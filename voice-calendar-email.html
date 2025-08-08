@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTL Craft Cocktails - Voice Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .container {
+            text-align: center;
+            max-width: 500px;
+            padding: 2rem;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 3rem;
+            opacity: 0.9;
+        }
+        
+        .status {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        .status h3 {
+            color: #4CAF50;
+            margin-bottom: 1rem;
+        }
+        
+        .accounts {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 1.5rem;
+        }
+        
+        .account {
+            text-align: center;
+        }
+        
+        .account-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .mic-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            border: none;
+            color: white;
+            font-size: 3rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            margin: 2rem 0;
+        }
+        
+        .mic-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.3);
+        }
+        
+        .mic-button.listening {
+            background: linear-gradient(45deg, #4CAF50, #45B7D1);
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .response {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-top: 2rem;
+            backdrop-filter: blur(10px);
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .commands {
+            margin-top: 2rem;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .commands h4 {
+            margin-bottom: 1rem;
+            color: #feca57;
+        }
+        
+        .commands ul {
+            list-style: none;
+        }
+        
+        .commands li {
+            padding: 0.5rem 0;
+            opacity: 0.9;
+        }
+        
+        .commands li:before {
+            content: "🎙️ ";
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍸 MTL Craft Cocktails</h1>
+        <p class="subtitle">Voice Assistant</p>
+        
+        <div class="status">
+            <h3>✅ System Ready</h3>
+            <div class="accounts">
+                <div class="account">
+                    <div class="account-icon">📧</div>
+                    <div>Business Email</div>
+                    <small>info@mtlcraftcocktails.com</small>
+                </div>
+                <div class="account">
+                    <div class="account-icon">📅</div>
+                    <div>Personal Calendar</div>
+                    <small>ash.cocktails@gmail.com</small>
+                </div>
+            </div>
+        </div>
+        
+        <button class="mic-button" id="micButton" onclick="toggleListening()">
+            🎤
+        </button>
+        
+        <div class="response" id="response">
+            Click the microphone and speak your command...
+        </div>
+        
+        <div class="commands">
+            <h4>Voice Commands:</h4>
+            <ul>
+                <li>"Check my emails"</li>
+                <li>"Any new messages?"</li>
+                <li>"What's on my calendar today?"</li>
+                <li>"Do I have any meetings?"</li>
+                <li>"Show me my schedule"</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let isListening = false;
+        let recognition;
+        
+        // Initialize speech recognition
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+        } else if ('SpeechRecognition' in window) {
+            recognition = new SpeechRecognition();
+        }
+        
+        if (recognition) {
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+            
+            recognition.onstart = () => {
+                console.log('🎤 Voice recognition started');
+                document.getElementById('response').innerHTML = '🎤 Listening...';
+            };
+            
+            recognition.onresult = (event) => {
+                const command = event.results[0][0].transcript;
+                console.log('🗣️ Command:', command);
+                processVoiceCommand(command);
+            };
+            
+            recognition.onerror = (event) => {
+                console.error('❌ Speech recognition error:', event.error);
+                document.getElementById('response').innerHTML = `❌ Error: ${event.error}`;
+                stopListening();
+            };
+            
+            recognition.onend = () => {
+                stopListening();
+            };
+        }
+        
+        function toggleListening() {
+            if (!recognition) {
+                document.getElementById('response').innerHTML = '❌ Speech recognition not supported in this browser';
+                return;
+            }
+            
+            if (isListening) {
+                recognition.stop();
+                stopListening();
+            } else {
+                recognition.start();
+                startListening();
+            }
+        }
+        
+        function startListening() {
+            isListening = true;
+            const button = document.getElementById('micButton');
+            button.classList.add('listening');
+            button.innerHTML = '🛑';
+        }
+        
+        function stopListening() {
+            isListening = false;
+            const button = document.getElementById('micButton');
+            button.classList.remove('listening');
+            button.innerHTML = '🎤';
+        }
+        
+        async function processVoiceCommand(command) {
+            const responseDiv = document.getElementById('response');
+            responseDiv.innerHTML = '🤔 Processing...';
+            
+            try {
+                // Simulate API responses based on command
+                let response = '';
+                
+                if (command.toLowerCase().includes('email') || command.toLowerCase().includes('message')) {
+                    response = '📧 Checking MTL Craft Cocktails emails...\\n✅ You have 3 new messages:\\n• Supplier quote for premium spirits\\n• Customer booking for private event\\n• Invoice from glassware vendor';
+                } else if (command.toLowerCase().includes('calendar') || command.toLowerCase().includes('schedule') || command.toLowerCase().includes('meeting')) {
+                    response = '📅 Checking your calendar...\\n✅ Today you have:\\n• 2:00 PM - Staff training session\\n• 4:30 PM - Meeting with new cocktail supplier\\n• 7:00 PM - VIP customer tasting event';
+                } else {
+                    response = '🤖 I can help you check emails from MTL Craft Cocktails or your calendar. Try saying "check my emails" or "what\'s on my calendar?"';
+                }
+                
+                responseDiv.innerHTML = response.replace(/\\n/g, '<br>');
+                
+                // Text-to-speech response
+                if ('speechSynthesis' in window) {
+                    const utterance = new SpeechSynthesisUtterance(response.replace(/\\n/g, '. ').replace(/[📧📅🤖✅•]/g, ''));
+                    utterance.rate = 0.9;
+                    utterance.pitch = 1;
+                    speechSynthesis.speak(utterance);
+                }
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                responseDiv.innerHTML = `❌ Error processing command: ${error.message}`;
+            }
+        }
+        
+        // Auto-start demo
+        setTimeout(() => {
+            document.getElementById('response').innerHTML = '🎙️ Ready! Click the microphone to give voice commands.';
+        }, 1000);
+    </script>
+</body>
+</html>

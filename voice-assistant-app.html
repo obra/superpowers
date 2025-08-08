@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+            background: #000000;
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .container {
+            max-width: 430px;
+            margin: 0 auto;
+            padding: 60px 20px 120px;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            margin-bottom: 40px;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .greeting {
+            color: #808080;
+            font-size: 18px;
+            font-weight: 400;
+            margin-bottom: 8px;
+        }
+
+        .tagline {
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        /* Card Grid */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 80px;
+        }
+
+        .card {
+            aspect-ratio: 1;
+            border-radius: 24px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                        box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease backwards;
+        }
+
+        .card:nth-child(1) {
+            background: linear-gradient(135deg, #F5E6D3 0%, #F0DCC5 100%);
+            animation-delay: 0.1s;
+        }
+
+        .card:nth-child(2) {
+            background: linear-gradient(135deg, #E8D5F2 0%, #DFC8EA 100%);
+            animation-delay: 0.2s;
+        }
+
+        .card:nth-child(3) {
+            background: linear-gradient(135deg, #FFE5E5 0%, #FFD6D6 100%);
+            animation-delay: 0.3s;
+        }
+
+        .card:nth-child(4) {
+            background: linear-gradient(135deg, #E5F2E8 0%, #D6E8DC 100%);
+            animation-delay: 0.4s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .card:active {
+            transform: translateY(-2px);
+        }
+
+        .card-icon {
+            width: 120px;
+            height: 120px;
+            margin-bottom: auto;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Premium 3D Icons */
+        
+        /* Email - Glass Milkshake Style */
+        .email-visual {
+            width: 70px;
+            height: 90px;
+            position: relative;
+            transform: perspective(1000px) rotateX(5deg) rotateY(-10deg);
+        }
+
+        .glass-container {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, 
+                rgba(255,255,255,0.95) 0%, 
+                rgba(255,182,193,0.3) 30%,
+                rgba(255,182,193,0.5) 100%);
+            border-radius: 0 0 35px 35px / 0 0 20px 20px;
+            position: relative;
+            box-shadow: 
+                inset 0 0 20px rgba(255,255,255,0.5),
+                inset -5px 0 10px rgba(255,182,193,0.2),
+                0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .glass-rim {
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            height: 8px;
+            background: linear-gradient(90deg, 
+                rgba(255,255,255,0.9), 
+                rgba(255,255,255,0.6));
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .email-straw {
+            position: absolute;
+            top: -20px;
+            right: 15px;
+            width: 6px;
+            height: 50px;
+            background: linear-gradient(90deg,
+                rgba(255,165,0,0.8),
+                rgba(255,195,0,0.9));
+            border-radius: 3px;
+            transform: rotate(-15deg);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .email-sphere {
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            width: 25px;
+            height: 25px;
+            background: radial-gradient(circle at 30% 30%,
+                rgba(255,220,150,0.9),
+                rgba(255,195,100,0.8));
+            border-radius: 50%;
+            box-shadow: 
+                0 3px 10px rgba(0,0,0,0.2),
+                inset -2px -2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* Calendar - Gift Box Style */
+        .calendar-visual {
+            width: 80px;
+            height: 75px;
+            position: relative;
+            transform: perspective(1000px) rotateX(10deg) rotateY(-5deg);
+        }
+
+        .gift-box {
+            width: 100%;
+            height: 60px;
+            background: linear-gradient(135deg,
+                #F5E6C8 0%,
+                #E8D4B0 50%,
+                #DCC3A0 100%);
+            border-radius: 8px;
+            position: relative;
+            box-shadow: 
+                0 10px 25px rgba(0,0,0,0.15),
+                inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+
+        .gift-lid {
+            position: absolute;
+            top: -8px;
+            left: -3px;
+            right: -3px;
+            height: 15px;
+            background: linear-gradient(135deg,
+                #F8EAD0 0%,
+                #E8D4B0 100%);
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .gift-ribbon-v {
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 100%;
+            background: linear-gradient(90deg,
+                rgba(255,255,255,0.9) 0%,
+                rgba(255,255,255,0.7) 50%,
+                rgba(255,255,255,0.9) 100%);
+            border-radius: 2px;
+        }
+
+        .gift-ribbon-h {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: linear-gradient(180deg,
+                rgba(255,255,255,0.9) 0%,
+                rgba(255,255,255,0.7) 50%,
+                rgba(255,255,255,0.9) 100%);
+            border-radius: 2px;
+            transform: translateY(-50%);
+        }
+
+        .gift-bow {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle,
+                rgba(255,255,255,0.95),
+                rgba(255,255,255,0.8));
+            border-radius: 50%;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Chat - Geometric Abstract Style */
+        .chat-visual {
+            width: 85px;
+            height: 85px;
+            position: relative;
+            transform: perspective(1000px) rotateX(-5deg) rotateY(10deg);
+        }
+
+        .geo-shape-1 {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg,
+                rgba(255,255,255,0.9),
+                rgba(240,240,240,0.7));
+            transform: rotate(45deg);
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .geo-shape-2 {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg,
+                #C8B8DB 0%,
+                #B8A8CB 100%);
+            transform: rotate(15deg);
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .geo-shape-3 {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(30deg);
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg,
+                rgba(255,220,220,0.9),
+                rgba(255,200,200,0.8));
+            border-radius: 50% 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .geo-hole {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 15px;
+            height: 15px;
+            background: #FFE5E5;
+            border-radius: 50%;
+        }
+
+        /* Tasks - Coins & Calendar Style */
+        .tasks-visual {
+            width: 85px;
+            height: 85px;
+            position: relative;
+            transform: perspective(1000px) rotateX(5deg) rotateY(-5deg);
+        }
+
+        .coin-stack {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+        }
+
+        .coin {
+            width: 45px;
+            height: 8px;
+            background: linear-gradient(90deg,
+                #FFD700 0%,
+                #FFA500 50%,
+                #FFD700 100%);
+            border-radius: 50%;
+            margin-bottom: -5px;
+            display: block;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .task-calendar {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 45px;
+            height: 50px;
+            background: linear-gradient(135deg,
+                #B8D4E3 0%,
+                #A8C4D3 100%);
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .calendar-header {
+            height: 12px;
+            background: #7C93A8;
+            position: relative;
+        }
+
+        .calendar-rings {
+            position: absolute;
+            top: -4px;
+            left: 8px;
+            right: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .ring {
+            width: 6px;
+            height: 10px;
+            background: #E5F2E8;
+            border-radius: 50%;
+            border: 2px solid #7C93A8;
+        }
+
+        .calendar-dots {
+            padding: 8px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            background: rgba(124, 147, 168, 0.3);
+            border-radius: 50%;
+        }
+
+        .dot:nth-child(3),
+        .dot:nth-child(5) {
+            background: #FFD700;
+        }
+
+        .card-content {
+            color: #333;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .card-subtitle {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        /* Golden Coin */
+        .coin-container {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+        }
+
+        .golden-coin {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #FFD700, #FFA500, #FFD700);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 15px 35px rgba(255, 215, 0, 0.3),
+                        0 5px 15px rgba(0, 0, 0, 0.3),
+                        inset 0 2px 5px rgba(255, 255, 255, 0.5),
+                        inset 0 -2px 5px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        .golden-coin:hover {
+            transform: scale(1.1) rotateY(180deg);
+            box-shadow: 0 20px 40px rgba(255, 215, 0, 0.5),
+                        0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .golden-coin:active {
+            transform: scale(0.95);
+        }
+
+        .golden-coin.spinning {
+            animation: spinCoin 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .golden-coin.listening {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .mic-icon {
+            width: 32px;
+            height: 32px;
+            fill: white;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+
+        /* Voice Interface */
+        .voice-interface {
+            position: fixed;
+            bottom: -100%;
+            left: 0;
+            right: 0;
+            height: 400px;
+            background: linear-gradient(to top, #000000 0%, rgba(0,0,0,0.95) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 30px 30px 0 0;
+            padding: 30px;
+            transition: bottom 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 90;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+        }
+
+        .voice-interface.active {
+            bottom: 0;
+        }
+
+        .voice-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .listening-text {
+            color: #808080;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .transcript {
+            font-size: 24px;
+            font-weight: 600;
+            min-height: 60px;
+            color: white;
+        }
+
+        /* Waveform */
+        .waveform {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80px;
+            gap: 4px;
+            margin: 40px 0;
+        }
+
+        .wave-bar {
+            width: 4px;
+            background: linear-gradient(to top, #FFD700, #FFA500);
+            border-radius: 2px;
+            animation: wave 1s ease-in-out infinite;
+        }
+
+        .wave-bar:nth-child(1) { height: 20px; animation-delay: 0s; }
+        .wave-bar:nth-child(2) { height: 35px; animation-delay: 0.1s; }
+        .wave-bar:nth-child(3) { height: 45px; animation-delay: 0.2s; }
+        .wave-bar:nth-child(4) { height: 55px; animation-delay: 0.3s; }
+        .wave-bar:nth-child(5) { height: 60px; animation-delay: 0.4s; }
+        .wave-bar:nth-child(6) { height: 55px; animation-delay: 0.5s; }
+        .wave-bar:nth-child(7) { height: 45px; animation-delay: 0.6s; }
+        .wave-bar:nth-child(8) { height: 35px; animation-delay: 0.7s; }
+        .wave-bar:nth-child(9) { height: 20px; animation-delay: 0.8s; }
+
+        .close-voice {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-voice:hover {
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.1);
+        }
+
+        /* Tab Bar */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .tab-item {
+            color: #808080;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-item:hover {
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .tab-item.active {
+            color: white;
+        }
+
+        /* Animations - Reduced and Professional */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                transform: scale(1);
+                box-shadow: 0 15px 35px rgba(255, 215, 0, 0.3),
+                            0 5px 15px rgba(0, 0, 0, 0.3);
+            }
+            50% { 
+                transform: scale(1.05);
+                box-shadow: 0 15px 35px rgba(255, 215, 0, 0.6),
+                            0 5px 15px rgba(0, 0, 0, 0.3),
+                            0 0 30px rgba(255, 215, 0, 0.8);
+            }
+        }
+
+        @keyframes wave {
+            0%, 100% { height: 20px; }
+            50% { height: 60px; }
+        }
+
+        @keyframes spinCoin {
+            0% { transform: rotateY(0); }
+            100% { transform: rotateY(720deg); }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 480px) {
+            .container {
+                padding: 40px 16px 120px;
+            }
+
+            .tagline {
+                font-size: 28px;
+            }
+
+            .card-grid {
+                gap: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="greeting">Hi Alex,</div>
+            <div class="tagline">How can I help you today?</div>
+        </div>
+
+        <div class="card-grid">
+            <div class="card" onclick="handleCardClick('email')">
+                <div class="card-icon">
+                    <div class="email-visual">
+                        <div class="glass-container">
+                            <div class="glass-rim"></div>
+                        </div>
+                        <div class="email-straw"></div>
+                        <div class="email-sphere"></div>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="card-title">Email</div>
+                    <div class="card-subtitle">Read, compose, organize</div>
+                </div>
+            </div>
+
+            <div class="card" onclick="handleCardClick('calendar')">
+                <div class="card-icon">
+                    <div class="calendar-visual">
+                        <div class="gift-box"></div>
+                        <div class="gift-lid"></div>
+                        <div class="gift-ribbon-v"></div>
+                        <div class="gift-ribbon-h"></div>
+                        <div class="gift-bow"></div>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="card-title">Calendar</div>
+                    <div class="card-subtitle">Schedule and manage</div>
+                </div>
+            </div>
+
+            <div class="card" onclick="handleCardClick('chat')">
+                <div class="card-icon">
+                    <div class="chat-visual">
+                        <div class="geo-shape-1">
+                            <div class="geo-hole"></div>
+                        </div>
+                        <div class="geo-shape-2"></div>
+                        <div class="geo-shape-3"></div>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="card-title">Chat</div>
+                    <div class="card-subtitle">AI conversations</div>
+                </div>
+            </div>
+
+            <div class="card" onclick="handleCardClick('tasks')">
+                <div class="card-icon">
+                    <div class="tasks-visual">
+                        <div class="coin-stack">
+                            <span class="coin"></span>
+                            <span class="coin"></span>
+                            <span class="coin"></span>
+                            <span class="coin"></span>
+                            <span class="coin"></span>
+                        </div>
+                        <div class="task-calendar">
+                            <div class="calendar-header">
+                                <div class="calendar-rings">
+                                    <span class="ring"></span>
+                                    <span class="ring"></span>
+                                </div>
+                            </div>
+                            <div class="calendar-dots">
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="card-title">Tasks</div>
+                    <div class="card-subtitle">Track and complete</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Golden Coin Microphone -->
+    <div class="coin-container">
+        <div class="golden-coin" id="goldCoin" onclick="toggleVoice()">
+            <svg class="mic-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Voice Interface -->
+    <div class="voice-interface" id="voiceInterface">
+        <button class="close-voice" onclick="closeVoice()">×</button>
+        <div class="voice-header">
+            <div class="listening-text">Listening...</div>
+            <div class="transcript" id="transcript">Try saying "Check my emails" or "What's on my calendar?"</div>
+        </div>
+        <div class="waveform">
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+        </div>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+        <div class="tab-item active">🏠</div>
+        <div class="tab-item">🔍</div>
+        <div class="tab-item">📊</div>
+        <div class="tab-item">⏰</div>
+    </div>
+
+    <script>
+        let isVoiceActive = false;
+        let isDragging = false;
+        let startX = 0;
+        let currentRotation = 0;
+
+        const coin = document.getElementById('goldCoin');
+        const voiceInterface = document.getElementById('voiceInterface');
+        const transcript = document.getElementById('transcript');
+
+        // Touch/Mouse events for coin spinning
+        coin.addEventListener('mousedown', startDrag);
+        coin.addEventListener('touchstart', startDrag);
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('touchmove', drag);
+        document.addEventListener('mouseup', endDrag);
+        document.addEventListener('touchend', endDrag);
+
+        function startDrag(e) {
+            e.preventDefault();
+            isDragging = true;
+            startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            coin.style.transition = 'none';
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            
+            const currentX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            const deltaX = currentX - startX;
+            currentRotation += deltaX * 2;
+            
+            coin.style.transform = 'rotateY(' + currentRotation + 'deg) scale(1.05)';
+            startX = currentX;
+        }
+
+        function endDrag(e) {
+            if (!isDragging) return;
+            isDragging = false;
+            
+            // Add spinning animation
+            coin.classList.add('spinning');
+            setTimeout(() => {
+                coin.classList.remove('spinning');
+                coin.style.transition = 'all 0.3s ease';
+                coin.style.transform = 'rotateY(0deg) scale(1)';
+                currentRotation = 0;
+            }, 1000);
+        }
+
+        function toggleVoice() {
+            if (isDragging) return;
+            
+            isVoiceActive = !isVoiceActive;
+            
+            if (isVoiceActive) {
+                voiceInterface.classList.add('active');
+                coin.classList.add('listening');
+                simulateListening();
+            } else {
+                closeVoice();
+            }
+        }
+
+        function closeVoice() {
+            isVoiceActive = false;
+            voiceInterface.classList.remove('active');
+            coin.classList.remove('listening');
+            transcript.textContent = "Try saying 'Check my emails' or 'What's on my calendar?'";
+        }
+
+        function handleCardClick(type) {
+            // Simulate card interaction
+            const messages = {
+                email: "Opening your email inbox...",
+                calendar: "Loading today's schedule...",
+                chat: "Starting AI conversation...",
+                tasks: "Fetching your task list..."
+            };
+            
+            // Show voice interface with relevant message
+            isVoiceActive = true;
+            voiceInterface.classList.add('active');
+            coin.classList.add('listening');
+            transcript.textContent = messages[type];
+            
+            setTimeout(() => {
+                simulateResponse(type);
+            }, 1500);
+        }
+
+        function simulateListening() {
+            const commands = [
+                "What's on my calendar today?",
+                "Check my latest emails",
+                "Schedule a meeting with Sarah",
+                "Add milk to my shopping list",
+                "Show me unread messages",
+                "What tasks do I have today?"
+            ];
+            
+            let index = 0;
+            const interval = setInterval(() => {
+                if (!isVoiceActive) {
+                    clearInterval(interval);
+                    return;
+                }
+                
+                transcript.textContent = commands[index];
+                index = (index + 1) % commands.length;
+            }, 3000);
+        }
+
+        function simulateResponse(type) {
+            const responses = {
+                email: "You have 5 new emails. 2 from your team and 3 newsletters.",
+                calendar: "You have 3 meetings today. Next one with Design Team at 2 PM.",
+                chat: "Hello! I'm ready to help you with anything you need.",
+                tasks: "You have 7 tasks today. 3 are high priority."
+            };
+            
+            transcript.textContent = responses[type] || "How can I help you?";
+        }
+
+        // Add some initial animation
+        window.addEventListener('load', () => {
+            // Simple fade in on load, no continuous animations
+        });
+    </script>
+</body>
+</html>

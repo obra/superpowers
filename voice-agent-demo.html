@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Calendar & Email Agent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .voice-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            cursor: pointer;
+            margin: 30px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .voice-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
+        }
+        
+        .voice-button.listening {
+            animation: pulse 1.5s infinite;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(245, 87, 108, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 30px rgba(245, 87, 108, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(245, 87, 108, 0);
+            }
+        }
+        
+        .voice-button svg {
+            width: 50px;
+            height: 50px;
+            fill: white;
+        }
+        
+        .transcript {
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 15px;
+            min-height: 100px;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .status {
+            text-align: center;
+            padding: 10px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .commands {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .commands h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .command-list {
+            list-style: none;
+        }
+        
+        .command-list li {
+            padding: 8px 0;
+            color: #666;
+            font-size: 14px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .command-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .command-list .command {
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .response-area {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f4ff;
+            border-radius: 10px;
+            min-height: 80px;
+            display: none;
+        }
+        
+        .response-area.show {
+            display: block;
+        }
+        
+        .response-area h4 {
+            color: #0066cc;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .response-text {
+            color: #333;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎙️ Voice Assistant</h1>
+            <p>Calendar & Email Management</p>
+        </div>
+        
+        <div class="status pending" id="status">
+            Initializing services...
+        </div>
+        
+        <button class="voice-button" id="voiceButton">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+            </svg>
+        </button>
+        
+        <div class="transcript" id="transcript">
+            Press the microphone to start speaking...
+        </div>
+        
+        <div class="response-area" id="responseArea">
+            <h4>Assistant Response:</h4>
+            <div class="response-text" id="responseText"></div>
+        </div>
+        
+        <div class="commands">
+            <h3>Example Commands:</h3>
+            <ul class="command-list">
+                <li><span class="command">"Check my emails"</span> - Get email summary</li>
+                <li><span class="command">"What's on my calendar today?"</span> - View today's events</li>
+                <li><span class="command">"Schedule a meeting"</span> - Create calendar event</li>
+                <li><span class="command">"Reply to the last email"</span> - Compose reply</li>
+                <li><span class="command">"Find free time tomorrow"</span> - Check availability</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        // Configuration
+        const CONFIG = {
+            apiKey: 'ak_suouXXwN2bd7UvBbjJvu',
+            baseUrl: 'https://backend.composio.dev/api/v1',
+            clientId: 'ash.cocktails@gmail.com'
+        };
+        
+        // Elements
+        const voiceButton = document.getElementById('voiceButton');
+        const transcript = document.getElementById('transcript');
+        const status = document.getElementById('status');
+        const responseArea = document.getElementById('responseArea');
+        const responseText = document.getElementById('responseText');
+        
+        // Speech recognition setup
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+        
+        let isListening = false;
+        
+        // Initialize
+        async function initialize() {
+            try {
+                // Check connection status
+                const response = await fetch(`${CONFIG.baseUrl}/connectedAccounts`, {
+                    headers: {
+                        'X-API-Key': CONFIG.apiKey,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const hasGmail = data.items?.some(item => item.appName === 'gmail' && item.status === 'ACTIVE');
+                    const hasCalendar = data.items?.some(item => 
+                        (item.appName === 'googlecalendar' || item.appName === 'google_calendar') && 
+                        item.status === 'ACTIVE'
+                    );
+                    
+                    if (hasGmail && hasCalendar) {
+                        status.className = 'status connected';
+                        status.textContent = '✅ Gmail & Calendar Connected';
+                    } else if (hasGmail || hasCalendar) {
+                        status.className = 'status pending';
+                        status.textContent = `⚠️ Partial connection (${hasGmail ? 'Gmail' : 'Calendar'} only)`;
+                    } else {
+                        status.className = 'status disconnected';
+                        status.textContent = '❌ Gmail & Calendar not connected';
+                    }
+                } else {
+                    throw new Error('Failed to check status');
+                }
+            } catch (error) {
+                status.className = 'status disconnected';
+                status.textContent = '❌ Connection error';
+                console.error('Initialization error:', error);
+            }
+        }
+        
+        // Voice button click handler
+        voiceButton.addEventListener('click', () => {
+            if (isListening) {
+                stopListening();
+            } else {
+                startListening();
+            }
+        });
+        
+        function startListening() {
+            isListening = true;
+            voiceButton.classList.add('listening');
+            transcript.textContent = 'Listening...';
+            recognition.start();
+        }
+        
+        function stopListening() {
+            isListening = false;
+            voiceButton.classList.remove('listening');
+            recognition.stop();
+        }
+        
+        // Speech recognition events
+        recognition.onresult = (event) => {
+            let finalTranscript = '';
+            let interimTranscript = '';
+            
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const result = event.results[i];
+                if (result.isFinal) {
+                    finalTranscript += result[0].transcript;
+                } else {
+                    interimTranscript += result[0].transcript;
+                }
+            }
+            
+            transcript.textContent = finalTranscript || interimTranscript;
+            
+            if (finalTranscript) {
+                processCommand(finalTranscript);
+            }
+        };
+        
+        recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            transcript.textContent = `Error: ${event.error}`;
+            stopListening();
+        };
+        
+        recognition.onend = () => {
+            stopListening();
+        };
+        
+        // Process voice commands
+        async function processCommand(command) {
+            transcript.textContent = `You said: "${command}"`;
+            
+            // Show response area
+            responseArea.classList.add('show');
+            responseText.textContent = 'Processing...';
+            
+            try {
+                // Simulate processing (replace with actual API calls)
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Parse command and generate response
+                const lowerCommand = command.toLowerCase();
+                let response = '';
+                
+                if (lowerCommand.includes('email') || lowerCommand.includes('mail')) {
+                    response = 'I would check your emails, but Gmail integration needs to be authorized first. Please run the setup script.';
+                } else if (lowerCommand.includes('calendar') || lowerCommand.includes('schedule') || lowerCommand.includes('meeting')) {
+                    response = 'I would check your calendar, but Google Calendar integration needs to be authorized first. Please run the setup script.';
+                } else if (lowerCommand.includes('help')) {
+                    response = 'I can help you manage emails and calendar events. Try saying "check my emails" or "what\'s on my calendar today?"';
+                } else {
+                    response = `I understood: "${command}". Once Gmail and Calendar are connected, I'll be able to help with that.`;
+                }
+                
+                responseText.textContent = response;
+                
+                // Use speech synthesis to speak the response
+                const utterance = new SpeechSynthesisUtterance(response);
+                speechSynthesis.speak(utterance);
+                
+            } catch (error) {
+                responseText.textContent = 'Sorry, I encountered an error processing your request.';
+                console.error('Command processing error:', error);
+            }
+        }
+        
+        // Initialize on load
+        initialize();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email/Calendar Agent - Professional Mobile UI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #111827 0%, #0f172a 100%);
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        .mobile-container {
+            max-width: 428px;
+            height: 100vh;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #111827 0%, #0a0e1a 100%);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        /* Status Bar */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 16px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(75, 85, 99, 0.2);
+        }
+        
+        .signal-dots {
+            display: flex;
+            gap: 2px;
+        }
+        
+        .dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: white;
+        }
+        
+        .dot:nth-child(3) {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        .battery {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .battery-icon {
+            width: 24px;
+            height: 12px;
+            border: 1px solid white;
+            border-radius: 2px;
+            position: relative;
+        }
+        
+        .battery-fill {
+            width: 100%;
+            height: 100%;
+            background: #22c55e;
+            border-radius: 1px;
+        }
+        
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid rgba(75, 85, 99, 0.3);
+        }
+        
+        .tab-group {
+            display: flex;
+            gap: 16px;
+        }
+        
+        .tab {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+        
+        .tab:not(.active) {
+            background: transparent;
+            color: #9ca3af;
+        }
+        
+        .composio-badge {
+            padding: 4px 8px;
+            border: 1px solid #22c55e;
+            border-radius: 12px;
+            font-size: 10px;
+            color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
+        }
+        
+        /* Chat Interface */
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid rgba(75, 85, 99, 0.3);
+        }
+        
+        .agent-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .agent-details h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        
+        .agent-details p {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+        
+        .messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .message {
+            display: flex;
+            max-width: 85%;
+        }
+        
+        .message.user {
+            align-self: flex-end;
+        }
+        
+        .message.ai {
+            align-self: flex-start;
+        }
+        
+        .message-bubble {
+            padding: 12px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+        
+        .message.ai .message-bubble {
+            background: rgba(31, 41, 55, 0.9);
+            color: #f3f4f6;
+            border: 1px solid rgba(75, 85, 99, 0.3);
+        }
+        
+        .message-time {
+            font-size: 10px;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+        
+        /* Input Area */
+        .input-area {
+            padding: 16px;
+            border-top: 1px solid rgba(75, 85, 99, 0.3);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .input-container {
+            flex: 1;
+            position: relative;
+        }
+        
+        .message-input {
+            width: 100%;
+            padding: 12px 48px 12px 16px;
+            border-radius: 24px;
+            border: 1px solid rgba(75, 85, 99, 0.5);
+            background: rgba(31, 41, 55, 0.8);
+            color: white;
+            font-size: 14px;
+            outline: none;
+        }
+        
+        .message-input::placeholder {
+            color: #9ca3af;
+        }
+        
+        .message-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .voice-btn {
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            color: #9ca3af;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .voice-btn.listening {
+            color: #ef4444;
+            animation: pulse 1s infinite;
+        }
+        
+        .send-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .send-btn:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 16px;
+            border-top: 1px solid rgba(75, 85, 99, 0.3);
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(12px);
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: #6b7280;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        .nav-item.active {
+            color: #3b82f6;
+        }
+        
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .nav-label {
+            font-size: 10px;
+            font-weight: 500;
+        }
+        
+        /* Cards (for email/calendar views) */
+        .card {
+            background: rgba(31, 41, 55, 0.95);
+            border: 1px solid rgba(75, 85, 99, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+        
+        .card:hover {
+            background: rgba(31, 41, 55, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Email specific styles */
+        .email-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .email-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6b7280 0%, #374151 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        
+        .email-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .email-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        
+        .email-from {
+            font-weight: 600;
+            font-size: 14px;
+            color: white;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .email-time {
+            font-size: 12px;
+            color: #9ca3af;
+            flex-shrink: 0;
+        }
+        
+        .email-subject {
+            font-size: 14px;
+            font-weight: 500;
+            color: #d1d5db;
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .email-preview {
+            font-size: 12px;
+            color: #6b7280;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .unread-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #3b82f6;
+            flex-shrink: 0;
+            margin-top: 8px;
+        }
+        
+        /* Calendar event styles */
+        .event-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .event-indicator {
+            width: 4px;
+            height: 64px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+        
+        .event-indicator.meeting {
+            background: #3b82f6;
+        }
+        
+        .event-indicator.call {
+            background: #22c55e;
+        }
+        
+        .event-indicator.appointment {
+            background: #8b5cf6;
+        }
+        
+        .event-content {
+            flex: 1;
+        }
+        
+        .event-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 8px;
+        }
+        
+        .event-details {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 4px;
+        }
+        
+        .event-duration {
+            font-size: 10px;
+            color: #6b7280;
+        }
+        
+        /* Loading animation */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 53%, 80%, 100% { transform: translate3d(0,0,0); }
+            40%, 43% { transform: translate3d(0, -8px, 0); }
+            70% { transform: translate3d(0, -4px, 0); }
+            90% { transform: translate3d(0, -2px, 0); }
+        }
+        
+        .loading-dots {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .loading-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #9ca3af;
+            animation: bounce 1.4s infinite;
+        }
+        
+        .loading-dot:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+        
+        .loading-dot:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 428px) {
+            .mobile-container {
+                max-width: 100%;
+            }
+        }
+        
+        /* Hidden content for demo switching */
+        .view-content {
+            display: none;
+        }
+        
+        .view-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="signal-dots">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+                <span>Verizon</span>
+            </div>
+            <span>9:41 AM</span>
+            <div class="battery">
+                <span>100%</span>
+                <div class="battery-icon">
+                    <div class="battery-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <div class="tab-group">
+                <button class="tab active" onclick="switchView('chat')">Chat</button>
+                <button class="tab" onclick="switchView('email')">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect width="20" height="16" x="2" y="4" rx="2"/>
+                        <path d="m22 7-10 5L2 7"/>
+                    </svg>
+                    Gmail
+                </button>
+                <button class="tab" onclick="switchView('calendar')">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+                        <line x1="16" x2="16" y1="2" y2="6"/>
+                        <line x1="8" x2="8" y1="2" y2="6"/>
+                        <line x1="3" x2="21" y1="10" y2="10"/>
+                    </svg>
+                    Calendar
+                </button>
+            </div>
+            <div class="composio-badge">Composio Connected</div>
+        </div>
+
+        <!-- Chat View -->
+        <div id="chat-view" class="view-content active">
+            <div class="chat-container">
+                <!-- Chat Header -->
+                <div class="chat-header">
+                    <div class="agent-info">
+                        <div class="avatar">EA</div>
+                        <div class="agent-details">
+                            <h3>Email & Calendar Agent</h3>
+                            <p>Gmail • Google Calendar • Composio</p>
+                        </div>
+                    </div>
+                    <button style="background: none; border: none; color: #9ca3af;">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="1"/>
+                            <circle cx="19" cy="12" r="1"/>
+                            <circle cx="5" cy="12" r="1"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Messages -->
+                <div class="messages">
+                    <div class="message ai">
+                        <div class="message-bubble">
+                            Good morning! I'm your Email & Calendar Agent. I can help you manage your Gmail, schedule meetings, and stay organized. What would you like to do today?
+                            <div class="message-time">9:41 AM</div>
+                        </div>
+                    </div>
+                    <div class="message user">
+                        <div class="message-bubble">
+                            Did Jon send his address yet?
+                            <div class="message-time">9:42 AM</div>
+                        </div>
+                    </div>
+                    <div class="message ai">
+                        <div class="message-bubble">
+                            I found Jon's email about dinner! He sent the address: 123 Main St, Downtown. The restaurant is called 'Bella Vista' and your reservation is at 7:30 PM. Would you like me to add this to your calendar or get directions?
+                            <div class="message-time">9:42 AM</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="input-area">
+                    <div class="input-container">
+                        <input type="text" class="message-input" placeholder="Ask about emails, schedule meetings..." id="messageInput">
+                        <button class="voice-btn" onclick="toggleVoice()">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                <line x1="12" x2="12" y1="19" y2="22"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <button class="send-btn" onclick="sendMessage()">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="m22 2-7 20-4-9-9-4Z"/>
+                            <path d="M22 2 11 13"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Email View -->
+        <div id="email-view" class="view-content">
+            <div class="chat-container">
+                <!-- Email Header -->
+                <div class="chat-header">
+                    <div class="agent-info">
+                        <svg width="24" height="24" fill="none" stroke="#3b82f6" viewBox="0 0 24 24">
+                            <rect width="20" height="16" x="2" y="4" rx="2"/>
+                            <path d="m22 7-10 5L2 7"/>
+                        </svg>
+                        <div class="agent-details">
+                            <h3>Gmail</h3>
+                            <p>2 unread messages</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button style="background: none; border: none; color: #9ca3af;">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46"/>
+                            </svg>
+                        </button>
+                        <button style="background: none; border: none; color: #9ca3af;">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="m21 21-4.35-4.35"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Email List -->
+                <div class="messages">
+                    <div class="card">
+                        <div class="email-item">
+                            <div class="email-avatar">JS</div>
+                            <div class="email-content">
+                                <div class="email-header">
+                                    <div class="email-from">Jon Smith</div>
+                                    <div class="email-time">2 min ago</div>
+                                </div>
+                                <div class="email-subject">Address for tonight's dinner</div>
+                                <div class="email-preview">Hey! The restaurant address is 123 Main St...</div>
+                            </div>
+                            <div class="unread-indicator"></div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="email-item">
+                            <div class="email-avatar">SJ</div>
+                            <div class="email-content">
+                                <div class="email-header">
+                                    <div class="email-from">Sarah Johnson</div>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <svg width="16" height="16" fill="#f59e0b" stroke="#f59e0b" viewBox="0 0 24 24">
+                                            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                                        </svg>
+                                        <div class="email-time">1 hour ago</div>
+                                    </div>
+                                </div>
+                                <div class="email-subject">Meeting agenda for tomorrow</div>
+                                <div class="email-preview">I've prepared the agenda for our quarterly review...</div>
+                            </div>
+                            <div class="unread-indicator"></div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="email-item">
+                            <div class="email-avatar">TU</div>
+                            <div class="email-content">
+                                <div class="email-header">
+                                    <div class="email-from" style="color: #d1d5db; font-weight: 400;">Team Updates</div>
+                                    <div class="email-time">3 hours ago</div>
+                                </div>
+                                <div class="email-subject" style="color: #9ca3af; font-weight: 400;">Weekly digest - Project Alpha</div>
+                                <div class="email-preview">This week's progress summary and next steps...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Compose Button -->
+                <div style="padding: 16px;">
+                    <button class="send-btn" style="width: 100%; height: 48px; border-radius: 24px; font-size: 14px; font-weight: 500;">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 8px;">
+                            <path d="M5 12h14"/>
+                            <path d="M12 5v14"/>
+                        </svg>
+                        Compose Email
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendar View -->
+        <div id="calendar-view" class="view-content">
+            <div class="chat-container">
+                <!-- Calendar Header -->
+                <div class="chat-header">
+                    <div class="agent-info">
+                        <svg width="24" height="24" fill="none" stroke="#22c55e" viewBox="0 0 24 24">
+                            <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+                            <line x1="16" x2="16" y1="2" y2="6"/>
+                            <line x1="8" x2="8" y1="2" y2="6"/>
+                            <line x1="3" x2="21" y1="10" y2="10"/>
+                        </svg>
+                        <div class="agent-details">
+                            <h3>Today's Schedule</h3>
+                            <p>Monday, August 5</p>
+                        </div>
+                    </div>
+                    <button style="background: none; border: none; color: #9ca3af;">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M5 12h14"/>
+                            <path d="M12 5v14"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Events List -->
+                <div class="messages">
+                    <div class="card">
+                        <div class="event-item">
+                            <div class="event-indicator meeting"></div>
+                            <div class="event-content">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <div class="event-title">Team Standup</div>
+                                    <div style="padding: 2px 6px; border: 1px solid #6b7280; border-radius: 8px; font-size: 10px; color: #d1d5db;">meeting</div>
+                                </div>
+                                <div class="event-details">
+                                    <div style="display: flex; align-items: center; gap: 4px;">
+                                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12,6 12,12 16,14"/>
+                                        </svg>
+                                        <span>10:00 AM</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 4px;">
+                                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                            <circle cx="12" cy="7" r="4"/>
+                                        </svg>
+                                        <span>5 attendees</span>
+                                    </div>
+                                </div>
+                                <div class="event-duration">30 min</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="event-item">
+                            <div class="event-indicator call"></div>
+                            <div class="event-content">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <div class="event-title">Client Call - ABC Corp</div>
+                                    <div style="padding: 2px 6px; border: 1px solid #6b7280; border-radius: 8px; font-size: 10px; color: #d1d5db;">call</div>
+                                </div>
+                                <div class="event-details">
+                                    <div style="display: flex; align-items: center; gap: 4px;">
+                                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12,6 12,12 16,14"/>
+                                        </svg>
+                                        <span>2:00 PM</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 4px;">
+                                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                            <circle cx="12" cy="7" r="4"/>
+                                        </svg>
+                                        <span>3 attendees</span>
+                                    </div>
+                                </div>
+                                <div class="event-duration">1 hour</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="event-item">
+                            <div class="event-indicator appointment"></div>
+                            <div class="event-content">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <div class="event-title">Dinner with Jon</div>
+                                    <div style="padding: 2px 6px; border: 1px solid #6b7280; border-radius: 8px; font-size: 10px; color: #d1d5db;">appointment</div>
+                                </div>
+                                <div class="event-details">
+                                    <div style="display: flex; align-items: center; gap: 4px;">
+                                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12,6 12,12 16,14"/>
+                                        </svg>
+                                        <span>7:30 PM</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 4px;">
+                                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                            <circle cx="12" cy="7" r="4"/>
+                                        </svg>
+                                        <span>2 attendees</span>
+                                    </div>
+                                </div>
+                                <div class="event-duration">2 hours</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div style="padding: 16px; display: flex; flex-direction: column; gap: 8px;">
+                    <button style="width: 100%; height: 40px; border: 1px solid #6b7280; background: transparent; color: #d1d5db; border-radius: 20px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+                            <line x1="16" x2="16" y1="2" y2="6"/>
+                            <line x1="8" x2="8" y1="2" y2="6"/>
+                            <line x1="3" x2="21" y1="10" y2="10"/>
+                        </svg>
+                        Schedule Meeting
+                    </button>
+                    <button style="width: 100%; height: 40px; border: 1px solid #6b7280; background: transparent; color: #d1d5db; border-radius: 20px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12,6 12,12 16,14"/>
+                        </svg>
+                        View Full Calendar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <a href="#" class="nav-item active" onclick="switchView('chat')">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9,22 9,12 15,12 15,22"/>
+                </svg>
+                <span class="nav-label">Home</span>
+            </a>
+            <a href="#" class="nav-item">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+                <span class="nav-label">Search</span>
+            </a>
+            <a href="#" class="nav-item" onclick="switchView('email')">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <rect width="20" height="16" x="2" y="4" rx="2"/>
+                    <path d="m22 7-10 5L2 7"/>
+                </svg>
+                <span class="nav-label">Email</span>
+            </a>
+            <a href="#" class="nav-item" onclick="switchView('calendar')">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+                    <line x1="16" x2="16" y1="2" y2="6"/>
+                    <line x1="8" x2="8" y1="2" y2="6"/>
+                    <line x1="3" x2="21" y1="10" y2="10"/>
+                </svg>
+                <span class="nav-label">Calendar</span>
+            </a>
+            <a href="#" class="nav-item">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 1v6m0 6v6"/>
+                </svg>
+                <span class="nav-label">Settings</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function switchView(viewName) {
+            // Hide all views
+            document.querySelectorAll('.view-content').forEach(view => {
+                view.classList.remove('active');
+            });
+            
+            // Show selected view
+            document.getElementById(viewName + '-view').classList.add('active');
+            
+            // Update tab states
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Update nav states
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Add active class to clicked tab and nav
+            event.target.classList.add('active');
+            
+            // Update bottom nav
+            if (viewName === 'chat') {
+                document.querySelector('.nav-item[onclick*="chat"]').classList.add('active');
+            } else if (viewName === 'email') {
+                document.querySelector('.nav-item[onclick*="email"]').classList.add('active');
+            } else if (viewName === 'calendar') {
+                document.querySelector('.nav-item[onclick*="calendar"]').classList.add('active');
+            }
+        }
+        
+        let isListening = false;
+        
+        function toggleVoice() {
+            const voiceBtn = document.querySelector('.voice-btn');
+            const messageInput = document.getElementById('messageInput');
+            
+            isListening = !isListening;
+            
+            if (isListening) {
+                voiceBtn.classList.add('listening');
+                // Simulate voice recognition
+                setTimeout(() => {
+                    messageInput.value = "Did Jon send his address yet?";
+                    voiceBtn.classList.remove('listening');
+                    isListening = false;
+                }, 2000);
+            } else {
+                voiceBtn.classList.remove('listening');
+            }
+        }
+        
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const messages = document.querySelector('#chat-view .messages');
+            
+            if (messageInput.value.trim()) {
+                // Add user message
+                const userMessage = document.createElement('div');
+                userMessage.className = 'message user';
+                userMessage.innerHTML = `
+                    <div class="message-bubble">
+                        ${messageInput.value}
+                        <div class="message-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                    </div>
+                `;
+                messages.appendChild(userMessage);
+                
+                // Clear input
+                messageInput.value = '';
+                
+                // Add loading indicator
+                const loadingMessage = document.createElement('div');
+                loadingMessage.className = 'message ai';
+                loadingMessage.innerHTML = `
+                    <div class="message-bubble">
+                        <div class="loading-dots">
+                            <div class="loading-dot"></div>
+                            <div class="loading-dot"></div>
+                            <div class="loading-dot"></div>
+                        </div>
+                    </div>
+                `;
+                messages.appendChild(loadingMessage);
+                
+                // Scroll to bottom
+                messages.scrollTop = messages.scrollHeight;
+                
+                // Simulate AI response
+                setTimeout(() => {
+                    messages.removeChild(loadingMessage);
+                    
+                    const aiMessage = document.createElement('div');
+                    aiMessage.className = 'message ai';
+                    aiMessage.innerHTML = `
+                        <div class="message-bubble">
+                            I'm here to help with your email and calendar management through Gmail and Google Calendar. You can ask me to check emails, schedule meetings, find contact information, or manage your appointments. What would you like to do?
+                            <div class="message-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                        </div>
+                    `;
+                    messages.appendChild(aiMessage);
+                    messages.scrollTop = messages.scrollHeight;
+                }, 1500);
+            }
+        }
+        
+        // Enter key to send message
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>

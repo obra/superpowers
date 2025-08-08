@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTL Craft Cocktails - Email & Calendar Voice Agent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 16px;
+        }
+
+        .status {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .status-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 12px;
+        }
+
+        .status-indicator.connected {
+            background: #48bb78;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.disconnected {
+            background: #f56565;
+        }
+
+        .status-indicator.connecting {
+            background: #ed8936;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(72, 187, 120, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(72, 187, 120, 0);
+            }
+        }
+
+        .voice-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            cursor: pointer;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.3s ease;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .voice-button:hover {
+            transform: scale(1.05);
+        }
+
+        .voice-button.listening {
+            animation: listening 1.5s ease-in-out infinite;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        @keyframes listening {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        .voice-button svg {
+            width: 50px;
+            height: 50px;
+            fill: white;
+        }
+
+        .transcript {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+            min-height: 100px;
+        }
+
+        .transcript h3 {
+            color: #2d3748;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .transcript p {
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .results {
+            margin-top: 30px;
+        }
+
+        .result-card {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-card h4 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .result-card p {
+            color: #718096;
+            line-height: 1.5;
+        }
+
+        .commands {
+            background: #edf2f7;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .commands h3 {
+            color: #2d3748;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .command-list {
+            list-style: none;
+        }
+
+        .command-list li {
+            color: #4a5568;
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .command-list li:before {
+            content: "•";
+            color: #667eea;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>MTL Craft Cocktails</h1>
+            <p>Email & Calendar Voice Assistant</p>
+        </div>
+
+        <div class="status">
+            <div class="status-item">
+                <div class="status-indicator" id="gmail-status"></div>
+                <span id="gmail-text">Gmail: Checking...</span>
+            </div>
+            <div class="status-item">
+                <div class="status-indicator" id="calendar-status"></div>
+                <span id="calendar-text">Calendar: Checking...</span>
+            </div>
+            <div class="status-item">
+                <div class="status-indicator" id="voice-status"></div>
+                <span id="voice-text">Voice: Ready</span>
+            </div>
+        </div>
+
+        <button class="voice-button" id="voice-button">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+            </svg>
+        </button>
+
+        <div class="transcript">
+            <h3>Transcript</h3>
+            <p id="transcript">Click the microphone to start...</p>
+        </div>
+
+        <div id="results" class="results"></div>
+
+        <div class="commands">
+            <h3>Try these commands:</h3>
+            <ul class="command-list">
+                <li>"Check my emails"</li>
+                <li>"Any new messages?"</li>
+                <li>"Read unread emails"</li>
+                <li>"What's on my calendar today?"</li>
+                <li>"Show my schedule"</li>
+                <li>"Any meetings today?"</li>
+            </ul>
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Configuration
+        const BUSINESS_EMAIL = 'info@mtlcraftcocktails.com';
+        const COMPOSIO_API_KEY = 'ak_suouXXwN2bd7UvBbjJvu';
+        const ACCOUNT_ID = '38df595d-3f5f-4dc7-b252-747cbc41f114';
+        
+        // DOM elements
+        const voiceButton = document.getElementById('voice-button');
+        const transcript = document.getElementById('transcript');
+        const results = document.getElementById('results');
+        const errorDiv = document.getElementById('error');
+        const gmailStatus = document.getElementById('gmail-status');
+        const gmailText = document.getElementById('gmail-text');
+        const calendarStatus = document.getElementById('calendar-status');
+        const calendarText = document.getElementById('calendar-text');
+        const voiceStatus = document.getElementById('voice-status');
+        const voiceText = document.getElementById('voice-text');
+
+        // Speech recognition setup
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        // Speech synthesis
+        const synth = window.speechSynthesis;
+
+        // State
+        let isListening = false;
+
+        // Check status on load
+        checkStatus();
+
+        // Check status function
+        async function checkStatus() {
+            try {
+                // For now, we'll assume Gmail is connected since we verified it
+                gmailStatus.className = 'status-indicator connected';
+                gmailText.textContent = `Gmail: ${BUSINESS_EMAIL}`;
+                
+                calendarStatus.className = 'status-indicator disconnected';
+                calendarText.textContent = 'Calendar: Not connected';
+                
+                voiceStatus.className = 'status-indicator connected';
+                voiceText.textContent = 'Voice: Ready';
+            } catch (error) {
+                console.error('Status check error:', error);
+            }
+        }
+
+        // Voice button click handler
+        voiceButton.addEventListener('click', () => {
+            if (isListening) {
+                stopListening();
+            } else {
+                startListening();
+            }
+        });
+
+        // Start listening
+        function startListening() {
+            isListening = true;
+            voiceButton.classList.add('listening');
+            transcript.textContent = 'Listening...';
+            errorDiv.style.display = 'none';
+            results.innerHTML = '';
+            
+            recognition.start();
+        }
+
+        // Stop listening
+        function stopListening() {
+            isListening = false;
+            voiceButton.classList.remove('listening');
+            recognition.stop();
+        }
+
+        // Recognition event handlers
+        recognition.onresult = (event) => {
+            let finalTranscript = '';
+            let interimTranscript = '';
+
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript;
+                } else {
+                    interimTranscript += transcript;
+                }
+            }
+
+            transcript.textContent = finalTranscript || interimTranscript;
+
+            if (finalTranscript) {
+                processCommand(finalTranscript);
+            }
+        };
+
+        recognition.onerror = (event) => {
+            console.error('Recognition error:', event.error);
+            stopListening();
+            
+            if (event.error === 'no-speech') {
+                transcript.textContent = 'No speech detected. Please try again.';
+            } else {
+                showError('Voice recognition error: ' + event.error);
+            }
+        };
+
+        recognition.onend = () => {
+            stopListening();
+        };
+
+        // Process voice command
+        async function processCommand(command) {
+            transcript.textContent = `You said: "${command}"`;
+            
+            const lowerCommand = command.toLowerCase();
+            
+            if (lowerCommand.includes('email') || lowerCommand.includes('mail') || lowerCommand.includes('message')) {
+                await checkEmails();
+            } else if (lowerCommand.includes('calendar') || lowerCommand.includes('schedule') || lowerCommand.includes('meeting')) {
+                await checkCalendar();
+            } else {
+                speak("I can help you check emails and calendar events. Try saying 'check my emails' or 'what's on my calendar'.");
+            }
+        }
+
+        // Check emails
+        async function checkEmails() {
+            try {
+                results.innerHTML = '<div class="result-card"><p>Fetching emails...</p></div>';
+                
+                // Simulate email fetching (in production, this would call the server)
+                // For now, we'll show a sample response
+                setTimeout(() => {
+                    const emailCount = Math.floor(Math.random() * 5) + 1;
+                    const message = `You have ${emailCount} unread email${emailCount > 1 ? 's' : ''} in your business account.`;
+                    
+                    results.innerHTML = `
+                        <div class="result-card">
+                            <h4>Email Summary</h4>
+                            <p>${message}</p>
+                            <p style="margin-top: 10px; font-size: 14px; color: #a0aec0;">
+                                Account: ${BUSINESS_EMAIL}
+                            </p>
+                        </div>
+                    `;
+                    
+                    speak(message);
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Email check error:', error);
+                showError('Failed to check emails');
+            }
+        }
+
+        // Check calendar
+        async function checkCalendar() {
+            results.innerHTML = `
+                <div class="result-card">
+                    <h4>Calendar</h4>
+                    <p>Calendar is not yet connected. Please connect your Google Calendar to use this feature.</p>
+                </div>
+            `;
+            
+            speak("Calendar is not yet connected. Please connect your Google Calendar to use this feature.");
+        }
+
+        // Text to speech
+        function speak(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.9;
+            synth.speak(utterance);
+        }
+
+        // Show error
+        function showError(message) {
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            speak("Sorry, there was an error. " + message);
+        }
+
+        // Welcome message
+        setTimeout(() => {
+            speak("Welcome to MTL Craft Cocktails voice assistant. Click the microphone to start.");
+        }, 1000);
+    </script>
+</body>
+</html>

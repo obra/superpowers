@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTL Craft Cocktails - Voice Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+            max-width: 800px;
+            width: 100%;
+            padding: 48px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 48px;
+            position: relative;
+        }
+
+        .header h1 {
+            color: #1a365d;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            color: #64748b;
+            font-size: 18px;
+            font-weight: 400;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .status-card {
+            background: linear-gradient(135deg, #f6f9fc 0%, #e9effd 100%);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .status-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(59, 130, 246, 0.1);
+        }
+
+        .status-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 10px;
+            position: relative;
+        }
+
+        .status-indicator.active {
+            background: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.inactive {
+            background: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+        }
+
+        .status-indicator.loading {
+            background: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 currentColor;
+            }
+            70% {
+                box-shadow: 0 0 0 8px transparent;
+            }
+            100% {
+                box-shadow: 0 0 0 0 transparent;
+            }
+        }
+
+        .status-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-detail {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        .voice-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 40px 0;
+        }
+
+        .voice-button {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 15px 35px rgba(59, 130, 246, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .voice-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.4);
+        }
+
+        .voice-button.listening {
+            animation: listening 1.5s ease-in-out infinite;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .voice-button.speaking {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            animation: speaking 0.5s ease-in-out infinite;
+        }
+
+        @keyframes listening {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.08);
+            }
+        }
+
+        @keyframes speaking {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.03);
+            }
+        }
+
+        .voice-button svg {
+            width: 60px;
+            height: 60px;
+            fill: white;
+            z-index: 1;
+        }
+
+        .voice-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .voice-button.listening::before {
+            opacity: 1;
+            animation: ripple 1.5s ease-in-out infinite;
+        }
+
+        @keyframes ripple {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .voice-hint {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #64748b;
+            text-align: center;
+        }
+
+        .transcript-box {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 24px;
+            margin: 32px 0;
+            border: 1px solid #e2e8f0;
+            min-height: 80px;
+        }
+
+        .transcript-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .transcript-text {
+            font-size: 16px;
+            color: #1e293b;
+            line-height: 1.6;
+            min-height: 24px;
+        }
+
+        .results-container {
+            margin-top: 32px;
+            display: none;
+        }
+
+        .results-container.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            transition: all 0.2s ease;
+        }
+
+        .result-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .result-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+        }
+
+        .result-icon.email {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+
+        .result-icon.calendar {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+
+        .result-icon svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        .result-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .result-subtitle {
+            font-size: 14px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .result-content {
+            color: #475569;
+            line-height: 1.6;
+        }
+
+        .result-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+
+        .result-item-title {
+            font-weight: 500;
+            color: #1e293b;
+        }
+
+        .result-item-time {
+            font-size: 13px;
+            color: #94a3b8;
+            white-space: nowrap;
+        }
+
+        .result-item-content {
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        .commands-section {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 32px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .commands-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 16px;
+        }
+
+        .command-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .command-chip {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 14px;
+            color: #475569;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .command-chip:hover {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+            transform: translateY(-1px);
+        }
+
+        .error-message {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 20px;
+            display: none;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+            20%, 40%, 60%, 80% { transform: translateX(2px); }
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 50%;
+            border-top-color: #3b82f6;
+            animation: spin 0.8s linear infinite;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>MTL Craft Cocktails</h1>
+            <p>AI Voice Assistant</p>
+        </div>
+
+        <div class="status-grid">
+            <div class="status-card">
+                <div class="status-header">
+                    <div class="status-indicator" id="gmail-status"></div>
+                    <div>
+                        <div class="status-title">Gmail</div>
+                        <div class="status-detail" id="gmail-detail">Connecting...</div>
+                    </div>
+                </div>
+            </div>
+            <div class="status-card">
+                <div class="status-header">
+                    <div class="status-indicator" id="calendar-status"></div>
+                    <div>
+                        <div class="status-title">Calendar</div>
+                        <div class="status-detail" id="calendar-detail">Connecting...</div>
+                    </div>
+                </div>
+            </div>
+            <div class="status-card">
+                <div class="status-header">
+                    <div class="status-indicator" id="voice-status"></div>
+                    <div>
+                        <div class="status-title">Voice</div>
+                        <div class="status-detail" id="voice-detail">Ready</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="voice-container">
+            <button class="voice-button" id="voice-button">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                    <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                </svg>
+            </button>
+            <div class="voice-hint" id="voice-hint">Click to start listening</div>
+        </div>
+
+        <div class="transcript-box">
+            <div class="transcript-label">Transcript</div>
+            <div class="transcript-text" id="transcript">Ready to listen...</div>
+        </div>
+
+        <div class="results-container" id="results-container"></div>
+
+        <div class="commands-section">
+            <div class="commands-title">Quick Commands</div>
+            <div class="command-chips">
+                <div class="command-chip" onclick="simulateCommand('Check my emails')">Check my emails</div>
+                <div class="command-chip" onclick="simulateCommand('Any new messages')">Any new messages</div>
+                <div class="command-chip" onclick="simulateCommand('What\'s on my calendar')">What's on my calendar</div>
+                <div class="command-chip" onclick="simulateCommand('Today\'s meetings')">Today's meetings</div>
+                <div class="command-chip" onclick="simulateCommand('Check everything')">Check everything</div>
+            </div>
+        </div>
+
+        <div class="error-message" id="error-message"></div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE = 'http://localhost:3000/api';
+        const ELEVENLABS_API_KEY = 'YOUR_ELEVENLABS_API_KEY'; // Will be set from server
+        const ELEVENLABS_VOICE_ID = 'EXAVITQu4vr4xnSDxMaL'; // Sarah voice
+        
+        // DOM elements
+        const voiceButton = document.getElementById('voice-button');
+        const voiceHint = document.getElementById('voice-hint');
+        const transcript = document.getElementById('transcript');
+        const resultsContainer = document.getElementById('results-container');
+        const errorMessage = document.getElementById('error-message');
+        
+        // Status elements
+        const gmailStatus = document.getElementById('gmail-status');
+        const gmailDetail = document.getElementById('gmail-detail');
+        const calendarStatus = document.getElementById('calendar-status');
+        const calendarDetail = document.getElementById('calendar-detail');
+        const voiceStatus = document.getElementById('voice-status');
+        const voiceDetail = document.getElementById('voice-detail');
+        
+        // Speech recognition setup
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+        
+        // State
+        let isListening = false;
+        let isSpeaking = false;
+        
+        // Initialize
+        checkSystemStatus();
+        
+        // Check system status
+        async function checkSystemStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/status`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Gmail status
+                    if (data.gmail?.connected) {
+                        gmailStatus.className = 'status-indicator active';
+                        gmailDetail.textContent = data.gmail.email;
+                    } else {
+                        gmailStatus.className = 'status-indicator inactive';
+                        gmailDetail.textContent = 'Not connected';
+                    }
+                    
+                    // Calendar status
+                    if (data.calendar?.connected) {
+                        calendarStatus.className = 'status-indicator active';
+                        calendarDetail.textContent = data.calendar.email;
+                    } else {
+                        calendarStatus.className = 'status-indicator inactive';
+                        calendarDetail.textContent = 'Not connected';
+                    }
+                    
+                    // Voice status
+                    voiceStatus.className = 'status-indicator active';
+                    voiceDetail.textContent = 'Ready';
+                }
+            } catch (error) {
+                console.error('Status check failed:', error);
+                showError('Failed to check system status');
+            }
+        }
+        
+        // Voice button handler
+        voiceButton.addEventListener('click', () => {
+            if (isSpeaking) return;
+            
+            if (isListening) {
+                stopListening();
+            } else {
+                startListening();
+            }
+        });
+        
+        // Start listening
+        function startListening() {
+            isListening = true;
+            voiceButton.classList.add('listening');
+            voiceHint.textContent = 'Listening...';
+            transcript.textContent = 'Listening...';
+            hideError();
+            
+            recognition.start();
+        }
+        
+        // Stop listening
+        function stopListening() {
+            isListening = false;
+            voiceButton.classList.remove('listening');
+            voiceHint.textContent = 'Click to start listening';
+            
+            recognition.stop();
+        }
+        
+        // Recognition handlers
+        recognition.onresult = (event) => {
+            let finalTranscript = '';
+            let interimTranscript = '';
+            
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const result = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    finalTranscript += result;
+                } else {
+                    interimTranscript += result;
+                }
+            }
+            
+            transcript.textContent = finalTranscript || interimTranscript;
+            
+            if (finalTranscript) {
+                processCommand(finalTranscript);
+            }
+        };
+        
+        recognition.onerror = (event) => {
+            console.error('Recognition error:', event.error);
+            stopListening();
+            
+            if (event.error === 'no-speech') {
+                transcript.textContent = 'No speech detected. Try again.';
+            } else {
+                showError(`Voice recognition error: ${event.error}`);
+            }
+        };
+        
+        recognition.onend = () => {
+            stopListening();
+        };
+        
+        // Process voice command
+        async function processCommand(command) {
+            transcript.textContent = `Processing: "${command}"`;
+            voiceHint.textContent = 'Processing command...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/voice/command`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ command }),
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayResults(data);
+                    if (data.response) {
+                        await speakResponse(data.response);
+                    }
+                } else {
+                    showError(data.error || 'Command failed');
+                }
+            } catch (error) {
+                console.error('Command processing error:', error);
+                showError('Failed to process command');
+            }
+            
+            voiceHint.textContent = 'Click to start listening';
+        }
+        
+        // Display results
+        function displayResults(data) {
+            resultsContainer.innerHTML = '';
+            resultsContainer.className = 'results-container active';
+            
+            if (data.type === 'emails' && data.data) {
+                const card = createResultCard('email', 'Emails', data.account || 'Business Account', data.data);
+                resultsContainer.appendChild(card);
+            } else if (data.type === 'calendar' && data.data) {
+                const card = createResultCard('calendar', 'Calendar', data.account || 'Personal Calendar', data.data);
+                resultsContainer.appendChild(card);
+            } else if (data.type === 'combined' && data.data) {
+                if (data.data.emails) {
+                    const emailCard = createResultCard('email', 'Emails', data.accounts?.email || 'Business', data.data.emails);
+                    resultsContainer.appendChild(emailCard);
+                }
+                if (data.data.events) {
+                    const calendarCard = createResultCard('calendar', 'Calendar', data.accounts?.calendar || 'Personal', data.data.events);
+                    resultsContainer.appendChild(calendarCard);
+                }
+            }
+        }
+        
+        // Create result card
+        function createResultCard(type, title, subtitle, items) {
+            const card = document.createElement('div');
+            card.className = 'result-card';
+            
+            const iconSvg = type === 'email' 
+                ? '<svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>'
+                : '<svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>';
+            
+            let content = `
+                <div class="result-header">
+                    <div class="result-icon ${type}">
+                        ${iconSvg}
+                    </div>
+                    <div>
+                        <div class="result-title">${title}</div>
+                        <div class="result-subtitle">${subtitle}</div>
+                    </div>
+                </div>
+                <div class="result-content">
+            `;
+            
+            if (items && items.length > 0) {
+                items.slice(0, 5).forEach(item => {
+                    if (type === 'email') {
+                        content += `
+                            <div class="result-item">
+                                <div class="result-item-header">
+                                    <div class="result-item-title">${item.from || 'Unknown sender'}</div>
+                                    <div class="result-item-time">${formatTime(item.date)}</div>
+                                </div>
+                                <div class="result-item-content">
+                                    <strong>${item.subject || 'No subject'}</strong><br>
+                                    ${item.snippet || 'No preview available'}
+                                </div>
+                            </div>
+                        `;
+                    } else if (type === 'calendar') {
+                        const startTime = item.start?.dateTime ? formatTime(item.start.dateTime) : 'All day';
+                        content += `
+                            <div class="result-item">
+                                <div class="result-item-header">
+                                    <div class="result-item-title">${item.summary || 'Untitled event'}</div>
+                                    <div class="result-item-time">${startTime}</div>
+                                </div>
+                                <div class="result-item-content">
+                                    ${item.location ? `Location: ${item.location}<br>` : ''}
+                                    ${item.description || 'No description'}
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+            } else {
+                content += '<p style="color: #94a3b8; text-align: center; padding: 20px;">No items to display</p>';
+            }
+            
+            content += '</div>';
+            card.innerHTML = content;
+            
+            return card;
+        }
+        
+        // Format time
+        function formatTime(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const now = new Date();
+            const isToday = date.toDateString() === now.toDateString();
+            
+            if (isToday) {
+                return date.toLocaleTimeString('en-US', { 
+                    hour: 'numeric', 
+                    minute: '2-digit' 
+                });
+            } else {
+                return date.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit'
+                });
+            }
+        }
+        
+        // Speak response using ElevenLabs TTS
+        async function speakResponse(text) {
+            isSpeaking = true;
+            voiceButton.classList.add('speaking');
+            voiceDetail.textContent = 'Speaking...';
+            
+            try {
+                // For now, use browser TTS as fallback
+                // In production, this would call ElevenLabs API through the server
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.95;
+                utterance.pitch = 1.0;
+                
+                utterance.onend = () => {
+                    isSpeaking = false;
+                    voiceButton.classList.remove('speaking');
+                    voiceDetail.textContent = 'Ready';
+                };
+                
+                window.speechSynthesis.speak(utterance);
+            } catch (error) {
+                console.error('TTS error:', error);
+                isSpeaking = false;
+                voiceButton.classList.remove('speaking');
+                voiceDetail.textContent = 'Ready';
+            }
+        }
+        
+        // Simulate command (for quick command chips)
+        function simulateCommand(command) {
+            if (isListening || isSpeaking) return;
+            transcript.textContent = `"${command}"`;
+            processCommand(command);
+        }
+        
+        // Show error
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.className = 'error-message active';
+            setTimeout(hideError, 5000);
+        }
+        
+        // Hide error
+        function hideError() {
+            errorMessage.className = 'error-message';
+        }
+        
+        // Welcome message
+        setTimeout(() => {
+            speakResponse("Welcome to MTL Craft Cocktails voice assistant. I can help you check your business emails and personal calendar. Click the microphone to start.");
+        }, 1000);
+        
+        // Periodic status check
+        setInterval(checkSystemStatus, 30000);
+    </script>
+</body>
+</html>
