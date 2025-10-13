@@ -1,21 +1,15 @@
 {
-    "name": "superpowers",
-    "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
-    "version": "1.0.0",
+  "name": "superpowers",
+  "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
+  "version": "2.0.2",
+  "author": {
     "author": {
-        "name": "Joe Goldin",
-        "email": "joe@fsck.com"
-    },
-    "homepage": "https://github.com/joegoldin/superpowers",
-    "repository": "https://github.com/joegoldin/superpowers",
-    "license": "MIT",
-    "keywords": [
-        "skills",
-        "tdd",
-        "debugging",
-        "collaboration",
-        "best-practices",
-        "workflows"
-    ],
-    "category": "productivity"
+      "name": "Joe Goldin",
+      "email": "joe@fsck.com"
+  },
+  "homepage": "https://github.com/joegoldin/superpowers",
+  "repository": "https://github.com/joegoldin/superpowers",
+  "license": "MIT",
+  "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows"],
+  "category": "productivity"
 }

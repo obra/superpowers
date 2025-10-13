@@ -7,7 +7,7 @@ set -euo pipefail
 export SUPERPOWERS_SKILLS_ROOT="${HOME}/.config/superpowers/skills"
 
 # Run skills initialization script (handles clone/fetch/auto-update)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 init_output=$("${PLUGIN_ROOT}/lib/initialize-skills.sh" 2>&1 || echo "")
 
@@ -15,7 +15,7 @@ init_output=$("${PLUGIN_ROOT}/lib/initialize-skills.sh" 2>&1 || echo "")
 skills_updated=$(echo "$init_output" | grep "SKILLS_UPDATED=true" || echo "")
 skills_behind=$(echo "$init_output" | grep "SKILLS_BEHIND=true" || echo "")
 # Remove status flags from display output
-init_output=$(echo "$init_output" | grep -v "SKILLS_UPDATED=true" | grep -v "SKILLS_BEHIND=true")
+init_output=$(echo "$init_output" | grep -v "SKILLS_UPDATED=true" | grep -v "SKILLS_BEHIND=true" || true)
 
 # Run find-skills to show all available skills
 find_skills_output=$("${SUPERPOWERS_SKILLS_ROOT}/skills/using-skills/find-skills" 2>&1 || echo "Error running find-skills")

@@ -1,3 +1,21 @@
+# Superpowers Release Notes
+
+## v2.0.2 (2025-10-12)
+
+### Bug Fixes
+
+- **Fixed false warning when local skills repo is ahead of upstream** - The initialization script was incorrectly warning "New skills available from upstream" when the local repository had commits ahead of upstream. The logic now correctly distinguishes between three git states: local behind (should update), local ahead (no warning), and diverged (should warn).
+
+## v2.0.1 (2025-10-12)
+
+### Bug Fixes
+
+- **Fixed session-start hook execution in plugin context** (#8, PR #9) - The hook was failing silently with "Plugin hook error" preventing skills context from loading. Fixed by:
+  - Using `${BASH_SOURCE[0]:-$0}` fallback when BASH_SOURCE is unbound in Claude Code's execution context
+  - Adding `|| true` to handle empty grep results gracefully when filtering status flags
+
+---
+
 # Superpowers v2.0.0 Release Notes
 
 ## Overview

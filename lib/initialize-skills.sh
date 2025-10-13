@@ -27,7 +27,7 @@ if [ -d "$SKILLS_DIR/.git" ]; then
     if [ -n "$LOCAL" ] && [ -n "$REMOTE" ] && [ "$LOCAL" != "$REMOTE" ]; then
         # Check if we can fast-forward (local is ancestor of remote)
         if [ "$LOCAL" = "$BASE" ]; then
-            # Fast-forward merge is possible
+            # Fast-forward merge is possible - local is behind
             echo "Updating skills to latest version..."
             if git merge --ff-only @{u} 2>&1; then
                 echo "✓ Skills updated successfully"
@@ -35,10 +35,11 @@ if [ -d "$SKILLS_DIR/.git" ]; then
             else
                 echo "Failed to update skills"
             fi
-        else
-            # Can't fast-forward - will be reported at the end
+        elif [ "$REMOTE" != "$BASE" ]; then
+            # Remote has changes (local is behind or diverged)
             echo "SKILLS_BEHIND=true"
         fi
+        # If REMOTE = BASE, local is ahead - no action needed
     fi
 
     exit 0
