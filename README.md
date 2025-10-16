@@ -38,8 +38,15 @@ Read the introduction: [Superpowers for Claude Code](https://blog.fsck.com/2025/
 /plugin marketplace add obra/superpowers-marketplace
 /plugin install superpowers@superpowers-marketplace
 ```
-
 The plugin automatically handles skills repository setup on first run.
+
+### Via One-Command Installation 
+Use the [Claude Plugins CLI](https://claude-plugins.dev) to skip the marketplace setup:
+```bash
+npx claude-plugins install @obra/superpowers-marketplace/superpowers
+```
+
+This automatically adds the marketplace and installs the plugin in a single step.
 
 ### Verify Installation
 
