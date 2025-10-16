@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh"
+            "command": "if command -v pwsh &>/dev/null || command -v powershell &>/dev/null; then powershell -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.ps1\"; else bash \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh\"; fi"
           }
         ]
       }
