@@ -1,6 +1,8 @@
 ---
-name: Code-Review-Reception
-description: Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation
+name: Code Review Reception
+description: Receive and act on code review feedback with technical rigor, not performative agreement or blind implementation
+when_to_use: when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable
+version: 1.1.0
 ---
 
 # Code Review Reception
@@ -55,6 +57,154 @@ You understand 1,2,3,6. Unclear on 4,5.
 ❌ WRONG: Implement 1,2,3,6 now, ask about 4,5 later
 ✅ RIGHT: "I understand items 1,2,3,6. Need clarification on 4 and 5 before proceeding."
 ```
+
+## GitHub Workflow Mechanics
+
+**IMPORTANT: The commands in this section require:**
+1. Repository remote hosted on github.com
+2. GitHub CLI (`gh`) installed
+
+**Before using any GitHub workflow mechanics, verify both prerequisites:**
+
+```bash
+# Check if remote is github.com
+git remote get-url origin
+# Should contain "github.com" - if it shows gitlab.com, bitbucket.org, etc., skip this section
+
+# Check if gh CLI is installed
+gh --version
+# Should show version number - if command not found, skip this section
+```
+
+**If either check fails:**
+- Repository not on github.com: Use alternative review workflow (email, GitLab MR, Bitbucket PR, etc.)
+- `gh` CLI not installed: Use GitHub web interface or ask Nick if you should install `gh`
+
+**Only proceed with commands below if both checks pass.**
+
+### Viewing Review Comments
+
+```bash
+# View PR with all review comments
+gh pr view <number>
+
+# Get structured JSON data for programmatic processing
+gh pr view <number> --json comments,reviews,reviewRequests
+
+# View PR diff to see what changed
+gh pr diff <number>
+
+# View PR checks and CI status
+gh pr checks <number>
+
+# Get review comments with full details (file, line, body)
+gh api repos/{owner}/{repo}/pulls/{number}/comments
+
+# Get comments including multi-line ranges
+gh api repos/{owner}/{repo}/pulls/{number}/comments --jq '.[] | {id, path, start_line, line, body}'
+```
+
+**For complex reviews:** Use `--json` to get structured data you can parse and process.
+
+**Multi-line comments:** Review comments can span multiple lines. `start_line` shows where comment begins, `line` shows where it ends. If `start_line` is null, it's a single-line comment.
+
+### Responding to Review Comments
+
+**Two approaches:**
+
+#### Option 1: General PR Comment
+```bash
+# Add general comment summarizing fixes
+gh pr comment <number> --body "Addressed review feedback:
+- Fixed validation logic per comment on utils.py:42
+- Refactored error handling per comment on api.py:15
+All changes pushed in commit abc123"
+```
+
+**Use when:** Summarizing multiple fixes, providing overall context
+
+#### Option 2: Reply to Specific Review Thread
+```bash
+# First, get comment ID from review comments
+gh api repos/{owner}/{repo}/pulls/{number}/comments --jq '.[] | {id, path, line, body}'
+
+# Reply to specific comment thread
+gh api repos/{owner}/{repo}/pulls/comments/{comment_id}/replies \
+  -f body="Fixed in commit abc123. [Technical explanation]"
+```
+
+**Use when:**
+- Replying to specific technical questions
+- Providing file/line-specific context
+- Pushing back on specific suggestions
+- Threading discussion to keep context
+
+#### Editing Your Own Comments
+
+```bash
+# Edit a comment you posted
+gh api repos/{owner}/{repo}/pulls/comments/{comment_id} \
+  -X PATCH \
+  -f body="Corrected response: [updated text]"
+```
+
+**Use when:** You posted incorrect information and need to fix it
+
+### Resolution Workflow
+
+**GitHub convention:**
+- **Reviewer marks resolved** when satisfied with changes
+
+**If you implemented fix:**
+1. Reply to review thread with what changed
+2. Reference commit: "Fixed in abc123"
+3. Let reviewer verify and mark resolved, you should never attempt to mark a comment resolved.
+4. Don't assume your fix is correct
+
+
+### Commit Strategy for Review Fixes
+
+```bash
+# One commit per distinct fix (preferred)
+git commit -m "Fix: [specific issue from review]"
+
+# Push changes
+git push  # Triggers notification to reviewers
+```
+
+**When to push:**
+- After fixing all related items
+- After all items if changes are tightly coupled
+- Incrementally if fixes are independent
+
+**Commit messages should reference what review feedback addressed**, not just "address review comments".
+
+### Requesting Re-Review
+
+```bash
+# After implementing all feedback, push changes first
+git push
+
+# Verify CI/build status before requesting re-review
+gh pr checks <number>
+
+# Then request re-review from specific reviewer
+gh pr review <number> --request-reviewer @username
+
+# Or from team
+gh pr review <number> --request-reviewer @org/team
+```
+
+**When to request:**
+- After implementing ALL feedback items
+- After clarifying unclear items
+- After pushing changes
+- After CI checks pass (don't request re-review with failing CI)
+- Not before push - reviewers see notifications anyway
+
+**Note:** Pushing new commits notifies reviewers automatically. Only use `--request-reviewer` if you need explicit re-review request.
+
+**CI status matters:** Reviewers typically wait for green checks before reviewing. Don't request re-review if CI is failing - fix the failures first.
 
 ## Source-Specific Handling
 
