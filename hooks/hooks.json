@@ -10,6 +10,28 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/hook_enforce_modern_tools.py"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|MultiEdit|Write|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "test -f .pre-commit-config.yaml && { prek run --all-files 2>&1 || exit 2; }"
+          }
+        ]
+      }
     ]
   }
 }
