@@ -100,3 +100,17 @@ Each rejection includes reasoning to prevent future reconsideration without new 
   4. Project-specific templates - generate code matching existing patterns rather than generic templates
 - **Reason**: Session state infrastructure (scaffold/plan.md, scaffold/state.json) adds complexity. Pattern discovery concept valuable for enhancing existing planning workflows without dedicated session state management. Resume capability useful but heavyweight for scaffolding use case.
 
+### security-scan
+- **Source**: CCPlugins/commands/security-scan.md
+- **Type**: Command
+- **Evaluated**: 2025-10-22
+- **Decision**: EXTRACT_CONCEPTS (not full integration)
+- **Concepts to Extract**:
+  1. Multi-dimensional vulnerability assessment - authentication, injection, secrets, dependencies, configuration
+  2. Risk-based prioritization - Critical/High/Medium/Low categorization with remediation order
+  3. Extended thinking for complex threats - chain vulnerabilities, business logic flaws, timing attacks
+  4. Secrets detection patterns - hardcoded credentials, API keys, configuration exposures
+  5. Incremental remediation workflow - fix, verify, update plan, move to next
+  6. Safe remediation patterns - secrets to env vars, hardcoded to config, weak validation to strong
+- **Reason**: Session state infrastructure (security-scan/plan.md, security-scan/state.json) adds complexity. Security analysis concepts valuable but dedicated command with state management may be overkill. Better as enhancement to systematic-debugging or as security analysis patterns within existing workflows.
+
