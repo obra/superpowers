@@ -166,3 +166,20 @@ Each rejection includes reasoning to prevent future reconsideration without new 
 - **Evaluated**: 2025-10-22
 - **Rejection Reason**: Primarily reference material - catalog of common architectural patterns with example output format. Actual pattern recognition is basic Claude capability. The value is in comprehensive list and structured format, but doesn't constitute teachable technique or systematic process. Educational content/templates rather than skill. Pattern explanation already within base capabilities without dedicated command.
 
+### update-pr-summary
+
+- **Source**: claude-codex-settings/.claude/commands/update-pr-summary.md
+- **Type**: Command
+- **Evaluated**: 2025-10-22
+- **Decision**: EXTRACT_CONCEPTS (not full integration)
+- **Concepts to Extract**:
+  1. Progressive reasoning framework - open-ended exploration before applying standard patterns
+  2. Multi-lens categorization - analyze through multiple perspectives (technical, business, risk, architectural)
+  3. Systematic verification with test cases - positive/negative/edge case/context validation of findings
+  4. Steel man reasoning - argue FOR implementation before critiquing
+  5. Bias detection framework - check for confirmation, recency, complexity, and framework biases
+  6. Alternative perspective simulation - security reviewer, performance engineer, new team member, end user views
+  7. Thinking budget allocation - complexity-based resource allocation (high/medium/low complexity indicators)
+  8. Constraint optimization - balance conciseness vs completeness, accuracy vs accessibility
+- **Reason**: GitHub-specific workflow automation. Exceptional analytical frameworks (7-phase comprehensive methodology) but implementation requires GitHub integration. Core analytical techniques (progressive reasoning, multi-lens analysis, bias detection, systematic verification) valuable for enhancing any analysis work beyond just PRs.
+
