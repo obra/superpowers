@@ -1,86 +1,104 @@
 ---
-name: Predict Issues
-description: Proactive problem identification through forward-looking risk analysis with likelihood, impact, timeline, and effort assessment
-when_to_use: after implementing features, before deployment, during architecture reviews, or when evaluating technical decisions
-version: 1.0.0
+name: predict-issues
+description: Use when completing features, before deployment, or during code reviews - identifies potential problems through systematic risk analysis (likelihood × impact × timeline × effort)
 ---
 
-# Predictive Code Analysis
+# Predict Issues
 
-I'll analyze your codebase to predict potential problems before they impact your project.
+## Overview
 
-## Strategic Thinking Process
+Proactive problem identification prevents issues before they impact projects. Analyze codebases for patterns that commonly lead to problems, assess risk systematically, and provide actionable recommendations with priority levels.
 
-<think>
-To make accurate predictions, I need to consider:
+## When to Use
 
-1. **Pattern Recognition**
-   - Which code patterns commonly lead to problems?
-   - Are there growing complexity hotspots?
-   - Do I see anti-patterns that will cause issues at scale?
-   - Are there ticking time bombs (hardcoded values, assumptions)?
+- After implementing features
+- Before deployment
+- During architecture reviews
+- When evaluating technical decisions
+- During code reviews for new functionality
 
-2. **Risk Assessment Framework**
-   - Likelihood: How probable is this issue to occur?
-   - Impact: How severe would the consequences be?
-   - Timeline: When might this become a problem?
-   - Effort: How hard would it be to fix now vs later?
+## Risk Assessment Framework
 
-3. **Common Problem Categories**
-   - Performance: O(n²) algorithms, memory leaks, inefficient queries
-   - Maintainability: High complexity, poor naming, tight coupling
-   - Security: Input validation gaps, exposed secrets, weak auth
-   - Scalability: Hardcoded limits, single points of failure
+Evaluate each potential issue across four dimensions:
 
-4. **Prediction Strategy**
-   - Start with highest risk areas (critical path code)
-   - Look for patterns that break at 10x, 100x scale
-   - Check for technical debt accumulation
-   - Identify brittleness in integration points
-</think>
+| Dimension | Assessment |
+|-----------|-----------|
+| **Likelihood** | How probable is this issue? Consider code patterns, usage patterns, scale trends |
+| **Impact** | How severe would consequences be? Downtime, data loss, security breach, poor UX |
+| **Timeline** | When might this become a problem? Immediate, weeks, months, at 10x scale |
+| **Effort** | How hard to fix now vs later? Technical debt cost, refactoring complexity |
 
-Based on this analysis framework, I'll use native tools for comprehensive analysis:
-- **Grep tool** to search for problematic patterns
-- **Glob tool** to analyze file structures and growth
-- **Read tool** to examine complex functions and hotspots
+## Problem Categories
 
-I'll examine:
-- Code complexity trends and potential hotspots
-- Performance bottleneck patterns forming
-- Maintenance difficulty indicators
-- Architecture stress points and scaling issues
-- Error handling gaps
+Focus analysis on these common categories:
 
-For each prediction, I'll:
-- Show specific code locations with file references
-- Explain why it's likely to cause future issues
-- Estimate potential timeline and impact
-- Suggest preventive measures with priority levels
+**Performance**
+- O(n²) algorithms that break at scale
+- Memory leaks and resource exhaustion
+- Inefficient database queries (N+1, missing indexes)
+- Unoptimized API calls
 
-When I find multiple issues, I'll create a TodoWrite list for systematic review and prioritization.
+**Maintainability**
+- High cyclomatic complexity
+- Poor naming and unclear intent
+- Tight coupling between components
+- Code duplication across modules
 
-Analysis areas:
-- Functions approaching complexity thresholds
-- Files with high change frequency (potential hotspots)
-- Dependencies with known issues or update requirements
-- Performance patterns that don't scale
-- Code duplication leading to maintenance issues
+**Security**
+- Input validation gaps
+- Exposed secrets or credentials
+- Weak authentication patterns
+- Missing authorization checks
 
-After analysis, I'll ask: "How would you like to track these predictions?"
-- Document in memory: I'll store risk assessments for future reference
-- Create tracking items: I'll generate a structured list of issues to address
-- Summary only: I'll provide actionable report without task creation
+**Scalability**
+- Hardcoded limits and assumptions
+- Single points of failure
+- Stateful designs that don't scale horizontally
+- Resource bottlenecks
 
-**Important**: I will NEVER:
-- Add "Created by Claude" or any AI attribution to issues
-- Include "Generated with Claude Code" in descriptions
-- Modify repository settings or permissions
-- Add any AI/assistant signatures or watermarks
+## Analysis Process
 
-Predictions will include:
-- Risk level assessment (Critical/High/Medium/Low)
-- Estimated timeline for potential issues
-- Specific remediation recommendations
-- Impact assessment on project goals
+1. **Identify risk areas**: Use Grep to find problematic patterns, Glob to analyze file structure growth, Read to examine complex functions
+2. **Assess each issue**: Apply risk framework (likelihood × impact × timeline × effort)
+3. **Prioritize findings**: Rank by risk level (Critical/High/Medium/Low)
+4. **Provide recommendations**: Specific, actionable fixes with effort estimates
 
-This helps prevent problems before they impact your project, saving time and maintaining code quality proactively.
+## Output Format
+
+For each prediction:
+- **Location**: Specific file and line references (e.g., [auth.ts:42](auth.ts#L42))
+- **Problem**: What pattern will cause issues and why
+- **Risk assessment**: Likelihood, impact, timeline, effort to fix
+- **Recommendation**: Concrete steps to prevent the problem
+- **Priority**: Critical/High/Medium/Low based on risk dimensions
+
+## Common Patterns to Check
+
+**Complexity hotspots**
+- Functions over 50 lines
+- Files with high change frequency
+- Deep nesting levels (>3)
+
+**Performance concerns**
+- Nested loops over collections
+- Synchronous operations in critical paths
+- Missing pagination for list operations
+
+**Architecture stress points**
+- Circular dependencies
+- God objects with too many responsibilities
+- Integration points without error handling
+
+**Technical debt indicators**
+- TODO/FIXME comments accumulating
+- Commented-out code blocks
+- Temporary workarounds still present
+
+## Tracking Predictions
+
+After analysis, ask user how to track findings:
+- **Memory**: Store risk assessments for future reference using remember()
+- **TodoWrite**: Create structured task list for systematic review
+- **Summary only**: Provide report without creating tasks
+
+Never add AI attribution, Claude Code watermarks, or assistant signatures to issues or reports.
