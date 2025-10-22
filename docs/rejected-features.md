@@ -155,3 +155,14 @@ Each rejection includes reasoning to prevent future reconsideration without new 
 - **Evaluated**: 2025-10-22
 - **Rejection Reason**: Redundant with existing code review infrastructure. Base repo already has comprehensive code review skills (requesting-code-review, receiving-code-review) and code-reviewer agent. Sub-agent specialization concept (security, performance, quality, architecture perspectives) interesting but existing skills already provide systematic review processes. No significant new concepts beyond what's already captured.
 
+---
+
+## claude-codex-settings
+
+### explain-architecture-pattern
+
+- **Source**: claude-codex-settings/.claude/commands/explain-architecture-pattern.md
+- **Type**: Command
+- **Evaluated**: 2025-10-22
+- **Rejection Reason**: Primarily reference material - catalog of common architectural patterns with example output format. Actual pattern recognition is basic Claude capability. The value is in comprehensive list and structured format, but doesn't constitute teachable technique or systematic process. Educational content/templates rather than skill. Pattern explanation already within base capabilities without dedicated command.
+
