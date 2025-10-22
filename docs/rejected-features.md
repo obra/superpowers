@@ -26,3 +26,20 @@ Each rejection includes reasoning to prevent future reconsideration without new 
 - **Evaluated**: 2025-10-22
 - **Rejection Reason**: Architecture mismatch. Designed for tracking single upstream (obra/superpowers-skills). This consolidation is one-way merge from multiple sources. Update model after consolidation will be manual feature evaluation, not automated git sync. Skill becomes obsolete post-consolidation.
 
+---
+
+## CCPlugins
+
+### implement
+- **Source**: CCPlugins/commands/implement.md
+- **Type**: Command
+- **Evaluated**: 2025-10-22
+- **Decision**: EXTRACT_CONCEPTS (not full integration)
+- **Concepts to Extract**:
+  1. External source adaptation (GitHub URLs, docs) with pattern matching to project architecture
+  2. Pattern discovery - analyzing codebase to understand existing conventions
+  3. Smart repo sampling for large external sources
+  4. Source-analysis.md artifact - deep comparison between original and implementation
+  5. Dependency resolution/mapping to existing project dependencies
+- **Reason**: Significant overlap with existing brainstorm/write-plan/execute-plan workflow. Complex session state management. Better to enhance existing skills with these concepts than duplicate workflow.
+
