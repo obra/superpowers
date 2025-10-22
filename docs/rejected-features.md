@@ -4,6 +4,10 @@ This document tracks features evaluated but not integrated during repository con
 
 Each rejection includes reasoning to prevent future reconsideration without new context.
 
+## Document Structure
+- **Rejected/Extract Concepts**: Features evaluated and decided upon
+- **Deferred for Future Exploration**: Large repositories worth deeper evaluation later
+
 ---
 
 ## superpowers-skills
@@ -251,4 +255,33 @@ Each rejection includes reasoning to prevent future reconsideration without new 
   1. Git notes retrospective annotation - technique for adding AI-generated explanatory notes to existing commit history using `git notes` (viewable with `git log --show-notes`), useful for understanding historical decisions, onboarding, and code archeology without rewriting history
   2. Multi-level changelog framework - daily (tactical/conversational, present tense, team-facing), weekly (thematic grouping by features/milestones, mixed technical/business impact), monthly (strategic overview, stakeholder-facing, metrics and achievements) with audience-appropriate language and detail levels
 - **Reason**: Architecture mismatch - external CLI wrapper that invokes Claude Code, not internal plugin/extension. Doesn't fit skills/commands/hooks/agents structure. Most prompts are simple formatting instructions already covered by other evaluations. However, git notes annotation technique and multi-level changelog abstraction framework provide structured approaches to documentation at different levels that could enhance existing practices.
+
+---
+
+# Deferred for Future Exploration
+
+These repositories contain potentially valuable concepts but require substantial evaluation effort beyond current consolidation scope.
+
+## SuperClaude_Framework
+
+### Entire Repository
+
+- **Source**: SuperClaude_Framework/ (entire repository)
+- **Type**: Complete meta-programming framework (v4.2.0)
+- **Evaluated**: 2025-10-22
+- **Decision**: DEFER for future exploration
+- **Scope**: 26 commands, 16 agents, 7 behavioral modes, 8 MCP server integrations
+- **Status**: Active maintenance, separate product with `/sc:` namespace
+- **Potentially Valuable Patterns**:
+  1. **Multi-expert panel consultation** - business-panel agent with 9 thought leader personas (Christensen, Porter, Drucker, Godin, Kim & Mauborgne, Collins, Taleb, Meadows, Doumont) using three interaction modes:
+     - DISCUSSION mode: Collaborative multi-perspective analysis with cross-pollination
+     - DEBATE mode: Structured adversarial analysis for stress-testing ideas
+     - SOCRATIC mode: Question-driven exploration for capability development
+  2. **Behavioral modes system** - 7 adaptive modes that modify Claude's behavior (Brainstorming, Business Panel, Deep Research, Orchestration, Token-Efficiency, Task Management, Introspection)
+  3. **MCP orchestration framework** - coordinated use of 8 MCP servers (Context7, Sequential, Magic, Playwright, Morphllm, Serena, Tavily, Chrome DevTools)
+  4. **Deep research capabilities** - autonomous multi-hop web research with adaptive planning strategies (Planning-Only, Intent-Planning, Unified), quality scoring, case-based learning
+  5. **PM agent learning system** - continuous learning through systematic documentation
+- **Coexistence**: Compatible with superpowers plugin (different namespace `/sc:` vs base commands/skills)
+- **Reason for Deferral**: Complete framework product with massive scope - evaluating all components would be disproportionate effort. Patterns are deeply integrated into framework architecture. Worth thorough future evaluation to extract teachable concepts from behavioral modes, multi-expert consultation patterns, and orchestration strategies.
+- **Future Work**: Systematic extraction of consultation frameworks, behavioral adaptation patterns, and orchestration strategies when time permits deeper analysis.
 
