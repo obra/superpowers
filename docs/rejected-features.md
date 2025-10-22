@@ -128,3 +128,9 @@ Each rejection includes reasoning to prevent future reconsideration without new 
   6. Systematic codebase analysis technique - structured approach to exploring unfamiliar codebases
 - **Reason**: Excellent analysis technique but as command it's workflow automation. The systematic discovery process is teachable and valuable for enhancing brainstorming or codebase exploration. Better as analysis pattern/technique within existing skills than standalone command.
 
+### todos-to-issues
+- **Source**: CCPlugins/commands/todos-to-issues.md
+- **Type**: Command
+- **Evaluated**: 2025-10-22
+- **Rejection Reason**: GitHub-specific workflow automation, not a teachable technique. Value is in automating issue creation rather than teaching systematic approach. Pre-flight checks concept already captured in contributing evaluation. TODO extraction is simple grep. This is utility automation rather than skill/pattern. If needed later, could be simple script but doesn't fit skill/command framework.
+
