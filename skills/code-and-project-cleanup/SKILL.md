@@ -1,5 +1,5 @@
 ---
-name: code-and-project-cleanup
+name: Code and Project Cleanup
 description: Use before commits or when project feels cluttered - safely removes unnecessary comments, debug statements, temp files, and build artifacts with git checkpoints
 ---
 

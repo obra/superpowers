@@ -1,5 +1,5 @@
 ---
-name: predict-issues
+name: Predicting Issues
 description: Use when completing features, before deployment, or during code reviews - identifies potential problems through systematic risk analysis (likelihood × impact × timeline × effort)
 ---
 

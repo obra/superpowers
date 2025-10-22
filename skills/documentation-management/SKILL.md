@@ -1,5 +1,5 @@
 ---
-name: documentation-management
+name: Documentation Management
 description: Use when documentation is outdated after code changes - systematically updates README, CHANGELOG, API docs, and guides based on actual implementation changes
 ---
 

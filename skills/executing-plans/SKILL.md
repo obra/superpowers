@@ -1,5 +1,5 @@
 ---
-name: executing-plans
+name: Executing Plans
 description: Use when partner provides a complete implementation plan to execute in controlled batches with review checkpoints - loads plan, reviews critically, executes tasks in batches, reports for review between batches
 ---
 
