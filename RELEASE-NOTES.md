@@ -1,5 +1,27 @@
 # Superpowers Release Notes
 
+## v3.2.2 (2025-10-21)
+
+### Improvements
+
+**Strengthened using-superpowers skill against agent rationalization**
+- Added EXTREMELY-IMPORTANT block with absolute language about mandatory skill checking
+  - "If even 1% chance a skill applies, you MUST read it"
+  - "You do not have a choice. You cannot rationalize your way out."
+- Added MANDATORY FIRST RESPONSE PROTOCOL checklist
+  - 5-step process agents must complete before any response
+  - Explicit "responding without this = failure" consequence
+- Added Common Rationalizations section with 8 specific evasion patterns
+  - "This is just a simple question" → WRONG
+  - "I can check files quickly" → WRONG
+  - "Let me gather information first" → WRONG
+  - Plus 5 more common patterns observed in agent behavior
+
+These changes address observed agent behavior where they rationalize around skill usage despite clear instructions. The forceful language and pre-emptive counter-arguments aim to make non-compliance harder.
+
+### Files Changed
+- Updated: `skills/using-superpowers/SKILL.md` - Added three layers of enforcement to prevent skill-skipping rationalization
+
 ## v3.2.1 (2025-10-20)
 
 ### New Features

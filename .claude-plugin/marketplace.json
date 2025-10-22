@@ -8,8 +8,8 @@
   "plugins": [
     {
       "name": "superpowers",
-      "description": "Fork of the superpowers plugin with custom settings",
-      "version": "1.0.0",
+      "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
+      "version": "3.2.2",
       "source": "./",
       "author": {
         "name": "Jacob Hurlburt"
