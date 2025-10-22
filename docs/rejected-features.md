@@ -20,3 +20,9 @@ Each rejection includes reasoning to prevent future reconsideration without new 
 - **Evaluated**: 2025-10-22
 - **Rejection Reason**: Architecture mismatch. Designed for INDEX.md-based wiki structure, but superpowers uses Claude Code first-party skills system without INDEX files. Bash scripts expect structure that doesn't exist. Would require complete rewrite for minimal benefit.
 
+### pulling-updates-from-skills-repository
+- **Source**: superpowers-skills/skills/meta/pulling-updates-from-skills-repository/
+- **Type**: Skill
+- **Evaluated**: 2025-10-22
+- **Rejection Reason**: Architecture mismatch. Designed for tracking single upstream (obra/superpowers-skills). This consolidation is one-way merge from multiple sources. Update model after consolidation will be manual feature evaluation, not automated git sync. Skill becomes obsolete post-consolidation.
+
