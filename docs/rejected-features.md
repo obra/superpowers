@@ -114,3 +114,17 @@ Each rejection includes reasoning to prevent future reconsideration without new 
   6. Safe remediation patterns - secrets to env vars, hardcoded to config, weak validation to strong
 - **Reason**: Session state infrastructure (security-scan/plan.md, security-scan/state.json) adds complexity. Security analysis concepts valuable but dedicated command with state management may be overkill. Better as enhancement to systematic-debugging or as security analysis patterns within existing workflows.
 
+### understand
+- **Source**: CCPlugins/commands/understand.md
+- **Type**: Command
+- **Evaluated**: 2025-10-22
+- **Decision**: EXTRACT_CONCEPTS (not full integration)
+- **Concepts to Extract**:
+  1. 5-phase discovery process - project understanding, architecture, patterns, dependencies, synthesis
+  2. Technology stack detection - identify frameworks, libraries, build tools, testing setup
+  3. Pattern recognition across codebase - naming conventions, architectural patterns, code organization
+  4. Integration point mapping - identify how components connect and communicate
+  5. Mental model generation - create comprehensive understanding for onboarding/context
+  6. Systematic codebase analysis technique - structured approach to exploring unfamiliar codebases
+- **Reason**: Excellent analysis technique but as command it's workflow automation. The systematic discovery process is teachable and valuable for enhancing brainstorming or codebase exploration. Better as analysis pattern/technique within existing skills than standalone command.
+
