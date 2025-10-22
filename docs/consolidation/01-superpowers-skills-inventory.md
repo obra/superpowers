@@ -51,3 +51,23 @@
 - skills/using-skills/SKILL.md
 
 ## Other Directories
+
+---
+
+## Evaluation Summary
+
+**Evaluated:** 2025-10-22
+
+**Results:**
+- **New skills integrated:** 8
+  - tracing-knowledge-lineages (research)
+  - simplification-cascades, collision-zone-thinking, meta-pattern-recognition, inversion-exercise, scale-game, when-stuck (problem-solving)
+  - preserving-productive-tensions (architecture)
+- **Attribution docs added:** 3 (ABOUT.md for problem-solving, research, architecture)
+- **Rejected:** 3
+  - remembering-conversations (redundant with local-semantic-memory MCP)
+  - gardening-skills-wiki (architecture mismatch)
+  - pulling-updates-from-skills-repository (architecture mismatch)
+- **Existing skills:** 20 skills already present in base repo with current implementations
+
+**Conclusion:** All valuable new capabilities from superpowers-skills have been integrated. Existing skills in base repo are current.
