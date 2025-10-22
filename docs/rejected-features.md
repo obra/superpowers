@@ -148,3 +148,10 @@ Each rejection includes reasoning to prevent future reconsideration without new 
   5. Error recovery - handle commit failures with clear guidance
 - **Reason**: Core workflow patterns valuable but full command is automation. Pre-commit gates and message generation from change analysis are concepts that enhance git workflow. Repository has no existing commit command/policy, so these patterns fill a gap conceptually.
 
+### review
+
+- **Source**: CCPlugins/commands/review.md
+- **Type**: Command
+- **Evaluated**: 2025-10-22
+- **Rejection Reason**: Redundant with existing code review infrastructure. Base repo already has comprehensive code review skills (requesting-code-review, receiving-code-review) and code-reviewer agent. Sub-agent specialization concept (security, performance, quality, architecture perspectives) interesting but existing skills already provide systematic review processes. No significant new concepts beyond what's already captured.
+
