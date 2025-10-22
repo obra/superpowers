@@ -183,3 +183,23 @@ Each rejection includes reasoning to prevent future reconsideration without new 
   8. Constraint optimization - balance conciseness vs completeness, accuracy vs accessibility
 - **Reason**: GitHub-specific workflow automation. Exceptional analytical frameworks (7-phase comprehensive methodology) but implementation requires GitHub integration. Core analytical techniques (progressive reasoning, multi-lens analysis, bias detection, systematic verification) valuable for enhancing any analysis work beyond just PRs.
 
+### pr-manager
+
+- **Source**: claude-codex-settings/.claude/agents/pr-manager.md
+- **Type**: Agent
+- **Evaluated**: 2025-10-22
+- **Decision**: EXTRACT_CONCEPTS (not full integration)
+- **Concepts to Extract**:
+  1. Documentation synchronization pattern - review diff against target branch to identify README/docs affected by changes, update docs to match code changes before PR creation
+  2. PR formatting standards - title ≤72 chars, brief summary + bullet points, no test plans, before/after code examples for significant changes
+  3. Inline markdown links to code - `[file.py:42](file.py#L42)` format for referencing specific code locations in PR descriptions
+  4. Source verification for claims - when PR includes config/API version changes, verify with web search and include source links inline
+- **Reason**: Bash tool already provides comprehensive PR creation workflow instructions - this agent duplicates that automation. Pattern matches todos-to-issues rejection (GitHub utility automation). Valuable elements are formatting standards and documentation synchronization checks, not the workflow orchestration. Hard dependency on commit-manager (not yet evaluated) adds coupling. Core workflow automation rather than teachable technique.
+
+### create-pr
+
+- **Source**: claude-codex-settings/.claude/commands/create-pr.md
+- **Type**: Command
+- **Evaluated**: 2025-10-22
+- **Rejection Reason**: Thin wrapper to pr-manager agent with no independent value. Since pr-manager is EXTRACT_CONCEPTS (not kept as agent), this wrapper has no purpose. Duplicates Bash tool's built-in PR workflow capabilities. Pattern matches todos-to-issues rejection (GitHub utility automation).
+
