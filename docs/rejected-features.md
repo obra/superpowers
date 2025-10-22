@@ -57,3 +57,19 @@ Each rejection includes reasoning to prevent future reconsideration without new 
   6. Complexity hotspot detection - identify code areas needing refactoring
 - **Reason**: Heavy 6-phase workflow with complex session state management. Core safety concepts (continuous validation, de-para mapping) would enhance existing workflows without duplicating infrastructure. Overlap with existing systematic-debugging skill.
 
+### contributing
+- **Source**: CCPlugins/commands/contributing.md
+- **Type**: Command
+- **Evaluated**: 2025-10-22
+- **Decision**: EXTRACT_CONCEPTS (not full integration)
+- **Concepts to Extract**:
+  1. Automatic issue discovery - scan remote repo for bugs/features matching your changes
+  2. Smart matching algorithm - link code changes to existing issues by keyword/file analysis
+  3. Proactive issue creation - create issues in project style if no matches exist
+  4. Context detection - adapts to active session vs post-implementation vs cold start vs mid-dev
+  5. Mandatory pre-flight checks - STOP if build/test/lint fails (hard gate)
+  6. PR style matching - analyze existing PRs to match project tone/format
+  7. Git workflow detection - identify Git Flow, GitHub Flow, GitLab Flow, or custom
+  8. Smart PR splitting - detect multiple features and suggest logical split
+- **Reason**: Duplicates existing finishing-a-development-branch skill. Core concepts (automatic issue discovery, context detection, mandatory checks, style matching) would enhance existing skill without duplicating workflow.
+
