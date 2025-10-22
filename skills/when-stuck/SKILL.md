@@ -43,12 +43,12 @@ digraph stuck_dispatch {
     scale -> scale_skill [label="yes"];
     bugs -> debug [label="yes"];
 
-    simp [label="skills/problem-solving/\nsimplification-cascades", shape=box, style="rounded,filled", fillcolor=lightgreen];
-    collision [label="skills/problem-solving/\ncollision-zone-thinking", shape=box, style="rounded,filled", fillcolor=lightgreen];
-    meta [label="skills/problem-solving/\nmeta-pattern-recognition", shape=box, style="rounded,filled", fillcolor=lightgreen];
-    invert [label="skills/problem-solving/\ninversion-exercise", shape=box, style="rounded,filled", fillcolor=lightgreen];
-    scale_skill [label="skills/problem-solving/\nscale-game", shape=box, style="rounded,filled", fillcolor=lightgreen];
-    debug [label="skills/debugging/\nsystematic-debugging", shape=box, style="rounded,filled", fillcolor=lightyellow];
+    simp [label="skills/\nsimplification-cascades", shape=box, style="rounded,filled", fillcolor=lightgreen];
+    collision [label="skills/\ncollision-zone-thinking", shape=box, style="rounded,filled", fillcolor=lightgreen];
+    meta [label="skills/\nmeta-pattern-recognition", shape=box, style="rounded,filled", fillcolor=lightgreen];
+    invert [label="skills/\ninversion-exercise", shape=box, style="rounded,filled", fillcolor=lightgreen];
+    scale_skill [label="skills/\nscale-game", shape=box, style="rounded,filled", fillcolor=lightgreen];
+    debug [label="skills/\nsystematic-debugging", shape=box, style="rounded,filled", fillcolor=lightyellow];
 }
 ```
 
@@ -56,14 +56,14 @@ digraph stuck_dispatch {
 
 | How You're Stuck | Use This Skill |
 |------------------|----------------|
-| **Complexity spiraling** - Same thing 5+ ways, growing special cases | skills/problem-solving/simplification-cascades |
-| **Need innovation** - Conventional solutions inadequate, can't find fitting approach | skills/problem-solving/collision-zone-thinking |
-| **Recurring patterns** - Same issue different places, reinventing wheels | skills/problem-solving/meta-pattern-recognition |
-| **Forced by assumptions** - "Must be done this way", can't question premise | skills/problem-solving/inversion-exercise |
-| **Scale uncertainty** - Will it work in production? Edge cases unclear? | skills/problem-solving/scale-game |
-| **Code broken** - Wrong behavior, test failing, unexpected output | skills/debugging/systematic-debugging |
-| **Multiple independent problems** - Can parallelize investigation | skills/collaboration/dispatching-parallel-agents |
-| **Root cause unknown** - Symptom clear, cause hidden | skills/debugging/root-cause-tracing |
+| **Complexity spiraling** - Same thing 5+ ways, growing special cases | skills/simplification-cascades |
+| **Need innovation** - Conventional solutions inadequate, can't find fitting approach | skills/collision-zone-thinking |
+| **Recurring patterns** - Same issue different places, reinventing wheels | skills/meta-pattern-recognition |
+| **Forced by assumptions** - "Must be done this way", can't question premise | skills/inversion-exercise |
+| **Scale uncertainty** - Will it work in production? Edge cases unclear? | skills/scale-game |
+| **Code broken** - Wrong behavior, test failing, unexpected output | skills/systematic-debugging |
+| **Multiple independent problems** - Can parallelize investigation | skills/dispatching-parallel-agents |
+| **Root cause unknown** - Symptom clear, cause hidden | skills/root-cause-tracing |
 
 ## Process
 
