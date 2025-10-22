@@ -73,3 +73,18 @@ Each rejection includes reasoning to prevent future reconsideration without new 
   8. Smart PR splitting - detect multiple features and suggest logical split
 - **Reason**: Duplicates existing finishing-a-development-branch skill. Core concepts (automatic issue discovery, context detection, mandatory checks, style matching) would enhance existing skill without duplicating workflow.
 
+### test
+- **Source**: CCPlugins/commands/test.md
+- **Type**: Command
+- **Evaluated**: 2025-10-22
+- **Decision**: EXTRACT_CONCEPTS (not full integration)
+- **Concepts to Extract**:
+  1. Auto-fix patterns for common test failures - async/timing, mocks, imports, types, null handling, off-by-one errors
+  2. Log/console pattern detection - memory leaks, port conflicts, permission errors, timeouts, module resolution
+  3. Build/compilation verification before tests - catch build failures early
+  4. Context-aware test selection - test only modified files vs full suite based on situation
+  5. Failure analysis workflow - parse output, read failing test, read implementation, analyze passing tests, apply fix
+  6. Coverage gap identification - identify untested code paths and suggest critical missing tests
+  7. Flaky test pattern detection - analyze intermittent failures
+- **Reason**: Heavy workflow automation with dependencies on non-existent commands (/scaffold, /fix-todos, /security-scan, /format, /create-todos, /explain-like-senior, /review, /session-end) and session context (CLAUDE.md). Core troubleshooting patterns valuable but context-detection orchestration is command-level, not teachable technique. Existing test-driven-development and testing-anti-patterns skills cover philosophy; this adds troubleshooting patterns.
+
