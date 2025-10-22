@@ -237,3 +237,18 @@ Each rejection includes reasoning to prevent future reconsideration without new 
   5. Over-engineering prevention - compare planned approach against existing implementations to identify simpler established patterns
 - **Reason**: Systematic pattern discovery and alignment technique genuinely valuable and fills gap in proactive consistency checking. However, auto-triggering after TodoWrite/Task is intrusive - better as conscious practice than automatic interruption. Pattern consistency checking more appropriate as deliberate step in implementation workflow, not automatic agent. Core technique is teachable and can be applied manually when starting new implementations without automation infrastructure.
 
+---
+
+## superclaude
+
+### Entire Repository
+
+- **Source**: superclaude/ (entire repository)
+- **Type**: External CLI wrapper tool (not Claude Code plugin)
+- **Evaluated**: 2025-10-22
+- **Decision**: EXTRACT_CONCEPTS (not full integration)
+- **Concepts to Extract**:
+  1. Git notes retrospective annotation - technique for adding AI-generated explanatory notes to existing commit history using `git notes` (viewable with `git log --show-notes`), useful for understanding historical decisions, onboarding, and code archeology without rewriting history
+  2. Multi-level changelog framework - daily (tactical/conversational, present tense, team-facing), weekly (thematic grouping by features/milestones, mixed technical/business impact), monthly (strategic overview, stakeholder-facing, metrics and achievements) with audience-appropriate language and detail levels
+- **Reason**: Architecture mismatch - external CLI wrapper that invokes Claude Code, not internal plugin/extension. Doesn't fit skills/commands/hooks/agents structure. Most prompts are simple formatting instructions already covered by other evaluations. However, git notes annotation technique and multi-level changelog abstraction framework provide structured approaches to documentation at different levels that could enhance existing practices.
+
