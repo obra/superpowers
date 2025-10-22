@@ -203,3 +203,23 @@ Each rejection includes reasoning to prevent future reconsideration without new 
 - **Evaluated**: 2025-10-22
 - **Rejection Reason**: Thin wrapper to pr-manager agent with no independent value. Since pr-manager is EXTRACT_CONCEPTS (not kept as agent), this wrapper has no purpose. Duplicates Bash tool's built-in PR workflow capabilities. Pattern matches todos-to-issues rejection (GitHub utility automation).
 
+### commit-manager
+
+- **Source**: claude-codex-settings/.claude/agents/commit-manager.md
+- **Type**: Agent
+- **Evaluated**: 2025-10-22
+- **Decision**: EXTRACT_CONCEPTS (not full integration)
+- **Concepts to Extract**:
+  1. Multi-commit splitting strategy - determine when staged changes should be split into multiple logical commits based on grouping (feature implementation vs bug fixes vs refactoring vs documentation), with principle that each commit represents one logical change
+  2. Precise multi-commit file management - safe technique for executing splits: list all staged files, use git reset HEAD to unstage files not for current commit, use git add for only files intended for current commit, verify staging area before each commit, re-stage remaining files for subsequent commits
+  3. README synchronization before commits (not just PRs) - check for new features/config needing documentation, outdated descriptions, missing setup instructions for new dependencies before creating commits
+  4. Big picture commit messages - focus on 'why' and 'what' rather than implementation details in commit message descriptions
+- **Reason**: Bash tool already provides comprehensive commit workflow instructions - this agent duplicates that automation. Core valuable concepts (pre-commit quality gates, conventional commit format, message generation) already captured from CCPlugins/commit evaluation. Multi-commit splitting strategy and precise file management are new techniques worth capturing. Documentation sync timing (before commits, not just PRs) adds to pr-manager's concept. Primarily workflow automation rather than teachable technique.
+
+### commit-staged
+
+- **Source**: claude-codex-settings/.claude/commands/commit-staged.md
+- **Type**: Command
+- **Evaluated**: 2025-10-22
+- **Rejection Reason**: Thin wrapper to commit-manager agent with no independent value. Since commit-manager is EXTRACT_CONCEPTS (not kept as agent), this wrapper has no purpose. Duplicates Bash tool's built-in commit workflow capabilities. Pattern matches todos-to-issues rejection (Git utility automation).
+
