@@ -134,3 +134,17 @@ Each rejection includes reasoning to prevent future reconsideration without new 
 - **Evaluated**: 2025-10-22
 - **Rejection Reason**: GitHub-specific workflow automation, not a teachable technique. Value is in automating issue creation rather than teaching systematic approach. Pre-flight checks concept already captured in contributing evaluation. TODO extraction is simple grep. This is utility automation rather than skill/pattern. If needed later, could be simple script but doesn't fit skill/command framework.
 
+### commit
+
+- **Source**: CCPlugins/commands/commit.md
+- **Type**: Command
+- **Evaluated**: 2025-10-22
+- **Decision**: EXTRACT_CONCEPTS (not full integration)
+- **Concepts to Extract**:
+  1. Pre-commit quality gates - MUST run build/test/lint before allowing commit
+  2. Commit message generation from change analysis - analyze diff to determine type, scope, and description
+  3. Conventional commit format - type (feat/fix/docs/style/refactor/test/chore), optional scope, clear subject
+  4. Staged vs unstaged awareness - handle both scenarios intelligently
+  5. Error recovery - handle commit failures with clear guidance
+- **Reason**: Core workflow patterns valuable but full command is automation. Pre-commit gates and message generation from change analysis are concepts that enhance git workflow. Repository has no existing commit command/policy, so these patterns fill a gap conceptually.
+
