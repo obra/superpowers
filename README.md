@@ -6,8 +6,11 @@ Give Claude Code superpowers with a comprehensive skills library of proven techn
 
 - **Testing Skills** - TDD, async testing, anti-patterns
 - **Debugging Skills** - Systematic debugging, root cause tracing, verification
+- **Problem-Solving Skills** - Simplification, innovation, pattern recognition, assumption challenges
+- **Research Skills** - Decision archaeology, knowledge lineage tracing
 - **Collaboration Skills** - Brainstorming, planning, code review, parallel agents
-- **Development Skills** - Git worktrees, finishing branches, subagent workflows
+- **Development Skills** - Git worktrees, finishing branches, subagent workflows, cleanup automation
+- **Documentation Skills** - Holistic documentation management
 - **Meta Skills** - Creating, testing, and sharing skills
 
 Plus:
@@ -71,32 +74,49 @@ Skills activate automatically when relevant. For example:
 
 ### Skills Library
 
-**Testing** (`skills/testing/`)
+**Testing**
 - **test-driven-development** - RED-GREEN-REFACTOR cycle
 - **condition-based-waiting** - Async test patterns
 - **testing-anti-patterns** - Common pitfalls to avoid
+- **testing-skills-with-subagents** - Validate skill quality
 
-**Debugging** (`skills/debugging/`)
+**Debugging**
 - **systematic-debugging** - 4-phase root cause process
 - **root-cause-tracing** - Find the real problem
 - **verification-before-completion** - Ensure it's actually fixed
 - **defense-in-depth** - Multiple validation layers
 
-**Collaboration** (`skills/collaboration/`)
+**Problem-Solving**
+- **simplification-cascades** - Find unifying principles that eliminate components
+- **collision-zone-thinking** - Force unrelated concepts together for innovation
+- **meta-pattern-recognition** - Spot universal patterns across domains
+- **inversion-exercise** - Flip assumptions to reveal alternatives
+- **scale-game** - Test at extremes to expose fundamental truths
+- **when-stuck** - Dispatch router to appropriate problem-solving technique
+- **predict-issues** - Proactive problem identification with risk assessment
+
+**Research & Architecture**
+- **tracing-knowledge-lineages** - Understand technical decision evolution
+- **preserving-productive-tensions** - Recognize when to preserve multiple approaches
+
+**Collaboration**
 - **brainstorming** - Socratic design refinement
 - **writing-plans** - Detailed implementation plans
 - **executing-plans** - Batch execution with checkpoints
 - **dispatching-parallel-agents** - Concurrent subagent workflows
 - **requesting-code-review** - Pre-review checklist
 - **receiving-code-review** - Responding to feedback
-- **using-git-worktrees** - Parallel development branches
-- **finishing-a-development-branch** - Merge/PR decision workflow
 - **subagent-driven-development** - Fast iteration with quality gates
 
-**Meta** (`skills/meta/`)
+**Development Workflow**
+- **using-git-worktrees** - Parallel development branches
+- **finishing-a-development-branch** - Merge/PR decision workflow
+- **documentation-management** - Holistic documentation maintenance
+- **code-and-project-cleanup** - Safe cleanup of code and project artifacts
+
+**Meta**
 - **writing-skills** - Create new skills following best practices
 - **sharing-skills** - Contribute skills back via branch and PR
-- **testing-skills-with-subagents** - Validate skill quality
 - **using-superpowers** - Introduction to the skills system
 
 ### Commands
@@ -132,7 +152,7 @@ Skills live directly in this repository. To contribute:
 4. Use the `testing-skills-with-subagents` skill to validate quality
 5. Submit a PR
 
-See `skills/meta/writing-skills/SKILL.md` for the complete guide.
+See `skills/writing-skills/SKILL.md` for the complete guide.
 
 ## Updating
 
