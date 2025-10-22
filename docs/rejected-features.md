@@ -43,3 +43,17 @@ Each rejection includes reasoning to prevent future reconsideration without new 
   5. Dependency resolution/mapping to existing project dependencies
 - **Reason**: Significant overlap with existing brainstorm/write-plan/execute-plan workflow. Complex session state management. Better to enhance existing skills with these concepts than duplicate workflow.
 
+### refactor
+- **Source**: CCPlugins/commands/refactor.md
+- **Type**: Command
+- **Evaluated**: 2025-10-22
+- **Decision**: EXTRACT_CONCEPTS (not full integration)
+- **Concepts to Extract**:
+  1. Continuous validation after EVERY change - guarantees no breakage during refactoring
+  2. De-para mapping - before/after tracking for migrations (helps teams understand changes)
+  3. Auto-fix broken references - automatically update imports, type definitions, references
+  4. Pattern migration tracking - map old patterns to new patterns with status
+  5. Multi-phase validation gates - coverage check, import verification, build/test, type checking, dead code detection
+  6. Complexity hotspot detection - identify code areas needing refactoring
+- **Reason**: Heavy 6-phase workflow with complex session state management. Core safety concepts (continuous validation, de-para mapping) would enhance existing workflows without duplicating infrastructure. Overlap with existing systematic-debugging skill.
+
