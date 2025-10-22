@@ -88,3 +88,15 @@ Each rejection includes reasoning to prevent future reconsideration without new 
   7. Flaky test pattern detection - analyze intermittent failures
 - **Reason**: Heavy workflow automation with dependencies on non-existent commands (/scaffold, /fix-todos, /security-scan, /format, /create-todos, /explain-like-senior, /review, /session-end) and session context (CLAUDE.md). Core troubleshooting patterns valuable but context-detection orchestration is command-level, not teachable technique. Existing test-driven-development and testing-anti-patterns skills cover philosophy; this adds troubleshooting patterns.
 
+### scaffold
+- **Source**: CCPlugins/commands/scaffold.md
+- **Type**: Command
+- **Evaluated**: 2025-10-22
+- **Decision**: EXTRACT_CONCEPTS (not full integration)
+- **Concepts to Extract**:
+  1. Pattern discovery from existing codebase - analyze project structure to understand conventions
+  2. Convention replication - automatically match naming, file organization, architecture patterns
+  3. Incremental generation with checkpoints - break large scaffolding into manageable steps
+  4. Project-specific templates - generate code matching existing patterns rather than generic templates
+- **Reason**: Session state infrastructure (scaffold/plan.md, scaffold/state.json) adds complexity. Pattern discovery concept valuable for enhancing existing planning workflows without dedicated session state management. Resume capability useful but heavyweight for scaffolding use case.
+
