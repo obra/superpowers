@@ -1,0 +1,41 @@
+# Project Instructions
+
+This project uses Claude Code with the Superpowers plugin.
+
+## Project Context
+
+[This section will be populated with project-specific information as the work progresses]
+
+## Technology Stack
+
+[Add project tech stack details here]
+
+## Architecture Notes
+
+[Add architecture decisions and patterns here]
+
+## Custom Orchestration Rules
+
+[Add any project-specific rules that override default orchestration behavior]
+
+Example:
+- Skip brainstorming for minor bug fixes under 10 lines
+- Always use test-driven-development for API endpoints
+- Require code review before merging features
+
+## Development Workflow
+
+[Add project-specific workflow notes]
+
+---
+
+<!--
+Orchestrator mode is active via superpowers plugin.
+You do not need to add orchestration instructions here - they are loaded automatically via SessionStart hook.
+
+The orchestrator will:
+1. Check agent registry for matching specialist
+2. Delegate complex tasks to specialists
+3. Handle simple coordination directly
+4. Manage multi-skill workflows
+-->
