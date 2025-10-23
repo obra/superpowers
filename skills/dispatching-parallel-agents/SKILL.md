@@ -1,30 +1,32 @@
 ---
 name: Dispatching Parallel Agents
-description: Use when facing 3+ independent failures that can be investigated without shared state or dependencies - dispatches multiple Claude agents to investigate and fix independent problems concurrently
+description: Use when facing 3+ independent tasks (debugging failures, analyzing codebases, researching domains) that can be handled without shared state or dependencies - dispatches multiple Claude agents to work concurrently on separate problem domains
 ---
 
 # Dispatching Parallel Agents
 
 ## Overview
 
-When you have multiple unrelated failures (different test files, different subsystems, different bugs), investigating them sequentially wastes time. Each investigation is independent and can happen in parallel.
+When you have multiple unrelated tasks (debugging failures, analyzing codebases, researching patterns), working on them sequentially wastes time. Each task is independent and can happen in parallel.
 
-**Core principle:** Dispatch one agent per independent problem domain. Let them work concurrently.
+**Core principle:** Dispatch one agent per independent domain. Let them work concurrently.
+
+**Use for:** Debugging, research, analysis, or any independent tasks.
 
 ## When to Use
 
 ```dot
 digraph when_to_use {
-    "Multiple failures?" [shape=diamond];
+    "Multiple tasks?" [shape=diamond];
     "Are they independent?" [shape=diamond];
-    "Single agent investigates all" [shape=box];
-    "One agent per problem domain" [shape=box];
+    "Single agent handles all" [shape=box];
+    "One agent per domain" [shape=box];
     "Can they work in parallel?" [shape=diamond];
     "Sequential agents" [shape=box];
     "Parallel dispatch" [shape=box];
 
-    "Multiple failures?" -> "Are they independent?" [label="yes"];
-    "Are they independent?" -> "Single agent investigates all" [label="no - related"];
+    "Multiple tasks?" -> "Are they independent?" [label="yes (3+)"];
+    "Are they independent?" -> "Single agent handles all" [label="no - related"];
     "Are they independent?" -> "Can they work in parallel?" [label="yes"];
     "Can they work in parallel?" -> "Parallel dispatch" [label="yes"];
     "Can they work in parallel?" -> "Sequential agents" [label="no - shared state"];
@@ -32,15 +34,17 @@ digraph when_to_use {
 ```
 
 **Use when:**
-- 3+ test files failing with different root causes
-- Multiple subsystems broken independently
-- Each problem can be understood without context from others
-- No shared state between investigations
+- **Debugging:** 3+ test files failing with different root causes
+- **Research:** Analyzing multiple independent codebases/frameworks
+- **Analysis:** Investigating separate problem domains
+- Each task can be understood without context from others
+- No shared state between tasks
 
 **Don't use when:**
-- Failures are related (fix one might fix others)
+- Tasks are related (one informs the other)
 - Need to understand full system state
 - Agents would interfere with each other
+- Tasks require sequential execution
 
 ## The Pattern
 
@@ -123,12 +127,15 @@ Return: Summary of what you found and what you fixed.
 
 ## When NOT to Use
 
-**Related failures:** Fixing one might fix others - investigate together first
-**Need full context:** Understanding requires seeing entire system
-**Exploratory debugging:** You don't know what's broken yet
-**Shared state:** Agents would interfere (editing same files, using same resources)
+**Related tasks:** One task informs the other - work sequentially
+**Need full context:** Understanding requires seeing entire system together
+**Exploratory work:** You don't know what domains exist yet
+**Shared state:** Agents would interfere (editing same files, conflicting changes)
+**Sequential dependencies:** Task B requires results from Task A
 
-## Real Example from Session
+## Real Examples
+
+### Example 1: Debugging (2025-10-03)
 
 **Scenario:** 6 test failures across 3 files after major refactoring
 
@@ -155,6 +162,33 @@ Agent 3 → Fix tool-approval-race-conditions.test.ts
 
 **Time saved:** 3 problems solved in parallel vs sequentially
 
+### Example 2: Research (2025-10-23)
+
+**Scenario:** Analyze 3 independent technology domains for pattern extraction
+
+**Domains:**
+- Domain 1: pytest testing framework patterns
+- Domain 2: webpack/vite build tool patterns
+- Domain 3: Terraform infrastructure patterns
+
+**Decision:** Independent research - testing frameworks unrelated to build tools unrelated to IaC
+
+**Dispatch:**
+```typescript
+Task("Analyze pytest patterns - best practices, anti-patterns, conventions. Return JSON.")
+Task("Analyze webpack/vite patterns - config patterns, optimizations. Return JSON.")
+Task("Analyze Terraform patterns - module structure, state management, security. Return JSON.")
+```
+
+**Results:**
+- Agent 1: pytest best practices with fixture patterns
+- Agent 2: webpack vs vite architectural differences
+- Agent 3: Terraform module structure patterns
+
+**Integration:** All analysis independent, combined into comprehensive report
+
+**Time saved:** 3 domains analyzed in ~3 minutes vs 9+ minutes sequentially
+
 ## Key Benefits
 
 1. **Parallelization** - Multiple investigations happen simultaneously
@@ -172,9 +206,17 @@ After agents return:
 
 ## Real-World Impact
 
-From debugging session (2025-10-03):
-- 6 failures across 3 files
-- 3 agents dispatched in parallel
+**Debugging session** (2025-10-03):
+- 6 failures across 3 files → 3 agents dispatched
 - All investigations completed concurrently
-- All fixes integrated successfully
-- Zero conflicts between agent changes
+- All fixes integrated successfully, zero conflicts
+
+**Research session** (2025-10-23):
+- 3 technology domains → 3 agents dispatched
+- Completed in ~3 minutes vs 9+ sequentially
+- Structured JSON from all agents, combined into analysis
+
+**Bake-off validation** (2025-10-23):
+- Task tool approach: 100% success rate, 3-minute completion
+- Simple one-line dispatch per agent
+- Reliable across debugging and research use cases
