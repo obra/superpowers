@@ -1,6 +1,6 @@
 {
-  "name": "jthurlburt-claude-plugin",
-  "description": "Custom plugin for Claude Code",
+  "name": "jthurlburt-claude-plugins",
+  "description": "Custom plugins for Claude Code",
   "owner": {
     "name": "Jacob Hurlburt",
     "email": "[email protected]"
