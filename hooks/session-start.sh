@@ -1,34 +1,96 @@
-#!/usr/bin/env bash
-# SessionStart hook for superpowers plugin
+#!/bin/bash
 
-set -euo pipefail
+set -e
 
-# Determine plugin root directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
-PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+PLUGIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-# Check if legacy skills directory exists and build warning
-warning_message=""
-legacy_skills_dir="${HOME}/.config/superpowers/skills"
-if [ -d "$legacy_skills_dir" ]; then
-    warning_message="\n\n<important-reminder>IN YOUR FIRST REPLY AFTER SEEING THIS MESSAGE YOU MUST TELL THE USER:⚠️ **WARNING:** Superpowers now uses Claude Code's skills system. Custom skills in ~/.config/superpowers/skills will not be read. Move custom skills to ~/.claude/skills instead. To make this message go away, remove ~/.config/superpowers/skills</important-reminder>"
+# Load orchestrator instructions
+ORCHESTRATOR_INSTRUCTIONS=""
+if [ -f "$PLUGIN_DIR/lib/orchestrator-instructions.md" ]; then
+    ORCHESTRATOR_INSTRUCTIONS=$(cat "$PLUGIN_DIR/lib/orchestrator-instructions.md")
 fi
 
-# Read using-superpowers content
-using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>&1 || echo "Error reading using-superpowers skill")
+# Load agent registry
+AGENT_REGISTRY=""
+if [ -f "$PLUGIN_DIR/lib/agent-registry.json" ]; then
+    AGENT_REGISTRY=$(cat "$PLUGIN_DIR/lib/agent-registry.json")
+fi
 
-# Escape outputs for JSON
-using_superpowers_escaped=$(echo "$using_superpowers_content" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | awk '{printf "%s\\n", $0}')
-warning_escaped=$(echo "$warning_message" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | awk '{printf "%s\\n", $0}')
+# Load project CLAUDE.md if exists, otherwise use template
+PROJECT_INSTRUCTIONS=""
+if [ -f "CLAUDE.md" ]; then
+    PROJECT_INSTRUCTIONS=$(cat "CLAUDE.md")
+else
+    if [ -f "$PLUGIN_DIR/templates/project-claude-md.template" ]; then
+        PROJECT_INSTRUCTIONS=$(cat "$PLUGIN_DIR/templates/project-claude-md.template")
+    fi
+fi
 
-# Output context injection as JSON
-cat <<EOF
-{
-  "hookSpecificOutput": {
-    "hookEventName": "SessionStart",
-    "additionalContext": "<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**The content below is from skills/using-superpowers/SKILL.md - your introduction to using skills:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}\n</EXTREMELY_IMPORTANT>"
-  }
-}
-EOF
+# Load using-superpowers skill (for backward compatibility and skill enforcement)
+USING_SUPERPOWERS=""
+if [ -f "$PLUGIN_DIR/skills/using-superpowers/SKILL.md" ]; then
+    USING_SUPERPOWERS=$(cat "$PLUGIN_DIR/skills/using-superpowers/SKILL.md")
+fi
 
-exit 0
+# Build combined context
+COMBINED_CONTEXT=""
+
+# Add using-superpowers (skill enforcement)
+if [ -n "$USING_SUPERPOWERS" ]; then
+    COMBINED_CONTEXT+="<EXTREMELY_IMPORTANT>
+You have superpowers.
+
+**The content below is from skills/using-superpowers/SKILL.md - your introduction to using skills:**
+
+---
+$USING_SUPERPOWERS
+---
+
+</EXTREMELY_IMPORTANT>
+
+"
+fi
+
+# Add orchestration mode
+if [ -n "$ORCHESTRATOR_INSTRUCTIONS" ]; then
+    COMBINED_CONTEXT+="<ORCHESTRATION_MODE_ACTIVE>
+
+$ORCHESTRATOR_INSTRUCTIONS
+
+</ORCHESTRATION_MODE_ACTIVE>
+
+"
+fi
+
+# Add agent registry
+if [ -n "$AGENT_REGISTRY" ]; then
+    COMBINED_CONTEXT+="<AGENT_REGISTRY>
+
+The following specialist agents are available to you. Each is an expert in one superpowers skill.
+
+When you need to delegate to a specialist, use the Task tool with the specialist's name.
+
+$AGENT_REGISTRY
+
+</AGENT_REGISTRY>
+
+"
+fi
+
+# Add project instructions
+if [ -n "$PROJECT_INSTRUCTIONS" ]; then
+    COMBINED_CONTEXT+="<PROJECT_INSTRUCTIONS>
+
+$PROJECT_INSTRUCTIONS
+
+</PROJECT_INSTRUCTIONS>"
+fi
+
+# Return JSON with combined context
+jq -n \
+  --arg context "$COMBINED_CONTEXT" \
+  '{
+    hookSpecificOutput: {
+      additionalContext: $context
+    }
+  }'
