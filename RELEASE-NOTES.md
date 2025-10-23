@@ -1,5 +1,64 @@
 # Superpowers Release Notes
 
+## v3.3.0 - Orchestration System
+
+**Release Date:** 2025-10-23
+
+### Major Features
+
+**Orchestration Mode (Default)**
+
+Superpowers now operates as an orchestration system where the main Claude agent delegates tasks to specialist sub-agents, each expert in one skill.
+
+- **20 Specialist Agents:** One per skill, auto-generated from `skills/*/SKILL.md`
+- **Agent Registry:** Loaded at session start (~2500 tokens) for skill matching
+- **Automatic Delegation:** If skill exists for task → specialist handles it
+- **Context Preservation:** Orchestrator stays lightweight, specialists do heavy lifting
+- **Multi-Skill Workflows:** Sequential, parallel, and adaptive workflows supported
+
+### New Files
+
+- `lib/generate-specialists.sh` - Builds specialist agents from skills
+- `lib/agent-registry.json` - Registry of all 20 specialists (auto-generated)
+- `lib/orchestrator-instructions.md` - Core orchestration rules
+- `templates/specialist-agent.template` - Template for generating specialists
+- `templates/project-claude-md.template` - Default project CLAUDE.md
+- `agents/*-specialist.md` - 20 specialist agent definitions (auto-generated)
+
+### Breaking Changes
+
+**None** - Orchestration is backward compatible. Projects without superpowers plugin continue working normally.
+
+### Migration
+
+**No action required** - Orchestration activates automatically when superpowers plugin is installed.
+
+To customize orchestration behavior, add rules to your project's `CLAUDE.md`.
+
+### Performance
+
+- **Session start:** ~2500 tokens (orchestrator + registry)
+- **Per task:** Only relevant specialist loads (~200-500 tokens)
+- **Savings vs v3.2.x:** ~8000 tokens per session (skills load on-demand, not all upfront)
+
+### Reliability
+
+- Loop prevention (max 10 specialists per workflow)
+- Graceful error handling (specialist crashes, blockers, conflicts)
+- Fallback to direct handling when no specialist matches
+
+### Developer Notes
+
+To regenerate specialists after skill updates:
+
+```bash
+./lib/generate-specialists.sh
+git add agents/*-specialist.md lib/agent-registry.json
+git commit -m "Regenerate specialists"
+```
+
+---
+
 ## v3.2.1 (2025-10-20)
 
 ### New Features
