@@ -1,0 +1,141 @@
+[
+  {
+    "name": "brainstorming-specialist",
+    "description": "Use when creating or developing anything, before writing code or implementation plans - refines rough ideas into fully-formed designs through structured Socratic questioning, alternative exploration, and incremental validation ",
+    "agent_file": "agents/brainstorming-specialist.md",
+    "skill_name": "brainstorming"
+  }
+,
+  {
+    "name": "condition-based-waiting-specialist",
+    "description": "Use when tests have race conditions, timing dependencies, or inconsistent pass/fail behavior - replaces arbitrary timeouts with condition polling to wait for actual state changes, eliminating flaky tests from timing guesses ",
+    "agent_file": "agents/condition-based-waiting-specialist.md",
+    "skill_name": "condition-based-waiting"
+  }
+,
+  {
+    "name": "defense-in-depth-specialist",
+    "description": "Use when invalid data causes failures deep in execution, requiring validation at multiple system layers - validates at every layer data passes through to make bugs structurally impossible ",
+    "agent_file": "agents/defense-in-depth-specialist.md",
+    "skill_name": "defense-in-depth"
+  }
+,
+  {
+    "name": "dispatching-parallel-agents-specialist",
+    "description": "Use when facing 3+ independent failures that can be investigated without shared state or dependencies - dispatches multiple Claude agents to investigate and fix independent problems concurrently ",
+    "agent_file": "agents/dispatching-parallel-agents-specialist.md",
+    "skill_name": "dispatching-parallel-agents"
+  }
+,
+  {
+    "name": "executing-plans-specialist",
+    "description": "Use when partner provides a complete implementation plan to execute in controlled batches with review checkpoints - loads plan, reviews critically, executes tasks in batches, reports for review between batches ",
+    "agent_file": "agents/executing-plans-specialist.md",
+    "skill_name": "executing-plans"
+  }
+,
+  {
+    "name": "finishing-a-development-branch-specialist",
+    "description": "Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup ",
+    "agent_file": "agents/finishing-a-development-branch-specialist.md",
+    "skill_name": "finishing-a-development-branch"
+  }
+,
+  {
+    "name": "receiving-code-review-specialist",
+    "description": "Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation ",
+    "agent_file": "agents/receiving-code-review-specialist.md",
+    "skill_name": "receiving-code-review"
+  }
+,
+  {
+    "name": "requesting-code-review-specialist",
+    "description": "Use when completing tasks, implementing major features, or before merging to verify work meets requirements - dispatches superpowers:code-reviewer subagent to review implementation against plan or requirements before proceeding ",
+    "agent_file": "agents/requesting-code-review-specialist.md",
+    "skill_name": "requesting-code-review"
+  }
+,
+  {
+    "name": "root-cause-tracing-specialist",
+    "description": "Use when errors occur deep in execution and you need to trace back to find the original trigger - systematically traces bugs backward through call stack, adding instrumentation when needed, to identify source of invalid data or incorrect behavior ",
+    "agent_file": "agents/root-cause-tracing-specialist.md",
+    "skill_name": "root-cause-tracing"
+  }
+,
+  {
+    "name": "sharing-skills-specialist",
+    "description": "Use when you've developed a broadly useful skill and want to contribute it upstream via pull request - guides process of branching, committing, pushing, and creating PR to contribute skills back to upstream repository ",
+    "agent_file": "agents/sharing-skills-specialist.md",
+    "skill_name": "sharing-skills"
+  }
+,
+  {
+    "name": "subagent-driven-development-specialist",
+    "description": "Use when executing implementation plans with independent tasks in the current session - dispatches fresh subagent for each task with code review between tasks, enabling fast iteration with quality gates ",
+    "agent_file": "agents/subagent-driven-development-specialist.md",
+    "skill_name": "subagent-driven-development"
+  }
+,
+  {
+    "name": "systematic-debugging-specialist",
+    "description": "Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes - four-phase framework (root cause investigation, pattern analysis, hypothesis testing, implementation) that ensures understanding before attempting solutions ",
+    "agent_file": "agents/systematic-debugging-specialist.md",
+    "skill_name": "systematic-debugging"
+  }
+,
+  {
+    "name": "test-driven-development-specialist",
+    "description": "Use when implementing any feature or bugfix, before writing implementation code - write the test first, watch it fail, write minimal code to pass; ensures tests actually verify behavior by requiring failure first ",
+    "agent_file": "agents/test-driven-development-specialist.md",
+    "skill_name": "test-driven-development"
+  }
+,
+  {
+    "name": "testing-anti-patterns-specialist",
+    "description": "Use when writing or changing tests, adding mocks, or tempted to add test-only methods to production code - prevents testing mock behavior, production pollution with test-only methods, and mocking without understanding dependencies ",
+    "agent_file": "agents/testing-anti-patterns-specialist.md",
+    "skill_name": "testing-anti-patterns"
+  }
+,
+  {
+    "name": "testing-skills-with-subagents-specialist",
+    "description": "Use when creating or editing skills, before deployment, to verify they work under pressure and resist rationalization - applies RED-GREEN-REFACTOR cycle to process documentation by running baseline without skill, writing to address failures, iterating to close loopholes ",
+    "agent_file": "agents/testing-skills-with-subagents-specialist.md",
+    "skill_name": "testing-skills-with-subagents"
+  }
+,
+  {
+    "name": "using-git-worktrees-specialist",
+    "description": "Use when starting feature work that needs isolation from current workspace or before executing implementation plans - creates isolated git worktrees with smart directory selection and safety verification ",
+    "agent_file": "agents/using-git-worktrees-specialist.md",
+    "skill_name": "using-git-worktrees"
+  }
+,
+  {
+    "name": "using-superpowers-specialist",
+    "description": "Use when starting any conversation - establishes mandatory workflows for finding and using skills, including using Read tool before announcing usage, following brainstorming before coding, and creating TodoWrite todos for checklists ",
+    "agent_file": "agents/using-superpowers-specialist.md",
+    "skill_name": "using-superpowers"
+  }
+,
+  {
+    "name": "verification-before-completion-specialist",
+    "description": "Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always ",
+    "agent_file": "agents/verification-before-completion-specialist.md",
+    "skill_name": "verification-before-completion"
+  }
+,
+  {
+    "name": "writing-plans-specialist",
+    "description": "Use when design is complete and you need detailed implementation tasks for engineers with zero codebase context - creates comprehensive implementation plans with exact file paths, complete code examples, and verification steps assuming engineer has minimal domain knowledge ",
+    "agent_file": "agents/writing-plans-specialist.md",
+    "skill_name": "writing-plans"
+  }
+,
+  {
+    "name": "writing-skills-specialist",
+    "description": "Use when creating new skills, editing existing skills, or verifying skills work before deployment - applies TDD to process documentation by testing with subagents before writing, iterating until bulletproof against rationalization Use when [specific triggering conditions and symptoms] - [what the skill does and how it helps, written in third person] ",
+    "agent_file": "agents/writing-skills-specialist.md",
+    "skill_name": "writing-skills"
+  }
+]
