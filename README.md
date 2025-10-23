@@ -114,6 +114,7 @@ Skills activate automatically when relevant. For example:
 
 - **tracing-knowledge-lineages** - Understand technical decision evolution
 - **preserving-productive-tensions** - Recognize when to preserve multiple approaches
+- **extracting-patterns-from-projects** - Systematic analysis methodology for external projects
 
 **Collaboration**
 
@@ -138,6 +139,7 @@ Skills activate automatically when relevant. For example:
 - **writing-skills** - Create new skills following best practices
 - **sharing-skills** - Contribute skills back via branch and PR
 - **using-superpowers** - Introduction to the skills system
+- **enhancing-superpowers** - Project-specific integration guide for superpowers
 
 ### Commands
 
