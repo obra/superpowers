@@ -1,6 +1,6 @@
 ---
 name: Writing Commits
-description: Guidelines for creating clear, meaningful commits - covers when to commit, commit message structure, atomic commits, and co-authorship policy
+description: Guidelines for creating clear, meaningful commits - covers when to commit, commit message structure, atomic commits, and strict no co-authorship policy
 ---
 
 # Writing Commits
@@ -136,21 +136,20 @@ git commit -m "Add password field"
 
 ## Co-Authorship Policy
 
-**Default: Skip co-authorship.** Clean git history without repetitive attribution is more valuable than credit on every commit.
+**NEVER include co-authorship.** Clean git history without AI attribution is essential. Co-authored-by lines add no value and clutter commit history.
 
-### When to Skip Co-Authorship (Default)
+### Strict Policy
 
-**❌ Skip by default:**
+**❌ NEVER add co-authorship for any reason:**
 
-- **Most work**: Features, fixes, refactoring, tests, docs
-- **Routine commits**: Standard development workflow
-- **Minor fixes**: Typos, formatting, simple corrections
-- **Trivial updates**: Dependency bumps, config tweaks
-- **Standard refactoring**: Renaming, file moves, basic cleanup
-- **Documentation**: README updates, comment fixes
-- **Test implementations**: Even comprehensive test suites
+- No "Co-Authored-By: Claude" lines
+- No "Generated with Claude Code" footers
+- No AI attribution of any kind
+- No exceptions, regardless of context
 
-**Example (typical commit, no co-authorship):**
+**This is an absolute rule.** Even if the user mentions "credit" or "attribution" in other contexts, never interpret this as permission to add co-authorship to commits.
+
+**Example (correct commit format):**
 
 ```
 feat(cache): implement LRU cache with TTL support
@@ -160,15 +159,7 @@ Uses doubly-linked list for O(1) eviction and hash map for
 O(1) lookups. Handles edge cases in concurrent access.
 ```
 
-### When to Add Co-Authorship (Rare)
-
-**✅ Only add when explicitly requested:**
-
-- User says "add co-authorship" or "give yourself credit"
-- User's project has specific attribution requirements
-- Legal/compliance reasons for tracking AI contributions
-
-**Never add co-authorship proactively.** If unsure, skip it.
+**Note:** Commits should only contain the conventional commit format (type, scope, subject, body, footer for issues/breaking changes). No AI attribution ever.
 
 ## Common Mistakes
 
@@ -286,4 +277,4 @@ Consolidates to single configurable module."
 - **What**: Atomic, complete, minimal
 - **How**: Clear type, concise subject, imperative mood
 - **Why**: Body explains context and reasoning
-- **Who**: Skip co-authorship by default, add only when explicitly requested
+- **Who**: NEVER include co-authorship or AI attribution
