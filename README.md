@@ -41,6 +41,64 @@ Read the introduction: [Superpowers for Claude Code](https://blog.fsck.com/2025/
 # /superpowers:execute-plan - Execute plan in batches
 ```
 
+## Orchestration Mode
+
+As of v3.3.0, superpowers includes an orchestration system that automatically delegates tasks to specialist agents.
+
+### How It Works
+
+When superpowers plugin is installed, orchestration mode is **active by default**:
+
+1. **You make a request** → Main Claude (orchestrator) receives it
+2. **Orchestrator checks registry** → Matches your request to appropriate specialist agent
+3. **Specialist executes skill** → Expert agent applies the relevant skill systematically
+4. **Report returns** → Orchestrator receives structured report and decides next steps
+5. **Workflow continues** → Orchestrator may call additional specialists or present results
+
+### Benefits
+
+- **Context preservation:** Orchestrator stays focused on workflow management, specialists handle execution details
+- **Systematic skill application:** Every specialist follows proven skill methodology exactly
+- **Performance:** Only relevant skills load (not all 20 skills per session)
+- **Reliability:** Clear delegation rules prevent ad-hoc "I'll do it myself" shortcuts
+
+### The Specialist Agents
+
+Each of the 20 superpowers skills has a corresponding specialist agent:
+
+- `brainstorming-specialist` - Design refinement before coding
+- `systematic-debugging-specialist` - 4-phase debugging framework
+- `test-driven-development-specialist` - RED-GREEN-REFACTOR cycle
+- `writing-plans-specialist` - Detailed implementation plans
+- `executing-plans-specialist` - Batch execution with checkpoints
+- ... (15 more specialists)
+
+Full list: `lib/agent-registry.json`
+
+### Project-Specific Configuration
+
+Projects can customize orchestration via `CLAUDE.md`:
+
+```markdown
+## Custom Orchestration Rules
+
+- Skip brainstorming for minor bug fixes under 10 lines
+- Always use test-driven-development for API endpoints
+- Require code review before merging features
+```
+
+The orchestrator respects project-specific rules while enforcing core delegation principles.
+
+### Regenerating Specialists
+
+When skills are updated, regenerate specialist agents:
+
+```bash
+./lib/generate-specialists.sh
+```
+
+This rebuilds all 20 `agents/*-specialist.md` files and `lib/agent-registry.json` from current skill content.
+
 ## Quick Start
 
 ### Using Slash Commands
