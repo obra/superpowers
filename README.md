@@ -14,13 +14,21 @@ Give Claude Code superpowers with a comprehensive skills library of proven techn
 - **Meta Skills** - Creating, testing, and sharing skills
 
 Plus:
+
 - **Slash Commands** - `/superpowers:brainstorm`, `/superpowers:write-plan`, `/superpowers:execute-plan`
 - **Automatic Integration** - Skills activate automatically when relevant
 - **Consistent Workflows** - Systematic approaches to common engineering tasks
 
-## Learn More
+## Attribution
 
-Read the introduction: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
+This is a personal fork of [obra/superpowers](https://github.com/obra/superpowers) with additional skills and enhancements borrowed from:
+
+- [superpowers-skills](https://github.com/obra/superpowers-skills) - Problem-solving patterns
+- [CCPlugins](https://github.com/brennercruvinel/CCPlugins) - Development workflow skills
+- [claude-codex-settings](https://github.com/fcakyon/claude-codex-settings/tree/main) - Enhancement concepts
+- [Microsoft Amplifier](https://github.com/microsoft/amplifier) - Tension management patterns
+
+See [CHANGELOG.md](CHANGELOG.md) for detailed changes and additions.
 
 ## Installation
 
@@ -28,8 +36,8 @@ Read the introduction: [Superpowers for Claude Code](https://blog.fsck.com/2025/
 
 ```bash
 # In Claude Code
-/plugin marketplace add obra/superpowers-marketplace
-/plugin install superpowers@superpowers-marketplace
+/plugin marketplace add jthurlburt/claude-settings
+/plugin install superpowers@jthurlburt/claude-settings
 ```
 
 ### Verify Installation
@@ -49,16 +57,19 @@ Read the introduction: [Superpowers for Claude Code](https://blog.fsck.com/2025/
 ### Using Slash Commands
 
 **Brainstorm a design:**
+
 ```
 /superpowers:brainstorm
 ```
 
 **Create an implementation plan:**
+
 ```
 /superpowers:write-plan
 ```
 
 **Execute the plan:**
+
 ```
 /superpowers:execute-plan
 ```
@@ -66,6 +77,7 @@ Read the introduction: [Superpowers for Claude Code](https://blog.fsck.com/2025/
 ### Automatic Skill Activation
 
 Skills activate automatically when relevant. For example:
+
 - `test-driven-development` activates when implementing features
 - `systematic-debugging` activates when debugging issues
 - `verification-before-completion` activates before claiming work is done
@@ -75,46 +87,54 @@ Skills activate automatically when relevant. For example:
 ### Skills Library
 
 **Testing**
+
 - **test-driven-development** - RED-GREEN-REFACTOR cycle
 - **condition-based-waiting** - Async test patterns
 - **testing-anti-patterns** - Common pitfalls to avoid
 - **testing-skills-with-subagents** - Validate skill quality
 
 **Debugging**
-- **systematic-debugging** - 4-phase root cause process
+
+- **systematic-debugging** - 4-phase root cause process (enhanced)
 - **root-cause-tracing** - Find the real problem
 - **verification-before-completion** - Ensure it's actually fixed
 - **defense-in-depth** - Multiple validation layers
 
 **Problem-Solving**
+
 - **simplification-cascades** - Find unifying principles that eliminate components
 - **collision-zone-thinking** - Force unrelated concepts together for innovation
 - **meta-pattern-recognition** - Spot universal patterns across domains
 - **inversion-exercise** - Flip assumptions to reveal alternatives
 - **scale-game** - Test at extremes to expose fundamental truths
 - **when-stuck** - Dispatch router to appropriate problem-solving technique
-- **predict-issues** - Proactive problem identification with risk assessment
+- **predict-issues** - Proactive problem identification with risk assessment (enhanced)
 
 **Research & Architecture**
+
 - **tracing-knowledge-lineages** - Understand technical decision evolution
 - **preserving-productive-tensions** - Recognize when to preserve multiple approaches
 
 **Collaboration**
-- **brainstorming** - Socratic design refinement
-- **writing-plans** - Detailed implementation plans
-- **executing-plans** - Batch execution with checkpoints
+
+- **brainstorming** - Socratic design refinement (enhanced)
+- **writing-plans** - Detailed implementation plans (enhanced)
+- **executing-plans** - Batch execution with checkpoints (enhanced)
 - **dispatching-parallel-agents** - Concurrent subagent workflows
 - **requesting-code-review** - Pre-review checklist
-- **receiving-code-review** - Responding to feedback
+- **receiving-code-review** - Responding to feedback (enhanced)
 - **subagent-driven-development** - Fast iteration with quality gates
 
 **Development Workflow**
+
 - **using-git-worktrees** - Parallel development branches
-- **finishing-a-development-branch** - Merge/PR decision workflow
+- **finishing-a-development-branch** - Merge/PR decision workflow (enhanced)
+- **writing-commits** - Commit message guidelines and co-authorship policy
 - **documentation-management** - Holistic documentation maintenance
 - **code-and-project-cleanup** - Safe cleanup of code and project artifacts
 
 **Meta**
+
 - **writing-skills** - Create new skills following best practices
 - **sharing-skills** - Contribute skills back via branch and PR
 - **using-superpowers** - Introduction to the skills system
@@ -159,7 +179,7 @@ See `skills/writing-skills/SKILL.md` for the complete guide.
 Skills update automatically when you update the plugin:
 
 ```bash
-/plugin update superpowers
+/plugin update superpowers@jthurlburt/claude-settings
 ```
 
 ## License
