@@ -17,6 +17,29 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
 
+## Survey Existing Patterns (before detailed planning)
+
+Before writing detailed implementation tasks, understand the codebase conventions:
+
+1. **Find similar features**: Search for existing implementations similar to what you're building
+2. **Extract patterns**: How are they structured? What conventions do they follow?
+   - File organization (where do similar files live?)
+   - Naming conventions (how are similar classes/functions named?)
+   - Testing patterns (how are similar features tested?)
+   - Import patterns (how are dependencies imported?)
+3. **Document conventions**: Capture patterns in the plan document
+4. **Design for consistency**: Follow discovered patterns unless you have strong reason to diverge
+
+**Example pattern survey in plan:**
+```markdown
+## Existing Patterns Survey
+- Similar feature: User authentication (src/auth/)
+- File pattern: {feature}/handlers.py, {feature}/models.py, {feature}/tests/
+- Naming: Use FooHandler classes, handle_foo() functions
+- Testing: Each handler has corresponding test_handlers.py with pytest fixtures
+→ Our feature should follow same structure
+```
+
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**

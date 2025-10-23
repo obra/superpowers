@@ -53,6 +53,30 @@ Options:
   - "Cookies" (works with SSR, compatible with older approach)
 ```
 
+### Phase 1.5: Working with External References (when applicable)
+
+If your partner references external code, repos, or patterns during understanding:
+
+**Smart Sampling Strategy:**
+- Focus on tests (reveals behavior), core modules (shows patterns), README (architecture)
+- Don't read everything - sample strategically
+
+**Pattern Extraction:**
+- What conventions does it follow?
+- What problems does it solve?
+- What design decisions did they make?
+
+**Context Mapping:**
+- How does their context differ from ours?
+- What translates directly?
+- What needs adaptation?
+
+**Document Insights:**
+- Create `docs/plans/<date>-<topic>-reference-analysis.md` if substantial
+- Capture key learnings that inform our design
+
+Don't copy blindly. Understand, extract, adapt.
+
 ### Phase 2: Exploration
 - Propose 2-3 different approaches
 - For each: Core architecture, trade-offs, complexity assessment
@@ -81,7 +105,22 @@ After design is validated, write it to a permanent document:
 - **Content:** Capture the design as discussed and validated in Phase 3, organized into the sections that emerged from the conversation
 - Commit the design document to git before proceeding
 
+### Phase 4.5: Challenge Your Design (before finalizing)
+
+Before exiting brainstorming, stress-test your design:
+
+1. **Steel man the alternatives**: What's the BEST argument for approaches you rejected?
+2. **Bias check**: Are you favoring this because it's familiar? Trendy? Comfortable?
+3. **Simulate perspectives**:
+   - **Operations**: "How do I debug this in production?"
+   - **Future maintainer**: "How do I modify this in 6 months?"
+   - **Security**: "How do I exploit this?"
+4. **Test cases for the design**: Can you describe scenarios that would prove/disprove this approach?
+
+If you can't defend your design against these challenges, return to exploration.
+
 ### Phase 5: Worktree Setup (for implementation)
+
 When design is approved and implementation will follow:
 - Announce: "I'm using the using-git-worktrees skill to set up an isolated workspace."
 - **REQUIRED SUB-SKILL:** Use superpowers:using-git-worktrees
@@ -89,6 +128,7 @@ When design is approved and implementation will follow:
 - Return here when worktree ready
 
 ### Phase 6: Planning Handoff
+
 Ask: "Ready to create the implementation plan?"
 
 When your human partner confirms (any affirmative response):

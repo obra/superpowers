@@ -97,6 +97,34 @@ IF reviewer suggests "implementing properly":
 
 **your human partner's rule:** "You and reviewer both report to me. If we don't need this feature, don't add it."
 
+## Pattern Alignment Check
+
+Before implementing reviewer feedback, check for existing patterns:
+
+### If Reviewer Says: "Extract this to a helper function"
+
+1. **Search**: Do similar helpers exist already?
+   ```bash
+   rg "def.*helper" --type py
+   grep -r "formatUser" src/
+   ```
+2. **Compare**: If found, does existing helper solve same problem?
+3. **Decide**:
+   - Use existing helper (best)
+   - Extend existing helper to handle both cases (good)
+   - Create new helper only if truly different (rare)
+
+### If Reviewer Says: "This pattern seems complex"
+
+1. **Search**: How do we solve similar problems elsewhere?
+2. **Compare**: Is your approach consistent or outlier?
+3. **Decide**:
+   - If yours is outlier: Adopt codebase pattern (consistency)
+   - If yours is better: Keep yours, potentially refactor others later
+   - If equal: Discuss with your human partner
+
+Don't create new patterns when existing ones solve the problem. Consistency > novelty.
+
 ## Implementation Order
 
 ```

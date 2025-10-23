@@ -37,7 +37,26 @@ Stop. Don't proceed to Step 2.
 
 **If tests pass:** Continue to Step 2.
 
-### Step 2: Determine Base Branch
+### Step 2: Documentation Synchronization Check
+
+Before completing the branch, verify documentation is up-to-date:
+
+1. **Review your changes**: Run `git diff main...HEAD` (or appropriate base branch)
+2. **Identify documentation needs**:
+   - Did you add/change public APIs? → Update API docs
+   - Did you change behavior? → Update relevant guides
+   - Did you add dependencies? → Update installation docs
+   - Did you change config? → Update configuration docs
+3. **Update documentation**: Make changes in the same branch
+4. **Verify claims**: If docs reference code, ensure references are accurate
+5. **Link to code**: Use relative markdown links to keep docs synchronized
+   - Example: `See [UserHandler](../src/handlers/user.py#L45)`
+
+**If documentation needs updating:** Make the updates now, before proceeding.
+
+**If no documentation changes needed:** Continue to Step 3.
+
+### Step 3: Determine Base Branch
 
 ```bash
 # Try common base branches
@@ -46,7 +65,7 @@ git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 
 Or ask: "This branch split from main - is that correct?"
 
-### Step 3: Present Options
+### Step 4: Present Options
 
 Present exactly these 4 options:
 
@@ -63,7 +82,7 @@ Which option?
 
 **Don't add explanation** - keep options concise.
 
-### Step 4: Execute Choice
+### Step 5: Execute Choice
 
 #### Option 1: Merge Locally
 
@@ -84,7 +103,7 @@ git merge <feature-branch>
 git branch -d <feature-branch>
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Cleanup worktree (Step 6)
 
 #### Option 2: Push and Create PR
 
@@ -103,7 +122,7 @@ EOF
 )"
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Cleanup worktree (Step 6)
 
 #### Option 3: Keep As-Is
 
@@ -131,9 +150,9 @@ git checkout <base-branch>
 git branch -D <feature-branch>
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Cleanup worktree (Step 6)
 
-### Step 5: Cleanup Worktree
+### Step 6: Cleanup Worktree
 
 **For Options 1, 2, 4:**
 
@@ -167,6 +186,47 @@ git worktree remove <worktree-path>
 **Open-ended questions**
 - **Problem:** "What should I do next?" → ambiguous
 - **Fix:** Present exactly 4 structured options
+
+## Optional: Clean Commit History
+
+**Note:** If you follow good commit guidelines from the start, this shouldn't be necessary.
+
+If your branch has messy commits and you want clean history before PR:
+
+### When to Clean
+
+- Multiple "WIP" or "fix" commits
+- Logical changes spread across multiple commits
+- Want each commit to be independently reviewable
+
+### How to Clean
+
+```bash
+# Interactive rebase to main
+git rebase -i main
+
+# In editor:
+# - Use 'squash' to combine related commits
+# - Use 'reword' to improve commit messages
+# - Use 'edit' to split commits
+
+# To split a commit:
+# - Mark commit as 'edit' in rebase
+# - When it stops: git reset HEAD^
+# - Stage and commit in logical groups
+# - Continue: git rebase --continue
+```
+
+### Logical Grouping
+
+Group changes by:
+- Feature vs tests vs docs
+- Refactoring vs new functionality
+- Public API vs implementation details
+
+Each commit should be independently understandable and (ideally) pass tests.
+
+**Only do this before pushing/before PR**. Don't rewrite published history.
 
 **Automatic worktree cleanup**
 - **Problem:** Remove worktree when might need it (Option 2, 3)

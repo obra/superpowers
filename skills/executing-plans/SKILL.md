@@ -28,7 +28,14 @@ For each task:
 1. Mark as in_progress
 2. Follow each step exactly (plan has bite-sized steps)
 3. Run verifications as specified
-4. Mark as completed
+4. **Quick validation** (after completing task, before marking complete):
+   - **Type check**: If you changed signatures, run type checker (mypy/tsc/etc.)
+   - **Import validation**: If you changed function/class names, grep for call sites
+   - **Task-specific test**: If plan specifies a test for this task, run it
+   - **Fix forward**: If validation fails, fix before next task
+5. Mark as completed
+
+**Exception**: Multi-file refactors that intentionally break across tasks - document the plan and validate at batch boundary instead.
 
 ### Step 3: Report
 When batch complete:

@@ -28,6 +28,38 @@ Evaluate each potential issue across four dimensions:
 | **Timeline** | When might this become a problem? Immediate, weeks, months, at 10x scale |
 | **Effort** | How hard to fix now vs later? Technical debt cost, refactoring complexity |
 
+## Security-Specific Risk Analysis
+
+When analyzing potential security issues:
+
+### Additional Risk Dimensions
+
+- **Exploitability**: How easily can this be exploited? (trivial/moderate/difficult)
+- **Exposure**: What's exposed? (credentials/data/system access)
+- **Blast radius**: Impact if exploited? (single user/all users/system compromise)
+
+### Common Security Anti-patterns to Check
+
+1. **Credentials in code**: Hardcoded API keys, passwords, tokens
+2. **Injection vulnerabilities**: SQL injection, command injection, XSS
+3. **Broken authentication**: Weak session management, missing validation
+4. **Insecure dependencies**: Known CVEs in dependencies
+5. **Insufficient logging**: Can't detect or investigate incidents
+6. **Missing input validation**: Trusting user input without sanitization
+
+### Risk Scoring for Security Issues
+
+```text
+Security Risk = Exploitability × Exposure × Blast Radius
+
+Examples:
+- Hardcoded API key in public repo: 1.0 × 1.0 × 0.8 = 0.80 (CRITICAL)
+- Missing input validation on admin endpoint: 0.7 × 0.9 × 0.9 = 0.57 (HIGH)
+- Outdated dependency with theoretical vulnerability: 0.3 × 0.5 × 0.6 = 0.09 (LOW)
+```
+
+Prioritize by exploitability first, exposure second, blast radius third.
+
 ## Problem Categories
 
 Focus analysis on these common categories:

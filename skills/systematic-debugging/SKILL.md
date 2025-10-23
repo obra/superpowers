@@ -119,6 +119,37 @@ You MUST complete each phase before proceeding to the next.
    - Keep tracing up until you find the source
    - Fix at source, not at symptom
 
+6. **Common Test Failure Patterns**
+
+   When investigating test failures, check these patterns first:
+
+   **Async/Timing Issues**
+   - **Symptom**: Test passes sometimes, fails sometimes
+   - **Check**: Are you awaiting all promises? Using proper async test syntax?
+   - **Pattern**: Missing `await`, forgotten `async`, race conditions
+   - **Fix**: Add awaits, use condition-based-waiting skill (not arbitrary timeouts)
+
+   **Mock/Stub Issues**
+   - **Symptom**: "X is not a function" or unexpected values
+   - **Check**: Are mocks properly set up? Restored between tests?
+   - **Pattern**: Mock not matching real signature, stale mocks, improper cleanup
+   - **Fix**: Match real signatures, use beforeEach/afterEach, verify mock calls
+   - **See also**: testing-anti-patterns skill (don't test mock behavior)
+
+   **Import Issues**
+   - **Symptom**: "Cannot find module" or wrong module loaded
+   - **Check**: Import paths correct? Module resolution working?
+   - **Pattern**: Relative vs absolute imports, circular dependencies, missing __init__.py
+   - **Fix**: Consistent import style, break circular deps, check module structure
+
+   **Flaky Tests**
+   - **Symptom**: Test fails in CI but passes locally (or vice versa)
+   - **Check**: Environment dependencies? Timing assumptions? Test isolation?
+   - **Pattern**: Hardcoded paths, timezone dependencies, shared state between tests
+   - **Fix**: Use fixtures for paths, explicit timezone handling, proper test isolation
+
+   Don't debug blind. Recognize patterns, apply known fixes.
+
 ### Phase 2: Pattern Analysis
 
 **Find the pattern before fixing:**
