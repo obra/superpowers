@@ -37,7 +37,7 @@ See [CHANGELOG.md](CHANGELOG.md) for detailed changes and additions.
 ```bash
 # In Claude Code
 /plugin marketplace add jthurlburt/claude-settings
-/plugin install superpowers@jthurlburt/claude-settings
+/plugin install superpowers@jthurlburt-claude-plugin
 ```
 
 ### Verify Installation
