@@ -341,7 +341,7 @@ You're good at porting - one great example is enough.
 | "I know the syntax" | CLI tools change, assumptions get stale | Always check `--help` first |
 | "Basic commands are obvious" | Flag names, structure vary between tools | Verify every example |
 | "Similar tools use same syntax" | Each tool has unique patterns | Check tool-specific help |
-| "Syntax is probably..." | Probably wrong without verification | Test commands before documenting |
+| "Syntax is probably..." | Almost certainly wrong without verification | Test commands before documenting |
 
 ### Verification Examples
 
