@@ -108,19 +108,53 @@ Then: Cleanup worktree (Step 6)
 
 #### Option 2: Push and Create PR
 
+**CRITICAL: Analyze the entire branch, not just latest commit.**
+
 ```bash
-# Push branch
+# 1. Analyze complete branch context
+git log <base-branch>..HEAD --oneline    # All commits
+git diff <base-branch>...HEAD | head -100  # Full diff preview
+
+# 2. Understand transformation
+# - What capability was added/fixed/improved?
+# - Why was this change needed?
+# - What are ALL the major changes across commits?
+
+# 3. Push branch
 git push -u origin <feature-branch>
 
-# Create PR
-gh pr create --title "<title>" --body "$(cat <<'EOF'
+# 4. Create PR with complete context
+gh pr create --title "<type>(<scope>): <complete feature description>" --body "$(cat <<'EOF'
 ## Summary
-<2-3 bullets of what changed>
+[2-3 sentences describing the complete transformation across all commits]
 
-## Test Plan
-- [ ] <verification steps>
+## Changes
+- [Major change 1 across commits]
+- [Major change 2 across commits]
+- [Major change 3 across commits]
 EOF
 )"
+```
+
+**Example - Bad (only latest commit):**
+
+```bash
+# Branch commits:
+# - feat(auth): add User model
+# - feat(auth): add login endpoint
+# - test(auth): add tests
+# - fix: typo in comment  ← latest
+
+# ❌ Bad PR title: "fix: typo in comment"
+# This misses the entire authentication feature!
+```
+
+**Example - Good (full branch analysis):**
+
+```bash
+# Same branch, but analyzed completely
+# ✅ Good PR title: "feat(auth): add user authentication system"
+# ✅ PR body describes all changes: User model, login endpoint, tests
 ```
 
 Then: Cleanup worktree (Step 6)
