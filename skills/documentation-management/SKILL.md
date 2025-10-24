@@ -68,6 +68,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/):
 - Preserve custom content and existing formatting
 - Match project's documentation style and conventions
 - Update all affected files, not just one
+- Include inline source links for factual claims: `[claim](https://source.url)`. Unverified claims are unverifiable
 
 **NEVER:**
 
