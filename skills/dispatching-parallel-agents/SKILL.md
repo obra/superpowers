@@ -34,6 +34,7 @@ digraph when_to_use {
 ```
 
 **Use when:**
+
 - **Debugging:** 3+ test files failing with different root causes
 - **Research:** Analyzing multiple independent codebases/frameworks
 - **Analysis:** Investigating separate problem domains
@@ -41,6 +42,7 @@ digraph when_to_use {
 - No shared state between tasks
 
 **Don't use when:**
+
 - Tasks are related (one informs the other)
 - Need to understand full system state
 - Agents would interfere with each other
@@ -51,6 +53,7 @@ digraph when_to_use {
 ### 1. Identify Independent Domains
 
 Group failures by what's broken:
+
 - File A tests: Tool approval flow
 - File B tests: Batch completion behavior
 - File C tests: Abort functionality
@@ -60,6 +63,7 @@ Each domain is independent - fixing tool approval doesn't affect abort tests.
 ### 2. Create Focused Agent Tasks
 
 Each agent gets:
+
 - **Specific scope:** One test file or subsystem
 - **Clear goal:** Make these tests pass
 - **Constraints:** Don't change other code
@@ -69,15 +73,16 @@ Each agent gets:
 
 ```typescript
 // In Claude Code / AI environment
-Task("Fix agent-tool-abort.test.ts failures")
-Task("Fix batch-completion-behavior.test.ts failures")
-Task("Fix tool-approval-race-conditions.test.ts failures")
+Task("Fix agent-tool-abort.test.ts failures");
+Task("Fix batch-completion-behavior.test.ts failures");
+Task("Fix tool-approval-race-conditions.test.ts failures");
 // All three run concurrently
 ```
 
 ### 4. Review and Integrate
 
 When agents return:
+
 - Read each summary
 - Verify fixes don't conflict
 - Run full test suite
@@ -86,6 +91,7 @@ When agents return:
 ## Agent Prompt Structure
 
 Good agent prompts are:
+
 1. **Focused** - One clear problem domain
 2. **Self-contained** - All context needed to understand the problem
 3. **Specific about output** - What should the agent return?
@@ -140,6 +146,7 @@ Return: Summary of what you found and what you fixed.
 **Scenario:** 6 test failures across 3 files after major refactoring
 
 **Failures:**
+
 - agent-tool-abort.test.ts: 3 failures (timing issues)
 - batch-completion-behavior.test.ts: 2 failures (tools not executing)
 - tool-approval-race-conditions.test.ts: 1 failure (execution count = 0)
@@ -147,6 +154,7 @@ Return: Summary of what you found and what you fixed.
 **Decision:** Independent domains - abort logic separate from batch completion separate from race conditions
 
 **Dispatch:**
+
 ```
 Agent 1 → Fix agent-tool-abort.test.ts
 Agent 2 → Fix batch-completion-behavior.test.ts
@@ -154,6 +162,7 @@ Agent 3 → Fix tool-approval-race-conditions.test.ts
 ```
 
 **Results:**
+
 - Agent 1: Replaced timeouts with event-based waiting
 - Agent 2: Fixed event structure bug (threadId in wrong place)
 - Agent 3: Added wait for async tool execution to complete
@@ -167,6 +176,7 @@ Agent 3 → Fix tool-approval-race-conditions.test.ts
 **Scenario:** Analyze 3 independent technology domains for pattern extraction
 
 **Domains:**
+
 - Domain 1: pytest testing framework patterns
 - Domain 2: webpack/vite build tool patterns
 - Domain 3: Terraform infrastructure patterns
@@ -174,13 +184,21 @@ Agent 3 → Fix tool-approval-race-conditions.test.ts
 **Decision:** Independent research - testing frameworks unrelated to build tools unrelated to IaC
 
 **Dispatch:**
+
 ```typescript
-Task("Analyze pytest patterns - best practices, anti-patterns, conventions. Return JSON.")
-Task("Analyze webpack/vite patterns - config patterns, optimizations. Return JSON.")
-Task("Analyze Terraform patterns - module structure, state management, security. Return JSON.")
+Task(
+  "Analyze pytest patterns - best practices, anti-patterns, conventions. Return JSON.",
+);
+Task(
+  "Analyze webpack/vite patterns - config patterns, optimizations. Return JSON.",
+);
+Task(
+  "Analyze Terraform patterns - module structure, state management, security. Return JSON.",
+);
 ```
 
 **Results:**
+
 - Agent 1: pytest best practices with fixture patterns
 - Agent 2: webpack vs vite architectural differences
 - Agent 3: Terraform module structure patterns
@@ -199,6 +217,7 @@ Task("Analyze Terraform patterns - module structure, state management, security.
 ## Verification
 
 After agents return:
+
 1. **Review each summary** - Understand what changed
 2. **Check for conflicts** - Did agents edit same code?
 3. **Run full suite** - Verify all fixes work together
@@ -207,16 +226,19 @@ After agents return:
 ## Real-World Impact
 
 **Debugging session** (2025-10-03):
+
 - 6 failures across 3 files → 3 agents dispatched
 - All investigations completed concurrently
 - All fixes integrated successfully, zero conflicts
 
 **Research session** (2025-10-23):
+
 - 3 technology domains → 3 agents dispatched
 - Completed in ~3 minutes vs 9+ sequentially
 - Structured JSON from all agents, combined into analysis
 
 **Bake-off validation** (2025-10-23):
+
 - Task tool approach: 100% success rate, 3-minute completion
 - Simple one-line dispatch per agent
 - Reliable across debugging and research use cases

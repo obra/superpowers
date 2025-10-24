@@ -15,16 +15,17 @@ Sometimes one insight eliminates 10 things. Look for the unifying principle that
 
 ## Quick Reference
 
-| Symptom | Likely Cascade |
-|---------|----------------|
-| Same thing implemented 5+ ways | Abstract the common pattern |
-| Growing special case list | Find the general case |
-| Complex rules with exceptions | Find the rule that has no exceptions |
-| Excessive config options | Find defaults that work for 95% |
+| Symptom                        | Likely Cascade                       |
+| ------------------------------ | ------------------------------------ |
+| Same thing implemented 5+ ways | Abstract the common pattern          |
+| Growing special case list      | Find the general case                |
+| Complex rules with exceptions  | Find the rule that has no exceptions |
+| Excessive config options       | Find defaults that work for 95%      |
 
 ## The Pattern
 
 **Look for:**
+
 - Multiple implementations of similar concepts
 - Special case handling everywhere
 - "We need to handle A, B, C, D differently..."
@@ -35,18 +36,21 @@ Sometimes one insight eliminates 10 things. Look for the unifying principle that
 ## Examples
 
 ### Cascade 1: Stream Abstraction
+
 **Before:** Separate handlers for batch/real-time/file/network data
 **Insight:** "All inputs are streams - just different sources"
 **After:** One stream processor, multiple stream sources
 **Eliminated:** 4 separate implementations
 
 ### Cascade 2: Resource Governance
+
 **Before:** Session tracking, rate limiting, file validation, connection pooling (all separate)
 **Insight:** "All are per-entity resource limits"
 **After:** One ResourceGovernor with 4 resource types
 **Eliminated:** 4 custom enforcement systems
 
 ### Cascade 3: Immutability
+
 **Before:** Defensive copying, locking, cache invalidation, temporal coupling
 **Insight:** "Treat everything as immutable data + transformations"
 **After:** Functional programming patterns

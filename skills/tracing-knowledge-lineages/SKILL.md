@@ -16,12 +16,14 @@ Ideas have history. Understanding why we arrived at current approaches - and wha
 ## When to Trace Lineages
 
 **Trace before:**
+
 - Proposing to replace existing approach (understand why it exists first)
 - Dismissing "old" patterns (they might have been abandoned for wrong reasons)
 - Implementing "new" ideas (they might be revivals worth reconsidering)
 - Declaring something "best practice" (understand its evolution)
 
 **Red flags triggering lineage tracing:**
+
 - "This seems overcomplicated" (was it simpler before? why did it grow?)
 - "Why don't we just..." (someone probably tried, what happened?)
 - "This is the modern way" (what did the old way teach us?)
@@ -39,6 +41,7 @@ Search for when/why current approach was chosen:
 4. **Ask the person who wrote it** (if available)
 
 **Document:**
+
 ```markdown
 ## Lineage: [Current Approach]
 
@@ -55,12 +58,14 @@ When someone says "we tried X and it didn't work":
 
 **Don't assume:** X is fundamentally flawed
 **Instead trace:**
+
 1. **What was the context?** (constraints that no longer apply)
 2. **What specifically failed?** (the whole approach or one aspect?)
 3. **Why did it fail then?** (technology limits, team constraints, time pressure)
 4. **Has context changed?** (new tools, different requirements, more experience)
 
 **Document:**
+
 ```markdown
 ## Failed Attempt: [Approach]
 
@@ -83,6 +88,7 @@ When evaluating "new" approaches:
 4. **Check if resurrection conditions exist** (has context changed enough?)
 
 **Common revival patterns:**
+
 - Microservices ← Service-Oriented Architecture ← Distributed Objects
 - GraphQL ← SOAP ← RPC
 - Serverless ← CGI scripts ← Cloud functions
@@ -95,6 +101,7 @@ When evaluating "new" approaches:
 When major architectural changes occurred:
 
 **Map the transition:**
+
 ```markdown
 ## Paradigm Shift: From [Old] to [New]
 
@@ -112,13 +119,14 @@ When major architectural changes occurred:
 **Where to look for lineage:**
 
 1. **Decision records** (common locations: `docs/decisions/`, `docs/adr/`, `.adr/`, or search for "ADR", "decision record")
-2. **Conversation history** (search with memory system: mcp__local-semantic-memory__search_content or mcp__local-semantic-memory__search_semantic)
+2. **Conversation history** (search with memory system: mcp**local-semantic-memory**search_content or mcp**local-semantic-memory**search_semantic)
 3. **Git history** (`git log --grep="keyword"`, `git blame`)
 4. **Issue/PR discussions** (GitHub/GitLab issue history)
 5. **Documentation evolution** (`git log -- docs/`)
 6. **Team knowledge** (ask: "Has anyone tried this before?")
 
 **Search patterns:**
+
 ```bash
 # Find when approach was introduced
 git log --all --grep="introduce.*caching"
@@ -169,29 +177,35 @@ When proposing changes, include lineage:
 ## Proposal: Switch from [Old] to [New]
 
 ### Current Approach Lineage
+
 - **Adopted:** [When/why]
 - **Replaced:** [What it replaced]
 - **Worked because:** [Its strengths]
 - **Struggling because:** [Current problems]
 
 ### Previous Attempts at [New]
+
 - **Attempted:** [When, if ever]
 - **Failed because:** [Why it didn't work then]
 - **Context change:** [What's different now]
 
 ### Decision
+
 [Proceed/Defer/Abandon] because [reasoning with historical context]
 ```
 
 ## Examples
 
 ### Good Lineage Tracing
+
 "We used XML before JSON. XML died because verbosity hurt developer experience. But XML namespaces solved a real problem. If we hit namespace conflicts in JSON, we should study how XML solved it, not reinvent."
 
 ### Bad Lineage Ignorance
+
 "REST is old, let's use GraphQL." (Ignores: Why did REST win over SOAP? What problems does it solve well? Are those problems gone?)
 
 ### Revival with Context
+
 "We tried client-side routing in 2010, abandoned it due to poor browser support. Now that support is universal and we have better tools, worth reconsidering with lessons learned."
 
 ## Remember

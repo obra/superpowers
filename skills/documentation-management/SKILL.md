@@ -36,23 +36,25 @@ Systematically update project documentation to match code reality. Analyze chang
 
 ## Update Patterns by Change Type
 
-| Change Type | Documentation Updates |
-|-------------|---------------------|
-| **New feature** | README features, CHANGELOG (minor bump), API docs, usage examples |
-| **Bug fix** | CHANGELOG (patch bump), troubleshooting if significant |
-| **Refactoring** | Architecture docs, migration guide if breaking, CHANGELOG |
-| **Security fix** | Security policy, CHANGELOG with Security section, README if user-facing |
-| **Performance** | Benchmarks, CHANGELOG with improved metrics, optimization guides |
-| **Breaking change** | CHANGELOG (major bump), migration guide, README with upgrade path |
+| Change Type         | Documentation Updates                                                   |
+| ------------------- | ----------------------------------------------------------------------- |
+| **New feature**     | README features, CHANGELOG (minor bump), API docs, usage examples       |
+| **Bug fix**         | CHANGELOG (patch bump), troubleshooting if significant                  |
+| **Refactoring**     | Architecture docs, migration guide if breaking, CHANGELOG               |
+| **Security fix**    | Security policy, CHANGELOG with Security section, README if user-facing |
+| **Performance**     | Benchmarks, CHANGELOG with improved metrics, optimization guides        |
+| **Breaking change** | CHANGELOG (major bump), migration guide, README with upgrade path       |
 
 ## CHANGELOG Version Guidance
 
 Suggest version bumps following semver:
+
 - **MAJOR**: Breaking changes, API removals, incompatible modifications
 - **MINOR**: New features, enhancements, deprecations (backward compatible)
 - **PATCH**: Bug fixes, documentation updates, internal changes
 
 Format follows [Keep a Changelog](https://keepachangelog.com/):
+
 - Group by type: Added, Changed, Deprecated, Removed, Fixed, Security
 - Newest entries at top
 - Link to issues/PRs when available
@@ -60,6 +62,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/):
 ## Essential Rules
 
 **ALWAYS:**
+
 - Read existing docs completely before updates
 - Find exact section needing update, modify in-place
 - Preserve custom content and existing formatting
@@ -67,6 +70,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/):
 - Update all affected files, not just one
 
 **NEVER:**
+
 - Delete existing documentation
 - Overwrite custom sections (respect `<!-- CUSTOM:START -->` markers)
 - Change documentation style drastically

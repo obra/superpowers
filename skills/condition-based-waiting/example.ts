@@ -2,8 +2,8 @@
 // From: Lace test infrastructure improvements (2025-10-03)
 // Context: Fixed 15 flaky tests by replacing arbitrary timeouts
 
-import type { ThreadManager } from '~/threads/thread-manager';
-import type { LaceEvent, LaceEventType } from '~/threads/types';
+import type { ThreadManager } from "~/threads/thread-manager";
+import type { LaceEvent, LaceEventType } from "~/threads/types";
 
 /**
  * Wait for a specific event type to appear in thread
@@ -21,7 +21,7 @@ export function waitForEvent(
   threadManager: ThreadManager,
   threadId: string,
   eventType: LaceEventType,
-  timeoutMs = 5000
+  timeoutMs = 5000,
 ): Promise<LaceEvent> {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
@@ -33,7 +33,11 @@ export function waitForEvent(
       if (event) {
         resolve(event);
       } else if (Date.now() - startTime > timeoutMs) {
-        reject(new Error(`Timeout waiting for ${eventType} event after ${timeoutMs}ms`));
+        reject(
+          new Error(
+            `Timeout waiting for ${eventType} event after ${timeoutMs}ms`,
+          ),
+        );
       } else {
         setTimeout(check, 10); // Poll every 10ms for efficiency
       }
@@ -62,7 +66,7 @@ export function waitForEventCount(
   threadId: string,
   eventType: LaceEventType,
   count: number,
-  timeoutMs = 5000
+  timeoutMs = 5000,
 ): Promise<LaceEvent[]> {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
@@ -76,8 +80,8 @@ export function waitForEventCount(
       } else if (Date.now() - startTime > timeoutMs) {
         reject(
           new Error(
-            `Timeout waiting for ${count} ${eventType} events after ${timeoutMs}ms (got ${matchingEvents.length})`
-          )
+            `Timeout waiting for ${count} ${eventType} events after ${timeoutMs}ms (got ${matchingEvents.length})`,
+          ),
         );
       } else {
         setTimeout(check, 10);
@@ -113,7 +117,7 @@ export function waitForEventMatch(
   threadId: string,
   predicate: (event: LaceEvent) => boolean,
   description: string,
-  timeoutMs = 5000
+  timeoutMs = 5000,
 ): Promise<LaceEvent> {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
@@ -125,7 +129,9 @@ export function waitForEventMatch(
       if (event) {
         resolve(event);
       } else if (Date.now() - startTime > timeoutMs) {
-        reject(new Error(`Timeout waiting for ${description} after ${timeoutMs}ms`));
+        reject(
+          new Error(`Timeout waiting for ${description} after ${timeoutMs}ms`),
+        );
       } else {
         setTimeout(check, 10);
       }

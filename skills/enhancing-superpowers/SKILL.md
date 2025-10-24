@@ -16,12 +16,14 @@ Project-specific guide for integrating external concepts into the superpowers/cl
 ## When to Use
 
 Use when:
+
 - Analyzing external projects for superpowers enhancements
 - User says "add pattern X from project Y"
 - Considering new capabilities for skills library
 - Evaluating whether concept fits superpowers philosophy
 
 Don't use when:
+
 - Making simple typo fixes
 - Updating documentation only
 - Changes don't involve external concepts
@@ -114,6 +116,7 @@ claude-settings/
 ```
 
 **File naming conventions:**
+
 - Skills: lowercase-with-hyphens
 - Commands: lowercase-with-hyphens.md
 - Tools: snake_case.py or kebab-case.sh
@@ -126,6 +129,7 @@ claude-settings/
 **Example:** DISCOVERIES.md, decision tracking
 
 **Approach:**
+
 1. Create template/documentation
 2. Integrate with existing skills (reference from systematic-debugging, when-stuck)
 3. Add to SessionStart reminder if needed
@@ -137,6 +141,7 @@ claude-settings/
 **Example:** Artifact-driven phases, approval gates
 
 **Approach:**
+
 1. Check existing workflow skills (writing-plans, executing-plans)
 2. Enhance those skills with new patterns
 3. Test integration with existing workflows
@@ -148,6 +153,7 @@ claude-settings/
 **Example:** Hooks, transcript system, status line
 
 **Approach:**
+
 1. Add to .claude/tools/
 2. Update .claude/settings.json if hooks
 3. Create slash command if user-facing
@@ -160,6 +166,7 @@ claude-settings/
 **Example:** Genuine new capability not covered by 33 existing skills
 
 **Approach:**
+
 1. **REQUIRED:** Follow superpowers:writing-skills (TDD for skills)
 2. Run baseline tests WITHOUT skill
 3. Write minimal skill addressing baseline failures
@@ -167,6 +174,7 @@ claude-settings/
 5. Deploy with confidence
 
 **Criteria for new skill:**
+
 - Not covered by existing 33+ skills
 - Broadly applicable (not project-specific)
 - Auto-activatable (clear triggering conditions)
@@ -178,6 +186,7 @@ claude-settings/
 **Example:** Implementation philosophy, modular design principles
 
 **Approach:**
+
 1. Create docs/ file
 2. Reference from relevant skills
 3. Add to SessionStart context if foundational
@@ -187,6 +196,7 @@ claude-settings/
 ## Philosophy Alignment Checklist
 
 **Superpowers values:**
+
 - ✅ Test-Driven Development (write tests first, always)
 - ✅ Systematic over ad-hoc (process over guessing)
 - ✅ Complexity reduction (simplicity as primary goal)
@@ -195,6 +205,7 @@ claude-settings/
 - ✅ Integrated workflows (skills work together seamlessly)
 
 **Before integrating, ask:**
+
 - [ ] Does this align with TDD philosophy?
 - [ ] Does this make things simpler or more complex?
 - [ ] Can this auto-activate or requires explicit invocation?
@@ -203,6 +214,7 @@ claude-settings/
 - [ ] Does this solve a real problem we've experienced?
 
 **Red flags:**
+
 - ❌ Requires explicit invocation (conflicts with auto-activation)
 - ❌ Adds significant complexity
 - ❌ Creates parallel system to existing skills
@@ -222,31 +234,39 @@ description: Use when [triggering conditions] - [what it does, third person, und
 # Skill Name
 
 ## Overview
+
 Core principle in 1-2 sentences.
 
 ## When to Use
+
 Bullet list with symptoms and use cases
 When NOT to use
 
 ## Core Pattern
+
 Before/after comparison
 
 ## Quick Reference
+
 Table for common operations
 
 ## Common Mistakes
+
 What goes wrong + fixes
 
 ## Integration
+
 Which skills this pairs with
 ```
 
 **Frontmatter rules:**
+
 - Only `name` and `description` fields (max 1024 chars total)
 - name: letters, numbers, hyphens only (no parens, special chars)
 - description: Start with "Use when...", third person, specific triggers
 
 **CSO (Claude Search Optimization):**
+
 - Use concrete triggers not abstractions
 - Include error messages, symptoms, tool names
 - Technology-agnostic unless skill is tech-specific
@@ -267,42 +287,49 @@ Which skills this pairs with
 
 ## Quick Reference
 
-| Task | Approach | Skills to Use |
-|------|----------|--------------|
-| Check existing | `ls skills/` + grep | N/A |
-| Enhance skill | Update SKILL.md | writing-skills, testing-skills-with-subagents |
-| New skill | Full TDD cycle | writing-skills, testing-skills-with-subagents |
-| Add infrastructure | .claude/tools/ | N/A |
-| Add docs | docs/ | N/A |
-| Exploration | Worktree required | using-git-worktrees |
+| Task               | Approach            | Skills to Use                                 |
+| ------------------ | ------------------- | --------------------------------------------- |
+| Check existing     | `ls skills/` + grep | N/A                                           |
+| Enhance skill      | Update SKILL.md     | writing-skills, testing-skills-with-subagents |
+| New skill          | Full TDD cycle      | writing-skills, testing-skills-with-subagents |
+| Add infrastructure | .claude/tools/      | N/A                                           |
+| Add docs           | docs/               | N/A                                           |
+| Exploration        | Worktree required   | using-git-worktrees                           |
 
 ## Common Mistakes
 
 ### Skipping Existing Skills Check
+
 **Problem:** Create new skill when could enhance existing
 **Fix:** Always check all 33+ skills first with grep
 
 ### Wrong Directory
+
 **Problem:** Put infrastructure in skills/, docs in .claude/
 **Fix:** Use structure table above
 
 ### No Worktree
+
 **Problem:** Work directly in main branch
 **Fix:** ALWAYS use worktrees for exploration
 
 ### Format Violations
+
 **Problem:** Wrong SKILL.md format, breaks auto-activation
 **Fix:** Follow exact format from writing-skills
 
 ### Skipping Tests
+
 **Problem:** Deploy untested skill, breaks in production
 **Fix:** Full RED-GREEN-REFACTOR cycle, no exceptions
 
 ### Philosophy Drift
+
 **Problem:** Add explicit-invocation features to auto-activation project
 **Fix:** Check philosophy alignment before integrating
 
 ### Skill Proliferation
+
 **Problem:** Create many niche skills, hard to discover
 **Fix:** High bar for new skills, enhance existing when possible
 
@@ -352,6 +379,7 @@ Which skills this pairs with
 ## Real-World Example
 
 From amplifier integration (2025-10-23):
+
 1. ✅ Used extracting-patterns-from-projects for analysis
 2. ✅ Created worktree (.worktrees/amplifier-integration)
 3. ✅ Comprehensive write-up (docs/amplifier-analysis.md)
@@ -361,6 +389,7 @@ From amplifier integration (2025-10-23):
 7. → Now writing these two skills to prevent future issues
 
 **Lessons:**
+
 - Follow existing skills even when you think you know
 - User caught mistake because skill wasn't there yet
 - These skills will prevent this in 7th, 8th, 9th attempts
@@ -368,12 +397,14 @@ From amplifier integration (2025-10-23):
 ## Integration
 
 **Required skills:**
+
 - **extracting-patterns-from-projects** - For analysis phase
 - **using-git-worktrees** - For isolation
 - **writing-skills** - For creating/modifying skills
 - **testing-skills-with-subagents** - For validation
 
 **Pairs with:**
+
 - **brainstorming** - For design decisions
 - **writing-plans** - After approval
 - **finishing-a-development-branch** - For cleanup
