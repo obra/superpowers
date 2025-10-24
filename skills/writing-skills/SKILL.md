@@ -51,11 +51,13 @@ The entire skill creation process follows RED-GREEN-REFACTOR.
 - You'd reference this again across projects
 - Pattern applies broadly (not project-specific)
 - Others would benefit
+- Tool/CLI commands need systematic organization and verification
 
 **Don't create for:**
 - One-off solutions
 - Standard practices well-documented elsewhere
 - Project-specific conventions (put in CLAUDE.md)
+- Tool syntax you haven't verified against actual help output
 
 ## Skill Types
 
@@ -67,6 +69,8 @@ Way of thinking about problems (flatten-with-flags, test-invariants)
 
 ### Reference
 API docs, syntax guides, tool documentation (office docs)
+
+**CRITICAL:** For CLI tools, always verify commands against actual `--help` output before writing skill. Don't assume syntax.
 
 ## Directory Structure
 
@@ -195,12 +199,15 @@ Use words Claude would search for:
 **Techniques:**
 
 **Move details to tool help:**
-```bash
-# ❌ BAD: Document all flags in SKILL.md
+```sh
+# ❌ BAD: Document all flags in SKILL.md without verification
 search-conversations supports --text, --both, --after DATE, --before DATE, --limit N
 
-# ✅ GOOD: Reference --help
+# ✅ GOOD: Reference --help after verifying it exists
 search-conversations supports multiple modes and filters. Run --help for details.
+
+# ✅ BETTER: Include verified example from actual help output  
+search-conversations --text "query" --limit 10  # Verified against --help
 ```
 
 **Use cross-references:**
@@ -303,13 +310,60 @@ Choose most relevant language:
 - From real scenario
 - Shows pattern clearly
 - Ready to adapt (not generic template)
+- **Syntax verified against actual tool/API** (for CLI/tool skills)
 
 **Don't:**
 - Implement in 5+ languages
 - Create fill-in-the-blank templates
 - Write contrived examples
+- **Assume CLI syntax without checking `--help` or documentation**
 
 You're good at porting - one great example is enough.
+
+## CLI Tool Verification (Critical)
+
+**For any skill involving CLI tools, APIs, or command-line interfaces:**
+
+### Mandatory Verification Process
+
+**NEVER document CLI syntax without verification. Always:**
+
+1. **Check tool exists:** `command --help` or `command -h`
+2. **Verify subcommands:** `command subcommand --help` 
+3. **Test syntax:** Run actual commands with sample data
+4. **Document exact flags:** Copy from help output, don't assume
+5. **Include version context:** Tool versions change syntax
+
+### Common CLI Documentation Failures
+
+| Mistake | Reality | Fix |
+|---------|---------|-----|
+| "I know the syntax" | CLI tools change, assumptions get stale | Always check `--help` first |
+| "Basic commands are obvious" | Flag names, structure vary between tools | Verify every example |
+| "Similar tools use same syntax" | Each tool has unique patterns | Check tool-specific help |
+| "Syntax is probably..." | Probably wrong without verification | Test commands before documenting |
+
+### Verification Examples
+
+```bash
+# ❌ BAD: Assume syntax
+acli jira issue create --project X --summary Y
+
+# ✅ GOOD: Verify first
+acli jira --help                    # Check subcommands
+acli jira workitem --help          # Verify correct subcommand
+acli jira workitem create --help   # Get exact syntax
+
+# Result: acli jira workitem create --project X --summary Y
+```
+
+**Red flags for CLI skills:**
+- "I assume this tool works like..."
+- "The syntax is probably..."
+- "Most CLI tools use..."
+- "It should be similar to..."
+
+**All mean: Stop. Verify with actual help output.**
 
 ## File Organization
 
@@ -405,8 +459,11 @@ Different skill types need different test approaches:
 - Retrieval scenarios: Can they find the right information?
 - Application scenarios: Can they use what they found correctly?
 - Gap testing: Are common use cases covered?
+- **Syntax verification:** Do examples match actual tool behavior?
 
 **Success criteria:** Agent finds and correctly applies reference information
+
+**CRITICAL for CLI/tool skills:** Always verify syntax against actual `--help` output or official documentation. Never assume command structure.
 
 ## Common Rationalizations for Skipping Testing
 
@@ -420,6 +477,7 @@ Different skill types need different test approaches:
 | "I'm confident it's good" | Overconfidence guarantees issues. Test anyway. |
 | "Academic review is enough" | Reading ≠ using. Test application scenarios. |
 | "No time to test" | Deploying untested skill wastes more time fixing it later. |
+| "I know the CLI syntax" | CLI tools change, syntax assumptions get stale. Verify with --help. |
 
 **All of these mean: Test before deploying. No exceptions.**
 
@@ -577,6 +635,7 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 - [ ] Keywords throughout for search (errors, symptoms, tools)
 - [ ] Clear overview with core principle
 - [ ] Address specific baseline failures identified in RED
+- [ ] **Verify all CLI commands/syntax against actual `--help` output**
 - [ ] Code inline OR link to separate file
 - [ ] One excellent example (not multi-language)
 - [ ] Run scenarios WITH skill - verify agents now comply
