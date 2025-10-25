@@ -1,0 +1,71 @@
+name: Auto-Sync Skills Best Practices
+
+on:
+  schedule:
+    # Run every Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq curl
+
+      - name: Run auto-sync
+        id: sync
+        run: |
+          chmod +x scripts/auto-sync.sh
+          if ./scripts/auto-sync.sh; then
+            echo "updates_found=false" >> $GITHUB_OUTPUT
+          else
+            echo "updates_found=true" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      - name: Create issue if updates found
+        if: steps.sync.outputs.updates_found == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const reportPath = 'sync-report.md';
+
+            if (fs.existsSync(reportPath)) {
+              const report = fs.readFileSync(reportPath, 'utf8');
+
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `Best Practices Update Available - ${new Date().toISOString().split('T')[0]}`,
+                body: report,
+                labels: ['auto-sync', 'best-practices', 'needs-review']
+              });
+
+              console.log('✓ Issue created with sync report');
+            } else {
+              console.log('⚠ No report file found');
+            }
+
+      - name: Upload sync report as artifact
+        if: steps.sync.outputs.updates_found == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: sync-report
+          path: sync-report.md
+          retention-days: 30
+
+      - name: Summary
+        run: |
+          if [ "${{ steps.sync.outputs.updates_found }}" = "true" ]; then
+            echo "📋 Updates detected - Issue created for review"
+          else
+            echo "✓ All skills up to date with latest best practices"
+          fi

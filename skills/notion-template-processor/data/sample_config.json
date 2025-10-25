@@ -1,0 +1,52 @@
+{
+  "notion_integration": {
+    "token_env_var": "NOTION_API_TOKEN",
+    "default_template_database": "Templates",
+    "default_output_database": "Generated Documents",
+    "timezone": "America/New_York"
+  },
+  "email_settings": {
+    "smtp_server": {
+      "host": "smtp.gmail.com",
+      "port": 587,
+      "use_tls": true,
+      "username_env_var": "SMTP_USERNAME",
+      "password_env_var": "SMTP_PASSWORD",
+      "sender_email_default": "me@example.com",
+      "sender_name_default": "Claude Skills System"
+    },
+    "api_providers": {
+      "sendgrid_env_var": "SENDGRID_API_KEY",
+      "aws_ses_region": "us-east-1",
+      "aws_access_key_env_var": "AWS_ACCESS_KEY_ID",
+      "aws_secret_key_env_var": "AWS_SECRET_ACCESS_KEY"
+    },
+    "default_subjects": {
+      "proposal": "Project Proposal: {{client_name}} - {{project_description}}",
+      "report": "Monthly Report - {{date}}",
+      "invoice": "Invoice #{{invoice_number}} for {{client_name}}",
+      "meeting": "Meeting Summary - {{meeting_date}}"
+    }
+  },
+  "template_defaults": {
+    "date_format": "%Y-%m-%d",
+    "currency_symbol": "$",
+    "company_name": "Your Company Name",
+    "company_address": "123 Business St, City, State 12345",
+    "company_phone": "(555) 123-4567",
+    "company_email": "info@company.com"
+  },
+  "batch_processing": {
+    "max_batch_size": 10,
+    "delay_between_emails_ms": 500,
+    "retry_attempts": 3,
+    "retry_delay_ms": 2000
+  },
+  "logging": {
+    "level": "INFO",
+    "log_template_operations": true,
+    "log_email_operations": true,
+    "log_errors": true,
+    "store_operation_history": true
+  }
+}

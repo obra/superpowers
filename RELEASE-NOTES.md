@@ -1,5 +1,64 @@
 # Superpowers Release Notes
 
+## v4.0.0 (2025-10-25)
+
+### 🎉 Major Release: Cross-Platform Support & Technical Skills
+
+**New Skills - Technical & Productivity (7 total)**
+- **pdf-processor** - Comprehensive PDF manipulation toolkit (extract, merge, split, create, forms)
+- **content-research-writer** - Research-enhanced writing with citations and iterative feedback
+- **brand-guidelines** - Corporate branding and styling automation for documents
+- **gmail-intelligence** - Email analysis, insights extraction, and automation
+- **invoice-organizer** - Financial document processing for tax preparation
+- **notion-template-processor** - Database automation with Notion MCP integration
+- **youtube-transcript-downloader** - Video content extraction with yt-dlp and Whisper fallback
+- **auto-sync-skills** - Monitor Anthropic docs and official repos for best practice updates
+
+**Cross-Platform Distribution**
+- All 28 skills now include ZIP files for Claude Desktop import
+- Added comprehensive USAGE_GUIDE.md for Claude Code, Desktop, and API/SDK
+- Skills can be loaded programmatically via Claude API/SDK
+- New script: `scripts/create-skill-zips.sh` to generate ZIP files
+
+**Documentation Enhancements**
+- Added IMPORT_GUIDE.md for importing skills from other repositories
+- Added templates/ directory with SKILL.md template for creating new skills
+- Added examples/ directory with working PDF and branding implementations
+- Enhanced CONTRIBUTING.md with skill creation guidelines
+- Updated README.md with cross-platform instructions
+
+**Auto-Sync Infrastructure**
+- New auto-sync-skills skill for monitoring best practice updates
+- Scripts: sync-anthropic-docs.sh, sync-official-repos.sh, auto-sync.sh
+- GitHub Action (.github/workflows/sync-practices.yml) for weekly automated checks
+- Automatically creates issues when updates are detected
+
+**Plugin Metadata**
+- Updated version to 4.0.0 (major release)
+- Enhanced description to include technical skills and cross-platform support
+- Added keywords: productivity, document-processing, automation, pdf, content-writing
+
+### Files Changed
+- New: 7 technical skill directories with SKILL.md files
+- New: 28 ZIP files (one per skill) for Claude Desktop
+- New: USAGE_GUIDE.md, IMPORT_GUIDE.md
+- New: templates/SKILL.md
+- New: examples/ directory (pdf-processing, brand-application)
+- New: scripts/ directory with sync scripts and setup utilities
+- New: docs/ directory with forms.md reference
+- New: .github/workflows/sync-practices.yml
+- Updated: README.md (comprehensive rewrite for cross-platform)
+- Updated: .claude-plugin/plugin.json (v4.0.0, enhanced description)
+- Updated: .gitignore (sync cache entries)
+
+### Breaking Changes
+None - fully backward compatible with v3.x
+
+### Migration Notes
+- Existing Claude Code users: Update via `/plugin update superpowers`
+- Claude Desktop users: Import desired skills via Profile → Skills → Import Skill
+- No changes required to existing skills or workflows
+
 ## v3.2.1 (2025-10-20)
 
 ### New Features

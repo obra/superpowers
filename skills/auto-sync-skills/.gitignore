@@ -1,0 +1,13 @@
+
+# macOS
+.DS_Store
+
+# Editor temp files
+*.swp
+*~
+.*.swp
+.*.swo
+
+# Auto-sync cache
+.sync-cache/
+sync-report.md

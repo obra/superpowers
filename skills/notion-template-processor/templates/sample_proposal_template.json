@@ -1,0 +1,108 @@
+{
+  "template_id": "proposal-001",
+  "name": "Client Proposal",
+  "type": "proposal",
+  "description": "Standard project proposal template",
+  "required_fields": [
+    "client_name",
+    "project_description",
+    "budget",
+    "timeline"
+  ],
+  "optional_fields": [
+    "contact_email",
+    "company_address",
+    "team_size",
+    "has_attachments"
+  ],
+  "conditional_sections": [
+    {
+      "condition": "has_attachments",
+      "section_name": "attachments_section"
+    }
+  ],
+  "content_structure": {
+    "blocks": [
+      {
+        "type": "heading_1",
+        "content": "# Project Proposal - {{client_name}}"
+      },
+      {
+        "type": "paragraph",
+        "content": "Date: {{date}}"
+      },
+      {
+        "type": "heading_2",
+        "content": "## Client Information"
+      },
+      {
+        "type": "bulleted_list_item",
+        "content": "- **Company**: {{client_name}}"
+      },
+      {
+        "type": "bulleted_list_item",
+        "content": "- **Contact**: {{contact_email}}"
+      },
+      {
+        "type": "bulleted_list_item",
+        "content": "- **Address**: {{company_address}}"
+      },
+      {
+        "type": "heading_2",
+        "content": "## Project Overview"
+      },
+      {
+        "type": "paragraph",
+        "content": "{{project_description}}"
+      },
+      {
+        "type": "heading_3",
+        "content": "### Budget & Timeline"
+      },
+      {
+        "type": "bulleted_list_item",
+        "content": "- **Budget**: {{budget}}"
+      },
+      {
+        "type": "bulleted_list_item",
+        "content": "- **Timeline**: {{timeline}}"
+      },
+      {
+        "type": "bulleted_list_item",
+        "content": "- **Team Size**: {{team_size}} developers"
+      },
+      {
+        "type": "conditional_section",
+        "condition": "has_attachments",
+        "content": {
+          "type": "heading_2",
+          "content": "## Attachments"
+        }
+      },
+      {
+        "type": "conditional_block",
+        "condition": "has_attachments",
+        "content": {
+          "type": "bulleted_list_item",
+          "content": "{{attachments_list}}"
+        }
+      },
+      {
+        "type": "heading_2",
+        "content": "## Next Steps"
+      },
+      {
+        "type": "numbered_list_item",
+        "content": "Project kickoff meeting"
+      },
+      {
+        "type": "numbered_list_item",
+        "content": "Requirements gathering phase"
+      },
+      {
+        "type": "numbered_list_item",
+        "content": "Development begins"
+      }
+    ]
+  }
+}
