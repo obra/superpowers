@@ -130,7 +130,7 @@ Task 3: security-focused-reviewer (if exists)
 
 ### Step 1: Normalize agent name
 
-```
+```text
 Input: "code-reviewer"
 Variations to check:
 - code-reviewer
@@ -166,7 +166,7 @@ find ~/.claude/plugins/cache/superpowers/skills -name "*code*review*" -type d
 
 ## Example: Code Review
 
-```
+```text
 [Just completed authentication feature]
 
 You: Let me use invoking-similar-agents to get comprehensive code review.
