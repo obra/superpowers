@@ -1,6 +1,6 @@
-# Superpowers
+# Best Practice
 
-Give Claude Code superpowers with a comprehensive skills library of proven techniques, patterns, and workflows.
+Give Claude Code best practice with a comprehensive skills library of proven techniques, patterns, and workflows.
 
 ## What You Get
 
@@ -11,13 +11,13 @@ Give Claude Code superpowers with a comprehensive skills library of proven techn
 - **Meta Skills** - Creating, testing, and sharing skills
 
 Plus:
-- **Slash Commands** - `/superpowers:brainstorm`, `/superpowers:write-plan`, `/superpowers:execute-plan`
+- **Slash Commands** - `/bestpractice:brainstorm`, `/bestpractice:write-plan`, `/bestpractice:execute-plan`
 - **Automatic Integration** - Skills activate automatically when relevant
 - **Consistent Workflows** - Systematic approaches to common engineering tasks
 
 ## Learn More
 
-Read the introduction: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
+Read the introduction: [Best Practice for Claude Code](https://blog.fsck.com/2025/10/09/bestpractice/)
 
 ## Installation
 
@@ -25,8 +25,8 @@ Read the introduction: [Superpowers for Claude Code](https://blog.fsck.com/2025/
 
 ```bash
 # In Claude Code
-/plugin marketplace add obra/superpowers-marketplace
-/plugin install superpowers@superpowers-marketplace
+/plugin marketplace add obra/bestpractice-marketplace
+/plugin install bestpractice@bestpractice-marketplace
 ```
 
 ### Verify Installation
@@ -36,9 +36,9 @@ Read the introduction: [Superpowers for Claude Code](https://blog.fsck.com/2025/
 /help
 
 # Should see:
-# /superpowers:brainstorm - Interactive design refinement
-# /superpowers:write-plan - Create implementation plan
-# /superpowers:execute-plan - Execute plan in batches
+# /bestpractice:brainstorm - Interactive design refinement
+# /bestpractice:write-plan - Create implementation plan
+# /bestpractice:execute-plan - Execute plan in batches
 ```
 
 ## Quick Start
@@ -47,17 +47,17 @@ Read the introduction: [Superpowers for Claude Code](https://blog.fsck.com/2025/
 
 **Brainstorm a design:**
 ```
-/superpowers:brainstorm
+/bestpractice:brainstorm
 ```
 
 **Create an implementation plan:**
 ```
-/superpowers:write-plan
+/bestpractice:write-plan
 ```
 
 **Execute the plan:**
 ```
-/superpowers:execute-plan
+/bestpractice:execute-plan
 ```
 
 ### Automatic Skill Activation
@@ -97,7 +97,7 @@ Skills activate automatically when relevant. For example:
 - **writing-skills** - Create new skills following best practices
 - **sharing-skills** - Contribute skills back via branch and PR
 - **testing-skills-with-subagents** - Validate skill quality
-- **using-superpowers** - Introduction to the skills system
+- **using-bestpractice** - Introduction to the skills system
 
 ### Commands
 
@@ -109,7 +109,7 @@ All commands are thin wrappers that activate the corresponding skill:
 
 ## How It Works
 
-1. **SessionStart Hook** - Loads the `using-superpowers` skill at session start
+1. **SessionStart Hook** - Loads the `using-bestpractice` skill at session start
 2. **Skills System** - Uses Claude Code's first-party skills system
 3. **Automatic Discovery** - Claude finds and uses relevant skills for your task
 4. **Mandatory Workflows** - When a skill exists for your task, using it becomes required
@@ -139,7 +139,7 @@ See `skills/meta/writing-skills/SKILL.md` for the complete guide.
 Skills update automatically when you update the plugin:
 
 ```bash
-/plugin update superpowers
+/plugin update bestpractice
 ```
 
 ## License
@@ -148,5 +148,5 @@ MIT License - see LICENSE file for details
 
 ## Support
 
-- **Issues**: https://github.com/obra/superpowers/issues
-- **Marketplace**: https://github.com/obra/superpowers-marketplace
+- **Issues**: https://github.com/obra/bestpractice/issues
+- **Marketplace**: https://github.com/obra/bestpractice-marketplace

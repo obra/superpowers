@@ -84,7 +84,7 @@ After design is validated, write it to a permanent document:
 ### Phase 5: Worktree Setup (for implementation)
 When design is approved and implementation will follow:
 - Announce: "I'm using the using-git-worktrees skill to set up an isolated workspace."
-- **REQUIRED SUB-SKILL:** Use superpowers:using-git-worktrees
+- **REQUIRED SUB-SKILL:** Use bestpractice:using-git-worktrees
 - Follow that skill's process for directory selection, safety verification, and setup
 - Return here when worktree ready
 
@@ -93,7 +93,7 @@ Ask: "Ready to create the implementation plan?"
 
 When your human partner confirms (any affirmative response):
 - Announce: "I'm using the writing-plans skill to create the implementation plan."
-- **REQUIRED SUB-SKILL:** Use superpowers:writing-plans
+- **REQUIRED SUB-SKILL:** Use bestpractice:writing-plans
 - Create detailed plan in the worktree
 
 ## Question Patterns

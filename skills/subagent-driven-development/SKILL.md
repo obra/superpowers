@@ -62,7 +62,7 @@ Task tool (general-purpose):
 
 **Dispatch code-reviewer subagent:**
 ```
-Task tool (superpowers:code-reviewer):
+Task tool (bestpractice:code-reviewer):
   Use template at requesting-code-review/code-reviewer.md
 
   WHAT_WAS_IMPLEMENTED: [from subagent's report]
@@ -103,7 +103,7 @@ After all tasks complete, dispatch final code-reviewer:
 
 After final review passes:
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
-- **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
+- **REQUIRED SUB-SKILL:** Use bestpractice:finishing-a-development-branch
 - Follow that skill to verify tests, present options, execute choice
 
 ## Example Workflow

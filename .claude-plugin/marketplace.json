@@ -1,13 +1,13 @@
 {
-  "name": "superpowers-dev",
-  "description": "Development marketplace for Superpowers core skills library",
+  "name": "bestpractice-dev",
+  "description": "Development marketplace for Best Practice core skills library",
   "owner": {
     "name": "Jesse Vincent",
     "email": "jesse@fsck.com"
   },
   "plugins": [
     {
-      "name": "superpowers",
+      "name": "bestpractice",
       "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
       "version": "3.2.2",
       "source": "./",
