@@ -4,12 +4,12 @@ Give Claude Code superpowers with a comprehensive skills library of proven techn
 
 ## What You Get
 
-**27 Production-Ready Skills:**
+**28 Production-Ready Skills:**
 - **Testing Skills** (4) - TDD, async testing, anti-patterns
 - **Debugging Skills** (4) - Systematic debugging, root cause tracing, verification
 - **Collaboration Skills** (9) - Brainstorming, planning, code review, parallel agents
-- **Technical & Productivity Skills** (7) - PDF processing, content writing, brand guidelines, email automation
-- **Meta Skills** (3) - Creating, testing, and sharing skills
+- **Technical & Productivity Skills** (7) - PDF processing, content writing, brand application, email intelligence
+- **Meta Skills** (4) - Creating, testing, sharing, and auto-syncing skills
 
 **Plus:**
 - **Cross-Platform Support** - Claude Code, Claude Desktop, and Claude API/SDK
@@ -48,7 +48,7 @@ Read the introduction: [Superpowers for Claude Code](https://blog.fsck.com/2025/
 
 1. **Download a skill ZIP:**
    - Browse to `skills/{skill-name}/{skill-name}-skill.zip`
-   - All 27 skills include ZIP files
+   - All 28 skills include ZIP files
 
 2. **Import into Claude Desktop:**
    - Open Claude Desktop
@@ -112,7 +112,7 @@ Skills activate automatically when relevant. For example:
 
 ## What's Inside
 
-### Skills Library (27 Total)
+### Skills Library (28 Total)
 
 **Testing** (4 skills)
 - **test-driven-development** - RED-GREEN-REFACTOR cycle
@@ -140,16 +140,17 @@ Skills activate automatically when relevant. For example:
 **Technical & Productivity** (7 skills)
 - **pdf-processor** - Comprehensive PDF manipulation toolkit
 - **content-research-writer** - Research-enhanced writing with citations
-- **brand-guidelines** - Corporate branding and styling automation
-- **gmail-intelligence** - Email analysis and automation
+- **brand-application** - Apply consistent corporate branding (template-based)
+- **email-intelligence** - Email analysis and business intelligence (any email provider)
 - **invoice-organizer** - Financial document processing
 - **notion-template-processor** - Database automation
 - **youtube-transcript-downloader** - Video content extraction
 
-**Meta** (3 skills)
+**Meta** (4 skills)
 - **writing-skills** - Create new skills following best practices
 - **sharing-skills** - Contribute skills back via branch and PR
 - **using-superpowers** - Introduction to the skills system
+- **auto-sync-skills** - Monitor Anthropic docs and repos for updates
 
 ### Commands
 

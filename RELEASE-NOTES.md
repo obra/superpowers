@@ -7,8 +7,8 @@
 **New Skills - Technical & Productivity (7 total)**
 - **pdf-processor** - Comprehensive PDF manipulation toolkit (extract, merge, split, create, forms)
 - **content-research-writer** - Research-enhanced writing with citations and iterative feedback
-- **brand-guidelines** - Corporate branding and styling automation for documents
-- **gmail-intelligence** - Email analysis, insights extraction, and automation
+- **brand-application** - Apply consistent corporate branding (template-based, no hardcoded company)
+- **email-intelligence** - Email analysis and business intelligence (works with any email provider)
 - **invoice-organizer** - Financial document processing for tax preparation
 - **notion-template-processor** - Database automation with Notion MCP integration
 - **youtube-transcript-downloader** - Video content extraction with yt-dlp and Whisper fallback
@@ -16,6 +16,7 @@
 
 **Cross-Platform Distribution**
 - All 28 skills now include ZIP files for Claude Desktop import
+- Generic, template-based skills (no hardcoded companies or brands)
 - Added comprehensive USAGE_GUIDE.md for Claude Code, Desktop, and API/SDK
 - Skills can be loaded programmatically via Claude API/SDK
 - New script: `scripts/create-skill-zips.sh` to generate ZIP files
