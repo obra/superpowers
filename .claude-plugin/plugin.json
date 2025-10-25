@@ -6,8 +6,8 @@
     "name": "Jesse Vincent",
     "email": "jesse@fsck.com"
   },
-  "homepage": "https://github.com/obra/bestpractice",
-  "repository": "https://github.com/obra/bestpractice",
+  "homepage": "https://github.com/titofebus/ccbp",
+  "repository": "https://github.com/titofebus/ccbp",
   "license": "MIT",
   "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows"]
 }

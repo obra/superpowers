@@ -21,21 +21,33 @@ Read the introduction: [Best Practice for Claude Code](https://blog.fsck.com/202
 
 ## Installation
 
-### Via Plugin Marketplace (Recommended)
+### From GitHub
 
 ```bash
 # In Claude Code
-/plugin marketplace add obra/bestpractice-marketplace
-/plugin install bestpractice@bestpractice-marketplace
+/plugin marketplace add titofebus/ccbp
+/plugin install bestpractice@ccbp
+```
+
+### From Local Directory
+
+If you've cloned this repository locally:
+
+```bash
+# In Claude Code
+/plugin marketplace add /path/to/ccbp
+/plugin install bestpractice@ccbp
 ```
 
 ### Verify Installation
+
+After installing, restart Claude Code, then verify:
 
 ```bash
 # Check that commands appear
 /help
 
-# Should see:
+# You should see:
 # /bestpractice:brainstorm - Interactive design refinement
 # /bestpractice:write-plan - Create implementation plan
 # /bestpractice:execute-plan - Execute plan in batches
@@ -136,10 +148,18 @@ See `skills/meta/writing-skills/SKILL.md` for the complete guide.
 
 ## Updating
 
-Skills update automatically when you update the plugin:
+To update the plugin:
 
 ```bash
-/plugin update bestpractice
+# Uninstall the old version
+/plugin uninstall bestpractice
+
+# Pull the latest changes from git
+git pull
+
+# Reinstall
+/plugin marketplace update ccbp
+/plugin install bestpractice@ccbp
 ```
 
 ## License
@@ -148,5 +168,5 @@ MIT License - see LICENSE file for details
 
 ## Support
 
-- **Issues**: https://github.com/obra/bestpractice/issues
-- **Marketplace**: https://github.com/obra/bestpractice-marketplace
+- **Issues**: https://github.com/titofebus/ccbp/issues
+- **Repository**: https://github.com/titofebus/ccbp
