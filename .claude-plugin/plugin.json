@@ -8,6 +8,5 @@
   },
   "homepage": "https://github.com/titofebus/ccbp",
   "repository": "https://github.com/titofebus/ccbp",
-  "license": "MIT",
   "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows"]
 }

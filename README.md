@@ -162,10 +162,6 @@ git pull
 /plugin install bestpractice@ccbp
 ```
 
-## License
-
-MIT License - see LICENSE file for details
-
 ## Support
 
 - **Issues**: https://github.com/titofebus/ccbp/issues
