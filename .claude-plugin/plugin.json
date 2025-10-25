@@ -2,6 +2,8 @@
   "name": "superpowers",
   "description": "Comprehensive skills library for Claude Code: TDD, debugging, collaboration patterns, document processing, and productivity automation - 27 skills with cross-platform support",
   "version": "4.0.0",
+  "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
+  "version": "3.2.3",
   "author": {
     "name": "Jesse Vincent",
     "email": "jesse@fsck.com"

@@ -1,9 +1,29 @@
 ---
 name: using-superpowers
-description: Use when starting any conversation - establishes mandatory workflows for finding and using skills, including using Read tool before announcing usage, following brainstorming before coding, and creating TodoWrite todos for checklists
+description: Use when starting any conversation - establishes mandatory workflows for finding and using skills, including using Skill tool before announcing usage, following brainstorming before coding, and creating TodoWrite todos for checklists
 ---
 
+<EXTREMELY-IMPORTANT>
+If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST read the skill.
+
+IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
+
+This is not negotiable. This is not optional. You cannot rationalize your way out of this.
+</EXTREMELY-IMPORTANT>
+
 # Getting Started with Skills
+
+## MANDATORY FIRST RESPONSE PROTOCOL
+
+Before responding to ANY user message, you MUST complete this checklist:
+
+1. ☐ List available skills in your mind
+2. ☐ Ask yourself: "Does ANY skill match this request?"
+3. ☐ If yes → Use the Skill tool to read and run the skill file
+4. ☐ Announce which skill you're using
+5. ☐ Follow the skill exactly
+
+**Responding WITHOUT completing this checklist = automatic failure.**
 
 ## Critical Rules
 
@@ -11,16 +31,18 @@ description: Use when starting any conversation - establishes mandatory workflow
 
 2. Execute skills with the Skill tool
 
-## Mandatory: Before ANY Task
+## Common Rationalizations That Mean You're About To Fail
 
-**1. If a relevant skill exists, YOU MUST use it:**
+If you catch yourself thinking ANY of these thoughts, STOP. You are rationalizing. Check for and use the skill.
 
-- Announce: "I've read [Skill Name] skill and I'm using it to [purpose]"
-- Follow it exactly
-
-**Don't rationalize:**
-- "I remember this skill" - Skills evolve. Read the current version.
-- "This doesn't count as a task" - It counts. Find and read skills.
+- "This is just a simple question" → WRONG. Questions are tasks. Check for skills.
+- "I can check git/files quickly" → WRONG. Files don't have conversation context. Check for skills.
+- "Let me gather information first" → WRONG. Skills tell you HOW to gather information. Check for skills.
+- "This doesn't need a formal skill" → WRONG. If a skill exists for it, use it.
+- "I remember this skill" → WRONG. Skills evolve. Run the current version.
+- "This doesn't count as a task" → WRONG. If you're taking action, it's a task. Check for skills.
+- "The skill is overkill for this" → WRONG. Skills exist because simple things become complex. Use it.
+- "I'll just do this one thing first" → WRONG. Check for skills BEFORE doing anything.
 
 **Why:** Skills document proven techniques that save time and prevent mistakes. Not using available skills means repeating solved problems and making known errors.
 
