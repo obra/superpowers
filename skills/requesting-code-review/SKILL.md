@@ -36,11 +36,11 @@ This skill automatically:
 - Dispatches them in parallel with the same context
 - Synthesizes findings with consensus validation
 
-**Agent discovery checks:**
-- Custom: `~/.claude/agents/**/code*review*.md`
-- Superpowers: Template at `requesting-code-review/code-reviewer.md`
-- Built-in: Any code-review agents in system prompt
-- Registry: `~/.claude/plugins/cache/superpowers/agents/AGENT_REGISTRY.md`
+**Agent discovery methods:**
+- Direct filesystem search of custom agents: `~/.claude/agents/**/code*review*.md`
+- Superpowers templates: `requesting-code-review/code-reviewer.md`
+- Built-in agents from Claude Code system prompt
+- Optional: Agent Registry (if available) for faster lookup
 
 **3. Prepare context for agents:**
 

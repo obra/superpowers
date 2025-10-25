@@ -26,12 +26,15 @@ Enhanced superpowers plugin with generic multi-agent invocation capability. When
 
 **Agent Discovery Algorithm:**
 1. Normalize agent name (handle variations: dashes, underscores, prefixes)
-2. Search all agent sources:
-   - Agent registry (`~/.claude/plugins/cache/superpowers/agents/AGENT_REGISTRY.md`)
-   - Custom agents (`~/.claude/agents/`)
-   - Built-in agents (system prompt)
+2. Search all agent sources (primary method: direct filesystem search):
+   - Custom agents: `~/.claude/agents/` (filesystem search)
+   - Superpowers templates: `~/.claude/plugins/cache/superpowers/skills/`
+   - Built-in agents: Known from system prompt
+   - Agent registry (optional): `~/.claude/plugins/cache/superpowers/agents/AGENT_REGISTRY.md`
 3. Filter by capability/role matching
 4. Deduplicate results
+
+**Note:** Agent Registry is optional - discovery works via direct filesystem search. The registry serves as documentation and an optional cache for faster lookups.
 
 **When to Use:**
 - Security-critical code reviews
@@ -135,7 +138,7 @@ You: Let me request code review using invoking-similar-agents.
 
 3. **Built-in Agents** (Claude Code system prompt)
    - Core agents available by default
-   - Listed in AGENT_REGISTRY.md
+   - Known from system prompt
 
 ### Discovery Flow
 
@@ -144,9 +147,13 @@ User requests code review
     ↓
 Use invoking-similar-agents skill
     ↓
-Query AGENT_REGISTRY.md
+Search custom agents directory (primary)
     ↓
-Search custom agents directory
+Search superpowers templates
+    ↓
+Check built-in agents
+    ↓
+Optional: Query AGENT_REGISTRY.md (cache)
     ↓
 Find matching agents
     ↓
@@ -225,8 +232,10 @@ specialization: web-security
 # Test 1: Verify skill file exists
 ls ~/.claude/plugins/cache/superpowers/skills/invoking-similar-agents/SKILL.md
 
-# Test 2: Check agent registry
-cat ~/.claude/plugins/cache/superpowers/agents/AGENT_REGISTRY.md | grep -i "code.*review"
+# Test 2: Check agent registry (optional, for reference)
+if [ -f ~/.claude/plugins/cache/superpowers/agents/AGENT_REGISTRY.md ]; then
+    cat ~/.claude/plugins/cache/superpowers/agents/AGENT_REGISTRY.md | grep -i "code.*review"
+fi
 
 # Test 3: List custom agents
 find ~/.claude/agents -name "*code*review*.md"
