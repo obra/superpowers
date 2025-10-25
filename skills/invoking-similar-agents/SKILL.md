@@ -128,7 +128,8 @@ Task 3: security-focused-reviewer (if exists)
 
 ## Algorithm: Finding Similar Agents
 
-**Step 1: Normalize agent name**
+### Step 1: Normalize agent name
+
 ```
 Input: "code-reviewer"
 Variations to check:
@@ -139,7 +140,8 @@ Variations to check:
 - *code*review*
 ```
 
-**Step 2: Search agent locations**
+### Step 2: Search agent locations
+
 ```bash
 # Primary: Direct filesystem search (always works)
 find ~/.claude/agents -name "*code*review*.md"
@@ -151,12 +153,14 @@ find ~/.claude/plugins/cache/superpowers/skills -name "*code*review*" -type d
 # No filesystem search needed - they're in the agent list
 ```
 
-**Step 3: Filter by capability**
+### Step 3: Filter by capability
+
 - Read agent descriptions
 - Match against desired role/capability
 - Include agents with overlapping expertise
 
-**Step 4: Deduplicate**
+### Step 4: Deduplicate
+
 - Remove duplicate references to same agent
 - Keep highest-specificity version
 
