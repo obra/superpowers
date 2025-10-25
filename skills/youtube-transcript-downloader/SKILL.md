@@ -1,5 +1,5 @@
 ---
-name: YouTube Transcript Downloader
+name: youtube-transcript-downloader
 description: Downloads YouTube video transcripts (subtitles/captions) using yt-dlp, with a fallback to Whisper transcription if no subtitles are available. Use when a user provides a YouTube URL and asks for a transcript, captions, or subtitles.
 allowed-tools:
   - Bash

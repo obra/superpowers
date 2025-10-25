@@ -1,5 +1,5 @@
 ---
-name: Notion Template Processor
+name: notion-template-processor
 description: Fills Notion database templates with data and delivers via email using Notion MCP integration
 allowed-tools:
   - MCP
