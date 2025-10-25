@@ -26,15 +26,12 @@ Enhanced superpowers plugin with generic multi-agent invocation capability. When
 
 **Agent Discovery Algorithm:**
 1. Normalize agent name (handle variations: dashes, underscores, prefixes)
-2. Search all agent sources (primary method: direct filesystem search):
+2. Search all agent sources via direct filesystem search:
    - Custom agents: `~/.claude/agents/` (filesystem search)
    - Superpowers templates: `~/.claude/plugins/cache/superpowers/skills/`
    - Built-in agents: Known from system prompt
-   - Agent registry (optional): `~/.claude/plugins/cache/superpowers/agents/AGENT_REGISTRY.md`
 3. Filter by capability/role matching
 4. Deduplicate results
-
-**Note:** Agent Registry is optional - discovery works via direct filesystem search. The registry serves as documentation and an optional cache for faster lookups.
 
 **When to Use:**
 - Security-critical code reviews
@@ -147,13 +144,11 @@ User requests code review
     ↓
 Use invoking-similar-agents skill
     ↓
-Search custom agents directory (primary)
+Search custom agents directory
     ↓
 Search superpowers templates
     ↓
 Check built-in agents
-    ↓
-Optional: Query AGENT_REGISTRY.md (cache)
     ↓
 Find matching agents
     ↓
@@ -232,12 +227,7 @@ specialization: web-security
 # Test 1: Verify skill file exists
 ls ~/.claude/plugins/cache/superpowers/skills/invoking-similar-agents/SKILL.md
 
-# Test 2: Check agent registry (optional, for reference)
-if [ -f ~/.claude/plugins/cache/superpowers/agents/AGENT_REGISTRY.md ]; then
-    cat ~/.claude/plugins/cache/superpowers/agents/AGENT_REGISTRY.md | grep -i "code.*review"
-fi
-
-# Test 3: List custom agents
+# Test 2: List custom agents
 find ~/.claude/agents -name "*code*review*.md"
 
 # Test 4: In Claude Code session
@@ -256,9 +246,9 @@ find ~/.claude/agents -name "*code*review*.md"
 - Priority/preference settings
 
 ### 3. Performance Optimization
-- Cache agent registry
 - Parallel synthesis
 - Incremental reviews (only changed files)
+- Cache discovery results per session
 
 ### 4. Result Caching
 - Cache agent reviews by git SHA

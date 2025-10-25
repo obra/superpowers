@@ -40,7 +40,6 @@ This skill automatically:
 - Direct filesystem search of custom agents: `~/.claude/agents/**/code*review*.md`
 - Superpowers templates: `requesting-code-review/code-reviewer.md`
 - Built-in agents from Claude Code system prompt
-- Optional: Agent Registry (if available) for faster lookup
 
 **3. Prepare context for agents:**
 
