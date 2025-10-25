@@ -6,6 +6,7 @@ Give Claude Code best practice with a comprehensive skills library of proven tec
 
 - **Testing Skills** - TDD, async testing, anti-patterns
 - **Debugging Skills** - Systematic debugging, root cause tracing, verification
+- **Refactoring Skills** - Complexity reduction, code quality improvements
 - **Collaboration Skills** - Brainstorming, planning, code review, parallel agents
 - **Development Skills** - Git worktrees, finishing branches, subagent workflows
 - **Meta Skills** - Creating, testing, and sharing skills
@@ -77,6 +78,7 @@ After installing, restart Claude Code, then verify:
 Skills activate automatically when relevant. For example:
 - `test-driven-development` activates when implementing features
 - `systematic-debugging` activates when debugging issues
+- `reducing-complexity` activates when refactoring functions with high cyclomatic complexity
 - `verification-before-completion` activates before claiming work is done
 
 ## What's Inside
@@ -93,6 +95,9 @@ Skills activate automatically when relevant. For example:
 - **root-cause-tracing** - Find the real problem
 - **verification-before-completion** - Ensure it's actually fixed
 - **defense-in-depth** - Multiple validation layers
+
+**Refactoring** (`skills/`)
+- **reducing-complexity** - Systematic refactoring to reduce cyclomatic complexity ≤ 10
 
 **Collaboration** (`skills/collaboration/`)
 - **brainstorming** - Socratic design refinement
