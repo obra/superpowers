@@ -1,7 +1,7 @@
 {
   "name": "superpowers",
-  "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, browser automation, iOS testing, and file organization",
-  "version": "3.4.0",
+  "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, browser automation, iOS testing, file organization, Gmail automation, and Notion integration",
+  "version": "3.5.0",
   "author": {
     "name": "Jesse Vincent",
     "email": "jesse@fsck.com"
@@ -9,5 +9,5 @@
   "homepage": "https://github.com/obra/superpowers",
   "repository": "https://github.com/obra/superpowers",
   "license": "MIT",
-  "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows", "playwright", "ios", "automation", "productivity", "file-organization"]
+  "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows", "playwright", "ios", "automation", "productivity", "file-organization", "gmail", "notion", "email"]
 }

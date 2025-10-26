@@ -9,7 +9,7 @@ Give Claude Code superpowers with a comprehensive skills library of proven techn
 - **Collaboration Skills** - Brainstorming, planning, code review, parallel agents
 - **Development Skills** - Git worktrees, finishing branches, subagent workflows
 - **Automation Skills** - Playwright browser testing, iOS simulator automation
-- **Productivity Skills** - File organization, duplicate detection, workspace cleanup
+- **Productivity Skills** - File organization, Gmail automation, Notion integration
 - **Meta Skills** - Creating, testing, and sharing skills
 
 Plus:
@@ -107,6 +107,8 @@ Skills activate automatically when relevant. For example:
 
 **Productivity** (`skills/productivity/`)
 - **file-organizer** - Intelligent file and folder organization with duplicate detection
+- **gmail-intelligence** - Analyze Gmail data, process email threads, and automate workflows
+- **notion-template-processor** - Fill Notion database templates and deliver via email
 
 ### Commands
 
