@@ -9,6 +9,7 @@ Give Claude Code superpowers with a comprehensive skills library of proven techn
 - **Collaboration Skills** - Brainstorming, planning, code review, parallel agents
 - **Development Skills** - Git worktrees, finishing branches, subagent workflows
 - **Automation Skills** - Playwright browser testing, iOS simulator automation
+- **Productivity Skills** - File organization, duplicate detection, workspace cleanup
 - **Meta Skills** - Creating, testing, and sharing skills
 
 Plus:
@@ -103,6 +104,9 @@ Skills activate automatically when relevant. For example:
 **Automation** (`skills/automation/`)
 - **playwright-browser-automation** - Browser testing and automation with Playwright
 - **ios-simulator-testing** - iOS app testing with accessibility-first navigation
+
+**Productivity** (`skills/productivity/`)
+- **file-organizer** - Intelligent file and folder organization with duplicate detection
 
 ### Commands
 

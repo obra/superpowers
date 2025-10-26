@@ -35,7 +35,7 @@ cd ~/.config/Claude/skills/
 for f in *.zip; do unzip -q "$f"; done
 ```
 
-## Available Skills (22 Total)
+## Available Skills (23 Total)
 
 ### Testing (3 skills)
 - `test-driven-development.zip` - RED-GREEN-REFACTOR cycle
@@ -62,6 +62,9 @@ for f in *.zip; do unzip -q "$f"; done
 ### Automation (2 skills)
 - `playwright-browser-automation.zip` - Browser testing with Playwright
 - `ios-simulator-testing.zip` - iOS app testing with accessibility automation
+
+### Productivity (1 skill)
+- `file-organizer.zip` - Intelligent file and folder organization with duplicate detection
 
 ### Meta (4 skills)
 - `writing-skills.zip` - Create new skills following best practices
