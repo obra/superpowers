@@ -35,7 +35,7 @@ cd ~/.config/Claude/skills/
 for f in *.zip; do unzip -q "$f"; done
 ```
 
-## Available Skills (25 Total)
+## Available Skills (37 Total)
 
 ### Testing (3 skills)
 - `test-driven-development.zip` - RED-GREEN-REFACTOR cycle
@@ -67,6 +67,24 @@ for f in *.zip; do unzip -q "$f"; done
 - `file-organizer.zip` - Intelligent file and folder organization with duplicate detection
 - `gmail-intelligence.zip` - Analyze Gmail data, process email threads, and automate workflows
 - `notion-template-processor.zip` - Fill Notion database templates and deliver via email
+
+### Document Skills (4 skills)
+- `docx.zip` - Create and edit Word documents with tracked changes and formatting
+- `pdf.zip` - Extract text/tables, create, merge, and split PDFs
+- `xlsx.zip` - Create Excel spreadsheets with formulas and data analysis
+- `pptx.zip` - Create PowerPoint presentations with layouts and charts
+
+### Creative & Media (5 skills)
+- `canvas-design.zip` - Visual art creation in PNG and PDF formats
+- `image-enhancer.zip` - Upscale and improve image resolution and clarity
+- `slack-gif-creator.zip` - Create animated GIFs optimized for Slack
+- `theme-factory.zip` - Apply professional themes to documents and slides
+- `video-downloader.zip` - Download videos from multiple platforms
+
+### Business & Research (3 skills)
+- `lead-research-assistant.zip` - Identify and qualify potential business leads
+- `competitive-ads-extractor.zip` - Analyze competitor advertising strategies
+- `notebooklm.zip` - Query NotebookLM for source-grounded, citation-backed answers
 
 ### Meta (4 skills)
 - `writing-skills.zip` - Create new skills following best practices

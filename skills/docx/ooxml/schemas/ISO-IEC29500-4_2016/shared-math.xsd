@@ -1,0 +1,582 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns="http://schemas.openxmlformats.org/officeDocument/2006/math"
+  xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math"
+  xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+  xmlns:s="http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes"
+  elementFormDefault="qualified" attributeFormDefault="qualified" blockDefault="#all"
+  targetNamespace="http://schemas.openxmlformats.org/officeDocument/2006/math">
+  <xsd:import namespace="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+    schemaLocation="wml.xsd"/>
+  <xsd:import namespace="http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes"
+    schemaLocation="shared-commonSimpleTypes.xsd"/>
+  <xsd:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="xml.xsd"/>
+  <xsd:simpleType name="ST_Integer255">
+    <xsd:restriction base="xsd:integer">
+      <xsd:minInclusive value="1"/>
+      <xsd:maxInclusive value="255"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:complexType name="CT_Integer255">
+    <xsd:attribute name="val" type="ST_Integer255" use="required"/>
+  </xsd:complexType>
+  <xsd:simpleType name="ST_Integer2">
+    <xsd:restriction base="xsd:integer">
+      <xsd:minInclusive value="-2"/>
+      <xsd:maxInclusive value="2"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:complexType name="CT_Integer2">
+    <xsd:attribute name="val" type="ST_Integer2" use="required"/>
+  </xsd:complexType>
+  <xsd:simpleType name="ST_SpacingRule">
+    <xsd:restriction base="xsd:integer">
+      <xsd:minInclusive value="0"/>
+      <xsd:maxInclusive value="4"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:complexType name="CT_SpacingRule">
+    <xsd:attribute name="val" type="ST_SpacingRule" use="required"/>
+  </xsd:complexType>
+  <xsd:simpleType name="ST_UnSignedInteger">
+    <xsd:restriction base="xsd:unsignedInt"/>
+  </xsd:simpleType>
+  <xsd:complexType name="CT_UnSignedInteger">
+    <xsd:attribute name="val" type="ST_UnSignedInteger" use="required"/>
+  </xsd:complexType>
+  <xsd:simpleType name="ST_Char">
+    <xsd:restriction base="xsd:string">
+      <xsd:maxLength value="1"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:complexType name="CT_Char">
+    <xsd:attribute name="val" type="ST_Char" use="required"/>
+  </xsd:complexType>
+  <xsd:complexType name="CT_OnOff">
+    <xsd:attribute name="val" type="s:ST_OnOff"/>
+  </xsd:complexType>
+  <xsd:complexType name="CT_String">
+    <xsd:attribute name="val" type="s:ST_String"/>
+  </xsd:complexType>
+  <xsd:complexType name="CT_XAlign">
+    <xsd:attribute name="val" type="s:ST_XAlign" use="required"/>
+  </xsd:complexType>
+  <xsd:complexType name="CT_YAlign">
+    <xsd:attribute name="val" type="s:ST_YAlign" use="required"/>
+  </xsd:complexType>
+  <xsd:simpleType name="ST_Shp">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="centered"/>
+      <xsd:enumeration value="match"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:complexType name="CT_Shp">
+    <xsd:attribute name="val" type="ST_Shp" use="required"/>
+  </xsd:complexType>
+  <xsd:simpleType name="ST_FType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="bar"/>
+      <xsd:enumeration value="skw"/>
+      <xsd:enumeration value="lin"/>
+      <xsd:enumeration value="noBar"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:complexType name="CT_FType">
+    <xsd:attribute name="val" type="ST_FType" use="required"/>
+  </xsd:complexType>
+  <xsd:simpleType name="ST_LimLoc">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="undOvr"/>
+      <xsd:enumeration value="subSup"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:complexType name="CT_LimLoc">
+    <xsd:attribute name="val" type="ST_LimLoc" use="required"/>
+  </xsd:complexType>
+  <xsd:simpleType name="ST_TopBot">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="top"/>
+      <xsd:enumeration value="bot"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:complexType name="CT_TopBot">
+    <xsd:attribute name="val" type="ST_TopBot" use="required"/>
+  </xsd:complexType>
+  <xsd:simpleType name="ST_Script">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="roman"/>
+      <xsd:enumeration value="script"/>
+      <xsd:enumeration value="fraktur"/>
+      <xsd:enumeration value="double-struck"/>
+      <xsd:enumeration value="sans-serif"/>
+      <xsd:enumeration value="monospace"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:complexType name="CT_Script">
+    <xsd:attribute name="val" type="ST_Script"/>
+  </xsd:complexType>
+  <xsd:simpleType name="ST_Style">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="p"/>
+      <xsd:enumeration value="b"/>
+      <xsd:enumeration value="i"/>
+      <xsd:enumeration value="bi"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:complexType name="CT_Style">
+    <xsd:attribute name="val" type="ST_Style"/>
+  </xsd:complexType>
+  <xsd:complexType name="CT_ManualBreak">
+    <xsd:attribute name="alnAt" type="ST_Integer255"/>
+  </xsd:complexType>
+  <xsd:group name="EG_ScriptStyle">
+    <xsd:sequence>
+      <xsd:element name="scr" minOccurs="0" type="CT_Script"/>
+      <xsd:element name="sty" minOccurs="0" type="CT_Style"/>
+    </xsd:sequence>
+  </xsd:group>
+  <xsd:complexType name="CT_RPR">
+    <xsd:sequence>
+      <xsd:element name="lit" minOccurs="0" type="CT_OnOff"/>
+      <xsd:choice>
+        <xsd:element name="nor" minOccurs="0" type="CT_OnOff"/>
+        <xsd:sequence>
+          <xsd:group ref="EG_ScriptStyle"/>
+        </xsd:sequence>
+      </xsd:choice>
+      <xsd:element name="brk" minOccurs="0" type="CT_ManualBreak"/>
+      <xsd:element name="aln" minOccurs="0" type="CT_OnOff"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_Text">
+    <xsd:simpleContent>
+      <xsd:extension base="s:ST_String">
+        <xsd:attribute ref="xml:space" use="optional"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+  <xsd:complexType name="CT_R">
+    <xsd:sequence>
+      <xsd:element name="rPr" type="CT_RPR" minOccurs="0"/>
+      <xsd:group ref="w:EG_RPr" minOccurs="0"/>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:group ref="w:EG_RunInnerContent"/>
+        <xsd:element name="t" type="CT_Text" minOccurs="0"/>
+      </xsd:choice>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_CtrlPr">
+    <xsd:sequence>
+      <xsd:group ref="w:EG_RPrMath" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_AccPr">
+    <xsd:sequence>
+      <xsd:element name="chr" type="CT_Char" minOccurs="0"/>
+      <xsd:element name="ctrlPr" type="CT_CtrlPr" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_Acc">
+    <xsd:sequence>
+      <xsd:element name="accPr" type="CT_AccPr" minOccurs="0"/>
+      <xsd:element name="e" type="CT_OMathArg"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_BarPr">
+    <xsd:sequence>
+      <xsd:element name="pos" type="CT_TopBot" minOccurs="0"/>
+      <xsd:element name="ctrlPr" type="CT_CtrlPr" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_Bar">
+    <xsd:sequence>
+      <xsd:element name="barPr" type="CT_BarPr" minOccurs="0"/>
+      <xsd:element name="e" type="CT_OMathArg"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_BoxPr">
+    <xsd:sequence>
+      <xsd:element name="opEmu" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="noBreak" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="diff" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="brk" type="CT_ManualBreak" minOccurs="0"/>
+      <xsd:element name="aln" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="ctrlPr" type="CT_CtrlPr" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_Box">
+    <xsd:sequence>
+      <xsd:element name="boxPr" type="CT_BoxPr" minOccurs="0"/>
+      <xsd:element name="e" type="CT_OMathArg"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_BorderBoxPr">
+    <xsd:sequence>
+      <xsd:element name="hideTop" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="hideBot" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="hideLeft" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="hideRight" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="strikeH" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="strikeV" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="strikeBLTR" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="strikeTLBR" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="ctrlPr" type="CT_CtrlPr" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_BorderBox">
+    <xsd:sequence>
+      <xsd:element name="borderBoxPr" type="CT_BorderBoxPr" minOccurs="0"/>
+      <xsd:element name="e" type="CT_OMathArg"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_DPr">
+    <xsd:sequence>
+      <xsd:element name="begChr" type="CT_Char" minOccurs="0"/>
+      <xsd:element name="sepChr" type="CT_Char" minOccurs="0"/>
+      <xsd:element name="endChr" type="CT_Char" minOccurs="0"/>
+      <xsd:element name="grow" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="shp" type="CT_Shp" minOccurs="0"/>
+      <xsd:element name="ctrlPr" type="CT_CtrlPr" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_D">
+    <xsd:sequence>
+      <xsd:element name="dPr" type="CT_DPr" minOccurs="0"/>
+      <xsd:element name="e" type="CT_OMathArg" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_EqArrPr">
+    <xsd:sequence>
+      <xsd:element name="baseJc" type="CT_YAlign" minOccurs="0"/>
+      <xsd:element name="maxDist" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="objDist" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="rSpRule" type="CT_SpacingRule" minOccurs="0"/>
+      <xsd:element name="rSp" type="CT_UnSignedInteger" minOccurs="0"/>
+      <xsd:element name="ctrlPr" type="CT_CtrlPr" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_EqArr">
+    <xsd:sequence>
+      <xsd:element name="eqArrPr" type="CT_EqArrPr" minOccurs="0"/>
+      <xsd:element name="e" type="CT_OMathArg" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_FPr">
+    <xsd:sequence>
+      <xsd:element name="type" type="CT_FType" minOccurs="0"/>
+      <xsd:element name="ctrlPr" type="CT_CtrlPr" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_F">
+    <xsd:sequence>
+      <xsd:element name="fPr" type="CT_FPr" minOccurs="0"/>
+      <xsd:element name="num" type="CT_OMathArg"/>
+      <xsd:element name="den" type="CT_OMathArg"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_FuncPr">
+    <xsd:sequence>
+      <xsd:element name="ctrlPr" type="CT_CtrlPr" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_Func">
+    <xsd:sequence>
+      <xsd:element name="funcPr" type="CT_FuncPr" minOccurs="0"/>
+      <xsd:element name="fName" type="CT_OMathArg"/>
+      <xsd:element name="e" type="CT_OMathArg"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_GroupChrPr">
+    <xsd:sequence>
+      <xsd:element name="chr" type="CT_Char" minOccurs="0"/>
+      <xsd:element name="pos" type="CT_TopBot" minOccurs="0"/>
+      <xsd:element name="vertJc" type="CT_TopBot" minOccurs="0"/>
+      <xsd:element name="ctrlPr" type="CT_CtrlPr" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_GroupChr">
+    <xsd:sequence>
+      <xsd:element name="groupChrPr" type="CT_GroupChrPr" minOccurs="0"/>
+      <xsd:element name="e" type="CT_OMathArg"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_LimLowPr">
+    <xsd:sequence>
+      <xsd:element name="ctrlPr" type="CT_CtrlPr" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_LimLow">
+    <xsd:sequence>
+      <xsd:element name="limLowPr" type="CT_LimLowPr" minOccurs="0"/>
+      <xsd:element name="e" type="CT_OMathArg"/>
+      <xsd:element name="lim" type="CT_OMathArg"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_LimUppPr">
+    <xsd:sequence>
+      <xsd:element name="ctrlPr" type="CT_CtrlPr" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_LimUpp">
+    <xsd:sequence>
+      <xsd:element name="limUppPr" type="CT_LimUppPr" minOccurs="0"/>
+      <xsd:element name="e" type="CT_OMathArg"/>
+      <xsd:element name="lim" type="CT_OMathArg"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_MCPr">
+    <xsd:sequence>
+      <xsd:element name="count" type="CT_Integer255" minOccurs="0"/>
+      <xsd:element name="mcJc" type="CT_XAlign" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_MC">
+    <xsd:sequence>
+      <xsd:element name="mcPr" type="CT_MCPr" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_MCS">
+    <xsd:sequence>
+      <xsd:element name="mc" type="CT_MC" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_MPr">
+    <xsd:sequence>
+      <xsd:element name="baseJc" type="CT_YAlign" minOccurs="0"/>
+      <xsd:element name="plcHide" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="rSpRule" type="CT_SpacingRule" minOccurs="0"/>
+      <xsd:element name="cGpRule" type="CT_SpacingRule" minOccurs="0"/>
+      <xsd:element name="rSp" type="CT_UnSignedInteger" minOccurs="0"/>
+      <xsd:element name="cSp" type="CT_UnSignedInteger" minOccurs="0"/>
+      <xsd:element name="cGp" type="CT_UnSignedInteger" minOccurs="0"/>
+      <xsd:element name="mcs" type="CT_MCS" minOccurs="0"/>
+      <xsd:element name="ctrlPr" type="CT_CtrlPr" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_MR">
+    <xsd:sequence>
+      <xsd:element name="e" type="CT_OMathArg" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_M">
+    <xsd:sequence>
+      <xsd:element name="mPr" type="CT_MPr" minOccurs="0"/>
+      <xsd:element name="mr" type="CT_MR" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_NaryPr">
+    <xsd:sequence>
+      <xsd:element name="chr" type="CT_Char" minOccurs="0"/>
+      <xsd:element name="limLoc" type="CT_LimLoc" minOccurs="0"/>
+      <xsd:element name="grow" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="subHide" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="supHide" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="ctrlPr" type="CT_CtrlPr" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_Nary">
+    <xsd:sequence>
+      <xsd:element name="naryPr" type="CT_NaryPr" minOccurs="0"/>
+      <xsd:element name="sub" type="CT_OMathArg"/>
+      <xsd:element name="sup" type="CT_OMathArg"/>
+      <xsd:element name="e" type="CT_OMathArg"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_PhantPr">
+    <xsd:sequence>
+      <xsd:element name="show" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="zeroWid" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="zeroAsc" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="zeroDesc" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="transp" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="ctrlPr" type="CT_CtrlPr" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_Phant">
+    <xsd:sequence>
+      <xsd:element name="phantPr" type="CT_PhantPr" minOccurs="0"/>
+      <xsd:element name="e" type="CT_OMathArg"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_RadPr">
+    <xsd:sequence>
+      <xsd:element name="degHide" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="ctrlPr" type="CT_CtrlPr" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_Rad">
+    <xsd:sequence>
+      <xsd:element name="radPr" type="CT_RadPr" minOccurs="0"/>
+      <xsd:element name="deg" type="CT_OMathArg"/>
+      <xsd:element name="e" type="CT_OMathArg"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_SPrePr">
+    <xsd:sequence>
+      <xsd:element name="ctrlPr" type="CT_CtrlPr" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_SPre">
+    <xsd:sequence>
+      <xsd:element name="sPrePr" type="CT_SPrePr" minOccurs="0"/>
+      <xsd:element name="sub" type="CT_OMathArg"/>
+      <xsd:element name="sup" type="CT_OMathArg"/>
+      <xsd:element name="e" type="CT_OMathArg"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_SSubPr">
+    <xsd:sequence>
+      <xsd:element name="ctrlPr" type="CT_CtrlPr" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_SSub">
+    <xsd:sequence>
+      <xsd:element name="sSubPr" type="CT_SSubPr" minOccurs="0"/>
+      <xsd:element name="e" type="CT_OMathArg"/>
+      <xsd:element name="sub" type="CT_OMathArg"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_SSubSupPr">
+    <xsd:sequence>
+      <xsd:element name="alnScr" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="ctrlPr" type="CT_CtrlPr" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_SSubSup">
+    <xsd:sequence>
+      <xsd:element name="sSubSupPr" type="CT_SSubSupPr" minOccurs="0"/>
+      <xsd:element name="e" type="CT_OMathArg"/>
+      <xsd:element name="sub" type="CT_OMathArg"/>
+      <xsd:element name="sup" type="CT_OMathArg"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_SSupPr">
+    <xsd:sequence>
+      <xsd:element name="ctrlPr" type="CT_CtrlPr" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_SSup">
+    <xsd:sequence>
+      <xsd:element name="sSupPr" type="CT_SSupPr" minOccurs="0"/>
+      <xsd:element name="e" type="CT_OMathArg"/>
+      <xsd:element name="sup" type="CT_OMathArg"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:group name="EG_OMathMathElements">
+    <xsd:choice>
+      <xsd:element name="acc" type="CT_Acc"/>
+      <xsd:element name="bar" type="CT_Bar"/>
+      <xsd:element name="box" type="CT_Box"/>
+      <xsd:element name="borderBox" type="CT_BorderBox"/>
+      <xsd:element name="d" type="CT_D"/>
+      <xsd:element name="eqArr" type="CT_EqArr"/>
+      <xsd:element name="f" type="CT_F"/>
+      <xsd:element name="func" type="CT_Func"/>
+      <xsd:element name="groupChr" type="CT_GroupChr"/>
+      <xsd:element name="limLow" type="CT_LimLow"/>
+      <xsd:element name="limUpp" type="CT_LimUpp"/>
+      <xsd:element name="m" type="CT_M"/>
+      <xsd:element name="nary" type="CT_Nary"/>
+      <xsd:element name="phant" type="CT_Phant"/>
+      <xsd:element name="rad" type="CT_Rad"/>
+      <xsd:element name="sPre" type="CT_SPre"/>
+      <xsd:element name="sSub" type="CT_SSub"/>
+      <xsd:element name="sSubSup" type="CT_SSubSup"/>
+      <xsd:element name="sSup" type="CT_SSup"/>
+      <xsd:element name="r" type="CT_R"/>
+    </xsd:choice>
+  </xsd:group>
+  <xsd:group name="EG_OMathElements">
+    <xsd:choice>
+      <xsd:group ref="EG_OMathMathElements"/>
+      <xsd:group ref="w:EG_PContentMath"/>
+    </xsd:choice>
+  </xsd:group>
+  <xsd:complexType name="CT_OMathArgPr">
+    <xsd:sequence>
+      <xsd:element name="argSz" type="CT_Integer2" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_OMathArg">
+    <xsd:sequence>
+      <xsd:element name="argPr" type="CT_OMathArgPr" minOccurs="0"/>
+      <xsd:group ref="EG_OMathElements" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="ctrlPr" type="CT_CtrlPr" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:simpleType name="ST_Jc">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="left"/>
+      <xsd:enumeration value="right"/>
+      <xsd:enumeration value="center"/>
+      <xsd:enumeration value="centerGroup"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:complexType name="CT_OMathJc">
+    <xsd:attribute name="val" type="ST_Jc"/>
+  </xsd:complexType>
+  <xsd:complexType name="CT_OMathParaPr">
+    <xsd:sequence>
+      <xsd:element name="jc" type="CT_OMathJc" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_TwipsMeasure">
+    <xsd:attribute name="val" type="s:ST_TwipsMeasure" use="required"/>
+  </xsd:complexType>
+  <xsd:simpleType name="ST_BreakBin">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="before"/>
+      <xsd:enumeration value="after"/>
+      <xsd:enumeration value="repeat"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:complexType name="CT_BreakBin">
+    <xsd:attribute name="val" type="ST_BreakBin"/>
+  </xsd:complexType>
+  <xsd:simpleType name="ST_BreakBinSub">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="--"/>
+      <xsd:enumeration value="-+"/>
+      <xsd:enumeration value="+-"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:complexType name="CT_BreakBinSub">
+    <xsd:attribute name="val" type="ST_BreakBinSub"/>
+  </xsd:complexType>
+  <xsd:complexType name="CT_MathPr">
+    <xsd:sequence>
+      <xsd:element name="mathFont" type="CT_String" minOccurs="0"/>
+      <xsd:element name="brkBin" type="CT_BreakBin" minOccurs="0"/>
+      <xsd:element name="brkBinSub" type="CT_BreakBinSub" minOccurs="0"/>
+      <xsd:element name="smallFrac" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="dispDef" type="CT_OnOff" minOccurs="0"/>
+      <xsd:element name="lMargin" type="CT_TwipsMeasure" minOccurs="0"/>
+      <xsd:element name="rMargin" type="CT_TwipsMeasure" minOccurs="0"/>
+      <xsd:element name="defJc" type="CT_OMathJc" minOccurs="0"/>
+      <xsd:element name="preSp" type="CT_TwipsMeasure" minOccurs="0"/>
+      <xsd:element name="postSp" type="CT_TwipsMeasure" minOccurs="0"/>
+      <xsd:element name="interSp" type="CT_TwipsMeasure" minOccurs="0"/>
+      <xsd:element name="intraSp" type="CT_TwipsMeasure" minOccurs="0"/>
+      <xsd:choice minOccurs="0">
+        <xsd:element name="wrapIndent" type="CT_TwipsMeasure"/>
+        <xsd:element name="wrapRight" type="CT_OnOff"/>
+      </xsd:choice>
+      <xsd:element name="intLim" type="CT_LimLoc" minOccurs="0"/>
+      <xsd:element name="naryLim" type="CT_LimLoc" minOccurs="0"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:element name="mathPr" type="CT_MathPr"/>
+  <xsd:complexType name="CT_OMathPara">
+    <xsd:sequence>
+      <xsd:element name="oMathParaPr" type="CT_OMathParaPr" minOccurs="0"/>
+      <xsd:element name="oMath" type="CT_OMath" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_OMath">
+    <xsd:sequence>
+      <xsd:group ref="EG_OMathElements" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:element name="oMathPara" type="CT_OMathPara"/>
+  <xsd:element name="oMath" type="CT_OMath"/>
+</xsd:schema>

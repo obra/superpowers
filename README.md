@@ -10,6 +10,9 @@ Give Claude Code superpowers with a comprehensive skills library of proven techn
 - **Development Skills** - Git worktrees, finishing branches, subagent workflows
 - **Automation Skills** - Playwright browser testing, iOS simulator automation
 - **Productivity Skills** - File organization, Gmail automation, Notion integration
+- **Document Skills** - Word, PDF, Excel, PowerPoint creation and manipulation
+- **Creative & Media Skills** - Visual design, image enhancement, GIFs, video downloads
+- **Business & Research Skills** - Lead research, competitor analysis, NotebookLM integration
 - **Meta Skills** - Creating, testing, and sharing skills
 
 Plus:
@@ -109,6 +112,24 @@ Skills activate automatically when relevant. For example:
 - **file-organizer** - Intelligent file and folder organization with duplicate detection
 - **gmail-intelligence** - Analyze Gmail data, process email threads, and automate workflows
 - **notion-template-processor** - Fill Notion database templates and deliver via email
+
+**Document Skills** (`skills/documents/`)
+- **docx** - Create and edit Word documents with tracked changes and formatting
+- **pdf** - Extract text/tables, create, merge, and split PDFs
+- **xlsx** - Create Excel spreadsheets with formulas and data analysis
+- **pptx** - Create PowerPoint presentations with layouts and charts
+
+**Creative & Media** (`skills/creative/`)
+- **canvas-design** - Visual art creation in PNG and PDF formats
+- **image-enhancer** - Upscale and improve image resolution and clarity
+- **slack-gif-creator** - Create animated GIFs optimized for Slack
+- **theme-factory** - Apply professional themes to documents and slides
+- **video-downloader** - Download videos from multiple platforms
+
+**Business & Research** (`skills/business/`)
+- **lead-research-assistant** - Identify and qualify potential business leads
+- **competitive-ads-extractor** - Analyze competitor advertising strategies
+- **notebooklm** - Query NotebookLM for source-grounded, citation-backed answers
 
 ### Commands
 
