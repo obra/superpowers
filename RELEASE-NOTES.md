@@ -1,5 +1,11 @@
 # Superpowers Release Notes
 
+## v3.3.1 (2025-10-28)
+
+### Bug Fixes
+
+- Clarified `writing-skills` guidance so it points to the correct agent-specific personal skill directories (`~/.claude/skills` for Claude Code, `~/.codex/skills` for Codex).
+
 ## v3.3.0 (2025-10-28)
 
 ### New Features
