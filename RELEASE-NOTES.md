@@ -1,5 +1,33 @@
 # Superpowers Release Notes
 
+## v3.3.0 (2025-10-28)
+
+### New Features
+
+**Experimental Codex Support**
+- Added unified `superpowers-codex` script with bootstrap/use-skill/find-skills commands
+- Cross-platform Node.js implementation (works on Windows, macOS, Linux)
+- Namespaced skills: `superpowers:skill-name` for superpowers skills, `skill-name` for personal
+- Personal skills override superpowers skills when names match
+- Clean skill display: shows name/description without raw frontmatter
+- Helpful context: shows supporting files directory for each skill
+- Tool mapping for Codex: TodoWrite→update_plan, subagents→manual fallback, etc.
+- Bootstrap integration with minimal AGENTS.md for automatic startup
+- Complete installation guide and bootstrap instructions specific to Codex
+
+**Key differences from Claude Code integration:**
+- Single unified script instead of separate tools
+- Tool substitution system for Codex-specific equivalents
+- Simplified subagent handling (manual work instead of delegation)
+- Updated terminology: "Superpowers skills" instead of "Core skills"
+
+### Files Added
+- `codex/INSTALL.md` - Installation guide for Codex users
+- `codex/superpowers-bootstrap.md` - Bootstrap instructions with Codex adaptations
+- `scripts/superpowers-codex` - Unified Node.js executable with all functionality
+
+**Note:** Codex support is experimental. The integration provides core superpowers functionality but may require refinement based on user feedback.
+
 ## v3.2.3 (2025-10-23)
 
 ### Improvements

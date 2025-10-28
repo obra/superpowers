@@ -8,7 +8,7 @@ const os = require('os');
 const homeDir = os.homedir();
 const superpowersSkillsDir = path.join(homeDir, '.codex', 'superpowers', 'skills');
 const personalSkillsDir = path.join(homeDir, '.codex', 'skills');
-const bootstrapFile = path.join(homeDir, '.codex', 'superpowers', 'codex', 'superpowers-bootstrap.md');
+const bootstrapFile = path.join(homeDir, '.codex', 'superpowers', '.codex', 'superpowers-bootstrap.md');
 
 // Utility functions
 function extractFrontmatter(filePath) {

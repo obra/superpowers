@@ -41,6 +41,12 @@ Read the introduction: [Superpowers for Claude Code](https://blog.fsck.com/2025/
 # /superpowers:execute-plan - Execute plan in batches
 ```
 
+### Codex Installation (Experimental)
+
+**Note:** Codex support is experimental and may require refinement based on user feedback.
+
+Tell Codex to fetch https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md and follow the instructions.
+
 ## Quick Start
 
 ### Using Slash Commands
