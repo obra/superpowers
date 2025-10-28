@@ -19,11 +19,15 @@ When skills reference tools you don't have, substitute your equivalent tools:
 - Personal skills override superpowers skills when names match
 
 **Critical Rules:**
-- Before ANY task, check the skills list shown below
+- Before ANY task, review the skills list (shown below)
 - If a relevant skill exists, you MUST use `superpowers-codex use-skill` to load it
 - Announce: "I've read the [Skill Name] skill and I'm using it to [purpose]"
 - Skills with checklists require `update_plan` todos for each item
 - NEVER skip mandatory workflows (brainstorming before coding, TDD, systematic debugging)
+
+**Skills location:**
+- Superpowers skills: ~/.codex/superpowers/skills/
+- Personal skills: ~/.codex/skills/ (override superpowers when names match)
 
 IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
 </EXTREMELY_IMPORTANT>
