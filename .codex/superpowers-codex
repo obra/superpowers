@@ -3,14 +3,40 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const { execSync } = require('child_process');
 
 // Paths
 const homeDir = os.homedir();
 const superpowersSkillsDir = path.join(homeDir, '.codex', 'superpowers', 'skills');
 const personalSkillsDir = path.join(homeDir, '.codex', 'skills');
 const bootstrapFile = path.join(homeDir, '.codex', 'superpowers', '.codex', 'superpowers-bootstrap.md');
+const superpowersRepoDir = path.join(homeDir, '.codex', 'superpowers');
 
 // Utility functions
+function checkForUpdates() {
+    try {
+        // Quick check with 3 second timeout to avoid delays if network is down
+        const output = execSync('git fetch origin && git status --porcelain=v1 --branch', {
+            cwd: superpowersRepoDir,
+            timeout: 3000,
+            encoding: 'utf8',
+            stdio: 'pipe'
+        });
+
+        // Parse git status output to see if we're behind
+        const statusLines = output.split('\n');
+        for (const line of statusLines) {
+            if (line.startsWith('## ') && line.includes('[behind ')) {
+                return true; // We're behind remote
+            }
+        }
+        return false; // Up to date
+    } catch (error) {
+        // Network down, git error, timeout, etc. - don't block bootstrap
+        return false;
+    }
+}
+
 function extractFrontmatter(filePath) {
     try {
         const content = fs.readFileSync(filePath, 'utf8');
@@ -143,6 +169,17 @@ function runBootstrap() {
     console.log('# Superpowers Bootstrap for Codex');
     console.log('# ================================');
     console.log('');
+
+    // Check for updates (with timeout protection)
+    if (checkForUpdates()) {
+        console.log('## Update Available');
+        console.log('');
+        console.log('⚠️  Your superpowers installation is behind the latest version.');
+        console.log('To update, run: `cd ~/.codex/superpowers && git pull`');
+        console.log('');
+        console.log('---');
+        console.log('');
+    }
 
     // Show the bootstrap instructions
     if (fs.existsSync(bootstrapFile)) {
