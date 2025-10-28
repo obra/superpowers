@@ -9,7 +9,7 @@ description: Use when creating or developing anything, before writing code or im
 
 Transform rough ideas into fully-formed designs through structured questioning and alternative exploration.
 
-**Core principle:** Ask questions to understand, explore alternatives, present design incrementally for validation.
+**Core principle:** Do your homework first, ask targeted questions to fill gaps, explore alternatives, present design incrementally for validation.
 
 **Announce at start:** "I'm using the brainstorming skill to refine your idea into a design."
 
@@ -17,7 +17,8 @@ Transform rough ideas into fully-formed designs through structured questioning a
 
 | Phase | Key Activities | Tool Usage | Output |
 |-------|---------------|------------|--------|
-| **1. Understanding** | Ask questions (one at a time) | AskUserQuestion for choices | Purpose, constraints, criteria |
+| **Prep: Autonomous Recon** | Inspect repo/docs/commits, form initial model | Native tools (ls, cat, git log, etc.) | Draft understanding to confirm |
+| **1. Understanding** | Share findings, ask only for missing context | AskUserQuestion for real decisions | Purpose, constraints, criteria (confirmed) |
 | **2. Exploration** | Propose 2-3 approaches | AskUserQuestion for approach selection | Architecture options with trade-offs |
 | **3. Design Presentation** | Present in 200-300 word sections | Open-ended questions | Complete design with validation |
 | **4. Design Documentation** | Write design document | writing-clearly-and-concisely skill | Design doc in docs/plans/ |
@@ -30,6 +31,7 @@ Copy this checklist to track progress:
 
 ```
 Brainstorming Progress:
+- [ ] Prep: Autonomous Recon (repo/docs/commits reviewed, initial model shared)
 - [ ] Phase 1: Understanding (purpose, constraints, criteria gathered)
 - [ ] Phase 2: Exploration (2-3 approaches proposed and evaluated)
 - [ ] Phase 3: Design Presentation (design validated in sections)
@@ -38,41 +40,47 @@ Brainstorming Progress:
 - [ ] Phase 6: Planning Handoff (if implementing)
 ```
 
-### Phase 1: Understanding
-- Check current project state in working directory
-- Ask ONE question at a time to refine the idea
-- **Use AskUserQuestion tool** when you have multiple choice options
-- Gather: Purpose, constraints, success criteria
+### Prep: Autonomous Recon
+- Use the tools you already have (file browsing, docs, git history, tests) to understand current project state before asking anything.
+- Form your own draft model: what problem we’re solving, what artifacts exist, and any obvious open questions.
+- Start the conversation by sharing that model: “Based on exploring the project state, docs, working copy, and recent commits, here’s how I think this should work…”
+- Only ask follow-up questions for information you genuinely cannot infer from the materials in front of you.
 
-**Example using AskUserQuestion:**
+### Phase 1: Understanding
+- Share your synthesized understanding first, then invite corrections or additions.
+- Ask ONE focused question at a time, and only for gaps you cannot close yourself.
+- **Use AskUserQuestion tool** only when you need the human to make a decision among real alternatives.
+- Gather: Purpose, constraints, success criteria (confirmed or amended by your partner)
+
+**Example summary + targeted question:**
 ```
-Question: "Where should the authentication data be stored?"
-Options:
-  - "Session storage" (clears on tab close, more secure)
-  - "Local storage" (persists across sessions, more convenient)
-  - "Cookies" (works with SSR, compatible with older approach)
+Based on the README and yesterday's commit, we're expanding localization to dashboard and billing emails; admin console is still untouched. Only gap I see is whether support responses need localization in this iteration. Did I miss anything important?
 ```
 
 ### Phase 2: Exploration
 - Propose 2-3 different approaches
-- For each: Core architecture, trade-offs, complexity assessment
-- **Use AskUserQuestion tool** to present approaches as structured choices
-- Ask your human partner which approach resonates
+- For each: Core architecture, trade-offs, complexity assessment, and your recommendation
+- **Use AskUserQuestion tool** to present approaches when you truly need a judgement call
+- Lead with the option you prefer and explain why; invite disagreement if your partner sees it differently
+- Own prioritization: if the repo already makes priorities clear, say so and move forward instead of asking
 
 **Example using AskUserQuestion:**
 ```
 Question: "Which architectural approach should we use?"
 Options:
+  - "Direct API calls with retry logic" (simple, synchronous, easier to debug) ← recommended for current scope
   - "Event-driven with message queue" (scalable, complex setup, eventual consistency)
-  - "Direct API calls with retry logic" (simple, synchronous, easier to debug)
   - "Hybrid with background jobs" (balanced, moderate complexity, best of both)
+
+I recommend the direct API approach because it matches existing patterns and minimizes new infrastructure. Let me know if you see a blocker that pushes us toward the other options.
 ```
 
 ### Phase 3: Design Presentation
-- Present in 200-300 word sections
+- Present in coherent sections; use ~200-300 words when introducing new material, shorter summaries once alignment is obvious
 - Cover: Architecture, components, data flow, error handling, testing
-- Ask after each section: "Does this look right so far?" (open-ended)
+- Check in at natural breakpoints instead of after every paragraph: “Stop me if this diverges from what you expect.”
 - Use open-ended questions here to allow freeform feedback
+- Don't ask whether you should continue; assume ownership and proceed unless your partner redirects you
 
 ### Phase 4: Design Documentation
 After design is validated, write it to a permanent document:
@@ -100,16 +108,15 @@ When your human partner confirms (any affirmative response):
 
 ### When to Use AskUserQuestion Tool
 
-**Use AskUserQuestion for:**
-- Phase 1: Clarifying questions with 2-4 clear options
-- Phase 2: Architectural approach selection (2-3 alternatives)
-- Any decision with distinct, mutually exclusive choices
-- When options have clear trade-offs to explain
+**Use AskUserQuestion when:**
+- You need your partner to make a judgement call among real alternatives
+- You have a recommendation and can explain why it’s your preference
+- Prioritization is ambiguous and cannot be inferred from existing materials
 
-**Benefits:**
-- Structured presentation of options with descriptions
-- Clear trade-off visibility for partner
-- Forces explicit choice (prevents vague "maybe both" responses)
+**Best practices:**
+- State your preferred option and rationale inside the question so your partner can agree or redirect
+- If you already know the answer from repo/docs, state it as fact and move on—no question needed
+- When priorities are already spelled out, acknowledge them and proceed rather than delegating the choice back to your partner
 
 ### When to Use Open-Ended Questions
 
@@ -118,6 +125,8 @@ When your human partner confirms (any affirmative response):
 - When you need detailed feedback or explanation
 - When partner should describe their own requirements
 - When structured options would limit creative input
+
+Frame them to confirm or expand on your current understanding instead of reopening settled topics.
 
 **Example decision flow:**
 - "What authentication method?" → Use AskUserQuestion (2-4 options)
@@ -156,10 +165,11 @@ digraph revisit_phases {
 
 | Principle | Application |
 |-----------|-------------|
-| **One question at a time** | Phase 1: Single question per message, use AskUserQuestion for choices |
+| **One question at a time** | Phase 1: Single targeted question only for gaps you can’t close yourself |
 | **Structured choices** | Use AskUserQuestion tool for 2-4 options with trade-offs |
 | **YAGNI ruthlessly** | Remove unnecessary features from all designs |
 | **Explore alternatives** | Always propose 2-3 approaches before settling |
 | **Incremental validation** | Present design in sections, validate each |
 | **Flexible progression** | Go backward when needed - flexibility > rigidity |
+| **Own the initiative** | Recommend priorities and next steps; don’t ask if you should proceed unless requirements conflict |
 | **Announce usage** | State skill usage at start of session |

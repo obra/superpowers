@@ -2,6 +2,10 @@
 
 ## v3.3.1 (2025-10-28)
 
+### Improvements
+
+- Updated `brainstorming` skill to require autonomous recon before questioning, encourage recommendation-driven decisions, and prevent agents from delegating prioritization back to humans.
+
 ### Bug Fixes
 
 - Clarified `writing-skills` guidance so it points to the correct agent-specific personal skill directories (`~/.claude/skills` for Claude Code, `~/.codex/skills` for Codex).
