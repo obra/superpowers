@@ -9,7 +9,7 @@ description: Use when creating or developing anything, before writing code or im
 
 Transform rough ideas into fully-formed designs through structured questioning and alternative exploration.
 
-**Core principle:** Do your homework first, ask targeted questions to fill gaps, explore alternatives, present design incrementally for validation.
+**Core principle:** Research first, ask targeted questions to fill gaps, explore alternatives, present design incrementally for validation.
 
 **Announce at start:** "I'm using the brainstorming skill to refine your idea into a design."
 
@@ -41,14 +41,14 @@ Brainstorming Progress:
 ```
 
 ### Prep: Autonomous Recon
-- Use the tools you already have (file browsing, docs, git history, tests) to understand current project state before asking anything.
-- Form your own draft model: what problem we’re solving, what artifacts exist, and any obvious open questions.
-- Start the conversation by sharing that model: “Based on exploring the project state, docs, working copy, and recent commits, here’s how I think this should work…”
-- Only ask follow-up questions for information you genuinely cannot infer from the materials in front of you.
+- Use existing tools (file browsing, docs, git history, tests) to understand current project state before asking anything.
+- Form your draft model: what problem you're solving, what artifacts exist, and what questions remain.
+- Start the conversation by sharing that model: "Based on exploring the project state, docs, working copy, and recent commits, here's how I think this should work…"
+- Ask follow-up questions only for information you cannot infer from available materials.
 
 ### Phase 1: Understanding
 - Share your synthesized understanding first, then invite corrections or additions.
-- Ask ONE focused question at a time, and only for gaps you cannot close yourself.
+- Ask one focused question at a time, only for gaps you cannot close yourself.
 - **Use AskUserQuestion tool** only when you need the human to make a decision among real alternatives.
 - Gather: Purpose, constraints, success criteria (confirmed or amended by your partner)
 
@@ -62,7 +62,7 @@ Based on the README and yesterday's commit, we're expanding localization to dash
 - For each: Core architecture, trade-offs, complexity assessment, and your recommendation
 - **Use AskUserQuestion tool** to present approaches when you truly need a judgement call
 - Lead with the option you prefer and explain why; invite disagreement if your partner sees it differently
-- Own prioritization: if the repo already makes priorities clear, say so and move forward instead of asking
+- Own prioritization: if the repo makes priorities clear, state them and proceed rather than asking
 
 **Example using AskUserQuestion:**
 ```
@@ -78,15 +78,15 @@ I recommend the direct API approach because it matches existing patterns and min
 ### Phase 3: Design Presentation
 - Present in coherent sections; use ~200-300 words when introducing new material, shorter summaries once alignment is obvious
 - Cover: Architecture, components, data flow, error handling, testing
-- Check in at natural breakpoints instead of after every paragraph: “Stop me if this diverges from what you expect.”
-- Use open-ended questions here to allow freeform feedback
-- Don't ask whether you should continue; assume ownership and proceed unless your partner redirects you
+- Check in at natural breakpoints rather than after every paragraph: "Stop me if this diverges from what you expect."
+- Use open-ended questions to allow freeform feedback
+- Assume ownership and proceed unless your partner redirects you
 
 ### Phase 4: Design Documentation
-After design is validated, write it to a permanent document:
+After validating the design, write it to a permanent document:
 - **File location:** `docs/plans/YYYY-MM-DD-<topic>-design.md` (use actual date and descriptive topic)
 - **RECOMMENDED SUB-SKILL:** Use elements-of-style:writing-clearly-and-concisely (if available) for documentation quality
-- **Content:** Capture the design as discussed and validated in Phase 3, organized into the sections that emerged from the conversation
+- **Content:** Capture the design as discussed and validated in Phase 3, organized into sections that emerged from the conversation
 - Commit the design document to git before proceeding
 
 ### Phase 5: Worktree Setup (for implementation)
@@ -115,8 +115,8 @@ When your human partner confirms (any affirmative response):
 
 **Best practices:**
 - State your preferred option and rationale inside the question so your partner can agree or redirect
-- If you already know the answer from repo/docs, state it as fact and move on—no question needed
-- When priorities are already spelled out, acknowledge them and proceed rather than delegating the choice back to your partner
+- If you know the answer from repo/docs, state it as fact and proceed—no question needed
+- When priorities are spelled out, acknowledge them and proceed rather than delegating the choice back to your partner
 
 ### When to Use Open-Ended Questions
 
@@ -126,7 +126,7 @@ When your human partner confirms (any affirmative response):
 - When partner should describe their own requirements
 - When structured options would limit creative input
 
-Frame them to confirm or expand on your current understanding instead of reopening settled topics.
+Frame them to confirm or expand your current understanding rather than reopening settled topics.
 
 **Example decision flow:**
 - "What authentication method?" → Use AskUserQuestion (2-4 options)
@@ -159,7 +159,7 @@ digraph revisit_phases {
 - Partner questions approach during Phase 3 → Return to Phase 2
 - Something doesn't make sense → Go back and clarify
 
-**Don't force forward linearly** when going backward would give better results.
+**Avoid forcing forward linearly** when going backward would give better results.
 
 ## Key Principles
 
@@ -171,5 +171,5 @@ digraph revisit_phases {
 | **Explore alternatives** | Always propose 2-3 approaches before settling |
 | **Incremental validation** | Present design in sections, validate each |
 | **Flexible progression** | Go backward when needed - flexibility > rigidity |
-| **Own the initiative** | Recommend priorities and next steps; don’t ask if you should proceed unless requirements conflict |
+| **Own the initiative** | Recommend priorities and next steps; ask if you should proceed only when requirements conflict |
 | **Announce usage** | State skill usage at start of session |
