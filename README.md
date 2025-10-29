@@ -130,7 +130,6 @@ Skills activate automatically when relevant. For example:
 
 - **using-git-worktrees** - Parallel development branches
 - **finishing-a-development-branch** - Merge/PR decision workflow (enhanced)
-- **writing-commits** - Commit message guidelines and co-authorship policy
 - **documentation-management** - Holistic documentation maintenance
 - **code-and-project-cleanup** - Safe cleanup of code and project artifacts
 
