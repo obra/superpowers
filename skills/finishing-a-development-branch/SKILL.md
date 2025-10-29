@@ -38,24 +38,29 @@ Stop. Don't proceed to Step 2.
 
 **If tests pass:** Continue to Step 2.
 
-### Step 2: Documentation Synchronization Check
+### Step 2: Documentation Synchronization
 
-Before completing the branch, verify documentation is up-to-date:
+**YOU MUST invoke the documentation-management skill. No exceptions.**
 
-1. **Review your changes**: Run `git diff main...HEAD` (or appropriate base branch)
-2. **Identify documentation needs**:
-   - Did you add/change public APIs? → Update API docs
-   - Did you change behavior? → Update relevant guides
-   - Did you add dependencies? → Update installation docs
-   - Did you change config? → Update configuration docs
-3. **Update documentation**: Make changes in the same branch
-4. **Verify claims**: If docs reference code, ensure references are accurate
-5. **Link to code**: Use relative markdown links to keep docs synchronized
-   - Example: `See [UserHandler](../src/handlers/user.py#L45)`
+Skipping documentation verification = drift. Every time.
 
-**If documentation needs updating:** Make the updates now, before proceeding.
+```bash
+# Use the Skill tool to invoke: documentation-management
+```
 
-**If no documentation changes needed:** Continue to Step 3.
+The skill will:
+
+- Analyze your branch changes via `git diff <base>...HEAD`
+- Identify documentation gaps (README, CHANGELOG, API docs, guides)
+- Update all affected files in the same branch
+- Verify inline source links are present
+- Confirm version bumps for CHANGELOG
+
+**If documentation is already synchronized:** The skill confirms this quickly.
+
+**If updates are needed:** The skill makes them comprehensively.
+
+**Do not proceed to Step 3 until documentation is synchronized.**
 
 ### Step 3: Determine Base Branch
 
