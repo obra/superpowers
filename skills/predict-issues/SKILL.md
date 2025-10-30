@@ -143,4 +143,4 @@ After analysis, ask user how to track findings:
 - **TodoWrite**: Create structured task list for systematic review
 - **Summary only**: Provide report without creating tasks
 
-Never add AI attribution, Claude Code watermarks, or assistant signatures to issues or reports.
+Avoid AI attribution, Claude Code watermarks, or assistant signatures in issues or reports.
