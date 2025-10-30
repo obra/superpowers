@@ -1,6 +1,6 @@
 # Superpowers
 
-Give Claude Code superpowers with a comprehensive skills library of proven techniques, patterns, and workflows.
+A comprehensive skills library of proven techniques, patterns, and workflows for AI coding assistants.
 
 ## What You Get
 
@@ -26,7 +26,7 @@ Read the introduction: [Superpowers for Claude Code](https://blog.fsck.com/2025/
 
 ## Installation
 
-### Via Plugin Marketplace (Recommended)
+### Claude Code (via Plugin Marketplace)
 
 ```bash
 # In Claude Code
@@ -45,6 +45,12 @@ Read the introduction: [Superpowers for Claude Code](https://blog.fsck.com/2025/
 # /superpowers:write-plan - Create implementation plan
 # /superpowers:execute-plan - Execute plan in batches
 ```
+
+### Codex (Experimental)
+
+**Note:** Codex support is experimental and may require refinement based on user feedback.
+
+Tell Codex to fetch https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md and follow the instructions.
 
 ## Quick Start
 
