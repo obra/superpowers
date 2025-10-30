@@ -22,7 +22,7 @@ Use when:
 - Considering new capabilities for skills library
 - Evaluating whether concept fits superpowers philosophy
 
-Don't use when:
+Skip when:
 
 - Making simple typo fixes
 - Updating documentation only
@@ -91,7 +91,7 @@ git worktree add .worktrees/amplifier-integration -b feature/amplifier-integrati
 cd .worktrees/amplifier-integration
 ```
 
-**Why mandatory:** Prevents polluting main branch during exploration.
+**Why:** Prevents polluting main branch during exploration.
 
 **REQUIRED SUB-SKILL:** Use superpowers:using-git-worktrees for complete workflow.
 
@@ -134,7 +134,7 @@ claude-settings/
 2. Integrate with existing skills (reference from systematic-debugging, when-stuck)
 3. Add to SessionStart reminder if needed
 
-**Don't:** Create new skill just for using a template
+**Avoid:** Creating new skill just for using a template
 
 ### Type 2: Workflow Pattern
 
@@ -146,7 +146,7 @@ claude-settings/
 2. Enhance those skills with new patterns
 3. Test integration with existing workflows
 
-**Don't:** Create parallel workflow system
+**Avoid:** Creating parallel workflow system
 
 ### Type 3: Infrastructure
 
@@ -159,11 +159,11 @@ claude-settings/
 3. Create slash command if user-facing
 4. Document in README.md
 
-**Don't:** Put infrastructure in skills/
+**Avoid:** Putting infrastructure in skills/
 
 ### Type 4: New Skill (High Bar)
 
-**Example:** Genuine new capability not covered by 33 existing skills
+**Example:** New capability not covered by 33 existing skills
 
 **Approach:**
 
@@ -191,7 +191,7 @@ claude-settings/
 2. Reference from relevant skills
 3. Add to SessionStart context if foundational
 
-**Don't:** Create skill for every principle
+**Avoid:** Creating skill for every principle
 
 ## Philosophy Alignment Checklist
 
@@ -283,7 +283,7 @@ Which skills this pairs with
 
 **REQUIRED SUB-SKILL:** Use superpowers:testing-skills-with-subagents.
 
-**Don't skip testing:** Untested skills have issues. Always.
+**Test every skill:** Untested skills have issues.
 
 ## Quick Reference
 

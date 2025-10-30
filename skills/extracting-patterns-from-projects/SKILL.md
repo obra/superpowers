@@ -22,11 +22,11 @@ Use when:
 - Evaluating whether to adopt practices from elsewhere
 - Researching how others solved similar problems
 
-Don't use when:
+Skip when:
 
 - Simple feature copying is appropriate
 - Projects are too different to compare meaningfully
-- You're implementing,not researching
+- You're implementing, not researching
 
 ## Core Pattern
 
@@ -181,7 +181,7 @@ wait
 
 - Good value but high effort OR specialized use cases
 - Consider based on actual need
-- Don't implement speculatively
+- Implement only when needed
 - Example: Advanced features, new capabilities
 
 **For each item, document:**
@@ -220,23 +220,23 @@ wait
 
 ## Pattern vs Architecture Distinction
 
-**Critical:** Don't confuse patterns with architectures.
+**Critical:** Distinguish patterns from architectures.
 
-### Architecture (Don't Copy)
+### Architecture (Avoid Copying)
 
 - "They use an agent system with 23 specialized agents"
 - "They have a 5-phase DDD workflow with state management"
 - "They use MCP for service communication"
 
-**Why not:** Target project likely has different architectural constraints.
+**Why not:** Target project has different architectural constraints.
 
-### Pattern (Extract This)
+### Pattern (Extract These)
 
 - "Artifact-driven phases where each stage produces inputs for next"
 - "Approval gates at key transitions"
 - "Living documentation that updates before code"
 
-**Why yes:** Patterns adapt to any architecture.
+**Why extract:** Patterns adapt to any architecture.
 
 ## Quick Reference
 
@@ -318,4 +318,4 @@ From amplifier analysis (2025-10-23):
 - ✅ Risk assessment with mitigation
 - ✅ Trade-off tables for each recommendation
 - ✅ Multiple implementation sequences
-- **Result:** User can make informed decision vs overwhelmed with features
+- **Result:** User can make informed decisions without feature overwhelm

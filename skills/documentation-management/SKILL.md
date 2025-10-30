@@ -70,13 +70,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/):
 - Update all affected files, not just one
 - Include inline source links for factual claims: `[claim](https://source.url)`. Unverified claims are unverifiable
 
-**NEVER:**
+**AVOID:**
 
-- Delete existing documentation
-- Overwrite custom sections (respect `<!-- CUSTOM:START -->` markers)
-- Change documentation style drastically
-- Add AI attribution or Claude Code markers
-- Create unnecessary new documentation files
+- Deleting existing documentation
+- Overwriting custom sections (respect `<!-- CUSTOM:START -->` markers)
+- Changing documentation style drastically
+- Adding AI attribution or Claude Code markers
+- Creating unnecessary new documentation files
 
 ## Documentation Types
 
@@ -88,4 +88,4 @@ Format follows [Keep a Changelog](https://keepachangelog.com/):
 
 ## Completion
 
-Ask how to proceed: update all, focus on specific files, create missing docs, or generate migration guide. Maintain documentation as current as code.
+Ask how to proceed: update all, focus on specific files, create missing docs, or generate migration guide.
