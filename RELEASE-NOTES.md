@@ -1,5 +1,11 @@
 # Superpowers Release Notes
 
+## v3.4.0 (2025-10-30)
+
+### Improvements
+
+- Simplified `brainstorming` skill to return to original conversational vision. Removed heavyweight 6-phase process with formal checklists in favor of natural dialogue: ask questions one at a time, then present design in 200-300 word sections with validation. Keeps documentation and implementation handoff features.
+
 ## v3.3.1 (2025-10-28)
 
 ### Improvements
