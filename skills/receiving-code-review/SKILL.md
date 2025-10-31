@@ -97,6 +97,47 @@ IF reviewer suggests "implementing properly":
 
 **your human partner's rule:** "You and reviewer both report to me. If we don't need this feature, don't add it."
 
+## Posting Responses on GitHub
+
+```
+WHEN responding to code review feedback on GitHub:
+
+IF feedback is from a specific review comment thread:
+  ✅ Reply IN that thread
+  ❌ NEVER post as top-level PR comment
+
+IF addressing general PR discussion (not tied to specific code):
+  ✅ Post as top-level comment
+```
+
+### Replying to Review Comment Threads
+
+**To reply to a review comment thread:**
+
+```bash
+# Get the comment ID from the review comment URL
+# Example: github.com/.../pull/268#discussion_r1234567890
+# The comment ID is: 1234567890
+
+gh api repos/{owner}/{repo}/pulls/{pull_number}/comments/{comment_id}/replies \
+  -f body="Your response here"
+```
+
+**Why threaded replies matter:**
+- Maintains conversation context
+- Shows resolution status in GitHub UI
+- Easier for reviewers to track discussions
+- Keeps PR timeline clean
+
+**Common mistake:**
+```bash
+# ❌ WRONG - creates top-level comment
+gh pr comment 268 -b "Response to threaded review feedback"
+
+# ✅ RIGHT - replies in thread
+gh api repos/owner/repo/pulls/268/comments/123/replies -f body="Response"
+```
+
 ## Implementation Order
 
 ```
