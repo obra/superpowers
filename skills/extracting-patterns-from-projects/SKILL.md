@@ -218,6 +218,21 @@ wait
 
 **Total time for complete analysis:** 2.5-4 hours
 
+**After write-up:**
+
+Check if project uses ADR pattern:
+
+```bash
+test -d docs/decisions && echo "ADR available"
+```
+
+**If this is a major integration decision:**
+
+- **If ADR available**: Create ADR documenting the decision to integrate (or not integrate) patterns
+- **Otherwise**: Store decision rationale with `mem add "Pattern extraction decision: [what] because [why]" --tags "decision,patterns"`
+
+Major integrations warrant formal decision documentation.
+
 ## Pattern vs Architecture Distinction
 
 **Critical:** Distinguish patterns from architectures.
