@@ -40,6 +40,10 @@ Brainstorming Progress:
 
 ### Phase 1: Understanding
 - Check current project state in working directory
+- Check `docs/decisions/` (if exists) for relevant architectural decisions
+  ```bash
+  test -d docs/decisions && fd . docs/decisions
+  ```
 - Ask ONE question at a time to refine the idea
 - **Use AskUserQuestion tool** when you have multiple choice options
 - Gather: Purpose, constraints, success criteria
@@ -104,6 +108,15 @@ After design is validated, write it to a permanent document:
 - **RECOMMENDED SUB-SKILL:** Use elements-of-style:writing-clearly-and-concisely (if available) for documentation quality
 - **Content:** Capture the design as discussed and validated in Phase 3, organized into the sections that emerged from the conversation
 - Commit the design document to git before proceeding
+
+**If significant architectural choice was made:**
+
+Check if project uses ADR pattern:
+```bash
+test -d docs/decisions && echo "ADR available"
+```
+
+If available, consider creating ADR to document the architectural decision with full context, alternatives considered, and rationale.
 
 ### Phase 4.5: Challenge Your Design (before finalizing)
 
