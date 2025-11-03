@@ -67,6 +67,23 @@ digraph stuck_dispatch {
 
 ## Process
 
+0. **Check Known Issues** (if applicable)
+
+   Before dispatching to problem-solving techniques, check if this problem has been solved before:
+
+   ```bash
+   test -f docs/discoveries/DISCOVERIES.md && echo "Check DISCOVERIES file"
+   ```
+
+   **If `docs/discoveries/DISCOVERIES.md` exists:**
+   - Read through discoveries for similar problems
+   - Search for keywords related to your stuck-ness
+   - May find solution without full investigation
+
+   **Otherwise:**
+   - Try `mem search semantic "stuck on [describe problem]"`
+   - May find past solutions from your personal knowledge
+
 1. **Identify stuck-type** - What symptom matches above?
 2. **Load that skill** - Read the specific technique
 3. **Apply technique** - Follow its process
