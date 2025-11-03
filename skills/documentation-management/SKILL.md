@@ -41,6 +41,7 @@ Systematically update project documentation to match code reality. Analyze chang
 | **New feature** | README features, CHANGELOG (minor bump), API docs, usage examples |
 | **Bug fix** | CHANGELOG (patch bump), troubleshooting if significant |
 | **Refactoring** | Architecture docs, migration guide if breaking, CHANGELOG |
+| **Architecture change** | README architecture section, CHANGELOG, ADR in decisions/ (if exists) |
 | **Security fix** | Security policy, CHANGELOG with Security section, README if user-facing |
 | **Performance** | Benchmarks, CHANGELOG with improved metrics, optimization guides |
 | **Breaking change** | CHANGELOG (major bump), migration guide, README with upgrade path |
@@ -80,6 +81,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/):
 - **API docs**: Endpoints, parameters, responses
 - **Configuration**: Environment variables, settings
 - **Guides**: Architecture, deployment, troubleshooting, migration
+- **ADR** (decisions/): Architecture decisions with rationale (if `docs/decisions/` exists)
+- **DISCOVERIES** (discoveries/): Known issues and solutions (if `docs/discoveries/DISCOVERIES.md` exists)
 
 ## Completion
 
