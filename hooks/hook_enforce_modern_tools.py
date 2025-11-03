@@ -5,8 +5,8 @@ Denies old commands and suggests better alternatives.
 """
 
 import json
-import sys
 import re
+import sys
 
 
 # Code structure keywords that suggest ast-grep should be used

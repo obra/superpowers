@@ -24,11 +24,11 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Edit|MultiEdit|Write|Task",
+        "matcher": "Edit|Write",
         "hooks": [
           {
             "type": "command",
-            "command": "test -f .pre-commit-config.yaml && { prek run --all-files 2>&1 || exit 2; }"
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/hook_run_prek.py"
           }
         ]
       }
