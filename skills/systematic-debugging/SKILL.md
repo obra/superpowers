@@ -224,10 +224,29 @@ You MUST complete each phase before proceeding to the next.
    - STOP
    - Count: How many fixes have you tried?
    - If < 3: Return to Phase 1, re-analyze with new information
-   - **If ≥ 3: STOP and question the architecture (step 5 below)**
+   - **If ≥ 3: STOP and question the architecture (step 6 below)**
    - DON'T attempt Fix #4 without architectural discussion
 
-5. **If 3+ Fixes Failed: Question Architecture**
+5. **Document Discovery (if applicable)**
+
+   **WHEN root cause was non-obvious or could recur:**
+
+   Check if `docs/discoveries/DISCOVERIES.md` exists:
+
+   ```bash
+   test -f docs/discoveries/DISCOVERIES.md && echo "File exists"
+   ```
+
+   **If file exists:**
+   - Document the Issue, Root Cause, Solution, Prevention
+   - Help future developers (including yourself) skip this investigation
+   - Add entry using template from DISCOVERIES.md
+
+   **If file doesn't exist:**
+   - Use `mem add "Discovery: [issue] caused by [root cause]. Fixed by [solution]" --tags "discovery,bug,project"`
+   - Personal reference for future debugging
+
+6. **If 3+ Fixes Failed: Question Architecture**
 
    **Pattern indicating architectural problem:**
    - Each fix reveals new shared state/coupling/problem in different place
