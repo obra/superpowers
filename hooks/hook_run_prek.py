@@ -31,9 +31,9 @@ def main():
         if not file_path.exists():
             sys.exit(0)
 
-        # Run prek on the specific file
+        # Run prek on the specific file, skipping the branch check
         result = subprocess.run(
-            ["prek", "run", "--files", str(file_path)],
+            ["prek", "run", "--skip", "no-commit-to-branch", "--files", str(file_path)],
             capture_output=True,
             text=True,
         )
