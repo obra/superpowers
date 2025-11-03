@@ -1,6 +1,6 @@
 ---
 name: Using Superpowers
-description: Use when starting any conversation - establishes mandatory workflows for finding and using skills, including using Read tool before announcing usage, following brainstorming before coding, and creating TodoWrite todos for checklists
+description: Use when starting any conversation - establishes mandatory workflows for finding and using skills, including using Skill tool before announcing usage, following brainstorming before coding, and creating TodoWrite todos for checklists
 ---
 
 <EXTREMELY-IMPORTANT>
@@ -19,7 +19,7 @@ Before responding to ANY user message, you MUST complete this checklist:
 
 1. ☐ List available skills in your mind
 2. ☐ Ask yourself: "Does ANY skill match this request?"
-3. ☐ If yes → Use the Read tool to read the skill file
+3. ☐ If yes → Use the Skill tool to read and run the skill file
 4. ☐ Announce which skill you're using
 5. ☐ Follow the skill exactly
 
@@ -39,7 +39,7 @@ If you catch yourself thinking ANY of these thoughts, STOP. You are rationalizin
 - "I can check git/files quickly" → WRONG. Files don't have conversation context. Check for skills.
 - "Let me gather information first" → WRONG. Skills tell you HOW to gather information. Check for skills.
 - "This doesn't need a formal skill" → WRONG. If a skill exists for it, use it.
-- "I remember this skill" → WRONG. Skills evolve. Read the current version.
+- "I remember this skill" → WRONG. Skills evolve. Run the current version.
 - "This doesn't count as a task" → WRONG. If you're taking action, it's a task. Check for skills.
 - "The skill is overkill for this" → WRONG. Skills exist because simple things become complex. Use it.
 - "I'll just do this one thing first" → WRONG. Check for skills BEFORE doing anything.
@@ -53,6 +53,7 @@ If a skill for your task exists, you must use it or you will fail at your task.
 If a skill has a checklist, YOU MUST create TodoWrite todos for EACH item.
 
 **Don't:**
+
 - Work through checklist mentally
 - Skip creating todos "to save time"
 - Batch multiple items into one todo
@@ -66,6 +67,7 @@ Before using a skill, announce that you are using it.
 "I'm using [Skill Name] to [what you're doing]."
 
 **Examples:**
+
 - "I'm using the brainstorming skill to refine your idea into a design."
 - "I'm using the test-driven-development skill to implement this feature."
 
@@ -92,9 +94,10 @@ Your human partner's specific instructions describe WHAT to do, not HOW.
 ## Summary
 
 **Starting any task:**
+
 1. If relevant skill exists → Use the skill
-3. Announce you're using it
-4. Follow what it says
+2. Announce you're using it
+3. Follow what it says
 
 **Skill has checklist?** TodoWrite for every item.
 

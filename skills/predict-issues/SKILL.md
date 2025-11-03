@@ -21,12 +21,12 @@ Proactive problem identification prevents issues before they impact projects. An
 
 Evaluate each potential issue across four dimensions:
 
-| Dimension | Assessment |
-|-----------|-----------|
+| Dimension      | Assessment                                                                       |
+| -------------- | -------------------------------------------------------------------------------- |
 | **Likelihood** | How probable is this issue? Consider code patterns, usage patterns, scale trends |
-| **Impact** | How severe would consequences be? Downtime, data loss, security breach, poor UX |
-| **Timeline** | When might this become a problem? Immediate, weeks, months, at 10x scale |
-| **Effort** | How hard to fix now vs later? Technical debt cost, refactoring complexity |
+| **Impact**     | How severe would consequences be? Downtime, data loss, security breach, poor UX  |
+| **Timeline**   | When might this become a problem? Immediate, weeks, months, at 10x scale         |
+| **Effort**     | How hard to fix now vs later? Technical debt cost, refactoring complexity        |
 
 ## Security-Specific Risk Analysis
 
@@ -65,24 +65,28 @@ Prioritize by exploitability first, exposure second, blast radius third.
 Focus analysis on these common categories:
 
 **Performance**
+
 - O(n²) algorithms that break at scale
 - Memory leaks and resource exhaustion
 - Inefficient database queries (N+1, missing indexes)
 - Unoptimized API calls
 
 **Maintainability**
+
 - High cyclomatic complexity
 - Poor naming and unclear intent
 - Tight coupling between components
 - Code duplication across modules
 
 **Security**
+
 - Input validation gaps
 - Exposed secrets or credentials
 - Weak authentication patterns
 - Missing authorization checks
 
 **Scalability**
+
 - Hardcoded limits and assumptions
 - Single points of failure
 - Stateful designs that don't scale horizontally
@@ -98,6 +102,7 @@ Focus analysis on these common categories:
 ## Output Format
 
 For each prediction:
+
 - **Location**: Specific file and line references (e.g., [auth.ts:42](auth.ts#L42))
 - **Problem**: What pattern will cause issues and why
 - **Risk assessment**: Likelihood, impact, timeline, effort to fix
@@ -107,21 +112,25 @@ For each prediction:
 ## Common Patterns to Check
 
 **Complexity hotspots**
+
 - Functions over 50 lines
 - Files with high change frequency
 - Deep nesting levels (>3)
 
 **Performance concerns**
+
 - Nested loops over collections
 - Synchronous operations in critical paths
 - Missing pagination for list operations
 
 **Architecture stress points**
+
 - Circular dependencies
 - God objects with too many responsibilities
 - Integration points without error handling
 
 **Technical debt indicators**
+
 - TODO/FIXME comments accumulating
 - Commented-out code blocks
 - Temporary workarounds still present
@@ -130,21 +139,8 @@ For each prediction:
 
 After analysis, ask user how to track findings:
 
-**Available options:**
+- **Memory**: Store risk assessments for future reference using remember()
+- **TodoWrite**: Create structured task list for systematic review
+- **Summary only**: Provide report without creating tasks
 
-- **decisions/** - Create ADR for architectural choices (if `docs/decisions/` exists)
-- **discoveries/** - Document known issues and prevention (if `docs/discoveries/DISCOVERIES.md` exists)
-- **Memory** - Store risk assessments using `mem add` for personal reference
-- **TodoWrite** - Create structured task list for systematic review
-- **Summary only** - Provide report without creating artifacts
-
-Check which options are available:
-
-```bash
-test -d docs/decisions && echo "ADR available"
-test -f docs/discoveries/DISCOVERIES.md && echo "DISCOVERIES available"
-```
-
-Present only available options to user.
-
-Never add AI attribution, Claude Code watermarks, or assistant signatures to issues or reports.
+Avoid AI attribution, Claude Code watermarks, or assistant signatures in issues or reports.

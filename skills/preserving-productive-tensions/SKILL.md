@@ -16,6 +16,7 @@ Some tensions aren't problems to solve - they're valuable information to preserv
 ## Recognizing Productive Tensions
 
 **A tension is productive when:**
+
 - Both approaches optimize for different valid priorities (cost vs latency, simplicity vs features)
 - The "better" choice depends on deployment context, not technical superiority
 - Different users/deployments would choose differently
@@ -23,6 +24,7 @@ Some tensions aren't problems to solve - they're valuable information to preserv
 - Stakeholders have conflicting valid concerns
 
 **A tension needs resolution when:**
+
 - Implementation cost of preserving both is prohibitive
 - The approaches fundamentally conflict (can't coexist)
 - There's clear technical superiority for this specific use case
@@ -32,6 +34,7 @@ Some tensions aren't problems to solve - they're valuable information to preserv
 ## Preservation Patterns
 
 ### Pattern 1: Configuration
+
 Make the choice configurable rather than baked into architecture:
 
 ```python
@@ -43,6 +46,7 @@ class Config:
 **When to use:** Both approaches are architecturally compatible, switching is runtime decision
 
 ### Pattern 2: Parallel Implementations
+
 Maintain both as separate clean modules with shared contract:
 
 ```python
@@ -54,6 +58,7 @@ Maintain both as separate clean modules with shared contract:
 **When to use:** Approaches diverge significantly, but share same interface
 
 ### Pattern 3: Documented Trade-off
+
 Capture the tension explicitly in documentation/decision records:
 
 ```markdown
@@ -115,11 +120,13 @@ When preserving tensions, document clearly:
 **Context:** [Why this tension exists]
 
 **Option A:** [Approach]
+
 - Optimizes for: [Priority]
 - Trade-off: [Cost]
 - Best when: [Context]
 
 **Option B:** [Approach]
+
 - Optimizes for: [Different priority]
 - Trade-off: [Different cost]
 - Best when: [Different context]
@@ -132,15 +139,21 @@ When preserving tensions, document clearly:
 ## Examples
 
 ### Productive Tension (Preserve)
+
 "Should we optimize for cost or latency?"
+
 - **Answer:** Make it configurable - different deployments need different trade-offs
 
 ### Technical Decision (Resolve)
+
 "Should we use SSE or WebSockets?"
+
 - **Answer:** SSE - we only need one-way communication, simpler implementation
 
 ### Business Decision (Defer)
+
 "Should we support offline mode?"
+
 - **Answer:** Don't preserve both - ask stakeholder to decide based on user needs
 
 ## Remember

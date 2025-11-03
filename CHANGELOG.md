@@ -38,7 +38,8 @@ Skills and concepts borrowed from:
 
 **New skills:**
 
-- `writing-commits` - Commit message guidelines and co-authorship policy
+- `extracting-patterns-from-projects` - Systematic analysis methodology for external projects (2025-10-23)
+- `enhancing-superpowers` - Project-specific integration guide for superpowers (2025-10-23)
 
 ## Enhanced Skills
 
@@ -73,6 +74,10 @@ Skills with added capabilities from concept extraction:
 **receiving-code-review:**
 
 - Pattern alignment checks before implementing feedback
+
+**dispatching-parallel-agents:**
+
+- Generalized from debugging-only to cover research, analysis, and any parallel tasks (2025-10-23)
 
 ## Structural Changes
 

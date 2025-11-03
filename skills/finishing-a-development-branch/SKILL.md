@@ -25,6 +25,7 @@ npm test / cargo test / pytest / go test ./...
 ```
 
 **If tests fail:**
+
 ```
 Tests failing (<N> failures). Must fix before completing:
 
@@ -37,24 +38,29 @@ Stop. Don't proceed to Step 2.
 
 **If tests pass:** Continue to Step 2.
 
-### Step 2: Documentation Synchronization Check
+### Step 2: Documentation Synchronization
 
-Before completing the branch, verify documentation is up-to-date:
+**YOU MUST invoke the documentation-management skill. No exceptions.**
 
-1. **Review your changes**: Run `git diff main...HEAD` (or appropriate base branch)
-2. **Identify documentation needs**:
-   - Did you add/change public APIs? → Update API docs
-   - Did you change behavior? → Update relevant guides
-   - Did you add dependencies? → Update installation docs
-   - Did you change config? → Update configuration docs
-3. **Update documentation**: Make changes in the same branch
-4. **Verify claims**: If docs reference code, ensure references are accurate
-5. **Link to code**: Use relative markdown links to keep docs synchronized
-   - Example: `See [UserHandler](../src/handlers/user.py#L45)`
+Skipping documentation verification = drift. Every time.
 
-**If documentation needs updating:** Make the updates now, before proceeding.
+```bash
+# Use the Skill tool to invoke: documentation-management
+```
 
-**If no documentation changes needed:** Continue to Step 3.
+The skill will:
+
+- Analyze your branch changes via `git diff <base>...HEAD`
+- Identify documentation gaps (README, CHANGELOG, API docs, guides)
+- Update all affected files in the same branch
+- Verify inline source links are present
+- Confirm version bumps for CHANGELOG
+
+**If documentation is already synchronized:** The skill confirms this quickly.
+
+**If updates are needed:** The skill makes them comprehensively.
+
+**Do not proceed to Step 3 until documentation is synchronized.**
 
 ### Step 3: Determine Base Branch
 
@@ -107,19 +113,53 @@ Then: Cleanup worktree (Step 6)
 
 #### Option 2: Push and Create PR
 
+**CRITICAL: Analyze the entire branch, not just latest commit.**
+
 ```bash
-# Push branch
+# 1. Analyze complete branch context
+git log <base-branch>..HEAD --oneline    # All commits
+git diff <base-branch>...HEAD | head -100  # Full diff preview
+
+# 2. Understand transformation
+# - What capability was added/fixed/improved?
+# - Why was this change needed?
+# - What are ALL the major changes across commits?
+
+# 3. Push branch
 git push -u origin <feature-branch>
 
-# Create PR
-gh pr create --title "<title>" --body "$(cat <<'EOF'
+# 4. Create PR with complete context
+gh pr create --title "<type>(<scope>): <complete feature description>" --body "$(cat <<'EOF'
 ## Summary
-<2-3 bullets of what changed>
+[2-3 sentences describing the complete transformation across all commits]
 
-## Test Plan
-- [ ] <verification steps>
+## Changes
+- [Major change 1 across commits]
+- [Major change 2 across commits]
+- [Major change 3 across commits]
 EOF
 )"
+```
+
+**Example - Bad (only latest commit):**
+
+```bash
+# Branch commits:
+# - feat(auth): add User model
+# - feat(auth): add login endpoint
+# - test(auth): add tests
+# - fix: typo in comment  ← latest
+
+# ❌ Bad PR title: "fix: typo in comment"
+# This misses the entire authentication feature!
+```
+
+**Example - Good (full branch analysis):**
+
+```bash
+# Same branch, but analyzed completely
+# ✅ Good PR title: "feat(auth): add user authentication system"
+# ✅ PR body describes all changes: User model, login endpoint, tests
 ```
 
 Then: Cleanup worktree (Step 6)
@@ -133,6 +173,7 @@ Report: "Keeping branch <name>. Worktree preserved at <path>."
 #### Option 4: Discard
 
 **Confirm first:**
+
 ```
 This will permanently delete:
 - Branch <name>
@@ -145,6 +186,7 @@ Type 'discard' to confirm.
 Wait for exact confirmation.
 
 If confirmed:
+
 ```bash
 git checkout <base-branch>
 git branch -D <feature-branch>
@@ -157,11 +199,13 @@ Then: Cleanup worktree (Step 6)
 **For Options 1, 2, 4:**
 
 Check if in worktree:
+
 ```bash
 git worktree list | grep $(git branch --show-current)
 ```
 
 If yes:
+
 ```bash
 git worktree remove <worktree-path>
 ```
@@ -170,20 +214,22 @@ git worktree remove <worktree-path>
 
 ## Quick Reference
 
-| Option | Merge | Push | Keep Worktree | Cleanup Branch |
-|--------|-------|------|---------------|----------------|
-| 1. Merge locally | ✓ | - | - | ✓ |
-| 2. Create PR | - | ✓ | ✓ | - |
-| 3. Keep as-is | - | - | ✓ | - |
-| 4. Discard | - | - | - | ✓ (force) |
+| Option           | Merge | Push | Keep Worktree | Cleanup Branch |
+| ---------------- | ----- | ---- | ------------- | -------------- |
+| 1. Merge locally | ✓     | -    | -             | ✓              |
+| 2. Create PR     | -     | ✓    | ✓             | -              |
+| 3. Keep as-is    | -     | -    | ✓             | -              |
+| 4. Discard       | -     | -    | -             | ✓ (force)      |
 
 ## Common Mistakes
 
 **Skipping test verification**
+
 - **Problem:** Merge broken code, create failing PR
 - **Fix:** Always verify tests before offering options
 
 **Open-ended questions**
+
 - **Problem:** "What should I do next?" → ambiguous
 - **Fix:** Present exactly 4 structured options
 
@@ -220,6 +266,7 @@ git rebase -i main
 ### Logical Grouping
 
 Group changes by:
+
 - Feature vs tests vs docs
 - Refactoring vs new functionality
 - Public API vs implementation details
@@ -229,22 +276,26 @@ Each commit should be independently understandable and (ideally) pass tests.
 **Only do this before pushing/before PR**. Don't rewrite published history.
 
 **Automatic worktree cleanup**
+
 - **Problem:** Remove worktree when might need it (Option 2, 3)
 - **Fix:** Only cleanup for Options 1 and 4
 
 **No confirmation for discard**
+
 - **Problem:** Accidentally delete work
 - **Fix:** Require typed "discard" confirmation
 
 ## Red Flags
 
 **Never:**
+
 - Proceed with failing tests
 - Merge without verifying tests on result
 - Delete work without confirmation
 - Force-push without explicit request
 
 **Always:**
+
 - Verify tests before offering options
 - Present exactly 4 options
 - Get typed confirmation for Option 4
@@ -253,8 +304,10 @@ Each commit should be independently understandable and (ideally) pass tests.
 ## Integration
 
 **Called by:**
+
 - **subagent-driven-development** (Step 7) - After all tasks complete
 - **executing-plans** (Step 5) - After all batches complete
 
 **Pairs with:**
+
 - **using-git-worktrees** - Cleans up worktree created by that skill

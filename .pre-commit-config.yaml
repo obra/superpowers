@@ -1,0 +1,42 @@
+repos:
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+        args: [--assume-in-merge]
+      - id: check-yaml
+        args: [--unsafe]
+      - id: no-commit-to-branch
+        args: [--branch, main]
+      - id: debug-statements
+      - id: mixed-line-ending
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.4
+    hooks:
+      - id: gitleaks
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.9
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+  - repo: https://github.com/adamchainz/blacken-docs
+    rev: 1.19.1
+    hooks:
+      - id: blacken-docs
+        additional_dependencies:
+          - black==22.12.0
+  - repo: https://github.com/ikamensh/flynt
+    rev: 1.0.6
+    hooks:
+      - id: flynt
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.7
+    hooks:
+      - id: actionlint

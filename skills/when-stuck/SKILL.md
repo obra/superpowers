@@ -54,16 +54,16 @@ digraph stuck_dispatch {
 
 ## Stuck-Type → Technique
 
-| How You're Stuck | Use This Skill |
-|------------------|----------------|
-| **Complexity spiraling** - Same thing 5+ ways, growing special cases | skills/simplification-cascades |
-| **Need innovation** - Conventional solutions inadequate, can't find fitting approach | skills/collision-zone-thinking |
-| **Recurring patterns** - Same issue different places, reinventing wheels | skills/meta-pattern-recognition |
-| **Forced by assumptions** - "Must be done this way", can't question premise | skills/inversion-exercise |
-| **Scale uncertainty** - Will it work in production? Edge cases unclear? | skills/scale-game |
-| **Code broken** - Wrong behavior, test failing, unexpected output | skills/systematic-debugging |
-| **Multiple independent problems** - Can parallelize investigation | skills/dispatching-parallel-agents |
-| **Root cause unknown** - Symptom clear, cause hidden | skills/root-cause-tracing |
+| How You're Stuck                                                                     | Use This Skill                     |
+| ------------------------------------------------------------------------------------ | ---------------------------------- |
+| **Complexity spiraling** - Same thing 5+ ways, growing special cases                 | skills/simplification-cascades     |
+| **Need innovation** - Conventional solutions inadequate, can't find fitting approach | skills/collision-zone-thinking     |
+| **Recurring patterns** - Same issue different places, reinventing wheels             | skills/meta-pattern-recognition    |
+| **Forced by assumptions** - "Must be done this way", can't question premise          | skills/inversion-exercise          |
+| **Scale uncertainty** - Will it work in production? Edge cases unclear?              | skills/scale-game                  |
+| **Code broken** - Wrong behavior, test failing, unexpected output                    | skills/systematic-debugging        |
+| **Multiple independent problems** - Can parallelize investigation                    | skills/dispatching-parallel-agents |
+| **Root cause unknown** - Symptom clear, cause hidden                                 | skills/root-cause-tracing          |
 
 ## Process
 

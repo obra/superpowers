@@ -3,24 +3,49 @@
 PreToolUse hook: Enforce modern tool usage over legacy alternatives.
 Denies old commands and suggests better alternatives.
 """
+
 import json
-import sys
 import re
+import sys
 
 
 # Code structure keywords that suggest ast-grep should be used
 CODE_KEYWORDS = [
-    r'\bclass\b', r'\bdef\b', r'\bfunction\b', r'\binterface\b',
-    r'\bconst\b', r'\blet\b', r'\bvar\b', r'\basync\b', r'\bawait\b',
-    r'\bimport\b', r'\bfrom\b', r'\bexport\b', r'\breturn\b',
-    r'\bstruct\b', r'\benum\b', r'\btype\b', r'\bimpl\b'
+    r"\bclass\b",
+    r"\bdef\b",
+    r"\bfunction\b",
+    r"\binterface\b",
+    r"\bconst\b",
+    r"\blet\b",
+    r"\bvar\b",
+    r"\basync\b",
+    r"\bawait\b",
+    r"\bimport\b",
+    r"\bfrom\b",
+    r"\bexport\b",
+    r"\breturn\b",
+    r"\bstruct\b",
+    r"\benum\b",
+    r"\btype\b",
+    r"\bimpl\b",
 ]
 
 # Code file extensions
 CODE_EXTENSIONS = [
-    r'\.py\b', r'\.js\b', r'\.ts\b', r'\.tsx\b', r'\.jsx\b',
-    r'\.go\b', r'\.rs\b', r'\.java\b', r'\.c\b', r'\.cpp\b',
-    r'\.h\b', r'\.hpp\b', r'\.rb\b', r'\.php\b'
+    r"\.py\b",
+    r"\.js\b",
+    r"\.ts\b",
+    r"\.tsx\b",
+    r"\.jsx\b",
+    r"\.go\b",
+    r"\.rs\b",
+    r"\.java\b",
+    r"\.c\b",
+    r"\.cpp\b",
+    r"\.h\b",
+    r"\.hpp\b",
+    r"\.rb\b",
+    r"\.php\b",
 ]
 
 
@@ -37,7 +62,7 @@ def looks_like_code_search(command):
             return True
 
     # Check for complex regex patterns often used in code search
-    if re.search(r'grep.*[\[\]{}()\|\\]', command):
+    if re.search(r"grep.*[\[\]{}()\|\\]", command):
         return True
 
     return False
@@ -49,20 +74,20 @@ TOOL_RULES = [
         "pattern": r"(^|\||;|&&)\s*(grep|egrep|fgrep)\b",
         "check": looks_like_code_search,
         "code_reason": "Use ast-grep for searching code structures. Examples:\n  ast-grep --pattern 'class $NAME' (find classes)\n  ast-grep --pattern 'def $FUNC($$$)' (find function definitions)\n  ast-grep --pattern 'import { $$$ } from $MOD' (find imports)",
-        "text_reason": "Use rg (Grep tool) for text search, ast-grep for code structures"
+        "text_reason": "Use rg (Grep tool) for text search, ast-grep for code structures",
     },
     {
         "pattern": r"(^|\||;|&&)\s*find\b",
-        "reason": "Use fd - fd (by name), fd -p (by path), fd . <dir> (list), fd -e <ext> <pattern>"
+        "reason": "Use fd - fd (by name), fd -p (by path), fd . <dir> (list), fd -e <ext> <pattern>",
     },
     {
         "pattern": r"ls\s+[^|]*-(la|R)",
-        "reason": "Use fd . <directory> to list files in directory"
+        "reason": "Use fd . <directory> to list files in directory",
     },
     {
         "pattern": r"(^|\||;|&&)\s*(sed|awk)\b",
-        "reason": "Use jq for JSON, yq for YAML/XML, rg for text search"
-    }
+        "reason": "Use jq for JSON, yq for YAML/XML, rg for text search",
+    },
 ]
 
 
@@ -80,7 +105,7 @@ def check_command(command):
                 "hookSpecificOutput": {
                     "hookEventName": "PreToolUse",
                     "permissionDecision": "deny",
-                    "permissionDecisionReason": reason
+                    "permissionDecisionReason": reason,
                 }
             }
     return None

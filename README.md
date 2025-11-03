@@ -114,6 +114,7 @@ Skills activate automatically when relevant. For example:
 
 - **tracing-knowledge-lineages** - Understand technical decision evolution
 - **preserving-productive-tensions** - Recognize when to preserve multiple approaches
+- **extracting-patterns-from-projects** - Systematic analysis methodology for external projects
 
 **Collaboration**
 
@@ -129,7 +130,6 @@ Skills activate automatically when relevant. For example:
 
 - **using-git-worktrees** - Parallel development branches
 - **finishing-a-development-branch** - Merge/PR decision workflow (enhanced)
-- **writing-commits** - Commit message guidelines and co-authorship policy
 - **documentation-management** - Holistic documentation maintenance
 - **code-and-project-cleanup** - Safe cleanup of code and project artifacts
 
@@ -138,6 +138,7 @@ Skills activate automatically when relevant. For example:
 - **writing-skills** - Create new skills following best practices
 - **sharing-skills** - Contribute skills back via branch and PR
 - **using-superpowers** - Introduction to the skills system
+- **enhancing-superpowers** - Project-specific integration guide for superpowers
 
 ### Commands
 

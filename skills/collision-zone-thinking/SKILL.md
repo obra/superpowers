@@ -15,13 +15,13 @@ Revolutionary insights come from forcing unrelated concepts to collide. Treat X 
 
 ## Quick Reference
 
-| Stuck On | Try Treating As | Might Discover |
-|----------|-----------------|----------------|
-| Code organization | DNA/genetics | Mutation testing, evolutionary algorithms |
-| Service architecture | Lego bricks | Composable microservices, plug-and-play |
-| Data management | Water flow | Streaming, data lakes, flow-based systems |
-| Request handling | Postal mail | Message queues, async processing |
-| Error handling | Circuit breakers | Fault isolation, graceful degradation |
+| Stuck On             | Try Treating As  | Might Discover                            |
+| -------------------- | ---------------- | ----------------------------------------- |
+| Code organization    | DNA/genetics     | Mutation testing, evolutionary algorithms |
+| Service architecture | Lego bricks      | Composable microservices, plug-and-play   |
+| Data management      | Water flow       | Streaming, data lakes, flow-based systems |
+| Request handling     | Postal mail      | Message queues, async processing          |
+| Error handling       | Circuit breakers | Fault isolation, graceful degradation     |
 
 ## Process
 
@@ -38,6 +38,7 @@ Revolutionary insights come from forcing unrelated concepts to collide. Treat X 
 **Collision:** "What if we treated services like electrical circuits?"
 
 **Emergent properties:**
+
 - Circuit breakers (disconnect on overload)
 - Fuses (one-time failure protection)
 - Ground faults (error isolation)
