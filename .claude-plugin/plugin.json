@@ -1,7 +1,7 @@
 {
   "name": "superpowers",
-  "description": "Comprehensive skills library for Claude Code: TDD, debugging, collaboration, automation, document creation (Word/PDF/Excel/PowerPoint), creative tools, business research, and productivity workflows",
-  "version": "3.6.0",
+  "description": "Comprehensive skills library for Claude Code: TDD, debugging, collaboration, automation, document creation (Word/PDF/Excel/PowerPoint), creative tools, business research, productivity workflows, and AI prompt engineering for Veo3, Midjourney, DALL-E, Flux, Stable Diffusion, Claude, ChatGPT, and Gemini",
+  "version": "3.7.0",
   "author": {
     "name": "Jesse Vincent",
     "email": "jesse@fsck.com"
@@ -9,5 +9,5 @@
   "homepage": "https://github.com/obra/superpowers",
   "repository": "https://github.com/obra/superpowers",
   "license": "MIT",
-  "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows", "playwright", "ios", "automation", "productivity", "documents", "pdf", "word", "excel", "powerpoint", "creative", "business", "research", "notebooklm"]
+  "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows", "playwright", "ios", "automation", "productivity", "documents", "pdf", "word", "excel", "powerpoint", "creative", "business", "research", "notebooklm", "prompt-engineering", "ai-prompts", "veo3", "midjourney", "dalle", "stable-diffusion"]
 }

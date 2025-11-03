@@ -13,6 +13,7 @@ A comprehensive skills library of proven techniques, patterns, and workflows for
 - **Document Skills** - Word, PDF, Excel, PowerPoint creation and manipulation
 - **Creative & Media Skills** - Visual design, image enhancement, GIFs, video downloads
 - **Business & Research Skills** - Lead research, competitor analysis, NotebookLM integration
+- **AI Prompt Engineering** - Expert techniques for Veo3, Midjourney, DALL-E, Flux, Stable Diffusion, Claude, ChatGPT, Gemini
 - **Meta Skills** - Creating, testing, and sharing skills
 
 Plus:
@@ -136,6 +137,9 @@ Skills activate automatically when relevant. For example:
 - **lead-research-assistant** - Identify and qualify potential business leads
 - **competitive-ads-extractor** - Analyze competitor advertising strategies
 - **notebooklm** - Query NotebookLM for source-grounded, citation-backed answers
+
+**AI Prompt Engineering** (`skills/`)
+- **prompt-engineer** - Expert prompt engineering for video generation (Veo3), image creation (Midjourney, DALL-E, Flux, Stable Diffusion), and conversational AI (Claude, ChatGPT, Gemini) with platform-specific techniques, parameters, and best practices
 
 ### Commands
 
