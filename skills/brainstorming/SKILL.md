@@ -46,7 +46,7 @@ Brainstorming Progress:
 
 ### Prep: Autonomous Recon
 
-- Use existing tools (file browsing, docs, git history, tests) to understand current project state before asking anything.
+- Use existing tools (file browsing, docs, git history, tests, decisions/) to understand current project state before asking anything.
 - Form your draft model: what problem you're solving, what artifacts exist, and what questions remain.
 - Start the conversation by sharing that model: "Based on exploring the project state, docs, working copy, and recent commits, here's how I think this should work…"
 - Ask follow-up questions only for information you cannot infer from available materials.
@@ -54,6 +54,10 @@ Brainstorming Progress:
 ### Phase 1: Understanding
 
 - Share your synthesized understanding first, then invite corrections or additions.
+- Check `docs/decisions/` (if exists) for relevant architectural decisions
+  ```bash
+  test -d docs/decisions && fd . docs/decisions
+  ```
 - Ask one focused question at a time, only for gaps you cannot close yourself.
 - **Use AskUserQuestion tool** only when you need the human to make a decision among real alternatives.
 - Gather: Purpose, constraints, success criteria (confirmed or amended by your partner)
@@ -128,6 +132,16 @@ After validating the design, write it to a permanent document:
 - **RECOMMENDED SUB-SKILL:** Use elements-of-style:writing-clearly-and-concisely (if available) for documentation quality
 - **Content:** Capture the design as discussed and validated in Phase 3, organized into sections that emerged from the conversation
 - Commit the design document to git before proceeding
+
+**If significant architectural choice was made:**
+
+Check if project uses ADR pattern:
+
+```bash
+test -d docs/decisions && echo "ADR available"
+```
+
+If available, consider creating ADR to document the architectural decision with full context, alternatives considered, and rationale.
 
 ### Phase 4.5: Challenge Your Design (before finalizing)
 
