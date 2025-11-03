@@ -193,6 +193,22 @@ claude-settings/
 
 **Avoid:** Creating skill for every principle
 
+### Type 6: Decision Documentation
+
+**Example:** Deciding to add/reject external patterns
+
+**Approach:**
+
+1. Check if project uses ADR pattern:
+   ```bash
+   test -d docs/decisions && echo "ADR available"
+   ```
+2. **If exists**: Create ADR documenting integration decision with context, rationale, alternatives
+3. **Otherwise**: Use `mem add "Integration decision: [what] because [why]. Alternatives: [rejected options]" --tags "decision,integration"`
+4. Reference in related skills or documentation
+
+**Avoid:** Making major decisions without documenting rationale
+
 ## Philosophy Alignment Checklist
 
 **Superpowers values:**
