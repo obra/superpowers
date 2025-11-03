@@ -132,6 +132,27 @@ Runs tests one-by-one, stops at first polluter. See script for usage.
 - Layer 3: NODE_ENV guard refuses git init outside tmpdir
 - Layer 4: Stack trace logging before git init
 
+## Documenting Discoveries
+
+After tracing to source and fixing:
+
+**Check if project uses discoveries pattern:**
+
+```bash
+test -f docs/discoveries/DISCOVERIES.md && echo "Discoveries file exists"
+```
+
+**If `docs/discoveries/DISCOVERIES.md` exists:**
+- Document the complete trace path
+- Record the root cause discovered
+- Describe the solution applied
+- Add prevention guidance
+- Help others recognize this pattern faster
+
+**If file doesn't exist:**
+- Use `mem add "Root cause trace: [symptom] → [immediate cause] → [source]. Fixed at [location]" --tags "discovery,trace,project"`
+- Store for personal reference in future debugging
+
 ## Key Principle
 
 ```dot
