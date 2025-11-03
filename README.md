@@ -15,7 +15,8 @@ Give Claude Code superpowers with a comprehensive skills library of proven techn
 
 Plus:
 
-- **Slash Commands** - `/superpowers:brainstorm`, `/superpowers:write-plan`, `/superpowers:execute-plan`
+- **Slash Commands** - `/superpowers:brainstorm`, `/superpowers:write-plan`, `/superpowers:execute-plan`, `/superpowers:setup-knowledge-management`
+- **Knowledge Management** - Opt-in [ADR](https://adr.github.io/) (Architecture Decision Records) and DISCOVERIES patterns for tracking decisions and non-obvious solutions
 - **Automatic Integration** - Skills activate automatically when relevant
 - **Consistent Workflows** - Systematic approaches to common engineering tasks
 

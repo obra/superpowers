@@ -7,6 +7,16 @@
 
 This is a personal fork with additional skills and enhancements borrowed from multiple sources.
 
+## [Unreleased]
+
+### Added
+
+- Knowledge management integration: Opt-in [ADR](https://adr.github.io/) (Architecture Decision Records) and DISCOVERIES patterns from [Microsoft Amplifier](https://github.com/microsoft/amplifier) (2025-11-03)
+  - `/setup-knowledge-management` slash command with embedded templates
+  - 9 skills updated to integrate with `docs/decisions/` and `docs/discoveries/` when present
+  - Skills fall back to `mem` for personal tracking when patterns not enabled
+  - Comprehensive integration documented in `docs/decisions/001-adopt-knowledge-management.md`
+
 ## Attribution
 
 Skills and concepts borrowed from:
