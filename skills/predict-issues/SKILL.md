@@ -139,8 +139,21 @@ For each prediction:
 
 After analysis, ask user how to track findings:
 
-- **Memory**: Store risk assessments for future reference using remember()
-- **TodoWrite**: Create structured task list for systematic review
-- **Summary only**: Provide report without creating tasks
+**Available options:**
+
+- **decisions/** - Create ADR for architectural choices (if `docs/decisions/` exists)
+- **discoveries/** - Document known issues and prevention (if `docs/discoveries/DISCOVERIES.md` exists)
+- **Memory** - Store risk assessments using `mem add` for personal reference
+- **TodoWrite** - Create structured task list for systematic review
+- **Summary only** - Provide report without creating artifacts
+
+Check which options are available:
+
+```bash
+test -d docs/decisions && echo "ADR available"
+test -f docs/discoveries/DISCOVERIES.md && echo "DISCOVERIES available"
+```
+
+Present only available options to user.
 
 Avoid AI attribution, Claude Code watermarks, or assistant signatures in issues or reports.
