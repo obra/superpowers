@@ -1,5 +1,46 @@
 # Superpowers Release Notes
 
+## v3.5.0 (2025-11-05)
+
+### New Features
+
+**Experimental GitHub Copilot Support**
+- Added unified `superpowers-copilot` script with bootstrap/use-skill/find-skills commands
+- Cross-platform Node.js implementation (works on Windows, macOS, Linux)
+- Namespaced skills: `superpowers:skill-name` for superpowers skills, `skill-name` for personal
+- Personal skills override superpowers skills when names match
+- Clean skill display: shows name/description without raw frontmatter
+- Helpful context: shows supporting files directory for each skill
+- Tool mapping for GitHub Copilot: TodoWrite→markdown checklists, subagents→custom agents or manual, etc.
+- Integration with Copilot's @workspace, slash commands (/tests, /fix, /refactor)
+- Bootstrap integration via `.github/copilot-instructions.md` or `AGENTS.md`
+- Complete installation guide and bootstrap instructions specific to GitHub Copilot
+- Template files for both bootstrap methods
+
+**Key differences from Claude Code integration:**
+- Single unified script instead of separate tools
+- Tool substitution system for Copilot-specific equivalents
+- File-based planning with markdown checklists (docs/plans/)
+- Custom agents support via `.github/agents/` for specialized tasks
+- Semantic search integration using @workspace participant
+- Support for multiple IDEs (VS Code primary, IntelliJ, Visual Studio, Xcode, etc.)
+
+**Key differences from Codex integration:**
+- @workspace semantic search instead of traditional grep/glob
+- Slash commands for enhanced workflows (/tests, /fix, /refactor)
+- Multiple bootstrap options (copilot-instructions.md recommended, AGENTS.md supported)
+- Custom agents via `.github/agents/` directory (optional)
+- File-based planning approach (markdown checklists in docs/plans/)
+
+### Files Added
+- `.copilot/INSTALL.md` - Installation guide for GitHub Copilot users
+- `.copilot/superpowers-bootstrap.md` - Bootstrap instructions with Copilot adaptations
+- `.copilot/superpowers-copilot` - Unified Node.js executable with all functionality
+- `.copilot/templates/copilot-instructions.md.template` - Template for .github/copilot-instructions.md
+- `.copilot/templates/AGENTS.md.template` - Template for AGENTS.md bootstrap
+
+**Note:** GitHub Copilot support is experimental. The integration provides core superpowers functionality but may require refinement based on user feedback. Tested primarily in VS Code; other IDE support is community-validated.
+
 ## v3.4.1 (2025-10-31)
 
 ### Improvements

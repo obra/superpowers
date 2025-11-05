@@ -47,6 +47,12 @@ Read the introduction: [Superpowers for Claude Code](https://blog.fsck.com/2025/
 
 Tell Codex to fetch https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md and follow the instructions.
 
+### GitHub Copilot (Experimental)
+
+**Note:** GitHub Copilot support is experimental and may require refinement based on user feedback.
+
+See [.copilot/INSTALL.md](.copilot/INSTALL.md) for installation instructions.
+
 ## Quick Start
 
 ### Using Slash Commands
