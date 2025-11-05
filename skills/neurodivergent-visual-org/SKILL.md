@@ -25,7 +25,7 @@ This skill supports four modes to adapt to different cognitive styles and access
 3. **Colorblind-Safe Mode** - Pattern-based differentiation for all color vision types
 4. **Monochrome Mode** - Pure black & white optimized for printing and e-ink displays
 
-**Mode Combinations Available:**
+#### Mode Combinations Available:
 - Neurodivergent + Colorblind-Safe
 - Neurodivergent + Monochrome
 - Neurotypical + Colorblind-Safe
@@ -33,28 +33,28 @@ This skill supports four modes to adapt to different cognitive styles and access
 - Colorblind-Safe only (no base mode features)
 - Monochrome only (no base mode features)
 
-**Selection Methods:**
+#### Selection Methods:
 
-**1. Auto-Detect (Default)**
+#### 1. Auto-Detect (Default)
 - Analyzes user language for distress signals ("overwhelmed", "paralyzed", "stuck")
 - Detects mentions of neurodivergent conditions or executive dysfunction
 - Detects accessibility requests ("colorblind-safe", "print-friendly", "grayscale")
 - Defaults to neurodivergent mode when ambiguous (inclusive design)
 
-**2. Explicit Mode Request**
+#### 2. Explicit Mode Request
 - User says: "Use neurotypical mode" or "Use ADHD mode"
 - User says: "Use colorblind-safe mode" or "Make it print-friendly"
 - User says: "Combine neurodivergent and colorblind-safe modes"
 - Persists for current conversation unless changed
 
-**3. Configuration File**
+#### 3. Configuration File
 - User creates: `.claude/neurodivergent-visual-org-preference.yml`
 - Sets default base mode, accessibility modes, time multipliers, chunk sizes
 - Can set auto-enable rules (e.g., monochrome for PDFs)
 
 ### Mode Characteristics
 
-**Base Mode Features:**
+#### Base Mode Features:
 
 | Aspect | Neurodivergent Mode | Neurotypical Mode |
 |--------|---------------------|-------------------|
@@ -65,7 +65,7 @@ This skill supports four modes to adapt to different cognitive styles and access
 | Colors | Calming (blues/greens) | Standard themes |
 | Energy scaffolding | Explicit (spoons, breaks) | Minimal |
 
-**Accessibility Mode Features:**
+#### Accessibility Mode Features:
 
 | Aspect | Colorblind-Safe Mode | Monochrome Mode |
 |--------|---------------------|-----------------|
@@ -79,7 +79,7 @@ This skill supports four modes to adapt to different cognitive styles and access
 | Best for | All color vision types | B&W printing, e-ink displays |
 | WCAG compliance | 2.1 AA (Use of Color 1.4.1) | 2.1 AAA (Maximum contrast) |
 
-**Mode Combination Notes:**
+#### Mode Combination Notes:
 - Base mode controls language, time estimates, and cognitive scaffolding
 - Accessibility mode controls visual encoding (patterns, contrast, shapes)
 - Both can be active simultaneously for maximum accommodation
@@ -93,7 +93,7 @@ v3.1 maintains v3.0 behavior:
 
 ## Mode Detection Algorithm
 
-**Step 1: Check for explicit base mode request**
+#### Step 1: Check for explicit base mode request
 ```python
 base_mode = None
 accessibility_mode = None
@@ -105,7 +105,7 @@ elif "adhd mode" or "neurodivergent mode" in user_message.lower():
     base_mode = "neurodivergent"
 ```
 
-**Step 2: Check for explicit accessibility mode request**
+#### Step 2: Check for explicit accessibility mode request
 ```python
 # Detect colorblind-safe mode
 colorblind_keywords = ["colorblind", "color blind", "colorblind-safe",
@@ -122,7 +122,7 @@ if any(keyword in user_message.lower() for keyword in monochrome_keywords):
     accessibility_mode = "monochrome"
 ```
 
-**Step 3: Check configuration file**
+#### Step 3: Check configuration file
 ```python
 if config_file_exists():
     config = load_user_preference()
@@ -138,7 +138,7 @@ if config_file_exists():
             accessibility_mode = config.get("monochrome", False) and "monochrome"
 ```
 
-**Step 4: Auto-detect base mode from language**
+#### Step 4: Auto-detect base mode from language
 ```python
 distress_signals = ["overwhelmed", "paralyzed", "stuck", "can't decide",
                    "don't know where to start", "too much"]
@@ -152,13 +152,13 @@ if base_mode is None:
         base_mode = "neurodivergent"
 ```
 
-**Step 5: Default to neurodivergent base mode (inclusive)**
+#### Step 5: Default to neurodivergent base mode (inclusive)
 ```python
 if base_mode is None:
     base_mode = "neurodivergent"  # Backward compatible with v2.0
 ```
 
-**Step 6: Apply modes**
+#### Step 6: Apply modes
 ```python
 # accessibility_mode can be None, "colorblind-safe", or "monochrome"
 # base_mode will always be "neurodivergent" or "neurotypical"
@@ -171,16 +171,16 @@ apply_modes(base_mode=base_mode, accessibility_mode=accessibility_mode)
 
 **Purpose:** Make diagrams accessible for all color vision types (protanopia, deuteranopia, tritanopia, achromatopsia) while remaining clear for regular color vision.
 
-**Design Principles:**
+#### Design Principles:
 1. **Never rely on color alone** - always pair with patterns, shapes, or text
 2. **Pattern-based differentiation** - use border styles as primary encoding
 3. **Explicit text labels** - prefix all nodes with type indicators
 4. **Shape coding** - use different node shapes for different categories
 5. **High contrast borders** - all nodes have bold, visible borders
 
-**Mermaid Implementation:**
+#### Mermaid Implementation:
 
-**Border Pattern System:**
+#### Border Pattern System:
 ```mermaid
 %%{init: {'theme':'base'}}%%
 flowchart TD
@@ -195,7 +195,7 @@ flowchart TD
     style Break fill:#ffffff,stroke:#000000,stroke-width:3px,stroke-dasharray: 1 4
 ```
 
-**Pattern Legend:**
+#### Pattern Legend:
 - `stroke-dasharray: 5 5` - Short dashes (KEEP items, positive actions)
 - `stroke-dasharray: 10 5` - Long dashes (DONATE items, external actions)
 - `stroke-dasharray: 2 2` - Dots (MAYBE items, uncertain states)
@@ -204,14 +204,14 @@ flowchart TD
 - `stroke-width: 2px` - Standard importance
 - `stroke-width: 1px` - Detail level
 
-**Shape Coding:**
+#### Shape Coding:
 - `([text])` - Rounded rectangle: Standard process steps
 - `{text}` - Diamond: Decision points
 - `[[text]]` - Hexagon-style: Critical deadlines
 - `[/text/]` - Trapezoid: Break/rest states
 - `>text]` - Asymmetric: External dependencies
 
-**Text Prefix System:**
+#### Text Prefix System:
 - `[✅ KEEP]` - Items to keep
 - `[📦 DONATE]` - Items to donate/give away
 - `[🤔 MAYBE]` - Uncertain decisions
@@ -221,7 +221,7 @@ flowchart TD
 - `[END]` - Completion point
 - `[DECIDE]` - Decision point
 
-**Color Strategy:**
+#### Color Strategy:
 - White fills (`#ffffff`) for all nodes
 - Black borders (`#000000`) for maximum contrast
 - Colors can be added for users with color vision, but information is encoded in patterns
@@ -230,16 +230,16 @@ flowchart TD
 
 **Purpose:** Optimize for black & white printing, photocopying, and e-ink displays where color is unavailable.
 
-**Design Principles:**
+#### Design Principles:
 1. **Pure black and white only** - no grays (print unreliably)
 2. **Fill pattern hierarchy** - use patterns to show importance
 3. **Border style differentiation** - solid/dashed/dotted for categories
 4. **Verbose text labels** - more explicit than colorblind-safe mode
 5. **Extra whitespace** - better print legibility
 
-**Mermaid Implementation:**
+#### Mermaid Implementation:
 
-**Fill Pattern System:**
+#### Fill Pattern System:
 ```mermaid
 %%{init: {'theme':'base'}}%%
 flowchart TD
@@ -254,20 +254,20 @@ flowchart TD
     style Standard fill:#ffffff,stroke:#000000,stroke-width:2px
 ```
 
-**Fill Pattern Hierarchy:**
+#### Fill Pattern Hierarchy:
 - Solid black fill + white text: `fill:#000000,color:#ffffff` - Priority 1 (Critical)
 - White fill + bold border: `fill:#ffffff,stroke-width:3px` - Priority 2 (High)
 - White fill + dashed border: `stroke-dasharray: 10 5` - Priority 3 (Medium)
 - White fill + solid border: Standard weight - Priority 4 (Standard)
 
-**Border Style System:**
+#### Border Style System:
 - `stroke-width:3px` + solid - Critical/deadlines
 - `stroke-width:2px` + solid - Standard steps
 - `stroke-dasharray: 10 5` - Optional/medium priority
 - `stroke-dasharray: 5 5` - Maybe/uncertain
 - `stroke-dasharray: 2 2` - Breaks/pauses
 
-**Text Prefix System (Verbose):**
+#### Text Prefix System (Verbose):
 - `[★ CRITICAL DEADLINE]` - Critical with visual marker
 - `[✓ KEEP]` - Text checkmark
 - `[→ DONATE]` - Text arrow
@@ -276,14 +276,14 @@ flowchart TD
 - `[○ START]` - Text circle
 - `[● END]` - Filled circle
 
-**Spacing Considerations:**
+#### Spacing Considerations:
 - Use more vertical space between nodes
 - Larger font sizes recommended (handled by `<br/>` for multi-line)
 - Wide margins in flowchart layout
 
 ### Mode Combination Logic
 
-**When both base mode and accessibility mode are active:**
+#### When both base mode and accessibility mode are active:
 
 1. **Base mode controls:**
    - Language tone (compassionate vs direct)
@@ -303,7 +303,7 @@ flowchart TD
    - Neurotypical + Colorblind-Safe = Efficient language + pattern-based visuals
    - Neurotypical + Monochrome = Efficient language + B&W print-optimized
 
-**Example Combined Output:**
+#### Example Combined Output:
 
 ```mermaid
 %%{init: {'theme':'base'}}%%
@@ -333,7 +333,7 @@ Users can create a configuration file to set default modes and customize behavio
 
 **File Location:** `.claude/neurodivergent-visual-org-preference.yml`
 
-**Complete Configuration Example:**
+#### Complete Configuration Example:
 
 ```yaml
 # Neurodivergent Visual Org v3.1 Configuration
@@ -405,7 +405,7 @@ mermaid_links:
   use_base64: false             # Use URL params instead of base64 (more readable)
 ```
 
-**Minimal Configuration (Just Change Defaults):**
+#### Minimal Configuration (Just Change Defaults):
 
 ```yaml
 # Simple config - just set your preferred defaults
@@ -413,7 +413,7 @@ default_mode: neurodivergent
 colorblind_safe: true   # Always use patterns for accessibility
 ```
 
-**Print-Optimized Configuration:**
+#### Print-Optimized Configuration:
 
 ```yaml
 # Optimized for printing and sharing
@@ -424,14 +424,14 @@ preferences:
   verbose_labels: true
 ```
 
-**Configuration Precedence:**
+#### Configuration Precedence:
 
 1. **Explicit user request** in current message (highest priority)
 2. **Configuration file** settings
 3. **Auto-detection** from language
 4. **Default** (neurodivergent mode, no accessibility modes)
 
-**Loading Configuration:**
+#### Loading Configuration:
 
 The skill automatically checks for `.claude/neurodivergent-visual-org-preference.yml` at the start of each conversation. If found, settings are applied. Users can override any setting with explicit requests like "use colorblind-safe mode for this diagram".
 
@@ -468,7 +468,7 @@ Use when the user:
 
 ## Core Principles
 
-**Always apply these neurodivergent-friendly principles:**
+#### Always apply these neurodivergent-friendly principles:
 - Use compassionate, non-judgmental language (never "just do it" or "should be easy")
 - Give realistic time estimates with buffer (use 1.5-2x what seems reasonable)
 - Acknowledge energy costs, not just time (consider spoon theory)
@@ -486,18 +486,18 @@ Use when the user:
 
 ### Color Psychology for ADHD
 
-**Primary Palette (Use These)**
+#### Primary Palette (Use These)
 - **Blues and greens** in soft, muted tones - promote tranquility and focus
 - **Muted browns** - provide grounding without stimulation
 - **Soft pastels** (light blues, lavenders, pale greens) - reduce visual stress
 - **Muted yellows** (sparingly) - boost energy without overstimulation
 
-**Avoid**
+#### Avoid
 - Bright reds, oranges, intense yellows - increase hyperactivity/agitation
 - Bright saturated colors - cause sensory overload
 - Clashing color combinations - create visual stress
 
-**Implementation**
+#### Implementation
 - Use `forest` theme (green-based) or `neutral` theme (muted earth tones)
 - Apply 60-30-10 rule: 60% calming background, 30% secondary, 10% accent
 - Maintain 4.5:1 contrast ratio minimum (WCAG compliance)
@@ -505,19 +505,19 @@ Use when the user:
 
 ### Information Density Management
 
-**Miller's Law + ADHD Considerations**
+#### Miller's Law + ADHD Considerations
 - Working memory holds 5-7 chunks (neurotypical) or 3-5 chunks (ADHD)
 - Stay at lower end (3-5 chunks) to prevent cognitive overload
 - Increased cognitive load reduces ADHD performance more severely
 
-**Practical Limits**
+#### Practical Limits
 - **Flowcharts**: 15-20 nodes maximum before splitting into multiple diagrams
 - **Mindmaps**: 3-4 levels deep maximum
 - **Pie charts**: 6-8 slices for readability
 - **Lists**: No more than 2 lists of 3-5 items per diagram
 - **Sections**: Use timeline/journey sections to chunk events logically
 
-**Implementation**
+#### Implementation
 - Break complex diagrams into digestible sections
 - Use progressive disclosure (show relevant info upfront, details on demand)
 - Provide TL;DR sections at beginning of complex diagrams
@@ -530,13 +530,13 @@ Use when the user:
 - Important nodes visibly larger than standard nodes
 - Use `classDef` to style critical elements distinctly
 
-**Priority Signaling**
+#### Priority Signaling
 - Distinguish important information through bold or color
 - Use visual highlights for critical numbers or elements
 - Separate each instruction clearly
 - Implement color-coded systems for immediate visual feedback
 
-**Avoid**
+#### Avoid
 - Competing visual elements fighting for attention
 - Auto-playing animations or flashy effects (extremely distracting)
 - Blinking or flashing elements
@@ -609,7 +609,7 @@ Mermaid 11.12.1 offers **22 diagram types**. Choose based on cognitive need:
 
 ### Flowcharts: Decision Trees & Task Breakdown
 
-**Syntax Basics**
+#### Syntax Basics
 ```mermaid
 flowchart TD
     Start[Task feels overwhelming] --> Q1{Do I know how to start?}
@@ -624,7 +624,7 @@ flowchart TD
     style A4 fill:#d4edda
 ```
 
-**Node Shapes**
+#### Node Shapes
 - `[]` Rectangle - standard task/statement
 - `()` Rounded rectangle - softer, process step
 - `{}` Diamond - decision point (yes/no question)
@@ -632,13 +632,13 @@ flowchart TD
 - `[()]` Stadium shape - start/end point
 - `{{}}` Hexagon - preparation step
 
-**Arrows & Labels**
+#### Arrows & Labels
 - `-->` Simple arrow
 - `-->|label|` Labeled arrow
 - `-.->` Dotted arrow (optional path)
 - `==>` Thick arrow (emphasis)
 
-**Subgraphs for Chunking**
+#### Subgraphs for Chunking
 ```mermaid
 flowchart TD
     subgraph "Phase 1: Prep"
@@ -652,7 +652,7 @@ flowchart TD
     A --> B --> C --> D
 ```
 
-**Best Practices**
+#### Best Practices
 - Limit to 15-20 nodes before splitting
 - Use subgraphs to chunk information (3-5 chunks)
 - Include validation and reassurance in nodes
@@ -661,7 +661,7 @@ flowchart TD
 
 ### Mindmaps: Non-Linear Brainstorming
 
-**Syntax Basics**
+#### Syntax Basics
 ```mermaid
 mindmap
   root((ADHD Management<br/>Toolkit))
@@ -683,14 +683,14 @@ mindmap
       Body doubling
 ```
 
-**Key Rules**
+#### Key Rules
 - **Start with `mindmap`** keyword
 - **Root node** in double parentheses `((text))`
 - **Indentation defines hierarchy** - relative spacing only
 - **Maximum 3-4 levels deep** to prevent overwhelm
 - **Markdown support**: `**bold**`, `*italic*`, `<br/>` for line breaks
 
-**Node Shapes**
+#### Node Shapes
 - Default text (no delimiters)
 - `[Square]`
 - `(Rounded)`
@@ -708,7 +708,7 @@ mindmap
       Research
 ```
 
-**Best Practices**
+#### Best Practices
 - Match ADHD's non-linear thinking patterns
 - Use for brainstorming where all ideas appear simultaneously
 - Keep branches to 3-5 items each (Miller's Law)
@@ -717,7 +717,7 @@ mindmap
 
 ### Timelines: Making Time Tangible
 
-**Syntax Basics**
+#### Syntax Basics
 ```mermaid
 %%{init: {'theme':'forest'}}%%
 timeline
@@ -736,7 +736,7 @@ timeline
     5:00 PM : Wrap up + tomorrow prep
 ```
 
-**Critical Rules**
+#### Critical Rules
 - Start with `timeline` keyword
 - Optional: `title Your Title` on second line
 - **All events before first `section` are IGNORED**
@@ -744,7 +744,7 @@ timeline
 - Each event starts with colon on new line
 - Time periods accept **any text** (not just numbers): "Q1 2024", "Phase 1", "Morning"
 
-**Sections for Color Coding**
+#### Sections for Color Coding
 - Use `section Section Name` to group time periods
 - Without sections: each period gets its own rainbow color
 - With sections: all periods in section share section's color
@@ -755,7 +755,7 @@ timeline
 - Use `#` for true inline comments
 - Best to avoid comments in timelines
 
-**Best Practices**
+#### Best Practices
 - Use sections to chunk events by energy level or day phase
 - Make time periods visible (address time blindness directly)
 - Include buffer time between events
@@ -764,7 +764,7 @@ timeline
 
 ### Quadrant Charts: Priority Matrices
 
-**Syntax Basics**
+#### Syntax Basics
 ```mermaid
 %%{init: {'theme':'neutral'}}%%
 quadrantChart
@@ -788,17 +788,17 @@ quadrantChart
 - `quadrant-3`: Bottom-left (low x, low y)
 - `quadrant-4`: Bottom-right (high x, low y)
 
-**Data Points**
+#### Data Points
 - Format: `Point Name: [x, y]`
 - **Coordinates must be 0-1** (0 = left/bottom, 1 = right/top)
 - Styling: `Point:::className: [x, y]` or inline `radius: 12, color: #ff3300`
 
-**Axis Configuration**
+#### Axis Configuration
 - Single side: `x-axis Label`
 - Two sides: `x-axis Left --> Right`
 - Same for y-axis
 
-**Best Practices**
+#### Best Practices
 - Perfect for Eisenhower Matrix (urgent/important)
 - Limit to 8-12 points for readability
 - Use for 2-dimensional comparisons
@@ -807,7 +807,7 @@ quadrantChart
 
 ### Pie Charts: Proportional Visualization
 
-**Syntax Basics**
+#### Syntax Basics
 ```mermaid
 %%{init: {'theme':'forest', 'themeVariables': {'pie1':'#81c784', 'pie2':'#64b5f6', 'pie3':'#ffb74d'}}}%%
 pie showData
@@ -819,7 +819,7 @@ pie showData
     "Buffer time" : 15
 ```
 
-**Key Rules**
+#### Key Rules
 - Start with `pie` keyword
 - `showData` on second line (optional) displays values + percentages
 - Title: `title Title Text` (quotes optional)
@@ -831,7 +831,7 @@ pie showData
 - `pie1` = largest slice, `pie2` = second largest, etc.
 - Configure via `themeVariables` in directive
 
-**Best Practices**
+#### Best Practices
 - Excellent for spoon theory / energy visualization
 - Show proportional time allocation
 - Visualize work distribution across categories
@@ -840,7 +840,7 @@ pie showData
 
 ### State Diagrams: System States & Transitions
 
-**Syntax Basics**
+#### Syntax Basics
 ```mermaid
 stateDiagram-v2
     [*] --> Resting
@@ -866,7 +866,7 @@ stateDiagram-v2
     end note
 ```
 
-**Key Rules**
+#### Key Rules
 - Use `stateDiagram-v2` (not v1)
 - `[*]` represents start/end points
 - Define states: simple `Moving` or `state Moving` or `Still: Description`
@@ -885,17 +885,17 @@ stateDiagram-v2
     Working --> [*]: End day
 ```
 
-**Advanced Features**
+#### Advanced Features
 - **Choice nodes**: `state choice <<choice>>` for branching
 - **Fork/Join**: `<<fork>>` and `<<join>>` for parallel states
 - **Concurrency**: `--` separator between parallel groups
 
-**⚠️ Common Errors**
+#### ⚠️ Common Errors
 - Cannot style `[*]` start/end states
 - Lowercase "end" as state name breaks diagram (use "End" or "END")
 - Cannot transition between internal states of different composites
 
-**Best Practices**
+#### Best Practices
 - Track work/focus states and transitions
 - Show ADHD-specific states (hyperfocus, crashed, recovering)
 - Include notes with coping strategies
@@ -904,7 +904,7 @@ stateDiagram-v2
 
 ### Sankey Diagrams: Flow Visualization
 
-**Syntax Basics**
+#### Syntax Basics
 ```mermaid
 ---
 config:
@@ -925,7 +925,7 @@ Evening Energy,Creative Work,20
 Evening Energy,Rest,30
 ```
 
-**Critical Rules**
+#### Critical Rules
 - Start with **YAML frontmatter config** (not directive style)
 - Use `sankey-beta` keyword (not `sankey`)
 - **CSV format**: `source,target,value` (exactly 3 columns)
@@ -944,7 +944,7 @@ config:
     height: 600              # Diagram height in pixels
 ```
 
-**⚠️ Critical Limitations**
+#### ⚠️ Critical Limitations
 - **No Unicode/non-ASCII characters** (Czech, Japanese, etc.) - causes parse failures
 - No title syntax support
 - No node aliases
@@ -952,7 +952,7 @@ config:
 - Directive-style `%%{init: {}}%%` config causes errors
 - Beta status means syntax may change
 
-**Best Practices**
+#### Best Practices
 - Visualize energy flow across activities (spoon theory)
 - Show resource distribution and allocation
 - Track where time/effort goes
@@ -961,7 +961,7 @@ config:
 
 ### User Journey Maps: Experience Tracking
 
-**Syntax Basics**
+#### Syntax Basics
 ```mermaid
 journey
     title Building a New Habit - ADHD Journey
@@ -978,7 +978,7 @@ journey
         Missing feels weird: 5: Me
 ```
 
-**Key Rules**
+#### Key Rules
 - Start with `journey` keyword
 - Optional: `title Your Title`
 - Sections: `section Section Name`
@@ -991,12 +991,12 @@ journey
   - 5 = very positive
 - Actors comma-separated (optional)
 
-**⚠️ Common Errors**
+#### ⚠️ Common Errors
 - Scores outside 1-5 range break rendering
 - Incorrect colon placement in format
 - Forgetting to indent tasks under sections
 
-**Best Practices**
+#### Best Practices
 - Track satisfaction across habit-building phases
 - Show emotional journey of ADHD management
 - Visualize experience across project stages
@@ -1064,7 +1064,7 @@ Ask clarifying questions if needed:
 - What's your current energy level?
 - Have you tried to start? What stopped you?
 
-**Listen for key phrases:**
+#### Listen for key phrases:
 - "I don't know where to start" → Task initiation block (flowchart diagnosis)
 - "Too many things" → Overwhelm (quadrant chart or Kanban)
 - "I can't decide" → Analysis paralysis (decision tree or matrix)
@@ -1075,14 +1075,14 @@ Ask clarifying questions if needed:
 
 Based on the cognitive need, choose the appropriate diagram type from the comprehensive guide above. Consider:
 
-**Information Processing Need:**
+#### Information Processing Need:
 - **Sequential thinking** → Timeline, Gantt, Flowchart
 - **Hierarchical organization** → Mindmap, State diagram
 - **Comparison** → Quadrant chart, Pie chart
 - **Flow tracking** → Sankey, User journey
 - **Status management** → State diagram, Kanban
 
-**Cognitive Load:**
+#### Cognitive Load:
 - **High overwhelm** → Simple flowchart (≤10 nodes), Timeline with 3 sections
 - **Medium complexity** → Mindmap (3 levels), Quadrant chart (≤10 points)
 - **Detail needed** → Gantt chart, Sankey, User journey
@@ -1106,7 +1106,7 @@ After determining user need and mode:
    - Customize with user-specific content
    - Apply mode-appropriate styling
 
-**Example:**
+#### Example:
 ```
 User: "I need to clean my apartment but don't know where to start" (auto-detect → neurodivergent)
 Pattern: task-breakdown
@@ -1118,26 +1118,26 @@ Characteristics: 3-5 minute tasks, compassionate language, energy indicators
 
 Before generating the diagram, plan for:
 
-**Color & Theme**
+#### Color & Theme
 - Use `forest` or `neutral` theme for calming palette
 - Limit to 3-4 colors maximum
 - Apply 60-30-10 rule
 - Ensure 4.5:1 contrast ratio
 
-**Information Density**
+#### Information Density
 - Chunk into 3-5 sections maximum
 - Limit nodes/points per section to 5-7 items
 - Use white space generously
 - Add TL;DR if complex
 
-**Language**
+#### Language
 - Compassionate phrasing (no "just" or "should")
 - Realistic time estimates (1.5-2x)
 - Acknowledge energy costs
 - Include validation statements
 - Provide permission to modify
 
-**Visual Hierarchy**
+#### Visual Hierarchy
 - Make important nodes notably larger
 - Use `classDef` for styling priority items
 - Clear next actions in distinct color
@@ -1153,28 +1153,28 @@ Create the Mermaid diagram following the selected pattern. Customize with:
 - Clear, concrete next actions
 - Progress markers (celebrate what's done)
 
-**Always use the Mermaid validation tool to render the diagram.**
+#### Always use the Mermaid validation tool to render the diagram.
 
 ### Step 5: Provide Context & Support
 
 After showing the diagram, include:
 
-**Explanation**
+#### Explanation
 - How to read/use the diagram
 - What each section/color represents
 - Where to start (concrete first step)
 
-**Permission & Flexibility**
+#### Permission & Flexibility
 - "You can modify this however works for you"
 - "This is a starting point, not a rigid rule"
 - "It's okay to skip steps or adjust times"
 
-**Validation & Encouragement**
+#### Validation & Encouragement
 - "Starting is genuinely the hardest part - you're not weak"
 - "Task initiation difficulty is executive dysfunction, not laziness"
 - "Breaking this down is progress in itself"
 
-**Offer Integration**
+#### Offer Integration
 - "Would you like me to save this to your Obsidian vault?"
 - "Want me to create a follow-up diagram for [next step]?"
 - "Need help breaking down any of these steps further?"
@@ -1210,32 +1210,32 @@ If the user wants to save visualizations:
 
 Users can request mode changes at any time:
 
-**To neurotypical mode:**
+#### To neurotypical mode:
 - "Can you make this more high-level?"
 - "Use neurotypical mode for this diagram"
 - "Make it more efficient/compact"
 
-**To neurodivergent mode:**
+#### To neurodivergent mode:
 - "Break this down more"
 - "I'm feeling overwhelmed, can you simplify?"
 - "Use ADHD-friendly mode"
 
-**To colorblind-safe mode:**
+#### To colorblind-safe mode:
 - "Make this colorblind-friendly"
 - "Use patterns instead of colors"
 - "I need this accessible for color vision deficiency"
 
-**To monochrome mode:**
+#### To monochrome mode:
 - "I need to print this in black and white"
 - "Make this e-ink friendly"
 - "Can you make a print-optimized version?"
 
-**To combine modes:**
+#### To combine modes:
 - "Use neurodivergent mode with colorblind-safe patterns"
 - "Make it ADHD-friendly and monochrome for printing"
 - "Neurotypical + colorblind-safe please"
 
-**What changes when switching:**
+#### What changes when switching:
 1. Regenerate current diagram with new mode template
 2. Adjust chunk sizes and time estimates (base mode)
 3. Update language style (base mode)
@@ -1257,7 +1257,7 @@ The skill includes detailed reference files with specific patterns:
 - **references/accountability-support.md** - Body doubling, check-ins, support networks, crisis protocols
 - **references/focus-regulation.md** - Pre-task calm-down, sensory tools, emotional regulation, recovery
 
-**Read relevant reference files for specific proven patterns and examples.**
+#### Read relevant reference files for specific proven patterns and examples.
 
 ## Anti-Patterns to Avoid
 
@@ -1302,7 +1302,7 @@ The skill includes detailed reference files with specific patterns:
 
 **User:** "I need to clean my apartment but it's so messy I don't know where to start"
 
-**Claude's Approach:**
+#### Claude's Approach:
 1. Recognize **task initiation block** (classic executive dysfunction)
 2. Choose **flowchart** (decision tree to diagnose the block) or **timeline** (break into phases)
 3. Apply principles:
@@ -1320,7 +1320,7 @@ The skill includes detailed reference files with specific patterns:
 
 **User:** "Should I take this new job offer or stay at my current job? I've been thinking about it for weeks and can't decide"
 
-**Claude's Approach:**
+#### Claude's Approach:
 1. Recognize **analysis paralysis** (decision fatigue)
 2. Ask about key factors that matter to them
 3. Choose **quadrant chart** (2-dimensional comparison) or **flowchart** (decision tree with validation)
@@ -1337,7 +1337,7 @@ The skill includes detailed reference files with specific patterns:
 
 **User:** "I have too many things on my plate and can't figure out what to do first"
 
-**Claude's Approach:**
+#### Claude's Approach:
 1. Recognize **overwhelm + priority paralysis**
 2. Choose **quadrant chart** (Eisenhower Matrix) or **pie chart** (see proportions)
 3. Apply principles:
@@ -1354,7 +1354,7 @@ The skill includes detailed reference files with specific patterns:
 
 **User:** "My day just disappears and I never get my important work done. Time management tools don't work for me"
 
-**Claude's Approach:**
+#### Claude's Approach:
 1. Recognize **time blindness** (core ADHD deficit)
 2. Choose **timeline** (make time visible) or **Gantt chart** (time-blocked day)
 3. Apply principles:
@@ -1371,7 +1371,7 @@ The skill includes detailed reference files with specific patterns:
 
 **User:** "I want to start exercising but I always forget or can't get myself to do it"
 
-**Claude's Approach:**
+#### Claude's Approach:
 1. Recognize **habit initiation + memory challenges**
 2. Choose **flowchart** (habit stacking) or **user journey** (track experience)
 3. Apply principles:
@@ -1388,7 +1388,7 @@ The skill includes detailed reference files with specific patterns:
 
 **User:** "I'm always exhausted and don't know why I have no energy for things I need to do"
 
-**Claude's Approach:**
+#### Claude's Approach:
 1. Recognize **energy depletion** without awareness of expenditure
 2. Choose **pie chart** (energy allocation) or **Sankey diagram** (energy flow)
 3. Apply principles:
@@ -1405,25 +1405,25 @@ The skill includes detailed reference files with specific patterns:
 
 This skill is built on:
 
-**ADHD Neuroscience**
+#### ADHD Neuroscience
 - Cognitive-Energetic Model (effort, arousal, activation, vigilance)
 - Working memory constraints (3-5 chunks for ADHD vs 5-7 neurotypical)
 - P1 component deficits in early visual processing
 - Time perception distortions (time blindness)
 
-**Visual Processing Research**
+#### Visual Processing Research
 - Visual aids externalize executive function
 - Working memory offloading improves performance
 - Visual-spatial strengths in ADHD populations
 - Pattern recognition as compensatory strategy
 
-**Cognitive Load Theory**
+#### Cognitive Load Theory
 - Increased load reduces ADHD performance more severely
 - Chunking reduces working memory demands
 - Progressive disclosure manages attention
 - Predictable layouts reduce cognitive friction
 
-**Design Principles**
+#### Design Principles
 - WCAG accessibility guidelines (4.5:1 contrast)
 - Miller's Law (5±2 chunks, adjusted for ADHD)
 - Gestalt principles (proximity, similarity)
@@ -1472,7 +1472,7 @@ encoded = urllib.parse.quote(diagram, safe='')
 url = f"https://mermaid.live/edit#pako:{encoded}"
 ```
 
-**Key encodings:**
+#### Key encodings:
 - `<` → `%3C`
 - `>` → `%3E`
 - `/` → `%2F`
@@ -1534,7 +1534,7 @@ If angle brackets appear as literal text in the rendered diagram, the URL encodi
 - "Build a habit" → Flowchart (habit stacking) or User journey
 - "Plan my day" → Timeline or Gantt (time-blocked)
 
-**Always:**
+#### Always:
 ✅ Use calming colors (forest/neutral theme)
 ✅ Limit to 3-5 chunks per section
 ✅ Be compassionate and realistic
@@ -1543,7 +1543,7 @@ If angle brackets appear as literal text in the rendered diagram, the URL encodi
 ✅ Offer to save to Obsidian
 ✅ Properly URL-encode playground links (especially `<br/>` tags)
 
-**Never:**
+#### Never:
 ❌ Judgmental language ("just" or "should")
 ❌ Unrealistic time estimates
 ❌ Too many nodes/elements
