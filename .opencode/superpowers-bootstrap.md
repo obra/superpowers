@@ -8,7 +8,6 @@ You have superpowers.
 
 **Tool Mapping for opencode:**
 When skills reference tools you don't have, substitute your equivalent tools:
-- `TodoWrite` → `update_plan` (your planning/task tracking tool)
 - `Task` tool with subagents → Use the Task tool with subagent_type: "general" to invoke subagents for testing and research
 - `Skill` tool → `~/.opencode/superpowers/.opencode/superpowers-opencode use-skill` command (already available)
 - `Read`, `Write`, `Edit`, `Bash` → Use your native tools with similar functions
