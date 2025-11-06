@@ -5,15 +5,19 @@ const path = require('path');
 const os = require('os');
 const { execSync } = require('child_process');
 
-// Auto-detect context from script name
+// Auto-detect context from parent directory
 function detectContext() {
-    const scriptName = path.basename(process.argv[1]);
-    if (scriptName.includes('codex')) {
-        return 'codex';
-    } else if (scriptName.includes('opencode')) {
-        return 'opencode';
+    // Get directory containing the wrapper script
+    const wrapperScript = process.argv[1];
+    const wrapperDir = path.dirname(path.resolve(wrapperScript));
+    const context = path.basename(wrapperDir);
+    
+    // Validate it's a valid context directory (starts with dot)
+    if (!context.startsWith('.')) {
+        throw new Error(`Invalid context directory: ${context}. Expected directory starting with '.'`);
     }
-    throw new Error('Unable to detect context - script name should contain "codex" or "opencode"');
+    
+    return context.substring(1); // Remove dot to get context name
 }
 
 // Set up paths based on detected context
