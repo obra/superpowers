@@ -560,6 +560,78 @@ helper1, helper2, step3, pattern4
 
 Deploying untested skills = deploying untested code. It's a violation of quality standards.
 
+## Frontmatter Validation Checklist
+
+**CRITICAL:** Before creating skill ZIP, validate frontmatter structure. Invalid frontmatter prevents skill loading.
+
+### Allowed Top-Level Keys Only
+
+**Required:**
+- `name` - Skill identifier (letters, numbers, hyphens only)
+- `description` - When to use and what it does (max 1024 chars total frontmatter)
+
+**Optional:**
+- `license` - License information (e.g., MIT, Apache-2.0)
+- `allowed-tools` - List of tool restrictions
+- `metadata` - Container for ALL other custom fields
+
+### Common Mistakes to Avoid
+
+**❌ WRONG - Custom keys at top level:**
+```yaml
+---
+name: my-skill
+description: Does something useful
+created: 2025-11-05
+version: 1.0.0
+updated: 2025-11-05
+author: Your Name
+---
+```
+
+**✅ CORRECT - Custom keys in metadata:**
+```yaml
+---
+name: my-skill
+description: Does something useful
+metadata:
+  created: 2025-11-05
+  version: 1.0.0
+  updated: 2025-11-05
+  author: Your Name
+---
+```
+
+### Quick Reference Table
+
+| Field | Location | Example |
+|-------|----------|---------|
+| name | Top-level (required) | `name: condition-based-waiting` |
+| description | Top-level (required) | `description: Use when tests...` |
+| license | Top-level (optional) | `license: MIT` |
+| allowed-tools | Top-level (optional) | `allowed-tools: [Bash, Read]` |
+| created | In metadata | `metadata: { created: 2025-11-05 }` |
+| version | In metadata | `metadata: { version: 1.0.0 }` |
+| updated | In metadata | `metadata: { updated: 2025-11-05 }` |
+| author | In metadata | `metadata: { author: Name }` |
+| ANY other field | In metadata | `metadata: { custom: value }` |
+
+### Validation Command
+
+Before creating skill ZIP, verify frontmatter passes validation:
+
+```bash
+# Check frontmatter has only allowed top-level keys
+grep -A 20 "^---$" SKILL.md | head -n -1 | tail -n +2
+```
+
+**Red flags:**
+- Any key besides name, description, license, allowed-tools, metadata at top level
+- Missing name or description
+- Total frontmatter exceeds 1024 characters
+
+**If validation fails:** Move custom fields into metadata block.
+
 ## Skill Creation Checklist (TDD Adapted)
 
 **IMPORTANT: Use TodoWrite to create todos for EACH checklist item below.**
@@ -571,7 +643,10 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 
 **GREEN Phase - Write Minimal Skill:**
 - [ ] Name uses only letters, numbers, hyphens (no parentheses/special chars)
-- [ ] YAML frontmatter with only name and description (max 1024 chars)
+- [ ] YAML frontmatter validation (see Frontmatter Validation Checklist above):
+  - [ ] Only allowed top-level keys: name, description, license, allowed-tools, metadata
+  - [ ] All custom fields in metadata block (created, version, updated, author, etc.)
+  - [ ] Total frontmatter under 1024 characters
 - [ ] Description starts with "Use when..." and includes specific triggers/symptoms
 - [ ] Description written in third person
 - [ ] Keywords throughout for search (errors, symptoms, tools)
