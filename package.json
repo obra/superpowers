@@ -1,0 +1,49 @@
+{
+  "name": "superpowers",
+  "version": "3.4.1",
+  "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint '**/*.{js,ts}'",
+    "lint:fix": "eslint '**/*.{js,ts}' --fix",
+    "format": "prettier --check '**/*.{js,ts,json,md}'",
+    "format:fix": "prettier --write '**/*.{js,ts,json,md}'",
+    "security:audit": "npm audit",
+    "security:check": "npm run security:audit && npm run lint",
+    "validate": "npm run lint && npm run format && npm run security:check"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/obra/superpowers.git"
+  },
+  "keywords": [
+    "claude-code",
+    "skills",
+    "tdd",
+    "debugging",
+    "collaboration",
+    "best-practices",
+    "workflows",
+    "ai-assistant"
+  ],
+  "author": "Jesse Vincent <jesse@fsck.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/obra/superpowers/issues"
+  },
+  "homepage": "https://github.com/obra/superpowers#readme",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-security": "^2.1.0",
+    "prettier": "^3.2.5",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

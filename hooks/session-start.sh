@@ -3,9 +3,22 @@
 
 set -euo pipefail
 
-# Determine plugin root directory
+# Determine plugin root directory with path validation
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# Validate that PLUGIN_ROOT is an actual directory
+if [ ! -d "$PLUGIN_ROOT" ]; then
+    echo '{"error": "Plugin root directory does not exist"}' >&2
+    exit 1
+fi
+
+# Resolve to canonical path to prevent symlink attacks
+if command -v realpath >/dev/null 2>&1; then
+    PLUGIN_ROOT="$(realpath "$PLUGIN_ROOT")"
+elif command -v readlink >/dev/null 2>&1; then
+    PLUGIN_ROOT="$(readlink -f "$PLUGIN_ROOT" 2>/dev/null || echo "$PLUGIN_ROOT")"
+fi
 
 # Check if legacy skills directory exists and build warning
 warning_message=""
@@ -15,20 +28,37 @@ if [ -d "$legacy_skills_dir" ]; then
 fi
 
 # Read using-superpowers content
-using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>&1 || echo "Error reading using-superpowers skill")
+if ! using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>/dev/null); then
+    echo '{"error": "Failed to read using-superpowers skill"}' >&2
+    exit 1
+fi
 
-# Escape outputs for JSON
-using_superpowers_escaped=$(echo "$using_superpowers_content" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | awk '{printf "%s\\n", $0}')
-warning_escaped=$(echo "$warning_message" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | awk '{printf "%s\\n", $0}')
+# Escape content for JSON using jq (proper JSON encoding)
+# If jq is not available, fail safely
+if ! command -v jq >/dev/null 2>&1; then
+    echo '{"error": "jq is required for secure JSON encoding. Please install jq."}' >&2
+    exit 1
+fi
 
-# Output context injection as JSON
-cat <<EOF
-{
-  "hookSpecificOutput": {
-    "hookEventName": "SessionStart",
-    "additionalContext": "<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}\n</EXTREMELY_IMPORTANT>"
-  }
-}
-EOF
+# Build the additional context message
+additional_context="<EXTREMELY_IMPORTANT>
+You have superpowers.
+
+**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**
+
+${using_superpowers_content}
+
+${warning_message}
+</EXTREMELY_IMPORTANT>"
+
+# Output context injection as JSON using jq for safe encoding
+jq -n \
+    --arg context "$additional_context" \
+    '{
+        hookSpecificOutput: {
+            hookEventName: "SessionStart",
+            additionalContext: $context
+        }
+    }'
 
 exit 0

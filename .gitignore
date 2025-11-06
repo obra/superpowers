@@ -1,2 +1,85 @@
+# Project-specific
 .worktrees/
 .private-journal/
+
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+*.key
+*.pem
+*.crt
+*.cer
+*.p12
+*.pfx
+secrets.yml
+secrets.yaml
+.secrets/
+
+# Credentials and tokens
+credentials.json
+auth.json
+token
+.token
+*.token
+
+# Dependencies
+node_modules/
+bower_components/
+jspm_packages/
+vendor/
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+.cache/
+*.log
+
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup
+*~
+
+# Package manager locks (optional - uncomment if needed)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Backups
+*.bak
+*.backup
+backups/
