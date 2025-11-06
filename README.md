@@ -23,18 +23,27 @@ Read the introduction: [Superpowers for Claude Code](https://blog.fsck.com/2025/
 
 ### Claude Code (via Plugin Marketplace)
 
+In Claude Code, register the marketplace first:
+
 ```bash
-# In Claude Code
 /plugin marketplace add obra/superpowers-marketplace
+```
+
+Then install the plugin from this marketplace:
+
+```bash
 /plugin install superpowers@superpowers-marketplace
 ```
 
 ### Verify Installation
 
-```bash
-# Check that commands appear
-/help
+Check that commands appear:
 
+```bash
+/help
+```
+
+```
 # Should see:
 # /superpowers:brainstorm - Interactive design refinement
 # /superpowers:write-plan - Create implementation plan
