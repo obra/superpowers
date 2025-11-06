@@ -1,0 +1,4 @@
+#!/usr/bin/env node
+
+// Wrapper script for superpowers-opencode that delegates to the shared bootstrap code
+require('../bootstrap/superpowers-bootstrap.js');
