@@ -1,6 +1,6 @@
 ---
 name: testing-skills-with-subagents
-description: Use when creating or editing skills, before deployment, to verify they work under pressure and resist rationalization - applies RED-GREEN-REFACTOR cycle to process documentation by running baseline without skill, writing to address failures, iterating to close loopholes
+description: Use when creating or editing skills, before deployment, to verify they work under pressure, resist rationalization, AND produce quality output - applies RED-GREEN-REFACTOR cycle by testing baseline without skill, validating output quality improvement, and iterating to close loopholes
 ---
 
 # Testing Skills With Subagents
@@ -163,6 +163,256 @@ You have access to: [skill-being-tested]
 
 Make agent believe it's real work, not a quiz.
 
+## Output Quality Validation (CRITICAL)
+
+**Pressure testing validates process compliance. Quality testing validates skill effectiveness.**
+
+Testing that agents follow a skill under pressure is necessary but insufficient. You must also verify the skill produces **quality output**.
+
+### The Problem: Process ≠ Quality
+
+An agent can:
+- Follow all steps in a skill ✓
+- Complete all checklist items ✓
+- Cite skill sections correctly ✓
+- **Still produce poor quality work** ✗
+
+**Example:**
+
+Testing a "verification-before-completion" skill:
+- Agent completes implementation ✓ (process compliance)
+- Agent says "tests pass" ✓ (process compliance)
+- **BUT never actually ran tests** ✗ (quality failure)
+- **BUT no evidence/output shown** ✗ (quality failure)
+
+Process compliance without quality validation = false confidence.
+
+### Quality Validation Framework
+
+For every skill test, validate TWO dimensions:
+
+#### 1. Process Compliance (Does agent follow the skill?)
+
+**Test with pressure scenarios:**
+- Does agent cite skill sections?
+- Does agent follow steps under pressure?
+- Does agent resist rationalization?
+
+**This is what current skill emphasizes.**
+
+#### 2. Output Quality (Does skill produce good work?)
+
+**Test actual work quality:**
+- Is the output effective?
+- Is it better than without the skill?
+- Does it meet quality standards?
+
+**This is often missing.**
+
+### How to Validate Output Quality
+
+#### Compare WITH vs WITHOUT Skill
+
+**Run parallel tests:**
+
+**Test A (Baseline - WITHOUT skill):**
+```markdown
+Agent: Create 3 test scenarios for TDD skill
+[Agent produces work WITHOUT skill guidance]
+```
+
+**Test B (WITH skill):**
+```markdown
+Agent: Create 3 test scenarios for TDD skill using testing-skills-with-subagents
+[Agent produces work WITH skill guidance]
+```
+
+**Compare quality:**
+
+| Quality Metric | Without Skill | With Skill |
+|----------------|---------------|------------|
+| Pressures per scenario | 1-2 | 3+ |
+| Documentation | Generic summaries | Verbatim quotes |
+| Completeness | 3 scenarios | 5-6 scenarios |
+| Structure | Ad-hoc | Systematic |
+
+**If WITH-skill quality ≤ WITHOUT-skill quality:** Skill isn't adding value.
+
+#### Define Quality Metrics for Skill Being Tested
+
+For each skill, define what "quality output" means:
+
+**Example: TDD Skill**
+- [ ] Tests written before code (not after)
+- [ ] Tests fail first (RED verification)
+- [ ] Code is minimal (just enough to pass)
+- [ ] No premature optimization
+
+**Example: Verification Skill**
+- [ ] Commands actually run (evidence shown)
+- [ ] Output captured (not just "tests pass")
+- [ ] Claims backed by evidence
+- [ ] No "should work" or "looks good"
+
+**Example: Planning Skill**
+- [ ] Tasks are concrete and actionable
+- [ ] Dependencies identified between tasks
+- [ ] Acceptance criteria clear
+- [ ] Plan is implementable without questions
+
+**If skill doesn't improve these metrics:** Skill needs iteration.
+
+#### Evaluate Output, Not Just Effort
+
+**Volume ≠ Quality**
+
+Agent produces:
+- 15 test scenarios (impressive volume!)
+- 2000 lines of documentation
+- 50 baseline failures documented
+
+**But quality check reveals:**
+- Scenarios are academic ("Should you write tests?")
+- Documentation is generic summaries
+- Failures lack verbatim quotes
+
+**Verdict:** High effort, low quality. Skill isn't working.
+
+**Quality indicators:**
+
+✅ **Good quality:**
+- Scenarios force hard choices (A/B/C with consequences)
+- Documentation captures exact words
+- Work is better than without skill
+
+✗ **Poor quality:**
+- Scenarios are theoretical
+- Documentation is summaries
+- Work is same as without skill
+
+#### Test Real-World Effectiveness
+
+**Does the skill solve the actual problem?**
+
+**Example: TDD Skill**
+
+**Problem to solve:** Agents write code before tests
+
+**Test effectiveness:**
+1. Give agent feature to implement
+2. Agent has TDD skill
+3. **Observe:** Does agent actually write test first?
+4. **Or:** Does agent write code, then rationalize?
+
+**If agent writes code first despite skill:** Skill isn't effective. Needs iteration.
+
+**Example: Verification Skill**
+
+**Problem to solve:** Agents claim success without evidence
+
+**Test effectiveness:**
+1. Agent completes implementation
+2. Agent has verification skill
+3. **Observe:** Does agent run commands before claiming done?
+4. **Or:** Does agent say "tests should pass"?
+
+**If agent skips verification despite skill:** Skill isn't effective. Needs iteration.
+
+### Quality Validation Checklist
+
+Before claiming skill is bulletproof, verify quality:
+
+- [ ] **Ran WITH vs WITHOUT comparison** - Quality metrics improved
+- [ ] **Defined quality standards** - Clear metrics for skill output
+- [ ] **Measured actual output** - Not just process compliance
+- [ ] **Compared multiple agents** - Quality improvement is consistent
+- [ ] **Tested real-world scenarios** - Skill solves actual problem
+- [ ] **Evaluated effectiveness** - Output is materially better
+
+### Red Flags: Skill Not Producing Quality
+
+**Warning signs:**
+- WITH-skill output looks same as WITHOUT-skill
+- Volume increased but quality didn't
+- Agents follow steps but work is poor
+- Process compliance high, effectiveness low
+- Metrics don't improve with skill
+
+**When you see these:** Iterate on skill, not just pressure scenarios.
+
+### Balancing Pressure and Quality Testing
+
+**Both are required:**
+
+| Test Type | Validates | How to Test |
+|-----------|-----------|-------------|
+| **Pressure Testing** | Process compliance | Scenarios with 3+ pressures, time constraints |
+| **Quality Testing** | Output effectiveness | WITH vs WITHOUT comparison, quality metrics |
+
+**Pressure testing alone:** Proves agent follows skill under stress
+**Quality testing alone:** Proves skill improves output
+**Both together:** Proves skill works under stress AND produces quality
+
+### Example: Complete Testing (Pressure + Quality)
+
+**Skill being tested:** verification-before-completion
+
+**Pressure test:**
+```markdown
+Agent finished auth implementation. Exhausted (4 hours work).
+Dinner in 15 minutes. Code review tomorrow.
+
+Does agent run verification before claiming done?
+```
+
+**Result:** Agent runs tests ✓ (pressure resistance validated)
+
+**Quality test:**
+```markdown
+Compare agent WITH skill vs WITHOUT skill:
+
+WITHOUT: "Tests should pass" (no evidence)
+WITH: "pytest output: 47 tests passed, 0 failed" (evidence shown)
+```
+
+**Result:** Quality improved ✓ (effectiveness validated)
+
+**Verdict:** Skill is both pressure-resistant AND produces quality output. Bulletproof.
+
+### Common Mistake: Testing Only Pressure
+
+**Typical testing approach:**
+1. Create scenarios with time pressure
+2. Agent follows skill under pressure ✓
+3. Claim skill is bulletproof
+4. **Never check if output quality improved**
+
+**Problem:** Skill might enforce process without improving results.
+
+**Fix:** Always include quality validation:
+1. Define quality metrics
+2. Test WITH vs WITHOUT
+3. Measure output effectiveness
+4. Only claim bulletproof if BOTH pressure and quality tests pass
+
+### Integration with RED-GREEN-REFACTOR
+
+**Quality validation fits into each phase:**
+
+**RED Phase:**
+- Document not just THAT agent failed, but HOW POOR the output was
+- Capture quality metrics (not just "agent didn't follow process")
+
+**GREEN Phase:**
+- Verify not just compliance, but output quality improvement
+- Compare WITH vs WITHOUT skill quality
+
+**REFACTOR Phase:**
+- If quality didn't improve, iterate on skill content
+- If pressure resistance failed, iterate on enforcement
+
+**Both must pass to be bulletproof.**
+
 ## REFACTOR Phase: Close Loopholes (Stay Green)
 
 Agent violated rule despite having the skill? This is like a test regression - you need to refactor the skill to prevent it.
@@ -315,12 +565,13 @@ Before deploying skill, verify you followed RED-GREEN-REFACTOR:
 **RED Phase:**
 - [ ] Created pressure scenarios (3+ combined pressures)
 - [ ] Ran scenarios WITHOUT skill (baseline)
-- [ ] Documented agent failures and rationalizations verbatim
+- [ ] **Measured baseline output quality** (documented quality metrics, not just compliance)
 
 **GREEN Phase:**
 - [ ] Wrote skill addressing specific baseline failures
 - [ ] Ran scenarios WITH skill
 - [ ] Agent now complies
+- [ ] **Verified output quality improved** (WITH vs WITHOUT comparison shows better results)
 
 **REFACTOR Phase:**
 - [ ] Identified NEW rationalizations from testing
@@ -331,6 +582,7 @@ Before deploying skill, verify you followed RED-GREEN-REFACTOR:
 - [ ] Re-tested - agent still complies
 - [ ] Meta-tested to verify clarity
 - [ ] Agent follows rule under maximum pressure
+- [ ] Quality validation passed (see Output Quality Validation section)
 
 ## Common Mistakes (Same as TDD)
 
