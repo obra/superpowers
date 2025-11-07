@@ -242,13 +242,13 @@ Agent: Create 3 test scenarios for TDD skill using testing-skills-with-subagents
 
 For each skill, define what "quality output" means:
 
-#### Example: TDD Skill
+#### Example: TDD Skill Quality Metrics
 - [ ] Tests written before code (not after)
 - [ ] Tests fail first (RED verification)
 - [ ] Code is minimal (just enough to pass)
 - [ ] No premature optimization
 
-#### Example: Verification Skill
+#### Example: Verification Skill Quality Metrics
 - [ ] Commands actually run (evidence shown)
 - [ ] Output captured (not just "tests pass")
 - [ ] Claims backed by evidence
@@ -294,7 +294,7 @@ Agent produces:
 
 **Does the skill solve the actual problem?**
 
-#### Example: TDD Skill
+#### Example: TDD Skill Effectiveness Test
 
 **Problem to solve:** Agents write code before tests
 
@@ -306,7 +306,7 @@ Agent produces:
 
 **If agent writes code first despite skill:** Skill isn't effective. Needs iteration.
 
-#### Example: Verification Skill
+#### Example: Verification Skill Effectiveness Test
 
 **Problem to solve:** Agents claim success without evidence
 
@@ -578,7 +578,7 @@ Before deploying skill, verify you followed RED-GREEN-REFACTOR:
 - [ ] Added explicit counters for each loophole
 - [ ] Updated rationalization table
 - [ ] Updated red flags list
-- [ ] Updated description ith violation symptoms
+- [ ] Updated description with violation symptoms
 - [ ] Re-tested - agent still complies
 - [ ] Meta-tested to verify clarity
 - [ ] Agent follows rule under maximum pressure
