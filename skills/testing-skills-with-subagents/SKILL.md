@@ -175,7 +175,7 @@ An agent can:
 - Follow all steps in a skill ✓
 - Complete all checklist items ✓
 - Cite skill sections correctly ✓
-- **Still produce poor quality work** ✗
+- **Still produce poor-quality work** ✗
 
 **Example:**
 
@@ -242,19 +242,19 @@ Agent: Create 3 test scenarios for TDD skill using testing-skills-with-subagents
 
 For each skill, define what "quality output" means:
 
-**Example: TDD Skill**
+#### Example: TDD Skill
 - [ ] Tests written before code (not after)
 - [ ] Tests fail first (RED verification)
 - [ ] Code is minimal (just enough to pass)
 - [ ] No premature optimization
 
-**Example: Verification Skill**
+#### Example: Verification Skill
 - [ ] Commands actually run (evidence shown)
 - [ ] Output captured (not just "tests pass")
 - [ ] Claims backed by evidence
 - [ ] No "should work" or "looks good"
 
-**Example: Planning Skill**
+#### Example: Planning Skill
 - [ ] Tasks are concrete and actionable
 - [ ] Dependencies identified between tasks
 - [ ] Acceptance criteria clear
@@ -264,7 +264,7 @@ For each skill, define what "quality output" means:
 
 #### Evaluate Output, Not Just Effort
 
-**Volume ≠ Quality**
+Volume ≠ Quality
 
 Agent produces:
 - 15 test scenarios (impressive volume!)
@@ -294,7 +294,7 @@ Agent produces:
 
 **Does the skill solve the actual problem?**
 
-**Example: TDD Skill**
+#### Example: TDD Skill
 
 **Problem to solve:** Agents write code before tests
 
@@ -306,7 +306,7 @@ Agent produces:
 
 **If agent writes code first despite skill:** Skill isn't effective. Needs iteration.
 
-**Example: Verification Skill**
+#### Example: Verification Skill
 
 **Problem to solve:** Agents claim success without evidence
 
@@ -349,9 +349,9 @@ Before claiming skill is bulletproof, verify quality:
 | **Pressure Testing** | Process compliance | Scenarios with 3+ pressures, time constraints |
 | **Quality Testing** | Output effectiveness | WITH vs WITHOUT comparison, quality metrics |
 
-**Pressure testing alone:** Proves agent follows skill under stress
+**Pressure testing alone:** Proves agent follows skill under pressure
 **Quality testing alone:** Proves skill improves output
-**Both together:** Proves skill works under stress AND produces quality
+**Both together:** Proves skill works under pressure AND produces quality
 
 ### Example: Complete Testing (Pressure + Quality)
 
