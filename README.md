@@ -8,6 +8,9 @@ A comprehensive skills library of proven techniques, patterns, and workflows for
 - **Debugging Skills** - Systematic debugging, root cause tracing, verification
 - **Collaboration Skills** - Brainstorming, planning, code review, parallel agents
 - **Development Skills** - Git worktrees, finishing branches, subagent workflows
+- **Security Skills** - Secure implementation patterns for auth, secrets, input validation
+- **Database Skills** - Schema migration strategies for zero-downtime deployments
+- **Architecture Skills** - System design validation and failure mode analysis
 - **Meta Skills** - Creating, testing, and sharing skills
 
 Plus:
@@ -81,6 +84,9 @@ Skills activate automatically when relevant. For example:
 - `test-driven-development` activates when implementing features
 - `systematic-debugging` activates when debugging issues
 - `verification-before-completion` activates before claiming work is done
+- `secure-implementation-patterns` when implementing auth or handling secrets
+- `schema-migration-strategy` when changing database schemas
+- `system-design-validation` after brainstorming, before implementation
 
 ## What's Inside
 
@@ -107,6 +113,15 @@ Skills activate automatically when relevant. For example:
 - **using-git-worktrees** - Parallel development branches
 - **finishing-a-development-branch** - Merge/PR decision workflow
 - **subagent-driven-development** - Fast iteration with quality gates
+
+**Security** (`skills/`)
+- **secure-implementation-patterns** - Battle-tested patterns for auth, secrets, input validation
+
+**Database** (`skills/`)
+- **schema-migration-strategy** - Zero-downtime migrations with backward compatibility
+
+**Architecture** (`skills/`)
+- **system-design-validation** - Validate designs before implementation
 
 **Meta** (`skills/meta/`)
 - **writing-skills** - Create new skills following best practices
