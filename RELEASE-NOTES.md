@@ -1,5 +1,51 @@
 # Superpowers Release Notes
 
+## v3.5.0 (2025-11-10)
+
+### New Features
+
+**Three New Skill Categories**
+
+Added comprehensive skills for security, database, and architecture:
+
+1. **secure-implementation-patterns** - Security-critical code implementation
+   - Authentication & authorization (password hashing, JWT, sessions)
+   - Secret management (environment variables, key rotation)
+   - Input validation & sanitization (SQL injection, XSS, command injection prevention)
+   - Data protection (encryption, secure file uploads)
+   - Battle-tested patterns with concrete Good/Bad examples
+   - Integration with test-driven-development for security testing
+
+2. **schema-migration-strategy** - Database schema change management
+   - Backward compatibility analysis framework
+   - Multi-phase migration pattern for breaking changes
+   - Zero-downtime deployment strategies
+   - Comprehensive safety checklist (rollback, testing, lock analysis)
+   - Database-specific considerations (PostgreSQL, MySQL, SQLite)
+   - Integration with verification-before-completion
+
+3. **system-design-validation** - Architecture validation before implementation
+   - 8-category validation checklist (requirements, scalability, failure modes, consistency, operations, dependencies, security, YAGNI)
+   - Failure mode analysis framework
+   - YAGNI simplification enforcement
+   - Risk identification with mitigation strategies
+   - Go/No-go decision framework
+   - Integration with brainstorming and writing-plans skills
+
+### Philosophy
+
+All three skills follow Superpowers core principles:
+- Systematic over ad-hoc (checklists prevent skipping steps)
+- Evidence over claims (verify migrations, test security, validate designs)
+- Complexity reduction (YAGNI ruthlessly)
+- Test-first mentality
+
+### Files Added
+- `skills/secure-implementation-patterns/SKILL.md`
+- `skills/schema-migration-strategy/SKILL.md`
+- `skills/system-design-validation/SKILL.md`
+- `docs/plans/2025-11-10-new-skills-design.md`
+
 ## v3.4.1 (2025-10-31)
 
 ### Improvements
