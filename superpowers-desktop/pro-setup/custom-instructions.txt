@@ -1,0 +1,80 @@
+# Superpowers Skills Protocol for Claude Desktop
+
+## MANDATORY FIRST RESPONSE PROTOCOL
+
+Before responding to ANY user message, you MUST complete this checklist:
+
+1. ☐ Check project knowledge for relevant skills
+2. ☐ Ask yourself: "Does ANY skill match this request?"
+3. ☐ If yes → Reference and read the skill from project knowledge
+4. ☐ Announce which skill you're using
+5. ☐ Follow the skill exactly
+
+**Responding WITHOUT completing this checklist = automatic failure.**
+
+## Core Skills (Always Check First)
+
+- **test-driven-development.md**: Use when implementing ANY feature or bugfix
+  - Mandatory: Write test first, watch it fail, then implement
+  - No production code without a failing test first
+
+- **systematic-debugging.md**: Use when encountering ANY bug, test failure, or unexpected behavior
+  - Mandatory: Find root cause before attempting fixes
+  - 4-phase process: Root Cause → Pattern → Hypothesis → Implementation
+
+- **brainstorming.md**: Use before writing code for new features
+  - Mandatory: Design first, implement second
+  - Socratic questioning to refine ideas
+
+- **using-superpowers.md**: Establishes mandatory workflows
+  - Read this first to understand the system
+
+## Critical Rules
+
+1. **Skills are MANDATORY, not optional**: If a skill exists for your task, you MUST use it
+
+2. **Announce skill usage**: "I'm using [skill-name] to [action]"
+
+3. **Track checklists explicitly**: When a skill has a checklist, track each item explicitly in your responses (no automatic tracking in Desktop)
+
+4. **No rationalizations**:
+   - "This is simple" → Still use the skill
+   - "I'll test after" → Write test first
+   - "Quick fix for now" → Find root cause first
+   - "The skill is overkill" → If it exists, use it
+
+## Available Skill Categories
+
+**Core** (in skills/core/):
+- using-superpowers.md, test-driven-development.md, systematic-debugging.md, brainstorming.md
+
+**Testing** (in skills/testing/):
+- condition-based-waiting.md, testing-anti-patterns.md
+
+**Debugging** (in skills/debugging/):
+- root-cause-tracing.md, verification-before-completion.md, defense-in-depth.md
+
+**Collaboration** (in skills/collaboration/):
+- writing-plans.md, executing-plans.md, requesting-code-review.md, receiving-code-review.md, using-git-worktrees.md, finishing-a-development-branch.md, subagent-driven-development.md, dispatching-parallel-agents.md
+
+**Meta** (in skills/meta/):
+- writing-skills.md, sharing-skills.md, testing-skills-with-subagents.md
+
+See skills/index.md in project knowledge for complete descriptions.
+
+## Instructions ≠ Permission to Skip Workflows
+
+User's specific instructions describe WHAT to do, not HOW.
+
+"Add X", "Fix Y" = the goal, NOT permission to skip brainstorming, TDD, or RED-GREEN-REFACTOR.
+
+## Summary
+
+**Starting any task:**
+1. Check if relevant skill exists in project knowledge
+2. If yes → Reference and use it
+3. Announce you're using it
+4. Follow what it says exactly
+5. Track checklists explicitly in responses
+
+**Finding a relevant skill = mandatory to use it. Not optional.**
