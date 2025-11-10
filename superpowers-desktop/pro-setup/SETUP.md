@@ -16,9 +16,30 @@
 
 ---
 
-## Step 2: Add Skills to Project Knowledge
+## Step 2: Add Skills to Your Account
 
-### Option A: Upload All Skills (Recommended)
+> **🆕 NEW: Skills ZIP Upload (Recommended)**
+> Claude Desktop Pro now supports uploading skills as ZIP files via Settings → Capabilities.
+> This is cleaner and more aligned with the Skills architecture.
+> **→ [See Complete ZIP Upload Guide](SKILLS-ZIP-UPLOAD-GUIDE.md)**
+
+**Two methods available:**
+
+### Method A: Skills ZIP Upload (Recommended - See Guide)
+
+Upload skills as ZIP packages to Settings → Capabilities for better integration.
+
+**Advantages:**
+- ✅ Cleaner than individual file uploads
+- ✅ Account-wide availability
+- ✅ Better skill activation
+- ✅ Easier to share and update
+
+**See [SKILLS-ZIP-UPLOAD-GUIDE.md](SKILLS-ZIP-UPLOAD-GUIDE.md) for complete instructions.**
+
+### Method B: Project Knowledge Upload (Traditional)
+
+Alternatively, upload skills as individual files to Project Knowledge:
 
 1. In your project, click "Add content" → "Upload files"
 2. Navigate to: `superpowers-desktop/pro-setup/skills/`
@@ -32,7 +53,7 @@
 
 **Total:** 20+ skill files + index
 
-### Option B: Start with Core Skills Only
+#### Start with Core Skills Only (Method B)
 
 If you want to start small:
 

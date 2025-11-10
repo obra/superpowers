@@ -1,0 +1,5 @@
+# Generated skill ZIP files
+skill-zips/
+
+# Temporary build directory
+temp-skill-build/

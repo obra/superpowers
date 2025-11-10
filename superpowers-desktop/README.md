@@ -28,6 +28,7 @@ Originally built as a Claude Code plugin, this distribution adapts the skills fo
 - ⚠️ Manual checklist tracking (no TodoWrite)
 
 **→ [Get Started with Pro Setup](pro-setup/SETUP.md)**
+**→ [Skills ZIP Upload Guide](pro-setup/SKILLS-ZIP-UPLOAD-GUIDE.md)** (Recommended method)
 
 ### 💡 Free Users ($0)
 
