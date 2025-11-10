@@ -15,7 +15,7 @@ Security vulnerabilities come from custom implementations and trusting user inpu
 
 ## The Iron Law
 
-```
+```markdown
 NO CUSTOM SECURITY IMPLEMENTATIONS WITHOUT EXPERT REVIEW
 Use battle-tested libraries. Follow established patterns.
 ```
