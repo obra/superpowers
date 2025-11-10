@@ -15,7 +15,7 @@ Schema changes in production require careful planning. Breaking migrations cause
 
 ## The Iron Law
 
-```
+```plaintext
 NO SCHEMA CHANGES WITHOUT BACKWARD COMPATIBILITY ANALYSIS
 Every migration must support rollback and zero-downtime deployment.
 ```

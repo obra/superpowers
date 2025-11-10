@@ -15,7 +15,7 @@ Security vulnerabilities come from custom implementations and trusting user inpu
 
 ## The Iron Law
 
-```markdown
+```plaintext
 NO CUSTOM SECURITY IMPLEMENTATIONS WITHOUT EXPERT REVIEW
 Use battle-tested libraries. Follow established patterns.
 ```
@@ -474,7 +474,7 @@ When implementing security-critical code, use TodoWrite to track:
    - [ ] Which patterns apply?
 
 2. **Select Battle-Tested Libraries**
-   - [ ] Research proven libraries (bcrypt, jsonwebtoken, etc)
+   - [ ] Research proven libraries (bcrypt, jsonwebtoken, etc.)
    - [ ] Verify library is actively maintained
    - [ ] Check for known vulnerabilities
 

@@ -15,7 +15,7 @@ Architectural flaws found during coding are expensive to fix. Missing failure mo
 
 ## The Iron Law
 
-```
+```plaintext
 NO LARGE FEATURE IMPLEMENTATION WITHOUT DESIGN VALIDATION
 Answer the hard questions before writing code.
 ```
@@ -122,7 +122,7 @@ Ensure design scales to expected load:
 ### Example Analysis
 
 **Good:**
-```
+```plaintext
 Current: 100 req/sec
 Expected 1yr: 1000 req/sec
 Expected 3yr: 5000 req/sec
@@ -139,7 +139,7 @@ Validation: Load test at 2000 req/sec to confirm headroom
 ```
 
 **Bad:**
-```
+```plaintext
 Should handle whatever traffic comes
 
 (No numbers, no bottleneck analysis, no mitigation plan)
@@ -199,7 +199,7 @@ Identify what can fail and plan for it:
 ### Example Analysis
 
 **Good:**
-```
+```plaintext
 Dependency: Payment Gateway API
 
 Failure modes:
@@ -220,7 +220,7 @@ Graceful degradation:
 ```
 
 **Bad:**
-```
+```plaintext
 If payment API fails, show error
 
 (No retry strategy, no monitoring, no circuit breaker)
@@ -267,7 +267,7 @@ Ensure data consistency guarantees match requirements:
 ### Example Analysis
 
 **Good:**
-```
+```plaintext
 Use case: Order processing
 
 Consistency requirements:
@@ -286,7 +286,7 @@ Partial failure handling:
 ```
 
 **Bad:**
-```
+```plaintext
 Store everything in database with transactions
 
 (No analysis of what needs strong vs eventual consistency)
@@ -337,7 +337,7 @@ Evaluate operational burden of the design:
 ### Example Analysis
 
 **Good:**
-```
+```plaintext
 Components added:
 - 1 new service (recommendation engine)
 - 1 new cache (Redis for recommendations)
@@ -358,7 +358,7 @@ Operational cost: Acceptable (1 new service, 1 cache, well-tested)
 ```
 
 **Bad:**
-```
+```plaintext
 Add 5 new microservices, 3 message queues, 2 databases
 
 (No justification for complexity, no deployment/debugging plan)
@@ -478,7 +478,7 @@ Simplify the design before implementing:
 ### Example Analysis
 
 **Good:**
-```
+```plaintext
 Initial design: 3 microservices, event bus, saga pattern
 
 Simplified design: 1 service with database transactions
@@ -495,7 +495,7 @@ Removed features:
 ```
 
 **Bad:**
-```
+```plaintext
 Building microservices architecture from day 1 for future scale
 
 (Over-engineering, YAGNI violation)
@@ -574,7 +574,7 @@ Create `docs/designs/YYYY-MM-DD-<feature>-validation.md`:
 List identified risks with mitigation strategies:
 
 **Example:**
-```
+```plaintext
 Risks:
 1. Payment API has 99.5% SLA (below our 99.9% target)
    Mitigation: Implement circuit breaker + retry logic + queue for offline processing
