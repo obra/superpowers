@@ -85,7 +85,7 @@ project=$(basename "$(git rev-parse --show-toplevel)")
 
 **CRITICAL: Always base worktrees off the main branch unless explicitly stated otherwise.**
 
-By default, `git worktree add` bases the new branch on whatever is currently checked out. This is almost never what you want when on a feature branch!
+By default, `git worktree add` bases the new branch on whatever is currently checked out. This is rarely what you want when on a feature branch!
 
 ```bash
 # Detect the repository's main branch
