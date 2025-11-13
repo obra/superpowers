@@ -62,6 +62,7 @@ grep -q "^\.worktrees/$" .gitignore || grep -q "^worktrees/$" .gitignore
 **If NOT in .gitignore:**
 
 Per Jesse's rule "Fix broken things immediately":
+
 1. Add appropriate line to .gitignore
 2. Commit the change
 3. Proceed with worktree creation
@@ -80,7 +81,37 @@ No .gitignore verification needed - outside project entirely.
 project=$(basename "$(git rev-parse --show-toplevel)")
 ```
 
-### 2. Create Worktree
+### 2. Detect Base Branch
+
+**CRITICAL: Always base worktrees off the main branch unless explicitly stated otherwise.**
+
+By default, `git worktree add` bases the new branch on whatever is currently checked out. This is almost never what you want when on a feature branch!
+
+```bash
+# Detect the repository's main branch
+main_branch=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
+
+# Fallback if symbolic-ref not set
+if [ -z "$main_branch" ]; then
+  # Check which common name exists
+  if git show-ref --verify --quiet refs/remotes/origin/main; then
+    main_branch="main"
+  elif git show-ref --verify --quiet refs/remotes/origin/master; then
+    main_branch="master"
+  else
+    main_branch="main"  # Default assumption
+  fi
+fi
+
+# Use origin/$main_branch as base unless user explicitly specified different base
+base_branch="${BASE_BRANCH:-origin/$main_branch}"
+```
+
+**Why critical:** Without specifying a base, worktrees inherit the current branch. If you're on `feature/old-work` and create a new worktree, it will be based on `feature/old-work`, not main!
+
+**User can override:** If user says "base this off feature/xyz", use that instead.
+
+### 3. Create Worktree
 
 ```bash
 # Determine full path
@@ -93,12 +124,12 @@ case $LOCATION in
     ;;
 esac
 
-# Create worktree with new branch
-git worktree add "$path" -b "$BRANCH_NAME"
+# Create worktree with new branch based on detected main branch
+git worktree add "$path" -b "$BRANCH_NAME" "$base_branch"
 cd "$path"
 ```
 
-### 3. Run Project Setup
+### 4. Run Project Setup
 
 Auto-detect and run appropriate setup:
 
@@ -115,9 +146,39 @@ if [ -f pyproject.toml ]; then poetry install; fi
 
 # Go
 if [ -f go.mod ]; then go mod download; fi
+
+# Elixir
+if [ -f mix.exs ]; then mix deps.get && mix compile; fi
 ```
 
-### 4. Verify Clean Baseline
+**Background Setup Optimization (Optional):**
+
+For long-running setup commands, you can run them in background while investigating code in the current directory:
+
+```bash
+# Start setup in background
+cd "$path"
+(npm install && npm test) &
+setup_pid=$!
+
+# Return to original directory to investigate
+cd -
+
+# Continue investigation while setup runs...
+# When ready to use worktree, check if setup complete:
+if ps -p $setup_pid > /dev/null; then
+  echo "Setup still running, waiting..."
+  wait $setup_pid
+fi
+```
+
+This optimization is useful when:
+
+- Setup takes several minutes (large dependency trees, compilation)
+- You want to investigate code while waiting
+- You're not immediately ready to work in the worktree
+
+### 5. Verify Clean Baseline
 
 Run tests to ensure worktree starts clean:
 
@@ -133,7 +194,7 @@ go test ./...
 
 **If tests pass:** Report ready.
 
-### 5. Report Location
+### 6. Report Location
 
 ```
 Worktree ready at <full-path>
@@ -143,31 +204,35 @@ Ready to implement <feature-name>
 
 ## Quick Reference
 
-| Situation | Action |
-|-----------|--------|
-| `.worktrees/` exists | Use it (verify .gitignore) |
-| `worktrees/` exists | Use it (verify .gitignore) |
-| Both exist | Use `.worktrees/` |
-| Neither exists | Check CLAUDE.md → Ask user |
+| Situation                   | Action                      |
+| --------------------------- | --------------------------- |
+| `.worktrees/` exists        | Use it (verify .gitignore)  |
+| `worktrees/` exists         | Use it (verify .gitignore)  |
+| Both exist                  | Use `.worktrees/`           |
+| Neither exists              | Check CLAUDE.md → Ask user  |
 | Directory not in .gitignore | Add it immediately + commit |
-| Tests fail during baseline | Report failures + ask |
-| No package.json/Cargo.toml | Skip dependency install |
+| Tests fail during baseline  | Report failures + ask       |
+| No package.json/Cargo.toml  | Skip dependency install     |
 
 ## Common Mistakes
 
 **Skipping .gitignore verification**
+
 - **Problem:** Worktree contents get tracked, pollute git status
 - **Fix:** Always grep .gitignore before creating project-local worktree
 
 **Assuming directory location**
+
 - **Problem:** Creates inconsistency, violates project conventions
 - **Fix:** Follow priority: existing > CLAUDE.md > ask
 
 **Proceeding with failing tests**
+
 - **Problem:** Can't distinguish new bugs from pre-existing issues
 - **Fix:** Report failures, get explicit permission to proceed
 
 **Hardcoding setup commands**
+
 - **Problem:** Breaks on projects using different tools
 - **Fix:** Auto-detect from project files (package.json, etc.)
 
@@ -190,6 +255,7 @@ Ready to implement auth feature
 ## Red Flags
 
 **Never:**
+
 - Create worktree without .gitignore verification (project-local)
 - Skip baseline test verification
 - Proceed with failing tests without asking
@@ -197,6 +263,7 @@ Ready to implement auth feature
 - Skip CLAUDE.md check
 
 **Always:**
+
 - Follow directory priority: existing > CLAUDE.md > ask
 - Verify .gitignore for project-local
 - Auto-detect and run project setup
@@ -205,9 +272,11 @@ Ready to implement auth feature
 ## Integration
 
 **Called by:**
+
 - **brainstorming** (Phase 4) - REQUIRED when design is approved and implementation follows
 - Any skill needing isolated workspace
 
 **Pairs with:**
+
 - **finishing-a-development-branch** - REQUIRED for cleanup after work complete
 - **executing-plans** or **subagent-driven-development** - Work happens in this worktree
