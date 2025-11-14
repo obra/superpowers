@@ -11,6 +11,8 @@ Strategic content creation for local SEO dominance, focusing on "people-first" c
 
 **Core principle:** Create unique, helpful content for each location that serves customers first and search engines second, avoiding spam penalties while maximizing local visibility.
 
+**Foundational rule:** The requirements in this skill (6 content types, calculated keyword density, pre-launch checklist) are not optional "best practices" or "nice-to-haves." They are minimum requirements to avoid Google penalties that can deindex entire service area page networks. Skipping them isn't being pragmatic or flexible - it's risking catastrophic SEO failure.
+
 ## When to Use
 
 Use this skill when:
@@ -185,6 +187,11 @@ If you're doing any of these, STOP and fix before publishing:
 - "I'll skip geo-tagging photos" → You lose critical local ranking signals
 - "I don't have time for testimonials" → Without them, page lacks required uniqueness
 - "FAQ Schema is optional" → You forfeit rich results and voice search visibility
+- "Publish now, do a quick SEO tune-up later" → These aren't tune-ups, they're core requirements
+- "80% complete is good enough" → No. Incomplete pages risk doorway penalties for entire network
+- "Being pragmatic not dogmatic" → Skipping requirements isn't pragmatic, it's gambling with SEO penalties
+- "Perfect is the enemy of good" → These aren't perfection, they're minimum requirements for ranking
+- "Experienced professionals can skip the calculations" → No. Experience doesn't eliminate spam penalties
 
 **All of these mean: Don't launch the page yet. Complete the checklist first.**
 
