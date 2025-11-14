@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>ABC Plumbing Service Area</name>
+    <description>Service area coverage for local plumbing business</description>
+
+    <!-- Point Marker for Business Location -->
+    <Placemark>
+      <name>ABC Plumbing - Main Office</name>
+      <description>
+        123 Main Street, Seattle, WA 98101
+        Phone: (206) 555-0100
+      </description>
+      <Point>
+        <coordinates>-122.33207,47.60621,0</coordinates>
+      </Point>
+    </Placemark>
+
+    <!-- Polygon for Service Area (Example: North Seattle Coverage) -->
+    <Placemark>
+      <name>North Seattle Service Area</name>
+      <description>Primary service area covering North Seattle neighborhoods</description>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>
+              -122.3321,47.6062,0
+              -122.3310,47.6100,0
+              -122.3250,47.6150,0
+              -122.3200,47.6200,0
+              -122.3100,47.6180,0
+              -122.3050,47.6120,0
+              -122.3150,47.6080,0
+              -122.3321,47.6062,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+
+    <!-- Additional Service Area (Example: South Seattle) -->
+    <Placemark>
+      <name>South Seattle Service Area</name>
+      <description>Secondary service area covering South Seattle</description>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>
+              -122.3250,47.5900,0
+              -122.3150,47.5850,0
+              -122.3050,47.5880,0
+              -122.3100,47.5950,0
+              -122.3200,47.5920,0
+              -122.3250,47.5900,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+
+  </Document>
+</kml>
