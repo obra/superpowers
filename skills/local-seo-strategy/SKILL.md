@@ -1,6 +1,6 @@
 ---
 name: local-seo-strategy
-description: Use when creating local SEO content (landing pages, service area pages, blogs) for businesses targeting geographic markets - provides strategic framework for high-intent local keywords, hyperlocal page optimization, people-first content, voice search, and avoiding Google doorway page penalties
+description: Use when developing long-term local SEO plans for businesses serving specific geographic areas - establishes KPIs, prioritizes tasks based on Google's local algorithm pillars (Relevance, Distance, Prominence), and creates systematic roadmaps for maximizing local visibility and conversions
 ---
 
 # Local SEO Strategy
