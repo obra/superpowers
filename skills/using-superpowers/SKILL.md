@@ -79,6 +79,54 @@ Before using a skill, announce that you are using it.
 
 The skill itself tells you which type it is.
 
+## Available Skills
+
+**Core Development Skills:**
+- **brainstorming** - Refine ideas before coding
+- **test-driven-development** - Write tests first, watch fail, implement
+- **systematic-debugging** - Four-phase debugging framework
+- **verification-before-completion** - Always verify before claiming success
+- **requesting-code-review** - Request review with context
+- **receiving-code-review** - Apply rigor to feedback, push back on invalid criticism
+- **writing-plans** - Create detailed implementation plans
+- **executing-plans** - Execute plans in batches with review checkpoints
+- **subagent-driven-development** - Dispatch fresh subagent per task with code review
+
+**Codex Integration:**
+- **codex-delegator** - Delegate code review and debugging to Codex CLI with validation
+
+**Codex-Enhanced Skills:**
+- **requesting-code-review** - Now supports optional Codex delegation for reviews
+- **systematic-debugging** - Now supports optional Codex delegation for evidence gathering
+
+## Codex Integration
+
+**SuperPowers now supports delegating auxiliary work to Codex CLI:**
+
+**What Codex handles:**
+- Code reviews (as reviewer)
+- Debug evidence gathering
+- Hypothesis validation
+
+**What Claude Code handles:**
+- Main implementation
+- Planning and orchestration
+- Validating Codex responses
+- Final decisions
+
+**Configuration:**
+Located at: `~/.claude/plugins/cache/superpowers/config/codex-config.json`
+
+**Toggle Codex:**
+- `codex_enabled: true` - Enable delegation
+- `codex_enabled: false` - Use traditional Claude-only workflow
+
+**Transparent integration:**
+- Skills automatically check config
+- Same workflow whether Codex or Claude reviews
+- Fallback to Claude if Codex unavailable
+- No workflow changes required
+
 ## Instructions ≠ Permission to Skip Workflows
 
 Your human partner's specific instructions describe WHAT to do, not HOW.

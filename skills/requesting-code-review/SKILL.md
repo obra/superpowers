@@ -46,6 +46,53 @@ Use Task tool with superpowers:code-reviewer type, fill template at `code-review
 - Note Minor issues for later
 - Push back if reviewer is wrong (with reasoning)
 
+## Codex Integration
+
+**NEW: Automatic delegation to Codex**
+
+When Codex delegation is enabled in config, reviews are automatically delegated to Codex CLI.
+
+**How it works:**
+
+**Step 1: Check codex delegation config**
+
+Review process automatically checks:
+- Is `codex_enabled: true` in config?
+- Is `code_review.delegate_to_codex: true`?
+
+**Step 2A: If Codex enabled → Delegate**
+
+**REQUIRED SUB-SKILL:** Use superpowers:codex-delegator
+
+1. Codex delegator prepares prompt from template
+2. Calls `mcp__codex__spawn_agent` with review context
+3. Validates Codex response
+4. Returns structured feedback (same format as code-reviewer subagent)
+
+**Step 2B: If Codex disabled → Traditional flow**
+
+Use Task tool with superpowers:code-reviewer subagent (existing behavior)
+
+**Step 3: Act on feedback (same regardless of source)**
+
+- Fix Critical issues immediately
+- Fix Important issues before proceeding
+- Note Minor issues for later
+- Push back if reviewer (Claude or Codex) is wrong
+
+**Fallback behavior:**
+
+If Codex delegation fails and `fallback_to_claude: true`:
+- Automatically retry with code-reviewer subagent
+- User notified of fallback
+- Review continues without interruption
+
+**Manual override:**
+
+To force Claude review (bypass Codex):
+- Temporarily set `code_review.delegate_to_codex: false`
+- Or directly dispatch code-reviewer subagent
+
 ## Example
 
 ```
@@ -88,6 +135,13 @@ You: [Fix progress indicators]
 **Ad-Hoc Development:**
 - Review before merge
 - Review when stuck
+
+**Codex-Enhanced Workflow:**
+- Config checked automatically
+- Codex reviews when enabled
+- Same feedback format
+- Same action steps
+- Transparent delegation (works like traditional review)
 
 ## Red Flags
 
