@@ -2,7 +2,8 @@
 
 # Get plugin root directory
 get_plugin_root() {
-    echo "/Users/fh/.claude/plugins/cache/superpowers"
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    echo "$(cd "${script_dir}/.." && pwd)"
 }
 
 # Check if Codex delegation is enabled
