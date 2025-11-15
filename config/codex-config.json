@@ -1,0 +1,25 @@
+{
+  "codex_enabled": true,
+  "delegation_rules": {
+    "code_review": {
+      "enabled": true,
+      "delegate_to_codex": true,
+      "fallback_to_claude": true
+    },
+    "debugging": {
+      "enabled": true,
+      "delegate_to_codex": true,
+      "phases": ["evidence_gathering", "hypothesis_testing"],
+      "fallback_to_claude": true
+    }
+  },
+  "response_validation": {
+    "require_reasoning": true,
+    "require_concrete_findings": true,
+    "max_retry_attempts": 2
+  },
+  "codex_prompts": {
+    "code_review_template": "Review the following code changes:\n\nBase SHA: {BASE_SHA}\nHead SHA: {HEAD_SHA}\n\nWhat was implemented:\n{WHAT_WAS_IMPLEMENTED}\n\nPlan/Requirements:\n{PLAN_OR_REQUIREMENTS}\n\nProvide:\n1. Strengths (what was done well)\n2. Issues (Critical/Important/Minor with specific examples)\n3. Assessment (ready to proceed / needs fixes)\n4. Reasoning for each issue identified",
+    "debugging_template": "Debug the following issue:\n\nProblem:\n{PROBLEM_DESCRIPTION}\n\nPhase: {DEBUG_PHASE}\n\nContext:\n{CONTEXT}\n\nProvide:\n1. Evidence gathered\n2. Root cause hypothesis\n3. Recommended next steps\n4. Reasoning for hypothesis"
+  }
+}
