@@ -50,6 +50,44 @@ Check that commands appear:
 # /superpowers:execute-plan - Execute plan in batches
 ```
 
+## Codex Integration (Optional)
+
+SuperPowers supports delegating code review and debugging tasks to Codex CLI.
+
+**What this means:**
+- Claude Code handles main implementation and orchestration
+- Codex CLI can handle auxiliary review and debugging work
+- Claude validates all Codex findings before proceeding
+- Completely optional - works seamlessly with or without Codex
+
+**Quick Start:**
+
+1. **Enable Codex** (edit the config):
+```json
+// ~/.claude/plugins/cache/superpowers/config/codex-config.json
+{
+  "codex_enabled": true
+}
+```
+
+2. **Use skills normally** - delegation happens automatically:
+```markdown
+- requesting-code-review → Delegates to Codex when enabled
+- systematic-debugging → Can delegate evidence gathering to Codex
+```
+
+3. **Claude validates and integrates** all Codex responses
+
+**Learn More:**
+- Full guide: `docs/CODEX_INTEGRATION.md`
+- Code review example: `examples/codex-review-example.md`
+- Debugging example: `examples/codex-debug-example.md`
+
+**Toggle anytime:**
+- Set `codex_enabled: false` to use traditional Claude-only workflow
+- Falls back to Claude automatically if Codex unavailable
+- No workflow changes required
+
 ### Codex (Experimental)
 
 **Note:** Codex support is experimental and may require refinement based on user feedback.
@@ -107,6 +145,9 @@ Skills activate automatically when relevant. For example:
 - **using-git-worktrees** - Parallel development branches
 - **finishing-a-development-branch** - Merge/PR decision workflow
 - **subagent-driven-development** - Fast iteration with quality gates
+
+**Codex Integration** (`skills/codex-delegator/`)
+- **codex-delegator** - Delegate review/debug to Codex with validation
 
 **Meta** (`skills/meta/`)
 - **writing-skills** - Create new skills following best practices
