@@ -107,7 +107,44 @@ You MUST complete each phase before proceeding to the next.
 
    **This reveals:** Which layer fails (secrets → workflow ✓, workflow → build ✗)
 
-5. **Trace Data Flow**
+5. **Codex-Assisted Evidence Gathering** (Optional)
+
+   **WHEN Codex is enabled for debugging:**
+
+   You can delegate evidence gathering to Codex while maintaining systematic approach.
+
+   **REQUIRED SUB-SKILL:** Use superpowers:codex-delegator (when delegation enabled)
+
+   **Delegation process:**
+   ```
+   1. Check config: debugging.delegate_to_codex = true?
+   2. Check phase: "evidence_gathering" in allowed phases?
+   3. If yes → Prepare debugging context:
+      - PROBLEM_DESCRIPTION: Error/failure description
+      - DEBUG_PHASE: "evidence_gathering"
+      - CONTEXT: Stack traces, recent changes, logs
+   4. Delegate to Codex via mcp__codex__spawn_agent
+   5. Codex returns: Evidence gathered + Initial hypothesis
+   6. CRITICAL: Claude validates evidence quality
+   7. Claude decides: Accept hypothesis → Phase 3, Reject → Gather more
+   ```
+
+   **What Codex can do:**
+   - Run diagnostic instrumentation
+   - Analyze multi-layer systems
+   - Trace data flow patterns
+   - Identify anomalies in logs/output
+
+   **What Claude must validate:**
+   - Evidence is concrete, not speculative
+   - Hypothesis is testable
+   - Reasoning is sound
+   - No phase-skipping (still follow Phase 1 → 2 → 3 → 4)
+
+   **Fallback:**
+   If Codex delegation fails or evidence insufficient → Claude gathers evidence directly
+
+6. **Trace Data Flow**
 
    **WHEN error is deep in call stack:**
 
@@ -278,8 +315,14 @@ If systematic investigation reveals issue is truly environmental, timing-depende
 ## Integration with Other Skills
 
 **This skill requires using:**
-- **root-cause-tracing** - REQUIRED when error is deep in call stack (see Phase 1, Step 5)
+- **root-cause-tracing** - REQUIRED when error is deep in call stack (see Phase 1, Step 6)
 - **test-driven-development** - REQUIRED for creating failing test case (see Phase 4, Step 1)
+
+**Codex integration:**
+- **codex-delegator** - OPTIONAL for evidence gathering and hypothesis testing
+  - Must still follow all 4 phases
+  - Claude validates all Codex findings
+  - No shortcuts around systematic process
 
 **Complementary skills:**
 - **defense-in-depth** - Add validation at multiple layers after finding root cause
