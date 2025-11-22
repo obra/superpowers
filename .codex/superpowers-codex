@@ -3,7 +3,6 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { execSync } = require('child_process');
 const skillsCore = require('../lib/skills-core');
 
 // Paths
@@ -14,30 +13,6 @@ const bootstrapFile = path.join(homeDir, '.codex', 'superpowers', '.codex', 'sup
 const superpowersRepoDir = path.join(homeDir, '.codex', 'superpowers');
 
 // Utility functions
-function checkForUpdates() {
-    try {
-        // Quick check with 3 second timeout to avoid delays if network is down
-        const output = execSync('git fetch origin && git status --porcelain=v1 --branch', {
-            cwd: superpowersRepoDir,
-            timeout: 3000,
-            encoding: 'utf8',
-            stdio: 'pipe'
-        });
-
-        // Parse git status output to see if we're behind
-        const statusLines = output.split('\n');
-        for (const line of statusLines) {
-            if (line.startsWith('## ') && line.includes('[behind ')) {
-                return true; // We're behind remote
-            }
-        }
-        return false; // Up to date
-    } catch (error) {
-        // Network down, git error, timeout, etc. - don't block bootstrap
-        return false;
-    }
-}
-
 function printSkill(skillPath, sourceType) {
     const skillFile = path.join(skillPath, 'SKILL.md');
     const relPath = sourceType === 'personal'
@@ -101,7 +76,7 @@ function runBootstrap() {
     console.log('');
 
     // Check for updates (with timeout protection)
-    if (checkForUpdates()) {
+    if (skillsCore.checkForUpdates(superpowersRepoDir)) {
         console.log('## Update Available');
         console.log('');
         console.log('⚠️  Your superpowers installation is behind the latest version.');
