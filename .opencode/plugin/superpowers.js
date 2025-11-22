@@ -79,7 +79,7 @@ ${content}`;
       }
     ],
 
-    'session.started': async () => {
+    'session.created': async () => {
       const usingSuperpowersPath = skillsCore.resolveSkillPath('using-superpowers', superpowersSkillsDir, personalSkillsDir);
 
       let usingSuperpowersContent = '';
