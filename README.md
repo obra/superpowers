@@ -56,6 +56,18 @@ Check that commands appear:
 
 Tell Codex to fetch https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md and follow the instructions.
 
+### OpenCode
+
+Superpowers works with [OpenCode.ai](https://opencode.ai) through a native JavaScript plugin.
+
+**Installation:** See [.opencode/INSTALL.md](.opencode/INSTALL.md)
+
+**Features:**
+- Custom tools: `use_skill` and `find_skills`
+- Automatic session bootstrap
+- Personal skills with shadowing
+- Supporting files and scripts access
+
 ## Quick Start
 
 ### Using Slash Commands
