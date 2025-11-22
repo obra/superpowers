@@ -34,29 +34,7 @@ module.exports = async ({ project, client, $, directory, worktree }) => {
 
           const fullContent = fs.readFileSync(resolved.skillFile, 'utf8');
           const { name, description } = skillsCore.extractFrontmatter(resolved.skillFile);
-
-          // Extract content after frontmatter
-          const lines = fullContent.split('\n');
-          let inFrontmatter = false;
-          let frontmatterEnded = false;
-          const contentLines = [];
-
-          for (const line of lines) {
-            if (line.trim() === '---') {
-              if (inFrontmatter) {
-                frontmatterEnded = true;
-                continue;
-              }
-              inFrontmatter = true;
-              continue;
-            }
-
-            if (frontmatterEnded || !inFrontmatter) {
-              contentLines.push(line);
-            }
-          }
-
-          const content = contentLines.join('\n').trim();
+          const content = skillsCore.stripFrontmatter(fullContent);
           const skillDirectory = path.dirname(resolved.skillFile);
 
           return `# ${name || skill_name}
@@ -104,28 +82,7 @@ ${content}`;
       let usingSuperpowersContent = '';
       if (usingSuperpowersPath) {
         const fullContent = fs.readFileSync(usingSuperpowersPath.skillFile, 'utf8');
-        // Strip frontmatter
-        const lines = fullContent.split('\n');
-        let inFrontmatter = false;
-        let frontmatterEnded = false;
-        const contentLines = [];
-
-        for (const line of lines) {
-          if (line.trim() === '---') {
-            if (inFrontmatter) {
-              frontmatterEnded = true;
-              continue;
-            }
-            inFrontmatter = true;
-            continue;
-          }
-
-          if (frontmatterEnded || !inFrontmatter) {
-            contentLines.push(line);
-          }
-        }
-
-        usingSuperpowersContent = contentLines.join('\n').trim();
+        usingSuperpowersContent = skillsCore.stripFrontmatter(fullContent);
       }
 
       const toolMapping = `
