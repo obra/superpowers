@@ -8,27 +8,29 @@
 
 ## Installation Steps
 
-### 1. Install Superpowers Skills
+### 1. Install Superpowers
 
 ```bash
-# Clone superpowers skills to OpenCode config directory
+# Clone superpowers to OpenCode config directory
 mkdir -p ~/.config/opencode/superpowers
 git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
 ```
 
-### 2. Install the Plugin
+### 2. Register the Plugin
 
-The plugin is included in the superpowers repository you just cloned.
+OpenCode discovers plugins from `~/.config/opencode/plugin/`. Create a symlink:
 
-OpenCode will automatically discover it from:
-- `~/.config/opencode/superpowers/.opencode/plugin/superpowers.js`
+```bash
+mkdir -p ~/.config/opencode/plugin
+ln -sf ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js ~/.config/opencode/plugin/superpowers.js
+```
 
-Or you can link it to the project-local plugin directory:
+Alternatively, for project-local installation:
 
 ```bash
 # In your OpenCode project
 mkdir -p .opencode/plugin
-ln -s ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js .opencode/plugin/superpowers.js
+ln -sf ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js .opencode/plugin/superpowers.js
 ```
 
 ### 3. Restart OpenCode
