@@ -59,41 +59,6 @@ function printSkill(skillPath, sourceType) {
     console.log('');
 }
 
-function findSkillsInDir(dir, sourceType, maxDepth = 1) {
-    const skills = [];
-
-    if (!fs.existsSync(dir)) return skills;
-
-    function searchDir(currentDir, currentDepth) {
-        if (currentDepth > maxDepth) return;
-
-        try {
-            const entries = fs.readdirSync(currentDir, { withFileTypes: true });
-
-            for (const entry of entries) {
-                if (entry.isDirectory()) {
-                    const skillDir = path.join(currentDir, entry.name);
-                    const skillFile = path.join(skillDir, 'SKILL.md');
-
-                    if (fs.existsSync(skillFile)) {
-                        skills.push(skillDir);
-                    }
-
-                    // For personal skills, search deeper (category/skill structure)
-                    if (sourceType === 'personal' && currentDepth < maxDepth) {
-                        searchDir(skillDir, currentDepth + 1);
-                    }
-                }
-            }
-        } catch (error) {
-            // Ignore permission errors or other issues
-        }
-    }
-
-    searchDir(dir, 0);
-    return skills;
-}
-
 // Commands
 function runFindSkills() {
     console.log('Available skills:');
@@ -103,19 +68,19 @@ function runFindSkills() {
     const foundSkills = new Set();
 
     // Find personal skills first (these take precedence)
-    const personalSkills = findSkillsInDir(personalSkillsDir, 'personal', 2);
-    for (const skillPath of personalSkills) {
-        const relPath = path.relative(personalSkillsDir, skillPath);
+    const personalSkills = skillsCore.findSkillsInDir(personalSkillsDir, 'personal', 2);
+    for (const skill of personalSkills) {
+        const relPath = path.relative(personalSkillsDir, skill.path);
         foundSkills.add(relPath);
-        printSkill(skillPath, 'personal');
+        printSkill(skill.path, 'personal');
     }
 
     // Find superpowers skills (only if not already found in personal)
-    const superpowersSkills = findSkillsInDir(superpowersSkillsDir, 'superpowers', 1);
-    for (const skillPath of superpowersSkills) {
-        const relPath = path.relative(superpowersSkillsDir, skillPath);
+    const superpowersSkills = skillsCore.findSkillsInDir(superpowersSkillsDir, 'superpowers', 1);
+    for (const skill of superpowersSkills) {
+        const relPath = path.relative(superpowersSkillsDir, skill.path);
         if (!foundSkills.has(relPath)) {
-            printSkill(skillPath, 'superpowers');
+            printSkill(skill.path, 'superpowers');
         }
     }
 
