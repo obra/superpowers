@@ -96,6 +96,74 @@ ${content}`;
           return output;
         }
       }
-    ]
+    ],
+
+    'session.started': async () => {
+      const usingSuperpowersPath = skillsCore.resolveSkillPath('using-superpowers', superpowersSkillsDir, personalSkillsDir);
+
+      let usingSuperpowersContent = '';
+      if (usingSuperpowersPath) {
+        const fullContent = fs.readFileSync(usingSuperpowersPath.skillFile, 'utf8');
+        // Strip frontmatter
+        const lines = fullContent.split('\n');
+        let inFrontmatter = false;
+        let frontmatterEnded = false;
+        const contentLines = [];
+
+        for (const line of lines) {
+          if (line.trim() === '---') {
+            if (inFrontmatter) {
+              frontmatterEnded = true;
+              continue;
+            }
+            inFrontmatter = true;
+            continue;
+          }
+
+          if (frontmatterEnded || !inFrontmatter) {
+            contentLines.push(line);
+          }
+        }
+
+        usingSuperpowersContent = contentLines.join('\n').trim();
+      }
+
+      const toolMapping = `
+**Tool Mapping for OpenCode:**
+When skills reference tools you don't have, substitute OpenCode equivalents:
+- \`TodoWrite\` → \`update_plan\` (your planning/task tracking tool)
+- \`Task\` tool with subagents → Use OpenCode's subagent system (@mention syntax or automatic dispatch)
+- \`Skill\` tool → \`use_skill\` custom tool (already available)
+- \`Read\`, \`Write\`, \`Edit\`, \`Bash\` → Use your native tools
+
+**Skill directories contain supporting files:**
+- Scripts you can run with bash tool
+- Additional documentation you can read
+- Utilities and helpers specific to that skill
+
+**Skills naming:**
+- Superpowers skills: \`superpowers:skill-name\` (from ~/.config/opencode/superpowers/skills/)
+- Personal skills: \`skill-name\` (from ~/.config/opencode/skills/)
+- Personal skills override superpowers skills when names match
+`;
+
+      const hasUpdates = skillsCore.checkForUpdates(path.join(homeDir, '.config/opencode/superpowers'));
+
+      const updateNotice = hasUpdates ?
+        '\n\n**Updates available!** Run `cd ~/.config/opencode/superpowers && git pull` to update superpowers.' :
+        '';
+
+      return {
+        context: `<EXTREMELY_IMPORTANT>
+You have superpowers.
+
+**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'use_skill' tool:**
+
+${usingSuperpowersContent}
+
+${toolMapping}${updateNotice}
+</EXTREMELY_IMPORTANT>`
+      };
+    }
   };
 };
