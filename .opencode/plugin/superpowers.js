@@ -5,16 +5,19 @@
  * with automatic bootstrap on session start.
  */
 
+import { createRequire } from 'module';
+import path from 'path';
+import fs from 'fs';
+import os from 'os';
+
+const require = createRequire(import.meta.url);
 const skillsCore = require('../../lib/skills-core');
-const path = require('path');
-const fs = require('fs');
-const os = require('os');
 
 const homeDir = os.homedir();
 const superpowersSkillsDir = path.join(homeDir, '.config/opencode/superpowers/skills');
 const personalSkillsDir = path.join(homeDir, '.config/opencode/skills');
 
-module.exports = async ({ project, client, $, directory, worktree }) => {
+export const SuperpowersPlugin = async ({ project, client, $, directory, worktree }) => {
   const { z } = await import('zod');
 
   return {
