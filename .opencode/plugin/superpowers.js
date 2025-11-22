@@ -66,6 +66,35 @@ module.exports = async ({ project, client, $, directory, worktree }) => {
 
 ${content}`;
         }
+      },
+      {
+        name: 'find_skills',
+        description: 'List all available skills in the superpowers and personal skill libraries.',
+        schema: z.object({}),
+        execute: async () => {
+          const superpowersSkills = skillsCore.findSkillsInDir(superpowersSkillsDir, 'superpowers', 3);
+          const personalSkills = skillsCore.findSkillsInDir(personalSkillsDir, 'personal', 3);
+          const allSkills = [...personalSkills, ...superpowersSkills];
+
+          if (allSkills.length === 0) {
+            return 'No skills found. Install superpowers skills to ~/.config/opencode/superpowers/skills/';
+          }
+
+          let output = 'Available skills:\n\n';
+
+          for (const skill of allSkills) {
+            const namespace = skill.sourceType === 'personal' ? '' : 'superpowers:';
+            const skillName = skill.name || path.basename(skill.path);
+
+            output += `${namespace}${skillName}\n`;
+            if (skill.description) {
+              output += `  ${skill.description}\n`;
+            }
+            output += `  Directory: ${skill.path}\n\n`;
+          }
+
+          return output;
+        }
       }
     ]
   };
