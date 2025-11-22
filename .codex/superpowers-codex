@@ -27,10 +27,9 @@ function printSkill(skillPath, sourceType) {
     }
 
     // Extract and print metadata
-    const { name, description, whenToUse } = skillsCore.extractFrontmatter(skillFile);
+    const { name, description } = skillsCore.extractFrontmatter(skillFile);
 
     if (description) console.log(`  ${description}`);
-    if (whenToUse) console.log(`  When to use: ${whenToUse}`);
     console.log('');
 }
 
@@ -212,7 +211,7 @@ function runUseSkill(skillName) {
     let content, frontmatter;
     try {
         const fullContent = fs.readFileSync(skillFile, 'utf8');
-        const { name, description, whenToUse } = skillsCore.extractFrontmatter(skillFile);
+        const { name, description } = skillsCore.extractFrontmatter(skillFile);
 
         // Extract just the content after frontmatter
         const lines = fullContent.split('\n');
@@ -236,7 +235,7 @@ function runUseSkill(skillName) {
         }
 
         content = contentLines.join('\n').trim();
-        frontmatter = { name, description, whenToUse };
+        frontmatter = { name, description };
     } catch (error) {
         console.log(`Error reading skill file: ${error.message}`);
         return;
@@ -251,9 +250,6 @@ function runUseSkill(skillName) {
     console.log(`# ${frontmatter.name || displayName}`);
     if (frontmatter.description) {
         console.log(`# ${frontmatter.description}`);
-    }
-    if (frontmatter.whenToUse) {
-        console.log(`# When to use: ${frontmatter.whenToUse}`);
     }
     console.log(`# Supporting tools and docs are in ${skillDirectory}`);
     console.log('# ============================================');
