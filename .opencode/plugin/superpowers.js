@@ -79,16 +79,17 @@ ${content}`;
       }
     ],
 
-    'session.created': async () => {
-      const usingSuperpowersPath = skillsCore.resolveSkillPath('using-superpowers', superpowersSkillsDir, personalSkillsDir);
+    event: async ({ event }) => {
+      if (event.type === 'session.created') {
+        const usingSuperpowersPath = skillsCore.resolveSkillPath('using-superpowers', superpowersSkillsDir, personalSkillsDir);
 
-      let usingSuperpowersContent = '';
-      if (usingSuperpowersPath) {
-        const fullContent = fs.readFileSync(usingSuperpowersPath.skillFile, 'utf8');
-        usingSuperpowersContent = skillsCore.stripFrontmatter(fullContent);
-      }
+        let usingSuperpowersContent = '';
+        if (usingSuperpowersPath) {
+          const fullContent = fs.readFileSync(usingSuperpowersPath.skillFile, 'utf8');
+          usingSuperpowersContent = skillsCore.stripFrontmatter(fullContent);
+        }
 
-      const toolMapping = `
+        const toolMapping = `
 **Tool Mapping for OpenCode:**
 When skills reference tools you don't have, substitute OpenCode equivalents:
 - \`TodoWrite\` → \`update_plan\` (your planning/task tracking tool)
@@ -107,14 +108,14 @@ When skills reference tools you don't have, substitute OpenCode equivalents:
 - Personal skills override superpowers skills when names match
 `;
 
-      const hasUpdates = skillsCore.checkForUpdates(path.join(homeDir, '.config/opencode/superpowers'));
+        const hasUpdates = skillsCore.checkForUpdates(path.join(homeDir, '.config/opencode/superpowers'));
 
-      const updateNotice = hasUpdates ?
-        '\n\n**Updates available!** Run `cd ~/.config/opencode/superpowers && git pull` to update superpowers.' :
-        '';
+        const updateNotice = hasUpdates ?
+          '\n\n**Updates available!** Run `cd ~/.config/opencode/superpowers && git pull` to update superpowers.' :
+          '';
 
-      return {
-        context: `<EXTREMELY_IMPORTANT>
+        return {
+          context: `<EXTREMELY_IMPORTANT>
 You have superpowers.
 
 **Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'use_skill' tool:**
@@ -123,7 +124,8 @@ ${usingSuperpowersContent}
 
 ${toolMapping}${updateNotice}
 </EXTREMELY_IMPORTANT>`
-      };
+        };
+      }
     }
   };
 };
