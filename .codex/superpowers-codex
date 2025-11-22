@@ -38,42 +38,6 @@ function checkForUpdates() {
     }
 }
 
-function extractFrontmatter(filePath) {
-    try {
-        const content = fs.readFileSync(filePath, 'utf8');
-        const lines = content.split('\n');
-
-        let inFrontmatter = false;
-        let name = '';
-        let description = '';
-        let whenToUse = '';
-
-        for (const line of lines) {
-            if (line.trim() === '---') {
-                if (inFrontmatter) break;
-                inFrontmatter = true;
-                continue;
-            }
-
-            if (inFrontmatter) {
-                const match = line.match(/^(\w+):\s*(.*)$/);
-                if (match) {
-                    const [, key, value] = match;
-                    switch (key) {
-                        case 'name': name = value.trim(); break;
-                        case 'description': description = value.trim(); break;
-                        case 'when_to_use': whenToUse = value.trim(); break;
-                    }
-                }
-            }
-        }
-
-        return { name, description, whenToUse };
-    } catch (error) {
-        return { name: '', description: '', whenToUse: '' };
-    }
-}
-
 function printSkill(skillPath, sourceType) {
     const skillFile = path.join(skillPath, 'SKILL.md');
     const relPath = sourceType === 'personal'
@@ -88,7 +52,7 @@ function printSkill(skillPath, sourceType) {
     }
 
     // Extract and print metadata
-    const { name, description, whenToUse } = extractFrontmatter(skillFile);
+    const { name, description, whenToUse } = skillsCore.extractFrontmatter(skillFile);
 
     if (description) console.log(`  ${description}`);
     if (whenToUse) console.log(`  When to use: ${whenToUse}`);
@@ -308,7 +272,7 @@ function runUseSkill(skillName) {
     let content, frontmatter;
     try {
         const fullContent = fs.readFileSync(skillFile, 'utf8');
-        const { name, description, whenToUse } = extractFrontmatter(skillFile);
+        const { name, description, whenToUse } = skillsCore.extractFrontmatter(skillFile);
 
         // Extract just the content after frontmatter
         const lines = fullContent.split('\n');
