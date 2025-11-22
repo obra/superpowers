@@ -1,5 +1,23 @@
 # Superpowers Release Notes
 
+## [Unreleased]
+
+### Added
+
+- **OpenCode Support**: Native JavaScript plugin for OpenCode.ai
+  - Custom tools: `use_skill` and `find_skills`
+  - Automatic session bootstrap with tool mapping instructions
+  - Shared core module (`lib/skills-core.js`) for code reuse
+  - Installation guide in `.opencode/INSTALL.md`
+
+### Changed
+
+- **Refactored Codex Implementation**: Now uses shared `lib/skills-core.js` module
+  - Eliminates code duplication between Codex and OpenCode
+  - Single source of truth for skill discovery and parsing
+
+---
+
 ## v3.4.1 (2025-10-31)
 
 ### Improvements
