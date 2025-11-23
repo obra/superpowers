@@ -50,26 +50,25 @@ Check that commands appear:
 # /superpowers:execute-plan - Execute plan in batches
 ```
 
-### Codex (Experimental)
+### Codex
 
-**Note:** Codex support is experimental and may require refinement based on user feedback.
+Tell Codex:
 
-Tell Codex to fetch https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md and follow the instructions.
+```
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md
+```
+
+**Detailed docs:** [docs/README.codex.md](docs/README.codex.md)
 
 ### OpenCode
 
-Superpowers works with [OpenCode.ai](https://opencode.ai) through a native JavaScript plugin.
+Tell OpenCode:
 
-**Installation:** See [.opencode/INSTALL.md](.opencode/INSTALL.md)
+```
+Clone https://github.com/obra/superpowers to ~/.config/opencode/superpowers, then create directory ~/.config/opencode/plugin, then symlink ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js to ~/.config/opencode/plugin/superpowers.js, then restart opencode.
+```
 
-**Features:**
-- Custom tools: `use_skill` and `find_skills`
-- Automatic context injection via chat.message hook
-- Message insertion pattern for skill persistence across compaction
-- Three-tier skill priority: project > personal > superpowers
-- Project-local skills support (`.opencode/skills/`)
-- Auto re-injection on session.compacted events
-- Supporting files and scripts access
+**Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
 
 ## Quick Start
 
