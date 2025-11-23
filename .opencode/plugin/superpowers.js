@@ -9,13 +9,12 @@ import path from 'path';
 import fs from 'fs';
 import os from 'os';
 import { fileURLToPath } from 'url';
+import { tool } from '@opencode-ai/plugin/tool';
 import * as skillsCore from '../../lib/skills-core.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const SuperpowersPlugin = async ({ project, client, $, directory, worktree }) => {
-  const { z } = await import('zod');
-
   const homeDir = os.homedir();
   const superpowersSkillsDir = path.join(homeDir, '.config/opencode/superpowers/skills');
   const personalSkillsDir = path.join(homeDir, '.config/opencode/skills');
@@ -24,12 +23,13 @@ export const SuperpowersPlugin = async ({ project, client, $, directory, worktre
 
   return {
     tool: {
-      use_skill: {
+      use_skill: tool({
         description: 'Load and read a specific skill to guide your work. Skills contain proven workflows, mandatory processes, and expert techniques.',
-        schema: z.object({
-          skill_name: z.string().describe('Name of the skill to load (e.g., "superpowers:brainstorming" or "my-custom-skill")')
-        }),
-        execute: async ({ skill_name }) => {
+        args: {
+          skill_name: tool.schema.string().describe('Name of the skill to load (e.g., "superpowers:brainstorming" or "my-custom-skill")')
+        },
+        execute: async (args, context) => {
+          const { skill_name } = args;
           const resolved = skillsCore.resolveSkillPath(skill_name, superpowersSkillsDir, personalSkillsDir);
 
           if (!resolved) {
@@ -48,11 +48,11 @@ export const SuperpowersPlugin = async ({ project, client, $, directory, worktre
 
 ${content}`;
         }
-      },
-      find_skills: {
+      }),
+      find_skills: tool({
         description: 'List all available skills in the superpowers and personal skill libraries.',
-        schema: z.object({}),
-        execute: async () => {
+        args: {},
+        execute: async (args, context) => {
           const superpowersSkills = skillsCore.findSkillsInDir(superpowersSkillsDir, 'superpowers', 3);
           const personalSkills = skillsCore.findSkillsInDir(personalSkillsDir, 'personal', 3);
           const allSkills = [...personalSkills, ...superpowersSkills];
@@ -76,7 +76,7 @@ ${content}`;
 
           return output;
         }
-      }
+      })
     }
   };
 };
