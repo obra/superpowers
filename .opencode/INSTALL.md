@@ -71,6 +71,35 @@ description: Use when [condition] - [what it does]
 
 Personal skills override superpowers skills with the same name.
 
+### Project Skills
+
+Create project-specific skills in your OpenCode project:
+
+```bash
+# In your OpenCode project
+mkdir -p .opencode/skills/my-project-skill
+```
+
+Create `.opencode/skills/my-project-skill/SKILL.md`:
+
+```markdown
+---
+name: my-project-skill
+description: Use when [condition] - [what it does]
+---
+
+# My Project Skill
+
+[Your skill content here]
+```
+
+**Skill Priority:** Project skills override personal skills, which override superpowers skills.
+
+**Skill Naming:**
+- `project:skill-name` - Force project skill lookup
+- `skill-name` - Searches project → personal → superpowers
+- `superpowers:skill-name` - Force superpowers skill lookup
+
 ## Updating
 
 ```bash
