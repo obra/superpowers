@@ -26,6 +26,29 @@ Skills are markdown files with proven workflows. The system teaches agents: "You
 
 **Plus:** Slash commands (`/superpowers:brainstorm`, `/superpowers:write-plan`, `/superpowers:execute-plan`) activate skills directly.
 
+## The Workflow
+
+**1. Brainstorm the design**
+```
+/superpowers:brainstorm
+```
+Refine rough ideas through Socratic questioning. Explore alternatives. Present design in sections, validate each. Output: design document.
+
+**2. Write the implementation plan**
+```
+/superpowers:write-plan
+```
+Break design into bite-sized tasks (2-5 minutes each). Include exact file paths, complete code, test commands. Output: task-by-task plan.
+
+**3. Execute with TDD**
+```
+/superpowers:execute-plan
+```
+Implement in batches with review checkpoints. Each task follows RED-GREEN-REFACTOR. Tests fail first, then pass. Frequent commits.
+
+**4. Finish the branch**
+Skills guide verification, decision (merge/PR/keep), and cleanup. Tests pass before merge. No broken windows.
+
 ## Philosophy
 
 Test-driven development. Systematic over ad-hoc. Evidence over claims. Simplicity as primary goal.
