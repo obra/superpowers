@@ -94,7 +94,7 @@ for test in "${tests[@]}"; do
 
     if [ ! -f "$test_path" ]; then
         echo "  [SKIP] Test file not found: $test"
-        ((skipped++))
+        skipped=$((skipped + 1))
         continue
     fi
 
@@ -111,13 +111,13 @@ for test in "${tests[@]}"; do
             duration=$((end_time - start_time))
             echo ""
             echo "  [PASS] $test (${duration}s)"
-            ((passed++))
+            passed=$((passed + 1))
         else
             end_time=$(date +%s)
             duration=$((end_time - start_time))
             echo ""
             echo "  [FAIL] $test (${duration}s)"
-            ((failed++))
+            failed=$((failed + 1))
         fi
     else
         # Capture output for non-verbose mode
@@ -125,7 +125,7 @@ for test in "${tests[@]}"; do
             end_time=$(date +%s)
             duration=$((end_time - start_time))
             echo "  [PASS] (${duration}s)"
-            ((passed++))
+            passed=$((passed + 1))
         else
             end_time=$(date +%s)
             duration=$((end_time - start_time))
@@ -133,7 +133,7 @@ for test in "${tests[@]}"; do
             echo ""
             echo "  Output:"
             echo "$output" | sed 's/^/    /'
-            ((failed++))
+            failed=$((failed + 1))
         fi
     fi
 

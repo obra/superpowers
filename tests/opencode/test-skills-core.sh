@@ -30,17 +30,8 @@ description: A test skill for unit testing
 This is the content.
 EOF
 
-# Run Node.js test
-result=$(node --input-type=module <<'NODESCRIPT'
-import { extractFrontmatter } from '$HOME/.config/opencode/superpowers/lib/skills-core.js';
-const result = extractFrontmatter(process.env.TEST_HOME + '/test-skill/SKILL.md');
-console.log(JSON.stringify(result));
-NODESCRIPT
-) 2>&1 || true
-
-# Try alternative approach if module import fails
-if ! echo "$result" | grep -q "test-skill"; then
-    result=$(node -e "
+# Run Node.js test using inline function (avoids ESM path resolution issues in test env)
+result=$(node -e "
 const path = require('path');
 const fs = require('fs');
 
@@ -76,7 +67,6 @@ function extractFrontmatter(filePath) {
 const result = extractFrontmatter('$TEST_HOME/test-skill/SKILL.md');
 console.log(JSON.stringify(result));
 " 2>&1)
-fi
 
 if echo "$result" | grep -q '"name":"test-skill"'; then
     echo "  [PASS] extractFrontmatter parses name correctly"

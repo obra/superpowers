@@ -17,10 +17,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const SuperpowersPlugin = async ({ project, client, $, directory, worktree }) => {
   const homeDir = os.homedir();
   const projectSkillsDir = path.join(directory, '.opencode/skills');
-  const superpowersSkillsDir = path.join(homeDir, '.config/opencode/superpowers/skills');
+  // Derive superpowers skills dir from plugin location (works for both symlinked and local installs)
+  const superpowersSkillsDir = path.resolve(__dirname, '../../skills');
   const personalSkillsDir = path.join(homeDir, '.config/opencode/skills');
-  const promptsDir = path.join(homeDir, '.config/opencode/prompts');
-  const promptFile = path.join(promptsDir, 'superpowers.txt');
 
   return {
     tool: {
