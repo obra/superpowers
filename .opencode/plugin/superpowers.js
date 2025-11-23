@@ -23,9 +23,8 @@ export const SuperpowersPlugin = async ({ project, client, $, directory, worktre
   const promptFile = path.join(promptsDir, 'superpowers.txt');
 
   return {
-    tools: [
-      {
-        name: 'use_skill',
+    tool: {
+      use_skill: {
         description: 'Load and read a specific skill to guide your work. Skills contain proven workflows, mandatory processes, and expert techniques.',
         schema: z.object({
           skill_name: z.string().describe('Name of the skill to load (e.g., "superpowers:brainstorming" or "my-custom-skill")')
@@ -50,8 +49,7 @@ export const SuperpowersPlugin = async ({ project, client, $, directory, worktre
 ${content}`;
         }
       },
-      {
-        name: 'find_skills',
+      find_skills: {
         description: 'List all available skills in the superpowers and personal skill libraries.',
         schema: z.object({}),
         execute: async () => {
@@ -79,6 +77,6 @@ ${content}`;
           return output;
         }
       }
-    ]
+    }
   };
 };
