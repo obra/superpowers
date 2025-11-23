@@ -64,8 +64,11 @@ Superpowers works with [OpenCode.ai](https://opencode.ai) through a native JavaS
 
 **Features:**
 - Custom tools: `use_skill` and `find_skills`
-- Automatic session bootstrap
-- Personal skills with shadowing
+- Automatic context injection via chat.message hook
+- Message insertion pattern for skill persistence across compaction
+- Three-tier skill priority: project > personal > superpowers
+- Project-local skills support (`.opencode/skills/`)
+- Auto re-injection on session.compacted events
 - Supporting files and scripts access
 
 ## Quick Start

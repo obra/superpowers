@@ -6,15 +6,20 @@
 
 - **OpenCode Support**: Native JavaScript plugin for OpenCode.ai
   - Custom tools: `use_skill` and `find_skills`
-  - Automatic session bootstrap with tool mapping instructions
-  - Shared core module (`lib/skills-core.js`) for code reuse
+  - Message insertion pattern for skill persistence across context compaction
+  - Automatic context injection via chat.message hook
+  - Auto re-injection on session.compacted events
+  - Three-tier skill priority: project > personal > superpowers
+  - Project-local skills support (`.opencode/skills/`)
+  - Shared core module (`lib/skills-core.js`) for code reuse with Codex
   - Installation guide in `.opencode/INSTALL.md`
 
 ### Changed
 
-- **Refactored Codex Implementation**: Now uses shared `lib/skills-core.js` module
+- **Refactored Codex Implementation**: Now uses shared `lib/skills-core.js` ES module
   - Eliminates code duplication between Codex and OpenCode
   - Single source of truth for skill discovery and parsing
+  - Codex successfully loads ES modules via Node.js interop
 
 ---
 
