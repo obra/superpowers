@@ -79,52 +79,6 @@ ${content}`;
           return output;
         }
       }
-    ],
-
-    config: async () => {
-      // Create prompts directory if it doesn't exist
-      if (!fs.existsSync(promptsDir)) {
-        fs.mkdirSync(promptsDir, { recursive: true });
-      }
-
-      // Generate prompt content
-      const usingSuperpowersPath = skillsCore.resolveSkillPath('using-superpowers', superpowersSkillsDir, personalSkillsDir);
-      let promptContent = '';
-
-      if (usingSuperpowersPath) {
-        const fullContent = fs.readFileSync(usingSuperpowersPath.skillFile, 'utf8');
-        const usingSuperpowersContent = skillsCore.stripFrontmatter(fullContent);
-
-        const toolMapping = `**Tool Mapping for OpenCode:**
-When skills reference tools you don't have, substitute OpenCode equivalents:
-- \`TodoWrite\` → \`update_plan\` (your planning/task tracking tool)
-- \`Task\` tool with subagents → Use OpenCode's subagent system (@mention syntax or automatic dispatch)
-- \`Skill\` tool → \`use_skill\` custom tool (already available)
-- \`Read\`, \`Write\`, \`Edit\`, \`Bash\` → Use your native tools
-
-**Skill directories contain supporting files:**
-- Scripts you can run with bash tool
-- Additional documentation you can read
-- Utilities and helpers specific to that skill
-
-**Skills naming:**
-- Superpowers skills: \`superpowers:skill-name\` (from ~/.config/opencode/superpowers/skills/)
-- Personal skills: \`skill-name\` (from ~/.config/opencode/skills/)
-- Personal skills override superpowers skills when names match`;
-
-        promptContent = `<EXTREMELY_IMPORTANT>
-You have superpowers.
-
-**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'use_skill' tool:**
-
-${usingSuperpowersContent}
-
-${toolMapping}
-</EXTREMELY_IMPORTANT>`;
-      }
-
-      // Write prompt file
-      fs.writeFileSync(promptFile, promptContent, 'utf8');
-    }
+    ]
   };
 };

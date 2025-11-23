@@ -14,6 +14,10 @@
 # Clone superpowers to OpenCode config directory
 mkdir -p ~/.config/opencode/superpowers
 git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
+
+# Copy the prompt file for agent configuration
+mkdir -p ~/.config/opencode/prompts
+cp ~/.config/opencode/superpowers/.opencode/prompts/superpowers.txt ~/.config/opencode/prompts/
 ```
 
 ### 2. Register the Plugin
@@ -35,7 +39,7 @@ ln -sf ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js .opencode/
 
 ### 3. Configure Agent Prompt
 
-The plugin generates a prompt file at `~/.config/opencode/prompts/superpowers.txt`. Add this to your agent configuration.
+The static prompt file `~/.config/opencode/prompts/superpowers.txt` was copied in step 1. Add this to your agent configuration.
 
 **Option A: Extend the Build agent** (recommended)
 
@@ -65,7 +69,7 @@ description: Build agent with superpowers support
 
 ### 4. Restart OpenCode
 
-Restart OpenCode to load the plugin. The prompt file will be generated automatically.
+Restart OpenCode to load the plugin and activate the prompt.
 
 ## Usage
 
