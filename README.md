@@ -1,28 +1,14 @@
 # Superpowers
 
-AI agents skip steps under time pressure. They bypass best practices when confident. They lack consistency across tasks.
+AI agents skip steps under time pressure. They bypass best practices when confident. They lack consistency across tasks. The result: bugs you didn't catch, designs you didn't validate, tests you didn't write.
 
-**Superpowers fixes this.** Skills are mandatory instruction documents agents must follow. When a relevant skill exists, agents use it or fail the task.
+**Superpowers fixes this.** Skills are mandatory instruction documents agents must follow. When a relevant skill exists, the agent checks for it, uses it, or fails the task.
 
 ## How It Works
 
-Skills are markdown files with proven workflows. The system teaches agents: "You have skills. Use them." This creates compliance, not optional reference.
+At session start, the agent learns which skills exist. Before any task, the agent checks: "Does a skill match this work?" If yes, the agent loads and follows that skill.
 
-**Example:** The `test-driven-development` skill forces RED-GREEN-REFACTOR. No test-first? Delete the code and start over. The skill prevents rationalization.
-
-## What's Inside
-
-**Testing**
-- test-driven-development, condition-based-waiting, testing-anti-patterns
-
-**Debugging**
-- systematic-debugging, root-cause-tracing, verification-before-completion, defense-in-depth
-
-**Collaboration**
-- brainstorming, writing-plans, executing-plans, dispatching-parallel-agents, requesting-code-review, receiving-code-review, using-git-worktrees, finishing-a-development-branch, subagent-driven-development
-
-**Meta**
-- writing-skills, sharing-skills, testing-skills-with-subagents, using-superpowers
+Skills are markdown files with proven workflows. The `test-driven-development` skill forces RED-GREEN-REFACTOR. No test-first? Delete the code and start over. The skill prevents rationalization.
 
 ## The Workflow
 
@@ -42,15 +28,11 @@ Skills are markdown files with proven workflows. The system teaches agents: "You
 
 7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
 
-**The agent decides which skills to use.** Skills activate automatically when your task matches their purpose.
-
-## Philosophy
-
-Test-driven development. Systematic over ad-hoc. Evidence over claims. Simplicity as primary goal.
-
-Read more: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
+**The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
 ## Installation
+
+**Note:** Installation differs by platform. Claude Code has a built-in plugin system. Codex and OpenCode require manual setup.
 
 ### Claude Code (via Plugin Marketplace)
 
@@ -101,32 +83,6 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
 
-## Quick Start
-
-### Using Slash Commands
-
-**Brainstorm a design:**
-```
-/superpowers:brainstorm
-```
-
-**Create an implementation plan:**
-```
-/superpowers:write-plan
-```
-
-**Execute the plan:**
-```
-/superpowers:execute-plan
-```
-
-### Automatic Skill Activation
-
-Skills activate automatically when relevant. For example:
-- `test-driven-development` activates when implementing features
-- `systematic-debugging` activates when debugging issues
-- `verification-before-completion` activates before claiming work is done
-
 ## What's Inside
 
 ### Skills Library
@@ -159,28 +115,14 @@ Skills activate automatically when relevant. For example:
 - **testing-skills-with-subagents** - Validate skill quality
 - **using-superpowers** - Introduction to the skills system
 
-### Commands
-
-All commands are thin wrappers that activate the corresponding skill:
-
-- **brainstorm.md** - Activates the `brainstorming` skill
-- **write-plan.md** - Activates the `writing-plans` skill
-- **execute-plan.md** - Activates the `executing-plans` skill
-
-## How It Works
-
-1. **SessionStart Hook** - Loads the `using-superpowers` skill at session start
-2. **Skills System** - Uses Claude Code's first-party skills system
-3. **Automatic Discovery** - Claude finds and uses relevant skills for your task
-4. **Mandatory Workflows** - When a skill exists for your task, using it becomes required
-
 ## Philosophy
 
 - **Test-Driven Development** - Write tests first, always
 - **Systematic over ad-hoc** - Process over guessing
 - **Complexity reduction** - Simplicity as primary goal
 - **Evidence over claims** - Verify before declaring success
-- **Domain over implementation** - Work at problem level, not solution level
+
+Read more: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
 
 ## Contributing
 
