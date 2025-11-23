@@ -11,65 +11,24 @@
 ### 1. Install Superpowers
 
 ```bash
-# Clone superpowers to OpenCode config directory
 mkdir -p ~/.config/opencode/superpowers
 git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
-
-# Copy the prompt file for agent configuration
-mkdir -p ~/.config/opencode/prompts
-cp ~/.config/opencode/superpowers/.opencode/prompts/superpowers.txt ~/.config/opencode/prompts/
 ```
 
 ### 2. Register the Plugin
 
-OpenCode discovers plugins from `~/.config/opencode/plugin/`. Create a symlink:
+Create a symlink so OpenCode discovers the plugin:
 
 ```bash
 mkdir -p ~/.config/opencode/plugin
 ln -sf ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js ~/.config/opencode/plugin/superpowers.js
 ```
 
-Alternatively, for project-local installation:
+### 3. Restart OpenCode
 
-```bash
-# In your OpenCode project
-mkdir -p .opencode/plugin
-ln -sf ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js .opencode/plugin/superpowers.js
-```
+Restart OpenCode. The plugin will automatically inject superpowers context via the chat.message hook.
 
-### 3. Configure Agent Prompt
-
-The static prompt file `~/.config/opencode/prompts/superpowers.txt` was copied in step 1. Add this to your agent configuration.
-
-**Option A: Extend the Build agent** (recommended)
-
-Edit `~/.config/opencode/opencode.json`:
-
-```json
-{
-  "agent": {
-    "build": {
-      "prompt": "{file:./prompts/superpowers.txt}"
-    }
-  }
-}
-```
-
-**Option B: Create a custom agent**
-
-Create `~/.config/opencode/agent/superbuild.md`:
-
-```markdown
----
-description: Build agent with superpowers support
----
-
-{file:./prompts/superpowers.txt}
-```
-
-### 4. Restart OpenCode
-
-Restart OpenCode to load the plugin and activate the prompt.
+You should see superpowers is active when you ask "do you have superpowers?"
 
 ## Usage
 
