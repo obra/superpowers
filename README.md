@@ -1,23 +1,36 @@
 # Superpowers
 
-A comprehensive skills library of proven techniques, patterns, and workflows for AI coding assistants.
+AI agents skip steps under time pressure. They bypass best practices when confident. They lack consistency across tasks.
 
-## What You Get
+**Superpowers fixes this.** Skills are mandatory instruction documents agents must follow. When a relevant skill exists, agents use it or fail the task.
 
-- **Testing Skills** - TDD, async testing, anti-patterns
-- **Debugging Skills** - Systematic debugging, root cause tracing, verification
-- **Collaboration Skills** - Brainstorming, planning, code review, parallel agents
-- **Development Skills** - Git worktrees, finishing branches, subagent workflows
-- **Meta Skills** - Creating, testing, and sharing skills
+## How It Works
 
-Plus:
-- **Slash Commands** - `/superpowers:brainstorm`, `/superpowers:write-plan`, `/superpowers:execute-plan`
-- **Automatic Integration** - Skills activate automatically when relevant
-- **Consistent Workflows** - Systematic approaches to common engineering tasks
+Skills are markdown files with proven workflows. The system teaches agents: "You have skills. Use them." This creates compliance, not optional reference.
 
-## Learn More
+**Example:** The `test-driven-development` skill forces RED-GREEN-REFACTOR. No test-first? Delete the code and start over. The skill prevents rationalization.
 
-Read the introduction: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
+## What's Inside
+
+**Testing**
+- test-driven-development, condition-based-waiting, testing-anti-patterns
+
+**Debugging**
+- systematic-debugging, root-cause-tracing, verification-before-completion, defense-in-depth
+
+**Collaboration**
+- brainstorming, writing-plans, executing-plans, dispatching-parallel-agents, requesting-code-review, receiving-code-review, using-git-worktrees, finishing-a-development-branch, subagent-driven-development
+
+**Meta**
+- writing-skills, sharing-skills, testing-skills-with-subagents, using-superpowers
+
+**Plus:** Slash commands (`/superpowers:brainstorm`, `/superpowers:write-plan`, `/superpowers:execute-plan`) activate skills directly.
+
+## Philosophy
+
+Test-driven development. Systematic over ad-hoc. Evidence over claims. Simplicity as primary goal.
+
+Read more: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
 
 ## Installation
 
