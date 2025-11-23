@@ -2,7 +2,7 @@
  * Superpowers plugin for OpenCode.ai
  *
  * Provides custom tools for loading and discovering skills,
- * with automatic bootstrap on session start.
+ * with prompt generation for agent configuration.
  */
 
 import path from 'path';
@@ -19,6 +19,8 @@ export const SuperpowersPlugin = async ({ project, client, $, directory, worktre
   const homeDir = os.homedir();
   const superpowersSkillsDir = path.join(homeDir, '.config/opencode/superpowers/skills');
   const personalSkillsDir = path.join(homeDir, '.config/opencode/skills');
+  const promptsDir = path.join(homeDir, '.config/opencode/prompts');
+  const promptFile = path.join(promptsDir, 'superpowers.txt');
 
   return {
     tools: [
@@ -79,18 +81,21 @@ ${content}`;
       }
     ],
 
-    event: async ({ event }) => {
-      if (event.type === 'session.created') {
-        const usingSuperpowersPath = skillsCore.resolveSkillPath('using-superpowers', superpowersSkillsDir, personalSkillsDir);
+    config: async () => {
+      // Create prompts directory if it doesn't exist
+      if (!fs.existsSync(promptsDir)) {
+        fs.mkdirSync(promptsDir, { recursive: true });
+      }
 
-        let usingSuperpowersContent = '';
-        if (usingSuperpowersPath) {
-          const fullContent = fs.readFileSync(usingSuperpowersPath.skillFile, 'utf8');
-          usingSuperpowersContent = skillsCore.stripFrontmatter(fullContent);
-        }
+      // Generate prompt content
+      const usingSuperpowersPath = skillsCore.resolveSkillPath('using-superpowers', superpowersSkillsDir, personalSkillsDir);
+      let promptContent = '';
 
-        const toolMapping = `
-**Tool Mapping for OpenCode:**
+      if (usingSuperpowersPath) {
+        const fullContent = fs.readFileSync(usingSuperpowersPath.skillFile, 'utf8');
+        const usingSuperpowersContent = skillsCore.stripFrontmatter(fullContent);
+
+        const toolMapping = `**Tool Mapping for OpenCode:**
 When skills reference tools you don't have, substitute OpenCode equivalents:
 - \`TodoWrite\` → \`update_plan\` (your planning/task tracking tool)
 - \`Task\` tool with subagents → Use OpenCode's subagent system (@mention syntax or automatic dispatch)
@@ -105,27 +110,21 @@ When skills reference tools you don't have, substitute OpenCode equivalents:
 **Skills naming:**
 - Superpowers skills: \`superpowers:skill-name\` (from ~/.config/opencode/superpowers/skills/)
 - Personal skills: \`skill-name\` (from ~/.config/opencode/skills/)
-- Personal skills override superpowers skills when names match
-`;
+- Personal skills override superpowers skills when names match`;
 
-        const hasUpdates = skillsCore.checkForUpdates(path.join(homeDir, '.config/opencode/superpowers'));
-
-        const updateNotice = hasUpdates ?
-          '\n\n**Updates available!** Run `cd ~/.config/opencode/superpowers && git pull` to update superpowers.' :
-          '';
-
-        return {
-          context: `<EXTREMELY_IMPORTANT>
+        promptContent = `<EXTREMELY_IMPORTANT>
 You have superpowers.
 
 **Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'use_skill' tool:**
 
 ${usingSuperpowersContent}
 
-${toolMapping}${updateNotice}
-</EXTREMELY_IMPORTANT>`
-        };
+${toolMapping}
+</EXTREMELY_IMPORTANT>`;
       }
+
+      // Write prompt file
+      fs.writeFileSync(promptFile, promptContent, 'utf8');
     }
   };
 };

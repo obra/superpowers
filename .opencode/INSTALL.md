@@ -33,13 +33,39 @@ mkdir -p .opencode/plugin
 ln -sf ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js .opencode/plugin/superpowers.js
 ```
 
-### 3. Restart OpenCode
+### 3. Configure Agent Prompt
 
-Restart OpenCode to load the plugin. On the next session, you should see:
+The plugin generates a prompt file at `~/.config/opencode/prompts/superpowers.txt`. Add this to your agent configuration.
 
+**Option A: Extend the Build agent** (recommended)
+
+Edit `~/.config/opencode/opencode.json`:
+
+```json
+{
+  "agent": {
+    "build": {
+      "prompt": "{file:./prompts/superpowers.txt}"
+    }
+  }
+}
 ```
-You have superpowers.
+
+**Option B: Create a custom agent**
+
+Create `~/.config/opencode/agent/superbuild.md`:
+
+```markdown
+---
+description: Build agent with superpowers support
+---
+
+{file:./prompts/superpowers.txt}
 ```
+
+### 4. Restart OpenCode
+
+Restart OpenCode to load the plugin. The prompt file will be generated automatically.
 
 ## Usage
 
