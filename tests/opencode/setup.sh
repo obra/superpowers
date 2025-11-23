@@ -10,6 +10,7 @@ REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 export TEST_HOME=$(mktemp -d)
 export HOME="$TEST_HOME"
 export XDG_CONFIG_HOME="$TEST_HOME/.config"
+export OPENCODE_CONFIG_DIR="$TEST_HOME/.config/opencode"
 
 # Install plugin to test location
 mkdir -p "$HOME/.config/opencode/superpowers"
