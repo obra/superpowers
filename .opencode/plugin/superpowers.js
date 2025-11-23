@@ -77,6 +77,37 @@ ${content}`;
           return output;
         }
       })
+    },
+    "chat.message": async (input, output) => {
+      // Only inject on first message of session (or every message if needed)
+      if (!output.message.system || output.message.system.length === 0) {
+        const usingSuperpowersPath = skillsCore.resolveSkillPath('using-superpowers', superpowersSkillsDir, personalSkillsDir);
+
+        if (usingSuperpowersPath) {
+          const fullContent = fs.readFileSync(usingSuperpowersPath.skillFile, 'utf8');
+          const usingSuperpowersContent = skillsCore.stripFrontmatter(fullContent);
+
+          const toolMapping = `**Tool Mapping for OpenCode:**
+When skills reference tools you don't have, substitute OpenCode equivalents:
+- \`TodoWrite\` → \`update_plan\`
+- \`Task\` tool with subagents → Use OpenCode's subagent system (@mention)
+- \`Skill\` tool → \`use_skill\` custom tool
+- \`Read\`, \`Write\`, \`Edit\`, \`Bash\` → Your native tools
+
+**Skills naming:**
+- Superpowers skills: \`superpowers:skill-name\`
+- Personal skills: \`skill-name\`
+- Personal skills override superpowers when names match`;
+
+          output.message.system = `<EXTREMELY_IMPORTANT>
+You have superpowers.
+
+${usingSuperpowersContent}
+
+${toolMapping}
+</EXTREMELY_IMPORTANT>`;
+        }
+      }
     }
   };
 };
