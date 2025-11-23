@@ -24,30 +24,23 @@ Skills are markdown files with proven workflows. The system teaches agents: "You
 **Meta**
 - writing-skills, sharing-skills, testing-skills-with-subagents, using-superpowers
 
-**Plus:** Slash commands (`/superpowers:brainstorm`, `/superpowers:write-plan`, `/superpowers:execute-plan`) activate skills directly.
-
 ## The Workflow
 
-**1. Brainstorm the design**
-```
-/superpowers:brainstorm
-```
-Refine rough ideas through Socratic questioning. Explore alternatives. Present design in sections, validate each. Output: design document.
+Skills activate automatically based on your task.
 
-**2. Write the implementation plan**
-```
-/superpowers:write-plan
-```
-Break design into bite-sized tasks (2-5 minutes each). Include exact file paths, complete code, test commands. Output: task-by-task plan.
+**When you ask to build a feature:**
 
-**3. Execute with TDD**
-```
-/superpowers:execute-plan
-```
-Implement in batches with review checkpoints. Each task follows RED-GREEN-REFACTOR. Tests fail first, then pass. Frequent commits.
+1. **Brainstorm** - The agent refines your idea through questions, explores alternatives, presents design in sections. You validate each section.
 
-**4. Finish the branch**
-Skills guide verification, decision (merge/PR/keep), and cleanup. Tests pass before merge. No broken windows.
+2. **Plan** - The agent breaks the design into tasks (2-5 minutes each). Each task has exact file paths, complete code, verification steps.
+
+3. **Implement** - The agent executes tasks in batches. Each task follows RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit.
+
+4. **Review** - Code review runs between tasks. Critical issues get fixed immediately.
+
+5. **Finish** - The agent verifies tests pass, presents options (merge/PR/keep), handles cleanup.
+
+**You don't invoke skills manually.** The agent recognizes when to use them and follows the workflow automatically.
 
 ## Philosophy
 
