@@ -26,21 +26,21 @@ Skills are markdown files with proven workflows. The system teaches agents: "You
 
 ## The Workflow
 
-Skills activate automatically based on your task.
-
 **When you ask to build a feature:**
 
-1. **Brainstorm** - The agent refines your idea through questions, explores alternatives, presents design in sections. You validate each section.
+1. **brainstorming** - Activates before writing code. Refines rough ideas through questions. Explores alternatives. Presents design in sections for validation. Outputs design document.
 
-2. **Plan** - The agent breaks the design into tasks (2-5 minutes each). Each task has exact file paths, complete code, verification steps.
+2. **writing-plans** - Activates when design is complete. Breaks work into tasks (2-5 minutes each). Includes exact file paths, complete code, verification commands. Outputs task-by-task plan.
 
-3. **Implement** - The agent executes tasks in batches. Each task follows RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit.
+3. **executing-plans** - Activates with a plan. Implements in batches with review checkpoints. Outputs working implementation.
 
-4. **Review** - Code review runs between tasks. Critical issues get fixed immediately.
+4. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write test, watch it fail, write code, watch it pass, commit. No code without failing test first.
 
-5. **Finish** - The agent verifies tests pass, presents options (merge/PR/keep), handles cleanup.
+5. **requesting-code-review** - Activates between tasks. Reviews implementation against plan. Reports issues by severity.
 
-**You don't invoke skills manually.** The agent recognizes when to use them and follows the workflow automatically.
+6. **finishing-a-development-branch** - Activates when work completes. Verifies tests, presents options (merge/PR/keep/discard), handles cleanup.
+
+**The agent decides which skills to use.** Skills activate automatically when your task matches their purpose.
 
 ## Philosophy
 
