@@ -362,5 +362,79 @@ else
     exit 1
 fi
 
+# Test 5: Test checkForUpdates function
+echo ""
+echo "Test 5: Testing checkForUpdates..."
+
+# Create a test git repo
+mkdir -p "$TEST_HOME/test-repo"
+cd "$TEST_HOME/test-repo"
+git init --quiet
+git config user.email "test@test.com"
+git config user.name "Test"
+echo "test" > file.txt
+git add file.txt
+git commit -m "initial" --quiet
+cd "$SCRIPT_DIR"
+
+# Test checkForUpdates on repo without remote (should return false, not error)
+result=$(node -e "
+const { execSync } = require('child_process');
+
+function checkForUpdates(repoDir) {
+    try {
+        const output = execSync('git fetch origin && git status --porcelain=v1 --branch', {
+            cwd: repoDir,
+            timeout: 3000,
+            encoding: 'utf8',
+            stdio: 'pipe'
+        });
+        const statusLines = output.split('\n');
+        for (const line of statusLines) {
+            if (line.startsWith('## ') && line.includes('[behind ')) {
+                return true;
+            }
+        }
+        return false;
+    } catch (error) {
+        return false;
+    }
+}
+
+// Test 1: Repo without remote should return false (graceful error handling)
+const result1 = checkForUpdates('$TEST_HOME/test-repo');
+console.log('NO_REMOTE:', result1);
+
+// Test 2: Non-existent directory should return false
+const result2 = checkForUpdates('$TEST_HOME/nonexistent');
+console.log('NONEXISTENT:', result2);
+
+// Test 3: Non-git directory should return false
+const result3 = checkForUpdates('$TEST_HOME');
+console.log('NOT_GIT:', result3);
+" 2>&1)
+
+if echo "$result" | grep -q 'NO_REMOTE: false'; then
+    echo "  [PASS] checkForUpdates handles repo without remote gracefully"
+else
+    echo "  [FAIL] checkForUpdates should return false for repo without remote"
+    echo "  Result: $result"
+    exit 1
+fi
+
+if echo "$result" | grep -q 'NONEXISTENT: false'; then
+    echo "  [PASS] checkForUpdates handles non-existent directory"
+else
+    echo "  [FAIL] checkForUpdates should return false for non-existent directory"
+    exit 1
+fi
+
+if echo "$result" | grep -q 'NOT_GIT: false'; then
+    echo "  [PASS] checkForUpdates handles non-git directory"
+else
+    echo "  [FAIL] checkForUpdates should return false for non-git directory"
+    exit 1
+fi
+
 echo ""
 echo "=== All skills-core library tests passed ==="

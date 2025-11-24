@@ -14,7 +14,7 @@ import * as skillsCore from '../../lib/skills-core.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export const SuperpowersPlugin = async ({ project, client, $, directory, worktree }) => {
+export const SuperpowersPlugin = async ({ client, directory }) => {
   const homeDir = os.homedir();
   const projectSkillsDir = path.join(directory, '.opencode/skills');
   // Derive superpowers skills dir from plugin location (works for both symlinked and local installs)
