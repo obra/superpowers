@@ -1,6 +1,6 @@
 # Superpowers Release Notes
 
-## [Unreleased]
+## v3.5.0 (2025-11-23)
 
 ### Added
 
