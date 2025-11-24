@@ -1,5 +1,17 @@
 # Superpowers Release Notes
 
+## v3.5.1 (2025-11-24)
+
+### Changed
+
+- **OpenCode Bootstrap Refactor**: Switched from `chat.message` hook to `session.created` event for bootstrap injection
+  - Bootstrap now injects at session creation via `session.prompt()` with `noReply: true`
+  - Explicitly tells the model that using-superpowers is already loaded to prevent redundant skill loading
+  - Consolidated bootstrap content generation into shared `getBootstrapContent()` helper
+  - Cleaner single-implementation approach (removed fallback pattern)
+
+---
+
 ## v3.5.0 (2025-11-23)
 
 ### Added
