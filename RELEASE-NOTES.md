@@ -12,7 +12,8 @@
   - Three-tier skill priority: project > personal > superpowers
   - Project-local skills support (`.opencode/skills/`)
   - Shared core module (`lib/skills-core.js`) for code reuse with Codex
-  - Installation guide in `.opencode/INSTALL.md`
+  - Automated test suite with proper isolation (`tests/opencode/`)
+  - Platform-specific documentation (`docs/README.opencode.md`, `docs/README.codex.md`)
 
 ### Changed
 
@@ -20,6 +21,12 @@
   - Eliminates code duplication between Codex and OpenCode
   - Single source of truth for skill discovery and parsing
   - Codex successfully loads ES modules via Node.js interop
+
+- **Improved Documentation**: Rewrote README to explain problem/solution clearly
+  - Removed duplicate sections and conflicting information
+  - Added complete workflow description (brainstorm → plan → execute → finish)
+  - Simplified platform installation instructions
+  - Emphasized skill-checking protocol over automatic activation claims
 
 ---
 
