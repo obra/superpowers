@@ -1,5 +1,5 @@
 ---
-name: Sharing-Skills
+name: sharing-skills
 description: Use when you've developed a broadly useful skill and want to contribute it upstream via pull request - guides process of branching, committing, pushing, and creating PR to contribute skills back to upstream repository
 ---
 
@@ -17,7 +17,7 @@ Contribute skills from your local branch back to the upstream repository.
 - Skill applies broadly (not project-specific)
 - Pattern/technique others would benefit from
 - Well-tested and documented
-- Follows skills/meta/writing-skills guidelines
+- Follows writing-skills guidelines
 
 **Keep personal when:**
 - Project-specific or organization-specific
@@ -29,7 +29,7 @@ Contribute skills from your local branch back to the upstream repository.
 
 - `gh` CLI installed and authenticated
 - Working directory is `~/.config/superpowers/skills/` (your local clone)
-- Skill has been tested (see skills/meta/writing-skills for TDD process)
+- **REQUIRED:** Skill has been tested using writing-skills TDD process
 
 ## Sharing Workflow
 
@@ -191,4 +191,4 @@ Each skill should:
 
 ## Related Skills
 
-- **skills/meta/writing-skills** - How to create well-tested skills
+- **writing-skills** - REQUIRED: How to create well-tested skills before sharing

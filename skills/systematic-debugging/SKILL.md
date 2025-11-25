@@ -1,5 +1,5 @@
 ---
-name: Systematic-Debugging
+name: systematic-debugging
 description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes - four-phase framework (root cause investigation, pattern analysis, hypothesis testing, implementation) that ensures understanding before attempting solutions
 ---
 
@@ -111,7 +111,7 @@ You MUST complete each phase before proceeding to the next.
 
    **WHEN error is deep in call stack:**
 
-   See skills/root-cause-tracing for backward tracing technique
+   **REQUIRED SUB-SKILL:** Use superpowers:root-cause-tracing for backward tracing technique
 
    **Quick version:**
    - Where does bad value originate?
@@ -176,7 +176,7 @@ You MUST complete each phase before proceeding to the next.
    - Automated test if possible
    - One-off test script if no framework
    - MUST have before fixing
-   - See skills/testing/test-driven-development for writing proper failing tests
+   - **REQUIRED SUB-SKILL:** Use superpowers:test-driven-development for writing proper failing tests
 
 2. **Implement Single Fix**
    - Address the root cause identified
@@ -277,11 +277,14 @@ If systematic investigation reveals issue is truly environmental, timing-depende
 
 ## Integration with Other Skills
 
-This skill works with:
-- skills/root-cause-tracing - How to trace back through call stack
-- skills/defense-in-depth - Add validation after finding root cause
-- skills/testing/condition-based-waiting - Replace timeouts identified in Phase 2
-- skills/verification-before-completion - Verify fix worked before claiming success
+**This skill requires using:**
+- **root-cause-tracing** - REQUIRED when error is deep in call stack (see Phase 1, Step 5)
+- **test-driven-development** - REQUIRED for creating failing test case (see Phase 4, Step 1)
+
+**Complementary skills:**
+- **defense-in-depth** - Add validation at multiple layers after finding root cause
+- **condition-based-waiting** - Replace arbitrary timeouts identified in Phase 2
+- **verification-before-completion** - Verify fix worked before claiming success
 
 ## Real-World Impact
 

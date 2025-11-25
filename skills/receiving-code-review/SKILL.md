@@ -1,8 +1,6 @@
 ---
-name: Code Review Reception
-description: Receive and act on code review feedback with technical rigor, not performative agreement or blind implementation
-when_to_use: when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable
-version: 1.1.0
+name: receiving-code-review
+description: Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation
 ---
 
 # Code Review Reception

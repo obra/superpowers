@@ -1,5 +1,5 @@
 ---
-name: Executing-Plans
+name: executing-plans
 description: Use when partner provides a complete implementation plan to execute in controlled batches with review checkpoints - loads plan, reviews critically, executes tasks in batches, reports for review between batches
 ---
 
@@ -11,7 +11,7 @@ Load plan, review critically, execute tasks in batches, report for review betwee
 
 **Core principle:** Batch execution with checkpoints for architect review.
 
-**Announce at start:** "I'm using the Executing Plans skill to implement this plan."
+**Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
 ## The Process
 
@@ -45,8 +45,8 @@ Based on feedback:
 ### Step 5: Complete Development
 
 After all tasks complete and verified:
-- Announce: "I'm using the Finishing a Development Branch skill to complete this work."
-- Switch to skills/collaboration/finishing-a-development-branch
+- Announce: "I'm using the finishing-a-development-branch skill to complete this work."
+- **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
 - Follow that skill to verify tests, present options, execute choice
 
 ## When to Stop and Ask for Help

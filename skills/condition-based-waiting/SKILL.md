@@ -1,5 +1,5 @@
 ---
-name: Condition-Based-Waiting
+name: condition-based-waiting
 description: Use when tests have race conditions, timing dependencies, or inconsistent pass/fail behavior - replaces arbitrary timeouts with condition polling to wait for actual state changes, eliminating flaky tests from timing guesses
 ---
 

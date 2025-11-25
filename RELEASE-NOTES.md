@@ -1,5 +1,242 @@
 # Superpowers Release Notes
 
+## v3.5.1 (2025-11-24)
+
+### Changed
+
+- **OpenCode Bootstrap Refactor**: Switched from `chat.message` hook to `session.created` event for bootstrap injection
+  - Bootstrap now injects at session creation via `session.prompt()` with `noReply: true`
+  - Explicitly tells the model that using-superpowers is already loaded to prevent redundant skill loading
+  - Consolidated bootstrap content generation into shared `getBootstrapContent()` helper
+  - Cleaner single-implementation approach (removed fallback pattern)
+
+---
+
+## v3.5.0 (2025-11-23)
+
+### Added
+
+- **OpenCode Support**: Native JavaScript plugin for OpenCode.ai
+  - Custom tools: `use_skill` and `find_skills`
+  - Message insertion pattern for skill persistence across context compaction
+  - Automatic context injection via chat.message hook
+  - Auto re-injection on session.compacted events
+  - Three-tier skill priority: project > personal > superpowers
+  - Project-local skills support (`.opencode/skills/`)
+  - Shared core module (`lib/skills-core.js`) for code reuse with Codex
+  - Automated test suite with proper isolation (`tests/opencode/`)
+  - Platform-specific documentation (`docs/README.opencode.md`, `docs/README.codex.md`)
+
+### Changed
+
+- **Refactored Codex Implementation**: Now uses shared `lib/skills-core.js` ES module
+  - Eliminates code duplication between Codex and OpenCode
+  - Single source of truth for skill discovery and parsing
+  - Codex successfully loads ES modules via Node.js interop
+
+- **Improved Documentation**: Rewrote README to explain problem/solution clearly
+  - Removed duplicate sections and conflicting information
+  - Added complete workflow description (brainstorm → plan → execute → finish)
+  - Simplified platform installation instructions
+  - Emphasized skill-checking protocol over automatic activation claims
+
+---
+
+## v3.4.1 (2025-10-31)
+
+### Improvements
+
+- Optimized superpowers bootstrap to eliminate redundant skill execution. The `using-superpowers` skill content is now provided directly in session context, with clear guidance to use the Skill tool only for other skills. This reduces overhead and prevents the confusing loop where agents would execute `using-superpowers` manually despite already having the content from session start.
+
+## v3.4.0 (2025-10-30)
+
+### Improvements
+
+- Simplified `brainstorming` skill to return to original conversational vision. Removed heavyweight 6-phase process with formal checklists in favor of natural dialogue: ask questions one at a time, then present design in 200-300 word sections with validation. Keeps documentation and implementation handoff features.
+
+## v3.3.1 (2025-10-28)
+
+### Improvements
+
+- Updated `brainstorming` skill to require autonomous recon before questioning, encourage recommendation-driven decisions, and prevent agents from delegating prioritization back to humans.
+- Applied writing clarity improvements to `brainstorming` skill following Strunk's "Elements of Style" principles (omitted needless words, converted negative to positive form, improved parallel construction).
+
+### Bug Fixes
+
+- Clarified `writing-skills` guidance so it points to the correct agent-specific personal skill directories (`~/.claude/skills` for Claude Code, `~/.codex/skills` for Codex).
+
+## v3.3.0 (2025-10-28)
+
+### New Features
+
+**Experimental Codex Support**
+- Added unified `superpowers-codex` script with bootstrap/use-skill/find-skills commands
+- Cross-platform Node.js implementation (works on Windows, macOS, Linux)
+- Namespaced skills: `superpowers:skill-name` for superpowers skills, `skill-name` for personal
+- Personal skills override superpowers skills when names match
+- Clean skill display: shows name/description without raw frontmatter
+- Helpful context: shows supporting files directory for each skill
+- Tool mapping for Codex: TodoWrite→update_plan, subagents→manual fallback, etc.
+- Bootstrap integration with minimal AGENTS.md for automatic startup
+- Complete installation guide and bootstrap instructions specific to Codex
+
+**Key differences from Claude Code integration:**
+- Single unified script instead of separate tools
+- Tool substitution system for Codex-specific equivalents
+- Simplified subagent handling (manual work instead of delegation)
+- Updated terminology: "Superpowers skills" instead of "Core skills"
+
+### Files Added
+- `codex/INSTALL.md` - Installation guide for Codex users
+- `codex/superpowers-bootstrap.md` - Bootstrap instructions with Codex adaptations
+- `scripts/superpowers-codex` - Unified Node.js executable with all functionality
+
+**Note:** Codex support is experimental. The integration provides core superpowers functionality but may require refinement based on user feedback.
+
+## v3.2.3 (2025-10-23)
+
+### Improvements
+
+**Updated using-superpowers skill to use Skill tool instead of Read tool**
+- Changed skill invocation instructions from Read tool to Skill tool
+- Updated description: "using Read tool" → "using Skill tool"
+- Updated step 3: "Use the Read tool" → "Use the Skill tool to read and run"
+- Updated rationalization list: "Read the current version" → "Run the current version"
+
+The Skill tool is the proper mechanism for invoking skills in Claude Code. This update corrects the bootstrap instructions to guide agents toward the correct tool.
+
+### Files Changed
+- Updated: `skills/using-superpowers/SKILL.md` - Changed tool references from Read to Skill
+
+## v3.2.2 (2025-10-21)
+
+### Improvements
+
+**Strengthened using-superpowers skill against agent rationalization**
+- Added EXTREMELY-IMPORTANT block with absolute language about mandatory skill checking
+  - "If even 1% chance a skill applies, you MUST read it"
+  - "You do not have a choice. You cannot rationalize your way out."
+- Added MANDATORY FIRST RESPONSE PROTOCOL checklist
+  - 5-step process agents must complete before any response
+  - Explicit "responding without this = failure" consequence
+- Added Common Rationalizations section with 8 specific evasion patterns
+  - "This is just a simple question" → WRONG
+  - "I can check files quickly" → WRONG
+  - "Let me gather information first" → WRONG
+  - Plus 5 more common patterns observed in agent behavior
+
+These changes address observed agent behavior where they rationalize around skill usage despite clear instructions. The forceful language and pre-emptive counter-arguments aim to make non-compliance harder.
+
+### Files Changed
+- Updated: `skills/using-superpowers/SKILL.md` - Added three layers of enforcement to prevent skill-skipping rationalization
+
+## v3.2.1 (2025-10-20)
+
+### New Features
+
+**Code reviewer agent now included in plugin**
+- Added `superpowers:code-reviewer` agent to plugin's `agents/` directory
+- Agent provides systematic code review against plans and coding standards
+- Previously required users to have personal agent configuration
+- All skill references updated to use namespaced `superpowers:code-reviewer`
+- Fixes #55
+
+### Files Changed
+- New: `agents/code-reviewer.md` - Agent definition with review checklist and output format
+- Updated: `skills/requesting-code-review/SKILL.md` - References to `superpowers:code-reviewer`
+- Updated: `skills/subagent-driven-development/SKILL.md` - References to `superpowers:code-reviewer`
+
+## v3.2.0 (2025-10-18)
+
+### New Features
+
+**Design documentation in brainstorming workflow**
+- Added Phase 4: Design Documentation to brainstorming skill
+- Design documents now written to `docs/plans/YYYY-MM-DD-<topic>-design.md` before implementation
+- Restores functionality from original brainstorming command that was lost during skill conversion
+- Documents written before worktree setup and implementation planning
+- Tested with subagent to verify compliance under time pressure
+
+### Breaking Changes
+
+**Skill reference namespace standardization**
+- All internal skill references now use `superpowers:` namespace prefix
+- Updated format: `superpowers:test-driven-development` (previously just `test-driven-development`)
+- Affects all REQUIRED SUB-SKILL, RECOMMENDED SUB-SKILL, and REQUIRED BACKGROUND references
+- Aligns with how skills are invoked using the Skill tool
+- Files updated: brainstorming, executing-plans, subagent-driven-development, systematic-debugging, testing-skills-with-subagents, writing-plans, writing-skills
+
+### Improvements
+
+**Design vs implementation plan naming**
+- Design documents use `-design.md` suffix to prevent filename collisions
+- Implementation plans continue using existing `YYYY-MM-DD-<feature-name>.md` format
+- Both stored in `docs/plans/` directory with clear naming distinction
+
+## v3.1.1 (2025-10-17)
+
+### Bug Fixes
+
+- **Fixed command syntax in README** (#44) - Updated all command references to use correct namespaced syntax (`/superpowers:brainstorm` instead of `/brainstorm`). Plugin-provided commands are automatically namespaced by Claude Code to avoid conflicts between plugins.
+
+## v3.1.0 (2025-10-17)
+
+### Breaking Changes
+
+**Skill names standardized to lowercase**
+- All skill frontmatter `name:` fields now use lowercase kebab-case matching directory names
+- Examples: `brainstorming`, `test-driven-development`, `using-git-worktrees`
+- All skill announcements and cross-references updated to lowercase format
+- This ensures consistent naming across directory names, frontmatter, and documentation
+
+### New Features
+
+**Enhanced brainstorming skill**
+- Added Quick Reference table showing phases, activities, and tool usage
+- Added copyable workflow checklist for tracking progress
+- Added decision flowchart for when to revisit earlier phases
+- Added comprehensive AskUserQuestion tool guidance with concrete examples
+- Added "Question Patterns" section explaining when to use structured vs open-ended questions
+- Restructured Key Principles as scannable table
+
+**Anthropic best practices integration**
+- Added `skills/writing-skills/anthropic-best-practices.md` - Official Anthropic skill authoring guide
+- Referenced in writing-skills SKILL.md for comprehensive guidance
+- Provides patterns for progressive disclosure, workflows, and evaluation
+
+### Improvements
+
+**Skill cross-reference clarity**
+- All skill references now use explicit requirement markers:
+  - `**REQUIRED BACKGROUND:**` - Prerequisites you must understand
+  - `**REQUIRED SUB-SKILL:**` - Skills that must be used in workflow
+  - `**Complementary skills:**` - Optional but helpful related skills
+- Removed old path format (`skills/collaboration/X` → just `X`)
+- Updated Integration sections with categorized relationships (Required vs Complementary)
+- Updated cross-reference documentation with best practices
+
+**Alignment with Anthropic best practices**
+- Fixed description grammar and voice (fully third-person)
+- Added Quick Reference tables for scanning
+- Added workflow checklists Claude can copy and track
+- Appropriate use of flowcharts for non-obvious decision points
+- Improved scannable table formats
+- All skills well under 500-line recommendation
+
+### Bug Fixes
+
+- **Re-added missing command redirects** - Restored `commands/brainstorm.md` and `commands/write-plan.md` that were accidentally removed in v3.0 migration
+- Fixed `defense-in-depth` name mismatch (was `Defense-in-Depth-Validation`)
+- Fixed `receiving-code-review` name mismatch (was `Code-Review-Reception`)
+- Fixed `commands/brainstorm.md` reference to correct skill name
+- Removed references to non-existent related skills
+
+### Documentation
+
+**writing-skills improvements**
+- Updated cross-referencing guidance with explicit requirement markers
+- Added reference to Anthropic's official best practices
+- Improved examples showing proper skill reference format
 
 ## v3.0.1 (2025-10-16)
 

@@ -1,5 +1,5 @@
 ---
-name: Subagent-Driven-Development
+name: subagent-driven-development
 description: Use when executing implementation plans with independent tasks in the current session - dispatches fresh subagent for each task with code review between tasks, enabling fast iteration with quality gates
 ---
 
@@ -62,8 +62,8 @@ Task tool (general-purpose):
 
 **Dispatch code-reviewer subagent:**
 ```
-Task tool (code-reviewer):
-  Use template at skills/collaboration/requesting-code-review/code-reviewer.md
+Task tool (superpowers:code-reviewer):
+  Use template at requesting-code-review/code-reviewer.md
 
   WHAT_WAS_IMPLEMENTED: [from subagent's report]
   PLAN_OR_REQUIREMENTS: Task N from [plan-file]
@@ -102,8 +102,8 @@ After all tasks complete, dispatch final code-reviewer:
 ### 7. Complete Development
 
 After final review passes:
-- Announce: "I'm using the Finishing a Development Branch skill to complete this work."
-- Switch to skills/collaboration/finishing-a-development-branch
+- Announce: "I'm using the finishing-a-development-branch skill to complete this work."
+- **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
 - Follow that skill to verify tests, present options, execute choice
 
 ## Example Workflow
@@ -175,12 +175,15 @@ Done!
 
 ## Integration
 
-**Pairs with:**
-- skills/collaboration/writing-plans (creates the plan)
-- skills/collaboration/requesting-code-review (review template)
-- skills/testing/test-driven-development (subagents follow this)
+**Required workflow skills:**
+- **writing-plans** - REQUIRED: Creates the plan that this skill executes
+- **requesting-code-review** - REQUIRED: Review after each task (see Step 3)
+- **finishing-a-development-branch** - REQUIRED: Complete development after all tasks (see Step 7)
 
-**Alternative to:**
-- skills/collaboration/executing-plans (parallel session)
+**Subagents must use:**
+- **test-driven-development** - Subagents follow TDD for each task
 
-See code-reviewer template: skills/collaboration/requesting-code-review/code-reviewer.md
+**Alternative workflow:**
+- **executing-plans** - Use for parallel session instead of same-session execution
+
+See code-reviewer template: requesting-code-review/code-reviewer.md

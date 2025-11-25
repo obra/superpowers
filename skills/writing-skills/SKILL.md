@@ -1,5 +1,5 @@
 ---
-name: Writing-Skills
+name: writing-skills
 description: Use when creating new skills, editing existing skills, or verifying skills work before deployment - applies TDD to process documentation by testing with subagents before writing, iterating until bulletproof against rationalization
 ---
 
@@ -9,13 +9,15 @@ description: Use when creating new skills, editing existing skills, or verifying
 
 **Writing skills IS Test-Driven Development applied to process documentation.**
 
-**Personal skills are written to `~/.claude/skills`** 
+**Personal skills live in agent-specific directories (`~/.claude/skills` for Claude Code, `~/.codex/skills` for Codex)** 
 
 You write test cases (pressure scenarios with subagents), watch them fail (baseline behavior), write the skill (documentation), watch tests pass (agents comply), and refactor (close loopholes).
 
 **Core principle:** If you didn't watch an agent fail without the skill, you don't know if the skill teaches the right thing.
 
-See skills/testing/test-driven-development for the fundamental RED-GREEN-REFACTOR cycle. This skill adapts TDD to documentation.
+**REQUIRED BACKGROUND:** You MUST understand superpowers:test-driven-development before using this skill. That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill adapts TDD to documentation.
+
+**Official guidance:** For Anthropic's official skill authoring best practices, see anthropic-best-practices.md. This document provides additional patterns and guidelines that complement the TDD-focused approach in this skill.
 
 ## What is a Skill?
 
@@ -208,7 +210,7 @@ When searching, dispatch subagent with template...
 [20 lines of repeated instructions]
 
 # ✅ GOOD: Reference other skill
-Always use subagents (50-100x context savings). See skills/using-skills for workflow.
+Always use subagents (50-100x context savings). REQUIRED: Use [other-skill-name] for workflow.
 ```
 
 **Compress examples:**
@@ -250,9 +252,10 @@ wc -w skills/path/SKILL.md
 
 **When writing documentation that references other skills:**
 
-Use path format without `@` prefix or `/SKILL.md` suffix:
-- ✅ Good: `test-driven-development`
-- ✅ Good: `systematic-debugging`
+Use skill name only, with explicit requirement markers:
+- ✅ Good: `**REQUIRED SUB-SKILL:** Use superpowers:test-driven-development`
+- ✅ Good: `**REQUIRED BACKGROUND:** You MUST understand superpowers:systematic-debugging`
+- ❌ Bad: `See skills/testing/test-driven-development` (unclear if required)
 - ❌ Bad: `@skills/testing/test-driven-development/SKILL.md` (force-loads, burns context)
 
 **Why no @ links:** `@` syntax force-loads files immediately, consuming 200k+ context before you need them.
@@ -354,7 +357,7 @@ Edit skill without testing? Same violation.
 - Don't "adapt" while running tests
 - Delete means delete
 
-See the test-driven-development skill for why this matters. Same principles apply to documentation.
+**REQUIRED BACKGROUND:** The superpowers:test-driven-development skill explains why this matters. Same principles apply to documentation.
 
 ## Testing All Skill Types
 
@@ -517,7 +520,7 @@ Run same scenarios WITH skill. Agent should now comply.
 
 Agent found new rationalization? Add explicit counter. Re-test until bulletproof.
 
-**See the testing-skills-with-subagents skill for:**
+**REQUIRED SUB-SKILL:** Use superpowers:testing-skills-with-subagents for the complete testing methodology:
 - How to write pressure scenarios
 - Pressure types (time, sunk cost, authority, exhaustion)
 - Plugging holes systematically
