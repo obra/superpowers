@@ -132,6 +132,80 @@ gh project item-edit \
   --single-select-option-id OPTION_ID
 ```
 
+## Sub-Issues (Parent/Child Relationships)
+
+GitHub supports hierarchical issue relationships via sub-issues. No native `gh` CLI support yet, so use GraphQL API directly.
+
+**Key requirements:**
+- Requires node IDs, not issue numbers
+- Requires feature flag: `-H "GraphQL-Features: sub_issues"`
+- Works cross-repo (node IDs are globally unique)
+
+```bash
+# Get node ID for an issue
+gh api repos/owner/repo/issues/123 --jq '.node_id'
+# Output: I_kwDONkHkN87aiXQ0
+
+# Add sub-issue (child under parent)
+gh api graphql \
+  -H "GraphQL-Features: sub_issues" \
+  -f query='
+    mutation {
+      addSubIssue(input: {
+        issueId: "PARENT_NODE_ID",
+        subIssueId: "CHILD_NODE_ID"
+      }) {
+        issue { number }
+        subIssue { number }
+      }
+    }
+  '
+
+# Remove sub-issue
+gh api graphql \
+  -H "GraphQL-Features: sub_issues" \
+  -f query='
+    mutation {
+      removeSubIssue(input: {
+        issueId: "PARENT_NODE_ID",
+        subIssueId: "CHILD_NODE_ID"
+      }) {
+        issue { number }
+        subIssue { number }
+      }
+    }
+  '
+
+# List sub-issues of a parent
+gh api graphql \
+  -H "GraphQL-Features: sub_issues" \
+  -f query='
+    query {
+      node(id: "PARENT_NODE_ID") {
+        ... on Issue {
+          subIssues(first: 50) {
+            nodes { number title state }
+          }
+        }
+      }
+    }
+  '
+```
+
+### Helper: Add Sub-Issue by Issue Numbers
+
+```bash
+# Usage: Substitute owner/repo and issue numbers
+PARENT_ID=$(gh api repos/owner/repo/issues/123 --jq '.node_id')
+CHILD_ID=$(gh api repos/other-owner/other-repo/issues/456 --jq '.node_id')
+
+gh api graphql \
+  -H "GraphQL-Features: sub_issues" \
+  -f query="mutation { addSubIssue(input: {issueId: \"$PARENT_ID\", subIssueId: \"$CHILD_ID\"}) { subIssue { number } } }"
+```
+
+**Note:** Shell variable expansion in GraphQL queries can be tricky. If you hit escaping issues, hardcode the IDs directly in the query string.
+
 ## JSON Output Examples
 
 ```bash
