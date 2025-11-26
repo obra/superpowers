@@ -67,7 +67,7 @@ ${toolMapping}
         path: { id: sessionID },
         body: {
           noReply: true,
-          parts: [{ type: "text", text: bootstrapContent }]
+          parts: [{ type: "text", text: bootstrapContent, synthetic: true }]
         }
       });
       return true;
@@ -132,8 +132,8 @@ ${toolMapping}
               body: {
                 noReply: true,
                 parts: [
-                  { type: "text", text: `Loading skill: ${name || skill_name}` },
-                  { type: "text", text: `${skillHeader}\n\n${content}` }
+                  { type: "text", text: `Loading skill: ${name || skill_name}`, synthetic: true },
+                  { type: "text", text: `${skillHeader}\n\n${content}`, synthetic: true }
                 ]
               }
             });
