@@ -1,0 +1,21 @@
+{
+  "name": "superpowers-gemini-mcp-server",
+  "version": "3.5.1",
+  "type": "module",
+  "main": "dist/superpowers.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/superpowers.js",
+    "typecheck": "tsc --noEmit",
+    "prepare": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.18.0",
+    "zod": "^3.24.2"
+  }
+}
