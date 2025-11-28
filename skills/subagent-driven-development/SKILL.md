@@ -196,16 +196,20 @@ Task tool (general-purpose):
     - ❌ Issues found: [list specifically what's missing or extra, with file:line references]
 ```
 
-**Review loop:**
+**Review loop (must complete before Step 4):**
 1. Spec reviewer reports findings
 2. If issues found:
    - Original implementer fixes issues
    - Spec reviewer reviews again
 3. Repeat until spec compliant
 
+**Do NOT proceed to code quality review until spec compliance is ✅**
+
 ### 4. Code Quality Review
 
 **Purpose:** Verify implementation is well-built (clean, tested, maintainable)
+
+**Only run after spec compliance review is complete.**
 
 **Dispatch code-reviewer subagent:**
 ```
@@ -368,6 +372,8 @@ Done!
 - Accept "close enough" on spec compliance (spec reviewer found issues = not done)
 - Skip review loops (reviewer found issues = implementer fixes = review again)
 - Let implementer self-review replace actual review (both are needed)
+- **Start code quality review before spec compliance is ✅** (wrong order)
+- Move to next task while either review has open issues
 
 **If subagent asks questions:**
 - Answer clearly and completely
