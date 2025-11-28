@@ -57,9 +57,9 @@ Check that commands appear:
 # /superpowers:execute-plan - Execute plan in batches
 ```
 
-### Via prpm (Claude, Cursor, Codex, or Gemini)
+### Via prpm (Codex, Cursor, Kiro, Opencode, Gemini, Claude, or Factory Droid)
 
-You can install Superpowers across multiple AI coding tools using [prpm](https://prpm.dev), an open source prompt package manager:
+You can install Superpowers across multiple AI coding tools using [prpm](https://prpm.dev), an open-source prompt package manager:
 
 ```bash
 npx prpm install collections/superpowers --as agents.md # Codex, Cursor, Kiro, Opencode
