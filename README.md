@@ -26,11 +26,11 @@ Thanks!
 
 ## Installation
 
-**Note:** Installation differs by platform. Claude Code has a built-in plugin system. Codex and OpenCode require manual setup.
+**Note:** Installation differs by platform. Choose the method that works best for your setup.
 
 ### Claude Code (via Plugin Marketplace)
 
-In Claude Code, register the marketplace first:
+Claude Code has a built-in plugin system. First, register the marketplace:
 
 ```bash
 /plugin marketplace add obra/superpowers-marketplace
@@ -56,6 +56,20 @@ Check that commands appear:
 # /superpowers:write-plan - Create implementation plan
 # /superpowers:execute-plan - Execute plan in batches
 ```
+
+### Via prpm (Claude, Cursor, Codex, or Gemini)
+
+You can install Superpowers across multiple AI coding tools using [prpm](https://prpm.dev), an open source prompt package manager:
+
+```bash
+npx prpm install collections/superpowers --as agents.md # Codex, Cursor, Kiro, Opencode
+npx prpm install collections/superpowers --as gemini.md # Gemini
+npx prpm install collections/superpowers --as claude    # Claude
+npx prpm install collections/superpowers --as droid     # Factory Droid
+```
+
+Note that this only installs the superpowers skills, not the command or agent and should be manually invoked.
+
 
 ### Codex
 
