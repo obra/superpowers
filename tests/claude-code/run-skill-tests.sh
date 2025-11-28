@@ -26,6 +26,7 @@ fi
 VERBOSE=false
 SPECIFIC_TEST=""
 TIMEOUT=300  # Default 5 minute timeout per test
+RUN_INTEGRATION=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -41,17 +42,25 @@ while [[ $# -gt 0 ]]; do
             TIMEOUT="$2"
             shift 2
             ;;
+        --integration|-i)
+            RUN_INTEGRATION=true
+            shift
+            ;;
         --help|-h)
             echo "Usage: $0 [options]"
             echo ""
             echo "Options:"
-            echo "  --verbose, -v      Show verbose output"
-            echo "  --test, -t NAME    Run only the specified test"
-            echo "  --timeout SECONDS  Set timeout per test (default: 300)"
-            echo "  --help, -h         Show this help"
+            echo "  --verbose, -v        Show verbose output"
+            echo "  --test, -t NAME      Run only the specified test"
+            echo "  --timeout SECONDS    Set timeout per test (default: 300)"
+            echo "  --integration, -i    Run integration tests (slow, 10-30 min)"
+            echo "  --help, -h           Show this help"
             echo ""
             echo "Tests:"
-            echo "  test-subagent-driven-development.sh  Test subagent-driven-development workflow"
+            echo "  test-subagent-driven-development.sh  Test skill loading and requirements"
+            echo ""
+            echo "Integration Tests (use --integration):"
+            echo "  test-subagent-driven-development-integration.sh  Full workflow execution"
             exit 0
             ;;
         *)
@@ -62,10 +71,20 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# List of skill tests to run
+# List of skill tests to run (fast unit tests)
 tests=(
     "test-subagent-driven-development.sh"
 )
+
+# Integration tests (slow, full execution)
+integration_tests=(
+    "test-subagent-driven-development-integration.sh"
+)
+
+# Add integration tests if requested
+if [ "$RUN_INTEGRATION" = true ]; then
+    tests+=("${integration_tests[@]}")
+fi
 
 # Filter to specific test if requested
 if [ -n "$SPECIFIC_TEST" ]; then
@@ -152,6 +171,12 @@ echo "  Passed:  $passed"
 echo "  Failed:  $failed"
 echo "  Skipped: $skipped"
 echo ""
+
+if [ "$RUN_INTEGRATION" = false ] && [ ${#integration_tests[@]} -gt 0 ]; then
+    echo "Note: Integration tests were not run (they take 10-30 minutes)."
+    echo "Use --integration flag to run full workflow execution tests."
+    echo ""
+fi
 
 if [ $failed -gt 0 ]; then
     echo "STATUS: FAILED"
