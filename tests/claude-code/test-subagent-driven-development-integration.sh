@@ -119,8 +119,8 @@ echo ""
 # Capture full output to analyze
 OUTPUT_FILE="$TEST_PROJECT/claude-output.txt"
 
-# Note: We use a longer timeout since this is integration testing
-timeout 1800 claude -p "$(cat <<'PROMPT'
+# Create prompt file
+cat > "$TEST_PROJECT/prompt.txt" <<'EOF'
 I want you to execute the implementation plan at docs/plans/implementation-plan.md using the subagent-driven-development skill.
 
 IMPORTANT: Follow the skill exactly. I will be verifying that you:
@@ -131,8 +131,11 @@ IMPORTANT: Follow the skill exactly. I will be verifying that you:
 5. Use review loops when issues are found
 
 Begin now. Execute the plan.
-PROMPT
-)" > "$OUTPUT_FILE" 2>&1 || {
+EOF
+
+# Note: We use a longer timeout since this is integration testing
+PROMPT=$(cat "$TEST_PROJECT/prompt.txt")
+timeout 1800 claude -p "$PROMPT" > "$OUTPUT_FILE" 2>&1 || {
     echo "EXECUTION FAILED"
     cat "$OUTPUT_FILE"
     exit 1
