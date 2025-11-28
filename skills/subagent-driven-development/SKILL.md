@@ -31,20 +31,50 @@ Execute plan by dispatching fresh subagent per task, with code review after each
 
 ### 1. Load Plan
 
-Read plan file, create TodoWrite with all tasks.
+1. Read plan file
+2. Extract all tasks
+3. Create TodoWrite with all tasks
 
 ### 2. Execute Task with Subagent
 
 For each task:
 
-**Dispatch fresh subagent:**
+**1. Prepare task context:**
+- Read the full text of Task N from plan file
+- Identify scene-setting context:
+  - Where this task fits in overall plan
+  - Dependencies on previous tasks
+  - Architectural context subagent needs
+  - Relevant patterns or existing code to follow
+
+**2. Dispatch fresh subagent with full task text:**
 ```
 Task tool (general-purpose):
   description: "Implement Task N: [task name]"
   prompt: |
-    You are implementing Task N from [plan-file].
+    You are implementing Task N: [task name]
 
-    Read that task carefully. Your job is to:
+    ## Task Description
+
+    [FULL TEXT of task from plan - paste it here, don't make subagent read file]
+
+    ## Context
+
+    [Scene-setting: where this fits, dependencies, architectural context]
+
+    ## Before You Begin
+
+    If you have questions about:
+    - The requirements or acceptance criteria
+    - The approach or implementation strategy
+    - Dependencies or assumptions
+    - Anything unclear in the task description
+
+    **Ask them now.** Raise any concerns before starting work.
+
+    ## Your Job
+
+    Once you're clear on requirements:
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
@@ -53,10 +83,25 @@ Task tool (general-purpose):
 
     Work from: [directory]
 
-    Report: What you implemented, what you tested, test results, files changed, any issues
+    ## Report Format
+
+    When done, report:
+    - What you implemented
+    - What you tested and test results
+    - Files changed
+    - Any issues or concerns
 ```
 
-**Subagent reports back** with summary of work.
+**3. Handle subagent response:**
+
+If subagent asks questions:
+- Answer clearly
+- Provide additional context if needed
+- Either continue conversation or re-dispatch with answers
+
+If subagent proceeds with implementation:
+- Review their report
+- Proceed to code review (Step 3)
 
 ### 3. Review Subagent's Work
 
@@ -111,12 +156,21 @@ After final review passes:
 ```
 You: I'm using Subagent-Driven Development to execute this plan.
 
-[Load plan, create TodoWrite]
+[Read plan file: docs/plans/feature-plan.md]
+[Extract 5 tasks, create TodoWrite]
 
 Task 1: Hook installation script
 
-[Dispatch implementation subagent]
-Subagent: Implemented install-hook with tests, 5/5 passing
+[Read Task 1 full text from plan]
+[Prepare context: "First task, no dependencies, creates new install-hook command"]
+[Dispatch implementation subagent with full task text + context]
+
+Subagent: "Before I begin - should the hook be installed at user or system level?"
+
+You: "User level (~/.config/superpowers/hooks/)"
+
+Subagent: "Got it. Implementing now..."
+[Later] Subagent: Implemented install-hook with tests, 5/5 passing
 
 [Get git SHAs, dispatch code-reviewer]
 Reviewer: Strengths: Good test coverage. Issues: None. Ready.
@@ -125,7 +179,11 @@ Reviewer: Strengths: Good test coverage. Issues: None. Ready.
 
 Task 2: Recovery modes
 
-[Dispatch implementation subagent]
+[Read Task 2 full text]
+[Prepare context: "Depends on Task 1 hook structure, adds verify/repair modes"]
+[Dispatch implementation subagent with full task text + context]
+
+Subagent: [No questions, proceeds]
 Subagent: Added verify/repair, 8/8 tests passing
 
 [Dispatch code-reviewer]
@@ -151,14 +209,22 @@ Done!
 - Subagents follow TDD naturally
 - Fresh context per task (no confusion)
 - Parallel-safe (subagents don't interfere)
+- Subagent can ask questions before starting (reduces ambiguity)
 
 **vs. Executing Plans:**
 - Same session (no handoff)
 - Continuous progress (no waiting)
 - Review checkpoints automatic
 
+**Efficiency gains:**
+- No file reading overhead (controller provides full text)
+- Controller curates exactly what context is needed
+- Subagent gets complete information upfront
+- Questions surfaced before work begins (not after)
+
 **Cost:**
 - More subagent invocations
+- Controller does more prep work (reading/extracting tasks)
 - But catches issues early (cheaper than debugging later)
 
 ## Red Flags
@@ -167,7 +233,14 @@ Done!
 - Skip code review between tasks
 - Proceed with unfixed Critical issues
 - Dispatch multiple implementation subagents in parallel (conflicts)
-- Implement without reading plan task
+- Make subagent read plan file (provide full text instead)
+- Skip scene-setting context (subagent needs to understand where task fits)
+- Ignore subagent questions (answer before letting them proceed)
+
+**If subagent asks questions:**
+- Answer clearly and completely
+- Provide additional context if needed
+- Don't rush them into implementation
 
 **If subagent fails task:**
 - Dispatch fix subagent with specific instructions
