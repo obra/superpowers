@@ -9,7 +9,6 @@
   - Explicitly tells the model that using-superpowers is already loaded to prevent redundant skill loading
   - Consolidated bootstrap content generation into shared `getBootstrapContent()` helper
   - Cleaner single-implementation approach (removed fallback pattern)
-- **Codex Skill Loader**: `superpowers-codex use-skill` now prints `Base directory for this skill: ...`, mirroring Claude Code’s output so agents immediately know where the skill’s tools live (fixes confusion around locating binaries like `codex-subagent`).
 
 ---
 
