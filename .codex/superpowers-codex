@@ -229,7 +229,7 @@ function runUseSkill(skillName) {
     if (frontmatter.description) {
         console.log(`# ${frontmatter.description}`);
     }
-    console.log(`# Supporting tools and docs are in ${skillDirectory}`);
+    console.log(`# Skill-specific tools and reference files live in ${skillDirectory}`);
     console.log('# ============================================');
     console.log('');
 
