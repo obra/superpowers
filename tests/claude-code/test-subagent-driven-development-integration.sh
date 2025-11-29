@@ -147,11 +147,15 @@ IMPORTANT: Follow the skill exactly. I will be verifying that you:
 
 Begin now. Execute the plan."
 
-cd "$SCRIPT_DIR/../.." && timeout 1800 claude -p "$PROMPT" --allowed-tools=all > "$OUTPUT_FILE" 2>&1 || {
-    echo "EXECUTION FAILED"
-    cat "$OUTPUT_FILE"
+echo "Running Claude (output will be shown below and saved to $OUTPUT_FILE)..."
+echo "================================================================================"
+cd "$SCRIPT_DIR/../.." && timeout 1800 claude -p "$PROMPT" --allowed-tools=all 2>&1 | tee "$OUTPUT_FILE" || {
+    echo ""
+    echo "================================================================================"
+    echo "EXECUTION FAILED (exit code: $?)"
     exit 1
 }
+echo "================================================================================"
 
 echo ""
 echo "Execution complete. Analyzing results..."
