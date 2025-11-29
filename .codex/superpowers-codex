@@ -232,6 +232,8 @@ function runUseSkill(skillName) {
     console.log(`# Supporting tools and docs are in ${skillDirectory}`);
     console.log('# ============================================');
     console.log('');
+    console.log(`Base directory for this skill: ${skillDirectory}`);
+    console.log('');
 
     // Display the skill content (without frontmatter)
     console.log(content);
