@@ -2,14 +2,21 @@
 # Helper functions for Claude Code skill tests
 
 # Run Claude Code with a prompt and capture output
-# Usage: run_claude "prompt text" [timeout_seconds]
+# Usage: run_claude "prompt text" [timeout_seconds] [allowed_tools]
 run_claude() {
     local prompt="$1"
     local timeout="${2:-60}"
+    local allowed_tools="${3:-}"
     local output_file=$(mktemp)
 
+    # Build command
+    local cmd="claude -p \"$prompt\""
+    if [ -n "$allowed_tools" ]; then
+        cmd="$cmd --allowed-tools=$allowed_tools"
+    fi
+
     # Run Claude in headless mode with timeout
-    if timeout "$timeout" claude -p "$prompt" > "$output_file" 2>&1; then
+    if timeout "$timeout" bash -c "$cmd" > "$output_file" 2>&1; then
         cat "$output_file"
         rm -f "$output_file"
         return 0
