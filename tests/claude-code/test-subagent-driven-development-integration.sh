@@ -134,8 +134,9 @@ Begin now. Execute the plan.
 EOF
 
 # Note: We use a longer timeout since this is integration testing
+# Use --allowed-tools to enable tool usage in headless mode
 PROMPT=$(cat "$TEST_PROJECT/prompt.txt")
-timeout 1800 claude -p "$PROMPT" > "$OUTPUT_FILE" 2>&1 || {
+timeout 1800 claude -p "$PROMPT" --allowed-tools=all > "$OUTPUT_FILE" 2>&1 || {
     echo "EXECUTION FAILED"
     cat "$OUTPUT_FILE"
     exit 1
