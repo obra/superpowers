@@ -135,8 +135,19 @@ EOF
 
 # Note: We use a longer timeout since this is integration testing
 # Use --allowed-tools to enable tool usage in headless mode
-PROMPT=$(cat "$TEST_PROJECT/prompt.txt")
-timeout 1800 claude -p "$PROMPT" --allowed-tools=all > "$OUTPUT_FILE" 2>&1 || {
+# IMPORTANT: Run from superpowers directory so local dev skills are available
+PROMPT="Change to directory $TEST_PROJECT and then execute the implementation plan at docs/plans/implementation-plan.md using the subagent-driven-development skill.
+
+IMPORTANT: Follow the skill exactly. I will be verifying that you:
+1. Read the plan once at the beginning
+2. Provide full task text to subagents (don't make them read files)
+3. Ensure subagents do self-review before reporting
+4. Run spec compliance review before code quality review
+5. Use review loops when issues are found
+
+Begin now. Execute the plan."
+
+cd "$SCRIPT_DIR/../.." && timeout 1800 claude -p "$PROMPT" --allowed-tools=all > "$OUTPUT_FILE" 2>&1 || {
     echo "EXECUTION FAILED"
     cat "$OUTPUT_FILE"
     exit 1
