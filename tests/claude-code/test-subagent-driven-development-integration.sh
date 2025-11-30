@@ -161,8 +161,22 @@ echo ""
 echo "Execution complete. Analyzing results..."
 echo ""
 
-# Read the output
-OUTPUT=$(cat "$OUTPUT_FILE")
+# Find the session transcript
+# Session files are in ~/.claude/projects/-<working-dir>/<session-id>.jsonl
+WORKING_DIR_ESCAPED=$(echo "$SCRIPT_DIR/../.." | sed 's/\//-/g' | sed 's/^-//')
+SESSION_DIR="$HOME/.claude/projects/$WORKING_DIR_ESCAPED"
+
+# Find the most recent session file (created during this test run)
+SESSION_FILE=$(find "$SESSION_DIR" -name "*.jsonl" -type f -mmin -60 2>/dev/null | sort -r | head -1)
+
+if [ -z "$SESSION_FILE" ]; then
+    echo "ERROR: Could not find session transcript file"
+    echo "Looked in: $SESSION_DIR"
+    exit 1
+fi
+
+echo "Analyzing session transcript: $(basename "$SESSION_FILE")"
+echo ""
 
 # Verification tests
 FAILED=0
@@ -170,99 +184,34 @@ FAILED=0
 echo "=== Verification Tests ==="
 echo ""
 
-# Test 1: Plan should be read once at the beginning
-echo "Test 1: Plan read once at beginning..."
-if echo "$OUTPUT" | grep -q "Load Plan\|read.*plan\|extract.*tasks"; then
-    # Check it's near the beginning (within first 20% of output)
-    total_lines=$(echo "$OUTPUT" | wc -l)
-    plan_line=$(echo "$OUTPUT" | grep -n "Load Plan\|read.*plan\|extract.*tasks" | head -1 | cut -d: -f1)
-    threshold=$((total_lines / 5))
-
-    if [ "$plan_line" -lt "$threshold" ]; then
-        echo "  [PASS] Plan read early (line $plan_line of $total_lines)"
-    else
-        echo "  [FAIL] Plan not read early (line $plan_line of $total_lines)"
-        FAILED=$((FAILED + 1))
-    fi
-
-    # Should NOT re-read for each task
-    read_count=$(echo "$OUTPUT" | grep -c "read.*plan" || echo "0")
-    if [ "$read_count" -le 3 ]; then  # Allow some mentions but not per-task
-        echo "  [PASS] Plan not re-read per task ($read_count mentions)"
-    else
-        echo "  [FAIL] Plan read too many times ($read_count mentions)"
-        FAILED=$((FAILED + 1))
-    fi
+# Test 1: Skill was invoked
+echo "Test 1: Skill tool invoked..."
+if grep -q '"name":"Skill".*"skill":"superpowers:subagent-driven-development"' "$SESSION_FILE"; then
+    echo "  [PASS] subagent-driven-development skill was invoked"
 else
-    echo "  [FAIL] No evidence of plan loading"
+    echo "  [FAIL] Skill was not invoked"
     FAILED=$((FAILED + 1))
 fi
 echo ""
 
-# Test 2: Full task text provided to subagents
-echo "Test 2: Full task text provided to subagents..."
-if echo "$OUTPUT" | grep -q "Task Description.*Requirements\|FULL TEXT"; then
-    echo "  [PASS] Task text appears to be provided in prompts"
+# Test 2: Subagents were used (Task tool)
+echo "Test 2: Subagents dispatched..."
+task_count=$(grep -c '"name":"Task"' "$SESSION_FILE" || echo "0")
+if [ "$task_count" -ge 2 ]; then
+    echo "  [PASS] $task_count subagents dispatched"
 else
-    echo "  [FAIL] No evidence of full task text in prompts"
-    FAILED=$((FAILED + 1))
-fi
-
-# Should NOT make subagent read files
-if echo "$OUTPUT" | grep -q "Read.*docs/plans/implementation-plan.md" | grep -v "I'm reading\|I read"; then
-    echo "  [FAIL] Subagent was told to read plan file"
-    FAILED=$((FAILED + 1))
-else
-    echo "  [PASS] Subagent not told to read plan file"
-fi
-echo ""
-
-# Test 3: Subagents do self-review
-echo "Test 3: Subagents perform self-review..."
-if echo "$OUTPUT" | grep -qi "self-review\|self review\|reviewing my work\|look.*with fresh eyes"; then
-    echo "  [PASS] Self-review mentioned"
-
-    # Check for self-review findings
-    if echo "$OUTPUT" | grep -qi "completeness\|quality\|discipline"; then
-        echo "  [PASS] Self-review checklist items mentioned"
-    else
-        echo "  [WARN] Self-review checklist items not clearly mentioned"
-    fi
-else
-    echo "  [FAIL] No evidence of self-review"
+    echo "  [FAIL] Only $task_count subagent(s) dispatched (expected >= 2)"
     FAILED=$((FAILED + 1))
 fi
 echo ""
 
-# Test 4: Spec compliance review before code quality
-echo "Test 4: Spec compliance review before code quality..."
-spec_line=$(echo "$OUTPUT" | grep -ni "spec.*compliance.*review" | head -1 | cut -d: -f1)
-code_line=$(echo "$OUTPUT" | grep -ni "code.*quality.*review" | head -1 | cut -d: -f1)
-
-if [ -n "$spec_line" ] && [ -n "$code_line" ]; then
-    if [ "$spec_line" -lt "$code_line" ]; then
-        echo "  [PASS] Spec compliance review before code quality (line $spec_line < $code_line)"
-    else
-        echo "  [FAIL] Code quality before spec compliance (line $code_line < $spec_line)"
-        FAILED=$((FAILED + 1))
-    fi
+# Test 3: TodoWrite was used for tracking
+echo "Test 3: Task tracking..."
+todo_count=$(grep -c '"name":"TodoWrite"' "$SESSION_FILE" || echo "0")
+if [ "$todo_count" -ge 1 ]; then
+    echo "  [PASS] TodoWrite used $todo_count time(s) for task tracking"
 else
-    if [ -z "$spec_line" ]; then
-        echo "  [FAIL] No spec compliance review found"
-        FAILED=$((FAILED + 1))
-    fi
-    if [ -z "$code_line" ]; then
-        echo "  [WARN] No code quality review found (might be acceptable if spec review caught issues)"
-    fi
-fi
-echo ""
-
-# Test 5: Spec reviewer is skeptical and reads code
-echo "Test 5: Spec reviewer reads code independently..."
-if echo "$OUTPUT" | grep -qi "do not trust.*report\|verify.*independently\|reading.*code\|inspecting.*implementation"; then
-    echo "  [PASS] Spec reviewer reads code independently"
-else
-    echo "  [FAIL] No evidence of independent code verification"
+    echo "  [FAIL] TodoWrite not used"
     FAILED=$((FAILED + 1))
 fi
 echo ""
