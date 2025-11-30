@@ -277,6 +277,14 @@ else
 fi
 echo ""
 
+# Token Usage Analysis
+echo "========================================="
+echo " Token Usage Analysis"
+echo "========================================="
+echo ""
+python3 "$SCRIPT_DIR/analyze-token-usage.py" "$SESSION_FILE"
+echo ""
+
 # Summary
 echo "========================================"
 echo " Test Summary"
