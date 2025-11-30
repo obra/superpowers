@@ -15,7 +15,7 @@ Claiming work is complete without verification is dishonesty, not efficiency.
 
 ## The Iron Law
 
-```
+```text
 NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
 ```
 
@@ -23,7 +23,7 @@ If you haven't run the verification command in this message, you cannot claim it
 
 ## The Gate Function
 
-```
+```text
 BEFORE claiming any status or expressing satisfaction:
 
 1. IDENTIFY: What command proves this claim?
@@ -76,31 +76,31 @@ Skip any step = lying, not verifying
 ## Key Patterns
 
 **Tests:**
-```
+```text
 ✅ [Run test command] [See: 34/34 pass] "All tests pass"
 ❌ "Should pass now" / "Looks correct"
 ```
 
 **Regression tests (TDD Red-Green):**
-```
+```text
 ✅ Write → Run (pass) → Revert fix → Run (MUST FAIL) → Restore → Run (pass)
 ❌ "I've written a regression test" (without red-green verification)
 ```
 
 **Build:**
-```
+```text
 ✅ [Run build] [See: exit 0] "Build passes"
 ❌ "Linter passed" (linter doesn't check compilation)
 ```
 
 **Requirements:**
-```
+```text
 ✅ Re-read plan → Create checklist → Verify each → Report gaps or completion
 ❌ "Tests pass, phase complete"
 ```
 
 **Agent delegation:**
-```
+```text
 ✅ Agent reports success → Check VCS diff → Verify changes → Report actual state
 ❌ Trust agent report
 ```

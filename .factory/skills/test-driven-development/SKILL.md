@@ -30,7 +30,7 @@ Thinking "skip TDD just this once"? Stop. That's rationalization.
 
 ## The Iron Law
 
-```
+```text
 NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
 ```
 
@@ -205,7 +205,7 @@ Next failing test for next feature.
 
 ## Why Order Matters
 
-**"I'll write tests after to verify it works"**
+### "I'll write tests after to verify it works"
 
 Tests written after code pass immediately. Passing immediately proves nothing:
 - Might test wrong thing
@@ -215,7 +215,7 @@ Tests written after code pass immediately. Passing immediately proves nothing:
 
 Test-first forces you to see the test fail, proving it actually tests something.
 
-**"I already manually tested all the edge cases"**
+### "I already manually tested all the edge cases"
 
 Manual testing is ad-hoc. You think you tested everything but:
 - No record of what you tested
@@ -225,7 +225,7 @@ Manual testing is ad-hoc. You think you tested everything but:
 
 Automated tests are systematic. They run the same way every time.
 
-**"Deleting X hours of work is wasteful"**
+### "Deleting X hours of work is wasteful"
 
 Sunk cost fallacy. The time is already gone. Your choice now:
 - Delete and rewrite with TDD (X more hours, high confidence)
@@ -233,7 +233,7 @@ Sunk cost fallacy. The time is already gone. Your choice now:
 
 The "waste" is keeping code you can't trust. Working code without real tests is technical debt.
 
-**"TDD is dogmatic, being pragmatic means adapting"**
+### "TDD is dogmatic, being pragmatic means adapting"
 
 TDD IS pragmatic:
 - Finds bugs before commit (faster than debugging after)
@@ -243,7 +243,7 @@ TDD IS pragmatic:
 
 "Pragmatic" shortcuts = debugging in production = slower.
 
-**"Tests after achieve the same goals - it's spirit not ritual"**
+### "Tests after achieve the same goals - it's spirit not ritual"
 
 No. Tests-after answer "What does this do?" Tests-first answer "What should this do?"
 
@@ -356,7 +356,7 @@ Never fix bugs without a test.
 
 ## Final Rule
 
-```
+```text
 Production code → test exists and failed first
 Otherwise → not TDD
 ```
