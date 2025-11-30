@@ -291,7 +291,8 @@ Tests-first force edge case discovery before implementing. Tests-after verify yo
 
 **Bug:** Empty email accepted
 
-**RED**
+### RED
+
 ```typescript
 test('rejects empty email', async () => {
   const result = await submitForm({ email: '' });
@@ -299,13 +300,15 @@ test('rejects empty email', async () => {
 });
 ```
 
-**Verify RED**
+### Verify RED
+
 ```bash
 $ npm test
 FAIL: expected 'Email required', got undefined
 ```
 
-**GREEN**
+### GREEN
+
 ```typescript
 function submitForm(data: FormData) {
   if (!data.email?.trim()) {
@@ -315,13 +318,15 @@ function submitForm(data: FormData) {
 }
 ```
 
-**Verify GREEN**
+### Verify GREEN
+
 ```bash
 $ npm test
 PASS
 ```
 
-**REFACTOR**
+### REFACTOR
+
 Extract validation for multiple fields if needed.
 
 ## Verification Checklist
