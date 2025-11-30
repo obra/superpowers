@@ -43,7 +43,7 @@ echo -e "${YELLOW}[1/5] Setting up superpowers repository...${NC}"
 if [[ -d "$SUPERPOWERS_DIR" ]]; then
     echo "  Repository exists, updating..."
     cd "$SUPERPOWERS_DIR"
-    git pull --quiet
+    git pull --quiet || { echo -e "${RED}  ✗ Failed to update repository${NC}"; exit 1; }
     echo -e "${GREEN}  ✓ Repository updated${NC}"
 else
     echo "  Cloning repository..."

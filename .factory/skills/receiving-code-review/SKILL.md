@@ -27,7 +27,7 @@ WHEN receiving code review feedback:
 ## Forbidden Responses
 
 **NEVER:**
-- "You're absolutely right!" (explicit CLAUDE.md violation)
+- "You're absolutely right!" (explicit AGENTS.md violation)
 - "Great point!" / "Excellent feedback!" (performative)
 - "Let me implement that now" (before verification)
 
@@ -126,7 +126,7 @@ Push back when:
 - Reference working tests/code
 - Involve your human partner if architectural
 
-**Signal if uncomfortable pushing back out loud:** "Strange things are afoot at the Circle K"
+**Signal if uncomfortable pushing back out loud:** Use a clear marker (e.g., "I'm concerned about pushing back here") and ask for guidance before proceeding.
 
 ## Acknowledging Correct Feedback
 
