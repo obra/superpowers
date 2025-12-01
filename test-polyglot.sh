@@ -74,11 +74,12 @@ echo ""
 # Test 5: Verify JSON is valid (if jq is available)
 echo "--- Test 5: JSON validity ---"
 if command -v jq &> /dev/null; then
-    if echo "$output" | jq . > /dev/null 2>&1; then
+    # Run fresh and pipe directly to jq to avoid variable escaping issues
+    if ./hooks/session-start.cmd 2>&1 | jq . > /dev/null 2>&1; then
         pass "Output is valid JSON (verified with jq)"
     else
         fail "Output is not valid JSON"
-        echo "Output was: $output"
+        echo "Run manually to debug: CLAUDE_PLUGIN_ROOT=\$(pwd) ./hooks/session-start.cmd | jq ."
     fi
 else
     echo "SKIP: jq not installed, cannot validate JSON"
