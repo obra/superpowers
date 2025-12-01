@@ -4,10 +4,7 @@ REM Polyglot wrapper: runs .sh scripts cross-platform
 REM Usage: run-hook.cmd <script-name> [args...]
 REM The script should be in the same directory as this wrapper
 
-set "SCRIPT_DIR=%~dp0"
-set "SCRIPT_NAME=%~1"
-
-"C:\Program Files\Git\bin\bash.exe" -l -c "cd \"$(cygpath -u \"%SCRIPT_DIR%\")\" && \"./%SCRIPT_NAME%\""
+"C:\Program Files\Git\bin\bash.exe" -l "%~dp0%~1"
 exit /b
 CMDBLOCK
 
