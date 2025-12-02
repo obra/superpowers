@@ -68,7 +68,7 @@ Transform problem descriptions into comprehensive, actionable GitHub issues.
 
 Offer 2-3 approaches:
 
-```
+```markdown
 **Approach 1: [Name]**
 - Description: [brief explanation]
 - Pros: [advantages]
@@ -157,19 +157,19 @@ Every issue must be:
 
 ## Common Mistakes
 
-**Creating issue without clarification**
+### Creating issue without clarification
 - Problem: Vague issues require follow-up, waste time
 - Fix: Always ask clarifying questions first
 
-**Skipping codebase analysis**
+### Skipping codebase analysis
 - Problem: Implementation details are guesses
 - Fix: Identify actual files and patterns before writing
 
-**One giant issue for multiple problems**
+### One giant issue for multiple problems
 - Problem: Hard to track, assign, or close
 - Fix: Ask "Should I create separate issues for each?"
 
-**Missing acceptance criteria**
+### Missing acceptance criteria
 - Problem: No clear definition of "done"
 - Fix: Always include testable checkboxes
 
