@@ -65,7 +65,7 @@ Evaluate these dimensions:
 Make one of three determinations:
 
 **A. CAN PROCEED** (requirements clear, scope manageable)
-```
+```text
 IMPLEMENTATION PLAN
 Complexity: [1-10]
 Files: [list with changes needed]
@@ -79,14 +79,14 @@ Risks: [Potential issues]
 ```
 
 **B. REQUIRES CLARIFICATION** (missing information)
-```
+```text
 REQUIRES CLARIFICATION
 Missing: [specific questions]
 Suggested: [how to obtain info]
 ```
 
 **C. BEYOND SCOPE** (too complex, blocked)
-```
+```text
 COMPLEXITY WARNING
 Reason: [why too complex]
 Blockers: [specific blockers]
@@ -138,19 +138,19 @@ Offer options:
 
 ## Common Mistakes
 
-**Starting implementation without checkpoint**
+### Starting implementation without checkpoint
 - Problem: Wasted effort if approach is wrong
 - Fix: Always present plan and wait for approval
 
-**Skipping codebase analysis**
+### Skipping codebase analysis
 - Problem: Miss dependencies, break other features
 - Fix: Always check related files and recent commits
 
-**Underestimating complexity**
+### Underestimating complexity
 - Problem: Get stuck mid-implementation
 - Fix: Be conservative in complexity ratings
 
-**Auto-committing or pushing**
+### Auto-committing or pushing
 - Problem: User loses control
 - Fix: Never commit/push without explicit approval
 
