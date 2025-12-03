@@ -55,7 +55,7 @@ ln -s ~/.factory/superpowers/agents/* .
 
 This exposes all Superpowers agents (like `code-reviewer`) as custom droids usable via the Task tool.
 
-#### 5. Install SessionStart Hook (Optional but Recommended)
+#### 5. Install SessionStart Hook (Optional) and/or AGENTS.md Bootstrap
 
 Add or merge the following into `~/.factory/settings.json` (create if missing):
 
@@ -64,12 +64,11 @@ Add or merge the following into `~/.factory/settings.json` (create if missing):
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "startup|resume|clear|compact",
         "hooks": [
           {
             "type": "command",
-            "command": "\"$HOME/.factory/superpowers/hooks/session-start.sh\"",
-            "timeout": 30
+            "command": "sh ~/.factory/superpowers/hooks/session-start.sh",
+            "timeout": 5
           }
         ]
       }
@@ -78,7 +77,20 @@ Add or merge the following into `~/.factory/settings.json` (create if missing):
 }
 ```
 
-On SessionStart, Droid runs the `session-start.sh` script directly from `~/.factory/superpowers/hooks/` and receives an `<EXTREMELY_IMPORTANT>` block with the full `using-superpowers` skill, which bootstraps all superpowers functionality. No additional copying or linking of the `hooks` directory is required.
+On SessionStart, Droid runs the `session-start.sh` script from `~/.factory/superpowers/hooks/` and should receive an `<EXTREMELY_IMPORTANT>` block with the full `using-superpowers` skill, which bootstraps all superpowers functionality.
+
+> Note: Some Droid CLI versions log `SessionStart` hook output but do not inject its `additionalContext` into the model. If you do not see the "You have superpowers" bootstrap text when you ask Droid about superpowers, fall back to an AGENTS.md-based bootstrap.
+
+**AGENTS.md bootstrap (recommended fallback if above hook is not working)**
+
+1. Open or create `~/.factory/AGENTS.md`.
+2. Append the full contents of the `using-superpowers` skill to your AGENTS guidelines:
+
+   ```bash
+   cat ~/.factory/skills/using-superpowers/SKILL.md >> ~/.factory/AGENTS.md
+   ```
+
+3. Start a new `droid` session. Droid will now always see the `using-superpowers` instructions via AGENTS.md, even if the SessionStart hook output is ignored.
 
 ## Usage
 
@@ -109,87 +121,6 @@ Use the Task tool with `code-reviewer` to review code:
 Run the Task tool with subagent_type 'code-reviewer' to review the staged diff.
 ```
 
-### Personal Skills
-
-Create your own skills in `~/.factory/skills/`:
-
-```bash
-mkdir -p ~/.factory/skills/my-skill
-```
-
-Create `~/.factory/skills/my-skill/SKILL.md`:
-
-```markdown
----
-name: my-skill
-description: Use when [condition] - [what it does]
----
-
-# My Skill
-
-[Your skill content here]
-```
-
-Personal skills override superpowers skills with the same name.
-
-## Project-Local Installation
-
-For teams who want Superpowers checked into a specific repo:
-
-1. **Add Superpowers as submodule**:
-   ```bash
-   git submodule add https://github.com/obra/superpowers.git tools/superpowers
-   ```
-
-2. **Copy skills**:
-   ```bash
-   mkdir -p .factory/skills
-   cp -r tools/superpowers/skills/* .factory/skills/
-   ```
-
-   Note: Skills must be copied (not symlinked) as Droid CLI doesn't recognize symlinked skills.
-
-3. **Symlink commands**:
-   ```bash
-   mkdir -p .factory/commands
-   cd .factory/commands
-   ln -s ../../tools/superpowers/commands/* .
-   ```
-
-4. **Symlink droids**:
-   ```bash
-   mkdir -p .factory/droids
-   cd .factory/droids
-  ln -s ../../tools/superpowers/agents/* .
-   ```
-
-5. **Configure SessionStart hook** in `.factory/settings.json`:
-   ```json
-   {
-     "hooks": {
-       "SessionStart": [
-         {
-           "matcher": "startup|resume|clear|compact",
-           "hooks": [
-             {
-               "type": "command",
-               "command": "\"$FACTORY_PROJECT_DIR/tools/superpowers/hooks/session-start.sh\"",
-               "timeout": 30
-             }
-           ]
-         }
-       ]
-     }
-   }
-   ```
-
-## Updating
-
-```bash
-cd ~/.factory/superpowers
-git pull
-```
-
 ## Troubleshooting
 
 ### Skills not detected
@@ -211,8 +142,8 @@ git pull
 ### SessionStart hook not running
 
 1. Run `/hooks` and inspect `SessionStart` configuration
-2. Verify script is executable: `chmod +x ~/.factory/superpowers/hooks/session-start.sh`
-3. Check `~/.factory/settings.json` syntax is valid JSON
+2. Verify script is executable: `chmod +x ~/.factory/hooks/session-start.sh`
+3. Alternatively copy the content of using-superpowers/SKILL.md to ~/.factory/AGENTS.md
 
 ## Getting Help
 

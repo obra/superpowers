@@ -49,12 +49,11 @@ Create or merge into `~/.factory/settings.json`:
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "startup|resume|clear|compact",
         "hooks": [
           {
             "type": "command",
-            "command": "\"$HOME/.factory/superpowers/hooks/session-start.sh\"",
-            "timeout": 30
+            "command": "sh ~/.factory/superpowers/hooks/session-start.sh",
+            "timeout": 5
           }
         ]
       }
@@ -64,6 +63,18 @@ Create or merge into `~/.factory/settings.json`:
 ```
 
 This uses the `session-start.sh` script directly from `~/.factory/superpowers/hooks/`; you do not need to copy or link the `hooks` directory.
+
+> Note: Some Droid CLI versions log `SessionStart` hook output but do not inject its `additionalContext` into the model. If you do not see the "You have superpowers" bootstrap text when you ask Droid about superpowers, you can use an AGENTS.md-based bootstrap instead of, or in addition to, the hook.
+
+### 6. AGENTS.md Bootstrap (Fallback or Alternative)
+
+Append the full contents of the `using-superpowers` skill to your global AGENTS guidelines:
+
+```bash
+cat ~/.factory/skills/using-superpowers/SKILL.md >> ~/.factory/AGENTS.md
+```
+
+Then start a new `droid` session. Droid will now always see the `using-superpowers` instructions via AGENTS.md, even if the SessionStart hook output is ignored.
 
 ## Verification
 
