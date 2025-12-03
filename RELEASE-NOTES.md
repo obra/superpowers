@@ -1,5 +1,16 @@
 # Superpowers Release Notes
 
+## v3.6.2 (2025-12-03)
+
+### Fixed
+
+- **Linux Compatibility**: Fixed polyglot hook wrapper (`run-hook.cmd`) to use POSIX-compliant syntax
+  - Replaced bash-specific `${BASH_SOURCE[0]:-$0}` with standard `$0` on line 16
+  - Resolves "Bad substitution" error on Ubuntu/Debian systems where `/bin/sh` is dash
+  - Fixes #141
+
+---
+
 ## v3.5.1 (2025-11-24)
 
 ### Changed
