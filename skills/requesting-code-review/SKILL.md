@@ -102,4 +102,11 @@ You: [Fix progress indicators]
 - Show code/tests that prove it works
 - Request clarification
 
-See template at: requesting-code-review/code-reviewer.md
+## GitHub PR Mechanics
+
+If reviewing a PR hosted on GitHub, see `github-reviews.md` for:
+- Fetching PR content and existing discussion
+- Posting findings (after parent approval)
+- Forbidden actions
+
+See template at: skills/collaboration/requesting-code-review/code-reviewer.md
