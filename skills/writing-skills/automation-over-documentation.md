@@ -18,8 +18,15 @@
 **Automation approach (succeeded):**
 
 ```python
+import emoji
+
 def strip_emojis(text):
-    return re.sub(r'[emoji_ranges]', '', text)
+    return emoji.replace_emoji(text, replace='')
+
+# Or using regex for zero dependencies:
+# import re
+# emoji_pattern = re.compile(r'[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF]+')
+# return emoji_pattern.sub('', text)
 ```
 
 **Result:** 5/5 tests passed first try, 100% compliance, zero documentation needed.
