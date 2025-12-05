@@ -497,6 +497,8 @@ Add to description: symptoms of when you're ABOUT to violate the rule:
 description: use when implementing any feature or bugfix, before writing implementation code
 ```
 
+**Deep dive:** See automation-over-documentation.md for case study showing documentation approach failing after 2 TDD cycles, mechanical enforcement succeeding immediately. Includes decision framework and cost-benefit analysis.
+
 ## RED-GREEN-REFACTOR for Skills
 
 Follow the TDD cycle:
