@@ -3,7 +3,7 @@
 With the introduction of native support for skills in codex (https://github.com/
   openai/codex/blob/main/docs/skills.md), we don't have to use legacy superpowers hook.
 
-#Steps to update from legacy installation
+# Steps to update from legacy installation
 1) Directory: put skills under `~/.codex/skills` (one folder per skill with `SKILL.md`).
 2) Enable feature: add to `~/.codex/config.toml`:
    ```
