@@ -84,13 +84,12 @@ These skills can still be read for educational purposes, but their workflows can
 
 | File | Purpose |
 |------|---------|
-| `INSTALL.md` | Step-by-step installation instructions |
+| `INSTALL.md` | Installation instructions (human-readable + Claude instructions) |
 | `README.md` | This file - overview and limitations |
-| `bootstrap.md` | Bootstrap content Claude fetches to install skills |
 
 ## Recommended Workflow for Web Users
 
-1. **First time**: Tell Claude to fetch the bootstrap and install skills
+1. **First time**: Tell Claude to fetch and follow INSTALL.md
 2. **Start of conversation**: Tell Claude to read `~/.claude/skills/superpowers/using-superpowers/SKILL.md`
 3. **Before any task**: Ask Claude to check for relevant skills
 4. **When a skill applies**: Have Claude read and follow it

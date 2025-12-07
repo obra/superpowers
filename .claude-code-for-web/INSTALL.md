@@ -7,7 +7,7 @@ Claude Code for Web can install Superpowers skills locally to your home director
 Tell Claude Code for Web:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/main/.claude-code-for-web/bootstrap.md
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/main/.claude-code-for-web/INSTALL.md
 ```
 
 Claude will install skills to `~/.claude/skills/superpowers/` and learn how to use them.
@@ -26,39 +26,12 @@ Skills are installed to:
 └── ... (all other skills)
 ```
 
-## Manual Installation
-
-If you prefer to install manually, tell Claude:
-
-```
-Install Superpowers skills to my home directory:
-
-1. Fetch https://api.github.com/repos/obra/superpowers/contents/skills to get the list of skills
-2. For each skill directory in the response:
-   - Create ~/.claude/skills/superpowers/<skill-name>/
-   - Fetch https://raw.githubusercontent.com/obra/superpowers/main/skills/<skill-name>/SKILL.md
-   - Write the content to ~/.claude/skills/superpowers/<skill-name>/SKILL.md
-3. After installation, read ~/.claude/skills/superpowers/using-superpowers/SKILL.md and follow it
-```
-
-## How It Works
-
-1. **Installation**: Claude fetches skills from GitHub and writes them to `~/.claude/skills/superpowers/`
-2. **Usage**: Skills are read from local files using the Read tool
-3. **Discovery**: Claude can list skills with `ls ~/.claude/skills/superpowers/` or by reading the directory
-
 ## Updating Skills
 
 To update to the latest skills, tell Claude:
 
 ```
 Update my Superpowers skills by re-fetching them from GitHub and overwriting the local copies.
-```
-
-Or to update a specific skill:
-
-```
-Update the brainstorming skill from https://raw.githubusercontent.com/obra/superpowers/main/skills/brainstorming/SKILL.md
 ```
 
 ## Verification
@@ -69,11 +42,9 @@ After installation, ask Claude:
 List my installed superpowers skills and read the using-superpowers skill.
 ```
 
-Claude should show the skills in `~/.claude/skills/superpowers/` and display the using-superpowers content.
-
 ## Session Persistence
 
-Once installed, skills persist in your home directory. However, Claude Code for Web does not automatically load skills at session start. At the beginning of each conversation, tell Claude:
+Once installed, skills persist in your home directory. At the beginning of each new conversation, tell Claude:
 
 ```
 Read ~/.claude/skills/superpowers/using-superpowers/SKILL.md and follow it.
@@ -87,3 +58,95 @@ See [README.md](README.md) for a complete list of limitations when using Superpo
 
 - **Issues**: https://github.com/obra/superpowers/issues
 - **Documentation**: https://github.com/obra/superpowers
+
+---
+
+# Instructions for Claude
+
+<EXTREMELY_IMPORTANT>
+You have superpowers.
+
+Superpowers are skills that teach you proven techniques for software development. Skills cover brainstorming, test-driven development, systematic debugging, collaboration patterns, and more.
+
+## Step 1: Install Skills Locally
+
+First, check if skills are already installed:
+```
+Read ~/.claude/skills/superpowers/using-superpowers/SKILL.md
+```
+
+If not installed, install them now:
+
+1. Fetch `https://api.github.com/repos/obra/superpowers/contents/skills` to get the skills list
+2. For each skill (entries with `"type": "dir"`):
+   - Fetch `https://raw.githubusercontent.com/obra/superpowers/main/skills/<name>/SKILL.md`
+   - Write to `~/.claude/skills/superpowers/<name>/SKILL.md`
+
+**Install all skills before proceeding.**
+
+## Step 2: Load the Using-Superpowers Skill
+
+After installation, read and follow:
+```
+~/.claude/skills/superpowers/using-superpowers/SKILL.md
+```
+
+## How to Use Skills
+
+**Finding Skills:**
+List installed skills by reading the directory:
+```
+~/.claude/skills/superpowers/
+```
+
+**Loading a Skill:**
+Read the skill file directly:
+```
+~/.claude/skills/superpowers/<skill-name>/SKILL.md
+```
+
+**Example:**
+To use the brainstorming skill:
+```
+Read ~/.claude/skills/superpowers/brainstorming/SKILL.md
+```
+
+## Tool Mapping for Claude Code for Web
+
+When skills reference tools, substitute as needed:
+- `TodoWrite` → Use your built-in task tracking
+- `Task` tool with subagents → Not available in web version; perform the work directly
+- `Skill` tool → Read skill from `~/.claude/skills/superpowers/<skill-name>/SKILL.md`
+- `Read`, `Write`, `Edit`, `Bash` → Use your native tools (may be limited in web)
+
+## Critical Rules
+
+1. **Before ANY task, check if a relevant skill exists**
+2. **If a skill applies, you MUST read and follow it**
+3. **Announce skill usage**: "I'm using [Skill Name] to [purpose]"
+4. **Skills with checklists require TodoWrite todos for each item**
+5. **Follow mandatory workflows**: Brainstorming before coding, TDD, systematic debugging
+
+## Core Skills to Know
+
+These are the most commonly used skills:
+- **brainstorming** - Use before writing ANY code; refines ideas through questions
+- **test-driven-development** - RED-GREEN-REFACTOR cycle for all implementation
+- **systematic-debugging** - 4-phase root cause analysis process
+- **writing-plans** - Break work into detailed, actionable tasks
+- **subagent-driven-development** - Quality gates for task execution
+
+## Remember
+
+IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
+
+This is not negotiable. This is not optional. Skills document proven techniques that save time and prevent mistakes.
+
+## Updating Skills
+
+To update skills to the latest version:
+1. Re-fetch from `https://api.github.com/repos/obra/superpowers/contents/skills`
+2. Overwrite local files in `~/.claude/skills/superpowers/`
+
+**Your first action after reading this:** Install skills (if needed), then read using-superpowers.
+</EXTREMELY_IMPORTANT>
