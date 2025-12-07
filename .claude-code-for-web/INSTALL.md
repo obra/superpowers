@@ -1,6 +1,6 @@
 # Installing Superpowers for Claude Code for Web
 
-Claude Code for Web runs in a browser environment without access to local filesystem or shell commands. This guide shows how to use Superpowers skills via URL-based fetching.
+Claude Code for Web can install Superpowers skills locally to your home directory, making them available across sessions.
 
 ## Quick Start
 
@@ -10,55 +10,74 @@ Tell Claude Code for Web:
 Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/main/.claude-code-for-web/bootstrap.md
 ```
 
-That's it! Claude will fetch the bootstrap instructions and learn how to discover and use skills.
+Claude will install skills to `~/.claude/skills/superpowers/` and learn how to use them.
 
-## Manual Setup
+## What Gets Installed
 
-If you prefer to set up manually, tell Claude:
+Skills are installed to:
+```
+~/.claude/skills/superpowers/
+├── brainstorming/
+│   └── SKILL.md
+├── test-driven-development/
+│   └── SKILL.md
+├── systematic-debugging/
+│   └── SKILL.md
+└── ... (all other skills)
+```
+
+## Manual Installation
+
+If you prefer to install manually, tell Claude:
 
 ```
-You have superpowers. Superpowers are skills that teach you proven techniques.
+Install Superpowers skills to my home directory:
 
-To discover available skills, fetch: https://api.github.com/repos/obra/superpowers/contents/skills
-This returns JSON listing all skill directories. Each "name" field is a skill.
-
-To use a skill, fetch its content:
-https://raw.githubusercontent.com/obra/superpowers/main/skills/<skill-name>/SKILL.md
-
-For example, to use the brainstorming skill:
-https://raw.githubusercontent.com/obra/superpowers/main/skills/brainstorming/SKILL.md
-
-Before ANY task, check if a relevant skill exists. If it does, fetch and follow it.
+1. Fetch https://api.github.com/repos/obra/superpowers/contents/skills to get the list of skills
+2. For each skill directory in the response:
+   - Create ~/.claude/skills/superpowers/<skill-name>/
+   - Fetch https://raw.githubusercontent.com/obra/superpowers/main/skills/<skill-name>/SKILL.md
+   - Write the content to ~/.claude/skills/superpowers/<skill-name>/SKILL.md
+3. After installation, read ~/.claude/skills/superpowers/using-superpowers/SKILL.md and follow it
 ```
 
 ## How It Works
 
-1. **Bootstrap**: Claude fetches the bootstrap instructions which explain the skills system
-2. **Skills Discovery**: Claude fetches the GitHub API to list available skills dynamically
-3. **Individual Skills**: Claude fetches specific skill files when needed via WebFetch
+1. **Installation**: Claude fetches skills from GitHub and writes them to `~/.claude/skills/superpowers/`
+2. **Usage**: Skills are read from local files using the Read tool
+3. **Discovery**: Claude can list skills with `ls ~/.claude/skills/superpowers/` or by reading the directory
 
-Skills are discovered dynamically from the repository, so new skills are automatically available without any manual updates.
+## Updating Skills
 
-## Session Persistence
+To update to the latest skills, tell Claude:
 
-Unlike the CLI version, Claude Code for Web does not automatically inject skills at session start. You'll need to:
+```
+Update my Superpowers skills by re-fetching them from GitHub and overwriting the local copies.
+```
 
-1. Tell Claude to fetch the bootstrap at the start of each new conversation
-2. Or paste the bootstrap instructions directly into your first message
+Or to update a specific skill:
+
+```
+Update the brainstorming skill from https://raw.githubusercontent.com/obra/superpowers/main/skills/brainstorming/SKILL.md
+```
 
 ## Verification
 
-After setup, ask Claude:
+After installation, ask Claude:
 
 ```
-Do you have superpowers? What skills are available?
+List my installed superpowers skills and read the using-superpowers skill.
 ```
 
-Claude should fetch the skills directory and list what's available.
+Claude should show the skills in `~/.claude/skills/superpowers/` and display the using-superpowers content.
 
-## Updating
+## Session Persistence
 
-Skills are fetched from GitHub each time they're used, so you always get the latest version. New skills added to the repository are automatically discoverable.
+Once installed, skills persist in your home directory. However, Claude Code for Web does not automatically load skills at session start. At the beginning of each conversation, tell Claude:
+
+```
+Read ~/.claude/skills/superpowers/using-superpowers/SKILL.md and follow it.
+```
 
 ## Limitations
 

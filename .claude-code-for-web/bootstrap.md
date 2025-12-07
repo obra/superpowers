@@ -5,39 +5,61 @@ You have superpowers.
 
 Superpowers are skills that teach you proven techniques for software development. Skills cover brainstorming, test-driven development, systematic debugging, collaboration patterns, and more.
 
-## How to Use Skills in Claude Code for Web
+## Step 1: Install Skills Locally
 
-**Discovering Skills:**
-Fetch the skills directory listing from GitHub API:
+First, check if skills are already installed:
 ```
-https://api.github.com/repos/obra/superpowers/contents/skills
+Read ~/.claude/skills/superpowers/using-superpowers/SKILL.md
 ```
 
-This returns JSON with all available skills. Each entry with `"type": "dir"` is a skill. Extract the `name` field to get skill names.
+If not installed, install them now:
+
+1. Fetch `https://api.github.com/repos/obra/superpowers/contents/skills` to get the skills list
+2. For each skill (entries with `"type": "dir"`):
+   - Fetch `https://raw.githubusercontent.com/obra/superpowers/main/skills/<name>/SKILL.md`
+   - Write to `~/.claude/skills/superpowers/<name>/SKILL.md`
+
+**Install all skills before proceeding.**
+
+## Step 2: Load the Using-Superpowers Skill
+
+After installation, read and follow:
+```
+~/.claude/skills/superpowers/using-superpowers/SKILL.md
+```
+
+## How to Use Skills
+
+**Finding Skills:**
+List installed skills by reading the directory:
+```
+~/.claude/skills/superpowers/
+```
 
 **Loading a Skill:**
-Once you know a skill name, fetch its content:
+Read the skill file directly:
 ```
-https://raw.githubusercontent.com/obra/superpowers/main/skills/<skill-name>/SKILL.md
+~/.claude/skills/superpowers/<skill-name>/SKILL.md
 ```
 
-**Example workflow:**
-1. Fetch `https://api.github.com/repos/obra/superpowers/contents/skills`
-2. Parse JSON to find skill names (e.g., `brainstorming`, `test-driven-development`)
-3. To use brainstorming, fetch: `https://raw.githubusercontent.com/obra/superpowers/main/skills/brainstorming/SKILL.md`
+**Example:**
+To use the brainstorming skill:
+```
+Read ~/.claude/skills/superpowers/brainstorming/SKILL.md
+```
 
 ## Tool Mapping for Claude Code for Web
 
 When skills reference tools, substitute as needed:
 - `TodoWrite` → Use your built-in task tracking
 - `Task` tool with subagents → Not available in web version; perform the work directly
-- `Skill` tool → Use WebFetch to load skills from GitHub URLs
+- `Skill` tool → Read skill from `~/.claude/skills/superpowers/<skill-name>/SKILL.md`
 - `Read`, `Write`, `Edit`, `Bash` → Use your native tools (may be limited in web)
 
 ## Critical Rules
 
 1. **Before ANY task, check if a relevant skill exists**
-2. **If a skill applies, you MUST fetch and follow it**
+2. **If a skill applies, you MUST read and follow it**
 3. **Announce skill usage**: "I'm using [Skill Name] to [purpose]"
 4. **Skills with checklists require TodoWrite todos for each item**
 5. **Follow mandatory workflows**: Brainstorming before coding, TDD, systematic debugging
@@ -51,13 +73,17 @@ These are the most commonly used skills:
 - **writing-plans** - Break work into detailed, actionable tasks
 - **subagent-driven-development** - Quality gates for task execution
 
-Fetch the full skills directory to see all available skills.
-
 ## Remember
 
 IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
 
 This is not negotiable. This is not optional. Skills document proven techniques that save time and prevent mistakes.
 
-**Your first action after reading this:** Fetch the skills directory to see what's available.
+## Updating Skills
+
+To update skills to the latest version:
+1. Re-fetch from `https://api.github.com/repos/obra/superpowers/contents/skills`
+2. Overwrite local files in `~/.claude/skills/superpowers/`
+
+**Your first action after reading this:** Install skills (if needed), then read using-superpowers.
 </EXTREMELY_IMPORTANT>
