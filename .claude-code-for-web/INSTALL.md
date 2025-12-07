@@ -7,10 +7,10 @@ Claude Code for Web runs in a browser environment without access to local filesy
 Tell Claude Code for Web:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.claude-code-for-web/bootstrap.md
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/main/.claude-code-for-web/bootstrap.md
 ```
 
-That's it! Claude will fetch the bootstrap instructions and learn how to use skills.
+That's it! Claude will fetch the bootstrap instructions and learn how to discover and use skills.
 
 ## Manual Setup
 
@@ -19,13 +19,14 @@ If you prefer to set up manually, tell Claude:
 ```
 You have superpowers. Superpowers are skills that teach you proven techniques.
 
-To find skills, fetch: https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.claude-code-for-web/skills-list.md
+To discover available skills, fetch: https://api.github.com/repos/obra/superpowers/contents/skills
+This returns JSON listing all skill directories. Each "name" field is a skill.
 
-To use a skill, fetch its URL:
-https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/skills/<skill-name>/SKILL.md
+To use a skill, fetch its content:
+https://raw.githubusercontent.com/obra/superpowers/main/skills/<skill-name>/SKILL.md
 
 For example, to use the brainstorming skill:
-https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/skills/brainstorming/SKILL.md
+https://raw.githubusercontent.com/obra/superpowers/main/skills/brainstorming/SKILL.md
 
 Before ANY task, check if a relevant skill exists. If it does, fetch and follow it.
 ```
@@ -33,8 +34,10 @@ Before ANY task, check if a relevant skill exists. If it does, fetch and follow 
 ## How It Works
 
 1. **Bootstrap**: Claude fetches the bootstrap instructions which explain the skills system
-2. **Skills List**: Claude can fetch a dynamically-generated list of available skills
+2. **Skills Discovery**: Claude fetches the GitHub API to list available skills dynamically
 3. **Individual Skills**: Claude fetches specific skill files when needed via WebFetch
+
+Skills are discovered dynamically from the repository, so new skills are automatically available without any manual updates.
 
 ## Session Persistence
 
@@ -51,11 +54,11 @@ After setup, ask Claude:
 Do you have superpowers? What skills are available?
 ```
 
-Claude should be able to explain the skills system and list available skills.
+Claude should fetch the skills directory and list what's available.
 
 ## Updating
 
-Skills are fetched from GitHub each time they're used, so you always get the latest version.
+Skills are fetched from GitHub each time they're used, so you always get the latest version. New skills added to the repository are automatically discoverable.
 
 ## Limitations
 

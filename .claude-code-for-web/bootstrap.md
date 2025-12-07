@@ -7,16 +7,24 @@ Superpowers are skills that teach you proven techniques for software development
 
 ## How to Use Skills in Claude Code for Web
 
-**Finding Skills:**
-Fetch the skills list: `https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.claude-code-for-web/skills-list.md`
+**Discovering Skills:**
+Fetch the skills directory listing from GitHub API:
+```
+https://api.github.com/repos/obra/superpowers/contents/skills
+```
+
+This returns JSON with all available skills. Each entry with `"type": "dir"` is a skill. Extract the `name` field to get skill names.
 
 **Loading a Skill:**
-Use WebFetch to load a skill by URL:
-`https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/skills/<skill-name>/SKILL.md`
+Once you know a skill name, fetch its content:
+```
+https://raw.githubusercontent.com/obra/superpowers/main/skills/<skill-name>/SKILL.md
+```
 
-**Example:**
-To load the brainstorming skill, fetch:
-`https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/skills/brainstorming/SKILL.md`
+**Example workflow:**
+1. Fetch `https://api.github.com/repos/obra/superpowers/contents/skills`
+2. Parse JSON to find skill names (e.g., `brainstorming`, `test-driven-development`)
+3. To use brainstorming, fetch: `https://raw.githubusercontent.com/obra/superpowers/main/skills/brainstorming/SKILL.md`
 
 ## Tool Mapping for Claude Code for Web
 
@@ -34,20 +42,16 @@ When skills reference tools, substitute as needed:
 4. **Skills with checklists require TodoWrite todos for each item**
 5. **Follow mandatory workflows**: Brainstorming before coding, TDD, systematic debugging
 
-## Skills Naming
-
-All skills use the URL pattern:
-```
-https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/skills/<skill-name>/SKILL.md
-```
-
 ## Core Skills to Know
 
+These are the most commonly used skills:
 - **brainstorming** - Use before writing ANY code; refines ideas through questions
 - **test-driven-development** - RED-GREEN-REFACTOR cycle for all implementation
 - **systematic-debugging** - 4-phase root cause analysis process
 - **writing-plans** - Break work into detailed, actionable tasks
 - **subagent-driven-development** - Quality gates for task execution
+
+Fetch the full skills directory to see all available skills.
 
 ## Remember
 
@@ -55,5 +59,5 @@ IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
 
 This is not negotiable. This is not optional. Skills document proven techniques that save time and prevent mistakes.
 
-To see all available skills, fetch the skills list now.
+**Your first action after reading this:** Fetch the skills directory to see what's available.
 </EXTREMELY_IMPORTANT>

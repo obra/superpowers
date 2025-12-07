@@ -27,15 +27,23 @@ Instead of local installation with hooks, Claude Code for Web uses **URL-based f
 
 1. User tells Claude to fetch bootstrap instructions from GitHub
 2. Claude learns about the skills system via the fetched content
-3. Skills are fetched on-demand via WebFetch when needed
-4. Each skill is loaded fresh from GitHub (always up-to-date)
+3. Claude discovers available skills dynamically via the GitHub API
+4. Skills are fetched on-demand via WebFetch when needed
+5. Each skill is loaded fresh from GitHub (always up-to-date)
+
+Skills are discovered dynamically by fetching:
+```
+https://api.github.com/repos/obra/superpowers/contents/skills
+```
+
+This means new skills added to the repository are automatically available without any manual updates to this directory.
 
 ## Limitations
 
 ### Fully Working
 
 - All skill content is accessible via WebFetch
-- Skills list is available and browsable
+- Dynamic skill discovery via GitHub API
 - Core workflows (brainstorming, TDD, debugging) work as documented
 - Tool mapping guidance helps adapt skills to available tools
 
@@ -44,7 +52,7 @@ Instead of local installation with hooks, Claude Code for Web uses **URL-based f
 | Feature | CLI Version | Web Version |
 |---------|-------------|-------------|
 | Auto-bootstrap at session start | Automatic via hook | Manual (user must request) |
-| Skill discovery | `Skill` tool lists all | Must fetch skills-list.md |
+| Skill discovery | `Skill` tool lists all | Fetches GitHub API |
 | Personal/custom skills | `~/.claude/skills/` | Not supported |
 | Project skills | `.claude/skills/` | Not supported (no filesystem) |
 
@@ -78,22 +86,11 @@ These skills can still be fetched and read for educational purposes, but their w
 | `INSTALL.md` | Step-by-step installation instructions |
 | `README.md` | This file - overview and limitations |
 | `bootstrap.md` | Bootstrap content Claude fetches at session start |
-| `skills-list.md` | List of all available skills with URLs |
-
-## Keeping Skills Updated
-
-The skills-list.md file contains a static list of skills. When new skills are added to the `skills/` directory, this file should be updated to include them.
-
-To add a new skill to the list:
-
-1. Add an entry to the appropriate category table in `skills-list.md`
-2. Include the skill name, description, and relative URL path
-3. The full URL pattern is: `https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/skills/<skill-name>/SKILL.md`
 
 ## Recommended Workflow for Web Users
 
 1. **Start of conversation**: Tell Claude to fetch the bootstrap
-2. **Before any task**: Ask Claude to check the skills list
+2. **Before any task**: Ask Claude to discover and check relevant skills
 3. **When a skill applies**: Have Claude fetch and follow it
 4. **For complex work**: Consider using Claude Code CLI instead for full functionality
 
