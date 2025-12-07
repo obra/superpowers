@@ -84,8 +84,9 @@ These skills can still be read for educational purposes, but their workflows can
 
 | File | Purpose |
 |------|---------|
-| `INSTALL.md` | Installation instructions (human-readable + Claude instructions) |
+| `INSTALL.md` | Human-readable installation guide; entry point for Claude |
 | `README.md` | This file - overview and limitations |
+| `bootstrap.md` | Instructions Claude follows to install and use skills |
 
 ## Recommended Workflow for Web Users
 
