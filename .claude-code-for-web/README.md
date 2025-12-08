@@ -22,24 +22,26 @@ The standard installation instructions in the main README.md don't work for Clau
 
 ## How This Version Works
 
-Claude Code for Web installs skills directly to the user's home directory:
+Claude Code for Web clones the superpowers repository to the user's home directory:
 
-1. User tells Claude to fetch bootstrap instructions from GitHub
-2. Claude fetches the skills list via GitHub API
-3. Claude writes each skill to `~/.claude/skills/superpowers/<skill-name>/SKILL.md`
-4. Skills persist across sessions and are read from local files
+1. User clones the repository to `~/.claude/skills/superpowers/`
+2. Skills are available at `~/.claude/skills/superpowers/skills/<skill-name>/SKILL.md`
+3. At each session start, user tells Claude to read the using-superpowers skill
+4. Skills persist across sessions and update via `git pull`
 
-Skills are installed to:
+Directory structure after installation:
 ```
 ~/.claude/skills/superpowers/
-├── brainstorming/
-│   └── SKILL.md
-├── test-driven-development/
-│   └── SKILL.md
-└── ... (all skills)
+├── skills/
+│   ├── brainstorming/
+│   │   └── SKILL.md
+│   ├── test-driven-development/
+│   │   └── SKILL.md
+│   └── ... (all skills)
+├── .claude-code-for-web/
+├── lib/
+└── ...
 ```
-
-This aligns with the CLI version's personal skills directory (`~/.claude/skills/`).
 
 ## Limitations
 
@@ -91,15 +93,19 @@ These skills can still be read for educational purposes, but their workflows can
 
 ## Recommended Workflow for Web Users
 
-1. **First time**: Tell Claude to fetch and follow INSTALL.md
-2. **Start of conversation**: Tell Claude to read `~/.claude/skills/superpowers/using-superpowers/SKILL.md`
+1. **First time**: Clone the repository per INSTALL.md instructions
+2. **Start of conversation**: Tell Claude to read `~/.claude/skills/superpowers/skills/using-superpowers/SKILL.md`
 3. **Before any task**: Ask Claude to check for relevant skills
 4. **When a skill applies**: Have Claude read and follow it
 5. **For complex work**: Consider using Claude Code CLI instead for full functionality
 
 ## Updating Skills
 
-To update to the latest skills, tell Claude to re-fetch from GitHub and overwrite the local copies. See INSTALL.md for details.
+To update to the latest skills:
+```bash
+cd ~/.claude/skills/superpowers
+git pull
+```
 
 ## Getting Help
 

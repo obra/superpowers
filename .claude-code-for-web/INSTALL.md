@@ -11,11 +11,17 @@ Claude Code for Web can install Superpowers skills locally to your home director
    git clone https://github.com/obra/superpowers.git .
    ```
 
-[Claude: fill in any remaining steps to install and activate Superpowers for Claude Code for Web so that they load for each new Claude Code for Web session]
+2. **Activate at session start**: Claude Code for Web doesn't have automatic hooks, so at the beginning of each conversation, tell Claude:
+   ```
+   Read ~/.claude/skills/superpowers/skills/using-superpowers/SKILL.md and follow it.
+   ```
 
 ## Verification
 
-[Claude: insert what a user can do to test that Claude Code for Web has properly installed and loaded the Superpowers skills]
+To test the installation, ask Claude:
 
-You should see [Claude: what should I see? Maybe something like "skill listings and bootstrap instructions"]. The system is now ready for use.
+```
+List the directories in ~/.claude/skills/superpowers/skills/ and read the using-superpowers skill.
+```
 
+You should see a list of skill directories (brainstorming, test-driven-development, systematic-debugging, etc.) and Claude should display the using-superpowers skill content. The system is now ready for use.
