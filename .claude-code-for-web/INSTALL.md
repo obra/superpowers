@@ -2,65 +2,20 @@
 
 Claude Code for Web can install Superpowers skills locally to your home directory, making them available across sessions.
 
-## Quick Start
+## Installation
 
-Tell Claude Code for Web:
+1. **Clone superpowers repository**:
+   ```bash
+   mkdir -p ~/.claude/skills/superpowers
+   cd ~/.claude/skills/superpowers
+   git clone https://github.com/obra/superpowers.git .
+   ```
 
-```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/main/.claude-code-for-web/INSTALL.md
-```
-
-Claude will install skills to `~/.claude/skills/superpowers/` and learn how to use them.
-
-## What Gets Installed
-
-Skills are installed to:
-```
-~/.claude/skills/superpowers/
-├── brainstorming/
-│   └── SKILL.md
-├── test-driven-development/
-│   └── SKILL.md
-├── systematic-debugging/
-│   └── SKILL.md
-└── ... (all other skills)
-```
-
-## Updating Skills
-
-To update to the latest skills, tell Claude:
-
-```
-Update my Superpowers skills by re-fetching them from GitHub and overwriting the local copies.
-```
+[Claude: fill in any remaining steps to install and activate Superpowers for Claude Code for Web so that they load for each new Claude Code for Web session]
 
 ## Verification
 
-After installation, ask Claude:
+[Claude: insert what a user can do to test that Claude Code for Web has properly installed and loaded the Superpowers skills]
 
-```
-List my installed superpowers skills and read the using-superpowers skill.
-```
+You should see [Claude: what should I see? Maybe something like "skill listings and bootstrap instructions"]. The system is now ready for use.
 
-## Session Persistence
-
-Once installed, skills persist in your home directory. At the beginning of each new conversation, tell Claude:
-
-```
-Read ~/.claude/skills/superpowers/using-superpowers/SKILL.md and follow it.
-```
-
-## Limitations
-
-See [README.md](README.md) for a complete list of limitations when using Superpowers with Claude Code for Web.
-
-## Getting Help
-
-- **Issues**: https://github.com/obra/superpowers/issues
-- **Documentation**: https://github.com/obra/superpowers
-
----
-
-## Instructions for Claude
-
-Fetch and follow: https://raw.githubusercontent.com/obra/superpowers/main/.claude-code-for-web/bootstrap.md
