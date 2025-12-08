@@ -51,8 +51,11 @@ Wait for approval, then create and add to project.
 
 Options:
 - A) Single parent issue linking to plan
-- B) Individual issues per major task
-- C) Skip
+- B) Parent issue with sub-issues for major tasks (hierarchical tracking)
+- C) Individual issues per major task (flat structure)
+- D) Skip
+
+For option B, use GitHub's sub-issues feature to create parent/child relationships. See gh-reference.md for GraphQL commands (requires node IDs, not issue numbers).
 
 ### 3. During Implementation (Bug/Debt Discovery)
 
