@@ -1,5 +1,49 @@
 # Superpowers Release Notes
 
+## v3.7.0 (2025-12-09) - dev branch
+
+### Improvements
+
+**Rewrote using-superpowers skill to prevent rationalization failures**
+- Added visual flowchart showing skill check as blocking gate before ANY response
+- Converted rationalizations from bullet list to scannable table format
+- Added new rationalizations based on observed failures:
+  - "I need more context first" → Skill check comes BEFORE clarifying questions
+  - "Let me explore the codebase first" → Skills tell you HOW to explore
+  - "This feels productive" → Undisciplined action wastes time
+- Clarified skill check applies even before asking clarifying questions
+- Reduced from 100 lines to 70 lines while adding functionality
+- Tested with `claude -p` scenarios to verify fix
+
+**Improved subagent-driven-development skill**
+- Controller now provides full task text to workers (not just references)
+- Spec compliance reviewer made skeptical and verification-focused
+- Spec compliance review must complete before code quality review
+- Clearer separation between spec compliance and code quality phases
+
+### New Features
+
+**Claude Code skills test framework** (`tests/claude-code/`)
+- Integration tests using `claude -p` to verify skill behavior
+- Tests verify skill usage via session transcript analysis
+- Supports `--permission-mode acceptEdits` for unrestricted testing
+- Real-time output display during test runs
+- Token usage analysis for cost tracking
+
+**Testing documentation** (`docs/testing.md`)
+- Comprehensive guide to testing skills with Claude Code
+- Covers integration testing patterns and best practices
+- Documents permission modes and transcript verification
+
+### Files Changed
+- Updated: `skills/using-superpowers/SKILL.md` - Flowchart format, new rationalizations
+- Updated: `skills/subagent-driven-development/SKILL.md` - Spec compliance focus
+- New: `tests/claude-code/` - Integration test framework
+- New: `docs/testing.md` - Testing documentation
+- New: `docs/plans/skills-improvement-plan.md` - Improvement roadmap from feedback
+
+---
+
 ## v3.6.2 (2025-12-03)
 
 ### Fixed
