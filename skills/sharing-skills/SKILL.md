@@ -63,9 +63,9 @@ git checkout -b "add-${skill_name}-skill"
 ```bash
 # Add and commit
 git add skills/your-skill-name/
-git commit -m "Add ${skill_name} skill
+git commit -m "$(cat <<'EOF'
+Add ${skill_name} skill
 
-$(cat <<'EOF'
 Brief description of what this skill does and why it's useful.
 
 Tested with: [describe testing approach]
