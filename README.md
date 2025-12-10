@@ -100,9 +100,8 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 ### Skills Library
 
 **Testing**
-- **test-driven-development** - RED-GREEN-REFACTOR cycle
+- **test-driven-development** - RED-GREEN-REFACTOR cycle (includes anti-patterns reference)
 - **condition-based-waiting** - Async test patterns
-- **testing-anti-patterns** - Common pitfalls to avoid
 
 **Debugging** 
 - **systematic-debugging** - 4-phase root cause process
