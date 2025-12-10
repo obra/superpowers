@@ -15,16 +15,22 @@ Bugs often manifest deep in the call stack (git init in wrong directory, file cr
 
 ```dot
 digraph when_to_use {
-    "Bug appears deep in stack?" [shape=diamond];
-    "Can trace backwards?" [shape=diamond];
-    "Fix at symptom point" [shape=box];
-    "Trace to original trigger" [shape=box];
-    "BETTER: Also add defense-in-depth" [shape=box];
+    start [label="Bug appears deep in stack?" shape=diamond];
+    trace [label="Can trace backwards?" shape=diamond];
+    symptom [label="Fix at symptom point\n(last resort)" shape=box];
+    root [label="Trace to original trigger" shape=box];
+    defense [label="Also add defense-in-depth" shape=box];
+    done [label="Bug fixed at source" shape=doublecircle];
+    notdeep [label="Fix at error location" shape=box];
 
-    "Bug appears deep in stack?" -> "Can trace backwards?" [label="yes"];
-    "Can trace backwards?" -> "Trace to original trigger" [label="yes"];
-    "Can trace backwards?" -> "Fix at symptom point" [label="no - dead end"];
-    "Trace to original trigger" -> "BETTER: Also add defense-in-depth";
+    start -> trace [label="yes"];
+    start -> notdeep [label="no"];
+    trace -> root [label="yes"];
+    trace -> symptom [label="no - dead end"];
+    root -> defense;
+    defense -> done;
+    symptom -> defense [label="still add guards"];
+    notdeep -> done;
 }
 ```
 
@@ -136,23 +142,24 @@ Runs tests one-by-one, stops at first polluter. See script for usage.
 
 ```dot
 digraph principle {
-    "Found immediate cause" [shape=ellipse];
-    "Can trace one level up?" [shape=diamond];
-    "Trace backwards" [shape=box];
-    "Is this the source?" [shape=diamond];
-    "Fix at source" [shape=box];
-    "Add validation at each layer" [shape=box];
-    "Bug impossible" [shape=doublecircle];
-    "NEVER fix just the symptom" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+    found [label="Found immediate cause" shape=ellipse];
+    cantrace [label="Can trace one level up?" shape=diamond];
+    trace [label="Trace backwards" shape=box];
+    issource [label="Is this the source?" shape=diamond];
+    fix [label="Fix at source" shape=box];
+    validate [label="Add validation at each layer" shape=box];
+    done [label="Bug impossible" shape=doublecircle];
+    warning [label="NEVER fix just the symptom\n(add instrumentation to trace)" shape=octagon style=filled fillcolor=red fontcolor=white];
 
-    "Found immediate cause" -> "Can trace one level up?";
-    "Can trace one level up?" -> "Trace backwards" [label="yes"];
-    "Can trace one level up?" -> "NEVER fix just the symptom" [label="no"];
-    "Trace backwards" -> "Is this the source?";
-    "Is this the source?" -> "Trace backwards" [label="no - keeps going"];
-    "Is this the source?" -> "Fix at source" [label="yes"];
-    "Fix at source" -> "Add validation at each layer";
-    "Add validation at each layer" -> "Bug impossible";
+    found -> cantrace;
+    cantrace -> trace [label="yes"];
+    cantrace -> warning [label="no - stuck"];
+    warning -> trace [label="add logging\nretry trace" style=dashed];
+    trace -> issource;
+    issource -> trace [label="no - keep going"];
+    issource -> fix [label="yes - found it"];
+    fix -> validate;
+    validate -> done;
 }
 ```
 

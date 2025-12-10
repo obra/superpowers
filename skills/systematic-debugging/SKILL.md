@@ -173,9 +173,9 @@ You MUST complete each phase before proceeding to the next.
 
 1. **Create Failing Test Case**
    - Simplest possible reproduction
-   - Automated test if possible
-   - One-off test script if no framework
-   - MUST have before fixing
+   - Automated test in test suite (strongly preferred)
+   - If no test framework exists: create one-off script, but document it for future regression testing
+   - MUST have reproducible test before fixing - this ensures the fix actually works
    - **REQUIRED SUB-SKILL:** Use superpowers:test-driven-development for writing proper failing tests
 
 2. **Implement Single Fix**
