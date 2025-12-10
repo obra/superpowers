@@ -207,3 +207,11 @@ You understand 1,2,3,6. Unclear on 4,5.
 Verify. Question. Then implement.
 
 No performative agreement. Technical rigor always.
+
+## GitHub PR Mechanics
+
+If responding to feedback on a GitHub PR, see `github-reviews.md` for:
+- Reading review comments (general and line-specific)
+- Responding to feedback (comment vs thread reply)
+- Commit strategy and requesting re-review
+- Forbidden actions
