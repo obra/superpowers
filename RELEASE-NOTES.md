@@ -98,9 +98,9 @@
 - Updated terminology: "Superpowers skills" instead of "Core skills"
 
 ### Files Added
-- `codex/INSTALL.md` - Installation guide for Codex users
-- `codex/superpowers-bootstrap.md` - Bootstrap instructions with Codex adaptations
-- `scripts/superpowers-codex` - Unified Node.js executable with all functionality
+- `.codex/INSTALL.md` - Installation guide for Codex users
+- `.codex/superpowers-bootstrap.md` - Bootstrap instructions with Codex adaptations
+- `.codex/superpowers-codex` - Unified Node.js executable with all functionality
 
 **Note:** Codex support is experimental. The integration provides core superpowers functionality but may require refinement based on user feedback.
 
