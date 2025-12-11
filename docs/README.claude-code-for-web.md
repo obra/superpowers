@@ -222,7 +222,7 @@ This document describes the layout and purpose of the `~/.claude` directory used
 
 ## Overview
 
-The `~/.claude` directory is Claude Code for Web's user-level configuration and data directory. It stores settings, skills, project data, and session state.
+The `~/.claude` directory is Claude Code for Web's user-level configuration and data directory. It stores settings, skills, project data, and session state. It is bootstrapped from some underlying image; changes made to it are not persisted.
 
 ## Directory Structure
 
