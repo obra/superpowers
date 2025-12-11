@@ -92,10 +92,21 @@ Then: Cleanup worktree (Step 5)
 # Push branch
 git push -u origin <feature-branch>
 
-# Create PR
-gh pr create --title "<title>" --body "$(cat <<'EOF'
+# Create PR with conventional commit title
+gh pr create --title "<type>: <description>" --body "$(cat <<'EOF'
 ## Summary
 <2-3 bullets of what changed>
+
+## Change Type
+<!-- Check ONE that applies -->
+- [ ] `fix:` - Bug fix (PATCH: x.x.X)
+- [ ] `feat:` - New feature (MINOR: x.X.0)
+- [ ] `feat!:` or `fix!:` or `BREAKING CHANGE:` - Breaking change (MAJOR: X.0.0)
+- [ ] `docs:` / `chore:` / `refactor:` / `test:` - No version change
+
+## Breaking Changes
+<!-- If this is a breaking change, describe what breaks and migration path -->
+N/A
 
 ## Test Plan
 - [ ] <verification steps>
@@ -157,6 +168,25 @@ git worktree remove <worktree-path>
 | 2. Create PR | - | ✓ | ✓ | - |
 | 3. Keep as-is | - | - | ✓ | - |
 | 4. Discard | - | - | - | ✓ (force) |
+
+## Conventional Commits for PR Titles
+
+Use conventional commit format for PR titles to enable automated versioning:
+
+| Prefix | When to Use | Version Impact |
+|--------|-------------|----------------|
+| `fix:` | Bug fixes | PATCH (x.x.X) |
+| `feat:` | New features | MINOR (x.X.0) |
+| `feat!:` / `fix!:` | Breaking changes | MAJOR (X.0.0) |
+| `docs:` | Documentation only | None |
+| `chore:` | Build, deps, config | None |
+| `refactor:` | Code restructure | None |
+| `test:` | Adding/fixing tests | None |
+
+**Examples:**
+- `fix: resolve crash when user cancels purchase`
+- `feat: add export to PDF functionality`
+- `feat!: change API response format for /users endpoint`
 
 ## Common Mistakes
 
