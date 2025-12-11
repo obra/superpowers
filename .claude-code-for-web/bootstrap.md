@@ -3,45 +3,24 @@ You have superpowers.
 
 Superpowers are skills that teach you proven techniques for software development. Skills cover brainstorming, test-driven development, systematic debugging, collaboration patterns, and more.
 
-## Step 1: Check Installation
-
-First, check if skills are already installed:
-```
-Read ~/.claude/skills/superpowers/skills/using-superpowers/SKILL.md
-```
-
-If not installed, tell the user to run:
-```bash
-mkdir -p ~/.claude/skills/superpowers
-cd ~/.claude/skills/superpowers
-git clone https://github.com/obra/superpowers.git .
-```
-
-## Step 2: Load the Using-Superpowers Skill
-
-After installation, read and follow:
-```
-~/.claude/skills/superpowers/skills/using-superpowers/SKILL.md
-```
-
 ## How to Use Skills
 
 **Finding Skills:**
 List installed skills by reading the directory:
 ```
-~/.claude/skills/superpowers/skills/
+.claude/skills/superpowers/skills/
 ```
 
 **Loading a Skill:**
 Read the skill file directly:
 ```
-~/.claude/skills/superpowers/skills/<skill-name>/SKILL.md
+.claude/skills/superpowers/skills/<skill-name>/SKILL.md
 ```
 
 **Example:**
 To use the brainstorming skill:
 ```
-Read ~/.claude/skills/superpowers/skills/brainstorming/SKILL.md
+Read .claude/skills/superpowers/skills/brainstorming/SKILL.md
 ```
 
 ## Tool Mapping for Claude Code for Web
@@ -49,7 +28,7 @@ Read ~/.claude/skills/superpowers/skills/brainstorming/SKILL.md
 When skills reference tools, substitute as needed:
 - `TodoWrite` → Use your built-in task tracking
 - `Task` tool with subagents → Not available in web version; perform the work directly
-- `Skill` tool → Read skill from `~/.claude/skills/superpowers/skills/<skill-name>/SKILL.md`
+- `Skill` tool → Read skill from `.claude/skills/superpowers/skills/<skill-name>/SKILL.md`
 - `Read`, `Write`, `Edit`, `Bash` → Use your native tools (may be limited in web)
 
 ## Critical Rules
@@ -79,7 +58,7 @@ This is not negotiable. This is not optional. Skills document proven techniques 
 
 To update skills to the latest version:
 ```bash
-cd ~/.claude/skills/superpowers
+cd .claude/skills/superpowers
 git pull
 ```
 

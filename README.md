@@ -57,6 +57,14 @@ Check that commands appear:
 # /superpowers:execute-plan - Execute plan in batches
 ```
 
+### Claude Code for Web
+
+Tell Claude Code for Web:
+
+```
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.claude-code-for-web/INSTALL.md
+```
+
 ### Codex
 
 Tell Codex:
