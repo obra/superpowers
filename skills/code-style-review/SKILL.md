@@ -114,7 +114,7 @@ codex exec -m gpt-5.1-codex-max \
 bash {SKILL_DIR}/setup.sh
 
 ## Your Tasks
-1. Read the style guide: cat {SKILL_DIR}/skill.md
+1. Read the style guide: cat {SKILL_DIR}/SKILL.md
 2. Run automated linter: ruff check --config {SKILL_DIR}/ruff.toml {TARGET}
 3. Run custom checker: python3 {SKILL_DIR}/style_check.py {TARGET}
 4. Read and analyze the target code
