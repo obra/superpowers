@@ -288,6 +288,12 @@ digraph when_flowchart {
 
 See @graphviz-conventions.dot for graphviz style rules.
 
+**Visualizing for your human partner:** Use `render-graphs.js` in this directory to render a skill's flowcharts to SVG:
+```bash
+./render-graphs.js ../some-skill           # Each diagram separately
+./render-graphs.js ../some-skill --combine # All diagrams in one SVG
+```
+
 ## Code Examples
 
 **One excellent example beats many mediocre ones**
