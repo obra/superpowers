@@ -71,6 +71,8 @@ echo ""
 
 # Run claude and capture output
 # Using stream-json to get token usage stats
+# Run from project directory so .claude/settings.local.json is picked up
+cd "$OUTPUT_DIR/project"
 claude -p "$PROMPT" \
   --plugin-dir "$PLUGIN_DIR" \
   --output-format stream-json \

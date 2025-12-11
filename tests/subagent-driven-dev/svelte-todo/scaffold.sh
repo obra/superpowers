@@ -18,6 +18,24 @@ git init
 cp "$SCRIPT_DIR/design.md" .
 cp "$SCRIPT_DIR/plan.md" .
 
+# Create .claude settings to allow reads/writes in this directory
+mkdir -p .claude
+cat > .claude/settings.local.json << 'SETTINGS'
+{
+  "permissions": {
+    "allow": [
+      "Read(**)",
+      "Edit(**)",
+      "Write(**)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(mkdir:*)",
+      "Bash(git:*)"
+    ]
+  }
+}
+SETTINGS
+
 # Create initial commit
 git add .
 git commit -m "Initial project setup with design and plan"
