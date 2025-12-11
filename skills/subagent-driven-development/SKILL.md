@@ -42,14 +42,18 @@ For each task:
 Task tool (general-purpose):
   description: "Implement Task N: [task name]"
   prompt: |
+    REQUIRED: First, use the Skill tool to read <insert relevant skills here>.
+    [See Propagating Skill Context section - list the specific skills you're following]
+
     You are implementing Task N from [plan-file].
 
     Read that task carefully. Your job is to:
     1. Implement exactly what the task specifies
-    2. Write tests (following TDD if task says to)
-    3. Verify implementation works
-    4. Commit your work
-    5. Report back
+    2. Follow the skills specified above
+    3. Write tests (following TDD if task says to)
+    4. Verify implementation works
+    5. Commit your work
+    6. Report back
 
     Work from: [directory]
 
@@ -106,6 +110,92 @@ After final review passes:
 - **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
 - Follow that skill to verify tests, present options, execute choice
 
+## Propagating Skill Context
+
+**Critical rule:** Subagents don't inherit skill context - they start fresh.
+
+**When dispatching subagents, you MUST include instructions to read any skills you are currently using.**
+
+### The Iron Law of Skill Propagation
+
+```
+If you're using a skill, your subagents MUST read that same skill.
+```
+
+**Not:** Describe the skill's process inline
+**Not:** Give "context" about the methodology
+**Not:** Mention what skill you're using
+**MUST:** Tell subagent to use Skill tool to READ the skill file
+
+### Why This Matters
+
+Skills don't propagate automatically. If you're following a skill but don't tell your subagent to use it, the subagent won't follow it. Whatever process you're using needs to be explicitly passed to subagents.
+
+**Common failure modes:**
+- ❌ "Follow RED-GREEN-REFACTOR cycle" (describes TDD but doesn't load the skill)
+- ❌ "Use systematic-debugging approach" (mentions skill but doesn't load it)
+- ❌ "This is exploration for brainstorming" (context but no skill loaded)
+- ✅ "REQUIRED: First, use the Skill tool to read superpowers:test-driven-development"
+
+### How to Propagate Skills
+
+**The pattern:** Look at what skills YOU are currently using, then explicitly instruct subagent to READ those same skills with the Skill tool.
+
+**Exact format - copy this:**
+```
+Task tool:
+  prompt: |
+    REQUIRED: First, use the Skill tool to read these skills:
+    - superpowers:<skill-you-are-using>
+    - superpowers:<another-skill-if-applicable>
+
+    [rest of your task prompt]
+```
+
+**This is non-negotiable.** The subagent must read the skill file, not receive a summary of it.
+
+### Examples
+
+**If you're using test-driven-development:**
+```
+REQUIRED: First, use the Skill tool to read superpowers:test-driven-development.
+
+You are implementing [feature]...
+```
+
+**If you're using systematic-debugging:**
+```
+REQUIRED: First, use the Skill tool to read superpowers:systematic-debugging.
+
+You are investigating [bug]...
+```
+
+**If you're using multiple skills (e.g., TDD + debugging):**
+```
+REQUIRED: First, use the Skill tool to read these skills:
+- superpowers:test-driven-development
+- superpowers:systematic-debugging
+
+You are fixing [issue]...
+```
+
+**If you're using brainstorming:**
+```
+REQUIRED: First, use the Skill tool to read superpowers:brainstorming.
+
+You are exploring design options for [feature]...
+```
+
+### Common Patterns
+
+- **Implementation work** - Propagate your development methodology (TDD, etc.)
+- **Debugging work** - Propagate systematic-debugging if you're using it
+- **Completion work** - Propagate verification-before-completion if you're using it
+- **Design work** - Propagate brainstorming if you're using it
+- **Multiple skills** - List all skills you're currently following
+
+**Key principle:** Mirror your own skill usage to your subagents.
+
 ## Example Workflow
 
 ```
@@ -148,7 +238,7 @@ Done!
 ## Advantages
 
 **vs. Manual execution:**
-- Subagents follow TDD naturally
+- Subagents follow your skills consistently (when propagated)
 - Fresh context per task (no confusion)
 - Parallel-safe (subagents don't interfere)
 
@@ -168,10 +258,22 @@ Done!
 - Proceed with unfixed Critical issues
 - Dispatch multiple implementation subagents in parallel (conflicts)
 - Implement without reading plan task
+- **Dispatch subagents without propagating skill context** (see Propagating Skill Context section)
 
 **If subagent fails task:**
 - Dispatch fix subagent with specific instructions
 - Don't try to fix manually (context pollution)
+
+**Common mistake - Forgetting skill propagation:**
+- You're using a skill but subagent isn't following it
+- Subagent behaves differently than you because they don't have your skill context
+- You described the skill process inline instead of telling subagent to read the skill
+- Solution: Always include "REQUIRED: First, use the Skill tool to read superpowers:<skill-name>" in subagent prompts
+
+**Red flags you're about to fail skill propagation:**
+- "I'll explain TDD to the subagent" → WRONG. Make them read the skill.
+- "The prompt has enough context" → WRONG. Skills have nuance that summaries miss.
+- "Reading skills is overhead" → WRONG. Not reading skills causes failures.
 
 ## Integration
 
@@ -180,8 +282,9 @@ Done!
 - **requesting-code-review** - REQUIRED: Review after each task (see Step 3)
 - **finishing-a-development-branch** - REQUIRED: Complete development after all tasks (see Step 7)
 
-**Subagents must use:**
-- **test-driven-development** - Subagents follow TDD for each task
+**Propagate your skills to subagents:**
+- Whatever skills you are using should be propagated to subagents (see Propagating Skill Context)
+- Common examples: test-driven-development, systematic-debugging, brainstorming, verification-before-completion
 
 **Alternative workflow:**
 - **executing-plans** - Use for parallel session instead of same-session execution
