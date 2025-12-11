@@ -1,0 +1,32 @@
+# Tianyu's Python Style - Ruff Configuration
+# Priority mapping:
+#   必须 (Must) -> error
+#   尽量 (Should) -> warning
+
+[lint]
+select = [
+    # Naming conventions (必须 - error)
+    "N801",  # PascalCase for classes
+    "N802",  # snake_case for functions
+    "N806",  # UPPER_CASE for constants (lowercase in function scope)
+    
+    # Import rules (尽量 - warning)
+    "I001",  # Import order
+    "F401",  # Unused imports
+    "F403",  # Star imports
+]
+
+# Treat 必须 rules as errors
+[lint.per-file-ignores]
+# No ignores by default
+
+[lint.isort]
+# Import order: stdlib -> third-party -> local
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+force-single-line = false
+combine-as-imports = true
+
+[format]
+# Basic formatting
+indent-style = "space"
+quote-style = "double"
