@@ -1,6 +1,6 @@
 # Superpowers Release Notes
 
-## v3.7.0 (2025-12-11) - dev branch
+## v4.0.0 (2025-12-11) - dev branch
 
 ### Major Changes
 
