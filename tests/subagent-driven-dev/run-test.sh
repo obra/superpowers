@@ -71,10 +71,11 @@ echo ""
 
 # Run claude and capture output
 # Using stream-json to get token usage stats
-# Run from project directory so .claude/settings.local.json is picked up
+# --dangerously-skip-permissions for automated testing (subagents don't inherit parent settings)
 cd "$OUTPUT_DIR/project"
 claude -p "$PROMPT" \
   --plugin-dir "$PLUGIN_DIR" \
+  --dangerously-skip-permissions \
   --output-format stream-json \
   > "$LOG_FILE" 2>&1 || true
 

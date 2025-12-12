@@ -1,6 +1,6 @@
 ---
 name: subagent-driven-development
-description: Use when executing implementation plans with independent tasks in the current session - dispatches fresh subagent for each task with two-stage review (spec compliance then code quality) between tasks
+description: Use when executing implementation plans with independent tasks in the current session
 ---
 
 # Subagent-Driven Development
