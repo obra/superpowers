@@ -32,4 +32,14 @@ Test the installation:
 ~/.codex/superpowers/.codex/superpowers-codex bootstrap
 ```
 
+On Windows, use one of these instead:
+
+```bash
+~/.codex/superpowers/.codex/superpowers-codex.cmd bootstrap
+```
+
+```bash
+node ~/.codex/superpowers/.codex/superpowers-codex bootstrap
+```
+
 You should see skill listings and bootstrap instructions. The system is now ready for use.

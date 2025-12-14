@@ -34,13 +34,13 @@
   - Auto re-injection on session.compacted events
   - Three-tier skill priority: project > personal > superpowers
   - Project-local skills support (`.opencode/skills/`)
-  - Shared core module (`lib/skills-core.js`) for code reuse with Codex
+  - Shared core module (`lib/skills-core.mjs`) for code reuse with Codex
   - Automated test suite with proper isolation (`tests/opencode/`)
   - Platform-specific documentation (`docs/README.opencode.md`, `docs/README.codex.md`)
 
 ### Changed
 
-- **Refactored Codex Implementation**: Now uses shared `lib/skills-core.js` ES module
+- **Refactored Codex Implementation**: Now uses shared `lib/skills-core.mjs` ES module
   - Eliminates code duplication between Codex and OpenCode
   - Single source of truth for skill discovery and parsing
   - Codex successfully loads ES modules via Node.js interop

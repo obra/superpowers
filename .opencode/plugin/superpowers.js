@@ -10,7 +10,7 @@ import fs from 'fs';
 import os from 'os';
 import { fileURLToPath } from 'url';
 import { tool } from '@opencode-ai/plugin/tool';
-import * as skillsCore from '../../lib/skills-core.js';
+import * as skillsCore from '../../lib/skills-core.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

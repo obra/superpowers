@@ -91,6 +91,10 @@ Personal skills override superpowers skills with the same name.
 
 **Location:** `~/.codex/superpowers/.codex/superpowers-codex`
 
+On Windows, prefer one of these:
+- `~/.codex/superpowers/.codex/superpowers-codex.cmd <command>` (recommended)
+- `node ~/.codex/superpowers/.codex/superpowers-codex <command>`
+
 A Node.js CLI script that provides three commands:
 - `bootstrap` - Load complete bootstrap with all skills
 - `use-skill <name>` - Load a specific skill
@@ -98,7 +102,7 @@ A Node.js CLI script that provides three commands:
 
 ### Shared Core Module
 
-**Location:** `~/.codex/superpowers/lib/skills-core.js`
+**Location:** `~/.codex/superpowers/lib/skills-core.mjs`
 
 The Codex implementation uses the shared `skills-core` module (ES module format) for skill discovery and parsing. This is the same module used by the OpenCode plugin, ensuring consistent behavior across platforms.
 
@@ -130,6 +134,12 @@ git pull
 
 ```bash
 chmod +x ~/.codex/superpowers/.codex/superpowers-codex
+```
+
+On Windows, use the shim instead:
+
+```bash
+~/.codex/superpowers/.codex/superpowers-codex.cmd find-skills
 ```
 
 ### Node.js errors

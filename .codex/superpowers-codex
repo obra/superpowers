@@ -3,7 +3,9 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const skillsCore = require('../lib/skills-core');
+const { pathToFileURL } = require('url');
+
+let skillsCore;
 
 // Paths
 const homeDir = os.homedir();
@@ -238,30 +240,42 @@ function runUseSkill(skillName) {
 
 }
 
-// Main CLI
-const command = process.argv[2];
-const arg = process.argv[3];
+async function main() {
+    // `lib/skills-core.mjs` is an ES module. This CLI is intentionally
+    // extensionless (for Unix shebang execution), so we keep it CommonJS and
+    // dynamically import the shared core for compatibility.
+    const skillsCoreUrl = pathToFileURL(path.join(__dirname, '..', 'lib', 'skills-core.mjs')).href;
+    skillsCore = await import(skillsCoreUrl);
 
-switch (command) {
-    case 'bootstrap':
-        runBootstrap();
-        break;
-    case 'use-skill':
-        runUseSkill(arg);
-        break;
-    case 'find-skills':
-        runFindSkills();
-        break;
-    default:
-        console.log('Superpowers for Codex');
-        console.log('Usage:');
-        console.log('  superpowers-codex bootstrap              # Run complete bootstrap with all skills');
-        console.log('  superpowers-codex use-skill <skill-name> # Load a specific skill');
-        console.log('  superpowers-codex find-skills            # List all available skills');
-        console.log('');
-        console.log('Examples:');
-        console.log('  superpowers-codex bootstrap');
-        console.log('  superpowers-codex use-skill superpowers:brainstorming');
-        console.log('  superpowers-codex use-skill my-custom-skill');
-        break;
+    const command = process.argv[2];
+    const arg = process.argv[3];
+
+    switch (command) {
+        case 'bootstrap':
+            runBootstrap();
+            break;
+        case 'use-skill':
+            runUseSkill(arg);
+            break;
+        case 'find-skills':
+            runFindSkills();
+            break;
+        default:
+            console.log('Superpowers for Codex');
+            console.log('Usage:');
+            console.log('  superpowers-codex bootstrap              # Run complete bootstrap with all skills');
+            console.log('  superpowers-codex use-skill <skill-name> # Load a specific skill');
+            console.log('  superpowers-codex find-skills            # List all available skills');
+            console.log('');
+            console.log('Examples:');
+            console.log('  superpowers-codex bootstrap');
+            console.log('  superpowers-codex use-skill superpowers:brainstorming');
+            console.log('  superpowers-codex use-skill my-custom-skill');
+            break;
+    }
 }
+
+main().catch((error) => {
+    console.error(error?.stack || String(error));
+    process.exitCode = 1;
+});

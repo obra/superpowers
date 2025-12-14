@@ -157,11 +157,11 @@ Skills written for Claude Code are automatically adapted for OpenCode. The plugi
 - Two custom tools: `use_skill`, `find_skills`
 - chat.message hook for initial context injection
 - event handler for session.compacted re-injection
-- Uses shared `lib/skills-core.js` module (also used by Codex)
+- Uses shared `lib/skills-core.mjs` module (also used by Codex)
 
 ### Shared Core Module
 
-**Location:** `~/.config/opencode/superpowers/lib/skills-core.js`
+**Location:** `~/.config/opencode/superpowers/lib/skills-core.mjs`
 
 **Functions:**
 - `extractFrontmatter()` - Parse skill metadata
