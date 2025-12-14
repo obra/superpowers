@@ -37,7 +37,8 @@ def strip_emojis(text):
 - Requirement is 100% objective (emoji yes/no, line length, format)
 - Violation is programmatically detectable
 - Agents consistently find rationalization loopholes
-- Examples: emoji stripping, line length, JSON validation, whitespace removal
+- Silent dependencies break workflows (e.g., registration gated by module import)
+- Examples: emoji stripping, line length, JSON validation, whitespace removal, dependency gates
 
 **Use Documentation (Judgment Guidance):**
 - Requirement needs human-like reasoning
@@ -51,6 +52,7 @@ def strip_emojis(text):
 - Iterating rationalization tables without progress
 - Adding "no really, I mean NEVER" language
 - Multiple TDD cycles without REFACTOR stabilizing
+- Silent fallbacks hiding failures (e.g., `if module_available: register()`)
 
 **Why:** You're using the wrong tool. REFACTOR phase won't stabilize when fighting natural LLM behavior.
 
