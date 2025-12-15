@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a **Claude Code plugin** that provides a core skills library. Unlike traditional Node.js projects, this repository contains **no build system, no package.json, and no traditional test suite**. Skills are markdown documentation files that are loaded directly by Claude Code.
 
 **Key Architecture:**
+
 - `skills/` - 21 skills organized by category (testing, debugging, collaboration, meta)
 - `commands/` - Slash commands that activate corresponding skills
 - `agents/` - Agent definitions (e.g., code-reviewer)
@@ -25,6 +26,7 @@ This is a **Claude Code plugin** that provides a core skills library. Unlike tra
 3. **Contribute with `skills/sharing-skills/SKILL.md`** - Fork, branch, test, PR workflow
 
 **TDD for Documentation Approach:**
+
 - RED: Run baseline with subagent (without skill) - observe failures
 - GREEN: Write skill that addresses violations - verify compliance
 - REFACTOR: Close loopholes, tighten language against rationalization
@@ -35,11 +37,11 @@ When developing superpowers locally and testing changes in Claude Code:
 
 1. **Edit skills** in `/Users/ethan.stark/dev/claude-code-resources/superpowers/skills/`
 2. **Commit changes** to your branch (e.g., `ethan-mod`)
-3. **Reload plugin** to reflect changes in Claude Code:
-   ```bash
-   /plugin uninstall superpowers@superpowers-dev && /plugin install superpowers@superpowers-dev
+3. **Reload plugin** to reflect changes in Claude Code (paste both lines):
    ```
-   Or run `./scripts/reload-plugin.sh` to display the command to copy/paste
+   /plugin uninstall superpowers@superpowers-dev
+   /plugin install superpowers@superpowers-dev
+   ```
 4. **Test changes** in a new Claude Code session
 
 **Important:** Plugin changes only take effect after reload. Skills are loaded at session start, so existing sessions won't see updates.
@@ -47,6 +49,7 @@ When developing superpowers locally and testing changes in Claude Code:
 ### Skill Structure Requirements
 
 **Directory and Naming:**
+
 ```
 skills/
   skill-name/           # lowercase-with-hyphens only (no special chars)
@@ -57,14 +60,16 @@ skills/
 ```
 
 **Frontmatter (required in SKILL.md):**
+
 ```yaml
 ---
-name: skill-name        # Must match directory name exactly
-description: Use when [trigger] - [what it does]  # Appears in skill list
+name: skill-name # Must match directory name exactly
+description: Use when [trigger] - [what it does] # Appears in skill list
 ---
 ```
 
 **Supporting Files Patterns:**
+
 - Self-contained skill → Only `SKILL.md`
 - Skill with reusable tool → `SKILL.md` + `example.ts` (see `condition-based-waiting`)
 - Skill with heavy reference → `SKILL.md` + reference docs + `scripts/` (see `root-cause-tracing`)
@@ -72,13 +77,16 @@ description: Use when [trigger] - [what it does]  # Appears in skill list
 ### Skill Types and Treatment
 
 1. **Discipline-Enforcing Skills** (e.g., `test-driven-development`, `verification-before-completion`)
+
    - Contain rigid rules tested against pressure scenarios
    - Follow exactly - don't adapt away the discipline
 
 2. **Technique Skills** (e.g., `condition-based-waiting`, `root-cause-tracing`)
+
    - How-to guides with concrete steps
 
 3. **Pattern Skills** (e.g., `brainstorming`, `systematic-debugging`)
+
    - Mental models and flexible patterns - adapt to context
 
 4. **Reference Skills**
@@ -124,6 +132,7 @@ Update plugin version in `.claude-plugin/plugin.json`:
 ```
 
 Follow semantic versioning:
+
 - MAJOR: Breaking changes to skill interfaces
 - MINOR: New skills, backward-compatible improvements
 - PATCH: Bug fixes, documentation improvements
@@ -131,17 +140,20 @@ Follow semantic versioning:
 ## Important Notes
 
 **llm/ Directory:**
+
 - Contains local-only planning documents
 - NOT tracked by git (per `.gitignore`)
 - Safe for scratch notes, implementation plans
 - Do NOT reference these files in skills or commits
 
 **Skill References:**
+
 - Skills are namespace-qualified: `superpowers:skill-name`
 - Use slash commands to activate: `/superpowers:brainstorm`
 - Session hook auto-loads `using-superpowers` at startup
 
 **No Legacy Systems:**
+
 - Skills overlay system removed in v2.0
 - First-party skills system adopted in v3.0
 - No backward compatibility with old skill formats
@@ -149,6 +161,7 @@ Follow semantic versioning:
 ## Key Reference Files
 
 **Essential reading for contributors:**
+
 - `skills/writing-skills/SKILL.md` - How to create effective skills
 - `skills/using-superpowers/SKILL.md` - How the skills system works
 - `skills/testing-skills-with-subagents/SKILL.md` - Testing methodology
@@ -156,11 +169,13 @@ Follow semantic versioning:
 - `README.md` - Installation, quick start, skills overview
 
 **Example skills demonstrating patterns:**
+
 - `skills/systematic-debugging/SKILL.md` - Complex skill with flowchart (Graphviz DOT notation)
 - `skills/condition-based-waiting/` - Skill with supporting TypeScript example
 - `skills/brainstorming/SKILL.md` - Command-activated skill with clear triggers
 
 **Supporting documentation in writing-skills:**
+
 - `anthropic-best-practices.md` - Official Anthropic skill authoring guide
 - `graphviz-conventions.dot` - Flowchart style rules
 - `persuasion-principles.md` - Psychology of effective documentation
