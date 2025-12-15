@@ -16,7 +16,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 **FIRST ACTION (mandatory):** Invoke wrapper script - DO NOT describe plan in chat first:
 
 ```bash
-python3 ~/.claude/skills/record-plan/scripts/write_plan.py \
+python3 ~/.claude/scripts/record-plan/write_plan.py \
   --working-dir <working-directory> \
   --plan-name <descriptive-name>
 ```
@@ -36,7 +36,7 @@ python3 ~/.claude/skills/record-plan/scripts/write_plan.py \
 **Execution Mode:** This skill has an executable wrapper that FORCES file writing.
 
 **How it works:**
-1. You invoke the wrapper script: `~/.claude/skills/record-plan/scripts/write_plan.py`
+1. You invoke the wrapper script: `~/.claude/scripts/record-plan/write_plan.py`
 2. The wrapper prints directives: "USE WRITE TOOL to create file at X"
 3. You MUST follow the directives - no describing, only executing
 4. The wrapper guides you through post-write workflow
@@ -134,7 +134,7 @@ The record-plan scripts automatically detect the git repository root and handle 
 
 **Custom usage:**
 ```bash
-python3 ~/.claude/skills/record-plan/scripts/write_plan.py \
+python3 ~/.claude/scripts/record-plan/write_plan.py \
     --working-dir /path/to/repo \
     --plan-name my-feature \
     --target-dir docs/architecture
@@ -157,7 +157,7 @@ This flexibility allows the record-plan skill to work with different project org
 
 **Manual check (optional):**
 ```bash
-python3 ~/.claude/skills/record-plan/scripts/check_lock.py \
+python3 ~/.claude/scripts/record-plan/check_lock.py \
   <working-dir> <file-path>
 ```
 
