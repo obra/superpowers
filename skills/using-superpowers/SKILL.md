@@ -43,6 +43,7 @@ If you catch yourself thinking ANY of these thoughts, STOP. You are rationalizin
 - "This doesn't count as a task" → WRONG. If you're taking action, it's a task. Check for skills.
 - "The skill is overkill for this" → WRONG. Skills exist because simple things become complex. Use it.
 - "I'll just do this one thing first" → WRONG. Check for skills BEFORE doing anything.
+- "Just editing a skill file" → WRONG. Use writing-skills. Skills are code. Same TDD rules apply.
 
 **Why:** Skills document proven techniques that save time and prevent mistakes. Not using available skills means repeating solved problems and making known errors.
 

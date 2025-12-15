@@ -29,6 +29,21 @@ This is a **Claude Code plugin** that provides a core skills library. Unlike tra
 - GREEN: Write skill that addresses violations - verify compliance
 - REFACTOR: Close loopholes, tighten language against rationalization
 
+### Local Plugin Development
+
+When developing superpowers locally and testing changes in Claude Code:
+
+1. **Edit skills** in `/Users/ethan.stark/dev/claude-code-resources/superpowers/skills/`
+2. **Commit changes** to your branch (e.g., `ethan-mod`)
+3. **Reload plugin** to reflect changes in Claude Code:
+   ```bash
+   /plugin uninstall superpowers@superpowers-dev && /plugin install superpowers@superpowers-dev
+   ```
+   Or run `./scripts/reload-plugin.sh` to display the command to copy/paste
+4. **Test changes** in a new Claude Code session
+
+**Important:** Plugin changes only take effect after reload. Skills are loaded at session start, so existing sessions won't see updates.
+
 ### Skill Structure Requirements
 
 **Directory and Naming:**

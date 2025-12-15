@@ -1,6 +1,6 @@
 ---
 name: writing-skills
-description: Use when creating new skills, editing existing skills, or verifying skills work before deployment - applies TDD to process documentation by testing with subagents before writing, iterating until bulletproof against rationalization
+description: Use when creating new skills, modifying existing skills, debugging skills that don't work, adding sections to skills, improving skill documentation, or verifying skills before deployment - applies TDD to process documentation by testing with subagents before writing, iterating until bulletproof against rationalization. REQUIRED before making ANY changes to skill files.
 ---
 
 # Writing Skills
@@ -18,6 +18,21 @@ You write test cases (pressure scenarios with subagents), watch them fail (basel
 **REQUIRED BACKGROUND:** You MUST understand superpowers:test-driven-development before using this skill. That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill adapts TDD to documentation.
 
 **Official guidance:** For Anthropic's official skill authoring best practices, see anthropic-best-practices.md. This document provides additional patterns and guidelines that complement the TDD-focused approach in this skill.
+
+<EXTREMELY-IMPORTANT>
+**Before modifying ANY skill file, you MUST consult this skill first.**
+
+If you're about to:
+- Edit a skill file
+- Add a section to a skill
+- Improve skill documentation
+- Debug why a skill isn't working
+- Make "quick fixes" to a skill
+
+**STOP. Read this skill. Follow TDD process.**
+
+Modifying skills without testing = deploying untested code. It's the same violation.
+</EXTREMELY-IMPORTANT>
 
 ## What is a Skill?
 
@@ -420,6 +435,9 @@ Different skill types need different test approaches:
 | "I'm confident it's good" | Overconfidence guarantees issues. Test anyway. |
 | "Academic review is enough" | Reading ≠ using. Test application scenarios. |
 | "No time to test" | Deploying untested skill wastes more time fixing it later. |
+| "Just adding a section" | Edits need testing too. What if section is unclear or wrong? |
+| "This is just documentation" | Skills ARE code. Untested edits = bugs. Same rules apply. |
+| "Quick fix, no testing needed" | Quick fixes break things. Test changes regardless of size. |
 
 **All of these mean: Test before deploying. No exceptions.**
 
