@@ -66,6 +66,49 @@ When developing superpowers locally and testing changes in Claude Code:
 - jira-publisher skill (safety-critical approval gates)
 - Option 4 discard confirmation (typed "discard" required)
 
+### Local Development with Worktrees
+
+**Use git worktrees to test changes in isolation while keeping main stable for the company marketplace.**
+
+**Creating a worktree for experiments:**
+
+```bash
+# From main repository
+cd /Users/ethan.stark/dev/claude-code-resources/superpowers
+
+# Create worktree with new branch
+git worktree add .worktrees/feature-name -b feature/my-experiment
+
+# Work in worktree
+cd .worktrees/feature-name
+# Edit skills, commit changes, then reload plugin:
+/plugin uninstall superpowers-fork
+/plugin install superpowers-fork
+# (Paste both lines together)
+```
+
+**When satisfied with changes:**
+
+```bash
+# Return to main
+cd /Users/ethan.stark/dev/claude-code-resources/superpowers
+
+# Merge feature branch
+git merge feature/my-experiment
+
+# Remove worktree
+git worktree remove .worktrees/feature-name
+
+# Delete feature branch (optional)
+git branch -d feature/my-experiment
+```
+
+**Benefits:**
+- Main directory always stable for marketplace
+- Test changes in isolation without affecting running Claude sessions
+- Run multiple worktrees for parallel experiments
+- Easy cleanup when done
+
 ### Skill Structure Requirements
 
 **Directory and Naming:**
