@@ -16,7 +16,8 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 **FIRST ACTION (mandatory):** Invoke wrapper script - DO NOT describe plan in chat first:
 
 ```bash
-python3 $CLAUDE_PLUGIN_ROOT/skills/writing-plans/scripts/write_plan.py \
+SCRIPT_PATH=$(find ~/.claude/plugins/cache -path "*/skills/writing-plans/scripts/write_plan.py" 2>/dev/null | head -1)
+python3 "$SCRIPT_PATH" \
   --working-dir <working-directory> \
   --plan-name <descriptive-name>
 ```
@@ -36,7 +37,7 @@ python3 $CLAUDE_PLUGIN_ROOT/skills/writing-plans/scripts/write_plan.py \
 **Execution Mode:** This skill has an executable wrapper that FORCES file writing.
 
 **How it works:**
-1. You invoke the wrapper script: `$CLAUDE_PLUGIN_ROOT/skills/writing-plans/scripts/write_plan.py`
+1. You invoke the wrapper script: `write_plan.py` (auto-located in plugin cache)
 2. The wrapper prints directives: "USE WRITE TOOL to create file at X"
 3. You MUST follow the directives - no describing, only executing
 4. The wrapper guides you through post-write workflow
@@ -134,7 +135,8 @@ The writing-plans scripts automatically detect the git repository root and handl
 
 **Custom usage:**
 ```bash
-python3 $CLAUDE_PLUGIN_ROOT/skills/writing-plans/scripts/write_plan.py \
+SCRIPT_PATH=$(find ~/.claude/plugins/cache -path "*/skills/writing-plans/scripts/write_plan.py" 2>/dev/null | head -1)
+python3 "$SCRIPT_PATH" \
     --working-dir /path/to/repo \
     --plan-name my-feature \
     --target-dir docs/architecture
@@ -157,8 +159,8 @@ This flexibility allows the writing-plans skill to work with different project o
 
 **Manual check (optional):**
 ```bash
-python3 $CLAUDE_PLUGIN_ROOT/skills/writing-plans/scripts/check_lock.py \
-  <working-dir> <file-path>
+SCRIPT_PATH=$(find ~/.claude/plugins/cache -path "*/skills/writing-plans/scripts/check_lock.py" 2>/dev/null | head -1)
+python3 "$SCRIPT_PATH" <working-dir> <file-path>
 ```
 
 ## Task Structure
@@ -320,7 +322,8 @@ Use Read tool to view the template, then Edit tool to fill in:
 ### Step 1: Validate Frontmatter
 
 ```bash
-python3 $CLAUDE_PLUGIN_ROOT/skills/writing-plans/scripts/validate-frontmatter.py <absolute-path-to-written-file>
+SCRIPT_PATH=$(find ~/.claude/plugins/cache -path "*/skills/writing-plans/scripts/validate-frontmatter.py" 2>/dev/null | head -1)
+python3 "$SCRIPT_PATH" <absolute-path-to-written-file>
 ```
 
 Expected output: `✓ Frontmatter validation passed`
@@ -332,7 +335,8 @@ If validation fails:
 ### Step 2: Invoke Rename Script
 
 ```bash
-python3 $CLAUDE_PLUGIN_ROOT/skills/writing-plans/scripts/rename_jot.py <absolute-path-to-written-file>
+SCRIPT_PATH=$(find ~/.claude/plugins/cache -path "*/skills/writing-plans/scripts/rename_jot.py" 2>/dev/null | head -1)
+python3 "$SCRIPT_PATH" <absolute-path-to-written-file>
 ```
 
 The script will:
