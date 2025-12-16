@@ -1,13 +1,13 @@
 {
-  "name": "superpowers",
-  "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
+  "name": "superpowers-fork",
+  "description": "Fork of superpowers with record-plan skill and automation-over-documentation guidance. Original by Jesse Vincent.",
   "version": "3.6.2",
   "author": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com"
+    "name": "Ethan Stark (original by Jesse Vincent)",
+    "email": "ethan.stark@renlearn.com"
   },
-  "homepage": "https://github.com/obra/superpowers",
-  "repository": "https://github.com/obra/superpowers",
+  "homepage": "https://github.com/EthanJStark/superpowers",
+  "repository": "https://github.com/EthanJStark/superpowers",
   "license": "MIT",
-  "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows"]
+  "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows", "fork", "record-plan"]
 }
