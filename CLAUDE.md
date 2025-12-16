@@ -46,6 +46,26 @@ When developing superpowers locally and testing changes in Claude Code:
 
 **Important:** Plugin changes only take effect after reload. Skills are loaded at session start, so existing sessions won't see updates.
 
+### PR Creation Safety
+
+**Approval pattern:** finishing-a-development-branch skill enforces preview-then-confirm for PR creation.
+
+**Expected flow:**
+1. User selects option 2 (Push and create PR)
+2. Claude pushes branch
+3. Claude shows PR title/body preview
+4. Claude asks: "Create this PR? (yes/no)"
+5. User must type "yes" to proceed
+
+**Defense-in-depth:**
+- Skill-level approval gate (primary)
+- Permission rules in ~/.claude/settings.json (secondary)
+- Permission system prompts on first use (tertiary)
+
+**Similar patterns:**
+- jira-publisher skill (safety-critical approval gates)
+- Option 4 discard confirmation (typed "discard" required)
+
 ### Skill Structure Requirements
 
 **Directory and Naming:**
