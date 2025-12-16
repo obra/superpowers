@@ -1,6 +1,6 @@
 ---
 name: finishing-a-development-branch
-description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup
+description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion with structured options and explicit approval gates for destructive operations
 ---
 
 # Finishing a Development Branch
@@ -88,17 +88,39 @@ Then: Cleanup worktree (Step 5)
 
 #### Option 2: Push and Create PR
 
+**Step 1: Push branch**
+
 ```bash
-# Push branch
 git push -u origin <feature-branch>
+```
 
-# Create PR
+**Step 2: Generate PR description**
+
+Draft PR title and body based on commit history.
+
+**Step 3: Show preview and request confirmation**
+
+Present:
+```
+Ready to create PR with:
+
+Title: <title>
+Body:
+<body-preview>
+
+Create this PR? (yes/no)
+```
+
+**Wait for explicit "yes" confirmation.**
+
+- If user confirms "yes": Proceed to Step 4
+- If user says "no": Report "PR creation cancelled. Branch pushed to remote."
+
+**Step 4: Create PR only if confirmed**
+
+```bash
 gh pr create --title "<title>" --body "$(cat <<'EOF'
-## Summary
-<2-3 bullets of what changed>
-
-## Test Plan
-- [ ] <verification steps>
+<body>
 EOF
 )"
 ```
@@ -176,6 +198,10 @@ git worktree remove <worktree-path>
 - **Problem:** Accidentally delete work
 - **Fix:** Require typed "discard" confirmation
 
+**Skipping PR preview**
+- **Problem:** Create PR without showing user the content first
+- **Fix:** Always show title/body, wait for "yes" confirmation
+
 ## Red Flags
 
 **Never:**
@@ -183,6 +209,8 @@ git worktree remove <worktree-path>
 - Merge without verifying tests on result
 - Delete work without confirmation
 - Force-push without explicit request
+- Create PR without showing preview first
+- Skip confirmation step "to save time"
 
 **Always:**
 - Verify tests before offering options
