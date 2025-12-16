@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
-const skillsCore = require('../lib/skills-core');
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
+import * as skillsCore from '../lib/skills-core.js';
 
 // Paths
 const homeDir = os.homedir();

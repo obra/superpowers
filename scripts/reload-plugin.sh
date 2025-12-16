@@ -10,11 +10,14 @@
 #   rls  # if you have the alias set up
 #
 
+# Extract marketplace name from marketplace.json
+MARKETPLACE=$(jq -r '.name' "$(dirname "$0")/../.claude-plugin/marketplace.json" 2>/dev/null || echo "superpowers-dev")
+
 echo "==> Superpowers Plugin Reload Commands"
 echo ""
 echo "Copy and paste these into Claude Code (paste both lines at once):"
 echo ""
-echo "/plugin uninstall superpowers@superpowers-dev"
-echo "/plugin install superpowers@superpowers-dev"
+echo "/plugin uninstall superpowers@${MARKETPLACE}"
+echo "/plugin install superpowers@${MARKETPLACE}"
 echo ""
 echo "IMPORTANT: After reload, start a new session to see changes."
