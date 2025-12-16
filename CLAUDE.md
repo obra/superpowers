@@ -35,12 +35,12 @@ This is a **Claude Code plugin** that provides a core skills library. Unlike tra
 
 When developing superpowers locally and testing changes in Claude Code:
 
-1. **Edit skills** in `/Users/ethan.stark/dev/claude-code-resources/superpowers/skills/`
-2. **Commit changes** to your branch (e.g., `ethan-mod`)
+1. **Edit skills** in the repository's `skills/` directory
+2. **Commit changes** to your branch
 3. **Reload plugin** to reflect changes in Claude Code (paste both lines):
    ```
-   /plugin uninstall superpowers@superpowers-dev
-   /plugin install superpowers@superpowers-dev
+   /plugin uninstall superpowers
+   /plugin install superpowers
    ```
 4. **Test changes** in a new Claude Code session
 
@@ -68,13 +68,13 @@ When developing superpowers locally and testing changes in Claude Code:
 
 ### Local Development with Worktrees
 
-**Use git worktrees to test changes in isolation while keeping main stable for the company marketplace.**
+**Use git worktrees to test changes in isolation while keeping main stable.**
 
 **Creating a worktree for experiments:**
 
 ```bash
 # From main repository
-cd /Users/ethan.stark/dev/claude-code-resources/superpowers
+cd /path/to/superpowers
 
 # Create worktree with new branch
 git worktree add .worktrees/feature-name -b feature/my-experiment
@@ -82,8 +82,8 @@ git worktree add .worktrees/feature-name -b feature/my-experiment
 # Work in worktree
 cd .worktrees/feature-name
 # Edit skills, commit changes, then reload plugin:
-/plugin uninstall superpowers-fork
-/plugin install superpowers-fork
+/plugin uninstall superpowers
+/plugin install superpowers
 # (Paste both lines together)
 ```
 
@@ -91,7 +91,7 @@ cd .worktrees/feature-name
 
 ```bash
 # Return to main
-cd /Users/ethan.stark/dev/claude-code-resources/superpowers
+cd /path/to/superpowers
 
 # Merge feature branch
 git merge feature/my-experiment
@@ -104,7 +104,7 @@ git branch -d feature/my-experiment
 ```
 
 **Benefits:**
-- Main directory always stable for marketplace
+- Main directory always stable
 - Test changes in isolation without affecting running Claude sessions
 - Run multiple worktrees for parallel experiments
 - Easy cleanup when done

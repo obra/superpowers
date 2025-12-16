@@ -20,8 +20,11 @@ if git diff --cached --name-only | grep -qE "llm/implementation-plans/[^0-9][^/]
 fi
 '
 
+# Default search path (override with REPOS_DIR environment variable)
+SEARCH_PATH="${REPOS_DIR:-$HOME/dev}"
+
 # Find all repos with llm/implementation-plans/ directory
-for repo in /Users/ethan.stark/dev/*/; do
+for repo in "$SEARCH_PATH"/*/; do
   if [ -d "$repo/llm/implementation-plans" ] && [ -d "$repo/.git" ]; then
     hook_path="$repo/.git/hooks/pre-commit"
     echo "$HOOK_CONTENT" > "$hook_path"
