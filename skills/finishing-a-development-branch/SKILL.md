@@ -202,7 +202,27 @@ git worktree remove <worktree-path>
 - **Problem:** Create PR without showing user the content first
 - **Fix:** Always show title/body, wait for "yes" confirmation
 
-## Red Flags
+## Rationalization Table
+
+Common excuses for skipping approval steps:
+
+| Excuse | Reality |
+|--------|---------|
+| "User selected option 2, that's consent" | Selection is consent to PR workflow, not blanket approval. Show preview first. |
+| "Permission system will catch it" | Permission system only prompts ONCE per session. Skill must enforce approval. |
+| "Preview adds unnecessary friction" | Safety > convenience. PR creation is public and permanent. |
+| "This is different from Option 4" | PRs are as permanent as deleted code. Same approval rigor required. |
+| "I'll describe what I'm creating" | Description ≠ approval. Must show preview AND wait for "yes". |
+
+## Red Flags - You're About to Skip Approval
+
+If you catch yourself thinking:
+- "User picked option 2, I can proceed" → WRONG. Show preview first.
+- "I'll explain what PR will contain" → WRONG. Show actual content, get confirmation.
+- "Permission system is enough" → WRONG. Skill must enforce its own approval gate.
+- "This adds too much friction" → WRONG. Safety is mandatory for public operations.
+
+**All of these mean: STOP. Show preview. Wait for "yes" confirmation.**
 
 **Never:**
 - Proceed with failing tests
@@ -216,6 +236,7 @@ git worktree remove <worktree-path>
 - Verify tests before offering options
 - Present exactly 4 options
 - Get typed confirmation for Option 4
+- Show preview and get "yes" for Option 2
 - Clean up worktree for Options 1 & 4 only
 
 ## Integration
