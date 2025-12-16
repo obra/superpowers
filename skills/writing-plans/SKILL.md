@@ -420,6 +420,46 @@ Ask: "Would you like to generate acceptance.json for this plan? (enables regress
 
 **Fix:** ALWAYS run validation (Step 1) before rename (Step 2). Fix all errors before proceeding
 
+### Mistake 5: Trying to use command substitution in one line
+**Problem:** Getting parse errors like `(eval):1: parse error near '('` when trying to use `SCRIPT_PATH=$(find...)` pattern
+
+**Root cause:** The Bash tool passes commands through shell evaluation that doesn't support command substitution `$(...)` syntax
+
+**Fix:** Use the two-step approach documented throughout this skill:
+1. Run `find` command to get the path
+2. Copy the path and use it in the next command
+
+**Alternative (if desperate):** Wrap in bash: `bash -c 'SCRIPT_PATH=$(find...); python3 "$SCRIPT_PATH" ...'`
+
+## Troubleshooting
+
+### Script Path Issues
+
+**Symptom:** Error like "can't open file '/skills/writing-plans/scripts/write_plan.py'"
+
+**Cause:** Script path variable is empty or malformed
+
+**Solution:**
+1. Verify script exists: `find ~/.claude/plugins/cache -path "*/skills/writing-plans/scripts/write_plan.py"`
+2. Check output - should show one absolute path
+3. If no path found: plugin not installed correctly - reinstall from marketplace
+4. If path found: use that literal path in python3 command
+
+**Symptom:** Parse error with parentheses: `parse error near '('`
+
+**Cause:** Shell evaluation doesn't support `$(...)` command substitution
+
+**Solution:** Use two-step approach (documented throughout skill)
+
+### Lock File Issues
+
+**Symptom:** "Lock file not found" or permission errors
+
+**Solution:**
+1. Verify wrapper script was invoked first (creates lock file)
+2. Check `.writing-plans-active` exists in working directory
+3. If missing: must invoke wrapper before Write tool
+
 ## STOP: Plan Writing Complete
 
 **After completing post-write workflow, STOP. Do NOT execute the plan.**
