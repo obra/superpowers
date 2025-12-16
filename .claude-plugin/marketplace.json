@@ -7,13 +7,13 @@
   },
   "plugins": [
     {
-      "name": "superpowers",
-      "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
+      "name": "superpowers-fork",
+      "description": "Fork of superpowers with writing-plans skill and automation-over-documentation guidance. Original by Jesse Vincent.",
       "version": "3.6.2",
       "source": "./",
       "author": {
-        "name": "Jesse Vincent",
-        "email": "jesse@fsck.com"
+        "name": "Ethan Stark (original by Jesse Vincent)",
+        "email": "ethan.stark@renlearn.com"
       }
     }
   ]

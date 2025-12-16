@@ -66,8 +66,8 @@ def main():
     print(f"   - H1 heading with feature name")
     print(f"   - Implementation tasks following writing-plans format")
     print(f"\n2. After writing, run post-write workflow:")
-    print(f"   - Validate: python3 ~/.claude/scripts/record-tools/validate-frontmatter.py {target_file}")
-    print(f"   - Rename: python3 ~/.claude/scripts/record-tools/rename_jot.py {target_file} (auto-tracks with file-track)")
+    print(f"   - Validate: python3 $CLAUDE_PLUGIN_ROOT/skills/writing-plans/scripts/validate-frontmatter.py {target_file}")
+    print(f"   - Rename: python3 $CLAUDE_PLUGIN_ROOT/skills/writing-plans/scripts/rename_jot.py {target_file} (auto-tracks with file-track)")
     print(f"   ⚠️  IMPORTANT: Rename script will remove lock file")
 
     print(f"\n⚠️  CRITICAL: DO NOT just describe the plan!")
