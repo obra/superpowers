@@ -1,13 +1,13 @@
 {
-  "name": "superpowers-fork",
-  "description": "Fork of superpowers with writing-plans skill and automation-over-documentation guidance. Original by Jesse Vincent.",
+  "name": "superpowers",
+  "description": "Core skills library with writing-plans skill and automation-over-documentation guidance",
   "version": "3.6.2",
   "author": {
-    "name": "Ethan Stark (original by Jesse Vincent)",
-    "email": "ethan.stark@renlearn.com"
+    "name": "Jesse Vincent",
+    "email": "jesse@fsck.com"
   },
-  "homepage": "https://github.com/EthanJStark/superpowers",
-  "repository": "https://github.com/EthanJStark/superpowers",
+  "homepage": "https://github.com/obra/superpowers",
+  "repository": "https://github.com/obra/superpowers",
   "license": "MIT",
-  "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows", "fork", "writing-plans"]
+  "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows", "writing-plans"]
 }
