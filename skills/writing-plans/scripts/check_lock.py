@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""Check if record-plan lock file exists before writing."""
+"""Check if writing-plans lock file exists before writing."""
 
 import os
 import sys
 
 def check_lock(working_dir: str, file_path: str) -> bool:
     """Check if lock file exists and authorizes this file."""
-    lock_file = os.path.join(working_dir, '.record-plan-active')
+    lock_file = os.path.join(working_dir, '.writing-plans-active')
 
     if not os.path.exists(lock_file):
-        print("❌ ERROR: No active record-plan session")
+        print("❌ ERROR: No active writing-plans session")
         print("MUST invoke wrapper first:")
-        print(f"  python3 ~/.claude/skills/record-plan/scripts/write_plan.py \\")
+        print(f"  python3 ~/.claude/skills/writing-plans/scripts/write_plan.py \\")
         print(f"    --working-dir {working_dir} \\")
         print(f"    --plan-name <descriptive-name>")
         return False

@@ -1,5 +1,5 @@
 ---
-name: record-plan
+name: writing-plans
 description: Use when design is complete and you need detailed implementation tasks - creates comprehensive plans with exact file paths, complete code examples, and verification steps. CRITICAL - invokes wrapper script that forces file writing - "create a plan" means invoke wrapper and write file, NOT describe in chat. SCOPE - this skill ONLY writes plans, never executes them. Mechanically enforced via lock file (attempting bypass = error).
 ---
 
@@ -11,12 +11,12 @@ Write comprehensive implementation plans assuming the engineer has zero context 
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
 
-**Announce at start:** "I'm using the record-plan skill to create the implementation plan."
+**Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
 **FIRST ACTION (mandatory):** Invoke wrapper script - DO NOT describe plan in chat first:
 
 ```bash
-python3 ~/.claude/scripts/record-plan/write_plan.py \
+python3 ~/.claude/scripts/writing-plans/write_plan.py \
   --working-dir <working-directory> \
   --plan-name <descriptive-name>
 ```
@@ -36,7 +36,7 @@ python3 ~/.claude/scripts/record-plan/write_plan.py \
 **Execution Mode:** This skill has an executable wrapper that FORCES file writing.
 
 **How it works:**
-1. You invoke the wrapper script: `~/.claude/scripts/record-plan/write_plan.py`
+1. You invoke the wrapper script: `~/.claude/scripts/writing-plans/write_plan.py`
 2. The wrapper prints directives: "USE WRITE TOOL to create file at X"
 3. You MUST follow the directives - no describing, only executing
 4. The wrapper guides you through post-write workflow
@@ -80,7 +80,7 @@ python3 ~/.claude/scripts/record-plan/write_plan.py \
 ---
 ```
 
-**IMPORTANT:** The "For Claude" instruction above is FOR THE EXECUTOR (future session using executing-plans), NOT for record-plan. When you write this header, you are creating instructions for a future Claude - not instructions for yourself.
+**IMPORTANT:** The "For Claude" instruction above is FOR THE EXECUTOR (future session using executing-plans), NOT for writing-plans. When you write this header, you are creating instructions for a future Claude - not instructions for yourself.
 
 ## File Requirements
 
@@ -122,7 +122,7 @@ The working directory is shown as "Working directory" in the environment context
 
 ## Repository Detection
 
-The record-plan scripts automatically detect the git repository root and handle nested git repositories:
+The writing-plans scripts automatically detect the git repository root and handle nested git repositories:
 
 **Nested llm/ repositories:** If your llm/ directory is its own git repository (common pattern for keeping ephemeral docs separate), the scripts automatically skip past it to find the parent repository. This ensures file paths are tracked relative to the main project repository, not the nested llm/ repo.
 
@@ -134,18 +134,18 @@ The record-plan scripts automatically detect the git repository root and handle 
 
 **Custom usage:**
 ```bash
-python3 ~/.claude/scripts/record-plan/write_plan.py \
+python3 ~/.claude/scripts/writing-plans/write_plan.py \
     --working-dir /path/to/repo \
     --plan-name my-feature \
     --target-dir docs/architecture
 ```
 
-This flexibility allows the record-plan skill to work with different project organizational conventions while maintaining backward compatibility with existing "llm/" workflows.
+This flexibility allows the writing-plans skill to work with different project organizational conventions while maintaining backward compatibility with existing "llm/" workflows.
 
 ## Enforcement Mechanism
 
 **Lock file pattern:**
-1. Wrapper creates `.record-plan-active` in working directory
+1. Wrapper creates `.writing-plans-active` in working directory
 2. Lock file contains authorized file path
 3. Write tool can only create plan if lock exists (future: full integration)
 4. Rename script removes lock after complete workflow
@@ -157,7 +157,7 @@ This flexibility allows the record-plan skill to work with different project org
 
 **Manual check (optional):**
 ```bash
-python3 ~/.claude/scripts/record-plan/check_lock.py \
+python3 ~/.claude/scripts/writing-plans/check_lock.py \
   <working-dir> <file-path>
 ```
 
@@ -235,18 +235,18 @@ If you caught yourself thinking:
 
 ### Violation 2: Executing the plan after writing
 
-**Stop. record-plan does NOT execute plans.**
+**Stop. writing-plans does NOT execute plans.**
 
 If you caught yourself thinking:
-- "Plan header says use executing-plans, so I should execute" → WRONG. That's for the EXECUTOR, not record-plan.
+- "Plan header says use executing-plans, so I should execute" → WRONG. That's for the EXECUTOR, not writing-plans.
 - "User asked to create plan for task 2, so I should do task 2" → WRONG. Create = write plan only.
-- "Plan already exists, let me execute it" → WRONG. record-plan writes, never executes.
+- "Plan already exists, let me execute it" → WRONG. writing-plans writes, never executes.
 - "I'll just start the first task" → WRONG. STOP after writing.
 
-**Production incident:** 2025-12-13 - Agent saw existing plan, decided to execute using superpowers:execute-plan. User had to interrupt: "This is a bug... record-plan should write and STOP."
+**Production incident:** 2025-12-13 - Agent saw existing plan, decided to execute using superpowers:execute-plan. User had to interrupt: "This is a bug... writing-plans should write and STOP."
 
 **Scope boundaries:**
-- record-plan = WRITE plans only
+- writing-plans = WRITE plans only
 - executing-plans = EXECUTE plans only
 - These are separate skills. Never cross boundaries.
 
@@ -356,7 +356,7 @@ Ask: "Would you like to generate acceptance.json for this plan? (enables regress
 
 1. **Generate acceptance.json from plan structure:**
    ```bash
-   python3 ~/.claude/skills/record-plan/scripts/generate_acceptance.py \
+   python3 ~/.claude/skills/writing-plans/scripts/generate_acceptance.py \
        --plan-file <working-directory>/llm/implementation-plans/<renamed-file>.md \
        --output <working-directory>/llm/acceptance.json
    ```
@@ -415,16 +415,16 @@ Plan complete: llm/implementation-plans/<filename>.md
 
 Next step: Use /superpowers:execute-plan OR open new session with executing-plans skill.
 
-[STOP - record-plan skill scope ends here]
+[STOP - writing-plans skill scope ends here]
 ```
 
 **Common Rationalization:**
 
 "The plan header says 'REQUIRED SUB-SKILL: Use executing-plans' - I should execute it now"
 
-**Reality:** That instruction is FOR THE EXECUTOR (future Claude session), NOT for this skill. record-plan ONLY writes, never executes.
+**Reality:** That instruction is FOR THE EXECUTOR (future Claude session), NOT for this skill. writing-plans ONLY writes, never executes.
 
-**Production incident:** 2025-12-13 - Agent saw existing plan, decided to execute it instead of stopping. User had to interrupt: "This is a bug... record-plan should write and STOP."
+**Production incident:** 2025-12-13 - Agent saw existing plan, decided to execute it instead of stopping. User had to interrupt: "This is a bug... writing-plans should write and STOP."
 
 ## Testing Verification
 

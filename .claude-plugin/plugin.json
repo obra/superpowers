@@ -1,6 +1,6 @@
 {
   "name": "superpowers-fork",
-  "description": "Fork of superpowers with record-plan skill and automation-over-documentation guidance. Original by Jesse Vincent.",
+  "description": "Fork of superpowers with writing-plans skill and automation-over-documentation guidance. Original by Jesse Vincent.",
   "version": "3.6.2",
   "author": {
     "name": "Ethan Stark (original by Jesse Vincent)",
@@ -9,5 +9,5 @@
   "homepage": "https://github.com/EthanJStark/superpowers",
   "repository": "https://github.com/EthanJStark/superpowers",
   "license": "MIT",
-  "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows", "fork", "record-plan"]
+  "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows", "fork", "writing-plans"]
 }

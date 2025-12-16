@@ -176,7 +176,7 @@ Done!
 ## Integration
 
 **Required workflow skills:**
-- **record-plans** - REQUIRED: Creates the plan that this skill executes
+- **writing-plans** - REQUIRED: Creates the plan that this skill executes
 - **requesting-code-review** - REQUIRED: Review after each task (see Step 3)
 - **finishing-a-development-branch** - REQUIRED: Complete development after all tasks (see Step 7)
 

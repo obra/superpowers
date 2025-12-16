@@ -1,4 +1,22 @@
-# Changelog - record-plan Skill
+# Changelog - writing-plans Skill
+
+## 2025-12-16 - Skill Name Reversion
+
+**Changed:** Reverted skill name from `record-plan` back to `writing-plans`
+
+**Reason:**
+- Align with upstream naming for PR 170 submission
+- Fork identity already established via plugin.json (`superpowers-fork`)
+- Zero backward compatibility concerns (no external users yet)
+- Reduces diff noise in PR review
+- Easier upstream integration if mechanical enforcement improvements are accepted
+
+**Impact:**
+- Slash command unchanged: `/write-plan` (always used same command)
+- All mechanical enforcement logic preserved (wrapper scripts, lock files, validation)
+- Only naming changed - no functional differences
+
+**Migration:** None needed (no external users)
 
 ## 2025-12-12 - file-track Integration
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Executable wrapper for record-plan skill.
+Executable wrapper for writing-plans skill.
 
 This wrapper guides Claude through the file writing workflow instead of
 letting Claude just describe what it would do.
@@ -52,7 +52,7 @@ def main():
         print(f"✓ Write plan to: {target_file}")
 
     # Create lock file to enable Write tool for this plan
-    lock_file = os.path.join(args.working_dir, '.record-plan-active')
+    lock_file = os.path.join(args.working_dir, '.writing-plans-active')
     with open(lock_file, 'w') as f:
         f.write(f"{target_file}\n")
         f.write(f"created: {datetime.now().isoformat()}\n")
@@ -64,7 +64,7 @@ def main():
     print(f"   - First line: <!-- jot:md-rename -->")
     print(f"   - YAML frontmatter (title, date, type, status)")
     print(f"   - H1 heading with feature name")
-    print(f"   - Implementation tasks following record-plan format")
+    print(f"   - Implementation tasks following writing-plans format")
     print(f"\n2. After writing, run post-write workflow:")
     print(f"   - Validate: python3 ~/.claude/scripts/record-tools/validate-frontmatter.py {target_file}")
     print(f"   - Rename: python3 ~/.claude/scripts/record-tools/rename_jot.py {target_file} (auto-tracks with file-track)")

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Install pre-commit hook for record-plan enforcement
+# Install pre-commit hook for writing-plans enforcement
 
 HOOK_CONTENT='#!/bin/bash
 # Pre-commit hook: Validate implementation plan format
@@ -8,7 +8,7 @@ if git diff --cached --name-only | grep -qE "llm/implementation-plans/[^0-9][^/]
   echo "❌ ERROR: Implementation plan does not follow YYMMDD-XX format"
   echo ""
   echo "Files must be created via wrapper script:"
-  echo "  python3 ~/.claude/skills/record-plan/scripts/write_plan.py \\"
+  echo "  python3 ~/.claude/skills/writing-plans/scripts/write_plan.py \\"
   echo "    --working-dir \$(pwd) \\"
   echo "    --plan-name <descriptive-name>"
   echo ""
