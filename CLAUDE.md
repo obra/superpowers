@@ -38,7 +38,7 @@ When developing superpowers locally and testing changes in Claude Code:
 1. **Edit skills** in the repository's `skills/` directory
 2. **Commit changes** to your branch
 3. **Reload plugin** to reflect changes in Claude Code (paste both lines):
-   ```
+   ```bash
    /plugin uninstall superpowers
    /plugin install superpowers
    ```
@@ -113,7 +113,7 @@ git branch -d feature/my-experiment
 
 **Directory and Naming:**
 
-```
+```plaintext
 skills/
   skill-name/           # lowercase-with-hyphens only (no special chars)
     SKILL.md            # Required: main skill content

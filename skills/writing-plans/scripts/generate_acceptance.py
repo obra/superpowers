@@ -16,7 +16,7 @@ def extract_tasks(plan_content: str) -> list[dict]:
     task_pattern = r'^### Task \d+: (.+)$'
 
     # Find all task headers
-    for idx, line in enumerate(plan_content.split('\n')):
+    for line in plan_content.split('\n'):
         match = re.match(task_pattern, line)
         if match:
             task_name = match.group(1)

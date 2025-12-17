@@ -11,16 +11,24 @@ def check_lock(working_dir: str, file_path: str) -> bool:
     if not os.path.exists(lock_file):
         print("❌ ERROR: No active writing-plans session")
         print("MUST invoke wrapper first:")
-        print(f"  python3 ~/.claude/skills/writing-plans/scripts/write_plan.py \\")
+        print("  python3 ~/.claude/skills/writing-plans/scripts/write_plan.py \\")
         print(f"    --working-dir {working_dir} \\")
-        print(f"    --plan-name <descriptive-name>")
+        print("    --plan-name <descriptive-name>")
         return False
 
-    # Check if lock authorizes this specific file
-    with open(lock_file) as f:
-        authorized_path = f.readline().strip()
+    try:
+        # Check if lock authorizes this specific file
+        with open(lock_file, encoding='utf-8') as f:
+            authorized_path = f.readline().strip()
+    except (OSError, IOError) as e:
+        print(f"❌ ERROR: Cannot read lock file: {e}")
+        return False
 
-    if not file_path.endswith(os.path.basename(authorized_path)):
+    # Normalize both paths and compare full paths (not just basename)
+    authorized_norm = os.path.normpath(os.path.abspath(authorized_path))
+    file_norm = os.path.normpath(os.path.abspath(file_path))
+
+    if authorized_norm != file_norm:
         print(f"❌ ERROR: Lock file authorizes {authorized_path}, not {file_path}")
         return False
 
