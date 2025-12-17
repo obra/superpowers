@@ -1,122 +1,88 @@
 # Superpowers Release Notes
 
-## v4.0.0 (2025-12-11) - dev branch
-
-### Major Changes
-
-**Complete skill rewrite with executable flowcharts**
-
-Rewrote several skills using Mermaid flowcharts that serve as executable specifications.
-The key insight: skill descriptions in plugin.json override flowchart content when they
-contain workflow summaries, causing Claude to follow the description instead of the
-detailed process. Fixed by making descriptions trigger-only ("Use when X") without
-process details.
-
-Skills rewritten with flowcharts:
-- **subagent-driven-development** - Two-stage code review (spec compliance then code quality)
-- **systematic-debugging** - Consolidated from 3 separate skills (root-cause-tracing, defense-in-depth, condition-based-waiting)
-- **using-superpowers** - Visual flowchart showing skill check as blocking gate
-
-**Skill consolidation**
-- Merged `root-cause-tracing`, `defense-in-depth`, `condition-based-waiting` into `systematic-debugging`
-- Merged `testing-skills-with-subagents` into `writing-skills`
-- Merged `testing-anti-patterns` into `test-driven-development`
-- Removed obsolete `sharing-skills` skill
-
-### Improvements
-
-**Fixed skill descriptions that override flowcharts**
-
-Updated 7 skill descriptions to be trigger-only (no workflow summaries):
-- dispatching-parallel-agents
-- executing-plans
-- requesting-code-review
-- systematic-debugging
-- test-driven-development
-- writing-plans
-- writing-skills
-
-**Strengthened brainstorming skill trigger**
-- Added skill priority guidance ensuring process skills (brainstorming, debugging) trigger before implementation skills
-- Clearer "Use when" description for feature requests
-
-**Improved subagent-driven-development skill**
-- Complete rewrite with visual flowchart showing controller/worker/reviewer flow
-- Controller now provides full task text to workers (not just references)
-- Two-stage review: spec compliance first, then code quality
-- Spec compliance reviewer made skeptical and verification-focused
-
-**Rewrote using-superpowers skill**
-- Added visual flowchart showing skill check as blocking gate before ANY response
-- Converted rationalizations from bullet list to scannable table format
-- Added new rationalizations based on observed failures
-- Clarified skill check applies even before asking clarifying questions
+## v4.0.0 (2025-12-17)
 
 ### New Features
 
-**Skill triggering test framework** (`tests/skill-triggering/`)
-- Tests whether skills trigger correctly from naive prompts
-- Validates 6 skills: systematic-debugging, test-driven-development, writing-plans, dispatching-parallel-agents, executing-plans, requesting-code-review
-- All tests passing - skills trigger based on descriptions without explicit naming
+**Two-stage code review in subagent-driven-development**
 
-**Subagent-driven-development test suite** (`tests/subagent-driven-dev/`)
-- End-to-end test using go-fractals project scaffold
-- Validates full workflow: task execution, code review, verification
-- Tests with `--dangerously-skip-permissions` for automation
+Subagent workflows now use two separate review stages after each task:
 
-**Flowchart visualization tool** (`tests/render-graphs.js`)
-- Extracts Mermaid diagrams from SKILL.md files
-- Generates PNG visualizations for documentation
-- Useful for reviewing skill flowcharts
+1. **Spec compliance review** - Skeptical reviewer verifies implementation matches spec exactly. Catches missing requirements AND over-building. Won't trust implementer's report—reads actual code.
 
-**Claude Code skills test framework** (`tests/claude-code/`)
-- Integration tests using `claude -p` to verify skill behavior
-- Tests verify skill usage via session transcript analysis
-- Supports `--dangerously-skip-permissions` for unrestricted testing
-- Real-time output display during test runs
-- Token usage analysis for cost tracking
+2. **Code quality review** - Only runs after spec compliance passes. Reviews for clean code, test coverage, maintainability.
 
-**Testing documentation** (`docs/testing.md`)
-- Comprehensive guide to testing skills with Claude Code
-- Covers integration testing patterns and best practices
-- Documents permission modes and transcript verification
+This catches the common failure mode where code is well-written but doesn't match what was requested. Reviews are loops, not one-shot: if reviewer finds issues, implementer fixes them, then reviewer checks again.
 
-### Documentation
+Other subagent workflow improvements:
+- Controller provides full task text to workers (not file references)
+- Workers can ask clarifying questions before AND during work
+- Self-review checklist before reporting completion
+- Plan read once at start, extracted to TodoWrite
 
-**Added "Description Trap" documentation to writing-skills**
-- Documents how skill descriptions override flowchart content
-- Explains why descriptions must be trigger-only
-- Provides examples of good vs bad descriptions
+New prompt templates in `skills/subagent-driven-development/`:
+- `implementer-prompt.md` - Includes self-review checklist, encourages questions
+- `spec-reviewer-prompt.md` - Skeptical verification against requirements
+- `code-quality-reviewer-prompt.md` - Standard code review
 
-### Files Changed
+**Debugging techniques consolidated with tools**
 
-**Skills Updated:**
-- `skills/brainstorming/SKILL.md` - Stronger trigger, skill priority
-- `skills/dispatching-parallel-agents/SKILL.md` - Trigger-only description
-- `skills/executing-plans/SKILL.md` - Trigger-only description
-- `skills/requesting-code-review/SKILL.md` - Trigger-only description
-- `skills/subagent-driven-development/SKILL.md` - Complete rewrite with flowcharts
-- `skills/systematic-debugging/SKILL.md` - Consolidated from 3 skills
-- `skills/test-driven-development/SKILL.md` - Merged testing-anti-patterns
-- `skills/using-superpowers/SKILL.md` - Flowchart format, new rationalizations
-- `skills/writing-plans/SKILL.md` - Trigger-only description
-- `skills/writing-skills/SKILL.md` - Merged testing-skills-with-subagents, description trap docs
+`systematic-debugging` now bundles supporting techniques and tools:
+- `root-cause-tracing.md` - Trace bugs backward through call stack
+- `defense-in-depth.md` - Add validation at multiple layers
+- `condition-based-waiting.md` - Replace arbitrary timeouts with condition polling
+- `find-polluter.sh` - Bisection script to find which test creates pollution
+- `condition-based-waiting-example.ts` - Complete implementation from real debugging session
 
-**Skills Removed:**
-- `skills/condition-based-waiting/` - Merged into systematic-debugging
-- `skills/defense-in-depth/` - Merged into systematic-debugging
-- `skills/root-cause-tracing/` - Merged into systematic-debugging
-- `skills/sharing-skills/` - Obsolete
-- `skills/testing-anti-patterns/` - Merged into test-driven-development
-- `skills/testing-skills-with-subagents/` - Merged into writing-skills
+**Testing anti-patterns reference**
 
-**Test Infrastructure:**
-- New: `tests/skill-triggering/` - Skill triggering validation
-- New: `tests/subagent-driven-dev/` - Full workflow test suite
-- New: `tests/render-graphs.js` - Flowchart visualization
-- New: `tests/claude-code/` - Integration test framework
-- New: `docs/testing.md` - Testing documentation
-- New: `docs/plans/skills-improvement-plan.md` - Improvement roadmap
+`test-driven-development` now includes `testing-anti-patterns.md` covering:
+- Testing mock behavior instead of real behavior
+- Adding test-only methods to production classes
+- Mocking without understanding dependencies
+- Incomplete mocks that hide structural assumptions
+
+**Skill test infrastructure**
+
+Three new test frameworks for validating skill behavior:
+
+`tests/skill-triggering/` - Validates skills trigger from naive prompts without explicit naming. Tests 6 skills to ensure descriptions alone are sufficient.
+
+`tests/claude-code/` - Integration tests using `claude -p` for headless testing. Verifies skill usage via session transcript (JSONL) analysis. Includes `analyze-token-usage.py` for cost tracking.
+
+`tests/subagent-driven-dev/` - End-to-end workflow validation with two complete test projects:
+- `go-fractals/` - CLI tool with Sierpinski/Mandelbrot (10 tasks)
+- `svelte-todo/` - CRUD app with localStorage and Playwright (12 tasks)
+
+### Major Changes
+
+**DOT flowcharts as executable specifications**
+
+Rewrote key skills using DOT/GraphViz flowcharts as the authoritative process definition. Prose becomes supporting content.
+
+**The Description Trap** (documented in `writing-skills`): Discovered that skill descriptions override flowchart content when descriptions contain workflow summaries. Claude follows the short description instead of reading the detailed flowchart. Fix: descriptions must be trigger-only ("Use when X") with no process details.
+
+**Skill priority in using-superpowers**
+
+When multiple skills apply, process skills (brainstorming, debugging) now explicitly come before implementation skills. "Build X" triggers brainstorming first, then domain skills.
+
+**brainstorming trigger strengthened**
+
+Description changed to imperative: "You MUST use this before any creative work—creating features, building components, adding functionality, or modifying behavior."
+
+### Breaking Changes
+
+**Skill consolidation** - Six standalone skills merged:
+- `root-cause-tracing`, `defense-in-depth`, `condition-based-waiting` → bundled in `systematic-debugging/`
+- `testing-skills-with-subagents` → bundled in `writing-skills/`
+- `testing-anti-patterns` → bundled in `test-driven-development/`
+- `sharing-skills` removed (obsolete)
+
+### Other Improvements
+
+- **render-graphs.js** - Tool to extract DOT diagrams from skills and render to SVG
+- **Rationalizations table** in using-superpowers - Scannable format including new entries: "I need more context first", "Let me explore first", "This feels productive"
+- **docs/testing.md** - Guide to testing skills with Claude Code integration tests
 
 ---
 
