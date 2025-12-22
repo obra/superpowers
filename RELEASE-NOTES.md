@@ -1,5 +1,17 @@
 # Superpowers Release Notes
 
+## v4.0.1 (2025-12-22)
+
+### Fixes
+
+**Clarified how to access skills in Claude Code**
+
+Fixed a confusing pattern where Claude would invoke a skill via the Skill tool, then try to Read the skill file separately. The `using-superpowers` skill now explicitly states that the Skill tool loads skill content directly—no need to read files.
+
+- Added "How to Access Skills" section to `using-superpowers`
+- Changed "read the skill" → "invoke the skill" in instructions
+- Updated slash commands to use fully qualified skill names (e.g., `superpowers:brainstorming`)
+
 ## v4.0.0 (2025-12-17)
 
 ### New Features
