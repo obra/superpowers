@@ -94,7 +94,7 @@ digraph process {
 
 | Subagent | Model | Rationale |
 |----------|-------|-----------|
-| Implementer | `sonnet` | Requires coding intelligence, TDD execution |
+| Implementer | `sonnet/opus` | Requires coding intelligence, TDD execution |
 | Spec Reviewer | `haiku` | Validation task, pattern matching |
 | Code Quality Reviewer | `haiku` | Validation task, checklist-based review |
 
