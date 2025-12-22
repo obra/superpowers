@@ -88,6 +88,23 @@ digraph process {
 - `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
 - `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
 
+## Model Selection
+
+**Recommended models per subagent type:**
+
+| Subagent | Model | Rationale |
+|----------|-------|-----------|
+| Implementer | `sonnet` | Requires coding intelligence, TDD execution |
+| Spec Reviewer | `haiku` | Validation task, pattern matching |
+| Code Quality Reviewer | `haiku` | Validation task, checklist-based review |
+
+When dispatching subagents:
+- `Task(implementer_prompt)` - inherits orchestrator model (sonnet/opus)
+- `Task(spec_reviewer_prompt, model: "haiku")` - fast validation
+- `Task(code_quality_reviewer_prompt, model: "haiku")` - fast validation
+
+This pattern follows Anthropic's recommendation: orchestrator handles complex reasoning, Haiku handles validation subtasks.
+
 ## Example Workflow
 
 ```
