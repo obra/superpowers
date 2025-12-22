@@ -65,9 +65,10 @@ Each agent gets:
 
 ```typescript
 // In Claude Code / AI environment
-Task("Fix agent-tool-abort.test.ts failures")
-Task("Fix batch-completion-behavior.test.ts failures")
-Task("Fix tool-approval-race-conditions.test.ts failures")
+// Use model: haiku for parallel investigation subagents (fast, cost-effective)
+Task("Fix agent-tool-abort.test.ts failures", model: "haiku")
+Task("Fix batch-completion-behavior.test.ts failures", model: "haiku")
+Task("Fix tool-approval-race-conditions.test.ts failures", model: "haiku")
 // All three run concurrently
 ```
 
@@ -161,6 +162,20 @@ Agent 3 → Fix tool-approval-race-conditions.test.ts
 2. **Focus** - Each agent has narrow scope, less context to track
 3. **Independence** - Agents don't interfere with each other
 4. **Speed** - 3 problems solved in time of 1
+
+## Model Selection
+
+Per [Anthropic's guidance](https://platform.claude.com/docs/en/about-claude/models/choosing-a-model), use `model: haiku` for parallel investigation subagents:
+
+- **Speed:** Haiku runs 4-5x faster than Sonnet
+- **Cost:** Fraction of Sonnet pricing for high-volume dispatching
+- **Quality:** Haiku 4.5 matches Sonnet 4 on coding and agentic workflows
+- **Pattern:** Orchestrator (Sonnet/Opus) dispatches Haiku subagents
+
+**When to use Sonnet/Opus instead:**
+- Complex architectural decisions
+- Multi-file refactoring requiring holistic understanding
+- Tasks where reasoning quality is paramount
 
 ## Verification
 
