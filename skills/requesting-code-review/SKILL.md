@@ -33,6 +33,12 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 Use Task tool with superpowers:code-reviewer type, fill template at `code-reviewer.md`
 
+**Model selection:** Use `model: haiku` when dispatching the code-reviewer subagent. Code review is a validation task that benefits from Haiku's speed and cost efficiency.
+
+```typescript
+Task(code_review_prompt, model: "haiku")
+```
+
 **Placeholders:**
 - `{WHAT_WAS_IMPLEMENTED}` - What you just built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
