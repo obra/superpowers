@@ -1,6 +1,6 @@
 # Superpowers Release Notes
 
-## v4.0.1 (2025-12-22)
+## v4.0.1 (2025-12-23)
 
 ### Fixes
 
@@ -11,6 +11,10 @@ Fixed a confusing pattern where Claude would invoke a skill via the Skill tool, 
 - Added "How to Access Skills" section to `using-superpowers`
 - Changed "read the skill" → "invoke the skill" in instructions
 - Updated slash commands to use fully qualified skill names (e.g., `superpowers:brainstorming`)
+
+**Added GitHub thread reply guidance to receiving-code-review** (h/t @ralphbean)
+
+Added a note about replying to inline review comments in the original thread rather than as top-level PR comments.
 
 ## v4.0.0 (2025-12-17)
 
