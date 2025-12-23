@@ -48,7 +48,7 @@ Quick setup to enable superpowers skills in Codex.
    New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.codex\skills"
    ```
 
-3. **Update $env:USERPROFILE\.codex\AGENTS.md** to include this superpowers section:
+3. **Update `$env:USERPROFILE\.codex\AGENTS.md`** to include this superpowers section:
    ```markdown
    ## Superpowers System
 
