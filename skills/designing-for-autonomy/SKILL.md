@@ -38,17 +38,10 @@ Apply during design/architecture: new projects, major features, logging systems,
 
 ## Dev Endpoints
 
-Build endpoints the agent can curl to verify state without screenshots:
-
-```javascript
-if (process.env.NODE_ENV === 'development') {
-  app.get('/dev/health', (req, res) => res.json({ status: 'ok', db: db.isConnected() }));
-  app.get('/dev/state', (req, res) => res.json({ users: users.count(), sessions: sessions.active() }));
-  app.post('/dev/reset', (req, res) => { resetDatabase(); res.json({ reset: true }); });
-}
-```
-
-**Pattern:** `/dev/health` for status, `/dev/state` for inspection, `/dev/reset` for clean slate.
+Build dev-only endpoints the agent can curl to verify state without screenshots:
+- `/dev/health` — system status
+- `/dev/state` — inspect internal state
+- `/dev/reset` — reset to clean slate
 
 ## Verbose Errors
 
