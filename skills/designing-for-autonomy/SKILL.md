@@ -1,9 +1,9 @@
 ---
-name: designing-for-agent-autonomy
+name: designing-for-autonomy
 description: Use when architecting features or systems - ensures AI agents can observe, test, and troubleshoot without requiring screenshots or manual intervention
 ---
 
-# Designing for Agent Autonomy
+# Designing for Autonomy
 
 ## Overview
 

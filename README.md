@@ -107,7 +107,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 - **verification-before-completion** - Ensure it's actually fixed
 
 **Architecture**
-- **designing-for-agent-autonomy** - Let agents close their own feedback loops so they can run more self-sufficiently
+- **designing-for-autonomy** - Let agents close their own feedback loops so they can run more self-sufficiently
 
 **Collaboration** 
 - **brainstorming** - Socratic design refinement
