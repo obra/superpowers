@@ -107,13 +107,13 @@ description: Use when [condition] - [what it does]
 
 #### For Windows
 
-Create your own skills in `%USERPROFILE%\.config\opencode\skills\`:
+Create your own skills in `$env:USERPROFILE\.config\opencode\skills\`:
 
 ```powershell
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.config\opencode\skills\my-skill"
 ```
 
-Create `%USERPROFILE%\.config\opencode\skills\my-skill\SKILL.md`:
+Create `$env:USERPROFILE\.config\opencode\skills\my-skill\SKILL.md`:
 
 ```markdown
 ---
