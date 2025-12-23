@@ -105,6 +105,57 @@ Agent reads one file.
 | Mobile | Local server | HTTP endpoint or bridged file |
 | Multi-service | Terminal or file | Shared volume or aggregator |
 
+## Agent-Testable Endpoints
+
+Build endpoints the agent can hit directly to verify state and behavior:
+
+- **Health checks:** `curl localhost:3000/health` returns system status
+- **State inspection:** `/dev/state` endpoint exposes internal state in dev mode
+- **Action triggers:** `/dev/reset` to reset to clean state, `/dev/seed` to populate test data
+
+```javascript
+// Dev-only endpoints for agent verification
+if (process.env.NODE_ENV === 'development') {
+  app.get('/dev/health', (req, res) => res.json({ status: 'ok', db: db.isConnected() }));
+  app.get('/dev/state', (req, res) => res.json({ users: users.count(), sessions: sessions.active() }));
+  app.post('/dev/reset', (req, res) => { resetDatabase(); res.json({ reset: true }); });
+}
+```
+
+**The principle:** If the agent can curl it, the agent can verify it. No screenshots needed.
+
+## Verbose Error Messages
+
+**Verbose errors beat silent failures.** Errors should contain everything the agent needs to diagnose and fix.
+
+**Bad:** `Error: Connection failed`
+
+**Good:** `Error: Connection to database failed. Host: localhost:5432, User: app_user, Reason: ECONNREFUSED. Check if PostgreSQL is running: pg_isready -h localhost -p 5432`
+
+**Principles:**
+- Include what was attempted, what failed, and why
+- Add context: config values, environment, relevant state
+- Suggest next steps or diagnostic commands
+- Never swallow errors silently - always surface them where the agent can see
+
+## Browser Testing Strategy
+
+The agent may have access to browser automation. Use it strategically:
+
+**1. Exhaust non-browser paths first**
+Browser automation is slower than terminal, logs, and API calls. Test everything possible without launching a browser.
+
+**2. Use browser automation for what requires it**
+Some things genuinely need browser testing - visual rendering, user flows, JavaScript behavior. Don't ask the human to test what the agent's browser can verify.
+
+**3. Browser as proxy for non-web apps**
+Even when building desktop/mobile apps, consider using the browser as a testing proxy:
+- Electron app? Test renderer logic in browser first
+- API backend? Build a simple debug UI the agent can interact with
+- Mobile app? Create a web version of key flows for faster agent testing
+
+**The principle:** Close as many feedback loops as possible before asking the human to test manually.
+
 ## Exhaust Automation Before Screenshots
 
 When the agent needs to verify something:
