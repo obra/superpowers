@@ -16,6 +16,10 @@ Fixed a confusing pattern where Claude would invoke a skill via the Skill tool, 
 
 Added a note about replying to inline review comments in the original thread rather than as top-level PR comments.
 
+**Added automation-over-documentation guidance to writing-skills** (h/t @EthanJStark)
+
+Added guidance that mechanical constraints should be automated, not documented—save skills for judgment calls.
+
 ## v4.0.0 (2025-12-17)
 
 ### New Features
