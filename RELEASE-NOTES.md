@@ -1,5 +1,15 @@
 # Superpowers Release Notes
 
+## v4.0.2 (2025-12-23)
+
+### Fixes
+
+**Slash commands now user-only**
+
+Added `disable-model-invocation: true` to all three slash commands (`/brainstorm`, `/execute-plan`, `/write-plan`). Claude can no longer invoke these commands via the Skill tool—they're restricted to manual user invocation only.
+
+The underlying skills (`superpowers:brainstorming`, `superpowers:executing-plans`, `superpowers:writing-plans`) remain available for Claude to invoke autonomously. This change prevents confusion when Claude would invoke a command that just redirects to a skill anyway.
+
 ## v4.0.1 (2025-12-23)
 
 ### Fixes
