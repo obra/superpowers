@@ -30,12 +30,12 @@ else
     exit 1
 fi
 
-# Test 2: Verify lib/skills-core.js is in place
-echo "Test 2: Checking skills-core.js..."
-if [ -f "$HOME/.config/opencode/superpowers/lib/skills-core.js" ]; then
-    echo "  [PASS] skills-core.js exists"
+# Test 2: Verify shared skills core module is in place
+echo "Test 2: Checking skills-core.mjs..."
+if [ -f "$HOME/.config/opencode/superpowers/lib/skills-core.mjs" ]; then
+    echo "  [PASS] skills-core.mjs exists"
 else
-    echo "  [FAIL] skills-core.js not found"
+    echo "  [FAIL] skills-core.mjs not found"
     exit 1
 fi
 

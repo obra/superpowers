@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Test: Skills Core Library
-# Tests the skills-core.js library functions directly via Node.js
+# Tests the skills-core library functions directly via Node.js
 # Does not require OpenCode - tests pure library functionality
 set -euo pipefail
 

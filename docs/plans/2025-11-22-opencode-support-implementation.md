@@ -4,7 +4,7 @@
 
 **Goal:** Add full superpowers support for OpenCode.ai with a native JavaScript plugin that shares core functionality with the existing Codex implementation.
 
-**Architecture:** Extract common skill discovery/parsing logic into `lib/skills-core.js`, refactor Codex to use it, then build OpenCode plugin using their native plugin API with custom tools and session hooks.
+**Architecture:** Extract common skill discovery/parsing logic into `lib/skills-core.mjs`, refactor Codex to use it, then build OpenCode plugin using their native plugin API with custom tools and session hooks.
 
 **Tech Stack:** Node.js, JavaScript, OpenCode Plugin API, Git worktrees
 
@@ -15,10 +15,10 @@
 ### Task 1: Extract Frontmatter Parsing
 
 **Files:**
-- Create: `lib/skills-core.js`
+- Create: `lib/skills-core.mjs`
 - Reference: `.codex/superpowers-codex` (lines 40-74)
 
-**Step 1: Create lib/skills-core.js with extractFrontmatter function**
+**Step 1: Create lib/skills-core.mjs with extractFrontmatter function**
 
 ```javascript
 #!/usr/bin/env node
@@ -82,13 +82,13 @@ module.exports = {
 
 **Step 2: Verify file was created**
 
-Run: `ls -l lib/skills-core.js`
+Run: `ls -l lib/skills-core.mjs`
 Expected: File exists
 
 **Step 3: Commit**
 
 ```bash
-git add lib/skills-core.js
+git add lib/skills-core.mjs
 git commit -m "feat: create shared skills core module with frontmatter parser"
 ```
 
@@ -97,10 +97,10 @@ git commit -m "feat: create shared skills core module with frontmatter parser"
 ### Task 2: Extract Skill Discovery Logic
 
 **Files:**
-- Modify: `lib/skills-core.js`
+- Modify: `lib/skills-core.mjs`
 - Reference: `.codex/superpowers-codex` (lines 97-136)
 
-**Step 1: Add findSkillsInDir function to skills-core.js**
+**Step 1: Add findSkillsInDir function to skills-core.mjs**
 
 Add before `module.exports`:
 
@@ -164,13 +164,13 @@ module.exports = {
 
 **Step 3: Verify syntax**
 
-Run: `node -c lib/skills-core.js`
+Run: `node -c lib/skills-core.mjs`
 Expected: No output (success)
 
 **Step 4: Commit**
 
 ```bash
-git add lib/skills-core.js
+git add lib/skills-core.mjs
 git commit -m "feat: add skill discovery function to core module"
 ```
 
@@ -179,7 +179,7 @@ git commit -m "feat: add skill discovery function to core module"
 ### Task 3: Extract Skill Resolution Logic
 
 **Files:**
-- Modify: `lib/skills-core.js`
+- Modify: `lib/skills-core.mjs`
 - Reference: `.codex/superpowers-codex` (lines 212-280)
 
 **Step 1: Add resolveSkillPath function**
@@ -243,13 +243,13 @@ module.exports = {
 
 **Step 3: Verify syntax**
 
-Run: `node -c lib/skills-core.js`
+Run: `node -c lib/skills-core.mjs`
 Expected: No output
 
 **Step 4: Commit**
 
 ```bash
-git add lib/skills-core.js
+git add lib/skills-core.mjs
 git commit -m "feat: add skill path resolution with shadowing support"
 ```
 
@@ -258,7 +258,7 @@ git commit -m "feat: add skill path resolution with shadowing support"
 ### Task 4: Extract Update Check Logic
 
 **Files:**
-- Modify: `lib/skills-core.js`
+- Modify: `lib/skills-core.mjs`
 - Reference: `.codex/superpowers-codex` (lines 16-38)
 
 **Step 1: Add checkForUpdates function**
@@ -316,13 +316,13 @@ module.exports = {
 
 **Step 3: Verify syntax**
 
-Run: `node -c lib/skills-core.js`
+Run: `node -c lib/skills-core.mjs`
 Expected: No output
 
 **Step 4: Commit**
 
 ```bash
-git add lib/skills-core.js
+git add lib/skills-core.mjs
 git commit -m "feat: add git update checking to core module"
 ```
 
@@ -950,12 +950,12 @@ At the top of the file (after the header), add:
 - **OpenCode Support**: Native JavaScript plugin for OpenCode.ai
   - Custom tools: `use_skill` and `find_skills`
   - Automatic session bootstrap with tool mapping instructions
-  - Shared core module (`lib/skills-core.js`) for code reuse
+  - Shared core module (`lib/skills-core.mjs`) for code reuse
   - Installation guide in `.opencode/INSTALL.md`
 
 ### Changed
 
-- **Refactored Codex Implementation**: Now uses shared `lib/skills-core.js` module
+- **Refactored Codex Implementation**: Now uses shared `lib/skills-core.mjs` module
   - Eliminates code duplication between Codex and OpenCode
   - Single source of truth for skill discovery and parsing
 
@@ -1014,7 +1014,7 @@ No commit needed - this is verification only.
 
 Run:
 ```bash
-ls -l lib/skills-core.js
+ls -l lib/skills-core.mjs
 ls -l .opencode/plugin/superpowers.js
 ls -l .opencode/INSTALL.md
 ```
@@ -1057,7 +1057,7 @@ Expected: Shows all commits from this implementation
 
 Create a completion summary showing:
 - Total commits made
-- Files created: `lib/skills-core.js`, `.opencode/plugin/superpowers.js`, `.opencode/INSTALL.md`
+- Files created: `lib/skills-core.mjs`, `.opencode/plugin/superpowers.js`, `.opencode/INSTALL.md`
 - Files modified: `.codex/superpowers-codex`, `README.md`, `RELEASE-NOTES.md`
 - Testing performed: Codex commands verified
 - Ready for: Testing with actual OpenCode installation
@@ -1085,7 +1085,7 @@ These steps require OpenCode to be installed and are not part of the automated i
 
 ## Success Criteria
 
-- [ ] `lib/skills-core.js` created with all core functions
+- [ ] `lib/skills-core.mjs` created with all core functions
 - [ ] `.codex/superpowers-codex` refactored to use shared core
 - [ ] Codex commands still work (find-skills, use-skill, bootstrap)
 - [ ] `.opencode/plugin/superpowers.js` created with tools and hooks
