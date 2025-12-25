@@ -1,0 +1,22 @@
+{
+  "name": "jamman7-png-marketplace",
+  "description": "JAMMAN7-png's Superpowers plugin marketplace",
+  "owner": {
+    "name": "JAMMAN7-png",
+    "url": "https://github.com/JAMMAN7-png"
+  },
+  "plugins": [
+    {
+      "name": "superpowers",
+      "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
+      "version": "4.0.2",
+      "source": "https://github.com/JAMMAN7-png/superpowers.git",
+      "author": {
+        "name": "Jesse Vincent (forked by JAMMAN7-png)",
+        "email": "jesse@fsck.com"
+      },
+      "homepage": "https://github.com/JAMMAN7-png/superpowers",
+      "repository": "https://github.com/JAMMAN7-png/superpowers"
+    }
+  ]
+}
