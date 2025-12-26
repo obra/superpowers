@@ -1,5 +1,6 @@
 ---
-description: Interactive design refinement using Socratic method
+description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores requirements and design before implementation."
+disable-model-invocation: true
 ---
 
-Use and follow the brainstorming skill exactly as written
+Invoke the superpowers:brainstorming skill and follow it exactly as presented to you

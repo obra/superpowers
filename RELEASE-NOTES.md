@@ -1,5 +1,121 @@
 # Superpowers Release Notes
 
+## v4.0.2 (2025-12-23)
+
+### Fixes
+
+**Slash commands now user-only**
+
+Added `disable-model-invocation: true` to all three slash commands (`/brainstorm`, `/execute-plan`, `/write-plan`). Claude can no longer invoke these commands via the Skill tool—they're restricted to manual user invocation only.
+
+The underlying skills (`superpowers:brainstorming`, `superpowers:executing-plans`, `superpowers:writing-plans`) remain available for Claude to invoke autonomously. This change prevents confusion when Claude would invoke a command that just redirects to a skill anyway.
+
+## v4.0.1 (2025-12-23)
+
+### Fixes
+
+**Clarified how to access skills in Claude Code**
+
+Fixed a confusing pattern where Claude would invoke a skill via the Skill tool, then try to Read the skill file separately. The `using-superpowers` skill now explicitly states that the Skill tool loads skill content directly—no need to read files.
+
+- Added "How to Access Skills" section to `using-superpowers`
+- Changed "read the skill" → "invoke the skill" in instructions
+- Updated slash commands to use fully qualified skill names (e.g., `superpowers:brainstorming`)
+
+**Added GitHub thread reply guidance to receiving-code-review** (h/t @ralphbean)
+
+Added a note about replying to inline review comments in the original thread rather than as top-level PR comments.
+
+**Added automation-over-documentation guidance to writing-skills** (h/t @EthanJStark)
+
+Added guidance that mechanical constraints should be automated, not documented—save skills for judgment calls.
+
+## v4.0.0 (2025-12-17)
+
+### New Features
+
+**Two-stage code review in subagent-driven-development**
+
+Subagent workflows now use two separate review stages after each task:
+
+1. **Spec compliance review** - Skeptical reviewer verifies implementation matches spec exactly. Catches missing requirements AND over-building. Won't trust implementer's report—reads actual code.
+
+2. **Code quality review** - Only runs after spec compliance passes. Reviews for clean code, test coverage, maintainability.
+
+This catches the common failure mode where code is well-written but doesn't match what was requested. Reviews are loops, not one-shot: if reviewer finds issues, implementer fixes them, then reviewer checks again.
+
+Other subagent workflow improvements:
+- Controller provides full task text to workers (not file references)
+- Workers can ask clarifying questions before AND during work
+- Self-review checklist before reporting completion
+- Plan read once at start, extracted to TodoWrite
+
+New prompt templates in `skills/subagent-driven-development/`:
+- `implementer-prompt.md` - Includes self-review checklist, encourages questions
+- `spec-reviewer-prompt.md` - Skeptical verification against requirements
+- `code-quality-reviewer-prompt.md` - Standard code review
+
+**Debugging techniques consolidated with tools**
+
+`systematic-debugging` now bundles supporting techniques and tools:
+- `root-cause-tracing.md` - Trace bugs backward through call stack
+- `defense-in-depth.md` - Add validation at multiple layers
+- `condition-based-waiting.md` - Replace arbitrary timeouts with condition polling
+- `find-polluter.sh` - Bisection script to find which test creates pollution
+- `condition-based-waiting-example.ts` - Complete implementation from real debugging session
+
+**Testing anti-patterns reference**
+
+`test-driven-development` now includes `testing-anti-patterns.md` covering:
+- Testing mock behavior instead of real behavior
+- Adding test-only methods to production classes
+- Mocking without understanding dependencies
+- Incomplete mocks that hide structural assumptions
+
+**Skill test infrastructure**
+
+Three new test frameworks for validating skill behavior:
+
+`tests/skill-triggering/` - Validates skills trigger from naive prompts without explicit naming. Tests 6 skills to ensure descriptions alone are sufficient.
+
+`tests/claude-code/` - Integration tests using `claude -p` for headless testing. Verifies skill usage via session transcript (JSONL) analysis. Includes `analyze-token-usage.py` for cost tracking.
+
+`tests/subagent-driven-dev/` - End-to-end workflow validation with two complete test projects:
+- `go-fractals/` - CLI tool with Sierpinski/Mandelbrot (10 tasks)
+- `svelte-todo/` - CRUD app with localStorage and Playwright (12 tasks)
+
+### Major Changes
+
+**DOT flowcharts as executable specifications**
+
+Rewrote key skills using DOT/GraphViz flowcharts as the authoritative process definition. Prose becomes supporting content.
+
+**The Description Trap** (documented in `writing-skills`): Discovered that skill descriptions override flowchart content when descriptions contain workflow summaries. Claude follows the short description instead of reading the detailed flowchart. Fix: descriptions must be trigger-only ("Use when X") with no process details.
+
+**Skill priority in using-superpowers**
+
+When multiple skills apply, process skills (brainstorming, debugging) now explicitly come before implementation skills. "Build X" triggers brainstorming first, then domain skills.
+
+**brainstorming trigger strengthened**
+
+Description changed to imperative: "You MUST use this before any creative work—creating features, building components, adding functionality, or modifying behavior."
+
+### Breaking Changes
+
+**Skill consolidation** - Six standalone skills merged:
+- `root-cause-tracing`, `defense-in-depth`, `condition-based-waiting` → bundled in `systematic-debugging/`
+- `testing-skills-with-subagents` → bundled in `writing-skills/`
+- `testing-anti-patterns` → bundled in `test-driven-development/`
+- `sharing-skills` removed (obsolete)
+
+### Other Improvements
+
+- **render-graphs.js** - Tool to extract DOT diagrams from skills and render to SVG
+- **Rationalizations table** in using-superpowers - Scannable format including new entries: "I need more context first", "Let me explore first", "This feels productive"
+- **docs/testing.md** - Guide to testing skills with Claude Code integration tests
+
+---
+
 ## v3.6.2 (2025-12-03)
 
 ### Fixed
@@ -98,9 +214,9 @@
 - Updated terminology: "Superpowers skills" instead of "Core skills"
 
 ### Files Added
-- `codex/INSTALL.md` - Installation guide for Codex users
-- `codex/superpowers-bootstrap.md` - Bootstrap instructions with Codex adaptations
-- `scripts/superpowers-codex` - Unified Node.js executable with all functionality
+- `.codex/INSTALL.md` - Installation guide for Codex users
+- `.codex/superpowers-bootstrap.md` - Bootstrap instructions with Codex adaptations
+- `.codex/superpowers-codex` - Unified Node.js executable with all functionality
 
 **Note:** Codex support is experimental. The integration provides core superpowers functionality but may require refinement based on user feedback.
 

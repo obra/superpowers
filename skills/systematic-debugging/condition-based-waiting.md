@@ -1,8 +1,3 @@
----
-name: condition-based-waiting
-description: Use when tests have race conditions, timing dependencies, or inconsistent pass/fail behavior - replaces arbitrary timeouts with condition polling to wait for actual state changes, eliminating flaky tests from timing guesses
----
-
 # Condition-Based Waiting
 
 ## Overview
@@ -84,7 +79,7 @@ async function waitFor<T>(
 }
 ```
 
-See @example.ts for complete implementation with domain-specific helpers (`waitForEvent`, `waitForEventCount`, `waitForEventMatch`) from actual debugging session.
+See `condition-based-waiting-example.ts` in this directory for complete implementation with domain-specific helpers (`waitForEvent`, `waitForEventCount`, `waitForEventMatch`) from actual debugging session.
 
 ## Common Mistakes
 

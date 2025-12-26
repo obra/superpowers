@@ -1,101 +1,86 @@
 ---
 name: using-superpowers
-description: Use when starting any conversation - establishes mandatory workflows for finding and using skills, including using Skill tool before announcing usage, following brainstorming before coding, and creating TodoWrite todos for checklists
+description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
 ---
 
 <EXTREMELY-IMPORTANT>
-If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST read the skill.
+If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.
 
 IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
 
 This is not negotiable. This is not optional. You cannot rationalize your way out of this.
 </EXTREMELY-IMPORTANT>
 
-# Getting Started with Skills
+## How to Access Skills
 
-## MANDATORY FIRST RESPONSE PROTOCOL
+**In Claude Code:** Use the `Skill` tool. When you invoke a skill, its content is loaded and presented to you—follow it directly. Never use the Read tool on skill files.
 
-Before responding to ANY user message, you MUST complete this checklist:
+**In other environments:** Check your platform's documentation for how skills are loaded.
 
-1. ☐ List available skills in your mind
-2. ☐ Ask yourself: "Does ANY skill match this request?"
-3. ☐ If yes → Use the Skill tool to read and run the skill file
-4. ☐ Announce which skill you're using
-5. ☐ Follow the skill exactly
+# Using Skills
 
-**Responding WITHOUT completing this checklist = automatic failure.**
+## The Rule
 
-## Critical Rules
+**Check for skills BEFORE ANY RESPONSE.** This includes clarifying questions. Even 1% chance means invoke the Skill tool first.
 
-1. **Follow mandatory workflows.** Brainstorming before coding. Check for relevant skills before ANY task.
+```dot
+digraph skill_flow {
+    "User message received" [shape=doublecircle];
+    "Might any skill apply?" [shape=diamond];
+    "Invoke Skill tool" [shape=box];
+    "Announce: 'Using [skill] to [purpose]'" [shape=box];
+    "Has checklist?" [shape=diamond];
+    "Create TodoWrite todo per item" [shape=box];
+    "Follow skill exactly" [shape=box];
+    "Respond (including clarifications)" [shape=doublecircle];
 
-2. Execute skills with the Skill tool
+    "User message received" -> "Might any skill apply?";
+    "Might any skill apply?" -> "Invoke Skill tool" [label="yes, even 1%"];
+    "Might any skill apply?" -> "Respond (including clarifications)" [label="definitely not"];
+    "Invoke Skill tool" -> "Announce: 'Using [skill] to [purpose]'";
+    "Announce: 'Using [skill] to [purpose]'" -> "Has checklist?";
+    "Has checklist?" -> "Create TodoWrite todo per item" [label="yes"];
+    "Has checklist?" -> "Follow skill exactly" [label="no"];
+    "Create TodoWrite todo per item" -> "Follow skill exactly";
+}
+```
 
-## Common Rationalizations That Mean You're About To Fail
+## Red Flags
 
-If you catch yourself thinking ANY of these thoughts, STOP. You are rationalizing. Check for and use the skill.
+These thoughts mean STOP—you're rationalizing:
 
-- "This is just a simple question" → WRONG. Questions are tasks. Check for skills.
-- "I can check git/files quickly" → WRONG. Files don't have conversation context. Check for skills.
-- "Let me gather information first" → WRONG. Skills tell you HOW to gather information. Check for skills.
-- "This doesn't need a formal skill" → WRONG. If a skill exists for it, use it.
-- "I remember this skill" → WRONG. Skills evolve. Run the current version.
-- "This doesn't count as a task" → WRONG. If you're taking action, it's a task. Check for skills.
-- "The skill is overkill for this" → WRONG. Skills exist because simple things become complex. Use it.
-- "I'll just do this one thing first" → WRONG. Check for skills BEFORE doing anything.
+| Thought | Reality |
+|---------|---------|
+| "This is just a simple question" | Questions are tasks. Check for skills. |
+| "I need more context first" | Skill check comes BEFORE clarifying questions. |
+| "Let me explore the codebase first" | Skills tell you HOW to explore. Check first. |
+| "I can check git/files quickly" | Files lack conversation context. Check for skills. |
+| "Let me gather information first" | Skills tell you HOW to gather information. |
+| "This doesn't need a formal skill" | If a skill exists, use it. |
+| "I remember this skill" | Skills evolve. Read current version. |
+| "This doesn't count as a task" | Action = task. Check for skills. |
+| "The skill is overkill" | Simple things become complex. Use it. |
+| "I'll just do this one thing first" | Check BEFORE doing anything. |
+| "This feels productive" | Undisciplined action wastes time. Skills prevent this. |
 
-**Why:** Skills document proven techniques that save time and prevent mistakes. Not using available skills means repeating solved problems and making known errors.
+## Skill Priority
 
-If a skill for your task exists, you must use it or you will fail at your task.
+When multiple skills could apply, use this order:
 
-## Skills with Checklists
+1. **Process skills first** (brainstorming, debugging) - these determine HOW to approach the task
+2. **Implementation skills second** (frontend-design, mcp-builder) - these guide execution
 
-If a skill has a checklist, YOU MUST create TodoWrite todos for EACH item.
+"Let's build X" → brainstorming first, then implementation skills.
+"Fix this bug" → debugging first, then domain-specific skills.
 
-**Don't:**
-- Work through checklist mentally
-- Skip creating todos "to save time"
-- Batch multiple items into one todo
-- Mark complete without doing them
+## Skill Types
 
-**Why:** Checklists without TodoWrite tracking = steps get skipped. Every time. The overhead of TodoWrite is tiny compared to the cost of missing steps.
+**Rigid** (TDD, debugging): Follow exactly. Don't adapt away discipline.
 
-## Announcing Skill Usage
+**Flexible** (patterns): Adapt principles to context.
 
-Before using a skill, announce that you are using it.
-"I'm using [Skill Name] to [what you're doing]."
+The skill itself tells you which.
 
-**Examples:**
-- "I'm using the brainstorming skill to refine your idea into a design."
-- "I'm using the test-driven-development skill to implement this feature."
+## User Instructions
 
-**Why:** Transparency helps your human partner understand your process and catch errors early. It also confirms you actually read the skill.
-
-# About these skills
-
-**Many skills contain rigid rules (TDD, debugging, verification).** Follow them exactly. Don't adapt away the discipline.
-
-**Some skills are flexible patterns (architecture, naming).** Adapt core principles to your context.
-
-The skill itself tells you which type it is.
-
-## Instructions ≠ Permission to Skip Workflows
-
-Your human partner's specific instructions describe WHAT to do, not HOW.
-
-"Add X", "Fix Y" = the goal, NOT permission to skip brainstorming, TDD, or RED-GREEN-REFACTOR.
-
-**Red flags:** "Instruction was specific" • "Seems simple" • "Workflow is overkill"
-
-**Why:** Specific instructions mean clear requirements, which is when workflows matter MOST. Skipping process on "simple" tasks is how simple tasks become complex problems.
-
-## Summary
-
-**Starting any task:**
-1. If relevant skill exists → Use the skill
-3. Announce you're using it
-4. Follow what it says
-
-**Skill has checklist?** TodoWrite for every item.
-
-**Finding a relevant skill = mandatory to read and use it. Not optional.**
+Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.

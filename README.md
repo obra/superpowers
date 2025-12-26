@@ -85,7 +85,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 3. **writing-plans** - Activates with approved design. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
 
-4. **subagent-driven-development** or **executing-plans** - Activates with plan. Dispatches fresh subagent per task (same session, fast iteration) or executes in batches (parallel session, human checkpoints).
+4. **subagent-driven-development** or **executing-plans** - Activates with plan. Dispatches fresh subagent per task with two-stage review (spec compliance, then code quality), or executes in batches with human checkpoints.
 
 5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
 
@@ -100,15 +100,11 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 ### Skills Library
 
 **Testing**
-- **test-driven-development** - RED-GREEN-REFACTOR cycle
-- **condition-based-waiting** - Async test patterns
-- **testing-anti-patterns** - Common pitfalls to avoid
+- **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
 
-**Debugging** 
-- **systematic-debugging** - 4-phase root cause process
-- **root-cause-tracing** - Find the real problem
+**Debugging**
+- **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
 - **verification-before-completion** - Ensure it's actually fixed
-- **defense-in-depth** - Multiple validation layers
 
 **Collaboration** 
 - **brainstorming** - Socratic design refinement
@@ -119,11 +115,10 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 - **receiving-code-review** - Responding to feedback
 - **using-git-worktrees** - Parallel development branches
 - **finishing-a-development-branch** - Merge/PR decision workflow
-- **subagent-driven-development** - Fast iteration with quality gates
+- **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
 
-**Meta** 
-- **writing-skills** - Create new skills following best practices
-- **testing-skills-with-subagents** - Validate skill quality
+**Meta**
+- **writing-skills** - Create new skills following best practices (includes testing methodology)
 - **using-superpowers** - Introduction to the skills system
 
 ## Philosophy
@@ -141,9 +136,8 @@ Skills live directly in this repository. To contribute:
 
 1. Fork the repository
 2. Create a branch for your skill
-3. Follow the `writing-skills` skill for creating new skills
-4. Use the `testing-skills-with-subagents` skill to validate quality
-5. Submit a PR
+3. Follow the `writing-skills` skill for creating and testing new skills
+4. Submit a PR
 
 See `skills/writing-skills/SKILL.md` for the complete guide.
 

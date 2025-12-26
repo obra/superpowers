@@ -10,7 +10,7 @@ For conceptual background on how Skills work, see the [Skills overview](/en/docs
 
 ### Concise is key
 
-The [context window](/en/docs/build-with-claude/context-windows) is a public good. Your Skill shares the context window with everything else Claude needs to know, including:
+The [context window](https://platform.claude.com/docs/en/build-with-claude/context-windows) is a public good. Your Skill shares the context window with everything else Claude needs to know, including:
 
 * The system prompt
 * Conversation history
