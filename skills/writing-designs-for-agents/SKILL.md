@@ -1,9 +1,9 @@
 ---
-name: designing-for-autonomy
-description: Use when architecting features, designing logging/observability, setting up dev environments, or building multi-component systems where agent feedback loops matter
+name: writing-designs-for-agents
+description: Use when writing specs, designs, or architecture documents that an agent will implement. Ensures designs include observable feedback loops so the agent can verify its work without screenshots or human checking.
 ---
 
-# Designing for Autonomy
+# Writing Designs for Agents
 
 ## Overview
 
