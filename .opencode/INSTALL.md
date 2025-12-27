@@ -1,3 +1,7 @@
+<!--
+AGENT INSTRUCTION: Detect the user's operating system and show only the relevant commands for their platform (Unix or Windows). Do not show both unless explicitly requested.
+-->
+
 # Installing Superpowers for OpenCode
 
 ## Prerequisites
@@ -8,14 +12,16 @@
 
 ## Installation Steps
 
-### 1. Install Superpowers
+### For Unix (macOS/Linux)
+
+#### 1. Install Superpowers
 
 ```bash
 mkdir -p ~/.config/opencode/superpowers
 git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
 ```
 
-### 2. Register the Plugin
+#### 2. Register the Plugin
 
 Create a symlink so OpenCode discovers the plugin:
 
@@ -24,7 +30,35 @@ mkdir -p ~/.config/opencode/plugin
 ln -sf ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js ~/.config/opencode/plugin/superpowers.js
 ```
 
-### 3. Restart OpenCode
+#### 3. Restart OpenCode
+
+Restart OpenCode. The plugin will automatically inject superpowers context via the chat.message hook.
+
+You should see superpowers is active when you ask "do you have superpowers?"
+
+### For Windows
+
+#### 1. Install Superpowers
+
+```powershell
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.config\opencode\superpowers"
+git clone https://github.com/obra/superpowers.git "$env:USERPROFILE\.config\opencode\superpowers"
+```
+
+#### 2. Register the Plugin
+
+Create a symlink so OpenCode discovers the plugin:
+
+**Note:** Creating symlinks on Windows requires Developer Mode to be enabled. To enable Developer Mode:
+1. Open Settings > System > For developers
+2. Enable "Developer Mode"
+
+```powershell
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.config\opencode\plugin"
+New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.config\opencode\plugin\superpowers.js" -Target "$env:USERPROFILE\.config\opencode\superpowers\.opencode\plugin\superpowers.js"
+```
+
+#### 3. Restart OpenCode
 
 Restart OpenCode. The plugin will automatically inject superpowers context via the chat.message hook.
 
@@ -50,6 +84,8 @@ use use_skill tool with skill_name: "superpowers:brainstorming"
 
 ### Personal Skills
 
+#### For Unix (macOS/Linux)
+
 Create your own skills in `~/.config/opencode/skills/`:
 
 ```bash
@@ -69,9 +105,32 @@ description: Use when [condition] - [what it does]
 [Your skill content here]
 ```
 
+#### For Windows
+
+Create your own skills in `$env:USERPROFILE\.config\opencode\skills\`:
+
+```powershell
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.config\opencode\skills\my-skill"
+```
+
+Create `$env:USERPROFILE\.config\opencode\skills\my-skill\SKILL.md`:
+
+```markdown
+---
+name: my-skill
+description: Use when [condition] - [what it does]
+---
+
+# My Skill
+
+[Your skill content here]
+```
+
 Personal skills override superpowers skills with the same name.
 
 ### Project Skills
+
+#### For Unix (macOS/Linux)
 
 Create project-specific skills in your OpenCode project:
 
@@ -93,6 +152,28 @@ description: Use when [condition] - [what it does]
 [Your skill content here]
 ```
 
+#### For Windows
+
+Create project-specific skills in your OpenCode project:
+
+```powershell
+# In your OpenCode project
+New-Item -ItemType Directory -Force -Path ".opencode\skills\my-project-skill"
+```
+
+Create `.opencode\skills\my-project-skill\SKILL.md`:
+
+```markdown
+---
+name: my-project-skill
+description: Use when [condition] - [what it does]
+---
+
+# My Project Skill
+
+[Your skill content here]
+```
+
 **Skill Priority:** Project skills override personal skills, which override superpowers skills.
 
 **Skill Naming:**
@@ -102,8 +183,17 @@ description: Use when [condition] - [what it does]
 
 ## Updating
 
+### For Unix (macOS/Linux)
+
 ```bash
 cd ~/.config/opencode/superpowers
+git pull
+```
+
+### For Windows
+
+```powershell
+cd "$env:USERPROFILE\.config\opencode\superpowers"
 git pull
 ```
 
@@ -111,13 +201,29 @@ git pull
 
 ### Plugin not loading
 
+#### For Unix (macOS/Linux)
+
 1. Check plugin file exists: `ls ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js`
+2. Check OpenCode logs for errors
+3. Verify Node.js is installed: `node --version`
+
+#### For Windows
+
+1. Check plugin file exists: `Test-Path "$env:USERPROFILE\.config\opencode\superpowers\.opencode\plugin\superpowers.js"`
 2. Check OpenCode logs for errors
 3. Verify Node.js is installed: `node --version`
 
 ### Skills not found
 
+#### For Unix (macOS/Linux)
+
 1. Verify skills directory exists: `ls ~/.config/opencode/superpowers/skills`
+2. Use `find_skills` tool to see what's discovered
+3. Check file structure: each skill should have a `SKILL.md` file
+
+#### For Windows
+
+1. Verify skills directory exists: `Test-Path "$env:USERPROFILE\.config\opencode\superpowers\skills"`
 2. Use `find_skills` tool to see what's discovered
 3. Check file structure: each skill should have a `SKILL.md` file
 

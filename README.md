@@ -28,6 +28,12 @@ Thanks!
 
 **Note:** Installation differs by platform. Claude Code has a built-in plugin system. Codex and OpenCode require manual setup.
 
+### Supported Platforms
+
+- **Windows** 10+ (PowerShell)
+- **macOS**
+- **Linux**
+
 ### Claude Code (via Plugin Marketplace)
 
 In Claude Code, register the marketplace first:
@@ -59,6 +65,8 @@ Check that commands appear:
 
 ### Codex
 
+**Supports:** Windows, macOS, Linux
+
 Tell Codex:
 
 ```
@@ -68,6 +76,8 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 **Detailed docs:** [docs/README.codex.md](docs/README.codex.md)
 
 ### OpenCode
+
+**Supports:** Windows, macOS, Linux
 
 Tell OpenCode:
 
