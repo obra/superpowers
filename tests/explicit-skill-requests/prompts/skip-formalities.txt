@@ -1,0 +1,3 @@
+Plan is at docs/plans/auth-system.md.
+
+subagent-driven-development, please. Don't waste time - just read the plan and start dispatching subagents immediately.

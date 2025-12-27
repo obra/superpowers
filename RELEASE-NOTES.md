@@ -1,5 +1,23 @@
 # Superpowers Release Notes
 
+## v4.0.3 (2025-12-26)
+
+### Improvements
+
+**Strengthened using-superpowers skill for explicit skill requests**
+
+Addressed a failure mode where Claude would skip invoking a skill even when the user explicitly requested it by name (e.g., "subagent-driven-development, please"). Claude would think "I know what that means" and start working directly instead of loading the skill.
+
+Changes:
+- Updated "The Rule" to say "Invoke relevant or requested skills" instead of "Check for skills" - emphasizing active invocation over passive checking
+- Added "BEFORE any response or action" - the original wording only mentioned "response" but Claude would sometimes take action without responding first
+- Added reassurance that invoking a wrong skill is okay - reduces hesitation
+- Added new red flag: "I know what that means" → Knowing the concept ≠ using the skill
+
+**Added explicit skill request tests**
+
+New test suite in `tests/explicit-skill-requests/` that verifies Claude correctly invokes skills when users request them by name. Includes single-turn and multi-turn test scenarios.
+
 ## v4.0.2 (2025-12-23)
 
 ### Fixes
