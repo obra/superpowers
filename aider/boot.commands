@@ -1,0 +1,6 @@
+# Template for Superpowers+Aider boot commands
+# The installer writes `.aider/superpowers.boot.commands` in your project with the real path.
+
+/read .aider/SUPERPOWERS.md
+/read <INSTALL_DIR>/aider/CONVENTIONS.md
+/read <INSTALL_DIR>/aider/SKILLS-INDEX.md

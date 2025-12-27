@@ -77,6 +77,16 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
 
+### Aider
+
+From any project repo you want to use with Aider, run:
+
+```
+~/.config/superpowers/superpowers/scripts/install-aider.sh
+```
+
+The installer keeps Superpowers synced in `~/.config/superpowers/superpowers`, writes minimal `.aider/` pointers, and makes Aider auto-`/read` the Superpowers conventions and skills index at startup. Sessions stay docs-only until you say `approved, start implementation`.
+
 ## The Basic Workflow
 
 1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
