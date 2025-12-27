@@ -1,0 +1,3 @@
+I have a plan at docs/plans/auth-system.md that's ready to implement.
+
+subagent-driven-development, please
