@@ -1,0 +1,3 @@
+The plan is done. docs/plans/auth-system.md has everything.
+
+Do subagent-driven development on this - start with Task 1, dispatch a subagent, then we'll review.
