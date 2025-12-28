@@ -29,7 +29,7 @@ OpenCode.ai is a coding agent similar to Claude Code and Codex. Previous attempt
 
 ### High-Level Structure
 
-1. **Shared Core Module** (`lib/skills-core.js`)
+1. **Shared Core Module** (`lib/skills-core.mjs`)
    - Common skill discovery and parsing logic
    - Used by both Codex and OpenCode implementations
 
@@ -46,7 +46,7 @@ OpenCode.ai is a coding agent similar to Claude Code and Codex. Previous attempt
 Extract common functionality from `.codex/superpowers-codex` into shared module:
 
 ```javascript
-// lib/skills-core.js
+// lib/skills-core.mjs
 module.exports = {
   extractFrontmatter(filePath),      // Parse name + description from YAML
   findSkillsInDir(dir, maxDepth),    // Recursive SKILL.md discovery
@@ -200,7 +200,7 @@ export const SuperpowersPlugin = async ({ client, directory, $ }) => {
 ```
 superpowers/
 ├── lib/
-│   └── skills-core.js           # NEW: Shared skill logic
+│   └── skills-core.mjs          # NEW: Shared skill logic
 ├── .codex/
 │   ├── superpowers-codex        # UPDATED: Use skills-core
 │   ├── superpowers-bootstrap.md
@@ -216,14 +216,14 @@ superpowers/
 
 ### Phase 1: Refactor Shared Core
 
-1. Create `lib/skills-core.js`
+1. Create `lib/skills-core.mjs`
    - Extract frontmatter parsing from `.codex/superpowers-codex`
    - Extract skill discovery logic
    - Extract path resolution (with shadowing)
    - Update to use only `name` and `description` (no `when_to_use`)
 
 2. Update `.codex/superpowers-codex` to use shared core
-   - Import from `../lib/skills-core.js`
+   - Import from `../lib/skills-core.mjs`
    - Remove duplicated code
    - Keep CLI wrapper logic
 
@@ -235,7 +235,7 @@ superpowers/
 ### Phase 2: Build OpenCode Plugin
 
 1. Create `.opencode/plugin/superpowers.js`
-   - Import shared core from `../../lib/skills-core.js`
+   - Import shared core from `../../lib/skills-core.mjs`
    - Implement plugin function
    - Define custom tools (use_skill, find_skills)
    - Implement session.started hook
