@@ -14,7 +14,12 @@ Task tool (general-purpose):
 
     ## Context
 
-    [Scene-setting: where this fits, dependencies, architectural context]
+    [Curated by orchestrator - include only what's relevant:]
+    - Working directory: [path]
+    - Key files: [list paths subagent will touch]
+    - Pattern to follow: See [example file] for similar implementation
+    - Dependency: Task 2 created [X], build on that
+    - Constraint: [any architectural decisions that apply]
 
     ## Before You Begin
 
@@ -34,7 +39,8 @@ Task tool (general-purpose):
     3. Verify implementation works
     4. Commit your work
     5. Self-review (see below)
-    6. Report back
+    6. Write handoff file (see below)
+    7. Report back
 
     Work from: [directory]
 
@@ -67,12 +73,37 @@ Task tool (general-purpose):
 
     If you find issues during self-review, fix them now before reporting.
 
+    ## Write Handoff File
+
+    After self-review, write your implementation report to `docs/handoffs/task-N-impl.md`:
+
+    ```markdown
+    # Task N Implementation Report
+
+    ## What I Built
+    [Your summary of what you implemented]
+
+    ## Files Changed
+    - path/to/file1.ts (what changed)
+    - path/to/file2.test.ts (what changed)
+
+    ## Test Results
+    [e.g., "5/5 passing" or test output summary]
+
+    ## Self-Review Notes
+    - [Any decisions you made, tradeoffs considered, or concerns]
+    - [Things reviewers should pay attention to]
+    ```
+
+    This handoff file will be read by reviewers, so include:
+    - What you built and why you made key decisions
+    - Concrete test results (not just "tests pass")
+    - Any concerns or areas that need extra review attention
+
     ## Report Format
 
     When done, report:
-    - What you implemented
-    - What you tested and test results
-    - Files changed
-    - Self-review findings (if any)
-    - Any issues or concerns
+    - Handoff file written to: docs/handoffs/task-N-impl.md
+    - Commit SHA
+    - Any blockers or questions for orchestrator
 ```
