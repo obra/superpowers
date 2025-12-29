@@ -213,6 +213,55 @@ Done!
 - Review loops add iterations
 - But catches issues early (cheaper than debugging later)
 
+## Progress Tracking
+
+Create `docs/current-progress.md` (gitignored) that agents update during execution:
+
+```markdown
+# Current Progress
+
+## Active Task
+Task 3: Add retry logic to API client
+
+## Status
+IN_PROGRESS
+
+## Last Update
+2025-01-15 14:32 - Implementer: Tests written, implementing retry wrapper
+
+## Completed Tasks
+- [x] Task 1: Setup project structure
+- [x] Task 2: Add base API client
+```
+
+**Status flags:** `PENDING`, `IN_PROGRESS`, `READY_FOR_SPEC_REVIEW`, `READY_FOR_CODE_REVIEW`, `BLOCKED`, `DONE`
+
+**Usage:**
+- Orchestrator checks this file to understand state
+- Agents update when transitioning
+- Enables resumability if session interrupted
+
+## Context Curation
+
+Before dispatching a subagent, curate exactly what it needs:
+
+**Always include:**
+- Full task text from plan (never make subagent read plan file)
+- Relevant file paths it will work with
+- Any decisions made in previous tasks that affect this one
+
+**Include if relevant:**
+- Architectural constraints (from design doc)
+- Existing patterns to follow (with example file path)
+- Known gotchas or edge cases
+
+**Never include:**
+- Full plan (only the current task)
+- Unrelated completed task details
+- General project background (subagent can read CLAUDE.md)
+
+**Rule of thumb:** If you're unsure whether to include something, provide the file path instead of the content. Let the subagent decide whether to read it.
+
 ## Red Flags
 
 **Never:**
