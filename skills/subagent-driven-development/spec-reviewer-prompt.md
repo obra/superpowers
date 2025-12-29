@@ -16,7 +16,7 @@ Task tool (general-purpose):
 
     ## What Implementer Claims They Built
 
-    [From implementer's report]
+    Read the implementation report at `docs/handoffs/task-N-impl.md`
 
     ## CRITICAL: Do Not Trust the Report
 
