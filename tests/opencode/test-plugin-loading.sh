@@ -70,7 +70,7 @@ fi
 
 # Test 6: Verify personal test skill was created
 echo "Test 6: Checking test fixtures..."
-if [ -f "$HOME/.config/opencode/skills/personal-test/SKILL.md" ]; then
+if [ -f "$HOME/.config/opencode/skill/personal-test/SKILL.md" ]; then
     echo "  [PASS] Personal test skill fixture created"
 else
     echo "  [FAIL] Personal test skill fixture not found"
