@@ -70,6 +70,8 @@ New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.gemini\antigravity\
 Copy-Item "$env:USERPROFILE\.antigravity\superpowers\.antigravity\commands\*.md" "$env:USERPROFILE\.gemini\antigravity\global_workflows\"
 ```
 
+**After installation, reload Antigravity IDE for the changes to take effect.**
+
 ### 4. Verify Installation
 
 Tell Antigravity:
