@@ -35,7 +35,7 @@ cat >> ~/.gemini/GEMINI.md << 'EOF'
 
 <EXTREMELY_IMPORTANT>
 You have superpowers. Superpowers teach you new skills and capabilities.
-RIGHT NOW run: `~/.antigravity/superpowers/.antigravity/superpowers-antigravity bootstrap` and follow the instructions it returns.
+**RIGHT NOW** run: `~/.antigravity/superpowers/.antigravity/superpowers-antigravity bootstrap` and follow the instructions it returns!!!
 </EXTREMELY_IMPORTANT>
 EOF
 ```
@@ -49,7 +49,7 @@ Add-Content -Path "$env:USERPROFILE\.gemini\GEMINI.md" -Value @"
 
 <EXTREMELY_IMPORTANT>
 You have superpowers. Superpowers teach you new skills and capabilities.
-RIGHT NOW run: ``node `$env:USERPROFILE\.antigravity\superpowers\.antigravity\superpowers-antigravity bootstrap`` and follow the instructions it returns.
+**RIGHT NOW** run: ``node `$env:USERPROFILE\.antigravity\superpowers\.antigravity\superpowers-antigravity bootstrap`` and follow the instructions it returns!!!
 </EXTREMELY_IMPORTANT>
 "@
 ```
