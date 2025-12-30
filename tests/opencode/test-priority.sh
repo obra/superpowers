@@ -32,8 +32,8 @@ PRIORITY_MARKER_SUPERPOWERS_VERSION
 EOF
 
 # 2. Create in personal location (medium priority)
-mkdir -p "$HOME/.config/opencode/skills/priority-test"
-cat > "$HOME/.config/opencode/skills/priority-test/SKILL.md" <<'EOF'
+mkdir -p "$HOME/.config/opencode/skill/priority-test"
+cat > "$HOME/.config/opencode/skill/priority-test/SKILL.md" <<'EOF'
 ---
 name: priority-test
 description: Personal version of priority test skill
@@ -46,8 +46,8 @@ PRIORITY_MARKER_PERSONAL_VERSION
 EOF
 
 # 3. Create in project location (highest priority)
-mkdir -p "$TEST_HOME/test-project/.opencode/skills/priority-test"
-cat > "$TEST_HOME/test-project/.opencode/skills/priority-test/SKILL.md" <<'EOF'
+mkdir -p "$TEST_HOME/test-project/.opencode/skill/priority-test"
+cat > "$TEST_HOME/test-project/.opencode/skill/priority-test/SKILL.md" <<'EOF'
 ---
 name: priority-test
 description: Project version of priority test skill
@@ -72,14 +72,14 @@ else
     exit 1
 fi
 
-if [ -f "$HOME/.config/opencode/skills/priority-test/SKILL.md" ]; then
+if [ -f "$HOME/.config/opencode/skill/priority-test/SKILL.md" ]; then
     echo "  [PASS] Personal version exists"
 else
     echo "  [FAIL] Personal version missing"
     exit 1
 fi
 
-if [ -f "$TEST_HOME/test-project/.opencode/skills/priority-test/SKILL.md" ]; then
+if [ -f "$TEST_HOME/test-project/.opencode/skill/priority-test/SKILL.md" ]; then
     echo "  [PASS] Project version exists"
 else
     echo "  [FAIL] Project version missing"

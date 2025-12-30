@@ -29,8 +29,8 @@ ln -sf "$HOME/.config/opencode/superpowers/.opencode/plugin/superpowers.js" \
 # Create test skills in different locations for testing
 
 # Personal test skill
-mkdir -p "$HOME/.config/opencode/skills/personal-test"
-cat > "$HOME/.config/opencode/skills/personal-test/SKILL.md" <<'EOF'
+mkdir -p "$HOME/.config/opencode/skill/personal-test"
+cat > "$HOME/.config/opencode/skill/personal-test/SKILL.md" <<'EOF'
 ---
 name: personal-test
 description: Test personal skill for verification
@@ -43,8 +43,8 @@ PERSONAL_SKILL_MARKER_12345
 EOF
 
 # Create a project directory for project-level skill tests
-mkdir -p "$TEST_HOME/test-project/.opencode/skills/project-test"
-cat > "$TEST_HOME/test-project/.opencode/skills/project-test/SKILL.md" <<'EOF'
+mkdir -p "$TEST_HOME/test-project/.opencode/skill/project-test"
+cat > "$TEST_HOME/test-project/.opencode/skill/project-test/SKILL.md" <<'EOF'
 ---
 name: project-test
 description: Test project skill for verification

@@ -70,13 +70,13 @@ Skills are automatically inserted into the conversation and persist across conte
 
 ### Personal Skills
 
-Create your own skills in `~/.config/opencode/skills/`:
+Create your own skills in `~/.config/opencode/skill/`:
 
 ```bash
-mkdir -p ~/.config/opencode/skills/my-skill
+mkdir -p ~/.config/opencode/skill/my-skill
 ```
 
-Create `~/.config/opencode/skills/my-skill/SKILL.md`:
+Create `~/.config/opencode/skill/my-skill/SKILL.md`:
 
 ```markdown
 ---
@@ -95,10 +95,10 @@ Create project-specific skills in your OpenCode project:
 
 ```bash
 # In your OpenCode project
-mkdir -p .opencode/skills/my-project-skill
+mkdir -p .opencode/skill/my-project-skill
 ```
 
-Create `.opencode/skills/my-project-skill/SKILL.md`:
+Create `.opencode/skill/my-project-skill/SKILL.md`:
 
 ```markdown
 ---
@@ -115,8 +115,8 @@ description: Use when [condition] - [what it does]
 
 Skills are resolved with this priority order:
 
-1. **Project skills** (`.opencode/skills/`) - Highest priority
-2. **Personal skills** (`~/.config/opencode/skills/`)
+1. **Project skills** (`.opencode/skill/`) - Highest priority
+2. **Personal skills** (`~/.config/opencode/skill/`)
 3. **Superpowers skills** (`~/.config/opencode/superpowers/skills/`)
 
 You can force resolution to a specific level:

@@ -16,10 +16,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const SuperpowersPlugin = async ({ client, directory }) => {
   const homeDir = os.homedir();
-  const projectSkillsDir = path.join(directory, '.opencode/skills');
+  const projectSkillsDir = path.join(directory, '.opencode/skill');
   // Derive superpowers skills dir from plugin location (works for both symlinked and local installs)
   const superpowersSkillsDir = path.resolve(__dirname, '../../skills');
-  const personalSkillsDir = path.join(homeDir, '.config/opencode/skills');
+  const personalSkillsDir = path.join(homeDir, '.config/opencode/skill');
 
   // Helper to generate bootstrap content
   const getBootstrapContent = (compact = false) => {
@@ -41,8 +41,8 @@ When skills reference tools you don't have, substitute OpenCode equivalents:
 - \`Read\`, \`Write\`, \`Edit\`, \`Bash\` → Your native tools
 
 **Skills naming (priority order):**
-- Project skills: \`project:skill-name\` (in .opencode/skills/)
-- Personal skills: \`skill-name\` (in ~/.config/opencode/skills/)
+- Project skills: \`project:skill-name\` (in .opencode/skill/)
+- Personal skills: \`skill-name\` (in ~/.config/opencode/skill/)
 - Superpowers skills: \`superpowers:skill-name\`
 - Project skills override personal, which override superpowers when names match`;
 
@@ -157,7 +157,7 @@ ${toolMapping}
           const allSkills = [...projectSkills, ...personalSkills, ...superpowersSkills];
 
           if (allSkills.length === 0) {
-            return 'No skills found. Install superpowers skills to ~/.config/opencode/superpowers/skills/ or add project skills to .opencode/skills/';
+            return 'No skills found. Install superpowers skills to ~/.config/opencode/superpowers/skills/ or add project skills to .opencode/skill/';
           }
 
           let output = 'Available skills:\n\n';
