@@ -156,6 +156,13 @@ node --version
 
 Should show v14 or higher (v18+ recommended for ES module support).
 
+### Permission denied (Linux/macOS)
+
+If you downloaded as a ZIP/archive instead of using git clone, make the script executable:
+```bash
+chmod +x ~/.antigravity/superpowers/.antigravity/superpowers-antigravity
+```
+
 ### Windows path issues
 
 On Windows, you may need to use the full path with `node`:
