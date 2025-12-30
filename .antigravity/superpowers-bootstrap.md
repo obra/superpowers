@@ -29,5 +29,5 @@ When skills reference tools you don't have, substitute your equivalent tools:
 - Superpowers skills: ~/.antigravity/superpowers/skills/
 - Personal skills: ~/.antigravity/skills/ (override superpowers when names match)
 
-IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
+**IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.**
 </EXTREMELY_IMPORTANT>

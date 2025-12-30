@@ -135,7 +135,7 @@ function runBootstrap() {
     console.log('# Bootstrap Complete!');
     console.log('# You now have access to all superpowers skills.');
     console.log('# Use "superpowers-antigravity use-skill <skill>" to load and apply skills.');
-    console.log('# Remember: If a skill applies to your task, you MUST use it!');
+    console.log('# Remember: **If a skill applies to your task, you MUST use it!**');
 }
 
 function runUseSkill(skillName) {
