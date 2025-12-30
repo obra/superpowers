@@ -51,6 +51,26 @@ Fix: hooks.json now calls session-start.sh directly. Claude Code 2.1.x handles t
 
 ---
 
+## v4.0.4 (2025-12-31)
+
+### New Features
+
+**Comprehensive UX/UI design skill**
+
+New `ux-ui-design` skill providing end-to-end user interface design workflow:
+- Router pattern with 5 workflows: ideate, design, review, implement, iterate
+- 8 reference files covering accessibility, design systems, usability heuristics, visual design, user research, UI patterns, anti-patterns, and tools
+- Figma MCP integration for extracting design context, screenshots, and variables
+- WCAG AA accessibility requirements built into all workflows
+- Design system token compliance enforcement
+- Clear disambiguation to prevent confusion with architecture/system design
+
+Triggers on: UI, UX, user interface, user experience, Figma, wireframes, mockups, usability, accessibility audits, visual design.
+
+**/research slash command**
+
+New slash command exposing the deep research skill without code duplication. Invokes `superpowers:research` for topic decomposition, parallel subagent research, confidence evaluation, and source-attributed synthesis.
+
 ## v4.0.3 (2025-12-26)
 
 ### Improvements
