@@ -55,6 +55,8 @@ Check that commands appear:
 # /superpowers:brainstorm - Interactive design refinement
 # /superpowers:write-plan - Create implementation plan
 # /superpowers:execute-plan - Execute plan in batches
+# /superpowers:research - Deep research with source gate
+# /superpowers:research-cancel - Cancel active research
 ```
 
 ### Codex
@@ -106,7 +108,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 - **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
 - **verification-before-completion** - Ensure it's actually fixed
 
-**Collaboration** 
+**Collaboration**
 - **brainstorming** - Socratic design refinement
 - **writing-plans** - Detailed implementation plans
 - **executing-plans** - Batch execution with checkpoints
@@ -116,6 +118,9 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 - **using-git-worktrees** - Parallel development branches
 - **finishing-a-development-branch** - Merge/PR decision workflow
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
+
+**Research**
+- **research** - Deep research with source gate enforcement. Decomposes topics into questions, researches in parallel with subagents, requires minimum source count before synthesis. Use `/research [topic]` to start, `/research-cancel` to abort.
 
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
