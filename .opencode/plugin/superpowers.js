@@ -57,26 +57,13 @@ ${toolMapping}
 </EXTREMELY_IMPORTANT>`;
   };
 
-  // Helper to inject bootstrap via session.prompt
-  const injectBootstrap = async (sessionID, compact = false) => {
-    const bootstrapContent = getBootstrapContent(compact);
-    if (!bootstrapContent) return false;
-
-    try {
-      await client.session.prompt({
-        path: { id: sessionID },
-        body: {
-          noReply: true,
-          parts: [{ type: "text", text: bootstrapContent, synthetic: true }]
-        }
-      });
-      return true;
-    } catch (err) {
-      return false;
-    }
-  };
-
   return {
+    'experimental.chat.system.transform': async (_input, output) => {
+      const bootstrap = getBootstrapContent(false);
+      if (bootstrap) {
+        (output.system ||= []).push(bootstrap);
+      }
+    },
     tool: {
       use_skill: tool({
         description: 'Load and read a specific skill to guide your work. Skills contain proven workflows, mandatory processes, and expert techniques.',
@@ -188,28 +175,7 @@ ${toolMapping}
       })
     },
     event: async ({ event }) => {
-      // Extract sessionID from various event structures
-      const getSessionID = () => {
-        return event.properties?.info?.id ||
-               event.properties?.sessionID ||
-               event.session?.id;
-      };
-
-      // Inject bootstrap at session creation (before first user message)
-      if (event.type === 'session.created') {
-        const sessionID = getSessionID();
-        if (sessionID) {
-          await injectBootstrap(sessionID, false);
-        }
-      }
-
-      // Re-inject bootstrap after context compaction (compact version to save tokens)
-      if (event.type === 'session.compacted') {
-        const sessionID = getSessionID();
-        if (sessionID) {
-          await injectBootstrap(sessionID, true);
-        }
-      }
+      // Event handling
     }
   };
 };
