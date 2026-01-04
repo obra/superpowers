@@ -48,20 +48,46 @@ Or ask: "This branch split from main - is that correct?"
 
 ### Step 3: Present Options
 
-Present exactly these 4 options:
+**Check configuration first:**
+
+Read session context for `<config-detected>` marker to get current `completion_strategy` and `development_mode` settings.
+
+**Present options based on configuration:**
+
+**Personal Mode (`development_mode: personal`):**
 
 ```
 Implementation complete. What would you like to do?
 
-1. Merge back to <base-branch> locally
-2. Push and create a Pull Request
+根据当前配置（个人开发者模式），推荐：
+1. ✨ Merge back to <base-branch> locally （推荐）
+2. Keep the branch as-is (I'll handle it later)
+3. Discard this work
+
+Which option?
+```
+
+**Team Mode (`development_mode: team`):**
+
+```
+Implementation complete. What would you like to do?
+
+根据当前配置（团队协作模式），推荐：
+1. ✨ Push and create a Pull Request （推荐）
+2. Merge back to <base-branch> locally
 3. Keep the branch as-is (I'll handle it later)
 4. Discard this work
 
 Which option?
 ```
 
-**Don't add explanation** - keep options concise.
+**If `completion_strategy` is explicitly set:**
+
+- `completion_strategy: merge` → Recommend local merge (Option 1)
+- `completion_strategy: pr` → Recommend PR (Option 2)
+- `completion_strategy: keep` → Recommend keep as-is (Option 3)
+
+**Keep options concise** - don't add explanations beyond the recommendation marker.
 
 ### Step 4: Execute Choice
 
