@@ -1,0 +1,21 @@
+# Superpowers Configuration Example
+# Copy this file to .superpowers-config.yaml and customize for your project
+
+# Development mode: personal (individual developer) or team (collaborative)
+development_mode: personal
+
+# Branch strategy: worktree (isolated environment) or simple (regular branches)
+# - worktree: Creates isolated worktree for parallel development
+# - simple: Uses regular git branches (lighter for personal development)
+branch_strategy: simple
+
+# Testing strategy: tdd (test-first) or test-after (code-first, add tests later)
+# - tdd: Strict test-driven development (write failing test first)
+# - test-after: Write code first, add tests later (better for prototypes)
+testing_strategy: test-after
+
+# Completion strategy: pr (create pull request), merge (local merge), or keep (preserve branch)
+# - pr: Create GitHub PR for code review (team mode)
+# - merge: Merge locally to base branch (personal mode)
+# - keep: Preserve branch for continued development
+completion_strategy: merge
