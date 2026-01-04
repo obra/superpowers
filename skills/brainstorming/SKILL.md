@@ -38,10 +38,18 @@ Start by understanding the current project context, then ask questions one at a 
 - Write the validated design to `docs/plans/YYYY-MM-DD-<topic>-design.md`
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
+- **Crucial**: Tell the user: "设计已保存到文档。你可以通过编辑文档来调整设计，完成后说'继续'或'ready'进入实施阶段。"
+- Wait for user confirmation - they may edit the document before proceeding
+
+**Document as communication medium:**
+- If user says "继续" or "ready" after documentation, re-read the design document
+- The document may have been modified by the user - treat it as the source of truth
+- Confirm understanding before proceeding: "基于文档中的设计，我们准备开始实施。确认继续？"
 
 **Implementation (if continuing):**
-- Ask: "Ready to set up for implementation?"
-- Use superpowers:using-git-worktrees to create isolated workspace
+- After user confirms, ask: "需要创建隔离的开发环境吗？"
+- If yes: Use superpowers:using-git-worktrees to create isolated workspace
+- If no: Continue in current branch
 - Use superpowers:writing-plans to create detailed implementation plan
 
 ## Key Principles
