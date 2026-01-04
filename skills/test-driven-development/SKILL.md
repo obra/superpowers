@@ -28,6 +28,49 @@ Write the test first. Watch it fail. Write minimal code to pass.
 
 Thinking "skip TDD just this once"? Stop. That's rationalization.
 
+## Configuration-Aware Workflow
+
+**Before starting TDD cycle, check configuration:**
+
+Read session context for `<config-detected>` marker to get current `testing_strategy` setting.
+
+**If `testing_strategy: test-after` (Personal Mode):**
+
+Present decision to user:
+
+```
+[决策点] 测试策略
+
+当前配置允许：先写代码再补充测试
+建议流程：实现功能 → 编写测试 → 验证通过
+注意：这偏离了严格 TDD，但适合个人开发场景
+
+选项：
+1. 按配置执行（代码优先，后续补充测试）
+2. 改用严格 TDD（测试优先，RED-GREEN-REFACTOR）
+3. 跳过测试（不推荐，仅用于原型验证）
+
+请选择：
+```
+
+**If user chooses "代码优先" (test-after):**
+- Implement the feature first
+- Then write tests to verify behavior
+- Finally verify all tests pass
+- Skip strict RED-GREEN-REFACTOR cycle for this iteration
+
+**If user chooses "严格 TDD":**
+- Proceed with standard TDD cycle below (Red-Green-Refactor)
+
+**If user chooses "跳过测试":**
+- Warn user this is for prototypes only
+- Implement without tests
+- Remind user to add tests later if code becomes production
+
+**If `testing_strategy: tdd` (Team Mode):**
+- Proceed directly with strict TDD cycle below
+- No decision point needed - TDD is mandatory for team collaboration
+
 ## The Iron Law
 
 ```
