@@ -34,6 +34,7 @@ For each task:
 When batch complete:
 - Show what was implemented
 - Show verification output
+- Show key decisions that you made, outside of the initial plan
 - Say: "Ready for feedback."
 
 ### Step 4: Continue
@@ -52,7 +53,7 @@ After all tasks complete and verified:
 ## When to Stop and Ask for Help
 
 **STOP executing immediately when:**
-- Hit a blocker mid-batch (missing dependency, test fails, instruction unclear)
+- Information that the implementation was based on is wrong, and requires a critical deviation from the plan
 - Plan has critical gaps preventing starting
 - You don't understand an instruction
 - Verification fails repeatedly
