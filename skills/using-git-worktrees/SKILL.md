@@ -72,6 +72,49 @@ Per Jesse's rule "Fix broken things immediately":
 
 No .gitignore verification needed - outside project entirely.
 
+## Decision Point: Branch Strategy
+
+**Before creating worktree, check configuration:**
+
+Read session context for `<config-detected>` marker to get current `branch_strategy` setting.
+
+**Present decision to user:**
+
+```
+[决策点] 分支创建策略
+
+根据当前配置，建议使用：<<based on branch_strategy>>
+
+**个人模式（simple 分支策略）：**
+- 使用普通分支，更轻量
+- 适合单人开发，无需环境隔离
+- 可以直接在当前项目目录中工作
+
+**团队模式（worktree 分支策略）：**
+- 使用 worktree 隔离环境
+- 适合多人协作或需要并行开发多个分支
+- 保持主分支环境干净
+
+选项：
+1. 采用建议（<<建议方案>>）
+2. 改用：<<替代方案>>
+3. 跳过分支创建，直接在当前分支工作
+
+请选择：
+```
+
+**If user chooses simple branch:**
+- Create new branch without worktree: `git checkout -b <branch-name>`
+- Skip worktree directory logic
+- Continue with project setup in current directory
+
+**If user chooses worktree:**
+- Proceed with worktree creation steps below
+
+**If user chooses skip:**
+- Continue working in current branch
+- Don't create any new branches
+
 ## Creation Steps
 
 ### 1. Detect Project Name
