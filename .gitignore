@@ -11,3 +11,4 @@ docs/handoffs/context-codebase-[!s]*.md
 docs/handoffs/context-docs-[!s]*.md
 docs/handoffs/context-web-[!s]*.md
 # Note: Summary files (context-*-summary.md) are NOT gitignored - they're referenced in plan headers
+docs/plans
