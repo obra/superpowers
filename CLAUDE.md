@@ -9,7 +9,7 @@ Superpowers is a Claude Code plugin providing composable "skills" that enforce d
 ## Structure
 
 - `skills/` - Core skills, each subdirectory has a `SKILL.md`
-- `commands/` - Slash commands (`/brainstorm`, `/write-plan`, `/execute-plan`)
+- `commands/` - Slash commands (`/brainstorm`, `/write-plan`)
 - `agents/` - Subagent definitions
 - `hooks/` - Session hooks
 - `tests/claude-code/` - Skills tests using Claude CLI
