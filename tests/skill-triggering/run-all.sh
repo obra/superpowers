@@ -12,7 +12,6 @@ SKILLS=(
     "test-driven-development"
     "writing-plans"
     "dispatching-parallel-agents"
-    "executing-plans"
     "requesting-code-review"
 )
 
