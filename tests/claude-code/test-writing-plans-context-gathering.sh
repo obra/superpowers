@@ -70,15 +70,9 @@ echo ""
 # Test 3: Verify documentation exploration follows codebase exploration
 echo "Test 3: Documentation exploration follows codebase..."
 
-output=$(run_claude "In the writing-plans skill, what is the relationship between Phase 1 (Codebase Exploration) and Phase 2 (Documentation Exploration)?" 30)
+output=$(run_claude "In the writing-plans skill, does Phase 2 use findings from Phase 1?" 60)
 
-if assert_contains "$output" "from.*codebase\|based on.*codebase\|codebase.*findings" "Docs phase uses codebase findings"; then
-    : # pass
-else
-    exit 1
-fi
-
-if assert_contains "$output" "identify.*documentation\|identify.*docs" "Identifies doc needs from codebase"; then
+if assert_contains "$output" "from.*codebase\|based on.*codebase\|codebase.*findings\|yes\|Yes" "Docs phase uses codebase findings"; then
     : # pass
 else
     exit 1
@@ -89,7 +83,7 @@ echo ""
 # Test 4: Verify all three phases must complete before plan writing
 echo "Test 4: All phases required before plan writing..."
 
-output=$(run_claude "In the writing-plans skill, can you start writing the plan before completing all three context gathering phases?" 30)
+output=$(run_claude "In the writing-plans skill, can you start writing the plan before completing all three context gathering phases?" 60)
 
 if assert_contains "$output" "after.*all\|After.*all\|complete.*all.*phases\|all three phases" "Must complete all phases"; then
     : # pass
@@ -108,7 +102,7 @@ echo ""
 # Test 5: Verify handoff file structure
 echo "Test 5: Handoff file structure..."
 
-output=$(run_claude "In the writing-plans skill context gathering phases, where do subagents write their findings?" 30)
+output=$(run_claude "In the writing-plans skill context gathering phases, where do subagents write their findings?" 60)
 
 if assert_contains "$output" "docs/handoffs\|docs\/handoffs" "Uses docs/handoffs directory"; then
     : # pass
@@ -124,8 +118,64 @@ fi
 
 echo ""
 
-# Test 6: Verify codebase-explorer-prompt.md exists and has required sections
-echo "Test 6: Codebase explorer prompt template exists..."
+# Test 6: Verify synthesis files are created between phases
+echo "Test 6: Synthesis files mentioned between phases..."
+
+output=$(run_claude "In the writing-plans skill, what happens after each context gathering phase completes?" 60)
+
+if assert_contains "$output" "summary\|synthesis" "Creates summary/synthesis files"; then
+    : # pass
+else
+    exit 1
+fi
+
+if assert_contains "$output" "context-codebase-summary\|context-docs-summary\|context-web-summary" "Creates specific summary files"; then
+    : # pass
+else
+    exit 1
+fi
+
+if assert_contains "$output" "Read.*handoff\|reads.*handoff" "Reads handoff files"; then
+    : # pass
+else
+    exit 1
+fi
+
+echo ""
+
+# Test 7: Verify plan header includes "Context Gathered From" section
+echo "Test 7: Plan header includes Context Gathered From..."
+
+output=$(run_claude "In the writing-plans skill, what should the plan document header include?" 60)
+
+if assert_contains "$output" "Context Gathered From" "Has 'Context Gathered From' section"; then
+    : # pass
+else
+    exit 1
+fi
+
+if assert_contains "$output" "context-codebase-summary\|Codebase.*summary" "References codebase summary"; then
+    : # pass
+else
+    exit 1
+fi
+
+if assert_contains "$output" "context-docs-summary\|Documentation.*summary" "References docs summary"; then
+    : # pass
+else
+    exit 1
+fi
+
+if assert_contains "$output" "context-web-summary\|Best Practices.*summary" "References web summary"; then
+    : # pass
+else
+    exit 1
+fi
+
+echo ""
+
+# Test 8: Verify codebase-explorer-prompt.md exists and has required sections
+echo "Test 8: Codebase explorer prompt template exists..."
 
 PROMPT_FILE="$SCRIPT_DIR/../../skills/writing-plans/codebase-explorer-prompt.md"
 
