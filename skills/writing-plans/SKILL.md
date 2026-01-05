@@ -151,8 +151,19 @@ After each phase completes:
 
 **Tech Stack:** [Key technologies/libraries]
 
+**Context Gathered From:**
+- Codebase: `docs/handoffs/context-codebase-summary.md`
+- Documentation: `docs/handoffs/context-docs-summary.md`
+- Best Practices: `docs/handoffs/context-web-summary.md`
+
 ---
 ```
+
+**Before writing tasks, review all three context summaries and incorporate:**
+- Patterns from codebase exploration
+- API details from documentation
+- Best practices from web research
+- Anti-patterns to avoid
 
 ## Task Structure
 
