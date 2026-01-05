@@ -4,8 +4,10 @@
 
 # Runtime files from subagent-driven development
 docs/current-progress.md
-docs/handoffs/*.md
-docs/plans
+docs/handoffs/task-*.md
 
-# Context gathering handoff files (ephemeral)
-docs/handoffs/context-*.md
+# Context gathering handoff files (ephemeral individual findings, not summaries)
+docs/handoffs/context-codebase-[!s]*.md
+docs/handoffs/context-docs-[!s]*.md
+docs/handoffs/context-web-[!s]*.md
+# Note: Summary files (context-*-summary.md) are NOT gitignored - they're referenced in plan headers

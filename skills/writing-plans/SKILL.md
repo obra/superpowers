@@ -230,10 +230,14 @@ Then:
 
 **After plan is complete and execution begins:**
 
-Context handoff files are ephemeral - they served their purpose:
-- `docs/handoffs/context-codebase-*.md` - can be deleted
-- `docs/handoffs/context-docs-*.md` - can be deleted
-- `docs/handoffs/context-web-*.md` - can be deleted
-- Summary files remain in plan header reference if needed
+**Individual explorer findings** (gitignored, safe to delete):
+- `docs/handoffs/context-codebase-{aspect}.md` - individual explorer outputs
+- `docs/handoffs/context-docs-{topic}.md` - individual explorer outputs
+- `docs/handoffs/context-web-{topic}.md` - individual explorer outputs
 
-These files are gitignored to prevent clutter.
+**Summary files** (NOT gitignored, referenced in plan header):
+- `docs/handoffs/context-codebase-summary.md` - keep for plan reference
+- `docs/handoffs/context-docs-summary.md` - keep for plan reference
+- `docs/handoffs/context-web-summary.md` - keep for plan reference
+
+Summary files can be committed with the plan or deleted after execution begins.
