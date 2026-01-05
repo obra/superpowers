@@ -124,4 +124,46 @@ fi
 
 echo ""
 
+# Test 6: Verify codebase-explorer-prompt.md exists and has required sections
+echo "Test 6: Codebase explorer prompt template exists..."
+
+PROMPT_FILE="$SCRIPT_DIR/../../skills/writing-plans/codebase-explorer-prompt.md"
+
+if [ ! -f "$PROMPT_FILE" ]; then
+    echo "FAIL: codebase-explorer-prompt.md does not exist"
+    exit 1
+fi
+
+content=$(cat "$PROMPT_FILE")
+
+if echo "$content" | grep -q "Codebase Explorer Subagent Prompt Template"; then
+    echo "PASS: Has correct title"
+else
+    echo "FAIL: Missing correct title"
+    exit 1
+fi
+
+if echo "$content" | grep -q "Your Exploration Focus"; then
+    echo "PASS: Has 'Your Exploration Focus' section"
+else
+    echo "FAIL: Missing 'Your Exploration Focus' section"
+    exit 1
+fi
+
+if echo "$content" | grep -q "Write Handoff File"; then
+    echo "PASS: Has 'Write Handoff File' section"
+else
+    echo "FAIL: Missing 'Write Handoff File' section"
+    exit 1
+fi
+
+if echo "$content" | grep -q "docs/handoffs/context-codebase-{aspect}.md"; then
+    echo "PASS: Specifies correct handoff file path"
+else
+    echo "FAIL: Missing correct handoff file path"
+    exit 1
+fi
+
+echo ""
+
 echo "=== All writing-plans context gathering tests passed ==="
