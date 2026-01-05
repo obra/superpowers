@@ -17,6 +17,37 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
 
+## Context Gathering Phases
+
+**Before writing ANY plan, complete these three phases:**
+
+### Phase 1: Codebase Exploration (Parallel Subagents)
+
+Dispatch 3-5 parallel subagents to explore code related to the task:
+- Each subagent explores one aspect (architecture, similar features, tests, dependencies)
+- Subagents write findings to `docs/handoffs/context-codebase-{aspect}.md`
+- Orchestrator reads all handoff files, synthesizes into `docs/handoffs/context-codebase-summary.md`
+
+### Phase 2: Documentation Exploration (Parallel Subagents)
+
+From codebase findings, identify documentation needs, then dispatch parallel subagents:
+- Framework/library docs (MCP or WebFetch)
+- API references
+- Configuration guides
+- Subagents write findings to `docs/handoffs/context-docs-{topic}.md`
+- Orchestrator synthesizes into `docs/handoffs/context-docs-summary.md`
+
+### Phase 3: Best Practices & Examples (Parallel Web Subagents)
+
+Dispatch parallel subagents to search web for:
+- Current best practices for the pattern/approach
+- Real-world examples and implementations
+- Common pitfalls and solutions
+- Subagents write findings to `docs/handoffs/context-web-{topic}.md`
+- Orchestrator synthesizes into `docs/handoffs/context-web-summary.md`
+
+**After all three phases:** Read the three summary files and proceed to plan writing.
+
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**
