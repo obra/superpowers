@@ -48,6 +48,85 @@ Dispatch parallel subagents to search web for:
 
 **After all three phases:** Read the three summary files and proceed to plan writing.
 
+## Context Gathering Workflow
+
+```dot
+digraph context_gathering {
+    rankdir=TB;
+
+    subgraph cluster_phase1 {
+        label="Phase 1: Codebase";
+        "Identify exploration aspects" [shape=box];
+        "Dispatch 3-5 parallel Explore subagents" [shape=box];
+        "Wait for all to complete" [shape=box];
+        "Read handoff files, write codebase-summary.md" [shape=box];
+    }
+
+    subgraph cluster_phase2 {
+        label="Phase 2: Documentation";
+        "From codebase findings, identify doc needs" [shape=box];
+        "Dispatch parallel doc explorer subagents" [shape=box];
+        "Wait for all to complete 2" [shape=box];
+        "Read handoff files, write docs-summary.md" [shape=box];
+    }
+
+    subgraph cluster_phase3 {
+        label="Phase 3: Best Practices";
+        "Identify patterns needing research" [shape=box];
+        "Dispatch parallel web research subagents" [shape=box];
+        "Wait for all to complete 3" [shape=box];
+        "Read handoff files, write web-summary.md" [shape=box];
+    }
+
+    "User requests plan" [shape=doublecircle];
+    "Read 3 summary files" [shape=box];
+    "Write implementation plan" [shape=box];
+    "Plan complete" [shape=doublecircle];
+
+    "User requests plan" -> "Identify exploration aspects";
+    "Identify exploration aspects" -> "Dispatch 3-5 parallel Explore subagents";
+    "Dispatch 3-5 parallel Explore subagents" -> "Wait for all to complete";
+    "Wait for all to complete" -> "Read handoff files, write codebase-summary.md";
+    "Read handoff files, write codebase-summary.md" -> "From codebase findings, identify doc needs";
+    "From codebase findings, identify doc needs" -> "Dispatch parallel doc explorer subagents";
+    "Dispatch parallel doc explorer subagents" -> "Wait for all to complete 2";
+    "Wait for all to complete 2" -> "Read handoff files, write docs-summary.md";
+    "Read handoff files, write docs-summary.md" -> "Identify patterns needing research";
+    "Identify patterns needing research" -> "Dispatch parallel web research subagents";
+    "Dispatch parallel web research subagents" -> "Wait for all to complete 3";
+    "Wait for all to complete 3" -> "Read handoff files, write web-summary.md";
+    "Read handoff files, write web-summary.md" -> "Read 3 summary files";
+    "Read 3 summary files" -> "Write implementation plan";
+    "Write implementation plan" -> "Plan complete";
+}
+```
+
+### Subagent Dispatch Guidelines
+
+**Phase 1 - Codebase Exploration:**
+- Identify 3-5 aspects relevant to the feature (e.g., "existing auth patterns", "test structure", "related components", "data layer")
+- Use `Explore` subagent type with `model: haiku`
+- Use template: `./codebase-explorer-prompt.md`
+
+**Phase 2 - Documentation:**
+- Based on codebase findings, identify what docs to research
+- Use `general-purpose` subagent with `model: haiku`
+- Use template: `./docs-explorer-prompt.md`
+- Prefer MCP tools when available for specific libraries
+
+**Phase 3 - Best Practices:**
+- Identify patterns/approaches that need current best practices research
+- Use `general-purpose` subagent with `model: haiku`
+- Use template: `./best-practices-explorer-prompt.md`
+- Focus on 2024-2025 content for freshness
+
+### Synthesis Between Phases
+
+After each phase completes:
+1. Read all handoff files from that phase
+2. Write phase summary using template: `./context-synthesis-prompt.md`
+3. Use summary to inform next phase's exploration targets
+
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**
