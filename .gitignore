@@ -6,3 +6,6 @@
 docs/current-progress.md
 docs/handoffs/*.md
 docs/plans
+
+# Context gathering handoff files (ephemeral)
+docs/handoffs/context-*.md

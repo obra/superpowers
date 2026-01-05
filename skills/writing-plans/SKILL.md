@@ -225,3 +225,15 @@ Then:
 - **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
 - Stay in this session
 - Fresh subagent per task + two-stage code review
+
+## Cleanup
+
+**After plan is complete and execution begins:**
+
+Context handoff files are ephemeral - they served their purpose:
+- `docs/handoffs/context-codebase-*.md` - can be deleted
+- `docs/handoffs/context-docs-*.md` - can be deleted
+- `docs/handoffs/context-web-*.md` - can be deleted
+- Summary files remain in plan header reference if needed
+
+These files are gitignored to prevent clutter.
