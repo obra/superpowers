@@ -119,12 +119,21 @@ digraph context_gathering {
     }
 
     "User requests plan" [shape=doublecircle];
+    "Analyze request and explore codebase" [shape=box];
+    "Request clear?" [shape=diamond];
+    "Ask clarifying questions" [shape=box];
+    "Write context-clarification.md" [shape=box];
     "Read 3 summary files" [shape=box];
     "Write implementation plan" [shape=box];
     "Cleanup handoffs" [shape=box];
     "Plan complete" [shape=doublecircle];
 
-    "User requests plan" -> "Identify exploration aspects";
+    "User requests plan" -> "Analyze request and explore codebase";
+    "Analyze request and explore codebase" -> "Request clear?";
+    "Request clear?" -> "Write context-clarification.md" [label="yes"];
+    "Request clear?" -> "Ask clarifying questions" [label="no"];
+    "Ask clarifying questions" -> "Write context-clarification.md";
+    "Write context-clarification.md" -> "Identify exploration aspects";
     "Identify exploration aspects" -> "Dispatch 3-5 parallel Explore subagents";
     "Dispatch 3-5 parallel Explore subagents" -> "Wait for all to complete";
     "Wait for all to complete" -> "Read handoff files, write codebase-summary.md";
