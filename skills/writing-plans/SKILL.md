@@ -81,6 +81,7 @@ digraph context_gathering {
     "User requests plan" [shape=doublecircle];
     "Read 3 summary files" [shape=box];
     "Write implementation plan" [shape=box];
+    "Cleanup handoffs" [shape=box];
     "Plan complete" [shape=doublecircle];
 
     "User requests plan" -> "Identify exploration aspects";
@@ -97,7 +98,8 @@ digraph context_gathering {
     "Wait for all to complete 3" -> "Read handoff files, write web-summary.md";
     "Read handoff files, write web-summary.md" -> "Read 3 summary files";
     "Read 3 summary files" -> "Write implementation plan";
-    "Write implementation plan" -> "Plan complete";
+    "Write implementation plan" -> "Cleanup handoffs";
+    "Cleanup handoffs" -> "Plan complete";
 }
 ```
 
