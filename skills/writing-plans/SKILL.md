@@ -40,9 +40,16 @@ Ask when request has:
 - Unclear success criteria
 
 Proceed without asking when:
-- Request is crystal clear
-- User said "don't ask, just plan"
-- All Six Questions answered (Why/What/Who/Where/When/How)
+- User explicitly said "don't ask, just plan"
+- User provided comprehensive spec document AND you verified it addresses Why/What/Who/Where/When/How
+- All Six Questions unambiguously answered in user's request
+
+**Do NOT skip clarification because:**
+- "The request seems clear enough" - Simple requests often hide complex requirements
+- "I can infer the scope from the codebase" - State assumptions explicitly, don't guess
+- "Questions slow things down" - Wrong assumptions waste far more time than 2-3 questions
+- "The spec file looks complete" - Verify it explicitly addresses scope/success criteria
+- "This is a common pattern" - Common patterns have many valid implementations
 
 ### Question Design
 
