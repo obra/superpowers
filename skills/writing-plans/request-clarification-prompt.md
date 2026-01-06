@@ -47,10 +47,9 @@ Flag requests that have:
 - First-time pattern in this codebase
 
 **Proceed without asking when:**
-- Request is crystal clear
-- All Six Questions answered (Why/What/Who/Where/When/How)
-- Low-risk, well-defined operation
+- All Six Questions unambiguously answered in user's request (Why/What/Who/Where/When/How)
 - User explicitly said "don't ask, just plan"
+- User provided comprehensive spec document AND you verified it addresses all Six Questions
 
 ### Step 5: Ask Clarifying Questions (if needed)
 
