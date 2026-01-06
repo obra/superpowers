@@ -1,5 +1,8 @@
 # Superpowers Release Notes
 
+> **Note:** This project was forked from "Superpowers" by Jesse Vincent and renamed to "Hyperpowers".
+> Historical release notes below may reference the original name and author.
+
 ## v4.0.0 (2025-12-17)
 
 ### New Features
