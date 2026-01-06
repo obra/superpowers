@@ -34,17 +34,20 @@ This phase prevents wasted effort by catching ambiguity early. It runs inline (o
 ### When to Ask Questions
 
 Ask when request has:
+
 - Multiple valid interpretations
 - Vague terms ("improve", "better", "robust")
 - No explicit scope boundaries
 - Unclear success criteria
 
 Proceed without asking when:
+
 - User explicitly said "don't ask, just plan"
 - User provided comprehensive spec document AND you verified it addresses Why/What/Who/Where/When/How
 - All Six Questions unambiguously answered in user's request
 
 **Do NOT skip clarification because:**
+
 - "The request seems clear enough" - Simple requests often hide complex requirements
 - "I can infer the scope from the codebase" - State assumptions explicitly, don't guess
 - "Questions slow things down" - Wrong assumptions waste far more time than 2-3 questions
@@ -71,6 +74,7 @@ Write clarification summary to `docs/handoffs/context-clarification.md`. This in
 ### Phase 1: Codebase Exploration (Parallel Subagents)
 
 Dispatch 3-5 parallel subagents to explore code related to the task:
+
 - Each subagent explores one aspect (architecture, similar features, tests, dependencies)
 - Subagents write findings to `docs/handoffs/context-codebase-{aspect}.md`
 - Orchestrator reads all handoff files, synthesizes into `docs/handoffs/context-codebase-summary.md`
@@ -78,6 +82,7 @@ Dispatch 3-5 parallel subagents to explore code related to the task:
 ### Phase 2: Documentation Exploration (Parallel Subagents)
 
 From codebase findings, identify documentation needs, then dispatch parallel subagents:
+
 - Framework/library docs (MCP or WebFetch)
 - API references
 - Configuration guides
@@ -87,6 +92,7 @@ From codebase findings, identify documentation needs, then dispatch parallel sub
 ### Phase 3: Best Practices & Examples (Parallel Web Subagents)
 
 Dispatch parallel subagents to search web for:
+
 - Current best practices for the pattern/approach
 - Real-world examples and implementations
 - Common pitfalls and solutions
@@ -162,17 +168,20 @@ digraph context_gathering {
 ### Subagent Dispatch Guidelines
 
 **Phase 1 - Codebase Exploration:**
+
 - Identify 3-5 aspects relevant to the feature (e.g., "existing auth patterns", "test structure", "related components", "data layer")
 - Use `Explore` subagent type with `model: haiku`
 - Use template: `./codebase-explorer-prompt.md`
 
 **Phase 2 - Documentation:**
+
 - Based on codebase findings, identify what docs to research
 - Use `general-purpose` subagent with `model: haiku`
 - Use template: `./docs-explorer-prompt.md`
 - Prefer MCP tools when available for specific libraries
 
 **Phase 3 - Best Practices:**
+
 - Identify patterns/approaches that need current best practices research
 - Use `general-purpose` subagent with `model: haiku`
 - Use template: `./best-practices-explorer-prompt.md`
@@ -181,6 +190,7 @@ digraph context_gathering {
 ### Synthesis Between Phases
 
 After each phase completes:
+
 1. Read all handoff files from that phase
 2. Write phase summary using template: `./context-synthesis-prompt.md`
 3. Use summary to inform next phase's exploration targets
@@ -188,6 +198,7 @@ After each phase completes:
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**
+
 - "Write the failing test" - step
 - "Run it to make sure it fails" - step
 - "Implement the minimal code to make the test pass" - step
@@ -213,6 +224,7 @@ After each phase completes:
 ```
 
 **Before writing tasks, review all three context summaries and incorporate:**
+
 - Patterns from codebase exploration
 - API details from documentation
 - Best practices from web research
@@ -220,10 +232,11 @@ After each phase completes:
 
 ## Task Structure
 
-```markdown
+````markdown
 ### Task N: [Component Name]
 
 **Files:**
+
 - Create: `exact/path/to/file.py`
 - Modify: `exact/path/to/existing.py:123-145`
 - Test: `tests/exact/path/to/test.py`
@@ -235,6 +248,7 @@ def test_specific_behavior():
     result = function(input)
     assert result == expected
 ```
+````
 
 **Step 2: Run test to verify it fails**
 
@@ -259,7 +273,8 @@ Expected: PASS
 git add tests/path/test.py src/path/file.py
 git commit -m "feat: add specific feature"
 ```
-```
+
+````
 
 ## Remember
 - Exact file paths always
@@ -278,15 +293,29 @@ Delete all files in `docs/handoffs/` - these are no longer needed once the plan 
 
 ```bash
 rm -rf docs/handoffs/*
-```
+````
 
 **Step 2: Announce completion and begin execution**
 
 **"Plan complete and saved to `docs/plans/<filename>.md`. Context gathering files cleaned up. Ready to execute using Subagent-Driven Development."**
 
+After announcing the plan is complete, provide these instructions to the user:
+
+```
+To prepare for implementation, compact this conversation:
+
+/compact ready to implement <filename>.md
+
+Then execute the plan:
+
+/hyperpowers:execute-plan <filename>.md
+```
+
+**Important:** Replace `<filename>` with the actual plan path (e.g., `/compact ready to implement docs/plans/user-authentication.md` and `/hyperpowers:execute-plan docs/plans/user-authentication.md`).
+
 Then:
+
 - **REQUIRED SUB-SKILL:** Use hyperpowers:subagent-driven-development
-- Stay in this session
 - Fresh subagent per task + two-stage code review
 
 ## Cleanup
@@ -300,6 +329,7 @@ The `docs/handoffs/` directory is used only during context gathering. Once the p
 - All context is captured in the plan document
 
 **Why cleanup immediately?**
+
 - Prevents stale context from affecting future planning sessions
 - Aligns with industry best practices: cleanup at terminal state (plan completion)
 - Keeps the directory clean for the next planning task
