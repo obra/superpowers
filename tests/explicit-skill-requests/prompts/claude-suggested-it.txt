@@ -1,0 +1,11 @@
+[Previous assistant message]:
+Plan complete and saved to docs/plans/auth-system.md.
+
+Two execution options:
+1. Subagent-Driven (this session) - I dispatch a fresh subagent per task, review between tasks, fast iteration within this conversation
+2. Parallel Session (separate) - Open a new Claude Code session with the execute-plan skill, batch execution with review checkpoints
+
+Which approach do you want to use for implementation?
+
+[Your response]:
+subagent-driven-development, please

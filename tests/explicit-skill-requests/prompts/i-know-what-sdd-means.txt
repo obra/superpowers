@@ -1,0 +1,8 @@
+I have my implementation plan ready at docs/plans/auth-system.md.
+
+I want to use subagent-driven-development to execute it. That means:
+- Dispatch a fresh subagent for each task in the plan
+- Review the output between tasks
+- Keep iteration fast within this conversation
+
+Let's start - please read the plan and begin dispatching subagents for each task.
