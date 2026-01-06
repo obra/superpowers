@@ -65,7 +65,7 @@ Rewrote key skills using DOT/GraphViz flowcharts as the authoritative process de
 
 **The Description Trap** (documented in `writing-skills`): Discovered that skill descriptions override flowchart content when descriptions contain workflow summaries. Claude follows the short description instead of reading the detailed flowchart. Fix: descriptions must be trigger-only ("Use when X") with no process details.
 
-**Skill priority in using-superpowers**
+**Skill priority in using-hyperpowers**
 
 When multiple skills apply, process skills (brainstorming, debugging) now explicitly come before implementation skills. "Build X" triggers brainstorming first, then domain skills.
 
@@ -84,7 +84,7 @@ Description changed to imperative: "You MUST use this before any creative workâ€
 ### Other Improvements
 
 - **render-graphs.js** - Tool to extract DOT diagrams from skills and render to SVG
-- **Rationalizations table** in using-superpowers - Scannable format including new entries: "I need more context first", "Let me explore first", "This feels productive"
+- **Rationalizations table** in using-hyperpowers - Scannable format including new entries: "I need more context first", "Let me explore first", "This feels productive"
 - **docs/testing.md** - Guide to testing skills with Claude Code integration tests
 
 ---
@@ -106,7 +106,7 @@ Description changed to imperative: "You MUST use this before any creative workâ€
 
 - **OpenCode Bootstrap Refactor**: Switched from `chat.message` hook to `session.created` event for bootstrap injection
   - Bootstrap now injects at session creation via `session.prompt()` with `noReply: true`
-  - Explicitly tells the model that using-superpowers is already loaded to prevent redundant skill loading
+  - Explicitly tells the model that using-hyperpowers is already loaded to prevent redundant skill loading
   - Consolidated bootstrap content generation into shared `getBootstrapContent()` helper
   - Cleaner single-implementation approach (removed fallback pattern)
 
@@ -146,7 +146,7 @@ Description changed to imperative: "You MUST use this before any creative workâ€
 
 ### Improvements
 
-- Optimized superpowers bootstrap to eliminate redundant skill execution. The `using-superpowers` skill content is now provided directly in session context, with clear guidance to use the Skill tool only for other skills. This reduces overhead and prevents the confusing loop where agents would execute `using-superpowers` manually despite already having the content from session start.
+- Optimized superpowers bootstrap to eliminate redundant skill execution. The `using-hyperpowers` skill content is now provided directly in session context, with clear guidance to use the Skill tool only for other skills. This reduces overhead and prevents the confusing loop where agents would execute `using-hyperpowers` manually despite already having the content from session start.
 
 ## v3.4.0 (2025-10-30)
 
@@ -197,7 +197,7 @@ Description changed to imperative: "You MUST use this before any creative workâ€
 
 ### Improvements
 
-**Updated using-superpowers skill to use Skill tool instead of Read tool**
+**Updated using-hyperpowers skill to use Skill tool instead of Read tool**
 - Changed skill invocation instructions from Read tool to Skill tool
 - Updated description: "using Read tool" â†’ "using Skill tool"
 - Updated step 3: "Use the Read tool" â†’ "Use the Skill tool to read and run"
@@ -206,13 +206,13 @@ Description changed to imperative: "You MUST use this before any creative workâ€
 The Skill tool is the proper mechanism for invoking skills in Claude Code. This update corrects the bootstrap instructions to guide agents toward the correct tool.
 
 ### Files Changed
-- Updated: `skills/using-superpowers/SKILL.md` - Changed tool references from Read to Skill
+- Updated: `skills/using-hyperpowers/SKILL.md` - Changed tool references from Read to Skill
 
 ## v3.2.2 (2025-10-21)
 
 ### Improvements
 
-**Strengthened using-superpowers skill against agent rationalization**
+**Strengthened using-hyperpowers skill against agent rationalization**
 - Added EXTREMELY-IMPORTANT block with absolute language about mandatory skill checking
   - "If even 1% chance a skill applies, you MUST read it"
   - "You do not have a choice. You cannot rationalize your way out."
@@ -228,7 +228,7 @@ The Skill tool is the proper mechanism for invoking skills in Claude Code. This 
 These changes address observed agent behavior where they rationalize around skill usage despite clear instructions. The forceful language and pre-emptive counter-arguments aim to make non-compliance harder.
 
 ### Files Changed
-- Updated: `skills/using-superpowers/SKILL.md` - Added three layers of enforcement to prevent skill-skipping rationalization
+- Updated: `skills/using-hyperpowers/SKILL.md` - Added three layers of enforcement to prevent skill-skipping rationalization
 
 ## v3.2.1 (2025-10-20)
 
