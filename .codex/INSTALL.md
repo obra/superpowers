@@ -1,14 +1,14 @@
-# Installing Superpowers for Codex
+# Installing Hyperpowers for Codex
 
-Quick setup to enable superpowers skills in Codex.
+Quick setup to enable hyperpowers skills in Codex.
 
 ## Installation
 
-1. **Clone superpowers repository**:
+1. **Clone hyperpowers repository**:
    ```bash
-   mkdir -p ~/.codex/superpowers
-   cd ~/.codex/superpowers
-   git clone https://github.com/obra/superpowers.git .
+   mkdir -p ~/.codex/hyperpowers
+   cd ~/.codex/hyperpowers
+   git clone https://github.com/bradwindy/hyperpowers.git .
    ```
 
 2. **Create personal skills directory**:
@@ -16,12 +16,12 @@ Quick setup to enable superpowers skills in Codex.
    mkdir -p ~/.codex/skills
    ```
 
-3. **Update ~/.codex/AGENTS.md** to include this superpowers section:
+3. **Update ~/.codex/AGENTS.md** to include this hyperpowers section:
    ```markdown
-   ## Superpowers System
+   ## Hyperpowers System
 
    <EXTREMELY_IMPORTANT>
-   You have superpowers. Superpowers teach you new skills and capabilities. RIGHT NOW run: `~/.codex/superpowers/.codex/superpowers-codex bootstrap` and follow the instructions it returns.
+   You have hyperpowers. Hyperpowers teach you new skills and capabilities. RIGHT NOW run: `~/.codex/hyperpowers/.codex/hyperpowers-codex bootstrap` and follow the instructions it returns.
    </EXTREMELY_IMPORTANT>
    ```
 
@@ -29,7 +29,7 @@ Quick setup to enable superpowers skills in Codex.
 
 Test the installation:
 ```bash
-~/.codex/superpowers/.codex/superpowers-codex bootstrap
+~/.codex/hyperpowers/.codex/hyperpowers-codex bootstrap
 ```
 
 You should see skill listings and bootstrap instructions. The system is now ready for use.
