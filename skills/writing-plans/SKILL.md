@@ -11,7 +11,7 @@ Write comprehensive implementation plans assuming the engineer has zero context 
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
 
-**Announce at start:** "I'm using the writing-plans skill. Starting with extensive context gathering across three phases: codebase exploration, documentation review, and best practices research."
+**Announce at start:** "I'm using the writing-plans skill. Starting with request clarification to ensure the plan addresses your needs, followed by extensive context gathering across three phases."
 
 **Context:** This should be run in a dedicated worktree (created by brainstorming skill).
 
