@@ -1,13 +1,13 @@
 {
-  "name": "superpowers",
+  "name": "hyperpowers",
   "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
   "version": "4.0.0",
   "author": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com"
+    "name": "Bradley Windybank",
+    "email": "bradley@windybank.net"
   },
-  "homepage": "https://github.com/obra/superpowers",
-  "repository": "https://github.com/obra/superpowers",
+  "homepage": "https://github.com/bradwindy/hyperpowers",
+  "repository": "https://github.com/bradwindy/hyperpowers",
   "license": "MIT",
   "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows"]
 }
