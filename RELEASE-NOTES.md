@@ -170,7 +170,7 @@ Description changed to imperative: "You MUST use this before any creative workâ€
 ### New Features
 
 **Experimental Codex Support**
-- Added unified `superpowers-codex` script with bootstrap/use-skill/find-skills commands
+- Added unified `hyperpowers-codex` script with bootstrap/use-skill/find-skills commands
 - Cross-platform Node.js implementation (works on Windows, macOS, Linux)
 - Namespaced skills: `superpowers:skill-name` for superpowers skills, `skill-name` for personal
 - Personal skills override superpowers skills when names match
@@ -188,8 +188,8 @@ Description changed to imperative: "You MUST use this before any creative workâ€
 
 ### Files Added
 - `.codex/INSTALL.md` - Installation guide for Codex users
-- `.codex/superpowers-bootstrap.md` - Bootstrap instructions with Codex adaptations
-- `.codex/superpowers-codex` - Unified Node.js executable with all functionality
+- `.codex/hyperpowers-bootstrap.md` - Bootstrap instructions with Codex adaptations
+- `.codex/hyperpowers-codex` - Unified Node.js executable with all functionality
 
 **Note:** Codex support is experimental. The integration provides core superpowers functionality but may require refinement based on user feedback.
 
