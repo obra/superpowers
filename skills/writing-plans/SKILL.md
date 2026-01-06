@@ -217,9 +217,19 @@ git commit -m "feat: add specific feature"
 
 ## Execution Handoff
 
-After saving the plan, announce completion and begin execution:
+After saving the plan:
 
-**"Plan complete and saved to `docs/plans/<filename>.md`. Ready to execute using Subagent-Driven Development."**
+**Step 1: Cleanup context gathering files**
+
+Delete all files in `docs/handoffs/` - these are no longer needed once the plan is written:
+
+```bash
+rm -rf docs/handoffs/*
+```
+
+**Step 2: Announce completion and begin execution**
+
+**"Plan complete and saved to `docs/plans/<filename>.md`. Context gathering files cleaned up. Ready to execute using Subagent-Driven Development."**
 
 Then:
 - **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
