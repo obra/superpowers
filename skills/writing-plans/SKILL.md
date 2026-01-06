@@ -238,16 +238,15 @@ Then:
 
 ## Cleanup
 
-**After plan is complete and execution begins:**
+**All handoff files are deleted after the plan is written** (see Execution Handoff above).
 
-**Individual explorer findings** (gitignored, safe to delete):
-- `docs/handoffs/context-codebase-{aspect}.md` - individual explorer outputs
-- `docs/handoffs/context-docs-{topic}.md` - individual explorer outputs
-- `docs/handoffs/context-web-{topic}.md` - individual explorer outputs
+The `docs/handoffs/` directory is used only during context gathering. Once the plan is saved to `docs/plans/`, the handoff files serve no purpose:
 
-**Summary files** (NOT gitignored, referenced in plan header):
-- `docs/handoffs/context-codebase-summary.md` - keep for plan reference
-- `docs/handoffs/context-docs-summary.md` - keep for plan reference
-- `docs/handoffs/context-web-summary.md` - keep for plan reference
+- Individual explorer findings (`context-codebase-{aspect}.md`, etc.) are intermediate artifacts
+- Summary files (`context-*-summary.md`) are synthesized into the plan itself
+- All context is captured in the plan document
 
-Summary files can be committed with the plan or deleted after execution begins.
+**Why cleanup immediately?**
+- Prevents stale context from affecting future planning sessions
+- Aligns with industry best practices: cleanup at terminal state (plan completion)
+- Keeps the directory clean for the next planning task
