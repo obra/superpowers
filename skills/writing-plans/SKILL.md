@@ -17,6 +17,46 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
 
+## Phase 0: Request Clarification
+
+**Before ANY context gathering, validate the request is clear.**
+
+This phase prevents wasted effort by catching ambiguity early. It runs inline (orchestrator handles it, not a subagent).
+
+### Clarification Flow
+
+1. **Analyze the request**: Identify goal, scope, success criteria, constraints
+2. **Shallow codebase exploration**: Quick glob/grep to understand project context (30 seconds max)
+3. **Detect ambiguity**: Flag vague terms, missing boundaries, unclear success criteria
+4. **Ask OR proceed**: Use AskUserQuestion for 2-3 targeted questions if unclear; proceed if clear
+5. **Document findings**: Write to `docs/handoffs/context-clarification.md`
+
+### When to Ask Questions
+
+Ask when request has:
+- Multiple valid interpretations
+- Vague terms ("improve", "better", "robust")
+- No explicit scope boundaries
+- Unclear success criteria
+
+Proceed without asking when:
+- Request is crystal clear
+- User said "don't ask, just plan"
+- All Six Questions answered (Why/What/Who/Where/When/How)
+
+### Question Design
+
+- **2-3 questions maximum** - quality over quantity
+- **Multiple choice preferred** - reduces cognitive load
+- **Context-aware** - reference codebase findings, not generic templates
+- **One focus per question** - goal, scope, or constraints
+
+Use template: `./request-clarification-prompt.md`
+
+### Output
+
+Write clarification summary to `docs/handoffs/context-clarification.md`. This informs Phase 1 exploration targets.
+
 ## Context Gathering Phases
 
 **Before writing ANY plan, complete these three phases:**
