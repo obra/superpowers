@@ -145,7 +145,7 @@ After each phase completes:
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development to implement this plan task-by-task.
+> **For Claude:** REQUIRED SUB-SKILL: Use hyperpowers:subagent-driven-development to implement this plan task-by-task.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -229,7 +229,7 @@ rm -rf docs/handoffs/*
 **"Plan complete and saved to `docs/plans/<filename>.md`. Context gathering files cleaned up. Ready to execute using Subagent-Driven Development."**
 
 Then:
-- **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
+- **REQUIRED SUB-SKILL:** Use hyperpowers:subagent-driven-development
 - Stay in this session
 - Fresh subagent per task + two-stage code review
 
