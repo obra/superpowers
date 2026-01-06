@@ -4,16 +4,15 @@ Hyperpowers is a complete software development workflow for your coding agents, 
 
 ## How it works
 
-It starts from the moment you fire up your coding agent. As soon as it sees that you're building something, it *doesn't* just jump into trying to write code. Instead, it steps back and asks you what you're really trying to do. 
+It starts from the moment you fire up your coding agent. As soon as it sees that you're building something, it _doesn't_ just jump into trying to write code. Instead, it steps back and asks you what you're really trying to do.
 
-Once it's teased a spec out of the conversation, it shows it to you in chunks short enough to actually read and digest. 
+Once it's teased a spec out of the conversation, it shows it to you in chunks short enough to actually read and digest.
 
-After you've signed off on the design, your agent puts together an implementation plan that's clear enough for an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing to follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY. 
+After you've signed off on the design, your agent puts together an implementation plan that's clear enough for an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing to follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY.
 
-Next up, once you say "go", it launches a *subagent-driven-development* process, having agents work through each engineering task, inspecting and reviewing their work, and continuing forward. It's not uncommon for Claude to be able to work autonomously for a couple hours at a time without deviating from the plan you put together.
+Next up, once you say "go", it launches a _subagent-driven-development_ process, having agents work through each engineering task, inspecting and reviewing their work, and continuing forward. It's not uncommon for Claude to be able to work autonomously for a couple hours at a time without deviating from the plan you put together.
 
 There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Hyperpowers.
-
 
 ## Sponsorship
 
@@ -23,26 +22,45 @@ Thanks!
 
 - Bradley
 
-
 ## Installation
 
 **Note:** Installation differs by platform. Claude Code has a built-in plugin system. Codex and OpenCode require manual setup.
 
-### Claude Code (via Plugin Marketplace)
+### Claude Code
 
-In Claude Code, register the marketplace first:
+#### Option 1: Direct Git Installation
+
+Execute this command to install directly from the repository:
 
 ```bash
-/plugin marketplace add bradwindy/hyperpowers-marketplace
+/plugin install --git https://github.com/bradwindy/hyperpowers
 ```
 
-Then install the plugin from this marketplace:
+#### Option 2: Marketplace Installation
+
+This approach requires two steps. First, register the marketplace source:
+
+```bash
+/plugin marketplace add bradwindy/hyperpowers
+```
+
+Then proceed with the installation:
 
 ```bash
 /plugin install hyperpowers@hyperpowers-marketplace
 ```
 
-### Verify Installation
+#### Option 3: Local Development
+
+Clone the repository locally, then add and install from that location:
+
+```bash
+git clone https://github.com/bradwindy/hyperpowers.git
+/plugin marketplace add ./hyperpowers
+/plugin install hyperpowers@hyperpowers-marketplace
+```
+
+#### Verify Installation
 
 Check that commands appear:
 
@@ -99,13 +117,16 @@ Fetch and follow instructions from https://raw.githubusercontent.com/bradwindy/h
 ### Skills Library
 
 **Testing**
+
 - **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
 
 **Debugging**
+
 - **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
 - **verification-before-completion** - Ensure it's actually fixed
 
 **Collaboration**
+
 - **brainstorming** - Socratic design refinement
 - **writing-plans** - Detailed implementation plans
 - **dispatching-parallel-agents** - Concurrent subagent workflows
@@ -116,6 +137,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/bradwindy/h
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
 
 **Meta**
+
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
 - **using-hyperpowers** - Introduction to the skills system
 
