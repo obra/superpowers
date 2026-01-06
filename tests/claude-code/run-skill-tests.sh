@@ -75,6 +75,7 @@ done
 tests=(
     "test-subagent-driven-development.sh"
     "test-writing-plans-context-gathering.sh"
+    "test-writing-plans-cleanup.sh"
 )
 
 # Integration tests (slow, full execution)
