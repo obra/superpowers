@@ -2,6 +2,13 @@
 
 Use this template when synthesizing subagent findings after each phase.
 
+## Using Clarification Context
+
+Before each synthesis phase, read `docs/handoffs/context-clarification.md` if it exists. Use it to:
+- Focus exploration on areas identified during clarification
+- Skip aspects that user explicitly said are out of scope
+- Prioritize based on user's stated goals and constraints
+
 ```
 # Phase Synthesis (Orchestrator performs inline, not a subagent)
 
