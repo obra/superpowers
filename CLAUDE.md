@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-Superpowers is a Claude Code plugin providing composable "skills" that enforce development workflows (TDD, brainstorming, systematic debugging, structured plan execution). Skills trigger automatically based on context.
+Hyperpowers is a Claude Code plugin providing composable "skills" that enforce development workflows (TDD, brainstorming, systematic debugging, structured plan execution). Skills trigger automatically based on context.
 
 ## Structure
 
