@@ -151,11 +151,6 @@ After each phase completes:
 
 **Tech Stack:** [Key technologies/libraries]
 
-**Context Gathered From:**
-- Codebase: `docs/handoffs/context-codebase-summary.md`
-- Documentation: `docs/handoffs/context-docs-summary.md`
-- Best Practices: `docs/handoffs/context-web-summary.md`
-
 ---
 ```
 
