@@ -1,6 +1,6 @@
 # Go Fractals CLI - Implementation Plan
 
-Execute this plan using the `superpowers:subagent-driven-development` skill.
+Execute this plan using the `hyperpowers:subagent-driven-development` skill.
 
 ## Context
 
@@ -13,7 +13,7 @@ Building a CLI tool that generates ASCII fractals. See `design.md` for full spec
 Create the Go module and directory structure.
 
 **Do:**
-- Initialize `go.mod` with module name `github.com/superpowers-test/fractals`
+- Initialize `go.mod` with module name `github.com/hyperpowers-test/fractals`
 - Create directory structure: `cmd/fractals/`, `internal/sierpinski/`, `internal/mandelbrot/`, `internal/cli/`
 - Create minimal `cmd/fractals/main.go` that prints "fractals cli"
 - Add `github.com/spf13/cobra` dependency

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Test: Skill Priority Resolution
-# Verifies that skills are resolved with correct priority: project > personal > superpowers
+# Verifies that skills are resolved with correct priority: project > personal > hyperpowers
 # NOTE: These tests require OpenCode to be installed and configured
 set -euo pipefail
 
@@ -17,18 +17,18 @@ trap cleanup_test_env EXIT
 # Create same skill "priority-test" in all three locations with different markers
 echo "Setting up priority test fixtures..."
 
-# 1. Create in superpowers location (lowest priority)
-mkdir -p "$HOME/.config/opencode/superpowers/skills/priority-test"
-cat > "$HOME/.config/opencode/superpowers/skills/priority-test/SKILL.md" <<'EOF'
+# 1. Create in hyperpowers location (lowest priority)
+mkdir -p "$HOME/.config/opencode/hyperpowers/skills/priority-test"
+cat > "$HOME/.config/opencode/hyperpowers/skills/priority-test/SKILL.md" <<'EOF'
 ---
 name: priority-test
-description: Superpowers version of priority test skill
+description: Hyperpowers version of priority test skill
 ---
-# Priority Test Skill (Superpowers Version)
+# Priority Test Skill (Hyperpowers Version)
 
-This is the SUPERPOWERS version of the priority test skill.
+This is the HYPERPOWERS version of the priority test skill.
 
-PRIORITY_MARKER_SUPERPOWERS_VERSION
+PRIORITY_MARKER_HYPERPOWERS_VERSION
 EOF
 
 # 2. Create in personal location (medium priority)
@@ -65,10 +65,10 @@ echo "  Created priority-test skill in all three locations"
 echo ""
 echo "Test 1: Verifying test fixtures..."
 
-if [ -f "$HOME/.config/opencode/superpowers/skills/priority-test/SKILL.md" ]; then
-    echo "  [PASS] Superpowers version exists"
+if [ -f "$HOME/.config/opencode/hyperpowers/skills/priority-test/SKILL.md" ]; then
+    echo "  [PASS] Hyperpowers version exists"
 else
-    echo "  [FAIL] Superpowers version missing"
+    echo "  [FAIL] Hyperpowers version missing"
     exit 1
 fi
 
@@ -96,9 +96,9 @@ if ! command -v opencode &> /dev/null; then
     exit 0
 fi
 
-# Test 2: Test that personal overrides superpowers
+# Test 2: Test that personal overrides hyperpowers
 echo ""
-echo "Test 2: Testing personal > superpowers priority..."
+echo "Test 2: Testing personal > hyperpowers priority..."
 echo "  Running from outside project directory..."
 
 # Run from HOME (not in project) - should get personal version
@@ -112,19 +112,19 @@ output=$(timeout 60s opencode run --print-logs "Use the use_skill tool to load t
 }
 
 if echo "$output" | grep -qi "PRIORITY_MARKER_PERSONAL_VERSION"; then
-    echo "  [PASS] Personal version loaded (overrides superpowers)"
-elif echo "$output" | grep -qi "PRIORITY_MARKER_SUPERPOWERS_VERSION"; then
-    echo "  [FAIL] Superpowers version loaded instead of personal"
+    echo "  [PASS] Personal version loaded (overrides hyperpowers)"
+elif echo "$output" | grep -qi "PRIORITY_MARKER_HYPERPOWERS_VERSION"; then
+    echo "  [FAIL] Hyperpowers version loaded instead of personal"
     exit 1
 else
     echo "  [WARN] Could not verify priority marker in output"
     echo "  Output snippet:"
-    echo "$output" | grep -i "priority\|personal\|superpowers" | head -10
+    echo "$output" | grep -i "priority\|personal\|hyperpowers" | head -10
 fi
 
-# Test 3: Test that project overrides both personal and superpowers
+# Test 3: Test that project overrides both personal and hyperpowers
 echo ""
-echo "Test 3: Testing project > personal > superpowers priority..."
+echo "Test 3: Testing project > personal > hyperpowers priority..."
 echo "  Running from project directory..."
 
 # Run from project directory - should get project version
@@ -142,8 +142,8 @@ if echo "$output" | grep -qi "PRIORITY_MARKER_PROJECT_VERSION"; then
 elif echo "$output" | grep -qi "PRIORITY_MARKER_PERSONAL_VERSION"; then
     echo "  [FAIL] Personal version loaded instead of project"
     exit 1
-elif echo "$output" | grep -qi "PRIORITY_MARKER_SUPERPOWERS_VERSION"; then
-    echo "  [FAIL] Superpowers version loaded instead of project"
+elif echo "$output" | grep -qi "PRIORITY_MARKER_HYPERPOWERS_VERSION"; then
+    echo "  [FAIL] Hyperpowers version loaded instead of project"
     exit 1
 else
     echo "  [WARN] Could not verify priority marker in output"
@@ -151,12 +151,12 @@ else
     echo "$output" | grep -i "priority\|project\|personal" | head -10
 fi
 
-# Test 4: Test explicit superpowers: prefix bypasses priority
+# Test 4: Test explicit hyperpowers: prefix bypasses priority
 echo ""
-echo "Test 4: Testing superpowers: prefix forces superpowers version..."
+echo "Test 4: Testing hyperpowers: prefix forces hyperpowers version..."
 
 cd "$TEST_HOME/test-project"
-output=$(timeout 60s opencode run --print-logs "Use the use_skill tool to load superpowers:priority-test specifically. Show me the exact content including any PRIORITY_MARKER text." 2>&1) || {
+output=$(timeout 60s opencode run --print-logs "Use the use_skill tool to load hyperpowers:priority-test specifically. Show me the exact content including any PRIORITY_MARKER text." 2>&1) || {
     exit_code=$?
     if [ $exit_code -eq 124 ]; then
         echo "  [FAIL] OpenCode timed out after 60s"
@@ -164,10 +164,10 @@ output=$(timeout 60s opencode run --print-logs "Use the use_skill tool to load s
     fi
 }
 
-if echo "$output" | grep -qi "PRIORITY_MARKER_SUPERPOWERS_VERSION"; then
-    echo "  [PASS] superpowers: prefix correctly forces superpowers version"
+if echo "$output" | grep -qi "PRIORITY_MARKER_HYPERPOWERS_VERSION"; then
+    echo "  [PASS] hyperpowers: prefix correctly forces hyperpowers version"
 elif echo "$output" | grep -qi "PRIORITY_MARKER_PROJECT_VERSION\|PRIORITY_MARKER_PERSONAL_VERSION"; then
-    echo "  [FAIL] superpowers: prefix did not force superpowers version"
+    echo "  [FAIL] hyperpowers: prefix did not force hyperpowers version"
     exit 1
 else
     echo "  [WARN] Could not verify priority marker in output"

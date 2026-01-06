@@ -36,8 +36,8 @@ output=$(timeout 60s opencode run --print-logs "Use the find_skills tool to list
 }
 
 # Check for expected patterns in output
-if echo "$output" | grep -qi "superpowers:brainstorming\|superpowers:using-superpowers\|Available skills"; then
-    echo "  [PASS] find_skills tool discovered superpowers skills"
+if echo "$output" | grep -qi "hyperpowers:brainstorming\|hyperpowers:using-hyperpowers\|Available skills"; then
+    echo "  [PASS] find_skills tool discovered hyperpowers skills"
 else
     echo "  [FAIL] find_skills did not return expected skills"
     echo "  Output was:"
@@ -76,12 +76,12 @@ else
     exit 1
 fi
 
-# Test 3: Test use_skill with superpowers: prefix
+# Test 3: Test use_skill with hyperpowers: prefix
 echo ""
-echo "Test 3: Testing use_skill with superpowers: prefix..."
-echo "  Running opencode with superpowers:brainstorming skill..."
+echo "Test 3: Testing use_skill with hyperpowers: prefix..."
+echo "  Running opencode with hyperpowers:brainstorming skill..."
 
-output=$(timeout 60s opencode run --print-logs "Use the use_skill tool to load superpowers:brainstorming and tell me the first few lines of what you received." 2>&1) || {
+output=$(timeout 60s opencode run --print-logs "Use the use_skill tool to load hyperpowers:brainstorming and tell me the first few lines of what you received." 2>&1) || {
     exit_code=$?
     if [ $exit_code -eq 124 ]; then
         echo "  [FAIL] OpenCode timed out after 60s"
@@ -92,9 +92,9 @@ output=$(timeout 60s opencode run --print-logs "Use the use_skill tool to load s
 
 # Check for expected content from brainstorming skill
 if echo "$output" | grep -qi "brainstorming\|Launching skill\|skill.*loaded"; then
-    echo "  [PASS] use_skill loaded superpowers:brainstorming skill"
+    echo "  [PASS] use_skill loaded hyperpowers:brainstorming skill"
 else
-    echo "  [FAIL] use_skill did not load superpowers:brainstorming correctly"
+    echo "  [FAIL] use_skill did not load hyperpowers:brainstorming correctly"
     echo "  Output was:"
     echo "$output" | head -50
     exit 1

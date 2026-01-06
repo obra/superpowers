@@ -13,18 +13,18 @@ export XDG_CONFIG_HOME="$TEST_HOME/.config"
 export OPENCODE_CONFIG_DIR="$TEST_HOME/.config/opencode"
 
 # Install plugin to test location
-mkdir -p "$HOME/.config/opencode/superpowers"
-cp -r "$REPO_ROOT/lib" "$HOME/.config/opencode/superpowers/"
-cp -r "$REPO_ROOT/skills" "$HOME/.config/opencode/superpowers/"
+mkdir -p "$HOME/.config/opencode/hyperpowers"
+cp -r "$REPO_ROOT/lib" "$HOME/.config/opencode/hyperpowers/"
+cp -r "$REPO_ROOT/skills" "$HOME/.config/opencode/hyperpowers/"
 
 # Copy plugin directory
-mkdir -p "$HOME/.config/opencode/superpowers/.opencode/plugin"
-cp "$REPO_ROOT/.opencode/plugin/superpowers.js" "$HOME/.config/opencode/superpowers/.opencode/plugin/"
+mkdir -p "$HOME/.config/opencode/hyperpowers/.opencode/plugin"
+cp "$REPO_ROOT/.opencode/plugin/hyperpowers.js" "$HOME/.config/opencode/hyperpowers/.opencode/plugin/"
 
 # Register plugin via symlink
 mkdir -p "$HOME/.config/opencode/plugin"
-ln -sf "$HOME/.config/opencode/superpowers/.opencode/plugin/superpowers.js" \
-       "$HOME/.config/opencode/plugin/superpowers.js"
+ln -sf "$HOME/.config/opencode/hyperpowers/.opencode/plugin/hyperpowers.js" \
+       "$HOME/.config/opencode/plugin/hyperpowers.js"
 
 # Create test skills in different locations for testing
 
@@ -57,8 +57,8 @@ PROJECT_SKILL_MARKER_67890
 EOF
 
 echo "Setup complete: $TEST_HOME"
-echo "Plugin installed to: $HOME/.config/opencode/superpowers/.opencode/plugin/superpowers.js"
-echo "Plugin registered at: $HOME/.config/opencode/plugin/superpowers.js"
+echo "Plugin installed to: $HOME/.config/opencode/hyperpowers/.opencode/plugin/hyperpowers.js"
+echo "Plugin registered at: $HOME/.config/opencode/plugin/hyperpowers.js"
 echo "Test project at: $TEST_HOME/test-project"
 
 # Helper function for cleanup (call from tests or trap)
