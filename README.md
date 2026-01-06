@@ -126,8 +126,6 @@ Fetch and follow instructions from https://raw.githubusercontent.com/bradwindy/h
 - **Complexity reduction** - Simplicity as primary goal
 - **Evidence over claims** - Verify before declaring success
 
-Read more: [Hyperpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
-
 ## Contributing
 
 Skills live directly in this repository. To contribute:
