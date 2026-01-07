@@ -17,7 +17,7 @@ LLMs respond to the same persuasion principles as humans. Understanding this psy
 - Eliminates decision fatigue and rationalization
 
 **When to use:**
-- Discipline-enforcing skills (TDD, verification requirements)
+- Discipline-enforcing skills (debugging methodology, verification requirements)
 - Safety-critical practices
 - Established best practices
 

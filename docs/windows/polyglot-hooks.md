@@ -65,7 +65,6 @@ hooks/
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "startup|resume|clear|compact",
         "hooks": [
           {
             "type": "command",
@@ -79,6 +78,8 @@ hooks/
 ```
 
 Note: The path must be quoted because `${CLAUDE_PLUGIN_ROOT}` may contain spaces on Windows (e.g., `C:\Program Files\...`).
+
+**Important:** SessionStart hooks don't use the `matcher` field - that's only for tool hooks like PreToolUse.
 
 ## Requirements
 
@@ -160,7 +161,6 @@ shift
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "startup",
         "hooks": [
           {
             "type": "command",
@@ -183,6 +183,8 @@ shift
   }
 }
 ```
+
+Note: `matcher` is used for PreToolUse to filter which tool triggers the hook (e.g., "Bash"), but SessionStart hooks don't need or use matcher.
 
 ## Troubleshooting
 
