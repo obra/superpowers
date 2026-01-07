@@ -8,18 +8,16 @@ graph TB
     User([User]) --> CC[Claude Code CLI]
 
     %% Plugin Loading
-    CC --> |loads at startup| Plugin[.claude-plugin/plugin.json]
-    CC --> |SessionStart event| Hook[hooks/session-start.sh]
-    Hook --> |injects content| UsingSuperpowers[using-superpowers skill]
-    
-    %% Commands Layer
-    User -->|/brainstorm| CmdBrainstorm[/brainstorm command]
-    User -->|/write-plan| CmdWritePlan[/write-plan command]
-    User -->|/execute-plan| CmdExecutePlan[/execute-plan command]
+    CC -->|loads at startup| Plugin[.claude-plugin/plugin.json]
+    CC -->|SessionStart event| Hook[hooks/session-start.sh]
+    Hook -->|injects content| UsingSuperpowers[using-superpowers skill]
+    User -->|/brainstorm| CmdBrainstorm["/brainstorm command"]
+    User -->|/write-plan| CmdWritePlan["/write-plan command"]
+    User -->|/execute-plan| CmdExecutePlan["/execute-plan command"]
 
     %% Skill Discovery
-    CC --> |uses| SkillsCore[lib/skills-core.js<br/>• findSkillsInDir<br/>• resolveSkillPath<br/>• extractFrontmatter]
-    SkillsCore --> |discovers| SkillsLib[(skills/ directory)]
+    CC -->|uses| SkillsCore["lib/skills-core.js<br/>• findSkillsInDir<br/>• resolveSkillPath<br/>• extractFrontmatter"]
+    SkillsCore -->|discovers| SkillsLib[(skills/ directory)]
 
     %% Commands to Skills Mapping
     CmdBrainstorm -.->|invokes| Brainstorming
@@ -50,7 +48,8 @@ graph TB
     end
 
     subgraph CompletionPhase[Completion Skills]
-        FinishingBranch[finishing-a-development-branch<br/>merge/PR/cleanup]
+        Documenting[documenting-completed-implementation<br/>update docs/plan/commit]
+        FinishingBranch[finishing-a-development-branch<br/>invokes documenting + git workflow]
     end
 
     subgraph MetaSkills[Meta Skills]
@@ -66,12 +65,13 @@ graph TB
     ExecutingPlans ==>|enforces during impl| TDD
     TDD ==>|before commit| RequestingReview
     RequestingReview ==>|all tasks done| FinishingBranch
+    FinishingBranch -->|invokes if plan exists| Documenting
 
     %% Agent System
     SubagentDev -->|spawns for review| CodeReviewer[agents/code-reviewer.md<br/>2-stage review:<br/>1. spec compliance<br/>2. code quality]
 
     %% Supporting Files
-    SystematicDebug -.->|references| SupportingFiles[Supporting Files:<br/>• condition-based-waiting.md<br/>• root-cause-tracing.md<br/>• defense-in-depth.md<br/>• example scripts]
+    SystematicDebug -.->|references| SupportingFiles["Supporting Files:<br/>• condition-based-waiting.md<br/>• root-cause-tracing.md<br/>• defense-in-depth.md<br/>• example scripts"]
 
     %% Debugging Flow
     SystematicDebug -->|after fix| Verification
@@ -79,7 +79,7 @@ graph TB
     %% Testing System
     WritingSkills -.->|uses for TDD| TestRunner[tests/run-skill-tests.sh]
     TestRunner -->|invokes headless| CC
-    TestRunner -->|runs| FastTests[Fast Tests<br/>skill verification<br/>~2 minutes]
+    TestRunner -->|runs| FastTests["Fast Tests<br/>skill verification<br/>~2 minutes"]
     TestRunner -->|--integration flag| IntegrationTests[Integration Tests<br/>full workflow<br/>10-30 minutes]
 
     %% Styling
@@ -92,7 +92,7 @@ graph TB
 
     class User,CC userClass
     class Plugin,Hook,UsingSuperpowers pluginClass
-    class Brainstorming,WritingPlans,GitWorktrees,ExecutingPlans,SubagentDev,TDD,SystematicDebug,RequestingReview,ReceivingReview,Verification,FinishingBranch,WritingSkills skillClass
+    class Brainstorming,WritingPlans,GitWorktrees,ExecutingPlans,SubagentDev,TDD,SystematicDebug,RequestingReview,ReceivingReview,Verification,Documenting,FinishingBranch,WritingSkills skillClass
     class CodeReviewer agentClass
     class TestRunner,FastTests,IntegrationTests testClass
 ```
@@ -165,29 +165,29 @@ sequenceDiagram
 
 ```mermaid
 graph TB
-    subgraph Repository[superpowers/]
-        subgraph Plugin[.claude-plugin/]
+    subgraph Repository["superpowers/"]
+        subgraph Plugin[".claude-plugin/"]
             P1[plugin.json]
             P2[marketplace.json]
         end
 
-        subgraph Hooks[hooks/]
+        subgraph Hooks["hooks/"]
             H1[hooks.json]
             H2[session-start.sh]
             H3[run-hook.cmd]
         end
 
-        subgraph Lib[lib/]
+        subgraph Lib["lib/"]
             L1[skills-core.js]
         end
 
-        subgraph Commands[commands/]
+        subgraph Commands["commands/"]
             C1[brainstorm.md]
             C2[write-plan.md]
             C3[execute-plan.md]
         end
 
-        subgraph Skills[skills/]
+        subgraph Skills["skills/"]
             S1[using-superpowers/SKILL.md]
             S2[brainstorming/SKILL.md]
             S3[writing-plans/SKILL.md]
@@ -197,11 +197,11 @@ graph TB
             S7[... more skills]
         end
 
-        subgraph Agents[agents/]
+        subgraph Agents["agents/"]
             A1[code-reviewer.md]
         end
 
-        subgraph Tests[tests/claude-code/]
+        subgraph Tests["tests/claude-code/"]
             T1[run-skill-tests.sh]
             T2[test-helpers.sh]
             T3[test-*.sh files]
@@ -242,7 +242,7 @@ graph LR
     Inject --> Follow[Follow Skill Instructions]
 
     subgraph Namespace[Namespace Resolution]
-        Load --> CheckPersonal{Personal Skill<br/>~/.claude/skills?}
+        Load --> CheckPersonal{"Personal Skill<br/>~/.claude/skills?"}
         CheckPersonal -->|Yes| UsePersonal[Use Personal]
         CheckPersonal -->|No| CheckSuperpowers{Superpowers Skill?}
         CheckSuperpowers -->|Yes| UseSuperpowers[Use Superpowers]
