@@ -1,6 +1,6 @@
 # Request Clarification Prompt Template
 
-Use this template for the orchestrator's request clarification phase.
+Use this template for the orchestrator's request clarification phase. Codebase exploration is delegated to a subagent; this template guides the overall flow.
 
 ## When to Use
 
@@ -16,18 +16,29 @@ Read the user's request carefully. Look for:
 - **Success criteria**: How will "done" be measured?
 - **Constraints**: Timeline, dependencies, technical limitations?
 
-### Step 2: Shallow Codebase Exploration
+### Step 2: Dispatch Exploration Subagent
 
-Before asking questions, do quick exploration to understand context:
+Before asking questions, dispatch a single Explore subagent:
 
 ```
-Glob for project structure:
-- Root level: package.json, tsconfig.json, etc.
-- Key directories: src/, lib/, tests/
-- Related files to the request (if mentioned)
+Task(
+  description="Explore project structure",
+  prompt=[Use ./clarification-explorer-prompt.md template with user's request],
+  subagent_type="Explore",
+  model="haiku"
+)
 ```
 
-This takes 30 seconds max. Purpose: ask context-aware questions, not generic ones.
+Wait for subagent to return findings. This takes 30 seconds max.
+
+### Step 2b: Write Exploration Handoff
+
+Write subagent's returned findings to `docs/handoffs/context-clarification-exploration.md`.
+
+The orchestrator will use these findings to:
+- Design context-aware questions (not generic templates)
+- Detect ambiguities based on existing project patterns
+- Inform the ask/proceed decision
 
 ### Step 3: Detect Ambiguity
 
@@ -106,6 +117,9 @@ Write findings to `docs/handoffs/context-clarification.md`:
 - **Project type**: [What kind of project is this]
 - **Key directories**: [Main code locations]
 - **Related patterns**: [Existing similar code found]
+
+## Exploration Handoff
+See: `docs/handoffs/context-clarification-exploration.md`
 
 ## Clarifications Obtained
 - [Question 1]: [User's answer]
