@@ -32,6 +32,20 @@ Start by understanding the current project context, then ask questions one at a 
 - Cover: architecture, components, data flow, error handling, testing
 - Be ready to go back and clarify if something doesn't make sense
 
+**Designing for agent implementation:**
+- Before finalizing, ask: "Can an agent verify this works without a human checking?"
+- Agents can tail terminals, read files, and automate browsers—but cannot see browser DevTools, mobile device logs, or logs scattered across processes
+
+*Observable feedback loops:*
+- Route ALL logs to ONE agent-accessible location—never leave logs only in browser console (invisible to agents; in dev mode, POST to a server endpoint)
+- Build dev-only endpoints: `/dev/health` (status), `/dev/state` (inspect), `/dev/reset` (clean slate so the agent can reset without manual setup)
+- Errors must include: what was attempted, what failed, why, and what to try next—never require asking the user what they see
+
+*Browser testing hierarchy:*
+1. Exhaust non-browser paths first (logs, API calls, terminal)
+2. Use browser automation for what requires it (visual rendering, user flows)
+3. Screenshots are last resort—close every feedback loop before asking the human
+
 ## After the Design
 
 **Documentation:**
