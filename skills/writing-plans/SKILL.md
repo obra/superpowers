@@ -21,15 +21,16 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Before ANY context gathering, validate the request is clear.**
 
-This phase prevents wasted effort by catching ambiguity early. It runs inline (orchestrator handles it, not a subagent).
+This phase prevents wasted effort by catching ambiguity early. Codebase exploration uses a single Explore subagent; decision-making and user interaction remain in the orchestrator.
 
 ### Clarification Flow
 
 1. **Analyze the request**: Identify goal, scope, success criteria, constraints
-2. **Shallow codebase exploration**: Quick glob/grep to understand project context (30 seconds max)
-3. **Detect ambiguity**: Flag vague terms, missing boundaries, unclear success criteria
-4. **Ask OR proceed**: Use AskUserQuestion for 2-3 targeted questions if unclear; proceed if clear
-5. **Document findings**: Write to `docs/handoffs/context-clarification.md`
+2. **Dispatch exploration subagent**: Single Explore subagent (haiku) for 30-second project structure scan
+3. **Read exploration findings**: Parse subagent's returned findings (orchestrator writes to handoff file)
+4. **Detect ambiguity**: Flag vague terms, missing boundaries, unclear success criteria using exploration context
+5. **Ask OR proceed**: Use AskUserQuestion for 2-3 targeted questions if unclear; proceed if clear
+6. **Document findings**: Write combined findings to `docs/handoffs/context-clarification.md`
 
 ### When to Ask Questions
 
@@ -62,6 +63,22 @@ Proceed without asking when:
 - **One focus per question** - goal, scope, or constraints
 
 Use template: `./request-clarification-prompt.md`
+
+### Clarification Exploration Subagent
+
+Dispatch a single Explore subagent before asking questions:
+
+- **Type:** `Explore` (read-only, fast)
+- **Model:** `haiku` (cheapest, sufficient for structure scanning)
+- **Template:** `./clarification-explorer-prompt.md`
+- **Dispatch:** Synchronous (wait for results before proceeding)
+
+The subagent returns findings as text. Orchestrator writes findings to `docs/handoffs/context-clarification-exploration.md` then uses them for question design.
+
+**Why subagent?**
+- Saves orchestrator credits (exploration runs on cheaper haiku model)
+- Keeps orchestrator context clean (search results stay in subagent)
+- Follows Phase 1-3 pattern (consistent architecture)
 
 ### Output
 
