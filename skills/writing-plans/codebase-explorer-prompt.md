@@ -1,6 +1,6 @@
 # Codebase Explorer Subagent Prompt Template
 
-Use this template when dispatching codebase exploration subagents.
+Use this template when dispatching codebase exploration subagents. The Explore subagent returns findings as text; the orchestrator writes the handoff file.
 
 ```
 Task tool (Explore subagent_type):
@@ -30,42 +30,43 @@ Task tool (Explore subagent_type):
        - Find configuration files
        - Identify dependencies
 
-    3. Document findings in handoff file
+    3. Return findings in structured format
 
-    ## Write Handoff File
+    ## Output Format (return this structured text)
 
-    Write findings to `docs/handoffs/context-codebase-{aspect}.md`:
+    CODEBASE EXPLORATION: [Aspect]
+    ==============================
 
-    ```markdown
-    # Codebase Exploration: [Aspect]
-
-    ## Key Files Found
+    Key Files Found:
     - `path/to/file.ts` - [what it does, why it's relevant]
     - `path/to/other.ts` - [what it does, why it's relevant]
 
-    ## Patterns Observed
+    Patterns Observed:
     - [Pattern 1 with code snippet if helpful]
     - [Pattern 2]
 
-    ## Dependencies/Imports
+    Dependencies/Imports:
     - [Key libraries used]
     - [Internal modules referenced]
 
-    ## Test Coverage
+    Test Coverage:
     - [How similar features are tested]
     - [Test file locations]
 
-    ## Recommendations for Implementation
+    Recommendations for Implementation:
     - [Suggest following existing patterns]
     - [Note any constraints or considerations]
-    ```
+
+    ==============================
 
     Keep summary detailed yet concise - focus on actionable context for plan writing.
-
-    ## Report Format
-
-    When done, report:
-    - Handoff file written to: docs/handoffs/context-codebase-{aspect}.md
-    - Number of relevant files found
-    - Key insight summary (2-3 sentences)
 ```
+
+## Orchestrator Responsibility
+
+After the subagent returns, the orchestrator writes findings to `docs/handoffs/context-codebase-{aspect}.md`.
+
+**Why this pattern?**
+- Explore subagents have read-only tools (Glob, Grep, Read) - no Write access
+- Orchestrator handles all file writing for consistency
+- Subagent focuses on exploration, orchestrator handles handoff management

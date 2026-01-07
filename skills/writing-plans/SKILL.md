@@ -93,7 +93,8 @@ Write clarification summary to `docs/handoffs/context-clarification.md`. This in
 Dispatch 3-5 parallel subagents to explore code related to the task:
 
 - Each subagent explores one aspect (architecture, similar features, tests, dependencies)
-- Subagents write findings to `docs/handoffs/context-codebase-{aspect}.md`
+- Subagents return findings as text (Explore has read-only tools)
+- Orchestrator writes findings to `docs/handoffs/context-codebase-{aspect}.md`
 - Orchestrator reads all handoff files, synthesizes into `docs/handoffs/context-codebase-summary.md`
 
 ### Phase 2: Documentation Exploration (Parallel Subagents)
