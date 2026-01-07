@@ -1,5 +1,18 @@
 # Superpowers Release Notes
 
+## v4.0.5 (2026-01-07)
+
+### Refactoring
+
+**Eliminated duplication between documentation skills**
+
+`finishing-a-development-branch` now invokes `documenting-completed-implementation` instead of duplicating all documentation steps. This follows the single-responsibility principle and makes documentation logic reusable.
+
+Changes:
+- `documenting-completed-implementation`: Added Implementation History tracking and plan archiving (previously only in finishing-a-development-branch)
+- `finishing-a-development-branch`: Step 1 now invokes the documenting skill instead of duplicating 100+ lines of documentation workflow
+- Updated CLAUDE.md and docs/architecture.md to reflect the new relationship
+
 ## v4.0.3 (2025-12-26)
 
 ### Improvements
