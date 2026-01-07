@@ -17,7 +17,7 @@ Make the search feature better.
 ### Expected Behavior WITH Clarification Phase
 
 1. Agent announces: "I'm using the writing-plans skill. Starting with request clarification..."
-2. Agent does shallow codebase exploration (glob for project structure)
+2. Agent dispatches Explore subagent for shallow codebase exploration
 3. Agent detects ambiguity: "better" is vague, no scope defined, no success criteria
 4. Agent uses AskUserQuestion to ask about:
    - Goal type (performance? UX? reliability?)
@@ -25,11 +25,23 @@ Make the search feature better.
 5. After user answers, agent writes `docs/handoffs/context-clarification.md`
 6. Agent proceeds to Phase 1 with clarified focus
 
+## Expected Behavior: Exploration Subagent
+
+Phase 0 should:
+1. Dispatch single Explore subagent (haiku model) for project structure scan
+2. Wait for subagent to return findings
+3. Write findings to `docs/handoffs/context-clarification-exploration.md`
+4. Use findings to design context-aware questions
+5. Proceed with ask/proceed decision
+
+**Key assertion:** The orchestrator should NOT perform inline glob/grep for exploration. This work is delegated to the subagent.
+
 ### Failure Indicators
 
 - Agent skips directly to "Starting context gathering..."
 - Agent dispatches codebase exploration subagents without asking questions
 - Agent asks generic questions not grounded in codebase context
+- Agent performs inline glob/grep instead of dispatching subagent
 - Agent proceeds with assumptions instead of asking
 
 ## Baseline Results (RED Phase)
@@ -115,7 +127,8 @@ All implementation changes are in place as of this verification:
 - File exists and is complete
 - Structured as: When to Use → 6-step flow → Anti-Patterns
 - Step 1: Analyze the Request (goal, scope, success criteria, constraints)
-- Step 2: Shallow Codebase Exploration (30 seconds max, project context)
+- Step 2: Dispatch Exploration Subagent (Explore type, haiku model)
+- Step 2b: Write Exploration Handoff (to context-clarification-exploration.md)
 - Step 3: Detect Ambiguity (semantic, vague terms, missing boundaries)
 - Step 4: Decide Ask or Proceed (with clear criteria)
 - Step 5: Ask Clarifying Questions (2-3 focused, AskUserQuestion examples)
@@ -149,25 +162,27 @@ Given the input "Make the search feature better":
    - Goal: Unclear (what aspect of "better"?)
    - Scope: Unclear (which search feature?)
    - Success criteria: Missing (how is "better" measured?)
-3. **Phase 0 Step 2**: Shallow exploration
-   - Glob for project structure
-   - Identify if search exists, where it lives
-   - 30 seconds max
-4. **Phase 0 Step 3**: Detect ambiguity
+3. **Phase 0 Step 2**: Dispatch exploration subagent
+   - Single Explore subagent with haiku model
+   - Template: clarification-explorer-prompt.md
+   - Returns project structure findings
+4. **Phase 0 Step 2b**: Write exploration handoff
+   - Orchestrator writes findings to docs/handoffs/context-clarification-exploration.md
+5. **Phase 0 Step 3**: Detect ambiguity
    - Flags "better" as vague terminology
    - Flags missing scope boundaries
    - Flags unclear success criteria
-5. **Phase 0 Step 4**: Decision → ASK (multiple criteria met)
-6. **Phase 0 Step 5**: AskUserQuestion (2-3 questions)
+6. **Phase 0 Step 4**: Decision → ASK (multiple criteria met)
+7. **Phase 0 Step 5**: AskUserQuestion (2-3 questions)
    - Question 1: Goal type (Performance/UX/Reliability/Features)
    - Question 2: Scope (which search, what aspects)
    - Question 3: Success criteria (how will "better" be measured)
-7. **Phase 0 Step 6**: Write `docs/handoffs/context-clarification.md`
+8. **Phase 0 Step 6**: Write `docs/handoffs/context-clarification.md`
    - Original request
    - Analysis with user's answers
    - Codebase context from shallow exploration
    - Exploration targets for Phase 1
-8. **Proceed to Phase 1** with focused exploration based on clarification
+9. **Proceed to Phase 1** with focused exploration based on clarification
 
 ### Success Criteria Assessment
 
