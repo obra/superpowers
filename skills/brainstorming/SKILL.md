@@ -38,7 +38,7 @@ Start by understanding the current project context, then ask questions one at a 
 
 *Observable feedback loops:*
 - Route ALL logs to ONE agent-accessible location—never leave logs only in browser console (invisible to agents; in dev mode, POST to a server endpoint)
-- Build dev-only endpoints: `/dev/health` (status), `/dev/state` (inspect), `/dev/reset` (clean slate so the agent can reset without manual setup)
+- Build dev-only endpoints, for example `/dev/health` (status), `/dev/state` (inspect), `/dev/reset` (clean slate so the agent can reset without manual setup)
 - Errors must include: what was attempted, what failed, why, and what to try next—never require asking the user what they see
 
 *Browser testing hierarchy:*
