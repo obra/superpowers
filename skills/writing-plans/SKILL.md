@@ -124,6 +124,16 @@ Dispatch parallel subagents to search web for:
 digraph context_gathering {
     rankdir=TB;
 
+    subgraph cluster_phase0 {
+        label="Phase 0: Clarification";
+        "Analyze request" [shape=box];
+        "Dispatch exploration subagent" [shape=box];
+        "Read exploration findings" [shape=box];
+        "Request clear?" [shape=diamond];
+        "Ask clarifying questions" [shape=box];
+        "Write context-clarification.md" [shape=box];
+    }
+
     subgraph cluster_phase1 {
         label="Phase 1: Codebase";
         "Identify exploration aspects" [shape=box];
@@ -149,17 +159,15 @@ digraph context_gathering {
     }
 
     "User requests plan" [shape=doublecircle];
-    "Analyze request and explore codebase" [shape=box];
-    "Request clear?" [shape=diamond];
-    "Ask clarifying questions" [shape=box];
-    "Write context-clarification.md" [shape=box];
     "Read 3 summary files" [shape=box];
     "Write implementation plan" [shape=box];
     "Cleanup handoffs" [shape=box];
     "Plan complete" [shape=doublecircle];
 
-    "User requests plan" -> "Analyze request and explore codebase";
-    "Analyze request and explore codebase" -> "Request clear?";
+    "User requests plan" -> "Analyze request";
+    "Analyze request" -> "Dispatch exploration subagent";
+    "Dispatch exploration subagent" -> "Read exploration findings";
+    "Read exploration findings" -> "Request clear?";
     "Request clear?" -> "Write context-clarification.md" [label="yes"];
     "Request clear?" -> "Ask clarifying questions" [label="no"];
     "Ask clarifying questions" -> "Write context-clarification.md";
