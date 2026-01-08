@@ -1,5 +1,11 @@
 # Superpowers
 
+> **PortSwigger Engineering Fork**
+>
+> This is a security-vetted fork maintained by PortSwigger Engineering. Changes from upstream are reviewed before being merged to protect against supply chain attacks and prompt injection.
+>
+> **Original project:** [obra/superpowers](https://github.com/obra/superpowers)
+
 Superpowers is a complete software development workflow for your coding agents, built on top of a set of composable "skills" and some initial instructions that make sure your agent uses them.
 
 ## How it works
@@ -30,16 +36,16 @@ Thanks!
 
 ### Claude Code (via Plugin Marketplace)
 
-In Claude Code, register the marketplace first:
+In Claude Code, register the PortSwigger Engineering marketplace:
 
 ```bash
-/plugin marketplace add obra/superpowers-marketplace
+/plugin marketplace add portswigger-engineering/claude-marketplace
 ```
 
-Then install the plugin from this marketplace:
+Then install the plugin:
 
 ```bash
-/plugin install superpowers@superpowers-marketplace
+/plugin install superpowers@engineering-tools
 ```
 
 ### Verify Installation
@@ -155,5 +161,4 @@ MIT License - see LICENSE file for details
 
 ## Support
 
-- **Issues**: https://github.com/obra/superpowers/issues
-- **Marketplace**: https://github.com/obra/superpowers-marketplace
+- **Upstream**: https://github.com/obra/superpowers

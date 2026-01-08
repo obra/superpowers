@@ -6,8 +6,8 @@
     "name": "Jesse Vincent",
     "email": "jesse@fsck.com"
   },
-  "homepage": "https://github.com/obra/superpowers",
-  "repository": "https://github.com/obra/superpowers",
+  "homepage": "https://github.com/ross-taylorturner-portswigger/superpowers",
+  "repository": "https://github.com/ross-taylorturner-portswigger/superpowers",
   "license": "MIT",
   "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows"]
 }
