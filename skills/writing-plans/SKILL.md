@@ -86,6 +86,15 @@ Write clarification summary to `docs/handoffs/context-clarification.md`. This in
 
 ## Context Gathering Phases
 
+> **IRON LAW: NO PLAN WRITING WITHOUT ALL THREE PHASES COMPLETE**
+>
+> You cannot write a single line of the implementation plan until:
+> 1. Phase 1 complete → `context-codebase-summary.md` exists
+> 2. Phase 2 complete → `context-docs-summary.md` exists
+> 3. Phase 3 complete → `context-web-summary.md` exists
+>
+> Violating this rule means deleting any plan content and starting over.
+
 **Before writing ANY plan, complete these three phases:**
 
 ### Phase 1: Codebase Exploration (Parallel Subagents)
