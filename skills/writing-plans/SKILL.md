@@ -259,6 +259,21 @@ docs/handoffs/context-web-summary.md
 
 **Skip this gate = plan is invalid.** Delete any plan content and restart from the first incomplete phase.
 
+## Do NOT Skip Context Gathering
+
+| Excuse | Reality |
+|--------|---------|
+| "I already know this codebase" | You don't have the user's full context. Subagents find what you'd miss. |
+| "The request is straightforward" | Straightforward requests hide complex implementation details. |
+| "Context gathering takes too long" | Wrong plans waste far more time than thorough research. |
+| "I can gather context while writing" | Context-while-writing = shallow research + poor synthesis. |
+| "The user wants speed" | Users want correct plans. Fast wrong plans require rewrites. |
+| "I'll just do a quick exploration instead" | Inline Glob/Grep ≠ parallel subagent deep-dive. Not equivalent. |
+| "Phase 2/3 aren't needed for this" | You don't know what you don't know. All phases reveal blind spots. |
+| "I can infer best practices" | Your training data is stale. Web research gets current patterns. |
+
+**If you're thinking any of these:** You're rationalizing. Complete all phases.
+
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**
