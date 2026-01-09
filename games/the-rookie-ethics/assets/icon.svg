@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="badgeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e94560"/>
+      <stop offset="100%" style="stop-color:#d63651"/>
+    </linearGradient>
+    <linearGradient id="shineGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffd700"/>
+      <stop offset="100%" style="stop-color:#ffaa00"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="#1a1a2e"/>
+
+  <!-- Badge shield shape -->
+  <path d="M256 60 L380 120 L380 280 C380 360 256 440 256 440 C256 440 132 360 132 280 L132 120 Z"
+        fill="url(#badgeGradient)" stroke="#ffd700" stroke-width="8"/>
+
+  <!-- Inner shield -->
+  <path d="M256 100 L350 145 L350 270 C350 330 256 390 256 390 C256 390 162 330 162 270 L162 145 Z"
+        fill="#1a1a2e" stroke="#ffd700" stroke-width="3"/>
+
+  <!-- Star in center -->
+  <polygon points="256,140 270,190 325,190 280,220 295,275 256,245 217,275 232,220 187,190 242,190"
+           fill="url(#shineGradient)"/>
+
+  <!-- LAPD text -->
+  <text x="256" y="330" font-family="Arial, sans-serif" font-size="36" font-weight="bold"
+        fill="#ffd700" text-anchor="middle">ROOKIE</text>
+
+  <!-- Scales of justice icon -->
+  <g transform="translate(256, 370)">
+    <line x1="0" y1="-15" x2="0" y2="15" stroke="#e94560" stroke-width="4"/>
+    <line x1="-30" y1="-10" x2="30" y2="-10" stroke="#e94560" stroke-width="4"/>
+    <circle cx="-30" cy="0" r="12" fill="none" stroke="#e94560" stroke-width="3"/>
+    <circle cx="30" cy="0" r="12" fill="none" stroke="#e94560" stroke-width="3"/>
+  </g>
+</svg>

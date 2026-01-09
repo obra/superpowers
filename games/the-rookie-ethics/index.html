@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Rookie: Ethics on the Beat - An Ethical Puzzle Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+
+        .game-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 2px solid #e94560;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #e94560;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #a0a0a0;
+            font-style: italic;
+        }
+
+        .badge-display {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .stat-box {
+            background: rgba(233, 69, 96, 0.1);
+            border: 1px solid #e94560;
+            border-radius: 10px;
+            padding: 15px 25px;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #e94560;
+        }
+
+        .scenario-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            border: 1px solid rgba(233, 69, 96, 0.3);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .scenario-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .scenario-number {
+            background: #e94560;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .scenario-type {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .scenario-title {
+            font-size: 1.5rem;
+            color: #fff;
+            margin-bottom: 15px;
+        }
+
+        .scenario-description {
+            line-height: 1.8;
+            color: #c0c0c0;
+            margin-bottom: 25px;
+            font-size: 1.05rem;
+        }
+
+        .character-quote {
+            background: rgba(233, 69, 96, 0.1);
+            border-left: 4px solid #e94560;
+            padding: 15px 20px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #ddd;
+        }
+
+        .character-name {
+            color: #e94560;
+            font-weight: bold;
+            font-style: normal;
+        }
+
+        .choices-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .choice-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(233, 69, 96, 0.5);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #e0e0e0;
+            font-size: 1rem;
+        }
+
+        .choice-btn:hover {
+            background: rgba(233, 69, 96, 0.2);
+            border-color: #e94560;
+            transform: translateX(10px);
+        }
+
+        .choice-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .choice-label {
+            font-weight: bold;
+            color: #e94560;
+            margin-bottom: 5px;
+        }
+
+        .outcome-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 5px solid;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .outcome-card.positive {
+            border-color: #4caf50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .outcome-card.negative {
+            border-color: #f44336;
+            background: rgba(244, 67, 54, 0.1);
+        }
+
+        .outcome-card.neutral {
+            border-color: #ff9800;
+            background: rgba(255, 152, 0, 0.1);
+        }
+
+        .outcome-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .outcome-card.positive .outcome-title { color: #4caf50; }
+        .outcome-card.negative .outcome-title { color: #f44336; }
+        .outcome-card.neutral .outcome-title { color: #ff9800; }
+
+        .outcome-text {
+            line-height: 1.7;
+            margin-bottom: 15px;
+        }
+
+        .stat-change {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .stat-change span {
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+        }
+
+        .stat-up {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+        }
+
+        .stat-down {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+        }
+
+        .next-btn {
+            background: #e94560;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            display: block;
+            margin-left: auto;
+        }
+
+        .next-btn:hover {
+            background: #d63651;
+            transform: scale(1.05);
+        }
+
+        .start-screen, .end-screen {
+            text-align: center;
+            padding: 50px 30px;
+        }
+
+        .start-screen h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #e94560;
+        }
+
+        .start-screen p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 30px;
+            color: #b0b0b0;
+        }
+
+        .start-btn {
+            background: #e94560;
+            color: white;
+            border: none;
+            padding: 20px 60px;
+            font-size: 1.3rem;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .start-btn:hover {
+            background: #d63651;
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(233, 69, 96, 0.4);
+        }
+
+        .end-screen h2 {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+        }
+
+        .final-score {
+            font-size: 3rem;
+            color: #e94560;
+            margin: 30px 0;
+        }
+
+        .rank-display {
+            font-size: 1.5rem;
+            color: #ffd700;
+            margin: 20px 0;
+        }
+
+        .summary-text {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #b0b0b0;
+            max-width: 600px;
+            margin: 0 auto 30px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .police-badge {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .intro-list {
+            text-align: left;
+            max-width: 500px;
+            margin: 20px auto;
+        }
+
+        .intro-list li {
+            margin: 10px 0;
+            color: #c0c0c0;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #e94560, #ff6b6b);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <h1>The Rookie: Ethics on the Beat</h1>
+            <p class="subtitle">An Ethical Puzzle Game Inspired by The Rookie</p>
+        </header>
+
+        <div id="stats-display" class="badge-display hidden">
+            <div class="stat-box">
+                <div class="stat-label">Integrity</div>
+                <div class="stat-value" id="integrity-score">100</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Protocol</div>
+                <div class="stat-value" id="protocol-score">100</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Humanity</div>
+                <div class="stat-value" id="humanity-score">100</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Trust</div>
+                <div class="stat-value" id="trust-score">100</div>
+            </div>
+        </div>
+
+        <div class="progress-bar hidden" id="progress-bar">
+            <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+        </div>
+
+        <main id="game-content">
+            <!-- Start Screen -->
+            <div id="start-screen" class="scenario-card start-screen">
+                <div class="police-badge">🚔</div>
+                <h2>Welcome, Rookie</h2>
+                <p>
+                    You've just completed your training at the Los Angeles Police Academy.
+                    Today is your first day on patrol, and you'll face situations that will
+                    test not just your knowledge of the law, but your moral compass.
+                </p>
+                <p>
+                    In this game, you'll navigate ethical dilemmas that officers face every day.
+                    There are no perfect answers—only choices and their consequences.
+                </p>
+                <ul class="intro-list">
+                    <li><strong>Integrity:</strong> Your commitment to honesty and moral principles</li>
+                    <li><strong>Protocol:</strong> How well you follow department procedures</li>
+                    <li><strong>Humanity:</strong> Your compassion and understanding for others</li>
+                    <li><strong>Trust:</strong> How much your colleagues and community trust you</li>
+                </ul>
+                <p>
+                    Remember: Every choice matters. Your training officer is watching,
+                    and so is the community you've sworn to protect.
+                </p>
+                <button class="start-btn" onclick="startGame()">Begin Your Shift</button>
+            </div>
+
+            <!-- Scenario Container -->
+            <div id="scenario-container" class="hidden"></div>
+
+            <!-- End Screen -->
+            <div id="end-screen" class="scenario-card end-screen hidden">
+                <h2>Shift Complete</h2>
+                <div id="final-stats" class="badge-display"></div>
+                <div class="rank-display" id="rank-display"></div>
+                <p class="summary-text" id="summary-text"></p>
+                <button class="start-btn" onclick="restartGame()">Start New Shift</button>
+            </div>
+        </main>
+
+        <footer>
+            <p>The Rookie: Ethics on the Beat - An educational game about ethical decision-making in law enforcement</p>
+            <p>Inspired by the TV series "The Rookie" | Not affiliated with ABC or the show</p>
+        </footer>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
