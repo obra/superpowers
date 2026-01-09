@@ -85,7 +85,7 @@ echo "Test 4: All phases required before plan writing..."
 
 output=$(run_claude "In the writing-plans skill, can you start writing the plan before completing all three context gathering phases?" 60)
 
-if assert_contains "$output" "after.*all\|After.*all\|complete.*all.*phases\|all three phases" "Must complete all phases"; then
+if assert_contains "$output" "after.*all\|After.*all\|complete.*all.*phases\|all three.*phases\|ALL THREE PHASES\|cannot.*until.*complete" "Must complete all phases"; then
     : # pass
 else
     exit 1
