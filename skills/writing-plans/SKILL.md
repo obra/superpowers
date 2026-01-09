@@ -230,6 +230,35 @@ After each phase completes:
 2. Write phase summary using template: `./context-synthesis-prompt.md`
 3. Use summary to inform next phase's exploration targets
 
+## Pre-Plan Writing Gate
+
+**BEFORE writing ANY plan content, complete this checklist:**
+
+```
+[ ] Phase 0: context-clarification.md written
+[ ] Phase 1: context-codebase-summary.md written (synthesized from 3-5 aspect files)
+[ ] Phase 2: context-docs-summary.md written (synthesized from doc research)
+[ ] Phase 3: context-web-summary.md written (synthesized from web research)
+[ ] All four summary files READ and incorporated
+```
+
+**If ANY checkbox is unchecked:** STOP. Complete the missing phase.
+
+**Verification command:**
+```bash
+ls docs/handoffs/context-*.md
+```
+
+Expected output (4 files minimum):
+```
+docs/handoffs/context-clarification.md
+docs/handoffs/context-codebase-summary.md
+docs/handoffs/context-docs-summary.md
+docs/handoffs/context-web-summary.md
+```
+
+**Skip this gate = plan is invalid.** Delete any plan content and restart from the first incomplete phase.
+
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**
