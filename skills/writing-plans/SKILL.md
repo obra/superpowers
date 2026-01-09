@@ -274,6 +274,21 @@ docs/handoffs/context-web-summary.md
 
 **If you're thinking any of these:** You're rationalizing. Complete all phases.
 
+## Red Flags - STOP Immediately
+
+You are about to skip context gathering if:
+
+- You're writing plan tasks without summary files open
+- You haven't dispatched any subagents yet
+- You're using Glob/Grep directly instead of Explore subagents
+- You can't name the 3-5 codebase aspects you explored
+- You haven't searched any external documentation
+- You haven't done any web research for best practices
+- Your plan references no specific file paths from exploration
+- You're "just going to start with the obvious parts"
+
+**Any of these = STOP.** Return to Phase 1 and complete all phases properly.
+
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**
