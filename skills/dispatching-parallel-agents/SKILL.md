@@ -9,7 +9,7 @@ description: Use when facing 2+ independent tasks that can be worked on without 
 
 When you have multiple unrelated failures (different test files, different subsystems, different bugs), investigating them sequentially wastes time. Each investigation is independent and can happen in parallel.
 
-**Core principle:** Dispatch one agent per independent problem domain. Let them work concurrently.
+**Core principle:** Dispatch one subagent per independent problem domain. Let them work concurrently.
 
 ## When to Use
 
@@ -17,17 +17,17 @@ When you have multiple unrelated failures (different test files, different subsy
 digraph when_to_use {
     "Multiple failures?" [shape=diamond];
     "Are they independent?" [shape=diamond];
-    "Single agent investigates all" [shape=box];
-    "One agent per problem domain" [shape=box];
+    "Single subagent investigates all" [shape=box];
+    "One subagent per problem domain" [shape=box];
     "Can they work in parallel?" [shape=diamond];
-    "Sequential agents" [shape=box];
+    "Sequential subagents" [shape=box];
     "Parallel dispatch" [shape=box];
 
     "Multiple failures?" -> "Are they independent?" [label="yes"];
-    "Are they independent?" -> "Single agent investigates all" [label="no - related"];
+    "Are they independent?" -> "Single subagent investigates all" [label="no - related"];
     "Are they independent?" -> "Can they work in parallel?" [label="yes"];
     "Can they work in parallel?" -> "Parallel dispatch" [label="yes"];
-    "Can they work in parallel?" -> "Sequential agents" [label="no - shared state"];
+    "Can they work in parallel?" -> "Sequential subagents" [label="no - shared state"];
 }
 ```
 
@@ -40,7 +40,7 @@ digraph when_to_use {
 **Don't use when:**
 - Failures are related (fix one might fix others)
 - Need to understand full system state
-- Agents would interfere with each other
+- Subagents would interfere with each other
 
 ## The Pattern
 
@@ -53,9 +53,9 @@ Group failures by what's broken:
 
 Each domain is independent - fixing tool approval doesn't affect abort tests.
 
-### 2. Create Focused Agent Tasks
+### 2. Create Focused Subagent Tasks
 
-Each agent gets:
+Each subagent gets:
 - **Specific scope:** One test file or subsystem
 - **Clear goal:** Make these tests pass
 - **Constraints:** Don't change other code
@@ -74,18 +74,18 @@ Task("Fix tool-approval-race-conditions.test.ts failures", model: "haiku")
 
 ### 4. Review and Integrate
 
-When agents return:
+When subagents return:
 - Read each summary
 - Verify fixes don't conflict
 - Run full test suite
 - Integrate all changes
 
-## Agent Prompt Structure
+## Subagent Prompt Structure
 
-Good agent prompts are:
+Good subagent prompts are:
 1. **Focused** - One clear problem domain
 2. **Self-contained** - All context needed to understand the problem
-3. **Specific about output** - What should the agent return?
+3. **Specific about output** - What should the subagent return?
 
 ```markdown
 Fix the 3 failing tests in src/agents/agent-tool-abort.test.ts:
@@ -136,13 +136,13 @@ Each parallel subagent must return results in structured format to enable synthe
 
 ## Common Mistakes
 
-**❌ Too broad:** "Fix all the tests" - agent gets lost
+**❌ Too broad:** "Fix all the tests" - subagent gets lost
 **✅ Specific:** "Fix agent-tool-abort.test.ts" - focused scope
 
-**❌ No context:** "Fix the race condition" - agent doesn't know where
+**❌ No context:** "Fix the race condition" - subagent doesn't know where
 **✅ Context:** Paste the error messages and test names
 
-**❌ No constraints:** Agent might refactor everything
+**❌ No constraints:** Subagent might refactor everything
 **✅ Constraints:** "Do NOT change production code" or "Fix tests only"
 
 **❌ Vague output:** "Fix it" - you don't know what changed
@@ -153,7 +153,7 @@ Each parallel subagent must return results in structured format to enable synthe
 **Related failures:** Fixing one might fix others - investigate together first
 **Need full context:** Understanding requires seeing entire system
 **Exploratory debugging:** You don't know what's broken yet
-**Shared state:** Agents would interfere (editing same files, using same resources)
+**Shared state:** Subagents would interfere (editing same files, using same resources)
 
 ## When to Use Parallel vs Sequential
 
@@ -185,15 +185,15 @@ Don't parallelize just because you can. Coordination overhead can exceed time sa
 
 **Dispatch:**
 ```
-Agent 1 → Fix agent-tool-abort.test.ts
-Agent 2 → Fix batch-completion-behavior.test.ts
-Agent 3 → Fix tool-approval-race-conditions.test.ts
+Subagent 1 → Fix agent-tool-abort.test.ts
+Subagent 2 → Fix batch-completion-behavior.test.ts
+Subagent 3 → Fix tool-approval-race-conditions.test.ts
 ```
 
 **Results:**
-- Agent 1: Replaced timeouts with event-based waiting
-- Agent 2: Fixed event structure bug (threadId in wrong place)
-- Agent 3: Added wait for async tool execution to complete
+- Subagent 1: Replaced timeouts with event-based waiting
+- Subagent 2: Fixed event structure bug (threadId in wrong place)
+- Subagent 3: Added wait for async tool execution to complete
 
 **Integration:** All fixes independent, no conflicts, full suite green
 
@@ -202,8 +202,8 @@ Agent 3 → Fix tool-approval-race-conditions.test.ts
 ## Key Benefits
 
 1. **Parallelization** - Multiple investigations happen simultaneously
-2. **Focus** - Each agent has narrow scope, less context to track
-3. **Independence** - Agents don't interfere with each other
+2. **Focus** - Each subagent has narrow scope, less context to track
+3. **Independence** - Subagents don't interfere with each other
 4. **Speed** - 3 problems solved in time of 1
 
 ## Model Selection
@@ -222,17 +222,17 @@ Per [Anthropic's guidance](https://platform.claude.com/docs/en/about-claude/mode
 
 ## Verification
 
-After agents return:
+After subagents return:
 1. **Review each summary** - Understand what changed
-2. **Check for conflicts** - Did agents edit same code?
+2. **Check for conflicts** - Did subagents edit same code?
 3. **Run full suite** - Verify all fixes work together
-4. **Spot check** - Agents can make systematic errors
+4. **Spot check** - Subagents can make systematic errors
 
 ## Real-World Impact
 
 From debugging session (2025-10-03):
 - 6 failures across 3 files
-- 3 agents dispatched in parallel
+- 3 subagents dispatched in parallel
 - All investigations completed concurrently
 - All fixes integrated successfully
-- Zero conflicts between agent changes
+- Zero conflicts between subagent changes
