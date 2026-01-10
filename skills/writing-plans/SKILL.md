@@ -200,6 +200,27 @@ digraph context_gathering {
 }
 ```
 
+## Context Engineering for Subagent Dispatch
+
+**Minimal Context Principle:** Each subagent receives ONLY the context it needs.
+
+When dispatching exploration subagents:
+
+**Always include:**
+- Specific exploration target (file patterns, keywords)
+- What information to return
+- Format for findings
+
+**Never include:**
+- Full conversation history
+- Unrelated task context
+- Previous exploration results (unless directly relevant)
+
+**Handoff Pattern:**
+- Use structured output format (not free-form prose)
+- Treat subagent dispatch like API calls
+- Validate returned findings before synthesis
+
 ### Subagent Dispatch Guidelines
 
 **Phase 1 - Codebase Exploration:**
