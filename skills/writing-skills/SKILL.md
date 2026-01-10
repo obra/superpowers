@@ -124,9 +124,15 @@ allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, Task
 ```
 
 **When to use:**
-- Read-only phases (brainstorming, research)
-- Verification phases (no modification)
-- Security-sensitive workflows
+- Read-only phases (brainstorming, research, exploration)
+- Verification phases (no modification allowed)
+- Security-sensitive workflows (audit, review)
+- Any skill where modification would be inappropriate
+
+**When NOT to use:**
+- Implementation skills (need Edit, Write, Bash)
+- Debugging skills (may need to add logging)
+- Skills that explicitly hand off to implementation
 
 **Note:** Only supported in Claude Code CLI, not SDK.
 
