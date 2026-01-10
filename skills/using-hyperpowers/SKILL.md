@@ -3,6 +3,14 @@ name: using-hyperpowers
 description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
 ---
 
+# Using Hyperpowers
+
+## Overview
+
+Skills are pre-loaded workflows that ensure consistent, high-quality execution. This skill establishes the fundamental rule: invoke skills BEFORE any response.
+
+**Core principle:** Even 1% chance a skill applies means you MUST invoke it.
+
 <CRITICAL>
 Even 1% chance a skill applies → YOU MUST invoke it. Not optional. Not negotiable.
 </CRITICAL>

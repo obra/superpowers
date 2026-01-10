@@ -6,6 +6,8 @@ allowed-tools: Task, Bash, Read
 
 # Requesting Code Review
 
+## Overview
+
 Dispatch hyperpowers:code-reviewer subagent to catch issues before they cascade.
 
 **Core principle:** Review early, review often.
