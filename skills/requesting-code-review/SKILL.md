@@ -78,7 +78,7 @@ This format enables focused review and reduces back-and-forth.
 
 **3. Dispatch code-reviewer subagent:**
 
-Use Task tool with hyperpowers:code-reviewer type, fill template at `code-reviewer.md`
+Use Task tool with hyperpowers:code-reviewer type, fill template at `./code-reviewer.md`
 
 **Model selection:** Use `model: haiku` when dispatching the code-reviewer subagent. Code review is a validation task that benefits from Haiku's speed and cost efficiency.
 
@@ -155,4 +155,4 @@ You: [Fix progress indicators]
 - Show code/tests that prove it works
 - Request clarification
 
-See template at: requesting-code-review/code-reviewer.md
+See template at: `./code-reviewer.md`
