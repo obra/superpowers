@@ -137,12 +137,20 @@ Fetch and follow instructions from https://raw.githubusercontent.com/bradwindy/h
 - **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
 - **verification-before-completion** - Ensure it's actually fixed
 
+**Research**
+
+- **research** - Deep technical research before planning (4 parallel agents: codebase, git history, framework docs, best practices)
+
+**Knowledge Management**
+
+- **compound** - Capture solutions from debugging sessions for future reference
+
 **Collaboration**
 
 - **brainstorming** - Socratic design refinement
 - **writing-plans** - Detailed implementation plans
 - **dispatching-parallel-agents** - Concurrent subagent workflows
-- **requesting-code-review** - Pre-review checklist
+- **requesting-code-review** - Parallel 4-agent review (security, performance, style, test)
 - **receiving-code-review** - Responding to feedback
 - **using-git-worktrees** - Parallel development branches
 - **finishing-a-development-branch** - Merge/PR decision workflow

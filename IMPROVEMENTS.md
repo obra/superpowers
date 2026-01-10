@@ -16,6 +16,7 @@ This document details all significant improvements made to Hyperpowers since for
 - [5. Upstream Merges](#5-upstream-merges)
 - [6. Test Infrastructure](#6-test-infrastructure)
 - [7. Fork Setup & Rebranding](#7-fork-setup--rebranding)
+- [8. Compound Engineering Integration](#8-compound-engineering-integration)
 
 ---
 
@@ -351,6 +352,78 @@ Complete rebranding from Superpowers to Hyperpowers.
 
 ---
 
+## 8. Compound Engineering Integration
+
+Comprehensive knowledge management and deep research capabilities added.
+
+### Research Skill
+
+Added dedicated research skill that conducts deep technical research before planning.
+
+**Features:**
+- 4 parallel research agents: codebase-analyst, git-history-analyzer, framework-docs-researcher, best-practices-researcher
+- Persistent research documents at `docs/research/`
+- Writing-plans delegates research to dedicated skill
+- Graceful degraded mode when research is declined
+
+**Files Created:**
+- `skills/research/SKILL.md`
+- `agents/research/codebase-analyst.md`
+- `agents/research/git-history-analyzer.md`
+- `agents/research/framework-docs-researcher.md`
+- `agents/research/best-practices-researcher.md`
+
+### Compound Skill (Knowledge Capture)
+
+Auto-captures solutions from debugging sessions into searchable knowledge base.
+
+**Features:**
+- Auto-triggers on resolution phrases ("it's fixed", "that worked")
+- Filters for non-trivial problems (doesn't capture trivial fixes)
+- 9 solution categories: build-errors, test-failures, runtime-errors, performance-issues, database-issues, security-issues, ui-bugs, integration-issues, logic-errors
+- Pattern detection (alerts when 3+ similar issues in category)
+
+**Files Created:**
+- `skills/compound/SKILL.md`
+- `docs/solutions/{9 categories}/.gitkeep`
+
+### Specialized Code Review
+
+Replaced single code-reviewer with 4 parallel specialized agents.
+
+**Review Agents:**
+- **security-reviewer**: Injection, auth, secrets, input validation, cryptography
+- **performance-reviewer**: N+1 queries, memory leaks, scaling, caching
+- **style-reviewer**: Naming, organization, patterns, formatting
+- **test-reviewer**: Coverage gaps, edge cases, test quality
+
+**Features:**
+- All 4 agents use haiku for fast, focused analysis
+- Severity-based synthesis (Critical -> Warning -> Suggestion)
+- Integration with docs/solutions/ for known issue links
+
+**Files Created:**
+- `agents/review/security-reviewer.md`
+- `agents/review/performance-reviewer.md`
+- `agents/review/style-reviewer.md`
+- `agents/review/test-reviewer.md`
+
+### Knowledge Discovery Integration
+
+Systematic debugging now searches existing solutions before fresh investigation.
+
+**Features:**
+- Pre-Phase-1 solution search in docs/solutions/
+- If prior solution found, try it first before investigating
+- Integrates with compound skill for capture after resolution
+
+**Files Modified:**
+- `skills/systematic-debugging/SKILL.md`
+- `skills/requesting-code-review/SKILL.md`
+- `skills/writing-plans/SKILL.md`
+
+---
+
 ## Summary Statistics
 
 | Category | Commits | Impact |
@@ -362,6 +435,7 @@ Complete rebranding from Superpowers to Hyperpowers.
 | Upstream Merges | ~6 | Feature parity |
 | Test Infrastructure | ~12 | Quality assurance |
 | Fork/Rebranding | ~23 | Independent identity |
+| Compound Engineering | ~17 | Knowledge management, deep research |
 
 ---
 
