@@ -16,8 +16,9 @@ This document details all significant improvements made to Hyperpowers since for
 - [5. Upstream Merges](#5-upstream-merges)
 - [6. Test Infrastructure](#6-test-infrastructure)
 - [7. Fork Setup & Rebranding](#7-fork-setup--rebranding)
-- [8. Compound Engineering Integration](#8-compound-engineering-integration)
-- [9. Context Fork Integration](#9-context-fork-integration)
+- [8. Research Skill](#8-research-skill)
+- [9. Knowledge Management & Specialized Review](#9-knowledge-management--specialized-review)
+- [10. Context Fork Integration](#10-context-fork-integration)
 
 ---
 
@@ -353,19 +354,40 @@ Complete rebranding from Superpowers to Hyperpowers.
 
 ---
 
-## 8. Compound Engineering Integration
+## 8. Research Skill
 
-Comprehensive knowledge management and deep research capabilities added.
+Deep technical research capability that gathers comprehensive context before planning.
 
-### Research Skill
+### 4 Parallel Research Agents
 
-Added dedicated research skill that conducts deep technical research before planning.
+The research skill dispatches specialized agents simultaneously to analyze different aspects of a problem:
 
-**Features:**
-- 4 parallel research agents: codebase-analyst, git-history-analyzer, framework-docs-researcher, best-practices-researcher
-- Persistent research documents at `docs/research/`
-- Writing-plans delegates research to dedicated skill
-- Graceful degraded mode when research is declined
+**Agents:**
+- **codebase-analyst**: Architecture patterns, similar implementations, naming conventions, dependencies
+- **git-history-analyzer**: Code evolution, past decisions via commit messages, contributor expertise
+- **framework-docs-researcher**: Official documentation, API details, version-specific considerations
+- **best-practices-researcher**: Current community patterns, security considerations, performance optimizations, common pitfalls
+
+**Key Features:**
+- All agents use haiku model for cost efficiency
+- Parallel execution via Task tool (not sequential)
+- Each agent has specialized methodology and tool constraints
+- Output standardization in consistent markdown structure
+
+### Persistent Research Documents
+
+Research findings are saved for reference during implementation:
+- Location: `docs/research/YYYY-MM-DD-<topic-slug>.md`
+- Contains synthesized findings from all 4 agents
+- Structured sections: Executive Summary, Codebase Analysis, Git History Insights, Framework & Documentation, Best Practices, Edge Cases & Gotchas, Open Questions
+
+### Planning Integration
+
+Writing-plans skill automatically incorporates research:
+- Checks for existing research in `docs/research/` before planning
+- If found: uses findings to inform task structure, references in plan header
+- If not found: offers choice to run research first (recommended) or proceed in degraded mode
+- Research clarification phase prevents incomplete planning
 
 **Files Created:**
 - `skills/research/SKILL.md`
@@ -373,6 +395,12 @@ Added dedicated research skill that conducts deep technical research before plan
 - `agents/research/git-history-analyzer.md`
 - `agents/research/framework-docs-researcher.md`
 - `agents/research/best-practices-researcher.md`
+
+---
+
+## 9. Knowledge Management & Specialized Review
+
+Comprehensive knowledge capture and specialized code review capabilities.
 
 ### Compound Skill (Knowledge Capture)
 
@@ -425,7 +453,7 @@ Systematic debugging now searches existing solutions before fresh investigation.
 
 ---
 
-## 9. Context Fork Integration
+## 10. Context Fork Integration
 
 New skill infrastructure feature that allows skills to run in isolated forked context for token efficiency.
 
@@ -460,7 +488,8 @@ Systematic-debugging now runs investigations in isolated forked context:
 | Upstream Merges | ~6 | Feature parity |
 | Test Infrastructure | ~12 | Quality assurance |
 | Fork/Rebranding | ~23 | Independent identity |
-| Compound Engineering | ~17 | Knowledge management, deep research |
+| Research Skill | ~8 | Deep context gathering before planning |
+| Knowledge Management & Review | ~9 | Solution capture, specialized review |
 | Context Fork Integration | ~4 | Token efficiency for verbose skills |
 
 ---

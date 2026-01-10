@@ -165,10 +165,10 @@ Fetch and follow instructions from https://raw.githubusercontent.com/bradwindy/h
 
 Hyperpowers includes significant enhancements over the original Superpowers project. Key improvements include:
 
-**Enhanced Planning Workflow**
-- **Phase 0 Clarification**: New preliminary phase that asks clarifying questions before context gathering, preventing incomplete planning
-- **Three-Phase Context Gathering**: Parallel subagent exploration across codebase, documentation, and best practices
-- **Iron Law Enforcement**: Strict gates preventing agents from skipping context gathering with rationalization tables and red flags
+**Deep Research Before Planning**
+- **4 Parallel Research Agents**: Codebase analyst, git history analyzer, framework docs researcher, and best practices researcher work simultaneously
+- **Persistent Research Documents**: Findings saved to `docs/research/` for reference during implementation
+- **Planning Integration**: Writing-plans skill automatically incorporates research findings
 
 **Subagent Communication**
 - **File-Based Handoffs**: Structured `docs/handoffs/` directory for subagent communication, reducing token usage
@@ -180,15 +180,20 @@ Hyperpowers includes significant enhancements over the original Superpowers proj
 - **Anti-Pattern Documentation**: Explicit warnings in TDD, debugging, and verification skills
 - **Anti-Performative-Agreement**: Code review skills require verification, not automatic acceptance
 
+**Knowledge Management**
+- **Solution Capture**: Auto-captures debugging solutions into searchable `docs/solutions/` knowledge base with pattern detection
+- **Specialized Code Review**: 4 parallel review agents (security, performance, style, test) replace single reviewer
+
 **Cost & Speed Optimization**
-- **Model Selection**: Haiku for validation tasks (reviews), Sonnet/Opus for implementation
+- **Model Selection**: Haiku for validation tasks (reviews, research agents), Sonnet/Opus for implementation
 - **Token Optimization**: Core skills compressed without losing essential behavior
+- **Context Fork Isolation**: Systematic-debugging runs investigations in isolated context (40-50% token reduction)
 
 **Testing Infrastructure**
 - **Comprehensive Test Suite**: Context gathering, clarification, and enforcement language tests
 - **Case-Insensitive Assertions**: Robust pattern matching for LLM output variance
 
-For complete details on all 111 commits since forking, see [IMPROVEMENTS.md](IMPROVEMENTS.md).
+For complete details, see [IMPROVEMENTS.md](IMPROVEMENTS.md).
 
 ## Philosophy
 
