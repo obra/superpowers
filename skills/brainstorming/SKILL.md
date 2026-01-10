@@ -66,9 +66,9 @@ Violations (any of these = stop and restart):
 
 **If you feel the urge to code:** That's the signal you haven't finished brainstorming. More questions needed.
 
-## Deliverable: spec.md
+## Deliverable: design.md
 
-Brainstorming is complete when you have a spec.md containing:
+Brainstorming is complete when you have a design document at `docs/plans/YYYY-MM-DD-<topic>-design.md` containing:
 
 1. **Problem Statement**: What problem are we solving? (not "add feature X")
 2. **Success Criteria**: How will we know it's done? (measurable)
@@ -76,4 +76,4 @@ Brainstorming is complete when you have a spec.md containing:
 4. **Approach**: High-level design (not implementation details)
 5. **Open Questions**: What do we still not know?
 
-**No spec.md = brainstorming not complete = no implementation.**
+**No design.md = brainstorming not complete = no implementation.**
