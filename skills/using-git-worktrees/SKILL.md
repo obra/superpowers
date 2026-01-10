@@ -153,6 +153,35 @@ Ready to implement <feature-name>
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
 
+## Worktree Lifecycle Management
+
+**Standard Lifecycle:**
+1. Create worktree → 2. Work → 3. Test → 4. Commit → 5. PR/Merge → 6. Remove worktree
+
+**Cleanup Discipline:**
+- Run `git worktree list` regularly to inventory active worktrees
+- Remove completed worktrees promptly with `git worktree remove <path>`
+- Use `git worktree prune` to clean stale references
+
+**Naming Convention:**
+- Pattern: `projectname-branchname`
+- Location: `.worktrees/` directory or sibling to main repo
+- Add `.worktrees/` to `.gitignore`
+
+## Parallel AI Agent Warning
+
+**Avoid two complex features in parallel** - architectural overlap creates merge headaches.
+
+**Good parallel use:**
+- Independent features touching different subsystems
+- Bug fix while feature work continues
+- Investigation while waiting for review
+
+**Bad parallel use:**
+- Two features touching same files
+- Refactoring while adding features to refactored code
+- Any tasks with implicit dependencies
+
 ## Common Mistakes
 
 ### Skipping ignore verification
