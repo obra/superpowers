@@ -109,6 +109,31 @@ description: Use when [specific triggering conditions and symptoms]
 ---
 
 # Skill Name
+```
+
+### allowed-tools Field
+
+Use `allowed-tools` to restrict which tools Claude can use during a skill:
+
+```yaml
+---
+name: research-skill
+description: Use when gathering information before implementation
+allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, Task
+---
+```
+
+**When to use:**
+- Read-only phases (brainstorming, research)
+- Verification phases (no modification)
+- Security-sensitive workflows
+
+**Note:** Only supported in Claude Code CLI, not SDK.
+
+### SKILL.md Body Structure
+
+```markdown
+# Skill Name
 
 ## Overview
 What is this? Core principle in 1-2 sentences.
@@ -141,11 +166,15 @@ Concrete results
 
 **Critical for discovery:** Future Claude needs to FIND your skill
 
-### 1. Rich Description Field
+### 1. Description Optimization (Critical)
 
-**Purpose:** Claude reads description to decide which skills to load for a given task. Make it answer: "Should I read this skill right now?"
+**The description is HOW Claude discovers your skill.** Claude reads the description to decide which skills to load for a given task. Make it answer: "Should I read this skill right now?"
 
-**Format:** Start with "Use when..." to focus on triggering conditions
+**Rules:**
+1. **"Use when..." format** - focus on triggering conditions
+2. **NO workflow summaries** - Claude follows description, not content (see below)
+3. **Include natural keywords** - words users would actually say
+4. **Max 1024 characters** - keep under 500 if possible
 
 **CRITICAL: Description = When to Use, NOT What the Skill Does**
 
@@ -169,6 +198,12 @@ description: Use when executing implementation plans with independent tasks in t
 
 # ✅ GOOD: Triggering conditions only
 description: Use when implementing any feature or bugfix, before writing implementation code
+
+# ✅ GOOD: Specific triggering condition
+description: Use when debugging any bug, test failure, or unexpected behavior, before proposing fixes
+
+# ❌ BAD: Workflow summary included - Claude may follow description instead of reading skill
+description: Use when debugging. This skill guides you through hypothesis-driven debugging with root cause analysis and systematic verification.
 ```
 
 **Content:**
