@@ -11,7 +11,7 @@ Write comprehensive implementation plans assuming the engineer has zero context 
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
 
-**Announce at start:** "I'm using the writing-plans skill. I MUST complete request clarification and ALL THREE context gathering phases before writing any plan content. Starting with Phase 0: Request Clarification."
+**Announce at start:** "I'm using the writing-plans skill. Checking for existing research in docs/research/."
 
 **Context:** This should be run in a dedicated worktree (created by brainstorming skill).
 
@@ -84,231 +84,61 @@ The subagent returns findings as text. Orchestrator writes findings to `docs/han
 
 Write clarification summary to `docs/handoffs/context-clarification.md`. This informs Phase 1 exploration targets.
 
-## Context Gathering Phases
+## Research Check
 
-> **IRON LAW: NO PLAN WRITING WITHOUT ALL THREE PHASES COMPLETE**
->
-> You cannot write a single line of the implementation plan until:
-> 1. Phase 1 complete → `context-codebase-summary.md` exists
-> 2. Phase 2 complete → `context-docs-summary.md` exists
-> 3. Phase 3 complete → `context-web-summary.md` exists
->
-> Violating this rule means deleting any plan content and starting over.
+Before proceeding to plan writing, check for existing research:
 
-**Before writing ANY plan, complete these three phases:**
+### Step 1: Search for Research Document
 
-### Phase 1: Codebase Exploration (Parallel Subagents)
+Look in `docs/research/` for a matching research document:
+- Match by date (recent, within last 7 days)
+- Match by topic keywords in filename
 
-Dispatch 3-5 parallel subagents to explore code related to the task:
+### Step 2: If Research Found
 
-- Each subagent explores one aspect (architecture, similar features, tests, dependencies)
-- Subagents return findings as text (Explore has read-only tools)
-- Orchestrator writes findings to `docs/handoffs/context-codebase-{aspect}.md`
-- Orchestrator reads all handoff files, synthesizes into `docs/handoffs/context-codebase-summary.md`
+Read the research document and proceed directly to plan writing:
+- Skip Phase 0 clarification (research already clarified the topic)
+- Use research findings to inform task structure
+- Reference research document in plan header
 
-### Phase 2: Documentation Exploration (Parallel Subagents)
+### Step 3: If No Research Found
 
-From codebase findings, identify documentation needs, then dispatch parallel subagents:
+Ask the user:
 
-- Framework/library docs (MCP or WebFetch)
-- API references
-- Configuration guides
-- Subagents write findings to `docs/handoffs/context-docs-{topic}.md`
-- Orchestrator synthesizes into `docs/handoffs/context-docs-summary.md`
+"No research found for this topic. Would you like to:"
+- **Run research first** (Recommended) - `/hyperpowers:research [topic]`
+- **Proceed without research** - Use lightweight inline exploration
 
-### Phase 3: Best Practices & Examples (Parallel Web Subagents)
+If user chooses research: Exit and let them run the research skill first.
+If user declines: Proceed with Phase 0 clarification, then degraded mode.
 
-Dispatch parallel subagents to search web for:
+### Degraded Mode (No Research)
 
-- Current best practices for the pattern/approach
-- Real-world examples and implementations
-- Common pitfalls and solutions
-- Subagents write findings to `docs/handoffs/context-web-{topic}.md`
-- Orchestrator synthesizes into `docs/handoffs/context-web-summary.md`
-
-**After all three phases:** Read the three summary files and proceed to plan writing.
-
-## Context Gathering Workflow
-
-```dot
-digraph context_gathering {
-    rankdir=TB;
-
-    subgraph cluster_phase0 {
-        label="Phase 0: Clarification";
-        "Analyze request" [shape=box];
-        "Dispatch exploration subagent" [shape=box];
-        "Read exploration findings" [shape=box];
-        "Request clear?" [shape=diamond];
-        "Ask clarifying questions" [shape=box];
-        "Write context-clarification.md" [shape=box];
-    }
-
-    subgraph cluster_phase1 {
-        label="Phase 1: Codebase";
-        "Identify exploration aspects" [shape=box];
-        "Dispatch 3-5 parallel Explore subagents" [shape=box];
-        "Wait for all to complete" [shape=box];
-        "Read handoff files, write codebase-summary.md" [shape=box];
-    }
-
-    subgraph cluster_phase2 {
-        label="Phase 2: Documentation";
-        "From codebase findings, identify doc needs" [shape=box];
-        "Dispatch parallel doc explorer subagents" [shape=box];
-        "Wait for all to complete 2" [shape=box];
-        "Read handoff files, write docs-summary.md" [shape=box];
-    }
-
-    subgraph cluster_phase3 {
-        label="Phase 3: Best Practices";
-        "Identify patterns needing research" [shape=box];
-        "Dispatch parallel web research subagents" [shape=box];
-        "Wait for all to complete 3" [shape=box];
-        "Read handoff files, write web-summary.md" [shape=box];
-    }
-
-    "User requests plan" [shape=doublecircle];
-    "Read 3 summary files" [shape=box];
-    "Write implementation plan" [shape=box];
-    "Cleanup handoffs" [shape=box];
-    "Plan complete" [shape=doublecircle];
-
-    "User requests plan" -> "Analyze request";
-    "Analyze request" -> "Dispatch exploration subagent";
-    "Dispatch exploration subagent" -> "Read exploration findings";
-    "Read exploration findings" -> "Request clear?";
-    "Request clear?" -> "Write context-clarification.md" [label="yes"];
-    "Request clear?" -> "Ask clarifying questions" [label="no"];
-    "Ask clarifying questions" -> "Write context-clarification.md";
-    "Write context-clarification.md" -> "Identify exploration aspects";
-    "Identify exploration aspects" -> "Dispatch 3-5 parallel Explore subagents";
-    "Dispatch 3-5 parallel Explore subagents" -> "Wait for all to complete";
-    "Wait for all to complete" -> "Read handoff files, write codebase-summary.md";
-    "Read handoff files, write codebase-summary.md" -> "From codebase findings, identify doc needs";
-    "From codebase findings, identify doc needs" -> "Dispatch parallel doc explorer subagents";
-    "Dispatch parallel doc explorer subagents" -> "Wait for all to complete 2";
-    "Wait for all to complete 2" -> "Read handoff files, write docs-summary.md";
-    "Read handoff files, write docs-summary.md" -> "Identify patterns needing research";
-    "Identify patterns needing research" -> "Dispatch parallel web research subagents";
-    "Dispatch parallel web research subagents" -> "Wait for all to complete 3";
-    "Wait for all to complete 3" -> "Read handoff files, write web-summary.md";
-    "Read handoff files, write web-summary.md" -> "Read 3 summary files";
-    "Read 3 summary files" -> "Write implementation plan";
-    "Write implementation plan" -> "Cleanup handoffs";
-    "Cleanup handoffs" -> "Plan complete";
-}
-```
-
-## Context Engineering for Subagent Dispatch
-
-**Minimal Context Principle:** Each subagent receives ONLY the context it needs.
-
-When dispatching exploration subagents:
-
-**Always include:**
-- Specific exploration target (file patterns, keywords)
-- What information to return
-- Format for findings
-
-**Never include:**
-- Full conversation history
-- Unrelated task context
-- Previous exploration results (unless directly relevant)
-
-**Handoff Pattern:**
-- Use structured output format (not free-form prose)
-- Treat subagent dispatch like API calls
-- Validate returned findings before synthesis
-
-### Subagent Dispatch Guidelines
-
-**Phase 1 - Codebase Exploration:**
-
-- Identify 3-5 aspects relevant to the feature (e.g., "existing auth patterns", "test structure", "related components", "data layer")
-- Use `Explore` subagent type with `model: haiku`
-- Use template: `./codebase-explorer-prompt.md`
-
-**Phase 2 - Documentation:**
-
-- Based on codebase findings, identify what docs to research
-- Use `general-purpose` subagent with `model: haiku`
-- Use template: `./docs-explorer-prompt.md`
-- Prefer MCP tools when available for specific libraries
-
-**Phase 3 - Best Practices:**
-
-- Identify patterns/approaches that need current best practices research
-- Use `general-purpose` subagent with `model: haiku`
-- Use template: `./best-practices-explorer-prompt.md`
-- Focus on 2024-2025 content for freshness
-
-### Synthesis Between Phases
-
-After each phase completes:
-
-1. Read all handoff files from that phase
-2. Write phase summary using template: `./context-synthesis-prompt.md`
-3. Use summary to inform next phase's exploration targets
+If proceeding without research:
+1. Complete Phase 0 clarification
+2. Do lightweight exploration using Glob/Grep (no parallel subagents)
+3. Note in plan header: "No research document - created with limited context"
+4. Recommend running `/hyperpowers:research` for future similar features
 
 ## Pre-Plan Writing Gate
 
-**BEFORE writing ANY plan content, complete this checklist:**
+**BEFORE writing ANY plan content, verify:**
 
 ```
-[ ] Phase 0: context-clarification.md written
-[ ] Phase 1: context-codebase-summary.md written (synthesized from 3-5 aspect files)
-[ ] Phase 2: context-docs-summary.md written (synthesized from doc research)
-[ ] Phase 3: context-web-summary.md written (synthesized from web research)
-[ ] All four summary files READ and incorporated
+[ ] Research document exists in docs/research/ OR degraded mode acknowledged
+[ ] Topic is clear (from research or Phase 0 clarification)
+[ ] Context is sufficient to write specific, actionable tasks
 ```
 
-**If ANY checkbox is unchecked:** STOP. Complete the missing phase.
+If research exists: Reference `docs/research/YYYY-MM-DD-topic.md`
+If degraded mode: Document limitations in plan header
 
-**Verification command:**
-```bash
-ls docs/handoffs/context-*.md
-```
+## Red Flags - STOP
 
-Expected output (4 files minimum):
-```
-docs/handoffs/context-clarification.md
-docs/handoffs/context-codebase-summary.md
-docs/handoffs/context-docs-summary.md
-docs/handoffs/context-web-summary.md
-```
-
-**Skip this gate = plan is invalid.** Delete any plan content and restart from the first incomplete phase.
-
-## Do NOT Skip Context Gathering
-
-| Excuse | Reality |
-|--------|---------|
-| "I already know this codebase" | You don't have the user's full context. Subagents find what you'd miss. |
-| "The request is straightforward" | Straightforward requests hide complex implementation details. |
-| "Context gathering takes too long" | Wrong plans waste far more time than thorough research. |
-| "I can gather context while writing" | Context-while-writing = shallow research + poor synthesis. |
-| "The user wants speed" | Users want correct plans. Fast wrong plans require rewrites. |
-| "I'll just do a quick exploration instead" | Inline Glob/Grep ≠ parallel subagent deep-dive. Not equivalent. |
-| "Phase 2/3 aren't needed for this" | You don't know what you don't know. All phases reveal blind spots. |
-| "I can infer best practices" | Your training data is stale. Web research gets current patterns. |
-
-**If you're thinking any of these:** You're rationalizing. Complete all phases.
-
-## Red Flags - STOP Immediately
-
-You are about to skip context gathering if:
-
-- You're writing plan tasks without summary files open
-- You haven't dispatched any subagents yet
-- You're using Glob/Grep directly instead of Explore subagents
-- You can't name the 3-5 codebase aspects you explored
-- You haven't searched any external documentation
-- You haven't done any web research for best practices
-- Your plan references no specific file paths from exploration
-- You're "just going to start with the obvious parts"
-
-**Any of these = STOP.** Return to Phase 1 and complete all phases properly.
+- No research document found and user declined to create one (proceeding in degraded mode)
+- Referencing research document without reading it
+- Skipping Phase 0 clarification in degraded mode
+- Writing plan without sufficient context
 
 ## Bite-Sized Task Granularity
 
@@ -336,18 +166,17 @@ You are about to skip context gathering if:
 **Tech Stack:** [Key technologies/libraries]
 
 **Context Gathered From:**
-- `docs/handoffs/context-codebase-summary.md` - Codebase patterns and structure
-- `docs/handoffs/context-docs-summary.md` - Framework and API documentation
-- `docs/handoffs/context-web-summary.md` - Best practices and examples
+- `docs/research/YYYY-MM-DD-topic.md` (if research exists)
+- OR: "Degraded mode - limited inline exploration"
 
 ---
 ```
 
-**Before writing tasks, review all three context summaries and incorporate:**
+**Before writing tasks, review research document (or inline exploration) and incorporate:**
 
 - Patterns from codebase exploration
 - API details from documentation
-- Best practices from web research
+- Best practices from research
 - Anti-patterns to avoid
 
 ## Task Structure
