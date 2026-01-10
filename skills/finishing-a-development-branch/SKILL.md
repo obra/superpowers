@@ -17,30 +17,14 @@ Guide completion of development work by presenting clear options and handling ch
 
 ### Step 1: Pre-Completion Verification Gate
 
-**Before presenting options, verify ALL of:**
+**REQUIRED:** Use hyperpowers:verification-before-completion before presenting options.
 
-```bash
-# Tests pass
-npm test / cargo test / pytest / go test ./...
+The verification gate checks:
+- Tests pass
+- Build succeeds
+- Lint passes
 
-# Build succeeds
-npm run build / cargo build / make
-
-# Lint passes
-npm run lint / cargo clippy / ruff check
-```
-
-**If ANY verification fails:**
-```
-Verification failed. Cannot proceed with completion.
-
-[Tests/Build/Lint] failing:
-[Show failures]
-
-Must fix before proceeding with merge/PR.
-```
-
-**STOP. Do NOT present completion options until all verifications pass.**
+**If ANY verification fails:** Cannot proceed with completion. Fix issues first.
 
 **If all pass:** Continue to Step 2.
 
@@ -177,7 +161,7 @@ git worktree remove "$WORKTREE_PATH"
 
 **Skipping verification gate**
 - **Problem:** Merge broken code, create failing PR, lint errors in PR
-- **Fix:** Always verify tests, build, AND lint before offering options
+- **Fix:** Always use hyperpowers:verification-before-completion before offering options
 
 **Open-ended questions**
 - **Problem:** "What should I do next?" → ambiguous
@@ -207,6 +191,9 @@ git worktree remove "$WORKTREE_PATH"
 - Clean up worktree for Options 1 & 4 only
 
 ## Integration
+
+**Calls:**
+- **verification-before-completion** (Step 1) - Pre-completion checks
 
 **Called by:**
 - **subagent-driven-development** (Step 7) - After all tasks complete
