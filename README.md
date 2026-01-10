@@ -60,6 +60,18 @@ git clone https://github.com/bradwindy/hyperpowers.git
 /plugin install hyperpowers@hyperpowers-marketplace
 ```
 
+#### Refreshing During Local Development
+
+When developing locally, Claude Code caches plugin files and doesn't automatically detect changes. To refresh after making edits:
+
+```bash
+rm -rf ~/.claude/plugins/cache/hyperpowers-marketplace/
+```
+
+Then restart Claude Code. The plugin will be re-cached from your source directory.
+
+**Note:** The skill hot-reload feature (v2.1.0+) only applies to `~/.claude/skills/` and `.claude/skills/` directories, not marketplace plugins.
+
 #### Verify Installation
 
 Check that commands appear:
