@@ -50,6 +50,44 @@ Skip any step = lying, not verifying
 | Agent completed | VCS diff shows changes | Agent reports "success" |
 | Requirements met | Line-by-line checklist | Tests passing |
 
+## Evidence-Based Completion Checklist
+
+Before claiming ANY work is complete:
+
+**Required Evidence:**
+- [ ] Tests RUN (not just written) - show passing output
+- [ ] Build SUCCEEDED - show build output
+- [ ] Linting PASSED - show lint output
+- [ ] Edge cases TESTED - list which ones
+- [ ] Related functionality VERIFIED - nothing broken
+
+**Red Flags for Premature Claims:**
+- "Tests should pass" (should ≠ did)
+- "The implementation looks correct" (looks ≠ verified)
+- "I made the changes as requested" (changes ≠ working)
+- Claiming success without showing command output
+
+**If ANY checkbox is unchecked:** Cannot claim completion.
+
+## Fresh Verification Requirement
+
+**Stale evidence is not evidence.**
+
+Before claiming completion:
+1. Run verification commands NOW (not from memory)
+2. Read the ACTUAL output (not expected output)
+3. Verify output indicates SUCCESS (not just "ran")
+4. Show evidence in your response
+
+**Invalid evidence:**
+- "Tests passed earlier"
+- "It was working before"
+- "I already ran this"
+
+**Valid evidence:**
+- Command output showing current pass/success status
+- Timestamps indicating recent execution
+
 ## Red Flags - STOP
 
 - Using "should", "probably", "seems to"
