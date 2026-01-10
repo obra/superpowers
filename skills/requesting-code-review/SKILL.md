@@ -22,6 +22,27 @@ Dispatch hyperpowers:code-reviewer subagent to catch issues before they cascade.
 - Before refactoring (baseline check)
 - After fixing complex bug
 
+## Two-Stage Review Pattern
+
+Reviews follow two stages in order:
+
+**Stage 1: Spec Compliance**
+- Does the code do what was requested?
+- Are all requirements met?
+- Is anything missing from the spec?
+- Is anything EXTRA that wasn't requested?
+
+**Stage 2: Code Quality**
+- Is the implementation well-designed?
+- Are there bugs, edge cases, security issues?
+- Is it maintainable, readable, testable?
+- Does it follow project patterns?
+
+**Why two stages?**
+- Spec compliance catches over/under-building FIRST
+- No point polishing code that doesn't meet requirements
+- Code quality assumes spec is already met
+
 ## How to Request
 
 **1. Get git SHAs:**
@@ -30,7 +51,30 @@ BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
 HEAD_SHA=$(git rev-parse HEAD)
 ```
 
-**2. Dispatch code-reviewer subagent:**
+**2. Prepare review request:**
+
+```markdown
+## Review Request
+
+**Spec Reference:** [link to spec.md or task description]
+
+**Changes:**
+- [list of changes made]
+
+**Testing:**
+- [tests written/run]
+- [verification evidence]
+
+**Areas of Concern:**
+- [anything you're unsure about]
+
+**Git Range:**
+git diff <base>..<head>
+```
+
+This format enables focused review and reduces back-and-forth.
+
+**3. Dispatch code-reviewer subagent:**
 
 Use Task tool with hyperpowers:code-reviewer type, fill template at `code-reviewer.md`
 
@@ -47,7 +91,7 @@ Task(code_review_prompt, model: "haiku")
 - `{HEAD_SHA}` - Ending commit
 - `{DESCRIPTION}` - Brief summary
 
-**3. Act on feedback:**
+**4. Act on feedback:**
 - Fix Critical issues immediately
 - Fix Important issues before proceeding
 - Note Minor issues for later
