@@ -141,6 +141,35 @@ Fetch and follow instructions from https://raw.githubusercontent.com/bradwindy/h
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
 - **using-hyperpowers** - Introduction to the skills system
 
+## Improvements Over Superpowers
+
+Hyperpowers includes significant enhancements over the original Superpowers project. Key improvements include:
+
+**Enhanced Planning Workflow**
+- **Phase 0 Clarification**: New preliminary phase that asks clarifying questions before context gathering, preventing incomplete planning
+- **Three-Phase Context Gathering**: Parallel subagent exploration across codebase, documentation, and best practices
+- **Iron Law Enforcement**: Strict gates preventing agents from skipping context gathering with rationalization tables and red flags
+
+**Subagent Communication**
+- **File-Based Handoffs**: Structured `docs/handoffs/` directory for subagent communication, reducing token usage
+- **Progress Tracking**: Gitignored state file for session resumability
+- **Context Curation Guidelines**: Best practices for minimal, focused context passing
+
+**Skill Strengthening**
+- **Allowed-Tools Enforcement**: New frontmatter field restricting tools per skill phase (e.g., brainstorming is read-only)
+- **Anti-Pattern Documentation**: Explicit warnings in TDD, debugging, and verification skills
+- **Anti-Performative-Agreement**: Code review skills require verification, not automatic acceptance
+
+**Cost & Speed Optimization**
+- **Model Selection**: Haiku for validation tasks (reviews), Sonnet/Opus for implementation
+- **Token Optimization**: Core skills compressed without losing essential behavior
+
+**Testing Infrastructure**
+- **Comprehensive Test Suite**: Context gathering, clarification, and enforcement language tests
+- **Case-Insensitive Assertions**: Robust pattern matching for LLM output variance
+
+For complete details on all 111 commits since forking, see [IMPROVEMENTS.md](IMPROVEMENTS.md).
+
 ## Philosophy
 
 - **Test-Driven Development** - Write tests first, always

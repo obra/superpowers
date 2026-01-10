@@ -24,3 +24,25 @@ Read `skills/writing-skills/SKILL.md` before creating or editing skills. Key poi
 - Skills follow TDD: baseline test → write skill → verify compliance
 - YAML frontmatter: `name`, `description`, and optional `allowed-tools` fields
 - Description format: "Use when..." (triggering conditions only)
+
+## Documenting Improvements
+
+When making significant improvements to Hyperpowers, update the documentation:
+
+1. **IMPROVEMENTS.md** - Add detailed entries for notable changes:
+   - Categorize under existing sections or create new ones
+   - Include commit hashes for traceability
+   - Explain the motivation and impact
+
+2. **README.md Improvements Section** - Update the summary if:
+   - A new major feature category is added
+   - An existing improvement is substantially enhanced
+   - The improvement represents a key differentiator from upstream
+
+3. **What qualifies as "significant"**:
+   - New workflow phases or gates
+   - New enforcement mechanisms
+   - Subagent communication patterns
+   - Model selection changes
+   - Test infrastructure additions
+   - Upstream feature merges
