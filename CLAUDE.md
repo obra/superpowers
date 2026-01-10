@@ -22,5 +22,5 @@ Run `./tests/claude-code/run-skill-tests.sh` for fast tests. Use `--integration`
 
 Read `skills/writing-skills/SKILL.md` before creating or editing skills. Key points:
 - Skills follow TDD: baseline test → write skill → verify compliance
-- YAML frontmatter: only `name` and `description` fields
+- YAML frontmatter: `name`, `description`, and optional `allowed-tools` fields
 - Description format: "Use when..." (triggering conditions only)
