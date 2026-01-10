@@ -330,6 +330,9 @@ If you catch yourself thinking:
 - Proposing solutions before tracing data flow
 - **"One more fix attempt" (when already tried 2+)**
 - **Each fix reveals new problem in different place**
+- **Completing investigation without Investigation Summary**
+- **Returning just "root cause: X" without research process**
+- **Omitting failed hypotheses from summary**
 
 **ALL of these mean: STOP. Return to Phase 1.**
 
