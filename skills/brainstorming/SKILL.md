@@ -1,6 +1,7 @@
 ---
 name: brainstorming
 description: "Use when starting any creative work - creating features, building components, adding functionality, or modifying behavior"
+allowed-tools: Read, Grep, Glob, AskUserQuestion, WebSearch, WebFetch, Task
 ---
 
 # Brainstorming Ideas Into Designs
