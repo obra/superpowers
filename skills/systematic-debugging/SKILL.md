@@ -87,6 +87,45 @@ Tools for observability:
 - Stack traces with full context
 - State snapshots before/after operations
 
+## Pre-Phase 1: Solution Search
+
+Before starting fresh investigation, check for existing solutions:
+
+### Step 1: Search Existing Solutions
+
+Search `docs/solutions/` for matching symptoms:
+
+```bash
+# Search by error message
+grep -r "error message text" docs/solutions/
+
+# Search by symptom keywords
+grep -ri "symptom keyword" docs/solutions/
+```
+
+### Step 2: If Solution Found
+
+Read the matching solution document and verify it applies:
+- Does the environment match? (versions, config)
+- Are the symptoms identical or similar?
+- Is the root cause likely the same?
+
+**If yes:** Try the documented solution first.
+- Apply the fix
+- Verify it works
+- If successful: Skip to implementation verification
+- If unsuccessful: Note what didn't work, proceed to Phase 1
+
+**If no match or doesn't apply:** Proceed to Phase 1 normally.
+
+### Step 3: Document Your Search
+
+Even if no solution found, note what you searched for:
+- This helps the compound skill identify missing solutions
+- Informs future pattern detection
+
+**Example:** "Searched docs/solutions/ for 'ECONNREFUSED', 'connection refused', 'redis timeout' - no matches."
+
 ### Phase 1: Root Cause Investigation
 
 **BEFORE attempting ANY fix:**
@@ -338,6 +377,7 @@ These techniques are part of systematic debugging and available in this director
 **Related skills:**
 - **hyperpowers:test-driven-development** - For creating failing test case (Phase 4, Step 1)
 - **hyperpowers:verification-before-completion** - Verify fix worked before claiming success
+- **hyperpowers:compound** - After resolving a non-trivial issue, capture the solution for future reference
 
 ## Real-World Impact
 
