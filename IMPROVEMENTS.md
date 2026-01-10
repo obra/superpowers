@@ -17,6 +17,7 @@ This document details all significant improvements made to Hyperpowers since for
 - [6. Test Infrastructure](#6-test-infrastructure)
 - [7. Fork Setup & Rebranding](#7-fork-setup--rebranding)
 - [8. Compound Engineering Integration](#8-compound-engineering-integration)
+- [9. Context Fork Integration](#9-context-fork-integration)
 
 ---
 
@@ -424,6 +425,30 @@ Systematic debugging now searches existing solutions before fresh investigation.
 
 ---
 
+## 9. Context Fork Integration
+
+New skill infrastructure feature that allows skills to run in isolated forked context for token efficiency.
+
+### Systematic Debugging Context Fork Integration
+
+Systematic-debugging now runs investigations in isolated forked context:
+
+- **Investigation isolation**: Phases 1-3 run in forked context for token efficiency
+- **Mandatory Investigation Summary**: Structured return preserves learning value
+- **Fresh TDD subagents**: Phase 4 implementation continues using fresh subagents
+- **Token efficiency**: 40-50% reduction for verbose investigations
+- **Parallel hypothesis testing**: 3 problems in time of 1
+
+**Key insight:** Teaching value isn't lost—it's captured in structured summaries that document the *why* and *how*, not just the *what*.
+
+**Commits:**
+- `feat(skills-core): extract context field from skill frontmatter`
+- `feat(systematic-debugging): add context: fork for isolated investigation`
+- `feat(systematic-debugging): require Investigation Summary return`
+- `docs(systematic-debugging): document context fork behavior`
+
+---
+
 ## Summary Statistics
 
 | Category | Commits | Impact |
@@ -436,6 +461,7 @@ Systematic debugging now searches existing solutions before fresh investigation.
 | Test Infrastructure | ~12 | Quality assurance |
 | Fork/Rebranding | ~23 | Independent identity |
 | Compound Engineering | ~17 | Knowledge management, deep research |
+| Context Fork Integration | ~4 | Token efficiency for verbose skills |
 
 ---
 
