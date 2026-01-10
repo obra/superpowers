@@ -388,3 +388,41 @@ From debugging sessions:
 - Random fixes approach: 2-3 hours of thrashing
 - First-time fix rate: 95% vs 40%
 - New bugs introduced: Near zero vs common
+
+## Investigation Summary (Required Return)
+
+**Because this skill runs in forked context, you MUST return a structured summary.**
+
+When investigation completes, return this format to the main conversation:
+
+~~~markdown
+## Investigation Summary
+
+### Problem
+[Brief description of the bug/failure that was investigated]
+
+### Research Process
+1. [What was checked first and why]
+2. [Key files/components examined]
+3. [Hypotheses tested and results]
+4. [Dead ends encountered—valuable for future reference]
+
+### Root Cause
+[Clear explanation of what was wrong]
+
+### Solution
+[The fix that was applied or recommendation for Phase 4]
+
+### Learnings
+- [Pattern to watch for in future]
+- [Related areas that might have similar issues]
+- [New debugging technique discovered, if any]
+~~~
+
+**Why this format is required:**
+- Users learn from structured summaries, not verbose logs
+- Failed hypotheses are valuable debugging knowledge
+- Summary captures the *why* and *how*, not just the *what*
+- Enables pattern recognition across debugging sessions
+
+**Red Flag:** Returning just "root cause: X" without explaining HOW you found it violates this requirement.
