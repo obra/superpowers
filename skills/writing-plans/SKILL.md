@@ -335,6 +335,11 @@ You are about to skip context gathering if:
 
 **Tech Stack:** [Key technologies/libraries]
 
+**Context Gathered From:**
+- `docs/handoffs/context-codebase-summary.md` - Codebase patterns and structure
+- `docs/handoffs/context-docs-summary.md` - Framework and API documentation
+- `docs/handoffs/context-web-summary.md` - Best practices and examples
+
 ---
 ```
 

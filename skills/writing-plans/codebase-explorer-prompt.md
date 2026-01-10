@@ -62,7 +62,7 @@ Task tool (Explore subagent_type):
     Keep summary detailed yet concise - focus on actionable context for plan writing.
 ```
 
-## Orchestrator Responsibility
+## Write Handoff File (Orchestrator Responsibility)
 
 After the subagent returns, the orchestrator writes findings to `docs/handoffs/context-codebase-{aspect}.md`.
 
