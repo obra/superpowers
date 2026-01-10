@@ -15,6 +15,17 @@ Random fixes waste time and create new bugs. Quick patches mask underlying issue
 
 **Violating the letter of this process is violating the spirit of debugging.**
 
+### Context Isolation
+
+This skill runs in **forked context** (`context: fork`):
+- Investigation (Phases 1-3) runs in isolated sub-agent context
+- Keeps main conversation clean for decision-making
+- Enables parallel hypothesis testing
+- Returns structured **Investigation Summary** (see end of skill)
+- Token efficiency gains of 40-50% for verbose investigations
+
+**Phase 4 (Implementation) uses fresh subagents** via TDD skill—the fork is for investigation only.
+
 ## The Iron Law
 
 ```
