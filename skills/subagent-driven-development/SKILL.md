@@ -84,15 +84,16 @@ digraph process {
 - `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
 - `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
 
-## Model Selection
+## Model Selection (Strict)
 
-**Recommended models per subagent type:**
-
-| Subagent | Model | Rationale |
-|----------|-------|-----------|
+| Subagent Type | Model | Rationale |
+|---------------|-------|-----------|
 | Implementer | `sonnet/opus` | Requires coding intelligence, TDD execution |
 | Spec Reviewer | `haiku` | Validation task, pattern matching |
-| Code Quality Reviewer | `haiku` | Validation task, checklist-based review |
+| Code Quality Reviewer | `haiku` | Validation task, checklist-based |
+| Exploration | `haiku` | Quick reads, summarization |
+
+**Do NOT use opus/sonnet for validation tasks** - wastes tokens, no quality improvement.
 
 When dispatching subagents:
 - `Task(implementer_prompt)` - inherits orchestrator model (sonnet/opus)
@@ -234,12 +235,14 @@ IN_PROGRESS
 
 ## Context Curation
 
-Before dispatching a subagent, curate exactly what it needs:
+Before dispatching a subagent, curate exactly what it needs.
+
+**Minimal Context Principle:** Each subagent receives ONLY what it needs for its specific task.
 
 **Always include:**
 - Full task text from plan (never make subagent read plan file)
 - Relevant file paths it will work with
-- Any decisions made in previous tasks that affect this one
+- Decisions from previous tasks that affect this one
 
 **Include if relevant:**
 - Architectural constraints (from design doc)
@@ -249,9 +252,33 @@ Before dispatching a subagent, curate exactly what it needs:
 **Never include:**
 - Full plan (only the current task)
 - Unrelated completed task details
-- General project background (subagent can read CLAUDE.md)
+- General project background (subagent reads CLAUDE.md)
 
 **Rule of thumb:** If you're unsure whether to include something, provide the file path instead of the content. Let the subagent decide whether to read it.
+
+**Structured Handoff Format:**
+
+Use structured format, not free-form prose:
+
+```
+Task: [exact task from plan]
+Files: [specific paths]
+Context: [only relevant prior decisions]
+Constraints: [any limitations]
+```
+
+## Context Pollution Warning
+
+**Signs of context pollution:**
+- Subagent asks about unrelated tasks
+- Subagent references old, irrelevant context
+- Subagent gets confused about current state
+- Token usage growing unexpectedly
+
+**Prevention:**
+- Fresh subagent per task (no reuse)
+- Explicit context curation before dispatch
+- Don't forward full conversation history
 
 ## Red Flags
 
