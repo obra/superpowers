@@ -108,6 +108,32 @@ Do NOT just increase timeouts - find the real issue.
 Return: Summary of what you found and what you fixed.
 ```
 
+## Structured Output Requirements
+
+Each parallel subagent must return results in structured format to enable synthesis without re-reading subagent thinking:
+
+```markdown
+## Findings: [Aspect Name]
+
+**Status:** complete | partial | failed
+
+**Key Findings:**
+1. [finding with file path reference]
+2. [finding with file path reference]
+
+**Files Examined:**
+- path/to/file.ts (relevant because...)
+
+**Gaps/Unknowns:**
+- [anything not found or unclear]
+```
+
+**Why structure matters:**
+- Orchestrator can synthesize without parsing freeform text
+- Status field enables quick triage of results
+- File references enable verification
+- Gaps surface incomplete coverage
+
 ## Common Mistakes
 
 **❌ Too broad:** "Fix all the tests" - agent gets lost
@@ -128,6 +154,23 @@ Return: Summary of what you found and what you fixed.
 **Need full context:** Understanding requires seeing entire system
 **Exploratory debugging:** You don't know what's broken yet
 **Shared state:** Agents would interfere (editing same files, using same resources)
+
+## When to Use Parallel vs Sequential
+
+**Use Parallel When:**
+- Tasks are truly independent (no shared state)
+- Tasks don't modify same files
+- Faster throughput is priority
+- Tasks can be verified independently
+
+**Use Sequential When:**
+- Tasks have dependencies
+- Order matters for correctness
+- Debugging clarity is needed
+- Tasks share state or files
+
+**Anti-Pattern: Forced Parallelism**
+Don't parallelize just because you can. Coordination overhead can exceed time savings. If you spend more time defining task boundaries and merging results than you would just doing tasks sequentially, parallelism isn't helping.
 
 ## Real Example from Session
 
