@@ -53,3 +53,27 @@ Start by understanding the current project context, then ask questions one at a 
 - **Explore alternatives** - Always propose 2-3 approaches before settling
 - **Incremental validation** - Present design in sections, validate each
 - **Be flexible** - Go back and clarify when something doesn't make sense
+
+## No Implementation During Brainstorming
+
+**This skill is for DESIGN, not CODING.**
+
+Violations (any of these = stop and restart):
+- Opening a code file with intent to modify
+- Writing implementation code (even "just a quick prototype")
+- Skipping to "let me just try this" without spec approval
+- Committing anything except spec/design documents
+
+**If you feel the urge to code:** That's the signal you haven't finished brainstorming. More questions needed.
+
+## Deliverable: spec.md
+
+Brainstorming is complete when you have a spec.md containing:
+
+1. **Problem Statement**: What problem are we solving? (not "add feature X")
+2. **Success Criteria**: How will we know it's done? (measurable)
+3. **Constraints**: What must NOT change? What's out of scope?
+4. **Approach**: High-level design (not implementation details)
+5. **Open Questions**: What do we still not know?
+
+**No spec.md = brainstorming not complete = no implementation.**
