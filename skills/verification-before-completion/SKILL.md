@@ -14,6 +14,17 @@ Claiming work is complete without verification is dishonesty, not efficiency.
 
 **Violating the letter of this rule is violating the spirit of this rule.**
 
+## When to Use
+
+**Use this skill when:**
+- About to claim work is complete, fixed, or passing
+- Before committing code
+- Before creating PRs
+- Before moving to next task
+
+**Don't use when:**
+- Still actively developing (wait until claiming done)
+
 ## The Iron Law
 
 ```

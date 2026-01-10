@@ -11,6 +11,12 @@ Skills are pre-loaded workflows that ensure consistent, high-quality execution. 
 
 **Core principle:** Even 1% chance a skill applies means you MUST invoke it.
 
+## When to Use
+
+**Use this skill at conversation start:** Before responding to ANY user request, check if a skill applies.
+
+**The rule is unconditional:** Even 1% chance = invoke the skill.
+
 <CRITICAL>
 Even 1% chance a skill applies → YOU MUST invoke it. Not optional. Not negotiable.
 </CRITICAL>

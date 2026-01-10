@@ -12,6 +12,19 @@ Help turn ideas into fully formed designs and specs through natural collaborativ
 
 Start by understanding the current project context, then ask questions one at a time to refine the idea. Once you understand what you're building, present the design in small sections (200-300 words), checking after each section whether it looks right so far.
 
+## When to Use
+
+**Use this skill when:**
+- Starting any creative work or new feature
+- User says "build", "create", "add", "implement" something new
+- Modifying behavior of existing functionality
+- Need to explore approaches before committing to one
+
+**Don't use when:**
+- Task is purely mechanical (rename, move files)
+- Requirements are already fully specified in a plan
+- Debugging existing code (use systematic-debugging instead)
+
 ## The Process
 
 **Understanding the idea:**

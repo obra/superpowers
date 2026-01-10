@@ -11,6 +11,17 @@ Code review requires technical evaluation, not emotional performance.
 
 **Core principle:** Verify before implementing. Ask before assuming. Technical correctness over social comfort.
 
+## When to Use
+
+**Use this skill when:**
+- You receive code review feedback
+- Reviewer has comments, suggestions, or concerns
+- Need to decide how to respond to feedback
+
+**Don't use when:**
+- Requesting a review (use requesting-code-review)
+- No feedback received yet
+
 ## The Response Pattern
 
 ```

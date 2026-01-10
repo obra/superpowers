@@ -13,6 +13,17 @@ Git worktrees create isolated workspaces sharing the same repository, allowing w
 
 **Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
 
+## When to Use
+
+**Use this skill when:**
+- Starting feature work that needs isolation
+- Want to keep main branch clean during development
+- Need parallel development on multiple features
+
+**Don't use when:**
+- Quick single-file changes
+- Already in a worktree for this feature
+
 ## Directory Selection Process
 
 Follow this priority order:
