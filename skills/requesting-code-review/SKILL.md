@@ -45,6 +45,20 @@ Reviews follow two stages in order:
 - No point polishing code that doesn't meet requirements
 - Code quality assumes spec is already met
 
+## Quick Reference
+
+| Stage | Focus | Key Questions |
+|-------|-------|---------------|
+| 1. Spec Compliance | Requirements | Does it do what was requested? Anything missing/extra? |
+| 2. Code Quality | Implementation | Bugs? Security? Maintainable? Follows patterns? |
+
+| Trigger | Action |
+|---------|--------|
+| After each subagent task | Dispatch code-reviewer |
+| After major feature | Dispatch code-reviewer |
+| Before merge to main | Dispatch code-reviewer |
+| When stuck | Dispatch code-reviewer (fresh perspective) |
+
 ## How to Request
 
 **1. Get git SHAs:**
