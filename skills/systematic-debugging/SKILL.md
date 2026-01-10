@@ -21,6 +21,19 @@ NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST
 
 If you haven't completed Phase 1, you cannot propose fixes.
 
+## Hypothesis-Driven Debugging (REQUIRED)
+
+**Never make random changes hoping something works.**
+
+Each debugging attempt must:
+1. **State hypothesis**: "I believe the bug is caused by X because Y"
+2. **Define test**: "I will verify by Z"
+3. **Predict outcome**: "If hypothesis is correct, I expect A; if wrong, I expect B"
+4. **Execute and observe**: Run test, record actual outcome
+5. **Update understanding**: Revise hypothesis based on evidence
+
+**Red Flag:** If you find yourself trying multiple fixes without stating hypotheses, STOP. You're guessing, not debugging.
+
 ## When to Use
 
 Use for ANY technical issue:
@@ -46,6 +59,18 @@ Use for ANY technical issue:
 ## The Four Phases
 
 You MUST complete each phase before proceeding to the next.
+
+## Observability Requirements
+
+Before making any changes:
+1. **Capture current state**: Error messages, stack traces, logs
+2. **Identify decision points**: Where did the code make wrong choices?
+3. **Trace execution**: What path led to the failure?
+
+Tools for observability:
+- Debug logging at decision points
+- Stack traces with full context
+- State snapshots before/after operations
 
 ### Phase 1: Root Cause Investigation
 
@@ -211,6 +236,18 @@ You MUST complete each phase before proceeding to the next.
    **Discuss with your human partner before attempting more fixes**
 
    This is NOT a failed hypothesis - this is a wrong architecture.
+
+## Butterfly Effect Warning
+
+Research shows AI fixes often:
+- Work in isolation but break other things
+- Fix symptoms but not root cause
+- Introduce subtle regressions
+
+**Prevention:**
+- Run FULL test suite after each fix, not just the failing test
+- Check related functionality that wasn't explicitly tested
+- If 3+ fixes haven't worked, question your root cause analysis
 
 ## Red Flags - STOP and Follow Process
 
