@@ -142,7 +142,7 @@ Then: Cleanup worktree (Step 5)
 
 ### Step 5: Worktree Cleanup Integration
 
-**For Options 1, 2, 4:**
+**For Options 1 and 4:**
 
 Check if currently in a worktree:
 ```bash
@@ -204,7 +204,7 @@ git worktree remove "$WORKTREE_PATH"
 - Run full verification gate (tests + build + lint) before offering options
 - Present exactly 4 options
 - Get typed confirmation for Option 4
-- Clean up worktree for Options 1, 2 & 4 only
+- Clean up worktree for Options 1 & 4 only
 
 ## Integration
 
