@@ -44,6 +44,32 @@ Write code before the test? Delete it. Start over.
 
 Implement fresh from tests. Period.
 
+**Phase Gate Enforcement:**
+
+Before moving from Red → Green:
+- [ ] Test exists and has been RUN
+- [ ] Test FAILED with expected error message
+- [ ] No production code exists yet
+
+Before moving from Green → Refactor:
+- [ ] Test PASSES
+- [ ] Minimal code written (just enough to pass)
+- [ ] No additional features added
+
+Skipping any checkbox = return to previous phase.
+
+## Critical Anti-Pattern: Circular Validation
+
+**Never let AI write tests AFTER implementation.** This leads to:
+- Tests that validate buggy behavior rather than correct behavior
+- Tests that simply mirror implementation instead of testing intent
+- False confidence in code that passes "tests" but is wrong
+
+**Prevention:**
+- Test must exist and FAIL before any implementation
+- Test should be written based on REQUIREMENTS, not code
+- If you wrote code first, delete it and start over
+
 ## Red-Green-Refactor
 
 ```dot
