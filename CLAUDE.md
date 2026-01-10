@@ -2,6 +2,29 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Issue Tracking (ENFORCED)
+
+This project uses **bd (beads)** for issue tracking. Hooks auto-inject `bd prime` at session start.
+
+**MANDATORY WORKFLOW:**
+
+1. **Session Start**: Run `bd ready` to see available work. If work relates to an existing issue, claim it with `bd update <id> --status=in_progress`
+
+2. **During Work**: If you discover work that should be tracked (multi-session, has dependencies, or non-trivial), create an issue with `bd create`
+
+3. **Before Completion**: You CANNOT claim work is done without:
+   - Closing related beads issues: `bd close <id>`
+   - Or explaining why no issue applies (truly ad-hoc work)
+
+**Quick reference:**
+- `bd ready` - Find unblocked work
+- `bd list --status=in_progress` - Your active work
+- `bd create "Title" --type task --priority 2` - Create issue
+- `bd close <id>` - Complete work
+- `bd update <id> --status=in_progress` - Claim work
+
+For full workflow details: `bd prime`
+
 ## What This Is
 
 Hyperpowers is a Claude Code plugin providing composable "skills" that enforce development workflows (TDD, brainstorming, systematic debugging, structured plan execution). Skills trigger automatically based on context.

@@ -60,6 +60,7 @@ Skip any step = lying, not verifying
 | Regression test works | Red-green cycle verified | Test passes once |
 | Agent completed | VCS diff shows changes | Agent reports "success" |
 | Requirements met | Line-by-line checklist | Tests passing |
+| Work complete | `bd close <id>` for related issues | "No issue tracked this" without checking |
 
 ## Evidence-Based Completion Checklist
 
@@ -71,6 +72,7 @@ Before claiming ANY work is complete:
 - [ ] Linting PASSED - show lint output
 - [ ] Edge cases TESTED - list which ones
 - [ ] Related functionality VERIFIED - nothing broken
+- [ ] Beads issues CLOSED - `bd close <id>` for related issues, or explain why none apply
 
 **Red Flags for Premature Claims:**
 - "Tests should pass" (should ≠ did)
