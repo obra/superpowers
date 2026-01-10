@@ -319,3 +319,21 @@ Constraints: [any limitations]
 
 **Subagents should use:**
 - **hyperpowers:test-driven-development** - Subagents follow TDD for each task
+
+## Cleanup
+
+After final review passes and before using `hyperpowers:finishing-a-development-branch`, clean up transient files:
+
+```bash
+rm -rf docs/handoffs/
+rm -f docs/current-progress.md
+```
+
+These files are gitignored and only needed during execution:
+- `docs/handoffs/task-N-impl.md` - Implementation reports for reviewers
+- `docs/current-progress.md` - Progress tracking for resumability
+
+**Why cleanup?**
+- Prevents stale context from affecting future sessions
+- Keeps directory clean for next plan execution
+- Files have no value after successful completion
