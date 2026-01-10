@@ -28,6 +28,34 @@ Write the test first. Watch it fail. Write minimal code to pass.
 
 Thinking "skip TDD just this once"? Stop. That's rationalization.
 
+## Priority: TDD vs Systematic Debugging
+
+```dot
+digraph tdd_vs_debugging {
+    rankdir=TB;
+    "Bug reported" [shape=ellipse];
+    "Root cause known?" [shape=diamond];
+    "TDD" [shape=box, label="TDD:\nWrite failing test\nImplement fix\nVerify"];
+    "Systematic Debugging" [shape=box, label="Systematic Debugging:\n4-phase investigation\nEstablish root cause\nTHEN write test"];
+
+    "Bug reported" -> "Root cause known?";
+    "Root cause known?" -> "TDD" [label="YES\n(clear repro steps)"];
+    "Root cause known?" -> "Systematic Debugging" [label="NO\n(mysterious behavior)"];
+}
+```
+
+**Use TDD when root cause is KNOWN:**
+- User provides clear reproduction steps
+- Error message points to specific code
+- "X causes Y" relationship is established
+
+**Use Systematic Debugging when root cause is UNKNOWN:**
+- "It just broke" with no clear trigger
+- Intermittent or non-reproducible
+- Multiple potential causes
+
+**After Systematic Debugging establishes root cause:** Return to TDD for the fix (write failing test, implement, verify).
+
 ## The Iron Law
 
 ```

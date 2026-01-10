@@ -56,6 +56,21 @@ Use for ANY technical issue:
 - You're in a hurry (rushing guarantees rework)
 - Manager wants it fixed NOW (systematic is faster than thrashing)
 
+## Priority: Systematic Debugging vs TDD
+
+**Use Systematic Debugging when root cause is UNKNOWN:**
+- Mysterious behavior without clear trigger
+- "It just stopped working"
+- Intermittent failures
+- Multiple potential causes
+
+**Use TDD directly when root cause is KNOWN:**
+- Clear reproduction steps exist
+- User says "X causes Y"
+- Error message points to specific code
+
+**Handoff:** After Phase 4 establishes root cause, use TDD (hyperpowers:test-driven-development) for the actual fix: write failing test, implement minimal fix, verify.
+
 ## The Four Phases
 
 You MUST complete each phase before proceeding to the next.
