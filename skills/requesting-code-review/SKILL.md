@@ -8,7 +8,7 @@ allowed-tools: Task, Bash, Read
 
 ## Overview
 
-Dispatch hyperpowers:code-reviewer subagent to catch issues before they cascade.
+Dispatch 4 specialized review agents in parallel to catch issues before they cascade.
 
 **Core principle:** Review early, review often.
 
@@ -24,94 +24,118 @@ Dispatch hyperpowers:code-reviewer subagent to catch issues before they cascade.
 - Before refactoring (baseline check)
 - After fixing complex bug
 
-## Two-Stage Review Pattern
+## Specialized Review Pattern
 
-Reviews follow two stages in order:
+Code review dispatches 4 parallel specialized agents:
 
-**Stage 1: Spec Compliance**
-- Does the code do what was requested?
-- Are all requirements met?
-- Is anything missing from the spec?
-- Is anything EXTRA that wasn't requested?
+| Agent | Focus | Key Checks |
+|-------|-------|-----------|
+| **Security Reviewer** | Vulnerabilities | Injection, auth, secrets, input validation |
+| **Performance Reviewer** | Efficiency | N+1, memory leaks, scaling, caching |
+| **Style Reviewer** | Conventions | Naming, organization, patterns, formatting |
+| **Test Reviewer** | Coverage | Gaps, edge cases, test quality |
 
-**Stage 2: Code Quality**
-- Is the implementation well-designed?
-- Are there bugs, edge cases, security issues?
-- Is it maintainable, readable, testable?
-- Does it follow project patterns?
+Each agent reviews the same changes independently, then findings are synthesized by severity.
 
-**Why two stages?**
-- Spec compliance catches over/under-building FIRST
-- No point polishing code that doesn't meet requirements
-- Code quality assumes spec is already met
+### Model Selection
+
+All 4 specialized agents use `haiku` for fast, focused analysis.
+Orchestrator (you) handles synthesis with full reasoning capability.
 
 ## Quick Reference
 
-| Stage | Focus | Key Questions |
-|-------|-------|---------------|
-| 1. Spec Compliance | Requirements | Does it do what was requested? Anything missing/extra? |
-| 2. Code Quality | Implementation | Bugs? Security? Maintainable? Follows patterns? |
+| Step | Action |
+|------|--------|
+| 1 | Gather git context (BASE_SHA, HEAD_SHA) |
+| 2 | Summarize what was implemented |
+| 3 | Dispatch 4 parallel review agents |
+| 4 | Synthesize findings by severity |
+| 5 | Check docs/solutions/ for known fixes |
+| 6 | Present unified checklist |
 
-| Trigger | Action |
-|---------|--------|
-| After each subagent task | Dispatch code-reviewer |
-| After major feature | Dispatch code-reviewer |
-| Before merge to main | Dispatch code-reviewer |
-| When stuck | Dispatch code-reviewer (fresh perspective) |
+## How to Request Code Review
 
-## How to Request
+### Step 1: Gather Git Context
 
-**1. Get git SHAs:**
 ```bash
-BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
+BASE_SHA=$(git merge-base HEAD origin/main)  # or appropriate base
 HEAD_SHA=$(git rev-parse HEAD)
+git diff $BASE_SHA..$HEAD_SHA --stat
 ```
 
-**2. Prepare review request:**
+### Step 2: Identify What Was Implemented
+
+Summarize the changes:
+- What feature/fix was implemented
+- Which files were changed
+- What requirements it should meet
+
+### Step 3: Dispatch 4 Parallel Review Agents
+
+Dispatch all 4 agents simultaneously:
+
+```
+Task(description: "Security review",
+     prompt: [security-reviewer with diff context],
+     model: "haiku",
+     subagent_type: "general-purpose")
+
+Task(description: "Performance review",
+     prompt: [performance-reviewer with diff context],
+     model: "haiku",
+     subagent_type: "general-purpose")
+
+Task(description: "Style review",
+     prompt: [style-reviewer with diff context],
+     model: "haiku",
+     subagent_type: "general-purpose")
+
+Task(description: "Test review",
+     prompt: [test-reviewer with diff context],
+     model: "haiku",
+     subagent_type: "general-purpose")
+```
+
+Each agent prompt should include:
+- The git diff or changed file contents
+- Summary of what was implemented
+- The agent's checklist and output format
+
+### Step 4: Synthesize Findings
+
+After all agents complete, combine findings by severity:
 
 ```markdown
-## Review Request
+## Code Review Results
 
-**Spec Reference:** [link to spec.md or task description]
+### Critical Issues
+[Must fix before merge]
+- [ ] **[CATEGORY]** [Issue] at `file:line`
+  - [Details and fix recommendation]
 
-**Changes:**
-- [list of changes made]
+### Warnings
+[Should fix, may proceed with justification]
+- [ ] **[CATEGORY]** [Issue] at `file:line`
+  - [Details and fix recommendation]
 
-**Testing:**
-- [tests written/run]
-- [verification evidence]
-
-**Areas of Concern:**
-- [anything you're unsure about]
-
-**Git Range:**
-git diff <base>..<head>
+### Suggestions
+[Optional improvements]
+- [ ] **[CATEGORY]** [Issue] at `file:line`
+  - [Details]
 ```
 
-This format enables focused review and reduces back-and-forth.
+### Step 5: Check for Known Solutions
 
-**3. Dispatch code-reviewer subagent:**
+For Critical/Warning findings, check `docs/solutions/` for prior solutions:
+- If match found: Include link in recommendation
+- Example: "See `docs/solutions/performance-issues/n-plus-one-2026-01-08.md`"
 
-Use Task tool with hyperpowers:code-reviewer type, fill template at `./code-reviewer.md`
+### Step 6: Present to User
 
-**Model selection:** Use `model: haiku` when dispatching the code-reviewer subagent. Code review is a validation task that benefits from Haiku's speed and cost efficiency.
-
-```typescript
-Task(code_review_prompt, model: "haiku")
-```
-
-**Placeholders:**
-- `{WHAT_WAS_IMPLEMENTED}` - What you just built
-- `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_SHA}` - Starting commit
-- `{HEAD_SHA}` - Ending commit
-- `{DESCRIPTION}` - Brief summary
-
-**4. Act on feedback:**
-- Fix Critical issues immediately
-- Fix Important issues before proceeding
-- Note Minor issues for later
-- Push back if reviewer is wrong (with reasoning)
+Present the synthesized checklist. User should:
+- Fix all Critical issues
+- Address Warnings before merge (or justify skipping)
+- Consider Suggestions for future improvement
 
 ## Example
 
@@ -120,24 +144,29 @@ Task(code_review_prompt, model: "haiku")
 
 You: Let me request code review before proceeding.
 
-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
+BASE_SHA=$(git merge-base HEAD origin/main)
 HEAD_SHA=$(git rev-parse HEAD)
 
-[Dispatch hyperpowers:code-reviewer subagent]
-  WHAT_WAS_IMPLEMENTED: Verification and repair functions for conversation index
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/plans/deployment-plan.md
-  BASE_SHA: a7981ec
-  HEAD_SHA: 3df7661
-  DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
+[Dispatch 4 parallel review agents with diff context]
 
-[Subagent returns]:
-  Strengths: Clean architecture, real tests
-  Issues:
-    Important: Missing progress indicators
-    Minor: Magic number (100) for reporting interval
-  Assessment: Ready to proceed
+[All agents return, orchestrator synthesizes]:
 
-You: [Fix progress indicators]
+## Code Review Results
+
+### Critical Issues
+(none)
+
+### Warnings
+- [ ] **[PERFORMANCE]** verifyIndex() loads entire file into memory at `src/verify.ts:45`
+  - Consider streaming for large files
+
+### Suggestions
+- [ ] **[STYLE]** Magic number (100) for reporting interval at `src/verify.ts:78`
+  - Extract to named constant
+- [ ] **[TEST]** Missing edge case test for empty index at `tests/verify.test.ts`
+  - Add test for empty index scenario
+
+You: [Fix memory issue, note suggestions for later]
 [Continue to Task 3]
 ```
 
@@ -168,5 +197,3 @@ You: [Fix progress indicators]
 - Push back with technical reasoning
 - Show code/tests that prove it works
 - Request clarification
-
-See template at: `./code-reviewer.md`
