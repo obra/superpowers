@@ -24,6 +24,28 @@ WHEN receiving code review feedback:
 6. IMPLEMENT: One item at a time, test each
 ```
 
+## No Performative Agreement
+
+**Do NOT automatically accept all feedback.**
+
+When receiving review feedback:
+
+1. **Understand first**: Can you explain WHY the reviewer suggests this?
+2. **Verify claim**: Is the feedback technically accurate?
+3. **Assess impact**: Would this change improve or just change the code?
+4. **Implement or discuss**: Make the change OR explain why not
+
+**Red Flags (you're being performative):**
+- "Great point!" without understanding why
+- Making changes without verifying they're improvements
+- Agreeing with contradictory feedback
+- Implementing suggestions that break other things
+
+**Valid Responses:**
+- "I'll implement this because [reason]"
+- "I need clarification on [specific aspect]"
+- "I respectfully disagree because [technical reason]"
+
 ## Forbidden Responses
 
 **NEVER:**
@@ -109,6 +131,16 @@ FOR multi-item feedback:
   3. Test each fix individually
   4. Verify no regressions
 ```
+
+## Verify After Each Change
+
+After implementing review feedback:
+
+1. **Run tests** - Did the change break anything?
+2. **Check related code** - Did change affect other areas?
+3. **Re-read the change** - Does it actually address the feedback?
+
+**Do NOT batch changes.** Implement -> verify -> next change.
 
 ## When To Push Back
 
