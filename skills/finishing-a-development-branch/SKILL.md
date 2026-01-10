@@ -15,27 +15,34 @@ Guide completion of development work by presenting clear options and handling ch
 
 ## The Process
 
-### Step 1: Verify Tests
+### Step 1: Pre-Completion Verification Gate
 
-**Before presenting options, verify tests pass:**
+**Before presenting options, verify ALL of:**
 
 ```bash
-# Run project's test suite
+# Tests pass
 npm test / cargo test / pytest / go test ./...
+
+# Build succeeds
+npm run build / cargo build / make
+
+# Lint passes
+npm run lint / cargo clippy / ruff check
 ```
 
-**If tests fail:**
+**If ANY verification fails:**
 ```
-Tests failing (<N> failures). Must fix before completing:
+Verification failed. Cannot proceed with completion.
 
+[Tests/Build/Lint] failing:
 [Show failures]
 
-Cannot proceed with merge/PR until tests pass.
+Must fix before proceeding with merge/PR.
 ```
 
-Stop. Don't proceed to Step 2.
+**STOP. Do NOT present completion options until all verifications pass.**
 
-**If tests pass:** Continue to Step 2.
+**If all pass:** Continue to Step 2.
 
 ### Step 2: Determine Base Branch
 
@@ -133,21 +140,29 @@ git branch -D <feature-branch>
 
 Then: Cleanup worktree (Step 5)
 
-### Step 5: Cleanup Worktree
+### Step 5: Worktree Cleanup Integration
 
 **For Options 1, 2, 4:**
 
-Check if in worktree:
+Check if currently in a worktree:
 ```bash
-git worktree list | grep $(git branch --show-current)
+git worktree list | grep $(pwd)
 ```
 
-If yes:
+If yes, cleanup:
 ```bash
-git worktree remove <worktree-path>
+# Store paths
+WORKTREE_PATH=$(pwd)
+MAIN_REPO=$(git worktree list | head -1 | awk '{print $1}')
+
+# Return to main repo first
+cd "$MAIN_REPO"
+
+# Remove worktree
+git worktree remove "$WORKTREE_PATH"
 ```
 
-**For Option 3:** Keep worktree.
+**For Option 3 (Keep as-is):** Do NOT cleanup - worktree still needed.
 
 ## Quick Reference
 
@@ -160,9 +175,9 @@ git worktree remove <worktree-path>
 
 ## Common Mistakes
 
-**Skipping test verification**
-- **Problem:** Merge broken code, create failing PR
-- **Fix:** Always verify tests before offering options
+**Skipping verification gate**
+- **Problem:** Merge broken code, create failing PR, lint errors in PR
+- **Fix:** Always verify tests, build, AND lint before offering options
 
 **Open-ended questions**
 - **Problem:** "What should I do next?" → ambiguous
@@ -179,16 +194,17 @@ git worktree remove <worktree-path>
 ## Red Flags
 
 **Never:**
-- Proceed with failing tests
+- Proceed with failing tests, build, or lint
+- Present options before all verifications pass
 - Merge without verifying tests on result
 - Delete work without confirmation
 - Force-push without explicit request
 
 **Always:**
-- Verify tests before offering options
+- Run full verification gate (tests + build + lint) before offering options
 - Present exactly 4 options
 - Get typed confirmation for Option 4
-- Clean up worktree for Options 1 & 4 only
+- Clean up worktree for Options 1, 2 & 4 only
 
 ## Integration
 
