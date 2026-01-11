@@ -76,25 +76,68 @@ This will:
 
 ### Step 2: Verify Tests
 
-**Before presenting options, verify tests pass:**
+**Run the project's test suite:**
+
+Determine the test command from project structure:
+- `package.json` → `npm test`
+- `Cargo.toml` → `cargo test`
+- `go.mod` → `go test ./...`
+- `pytest.ini` or `setup.py` → `pytest`
 
 ```bash
-# Run project's test suite
-npm test / cargo test / pytest / go test ./...
+[appropriate test command]
 ```
+
+**Interpret test results:**
+
+**If all tests pass:**
+```
+✅ All tests passed ([N] tests)
+
+Proceeding to next step.
+```
+
+Continue to Step 3.
 
 **If tests fail:**
+
+Show the failure output, then prompt user:
+
 ```
-Tests failing (<N> failures). Must fix before completing:
+❌ Tests failed ([N] failures)
 
-[Show failures]
+[Show failure summary - first 20 lines of failures]
 
-Cannot proceed with merge/PR until tests pass.
+Are these failures due to:
+
+1. Missing configuration (.env, credentials, database setup) - safe to merge
+2. Actual bugs in the code - must fix before merging
+
+Which applies?
 ```
 
-Stop. Don't proceed to Step 3.
+**Option 1 selected (configuration issues):**
+```
+⚠️  Tests require environment setup but that's expected for this project.
 
-**If tests pass:** Continue to Step 3.
+Examples of config-dependent tests:
+- Integration tests requiring API credentials
+- Database tests requiring local DB
+- AWS Lambda tests requiring credentials
+
+✅ Proceeding with merge (configuration issues are acceptable)
+```
+
+Continue to Step 3.
+
+**Option 2 selected (actual bugs):**
+```
+❌ Cannot proceed with merge until test failures are fixed.
+
+Please fix the failing tests, then run this skill again.
+```
+
+Stop workflow. Do not proceed to next steps.
 
 ### Step 3: Determine Base Branch
 
