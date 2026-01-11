@@ -279,8 +279,8 @@ Cherry-picked improvements from the original Superpowers repository.
   - New red flag: "I know what that means"
 
 - **Make slash commands user-only** (`0403d17` from upstream `9baedaa`)
-  - Added `disable-model-invocation` to slash commands
-  - Claude can still invoke underlying skills directly
+  - Removed: `disable-model-invocation` was causing issues and has been removed
+  - Claude can invoke underlying skills directly
 
 - **Automation-over-documentation guidance** (`feba88d` from upstream `66a2dbd`)
   - Mechanical constraints should be automated, not documented
