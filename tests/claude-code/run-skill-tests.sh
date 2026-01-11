@@ -22,6 +22,36 @@ if ! command -v claude &> /dev/null; then
     exit 1
 fi
 
+# Portable timeout function
+# Works on Linux (timeout), macOS with coreutils (gtimeout), or falls back to basic implementation
+run_with_timeout() {
+    local timeout_duration=$1
+    shift
+
+    if command -v timeout &> /dev/null; then
+        timeout "$timeout_duration" "$@"
+    elif command -v gtimeout &> /dev/null; then
+        gtimeout "$timeout_duration" "$@"
+    else
+        # Basic timeout fallback for macOS without coreutils
+        # Run command in background and kill if it exceeds timeout
+        "$@" &
+        local pid=$!
+        local count=0
+        while kill -0 $pid 2>/dev/null && [ $count -lt $timeout_duration ]; do
+            sleep 1
+            count=$((count + 1))
+        done
+        if kill -0 $pid 2>/dev/null; then
+            kill -TERM $pid 2>/dev/null
+            wait $pid 2>/dev/null
+            return 124  # timeout exit code
+        fi
+        wait $pid
+        return $?
+    fi
+}
+
 # Parse command line arguments
 VERBOSE=false
 SPECIFIC_TEST=""
@@ -118,7 +148,7 @@ for test in "${tests[@]}"; do
     start_time=$(date +%s)
 
     if [ "$VERBOSE" = true ]; then
-        if timeout "$TIMEOUT" bash "$test_path"; then
+        if run_with_timeout "$TIMEOUT" bash "$test_path"; then
             end_time=$(date +%s)
             duration=$((end_time - start_time))
             echo ""
@@ -138,7 +168,7 @@ for test in "${tests[@]}"; do
         fi
     else
         # Capture output for non-verbose mode
-        if output=$(timeout "$TIMEOUT" bash "$test_path" 2>&1); then
+        if output=$(run_with_timeout "$TIMEOUT" bash "$test_path" 2>&1); then
             end_time=$(date +%s)
             duration=$((end_time - start_time))
             echo "  [PASS] (${duration}s)"
