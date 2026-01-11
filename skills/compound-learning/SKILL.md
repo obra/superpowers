@@ -48,6 +48,12 @@ Workflow used (comma-separated, e.g., systematic-debugging, test-driven-developm
 
 ### Step 3: Create Learning File
 
+Create directory if needed:
+
+```bash
+mkdir -p docs/learnings
+```
+
 Generate filename from summary:
 
 ```bash
