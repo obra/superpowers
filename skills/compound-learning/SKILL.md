@@ -33,11 +33,7 @@ Solution verified! Capture learning? (30 sec)
 2. No - skip
 ```
 
-If user chooses "Yes", continue to Step 3.
-
-### Step 3: Gather Learning Information
-
-Ask user for the following (allow flexible input):
+If user chooses "Yes", gather the following (allow flexible input):
 
 ```
 What did you learn? (one sentence)
@@ -50,7 +46,7 @@ Workflow used (comma-separated, e.g., systematic-debugging, test-driven-developm
 > [User enters workflows]
 ```
 
-### Step 4: Create Learning File
+### Step 3: Create Learning File
 
 Generate filename from summary:
 
@@ -92,7 +88,7 @@ Example output:
 ✓ Learning captured: docs/learnings/2026-01-11-yaml-parsing-edge-case.md
 ```
 
-### Step 5: Increment Counter
+### Step 4: Increment Counter
 
 Record the learning and check if threshold reached:
 
@@ -107,7 +103,7 @@ If count reaches 10, suggest review:
 💡 10 learnings captured! Run /review-learnings to detect patterns.
 ```
 
-### Step 6: Commit Learning
+### Step 5: Commit Learning
 
 ```bash
 git add "docs/learnings/[DATE]-[SLUG].md"
@@ -139,9 +135,6 @@ Learning already captured in this session. Run /compound again to capture anothe
 - ✅ YAML frontmatter with tags and workflow arrays
 - ✅ Auto-increments counter
 - ✅ Easy to skip
-- ✅ Files created in `docs/learnings/` with proper naming
-- ✅ Changes committed to git
-- ✅ Suggests review after 10 learnings
 
 ## Error Handling
 
