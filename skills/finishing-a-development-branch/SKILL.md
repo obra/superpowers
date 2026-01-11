@@ -91,20 +91,37 @@ Then: Cleanup worktree (Step 5)
 
 #### Option 2: Push and Create PR
 
+First, get issue reference from issue-tracking agent:
+```
+Task(description: "Get issue for PR",
+     prompt: "Operation: discover
+Context: [branch name, plan goal]
+Return: Primary issue for PR reference",
+     model: "haiku",
+     subagent_type: "general-purpose")
+```
+
 ```bash
 # Push branch
 git push -u origin <feature-branch>
 
-# Create PR
+# Create PR with issue reference
 gh pr create --title "<title>" --body "$(cat <<'EOF'
 ## Summary
 <2-3 bullets of what changed>
 
 ## Test Plan
 - [ ] <verification steps>
+
+Closes <issue-reference>
 EOF
 )"
 ```
+
+**Issue reference format by tracker:**
+- GitHub: `Closes #123` or `Closes org/repo#123`
+- Jira: `Closes PROJ-123`
+- Beads: `Related: beads-123` (manual close after merge)
 
 Then: Cleanup worktree (Step 5)
 
@@ -160,14 +177,45 @@ git worktree remove "$WORKTREE_PATH"
 
 **For Option 3 (Keep as-is):** Do NOT cleanup - worktree still needed.
 
+### Step 6: Issue Close Offer
+
+**For Options 1 (Merge) and 2 (PR after merge confirmed):**
+
+Dispatch issue-tracking agent:
+```
+Task(description: "Prepare close command",
+     prompt: "Operation: close
+Issue: [primary issue ID]",
+     model: "haiku",
+     subagent_type: "general-purpose")
+```
+
+Present offer:
+```
+Issue Close Offer:
+- Issue: PROJ-123 "Add user authentication"
+- Reason: [PR merged / Changes pushed to main]
+- Command: [from agent]
+
+Close issue? [Yes / Skip]
+```
+
+**Close timing logic:**
+- If PR workflow: Offer after merge confirmed
+- If direct-to-main: Offer after push confirmed
+- If GitHub with `Closes #N` in PR: Skip offer (auto-closed on merge)
+
+**For Option 3 (Keep as-is):** No close offer - work not complete.
+**For Option 4 (Discard):** No close offer - work discarded.
+
 ## Quick Reference
 
-| Option | Merge | Push | Keep Worktree | Cleanup Branch |
-|--------|-------|------|---------------|----------------|
-| 1. Merge locally | ✓ | - | - | ✓ |
-| 2. Create PR | - | ✓ | ✓ | - |
-| 3. Keep as-is | - | - | ✓ | - |
-| 4. Discard | - | - | - | ✓ (force) |
+| Option | Merge | Push | Keep Worktree | Cleanup Branch | Issue Close |
+|--------|-------|------|---------------|----------------|-------------|
+| 1. Merge locally | ✓ | - | - | ✓ | Offer |
+| 2. Create PR | - | ✓ | ✓ | - | After merge |
+| 3. Keep as-is | - | - | ✓ | - | - |
+| 4. Discard | - | - | - | ✓ (force) | - |
 
 ## Common Mistakes
 
