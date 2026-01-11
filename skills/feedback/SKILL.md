@@ -14,6 +14,24 @@ Enable iterative refinement of design, research, and plan documents through natu
 
 **Core principle:** User maintains full control - every change requires explicit approval.
 
+## Quick Reference
+
+| Phase | Action | Output |
+|-------|--------|--------|
+| 1. Parse | Read document, identify sections | Section targets, clarity check |
+| 2. Clarify | Ask questions if ambiguous | Clear intent (confidence > 85%) |
+| 3. Research | Escalate if needed (3 tiers) | Context for changes |
+| 4. Diff | Present old → new per change | User approval per change |
+| 5. Update | Apply approved changes, add changelog | Modified document |
+| 6. Complete | Ask continue/next stage/done | Handoff or more feedback |
+
+**Research Tiers:**
+| Tier | Trigger | Method |
+|------|---------|--------|
+| 1 | Codebase patterns | Grep/Glob |
+| 2 | External info needed | WebSearch/WebFetch |
+| 3 | Major scope change | 4 parallel agents |
+
 ## When to Use
 
 **Use this skill when:**
