@@ -193,7 +193,19 @@ Example: `docs/research/2026-01-15-user-authentication.md`
 
 ### Phase 5: Announce Completion
 
-"Research complete and saved to `docs/research/[filename].md`. Ready to proceed with planning."
+After saving the research document, announce with copy-paste commands:
+
+```
+Research complete and saved to `docs/research/<actual-filename>.md`.
+
+To continue:
+/compact ready to plan docs/research/<actual-filename>.md
+/hyperpowers:writing-plans docs/research/<actual-filename>.md
+```
+
+Replace `<actual-filename>` with the real filename you just created.
+
+**Design doc note:** If a design doc was used, add: "The design doc at `docs/designs/...` can be deleted now that it's absorbed into the research document."
 
 ## Quick Reference
 
