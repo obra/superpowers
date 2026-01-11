@@ -46,6 +46,34 @@ Read the target document and parse the user's natural language feedback.
 
 **If unsupported location:** Stop and inform user: "Feedback skill only supports documents in docs/designs/, docs/research/, or docs/plans/."
 
+### Phase 2: Clarify (if needed)
+
+**Skip this phase if:** Feedback is unambiguous (clear section, clear change, no interpretation needed).
+
+**Ask clarifying questions when:**
+- Feedback uses vague terms ("more robust", "better", "improve")
+- Multiple valid interpretations exist
+- Section target is unclear
+- Scope of change is undefined
+
+**Clarification Rules:**
+- 1-2 targeted questions maximum
+- Multiple choice preferred over open-ended
+- One question per message
+- Reference specific document content when asking
+
+**Example clarification:**
+```
+You mentioned "more robust error handling" - which do you mean?
+
+1. **Retry logic** - Automatically retry failed operations
+2. **Better error messages** - More descriptive user-facing errors
+3. **Graceful degradation** - Fallback behavior when components fail
+4. **Other** - Describe what you're looking for
+```
+
+**If confidence < 85% in interpreting feedback:** Ask, don't guess.
+
 ## Red Flags - STOP
 
 - Applying changes without user approval
