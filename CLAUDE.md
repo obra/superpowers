@@ -2,28 +2,25 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Issue Tracking (ENFORCED)
+## Issue Tracking
 
-This project uses **bd (beads)** for issue tracking. Hooks auto-inject `bd prime` at session start.
+This project uses issue tracking (beads, GitHub Issues, or Jira depending on configuration).
 
-**MANDATORY WORKFLOW:**
+**Skills handle issue tracking automatically:**
+- **research** - Discovers related issues, includes in research doc
+- **writing-plans** - Carries issue context to plan header
+- **subagent-driven-development** - Offers branch creation and status update at start
+- **verification-before-completion** - Offers to create discovered work, update original issue
+- **finishing-a-development-branch** - Includes issue reference in PR, offers close after merge
 
-1. **Session Start**: Run `bd ready` to see available work. If work relates to an existing issue, claim it with `bd update <id> --status=in_progress`
+**No manual issue commands needed** - skills present offers at checkpoints.
 
-2. **During Work**: If you discover work that should be tracked (multi-session, has dependencies, or non-trivial), create an issue with `bd create`
+**Detection priority:**
+1. Explicit declaration in CLAUDE.md or project rules
+2. Auto-detect: `.beads/` → `gh auth status` → Jira MCP
+3. If none detected: Skills warn but proceed without tracking
 
-3. **Before Completion**: You CANNOT claim work is done without:
-   - Closing related beads issues: `bd close <id>`
-   - Or explaining why no issue applies (truly ad-hoc work)
-
-**Quick reference:**
-- `bd ready` - Find unblocked work
-- `bd list --status=in_progress` - Your active work
-- `bd create "Title" --type task --priority 2` - Create issue
-- `bd close <id>` - Complete work
-- `bd update <id> --status=in_progress` - Claim work
-
-For full workflow details: `bd prime`
+**To configure:** Add to CLAUDE.md: "This project uses [beads|GitHub Issues|Jira] for issue tracking."
 
 ## What This Is
 
