@@ -19,6 +19,7 @@ This document details all significant improvements made to Hyperpowers since for
 - [8. Research Skill](#8-research-skill)
 - [9. Knowledge Management & Specialized Review](#9-knowledge-management--specialized-review)
 - [10. Context Fork Integration](#10-context-fork-integration)
+- [11. Issue Tracking Abstraction](#11-issue-tracking-abstraction)
 
 ---
 
@@ -477,6 +478,92 @@ Systematic-debugging now runs investigations in isolated forked context:
 
 ---
 
+## 11. Issue Tracking Abstraction
+
+System-agnostic issue tracking integration across all workflow skills.
+
+**Commits:** `25333e8`, `b23f38c`, `b95479d`, `da16ebd`, `7ee0341`, `d3edcae`, `3f7b27d`, `f57f26b`, `38fe86e`, `39ec7a0`, `42c9dcf`
+
+### Problem
+
+Previous implementation hardcoded beads (`bd`) commands throughout skills, making Hyperpowers unusable for projects using GitHub Issues, Jira, or other trackers.
+
+### Solution: Issue-Tracking Agent
+
+Created a new agent that abstracts tracker operations behind a unified interface.
+
+**Agent Structure:**
+- `agents/issue-tracking/AGENT.md` - Main agent definition with 4 operations
+- `agents/issue-tracking/beads-adapter.md` - Beads/bd CLI integration
+- `agents/issue-tracking/github-adapter.md` - GitHub Issues via `gh` CLI
+- `agents/issue-tracking/jira-adapter.md` - Jira via MCP tools
+
+**Detection Priority:**
+1. CLAUDE.md mentions (beads/bd/GitHub/Jira keywords)
+2. `.beads/` directory exists
+3. `gh auth status` succeeds
+4. Jira MCP tools available
+5. Fallback: No tracking available
+
+**4 Operations:**
+1. `discover` - Find ready-to-work issues (unblocked, high priority)
+2. `update_status` - Change issue status (in_progress, blocked, etc.)
+3. `track_discovered` - Create issue for work discovered during session
+4. `close_offer` - Offer to close issues upon completion
+
+### Skill Integrations
+
+**Research Skill:**
+- Added "Related Issues" section at end of research documents
+- Dispatches issue-tracking agent during research phase
+- Links findings to existing issues for context
+
+**Writing-Plans Skill:**
+- Added Phase 0.5 "Issue Context" after research check
+- Extracts related issues from research document if available
+- Falls back to agent discovery in degraded mode
+- Issues included in plan header for implementer reference
+
+**Subagent-Driven-Development Skill:**
+- Added "Pre-Implementation Offers" checkpoint before any coding
+- Offers to create issues for plan sections with dependencies
+- User approval required before proceeding
+
+**Verification-Before-Completion Skill:**
+- Removed hardcoded `bd update` commands
+- Added issue-tracking step to verification checklist
+- Dispatches agent for status updates
+
+**Finishing-Branch Skill:**
+- Added close timing: "Offer during Close" before merge/PR
+- PR descriptions include issue references with close keywords
+- Merge commits reference closed issues
+
+**CLAUDE.md:**
+- Replaced beads-specific enforcement with skill-based guidance
+- Points to issue-tracking agent for all tracker operations
+- Still uses beads as example workflow for bd-enabled projects
+
+### Design Principles
+
+**User Approval Required:**
+- All issue operations require explicit user consent
+- Never automatically creates, updates, or closes issues
+- Batched at natural checkpoints to minimize interruption
+
+**Checkpoint-Based Offers:**
+- Session start: Discovery offers (what's ready to work on?)
+- Pre-implementation: Track discovered work
+- Verification: Status updates
+- Finish: Close offers
+
+**Graceful Degradation:**
+- If no tracker detected, workflows continue without issue integration
+- Skills adapt behavior based on tracker availability
+- No failures when working on untracked projects
+
+---
+
 ## Summary Statistics
 
 | Category | Commits | Impact |
@@ -491,6 +578,7 @@ Systematic-debugging now runs investigations in isolated forked context:
 | Research Skill | ~8 | Deep context gathering before planning |
 | Knowledge Management & Review | ~9 | Solution capture, specialized review |
 | Context Fork Integration | ~4 | Token efficiency for verbose skills |
+| Issue Tracking Abstraction | ~11 | System-agnostic tracker support |
 
 ---
 

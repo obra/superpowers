@@ -189,6 +189,12 @@ Hyperpowers includes significant enhancements over the original Superpowers proj
 - **Token Optimization**: Core skills compressed without losing essential behavior
 - **Context Fork Isolation**: Systematic-debugging runs investigations in isolated context (40-50% token reduction)
 
+**Issue Tracking Abstraction**
+- **System-Agnostic Integration**: Single agent abstracts beads, GitHub Issues (via `gh`), and Jira (via MCP) behind unified interface
+- **Automatic Detection**: Priority chain (CLAUDE.md → `.beads/` → `gh auth status` → Jira MCP) with graceful fallback
+- **Full Lifecycle Support**: Discovery, status updates, discovered work tracking, and close offers across all workflow skills
+- **Checkpoint-Based Offers**: All issue operations batched at natural points (session start, verification, finish) - never interrupts during execution
+
 **Testing Infrastructure**
 - **Comprehensive Test Suite**: Context gathering, clarification, and enforcement language tests
 - **Case-Insensitive Assertions**: Robust pattern matching for LLM output variance
