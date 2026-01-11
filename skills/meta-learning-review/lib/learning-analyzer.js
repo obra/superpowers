@@ -7,25 +7,42 @@ const { execSync } = require('child_process');
 const LEARNINGS_DIR = 'docs/learnings';
 const STALE_MONTHS = 6;
 
-// Extract YAML frontmatter
+// Extract YAML frontmatter with better error handling
 function extractFrontmatter(content) {
-  const match = content.match(/^---\n([\s\S]*?)\n---/);
-  if (!match) return null;
+  try {
+    // Normalize line endings to \n
+    const normalized = content.replace(/\r\n/g, '\n');
 
-  const frontmatter = {};
-  match[1].split('\n').forEach(line => {
-    const [key, value] = line.split(': ');
-    if (key && value) {
-      // Handle arrays: tags: [a, b, c]
-      if (value.startsWith('[')) {
-        frontmatter[key] = value.slice(1, -1).split(',').map(t => t.trim());
-      } else {
-        frontmatter[key] = value;
+    const match = normalized.match(/^---\n([\s\S]*?)\n---/);
+    if (!match) return null;
+
+    const frontmatter = {};
+    match[1].split('\n').forEach(line => {
+      // Skip empty lines and comments
+      if (!line.trim() || line.trim().startsWith('#')) return;
+
+      // Split on first colon to handle quoted values with colons
+      const colonIndex = line.indexOf(': ');
+      if (colonIndex === -1) return;
+
+      const key = line.substring(0, colonIndex).trim();
+      const value = line.substring(colonIndex + 2).trim();
+
+      if (key && value) {
+        // Handle arrays: tags: [a, b, c]
+        if (value.startsWith('[')) {
+          frontmatter[key] = value.slice(1, -1).split(',').map(t => t.trim());
+        } else {
+          frontmatter[key] = value;
+        }
       }
-    }
-  });
+    });
 
-  return frontmatter;
+    return frontmatter;
+  } catch (error) {
+    console.error('Error parsing frontmatter:', error.message);
+    return null;
+  }
 }
 
 // Find all learning files (excluding .archive)
@@ -60,7 +77,8 @@ function loadLearnings() {
 // Identify stale learnings (6+ months old)
 function findStaleLearnings(learnings) {
   const now = new Date();
-  const sixMonthsAgo = new Date(now.setMonth(now.getMonth() - STALE_MONTHS));
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - STALE_MONTHS);
 
   return learnings.filter(learning => {
     const learningDate = new Date(learning.date);
@@ -143,7 +161,13 @@ if (command === 'analyze') {
   const stale = findStaleLearnings(learnings);
   console.log(JSON.stringify(stale, null, 2));
 
+} else if (command === 'match-skills') {
+  const learnings = loadLearnings();
+  const patterns = detectPatterns(learnings);
+  const matched = matchSkills(patterns);
+  console.log(JSON.stringify(matched, null, 2));
+
 } else {
-  console.log('Usage: learning-analyzer.js [analyze|patterns|stale]');
+  console.log('Usage: learning-analyzer.js [analyze|patterns|stale|match-skills]');
   process.exit(1);
 }
