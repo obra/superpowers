@@ -49,7 +49,7 @@ Check that commands appear:
 ```bash
 /help
 ```
-
+> Note: Switch to the **custom-commands** tab to see the plugin commands.
 ```
 # Should see:
 # /superpowers:brainstorm - Interactive design refinement
