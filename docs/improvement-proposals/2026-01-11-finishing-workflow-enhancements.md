@@ -4,6 +4,28 @@
 **Author:** Retrospective analysis from calendar-prep-mvp Todoist implementation
 **Skills Affected:** `finishing-a-development-branch`, `documenting-completed-implementation`
 
+## Implementation Status
+
+**Date Implemented:** 2026-01-11
+
+**Implemented:**
+- ✅ Step 0: Pre-flight check for uncommitted changes
+- ✅ Step 2: Enhanced test verification with user prompt
+- ✅ Step 3.5: Code review as explicit option (not auto-gate)
+- ✅ Step 3 (documenting): Smart README section detection
+
+**Not Implemented (Rationale):**
+- ❌ Step 2.5: Auto-invoke verification-before-completion (wrong tool for job - that skill is about claim verification, not pre-merge checks)
+- ❌ Step 5: Remote push prompt (scope creep, decision fatigue)
+- ❌ New pre-merge-verification skill (skill proliferation)
+
+**Changes from Original Proposal:**
+- Test verification uses user prompt instead of auto-categorizing unit vs integration tests (simpler, more reliable)
+- README check uses section header detection instead of line counting (more accurate)
+- Code review added as explicit option rather than auto-detected gate (preserves user agency)
+
+---
+
 ## Problem Statement
 
 During a real-world feature merge (Todoist output Lambda implementation), several workflow gaps were identified that made the process less smooth than it could be:
