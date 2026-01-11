@@ -197,6 +197,8 @@ Then: Cleanup worktree (Step 6)
 
 Use the `superpowers:requesting-code-review` skill to prepare code review request.
 
+**Note:** Review happens in current worktree. Worktree is preserved for potential fixes.
+
 **After code review is complete:**
 
 Return to this workflow and present options again:
@@ -212,7 +214,11 @@ Code review complete. What would you like to do now?
 Which option?
 ```
 
-Then follow the handler for the selected option (1, 3, 4, or 5 from original numbering).
+Then follow the handler for the selected option:
+- Post-review option 1 → Option 1 (Merge locally)
+- Post-review option 2 → Option 3 (Push and create PR)
+- Post-review option 3 → Option 4 (Keep as-is)
+- Post-review option 4 → Option 5 (Discard)
 
 #### Option 3: Push and Create PR
 
