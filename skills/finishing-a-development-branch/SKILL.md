@@ -177,7 +177,9 @@ git worktree remove "$WORKTREE_PATH"
 
 **For Option 3 (Keep as-is):** Do NOT cleanup - worktree still needed.
 
-### Step 6: Issue Close Offer
+### Step 6: MANDATORY Issue Close Offer
+
+**REQUIRED for Options 1 and 2:** Issue close offer MUST be presented if issue was tracked at session start.
 
 **For Options 1 (Merge) and 2 (PR after merge confirmed):**
 
@@ -188,6 +190,17 @@ Task(description: "Prepare close command",
 Issue: [primary issue ID]",
      model: "haiku",
      subagent_type: "general-purpose")
+```
+
+**If no primary issue was tracked:**
+```
+Note: No primary issue was tracked during this session.
+
+Manual verification:
+- [ ] Work matches original request
+- [ ] No issue should be closed for this work
+
+Consider using issue tracking for future work.
 ```
 
 Present offer:
@@ -217,6 +230,8 @@ Close issue? [Yes / Skip]
 | 3. Keep as-is | - | - | ✓ | - | - |
 | 4. Discard | - | - | - | ✓ (force) | - |
 
+**Note:** Issue Close offer is MANDATORY for Options 1 and 2 when an issue was tracked. User decides execution.
+
 ## Common Mistakes
 
 **Skipping verification gate**
@@ -243,6 +258,7 @@ Close issue? [Yes / Skip]
 - Merge without verifying tests on result
 - Delete work without confirmation
 - Force-push without explicit request
+- Skip issue close offer for Options 1/2 when issue was tracked
 
 **Always:**
 - Run full verification gate (tests + build + lint) before offering options
