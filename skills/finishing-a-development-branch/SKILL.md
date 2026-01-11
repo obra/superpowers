@@ -15,6 +15,48 @@ Finalize completed implementation: document what was built, track in history, th
 
 ## The Process
 
+### Step 0: Pre-flight Check
+
+**Verify clean working directory before starting:**
+
+```bash
+git status --short
+```
+
+**If output is empty:** Working directory is clean, proceed to Step 1.
+
+**If uncommitted changes exist:** Present options to user:
+
+```
+⚠️  You have uncommitted changes:
+
+[Show git status output]
+
+What would you like to do?
+
+1. Commit them now (recommended)
+2. Stash them temporarily
+3. Cancel - I'll handle this manually
+
+Which option?
+```
+
+**Option 1 selected - Commit changes:**
+```bash
+git add -A
+git commit -m "work in progress: preparing to finish branch"
+```
+
+**Option 2 selected - Stash changes:**
+```bash
+git stash push -m "WIP before finishing branch"
+```
+
+**Option 3 selected - Cancel:**
+Stop the workflow. Report to user: "Please handle uncommitted changes, then run this skill again."
+
+**Only proceed to Step 1 if working directory is clean.**
+
 ### Step 1: Document Completed Work
 
 **REQUIRED:** If implementation was based on a plan in `docs/plans/`, invoke `documenting-completed-implementation` skill first.
