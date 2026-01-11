@@ -238,8 +238,25 @@ To continue:
 
 ## Red Flags - STOP
 
+Stop and reconsider if you catch yourself:
+
 - Applying changes without user approval
 - Modifying code files (design artifacts only)
 - Skipping clarification when feedback is ambiguous
 - Restructuring document format (add content, don't restructure)
 - Dispatching full research for simple feedback
+- Batching changes as all-or-nothing instead of individual approval
+- Guessing user intent instead of asking
+- Changing document structure or format (content only)
+- Creating new documents instead of modifying existing ones
+
+## Rationalization Prevention
+
+| Excuse | Reality |
+|--------|---------|
+| "Change is obviously correct" | User still approves each change |
+| "Batch approval is faster" | Individual approval is the design |
+| "Full research ensures quality" | Most feedback needs Tier 1 or Tier 2 |
+| "Document needs restructuring" | Feedback adds content, doesn't restructure |
+| "I understood the feedback" | If confidence < 85%, ask |
+| "User will approve anyway" | Never assume approval |
