@@ -117,7 +117,25 @@ After all agents complete, synthesize their findings into a research document.
 # Research: [Topic]
 
 > Generated: [YYYY-MM-DD]
+> Design Doc: docs/designs/YYYY-MM-DD-<topic>-design.md (if exists)
 > Issue: [if linked]
+
+## Design Summary
+
+**Problem:** [from design doc Problem Statement, or omit section if no design doc]
+
+**Success Criteria:** [from design doc, as numbered list]
+
+**Constraints:** [from design doc]
+
+**Proposed Approach:** [from design doc Approach section]
+
+## Resolved Questions
+
+| Question | Resolution |
+|----------|------------|
+| [open question 1 from design] | [answer from agent research] |
+| [open question 2 from design] | [answer from agent research] |
 
 ## Executive Summary
 - [5-7 key findings as bullets]
@@ -163,7 +181,7 @@ After all agents complete, synthesize their findings into a research document.
 - Integration points to consider
 
 ## Open Questions
-- Things research couldn't resolve
+- Things research couldn't resolve (not from design - those go in Resolved Questions)
 - Decisions needed before planning
 ```
 
