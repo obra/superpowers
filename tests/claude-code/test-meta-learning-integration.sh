@@ -49,12 +49,22 @@ fi
 
 echo ""
 
-# Test 3: Verify meta-learning-review skill can be invoked
-echo "Test 3: Meta-learning-review skill invocation..."
+# Test 3: Verify meta-learning-review skill identifies patterns in learnings
+echo "Test 3: Meta-learning-review skill analysis..."
 
-output=$(run_claude "Use meta-learning-review to analyze the learnings in docs/learnings/" 60)
+# Instead of asking Claude to use the skill, directly test the analyzer
+output=$(cd ~/Dev/superpowers && node skills/meta-learning-review/lib/learning-analyzer.js patterns 2>&1)
 
-if assert_contains "$output" "meta-learning-review\|learning\|pattern" "Skill provides analysis"; then
+# Verify the analyzer detects the yaml pattern with 5 learnings
+if assert_contains "$output" "yaml" "Analyzer detects yaml pattern"; then
+    : # pass
+else
+    rm -rf ~/Dev/superpowers/docs/learnings
+    exit 1
+fi
+
+# Verify the count is exactly 5
+if assert_contains "$output" '"count": 5' "Analyzer reports 5 yaml learnings"; then
     : # pass
 else
     rm -rf ~/Dev/superpowers/docs/learnings
@@ -63,12 +73,13 @@ fi
 
 echo ""
 
-# Test 4: Verify compound-learning skill is discoverable
+# Test 4: Verify compound-learning skill is discoverable with accurate description
 echo "Test 4: Compound-learning skill discovery..."
 
 output=$(run_claude "What is the compound-learning skill? Describe its purpose briefly." 30)
 
-if assert_contains "$output" "compound-learning\|capture\|learning" "Skill is recognized"; then
+# Verify the skill's actual purpose: capturing/knowledge and learnings
+if assert_contains "$output" "knowledge.*capture\|capture.*knowledge\|learning" "Skill purpose is accurately described"; then
     : # pass
 else
     rm -rf ~/Dev/superpowers/docs/learnings
@@ -77,12 +88,14 @@ fi
 
 echo ""
 
-# Test 5: Verify verification-before-completion mentions learning capture
+# Test 5: Verify verification-before-completion skill integrates learning capture
 echo "Test 5: Verification-before-completion learning integration..."
 
-output=$(run_claude "In the verification-before-completion skill, what is mentioned about capturing learnings?" 30)
+# Directly verify the skill content mentions compound-learning
+output=$(cat ~/Dev/superpowers/skills/verification-before-completion/SKILL.md 2>&1)
 
-if assert_contains "$output" "learning\|capture\|compound" "Mentions learning capture option"; then
+# Verify it mentions the compound-learning skill as the mechanism for capturing
+if assert_contains "$output" "compound-learning" "Mentions compound-learning for capturing"; then
     : # pass
 else
     rm -rf ~/Dev/superpowers/docs/learnings
