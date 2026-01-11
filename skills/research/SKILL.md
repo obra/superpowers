@@ -26,7 +26,31 @@ Do NOT use when:
 
 ## The Process
 
-### Phase 1: Clarify the Topic
+### Phase 0: Check for Design Document
+
+Before topic clarification, check if a design document exists:
+
+**If invoked with a path argument:**
+1. Check if the path points to a file in `docs/designs/` or `docs/plans/`
+2. If file exists: Read it, extract Problem Statement, Success Criteria, Constraints, Approach, Open Questions
+3. If file missing: Warn "Design doc not found at [path], falling back to clarification"
+
+**If no path provided:**
+1. Search `docs/designs/` for recent design docs (within 7 days)
+2. If found: Ask "Found design doc [filename]. Use this for research?" (Yes/No)
+3. If not found or declined: Proceed to Phase 1 clarification
+
+**When design doc found:**
+- Extract "Open Questions" section
+- Add to each agent prompt in Phase 2:
+  ```
+  Additionally, investigate these open questions from the design:
+  - [question 1]
+  - [question 2]
+  ```
+- Skip Phase 1 clarification (design already clarifies the topic)
+
+### Phase 1: Clarify the Topic (if no design doc)
 
 If the research topic is ambiguous, ask 2-3 targeted questions using AskUserQuestion:
 - What specific aspect needs investigation?
@@ -157,7 +181,8 @@ Example: `docs/research/2026-01-15-user-authentication.md`
 
 | Phase | Action | Output |
 |-------|--------|--------|
-| 1 | Clarify topic | Clear research question |
+| 0 | Check design doc | Design context or proceed |
+| 1 | Clarify topic (if no design) | Clear research question |
 | 2 | Dispatch 4 agents | Parallel research |
 | 2.5 | Discover issues | Related issues list |
 | 3 | Synthesize | Combined findings |
