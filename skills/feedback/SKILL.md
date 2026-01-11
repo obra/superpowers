@@ -74,6 +74,51 @@ You mentioned "more robust error handling" - which do you mean?
 
 **If confidence < 85% in interpreting feedback:** Ask, don't guess.
 
+### Phase 3: Research (if needed)
+
+**Skip this phase if:** Feedback can be addressed from document context alone.
+
+**Three-Tier Escalation Model:**
+
+**Tier 1: Codebase Lookup** (most common)
+- **Trigger:** Feedback requires finding existing patterns or implementations
+- **Method:** Grep/Glob the codebase synchronously
+- **Example:** "Add retry logic" → search for existing retry implementations
+- **Execution:** Orchestrator-level, no subagent dispatch
+
+**Tier 2: Web Search**
+- **Trigger:** Feedback asks about APIs, libraries, or best practices not in codebase
+- **Method:** WebSearch + WebFetch for documentation
+- **Example:** "Use Redis instead of in-memory cache" → search Redis best practices
+- **Execution:** Orchestrator-level, synchronous
+
+**Tier 3: Full Research Dispatch** (rare)
+- **Trigger:** Feedback introduces significant new scope or complex unknowns
+- **Method:** Dispatch 4 parallel research agents (haiku model)
+- **Example:** "Change authentication from session-based to JWT"
+- **Execution:** Only when feedback introduces major architectural changes
+
+**Escalation Decision Algorithm:**
+```
+1. Answerable from document context alone?
+   YES → Incorporate feedback directly
+   NO → proceed to step 2
+
+2. Codebase-specific question (existing patterns, code)?
+   YES → Tier 1 (Grep/Glob), escalate to web if insufficient
+   NO → proceed to step 3
+
+3. Requires current external information?
+   YES → Tier 2 (WebSearch)
+   NO → proceed to step 4
+
+4. Requires synthesis across multiple complex sources?
+   YES → Tier 3 (Full dispatch)
+   NO → Ask user for clarification (feedback too vague)
+```
+
+**Anti-Pattern:** Over-escalation. Reserve full dispatch for genuinely complex tradeoffs. Most feedback needs Tier 1 or Tier 2 only.
+
 ## Red Flags - STOP
 
 - Applying changes without user approval
