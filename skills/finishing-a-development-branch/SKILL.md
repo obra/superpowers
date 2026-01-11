@@ -150,15 +150,18 @@ Or ask: "This branch split from main - is that correct?"
 
 ### Step 4: Present Options
 
-Present exactly these 4 options:
+Present exactly these 5 options:
 
 ```
-Implementation complete. What would you like to do?
+✅ Implementation complete and tests verified.
+
+What would you like to do?
 
 1. Merge back to <base-branch> locally
-2. Push and create a Pull Request
-3. Keep the branch as-is (I'll handle it later)
-4. Discard this work
+2. Request code review before merging
+3. Push and create a Pull Request
+4. Keep the branch as-is (I'll handle it later)
+5. Discard this work
 
 Which option?
 ```
@@ -188,7 +191,30 @@ git branch -d <feature-branch>
 
 Then: Cleanup worktree (Step 6)
 
-#### Option 2: Push and Create PR
+#### Option 2: Request Code Review
+
+**Invoke code review skill:**
+
+Use the `superpowers:requesting-code-review` skill to prepare code review request.
+
+**After code review is complete:**
+
+Return to this workflow and present options again:
+
+```
+Code review complete. What would you like to do now?
+
+1. Merge back to <base-branch> locally
+2. Push and create a Pull Request
+3. Keep the branch as-is (I'll handle it later)
+4. Discard this work
+
+Which option?
+```
+
+Then follow the handler for the selected option (1, 3, 4, or 5 from original numbering).
+
+#### Option 3: Push and Create PR
 
 ```bash
 # Push branch
@@ -207,13 +233,13 @@ EOF
 
 Then: Cleanup worktree (Step 6)
 
-#### Option 3: Keep As-Is
+#### Option 4: Keep As-Is
 
 Report: "Keeping branch <name>. Worktree preserved at <path>."
 
 **Don't cleanup worktree.**
 
-#### Option 4: Discard
+#### Option 5: Discard
 
 **Confirm first:**
 ```
@@ -237,7 +263,7 @@ Then: Cleanup worktree (Step 6)
 
 ### Step 6: Cleanup Worktree
 
-**For Options 1, 2, 4:**
+**For Options 1, 3, 5:**
 
 Check if in worktree:
 ```bash
@@ -249,16 +275,17 @@ If yes:
 git worktree remove <worktree-path>
 ```
 
-**For Option 3:** Keep worktree.
+**For Options 2, 4:** Keep worktree.
 
 ## Quick Reference
 
 | Option | Merge | Push | Keep Worktree | Cleanup Branch |
 |--------|-------|------|---------------|----------------|
 | 1. Merge locally | ✓ | - | - | ✓ |
-| 2. Create PR | - | ✓ | ✓ | - |
-| 3. Keep as-is | - | - | ✓ | - |
-| 4. Discard | - | - | - | ✓ (force) |
+| 2. Code review | - | - | ✓ | - |
+| 3. Create PR | - | ✓ | ✓ | - |
+| 4. Keep as-is | - | - | ✓ | - |
+| 5. Discard | - | - | - | ✓ (force) |
 
 ## Common Mistakes
 
@@ -266,8 +293,8 @@ git worktree remove <worktree-path>
 |---------|-----|
 | **Skip documentation** | Step 1 is REQUIRED if plan exists. Invoke documenting-completed-implementation first. |
 | **Skip test verification** | Merge broken code, create failing PR |
-| **Open-ended questions** | "What should I do next?" → ambiguous. Present 4 structured options. |
-| **Automatic worktree cleanup** | Remove worktree when might need it (Option 2, 3) |
+| **Open-ended questions** | "What should I do next?" → ambiguous. Present 5 structured options. |
+| **Automatic worktree cleanup** | Remove worktree when might need it (Options 2, 3, 4) |
 | **No confirmation for discard** | Accidentally delete work |
 
 ## Red Flags
@@ -282,9 +309,9 @@ git worktree remove <worktree-path>
 **Always:**
 - Invoke documenting-completed-implementation first (if plan exists)
 - Verify tests before offering options
-- Present exactly 4 options
-- Get typed confirmation for Option 4
-- Clean up worktree for Options 1 & 4 only
+- Present exactly 5 options
+- Get typed confirmation for Option 5
+- Clean up worktree for Options 1, 3 & 5 only
 
 ## Integration
 
