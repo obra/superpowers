@@ -28,7 +28,23 @@ Enable iterative refinement of design, research, and plan documents through natu
 
 ## The Process
 
-[Phase content to be added in subsequent tasks]
+### Phase 1: Parse Feedback
+
+Read the target document and parse the user's natural language feedback.
+
+**Identify:**
+1. Which section(s) the feedback applies to
+2. Whether the request is clear or needs clarification
+3. Whether research is needed to fulfill the request
+
+**Document Detection:**
+- `docs/designs/` → design document → next stage is `/hyperpowers:research`
+- `docs/research/` → research document → next stage is `/hyperpowers:writing-plans`
+- `docs/plans/` → plan document → next stage is `/hyperpowers:subagent-driven-development`
+
+**If document not found:** Stop and inform user: "Document not found at [path]. Please provide a valid path to a design, research, or plan document."
+
+**If unsupported location:** Stop and inform user: "Feedback skill only supports documents in docs/designs/, docs/research/, or docs/plans/."
 
 ## Red Flags - STOP
 
