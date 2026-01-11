@@ -26,6 +26,20 @@ Enable iterative refinement of design, research, and plan documents through natu
 - User wants to start fresh with a new design (use brainstorming instead)
 - Document doesn't exist in `docs/designs/`, `docs/research/`, or `docs/plans/`
 
+## Implicit Trigger Detection
+
+The feedback skill can activate implicitly when:
+
+1. **Keywords detected:** "actually", "change", "instead", "add", "remove", "update", "modify"
+2. **Proximity:** Feedback follows document creation in same conversation session
+3. **Context:** User is referencing a recently-created design, research, or plan document
+
+**Implicit activation announcement:**
+"I notice you're providing feedback on the [document type] we just created. I'll use the feedback skill to incorporate your changes."
+
+**Confidence threshold:** Only activate implicitly if confidence > 85%. Otherwise, ask:
+"Are you providing feedback on [document path]? If so, I can use the feedback skill to incorporate your changes."
+
 ## The Process
 
 ### Phase 1: Parse Feedback
