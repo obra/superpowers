@@ -190,6 +190,38 @@ Add or update the `## Changelog` section at the end of the document:
 - **Success Criteria:** Added latency requirement (<100ms p95)
 ~~~
 
+### Phase 6: Completion Check
+
+After all approved changes are applied, ask explicitly:
+
+```
+Document updated at `[document path]`.
+
+Would you like to:
+1. **Continue refining** - Give more feedback on this document
+2. **Move to next stage** - [Context-aware based on document type]
+3. **Done for now** - Stay here, invoke next skill manually later
+```
+
+**Next stage options (context-aware):**
+- Design doc (`docs/designs/`) → "Move to research (`/hyperpowers:research`)"
+- Research doc (`docs/research/`) → "Move to planning (`/hyperpowers:writing-plans`)"
+- Plan doc (`docs/plans/`) → "Move to implementation (`/hyperpowers:subagent-driven-development`)"
+
+**If user chooses option 1:** Return to Phase 1 with new feedback.
+
+**If user chooses option 2:** Provide standard handoff:
+
+```
+Document finalized at `[document path]`.
+
+To continue:
+/compact ready to [research|plan|implement] [document path]
+/hyperpowers:[next-skill] [document path]
+```
+
+**If user chooses option 3:** End skill execution.
+
 ## Red Flags - STOP
 
 - Applying changes without user approval
