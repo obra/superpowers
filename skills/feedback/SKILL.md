@@ -119,6 +119,38 @@ You mentioned "more robust error handling" - which do you mean?
 
 **Anti-Pattern:** Over-escalation. Reserve full dispatch for genuinely complex tradeoffs. Most feedback needs Tier 1 or Tier 2 only.
 
+### Phase 4: Present Changes as Diffs
+
+For each section being modified, show the change with individual approval:
+
+**Diff Format:**
+```
+### Change 1 of 3: [Section Name]
+
+**Old:**
+> [Exact text being replaced, quoted]
+
+**New:**
+> [Proposed replacement text, quoted]
+
+Apply this change? (yes/no/modify)
+```
+
+**Approval Options:**
+- **yes** - Apply this change and move to next
+- **no** - Skip this change and move to next
+- **modify** - User provides additional feedback on this specific change
+
+**Rules:**
+- Present one change at a time
+- Wait for user response before proceeding to next change
+- Show context (3-5 surrounding lines) when helpful
+- Never batch changes as all-or-nothing
+- User maintains full control over each modification
+
+**If user selects "modify":**
+Return to Phase 2 (Clarify) for this specific change with the user's additional feedback.
+
 ## Red Flags - STOP
 
 - Applying changes without user approval
