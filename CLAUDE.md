@@ -227,6 +227,10 @@ Core skills trigger in sequence:
 - `documenting-completed-implementation` - Update CLAUDE.md and README, mark plan complete, archive to completed/
 - `finishing-a-development-branch` - Invokes documenting skill, then handles git workflow (merge/PR/cleanup)
 
+**Meta-Learning**:
+- `meta-learning-review` - Analyze learnings, detect patterns, suggest skills. Handles decay (archives stale knowledge). Triggered every 10 learnings or via /review-learnings.
+- `compound-learning` - Quick capture after verification. Builds searchable knowledge in docs/learnings/.
+
 **Meta**:
 - `using-superpowers` - Introduction to skills system (auto-loaded at session start)
 - `writing-skills` - TDD for creating/editing skills

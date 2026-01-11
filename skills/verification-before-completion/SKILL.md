@@ -130,6 +130,19 @@ From 24 failure memories:
 - Implications of success
 - ANY communication suggesting completion/correctness
 
+### Optional: Capture Learning
+
+```
+✅ Verification complete!
+
+Capture any learnings? (optional)
+
+1. Yes - use compound-learning
+2. No - skip
+```
+
+If yes: Invoke compound-learning skill.
+
 ## The Bottom Line
 
 **No shortcuts for verification.**
