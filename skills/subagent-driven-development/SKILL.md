@@ -80,6 +80,75 @@ digraph process {
 }
 ```
 
+## Pre-Implementation Setup
+
+**Before the task loop, at session start:**
+
+### Step 1: Branch Creation Offer (if not on feature branch)
+
+Check if on main/master/develop:
+```bash
+git branch --show-current
+```
+
+If on base branch, dispatch issue-tracking agent:
+```
+Task(description: "Get branch convention",
+     prompt: "Operation: get-branch-convention
+Context: [plan goal/primary issue]",
+     model: "haiku",
+     subagent_type: "general-purpose")
+```
+
+Present offer to user:
+```
+Branch Creation Offer:
+- Convention detected from: [source]
+- Proposed branch: feature/PROJ-123-add-user-auth
+- Based on issue: PROJ-123 "Add user authentication"
+
+Create this branch? [Yes / Modify / Skip]
+```
+
+Only execute after user approval.
+
+### Step 2: Status Update Offer
+
+If primary issue identified, dispatch issue-tracking agent:
+```
+Task(description: "Prepare status update",
+     prompt: "Operation: update-status
+Issue: [primary issue ID]
+New status: in-progress",
+     model: "haiku",
+     subagent_type: "general-purpose")
+```
+
+Present offer:
+```
+Issue Status Update Offer:
+- Issue: PROJ-123 "Add user authentication"
+- Current status: open
+- Proposed status: in-progress
+- Command: [command from agent]
+
+Update status? [Yes / Skip]
+```
+
+Only execute after user approval.
+
+### Discovered Work Tracking
+
+During task execution, when work uncovers something that should be tracked, append to `docs/current-progress.md`:
+
+```markdown
+## Discovered Work
+- [ ] "Need to add rate limiting to API" (discovered in Task 3)
+- [ ] "Auth tokens should expire after 24h" (discovered in Task 5)
+```
+
+**No offers during execution.** Discovered work is batched for presentation at verification checkpoint.
+
 ## Prompt Templates
 
 - `./implementer-prompt.md` - Dispatch implementer subagent
@@ -226,6 +295,10 @@ IN_PROGRESS
 ## Completed Tasks
 - [x] Task 1: Setup project structure
 - [x] Task 2: Add base API client
+
+## Discovered Work
+- [ ] "Need to add rate limiting to API" (discovered in Task 3)
+- [ ] "Auth tokens should expire after 24h" (discovered in Task 5)
 ```
 
 **Status flags:** `PENDING`, `IN_PROGRESS`, `READY_FOR_SPEC_REVIEW`, `READY_FOR_CODE_REVIEW`, `BLOCKED`, `DONE`
