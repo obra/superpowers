@@ -151,6 +151,45 @@ Apply this change? (yes/no/modify)
 **If user selects "modify":**
 Return to Phase 2 (Clarify) for this specific change with the user's additional feedback.
 
+### Phase 5: Update Document & Changelog
+
+After user approves changes:
+
+**Step 1: Apply approved changes**
+Use Edit tool to apply each approved change to the document.
+
+**Step 2: Append changelog entry**
+Add or update the `## Changelog` section at the end of the document:
+
+~~~markdown
+## Changelog
+
+### YYYY-MM-DD - Feedback Round N
+- **[Section]:** [Brief description of change]
+- **[Section]:** [Brief description of change]
+- **Research:** [If research was performed, note what was looked up]
+~~~
+
+**Changelog Rules:**
+- Create `## Changelog` section on first feedback round
+- Append new dated entries on subsequent rounds
+- Use Keep a Changelog categories when appropriate: Added, Changed, Fixed
+- Include research performed (with tier used)
+- Persist across sessions (changelog is permanent)
+
+**Example:**
+~~~markdown
+## Changelog
+
+### 2026-01-11 - Feedback Round 1
+- **Architecture:** Changed from in-memory cache to Redis with 15-min TTL
+- **Error Handling:** Added retry logic with exponential backoff
+- **Research:** Tier 2 - Looked up Redis best practices for cache invalidation
+
+### 2026-01-12 - Feedback Round 2
+- **Success Criteria:** Added latency requirement (<100ms p95)
+~~~
+
 ## Red Flags - STOP
 
 - Applying changes without user approval
