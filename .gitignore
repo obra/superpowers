@@ -7,4 +7,7 @@ docs/current-progress.md
 docs/plans
 docs/handoffs
 docs/research
+
+# Ephemeral design documents (absorbed into research)
+docs/designs/
 .DS_Store
