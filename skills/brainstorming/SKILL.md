@@ -49,7 +49,7 @@ Start by understanding the current project context, then ask questions one at a 
 ## After the Design
 
 **Documentation:**
-- Write the validated design to `docs/plans/YYYY-MM-DD-<topic>-design.md`
+- Write the validated design to `docs/designs/YYYY-MM-DD-<topic>-design.md`
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 
@@ -81,7 +81,7 @@ Violations (any of these = stop and restart):
 
 ## Deliverable: design.md
 
-Brainstorming is complete when you have a design document at `docs/plans/YYYY-MM-DD-<topic>-design.md` containing:
+Brainstorming is complete when you have a design document at `docs/designs/YYYY-MM-DD-<topic>-design.md` containing:
 
 1. **Problem Statement**: What problem are we solving? (not "add feature X")
 2. **Success Criteria**: How will we know it's done? (measurable)
