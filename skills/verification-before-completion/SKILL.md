@@ -60,7 +60,7 @@ Skip any step = lying, not verifying
 | Regression test works | Red-green cycle verified | Test passes once |
 | Agent completed | VCS diff shows changes | Agent reports "success" |
 | Requirements met | Line-by-line checklist | Tests passing |
-| Work complete | `bd close <id>` for related issues | "No issue tracked this" without checking |
+| Work complete | Issue offers reviewed, original issue updated | "No issue tracked this" without checking |
 
 ## Evidence-Based Completion Checklist
 
@@ -72,7 +72,7 @@ Before claiming ANY work is complete:
 - [ ] Linting PASSED - show lint output
 - [ ] Edge cases TESTED - list which ones
 - [ ] Related functionality VERIFIED - nothing broken
-- [ ] Beads issues CLOSED - `bd close <id>` for related issues, or explain why none apply
+- [ ] Issue tracking offers reviewed - discovered work creation, original issue update (see Issue Offers phase below)
 
 **Red Flags for Premature Claims:**
 - "Tests should pass" (should ≠ did)
@@ -81,6 +81,61 @@ Before claiming ANY work is complete:
 - Claiming success without showing command output
 
 **If ANY checkbox is unchecked:** Cannot claim completion.
+
+## Issue Offers Phase
+
+**After all verification passes, before claiming completion:**
+
+### Step 1: Create Issues for Discovered Work
+
+Read `docs/current-progress.md` "Discovered Work" section.
+
+For each item, present creation offer:
+```
+New Issue Offers (Discovered During Work):
+
+1. "Need to add rate limiting to API"
+   Command: [from issue-tracking agent]
+   [Create / Skip]
+
+2. "Auth tokens should expire after 24h"
+   Command: [from issue-tracking agent]
+   [Create / Skip]
+```
+
+Batch presentation, individual approval per item.
+
+### Step 2: Update Original Issue
+
+If primary issue tracked, dispatch issue-tracking agent:
+```
+Task(description: "Compose issue update",
+     prompt: "Operation: add-comment
+Issue: [primary issue ID]
+Summary: [work completed summary]",
+     model: "haiku",
+     subagent_type: "general-purpose")
+```
+
+Present offer:
+```
+Issue Update Offer:
+- Issue: PROJ-123 "Add user authentication"
+- Action: Add comment summarizing work completed
+- Summary: "Implemented JWT-based auth with login/logout endpoints,
+  added middleware, tests passing. Ready for review."
+- Command: [from agent]
+
+Update issue? [Yes / Edit Summary / Skip]
+```
+
+### No Tracker Detected
+
+If issue-tracking agent returned `ISSUE_TRACKER: none`:
+```
+Note: No issue tracker detected. Skipping issue offers.
+Consider configuring issue tracking in CLAUDE.md.
+```
 
 ## Fresh Verification Requirement
 
