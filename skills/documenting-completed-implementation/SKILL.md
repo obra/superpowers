@@ -133,11 +133,12 @@ node packages/admin-ui/scripts/query-metrics.js user1
 
 **First, check if README already documents this feature:**
 
-Extract feature name from plan file:
+Extract feature name from the plan file being documented:
 ```bash
-# Get plan filename without path and extension
-PLAN_FILE="docs/plans/YYYY-MM-DD-feature-name.md"
-FEATURE_NAME=$(basename "$PLAN_FILE" .md | sed 's/^[0-9-]*-//' | sed 's/-/ /g')
+# Get the plan filename (determined in Step 1)
+# Example: docs/plans/2026-01-11-todoist-integration.md
+# Strip date prefix (YYYY-MM-DD-) and convert hyphens to spaces: "todoist integration"
+FEATURE_NAME=$(basename "$PLAN_FILE" .md | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | sed 's/-/ /g')
 ```
 
 **Check for dedicated section in README:**
