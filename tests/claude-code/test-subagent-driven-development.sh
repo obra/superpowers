@@ -20,7 +20,10 @@ else
     exit 1
 fi
 
-if assert_contains "$output" "Load Plan\|read.*plan\|extract.*tasks" "Mentions loading plan"; then
+# Ask a more specific question to get workflow details
+output2=$(run_claude "In the subagent-driven-development skill, what is the first step? What does the controller do with the plan file?" 30)
+
+if assert_contains "$output2" "read.*plan\|extract.*task\|Load Plan" "Mentions loading plan"; then
     : # pass
 else
     exit 1
