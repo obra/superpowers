@@ -66,6 +66,23 @@ Each agent prompt should include:
 - The agent's methodology from their definition file
 - The output format expected
 
+### Phase 2.5: Issue Discovery (Optional)
+
+If an issue tracker is detected, dispatch issue-tracking agent for discovery:
+
+```
+Task(description: "Discover related issues",
+     prompt: "Operation: discover
+Context: [user's research topic]
+Branch: [current branch name if relevant]
+
+Find issues related to this research topic.",
+     model: "haiku",
+     subagent_type: "general-purpose")
+```
+
+If no tracker detected, skip this phase (will note in output).
+
 ### Phase 3: Synthesize Findings
 
 After all agents complete, synthesize their findings into a research document.
@@ -107,6 +124,14 @@ After all agents complete, synthesize their findings into a research document.
 - Security considerations
 - Performance implications
 
+## Related Issues
+
+| ID | Title | Status | Source |
+|----|-------|--------|--------|
+| [id] | [title] | [status] | [user-mentioned / branch name / keyword match] |
+
+**Note:** [If no tracker detected: "No issue tracker detected. Consider configuring one in CLAUDE.md."]
+
 ## Edge Cases & Gotchas
 [Synthesized from all agents]
 - Testing blind spots identified
@@ -134,6 +159,7 @@ Example: `docs/research/2026-01-15-user-authentication.md`
 |-------|--------|--------|
 | 1 | Clarify topic | Clear research question |
 | 2 | Dispatch 4 agents | Parallel research |
+| 2.5 | Discover issues | Related issues list |
 | 3 | Synthesize | Combined findings |
 | 4 | Save | `docs/research/YYYY-MM-DD-topic.md` |
 | 5 | Announce | Ready for planning |
