@@ -278,28 +278,17 @@ Delete all files in `docs/handoffs/` - these are no longer needed once the plan 
 rm -rf docs/handoffs/*
 ````
 
-**Step 2: Announce completion and begin execution**
-
-**"Plan complete and saved to `docs/plans/<filename>.md`. Context gathering files cleaned up. Ready to execute using Subagent-Driven Development."**
-
-After announcing the plan is complete, provide these instructions to the user:
+**Step 2: Announce completion and provide handoff**
 
 ```
-To prepare for implementation, compact this conversation:
+Plan complete and saved to `docs/plans/<actual-filename>.md`. Context gathering files cleaned up.
 
-/compact ready to implement <filename>.md
-
-Then execute the plan:
-
-/hyperpowers:execute-plan <filename>.md
+To continue:
+/compact ready to implement docs/plans/<actual-filename>.md
+/hyperpowers:subagent-driven-development docs/plans/<actual-filename>.md
 ```
 
-**Important:** Replace `<filename>` with the actual plan path (e.g., `/compact ready to implement docs/plans/user-authentication.md` and `/hyperpowers:execute-plan docs/plans/user-authentication.md`).
-
-Then:
-
-- **REQUIRED SUB-SKILL:** Use hyperpowers:subagent-driven-development
-- Fresh subagent per task + two-stage code review
+Replace `<actual-filename>` with the real plan path.
 
 ## Cleanup
 
