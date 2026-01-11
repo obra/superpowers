@@ -13,6 +13,13 @@ This project uses issue tracking (beads, GitHub Issues, or Jira depending on con
 - **verification-before-completion** - Offers to create discovered work, update original issue
 - **finishing-a-development-branch** - Includes issue reference in PR, offers close after merge
 
+**Mandatory Checkpoints:**
+- **Session Start** (subagent-driven-development): Branch creation offer, status update offer - MUST be presented
+- **Before Completion** (verification-before-completion): Discovered work offers, original issue update - MUST be presented
+- **After Merge/PR** (finishing-a-development-branch): Issue close offer - MUST be presented
+
+"Mandatory" means the offer MUST be presented. User always decides whether to execute.
+
 **No manual issue commands needed** - skills present offers at checkpoints.
 
 **Detection priority:**
