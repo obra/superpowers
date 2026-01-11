@@ -131,40 +131,88 @@ node packages/admin-ui/scripts/query-metrics.js user1
 
 ### Step 3: Update README.md
 
-**Purpose:** User-facing quickstart and setup
+**First, check if README already documents this feature:**
 
-**Add/Update:**
-- Installation steps (if new dependencies)
-- Configuration (if new env vars)
-- Usage examples (if new features)
-- Commands (if new scripts)
-
-**Scope:**
-- Setup instructions: Clear, step-by-step
-- Examples: Working code users can copy-paste
-- Commands: With example output if helpful
-
-**Balance:**
-- Quickstart: Keep it brief
-- Full docs: Link to separate docs/ files if >50 lines
-
-**Example:**
-```markdown
-### Metrics Tracking
-
+Extract feature name from plan file:
 ```bash
-# Setup MongoDB indexes (one-time)
-node packages/admin-ui/scripts/setup-metrics-indexes.js
-
-# Query metrics for a user
-node packages/admin-ui/scripts/query-metrics.js user1
+# Get plan filename without path and extension
+PLAN_FILE="docs/plans/YYYY-MM-DD-feature-name.md"
+FEATURE_NAME=$(basename "$PLAN_FILE" .md | sed 's/^[0-9-]*-//' | sed 's/-/ /g')
 ```
 
-**Example Output:**
+**Check for dedicated section in README:**
+```bash
+# Look for section headers mentioning the feature
+grep -i "^## .*${FEATURE_NAME}" README.md
+grep -i "^### .*${FEATURE_NAME}" README.md
 ```
-Date: 2026-01-06
-  Uploads: 15 files, 5242880 bytes
-  Tokens: 40000 total (25000 used, 15000 cached, 37.5% cache rate)
+
+**Decision tree:**
+
+| Section Found | Documentation State | Action |
+|---------------|---------------------|--------|
+| Yes (## or ###) | Comprehensive section exists | Skip update, note to user |
+| No | Missing or only brief mentions | Add documentation |
+
+**If section exists:**
+```
+✅ README.md already has a dedicated section for <feature>
+
+Found section: [show matching header]
+
+Skipping README update. Review the existing section to ensure it's current.
+```
+
+Proceed to Step 4.
+
+**If no section found:**
+
+Add user-facing documentation following these guidelines:
+
+**What to document:**
+- Feature purpose (what it does, why it exists)
+- How to use it (examples, commands, configuration)
+- Any setup required (environment variables, credentials)
+- Related features or dependencies
+
+**Where to add it:**
+- Features section (if one exists)
+- Before the "Development" or "Contributing" section
+- At the end of user-facing content (before technical sections)
+
+**Format:**
+```markdown
+## [Feature Name]
+
+[Brief description of what this feature does]
+
+### Usage
+
+[Concrete examples showing how to use it]
+
+### Configuration
+
+[Any setup, environment variables, or options]
+```
+
+**Example for Todoist integration:**
+```markdown
+## Todoist Integration
+
+The calendar prep system can output your schedule to Todoist, creating tasks for each event.
+
+### Usage
+
+Run the output Lambda:
+```bash
+npm run output:todoist
+```
+
+### Configuration
+
+Set these environment variables in `.env`:
+- `TODOIST_API_TOKEN` - Your Todoist API token
+- `TODOIST_PROJECT_ID` - Target project ID (optional, defaults to Inbox)
 ```
 ```
 
