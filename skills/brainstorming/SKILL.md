@@ -50,13 +50,20 @@ Start by understanding the current project context, then ask questions one at a 
 
 **Documentation:**
 - Write the validated design to `docs/designs/YYYY-MM-DD-<topic>-design.md`
-- Use elements-of-style:writing-clearly-and-concisely skill if available
-- Commit the design document to git
+- Do NOT commit (this directory is gitignored - designs are ephemeral)
 
-**Implementation (if continuing):**
-- Ask: "Ready to set up for implementation?"
-- Use hyperpowers:using-git-worktrees to create isolated workspace
-- Use hyperpowers:writing-plans to create detailed implementation plan
+**Handoff:**
+After saving the design, announce completion with copy-paste commands:
+
+```
+Design saved to `docs/designs/<actual-filename>.md`.
+
+To continue:
+/compact ready to research docs/designs/<actual-filename>.md
+/hyperpowers:research docs/designs/<actual-filename>.md
+```
+
+Replace `<actual-filename>` with the real filename you just created.
 
 ## Key Principles
 
