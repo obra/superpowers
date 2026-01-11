@@ -135,9 +135,16 @@ node packages/admin-ui/scripts/query-metrics.js user1
 
 Extract feature name from the plan file being documented:
 ```bash
-# Get the plan filename (determined in Step 1)
-# Example: docs/plans/2026-01-11-todoist-integration.md
-# Strip date prefix (YYYY-MM-DD-) and convert hyphens to spaces: "todoist integration"
+# Find the plan file being documented (most recent non-completed plan)
+PLAN_FILE=$(ls -t docs/plans/[0-9][0-9][0-9][0-9]-*.md 2>/dev/null | grep -v '/completed/' | head -1)
+
+if [ -z "$PLAN_FILE" ]; then
+    echo "Error: No active plan file found in docs/plans/"
+    exit 1
+fi
+
+# Strip date prefix (YYYY-MM-DD-) and convert hyphens to spaces
+# Example: docs/plans/2026-01-11-todoist-integration.md → "todoist integration"
 FEATURE_NAME=$(basename "$PLAN_FILE" .md | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | sed 's/-/ /g')
 ```
 
