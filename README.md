@@ -121,6 +121,37 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
 - **using-superpowers** - Introduction to the skills system
 
+**Meta-Learning**
+- **compound-learning** - Quick 30-second capture after solving problems
+- **meta-learning-review** - Pattern detection, skill gap analysis, learning decay management (auto-archives stale knowledge after 6 months)
+
+### Meta-Learning Commands
+
+```bash
+# After fixing a problem (triggered by verification-before-completion)
+/compound
+
+# Review captured learnings (auto-triggers every 10 learnings)
+/review-learnings
+```
+
+**Example Output:**
+
+```
+Found 3 patterns:
+- yaml (5 learnings) - Consider: yaml-parsing skill
+- git-worktree (4 learnings) - Consider: Enhance using-git-worktrees
+- test-reliability (3 learnings) - Consider: testing-best-practices skill
+
+Stale learnings: 2 files (6+ months old)
+
+Decision menu:
+1. Create new skill from pattern
+2. Enhance existing skill
+3. Archive stale learnings
+4. View learnings
+```
+
 ## Philosophy
 
 - **Test-Driven Development** - Write tests first, always
