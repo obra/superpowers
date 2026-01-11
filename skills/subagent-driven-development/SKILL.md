@@ -80,9 +80,9 @@ digraph process {
 }
 ```
 
-## Pre-Implementation Setup
+## MANDATORY CHECKPOINT: Pre-Implementation Setup
 
-**Before the task loop, at session start:**
+**REQUIRED before the task loop. These offers MUST be presented - user decides execution.**
 
 ### Step 1: Branch Creation Offer (if not on feature branch)
 
@@ -90,6 +90,8 @@ Check if on main/master/develop:
 ```bash
 git branch --show-current
 ```
+
+**REQUIRED:** If on base branch, you MUST present the branch creation offer. Skipping this offer = incomplete setup.
 
 If on base branch, dispatch issue-tracking agent:
 ```
@@ -113,6 +115,8 @@ Create this branch? [Yes / Modify / Skip]
 Only execute after user approval.
 
 ### Step 2: Status Update Offer
+
+**REQUIRED:** If primary issue exists (from plan header, branch name, or discovery), you MUST present the status update offer.
 
 If primary issue identified, dispatch issue-tracking agent:
 ```
@@ -148,6 +152,24 @@ During task execution, when work uncovers something that should be tracked, appe
 ```
 
 **No offers during execution.** Discovered work is batched for presentation at verification checkpoint.
+
+### Pre-Implementation Checkpoint Gate
+
+```
+BEFORE starting task loop:
+
+1. CHECK: On base branch?
+   - YES → MUST present Branch Creation Offer
+   - NO → Skip branch offer
+
+2. CHECK: Primary issue exists?
+   - YES → MUST present Status Update Offer
+   - NO → Skip status offer
+
+Skip presenting any required offer = incomplete pre-implementation setup
+```
+
+**Note:** User can decline any offer. The REQUIREMENT is presentation, not execution.
 
 ## Prompt Templates
 
@@ -359,6 +381,7 @@ Constraints: [any limitations]
 
 **Never:**
 - Skip reviews (spec compliance OR code quality)
+- **Skip presenting branch/status offers at session start** (offers are mandatory, execution is optional)
 - Proceed with unfixed issues
 - Dispatch multiple implementation subagents in parallel (conflicts)
 - Make subagent read plan file (provide full text instead)
