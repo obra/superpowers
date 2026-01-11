@@ -79,6 +79,7 @@ tests=(
     "test-writing-plans-cleanup.sh"
     "test-research.sh"
     "test-compound.sh"
+    "issue-tracking-detection.test.sh"
 )
 
 # Integration tests (slow, full execution)
