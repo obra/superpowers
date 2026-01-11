@@ -265,7 +265,6 @@ Stop and reconsider if you catch yourself:
 - Dispatching full research for simple feedback
 - Batching changes as all-or-nothing instead of individual approval
 - Guessing user intent instead of asking
-- Changing document structure or format (content only)
 - Creating new documents instead of modifying existing ones
 
 ## Rationalization Prevention
