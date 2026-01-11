@@ -61,6 +61,7 @@ Skip any step = lying, not verifying
 | Agent completed | VCS diff shows changes | Agent reports "success" |
 | Requirements met | Line-by-line checklist | Tests passing |
 | Work complete | Issue offers reviewed, original issue updated | "No issue tracked this" without checking |
+| Issue offers done | Offers PRESENTED (user decided) | "No tracker, skipping" without manual check |
 
 ## Evidence-Based Completion Checklist
 
@@ -72,7 +73,7 @@ Before claiming ANY work is complete:
 - [ ] Linting PASSED - show lint output
 - [ ] Edge cases TESTED - list which ones
 - [ ] Related functionality VERIFIED - nothing broken
-- [ ] Issue tracking offers reviewed - discovered work creation, original issue update (see Issue Offers phase below)
+- [ ] Issue tracking offers PRESENTED - discovered work creation, original issue update (MANDATORY - see Issue Offers phase below)
 
 **Red Flags for Premature Claims:**
 - "Tests should pass" (should ≠ did)
@@ -82,9 +83,11 @@ Before claiming ANY work is complete:
 
 **If ANY checkbox is unchecked:** Cannot claim completion.
 
-## Issue Offers Phase
+## MANDATORY: Issue Offers Phase
 
 **After all verification passes, before claiming completion:**
+
+**REQUIRED:** This phase MUST execute. Offers MUST be presented. User decides execution.
 
 ### Step 1: Create Issues for Discovered Work
 
@@ -133,9 +136,16 @@ Update issue? [Yes / Edit Summary / Skip]
 
 If issue-tracking agent returned `ISSUE_TRACKER: none`:
 ```
-Note: No issue tracker detected. Skipping issue offers.
-Consider configuring issue tracking in CLAUDE.md.
+Note: No issue tracker detected.
+
+Manual verification required:
+- [ ] Checked for discovered work that should be tracked elsewhere
+- [ ] Verified original task/request is addressed
+
+Consider configuring issue tracking in CLAUDE.md for automated tracking.
 ```
+
+**The phase still executes** - offers change to manual verification prompts.
 
 ## Fresh Verification Requirement
 
