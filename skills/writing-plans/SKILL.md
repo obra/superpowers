@@ -120,6 +120,38 @@ If proceeding without research:
 3. Note in plan header: "No research document - created with limited context"
 4. Recommend running `/hyperpowers:research` for future similar features
 
+## Issue Context (Phase 0.5)
+
+After research check, before plan writing:
+
+### If Research Document Exists
+
+Extract "Related Issues" section from research doc:
+- Parse issue IDs, titles, statuses
+- Identify primary issue (from branch name or first listed)
+- Carry forward to plan header
+
+### If No Research Document (Degraded Mode)
+
+Dispatch issue-tracking agent for discovery:
+```
+Task(description: "Discover related issues",
+     prompt: "Operation: discover
+Context: [feature/task description]
+Branch: [current branch name]",
+     model: "haiku",
+     subagent_type: "general-purpose")
+```
+
+### Plan Header Addition
+
+Update plan header template to include:
+
+```markdown
+> **Related Issues:** [PROJ-123, PROJ-456]
+> **Primary Issue:** [PROJ-123] (from branch name)
+```
+
 ## Pre-Plan Writing Gate
 
 **BEFORE writing ANY plan content, verify:**
@@ -158,6 +190,8 @@ If degraded mode: Document limitations in plan header
 # [Feature Name] Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use hyperpowers:subagent-driven-development to implement this plan task-by-task.
+> **Related Issues:** [PROJ-123, PROJ-456]
+> **Primary Issue:** [PROJ-123] (from branch name)
 
 **Goal:** [One sentence describing what this builds]
 
