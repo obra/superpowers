@@ -10,6 +10,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Plugin System**: Claude Code plugin integration with hooks and commands
 - **Testing Framework**: Automated skill verification using Claude Code CLI
 
+## Implementation History
+
+Recent implementations (see docs/plans/completed/ for details):
+
+- **2026-01-11**: Finishing Workflow Enhancements - Pre-flight check for uncommitted changes, enhanced test verification with user prompts, code review as explicit option, smart README section detection
+
 ## Core Architecture
 
 ### Skills System
