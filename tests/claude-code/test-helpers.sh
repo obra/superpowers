@@ -1,6 +1,36 @@
 #!/usr/bin/env bash
 # Helper functions for Claude Code skill tests
 
+# Portable timeout function
+# Works on Linux (timeout), macOS with coreutils (gtimeout), or falls back to basic implementation
+run_with_timeout() {
+    local timeout_duration=$1
+    shift
+
+    if command -v timeout &> /dev/null; then
+        timeout "$timeout_duration" "$@"
+    elif command -v gtimeout &> /dev/null; then
+        gtimeout "$timeout_duration" "$@"
+    else
+        # Basic timeout fallback for macOS without coreutils
+        # Run command in background and kill if it exceeds timeout
+        "$@" &
+        local pid=$!
+        local count=0
+        while kill -0 $pid 2>/dev/null && [ $count -lt $timeout_duration ]; do
+            sleep 1
+            count=$((count + 1))
+        done
+        if kill -0 $pid 2>/dev/null; then
+            kill -TERM $pid 2>/dev/null
+            wait $pid 2>/dev/null
+            return 124  # timeout exit code
+        fi
+        wait $pid
+        return $?
+    fi
+}
+
 # Run Claude Code with a prompt and capture output
 # Usage: run_claude "prompt text" [timeout_seconds] [allowed_tools]
 run_claude() {
@@ -16,7 +46,7 @@ run_claude() {
     fi
 
     # Run Claude in headless mode with timeout
-    if timeout "$timeout" bash -c "$cmd" > "$output_file" 2>&1; then
+    if run_with_timeout "$timeout" bash -c "$cmd" > "$output_file" 2>&1; then
         cat "$output_file"
         rm -f "$output_file"
         return 0
