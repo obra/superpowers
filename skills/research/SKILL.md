@@ -261,6 +261,26 @@ After all agents complete, synthesize their findings into a research document.
 - Decisions needed before planning
 ```
 
+### COMPULSORY: Synthesis Verification
+
+Before saving the research document, you MUST verify synthesis is complete.
+
+**Synthesis Checklist** (all COMPULSORY - document MUST contain each section):
+- [ ] Executive Summary (your synthesis, not copy-paste)
+- [ ] Codebase Analysis (from codebase-analyst)
+- [ ] Git History Insights (from git-history-analyzer)
+- [ ] Framework & Documentation (from framework-docs-researcher)
+- [ ] Best Practices (from best-practices-researcher)
+- [ ] Test Coverage Analysis (from test-coverage-analyst)
+- [ ] Error Handling Analysis (from error-handling-analyst)
+- [ ] Dependency Analysis (from dependency-analyst)
+- [ ] Architecture Boundaries Analysis (from architecture-boundaries-analyst)
+- [ ] Edge Cases & Gotchas (synthesized from ALL agents)
+
+**STOP CONDITION:** If ANY section is missing or contains only "N/A" or placeholder text, do NOT save. Complete the missing section(s) first.
+
+**CRITICAL:** The Executive Summary and Edge Cases sections MUST be YOUR synthesis, not raw agent output. These sections prove you combined the findings.
+
 ### Phase 4: Save Research Document
 
 Save to: `docs/research/YYYY-MM-DD-<topic-slug>.md`
