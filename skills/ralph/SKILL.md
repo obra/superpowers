@@ -110,6 +110,36 @@ Checking environment...
 Ready to start. Estimated: N tasks, ~40 iterations max, 8h limit
 ```
 
+## Iteration Pattern
+
+Each loop cycle follows this pattern with FRESH context:
+
+```
+Orient → Select → Check → Implement → Validate → Review → Update → Commit → Exit
+```
+
+### Phase Details
+
+| Phase | Action | On Failure |
+|-------|--------|------------|
+| Orient | Read specs + plan + progress.txt | N/A (startup) |
+| Select | Pick ONE uncompleted task | Exit code 2 (plan exhausted) |
+| Check | Search codebase, verify not done | Skip to next task |
+| Implement | Use TDD skill | Write failure → Exit code 1 |
+| Validate | Use verification skill | Write failure → Exit code 1 |
+| Review | Use code review skill | Write feedback → Exit code 1 |
+| Update | Write success to progress.txt | N/A |
+| Commit | Git commit changes | Write failure → Exit code 1 |
+| Exit | End iteration | N/A (always exits) |
+
+### Key Principle
+
+**Failures exit immediately for fresh context.** Progress file bridges knowledge between iterations.
+
+### Iteration Prompt Template
+
+See `./iteration-prompt.md` for the prompt fed to Claude CLI each iteration.
+
 ## Red Flags
 
 **Never:**
