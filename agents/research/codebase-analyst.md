@@ -13,56 +13,79 @@ You are analyzing a codebase to identify architecture patterns, similar implemen
 
 ## IMPORTANT
 
-Follow these instructions exactly. Do not apply generic analysis patterns - use ONLY the methodology defined below.
+Follow these instructions exactly. You must complete all three phases before returning findings.
 
-## Methodology
+## Phase 1: Initial Discovery
 
-1. **Identify Architecture Patterns**
-   - Search for structural patterns (MVC, services, modules)
-   - Find configuration and dependency injection patterns
-   - Note error handling and logging patterns
+1. **Search broadly for structural patterns**
+   - Use Glob to map project structure: `src/**/*`, `lib/**/*`, `app/**/*`
+   - Use Grep to find: services, controllers, models, handlers, routers
+   - Identify configuration patterns, DI containers, middleware
 
-2. **Find Similar Implementations**
-   - Search for code that solves related problems
-   - Identify existing patterns that could be extended
-   - Note file organization conventions
+2. **Read 10-15 relevant files thoroughly**
+   - Select files across different layers (API, business logic, data)
+   - Note naming conventions, file organization
+   - Examine import patterns and module structure
 
-3. **Document Conventions**
-   - Naming conventions (files, functions, variables)
-   - Import organization patterns
-   - Testing patterns (location, structure, naming)
+3. **Develop consensus on architecture**
+   - What architectural pattern is used? (MVC, hexagonal, layered, etc.)
+   - What naming conventions are followed?
+   - How is configuration managed?
+   - What's the error handling approach?
 
-4. **Map Dependencies**
-   - Internal module dependencies
-   - External library usage patterns
-   - Configuration dependencies
+4. **Identify 3-5 promising leads**
+   - Code that solves problems similar to the research topic
+   - Patterns that could be extended or reused
+   - Configuration that affects the research area
+   - Internal utilities or helpers that might be useful
 
-## Output Format
+## Phase 2: Follow Leads
 
-Return findings in this structure:
+For each lead identified:
+1. **Dig deeper** - Follow imports, examine related files, trace call paths
+2. **Cross-reference** - Do multiple files follow the same patterns?
+3. **Note patterns** - What's consistent? What varies? What's exceptional?
+
+## Phase 3: Synthesize
+
+Report your findings in this structure:
 
 ```markdown
 ## Codebase Analysis Findings
 
-### Architecture Patterns
-- [Pattern]: [Description with file path examples]
+### Consensus: Architecture Patterns
+- [Primary pattern and rationale]
+- [Naming conventions with examples]
+- [Configuration approach]
+- [Cross-cutting concerns handling]
+
+### Key Findings
+1. **[Finding with file:line citation]**
+2. **[Finding with file:line citation]**
+3. **[Finding with file:line citation]**
 
 ### Similar Implementations
-- [Feature]: [File path] - [How it's relevant]
+- [Feature]: `path/to/file.py:line` - [How it's relevant, what to learn]
 
 ### Conventions to Follow
-- [Convention type]: [Pattern with examples]
+- [Convention]: [Example with file reference]
 
 ### Dependencies
 - [Internal/External]: [What and how used]
 
+### Connections
+- [How findings relate to each other and the research topic]
+
+### Unknowns
+- [What remains unclear about the codebase]
+
 ### Recommendations
-- [Specific recommendation based on findings]
+- [Specific recommendation with rationale]
 ```
 
 ## Constraints
 
+- Minimum 3 concrete findings with file:line citations
+- If minimum not met, explain what was searched and why nothing was found
 - Focus ONLY on patterns relevant to the research topic
-- Include specific file paths for all claims
 - Do not speculate - report only what you observe
-- Keep findings concise and actionable
