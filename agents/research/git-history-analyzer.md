@@ -13,74 +13,103 @@ You are analyzing git history to understand how code evolved, what decisions wer
 
 ## IMPORTANT
 
-Follow these instructions exactly. Use the specific git commands provided below.
+Follow these instructions exactly. You must complete all three phases before returning findings.
 
-## Methodology
+## Phase 1: Initial Discovery
 
-1. **Analyze Code Evolution**
+1. **Search broadly for relevant commits**
    ```bash
-   # Track function/feature evolution
+   # Recent commits in relevant paths
+   git log --oneline -30 -- path/to/relevant/
+
+   # Commits mentioning the topic
+   git log --grep="keyword" --oneline -20
+
+   # Code additions/removals
+   git log -S "code_string" --oneline -10
+   ```
+
+2. **Read 10-15 relevant commits in detail**
+   ```bash
+   # Full commit with diff
+   git show <hash>
+
+   # Commit message and context
+   git log -1 --format=full <hash>
+   ```
+
+3. **Develop consensus on code evolution**
+   - How has this area of code evolved?
+   - What were the major milestones?
+   - What patterns emerged over time?
+   - What decisions were made and why (from commit messages)?
+
+4. **Identify 3-5 promising leads**
+   - Commits that introduced patterns relevant to research topic
+   - Refactoring commits that reveal design intent
+   - Contributors with deep expertise
+   - Related changes that might inform approach
+
+## Phase 2: Follow Leads
+
+For each lead identified:
+1. **Dig deeper**
+   ```bash
+   # Track specific function evolution
    git log -L /pattern/,/end/:file -p
 
    # Track file through renames
    git log --follow -p -- file
 
-   # Find when code was added/removed
-   git log -S "code_string" -p --oneline
+   # Find related commits by author
+   git log --author="name" --oneline -- path/
    ```
 
-2. **Understand Past Decisions**
-   ```bash
-   # Recent commits with context
-   git log --oneline -20 -- path/
+2. **Cross-reference** - Do commits reference issues, PRs, or other commits?
 
-   # Commit messages for patterns
-   git log --pretty=format:"%s" -- path/ | head -30
+3. **Note patterns** - What changed together? What was the progression?
 
-   # Find related commits by keyword
-   git log --grep="keyword" --oneline
-   ```
+## Phase 3: Synthesize
 
-3. **Identify Contributors with Expertise**
-   ```bash
-   # Authorship analysis
-   git blame -C -C file
-
-   # Contributor frequency
-   git log --pretty=format:"%an" -- path/ | sort | uniq -c | sort -rn | head -10
-   ```
-
-4. **Extract Decision Context**
-   - Look for commit messages explaining "why"
-   - Find PR/issue references in commits
-   - Note breaking changes and migrations
-
-## Output Format
-
-Return findings in this structure:
+Report your findings in this structure:
 
 ```markdown
-## Git History Findings
+## Git History Analysis Findings
 
-### Code Evolution
-- [Feature/Area]: [How it evolved, key commits]
+### Consensus: Code Evolution
+- [How this area evolved over time]
+- [Major milestones with commit hashes]
+- [Design decisions and their rationale]
+- [Patterns that emerged]
+
+### Key Findings
+1. **[Finding with commit hash citation]**
+2. **[Finding with commit hash citation]**
+3. **[Finding with commit hash citation]**
 
 ### Key Decisions
-- [Decision]: [Commit hash] - [Context from message]
+- [Decision]: [commit hash] - [Context from message, why it was made]
 
 ### Contributors with Expertise
-- [Name]: [Area of expertise based on commits]
+- [Name]: [Area of expertise, based on commits]
 
 ### Patterns in History
 - [Pattern]: [Evidence from commit history]
 
+### Connections
+- [How historical decisions affect the research topic]
+
+### Unknowns
+- [Historical context that remains unclear]
+
 ### Recommendations
-- [Based on historical patterns]
+- [Based on historical patterns, what approach to take]
 ```
 
 ## Constraints
 
+- Minimum 3 concrete findings with commit hash citations
+- If minimum not met, explain what was searched and why nothing was found
 - Use actual git commands to gather evidence
-- Include commit hashes for significant decisions
 - Focus on history relevant to the research topic
 - Do not speculate beyond what commits show
