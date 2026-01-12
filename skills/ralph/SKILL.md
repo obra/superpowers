@@ -201,6 +201,60 @@ Each iteration appends a JSON block for programmatic access:
 }
 ```
 
+## Completion Detection
+
+Loop stops when ANY condition is met:
+
+### 1. Plan Exhaustion (Primary)
+
+All tasks in `IMPLEMENTATION_PLAN.md` checked off:
+
+```bash
+# No uncompleted tasks remain
+! grep -qE "^[[:space:]]*-[[:space:]]*\[[[:space:]]*\]" IMPLEMENTATION_PLAN.md
+```
+
+Exit code: 2 (success - plan complete)
+
+### 2. Backpressure Satisfied
+
+Tests, lints, and type checks all pass. Enforced by TDD + verification skills per iteration.
+
+### 3. Convergence Detection
+
+No meaningful changes in 3 consecutive iterations:
+
+```bash
+# Compare iterations N, N-1, N-2
+# If >95% similar (by git diff), increment stuck counter
+# At 3x stuck, exit and report
+```
+
+Exit code: 3 (stuck - needs human intervention)
+
+### 4. Hard Limits
+
+```yaml
+max_iterations: 40
+max_duration: 8h  # 28800 seconds
+```
+
+Exit code: 4 (limit reached)
+
+### Notifications
+
+On completion, send platform notification:
+
+**macOS:**
+```bash
+osascript -e 'display notification "7/7 tasks done in 3h 12m" with title "Ralph Complete" sound name "Glass"'
+```
+
+**Linux:**
+```bash
+notify-send -u normal -t 5000 "Ralph Complete" "7/7 tasks done in 3h 12m"
+```
+
 ## Red Flags
 
 **Never:**
