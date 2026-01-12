@@ -391,10 +391,38 @@ Users can modify GUARDRAILS.md before starting. Ralph reads it fresh each iterat
 - Allowing main/master commits
 - Removing cost controls
 
-## Red Flags
+## Red Flags - STOP
 
-**Never:**
-- Skip validation before starting
-- Use non-Haiku model (cost control)
-- Retry failed iteration without fresh context
-- Accumulate context across iterations
+If you're thinking any of these, you're about to violate ralph principles:
+
+- "I'll just run a few tasks inline first" - NO, ralph is for background execution
+- "Haiku is too slow, I'll use Sonnet" - NO, cost control is mandatory
+- "I can skip validation, I know the files are there" - NO, always validate
+- "I'll keep context between iterations" - NO, fresh context is the core principle
+- "I'll retry this failure one more time" - NO, exit and let next iteration diagnose
+- "Tests are passing, I can skip verification" - NO, always use verification skill
+- "Code review is overkill for this small change" - NO, always use code review skill
+
+## Rationalization Table
+
+| Excuse | Reality |
+|--------|---------|
+| "Inline is faster" | Inline causes context rot. Ralph's fresh context scales to 40+ iterations. |
+| "Sonnet is smarter" | Haiku is sufficient for task execution. 3x cost adds up over 40 iterations. |
+| "Just skip this one validation" | One skip becomes habit. Validation catches real issues. |
+| "I remember what failed" | You don't. Fresh context reads progress.txt accurately. |
+| "One more retry won't hurt" | One retry bloats context. Exit for fresh diagnosis. |
+| "Tests prove it works" | Tests prove tests pass. Verification proves user value. |
+| "Small change, no review needed" | Small changes accumulate. Review catches drift. |
+
+## Common Mistakes
+
+| Mistake | Fix |
+|---------|-----|
+| Running tasks inline | Use `/ralph start` for tmux background |
+| Using Sonnet/Opus | Enforce Haiku via `--model claude-haiku-4-5` |
+| Skipping validation | Always run full validation before start |
+| Accumulating context | Fresh agent per iteration, read progress.txt |
+| Retrying in same iteration | Exit on failure, let next iteration diagnose |
+| Not updating progress.txt | Write outcome before EVERY exit |
+| Forgetting to commit | Commit after each task completion |
