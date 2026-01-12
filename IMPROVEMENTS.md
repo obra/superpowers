@@ -20,6 +20,7 @@ This document details all significant improvements made to Hyperpowers since for
 - [9. Knowledge Management & Specialized Review](#9-knowledge-management--specialized-review)
 - [10. Context Fork Integration](#10-context-fork-integration)
 - [11. Issue Tracking Abstraction](#11-issue-tracking-abstraction)
+- [12. Autonomous Execution (Ralph Skill)](#12-autonomous-execution-ralph-skill)
 
 ---
 
@@ -564,6 +565,67 @@ Created a new agent that abstracts tracker operations behind a unified interface
 
 ---
 
+## 12. Autonomous Execution (Ralph Skill)
+
+Implements the Ralph Wiggum technique for autonomous overnight iteration loops with fresh context per task.
+
+### Core Concept
+
+The ralph skill enables autonomous code execution overnight by:
+- Running iterations with fresh context (no context rot)
+- Using tmux for background execution that survives terminal close
+- Enforcing Haiku model for cost control (~$4-12 vs $12-36 for Sonnet over 40 iterations)
+- Leveraging existing Hyperpowers skills (TDD, verification, code review) per iteration
+
+### Key Features
+
+**Fresh Context Per Iteration:**
+- Each iteration starts fresh via Claude CLI `-p` mode
+- Progress file (`.ralph/progress.txt`) bridges knowledge between iterations
+- Failures exit immediately for fresh diagnosis (no "overbaking")
+
+**Background Execution:**
+- tmux sessions named `ralph-<project>`
+- Graceful shutdown via stop signal file
+- Platform notifications (macOS osascript, Linux notify-send)
+
+**Quality Enforcement:**
+- Mandatory use of TDD, verification, and code review skills
+- GUARDRAILS.md with customizable limits
+- Convergence detection (3+ similar iterations = stuck)
+
+**Completion Detection:**
+- Plan exhaustion (primary): All tasks checked off
+- Backpressure satisfied: Tests, lints, type checks pass
+- Convergence detection: 3 consecutive similar iterations
+- Hard limits: 40 iterations OR 8 hours
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `/ralph init` | Create template files (specs, plan, guardrails) |
+| `/ralph start` | Start loop with validation |
+| `/ralph resume` | Continue from progress.txt |
+| `/ralph status` | Show progress and recent activity |
+| `/ralph stop` | Graceful stop with summary |
+
+### Files Created
+
+- `skills/ralph/SKILL.md` - Main skill definition
+- `skills/ralph/iteration-prompt.md` - Prompt for each iteration
+- `commands/ralph-{init,start,resume,status,stop}.md` - Command files
+- `tests/claude-code/skills/ralph/{baseline,compliance}-test.md` - TDD tests
+
+### Design Inspiration
+
+Based on the Ralph Wiggum technique by Geoff Huntley, which emphasizes:
+- Context engineering over indefinite execution
+- Declarative specifications
+- Iterative refinement with fresh context
+
+---
+
 ## Summary Statistics
 
 | Category | Commits | Impact |
@@ -579,6 +641,7 @@ Created a new agent that abstracts tracker operations behind a unified interface
 | Knowledge Management & Review | ~9 | Solution capture, specialized review |
 | Context Fork Integration | ~4 | Token efficiency for verbose skills |
 | Issue Tracking Abstraction | ~11 | System-agnostic tracker support |
+| Autonomous Execution (Ralph) | ~15 | Overnight autonomous loops |
 
 ---
 
