@@ -255,6 +255,92 @@ osascript -e 'display notification "7/7 tasks done in 3h 12m" with title "Ralph 
 notify-send -u normal -t 5000 "Ralph Complete" "7/7 tasks done in 3h 12m"
 ```
 
+## Background Execution
+
+Ralph uses tmux for background execution that survives terminal close.
+
+### Session Management
+
+```bash
+# Create detached session
+project=$(basename "$(git rev-parse --show-toplevel)")
+tmux new-session -t "ralph-$project" -d -c "$(pwd)"
+
+# Check existence
+tmux has-session -t "ralph-$project" 2>/dev/null && echo "Running"
+
+# Send command
+tmux send-keys -t "ralph-$project" "command" Enter
+
+# Kill session
+tmux kill-session -t "ralph-$project"
+```
+
+### Loop Script
+
+The loop runs inside tmux:
+
+```bash
+#!/bin/bash
+# .ralph/loop.sh
+
+set -e
+
+project=$(basename "$(git rev-parse --show-toplevel)")
+iteration=0
+max_iterations=40
+start_time=$(date +%s)
+max_duration=28800  # 8 hours
+
+# Graceful shutdown trap
+trap 'echo "Stopping after current iteration..."; touch .ralph/stop' SIGINT SIGTERM
+
+while true; do
+    # Check stop signal
+    [[ -f .ralph/stop ]] && break
+
+    # Check hard limits
+    ((iteration++))
+    [[ $iteration -gt $max_iterations ]] && break
+
+    elapsed=$(($(date +%s) - start_time))
+    [[ $elapsed -gt $max_duration ]] && break
+
+    # Run iteration with fresh context
+    exit_code=0
+    claude -p "$(cat .ralph/iteration-prompt.md)" --model claude-haiku-4-5 || exit_code=$?
+
+    # Handle exit codes
+    case $exit_code in
+        0) continue ;;           # Success, next iteration
+        1) continue ;;           # Failed, next iteration will retry
+        2) break ;;              # Plan exhausted
+        3) break ;;              # Stuck detected
+        4) break ;;              # Limit reached
+        *) break ;;              # Unknown, stop
+    esac
+done
+
+# Send completion notification
+# (platform-specific, see notifications section)
+
+rm -f .ralph/stop
+```
+
+### User Commands
+
+```
+/ralph start
+
+Starting Ralph loop in tmux session 'ralph-hyperpowers'...
+
+To monitor:  tmux attach -t ralph-hyperpowers
+To detach:   Ctrl+B then D
+To stop:     /ralph stop
+
+Loop running. Check /ralph status for progress.
+```
+
 ## Red Flags
 
 **Never:**
