@@ -140,6 +140,67 @@ Orient → Select → Check → Implement → Validate → Review → Update →
 
 See `./iteration-prompt.md` for the prompt fed to Claude CLI each iteration.
 
+## Progress File (.ralph/progress.txt)
+
+Machine-readable JSON for parsing, human-readable markdown for debugging.
+
+### Structure
+
+```markdown
+# Progress
+
+## Current State
+- Iteration: 12
+- Active Task: Task 5 - Add caching layer
+- Status: in-progress
+- Started: 2026-01-12 01:30
+- Elapsed: 2h 12m
+
+## Task Status
+- [x] Task 1 - Setup project structure
+- [x] Task 2 - Implement auth endpoints
+- [x] Task 3 - Add API rate limiting
+- [x] Task 4 - Add input validation
+- [ ] Task 5 - Add caching layer
+- [ ] Task 6 - Write integration tests
+- [ ] Task 7 - Add monitoring hooks
+
+## Iteration History
+
+### Iteration 12 (2026-01-12 03:42)
+- Task: 5 - Add caching layer
+- Actions: Implemented token bucket algorithm, added middleware
+- Files modified: src/middleware/rateLimit.ts, src/config.ts
+- Outcome: FAILED - Tests failing, Redis connection timeout
+- Learnings: Need to mock Redis in test environment
+
+### Iteration 11 (2026-01-12 03:31)
+- Task: 5 - Add caching layer
+- Actions: Added Redis client, wrote cache wrapper
+- Files modified: src/cache/redis.ts, package.json
+- Outcome: FAILED - Code review rejected, missing error handling
+- Learnings: Add try/catch around all Redis operations
+```
+
+### JSON Block (for machine parsing)
+
+Each iteration appends a JSON block for programmatic access:
+
+```json
+{
+  "iteration": 12,
+  "task_id": "5",
+  "task_name": "Add caching layer",
+  "status": "failed",
+  "failure_reason": "Redis connection timeout",
+  "files_modified": ["src/middleware/rateLimit.ts", "src/config.ts"],
+  "learnings": "Need to mock Redis in test environment",
+  "commit_sha": "abc123",
+  "tokens_used": 15000,
+  "timestamp": "2026-01-12T03:42:00Z"
+}
+```
+
 ## Red Flags
 
 **Never:**
