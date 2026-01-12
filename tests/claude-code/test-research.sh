@@ -39,4 +39,24 @@ else
 fi
 
 echo ""
+
+# Test 4: Skill mentions all 8 research agents
+echo "Test 4: Research skill mentions all 8 agents..."
+output=$(run_claude "List all the research agents that the hyperpowers research skill dispatches" 45)
+# Check for each agent name
+all_found=true
+for agent in "codebase-analyst" "git-history-analyzer" "framework-docs-researcher" "best-practices-researcher" "test-coverage-analyst" "error-handling-analyst" "dependency-analyst" "architecture-boundaries-analyst"; do
+    if ! echo "$output" | grep -qi "$agent"; then
+        echo "  Missing agent: $agent"
+        all_found=false
+    fi
+done
+if [ "$all_found" = true ]; then
+    echo "  [PASS] All 8 agents mentioned"
+else
+    echo "  [FAIL] Not all 8 agents mentioned"
+    exit 1
+fi
+
+echo ""
 echo "=== All tests passed ==="
