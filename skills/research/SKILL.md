@@ -10,7 +10,7 @@ allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, Task, Write
 
 ## Overview
 
-Deep research that surfaces issues before they become bugs. Dispatches 4 parallel agents to analyze codebase, git history, framework docs, and best practices, then synthesizes findings into a persistent research document.
+Deep research that surfaces issues before they become bugs. Dispatches 8 parallel agents to analyze codebase, git history, framework docs, best practices, test coverage, error handling, dependencies, and architecture boundaries, then synthesizes findings into a persistent research document.
 
 ## When to Use
 
@@ -61,7 +61,7 @@ If clear, proceed directly to Phase 2.
 
 ### Phase 2: Dispatch Parallel Research Agents
 
-Dispatch all 4 agents simultaneously using the Task tool:
+Dispatch all 8 agents simultaneously using the Task tool:
 
 ```
 Task(description: "Analyze codebase patterns",
@@ -83,10 +83,31 @@ Task(description: "Research best practices",
      prompt: [best-practices-researcher prompt with topic],
      model: "haiku",
      subagent_type: "general-purpose")
+
+Task(description: "Analyze test coverage",
+     prompt: [test-coverage-analyst prompt with topic],
+     model: "haiku",
+     subagent_type: "general-purpose")
+
+Task(description: "Analyze error handling",
+     prompt: [error-handling-analyst prompt with topic],
+     model: "haiku",
+     subagent_type: "general-purpose")
+
+Task(description: "Analyze dependencies",
+     prompt: [dependency-analyst prompt with topic],
+     model: "haiku",
+     subagent_type: "general-purpose")
+
+Task(description: "Analyze architecture boundaries",
+     prompt: [architecture-boundaries-analyst prompt with topic],
+     model: "haiku",
+     subagent_type: "general-purpose")
 ```
 
 Each agent prompt should include:
 - The specific research topic
+- Any open questions from the design document
 - The agent's methodology from their definition file
 - The output format expected
 
@@ -166,6 +187,34 @@ After all agents complete, synthesize their findings into a research document.
 - Security considerations
 - Performance implications
 
+## Test Coverage Analysis
+[From test-coverage-analyst agent]
+- Existing test patterns
+- Coverage gaps identified
+- Test utilities available
+- Testing recommendations
+
+## Error Handling Analysis
+[From error-handling-analyst agent]
+- Error patterns in codebase
+- Failure modes to handle
+- Logging/monitoring approaches
+- Recovery strategies
+
+## Dependency Analysis
+[From dependency-analyst agent]
+- Relevant dependencies and versions
+- Version constraints affecting implementation
+- Upgrade considerations
+- Transitive dependency notes
+
+## Architecture Boundaries Analysis
+[From architecture-boundaries-analyst agent]
+- Module boundaries relevant to task
+- Public interfaces to implement
+- Coupling patterns to follow
+- Where new code should live
+
 ## Related Issues
 
 | ID | Title | Status | Source |
@@ -213,7 +262,7 @@ Replace `<actual-filename>` with the real filename you just created.
 |-------|--------|--------|
 | 0 | Check design doc | Design context or proceed |
 | 1 | Clarify topic (if no design) | Clear research question |
-| 2 | Dispatch 4 agents | Parallel research |
+| 2 | Dispatch 8 agents | Parallel research |
 | 2.5 | Discover issues | Related issues list |
 | 3 | Synthesize | Combined findings |
 | 4 | Save | `docs/research/YYYY-MM-DD-topic.md` |
