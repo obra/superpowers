@@ -315,12 +315,19 @@ Replace `<actual-filename>` with the real filename you just created.
 | 4 | Save | `docs/research/YYYY-MM-DD-topic.md` |
 | 5 | Announce | Ready for planning |
 
-## Red Flags - STOP
+## Red Flags - IMMEDIATE STOP
 
-- Dispatching agents without clear topic
-- Writing research doc before agents complete
-- Skipping synthesis (just concatenating agent outputs)
-- Not saving to `docs/research/`
+These are CRITICAL violations. If you catch yourself doing any of these, STOP immediately:
+
+| Violation | Why It's Critical | Recovery |
+|-----------|-------------------|----------|
+| Dispatching fewer than 8 agents | Incomplete research = flawed plans | Go back, dispatch ALL agents |
+| Writing doc before agents complete | Premature synthesis misses findings | Wait for all agent results |
+| Concatenating without synthesizing | Raw dumps aren't research | Write Executive Summary + Edge Cases |
+| Skipping the dispatch checklist | Gate exists for a reason | Complete checklist before proceeding |
+| Skipping the synthesis checklist | Gate exists for a reason | Complete checklist before saving |
+
+**If in doubt:** Re-read the CRITICAL REQUIREMENTS section at the top.
 
 ## Integration
 
