@@ -341,6 +341,56 @@ To stop:     /ralph stop
 Loop running. Check /ralph status for progress.
 ```
 
+## Guardrails (GUARDRAILS.md)
+
+Default guardrails created by `/ralph init`:
+
+```markdown
+# Guardrails
+
+## Limits
+- Max iterations: 40
+- Max time: 8 hours
+- Model: Haiku only (cost control)
+
+## Quality Gates
+- Tests must pass before commit
+- Lints/type checks must pass before commit
+- Code review must approve before marking task complete
+
+## Git Rules
+- Commit after each completed task
+- No force push
+- No commits to main/master directly
+- No uncommitted changes before iteration
+
+## Behavior
+- One task per iteration
+- Exit on failure (fresh context next iteration)
+- Update progress.txt before exiting
+- If stuck for 3 consecutive iterations, stop and report
+
+## Forbidden Actions
+- Modifying GUARDRAILS.md during loop
+- Skipping tests for "quick fixes"
+- Accumulating context across iterations
+- Retrying within same iteration
+```
+
+### Customization
+
+Users can modify GUARDRAILS.md before starting. Ralph reads it fresh each iteration.
+
+**Safe customizations:**
+- Adjust max_iterations (recommend 20-60)
+- Adjust max_duration (recommend 4-12h)
+- Add project-specific rules
+
+**Dangerous customizations:**
+- Disabling quality gates (defeats purpose)
+- Allowing main/master commits
+- Removing cost controls
+
 ## Red Flags
 
 **Never:**
