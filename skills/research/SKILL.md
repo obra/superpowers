@@ -24,6 +24,15 @@ Do NOT use when:
 - Making a quick fix to familiar code
 - Research already exists in `docs/research/`
 
+## CRITICAL REQUIREMENTS
+
+This skill has two non-negotiable requirements. Violation = skill failure.
+
+1. **ALL 8 AGENTS MUST BE DISPATCHED** - No exceptions. Partial dispatch is failure.
+2. **SYNTHESIS IS COMPULSORY** - Raw agent outputs are not valid research.
+
+If you cannot complete both requirements, STOP and report why.
+
 ## The Process
 
 ### Phase 0: Check for Design Document
