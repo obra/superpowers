@@ -55,7 +55,7 @@ ls GUARDRAILS.md
 
 ```bash
 # Check plan has uncompleted tasks
-grep -E "^\s*-\s*\[\s*\]" IMPLEMENTATION_PLAN.md
+grep -E "^[[:space:]]*-[[:space:]]*\[[[:space:]]*\]" IMPLEMENTATION_PLAN.md
 ```
 
 ### Environment
