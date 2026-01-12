@@ -15,7 +15,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { execSync, spawnSync } = require('child_process');
 
 function extractDotBlocks(markdown) {
   const blocks = [];
@@ -69,14 +69,25 @@ ${bodies.join('\n\n')}
 
 function renderToSvg(dotContent) {
   try {
-    return execSync('dot -Tsvg', {
+    // Use spawnSync instead of execSync to avoid shell injection
+    // This prevents any shell metacharacters in dotContent from being interpreted
+    const result = spawnSync('dot', ['-Tsvg'], {
       input: dotContent,
       encoding: 'utf-8',
       maxBuffer: 10 * 1024 * 1024
     });
+    
+    if (result.error) {
+      throw result.error;
+    }
+    
+    if (result.status !== 0) {
+      throw new Error(result.stderr || 'dot command failed');
+    }
+    
+    return result.stdout;
   } catch (err) {
     console.error('Error running dot:', err.message);
-    if (err.stderr) console.error(err.stderr.toString());
     return null;
   }
 }
@@ -102,6 +113,12 @@ function main() {
   const skillFile = path.join(skillDir, 'SKILL.md');
   const skillName = path.basename(skillDir).replace(/-/g, '_');
 
+  // Validate that skillDir and skillFile are safe paths
+  if (!skillFile.startsWith(skillDir)) {
+    console.error('Error: Invalid file path');
+    process.exit(1);
+  }
+
   if (!fs.existsSync(skillFile)) {
     console.error(`Error: ${skillFile} not found`);
     process.exit(1);
@@ -109,7 +126,10 @@ function main() {
 
   // Check if dot is available
   try {
-    execSync('which dot', { encoding: 'utf-8' });
+    const result = spawnSync('which', ['dot'], { encoding: 'utf-8' });
+    if (result.status !== 0) {
+      throw new Error('dot not found');
+    }
   } catch {
     console.error('Error: graphviz (dot) not found. Install with:');
     console.error('  brew install graphviz    # macOS');

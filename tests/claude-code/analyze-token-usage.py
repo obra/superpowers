@@ -6,8 +6,15 @@ Breaks down usage by main session and individual subagents.
 
 import json
 import sys
+import logging
 from pathlib import Path
 from collections import defaultdict
+
+# Configure logging for security audit trail
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 def analyze_main_session(filepath):
     """Analyze a session file and return token usage broken down by agent."""
@@ -86,13 +93,34 @@ def main():
         sys.exit(1)
 
     main_session_file = sys.argv[1]
-
-    if not Path(main_session_file).exists():
-        print(f"Error: Session file not found: {main_session_file}")
+    
+    # Validate file path to prevent directory traversal attacks
+    try:
+        file_path = Path(main_session_file).resolve()
+        # Ensure the path is within allowed directory (current working directory or subdirs)
+        file_path.relative_to(Path.cwd())
+    except ValueError:
+        print(f"Error: Invalid file path - access outside current directory: {main_session_file}")
+        logging.error(f"Attempted access to file outside allowed directory: {main_session_file}")
         sys.exit(1)
 
+    if not file_path.exists():
+        print(f"Error: Session file not found: {main_session_file}")
+        logging.warning(f"Session file not found: {main_session_file}")
+        sys.exit(1)
+    
+    # Check file size to prevent resource exhaustion attacks (limit to 1GB)
+    MAX_FILE_SIZE = 1024 * 1024 * 1024  # 1GB in bytes
+    file_size = file_path.stat().st_size
+    if file_size > MAX_FILE_SIZE:
+        print(f"Error: Session file too large: {file_size} bytes (max: {MAX_FILE_SIZE} bytes)")
+        logging.error(f"Attempted to read oversized file: {main_session_file} ({file_size} bytes)")
+        sys.exit(1)
+    
+    logging.info(f"Processing session file: {file_path} (size: {file_size} bytes)")
+
     # Analyze the session
-    main_usage, subagent_usage = analyze_main_session(main_session_file)
+    main_usage, subagent_usage = analyze_main_session(file_path)
 
     print("=" * 100)
     print("TOKEN USAGE ANALYSIS")
