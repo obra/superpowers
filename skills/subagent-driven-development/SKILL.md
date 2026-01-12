@@ -5,9 +5,9 @@ description: Use when executing implementation plans with independent tasks in t
 
 # Subagent-Driven Development
 
-Execute plan by dispatching fresh subagent per task, with two-stage review after each: spec compliance review first, then code quality review.
+Execute plan by dispatching fresh subagent per task, with three-stage review after each: spec compliance, then security, then code quality.
 
-**Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
+**Core principle:** Fresh subagent per task + three-stage review (spec → security → quality) = secure, high quality, fast iteration
 
 ## When to Use
 
@@ -32,7 +32,7 @@ digraph when_to_use {
 **vs. Executing Plans (parallel session):**
 - Same session (no context switch)
 - Fresh subagent per task (no context pollution)
-- Two-stage review after each task: spec compliance first, then code quality
+- Three-stage review after each task: spec compliance → security → code quality
 - Faster iteration (no human-in-loop between tasks)
 
 ## The Process
@@ -50,6 +50,9 @@ digraph process {
         "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [shape=box];
         "Spec reviewer subagent confirms code matches spec?" [shape=diamond];
         "Implementer subagent fixes spec gaps" [shape=box];
+        "Dispatch security reviewer subagent (./security-reviewer-prompt.md)" [shape=box style=filled fillcolor=lightyellow];
+        "Security reviewer subagent approves?" [shape=diamond];
+        "Implementer subagent fixes security issues" [shape=box];
         "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
         "Code quality reviewer subagent approves?" [shape=diamond];
         "Implementer subagent fixes quality issues" [shape=box];
@@ -70,7 +73,11 @@ digraph process {
     "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" -> "Spec reviewer subagent confirms code matches spec?";
     "Spec reviewer subagent confirms code matches spec?" -> "Implementer subagent fixes spec gaps" [label="no"];
     "Implementer subagent fixes spec gaps" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="re-review"];
-    "Spec reviewer subagent confirms code matches spec?" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="yes"];
+    "Spec reviewer subagent confirms code matches spec?" -> "Dispatch security reviewer subagent (./security-reviewer-prompt.md)" [label="yes"];
+    "Dispatch security reviewer subagent (./security-reviewer-prompt.md)" -> "Security reviewer subagent approves?";
+    "Security reviewer subagent approves?" -> "Implementer subagent fixes security issues" [label="no"];
+    "Implementer subagent fixes security issues" -> "Dispatch security reviewer subagent (./security-reviewer-prompt.md)" [label="re-review"];
+    "Security reviewer subagent approves?" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="yes"];
     "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
     "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
     "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
@@ -86,6 +93,7 @@ digraph process {
 
 - `./implementer-prompt.md` - Dispatch implementer subagent
 - `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
+- `./security-reviewer-prompt.md` - Dispatch security reviewer subagent (blocks on Critical/High issues)
 - `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
 
 ## Example Workflow
@@ -116,50 +124,56 @@ Implementer: "Got it. Implementing now..."
 [Dispatch spec compliance reviewer]
 Spec reviewer: ✅ Spec compliant - all requirements met, nothing extra
 
+[Dispatch security reviewer]
+Security reviewer: ✅ Security approved - no Critical or High issues found
+
 [Get git SHAs, dispatch code quality reviewer]
 Code reviewer: Strengths: Good test coverage, clean. Issues: None. Approved.
 
 [Mark Task 1 complete]
 
-Task 2: Recovery modes
+Task 2: Email OAuth integration
 
 [Get Task 2 text and context (already extracted)]
 [Dispatch implementation subagent with full task text + context]
 
 Implementer: [No questions, proceeds]
 Implementer:
-  - Added verify/repair modes
+  - Added OAuth token handling
   - 8/8 tests passing
   - Self-review: All good
   - Committed
 
 [Dispatch spec compliance reviewer]
-Spec reviewer: ❌ Issues:
-  - Missing: Progress reporting (spec says "report every 100 items")
-  - Extra: Added --json flag (not requested)
+Spec reviewer: ✅ Spec compliant
 
-[Implementer fixes issues]
-Implementer: Removed --json flag, added progress reporting
+[Dispatch security reviewer]
+Security reviewer: ❌ Issues found:
+  Critical:
+  - src/auth/oauth.ts:15 - Access token stored in localStorage (insecure)
+  - src/utils/logger.ts:42 - Token value logged in debug output
+  High:
+  - src/api/email.ts:28 - Missing token encryption at rest
 
-[Spec reviewer reviews again]
-Spec reviewer: ✅ Spec compliant now
+[Implementer fixes security issues]
+Implementer:
+  - Moved token to httpOnly secure cookie
+  - Removed token from logs
+  - Added AES encryption for stored tokens
+
+[Security reviewer reviews again]
+Security reviewer: ✅ Security approved
 
 [Dispatch code quality reviewer]
-Code reviewer: Strengths: Solid. Issues (Important): Magic number (100)
+Code reviewer: Strengths: Solid encryption. Issues (Minor): Could extract crypto utils
 
-[Implementer fixes]
-Implementer: Extracted PROGRESS_INTERVAL constant
-
-[Code reviewer reviews again]
-Code reviewer: ✅ Approved
-
-[Mark Task 2 complete]
+[Mark Task 2 complete - minor issues don't block]
 
 ...
 
 [After all tasks]
 [Dispatch final code-reviewer]
-Final reviewer: All requirements met, ready to merge
+Final reviewer: All requirements met, security verified, ready to merge
 
 Done!
 ```
@@ -185,22 +199,23 @@ Done!
 
 **Quality gates:**
 - Self-review catches issues before handoff
-- Two-stage review: spec compliance, then code quality
+- Three-stage review: spec compliance → security → code quality
 - Review loops ensure fixes actually work
 - Spec compliance prevents over/under-building
+- Security review catches vulnerabilities early (blocks on Critical/High)
 - Code quality ensures implementation is well-built
 
 **Cost:**
-- More subagent invocations (implementer + 2 reviewers per task)
+- More subagent invocations (implementer + 3 reviewers per task)
 - Controller does more prep work (extracting all tasks upfront)
 - Review loops add iterations
-- But catches issues early (cheaper than debugging later)
+- But catches issues early (security issues in production are 10-100x more expensive)
 
 ## Red Flags
 
 **Never:**
-- Skip reviews (spec compliance OR code quality)
-- Proceed with unfixed issues
+- Skip reviews (spec compliance, security, OR code quality)
+- Proceed with unfixed Critical or High security issues
 - Dispatch multiple implementation subagents in parallel (conflicts)
 - Make subagent read plan file (provide full text instead)
 - Skip scene-setting context (subagent needs to understand where task fits)
@@ -208,8 +223,10 @@ Done!
 - Accept "close enough" on spec compliance (spec reviewer found issues = not done)
 - Skip review loops (reviewer found issues = implementer fixes = review again)
 - Let implementer self-review replace actual review (both are needed)
-- **Start code quality review before spec compliance is ✅** (wrong order)
-- Move to next task while either review has open issues
+- **Start security review before spec compliance is ✅** (wrong order)
+- **Start code quality review before security is ✅** (wrong order)
+- Move to next task while any review has open Critical/High issues
+- Downgrade security severity to avoid blocking ("it's just internal" = still fix it)
 
 **If subagent asks questions:**
 - Answer clearly and completely
@@ -225,6 +242,13 @@ Done!
 **If subagent fails task:**
 - Dispatch fix subagent with specific instructions
 - Don't try to fix manually (context pollution)
+
+**Skipping security review (use sparingly):**
+- User must explicitly request: "Skip security review for [task name]"
+- User must provide reason (e.g., "internal prototype", "no sensitive data")
+- Log the skip in commit message: "⚠️ Security review skipped - [reason]"
+- NOT recommended for: authentication, data handling, API endpoints, email/OAuth integration
+- See `./security-reviewer-prompt.md` for skip confirmation process
 
 ## Integration
 
