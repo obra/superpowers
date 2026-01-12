@@ -120,6 +120,24 @@ Each agent prompt should include:
 - The agent's methodology from their definition file
 - The output format expected
 
+### COMPULSORY: Agent Dispatch Verification
+
+Before proceeding to Phase 2.5 or Phase 3, you MUST verify all 8 agents were dispatched.
+
+**Dispatch Checklist** (all COMPULSORY):
+- [ ] codebase-analyst
+- [ ] git-history-analyzer
+- [ ] framework-docs-researcher
+- [ ] best-practices-researcher
+- [ ] test-coverage-analyst
+- [ ] error-handling-analyst
+- [ ] dependency-analyst
+- [ ] architecture-boundaries-analyst
+
+**STOP CONDITION:** If ANY checkbox is unchecked, do NOT proceed. Dispatch the missing agent(s) first.
+
+**Self-Check:** Count your Task tool calls. You MUST have exactly 8 (plus 1 optional for issue discovery). If fewer than 8, you have failed this gate.
+
 ### Phase 2.5: Issue Discovery (Optional)
 
 If an issue tracker is detected, dispatch issue-tracking agent for discovery:
