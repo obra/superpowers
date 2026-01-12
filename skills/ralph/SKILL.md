@@ -38,6 +38,78 @@ Don't use when:
 
 TODO: Complete after iteration pattern is implemented
 
+## Validation (Pre-Start)
+
+Before starting loop, validate ALL of these:
+
+### Required Files
+
+```bash
+# Check required files exist
+ls specs/*.md           # At least one spec
+ls IMPLEMENTATION_PLAN.md
+ls GUARDRAILS.md
+```
+
+### Plan Parsing
+
+```bash
+# Check plan has uncompleted tasks
+grep -E "^\s*-\s*\[\s*\]" IMPLEMENTATION_PLAN.md
+```
+
+### Environment
+
+```bash
+# Git status (should be clean)
+git status --porcelain
+
+# Tests passing
+npm test || pytest || cargo test  # project-appropriate
+
+# tmux available
+tmux -V
+```
+
+### Model Check
+
+```bash
+# Check current model
+claude --print-settings | grep model
+```
+
+**If model is not Haiku:**
+```
+WARNING: Current model is [model]. Ralph runs many iterations.
+Haiku costs $1/$5 per million tokens (vs $3/$15 for Sonnet).
+40-iteration session: ~$4-12 on Haiku vs $12-36 on Sonnet.
+
+Continue with [model]? [Yes / Switch to Haiku]
+```
+
+### Validation Output
+
+```
+Validating Ralph setup...
+
+✓ specs/ directory found (N files)
+✓ IMPLEMENTATION_PLAN.md found (N tasks)
+✓ GUARDRAILS.md found
+✓ .ralph/progress.txt initialized
+
+Parsing IMPLEMENTATION_PLAN.md...
+✓ All N tasks have clear descriptions
+⚠ Warning: Task 4 has no explicit test criteria
+
+Checking environment...
+✓ Git repo clean
+✓ Tests passing (N/N)
+✓ tmux available
+✓ Model: Haiku
+
+Ready to start. Estimated: N tasks, ~40 iterations max, 8h limit
+```
+
 ## Red Flags
 
 **Never:**
