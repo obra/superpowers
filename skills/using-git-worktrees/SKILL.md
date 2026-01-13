@@ -246,6 +246,35 @@ Ready to implement auth feature
 - Auto-detect and run project setup
 - Verify clean test baseline
 
+## COMPULSORY: Worktree Safety Verification
+
+Before creating project-local worktree:
+
+**Ignore Verification Gate** (COMPULSORY for .worktrees or worktrees):
+
+- [ ] Ran `git check-ignore` on directory
+- [ ] If NOT ignored: added to .gitignore and committed
+
+**STOP CONDITION:** If creating worktree in non-ignored directory, STOP. Fix gitignore first.
+
+After creating worktree:
+
+**Setup Gate** (COMPULSORY):
+
+- [ ] Auto-detected project type (package.json, Cargo.toml, etc.)
+- [ ] Ran appropriate setup command
+- [ ] Ran baseline tests
+
+**STOP CONDITION:** If tests fail, report and get permission before proceeding.
+
+**Readiness Gate** (COMPULSORY):
+
+- [ ] Full path reported to user
+- [ ] Test results reported
+- [ ] "Ready to implement" announced
+
+**STOP CONDITION:** If proceeding without readiness report, STOP and report.
+
 ## Integration
 
 **Called by:**
