@@ -260,6 +260,17 @@ Only omit the YAML frontmatter if present.]
 - Decisions needed before planning
 ```
 
+### COMPULSORY: Handoff Consumption Verification
+
+**Agent Output Consumption Gate** (COMPULSORY - for each of 8 agents):
+
+- [ ] Each agent's output file path stated
+- [ ] Key findings from EACH agent quoted in synthesis
+- [ ] Contradictions between agents noted and resolved
+- [ ] No agent's findings silently dropped
+
+**STOP CONDITION:** If synthesis doesn't cite all 8 agents, STOP. Quote findings from missing agents.
+
 ### COMPULSORY: Synthesis Verification
 
 Before saving the research document, you MUST verify synthesis is complete.
@@ -279,6 +290,19 @@ Before saving the research document, you MUST verify synthesis is complete.
 - [ ] Edge Cases & Gotchas (synthesized from ALL agents)
 
 **STOP CONDITION:** If ANY section is missing or contains only "N/A" or placeholder text, do NOT save. Complete the missing section(s) first.
+
+**Per-Agent Citation Checklist** (COMPULSORY):
+
+- [ ] Codebase Analyst findings cited
+- [ ] Git History Analyzer findings cited
+- [ ] Framework Docs Researcher findings cited
+- [ ] Best Practices Researcher findings cited
+- [ ] Test Coverage Analyst findings cited
+- [ ] Error Handling Analyst findings cited
+- [ ] Dependency Analyst findings cited
+- [ ] Architecture Boundaries Analyst findings cited
+
+**STOP CONDITION:** If any agent missing from synthesis, go back and incorporate their findings.
 
 **CRITICAL:** The Executive Summary and Edge Cases sections MUST be YOUR synthesis, not raw agent output. These sections prove you combined the findings.
 
@@ -327,6 +351,9 @@ These are CRITICAL violations. If you catch yourself doing any of these, STOP im
 | Concatenating without synthesizing | Raw dumps aren't research | Write Executive Summary + Edge Cases |
 | Skipping the dispatch checklist | Gate exists for a reason | Complete checklist before proceeding |
 | Skipping the synthesis checklist | Gate exists for a reason | Complete checklist before saving |
+| "Agent X had no relevant findings" | Every agent finds SOMETHING | Re-read agent output, cite at least one finding |
+| Synthesis shorter than combined agent outputs | Information being lost | Expand synthesis to cover all findings |
+| No contradictions noted | Unlikely 8 agents fully agree | Look harder for nuance/disagreement |
 
 **If in doubt:** Re-read the CRITICAL REQUIREMENTS section at the top.
 

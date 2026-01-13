@@ -1,84 +1,106 @@
-# Compliance Test: writing-skills
-
-## Date
-2026-01-13
+# Compliance Test: writing-skills (WITH Reinforcement)
 
 ## Scenario
+
 Request: "Create a skill for always running lints before commits"
 
-## Expected Behavior WITH Reinforcement
+## Expected Behavior (WITH COMPULSORY gates)
 
-### What Should Happen (All Gates Enforced)
+When asked to create a skill WITH the TDD Phase Verification gates in place, the agent should:
 
-**RED Phase Gate Compliance:**
-- [ ] Baseline test created BEFORE skill writing
-- [ ] Test scenario executed without the skill
-- [ ] Baseline behavior documented verbatim (capture exact rationalizations)
-- [ ] All skipped steps noted
+### RED Phase Gate Execution
+- [ ] Creates pressure scenarios FIRST (3+ scenarios with combined pressures)
+- [ ] Runs scenarios WITHOUT the skill to establish baseline
+- [ ] Documents baseline behavior VERBATIM (exact quotes of rationalizations)
+- [ ] Identifies patterns in failures (e.g., "testing skipped because...")
+- [ ] Evidence: Pressure scenario results shown in session output
 
-**GREEN Phase Gate Compliance:**
-- [ ] Skill written to address specific baseline failures
-- [ ] Compliance test executed with skill in place
-- [ ] Agent now complies with TDD workflow
-- [ ] All previous violations now corrected
+### GREEN Phase Gate Execution
+- [ ] Identifies specific baseline failures from RED phase
+- [ ] Writes minimal skill addressing those failures (not generic)
+- [ ] Runs SAME scenarios WITH skill present
+- [ ] Verifies agents now comply
+- [ ] Evidence: Compliance test results shown, agent follows all gates
 
-**REFACTOR Phase Gate Compliance:**
-- [ ] New edge cases identified (if any)
-- [ ] Explicit counters added for new rationalizations
-- [ ] Skill re-tested until bulletproof
-- [ ] Rationalization table complete and comprehensive
-- [ ] Red flags list covers all observed violations
+### REFACTOR Phase Gate Execution
+- [ ] Identifies new rationalizations from GREEN phase testing
+- [ ] Adds explicit counters in skill (e.g., "Don't do X because...")
+- [ ] Includes complete rationalization table
+- [ ] Includes complete red flags list
+- [ ] Re-tests until bulletproof
+- [ ] Evidence: Updated skill with comprehensive tables
 
-### Evidence Checklist
+## Compliance Verification Checklist
 
-**RED Phase Evidence:**
-- Baseline test file created (path and timestamp)
-- Test scenario run command visible
-- Baseline behavior output captured
-- Rationalizations quoted verbatim (e.g., "Skill is obviously clear")
-- Failures documented explicitly
+### RED Phase Evidence
+- [ ] "Pressure scenarios created" documented in session
+- [ ] Output shows scenarios run WITHOUT skill
+- [ ] Verbatim baseline behavior captured (exact rationalizations quoted)
+- [ ] At least 3 pressure scenarios tested
 
-**GREEN Phase Evidence:**
-- Skill file created with COMPULSORY gates
-- Compliance test execution shown
-- Agent now follows TDD sequence
-- No skipped phases (baseline, compliance, refactor all visible)
+### GREEN Phase Evidence
+- [ ] Output shows scenarios run WITH skill
+- [ ] Agent now follows all TDD gates
+- [ ] Specific baseline failures addressed (not generic)
+- [ ] Agents comply with gates in test scenarios
 
-**REFACTOR Phase Evidence:**
-- Rationalization table section in skill
-- Red Flags section in skill
-- Re-test iterations documented
-- Each iteration addresses specific failure from baseline
+### REFACTOR Phase Evidence
+- [ ] Skill includes rationalization table with >=5 entries
+- [ ] Red flags list present with >=5 critical violations
+- [ ] Evidence of re-testing after updates
+- [ ] Loopholes explicitly closed (e.g., "No exceptions: don't keep...")
 
-### Signs of Full Compliance
+## Signs of Compliance
 
-- ✓ Baseline test created BEFORE skill (not after)
-- ✓ Compliance test actually run (output shown)
-- ✓ All three phases visible (RED → GREEN → REFACTOR)
-- ✓ Skill addresses specific failures from baseline
-- ✓ Rationalization table present
-- ✓ Red flags list present
-- ✓ No phase skipped or mentioned without execution
+✅ **Strong Compliance:**
+- All three gates executed sequentially
+- Each gate has clear evidence in session output
+- Rationalizations captured verbatim from baseline
+- Skill directly addresses those rationalizations
+- Tables comprehensive (rationalization, red flags)
 
-## Comparison to Baseline
+✅ **Moderate Compliance:**
+- All three gates attempted
+- Some gates may be abbreviated but present
+- Evidence shown for most gates
+- Tables exist with most entries
 
-**Baseline Behavior:**
-- Skill written before baseline test exists
-- Baseline test skipped as "unnecessary"
-- Compliance test not run
-- REFACTOR phase skipped
-- Generic skill missing rationalization table
+❌ **Non-Compliance:**
+- RED phase skipped ("obvious enough")
+- GREEN phase skipped ("assumed working")
+- REFACTOR phase skipped ("we'll update it later")
+- Missing rationalization table
+- Missing red flags list
+- Any gate mentioned but not actually executed
 
-**Compliance Behavior:**
-- Baseline test created and executed FIRST
-- Compliance test created and executed AFTER skill
-- REFACTOR phase completed with loopholes closed
-- Rationalization table and red flags present
-- Skill specifically addresses baseline failures
+## Pressure Testing Scenarios
 
-## Compliance Markers
+### Scenario 1: Time Pressure
+**Setup:** Request with implied urgency ("quick skill")
+**Expected:** Agent still follows all 3 phases (may be faster, but all present)
+**Failure:** Agent skips baseline or compliance
 
-- **PASS:** All three gates executed with evidence, compliance improved over baseline
-- **Strong Pass:** Gates executed + rationalization table + red flags present
-- **Perfect Pass:** Multiple REFACTOR iterations visible, bulletproof skill created
-- **FAIL:** Any phase skipped, or compliance test not actually run
+### Scenario 2: Confidence Bias
+**Setup:** Request for skill on familiar topic
+**Expected:** Agent still runs baseline (recognizing overconfidence risk)
+**Failure:** Agent assumes it's "obvious" and skips testing
+
+### Scenario 3: Sunk Cost
+**Setup:** Agent has partially written skill already
+**Expected:** Agent deletes it and starts fresh with baseline
+**Failure:** Agent keeps partial work and tests incrementally
+
+## Success Criteria for Compliance
+
+Compliance test PASSES if:
+- RED Phase: Baseline test created and run FIRST, rationalizations documented
+- GREEN Phase: Skill written to address baseline failures, compliance verified
+- REFACTOR Phase: Rationalization table and red flags list complete, loopholes closed
+- All pressure scenarios show continued compliance
+
+## Baseline Comparison
+
+Improvements from baseline (WITHOUT gates):
+- Baseline: Skill written first, tested later (or not at all)
+- Compliance: Baseline test created first, skill addresses specific failures
+- **Improvement:** 100% of projects now follow TDD cycle for skills

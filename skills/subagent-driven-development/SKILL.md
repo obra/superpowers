@@ -377,6 +377,54 @@ Constraints: [any limitations]
 - Explicit context curation before dispatch
 - Don't forward full conversation history
 
+## COMPULSORY: Task Loop Verification
+
+Before each task:
+
+**Context Curation Gate** (COMPULSORY):
+
+- [ ] Full task text extracted from plan (not file path)
+- [ ] Relevant file paths included
+- [ ] Prior decisions affecting this task noted
+- [ ] Structured handoff format used
+
+**STOP CONDITION:** If subagent needs to read plan file, STOP. Provide full text.
+
+## COMPULSORY: Handoff Consumption Verification
+
+**Implementer Consumption Gate** (COMPULSORY - enforced via prompt):
+
+- [ ] Implementer prompt requires acknowledgment of handoff sections
+- [ ] Implementer must state: "Received context for: [task name]"
+- [ ] Implementer must reference specific files from handoff before modifying
+
+**Orchestrator Verification** (COMPULSORY):
+
+- [ ] Verify implementer's response references handoff content
+- [ ] If implementer proceeds without acknowledgment, STOP and re-prompt
+
+**STOP CONDITION:** If implementer output doesn't reference handoff, reject and re-dispatch with explicit consumption requirement.
+
+After implementer completes:
+
+**Review Sequence Gate** (COMPULSORY):
+
+- [ ] Spec Compliance Review completed FIRST
+- [ ] Spec issues fixed (if any)
+- [ ] THEN Code Quality Review
+- [ ] Quality issues fixed (if any)
+- [ ] Both reviews approved
+
+**STOP CONDITION:** If attempting Code Quality before Spec Compliance approved, STOP. Wrong order.
+
+**Task Completion Gate** (COMPULSORY):
+
+- [ ] Both reviews approved
+- [ ] TodoWrite updated (task marked complete)
+- [ ] Progress file updated
+
+**STOP CONDITION:** If moving to next task without both reviews approved, STOP.
+
 ## Red Flags
 
 **Never:**

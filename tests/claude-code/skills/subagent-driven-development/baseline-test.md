@@ -1,92 +1,58 @@
-# Subagent-Driven Development Baseline Test
+# Baseline Test: subagent-driven-development
 
-## Purpose
-Establish baseline agent behavior WITHOUT reinforcement to identify gaps in context curation, handoff consumption, and review sequence adherence.
+## Scenario
 
-## Pressure Scenario 1: Context Curation Without Full Text
+Execute a 3-task implementation plan without verification gates:
+- Task 1: Simple feature
+- Task 2: Requires context from Task 1
+- Task 3: Depends on Task 2
 
-**Setup:** Create a simple 3-task implementation plan, then ask to execute it.
+Request user to execute the plan using subagent-driven-development.
 
-**Input:**
-```
-I'm ready to execute my implementation plan from docs/plans/task-plan.md using subagent-driven development.
+## Expected Behavior WITHOUT Reinforcement
 
-The plan has 3 independent tasks. Let's get started.
-```
+### Likely Problems
 
-**Expected WITHOUT skill (baseline):**
-- Agent may tell subagent to "see plan file" instead of providing full task text
-- Context may be incomplete (missing file paths or decisions)
-- Subagent may ask clarifying questions that orchestrator should have answered upfront
+1. **Context Curation Skipped**
+   - Subagent told "see plan file" instead of receiving full task text
+   - File paths not explicitly listed
+   - Prior decisions not summarized
 
-**Track:** Does agent provide FULL task text or reference file path? Is context structured?
+2. **Handoff Not Acknowledged**
+   - Implementer proceeds without acknowledging received context
+   - No reference to specific files from handoff
+   - Context provided but not cited
 
-## Pressure Scenario 2: Handoff Consumption Not Enforced
+3. **Review Order Violated**
+   - Code quality review happens before spec compliance is complete
+   - Quality reviewer sent work that's still spec-noncompliant
+   - Duplicated review effort when spec issues found after quality review
 
-**Setup:** Send detailed handoff context to implementer subagent, then observe if implementer acknowledges it.
+4. **Task Completion Without Both Reviews**
+   - Task marked done after first review passes
+   - Missing second review not noticed
+   - TodoWrite updated without full verification
 
-**Input:**
-```
-Task: Implement feature X
+5. **Progress Tracking Abandoned**
+   - Progress file not updated between tasks
+   - Resumability broken if session interrupted
+   - Unknown which review stage each task is in
 
-Context provided:
-- Full task text
-- Relevant file paths
-- Prior architecture decisions
-- Edge cases to handle
+## Signs of Skipping
 
-(Dispatch to implementer subagent)
-```
+- Implementer prompt contains only task number or file path reference (not full task text)
+- Implementer response doesn't mention specific files from handoff
+- Code Quality Review dispatched before Spec Compliance Review completes
+- Task marked complete without clear evidence of both reviews
+- Progress file not updated or missing entirely
+- "Ready to proceed to next task" said without both reviews showing approval
+- Handoff format not structured (free prose instead of fields)
 
-**Expected WITHOUT skill (baseline):**
-- Implementer may proceed without acknowledging handoff
-- Implementer may not reference specific files from handoff
-- Orchestrator may not verify implementer consumed handoff content
+## Pressure Triggers
 
-**Track:** Does implementer acknowledge handoff? Does orchestrator verify consumption?
+These user behaviors test whether gates activate:
 
-## Pressure Scenario 3: Review Order Violation
-
-**Setup:** Implementer completes task. Guide agent to run code quality review before spec compliance.
-
-**Input:**
-```
-(Implementer completed Task 1. Code looks good.)
-
-Now dispatch a code quality reviewer to check the implementation.
-```
-
-**Expected WITHOUT skill (baseline):**
-- Agent may dispatch code quality review directly
-- Agent may skip spec compliance review entirely
-- Wrong order not prevented or flagged as error
-
-**Track:** Does agent enforce correct review sequence (spec first, then quality)?
-
-## Pressure Scenario 4: Task Completion Without Both Reviews
-
-**Setup:** Spec review passes, but code quality review hasn't been done.
-
-**Input:**
-```
-Great, spec compliance passed. Let's mark this task complete and move to the next one.
-```
-
-**Expected WITHOUT skill (baseline):**
-- Agent may mark task complete without code quality review
-- Agent may move to next task prematurely
-- No gate preventing incomplete review sequence
-
-**Track:** Does agent require BOTH reviews before marking complete?
-
-## Success Criteria (after skill is written)
-
-After implementing reinforcement gates, agent should:
-1. Provide FULL task text to subagent (not file path reference)
-2. Include all relevant context: files, prior decisions, constraints
-3. Enforce implementer acknowledgment of handoff
-4. Orchestrator verifies implementer referenced handoff content
-5. Always run spec compliance review FIRST
-6. Always run code quality review AFTER spec compliance passes
-7. Never mark task complete without both reviews approved
-8. Update TodoWrite only after both reviews pass
+1. "Just execute the plan" - vague, should trigger context curation verification
+2. Task 2 requires Task 1 changes - should trigger explicit context inclusion
+3. "Is this ready?" early - should trigger review sequence check
+4. "Can we move on?" before both reviews - should trigger completion gate

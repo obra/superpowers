@@ -165,6 +165,51 @@ Update plan header template to include:
 If research exists: Reference `docs/research/YYYY-MM-DD-topic.md`
 If degraded mode: Document limitations in plan header
 
+## COMPULSORY: Handoff Consumption Verification
+
+**Research Consumption Gate** (COMPULSORY when research doc provided):
+
+- [ ] Research document path explicitly stated
+- [ ] Key findings from research quoted in plan header
+- [ ] Architecture decisions traced to research findings
+- [ ] Open questions from research addressed or carried forward
+
+**STOP CONDITION:** If writing plan without citing research findings, STOP. Quote specific sections from research.
+
+## COMPULSORY: Plan Quality Verification
+
+Before writing ANY task:
+
+**Context Gate** (COMPULSORY):
+
+- [ ] Research document read (or degraded mode acknowledged)
+- [ ] Topic clear from research or clarification
+- [ ] Sufficient context for specific, actionable tasks
+
+**STOP CONDITION:** If writing tasks without context, STOP. Gather context first.
+
+For EACH task written:
+
+**Task Quality Gate** (COMPULSORY):
+
+- [ ] Exact file paths (not "relevant files")
+- [ ] Complete code in plan (not "add validation")
+- [ ] Exact commands with expected output
+- [ ] Step granularity is 2-5 minutes each
+
+**STOP CONDITION:** If task is vague, rewrite with specifics.
+
+After writing all tasks:
+
+**Plan Completeness Gate** (COMPULSORY):
+
+- [ ] Header includes Goal, Architecture, Tech Stack
+- [ ] Related Issues section populated (or "none" noted)
+- [ ] Each task has Files, Steps, Commit sections
+- [ ] DRY/YAGNI/TDD principles followed
+
+**STOP CONDITION:** If plan missing required sections, add them before saving.
+
 ## Red Flags - STOP
 
 - No research document found and user declined to create one (proceeding in degraded mode)

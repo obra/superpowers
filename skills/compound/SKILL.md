@@ -151,6 +151,29 @@ docs/solutions/
 - Skipping the "Failed Attempts" section (valuable for future debugging)
 - Not checking for pattern detection
 
+## COMPULSORY: Capture Verification
+
+Before saving solution document:
+
+**Solution Quality Gate** (all COMPULSORY):
+
+- [ ] Symptoms include exact error messages (quoted)
+- [ ] Failed Attempts section has at least one entry (unless first attempt worked)
+- [ ] Root Cause explains WHY (not just what)
+- [ ] Solution has step-by-step instructions
+- [ ] Prevention section has actionable items
+
+**STOP CONDITION:** If ANY checkbox is unchecked, do NOT save. Complete missing section(s) first.
+
+After saving:
+
+**Pattern Detection Gate** (COMPULSORY):
+
+- [ ] Ran `ls docs/solutions/{category}/ | wc -l`
+- [ ] If 3+, noted pattern to user
+
+**STOP CONDITION:** If pattern detection skipped, go back and run it.
+
 ## Integration
 
 **With systematic-debugging:** After debugging completes, compound skill captures the solution.
