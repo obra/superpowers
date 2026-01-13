@@ -62,13 +62,13 @@ If no design exists:
 
 **Implementation (if continuing):**
 - Ask: "Ready to set up for implementation?"
-- Use superpowers:using-git-worktrees to create isolated workspace
+- Use superpowers-ng:using-git-worktrees to create isolated workspace
 - Present planning options:
   1. **Native planning** (writing-plans + executing-plans): Best for short tasks (<30 min), interactive development with human checkpoints
   2. **Manus planning** (manus-planning): Best for long autonomous runs, multi-session projects, tasks requiring persistent memory across context resets
 - Based on choice:
-  - **Native**: Use superpowers:writing-plans to create detailed implementation plan
-  - **Manus**: Use superpowers:manus-planning (the design document content will be automatically copied into `docs/manus/findings.md` under "## Design Document" section)
+  - **Native**: Use superpowers-ng:writing-plans to create detailed implementation plan
+  - **Manus**: Use superpowers-ng:manus-planning (the design document content will be automatically copied into `docs/manus/findings.md` under "## Design Document" section)
 
 ## Key Principles
 

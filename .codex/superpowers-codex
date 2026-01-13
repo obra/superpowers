@@ -23,7 +23,7 @@ function printSkill(skillPath, sourceType) {
     if (sourceType === 'personal') {
         console.log(relPath.replace(/\\/g, '/')); // Personal skills are not namespaced
     } else {
-        console.log(`superpowers:${relPath.replace(/\\/g, '/')}`); // Superpowers skills get superpowers namespace
+        console.log(`superpowers-ng:${relPath.replace(/\\/g, '/')}`); // Superpowers skills get superpowers-ng namespace
     }
 
     // Extract and print metadata
@@ -62,7 +62,7 @@ function runFindSkills() {
     console.log('  superpowers-codex use-skill <skill-name>   # Load a specific skill');
     console.log('');
     console.log('Skill naming:');
-    console.log('  Superpowers skills: superpowers:skill-name (from ~/.codex/superpowers/skills/)');
+    console.log('  Superpowers skills: superpowers-ng:skill-name (from ~/.codex/superpowers/skills/)');
     console.log('  Personal skills: skill-name (from ~/.codex/skills/)');
     console.log('  Personal skills override superpowers skills when names match.');
     console.log('');
@@ -110,9 +110,9 @@ function runBootstrap() {
     console.log('');
 
     // Load the using-superpowers skill automatically
-    console.log('## Auto-loading superpowers:using-superpowers skill:');
+    console.log('## Auto-loading superpowers-ng:using-superpowers skill:');
     console.log('');
-    runUseSkill('superpowers:using-superpowers');
+    runUseSkill('superpowers-ng:using-superpowers');
 
     console.log('');
     console.log('---');
@@ -127,7 +127,7 @@ function runUseSkill(skillName) {
     if (!skillName) {
         console.log('Usage: superpowers-codex use-skill <skill-name>');
         console.log('Examples:');
-        console.log('  superpowers-codex use-skill superpowers:brainstorming  # Load superpowers skill');
+        console.log('  superpowers-codex use-skill superpowers-ng:brainstorming  # Load superpowers skill');
         console.log('  superpowers-codex use-skill brainstorming              # Load personal skill (or superpowers if not found)');
         console.log('  superpowers-codex use-skill my-custom-skill            # Load personal skill');
         return;
@@ -137,9 +137,9 @@ function runUseSkill(skillName) {
     let actualSkillPath;
     let forceSuperpowers = false;
 
-    if (skillName.startsWith('superpowers:')) {
-        // Remove the superpowers: namespace prefix
-        actualSkillPath = skillName.substring('superpowers:'.length);
+    if (skillName.startsWith('superpowers-ng:')) {
+        // Remove the superpowers-ng: namespace prefix
+        actualSkillPath = skillName.substring('superpowers-ng:'.length);
         forceSuperpowers = true;
     } else {
         actualSkillPath = skillName;
@@ -191,7 +191,7 @@ function runUseSkill(skillName) {
             const superpowersPath = path.join(superpowersSkillsDir, actualSkillPath);
             skillFile = findSkillFile(superpowersPath);
             if (skillFile) {
-                console.log(`# Loading superpowers skill: superpowers:${actualSkillPath}`);
+                console.log(`# Loading superpowers skill: superpowers-ng:${actualSkillPath}`);
                 console.log(`# Source: ${skillFile}`);
                 console.log('');
             }
@@ -220,8 +220,8 @@ function runUseSkill(skillName) {
     }
 
     // Display skill header with clean info
-    const displayName = forceSuperpowers ? `superpowers:${actualSkillPath}` :
-                       (skillFile.includes(personalSkillsDir) ? actualSkillPath : `superpowers:${actualSkillPath}`);
+    const displayName = forceSuperpowers ? `superpowers-ng:${actualSkillPath}` :
+                       (skillFile.includes(personalSkillsDir) ? actualSkillPath : `superpowers-ng:${actualSkillPath}`);
 
     const skillDirectory = path.dirname(skillFile);
 
@@ -261,7 +261,7 @@ switch (command) {
         console.log('');
         console.log('Examples:');
         console.log('  superpowers-codex bootstrap');
-        console.log('  superpowers-codex use-skill superpowers:brainstorming');
+        console.log('  superpowers-codex use-skill superpowers-ng:brainstorming');
         console.log('  superpowers-codex use-skill my-custom-skill');
         break;
 }

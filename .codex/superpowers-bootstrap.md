@@ -14,7 +14,7 @@ When skills reference tools you don't have, substitute your equivalent tools:
 - `Read`, `Write`, `Edit`, `Bash` → Use your native tools with similar functions
 
 **Skills naming:**
-- Superpowers skills: `superpowers:skill-name` (from ~/.codex/superpowers/skills/)
+- Superpowers skills: `superpowers-ng:skill-name` (from ~/.codex/superpowers/skills/)
 - Personal skills: `skill-name` (from ~/.codex/skills/)
 - Personal skills override superpowers skills when names match
 

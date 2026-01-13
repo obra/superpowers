@@ -147,11 +147,11 @@ See `PROMPT.template.md` for a complete example. Key patterns:
 ```markdown
 # Design Phase (run once)
 If docs/plans/*-design.md DOESN'T exist:
-  - Use superpowers:brainstorming
+  - Use superpowers-ng:brainstorming
 
 # Implementation Phase (every loop)
-Use superpowers:manus-planning (auto-resumes if docs/manus/ exists)
-Use superpowers:test-driven-development for all code
+Use superpowers-ng:manus-planning (auto-resumes if docs/manus/ exists)
+Use superpowers-ng:test-driven-development for all code
 ```
 
 ### Status Emission
@@ -230,9 +230,9 @@ Keep both systems updated:
 # Choose planning system based on task complexity
 
 If task requires >50 tool calls OR spans multiple sessions:
-  - Use superpowers:manus-planning
+  - Use superpowers-ng:manus-planning
 Else:
-  - Use superpowers:writing-plans + superpowers:executing-plans
+  - Use superpowers-ng:writing-plans + superpowers-ng:executing-plans
 ```
 
 ### Pattern: Phased Approach
@@ -242,17 +242,17 @@ Else:
 
 Phase 1 - Design (once):
   - Check for design.md
-  - If missing: superpowers:brainstorming
+  - If missing: superpowers-ng:brainstorming
 
 Phase 2 - Planning (once):
-  - superpowers:manus-planning or writing-plans
+  - superpowers-ng:manus-planning or writing-plans
 
 Phase 3 - Implementation (every loop):
-  - superpowers:test-driven-development
+  - superpowers-ng:test-driven-development
   - Update @fix_plan.md as tasks complete
 
 Phase 4 - Completion:
-  - superpowers:verification-before-completion
+  - superpowers-ng:verification-before-completion
   - Emit EXIT_SIGNAL: true
 ```
 

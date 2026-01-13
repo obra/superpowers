@@ -66,8 +66,8 @@ The core philosophy: **Test-Driven Development**, **YAGNI**, **DRY**, and **syst
 
 ```bash
 # Clone the repository
-git clone https://github.com/OniReimu/superpowers.git
-cd superpowers
+git clone https://github.com/OniReimu/superpowers-ng.git
+cd superpowers-ng
 
 # Install as a local plugin
 # (Instructions TBD based on Claude Code local plugin support)

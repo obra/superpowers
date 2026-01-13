@@ -32,7 +32,7 @@ export const SuperpowersPlugin = async ({ client, directory }) => {
     const toolMapping = compact
       ? `**Tool Mapping:** TodoWrite->update_plan, Task->@mention, Skill->use_skill
 
-**Skills naming (priority order):** project: > personal > superpowers:`
+**Skills naming (priority order):** project: > personal > superpowers-ng:`
       : `**Tool Mapping for OpenCode:**
 When skills reference tools you don't have, substitute OpenCode equivalents:
 - \`TodoWrite\` → \`update_plan\`
@@ -43,7 +43,7 @@ When skills reference tools you don't have, substitute OpenCode equivalents:
 **Skills naming (priority order):**
 - Project skills: \`project:skill-name\` (in .opencode/skills/)
 - Personal skills: \`skill-name\` (in ~/.config/opencode/skills/)
-- Superpowers skills: \`superpowers:skill-name\`
+- Superpowers skills: \`superpowers-ng:skill-name\`
 - Project skills override personal, which override superpowers when names match`;
 
     return `<EXTREMELY_IMPORTANT>
@@ -81,7 +81,7 @@ ${toolMapping}
       use_skill: tool({
         description: 'Load and read a specific skill to guide your work. Skills contain proven workflows, mandatory processes, and expert techniques.',
         args: {
-          skill_name: tool.schema.string().describe('Name of the skill to load (e.g., "superpowers:brainstorming", "my-custom-skill", or "project:my-skill")')
+          skill_name: tool.schema.string().describe('Name of the skill to load (e.g., "superpowers-ng:brainstorming", "my-custom-skill", or "project:my-skill")')
         },
         execute: async (args, context) => {
           const { skill_name } = args;
@@ -94,7 +94,7 @@ ${toolMapping}
           let resolved = null;
 
           // Try project skills first (if project: prefix or no prefix)
-          if (forceProject || !skill_name.startsWith('superpowers:')) {
+          if (forceProject || !skill_name.startsWith('superpowers-ng:')) {
             const projectPath = path.join(projectSkillsDir, actualSkillName);
             const projectSkillFile = path.join(projectPath, 'SKILL.md');
             if (fs.existsSync(projectSkillFile)) {
@@ -172,7 +172,7 @@ ${toolMapping}
                 namespace = '';
                 break;
               default:
-                namespace = 'superpowers:';
+                namespace = 'superpowers-ng:';
             }
             const skillName = skill.name || path.basename(skill.path);
 

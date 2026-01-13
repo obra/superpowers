@@ -121,7 +121,7 @@ When all 5 phases are complete:
 1. Mark all phases as `complete` in `task_plan.md`
 2. **Remove marker file:** Delete `docs/manus/.active`
 3. **Announce:** "I'm using the finishing-a-development-branch skill to complete this work."
-4. **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
+4. **REQUIRED SUB-SKILL:** Use superpowers-ng:finishing-a-development-branch
 
 ## File Formats
 

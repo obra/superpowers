@@ -186,7 +186,7 @@ echo ""
 
 # Test 1: Skill was invoked
 echo "Test 1: Skill tool invoked..."
-if grep -q '"name":"Skill".*"skill":"superpowers:subagent-driven-development"' "$SESSION_FILE"; then
+if grep -q '"name":"Skill".*"skill":"superpowers-ng:subagent-driven-development"' "$SESSION_FILE"; then
     echo "  [PASS] subagent-driven-development skill was invoked"
 else
     echo "  [FAIL] Skill was not invoked"

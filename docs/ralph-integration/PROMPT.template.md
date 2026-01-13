@@ -30,7 +30,7 @@ You are working within the Ralph autonomous loop framework with Superpowers-NG s
 Check if `docs/plans/*-design.md` exists:
 
 **If NO design exists**:
-- Use **superpowers:brainstorming** to explore requirements and create design
+- Use **superpowers-ng:brainstorming** to explore requirements and create design
 - The skill will create `docs/plans/YYYY-MM-DD-topic-design.md`
 - Brainstorming will automatically skip to implementation if design exists
 
@@ -44,7 +44,7 @@ Check if `docs/plans/*-design.md` exists:
 Choose based on task complexity:
 
 **For long-running tasks (>50 tool calls, multi-session work)**:
-- Use **superpowers:manus-planning**
+- Use **superpowers-ng:manus-planning**
 - Creates persistent files in `docs/manus/`:
   - `task_plan.md` - 5-phase plan with goals and decisions
   - `findings.md` - Research and requirements
@@ -53,8 +53,8 @@ Choose based on task complexity:
 - **Auto-resumes**: If `docs/manus/.active` exists, manus-planning automatically continues from current phase
 
 **For shorter tasks (<30 min, interactive)**:
-- Use **superpowers:writing-plans** to create implementation plan
-- Then use **superpowers:executing-plans** to execute in batches
+- Use **superpowers-ng:writing-plans** to create implementation plan
+- Then use **superpowers-ng:executing-plans** to execute in batches
 
 **Recommended**: Use manus-planning for Ralph projects (designed for context resets and long runs)
 
@@ -63,13 +63,13 @@ Choose based on task complexity:
 Focus on ONE task from `@fix_plan.md` per loop.
 
 **Core disciplines**:
-- Use **superpowers:test-driven-development** for ALL implementation
+- Use **superpowers-ng:test-driven-development** for ALL implementation
   - Write failing test first
   - Make it pass
   - Refactor
   - NO production code without a failing test first
 
-- Use **superpowers:systematic-debugging** when bugs occur
+- Use **superpowers-ng:systematic-debugging** when bugs occur
   - 4-phase root cause process
   - No trial-and-error fixes
   - Document resolution in progress.md
@@ -83,7 +83,7 @@ Focus on ONE task from `@fix_plan.md` per loop.
 
 Before claiming completion:
 
-1. Use **superpowers:verification-before-completion**
+1. Use **superpowers-ng:verification-before-completion**
    - Run tests
    - Verify output
    - Gather evidence
@@ -279,9 +279,9 @@ Before setting EXIT_SIGNAL: true, verify ALL conditions:
 ### Scenario 1: First Loop - No Artifacts
 
 **Actions**:
-1. No design.md exists → Run **superpowers:brainstorming** → Create `docs/plans/YYYY-MM-DD-topic-design.md`
-2. No docs/manus/ exists → Start **superpowers:manus-planning** → Create task_plan.md, findings.md, progress.md, .active
-3. Work on first task from @fix_plan.md using **superpowers:test-driven-development**
+1. No design.md exists → Run **superpowers-ng:brainstorming** → Create `docs/plans/YYYY-MM-DD-topic-design.md`
+2. No docs/manus/ exists → Start **superpowers-ng:manus-planning** → Create task_plan.md, findings.md, progress.md, .active
+3. Work on first task from @fix_plan.md using **superpowers-ng:test-driven-development**
 4. Mark task complete in @fix_plan.md: `- [x] Task description`
 
 **Status Emission**:
@@ -303,7 +303,7 @@ RECOMMENDATION: Continue with next task from @fix_plan.md
 1. design.md exists → brainstorming auto-skips to implementation
 2. .active exists → manus-planning auto-resumes from current phase
 3. Continue next task from @fix_plan.md
-4. Use **superpowers:test-driven-development** for implementation
+4. Use **superpowers-ng:test-driven-development** for implementation
 
 **Status Emission**:
 ```
@@ -322,7 +322,7 @@ RECOMMENDATION: 3 tasks remaining in @fix_plan.md
 
 **Actions**:
 1. Attempted fix 3 times, same error occurs
-2. Use **superpowers:systematic-debugging** to diagnose
+2. Use **superpowers-ng:systematic-debugging** to diagnose
 3. After 3 attempts still failing → Document in progress.md and task_plan.md
 4. Set STATUS: BLOCKED
 
@@ -346,7 +346,7 @@ RECOMMENDATION: Need human help - database connection fails in test environment
 **Actions**:
 1. All @fix_plan.md tasks marked `[x]`
 2. All manus phases complete
-3. Run **superpowers:verification-before-completion**
+3. Run **superpowers-ng:verification-before-completion**
 4. Tests pass (verified with evidence)
 5. Remove .active marker: `rm docs/manus/.active`
 
@@ -451,11 +451,11 @@ npm start
 - Quality over quantity - exit early is better than wasted loops
 
 **Use Superpowers Skills**:
-- **superpowers:brainstorming** (checks for existing design)
-- **superpowers:manus-planning** (persistent, auto-resumes)
-- **superpowers:test-driven-development** (RED-GREEN-REFACTOR)
-- **superpowers:systematic-debugging** (root cause analysis)
-- **superpowers:verification-before-completion** (evidence-based)
+- **superpowers-ng:brainstorming** (checks for existing design)
+- **superpowers-ng:manus-planning** (persistent, auto-resumes)
+- **superpowers-ng:test-driven-development** (RED-GREEN-REFACTOR)
+- **superpowers-ng:systematic-debugging** (root cause analysis)
+- **superpowers-ng:verification-before-completion** (evidence-based)
 
 **Circuit Breakers**:
 - 3 test-only loops → Exit
