@@ -13,19 +13,40 @@ Start by understanding the current project context, then ask questions one at a 
 
 ## The Process
 
-**Understanding the idea:**
+**Phase 0: Check for Existing Design**
+
+Before starting brainstorming, check for existing design files:
+- `docs/plans/*-design.md` (typical location)
+- `design.md` (root directory)
+- `docs/design.md` (alternate location)
+- `docs/manus/findings.md` (if manus-planning was used, check "## Design Document" section)
+
+If design exists:
+- Read the existing design
+- Announce: "Found existing design at [path]"
+- **Interactive mode**: Ask "Should I: 1) Use existing design and proceed to implementation 2) Refine/update it 3) Start fresh design"
+- **Autonomous mode** (e.g., Ralph loops): Automatically use existing design and skip to "After the Design" → Implementation phase
+- Based on choice/mode:
+  - **Option 1 / Autonomous**: Skip to "After the Design" → Implementation phase
+  - **Option 2**: Load existing design, ask targeted refinement questions
+  - **Option 3**: Archive old design, proceed with fresh brainstorming
+
+If no design exists:
+- Continue with Phase 1 (Understanding the idea)
+
+**Phase 1: Understanding the idea**
 - Check out the current project state first (files, docs, recent commits)
 - Ask questions one at a time to refine the idea
 - Prefer multiple choice questions when possible, but open-ended is fine too
 - Only one question per message - if a topic needs more exploration, break it into multiple questions
 - Focus on understanding: purpose, constraints, success criteria
 
-**Exploring approaches:**
+**Phase 2: Exploring approaches**
 - Propose 2-3 different approaches with trade-offs
 - Present options conversationally with your recommendation and reasoning
 - Lead with your recommended option and explain why
 
-**Presenting the design:**
+**Phase 3: Presenting the design**
 - Once you believe you understand what you're building, present the design
 - Break it into sections of 200-300 words
 - Ask after each section whether it looks right so far
@@ -46,8 +67,8 @@ Start by understanding the current project context, then ask questions one at a 
   1. **Native planning** (writing-plans + executing-plans): Best for short tasks (<30 min), interactive development with human checkpoints
   2. **Manus planning** (manus-planning): Best for long autonomous runs, multi-session projects, tasks requiring persistent memory across context resets
 - Based on choice:
-  - Native: Use superpowers:writing-plans to create detailed implementation plan
-  - Manus: Use superpowers:manus-planning (design document will be copied into findings.md)
+  - **Native**: Use superpowers:writing-plans to create detailed implementation plan
+  - **Manus**: Use superpowers:manus-planning (the design document content will be automatically copied into `docs/manus/findings.md` under "## Design Document" section)
 
 ## Key Principles
 
