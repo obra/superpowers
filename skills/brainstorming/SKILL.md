@@ -86,6 +86,39 @@ Violations (any of these = stop and restart):
 
 **If you feel the urge to code:** That's the signal you haven't finished brainstorming. More questions needed.
 
+## COMPULSORY: Phase Gate Verification
+
+Before proceeding to design presentation:
+
+**Understanding Gate** (all COMPULSORY):
+
+- [ ] Read current project state (files, docs, commits)
+- [ ] Asked at least one clarifying question
+- [ ] User has confirmed understanding
+
+**STOP CONDITION:** If ANY checkbox is unchecked, do NOT proceed. Complete missing steps first.
+
+Before saving design:
+
+**Design Gate** (all COMPULSORY):
+
+- [ ] Problem Statement included
+- [ ] Success Criteria included (measurable)
+- [ ] Constraints/Out of Scope included
+- [ ] Approach included
+- [ ] Open Questions included
+
+**STOP CONDITION:** If ANY section missing, do NOT save. Complete missing section(s) first.
+
+## Red Flags - IMMEDIATE STOP
+
+| Violation | Why It's Critical | Recovery |
+|-----------|-------------------|----------|
+| Opening code files with intent to modify | Brainstorming is DESIGN, not CODING | Return to clarifying questions |
+| Skipping clarifying questions | Assumptions lead to wrong designs | Ask at least one question |
+| Presenting design without user confirmation | Design may be solving wrong problem | Get explicit "yes, that's what I want" |
+| Saving design without all 5 required sections | Incomplete design = incomplete planning | Add missing sections |
+
 ## Deliverable: design.md
 
 Brainstorming is complete when you have a design document at `docs/designs/YYYY-MM-DD-<topic>-design.md` containing:
