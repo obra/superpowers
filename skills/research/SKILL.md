@@ -41,7 +41,7 @@ Before topic clarification, check if a design document exists:
 
 **If invoked with a path argument:**
 1. Check if the path points to a file in `docs/designs/` or `docs/plans/`
-2. If file exists: Read it, extract Problem Statement, Success Criteria, Constraints, Approach, Open Questions
+2. If file exists: Read the FULL content (it will be included verbatim in the research doc)
 3. If file missing: Warn "Design doc not found at [path], falling back to clarification"
 
 **If no path provided:**
@@ -50,7 +50,8 @@ Before topic clarification, check if a design document exists:
 3. If not found or declined: Proceed to Phase 1 clarification
 
 **When design doc found:**
-- Extract "Open Questions" section
+- Store the FULL design document content (will be included verbatim in Phase 3)
+- Extract "Open Questions" section for agent prompts
 - Add to each agent prompt in Phase 2:
   ```
   Additionally, investigate these open questions from the design:
@@ -168,15 +169,13 @@ After all agents complete, synthesize their findings into a research document.
 > Design Doc: docs/designs/YYYY-MM-DD-<topic>-design.md (if exists)
 > Issue: [if linked]
 
-## Design Summary
+## Original Design Document
 
-**Problem:** [from design doc Problem Statement, or omit section if no design doc]
+[Include the FULL design document content here, verbatim. Do NOT summarize.
+Copy the entire design doc including all sections, formatting, and details.
+Only omit the YAML frontmatter if present.]
 
-**Success Criteria:** [from design doc, as numbered list]
-
-**Constraints:** [from design doc]
-
-**Proposed Approach:** [from design doc Approach section]
+---
 
 ## Resolved Questions
 
@@ -266,6 +265,8 @@ After all agents complete, synthesize their findings into a research document.
 Before saving the research document, you MUST verify synthesis is complete.
 
 **Synthesis Checklist** (all COMPULSORY - document MUST contain each section):
+- [ ] Original Design Document (full verbatim content, if design doc exists)
+- [ ] Resolved Questions (answers to design's open questions, if design doc exists)
 - [ ] Executive Summary (your synthesis, not copy-paste)
 - [ ] Codebase Analysis (from codebase-analyst)
 - [ ] Git History Insights (from git-history-analyzer)
@@ -301,13 +302,13 @@ To continue:
 
 Replace `<actual-filename>` with the real filename you just created.
 
-**Design doc note:** If a design doc was used, add: "The design doc at `docs/designs/...` can be deleted now that it's absorbed into the research document."
+**Design doc note:** If a design doc was used, add: "The full design document has been preserved in the research doc."
 
 ## Quick Reference
 
 | Phase | Action | Output |
 |-------|--------|--------|
-| 0 | Check design doc | Design context or proceed |
+| 0 | Check design doc | Full design content or proceed |
 | 1 | Clarify topic (if no design) | Clear research question |
 | 2 | Dispatch 8 agents | Parallel research |
 | 2.5 | Discover issues | Related issues list |
