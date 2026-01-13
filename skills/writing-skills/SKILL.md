@@ -412,6 +412,232 @@ pptx/
 ```
 When: Reference material too large for inline
 
+## Proven Reinforcement Patterns
+
+These patterns were validated through the hyperpowers-dvi skill reinforcement project (13 skills reinforced, tested with reviewer agents). Use them when creating discipline-enforcing skills.
+
+### 1. Gate Structure Pattern
+
+Every verification gate uses this exact structure:
+
+```markdown
+**[Gate Name] Gate** (COMPULSORY):
+
+- [ ] [First requirement]
+- [ ] [Second requirement]
+- [ ] [Third requirement]
+
+**STOP CONDITION:** If ANY checkbox is unchecked, do NOT proceed. [Recovery action].
+```
+
+**Key elements:**
+- Explicit **COMPULSORY** keyword (triggers agent recognition)
+- Checkbox format (visual tracking)
+- **STOP CONDITION** with specific recovery (prevents rationalization)
+
+**Examples from validated skills:**
+
+```markdown
+## From brainstorming:
+**Understanding Gate** (all COMPULSORY):
+- [ ] Read current project state (files, docs, commits)
+- [ ] Asked at least one clarifying question
+- [ ] User has confirmed understanding
+
+**STOP CONDITION:** If ANY checkbox is unchecked, do NOT proceed. Complete missing steps first.
+
+## From research:
+**Dispatch Checklist** (all COMPULSORY):
+- [ ] codebase-analyst
+- [ ] git-history-analyzer
+- [ ] framework-docs-researcher
+...
+
+**STOP CONDITION:** If ANY checkbox is unchecked, do NOT proceed. Dispatch the missing agent(s) first.
+```
+
+### 2. Red Flags Table Pattern
+
+Catch violations with a 3-column table (proven to trigger recognition):
+
+```markdown
+## Red Flags - IMMEDIATE STOP
+
+| Violation | Why It's Critical | Recovery |
+|-----------|-------------------|----------|
+| [Specific bad behavior] | [Why this matters] | [How to fix] |
+```
+
+**Key elements:**
+- Header: "Red Flags - IMMEDIATE STOP" (urgency signal)
+- Column 1: Specific observable behavior (not abstract)
+- Column 2: WHY it's critical (builds understanding)
+- Column 3: Recovery action (provides escape path)
+
+**Example from validated skills:**
+
+```markdown
+| Violation | Why It's Critical | Recovery |
+|-----------|-------------------|----------|
+| Opening code files with intent to modify | Brainstorming is DESIGN, not CODING | Return to clarifying questions |
+| "Great point!" before understanding | Performative agreement | Restate requirement instead |
+| Dispatching fewer than 8 agents | Incomplete research = flawed plans | Go back, dispatch ALL agents |
+```
+
+### 3. Self-Check Question Pattern
+
+Help agents recognize their own rationalization with a 2-column table:
+
+```markdown
+## Self-Check: [Topic]
+
+| Thought | Reality |
+|---------|---------|
+| "[Rationalization]" | [Counter] |
+```
+
+**Key elements:**
+- First-person quotes in Thought column (agent recognizes own thinking)
+- Direct counter in Reality column (immediate reframe)
+- Short, punchy responses
+
+**Example from validated skills:**
+
+```markdown
+## Self-Check: Am I Skipping Testing?
+
+| Thought | Reality |
+|---------|---------|
+| "Skill is obviously clear" | Clear to you ≠ clear to agents. Test it. |
+| "It's just a reference" | References have gaps. Test retrieval. |
+| "Testing is overkill" | 15 min testing saves hours debugging. |
+| "I'll test if problems emerge" | Test BEFORE deploying. |
+```
+
+### 4. Handoff Consumption Pattern
+
+When skills dispatch subagents or receive handoffs, enforce citation:
+
+```markdown
+## COMPULSORY: Handoff Consumption Verification
+
+**[Source] Consumption Gate** (COMPULSORY):
+
+- [ ] [Source] document path explicitly stated
+- [ ] Key findings from [source] quoted in [output]
+- [ ] [Specific elements] traced to [source] findings
+
+**STOP CONDITION:** If [output] doesn't cite [source] findings, STOP. Quote specific sections.
+```
+
+**Per-Agent Citation Checklist** (for multi-agent workflows):
+
+```markdown
+**Per-Agent Citation Checklist** (COMPULSORY):
+
+- [ ] Agent A findings cited
+- [ ] Agent B findings cited
+- [ ] Agent C findings cited
+...
+
+**STOP CONDITION:** If any agent missing from synthesis, go back and incorporate their findings.
+```
+
+**Example from validated skills:**
+
+```markdown
+## From research skill:
+**Agent Output Consumption Gate** (COMPULSORY - for each of 8 agents):
+
+- [ ] Each agent's output file path stated
+- [ ] Key findings from EACH agent quoted in synthesis
+- [ ] Contradictions between agents noted and resolved
+- [ ] No agent's findings silently dropped
+
+**STOP CONDITION:** If synthesis doesn't cite all 8 agents, STOP. Quote findings from missing agents.
+```
+
+### 5. Phase Gate Sequencing
+
+Different skill phases need different gate types:
+
+| Phase | Gate Type | Purpose |
+|-------|-----------|---------|
+| Entry | Pre-check Gate | Verify skill is applicable |
+| Understanding | Clarification Gate | Ensure correct interpretation |
+| Before Output | Quality Gate | Verify all requirements met |
+| After Output | Verification Gate | Confirm output correctness |
+| Handoff | Consumption Gate | Ensure recipient uses handoff |
+| Completion | Completion Gate | Final verification before done |
+
+**Sequencing example from subagent-driven-development:**
+
+```
+1. Pre-Implementation Setup → Branch Creation Offer, Status Update Offer
+2. Per Task → Context Curation Gate
+3. After Implementation → Review Sequence Gate (spec FIRST, then quality)
+4. Before Next Task → Task Completion Gate (both reviews approved)
+5. Before Done → Issue Offers Phase
+```
+
+### 6. Counter-Rationalization Patterns
+
+Add explicit counters for predictable rationalizations:
+
+```markdown
+## Rationalization Prevention
+
+| Excuse | Reality |
+|--------|---------|
+| "Should work now" | RUN the verification |
+| "I'm confident" | Confidence ≠ evidence |
+| "Just this once" | No exceptions |
+```
+
+**Stronger pattern: Explicit "No Exceptions" list:**
+
+```markdown
+**No exceptions:**
+- Not for "simple additions"
+- Not for "just adding a section"
+- Not for "documentation updates"
+- Don't keep untested changes as "reference"
+```
+
+### 7. Evidence Requirements Pattern
+
+For verification-focused skills, require specific evidence:
+
+```markdown
+**Evidence Required:**
+- Show [command] output
+- Show [specific result]
+- "[Weak claim]" is NOT evidence. [Strong evidence] required.
+```
+
+**Example:**
+
+```markdown
+**Evidence Required:**
+- Show test command output
+- Show build command output
+- Show lint command output
+
+"Should pass" or "passed earlier" is NOT evidence. Fresh run required.
+```
+
+### Pattern Integration Checklist
+
+When writing discipline-enforcing skills, include:
+
+- [ ] At least one COMPULSORY gate with checkboxes
+- [ ] STOP CONDITION for each gate
+- [ ] Red Flags table for critical violations
+- [ ] Self-Check questions for common rationalizations
+- [ ] Counter-rationalization table
+- [ ] Evidence requirements (if verification skill)
+- [ ] Handoff consumption verification (if multi-phase/multi-agent)
+
 ## The Iron Law (Same as TDD)
 
 ```
@@ -647,6 +873,12 @@ helper1, helper2, step3, pattern4
 - [ ] Re-tested until bulletproof
 - [ ] Rationalization table complete
 - [ ] Red flags list complete
+- [ ] **Proven patterns applied** (see "Proven Reinforcement Patterns" section):
+  - [ ] COMPULSORY gates with checkboxes added (for discipline skills)
+  - [ ] STOP CONDITIONS for each gate
+  - [ ] Red Flags table (3-column: Violation | Why Critical | Recovery)
+  - [ ] Self-Check questions (if applicable)
+  - [ ] Handoff consumption verification (if multi-phase/multi-agent)
 
 **STOP CONDITION:** If deploying skill without REFACTOR phase, STOP. Close loopholes.
 
@@ -698,6 +930,12 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 - [ ] Add explicit counters (if discipline skill)
 - [ ] Build rationalization table from all test iterations
 - [ ] Create red flags list
+- [ ] **Apply Proven Reinforcement Patterns** (for discipline skills):
+  - [ ] Add COMPULSORY gates with checkboxes
+  - [ ] Add STOP CONDITION after each gate
+  - [ ] Add Red Flags table (3-column format)
+  - [ ] Add Self-Check questions table
+  - [ ] Add handoff consumption verification (if multi-phase)
 - [ ] Re-test until bulletproof
 
 **Quality Checks:**
