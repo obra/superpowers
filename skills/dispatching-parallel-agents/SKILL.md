@@ -220,6 +220,48 @@ Per [Anthropic's guidance](https://platform.claude.com/docs/en/about-claude/mode
 - Multi-file refactoring requiring holistic understanding
 - Tasks where reasoning quality is paramount
 
+## COMPULSORY: Dispatch Verification
+
+Before dispatching agents:
+
+**Independence Gate** (all COMPULSORY):
+
+- [ ] Confirmed tasks are independent (no shared state)
+- [ ] Tasks don't modify same files
+- [ ] Each agent has specific scope (one test file/subsystem)
+
+**STOP CONDITION:** If ANY task has dependencies, do NOT parallelize. Use sequential dispatch.
+
+**Prompt Quality Gate** (all COMPULSORY - per agent):
+
+- [ ] Specific scope defined (not "fix the tests")
+- [ ] Context included (error messages, test names)
+- [ ] Constraints stated (what NOT to change)
+- [ ] Structured output format specified
+
+**STOP CONDITION:** If prompt is vague, rewrite before dispatching.
+
+After agents return:
+
+**Integration Gate** (all COMPULSORY):
+
+- [ ] Read each summary
+- [ ] Verified no conflicts (same files modified)
+- [ ] Ran full test suite
+- [ ] All changes integrate cleanly
+
+**STOP CONDITION:** If conflicts detected, resolve before proceeding.
+
+## Red Flags - IMMEDIATE STOP
+
+| Violation | Why It's Critical | Recovery |
+|-----------|-------------------|----------|
+| Parallelizing without checking independence | Shared state causes race conditions | Re-read task descriptions, identify true dependencies |
+| Vague prompts like "fix the tests" | Subagent gets lost, inefficient | Rewrite with specific scope and context |
+| Dependencies mentioned but then ignored | Creates cascading failures | Revert to sequential dispatch, fix order |
+| Integration test skipped | Can't verify fixes work together | Run full suite before accepting results |
+| "These look independent" without verification | Assumptions fail in practice | Explicitly check files and state access patterns |
+
 ## Verification
 
 After subagents return:
