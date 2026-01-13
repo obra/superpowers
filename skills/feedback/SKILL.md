@@ -254,18 +254,52 @@ To continue:
 
 **If user chooses option 3:** End skill execution.
 
-## Red Flags - STOP
+## COMPULSORY: Phase Verification
+
+Before presenting changes:
+
+**Clarification Gate** (when confidence < 85%):
+
+- [ ] Asked clarifying question(s)
+- [ ] User confirmed interpretation
+- [ ] Confidence now >= 85%
+
+**STOP CONDITION:** If confidence < 85% and no clarification asked, STOP and ask.
+
+Before applying changes:
+
+**Approval Gate** (per change - COMPULSORY):
+
+- [ ] Change presented with Old/New diff
+- [ ] User explicitly approved (yes/no/modify)
+- [ ] If "modify": returned to clarification
+
+**STOP CONDITION:** If applying change without explicit user approval, STOP.
+
+After all changes:
+
+**Changelog Gate** (COMPULSORY):
+
+- [ ] Changelog section exists (created or appended)
+- [ ] Entry dated with feedback round number
+- [ ] Research tier noted if used
+
+**STOP CONDITION:** If changelog not updated, STOP and add entry.
+
+## Red Flags - IMMEDIATE STOP
 
 Stop and reconsider if you catch yourself:
 
-- Applying changes without user approval
-- Modifying code files (design artifacts only)
-- Skipping clarification when feedback is ambiguous
-- Restructuring document format (add content, don't restructure)
-- Dispatching full research for simple feedback
-- Batching changes as all-or-nothing instead of individual approval
-- Guessing user intent instead of asking
-- Creating new documents instead of modifying existing ones
+| Violation | Why It's Critical | Recovery |
+|-----------|-------------------|----------|
+| Applying changes without user approval | User maintains control | Present each change, get explicit approval |
+| Batching changes as all-or-nothing | Design requires individual approval | One change at a time, wait for response |
+| Skipping clarification when ambiguous | Wrong changes = wasted iteration | Ask questions if confidence < 85% |
+| "I understood the feedback" without asking | Assumptions cause rework | If unsure, ask for clarification |
+| Modifying code files | Skill is for design artifacts only | Only modify docs/designs/, docs/research/, docs/plans/ |
+| Restructuring document format | Feedback adds content, doesn't restructure | Add content, preserve existing structure |
+| Dispatching full research for simple feedback | Over-escalation wastes tokens | Use Tier 1/2, reserve Tier 3 for major scope changes |
+| Creating new documents instead of modifying | Should refine, not create | Modify existing document, update changelog |
 
 ## Rationalization Prevention
 
