@@ -14,10 +14,29 @@ const superpowersRepoDir = path.join(homeDir, '.codex', 'superpowers');
 
 // Utility functions
 function printSkill(skillPath, sourceType) {
-    const skillFile = path.join(skillPath, 'SKILL.md');
+    // Validate that skillPath stays within the intended base directory
+    const baseDir = sourceType === 'personal' ? personalSkillsDir : superpowersSkillsDir;
+    const resolvedSkillPath = path.resolve(skillPath);
+    const resolvedBase = path.resolve(baseDir);
+    
+    // Ensure the resolved skill path is within the base directory
+    if (!resolvedSkillPath.startsWith(resolvedBase + path.sep) && resolvedSkillPath !== resolvedBase) {
+        console.log(`Error: Invalid skill path`);
+        return;
+    }
+    
+    // Use path.resolve() with the base directory to safely construct the skill file path
+    const skillFile = path.resolve(resolvedSkillPath, 'SKILL.md');
+    
+    // Verify the skill file is still within the base directory after adding SKILL.md
+    if (!skillFile.startsWith(resolvedBase + path.sep) && skillFile !== resolvedBase) {
+        console.log(`Error: Invalid skill path`);
+        return;
+    }
+    
     const relPath = sourceType === 'personal'
-        ? path.relative(personalSkillsDir, skillPath)
-        : path.relative(superpowersSkillsDir, skillPath);
+        ? path.relative(personalSkillsDir, resolvedSkillPath)
+        : path.relative(superpowersSkillsDir, resolvedSkillPath);
 
     // Print skill name with namespace
     if (sourceType === 'personal') {
@@ -133,16 +152,25 @@ function runUseSkill(skillName) {
         return;
     }
 
+    // Whitelist allowed characters in skill names (alphanumeric, hyphens, underscores, colons, slashes)
+    // This prevents path traversal by only allowing safe characters
+    const sanitizedName = String(skillName).trim();
+    if (!/^[a-zA-Z0-9:\-\/_]+$/.test(sanitizedName)) {
+        console.log(`Error: Invalid skill name: ${skillName}`);
+        console.log('Skill names can only contain letters, numbers, hyphens, underscores, colons and forward slashes');
+        return;
+    }
+
     // Handle namespaced skill names
     let actualSkillPath;
     let forceSuperpowers = false;
 
-    if (skillName.startsWith('superpowers:')) {
+    if (sanitizedName.startsWith('superpowers:')) {
         // Remove the superpowers: namespace prefix
-        actualSkillPath = skillName.substring('superpowers:'.length);
+        actualSkillPath = sanitizedName.substring('superpowers:'.length);
         forceSuperpowers = true;
     } else {
-        actualSkillPath = skillName;
+        actualSkillPath = sanitizedName;
     }
 
     // Remove "skills/" prefix if present
@@ -150,10 +178,21 @@ function runUseSkill(skillName) {
         actualSkillPath = actualSkillPath.substring('skills/'.length);
     }
 
+    // Validate and sanitize the skill path to prevent directory traversal
+    function validateSkillPath(basePath, skillPath) {
+        const resolvedPath = path.resolve(basePath, skillPath);
+        const resolvedBase = path.resolve(basePath);
+        // Ensure resolved path is within the base directory
+        if (!resolvedPath.startsWith(resolvedBase + path.sep) && resolvedPath !== resolvedBase) {
+            return null;
+        }
+        return resolvedPath;
+    }
+
     // Function to find skill file
     function findSkillFile(searchPath) {
-        // Check for exact match with SKILL.md
-        const skillMdPath = path.join(searchPath, 'SKILL.md');
+        // Check for exact match with SKILL.md - construct path safely
+        const skillMdPath = searchPath + path.sep + 'SKILL.md';
         if (fs.existsSync(skillMdPath)) {
             return skillMdPath;
         }
@@ -171,29 +210,35 @@ function runUseSkill(skillName) {
     // If superpowers: namespace was used, only check superpowers skills
     if (forceSuperpowers) {
         if (fs.existsSync(superpowersSkillsDir)) {
-            const superpowersPath = path.join(superpowersSkillsDir, actualSkillPath);
-            skillFile = findSkillFile(superpowersPath);
+            const validatedPath = validateSkillPath(superpowersSkillsDir, actualSkillPath);
+            if (validatedPath) {
+                skillFile = findSkillFile(validatedPath);
+            }
         }
     } else {
         // First check personal skills directory (takes precedence)
         if (fs.existsSync(personalSkillsDir)) {
-            const personalPath = path.join(personalSkillsDir, actualSkillPath);
-            skillFile = findSkillFile(personalPath);
-            if (skillFile) {
-                console.log(`# Loading personal skill: ${actualSkillPath}`);
-                console.log(`# Source: ${skillFile}`);
-                console.log('');
+            const validatedPath = validateSkillPath(personalSkillsDir, actualSkillPath);
+            if (validatedPath) {
+                skillFile = findSkillFile(validatedPath);
+                if (skillFile) {
+                    console.log(`# Loading personal skill: ${actualSkillPath}`);
+                    console.log(`# Source: ${skillFile}`);
+                    console.log('');
+                }
             }
         }
 
         // If not found in personal, check superpowers skills
         if (!skillFile && fs.existsSync(superpowersSkillsDir)) {
-            const superpowersPath = path.join(superpowersSkillsDir, actualSkillPath);
-            skillFile = findSkillFile(superpowersPath);
-            if (skillFile) {
-                console.log(`# Loading superpowers skill: superpowers:${actualSkillPath}`);
-                console.log(`# Source: ${skillFile}`);
-                console.log('');
+            const validatedPath = validateSkillPath(superpowersSkillsDir, actualSkillPath);
+            if (validatedPath) {
+                skillFile = findSkillFile(validatedPath);
+                if (skillFile) {
+                    console.log(`# Loading superpowers skill: superpowers:${actualSkillPath}`);
+                    console.log(`# Source: ${skillFile}`);
+                    console.log('');
+                }
             }
         }
     }
