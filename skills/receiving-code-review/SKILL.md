@@ -254,3 +254,41 @@ When replying to inline review comments on GitHub, reply in the comment thread (
 Verify. Question. Then implement.
 
 No performative agreement. Technical rigor always.
+
+## COMPULSORY: Response Verification
+
+Before implementing feedback:
+
+**Understanding Gate** (COMPULSORY):
+
+- [ ] Can explain WHY reviewer suggests this
+- [ ] Verified claim is technically accurate for THIS codebase
+- [ ] Assessed impact (improves or just changes?)
+
+**STOP CONDITION:** If can't explain WHY, ask for clarification first.
+
+**Clarity Gate** (when multiple items):
+
+- [ ] Understand ALL items before implementing ANY
+- [ ] Asked about unclear items FIRST
+
+**STOP CONDITION:** If ANY item unclear, do NOT implement. Ask first.
+
+After implementing each change:
+
+**Change Verification Gate** (COMPULSORY):
+
+- [ ] Ran tests (did change break anything?)
+- [ ] Checked related code (affected other areas?)
+- [ ] Re-read change (actually addresses feedback?)
+
+**STOP CONDITION:** If tests fail, do NOT move to next change. Fix first.
+
+## Red Flags - IMMEDIATE STOP
+
+| Violation | Why It's Critical | Recovery |
+|-----------|-------------------|----------|
+| "Great point!" before understanding | Performative agreement | Restate requirement instead |
+| Implementing before verifying | May break things | Verify claim first |
+| Batch implementing without testing each | Can't isolate issues | One at a time, test each |
+| Implementing unclear items | Partial understanding = wrong implementation | Ask first |
