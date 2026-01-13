@@ -82,6 +82,19 @@ When multiple skills could apply, use this order:
 
 The skill itself tells you which.
 
+## Planning Approaches
+
+Two planning systems exist—choose based on task complexity:
+
+| Approach | Skills | Best For |
+|----------|--------|----------|
+| **Native** | writing-plans + executing-plans | Short tasks (<30 min), interactive development with human checkpoints |
+| **Manus** | manus-planning | Long autonomous runs, multi-session projects, tasks requiring >50 tool calls |
+
+**Key difference:** Native uses in-memory TodoWrite for progress. Manus uses persistent files (`docs/manus/`) that survive context resets.
+
+**When unsure:** If the task feels complex or might span multiple sessions, prefer Manus.
+
 ## User Instructions
 
 Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
