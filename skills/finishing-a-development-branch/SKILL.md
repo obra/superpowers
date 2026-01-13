@@ -266,6 +266,51 @@ Close issue? [Yes / Skip]
 - Get typed confirmation for Option 4
 - Clean up worktree for Options 1 & 4 only
 
+## COMPULSORY: Pre-Completion Gate
+
+**This gate MUST pass before presenting options:**
+
+**Verification Gate** (COMPULSORY):
+
+- [ ] Tests pass (fresh run, not from memory)
+- [ ] Build succeeds (fresh run)
+- [ ] Lint passes (fresh run)
+
+**STOP CONDITION:** If ANY verification fails, do NOT present options. Fix issues first.
+
+**Evidence Required:**
+
+- Show test command output
+- Show build command output
+- Show lint command output
+
+"Should pass" or "passed earlier" is NOT evidence. Fresh run required.
+
+## COMPULSORY: Option Execution Verification
+
+After user selects option:
+
+**Option 1 (Merge) Gate:**
+
+- [ ] Switched to base branch
+- [ ] Pulled latest
+- [ ] Merged feature branch
+- [ ] Tests pass on merged result
+- [ ] Branch deleted
+
+**Option 2 (PR) Gate:**
+
+- [ ] Pushed with -u flag
+- [ ] PR created with issue reference
+- [ ] PR URL reported to user
+
+**Option 4 (Discard) Gate:**
+
+- [ ] User typed 'discard' confirmation
+- [ ] Branch deleted with -D flag
+
+**STOP CONDITION:** If any step in selected option fails, stop and report.
+
 ## Integration
 
 **Calls:**
