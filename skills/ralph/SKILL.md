@@ -28,11 +28,12 @@ Don't use when:
 
 | Command | Description |
 |---------|-------------|
-| `/ralph init` | Create template files (specs, plan, guardrails) |
+| `/ralph init` | Create .ralph/ directory with template files |
 | `/ralph start` | Start loop (validates first) |
 | `/ralph resume` | Continue from progress.txt |
 | `/ralph status` | Show progress + recent activity |
 | `/ralph stop` | Graceful stop with summary |
+| `/ralph cleanup` | Remove .ralph/ after user confirms satisfaction |
 
 ## Quick Reference
 
@@ -46,16 +47,17 @@ Before starting loop, validate ALL of these:
 
 ```bash
 # Check required files exist
-ls specs/*.md           # At least one spec
-ls IMPLEMENTATION_PLAN.md
-ls GUARDRAILS.md
+ls .ralph/specs/*.md           # At least one spec
+ls .ralph/IMPLEMENTATION_PLAN.md
+ls .ralph/GUARDRAILS.md
+ls .ralph/progress.txt
 ```
 
 ### Plan Parsing
 
 ```bash
 # Check plan has uncompleted tasks
-grep -E "^[[:space:]]*-[[:space:]]*\[[[:space:]]*\]" IMPLEMENTATION_PLAN.md
+grep -E "^[[:space:]]*-[[:space:]]*\[[[:space:]]*\]" .ralph/IMPLEMENTATION_PLAN.md
 ```
 
 ### Environment
@@ -92,12 +94,14 @@ Continue with [model]? [Yes / Switch to Haiku]
 ```
 Validating Ralph setup...
 
-✓ specs/ directory found (N files)
-✓ IMPLEMENTATION_PLAN.md found (N tasks)
-✓ GUARDRAILS.md found
+✓ .ralph/ directory found
+✓ .ralph/specs/ directory found (N files)
+✓ .ralph/IMPLEMENTATION_PLAN.md found (N tasks)
+✓ .ralph/GUARDRAILS.md found
 ✓ .ralph/progress.txt initialized
+✓ .ralph/ is gitignored
 
-Parsing IMPLEMENTATION_PLAN.md...
+Parsing .ralph/IMPLEMENTATION_PLAN.md...
 ✓ All N tasks have clear descriptions
 ⚠ Warning: Task 4 has no explicit test criteria
 
@@ -122,7 +126,7 @@ Orient → Select → Check → Implement → Validate → Review → Update →
 
 | Phase | Action | On Failure |
 |-------|--------|------------|
-| Orient | Read specs + plan + progress.txt | N/A (startup) |
+| Orient | Read .ralph/specs + .ralph/IMPLEMENTATION_PLAN.md + .ralph/progress.txt | N/A (startup) |
 | Select | Pick ONE uncompleted task | Exit code 2 (plan exhausted) |
 | Check | Search codebase, verify not done | Skip to next task |
 | Implement | Use TDD skill | Write failure → Exit code 1 |
@@ -207,11 +211,11 @@ Loop stops when ANY condition is met:
 
 ### 1. Plan Exhaustion (Primary)
 
-All tasks in `IMPLEMENTATION_PLAN.md` checked off:
+All tasks in `.ralph/IMPLEMENTATION_PLAN.md` checked off:
 
 ```bash
 # No uncompleted tasks remain
-! grep -qE "^[[:space:]]*-[[:space:]]*\[[[:space:]]*\]" IMPLEMENTATION_PLAN.md
+! grep -qE "^[[:space:]]*-[[:space:]]*\[[[:space:]]*\]" .ralph/IMPLEMENTATION_PLAN.md
 ```
 
 Exit code: 2 (success - plan complete)
@@ -341,7 +345,7 @@ To stop:     /ralph stop
 Loop running. Check /ralph status for progress.
 ```
 
-## Guardrails (GUARDRAILS.md)
+## Guardrails (.ralph/GUARDRAILS.md)
 
 Default guardrails created by `/ralph init`:
 
@@ -379,7 +383,7 @@ Default guardrails created by `/ralph init`:
 
 ### Customization
 
-Users can modify GUARDRAILS.md before starting. Ralph reads it fresh each iteration.
+Users can modify `.ralph/GUARDRAILS.md` before starting. Ralph reads it fresh each iteration.
 
 **Safe customizations:**
 - Adjust max_iterations (recommend 20-60)
@@ -426,3 +430,104 @@ If you're thinking any of these, you're about to violate ralph principles:
 | Retrying in same iteration | Exit on failure, let next iteration diagnose |
 | Not updating progress.txt | Write outcome before EVERY exit |
 | Forgetting to commit | Commit after each task completion |
+
+## Initialization (`/ralph init`)
+
+Creates the `.ralph/` directory structure and adds it to `.gitignore`.
+
+### Directory Structure
+
+```
+.ralph/
+├── specs/              # Spec files for the work
+│   └── *.md
+├── IMPLEMENTATION_PLAN.md   # Task list with checkboxes
+├── GUARDRAILS.md            # Limits and rules
+└── progress.txt             # Iteration tracking
+```
+
+### Init Steps
+
+1. Check if `.ralph/` exists - if yes, warn and confirm overwrite
+2. Create `.ralph/` directory
+3. Add `.ralph/` to `.gitignore` if not already present:
+   ```bash
+   grep -qxF '.ralph/' .gitignore || echo '.ralph/' >> .gitignore
+   ```
+4. Create subdirectories: `mkdir -p .ralph/specs`
+5. Create template files:
+   - `.ralph/GUARDRAILS.md` - default guardrails
+   - `.ralph/IMPLEMENTATION_PLAN.md` - empty plan template
+   - `.ralph/progress.txt` - initialized progress file
+6. Report structure created
+
+### Init Output
+
+```
+Creating Ralph workspace...
+
+✓ Created .ralph/
+✓ Added .ralph/ to .gitignore
+✓ Created .ralph/specs/
+✓ Created .ralph/GUARDRAILS.md (default limits)
+✓ Created .ralph/IMPLEMENTATION_PLAN.md (template)
+✓ Created .ralph/progress.txt (initialized)
+
+Next steps:
+1. Add spec files to .ralph/specs/
+2. Edit .ralph/IMPLEMENTATION_PLAN.md with tasks
+3. Customize .ralph/GUARDRAILS.md if needed
+4. Run /ralph start
+```
+
+## Cleanup (`/ralph cleanup`)
+
+Removes the `.ralph/` directory **only after user explicitly confirms** they are satisfied with the results.
+
+### COMPULSORY: User Confirmation Gate
+
+**Before ANY cleanup:**
+
+- [ ] All tasks complete (plan exhausted)
+- [ ] Final summary generated and shown to user
+- [ ] User explicitly confirms satisfaction (not assumed)
+
+**STOP CONDITION:** If user has not explicitly said they are satisfied, do NOT cleanup. Ask first.
+
+### Cleanup Flow
+
+1. Show final summary (from progress.txt or summary task)
+2. Ask user: "Are you satisfied with the results? Ready to cleanup .ralph/?"
+3. **Wait for explicit "yes" or confirmation**
+4. If confirmed:
+   ```bash
+   rm -rf .ralph/
+   ```
+5. Report cleanup complete
+
+### Cleanup Output
+
+```
+Ralph Cleanup
+
+Summary:
+- Tasks completed: 37/37
+- Total iterations: 28
+- Total time: 4h 32m
+- All tests passing
+
+Are you satisfied with the results? This will delete .ralph/ permanently.
+[Yes, cleanup] [No, keep .ralph/]
+
+> Yes, cleanup
+
+✓ Removed .ralph/
+✓ Cleanup complete
+```
+
+### Red Flags - Cleanup
+
+- "User seems done" - NOT explicit confirmation. Ask.
+- "All tasks passed" - Success doesn't mean satisfaction. Ask.
+- "Auto-cleanup after completion" - NO. Always require explicit confirmation.
+- Cleaning up before final summary shown - NO. Show summary first.
