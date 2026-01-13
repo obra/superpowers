@@ -155,6 +155,28 @@ You should see:
 - **Evidence over claims** - Verify before declaring success
 - **Persistent memory** (New) - Filesystem as external memory for long tasks
 
+## Integration with Ralph
+
+Superpowers-NG works seamlessly with [Ralph](https://github.com/frankbria/ralph-claude-code), the autonomous loop framework for Claude Code.
+
+**Ralph provides**: Loop orchestration, session management, exit detection, rate limiting
+
+**Superpowers-NG provides**: Development methodologies, TDD discipline, debugging workflows, persistent planning
+
+**Key features for Ralph users**:
+- **brainstorming** now auto-detects existing designs and skips in subsequent loops
+- **manus-planning** designed for multi-loop persistence with auto-resume
+- **verification-before-completion** ensures evidence-based exit signals
+- Skills are autonomous-mode aware (no waiting for user input)
+
+**Get started**:
+```bash
+# Copy enhanced PROMPT.md template to your Ralph project
+cp docs/ralph-integration/PROMPT.template.md /path/to/ralph-project/PROMPT.md
+```
+
+See `docs/ralph-integration/README.md` for complete integration guide.
+
 ## Contributing
 
 Skills live directly in this repository. To contribute:

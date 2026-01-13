@@ -2,7 +2,7 @@
 
 ## v0.1.0 (2026-01-13)
 
-**Initial release** of Superpowers-NG, an enhanced fork of [obra/superpowers](https://github.com/obra/superpowers) with Manus-style persistent planning.
+**Initial release** of Superpowers-NG, an enhanced fork of [obra/superpowers](https://github.com/obra/superpowers) with Manus-style persistent planning and Ralph integration.
 
 ### New Features
 
@@ -58,6 +58,54 @@ Updated `using-superpowers` skill with "Planning Approaches" section explaining 
 
 **File:**
 - `skills/using-superpowers/SKILL.md` - Added planning guidance section
+
+#### Ralph Integration
+
+**Seamless integration with Ralph autonomous loop framework**
+
+Added comprehensive support for using Superpowers-NG skills within [Ralph](https://github.com/frankbria/ralph-claude-code), the autonomous loop framework for Claude Code.
+
+**Key improvements**:
+- **brainstorming** now checks for existing design files before starting
+  - Auto-detects `docs/plans/*-design.md`, `design.md`, or `docs/manus/findings.md`
+  - In autonomous mode (Ralph loops): automatically uses existing design and skips to implementation
+  - In interactive mode: offers choices (use existing, refine, start fresh)
+  - Prevents redundant brainstorming in subsequent Ralph loops
+- **manus-planning** already compatible with Ralph's multi-session nature
+  - Persistent files survive loop resets
+  - Auto-resumes via `.active` marker detection
+  - Perfect for Ralph's `--continue` session model
+- Phased brainstorming structure (Phase 0 → Phase 3) for clearer flow
+
+**Documentation**:
+- `docs/ralph-integration/README.md` - Complete integration guide
+  - Architecture overview (Ralph vs Superpowers layers)
+  - Skill lifecycle in Ralph loops (once per task vs every loop)
+  - PROMPT.md structure and patterns
+  - File management strategy
+  - Common issues and solutions
+- `docs/ralph-integration/PROMPT.template.md` - Ready-to-use PROMPT.md template
+  - **Ralph's official status block format** with all required fields:
+    - STATUS, TASKS_COMPLETED_THIS_LOOP, FILES_MODIFIED, TESTS_STATUS, WORK_TYPE, EXIT_SIGNAL, RECOMMENDATION
+  - **Concrete examples**: 5 detailed scenarios showing exact status emissions
+  - **Circuit breaker patterns**: Test-only loops, recurring errors, zero progress detection
+  - **Anti-patterns table**: 8 explicitly forbidden patterns (refactor working code, add unplanned features, etc.)
+  - **Exit criteria checklist**: 7-item checklist for when to set EXIT_SIGNAL: true
+  - Conditional skill invocation (check for existing artifacts)
+  - Autonomous mode behavior guidelines
+  - Phase-based workflow with Superpowers skills
+  - Customizable project context sections
+
+**Updated Files**:
+- `skills/brainstorming/SKILL.md` - Added Phase 0 (Check for Existing Design) with autonomous mode logic
+- `README.md` - Added "Integration with Ralph" section
+
+**Benefits for Ralph users**:
+- No duplicate work across loops (design once, implement across many loops)
+- Persistent memory via manus-planning files
+- TDD and debugging discipline maintained across sessions
+- Evidence-based completion signals (verification-before-completion)
+- Ready-to-use templates for quick setup
 
 ### Technical Implementation
 
