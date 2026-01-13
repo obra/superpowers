@@ -197,3 +197,55 @@ You: [Fix memory issue, note suggestions for later]
 - Push back with technical reasoning
 - Show code/tests that prove it works
 - Request clarification
+
+## COMPULSORY: Review Dispatch Verification
+
+Before dispatching review agents:
+
+**Context Gate** (COMPULSORY):
+
+- [ ] BASE_SHA and HEAD_SHA captured
+- [ ] Git diff generated
+- [ ] Summary of changes prepared
+
+**STOP CONDITION:** If context incomplete, gather it first.
+
+**Dispatch Gate** (COMPULSORY - must dispatch all 4):
+
+- [ ] Security Reviewer dispatched
+- [ ] Performance Reviewer dispatched
+- [ ] Style Reviewer dispatched
+- [ ] Test Reviewer dispatched
+
+**STOP CONDITION:** If fewer than 4 agents dispatched, dispatch missing agents.
+
+After agents return:
+
+**Synthesis Gate** (COMPULSORY):
+
+- [ ] All 4 agents completed
+- [ ] Findings grouped by severity (Critical/Warning/Suggestion)
+- [ ] Checked docs/solutions/ for known fixes
+- [ ] Unified checklist presented
+
+**STOP CONDITION:** If any agent missing from synthesis, wait or re-dispatch.
+
+## COMPULSORY: Handoff Consumption Verification
+
+**Consumption Gate** (COMPULSORY - for each reviewer's findings):
+
+- [ ] Each reviewer's output file path stated
+- [ ] Key findings from EACH reviewer quoted/referenced
+- [ ] Severity classifications traced back to specific reviewer
+
+**STOP CONDITION:** If synthesizing without citing specific reviewer outputs, STOP. Quote each reviewer's findings.
+
+## Red Flags - IMMEDIATE STOP
+
+| Violation | Why It's Critical | Recovery |
+|-----------|-------------------|----------|
+| Fewer than 4 reviewers dispatched | Incomplete review coverage | Re-dispatch missing agents |
+| Synthesis doesn't cite all reviewers | Information loss | Include quotes from each reviewer |
+| Reviewer findings summarized without quotes | Can't trace back to source | Quote specific findings per reviewer |
+| Severity grouping missing | Prioritization unclear | Group as Critical/Warning/Suggestion |
+| Any reviewer's findings dropped | Some issues missed | Ensure all 4 reviewers in synthesis |
