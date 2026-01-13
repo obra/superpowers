@@ -621,6 +621,44 @@ step2 [label="read file"];
 helper1, helper2, step3, pattern4
 **Why bad:** Labels should have semantic meaning
 
+## COMPULSORY: TDD Phase Verification
+
+**RED Phase Gate** (COMPULSORY):
+
+- [ ] Pressure scenarios created (3+ for discipline skills)
+- [ ] Scenarios run WITHOUT skill
+- [ ] Baseline behavior documented VERBATIM
+- [ ] Rationalizations captured
+
+**STOP CONDITION:** If writing skill without baseline test, STOP. Run baseline first.
+
+**GREEN Phase Gate** (COMPULSORY):
+
+- [ ] Skill addresses specific baseline failures
+- [ ] Scenarios run WITH skill
+- [ ] Agents now comply
+
+**STOP CONDITION:** If skill written without running compliance test, STOP. Test it.
+
+**REFACTOR Phase Gate** (COMPULSORY):
+
+- [ ] New rationalizations identified (if any)
+- [ ] Explicit counters added
+- [ ] Re-tested until bulletproof
+- [ ] Rationalization table complete
+- [ ] Red flags list complete
+
+**STOP CONDITION:** If deploying skill without REFACTOR phase, STOP. Close loopholes.
+
+## Self-Check: Am I Skipping Testing?
+
+| Thought | Reality |
+|---------|---------|
+| "Skill is obviously clear" | Clear to you ≠ clear to agents. Test it. |
+| "It's just a reference" | References have gaps. Test retrieval. |
+| "Testing is overkill" | 15 min testing saves hours debugging. |
+| "I'll test if problems emerge" | Test BEFORE deploying. |
+
 ## STOP: Before Moving to Next Skill
 
 **After writing ANY skill, you MUST STOP and complete the deployment process.**
