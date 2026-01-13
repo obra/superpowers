@@ -1,13 +1,25 @@
 {
-  "name": "superpowers",
-  "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
-  "version": "4.0.3",
+  "name": "superpowers-ng",
+  "description": "Enhanced fork of superpowers with Manus-style persistent planning for long-running tasks and context resets",
+  "version": "0.1.0",
   "author": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com"
+    "name": "OniReimu",
+    "url": "https://github.com/OniReimu"
   },
-  "homepage": "https://github.com/obra/superpowers",
-  "repository": "https://github.com/obra/superpowers",
+  "homepage": "https://github.com/OniReimu/superpowers",
+  "repository": "https://github.com/OniReimu/superpowers",
   "license": "MIT",
-  "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows"]
+  "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows", "manus", "planning", "persistent-memory"],
+  "credits": [
+    {
+      "name": "Jesse Vincent (obra)",
+      "role": "Original Superpowers author",
+      "url": "https://github.com/obra/superpowers"
+    },
+    {
+      "name": "Ahmad Othman Ammar Adi (OthmanAdi)",
+      "role": "Planning-with-files author",
+      "url": "https://github.com/OthmanAdi/planning-with-files"
+    }
+  ]
 }
