@@ -66,6 +66,11 @@
 - [ ] Task 34: Evaluate results and handle failures
 - [ ] Task 35: Cleanup test project
 
+## Phase 3: Finalization
+
+- [ ] Task 36: Update writing-skills with successful reinforcement patterns
+- [ ] Task 37: Generate final summary
+
 ---
 
 ## Task Details
@@ -1847,11 +1852,122 @@ If ANY skill failed:
 
 ---
 
+### Task 36: Update writing-skills with successful reinforcement patterns
+
+**Purpose:** Analyze all reinforcements that worked (passed validation) and update the writing-skills skill so future skills automatically include these patterns.
+
+**Files:**
+- Modify: `skills/writing-skills/SKILL.md`
+
+**Steps:**
+1. Review SKILL_TEST_LOG.md for all PASS results
+2. For each passing skill, identify which reinforcement patterns were effective:
+   - COMPULSORY gate structures that worked
+   - STOP CONDITION phrasings that prevented skipping
+   - Red Flags tables that caught violations
+   - Self-Check questions that triggered compliance
+   - Handoff consumption patterns that ensured citation
+3. Synthesize into reusable patterns for writing-skills:
+   - Add "Proven Reinforcement Patterns" section
+   - Include templates for each pattern type
+   - Document which scenarios each pattern addresses
+4. Update the skill's TDD Phase Verification to include these patterns
+5. Run existing writing-skills tests to ensure no regression
+
+**Pattern Categories to Document:**
+- Gate structure (checkbox + STOP CONDITION format)
+- Red Flags table format (Violation | Why Critical | Recovery)
+- Self-Check question format (Thought | Reality)
+- Handoff consumption verification format
+- Phase gate sequencing (what gates go where in a skill)
+
+**Commit:**
+```
+feat(writing-skills): add proven reinforcement patterns from hyperpowers-dvi
+
+Synthesized from 16 skills validated through reviewer agent testing.
+Patterns include: gate structure, red flags tables, self-checks,
+handoff consumption, and phase gate sequencing.
+
+Part of hyperpowers-dvi skill reinforcement.
+```
+
+---
+
+### Task 37: Generate final summary
+
+**Purpose:** Create a succinct summary of all changes made during hyperpowers-dvi.
+
+**Files:**
+- Create: `docs/summaries/hyperpowers-dvi-summary.md`
+
+**Steps:**
+1. Count total commits made
+2. List all skills modified with brief description of changes
+3. Summarize Phase 0 baseline findings
+4. Summarize Phase 1 reinforcement additions
+5. Summarize Phase 2 validation results
+6. Note any skills that required retries and what was learned
+7. Document patterns added to writing-skills (from Task 36)
+8. Include final statistics:
+   - Skills reinforced: 13
+   - Skills validated: 16
+   - Patterns documented: N
+   - Total iterations: N
+   - Total time elapsed: N
+
+**Summary Template:**
+```markdown
+# hyperpowers-dvi Summary
+
+## Overview
+Reinforced 13 skills and validated all 16 with reviewer agent testing.
+
+## Phase 0: Baseline Capture
+- Captured baseline behavior for all 16 skills
+- Key findings: [list major gaps observed]
+
+## Phase 1: Skill Reinforcement
+- Added COMPULSORY gates to 13 skills
+- Added STOP CONDITIONS to all gates
+- Added Red Flags tables to skills lacking them
+- Added handoff consumption to 4 skills
+
+## Phase 2: Validation Testing
+- All 16 skills tested with reviewer agent
+- Results: X PASS, Y required retries, Z ESCALATED
+- Baseline comparison: [improvement summary]
+
+## Patterns Documented
+- [List patterns added to writing-skills]
+
+## Statistics
+- Total commits: N
+- Total iterations: N
+- Total time: Xh Ym
+- Skills modified: 13
+- Skills validated: 16
+
+## Lessons Learned
+- [Key insights from the process]
+```
+
+**Commit:**
+```
+docs: add hyperpowers-dvi summary
+
+Final summary of skill reinforcement project including patterns
+documented for future skill development.
+```
+
+---
+
 ## Summary
 
 **Phase 0 (Task 0):** Capture baseline behavior for all 16 skills before modifications
 **Phase 1 (Tasks 1-16):** Reinforce 13 skills with verification gates
 **Phase 2 (Tasks 17-35):** COMPULSORY validation testing of ALL 16 skills with baseline comparison
+**Phase 3 (Tasks 36-37):** Update writing-skills with proven patterns + generate final summary
 
 **Key Reinforcement Patterns Added:**
 

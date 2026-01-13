@@ -26,6 +26,15 @@
 - Update progress.txt before exiting
 - If stuck for 3 consecutive iterations, stop and report
 
+## Usage Limit Handling
+
+If ANY Claude instance (orchestrator or subagent) receives a usage limit warning or error:
+1. Immediately stop current work gracefully
+2. Commit any completed work
+3. Update progress.txt with current state
+4. Exit with message: "STOPPED: Usage limit detected. Resume with /ralph resume"
+5. Do NOT retry or spawn new agents
+
 ## Failure Recovery (Phase 2)
 
 - If a skill fails validation, retry up to 5 times
@@ -54,3 +63,4 @@
 - 3+ consecutive stuck iterations
 - 40 iterations reached
 - 8 hours elapsed
+- **Usage limit warning/error detected** (session or weekly limit)
