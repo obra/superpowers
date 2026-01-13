@@ -11,3 +11,4 @@ docs/research
 # Ephemeral design documents (absorbed into research)
 docs/designs/
 .DS_Store
+.ralph/
