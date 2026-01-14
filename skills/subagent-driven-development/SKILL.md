@@ -46,6 +46,7 @@ digraph process {
         "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [shape=box];
         "Spec reviewer subagent confirms code matches spec?" [shape=diamond];
         "Implementer subagent fixes spec gaps" [shape=box];
+        "Display fix summaries to user" [shape=box];
         "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
         "Code quality reviewer subagent approves?" [shape=diamond];
         "Implementer subagent fixes quality issues" [shape=box];
@@ -66,11 +67,13 @@ digraph process {
     "Implementer subagent implements, tests, commits, self-reviews" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)";
     "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" -> "Spec reviewer subagent confirms code matches spec?";
     "Spec reviewer subagent confirms code matches spec?" -> "Implementer subagent fixes spec gaps" [label="no"];
-    "Implementer subagent fixes spec gaps" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="re-review"];
+    "Implementer subagent fixes spec gaps" -> "Display fix summaries to user";
+    "Display fix summaries to user" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="re-review"];
     "Spec reviewer subagent confirms code matches spec?" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="yes"];
     "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
     "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
-    "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
+    "Implementer subagent fixes quality issues" -> "Display fix summaries to user";
+    "Display fix summaries to user" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
     "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
     "Mark task complete in TodoWrite" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
@@ -438,11 +441,46 @@ After implementer completes:
 
 **STOP CONDITION:** If moving to next task without both reviews approved, STOP.
 
+## Displaying Fix Summaries
+
+After the implementer completes a fix cycle (before re-dispatching reviewer), the orchestrator:
+
+1. **Read the handoff file** - Look for `## Fixes Applied` section in `docs/handoffs/task-N-impl.md`
+2. **Parse the fix entries** - Extract each fix's title, why, before, after
+3. **Display inline to user** - Format for terminal:
+
+**Display format:**
+
+```
+Fixed: [Fix title from ### header]
+- Why: [Content of Why field]
+- Before:
+    [Code from Before block, indented 4 spaces]
+- After:
+    [Code from After block, indented 4 spaces]
+
+Fixed: [Next fix title]
+...
+
+[Re-reviewing spec/code quality...]
+```
+
+**Parsing guidance:**
+- Look for `### Fix N:` headers
+- Extract content between `- **Why:**` and the next field
+- Extract code blocks after `- **Before:**` and `- **After:**`
+- Skip malformed entries; log warning but continue
+
+**If no Fixes Applied section found:**
+- Display: "[Implementer reported no fixes to display]"
+- Proceed to re-review (may indicate implementer didn't follow format)
+
 ## Red Flags
 
 **Never:**
 - Skip reviews (spec compliance OR code quality)
 - **Skip presenting branch/status offers at session start** (offers are mandatory, execution is optional)
+- **Skip displaying fixes to user** (orchestrator should always show what was fixed before re-review)
 - Proceed with unfixed issues
 - Dispatch multiple implementation subagents in parallel (conflicts)
 - Make subagent read plan file (provide full text instead)
