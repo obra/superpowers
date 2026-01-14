@@ -60,6 +60,29 @@ Before topic clarification, check if a design document exists:
   ```
 - Skip Phase 1 clarification (design already clarifies the topic)
 
+### Issue Context Handling in Phase 0
+
+**If design doc found with Original Issue block:**
+- Extract the "## Original Issue" section verbatim
+- Store for inclusion in research output (Phase 3)
+- Do NOT re-fetch from issue tracker (use captured version)
+
+**If no design doc AND issue ID provided as argument:**
+1. Dispatch issue-tracking agent:
+   ```
+   Task(description: "Fetch issue body",
+        prompt: "Operation: get-issue-body
+   Issue: [issue ID from argument]",
+        model: "haiku",
+        subagent_type: "hyperpowers:issue-tracking:issue-tracking")
+   ```
+
+2. Assess and confirm classification (same as brainstorming Phase 0)
+
+3. Store for inclusion in research output
+
+**If neither design doc nor issue ID:** Proceed without Original Issue block.
+
 ### Phase 1: Clarify the Topic (if no design doc)
 
 If the research topic is ambiguous, ask 2-3 targeted questions using AskUserQuestion:
@@ -184,6 +207,17 @@ Only omit the YAML frontmatter if present.]
 | [open question 1 from design] | [answer from agent research] |
 | [open question 2 from design] | [answer from agent research] |
 
+## Original Issue
+
+> **ID:** [issue-id]
+> **Title:** [title]
+> **Status:** Authoritative | Reference Only
+> **Reason:** [classification reason]
+
+[Full issue body verbatim - copied from design doc or captured directly]
+
+---
+
 ## Executive Summary
 - [5-7 key findings as bullets]
 - Critical constraints discovered
@@ -278,6 +312,7 @@ Before saving the research document, you MUST verify synthesis is complete.
 **Synthesis Checklist** (all COMPULSORY - document MUST contain each section):
 - [ ] Original Design Document (full verbatim content, if design doc exists)
 - [ ] Resolved Questions (answers to design's open questions, if design doc exists)
+- [ ] Original Issue (if captured in Phase 0 or extracted from design doc)
 - [ ] Executive Summary (your synthesis, not copy-paste)
 - [ ] Codebase Analysis (from codebase-analyst)
 - [ ] Git History Insights (from git-history-analyzer)
