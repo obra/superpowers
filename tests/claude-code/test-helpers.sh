@@ -191,12 +191,92 @@ EOF
     echo "$plan_file"
 }
 
+# Check if a file exists
+# Usage: assert_file_exists "/path" "test name"
+assert_file_exists() {
+    local file="$1"
+    local test_name="${2:-test}"
+    if [ -f "$file" ]; then
+        echo "  [PASS] $test_name"
+        return 0
+    else
+        echo "  [FAIL] $test_name"
+        echo "  Missing file: $file"
+        return 1
+    fi
+}
+
+# Check if file contains a pattern
+# Usage: assert_file_contains "/path" "pattern" "test name"
+assert_file_contains() {
+    local file="$1"
+    local pattern="$2"
+    local test_name="${3:-test}"
+    if grep -q "$pattern" "$file"; then
+        echo "  [PASS] $test_name"
+        return 0
+    else
+        echo "  [FAIL] $test_name"
+        echo "  Expected to find: $pattern"
+        echo "  In file: $file"
+        return 1
+    fi
+}
+
+# Validate JSON string
+# Usage: assert_valid_json "{...}" "test name"
+assert_valid_json() {
+    local json="$1"
+    local test_name="${2:-test}"
+    if echo "$json" | python3 -c 'import json, sys; json.load(sys.stdin)' 2>/dev/null; then
+        echo "  [PASS] $test_name"
+        return 0
+    else
+        echo "  [FAIL] $test_name"
+        echo "  Invalid JSON"
+        return 1
+    fi
+}
+
+# Extract Ralph status block from output
+# Usage: extract_ralph_status "output"
+extract_ralph_status() {
+    echo "$1" | sed -n '/---RALPH_STATUS---/,/---END_RALPH_STATUS---/p'
+}
+
+# Verify Ralph status block fields and enums
+# Usage: verify_ralph_status_block "status_block" "test name"
+verify_ralph_status_block() {
+    local status="$1"
+    local test_name="${2:-test}"
+
+    echo "$status" | grep -q "STATUS: " || { echo "  [FAIL] $test_name (missing STATUS)"; return 1; }
+    echo "$status" | grep -q "TASKS_COMPLETED_THIS_LOOP: " || { echo "  [FAIL] $test_name (missing TASKS_COMPLETED_THIS_LOOP)"; return 1; }
+    echo "$status" | grep -q "FILES_MODIFIED: " || { echo "  [FAIL] $test_name (missing FILES_MODIFIED)"; return 1; }
+    echo "$status" | grep -q "TESTS_STATUS: " || { echo "  [FAIL] $test_name (missing TESTS_STATUS)"; return 1; }
+    echo "$status" | grep -q "WORK_TYPE: " || { echo "  [FAIL] $test_name (missing WORK_TYPE)"; return 1; }
+    echo "$status" | grep -q "EXIT_SIGNAL: " || { echo "  [FAIL] $test_name (missing EXIT_SIGNAL)"; return 1; }
+    echo "$status" | grep -q "RECOMMENDATION: " || { echo "  [FAIL] $test_name (missing RECOMMENDATION)"; return 1; }
+
+    echo "$status" | grep -Eq "STATUS: (IN_PROGRESS|COMPLETE|BLOCKED)" || { echo "  [FAIL] $test_name (bad STATUS)"; return 1; }
+    echo "$status" | grep -Eq "TESTS_STATUS: (PASSING|FAILING|NOT_RUN)" || { echo "  [FAIL] $test_name (bad TESTS_STATUS)"; return 1; }
+    echo "$status" | grep -Eq "WORK_TYPE: (IMPLEMENTATION|TESTING|DOCUMENTATION|REFACTORING)" || { echo "  [FAIL] $test_name (bad WORK_TYPE)"; return 1; }
+    echo "$status" | grep -Eq "EXIT_SIGNAL: (true|false)" || { echo "  [FAIL] $test_name (bad EXIT_SIGNAL)"; return 1; }
+
+    echo "  [PASS] $test_name"
+}
+
 # Export functions for use in tests
 export -f run_claude
 export -f assert_contains
 export -f assert_not_contains
 export -f assert_count
 export -f assert_order
+export -f assert_file_exists
+export -f assert_file_contains
+export -f assert_valid_json
+export -f extract_ralph_status
+export -f verify_ralph_status_block
 export -f create_test_project
 export -f cleanup_test_project
 export -f create_test_plan
