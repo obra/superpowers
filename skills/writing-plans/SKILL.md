@@ -234,7 +234,7 @@ After writing all tasks:
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use hyperpowers:subagent-driven-development to implement this plan task-by-task.
+> **For Claude:** Run `/execute-plan` to implement this plan (will ask which execution style you prefer).
 > **Related Issues:** [PROJ-123, PROJ-456]
 > **Primary Issue:** [PROJ-123] (from branch name)
 
