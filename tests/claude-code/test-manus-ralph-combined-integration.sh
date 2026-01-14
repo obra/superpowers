@@ -24,8 +24,13 @@ EOF
 cat > "$TEST_PROJECT/PROMPT.md" <<'EOF'
 You are running in a Ralph loop with Superpowers-NG.
 
-If docs/manus/.active is missing, use superpowers-ng:manus-planning to start planning.
-Initialize the manus files but do NOT complete the task in this loop; stop after Phase 1 planning.
+IMPORTANT: You must use the Skill tool to invoke superpowers-ng:manus-planning.
+
+Steps:
+1. Use Skill tool with skill="superpowers-ng:manus-planning"
+2. This will create docs/manus/.active and the 3 manus files
+3. Do Phase 1 planning only, then stop
+4. Emit status block below
 
 At the end of your response, emit this status block format:
 
@@ -38,17 +43,15 @@ WORK_TYPE: DOCUMENTATION
 EXIT_SIGNAL: false
 RECOMMENDATION: Manus planning started, continue in next loop
 ---END_RALPH_STATUS---
-
-(Adjust values based on actual work, keep EXIT_SIGNAL: false while manus is active)
 EOF
 
 PROMPT="Change to directory $TEST_PROJECT and follow PROMPT.md exactly."
 
-# Run with timeout fallback
+# Run with timeout fallback (longer timeout for manus initialization)
 if command -v timeout >/dev/null 2>&1; then
-    cd "$SCRIPT_DIR/../.." && timeout 180 claude -p "$PROMPT" --allowed-tools=all --add-dir "$TEST_PROJECT" --permission-mode bypassPermissions > "$TEST_PROJECT/out.txt" 2>&1 || true
+    cd "$SCRIPT_DIR/../.." && timeout 360 claude -p "$PROMPT" --allowed-tools=all --add-dir "$TEST_PROJECT" --permission-mode bypassPermissions > "$TEST_PROJECT/out.txt" 2>&1 || true
 elif command -v gtimeout >/dev/null 2>&1; then
-    cd "$SCRIPT_DIR/../.." && gtimeout 180 claude -p "$PROMPT" --allowed-tools=all --add-dir "$TEST_PROJECT" --permission-mode bypassPermissions > "$TEST_PROJECT/out.txt" 2>&1 || true
+    cd "$SCRIPT_DIR/../.." && gtimeout 360 claude -p "$PROMPT" --allowed-tools=all --add-dir "$TEST_PROJECT" --permission-mode bypassPermissions > "$TEST_PROJECT/out.txt" 2>&1 || true
 else
     echo "  [SKIP] timeout command not available - install coreutils (brew install coreutils)"
     exit 0
