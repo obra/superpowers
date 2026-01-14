@@ -82,6 +82,18 @@ When multiple skills could apply, use this order:
 
 The skill itself tells you which.
 
+## Executing Skills
+
+When you invoke a skill via the Skill tool:
+
+1. **The skill content is loaded and presented to you** - it's not in your training data
+2. **Read it completely before starting** - don't work from memory or assumptions
+3. **Follow documented steps exactly** - don't improvise or skip steps
+4. **Check "Success Criteria" section** to verify completion
+5. **For rigid skills, every step is mandatory** - no shortcuts
+
+**Common mistake:** Invoking a skill but then working from assumed understanding instead of following the loaded content step-by-step.
+
 ## User Instructions
 
 Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
