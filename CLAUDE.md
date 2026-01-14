@@ -200,8 +200,9 @@ Core skills trigger in sequence:
 6. `systematic-debugging` → 4-phase root cause analysis (triggered when bugs occur)
 7. `requesting-code-review` → Quality verification
 8. `verification-before-completion` → Ensure fixes actually work
-9. `documenting-completed-implementation` → Update project documentation
-10. `finishing-a-development-branch` → Integration decisions (merge/PR/cleanup)
+9. `ai-self-reflection` → Automatic mistake detection and learning capture (optional after verification)
+10. `documenting-completed-implementation` → Update project documentation
+11. `finishing-a-development-branch` → Integration decisions (merge/PR/cleanup)
 
 ### Complete Skills List
 
@@ -229,6 +230,7 @@ Core skills trigger in sequence:
 - `finishing-a-development-branch` - Invokes documenting skill, then handles git workflow (merge/PR/cleanup)
 
 **Meta-Learning**:
+- `ai-self-reflection` - Analyze session for mistakes (user corrections, backtracking, repeated errors), capture learnings automatically
 - `meta-learning-review` - Analyze learnings, detect patterns, suggest skills. Handles decay (archives stale knowledge). Triggered every 10 learnings or via /review-learnings.
 - `compound-learning` - Quick capture after verification. Builds searchable knowledge in docs/learnings/.
 
