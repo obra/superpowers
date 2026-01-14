@@ -10,6 +10,8 @@ This test suite verifies that skills are loaded correctly and Claude follows the
 
 - Claude Code CLI installed and in PATH (`claude --version` should work)
 - Local superpowers plugin installed (see main README for installation)
+- Optional: `timeout` command for integration tests (install with `brew install coreutils` on macOS)
+  - Integration tests will skip gracefully if timeout is not available
 
 ## Running Tests
 
@@ -18,7 +20,7 @@ This test suite verifies that skills are loaded correctly and Claude follows the
 ./run-skill-tests.sh
 ```
 
-### Run integration tests (slow, 10-30 minutes):
+### Run integration tests (slow, 10-15 minutes):
 ```bash
 ./run-skill-tests.sh --integration
 ```
@@ -47,6 +49,11 @@ Common functions for skills testing:
 - `assert_not_contains output pattern name` - Verify pattern absent
 - `assert_count output pattern count name` - Verify exact count
 - `assert_order output pattern_a pattern_b name` - Verify order
+- `assert_file_exists file name` - Verify file exists
+- `assert_file_contains file pattern name` - Verify file contains pattern
+- `assert_valid_json json name` - Verify valid JSON string
+- `extract_ralph_status output` - Extract Ralph status block
+- `verify_ralph_status_block status name` - Verify Ralph status format
 - `create_test_project` - Create temp test directory
 - `create_test_plan project_dir` - Create sample plan file
 
@@ -92,6 +99,20 @@ Tests skill content and requirements (~2 minutes):
 - Review loops documented
 - Task context provision documented
 
+#### test-manus-pretool-hook.sh
+Unit test for manus pretool hook (~1 second):
+- Verifies hook outputs valid JSON when inactive
+- Verifies hook outputs empty JSON when no .active marker
+- Verifies hook emits reminder when .active exists
+- Verifies reminder includes plan preview
+
+#### test-ralph-status-blocks.sh
+Unit test for Ralph status block parsing (~1 second):
+- Verifies status block extraction from output
+- Verifies all required fields present
+- Verifies enum values are valid
+- Verifies field format correctness
+
 ### Integration Tests (use --integration flag)
 
 #### test-subagent-driven-development-integration.sh
@@ -114,6 +135,44 @@ Full workflow execution test (~10-30 minutes):
 - Our improvements are actually applied
 - Subagents follow the skill correctly
 - Final code is functional and tested
+
+#### test-manus-resume-integration.sh
+Manus planning session resume test (~4-6 minutes):
+- Session 1: Starts manus-planning task, creates files
+- Session 2: Resumes task in new session
+- Verifies:
+  - Manus files created (task_plan.md, findings.md, progress.md)
+  - .active marker controls behavior
+  - Session resume works across invocations
+  - .active removed on completion
+
+#### test-ralph-status-emission-integration.sh
+Ralph status block emission test (~2-3 minutes):
+- Creates Ralph project with simple task
+- Executes task with Ralph-style prompt
+- Verifies:
+  - Status block emitted at end
+  - All required fields present
+  - Field values are valid
+
+#### test-manus-ralph-combined-integration.sh
+Combined manus + Ralph workflow test (~2-3 minutes):
+- Creates Ralph project
+- Starts manus-planning in Ralph loop
+- Verifies:
+  - Manus files created
+  - Status block emitted
+  - EXIT_SIGNAL stays false while manus active
+  - Both systems work together
+
+### Slim Test Suite
+
+The new manus/Ralph tests form a slim test suite targeting ~10-15 minutes total runtime:
+- 2 fast unit tests (< 1 minute total)
+- 3 focused integration tests (10-12 minutes total)
+- Tests core superpowers-ng differentiators:
+  - Manus-styled planning with session persistence
+  - Ralph loop integration with status blocks
 
 ## Adding New Tests
 

@@ -53,14 +53,19 @@ while [[ $# -gt 0 ]]; do
             echo "  --verbose, -v        Show verbose output"
             echo "  --test, -t NAME      Run only the specified test"
             echo "  --timeout SECONDS    Set timeout per test (default: 300)"
-            echo "  --integration, -i    Run integration tests (slow, 10-30 min)"
+            echo "  --integration, -i    Run integration tests (slow, 10-15 min)"
             echo "  --help, -h           Show this help"
             echo ""
             echo "Tests:"
-            echo "  test-subagent-driven-development.sh  Test skill loading and requirements"
+            echo "  test-subagent-driven-development.sh         Test skill loading and requirements"
+            echo "  test-manus-pretool-hook.sh                  Test manus pretool hook unit"
+            echo "  test-ralph-status-blocks.sh                 Test ralph status block parsing"
             echo ""
             echo "Integration Tests (use --integration):"
             echo "  test-subagent-driven-development-integration.sh  Full workflow execution"
+            echo "  test-manus-resume-integration.sh                 Manus resume across sessions"
+            echo "  test-ralph-status-emission-integration.sh        Ralph status block emission"
+            echo "  test-manus-ralph-combined-integration.sh         Manus + Ralph combined"
             exit 0
             ;;
         *)
@@ -74,11 +79,16 @@ done
 # List of skill tests to run (fast unit tests)
 tests=(
     "test-subagent-driven-development.sh"
+    "test-manus-pretool-hook.sh"
+    "test-ralph-status-blocks.sh"
 )
 
 # Integration tests (slow, full execution)
 integration_tests=(
     "test-subagent-driven-development-integration.sh"
+    "test-manus-resume-integration.sh"
+    "test-ralph-status-emission-integration.sh"
+    "test-manus-ralph-combined-integration.sh"
 )
 
 # Add integration tests if requested
@@ -117,8 +127,17 @@ for test in "${tests[@]}"; do
 
     start_time=$(date +%s)
 
+    # Check if timeout command is available
+    if command -v timeout >/dev/null 2>&1; then
+        TIMEOUT_CMD="timeout $TIMEOUT"
+    elif command -v gtimeout >/dev/null 2>&1; then
+        TIMEOUT_CMD="gtimeout $TIMEOUT"
+    else
+        TIMEOUT_CMD=""
+    fi
+
     if [ "$VERBOSE" = true ]; then
-        if timeout "$TIMEOUT" bash "$test_path"; then
+        if $TIMEOUT_CMD bash "$test_path"; then
             end_time=$(date +%s)
             duration=$((end_time - start_time))
             echo ""
@@ -138,7 +157,7 @@ for test in "${tests[@]}"; do
         fi
     else
         # Capture output for non-verbose mode
-        if output=$(timeout "$TIMEOUT" bash "$test_path" 2>&1); then
+        if output=$($TIMEOUT_CMD bash "$test_path" 2>&1); then
             end_time=$(date +%s)
             duration=$((end_time - start_time))
             echo "  [PASS] (${duration}s)"
@@ -173,7 +192,7 @@ echo "  Skipped: $skipped"
 echo ""
 
 if [ "$RUN_INTEGRATION" = false ] && [ ${#integration_tests[@]} -gt 0 ]; then
-    echo "Note: Integration tests were not run (they take 10-30 minutes)."
+    echo "Note: Integration tests were not run (they take 10-15 minutes)."
     echo "Use --integration flag to run full workflow execution tests."
     echo ""
 fi
