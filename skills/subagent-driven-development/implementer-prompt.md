@@ -124,6 +124,36 @@ Task tool (general-purpose):
     - Concrete test results (not just "tests pass")
     - Any concerns or areas that need extra review attention
 
+    ## Fixing Review Issues
+
+    When you are re-invoked to fix issues found by a reviewer, append a `## Fixes Applied` section to your handoff file.
+
+    **For each fix, use this format:**
+
+    ```markdown
+    ## Fixes Applied
+
+    ### Fix 1: [Short title of what you fixed]
+    - **Why:** [One sentence explaining why this matters - not just "reviewer said so"]
+    - **Before:**
+      ```[lang]
+      [The code as it was - show enough context to understand the change]
+      ```
+    - **After:**
+      ```[lang]
+      [The code after your fix - same scope as Before]
+      ```
+
+    ### Fix 2: [Next fix title]
+    ...
+    ```
+
+    **Guidelines:**
+    - "Why" should explain the actual problem, not just repeat the reviewer's words
+    - Show 2-5 lines of context in snippets - enough to understand, not entire functions
+    - For additions (no "before"), show the surrounding code that now includes the addition
+    - Each fix gets its own entry, even if they're in the same file
+
     ## Report Format
 
     When done, report:
