@@ -9,7 +9,14 @@ echo "=== Integration Test: manus + ralph combined ==="
 TEST_PROJECT=$(create_test_project)
 trap "cleanup_test_project $TEST_PROJECT" EXIT
 
-mkdir -p "$TEST_PROJECT"
+mkdir -p "$TEST_PROJECT/docs"
+cd "$TEST_PROJECT"
+
+git init --quiet
+git config user.email "test@test.com"
+git config user.name "Test User"
+git commit --allow-empty -m "init" --quiet
+
 cat > "$TEST_PROJECT/@fix_plan.md" <<'EOF'
 - [ ] Create docs/combined.txt with "ok"
 EOF
