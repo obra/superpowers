@@ -130,18 +130,20 @@ From 24 failure memories:
 - Implications of success
 - ANY communication suggesting completion/correctness
 
-### Optional: Capture Learning
+### Optional: Self-Reflection
 
 ```
 ✅ Verification complete!
 
-Capture any learnings? (optional)
+Reflect on this session and capture learnings? (optional)
 
-1. Yes - use compound-learning
+1. Yes - use ai-self-reflection
 2. No - skip
 ```
 
-If yes: Invoke compound-learning skill.
+If yes: Invoke ai-self-reflection skill.
+
+Note: You can also manually trigger retrospection later with `/retrospective` command.
 
 ## The Bottom Line
 
