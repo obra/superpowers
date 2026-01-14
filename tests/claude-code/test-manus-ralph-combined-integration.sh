@@ -17,10 +17,22 @@ EOF
 cat > "$TEST_PROJECT/PROMPT.md" <<'EOF'
 You are running in a Ralph loop with Superpowers-NG.
 
-If docs/manus/.active is missing, start manus-planning and create the manus files.
-Do NOT complete the task in this loop; stop after Phase 1 planning.
+If docs/manus/.active is missing, use superpowers-ng:manus-planning to start planning.
+Initialize the manus files but do NOT complete the task in this loop; stop after Phase 1 planning.
 
-Emit the required Ralph status block at the end.
+At the end of your response, emit this status block format:
+
+---RALPH_STATUS---
+STATUS: IN_PROGRESS
+TASKS_COMPLETED_THIS_LOOP: 0
+FILES_MODIFIED: 3
+TESTS_STATUS: NOT_RUN
+WORK_TYPE: DOCUMENTATION
+EXIT_SIGNAL: false
+RECOMMENDATION: Manus planning started, continue in next loop
+---END_RALPH_STATUS---
+
+(Adjust values based on actual work, keep EXIT_SIGNAL: false while manus is active)
 EOF
 
 PROMPT="Change to directory $TEST_PROJECT and follow PROMPT.md exactly."

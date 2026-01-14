@@ -17,10 +17,21 @@ EOF
 cat > "$TEST_PROJECT/PROMPT.md" <<'EOF'
 You are running in a Ralph loop with Superpowers-NG.
 
-Use superpowers-ng:manus-planning if docs/manus/.active exists.
-Otherwise focus on the single task in @fix_plan.md.
+Tasks are in @fix_plan.md. Complete the task.
 
-At the end, emit the required Ralph status block format from the template.
+At the end of your response, emit this exact status block format:
+
+---RALPH_STATUS---
+STATUS: IN_PROGRESS
+TASKS_COMPLETED_THIS_LOOP: 1
+FILES_MODIFIED: 1
+TESTS_STATUS: NOT_RUN
+WORK_TYPE: IMPLEMENTATION
+EXIT_SIGNAL: false
+RECOMMENDATION: Task completed successfully
+---END_RALPH_STATUS---
+
+(Adjust values based on actual work done)
 EOF
 
 PROMPT="Change to directory $TEST_PROJECT and follow PROMPT.md exactly."
