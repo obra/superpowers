@@ -80,6 +80,7 @@ tests=(
     "test-research.sh"
     "test-compound.sh"
     "issue-tracking-detection.test.sh"
+    "test-fixes-applied-summary.sh"
 )
 
 # Integration tests (slow, full execution)
