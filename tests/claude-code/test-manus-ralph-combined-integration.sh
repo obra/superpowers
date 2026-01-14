@@ -17,6 +17,34 @@ git config user.email "test@test.com"
 git config user.name "Test User"
 git commit --allow-empty -m "init" --quiet
 
+# Pre-create manus files to simulate active manus planning
+mkdir -p "$TEST_PROJECT/docs/manus"
+cat > "$TEST_PROJECT/docs/manus/task_plan.md" <<'EOF'
+# Test Task Plan
+
+## Goal
+Create docs/combined.txt with "ok"
+
+## Current Phase
+Phase 1 (in progress)
+
+## Phases
+### Phase 1: Initial Setup
+**Status**: in_progress
+EOF
+
+cat > "$TEST_PROJECT/docs/manus/findings.md" <<'EOF'
+# Findings
+Simple test task
+EOF
+
+cat > "$TEST_PROJECT/docs/manus/progress.md" <<'EOF'
+# Progress
+Planning started
+EOF
+
+touch "$TEST_PROJECT/docs/manus/.active"
+
 cat > "$TEST_PROJECT/@fix_plan.md" <<'EOF'
 - [ ] Create docs/combined.txt with "ok"
 EOF
@@ -24,34 +52,31 @@ EOF
 cat > "$TEST_PROJECT/PROMPT.md" <<'EOF'
 You are running in a Ralph loop with Superpowers-NG.
 
-IMPORTANT: You must use the Skill tool to invoke superpowers-ng:manus-planning.
-
-Steps:
-1. Use Skill tool with skill="superpowers-ng:manus-planning"
-2. This will create docs/manus/.active and the 3 manus files
-3. Do Phase 1 planning only, then stop
-4. Emit status block below
+docs/manus/.active exists, which means manus planning is active.
+Complete the simple task from @fix_plan.md.
 
 At the end of your response, emit this status block format:
 
 ---RALPH_STATUS---
 STATUS: IN_PROGRESS
-TASKS_COMPLETED_THIS_LOOP: 0
-FILES_MODIFIED: 3
+TASKS_COMPLETED_THIS_LOOP: 1
+FILES_MODIFIED: 1
 TESTS_STATUS: NOT_RUN
-WORK_TYPE: DOCUMENTATION
+WORK_TYPE: IMPLEMENTATION
 EXIT_SIGNAL: false
-RECOMMENDATION: Manus planning started, continue in next loop
+RECOMMENDATION: Task completed, manus still active, continue in next loop
 ---END_RALPH_STATUS---
+
+IMPORTANT: Keep EXIT_SIGNAL: false because docs/manus/.active exists
 EOF
 
 PROMPT="Change to directory $TEST_PROJECT and follow PROMPT.md exactly."
 
-# Run with timeout fallback (longer timeout for manus initialization)
+# Run with timeout fallback
 if command -v timeout >/dev/null 2>&1; then
-    cd "$SCRIPT_DIR/../.." && timeout 360 claude -p "$PROMPT" --allowed-tools=all --add-dir "$TEST_PROJECT" --permission-mode bypassPermissions > "$TEST_PROJECT/out.txt" 2>&1 || true
+    cd "$SCRIPT_DIR/../.." && timeout 180 claude -p "$PROMPT" --allowed-tools=all --add-dir "$TEST_PROJECT" --permission-mode bypassPermissions > "$TEST_PROJECT/out.txt" 2>&1 || true
 elif command -v gtimeout >/dev/null 2>&1; then
-    cd "$SCRIPT_DIR/../.." && gtimeout 360 claude -p "$PROMPT" --allowed-tools=all --add-dir "$TEST_PROJECT" --permission-mode bypassPermissions > "$TEST_PROJECT/out.txt" 2>&1 || true
+    cd "$SCRIPT_DIR/../.." && gtimeout 180 claude -p "$PROMPT" --allowed-tools=all --add-dir "$TEST_PROJECT" --permission-mode bypassPermissions > "$TEST_PROJECT/out.txt" 2>&1 || true
 else
     echo "  [SKIP] timeout command not available - install coreutils (brew install coreutils)"
     exit 0
