@@ -1,5 +1,26 @@
 # Superpowers Release Notes
 
+## v4.1.1 (2026-01-14)
+
+### Improvements
+
+**using-superpowers skill enhancements**
+
+Based on meta-learning feedback from ai-self-reflection usage, added two critical sections to the using-superpowers skill (auto-loaded in every session):
+
+- **Executing Skills** - Discipline for following loaded skill content
+  - Read skill completely before starting
+  - Follow documented steps exactly (don't improvise)
+  - Check Success Criteria section
+  - For rigid skills, every step is mandatory
+  - Addresses common mistake: working from assumed understanding instead of following loaded content
+
+- **Model Selection for Skills** - Cost optimization guidance
+  - Opus for design/architecture (brainstorming)
+  - Sonnet for planning and debugging
+  - Haiku for mechanical execution
+  - Moved from user CLAUDE.md to plugin (now available to all users)
+
 ## v4.1.0 (2026-01-14)
 
 ### New Features
