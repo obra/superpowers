@@ -3,6 +3,9 @@
 <EXTREMELY_IMPORTANT>
 You have superpowers.
 
+**Control**
+- If the USER instructed not to use this Superpower skill, DONT USE it and stop here.
+
 **Tool for running skills:**
 - `~/.codex/superpowers/.codex/superpowers-codex use-skill <skill-name>`
 
