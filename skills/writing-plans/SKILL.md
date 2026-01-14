@@ -126,22 +126,37 @@ After research check, before plan writing:
 
 ### If Research Document Exists
 
-Extract "Related Issues" section from research doc:
-- Parse issue IDs, titles, statuses
-- Identify primary issue (from branch name or first listed)
-- Carry forward to plan header
+1. Extract "Related Issues" section from research doc:
+   - Parse issue IDs, titles, statuses
+   - Identify primary issue (from branch name or first listed)
+   - Carry forward to plan header
+
+2. **Extract "## Original Issue" section verbatim if present**
+   - Parse issue ID, title, status from header
+   - Store full block for inclusion in plan output
 
 ### If No Research Document (Degraded Mode)
 
-Dispatch issue-tracking agent for discovery:
-```
-Task(description: "Discover related issues",
-     prompt: "Operation: discover
-Context: [feature/task description]
-Branch: [current branch name]",
-     model: "haiku",
-     subagent_type: "general-purpose")
-```
+1. Dispatch issue-tracking agent for discovery:
+   ```
+   Task(description: "Discover related issues",
+        prompt: "Operation: discover
+   Context: [feature/task description]
+   Branch: [current branch name]",
+        model: "haiku",
+        subagent_type: "general-purpose")
+   ```
+
+2. **If primary issue identified, fetch full body:**
+   ```
+   Task(description: "Fetch issue body",
+        prompt: "Operation: get-issue-body
+   Issue: [primary issue ID]",
+        model: "haiku",
+        subagent_type: "hyperpowers:issue-tracking:issue-tracking")
+   ```
+
+3. Assess and confirm classification
 
 ### Plan Header Addition
 
@@ -150,6 +165,17 @@ Update plan header template to include:
 ```markdown
 > **Related Issues:** [PROJ-123, PROJ-456]
 > **Primary Issue:** [PROJ-123] (from branch name)
+```
+
+### Original Issue Validation Gate
+
+**STOP CONDITION:** If research doc references an issue but no Original Issue block found, warn user:
+```
+Warning: Research references issue [ID] but no Original Issue block found.
+This may indicate context loss. Options:
+- Fetch issue now and include [Recommended]
+- Proceed without original issue context
+- Return to research phase
 ```
 
 ## Pre-Plan Writing Gate
@@ -205,6 +231,7 @@ After writing all tasks:
 
 - [ ] Header includes Goal, Architecture, Tech Stack
 - [ ] Related Issues section populated (or "none" noted)
+- [ ] Original Issue section included (if issue tracked)
 - [ ] Each task has Files, Steps, Commit sections
 - [ ] DRY/YAGNI/TDD principles followed
 
@@ -247,6 +274,17 @@ After writing all tasks:
 **Context Gathered From:**
 - `docs/research/YYYY-MM-DD-topic.md` (if research exists)
 - OR: "Degraded mode - limited inline exploration"
+
+---
+
+## Original Issue
+
+> **ID:** [issue-id]
+> **Title:** [title]
+> **Status:** Authoritative | Reference Only
+> **Reason:** [classification reason]
+
+[Full issue body verbatim - copied from research doc or captured directly]
 
 ---
 ```
