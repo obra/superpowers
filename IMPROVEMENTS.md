@@ -20,6 +20,7 @@ This document details all significant improvements made to Hyperpowers since for
 - [9. Knowledge Management & Specialized Review](#9-knowledge-management--specialized-review)
 - [10. Context Fork Integration](#10-context-fork-integration)
 - [11. Issue Tracking Abstraction](#11-issue-tracking-abstraction)
+- [12. Issue Context Preservation](#12-issue-context-preservation)
 
 ---
 
@@ -564,6 +565,73 @@ Created a new agent that abstracts tracker operations behind a unified interface
 
 ---
 
+## 12. Issue Context Preservation
+
+**Commits:** `a294bf6`, `7050af2`, `2a1e31f`, `baad00d`, `1cb9f63`, `c206339`, `7e068f8`, `d982e29`
+
+### Problem
+
+Original issue requirements get diluted as work progresses through brainstorm → research → plan → develop cycle. By the time implementers work on tasks, subtle requirements and acceptance criteria have been abstracted away.
+
+### Solution
+
+Entry-point skills capture and preserve full issue context throughout the entire workflow chain:
+
+**Context Capture:**
+- Brainstorming, research, and writing-plans skills extract full issue body at start
+- New `get-issue-body` operation added to issue-tracking agent
+- Issue context stored in "Original Issue" block format
+
+**Verbatim Preservation:**
+- Each skill copies "Original Issue" block verbatim to output documents
+- No re-summarization or abstraction—exact context preserved
+- Research docs, specs, and plans all carry forward complete issue context
+
+**Implementer Context:**
+- Writing-plans generates implementer prompt template with issue context section
+- Subagent-driven-development forwards issue context to implementer subagents
+- Implementers receive original requirements, not just abstracted tasks
+
+**Verification Integration:**
+- Verification-before-completion checks acceptance criteria for Authoritative issues
+- Authoritative vs Reference Only classification prevents misuse of vague tickets
+- End-to-end test traces requirement from issue through entire chain
+
+### Key Features
+
+**Authoritative vs Reference Only:**
+Issues with concrete acceptance criteria are marked "Authoritative" and used for verification. Vague or discovery-phase issues are marked "Reference Only" to prevent false compliance claims.
+
+**COMPULSORY Gates:**
+Skills enforce that issue context is included at each stage:
+- Research skill: COMPULSORY "Original Issue" section in research doc
+- Writing-plans: COMPULSORY issue context in plan header
+- Subagent-driven-dev: COMPULSORY issue forwarding to implementers
+
+**End-to-End Test:**
+`tests/claude-code/test-issue-context-preservation-e2e.sh` traces requirement preservation:
+1. Mock issue with specific acceptance criteria
+2. Brainstorm captures and includes criteria
+3. Research carries forward verbatim
+4. Plan preserves in header
+5. Implementer receives full context
+6. Verification checks against criteria
+
+### Files Created/Modified
+
+**New Files:**
+- `tests/claude-code/test-issue-context-preservation-e2e.sh` - End-to-end test
+
+**Modified Files:**
+- `agents/issue-tracking/AGENT.md` - Added `get-issue-body` operation
+- `skills/brainstorming/SKILL.md` - Added issue context capture phase
+- `skills/research/SKILL.md` - Added issue context carry-forward
+- `skills/writing-plans/SKILL.md` - Added issue context extraction and inclusion
+- `skills/subagent-driven-development/SKILL.md` - Added issue context forwarding
+- `skills/verification-before-completion/SKILL.md` - Added acceptance criteria verification
+
+---
+
 ## Summary Statistics
 
 | Category | Commits | Impact |
@@ -579,6 +647,7 @@ Created a new agent that abstracts tracker operations behind a unified interface
 | Knowledge Management & Review | ~9 | Solution capture, specialized review |
 | Context Fork Integration | ~4 | Token efficiency for verbose skills |
 | Issue Tracking Abstraction | ~11 | System-agnostic tracker support |
+| Issue Context Preservation | ~8 | Requirements preserved through workflow chain |
 
 ---
 
