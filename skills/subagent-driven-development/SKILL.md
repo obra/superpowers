@@ -251,6 +251,24 @@ Spec reviewer: ❌ Issues:
 [Implementer fixes issues]
 Implementer: Removed --json flag, added progress reporting
 
+Fixed: Removed --json flag
+- Why: Flag was not requested in spec; YAGNI violation
+- Before:
+    parser.add_argument('--json', action='store_true')
+- After:
+    [removed]
+
+Fixed: Added progress reporting
+- Why: Spec requires reporting every 100 items for user feedback
+- Before:
+    for item in items:
+        process(item)
+- After:
+    for i, item in enumerate(items):
+        if i % 100 == 0: print(f"Progress: {i}/{len(items)}")
+        process(item)
+
+[Re-reviewing spec compliance...]
 [Spec reviewer reviews again]
 Spec reviewer: ✅ Spec compliant now
 
