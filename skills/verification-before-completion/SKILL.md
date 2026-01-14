@@ -33,7 +33,7 @@ NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
 
 If you haven't run the verification command in this message, you cannot claim it passes.
 
-## The Gate Function
+## COMPULSORY: The Gate Function
 
 ```
 BEFORE claiming any status or expressing satisfaction:
@@ -49,6 +49,8 @@ BEFORE claiming any status or expressing satisfaction:
 Skip any step = lying, not verifying
 ```
 
+**STOP CONDITION:** If about to claim completion without running verification command in THIS message, STOP. Run the command first.
+
 ## Common Failures
 
 | Claim | Requires | Not Sufficient |
@@ -63,17 +65,20 @@ Skip any step = lying, not verifying
 | Work complete | Issue offers reviewed, original issue updated | "No issue tracked this" without checking |
 | Issue offers done | Offers PRESENTED (user decided) | "No tracker, skipping" without manual check |
 
-## Evidence-Based Completion Checklist
+## COMPULSORY: Evidence-Based Completion Checklist
 
 Before claiming ANY work is complete:
 
-**Required Evidence:**
+**Required Evidence** (all COMPULSORY):
+
 - [ ] Tests RUN (not just written) - show passing output
 - [ ] Build SUCCEEDED - show build output
 - [ ] Linting PASSED - show lint output
 - [ ] Edge cases TESTED - list which ones
 - [ ] Related functionality VERIFIED - nothing broken
 - [ ] Issue tracking offers PRESENTED - discovered work creation, original issue update (MANDATORY - see Issue Offers phase below)
+
+**STOP CONDITION:** If ANY checkbox is unchecked, do NOT claim completion. Complete the missing verification(s) first.
 
 **Red Flags for Premature Claims:**
 - "Tests should pass" (should ≠ did)
@@ -166,16 +171,18 @@ Before claiming completion:
 - Command output showing current pass/success status
 - Timestamps indicating recent execution
 
-## Red Flags - STOP
+## Red Flags - IMMEDIATE STOP
 
-- Using "should", "probably", "seems to"
-- Expressing satisfaction before verification ("Great!", "Perfect!", "Done!", etc.)
-- About to commit/push/PR without verification
-- Trusting agent success reports
-- Relying on partial verification
-- Thinking "just this once"
-- Tired and wanting work over
-- **ANY wording implying success without having run verification**
+| Violation | Why It's Critical | Recovery |
+|-----------|-------------------|----------|
+| Using "should", "probably", "seems to" | Uncertainty words = no evidence | Run verification command NOW |
+| "Great!", "Perfect!", "Done!" before verification | Premature satisfaction = false confidence | Verify THEN celebrate |
+| About to commit/push/PR without verification | Ships broken code | Run full test suite first |
+| Trusting agent success reports | Agents can be wrong | Independently verify with VCS diff |
+| Relying on partial verification | Partial proves nothing | Run FULL verification |
+| "Just this once" | Exceptions become patterns | No exceptions, verify always |
+| Tired and wanting work over | Exhaustion leads to mistakes | Verify anyway, then rest |
+| ANY wording implying success | Words without evidence = lying | Run command, show output |
 
 ## Rationalization Prevention
 

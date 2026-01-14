@@ -9,21 +9,24 @@ echo "=== Skill Reinforcement Verification ==="
 echo "Checking skills in: $REPO_ROOT"
 echo ""
 
-SKILLS=(
-    "brainstorming"
-    "compound"
-    "dispatching-parallel-agents"
-    "using-hyperpowers"
-    "feedback"
-    "finishing-a-development-branch"
-    "receiving-code-review"
-    "requesting-code-review"
-    "subagent-driven-development"
-    "using-git-worktrees"
-    "writing-skills"
-    "writing-plans"
-    "research"
-)
+# Dynamically discover all skills with SKILL.md files
+# Excludes: ralph (meta/loop control skill, doesn't need reinforcement pattern)
+EXCLUDED_SKILLS="ralph"
+
+SKILLS=()
+while IFS= read -r skill_dir; do
+    skill_name=$(basename "$skill_dir")
+    # Skip excluded skills
+    if [[ " $EXCLUDED_SKILLS " =~ " $skill_name " ]]; then
+        echo "Skipping (excluded): $skill_name"
+        continue
+    fi
+    SKILLS+=("$skill_name")
+done < <(find "$REPO_ROOT/skills" -name "SKILL.md" -exec dirname {} \; | sort)
+
+echo ""
+echo "Found ${#SKILLS[@]} skills to verify"
+echo ""
 
 PASSED=0
 FAILED=0
@@ -59,6 +62,7 @@ echo ""
 echo "=== Results ==="
 echo "Passed: $PASSED"
 echo "Failed: $FAILED"
+echo "Skills checked: ${#SKILLS[@]}"
 
 if [ $FAILED -gt 0 ]; then
     exit 1

@@ -72,17 +72,33 @@ Write code before the test? Delete it. Start over.
 
 Implement fresh from tests. Period.
 
-**Phase Gate Enforcement:**
+## COMPULSORY: Phase Gate Verification
 
-Before moving from Red → Green:
+**RED Phase Gate** (COMPULSORY - before writing ANY production code):
+
 - [ ] Test exists and has been RUN
-- [ ] Test FAILED with expected error message
+- [ ] Test FAILED (not errored)
+- [ ] Failure message is expected (feature missing, not typo)
 - [ ] No production code exists yet
 
-Before moving from Green → Refactor:
+**STOP CONDITION:** If ANY checkbox unchecked, do NOT write production code. Complete RED phase first.
+
+**GREEN Phase Gate** (COMPULSORY - before refactoring):
+
 - [ ] Test PASSES
 - [ ] Minimal code written (just enough to pass)
 - [ ] No additional features added
+- [ ] All other tests still pass
+
+**STOP CONDITION:** If test doesn't pass or extra features added, STOP. Fix before proceeding.
+
+**REFACTOR Phase Gate** (COMPULSORY - before next cycle):
+
+- [ ] All tests still pass after refactoring
+- [ ] No behavior changes introduced
+- [ ] Code cleaner than before
+
+**STOP CONDITION:** If tests fail after refactoring, STOP. Undo refactoring, restore green state.
 
 Skipping any checkbox = return to previous phase.
 
@@ -323,21 +339,22 @@ Tests-first force edge case discovery before implementing. Tests-after verify yo
 | "Manual test faster" | Manual doesn't prove edge cases. You'll re-test every change. |
 | "Existing code has no tests" | You're improving it. Add tests for existing code. |
 
-## Red Flags - STOP and Start Over
+## Red Flags - IMMEDIATE STOP
 
-- Code before test
-- Test after implementation
-- Test passes immediately
-- Can't explain why test failed
-- Tests added "later"
-- Rationalizing "just this once"
-- "I already manually tested it"
-- "Tests after achieve the same purpose"
-- "It's about spirit not ritual"
-- "Keep as reference" or "adapt existing code"
-- "Already spent X hours, deleting is wasteful"
-- "TDD is dogmatic, I'm being pragmatic"
-- "This is different because..."
+| Violation | Why It's Critical | Recovery |
+|-----------|-------------------|----------|
+| Code before test | Test can't prove it catches the bug | Delete code, write test first |
+| Test after implementation | Test biased by implementation | Delete code, start over |
+| Test passes immediately | Proves nothing about new behavior | Fix test to actually test new code |
+| Can't explain why test failed | You don't understand what you're testing | Re-read test, understand the assertion |
+| Tests added "later" | "Later" means never, or means biased tests | Add test NOW, before more code |
+| "Just this once" | Exceptions become rules | No exceptions, follow TDD |
+| "Already manually tested" | Manual testing doesn't persist | Write automated test |
+| "Tests after achieve same purpose" | Tests-after test implementation, not requirements | Delete, write test BEFORE code |
+| "Keep as reference" | You'll adapt it, that's testing after | Delete completely, no peeking |
+| "Already spent X hours" | Sunk cost fallacy, untested code is debt | Delete, time already spent regardless |
+| "TDD is dogmatic" | TDD is pragmatic - faster than debugging | Follow the process |
+| "This is different because..." | It's not different | Follow the process |
 
 **All of these mean: Delete code. Start over with TDD.**
 

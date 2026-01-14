@@ -88,6 +88,52 @@ Use for ANY technical issue:
 
 You MUST complete each phase before proceeding to the next.
 
+## COMPULSORY: Phase Gate Verification
+
+Before proceeding to each phase, verify the previous phase is complete.
+
+**Phase 1 Gate** (COMPULSORY - before proposing ANY fix):
+
+- [ ] Error messages read completely (not skimmed)
+- [ ] Bug reproduced consistently OR documented as intermittent
+- [ ] Recent changes checked (git diff/log)
+- [ ] Evidence gathered (logs, traces, state)
+
+**STOP CONDITION:** If proposing a fix without all checkboxes, STOP. Return to investigation.
+
+**Phase 2 Gate** (COMPULSORY - before forming hypothesis):
+
+- [ ] Working example found in codebase
+- [ ] Differences between working and broken identified
+- [ ] Dependencies understood
+
+**STOP CONDITION:** If forming hypothesis without pattern analysis, STOP. Find working examples first.
+
+**Phase 3 Gate** (COMPULSORY - before implementing fix):
+
+- [ ] Hypothesis stated explicitly ("I believe X because Y")
+- [ ] Test defined for hypothesis
+- [ ] Outcome predicted (what success/failure looks like)
+
+**STOP CONDITION:** If implementing without stated hypothesis, STOP. You're guessing.
+
+**Phase 4 Gate** (COMPULSORY - before claiming fix complete):
+
+- [ ] Failing test created FIRST
+- [ ] Single fix implemented (not multiple)
+- [ ] Test passes now
+- [ ] Full test suite passes (not just the failing test)
+- [ ] Investigation Summary written (see end of skill)
+
+**STOP CONDITION:** If claiming success without Investigation Summary, STOP. Complete the summary.
+
+**Fix Attempt Counter Gate** (COMPULSORY):
+
+- [ ] Current fix attempt number stated
+- [ ] If attempt ≥ 3: Architecture discussion triggered
+
+**STOP CONDITION:** If attempting fix #4+ without questioning architecture, STOP. Discuss with human partner.
+
 ## Observability Requirements
 
 Before making any changes:
@@ -316,27 +362,26 @@ Research shows AI fixes often:
 - Check related functionality that wasn't explicitly tested
 - If 3+ fixes haven't worked, question your root cause analysis
 
-## Red Flags - STOP and Follow Process
+## Red Flags - IMMEDIATE STOP
 
-If you catch yourself thinking:
-- "Quick fix for now, investigate later"
-- "Just try changing X and see if it works"
-- "Add multiple changes, run tests"
-- "Skip the test, I'll manually verify"
-- "It's probably X, let me fix that"
-- "I don't fully understand but this might work"
-- "Pattern says X but I'll adapt it differently"
-- "Here are the main problems: [lists fixes without investigation]"
-- Proposing solutions before tracing data flow
-- **"One more fix attempt" (when already tried 2+)**
-- **Each fix reveals new problem in different place**
-- **Completing investigation without Investigation Summary**
-- **Returning just "root cause: X" without research process**
-- **Omitting failed hypotheses from summary**
+| Violation | Why It's Critical | Recovery |
+|-----------|-------------------|----------|
+| "Quick fix for now, investigate later" | Sets wrong pattern, masks root cause | Return to Phase 1, gather evidence |
+| "Just try changing X and see if it works" | Guessing, not debugging | State hypothesis first |
+| "Add multiple changes, run tests" | Can't isolate what worked | One change at a time |
+| "Skip the test, I'll manually verify" | Manual verification doesn't stick | Write automated test |
+| "It's probably X, let me fix that" | Assumption without evidence | Verify X is actually the cause |
+| "I don't fully understand but this might work" | Guarantees future bugs | Research until you understand |
+| Proposing solutions before tracing data flow | Treating symptoms, not cause | Complete Phase 1 first |
+| "One more fix attempt" (when 2+ already tried) | 3+ failures = architectural problem | Question architecture with human |
+| Each fix reveals problem in different place | System is fundamentally broken | Stop fixing, discuss redesign |
+| Completing without Investigation Summary | Knowledge lost, can't learn | Write full summary before claiming done |
+| "Root cause: X" without research process | No proof, likely wrong | Document how you found it |
+| Omitting failed hypotheses from summary | Debugging knowledge lost | Include what didn't work |
 
 **ALL of these mean: STOP. Return to Phase 1.**
 
-**If 3+ fixes failed:** Question the architecture (see Phase 4.5)
+**If 3+ fixes failed:** Question the architecture (see Phase 4, step 5)
 
 ## your human partner's Signals You're Doing It Wrong
 
