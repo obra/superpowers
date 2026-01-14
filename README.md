@@ -77,6 +77,23 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
 
+### Antigravity IDE
+
+1. **Create the global skills directory**:
+   ```bash
+   mkdir -p ~/.gemini/antigravity/skills
+   ```
+
+2. **Install Superpowers**:
+   Clone the repository and copy the skills into the global directory:
+   ```bash
+   git clone https://github.com/obra/superpowers.git /tmp/superpowers
+   cp -r /tmp/superpowers/skills/* ~/.gemini/antigravity/skills/
+   rm -rf /tmp/superpowers
+   ```
+
+Antigravity will automatically discover these skills and apply them as global utilities across all your workspaces.
+
 ## The Basic Workflow
 
 1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
