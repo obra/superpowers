@@ -44,18 +44,7 @@ Then install the plugin from this marketplace:
 
 ### Verify Installation
 
-Check that commands appear:
-
-```bash
-/help
-```
-
-```
-# Should see:
-# /superpowers:brainstorm - Interactive design refinement
-# /superpowers:write-plan - Create implementation plan
-# /superpowers:execute-plan - Execute plan in batches
-```
+Start a new session and ask Claude to help with something that would trigger a skill (e.g., "help me plan this feature" or "let's debug this issue"). Claude should automatically invoke the relevant superpowers skill.
 
 ### Codex
 
