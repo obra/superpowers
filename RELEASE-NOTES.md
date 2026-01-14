@@ -1,5 +1,129 @@
 # Superpowers Release Notes
 
+## v4.1.0 (2026-01-14)
+
+### New Features
+
+**ai-self-reflection skill - Automatic Mistake Detection and Learning Capture**
+
+Superpowers can now automatically detect mistakes during development sessions and capture them as structured learnings. The ai-self-reflection skill analyzes conversations for three types of mistakes:
+
+- **User corrections** - Detects when users correct AI assumptions (negations, "use X not Y" patterns)
+- **Backtracking** - Identifies when AI confidently states an approach but then needs to pivot after failure
+- **Repeated errors** - Flags when the same error occurs 2+ times in a session
+
+**Key capabilities:**
+- Silently analyzes conversation without verbose output
+- Shows summary of detected learnings with bulk confirmation
+- Creates YAML-frontmatter learning files with `source: ai-detected` field
+- Integrates with meta-learning-review for pattern detection
+- Manual trigger via `/ai-self-reflection` or `/retrospective` commands
+- Optional automatic trigger after `verification-before-completion`
+
+**Integration:**
+- Modified `verification-before-completion` skill to suggest ai-self-reflection after completion
+- Learning files compatible with existing meta-learning infrastructure
+- Feeds into pattern detection for skill suggestions
+
+### Improvements
+
+- Learning analyzer now handles `source`, `type`, and `confidence` fields in frontmatter
+- Added `/ai-self-reflection` and `/retrospective` commands for manual triggering
+
+## v4.0.6 (2026-01-11)
+
+### New Features
+
+**Meta-Learning System - Self-Learning Workflow Framework**
+
+Superpowers now learns from solved problems and suggests workflow improvements automatically. The meta-learning system captures knowledge after verification, detects patterns across learnings, and suggests creating new skills or enhancing existing ones.
+
+**Two new skills:**
+
+- **`compound-learning`** - Quick 30-second learning capture after verification confirms a fix works
+  - Only captures after `verification-before-completion` passes
+  - Creates YAML-frontmatter markdown files in `docs/learnings/`
+  - Auto-increments counter and triggers review at 10 learnings
+  - Integrated into verification workflow as optional step
+
+- **`meta-learning-review`** - Pattern detection and skill suggestion engine
+  - Analyzes captured learnings using tag clustering (3+ learnings threshold)
+  - Learning decay management: auto-archives stale learnings (6+ months old)
+  - Cross-references patterns with existing skills to avoid duplication
+  - Suggests creating new skills or enhancing existing ones
+  - Presents decision menu for user choices (create skill, enhance existing, defer, discard)
+  - Auto-triggered every 10 learnings or manually via `/review-learnings` command
+
+**Supporting infrastructure:**
+- Learning analyzer script (`skills/meta-learning-review/lib/learning-analyzer.js`) - Parses YAML frontmatter, detects patterns, identifies stale learnings, matches against skills
+- State tracker (`lib/meta-learning-state.js`) - Stores learning count in `~/.claude/meta-learning-state.json`, tracks last review timestamp
+- Two new commands: `/compound` and `/review-learnings`
+
+**Learning file structure:**
+```
+docs/learnings/
+├── YYYY-MM-DD-topic.md           (Active learnings with YAML frontmatter)
+└── .archive/                      (Stale learnings 6+ months old)
+```
+
+**Tests:**
+- `tests/claude-code/test-meta-learning-review.sh` - Skill behavior verification
+- `tests/claude-code/test-meta-learning-integration.sh` - End-to-end workflow validation
+
+**Finishing Workflow Enhancements**
+
+Enhanced `finishing-a-development-branch` and `documenting-completed-implementation` skills to reduce workflow friction and prevent common errors.
+
+**Four improvements:**
+
+1. **Step 0: Pre-flight Check**
+   - Verifies clean working directory before starting workflow
+   - Detects uncommitted changes and presents options: commit now (recommended), stash temporarily, or cancel
+   - Prevents mid-flow failures during git checkout operations
+
+2. **Enhanced Test Verification (Step 2)**
+   - When tests fail, prompts user to distinguish configuration-related failures (safe to merge) from actual bugs in code (must fix)
+   - Prevents confusion when integration tests fail due to missing .env files, credentials, or database setup
+   - Blocks merge if user indicates actual bugs exist
+
+3. **Code Review as Explicit Option (Step 3)**
+   - Code review added as option 2 in completion workflow (not an auto-gate)
+   - Opt-in choice preserving user agency
+   - Can request review via `requesting-code-review` skill
+   - Returns to options menu after review completes
+
+4. **Smart README Section Detection (documenting skill)**
+   - Checks if README.md already has dedicated section for implemented feature
+   - Searches for section headers (## or ###) matching feature name
+   - Skips redundant updates when comprehensive docs exist
+   - Uses section header detection for accuracy
+
+### Files Added
+
+**Meta-Learning:**
+- `skills/compound-learning/SKILL.md` - Quick learning capture skill (163 lines)
+- `skills/meta-learning-review/SKILL.md` - Pattern detection and review skill (228 lines)
+- `skills/meta-learning-review/lib/learning-analyzer.js` - Learning analysis engine (173 lines)
+- `lib/meta-learning-state.js` - Learning counter and state management
+- `commands/compound.md` - `/compound` command
+- `commands/review-learnings.md` - `/review-learnings` command
+- `tests/claude-code/test-meta-learning-review.sh` - Skill tests
+- `tests/claude-code/test-meta-learning-integration.sh` - Integration tests
+
+**Completed Plans:**
+- `docs/plans/completed/2026-01-11-meta-learning-review-skill.md` - Meta-learning implementation plan
+- `docs/plans/completed/2026-01-11-finishing-workflow-enhancements.md` - Finishing workflow improvements plan
+
+### Files Modified
+
+**Finishing Workflow:**
+- `skills/finishing-a-development-branch/SKILL.md` - Added pre-flight check, enhanced test verification, code review option
+- `skills/documenting-completed-implementation/SKILL.md` - Added smart README section detection
+- `skills/verification-before-completion/SKILL.md` - Added optional learning capture after verification passes
+
+**Documentation:**
+- `CLAUDE.md` - Updated with meta-learning skills and workflow integration
+
 ## v4.0.5 (2026-01-07)
 
 ### Refactoring
