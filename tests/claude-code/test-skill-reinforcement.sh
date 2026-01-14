@@ -10,17 +10,9 @@ echo "Checking skills in: $REPO_ROOT"
 echo ""
 
 # Dynamically discover all skills with SKILL.md files
-# Excludes: ralph (meta/loop control skill, doesn't need reinforcement pattern)
-EXCLUDED_SKILLS="ralph"
-
 SKILLS=()
 while IFS= read -r skill_dir; do
     skill_name=$(basename "$skill_dir")
-    # Skip excluded skills
-    if [[ " $EXCLUDED_SKILLS " =~ " $skill_name " ]]; then
-        echo "Skipping (excluded): $skill_name"
-        continue
-    fi
     SKILLS+=("$skill_name")
 done < <(find "$REPO_ROOT/skills" -name "SKILL.md" -exec dirname {} \; | sort)
 

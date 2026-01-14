@@ -156,10 +156,6 @@ Fetch and follow instructions from https://raw.githubusercontent.com/bradwindy/h
 - **finishing-a-development-branch** - Merge/PR decision workflow
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
 
-**Autonomous Execution**
-
-- **ralph** - Autonomous overnight iteration loops with fresh context per task
-
 **Meta**
 
 - **writing-skills** - Create new skills following best practices (includes testing methodology)

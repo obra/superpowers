@@ -1,6 +1,7 @@
 .worktrees/
 .private-journal/
 .claude/
+_archived/
 
 # Runtime files from subagent-driven development
 docs/current-progress.md
@@ -11,4 +12,3 @@ docs/research
 # Ephemeral design documents (absorbed into research)
 docs/designs/
 .DS_Store
-.ralph/
