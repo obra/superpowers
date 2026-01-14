@@ -125,6 +125,8 @@ BEFORE starting task loop:
 Skip presenting any required offer = incomplete pre-execution setup
 ```
 
+**STOP CONDITION:** If about to start task loop without presenting required offers, STOP. Present offers first.
+
 **Note:** User can decline any offer. The REQUIREMENT is presentation, not execution.
 
 ## Batch Execution
