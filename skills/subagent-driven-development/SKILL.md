@@ -334,12 +334,23 @@ IN_PROGRESS
 
 Before dispatching a subagent, curate exactly what it needs.
 
+**Original Issue Extraction:**
+
+Before the task loop begins, extract the "## Original Issue" section from the plan:
+1. Search plan for `## Original Issue` header
+2. Parse the header metadata (ID, Title, Status)
+3. Extract full body text
+4. Store for inclusion in each implementer prompt
+
+If no Original Issue block found in plan, note this and proceed without.
+
 **Minimal Context Principle:** Each subagent receives ONLY what it needs for its specific task.
 
 **Always include:**
 - Full task text from plan (never make subagent read plan file)
 - Relevant file paths it will work with
 - Decisions from previous tasks that affect this one
+- Original Issue context (if present in plan) with appropriate instruction
 
 **Include if relevant:**
 - Architectural constraints (from design doc)
@@ -386,6 +397,8 @@ Before each task:
 - [ ] Full task text extracted from plan (not file path)
 - [ ] Relevant file paths included
 - [ ] Prior decisions affecting this task noted
+- [ ] Original Issue context included (if present in plan)
+- [ ] Appropriate instruction added (Authoritative: verify criteria; Reference Only: context only)
 - [ ] Structured handoff format used
 
 **STOP CONDITION:** If subagent needs to read plan file, STOP. Provide full text.
