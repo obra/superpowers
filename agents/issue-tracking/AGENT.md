@@ -16,13 +16,14 @@ Single abstraction point for all issue tracker operations. Detects configured tr
 ## Interface
 
 **Input (via prompt):**
-- `operation`: One of `detect`, `discover`, `update-status`, `create`, `close`, `add-comment`, `get-branch-convention`
+- `operation`: One of `detect`, `discover`, `update-status`, `create`, `close`, `add-comment`, `get-issue-body`, `get-branch-convention`
 - `context`: Task description, branch name, mentioned issue IDs (operation-dependent)
 
 **Output (structured in response):**
 ```
 ISSUE_TRACKER: beads | github | jira | none
 ISSUES_FOUND: [{id, title, status, url}]
+ISSUE_BODY: full description text (when get-issue-body operation used)
 BRANCH_CONVENTION: pattern (e.g., "feature/ISSUE-ID-description")
 WARNING: message (if no tracker detected)
 COMMAND_TO_RUN: the actual command/tool call (for user approval)
@@ -103,6 +104,23 @@ Add progress summary comment to issue.
 | beads | `bd comments add <id> "<comment>"` |
 | github | `gh issue comment <id> --body "<comment>"` |
 | jira | `addCommentToJiraIssue` MCP call |
+
+### get-issue-body
+
+Fetch full issue body/description for inclusion in documents.
+
+| Tracker | Command |
+|---------|---------|
+| beads | `bd show <id>` (extract DESCRIPTION section) |
+| github | `gh issue view <id> --json body --jq .body` |
+| jira | `getJiraIssue` MCP call (extract description field) |
+
+**Output addition:**
+```
+ISSUE_BODY: [full description text]
+```
+
+This operation returns the complete issue description for verbatim inclusion in skill outputs.
 
 ### get-branch-convention
 
