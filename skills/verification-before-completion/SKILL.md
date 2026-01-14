@@ -77,6 +77,7 @@ Before claiming ANY work is complete:
 - [ ] Edge cases TESTED - list which ones
 - [ ] Related functionality VERIFIED - nothing broken
 - [ ] Issue tracking offers PRESENTED - discovered work creation, original issue update (MANDATORY - see Issue Offers phase below)
+- [ ] Acceptance criteria VERIFIED (if Original Issue was Authoritative - see below)
 
 **STOP CONDITION:** If ANY checkbox is unchecked, do NOT claim completion. Complete the missing verification(s) first.
 
@@ -151,6 +152,58 @@ Consider configuring issue tracking in CLAUDE.md for automated tracking.
 ```
 
 **The phase still executes** - offers change to manual verification prompts.
+
+## MANDATORY: Acceptance Criteria Verification (Authoritative Issues Only)
+
+**If the plan contains an Original Issue block with Status: Authoritative:**
+
+This phase MUST execute. Verification MUST be performed.
+
+### Step 1: Extract Acceptance Criteria
+
+Parse the Original Issue body for:
+- `- [ ]` checklist items
+- Numbered requirements
+- "Must", "Should", "Shall" statements
+
+### Step 2: Verify Each Criterion
+
+For each criterion found:
+```
+Acceptance Criteria Verification:
+
+1. "Identify where context is currently lost in skill transitions"
+   ✅ VERIFIED: Task 1 analyzed issue-tracking agent, Tasks 2-4 added capture points
+   Evidence: [specific file changes or test results]
+
+2. "Add explicit spec/issue context forwarding in relevant skills"
+   ✅ VERIFIED: Tasks 2-6 added forwarding in all 5 skills
+   Evidence: [commit SHAs or grep results]
+
+3. [etc.]
+```
+
+### Step 3: Report Gaps
+
+If ANY criterion is not verified:
+```
+⚠️ Acceptance Criteria Gap:
+
+Criterion: "[unmet criterion]"
+Status: NOT VERIFIED
+Gap: [what's missing]
+Action needed: [specific fix required]
+```
+
+**STOP CONDITION:** If ANY Authoritative acceptance criterion is unverified, do NOT claim completion.
+
+### Reference Only Issues
+
+If Original Issue status is "Reference Only", skip this phase:
+```
+Note: Original Issue marked Reference Only - skipping acceptance criteria verification.
+Proceeding with standard verification checklist.
+```
 
 ## Fresh Verification Requirement
 
