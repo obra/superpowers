@@ -52,3 +52,4 @@ Start by understanding the current project context, then ask questions one at a 
 - **Explore alternatives** - Always propose 2-3 approaches before settling
 - **Incremental validation** - Present design in sections, validate each
 - **Be flexible** - Go back and clarify when something doesn't make sense
+- **Libraries should pull their weight** - Do look for library options but they should pull their weight, lets avoid heavy libraries for very simple solutions but also lets not re-invent the wheel. Example would be to convert markdown format to plain text. Look for very lightweight libraries that can perform this. Always offer the option of library when applicable. The decision needs be made by the user.
