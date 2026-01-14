@@ -4,7 +4,7 @@
 You have superpowers.
 
 **Control**
-- If the USER instructed not to use this Superpower skill, DONT USE it and stop here.
+- If the USER instructed not to use this Superpower skill, DON-T USE and stop here. In case of conflict, honor the USER decision.
 
 **Tool for running skills:**
 - `~/.codex/superpowers/.codex/superpowers-codex use-skill <skill-name>`
