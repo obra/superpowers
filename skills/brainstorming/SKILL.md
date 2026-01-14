@@ -27,6 +27,39 @@ Start by understanding the current project context, then ask questions one at a 
 
 ## The Process
 
+### Phase 0: Issue Context Capture
+
+**If invoked with an issue ID argument (e.g., `/brainstorm hyperpowers-5fy`):**
+
+1. Dispatch issue-tracking agent to fetch issue body:
+   ```
+   Task(description: "Fetch issue body",
+        prompt: "Operation: get-issue-body
+   Issue: [issue ID from argument]",
+        model: "haiku",
+        subagent_type: "hyperpowers:issue-tracking:issue-tracking")
+   ```
+
+2. Assess whether issue is Authoritative or Reference Only:
+   - Has `- [ ]` checklist items → **Authoritative**
+   - Has "?" in description or title → **Reference Only**
+   - No clear acceptance criteria → **Reference Only**
+
+3. Present assessment to user:
+   ```
+   Issue Assessment:
+   - ID: [issue ID]
+   - Title: [title]
+   - Classification: [Authoritative/Reference Only]
+   - Reason: [why this classification]
+
+   Confirm? [Yes / Change to Authoritative / Change to Reference Only]
+   ```
+
+4. Store for inclusion in design document output
+
+**If no issue ID provided:** Skip to "Understanding the idea" phase.
+
 **Understanding the idea:**
 - Check out the current project state first (files, docs, recent commits)
 - Ask questions one at a time to refine the idea
@@ -107,6 +140,7 @@ Before saving design:
 - [ ] Constraints/Out of Scope included
 - [ ] Approach included
 - [ ] Open Questions included
+- [ ] Original Issue included (if issue ID was provided at start)
 
 **STOP CONDITION:** If ANY section missing, do NOT save. Complete missing section(s) first.
 
@@ -117,7 +151,7 @@ Before saving design:
 | Opening code files with intent to modify | Brainstorming is DESIGN, not CODING | Return to clarifying questions |
 | Skipping clarifying questions | Assumptions lead to wrong designs | Ask at least one question |
 | Presenting design without user confirmation | Design may be solving wrong problem | Get explicit "yes, that's what I want" |
-| Saving design without all 5 required sections | Incomplete design = incomplete planning | Add missing sections |
+| Saving design without required sections | Incomplete design = incomplete planning | Add missing sections |
 
 ## Deliverable: design.md
 
@@ -128,5 +162,16 @@ Brainstorming is complete when you have a design document at `docs/designs/YYYY-
 3. **Constraints**: What must NOT change? What's out of scope?
 4. **Approach**: High-level design (not implementation details)
 5. **Open Questions**: What do we still not know?
+6. **Original Issue** (if issue ID was provided):
+   ```markdown
+   ## Original Issue
+
+   > **ID:** [issue-id]
+   > **Title:** [title]
+   > **Status:** Authoritative | Reference Only
+   > **Reason:** [classification reason]
+
+   [Full issue body verbatim]
+   ```
 
 **No design.md = brainstorming not complete = no implementation.**
