@@ -8,6 +8,26 @@ Task tool (general-purpose):
   prompt: |
     You are implementing Task N: [task name]
 
+    ## Original Issue Context
+
+    [If plan has Original Issue block, include it here:]
+
+    > **ID:** [issue-id]
+    > **Title:** [title]
+    > **Status:** [Authoritative | Reference Only]
+
+    [Issue body - abbreviated if very long, full if reasonable length]
+
+    ---
+
+    [If Authoritative, add:]
+    **Requirement:** Verify your implementation satisfies the acceptance criteria in the Original Issue above.
+
+    [If Reference Only, add:]
+    **Note:** The Original Issue above is for context only. Follow the task spec below, not the issue directly.
+
+    ---
+
     ## Task Description
 
     [FULL TEXT of task from plan - paste it here, don't make subagent read file]
@@ -70,6 +90,10 @@ Task tool (general-purpose):
     - Do tests actually verify behavior (not just mock behavior)?
     - Did I follow TDD if required?
     - Are tests comprehensive?
+
+    **Original Issue Alignment:** (if Authoritative)
+    - Did I address the acceptance criteria from the Original Issue?
+    - Are there requirements in the issue I might have missed?
 
     If you find issues during self-review, fix them now before reporting.
 
