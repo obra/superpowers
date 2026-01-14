@@ -14,6 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Recent implementations (see docs/plans/completed/ for details):
 
+- **2026-01-14**: AI Self-Reflection - Automatic mistake detection skill that analyzes sessions for user corrections, backtracking, and repeated errors, capturing learnings with ai-detected source field
 - **2026-01-11**: Meta-Learning System - Self-learning system that captures knowledge after verification, detects patterns via tag clustering, suggests new skills, manages learning decay (6+ months auto-archive)
 - **2026-01-11**: Finishing Workflow Enhancements - Pre-flight check for uncommitted changes, enhanced test verification with user prompts, code review as explicit option, smart README section detection
 
