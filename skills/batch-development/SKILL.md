@@ -1,6 +1,7 @@
 ---
 name: batch-development
 description: Use when executing implementation plans with human-in-loop batch checkpoints between tasks
+allowed-tools: Bash, Read, Grep, Glob, Task, TodoWrite, AskUserQuestion
 ---
 
 # Batch Development
@@ -70,17 +71,23 @@ Context: [plan goal/primary issue]",
      subagent_type: "general-purpose")
 ```
 
-Present offer to user:
+**MUST use AskUserQuestion tool** to present offer to user:
 ```
-Branch Creation Offer:
-- Convention detected from: [source]
-- Proposed branch: feature/PROJ-123-add-user-auth
-- Based on issue: PROJ-123 "Add user authentication"
-
-Create this branch? [Yes / Modify / Skip]
+AskUserQuestion(
+  questions: [{
+    question: "Create this branch?",
+    header: "Branch",
+    options: [
+      {label: "Yes", description: "Create branch: feature/PROJ-123-add-user-auth"},
+      {label: "Modify", description: "Let me specify a different branch name"},
+      {label: "Skip", description: "Don't create a branch, stay on current"}
+    ],
+    multiSelect: false
+  }]
+)
 ```
 
-Only execute after user approval.
+Only execute after user approval via AskUserQuestion response.
 
 ### Step 2: Status Update Offer
 
@@ -96,18 +103,22 @@ New status: in-progress",
      subagent_type: "general-purpose")
 ```
 
-Present offer:
+**MUST use AskUserQuestion tool** to present offer:
 ```
-Issue Status Update Offer:
-- Issue: PROJ-123 "Add user authentication"
-- Current status: open
-- Proposed status: in-progress
-- Command: [command from agent]
-
-Update status? [Yes / Skip]
+AskUserQuestion(
+  questions: [{
+    question: "Update issue PROJ-123 status to in-progress?",
+    header: "Status",
+    options: [
+      {label: "Yes", description: "Update status to in-progress"},
+      {label: "Skip", description: "Leave status unchanged"}
+    ],
+    multiSelect: false
+  }]
+)
 ```
 
-Only execute after user approval.
+Only execute after user approval via AskUserQuestion response.
 
 ### Pre-Execution Checkpoint Gate
 
@@ -151,13 +162,29 @@ After each batch, before reporting:
 
 ## COMPULSORY: Human Checkpoint Enforcement
 
-After reporting batch results:
+After reporting batch results, **MUST use AskUserQuestion tool**:
 
-- [ ] Stated "Ready for feedback"
-- [ ] WAITED for explicit user response
+```
+AskUserQuestion(
+  questions: [{
+    question: "Batch complete. How should I proceed?",
+    header: "Continue",
+    options: [
+      {label: "Continue", description: "Proceed to next batch"},
+      {label: "Pause", description: "I have feedback before continuing"},
+      {label: "Stop", description: "Stop here, I'll resume later"}
+    ],
+    multiSelect: false
+  }]
+)
+```
+
+Verification checklist:
+- [ ] Used AskUserQuestion tool (NOT plain text)
+- [ ] WAITED for explicit user response via tool
 - [ ] Incorporated any feedback before next batch
 
-**STOP CONDITION:** NEVER proceed to next batch without user response. This is the core value proposition of batch-development.
+**STOP CONDITION:** NEVER proceed to next batch without AskUserQuestion response. Plain text questions do NOT count.
 
 ## Progress Tracking
 
@@ -234,12 +261,15 @@ Use `hyperpowers:finishing-a-development-branch` skill:
 
 | Violation | Why It's Critical | Recovery |
 |-----------|-------------------|----------|
+| **Plain text questions instead of AskUserQuestion** | User can't respond via structured UI | Use AskUserQuestion tool |
 | Proceeding without user feedback | Defeats purpose of batch approach | STOP, wait for response |
 | Skipping batch verifications | Ships unverified code | Run verifications, show output |
 | Skipping pre-execution offers | Missing branch/status setup | Present required offers |
 | "Ready for feedback" without verification | False confidence | Verify THEN report |
 | Batch size of "all remaining" | Loses checkpoint value | Stick to configured batch size |
 | Starting new batch without user response | Human-in-loop is the value | Wait for explicit "continue" |
+
+**AskUserQuestion is MANDATORY** for all user interaction points. Plain text questions like "Create this branch? [Yes/No]" are NOT acceptable - they bypass the structured response UI.
 
 ## Integration
 

@@ -1,6 +1,7 @@
 ---
 name: finishing-a-development-branch
 description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work
+allowed-tools: Bash, Read, Grep, Glob, Task, AskUserQuestion
 ---
 
 # Finishing a Development Branch
@@ -47,24 +48,43 @@ The verification gate checks:
 git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 ```
 
-Or ask: "This branch split from main - is that correct?"
+Or **MUST use AskUserQuestion tool** to confirm:
+```
+AskUserQuestion(
+  questions: [{
+    question: "This branch split from main - is that correct?",
+    header: "Base",
+    options: [
+      {label: "Yes, main", description: "main is the base branch"},
+      {label: "No, master", description: "master is the base branch"},
+      {label: "Other", description: "Different base branch"}
+    ],
+    multiSelect: false
+  }]
+)
+```
 
 ### Step 3: Present Options
 
-Present exactly these 4 options:
+**MUST use AskUserQuestion tool** to present exactly these 4 options:
 
 ```
-Implementation complete. What would you like to do?
-
-1. Merge back to <base-branch> locally
-2. Push and create a Pull Request
-3. Keep the branch as-is (I'll handle it later)
-4. Discard this work
-
-Which option?
+AskUserQuestion(
+  questions: [{
+    question: "Implementation complete. What would you like to do?",
+    header: "Finish",
+    options: [
+      {label: "Merge locally", description: "Merge back to <base-branch> locally"},
+      {label: "Create PR", description: "Push and create a Pull Request"},
+      {label: "Keep as-is", description: "Keep the branch, I'll handle it later"},
+      {label: "Discard", description: "Discard this work entirely"}
+    ],
+    multiSelect: false
+  }]
+)
 ```
 
-**Don't add explanation** - keep options concise.
+**Don't add explanation** - keep options concise. The AskUserQuestion descriptions provide context.
 
 ### Step 4: Execute Choice
 
@@ -133,17 +153,22 @@ Report: "Keeping branch <name>. Worktree preserved at <path>."
 
 #### Option 4: Discard
 
-**Confirm first:**
+**MUST use AskUserQuestion tool** to confirm first:
 ```
-This will permanently delete:
-- Branch <name>
-- All commits: <commit-list>
-- Worktree at <path>
-
-Type 'discard' to confirm.
+AskUserQuestion(
+  questions: [{
+    question: "This will permanently delete branch <name>, all commits, and worktree. Are you sure?",
+    header: "Confirm",
+    options: [
+      {label: "Yes, discard", description: "Permanently delete all work on this branch"},
+      {label: "No, keep it", description: "Cancel and keep the branch"}
+    ],
+    multiSelect: false
+  }]
+)
 ```
 
-Wait for exact confirmation.
+Wait for explicit "Yes, discard" response via AskUserQuestion. Do NOT proceed on any other response.
 
 If confirmed:
 ```bash
@@ -203,14 +228,19 @@ Manual verification:
 Consider using issue tracking for future work.
 ```
 
-Present offer:
+**MUST use AskUserQuestion tool** to present offer:
 ```
-Issue Close Offer:
-- Issue: PROJ-123 "Add user authentication"
-- Reason: [PR merged / Changes pushed to main]
-- Command: [from agent]
-
-Close issue? [Yes / Skip]
+AskUserQuestion(
+  questions: [{
+    question: "Close issue PROJ-123 'Add user authentication'?",
+    header: "Close",
+    options: [
+      {label: "Yes", description: "Close issue - work is complete"},
+      {label: "Skip", description: "Leave issue open"}
+    ],
+    multiSelect: false
+  }]
+)
 ```
 
 **Close timing logic:**
@@ -253,6 +283,7 @@ Close issue? [Yes / Skip]
 ## Red Flags
 
 **Never:**
+- **Use plain text questions instead of AskUserQuestion** - bypasses structured response UI
 - Proceed with failing tests, build, or lint
 - Present options before all verifications pass
 - Merge without verifying tests on result
@@ -261,10 +292,13 @@ Close issue? [Yes / Skip]
 - Skip issue close offer for Options 1/2 when issue was tracked
 
 **Always:**
+- **Use AskUserQuestion tool for ALL user interaction** (options, confirmations, questions)
 - Run full verification gate (tests + build + lint) before offering options
-- Present exactly 4 options
-- Get typed confirmation for Option 4
+- Present exactly 4 options via AskUserQuestion
+- Get confirmation via AskUserQuestion for Option 4
 - Clean up worktree for Options 1 & 4 only
+
+**AskUserQuestion is MANDATORY** for all user interaction points. Plain text questions are NOT acceptable.
 
 ## COMPULSORY: Pre-Completion Gate
 

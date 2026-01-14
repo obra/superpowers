@@ -1,6 +1,7 @@
 ---
 name: subagent-driven-development
 description: Use when executing implementation plans with independent tasks in the current session
+allowed-tools: Bash, Read, Grep, Glob, Task, TodoWrite, AskUserQuestion
 ---
 
 # Subagent-Driven Development
@@ -105,17 +106,23 @@ Context: [plan goal/primary issue]",
      subagent_type: "general-purpose")
 ```
 
-Present offer to user:
+**MUST use AskUserQuestion tool** to present offer to user:
 ```
-Branch Creation Offer:
-- Convention detected from: [source]
-- Proposed branch: feature/PROJ-123-add-user-auth
-- Based on issue: PROJ-123 "Add user authentication"
-
-Create this branch? [Yes / Modify / Skip]
+AskUserQuestion(
+  questions: [{
+    question: "Create this branch?",
+    header: "Branch",
+    options: [
+      {label: "Yes", description: "Create branch: feature/PROJ-123-add-user-auth"},
+      {label: "Modify", description: "Let me specify a different branch name"},
+      {label: "Skip", description: "Don't create a branch, stay on current"}
+    ],
+    multiSelect: false
+  }]
+)
 ```
 
-Only execute after user approval.
+Only execute after user approval via AskUserQuestion response.
 
 ### Step 2: Status Update Offer
 
@@ -131,18 +138,22 @@ New status: in-progress",
      subagent_type: "general-purpose")
 ```
 
-Present offer:
+**MUST use AskUserQuestion tool** to present offer:
 ```
-Issue Status Update Offer:
-- Issue: PROJ-123 "Add user authentication"
-- Current status: open
-- Proposed status: in-progress
-- Command: [command from agent]
-
-Update status? [Yes / Skip]
+AskUserQuestion(
+  questions: [{
+    question: "Update issue PROJ-123 status to in-progress?",
+    header: "Status",
+    options: [
+      {label: "Yes", description: "Update status to in-progress"},
+      {label: "Skip", description: "Leave status unchanged"}
+    ],
+    multiSelect: false
+  }]
+)
 ```
 
-Only execute after user approval.
+Only execute after user approval via AskUserQuestion response.
 
 ### Discovered Work Tracking
 
@@ -496,6 +507,7 @@ Fixed: [Next fix title]
 ## Red Flags
 
 **Never:**
+- **Use plain text questions instead of AskUserQuestion** - bypasses structured response UI
 - Skip reviews (spec compliance OR code quality)
 - **Skip presenting branch/status offers at session start** (offers are mandatory, execution is optional)
 - **Skip displaying fixes to user** (orchestrator should always show what was fixed before re-review)
@@ -509,6 +521,8 @@ Fixed: [Next fix title]
 - Let implementer self-review replace actual review (both are needed)
 - **Start code quality review before spec compliance is ✅** (wrong order)
 - Move to next task while either review has open issues
+
+**AskUserQuestion is MANDATORY** for all user interaction points (branch offers, status offers). Plain text questions are NOT acceptable.
 
 **If subagent asks questions:**
 - Answer clearly and completely

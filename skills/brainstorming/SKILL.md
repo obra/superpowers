@@ -45,16 +45,23 @@ Start by understanding the current project context, then ask questions one at a 
    - Has "?" in description or title → **Reference Only**
    - No clear acceptance criteria → **Reference Only**
 
-3. Present assessment to user:
+3. **MUST use AskUserQuestion tool** to present assessment to user:
    ```
-   Issue Assessment:
-   - ID: [issue ID]
-   - Title: [title]
-   - Classification: [Authoritative/Reference Only]
-   - Reason: [why this classification]
+   AskUserQuestion(
+     questions: [{
+       question: "Issue [ID] '[title]' classified as [Authoritative/Reference Only]. Is this correct?",
+       header: "Issue",
+       options: [
+         {label: "Yes", description: "Classification is correct"},
+         {label: "Change to Authoritative", description: "Has acceptance criteria I must meet"},
+         {label: "Change to Reference Only", description: "Just context, no strict criteria"}
+       ],
+       multiSelect: false
+     }]
+   )
+   ```
 
-   Confirm? [Yes / Change to Authoritative / Change to Reference Only]
-   ```
+   Do NOT proceed without AskUserQuestion response. Plain text confirmation is NOT acceptable.
 
 4. Store for inclusion in design document output
 
@@ -62,10 +69,12 @@ Start by understanding the current project context, then ask questions one at a 
 
 **Understanding the idea:**
 - Check out the current project state first (files, docs, recent commits)
-- Ask questions one at a time to refine the idea
-- Prefer multiple choice questions when possible, but open-ended is fine too
-- Only one question per message - if a topic needs more exploration, break it into multiple questions
+- **MUST use AskUserQuestion tool** to ask questions one at a time to refine the idea
+- Prefer multiple choice questions (AskUserQuestion options) when possible
+- Only one AskUserQuestion per message - if a topic needs more exploration, break it into multiple AskUserQuestion calls
 - Focus on understanding: purpose, constraints, success criteria
+
+**AskUserQuestion is MANDATORY** for all clarifying questions. Plain text questions are NOT acceptable.
 
 **Exploring approaches:**
 - Propose 2-3 different approaches with trade-offs
@@ -75,7 +84,20 @@ Start by understanding the current project context, then ask questions one at a 
 **Presenting the design:**
 - Once you believe you understand what you're building, present the design
 - Break it into sections of 200-300 words
-- Ask after each section whether it looks right so far
+- **MUST use AskUserQuestion tool** after each section to check if it looks right:
+  ```
+  AskUserQuestion(
+    questions: [{
+      question: "Does this [section name] look right?",
+      header: "Review",
+      options: [
+        {label: "Yes, continue", description: "This section is good, proceed"},
+        {label: "Needs changes", description: "I have feedback on this section"}
+      ],
+      multiSelect: false
+    }]
+  )
+  ```
 - Cover: architecture, components, data flow, error handling, testing
 - Be ready to go back and clarify if something doesn't make sense
 
@@ -148,10 +170,13 @@ Before saving design:
 
 | Violation | Why It's Critical | Recovery |
 |-----------|-------------------|----------|
+| **Plain text questions instead of AskUserQuestion** | User can't respond via structured UI | Use AskUserQuestion tool |
 | Opening code files with intent to modify | Brainstorming is DESIGN, not CODING | Return to clarifying questions |
-| Skipping clarifying questions | Assumptions lead to wrong designs | Ask at least one question |
-| Presenting design without user confirmation | Design may be solving wrong problem | Get explicit "yes, that's what I want" |
+| Skipping clarifying questions | Assumptions lead to wrong designs | Ask at least one question via AskUserQuestion |
+| Presenting design without user confirmation | Design may be solving wrong problem | Get explicit confirmation via AskUserQuestion |
 | Saving design without required sections | Incomplete design = incomplete planning | Add missing sections |
+
+**AskUserQuestion is MANDATORY** for ALL user interaction: issue assessment, clarifying questions, design section reviews. Plain text questions like "Does this look right?" are NOT acceptable.
 
 ## Deliverable: design.md
 

@@ -1,6 +1,7 @@
 ---
 name: using-git-worktrees
 description: Use when starting feature work that needs isolation from current workspace
+allowed-tools: Bash, Read, Grep, Glob, AskUserQuestion
 ---
 
 # Using Git Worktrees
@@ -48,16 +49,23 @@ grep -i "worktree.*director" CLAUDE.md 2>/dev/null
 
 ### 3. Ask User
 
-If no directory exists and no CLAUDE.md preference:
+If no directory exists and no CLAUDE.md preference, **MUST use AskUserQuestion tool**:
 
 ```
-No worktree directory found. Where should I create worktrees?
-
-1. .worktrees/ (project-local, hidden)
-2. ~/.config/hyperpowers/worktrees/<project-name>/ (global location)
-
-Which would you prefer?
+AskUserQuestion(
+  questions: [{
+    question: "No worktree directory found. Where should I create worktrees?",
+    header: "Location",
+    options: [
+      {label: ".worktrees/", description: "Project-local, hidden directory"},
+      {label: "~/.config/hyperpowers/worktrees/", description: "Global location for all projects"}
+    ],
+    multiSelect: false
+  }]
+)
 ```
+
+Do NOT proceed without AskUserQuestion response. Plain text questions are NOT acceptable.
 
 ## Safety Verification
 
@@ -234,6 +242,7 @@ Ready to implement auth feature
 ## Red Flags
 
 **Never:**
+- **Use plain text questions instead of AskUserQuestion** - bypasses structured response UI
 - Create worktree without verifying it's ignored (project-local)
 - Skip baseline test verification
 - Proceed with failing tests without asking
@@ -241,10 +250,13 @@ Ready to implement auth feature
 - Skip CLAUDE.md check
 
 **Always:**
-- Follow directory priority: existing > CLAUDE.md > ask
+- **Use AskUserQuestion tool for ALL user interaction** (directory preference, test failure decisions)
+- Follow directory priority: existing > CLAUDE.md > ask (via AskUserQuestion)
 - Verify directory is ignored for project-local
 - Auto-detect and run project setup
 - Verify clean test baseline
+
+**AskUserQuestion is MANDATORY** for all user interaction points. Plain text questions are NOT acceptable.
 
 ## COMPULSORY: Worktree Safety Verification
 

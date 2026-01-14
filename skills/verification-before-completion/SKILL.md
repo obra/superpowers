@@ -1,7 +1,7 @@
 ---
 name: verification-before-completion
 description: Use when about to claim work is complete, fixed, or passing, before committing or creating PRs
-allowed-tools: Bash, Read, Grep, Glob
+allowed-tools: Bash, Read, Grep, Glob, AskUserQuestion
 ---
 
 # Verification Before Completion
@@ -99,20 +99,22 @@ Before claiming ANY work is complete:
 
 Read `docs/current-progress.md` "Discovered Work" section.
 
-For each item, present creation offer:
+For each item, **MUST use AskUserQuestion tool** to present creation offer:
 ```
-New Issue Offers (Discovered During Work):
-
-1. "Need to add rate limiting to API"
-   Command: [from issue-tracking agent]
-   [Create / Skip]
-
-2. "Auth tokens should expire after 24h"
-   Command: [from issue-tracking agent]
-   [Create / Skip]
+AskUserQuestion(
+  questions: [{
+    question: "Create issue for discovered work: 'Need to add rate limiting to API'?",
+    header: "Issue 1",
+    options: [
+      {label: "Create", description: "Create this as a new issue"},
+      {label: "Skip", description: "Don't create an issue for this"}
+    ],
+    multiSelect: false
+  }]
+)
 ```
 
-Batch presentation, individual approval per item.
+Present one AskUserQuestion per discovered item. Batch presentation is NOT acceptable - each item needs individual AskUserQuestion approval.
 
 ### Step 2: Update Original Issue
 
@@ -126,16 +128,20 @@ Summary: [work completed summary]",
      subagent_type: "general-purpose")
 ```
 
-Present offer:
+**MUST use AskUserQuestion tool** to present offer:
 ```
-Issue Update Offer:
-- Issue: PROJ-123 "Add user authentication"
-- Action: Add comment summarizing work completed
-- Summary: "Implemented JWT-based auth with login/logout endpoints,
-  added middleware, tests passing. Ready for review."
-- Command: [from agent]
-
-Update issue? [Yes / Edit Summary / Skip]
+AskUserQuestion(
+  questions: [{
+    question: "Update issue PROJ-123 with completion summary?",
+    header: "Update",
+    options: [
+      {label: "Yes", description: "Add comment: 'Implemented JWT-based auth...'"},
+      {label: "Edit", description: "Let me modify the summary first"},
+      {label: "Skip", description: "Don't update the issue"}
+    ],
+    multiSelect: false
+  }]
+)
 ```
 
 ### No Tracker Detected
@@ -228,6 +234,7 @@ Before claiming completion:
 
 | Violation | Why It's Critical | Recovery |
 |-----------|-------------------|----------|
+| **Plain text questions instead of AskUserQuestion** | User can't respond via structured UI | Use AskUserQuestion tool |
 | Using "should", "probably", "seems to" | Uncertainty words = no evidence | Run verification command NOW |
 | "Great!", "Perfect!", "Done!" before verification | Premature satisfaction = false confidence | Verify THEN celebrate |
 | About to commit/push/PR without verification | Ships broken code | Run full test suite first |
@@ -236,6 +243,8 @@ Before claiming completion:
 | "Just this once" | Exceptions become patterns | No exceptions, verify always |
 | Tired and wanting work over | Exhaustion leads to mistakes | Verify anyway, then rest |
 | ANY wording implying success | Words without evidence = lying | Run command, show output |
+
+**AskUserQuestion is MANDATORY** for all Issue Offers (discovered work, original issue update). Plain text questions are NOT acceptable.
 
 ## Rationalization Prevention
 
