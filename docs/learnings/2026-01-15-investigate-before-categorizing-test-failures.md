@@ -57,3 +57,10 @@ When presenting test failure options in finishing-a-development-branch Step 2, a
 ```
 
 Only present options AFTER understanding the root cause.
+
+---
+
+**IMPLEMENTED (2026-01-15):** Enhanced multiple skills in v4.1.2:
+- systematic-debugging Phase 1: Added "don't trust error messages at face value"
+- verification-before-completion: Added Step 4 INVESTIGATE before interpreting
+- finishing-a-development-branch Step 2: Added investigation workflow before categorization

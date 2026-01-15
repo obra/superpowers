@@ -50,3 +50,11 @@ Applies to ALL projects and situations. The finishing skill is not about complex
 ## Suggested Action
 
 This is a general pattern. No CLAUDE.md changes needed - just strict adherence to skill invocation rules from using-superpowers skill.
+
+---
+
+**IMPLEMENTED (2026-01-15):** Enhanced using-superpowers skill in v4.1.2:
+- Added "Common Trigger Phrases" table with explicit skill invocation examples
+- Completion triggers: "let's complete this" → finishing-a-development-branch
+- Debugging triggers: "this is broken" → systematic-debugging
+- Feature triggers: "add feature X" → brainstorming first
