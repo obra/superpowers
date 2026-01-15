@@ -67,6 +67,35 @@ Start by understanding the current project context, then ask questions one at a 
 
 **If no issue ID provided:** Skip to "Understanding the idea" phase.
 
+### Phase 0.5: Codebase Exploration
+
+**Always dispatch an Explore subagent before asking clarifying questions.**
+
+After Phase 0 completes (or immediately if no issue ID), dispatch exploration:
+
+```
+Task(
+  description: "Explore codebase for brainstorming",
+  prompt: [exploration-prompt.md template filled with:
+    - Topic: user's brainstorming request
+    - Issue Context: captured in Phase 0, or "None provided"],
+  model: "haiku",
+  subagent_type: "Explore"
+)
+```
+
+**Use exploration findings to:**
+- Reference actual file paths when asking about placement ("should this go in `src/services/` like other services?")
+- Identify existing patterns to follow or break from
+- Detect potential conflicts early
+
+**Handling exploration issues:**
+- **Timeout (>45s):** Proceed without exploration context, note "Exploration timed out - questions based on general patterns only"
+- **Empty results:** Proceed normally, note "New/minimal codebase - no existing patterns detected"
+- **Subagent failure:** Proceed without context, note "Exploration unavailable - design based on manual analysis only"
+
+**Exploration findings are internal context only** - do NOT include in final design document.
+
 **Understanding the idea:**
 - Check out the current project state first (files, docs, recent commits)
 - **MUST use AskUserQuestion tool** to ask questions one at a time to refine the idea
