@@ -18,16 +18,23 @@ fi
 config_detected_marker=""
 config_output=""  # Initialize to empty string to avoid undefined variable
 
-# Try to find .horspowers-config.yaml
+# Try to find .horspowers-config.yaml or .superpowers-config.yaml (for backwards compatibility)
 current_dir="$PWD"
 while [ "$current_dir" != "/" ]; do
+    config_file=""
     if [ -f "$current_dir/.horspowers-config.yaml" ]; then
+        config_file="$current_dir/.horspowers-config.yaml"
+    elif [ -f "$current_dir/.superpowers-config.yaml" ]; then
+        config_file="$current_dir/.superpowers-config.yaml"
+    fi
+
+    if [ -n "$config_file" ]; then
         # Config found, read it using Node.js
         # SECURITY: Pass path via environment variable to prevent code injection
-        if config_output=$(CONFIG_DIR="$current_dir" node -e "
+        if config_output=$(CONFIG_FILE="$config_file" node -e "
         const fs = require('fs');
         const path = require('path');
-        const configPath = path.join(process.env.CONFIG_DIR, '.horspowers-config.yaml');
+        const configPath = process.env.CONFIG_FILE;
         try {
             const content = fs.readFileSync(configPath, 'utf8');
             const lines = content.split('\\n');

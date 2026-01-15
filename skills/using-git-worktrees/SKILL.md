@@ -107,6 +107,22 @@ Read session context for `<config-detected>` marker to get current `branch_strat
 - Create new branch without worktree: `git checkout -b <branch-name>`
 - Skip worktree directory logic
 - Continue with project setup in current directory
+- **IMPORTANT:** Inform user about automated-development-workflow skill:
+
+```
+✓ 已创建普通分支: <branch-name>
+
+💡 提示：你现在使用的是普通分支模式（非 worktree）
+
+日常开发工作流建议使用自动化开发工作流技能：
+- 下班时提交代码：使用 /daily-workflow 或说"下班了"
+- 快速提交代码：使用 /quick-commit 或说"快速提交"
+- 合并分支：使用 /merge-branch 或说"合并到 develop"
+
+这些命令会自动处理代码检查、提交和合并流程。
+
+按回车继续...
+```
 
 **If user chooses worktree:**
 - Proceed with worktree creation steps below
