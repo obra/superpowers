@@ -1,6 +1,6 @@
 ---
 name: systematic-debugging
-description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes
+description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes. 中文触发场景：当用户说'这里有个bug'、'测试失败了'、'为什么报错？'、'帮忙调试一下'、'出问题了'等遇到任何技术问题时使用此技能。
 ---
 
 # Systematic Debugging
@@ -12,6 +12,8 @@ Random fixes waste time and create new bugs. Quick patches mask underlying issue
 **Core principle:** ALWAYS find root cause before attempting fixes. Symptom fixes are failure.
 
 **Violating the letter of this process is violating the spirit of debugging.**
+
+**Announce at start:** "我正在使用系统化调试技能..." (I'm using systematic debugging...)
 
 ## The Iron Law
 
@@ -176,7 +178,7 @@ You MUST complete each phase before proceeding to the next.
    - Automated test if possible
    - One-off test script if no framework
    - MUST have before fixing
-   - Use the `superpowers:test-driven-development` skill for writing proper failing tests
+   - Use the `horspowers:test-driven-development` skill for writing proper failing tests
 
 2. **Implement Single Fix**
    - Address the root cause identified
@@ -284,8 +286,8 @@ These techniques are part of systematic debugging and available in this director
 - **`condition-based-waiting.md`** - Replace arbitrary timeouts with condition polling
 
 **Related skills:**
-- **superpowers:test-driven-development** - For creating failing test case (Phase 4, Step 1)
-- **superpowers:verification-before-completion** - Verify fix worked before claiming success
+- **horspowers:test-driven-development** - For creating failing test case (Phase 4, Step 1)
+- **horspowers:verification-before-completion** - Verify fix worked before claiming success
 
 ## Real-World Impact
 

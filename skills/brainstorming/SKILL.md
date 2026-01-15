@@ -1,6 +1,6 @@
 ---
 name: brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
+description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation. 中文触发场景：当用户说'帮我想想这个功能的实现方案'、'这个需求我该怎么设计？'、'帮我理清思路'、'我想做个XXX，有什么建议？'等需要完善想法时使用此技能。"
 ---
 
 # Brainstorming Ideas Into Designs
@@ -10,6 +10,8 @@ description: "You MUST use this before any creative work - creating features, bu
 Help turn ideas into fully formed designs and specs through natural collaborative dialogue.
 
 Start by understanding the current project context, then ask questions one at a time to refine the idea. Once you understand what you're building, present the design in small sections (200-300 words), checking after each section whether it looks right so far.
+
+**Announce at start:** "我正在使用头脑风暴技能来完善你的想法..." (I'm using brainstorming to refine your idea...)
 
 ## The Process
 
@@ -38,11 +40,19 @@ Start by understanding the current project context, then ask questions one at a 
 - Write the validated design to `docs/plans/YYYY-MM-DD-<topic>-design.md`
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
+- **Crucial**: Tell the user: "设计已保存到文档。你可以通过编辑文档来调整设计，完成后说'继续'或'ready'进入实施阶段。"
+- Wait for user confirmation - they may edit the document before proceeding
+
+**Document as communication medium:**
+- If user says "继续" or "ready" after documentation, re-read the design document
+- The document may have been modified by the user - treat it as the source of truth
+- Confirm understanding before proceeding: "基于文档中的设计，我们准备开始实施。确认继续？"
 
 **Implementation (if continuing):**
-- Ask: "Ready to set up for implementation?"
-- Use superpowers:using-git-worktrees to create isolated workspace
-- Use superpowers:writing-plans to create detailed implementation plan
+- After user confirms, ask: "需要创建隔离的开发环境吗？"
+- If yes: Use horspowers:using-git-worktrees to create isolated workspace
+- If no: Continue in current branch
+- Use horspowers:writing-plans to create detailed implementation plan
 
 ## Key Principles
 

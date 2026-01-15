@@ -1,6 +1,6 @@
 ---
 name: finishing-a-development-branch
-description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup
+description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup. 中文触发场景：当用户说'开发完成了'、'功能做完了怎么办？'、'合并代码'、'结束开发分支'等需要完成开发分支时使用此技能。
 ---
 
 # Finishing a Development Branch
@@ -11,7 +11,7 @@ Guide completion of development work by presenting clear options and handling ch
 
 **Core principle:** Verify tests → Present options → Execute choice → Clean up.
 
-**Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
+**Announce at start:** "我正在使用完成开发分支技能..." (I'm using the finishing-a-development-branch skill to complete this work...)
 
 ## The Process
 
@@ -48,20 +48,52 @@ Or ask: "This branch split from main - is that correct?"
 
 ### Step 3: Present Options
 
-Present exactly these 4 options:
+**Check configuration first:**
+
+Read session context for `<config-detected>` marker to get current `completion_strategy` and `development_mode` settings.
+
+**Present options based on configuration:**
+
+**Personal Mode (`development_mode: personal`):**
 
 ```
 Implementation complete. What would you like to do?
 
-1. Merge back to <base-branch> locally
-2. Push and create a Pull Request
+根据当前配置（个人开发者模式），推荐：
+1. ✨ Merge back to <base-branch> locally （推荐）
+2. Keep the branch as-is (I'll handle it later)
+3. Discard this work
+
+Which option?
+```
+
+**Team Mode (`development_mode: team`):**
+
+```
+Implementation complete. What would you like to do?
+
+根据当前配置（团队协作模式），推荐：
+1. ✨ Push and create a Pull Request （推荐）
+2. Merge back to <base-branch> locally
 3. Keep the branch as-is (I'll handle it later)
 4. Discard this work
 
 Which option?
 ```
 
-**Don't add explanation** - keep options concise.
+**If `completion_strategy` is explicitly set, the recommended option depends on mode:**
+
+**Personal Mode:**
+- `completion_strategy: merge` → Option 1 (Merge locally) ✨
+- `completion_strategy: keep` → Option 2 (Keep as-is) ✨
+- `completion_strategy: pr` → Not available in Personal Mode, use merge instead
+
+**Team Mode:**
+- `completion_strategy: pr` → Option 1 (Push and create PR) ✨
+- `completion_strategy: merge` → Option 2 (Merge locally) ✨
+- `completion_strategy: keep` → Option 3 (Keep as-is) ✨
+
+**Keep options concise** - don't add explanations beyond the recommendation marker.
 
 ### Step 4: Execute Choice
 

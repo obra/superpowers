@@ -1,6 +1,6 @@
 ---
 name: using-superpowers
-description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
+description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions. 中文触发场景：每次会话开始时自动注入，建立如何查找和使用技能的基础规则。
 ---
 
 <EXTREMELY-IMPORTANT>
@@ -85,3 +85,45 @@ The skill itself tells you which.
 ## User Instructions
 
 Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
+
+## Configuration System (Personal/Team Modes)
+
+**Check for configuration marker on session start:**
+
+When this skill is injected via session start hook, check for `<config-exists>` marker:
+
+**If `<config-exists>false</config-exists>`:**
+- On your FIRST response to the user, you MUST guide them through initial configuration
+- Use AskUserQuestion to ask about their development preferences:
+
+```
+欢迎使用 Superpowers！检测到这是首次使用，需要配置开发模式。
+
+**请选择你的开发模式：**
+
+1. **个人开发者** - 单人开发，使用简化的工作流程：
+   - 使用普通分支而非 worktree
+   - 本地合并而非创建 PR
+   - 可选的测试（可以写完代码再测试）
+
+2. **团队协作** - 团队开发，使用完整的工程化流程：
+   - 使用 worktree 隔离环境
+   - 创建 PR 进行代码审查
+   - 严格的 TDD 流程
+
+请选择 1 或 2：
+```
+
+- After user selects, create `.superpowers-config.yaml` in current directory with appropriate settings
+- Personal mode: `development_mode: personal`, `branch_strategy: simple`, `testing_strategy: test-after`, `completion_strategy: merge`
+- Team mode: `development_mode: team`, `branch_strategy: worktree`, `testing_strategy: tdd`, `completion_strategy: pr`
+
+**If `<config-exists>true</config-exists>`:**
+- Configuration file exists - read `<config-detected>` marker for current settings
+- Store these settings in memory for use by other skills
+- Don't mention configuration unless user asks or a skill needs to make a decision
+
+**Config usage by other skills:**
+- Skills should read the configuration from session context
+- At decision points, show "根据当前配置（<mode>），建议：..." with confirmation
+- Always allow user to override the suggestion

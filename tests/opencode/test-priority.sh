@@ -26,9 +26,9 @@ description: Superpowers version of priority test skill
 ---
 # Priority Test Skill (Superpowers Version)
 
-This is the SUPERPOWERS version of the priority test skill.
+This is the HORSPOWER version of the priority test skill.
 
-PRIORITY_MARKER_SUPERPOWERS_VERSION
+PRIORITY_MARKER_HORSPOWER_VERSION
 EOF
 
 # 2. Create in personal location (medium priority)
@@ -113,7 +113,7 @@ output=$(timeout 60s opencode run --print-logs "Use the use_skill tool to load t
 
 if echo "$output" | grep -qi "PRIORITY_MARKER_PERSONAL_VERSION"; then
     echo "  [PASS] Personal version loaded (overrides superpowers)"
-elif echo "$output" | grep -qi "PRIORITY_MARKER_SUPERPOWERS_VERSION"; then
+elif echo "$output" | grep -qi "PRIORITY_MARKER_HORSPOWER_VERSION"; then
     echo "  [FAIL] Superpowers version loaded instead of personal"
     exit 1
 else
@@ -142,7 +142,7 @@ if echo "$output" | grep -qi "PRIORITY_MARKER_PROJECT_VERSION"; then
 elif echo "$output" | grep -qi "PRIORITY_MARKER_PERSONAL_VERSION"; then
     echo "  [FAIL] Personal version loaded instead of project"
     exit 1
-elif echo "$output" | grep -qi "PRIORITY_MARKER_SUPERPOWERS_VERSION"; then
+elif echo "$output" | grep -qi "PRIORITY_MARKER_HORSPOWER_VERSION"; then
     echo "  [FAIL] Superpowers version loaded instead of project"
     exit 1
 else
@@ -151,12 +151,12 @@ else
     echo "$output" | grep -i "priority\|project\|personal" | head -10
 fi
 
-# Test 4: Test explicit superpowers: prefix bypasses priority
+# Test 4: Test explicit horspowers: prefix bypasses priority
 echo ""
-echo "Test 4: Testing superpowers: prefix forces superpowers version..."
+echo "Test 4: Testing horspowers: prefix forces superpowers version..."
 
 cd "$TEST_HOME/test-project"
-output=$(timeout 60s opencode run --print-logs "Use the use_skill tool to load superpowers:priority-test specifically. Show me the exact content including any PRIORITY_MARKER text." 2>&1) || {
+output=$(timeout 60s opencode run --print-logs "Use the use_skill tool to load horspowers:priority-test specifically. Show me the exact content including any PRIORITY_MARKER text." 2>&1) || {
     exit_code=$?
     if [ $exit_code -eq 124 ]; then
         echo "  [FAIL] OpenCode timed out after 60s"
@@ -164,10 +164,10 @@ output=$(timeout 60s opencode run --print-logs "Use the use_skill tool to load s
     fi
 }
 
-if echo "$output" | grep -qi "PRIORITY_MARKER_SUPERPOWERS_VERSION"; then
-    echo "  [PASS] superpowers: prefix correctly forces superpowers version"
+if echo "$output" | grep -qi "PRIORITY_MARKER_HORSPOWER_VERSION"; then
+    echo "  [PASS] horspowers: prefix correctly forces superpowers version"
 elif echo "$output" | grep -qi "PRIORITY_MARKER_PROJECT_VERSION\|PRIORITY_MARKER_PERSONAL_VERSION"; then
-    echo "  [FAIL] superpowers: prefix did not force superpowers version"
+    echo "  [FAIL] horspowers: prefix did not force superpowers version"
     exit 1
 else
     echo "  [WARN] Could not verify priority marker in output"

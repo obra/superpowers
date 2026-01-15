@@ -1,6 +1,6 @@
 ---
 name: using-git-worktrees
-description: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - creates isolated git worktrees with smart directory selection and safety verification
+description: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - creates isolated git worktrees with smart directory selection and safety verification. 中文触发场景：当用户说'创建新的开发分支'、'需要隔离的开发环境'、'用 worktree 开发'、'创建独立工作区'等需要 Git Worktree 隔离时使用此技能。
 ---
 
 # Using Git Worktrees
@@ -71,6 +71,65 @@ Per Jesse's rule "Fix broken things immediately":
 ### For Global Directory (~/.config/superpowers/worktrees)
 
 No .gitignore verification needed - outside project entirely.
+
+## Decision Point: Branch Strategy
+
+**Before creating worktree, check configuration:**
+
+Read session context for `<config-detected>` marker to get current `branch_strategy` setting.
+
+**Present decision to user:**
+
+```
+[决策点] 分支创建策略
+
+根据当前配置，建议使用：<<based on branch_strategy>>
+
+**个人模式（simple 分支策略）：**
+- 使用普通分支，更轻量
+- 适合单人开发，无需环境隔离
+- 可以直接在当前项目目录中工作
+
+**团队模式（worktree 分支策略）：**
+- 使用 worktree 隔离环境
+- 适合多人协作或需要并行开发多个分支
+- 保持主分支环境干净
+
+选项：
+1. 采用建议（<<建议方案>>）
+2. 改用：<<替代方案>>
+3. 跳过分支创建，直接在当前分支工作
+
+请选择：
+```
+
+**If user chooses simple branch:**
+- Create new branch without worktree: `git checkout -b <branch-name>`
+- Skip worktree directory logic
+- Continue with project setup in current directory
+- **IMPORTANT:** Inform user about automated-development-workflow skill:
+
+```
+✓ 已创建普通分支: <branch-name>
+
+💡 提示：你现在使用的是普通分支模式（非 worktree）
+
+日常开发工作流建议使用自动化开发工作流技能：
+- 下班时提交代码：使用 /daily-workflow 或说"下班了"
+- 快速提交代码：使用 /quick-commit 或说"快速提交"
+- 合并分支：使用 /merge-branch 或说"合并到 develop"
+
+这些命令会自动处理代码检查、提交和合并流程。
+
+按回车继续...
+```
+
+**If user chooses worktree:**
+- Proceed with worktree creation steps below
+
+**If user chooses skip:**
+- Continue working in current branch
+- Don't create any new branches
 
 ## Creation Steps
 

@@ -1,0 +1,200 @@
+# Horspowers 项目配置模板
+# 复制此文件到项目根目录并重命名为 .horspowers-config.yaml
+
+version: "1.0"
+
+# ============================================
+# 开发模式配置
+# ============================================
+# personal: 个人开发者，本地合并，可选测试
+# team: 团队协作，worktree 开发，PR 合并，强制测试
+development_mode: team
+
+# ============================================
+# 完成策略
+# ============================================
+# merge: 本地合并到主分支
+# pr: 创建 Pull Request
+# keep: 保持分支，稍后处理
+completion_strategy: pr
+
+# ============================================
+# 文档驱动工作流集成
+# ============================================
+documentation:
+  # 是否启用文档集成
+  enabled: true
+
+  # document-driven-ai-workflow CLI 工具路径
+  # 根据你的实际安装位置修改
+  # 示例：
+  # - 全局安装：cli_path: "horspowers-docs"
+  # - 本地路径：cli_path: "node /absolute/path/to/document-driven-ai-workflow/cli.js"
+  # - 相对路径：cli_path: "node ../document-driven-ai-workflow/cli.js"
+  cli_path: "node /path/to/document-driven-ai-workflow/cli.js"
+
+  # 各工作流的文档集成配置
+  workflows:
+    # brainstorming 技能集成
+    brainstorming:
+      # 开始前搜索的文档类型
+      pre_search:
+        - "项目架构"
+        - "技术决策"
+        - "相关设计"
+      # 完成后创建的文档
+      create:
+        - type: decision
+          when: "technical_decisions_made"
+          title_template: "技术决策：{design_topic}"
+
+    # writing-plans 技能集成
+    writing-plans:
+      # 开始前搜索
+      pre_search:
+        - "相关功能"
+        - "类似任务"
+        - "实施历史"
+      # 完成后创建
+      create:
+        - type: task
+          always: true
+          title_template: "实现：{feature_name}"
+
+    # test-driven-development 技能集成
+    test-driven-development:
+      # 测试失败时
+      create:
+        - type: bug
+          when: "test_fails_unexpectedly"
+          title_template: "Bug：{test_name}"
+      # 修复完成时
+      update:
+        - type: bug
+          when: "bug_fixed"
+          status: "已修复"
+
+    # subagent-driven-development 技能集成
+    subagent-driven-development:
+      # 每个子任务完成后
+      update:
+        - type: task
+          when: "checkpoint_complete"
+          progress_template: "完成：{checkpoint_description}"
+
+    # finishing-a-development-branch 技能集成
+    finishing-a-development-branch:
+      # 完成前的操作
+      actions:
+        - type: status
+          always: true
+        - type: update
+          target: "task"
+          status: "已完成"
+        - type: archive
+          when: "merging_to_main"
+
+  # 自动归档设置
+  archive:
+    enabled: true
+    # 完成多少天后归档
+    after_days: 30
+    # 保持活跃的条件
+    keep_active:
+      - type: task
+        status: ["进行中", "已阻塞"]
+      - type: bug
+        status: ["待修复", "调查中"]
+
+  # 文档分类配置
+  categories:
+    decision:
+      description: "重要的技术决策和选择"
+      required_fields: ["背景", "选项", "选择", "理由"]
+    task:
+      description: "开发任务和实施计划"
+      required_fields: ["目标", "步骤", "状态"]
+    bug:
+      description: "问题分析和修复过程"
+      required_fields: ["问题", "复现", "分析", "修复"]
+    context:
+      description: "项目背景和知识"
+      required_fields: ["概述", "细节"]
+
+# ============================================
+# 测试配置
+# ============================================
+testing:
+  # 是否强制测试通过才能完成
+  required: true
+
+  # 测试命令（根据项目类型选择）
+  commands:
+    npm: "npm test"
+    python: "pytest"
+    rust: "cargo test"
+    go: "go test ./..."
+
+  # 自动检测测试命令
+  auto_detect: true
+
+# ============================================
+# Git 配置
+# ============================================
+git:
+  # 主分支名称
+  main_branch: "main"
+
+  # 是否使用 worktree
+  use_worktrees: true  # team 模式自动启用
+
+  # worktree 存放位置
+  worktree_base: ".git-worktrees"
+
+  # 提交前是否运行测试
+  test_before_commit: true
+
+# ============================================
+# 技能覆盖配置
+# ============================================
+# 可以禁用特定技能或修改行为
+skills:
+  # 强制使用的技能
+  required:
+    - "brainstorming"
+    - "writing-plans"
+    - "test-driven-development"
+
+  # 可选技能
+  optional:
+    - "subagent-driven-development"
+    - "document-driven-bridge"
+
+  # 禁用的技能
+  disabled: []
+
+# ============================================
+# 通知配置
+# ============================================
+notifications:
+  # 完成时显示摘要
+  show_summary: true
+
+  # 文档创建时通知
+  document_created: true
+
+  # 任务状态变更时通知
+  status_changed: true
+
+# ============================================
+# 高级配置
+# ============================================
+advanced:
+  # 是否在会话开始时显示配置
+  announce_config: true
+
+  # 是否记录详细的技能调用
+  log_invocations: false
+
+  # 配置文件版本检查
+  version_check: true

@@ -1,19 +1,19 @@
 {
-  "name": "superpowers-dev",
-  "description": "Development marketplace for Superpowers core skills library",
+  "name": "horspowers-dev",
+  "description": "Horspowers - 中文增强的开发技能库开发市场",
   "owner": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com"
+    "name": "horsliu",
+    "email": "louishors@outlook.com"
   },
   "plugins": [
     {
-      "name": "superpowers",
-      "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
-      "version": "4.0.3",
+      "name": "horspowers",
+      "description": "中文增强的开发技能库 - 基于 Claude Code 的可组合工作流",
+      "version": "4.1.0",
       "source": "./",
       "author": {
-        "name": "Jesse Vincent",
-        "email": "jesse@fsck.com"
+        "name": "horsliu",
+        "email": "louishors@outlook.com"
       }
     }
   ]
