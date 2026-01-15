@@ -104,7 +104,7 @@ Same skill format works across Cursor, Claude Code, OpenCode, and Codex.
 
 - **Installation**: [INSTALL.md](../.cursor/INSTALL.md) - Detailed setup guide
 - **CLI Reference**: [README.md](../.cursor/README.md) - Command documentation
-- **Cursor Skills**: [cursor.com/docs/context/skills](https://cursor.com/cn/docs/context/skills)
+- **Cursor Skills**: [cursor.com/docs/context/skills](https://cursor.com/docs/context/skills)
 - **Superpowers**: [github.com/obra/superpowers](https://github.com/obra/superpowers)
 
 ## Troubleshooting
