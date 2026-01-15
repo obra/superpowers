@@ -12,6 +12,14 @@ Help turn ideas into fully formed designs and specs through natural collaborativ
 
 Start by understanding the current project context, then ask questions one at a time to refine the idea. Once you understand what you're building, present the design in small sections (200-300 words), checking after each section whether it looks right so far.
 
+<requirements>
+## Requirements
+
+1. Use AskUserQuestion for ALL user interaction. Plain text questions don't allow structured responses.
+2. Complete Understanding Gate before presenting design.
+3. Save design to docs/designs/ before announcing completion.
+</requirements>
+
 ## When to Use
 
 **Use this skill when:**
@@ -45,7 +53,7 @@ Start by understanding the current project context, then ask questions one at a 
    - Has "?" in description or title → **Reference Only**
    - No clear acceptance criteria → **Reference Only**
 
-3. **MUST use AskUserQuestion tool** to present assessment to user:
+3. Use AskUserQuestion to present assessment to user:
    ```
    AskUserQuestion(
      questions: [{
@@ -61,7 +69,7 @@ Start by understanding the current project context, then ask questions one at a 
    )
    ```
 
-   Do NOT proceed without AskUserQuestion response. Plain text confirmation is NOT acceptable.
+   Wait for AskUserQuestion response before proceeding.
 
 4. Store for inclusion in design document output
 
@@ -100,12 +108,12 @@ Task(
 - Use the exploration findings from Phase 0.5 to inform your questions
 - Reference actual file locations and patterns when asking about structure (e.g., "should this go in `src/services/` like similar features?")
 - Check out the current project state first (files, docs, recent commits)
-- **MUST use AskUserQuestion tool** to ask questions one at a time to refine the idea
+- Use AskUserQuestion to ask questions one at a time to refine the idea
 - Prefer multiple choice questions (AskUserQuestion options) when possible
 - Only one AskUserQuestion per message - if a topic needs more exploration, break it into multiple AskUserQuestion calls
 - Focus on understanding: purpose, constraints, success criteria
 
-**AskUserQuestion is MANDATORY** for all clarifying questions. Plain text questions are NOT acceptable.
+Use AskUserQuestion for clarifying questions. Plain text questions don't allow structured responses.
 
 **Exploring approaches:**
 - Propose 2-3 different approaches with trade-offs
@@ -115,7 +123,7 @@ Task(
 **Presenting the design:**
 - Once you believe you understand what you're building, present the design
 - Break it into sections of 200-300 words
-- **MUST use AskUserQuestion tool** after each section to check if it looks right:
+- Use AskUserQuestion after each section to check if it looks right:
   ```
   AskUserQuestion(
     questions: [{
@@ -172,22 +180,23 @@ Violations (any of these = stop and restart):
 
 **If you feel the urge to code:** That's the signal you haven't finished brainstorming. More questions needed.
 
-## COMPULSORY: Phase Gate Verification
+<verification>
+## Phase Gate Verification
 
 Before proceeding to design presentation:
 
-**Understanding Gate** (all COMPULSORY):
+**Understanding Gate** (Required):
 
 - [ ] Dispatched Explore subagent and received results (or documented failure)
 - [ ] Read current project state (files, docs, commits)
 - [ ] Asked at least one clarifying question (grounded in exploration findings)
 - [ ] User has confirmed understanding
 
-**STOP CONDITION:** If ANY checkbox is unchecked, do NOT proceed. Complete missing steps first.
+**STOP CONDITION:** If any checkbox is unchecked, complete missing steps before presenting design.
 
 Before saving design:
 
-**Design Gate** (all COMPULSORY):
+**Design Gate** (Required):
 
 - [ ] Problem Statement included
 - [ ] Success Criteria included (measurable)
@@ -196,20 +205,19 @@ Before saving design:
 - [ ] Open Questions included
 - [ ] Original Issue included (if issue ID was provided at start)
 
-**STOP CONDITION:** If ANY section missing, do NOT save. Complete missing section(s) first.
+**STOP CONDITION:** If any section missing, add it before saving.
+</verification>
 
 ## Red Flags - IMMEDIATE STOP
 
 | Violation | Why It's Critical | Recovery |
 |-----------|-------------------|----------|
 | **Plain text questions instead of AskUserQuestion** | User can't respond via structured UI | Use AskUserQuestion tool |
-| Opening code files with intent to modify | Brainstorming is DESIGN, not CODING | Return to clarifying questions |
+| Opening code files with intent to modify | Brainstorming is for design, not coding | Return to clarifying questions |
 | Skipping clarifying questions | Assumptions lead to wrong designs | Ask at least one question via AskUserQuestion |
 | Presenting design without user confirmation | Design may be solving wrong problem | Get explicit confirmation via AskUserQuestion |
 | Saving design without required sections | Incomplete design = incomplete planning | Add missing sections |
 | Skipping codebase exploration | Questions may not reflect actual project structure | Dispatch Explore subagent first |
-
-**AskUserQuestion is MANDATORY** for ALL user interaction: issue assessment, clarifying questions, design section reviews. Plain text questions like "Does this look right?" are NOT acceptable.
 
 ## Deliverable: design.md
 
@@ -231,5 +239,13 @@ Brainstorming is complete when you have a design document at `docs/designs/YYYY-
 
    [Full issue body verbatim]
    ```
+
+<requirements>
+## Requirements (reminder)
+
+1. Use AskUserQuestion for ALL user interaction. Plain text questions don't allow structured responses.
+2. Complete Understanding Gate before presenting design.
+3. Save design to docs/designs/ before announcing completion.
+</requirements>
 
 **No design.md = brainstorming not complete = no implementation.**
