@@ -1,0 +1,36 @@
+{
+  "name": "@superpowers/cursor",
+  "version": "1.0.0",
+  "description": "Superpowers integration for Cursor Agent Skills",
+  "type": "module",
+  "bin": {
+    "superpowers-cursor": "./cli.js"
+  },
+  "scripts": {
+    "install-global": "node cli.js install --global",
+    "install-local": "node cli.js install --local"
+  },
+  "keywords": [
+    "cursor",
+    "agent-skills",
+    "ai",
+    "superpowers"
+  ],
+  "author": "Jesse Vincent",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/obra/superpowers.git",
+    "directory": ".cursor"
+  },
+  "homepage": "https://github.com/obra/superpowers#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "commander": "^12.0.0",
+    "chalk": "^5.3.0",
+    "ora": "^8.0.1",
+    "prompts": "^2.4.2"
+  }
+}
