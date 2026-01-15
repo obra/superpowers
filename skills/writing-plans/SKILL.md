@@ -17,6 +17,14 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
 
+<requirements>
+## Requirements
+
+1. Check for existing research before writing plan. Plans without research context may miss critical findings.
+2. Include Original Issue context if available. Missing context = incomplete plan.
+3. Save plan to docs/plans/ before announcing completion.
+</requirements>
+
 ## Phase 0: Request Clarification
 
 **Before ANY context gathering, validate the request is clear.**
@@ -47,14 +55,6 @@ Proceed without asking when:
 - User provided comprehensive spec document AND you verified it addresses Why/What/Who/Where/When/How
 - All Six Questions unambiguously answered in user's request
 
-**Do NOT skip clarification because:**
-
-- "The request seems clear enough" - Simple requests often hide complex requirements
-- "I can infer the scope from the codebase" - State assumptions explicitly, don't guess
-- "Questions slow things down" - Wrong assumptions waste far more time than 2-3 questions
-- "The spec file looks complete" - Verify it explicitly addresses scope/success criteria
-- "This is a common pattern" - Common patterns have many valid implementations
-
 ### Question Design
 
 - **2-3 questions maximum** - quality over quantity
@@ -74,11 +74,6 @@ Dispatch a single Explore subagent before asking questions:
 - **Dispatch:** Synchronous (wait for results before proceeding)
 
 The subagent returns findings as text. Orchestrator writes findings to `docs/handoffs/context-clarification-exploration.md` then uses them for question design.
-
-**Why subagent?**
-- Saves orchestrator credits (exploration runs on cheaper haiku model)
-- Keeps orchestrator context clean (search results stay in subagent)
-- Follows Phase 1-3 pattern (consistent architecture)
 
 ### Output
 
@@ -167,6 +162,7 @@ Update plan header template to include:
 > **Primary Issue:** [PROJ-123] (from branch name)
 ```
 
+<verification>
 ### Original Issue Validation Gate
 
 **STOP CONDITION:** If research doc references an issue but no Original Issue block found, warn user:
@@ -177,23 +173,27 @@ This may indicate context loss. Options:
 - Proceed without original issue context
 - Return to research phase
 ```
+</verification>
 
+<verification>
 ## Pre-Plan Writing Gate
 
-**BEFORE writing ANY plan content, verify:**
+Proceeding without verification leads to plans that miss context and require rework.
 
-```
-[ ] Research document exists in docs/research/ OR degraded mode acknowledged
-[ ] Topic is clear (from research or Phase 0 clarification)
-[ ] Context is sufficient to write specific, actionable tasks
-```
+- [ ] Research document exists in docs/research/ OR degraded mode acknowledged
+- [ ] Topic is clear (from research or Phase 0 clarification)
+- [ ] Context is sufficient to write specific, actionable tasks
 
 If research exists: Reference `docs/research/YYYY-MM-DD-topic.md`
 If degraded mode: Document limitations in plan header
+</verification>
 
-## COMPULSORY: Handoff Consumption Verification
+<verification>
+## Handoff Consumption Verification
 
-**Research Consumption Gate** (COMPULSORY when research doc provided):
+**Research Consumption Gate** (when research doc provided):
+
+Plans that don't cite research findings will miss context and require rework.
 
 - [ ] Research document path explicitly stated
 - [ ] Key findings from research quoted in plan header
@@ -201,12 +201,16 @@ If degraded mode: Document limitations in plan header
 - [ ] Open questions from research addressed or carried forward
 
 **STOP CONDITION:** If writing plan without citing research findings, STOP. Quote specific sections from research.
+</verification>
 
-## COMPULSORY: Plan Quality Verification
+<verification>
+## Plan Quality Verification
 
 Before writing ANY task:
 
-**Context Gate** (COMPULSORY):
+**Context Gate:**
+
+Tasks written without context produce vague instructions that waste executor time.
 
 - [ ] Research document read (or degraded mode acknowledged)
 - [ ] Topic clear from research or clarification
@@ -216,7 +220,9 @@ Before writing ANY task:
 
 For EACH task written:
 
-**Task Quality Gate** (COMPULSORY):
+**Task Quality Gate:**
+
+Vague tasks ("add validation") require executor to make decisions, which introduces errors.
 
 - [ ] Exact file paths (not "relevant files")
 - [ ] Complete code in plan (not "add validation")
@@ -227,7 +233,9 @@ For EACH task written:
 
 After writing all tasks:
 
-**Plan Completeness Gate** (COMPULSORY):
+**Plan Completeness Gate:**
+
+Incomplete plans require back-and-forth that defeats the purpose of planning.
 
 - [ ] Header includes Goal, Architecture, Tech Stack
 - [ ] Related Issues section populated (or "none" noted)
@@ -236,6 +244,7 @@ After writing all tasks:
 - [ ] DRY/YAGNI/TDD principles followed
 
 **STOP CONDITION:** If plan missing required sections, add them before saving.
+</verification>
 
 ## Red Flags - STOP
 
@@ -256,7 +265,7 @@ After writing all tasks:
 
 ## Plan Document Header
 
-**Every plan MUST start with this header:**
+**Every plan starts with this header** (plans without headers are incomplete and will require revision):
 
 ```markdown
 # [Feature Name] Implementation Plan
@@ -375,16 +384,13 @@ Replace `<actual-filename>` with the real plan path.
 
 ## Cleanup
 
-**All handoff files are deleted after the plan is written** (see Execution Handoff above).
+Delete `docs/handoffs/*` after plan is written (see Execution Handoff above). Stale handoff files cause context confusion in future sessions.
 
-The `docs/handoffs/` directory is used only during context gathering. Once the plan is saved to `docs/plans/`, the handoff files serve no purpose:
+<requirements>
+## Requirements Reminder
 
-- Individual explorer findings (`context-codebase-{aspect}.md`, etc.) are intermediate artifacts
-- Summary files (`context-*-summary.md`) are synthesized into the plan itself
-- All context is captured in the plan document
-
-**Why cleanup immediately?**
-
-- Prevents stale context from affecting future planning sessions
-- Aligns with industry best practices: cleanup at terminal state (plan completion)
-- Keeps the directory clean for the next planning task
+Before announcing completion, verify:
+1. Research was checked (or degraded mode acknowledged)
+2. Original Issue context included if available
+3. Plan saved to docs/plans/
+</requirements>
