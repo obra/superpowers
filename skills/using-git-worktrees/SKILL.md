@@ -25,6 +25,14 @@ Git worktrees create isolated workspaces sharing the same repository, allowing w
 - Quick single-file changes
 - Already in a worktree for this feature
 
+<requirements>
+## Requirements
+
+1. Verify worktree directory is in gitignore. Unignored worktrees pollute git status.
+2. Run tests after worktree creation. Untested baseline hides pre-existing failures.
+3. Use AskUserQuestion for directory selection. Plain text doesn't allow structured response.
+</requirements>
+
 ## Directory Selection Process
 
 Follow this priority order:
@@ -49,7 +57,7 @@ grep -i "worktree.*director" CLAUDE.md 2>/dev/null
 
 ### 3. Ask User
 
-If no directory exists and no CLAUDE.md preference, **MUST use AskUserQuestion tool**:
+If no directory exists and no CLAUDE.md preference, use AskUserQuestion tool (plain text questions don't allow structured response):
 
 ```
 AskUserQuestion(
@@ -65,13 +73,11 @@ AskUserQuestion(
 )
 ```
 
-Do NOT proceed without AskUserQuestion response. Plain text questions are NOT acceptable.
-
 ## Safety Verification
 
 ### For Project-Local Directories (.worktrees or worktrees)
 
-**MUST verify directory is ignored before creating worktree:**
+Verify directory is ignored before creating worktree (unignored worktrees pollute git status):
 
 ```bash
 # Check if directory is ignored (respects local, global, and system gitignore)
@@ -84,8 +90,6 @@ Per Jesse's rule "Fix broken things immediately":
 1. Add appropriate line to .gitignore
 2. Commit the change
 3. Proceed with worktree creation
-
-**Why critical:** Prevents accidentally committing worktree contents to repository.
 
 ### For Global Directory (~/.config/hyperpowers/worktrees)
 
@@ -239,53 +243,44 @@ Tests passing (47 tests, 0 failures)
 Ready to implement auth feature
 ```
 
-## Red Flags
+## Verification Gates
 
-**Never:**
-- **Use plain text questions instead of AskUserQuestion** - bypasses structured response UI
-- Create worktree without verifying it's ignored (project-local)
-- Skip baseline test verification
-- Proceed with failing tests without asking
-- Assume directory location when ambiguous
-- Skip CLAUDE.md check
-
-**Always:**
-- **Use AskUserQuestion tool for ALL user interaction** (directory preference, test failure decisions)
-- Follow directory priority: existing > CLAUDE.md > ask (via AskUserQuestion)
-- Verify directory is ignored for project-local
-- Auto-detect and run project setup
-- Verify clean test baseline
-
-**AskUserQuestion is MANDATORY** for all user interaction points. Plain text questions are NOT acceptable.
-
-## COMPULSORY: Worktree Safety Verification
-
-Before creating project-local worktree:
-
-**Ignore Verification Gate** (COMPULSORY for .worktrees or worktrees):
+<verification>
+### Pre-Creation Gate (before creating project-local worktree)
 
 - [ ] Ran `git check-ignore` on directory
 - [ ] If NOT ignored: added to .gitignore and committed
 
-**STOP CONDITION:** If creating worktree in non-ignored directory, STOP. Fix gitignore first.
+**Stop condition:** Non-ignored directory blocks worktree creation. Fix gitignore first.
+</verification>
 
-After creating worktree:
-
-**Setup Gate** (COMPULSORY):
+<verification>
+### Setup Gate (after creating worktree)
 
 - [ ] Auto-detected project type (package.json, Cargo.toml, etc.)
 - [ ] Ran appropriate setup command
 - [ ] Ran baseline tests
 
-**STOP CONDITION:** If tests fail, report and get permission before proceeding.
+**Stop condition:** Test failures require user permission before proceeding.
+</verification>
 
-**Readiness Gate** (COMPULSORY):
+<verification>
+### Readiness Gate (before starting work)
 
 - [ ] Full path reported to user
 - [ ] Test results reported
 - [ ] "Ready to implement" announced
 
-**STOP CONDITION:** If proceeding without readiness report, STOP and report.
+**Stop condition:** Incomplete readiness report blocks work start.
+</verification>
+
+<requirements>
+## Requirements Reminder
+
+1. Verify worktree directory is in gitignore. Unignored worktrees pollute git status.
+2. Run tests after worktree creation. Untested baseline hides pre-existing failures.
+3. Use AskUserQuestion for directory selection. Plain text doesn't allow structured response.
+</requirements>
 
 ## Integration
 
