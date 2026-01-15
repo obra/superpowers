@@ -71,7 +71,7 @@ npx github:obra/superpowers/.cursor uninstall --local
 ## Architecture
 
 **Global install:**
-```
+```text
 ~/.cursor/
 ├── superpowers/           # Full repo
 │   └── skills/           # All skills
@@ -81,7 +81,7 @@ npx github:obra/superpowers/.cursor uninstall --local
 ```
 
 **Local install:**
-```
+```text
 your-project/
 ├── .cursor-superpowers/  # Full repo
 └── .cursor/
