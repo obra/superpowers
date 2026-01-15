@@ -74,7 +74,7 @@ escape_for_json() {
     for (( i=0; i<${#input}; i++ )); do
         char="${input:$i:1}"
         case "$char" in
-            $'\\') output+='\\' ;;
+            $'\\') output+='\\\\' ;;  # Fixed: need \\ for valid JSON
             '"') output+='\"' ;;
             $'\n') output+='\n' ;;
             $'\r') output+='\r' ;;
