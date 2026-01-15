@@ -176,7 +176,7 @@ In a Cursor chat:
 3. You should see Superpowers skills appear
 
 Or just describe a task:
-```
+```text
 "Let's brainstorm ideas for improving our CI/CD pipeline"
 ```
 

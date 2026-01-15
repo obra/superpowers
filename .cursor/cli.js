@@ -537,7 +537,11 @@ program
         // Check if skill is linked in .cursor/skills
         const linkPath = path.join(location.skillsDir, skill.name);
         const linkReal = getRealPathSafe(linkPath);
-        const isLinked = linkReal && skillsDirReal && linkReal.startsWith(skillsDirReal);
+        // Use path.sep to avoid false positives (e.g., skills-custom matching skills)
+        const isLinked = linkReal && skillsDirReal && (
+          linkReal === skillsDirReal ||
+          linkReal.startsWith(skillsDirReal + path.sep)
+        );
 
         if (isLinked) {
           console.log(chalk.green(`  ✓ ${skill.name}`));
@@ -557,7 +561,11 @@ program
         for (const entry of entries) {
           const entryPath = path.join(location.skillsDir, entry);
           const entryReal = getRealPathSafe(entryPath);
-          const isSuperpowers = entryReal && skillsDirReal && entryReal.startsWith(skillsDirReal);
+          // Use path.sep to avoid false positives
+          const isSuperpowers = entryReal && skillsDirReal && (
+            entryReal === skillsDirReal ||
+            entryReal.startsWith(skillsDirReal + path.sep)
+          );
           if (!isSuperpowers) {
             customSkills.push(entry);
           }
