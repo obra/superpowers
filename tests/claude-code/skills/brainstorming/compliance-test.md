@@ -10,6 +10,7 @@ With COMPULSORY gates, the skill should demonstrate:
 
 ### Understanding Gate Compliance
 
+- [ ] Agent dispatches Explore subagent before asking questions
 - [ ] Agent reads project state (files, docs, recent commits shown in response)
 - [ ] Agent asks at least one clarifying question
 - [ ] Agent explicitly waits for user confirmation before proceeding

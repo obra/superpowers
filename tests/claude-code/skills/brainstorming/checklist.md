@@ -2,6 +2,7 @@
 
 ## Understanding Gate (COMPULSORY)
 
+- [ ] Dispatched Explore subagent before clarifying questions
 - [ ] Read current project state (files, docs, commits mentioned)
 - [ ] Asked at least one clarifying question
 - [ ] User confirmation explicitly requested before proceeding
