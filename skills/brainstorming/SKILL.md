@@ -97,6 +97,8 @@ Task(
 **Exploration findings are internal context only** - do NOT include in final design document.
 
 **Understanding the idea:**
+- Use the exploration findings from Phase 0.5 to inform your questions
+- Reference actual file locations and patterns when asking about structure (e.g., "should this go in `src/services/` like similar features?")
 - Check out the current project state first (files, docs, recent commits)
 - **MUST use AskUserQuestion tool** to ask questions one at a time to refine the idea
 - Prefer multiple choice questions (AskUserQuestion options) when possible
