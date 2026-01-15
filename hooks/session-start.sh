@@ -23,10 +23,11 @@ current_dir="$PWD"
 while [ "$current_dir" != "/" ]; do
     if [ -f "$current_dir/.superpowers-config.yaml" ]; then
         # Config found, read it using Node.js
-        if config_output=$(node -e "
+        # SECURITY: Pass path via environment variable to prevent code injection
+        if config_output=$(CONFIG_DIR="$current_dir" node -e "
         const fs = require('fs');
         const path = require('path');
-        const configPath = path.join('$current_dir', '.superpowers-config.yaml');
+        const configPath = path.join(process.env.CONFIG_DIR, '.superpowers-config.yaml');
         try {
             const content = fs.readFileSync(configPath, 'utf8');
             const lines = content.split('\\n');

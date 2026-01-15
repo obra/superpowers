@@ -81,11 +81,17 @@ Implementation complete. What would you like to do?
 Which option?
 ```
 
-**If `completion_strategy` is explicitly set:**
+**If `completion_strategy` is explicitly set, the recommended option depends on mode:**
 
-- `completion_strategy: merge` → Recommend local merge (Option 1)
-- `completion_strategy: pr` → Recommend PR (Option 2)
-- `completion_strategy: keep` → Recommend keep as-is (Option 3)
+**Personal Mode:**
+- `completion_strategy: merge` → Option 1 (Merge locally) ✨
+- `completion_strategy: keep` → Option 2 (Keep as-is) ✨
+- `completion_strategy: pr` → Not available in Personal Mode, use merge instead
+
+**Team Mode:**
+- `completion_strategy: pr` → Option 1 (Push and create PR) ✨
+- `completion_strategy: merge` → Option 2 (Merge locally) ✨
+- `completion_strategy: keep` → Option 3 (Keep as-is) ✨
 
 **Keep options concise** - don't add explanations beyond the recommendation marker.
 
