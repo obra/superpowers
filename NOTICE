@@ -1,0 +1,47 @@
+# NOTICE
+
+## Horspowers - Fork of Superpowers
+
+This project is a fork of [obra/superpowers](https://github.com/obra/superpowers),
+a skills library for Claude Code that provides composable workflows for software
+development.
+
+### Original Project
+
+- **Project**: Superpowers
+- **Author**: Jesse Vincent (obra)
+- **Repository**: https://github.com/obra/superpowers
+- **License**: MIT License
+
+### This Fork
+
+- **Project Name**: Horspowers
+- **Author**: horsliu
+- **Repository**: https://github.com/LouisHors/horspowers
+- **License**: MIT License
+
+### Modifications
+
+This fork includes the following modifications to the original project:
+
+1. **Chinese Language Support** - Added full Chinese localization for skill triggers and documentation
+2. **Personal/Team Mode** - Added configurable development modes for individual developers vs. teams
+3. **Document-Driven Integration** - Integrated with document-driven-ai-workflow for project context management
+4. **Configuration System** - Added project-level configuration via `.superpowers-config.yaml`
+5. **Enhanced Workflows** - Additional workflow optimizations for individual developers
+
+### License
+
+Both the original project and this fork are distributed under the MIT License.
+See LICENSE file for details.
+
+### Acknowledgments
+
+This fork is based on the excellent work by Jesse Vincent and contributors to the
+original Superpowers project. The fork maintains compatibility with the original
+MIT License while adding enhancements for the Chinese developer community.
+
+---
+
+**Original Copyright**: (c) 2024 Jesse Vincent
+**Modifications Copyright**: (c) 2026 horsliu

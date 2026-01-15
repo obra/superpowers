@@ -7,7 +7,7 @@ Always respond in *Simplified Chinese/中文*
 
 ## Project Overview
 
-Superpowers is a skills library for Claude Code that provides composable workflows for software development. It's a plugin that injects skills at session start and provides slash commands for common workflows.
+**Horspower** is a Chinese-enhanced fork of [obra/superpowers](https://github.com/obra/superpowers) - a skills library for Claude Code that provides composable workflows for software development. It's a plugin that injects skills at session start and provides slash commands for common workflows.
 
 **Key concept:** Skills are Markdown files with YAML frontmatter that Claude invokes via the `Skill` tool. The `using-superpowers` skill is injected automatically at session start via a hook.
 
@@ -24,7 +24,7 @@ Superpowers is a skills library for Claude Code that provides composable workflo
 ./tests/claude-code/run-skill-tests.sh --test test-subagent-driven-development.sh --verbose
 ```
 
-**Important:** Tests must run FROM the superpowers directory, not from temp directories. Integration tests create real projects and execute full workflows.
+**Important:** Tests must run FROM the horspowerss directory, not from temp directories. Integration tests create real projects and execute full workflows.
 
 ## Architecture
 
@@ -49,7 +49,7 @@ description: Use when [condition] - [what it does]
 
 - **Frontmatter:** `name` (lowercase kebab-case), `description` (trigger-only, no process details)
 - **Description trap:** Never include workflow steps in description - Claude will follow description instead of reading the skill
-- **Cross-references:** Use `superpowers:skill-name` format for internal references
+- **Cross-references:** Use `horspowers:skill-name` format for internal references
 
 ### Slash Commands
 
@@ -61,7 +61,7 @@ description: Brief description
 disable-model-invocation: true
 ---
 
-Invoke the superpowers:skill-name skill and follow it exactly as presented to you
+Invoke the horspowerss:skill-name skill and follow it exactly as presented to you
 ```
 
 The `disable-model-invocation: true` prevents Claude from invoking commands - only users can invoke slash commands.
@@ -72,11 +72,11 @@ The `disable-model-invocation: true` prevents Claude from invoking commands - on
 
 ### Skill Resolution
 
-- Personal skills (`~/.claude/skills/`) override superpowers skills
-- Use `superpowers:` prefix to force using a superpowers skill
+- Personal skills (`~/.claude/skills/`) override horspowerss skills
+- Use `horspowers:` prefix to force using a horspowerss skill
 - Skills are discovered by finding `SKILL.md` files recursively
 
-## The Superpowers Workflow
+## The Horspower Workflow
 
 1. **brainstorming** - Refine ideas through questions, present design in sections
 2. **using-git-worktrees** - Create isolated workspace on new branch
@@ -146,7 +146,7 @@ When creating new skills:
 
 **The Description Trap:** If description summarizes the workflow, Claude follows description instead of reading the skill. Keep descriptions trigger-only: "Use when X" not "Use when X to do Y via Z".
 
-**Rationalization:** Agents think "I know what this means" and skip skill invocation. The `using-superpowers` skill lists 12+ rationalization patterns to counter this.
+**Rationalization:** Agents think "I know what this means" and skip skill invocation. The `using-superpowers` skill (retained for compatibility) lists 12+ rationalization patterns to counter this.
 
 **Test before implementing:** The `test-driven-development` skill deletes any code written before tests. Always invoke TDD before implementation tasks.
 

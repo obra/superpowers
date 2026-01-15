@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SessionStart hook for superpowers plugin
+# SessionStart hook for horspowers plugin
 
 set -euo pipefail
 
@@ -11,7 +11,7 @@ PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 warning_message=""
 legacy_skills_dir="${HOME}/.config/superpowers/skills"
 if [ -d "$legacy_skills_dir" ]; then
-    warning_message="\n\n<important-reminder>IN YOUR FIRST REPLY AFTER SEEING THIS MESSAGE YOU MUST TELL THE USER:⚠️ **WARNING:** Superpowers now uses Claude Code's skills system. Custom skills in ~/.config/superpowers/skills will not be read. Move custom skills to ~/.claude/skills instead. To make this message go away, remove ~/.config/superpowers/skills</important-reminder>"
+    warning_message="\n\n<important-reminder>IN YOUR FIRST REPLY AFTER SEEING THIS MESSAGE YOU MUST TELL THE USER:⚠️ **WARNING:** Horspower (forked from superpowers) now uses Claude Code's skills system. Custom skills in ~/.config/superpowers/skills will not be read. Move custom skills to ~/.claude/skills instead. To make this message go away, remove ~/.config/superpowers/skills</important-reminder>"
 fi
 
 # Detect configuration file in current working directory
@@ -92,7 +92,7 @@ const configMarker = Buffer.from(process.env.CONFIG_MARKER_B64, 'base64').toStri
 const configOutput = Buffer.from(process.env.CONFIG_OUTPUT_B64, 'base64').toString('utf8');
 
 // Build the additional context string
-let context = '<EXTREMELY_IMPORTANT>\\nYou have superpowers.\\n\\n**Below is the full content of your \\'superpowers:using-superpowers\\' skill - your introduction to using skills. For all other skills, use the \\'Skill\\' tool:**\\n\\n' +
+let context = '<EXTREMELY_IMPORTANT>\\nYou have horspowers.\\n\\n**Below is the full content of your \\'horspowers:using-superpowers\\' skill - your introduction to using skills. For all other skills, use the \\'Skill\\' tool:**\\n\\n' +
   usingSuperpowers + '\\n\\n' + configMarker;
 
 // Embed config output if exists (already JSON, no double-escaping)

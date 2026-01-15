@@ -262,7 +262,7 @@ echo "ℹ️  No .superpowers-config.yaml found. Using default documentation set
 
 ## See Also
 
-- **superpowers:brainstorming** - Design decisions captured here
-- **superpowers:writing-plans** - Implementation tasks created here
-- **superpowers:test-driven-development** - Bug tracking integrated here
-- **superpowers:finishing-a-development-branch** - Final status check here
+- **horspowers:brainstorming** - Design decisions captured here
+- **horspowers:writing-plans** - Implementation tasks created here
+- **horspowers:test-driven-development** - Bug tracking integrated here
+- **horspowers:finishing-a-development-branch** - Final status check here

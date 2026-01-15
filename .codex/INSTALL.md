@@ -1,14 +1,16 @@
-# Installing Superpowers for Codex
+# Installing Horspowers for Codex
 
-Quick setup to enable superpowers skills in Codex.
+> **Forked from [obra/superpowers](https://github.com/obra/superpowers)** - Horspowers is a Chinese-enhanced version with additional workflows and localization support.
+
+Quick setup to enable horspowers skills in Codex.
 
 ## Installation
 
-1. **Clone superpowers repository**:
+1. **Clone horspowers repository**:
    ```bash
-   mkdir -p ~/.codex/superpowers
-   cd ~/.codex/superpowers
-   git clone https://github.com/obra/superpowers.git .
+   mkdir -p ~/.codex/horspowers
+   cd ~/.codex/horspowers
+   git clone https://github.com/LouisHors/horspowers.git .
    ```
 
 2. **Create personal skills directory**:
@@ -16,12 +18,12 @@ Quick setup to enable superpowers skills in Codex.
    mkdir -p ~/.codex/skills
    ```
 
-3. **Update ~/.codex/AGENTS.md** to include this superpowers section:
+3. **Update ~/.codex/AGENTS.md** to include this horspowers section:
    ```markdown
-   ## Superpowers System
+   ## Horspowers System
 
    <EXTREMELY_IMPORTANT>
-   You have superpowers. Superpowers teach you new skills and capabilities. RIGHT NOW run: `~/.codex/superpowers/.codex/superpowers-codex bootstrap` and follow the instructions it returns.
+   You have horspowers. Horspowers teaches you new skills and capabilities. RIGHT NOW run: `~/.codex/horspowers/.codex/horspowers-codex bootstrap` and follow the instructions it returns.
    </EXTREMELY_IMPORTANT>
    ```
 
@@ -29,7 +31,11 @@ Quick setup to enable superpowers skills in Codex.
 
 Test the installation:
 ```bash
-~/.codex/superpowers/.codex/superpowers-codex bootstrap
+~/.codex/horspowers/.codex/horspowers-codex bootstrap
 ```
 
 You should see skill listings and bootstrap instructions. The system is now ready for use.
+
+## Upstream Project
+
+This is a fork of the original [obra/superpowers](https://github.com/obra/superpowers) project. Please report issues specific to this fork at: https://github.com/LouisHors/horspowers/issues

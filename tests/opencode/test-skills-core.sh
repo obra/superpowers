@@ -283,8 +283,8 @@ const fs = require('fs');
 const path = require('path');
 
 function resolveSkillPath(skillName, superpowersDir, personalDir) {
-    const forceSuperpowers = skillName.startsWith('superpowers:');
-    const actualSkillName = forceSuperpowers ? skillName.replace(/^superpowers:/, '') : skillName;
+    const forceSuperpowers = skillName.startsWith('horspowers:');
+    const actualSkillName = forceSuperpowers ? skillName.replace(/^horspowers:/, '') : skillName;
 
     if (!forceSuperpowers && personalDir) {
         const personalPath = path.join(personalDir, actualSkillName);
@@ -320,8 +320,8 @@ const personalDir = '$TEST_HOME/personal-skills';
 const shared = resolveSkillPath('shared-skill', superpowersDir, personalDir);
 console.log('SHARED:', JSON.stringify(shared));
 
-// Test 2: superpowers: prefix should force superpowers
-const forced = resolveSkillPath('superpowers:shared-skill', superpowersDir, personalDir);
+// Test 2: horspowerss: prefix should force superpowers
+const forced = resolveSkillPath('horspowers:shared-skill', superpowersDir, personalDir);
 console.log('FORCED:', JSON.stringify(forced));
 
 // Test 3: Unique skill should resolve to superpowers
@@ -342,9 +342,9 @@ else
 fi
 
 if echo "$result" | grep -q 'FORCED:.*"sourceType":"superpowers"'; then
-    echo "  [PASS] superpowers: prefix forces superpowers resolution"
+    echo "  [PASS] horspowerss: prefix forces superpowers resolution"
 else
-    echo "  [FAIL] superpowers: prefix not working"
+    echo "  [FAIL] horspowerss: prefix not working"
     exit 1
 fi
 

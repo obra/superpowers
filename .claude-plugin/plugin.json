@@ -1,13 +1,13 @@
 {
-  "name": "superpowers",
-  "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
-  "version": "4.0.3",
+  "name": "horspowers",
+  "description": "中文增强的开发技能库 - Forked from obra/superpowers, enhanced with Chinese localization and additional workflows",
+  "version": "4.1.0",
   "author": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com"
+    "name": "horsliu",
+    "email": "louishors@outlook.com"
   },
-  "homepage": "https://github.com/obra/superpowers",
-  "repository": "https://github.com/obra/superpowers",
+  "homepage": "https://github.com/LouisHors/horspowers",
+  "repository": "https://github.com/LouisHors/horspowers",
   "license": "MIT",
-  "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows"]
+  "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows", "chinese", "中文", "horspowers", "fork"]
 }

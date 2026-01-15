@@ -146,7 +146,7 @@ completion_strategy: merge
 - 提示用户可以通过编辑文档继续完善设计
 
 **验证方法**:
-1. 运行 `/superpowers:brainstorm`
+1. 运行 `/horspowers:brainstorm`
 2. 完成设计对话
 3. 确认 `docs/plans/` 下生成了设计文档
 4. 编辑文档，说"继续"，验证 Claude 能读取更新后的设计
@@ -207,7 +207,7 @@ completion_strategy: merge
 
 **测试场景**: 完整的"设计 → 编码 → 完成"流程
 
-1. 使用 `/superpowers:brainstorm` 完成设计
+1. 使用 `/horspowers:brainstorm` 完成设计
 2. 编辑设计文档进行调整
 3. 进入实施阶段
 4. 在各个决策点选择个人模式偏好

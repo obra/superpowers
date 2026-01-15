@@ -30,7 +30,7 @@ document-driven CLI 命令
 **Documentation Integration:**
 
 IF `.superpowers-config.yaml` exists AND `documentation.enabled: true`:
-  **REQUIRED SUB-SKILL:** Use superpowers:document-driven-bridge
+  **REQUIRED SUB-SKILL:** Use horspowerss:document-driven-bridge
   Run `$DOCS_CLI search "相关设计决策"` to check for existing decisions
   Run `$DOCS_CLI create decision "设计主题"` to capture technical decisions
   Update context if new architectural patterns discovered
@@ -57,7 +57,7 @@ IF `.superpowers-config.yaml` exists AND `documentation.enabled: true`:
 **Documentation Integration:**
 
 IF `.superpowers-config.yaml` exists AND `documentation.enabled: true`:
-  **REQUIRED SUB-SKILL:** Use superpowers:document-driven-bridge
+  **REQUIRED SUB-SKILL:** Use horspowerss:document-driven-bridge
 
   **Create task document:**
   ```bash
@@ -88,7 +88,7 @@ After saving the plan, offer execution choice:
 **Documentation Integration:**
 
 IF test fails unexpectedly (not first run):
-  Use superpowers:document-driven-bridge
+  Use horspowerss:document-driven-bridge
   Run `$DOCS_CLI create bug "测试失败：[test-name]"` to document investigation
 
 **Original RED step:**
@@ -128,7 +128,7 @@ IF `$BUG_DOC` is set (from RED phase):
 **Documentation Integration:**
 
 IF `.superpowers-config.yaml` exists AND `documentation.enabled: true`:
-  **REQUIRED SUB-SKILL:** Use superpowers:document-driven-bridge
+  **REQUIRED SUB-SKILL:** Use horspowerss:document-driven-bridge
 
   **Check project status:**
   ```bash
