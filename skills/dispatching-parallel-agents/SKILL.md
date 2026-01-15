@@ -11,6 +11,14 @@ When you have multiple unrelated failures (different test files, different subsy
 
 **Core principle:** Dispatch one subagent per independent problem domain. Let them work concurrently.
 
+<requirements>
+## Requirements
+
+1. All Task calls in single message. Multiple messages serialize execution.
+2. Tasks must be independent. Dependent tasks must run sequentially.
+3. Synthesize results after all agents complete.
+</requirements>
+
 ## When to Use
 
 ```dot
@@ -220,44 +228,46 @@ Per [Anthropic's guidance](https://platform.claude.com/docs/en/about-claude/mode
 - Multi-file refactoring requiring holistic understanding
 - Tasks where reasoning quality is paramount
 
-## COMPULSORY: Dispatch Verification
+<verification>
+## Dispatch Verification
 
 Before dispatching agents:
 
-**Independence Gate** (all COMPULSORY):
+**Independence Gate:**
 
 - [ ] Confirmed tasks are independent (no shared state)
 - [ ] Tasks don't modify same files
 - [ ] Each agent has specific scope (one test file/subsystem)
 
-**STOP CONDITION:** If ANY task has dependencies, do NOT parallelize. Use sequential dispatch.
+If any task has dependencies, parallel dispatch causes race conditions. Use sequential dispatch instead.
 
-**Prompt Quality Gate** (all COMPULSORY - per agent):
+**Prompt Quality Gate (per agent):**
 
 - [ ] Specific scope defined (not "fix the tests")
 - [ ] Context included (error messages, test names)
 - [ ] Constraints stated (what NOT to change)
 - [ ] Structured output format specified
 
-**STOP CONDITION:** If prompt is vague, rewrite before dispatching.
+If prompt is vague, subagent gets lost and wastes tokens. Rewrite before dispatching.
 
 After agents return:
 
-**Integration Gate** (all COMPULSORY):
+**Integration Gate:**
 
 - [ ] Read each summary
 - [ ] Verified no conflicts (same files modified)
 - [ ] Ran full test suite
 - [ ] All changes integrate cleanly
 
-**STOP CONDITION:** If conflicts detected, resolve before proceeding.
+If conflicts detected, merging produces broken code. Resolve before proceeding.
+</verification>
 
-## Red Flags - IMMEDIATE STOP
+## Red Flags
 
-| Violation | Why It's Critical | Recovery |
-|-----------|-------------------|----------|
+| Pattern | Consequence | Recovery |
+|---------|-------------|----------|
 | Parallelizing without checking independence | Shared state causes race conditions | Re-read task descriptions, identify true dependencies |
-| Vague prompts like "fix the tests" | Subagent gets lost, inefficient | Rewrite with specific scope and context |
+| Vague prompts like "fix the tests" | Subagent gets lost, wastes tokens | Rewrite with specific scope and context |
 | Dependencies mentioned but then ignored | Creates cascading failures | Revert to sequential dispatch, fix order |
 | Integration test skipped | Can't verify fixes work together | Run full suite before accepting results |
 | "These look independent" without verification | Assumptions fail in practice | Explicitly check files and state access patterns |
@@ -278,3 +288,11 @@ From debugging session (2025-10-03):
 - All investigations completed concurrently
 - All fixes integrated successfully
 - Zero conflicts between subagent changes
+
+<requirements>
+## Requirements Reminder
+
+1. All Task calls in single message. Multiple messages serialize execution.
+2. Tasks must be independent. Dependent tasks must run sequentially.
+3. Synthesize results after all agents complete.
+</requirements>
