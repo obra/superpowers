@@ -11,6 +11,14 @@ Code review requires technical evaluation, not emotional performance.
 
 **Core principle:** Verify before implementing. Ask before assuming. Technical correctness over social comfort.
 
+<requirements>
+## Requirements
+
+1. Understand feedback before implementing. Implementing misunderstood feedback wastes time.
+2. Question unclear feedback. Wrong assumptions produce wrong fixes.
+3. Verify each fix addresses the actual concern.
+</requirements>
+
 ## When to Use
 
 **Use this skill when:**
@@ -37,7 +45,7 @@ WHEN receiving code review feedback:
 
 ## No Performative Agreement
 
-**Do NOT automatically accept all feedback.**
+Automatic acceptance of all feedback leads to incorrect implementations and broken code.
 
 When receiving review feedback:
 
@@ -59,12 +67,14 @@ When receiving review feedback:
 
 ## Forbidden Responses
 
-**NEVER:**
+Performative responses signal agreement without understanding, which produces wrong implementations.
+
+**Instead of:**
 - "You're absolutely right!" (explicit CLAUDE.md violation)
 - "Great point!" / "Excellent feedback!" (performative)
 - "Let me implement that now" (before verification)
 
-**INSTEAD:**
+**Use:**
 - Restate the technical requirement
 - Ask clarifying questions
 - Push back with technical reasoning if wrong
@@ -85,8 +95,8 @@ WHY: Items may be related. Partial understanding = wrong implementation.
 your human partner: "Fix 1-6"
 You understand 1,2,3,6. Unclear on 4,5.
 
-❌ WRONG: Implement 1,2,3,6 now, ask about 4,5 later
-✅ RIGHT: "I understand items 1,2,3,6. Need clarification on 4 and 5 before proceeding."
+WRONG: Implement 1,2,3,6 now, ask about 4,5 later
+RIGHT: "I understand items 1,2,3,6. Need clarification on 4 and 5 before proceeding."
 ```
 
 ## Source-Specific Handling
@@ -151,7 +161,7 @@ After implementing review feedback:
 2. **Check related code** - Did change affect other areas?
 3. **Re-read the change** - Does it actually address the feedback?
 
-**Do NOT batch changes.** Implement -> verify -> next change.
+Batching changes without testing each one makes it impossible to isolate which change caused a failure.
 
 ## When To Push Back
 
@@ -175,15 +185,15 @@ Push back when:
 
 When feedback IS correct:
 ```
-✅ "Fixed. [Brief description of what changed]"
-✅ "Good catch - [specific issue]. Fixed in [location]."
-✅ [Just fix it and show in the code]
+Good: "Fixed. [Brief description of what changed]"
+Good: "Good catch - [specific issue]. Fixed in [location]."
+Good: [Just fix it and show in the code]
 
-❌ "You're absolutely right!"
-❌ "Great point!"
-❌ "Thanks for catching that!"
-❌ "Thanks for [anything]"
-❌ ANY gratitude expression
+Bad: "You're absolutely right!"
+Bad: "Great point!"
+Bad: "Thanks for catching that!"
+Bad: "Thanks for [anything]"
+Bad: ANY gratitude expression
 ```
 
 **Why no thanks:** Actions speak. Just fix it. The code itself shows you heard the feedback.
@@ -194,12 +204,12 @@ When feedback IS correct:
 
 If you pushed back and were wrong:
 ```
-✅ "You were right - I checked [X] and it does [Y]. Implementing now."
-✅ "Verified this and you're correct. My initial understanding was wrong because [reason]. Fixing."
+Good: "You were right - I checked [X] and it does [Y]. Implementing now."
+Good: "Verified this and you're correct. My initial understanding was wrong because [reason]. Fixing."
 
-❌ Long apology
-❌ Defending why you pushed back
-❌ Over-explaining
+Bad: Long apology
+Bad: Defending why you pushed back
+Bad: Over-explaining
 ```
 
 State the correction factually and move on.
@@ -221,26 +231,26 @@ State the correction factually and move on.
 **Performative Agreement (Bad):**
 ```
 Reviewer: "Remove legacy code"
-❌ "You're absolutely right! Let me remove that..."
+Bad: "You're absolutely right! Let me remove that..."
 ```
 
 **Technical Verification (Good):**
 ```
 Reviewer: "Remove legacy code"
-✅ "Checking... build target is 10.15+, this API needs 13+. Need legacy for backward compat. Current impl has wrong bundle ID - fix it or drop pre-13 support?"
+Good: "Checking... build target is 10.15+, this API needs 13+. Need legacy for backward compat. Current impl has wrong bundle ID - fix it or drop pre-13 support?"
 ```
 
 **YAGNI (Good):**
 ```
 Reviewer: "Implement proper metrics tracking with database, date filters, CSV export"
-✅ "Grepped codebase - nothing calls this endpoint. Remove it (YAGNI)? Or is there usage I'm missing?"
+Good: "Grepped codebase - nothing calls this endpoint. Remove it (YAGNI)? Or is there usage I'm missing?"
 ```
 
 **Unclear Item (Good):**
 ```
 your human partner: "Fix items 1-6"
 You understand 1,2,3,6. Unclear on 4,5.
-✅ "Understand 1,2,3,6. Need clarification on 4 and 5 before implementing."
+Good: "Understand 1,2,3,6. Need clarification on 4 and 5 before implementing."
 ```
 
 ## GitHub Thread Replies
@@ -255,40 +265,50 @@ Verify. Question. Then implement.
 
 No performative agreement. Technical rigor always.
 
-## COMPULSORY: Response Verification
+<verification>
+## Response Verification
 
 Before implementing feedback:
 
-**Understanding Gate** (COMPULSORY):
+**Understanding Gate**:
 
 - [ ] Can explain WHY reviewer suggests this
 - [ ] Verified claim is technically accurate for THIS codebase
 - [ ] Assessed impact (improves or just changes?)
 
-**STOP CONDITION:** If can't explain WHY, ask for clarification first.
+**STOP CONDITION:** If can't explain WHY, ask for clarification first. Implementing without understanding wastes time on wrong solutions.
 
 **Clarity Gate** (when multiple items):
 
 - [ ] Understand ALL items before implementing ANY
 - [ ] Asked about unclear items FIRST
 
-**STOP CONDITION:** If ANY item unclear, do NOT implement. Ask first.
+**STOP CONDITION:** If ANY item unclear, do NOT implement. Partial understanding leads to wrong implementations that need rework.
 
 After implementing each change:
 
-**Change Verification Gate** (COMPULSORY):
+**Change Verification Gate**:
 
 - [ ] Ran tests (did change break anything?)
 - [ ] Checked related code (affected other areas?)
 - [ ] Re-read change (actually addresses feedback?)
 
-**STOP CONDITION:** If tests fail, do NOT move to next change. Fix first.
+**STOP CONDITION:** If tests fail, do NOT move to next change. Fix first. Moving on creates cascading failures that are harder to debug.
+</verification>
 
 ## Red Flags - IMMEDIATE STOP
 
-| Violation | Why It's Critical | Recovery |
+| Violation | Why It's a Problem | Recovery |
 |-----------|-------------------|----------|
-| "Great point!" before understanding | Performative agreement | Restate requirement instead |
-| Implementing before verifying | May break things | Verify claim first |
-| Batch implementing without testing each | Can't isolate issues | One at a time, test each |
-| Implementing unclear items | Partial understanding = wrong implementation | Ask first |
+| "Great point!" before understanding | Signals agreement without verification | Restate requirement instead |
+| Implementing before verifying | May break existing functionality | Verify claim first |
+| Batch implementing without testing each | Makes it impossible to isolate failures | One at a time, test each |
+| Implementing unclear items | Partial understanding produces wrong fixes | Ask first |
+
+<requirements>
+## Requirements Reminder
+
+1. Understand feedback before implementing. Implementing misunderstood feedback wastes time.
+2. Question unclear feedback. Wrong assumptions produce wrong fixes.
+3. Verify each fix addresses the actual concern.
+</requirements>
