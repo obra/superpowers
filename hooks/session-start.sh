@@ -49,8 +49,10 @@ while [ "$current_dir" != "/" ]; do
         " 2>&1); then
             # Check that config_output is not empty and is valid JSON
             if [ -n "$config_output" ]; then
-                config_message="\n\n<config-detected>当前项目配置：$config_output</config-detected>"
+                # Don't embed JSON in config_message to avoid double-escaping
+                # Store it separately for direct embedding in final JSON
                 config_detected_marker="<config-exists>true</config-exists>"
+                config_has_config=true
             fi
         fi
         break
@@ -71,38 +73,44 @@ fi
 # Read using-superpowers content
 using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>&1 || echo "Error reading using-superpowers skill")
 
-# Escape outputs for JSON using pure bash
-escape_for_json() {
-    local input="$1"
-    local output=""
-    local i char
-    for (( i=0; i<${#input}; i++ )); do
-        char="${input:$i:1}"
-        case "$char" in
-            $'\\') output+='\\\\' ;;  # Fixed: need \\ for valid JSON
-            '"') output+='\"' ;;
-            $'\n') output+='\n' ;;
-            $'\r') output+='\r' ;;
-            $'\t') output+='\t' ;;
-            *) output+="$char" ;;
-        esac
-    done
-    printf '%s' "$output"
+# Build final JSON using Node.js to handle escaping correctly
+# Use base64 encoding to safely pass all content without special character issues
+using_superpowers_b64=$(printf '%s' "$using_superpowers_content" | base64)
+warning_b64=$(printf '%s' "$warning_message" | base64)
+config_marker_b64=$(printf '%s' "$config_detected_marker" | base64)
+config_output_b64=$(printf '%s' "$config_output" | base64)
+
+node -e "
+const Buffer = require('buffer').Buffer;
+
+const usingSuperpowers = Buffer.from(process.env.USING_SUPERPOWERS_B64, 'base64').toString('utf8');
+const warning = Buffer.from(process.env.WARNING_B64, 'base64').toString('utf8');
+const configMarker = Buffer.from(process.env.CONFIG_MARKER_B64, 'base64').toString('utf8');
+const configOutput = Buffer.from(process.env.CONFIG_OUTPUT_B64, 'base64').toString('utf8');
+
+// Build the additional context string
+let context = '<EXTREMELY_IMPORTANT>\\nYou have superpowers.\\n\\n**Below is the full content of your \\'superpowers:using-superpowers\\' skill - your introduction to using skills. For all other skills, use the \\'Skill\\' tool:**\\n\\n' +
+  usingSuperpowers + '\\n\\n' + configMarker;
+
+// Embed config output if exists (already JSON, no double-escaping)
+if (configOutput) {
+  context += '\\n\\n<config-detected>当前项目配置：' + configOutput + '</config-detected>';
 }
 
-using_superpowers_escaped=$(escape_for_json "$using_superpowers_content")
-warning_escaped=$(escape_for_json "$warning_message")
-config_escaped=$(escape_for_json "$config_message")
-config_marker_escaped=$(escape_for_json "$config_detected_marker")
+context += warning + '\\n</EXTREMELY_IMPORTANT>';
 
-# Output context injection as JSON
-cat <<EOF
-{
-  "hookSpecificOutput": {
-    "hookEventName": "SessionStart",
-    "additionalContext": "<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${config_marker_escaped}${config_escaped}${warning_escaped}\n</EXTREMELY_IMPORTANT>"
+const result = {
+  hookSpecificOutput: {
+    hookEventName: 'SessionStart',
+    additionalContext: context
   }
-}
-EOF
+};
+
+console.log(JSON.stringify(result, null, 2));
+" \
+  -- "USING_SUPERPOWERS_B64=$using_superpowers_b64" \
+  -- "WARNING_B64=$warning_b64" \
+  -- "CONFIG_MARKER_B64=$config_marker_b64" \
+  -- "CONFIG_OUTPUT_B64=$config_output_b64"
 
 exit 0
