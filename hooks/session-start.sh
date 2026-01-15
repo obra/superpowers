@@ -43,10 +43,14 @@ while [ "$current_dir" != "/" ]; do
             console.log(JSON.stringify(config));
         } catch (e) {
             console.error('Error:', e.message);
+            process.exit(1);
         }
-        " 2>/dev/null); then
-            config_message="\n\n<config-detected>当前项目配置：$config_output</config-detected>"
-            config_detected_marker="<config-exists>true</config-exists>"
+        " 2>&1); then
+            # Check that config_output is not empty and is valid JSON
+            if [ -n "$config_output" ]; then
+                config_message="\n\n<config-detected>当前项目配置：$config_output</config-detected>"
+                config_detected_marker="<config-exists>true</config-exists>"
+            fi
         fi
         break
     fi
