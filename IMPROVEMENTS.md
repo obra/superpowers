@@ -21,6 +21,7 @@ This document details all significant improvements made to Hyperpowers since for
 - [10. Context Fork Integration](#10-context-fork-integration)
 - [11. Issue Tracking Abstraction](#11-issue-tracking-abstraction)
 - [12. Issue Context Preservation](#12-issue-context-preservation)
+- [13. Skill Instruction Following Improvements](#13-skill-instruction-following-improvements)
 
 ---
 
@@ -632,6 +633,81 @@ Skills enforce that issue context is included at each stage:
 
 ---
 
+## 13. Skill Instruction Following Improvements
+
+Applied 8 research-backed patterns to all 17 hyperpowers skills based on Stanford/ACL 2024 "Lost in the Middle" findings and Anthropic Claude 4 best practices.
+
+**Commits:** See `feature/skill-instruction-following` branch
+
+### The Problem
+
+Skills were not being followed precisely:
+- Research skill: Required 8 parallel agents but Claude often dispatched only 4-5 (~50-60% compliance)
+- Reinforcement language ineffective: MUST/CRITICAL/COMPULSORY keywords treated as suggestions
+- Mid-skill instructions missed: Instructions in skill middles skipped 15-20% more often
+
+### The 8 Improvement Patterns
+
+| # | Pattern | What It Does |
+|---|---------|--------------|
+| 1 | **Beginning-End Anchoring** | Place critical requirements at BOTH start AND end to combat "Lost in the Middle" phenomenon |
+| 2 | **Logical Statements** | Replace MUST/CRITICAL with consequence statements - Claude 4.x evaluates logical necessity, not caps |
+| 3 | **Pre-Action Verification** | Move checklists BEFORE actions (not after where they're too late) |
+| 4 | **Numbered Items** | "# Agent 1 of 8" pattern makes counts explicit and harder to skip |
+| 5 | **XML Tags** | `<requirements>`, `<verification>` tags for critical sections (Claude trained on XML) |
+| 6 | **Show Don't Tell** | Full examples over descriptions - examples beat prose by 30%+ |
+| 7 | **Length Reduction** | Target <400 lines per skill - comprehension drops ~12% per 100 words beyond 500 |
+| 8 | **Reinforcement Reduction** | ~3-4 instances per skill (down from ~12) - reserve for true non-negotiables |
+
+### Infrastructure Created
+
+**Shared Patterns Library** (`skills/shared-patterns.md`):
+- 7 validated pattern definitions extracted from writing-skills
+- Single source of truth for gate structure, red flags tables, etc.
+- Skills reference this instead of duplicating patterns
+
+**Skill Linter** (`tools/lint-skill.sh`):
+- Pre-commit validation for all SKILL.md files
+- Validates: YAML frontmatter, name format, description format, line count, reinforcement frequency, gate structure
+- Integrated into git pre-commit hook
+
+### Results
+
+| Metric | Before | After |
+|--------|--------|-------|
+| Average skill lines | 380 | 290 |
+| MUST/CRITICAL instances | ~12 per skill | ~3-4 per skill |
+| Gate compliance | ~60% | Target >90% |
+| Lint errors | N/A | 0 across all skills |
+
+### Skills Refactored (17 total)
+
+All 17 skills received the 8-pattern treatment:
+- **Priority skills** (4): research, brainstorming, systematic-debugging, test-driven-development
+- **Process skills** (7): writing-plans, verification-before-completion, subagent-driven-development, feedback, finishing-a-development-branch, dispatching-parallel-agents, batch-development
+- **Review skills** (2): receiving-code-review, requesting-code-review
+- **Utility skills** (3): using-git-worktrees, compound, using-hyperpowers
+- **Meta-skill** (1): writing-skills (now references shared-patterns.md)
+
+### Key Changes Per Skill
+
+| Skill | Lines Before → After | Key Change |
+|-------|---------------------|------------|
+| research | 400 → 399 | Numbered "Agent 1 of 8" through "Agent 8 of 8" |
+| systematic-debugging | 486 → 286 | Removed 200 lines of verbose explanations |
+| test-driven-development | 442 → 312 | Condensed redundant TDD diagrams |
+| writing-skills | 972 → 353 | Extracted patterns to shared-patterns.md |
+| subagent-driven-development | 568 → 297 | Condensed verbose DOT diagrams |
+
+### Research Sources
+
+- [Lost in the Middle - Stanford/ACL 2024](https://arxiv.org/abs/2307.03172)
+- [Claude 4 Best Practices - Anthropic](https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/claude-4-best-practices)
+- [Context Rot Research - Chroma](https://research.trychroma.com/context-rot)
+- [Claude Code GitHub Issues #2544, #6120, #742](https://github.com/anthropics/claude-code/issues)
+
+---
+
 ## Summary Statistics
 
 | Category | Commits | Impact |
@@ -648,6 +724,7 @@ Skills enforce that issue context is included at each stage:
 | Context Fork Integration | ~4 | Token efficiency for verbose skills |
 | Issue Tracking Abstraction | ~11 | System-agnostic tracker support |
 | Issue Context Preservation | ~8 | Requirements preserved through workflow chain |
+| Skill Instruction Following | ~20 | Research-backed pattern application to all skills |
 
 ---
 
