@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This is a plugin for claude code that provides a set of skills to execute a complete software development workflow.
 
 ## Issue Tracking
 
@@ -18,33 +18,6 @@ bd sync                              # Sync to beads-sync branch (required for c
 ```
 
 Issues sync via the `beads-sync` branch, not main. Always run `bd sync` after creating/updating issues.
-
-**Skills handle issue tracking automatically:**
-- **research** - Discovers related issues, includes in research doc
-- **writing-plans** - Carries issue context to plan header
-- **subagent-driven-development** - Offers branch creation and status update at start
-- **verification-before-completion** - Offers to create discovered work, update original issue
-- **finishing-a-development-branch** - Includes issue reference in PR, offers close after merge
-
-**Mandatory Checkpoints:**
-- **Session Start** (subagent-driven-development): Branch creation offer, status update offer - MUST be presented
-- **Before Completion** (verification-before-completion): Discovered work offers, original issue update - MUST be presented
-- **After Merge/PR** (finishing-a-development-branch): Issue close offer - MUST be presented
-
-"Mandatory" means the offer MUST be presented. User always decides whether to execute.
-
-**No manual issue commands needed** - skills present offers at checkpoints.
-
-**Detection priority:**
-1. Explicit declaration in CLAUDE.md or project rules
-2. Auto-detect: `.beads/` → `gh auth status` → Jira MCP
-3. If none detected: Skills warn but proceed without tracking
-
-**To configure:** Add to CLAUDE.md: "This project uses [beads|GitHub Issues|Jira] for issue tracking."
-
-## What This Is
-
-Hyperpowers is a Claude Code plugin providing composable "skills" that enforce development workflows (TDD, brainstorming, systematic debugging, structured plan execution). Skills trigger automatically based on context.
 
 ## Structure
 
@@ -86,3 +59,10 @@ When making significant improvements to Hyperpowers, update the documentation:
    - Model selection changes
    - Test infrastructure additions
    - Upstream feature merges
+ 
+## Plugin Version Updates
+
+**ALWAYS** offer to update the plugin version number once work is deemed completed. 
+Suggest a patch version update (0.0.1 -> 0.0.2) for small updates, and a minor version update (0.1.1 -> 0.2.0) for larger improvements. 
+Do not offer a major version update yet, this library is still in development and not stable. 
+Always offer the user to provide their own version instead too alongside your suggested version. Use AskUserQuestion for this.
