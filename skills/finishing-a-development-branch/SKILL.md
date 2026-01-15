@@ -14,6 +14,14 @@ Guide completion of development work by presenting clear options and handling ch
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
+<requirements>
+## Requirements
+
+1. Verify all tests pass before merging. Merging with failures introduces bugs.
+2. Present merge options via AskUserQuestion. Let user decide integration approach.
+3. Clean up worktree after successful merge.
+</requirements>
+
 ## When to Use
 
 **Use this skill when:**
@@ -30,7 +38,7 @@ Guide completion of development work by presenting clear options and handling ch
 
 ### Step 1: Pre-Completion Verification Gate
 
-**REQUIRED:** Use hyperpowers:verification-before-completion before presenting options.
+Use hyperpowers:verification-before-completion before presenting options. Skipping verification risks merging broken code.
 
 The verification gate checks:
 - Tests pass
@@ -48,7 +56,7 @@ The verification gate checks:
 git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 ```
 
-Or **MUST use AskUserQuestion tool** to confirm:
+Or use AskUserQuestion to confirm (plain text questions bypass structured response UI):
 ```
 AskUserQuestion(
   questions: [{
@@ -66,7 +74,7 @@ AskUserQuestion(
 
 ### Step 3: Present Options
 
-**MUST use AskUserQuestion tool** to present exactly these 4 options:
+Use AskUserQuestion to present exactly these 4 options:
 
 ```
 AskUserQuestion(
@@ -153,7 +161,7 @@ Report: "Keeping branch <name>. Worktree preserved at <path>."
 
 #### Option 4: Discard
 
-**MUST use AskUserQuestion tool** to confirm first:
+Use AskUserQuestion to confirm first (prevents accidental work deletion):
 ```
 AskUserQuestion(
   questions: [{
@@ -202,9 +210,9 @@ git worktree remove "$WORKTREE_PATH"
 
 **For Option 3 (Keep as-is):** Do NOT cleanup - worktree still needed.
 
-### Step 6: MANDATORY Issue Close Offer
+### Step 6: Issue Close Offer
 
-**REQUIRED for Options 1 and 2:** Issue close offer MUST be presented if issue was tracked at session start.
+For Options 1 and 2: Present issue close offer if issue was tracked at session start. Skipping this leaves issues open after completion.
 
 **For Options 1 (Merge) and 2 (PR after merge confirmed):**
 
@@ -228,7 +236,7 @@ Manual verification:
 Consider using issue tracking for future work.
 ```
 
-**MUST use AskUserQuestion tool** to present offer:
+Use AskUserQuestion to present close offer:
 ```
 AskUserQuestion(
   questions: [{
@@ -260,7 +268,7 @@ AskUserQuestion(
 | 3. Keep as-is | - | - | ✓ | - | - |
 | 4. Discard | - | - | - | ✓ (force) | - |
 
-**Note:** Issue Close offer is MANDATORY for Options 1 and 2 when an issue was tracked. User decides execution.
+**Note:** Present issue close offer for Options 1 and 2 when an issue was tracked. User decides execution.
 
 ## Common Mistakes
 
@@ -282,35 +290,31 @@ AskUserQuestion(
 
 ## Red Flags
 
-**Never:**
-- **Use plain text questions instead of AskUserQuestion** - bypasses structured response UI
-- Proceed with failing tests, build, or lint
-- Present options before all verifications pass
-- Merge without verifying tests on result
-- Delete work without confirmation
-- Force-push without explicit request
-- Skip issue close offer for Options 1/2 when issue was tracked
+**Avoid:**
+- Plain text questions instead of AskUserQuestion (bypasses structured response UI)
+- Proceeding with failing tests, build, or lint
+- Presenting options before all verifications pass
+- Merging without verifying tests on result
+- Deleting work without confirmation
+- Force-pushing without explicit request
 
-**Always:**
-- **Use AskUserQuestion tool for ALL user interaction** (options, confirmations, questions)
-- Run full verification gate (tests + build + lint) before offering options
+**Practice:**
+- Use AskUserQuestion for user interaction (options, confirmations, questions)
+- Run full verification gate before offering options
 - Present exactly 4 options via AskUserQuestion
 - Get confirmation via AskUserQuestion for Option 4
-- Clean up worktree for Options 1 & 4 only
+- Clean up worktree for Options 1 and 4 only
 
-**AskUserQuestion is MANDATORY** for all user interaction points. Plain text questions are NOT acceptable.
+<verification>
+## Pre-Completion Gate
 
-## COMPULSORY: Pre-Completion Gate
-
-**This gate MUST pass before presenting options:**
-
-**Verification Gate** (COMPULSORY):
+This gate passes before presenting options:
 
 - [ ] Tests pass (fresh run, not from memory)
 - [ ] Build succeeds (fresh run)
 - [ ] Lint passes (fresh run)
 
-**STOP CONDITION:** If ANY verification fails, do NOT present options. Fix issues first.
+**If ANY verification fails:** Do not present options. Fix issues first.
 
 **Evidence Required:**
 
@@ -318,9 +322,11 @@ AskUserQuestion(
 - Show build command output
 - Show lint command output
 
-"Should pass" or "passed earlier" is NOT evidence. Fresh run required.
+"Should pass" or "passed earlier" is not evidence. Fresh run required.
+</verification>
 
-## COMPULSORY: Option Execution Verification
+<verification>
+## Option Execution Verification
 
 After user selects option:
 
@@ -340,10 +346,19 @@ After user selects option:
 
 **Option 4 (Discard) Gate:**
 
-- [ ] User typed 'discard' confirmation
+- [ ] User confirmed via AskUserQuestion
 - [ ] Branch deleted with -D flag
 
-**STOP CONDITION:** If any step in selected option fails, stop and report.
+**If any step fails:** Stop and report.
+</verification>
+
+<requirements>
+## Requirements Reminder
+
+1. Verify all tests pass before merging. Merging with failures introduces bugs.
+2. Present merge options via AskUserQuestion. Let user decide integration approach.
+3. Clean up worktree after successful merge.
+</requirements>
 
 ## Integration
 
