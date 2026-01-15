@@ -15,8 +15,8 @@ if [ -d "$legacy_skills_dir" ]; then
 fi
 
 # Detect configuration file in current working directory
-config_message=""
 config_detected_marker=""
+config_output=""  # Initialize to empty string to avoid undefined variable
 
 # Try to find .superpowers-config.yaml
 current_dir="$PWD"
@@ -49,10 +49,8 @@ while [ "$current_dir" != "/" ]; do
         " 2>&1); then
             # Check that config_output is not empty and is valid JSON
             if [ -n "$config_output" ]; then
-                # Don't embed JSON in config_message to avoid double-escaping
-                # Store it separately for direct embedding in final JSON
+                # Config found - set marker (config_output already contains JSON)
                 config_detected_marker="<config-exists>true</config-exists>"
-                config_has_config=true
             fi
         fi
         break
@@ -80,6 +78,11 @@ warning_b64=$(printf '%s' "$warning_message" | base64)
 config_marker_b64=$(printf '%s' "$config_detected_marker" | base64)
 config_output_b64=$(printf '%s' "$config_output" | base64)
 
+# Pass base64-encoded content via environment variables
+USING_SUPERPOWERS_B64="$using_superpowers_b64" \
+WARNING_B64="$warning_b64" \
+CONFIG_MARKER_B64="$config_marker_b64" \
+CONFIG_OUTPUT_B64="$config_output_b64" \
 node -e "
 const Buffer = require('buffer').Buffer;
 
@@ -107,10 +110,6 @@ const result = {
 };
 
 console.log(JSON.stringify(result, null, 2));
-" \
-  -- "USING_SUPERPOWERS_B64=$using_superpowers_b64" \
-  -- "WARNING_B64=$warning_b64" \
-  -- "CONFIG_MARKER_B64=$config_marker_b64" \
-  -- "CONFIG_OUTPUT_B64=$config_output_b64"
+"
 
 exit 0
