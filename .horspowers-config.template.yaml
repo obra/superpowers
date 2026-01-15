@@ -1,5 +1,5 @@
-# Superpowers 项目配置模板
-# 复制此文件到项目根目录并重命名为 .superpowers-config.yaml
+# Horspowers 项目配置模板
+# 复制此文件到项目根目录并重命名为 .horspowers-config.yaml
 
 version: "1.0"
 
@@ -28,7 +28,7 @@ documentation:
   # document-driven-ai-workflow CLI 工具路径
   # 根据你的实际安装位置修改
   # 示例：
-  # - 全局安装：cli_path: "docs"
+  # - 全局安装：cli_path: "horspowers-docs"
   # - 本地路径：cli_path: "node /absolute/path/to/document-driven-ai-workflow/cli.js"
   # - 相对路径：cli_path: "node ../document-driven-ai-workflow/cli.js"
   cli_path: "node /path/to/document-driven-ai-workflow/cli.js"

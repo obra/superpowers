@@ -27,7 +27,7 @@ This fork includes the following modifications to the original project:
 1. **Chinese Language Support** - Added full Chinese localization for skill triggers and documentation
 2. **Personal/Team Mode** - Added configurable development modes for individual developers vs. teams
 3. **Document-Driven Integration** - Integrated with document-driven-ai-workflow for project context management
-4. **Configuration System** - Added project-level configuration via `.superpowers-config.yaml`
+4. **Configuration System** - Added project-level configuration via `.horspowers-config.yaml`
 5. **Enhanced Workflows** - Additional workflow optimizations for individual developers
 
 ### License
