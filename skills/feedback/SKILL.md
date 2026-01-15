@@ -14,6 +14,14 @@ Enable iterative refinement of design, research, and plan documents through natu
 
 **Core principle:** User maintains full control - every change requires explicit approval.
 
+<requirements>
+## Requirements
+
+1. Present each change as a diff for approval. Bulk changes lose user control.
+2. Wait for user response via AskUserQuestion. Plain text doesn't allow structured response.
+3. Only apply changes after explicit approval.
+</requirements>
+
 ## Quick Reference
 
 | Phase | Action | Output |
@@ -254,9 +262,10 @@ To continue:
 
 **If user chooses option 3:** End skill execution.
 
-## COMPULSORY: Phase Verification
+## Phase Verification
 
-Before presenting changes:
+<verification>
+### Before Presenting Changes
 
 **Clarification Gate** (when confidence < 85%):
 
@@ -264,42 +273,47 @@ Before presenting changes:
 - [ ] User confirmed interpretation
 - [ ] Confidence now >= 85%
 
-**STOP CONDITION:** If confidence < 85% and no clarification asked, STOP and ask.
+If confidence < 85% and no clarification asked, changes will be based on assumptions that may not match user intent.
+</verification>
 
-Before applying changes:
+<verification>
+### Before Applying Changes
 
-**Approval Gate** (per change - COMPULSORY):
+**Approval Gate** (per change):
 
 - [ ] Change presented with Old/New diff
 - [ ] User explicitly approved (yes/no/modify)
 - [ ] If "modify": returned to clarification
 
-**STOP CONDITION:** If applying change without explicit user approval, STOP.
+If changes are applied without explicit user approval, the user loses the control that is the core design of this skill.
+</verification>
 
-After all changes:
+<verification>
+### After All Changes
 
-**Changelog Gate** (COMPULSORY):
+**Changelog Gate**:
 
 - [ ] Changelog section exists (created or appended)
 - [ ] Entry dated with feedback round number
 - [ ] Research tier noted if used
 
-**STOP CONDITION:** If changelog not updated, STOP and add entry.
+If changelog is not updated, there is no record of what changed and why, making future revisions harder.
+</verification>
 
-## Red Flags - IMMEDIATE STOP
+## Red Flags
 
 Stop and reconsider if you catch yourself:
 
-| Violation | Why It's Critical | Recovery |
-|-----------|-------------------|----------|
-| Applying changes without user approval | User maintains control | Present each change, get explicit approval |
-| Batching changes as all-or-nothing | Design requires individual approval | One change at a time, wait for response |
-| Skipping clarification when ambiguous | Wrong changes = wasted iteration | Ask questions if confidence < 85% |
-| "I understood the feedback" without asking | Assumptions cause rework | If unsure, ask for clarification |
+| Violation | Consequence | Recovery |
+|-----------|-------------|----------|
+| Applying changes without user approval | User loses control over their document | Present each change, get explicit approval |
+| Batching changes as all-or-nothing | User cannot selectively accept changes | One change at a time, wait for response |
+| Skipping clarification when ambiguous | Changes may not match user intent | Ask questions if confidence < 85% |
+| "I understood the feedback" without asking | Assumptions lead to rework | If unsure, ask for clarification |
 | Modifying code files | Skill is for design artifacts only | Only modify docs/designs/, docs/research/, docs/plans/ |
-| Restructuring document format | Feedback adds content, doesn't restructure | Add content, preserve existing structure |
-| Dispatching full research for simple feedback | Over-escalation wastes tokens | Use Tier 1/2, reserve Tier 3 for major scope changes |
-| Creating new documents instead of modifying | Should refine, not create | Modify existing document, update changelog |
+| Restructuring document format | Loses established document structure | Add content, preserve existing structure |
+| Dispatching full research for simple feedback | Wastes tokens and time | Use Tier 1/2, reserve Tier 3 for major scope changes |
+| Creating new documents instead of modifying | Loses document history and changelog | Modify existing document, update changelog |
 
 ## Rationalization Prevention
 
@@ -311,3 +325,11 @@ Stop and reconsider if you catch yourself:
 | "Document needs restructuring" | Feedback adds content, doesn't restructure |
 | "I understood the feedback" | If confidence < 85%, ask |
 | "User will approve anyway" | Never assume approval |
+
+<requirements>
+## Requirements Reminder
+
+1. Present each change as a diff for approval. Bulk changes lose user control.
+2. Wait for user response via AskUserQuestion. Plain text doesn't allow structured response.
+3. Only apply changes after explicit approval.
+</requirements>
