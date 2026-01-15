@@ -12,6 +12,14 @@ allowed-tools: Read, Grep, Glob, Write
 
 Captures solutions from debugging sessions into a searchable knowledge base. Auto-triggers on resolution phrases for non-trivial problems. Prevents re-investigation of solved issues.
 
+<requirements>
+## Requirements
+
+1. Only capture non-trivial solutions. Trivial fixes pollute the knowledge base and make it harder to find real solutions.
+2. Include root cause explanation. Solutions without context don't teach - future readers need to understand why, not just what.
+3. Document failed attempts. What didn't work is valuable for future debugging and prevents others from repeating mistakes.
+</requirements>
+
 ## When to Use
 
 **Auto-detection triggers** (proactively use this skill when you see):
@@ -151,11 +159,12 @@ docs/solutions/
 - Skipping the "Failed Attempts" section (valuable for future debugging)
 - Not checking for pattern detection
 
-## COMPULSORY: Capture Verification
+<verification>
+## Capture Verification
 
-Before saving solution document:
+Complete these checks before saving solution document. Saving without verification produces incomplete solutions that fail to help future debugging.
 
-**Solution Quality Gate** (all COMPULSORY):
+**Solution Quality Gate:**
 
 - [ ] Symptoms include exact error messages (quoted)
 - [ ] Failed Attempts section has at least one entry (unless first attempt worked)
@@ -163,19 +172,27 @@ Before saving solution document:
 - [ ] Solution has step-by-step instructions
 - [ ] Prevention section has actionable items
 
-**STOP CONDITION:** If ANY checkbox is unchecked, do NOT save. Complete missing section(s) first.
+If any checkbox is unchecked, complete missing section(s) before saving. Incomplete solutions waste the reader's time.
 
-After saving:
-
-**Pattern Detection Gate** (COMPULSORY):
+**Pattern Detection Gate (after saving):**
 
 - [ ] Ran `ls docs/solutions/{category}/ | wc -l`
 - [ ] If 3+, noted pattern to user
 
-**STOP CONDITION:** If pattern detection skipped, go back and run it.
+Skipping pattern detection misses opportunities to address systemic issues.
+</verification>
 
 ## Integration
 
 **With systematic-debugging:** After debugging completes, compound skill captures the solution.
 
 **With code review:** Reviewers can reference solutions: "See `docs/solutions/performance-issues/n-plus-one-2026-01-08.md`"
+
+<requirements>
+## Requirements Reminder
+
+Before completing, verify:
+1. Only non-trivial solutions are captured
+2. Root cause is explained (why, not just what)
+3. Failed attempts are documented
+</requirements>
