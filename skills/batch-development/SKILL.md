@@ -10,6 +10,14 @@ Execute plans in batches with human checkpoints between each batch.
 
 **Core principle:** Human stays in control. Execute N tasks, pause for feedback, repeat.
 
+<requirements>
+## Requirements
+
+1. Pause after each batch for user review. Continuous execution loses user control.
+2. Use AskUserQuestion for checkpoint feedback. Plain text doesn't allow structured response.
+3. Wait for user approval before next batch. Proceeding without approval defeats the human-in-loop purpose.
+</requirements>
+
 ## When to Use
 
 - Executing implementation plans where you want to review progress
@@ -28,7 +36,7 @@ digraph process {
     rankdir=TB;
 
     "Load Plan" [shape=box];
-    "Pre-Execution Setup (MANDATORY)" [shape=box style=filled fillcolor=lightyellow];
+    "Pre-Execution Setup" [shape=box style=filled fillcolor=lightyellow];
     "Execute Batch (N tasks)" [shape=box];
     "Batch Verification Gate" [shape=box style=filled fillcolor=lightyellow];
     "Report & Wait for Feedback" [shape=box style=filled fillcolor=lightgreen];
@@ -37,8 +45,8 @@ digraph process {
     "Cleanup transient files" [shape=box];
     "Use finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Load Plan" -> "Pre-Execution Setup (MANDATORY)";
-    "Pre-Execution Setup (MANDATORY)" -> "Execute Batch (N tasks)";
+    "Load Plan" -> "Pre-Execution Setup";
+    "Pre-Execution Setup" -> "Execute Batch (N tasks)";
     "Execute Batch (N tasks)" -> "Batch Verification Gate";
     "Batch Verification Gate" -> "Report & Wait for Feedback";
     "Report & Wait for Feedback" -> "More tasks?";
@@ -49,9 +57,20 @@ digraph process {
 }
 ```
 
-## MANDATORY CHECKPOINT: Pre-Execution Setup
+## Pre-Execution Setup
 
-**REQUIRED before the task loop. These offers MUST be presented - user decides execution.**
+These offers are presented before the task loop. User decides whether to execute each.
+
+<verification>
+### Pre-Execution Verification
+
+Before starting task loop, verify:
+
+- [ ] On base branch? If yes, present Branch Creation Offer
+- [ ] Primary issue exists? If yes, present Status Update Offer
+
+Skipping required offers results in incomplete setup. User can decline any offer - the requirement is presentation, not execution.
+</verification>
 
 ### Step 1: Branch Creation Offer (if not on feature branch)
 
@@ -59,8 +78,6 @@ Check if on main/master/develop:
 ```bash
 git branch --show-current
 ```
-
-**REQUIRED:** If on base branch, you MUST present the branch creation offer.
 
 If on base branch, dispatch issue-tracking agent:
 ```
@@ -71,7 +88,7 @@ Context: [plan goal/primary issue]",
      subagent_type: "general-purpose")
 ```
 
-**MUST use AskUserQuestion tool** to present offer to user:
+Present offer to user:
 ```
 AskUserQuestion(
   questions: [{
@@ -91,9 +108,7 @@ Only execute after user approval via AskUserQuestion response.
 
 ### Step 2: Status Update Offer
 
-**REQUIRED:** If primary issue exists (from plan header, branch name, or discovery), you MUST present the status update offer.
-
-If primary issue identified, dispatch issue-tracking agent:
+If primary issue identified (from plan header, branch name, or discovery), dispatch issue-tracking agent:
 ```
 Task(description: "Prepare status update",
      prompt: "Operation: update-status
@@ -103,7 +118,7 @@ New status: in-progress",
      subagent_type: "general-purpose")
 ```
 
-**MUST use AskUserQuestion tool** to present offer:
+Present offer:
 ```
 AskUserQuestion(
   questions: [{
@@ -120,26 +135,6 @@ AskUserQuestion(
 
 Only execute after user approval via AskUserQuestion response.
 
-### Pre-Execution Checkpoint Gate
-
-```
-BEFORE starting task loop:
-
-1. CHECK: On base branch?
-   - YES → MUST present Branch Creation Offer
-   - NO → Skip branch offer
-
-2. CHECK: Primary issue exists?
-   - YES → MUST present Status Update Offer
-   - NO → Skip status offer
-
-Skip presenting any required offer = incomplete pre-execution setup
-```
-
-**STOP CONDITION:** If about to start task loop without presenting required offers, STOP. Present offers first.
-
-**Note:** User can decline any offer. The REQUIREMENT is presentation, not execution.
-
 ## Batch Execution
 
 For each batch of N tasks:
@@ -148,21 +143,24 @@ For each batch of N tasks:
 2. **Track progress** - Update `docs/current-progress.md` after each task
 3. **Note discovered work** - Append to progress file if work uncovers new requirements
 
-## COMPULSORY: Batch Completion Gate
+<verification>
+## Batch Completion Gate
 
 After each batch, before reporting:
 
 - [ ] All batch tasks executed (not skipped)
-- [ ] Verifications RUN for each task (show output)
+- [ ] Verifications run for each task (show output)
 - [ ] Tests passing (show test output)
 - [ ] Progress file updated with completed tasks
 - [ ] Discovered work appended (if any found)
 
-**STOP CONDITION:** If ANY checkbox unchecked, complete it before reporting.
+Any unchecked item blocks reporting. Complete all verifications first.
+</verification>
 
-## COMPULSORY: Human Checkpoint Enforcement
+<verification>
+## Human Checkpoint Gate
 
-After reporting batch results, **MUST use AskUserQuestion tool**:
+After reporting batch results, use AskUserQuestion:
 
 ```
 AskUserQuestion(
@@ -179,12 +177,13 @@ AskUserQuestion(
 )
 ```
 
-Verification checklist:
+Verification:
 - [ ] Used AskUserQuestion tool (NOT plain text)
-- [ ] WAITED for explicit user response via tool
+- [ ] Waited for explicit user response via tool
 - [ ] Incorporated any feedback before next batch
 
-**STOP CONDITION:** NEVER proceed to next batch without AskUserQuestion response. Plain text questions do NOT count.
+Proceeding without AskUserQuestion response bypasses human control. Plain text questions don't provide structured response UI.
+</verification>
 
 ## Progress Tracking
 
@@ -257,19 +256,17 @@ Use `hyperpowers:finishing-a-development-branch` skill:
 - Issue close offer (if primary issue tracked)
 - Worktree cleanup offer (if in worktree)
 
-## Red Flags - IMMEDIATE STOP
+## Red Flags
 
-| Violation | Why It's Critical | Recovery |
-|-----------|-------------------|----------|
-| **Plain text questions instead of AskUserQuestion** | User can't respond via structured UI | Use AskUserQuestion tool |
-| Proceeding without user feedback | Defeats purpose of batch approach | STOP, wait for response |
+| Violation | Consequence | Recovery |
+|-----------|-------------|----------|
+| Plain text questions instead of AskUserQuestion | User can't respond via structured UI | Use AskUserQuestion tool |
+| Proceeding without user feedback | Defeats purpose of batch approach | Stop, wait for response |
 | Skipping batch verifications | Ships unverified code | Run verifications, show output |
 | Skipping pre-execution offers | Missing branch/status setup | Present required offers |
-| "Ready for feedback" without verification | False confidence | Verify THEN report |
+| "Ready for feedback" without verification | False confidence | Verify then report |
 | Batch size of "all remaining" | Loses checkpoint value | Stick to configured batch size |
 | Starting new batch without user response | Human-in-loop is the value | Wait for explicit "continue" |
-
-**AskUserQuestion is MANDATORY** for all user interaction points. Plain text questions like "Create this branch? [Yes/No]" are NOT acceptable - they bypass the structured response UI.
 
 ## Integration
 
@@ -278,3 +275,11 @@ Use `hyperpowers:finishing-a-development-branch` skill:
 - **hyperpowers:finishing-a-development-branch** - Complete development after all tasks
 
 **This skill replaces human with subagents** - Unlike subagent-driven-development which dispatches reviewer subagents, batch-development relies on human feedback. No prompt templates needed.
+
+<requirements>
+## Requirements Reminder
+
+1. Pause after each batch for user review.
+2. Use AskUserQuestion for checkpoint feedback.
+3. Wait for user approval before next batch.
+</requirements>
