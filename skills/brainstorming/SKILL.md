@@ -176,8 +176,9 @@ Before proceeding to design presentation:
 
 **Understanding Gate** (all COMPULSORY):
 
+- [ ] Dispatched Explore subagent and received results (or documented failure)
 - [ ] Read current project state (files, docs, commits)
-- [ ] Asked at least one clarifying question
+- [ ] Asked at least one clarifying question (grounded in exploration findings)
 - [ ] User has confirmed understanding
 
 **STOP CONDITION:** If ANY checkbox is unchecked, do NOT proceed. Complete missing steps first.
