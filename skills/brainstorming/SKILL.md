@@ -205,6 +205,7 @@ Before saving design:
 | Skipping clarifying questions | Assumptions lead to wrong designs | Ask at least one question via AskUserQuestion |
 | Presenting design without user confirmation | Design may be solving wrong problem | Get explicit confirmation via AskUserQuestion |
 | Saving design without required sections | Incomplete design = incomplete planning | Add missing sections |
+| Skipping codebase exploration | Questions may not reflect actual project structure | Dispatch Explore subagent first |
 
 **AskUserQuestion is MANDATORY** for ALL user interaction: issue assessment, clarifying questions, design section reviews. Plain text questions like "Does this look right?" are NOT acceptable.
 
