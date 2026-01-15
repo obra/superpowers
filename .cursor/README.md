@@ -75,7 +75,7 @@ npx github:obra/superpowers/.cursor uninstall -l
 
 ### Architecture
 
-```
+```text
 ~/.cursor/
 ├── superpowers/              # Full superpowers repo
 │   └── skills/
@@ -180,7 +180,7 @@ All platforms use the same `SKILL.md` format for cross-compatibility.
 
 Cursor implementation uses the **shared `lib/skills-core.js` module**, maintaining consistency with Codex and OpenCode:
 
-```
+```text
 lib/skills-core.js          # Shared skill logic
 ├── extractFrontmatter()    # Parse YAML metadata
 ├── findSkillsInDir()       # Discover skills recursively

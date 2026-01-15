@@ -31,7 +31,7 @@ All Superpowers skills, automatically available in Cursor:
 
 Just describe your task - the agent decides which skills to use:
 
-```
+```text
 "Let's build a new feature for user authentication"
 → Agent uses: brainstorming → writing-plans → executing-plans
 ```
@@ -40,7 +40,7 @@ Just describe your task - the agent decides which skills to use:
 
 Type `/` in chat, search for skill name:
 
-```
+```text
 / → "brainstorming" → Select
 ```
 
@@ -66,7 +66,7 @@ npx github:obra/superpowers/.cursor uninstall --local
 ## Requirements
 
 - **Cursor IDE** with **Nightly channel** (Settings → Beta → Update Channel → Nightly)
-- **Node.js** 14.0.0+
+- **Node.js** 18.0.0+
 
 ## Architecture
 
