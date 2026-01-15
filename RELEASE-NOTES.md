@@ -1,5 +1,34 @@
 # Superpowers Release Notes
 
+## v4.1.2 (2026-01-15)
+
+### Improvements
+
+**Investigation-before-categorization pattern across multiple skills**
+
+Based on learnings from ai-self-reflection analysis, enhanced four core skills to emphasize investigating test failures and errors before categorizing them:
+
+- **systematic-debugging (Phase 1)** - Added emphasis: "Don't trust error messages at face value - they describe symptoms, not root causes"
+  - Verify error claims (e.g., "file not found" - check if file exists elsewhere, wrong path, permissions)
+
+- **verification-before-completion (Gate Function)** - Added Step 4: INVESTIGATE before interpreting failures
+  - Check paths, permissions, environment before categorizing
+  - Renumbered subsequent steps (VERIFY is now Step 5)
+
+- **finishing-a-development-branch (Step 2)** - Added investigation workflow before presenting categorization options
+  - Reference systematic-debugging Phase 1 for root cause analysis
+  - Show investigation findings in categorization prompt
+
+- **using-superpowers** - Added "Common Trigger Phrases" table with explicit skill invocation examples
+  - Completion triggers: "let's complete this" → `finishing-a-development-branch`
+  - Debugging triggers: "this is broken" → `systematic-debugging`
+  - Feature triggers: "add feature X" → `brainstorming` first
+  - Prevents bypassing workflows when user signals completion or issues
+
+**Source learnings:**
+- `docs/learnings/2026-01-15-investigate-before-categorizing-test-failures.md`
+- `docs/learnings/2026-01-15-always-use-finishing-skill-on-completion-triggers.md`
+
 ## v4.1.1 (2026-01-14)
 
 ### Improvements
