@@ -102,8 +102,8 @@ Same skill format works across Cursor, Claude Code, OpenCode, and Codex.
 
 ## Documentation
 
-- **Installation**: [INSTALL.md](.cursor/INSTALL.md) - Detailed setup guide
-- **CLI Reference**: [README.md](.cursor/README.md) - Command documentation
+- **Installation**: [INSTALL.md](../.cursor/INSTALL.md) - Detailed setup guide
+- **CLI Reference**: [README.md](../.cursor/README.md) - Command documentation
 - **Cursor Skills**: [cursor.com/docs/context/skills](https://cursor.com/cn/docs/context/skills)
 - **Superpowers**: [github.com/obra/superpowers](https://github.com/obra/superpowers)
 
@@ -120,7 +120,7 @@ Enable Developer Mode or run as Administrator.
 **Skills not triggering?**
 Mention keywords from skill descriptions, or manually invoke with `/`.
 
-Full troubleshooting: [INSTALL.md](.cursor/INSTALL.md#troubleshooting)
+Full troubleshooting: [INSTALL.md](../.cursor/INSTALL.md#troubleshooting)
 
 ## Updating
 

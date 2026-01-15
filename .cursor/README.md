@@ -119,7 +119,7 @@ Type `/` in chat, then search for the skill name.
 ## Requirements
 
 - **Cursor IDE** with **Nightly channel** enabled
-- **Node.js** 14.0.0 or higher
+- **Node.js** 18.0.0 or higher
 - **Git** (for updates)
 
 ### Enable Nightly Channel

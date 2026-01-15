@@ -22,6 +22,26 @@ const log = {
   error: (msg) => console.log(chalk.red('✗'), msg),
 };
 
+// Manual recursive copy for Node.js < 16.7 (when fs.cpSync is not available)
+function copyDirRecursive(src, dest) {
+  if (!fs.existsSync(dest)) {
+    fs.mkdirSync(dest, { recursive: true });
+  }
+  
+  const entries = fs.readdirSync(src, { withFileTypes: true });
+  
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+    
+    if (entry.isDirectory()) {
+      copyDirRecursive(srcPath, destPath);
+    } else {
+      fs.copyFileSync(srcPath, destPath);
+    }
+  }
+}
+
 function checkCursorInstalled() {
   const spinner = ora('Checking for Cursor installation...').start();
   
@@ -86,7 +106,14 @@ function createSymlink(target, link) {
         fs.unlinkSync(link);
       } else if (linkStat.isDirectory()) {
         const linkReal = getRealPathSafe(link);
-        if (targetReal && linkReal && linkReal.startsWith(targetReal)) {
+        // Check if linkReal is actually inside targetReal (not just a prefix match)
+        // Ensure path separator exists to avoid false positives like:
+        // targetReal: /path/skills, linkReal: /path/skills-custom
+        const isInsideTarget = targetReal && linkReal && (
+          linkReal === targetReal ||
+          linkReal.startsWith(targetReal + path.sep)
+        );
+        if (isInsideTarget) {
           fs.rmSync(link, { recursive: true, force: true });
         } else {
           log.warn(`Skipping existing directory: ${link}`);
@@ -126,7 +153,13 @@ function removeLinkedSkills(skillsDir, superpowersSkillsDir) {
     const entryPath = path.join(skillsDir, entry);
     const entryReal = getRealPathSafe(entryPath);
 
-    if (entryReal && entryReal.startsWith(skillsReal)) {
+    // Check if entryReal is actually inside skillsReal (not just a prefix match)
+    const isInsideSkills = entryReal && (
+      entryReal === skillsReal ||
+      entryReal.startsWith(skillsReal + path.sep)
+    );
+    
+    if (isInsideSkills) {
       try {
         fs.rmSync(entryPath, { recursive: true, force: true });
       } catch (err) {
@@ -171,12 +204,18 @@ async function installGlobal() {
   const spinner = ora('Installing Superpowers...').start();
   fs.mkdirSync(path.dirname(targetDir), { recursive: true });
   
-  // Use cp -R for better symlink handling
+  // Copy superpowers - prefer native cp for better symlink handling
   try {
     execSync(`cp -R "${REPO_ROOT}" "${targetDir}"`, { stdio: 'ignore' });
   } catch (error) {
-    // Fallback to Node.js copy
-    fs.cpSync(REPO_ROOT, targetDir, { recursive: true });
+    // Fallback to Node.js recursive copy (Node.js 16.7+)
+    // For older Node.js, use manual recursive copy
+    if (typeof fs.cpSync === 'function') {
+      fs.cpSync(REPO_ROOT, targetDir, { recursive: true });
+    } else {
+      // Manual recursive copy for Node.js < 16.7
+      copyDirRecursive(REPO_ROOT, targetDir);
+    }
   }
   
   spinner.succeed(`Installed Superpowers to ${chalk.dim(targetDir)}`);
@@ -248,10 +287,17 @@ async function installLocal() {
   // Copy superpowers
   const spinner = ora('Installing Superpowers...').start();
   
+  // Copy superpowers - prefer native cp for better symlink handling
   try {
     execSync(`cp -R "${REPO_ROOT}" "${targetDir}"`, { stdio: 'ignore' });
   } catch (error) {
-    fs.cpSync(REPO_ROOT, targetDir, { recursive: true });
+    // Fallback to Node.js recursive copy (Node.js 16.7+)
+    if (typeof fs.cpSync === 'function') {
+      fs.cpSync(REPO_ROOT, targetDir, { recursive: true });
+    } else {
+      // Manual recursive copy for Node.js < 16.7
+      copyDirRecursive(REPO_ROOT, targetDir);
+    }
   }
   
   spinner.succeed(`Installed Superpowers to ${chalk.dim('.cursor-superpowers/')}`);

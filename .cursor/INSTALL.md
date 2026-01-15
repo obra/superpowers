@@ -25,7 +25,7 @@ Required for running the installation CLI.
 node --version
 ```
 
-Should show v14.0.0 or higher.
+Should show v18.0.0 or higher.
 
 **Install if needed:**
 - macOS: `brew install node`
@@ -155,7 +155,7 @@ ls -la .cursor/skills/
 ```
 
 You should see symlinks to skill directories:
-```
+```text
 brainstorming -> /Users/you/.cursor/superpowers/skills/brainstorming
 systematic-debugging -> /Users/you/.cursor/superpowers/skills/systematic-debugging
 ...
