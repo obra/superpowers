@@ -56,6 +56,8 @@ You MUST complete each phase before proceeding to the next.
    - They often contain the exact solution
    - Read stack traces completely
    - Note line numbers, file paths, error codes
+   - **Don't trust error messages at face value** - they describe symptoms, not root causes
+   - Verify error claims (e.g., "file not found" - check if file exists elsewhere, wrong path, permissions)
 
 2. **Reproduce Consistently**
    - Can you trigger it reliably?

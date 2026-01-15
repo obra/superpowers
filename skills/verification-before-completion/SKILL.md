@@ -29,10 +29,14 @@ BEFORE claiming any status or expressing satisfaction:
 1. IDENTIFY: What command proves this claim?
 2. RUN: Execute the FULL command (fresh, complete)
 3. READ: Full output, check exit code, count failures
-4. VERIFY: Does output confirm the claim?
+4. INVESTIGATE: Before interpreting failures/errors:
+   - Don't trust error messages at face value (symptoms ≠ root cause)
+   - Verify error claims (e.g., "file not found" - check if exists elsewhere)
+   - Check paths, permissions, environment before categorizing
+5. VERIFY: Does output confirm the claim?
    - If NO: State actual status with evidence
    - If YES: State claim WITH evidence
-5. ONLY THEN: Make the claim
+6. ONLY THEN: Make the claim
 
 Skip any step = lying, not verifying
 ```

@@ -124,3 +124,17 @@ When you invoke a skill via the Skill tool:
 ## User Instructions
 
 Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
+
+## Common Trigger Phrases
+
+Recognize these user phrases as skill invocation triggers:
+
+| User Says | Skill to Invoke | Why |
+|-----------|----------------|-----|
+| "let's complete this", "finish this work", "wrap this up", "we're done", "finalize this" | `finishing-a-development-branch` | Completion signals require proper workflow (documentation, tests, git integration) |
+| "this is broken", "tests are failing", "not working" | `systematic-debugging` | Issues require root cause investigation before fixes |
+| "add feature X", "implement Y" | `brainstorming` first | Design decisions before implementation |
+| "plan this out", "how should we approach this" | `writing-plans` | Multi-step tasks need structured planning |
+| "is this ready to merge", "can we ship this" | `verification-before-completion` | Claims require evidence |
+
+**Exception:** Only skip skill if user explicitly says "skip the workflow" or "just commit it".

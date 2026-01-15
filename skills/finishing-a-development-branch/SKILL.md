@@ -101,12 +101,24 @@ Continue to Step 3.
 
 **If tests fail:**
 
-Show the failure output, then prompt user:
+First, investigate the failures before categorizing:
+
+```bash
+# Read error messages carefully
+# Verify error claims (e.g., "file not found" - check if file exists elsewhere)
+# Check paths, permissions, environment
+# Use superpowers:systematic-debugging Phase 1 if root cause unclear
+```
+
+After investigation, show the failure output and prompt user:
 
 ```
 ❌ Tests failed ([N] failures)
 
 [Show failure summary - first 20 lines of failures]
+
+Investigation findings:
+[Brief summary of what you discovered]
 
 Are these failures due to:
 
