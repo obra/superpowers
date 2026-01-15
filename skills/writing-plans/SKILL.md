@@ -368,7 +368,7 @@ Plan complete and saved to `docs/plans/<actual-filename>.md`. Context gathering 
 
 To continue:
 /compact ready to implement docs/plans/<actual-filename>.md
-/execute-plan docs/plans/<actual-filename>.md
+/hyperpowers:execute-plan docs/plans/<actual-filename>.md
 ```
 
 Replace `<actual-filename>` with the real plan path.
