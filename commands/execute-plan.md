@@ -31,6 +31,10 @@ Use AskUserQuestion with these options:
 
 Pass the plan path as the argument to the skill.
 
+Follow the chosen skill EXACTLY.
+
+These skills are available in the skills folder within the hyperpowers claude plugin. ONLY search there, do NOT look for development skills in the repo you are working in, or in other plugins. Do not assume you know how to develop without finding the SKILL.md file.
+
 ## Red Flags
 
 | Violation | Why It's Critical | Recovery |
