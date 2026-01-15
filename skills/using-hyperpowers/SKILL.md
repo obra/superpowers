@@ -9,17 +9,20 @@ description: Use when starting any conversation - establishes how to find and us
 
 Skills are pre-loaded workflows that ensure consistent, high-quality execution. This skill establishes the fundamental rule: invoke skills BEFORE any response.
 
-**Core principle:** Even 1% chance a skill applies means you MUST invoke it.
+**Core principle:** Even 1% chance a skill applies means you should invoke it.
+
+<requirements>
+## Requirements
+
+1. Check if skill applies before responding. Skipping skill check misses applicable workflows.
+2. Invoke skill via Skill tool. Reading files directly misses execution context.
+</requirements>
 
 ## When to Use
 
 **Use this skill at conversation start:** Before responding to ANY user request, check if a skill applies.
 
 **The rule is unconditional:** Even 1% chance = invoke the skill.
-
-<CRITICAL>
-Even 1% chance a skill applies → YOU MUST invoke it. Not optional. Not negotiable.
-</CRITICAL>
 
 ## The Rule
 
@@ -45,17 +48,19 @@ Even 1% chance a skill applies → YOU MUST invoke it. Not optional. Not negotia
 
 Instructions say WHAT, not HOW. "Add X" doesn't mean skip workflows.
 
-## COMPULSORY: Pre-Response Check
+<verification>
+## Pre-Response Check
 
 Before ANY response to a user request:
 
-**Skill Invocation Gate** (COMPULSORY):
+**Skill Invocation Gate:**
 
 - [ ] Checked if a skill applies (even 1% chance = yes)
 - [ ] If yes: Invoked skill BEFORE responding
 - [ ] If no skill applies: Proceed with response
 
 **STOP CONDITION:** If you're about to respond without checking skills, STOP. Check first.
+</verification>
 
 **Self-Check Questions:**
 
@@ -68,9 +73,16 @@ Before ANY response to a user request:
 
 ## Red Flags - IMMEDIATE STOP
 
-| Violation | Why It's Critical | Recovery |
-|-----------|-------------------|----------|
+| Violation | Why It Matters | Recovery |
+|-----------|----------------|----------|
 | Responding before skill check | May miss applicable workflow | Stop, check skills, then respond |
 | "Let me explore first" | Skills tell you HOW to explore | Invoke exploration skill |
 | "I remember this skill" | Skills change; memory may be stale | Read current skill version |
 | "Too simple for skills" | Simple tasks still have workflows | Check anyway - 30 seconds |
+
+<requirements>
+## Summary
+
+1. Check if skill applies before responding. Skipping misses workflows.
+2. Invoke via Skill tool. Reading directly misses context.
+</requirements>
