@@ -14,6 +14,14 @@ Claiming work is complete without verification is dishonesty, not efficiency.
 
 **Violating the letter of this rule is violating the spirit of this rule.**
 
+<requirements>
+## Requirements
+
+1. Run actual verification commands. "Should work" is not verification.
+2. Show command output as evidence. Confidence is not evidence.
+3. Only claim completion when tests pass.
+</requirements>
+
 ## When to Use
 
 **Use this skill when:**
@@ -33,10 +41,10 @@ NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
 
 If you haven't run the verification command in this message, you cannot claim it passes.
 
-## COMPULSORY: The Gate Function
+<verification>
+## The Gate Function
 
-```
-BEFORE claiming any status or expressing satisfaction:
+Before claiming any status or expressing satisfaction:
 
 1. IDENTIFY: What command proves this claim?
 2. RUN: Execute the FULL command (fresh, complete)
@@ -46,10 +54,10 @@ BEFORE claiming any status or expressing satisfaction:
    - If YES: State claim WITH evidence
 5. ONLY THEN: Make the claim
 
-Skip any step = lying, not verifying
-```
+Skipping steps produces false claims, not verified results.
 
 **STOP CONDITION:** If about to claim completion without running verification command in THIS message, STOP. Run the command first.
+</verification>
 
 ## Common Failures
 
@@ -65,21 +73,23 @@ Skip any step = lying, not verifying
 | Work complete | Issue offers reviewed, original issue updated | "No issue tracked this" without checking |
 | Issue offers done | Offers PRESENTED (user decided) | "No tracker, skipping" without manual check |
 
-## COMPULSORY: Evidence-Based Completion Checklist
+<verification>
+## Evidence-Based Completion Checklist
 
 Before claiming ANY work is complete:
 
-**Required Evidence** (all COMPULSORY):
+**Required Evidence** (unchecked items block completion):
 
 - [ ] Tests RUN (not just written) - show passing output
 - [ ] Build SUCCEEDED - show build output
 - [ ] Linting PASSED - show lint output
 - [ ] Edge cases TESTED - list which ones
 - [ ] Related functionality VERIFIED - nothing broken
-- [ ] Issue tracking offers PRESENTED - discovered work creation, original issue update (MANDATORY - see Issue Offers phase below)
+- [ ] Issue tracking offers PRESENTED - discovered work creation, original issue update (see Issue Offers phase below)
 - [ ] Acceptance criteria VERIFIED (if Original Issue was Authoritative - see below)
 
 **STOP CONDITION:** If ANY checkbox is unchecked, do NOT claim completion. Complete the missing verification(s) first.
+</verification>
 
 **Red Flags for Premature Claims:**
 - "Tests should pass" (should ≠ did)
@@ -89,17 +99,17 @@ Before claiming ANY work is complete:
 
 **If ANY checkbox is unchecked:** Cannot claim completion.
 
-## MANDATORY: Issue Offers Phase
+## Issue Offers Phase
 
 **After all verification passes, before claiming completion:**
 
-**REQUIRED:** This phase MUST execute. Offers MUST be presented. User decides execution.
+This phase executes after verification passes. Offers are presented to the user, who decides execution.
 
 ### Step 1: Create Issues for Discovered Work
 
 Read `docs/current-progress.md` "Discovered Work" section.
 
-For each item, **MUST use AskUserQuestion tool** to present creation offer:
+For each item, use AskUserQuestion tool to present creation offer (plain text questions prevent structured response):
 ```
 AskUserQuestion(
   questions: [{
@@ -128,7 +138,7 @@ Summary: [work completed summary]",
      subagent_type: "general-purpose")
 ```
 
-**MUST use AskUserQuestion tool** to present offer:
+Use AskUserQuestion tool to present offer:
 ```
 AskUserQuestion(
   questions: [{
@@ -159,11 +169,12 @@ Consider configuring issue tracking in CLAUDE.md for automated tracking.
 
 **The phase still executes** - offers change to manual verification prompts.
 
-## MANDATORY: Acceptance Criteria Verification (Authoritative Issues Only)
+<verification>
+## Acceptance Criteria Verification (Authoritative Issues Only)
 
 **If the plan contains an Original Issue block with Status: Authoritative:**
 
-This phase MUST execute. Verification MUST be performed.
+This phase executes for Authoritative issues. Skipping produces incomplete deliverables.
 
 ### Step 1: Extract Acceptance Criteria
 
@@ -210,6 +221,7 @@ If Original Issue status is "Reference Only", skip this phase:
 Note: Original Issue marked Reference Only - skipping acceptance criteria verification.
 Proceeding with standard verification checklist.
 ```
+</verification>
 
 ## Fresh Verification Requirement
 
@@ -244,7 +256,7 @@ Before claiming completion:
 | Tired and wanting work over | Exhaustion leads to mistakes | Verify anyway, then rest |
 | ANY wording implying success | Words without evidence = lying | Run command, show output |
 
-**AskUserQuestion is MANDATORY** for all Issue Offers (discovered work, original issue update). Plain text questions are NOT acceptable.
+AskUserQuestion is required for all Issue Offers (discovered work, original issue update). Plain text questions prevent structured response.
 
 ## Rationalization Prevention
 
@@ -269,7 +281,7 @@ Before claiming completion:
 
 **Regression tests (TDD Red-Green):**
 ```
-✅ Write → Run (pass) → Revert fix → Run (MUST FAIL) → Restore → Run (pass)
+✅ Write → Run (pass) → Revert fix → Run (fails) → Restore → Run (pass)
 ❌ "I've written a regression test" (without red-green verification)
 ```
 
@@ -316,10 +328,16 @@ From 24 failure memories:
 - Implications of success
 - ANY communication suggesting completion/correctness
 
+<requirements>
+## Requirements (Reminder)
+
+1. Run actual verification commands. "Should work" is not verification.
+2. Show command output as evidence. Confidence is not evidence.
+3. Only claim completion when tests pass.
+</requirements>
+
 ## The Bottom Line
 
 **No shortcuts for verification.**
 
 Run the command. Read the output. THEN claim the result.
-
-This is non-negotiable.
