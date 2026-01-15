@@ -12,6 +12,13 @@ allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, Task, Write
 
 Deep research that surfaces issues before they become bugs. Dispatches 8 parallel agents to analyze codebase, git history, framework docs, best practices, test coverage, error handling, dependencies, and architecture boundaries, then synthesizes findings into a persistent research document.
 
+<requirements>
+## Requirements (8 agents, synthesis)
+
+1. Dispatch ALL 8 agents in a single message. Fewer than 8 = incomplete research.
+2. Synthesize findings into research document. Raw concatenation = invalid output.
+</requirements>
+
 ## When to Use
 
 Use this skill when:
@@ -24,14 +31,14 @@ Do NOT use when:
 - Making a quick fix to familiar code
 - Research already exists in `docs/research/`
 
-## CRITICAL REQUIREMENTS
+## Requirements
 
-This skill has two non-negotiable requirements. Violation = skill failure.
+This skill produces valid output only when both are met:
 
-1. **ALL 8 AGENTS MUST BE DISPATCHED** - No exceptions. Partial dispatch is failure.
-2. **SYNTHESIS IS COMPULSORY** - Raw agent outputs are not valid research.
+1. **Dispatch all 8 agents** in one message. Dispatching fewer produces incomplete research.
+2. **Synthesize findings** into a coherent document. Concatenating raw output is not synthesis.
 
-If you cannot complete both requirements, STOP and report why.
+If blocked from either requirement, stop and explain why.
 
 ## The Process
 
@@ -94,44 +101,66 @@ If clear, proceed directly to Phase 2.
 
 ### Phase 2: Dispatch Parallel Research Agents
 
-Dispatch all 8 agents simultaneously using the Task tool:
+### Dispatch Verification (check BEFORE dispatching)
+
+You will dispatch exactly 8 agents:
+1. codebase-analyst
+2. git-history-analyzer
+3. framework-docs-researcher
+4. best-practices-researcher
+5. test-coverage-analyst
+6. error-handling-analyst
+7. dependency-analyst
+8. architecture-boundaries-analyst
+
+**STOP CONDITION:** If your next message won't contain all 8 Task calls, stop and add the missing ones.
+
+### Dispatch all 8 agents now:
 
 ```
+# Agent 1 of 8: Codebase Analysis
 Task(description: "Analyze codebase patterns",
      prompt: [codebase-analyst prompt with topic],
      model: "haiku",
      subagent_type: "general-purpose")
 
+# Agent 2 of 8: Git History
 Task(description: "Analyze git history",
      prompt: [git-history-analyzer prompt with topic],
      model: "haiku",
      subagent_type: "general-purpose")
 
+# Agent 3 of 8: Framework Docs
 Task(description: "Research framework docs",
      prompt: [framework-docs-researcher prompt with topic],
      model: "haiku",
      subagent_type: "general-purpose")
 
+# Agent 4 of 8: Best Practices
 Task(description: "Research best practices",
      prompt: [best-practices-researcher prompt with topic],
      model: "haiku",
      subagent_type: "general-purpose")
 
+# Agent 5 of 8: Test Coverage
 Task(description: "Analyze test coverage",
      prompt: [test-coverage-analyst prompt with topic],
      model: "haiku",
      subagent_type: "general-purpose")
 
+# Agent 6 of 8: Error Handling
 Task(description: "Analyze error handling",
      prompt: [error-handling-analyst prompt with topic],
      model: "haiku",
      subagent_type: "general-purpose")
 
+# Agent 7 of 8: Dependencies
 Task(description: "Analyze dependencies",
      prompt: [dependency-analyst prompt with topic],
      model: "haiku",
      subagent_type: "general-purpose")
 
+# Agent 8 of 8: Architecture Boundaries
 Task(description: "Analyze architecture boundaries",
      prompt: [architecture-boundaries-analyst prompt with topic],
      model: "haiku",
@@ -143,24 +172,6 @@ Each agent prompt should include:
 - Any open questions from the design document
 - The agent's methodology from their definition file
 - The output format expected
-
-### COMPULSORY: Agent Dispatch Verification
-
-Before proceeding to Phase 2.5 or Phase 3, you MUST verify all 8 agents were dispatched.
-
-**Dispatch Checklist** (all COMPULSORY):
-- [ ] codebase-analyst
-- [ ] git-history-analyzer
-- [ ] framework-docs-researcher
-- [ ] best-practices-researcher
-- [ ] test-coverage-analyst
-- [ ] error-handling-analyst
-- [ ] dependency-analyst
-- [ ] architecture-boundaries-analyst
-
-**STOP CONDITION:** If ANY checkbox is unchecked, do NOT proceed. Dispatch the missing agent(s) first.
-
-**Self-Check:** Count your Task tool calls. You MUST have exactly 8 (plus 1 optional for issue discovery). If fewer than 8, you have failed this gate.
 
 ### Phase 2.5: Issue Discovery (Optional)
 
@@ -294,39 +305,29 @@ Only omit the YAML frontmatter if present.]
 - Decisions needed before planning
 ```
 
-### COMPULSORY: Handoff Consumption Verification
+### Agent Output Consumption Gate
 
-**Agent Output Consumption Gate** (COMPULSORY - for each of 8 agents):
+Before saving, verify all 8 agents' findings are incorporated:
 
 - [ ] Each agent's output file path stated
 - [ ] Key findings from EACH agent quoted in synthesis
 - [ ] Contradictions between agents noted and resolved
 - [ ] No agent's findings silently dropped
 
-**STOP CONDITION:** If synthesis doesn't cite all 8 agents, STOP. Quote findings from missing agents.
+**STOP CONDITION:** If synthesis doesn't cite all 8 agents, stop. Quote findings from missing agents.
 
-### COMPULSORY: Synthesis Verification
+<verification>
+### Synthesis Verification (check BEFORE saving)
 
-Before saving the research document, you MUST verify synthesis is complete.
+- [ ] Executive Summary written (your synthesis, not copy-paste)
+- [ ] All 8 agent sections populated with findings
+- [ ] Edge Cases synthesized from multiple agents
+- [ ] Contradictions between agents noted
 
-**Synthesis Checklist** (all COMPULSORY - document MUST contain each section):
-- [ ] Original Design Document (full verbatim content, if design doc exists)
-- [ ] Resolved Questions (answers to design's open questions, if design doc exists)
-- [ ] Original Issue (if captured in Phase 0 or extracted from design doc)
-- [ ] Executive Summary (your synthesis, not copy-paste)
-- [ ] Codebase Analysis (from codebase-analyst)
-- [ ] Git History Insights (from git-history-analyzer)
-- [ ] Framework & Documentation (from framework-docs-researcher)
-- [ ] Best Practices (from best-practices-researcher)
-- [ ] Test Coverage Analysis (from test-coverage-analyst)
-- [ ] Error Handling Analysis (from error-handling-analyst)
-- [ ] Dependency Analysis (from dependency-analyst)
-- [ ] Architecture Boundaries Analysis (from architecture-boundaries-analyst)
-- [ ] Edge Cases & Gotchas (synthesized from ALL agents)
+**STOP CONDITION:** If any section empty or placeholder, complete before saving.
+</verification>
 
-**STOP CONDITION:** If ANY section is missing or contains only "N/A" or placeholder text, do NOT save. Complete the missing section(s) first.
-
-**Per-Agent Citation Checklist** (COMPULSORY):
+**Per-Agent Citation Checklist:**
 
 - [ ] Codebase Analyst findings cited
 - [ ] Git History Analyzer findings cited
@@ -339,7 +340,7 @@ Before saving the research document, you MUST verify synthesis is complete.
 
 **STOP CONDITION:** If any agent missing from synthesis, go back and incorporate their findings.
 
-**CRITICAL:** The Executive Summary and Edge Cases sections MUST be YOUR synthesis, not raw agent output. These sections prove you combined the findings.
+The Executive Summary and Edge Cases sections should be YOUR synthesis, not raw agent output. These sections demonstrate combined findings.
 
 ### Phase 4: Save Research Document
 
@@ -363,6 +364,13 @@ Replace `<actual-filename>` with the real filename you just created.
 
 **Design doc note:** If a design doc was used, add: "The full design document has been preserved in the research doc."
 
+<requirements>
+## Requirements (reminder)
+
+1. Dispatch ALL 8 agents in a single message. Fewer than 8 = incomplete research.
+2. Synthesize findings into research document. Raw concatenation = invalid output.
+</requirements>
+
 ## Quick Reference
 
 | Phase | Action | Output |
@@ -375,25 +383,17 @@ Replace `<actual-filename>` with the real filename you just created.
 | 4 | Save | `docs/research/YYYY-MM-DD-topic.md` |
 | 5 | Announce | Ready for planning |
 
-## Red Flags - IMMEDIATE STOP
+## Red Flags - Stop and Recover
 
-These are CRITICAL violations. If you catch yourself doing any of these, STOP immediately:
-
-| Violation | Why It's Critical | Recovery |
-|-----------|-------------------|----------|
-| Dispatching fewer than 8 agents | Incomplete research = flawed plans | Go back, dispatch ALL agents |
-| Writing doc before agents complete | Premature synthesis misses findings | Wait for all agent results |
-| Concatenating without synthesizing | Raw dumps aren't research | Write Executive Summary + Edge Cases |
-| Skipping the dispatch checklist | Gate exists for a reason | Complete checklist before proceeding |
-| Skipping the synthesis checklist | Gate exists for a reason | Complete checklist before saving |
-| "Agent X had no relevant findings" | Every agent finds SOMETHING | Re-read agent output, cite at least one finding |
-| Synthesis shorter than combined agent outputs | Information being lost | Expand synthesis to cover all findings |
-| No contradictions noted | Unlikely 8 agents fully agree | Look harder for nuance/disagreement |
-
-**If in doubt:** Re-read the CRITICAL REQUIREMENTS section at the top.
+| Violation | Recovery |
+|-----------|----------|
+| Fewer than 8 agents dispatched | Go back, dispatch ALL agents |
+| Writing doc before agents complete | Wait for all agent results |
+| Concatenating without synthesizing | Write Executive Summary + Edge Cases |
+| Skipping dispatch or synthesis checklist | Complete checklist before proceeding |
+| "Agent X had no relevant findings" | Re-read agent output, cite at least one finding |
+| Synthesis shorter than combined outputs | Expand synthesis to cover all findings |
 
 ## Integration
 
-After research, the user should run:
-- `/hyperpowers:write-plan` to create implementation plan
-- The planning skill will automatically find and use the research
+After research, run `/hyperpowers:write-plan` to create implementation plan.
