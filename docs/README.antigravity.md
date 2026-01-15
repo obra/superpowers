@@ -15,7 +15,6 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 ### Prerequisites
 
 - Antigravity IDE installed
-- Node.js installed (v14+, v18+ recommended)
 - Git installed
 
 ### Installation Steps
@@ -24,70 +23,71 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 **Linux/macOS:**
 ```bash
-mkdir -p ~/.antigravity/superpowers
-git clone https://github.com/obra/superpowers.git ~/.antigravity/superpowers
+git clone https://github.com/obra/superpowers.git ~/.gemini/antigravity/superpowers
 ```
 
 **Windows (PowerShell):**
 ```powershell
-New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.antigravity\superpowers"
-git clone https://github.com/obra/superpowers.git "$env:USERPROFILE\.antigravity\superpowers"
+git clone https://github.com/obra/superpowers.git "$env:USERPROFILE\.gemini\antigravity\superpowers"
 ```
 
-#### 2. Configure Global Rules
+#### 2. Copy Skills
 
-Add to `~/.gemini/GEMINI.md`:
+Copy the skills folder to your workspace:
 
-```markdown
-## Superpowers System
+**Linux/macOS:**
+```bash
+mkdir -p .agent
+cp -r ~/.gemini/antigravity/superpowers/skills .agent/skills
+```
 
-<EXTREMELY_IMPORTANT>
-You have superpowers. Superpowers teach you new skills and capabilities.
-RIGHT NOW run: `~/.antigravity/superpowers/.antigravity/superpowers-antigravity bootstrap` and follow the instructions it returns.
-</EXTREMELY_IMPORTANT>
+**Windows:**
+```powershell
+New-Item -ItemType Directory -Force -Path ".agent"
+Copy-Item -Recurse "$env:USERPROFILE\.gemini\antigravity\superpowers\skills" ".agent\skills"
 ```
 
 #### 3. Verify Installation
 
-Tell Antigravity:
+In Antigravity, ask: "What skills are available?"
 
-```
-Run ~/.antigravity/superpowers/.antigravity/superpowers-antigravity find-skills to show available skills
-```
-
-You should see a list of available skills with descriptions.
+You should see superpowers skills listed.
 
 ## Usage
 
-### Finding Skills
+Skills activate automatically based on context. For example:
 
+- Say "I want to build a new feature" → `brainstorming` skill activates
+- Say "I need to debug this issue" → `systematic-debugging` skill activates
+- Say "Let's implement this" → `test-driven-development` skill activates
+
+---
+
+## Global Installation (Alternative)
+
+If you prefer to install skills globally (available across all projects):
+
+**Linux/macOS:**
+```bash
+cp -r ~/.gemini/antigravity/superpowers/skills ~/.gemini/antigravity/skills
 ```
-Run ~/.antigravity/superpowers/.antigravity/superpowers-antigravity find-skills
+
+**Windows:**
+```powershell
+Copy-Item -Recurse "$env:USERPROFILE\.gemini\antigravity\superpowers\skills" "$env:USERPROFILE\.gemini\antigravity\skills"
 ```
 
-### Loading a Skill
+---
 
-```
-Run ~/.antigravity/superpowers/.antigravity/superpowers-antigravity use-skill superpowers:brainstorming
-```
+## Personal Skills
 
-### Bootstrap All Skills
-
-```
-Run ~/.antigravity/superpowers/.antigravity/superpowers-antigravity bootstrap
-```
-
-This loads the complete bootstrap with all skill information.
-
-### Personal Skills
-
-Create your own skills in `~/.antigravity/skills/`:
+To add personal skills, create new skill folders in `.agent/skills/`:
 
 ```bash
-mkdir -p ~/.antigravity/skills/my-skill
+mkdir -p .agent/skills/my-skill
 ```
 
-Create `~/.antigravity/skills/my-skill/SKILL.md`:
+Create `.agent/skills/my-skill/SKILL.md`:
 
 ```markdown
 ---
@@ -100,66 +100,14 @@ description: Use when [condition] - [what it does]
 [Your skill content here]
 ```
 
-Personal skills override superpowers skills with the same name.
-
-## Architecture
-
-### Antigravity CLI Tool
-
-**Location:** `~/.antigravity/superpowers/.antigravity/superpowers-antigravity`
-
-A Node.js CLI script that provides three commands:
-- `bootstrap` - Load complete bootstrap with all skills
-- `use-skill <name>` - Load a specific skill
-- `find-skills` - List all available skills
-
-### Shared Core Module
-
-**Location:** `~/.antigravity/superpowers/lib/skills-core.js`
-
-The Antigravity implementation uses the shared `skills-core` module for skill discovery and parsing. This is the same module used by Codex and OpenCode plugins, ensuring consistent behavior across platforms.
-
-### Tool Mapping
-
-Skills written for Claude Code are adapted for Antigravity with these mappings:
-
-- `TodoWrite` → Use task.md artifact or similar task tracking
-- `Task` with subagents → Use browser_subagent or tell user subagents aren't available
-- `Skill` tool → `~/.antigravity/superpowers/.antigravity/superpowers-antigravity use-skill`
-- File operations → Native Antigravity tools (view_file, write_to_file, run_command, etc.)
-
 ## Updating
 
 ```bash
-cd ~/.antigravity/superpowers
+cd ~/.gemini/antigravity/superpowers
 git pull
 ```
 
-## Troubleshooting
-
-### Skills not found
-
-1. Verify installation: `ls ~/.antigravity/superpowers/skills`
-2. Check CLI works: `node ~/.antigravity/superpowers/.antigravity/superpowers-antigravity find-skills`
-3. Verify skills have SKILL.md files
-
-### CLI script not working
-
-The CLI script requires Node.js. Verify:
-
-```bash
-node --version
-```
-
-Should show v14 or higher (v18+ recommended).
-
-### Windows path issues
-
-On Windows, use the full path with `node`:
-
-```powershell
-node "$env:USERPROFILE\.antigravity\superpowers\.antigravity\superpowers-antigravity" bootstrap
-```
+Then re-copy the skills folder to your project.
 
 ## Getting Help
 
