@@ -76,12 +76,12 @@ else
     exit 1
 fi
 
-# Test 3: Test use_skill with horspowerss: prefix
+# Test 3: Test use_skill with horspowers: prefix
 echo ""
-echo "Test 3: Testing use_skill with horspowerss: prefix..."
-echo "  Running opencode with horspowerss:brainstorming skill..."
+echo "Test 3: Testing use_skill with horspowers: prefix..."
+echo "  Running opencode with horspowers:brainstorming skill..."
 
-output=$(timeout 60s opencode run --print-logs "Use the use_skill tool to load horspowerss:brainstorming and tell me the first few lines of what you received." 2>&1) || {
+output=$(timeout 60s opencode run --print-logs "Use the use_skill tool to load horspowers:brainstorming and tell me the first few lines of what you received." 2>&1) || {
     exit_code=$?
     if [ $exit_code -eq 124 ]; then
         echo "  [FAIL] OpenCode timed out after 60s"
@@ -92,9 +92,9 @@ output=$(timeout 60s opencode run --print-logs "Use the use_skill tool to load h
 
 # Check for expected content from brainstorming skill
 if echo "$output" | grep -qi "brainstorming\|Launching skill\|skill.*loaded"; then
-    echo "  [PASS] use_skill loaded horspowerss:brainstorming skill"
+    echo "  [PASS] use_skill loaded horspowers:brainstorming skill"
 else
-    echo "  [FAIL] use_skill did not load horspowerss:brainstorming correctly"
+    echo "  [FAIL] use_skill did not load horspowers:brainstorming correctly"
     echo "  Output was:"
     echo "$output" | head -50
     exit 1

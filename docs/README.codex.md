@@ -51,7 +51,7 @@ Run ~/.codex/superpowers/.codex/superpowers-codex find-skills
 ### Loading a Skill
 
 ```
-Run ~/.codex/superpowers/.codex/superpowers-codex use-skill horspowerss:brainstorming
+Run ~/.codex/superpowers/.codex/superpowers-codex use-skill horspowers:brainstorming
 ```
 
 ### Bootstrap All Skills

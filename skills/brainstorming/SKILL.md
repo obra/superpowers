@@ -50,9 +50,9 @@ Start by understanding the current project context, then ask questions one at a 
 
 **Implementation (if continuing):**
 - After user confirms, ask: "需要创建隔离的开发环境吗？"
-- If yes: Use horspowerss:using-git-worktrees to create isolated workspace
+- If yes: Use horspowers:using-git-worktrees to create isolated workspace
 - If no: Continue in current branch
-- Use horspowerss:writing-plans to create detailed implementation plan
+- Use horspowers:writing-plans to create detailed implementation plan
 
 ## Key Principles
 

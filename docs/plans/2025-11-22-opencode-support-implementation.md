@@ -1,6 +1,6 @@
 # OpenCode Support Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use horspowerss:executing-plans to implement this plan task-by-task.
+> **For Claude:** REQUIRED SUB-SKILL: Use horspowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Add full superpowers support for OpenCode.ai with a native JavaScript plugin that shares core functionality with the existing Codex implementation.
 
@@ -197,11 +197,11 @@ Add before `module.exports`:
  * @returns {{skillFile: string, sourceType: string, skillPath: string} | null}
  */
 function resolveSkillPath(skillName, superpowersDir, personalDir) {
-    // Strip horspowerss: prefix if present
+    // Strip horspowers: prefix if present
     const forceSuperpowers = skillName.startsWith('horspowers:');
     const actualSkillName = forceSuperpowers ? skillName.replace(/^horspowers:/, '') : skillName;
 
-    // Try personal skills first (unless explicitly horspowerss:)
+    // Try personal skills first (unless explicitly horspowers:)
     if (!forceSuperpowers && personalDir) {
         const personalPath = path.join(personalDir, actualSkillName);
         const personalSkillFile = path.join(personalPath, 'SKILL.md');
@@ -991,7 +991,7 @@ Expected: Shows list of skills with names and descriptions
 
 **Step 2: Test use-skill command**
 
-Run: `.codex/superpowers-codex use-skill horspowerss:brainstorming | head -20`
+Run: `.codex/superpowers-codex use-skill horspowers:brainstorming | head -20`
 Expected: Shows brainstorming skill content
 
 **Step 3: Test bootstrap command**

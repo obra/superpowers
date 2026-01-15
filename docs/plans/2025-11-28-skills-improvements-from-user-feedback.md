@@ -507,7 +507,7 @@ Directly addresses the failure pattern from feedback.
 BEFORE writing any tests:
 
 1. Read testing-anti-patterns skill:
-   Use Skill tool: horspowerss:testing-anti-patterns
+   Use Skill tool: horspowers:testing-anti-patterns
 
 2. Apply gate functions from that skill when:
    - Writing mocks

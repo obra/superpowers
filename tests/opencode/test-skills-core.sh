@@ -320,7 +320,7 @@ const personalDir = '$TEST_HOME/personal-skills';
 const shared = resolveSkillPath('shared-skill', superpowersDir, personalDir);
 console.log('SHARED:', JSON.stringify(shared));
 
-// Test 2: horspowerss: prefix should force superpowers
+// Test 2: horspowers: prefix should force superpowers
 const forced = resolveSkillPath('horspowers:shared-skill', superpowersDir, personalDir);
 console.log('FORCED:', JSON.stringify(forced));
 
@@ -342,9 +342,9 @@ else
 fi
 
 if echo "$result" | grep -q 'FORCED:.*"sourceType":"superpowers"'; then
-    echo "  [PASS] horspowerss: prefix forces superpowers resolution"
+    echo "  [PASS] horspowers: prefix forces superpowers resolution"
 else
-    echo "  [FAIL] horspowerss: prefix not working"
+    echo "  [FAIL] horspowers: prefix not working"
     exit 1
 fi
 

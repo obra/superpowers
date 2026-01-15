@@ -24,7 +24,7 @@ Always respond in *Simplified Chinese/中文*
 ./tests/claude-code/run-skill-tests.sh --test test-subagent-driven-development.sh --verbose
 ```
 
-**Important:** Tests must run FROM the horspowerss directory, not from temp directories. Integration tests create real projects and execute full workflows.
+**Important:** Tests must run FROM the horspowers directory, not from temp directories. Integration tests create real projects and execute full workflows.
 
 ## Architecture
 
@@ -61,7 +61,7 @@ description: Brief description
 disable-model-invocation: true
 ---
 
-Invoke the horspowerss:skill-name skill and follow it exactly as presented to you
+Invoke the horspowers:skill-name skill and follow it exactly as presented to you
 ```
 
 The `disable-model-invocation: true` prevents Claude from invoking commands - only users can invoke slash commands.
@@ -72,8 +72,8 @@ The `disable-model-invocation: true` prevents Claude from invoking commands - on
 
 ### Skill Resolution
 
-- Personal skills (`~/.claude/skills/`) override horspowerss skills
-- Use `horspowers:` prefix to force using a horspowerss skill
+- Personal skills (`~/.claude/skills/`) override horspowers skills
+- Use `horspowers:` prefix to force using a horspowers skill
 - Skills are discovered by finding `SKILL.md` files recursively
 
 ## The Horspower Workflow
