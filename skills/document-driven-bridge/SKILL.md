@@ -1,6 +1,6 @@
 ---
 name: document-driven-bridge
-description: Use when document-driven-ai-workflow integration is enabled - Provides unified document management commands for superpowers workflows
+description: Use when document-driven-ai-workflow integration is enabled - Provides unified document management commands for superpowers workflows. 中文触发场景：当启用 document-driven-ai-workflow 集成时，提供统一的文档管理命令。
 ---
 
 # Document-Driven Bridge

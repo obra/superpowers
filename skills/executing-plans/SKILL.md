@@ -1,6 +1,6 @@
 ---
 name: executing-plans
-description: Use when you have a written implementation plan to execute in a separate session with review checkpoints
+description: Use when you have a written implementation plan to execute in a separate session with review checkpoints. 中文触发场景：当用户说'按计划执行'、'开始实施计划'、'执行这个开发计划'等需要执行已有计划时使用此技能。
 ---
 
 # Executing Plans
@@ -11,7 +11,7 @@ Load plan, review critically, execute tasks in batches, report for review betwee
 
 **Core principle:** Batch execution with checkpoints for architect review.
 
-**Announce at start:** "I'm using the executing-plans skill to implement this plan."
+**Announce at start:** "我正在使用执行计划技能来实施这个计划..." (I'm using the executing-plans skill to implement this plan...)
 
 ## The Process
 

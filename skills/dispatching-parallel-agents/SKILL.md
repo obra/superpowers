@@ -1,6 +1,6 @@
 ---
 name: dispatching-parallel-agents
-description: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies
+description: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies. 中文触发场景：当用户说'并行处理这些任务'、'同时解决这些问题'、'有多个独立的失败需要修复'等需要并行代理时使用此技能。
 ---
 
 # Dispatching Parallel Agents

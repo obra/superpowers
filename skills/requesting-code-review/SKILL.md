@@ -1,6 +1,6 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
+description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements. 中文触发场景：当用户说'帮我审查代码'、'检查一下代码质量'、'代码写完了帮我看看'等需要代码审查时使用此技能。
 ---
 
 # Requesting Code Review

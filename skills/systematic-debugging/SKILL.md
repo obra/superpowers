@@ -1,6 +1,6 @@
 ---
 name: systematic-debugging
-description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes
+description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes. 中文触发场景：当用户说'这里有个bug'、'测试失败了'、'为什么报错？'、'帮忙调试一下'、'出问题了'等遇到任何技术问题时使用此技能。
 ---
 
 # Systematic Debugging
@@ -12,6 +12,8 @@ Random fixes waste time and create new bugs. Quick patches mask underlying issue
 **Core principle:** ALWAYS find root cause before attempting fixes. Symptom fixes are failure.
 
 **Violating the letter of this process is violating the spirit of debugging.**
+
+**Announce at start:** "我正在使用系统化调试技能..." (I'm using systematic debugging...)
 
 ## The Iron Law
 

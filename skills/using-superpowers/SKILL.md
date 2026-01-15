@@ -1,6 +1,6 @@
 ---
 name: using-superpowers
-description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
+description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions. 中文触发场景：每次会话开始时自动注入，建立如何查找和使用技能的基础规则。
 ---
 
 <EXTREMELY-IMPORTANT>

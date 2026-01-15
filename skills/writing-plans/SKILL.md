@@ -1,6 +1,6 @@
 ---
 name: writing-plans
-description: Use when you have a spec or requirements for a multi-step task, before touching code
+description: Use when you have a spec or requirements for a multi-step task, before touching code. 中文触发场景：当用户说'帮我写个实施计划'、'怎么实现这个功能？'、'制定开发计划'、'需要详细规划一下'等需要编写实施计划时使用此技能。
 ---
 
 # Writing Plans
@@ -11,7 +11,7 @@ Write comprehensive implementation plans assuming the engineer has zero context 
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
 
-**Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
+**Announce at start:** "我正在使用编写计划技能来创建实施计划..." (I'm using the writing-plans skill to create the implementation plan...)
 
 **Context:** This should be run in a dedicated worktree (created by brainstorming skill).
 
@@ -98,13 +98,13 @@ git commit -m "feat: add specific feature"
 
 After saving the plan, offer execution choice:
 
-**"Plan complete and saved to `docs/plans/<filename>.md`. Two execution options:**
+**"计划已完成并保存到 `docs/plans/<filename>.md`。两种执行方式：**
 
-**1. Subagent-Driven (this session)** - I dispatch fresh subagent per task, review between tasks, fast iteration
+**1. 子代理驱动（当前会话）** - 我为每个任务分派新的子代理，任务间进行审查，快速迭代
 
-**2. Parallel Session (separate)** - Open new session with executing-plans, batch execution with checkpoints
+**2. 并行会话（独立）** - 在新会话中使用 executing-plans 批量执行，有检查点
 
-**Which approach?"**
+**选择哪种方式？"** (Which approach?)
 
 **If Subagent-Driven chosen:**
 - **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development

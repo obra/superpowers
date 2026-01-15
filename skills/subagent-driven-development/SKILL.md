@@ -1,6 +1,6 @@
 ---
 name: subagent-driven-development
-description: Use when executing implementation plans with independent tasks in the current session
+description: Use when executing implementation plans with independent tasks in the current session. 中文触发场景：当用户说'开始实施这个计划'、'按计划执行开发'、'执行开发任务'等需要子代理驱动开发时使用此技能。
 ---
 
 # Subagent-Driven Development
@@ -8,6 +8,8 @@ description: Use when executing implementation plans with independent tasks in t
 Execute plan by dispatching fresh subagent per task, with two-stage review after each: spec compliance review first, then code quality review.
 
 **Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
+
+**Announce at start:** "我正在使用子代理驱动开发技能来执行这个计划..." (I'm using subagent-driven development to execute this plan...)
 
 ## When to Use
 

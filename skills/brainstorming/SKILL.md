@@ -1,6 +1,6 @@
 ---
 name: brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
+description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation. 中文触发场景：当用户说'帮我想想这个功能的实现方案'、'这个需求我该怎么设计？'、'帮我理清思路'、'我想做个XXX，有什么建议？'等需要完善想法时使用此技能。"
 ---
 
 # Brainstorming Ideas Into Designs
@@ -10,6 +10,8 @@ description: "You MUST use this before any creative work - creating features, bu
 Help turn ideas into fully formed designs and specs through natural collaborative dialogue.
 
 Start by understanding the current project context, then ask questions one at a time to refine the idea. Once you understand what you're building, present the design in small sections (200-300 words), checking after each section whether it looks right so far.
+
+**Announce at start:** "我正在使用头脑风暴技能来完善你的想法..." (I'm using brainstorming to refine your idea...)
 
 ## The Process
 

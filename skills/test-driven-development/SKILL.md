@@ -1,6 +1,6 @@
 ---
 name: test-driven-development
-description: Use when implementing any feature or bugfix, before writing implementation code
+description: Use when implementing any feature or bugfix, before writing implementation code. 中文触发场景：当用户说'开始写这个功能'、'实现XXX功能'、'修复这个bug'、'用TDD方式开发'等需要测试驱动开发时使用此技能。
 ---
 
 # Test-Driven Development (TDD)
@@ -12,6 +12,8 @@ Write the test first. Watch it fail. Write minimal code to pass.
 **Core principle:** If you didn't watch the test fail, you don't know if it tests the right thing.
 
 **Violating the letter of the rules is violating the spirit of the rules.**
+
+**Announce at start:** "我正在使用测试驱动开发技能..." (I'm using test-driven development...)
 
 ## When to Use
 

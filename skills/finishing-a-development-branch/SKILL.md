@@ -1,6 +1,6 @@
 ---
 name: finishing-a-development-branch
-description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup
+description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup. 中文触发场景：当用户说'开发完成了'、'功能做完了怎么办？'、'合并代码'、'结束开发分支'等需要完成开发分支时使用此技能。
 ---
 
 # Finishing a Development Branch
@@ -11,7 +11,7 @@ Guide completion of development work by presenting clear options and handling ch
 
 **Core principle:** Verify tests → Present options → Execute choice → Clean up.
 
-**Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
+**Announce at start:** "我正在使用完成开发分支技能..." (I'm using the finishing-a-development-branch skill to complete this work...)
 
 ## The Process
 
