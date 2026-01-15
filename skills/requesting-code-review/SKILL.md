@@ -12,6 +12,14 @@ Dispatch 4 specialized review agents in parallel to catch issues before they cas
 
 **Core principle:** Review early, review often.
 
+<requirements>
+## Requirements
+
+1. Include context for reviewers. Code without context produces unclear feedback.
+2. Specify what feedback you need. Vague requests get vague responses.
+3. Provide test evidence. Claims without proof are unverifiable.
+</requirements>
+
 ## When to Request Review
 
 **Mandatory:**
@@ -187,30 +195,31 @@ You: [Fix memory issue, note suggestions for later]
 
 ## Red Flags
 
-**Never:**
-- Skip review because "it's simple"
-- Ignore Critical issues
-- Proceed with unfixed Important issues
-- Argue with valid technical feedback
+**Avoid:**
+- Skipping review because "it's simple"
+- Ignoring high-severity issues
+- Proceeding with unfixed issues
+- Arguing with valid technical feedback
 
 **If reviewer wrong:**
 - Push back with technical reasoning
 - Show code/tests that prove it works
 - Request clarification
 
-## COMPULSORY: Review Dispatch Verification
+<verification>
+## Pre-Dispatch Verification
 
-Before dispatching review agents:
+Before dispatching review agents, verify context is complete:
 
-**Context Gate** (COMPULSORY):
+**Context Gate:**
 
 - [ ] BASE_SHA and HEAD_SHA captured
 - [ ] Git diff generated
 - [ ] Summary of changes prepared
 
-**STOP CONDITION:** If context incomplete, gather it first.
+**STOP CONDITION:** If context incomplete, gather it before dispatching agents.
 
-**Dispatch Gate** (COMPULSORY - must dispatch all 4):
+**Dispatch Gate:**
 
 - [ ] Security Reviewer dispatched
 - [ ] Performance Reviewer dispatched
@@ -218,10 +227,14 @@ Before dispatching review agents:
 - [ ] Test Reviewer dispatched
 
 **STOP CONDITION:** If fewer than 4 agents dispatched, dispatch missing agents.
+</verification>
 
-After agents return:
+<verification>
+## Post-Completion Verification
 
-**Synthesis Gate** (COMPULSORY):
+After agents return, verify synthesis is complete:
+
+**Synthesis Gate:**
 
 - [ ] All 4 agents completed
 - [ ] Findings grouped by severity (Critical/Warning/Suggestion)
@@ -230,22 +243,19 @@ After agents return:
 
 **STOP CONDITION:** If any agent missing from synthesis, wait or re-dispatch.
 
-## COMPULSORY: Handoff Consumption Verification
-
-**Consumption Gate** (COMPULSORY - for each reviewer's findings):
+**Consumption Gate (for each reviewer's findings):**
 
 - [ ] Each reviewer's output file path stated
 - [ ] Key findings from EACH reviewer quoted/referenced
 - [ ] Severity classifications traced back to specific reviewer
 
-**STOP CONDITION:** If synthesizing without citing specific reviewer outputs, STOP. Quote each reviewer's findings.
+**STOP CONDITION:** If synthesizing without citing specific reviewer outputs, quote each reviewer's findings.
+</verification>
 
-## Red Flags - IMMEDIATE STOP
+<requirements>
+## Requirements Reminder
 
-| Violation | Why It's Critical | Recovery |
-|-----------|-------------------|----------|
-| Fewer than 4 reviewers dispatched | Incomplete review coverage | Re-dispatch missing agents |
-| Synthesis doesn't cite all reviewers | Information loss | Include quotes from each reviewer |
-| Reviewer findings summarized without quotes | Can't trace back to source | Quote specific findings per reviewer |
-| Severity grouping missing | Prioritization unclear | Group as Critical/Warning/Suggestion |
-| Any reviewer's findings dropped | Some issues missed | Ensure all 4 reviewers in synthesis |
+1. Include context for reviewers. Code without context produces unclear feedback.
+2. Specify what feedback you need. Vague requests get vague responses.
+3. Provide test evidence. Claims without proof are unverifiable.
+</requirements>
