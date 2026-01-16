@@ -3,7 +3,7 @@
 Superpowers is a complete software development workflow for your coding agents, built on top of a set of composable "skills" and some initial instructions that make sure your agent uses them.
 
 ## How it works
-
+hewjcfbejkwhbfjewhbjkfhjkwehfjk
 It starts from the moment you fire up your coding agent. As soon as it sees that you're building something, it *doesn't* just jump into trying to write code. Instead, it steps back and asks you what you're really trying to do. 
 
 Once it's teased a spec out of the conversation, it shows it to you in chunks short enough to actually read and digest. 
@@ -144,7 +144,7 @@ See `skills/writing-skills/SKILL.md` for the complete guide.
 ## Updating
 
 Skills update automatically when you update the plugin:
-
+PERFERCT
 ```bash
 /plugin update superpowers
 ```
