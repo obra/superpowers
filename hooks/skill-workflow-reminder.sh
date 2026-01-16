@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Stop hook for skill workflow suggestions
+# UserPromptSubmit hook for skill workflow suggestions
 # Reminds Claude to suggest next skills after completing workflows
 
 set -euo pipefail
@@ -16,7 +16,7 @@ set -euo pipefail
 cat <<'EOF'
 {
   "hookSpecificOutput": {
-    "hookEventName": "Stop",
+    "hookEventName": "UserPromptSubmit",
     "additionalContext": "<skill-workflow-reminder>\n**IMPORTANT:** Check if you just completed a skill workflow step. If yes, consult the \"Common Workflow Chains\" table in using-superpowers and proactively suggest the next logical skill.\n\nFormat: \"✅ [skill] complete. **Next step:** Use `superpowers:[next-skill]` to [purpose]\"\n\nBe directive, not passive. This is mandatory workflow discipline.\n</skill-workflow-reminder>"
   }
 }
