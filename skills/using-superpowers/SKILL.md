@@ -138,3 +138,25 @@ Recognize these user phrases as skill invocation triggers:
 | "is this ready to merge", "can we ship this" | `verification-before-completion` | Claims require evidence |
 
 **Exception:** Only skip skill if user explicitly says "skip the workflow" or "just commit it".
+
+## Common Workflow Chains
+
+**After completing ANY skill, proactively suggest the next logical step:**
+
+| After This Skill | Suggest This Next | When |
+|------------------|-------------------|------|
+| `brainstorming` | `using-git-worktrees` → `writing-plans` | Design is validated and ready for implementation |
+| `writing-plans` | Choice: `executing-plans` OR `subagent-driven-development` | Plan is complete, ask which execution approach |
+| `executing-plans` | `verification-before-completion` | All tasks complete |
+| `subagent-driven-development` | `verification-before-completion` | All tasks complete |
+| `test-driven-development` | `verification-before-completion` | Tests passing and implementation complete |
+| `systematic-debugging` | `verification-before-completion` | Fix implemented |
+| `verification-before-completion` | `finishing-a-development-branch` | All tests pass |
+| `requesting-code-review` | `finishing-a-development-branch` | Feedback addressed |
+| `finishing-a-development-branch` | `ai-self-reflection` OR `compound-learning` | Work integrated, capture learnings |
+
+**Be proactive, not passive:**
+- ✅ "✅ [skill] complete. **Next step:** Use `superpowers:[next-skill]` to [purpose]"
+- ❌ "What would you like to do next?"
+
+**This is mandatory workflow discipline** - always suggest the next step.

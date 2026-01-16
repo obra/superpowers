@@ -18,8 +18,11 @@ description: Use when verification-before-completion finishes or when analyzing 
 1. Asks user for scope of analysis
 2. Analyzes conversation for three mistake types
 3. Extracts structured learnings from detected mistakes
-4. Shows summary and asks for bulk confirmation
-5. Writes learnings to docs/learnings/
+4. Shows summary and asks how to handle them:
+   - **Act on them now** (recommended): Present each learning and choose action (update CLAUDE.md, create skill, fix code, or save)
+   - **Save for later**: Write all to docs/learnings/ without immediate action
+   - **Skip**: Don't capture any learnings
+5. Executes chosen actions for each learning
 6. Increments counter for meta-learning-review trigger
 
 ---
@@ -128,8 +131,6 @@ Found {{COUNT}} potential learning(s) from this session:
 1. [Type: user-correction] {{BRIEF_SUMMARY_1}}
 2. [Type: backtracking] {{BRIEF_SUMMARY_2}}
 3. [Type: repeated-error] {{BRIEF_SUMMARY_3}}
-
-Capture all learnings?
 ```
 
 Use AskUserQuestion tool:
@@ -137,16 +138,20 @@ Use AskUserQuestion tool:
 ```json
 {
   "questions": [{
-    "question": "Should I capture these learnings?",
-    "header": "Confirmation",
+    "question": "How should I handle these learnings?",
+    "header": "Action",
     "multiSelect": false,
     "options": [
       {
-        "label": "Yes - capture all",
-        "description": "Write all detected learnings to docs/learnings/"
+        "label": "Act on them now (Recommended)",
+        "description": "Review each learning and decide what to do (update docs, create skill, fix code, or save for later)"
       },
       {
-        "label": "No - skip",
+        "label": "Save for later",
+        "description": "Write all learnings to docs/learnings/ without immediate action"
+      },
+      {
+        "label": "Skip",
         "description": "Don't capture any learnings from this session"
       }
     ]
@@ -154,9 +159,115 @@ Use AskUserQuestion tool:
 }
 ```
 
-If user chooses "No", exit skill.
+If user chooses "Skip", exit skill.
 
-If user chooses "Yes", proceed to Step 4.
+If user chooses "Save for later", proceed to Step 4.
+
+If user chooses "Act on them now", proceed to Step 3a.
+
+### Step 3a: Act on Learnings Immediately
+
+**For each detected learning:**
+
+1. **Present the learning:**
+
+```
+## Learning {{N}} of {{TOTAL}}: {{BRIEF_SUMMARY}}
+
+**Type:** {{TYPE}}
+
+**What Happened:**
+{{DESCRIPTION}}
+
+**AI Assumption:**
+{{ASSUMPTION}}
+
+**Reality:**
+{{REALITY}}
+
+**Lesson:**
+{{TAKEAWAY}}
+
+**Suggested Action:**
+{{SUGGESTED_ACTION}}
+```
+
+2. **Ask what to do with this learning:**
+
+Use AskUserQuestion tool:
+
+```json
+{
+  "questions": [{
+    "question": "What should I do with this learning?",
+    "header": "Action",
+    "multiSelect": false,
+    "options": [
+      {
+        "label": "Update CLAUDE.md",
+        "description": "Add this pattern to project documentation"
+      },
+      {
+        "label": "Create/update skill",
+        "description": "Create a new skill or enhance an existing one"
+      },
+      {
+        "label": "Fix code now",
+        "description": "Make code changes to address this issue"
+      },
+      {
+        "label": "Save for later",
+        "description": "Just write to docs/learnings/ for future reference"
+      },
+      {
+        "label": "Skip this one",
+        "description": "Don't capture this particular learning"
+      }
+    ]
+  }]
+}
+```
+
+3. **Execute the chosen action:**
+
+**If "Update CLAUDE.md":**
+- Read CLAUDE.md to understand current structure
+- Identify appropriate section (or create new section like "Common Patterns" or "Lessons Learned")
+- Draft the addition showing context and lesson learned
+- Use Edit tool to add to CLAUDE.md
+- Write learning to docs/learnings/ with added note in Suggested Action section: "IMPLEMENTED: Added to CLAUDE.md on [DATE]"
+- Continue to next learning
+
+**If "Create/update skill":**
+- Ask which skill to modify: Use AskUserQuestion with two options:
+  - "Create new skill" - then ask for skill name suggestion
+  - "Update existing skill" - then ask which skill name
+- Invoke superpowers:writing-skills skill
+- When writing-skills completes, return to ai-self-reflection workflow
+- Write learning to docs/learnings/ with added note: "IMPLEMENTED: Created/updated [SKILL-NAME] skill on [DATE]"
+- Continue to next learning
+
+**If "Fix code now":**
+- Show the suggested fix from the learning
+- Ask user to confirm files to change or provide file paths
+- Make the recommended code changes using Edit tool
+- Write learning to docs/learnings/ with added note: "IMPLEMENTED: Fixed code in [FILES] on [DATE]"
+- Continue to next learning
+
+**If "Save for later":**
+- Write this learning to docs/learnings/ without implementation notes
+- Continue to next learning
+
+**If "Skip this one":**
+- Do NOT write this learning to docs/learnings/
+- Continue to next learning
+
+4. **Repeat for all learnings**
+
+5. **After processing all learnings:**
+- Count how many learnings were actually saved (excludes "Skip this one" choices)
+- If count > 0, proceed to Step 5 (increment counter and commit)
+- If count = 0, skip to success message: "Processed {{TOTAL}} learning(s), none were saved."
 
 ### Step 4: Create Learning Files
 
@@ -265,7 +376,11 @@ These learnings will be analyzed by meta-learning-review for patterns.
 - ✅ Silently analyzes conversation for mistakes
 - ✅ Detects user corrections, backtracking, repeated errors
 - ✅ Shows summary with brief descriptions
-- ✅ Asks bulk confirmation (capture all or skip)
+- ✅ Asks how to handle learnings (act now, save for later, or skip)
+- ✅ For "Act on them now": presents each learning with full details
+- ✅ For "Act on them now": offers action choices (update CLAUDE.md, create/update skill, fix code, save, skip)
+- ✅ For "Act on them now": executes chosen actions (edits CLAUDE.md, invokes writing-skills, makes code fixes)
+- ✅ For "Save for later": writes all to docs/learnings/ without interaction
 - ✅ Writes YAML frontmatter with source:ai-detected
 - ✅ Increments meta-learning counter
 - ✅ Commits learnings to git
