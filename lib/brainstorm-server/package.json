@@ -1,0 +1,11 @@
+{
+  "name": "brainstorm-server",
+  "version": "1.0.0",
+  "description": "Visual brainstorming companion server for Claude Code",
+  "main": "index.js",
+  "dependencies": {
+    "chokidar": "^3.5.3",
+    "express": "^4.18.2",
+    "ws": "^8.14.2"
+  }
+}
