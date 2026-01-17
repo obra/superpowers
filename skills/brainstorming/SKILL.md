@@ -52,3 +52,23 @@ Start by understanding the current project context, then ask questions one at a 
 - **Explore alternatives** - Always propose 2-3 approaches before settling
 - **Incremental validation** - Present design in sections, validate each
 - **Be flexible** - Go back and clarify when something doesn't make sense
+
+## Visual Companion (Optional)
+
+When brainstorming involves visual elements - UI mockups, wireframes, interactive prototypes - use the browser-based visual companion.
+
+**When to use:**
+- Presenting UI/UX options that benefit from visual comparison
+- Showing wireframes or layout options
+- Gathering structured feedback (ratings, forms)
+- Prototyping click interactions
+
+**How it works:**
+1. Start the server as a background job
+2. Tell user to open http://localhost:3333
+3. Write HTML to `/tmp/brainstorm/screen.html` (auto-refreshes)
+4. Check background task output for user interactions
+
+The terminal remains the primary conversation interface. The browser is a visual aid.
+
+**Reference:** See `visual-companion.md` in this skill directory for HTML patterns and API details.
