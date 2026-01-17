@@ -77,6 +77,8 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 ### Google Antigravity
 
+For more details on managing skills, please refer to the [official documentation](https://antigravity.google/docs/skills).
+
 1. Clone this repository:
 
    ```bash
