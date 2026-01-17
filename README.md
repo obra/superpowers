@@ -87,7 +87,7 @@ For more details on managing skills, please refer to the [official documentation
 
 2. Copy the `skills` directory contents to your global skills directory:
 
-   - **Windows**: `C:\Users\Administrator\.gemini\antigravity\skills`
+   - **Windows**: `%USERPROFILE%\.gemini\antigravity\skills`
    - **Mac/Linux**: `~/.gemini/antigravity/skills`
 
 3. (Optional) Clean up the temporary directory.
