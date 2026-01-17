@@ -19,8 +19,8 @@ Write HTML to `/tmp/brainstorm/screen.html`. The server watches this file and au
 Check the background task output for JSON events:
 
 ```json
-{"text":"Option A","choice":"optionA","timestamp":1234567890,"type":"user-event"}
-{"data":{"notes":"My feedback"},"timestamp":1234567891,"type":"user-event"}
+{"source":"user-event","type":"click","text":"Option A","choice":"optionA","timestamp":1234567890}
+{"source":"user-event","type":"submit","data":{"notes":"My feedback"},"timestamp":1234567891}
 ```
 
 Event types:
