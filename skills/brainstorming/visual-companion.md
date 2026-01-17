@@ -5,7 +5,7 @@
 Run as a background job:
 
 ```bash
-node ${PLUGIN_ROOT}/lib/brainstorm-server/index.js
+node ${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/index.js
 ```
 
 Tell the user: "I've started a visual companion at http://localhost:3333 - open it in a browser."
@@ -19,14 +19,15 @@ Write HTML to `/tmp/brainstorm/screen.html`. The server watches this file and au
 Check the background task output for JSON events:
 
 ```json
-{"type":"user-event","type":"click","text":"Option A","choice":"optionA","timestamp":1234567890}
-{"type":"user-event","type":"submit","data":{"notes":"My feedback"},"timestamp":1234567891}
+{"text":"Option A","choice":"optionA","timestamp":1234567890,"type":"user-event"}
+{"data":{"notes":"My feedback"},"timestamp":1234567891,"type":"user-event"}
 ```
 
 Event types:
 - **click**: User clicked button or `data-choice` element
 - **submit**: User submitted form (includes all form data)
 - **input**: User typed in field (debounced 500ms)
+- **choice**: Explicit choice via `brainstorm.choice()` call
 
 ## HTML Patterns
 
