@@ -68,7 +68,7 @@ async function runTests() {
     ws.send(JSON.stringify({ type: 'click', text: 'Test Button' }));
     await sleep(300);
 
-    assert(stdout.includes('user-event'), 'Should relay user events');
+    assert(stdout.includes('"source":"user-event"'), 'Should relay user events with source field');
     assert(stdout.includes('Test Button'), 'Should include event data');
     ws.close();
     console.log('  PASS');
