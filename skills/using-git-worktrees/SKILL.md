@@ -20,16 +20,22 @@ Git worktrees create isolated workspaces sharing the same repository, allowing w
 ### 1. Detect If Already In A Worktree
 
 ```bash
-# Check if current directory is a worktree (.git is a file, not a directory)
-if [ -f .git ]; then
+# Check if in a worktree by comparing git-dir vs git-common-dir
+# Works reliably from any subdirectory, not just repo root
+git_dir=$(git rev-parse --path-format=absolute --git-dir 2>/dev/null)
+git_common_dir=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)
+
+if [[ -n "$git_dir" && -n "$git_common_dir" && "$git_dir" != "$git_common_dir" ]]; then
     echo "⚠️  Already in a worktree. Navigating to main repository..."
-    main_repo=$(git rev-parse --path-format=absolute --git-common-dir | sed 's|/.git$||')
+    main_repo=$(echo "$git_common_dir" | sed 's|/.git$||')
     cd "$main_repo"
     echo "Now in: $(pwd)"
 fi
 ```
 
 **Why critical:** Creating a worktree from within another worktree causes nested creation at wrong paths.
+
+**Why this method:** Comparing `git-dir` vs `git-common-dir` works from any subdirectory. When in a worktree, these differ; in the main repository, they're identical. The old `[ -f .git ]` check only worked at the repository root.
 
 ### 2. Detect Repository Type
 

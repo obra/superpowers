@@ -53,7 +53,7 @@ git worktree add .worktrees/bugfix -b bugfix
 
 **Expected Behavior:**
 
-1. **Pre-Flight Check:** (`.git` in subdirectory is not a file, so doesn't trigger worktree detection - this is correct)
+1. **Pre-Flight Check:** Worktree detection works from subdirectory using git-dir vs git-common-dir comparison (doesn't rely on `.git` file presence)
 
 2. **Agent Uses Absolute Path Resolution:**
 ```bash
