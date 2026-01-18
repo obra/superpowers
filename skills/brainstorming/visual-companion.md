@@ -21,18 +21,18 @@ ${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/start-server.sh
 #           "screen_dir":"/tmp/brainstorm-12345-1234567890",
 #           "screen_file":"/tmp/brainstorm-12345-1234567890/screen.html"}
 
-# 2. Write screen to the session's screen_file
+# 2. Start watcher FIRST (before writing screen - avoids race condition)
+${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/wait-for-event.sh $SCREEN_DIR/.server.log
+
+# 3. Write screen to the session's screen_file
 # Use Bash with heredoc to write HTML
 
-# 3. Wait for feedback using TaskOutput with block=true
-# Start watcher in background:
-${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/wait-for-event.sh $SCREEN_DIR/.server.log
-# Then call TaskOutput(task_id, block=true, timeout=600000) to wait
+# 4. Wait for feedback - call TaskOutput(task_id, block=true, timeout=600000)
 # If timeout, call TaskOutput again (watcher still running)
 # After 3 timeouts (30 min), say "Let me know when you want to continue"
 # Returns: {"choice":"a","feedback":"user notes"}
 
-# 4. Clean up when done (pass screen_dir as argument)
+# 5. Clean up when done (pass screen_dir as argument)
 ${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/stop-server.sh $SCREEN_DIR
 ```
 

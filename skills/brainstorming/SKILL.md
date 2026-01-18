@@ -112,9 +112,9 @@ When the user clicks Send in the browser, the watcher exits and TaskOutput retur
 
 ### The Loop
 
-1. Write screen HTML to `screen_file`
-2. Start watcher (background bash)
-3. Call TaskOutput(task_id, block=true) to wait
+1. Start watcher (background bash) - must be FIRST to avoid race condition
+2. Write screen HTML to `screen_file`
+3. Call TaskOutput(task_id, block=true, timeout=600000) to wait
 4. TaskOutput returns with feedback
 5. Respond with new screen
 6. Repeat until done
