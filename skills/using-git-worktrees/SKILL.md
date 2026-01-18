@@ -13,6 +13,37 @@ Git worktrees create isolated workspaces sharing the same repository, allowing w
 
 **Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
 
+## Pre-Flight Checks
+
+**CRITICAL: Always run these checks before creating a worktree.**
+
+### 1. Detect If Already In A Worktree
+
+```bash
+# Check if current directory is a worktree (.git is a file, not a directory)
+if [ -f .git ]; then
+    echo "⚠️  Already in a worktree. Navigating to main repository..."
+    main_repo=$(git rev-parse --path-format=absolute --git-common-dir | sed 's|/.git$||')
+    cd "$main_repo"
+    echo "Now in: $(pwd)"
+fi
+```
+
+**Why critical:** Creating a worktree from within another worktree causes nested creation at wrong paths.
+
+### 2. Detect Repository Type
+
+```bash
+# Check if this is a bare repository
+is_bare=$(git config --get core.bare 2>/dev/null)
+if [[ "$is_bare" == "true" ]]; then
+    echo "Note: This is a bare repository. All work must happen in worktrees."
+    echo "Primary workspace should be: .worktrees/main"
+fi
+```
+
+**Why critical:** Bare repositories require all work in worktrees; main directory has no working tree.
+
 ## Directory Selection Process
 
 Follow this priority order:
@@ -82,21 +113,28 @@ project=$(basename "$(git rev-parse --show-toplevel)")
 
 ### 2. Create Worktree
 
+**CRITICAL: Always use absolute paths to prevent nested worktree creation.**
+
 ```bash
-# Determine full path
+# Get absolute path to main repository
+main_repo=$(git rev-parse --show-toplevel)
+
+# Determine full worktree path (always absolute)
 case $LOCATION in
   .worktrees|worktrees)
-    path="$LOCATION/$BRANCH_NAME"
+    worktree_path="$main_repo/$LOCATION/$BRANCH_NAME"
     ;;
   ~/.config/superpowers/worktrees/*)
-    path="~/.config/superpowers/worktrees/$project/$BRANCH_NAME"
+    worktree_path="$HOME/.config/superpowers/worktrees/$project/$BRANCH_NAME"
     ;;
 esac
 
-# Create worktree with new branch
-git worktree add "$path" -b "$BRANCH_NAME"
-cd "$path"
+# Create worktree with new branch using absolute path
+git worktree add "$worktree_path" -b "$BRANCH_NAME"
+cd "$worktree_path"
 ```
+
+**Why absolute paths:** Relative paths like `../.worktrees/` can create worktrees at wrong locations when already inside a worktree.
 
 ### 3. Run Project Setup
 
@@ -145,6 +183,8 @@ Ready to implement <feature-name>
 
 | Situation | Action |
 |-----------|--------|
+| **Already in a worktree** | Navigate to main repo before creating new worktree |
+| **Bare repository detected** | Note primary workspace is `.worktrees/main` |
 | `.worktrees/` exists | Use it (verify ignored) |
 | `worktrees/` exists | Use it (verify ignored) |
 | Both exist | Use `.worktrees/` |
@@ -194,6 +234,9 @@ Ready to implement auth feature
 ## Red Flags
 
 **Never:**
+- Create worktree from within another worktree (detect and navigate to main repo first)
+- Use relative paths like `../.worktrees/` for worktree operations (always use absolute paths)
+- Run `git pull` in a bare repository root (run from `.worktrees/main` instead)
 - Create worktree without verifying it's ignored (project-local)
 - Skip baseline test verification
 - Proceed with failing tests without asking
@@ -201,6 +244,8 @@ Ready to implement auth feature
 - Skip CLAUDE.md check
 
 **Always:**
+- Run pre-flight checks: detect if in worktree, detect if bare repo
+- Use absolute paths for all worktree creation (`$main_repo/.worktrees/$BRANCH_NAME`)
 - Follow directory priority: existing > CLAUDE.md > ask
 - Verify directory is ignored for project-local
 - Auto-detect and run project setup
