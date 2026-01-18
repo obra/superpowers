@@ -21,6 +21,32 @@ export const SuperpowersPlugin = async ({ client, directory }) => {
   const superpowersSkillsDir = path.resolve(__dirname, '../../skills');
   const personalSkillsDir = path.join(homeDir, '.config/opencode/skills');
 
+  // Helper to get opencode state directory
+  const getStateDir = () => {
+    if (process.env.OPENCODE_TEST_HOME) {
+      return path.join(process.env.OPENCODE_TEST_HOME, '.local', 'state', 'opencode');
+    }
+    // Use xdgState with fallback for different platforms
+    const xdgState = process.env.XDG_STATE_HOME || 
+      path.join(os.homedir(), '.local', 'state');
+    return path.join(xdgState, 'opencode');
+  };
+
+  // Helper to read model from TUI cache
+  const getTUIModelAndAgent = () => {
+    try {
+      const modelFile = path.join(getStateDir(), 'model.json');
+      const data = JSON.parse(fs.readFileSync(modelFile, 'utf8'));
+      
+      const model = data.recent?.[0];
+      return {
+        model
+      };
+    } catch (err) {
+      return null;
+    }
+  };
+
   // Helper to generate bootstrap content
   const getBootstrapContent = (compact = false) => {
     const usingSuperpowersPath = skillsCore.resolveSkillPath('using-superpowers', superpowersSkillsDir, personalSkillsDir);
@@ -62,13 +88,24 @@ ${toolMapping}
     const bootstrapContent = getBootstrapContent(compact);
     if (!bootstrapContent) return false;
 
-    try {
-      await client.session.prompt({
-        path: { id: sessionID },
-        body: {
+      const tuiData = getTUIModelAndAgent();
+      
+      try {
+        const promptBody = {
           noReply: true,
           parts: [{ type: "text", text: bootstrapContent, synthetic: true }]
+        };
+
+        if (tuiData?.model) {
+          promptBody.model = {
+            providerID: tuiData.model.providerID,
+            modelID: tuiData.model.modelID
+          };
         }
+
+      await client.session.prompt({
+        path: { id: sessionID },
+        body: promptBody
       });
       return true;
     } catch (err) {
@@ -127,15 +164,25 @@ ${toolMapping}
 
           // Insert as user message with noReply for persistence across compaction
           try {
+            const tuiData = getTUIModelAndAgent();
+            const promptBody = {
+              noReply: true,
+              parts: [
+                { type: "text", text: `Loading skill: ${name || skill_name}`, synthetic: true },
+                { type: "text", text: `${skillHeader}\n\n${content}`, synthetic: true }
+              ]
+            };
+
+            if (tuiData?.model) {
+              promptBody.model = {
+                providerID: tuiData.model.providerID,
+                modelID: tuiData.model.modelID
+              };
+            }
+
             await client.session.prompt({
               path: { id: context.sessionID },
-              body: {
-                noReply: true,
-                parts: [
-                  { type: "text", text: `Loading skill: ${name || skill_name}`, synthetic: true },
-                  { type: "text", text: `${skillHeader}\n\n${content}`, synthetic: true }
-                ]
-              }
+              body: promptBody
             });
           } catch (err) {
             // Fallback: return content directly if message insertion fails
