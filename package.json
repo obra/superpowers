@@ -1,0 +1,41 @@
+{
+  "name": "superpowers",
+  "version": "4.0.3",
+  "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./skills-core": "./lib/skills-core.js",
+    "./skill-registry": "./lib/skill-registry.js",
+    "./subagent-registry": "./lib/subagent-registry.js",
+    "./command-registry": "./lib/command-registry.js"
+  },
+  "scripts": {
+    "test": "node --test tests/",
+    "list-skills": "node -e \"import('./lib/index.js').then(m => console.log(m.listSkills().map(s => s.name).join('\\n')))\""
+  },
+  "keywords": [
+    "claude-code",
+    "skills",
+    "tdd",
+    "debugging",
+    "collaboration",
+    "best-practices",
+    "workflows",
+    "subagents"
+  ],
+  "author": {
+    "name": "Jesse Vincent",
+    "email": "jesse@fsck.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/obra/superpowers"
+  },
+  "homepage": "https://github.com/obra/superpowers",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
