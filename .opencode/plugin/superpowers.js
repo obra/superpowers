@@ -10,15 +10,50 @@ import fs from 'fs';
 import os from 'os';
 import { fileURLToPath } from 'url';
 import { tool } from '@opencode-ai/plugin/tool';
-import * as skillsCore from '../../lib/skills-core.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Find the superpowers lib directory by looking in common locations
+const findSkillsCorePath = () => {
+  const possiblePaths = [
+    path.join(__dirname, '../../lib/skills-core.js'),
+    path.join(process.cwd(), '.opencode/lib/skills-core.js'),
+    path.join(path.dirname(__dirname), 'superpowers/lib/skills-core.js'),
+    path.join(path.dirname(__dirname), 'lib/skills-core.js'),
+  ];
+
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      return p;
+    }
+  }
+  throw new Error(`skills-core.js not found. Looked in: ${possiblePaths.join(', ')}`);
+};
+
+const findSuperpowersSkillsDir = () => {
+  const possiblePaths = [
+    path.join(__dirname, '../../skills'),
+    path.join(process.cwd(), '.opencode/skills'),
+    path.join(path.dirname(__dirname), 'superpowers/skills'),
+    path.join(path.dirname(__dirname), 'skills'),
+  ];
+
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      return p;
+    }
+  }
+  throw new Error(`Superpowers skills directory not found. Looked in: ${possiblePaths.join(', ')}`);
+};
+
+const skillsCorePath = findSkillsCorePath();
+const skillsCore = await import(skillsCorePath);
+const superpowersSkillsDir = findSuperpowersSkillsDir();
 
 export const SuperpowersPlugin = async ({ client, directory }) => {
   const homeDir = os.homedir();
   const projectSkillsDir = path.join(directory, '.opencode/skills');
-  // Derive superpowers skills dir from plugin location (works for both symlinked and local installs)
-  const superpowersSkillsDir = path.resolve(__dirname, '../../skills');
   const personalSkillsDir = path.join(homeDir, '.config/opencode/skills');
 
   // Helper to get opencode state directory
