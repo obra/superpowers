@@ -55,81 +55,74 @@ Start by understanding the current project context, then ask questions one at a 
 
 ## Visual Companion (Claude Code Only)
 
-When brainstorming involves visual elements - UI mockups, layouts, design comparisons - you can use a browser-based visual companion instead of ASCII art. **This only works in Claude Code.**
+A browser-based visual companion for showing mockups, diagrams, and options. Use it whenever visual representation makes feedback easier. **Only works in Claude Code.**
 
-### When to Offer
+### When to Use
 
-If the brainstorm involves visual decisions (UI layouts, design choices, mockups), ask the user:
+Use the visual companion when seeing beats describing:
+- **UI mockups** - layouts, navigation, component designs
+- **Architecture diagrams** - system components, data flow, relationships
+- **Complex choices** - multi-option decisions with visual trade-offs
+- **Design polish** - when the question is about look and feel
+- **Spatial relationships** - file structures, database schemas, state machines
 
+**Always ask first:**
 > "This involves some visual decisions. Would you like me to show mockups in a browser window? (Requires opening a local URL)"
 
-Only proceed with visual companion if they agree. Otherwise, describe options in text.
+Only proceed if they agree. Otherwise, describe options in text.
 
-### Starting the Visual Companion
+### How to Use Effectively
+
+**Scale fidelity to the question.** If you're asking about layout structure, simple wireframes suffice. If you're asking about visual polish, show polish. Match the mockup's detail level to what you're trying to learn.
+
+**Explain the question on each page.** Don't just show options—state what decision you're seeking. "Which layout feels more professional?" not just "Pick one."
+
+**Iterate before moving on.** If feedback changes the current screen, update it and show again. Validate that your changes address their feedback before proceeding to the next question.
+
+**Limit choices to 2-4 options.** More gets overwhelming. If you have more alternatives, narrow them down first or group them.
+
+**Use real content when it matters.** For a photography portfolio, use actual images (Unsplash). For a blog, use realistic text. Placeholder content obscures design issues.
+
+### Starting a Session
 
 ```bash
 # Start server (creates unique session directory)
 ${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/start-server.sh
 
-# Output looks like:
-# {"type":"server-started","port":52341,"url":"http://localhost:52341",
-#  "screen_dir":"/tmp/brainstorm-12345-1234567890",
-#  "screen_file":"/tmp/brainstorm-12345-1234567890/screen.html"}
+# Returns: {"type":"server-started","port":52341,"url":"http://localhost:52341",
+#           "screen_dir":"/tmp/brainstorm-12345","screen_file":"/tmp/brainstorm-12345/screen.html"}
 ```
 
-**Save the `screen_dir` and `screen_file` paths from the response** - you'll need them throughout the session.
-
-Tell the user to open the URL in their browser.
-
-### Showing Content
-
-Write complete HTML to the session's `screen_file` path. The browser auto-refreshes.
-
-Use the frame template structure from `${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/frame-template.html`:
-- Keep the header and feedback-footer intact
-- Replace `#claude-content` with your content
-- Use the CSS helper classes (`.options`, `.cards`, `.mockup`, `.split`, `.pros-cons`)
-
-See `${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/CLAUDE-INSTRUCTIONS.md` for detailed examples.
-
-### Waiting for User Feedback
-
-Start the watcher as a background bash command, then use TaskOutput with block=true to wait:
-
-```bash
-# 1. Start watcher in background
-${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/wait-for-event.sh $SCREEN_DIR/.server.log
-
-# 2. Call TaskOutput(task_id, block=true, timeout=600000) to wait
-# 3. If timeout, call TaskOutput again (watcher is still running)
-# 4. After 3 timeouts (30 min), say "Let me know when you want to continue" and stop looping
-```
-
-When the user clicks Send in the browser, the watcher exits and TaskOutput returns with feedback:
-```json
-{"choice": "a", "feedback": "I like this but make the header smaller"}
-```
+Save `screen_dir` and `screen_file` from the response. Tell user to open the URL.
 
 ### The Loop
 
-1. Start watcher (background bash) - must be FIRST to avoid race condition
-2. Write screen HTML to `screen_file`
-3. Call TaskOutput(task_id, block=true, timeout=600000) to wait
-4. TaskOutput returns with feedback
-5. Respond with new screen
-6. Repeat until done
+1. **Start watcher first** (background bash) - avoids race condition:
+   ```bash
+   ${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/wait-for-feedback.sh $SCREEN_DIR
+   ```
+
+2. **Write HTML** to `screen_file` using the Write tool (browser auto-refreshes)
+
+3. **Wait for feedback** - call `TaskOutput(task_id, block=true, timeout=600000)`
+   - If timeout, call TaskOutput again (watcher still running)
+   - After 3 timeouts (30 min), say "Let me know when you want to continue"
+
+4. **Process feedback** - returns JSON like `{"choice": "a", "feedback": "make header smaller"}`
+
+5. **Iterate or advance** - if feedback changes current screen, update and re-show. Only move to next question when current step is validated.
+
+6. Repeat until done.
 
 ### Cleaning Up
-
-When the visual brainstorming session is complete, pass the screen_dir to stop:
 
 ```bash
 ${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/stop-server.sh $SCREEN_DIR
 ```
 
-### Tips
+### Resources
 
-- **Keep mockups simple** - Focus on layout and structure, not pixel-perfect design
-- **Limit choices** - 2-4 options is ideal
-- **Regenerate fully** - Write complete HTML each turn; the screen is stateless
-- **Terminal is primary** - The browser shows things; conversation happens in terminal
+- Frame template: `${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/frame-template.html`
+- CSS classes: `.options`, `.cards`, `.mockup`, `.split`, `.pros-cons`
+- Detailed examples: `${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/CLAUDE-INSTRUCTIONS.md`
+- Quick reference: `${CLAUDE_PLUGIN_ROOT}/skills/brainstorming/visual-companion.md`

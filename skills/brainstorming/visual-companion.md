@@ -1,6 +1,6 @@
 # Visual Companion Reference
 
-Quick reference for using the visual brainstorming companion.
+Quick reference for the browser-based visual brainstorming companion.
 
 ## Files
 
@@ -8,33 +8,39 @@ Quick reference for using the visual brainstorming companion.
 |------|---------|
 | `lib/brainstorm-server/start-server.sh` | Start server, outputs JSON with URL and session paths |
 | `lib/brainstorm-server/stop-server.sh` | Stop server and clean up session directory |
-| `lib/brainstorm-server/wait-for-event.sh` | Wait for user feedback |
+| `lib/brainstorm-server/wait-for-feedback.sh` | Wait for user feedback (polling-based) |
 | `lib/brainstorm-server/frame-template.html` | Base HTML template with CSS |
 | `lib/brainstorm-server/CLAUDE-INSTRUCTIONS.md` | Detailed usage guide |
 
 ## Quick Start
 
 ```bash
-# 1. Start server (creates unique session directory)
+# 1. Start server
 ${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/start-server.sh
-# Returns: {"type":"server-started","port":52341,"url":"http://localhost:52341",
-#           "screen_dir":"/tmp/brainstorm-12345-1234567890",
-#           "screen_file":"/tmp/brainstorm-12345-1234567890/screen.html"}
+# Returns: {"screen_dir":"/tmp/brainstorm-xxx","screen_file":"...","url":"http://localhost:PORT"}
 
-# 2. Start watcher FIRST (before writing screen - avoids race condition)
-${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/wait-for-event.sh $SCREEN_DIR/.server.log
+# 2. Start watcher FIRST (background bash) - avoids race condition
+${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/wait-for-feedback.sh $SCREEN_DIR
 
-# 3. Write screen to the session's screen_file
-# Use Bash with heredoc to write HTML
+# 3. Write HTML to screen_file using Write tool (browser auto-refreshes)
 
-# 4. Wait for feedback - call TaskOutput(task_id, block=true, timeout=600000)
-# If timeout, call TaskOutput again (watcher still running)
-# After 3 timeouts (30 min), say "Let me know when you want to continue"
+# 4. Call TaskOutput(task_id, block=true, timeout=600000)
+#    If timeout, call again. After 3 timeouts (30 min), prompt user.
 # Returns: {"choice":"a","feedback":"user notes"}
 
-# 5. Clean up when done (pass screen_dir as argument)
+# 5. Iterate or advance - update screen if feedback changes it, else next question
+
+# 6. Clean up when done
 ${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/stop-server.sh $SCREEN_DIR
 ```
+
+## Key Principles
+
+- **Always ask first** before starting visual companion
+- **Scale fidelity to the question** - wireframes for layout, polish for polish questions
+- **Explain the question** on each page - what decision are you seeking?
+- **Iterate before advancing** - if feedback changes current screen, update and re-show
+- **2-4 options max** per screen
 
 ## CSS Classes
 
