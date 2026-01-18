@@ -68,17 +68,22 @@ Only proceed with visual companion if they agree. Otherwise, describe options in
 ### Starting the Visual Companion
 
 ```bash
-# Start server (outputs JSON with URL)
+# Start server (creates unique session directory)
 ${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/start-server.sh
 
-# Output looks like: {"type":"server-started","port":52341,"url":"http://localhost:52341"}
+# Output looks like:
+# {"type":"server-started","port":52341,"url":"http://localhost:52341",
+#  "screen_dir":"/tmp/brainstorm-12345-1234567890",
+#  "screen_file":"/tmp/brainstorm-12345-1234567890/screen.html"}
 ```
+
+**Save the `screen_dir` and `screen_file` paths from the response** - you'll need them throughout the session.
 
 Tell the user to open the URL in their browser.
 
 ### Showing Content
 
-Write complete HTML to `/tmp/brainstorm/screen.html`. The browser auto-refreshes.
+Write complete HTML to the session's `screen_file` path. The browser auto-refreshes.
 
 Use the frame template structure from `${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/frame-template.html`:
 - Keep the header and feedback-footer intact
@@ -89,31 +94,37 @@ See `${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/CLAUDE-INSTRUCTIONS.md` for det
 
 ### Waiting for User Feedback
 
-Run the watcher as a background bash command:
+Start the watcher as a background bash command, then use TaskOutput with block=true to wait:
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/wait-for-event.sh /tmp/brainstorm/.server.log
+# 1. Start watcher in background
+${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/wait-for-event.sh $SCREEN_DIR/.server.log
+
+# 2. Call TaskOutput(task_id, block=true, timeout=600000) to wait
+# 3. If timeout, call TaskOutput again (watcher is still running)
+# 4. After 3 timeouts (30 min), say "Let me know when you want to continue" and stop looping
 ```
 
-When the user clicks Send in the browser, the watcher exits and you receive their feedback as JSON:
+When the user clicks Send in the browser, the watcher exits and TaskOutput returns with feedback:
 ```json
 {"choice": "a", "feedback": "I like this but make the header smaller"}
 ```
 
 ### The Loop
 
-1. Write screen HTML
+1. Write screen HTML to `screen_file`
 2. Start watcher (background bash)
-3. Watcher completes when user sends feedback
-4. Read feedback, respond with new screen
-5. Repeat until done
+3. Call TaskOutput(task_id, block=true) to wait
+4. TaskOutput returns with feedback
+5. Respond with new screen
+6. Repeat until done
 
 ### Cleaning Up
 
-When the visual brainstorming session is complete:
+When the visual brainstorming session is complete, pass the screen_dir to stop:
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/stop-server.sh
+${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/stop-server.sh $SCREEN_DIR
 ```
 
 ### Tips
