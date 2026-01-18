@@ -3,15 +3,19 @@
 # Usage: start-server.sh
 #
 # Starts server on a random high port, outputs JSON with URL
+# Each session gets its own temp directory to avoid conflicts
 # Server runs in background, PID saved for cleanup
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-SCREEN_DIR="${BRAINSTORM_SCREEN_DIR:-/tmp/brainstorm}"
+
+# Generate unique session directory
+SESSION_ID="$$-$(date +%s)"
+SCREEN_DIR="/tmp/brainstorm-${SESSION_ID}"
 SCREEN_FILE="${SCREEN_DIR}/screen.html"
 PID_FILE="${SCREEN_DIR}/.server.pid"
 LOG_FILE="${SCREEN_DIR}/.server.log"
 
-# Ensure screen directory exists
+# Create fresh session directory
 mkdir -p "$SCREEN_DIR"
 
 # Kill any existing server
@@ -23,7 +27,7 @@ fi
 
 # Start server, capturing output to log file
 cd "$SCRIPT_DIR"
-node index.js > "$LOG_FILE" 2>&1 &
+BRAINSTORM_SCREEN="$SCREEN_FILE" node index.js > "$LOG_FILE" 2>&1 &
 SERVER_PID=$!
 echo "$SERVER_PID" > "$PID_FILE"
 
