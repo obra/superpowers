@@ -130,6 +130,7 @@ ${toolMapping}
             await client.session.prompt({
               path: { id: context.sessionID },
               body: {
+                agent: context.agent,
                 noReply: true,
                 parts: [
                   { type: "text", text: `Loading skill: ${name || skill_name}`, synthetic: true },
