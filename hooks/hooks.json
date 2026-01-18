@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start.sh"
+            "command": "\"$(wslpath -u '${CLAUDE_PLUGIN_ROOT}')/hooks/run-hook.cmd\" session-start.sh || \"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start.sh"
           }
         ]
       }
