@@ -42,6 +42,13 @@ ${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/stop-server.sh $SCREEN_DIR
 - **Iterate before advancing** - if feedback changes current screen, update and re-show
 - **2-4 options max** per screen
 
+## Terminal UX
+
+- **Never use cat/heredoc for HTML** - dumps noise into terminal. Use Write tool instead.
+- **Read screen_file first** before Write (even if empty) to avoid tool errors
+- **Remind user of URL** on every step, not just the first
+- **Give text summary** of what's on screen before they look (e.g., "Showing 3 API structure options")
+
 ## CSS Classes
 
 ### Options (A/B/C choices)

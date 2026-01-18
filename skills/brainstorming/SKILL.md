@@ -102,17 +102,25 @@ Save `screen_dir` and `screen_file` from the response. Tell user to open the URL
    ${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/wait-for-feedback.sh $SCREEN_DIR
    ```
 
-2. **Write HTML** to `screen_file` using the Write tool (browser auto-refreshes)
+2. **Write HTML** to `screen_file`:
+   - First `Read` the screen_file (even if empty) so Write tool works
+   - Then use Write tool - **never use cat/heredoc** (dumps noise into terminal)
+   - If Write fails, read first then retry
 
-3. **Wait for feedback** - call `TaskOutput(task_id, block=true, timeout=600000)`
+3. **Tell user what to expect:**
+   - Remind them of the URL (every step, not just first)
+   - Give a brief text summary of what's on screen (e.g., "Showing 3 layout options for the homepage")
+   - This lets them know what to look for before switching to browser
+
+4. **Wait for feedback** - call `TaskOutput(task_id, block=true, timeout=600000)`
    - If timeout, call TaskOutput again (watcher still running)
    - After 3 timeouts (30 min), say "Let me know when you want to continue"
 
-4. **Process feedback** - returns JSON like `{"choice": "a", "feedback": "make header smaller"}`
+5. **Process feedback** - returns JSON like `{"choice": "a", "feedback": "make header smaller"}`
 
-5. **Iterate or advance** - if feedback changes current screen, update and re-show. Only move to next question when current step is validated.
+6. **Iterate or advance** - if feedback changes current screen, update and re-show. Only move to next question when current step is validated.
 
-6. Repeat until done.
+7. Repeat until done.
 
 ### Cleaning Up
 
