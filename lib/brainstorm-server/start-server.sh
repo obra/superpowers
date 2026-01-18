@@ -11,7 +11,6 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # Generate unique session directory
 SESSION_ID="$$-$(date +%s)"
 SCREEN_DIR="/tmp/brainstorm-${SESSION_ID}"
-SCREEN_FILE="${SCREEN_DIR}/screen.html"
 PID_FILE="${SCREEN_DIR}/.server.pid"
 LOG_FILE="${SCREEN_DIR}/.server.log"
 
@@ -27,7 +26,7 @@ fi
 
 # Start server, capturing output to log file
 cd "$SCRIPT_DIR"
-BRAINSTORM_SCREEN="$SCREEN_FILE" node index.js > "$LOG_FILE" 2>&1 &
+BRAINSTORM_DIR="$SCREEN_DIR" node index.js > "$LOG_FILE" 2>&1 &
 SERVER_PID=$!
 echo "$SERVER_PID" > "$PID_FILE"
 

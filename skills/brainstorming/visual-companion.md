@@ -17,18 +17,19 @@ Quick reference for the browser-based visual brainstorming companion.
 ```bash
 # 1. Start server
 ${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/start-server.sh
-# Returns: {"screen_dir":"/tmp/brainstorm-xxx","screen_file":"...","url":"http://localhost:PORT"}
+# Returns: {"screen_dir":"/tmp/brainstorm-xxx","url":"http://localhost:PORT"}
 
 # 2. Start watcher FIRST (background bash) - avoids race condition
 ${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/wait-for-feedback.sh $SCREEN_DIR
 
-# 3. Write HTML to screen_file using Write tool (browser auto-refreshes)
+# 3. Write HTML to a NEW file in screen_dir (e.g., platform.html, style.html)
+#    Never reuse filenames - server serves newest file automatically
 
 # 4. Call TaskOutput(task_id, block=true, timeout=600000)
 #    If timeout, call again. After 3 timeouts (30 min), prompt user.
 # Returns: {"choice":"a","feedback":"user notes"}
 
-# 5. Iterate or advance - update screen if feedback changes it, else next question
+# 5. Iterate or advance - write new file if feedback changes it (e.g., style-v2.html)
 
 # 6. Clean up when done
 ${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/stop-server.sh $SCREEN_DIR
@@ -39,13 +40,19 @@ ${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/stop-server.sh $SCREEN_DIR
 - **Always ask first** before starting visual companion
 - **Scale fidelity to the question** - wireframes for layout, polish for polish questions
 - **Explain the question** on each page - what decision are you seeking?
-- **Iterate before advancing** - if feedback changes current screen, update and re-show
+- **Iterate before advancing** - if feedback changes current screen, write new version
 - **2-4 options max** per screen
+
+## File Naming
+
+- **Use semantic names**: `platform.html`, `visual-style.html`, `layout.html`, `controls.html`
+- **Never reuse filenames** - each screen is a new file
+- **For iterations**: append version suffix like `layout-v2.html`, `layout-v3.html`
+- Server automatically serves the newest file by modification time
 
 ## Terminal UX
 
 - **Never use cat/heredoc for HTML** - dumps noise into terminal. Use Write tool instead.
-- **Read screen_file first** before Write (even if empty) to avoid tool errors
 - **Remind user of URL** on every step, not just the first
 - **Give text summary** of what's on screen before they look (e.g., "Showing 3 API structure options")
 

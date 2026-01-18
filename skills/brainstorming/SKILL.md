@@ -90,10 +90,10 @@ Only proceed if they agree. Otherwise, describe options in text.
 ${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/start-server.sh
 
 # Returns: {"type":"server-started","port":52341,"url":"http://localhost:52341",
-#           "screen_dir":"/tmp/brainstorm-12345","screen_file":"/tmp/brainstorm-12345/screen.html"}
+#           "screen_dir":"/tmp/brainstorm-12345"}
 ```
 
-Save `screen_dir` and `screen_file` from the response. Tell user to open the URL.
+Save `screen_dir` from the response. Tell user to open the URL.
 
 ### The Loop
 
@@ -102,10 +102,11 @@ Save `screen_dir` and `screen_file` from the response. Tell user to open the URL
    ${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/wait-for-feedback.sh $SCREEN_DIR
    ```
 
-2. **Write HTML** to `screen_file`:
-   - First `Read` the screen_file (even if empty) so Write tool works
-   - Then use Write tool - **never use cat/heredoc** (dumps noise into terminal)
-   - If Write fails, read first then retry
+2. **Write HTML** to a new file in `screen_dir`:
+   - Use semantic filenames: `platform.html`, `visual-style.html`, `layout.html`
+   - **Never reuse filenames** - each screen gets a fresh file
+   - Use Write tool - **never use cat/heredoc** (dumps noise into terminal)
+   - Server automatically serves the newest file
 
 3. **Tell user what to expect:**
    - Remind them of the URL (every step, not just first)
@@ -118,7 +119,7 @@ Save `screen_dir` and `screen_file` from the response. Tell user to open the URL
 
 5. **Process feedback** - returns JSON like `{"choice": "a", "feedback": "make header smaller"}`
 
-6. **Iterate or advance** - if feedback changes current screen, update and re-show. Only move to next question when current step is validated.
+6. **Iterate or advance** - if feedback changes current screen, write a new file (e.g., `layout-v2.html`). Only move to next question when current step is validated.
 
 7. Repeat until done.
 

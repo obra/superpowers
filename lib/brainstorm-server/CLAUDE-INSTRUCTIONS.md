@@ -15,26 +15,32 @@ Use the visual companion when you need to show:
 ## Lifecycle
 
 ```bash
-# Start server (returns JSON with URL and session paths)
+# Start server (returns JSON with URL and session directory)
 ${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/start-server.sh
 # Returns: {"type":"server-started","port":52341,"url":"http://localhost:52341",
-#           "screen_dir":"/tmp/brainstorm-12345-1234567890",
-#           "screen_file":"/tmp/brainstorm-12345-1234567890/screen.html"}
+#           "screen_dir":"/tmp/brainstorm-12345-1234567890"}
 
-# Save screen_dir and screen_file from response!
+# Save screen_dir from response!
 
 # Tell user to open the URL in their browser
 
-# Write screens to screen_file (auto-refreshes)
-
-# Wait for user feedback:
-# 1. Start watcher in background
-${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/wait-for-event.sh $SCREEN_DIR/.server.log
-# 2. Immediately call TaskOutput(task_id, block=true) to wait for completion
+# For each screen:
+# 1. Start watcher in background FIRST (avoids race condition)
+${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/wait-for-feedback.sh $SCREEN_DIR
+# 2. Write HTML to a NEW file in screen_dir (e.g., platform.html, style.html)
+#    Server automatically serves the newest file by modification time
+# 3. Call TaskOutput(task_id, block=true, timeout=600000) to wait for feedback
 
 # When done, stop server (pass screen_dir)
 ${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/stop-server.sh $SCREEN_DIR
 ```
+
+## File Naming
+
+- **Use semantic names**: `platform.html`, `visual-style.html`, `layout.html`, `controls.html`
+- **Never reuse filenames** - each screen must be a new file
+- **For iterations**: append version suffix like `layout-v2.html`, `layout-v3.html`
+- Server automatically serves the newest `.html` file by modification time
 
 ## Writing Screens
 
