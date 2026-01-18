@@ -53,22 +53,72 @@ Start by understanding the current project context, then ask questions one at a 
 - **Incremental validation** - Present design in sections, validate each
 - **Be flexible** - Go back and clarify when something doesn't make sense
 
-## Visual Companion (Optional)
+## Visual Companion (Claude Code Only)
 
-When brainstorming involves visual elements - UI mockups, wireframes, interactive prototypes - use the browser-based visual companion.
+When brainstorming involves visual elements - UI mockups, layouts, design comparisons - you can use a browser-based visual companion instead of ASCII art. **This only works in Claude Code.**
 
-**When to use:**
-- Presenting UI/UX options that benefit from visual comparison
-- Showing wireframes or layout options
-- Gathering structured feedback (ratings, forms)
-- Prototyping click interactions
+### When to Offer
 
-**How it works:**
-1. Start the server as a background job
-2. Tell user to open http://localhost:3333
-3. Write HTML to `/tmp/brainstorm/screen.html` (auto-refreshes)
-4. Check background task output for user interactions
+If the brainstorm involves visual decisions (UI layouts, design choices, mockups), ask the user:
 
-The terminal remains the primary conversation interface. The browser is a visual aid.
+> "This involves some visual decisions. Would you like me to show mockups in a browser window? (Requires opening a local URL)"
 
-**Reference:** See `visual-companion.md` in this skill directory for HTML patterns and API details.
+Only proceed with visual companion if they agree. Otherwise, describe options in text.
+
+### Starting the Visual Companion
+
+```bash
+# Start server (outputs JSON with URL)
+${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/start-server.sh
+
+# Output looks like: {"type":"server-started","port":52341,"url":"http://localhost:52341"}
+```
+
+Tell the user to open the URL in their browser.
+
+### Showing Content
+
+Write complete HTML to `/tmp/brainstorm/screen.html`. The browser auto-refreshes.
+
+Use the frame template structure from `${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/frame-template.html`:
+- Keep the header and feedback-footer intact
+- Replace `#claude-content` with your content
+- Use the CSS helper classes (`.options`, `.cards`, `.mockup`, `.split`, `.pros-cons`)
+
+See `${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/CLAUDE-INSTRUCTIONS.md` for detailed examples.
+
+### Waiting for User Feedback
+
+Run the watcher as a background bash command:
+
+```bash
+${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/wait-for-event.sh /tmp/brainstorm/.server.log
+```
+
+When the user clicks Send in the browser, the watcher exits and you receive their feedback as JSON:
+```json
+{"choice": "a", "feedback": "I like this but make the header smaller"}
+```
+
+### The Loop
+
+1. Write screen HTML
+2. Start watcher (background bash)
+3. Watcher completes when user sends feedback
+4. Read feedback, respond with new screen
+5. Repeat until done
+
+### Cleaning Up
+
+When the visual brainstorming session is complete:
+
+```bash
+${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/stop-server.sh
+```
+
+### Tips
+
+- **Keep mockups simple** - Focus on layout and structure, not pixel-perfect design
+- **Limit choices** - 2-4 options is ideal
+- **Regenerate fully** - Write complete HTML each turn; the screen is stateless
+- **Terminal is primary** - The browser shows things; conversation happens in terminal
