@@ -14,12 +14,30 @@ import * as skillsCore from '../../lib/skills-core.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Normalize a path: trim whitespace, expand ~, resolve to absolute
+const normalizePath = (p, homeDir) => {
+  if (!p || typeof p !== 'string') return null;
+  let normalized = p.trim();
+  if (!normalized) return null;
+  // Expand ~ to home directory
+  if (normalized.startsWith('~/')) {
+    normalized = path.join(homeDir, normalized.slice(2));
+  } else if (normalized === '~') {
+    normalized = homeDir;
+  }
+  // Resolve to absolute path
+  return path.resolve(normalized);
+};
+
 export const SuperpowersPlugin = async ({ client, directory }) => {
   const homeDir = os.homedir();
   const projectSkillsDir = path.join(directory, '.opencode/skills');
   // Derive superpowers skills dir from plugin location (works for both symlinked and local installs)
   const superpowersSkillsDir = path.resolve(__dirname, '../../skills');
-  const personalSkillsDir = path.join(homeDir, '.config/opencode/skills');
+  // Respect OPENCODE_CONFIG_DIR if set, otherwise fall back to default
+  const envConfigDir = normalizePath(process.env.OPENCODE_CONFIG_DIR, homeDir);
+  const configDir = envConfigDir || path.join(homeDir, '.config/opencode');
+  const personalSkillsDir = path.join(configDir, 'skills');
 
   // Helper to generate bootstrap content
   const getBootstrapContent = (compact = false) => {
@@ -42,7 +60,7 @@ When skills reference tools you don't have, substitute OpenCode equivalents:
 
 **Skills naming (priority order):**
 - Project skills: \`project:skill-name\` (in .opencode/skills/)
-- Personal skills: \`skill-name\` (in ~/.config/opencode/skills/)
+- Personal skills: \`skill-name\` (in ${configDir}/skills/)
 - Superpowers skills: \`superpowers:skill-name\`
 - Project skills override personal, which override superpowers when names match`;
 
@@ -158,7 +176,7 @@ ${toolMapping}
           const allSkills = [...projectSkills, ...personalSkills, ...superpowersSkills];
 
           if (allSkills.length === 0) {
-            return 'No skills found. Install superpowers skills to ~/.config/opencode/superpowers/skills/ or add project skills to .opencode/skills/';
+            return `No skills found. Install superpowers skills to ${superpowersSkillsDir}/ or add personal skills to ${personalSkillsDir}/`;
           }
 
           let output = 'Available skills:\n\n';
