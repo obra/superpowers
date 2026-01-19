@@ -14,13 +14,29 @@ import * as skillsCore from '../../lib/skills-core.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Normalize a path: trim whitespace, expand ~, resolve to absolute
+const normalizePath = (p, homeDir) => {
+  if (!p || typeof p !== 'string') return null;
+  let normalized = p.trim();
+  if (!normalized) return null;
+  // Expand ~ to home directory
+  if (normalized.startsWith('~/')) {
+    normalized = path.join(homeDir, normalized.slice(2));
+  } else if (normalized === '~') {
+    normalized = homeDir;
+  }
+  // Resolve to absolute path
+  return path.resolve(normalized);
+};
+
 export const SuperpowersPlugin = async ({ client, directory }) => {
   const homeDir = os.homedir();
   const projectSkillsDir = path.join(directory, '.opencode/skills');
   // Derive superpowers skills dir from plugin location (works for both symlinked and local installs)
   const superpowersSkillsDir = path.resolve(__dirname, '../../skills');
   // Respect OPENCODE_CONFIG_DIR if set, otherwise fall back to default
-  const configDir = process.env.OPENCODE_CONFIG_DIR || path.join(homeDir, '.config/opencode');
+  const envConfigDir = normalizePath(process.env.OPENCODE_CONFIG_DIR, homeDir);
+  const configDir = envConfigDir || path.join(homeDir, '.config/opencode');
   const personalSkillsDir = path.join(configDir, 'skills');
 
   // Helper to generate bootstrap content
