@@ -1,0 +1,17 @@
+---
+name: "Superpowers: Bootstrap"
+description: Activate the Superpowers workflow and load the skills library
+invokable: true
+---
+
+You have superpowers.
+
+Do this now, in order:
+
+1. Read and follow `../skills/superpowers/using-superpowers/SKILL.md`.
+2. Scan `../skills/superpowers/` for every `SKILL.md` and list all available skills as `<skill-name> - <description>`.
+3. For any task, if a relevant skill exists, you MUST read it first and follow it exactly.
+4. Tool mapping:
+   - If a skill mentions `TodoWrite`, use Continue's plan/todo mechanism if available; otherwise keep an explicit checklist in chat and update it as you go.
+   - If a skill mentions subagents, simulate the workflow by splitting work into stages and doing a spec-compliance pass followed by a code-quality pass.
+   - Use Continue's file and terminal capabilities as equivalents for `Read`, `Write`, `Edit`, and `Bash`.
