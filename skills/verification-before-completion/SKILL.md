@@ -76,7 +76,7 @@ Skip any step = lying, not verifying
 ## Key Patterns
 
 **Configuration Changes:**
-```
+```text
 BEFORE claiming works:
 1. Identify OBSERVABLE difference (log, response field, behavior)
 2. Run command to show that difference

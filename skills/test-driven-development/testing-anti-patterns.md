@@ -291,7 +291,7 @@ const mock = {
 
 ### Gate Function
 
-```
+```text
 BEFORE writing any mock:
 
   1. STOP - Do NOT look at the code under test yet
