@@ -1,5 +1,25 @@
 # Document-Driven AI Workflow Integration Guide
 
+> **⚠️ DEPRECATED - 此文档已过时**
+>
+> **此文档描述的 bridge 集成方式已被统一文档系统替代。**
+>
+> **请使用新的统一文档系统：**
+> - 查看 [统一文档系统指南](./unified-document-system.md)
+> - 参考 [文档迁移指南](./document-migration-guide.md)
+> - 阅读设计文档：[docs/plans/2025-01-19-unified-document-system-design.md](./plans/2025-01-19-unified-document-system-design.md)
+>
+> **统一文档系统的优势：**
+> - ✅ 无需额外配置或 bridge，文档功能直接内置于 horspowers
+> - ✅ 自动状态追踪，文档随工作流自动更新
+> - ✅ 会话恢复，自动保留上下文
+> - ✅ 智能归档，保持目录整洁
+> - ✅ 与所有工作流技能无缝集成
+>
+> **此文档仅保留用于历史参考。新项目请勿使用 bridge 方式。**
+
+---
+
 本文档展示如何在 superpowers 技能中集成 `document-driven-ai-workflow`，实现关键操作的自动文档生成。
 
 ## 🎯 集成概览

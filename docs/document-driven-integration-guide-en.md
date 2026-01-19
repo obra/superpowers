@@ -1,5 +1,25 @@
 # Document-Driven AI Workflow Integration Guide
 
+> **⚠️ DEPRECATED - This document is outdated**
+>
+> **The bridge integration approach described in this document has been replaced by the Unified Document System.**
+>
+> **Please use the new Unified Document System:**
+> - See [Unified Document System Guide](./unified-document-system.md)
+> - Reference [Document Migration Guide](./document-migration-guide.md)
+> - Read design document: [docs/plans/2025-01-19-unified-document-system-design.md](./plans/2025-01-19-unified-document-system-design.md)
+>
+> **Advantages of the Unified Document System:**
+> - ✅ No additional configuration or bridge needed, documentation is built directly into horspowers
+> - ✅ Automatic status tracking, documents update automatically with workflow
+> - ✅ Session recovery, automatically preserves context
+> - ✅ Smart archiving, keeps directories clean
+> - ✅ Seamless integration with all workflow skills
+>
+> **This document is kept for historical reference only. New projects should not use the bridge approach.**
+
+---
+
 This document demonstrates how to integrate `document-driven-ai-workflow` into superpowers skills, enabling automatic document generation at key workflow operations.
 
 ## 🎯 Integration Overview

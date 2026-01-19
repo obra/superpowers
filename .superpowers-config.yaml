@@ -12,3 +12,6 @@ testing_strategy: test-after
 
 # Completion strategy: pr (create pull request), merge (local merge), or keep (preserve branch)
 completion_strategy: merge
+
+# Documentation: Enable unified document system
+documentation.enabled: true

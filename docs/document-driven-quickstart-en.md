@@ -1,5 +1,24 @@
 # Document-Driven Workflow Integration - Quick Start
 
+> **⚠️ DEPRECATED - This document is outdated**
+>
+> **The bridge integration approach described in this document has been replaced by the Unified Document System.**
+>
+> **Please use the new Unified Document System:**
+> - See [Unified Document System Guide](./unified-document-system.md)
+> - Reference [Document Migration Guide](./document-migration-guide.md)
+> - Read design document: [docs/plans/2025-01-19-unified-document-system-design.md](./plans/2025-01-19-unified-document-system-design.md)
+>
+> **The new system is simpler:**
+> - No need to install document-driven-ai-workflow separately
+> - Just set `documentation.enabled: true` in `.horspowers-config.yaml`
+> - Run `/docs-init` to initialize
+> - All workflow skills automatically support document generation
+>
+> **This document is kept for historical reference only. New projects should not use the bridge approach.**
+
+---
+
 Enable document-driven AI workflow for superpowers in 5 minutes.
 
 ## 🎯 Goal

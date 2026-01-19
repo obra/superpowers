@@ -1,5 +1,24 @@
 # 文档驱动工作流集成 - 快速开始
 
+> **⚠️ DEPRECATED - 此文档已过时**
+>
+> **此文档描述的 bridge 集成方式已被统一文档系统替代。**
+>
+> **请使用新的统一文档系统：**
+> - 查看 [统一文档系统指南](./unified-document-system.md)
+> - 参考 [文档迁移指南](./document-migration-guide.md)
+> - 阅读设计文档：[docs/plans/2025-01-19-unified-document-system-design.md](./plans/2025-01-19-unified-document-system-design.md)
+>
+> **新系统更简单：**
+> - 无需单独安装 document-driven-ai-workflow
+> - 只需在 `.horspowers-config.yaml` 中设置 `documentation.enabled: true`
+> - 运行 `/docs-init` 初始化即可
+> - 所有工作流技能自动支持文档生成
+>
+> **此文档仅保留用于历史参考。新项目请勿使用 bridge 方式。**
+
+---
+
 5 分钟内为 superpowers 启用文档驱动 AI 工作流。
 
 ## 🎯 目标
