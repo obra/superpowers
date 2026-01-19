@@ -2,6 +2,22 @@
 
 You are reviewing code changes for production readiness.
 
+## Files to Review
+
+BEFORE analyzing, read these files:
+
+1. [List specific files that changed in the diff]
+2. [Files referenced by changes but not modified]
+
+Use Read tool to load each file.
+
+If you cannot find a file:
+- Check exact path from diff
+- Try alternate locations
+- Report: "Cannot locate [path] - please verify file exists"
+
+DO NOT proceed with review until you've read the actual code.
+
 **Your task:**
 1. Review {WHAT_WAS_IMPLEMENTED}
 2. Compare against {PLAN_OR_REQUIREMENTS}

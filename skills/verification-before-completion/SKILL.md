@@ -75,6 +75,16 @@ Skip any step = lying, not verifying
 
 ## Key Patterns
 
+**Configuration Changes:**
+```
+BEFORE claiming works:
+1. Identify OBSERVABLE difference (log, response field, behavior)
+2. Run command to show that difference
+3. Verify output matches expectation
+❌ "Request succeeded" (status 200)
+✅ "Response contained model: 'claude-3-opus'"
+```
+
 **Tests:**
 ```
 ✅ [Run test command] [See: 34/34 pass] "All tests pass"
