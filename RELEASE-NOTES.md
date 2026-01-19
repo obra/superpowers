@@ -1,4 +1,74 @@
-# Superpowers Release Notes
+# Horspowers Release Notes
+
+## v4.2.0 (2025-01-19)
+
+### Major Features
+
+**统一文档系统 (Unified Document System)**
+
+实现了一套完整的文档管理系统，替代了原有的 document-driven-bridge 集成方式，提供无缝的文档追踪和状态管理。
+
+核心组件：
+- `lib/docs-core.js` (1076 行) - 文档管理核心模块
+  * 支持文档创建、更新、搜索、统计
+  * 智能文档分类（design、plan、task、bug、decision、context）
+  * 自动迁移工具（检测并整合多个文档目录）
+  * 元数据追踪（活跃任务、检查点验证）
+- `hooks/session-end.sh` - 会话结束自动归档和状态更新
+- `skills/document-management/` - 文档管理技能
+- 6 个新命令：`/docs-init`, `/docs-migrate`, `/docs-search`, `/docs-stats`, `/docs-analyze`, `/docs-status`
+
+工作流集成：
+- **brainstorming**: 设计完成后自动创建 decision 文档
+- **writing-plans**: 计划完成后自动创建 task 文档并设置 `$TASK_DOC`
+- **subagent-driven-development**: 每个任务完成后自动更新进展
+- **test-driven-development**: 测试失败时自动创建 bug 文档，修复后更新状态
+- **finishing-a-development-branch**: 完成后自动归档文档
+
+配置支持：
+```yaml
+# .superpowers-config.yaml
+documentation:
+  enabled: true
+  # 自动创建和更新文档
+```
+
+### Bug Fixes
+
+**修复环境变量设置错误**
+- 问题：在 Node.js `-e` 脚本中直接使用 `export` 命令导致语法错误
+- 修复：使用命令替换 `VAR=$(node -e "...")` 捕获输出，再在 shell 层面导出
+- 影响：test-driven-development, writing-plans 技能
+
+**修复不可达代码**
+- 问题：`subagent-driven-development` 中 `else if` 使用与 `if` 相同的条件
+- 修复：改为 `else` 分支，处理没有进展记录的情况
+- 影响：任务文档进展更新功能
+
+**修复配置解析错误**
+- 问题：YAML 点分符号（如 `documentation.enabled`）被解析为扁平键而非嵌套对象
+- 修复：使用 Node.js 正确解析为嵌套 JSON 结构
+- 影响：session-start.sh 和 session-end.sh 的配置检查
+
+### Deprecations
+
+**document-driven-bridge 已标记为废弃**
+
+原有的 bridge 集成方式已被统一文档系统替代：
+- ✅ 无需额外配置或 bridge
+- ✅ 自动状态追踪
+- ✅ 会话恢复
+- ✅ 智能归档
+- ✅ 与所有工作流技能无缝集成
+
+### Documentation
+
+新增文档：
+- `docs/unified-document-system.md` - 用户指南
+- `docs/document-migration-guide.md` - 迁移指南
+- `docs/plans/2025-01-19-unified-document-system-design.md` - 设计文档
+
+---
 
 ## v4.0.3 (2025-12-26)
 
