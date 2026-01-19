@@ -19,7 +19,9 @@ export const SuperpowersPlugin = async ({ client, directory }) => {
   const projectSkillsDir = path.join(directory, '.opencode/skills');
   // Derive superpowers skills dir from plugin location (works for both symlinked and local installs)
   const superpowersSkillsDir = path.resolve(__dirname, '../../skills');
-  const personalSkillsDir = path.join(homeDir, '.config/opencode/skills');
+  // Respect OPENCODE_CONFIG_DIR if set, otherwise fall back to default
+  const configDir = process.env.OPENCODE_CONFIG_DIR || path.join(homeDir, '.config/opencode');
+  const personalSkillsDir = path.join(configDir, 'skills');
 
   // Helper to generate bootstrap content
   const getBootstrapContent = (compact = false) => {
