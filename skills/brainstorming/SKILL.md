@@ -36,7 +36,30 @@ Start by understanding the current project context, then ask questions one at a 
 
 ## After the Design
 
-**Documentation:**
+**Documentation Integration:**
+
+IF `.superpowers-config.yaml` exists AND `documentation.enabled: true`:
+
+  **Initialize if needed:**
+  IF session context shows `docs_auto_init:true`:
+    Run: Create `.docs/` directory structure using core docs module
+
+  **Search existing context:**
+  Run: Search docs for "project architecture" or "related decisions" to understand existing context
+
+  **Create decision tracking document:**
+  IF design includes important technical choices:
+    Use horspowers:document-management or core module
+    Create: `docs/active/YYYY-MM-DD-decision-<title>.md`
+
+    In the created document, populate:
+    - ## 决策背景: [为什么需要这个决策]
+    - ## 可选方案: [列出方案A、方案B等，包括优缺点]
+    - ## 最终决策: [选择的方案及详细理由]
+    - ## 影响范围: [这个决策影响的模块/系统]
+    - ## 实施计划: [如何实施这个决策]
+
+**Original documentation:**
 - Write the validated design to `docs/plans/YYYY-MM-DD-<topic>-design.md`
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git

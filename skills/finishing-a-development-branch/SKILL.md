@@ -37,6 +37,63 @@ Stop. Don't proceed to Step 2.
 
 **If tests pass:** Continue to Step 2.
 
+### Documentation Integration: Complete Tasks
+
+IF `.horspowers-config.yaml` exists AND `documentation.enabled: true`:
+
+**IF `$TASK_DOC` is set (from writing-plans):**
+```bash
+# Update task document to completed
+node -e "
+const DocsCore = require('./lib/docs-core.js');
+const manager = new DocsCore(process.cwd());
+manager.updateActiveDocument(process.env.TASK_DOC, {
+  status: '已完成',
+  progress: '## 完成时间\\n' + new Date().toISOString() + '\\n\\n## 验收结果\\n- 所有测试通过\\n- 代码已实现完成\\n- 准备合并到主分支'
+});
+"
+
+# Archive completed task
+node -e "
+const DocsCore = require('./lib/docs-core.js');
+const manager = new DocsCore(process.cwd());
+manager.archiveDocument(process.env.TASK_DOC);
+"
+```
+
+**IF `$BUG_DOC` is set (from test-driven-development):**
+```bash
+# Ensure bug is marked as fixed
+node -e "
+const DocsCore = require('./lib/docs-core.js');
+const manager = new DocsCore(process.cwd());
+manager.updateActiveDocument(process.env.BUG_DOC, {
+  status: '已关闭',
+  progress: 'Bug 已修复并验证通过，准备合并。'
+});
+"
+
+# Archive resolved bug
+node -e "
+const DocsCore = require('./lib/docs-core.js');
+const manager = new DocsCore(process.cwd());
+manager.archiveDocument(process.env.BUG_DOC);
+"
+```
+
+**Check for other active documents:**
+```bash
+# List all active documents
+node -e "
+const DocsCore = require('./lib/docs-core.js');
+const manager = new DocsCore(process.cwd());
+const files = manager.getActiveFiles();
+console.log('Active documents:', files.join(', '));
+"
+
+# If other related documents exist, ask user about archiving them
+```
+
 ### Step 2: Determine Base Branch
 
 ```bash

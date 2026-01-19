@@ -1,9 +1,29 @@
 ---
 name: document-driven-bridge
-description: Use when document-driven-ai-workflow integration is enabled - Provides unified document management commands for superpowers workflows. 中文触发场景：当启用 document-driven-ai-workflow 集成时，提供统一的文档管理命令。
+description: ⚠️ DEPRECATED - Use horspowers:document-management instead. This skill is deprecated and will be removed in a future version.
 ---
 
 # Document-Driven Bridge
+
+## ⚠️ DEPRECATION NOTICE
+
+**This skill is deprecated.** Please use `horspowers:document-management` instead.
+
+The document-driven-ai-workflow CLI tool has been integrated directly into horspowers. Update your configuration:
+
+```yaml
+# .superpowers-config.yaml
+documentation:
+  enabled: true
+  # No need for cli_path anymore
+```
+
+### Migration Steps
+
+1. Remove `cli_path` from your `.superpowers-config.yaml`
+2. Use `/docs-init` to initialize the unified document system
+3. Use `/docs-migrate` to migrate existing documents
+4. Use `/docs-status` to check document system status
 
 ## Overview
 
@@ -11,21 +31,21 @@ This skill bridges **superpowers** workflow skills with **document-driven-ai-wor
 
 ## Prerequisites
 
-**REQUIRED:** The `document-driven-ai-workflow` skill must be installed and available. Check installation by running:
+**DEPRECATED:** The new unified document system doesn't require external CLI tools.
 
-```bash
-# Check if docs command is available
-which docs || node /path/to/document-driven-ai-workflow/cli.js --help
-```
-
-**Configuration Required:** `.superpowers-config.yaml` must have:
+**Old Configuration (Deprecated):**
 
 ```yaml
 documentation:
   enabled: true
   cli_path: "node /path/to/document-driven-ai-workflow/cli.js"
-  # or if installed globally:
-  # cli_path: "docs"
+```
+
+**New Configuration:**
+
+```yaml
+documentation:
+  enabled: true
 ```
 
 ## When This Skill Is Used

@@ -228,6 +228,57 @@ Done!
 - Dispatch fix subagent with specific instructions
 - Don't try to fix manually (context pollution)
 
+## Task Completion
+
+For each completed task:
+
+1. **Update task document automatically:**
+   IF `$TASK_DOC` is set AND documentation is enabled:
+     ```bash
+     # Update progress with task description
+     node -e "
+     const fs = require('fs');
+     const path = require('path');
+
+     const taskDoc = process.env.TASK_DOC;
+     if (fs.existsSync(taskDoc)) {
+         let content = fs.readFileSync(taskDoc, 'utf8');
+         const timestamp = new Date().toISOString().slice(0, 10);
+         const taskDesc = '[task-description]'; // Replace with actual task description
+
+         // Update status to 进行中 if not already
+         if (!content.includes('状态:进行中') && !content.includes('状态:已完成')) {
+             content = content.replace(/- 状态[：:].+/, '- 状态: 进行中');
+         }
+
+         // Add progress entry
+         const progressEntry = \`- \${timestamp}: \${taskDesc} 完成\`;
+
+         if (content.includes('## 进展记录')) {
+             // 已有进展记录，添加新条目
+             content = content.replace(
+                 /(## 进展记录\\n[\\s\\S]*?)(?=\\n##|\\Z)/,
+                 '\$1\\n' + progressEntry
+             );
+         } else {
+             // 没有进展记录，创建新的部分
+             const lastHeaderMatch = content.lastIndexOf('\n## ');
+             if (lastHeaderMatch > 0) {
+                 const insertPoint = content.indexOf('\n', lastHeaderMatch);
+                 const progressSection = \`\n## 进展记录\n\${progressEntry}\n\`;
+                 content = content.slice(0, insertPoint + 1) + progressSection + content.slice(insertPoint + 1);
+             }
+         }
+
+         fs.writeFileSync(taskDoc, content);
+     }
+     "
+     ```
+
+2. **Mark as complete when all tasks done:**
+   IF all tasks completed AND `$TASK_DOC` is set:
+     Update status to "已完成" and add final progress entry
+
 ## Integration
 
 **Required workflow skills:**

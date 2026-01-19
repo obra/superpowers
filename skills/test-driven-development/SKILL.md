@@ -172,6 +172,42 @@ Confirm:
 
 **Test errors?** Fix error, re-run until it fails correctly.
 
+### Documentation Integration: Bug Tracking
+
+IF `.horspowers-config.yaml` exists AND `documentation.enabled: true`:
+
+**IF test fails unexpectedly (not expected RED phase failure):**
+- This indicates a potential bug in existing code
+- Create bug tracking document:
+  ```bash
+  # 创建 bug 文档并捕获路径
+  BUG_DOC=$(node -e "
+  const DocsCore = require('./lib/docs-core.js');
+  const manager = new DocsCore(process.cwd());
+  const result = manager.createActiveDocument('bug', 'Bug: [test name]', \`
+## 问题描述
+测试用例：[test name]
+预期行为：[expected behavior]
+实际行为：[actual behavior]
+错误信息：[error output]
+
+## 复现步骤
+1. 运行测试：npm test [test path]
+2. 观察失败信息
+
+## 状态
+状态:待修复
+优先级:中
+创建时间:\${new Date().toISOString()}
+\`);
+  console.log(result.path);
+  ")
+  echo "Created bug document: $BUG_DOC"
+  export BUG_DOC
+  ```
+- Store document path as `$BUG_DOC` for later updates
+- This bug document will be updated when fix is implemented
+
 ### GREEN - Minimal Code
 
 Write simplest code to pass the test.
@@ -226,6 +262,48 @@ Confirm:
 **Test fails?** Fix code, not test.
 
 **Other tests fail?** Fix now.
+
+### Documentation Integration: Update Bug Status
+
+IF `$BUG_DOC` is set (from RED phase):
+
+**Update bug document with fix details:**
+```bash
+node -e "
+const DocsCore = require('./lib/docs-core.js');
+const manager = new DocsCore(process.cwd());
+manager.updateActiveDocument(process.env.BUG_DOC, {
+  status: '已修复',
+  progress: '## 修复方案\\n[brief description of the fix]\\n\\n实施时间: ' + new Date().toISOString() + '\\n\\n## 验证结果\\n- 测试通过：npm test [test path]\\n- 无其他测试失败\\n- 输出无错误或警告'
+});
+"
+```
+
+**Also append solution details to bug document:**
+```bash
+cat >> "$BUG_DOC" <<'EOF'
+
+## 解决方案
+\`\`\`[language]
+[implementation code that fixed the bug]
+\`\`\`
+
+### 修复说明
+[brief explanation of why this fix works]
+EOF
+```
+
+IF `$TASK_DOC` is set (from writing-plans):
+- Also update task document with progress:
+  ```bash
+  node -e "
+  const DocsCore = require('./lib/docs-core.js');
+  const manager = new DocsCore(process.cwd());
+  manager.updateActiveDocument(process.env.TASK_DOC, {
+    progress: '已修复 bug: [bug title]'
+  });
+  "
+  ```
 
 ### REFACTOR - Clean Up
 
