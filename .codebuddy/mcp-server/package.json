@@ -1,0 +1,29 @@
+{
+  "name": "@superpowers/mcp-server-codebuddy",
+  "version": "1.0.0",
+  "description": "MCP server for CodeBuddy - provides Superpowers skills system integration",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "superpowers-mcp-server": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "node test.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "codebuddy",
+    "superpowers",
+    "skills"
+  ],
+  "author": "Jesse Vincent <jesse@fsck.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

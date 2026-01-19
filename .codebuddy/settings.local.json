@@ -1,0 +1,44 @@
+{
+  "sandbox": {
+    "enabled": false,
+    "autoAllowBashIfSandboxed": true,
+    "network": {
+      "allowedDomains": [],
+      "deniedDomains": [],
+      "allowLocalBinding": false,
+      "allowUnixSockets": [],
+      "allowAllUnixSockets": false
+    },
+    "filesystem": {
+      "denyRead": [
+        "~/.ssh",
+        "~/.aws",
+        "~/.gcp"
+      ],
+      "allowWrite": [
+        ".",
+        "/dev/stdout",
+        "/dev/stderr",
+        "/dev/null",
+        "/dev/tty",
+        "/dev/dtracehelper",
+        "/dev/autofs_nowait",
+        "/tmp/codebuddy",
+        "/private/tmp/codebuddy",
+        "~/.npm/_logs",
+        "~/.codebuddy/debug",
+        "~/.codebuddy/statsig"
+      ],
+      "denyWrite": []
+    },
+    "excludedCommands": [],
+    "allowUnsandboxedCommands": true,
+    "enableWeakerNestedSandbox": false
+  },
+  "permissions": {
+    "allow": [
+      "mcp__sequential_thinking__sequentialthinking",
+      "mcp__filesystem__write_file"
+    ]
+  }
+}

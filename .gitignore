@@ -1,3 +1,4 @@
 .worktrees/
 .private-journal/
 .claude/
+.codebuddy/mcp-server/node_modules/

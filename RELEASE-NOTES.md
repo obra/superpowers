@@ -1,5 +1,76 @@
 # Superpowers Release Notes
 
+## v4.1.0 (2025-01-19)
+
+### New Features
+
+**Added CodeBuddy support (including Internal version)**
+
+Superpowers now supports Tencent CodeBuddy through MCP (Model Context Protocol) integration. This is the first Chinese AI coding assistant to fully support Superpowers.
+
+**MCP Server Implementation:**
+
+- Created dedicated MCP server at `.codebuddy/mcp-server/`
+- Three MCP tools provided:
+  - `use_skill` - Load specific skills with full content
+  - `find_skills` - List all available skills across directories
+  - `get_bootstrap` - Get superpowers bootstrap with tool mappings
+
+**Installation for CodeBuddy:**
+
+```bash
+git clone https://github.com/obra/superpowers.git ~/.codebuddy/superpowers
+cd ~/.codebuddy/superpowers/.codebuddy/mcp-server
+npm install
+```
+
+Configure in CodeBuddy's MCP settings (Craft mode):
+```json
+{
+  "name": "superpowers",
+  "type": "stdio",
+  "command": "node",
+  "args": ["~/.codebuddy/superpowers/.codebuddy/mcp-server/index.js"],
+  "disabled": false
+}
+```
+
+**Features:**
+
+- **Skill Priority System**: Project → Personal → Superpowers (same as other platforms)
+- **Namespace Support**: `project:`, `superpowers:`, or no prefix
+- **Shared Core**: Uses `lib/skills-core.js` for code reuse with OpenCode/Codex
+- **Context Compaction**: Compact bootstrap support for long sessions
+- **Bootstrap Injection**: Automatic using-superpowers skill loading
+- **Tool Mappings**: CodeBuddy-specific tool name translations
+
+**CodeBuddy Internal Version Support:**
+
+- Enhanced configuration options for internal deployments
+- Support for `configSource: "user"` and custom timeouts
+- Team knowledge base integration ready
+- Multi-model support (混元, DeepSeek, GLM) compatible
+- Enterprise authentication support
+
+**Documentation:**
+
+- New comprehensive guide: `docs/README.codebuddy.md`
+- MCP server documentation: `.codebuddy/mcp-server/README.md`
+- Test suite: `.codebuddy/mcp-server/test.js`
+
+**Benefits:**
+
+- Chinese developers can now use Superpowers in their native AI assistant
+- MCP standard ensures clean integration with CodeBuddy's Craft mode
+- Real-time skill loading and discovery
+- Consistent skill experience across all four supported platforms
+
+**Technical Details:**
+
+The MCP server uses stdio transport and follows Model Context Protocol standards, making it compatible with any MCP-compliant tool. It shares the same core module (`lib/skills-core.js`) as OpenCode and Codex implementations, ensuring consistent skill discovery and parsing behavior across all platforms.
+
+---
+
 ## v4.0.3 (2025-12-26)
 
 ### Improvements
