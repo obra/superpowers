@@ -44,7 +44,7 @@ When skills reference tools you don't have, substitute OpenCode equivalents:
 
 **Skills naming (priority order):**
 - Project skills: \`project:skill-name\` (in .opencode/skills/)
-- Personal skills: \`skill-name\` (in ~/.config/opencode/skills/)
+- Personal skills: \`skill-name\` (in ${configDir}/skills/)
 - Superpowers skills: \`superpowers:skill-name\`
 - Project skills override personal, which override superpowers when names match`;
 
@@ -160,7 +160,7 @@ ${toolMapping}
           const allSkills = [...projectSkills, ...personalSkills, ...superpowersSkills];
 
           if (allSkills.length === 0) {
-            return 'No skills found. Install superpowers skills to ~/.config/opencode/superpowers/skills/ or add project skills to .opencode/skills/';
+            return `No skills found. Install superpowers skills to ${superpowersSkillsDir}/ or add personal skills to ${personalSkillsDir}/`;
           }
 
           let output = 'Available skills:\n\n';
