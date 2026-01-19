@@ -8,8 +8,8 @@ You have superpowers.
 
 Do this now, in order:
 
-1. Read and follow `../skills/superpowers/using-superpowers/SKILL.md`.
-2. Scan `../skills/superpowers/` for every `SKILL.md` and list all available skills as `<skill-name> - <description>`.
+1. Use Continue's Read Skills tool to open `superpowers:using-superpowers` and follow it exactly.
+2. Use Continue's Read Skills tool to list all skills, then output ONLY `superpowers:*` skills as `<skill-name> - <description>`.
 3. For any task, if a relevant skill exists, you MUST read it first and follow it exactly.
 4. Tool mapping:
    - If a skill mentions `TodoWrite`, use Continue's plan/todo mechanism if available; otherwise keep an explicit checklist in chat and update it as you go.
