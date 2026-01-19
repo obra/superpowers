@@ -28,7 +28,10 @@ Check if `notion_create_page` tool is available.
 ```
 
 #### Method 2: API Fallback
-**Note:** Examples use API version `2022-06-28`.
+**Note:** Examples use API version `2022-06-28`. To upgrade to `2025-09-03`:
+1. Use `data_source_id` instead of `database_id` (requires fetching the data source ID).
+2. Update endpoints to use `/v1/data_sources` if interacting with data sources.
+
 Use `curl` to create a page.
 ```bash
 curl -X POST https://api.notion.com/v1/pages \
@@ -81,7 +84,10 @@ Check if `notion_create_database_row` or `notion_create_page` (with database par
 ```
 
 #### Method 2: API Fallback
-**Note:** Examples use API version `2022-06-28`.
+**Note:** Examples use API version `2022-06-28`. To upgrade to `2025-09-03`:
+1. Use `data_source_id` instead of `database_id` (requires fetching the data source ID).
+2. Update endpoints to use `/v1/data_sources` if interacting with data sources.
+
 ```bash
 curl -X POST https://api.notion.com/v1/pages \
   -H "Authorization: Bearer $NOTION_API_KEY" \
