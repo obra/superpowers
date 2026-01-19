@@ -20,6 +20,81 @@ export const SuperpowersPlugin = async ({ client, directory }) => {
   // Derive superpowers skills dir from plugin location (works for both symlinked and local installs)
   const superpowersSkillsDir = path.resolve(__dirname, '../../skills');
   const personalSkillsDir = path.join(homeDir, '.config/opencode/skills');
+  const stateModelFile = path.join(homeDir, '.local/state/opencode/model.json');
+
+  const parseModelRef = (ref) => {
+    if (!ref) return null;
+
+    if (typeof ref === 'string') {
+      const value = ref.trim();
+      if (!value) return null;
+      const idx = value.indexOf('/');
+      if (idx <= 0) return null;
+      const providerID = value.slice(0, idx).trim();
+      const modelID = value.slice(idx + 1).trim();
+      if (!providerID || !modelID) return null;
+      return { providerID, modelID };
+    }
+
+    if (typeof ref === 'object') {
+      const providerID = typeof ref.providerID === 'string' ? ref.providerID : null;
+      const modelID = typeof ref.modelID === 'string' ? ref.modelID : null;
+      if (!providerID || !modelID) return null;
+      return { providerID, modelID };
+    }
+
+    return null;
+  };
+
+  const getLastUsedModel = () => {
+    try {
+      if (!fs.existsSync(stateModelFile)) return null;
+      const parsed = JSON.parse(fs.readFileSync(stateModelFile, 'utf8'));
+      const recent = Array.isArray(parsed?.recent) ? parsed.recent[0] : null;
+      return parseModelRef(recent);
+    } catch {
+      return null;
+    }
+  };
+
+  // Resolve the model the session is expected to use:
+  // default_agent.model (if set) -> global model -> last used.
+  const getBootstrapTarget = async () => {
+    const lastUsed = getLastUsedModel();
+
+    try {
+      const configRes = await client.config.get();
+      const config = configRes?.data ?? configRes;
+
+      const agentName =
+        typeof config?.default_agent === 'string' && config.default_agent.trim()
+          ? config.default_agent.trim()
+          : 'build';
+
+      const agentModelFromConfig = parseModelRef(config?.agent?.[agentName]?.model);
+      if (agentModelFromConfig) return { agentName, model: agentModelFromConfig };
+
+      // Agents defined via markdown files might not appear under config.agent.
+      try {
+        const agentsRes = await client.app.agents();
+        const agents = agentsRes?.data ?? agentsRes;
+        if (Array.isArray(agents)) {
+          const agent = agents.find((a) => a?.id === agentName || a?.name === agentName);
+          const agentModelFromList = parseModelRef(agent?.model);
+          if (agentModelFromList) return { agentName, model: agentModelFromList };
+        }
+      } catch {
+        // ignore; fall back to other sources
+      }
+
+      const globalModel = parseModelRef(config?.model);
+      if (globalModel) return { agentName, model: globalModel };
+
+      return { agentName, model: lastUsed };
+    } catch {
+      return { agentName: 'build', model: lastUsed };
+    }
+  };
 
   // Helper to generate bootstrap content
   const getBootstrapContent = (compact = false) => {
@@ -63,10 +138,13 @@ ${toolMapping}
     if (!bootstrapContent) return false;
 
     try {
+      const target = await getBootstrapTarget();
       await client.session.prompt({
         path: { id: sessionID },
         body: {
           noReply: true,
+          ...(target?.agentName ? { agent: target.agentName } : {}),
+          ...(target?.model ? { model: target.model } : {}),
           parts: [{ type: "text", text: bootstrapContent, synthetic: true }]
         }
       });
@@ -192,8 +270,8 @@ ${toolMapping}
       // Extract sessionID from various event structures
       const getSessionID = () => {
         return event.properties?.info?.id ||
-               event.properties?.sessionID ||
-               event.session?.id;
+          event.properties?.sessionID ||
+          event.session?.id;
       };
 
       // Inject bootstrap at session creation (before first user message)
@@ -214,3 +292,4 @@ ${toolMapping}
     }
   };
 };
+
