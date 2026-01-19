@@ -5,7 +5,7 @@
 Tell CodeBuddy in Craft mode:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codebuddy/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/binbinao/superpowers/refs/heads/main/.codebuddy/INSTALL.md
 ```
 
 Or run these commands in your terminal:
@@ -13,7 +13,7 @@ Or run these commands in your terminal:
 ```bash
 # Clone superpowers
 mkdir -p ~/.codebuddy
-git clone https://github.com/obra/superpowers.git ~/.codebuddy/superpowers
+git clone https://github.com/binbinao/superpowers.git ~/.codebuddy/superpowers
 
 # Install MCP server dependencies
 cd ~/.codebuddy/superpowers/.codebuddy/mcp-server
@@ -29,7 +29,7 @@ node test.js
 
 ```bash
 mkdir -p ~/.codebuddy
-git clone https://github.com/obra/superpowers.git ~/.codebuddy/superpowers
+git clone https://github.com/binbinao/superpowers.git ~/.codebuddy/superpowers
 cd ~/.codebuddy/superpowers
 ```
 
@@ -60,7 +60,7 @@ npm install
   "command": "npx",
   "args": [
     "-y",
-    "github.com/obra/superpowers#main/.codebuddy/mcp-server"
+    "github.com/binbinao/superpowers#main/.codebuddy/mcp-server"
   ],
   "disabled": false
 }
@@ -248,7 +248,7 @@ node test.js
 - Read full documentation: [docs/README.codebuddy.md](../docs/README.codebuddy.md)
 - Learn skill development: [skills/writing-skills/SKILL.md](../skills/writing-skills/SKILL.md)
 - Browse available skills: [skills/](../skills/)
-- Report issues: [https://github.com/obra/superpowers/issues](https://github.com/obra/superpowers/issues)
+- Report issues: [https://github.com/binbinao/superpowers/issues](https://github.com/binbinao/superpowers/issues)
 
 ## Uninstallation
 
@@ -264,6 +264,6 @@ Your personal and project skills in `~/.config/codebuddy/skills/` and `.codebudd
 
 ## Support
 
-- **Issues**: https://github.com/obra/superpowers/issues
+- **Issues**: https://github.com/binbinao/superpowers/issues
 - **CodeBuddy Docs**: https://cloud.tencent.com/document/product/1749
 - **CodeBuddy MCP Guide**: https://cloud.tencent.com/developer/article/2526313
