@@ -2,3 +2,5 @@
 .private-journal/
 .claude/
 .codebuddy/mcp-server/node_modules/
+.codebuddy/commands/
+package-lock.json
