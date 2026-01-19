@@ -42,7 +42,7 @@ curl -D- \
        }
    }
 }' \
-"https://$JIRA_DOMAIN/rest/api/2/issue"
+"https://$JIRA_DOMAIN/rest/api/3/issue"
 ```
 
 ### Action 2: Update Ticket

@@ -17,7 +17,7 @@ Interact with Notion workspaces to store documents or manage tasks.
 ### Action 1: Store Document
 **Goal:** Create a new page in Notion with the document content.
 
-**Method 1: MCP Tool (Preferred)**
+#### Method 1: MCP Tool (Preferred)
 Check if `notion_create_page` tool is available.
 ```json
 {
@@ -27,7 +27,8 @@ Check if `notion_create_page` tool is available.
 }
 ```
 
-**Method 2: API Fallback**
+#### Method 2: API Fallback
+**Note:** Examples use API version `2022-06-28`.
 Use `curl` to create a page.
 ```bash
 curl -X POST https://api.notion.com/v1/pages \
@@ -67,10 +68,20 @@ curl -X POST https://api.notion.com/v1/pages \
 ### Action 2: Create Task
 **Goal:** Add a row to a Notion Database.
 
-**Method 1: MCP Tool (Preferred)**
+#### Method 1: MCP Tool (Preferred)
 Check if `notion_create_database_row` or `notion_create_page` (with database parent) is available.
+```json
+{
+  "parent": { "database_id": "YOUR_DATABASE_ID" },
+  "properties": {
+    "Name": { "title": "Task Name" },
+    "Status": { "select": "To Do" }
+  }
+}
+```
 
-**Method 2: API Fallback**
+#### Method 2: API Fallback
+**Note:** Examples use API version `2022-06-28`.
 ```bash
 curl -X POST https://api.notion.com/v1/pages \
   -H "Authorization: Bearer $NOTION_API_KEY" \
