@@ -1,5 +1,69 @@
 # Horspowers Release Notes
 
+## v4.2.1 (2025-01-20)
+
+### New Features
+
+**版本升级脚本 (Version Upgrade Script)**
+
+添加了自动检测和迁移旧版本的功能，帮助用户从 4.2.0 以前版本平滑升级。
+
+- `lib/version-upgrade.js` - 升级脚本核心模块
+  * 检测版本标记文件 `.horspowers-version`
+  * 识别并处理 `document-driven-ai-workflow` 旧目录
+  * 执行文档目录统一迁移
+  * 交互式用户确认和错误恢复
+- `bin/upgrade` - CLI 命令行入口
+- `commands/upgrade.md` - Claude Code 命令
+- `hooks/session-start.sh` - 会话开始时自动检测升级需求
+
+升级功能：
+- 版本比较逻辑（仅对 < 4.2.0 触发）
+- 询问用户是否移除旧目录（带详细说明）
+- 执行文档迁移到统一 `docs/` 结构
+- 备份旧目录到 `.horspowers-trash/`
+- 成功后更新版本标记文件
+
+### Bug Fixes
+
+**修复版本升级脚本仅在成功时更新标记**
+- 问题：`run()` 方法始终调用 `showCompletion()` 和 `updateVersionMarker()`，无论迁移是否成功
+- 修复：添加 `hasError` 标志，仅在 `!hasError` 时更新版本标记
+- 影响：确保失败后可以重试升级
+
+**修复 quiet 模式下版本标记未更新**
+- 问题：版本标记更新在 `if (!options.quiet)` 块内
+- 修复：移到块外，确保所有模式都更新标记
+- 影响：quiet 模式现在正确记录版本
+
+**修复文档元数据路径跨设备兼容性**
+- 问题：`session-end.sh` 保存绝对路径，跨设备协作失效
+- 修复：改用相对路径存储（`path.relative(workingDir, absPath)`）
+- 影响：`TASK_DOC` 和 `BUG_DOC` 现在支持跨设备恢复
+
+**修复 getActiveTask 向后兼容性**
+- 问题：新格式 `task:path` 导致旧格式（仅绝对路径）文件无法解析
+- 修复：添加旧格式回退逻辑（路径仅存在时假定为 task 类型）
+- 影响：现有 `active-task.txt` 文件继续可用
+
+**修复 brainstorming 测试缺失失败判断**
+- 问题：`test_brainstorming_asks_questions` 所有路径都返回 0
+- 修复：改为扁平 if 序列，最终 `return 1`
+- 影响：测试现在能正确检测失败情况
+
+**修复 hooks/bash 语法问题**
+- 问题：`WORKING_DIR` 变量未定义
+- 修复：改用 `$PWD`
+- 问题：node -e 中使用 `return` 语句非法
+- 修复：改用变量赋值 + `break` 模式
+
+### Documentation
+
+**更新 .gitignore**
+- 添加 `.horspowers-version` 到忽略列表
+
+---
+
 ## v4.2.0 (2025-01-19)
 
 ### Major Features
