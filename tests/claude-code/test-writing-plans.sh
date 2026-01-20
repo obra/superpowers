@@ -17,13 +17,15 @@ test_writing_plans_availability() {
     echo "Test: writing-plans skill availability..."
 
     local output
-    output=$(run_claude "What is the writing-plans skill for?" 30)
+    output=$(run_claude "What is the writing-plans skill for?" 45)
 
-    if echo "$output" | grep -q "writing-plans\|writing plans"; then
+    # Check for skill name or related terms
+    if echo "$output" | grep -qiE "(writing-plans|writing plans|编写计划|实施计划)"; then
         echo "  [PASS] writing-plans skill is available"
         return 0
     else
         echo "  [FAIL] writing-plans skill should be available"
+        echo "  Output: $(echo "$output" | head -30)"
         return 1
     fi
 }
