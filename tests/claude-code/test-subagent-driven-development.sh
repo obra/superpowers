@@ -20,9 +20,11 @@ else
     exit 1
 fi
 
-if assert_contains "$output" "Load Plan\|read.*plan\|extract.*tasks" "Mentions loading plan"; then
+if echo "$output" | grep -qiE "(Load Plan|read.*plan|extract.*tasks|读取计划|读取.*计划)"; then
     : # pass
 else
+    echo "  [FAIL] Should mention loading plan"
+    echo "  Output: $(echo "$output" | head -30)"
     exit 1
 fi
 

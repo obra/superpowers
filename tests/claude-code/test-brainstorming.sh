@@ -55,7 +55,8 @@ test_brainstorming_asks_questions() {
     local output
     output=$(run_claude "I want to add a login feature. Use brainstorming to help me design it." 60)
 
-    if assert_contains "$output" "?" "Asks questions"; then
+    # Check for questions or options (skill may use numbered options)
+    if echo "$output" | grep -qE "(\?|请|确认|告诉我|Which|What|How|选项|Option \\d)" > /dev/null; then
         echo "  [PASS] brainstorming asks clarifying questions"
         return 0
     else

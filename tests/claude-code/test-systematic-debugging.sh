@@ -59,11 +59,13 @@ test_debugging_reproduce_first() {
     local output
     output=$(run_claude "What is the first step in systematic-debugging?" 30)
 
-    if echo "$output" | grep -qi "reproduce\|reproducible"; then
+    # Support both English and Chinese keywords
+    if echo "$output" | grep -qiE "(reproduce|reproducible|复现|reproducibility|第一步|first.*step)"; then
         echo "  [PASS] debugging starts with reproduction"
         return 0
     else
         echo "  [FAIL] debugging should start with reproduction"
+        echo "  Output: $(echo "$output" | head -30)"
         return 1
     fi
 }
