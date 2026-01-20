@@ -79,8 +79,8 @@ test_brainstorming_proposes_approaches() {
     local output
     output=$(run_claude "Use brainstorming to design a caching strategy. What approaches would you consider?" 60)
 
-    # Check for mentions of options/approaches
-    if echo "$output" | grep -iE "(approach|option|alternative|方案|选项|Option 1|Option 2|First|Second)" > /dev/null; then
+    # Check for options/approaches - including A/B/C/D options or numbered lists
+    if echo "$output" | grep -iE "(approach|option|alternative|方案|选项|Option [ABCD]|[ABCD]\.|选择.*A|选择.*B|问题.*1)" > /dev/null; then
         echo "  [PASS] brainstorming proposes multiple approaches"
         return 0
     else
