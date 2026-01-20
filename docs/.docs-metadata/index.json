@@ -1,0 +1,22 @@
+{
+  "2026-01-19-test-feature-design.md": {
+    "type": "design",
+    "file": "2026-01-19-test-feature-design.md",
+    "topic": "test-feature",
+    "updatedAt": "2026-01-19T10:38:16.226Z"
+  },
+  "2026-01-19-task-test-task.md": {
+    "type": "task",
+    "file": "2026-01-19-task-test-task.md",
+    "title": "Test Task",
+    "relatedDocs": [],
+    "updatedAt": "2026-01-19T10:38:16.230Z"
+  },
+  "2026-01-19-task-test-feature-implementation.md": {
+    "type": "task",
+    "file": "2026-01-19-task-test-feature-implementation.md",
+    "title": "Test Feature Implementation",
+    "relatedDocs": [],
+    "updatedAt": "2026-01-19T10:38:41.705Z"
+  }
+}
