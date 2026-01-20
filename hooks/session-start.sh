@@ -191,8 +191,8 @@ if [ "$docs_enabled" = "true" ]; then
         docs_context+="<active-docs-count>0</active-docs-count>"
     fi
 
-    # Check for last session metadata
-    metadata_dir="${PLUGIN_ROOT}/.docs-metadata"
+    # Check for last session metadata (should be in project's docs/ directory)
+    metadata_dir="${WORKING_DIR}/docs/.docs-metadata"
     if [ -f "$metadata_dir/last-session.json" ]; then
         # Read and escape the JSON content
         last_session_content=$(cat "$metadata_dir/last-session.json" 2>/dev/null || echo "{}")

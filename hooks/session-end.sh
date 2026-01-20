@@ -185,8 +185,8 @@ result='{"hookSpecificOutput":{"hookEventName":"SessionEnd","additionalContext":
 
 # Check if documentation is enabled
 if is_docs_enabled; then
-    # Save session metadata
-    METADATA_DIR="${PLUGIN_ROOT}/.docs-metadata"
+    # Save session metadata (should be in project's docs/ directory)
+    METADATA_DIR="${WORKING_DIR}/docs/.docs-metadata"
     SESSION_ID="${CLAUDE_SESSION_ID:-unknown}"
 
     save_session_metadata "$METADATA_DIR" "$SESSION_ID"
