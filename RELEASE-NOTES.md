@@ -1,5 +1,35 @@
 # Superpowers Release Notes
 
+## Unreleased
+
+### New Features
+
+**Visual companion for brainstorming skill**
+
+Added optional browser-based visual companion for brainstorming sessions. When users have a browser available, brainstorming can display interactive screens showing current phase, questions, and design decisions in a more readable format than terminal output.
+
+Components:
+- `lib/brainstorm-server/` - WebSocket server for real-time updates
+- `skills/brainstorming/visual-companion.md` - Integration guide
+- Helper scripts for session management with proper isolation
+- Browser helper library for event capture
+
+The visual companion is opt-in and falls back gracefully to terminal-only operation.
+
+### Improvements
+
+**Instruction priority clarified in using-superpowers**
+
+Added explicit instruction priority hierarchy to prevent conflicts with user preferences:
+
+1. User's explicit instructions (CLAUDE.md, direct requests) — highest priority
+2. Superpowers skills — override default system behavior where they conflict
+3. Default system prompt — lowest priority
+
+This ensures users remain in control. If CLAUDE.md says "don't use TDD" and a skill says "always use TDD," CLAUDE.md wins.
+
+---
+
 ## v4.1.1 (2026-01-23)
 
 ### Fixes
