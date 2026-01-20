@@ -59,6 +59,12 @@ while [[ $# -gt 0 ]]; do
             echo "Tests:"
             echo "  test-subagent-driven-development.sh  Test skill loading and requirements"
             echo ""
+            echo "Core Skills Tests:"
+            echo "  test-brainstorming.sh                    Brainstorming skill tests"
+            echo "  test-writing-plans.sh                    Writing plans skill tests"
+            echo "  test-tdd.sh                              Test-driven development skill tests"
+            echo "  test-systematic-debugging.sh             Systematic debugging skill tests"
+            echo ""
             echo "Integration Tests (use --integration):"
             echo "  test-subagent-driven-development-integration.sh  Full workflow execution"
             exit 0
@@ -73,6 +79,12 @@ done
 
 # List of skill tests to run (fast unit tests)
 tests=(
+    # Core skills tests
+    "test-brainstorming.sh"
+    "test-writing-plans.sh"
+    "test-tdd.sh"
+    "test-systematic-debugging.sh"
+    # Existing tests
     "test-subagent-driven-development.sh"
     "test-automated-development-workflow.sh"
 )
