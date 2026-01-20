@@ -14,6 +14,65 @@ if [ -d "$legacy_skills_dir" ]; then
     warning_message="\n\n<important-reminder>IN YOUR FIRST REPLY AFTER SEEING THIS MESSAGE YOU MUST TELL THE USER:⚠️ **WARNING:** Horspower (forked from superpowers) now uses Claude Code's skills system. Custom skills in ~/.config/superpowers/skills will not be read. Move custom skills to ~/.claude/skills instead. To make this message go away, remove ~/.config/superpowers/skills</important-reminder>"
 fi
 
+# Version upgrade detection
+upgrade_needed=""
+upgrade_message=""
+
+# First, check for version marker file
+version_marker="$PWD/.horspowers-version"
+needs_upgrade_check="false"
+
+if [ ! -f "$version_marker" ]; then
+    # No version marker - might be upgrading from pre-4.2.0
+    needs_upgrade_check="true"
+else
+    # Version marker exists - check if version < 4.2.0
+    marker_version=$(cat "$version_marker" 2>/dev/null || echo "0.0.0")
+    # Use Node.js for proper version comparison
+    needs_upgrade_check=$(node -e "
+        const v1 = '$marker_version'.split('.').map(Number);
+        const v2 = '4.2.0'.split('.').map(Number);
+        let result = false;
+        for (let i = 0; i < Math.max(v1.length, v2.length); i++) {
+            const p1 = v1[i] || 0;
+            const p2 = v2[i] || 0;
+            if (p1 < p2) { result = true; break; }
+            if (p1 > p2) { result = false; break; }
+        }
+        console.log(result);
+    " 2>/dev/null || echo "false")
+fi
+
+# Only check for old directories if upgrade is needed
+if [ "$needs_upgrade_check" = "true" ]; then
+    # Check for document-driven-ai-workflow directory (old version)
+    ddaw_dir="$PWD/document-driven-ai-workflow"
+    if [ -d "$ddaw_dir" ]; then
+        upgrade_needed="true"
+        upgrade_message="\n\n<upgrade-needed>⚠️ **检测到需要升级**: 发现旧版本的 document-driven-ai-workflow 目录。
+
+**说明**: Horspowers 4.2.0+ 已将文档管理功能完全内置到插件中，不再需要单独安装 document-driven-ai-workflow 工具。
+
+**操作建议**: 运行 /upgrade 命令来自动迁移并清理旧目录。
+
+或者手动运行: ./bin/upgrade 或 node lib/version-upgrade.js</upgrade-needed>"
+    fi
+
+    # Check if there are old-style docs directories that need migration
+    if [ -d "$PWD/.docs" ] || [ -d "$PWD/doc" ] || [ -d "$PWD/document" ]; then
+        upgrade_needed="true"
+        if [ -z "$upgrade_message" ]; then
+            upgrade_message="\n\n<upgrade-needed>⚠️ **检测到需要升级**: 发现旧版本的文档目录结构。
+
+**说明**: Horspowers 4.2.0+ 使用统一的 docs/ 目录结构。
+
+**操作建议**: 运行 /upgrade 命令来自动迁移文档。
+
+或者手动运行: ./bin/upgrade 或 node lib/version-upgrade.js</upgrade-needed>"
+        fi
+    fi
+fi
+
 # Detect configuration file in current working directory
 config_detected_marker=""
 config_output=""  # Initialize to empty string to avoid undefined variable
@@ -192,7 +251,7 @@ if [ "$docs_enabled" = "true" ]; then
     fi
 
     # Check for last session metadata (should be in project's docs/ directory)
-    metadata_dir="${WORKING_DIR}/docs/.docs-metadata"
+    metadata_dir="$PWD/docs/.docs-metadata"
     if [ -f "$metadata_dir/last-session.json" ]; then
         # Read and escape the JSON content
         last_session_content=$(cat "$metadata_dir/last-session.json" 2>/dev/null || echo "{}")
@@ -227,12 +286,14 @@ using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.m
 # Use base64 encoding to safely pass all content without special character issues
 using_superpowers_b64=$(printf '%s' "$using_superpowers_content" | base64)
 warning_b64=$(printf '%s' "$warning_message" | base64)
+upgrade_b64=$(printf '%s' "$upgrade_message" | base64)
 config_marker_b64=$(printf '%s' "$config_detected_marker" | base64)
 config_output_b64=$(printf '%s' "$config_output" | base64)
 
 # Pass base64-encoded content via environment variables
 USING_SUPERPOWERS_B64="$using_superpowers_b64" \
 WARNING_B64="$warning_b64" \
+UPGRADE_B64="$upgrade_b64" \
 CONFIG_MARKER_B64="$config_marker_b64" \
 CONFIG_OUTPUT_B64="$config_output_b64" \
 DOCS_CONTEXT_B64=$(printf '%s' "$docs_context" | base64) \
@@ -241,6 +302,7 @@ const Buffer = require('buffer').Buffer;
 
 const usingSuperpowers = Buffer.from(process.env.USING_SUPERPOWERS_B64, 'base64').toString('utf8');
 const warning = Buffer.from(process.env.WARNING_B64, 'base64').toString('utf8');
+const upgrade = Buffer.from(process.env.UPGRADE_B64, 'base64').toString('utf8');
 const configMarker = Buffer.from(process.env.CONFIG_MARKER_B64, 'base64').toString('utf8');
 const configOutput = Buffer.from(process.env.CONFIG_OUTPUT_B64, 'base64').toString('utf8');
 const docsContext = Buffer.from(process.env.DOCS_CONTEXT_B64, 'base64').toString('utf8');
@@ -256,6 +318,9 @@ if (configOutput) {
 
 // Embed document system context
 context += '\\n\\n' + docsContext;
+
+// Embed upgrade message if needed
+context += upgrade;
 
 context += warning + '\\n</EXTREMELY_IMPORTANT>';
 

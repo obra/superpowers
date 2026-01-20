@@ -1,0 +1,7 @@
+#!/bin/bash
+# Horspowers 版本升级脚本包装器
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+node "$PROJECT_ROOT/lib/version-upgrade.js" "$@"
