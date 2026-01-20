@@ -13,10 +13,10 @@ Configure MCP server:
 - Name: superpowers
 - Type: stdio
 - Command: npx
-- Args: -y, github.com/obra/superpowers#main/.codebuddy/mcp-server
+- Args: -y, github.com/binbinao/superpowers#main/.codebuddy/mcp-server
 
 Or download and run locally:
-git clone https://github.com/obra/superpowers.git ~/.codebuddy/superpowers
+git clone https://github.com/binbinao/superpowers.git ~/.codebuddy/superpowers
 node ~/.codebuddy/superpowers/.codebuddy/mcp-server/index.js
 ```
 
@@ -34,7 +34,7 @@ node ~/.codebuddy/superpowers/.codebuddy/mcp-server/index.js
 
 ```bash
 mkdir -p ~/.codebuddy
-git clone https://github.com/obra/superpowers.git ~/.codebuddy/superpowers
+git clone https://github.com/binbinao/superpowers.git ~/.codebuddy/superpowers
 ```
 
 ##### 2. Install Dependencies
@@ -316,8 +316,8 @@ For the internal version of CodeBuddy:
 
 ## Getting Help
 
-- Report issues: https://github.com/obra/superpowers/issues
-- Main documentation: https://github.com/obra/superpowers
+- Report issues: https://github.com/binbinao/superpowers/issues
+- Main documentation: https://github.com/binbinao/superpowers
 - CodeBuddy docs: https://cloud.tencent.com/document/product/1749
 - CodeBuddy MCP guide: https://cloud.tencent.com/developer/article/2526313
 

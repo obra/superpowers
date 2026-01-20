@@ -4,3 +4,6 @@
 .codebuddy/mcp-server/node_modules/
 .codebuddy/commands/
 package-lock.json
+docs/plans/2026-01-20-superpowers-codebuddy-integration-paper-outline.md
+docs/2026-01-20-superpowers-codebuddy-integration-paper.md
+docs/superpowers-mcp.png
