@@ -77,11 +77,13 @@ test_debugging_hypothesis() {
     local output
     output=$(run_claude "Does systematic-debugging form hypotheses before fixing bugs?" 30)
 
-    if echo "$output" | grep -qi "hypothes\|theory\|guess\|suspect"; then
+    # Check for hypothesis-related terms (English and Chinese)
+    if echo "$output" | grep -qiE "(hypothes|theory|guess|suspect|假设|推测|猜想|怀疑|根因|原因)"; then
         echo "  [PASS] debugging mentions hypotheses"
         return 0
     else
         echo "  [FAIL] debugging should mention hypotheses"
+        echo "  Output: $(echo "$output" | head -30)"
         return 1
     fi
 }

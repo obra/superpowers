@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Helper functions for Claude Code skill tests
 
+# Debug mode - set to 1 to enable detailed output
+TEST_DEBUG_MODE="${TEST_DEBUG_MODE:-0}"
+
 # Run Claude Code with a prompt and capture output
 # Usage: run_claude "prompt text" [timeout_seconds] [allowed_tools]
 run_claude() {
@@ -15,13 +18,35 @@ run_claude() {
         cmd="$cmd --allowed-tools=$allowed_tools"
     fi
 
+    # Debug: Show command being run
+    if [ "$TEST_DEBUG_MODE" = "1" ]; then
+        echo "  [DEBUG] Running: $cmd" >&2
+        echo "  [DEBUG] Timeout: ${timeout}s" >&2
+    fi
+
     # Run Claude in headless mode with timeout
     if timeout "$timeout" bash -c "$cmd" > "$output_file" 2>&1; then
-        cat "$output_file"
+        local output=$(cat "$output_file")
+        local output_len=$(echo "$output" | wc -c)
+
+        # Debug: Show output length
+        if [ "$TEST_DEBUG_MODE" = "1" ]; then
+            echo "  [DEBUG] Output length: ${output_len} bytes" >&2
+        fi
+
+        # Warn if output is suspiciously empty
+        if [ "$output_len" -lt 50 ]; then
+            echo "  [WARN] Output is very short (${output_len} bytes)" >&2
+            echo "  [WARN] This might indicate a timeout or CLI issue" >&2
+            echo "  [WARN] Output preview: $(echo "$output" | head -3)" >&2
+        fi
+
+        echo "$output"
         rm -f "$output_file"
         return 0
     else
         local exit_code=$?
+        echo "  [ERROR] Command failed with exit code: $exit_code" >&2
         cat "$output_file" >&2
         rm -f "$output_file"
         return $exit_code

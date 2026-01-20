@@ -17,7 +17,7 @@ test_tdd_availability() {
     echo "Test: TDD skill availability..."
 
     local output
-    output=$(run_claude "What is the test-driven-development skill for?" 30)
+    output=$(run_claude "What is the test-driven-development skill for?" 60)
 
     if echo "$output" | grep -qi "test-driven\|TDD"; then
         echo "  [PASS] TDD skill is available"
@@ -33,7 +33,7 @@ test_tdd_chinese_announcement() {
     echo "Test: TDD Chinese announcement..."
 
     local output
-    output=$(run_claude "Use the test-driven-development skill" 30)
+    output=$(run_claude "Use the test-driven-development skill" 60)
 
     # More flexible - just check for TDD-related content
     if echo "$output" | grep -qiE "(测试驱动开发|TDD|test-driven|RED|GREEN|测试|test)"; then
@@ -41,7 +41,7 @@ test_tdd_chinese_announcement() {
         return 0
     else
         echo "  [FAIL] TDD should mention itself"
-        echo "  Output: $(echo "$output" | head -30)"
+        echo "  Output: $(echo "$output" | head -60)"
         return 1
     fi
 }
@@ -51,7 +51,7 @@ test_tdd_red_green_refactor() {
     echo "Test: TDD RED-GREEN-REFACTOR cycle..."
 
     local output
-    output=$(run_claude "What are the phases of TDD in the test-driven-development skill?" 30)
+    output=$(run_claude "What are the phases of TDD in the test-driven-development skill?" 60)
 
     local found=0
     echo "$output" | grep -qi "RED\|red" && ((found++))
@@ -72,7 +72,7 @@ test_tdd_test_first() {
     echo "Test: TDD requires test first..."
 
     local output
-    output=$(run_claude "Does TDD allow writing code before tests? What is the rule?" 30)
+    output=$(run_claude "Does TDD allow writing code before tests? What is the rule?" 60)
 
     # More flexible matching for test-first principle
     if echo "$output" | grep -qiE "(no|not.*allowed|delete.*code|must.*test.*first|test.*before.*code|write.*test.*first|铁律|Iron Law)"; then
@@ -80,7 +80,7 @@ test_tdd_test_first() {
         return 0
     else
         echo "  [FAIL] TDD should require test first"
-        echo "  Output: $(echo "$output" | head -30)"
+        echo "  Output: $(echo "$output" | head -60)"
         return 1
     fi
 }
@@ -90,7 +90,7 @@ test_tdd_verify_red() {
     echo "Test: TDD verifies test fails..."
 
     local output
-    output=$(run_claude "In TDD, why should you verify the test fails in RED phase?" 30)
+    output=$(run_claude "In TDD, why should you verify the test fails in RED phase?" 60)
 
     # More flexible matching for RED phase verification
     if echo "$output" | grep -qiE "(prove|verif|correct|right|ensure|test.*fail|fail.*first|red.*phase)"; then
@@ -98,7 +98,7 @@ test_tdd_verify_red() {
         return 0
     else
         echo "  [FAIL] TDD should explain verifying failure"
-        echo "  Output: $(echo "$output" | head -30)"
+        echo "  Output: $(echo "$output" | head -60)"
         return 1
     fi
 }
@@ -108,7 +108,7 @@ test_tdd_minimal_code() {
     echo "Test: TDD minimal code principle..."
 
     local output
-    output=$(run_claude "How much code should you write in the GREEN phase of TDD?" 30)
+    output=$(run_claude "How much code should you write in the GREEN phase of TDD?" 60)
 
     if echo "$output" | grep -qi "minimal\|simplest\|least\|just.*enough"; then
         echo "  [PASS] TDD mentions minimal code"

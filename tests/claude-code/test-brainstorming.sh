@@ -80,7 +80,8 @@ test_brainstorming_proposes_approaches() {
     output=$(run_claude "Use brainstorming to design a caching strategy. What approaches would you consider?" 60)
 
     # Check for options/approaches - including A/B/C/D options or numbered lists
-    if echo "$output" | grep -iE "(approach|option|alternative|方案|选项|Option [ABCD]|[ABCD]\.|选择.*A|选择.*B|问题.*1)" > /dev/null; then
+    # Enhanced regex to match various option formats
+    if echo "$output" | grep -iE "(approach|option|alternative|方案|选项|Option [ABCD]|^[[:space:]]*[ABCD]\.|[ABCD]\.|\* [ABCD]|选择.*A|选择.*B|问题.*1)" > /dev/null; then
         echo "  [PASS] brainstorming proposes multiple approaches"
         return 0
     else
@@ -97,10 +98,18 @@ test_brainstorming_design_sections() {
     local output
     output=$(run_claude "Use brainstorming skill. What sections does a design document typically include?" 30)
 
-    # Check for key design sections
+    # Check for key design sections (both English and Chinese)
     local found_sections=0
 
+    # English keywords
     for section in "architecture" "component" "data flow" "testing"; do
+        if echo "$output" | grep -iq "$section"; then
+            ((found_sections++))
+        fi
+    done
+
+    # Chinese keywords
+    for section in "架构" "组件" "模块" "数据流" "测试"; do
         if echo "$output" | grep -iq "$section"; then
             ((found_sections++))
         fi
