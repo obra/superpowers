@@ -259,19 +259,26 @@ if [ "$docs_enabled" = "true" ]; then
         docs_context+="<last-session>$escaped_session</last-session>"
 
         # Extract taskDoc and bugDoc for environment setup
+        # Paths are stored as relative paths, convert to absolute
         # Use [[:space:]] for portability (grep -E with \s not always available)
-        task_doc_path=$(echo "$last_session_content" | grep -o '"taskDoc"[[:space:]]*:[[:space:]]*"[^"]*"' | cut -d'"' -f4 2>/dev/null || echo "")
-        bug_doc_path=$(echo "$last_session_content" | grep -o '"bugDoc"[[:space:]]*:[[:space:]]*"[^"]*"' | cut -d'"' -f4 2>/dev/null || echo "")
+        task_doc_relative=$(echo "$last_session_content" | grep -o '"taskDoc"[[:space:]]*:[[:space:]]*"[^"]*"' | cut -d'"' -f4 2>/dev/null || echo "")
+        bug_doc_relative=$(echo "$last_session_content" | grep -o '"bugDoc"[[:space:]]*:[[:space:]]*"[^"]*"' | cut -d'"' -f4 2>/dev/null || echo "")
 
-        # Set environment variables if files still exist
-        if [ -n "$task_doc_path" ] && [ -f "$task_doc_path" ]; then
-            export TASK_DOC="$task_doc_path"
-            docs_context+="<resumed-task-doc>$task_doc_path</resumed-task-doc>"
+        # Convert relative paths to absolute paths
+        if [ -n "$task_doc_relative" ]; then
+            task_doc_path="$PWD/$task_doc_relative"
+            if [ -f "$task_doc_path" ]; then
+                export TASK_DOC="$task_doc_path"
+                docs_context+="<resumed-task-doc>$task_doc_path</resumed-task-doc>"
+            fi
         fi
 
-        if [ -n "$bug_doc_path" ] && [ -f "$bug_doc_path" ]; then
-            export BUG_DOC="$bug_doc_path"
-            docs_context+="<resumed-bug-doc>$bug_doc_path</resumed-bug-doc>"
+        if [ -n "$bug_doc_relative" ]; then
+            bug_doc_path="$PWD/$bug_doc_relative"
+            if [ -f "$bug_doc_path" ]; then
+                export BUG_DOC="$bug_doc_path"
+                docs_context+="<resumed-bug-doc>$bug_doc_path</resumed-bug-doc>"
+            fi
         fi
     fi
 else

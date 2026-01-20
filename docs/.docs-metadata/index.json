@@ -39,5 +39,19 @@
       "plan": "2026-01-20-test-implementation.md"
     },
     "updatedAt": "2026-01-20T09:52:16.398Z"
+  },
+  "2026-01-20-task-test-relative-path.md": {
+    "type": "task",
+    "file": "2026-01-20-task-test-relative-path.md",
+    "title": "test-relative-path",
+    "relatedDocs": {},
+    "updatedAt": "2026-01-20T10:31:52.095Z"
+  },
+  "2026-01-20-task-test-relative-path-v2.md": {
+    "type": "task",
+    "file": "2026-01-20-task-test-relative-path-v2.md",
+    "title": "test-relative-path-v2",
+    "relatedDocs": {},
+    "updatedAt": "2026-01-20T10:32:25.931Z"
   }
 }

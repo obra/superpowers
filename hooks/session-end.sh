@@ -121,15 +121,27 @@ save_session_metadata() {
     mkdir -p "$metadata_dir"
 
     # Use Node.js to write JSON safely
+    # Convert absolute paths to relative paths for portability
     node -e "
     const fs = require('fs');
+    const path = require('path');
+
+    const workingDir = '$WORKING_DIR';
+    const taskDoc = process.env.TASK_DOC || '';
+    const bugDoc = process.env.BUG_DOC || '';
+
+    // Convert absolute paths to relative (from project root)
+    const toRelative = (absPath) => {
+        if (!absPath) return '';
+        return path.relative(workingDir, absPath);
+    };
+
     const metadata = {
       sessionId: '$session_id',
       endTime: '$SESSION_END_TIME',
-      workingDirectory: '$WORKING_DIR',
       gitBranch: '$CURRENT_BRANCH',
-      taskDoc: process.env.TASK_DOC || '',
-      bugDoc: process.env.BUG_DOC || ''
+      taskDoc: toRelative(taskDoc),
+      bugDoc: toRelative(bugDoc)
     };
 
     fs.writeFileSync(
