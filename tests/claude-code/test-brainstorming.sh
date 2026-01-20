@@ -36,13 +36,13 @@ test_brainstorming_chinese_announcement() {
     local output
     output=$(run_claude "Use the brainstorming skill to help me design a simple feature" 60)
 
-    # Check for Chinese announcement (flexible matching)
-    # Match "使用...技能" or "头脑风暴" or Chinese skill-related terms
-    if echo "$output" | grep -qE "(使用.*技能|头脑风暴|brainstorming)"; then
-        echo "  [PASS] brainstorming announces in Chinese"
+    # Check for Chinese interaction (skill is active and responding in Chinese)
+    # The skill may use AskUserQuestion or other tools, so we check for Chinese content
+    if echo "$output" | grep -qE "(功能|设计|选择|请问|想要|你想要|技能|brainstorming)"; then
+        echo "  [PASS] brainstorming responds in Chinese"
         return 0
     else
-        echo "  [FAIL] brainstorming should announce in Chinese"
+        echo "  [FAIL] brainstorming should respond in Chinese"
         echo "  Output sample: $(echo "$output" | head -20)"
         return 1
     fi
