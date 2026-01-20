@@ -44,9 +44,28 @@ mkdir -p .opencode/plugin
 ln -sf ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js .opencode/plugin/superpowers.js
 ```
 
-#### 3. Restart OpenCode
+#### 3. Install OpenCode Plugin Dependencies
+
+**Important:** Don't forget to install the required OpenCode plugin package:
+
+```bash
+cd ~/.config/opencode
+npm i @opencode-ai/plugin
+```
+
+Without this, the plugin will appear blank in OpenCode.
+
+#### 4. Restart OpenCode
 
 Restart OpenCode to load the plugin. Superpowers will automatically activate.
+
+#### 5. Validate Installation
+
+To verify the installation was successful, run:
+
+```bash
+opencode run hello --print-logs
+```
 
 ## Usage
 
