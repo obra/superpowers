@@ -10,6 +10,7 @@ Manage tasks and bugs in Jira.
 
 ## Prerequisites
 - `JIRA_API_TOKEN` and `JIRA_EMAIL` in environment.
+  - **Note:** `JIRA_API_TOKEN` should be an [API Token](https://id.atlassian.com/manage-profile/security/api-tokens) for Atlassian Cloud, not your password.
 - `JIRA_DOMAIN` (e.g., `your-domain.atlassian.net`) in configuration or environment.
 - `JIRA_PROJECT_KEY` in configuration.
 
@@ -25,7 +26,7 @@ Check if `jira_create_issue` tool is available.
 Use `curl` to create an issue.
 
 ```bash
-curl -D- \
+curl -s \
   -u $JIRA_EMAIL:$JIRA_API_TOKEN \
   -X POST \
   -H "Content-Type: application/json" \
