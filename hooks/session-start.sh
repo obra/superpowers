@@ -73,83 +73,87 @@ if [ "$needs_upgrade_check" = "true" ]; then
     fi
 fi
 
-# Detect configuration file in current working directory
-config_detected_marker=""
-config_output=""  # Initialize to empty string to avoid undefined variable
+# Detect configuration file status using config-manager.js
+config_status_output=$(node -e "
+const { detectConfigFiles, readConfig, checkConfigUpdate, validateConfig } = require('./lib/config-manager.js');
+const detection = detectConfigFiles(process.cwd());
 
-# Try to find .horspowers-config.yaml or .superpowers-config.yaml (for backwards compatibility)
-current_dir="$PWD"
-while [ "$current_dir" != "/" ]; do
-    config_file=""
-    if [ -f "$current_dir/.horspowers-config.yaml" ]; then
-        config_file="$current_dir/.horspowers-config.yaml"
-    elif [ -f "$current_dir/.superpowers-config.yaml" ]; then
-        config_file="$current_dir/.superpowers-config.yaml"
-    fi
-
-    if [ -n "$config_file" ]; then
-        # Config found, read it using Node.js
-        # SECURITY: Pass path via environment variable to prevent code injection
-        if config_output=$(CONFIG_FILE="$config_file" node -e "
-        const fs = require('fs');
-        const path = require('path');
-        const configPath = process.env.CONFIG_FILE;
-        try {
-            const content = fs.readFileSync(configPath, 'utf8');
-            const lines = content.split('\\n');
-            const config = {};
-            for (const line of lines) {
-                const trimmed = line.trim();
-                if (trimmed && !trimmed.startsWith('#')) {
-                    // Support keys with dots like \"documentation.enabled\"
-                    const match = trimmed.match(/^([^:#=]+):\\s*(.+)$/);
-                    if (match) {
-                        const key = match[1];
-                        const value = match[2];
-
-                        // Handle nested keys (e.g., \"documentation.enabled\")
-                        if (key.includes('.')) {
-                            const parts = key.split('.');
-                            let current = config;
-                            for (let i = 0; i < parts.length - 1; i++) {
-                                if (!current[parts[i]]) {
-                                    current[parts[i]] = {};
-                                }
-                                current = current[parts[i]];
-                            }
-                            current[parts[parts.length - 1]] = value;
-                        } else {
-                            config[key] = value;
-                        }
-                    }
-                }
+if (detection.hasOld) {
+    console.log('status:needs-migration');
+    console.log('old_path:' + detection.oldPath);
+    console.log('new_path:' + detection.newPath);
+} else if (detection.hasNew) {
+    const config = readConfig(process.cwd());
+    if (!config) {
+        console.log('status:read-error');
+    } else {
+        const validation = validateConfig(config);
+        if (!validation.valid) {
+            console.log('status:invalid');
+            console.log('errors:' + validation.errors.join('|'));
+        } else {
+            const check = checkConfigUpdate(config);
+            if (check.needsUpdate) {
+                console.log('status:needs-update');
+                console.log('reason:' + check.reason);
+            } else {
+                console.log('status:valid');
             }
-            console.log(JSON.stringify(config));
-        } catch (e) {
-            console.error('Error:', e.message);
-            process.exit(1);
         }
-        " 2>&1); then
-            # Check that config_output is not empty and is valid JSON
-            if [ -n "$config_output" ]; then
-                # Config found - set marker (config_output already contains JSON)
-                config_detected_marker="<config-exists>true</config-exists>"
-            fi
-        fi
-        break
-    fi
-    # Move up one directory
-    new_dir=$(dirname "$current_dir")
-    if [ "$new_dir" = "$current_dir" ]; then
-        break
-    fi
-    current_dir="$new_dir"
-done
+        console.log('config:' + JSON.stringify(config));
+    }
+} else {
+    console.log('status:needs-init');
+}
+" 2>&1)
 
-# If no config found, add marker for initial setup
-if [ -z "$config_detected_marker" ]; then
-    config_detected_marker="<config-exists>false</config-exists>"
-fi
+# Parse config status output
+config_status=""
+config_detected_marker=""
+config_output=""
+config_migration_path=""
+config_update_reason=""
+
+# Parse the output line by line
+while IFS= read -r line; do
+    if [[ "$line" == status:* ]]; then
+        config_status="${line#status:}"
+    elif [[ "$line" == config:* ]]; then
+        config_output="${line#config:}"
+    elif [[ "$line" == old_path:* ]]; then
+        config_migration_path="${line#old_path:}"
+    elif [[ "$line" == reason:* ]]; then
+        config_update_reason="${line#reason:}"
+    fi
+done <<< "$config_status_output"
+
+# Set markers based on status
+case "$config_status" in
+    needs-init)
+        config_detected_marker="<config-needs-init>true</config-needs-init>"
+        ;;
+    needs-migration)
+        config_detected_marker="<config-needs-migration>true</config-needs-migration>"
+        config_detected_marker+="<config-old-path>$config_migration_path</config-old-path>"
+        ;;
+    needs-update)
+        config_detected_marker="<config-needs-update>true</config-needs-update>"
+        config_detected_marker+="<config-update-reason>$config_update_reason</config-update-reason>"
+        config_detected_marker="<config-exists>true</config-exists>"
+        ;;
+    invalid)
+        config_detected_marker="<config-invalid>true</config-invalid>"
+        config_detected_marker="<config-exists>true</config-exists>"
+        ;;
+    valid)
+        config_detected_marker="<config-valid>true</config-valid>"
+        config_detected_marker="<config-exists>true</config-exists>"
+        ;;
+    *)
+        # Default: no config found
+        config_detected_marker="<config-exists>false</config-exists>"
+        ;;
+esac
 
 # Document system detection
 docs_context=""
@@ -166,11 +170,15 @@ docs_enabled="false"
 if [ -n "$config_output" ]; then
     # Check if documentation.enabled is true using Node.js for proper JSON parsing
     docs_enabled=$(echo "$config_output" | node -e "
-    const config = JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8'));
-    // Check nested documentation.enabled property
-    if (config.documentation && config.documentation.enabled === 'true') {
-        console.log('true');
-    } else {
+    try {
+        const config = JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8'));
+        // Check nested documentation.enabled property (can be boolean or string)
+        if (config.documentation && (config.documentation.enabled === true || config.documentation.enabled === 'true')) {
+            console.log('true');
+        } else {
+            console.log('false');
+        }
+    } catch (e) {
         console.log('false');
     }
     " 2>/dev/null || echo "false")
@@ -286,8 +294,8 @@ else
     docs_context+="<docs-enabled>false</docs-enabled>"
 fi
 
-# Read using-superpowers content
-using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>&1 || echo "Error reading using-superpowers skill")
+# Read using-horspowers content
+using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-horspowers/SKILL.md" 2>&1 || echo "Error reading using-horspowers skill")
 
 # Build final JSON using Node.js to handle escaping correctly
 # Use base64 encoding to safely pass all content without special character issues
@@ -315,7 +323,7 @@ const configOutput = Buffer.from(process.env.CONFIG_OUTPUT_B64, 'base64').toStri
 const docsContext = Buffer.from(process.env.DOCS_CONTEXT_B64, 'base64').toString('utf8');
 
 // Build the additional context string
-let context = '<EXTREMELY_IMPORTANT>\\nYou have horspowers.\\n\\n**Below is the full content of your \\'horspowers:using-superpowers\\' skill - your introduction to using skills. For all other skills, use the \\'Skill\\' tool:**\\n\\n' +
+let context = '<EXTREMELY_IMPORTANT>\\nYou have horspowers.\\n\\n**Below is the full content of your \\'horspowers:using-horspowers\\' skill - your introduction to using skills. For all other skills, use the \\'Skill\\' tool:**\\n\\n' +
   usingSuperpowers + '\\n\\n' + configMarker;
 
 // Embed config output if exists (already JSON, no double-escaping)

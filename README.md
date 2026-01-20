@@ -12,7 +12,7 @@
 
 - ✅ **完整的中文支持** - 所有技能支持中文触发，在中文语境下正常工作
 - ✅ **个人/团队模式** - 可选择轻量化的个人开发模式或完整的团队协作模式
-- ✅ **文档驱动集成** - 集成 document-driven-ai-workflow，自动维护项目上下文
+- ✅ **内置文档系统** - 文档功能已内置到插件中，自动维护项目上下文
 
 ### 个人模式 vs 团队模式
 
@@ -23,7 +23,7 @@
 | 完成策略 | 本地合并 | 创建 PR |
 | 适用场景 | 单人快速开发 | 多人协作项目 |
 
-在 `.superpowers-config.yaml` 中配置：
+在 `.horspowers-config.yaml` 中配置：
 
 ```yaml
 development_mode: personal  # 或 team
@@ -57,25 +57,14 @@ I'm a single developer, sometimes, off the work, e.g.
 So, as a lazy dog(Chinese slang), TDD? worktree? nuh, I dont need thoes heavy machine gun.
 
 I just add a "Personal/Single Mode" for the superpower skills, origin for team work, new mode for me.
-- change the strategy in ./.superpowers-config.yaml
+- change the strategy in ./.horspowers-config.yaml
     - braches strategy support regular branch strategy
     - test strategy support test-after, code first
     - push-merge strategy support pr or local merge
 
-## Use With My Document-Driven Skill
+## Built-in Documentation System (4.2.0+)
 
-This version includes integration with [document-driven-ai-workflow](https://github.com/LouisHors/document-driven-ai-workflow) - a documentation system that enables AI to maintain project context across sessions.
-
-### Quick Links
-
-**English:**
-- **[📖 Integration Guide](docs/document-driven-integration-guide-en.md)** - Complete integration documentation
-- **[🚀 Quick Start](docs/document-driven-quickstart-en.md)** - Get started in 5 minutes
-- **[🔧 Bridge Skill](skills/document-driven-bridge/SKILL.md)** - Core integration skill
-
-**中文:**
-- **[📖 集成指南](docs/document-driven-integration-guide.md)** - 完整的集成文档
-- **[🚀 快速开始](docs/document-driven-quickstart.md)** - 5 分钟上手指南
+The documentation system is now built directly into the plugin, with no external dependencies required.
 
 ### What It Does
 
@@ -88,12 +77,18 @@ Automatically creates and updates documentation at key workflow points:
 
 ### Setup
 
-1. Clone the workflow: `git clone https://github.com/LouisHors/document-driven-ai-workflow.git`
-2. Copy config template: `cp .superpowers-config.template.yaml .superpowers-config.yaml`
-3. Set `documentation.enabled: true` and configure `cli_path`
-4. Initialize: `node /path/to/document-driven-ai-workflow/cli.js init`
+Simply enable documentation in your `.horspowers-config.yaml`:
 
-See [Quick Start](docs/document-driven-quickstart.md) for detailed instructions.
+```yaml
+documentation:
+  enabled: true
+```
+
+The system will automatically:
+- Create a `docs/` directory structure
+- Track active tasks and decisions in `docs/active/`
+- Archive completed work in `docs/archive/`
+- Maintain session metadata across conversations
 
 ---
 
@@ -218,7 +213,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/LouisHors/h
 
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
-- **using-superpowers** - Introduction to the skills system
+- **using-horspowers** - Introduction to the skills system (originally `using-superpowers` in upstream)
 
 ## Philosophy
 

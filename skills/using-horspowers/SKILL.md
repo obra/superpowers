@@ -1,5 +1,5 @@
 ---
-name: using-superpowers
+name: using-horspowers
 description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions. 中文触发场景：每次会话开始时自动注入，建立如何查找和使用技能的基础规则。
 ---
 
@@ -8,7 +8,7 @@ If you think there is even a 1% chance a skill might apply to what you are doing
 
 IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
 
-This is not negotiable. This is not optional. You cannot rationalize your way out of this.
+This is not negotiable. This is not optional. You cannot rationalize your way out of it.
 </EXTREMELY-IMPORTANT>
 
 ## How to Access Skills
@@ -17,7 +17,13 @@ This is not negotiable. This is not optional. You cannot rationalize your way ou
 
 **In other environments:** Check your platform's documentation for how skills are loaded.
 
-# Using Skills
+# Using Horspowers Skills
+
+## About Horspowers
+
+**Horspowers** is a Chinese-enhanced fork of [obra/superpowers](https://github.com/obra/superpowers), a composable skills library for Claude Code. It provides complete development workflows with full Chinese language support.
+
+This skill was originally called `using-superpowers` in the upstream project. For backward compatibility, you may also invoke it using `horspowers:using-superpowers`.
 
 ## The Rule
 
@@ -90,14 +96,14 @@ Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
 
 **Check for configuration marker on session start:**
 
-When this skill is injected via session start hook, check for `<config-exists>` marker:
+When this skill is injected via session start hook, check for configuration status markers:
 
-**If `<config-exists>false</config-exists>`:**
+**If `<config-needs-init>true</config-needs-init>`:**
 - On your FIRST response to the user, you MUST guide them through initial configuration
 - Use AskUserQuestion to ask about their development preferences:
 
 ```
-欢迎使用 Superpowers！检测到这是首次使用，需要配置开发模式。
+欢迎使用 Horspowers！检测到这是首次使用，需要配置开发模式。
 
 **请选择你的开发模式：**
 
@@ -114,16 +120,55 @@ When this skill is injected via session start hook, check for `<config-exists>` 
 请选择 1 或 2：
 ```
 
-- After user selects, create `.superpowers-config.yaml` in current directory with appropriate settings
-- Personal mode: `development_mode: personal`, `branch_strategy: simple`, `testing_strategy: test-after`, `completion_strategy: merge`
-- Team mode: `development_mode: team`, `branch_strategy: worktree`, `testing_strategy: tdd`, `completion_strategy: pr`
+- After user selects, use Node.js to create config file:
+```javascript
+const { initializeConfig } = require('./lib/config-manager.js');
+const mode = userSelection === 1 ? 'personal' : 'team';
+const result = initializeConfig(process.cwd(), mode);
+```
 
-**If `<config-exists>true</config-exists>`:**
-- Configuration file exists - read `<config-detected>` marker for current settings
+**If `<config-needs-migration>true</config-needs-migration>`:**
+- On your FIRST response, inform user about migration:
+```
+⚠️ **检测到旧版配置文件**: 发现 `.superpowers-config.yaml` 需要迁移到新版格式。
+
+新版配置文件 `.horspowers-config.yaml` 将：
+- 更新配置版本到 {{CONFIG_VERSION}}
+- 保留您现有的配置设置
+- 自动添加新的可选字段（如 documentation.enabled）
+
+是否现在执行迁移？
+```
+
+- If user confirms, use: `migrateOldConfig(oldPath, projectDir)`
+- Migration path provided in `<config-old-path>` marker
+
+**If `<config-needs-update>true</config-needs-update>`:**
+- On your FIRST response, inform user about update:
+```
+⚠️ **配置文件需要更新**: {{<config-update-reason>}}
+
+是否现在更新配置文件？
+```
+
+- If user confirms, use: `updateConfig(projectDir, currentConfig)`
+
+**If `<config-invalid>true</config-invalid>`:**
+- On your FIRST response, inform user about validation errors:
+```
+⚠️ **配置文件无效**: 配置文件存在但验证失败。
+
+错误信息：{{errors}}
+
+建议修复配置文件或删除后重新初始化。
+```
+
+**If `<config-valid>true</config-valid>`:**
+- Configuration is valid and up to date - read `<config-detected>` marker for current settings
 - Store these settings in memory for use by other skills
 - Don't mention configuration unless user asks or a skill needs to make a decision
 
 **Config usage by other skills:**
 - Skills should read the configuration from session context
-- At decision points, show "根据当前配置（<mode>），建议：..." with confirmation
+- At decision points, show "根据当前配置（<development_mode>），建议：..." with confirmation
 - Always allow user to override the suggestion

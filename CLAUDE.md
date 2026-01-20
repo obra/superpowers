@@ -9,7 +9,7 @@ Always respond in *Simplified Chinese/中文*
 
 **Horspower** is a Chinese-enhanced fork of [obra/superpowers](https://github.com/obra/superpowers) - a skills library for Claude Code that provides composable workflows for software development. It's a plugin that injects skills at session start and provides slash commands for common workflows.
 
-**Key concept:** Skills are Markdown files with YAML frontmatter that Claude invokes via the `Skill` tool. The `using-superpowers` skill is injected automatically at session start via a hook.
+**Key concept:** Skills are Markdown files with YAML frontmatter that Claude invokes via the `Skill` tool. The `using-horspowers` skill (originally called `using-superpowers` in the upstream project) is injected automatically at session start via a hook.
 
 ## Running Tests
 
@@ -68,7 +68,7 @@ The `disable-model-invocation: true` prevents Claude from invoking commands - on
 
 ### Session Start Hook
 
-`hooks/session-start.sh` injects `using-superpowers` skill content into every session via `additionalContext`. The hook uses a polyglot wrapper (`run-hook.cmd`) for cross-platform support.
+`hooks/session-start.sh` injects `using-horspowers` skill content into every session via `additionalContext`. The hook uses a polyglot wrapper (`run-hook.cmd`) for cross-platform support.
 
 ### Skill Resolution
 
@@ -104,7 +104,7 @@ The `disable-model-invocation: true` prevents Claude from invoking commands - on
 - `receiving-code-review` - Responding to feedback
 
 **Meta skills:**
-- `using-superpowers` - Introduction to skills system
+- `using-horspowers` - Introduction to skills system
 - `writing-skills` - Creating and testing new skills
 
 ## Testing Methodology
@@ -146,7 +146,7 @@ When creating new skills:
 
 **The Description Trap:** If description summarizes the workflow, Claude follows description instead of reading the skill. Keep descriptions trigger-only: "Use when X" not "Use when X to do Y via Z".
 
-**Rationalization:** Agents think "I know what this means" and skip skill invocation. The `using-superpowers` skill (retained for compatibility) lists 12+ rationalization patterns to counter this.
+**Rationalization:** Agents think "I know what this means" and skip skill invocation. The `using-horspowers` skill lists 12+ rationalization patterns to counter this.
 
 **Test before implementing:** The `test-driven-development` skill deletes any code written before tests. Always invoke TDD before implementation tasks.
 
