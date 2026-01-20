@@ -1,6 +1,6 @@
 ---
 name: using-notion
-description: Use when you need to interact with Notion for storage or task management
+description: Use when you need to store documentation or manage tasks in Notion
 ---
 
 # Using Notion
@@ -9,107 +9,38 @@ description: Use when you need to interact with Notion for storage or task manag
 Interact with Notion workspaces to store documents or manage tasks.
 
 ## Prerequisites
-- `NOTION_API_KEY` in environment.
-- `NOTION_DATABASE_ID` (for tasks) or `NOTION_PARENT_PAGE_ID` (for docs) in configuration or environment.
+- `NOTION_API_KEY` in config (via `lib/config-core.js` logic).
+- `project_management.notion.database_id` (for tasks) or `documentation.notion_root_page_id` (for docs) in configuration.
 
 ## Actions
 
-### Action 1: Store Document
-**Goal:** Create a new page in Notion with the document content.
+### Action 1: Sync Documentation
+**Goal:** Sync local markdown files to Notion pages, mirroring directory structure.
 
-#### Method 1: MCP Tool (Preferred)
-Check if `notion_create_page` tool is available.
-```json
-{
-  "parent": { "page_id": "YOUR_PARENT_PAGE_ID" },
-  "properties": { "title": "Doc Title" },
-  "children": [ ...blocks... ]
-}
-```
+**Method:** Use the `lib/notion-sync.js` script.
 
-#### Method 2: API Fallback
-**Note:** Examples use API version `2022-06-28`. To upgrade to `2025-09-03`:
-1. Use `data_source_id` instead of `database_id` (requires fetching the data source ID).
-2. Update endpoints to use `/v1/data_sources` if interacting with data sources.
+1. **Sync a single file:**
+   ```bash
+   node lib/notion-sync.js --file path/to/doc.md
+   ```
 
-Use `curl` to create a page.
-```bash
-curl -X POST https://api.notion.com/v1/pages \
-  -H "Authorization: Bearer $NOTION_API_KEY" \
-  -H "Content-Type: application/json" \
-  -H "Notion-Version: 2022-06-28" \
-  --data '{
-    "parent": { "page_id": "'"$NOTION_PARENT_PAGE_ID"'" },
-    "properties": {
-      "title": [
-        {
-          "text": {
-            "content": "Doc Title"
-          }
-        }
-      ]
-    },
-    "children": [
-      {
-        "object": "block",
-        "type": "paragraph",
-        "paragraph": {
-          "rich_text": [
-            {
-              "type": "text",
-              "text": {
-                "content": "Doc content..."
-              }
-            }
-          ]
-        }
-      }
-    ]
-  }'
-```
+2. **Sync an entire directory (recursive):**
+   ```bash
+   node lib/notion-sync.js --dir path/to/docs/
+   ```
 
-### Action 2: Create Task
-**Goal:** Add a row to a Notion Database.
+**Note:** This script handles:
+- Creating parent pages if they don't exist.
+- Mapping local paths to Notion Page IDs (cached in `.superpowers/notion-map.json`).
+- Updating existing pages.
 
-#### Method 1: MCP Tool (Preferred)
-Check if `notion_create_database_row` or `notion_create_page` (with database parent) is available.
-```json
-{
-  "parent": { "database_id": "YOUR_DATABASE_ID" },
-  "properties": {
-    "Name": { "title": "Task Name" },
-    "Status": { "select": "To Do" }
-  }
-}
-```
+### Action 2: Manage Tasks
+**Goal:** Create or update tasks in a Notion Database.
 
-#### Method 2: API Fallback
-**Note:** Examples use API version `2022-06-28`. To upgrade to `2025-09-03`:
-1. Use `data_source_id` instead of `database_id` (requires fetching the data source ID).
-2. Update endpoints to use `/v1/data_sources` if interacting with data sources.
+**Method:** Use the Unified Task Manager (`lib/task-manager.js`).
+See `skills/using-task-tracker/SKILL.md` for details, or run directly:
 
 ```bash
-curl -X POST https://api.notion.com/v1/pages \
-  -H "Authorization: Bearer $NOTION_API_KEY" \
-  -H "Content-Type: application/json" \
-  -H "Notion-Version: 2022-06-28" \
-  --data '{
-    "parent": { "database_id": "'"$NOTION_DATABASE_ID"'" },
-    "properties": {
-      "Name": {
-        "title": [
-          {
-            "text": {
-              "content": "Task Name"
-            }
-          }
-        ]
-      },
-      "Status": {
-        "select": {
-          "name": "To Do"
-        }
-      }
-    }
-  }'
+# Create a task in Notion (if configured as provider)
+node lib/task-manager.js create --title "Task Name" --desc "Details..."
 ```
