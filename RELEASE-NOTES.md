@@ -1,5 +1,18 @@
 # Horspowers Release Notes
 
+## v4.2.2 (2025-01-20)
+
+### Documentation
+
+**更新 .gitignore**
+- 添加 `.DS_Store` 和 `.DS_Store?` 到忽略列表（macOS 系统文件）
+
+**移除过时的配置文件**
+- 移除 `.superpowers-config.yaml` 和 `.superpowers-config.yaml.example`
+- 配置系统已简化，这些文件不再需要
+
+---
+
 ## v4.2.1 (2025-01-20)
 
 ### New Features

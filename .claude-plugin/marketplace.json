@@ -9,7 +9,7 @@
     {
       "name": "horspowers",
       "description": "中文增强的开发技能库 - 基于 Claude Code 的可组合工作流",
-      "version": "4.2.1",
+      "version": "4.2.2",
       "source": "./",
       "author": {
         "name": "horsliu",
