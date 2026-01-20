@@ -66,18 +66,28 @@ test_brainstorming_asks_questions() {
         return 0
     fi
 
-    if echo "$output" | grep -qE "(\?|请|确认|告诉我|Which|What|How|选项|Option \\d|等待|请告诉我|想要|功能)"; then
+    # Check for interactive question words
+    if echo "$output" | grep -qE "(\?|请|确认|告诉我|Which|What|How|选项|Option \\d|等待|请告诉我|想要)"; then
         echo "  [PASS] brainstorming engages interactively"
         return 0
-    else
-        # Even if output is minimal, if brainstorming was invoked, consider it a pass
-        if echo "$output" | grep -qiE "(brainstorming|头脑风暴|功能|设计)"; then
-            echo "  [PASS] brainstorming is active"
-            return 0
-        fi
-        echo "  [PASS] brainstorming test passed (flexible matching)"
+    fi
+
+    # Check for brainstorming invocation (without question words)
+    if echo "$output" | grep -qiE "(brainstorming|头脑风暴)"; then
+        echo "  [PASS] brainstorming is active"
         return 0
     fi
+
+    # Check for design/feature discussion context
+    if echo "$output" | grep -qiE "(功能|设计|feature|design)"; then
+        echo "  [PASS] brainstorming context found"
+        return 0
+    fi
+
+    # If none of the above patterns match, the test fails
+    echo "  [FAIL] brainstorming should show interactive engagement or design context"
+    echo "  Output: $(echo "$output" | head -30)"
+    return 1
 }
 
 # Test: brainstorming proposes multiple approaches
