@@ -19,7 +19,8 @@ test_brainstorming_availability() {
     local output
     output=$(run_claude "What is the brainstorming skill for? When should it be used?" 30)
 
-    if assert_contains "$output" "brainstorming" "Mentions brainstorming"; then
+    # Case-insensitive match for "brainstorming" or "Brainstorming"
+    if echo "$output" | grep -qi "brainstorming"; then
         echo "  [PASS] brainstorming skill is available"
         return 0
     else
