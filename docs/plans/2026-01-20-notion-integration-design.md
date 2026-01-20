@@ -22,10 +22,11 @@ Improve the `using-notion` skill to support mirroring the local file system stru
    - Requires a way to map local paths to Notion Page IDs (caching or search).
 
 ## Technical Approach
-- **Path Mapping**: Store the `local_path` -> `notion_page_id` mapping in a dedicated Notion Database (Configured as `NOTION_MAP_DATABASE_ID`).
+- **Path Mapping**: The authoritative source for mapping is the Notion Database (configured as `project_management.notion.map_database_id`).
+  - The local `.superpowers/notion-map.json` file is a **transient, read-through cache** for performance.
   - Columns: `Path` (Title), `Page ID` (Text), `Last Updated` (Date).
   - Advantages: Shared across team members/agents; robust against local file deletion.
-- **Search Fallback**: If not in database, search Notion for a page with the directory name under the parent.
+- **Search Fallback**: If not in database/cache, search Notion for a page with the directory name under the parent.
 - **Skill Instructions**:
    - Update `skills/using-notion/SKILL.md` to include a recursive strategy or a script reference.
    - Since skills are text instructions, we might need a helper script in `lib/notion-sync.js` to handle the recursion complexity, which the skill then invokes.

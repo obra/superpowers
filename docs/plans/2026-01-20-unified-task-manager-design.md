@@ -26,9 +26,8 @@ Extend config to support provider selection and credentials:
 A CLI entry point that delegates to specific provider adapters.
 - **Commands**:
   - `create`: Create a new task/ticket.
-  - `update`: Update status, assign, etc.
   - `log-work`: Add work logs/time tracking.
-  - `breakdown`: Create subtasks from a list.
+  - `subtask`: Create subtasks under a parent.
 
 ### 3. Adapters (`lib/adapters/`)
 - `jira-adapter.js`: Wraps Jira REST API / MCP tools.
