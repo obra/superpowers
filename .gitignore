@@ -3,3 +3,7 @@
 .claude/
 .horspowers-config.yaml
 .horspowers-version
+
+# macOS
+.DS_Store
+.DS_Store?
