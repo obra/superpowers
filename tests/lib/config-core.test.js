@@ -1,4 +1,3 @@
-
 import { loadConfig } from '../../lib/config-core.js';
 import assert from 'assert';
 import fs from 'fs';
@@ -64,6 +63,15 @@ async function runTests() {
         }));
         config = loadConfig(PROJECT_DIR);
         assert.strictEqual(config.extra.key, 'value');
+
+        // Test 5: Malformed JSON should warn and return empty/partial config (which merges with defaults)
+        console.log('Test 5: Malformed JSON in user config');
+        fs.writeFileSync(path.join(USER_CONFIG_DIR, 'config.json'), '{ invalid json }');
+        fs.unlinkSync(path.join(PROJECT_CONFIG_DIR, 'config.json')); // Remove project config
+        config = loadConfig(PROJECT_DIR);
+        // assert.deepStrictEqual(config, {}); // Old check for empty
+        assert.strictEqual(config.project_management.provider, 'local'); // Should fall back to default
+        assert.strictEqual(config.documentation.root_dir, 'docs');
 
         console.log('All tests passed!');
     } catch (err) {
