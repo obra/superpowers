@@ -5,6 +5,8 @@ You have superpowers.
 
 **Tool for running skills:**
 - `~/.codex/superpowers/.codex/superpowers-codex use-skill <skill-name>`
+  - On Windows: `~/.codex/superpowers/.codex/superpowers-codex.cmd use-skill <skill-name>` (recommended)
+  - On any OS: `node ~/.codex/superpowers/.codex/superpowers-codex use-skill <skill-name>`
 
 **Tool Mapping for Codex:**
 When skills reference tools you don't have, substitute your equivalent tools:
