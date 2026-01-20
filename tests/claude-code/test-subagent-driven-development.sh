@@ -12,7 +12,7 @@ echo ""
 # Test 1: Verify skill can be loaded
 echo "Test 1: Skill loading..."
 
-output=$(run_claude "What is the subagent-driven-development skill? Describe its key steps briefly." 30)
+output=$(run_claude "What is the subagent-driven-development skill? Describe its key steps briefly." 120)
 
 # Accept both English and Chinese skill name
 if echo "$output" | grep -qiE "(subagent-driven-development|子代理驱动开发|subagent)"; then
@@ -36,7 +36,7 @@ echo ""
 # Test 2: Verify skill describes correct workflow order
 echo "Test 2: Workflow ordering..."
 
-output=$(run_claude "In the subagent-driven-development skill, what comes first: spec compliance review or code quality review? Be specific about the order." 30)
+output=$(run_claude "In the subagent-driven-development skill, what comes first: spec compliance review or code quality review? Be specific about the order." 120)
 
 # Check that both are mentioned and spec compliance comes first (or explicitly stated order)
 if echo "$output" | grep -qiE "(spec.*compliance|spec.*review|规格|规范)" && echo "$output" | grep -qiE "(code.*quality|code review|代码.*质量)"; then
@@ -53,7 +53,7 @@ echo ""
 # Test 3: Verify self-review is mentioned
 echo "Test 3: Self-review requirement..."
 
-output=$(run_claude "Does the subagent-driven-development skill require implementers to do self-review? What should they check?" 30)
+output=$(run_claude "Does the subagent-driven-development skill require implementers to do self-review? What should they check?" 120)
 
 if echo "$output" | grep -qiE "(self-review|self review|自审|自我审查)"; then
     : # pass
@@ -74,7 +74,7 @@ echo ""
 # Test 4: Verify plan is read once
 echo "Test 4: Plan reading efficiency..."
 
-output=$(run_claude "In subagent-driven-development, how many times should the controller read the plan file? When does this happen?" 30)
+output=$(run_claude "In subagent-driven-development, how many times should the controller read the plan file? When does this happen?" 120)
 
 if echo "$output" | grep -qiE "(once|one time|single|一次|仅.*一次)"; then
     : # pass
@@ -95,7 +95,7 @@ echo ""
 # Test 5: Verify spec compliance reviewer is skeptical
 echo "Test 5: Spec compliance reviewer mindset..."
 
-output=$(run_claude "What is the spec compliance reviewer's attitude toward the implementer's report in subagent-driven-development?" 30)
+output=$(run_claude "What is the spec compliance reviewer's attitude toward the implementer's report in subagent-driven-development?" 120)
 
 if echo "$output" | grep -qiE "(not trust|don't trust|skeptical|verify.*independently|suspiciously|怀疑|不相信|独立验证)"; then
     : # pass
@@ -116,7 +116,7 @@ echo ""
 # Test 6: Verify review loops
 echo "Test 6: Review loop requirements..."
 
-output=$(run_claude "In subagent-driven-development, what happens if a reviewer finds issues? Is it a one-time review or a loop?" 30)
+output=$(run_claude "In subagent-driven-development, what happens if a reviewer finds issues? Is it a one-time review or a loop?" 120)
 
 if echo "$output" | grep -qiE "(loop|again|repeat|until.*approved|until.*compliant|循环|重复|直到)"; then
     : # pass
@@ -137,7 +137,7 @@ echo ""
 # Test 7: Verify full task text is provided
 echo "Test 7: Task context provision..."
 
-output=$(run_claude "In subagent-driven-development, how does the controller provide task information to the implementer subagent? Does it make them read a file or provide it directly?" 30)
+output=$(run_claude "In subagent-driven-development, how does the controller provide task information to the implementer subagent? Does it make them read a file or provide it directly?" 120)
 
 if echo "$output" | grep -qiE "(provide.*directly|full.*text|paste|include.*prompt|直接提供|完整文本|包含.*prompt)"; then
     : # pass

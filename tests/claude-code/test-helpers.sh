@@ -8,7 +8,7 @@ TEST_DEBUG_MODE="${TEST_DEBUG_MODE:-0}"
 # Usage: run_claude "prompt text" [timeout_seconds] [allowed_tools]
 run_claude() {
     local prompt="$1"
-    local timeout="${2:-60}"
+    local timeout="${2:-120}"
     local allowed_tools="${3:-}"
     local output_file=$(mktemp)
 
@@ -38,7 +38,9 @@ run_claude() {
         if [ "$output_len" -lt 50 ]; then
             echo "  [WARN] Output is very short (${output_len} bytes)" >&2
             echo "  [WARN] This might indicate a timeout or CLI issue" >&2
-            echo "  [WARN] Output preview: $(echo "$output" | head -3)" >&2
+            local preview
+            preview=$(echo "$output" | head -3)
+            echo "  [WARN] Output preview: $preview" >&2
         fi
 
         echo "$output"

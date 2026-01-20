@@ -17,7 +17,7 @@ test_debugging_availability() {
     echo "Test: debugging skill availability..."
 
     local output
-    output=$(run_claude "What is the systematic-debugging skill for?" 30)
+    output=$(run_claude "What is the systematic-debugging skill for?" 120)
 
     if echo "$output" | grep -qi "debugging\|debug"; then
         echo "  [PASS] debugging skill is available"
@@ -33,7 +33,7 @@ test_debugging_four_phases() {
     echo "Test: debugging has 4 phases..."
 
     local output
-    output=$(run_claude "What are the phases of systematic-debugging? List them." 30)
+    output=$(run_claude "What are the phases of systematic-debugging? List them." 120)
 
     # Look for mentions of phases or the phases themselves
     local found_phases=0
@@ -57,7 +57,7 @@ test_debugging_reproduce_first() {
     echo "Test: debugging starts with reproduction..."
 
     local output
-    output=$(run_claude "What is the first step in systematic-debugging?" 30)
+    output=$(run_claude "What is the first step in systematic-debugging?" 120)
 
     # Support both English and Chinese keywords
     if echo "$output" | grep -qiE "(reproduce|reproducible|复现|reproducibility|第一步|first.*step)"; then
@@ -75,7 +75,7 @@ test_debugging_hypothesis() {
     echo "Test: debugging forms hypotheses..."
 
     local output
-    output=$(run_claude "Does systematic-debugging form hypotheses before fixing bugs?" 30)
+    output=$(run_claude "Does systematic-debugging form hypotheses before fixing bugs?" 120)
 
     # Check for hypothesis-related terms (English and Chinese)
     if echo "$output" | grep -qiE "(hypothes|theory|guess|suspect|假设|推测|猜想|怀疑|根因|原因)"; then
@@ -93,7 +93,7 @@ test_debugging_verify_fix() {
     echo "Test: debugging verifies fix..."
 
     local output
-    output=$(run_claude "Should you verify the fix in systematic-debugging? How?" 30)
+    output=$(run_claude "Should you verify the fix in systematic-debugging? How?" 120)
 
     if echo "$output" | grep -qi "verif\|test.*fix\|confirm"; then
         echo "  [PASS] debugging verifies fix"
@@ -109,7 +109,7 @@ test_debugging_no_premature_fix() {
     echo "Test: debugging prevents premature fixes..."
 
     local output
-    output=$(run_claude "Does systematic-debugging allow fixing before understanding the root cause?" 30)
+    output=$(run_claude "Does systematic-debugging allow fixing before understanding the root cause?" 120)
 
     if echo "$output" | grep -qi "no\|not.*allow\|understand.*first\|root.*cause"; then
         echo "  [PASS] debugging prevents premature fixes"

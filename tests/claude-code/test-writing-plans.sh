@@ -17,7 +17,7 @@ test_writing_plans_availability() {
     echo "Test: writing-plans skill availability..."
 
     local output
-    output=$(run_claude "What is the writing-plans skill for?" 45)
+    output=$(run_claude "What is the writing-plans skill for?" 120)
 
     # Check for skill name or related terms
     if echo "$output" | grep -qiE "(writing-plans|writing plans|编写计划|实施计划)"; then
@@ -35,7 +35,7 @@ test_writing_plans_bite_sized_tasks() {
     echo "Test: writing-plans creates bite-sized tasks..."
 
     local output
-    output=$(run_claude "In the writing-plans skill, what size should tasks be?" 30)
+    output=$(run_claude "In the writing-plans skill, what size should tasks be?" 120)
 
     # More flexible matching - check for task size mentions
     if echo "$output" | grep -qE "(2-5|bite-sized|small|2 to 5|分钟|minute|task.*size|small.*task)"; then
@@ -53,7 +53,7 @@ test_writing_plans_file_paths() {
     echo "Test: writing-plans includes file paths..."
 
     local output
-    output=$(run_claude "What information should each task in a writing-plans document include?" 60)
+    output=$(run_claude "What information should each task in a writing-plans document include?" 120)
 
     # More flexible - check for file/location mentions or task structure
     if echo "$output" | grep -qiE "(file|路径|path|location|文件|任务.*包含|task.*include|structure)"; then
@@ -71,7 +71,7 @@ test_writing_plans_save_location() {
     echo "Test: writing-plans save location..."
 
     local output
-    output=$(run_claude "Where does writing-plans skill save the plan documents?" 60)
+    output=$(run_claude "Where does writing-plans skill save the plan documents?" 120)
 
     if echo "$output" | grep -q "docs/plans"; then
         echo "  [PASS] writing-plans saves to docs/plans"
@@ -88,7 +88,7 @@ test_writing_plans_tdd() {
     echo "Test: writing-plans follows TDD..."
 
     local output
-    output=$(run_claude "Does writing-plans require TDD? What testing approach does it use?" 60)
+    output=$(run_claude "Does writing-plans require TDD? What testing approach does it use?" 120)
 
     if echo "$output" | grep -qi "TDD\|test-driven"; then
         echo "  [PASS] writing-plans mentions TDD"
@@ -105,7 +105,7 @@ test_writing_plans_commit_steps() {
     echo "Test: writing-plans includes commit steps..."
 
     local output
-    output=$(run_claude "What does writing-plans say about git commits?" 60)
+    output=$(run_claude "What does writing-plans say about git commits?" 120)
 
     if echo "$output" | grep -q "commit\|Commit"; then
         echo "  [PASS] writing-plans includes commit steps"

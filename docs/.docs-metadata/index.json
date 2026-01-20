@@ -18,5 +18,26 @@
     "title": "Test Feature Implementation",
     "relatedDocs": [],
     "updatedAt": "2026-01-19T10:38:41.705Z"
+  },
+  "2026-01-20-test-feature-design.md": {
+    "type": "design",
+    "file": "2026-01-20-test-feature-design.md",
+    "topic": "Test Feature",
+    "updatedAt": "2026-01-20T09:52:16.393Z"
+  },
+  "2026-01-20-test-implementation.md": {
+    "type": "plan",
+    "file": "2026-01-20-test-implementation.md",
+    "feature": "Test Implementation",
+    "updatedAt": "2026-01-20T09:52:16.396Z"
+  },
+  "2026-01-20-task-test-task.md": {
+    "type": "task",
+    "file": "2026-01-20-task-test-task.md",
+    "title": "Test Task",
+    "relatedDocs": {
+      "plan": "2026-01-20-test-implementation.md"
+    },
+    "updatedAt": "2026-01-20T09:52:16.398Z"
   }
 }
