@@ -32,7 +32,9 @@ async function runTests() {
         // Test 1: Defaults (no config files)
         console.log('Test 1: Defaults (no config files)');
         let config = loadConfig(PROJECT_DIR);
-        assert.deepStrictEqual(config, {});
+        // assert.deepStrictEqual(config, {}); // Old check
+        assert.strictEqual(config.project_management.provider, 'local');
+        assert.strictEqual(config.documentation.root_dir, 'docs');
 
         // Test 2: User config only
         console.log('Test 2: User config only');
