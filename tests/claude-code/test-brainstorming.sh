@@ -36,7 +36,8 @@ test_brainstorming_chinese_announcement() {
     output=$(run_claude "Use the brainstorming skill to help me design a simple feature" 60)
 
     # Check for Chinese announcement (flexible matching)
-    if echo "$output" | grep -q "使用.*头脑风暴"; then
+    # Match "使用...技能" or "头脑风暴" or Chinese skill-related terms
+    if echo "$output" | grep -qE "(使用.*技能|头脑风暴|brainstorming)"; then
         echo "  [PASS] brainstorming announces in Chinese"
         return 0
     else

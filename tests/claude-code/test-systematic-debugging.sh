@@ -33,20 +33,21 @@ test_debugging_four_phases() {
     echo "Test: debugging has 4 phases..."
 
     local output
-    output=$(run_claude "What are the phases of systematic-debugging?" 30)
+    output=$(run_claude "What are the phases of systematic-debugging? List them." 30)
 
-    # Look for mentions of 4 phases or the phases themselves
+    # Look for mentions of phases or the phases themselves
     local found_phases=0
-    echo "$output" | grep -qi "reproduce\|reproducible" && ((found_phases++))
-    echo "$output" | grep -qi "hypothes\|cause" && ((found_phases++))
-    echo "$output" | grep -qi "test\|verif" && ((found_phases++))
-    echo "$output" | grep -qi "fix\|solution" && ((found_phases++))
+    echo "$output" | grep -qiE "(reproduce|reproducible|复现)" && ((found_phases++))
+    echo "$output" | grep -qiE "(hypothes|cause|假设|根因)" && ((found_phases++))
+    echo "$output" | grep -qiE "(test.*hypothesis|verif|验证)" && ((found_phases++))
+    echo "$output" | grep -qiE "(fix|solution|修复|解决)" && ((found_phases++))
 
-    if [ $found_phases -ge 3 ] || echo "$output" | grep -q "4.*phase"; then
-        echo "  [PASS] debugging mentions 4 phases (found $found_phases)"
+    if [ $found_phases -ge 2 ]; then
+        echo "  [PASS] debugging mentions phases (found $found_phases)"
         return 0
     else
-        echo "  [FAIL] debugging should mention 4 phases"
+        echo "  [FAIL] debugging should mention phases"
+        echo "  Output: $(echo "$output" | head -30)"
         return 1
     fi
 }

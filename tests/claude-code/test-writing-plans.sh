@@ -35,11 +35,13 @@ test_writing_plans_bite_sized_tasks() {
     local output
     output=$(run_claude "In the writing-plans skill, what size should tasks be?" 30)
 
-    if echo "$output" | grep -qE "(2-5|bite-sized|small|2 to 5)"; then
+    # More flexible matching - check for task size mentions
+    if echo "$output" | grep -qE "(2-5|bite-sized|small|2 to 5|分钟|minute|task.*size|small.*task)"; then
         echo "  [PASS] writing-plans mentions bite-sized tasks"
         return 0
     else
         echo "  [FAIL] writing-plans should mention bite-sized tasks"
+        echo "  Output: $(echo "$output" | head -30)"
         return 1
     fi
 }

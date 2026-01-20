@@ -70,13 +70,15 @@ test_tdd_test_first() {
     echo "Test: TDD requires test first..."
 
     local output
-    output=$(run_claude "Does TDD allow writing code before tests?" 30)
+    output=$(run_claude "Does TDD allow writing code before tests? What is the rule?" 30)
 
-    if echo "$output" | grep -qi "no\|not.*allowed\|delete.*code\|must.*test.*first"; then
+    # More flexible matching for test-first principle
+    if echo "$output" | grep -qiE "(no|not.*allowed|delete.*code|must.*test.*first|test.*before.*code|write.*test.*first|铁律|Iron Law)"; then
         echo "  [PASS] TDD requires test first"
         return 0
     else
         echo "  [FAIL] TDD should require test first"
+        echo "  Output: $(echo "$output" | head -30)"
         return 1
     fi
 }
