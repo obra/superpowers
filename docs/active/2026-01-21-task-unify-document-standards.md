@@ -762,6 +762,21 @@ TDD RED phase：测试意外失败
     - 添加**文档复杂度控制**章节（Scrum 思想、CPU-内存-硬盘类比）
     - 区分内部格式迁移和外部系统迁移
   - 测试验证：脚本 dry-run 模式测试通过，识别 4 个旧格式文档待迁移
+- 2026-01-21: **代码审查完成** - 审查评分：⭐⭐⭐⭐⭐ (4.8/5.0)
+  - 审查范围：commit fec48fb → 34d52c2（Phase 1-5 完整变更）
+  - 核心优势：计划对齐完美、向后兼容性出色、防御性编程优秀、用户体验友好
+  - 需要修复的问题：
+    - **关键**：缺少对新功能的测试覆盖（deleteBugDocument、countCoreDocs、迁移脚本）
+    - **重要**：extractDocType 的 plan 检测逻辑可能误判
+    - **重要**：文档链接正则表达式可能遗漏边缘情况
+- 2026-01-21: **TDD 流程启动** - 创建 Phase 1-5 新功能测试
+  - 创建 `tests/integration/test-docs-phase1-5.sh` 测试文件
+  - 修复 Bug 模板：添加状态字段，支持初始状态设置
+  - RED 阶段：测试运行失败（预期），发现 Bug 模板缺少状态字段
+  - GREEN 阶段（进行中）：修复 lib/docs-core.js 中的 Bug 模板
+    - 添加 `- 状态: 待修复` 字段到 getBugTemplate()
+    - 修改 getActiveTemplate() 支持 status/priority 参数传递
+    - 修改 getBugTemplate() 接受 metadata 参数
 
 ---
 

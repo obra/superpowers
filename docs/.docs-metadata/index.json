@@ -58,5 +58,15 @@
     "file": "2026-01-21-bug-test-phase3.md",
     "deleted": true,
     "updatedAt": "2026-01-21T03:42:03.221Z"
+  },
+  "2026-01-21-bug-test-fixed-bug.md": {
+    "type": "bug",
+    "file": "2026-01-21-bug-test-fixed-bug.md",
+    "title": "Test Fixed Bug",
+    "relatedDocs": {
+      "status": "已修复",
+      "priority": "中"
+    },
+    "updatedAt": "2026-01-21T10:07:59.384Z"
   }
 }
