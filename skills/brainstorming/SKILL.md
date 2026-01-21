@@ -62,7 +62,14 @@ If no design exists:
 
 **Implementation (if continuing):**
 - Ask: "Ready to set up for implementation?"
-- Use superpowers-ng:using-git-worktrees to create isolated workspace
+- Ask workspace preference:
+  1. **Use a git worktree (recommended)** - isolated workspace
+  2. **Work directly in this repo (no worktrees)** - faster, less isolation
+- Based on choice:
+  - **Worktree**: Use superpowers-ng:using-git-worktrees to create isolated workspace
+  - **Direct**: Ensure safe setup in current repo:
+    - Be on a feature branch (not main/master); if needed: `git checkout -b <branch>`
+    - Ensure clean working tree (`git status` clean) or stash/commit before proceeding
 - Present planning options:
   1. **Native planning** (writing-plans + executing-plans): Best for short tasks (<30 min), interactive development with human checkpoints
   2. **Manus planning** (manus-planning): Best for long autonomous runs, multi-session projects, tasks requiring persistent memory across context resets

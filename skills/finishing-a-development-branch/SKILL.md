@@ -9,7 +9,7 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 Guide completion of development work by presenting clear options and handling chosen workflow.
 
-**Core principle:** Verify tests → Present options → Execute choice → Clean up.
+**Core principle:** Verify tests → Present options → Execute choice → Clean up (if applicable).
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
@@ -84,7 +84,7 @@ git merge <feature-branch>
 git branch -d <feature-branch>
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Optional cleanup (Step 5)
 
 #### Option 2: Push and Create PR
 
@@ -103,13 +103,13 @@ EOF
 )"
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Optional cleanup (Step 5)
 
 #### Option 3: Keep As-Is
 
-Report: "Keeping branch <name>. Worktree preserved at <path>."
+Report: "Keeping branch <name> as-is."
 
-**Don't cleanup worktree.**
+**Don't cleanup automatically.**
 
 #### Option 4: Discard
 
@@ -118,7 +118,7 @@ Report: "Keeping branch <name>. Worktree preserved at <path>."
 This will permanently delete:
 - Branch <name>
 - All commits: <commit-list>
-- Worktree at <path>
+- Any associated worktree (if you created one)
 
 Type 'discard' to confirm.
 ```
@@ -131,23 +131,23 @@ git checkout <base-branch>
 git branch -D <feature-branch>
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Optional cleanup (Step 5)
 
-### Step 5: Cleanup Worktree
+### Step 5: Optional Cleanup (Worktree Only)
 
-**For Options 1, 2, 4:**
+If you used a git worktree for this work, you may want to remove it now.
 
-Check if in worktree:
+Check if in a worktree:
 ```bash
 git worktree list | grep $(git branch --show-current)
 ```
 
-If yes:
+If yes, and you want to remove it:
 ```bash
 git worktree remove <worktree-path>
 ```
 
-**For Option 3:** Keep worktree.
+If not in a worktree (direct-on-repo): nothing to clean up here.
 
 ## Quick Reference
 
@@ -170,7 +170,7 @@ git worktree remove <worktree-path>
 
 **Automatic worktree cleanup**
 - **Problem:** Remove worktree when might need it (Option 2, 3)
-- **Fix:** Only cleanup for Options 1 and 4
+- **Fix:** Treat cleanup as optional; default is to keep the worktree for Options 2 & 3
 
 **No confirmation for discard**
 - **Problem:** Accidentally delete work

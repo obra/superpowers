@@ -11,6 +11,10 @@ Git worktrees create isolated workspaces sharing the same repository, allowing w
 
 **Core principle:** Systematic directory selection + safety verification = reliable isolation.
 
+**Opt-out (no worktrees):** If the user prefers to work directly in the repo, do **not** run this skill. Instead:
+- Work on a feature branch (not main/master)
+- Ensure clean working tree (`git status` clean) or stash/commit before starting
+
 **Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
 
 ## Directory Selection Process

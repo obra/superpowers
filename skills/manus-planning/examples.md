@@ -164,7 +164,7 @@ Final sanity pass: update `task_plan.md` phases to `complete`, then:
    ```
    I'm using the finishing-a-development-branch skill to complete this work.
    ```
-3. The skill will verify tests, present options (merge locally, create PR, keep as-is, discard), and handle worktree cleanup
+3. The skill will verify tests, present options (merge locally, create PR, keep as-is, discard), and handle **optional cleanup** (worktree removal only if a worktree was used)
 
 ---
 

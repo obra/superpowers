@@ -13,7 +13,13 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** This should be run in a dedicated worktree (created by brainstorming skill).
+**Context:** This can be run either:
+- **In a git worktree (recommended)** - isolated workspace (often created by brainstorming via `using-git-worktrees`)
+- **Directly in the repo (no worktrees)** - supported when the user prefers it
+
+**If working directly in the repo:** ensure a safe baseline before planning/execution:
+- Be on a feature branch (not main/master); if needed: `git checkout -b <branch>`
+- Ensure clean working tree (`git status` clean) or stash/commit before starting implementation
 
 **Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
 
@@ -112,5 +118,7 @@ After saving the plan, offer execution choice:
 - Fresh subagent per task + code review
 
 **If Parallel Session chosen:**
-- Guide them to open new session in worktree
+- Guide them to open a new session in the chosen workspace:
+  - **If using worktrees:** open the session in the worktree path
+  - **If direct-on-repo:** open the session in the repo on the feature branch
 - **REQUIRED SUB-SKILL:** New session uses superpowers-ng:executing-plans
