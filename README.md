@@ -12,7 +12,8 @@
 
 - ✅ **完整的中文支持** - 所有技能支持中文触发，在中文语境下正常工作
 - ✅ **个人/团队模式** - 可选择轻量化的个人开发模式或完整的团队协作模式
-- ✅ **内置文档系统** - 文档功能已内置到插件中，自动维护项目上下文
+- ✅ **统一文档系统** - 文档功能已内置到插件中，实现知识传承和上下文传递
+- ✅ **TDD 工作流** - 测试驱动开发，确保代码质量
 
 ### 个人模式 vs 团队模式
 
@@ -32,6 +33,40 @@ testing_strategy: test-after # 或 tdd
 completion_strategy: merge  # 或 pr
 ```
 
+### 统一文档系统 (v4.2.2+)
+
+文档系统完全内置，无需外部依赖，自动在工作流关键节点创建和更新文档。
+
+**文档类型**：
+
+| 类型 | 命名格式 | 存储位置 | 生命周期 |
+|-----|---------|---------|---------|
+| design | `YYYY-MM-DD-design-<topic>.md` | `docs/plans/` | 长期保留 |
+| plan | `YYYY-MM-DD-<feature>.md` | `docs/plans/` | 长期保留 |
+| task | `YYYY-MM-DD-task-<title>.md` | `docs/active/` → `docs/archive/` | 完成后归档 |
+| bug | `YYYY-MM-DD-bug-<desc>.md` | `docs/active/` | 修复后删除 |
+| context | `YYYY-MM-DD-context-<topic>.md` | `docs/context/` | 长期保留 |
+
+**核心原则**：每个需求最多 3 个核心文档 (1 design + 1 plan + 1 task)，避免文档膨胀。
+
+**启用方式**：
+
+```yaml
+# .horspowers-config.yaml
+documentation:
+  enabled: true
+```
+
+**文档迁移**（旧格式 → 新格式）：
+
+```bash
+# 预览迁移
+node scripts/migrate-docs.js --dry-run
+
+# 执行迁移
+node scripts/migrate-docs.js
+```
+
 ### 中文触发示例
 
 所有技能都支持中文触发，例如：
@@ -39,6 +74,7 @@ completion_strategy: merge  # 或 pr
 - "帮我写个实施计划" → 触发 `writing-plans`
 - "开始写这个功能" → 触发 `test-driven-development`
 - "这里有个bug" → 触发 `systematic-debugging`
+- "搜索文档" → 触发 `document-management`
 
 更多示例请查看各技能的 description。
 
