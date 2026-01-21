@@ -100,45 +100,73 @@ Before offering execution choice, check if documentation is enabled:
 
 IF `.superpowers-config.yaml` exists AND `documentation.enabled: true`:
 
-  **Search related tasks:**
-  Run: Search docs for "similar features" to avoid duplication
+  **Step 1: Search related documents (输入文档上下文):**
+  Run: Search `docs/plans/` for related design documents
+  Purpose: 读取设计文档（如果存在），理解设计决策
 
-  **Create task tracking document:**
+  **Step 2: Create plan document (静态参考):**
+  Save: `docs/plans/YYYY-MM-DD-<feature-name>.md`
+  Format: 使用 plan 模板（保持原有格式）
+
+  **Step 3: Create task tracking document (动态追踪):**
   ```bash
   # 创建任务文档并捕获路径
   TASK_DOC=$(node -e "
   const DocsCore = require('./lib/docs-core.js');
   const manager = new DocsCore(process.cwd());
-  const result = manager.createActiveDocument('task', 'Implement: [feature-name]', \`
-## 任务描述
-[来自计划的实施步骤概述]
 
-## 实施计划
-- [步骤1]
-- [步骤2]
-- [步骤3]
+  // 构建相关文档链接
+  const planFileName = '${date}-${featureSlug}.md';
+  let relatedDocs = { plan: planFileName };
 
-## 验收标准
-- [验收条件1]
-- [验收条件2]
+  // 如果存在 design 文档，添加到相关文档
+  // (需要在搜索步骤中找到 design 文档路径)
 
-## 进展记录
-- \${new Date().toISOString()}: 创建任务 - 待开始
-\`);
+  const result = manager.createActiveDocument('task', 'Implement: [feature-name]', null, relatedDocs);
+
   console.log(result.path);
   ")
   echo "Created task document: $TASK_DOC"
   export TASK_DOC
   ```
 
-  Store the document path as `$TASK_DOC` for progress tracking throughout implementation.
+  **Step 4: Set active task for progress tracking:**
+  ```bash
+  # 设置活跃任务，供后续技能使用
+  node -e "
+  const DocsCore = require('./lib/docs-core.js');
+  const manager = new DocsCore(process.cwd());
+  manager.setActiveTask('$TASK_DOC', 'task');
+  "
+  ```
 
-  In the created document, populate:
+  **In the created task document, ensure:**
   - ## 任务描述: [来自计划的实施步骤概述]
+  - ## 相关文档:
+    - `- 计划文档: [../plans/YYYY-MM-DD-<feature>.md](../plans/YYYY-MM-DD-<feature>.md)`
+    - `- 设计文档: [../plans/YYYY-MM-DD-design-<topic>.md](../plans/YYYY-MM-DD-design-<topic>.md)` (如果存在)
   - ## 实施计划: [拆解的具体任务列表，可引用计划中的步骤]
   - ## 验收标准: [如何验证任务完成]
   - ## 进展记录: [初始化为"待开始"]
-  - ## 相关文档: [链接到设计文档 `../plans/YYYY-MM-DD-<design>.md`]
+
+  **Step 5: Check core document count (复杂度控制):**
+  ```bash
+  # 检查核心文档数量
+  node -e "
+  const DocsCore = require('./lib/docs-core.js');
+  const manager = new DocsCore(process.cwd());
+  const count = manager.countCoreDocs('[feature-name]');
+  console.log('Core documents:', count.total);
+  if (count.warning) {
+    console.warn('WARNING:', count.warning);
+  }
+  "
+  ```
+
+  IF core document count > 3:
+    WARN user: "当前核心文档数量为 ${count.total} 个，超过了建议的 3 个上限。建议检查是否所有文档都是必需的。"
+
+  Store the document path as `$TASK_DOC` for progress tracking throughout implementation.
 
 ## Execution Handoff
 

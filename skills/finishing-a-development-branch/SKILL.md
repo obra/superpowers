@@ -41,6 +41,7 @@ Stop. Don't proceed to Step 2.
 
 IF `.horspowers-config.yaml` exists AND `documentation.enabled: true`:
 
+**Step 1: Complete task document**
 **IF `$TASK_DOC` is set (from writing-plans):**
 ```bash
 # Update task document to completed
@@ -57,41 +58,108 @@ manager.updateActiveDocument(process.env.TASK_DOC, {
 node -e "
 const DocsCore = require('./lib/docs-core.js');
 const manager = new DocsCore(process.cwd());
-manager.archiveDocument(process.env.TASK_DOC);
+const result = manager.archiveDocument(process.env.TASK_DOC);
+console.log('Task archived to:', result.archivedPath);
 "
 ```
 
+**Step 2: Handle bug documents (临时文档清理)**
 **IF `$BUG_DOC` is set (from test-driven-development):**
+
+First, verify bug status:
 ```bash
-# Ensure bug is marked as fixed
+# Check if bug is marked as fixed
 node -e "
 const DocsCore = require('./lib/docs-core.js');
 const manager = new DocsCore(process.cwd());
-manager.updateActiveDocument(process.env.BUG_DOC, {
-  status: '已关闭',
-  progress: 'Bug 已修复并验证通过，准备合并。'
-});
+const fs = require('fs');
+const content = fs.readFileSync(process.env.BUG_DOC, 'utf8');
+const isFixed = content.match(/- 状态[：:]\\s*(已修复|fixed)/i);
+console.log('Bug fixed:', isFixed ? 'yes' : 'no');
 "
+```
 
+**ASK user: "检测到 Bug 文档 `${BUG_DOC}`。Bug 文档是临时文档，修复完成后建议删除以避免文档膨胀。
+
+**选项:**
+1. **删除 Bug 文档** - Bug 已修复，删除临时文档（推荐）
+2. **归档 Bug 文档** - 保留记录到 archive（用于重要 bug 复盘）
+3. **保留 Bug 文档** - 暂时保留在 active/ 目录
+
+说明: 删除后无法恢复，请确认 bug 已修复并验证通过"
+
+**IF user chooses 删除 Bug 文档:**
+```bash
+# Delete the bug document
+node -e "
+const DocsCore = require('./lib/docs-core.js');
+const manager = new DocsCore(process.cwd());
+const result = manager.deleteBugDocument(process.env.BUG_DOC, {
+  verifyStatus: true,
+  requireConfirmation: false
+});
+console.log(result.message);
+"
+```
+
+**ELSE IF user chooses 归档 Bug 文档:**
+```bash
 # Archive resolved bug
 node -e "
 const DocsCore = require('./lib/docs-core.js');
 const manager = new DocsCore(process.cwd());
-manager.archiveDocument(process.env.BUG_DOC);
+const result = manager.archiveDocument(process.env.BUG_DOC);
+console.log('Bug archived to:', result.archivedPath);
 "
 ```
 
-**Check for other active documents:**
+**ELSE (user chooses 保留):**
+Do nothing, bug document remains in active/
+
+**Step 3: Clear environment variables**
+```bash
+# Clear active task tracking
+node -e "
+const DocsCore = require('./lib/docs-core.js');
+const manager = new DocsCore(process.cwd());
+manager.clearActiveTask();
+"
+
+# Unset environment variables
+unset TASK_DOC
+unset BUG_DOC
+```
+
+**Step 4: Check for other active documents**
 ```bash
 # List all active documents
 node -e "
 const DocsCore = require('./lib/docs-core.js');
 const manager = new DocsCore(process.cwd());
 const files = manager.getActiveFiles();
-console.log('Active documents:', files.join(', '));
+if (files.length > 0) {
+  console.log('Remaining active documents:', files.join(', '));
+} else {
+  console.log('No remaining active documents.');
+}
 "
 
-# If other related documents exist, ask user about archiving them
+# If other related documents exist, ask user about handling them
+```
+
+**Step 5: Verify core document count**
+```bash
+# Check if core document count is within limits
+node -e "
+const DocsCore = require('./lib/docs-core.js');
+const manager = new DocsCore(process.cwd());
+const count = manager.countCoreDocs();
+console.log('Core documents:', count.total);
+console.log('Breakdown:', count.breakdown);
+if (count.warning) {
+  console.warn('WARNING:', count.warning);
+}
+"
 ```
 
 ### Step 2: Determine Base Branch
