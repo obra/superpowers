@@ -8,6 +8,18 @@
 
 **HorsPowers** 是基于 [Superpowers](https://github.com/obra/superpowers) 的自定义版本，专为个人开发者优化。
 
+原版 Superpowers 是一个很厉害的想法，所以我没有改动太多的流程，唯一的问题是，没有支持中文
+
+所以我稍微改吧改吧，然后又把我另一个项目融了进来，在原来的基础上，增加了一个文档的逻辑，用于将关键上下文在整个流程中进行流转
+
+模拟的是 CPU-内存-硬盘 这个结构，即 AI-上下文-文档，可以参考 [这个文档](/docs/archive/2026-01-21-task-unify-document-standards.md)
+
+其实文档的这个理念，也是借鉴了各类教程视频，我自己鼓捣出来的一个想法
+
+vibe coding 这一行当现在是以月为单位在迭代的，没有什么是最好用的，只有最适合你自己的
+
+欢迎提 issue 讨论，欢迎pr
+
 ### 主要特点
 
 - ✅ **完整的中文支持** - 所有技能支持中文触发，在中文语境下正常工作
@@ -33,7 +45,7 @@ testing_strategy: test-after # 或 tdd
 completion_strategy: merge  # 或 pr
 ```
 
-### 统一文档系统 (v4.2.2+)
+### 统一文档系统 (v4.3.0+)
 
 文档系统完全内置，无需外部依赖，自动在工作流关键节点创建和更新文档。
 
@@ -98,7 +110,7 @@ I just add a "Personal/Single Mode" for the superpower skills, origin for team w
     - test strategy support test-after, code first
     - push-merge strategy support pr or local merge
 
-## Built-in Documentation System (4.2.2+)
+## Built-in Documentation System (4.3.0+)
 
 The documentation system is now built directly into the plugin, with no external dependencies required.
 
@@ -355,7 +367,7 @@ MIT License - see LICENSE file for details
 
 ## Changelog
 
-### v4.2.2 (2026-01-21)
+### v4.3.0 (2026-01-21)
 
 **文档系统统一**
 - ✅ 统一命名规范：前缀式 `YYYY-MM-DD-<type>-<slug>.md`
