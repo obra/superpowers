@@ -726,6 +726,21 @@ TDD RED phase：测试意外失败
   - 更新 writing-plans 技能：添加文档输入上下文、正确链接、核心文档数量检查
   - 更新 finishing-a-development-branch 技能：添加 bug 文档删除/归档/保留选项
   - 测试验证：所有新方法测试通过
+- 2026-01-21: **Phase 4 完成** - 更新技能引用（文档上下文传递）
+  - 更新 subagent-driven-development：添加 Step 0 文档上下文加载，传递文档路径给子代理
+  - 更新 executing-plans：添加 Step 0 文档上下文加载、Step 2.5 检查点保存机制
+  - 更新 systematic-debugging：添加 Phase 0 文档上下文加载、Phase 4.5 更新 bug 文档
+  - 更新 requesting-code-review：添加文档上下文加载、审查后更新任务文档
+  - 更新 dispatching-parallel-agents：添加 Step 0 文档上下文加载、Step 4.5 汇总进度
+  - **所有文档加载逻辑都处理了文件不存在的情况**：
+    - 使用 `[ -f "$FILE" ]` 检查文件存在性
+    - 文件不存在时的增强处理：
+      - 🔍 搜索相关文档（最近 7 天内的 task/bug 文档）
+      - 📝 从 git log 获取上下文（最近 5 条 commit）
+      - 💡 提供流程引导建议（推荐工作流程）
+      - 📋 检查文档系统是否初始化
+      - 明确提示：继续使用可用上下文执行
+  - **所有提示信息改为中文**，使用 emoji 增强可读性
 
 ---
 

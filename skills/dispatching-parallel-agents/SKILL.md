@@ -11,6 +11,82 @@ When you have multiple unrelated failures (different test files, different subsy
 
 **Core principle:** Dispatch one agent per independent problem domain. Let them work concurrently.
 
+## Step 0: Load Document Context (文档上下文传递)
+
+**Before dispatching agents:**
+
+IF `.horspowers-config.yaml` exists AND `documentation.enabled: true`:
+
+1. **Read task document path** (if set):
+   ```bash
+   # 检查任务文档是否存在
+   if [ -n "$TASK_DOC" ] && [ -f "$TASK_DOC" ]; then
+     echo "✅ 任务文档: $TASK_DOC"
+     cat "$TASK_DOC"
+   elif [ -n "$TASK_DOC" ]; then
+     # 文档路径设置但文件不存在 - 增强处理
+     echo "⚠️  警告: TASK_DOC 已设置但文件不存在: $TASK_DOC"
+     echo ""
+
+     # 尝试搜索相关文档
+     echo "🔍 搜索相关文档..."
+     RECENT_TASKS=$(find docs/active -name "task*.md" -mtime -7 2>/dev/null | head -3)
+     if [ -n "$RECENT_TASKS" ]; then
+       echo "最近的任务文档:"
+       echo "$RECENT_TASKS"
+     fi
+
+     # 从 git log 获取上下文
+     echo ""
+     echo "📝 从 git 获取上下文..."
+     git log --oneline -5 2>/dev/null || true
+     CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
+     echo "当前分支: $CURRENT_BRANCH"
+
+     # 提供流程引导建议
+     echo ""
+     echo "💡 推荐工作流程:"
+     echo "   完整流程: brainstorming → writing-plans → (当前技能)"
+     echo ""
+
+     # 检查文档系统是否初始化
+     if [ ! -d "docs/active" ]; then
+       echo "📋 文档系统未初始化。运行 'horspowers:document-management' 初始化文档系统。"
+     fi
+
+     echo "继续使用可用上下文分发代理..."
+   fi
+   ```
+
+2. **Read related documents** (if specified in task document):
+   ```bash
+   # 设计文档 (如果在任务文档中链接)
+   DESIGN_DOC="docs/plans/YYYY-MM-DD-design-<topic>.md"
+   if [ -f "$DESIGN_DOC" ]; then
+     echo "✅ 设计文档: $DESIGN_DOC"
+     cat "$DESIGN_DOC"
+   fi
+
+   # 计划文档 (如果在任务文档中链接)
+   PLAN_DOC="docs/plans/YYYY-MM-DD-<feature>.md"
+   if [ -f "$PLAN_DOC" ]; then
+     echo "✅ 计划文档: $PLAN_DOC"
+     cat "$PLAN_DOC"
+   fi
+   ```
+
+3. **Prepare document context for each agent**:
+   Each agent prompt should include:
+   - Relevant document paths (for reference)
+   - Task/Plan/Design context snippets
+   - Bug document path if applicable (`$BUG_DOC`)
+
+**Note:** 如果文档不存在，跳过加载并使用可用上下文继续分发代理。
+
+**IF documentation is NOT enabled:**
+- Skip document loading
+- Proceed with agent dispatch
+
 ## When to Use
 
 ```dot
@@ -78,6 +154,45 @@ When agents return:
 - Verify fixes don't conflict
 - Run full test suite
 - Integrate all changes
+
+### 4.5. Update Task Document (汇总进度)
+
+**After all agents complete:**
+
+IF `.horspowers-config.yaml` exists AND `documentation.enabled: true`:
+
+**IF `$TASK_DOC` is set:**
+```bash
+# Update task document with parallel agent results
+node -e "
+const fs = require('fs');
+const taskDoc = process.env.TASK_DOC;
+if (fs.existsSync(taskDoc)) {
+    let content = fs.readFileSync(taskDoc, 'utf8');
+    const timestamp = new Date().toISOString().slice(0, 10);
+
+    const results = [
+        { agent: 'Agent 1', result: 'Fixed X' },
+        { agent: 'Agent 2', result: 'Fixed Y' },
+        { agent: 'Agent 3', result: 'Fixed Z' }
+    ];
+
+    let summary = \`- \${timestamp}: 并行代理执行完成\\n\`;
+    results.forEach(r => {
+        summary += \`  - \${r.agent}: \${r.result}\\n\`;
+    });
+
+    if (content.includes('## 进展记录')) {
+        content = content.replace(
+            /(## 进展记录\\n[\\s\\S]*?)(?=\\n##|\\Z)/,
+            '\$1\\n' + summary
+        );
+    }
+
+    fs.writeFileSync(taskDoc, content);
+}
+"
+```
 
 ## Agent Prompt Structure
 

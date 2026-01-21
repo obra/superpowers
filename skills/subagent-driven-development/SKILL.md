@@ -39,9 +39,79 @@ digraph when_to_use {
 
 ## The Process
 
+### Step 0: Load Document Context (文档上下文传递)
+
+**Before starting task execution:**
+
+IF `.horspowers-config.yaml` exists AND `documentation.enabled: true`:
+
+1. **Read task document path** (from writing-plans):
+   ```bash
+   # 检查任务文档是否存在
+   if [ -n "$TASK_DOC" ] && [ -f "$TASK_DOC" ]; then
+     echo "✅ 任务文档: $TASK_DOC"
+     cat "$TASK_DOC"
+   elif [ -n "$TASK_DOC" ]; then
+     # 文档路径设置但文件不存在 - 增强处理
+     echo "⚠️  警告: TASK_DOC 已设置但文件不存在: $TASK_DOC"
+     echo ""
+
+     # 尝试搜索相关文档
+     echo "🔍 搜索相关文档..."
+     RECENT_TASKS=$(find docs/active -name "task*.md" -mtime -7 2>/dev/null | head -3)
+     if [ -n "$RECENT_TASKS" ]; then
+       echo "最近的任务文档:"
+       echo "$RECENT_TASKS"
+     fi
+
+     # 提供流程引导建议
+     echo ""
+     echo "💡 推荐工作流程:"
+     echo "   新功能: brainstorming → writing-plans → (当前技能)"
+     echo "   修复 bug: systematic-debugging → test-driven-development"
+     echo ""
+
+     # 检查文档系统是否初始化
+     if [ ! -d "docs/active" ]; then
+       echo "📋 文档系统未初始化。运行 'horspowers:document-management' 初始化文档系统。"
+     fi
+
+     echo "继续使用可用上下文执行..."
+   fi
+   ```
+
+2. **Read related documents** (if specified in task document):
+   ```bash
+   # 设计文档 (如果在任务文档中链接)
+   DESIGN_DOC="docs/plans/YYYY-MM-DD-design-<topic>.md"
+   if [ -f "$DESIGN_DOC" ]; then
+     echo "✅ 设计文档: $DESIGN_DOC"
+     cat "$DESIGN_DOC"
+   fi
+
+   # 计划文档 (如果在任务文档中链接)
+   PLAN_DOC="docs/plans/YYYY-MM-DD-<feature>.md"
+   if [ -f "$PLAN_DOC" ]; then
+     echo "✅ 计划文档: $PLAN_DOC"
+     cat "$PLAN_DOC"
+   fi
+   ```
+
+3. **Pass document paths to subagents**:
+   Each subagent prompt should include relevant document paths for context
+
+**Note:** 如果文档不存在，跳过加载并使用可用上下文继续执行任务。
+
+**IF documentation is NOT enabled:**
+- Skip document loading
+- Proceed with plan execution
+
 ```dot
 digraph process {
     rankdir=TB;
+
+    "Load document context ($TASK_DOC, design, plan)" [shape=box style=filled fillcolor=lightyellow];
+    "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
 
     subgraph cluster_per_task {
         label="Per Task";
@@ -55,14 +125,15 @@ digraph process {
         "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
         "Code quality reviewer subagent approves?" [shape=diamond];
         "Implementer subagent fixes quality issues" [shape=box];
+        "Update task document progress" [shape=box];
         "Mark task complete in TodoWrite" [shape=box];
     }
 
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
     "Use horspowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
+    "Load document context ($TASK_DOC, design, plan)" -> "Read plan, extract all tasks with full text, note context, create TodoWrite";
     "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
@@ -76,7 +147,8 @@ digraph process {
     "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
     "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
     "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
-    "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
+    "Code quality reviewer subagent approves?" -> "Update task document progress" [label="yes"];
+    "Update task document progress" -> "Mark task complete in TodoWrite";
     "Mark task complete in TodoWrite" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];

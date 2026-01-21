@@ -49,6 +49,74 @@ Use for ANY technical issue:
 
 You MUST complete each phase before proceeding to the next.
 
+### Phase 0: Load Bug Document Context (文档上下文加载)
+
+**Before starting debugging:**
+
+IF `.horspowers-config.yaml` exists AND `documentation.enabled: true`:
+
+**IF `$BUG_DOC` is set (from TDD RED phase):**
+```bash
+# 检查 bug 文档是否存在
+if [ -f "$BUG_DOC" ]; then
+  echo "✅ Bug 文档: $BUG_DOC"
+  cat "$BUG_DOC"
+elif [ -n "$BUG_DOC" ]; then
+  # 文档路径设置但文件不存在 - 增强处理
+  echo "⚠️  警告: BUG_DOC 已设置但文件不存在: $BUG_DOC"
+  echo ""
+
+  # 尝试搜索相关文档
+  echo "🔍 搜索相关 bug 文档..."
+  RECENT_BUGS=$(find docs/active -name "bug*.md" -mtime -7 2>/dev/null | head -3)
+  if [ -n "$RECENT_BUGS" ]; then
+    echo "最近的 bug 文档:"
+    echo "$RECENT_BUGS"
+  fi
+
+  # 检查文档系统是否初始化
+  if [ ! -d "docs/active" ]; then
+    echo "📋 文档系统未初始化。运行 'horspowers:document-management' 初始化文档系统。"
+  fi
+
+  echo "继续使用可用上下文进行调试..."
+fi
+```
+
+**IF `$TASK_DOC` is set (from writing-plans):**
+```bash
+# 检查任务文档是否存在
+if [ -f "$TASK_DOC" ]; then
+  echo "✅ 任务文档: $TASK_DOC"
+  # 读取任务文档了解正在调试什么
+  cat "$TASK_DOC"
+elif [ -n "$TASK_DOC" ]; then
+  # 文档路径设置但文件不存在 - 增强处理
+  echo "⚠️  警告: TASK_DOC 已设置但文件不存在: $TASK_DOC"
+  echo ""
+
+  # 尝试搜索相关文档
+  echo "🔍 搜索相关任务文档..."
+  RECENT_TASKS=$(find docs/active -name "task*.md" -mtime -7 2>/dev/null | head -3)
+  if [ -n "$RECENT_TASKS" ]; then
+    echo "最近的任务文档:"
+    echo "$RECENT_TASKS"
+  fi
+
+  echo "继续使用可用上下文进行调试..."
+fi
+```
+
+**IF no bug document exists but issue was found:**
+- Note the issue details - TDD skill will create bug document in RED phase
+- Proceed with systematic debugging
+
+**Note:** 如果文档不存在，跳过加载并使用可用上下文继续调试。
+
+**IF documentation is NOT enabled:**
+- Skip document loading
+- Proceed with debugging
+
 ### Phase 1: Root Cause Investigation
 
 **BEFORE attempting ANY fix:**
@@ -213,6 +281,68 @@ You MUST complete each phase before proceeding to the next.
    **Discuss with your human partner before attempting more fixes**
 
    This is NOT a failed hypothesis - this is a wrong architecture.
+
+### Phase 4.5: Update Bug Document (文档输出)
+
+**After root cause is identified and fix is implemented:**
+
+IF `.horspowers-config.yaml` exists AND `documentation.enabled: true`:
+
+**IF `$BUG_DOC` is set:**
+```bash
+# Update bug document with root cause analysis and fix details
+node -e "
+const fs = require('fs');
+const bugDoc = process.env.BUG_DOC;
+if (fs.existsSync(bugDoc)) {
+    let content = fs.readFileSync(bugDoc, 'utf8');
+    const timestamp = new Date().toISOString();
+
+    const rootCauseSection = \`
+## 根因分析
+[Detailed root cause analysis from Phase 1-2]
+
+分析时间: \${timestamp}
+\`;
+
+    const fixSection = \`
+## 修复方案
+[Description of the fix implemented in Phase 4]
+
+修复时间: \${timestamp}
+\`;
+
+    // Add root cause and fix sections
+    content += '\\n' + rootCauseSection + '\\n' + fixSection;
+
+    fs.writeFileSync(bugDoc, content);
+}
+"
+```
+
+**IF `$TASK_DOC` is set:**
+```bash
+# Also update task document with debugging progress
+node -e "
+const fs = require('fs');
+const taskDoc = process.env.TASK_DOC;
+if (fs.existsSync(taskDoc)) {
+    let content = fs.readFileSync(taskDoc, 'utf8');
+    const timestamp = new Date().toISOString().slice(0, 10);
+
+    const progressEntry = \`- \${timestamp}: 完成根因分析和修复：[bug description]\`;
+
+    if (content.includes('## 进展记录')) {
+        content = content.replace(
+            /(## 进展记录\\n[\\s\\S]*?)(?=\\n##|\\Z)/,
+            '\$1\\n' + progressEntry
+        );
+    }
+
+    fs.writeFileSync(taskDoc, content);
+}
+"
+```
 
 ## Red Flags - STOP and Follow Process
 
