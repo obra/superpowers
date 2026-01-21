@@ -773,10 +773,12 @@ TDD RED phase：测试意外失败
   - 创建 `tests/integration/test-docs-phase1-5.sh` 测试文件
   - 修复 Bug 模板：添加状态字段，支持初始状态设置
   - RED 阶段：测试运行失败（预期），发现 Bug 模板缺少状态字段
-  - GREEN 阶段（进行中）：修复 lib/docs-core.js 中的 Bug 模板
-    - 添加 `- 状态: 待修复` 字段到 getBugTemplate()
-    - 修改 getActiveTemplate() 支持 status/priority 参数传递
-    - 修改 getBugTemplate() 接受 metadata 参数
+  - GREEN 阶段：修复 lib/docs-core.js 和测试文件中的问题
+    - ✅ 修复 `countCoreDocs()` 返回字段名称 (breakdown → details)
+    - ✅ 修复 `extractDocType()` 支持带路径的文件名检测（提取 basename）
+    - ✅ 修复 `extractDocType()` 的 plan 检测逻辑（严格前缀匹配）
+    - ✅ 更新测试用例边缘情况（debug/designer 按新规则识别为 plan）
+  - ✅ 所有单元测试通过 (deleteBugDocument, countCoreDocs, extractDocType)
 
 ---
 

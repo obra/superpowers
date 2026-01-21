@@ -220,9 +220,10 @@ const testCases = [
     // Old suffix format (should still be detected for backward compatibility)
     { path: 'docs/plans/2025-01-04-auth-system-design.md', expected: 'design' },
 
-    // Edge cases
-    { path: 'docs/2026-01-21-debug-connection.md', expected: 'bug' }, // 'debug' contains 'bug'
-    { path: 'docs/2026-01-21-designer-profile.md', expected: 'unknown' }, // not a design doc
+    // Edge cases - 使用严格前缀匹配，避免子串误判
+    { path: 'docs/2026-01-21-debug-connection.md', expected: 'plan' }, // 'debug' 不是 'bug-' 前缀，应识别为 plan
+    { path: 'docs/2026-01-21-designer-profile.md', expected: 'plan' }, // 'designer' 不是 'design-' 前缀，应识别为 plan
+    { path: 'docs/random-file.md', expected: 'unknown' }, // 没有日期前缀，应识别为 unknown
 ];
 
 console.log('Testing extractDocType()...\n');
