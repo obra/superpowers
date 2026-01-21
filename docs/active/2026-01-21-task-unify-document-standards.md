@@ -707,3 +707,123 @@ TDD RED phase：测试意外失败
 
 - 2026-01-21: 创建任务 - 待开始
 - 2026-01-21: 完成文档流转体系分析，识别 4 个遗漏点
+- 2026-01-21: 完成改动范围预估，确认实施方向
+- 2026-01-21: **Phase 1 完成** - 统一命名规范（前缀式）
+  - 修改 `createDesignDocument()` 采用前缀式命名
+  - 更新 `extractDocType()` 支持新旧格式（后缀式优先检查）
+  - 更新 `getStats()` 支持新旧格式 design 文档统计
+  - 向后兼容性：旧格式文件仍可正确识别
+- 2026-01-21: **Phase 2 完成** - 统一模板格式（合并 design + decision）
+  - 合并 `getDesignTemplate()` 采用 DDAW 详细结构（10个字段）
+  - 删除 `getDecisionTemplate()` 方法
+  - 更新 `getActiveTemplate()` 移除 decision 类型
+  - 更新 `createActiveDocument()` validTypes 移除 decision
+  - 向后兼容性：保留旧 decision 文档的识别和统计
+- 2026-01-21: **Phase 3 完成** - 解决文档复杂度问题（Scrum 思想）
+  - 实现 `deleteBugDocument()` 方法：支持状态验证、用户确认、强制删除
+  - 实现 `countCoreDocs()` 方法：统计核心文档数量，超过 3 个时发出警告
+  - 更新 brainstorming 技能：添加询问用户是否需要创建 design 文档的逻辑
+  - 更新 writing-plans 技能：添加文档输入上下文、正确链接、核心文档数量检查
+  - 更新 finishing-a-development-branch 技能：添加 bug 文档删除/归档/保留选项
+  - 测试验证：所有新方法测试通过
+
+---
+
+## 改动范围预估
+
+### 总体概览
+
+| 类别 | 文件数量 | 改动类型 |
+|------|---------|---------|
+| **核心库文件** | 1 个 | `lib/docs-core.js` |
+| **技能文件** | 10 个 | SKILL.md |
+| **文档/脚本** | 1-2 个 | 迁移指南 |
+| **测试脚本** | 约 3 个 | 验证新规范 |
+
+### 确认的实施方向
+
+| 决策点 | 确认方案 |
+|--------|----------|
+| **执行范围** | 全部5个Phase按顺序执行 |
+| **Design文档创建** | brainstorming 技能询问用户是否需要 |
+| **现有文档** | 不处理，保持现状（只影响新创建的文档） |
+| **Bug删除** | finishing-a-development-branch 技能询问用户是否删除 |
+
+**核心原则：新文档使用新规范，旧文档保持兼容**
+
+### 各Phase详细预估
+
+#### Phase 1: 命名统一
+
+**文件：** `lib/docs-core.js`
+
+| 方法 | 当前格式 | 新格式 | 改动量 |
+|------|---------|--------|--------|
+| `createDesignDocument()` | `YYYY-MM-DD-<topic>-design.md` | `YYYY-MM-DD-design-<topic>.md` | ~5 行 |
+| `extractDocType()` | 检测后缀式 | 添加前缀式检测 | ~5 行 |
+| `getDesignTemplate()` | 更新示例链接 | 新格式链接 | ~2 行 |
+
+**小计：** ~12 行代码修改
+
+#### Phase 2: 模板统一
+
+**文件：** `lib/docs-core.js`
+
+| 操作 | 详情 | 改动量 |
+|------|------|--------|
+| 合并模板 | `getDesignTemplate()` 采用 DDAW 结构 | ~20 行 |
+| 移除模板 | 删除 `getDecisionTemplate()` | -25 行 |
+| 更新调用 | `getActiveTemplate()` 移除 decision | ~3 行 |
+
+**小计：** ~48 行代码修改
+
+#### Phase 3: 复杂度控制
+
+**文件：** `lib/docs-core.js`
+
+| 新增方法 | 用途 | 改动量 |
+|---------|------|--------|
+| `deleteBugDocument()` | 删除已修复的bug文档 | ~15 行 |
+| `countCoreDocs()` | 统计核心文档数量 | ~10 行 |
+
+**技能文件更新（P0）：**
+- `brainstorming/SKILL.md`: 添加询问用户逻辑 ~20 行
+- `writing-plans/SKILL.md`: 确保 plan/task 正确链接 ~10 行
+
+**小计：** ~55 行代码修改
+
+#### Phase 4: 技能更新（最大工作量）
+
+| 优先级 | 技能 | 主要改动 | 预估改动量 |
+|--------|------|---------|-----------|
+| **P0** | `brainstorming/SKILL.md` | 询问创建design、搜索现有文档 | ~50 行 |
+| **P0** | `writing-plans/SKILL.md` | 读取design、创建task、设置环境变量 | ~40 行 |
+| **P0** | `test-driven-development/SKILL.md` | 意外失败创建bug、更新task进度 | ~30 行 |
+| **P1** | `subagent-driven-development/SKILL.md` | 输入输出文档路径、更新进度 | ~35 行 |
+| **P1** | `executing-plans/SKILL.md` | 检查点机制、会话恢复 | ~25 行 |
+| **P1** | `finishing-a-development-branch/SKILL.md` | 归档task、询问删除bug | ~30 行 |
+| **P2** | `requesting-code-review/SKILL.md` | 输入文档路径、更新task状态 | ~20 行 |
+| **P2** | `systematic-debugging/SKILL.md` | 输入bug/task、更新bug文档 | ~25 行 |
+| **P2** | `dispatching-parallel-agents/SKILL.md` | 准备文档上下文、汇总进度 | ~25 行 |
+| **P3** | `document-management/SKILL.md` | 更新命名规则、删除功能 | ~30 行 |
+
+**小计：** ~310 行技能文档修改
+
+#### Phase 5: 迁移工具
+
+| 文件 | 类型 | 改动量 |
+|------|------|--------|
+| `scripts/migrate-docs.js` | 新建迁移脚本 | ~150 行 |
+| `docs/migration-guide.md` | 迁移指南文档 | ~200 行 |
+
+**小计：** ~350 行新增内容
+
+### 总计统计
+
+| 类别 | 文件数 | 代码行数 |
+|------|--------|---------|
+| **核心库修改** | 1 | ~115 行 |
+| **技能文档更新** | 10 | ~310 行 |
+| **新增脚本/文档** | 2 | ~350 行 |
+| **测试验证** | 3 | ~150 行 |
+| **合计** | **16** | **~925 行** |

@@ -53,5 +53,10 @@
     "title": "test-relative-path-v2",
     "relatedDocs": {},
     "updatedAt": "2026-01-20T10:32:25.931Z"
+  },
+  "2026-01-21-bug-test-phase3.md": {
+    "file": "2026-01-21-bug-test-phase3.md",
+    "deleted": true,
+    "updatedAt": "2026-01-21T03:42:03.221Z"
   }
 }
