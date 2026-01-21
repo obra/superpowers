@@ -47,84 +47,298 @@ documentation.enabled: true
 - **test-driven-development**：创建 bug 追踪文档
 - **finishing-a-development-branch**：归档完成的文档
 
+## 文档命名规范
+
+### 统一前缀式命名
+
+所有文档使用统一的**前缀式**命名规则：
+
+```
+YYYY-MM-DD-<type>-<slug>.md
+```
+
+| 部分 | 说明 | 示例 |
+|------|------|------|
+| `YYYY-MM-DD` | 创建日期（ISO 8601） | `2026-01-21` |
+| `<type>` | 文档类型（小写） | `design`, `plan`, `task` |
+| `<slug>` | 描述性标识符（kebab-case） | `user-authentication` |
+
+### 完整示例
+
+| 文档类型 | 文件名格式 | 示例 |
+|---------|-----------|------|
+| Design | `YYYY-MM-DD-design-<topic>.md` | `2026-01-21-design-user-authentication.md` |
+| Plan | `YYYY-MM-DD-plan-<feature>.md` | `2026-01-21-plan-authentication-flow.md` |
+| Task | `YYYY-MM-DD-task-<name>.md` | `2026-01-21-task-implement-login.md` |
+| Bug | `YYYY-MM-DD-bug-<description>.md` | `2026-01-21-bug-login-crash.md` |
+| Context | `YYYY-MM-DD-context-<topic>.md` | `2026-01-21-context-api-keys.md` |
+
+**注意**：旧格式 `YYYY-MM-DD-<topic>-design.md`（后缀式）仍被支持，但建议迁移到新格式。参见 [迁移指南](./migration-guide.md)。
+
 ## 文档类型
 
 ### 设计文档 (Design)
 
-位置：`docs/plans/YYYY-MM-DD-<topic>-design.md`
+**位置**：`docs/plans/YYYY-MM-DD-design-<topic>.md`
 
-创建时机：使用 brainstorming 技能完成设计后
+**创建时机**：使用 brainstorming 技能，**仅当有重要方案选择时**创建
 
-内容：
-- 决策背景
-- 可选方案比较
-- 最终决策及理由
-- 影响范围
-- 实施计划
+**性质**：静态参考，长期保留
+
+**模板结构**：
+```markdown
+# 设计: <标题>
+
+## 基本信息
+- 创建时间: YYYY-MM-DD
+- 设计者: [待指定]
+- 状态: [草稿/已批准/已实施]
+
+## 设计背景
+[描述需要设计的背景和原因]
+
+## 设计方案
+
+### 方案A
+- 描述: [方案描述]
+- 优点: [优点列表]
+- 缺点: [缺点列表]
+
+### 方案B
+...
+
+## 最终设计
+**选择**: [选择的方案]
+**理由**: [详细说明选择理由]
+
+## 技术细节
+[架构、组件、数据流等详细设计]
+
+## 影响范围
+[这个设计影响的模块/系统]
+
+## 实施计划
+1. [实施步骤1]
+2. [实施步骤2]
+3. [实施步骤3]
+
+## 结果评估
+[设计实施后的效果评估]
+
+## 相关文档
+- 计划文档: [../plans/YYYY-MM-DD-plan-<feature>.md](../plans/YYYY-MM-DD-plan-<feature>.md)
+```
 
 ### 实施计划 (Plan)
 
-位置：`docs/plans/YYYY-MM-DD-<feature-name>.md`
+**位置**：`docs/plans/YYYY-MM-DD-plan-<feature>.md`
 
-创建时机：使用 writing-plans 技能创建详细计划后
+**创建时机**：使用 writing-plans 技能创建详细计划时（必需）
 
-内容：
-- 目标描述
-- 架构说明
-- 技术栈
-- 详细任务步骤
-- 测试策略
+**性质**：静态参考，长期保留
+
+**模板结构**：
+```markdown
+# 计划: <功能名称>
+
+## 基本信息
+- 创建时间: YYYY-MM-DD
+- 状态: [草稿/进行中/已完成]
+
+## 目标
+[清晰描述要实现的目标]
+
+## 架构说明
+[系统架构和组件关系]
+
+## 技术栈
+- [列出使用的技术]
+
+## 实施步骤
+1. [步骤1] (2-5分钟)
+2. [步骤2] (2-5分钟)
+3. [步骤3] (2-5分钟)
+
+## 测试策略
+[如何验证实施正确]
+
+## 相关文档
+- 设计文档: [YYYY-MM-DD-design-<topic>.md](../plans/YYYY-MM-DD-design-<topic>.md)
+- 任务文档: [../active/YYYY-MM-DD-task-<name>.md](../active/YYYY-MM-DD-task-<name>.md)
+```
 
 ### 任务追踪 (Task)
 
-位置：`docs/active/YYYY-MM-DD-task-<name>.md`
+**位置**：`docs/active/YYYY-MM-DD-task-<name>.md`
 
-创建时机：使用 writing-plans 技能开始实施时
+**创建时机**：使用 writing-plans 技能开始实施时（必需）
 
-内容：
-- 任务描述
-- 实施计划
-- 验收标准
-- 进展记录（自动更新）
-- 相关文档链接
+**性质**：动态追踪，完成后归档
+
+**模板结构**：
+```markdown
+# 任务: <任务名称>
+
+## 基本信息
+- 创建时间: YYYY-MM-DD
+- 负责人: [待指定]
+- 状态: [待开始/进行中/已完成/已阻塞]
+
+## 任务描述
+[清晰描述任务内容]
+
+## 实施计划
+[关联到 plan 文档的步骤]
+
+## 验收标准
+- [ ] [标准1]
+- [ ] [标准2]
+- [ ] [标准3]
+
+## 进展记录
+- YYYY-MM-DD: [进度更新]
+
+## 相关文档
+- 设计文档: [../plans/YYYY-MM-DD-design-<topic>.md](../plans/YYYY-MM-DD-design-<topic>.md)
+- 计划文档: [../plans/YYYY-MM-DD-plan-<feature>.md](../plans/YYYY-MM-DD-plan-<feature>.md)
+```
 
 ### Bug 追踪 (Bug)
 
-位置：`docs/active/YYYY-MM-DD-bug-<description>.md`
+**位置**：`docs/active/YYYY-MM-DD-bug-<description>.md`
 
-创建时机：TDD RED phase 检测到意外失败时
+**创建时机**：TDD RED phase 检测到意外失败时
 
-内容：
-- 问题描述
-- 复现步骤
-- 状态（待修复 → 已修复 → 已关闭）
-- 修复方案
-- 验证结果
+**性质**：临时追踪，修复后删除
 
-### 决策记录 (Decision)
+**生命周期**：
+```
+创建（TDD RED） → 更新（systematic-debugging） → 修复（TDD GREEN） → 删除（确认后）
+```
 
-位置：`docs/active/YYYY-MM-DD-decision-<title>.md`
+**模板结构**：
+```markdown
+# Bug: <简短描述>
 
-创建时机：brainstorming 技能遇到重要技术选择时
+## 基本信息
+- 发现时间: YYYY-MM-DD
+- 严重程度: [低/中/高/紧急]
+- 状态: [待修复/修复中/已修复/已验证]
 
-内容：
-- 决策背景
-- 可选方案
-- 最终决策
-- 影响范围
-- 实施计划
+## 问题描述
+[清晰描述 bug 现象]
+
+## 复现步骤
+1. [步骤1]
+2. [步骤2]
+3. [步骤3]
+
+**预期行为**: [应该发生什么]
+**实际行为**: [实际发生了什么]
+
+## 根因分析
+[使用 systematic-debugging 技能分析]
+
+## 修复方案
+[描述如何修复]
+
+## 验证结果
+- [ ] 测试通过
+- [ ] 回归测试通过
+
+## 相关任务
+- 任务文档: [../active/YYYY-MM-DD-task-<name>.md](../active/YYYY-MM-DD-task-<name>.md)
+```
 
 ### 上下文文档 (Context)
 
-位置：`docs/active/YYYY-MM-DD-context-<topic>.md`
+**位置**：`docs/context/YYYY-MM-DD-context-<topic>.md`
 
-创建时机：需要记录项目特定上下文时
+**创建时机**：需要记录项目特定上下文时
 
-内容：
-- 项目特定信息
-- 环境配置
-- 依赖说明
-- 注意事项
+**性质**：静态参考，长期保留
+
+**模板结构**：
+```markdown
+# 上下文: <主题>
+
+## 基本信息
+- 创建时间: YYYY-MM-DD
+- 主题: [上下文主题]
+
+## 内容
+[项目特定信息、环境配置、依赖说明等]
+```
+
+## 文档复杂度控制
+
+### 核心原则
+
+借鉴 **Scrum 思想**：文档优先 + 敏捷开发
+
+**CPU-内存-硬盘类比**：
+- **AI (CPU)**：处理逻辑、运算、决策
+- **上下文 (内存)**：快速存取，容量有限，易丢失
+- **文档 (硬盘)**：持久化存储，容量大，长期读取
+- **文档流转**：内存↔硬盘数据交换
+
+### 每个需求的文档数量
+
+**推荐上限：3 个核心文档**
+
+| 阶段 | 文档类型 | 是否必需 | 说明 |
+|------|---------|---------|------|
+| 设计 | Design | 可选 | 仅重要方案选择时创建 |
+| 计划 | Plan | 必需 | 详细实施步骤 |
+| 执行 | Task | 必需 | 动态追踪进度 |
+| 调试 | Bug | 临时 | 修复后删除 |
+
+**文档生命周期**：
+```
+需求输入
+    ↓
+[brainstorming] → Design 文档（可选，静态参考）
+    ↓
+[writing-plans] → Plan 文档（必需，静态参考）
+                 → Task 文档（必需，动态追踪）
+    ↓
+[开发执行] → Bug 文档（临时，修复后删除）
+    ↓
+[finishing] → Task 归档，Bug 删除
+```
+
+### 避免文档膨胀
+
+**最小必要原则**：
+1. 只创建真正需要的文档
+2. 通过链接引用，避免重复内容
+3. Bug 文档修复后立即删除
+4. 定期归档已完成的任务
+
+**复杂度警告**：
+- 当核心文档超过 3 个时，系统会发出警告
+- 审查是否每个文档都是必需的
+- 考虑合并相关内容
+
+### 文档流转机制
+
+每个技能步骤有明确的**输入文档**（从硬盘加载到内存）和**输出文档**（从内存写回硬盘）：
+
+```
+[brainstorming]
+输入：项目上下文（搜索现有 context、design）
+输出：design 文档（可选）
+    ↓
+[writing-plans]
+输入：design 文档路径（可选）
+输出：plan 文档 + task 文档
+    ↓
+[subagent-driven-development]
+输入：plan 文档、task 文档路径、design（可选）
+输出：更新 task 文档进度
+```
+
+这种设计确保关键信息在工作流程中不丢失。
 
 ## 工作流集成
 
@@ -366,10 +580,21 @@ documentation.enabled: true
 
 ## 迁移指南
 
-如果你在使用旧的文档系统，请参考 [文档迁移指南](./document-migration-guide.md)。
+### 从旧格式迁移
+
+如果你有旧格式文档（后缀式命名），请参考 [内部格式迁移指南](./migration-guide.md)。
+
+**支持的迁移**：
+- `YYYY-MM-DD-<topic>-design.md` → `YYYY-MM-DD-design-<topic>.md`
+- `YYYY-MM-DD-decision-<title>.md` → `YYYY-MM-DD-design-<title>.md`
+
+### 从外部系统迁移
+
+如果从其他文档系统迁移到 Horspowers，请参考 [外部系统迁移指南](./document-migration-guide.md)。
 
 ## 相关文档
 
-- [设计文档](./plans/2025-01-19-unified-document-system-design.md)
-- [迁移指南](./document-migration-guide.md)
+- [统一文档系统设计](../plans/2026-01-19-unified-document-system-design.md)
+- [格式迁移指南](../migration-guide.md) ⭐ 新增
+- [外部系统迁移指南](../document-migration-guide.md)
 - [技能开发文档](../README.md)
