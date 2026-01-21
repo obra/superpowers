@@ -166,30 +166,39 @@ function runUseSkill(skillName) {
         return null;
     }
 
+    // Helper to safely resolve path and find skill
+    function findSafeSkillPath(baseDir, relativePath) {
+        if (!fs.existsSync(baseDir)) return null;
+
+        const resolvedBase = path.resolve(baseDir);
+        const candidatePath = path.resolve(baseDir, relativePath);
+
+        // Security check: Ensure path traversal doesn't escape base directory
+        // We append path.sep to ensure we match directory boundaries (e.g. /skills-secrets vs /skills/secrets)
+        if (!candidatePath.startsWith(resolvedBase + path.sep)) {
+            return null;
+        }
+
+        return findSkillFile(candidatePath);
+    }
+
     let skillFile = null;
 
     // If superpowers: namespace was used, only check superpowers skills
     if (forceSuperpowers) {
-        if (fs.existsSync(superpowersSkillsDir)) {
-            const superpowersPath = path.join(superpowersSkillsDir, actualSkillPath);
-            skillFile = findSkillFile(superpowersPath);
-        }
+        skillFile = findSafeSkillPath(superpowersSkillsDir, actualSkillPath);
     } else {
         // First check personal skills directory (takes precedence)
-        if (fs.existsSync(personalSkillsDir)) {
-            const personalPath = path.join(personalSkillsDir, actualSkillPath);
-            skillFile = findSkillFile(personalPath);
-            if (skillFile) {
-                console.log(`# Loading personal skill: ${actualSkillPath}`);
-                console.log(`# Source: ${skillFile}`);
-                console.log('');
-            }
+        skillFile = findSafeSkillPath(personalSkillsDir, actualSkillPath);
+        if (skillFile) {
+            console.log(`# Loading personal skill: ${actualSkillPath}`);
+            console.log(`# Source: ${skillFile}`);
+            console.log('');
         }
 
         // If not found in personal, check superpowers skills
-        if (!skillFile && fs.existsSync(superpowersSkillsDir)) {
-            const superpowersPath = path.join(superpowersSkillsDir, actualSkillPath);
-            skillFile = findSkillFile(superpowersPath);
+        if (!skillFile) {
+            skillFile = findSafeSkillPath(superpowersSkillsDir, actualSkillPath);
             if (skillFile) {
                 console.log(`# Loading superpowers skill: superpowers:${actualSkillPath}`);
                 console.log(`# Source: ${skillFile}`);
