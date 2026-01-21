@@ -68,12 +68,12 @@ If you prefer to install skills globally (available across all projects):
 
 **Linux/macOS:**
 ```bash
-cp -r ~/.gemini/antigravity/superpowers/skills ~/.gemini/antigravity/skills
+cp -r ~/.gemini/antigravity/superpowers/skills ~/.gemini/antigravity/global_skills
 ```
 
 **Windows:**
 ```powershell
-Copy-Item -Recurse "$env:USERPROFILE\.gemini\antigravity\superpowers\skills" "$env:USERPROFILE\.gemini\antigravity\skills"
+Copy-Item -Recurse "$env:USERPROFILE\.gemini\antigravity\superpowers\skills" "$env:USERPROFILE\.gemini\antigravity\global_skills"
 ```
 
 ---
