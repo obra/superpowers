@@ -88,7 +88,7 @@ This repository is a Claude Code plugin. For local development:
 
 ### Version Management
 
-Version is stored in `.claude-plugin/plugin.json` (currently 4.0.4). When releasing:
+Version is stored in `.claude-plugin/plugin.json` (currently 4.1.5). When releasing:
 1. Update version in `.claude-plugin/plugin.json`
 2. Document changes in `RELEASE-NOTES.md`
 3. Commit and tag with version number
@@ -199,11 +199,12 @@ Core skills trigger in sequence:
 4. `subagent-driven-development` or `executing-plans` → Task execution
 5. `test-driven-development` → RED-GREEN-REFACTOR enforcement (triggered during implementation)
 6. `systematic-debugging` → 4-phase root cause analysis (triggered when bugs occur)
-7. `requesting-code-review` → Quality verification
-8. `verification-before-completion` → Ensure fixes actually work
-9. `ai-self-reflection` → Automatic mistake detection and learning capture (optional after verification)
-10. `documenting-completed-implementation` → Update project documentation
-11. `finishing-a-development-branch` → Integration decisions (merge/PR/cleanup)
+7. `code-simplification` → Optional code cleanup via code-simplifier agent (if substantial changes)
+8. `requesting-code-review` → Quality verification
+9. `verification-before-completion` → Ensure fixes actually work
+10. `ai-self-reflection` → Automatic mistake detection and learning capture (optional after verification)
+11. `documenting-completed-implementation` → Update project documentation
+12. `finishing-a-development-branch` → Integration decisions (merge/PR/cleanup)
 
 ### Complete Skills List
 
@@ -222,6 +223,7 @@ Core skills trigger in sequence:
 **Quality & Testing**:
 - `test-driven-development` - RED-GREEN-REFACTOR cycle enforcement
 - `systematic-debugging` - 4-phase process with root-cause-tracing
+- `code-simplification` - Optional cleanup via code-simplifier agent (requires plugin)
 - `verification-before-completion` - Ensure it actually works
 - `requesting-code-review` - Pre-review checklist
 - `receiving-code-review` - Responding to feedback with verification

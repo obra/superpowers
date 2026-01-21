@@ -136,6 +136,7 @@ Recognize these user phrases as skill invocation triggers:
 | "add feature X", "implement Y" | `brainstorming` first | Design decisions before implementation |
 | "plan this out", "how should we approach this" | `writing-plans` | Multi-step tasks need structured planning |
 | "is this ready to merge", "can we ship this" | `verification-before-completion` | Claims require evidence |
+| "clean this up", "simplify the code", "make this cleaner" | `code-simplification` | Code quality improvement via code-simplifier agent |
 
 **Exception:** Only skip skill if user explicitly says "skip the workflow" or "just commit it".
 
@@ -147,8 +148,9 @@ Recognize these user phrases as skill invocation triggers:
 |------------------|-------------------|------|
 | `brainstorming` | `using-git-worktrees` → `writing-plans` | Design is validated and ready for implementation |
 | `writing-plans` | Choice: `executing-plans` OR `subagent-driven-development` | Plan is complete, ask which execution approach |
-| `executing-plans` | `verification-before-completion` | All tasks complete |
-| `subagent-driven-development` | `verification-before-completion` | All tasks complete |
+| `executing-plans` | `code-simplification` (optional) → `verification-before-completion` | All tasks complete; offer simplification if 5+ files or 100+ lines changed |
+| `subagent-driven-development` | `code-simplification` (optional) → `verification-before-completion` | All tasks complete; offer simplification if 5+ files or 100+ lines changed |
+| `code-simplification` | `requesting-code-review` OR `verification-before-completion` | Code refined; choose review or verify |
 | `test-driven-development` | `verification-before-completion` | Tests passing and implementation complete |
 | `systematic-debugging` | `verification-before-completion` | Fix implemented |
 | `verification-before-completion` | `finishing-a-development-branch` | All tests pass |

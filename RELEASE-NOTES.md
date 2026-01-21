@@ -1,5 +1,22 @@
 # Superpowers Release Notes
 
+## v4.1.5 (2026-01-21)
+
+### New Features
+
+**Code Simplification Skill** - Optional quality step integrating external code-simplifier plugin
+
+- New skill `code-simplification` - Dispatches code-simplifier agent to refine recently modified code
+- New command `/simplify` - Quick access to invoke the skill
+- Workflow integration: Suggested after `executing-plans` or `subagent-driven-development` when changes are substantial (5+ files or 100+ lines)
+- Graceful failure: Detects when code-simplifier plugin is not installed and offers alternatives
+- Auto scope detection: Recommends simplification based on git diff size
+
+**Updated skills:**
+- `using-superpowers` - Added code-simplification to workflow chain table and trigger phrases
+- `requesting-code-review` - Added "Before Requesting Review" note suggesting simplification first
+- `CLAUDE.md` - Updated workflow chain and complete skills list
+
 ## v4.1.2 (2026-01-15)
 
 ### Improvements

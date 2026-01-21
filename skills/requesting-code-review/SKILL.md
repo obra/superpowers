@@ -21,6 +21,10 @@ Dispatch superpowers:code-reviewer subagent to catch issues before they cascade.
 - Before refactoring (baseline check)
 - After fixing complex bug
 
+## Before Requesting Review
+
+**Consider:** Use `superpowers:code-simplification` first if substantial changes (5+ files or 100+ lines). Cleaner code = faster, more focused review.
+
 ## How to Request
 
 **1. Get git SHAs:**
