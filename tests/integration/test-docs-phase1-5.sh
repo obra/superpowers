@@ -101,7 +101,9 @@ sed -i.bak "s|@HORSPOWERS_ROOT@|$HORSPOWERS_ROOT|g" "$TEST_PROJECT/test-delete-b
 rm -f "$TEST_PROJECT/test-delete-bug.js.bak"
 
 echo "Running deleteBugDocument tests..."
-if node "$TEST_PROJECT/test-delete-bug.js"; then
+# 必须在测试目录中运行，以便 process.cwd() 返回正确的项目根目录
+(cd "$TEST_PROJECT" && node test-delete-bug.js)
+if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ PASS${NC}: deleteBugDocument() status verification working"
 else
     echo -e "${RED}✗ FAIL${NC}: deleteBugDocument() test failed"
@@ -189,7 +191,8 @@ sed -i.bak "s|@HORSPOWERS_ROOT@|$HORSPOWERS_ROOT|g" "$TEST_PROJECT/test-count-co
 rm -f "$TEST_PROJECT/test-count-core.js.bak"
 
 echo "Running countCoreDocs tests..."
-if node "$TEST_PROJECT/test-count-core.js"; then
+(cd "$TEST_PROJECT" && node test-count-core.js)
+if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ PASS${NC}: countCoreDocs() working correctly"
 else
     echo -e "${RED}✗ FAIL${NC}: countCoreDocs() test failed"
@@ -254,7 +257,8 @@ sed -i.bak "s|@HORSPOWERS_ROOT@|$HORSPOWERS_ROOT|g" "$TEST_PROJECT/test-extract-
 rm -f "$TEST_PROJECT/test-extract-type.js.bak"
 
 echo "Running extractDocType tests..."
-if node "$TEST_PROJECT/test-extract-type.js"; then
+(cd "$TEST_PROJECT" && node test-extract-type.js)
+if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ PASS${NC}: extractDocType() prefix format detection working"
 else
     echo -e "${RED}✗ FAIL${NC}: extractDocType() test failed"
