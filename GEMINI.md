@@ -12,11 +12,11 @@ The primary artifacts of this repository.
 *   **Structure:** Each skill is a directory (e.g., `skills/brainstorming/`) containing a `SKILL.md` file.
 *   **Format:** `SKILL.md` files use YAML frontmatter for metadata (`name`, `description`) followed by the instructional content.
 *   **Core Skills:**
-    *   `brainstorming`: Design refinement.
-    *   `writing-plans`: creating implementation plans.
-    *   `test-driven-development`: Enforcing Red/Green/Refactor.
-    *   `systematic-debugging`: Root cause analysis.
-    *   `subagent-driven-development`: Dispatching sub-agents for tasks.
+  * `brainstorming`: Design refinement.
+  * `writing-plans`: creating implementation plans.
+  * `test-driven-development`: Enforcing Red/Green/Refactor.
+  * `systematic-debugging`: Root cause analysis.
+  * `subagent-driven-development`: Dispatching sub-agents for tasks.
 
 ### 2. Core Logic (`lib/skills-core.js`)
 A Node.js library used by the environment plugins to:
