@@ -81,7 +81,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 Tell Gemini:
 
-```
+```text
 Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.gemini/INSTALL.md
 ```
 
