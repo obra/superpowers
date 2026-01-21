@@ -62,7 +62,7 @@ I just add a "Personal/Single Mode" for the superpower skills, origin for team w
     - test strategy support test-after, code first
     - push-merge strategy support pr or local merge
 
-## Built-in Documentation System (4.2.0+)
+## Built-in Documentation System (4.2.2+)
 
 The documentation system is now built directly into the plugin, with no external dependencies required.
 
@@ -70,10 +70,22 @@ The documentation system is now built directly into the plugin, with no external
 
 Automatically creates and updates documentation at key workflow points:
 
-- **brainstorming** → Records technical decisions
-- **writing-plans** → Creates task tracking documents
-- **test-driven-development** → Logs bugs and fixes
-- **finishing-a-development-branch** → Archives completed work
+- **brainstorming** → Records technical decisions (design 文档)
+- **writing-plans** → Creates task tracking documents (plan + task 文档)
+- **test-driven-development** → Logs bugs and fixes (bug 文档)
+- **finishing-a-development-branch** → Archives completed work (归档 task，删除 bug)
+
+### Document Types
+
+| 类型 | 命名格式 | 存储位置 | 生命周期 |
+|-----|---------|---------|---------|
+| design | `YYYY-MM-DD-design-<topic>.md` | `docs/plans/` | 长期保留 |
+| plan | `YYYY-MM-DD-<feature>.md` | `docs/plans/` | 长期保留 |
+| task | `YYYY-MM-DD-task-<title>.md` | `docs/active/` → `docs/archive/` | 完成后归档 |
+| bug | `YYYY-MM-DD-bug-<desc>.md` | `docs/active/` | 修复后删除 |
+| context | `YYYY-MM-DD-context-<topic>.md` | `docs/context/` | 长期保留 |
+
+**核心原则**: 每个需求最多 3 个核心文档 (1 design + 1 plan + 1 task)，避免文档膨胀。
 
 ### Setup
 
@@ -86,9 +98,53 @@ documentation:
 
 The system will automatically:
 - Create a `docs/` directory structure
-- Track active tasks and decisions in `docs/active/`
+- Track active tasks and bugs in `docs/active/`
 - Archive completed work in `docs/archive/`
 - Maintain session metadata across conversations
+
+### Documentation Workflow
+
+```
+用户需求
+    ↓
+[brainstorming]
+输入：项目上下文（搜索现有 context、design）
+输出：design 文档（重要方案选择时）
+    ↓
+[writing-plans]
+输入：design 文档路径
+输出：plan 文档 + task 文档 + 环境变量 ($TASK_DOC)
+    ↓
+[subagent-driven-development] / [executing-plans]
+输入：plan、task 文档路径
+输出：更新 task 进度
+    ↓
+[test-driven-development]
+输入：task 文档路径
+输出：bug 文档（意外失败时）或 更新 task 进度
+    ↓
+[requesting-code-review]
+输入：task、design、plan 文档
+输出：更新 task 状态
+    ↓
+[finishing-a-development-branch]
+输入：task、bug 文档
+输出：task → archive, bug → 删除
+```
+
+### Migration Guide
+
+If you have documents from older versions, use the migration script:
+
+```bash
+# Preview migration
+node scripts/migrate-docs.js --dry-run
+
+# Execute migration
+node scripts/migrate-docs.js
+```
+
+See [docs/migration-guide.md](docs/migration-guide.md) for details.
 
 ---
 
@@ -215,6 +271,9 @@ Fetch and follow instructions from https://raw.githubusercontent.com/LouisHors/h
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
 - **using-horspowers** - Introduction to the skills system (originally `using-superpowers` in upstream)
 
+**Documentation**
+- **document-management** - Document system management, search, and migration tools
+
 ## Philosophy
 
 - **Test-Driven Development** - Write tests first, always
@@ -251,3 +310,39 @@ MIT License - see LICENSE file for details
 
 - **Issues**: https://github.com/LouisHors/horspowers/issues
 - **Upstream**: https://github.com/obra/superpowers (Original project)
+
+## Documentation
+
+- [统一文档系统用户指南](docs/tasks/unified-document-system.md) - 完整的文档系统使用说明
+- [文档格式迁移指南](docs/migration-guide.md) - 旧格式文档迁移步骤
+- [文档系统统一项目总结](docs/active/2026-01-21-doc-system-unification-summary.md) - v4.2.2 更新详情
+
+## Changelog
+
+### v4.2.2 (2026-01-21)
+
+**文档系统统一**
+- ✅ 统一命名规范：前缀式 `YYYY-MM-DD-<type>-<slug>.md`
+- ✅ 统一模板格式：合并 design + decision，采用 DDAW 结构
+- ✅ 文档复杂度控制：每个需求最多 3 个核心文档
+- ✅ 技能文档上下文传递：所有技能支持文档输入输出
+- ✅ 迁移工具：自动迁移脚本 `scripts/migrate-docs.js`
+
+**新增功能**
+- `deleteBugDocument()` - Bug 文档删除（支持状态验证）
+- `countCoreDocs()` - 核心文档计数（超过 3 个警告）
+- 优化 `extractDocType()` - 支持带路径检测，严格前缀匹配
+
+**技能更新**
+- brainstorming: 搜索现有文档，询问是否创建 design
+- writing-plans: 文档输入上下文，创建 task + 环境变量
+- subagent-driven-development: 文档上下文加载
+- executing-plans: 检查点保存机制
+- systematic-debugging: 更新 bug 文档
+- requesting-code-review: 审查后更新 task
+- finishing-a-development-branch: 归档 task，删除 bug
+- dispatching-parallel-agents: 文档上下文汇总
+
+**测试**
+- 集成测试：`tests/integration/test-docs-phase1-5.sh`
+- TDD 流程：RED → GREEN → REFACTOR 完整周期
