@@ -779,6 +779,11 @@ TDD RED phase：测试意外失败
     - ✅ 修复 `extractDocType()` 的 plan 检测逻辑（严格前缀匹配）
     - ✅ 更新测试用例边缘情况（debug/designer 按新规则识别为 plan）
   - ✅ 所有单元测试通过 (deleteBugDocument, countCoreDocs, extractDocType)
+  - REFACTOR 阶段：优化 `extractDocType()` 代码结构
+    - 提取 `DATE_PREFIX` 和 `TYPE_PREFIXES` 常量
+    - 使用循环替代重复的条件判断（5 个 if → 1 个 for）
+    - 简化 plan 检测逻辑（双重正则 → 单次检查）
+    - ✅ 重构后测试验证通过
 
 ---
 
