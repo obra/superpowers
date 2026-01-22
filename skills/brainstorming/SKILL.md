@@ -43,7 +43,9 @@ Start by understanding the current project context, then ask questions one at a 
 **Implementation (if continuing):**
 - Ask: "Ready to set up for implementation?"
 - Use superpowers:using-git-worktrees to create isolated workspace
-- Use superpowers:writing-plans to create detailed implementation plan
+- **REQUIRED:** Use superpowers:writing-plans to create detailed implementation plan
+  - Do NOT use platform planning features (e.g., EnterPlanMode, plan mode)
+  - Do NOT start implementing directly - the writing-plans skill comes first
 
 ## Key Principles
 

@@ -11,6 +11,12 @@
 - User preferences for spec/plan locations override these defaults
 - Migration: move existing files from `docs/plans/` to new locations if desired
 
+**Brainstorming → writing-plans transition enforced**
+
+- After design approval, brainstorming now requires using writing-plans skill
+- Platform planning features (e.g., EnterPlanMode) should not be used
+- Direct implementation without writing-plans is not allowed
+
 **OpenCode: Switched to native skills system**
 
 Superpowers for OpenCode now uses OpenCode's native `skill` tool instead of custom `use_skill`/`find_skills` tools. This is a cleaner integration that works with OpenCode's built-in skill discovery.
