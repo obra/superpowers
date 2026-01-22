@@ -36,6 +36,14 @@ Components:
 
 The visual companion is opt-in and falls back gracefully to terminal-only operation.
 
+### Bug Fixes
+
+**Fixed Windows hook execution for Claude Code 2.1.x**
+
+Claude Code 2.1.x changed how hooks execute on Windows: it now auto-detects `.sh` files in commands and prepends `bash `. This broke the polyglot wrapper pattern because `bash "run-hook.cmd" session-start.sh` tries to execute the .cmd file as a bash script.
+
+Fix: hooks.json now calls session-start.sh directly. Claude Code 2.1.x handles the bash invocation automatically. Also added .gitattributes to enforce LF line endings for shell scripts (fixes CRLF issues on Windows checkout).
+
 ### Improvements
 
 **Instruction priority clarified in using-superpowers**
