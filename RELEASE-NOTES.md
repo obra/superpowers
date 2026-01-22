@@ -1,5 +1,26 @@
 # Horspowers Release Notes
 
+## v4.3.1 (2026-01-22)
+
+### Bug Fixes
+
+**修复 /upgrade 命令缺失技能定义**
+- 问题：`commands/upgrade.md` 引用 `horspowers:upgrade` 技能，但技能文件不存在
+- 修复：
+  * 创建 `skills/upgrade/SKILL.md` 技能定义
+  * 更新 `commands/upgrade.md` 使用标准命令格式
+  * 添加 `tests/claude-code/test-upgrade.sh` 测试文件
+- 影响：`/upgrade` 命令现在可以正常工作
+
+### Documentation
+
+**添加 upgrade 技能测试**
+- 测试技能可用性和版本检测功能
+- 验证 DDAW 目录处理逻辑
+- 确认文档迁移相关功能
+
+---
+
 ## v4.2.2 (2025-01-20)
 
 ### Documentation
