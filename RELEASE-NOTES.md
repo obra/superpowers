@@ -17,6 +17,12 @@
 - Platform planning features (e.g., EnterPlanMode) should not be used
 - Direct implementation without writing-plans is not allowed
 
+**Subagent-driven development now mandatory on capable harnesses**
+
+- On harnesses with subagent support (Claude Code), subagent-driven-development is now required after plan approval
+- No longer offers a choice between subagent-driven and executing-plans
+- Executing-plans is only used on harnesses without subagent capability
+
 **OpenCode: Switched to native skills system**
 
 Superpowers for OpenCode now uses OpenCode's native `skill` tool instead of custom `use_skill`/`find_skills` tools. This is a cleaner integration that works with OpenCode's built-in skill discovery.

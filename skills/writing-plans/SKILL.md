@@ -34,7 +34,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+> **For Claude:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -97,21 +97,17 @@ git commit -m "feat: add specific feature"
 
 ## Execution Handoff
 
-After saving the plan, offer execution choice:
+After saving the plan:
 
-**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two execution options:**
+**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Ready to execute?"**
 
-**1. Subagent-Driven (this session)** - I dispatch fresh subagent per task, review between tasks, fast iteration
+**Execution path depends on harness capabilities:**
 
-**2. Parallel Session (separate)** - Open new session with executing-plans, batch execution with checkpoints
+**If harness has subagents (Claude Code, etc.):**
+- **REQUIRED:** Use superpowers:subagent-driven-development
+- Do NOT offer a choice - subagent-driven is the standard approach
+- Fresh subagent per task + two-stage review
 
-**Which approach?"**
-
-**If Subagent-Driven chosen:**
-- **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
-- Stay in this session
-- Fresh subagent per task + code review
-
-**If Parallel Session chosen:**
-- Guide them to open new session in worktree
-- **REQUIRED SUB-SKILL:** New session uses superpowers:executing-plans
+**If harness does NOT have subagents:**
+- Execute plan in current session using superpowers:executing-plans
+- Batch execution with checkpoints for review
