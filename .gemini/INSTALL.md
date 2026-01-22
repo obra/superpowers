@@ -7,7 +7,7 @@ Enable Superpowers skills in your Gemini CLI environment using the extensions sy
 If you're an AI agent being asked to install superpowers, run this command:
 
 ```bash
-run_shell_command ~/.gemini/superpowers/.gemini/superpowers-gemini install
+run_shell_command ~/superpowers/.gemini/superpowers-gemini install
 ```
 
 Or if the repository path is known:
