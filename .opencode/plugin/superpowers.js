@@ -8,11 +8,18 @@
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import { tool } from '@opencode-ai/plugin/tool';
-import * as skillsCore from '../../lib/skills-core.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Resolve skills-core.js path dynamically to work with both symlinks and copies
+// On Mac/Linux with symlink: __dirname points to actual location
+// On Windows with copy: we need to find the superpowers installation
+const homeDir = os.homedir();
+const superpowersRoot = path.join(homeDir, '.config/opencode/superpowers');
+const skillsCorePathResolved = path.join(superpowersRoot, 'lib/skills-core.js');
+const skillsCore = await import(pathToFileURL(skillsCorePathResolved).href);
 
 // Normalize a path: trim whitespace, expand ~, resolve to absolute
 const normalizePath = (p, homeDir) => {
@@ -32,8 +39,8 @@ const normalizePath = (p, homeDir) => {
 export const SuperpowersPlugin = async ({ client, directory }) => {
   const homeDir = os.homedir();
   const projectSkillsDir = path.join(directory, '.opencode/skills');
-  // Derive superpowers skills dir from plugin location (works for both symlinked and local installs)
-  const superpowersSkillsDir = path.resolve(__dirname, '../../skills');
+  // Derive superpowers skills dir - use absolute path for Windows compatibility
+  const superpowersSkillsDir = path.join(superpowersRoot, 'skills');
   // Respect OPENCODE_CONFIG_DIR if set, otherwise fall back to default
   const envConfigDir = normalizePath(process.env.OPENCODE_CONFIG_DIR, homeDir);
   const configDir = envConfigDir || path.join(homeDir, '.config/opencode');
