@@ -44,6 +44,12 @@ Claude Code 2.1.x changed how hooks execute on Windows: it now auto-detects `.sh
 
 Fix: hooks.json now calls session-start.sh directly. Claude Code 2.1.x handles the bash invocation automatically. Also added .gitattributes to enforce LF line endings for shell scripts (fixes CRLF issues on Windows checkout).
 
+**Fixed Windows Codex launcher (#243, #285)**
+
+Windows cannot execute extensionless scripts with shebangs, so the `superpowers-codex` script would either open an "Open with" dialog or produce no output in PowerShell.
+
+Fix: Added `.codex/superpowers-codex.cmd` wrapper that invokes Node.js directly. Updated docs with Windows-specific installation and usage instructions.
+
 ### Improvements
 
 **Instruction priority clarified in using-superpowers**
