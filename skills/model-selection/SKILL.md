@@ -13,7 +13,7 @@ description: Use when spawning Task agents or choosing response depth - prevents
 | Variants/drafts | Haiku | Copy options, UI text, boilerplate |
 | Quick lookups | Haiku | File searches, fact Q&A, exploration |
 | Most coding | Sonnet | Features, bug fixes, refactors (<5 files) |
-| High-leverage | Opus | Architecture, security, critical specs |
+| High-leverage | Opus | Architecture, security, critical specs, refactors (5+ files) |
 | After 2 failures | Escalate | Haiku→Sonnet→Opus |
 
 ## Default: Sonnet
@@ -66,11 +66,11 @@ Example Task call with Opus:
 
 **What counts as failure:**
 1. Agent returns error or says it couldn't complete
-2. Output is clearly wrong or low quality
+2. Output is clearly wrong or low-quality
 3. User says result isn't good enough
 
 **Escalation flow:**
-```
+```text
 Attempt 1: Use model per rules above
     ↓ failure
 Attempt 2: Same model, adjust prompt
@@ -120,7 +120,7 @@ User: "Where is error handling done?"
 
 ### Correct: Sonnet for feature work
 User: "Add a logout button"
-→ Default Sonnet (no model param needed, or explicit `model: sonnet`)
+→ Spawn agent with explicit `model: sonnet` - standard feature work
 
 ### Correct: Opus for architecture
 User: "Design the payment processing system"
