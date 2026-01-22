@@ -490,8 +490,9 @@ console.log('  Conflicts: ' + plan.conflicts.length);
 
 **Documents not being tracked:**
 - Check that `documentation.enabled: true` in config
-- Verify `lib/docs-core.js` exists and is accessible
-- Check environment variables are being passed correctly
+- Verify plugin is properly installed: `claude plugin list`
+- Check that `${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js` exists in the plugin directory
+- Try updating the plugin: `claude plugin update horspowers@horspowers-dev`
 
 **Migration not finding documents:**
 - Verify source directory path is correct
