@@ -52,18 +52,15 @@ IF user says "yes":
 
 **Check if already initialized:**
 ```bash
-# Check if docs-core.js exists and is executable
-ls lib/docs-core.js
-
 # Check if docs/ directory exists
 ls docs/ 2>/dev/null || echo "Not initialized"
 ```
 
 **IF not initialized:**
 ```bash
-# Create directory structure
+# Create directory structure using horspowers plugin
 node -e "
-const DocsCore = require('./lib/docs-core.js');
+const DocsCore = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
 const manager = new DocsCore(process.cwd());
 const result = manager.init();
 console.log(result.message);
@@ -104,17 +101,17 @@ Created metadata directory: .docs-metadata
 
 Search for "authentication" across all documents:
 ```bash
-node lib/docs-core.js search "authentication"
+node "\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js" search "authentication"
 ```
 
 Search for bugs in last 7 days:
 ```bash
-node lib/docs-core.js search "bug" --type bug --days 7
+node "\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js" search "bug" --type bug --days 7
 ```
 
 Search for active tasks:
 ```bash
-node lib/docs-core.js search "" --type task --active
+node "\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js" search "" --type task --active
 ```
 
 ### Document Statistics
@@ -123,7 +120,7 @@ node lib/docs-core.js search "" --type task --active
 
 **Display:**
 ```bash
-node lib/docs-core.js stats
+node "\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js" stats
 ```
 
 Expected output:
@@ -188,12 +185,12 @@ Expected output:
 
 Last 7 days, all types:
 ```bash
-node lib/docs-core.js recent 7
+node "\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js" recent 7
 ```
 
 Last 30 days, tasks only:
 ```bash
-node lib/docs-core.js recent 30 task
+node "\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js" recent 30 task
 ```
 
 **Present results grouped by type:**
@@ -213,13 +210,13 @@ node lib/docs-core.js recent 30 task
 
 **Archive a specific document:**
 ```bash
-node lib/docs-core.js archive docs/active/2025-01-15-task-old-feature.md
+node "\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js" archive docs/active/2025-01-15-task-old-feature.md
 ```
 
 **Archive all completed documents:**
 ```bash
 node -e "
-const DocsCore = require('./lib/docs-core.js');
+const DocsCore = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
 const manager = new DocsCore(process.cwd());
 const result = manager.archiveCompleted();
 console.log(\`Archived \${result.archived.length} documents\`);
@@ -239,7 +236,7 @@ find docs/archive -name "*.md" -type f | sort
 **Example:**
 ```bash
 node -e "
-const DocsCore = require('./lib/docs-core.js');
+const DocsCore = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
 const fs = require('fs');
 const manager = new DocsCore(process.cwd());
 
@@ -264,7 +261,7 @@ if (fs.existsSync(archivePath)) {
 
 ```bash
 node -e "
-const DocsCore = require('./lib/docs-core.js');
+const DocsCore = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
 const manager = new DocsCore(process.cwd());
 const detected = manager.detectDocDirectories();
 console.log('Detected document directories:');
@@ -287,7 +284,7 @@ Detected legacy document directories:
 
 ```bash
 node -e "
-const DocsCore = require('./lib/docs-core.js');
+const DocsCore = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
 const manager = new DocsCore(process.cwd());
 const analysis = manager.analyzeDocDirectory('.docs');
 console.log('Analysis:', JSON.stringify(analysis, null, 2));
@@ -300,7 +297,7 @@ console.log('Analysis:', JSON.stringify(analysis, null, 2));
 
 ```bash
 node -e "
-const DocsCore = require('./lib/docs-core.js');
+const DocsCore = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
 const manager = new DocsCore(process.cwd());
 const plan = manager.generateMigrationPlan('.docs');
 console.log('Migration plan:');
@@ -353,7 +350,7 @@ console.log('  Conflicts: ' + plan.conflicts.length);
 3. **Execute migration:**
    ```bash
    node -e "
-   const DocsCore = require('./lib/docs-core.js');
+   const DocsCore = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
    const manager = new DocsCore(process.cwd());
    const plan = manager.generateMigrationPlan('.docs');
    const options = {
@@ -373,7 +370,7 @@ console.log('  Conflicts: ' + plan.conflicts.length);
 4. **Validate migration:**
    ```bash
    node -e "
-   const DocsCore = require('./lib/docs-core.js');
+   const DocsCore = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
    const manager = new DocsCore(process.cwd());
    const beforePlan = manager.generateMigrationPlan('.docs');
    const result = manager.executeMigration(beforePlan, {});
