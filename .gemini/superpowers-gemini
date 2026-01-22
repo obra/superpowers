@@ -95,7 +95,7 @@ function runInstall() {
     console.log('');
     console.log('If you see function calling errors:');
     console.log('- Check if hooks were migrated with wrong variables');
-    console.log('- Fix: Edit ~/.gemini/skills/superpowers/hooks/hooks.json');
+    console.log('- Fix: Edit ~/superpowers/hooks/hooks.json');
     console.log('- Replace ${CLAUDE_PLUGIN_ROOT} with ${extensionPath}');
     console.log('');
     console.log('Need help? https://github.com/obra/superpowers/issues');
