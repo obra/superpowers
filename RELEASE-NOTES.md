@@ -4,6 +4,13 @@
 
 ### Breaking Changes
 
+**Specs and plans directory restructured**
+
+- Specs (brainstorming output) now go to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
+- Plans (writing-plans output) now go to `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
+- User preferences for spec/plan locations override these defaults
+- Migration: move existing files from `docs/plans/` to new locations if desired
+
 **OpenCode: Switched to native skills system**
 
 Superpowers for OpenCode now uses OpenCode's native `skill` tool instead of custom `use_skill`/`find_skills` tools. This is a cleaner integration that works with OpenCode's built-in skill discovery.
