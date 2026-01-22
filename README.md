@@ -83,13 +83,13 @@ Install the extension:
 
 ```bash
 git clone https://github.com/obra/superpowers.git ~/superpowers
-gemini extensions link ~/superpowers
+gemini extensions install ~/superpowers
 ```
 
 Or tell the AI agent:
 
 ```text
-Clone https://github.com/obra/superpowers.git to ~/superpowers, then run: gemini extensions link ~/superpowers
+Clone https://github.com/obra/superpowers.git to ~/superpowers, then run: gemini extensions install ~/superpowers
 ```
 
 **Detailed docs:** [.gemini/INSTALL.md](.gemini/INSTALL.md)

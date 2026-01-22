@@ -29,17 +29,17 @@ cd ~/superpowers
 
 ### 2. Install the extension
 
-Choose one option:
+```bash
+gemini extensions install ~/superpowers
+```
 
-**Option A - Link for development** (changes immediately reflected):
+**For development** (if you need changes immediately reflected):
 ```bash
 gemini extensions link ~/superpowers
 ```
 
-**Option B - Install as regular extension**:
-```bash
-gemini extensions install ~/superpowers
-```
+Note: Using `install` (recommended) copies files to `~/.gemini/extensions/` for better reliability.
+Using `link` creates a symlink, which may cause issues finding skills.
 
 ### 3. Verify installation
 
