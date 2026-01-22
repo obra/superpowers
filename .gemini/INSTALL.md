@@ -1,47 +1,110 @@
 # Installing Superpowers for Gemini CLI
 
-Enable Superpowers skills in your Gemini CLI environment.
+Enable Superpowers skills in your Gemini CLI environment using the extensions system.
 
-## Installation
+## Quick Install (For Agents)
+
+If you're an AI agent being asked to install superpowers, run this command:
+
+```bash
+run_shell_command ~/.gemini/superpowers/.gemini/superpowers-gemini install
+```
+
+Or if the repository path is known:
+
+```bash
+run_shell_command <repo-path>/.gemini/superpowers-gemini install
+```
+
+Then follow the instructions it provides.
+
+## Manual Installation
 
 ### 1. Clone the repository
 
-Clone the Superpowers repository into your Gemini configuration directory:
-
 ```bash
-mkdir -p ~/.gemini/superpowers
-git clone https://github.com/obra/superpowers.git ~/.gemini/superpowers
+git clone https://github.com/obra/superpowers.git ~/superpowers
+cd ~/superpowers
 ```
 
-### 2. Create personal skills directory (Optional)
+### 2. Install the extension
 
-If you want to create your own skills:
+Choose one option:
+
+**Option A - Link for development** (changes immediately reflected):
+```bash
+gemini extensions link ~/superpowers
+```
+
+**Option B - Install as regular extension**:
+```bash
+gemini extensions install ~/superpowers
+```
+
+### 3. Verify installation
+
+```bash
+gemini extensions list
+```
+
+You should see `superpowers` in the list with all skills shown.
+
+### 4. (Optional) Create personal skills directory
+
+For your own custom skills:
 
 ```bash
 mkdir -p ~/.gemini/skills
 ```
 
-### 3. Configure Gemini Context
+## Testing
 
-You need to tell Gemini about these superpowers. Add the following instruction to your global `~/.gemini/GEMINI.md` or your project-specific `GEMINI.md` file:
-
-```markdown
-# Superpowers System
-
-<EXTREMELY_IMPORTANT>
-You have superpowers. Superpowers teach you new skills and capabilities.
-RIGHT NOW run: `~/.gemini/superpowers/.gemini/superpowers-gemini bootstrap` and follow the instructions it returns.
-</EXTREMELY_IMPORTANT>
+Start a Gemini session and ask:
+```
+List all available superpowers skills
 ```
 
-## Verification
+The agent should recognize and use the skills system.
 
-Start a new Gemini CLI session. You should see the agent run the bootstrap command and list available skills.
+## Troubleshooting
 
-To test manually, ask the agent:
-"Do you have superpowers?"
+### Function calling error
 
-Or run the bootstrap command yourself to check output:
+If you see:
+```
+Please ensure that the number of function response parts is equal to the number of function call parts
+```
+
+This happens when hooks have wrong variable names:
+
+1. Edit `~/.gemini/skills/superpowers/hooks/hooks.json`
+2. Replace `${CLAUDE_PLUGIN_ROOT}` with `${extensionPath}`
+3. Restart Gemini
+
+### Extension not loading
+
+Verify the extension:
 ```bash
-~/.gemini/superpowers/.gemini/superpowers-gemini bootstrap
+gemini extensions validate ~/superpowers
 ```
+
+### Skills not appearing
+
+Check extension status:
+```bash
+gemini extensions list
+```
+
+Look for "Enabled (User): true" and "Enabled (Workspace): true"
+
+## Updating
+
+```bash
+cd ~/superpowers
+git pull
+gemini extensions update superpowers
+```
+
+## Need Help?
+
+https://github.com/obra/superpowers/issues

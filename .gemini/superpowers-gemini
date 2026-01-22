@@ -1,23 +1,36 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
-const skillsCore = require('../lib/skills-core');
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
+import { fileURLToPath } from 'url';
+import * as skillsCore from '../lib/skills-core.js';
+
+// ESM replacement for __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Paths
 const homeDir = os.homedir();
-const superpowersSkillsDir = path.join(homeDir, '.gemini', 'superpowers', 'skills');
+// When running as an extension, we need to locate skills relative to this script
+// This script is in .gemini/superpowers-gemini
+// So the root is one level up (..)
+const extensionRoot = path.resolve(__dirname, '..');
+const superpowersSkillsDir = path.join(extensionRoot, 'skills');
+// Personal skills still live in the user's home config
 const personalSkillsDir = path.join(homeDir, '.gemini', 'skills');
-const bootstrapFile = path.join(homeDir, '.gemini', 'superpowers', '.gemini', 'superpowers-bootstrap.md');
-const superpowersRepoDir = path.join(homeDir, '.gemini', 'superpowers');
+const bootstrapFile = path.join(extensionRoot, '.gemini', 'superpowers-bootstrap.md');
 
 // Utility functions
 function printSkill(skillPath, sourceType) {
     const skillFile = path.join(skillPath, 'SKILL.md');
-    const relPath = sourceType === 'personal'
-        ? path.relative(personalSkillsDir, skillPath)
-        : path.relative(superpowersSkillsDir, skillPath);
+    // Calculate relative path for display
+    let relPath;
+    if (sourceType === 'personal') {
+        relPath = path.relative(personalSkillsDir, skillPath);
+    } else {
+        relPath = path.relative(superpowersSkillsDir, skillPath);
+    }
 
     // Print skill name with namespace
     if (sourceType === 'personal') {
@@ -34,6 +47,60 @@ function printSkill(skillPath, sourceType) {
 }
 
 // Commands
+function runInstall() {
+    console.log('# Installing Superpowers for Gemini CLI');
+    console.log('# =======================================');
+    console.log('');
+    console.log('Follow these steps to install the Superpowers extension:');
+    console.log('');
+    console.log('## Step 1: Clone or locate the repository');
+    console.log('');
+    console.log('If you don\'t already have the repository:');
+    console.log('```bash');
+    console.log('git clone https://github.com/obra/superpowers.git ~/superpowers');
+    console.log('cd ~/superpowers');
+    console.log('```');
+    console.log('');
+    console.log('## Step 2: Install the extension');
+    console.log('');
+    console.log('Run ONE of these commands:');
+    console.log('');
+    console.log('Option A - Link for development (changes to repo immediately reflected):');
+    console.log('```bash');
+    console.log('gemini extensions link ~/superpowers');
+    console.log('```');
+    console.log('');
+    console.log('Option B - Install as a regular extension:');
+    console.log('```bash');
+    console.log('gemini extensions install ~/superpowers');
+    console.log('```');
+    console.log('');
+    console.log('## Step 3: Verify installation');
+    console.log('');
+    console.log('Check the extension is installed:');
+    console.log('```bash');
+    console.log('gemini extensions list');
+    console.log('```');
+    console.log('');
+    console.log('You should see "superpowers" in the list.');
+    console.log('');
+    console.log('## Step 4: Test it');
+    console.log('');
+    console.log('Start a Gemini session and ask:');
+    console.log('"List all available superpowers skills"');
+    console.log('');
+    console.log('The agent should use the skills system to list available skills.');
+    console.log('');
+    console.log('## Troubleshooting');
+    console.log('');
+    console.log('If you see function calling errors:');
+    console.log('- Check if hooks were migrated with wrong variables');
+    console.log('- Fix: Edit ~/.gemini/skills/superpowers/hooks/hooks.json');
+    console.log('- Replace ${CLAUDE_PLUGIN_ROOT} with ${extensionPath}');
+    console.log('');
+    console.log('Need help? https://github.com/obra/superpowers/issues');
+}
+
 function runFindSkills() {
     console.log('Available skills:');
     console.log('==================');
@@ -62,7 +129,7 @@ function runFindSkills() {
     console.log('  superpowers-gemini use-skill <skill-name>   # Load a specific skill');
     console.log('');
     console.log('Skill naming:');
-    console.log('  Superpowers skills: superpowers:skill-name (from ~/.gemini/superpowers/skills/)');
+    console.log('  Superpowers skills: superpowers:skill-name');
     console.log('  Personal skills: skill-name (from ~/.gemini/skills/)');
     console.log('  Personal skills override superpowers skills when names match.');
     console.log('');
@@ -74,12 +141,12 @@ function runBootstrap() {
     console.log('# ================================');
     console.log('');
 
-    // Check for updates (with timeout protection)
-    if (skillsCore.checkForUpdates(superpowersRepoDir)) {
+    // Check for updates
+    if (skillsCore.checkForUpdates(extensionRoot)) {
         console.log('## Update Available');
         console.log('');
         console.log('⚠️  Your superpowers installation is behind the latest version.');
-        console.log('To update, run: `cd ~/.gemini/superpowers && git pull`');
+        console.log(`To update, run: \`cd ${extensionRoot} && git pull\``);
         console.log('');
         console.log('---');
         console.log('');
@@ -174,7 +241,6 @@ function runUseSkill(skillName) {
         const candidatePath = path.resolve(baseDir, relativePath);
 
         // Security check: Ensure path traversal doesn't escape base directory
-        // We append path.sep to ensure we match directory boundaries (e.g. /skills-secrets vs /skills/secrets)
         if (!candidatePath.startsWith(resolvedBase + path.sep)) {
             return null;
         }
@@ -252,6 +318,9 @@ const command = process.argv[2];
 const arg = process.argv[3];
 
 switch (command) {
+    case 'install':
+        runInstall();
+        break;
     case 'bootstrap':
         runBootstrap();
         break;
@@ -264,11 +333,13 @@ switch (command) {
     default:
         console.log('Superpowers for Gemini');
         console.log('Usage:');
+        console.log('  superpowers-gemini install                # Show installation instructions');
         console.log('  superpowers-gemini bootstrap              # Run complete bootstrap with all skills');
         console.log('  superpowers-gemini use-skill <skill-name> # Load a specific skill');
         console.log('  superpowers-gemini find-skills            # List all available skills');
         console.log('');
         console.log('Examples:');
+        console.log('  superpowers-gemini install');
         console.log('  superpowers-gemini bootstrap');
         console.log('  superpowers-gemini use-skill superpowers:brainstorming');
         console.log('  superpowers-gemini use-skill my-custom-skill');
