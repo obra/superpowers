@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+### Breaking Changes
+
+**OpenCode: Switched to native skills system**
+
+Superpowers for OpenCode now uses OpenCode's native `skill` tool instead of custom `use_skill`/`find_skills` tools. This is a cleaner integration that works with OpenCode's built-in skill discovery.
+
+**Migration required:** Skills must be symlinked to `~/.config/opencode/skills/superpowers/` (see updated installation docs).
+
+### Fixes
+
+**OpenCode: Fixed agent reset on session start (#226)**
+
+The previous bootstrap injection method using `session.prompt({ noReply: true })` caused OpenCode to reset the selected agent to "build" on first message. Now uses `experimental.chat.system.transform` hook which modifies the system prompt directly without side effects.
+
+**OpenCode: Fixed Windows installation (#232)**
+
+- Removed dependency on `skills-core.js` (eliminates broken relative imports when file is copied instead of symlinked)
+- Added comprehensive Windows installation docs for cmd.exe, PowerShell, and Git Bash
+- Documented proper symlink vs junction usage for each platform
+
 ### New Features
 
 **Visual companion for brainstorming skill**
