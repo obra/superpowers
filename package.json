@@ -1,0 +1,17 @@
+{
+  "name": "superpowers",
+  "version": "4.0.3",
+  "description": "Core skills library for AI coding agents: TDD, debugging, collaboration patterns, and proven techniques",
+  "type": "module",
+  "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows"],
+  "author": {
+    "name": "Jesse Vincent",
+    "email": "jesse@fsck.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/obra/superpowers",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/obra/superpowers.git"
+  }
+}
