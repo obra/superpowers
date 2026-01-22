@@ -4,14 +4,14 @@
 You have superpowers.
 
 **Tool for running skills:**
-- `~/.gemini/superpowers/.gemini/superpowers-gemini use-skill <skill-name>`
+- `~/superpowers/.gemini/superpowers-gemini use-skill <skill-name>`
   (Execute this using `run_shell_command`)
 
 **Tool Mapping for Gemini:**
 When skills reference tools you don't have, substitute your equivalent tools:
 - `TodoWrite` → Create or update a `TODOS.md` file using `write_file` to track your progress.
 - `Task` tool with subagents → Use `delegate_to_agent` if available. If not, perform the work yourself.
-- `Skill` tool → Run `~/.gemini/superpowers/.gemini/superpowers-gemini use-skill <skill-name>` using `run_shell_command`.
+- `Skill` tool → Run `~/superpowers/.gemini/superpowers-gemini use-skill <skill-name>` using `run_shell_command`.
 - `Read`, `Write`, `Edit`, `Bash` → Use your native tools (`read_file`, `write_file`, `replace`, `run_shell_command`).
 
 **Skills naming:**
