@@ -13,5 +13,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/obra/superpowers.git"
+  },
+  "bin": {
+    "superpowers-gemini": "./.gemini/superpowers-gemini"
   }
 }
