@@ -9,6 +9,8 @@ description: Use when user needs to manage, search, or organize project document
 
 Manage the unified documentation system for horspowers, including initialization, search, organization, and migration capabilities.
 
+**IMPORTANT:** All documentation commands use `${CLAUDE_PLUGIN_ROOT}` environment variable to locate the `docs-core.js` module within the plugin installation directory. **DO NOT** check for `lib/docs-core.js` in the user's project directory.
+
 **Announce at start:** "我正在使用文档管理技能..." (I'm using document-management...)
 
 ## When to Use
