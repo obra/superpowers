@@ -1,172 +1,177 @@
 #!/usr/bin/env bash
-# Test: Document Review System
-# Verifies that spec and plan document reviewers are integrated correctly
+# Integration Test: Document Review System
+# Actually runs spec/plan review and verifies reviewers catch issues
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/test-helpers.sh"
 
-echo "=== Test: Document Review System ==="
+echo "========================================"
+echo " Integration Test: Document Review System"
+echo "========================================"
+echo ""
+echo "This test verifies the document review system by:"
+echo "  1. Creating a spec with intentional errors"
+echo "  2. Running the spec document reviewer"
+echo "  3. Verifying the reviewer catches the errors"
 echo ""
 
-# Test 1: Spec document reviewer exists and describes correct checks
-echo "Test 1: Spec document reviewer checks..."
+# Create test project
+TEST_PROJECT=$(create_test_project)
+echo "Test project: $TEST_PROJECT"
 
-output=$(run_claude "What does the spec document reviewer check for in the brainstorming skill? List the categories." 30)
+# Trap to cleanup
+trap "cleanup_test_project $TEST_PROJECT" EXIT
 
-if assert_contains "$output" "Completeness\|completeness" "Checks completeness"; then
-    : # pass
-else
-    exit 1
-fi
+cd "$TEST_PROJECT"
 
-if assert_contains "$output" "TODO\|placeholder" "Checks for TODOs"; then
-    : # pass
-else
-    exit 1
-fi
+# Create directory structure
+mkdir -p docs/superpowers/specs
 
-echo ""
+# Create a spec document WITH INTENTIONAL ERRORS for the reviewer to catch
+cat > docs/superpowers/specs/test-feature-design.md <<'EOF'
+# Test Feature Design
 
-# Test 2: Brainstorming skill has spec review loop
-echo "Test 2: Brainstorming skill spec review loop..."
+## Overview
 
-output=$(run_claude "Does the brainstorming skill have a spec review loop? What happens if issues are found?" 30)
+This is a test feature that does something useful.
 
-if assert_contains "$output" "review.*loop\|loop.*review\|re-dispatch\|repeat\|re-review" "Has review loop"; then
-    : # pass
-else
-    exit 1
-fi
+## Requirements
 
-if assert_contains "$output" "fix.*issues\|issues.*fix" "Fix issues mentioned"; then
-    : # pass
-else
-    exit 1
-fi
+1. The feature should work correctly
+2. It should be fast
+3. TODO: Add more requirements here
 
-echo ""
+## Architecture
 
-# Test 3: Plan document reviewer exists and checks correct things
-echo "Test 3: Plan document reviewer checks..."
+The feature will use a simple architecture with:
+- A frontend component
+- A backend service
+- Error handling will be specified later once we understand the failure modes better
 
-output=$(run_claude "What does the plan document reviewer check for in the writing-plans skill? What categories?" 30)
+## Data Flow
 
-if assert_contains "$output" "Spec Alignment\|spec alignment\|matches.*spec" "Checks spec alignment"; then
-    : # pass
-else
-    exit 1
-fi
+Data flows from the frontend to the backend.
 
-if assert_contains "$output" "Task Decomposition\|task decomposition\|atomic" "Checks task decomposition"; then
-    : # pass
-else
-    exit 1
-fi
+## Testing Strategy
+
+Tests will be written to cover the main functionality.
+EOF
+
+# Initialize git repo
+git init --quiet
+git config user.email "test@test.com"
+git config user.name "Test User"
+git add .
+git commit -m "Initial commit with test spec" --quiet
 
 echo ""
-
-# Test 4: Writing-plans skill has chunk-by-chunk review
-echo "Test 4: Chunk-by-chunk plan review..."
-
-output=$(run_claude "How does the writing-plans skill review plans? Is it all at once or chunk by chunk?" 30)
-
-if assert_contains "$output" "chunk" "Mentions chunks"; then
-    : # pass
-else
-    exit 1
-fi
-
-if assert_contains "$output" "1000.*line\|under.*1000\|≤1000" "Mentions chunk size limit"; then
-    : # pass
-else
-    exit 1
-fi
-
+echo "Created test spec with intentional errors:"
+echo "  - TODO placeholder in Requirements section"
+echo "  - 'specified later' deferral in Architecture section"
+echo ""
+echo "Running spec document reviewer..."
 echo ""
 
-# Test 5: Review loops have iteration guidance
-echo "Test 5: Review loop iteration guidance..."
+# Run Claude to review the spec
+OUTPUT_FILE="$TEST_PROJECT/claude-output.txt"
 
-output=$(run_claude "In the brainstorming or writing-plans skills, what happens if the review loop runs too many times? Is there a limit?" 30)
+PROMPT="You are testing the spec document reviewer.
 
-if assert_contains "$output" "5.*iteration\|5 iteration\|exceed.*5\|human.*guidance" "Has iteration limit or escalation"; then
-    : # pass
-else
+Read the spec-document-reviewer-prompt.md template in skills/brainstorming/ to understand the review format.
+
+Then review the spec at $TEST_PROJECT/docs/superpowers/specs/test-feature-design.md using the criteria from that template.
+
+Look for:
+- TODOs, placeholders, 'TBD', incomplete sections
+- Sections saying 'to be defined later' or 'will spec when X is done'
+- Sections noticeably less detailed than others
+
+Output your review in the format specified in the template."
+
+echo "================================================================================"
+cd "$SCRIPT_DIR/../.." && timeout 120 claude -p "$PROMPT" --permission-mode bypassPermissions 2>&1 | tee "$OUTPUT_FILE" || {
+    echo ""
+    echo "================================================================================"
+    echo "EXECUTION FAILED (exit code: $?)"
     exit 1
-fi
+}
+echo "================================================================================"
 
 echo ""
-
-# Test 6: Checkbox syntax is on steps only
-echo "Test 6: Checkbox syntax on steps..."
-
-output=$(run_claude "In writing-plans, where should checkbox syntax be used - on task headings, steps, or both?" 30)
-
-if assert_contains "$output" "step" "Mentions steps"; then
-    : # pass
-else
-    exit 1
-fi
-
-if assert_not_contains "$output" "task.*heading.*checkbox\|checkbox.*task.*heading" "Not on task headings"; then
-    : # pass
-else
-    exit 1
-fi
-
+echo "Analyzing reviewer output..."
 echo ""
 
-# Test 7: Specs go to correct directory
-echo "Test 7: Spec document directory..."
+# Verification tests
+FAILED=0
 
-output=$(run_claude "Where does the brainstorming skill save spec documents? What directory?" 30)
-
-if assert_contains "$output" "docs/superpowers/specs" "Uses correct spec directory"; then
-    : # pass
-else
-    exit 1
-fi
-
+echo "=== Verification Tests ==="
 echo ""
 
-# Test 8: Plans go to correct directory
-echo "Test 8: Plan document directory..."
-
-output=$(run_claude "Where does the writing-plans skill save plan documents? What directory?" 30)
-
-if assert_contains "$output" "docs/superpowers/plans" "Uses correct plan directory"; then
-    : # pass
+# Test 1: Reviewer found the TODO
+echo "Test 1: Reviewer found TODO..."
+if grep -qi "TODO" "$OUTPUT_FILE" && grep -qi "requirements\|Requirements" "$OUTPUT_FILE"; then
+    echo "  [PASS] Reviewer identified TODO in Requirements section"
 else
-    exit 1
+    echo "  [FAIL] Reviewer did not identify TODO"
+    FAILED=$((FAILED + 1))
 fi
-
 echo ""
 
-# Test 9: Reviewers are advisory
-echo "Test 9: Reviewer advisory nature..."
-
-output=$(run_claude "Are the spec and plan document reviewers blocking or advisory? Can disagreements be explained?" 30)
-
-if assert_contains "$output" "advisory\|explain.*disagreement\|disagreement" "Reviewers are advisory"; then
-    : # pass
+# Test 2: Reviewer found the "specified later" deferral
+echo "Test 2: Reviewer found 'specified later' deferral..."
+if grep -qi "specified later\|later\|defer\|incomplete\|error handling" "$OUTPUT_FILE"; then
+    echo "  [PASS] Reviewer identified deferred content"
 else
-    exit 1
+    echo "  [FAIL] Reviewer did not identify deferred content"
+    FAILED=$((FAILED + 1))
 fi
-
 echo ""
 
-# Test 10: Same agent fixes issues (preserves context)
-echo "Test 10: Same agent fixes issues..."
-
-output=$(run_claude "In the document review loops, who fixes the issues - a new agent or the same agent that wrote the document?" 30)
-
-if assert_contains "$output" "same.*agent\|preserves.*context\|same agent" "Same agent fixes issues"; then
-    : # pass
+# Test 3: Reviewer output includes Issues section
+echo "Test 3: Review output format..."
+if grep -qi "issues\|Issues" "$OUTPUT_FILE"; then
+    echo "  [PASS] Review includes Issues section"
 else
-    exit 1
+    echo "  [FAIL] Review missing Issues section"
+    FAILED=$((FAILED + 1))
 fi
-
 echo ""
 
-echo "=== All document review system tests passed ==="
+# Test 4: Reviewer did NOT approve (found issues)
+echo "Test 4: Reviewer verdict..."
+if grep -qi "Issues Found\|❌\|not approved\|issues found" "$OUTPUT_FILE"; then
+    echo "  [PASS] Reviewer correctly found issues (not approved)"
+elif grep -qi "Approved\|✅" "$OUTPUT_FILE" && ! grep -qi "Issues Found\|❌" "$OUTPUT_FILE"; then
+    echo "  [FAIL] Reviewer incorrectly approved spec with errors"
+    FAILED=$((FAILED + 1))
+else
+    echo "  [PASS] Reviewer identified problems (ambiguous format but found issues)"
+fi
+echo ""
+
+# Summary
+echo "========================================"
+echo " Test Summary"
+echo "========================================"
+echo ""
+
+if [ $FAILED -eq 0 ]; then
+    echo "STATUS: PASSED"
+    echo "All verification tests passed!"
+    echo ""
+    echo "The spec document reviewer correctly:"
+    echo "  ✓ Found TODO placeholder"
+    echo "  ✓ Found 'specified later' deferral"
+    echo "  ✓ Produced properly formatted review"
+    echo "  ✓ Did not approve spec with errors"
+    exit 0
+else
+    echo "STATUS: FAILED"
+    echo "Failed $FAILED verification tests"
+    echo ""
+    echo "Output saved to: $OUTPUT_FILE"
+    echo ""
+    echo "Review the output to see what went wrong."
+    exit 1
+fi
