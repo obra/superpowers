@@ -25,6 +25,17 @@ Start by understanding the current project context, then ask questions one at a 
 - Present options conversationally with your recommendation and reasoning
 - Lead with your recommended option and explain why
 
+**Validating external dependencies (MANDATORY when applicable):**
+
+When any approach involves external APIs, OAuth, SDKs, or third-party services:
+1. **Search for deprecation/sunset notices** before recommending:
+   - `"[API name] deprecated [current year] sunset shutdown"`
+   - `"[API name] breaking changes migration"`
+2. **Check official documentation** for deprecation banners, scope changes, auth changes
+3. **Report findings** to user before finalizing the design
+
+Why: Google Photos Library API scopes were deprecated March 2025. 5 minutes of validation saves hours of debugging dead APIs.
+
 **Presenting the design:**
 - Once you believe you understand what you're building, present the design
 - Break it into sections of 200-300 words
@@ -52,3 +63,4 @@ Start by understanding the current project context, then ask questions one at a 
 - **Explore alternatives** - Always propose 2-3 approaches before settling
 - **Incremental validation** - Present design in sections, validate each
 - **Be flexible** - Go back and clarify when something doesn't make sense
+- **Validate external APIs** - Always check for deprecation before recommending third-party services
