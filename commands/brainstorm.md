@@ -3,4 +3,4 @@ description: "You MUST use this before any creative work - creating features, bu
 disable-model-invocation: true
 ---
 
-Invoke the superpowers:brainstorming skill and follow it exactly as presented to you
+Invoke the brainstorming skill and follow it exactly as presented to you
