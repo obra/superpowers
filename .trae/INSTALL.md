@@ -8,7 +8,7 @@ Quick setup to enable superpowers skills in Trae.
    ```bash
    mkdir -p ~/.trae/superpowers
    cd ~/.trae/superpowers
-   git clone https://github.com/obra/superpowers.git .
+   git clone https://github.com/ice-zjchen/superpowers.git .
    ```
 
 2. **Create personal skills directory**:
@@ -16,7 +16,7 @@ Quick setup to enable superpowers skills in Trae.
    mkdir -p ~/.trae/skills
    ```
 
-3. **Update ~/.trae/AGENTS.md** to include this superpowers section:
+3. **Create `.trae/rules/superpowers.md` and Update it** to include this superpowers section:
    ```markdown
    ## Superpowers System
 
