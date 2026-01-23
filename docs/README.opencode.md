@@ -7,7 +7,7 @@ Complete guide for using Superpowers with [OpenCode.ai](https://opencode.ai).
 Tell OpenCode:
 
 ```
-Clone https://github.com/obra/superpowers to ~/.config/opencode/superpowers, then create directory ~/.config/opencode/plugin, then symlink ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js to ~/.config/opencode/plugin/superpowers.js, then symlink ~/.config/opencode/superpowers/skills to ~/.config/opencode/skills/superpowers, then restart opencode.
+Clone https://github.com/obra/superpowers to ~/.config/opencode/superpowers, then create directory ~/.config/opencode/plugins, then symlink ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js to ~/.config/opencode/plugins/superpowers.js, then symlink ~/.config/opencode/superpowers/skills to ~/.config/opencode/skills/superpowers, then restart opencode.
 ```
 
 ## Manual Installation
@@ -28,14 +28,14 @@ else
 fi
 
 # 2. Create directories
-mkdir -p ~/.config/opencode/plugin ~/.config/opencode/skills
+mkdir -p ~/.config/opencode/plugins ~/.config/opencode/skills
 
 # 3. Remove old symlinks/directories if they exist
-rm -f ~/.config/opencode/plugin/superpowers.js
+rm -f ~/.config/opencode/plugins/superpowers.js
 rm -rf ~/.config/opencode/skills/superpowers
 
 # 4. Create symlinks
-ln -s ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js ~/.config/opencode/plugin/superpowers.js
+ln -s ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js ~/.config/opencode/plugins/superpowers.js
 ln -s ~/.config/opencode/superpowers/skills ~/.config/opencode/skills/superpowers
 
 # 5. Restart OpenCode
@@ -44,7 +44,7 @@ ln -s ~/.config/opencode/superpowers/skills ~/.config/opencode/skills/superpower
 #### Verify Installation
 
 ```bash
-ls -l ~/.config/opencode/plugin/superpowers.js
+ls -l ~/.config/opencode/plugins/superpowers.js
 ls -l ~/.config/opencode/skills/superpowers
 ```
 
@@ -69,15 +69,15 @@ Run as Administrator, or with Developer Mode enabled:
 git clone https://github.com/obra/superpowers.git "%USERPROFILE%\.config\opencode\superpowers"
 
 :: 2. Create directories
-mkdir "%USERPROFILE%\.config\opencode\plugin" 2>nul
+mkdir "%USERPROFILE%\.config\opencode\plugins" 2>nul
 mkdir "%USERPROFILE%\.config\opencode\skills" 2>nul
 
 :: 3. Remove existing links (safe for reinstalls)
-del "%USERPROFILE%\.config\opencode\plugin\superpowers.js" 2>nul
+del "%USERPROFILE%\.config\opencode\plugins\superpowers.js" 2>nul
 rmdir "%USERPROFILE%\.config\opencode\skills\superpowers" 2>nul
 
 :: 4. Create plugin symlink (requires Developer Mode or Admin)
-mklink "%USERPROFILE%\.config\opencode\plugin\superpowers.js" "%USERPROFILE%\.config\opencode\superpowers\.opencode\plugin\superpowers.js"
+mklink "%USERPROFILE%\.config\opencode\plugins\superpowers.js" "%USERPROFILE%\.config\opencode\superpowers\.opencode\plugins\superpowers.js"
 
 :: 5. Create skills junction (works without special privileges)
 mklink /J "%USERPROFILE%\.config\opencode\skills\superpowers" "%USERPROFILE%\.config\opencode\superpowers\skills"
@@ -94,15 +94,15 @@ Run as Administrator, or with Developer Mode enabled:
 git clone https://github.com/obra/superpowers.git "$env:USERPROFILE\.config\opencode\superpowers"
 
 # 2. Create directories
-New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.config\opencode\plugin"
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.config\opencode\plugins"
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.config\opencode\skills"
 
 # 3. Remove existing links (safe for reinstalls)
-Remove-Item "$env:USERPROFILE\.config\opencode\plugin\superpowers.js" -Force -ErrorAction SilentlyContinue
+Remove-Item "$env:USERPROFILE\.config\opencode\plugins\superpowers.js" -Force -ErrorAction SilentlyContinue
 Remove-Item "$env:USERPROFILE\.config\opencode\skills\superpowers" -Force -ErrorAction SilentlyContinue
 
 # 4. Create plugin symlink (requires Developer Mode or Admin)
-New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.config\opencode\plugin\superpowers.js" -Target "$env:USERPROFILE\.config\opencode\superpowers\.opencode\plugin\superpowers.js"
+New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.config\opencode\plugins\superpowers.js" -Target "$env:USERPROFILE\.config\opencode\superpowers\.opencode\plugins\superpowers.js"
 
 # 5. Create skills junction (works without special privileges)
 New-Item -ItemType Junction -Path "$env:USERPROFILE\.config\opencode\skills\superpowers" -Target "$env:USERPROFILE\.config\opencode\superpowers\skills"
@@ -119,14 +119,14 @@ Note: Git Bash's native `ln` command copies files instead of creating symlinks. 
 git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
 
 # 2. Create directories
-mkdir -p ~/.config/opencode/plugin ~/.config/opencode/skills
+mkdir -p ~/.config/opencode/plugins ~/.config/opencode/skills
 
 # 3. Remove existing links (safe for reinstalls)
-rm -f ~/.config/opencode/plugin/superpowers.js 2>/dev/null
+rm -f ~/.config/opencode/plugins/superpowers.js 2>/dev/null
 rm -rf ~/.config/opencode/skills/superpowers 2>/dev/null
 
 # 4. Create plugin symlink (requires Developer Mode or Admin)
-cmd //c "mklink \"$(cygpath -w ~/.config/opencode/plugin/superpowers.js)\" \"$(cygpath -w ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js)\""
+cmd //c "mklink \"$(cygpath -w ~/.config/opencode/plugins/superpowers.js)\" \"$(cygpath -w ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js)\""
 
 # 5. Create skills junction (works without special privileges)
 cmd //c "mklink /J \"$(cygpath -w ~/.config/opencode/skills/superpowers)\" \"$(cygpath -w ~/.config/opencode/superpowers/skills)\""
@@ -142,13 +142,13 @@ If running OpenCode inside WSL, use the [macOS / Linux](#macos--linux) instructi
 
 **Command Prompt:**
 ```cmd
-dir /AL "%USERPROFILE%\.config\opencode\plugin"
+dir /AL "%USERPROFILE%\.config\opencode\plugins"
 dir /AL "%USERPROFILE%\.config\opencode\skills"
 ```
 
 **PowerShell:**
 ```powershell
-Get-ChildItem "$env:USERPROFILE\.config\opencode\plugin" | Where-Object { $_.LinkType }
+Get-ChildItem "$env:USERPROFILE\.config\opencode\plugins" | Where-Object { $_.LinkType }
 Get-ChildItem "$env:USERPROFILE\.config\opencode\skills" | Where-Object { $_.LinkType }
 ```
 
@@ -258,7 +258,7 @@ Skills written for Claude Code are automatically adapted for OpenCode. The boots
 
 ### Plugin Structure
 
-**Location:** `~/.config/opencode/superpowers/.opencode/plugin/superpowers.js`
+**Location:** `~/.config/opencode/superpowers/.opencode/plugins/superpowers.js`
 
 **Components:**
 - `experimental.chat.system.transform` hook for bootstrap injection
@@ -283,8 +283,8 @@ Restart OpenCode to load the updates.
 
 ### Plugin not loading
 
-1. Check plugin exists: `ls ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js`
-2. Check symlink/junction: `ls -l ~/.config/opencode/plugin/` (macOS/Linux) or `dir /AL %USERPROFILE%\.config\opencode\plugin` (Windows)
+1. Check plugin exists: `ls ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js`
+2. Check symlink/junction: `ls -l ~/.config/opencode/plugins/` (macOS/Linux) or `dir /AL %USERPROFILE%\.config\opencode\plugins` (Windows)
 3. Check OpenCode logs: `opencode run "test" --print-logs --log-level DEBUG`
 4. Look for plugin loading message in logs
 
