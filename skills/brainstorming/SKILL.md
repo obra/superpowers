@@ -13,10 +13,14 @@ Start by understanding the current project context, then ask questions one at a 
 
 ## The Process
 
-**Before exploring requirements:**
-- Check `docs/BACKLOG.md` (or `docs/backlog.md`) for related items
-- Look for items that relate to current request, could be bundled, or provide context
-- Mention relevant backlog items to partner early in the conversation
+**FIRST: Check the project backlog**
+
+Before ANY exploration, read `docs/BACKLOG.md` (or `docs/backlog.md`). Look for:
+- Items related to the current request
+- Items that could be bundled with this work
+- Context from previous discussions
+
+If you find related items, mention them immediately: "I see this is already tracked in the backlog..." or "The backlog has related items we should consider..."
 
 **Understanding the idea:**
 - Check out the current project state first (files, docs, recent commits)
