@@ -3,15 +3,13 @@
 ## Prerequisites
 
 - [OpenCode.ai](https://opencode.ai) installed
-- Node.js installed
 - Git installed
 
 ## Installation Steps
 
-### 1. Install Superpowers
+### 1. Clone Superpowers
 
 ```bash
-mkdir -p ~/.config/opencode/superpowers
 git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
 ```
 
@@ -20,32 +18,43 @@ git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
 Create a symlink so OpenCode discovers the plugin:
 
 ```bash
-mkdir -p ~/.config/opencode/plugin
-ln -sf ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js ~/.config/opencode/plugin/superpowers.js
+mkdir -p ~/.config/opencode/plugins
+rm -f ~/.config/opencode/plugins/superpowers.js
+ln -s ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js ~/.config/opencode/plugins/superpowers.js
 ```
 
-### 3. Restart OpenCode
+### 3. Symlink Skills
 
-Restart OpenCode. The plugin will automatically inject superpowers context via the chat.message hook.
+Create a symlink so OpenCode's native skill tool discovers superpowers skills:
 
-You should see superpowers is active when you ask "do you have superpowers?"
+```bash
+mkdir -p ~/.config/opencode/skills
+rm -rf ~/.config/opencode/skills/superpowers
+ln -s ~/.config/opencode/superpowers/skills ~/.config/opencode/skills/superpowers
+```
+
+### 4. Restart OpenCode
+
+Restart OpenCode. The plugin will automatically inject superpowers context.
+
+Verify by asking: "do you have superpowers?"
 
 ## Usage
 
 ### Finding Skills
 
-Use the `find_skills` tool to list all available skills:
+Use OpenCode's native `skill` tool to list available skills:
 
 ```
-use find_skills tool
+use skill tool to list skills
 ```
 
 ### Loading a Skill
 
-Use the `use_skill` tool to load a specific skill:
+Use OpenCode's native `skill` tool to load a specific skill:
 
 ```
-use use_skill tool with skill_name: "superpowers:brainstorming"
+use skill tool to load superpowers/brainstorming
 ```
 
 ### Personal Skills
@@ -69,36 +78,11 @@ description: Use when [condition] - [what it does]
 [Your skill content here]
 ```
 
-Personal skills override superpowers skills with the same name.
-
 ### Project Skills
 
-Create project-specific skills in your OpenCode project:
+Create project-specific skills in `.opencode/skills/` within your project.
 
-```bash
-# In your OpenCode project
-mkdir -p .opencode/skills/my-project-skill
-```
-
-Create `.opencode/skills/my-project-skill/SKILL.md`:
-
-```markdown
----
-name: my-project-skill
-description: Use when [condition] - [what it does]
----
-
-# My Project Skill
-
-[Your skill content here]
-```
-
-**Skill Priority:** Project skills override personal skills, which override superpowers skills.
-
-**Skill Naming:**
-- `project:skill-name` - Force project skill lookup
-- `skill-name` - Searches project → personal → superpowers
-- `superpowers:skill-name` - Force superpowers skill lookup
+**Skill Priority:** Project skills > Personal skills > Superpowers skills
 
 ## Updating
 
@@ -111,25 +95,25 @@ git pull
 
 ### Plugin not loading
 
-1. Check plugin file exists: `ls ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js`
-2. Check OpenCode logs for errors
-3. Verify Node.js is installed: `node --version`
+1. Check plugin symlink: `ls -l ~/.config/opencode/plugins/superpowers.js`
+2. Check source exists: `ls ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js`
+3. Check OpenCode logs for errors
 
 ### Skills not found
 
-1. Verify skills directory exists: `ls ~/.config/opencode/superpowers/skills`
-2. Use `find_skills` tool to see what's discovered
-3. Check file structure: each skill should have a `SKILL.md` file
+1. Check skills symlink: `ls -l ~/.config/opencode/skills/superpowers`
+2. Verify it points to: `~/.config/opencode/superpowers/skills`
+3. Use `skill` tool to list what's discovered
 
-### Tool mapping issues
+### Tool mapping
 
-When a skill references a Claude Code tool you don't have:
-- `TodoWrite` → use `update_plan`
-- `Task` with subagents → use `@mention` syntax to invoke OpenCode subagents
-- `Skill` → use `use_skill` tool
-- File operations → use your native tools
+When skills reference Claude Code tools:
+- `TodoWrite` → `update_plan`
+- `Task` with subagents → `@mention` syntax
+- `Skill` tool → OpenCode's native `skill` tool
+- File operations → your native tools
 
 ## Getting Help
 
 - Report issues: https://github.com/obra/superpowers/issues
-- Documentation: https://github.com/obra/superpowers
+- Full documentation: https://github.com/obra/superpowers/blob/main/docs/README.opencode.md
