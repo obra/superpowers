@@ -28,18 +28,26 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 ## Plan Document Header
 
-**Every plan MUST start with this header:**
+**Every plan MUST start with this header (中文模板):**
 
 ```markdown
-# [Feature Name] Implementation Plan
+# [功能名称] 实施计划
 
 > **For Claude:** REQUIRED SUB-SKILL: Use horspowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** [One sentence describing what this builds]
+**日期**: YYYY-MM-DD
 
-**Architecture:** [2-3 sentences about approach]
+## 目标
 
-**Tech Stack:** [Key technologies/libraries]
+[一句话描述这个计划要实现什么]
+
+## 架构方案
+
+[2-3 句话说明实现方法]
+
+## 技术栈
+
+[关键技术/库]
 
 ---
 ```
