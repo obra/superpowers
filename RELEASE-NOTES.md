@@ -1,5 +1,26 @@
 # Superpowers Release Notes
 
+## v4.1.1 (2026-01-23)
+
+### Fixes
+
+**OpenCode: Standardized on `plugins/` directory per official docs (#343)**
+
+OpenCode's official documentation uses `~/.config/opencode/plugins/` (plural). Our docs previously used `plugin/` (singular). While OpenCode accepts both forms, we've standardized on the official convention to avoid confusion.
+
+Changes:
+- Renamed `.opencode/plugin/` to `.opencode/plugins/` in repo structure
+- Updated all installation docs (INSTALL.md, README.opencode.md) across all platforms
+- Updated test scripts to match
+
+**OpenCode: Fixed symlink instructions (#339, #342)**
+
+- Added explicit `rm` before `ln -s` (fixes "file already exists" errors on reinstall)
+- Added missing skills symlink step that was absent from INSTALL.md
+- Updated from deprecated `use_skill`/`find_skills` to native `skill` tool references
+
+---
+
 ## v4.1.0 (2026-01-23)
 
 ### Breaking Changes
