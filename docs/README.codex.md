@@ -19,11 +19,25 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 ### Installation Steps
 
-#### 1. Clone Superpowers
+#### macOS / Linux
 
 ```bash
 mkdir -p ~/.codex/superpowers
 git clone https://github.com/obra/superpowers.git ~/.codex/superpowers
+```
+
+#### Windows
+
+**Command Prompt:**
+```cmd
+mkdir "%USERPROFILE%\.codex\superpowers"
+git clone https://github.com/obra/superpowers.git "%USERPROFILE%\.codex\superpowers"
+```
+
+**PowerShell:**
+```powershell
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.codex\superpowers"
+git clone https://github.com/obra/superpowers.git "$env:USERPROFILE\.codex\superpowers"
 ```
 
 #### 2. Install Bootstrap
@@ -34,11 +48,19 @@ The bootstrap file is included in the repository at `.codex/superpowers-bootstra
 
 Tell Codex:
 
+**macOS / Linux:**
 ```
 Run ~/.codex/superpowers/.codex/superpowers-codex find-skills to show available skills
 ```
 
+**Windows:**
+```
+Run ~/.codex/superpowers/.codex/superpowers-codex.cmd find-skills to show available skills
+```
+
 You should see a list of available skills with descriptions.
+
+> **Note:** On Windows, always use the `.cmd` extension when running superpowers-codex commands.
 
 ## Usage
 
@@ -126,10 +148,24 @@ git pull
 2. Check CLI works: `~/.codex/superpowers/.codex/superpowers-codex find-skills`
 3. Verify skills have SKILL.md files
 
-### CLI script not executable
+### CLI script not executable (macOS/Linux)
 
 ```bash
 chmod +x ~/.codex/superpowers/.codex/superpowers-codex
+```
+
+### Windows: "Open with" dialog or no output
+
+On Windows, you must use the `.cmd` wrapper:
+
+```cmd
+~/.codex/superpowers/.codex/superpowers-codex.cmd find-skills
+```
+
+Or invoke with Node directly:
+
+```cmd
+node "%USERPROFILE%\.codex\superpowers\.codex\superpowers-codex" find-skills
 ```
 
 ### Node.js errors
@@ -140,7 +176,7 @@ The CLI script requires Node.js. Verify:
 node --version
 ```
 
-Should show v14 or higher (v18+ recommended for ES module support).
+Should show v14 or higher (v18+ recommended).
 
 ## Getting Help
 
