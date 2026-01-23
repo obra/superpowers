@@ -7,7 +7,7 @@ Complete guide for using Superpowers with Trae.
 Tell Trae:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.trae/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/ice-zjchen/superpowers/refs/heads/main/.trae/INSTALL.md
 ```
 
 ## Manual Installation
@@ -24,7 +24,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 ```bash
 mkdir -p ~/.trae/superpowers
-git clone https://github.com/obra/superpowers.git ~/.trae/superpowers
+git clone https://github.com/ice-zjchen/superpowers.git ~/.trae/superpowers
 ```
 
 #### 2. Install Bootstrap
