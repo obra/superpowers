@@ -16,7 +16,7 @@
 
 This chunk adds the spec document reviewer to the brainstorming skill.
 
-- [ ] ### Task 1: Create Spec Document Reviewer Prompt Template
+### Task 1: Create Spec Document Reviewer Prompt Template
 
 **Files:**
 - Create: `skills/brainstorming/spec-document-reviewer-prompt.md`
@@ -87,7 +87,7 @@ git commit -m "feat: add spec document reviewer prompt template"
 
 ---
 
-- [ ] ### Task 2: Add Review Loop to Brainstorming Skill
+### Task 2: Add Review Loop to Brainstorming Skill
 
 **Files:**
 - Modify: `skills/brainstorming/SKILL.md`
@@ -134,7 +134,7 @@ git commit -m "feat: add spec review loop to brainstorming skill"
 
 This chunk adds the plan document reviewer to the writing-plans skill.
 
-- [ ] ### Task 3: Create Plan Document Reviewer Prompt Template
+### Task 3: Create Plan Document Reviewer Prompt Template
 
 **Files:**
 - Create: `skills/writing-plans/plan-document-reviewer-prompt.md`
@@ -207,7 +207,7 @@ git commit -m "feat: add plan document reviewer prompt template"
 
 ---
 
-- [ ] ### Task 4: Add Review Loop to Writing-Plans Skill
+### Task 4: Add Review Loop to Writing-Plans Skill
 
 **Files:**
 - Modify: `skills/writing-plans/SKILL.md`
@@ -241,7 +241,7 @@ After completing each chunk of the plan:
 Change the Task Structure section to show checkbox syntax:
 
 ```markdown
-- [ ] ### Task N: [Component Name]
+### Task N: [Component Name]
 
 - [ ] **Step 1:** Write the failing test
   - File: `tests/path/test.py`
@@ -256,7 +256,7 @@ Expected: Shows the new review loop section
 - [ ] **Step 5:** Verify the task syntax examples were updated
 
 Run: `grep -A 5 "Task N:" skills/writing-plans/SKILL.md`
-Expected: Shows checkbox syntax `- [ ] ### Task N:`
+Expected: Shows checkbox syntax `### Task N:`
 
 - [ ] **Step 6:** Commit
 
@@ -271,7 +271,7 @@ git commit -m "feat: add plan review loop and checkbox syntax to writing-plans s
 
 This chunk updates the plan document header template to reference the new checkbox syntax requirements.
 
-- [ ] ### Task 5: Update Plan Header Template in Writing-Plans Skill
+### Task 5: Update Plan Header Template in Writing-Plans Skill
 
 **Files:**
 - Modify: `skills/writing-plans/SKILL.md`
