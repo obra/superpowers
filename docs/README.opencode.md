@@ -30,11 +30,15 @@ fi
 # 2. Create directories
 mkdir -p ~/.config/opencode/plugin ~/.config/opencode/skills
 
-# 3. Create symlinks (safe for reinstalls - ln -sf overwrites)
-ln -sf ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js ~/.config/opencode/plugin/superpowers.js
-ln -sf ~/.config/opencode/superpowers/skills ~/.config/opencode/skills/superpowers
+# 3. Remove old symlinks/directories if they exist
+rm -f ~/.config/opencode/plugin/superpowers.js
+rm -rf ~/.config/opencode/skills/superpowers
 
-# 4. Restart OpenCode
+# 4. Create symlinks
+ln -s ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js ~/.config/opencode/plugin/superpowers.js
+ln -s ~/.config/opencode/superpowers/skills ~/.config/opencode/skills/superpowers
+
+# 5. Restart OpenCode
 ```
 
 #### Verify Installation
