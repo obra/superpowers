@@ -17,6 +17,13 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
 
+## Before Writing the Plan
+
+1. **Cross-reference backlog** - Check `docs/BACKLOG.md` (or `docs/backlog.md`)
+2. Verify the work isn't already tracked
+3. Note any backlog items that should be addressed together
+4. Include backlog cleanup in plan if items will be resolved by this work
+
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**
