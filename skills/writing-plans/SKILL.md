@@ -15,7 +15,14 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Context:** This should be run in a dedicated worktree (created by brainstorming skill).
 
-**Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
+**Save plans to:** Determine location based on configuration:
+
+1. **Check for `SUPERPOWERS_PLANS_DIR` environment variable**
+2. **If set:** Save to `$SUPERPOWERS_PLANS_DIR/<project-path>/YYYY-MM-DD-<feature-name>.md`
+   - `<project-path>` is derived from the current working directory relative to `~`
+   - Example: Working in `~/code/myorg/webapp` with `SUPERPOWERS_PLANS_DIR=~/Documents/plans` → save to `~/Documents/plans/code/myorg/webapp/YYYY-MM-DD-<feature-name>.md`
+   - **Create the directory if it doesn't exist** before saving
+3. **If not set:** Use default `docs/plans/YYYY-MM-DD-<feature-name>.md` (current behavior)
 
 ## Bite-Sized Task Granularity
 
@@ -98,7 +105,7 @@ git commit -m "feat: add specific feature"
 
 After saving the plan, offer execution choice:
 
-**"Plan complete and saved to `docs/plans/<filename>.md`. Two execution options:**
+**"Plan complete and saved to `<plan-location>/<filename>.md`. Two execution options:**
 
 **1. Subagent-Driven (this session)** - I dispatch fresh subagent per task, review between tasks, fast iteration
 
