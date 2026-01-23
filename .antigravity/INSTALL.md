@@ -32,7 +32,20 @@ New-Item -ItemType Directory -Force -Path ".agent"
 Copy-Item -Recurse "$env:USERPROFILE\.gemini\antigravity\superpowers\skills" ".agent\skills"
 ```
 
-### 3. Verify installation
+### 3. Configure Global Rules
+
+Add the following content to your `~/.gemini/GEMINI.md` (Linux/macOS) or `$env:USERPROFILE\.gemini\GEMINI.md` (Windows) file:
+
+```markdown
+## Superpowers System
+
+<EXTREMELY_IMPORTANT>
+You have superpowers. Superpowers teach you new skills and capabilities.
+**RIGHT NOW** use: **using-superpowers** skill and follow the instructions it returns!!!
+</EXTREMELY_IMPORTANT>
+```
+
+### 4. Verify installation
 
 **Linux/macOS:**
 ```bash
