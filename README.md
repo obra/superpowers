@@ -44,17 +44,17 @@ Then install the plugin from this marketplace:
 
 ### Verify Installation
 
-Check that commands appear:
+Check that skills appear:
 
 ```bash
 /help
 ```
 
 ```
-# Should see:
-# /superpowers:brainstorm - Interactive design refinement
-# /superpowers:write-plan - Create implementation plan
-# /superpowers:execute-plan - Execute plan in batches
+# Should see skills like:
+# superpowers:brainstorming - Explores user intent, requirements and design before implementation
+# superpowers:writing-plans - Create detailed implementation plan with bite-sized tasks
+# superpowers:executing-plans - Execute plan in batches with review checkpoints
 ```
 
 ### Codex

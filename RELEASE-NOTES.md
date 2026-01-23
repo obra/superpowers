@@ -1,5 +1,22 @@
 # Superpowers Release Notes
 
+## v4.2.0 (unreleased)
+
+### Breaking Changes
+
+**Removed legacy slash commands**
+
+Removed the three slash command files (`/brainstorm`, `/write-plan`, `/execute-plan`) that were redirecting to skills. Anthropic unified commands and skills in Claude Code, making these redundant wrappers that caused `disable-model-invocation` errors (#345, #222, #244).
+
+**Migration:** Use the skills directly — they trigger automatically based on context, or can be invoked by name:
+- `/superpowers:brainstorm` → use `superpowers:brainstorming` skill
+- `/superpowers:write-plan` → use `superpowers:writing-plans` skill
+- `/superpowers:execute-plan` → use `superpowers:executing-plans` skill
+
+No action needed if you were already using skills directly or letting them trigger automatically.
+
+---
+
 ## v4.1.1 (2026-01-23)
 
 ### Fixes
