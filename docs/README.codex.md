@@ -1,6 +1,7 @@
+<!-- GENERATED: do not edit directly. Source: templates/docs/README.codex.md -->
 # Superpowers for Codex
 
-Complete guide for using Superpowers with OpenAI Codex.
+Complete guide for using Superpowers with Codex.
 
 ## Quick Install
 
@@ -14,7 +15,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 ### Prerequisites
 
-- OpenAI Codex access
+- Access to Codex
 - Shell access to install files
 
 ### Installation Steps
@@ -110,6 +111,20 @@ Skills written for Claude Code are adapted for Codex with these mappings:
 - `Task` with subagents → Tell user subagents aren't available, do work directly
 - `Skill` tool → `~/.codex/superpowers/.codex/superpowers-codex use-skill`
 - File operations → Native Codex tools
+
+## Templates & Rendering
+
+Source files live in `templates/`. Regenerate agent-specific outputs with:
+
+```bash
+node scripts/render-agent.js --agent codex --write
+```
+
+Validate all templates:
+
+```bash
+bash tests/render-templates.sh
+```
 
 ## Updating
 

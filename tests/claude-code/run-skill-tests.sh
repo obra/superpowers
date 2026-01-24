@@ -12,7 +12,7 @@ echo "========================================"
 echo ""
 echo "Repository: $(cd ../.. && pwd)"
 echo "Test time: $(date)"
-echo "Claude version: $(claude --version 2>/dev/null || echo 'not found')"
+echo "Claude Code version: $(claude --version 2>/dev/null || echo 'not found')"
 echo ""
 
 # Check if Claude Code is available

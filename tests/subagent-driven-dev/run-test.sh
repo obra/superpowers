@@ -62,14 +62,14 @@ echo ""
 PLAN_PATH="$OUTPUT_DIR/project/plan.md"
 PROMPT="Execute this plan using superpowers:subagent-driven-development. The plan is at: $PLAN_PATH"
 
-# Run Claude with JSON output for token tracking
+# Run Claude Code with JSON output for token tracking
 LOG_FILE="$OUTPUT_DIR/claude-output.json"
-echo ">>> Running Claude..."
+echo ">>> Running Claude Code..."
 echo "Prompt: $PROMPT"
 echo "Log file: $LOG_FILE"
 echo ""
 
-# Run claude and capture output
+# Run Claude Code and capture output
 # Using stream-json to get token usage stats
 # --dangerously-skip-permissions for automated testing (subagents don't inherit parent settings)
 cd "$OUTPUT_DIR/project"
@@ -83,7 +83,7 @@ claude -p "$PROMPT" \
 echo ""
 echo ">>> Test complete"
 echo "Project directory: $OUTPUT_DIR/project"
-echo "Claude log: $LOG_FILE"
+echo "Claude Code log: $LOG_FILE"
 echo ""
 
 # Show token usage if available
@@ -96,7 +96,7 @@ fi
 
 echo ">>> Next steps:"
 echo "1. Review the project: cd $OUTPUT_DIR/project"
-echo "2. Review Claude's log: less $LOG_FILE"
+echo "2. Review Claude Code's log: less $LOG_FILE"
 echo "3. Check if tests pass:"
 if [[ "$TEST_NAME" == "go-fractals" ]]; then
   echo "   cd $OUTPUT_DIR/project && go test ./..."

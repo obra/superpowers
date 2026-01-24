@@ -1,8 +1,9 @@
+<!-- GENERATED: do not edit directly. Source: templates/.opencode/INSTALL.md -->
 # Installing Superpowers for OpenCode
 
 ## Prerequisites
 
-- [OpenCode.ai](https://opencode.ai) installed
+- [OpenCode](https://opencode.ai) installed
 - Git installed
 
 ## Installation Steps

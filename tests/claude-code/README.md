@@ -4,7 +4,7 @@ Automated tests for superpowers skills using Claude Code CLI.
 
 ## Overview
 
-This test suite verifies that skills are loaded correctly and Claude follows them as expected. Tests invoke Claude Code in headless mode (`claude -p`) and verify the behavior.
+This test suite verifies that skills are loaded correctly and Claude Code follows them as expected. Tests invoke Claude Code in headless mode (`claude -p`) and verify the behavior.
 
 ## Requirements
 
@@ -42,7 +42,7 @@ This test suite verifies that skills are loaded correctly and Claude follows the
 
 ### test-helpers.sh
 Common functions for skills testing:
-- `run_claude "prompt" [timeout]` - Run Claude with prompt
+- `run_claude "prompt" [timeout]` - Run Claude Code with prompt
 - `assert_contains output pattern name` - Verify pattern exists
 - `assert_not_contains output pattern name` - Verify pattern absent
 - `assert_count output pattern count name` - Verify exact count
@@ -69,7 +69,7 @@ source "$SCRIPT_DIR/test-helpers.sh"
 
 echo "=== Test: My Skill ==="
 
-# Ask Claude about the skill
+# Ask Claude Code about the skill
 output=$(run_claude "What does the my-skill skill do?" 30)
 
 # Verify response
@@ -132,7 +132,7 @@ Full workflow execution test (~10-30 minutes):
 
 ## Debugging Failed Tests
 
-With `--verbose`, you'll see full Claude output:
+With `--verbose`, you'll see full Claude Code output:
 ```bash
 ./run-skill-tests.sh --verbose --test test-subagent-driven-development.sh
 ```

@@ -3,7 +3,7 @@
 # Usage: ./run-multiturn-test.sh
 #
 # This test builds actual conversation history to reproduce the failure mode
-# where Claude skips skill invocation after extended conversation
+# where Claude Code skips skill invocation after extended conversation
 
 set -e
 

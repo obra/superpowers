@@ -1,3 +1,4 @@
+<!-- GENERATED: do not edit directly. Source: templates/.codex/INSTALL.md -->
 # Installing Superpowers for Codex
 
 Quick setup to enable superpowers skills in Codex.

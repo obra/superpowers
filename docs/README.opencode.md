@@ -1,13 +1,14 @@
+<!-- GENERATED: do not edit directly. Source: templates/docs/README.opencode.md -->
 # Superpowers for OpenCode
 
-Complete guide for using Superpowers with [OpenCode.ai](https://opencode.ai).
+Complete guide for using Superpowers with [OpenCode](https://opencode.ai).
 
 ## Quick Install
 
 Tell OpenCode:
 
 ```
-Clone https://github.com/obra/superpowers to ~/.config/opencode/superpowers, then create directory ~/.config/opencode/plugins, then symlink ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js to ~/.config/opencode/plugins/superpowers.js, then symlink ~/.config/opencode/superpowers/skills to ~/.config/opencode/skills/superpowers, then restart opencode.
+Clone https://github.com/obra/superpowers to ~/.config/opencode/superpowers, then create directory ~/.config/opencode/plugins, then symlink ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js to ~/.config/opencode/plugins/superpowers.js, then symlink ~/.config/opencode/superpowers/skills to ~/.config/opencode/skills/superpowers, then restart OpenCode.
 ```
 
 ## Manual Installation
@@ -269,6 +270,20 @@ Skills written for Claude Code are automatically adapted for OpenCode. The boots
 **Location:** `~/.config/opencode/skills/superpowers/` (symlink to `~/.config/opencode/superpowers/skills/`)
 
 Skills are discovered by OpenCode's native skill system. Each skill has a `SKILL.md` file with YAML frontmatter.
+
+## Templates & Rendering
+
+Source files live in `templates/`. Regenerate agent-specific outputs with:
+
+```bash
+node scripts/render-agent.js --agent opencode --write
+```
+
+Validate all templates:
+
+```bash
+bash tests/render-templates.sh
+```
 
 ## Updating
 

@@ -1,0 +1,13 @@
+{
+  "AGENT_ID": "opencode",
+  "AGENT_NAME": "OpenCode",
+  "AGENTS_MD": "AGENTS.md",
+  "CLI_NAME": "opencode",
+  "CLI_CMD": "opencode",
+  "AGENT_HOME": "~/.config/opencode",
+  "AGENT_HOME_ENV": "$HOME/.config/opencode",
+  "SKILLS_DIR": "~/.config/opencode/skills",
+  "CONFIG_DIR": "~/.config/opencode",
+  "PLUGIN_DIR": "~/.config/opencode/plugins",
+  "SUPERPOWERS_DIR": "~/.config/opencode/superpowers"
+}

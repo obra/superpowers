@@ -1,0 +1,13 @@
+{
+  "AGENT_ID": "claude",
+  "AGENT_NAME": "Claude Code",
+  "AGENTS_MD": "CLAUDE.md",
+  "CLI_NAME": "claude",
+  "CLI_CMD": "claude",
+  "AGENT_HOME": "~/.claude",
+  "AGENT_HOME_ENV": "$HOME/.claude",
+  "SKILLS_DIR": "~/.claude/skills",
+  "CONFIG_DIR": "~/.claude",
+  "PLUGIN_DIR": "~/.claude/plugins",
+  "SUPERPOWERS_DIR": "~/.claude/superpowers"
+}

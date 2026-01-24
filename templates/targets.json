@@ -1,0 +1,39 @@
+{
+  "claude": [
+    { "template": "skills/using-git-worktrees/SKILL.md", "out": "skills/using-git-worktrees/SKILL.md" },
+    { "template": "skills/receiving-code-review/SKILL.md", "out": "skills/receiving-code-review/SKILL.md" },
+    { "template": "skills/systematic-debugging/CREATION-LOG.md", "out": "skills/systematic-debugging/CREATION-LOG.md" },
+    { "template": "skills/writing-plans/SKILL.md", "out": "skills/writing-plans/SKILL.md" },
+    { "template": "skills/writing-skills/SKILL.md", "out": "skills/writing-skills/SKILL.md" },
+    { "template": "skills/writing-skills/testing-skills-with-subagents.md", "out": "skills/writing-skills/testing-skills-with-subagents.md" },
+    { "template": "skills/writing-skills/examples/CLAUDE_MD_TESTING.md", "out": "skills/writing-skills/examples/CLAUDE_MD_TESTING.md" },
+    { "dir": "tests/claude-code" },
+    { "dir": "tests/explicit-skill-requests" },
+    { "dir": "tests/subagent-driven-dev" },
+    { "dir": "tests/skill-triggering" }
+  ],
+  "codex": [
+    { "template": "README.md", "out": "README.md" },
+    { "template": "docs/README.codex.md", "out": "docs/README.codex.md" },
+    { "template": ".codex/INSTALL.md", "out": ".codex/INSTALL.md" },
+    { "template": "skills/using-git-worktrees/SKILL.md", "out": "skills/using-git-worktrees/SKILL.md" },
+    { "template": "skills/receiving-code-review/SKILL.md", "out": "skills/receiving-code-review/SKILL.md" },
+    { "template": "skills/systematic-debugging/CREATION-LOG.md", "out": "skills/systematic-debugging/CREATION-LOG.md" },
+    { "template": "skills/writing-plans/SKILL.md", "out": "skills/writing-plans/SKILL.md" },
+    { "template": "skills/writing-skills/SKILL.md", "out": "skills/writing-skills/SKILL.md" },
+    { "template": "skills/writing-skills/testing-skills-with-subagents.md", "out": "skills/writing-skills/testing-skills-with-subagents.md" },
+    { "template": "skills/writing-skills/examples/CLAUDE_MD_TESTING.md", "out": "skills/writing-skills/examples/CLAUDE_MD_TESTING.md" }
+  ],
+  "opencode": [
+    { "template": "docs/README.opencode.md", "out": "docs/README.opencode.md" },
+    { "template": ".opencode/INSTALL.md", "out": ".opencode/INSTALL.md" },
+    { "template": "skills/using-git-worktrees/SKILL.md", "out": "skills/using-git-worktrees/SKILL.md" },
+    { "template": "skills/receiving-code-review/SKILL.md", "out": "skills/receiving-code-review/SKILL.md" },
+    { "template": "skills/systematic-debugging/CREATION-LOG.md", "out": "skills/systematic-debugging/CREATION-LOG.md" },
+    { "template": "skills/writing-plans/SKILL.md", "out": "skills/writing-plans/SKILL.md" },
+    { "template": "skills/writing-skills/SKILL.md", "out": "skills/writing-skills/SKILL.md" },
+    { "template": "skills/writing-skills/testing-skills-with-subagents.md", "out": "skills/writing-skills/testing-skills-with-subagents.md" },
+    { "template": "skills/writing-skills/examples/CLAUDE_MD_TESTING.md", "out": "skills/writing-skills/examples/CLAUDE_MD_TESTING.md" },
+    { "dir": "tests/opencode" }
+  ]
+}

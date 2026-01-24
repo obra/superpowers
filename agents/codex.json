@@ -1,0 +1,13 @@
+{
+  "AGENT_ID": "codex",
+  "AGENT_NAME": "Codex",
+  "AGENTS_MD": "AGENTS.md",
+  "CLI_NAME": "codex",
+  "CLI_CMD": "codex",
+  "AGENT_HOME": "~/.codex",
+  "AGENT_HOME_ENV": "$HOME/.codex",
+  "SKILLS_DIR": "~/.codex/skills",
+  "CONFIG_DIR": "~/.codex",
+  "PLUGIN_DIR": "",
+  "SUPERPOWERS_DIR": "~/.codex/superpowers"
+}

@@ -15,7 +15,7 @@ run_claude() {
         cmd="$cmd --allowed-tools=$allowed_tools"
     fi
 
-    # Run Claude in headless mode with timeout
+    # Run Claude Code in headless mode with timeout
     if timeout "$timeout" bash -c "$cmd" > "$output_file" 2>&1; then
         cat "$output_file"
         rm -f "$output_file"
