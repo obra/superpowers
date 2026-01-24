@@ -114,3 +114,72 @@ After saving the plan, offer execution choice:
 **If Parallel Session chosen:**
 - Guide them to open new session in worktree
 - **REQUIRED SUB-SKILL:** New session uses superpowers:executing-plans
+
+---
+
+## Native Task Integration
+
+**REQUIRED:** Use Claude Code's native task tools (v2.1.16+) to create structured tasks alongside the plan document.
+
+### Pre-Check
+
+Before creating tasks, check for existing tasks from brainstorming:
+
+```
+TaskList
+```
+
+If tasks exist: enhance descriptions with implementation details from the plan.
+If no tasks: create them as you write each plan task.
+
+### Creating Native Tasks
+
+For each task in the plan, create a corresponding native task:
+
+```
+TaskCreate:
+  subject: "Task N: [Component Name]"
+  description: |
+    **Files:**
+    - Create: `exact/path/to/file.py`
+    - Modify: `exact/path/to/existing.py:123-145`
+    - Test: `tests/exact/path/to/test.py`
+
+    [Full task content from plan]
+
+    **Acceptance Criteria:**
+    - [ ] Test exists and fails initially
+    - [ ] Implementation passes test
+    - [ ] Committed with descriptive message
+  activeForm: "Implementing [Component Name]"
+```
+
+### Setting Dependencies
+
+After all tasks created, set blockedBy relationships:
+
+```
+TaskUpdate:
+  taskId: [task-id]
+  addBlockedBy: [prerequisite-task-ids]
+```
+
+### During Execution
+
+Update task status as work progresses:
+
+```
+TaskUpdate:
+  taskId: [task-id]
+  status: in_progress  # when starting
+
+TaskUpdate:
+  taskId: [task-id]
+  status: completed    # when done
+```
+
+### Notes
+
+- Native tasks provide CLI-visible progress tracking
+- Plan document remains the permanent record
+- Tasks are session-scoped; re-run TaskCreate from plan for new sessions
