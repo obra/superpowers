@@ -107,7 +107,8 @@ The Codex implementation uses the shared `skills-core` module (ES module format)
 Skills written for Claude Code are adapted for Codex with these mappings:
 
 - `TodoWrite` → `update_plan`
-- `Task` with subagents → Tell user subagents aren't available, do work directly
+- `Task` with subagents → Use collab `spawn_agent` + `wait` when available; if collab is disabled, say so and proceed sequentially
+- `Subagent` / `Agent` tool mentions → Map to `spawn_agent` (collab) or sequential fallback when collab is disabled
 - `Skill` tool → `~/.codex/superpowers/.codex/superpowers-codex use-skill`
 - File operations → Native Codex tools
 
