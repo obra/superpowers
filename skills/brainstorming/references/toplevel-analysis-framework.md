@@ -1,6 +1,6 @@
 # Top-Level Category Analysis Framework (Sowa) - Superpowers Reference
 
-Source: https://www.jfsowa.com/ontology/toplevel.htm
+Source: [Toplevel Ontology](https://www.jfsowa.com/ontology/toplevel.htm)
 Purpose: Improve requirement classification and coverage checks. No workflow changes.
 
 ## Classification Axes
