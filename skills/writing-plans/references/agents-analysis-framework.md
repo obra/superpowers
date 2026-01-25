@@ -1,36 +1,18 @@
-# Agents Analysis Framework (Sowa) - Superpowers Reference
+# Agents Analysis Framework
 
-Source: [Agents Ontology](https://www.jfsowa.com/ontology/agents.htm)
-Purpose: Improve requirement clarification and capability scoping. No workflow changes.
+Use this framework to define the scope, boundaries, and capabilities of an agent or autonomous system.
 
 ## Core Dimensions
-- Purpose: What goal the agent is trying to achieve.
-- Capability: What it can and cannot do.
-- Perception: What inputs it can sense or access.
-- Action: What outputs or actions it can take.
-- Environment: What context constrains behavior (rules, tools, limits).
+Define these for every agent:
+- **Purpose**: The specific goal or outcome the agent is responsible for.
+- **Capability**: Explicit in-scope functions and out-of-scope limitations.
+- **Perception**: What the agent can "see" (APIs, events, user input).
+- **Action**: What the agent can "do" (outputs, API calls, side effects).
+- **Environment**: Constraints, policies, and available tools.
 
 ## Capability Ladder
-- Reflex: immediate responses to signals.
-- Representation: builds or uses internal models.
-- Reasoning/Planning: evaluates options and sequences actions.
-- Anticipation: predicts other agents or environment changes.
-
-## Clarification Prompts
-- Purpose: What outcome is the agent responsible for?
-- Capability: What functions are in scope vs out of scope?
-- Perception: What signals, data, or events can it observe?
-- Action: What actions are allowed or required?
-- Environment: What constraints or policies govern behavior?
-- Level: Which capability ladder level is required (reflex, representation, reasoning, anticipation)?
-
-## Output Mapping (for planning/review)
-- Intent summary: one sentence purpose.
-- Capability boundaries: explicit in-scope/out-of-scope list.
-- Inputs/outputs: named signals and actions.
-- Environment constraints: policies, limits, dependencies.
-- Required capability level: chosen ladder rung.
-
-## Reference Logic
-- Use when: The plan or review involves an agent, assistant, automation, or autonomous behavior.
-- Adapt when: The system is not autonomous; treat the agent as the primary actor or workflow and map capability to feature scope.
+Assess the required intelligence level:
+1. **Reflex**: Simple trigger-response (if X then Y).
+2. **Representation**: Maintains internal state or models of the world.
+3. **Reasoning/Planning**: Evaluates multiple paths to achieve a goal.
+4. **Anticipation**: Predicts external changes or other agents' behaviors.

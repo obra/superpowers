@@ -34,9 +34,8 @@ Start by understanding the current project context, then ask questions one at a 
 
 ## References (Optional)
 
-Use these only to improve requirement clarification. Do not change the workflow.
-- `references/agents-analysis-framework.md` - Use when the feature involves an agent, assistant, or automation; adapt when the system is not autonomous by treating the primary actor or workflow as the agent.
-- `references/toplevel-analysis-framework.md` - Use when scope mixes objects, processes, descriptions, or intentions; adapt by using only the axis classification for simple domains.
+- `references/agents-analysis-framework.md` - Checklist for defining agent boundaries and capabilities.
+- `references/toplevel-analysis-framework.md` - Classification tools to distinguish objects, processes, and intentions.
 
 ## After the Design
 

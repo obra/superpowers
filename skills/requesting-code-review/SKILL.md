@@ -91,9 +91,8 @@ You: [Fix progress indicators]
 
 ## References (Optional)
 
-Use these only to sharpen review criteria. Do not change the workflow.
-- `references/agents-analysis-framework.md` - Use when reviewing agent behavior; adapt by checking capability claims against implemented behavior.
-- `references/toplevel-analysis-framework.md` - Use when reviewing modeling of object/process/script/history/reason/purpose; adapt by focusing on the categories in scope.
+- `references/agents-analysis-framework.md` - Checklist for reviewing agent capability claims.
+- `references/toplevel-analysis-framework.md` - Guide for reviewing domain modeling accuracy.
 
 ## Red Flags
 

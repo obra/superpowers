@@ -77,6 +77,5 @@ After all tasks complete and verified:
 
 ## References (Optional)
 
-Use these only to improve verification focus. Do not change the workflow.
-- `references/agents-analysis-framework.md` - Use when verifying agent behavior; adapt by mapping capability to concrete acceptance tests.
-- `references/toplevel-analysis-framework.md` - Use when verifying process/script/history distinctions; adapt by applying only relevant categories.
+- `references/agents-analysis-framework.md` - Criteria for verifying agent behaviors.
+- `references/toplevel-analysis-framework.md` - Checks for preventing domain logic gaps.

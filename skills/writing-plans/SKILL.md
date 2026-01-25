@@ -96,9 +96,8 @@ git commit -m "feat: add specific feature"
 
 ## References (Optional)
 
-Use these only to improve plan coverage. Do not change the workflow.
-- `references/agents-analysis-framework.md` - Use when the plan involves an agent, assistant, or automation; adapt by treating the primary actor or workflow as the agent if not autonomous.
-- `references/toplevel-analysis-framework.md` - Use when requirements mix objects, processes, descriptions, or intentions; adapt by using axis classification only for simple domains.
+- `references/agents-analysis-framework.md` - Guide for specifying agent scope and logic.
+- `references/toplevel-analysis-framework.md` - Framework for defining complex domain models.
 
 ## Execution Handoff
 

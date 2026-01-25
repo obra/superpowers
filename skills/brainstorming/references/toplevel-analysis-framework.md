@@ -1,30 +1,19 @@
-# Top-Level Category Analysis Framework (Sowa) - Superpowers Reference
+# Top-Level Analysis Framework (Sowa)
 
-Source: [Toplevel Ontology](https://www.jfsowa.com/ontology/toplevel.htm)
-Purpose: Improve requirement classification and coverage checks. No workflow changes.
+Use this framework to identify missing dimensions in your domain analysis.
 
 ## Classification Axes
-- Independent vs Relative vs Mediating
-- Physical vs Abstract
-- Continuant vs Occurrent
+Checks to classify any entity:
+1. **Independent vs Relative vs Mediating**: Does it exist alone, in relation to others, or as a connection?
+2. **Physical vs Abstract**: Is it matter/energy or information?
+3. **Continuant vs Occurrent**: Does it persist in time (object) or happen over time (process)?
 
-## Coverage Matrix (12 central categories)
-- Object / Process / Schema / Script
-- Juncture / Participation / Description / History
-- Structure / Situation / Reason / Purpose
+## Coverage Matrix
+Ensure your analysis covers these central categories where applicable:
+- **Entities**: Object, Schema, Structure.
+- **Dynamic**: Process, Script, Situation.
+- **Relational**: Participation, Description, Reason, Purpose, History.
 
-## Clarification Prompts
-- Is this primarily an entity, a relationship, or a mediator?
-- Is it physical (located) or abstract (information)?
-- Does it persist (continuant) or happen over time (occurrent)?
-- Do we need a script (plan/recipe/program) distinct from the process?
-- Do we need a description or history distinct from purpose or reason?
-
-## Output Mapping (for brainstorming notes)
-- Domain classification: axis selections.
-- Category coverage: which matrix cells are in scope.
-- Missing elements: list gaps (e.g., purpose not defined, no history).
-
-## Reference Logic
-- Use when: The scope mixes objects, processes, descriptions, or intentions.
-- Adapt when: The domain is simple; use only the axis classification and skip the full matrix.
+## Usage
+- **Classify**: Apply the axes to your key terms to disambiguate them.
+- **Gap Check**: Use the matrix to see if you missed a "History" (record), a "Script" (plan), or a "Purpose".
