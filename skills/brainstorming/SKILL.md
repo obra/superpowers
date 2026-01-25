@@ -32,6 +32,11 @@ Start by understanding the current project context, then ask questions one at a 
 - Cover: architecture, components, data flow, error handling, testing
 - Be ready to go back and clarify if something doesn't make sense
 
+## References (Optional)
+
+- `references/agents-analysis-framework.md` - Checklist for defining agent boundaries and capabilities.
+- `references/toplevel-analysis-framework.md` - Classification tools to distinguish objects, processes, and intentions.
+
 ## After the Design
 
 **Documentation:**

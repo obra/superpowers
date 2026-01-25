@@ -74,3 +74,8 @@ After all tasks complete and verified:
 - Reference skills when plan says to
 - Between batches: just report and wait
 - Stop when blocked, don't guess
+
+## References (Optional)
+
+- `references/agents-analysis-framework.md` - Criteria for verifying agent behaviors.
+- `references/toplevel-analysis-framework.md` - Checks for preventing domain logic gaps.

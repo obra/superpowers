@@ -89,6 +89,11 @@ You: [Fix progress indicators]
 - Review before merge
 - Review when stuck
 
+## References (Optional)
+
+- `references/agents-analysis-framework.md` - Checklist for reviewing agent capability claims.
+- `references/toplevel-analysis-framework.md` - Guide for reviewing domain modeling accuracy.
+
 ## Red Flags
 
 **Never:**

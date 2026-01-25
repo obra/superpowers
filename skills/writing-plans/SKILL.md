@@ -94,6 +94,11 @@ git commit -m "feat: add specific feature"
 - Reference relevant skills with @ syntax
 - DRY, YAGNI, TDD, frequent commits
 
+## References (Optional)
+
+- `references/agents-analysis-framework.md` - Guide for specifying agent scope and logic.
+- `references/toplevel-analysis-framework.md` - Framework for defining complex domain models.
+
 ## Execution Handoff
 
 After saving the plan, offer execution choice:
