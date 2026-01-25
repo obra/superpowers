@@ -1,180 +1,79 @@
 ---
 name: dispatching-parallel-agents
-description: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies
+description: Use when multiple independent investigations or tasks can run concurrently and Codex collab multi-agents can reduce wall-clock time.
 ---
 
 # Dispatching Parallel Agents
 
 ## Overview
-
-When you have multiple unrelated failures (different test files, different subsystems, different bugs), investigating them sequentially wastes time. Each investigation is independent and can happen in parallel.
-
-**Core principle:** Dispatch one agent per independent problem domain. Let them work concurrently.
+Use Codex collab multi-agents (`spawn_agent` + `wait`) to run independent workstreams in parallel. Do not default to "subagents unavailable" when the collab feature is present, and never claim agents were spawned without calling the tool.
 
 ## When to Use
+- 2+ independent tasks or investigations with minimal shared state
+- User asks for "multi-agent", "subagents", "parallel agents", or "split into agents"
+- Pressure to reduce wall-clock time (incident response, deadline, multiple failures)
 
-```dot
-digraph when_to_use {
-    "Multiple failures?" [shape=diamond];
-    "Are they independent?" [shape=diamond];
-    "Single agent investigates all" [shape=box];
-    "One agent per problem domain" [shape=box];
-    "Can they work in parallel?" [shape=diamond];
-    "Sequential agents" [shape=box];
-    "Parallel dispatch" [shape=box];
+When NOT to use:
+- Tasks are coupled and must be sequenced
+- Shared state or overlapping files would conflict
+- Only one small task exists
 
-    "Multiple failures?" -> "Are they independent?" [label="yes"];
-    "Are they independent?" -> "Single agent investigates all" [label="no - related"];
-    "Are they independent?" -> "Can they work in parallel?" [label="yes"];
-    "Can they work in parallel?" -> "Parallel dispatch" [label="yes"];
-    "Can they work in parallel?" -> "Sequential agents" [label="no - shared state"];
-}
-```
+## Core Principle
+If collab is available, attempt `spawn_agent` first. Only fall back to sequential work if agent spawning fails.
 
-**Use when:**
-- 3+ test files failing with different root causes
-- Multiple subsystems broken independently
-- Each problem can be understood without context from others
-- No shared state between investigations
+## Process
+1. Identify independent domains and name each task clearly.
+2. Draft one focused prompt per task (scope, constraints, expected output).
+3. Dispatch agents in parallel using `spawn_agent` (or `multi_tool_use.parallel` for 2+ agents).
+4. `wait` for results, then integrate and resolve conflicts.
+5. If `spawn_agent` fails or is unavailable, state that explicitly and proceed sequentially.
 
-**Don't use when:**
-- Failures are related (fix one might fix others)
-- Need to understand full system state
-- Agents would interfere with each other
+## Collab Tool Checklist
+- Call `spawn_agent` for each independent task before claiming any agents were created.
+- Use `wait` to collect results and cite which agent returned.
+- If a tool call fails, say so and switch to sequential work.
 
-## The Pattern
+## Quick Reference
+| Situation | Action |
+| --- | --- |
+| User requests parallel agents | Use `spawn_agent` per task and `wait` for results |
+| Subagents requested for testing | Use collab agents to run RED/GREEN scenarios |
+| Spawn fails | Tell the user and switch to sequential work |
+| Tasks are coupled | Do not parallelize; do sequential with clear checkpoints |
 
-### 1. Identify Independent Domains
+## Example
+User: "We have 3 independent failures; use multi-agents."
 
-Group failures by what's broken:
-- File A tests: Tool approval flow
-- File B tests: Batch completion behavior
-- File C tests: Abort functionality
+Actions:
+1. Spawn three agents with focused prompts.
+2. Wait for each to return.
+3. Summarize results and propose next steps.
 
-Each domain is independent - fixing tool approval doesn't affect abort tests.
-
-### 2. Create Focused Agent Tasks
-
-Each agent gets:
-- **Specific scope:** One test file or subsystem
-- **Clear goal:** Make these tests pass
-- **Constraints:** Don't change other code
-- **Expected output:** Summary of what you found and fixed
-
-### 3. Dispatch in Parallel
-
-```typescript
-// In Claude Code / AI environment
-Task("Fix agent-tool-abort.test.ts failures")
-Task("Fix batch-completion-behavior.test.ts failures")
-Task("Fix tool-approval-race-conditions.test.ts failures")
-// All three run concurrently
-```
-
-### 4. Review and Integrate
-
-When agents return:
-- Read each summary
-- Verify fixes don't conflict
-- Run full test suite
-- Integrate all changes
-
-## Agent Prompt Structure
-
-Good agent prompts are:
-1. **Focused** - One clear problem domain
-2. **Self-contained** - All context needed to understand the problem
-3. **Specific about output** - What should the agent return?
-
-```markdown
-Fix the 3 failing tests in src/agents/agent-tool-abort.test.ts:
-
-1. "should abort tool with partial output capture" - expects 'interrupted at' in message
-2. "should handle mixed completed and aborted tools" - fast tool aborted instead of completed
-3. "should properly track pendingToolCount" - expects 3 results but gets 0
-
-These are timing/race condition issues. Your task:
-
-1. Read the test file and understand what each test verifies
-2. Identify root cause - timing issues or actual bugs?
-3. Fix by:
-   - Replacing arbitrary timeouts with event-based waiting
-   - Fixing bugs in abort implementation if found
-   - Adjusting test expectations if testing changed behavior
-
-Do NOT just increase timeouts - find the real issue.
-
-Return: Summary of what you found and what you fixed.
+```text
+Agent A: UI error root cause and files
+Agent B: API timeout diagnosis and logs needed
+Agent C: Scheduler flake reproduction + stabilization ideas
 ```
 
 ## Common Mistakes
+- Claiming agents were spawned without actually calling `spawn_agent`
+- Saying "subagents aren't available in Codex" when collab is enabled
+- Parallelizing tasks that share the same files or state
+- Asking each agent to read the entire repo instead of giving tight scope
 
-**❌ Too broad:** "Fix all the tests" - agent gets lost
-**✅ Specific:** "Fix agent-tool-abort.test.ts" - focused scope
+## Rationalizations to Avoid
+| Excuse | Reality |
+| --- | --- |
+| "Subagents aren't available in Codex" | Collab provides `spawn_agent`; attempt it first. |
+| "I'll just interleave updates instead" | Use true parallel agents when tasks are independent. |
+| "I can say I spawned agents" | Never claim tool use without actually calling it. |
+| "I already described the agents; no tool call needed" | Description is not execution. Call `spawn_agent`. |
 
-**❌ No context:** "Fix the race condition" - agent doesn't know where
-**✅ Context:** Paste the error messages and test names
+## Red Flags
+- No `spawn_agent` calls when user explicitly asked for parallel agents
+- "Parallel-style" work without attempting collab agents
+- Multiple tasks share files or shared state but were still parallelized
 
-**❌ No constraints:** Agent might refactor everything
-**✅ Constraints:** "Do NOT change production code" or "Fix tests only"
-
-**❌ Vague output:** "Fix it" - you don't know what changed
-**✅ Specific:** "Return summary of root cause and changes"
-
-## When NOT to Use
-
-**Related failures:** Fixing one might fix others - investigate together first
-**Need full context:** Understanding requires seeing entire system
-**Exploratory debugging:** You don't know what's broken yet
-**Shared state:** Agents would interfere (editing same files, using same resources)
-
-## Real Example from Session
-
-**Scenario:** 6 test failures across 3 files after major refactoring
-
-**Failures:**
-- agent-tool-abort.test.ts: 3 failures (timing issues)
-- batch-completion-behavior.test.ts: 2 failures (tools not executing)
-- tool-approval-race-conditions.test.ts: 1 failure (execution count = 0)
-
-**Decision:** Independent domains - abort logic separate from batch completion separate from race conditions
-
-**Dispatch:**
-```
-Agent 1 → Fix agent-tool-abort.test.ts
-Agent 2 → Fix batch-completion-behavior.test.ts
-Agent 3 → Fix tool-approval-race-conditions.test.ts
-```
-
-**Results:**
-- Agent 1: Replaced timeouts with event-based waiting
-- Agent 2: Fixed event structure bug (threadId in wrong place)
-- Agent 3: Added wait for async tool execution to complete
-
-**Integration:** All fixes independent, no conflicts, full suite green
-
-**Time saved:** 3 problems solved in parallel vs sequentially
-
-## Key Benefits
-
-1. **Parallelization** - Multiple investigations happen simultaneously
-2. **Focus** - Each agent has narrow scope, less context to track
-3. **Independence** - Agents don't interfere with each other
-4. **Speed** - 3 problems solved in time of 1
-
-## Verification
-
-After agents return:
-1. **Review each summary** - Understand what changed
-2. **Check for conflicts** - Did agents edit same code?
-3. **Run full suite** - Verify all fixes work together
-4. **Spot check** - Agents can make systematic errors
-
-## Real-World Impact
-
-From debugging session (2025-10-03):
-- 6 failures across 3 files
-- 3 agents dispatched in parallel
-- All investigations completed concurrently
-- All fixes integrated successfully
-- Zero conflicts between agent changes
+## Output Expectations
+- One short summary per agent
+- Consolidated next steps with any conflicts called out

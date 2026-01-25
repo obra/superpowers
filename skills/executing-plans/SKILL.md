@@ -1,76 +1,79 @@
 ---
 name: executing-plans
-description: Use when you have a written implementation plan to execute in a separate session with review checkpoints
+description: Use when executing a written plan and you can use Codex collab agents to parallelize independent steps safely.
 ---
 
-# Executing Plans
+# Executing Plans (Collab + FD-Safe)
 
 ## Overview
+Execute written plans with collab agents when steps are independent, and keep file descriptor usage safe by limiting concurrent agents and closing them after use.
 
-Load plan, review critically, execute tasks in batches, report for review between batches.
+## When to Use
+- A written plan exists (2+ steps)
+- Some steps can run independently
+- User requests multi-agent or faster execution
 
-**Core principle:** Batch execution with checkpoints for architect review.
+When NOT to use:
+- Steps are tightly coupled or touch the same files
+- Plan text is missing or ambiguous (request it first)
 
-**Announce at start:** "I'm using the executing-plans skill to implement this plan."
+## Core Principle
+Parallelize only independent steps, and manage agent lifecycle explicitly to avoid FD exhaustion.
 
-## The Process
+## Process
+1. Read the full plan and list each step verbatim.
+2. Tag each step as **independent** or **coupled** (shared files/state).
+3. If independent:
+   - Dispatch one agent per step using `spawn_agent` (or `multi_tool_use.parallel`).
+   - Limit concurrency to a small batch (e.g., 3–5 agents at a time).
+4. If coupled:
+   - Execute sequentially with clear checkpoints.
+5. Always `wait` for results, then `close_agent` to release resources.
+6. Summarize outcomes and conflicts, then proceed to next batch.
 
-### Step 1: Load and Review Plan
-1. Read plan file
-2. Review critically - identify any questions or concerns about the plan
-3. If concerns: Raise them with your human partner before starting
-4. If no concerns: Create TodoWrite and proceed
+## FD Hygiene Rules
+- Do not leave spawned agents unclosed.
+- Use batching to avoid spikes in open descriptors.
+- If you hit "too many open files", stop spawning agents and close existing ones before proceeding.
+- If the skill is missing from the list, re-run bootstrap and proceed with this workflow anyway.
 
-### Step 2: Execute Batch
-**Default: First 3 tasks**
+## Quick Reference
+| Situation | Action |
+| --- | --- |
+| Independent steps | Spawn agents (batched), wait, close agents |
+| Coupled steps | Sequential execution |
+| User asks to parallelize despite shared files | Refuse and explain conflict risk |
+| FD pressure | Reduce concurrency, close agents immediately |
 
-For each task:
-1. Mark as in_progress
-2. Follow each step exactly (plan has bite-sized steps)
-3. Run verifications as specified
-4. Mark as completed
+## Example
+User: "We have a 4-step plan; all independent. Use multi-agents."
 
-### Step 3: Report
-When batch complete:
-- Show what was implemented
-- Show verification output
-- Say: "Ready for feedback."
+Actions:
+- Spawn 4 agents (or two batches of 2).
+- Wait for each result.
+- Close each agent.
+- Integrate results and note any conflicts.
 
-### Step 4: Continue
-Based on feedback:
-- Apply changes if needed
-- Execute next batch
-- Repeat until complete
+## Common Mistakes
+- Parallelizing steps that touch the same files
+- Spawning too many agents at once
+- Forgetting to close agents after use
+- Claiming agents were spawned without tool calls
 
-### Step 5: Complete Development
+## Rationalizations to Avoid
+| Excuse | Reality |
+| --- | --- |
+| "Parallelize anyway" | Shared files = conflict risk. Do sequential. |
+| "More agents is faster" | Too many agents = FD exhaustion. Batch. |
+| "I can leave agents open" | Close agents to release resources. |
+| "Skill not found, so I can't follow it" | Re-run bootstrap and apply this workflow anyway. |
 
-After all tasks complete and verified:
-- Announce: "I'm using the finishing-a-development-branch skill to complete this work."
-- **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
-- Follow that skill to verify tests, present options, execute choice
+## Red Flags
+- No `close_agent` calls after `wait`
+- Large agent fan-out without batching
+- Parallelizing steps with shared files
 
-## When to Stop and Ask for Help
-
-**STOP executing immediately when:**
-- Hit a blocker mid-batch (missing dependency, test fails, instruction unclear)
-- Plan has critical gaps preventing starting
-- You don't understand an instruction
-- Verification fails repeatedly
-
-**Ask for clarification rather than guessing.**
-
-## When to Revisit Earlier Steps
-
-**Return to Review (Step 1) when:**
-- Partner updates the plan based on your feedback
-- Fundamental approach needs rethinking
-
-**Don't force through blockers** - stop and ask.
-
-## Remember
-- Review plan critically first
-- Follow plan steps exactly
-- Don't skip verifications
-- Reference skills when plan says to
-- Between batches: just report and wait
-- Stop when blocked, don't guess
+## Output Expectations
+- Per-step summary
+- Conflict notes
+- Clear next batch or sequential checkpoint
