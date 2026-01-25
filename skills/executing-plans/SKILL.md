@@ -36,6 +36,7 @@ Parallelize only independent steps, and manage agent lifecycle explicitly to avo
 - Use batching to avoid spikes in open descriptors.
 - If you hit "too many open files", stop spawning agents and close existing ones before proceeding.
 - If the skill is missing from the list, re-run bootstrap and proceed with this workflow anyway.
+- If collab is disabled, suggest enabling `/experimental` multi-agents, then proceed sequentially.
 
 ## Quick Reference
 | Situation | Action |

@@ -36,6 +36,7 @@ If collab is available, use `spawn_agent` for implementer + reviewers per task. 
 - If `spawn_agent` fails, say so and proceed sequentially.
 - Do NOT say "spawned" or "spun up" in a response unless the tool call already happened in that response.
 - If the skill is unexpectedly missing from the list, re-run bootstrap and proceed with this workflow anyway.
+- If collab is disabled, suggest enabling `/experimental` multi-agents, then proceed sequentially.
 
 ## Quick Reference
 | Step | Action |

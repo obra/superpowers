@@ -40,6 +40,7 @@ No skill update without a failing baseline test first. Use collab `spawn_agent` 
 - Use `wait` to gather results and cite which agent returned.
 - If `spawn_agent` fails, state that explicitly and run sequentially.
 - Do not claim tests ran without tool calls.
+- If collab is disabled, suggest enabling `/experimental` multi-agents, then proceed sequentially.
 
 ## Quick Reference
 | Phase | Required Actions |

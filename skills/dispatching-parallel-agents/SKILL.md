@@ -32,6 +32,7 @@ If collab is available, attempt `spawn_agent` first. Only fall back to sequentia
 - Call `spawn_agent` for each independent task before claiming any agents were created.
 - Use `wait` to collect results and cite which agent returned.
 - If a tool call fails, say so and switch to sequential work.
+- If collab is disabled, suggest the user enable it via `/experimental` to use multi-agents, then proceed sequentially.
 
 ## Quick Reference
 | Situation | Action |
