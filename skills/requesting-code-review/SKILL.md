@@ -89,6 +89,12 @@ You: [Fix progress indicators]
 - Review before merge
 - Review when stuck
 
+## References (Optional)
+
+Use these only to sharpen review criteria. Do not change the workflow.
+- `references/agents-analysis-framework.md` - Use when reviewing agent behavior; adapt by checking capability claims against implemented behavior.
+- `references/toplevel-analysis-framework.md` - Use when reviewing modeling of object/process/script/history/reason/purpose; adapt by focusing on the categories in scope.
+
 ## Red Flags
 
 **Never:**

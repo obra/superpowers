@@ -74,3 +74,9 @@ After all tasks complete and verified:
 - Reference skills when plan says to
 - Between batches: just report and wait
 - Stop when blocked, don't guess
+
+## References (Optional)
+
+Use these only to improve verification focus. Do not change the workflow.
+- `references/agents-analysis-framework.md` - Use when verifying agent behavior; adapt by mapping capability to concrete acceptance tests.
+- `references/toplevel-analysis-framework.md` - Use when verifying process/script/history distinctions; adapt by applying only relevant categories.

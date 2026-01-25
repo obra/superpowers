@@ -32,6 +32,12 @@ Start by understanding the current project context, then ask questions one at a 
 - Cover: architecture, components, data flow, error handling, testing
 - Be ready to go back and clarify if something doesn't make sense
 
+## References (Optional)
+
+Use these only to improve requirement clarification. Do not change the workflow.
+- `references/agents-analysis-framework.md` - Use when the feature involves an agent, assistant, or automation; adapt when the system is not autonomous by treating the primary actor or workflow as the agent.
+- `references/toplevel-analysis-framework.md` - Use when scope mixes objects, processes, descriptions, or intentions; adapt by using only the axis classification for simple domains.
+
 ## After the Design
 
 **Documentation:**
