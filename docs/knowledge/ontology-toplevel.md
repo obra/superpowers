@@ -1,6 +1,6 @@
 # Ontology Top-Level Categories (Sowa) - Superpowers Knowledge Doc
 
-Source: https://www.jfsowa.com/ontology/toplevel.htm
+Source: [Toplevel Ontology](https://www.jfsowa.com/ontology/toplevel.htm)
 Scope: Adapted for Superpowers content design. Workflow remains unchanged.
 
 ## zh-CN

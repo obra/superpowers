@@ -1,6 +1,6 @@
 # Ontology Agents (Sowa) - Superpowers Knowledge Doc
 
-Source: https://www.jfsowa.com/ontology/agents.htm
+Source: [Agents Ontology](https://www.jfsowa.com/ontology/agents.htm)
 Scope: Adapted for Superpowers content design. Workflow remains unchanged.
 
 ## zh-CN

@@ -1,6 +1,6 @@
 # Agents Analysis Framework (Sowa) - Superpowers Reference
 
-Source: https://www.jfsowa.com/ontology/agents.htm
+Source: [Agents Ontology](https://www.jfsowa.com/ontology/agents.htm)
 Purpose: Improve requirement clarification and capability scoping. No workflow changes.
 
 ## Core Dimensions
