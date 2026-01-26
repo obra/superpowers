@@ -165,7 +165,7 @@ Run same scenarios WITH skill. Agent should now comply.
 
 Agent found new rationalization? Add explicit counter. Re-test until bulletproof.
 
-**Testing methodology:** See @testing-skills-with-subagents.md for pressure scenarios, pressure types, and meta-testing techniques.
+**Testing methodology:** See testing-skills-with-subagents.md for pressure scenarios, pressure types, and meta-testing techniques.
 
 For detailed guidance on testing different skill types and bulletproofing against rationalization, see SKILL_AUTHORING_DETAILS.md.
 
