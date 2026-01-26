@@ -62,8 +62,8 @@ ls docs/ 2>/dev/null || echo "Not initialized"
 ```bash
 # Create directory structure using horspowers plugin
 node -e "
-const DocsCore = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
-const manager = new DocsCore(process.cwd());
+const { UnifiedDocsManager } = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
+const manager = new UnifiedDocsManager(process.cwd());
 const result = manager.init();
 console.log(result.message);
 "
@@ -218,8 +218,8 @@ node "\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js" archive docs/active/2025-01-15-ta
 **Archive all completed documents:**
 ```bash
 node -e "
-const DocsCore = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
-const manager = new DocsCore(process.cwd());
+const { UnifiedDocsManager } = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
+const manager = new UnifiedDocsManager(process.cwd());
 const result = manager.archiveCompleted();
 console.log(\`Archived \${result.archived.length} documents\`);
 result.archived.forEach(doc => console.log('  - ' + doc));
@@ -238,9 +238,9 @@ find docs/archive -name "*.md" -type f | sort
 **Example:**
 ```bash
 node -e "
-const DocsCore = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
+const { UnifiedDocsManager } = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
 const fs = require('fs');
-const manager = new DocsCore(process.cwd());
+const manager = new UnifiedDocsManager(process.cwd());
 
 // Find document in archive
 const archivePath = 'docs/archive/2025-01-15-task-old-feature.md';
@@ -263,8 +263,8 @@ if (fs.existsSync(archivePath)) {
 
 ```bash
 node -e "
-const DocsCore = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
-const manager = new DocsCore(process.cwd());
+const { UnifiedDocsManager } = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
+const manager = new UnifiedDocsManager(process.cwd());
 const detected = manager.detectDocDirectories();
 console.log('Detected document directories:');
 detected.forEach(dir => {
@@ -286,8 +286,8 @@ Detected legacy document directories:
 
 ```bash
 node -e "
-const DocsCore = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
-const manager = new DocsCore(process.cwd());
+const { UnifiedDocsManager } = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
+const manager = new UnifiedDocsManager(process.cwd());
 const analysis = manager.analyzeDocDirectory('.docs');
 console.log('Analysis:', JSON.stringify(analysis, null, 2));
 "
@@ -299,8 +299,8 @@ console.log('Analysis:', JSON.stringify(analysis, null, 2));
 
 ```bash
 node -e "
-const DocsCore = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
-const manager = new DocsCore(process.cwd());
+const { UnifiedDocsManager } = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
+const manager = new UnifiedDocsManager(process.cwd());
 const plan = manager.generateMigrationPlan('.docs');
 console.log('Migration plan:');
 console.log('  From: ' + plan.sourceDir);
@@ -352,8 +352,8 @@ console.log('  Conflicts: ' + plan.conflicts.length);
 3. **Execute migration:**
    ```bash
    node -e "
-   const DocsCore = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
-   const manager = new DocsCore(process.cwd());
+   const { UnifiedDocsManager } = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
+   const manager = new UnifiedDocsManager(process.cwd());
    const plan = manager.generateMigrationPlan('.docs');
    const options = {
      dryRun: false,
@@ -372,8 +372,8 @@ console.log('  Conflicts: ' + plan.conflicts.length);
 4. **Validate migration:**
    ```bash
    node -e "
-   const DocsCore = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
-   const manager = new DocsCore(process.cwd());
+   const { UnifiedDocsManager } = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
+   const manager = new UnifiedDocsManager(process.cwd());
    const beforePlan = manager.generateMigrationPlan('.docs');
    const result = manager.executeMigration(beforePlan, {});
    const validation = manager.validateMigration(beforePlan);
