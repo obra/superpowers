@@ -41,15 +41,6 @@ jobs:
             echo [FAIL] bash not found in PATH
             exit /b 1
           )
-          echo.
-          echo Test 2: Check common Git installation paths
-          if exist "C:\Program Files\Git\bin\bash.exe" (
-            echo [PASS] Found bash at C:\Program Files\Git\bin\bash.exe
-          ) else if exist "C:\Program Files (x86)\Git\bin\bash.exe" (
-            echo [PASS] Found bash at C:\Program Files (x86)\Git\bin\bash.exe
-          ) else if exist "%LOCALAPPDATA%\Programs\Git\bin\bash.exe" (
-            echo [PASS] Found bash at %LOCALAPPDATA%\Programs\Git\bin\bash.exe
-          )
 
       - name: Test run-hook.cmd - Polyglot syntax
         shell: cmd
