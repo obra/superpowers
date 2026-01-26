@@ -26,13 +26,13 @@ jobs:
           echo Checking Git Bash installation...
           where bash
           bash --version
-          echo ""
+          echo.
 
       - name: Test run-hook.cmd - Find bash.exe
         shell: cmd
         run: |
           echo Testing run-hook.cmd bash.exe detection...
-          echo ""
+          echo.
           echo Test 1: Check if bash is in PATH
           where bash
           if %ERRORLEVEL% EQU 0 (
@@ -41,7 +41,7 @@ jobs:
             echo [FAIL] bash not found in PATH
             exit /b 1
           )
-          echo ""
+          echo.
           echo Test 2: Check common Git installation paths
           if exist "C:\Program Files\Git\bin\bash.exe" (
             echo [PASS] Found bash at C:\Program Files\Git\bin\bash.exe
@@ -57,7 +57,7 @@ jobs:
         shell: cmd
         run: |
           echo Testing run-hook.cmd polyglot structure...
-          echo ""
+          echo.
           echo Test 1: Verify file exists
           if exist "hooks\run-hook.cmd" (
             echo [PASS] run-hook.cmd exists
@@ -65,7 +65,7 @@ jobs:
             echo [FAIL] run-hook.cmd not found
             exit /b 1
           )
-          echo ""
+          echo.
           echo Test 2: Check for CMDBLOCK marker (polyglot delimiter)
           findstr /C:"CMDBLOCK" "hooks\run-hook.cmd"
           if %ERRORLEVEL% EQU 0 (
@@ -100,19 +100,19 @@ jobs:
         shell: cmd
         run: |
           echo Testing session-start hook execution...
-          echo ""
+          echo.
           echo Setting CLAUDE_PLUGIN_ROOT environment variable
           set CLAUDE_PLUGIN_ROOT=%CD%
           echo CLAUDE_PLUGIN_ROOT=%CLAUDE_PLUGIN_ROOT%
-          echo ""
+          echo.
           echo Running: "hooks\run-hook.cmd" session-start.sh
-          echo ""
+          echo.
           "hooks\run-hook.cmd" session-start.sh
           if %ERRORLEVEL% EQU 0 (
-            echo ""
+            echo.
             echo [PASS] session-start.sh executed successfully
           ) else (
-            echo ""
+            echo.
             echo [FAIL] session-start.sh failed with exit code %ERRORLEVEL%
             exit /b 1
           )
@@ -195,7 +195,7 @@ jobs:
         shell: cmd
         run: |
           echo Testing error handling...
-          echo ""
+          echo.
           echo Test 1: Missing script name
           "hooks\run-hook.cmd"
           if %ERRORLEVEL% NEQ 0 (
@@ -204,7 +204,7 @@ jobs:
             echo [FAIL] Should fail when script name is missing
             exit /b 1
           )
-          echo ""
+          echo.
           echo Test 2: Non-existent script
           "hooks\run-hook.cmd" nonexistent-script.sh
           if %ERRORLEVEL% NEQ 0 (
@@ -218,7 +218,7 @@ jobs:
         shell: cmd
         run: |
           echo Testing session-end hook execution...
-          echo ""
+          echo.
           set CLAUDE_PLUGIN_ROOT=%CD%
           "hooks\run-hook.cmd" session-end.sh
           if %ERRORLEVEL% EQU 0 (
