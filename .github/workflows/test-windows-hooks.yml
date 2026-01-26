@@ -26,13 +26,13 @@ jobs:
           echo Checking Git Bash installation...
           where bash
           bash --version
-          echo.
+          echo ""
 
       - name: Test run-hook.cmd - Find bash.exe
         shell: cmd
         run: |
           echo Testing run-hook.cmd bash.exe detection...
-          echo.
+          echo ""
           echo Test 1: Check if bash is in PATH
           where bash
           if %ERRORLEVEL% EQU 0 (
@@ -41,7 +41,7 @@ jobs:
             echo [FAIL] bash not found in PATH
             exit /b 1
           )
-          echo.
+          echo ""
           echo Test 2: Check common Git installation paths
           if exist "C:\Program Files\Git\bin\bash.exe" (
             echo [PASS] Found bash at C:\Program Files\Git\bin\bash.exe
@@ -57,7 +57,7 @@ jobs:
         shell: cmd
         run: |
           echo Testing run-hook.cmd polyglot structure...
-          echo.
+          echo ""
           echo Test 1: Verify file exists
           if exist "hooks\run-hook.cmd" (
             echo [PASS] run-hook.cmd exists
@@ -65,7 +65,7 @@ jobs:
             echo [FAIL] run-hook.cmd not found
             exit /b 1
           )
-          echo.
+          echo ""
           echo Test 2: Check for CMDBLOCK marker (polyglot delimiter)
           findstr /C:"CMDBLOCK" "hooks\run-hook.cmd"
           if %ERRORLEVEL% EQU 0 (
@@ -79,7 +79,7 @@ jobs:
         shell: bash
         run: |
           echo "Testing session-start.sh syntax..."
-          echo.
+          echo ""
           echo "Test 1: Check file exists"
           if [ -f "hooks/session-start.sh" ]; then
             echo "[PASS] session-start.sh exists"
@@ -87,7 +87,7 @@ jobs:
             echo "[FAIL] session-start.sh not found"
             exit 1
           fi
-          echo.
+          echo ""
           echo "Test 2: Bash syntax check"
           if bash -n "hooks/session-start.sh"; then
             echo "[PASS] Bash syntax is valid"
@@ -100,19 +100,19 @@ jobs:
         shell: cmd
         run: |
           echo Testing session-start hook execution...
-          echo.
+          echo ""
           echo Setting CLAUDE_PLUGIN_ROOT environment variable
           set CLAUDE_PLUGIN_ROOT=%CD%
           echo CLAUDE_PLUGIN_ROOT=%CLAUDE_PLUGIN_ROOT%
-          echo.
+          echo ""
           echo Running: "hooks\run-hook.cmd" session-start.sh
-          echo.
+          echo ""
           "hooks\run-hook.cmd" session-start.sh
           if %ERRORLEVEL% EQU 0 (
-            echo.
+            echo ""
             echo [PASS] session-start.sh executed successfully
           ) else (
-            echo.
+            echo ""
             echo [FAIL] session-start.sh failed with exit code %ERRORLEVEL%
             exit /b 1
           )
@@ -121,7 +121,7 @@ jobs:
         shell: bash
         run: |
           echo "Testing session-start hook JSON output..."
-          echo.
+          echo ""
           export CLAUDE_PLUGIN_ROOT="$(pwd)"
           output=$("hooks/run-hook.cmd" session-start.sh 2>&1)
           exit_code=$?
@@ -129,7 +129,7 @@ jobs:
           echo "Exit code: $exit_code"
           echo "Output:"
           echo "$output"
-          echo.
+          echo ""
 
           if [ $exit_code -eq 0 ]; then
             echo "[PASS] Hook executed with exit code 0"
@@ -137,16 +137,16 @@ jobs:
             # Try to parse as JSON
             if echo "$output" | jq -e '.hookSpecificOutput' > /dev/null 2>&1; then
               echo "[PASS] Output is valid JSON"
-              echo.
+              echo ""
               echo "Parsed structure:"
               echo "$output" | jq '.hookSpecificOutput | keys'
-              echo.
+              echo ""
               echo "Has hookEventName:"
               echo "$output" | jq -r '.hookSpecificOutput.hookEventName // "not found"'
-              echo.
+              echo ""
               echo "Additional context length:"
               echo "$output" | jq -r '.hookSpecificOutput.additionalContext // "not found"' | wc -c
-              echo.
+              echo ""
               echo "First 200 chars of additionalContext:"
               echo "$output" | jq -r '.hookSpecificOutput.additionalContext' | head -c 200
               echo "..."
@@ -163,7 +163,7 @@ jobs:
         shell: bash
         run: |
           echo "Testing using-horspowers skill injection..."
-          echo.
+          echo ""
           export CLAUDE_PLUGIN_ROOT="$(pwd)"
           output=$("hooks/run-hook.cmd" session-start.sh 2>&1)
 
@@ -195,7 +195,7 @@ jobs:
         shell: cmd
         run: |
           echo Testing error handling...
-          echo.
+          echo ""
           echo Test 1: Missing script name
           "hooks\run-hook.cmd"
           if %ERRORLEVEL% NEQ 0 (
@@ -204,7 +204,7 @@ jobs:
             echo [FAIL] Should fail when script name is missing
             exit /b 1
           )
-          echo.
+          echo ""
           echo Test 2: Non-existent script
           "hooks\run-hook.cmd" nonexistent-script.sh
           if %ERRORLEVEL% NEQ 0 (
@@ -218,7 +218,7 @@ jobs:
         shell: cmd
         run: |
           echo Testing session-end hook execution...
-          echo.
+          echo ""
           set CLAUDE_PLUGIN_ROOT=%CD%
           "hooks\run-hook.cmd" session-end.sh
           if %ERRORLEVEL% EQU 0 (
@@ -231,7 +231,7 @@ jobs:
         shell: bash
         run: |
           echo "Testing hook execution from different working directories..."
-          echo.
+          echo ""
           export CLAUDE_PLUGIN_ROOT="$(pwd)"
 
           # Test from a temporary directory
@@ -261,9 +261,9 @@ jobs:
           echo "==================================="
           echo "Windows Hooks Test Summary"
           echo "==================================="
-          echo.
+          echo ""
           echo "All tests completed!"
-          echo.
+          echo ""
           echo "Key findings:"
           echo "  - run-hook.cmd: bash.exe detection works"
           echo "  - Polyglot syntax: CMD and bash both parse correctly"
@@ -271,7 +271,7 @@ jobs:
           echo "  - JSON output: Valid structure"
           echo "  - using-horspowers: Skill content injected"
           echo "  - Cross-directory: Works from different working dirs"
-          echo.
+          echo ""
           echo "Next steps:"
           echo "  - Test on a real Windows machine with Claude Code"
           echo "  - Verify session-start hook actually injects context"
@@ -292,7 +292,7 @@ jobs:
       - name: Test run-hook.cmd - Unix section
         run: |
           echo "Testing run-hook.cmd Unix section..."
-          echo.
+          echo ""
           # On Unix, run-hook.cmd should execute the bash section after CMDBLOCK
           if [ -x "hooks/run-hook.cmd" ]; then
             echo "[PASS] run-hook.cmd is executable"
@@ -300,12 +300,12 @@ jobs:
             chmod +x hooks/run-hook.cmd
             echo "[INFO] Made run-hook.cmd executable"
           fi
-          echo.
+          echo ""
           echo "Test 1: Check CMDBLOCK heredoc works"
           if grep -q "CMDBLOCK" hooks/run-hook.cmd; then
             echo "[PASS] CMDBLOCK marker found"
           fi
-          echo.
+          echo ""
           echo "Test 2: Execute session-start hook"
           export CLAUDE_PLUGIN_ROOT="$(pwd)"
           if "hooks/run-hook.cmd" session-start.sh | jq -e '.hookSpecificOutput' > /dev/null 2>&1; then
