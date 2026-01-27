@@ -33,3 +33,8 @@ Test the installation:
 ```
 
 You should see skill listings and bootstrap instructions. The system is now ready for use.
+
+> **Windows tip:** Windows users can now call the included `~/.codex/superpowers/.codex/superpowers-codex.cmd` helper so the command runs through Node automatically:
+> ```powershell
+> ~/.codex/superpowers/.codex/superpowers-codex.cmd bootstrap
+> ```
