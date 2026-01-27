@@ -1,5 +1,56 @@
 # Superpowers Release Notes
 
+## v4.1.1 (2026-01-23)
+
+### Fixes
+
+**OpenCode: Standardized on `plugins/` directory per official docs (#343)**
+
+OpenCode's official documentation uses `~/.config/opencode/plugins/` (plural). Our docs previously used `plugin/` (singular). While OpenCode accepts both forms, we've standardized on the official convention to avoid confusion.
+
+Changes:
+- Renamed `.opencode/plugin/` to `.opencode/plugins/` in repo structure
+- Updated all installation docs (INSTALL.md, README.opencode.md) across all platforms
+- Updated test scripts to match
+
+**OpenCode: Fixed symlink instructions (#339, #342)**
+
+- Added explicit `rm` before `ln -s` (fixes "file already exists" errors on reinstall)
+- Added missing skills symlink step that was absent from INSTALL.md
+- Updated from deprecated `use_skill`/`find_skills` to native `skill` tool references
+
+---
+
+## v4.1.0 (2026-01-23)
+
+### Breaking Changes
+
+**OpenCode: Switched to native skills system**
+
+Superpowers for OpenCode now uses OpenCode's native `skill` tool instead of custom `use_skill`/`find_skills` tools. This is a cleaner integration that works with OpenCode's built-in skill discovery.
+
+**Migration required:** Skills must be symlinked to `~/.config/opencode/skills/superpowers/` (see updated installation docs).
+
+### Fixes
+
+**OpenCode: Fixed agent reset on session start (#226)**
+
+The previous bootstrap injection method using `session.prompt({ noReply: true })` caused OpenCode to reset the selected agent to "build" on first message. Now uses `experimental.chat.system.transform` hook which modifies the system prompt directly without side effects.
+
+**OpenCode: Fixed Windows installation (#232)**
+
+- Removed dependency on `skills-core.js` (eliminates broken relative imports when file is copied instead of symlinked)
+- Added comprehensive Windows installation docs for cmd.exe, PowerShell, and Git Bash
+- Documented proper symlink vs junction usage for each platform
+
+**Claude Code: Fixed Windows hook execution for Claude Code 2.1.x**
+
+Claude Code 2.1.x changed how hooks execute on Windows: it now auto-detects `.sh` files in commands and prepends `bash `. This broke the polyglot wrapper pattern because `bash "run-hook.cmd" session-start.sh` tries to execute the .cmd file as a bash script.
+
+Fix: hooks.json now calls session-start.sh directly. Claude Code 2.1.x handles the bash invocation automatically. Also added .gitattributes to enforce LF line endings for shell scripts (fixes CRLF issues on Windows checkout).
+
+---
+
 ## v4.0.3 (2025-12-26)
 
 ### Improvements
