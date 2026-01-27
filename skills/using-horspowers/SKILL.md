@@ -127,6 +127,29 @@ const mode = userSelection === 1 ? 'personal' : 'team';
 const result = initializeConfig(process.cwd(), mode);
 ```
 
+**After config is created, check for docs initialization:**
+```
+✅ 配置文件已创建！
+
+Horspowers 默认启用文档系统功能，可以帮助你追踪任务和进度。
+
+是否立即初始化文档系统（创建 docs/ 目录结构）？
+```
+
+- If user confirms "yes":
+  ```bash
+  node -e "
+  const { UnifiedDocsManager } = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
+  const manager = new UnifiedDocsManager(process.cwd());
+  const result = manager.init();
+  console.log(result.message);
+  "
+  ```
+- If user says "no":
+  ```
+  好的，你可以稍后使用 `/docs init` 命令或运行 Skill: `horspowers:document-management` 来初始化文档系统。
+  ```
+
 **If `<config-needs-migration>true</config-needs-migration>`:**
 - On your FIRST response, inform user about migration:
 ```
@@ -143,6 +166,9 @@ const result = initializeConfig(process.cwd(), mode);
 - If user confirms, use: `migrateOldConfig(oldPath, projectDir)`
 - Migration path provided in `<config-old-path>` marker
 
+**After migration, check for docs initialization (same prompt as above):**
+- If config now has `documentation.enabled: true` but docs/ doesn't exist, prompt to initialize
+
 **If `<config-needs-update>true</config-needs-update>`:**
 - On your FIRST response, inform user about update:
 ```
@@ -152,6 +178,9 @@ const result = initializeConfig(process.cwd(), mode);
 ```
 
 - If user confirms, use: `updateConfig(projectDir, currentConfig)`
+
+**After update, check for docs initialization:**
+- If config now has `documentation.enabled: true` but docs/ doesn't exist, prompt to initialize
 
 **If `<config-invalid>true</config-invalid>`:**
 - On your FIRST response, inform user about validation errors:
@@ -167,6 +196,85 @@ const result = initializeConfig(process.cwd(), mode);
 - Configuration is valid and up to date - read `<config-detected>` marker for current settings
 - Store these settings in memory for use by other skills
 - Don't mention configuration unless user asks or a skill needs to make a decision
+
+## Document System Initialization Check
+
+**IMPORTANT:** After confirming config is valid, ALWAYS check document system status:
+
+**Check if docs/ directory exists:**
+```bash
+ls docs/ 2>/dev/null || echo "Not initialized"
+```
+
+**If `documentation.enabled: true` but docs/ directory does NOT exist:**
+```
+📄 **文档系统已启用但未初始化**
+
+检测到你在配置文件中启用了文档系统，但 docs/ 目录尚未创建。
+
+是否现在初始化文档系统？这将创建以下目录结构：
+- docs/plans/      - 静态文档（设计、计划）
+- docs/active/     - 活跃状态追踪文档
+- docs/archive/    - 已归档文档
+- docs/context/    - 上下文文档
+- docs/.docs-metadata/ - 元数据和会话状态
+```
+
+- If user confirms "yes":
+  ```bash
+  node -e "
+  const { UnifiedDocsManager } = require('\${CLAUDE_PLUGIN_ROOT}/lib/docs-core.js');
+  const manager = new UnifiedDocsManager(process.cwd());
+  const result = manager.init();
+  console.log(result.message);
+  "
+  ```
+- If user says "no":
+  ```
+  好的，文档系统暂不初始化。
+
+  你可以稍后使用以下方式手动初始化：
+  - 运行 `/docs init` 命令
+  - 或直接调用 Skill: `horspowers:document-management`
+  ```
+
+**If `documentation.enabled` is NOT true or does NOT exist:**
+```
+📄 **文档系统集成提示**
+
+Horspowers 提供文档系统功能，可以帮助你：
+- 追踪任务、Bug 和设计文档
+- 记录会话状态和进度
+- 自动归档完成的文档
+
+是否启用文档系统？
+```
+
+- If user confirms "yes":
+  1. Use Node.js to update config:
+  ```javascript
+  const { readConfig, updateConfig } = require('./lib/config-manager.js');
+  const config = readConfig(process.cwd());
+  config.documentation = { enabled: true };
+  updateConfig(process.cwd(), config);
+  ```
+  2. Then initialize the docs directory (as shown above)
+- If user says "no":
+  ```
+  好的，文档系统暂不启用。
+
+  你可以随时在 .horspowers-config.yaml 中添加以下配置来启用：
+  ```yaml
+  documentation:
+    enabled: true
+  ```
+
+  或使用 `/docs init` 命令时再询问是否启用配置。
+  ```
+
+**If `documentation.enabled: true` AND docs/ directory exists:**
+- Document system is ready - no action needed
+- Store in memory: `docsSystemReady: true`
 
 **Config usage by other skills:**
 - Skills should read the configuration from session context

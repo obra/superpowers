@@ -24,29 +24,52 @@ Manage the unified documentation system for horspowers, including initialization
 
 ## Prerequisites
 
-**Check if documentation is enabled:**
+**System Readiness Check (run FIRST for ALL commands):**
 
-IF `.horspowers-config.yaml` does NOT exist OR `documentation.enabled` is not `true`:
-
-```
-文档系统未启用。需要先在配置文件中启用：
-
-创建或编辑 .horspowers-config.yaml：
-```yaml
-development_mode: personal  # 或 team
-branch_strategy: simple     # 或 worktree
-testing_strategy: test-after  # 或 tdd
-completion_strategy: merge   # 或 pr
-documentation.enabled: true
+```bash
+# Check if docs/ directory exists
+ls docs/ 2>/dev/null || echo "Not initialized"
 ```
 
-是否现在创建配置文件？(yes/no)
+**IF docs/ directory does NOT exist:**
+```
+⚠️ **文档系统未初始化**
+
+docs/ 目录不存在，无法执行文档操作。
+
+是否立即初始化文档系统？
 ```
 
-IF user says "yes":
-- Create `.horspowers-config.yaml` with recommended settings
-- Ask user for development mode preference if not clear
-- Continue with document initialization
+- If user says "yes": Proceed to Initialize Document System section
+- If user says "no":
+  ```
+  好的，你可以稍后使用 `/docs init` 命令初始化文档系统。
+  ```
+
+**IF docs/ directory exists BUT `.horspowers-config.yaml` is missing or `documentation.enabled` is not `true`:**
+```
+⚠️ **文档系统未在配置中启用**
+
+检测到 docs/ 目录存在，但配置文件未启用文档系统。
+
+是否现在启用文档系统？这将更新配置文件。
+```
+
+- If user says "yes":
+  ```javascript
+  const { readConfig, updateConfig } = require('./lib/config-manager.js');
+  const config = readConfig(process.cwd());
+  if (!config.documentation) config.documentation = {};
+  config.documentation.enabled = true;
+  updateConfig(process.cwd(), config);
+  ```
+- If user says "no":
+  ```
+  好的，文档系统功能受限。你可以随时在配置中启用。
+  ```
+
+**IF docs/ directory exists AND documentation is enabled:**
+- Document system is ready - proceed with the requested command
 
 ## Core Commands
 
