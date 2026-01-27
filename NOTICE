@@ -3,8 +3,7 @@
 ## Horspowers - Fork of Superpowers
 
 This project is a fork of [obra/superpowers](https://github.com/obra/superpowers),
-a skills library for Claude Code that provides composable workflows for software
-development.
+a skills library for Claude Code that provides composable workflows for software development.
 
 ### Original Project
 
@@ -37,8 +36,7 @@ See LICENSE file for details.
 
 ### Acknowledgments
 
-This fork is based on the excellent work by Jesse Vincent and contributors to the
-original Superpowers project. The fork maintains compatibility with the original
+This fork is based on the excellent work by Jesse Vincent and contributors to the original Superpowers project. The fork maintains compatibility with the original
 MIT License while adding enhancements for the Chinese developer community.
 
 ---
