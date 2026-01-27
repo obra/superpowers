@@ -13,7 +13,7 @@ Start by understanding the current project context, then ask questions one at a 
 
 ## The Process
 
-**FIRST: Check the project backlog**
+## FIRST: Check the project backlog
 
 Before ANY exploration, read `docs/BACKLOG.md` (or `docs/backlog.md`). Look for:
 - Items related to the current request
