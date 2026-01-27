@@ -90,6 +90,150 @@ node scripts/migrate-docs.js
 
 更多示例请查看各技能的 description。
 
+### 安装与使用
+
+**前提条件**：Claude Code CLI (`claude` 命令)
+
+#### 1. 安装插件
+
+首先添加插件市场并安装：
+
+```bash
+# 添加HorsPowers插件市场
+/plugin marketplace add LouisHors/horspowers-marketplace
+
+# 安装插件
+/plugin install horspowers@horspowers-marketplace
+```
+
+#### 2. 验证安装
+
+运行 `/help` 查看是否成功安装：
+
+```bash
+/help
+```
+
+成功后会看到以下命令：
+
+```
+/horspowers:brainstorm - 交互式设计细化
+/horspowers:write-plan - 创建实施计划
+/horspowers:execute-plan - 批量执行计划
+```
+
+#### 3. 快速开始
+
+**首次使用**：先运行 `using-horspowers` 了解技能系统
+
+```bash
+/horspowers:using-horspowers
+```
+
+**典型工作流**：
+
+| 阶段 | 触发方式 | 说明 |
+|-----|---------|-----|
+| 需求澄清 | `/horspowers:brainstorm` | 交互式设计细化，确定需求 |
+| 制定计划 | `/horspowers:write-plan` | 拆解为可执行任务 |
+| 代码实现 | `/horspowers:execute-plan` | 批量执行或使用 TDD |
+| 代码审查 | `/horspowers:requesting-code-review` | 提交前审查 |
+| 分支收尾 | `/horspowers:finishing-a-development-branch` | 合并/PR/清理 |
+
+**TDD 开发**：遇到具体实现任务时，使用 TDD 模式
+
+```bash
+/horspowers:test-driven-development
+```
+
+**Bug 调试**：遇到问题时，使用系统化调试
+
+```bash
+/horspowers:systematic-debugging
+```
+
+#### 4. 配置说明
+
+在项目根目录创建 `.horspowers-config.yaml`：
+
+```yaml
+# 开发模式：personal(个人) 或 team(团队)
+development_mode: personal
+
+# 分支策略：simple(普通分支) 或 worktree(Git Worktree)
+branch_strategy: simple
+
+# 测试策略：test-after(后测) 或 tdd(TDD模式)
+testing_strategy: test-after
+
+# 完成策略：merge(本地合并) 或 pr(创建PR)
+completion_strategy: merge
+
+# 文档系统开关
+documentation:
+  enabled: true
+```
+
+**模式对比**：
+
+| 场景 | 推荐配置 |
+|-----|---------|
+| 单人快速开发 | personal + simple + test-after + merge |
+| 多人协作项目 | team + worktree + tdd + pr |
+| 学习/实验项目 | personal + simple + tdd + merge |
+
+#### 5. 文档系统
+
+启用文档系统后，系统会在关键节点自动创建和更新文档：
+
+```yaml
+# 启用文档系统
+documentation:
+  enabled: true
+```
+
+**自动创建的文档类型**：
+
+| 类型 | 存储位置 | 说明 |
+|-----|---------|-----|
+| design | `docs/plans/` | 技术方案设计 |
+| plan | `docs/plans/` | 功能实施计划 |
+| task | `docs/active/` → `docs/archive/` | 任务进度跟踪 |
+| bug | `docs/active/` | Bug 记录与修复 |
+| context | `docs/context/` | 项目上下文知识 |
+
+**文档命名规范**：`YYYY-MM-DD-<类型>-<描述>.md`
+
+#### 6. 常用命令速查
+
+| 命令 | 用途 |
+|-----|-----|
+| `/horspowers:using-horspowers` | 技能系统介绍 |
+| `/horspowers:brainstorming` | 设计细化 |
+| `/horspowers:writing-plans` | 制定实施计划 |
+| `/horspowers:executing-plans` | 执行计划任务 |
+| `/horspowers:test-driven-development` | TDD 开发模式 |
+| `/horspowers:systematic-debugging` | 系统化调试 |
+| `/horspowers:requesting-code-review` | 代码审查 |
+| `/horspowers:finishing-a-development-branch` | 分支收尾 |
+| `/horspowers:document-management` | 文档管理 |
+
+#### 7. 故障排除
+
+**命令无响应**：确保已安装插件，重新启动 Claude Code
+
+```bash
+# 检查插件状态
+/plugin list
+
+# 重新加载
+/plugin reload horspowers
+```
+
+**文档未创建**：检查 `.horspowers-config.yaml` 中 `documentation.enabled` 是否为 `true`，并手动执行技能 `/horspowers:document-management`
+
+**技能未触发**：检查是否在正确的触发条件下使用，参考各技能的 `description` 说明
+
 ---
 
 ## 🇺🇸 English
