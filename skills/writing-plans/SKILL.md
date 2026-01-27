@@ -17,14 +17,6 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
 
-## FIRST: Check the Backlog
-
-Before writing ANY plan, read `docs/BACKLOG.md` (or `docs/backlog.md`):
-
-1. Is this work already tracked? If so, mention it.
-2. Are there related items to bundle together?
-3. Will this work resolve any backlog items? Add cleanup to the plan.
-
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**
@@ -96,6 +88,7 @@ git commit -m "feat: add specific feature"
 ```
 
 ## Remember
+- Check backlog for related items
 - Exact file paths always
 - Complete code in plan (not "add validation")
 - Exact commands with expected output

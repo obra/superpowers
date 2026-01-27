@@ -11,7 +11,7 @@ Check the project backlog before planning work. Prevents duplicate effort and su
 
 ## Location
 
-`docs/BACKLOG.md` or `docs/backlog.md` in the project root.
+`docs/BACKLOG.md` in the project root. Create it if it doesn't exist.
 
 ## Before Planning Work
 

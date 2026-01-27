@@ -13,17 +13,8 @@ Start by understanding the current project context, then ask questions one at a 
 
 ## The Process
 
-## FIRST: Check the project backlog
-
-Before ANY exploration, read `docs/BACKLOG.md` (or `docs/backlog.md`). Look for:
-- Items related to the current request
-- Items that could be bundled with this work
-- Context from previous discussions
-
-If you find related items, mention them immediately: "I see this is already tracked in the backlog..." or "The backlog has related items we should consider..."
-
 **Understanding the idea:**
-- Check out the current project state first (files, docs, recent commits)
+- Check out the current project state first (files, docs, recent commits, backlog)
 - Ask questions one at a time to refine the idea
 - Prefer multiple choice questions when possible, but open-ended is fine too
 - Only one question per message - if a topic needs more exploration, break it into multiple questions
