@@ -67,6 +67,22 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 **Detailed docs:** [docs/README.codex.md](docs/README.codex.md)
 
+### Factory Droid
+
+In Droid, register the marketplace first:
+
+```bash
+/plugin marketplace add obra/superpowers
+```
+
+Then install the plugin from this marketplace:
+
+```bash
+/plugin install superpowers@superpowers
+```
+
+**Detailed docs:** [docs/README.droid.md](docs/README.droid.md)
+
 ### OpenCode
 
 Tell OpenCode:
