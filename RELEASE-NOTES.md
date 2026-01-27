@@ -1,5 +1,21 @@
 # Horspowers Release Notes
 
+## v4.3.2 (2026-01-27)
+
+### Documentation
+
+**完善 README 中文安装使用指南**
+- 新增「安装与使用」中文章节
+- 包含：插件安装、验证安装、快速开始、配置说明、文档系统、常用命令速查、故障排除
+- 提升中文用户的使用体验
+
+**文档结构优化**
+- 移除重复的集成指南文档 (`document-driven-integration-guide*.md`)
+- 归档已完成任务文档到 `docs/archive/`
+- 简化文档目录结构
+
+---
+
 ## v4.3.1 (2026-01-22)
 
 ### Bug Fixes
