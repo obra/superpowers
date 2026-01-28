@@ -28,6 +28,17 @@ test('parseFindOutput tolerates entries without url', () => {
   assert.deepEqual(parseFindOutput(output), [{ id: 'owner/repo@skill', url: null }]);
 });
 
+test('parseFindOutput ignores non-skill @ strings', () => {
+  const output = [
+    'email@test.com',
+    'owner/repo@skill',
+  ].join('\n');
+
+  assert.deepEqual(parseFindOutput(output), [
+    { id: 'owner/repo@skill', url: null }
+  ]);
+});
+
 test('buildNpxArgs uses npx with skills subcommand', () => {
   assert.deepEqual(buildNpxArgs(['find', 'codex']), ['--yes', 'skills', 'find', 'codex']);
 });

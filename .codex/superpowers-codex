@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const skillsCore = require('../lib/skills-core');
+const npxSkills = require('../lib/npx-skills');
 
 // Paths
 const homeDir = os.homedir();
@@ -238,9 +239,57 @@ function runUseSkill(skillName) {
 
 }
 
+function runSearchSkills(query) {
+    if (!query) {
+        console.log('Usage: superpowers-codex search-skills <query>');
+        console.log('Examples:');
+        console.log('  superpowers-codex search-skills codex');
+        return;
+    }
+
+    const { status, stdout, stderr } = npxSkills.runNpxSkills(['find', query]);
+    if (status !== 0) {
+        console.log('Error: npx skills find failed');
+        if (stderr) console.log(stderr.trim());
+        process.exitCode = status || 1;
+        return;
+    }
+
+    const results = npxSkills.parseFindOutput(stdout);
+    if (results.length === 0) {
+        console.log('No skills found.');
+        return;
+    }
+
+    console.log('Skill search results:');
+    for (const result of results) {
+        console.log(`- ${result.id}`);
+        if (result.url) console.log(`  ${result.url}`);
+    }
+}
+
+function runInstallSkill(args) {
+    if (!args || args.length === 0) {
+        console.log('Usage: superpowers-codex install-skill <owner/repo> [args...]');
+        console.log('Examples:');
+        console.log('  superpowers-codex install-skill vercel-labs/agent-skills --agent codex');
+        return;
+    }
+
+    const { status, stdout, stderr } = npxSkills.runNpxSkills(['add', ...args]);
+    if (stdout) console.log(stdout.trim());
+    if (status !== 0) {
+        console.log('Error: npx skills add failed');
+        if (stderr) console.log(stderr.trim());
+        process.exitCode = status || 1;
+        return;
+    }
+}
+
 // Main CLI
 const command = process.argv[2];
 const arg = process.argv[3];
+const rest = process.argv.slice(3);
 
 switch (command) {
     case 'bootstrap':
@@ -252,16 +301,26 @@ switch (command) {
     case 'find-skills':
         runFindSkills();
         break;
+    case 'search-skills':
+        runSearchSkills(arg);
+        break;
+    case 'install-skill':
+        runInstallSkill(rest);
+        break;
     default:
         console.log('Superpowers for Codex');
         console.log('Usage:');
         console.log('  superpowers-codex bootstrap              # Run complete bootstrap with all skills');
         console.log('  superpowers-codex use-skill <skill-name> # Load a specific skill');
         console.log('  superpowers-codex find-skills            # List all available skills');
+        console.log('  superpowers-codex search-skills <query>  # Search skills via npx skills');
+        console.log('  superpowers-codex install-skill <repo>   # Install skills via npx skills add');
         console.log('');
         console.log('Examples:');
         console.log('  superpowers-codex bootstrap');
         console.log('  superpowers-codex use-skill superpowers:brainstorming');
         console.log('  superpowers-codex use-skill my-custom-skill');
+        console.log('  superpowers-codex search-skills codex');
+        console.log('  superpowers-codex install-skill vercel-labs/agent-skills --agent codex');
         break;
 }

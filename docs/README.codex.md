@@ -54,6 +54,18 @@ Run ~/.codex/superpowers/.codex/superpowers-codex find-skills
 Run ~/.codex/superpowers/.codex/superpowers-codex use-skill superpowers:brainstorming
 ```
 
+### Searching Skills (via npx skills)
+
+```
+Run ~/.codex/superpowers/.codex/superpowers-codex search-skills codex
+```
+
+### Installing Skills (via npx skills)
+
+```
+Run ~/.codex/superpowers/.codex/superpowers-codex install-skill vercel-labs/agent-skills --agent codex
+```
+
 ### Bootstrap All Skills
 
 ```
@@ -91,10 +103,12 @@ Personal skills override superpowers skills with the same name.
 
 **Location:** `~/.codex/superpowers/.codex/superpowers-codex`
 
-A Node.js CLI script that provides three commands:
+A Node.js CLI script that provides these commands:
 - `bootstrap` - Load complete bootstrap with all skills
 - `use-skill <name>` - Load a specific skill
 - `find-skills` - List all available skills
+- `search-skills <query>` - Search skills via npx skills
+- `install-skill <repo>` - Install skills via npx skills add
 
 ### Shared Core Module
 
