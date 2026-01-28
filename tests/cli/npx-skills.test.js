@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { stripAnsi, parseFindOutput, buildNpxArgs } = require('../../lib/npx-skills');
+const { stripAnsi, parseFindOutput, buildNpxArgs, runNpxSkills } = require('../../lib/npx-skills');
 
 test('stripAnsi removes ANSI codes', () => {
   const input = '\u001b[31mred\u001b[0m text';
@@ -23,6 +23,23 @@ test('parseFindOutput extracts skill ids and urls', () => {
   ]);
 });
 
+test('parseFindOutput tolerates entries without url', () => {
+  const output = 'owner/repo@skill';
+  assert.deepEqual(parseFindOutput(output), [{ id: 'owner/repo@skill', url: null }]);
+});
+
 test('buildNpxArgs uses npx with skills subcommand', () => {
   assert.deepEqual(buildNpxArgs(['find', 'codex']), ['--yes', 'skills', 'find', 'codex']);
+});
+
+test('runNpxSkills returns stdout/stderr and status', () => {
+  const fakeSpawn = (cmd, args, options) => {
+    assert.equal(cmd, 'npx');
+    assert.deepEqual(args, ['--yes', 'skills', 'find', 'codex']);
+    assert.equal(options.shell, false);
+    return { status: 0, stdout: Buffer.from('out'), stderr: Buffer.from('') };
+  };
+
+  const result = runNpxSkills(['find', 'codex'], { spawnSync: fakeSpawn });
+  assert.deepEqual(result, { status: 0, stdout: 'out', stderr: '' });
 });
