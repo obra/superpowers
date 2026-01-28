@@ -1,6 +1,6 @@
 ---
 name: skills-acquirer
-description: Discover and install skills via npx skills using superpowers-codex search-skills/install-skill when the user asks to find, fetch, or add new skills.
+description: Automatically trigger when the user asks to find, search, discover, browse, list, fetch, add, install, download, or update skills; mentions skills.sh or npx skills; wants a skill from GitHub; or asks how to get more skills. Use superpowers-codex search-skills/install-skill to perform acquisition.
 ---
 
 # Skills Acquisition
