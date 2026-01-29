@@ -74,3 +74,11 @@ After all tasks complete and verified:
 - Reference skills when plan says to
 - Between batches: just report and wait
 - Stop when blocked, don't guess
+- Never start on main/master branch (use worktree first)
+
+## Integration
+
+**Required workflow skills:**
+- **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
+- **superpowers:writing-plans** - Creates the plan this skill executes
+- **superpowers:finishing-a-development-branch** - Complete development after all tasks
