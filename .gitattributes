@@ -1,0 +1,17 @@
+# Ensure shell scripts always have LF line endings
+*.sh text eol=lf
+
+# Ensure the polyglot wrapper keeps LF (it's parsed by both cmd and bash)
+*.cmd text eol=lf
+
+# Common text files
+*.md text eol=lf
+*.json text eol=lf
+*.js text eol=lf
+*.mjs text eol=lf
+*.ts text eol=lf
+
+# Explicitly mark binary files
+*.png binary
+*.jpg binary
+*.gif binary

@@ -15,15 +15,15 @@ trap cleanup_test_env EXIT
 
 # Test 1: Verify plugin file exists and is registered
 echo "Test 1: Checking plugin registration..."
-if [ -L "$HOME/.config/opencode/plugin/superpowers.js" ]; then
+if [ -L "$HOME/.config/opencode/plugins/superpowers.js" ]; then
     echo "  [PASS] Plugin symlink exists"
 else
-    echo "  [FAIL] Plugin symlink not found at $HOME/.config/opencode/plugin/superpowers.js"
+    echo "  [FAIL] Plugin symlink not found at $HOME/.config/opencode/plugins/superpowers.js"
     exit 1
 fi
 
 # Verify symlink target exists
-if [ -f "$(readlink -f "$HOME/.config/opencode/plugin/superpowers.js")" ]; then
+if [ -f "$(readlink -f "$HOME/.config/opencode/plugins/superpowers.js")" ]; then
     echo "  [PASS] Plugin symlink target exists"
 else
     echo "  [FAIL] Plugin symlink target does not exist"
@@ -60,7 +60,7 @@ fi
 
 # Test 5: Verify plugin JavaScript syntax (basic check)
 echo "Test 5: Checking plugin JavaScript syntax..."
-plugin_file="$HOME/.config/opencode/superpowers/.opencode/plugin/superpowers.js"
+plugin_file="$HOME/.config/opencode/superpowers/.opencode/plugins/superpowers.js"
 if node --check "$plugin_file" 2>/dev/null; then
     echo "  [PASS] Plugin JavaScript syntax is valid"
 else
