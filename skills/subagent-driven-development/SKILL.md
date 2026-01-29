@@ -199,6 +199,7 @@ Done!
 ## Red Flags
 
 **Never:**
+- Start implementation on main/master branch (use worktree first)
 - Skip reviews (spec compliance OR code quality)
 - Proceed with unfixed issues
 - Dispatch multiple implementation subagents in parallel (conflicts)
