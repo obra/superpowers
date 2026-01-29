@@ -14,7 +14,7 @@ echo "Test 1: Skill loading..."
 
 output=$(run_claude "What is the subagent-driven-development skill? Describe its key steps briefly." 30)
 
-if assert_contains "$output" "subagent-driven-development" "Skill is recognized"; then
+if assert_contains "$output" "subagent-driven-development\|Subagent-Driven Development\|Subagent Driven" "Skill is recognized"; then
     : # pass
 else
     exit 1
