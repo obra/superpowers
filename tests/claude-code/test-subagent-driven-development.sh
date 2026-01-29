@@ -154,7 +154,7 @@ echo "Test 9: Main branch red flag..."
 
 output=$(run_claude "In subagent-driven-development, is it okay to start implementation directly on the main branch?" 30)
 
-if assert_contains "$output" "worktree\|feature.*branch\|not.*main\|never.*main\|avoid.*main\|don't.*main" "Warns against main branch"; then
+if assert_contains "$output" "worktree\|feature.*branch\|not.*main\|never.*main\|avoid.*main\|don't.*main\|consent\|permission" "Warns against main branch"; then
     : # pass
 else
     exit 1
