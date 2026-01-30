@@ -20,6 +20,18 @@ Start by understanding the current project context, then ask questions one at a 
 - Only one question per message - if a topic needs more exploration, break it into multiple questions
 - Focus on understanding: purpose, constraints, success criteria
 
+**Researching existing solutions:**
+- Before proposing custom approaches, search for existing solutions
+- Use GitHub CLI to find relevant repositories:
+  ```bash
+  gh search repos "[keywords]" --limit 10 --sort stars
+  gh search repos "[keywords]" --language [lang] --limit 10 --sort stars
+  ```
+- Use web search to find existing tools, libraries, or patterns
+- Present findings with context: stars, last update, license, key features
+- Ask: "I found these existing solutions. Should we build on one, use one as inspiration, or start fresh?"
+- If user chooses to build on existing work, explore that codebase before designing
+
 **Exploring approaches:**
 - Propose 2-3 different approaches with trade-offs
 - Present options conversationally with your recommendation and reasoning
@@ -48,6 +60,7 @@ Start by understanding the current project context, then ask questions one at a 
 
 - **One question at a time** - Don't overwhelm with multiple questions
 - **Multiple choice preferred** - Easier to answer than open-ended when possible
+- **Research before reinventing** - Search GitHub and web for existing solutions before designing from scratch
 - **YAGNI ruthlessly** - Remove unnecessary features from all designs
 - **Explore alternatives** - Always propose 2-3 approaches before settling
 - **Incremental validation** - Present design in sections, validate each
