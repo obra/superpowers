@@ -77,6 +77,23 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
 
+### Gemini CLI
+
+Install the extension:
+
+```bash
+git clone https://github.com/obra/superpowers.git ~/superpowers
+gemini extensions install ~/superpowers
+```
+
+Or tell the AI agent:
+
+```text
+Clone https://github.com/obra/superpowers.git to ~/superpowers, then run: gemini extensions install ~/superpowers
+```
+
+**Detailed docs:** [.gemini/INSTALL.md](.gemini/INSTALL.md)
+
 ## The Basic Workflow
 
 1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
@@ -143,10 +160,22 @@ See `skills/writing-skills/SKILL.md` for the complete guide.
 
 ## Updating
 
+### Claude Code
+
 Skills update automatically when you update the plugin:
 
 ```bash
 /plugin update superpowers
+```
+
+### Gemini CLI
+
+Update the extension:
+
+```bash
+cd ~/superpowers
+git pull
+gemini extensions update superpowers
 ```
 
 ## License
