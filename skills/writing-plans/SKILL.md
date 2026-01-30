@@ -88,6 +88,7 @@ git commit -m "feat: add specific feature"
 ```
 
 ## Remember
+- Check backlog for related items
 - Exact file paths always
 - Complete code in plan (not "add validation")
 - Exact commands with expected output
