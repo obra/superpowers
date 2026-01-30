@@ -26,7 +26,21 @@ Thanks!
 
 ## Installation
 
-**Note:** Installation differs by platform. Claude Code has a built-in plugin system. Codex and OpenCode require manual setup.
+**Note:** Installation differs by platform. Each has native integration optimized for that environment.
+
+### Cursor (via NPX) 🎯
+
+One command to install:
+
+```bash
+# Global (all projects)
+npx github:obra/superpowers/.cursor install --global
+
+# Or local (current project)
+npx github:obra/superpowers/.cursor install --local
+```
+
+**Requirements:** Cursor with Nightly channel enabled. [Full docs →](.cursor/INSTALL.md)
 
 ### Claude Code (via Plugin Marketplace)
 
