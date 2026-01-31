@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blueprint Design System</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* ========================================
+           CSS VARIABLES & RESET
+        ======================================== */
+        :root {
+            --paper: #F7F7F5;
+            --forest: #1A3C2B;
+            --grid: #3A3A38;
+            --coral: #FF8C69;
+            --mint: #9EFFBF;
+            --gold: #F4D35E;
+
+            --border-subtle: rgba(58, 58, 56, 0.2);
+            --border-faint: rgba(58, 58, 56, 0.3);
+
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-body: 'Space Grotesk', system-ui, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--paper);
+            color: var(--grid);
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+
+        /* ========================================
+           MOSAIC BACKGROUND
+        ======================================== */
+        .mosaic-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .mosaic-bg svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ========================================
+           TYPOGRAPHY
+        ======================================== */
+        .display-xl {
+            font-family: var(--font-display);
+            font-size: clamp(48px, 8vw, 96px);
+            font-weight: 700;
+            line-height: 0.9;
+            letter-spacing: -0.03em;
+            color: var(--forest);
+        }
+
+        .display-lg {
+            font-family: var(--font-display);
+            font-size: clamp(36px, 5vw, 64px);
+            font-weight: 700;
+            line-height: 0.9;
+            letter-spacing: -0.02em;
+            color: var(--forest);
+        }
+
+        .mono-label {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--grid);
+        }
+
+        .mono-text {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            letter-spacing: 0.02em;
+        }
+
+        .mono-sm {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* ========================================
+           SECTION DIVIDERS
+        ======================================== */
+        .section-divider {
+            width: 100%;
+            height: 1px;
+            background-color: var(--border-subtle);
+        }
+
+        section {
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        /* ========================================
+           NAVIGATION
+        ======================================== */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: var(--paper);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 0 32px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-logo {
+            width: 32px;
+            height: 32px;
+            background: var(--forest);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-logo svg {
+            width: 16px;
+            height: 16px;
+            fill: white;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--grid);
+            text-decoration: none;
+            transition: color 0.15s ease-out;
+        }
+
+        .nav-links a:hover {
+            color: var(--forest);
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn-ghost {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid var(--border-subtle);
+            color: var(--grid);
+            cursor: pointer;
+            border-radius: 2px;
+            transition: all 0.15s ease-out;
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--forest);
+            color: var(--forest);
+        }
+
+        .btn-solid {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 10px 20px;
+            background: var(--forest);
+            border: 1px solid var(--forest);
+            color: white;
+            cursor: pointer;
+            border-radius: 2px;
+            transition: all 0.15s ease-out;
+        }
+
+        .btn-solid:hover {
+            background: #0f2519;
+            border-color: #0f2519;
+        }
+
+        /* ========================================
+           HERO SECTION
+        ======================================== */
+        .hero {
+            min-height: 100vh;
+            padding: 120px 64px 80px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 64px;
+            align-items: center;
+        }
+
+        .hero-content {
+            max-width: 640px;
+        }
+
+        .hero-subtitle {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .hero-subtitle::before {
+            content: '';
+            width: 1px;
+            height: 48px;
+            background: var(--forest);
+            flex-shrink: 0;
+        }
+
+        .hero-subtitle span {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--grid);
+            line-height: 1.6;
+        }
+
+        .hero-title {
+            margin-bottom: 48px;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .hero-graphic {
+            position: relative;
+            width: 100%;
+            max-width: 480px;
+            aspect-ratio: 1;
+            border: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            justify-self: end;
+        }
+
+        .orbit-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+        }
+
+        .orbit-path {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 280px;
+            height: 280px;
+            transform: translate(-50%, -50%);
+            border: 1px dashed var(--border-subtle);
+            border-radius: 50%;
+        }
+
+        .orbit-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 64px;
+            height: 64px;
+            transform: translate(-50%, -50%);
+            overflow: hidden;
+        }
+
+        .orbit-center img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            mix-blend-mode: luminosity;
+            opacity: 0.9;
+            transition: all 0.3s ease-out;
+        }
+
+        .orbit-center:hover img {
+            mix-blend-mode: normal;
+            opacity: 1;
+        }
+
+        .orbit-node {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: var(--forest);
+            top: 50%;
+            left: 50%;
+            margin: -6px 0 0 -6px;
+            animation: orbit 20s linear infinite;
+        }
+
+        .orbit-node:nth-child(2) {
+            animation-delay: -6.66s;
+        }
+
+        .orbit-node:nth-child(3) {
+            animation-delay: -13.33s;
+        }
+
+        .orbit-line {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 140px;
+            height: 1px;
+            background: rgba(26, 60, 43, 0.2);
+            transform-origin: left center;
+            animation: orbit-line 20s linear infinite;
+        }
+
+        .orbit-line:nth-child(5) {
+            animation-delay: -6.66s;
+        }
+
+        .orbit-line:nth-child(6) {
+            animation-delay: -13.33s;
+        }
+
+        @keyframes orbit {
+            from {
+                transform: rotate(0deg) translateX(140px) rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg) translateX(140px) rotate(-360deg);
+            }
+        }
+
+        @keyframes orbit-line {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ========================================
+           BENTO FEATURE GRID
+        ======================================== */
+        .bento-section {
+            padding: 80px 64px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 48px;
+        }
+
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1px;
+            background: var(--grid);
+        }
+
+        .bento-cell {
+            background: var(--paper);
+            padding: 32px;
+            min-height: 320px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .bento-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .bento-accent {
+            width: 3px;
+            height: 16px;
+        }
+
+        .accent-coral { background: var(--coral); }
+        .accent-mint { background: var(--mint); }
+        .accent-gold { background: var(--gold); }
+        .accent-forest { background: var(--forest); }
+
+        .bento-title {
+            font-family: var(--font-display);
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--forest);
+            margin-bottom: 12px;
+        }
+
+        .bento-desc {
+            font-family: var(--font-body);
+            font-size: 14px;
+            color: var(--grid);
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .mockup-box {
+            flex: 1;
+            background: white;
+            border: 1px solid var(--border-subtle);
+            padding: 16px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            overflow: hidden;
+        }
+
+        .mockup-header {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .mockup-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .code-line {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 4px;
+            color: var(--grid);
+        }
+
+        .code-line .keyword { color: var(--forest); }
+        .code-line .string { color: var(--coral); }
+        .code-line .number { color: var(--gold); }
+        .code-line .function { color: #2563eb; }
+
+        .error-box {
+            background: rgba(255, 140, 105, 0.1);
+            border-left: 3px solid var(--coral);
+            padding: 12px;
+            margin-top: 12px;
+        }
+
+        .color-chips {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .color-chip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chip-swatch {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* ========================================
+           STATUS BADGE
+        ======================================== */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 12px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--forest);
+        }
+
+        .status-dot.active {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-text {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--grid);
+        }
+
+        /* ========================================
+           NETWORK TOPOLOGY GRAPH
+        ======================================== */
+        .topology-section {
+            padding: 80px 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 80px;
+        }
+
+        .topology-content {
+            max-width: 480px;
+        }
+
+        .topology-container {
+            width: 450px;
+            height: 450px;
+            border: 1px solid var(--border-subtle);
+            border-radius: 50%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .topology-center {
+            width: 16px;
+            height: 16px;
+            background: var(--forest);
+            position: absolute;
+            z-index: 10;
+        }
+
+        .topology-orbit {
+            position: absolute;
+            width: 280px;
+            height: 280px;
+            border: 1px dashed var(--border-subtle);
+            border-radius: 50%;
+        }
+
+        .topology-node {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: var(--forest);
+            top: 50%;
+            left: 50%;
+            margin: -6px 0 0 -6px;
+            animation: topology-orbit 20s linear infinite;
+        }
+
+        .topology-node:nth-child(2) {
+            animation-delay: -6.66s;
+            background: var(--coral);
+        }
+
+        .topology-node:nth-child(3) {
+            animation-delay: -13.33s;
+            background: var(--mint);
+        }
+
+        .topology-line {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 140px;
+            height: 1px;
+            background: rgba(26, 60, 43, 0.2);
+            transform-origin: left center;
+            animation: topology-orbit 20s linear infinite;
+        }
+
+        .topology-line:nth-child(5) {
+            animation-delay: -6.66s;
+        }
+
+        .topology-line:nth-child(6) {
+            animation-delay: -13.33s;
+        }
+
+        @keyframes topology-orbit {
+            from {
+                transform: rotate(0deg) translateX(140px);
+            }
+            to {
+                transform: rotate(360deg) translateX(140px);
+            }
+        }
+
+        /* ========================================
+           TESTIMONIAL CARD
+        ======================================== */
+        .testimonials-section {
+            padding: 80px 64px;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .testimonial-card {
+            border: 1px solid var(--border-subtle);
+            background: var(--paper);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .testimonial-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .quote-icon {
+            font-family: var(--font-display);
+            font-size: 32px;
+            color: var(--forest);
+            line-height: 1;
+        }
+
+        .star-rating {
+            display: flex;
+            gap: 2px;
+        }
+
+        .star {
+            width: 10px;
+            height: 10px;
+            fill: var(--gold);
+        }
+
+        .testimonial-body {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--grid);
+            flex: 1;
+            margin-bottom: 20px;
+        }
+
+        .testimonial-footer {
+            border-top: 1px solid var(--border-subtle);
+            padding-top: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .testimonial-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--forest);
+            overflow: hidden;
+        }
+
+        .testimonial-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            mix-blend-mode: luminosity;
+            opacity: 0.9;
+            transition: all 0.3s ease-out;
+        }
+
+        .testimonial-card:hover .testimonial-avatar img {
+            mix-blend-mode: normal;
+            opacity: 1;
+        }
+
+        .testimonial-info {
+            font-family: var(--font-mono);
+        }
+
+        .testimonial-name {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--forest);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .testimonial-title {
+            font-size: 10px;
+            color: var(--grid);
+            opacity: 0.7;
+        }
+
+        /* ========================================
+           FORM CTA SECTION
+        ======================================== */
+        .form-section {
+            padding: 120px 64px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .form-container {
+            width: 100%;
+            max-width: 640px;
+            position: relative;
+            background: var(--paper);
+            border: 1px solid var(--border-subtle);
+            padding: 48px;
+        }
+
+        /* Corner markers */
+        .corner-marker {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+        }
+
+        .corner-marker::before,
+        .corner-marker::after {
+            content: '';
+            position: absolute;
+            background: var(--forest);
+        }
+
+        .corner-marker.top-left {
+            top: -1px;
+            left: -1px;
+        }
+        .corner-marker.top-left::before {
+            top: 0;
+            left: 0;
+            width: 10px;
+            height: 2px;
+        }
+        .corner-marker.top-left::after {
+            top: 0;
+            left: 0;
+            width: 2px;
+            height: 10px;
+        }
+
+        .corner-marker.top-right {
+            top: -1px;
+            right: -1px;
+        }
+        .corner-marker.top-right::before {
+            top: 0;
+            right: 0;
+            width: 10px;
+            height: 2px;
+        }
+        .corner-marker.top-right::after {
+            top: 0;
+            right: 0;
+            width: 2px;
+            height: 10px;
+        }
+
+        .corner-marker.bottom-left {
+            bottom: -1px;
+            left: -1px;
+        }
+        .corner-marker.bottom-left::before {
+            bottom: 0;
+            left: 0;
+            width: 10px;
+            height: 2px;
+        }
+        .corner-marker.bottom-left::after {
+            bottom: 0;
+            left: 0;
+            width: 2px;
+            height: 10px;
+        }
+
+        .corner-marker.bottom-right {
+            bottom: -1px;
+            right: -1px;
+        }
+        .corner-marker.bottom-right::before {
+            bottom: 0;
+            right: 0;
+            width: 10px;
+            height: 2px;
+        }
+        .corner-marker.bottom-right::after {
+            bottom: 0;
+            right: 0;
+            width: 2px;
+            height: 10px;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .form-title {
+            font-family: var(--font-display);
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--forest);
+            margin-bottom: 12px;
+        }
+
+        .form-subtitle {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--grid);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--grid);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: white;
+            border: 1px solid var(--border-subtle);
+            font-family: var(--font-mono);
+            font-size: 14px;
+            color: var(--forest);
+            border-radius: 0;
+            outline: none;
+            transition: border-color 0.15s ease-out;
+        }
+
+        .form-input:focus {
+            border-color: var(--forest);
+        }
+
+        .form-input::placeholder {
+            color: var(--grid);
+            opacity: 0.5;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-submit {
+            width: 100%;
+            padding: 16px;
+            background: var(--forest);
+            border: 1px solid var(--forest);
+            color: white;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: all 0.15s ease-out;
+        }
+
+        .form-submit:hover {
+            background: #0f2519;
+        }
+
+        /* ========================================
+           FOOTER
+        ======================================== */
+        .footer {
+            padding: 48px 64px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .footer-links a {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--grid);
+            text-decoration: none;
+            transition: color 0.15s ease-out;
+        }
+
+        .footer-links a:hover {
+            color: var(--forest);
+        }
+
+        .footer-copyright {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--grid);
+            opacity: 0.7;
+        }
+
+        /* ========================================
+           RESPONSIVE
+        ======================================== */
+        @media (max-width: 1024px) {
+            .hero {
+                grid-template-columns: 1fr;
+                padding: 120px 32px 64px;
+            }
+
+            .hero-graphic {
+                justify-self: center;
+            }
+
+            .topology-section {
+                flex-direction: column;
+                padding: 64px 32px;
+            }
+
+            .testimonials-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav {
+                padding: 0 16px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .bento-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .footer {
+                flex-direction: column;
+                gap: 24px;
+                text-align: center;
+            }
+
+            .footer-left {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mosaic Background -->
+    <div class="mosaic-bg">
+        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <pattern id="mosaic" x="0" y="0" width="400" height="300" patternUnits="userSpaceOnUse">
+                    <!-- Large square -->
+                    <rect x="0" y="0" width="150" height="150" fill="#F7F7F5" stroke="#3A3A38" stroke-width="0.5" stroke-opacity="0.3"/>
+                    <!-- Horizontal strip -->
+                    <rect x="150" y="0" width="250" height="75" fill="#F7F7F5" stroke="#3A3A38" stroke-width="0.5" stroke-opacity="0.3"/>
+                    <!-- Small squares -->
+                    <rect x="150" y="75" width="125" height="75" fill="#F7F7F5" stroke="#3A3A38" stroke-width="0.5" stroke-opacity="0.3"/>
+                    <rect x="275" y="75" width="125" height="75" fill="#F7F7F5" stroke="#3A3A38" stroke-width="0.5" stroke-opacity="0.3"/>
+                    <!-- Vertical block -->
+                    <rect x="0" y="150" width="75" height="150" fill="#F7F7F5" stroke="#3A3A38" stroke-width="0.5" stroke-opacity="0.3"/>
+                    <!-- Medium rectangle -->
+                    <rect x="75" y="150" width="175" height="100" fill="#F7F7F5" stroke="#3A3A38" stroke-width="0.5" stroke-opacity="0.3"/>
+                    <!-- Small blocks -->
+                    <rect x="75" y="250" width="87.5" height="50" fill="#F7F7F5" stroke="#3A3A38" stroke-width="0.5" stroke-opacity="0.3"/>
+                    <rect x="162.5" y="250" width="87.5" height="50" fill="#F7F7F5" stroke="#3A3A38" stroke-width="0.5" stroke-opacity="0.3"/>
+                    <!-- Tall rectangle -->
+                    <rect x="250" y="150" width="150" height="150" fill="#F7F7F5" stroke="#3A3A38" stroke-width="0.5" stroke-opacity="0.3"/>
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#mosaic)"/>
+        </svg>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-logo">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.5L19 8l-7 3.5L5 8l7-3.5zM4 9.5l7 3.5v7l-7-3.5v-7zm16 0v7l-7 3.5v-7l7-3.5z"/>
+            </svg>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#features">01. Features</a></li>
+            <li><a href="#topology">02. System</a></li>
+            <li><a href="#testimonials">03. Clients</a></li>
+            <li><a href="#contact">04. Contact</a></li>
+        </ul>
+        <div class="nav-actions">
+            <button class="btn-ghost">Documentation</button>
+            <button class="btn-solid">Get Started</button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-subtitle">
+                <span>Blueprint Design System<br>Version 1.0.0 — Technical Interface Kit</span>
+            </div>
+            <h1 class="display-xl hero-title">Structural<br>Precision.</h1>
+            <div class="hero-actions">
+                <button class="btn-solid">Explore Components</button>
+                <button class="btn-ghost">View Documentation</button>
+                <div class="status-badge">
+                    <div class="status-dot active"></div>
+                    <span class="status-text">System Online</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero-graphic">
+            <div class="orbit-container">
+                <div class="orbit-path"></div>
+                <div class="orbit-center">
+                    <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200&h=200&fit=crop" alt="Abstract">
+                </div>
+                <div class="orbit-node"></div>
+                <div class="orbit-node"></div>
+                <div class="orbit-node"></div>
+                <div class="orbit-line"></div>
+                <div class="orbit-line"></div>
+                <div class="orbit-line"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bento Feature Grid -->
+    <section class="bento-section" id="features">
+        <div class="section-header">
+            <div>
+                <span class="mono-label">02 / Features</span>
+                <h2 class="display-lg" style="margin-top: 8px;">Component Library</h2>
+            </div>
+            <div class="status-badge">
+                <div class="status-dot"></div>
+                <span class="status-text">48 Components</span>
+            </div>
+        </div>
+
+        <div class="bento-grid">
+            <div class="bento-cell">
+                <div class="bento-label">
+                    <div class="bento-accent accent-coral"></div>
+                    <span class="mono-label">Type System</span>
+                </div>
+                <h3 class="bento-title">Typography Scale</h3>
+                <p class="bento-desc">Modular type scale with Space Grotesk for display and JetBrains Mono for technical elements.</p>
+                <div class="mockup-box">
+                    <div class="mockup-header">
+                        <div class="mockup-dot" style="background: var(--coral)"></div>
+                        <div class="mockup-dot" style="background: var(--gold)"></div>
+                        <div class="mockup-dot" style="background: var(--mint)"></div>
+                    </div>
+                    <div class="code-line"><span class="keyword">--font-display:</span> <span class="string">'Space Grotesk'</span>;</div>
+                    <div class="code-line"><span class="keyword">--font-mono:</span> <span class="string">'JetBrains Mono'</span>;</div>
+                    <div class="code-line"><span class="keyword">--size-xl:</span> <span class="number">96px</span>;</div>
+                    <div class="code-line"><span class="keyword">--tracking:</span> <span class="number">-0.03em</span>;</div>
+                </div>
+            </div>
+
+            <div class="bento-cell">
+                <div class="bento-label">
+                    <div class="bento-accent accent-mint"></div>
+                    <span class="mono-label">Color Tokens</span>
+                </div>
+                <h3 class="bento-title">Palette System</h3>
+                <p class="bento-desc">Semantic color tokens with Forest green primary and accent colors for status indication.</p>
+                <div class="mockup-box">
+                    <div class="color-chips">
+                        <div class="color-chip">
+                            <div class="chip-swatch" style="background: var(--forest)"></div>
+                            <span class="mono-label">Forest</span>
+                        </div>
+                        <div class="color-chip">
+                            <div class="chip-swatch" style="background: var(--coral)"></div>
+                            <span class="mono-label">Coral</span>
+                        </div>
+                    </div>
+                    <div class="color-chips">
+                        <div class="color-chip">
+                            <div class="chip-swatch" style="background: var(--mint)"></div>
+                            <span class="mono-label">Mint</span>
+                        </div>
+                        <div class="color-chip">
+                            <div class="chip-swatch" style="background: var(--gold)"></div>
+                            <span class="mono-label">Gold</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bento-cell">
+                <div class="bento-label">
+                    <div class="bento-accent accent-gold"></div>
+                    <span class="mono-label">Error States</span>
+                </div>
+                <h3 class="bento-title">Validation UI</h3>
+                <p class="bento-desc">Flat error handling patterns with monospaced messaging and status indicators.</p>
+                <div class="mockup-box">
+                    <div class="code-line"><span class="function">validateInput</span>(<span class="string">"email"</span>)</div>
+                    <div class="error-box">
+                        <div class="code-line" style="color: var(--coral); margin: 0;">
+                            <span>ERR_VALIDATION:</span>
+                        </div>
+                        <div class="code-line" style="margin: 0; margin-top: 4px;">
+                            Invalid format detected
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bento-cell">
+                <div class="bento-label">
+                    <div class="bento-accent accent-forest"></div>
+                    <span class="mono-label">Grid System</span>
+                </div>
+                <h3 class="bento-title">Bento Layout</h3>
+                <p class="bento-desc">Modular grid with 1px hairline gaps creating a blueprint-style component arrangement.</p>
+                <div class="mockup-box">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--grid); height: 100%;">
+                        <div style="background: var(--paper); padding: 8px;">
+                            <span class="mono-label">A1</span>
+                        </div>
+                        <div style="background: var(--paper); padding: 8px;">
+                            <span class="mono-label">A2</span>
+                        </div>
+                        <div style="background: var(--paper); padding: 8px; grid-column: span 2;">
+                            <span class="mono-label">B1 — Span 2</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Network Topology Section -->
+    <section class="topology-section" id="topology">
+        <div class="topology-content">
+            <span class="mono-label">03 / Architecture</span>
+            <h2 class="display-lg" style="margin: 16px 0 24px;">System Topology</h2>
+            <p style="font-size: 16px; line-height: 1.7; color: var(--grid); margin-bottom: 32px;">
+                A modular architecture where each component orbits around a central design token system, ensuring consistency and scalability across your entire product.
+            </p>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <div class="status-badge">
+                    <div class="status-dot" style="background: var(--forest)"></div>
+                    <span class="status-text">Core Tokens</span>
+                </div>
+                <div class="status-badge">
+                    <div class="status-dot" style="background: var(--coral)"></div>
+                    <span class="status-text">Components</span>
+                </div>
+                <div class="status-badge">
+                    <div class="status-dot" style="background: var(--mint)"></div>
+                    <span class="status-text">Patterns</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="topology-container">
+            <div class="topology-center"></div>
+            <div class="topology-orbit"></div>
+            <div class="topology-node"></div>
+            <div class="topology-node"></div>
+            <div class="topology-node"></div>
+            <div class="topology-line"></div>
+            <div class="topology-line"></div>
+            <div class="topology-line"></div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials-section" id="testimonials">
+        <div class="section-header">
+            <div>
+                <span class="mono-label">04 / Testimonials</span>
+                <h2 class="display-lg" style="margin-top: 8px;">Client Feedback</h2>
+            </div>
+        </div>
+
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <div class="testimonial-header">
+                    <span class="quote-icon">"</span>
+                    <div class="star-rating">
+                        <svg class="star" viewBox="0 0 10 10"><polygon points="5,0 6.5,3.5 10,3.5 7,6 8.5,10 5,7.5 1.5,10 3,6 0,3.5 3.5,3.5"/></svg>
+                        <svg class="star" viewBox="0 0 10 10"><polygon points="5,0 6.5,3.5 10,3.5 7,6 8.5,10 5,7.5 1.5,10 3,6 0,3.5 3.5,3.5"/></svg>
+                        <svg class="star" viewBox="0 0 10 10"><polygon points="5,0 6.5,3.5 10,3.5 7,6 8.5,10 5,7.5 1.5,10 3,6 0,3.5 3.5,3.5"/></svg>
+                        <svg class="star" viewBox="0 0 10 10"><polygon points="5,0 6.5,3.5 10,3.5 7,6 8.5,10 5,7.5 1.5,10 3,6 0,3.5 3.5,3.5"/></svg>
+                        <svg class="star" viewBox="0 0 10 10"><polygon points="5,0 6.5,3.5 10,3.5 7,6 8.5,10 5,7.5 1.5,10 3,6 0,3.5 3.5,3.5"/></svg>
+                    </div>
+                </div>
+                <p class="testimonial-body">The precision of this design system transformed how we approach interface development. Every component feels intentional and structurally sound.</p>
+                <div class="testimonial-footer">
+                    <div class="testimonial-avatar">
+                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face" alt="Avatar">
+                    </div>
+                    <div class="testimonial-info">
+                        <div class="testimonial-name">Marcus Chen</div>
+                        <div class="testimonial-title">Design Lead, Vertex</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="testimonial-card">
+                <div class="testimonial-header">
+                    <span class="quote-icon">"</span>
+                    <div class="star-rating">
+                        <svg class="star" viewBox="0 0 10 10"><polygon points="5,0 6.5,3.5 10,3.5 7,6 8.5,10 5,7.5 1.5,10 3,6 0,3.5 3.5,3.5"/></svg>
+                        <svg class="star" viewBox="0 0 10 10"><polygon points="5,0 6.5,3.5 10,3.5 7,6 8.5,10 5,7.5 1.5,10 3,6 0,3.5 3.5,3.5"/></svg>
+                        <svg class="star" viewBox="0 0 10 10"><polygon points="5,0 6.5,3.5 10,3.5 7,6 8.5,10 5,7.5 1.5,10 3,6 0,3.5 3.5,3.5"/></svg>
+                        <svg class="star" viewBox="0 0 10 10"><polygon points="5,0 6.5,3.5 10,3.5 7,6 8.5,10 5,7.5 1.5,10 3,6 0,3.5 3.5,3.5"/></svg>
+                        <svg class="star" viewBox="0 0 10 10"><polygon points="5,0 6.5,3.5 10,3.5 7,6 8.5,10 5,7.5 1.5,10 3,6 0,3.5 3.5,3.5"/></svg>
+                    </div>
+                </div>
+                <p class="testimonial-body">Finally, a system that respects the craft. The hairline borders and mosaic patterns create an aesthetic that feels both technical and refined.</p>
+                <div class="testimonial-footer">
+                    <div class="testimonial-avatar">
+                        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&h=80&fit=crop&crop=face" alt="Avatar">
+                    </div>
+                    <div class="testimonial-info">
+                        <div class="testimonial-name">Sarah Lindqvist</div>
+                        <div class="testimonial-title">Creative Director, Forma</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="testimonial-card">
+                <div class="testimonial-header">
+                    <span class="quote-icon">"</span>
+                    <div class="star-rating">
+                        <svg class="star" viewBox="0 0 10 10"><polygon points="5,0 6.5,3.5 10,3.5 7,6 8.5,10 5,7.5 1.5,10 3,6 0,3.5 3.5,3.5"/></svg>
+                        <svg class="star" viewBox="0 0 10 10"><polygon points="5,0 6.5,3.5 10,3.5 7,6 8.5,10 5,7.5 1.5,10 3,6 0,3.5 3.5,3.5"/></svg>
+                        <svg class="star" viewBox="0 0 10 10"><polygon points="5,0 6.5,3.5 10,3.5 7,6 8.5,10 5,7.5 1.5,10 3,6 0,3.5 3.5,3.5"/></svg>
+                        <svg class="star" viewBox="0 0 10 10"><polygon points="5,0 6.5,3.5 10,3.5 7,6 8.5,10 5,7.5 1.5,10 3,6 0,3.5 3.5,3.5"/></svg>
+                        <svg class="star" viewBox="0 0 10 10"><polygon points="5,0 6.5,3.5 10,3.5 7,6 8.5,10 5,7.5 1.5,10 3,6 0,3.5 3.5,3.5"/></svg>
+                    </div>
+                </div>
+                <p class="testimonial-body">Our development velocity increased significantly. The token system and clear specifications made implementation straightforward across our team.</p>
+                <div class="testimonial-footer">
+                    <div class="testimonial-avatar">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face" alt="Avatar">
+                    </div>
+                    <div class="testimonial-info">
+                        <div class="testimonial-name">James Okonkwo</div>
+                        <div class="testimonial-title">Engineering Manager, Arc</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Form CTA Section -->
+    <section class="form-section" id="contact">
+        <div class="form-container">
+            <div class="corner-marker top-left"></div>
+            <div class="corner-marker top-right"></div>
+            <div class="corner-marker bottom-left"></div>
+            <div class="corner-marker bottom-right"></div>
+
+            <div class="form-header">
+                <span class="mono-label">Get Access</span>
+                <h2 class="form-title">Request Early Access</h2>
+                <p class="form-subtitle">Join the waitlist for Blueprint v1.0</p>
+            </div>
+
+            <form>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">First Name</label>
+                        <input type="text" class="form-input" placeholder="Enter first name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Last Name</label>
+                        <input type="text" class="form-input" placeholder="Enter last name">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-input" placeholder="you@company.com">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Company</label>
+                    <input type="text" class="form-input" placeholder="Company name">
+                </div>
+
+                <button type="submit" class="form-submit">Submit Request</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-left">
+            <div class="nav-logo">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.5L19 8l-7 3.5L5 8l7-3.5zM4 9.5l7 3.5v7l-7-3.5v-7zm16 0v7l-7 3.5v-7l7-3.5z"/>
+                </svg>
+            </div>
+            <div class="footer-links">
+                <a href="#">Documentation</a>
+                <a href="#">Components</a>
+                <a href="#">GitHub</a>
+                <a href="#">Support</a>
+            </div>
+        </div>
+        <div class="footer-copyright">
+            Blueprint Design System v1.0.0 — 2026
+        </div>
+    </footer>
+</body>
+</html>
