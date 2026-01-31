@@ -28,7 +28,7 @@ Non-goals for this phase:
 - Tool-mapping rewrites within skill bodies.
 - Implementation mechanics (manifest format, script layout, etc.)
 
-Platform intent: cross-platform support (macOS, Linux, Windows). A PowerShell-native path may be a documented TODO; any gaps must be explicit rather than silent.
+Platform intent: cross-platform support (macOS, Linux, Windows via shell environments such as Git Bash or WSL). Native PowerShell support for Windows is a documented TODO for a future phase; any gaps must be explicit rather than silent.
 
 ## Requirements and constraints
 
@@ -109,4 +109,3 @@ Decision: Option B.
 - Lower per-session overhead (no bootstrap on every session; only always-on rules remain).
 - Lower install friction compared to the legacy flow.
 - Reliable updates: re-running install is a no-op when reconciled; deterministic corrections when out of date.
-
