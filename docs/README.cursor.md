@@ -126,11 +126,45 @@ Cursor automatically discovers:
   - `.cursor/commands/` (project-level)
   - `~/.cursor/commands/` (global-level)
 
+### Built-in Subagents
+
+Cursor includes three built-in subagents that handle context-heavy operations automatically:
+
+- **Explore**: Searches and analyzes codebases (uses faster model for parallel searches)
+- **Bash**: Runs series of shell commands (isolates verbose output)
+- **Browser**: Controls browser via MCP tools (filters DOM snapshots and screenshots)
+
+These subagents are used automatically when appropriate and don't need configuration.
+
+### Subagent File Format
+
+Custom subagents are markdown files with YAML frontmatter:
+
+```markdown
+---
+name: code-reviewer
+description: Use when a major project step has been completed and needs to be reviewed
+model: inherit
+---
+
+[Your subagent prompt here]
+```
+
+**Configuration fields:**
+- `name` (required): Unique identifier
+- `description` (required): When to use this subagent
+- `model` (optional): `fast`, `inherit`, or specific model ID
+- `readonly` (optional): If `true`, runs with restricted write permissions
+- `is_background` (optional): If `true`, runs in background without waiting
+
 ### Manual Invocation
 
 Skills can be manually invoked in chat using `/skill-name` syntax.
 
-Subagents can be manually invoked in chat using `@mention` syntax.
+Subagents can be manually invoked using `/name` syntax or natural language requests:
+
+- `/name` syntax: `/code-reviewer review this code`
+- Natural language: `Use the code-reviewer subagent to review this code`
 
 Commands can be manually invoked in chat using `/command-name` syntax.
 
@@ -217,13 +251,23 @@ Commands are loaded from:
 - Project: `.cursor/commands/` (highest priority)
 - Global: `~/.cursor/commands/` (fallback)
 
+### Parallel Execution
+
+You can launch multiple subagents concurrently for maximum throughput:
+
+```text
+Review the API changes and update the documentation in parallel
+```
+
+This allows Cursor to work on different parts of your codebase simultaneously, significantly reducing overall execution time.
+
 ### Tool Mapping
 
 Skills written for Claude Code are adapted for Cursor with these mappings:
 
 - `TodoWrite` → `update_plan` (your planning/task tracking tool)
-- `Task` with subagents → Use Cursor's subagent system (@mention) or sequential fallback
-- `Subagent` / `Agent` tool mentions → Map to Cursor's subagent system (@mention)
+- `Task` with subagents → Use Cursor's subagent system (/name syntax) or sequential fallback
+- `Subagent` / `Agent` tool mentions → Map to Cursor's subagent system (/name syntax)
 - File operations → Your native tools
 
 ## Updating
@@ -255,8 +299,9 @@ git pull
 ### Subagents not found
 
 1. Verify installation: `ls ~/.cursor/agents/superpowers` (global) or `ls .cursor/agents/` (project)
-2. Verify subagents have .md files
+2. Verify subagents have .md files with proper YAML frontmatter
 3. Check that symlinks/copies are working: `ls -la ~/.cursor/agents/superpowers` (global) or `ls -la .cursor/agents/` (project)
+4. For invocation issues, try `/subagent-name` syntax or natural language requests instead of `@` syntax (which is for files/folders/code/docs, not subagents)
 
 ### Commands not found
 
