@@ -17,6 +17,10 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 - [Cursor IDE](https://cursor.com) installed
 - Git installed
 
+> **Important:** Cursor does not discover symlinked rules, skills, agents, or commands. 
+> This installation uses copy-based setup to ensure proper discovery. After updating 
+> superpowers, you'll need to re-copy the files (see Updating section).
+
 ### Installation Steps
 
 #### Option 1: Global Installation (Recommended)
@@ -37,32 +41,34 @@ git clone https://github.com/obra/superpowers.git .
 mkdir -p ~/.cursor/skills
 ```
 
-##### 3. Symlink Superpowers Skills
+##### 3. Copy Superpowers Skills
 
 ```bash
-ln -s ~/.cursor/superpowers/skills ~/.cursor/skills/superpowers
+rm -rf ~/.cursor/skills/superpowers
+cp -r ~/.cursor/superpowers/skills ~/.cursor/skills/superpowers
 ```
 
-##### 4. Symlink Superpowers Subagents
+##### 4. Copy Superpowers Subagents
 
 ```bash
 mkdir -p ~/.cursor/agents
-ln -s ~/.cursor/superpowers/agents ~/.cursor/agents/superpowers
+rm -rf ~/.cursor/agents/superpowers
+cp -r ~/.cursor/superpowers/agents ~/.cursor/agents/superpowers
 ```
 
-##### 5. Symlink Superpowers Commands
+##### 5. Copy Superpowers Commands
 
 ```bash
 mkdir -p ~/.cursor/commands
-ln -s ~/.cursor/superpowers/commands ~/.cursor/commands/superpowers
+rm -rf ~/.cursor/commands/superpowers
+cp -r ~/.cursor/superpowers/commands ~/.cursor/commands/superpowers
 ```
 
-##### 6. Symlink Superpowers Rules
+##### 6. Copy Superpowers Rules
 
 ```bash
 mkdir -p ~/.cursor/rules
-ln -sf ~/.cursor/superpowers/.cursor/rules/superpowers.mdc ~/.cursor/rules/superpowers.mdc
-```
+cp ~/.cursor/superpowers/.cursor/rules/superpowers.mdc ~/.cursor/rules/superpowers.mdc
 ```
 
 #### Option 2: Project-Specific Installation
@@ -77,16 +83,15 @@ git clone https://github.com/obra/superpowers.git .cursor/superpowers
 
 ##### 2. Create Skills Directory
 
-##### 2. Create Skills Directory
-
 ```bash
 mkdir -p .cursor/skills
 ```
 
-##### 3. Symlink Superpowers Skills
+##### 3. Copy Superpowers Skills
 
 ```bash
-ln -s ../superpowers/skills .cursor/skills/superpowers
+rm -rf .cursor/skills/superpowers
+cp -r .cursor/superpowers/skills .cursor/skills/superpowers
 ```
 
 ##### 4. Copy Superpowers Subagents
@@ -213,9 +218,11 @@ Global Installation (~/.cursor/):
 │   ├── commands/        # Superpowers commands
 │   ├── lib/             # Shared modules
 │   └── .cursor/         # Cursor-specific files
-├── skills/              # Personal skills + symlinked superpowers
-├── agents/              # Personal subagents + symlinked superpowers
-└── commands/            # Personal commands + symlinked superpowers
+├── skills/              # Personal skills + copied superpowers
+├── agents/              # Personal subagents + copied superpowers
+├── commands/            # Personal commands + copied superpowers
+└── rules/
+    └── superpowers.mdc  # Copied from superpowers
 
 Project Installation (.cursor/):
 ├── superpowers/         # Cloned repository
@@ -224,9 +231,11 @@ Project Installation (.cursor/):
 │   ├── commands/        # Superpowers commands
 │   ├── lib/             # Shared modules
 │   └── .cursor/         # Cursor-specific files
-├── skills/              # Personal skills + symlinked superpowers
+├── skills/              # Personal skills + copied superpowers
 ├── agents/              # Personal subagents + copied superpowers
-└── commands/            # Personal commands + copied superpowers
+├── commands/            # Personal commands + copied superpowers
+└── rules/
+    └── superpowers.mdc  # Copied from superpowers
 ```
 
 ### Skill Priority
@@ -277,9 +286,25 @@ Skills written for Claude Code are adapted for Cursor with these mappings:
 cd ~/.cursor/superpowers
 git pull
 
+# After git pull, sync the copies:
+# Global installation
+rm -rf ~/.cursor/skills/superpowers ~/.cursor/agents/superpowers ~/.cursor/commands/superpowers
+cp -r ~/.cursor/superpowers/skills ~/.cursor/skills/superpowers
+cp -r ~/.cursor/superpowers/agents ~/.cursor/agents/superpowers
+cp -r ~/.cursor/superpowers/commands ~/.cursor/commands/superpowers
+cp ~/.cursor/superpowers/.cursor/rules/superpowers.mdc ~/.cursor/rules/superpowers.mdc
+
 # Project installation
 cd .cursor/superpowers
 git pull
+
+# After git pull, sync the copies:
+# Project installation
+rm -rf .cursor/skills/superpowers
+cp -r .cursor/superpowers/skills .cursor/skills/superpowers
+cp .cursor/superpowers/.cursor/rules/superpowers.mdc .cursor/rules/superpowers.mdc
+cp -r .cursor/superpowers/agents/* .cursor/agents/
+cp -r .cursor/superpowers/commands/* .cursor/commands/
 ```
 
 ## Troubleshooting
@@ -288,7 +313,7 @@ git pull
 
 1. Verify installation: `ls ~/.cursor/skills/superpowers` (global) or `ls .cursor/skills/superpowers` (project)
 2. Verify skills have SKILL.md files
-3. Check that symlinks are working: `ls -la ~/.cursor/skills/superpowers` (global) or `ls -la .cursor/skills/superpowers` (project)
+3. Check that directories contain the copied files: `ls ~/.cursor/skills/superpowers/` (global) or `ls .cursor/skills/superpowers/` (project)
 
 ### Rules not working
 
@@ -300,14 +325,14 @@ git pull
 
 1. Verify installation: `ls ~/.cursor/agents/superpowers` (global) or `ls .cursor/agents/` (project)
 2. Verify subagents have .md files with proper YAML frontmatter
-3. Check that symlinks/copies are working: `ls -la ~/.cursor/agents/superpowers` (global) or `ls -la .cursor/agents/` (project)
+3. Check that directories contain the copied files: `ls ~/.cursor/agents/superpowers/` (global) or `ls .cursor/agents/` (project)
 4. For invocation issues, try `/subagent-name` syntax or natural language requests instead of `@` syntax (which is for files/folders/code/docs, not subagents)
 
 ### Commands not found
 
 1. Verify installation: `ls ~/.cursor/commands/superpowers` (global) or `ls .cursor/commands/` (project)
 2. Verify commands have .md files
-3. Check that symlinks/copies are working: `ls -la ~/.cursor/commands/superpowers` (global) or `ls -la .cursor/commands/` (project)
+3. Check that directories contain the copied files: `ls ~/.cursor/commands/superpowers/` (global) or `ls .cursor/commands/` (project)
 
 ### Skills not overriding properly
 

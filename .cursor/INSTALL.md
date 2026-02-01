@@ -2,6 +2,10 @@
 
 Quick setup to enable superpowers skills in Cursor.
 
+> **Important:** Cursor does not discover symlinked rules, skills, agents, or commands. 
+> This installation uses copy-based setup to ensure proper discovery. After updating 
+> superpowers, you'll need to re-copy the files (see Updating section).
+
 ## Installation
 
 ### Option 1: Global Installation (Recommended)
@@ -22,33 +26,34 @@ Install superpowers globally for use across all Cursor projects.
    mkdir -p ~/.cursor/skills
    ```
 
-3. **Symlink superpowers skills**:
+3. **Copy superpowers skills**:
 
    ```bash
    rm -rf ~/.cursor/skills/superpowers
-   ln -s ~/.cursor/superpowers/skills ~/.cursor/skills/superpowers
+   cp -r ~/.cursor/superpowers/skills ~/.cursor/skills/superpowers
    ```
 
-4. **Symlink superpowers rules**:
+4. **Copy superpowers rules**:
 
    ```bash
    mkdir -p ~/.cursor/rules
-   ln -sf ~/.cursor/superpowers/.cursor/rules/superpowers.mdc ~/.cursor/rules/superpowers.mdc
+   cp ~/.cursor/superpowers/.cursor/rules/superpowers.mdc ~/.cursor/rules/superpowers.mdc
    ```
 
-5. **Symlink superpowers subagents**:
+5. **Copy superpowers subagents**:
 
    ```bash
    mkdir -p ~/.cursor/agents
    rm -rf ~/.cursor/agents/superpowers
-   ln -s ~/.cursor/superpowers/agents ~/.cursor/agents/superpowers
+   cp -r ~/.cursor/superpowers/agents ~/.cursor/agents/superpowers
    ```
 
-6. **Symlink superpowers commands**:
+6. **Copy superpowers commands**:
+
    ```bash
    mkdir -p ~/.cursor/commands
    rm -rf ~/.cursor/commands/superpowers
-   ln -s ~/.cursor/superpowers/commands ~/.cursor/commands/superpowers
+   cp -r ~/.cursor/superpowers/commands ~/.cursor/commands/superpowers
    ```
 
 ### Option 2: Project-Specific Installation
@@ -67,11 +72,11 @@ Install superpowers in a specific project (overrides global installation).
    mkdir -p .cursor/skills
    ```
 
-3. **Symlink superpowers skills**:
+3. **Copy superpowers skills**:
 
    ```bash
    rm -rf .cursor/skills/superpowers
-   ln -s ../superpowers/skills .cursor/skills/superpowers
+   cp -r .cursor/superpowers/skills .cursor/skills/superpowers
    ```
 
 4. **Copy superpowers rule**:
@@ -89,6 +94,7 @@ Install superpowers in a specific project (overrides global installation).
    ```
 
 6. **Copy superpowers commands**:
+
    ```bash
    mkdir -p .cursor/commands
    cp -r .cursor/superpowers/commands/* .cursor/commands/
@@ -170,7 +176,23 @@ Commands are loaded from:
 cd ~/.cursor/superpowers
 git pull
 
+# After git pull, sync the copies:
+# Global installation
+rm -rf ~/.cursor/skills/superpowers ~/.cursor/agents/superpowers ~/.cursor/commands/superpowers
+cp -r ~/.cursor/superpowers/skills ~/.cursor/skills/superpowers
+cp -r ~/.cursor/superpowers/agents ~/.cursor/agents/superpowers
+cp -r ~/.cursor/superpowers/commands ~/.cursor/commands/superpowers
+cp ~/.cursor/superpowers/.cursor/rules/superpowers.mdc ~/.cursor/rules/superpowers.mdc
+
 # Project installation
 cd .cursor/superpowers
 git pull
+
+# After git pull, sync the copies:
+# Project installation
+rm -rf .cursor/skills/superpowers
+cp -r .cursor/superpowers/skills .cursor/skills/superpowers
+cp .cursor/superpowers/.cursor/rules/superpowers.mdc .cursor/rules/superpowers.mdc
+cp -r .cursor/superpowers/agents/* .cursor/agents/
+cp -r .cursor/superpowers/commands/* .cursor/commands/
 ```
