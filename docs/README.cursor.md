@@ -6,7 +6,7 @@ Complete guide for using Superpowers with Cursor IDE.
 
 Tell Cursor:
 
-```
+```text
 Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.cursor/INSTALL.md
 ```
 
@@ -210,7 +210,7 @@ The Cursor implementation uses the shared `skills-core` module for skill discove
 
 Cursor supports both global and project-specific skill directories:
 
-```
+```text
 Global Installation (~/.cursor/):
 ├── superpowers/          # Cloned repository
 │   ├── skills/          # Superpowers skills
