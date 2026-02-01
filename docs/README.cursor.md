@@ -40,26 +40,29 @@ mkdir -p ~/.cursor/skills
 ##### 3. Symlink Superpowers Skills
 
 ```bash
-##### 4. Symlink Superpowers Skills
-
-```bash
 ln -s ~/.cursor/superpowers/skills ~/.cursor/skills/superpowers
 ```
 
-##### 5. Symlink Superpowers Rules
+##### 4. Symlink Superpowers Subagents
+
+```bash
+mkdir -p ~/.cursor/agents
+ln -s ~/.cursor/superpowers/agents ~/.cursor/agents/superpowers
+```
+
+##### 5. Symlink Superpowers Commands
+
+```bash
+mkdir -p ~/.cursor/commands
+ln -s ~/.cursor/superpowers/commands ~/.cursor/commands/superpowers
+```
+
+##### 6. Symlink Superpowers Rules
 
 ```bash
 mkdir -p ~/.cursor/rules
 ln -sf ~/.cursor/superpowers/.cursor/rules/superpowers.mdc ~/.cursor/rules/superpowers.mdc
 ```
-- Skills with checklists require update_plan todos for each item
-- NEVER skip mandatory workflows (brainstorming before coding, TDD, systematic debugging)
-- Use Cursor's native subagent system (@mention) when skills reference subagents
-
-Available superpowers skills include brainstorming, systematic debugging, test-driven development, code review, and more.
-</EXTREMELY_IMPORTANT>
-```
-</EXTREMELY_IMPORTANT>
 ```
 
 #### Option 2: Project-Specific Installation
@@ -74,44 +77,66 @@ git clone https://github.com/obra/superpowers.git .cursor/superpowers
 
 ##### 2. Create Skills Directory
 
+##### 2. Create Skills Directory
+
 ```bash
 mkdir -p .cursor/skills
 ```
+
+##### 3. Symlink Superpowers Skills
 
 ```bash
 ln -s ../superpowers/skills .cursor/skills/superpowers
 ```
 
-##### 4. Copy Superpowers Rule
+##### 4. Copy Superpowers Subagents
+
+```bash
+mkdir -p .cursor/agents
+cp -r .cursor/superpowers/agents/* .cursor/agents/
+```
+
+##### 5. Copy Superpowers Commands
+
+```bash
+mkdir -p .cursor/commands
+cp -r .cursor/superpowers/commands/* .cursor/commands/
+```
+
+##### 6. Copy Superpowers Rule
 
 ```bash
 mkdir -p .cursor/rules
 cp .cursor/superpowers/.cursor/rules/superpowers.mdc .cursor/rules/superpowers.mdc
-```
-```
-- Skills with checklists require update_plan todos for each item
-- NEVER skip mandatory workflows (brainstorming before coding, TDD, systematic debugging)
-- Use Cursor's native subagent system (@mention) when skills reference subagents
-
-Available superpowers skills include brainstorming, systematic debugging, test-driven development, code review, and more.
-</EXTREMELY_IMPORTANT>
 ```
 
 ## Usage
 
 ### Automatic Discovery
 
-Cursor automatically discovers skills from:
-- `.cursor/skills/` (project-level)
-- `~/.cursor/skills/` (global-level)
+Cursor automatically discovers:
+
+- **Skills** from:
+  - `.cursor/skills/` (project-level)
+  - `~/.cursor/skills/` (global-level)
+- **Subagents** from:
+  - `.cursor/agents/` (project-level)
+  - `~/.cursor/agents/` (global-level)
+- **Commands** from:
+  - `.cursor/commands/` (project-level)
+  - `~/.cursor/commands/` (global-level)
 
 ### Manual Invocation
 
 Skills can be manually invoked in chat using `/skill-name` syntax.
 
-### Bootstrap All Skills
+Subagents can be manually invoked in chat using `@mention` syntax.
 
-The bootstrap information is available in `.cursor/superpowers-bootstrap.md` and provides context about the skill system.
+Commands can be manually invoked in chat using `/command-name` syntax.
+
+### Bootstrap Information
+
+The bootstrap information is available in `.cursor/superpowers-bootstrap.md` and provides context about the skills, subagents, and commands systems.
 
 ### Personal Skills
 
@@ -150,16 +175,24 @@ Cursor supports both global and project-specific skill directories:
 Global Installation (~/.cursor/):
 ├── superpowers/          # Cloned repository
 │   ├── skills/          # Superpowers skills
+│   ├── agents/          # Superpowers subagents
+│   ├── commands/        # Superpowers commands
 │   ├── lib/             # Shared modules
 │   └── .cursor/         # Cursor-specific files
-└── skills/              # Personal skills + symlinked superpowers
+├── skills/              # Personal skills + symlinked superpowers
+├── agents/              # Personal subagents + symlinked superpowers
+└── commands/            # Personal commands + symlinked superpowers
 
 Project Installation (.cursor/):
 ├── superpowers/         # Cloned repository
 │   ├── skills/          # Superpowers skills
+│   ├── agents/          # Superpowers subagents
+│   ├── commands/        # Superpowers commands
 │   ├── lib/             # Shared modules
 │   └── .cursor/         # Cursor-specific files
-└── skills/              # Personal skills + symlinked superpowers
+├── skills/              # Personal skills + symlinked superpowers
+├── agents/              # Personal subagents + copied superpowers
+└── commands/            # Personal commands + copied superpowers
 ```
 
 ### Skill Priority
@@ -169,6 +202,20 @@ Skills are loaded in this priority order (highest to lowest):
 2. Project superpowers skills (`.cursor/skills/superpowers/`)
 3. Global personal skills (`~/.cursor/skills/`)
 4. Global superpowers skills (`~/.cursor/skills/superpowers/`)
+
+### Subagents Priority
+
+Subagents are loaded from:
+
+- Project: `.cursor/agents/` (highest priority)
+- Global: `~/.cursor/agents/` (fallback)
+
+### Commands Priority
+
+Commands are loaded from:
+
+- Project: `.cursor/commands/` (highest priority)
+- Global: `~/.cursor/commands/` (fallback)
 
 ### Tool Mapping
 
@@ -185,11 +232,11 @@ Skills written for Claude Code are adapted for Cursor with these mappings:
 # Global installation
 cd ~/.cursor/superpowers
 git pull
-### Rules not working
 
-1. Ensure `.cursor/rules/superpowers.mdc` exists in the project root
-2. Verify the frontmatter has `alwaysApply: true`
-3. Restart Cursor after creating the rule file
+# Project installation
+cd .cursor/superpowers
+git pull
+```
 
 ## Troubleshooting
 
@@ -204,6 +251,18 @@ git pull
 1. Ensure `.cursor/rules/superpowers.mdc` exists in the project root
 2. Verify the frontmatter has `alwaysApply: true`
 3. Restart Cursor after creating the rule file
+
+### Subagents not found
+
+1. Verify installation: `ls ~/.cursor/agents/superpowers` (global) or `ls .cursor/agents/` (project)
+2. Verify subagents have .md files
+3. Check that symlinks/copies are working: `ls -la ~/.cursor/agents/superpowers` (global) or `ls -la .cursor/agents/` (project)
+
+### Commands not found
+
+1. Verify installation: `ls ~/.cursor/commands/superpowers` (global) or `ls .cursor/commands/` (project)
+2. Verify commands have .md files
+3. Check that symlinks/copies are working: `ls -la ~/.cursor/commands/superpowers` (global) or `ls -la .cursor/commands/` (project)
 
 ### Skills not overriding properly
 
