@@ -114,6 +114,10 @@ Cursor automatically discovers:
 
 Skills can be manually invoked in chat using `/skill-name` syntax.
 
+Subagents can be manually invoked using `/name` syntax or natural language requests:
+- `/name` syntax: `/code-reviewer review this code`
+- Natural language: `Use the code-reviewer subagent to review this code`
+
 ### Personal Skills
 
 Create your own skills in the appropriate skills directory:

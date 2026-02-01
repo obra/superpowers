@@ -11,14 +11,14 @@ You have superpowers. Skills, subagents, and commands are automatically discover
 
 **Invocation:**
 - Skills: `/skill-name` in chat
-- Subagents: `@mention` syntax  
+- Subagents: `/name` syntax or natural language requests  
 - Commands: `/command-name` syntax
 
 **Critical Rules:**
 - If a relevant skill/subagent/command applies to your task, you MUST use it
 - Skills with checklists require update_plan todos for each item
 - NEVER skip mandatory workflows (brainstorming before coding, TDD, systematic debugging)
-- Use Cursor's native subagent system (@mention) when skills reference subagents
+- Use Cursor's native subagent system (/name syntax) when skills reference subagents
 - Use available commands for standardized workflows
 
 **Priority (highest to lowest):**

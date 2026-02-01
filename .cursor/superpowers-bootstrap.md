@@ -12,8 +12,9 @@ You have superpowers.
 **Subagent System:**
 
 - Subagents are automatically discovered from `.cursor/agents/` and `~/.cursor/agents/` directories
-- Subagents can be invoked using @mention syntax in chat
+- Subagents can be invoked using /name syntax or natural language requests (e.g., /code-reviewer review this code or Use the code-reviewer subagent to review this code)
 - Cursor's agent automatically uses subagents when appropriate for context isolation and parallel work
+- You can launch multiple subagents concurrently by requesting parallel execution (e.g., "Review the API changes and update the documentation in parallel")
 
 **Command System:**
 
@@ -27,7 +28,7 @@ You have superpowers.
 - If a relevant skill applies to your task, you MUST use it
 - Skills with checklists require `update_plan` todos for each item
 - NEVER skip mandatory workflows (brainstorming before coding, TDD, systematic debugging)
-- Use Cursor's native subagent system (@mention) when skills reference subagents
+- Use Cursor's native subagent system (/name syntax) when skills reference subagents
 - Use available commands for standardized workflows
 
 **Skills location:**
