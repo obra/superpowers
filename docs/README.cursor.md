@@ -340,9 +340,12 @@ Check the skill priority order. Project skills override global skills with the s
 
 ## Getting Help
 
-- Report issues: https://github.com/obra/superpowers/issues
-- Main documentation: https://github.com/obra/superpowers
-- Blog post: https://blog.fsck.com/2025/10/27/skills-for-openai-codex/
+- Report issues: [Report issues](https://github.com/obra/superpowers/issues)
+- Main documentation: [Main documentation](https://github.com/obra/superpowers)
+- Cursor skills: [Cursor skills](https://docs.cursor.com/ai/skills)
+- Cursor commands: [Cursor commands](https://docs.cursor.com/ai/commands)
+- Cursor agents: [Cursor agents](https://docs.cursor.com/ai/agents)
+- Cursor rules: [Cursor rules](https://docs.cursor.com/ai/rules)
 
 ## Note
 
