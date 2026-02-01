@@ -31,6 +31,21 @@ Install superpowers globally for use across all Cursor projects.
    mkdir -p ~/.cursor/rules
    ln -sf ~/.cursor/superpowers/.cursor/rules/superpowers.mdc ~/.cursor/rules/superpowers.mdc
    ```
+
+5. **Symlink superpowers subagents**:
+   ```bash
+   mkdir -p ~/.cursor/agents
+   rm -rf ~/.cursor/agents/superpowers
+   ln -s ~/.cursor/superpowers/agents ~/.cursor/agents/superpowers
+   ```
+
+6. **Symlink superpowers commands**:
+   ```bash
+   mkdir -p ~/.cursor/commands
+   rm -rf ~/.cursor/commands/superpowers
+   ln -s ~/.cursor/superpowers/commands ~/.cursor/commands/superpowers
+   ```
+
 ### Option 2: Project-Specific Installation
 
 Install superpowers in a specific project (overrides global installation).
@@ -57,13 +72,32 @@ Install superpowers in a specific project (overrides global installation).
    cp .cursor/superpowers/.cursor/rules/superpowers.mdc .cursor/rules/superpowers.mdc
    ```
 
+5. **Copy superpowers subagents**:
+   ```bash
+   mkdir -p .cursor/agents
+   cp -r .cursor/superpowers/agents/* .cursor/agents/
+   ```
+
+6. **Copy superpowers commands**:
+   ```bash
+   mkdir -p .cursor/commands
+   cp -r .cursor/superpowers/commands/* .cursor/commands/
+   ```
+
 ## Usage
 
 ### Automatic Discovery
 
-Cursor automatically discovers skills from:
-- `.cursor/skills/` (project-level)
-- `~/.cursor/skills/` (global-level)
+Cursor automatically discovers:
+- **Skills** from:
+  - `.cursor/skills/` (project-level)
+  - `~/.cursor/skills/` (global-level)
+- **Subagents** from:
+  - `.cursor/agents/` (project-level)
+  - `~/.cursor/agents/` (global-level)
+- **Commands** from:
+  - `.cursor/commands/` (project-level)
+  - `~/.cursor/commands/` (global-level)
 
 ### Manual Invocation
 
@@ -87,13 +121,24 @@ description: Use when [condition] - [what it does]
 [Your skill content here]
 ```
 
-## Skill Priority Order
+## Priority Order
 
+### Skills
 Skills are loaded in this priority order (highest to lowest):
 1. Project personal skills (`.cursor/skills/`)
 2. Project superpowers skills (`.cursor/skills/superpowers/`)
 3. Global personal skills (`~/.cursor/skills/`)
 4. Global superpowers skills (`~/.cursor/skills/superpowers/`)
+
+### Subagents
+Subagents are loaded from:
+- Project: `.cursor/agents/` (highest priority)
+- Global: `~/.cursor/agents/` (fallback)
+
+### Commands
+Commands are loaded from:
+- Project: `.cursor/commands/` (highest priority)
+- Global: `~/.cursor/commands/` (fallback)
 
 ## Updating
 
