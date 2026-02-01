@@ -1,0 +1,17 @@
+---
+alwaysApply: true
+---
+
+## Superpowers System
+
+<EXTREMELY_IMPORTANT>
+You have superpowers. Skills are automatically discovered from .cursor/skills/ and ~/.cursor/skills/ directories. Skills can be manually invoked using /skill-name in chat, and Cursor's agent automatically applies relevant skills based on context.
+
+Critical Rules:
+- If a relevant skill applies to your task, you MUST use it
+- Skills with checklists require update_plan todos for each item
+- NEVER skip mandatory workflows (brainstorming before coding, TDD, systematic debugging)
+- Use Cursor's native subagent system (@mention) when skills reference subagents
+
+Available superpowers skills include brainstorming, systematic debugging, test-driven development, code review, and more.
+</EXTREMELY_IMPORTANT>
