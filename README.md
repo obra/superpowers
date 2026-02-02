@@ -57,6 +57,20 @@ Check that commands appear:
 # /superpowers:execute-plan - Execute plan in batches
 ```
 
+### AdaL
+
+In AdaL, register the marketplace:
+
+```bash
+/plugin marketplace add obra/superpowers-marketplace
+```
+
+Then install the plugin:
+
+```bash
+/plugin install superpowers@superpowers-marketplace
+```
+
 ### Codex
 
 Tell Codex:
