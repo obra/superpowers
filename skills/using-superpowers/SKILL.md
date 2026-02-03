@@ -63,6 +63,8 @@ These thoughts mean STOP—you're rationalizing:
 | "I'll just do this one thing first" | Check BEFORE doing anything. |
 | "This feels productive" | Undisciplined action wastes time. Skills prevent this. |
 | "I know what that means" | Knowing the concept ≠ using the skill. Invoke it. |
+| "This is too simple to need a plan" | Simple tasks get short plans. Still use writing-plans. |
+| "I'll skip brainstorming, requirements are clear" | Fine, but you MUST still use writing-plans. Never skip both. |
 
 ## Skill Priority
 
@@ -85,3 +87,25 @@ The skill itself tells you which.
 ## User Instructions
 
 Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
+
+## Explicit Superpowers Requests
+
+**When user explicitly says "use your superpowers" (or similar) for an implementation task:**
+
+```
+NEVER skip planning. At minimum, writing-plans is REQUIRED.
+```
+
+**The flow:**
+1. Do you fully understand what to build?
+   - **No** → Use brainstorming first to clarify, then writing-plans
+   - **Yes** → Use writing-plans directly
+2. NEVER skip both. Planning must happen before implementation.
+
+**Why this matters:** The judgment call is "do I understand what to build?" NOT "is this simple enough to skip planning?" Simple tasks get short plans. Complex tasks get longer plans. But plans always happen.
+
+| Thought | Reality |
+|---------|---------|
+| "This is obvious, no plan needed" | Obvious tasks get short plans. Still plan. |
+| "I'll just make this quick change" | Quick changes still need plans. No exceptions. |
+| "Planning is overkill here" | You're rationalizing. Use writing-plans. |

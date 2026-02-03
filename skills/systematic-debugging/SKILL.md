@@ -176,7 +176,7 @@ You MUST complete each phase before proceeding to the next.
    - Automated test if possible
    - One-off test script if no framework
    - MUST have before fixing
-   - Use the `superpowers:test-driven-development` skill for writing proper failing tests
+   - **REQUIRED SUB-SKILL:** Use superpowers:test-driven-development for the failing test
 
 2. **Implement Single Fix**
    - Address the root cause identified
@@ -188,6 +188,7 @@ You MUST complete each phase before proceeding to the next.
    - Test passes now?
    - No other tests broken?
    - Issue actually resolved?
+   - **REQUIRED SUB-SKILL:** Use superpowers:verification-before-completion before claiming fix works
 
 4. **If Fix Doesn't Work**
    - STOP
@@ -196,21 +197,21 @@ You MUST complete each phase before proceeding to the next.
    - **If ≥ 3: STOP and question the architecture (step 5 below)**
    - DON'T attempt Fix #4 without architectural discussion
 
-5. **If 3+ Fixes Failed: Question Architecture**
+5. **If 3+ Fixes Failed: Escalate to Architectural Refactoring**
 
    **Pattern indicating architectural problem:**
    - Each fix reveals new shared state/coupling/problem in different place
    - Fixes require "massive refactoring" to implement
    - Each fix creates new symptoms elsewhere
 
-   **STOP and question fundamentals:**
-   - Is this pattern fundamentally sound?
-   - Are we "sticking with it through sheer inertia"?
-   - Should we refactor architecture vs. continue fixing symptoms?
+   **Automatically escalate to architectural refactoring:**
+   - Stop attempting point fixes
+   - Document the failing pattern and evidence gathered
+   - Begin architectural analysis: Is this pattern fundamentally sound?
+   - Propose refactoring approach that addresses root structural issues
+   - **REQUIRED SUB-SKILL:** Use superpowers:test-driven-development for all refactoring implementation
 
-   **Discuss with your human partner before attempting more fixes**
-
-   This is NOT a failed hypothesis - this is a wrong architecture.
+   This is NOT a failed hypothesis - this is a wrong architecture. Act accordingly.
 
 ## Red Flags - STOP and Follow Process
 
@@ -226,10 +227,11 @@ If you catch yourself thinking:
 - Proposing solutions before tracing data flow
 - **"One more fix attempt" (when already tried 2+)**
 - **Each fix reveals new problem in different place**
+- **"I'll skip TDD/verification skill, it's overkill for this fix"**
 
 **ALL of these mean: STOP. Return to Phase 1.**
 
-**If 3+ fixes failed:** Question the architecture (see Phase 4.5)
+**If 3+ fixes failed:** Auto-escalate to architectural refactoring (see Phase 4, Step 5)
 
 ## your human partner's Signals You're Doing It Wrong
 
@@ -253,7 +255,8 @@ If you catch yourself thinking:
 | "Multiple fixes at once saves time" | Can't isolate what worked. Causes new bugs. |
 | "Reference too long, I'll adapt the pattern" | Partial understanding guarantees bugs. Read it completely. |
 | "I see the problem, let me fix it" | Seeing symptoms ≠ understanding root cause. |
-| "One more fix attempt" (after 2+ failures) | 3+ failures = architectural problem. Question pattern, don't fix again. |
+| "One more fix attempt" (after 2+ failures) | 3+ failures = architectural problem. Auto-escalate to refactoring. |
+| "Skip TDD/verification, it's simple" | Required sub-skills are REQUIRED. No exceptions. Invoke them. |
 
 ## Quick Reference
 
@@ -283,9 +286,9 @@ These techniques are part of systematic debugging and available in this director
 - **`defense-in-depth.md`** - Add validation at multiple layers after finding root cause
 - **`condition-based-waiting.md`** - Replace arbitrary timeouts with condition polling
 
-**Related skills:**
-- **superpowers:test-driven-development** - For creating failing test case (Phase 4, Step 1)
-- **superpowers:verification-before-completion** - Verify fix worked before claiming success
+**Required skills (MUST invoke during Phase 4):**
+- **superpowers:test-driven-development** - REQUIRED for creating failing test case (Step 1) and refactoring (Step 5)
+- **superpowers:verification-before-completion** - REQUIRED before claiming fix works (Step 3)
 
 ## Real-World Impact
 

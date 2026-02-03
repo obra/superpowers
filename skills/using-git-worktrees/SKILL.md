@@ -35,18 +35,15 @@ grep -i "worktree.*director" CLAUDE.md 2>/dev/null
 
 **If preference specified:** Use it without asking.
 
-### 3. Ask User
+### 3. Default to .worktrees/
 
-If no directory exists and no CLAUDE.md preference:
+If no directory exists and no CLAUDE.md preference, create `.worktrees/` automatically:
 
+```bash
+mkdir -p .worktrees
 ```
-No worktree directory found. Where should I create worktrees?
 
-1. .worktrees/ (project-local, hidden)
-2. ~/.config/superpowers/worktrees/<project-name>/ (global location)
-
-Which would you prefer?
-```
+This is the preferred default: project-local and hidden.
 
 ## Safety Verification
 
@@ -148,7 +145,7 @@ Ready to implement <feature-name>
 | `.worktrees/` exists | Use it (verify ignored) |
 | `worktrees/` exists | Use it (verify ignored) |
 | Both exist | Use `.worktrees/` |
-| Neither exists | Check CLAUDE.md → Ask user |
+| Neither exists | Check CLAUDE.md → Default to `.worktrees/` |
 | Directory not ignored | Add to .gitignore + commit |
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
@@ -163,7 +160,7 @@ Ready to implement <feature-name>
 ### Assuming directory location
 
 - **Problem:** Creates inconsistency, violates project conventions
-- **Fix:** Follow priority: existing > CLAUDE.md > ask
+- **Fix:** Follow priority: existing > CLAUDE.md > default to `.worktrees/`
 
 ### Proceeding with failing tests
 
@@ -201,7 +198,7 @@ Ready to implement auth feature
 - Skip CLAUDE.md check
 
 **Always:**
-- Follow directory priority: existing > CLAUDE.md > ask
+- Follow directory priority: existing > CLAUDE.md > default to `.worktrees/`
 - Verify directory is ignored for project-local
 - Auto-detect and run project setup
 - Verify clean test baseline

@@ -39,8 +39,8 @@ Start by understanding the current project context, then ask questions one at a 
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 
-**Implementation (if continuing):**
-- Ask: "Ready to set up for implementation?"
+**Implementation:**
+- Proceed directly to implementation setup
 - Use superpowers:using-git-worktrees to create isolated workspace
 - Use superpowers:writing-plans to create detailed implementation plan
 
