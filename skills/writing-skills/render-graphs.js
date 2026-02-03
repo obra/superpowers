@@ -27,7 +27,14 @@ function extractDotBlocks(markdown) {
 
     // Extract digraph name
     const nameMatch = content.match(/digraph\s+(\w+)/);
-    const name = nameMatch ? nameMatch[1] : `graph_${blocks.length + 1}`;
+    let name = nameMatch ? nameMatch[1] : `graph_${blocks.length + 1}`;
+    
+    // Validate graph name to prevent injection attacks
+    // Only allow alphanumeric characters and underscores in graph names
+    if (!/^[a-zA-Z0-9_]+$/.test(name)) {
+      console.warn(`Warning: Invalid graph name "${name}" - using fallback name`);
+      name = `graph_${blocks.length + 1}`;
+    }
 
     blocks.push({ name, content });
   }
@@ -82,7 +89,22 @@ function renderToSvg(dotContent) {
 }
 
 function main() {
+  // Safely extract and validate command-line arguments to prevent prototype pollution
   const args = process.argv.slice(2);
+  
+  // Validate all arguments to ensure they don't contain prototype pollution patterns
+  for (const arg of args) {
+    if (typeof arg !== 'string') {
+      console.error('Error: Invalid argument type');
+      process.exit(1);
+    }
+    // Prevent prototype pollution attacks via __proto__, constructor, or prototype
+    if (arg.includes('__proto__') || arg.includes('constructor') || arg.includes('prototype')) {
+      console.error('Error: Invalid argument detected');
+      process.exit(1);
+    }
+  }
+  
   const combine = args.includes('--combine');
   const skillDirArg = args.find(a => !a.startsWith('--'));
 
@@ -98,12 +120,43 @@ function main() {
     process.exit(1);
   }
 
-  const skillDir = path.resolve(skillDirArg);
-  const skillFile = path.join(skillDir, 'SKILL.md');
-  const skillName = path.basename(skillDir).replace(/-/g, '_');
+  // Validate input to prevent command injection
+  // Only allow safe characters: alphanumeric, dash, underscore, dot, forward slash
+  if (!/^[a-zA-Z0-9\-_./]+$/.test(skillDirArg)) {
+    console.error('Error: Invalid characters in skill directory path');
+    console.error('Only alphanumeric characters, dashes, underscores, dots, and forward slashes are allowed');
+    process.exit(1);
+  }
 
-  if (!fs.existsSync(skillFile)) {
-    console.error(`Error: ${skillFile} not found`);
+  const skillDir = path.resolve(skillDirArg);
+  
+  // Prevent path traversal attacks by ensuring the resolved path is a real directory
+  // and normalize it to prevent directory traversal
+  const normalizedSkillDir = path.normalize(skillDir);
+  if (!fs.existsSync(normalizedSkillDir) || !fs.statSync(normalizedSkillDir).isDirectory()) {
+    console.error(`Error: ${skillDirArg} is not a valid directory`);
+    process.exit(1);
+  }
+  
+  const skillFile = path.join(normalizedSkillDir, 'SKILL.md');
+  const skillName = path.basename(normalizedSkillDir).replace(/-/g, '_');
+
+  // Validate skillName to ensure it only contains safe characters
+  if (!/^[a-zA-Z0-9_]+$/.test(skillName)) {
+    console.error('Error: Skill directory name contains invalid characters');
+    console.error('Only alphanumeric characters, dashes, and underscores are allowed in directory names');
+    process.exit(1);
+  }
+
+  // Verify that the SKILL.md file is actually within the specified directory (prevent path traversal)
+  const normalizedSkillFile = path.normalize(skillFile);
+  if (!normalizedSkillFile.startsWith(normalizedSkillDir + path.sep)) {
+    console.error('Error: Path traversal detected');
+    process.exit(1);
+  }
+
+  if (!fs.existsSync(normalizedSkillFile)) {
+    console.error(`Error: ${normalizedSkillFile} not found`);
     process.exit(1);
   }
 
@@ -117,19 +170,27 @@ function main() {
     process.exit(1);
   }
 
-  const markdown = fs.readFileSync(skillFile, 'utf-8');
+  const markdown = fs.readFileSync(normalizedSkillFile, 'utf-8');
   const blocks = extractDotBlocks(markdown);
 
   if (blocks.length === 0) {
-    console.log('No ```dot blocks found in', skillFile);
+    console.log('No ```dot blocks found in', normalizedSkillFile);
     process.exit(0);
   }
 
-  console.log(`Found ${blocks.length} diagram(s) in ${path.basename(skillDir)}/SKILL.md`);
+  console.log(`Found ${blocks.length} diagram(s) in ${path.basename(normalizedSkillDir)}/SKILL.md`);
 
-  const outputDir = path.join(skillDir, 'diagrams');
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir);
+  const outputDir = path.join(normalizedSkillDir, 'diagrams');
+  const normalizedOutputDir = path.normalize(outputDir);
+  
+  // Validate that output directory is within the skill directory (prevent path traversal)
+  if (!normalizedOutputDir.startsWith(normalizedSkillDir + path.sep)) {
+    console.error('Error: Invalid output directory path');
+    process.exit(1);
+  }
+  
+  if (!fs.existsSync(normalizedOutputDir)) {
+    fs.mkdirSync(normalizedOutputDir);
   }
 
   if (combine) {
@@ -137,12 +198,22 @@ function main() {
     const combined = combineGraphs(blocks, skillName);
     const svg = renderToSvg(combined);
     if (svg) {
-      const outputPath = path.join(outputDir, `${skillName}_combined.svg`);
+      const outputPath = path.normalize(path.join(normalizedOutputDir, `${skillName}_combined.svg`));
+      // Validate output path is within the output directory
+      if (!outputPath.startsWith(normalizedOutputDir + path.sep)) {
+        console.error('Error: Invalid output file path');
+        process.exit(1);
+      }
       fs.writeFileSync(outputPath, svg);
       console.log(`  Rendered: ${skillName}_combined.svg`);
 
       // Also write the dot source for debugging
-      const dotPath = path.join(outputDir, `${skillName}_combined.dot`);
+      const dotPath = path.normalize(path.join(normalizedOutputDir, `${skillName}_combined.dot`));
+      // Validate output path is within the output directory
+      if (!dotPath.startsWith(normalizedOutputDir + path.sep)) {
+        console.error('Error: Invalid output file path');
+        process.exit(1);
+      }
       fs.writeFileSync(dotPath, combined);
       console.log(`  Source: ${skillName}_combined.dot`);
     } else {
@@ -153,7 +224,12 @@ function main() {
     for (const block of blocks) {
       const svg = renderToSvg(block.content);
       if (svg) {
-        const outputPath = path.join(outputDir, `${block.name}.svg`);
+        const outputPath = path.normalize(path.join(normalizedOutputDir, `${block.name}.svg`));
+        // Validate output path is within the output directory
+        if (!outputPath.startsWith(normalizedOutputDir + path.sep)) {
+          console.error('Error: Invalid output file path');
+          process.exit(1);
+        }
         fs.writeFileSync(outputPath, svg);
         console.log(`  Rendered: ${block.name}.svg`);
       } else {
@@ -162,7 +238,7 @@ function main() {
     }
   }
 
-  console.log(`\nOutput: ${outputDir}/`);
+  console.log(`\nOutput: ${normalizedOutputDir}/`);
 }
 
 main();
