@@ -271,6 +271,14 @@ switch (command) {
         console.log('  superpowers-codex upgrade [flags]         # Update central repo and repair links');
         console.log('  superpowers-codex doctor [flags]          # Check installation and links');
         console.log('');
+        console.log('Flags for install/upgrade/doctor:');
+        console.log('  --repo <owner/name>   # default: obra/superpowers');
+        console.log('  --ref <branch|tag>     # default: main');
+        console.log('  --dir <path>           # default: ~/.superpowers');
+        console.log('  --force                # replace existing paths / continue if repo dirty');
+        console.log('  --no-update            # skip git fetch/pull');
+        console.log('  --no-agents            # do not modify ~/.codex/AGENTS.md');
+        console.log('');
         console.log('Examples:');
         console.log('  superpowers-codex bootstrap');
         console.log('  superpowers-codex use-skill superpowers:brainstorming');
