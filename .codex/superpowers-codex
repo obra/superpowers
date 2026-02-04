@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const skillsCore = require('../lib/skills-core');
+const { parseArgs, runInstall, runUpgrade, runDoctor } = require('../lib/installer-core');
 
 // Paths
 const homeDir = os.homedir();
@@ -242,6 +243,14 @@ function runUseSkill(skillName) {
 const command = process.argv[2];
 const arg = process.argv[3];
 
+if (command === 'install' || command === 'upgrade' || command === 'doctor') {
+    const parsedArgs = parseArgs(process.argv.slice(3));
+    if (command === 'install') runInstall('codex', parsedArgs);
+    if (command === 'upgrade') runUpgrade('codex', parsedArgs);
+    if (command === 'doctor') runDoctor('codex', parsedArgs);
+    process.exit(0);
+}
+
 switch (command) {
     case 'bootstrap':
         runBootstrap();
@@ -258,6 +267,9 @@ switch (command) {
         console.log('  superpowers-codex bootstrap              # Run complete bootstrap with all skills');
         console.log('  superpowers-codex use-skill <skill-name> # Load a specific skill');
         console.log('  superpowers-codex find-skills            # List all available skills');
+        console.log('  superpowers-codex install [flags]        # Clone/update central repo and link into Codex');
+        console.log('  superpowers-codex upgrade [flags]         # Update central repo and repair links');
+        console.log('  superpowers-codex doctor [flags]          # Check installation and links');
         console.log('');
         console.log('Examples:');
         console.log('  superpowers-codex bootstrap');
@@ -265,3 +277,4 @@ switch (command) {
         console.log('  superpowers-codex use-skill my-custom-skill');
         break;
 }
+
