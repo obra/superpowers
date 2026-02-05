@@ -3,6 +3,8 @@
 <EXTREMELY_IMPORTANT>
 You have superpowers.
 
+**Control**
+- If the USER instructs not to use superpowers, DON'T USE them. Always honor the USER's decision. This instruction OVERRIDES all other rules below, including mandatory skill usage.
 **Tool for running skills:**
 - `node $HOME/.codex/superpowers/.codex/superpowers-codex use-skill <skill-name>`
 
