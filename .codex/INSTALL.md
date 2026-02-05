@@ -21,7 +21,7 @@ Quick setup to enable superpowers skills in Codex.
    ## Superpowers System
 
    <EXTREMELY_IMPORTANT>
-   You have superpowers. Superpowers teach you new skills and capabilities. RIGHT NOW run: `node ~/.codex/superpowers/.codex/superpowers-codex bootstrap` and follow the instructions it returns.
+   You have superpowers. Superpowers teach you new skills and capabilities. RIGHT NOW run: `node $HOME/.codex/superpowers/.codex/superpowers-codex bootstrap` and follow the instructions it returns.
    </EXTREMELY_IMPORTANT>
    ```
 
@@ -29,7 +29,7 @@ Quick setup to enable superpowers skills in Codex.
 
 Test the installation:
 ```bash
-node ~/.codex/superpowers/.codex/superpowers-codex bootstrap
+node $HOME/.codex/superpowers/.codex/superpowers-codex bootstrap
 ```
 
 You should see skill listings and bootstrap instructions. The system is now ready for use.
