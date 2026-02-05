@@ -28,6 +28,10 @@ Claude Code 2.1.x changed how hooks execute on Windows: it now auto-detects `.sh
 
 Fix: hooks.json now calls session-start.sh directly. Claude Code 2.1.x handles the bash invocation automatically. Also added .gitattributes to enforce LF line endings for shell scripts (fixes CRLF issues on Windows checkout).
 
+**Windows: SessionStart hook runs async to prevent terminal freeze**
+
+The synchronous SessionStart hook blocked the TUI from entering raw mode on Windows, freezing terminal input. The pure-bash `escape_for_json` function is O(n^2) on Windows Git Bash, taking 60+ seconds. Running the hook async prevents the freeze while still injecting superpowers context.
+
 ### New Features
 
 **Visual companion for brainstorming skill**
