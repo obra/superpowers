@@ -30,6 +30,7 @@
             "_debug_echo": "echo >&2; echo \"[hook-debug] RAW=[$RAW]\" >&2; echo \"[hook-debug] UNIX_PATH=[$PLUGIN_UNIX_PATH]\" >&2; echo \"[hook-debug] DRIVE=[$DRIVE] REST=[$REST] OS=[$OS] RESOLVED=[$RESOLVED]\" >&2; echo >&2;",
             "type": "command",
             "command": "bash -c 'RAW=\"${CLAUDE_PLUGIN_ROOT}\"; PLUGIN_UNIX_PATH=\"${RAW//\\\\\/\/}\"; DRIVE=\"${PLUGIN_UNIX_PATH%%:*}\"; REST=\"${PLUGIN_UNIX_PATH#*:}\"; if [ \"$DRIVE\" = \"$PLUGIN_UNIX_PATH\" ]; then RESOLVED=\"$PLUGIN_UNIX_PATH\"; elif [ \"$OS\" = \"Windows_NT\" ]; then RESOLVED=\"\/${DRIVE,,}$REST\"; else RESOLVED=\"\/mnt\/${DRIVE,,}$REST\"; fi; \"$RESOLVED\/hooks\/session-start.sh\"'"
+            "async": true
           }
         ]
       }
