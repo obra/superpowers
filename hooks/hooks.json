@@ -5,8 +5,31 @@
         "matcher": "startup|resume|clear|compact",
         "hooks": [
           {
+            "_comment": [
+              "Claude Code injects it via template substitution BEFORE the shell runs,",
+              "so ${CLAUDE_PLUGIN_ROOT} expands but bash never sees the actual env var.",
+              "This means bash parameter operations (${#VAR}, ${VAR//p/r}) on it directly return empty.",
+              "On Windows, CLAUDE_PLUGIN_ROOT is a Windows path (e.g. C:\\Users\\myuser\\.claude\\plugins\\...)",
+              "which conflicts with Bash's string escaping.",
+              "Fix: assign the template-expanded value to a local bash",
+              "variable (RAW) first, then operate on RAW.",
+              "",
+              "This command must work across three bash environments:",
+              "  1. Git Bash on Windows: OSTYPE=msys, OS=Windows_NT, paths like /c/Users/...",
+              "  2. WSL bash: OSTYPE=linux-gnu, OS unset, paths like /mnt/c/Users/...",
+              "  3. Native Linux /bin/bash: OSTYPE=linux-gnu, no drive letter conversion needed",
+              "",
+              "Path resolution steps:",
+              "  1. Capture CLAUDE_PLUGIN_ROOT into RAW (makes it a real bash variable)",
+              "  2. Replace backslashes with forward slashes: C:\\Users\\... -> C:/Users/...",
+              "  3. Extract drive letter (C) and rest of path (/Users/...)",
+              "  4. If no colon found (native Linux), use RAW as-is",
+              "  5. If OS=Windows_NT (Git Bash): prefix with / -> /c/Users/...",
+              "  6. Otherwise (WSL): prefix with /mnt/ -> /mnt/c/Users/..."
+            ],
+            "_debug_echo": "echo >&2; echo \"[hook-debug] RAW=[$RAW]\" >&2; echo \"[hook-debug] UNIX_PATH=[$PLUGIN_UNIX_PATH]\" >&2; echo \"[hook-debug] DRIVE=[$DRIVE] REST=[$REST] OS=[$OS] RESOLVED=[$RESOLVED]\" >&2; echo >&2;",
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh"
+            "command": "bash -c 'RAW=\"${CLAUDE_PLUGIN_ROOT}\"; PLUGIN_UNIX_PATH=\"${RAW//\\\\\/\/}\"; DRIVE=\"${PLUGIN_UNIX_PATH%%:*}\"; REST=\"${PLUGIN_UNIX_PATH#*:}\"; if [ \"$DRIVE\" = \"$PLUGIN_UNIX_PATH\" ]; then RESOLVED=\"$PLUGIN_UNIX_PATH\"; elif [ \"$OS\" = \"Windows_NT\" ]; then RESOLVED=\"\/${DRIVE,,}$REST\"; else RESOLVED=\"\/mnt\/${DRIVE,,}$REST\"; fi; \"$RESOLVED\/hooks\/session-start.sh\"'"
           }
         ]
       }
