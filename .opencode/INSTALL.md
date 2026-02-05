@@ -7,33 +7,28 @@
 
 ## Installation Steps
 
-### 1. Clone Superpowers
+### 1. Run installer
+
+This will clone/update the central repo at `~/.superpowers` and create the OpenCode links:
+
+- `~/.config/opencode/superpowers -> ~/.superpowers`
+- `~/.config/opencode/plugins/superpowers.js -> ~/.superpowers/.opencode/plugins/superpowers.js`
+- `~/.config/opencode/skills/superpowers -> ~/.superpowers/skills`
+
+If this is your first install (and `~/.superpowers` does not exist yet), run from a temporary clone:
 
 ```bash
-git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
+git clone https://github.com/obra/superpowers.git /tmp/superpowers
+node /tmp/superpowers/.opencode/superpowers-opencode install
 ```
 
-### 2. Register the Plugin
-
-Create a symlink so OpenCode discovers the plugin:
+If you already have `~/.superpowers` installed, you can run:
 
 ```bash
-mkdir -p ~/.config/opencode/plugins
-rm -f ~/.config/opencode/plugins/superpowers.js
-ln -s ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js ~/.config/opencode/plugins/superpowers.js
+node ~/.superpowers/.opencode/superpowers-opencode upgrade
 ```
 
-### 3. Symlink Skills
-
-Create a symlink so OpenCode's native skill tool discovers superpowers skills:
-
-```bash
-mkdir -p ~/.config/opencode/skills
-rm -rf ~/.config/opencode/skills/superpowers
-ln -s ~/.config/opencode/superpowers/skills ~/.config/opencode/skills/superpowers
-```
-
-### 4. Restart OpenCode
+### 2. Restart OpenCode
 
 Restart OpenCode. The plugin will automatically inject superpowers context.
 
@@ -87,8 +82,7 @@ Create project-specific skills in `.opencode/skills/` within your project.
 ## Updating
 
 ```bash
-cd ~/.config/opencode/superpowers
-git pull
+node ~/.superpowers/.opencode/superpowers-opencode upgrade
 ```
 
 ## Troubleshooting

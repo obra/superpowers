@@ -1,0 +1,43 @@
+#!/usr/bin/env node
+
+const { parseArgs, runInstall, runUpgrade, runDoctor } = require('../lib/installer-core');
+
+const cliName = 'superpowers-opencode';
+
+const commands = {
+  install: (args) => runInstall('opencode', args),
+  upgrade: (args) => runUpgrade('opencode', args),
+  doctor: (args) => runDoctor('opencode', args),
+};
+
+function printHelp() {
+  console.log('Superpowers for OpenCode');
+  console.log('Usage:');
+  console.log(`  ${cliName} install [flags]        # Clone/update central repo and link into OpenCode`);
+  console.log(`  ${cliName} upgrade [flags]         # Update central repo and repair links`);
+  console.log(`  ${cliName} doctor [flags]          # Check installation and links`);
+  console.log('');
+  console.log('Flags:');
+  console.log('  --repo <owner/name>   # default: obra/superpowers');
+  console.log('  --ref <branch|tag>     # default: main');
+  console.log('  --dir <path>           # default: ~/.superpowers');
+  console.log('  --force                # replace existing paths / continue if repo dirty');
+  console.log('  --no-update            # skip git fetch/pull');
+}
+
+const command = process.argv[2];
+const parsedArgs = parseArgs(process.argv.slice(3));
+
+if (!command) {
+  printHelp();
+  process.exit(0);
+}
+
+const runner = commands[command];
+if (!runner) {
+  console.log(`Unknown command: ${command}`);
+  printHelp();
+  process.exit(1);
+}
+
+runner(parsedArgs);
