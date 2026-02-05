@@ -17,6 +17,16 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
 
+## Before Planning
+
+**[HOOK: before_plan]** Check for workflow hooks before starting:
+1. Look for `.claude/workflow-hooks.yaml` or `~/.claude/workflow-hooks.yaml`
+2. If `before_plan` hooks are defined, invoke each skill where condition passes
+3. For `mode: check` hooks, verify criteria are met and warn if not
+4. For `mode: enforce` hooks, block planning until criteria are met
+
+Example: A `project-quality-setup` hook in check mode would verify linting/formatting/CI are configured before planning implementation.
+
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**
@@ -96,7 +106,11 @@ git commit -m "feat: add specific feature"
 
 ## Execution Handoff
 
-After saving the plan, offer execution choice:
+**[HOOK: after_plan]** After saving the plan, check for workflow hooks:
+1. Check workflow hooks configuration for `after_plan` hooks
+2. If hooks are defined, invoke each skill where condition passes
+
+Then offer execution choice:
 
 **"Plan complete and saved to `docs/plans/<filename>.md`. Two execution options:**
 
@@ -114,3 +128,14 @@ After saving the plan, offer execution choice:
 **If Parallel Session chosen:**
 - Guide them to open new session in worktree
 - **REQUIRED SUB-SKILL:** New session uses superpowers:executing-plans
+
+## Workflow Hooks Reference
+
+This skill supports these hook points (see `hooks/workflow-hooks.md`):
+
+| Hook | When | Example Skills |
+|------|------|----------------|
+| `before_plan` | Start of planning | Project quality setup (check/enforce) |
+| `after_plan` | After plan saved | Plan validation, complexity assessment |
+
+To configure hooks, create `.claude/workflow-hooks.yaml` or `~/.claude/workflow-hooks.yaml`.

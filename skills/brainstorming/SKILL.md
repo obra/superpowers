@@ -13,6 +13,11 @@ Start by understanding the current project context, then ask questions one at a 
 
 ## The Process
 
+**[HOOK: before_design]** Before starting, check for workflow hooks:
+1. Look for `.claude/workflow-hooks.yaml` or `~/.claude/workflow-hooks.yaml`
+2. If `before_design` hooks are defined, invoke each skill where condition passes
+3. Apply guidance from invoked skills to the design process
+
 **Understanding the idea:**
 - Check out the current project state first (files, docs, recent commits)
 - Ask questions one at a time to refine the idea
@@ -34,6 +39,11 @@ Start by understanding the current project context, then ask questions one at a 
 
 ## After the Design
 
+**[HOOK: after_design]** Before saving the design document:
+1. Check workflow hooks configuration for `after_design` hooks
+2. If hooks are defined, invoke each skill where condition passes
+3. Apply guidance (e.g., create ADRs for architectural decisions)
+
 **Documentation:**
 - Write the validated design to `docs/plans/YYYY-MM-DD-<topic>-design.md`
 - Use elements-of-style:writing-clearly-and-concisely skill if available
@@ -52,3 +62,14 @@ Start by understanding the current project context, then ask questions one at a 
 - **Explore alternatives** - Always propose 2-3 approaches before settling
 - **Incremental validation** - Present design in sections, validate each
 - **Be flexible** - Go back and clarify when something doesn't make sense
+
+## Workflow Hooks Reference
+
+This skill supports these hook points (see `hooks/workflow-hooks.md`):
+
+| Hook | When | Example Skills |
+|------|------|----------------|
+| `before_design` | Start of design process | UX principles, domain modeling |
+| `after_design` | After design validated | Architecture decision records |
+
+To configure hooks, create `.claude/workflow-hooks.yaml` or `~/.claude/workflow-hooks.yaml`.

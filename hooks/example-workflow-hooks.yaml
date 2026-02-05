@@ -1,0 +1,72 @@
+# Example Workflow Hooks Configuration
+# Copy to .claude/workflow-hooks.yaml (project) or ~/.claude/workflow-hooks.yaml (global)
+#
+# This example integrates the dev-ethos skill pack into superpowers workflow.
+# Install dev-ethos first: https://github.com/sbrudz/dev-ethos
+
+hooks:
+  # ─────────────────────────────────────────────────────────────────
+  # DESIGN PHASE (brainstorming skill)
+  # ─────────────────────────────────────────────────────────────────
+
+  before_design:
+    # Apply user-centered design thinking for UI features
+    - skill: dev-ethos:ux-design-principles
+      condition: if_ui
+
+    # Establish ubiquitous language for domain concepts
+    - skill: dev-ethos:domain-driven-design
+
+  after_design:
+    # Capture significant architectural decisions as ADRs
+    - skill: dev-ethos:architecture-decision-records
+
+  # ─────────────────────────────────────────────────────────────────
+  # PLANNING PHASE (writing-plans skill)
+  # ─────────────────────────────────────────────────────────────────
+
+  before_plan:
+    # Check that project has quality tooling before planning implementation
+    - skill: dev-ethos:project-quality-setup
+      mode: check
+
+  # ─────────────────────────────────────────────────────────────────
+  # EXECUTION PHASE (subagent-driven-development skill)
+  # ─────────────────────────────────────────────────────────────────
+
+  before_execute:
+    # Enforce quality tooling is set up before implementing
+    - skill: dev-ethos:project-quality-setup
+      mode: enforce
+
+  after_task:
+    # Apply incremental refactoring after each task
+    - skill: dev-ethos:boy-scout-rule
+
+    # Visually verify UI changes look correct
+    - skill: dev-ethos:visual-feedback-loop
+      condition: if_ui_changed
+
+    # Evaluate visual design quality (after basic visual check passes)
+    - skill: dev-ethos:ux-visual-evaluation
+      condition: if_ui_changed
+
+  before_review:
+    # Add functional core/imperative shell criteria to code review
+    - skill: dev-ethos:functional-core-imperative-shell
+      mode: inject
+
+    # Add React best practices criteria for React code
+    - skill: dev-ethos:react-best-practices
+      condition: if_react
+      mode: inject
+
+# ─────────────────────────────────────────────────────────────────────
+# Custom Conditions (optional - extend built-in conditions)
+# ─────────────────────────────────────────────────────────────────────
+
+# conditions:
+#   if_python:
+#     match: "git diff includes .py files"
+#   if_api:
+#     match: "files in api/ or routes/ directories"
