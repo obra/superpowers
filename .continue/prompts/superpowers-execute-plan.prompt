@@ -1,0 +1,7 @@
+---
+name: "Superpowers: Execute Plan"
+description: Execute plan in batches with review checkpoints
+invokable: true
+---
+
+Invoke the superpowers:executing-plans skill and follow it exactly as presented to you
