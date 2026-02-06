@@ -68,11 +68,13 @@ These thoughts mean STOP—you're rationalizing:
 
 When multiple skills could apply, use this order:
 
-1. **Process skills first** (brainstorming, debugging) - these determine HOW to approach the task
-2. **Implementation skills second** (frontend-design, mcp-builder) - these guide execution
+1. **Brainstorming first for new work** - Start most sessions here. It gathers context, identifies Amplifier agents, designs the solution, and routes to the right execution workflow.
+2. **Process skills for specific situations** (debugging, code review) - these determine HOW to approach known problems
+3. **Implementation skills last** (frontend-design, mcp-builder) - these guide execution after planning
 
-"Let's build X" → brainstorming first, then implementation skills.
-"Fix this bug" → debugging first, then domain-specific skills.
+"Let's build X" → brainstorming first, then writing-plans, then subagent-driven-development.
+"Fix this bug" → systematic-debugging first, then dispatching-parallel-agents if multiple issues.
+"Review this code" → requesting-code-review.
 
 ## Skill Types
 
