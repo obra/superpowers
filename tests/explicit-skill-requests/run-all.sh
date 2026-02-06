@@ -36,27 +36,6 @@ else
 fi
 echo ""
 
-# Test: please use brainstorming
-echo ">>> Test 3: please-use-brainstorming"
-if "$SCRIPT_DIR/run-test.sh" "brainstorming" "$PROMPTS_DIR/please-use-brainstorming.txt"; then
-    PASSED=$((PASSED + 1))
-    RESULTS="$RESULTS\nPASS: please-use-brainstorming"
-else
-    FAILED=$((FAILED + 1))
-    RESULTS="$RESULTS\nFAIL: please-use-brainstorming"
-fi
-echo ""
-
-# Test: mid-conversation execute plan
-echo ">>> Test 4: mid-conversation-execute-plan"
-if "$SCRIPT_DIR/run-test.sh" "subagent-driven-development" "$PROMPTS_DIR/mid-conversation-execute-plan.txt"; then
-    PASSED=$((PASSED + 1))
-    RESULTS="$RESULTS\nPASS: mid-conversation-execute-plan"
-else
-    FAILED=$((FAILED + 1))
-    RESULTS="$RESULTS\nFAIL: mid-conversation-execute-plan"
-fi
-echo ""
 
 echo "=== Summary ==="
 echo -e "$RESULTS"

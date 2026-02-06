@@ -33,10 +33,6 @@ Task is complete when ALL of these are true:
 - [ ] Gaps and limitations explicitly noted in report
 </success_criteria>
 
-<required_background>
-This skill dispatches subagents. See `superpowers:dispatching-parallel-agents` for dispatch patterns.
-</required_background>
-
 <when_to_use>
 ```dot
 digraph when_research {

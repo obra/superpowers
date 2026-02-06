@@ -337,6 +337,22 @@ Before marking work complete:
 - [ ] Tests use real code (mocks only if unavoidable)
 - [ ] Edge cases and errors covered
 
+### Cheat Test Detection
+
+After writing tests, review each one for these AI-generated test anti-patterns:
+
+| Category | Ask Yourself | Red Flag |
+|----------|-------------|----------|
+| **Behavior vs Implementation** | Would this test fail if the feature was broken? | Assertions mirror implementation code structure |
+| **Mock Quality** | Could this pass with a broken implementation? | Mock returns exactly what test expects (tautological) |
+| **Assertion Quality** | Does this verify meaningful behavior? | `toEqual(expect.anything())`, checking "was called" only |
+| **Independence** | Would tests pass in different order? | Shared mutable state, setup in one test used by another |
+| **Coverage Gaming** | Does this test actually prove something? | Tests that hit lines but don't verify behavior |
+
+**The key question:** "Would this test still pass if the feature was completely broken?"
+
+If yes, delete the test and rewrite it.
+
 Can't check all boxes? You skipped TDD. Start over.
 
 ## When Stuck
