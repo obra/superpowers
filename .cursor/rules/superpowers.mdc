@@ -1,0 +1,28 @@
+---
+alwaysApply: true
+---
+
+## Superpowers System
+
+<EXTREMELY_IMPORTANT>
+You have superpowers. Skills, subagents, and commands are automatically discovered from:
+- `.cursor/skills/`, `.cursor/agents/`, `.cursor/commands/` (project-level)
+- `~/.cursor/skills/`, `~/.cursor/agents/`, `~/.cursor/commands/` (global-level)
+
+**Invocation:**
+- Skills: `/skill-name` in chat
+- Subagents: `/name` syntax or natural language requests  
+- Commands: `/command-name` syntax
+
+**Critical Rules:**
+- If a relevant skill/subagent/command applies to your task, you MUST use it
+- Skills with checklists require update_plan todos for each item
+- NEVER skip mandatory workflows (brainstorming before coding, TDD, systematic debugging)
+- Use Cursor's native subagent system (/name syntax) when skills reference subagents
+- Use available commands for standardized workflows
+
+**Priority (highest to lowest):**
+1. Project personal > Project superpowers > Global personal > Global superpowers
+
+Available skills include: brainstorming, systematic-debugging, test-driven-development, code-review, subagent-driven-development, writing-plans, executing-plans, verification-before-completion, and more.
+</EXTREMELY_IMPORTANT>
