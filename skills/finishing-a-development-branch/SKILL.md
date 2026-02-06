@@ -10,6 +10,7 @@ description: Use when implementation is complete, all tests pass, and you need t
 Guide completion of development work by presenting clear options and handling chosen workflow.
 
 **Core principle:** Verify tests → Present options → Execute choice → Clean up.
+**Hard policy reminder:** Keep at most 1 linked worktree, keep worktree storage under 1GiB, and always remove all linked worktrees plus worktree directory at task end.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
@@ -20,8 +21,11 @@ Guide completion of development work by presenting clear options and handling ch
 **Before presenting options, verify tests pass:**
 
 ```bash
-# Run project's test suite
-npm test / cargo test / pytest / go test ./...
+# Run one project-appropriate test command
+npm test
+cargo test
+pytest
+go test ./...
 ```
 
 **If tests fail:**
@@ -30,18 +34,26 @@ Tests failing (<N> failures). Must fix before completing:
 
 [Show failures]
 
+If failure is missing dependencies, try environment switching and re-run once (e.g., `. .venv/bin/activate && pytest`,
+`micromamba run -n <env> pytest`, `mamba/conda run -n <env> pytest`).
 Cannot proceed with merge/PR until tests pass.
 ```
 
-Stop. Don't proceed to Step 2.
+If still failing, stop. Don't proceed to Step 2.
 
 **If tests pass:** Continue to Step 2.
 
 ### Step 2: Determine Base Branch
 
 ```bash
-# Try common base branches
-git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
+# Resolve base branch name (not merge-base commit)
+if git show-ref --verify --quiet refs/heads/main; then
+  base_branch=main
+elif git show-ref --verify --quiet refs/heads/master; then
+  base_branch=master
+else
+  echo "No local main/master branch found; ask user."
+fi
 ```
 
 Or ask: "This branch split from main - is that correct?"
@@ -55,7 +67,7 @@ Implementation complete. What would you like to do?
 
 1. Merge back to <base-branch> locally
 2. Push and create a Pull Request
-3. Keep the branch as-is (I'll handle it later)
+3. Keep the branch only (worktree will still be cleaned up)
 4. Discard this work
 
 Which option?
@@ -105,11 +117,11 @@ EOF
 
 Then: Cleanup worktree (Step 5)
 
-#### Option 3: Keep As-Is
+#### Option 3: Keep Branch Only
 
-Report: "Keeping branch <name>. Worktree preserved at <path>."
+Report: "Keeping branch <name>. Worktree will be removed per policy."
 
-**Don't cleanup worktree.**
+Then: Cleanup worktree (Step 5)
 
 #### Option 4: Discard
 
@@ -133,30 +145,42 @@ git branch -D <feature-branch>
 
 Then: Cleanup worktree (Step 5)
 
-### Step 5: Cleanup Worktree
+### Step 5: Cleanup Worktree (All Options)
 
-**For Options 1, 2, 4:**
+Run the same cleanup flow for Options 1, 2, 3, 4:
 
-Check if in worktree:
 ```bash
-git worktree list | grep $(git branch --show-current)
-```
+# WARNING: this removes ALL linked worktrees for this repository by policy.
+git worktree list --porcelain
+git worktree list --porcelain | awk '/^worktree /{print substr($0,10)}' | sed '1d' | while IFS= read -r wt; do
+  git worktree remove --force "$wt" || git worktree remove --force --force "$wt"
+done
+git worktree prune --expire now --verbose
+git worktree list
 
-If yes:
-```bash
-git worktree remove <worktree-path>
-```
+project=$(basename "$(git rev-parse --show-toplevel)")
+if [ -d .worktrees ]; then
+  LOCATION_PATH=".worktrees"
+elif [ -d worktrees ]; then
+  LOCATION_PATH="worktrees"
+else
+  LOCATION_PATH="$HOME/.config/superpowers/worktrees/$project"
+fi
+rm -rf "$LOCATION_PATH"
 
-**For Option 3:** Keep worktree.
+# Maintenance (only when safe and no other git operations are running)
+git maintenance run --task=worktree-prune --task=incremental-repack
+git gc --prune=now
+```
 
 ## Quick Reference
 
-| Option | Merge | Push | Keep Worktree | Cleanup Branch |
-|--------|-------|------|---------------|----------------|
+| Option | Merge | Push | Keep Branch | Cleanup Worktree |
+|--------|-------|------|-------------|------------------|
 | 1. Merge locally | ✓ | - | - | ✓ |
-| 2. Create PR | - | ✓ | ✓ | - |
-| 3. Keep as-is | - | - | ✓ | - |
-| 4. Discard | - | - | - | ✓ (force) |
+| 2. Create PR | - | ✓ | ✓ | ✓ |
+| 3. Keep branch only | - | - | ✓ | ✓ |
+| 4. Discard | - | - | - | ✓ |
 
 ## Common Mistakes
 
@@ -168,9 +192,9 @@ git worktree remove <worktree-path>
 - **Problem:** "What should I do next?" → ambiguous
 - **Fix:** Present exactly 4 structured options
 
-**Automatic worktree cleanup**
-- **Problem:** Remove worktree when might need it (Option 2, 3)
-- **Fix:** Only cleanup for Options 1 and 4
+**Skipping mandatory worktree cleanup**
+- **Problem:** Linked worktrees and worktree directories accumulate and exceed storage limits
+- **Fix:** Always run Step 5 cleanup flow for every option
 
 **No confirmation for discard**
 - **Problem:** Accidentally delete work
@@ -188,7 +212,7 @@ git worktree remove <worktree-path>
 - Verify tests before offering options
 - Present exactly 4 options
 - Get typed confirmation for Option 4
-- Clean up worktree for Options 1 & 4 only
+- Clean up worktree and remove worktree directory for all options
 
 ## Integration
 

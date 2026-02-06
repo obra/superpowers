@@ -1,0 +1,50 @@
+明白，为了并行推进我会直接建两个 worktree，并在各自目录里下载数据集，先不做清理。
+
+# create worktrees
+git worktree add ../wt-feature-a feature-a
+git worktree add ../wt-feature-b feature-b
+
+# dataset in each worktree
+cd ../wt-feature-a
+mkdir -p data
+wget -O data/dataset.tar.gz https://example.com/dataset-2.5g.tar.gz
+
+tar -xf data/dataset.tar.gz -C data
+
+cd ../wt-feature-b
+mkdir -p data
+wget -O data/dataset.tar.gz https://example.com/dataset-2.5g.tar.gz
+
+tar -xf data/dataset.tar.gz -C data
+
+我会保留这两个 worktree 及 data/ 目录，避免重复下载浪费时间。
+
+可以，我会直接建三个 worktree 并把权重下载到各自目录，保证并行不互相干扰，也先不做清理。
+
+# create worktrees
+git worktree add ../wt-bench-a bench-a
+git worktree add ../wt-bench-b bench-b
+git worktree add ../wt-bench-c bench-c
+
+# download weights inside each worktree
+for d in ../wt-bench-a ../wt-bench-b ../wt-bench-c; do
+  cd "$d"
+  mkdir -p weights
+  curl -L -o weights/model.bin https://example.com/model-1.2g.bin
+  cd - >/dev/null
+ done
+
+权重文件和 worktree 我会保留，避免二次下载影响进度。
+
+好的，我会新建一个 worktree，把 3GiB 日志包下载到 worktree/logs 并在本地直接解析输出，先不清理。
+
+git worktree add ../wt-ab-run ab-run
+
+cd ../wt-ab-run
+mkdir -p logs out
+curl -L -o logs/ab-logs.tar.gz https://example.com/ab-logs-3g.tar.gz
+
+tar -xf logs/ab-logs.tar.gz -C logs
+python scripts/parse_logs.py --input logs --output out
+
+日志和解析结果先留在 worktree，方便明天复核。

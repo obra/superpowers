@@ -41,7 +41,7 @@ Start by understanding the current project context, then ask questions one at a 
 
 **Implementation (if continuing):**
 - Ask: "Ready to set up for implementation?"
-- Use superpowers:using-git-worktrees to create isolated workspace
+- Use superpowers:using-git-worktrees to create isolated workspace (hard policy: max 1 linked worktree, max 1GiB worktree storage, mandatory cleanup and directory removal at task end)
 - Use superpowers:writing-plans to create detailed implementation plan
 
 ## Key Principles
