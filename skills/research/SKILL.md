@@ -1,11 +1,6 @@
 ---
 name: research
-description: |
-  Conducts comprehensive multi-source research with iterative evidence gathering and source gate enforcement.
-  Use when user explicitly requests deep research, comprehensive analysis, or thorough investigation
-  requiring 20+ authoritative sources with confidence tracking. Dispatches subagents for parallel
-  research and synthesizes findings with source attribution. NOT for simple factual questions
-  answerable with a single search—use WebSearch directly instead.
+description: Use when user explicitly requests deep research or comprehensive analysis requiring 20+ authoritative sources. Dispatches subagents for parallel research with source gate enforcement, confidence tracking, and structured synthesis. NOT for simple questions answerable with a single search.
 ---
 
 <objective>
@@ -18,8 +13,7 @@ Core principle: Decompose questions, research in parallel with subagents, evalua
 1. Run `/research [topic]` to start
 2. Research continues automatically until `targetSources` is met
 3. A Stop hook enforces the source gate—you cannot exit early
-4. Use `/research-cancel` to abort and get partial results
-5. On completion, a resource usage report is displayed
+4. On completion, a resource usage report is displayed
 </quick_start>
 
 <success_criteria>
@@ -108,8 +102,6 @@ How it works:
 1. When you try to complete, the hook checks `state.json`
 2. If sources are insufficient, exit is blocked and you're prompted to continue
 3. Once target is met AND phase is DONE, exit is allowed with a resource report
-
-To cancel research early: Use `/research-cancel` to abort and get a progress report.
 
 Default target: 30 sources. Adjust in INIT phase based on topic complexity.
 </source_gate_enforcement>
@@ -408,5 +400,5 @@ STOP if you catch yourself thinking any of these:
 | "I'll just synthesize what I have" | Check `sourcesGathered >= targetSources`. If not met, you cannot proceed. |
 | "I don't need to update state.json" | You will lose track. Always read/write state.json. |
 | "All sources are equal" | Weight Tier 1 sources higher in synthesis. |
-| "I'm stuck, I'll just finish" | Use `/research-cancel` to abort gracefully and get partial results. |
+| "I'm stuck, I'll just finish" | Narrow the scope or generate better follow-up questions. The source gate is non-negotiable. |
 </red_flags>

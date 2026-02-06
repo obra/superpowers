@@ -6,6 +6,9 @@
 
 set -euo pipefail
 
+# Fail-open if jq is not available
+command -v jq >/dev/null 2>&1 || { exit 0; }
+
 # Read hook input from stdin
 HOOK_INPUT=$(cat)
 
@@ -165,31 +168,14 @@ Current progress:
   Searches:     ${total_searches}
   Iterations:   ${iteration}
 
-Need ${target_sources - sources_gathered} more sources before completion.
-Use /research-cancel to abort.
+Need $((target_sources - sources_gathered)) more sources before completion.
 EOF
             ;;
     esac
 }
 
-# Escape string for JSON
-escape_for_json() {
-    local input="$1"
-    local output=""
-    local i char
-    for (( i=0; i<${#input}; i++ )); do
-        char="${input:$i:1}"
-        case "$char" in
-            $'\\') output+='\\\\';;
-            '"') output+='\"' ;;
-            $'\n') output+='\\n' ;;
-            $'\r') output+='\\r' ;;
-            $'\t') output+='\\t' ;;
-            *) output+="$char" ;;
-        esac
-    done
-    printf '%s' "$output"
-}
+# shellcheck source=../lib/escape-json.sh
+source "$(cd "$(dirname "$0")" && pwd)/../lib/escape-json.sh"
 
 # Main logic
 main() {
@@ -204,19 +190,13 @@ main() {
     research_dir=$(dirname "$state_file")
     findings_file="${research_dir}/findings.json"
 
-    # Check if research was cancelled (cancel file exists)
-    if [[ -f "${research_dir}/.cancelled" ]]; then
-        # Generate cancellation report
+    # Check if research was cancelled (phase set to CANCELLED)
+    local current_phase
+    current_phase=$(jq -r '.phase // ""' "$state_file" 2>/dev/null || echo "")
+    if [[ "$current_phase" == "CANCELLED" ]]; then
+        # Generate cancellation report and allow exit
         local report
         report=$(generate_report "$state_file" "$findings_file" "cancelled")
-
-        # Clean up cancel marker
-        rm -f "${research_dir}/.cancelled"
-
-        # Mark as done so we don't block again
-        jq '.phase = "CANCELLED"' "$state_file" > "${state_file}.tmp" && mv "${state_file}.tmp" "$state_file"
-
-        # Allow exit with report
         echo "$report"
         exit 0
     fi

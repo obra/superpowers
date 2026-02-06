@@ -56,7 +56,6 @@ Check that commands appear:
 # /superpowers:write-plan - Create implementation plan
 # /superpowers:execute-plan - Execute plan in batches
 # /superpowers:research - Deep research with source gate
-# /superpowers:research-cancel - Cancel active research
 ```
 
 ### Codex
@@ -120,7 +119,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
 
 **Research**
-- **research** - Deep research with source gate enforcement. Decomposes topics into questions, researches in parallel with subagents, requires minimum source count before synthesis. Use `/research [topic]` to start, `/research-cancel` to abort.
+- **research** - Deep research with source gate enforcement. Decomposes topics into questions, researches in parallel with subagents, requires minimum source count before synthesis. Use `/research [topic]` to start.
 
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
