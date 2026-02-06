@@ -46,6 +46,20 @@ Then install the plugin from this marketplace:
 
 Start a new session and ask Claude to help with something that would trigger a skill (e.g., "help me plan this feature" or "let's debug this issue"). Claude should automatically invoke the relevant superpowers skill.
 
+### AdaL
+
+In AdaL, register the marketplace:
+
+```bash
+/plugin marketplace add obra/superpowers-marketplace
+```
+
+Then install the plugin:
+
+```bash
+/plugin install superpowers@superpowers-marketplace
+```
+
 ### Codex
 
 Tell Codex:
