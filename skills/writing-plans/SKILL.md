@@ -17,6 +17,18 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
 
+## Required Sub-Skills
+
+Plans follow strict TDD. Before executing any task from a plan:
+
+- **REQUIRED:** `superpowers:test-driven-development` - Every task uses RED-GREEN-REFACTOR. If you haven't read this skill, read it first. It covers:
+  - The Iron Law: no production code without a failing test first
+  - How to verify tests fail for the right reason
+  - Common rationalizations and red flags
+  - When to delete code and start over
+
+- **REQUIRED:** `superpowers:testing-anti-patterns` - Prevents testing mock behavior instead of real code
+
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**
