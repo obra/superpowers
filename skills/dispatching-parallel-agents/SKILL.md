@@ -9,7 +9,21 @@ description: Use when facing 2+ independent tasks that can be worked on without 
 
 When you have multiple unrelated failures (different test files, different subsystems, different bugs), investigating them sequentially wastes time. Each investigation is independent and can happen in parallel.
 
-**Core principle:** Dispatch one agent per independent problem domain. Let them work concurrently.
+**Core principle:** Dispatch the right Amplifier specialist per independent problem domain. Let them work concurrently.
+
+## Amplifier Agent Selection
+
+Consult `AMPLIFIER-AGENTS.md` for the full mapping. Quick reference for parallel dispatch:
+
+| Problem Domain | Amplifier Agent | Why This Specialist |
+|---------------|-----------------|-------------------|
+| Test failures | `bug-hunter` | Hypothesis-driven debugging, root cause analysis |
+| Performance issues | `performance-optimizer` | Measure-first approach, 80/20 optimization |
+| Security findings | `security-guardian` | OWASP patterns, vulnerability assessment |
+| Integration breakage | `integration-specialist` | External system expertise, dependency management |
+| UI regressions | `component-designer` | Component-level assessment, visual consistency |
+| Schema problems | `database-architect` | Query optimization, migration expertise |
+| API failures | `api-contract-designer` | Contract validation, endpoint analysis |
 
 ## When to Use
 
@@ -18,7 +32,7 @@ digraph when_to_use {
     "Multiple failures?" [shape=diamond];
     "Are they independent?" [shape=diamond];
     "Single agent investigates all" [shape=box];
-    "One agent per problem domain" [shape=box];
+    "One specialist per problem domain" [shape=box];
     "Can they work in parallel?" [shape=diamond];
     "Sequential agents" [shape=box];
     "Parallel dispatch" [shape=box];
@@ -53,23 +67,20 @@ Group failures by what's broken:
 
 Each domain is independent - fixing tool approval doesn't affect abort tests.
 
-### 2. Create Focused Agent Tasks
+### 2. Select Amplifier Specialist per Domain
 
-Each agent gets:
-- **Specific scope:** One test file or subsystem
-- **Clear goal:** Make these tests pass
-- **Constraints:** Don't change other code
-- **Expected output:** Summary of what you found and fixed
+Match each domain to the right agent from the mapping table above. Each specialist brings domain expertise — a `bug-hunter` uses hypothesis-driven analysis, a `security-guardian` checks OWASP patterns, a `performance-optimizer` measures before fixing.
 
 ### 3. Dispatch in Parallel
 
-```typescript
-// In Claude Code / AI environment
-Task("Fix agent-tool-abort.test.ts failures")
-Task("Fix batch-completion-behavior.test.ts failures")
-Task("Fix tool-approval-race-conditions.test.ts failures")
-// All three run concurrently
 ```
+Single message, three parallel Task calls:
+- Task bug-hunter: "Fix 3 failing tests in auth.test.ts — timing issues"
+- Task integration-specialist: "API connection failures to payment service"
+- Task performance-optimizer: "Response time regression in /api/search"
+```
+
+All three run concurrently with specialist knowledge.
 
 ### 4. Review and Integrate
 
@@ -121,6 +132,9 @@ Return: Summary of what you found and what you fixed.
 **❌ Vague output:** "Fix it" - you don't know what changed
 **✅ Specific:** "Return summary of root cause and changes"
 
+**❌ Wrong specialist:** Sending bug-hunter for a performance regression
+**✅ Right specialist:** Sending performance-optimizer who will measure first
+
 ## When NOT to Use
 
 **Related failures:** Fixing one might fix others - investigate together first
@@ -128,39 +142,13 @@ Return: Summary of what you found and what you fixed.
 **Exploratory debugging:** You don't know what's broken yet
 **Shared state:** Agents would interfere (editing same files, using same resources)
 
-## Real Example from Session
-
-**Scenario:** 6 test failures across 3 files after major refactoring
-
-**Failures:**
-- agent-tool-abort.test.ts: 3 failures (timing issues)
-- batch-completion-behavior.test.ts: 2 failures (tools not executing)
-- tool-approval-race-conditions.test.ts: 1 failure (execution count = 0)
-
-**Decision:** Independent domains - abort logic separate from batch completion separate from race conditions
-
-**Dispatch:**
-```
-Agent 1 → Fix agent-tool-abort.test.ts
-Agent 2 → Fix batch-completion-behavior.test.ts
-Agent 3 → Fix tool-approval-race-conditions.test.ts
-```
-
-**Results:**
-- Agent 1: Replaced timeouts with event-based waiting
-- Agent 2: Fixed event structure bug (threadId in wrong place)
-- Agent 3: Added wait for async tool execution to complete
-
-**Integration:** All fixes independent, no conflicts, full suite green
-
-**Time saved:** 3 problems solved in parallel vs sequentially
-
 ## Key Benefits
 
-1. **Parallelization** - Multiple investigations happen simultaneously
-2. **Focus** - Each agent has narrow scope, less context to track
-3. **Independence** - Agents don't interfere with each other
-4. **Speed** - 3 problems solved in time of 1
+1. **Specialist knowledge** - Each agent brings domain expertise to its problem
+2. **Parallelization** - Multiple investigations happen simultaneously
+3. **Focus** - Each agent has narrow scope, less context to track
+4. **Independence** - Agents don't interfere with each other
+5. **Speed** - 3 problems solved in time of 1
 
 ## Verification
 
@@ -169,12 +157,3 @@ After agents return:
 2. **Check for conflicts** - Did agents edit same code?
 3. **Run full suite** - Verify all fixes work together
 4. **Spot check** - Agents can make systematic errors
-
-## Real-World Impact
-
-From debugging session (2025-10-03):
-- 6 failures across 3 files
-- 3 agents dispatched in parallel
-- All investigations completed concurrently
-- All fixes integrated successfully
-- Zero conflicts between agent changes
