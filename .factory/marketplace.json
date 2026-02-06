@@ -1,0 +1,20 @@
+{
+  "name": "superpowers-droid",
+  "description": "Development marketplace for Superpowers core skills library (Factory Droid)",
+  "owner": {
+    "name": "Jesse Vincent",
+    "email": "jesse@fsck.com"
+  },
+  "plugins": [
+    {
+      "name": "superpowers",
+      "description": "Core skills library for Factory Droid: TDD, debugging, collaboration patterns, and proven techniques",
+      "version": "4.1.1",
+      "source": "./",
+      "author": {
+        "name": "Jesse Vincent",
+        "email": "jesse@fsck.com"
+      }
+    }
+  ]
+}
