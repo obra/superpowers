@@ -68,7 +68,7 @@ Which option?
 #### Option 1: Merge Locally
 
 ```bash
-# Switch to base branch
+# Switch to base branch (in the MAIN repo, not the worktree)
 git checkout <base-branch>
 
 # Pull latest
@@ -80,11 +80,11 @@ git merge <feature-branch>
 # Verify tests on merged result
 <test command>
 
-# If tests pass
-git branch -d <feature-branch>
+# If tests pass: cleanup worktree FIRST, then delete branch
+# (git refuses to delete a branch checked out in a worktree)
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Cleanup worktree (Step 5), which handles removal order
 
 #### Option 2: Push and Create PR
 
@@ -125,13 +125,7 @@ Type 'discard' to confirm.
 
 Wait for exact confirmation.
 
-If confirmed:
-```bash
-git checkout <base-branch>
-git branch -D <feature-branch>
-```
-
-Then: Cleanup worktree (Step 5)
+If confirmed: Cleanup worktree (Step 5), which handles removal and branch deletion
 
 ### Step 5: Cleanup Worktree
 
@@ -139,13 +133,29 @@ Then: Cleanup worktree (Step 5)
 
 Check if in worktree:
 ```bash
-git worktree list | grep $(git branch --show-current)
+git rev-parse --git-common-dir  # differs from --git-dir when in a worktree
 ```
 
-If yes:
+If in a worktree, **order matters — get CWD out before removing:**
+
 ```bash
+# 1. Move CWD to main repo FIRST
+#    (removing a worktree while CWD is inside it makes the shell
+#    unrecoverable — every subsequent command fails with "Path does not exist")
+cd <main-repo-path>
+
+# 2. Remove the worktree
 git worktree remove <worktree-path>
+# Use --force if only untracked files remain (e.g. plan docs, .pyc)
+
+# 3. Prune stale worktree refs
+git worktree prune
+
+# 4. NOW delete the branch (git refuses while a worktree has it checked out)
+git branch -d <feature-branch>   # -D for Option 4 (discard)
 ```
+
+**If generating a plan for another session to execute:** Include an explicit warning that the executing session's CWD will be inside the worktree. The plan must either start commands with `cd <main-repo>` or note that the worktree removal step will invalidate the shell.
 
 **For Option 3:** Keep worktree.
 
@@ -171,6 +181,14 @@ git worktree remove <worktree-path>
 **Automatic worktree cleanup**
 - **Problem:** Remove worktree when might need it (Option 2, 3)
 - **Fix:** Only cleanup for Options 1 and 4
+
+**Removing worktree while CWD is inside it**
+- **Problem:** Shell CWD becomes invalid — every command errors with "Path does not exist", unrecoverable in current shell
+- **Fix:** Always `cd <main-repo-path>` before `git worktree remove`. When generating plans for another session, warn that the session's CWD is inside the worktree.
+
+**Deleting branch before removing worktree**
+- **Problem:** `git branch -d` fails because the branch is checked out in the worktree
+- **Fix:** Remove worktree first, then delete branch
 
 **No confirmation for discard**
 - **Problem:** Accidentally delete work
