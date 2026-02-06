@@ -17,7 +17,7 @@ Before diving into the idea:
 
 1. **Context gathering** — Check project state (files, docs, recent commits, open branches, existing plans)
 2. **Memory consultation** — Search episodic memory for related past conversations, decisions, and lessons learned (use episodic-memory:search-conversations if available)
-3. **Agent awareness** — Identify which Amplifier agents are relevant for this task (consult `AMPLIFIER-AGENTS.md` at repo root for the full mapping)
+3. **Agent awareness** — Identify which Amplifier agents are relevant for this task (consult `AMPLIFIER-AGENTS.md` in the superpowers plugin directory for the full mapping)
 
 Surface the relevant agents early: "For this task, we'll likely use zen-architect for design, modular-builder for implementation, and test-coverage for verification."
 

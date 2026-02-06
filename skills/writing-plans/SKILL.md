@@ -19,7 +19,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 ## Amplifier Agent Assignment
 
-Each task gets an `Agent:` field specifying which Amplifier agent will handle it during execution. Consult `AMPLIFIER-AGENTS.md` at the repo root for the full mapping.
+Each task gets an `Agent:` field specifying which Amplifier agent will handle it during execution. Consult `AMPLIFIER-AGENTS.md` in the superpowers plugin directory for the full mapping.
 
 **Auto-assign by scanning the task description:**
 - Implementation tasks (build, create, add) → `modular-builder`

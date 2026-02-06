@@ -13,7 +13,7 @@ When you have multiple unrelated failures (different test files, different subsy
 
 ## Amplifier Agent Selection
 
-Consult `AMPLIFIER-AGENTS.md` for the full mapping. Quick reference for parallel dispatch:
+Consult `AMPLIFIER-AGENTS.md` in the superpowers plugin directory for the full mapping. Quick reference for parallel dispatch:
 
 | Problem Domain | Amplifier Agent | Why This Specialist |
 |---------------|-----------------|-------------------|
