@@ -28,7 +28,8 @@ For each task:
 1. Mark as in_progress
 2. Follow each step exactly (plan has bite-sized steps)
 3. Run verifications as specified
-4. Mark as completed
+4. If verification fails due to missing dependencies, try environment switching and re-run once
+5. Mark as completed
 
 ### Step 3: Report
 When batch complete:
@@ -52,7 +53,7 @@ After all tasks complete and verified:
 ## When to Stop and Ask for Help
 
 **STOP executing immediately when:**
-- Hit a blocker mid-batch (missing dependency, test fails, instruction unclear)
+- Hit a blocker mid-batch after trying environment switching and a re-run (missing dependency, test fails, instruction unclear)
 - Plan has critical gaps preventing starting
 - You don't understand an instruction
 - Verification fails repeatedly
@@ -79,6 +80,6 @@ After all tasks complete and verified:
 ## Integration
 
 **Required workflow skills:**
-- **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
+- **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting and enforce hard policy (1 linked worktree max, 1GiB storage cap, mandatory end-of-task cleanup with worktree directory removal)
 - **superpowers:writing-plans** - Creates the plan this skill executes
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
