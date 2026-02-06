@@ -95,7 +95,12 @@ Skills update instantly through the symlink.
 rm ~/.agents/skills/superpowers
 ```
 
-Optionally delete the clone: `rm -rf ~/.codex/superpowers`.
+**Windows (PowerShell):**
+```powershell
+Remove-Item "$env:USERPROFILE\.agents\skills\superpowers"
+```
+
+Optionally delete the clone: `rm -rf ~/.codex/superpowers` (Windows: `Remove-Item -Recurse -Force "$env:USERPROFILE\.codex\superpowers"`).
 
 ## Troubleshooting
 
