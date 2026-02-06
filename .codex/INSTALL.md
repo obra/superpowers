@@ -1,35 +1,39 @@
 # Installing Superpowers for Codex
 
-Quick setup to enable superpowers skills in Codex.
+Quick setup to enable superpowers skills in Codex via native skill discovery.
 
 ## Installation
 
 1. **Clone superpowers repository**:
    ```bash
-   mkdir -p ~/.codex/superpowers
-   cd ~/.codex/superpowers
-   git clone https://github.com/obra/superpowers.git .
+   git clone https://github.com/obra/superpowers.git ~/.codex/superpowers
    ```
 
-2. **Create personal skills directory**:
+2. **Run the installer**:
    ```bash
-   mkdir -p ~/.codex/skills
+   node ~/.codex/superpowers/.codex/install-codex.mjs
    ```
 
-3. **Update ~/.codex/AGENTS.md** to include this superpowers section:
-   ```markdown
-   ## Superpowers System
+3. **Restart Codex** to discover the skills.
 
-   <EXTREMELY_IMPORTANT>
-   You have superpowers. Superpowers teach you new skills and capabilities. RIGHT NOW run: `node $HOME/.codex/superpowers/.codex/superpowers-codex bootstrap` and follow the instructions it returns.
-   </EXTREMELY_IMPORTANT>
-   ```
+## What the installer does
 
-## Verification
+- Creates a symlink: `~/.agents/skills/superpowers` → `~/.codex/superpowers/skills`
+- Adds a small gatekeeper block to `~/.codex/AGENTS.md`
+- If you had the old bootstrap setup, it removes it automatically
 
-Test the installation:
+## Updating
+
 ```bash
-node $HOME/.codex/superpowers/.codex/superpowers-codex bootstrap
+cd ~/.codex/superpowers && git pull
 ```
 
-You should see skill listings and bootstrap instructions. The system is now ready for use.
+Skills update instantly through the symlink.
+
+## Uninstalling
+
+```bash
+rm ~/.agents/skills/superpowers
+```
+
+Then remove the block between `<!-- superpowers:begin -->` and `<!-- superpowers:end -->` from `~/.codex/AGENTS.md`.
