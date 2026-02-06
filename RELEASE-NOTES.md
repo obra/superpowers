@@ -1,62 +1,67 @@
 # Superpowers Release Notes
 
-## Unreleased
+## v4.2.0 (2026-02-05)
 
 ### Breaking Changes
 
-**OpenCode: Switched to native skills system**
+**Codex: Replaced bootstrap CLI with native skill discovery**
 
-Superpowers for OpenCode now uses OpenCode's native `skill` tool instead of custom `use_skill`/`find_skills` tools. This is a cleaner integration that works with OpenCode's built-in skill discovery.
+The `superpowers-codex` bootstrap CLI, Windows `.cmd` wrapper, and related bootstrap content file have been removed. Codex now uses native skill discovery via `~/.agents/skills/superpowers/` symlink, so the old `use_skill`/`find_skills` CLI tools are no longer needed.
 
-**Migration required:** Skills must be symlinked to `~/.config/opencode/skills/superpowers/` (see updated installation docs).
+Installation is now just clone + symlink (documented in INSTALL.md). No Node.js dependency required. The old `~/.codex/skills/` path is deprecated.
 
 ### Fixes
 
-**OpenCode: Fixed agent reset on session start (#226)**
+**Windows: Fixed Claude Code 2.1.x hook execution (#331)**
 
-The previous bootstrap injection method using `session.prompt({ noReply: true })` caused OpenCode to reset the selected agent to "build" on first message. Now uses `experimental.chat.system.transform` hook which modifies the system prompt directly without side effects.
-
-**OpenCode: Fixed Windows installation (#232)**
-
-- Removed dependency on `skills-core.js` (eliminates broken relative imports when file is copied instead of symlinked)
-- Added comprehensive Windows installation docs for cmd.exe, PowerShell, and Git Bash
-- Documented proper symlink vs junction usage for each platform
-
-**Fixed Windows hook execution for Claude Code 2.1.x**
-
-Claude Code 2.1.x changed how hooks execute on Windows: it now auto-detects `.sh` files in commands and prepends `bash `. This broke the polyglot wrapper pattern because `bash "run-hook.cmd" session-start.sh` tries to execute the .cmd file as a bash script.
+Claude Code 2.1.x changed how hooks execute on Windows: it now auto-detects `.sh` files in commands and prepends `bash`. This broke the polyglot wrapper pattern because `bash "run-hook.cmd" session-start.sh` tries to execute the `.cmd` file as a bash script.
 
 Fix: hooks.json now calls session-start.sh directly. Claude Code 2.1.x handles the bash invocation automatically. Also added .gitattributes to enforce LF line endings for shell scripts (fixes CRLF issues on Windows checkout).
 
-**Windows: SessionStart hook runs async to prevent terminal freeze**
+**Windows: SessionStart hook runs async to prevent terminal freeze (#404, #413, #414, #419)**
 
-The synchronous SessionStart hook blocked the TUI from entering raw mode on Windows, freezing terminal input. The pure-bash `escape_for_json` function is O(n^2) on Windows Git Bash, taking 60+ seconds. Running the hook async prevents the freeze while still injecting superpowers context.
+The synchronous SessionStart hook blocked the TUI from entering raw mode on Windows, freezing all keyboard input. Running the hook async prevents the freeze while still injecting superpowers context.
 
-### New Features
+**Windows: Fixed O(n^2) `escape_for_json` performance**
 
-**Visual companion for brainstorming skill**
+The character-by-character loop using `${input:$i:1}` was O(n^2) in bash due to substring copy overhead. On Windows Git Bash this took 60+ seconds. Replaced with bash parameter substitution (`${s//old/new}`) which runs each pattern as a single C-level pass — 7x faster on macOS, dramatically faster on Windows.
 
-Added optional browser-based visual companion for brainstorming sessions. When users have a browser available, brainstorming can display interactive screens showing current phase, questions, and design decisions in a more readable format than terminal output.
+**Codex: Fixed Windows/PowerShell invocation (#285, #243)**
 
-Components:
-- `lib/brainstorm-server/` - WebSocket server for real-time updates
-- `skills/brainstorming/visual-companion.md` - Integration guide
-- Helper scripts for session management with proper isolation
-- Browser helper library for event capture
+- Windows doesn't respect shebangs, so directly invoking the extensionless `superpowers-codex` script triggered an "Open with" dialog. All invocations now prefixed with `node`.
+- Fixed `~/` path expansion on Windows — PowerShell doesn't expand `~` when passed as an argument to `node`. Changed to `$HOME` which expands correctly in both bash and PowerShell.
 
-The visual companion is opt-in and falls back gracefully to terminal-only operation.
+**Codex: Fixed path resolution in installer**
+
+Used `fileURLToPath()` instead of manual URL pathname parsing to correctly handle paths with spaces and special characters on all platforms.
+
+**Codex: Fixed stale skills path in writing-skills**
+
+Updated `~/.codex/skills/` reference (deprecated) to `~/.agents/skills/` for native discovery.
 
 ### Improvements
 
-**Instruction priority clarified in using-superpowers**
+**Worktree isolation now required before implementation**
 
-Added explicit instruction priority hierarchy to prevent conflicts with user preferences:
+Added `using-git-worktrees` as a required skill for both `subagent-driven-development` and `executing-plans`. Implementation workflows now explicitly require setting up an isolated worktree before starting work, preventing accidental work directly on main.
 
-1. User's explicit instructions (CLAUDE.md, direct requests) — highest priority
-2. Superpowers skills — override default system behavior where they conflict
-3. Default system prompt — lowest priority
+**Main branch protection softened to require explicit consent**
 
-This ensures users remain in control. If CLAUDE.md says "don't use TDD" and a skill says "always use TDD," CLAUDE.md wins.
+Instead of prohibiting main branch work entirely, the skills now allow it with explicit user consent. More flexible while still ensuring users are aware of the implications.
+
+**Simplified installation verification**
+
+Removed `/help` command check and specific slash command list from verification steps. Skills are primarily invoked by describing what you want to do, not by running specific commands.
+
+**Codex: Clarified subagent tool mapping in bootstrap**
+
+Improved documentation of how Codex tools map to Claude Code equivalents for subagent workflows.
+
+### Tests
+
+- Added worktree requirement test for subagent-driven-development
+- Added main branch red flag warning test
+- Fixed case sensitivity in skill recognition test assertions
 
 ---
 
