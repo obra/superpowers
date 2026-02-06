@@ -17,6 +17,12 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
 
+## Phase Design
+
+**"Something simple working soon."** This is the core principle. Close a working loop of value fast - boilerplate, hello world, a minimal slice - then add concentric layers of functionality.
+
+**Stoppable phases:** Each phase is self-contained. You can pause after any phase and have working software. Avoid patterns like "write all tests at the end" - do hygiene incrementally within each phase.
+
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**
