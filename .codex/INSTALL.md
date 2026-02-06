@@ -29,7 +29,18 @@ Enable superpowers skills in Codex via native skill discovery. Just clone and sy
 
 ## Migrating from old bootstrap
 
-If your `~/.codex/AGENTS.md` contains a superpowers block that references `superpowers-codex bootstrap`, remove that block — it's no longer needed. Native skill discovery replaces the old bootstrap system.
+If you installed superpowers before native skill discovery, you need to:
+
+1. **Update the repo:**
+   ```bash
+   cd ~/.codex/superpowers && git pull
+   ```
+
+2. **Create the skills symlink** (step 2 above) — this is the new discovery mechanism.
+
+3. **Remove the old bootstrap block** from `~/.codex/AGENTS.md` — any block referencing `superpowers-codex bootstrap` is no longer needed.
+
+4. **Restart Codex.**
 
 ## Verify
 
