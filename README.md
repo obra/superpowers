@@ -46,6 +46,14 @@ Then install the plugin from this marketplace:
 
 Start a new session and ask Claude to help with something that would trigger a skill (e.g., "help me plan this feature" or "let's debug this issue"). Claude should automatically invoke the relevant superpowers skill.
 
+### Claude Code for Web
+
+Tell Claude Code for Web:
+
+```
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.claude-code-for-web/INSTALL.md
+```
+
 ### Codex
 
 Tell Codex:
