@@ -4,8 +4,9 @@
 // Creates a symlink from ~/.agents/skills/superpowers → repo skills/
 // and updates ~/.codex/AGENTS.md with a gatekeeper block.
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync, symlinkSync, lstatSync, readlinkSync } from 'fs';
-import { join, resolve } from 'path';
+import { existsSync, readFileSync, writeFileSync, mkdirSync, symlinkSync, lstatSync, readlinkSync, unlinkSync } from 'fs';
+import { join, resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { homedir, platform } from 'os';
 import { execSync } from 'child_process';
 
@@ -13,7 +14,8 @@ const home = homedir();
 const isWindows = platform() === 'win32';
 
 // Paths
-const repoSkillsDir = resolve(new URL('.', import.meta.url).pathname.replace(/^\/([A-Z]:)/i, '$1'), '..', 'skills');
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const repoSkillsDir = resolve(__dirname, '..', 'skills');
 const agentsSkillsDir = join(home, '.agents', 'skills');
 const symlinkPath = join(agentsSkillsDir, 'superpowers');
 const agentsMdPath = join(home, '.codex', 'AGENTS.md');
@@ -52,7 +54,7 @@ function createSymlink() {
           return;
         }
         console.log(`! Existing symlink points to ${target}, updating to ${repoSkillsDir}`);
-        execSync(isWindows ? `rmdir "${symlinkPath}"` : `rm "${symlinkPath}"`);
+        unlinkSync(symlinkPath);
       } else {
         console.error(`✗ ${symlinkPath} already exists and is not a symlink.`);
         console.error(`  Remove it manually and re-run the installer.`);
