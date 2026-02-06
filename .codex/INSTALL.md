@@ -1,33 +1,35 @@
 # Installing Superpowers for Codex
 
-Quick setup to enable superpowers skills in Codex. The installer links your skills into Codex's native discovery path so they load automatically.
+Enable superpowers skills in Codex via native skill discovery. Just clone and symlink.
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) (v16+)
 - Git
 
 ## Installation
 
-1. **Clone superpowers repository**:
+1. **Clone the superpowers repository:**
    ```bash
    git clone https://github.com/obra/superpowers.git ~/.codex/superpowers
    ```
 
-2. **Run the installer**:
+2. **Create the skills symlink:**
    ```bash
-   node ~/.codex/superpowers/.codex/install-codex.mjs
+   mkdir -p ~/.agents/skills
+   ln -s ~/.codex/superpowers/skills ~/.agents/skills/superpowers
+   ```
+
+   **Windows (PowerShell):**
+   ```powershell
+   New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.agents\skills"
+   cmd /c mklink /J "$env:USERPROFILE\.agents\skills\superpowers" "$env:USERPROFILE\.codex\superpowers\skills"
    ```
 
 3. **Restart Codex** (quit and relaunch the CLI) to discover the skills.
 
-**Windows:** The installer creates a junction (`mklink /J`), which works without Developer Mode.
+## Migrating from old bootstrap
 
-## What the installer does
-
-- Links `~/.agents/skills/superpowers` → `~/.codex/superpowers/skills` (symlink on macOS/Linux, junction on Windows)
-- Adds a gatekeeper block to `~/.codex/AGENTS.md` that tells Codex to use superpowers skills
-- If you had the old bootstrap setup, it removes it automatically
+If your `~/.codex/AGENTS.md` contains a superpowers block that references `superpowers-codex bootstrap`, remove that block — it's no longer needed. Native skill discovery replaces the old bootstrap system.
 
 ## Verify
 
@@ -35,7 +37,7 @@ Quick setup to enable superpowers skills in Codex. The installer links your skil
 ls -la ~/.agents/skills/superpowers
 ```
 
-You should see a symlink (or junction) pointing to your superpowers skills directory.
+You should see a symlink (or junction on Windows) pointing to your superpowers skills directory.
 
 ## Updating
 
@@ -43,7 +45,7 @@ You should see a symlink (or junction) pointing to your superpowers skills direc
 cd ~/.codex/superpowers && git pull
 ```
 
-Skills update instantly through the link.
+Skills update instantly through the symlink.
 
 ## Uninstalling
 
@@ -51,4 +53,4 @@ Skills update instantly through the link.
 rm ~/.agents/skills/superpowers
 ```
 
-Then remove the block between `<!-- superpowers:begin -->` and `<!-- superpowers:end -->` from `~/.codex/AGENTS.md`. Optionally delete the clone: `rm -rf ~/.codex/superpowers`.
+Optionally delete the clone: `rm -rf ~/.codex/superpowers`.

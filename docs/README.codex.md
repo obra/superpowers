@@ -15,7 +15,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 ### Prerequisites
 
 - OpenAI Codex CLI
-- Node.js (for the installer script)
+- Git
 
 ### Steps
 
@@ -24,18 +24,22 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
    git clone https://github.com/obra/superpowers.git ~/.codex/superpowers
    ```
 
-2. Run the installer:
+2. Create the skills symlink:
    ```bash
-   node ~/.codex/superpowers/.codex/install-codex.mjs
+   mkdir -p ~/.agents/skills
+   ln -s ~/.codex/superpowers/skills ~/.agents/skills/superpowers
    ```
 
 3. Restart Codex.
 
-The installer links `~/.agents/skills/superpowers` to the repo's `skills/` directory (symlink on macOS/Linux, junction on Windows) and adds a gatekeeper block to `~/.codex/AGENTS.md`. Existing users with the old bootstrap setup are migrated automatically.
-
 ### Windows
 
-The installer creates a junction (`mklink /J`) on Windows, which works without Developer Mode. On macOS/Linux it creates a standard symlink. Both work for Codex skill discovery.
+Use a junction instead of a symlink (works without Developer Mode):
+
+```powershell
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.agents\skills"
+cmd /c mklink /J "$env:USERPROFILE\.agents\skills\superpowers" "$env:USERPROFILE\.codex\superpowers\skills"
+```
 
 ## How It Works
 
@@ -45,7 +49,7 @@ Codex has native skill discovery — it scans `~/.agents/skills/` at startup, pa
 ~/.agents/skills/superpowers/ → ~/.codex/superpowers/skills/
 ```
 
-A small gatekeeper block in `~/.codex/AGENTS.md` ensures Codex invokes `$using-superpowers` at session start, which enforces skill usage discipline across turns.
+The `using-superpowers` skill is discovered automatically and enforces skill usage discipline — no additional configuration needed.
 
 ## Usage
 
@@ -53,19 +57,6 @@ Skills are discovered automatically. Codex activates them when:
 - You mention a skill by name (e.g., "use brainstorming")
 - The task matches a skill's description
 - The `using-superpowers` skill directs Codex to use one
-
-### Tool Mappings
-
-Skills written for Claude Code reference tools that have Codex equivalents:
-
-| Claude Code | Codex |
-|-------------|-------|
-| `TodoWrite` | `update_plan` |
-| `Task`/`Subagent` | `spawn_agent` + `wait` (or sequential if collab disabled) |
-| `Skill` tool | Native `$skill-name` mention |
-| `Read`, `Write`, `Edit`, `Bash` | Native equivalents |
-
-These mappings are included in the AGENTS.md gatekeeper block.
 
 ### Personal Skills
 
@@ -104,7 +95,7 @@ Skills update instantly through the symlink.
 rm ~/.agents/skills/superpowers
 ```
 
-Then remove the block between `<!-- superpowers:begin -->` and `<!-- superpowers:end -->` from `~/.codex/AGENTS.md`.
+Optionally delete the clone: `rm -rf ~/.codex/superpowers`.
 
 ## Troubleshooting
 
@@ -116,15 +107,7 @@ Then remove the block between `<!-- superpowers:begin -->` and `<!-- superpowers
 
 ### Windows junction issues
 
-The installer creates junctions on Windows, which normally work without special permissions. If junction creation fails, try running PowerShell as administrator.
-
-### Node.js not found
-
-The installer requires Node.js. Verify:
-
-```bash
-node --version
-```
+Junctions normally work without special permissions. If creation fails, try running PowerShell as administrator.
 
 ## Getting Help
 
