@@ -5,9 +5,9 @@ description: Use when executing implementation plans with independent tasks in t
 
 # Subagent-Driven Development
 
-Execute plan by dispatching fresh subagent per task, with two-stage review after each: spec compliance review first, then code quality review.
+Execute plan by dispatching the Amplifier agent specified in each task, with two-stage review after each: spec compliance review first, then code quality review.
 
-**Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
+**Core principle:** Dispatch the right Amplifier specialist per task + two-stage review (spec then quality) = high quality, fast iteration
 
 ## When to Use
 
@@ -31,9 +31,28 @@ digraph when_to_use {
 
 **vs. Executing Plans (parallel session):**
 - Same session (no context switch)
-- Fresh subagent per task (no context pollution)
+- Fresh Amplifier agent per task (specialist knowledge + no context pollution)
 - Two-stage review after each task: spec compliance first, then code quality
 - Faster iteration (no human-in-loop between tasks)
+
+## Amplifier Agent Dispatch
+
+Each task in the plan has an `Agent:` field. Use it to dispatch the right specialist:
+
+1. Read the task's `Agent:` field (e.g., `modular-builder`, `bug-hunter`, `database-architect`)
+2. Dispatch that agent via the Task tool
+3. Pass the full task text + context (never make subagent read the plan file)
+4. The agent brings domain expertise to the implementation
+
+**Review agents (from AMPLIFIER-AGENTS.md):**
+- Spec compliance review → dispatch `test-coverage` agent
+- Code quality review → dispatch `zen-architect` agent (REVIEW mode)
+- Security-sensitive tasks → add `security-guardian` as third reviewer
+- Parallel review is OK: spec-compliance and security reviews are read-only, they can run concurrently
+
+**After all tasks complete:**
+- Dispatch `post-task-cleanup` agent for codebase hygiene
+- Then use superpowers:finishing-a-development-branch
 
 ## The Process
 
@@ -43,50 +62,50 @@ digraph process {
 
     subgraph cluster_per_task {
         label="Per Task";
-        "Dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
-        "Implementer subagent asks questions?" [shape=diamond];
+        "Read task Agent field, dispatch that Amplifier agent (./implementer-prompt.md)" [shape=box];
+        "Agent asks questions?" [shape=diamond];
         "Answer questions, provide context" [shape=box];
-        "Implementer subagent implements, tests, commits, self-reviews" [shape=box];
-        "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [shape=box];
-        "Spec reviewer subagent confirms code matches spec?" [shape=diamond];
-        "Implementer subagent fixes spec gaps" [shape=box];
-        "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
-        "Code quality reviewer subagent approves?" [shape=diamond];
-        "Implementer subagent fixes quality issues" [shape=box];
+        "Agent implements, tests, commits, self-reviews" [shape=box];
+        "Dispatch test-coverage agent for spec review (./spec-reviewer-prompt.md)" [shape=box];
+        "Spec compliant?" [shape=diamond];
+        "Implementation agent fixes spec gaps" [shape=box];
+        "Dispatch zen-architect REVIEW mode (./code-quality-reviewer-prompt.md)" [shape=box];
+        "Quality approved?" [shape=diamond];
+        "Implementation agent fixes quality issues" [shape=box];
         "Mark task complete in TodoWrite" [shape=box];
     }
 
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
+    "Read plan, extract all tasks with Agent fields, note context, create TodoWrite" [shape=box];
     "More tasks remain?" [shape=diamond];
-    "Dispatch final code reviewer subagent for entire implementation" [shape=box];
+    "Dispatch post-task-cleanup agent" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
-    "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
-    "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
-    "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
-    "Implementer subagent asks questions?" -> "Implementer subagent implements, tests, commits, self-reviews" [label="no"];
-    "Implementer subagent implements, tests, commits, self-reviews" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)";
-    "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" -> "Spec reviewer subagent confirms code matches spec?";
-    "Spec reviewer subagent confirms code matches spec?" -> "Implementer subagent fixes spec gaps" [label="no"];
-    "Implementer subagent fixes spec gaps" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="re-review"];
-    "Spec reviewer subagent confirms code matches spec?" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="yes"];
-    "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
-    "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
-    "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
-    "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
+    "Read plan, extract all tasks with Agent fields, note context, create TodoWrite" -> "Read task Agent field, dispatch that Amplifier agent (./implementer-prompt.md)";
+    "Read task Agent field, dispatch that Amplifier agent (./implementer-prompt.md)" -> "Agent asks questions?";
+    "Agent asks questions?" -> "Answer questions, provide context" [label="yes"];
+    "Answer questions, provide context" -> "Read task Agent field, dispatch that Amplifier agent (./implementer-prompt.md)";
+    "Agent asks questions?" -> "Agent implements, tests, commits, self-reviews" [label="no"];
+    "Agent implements, tests, commits, self-reviews" -> "Dispatch test-coverage agent for spec review (./spec-reviewer-prompt.md)";
+    "Dispatch test-coverage agent for spec review (./spec-reviewer-prompt.md)" -> "Spec compliant?";
+    "Spec compliant?" -> "Implementation agent fixes spec gaps" [label="no"];
+    "Implementation agent fixes spec gaps" -> "Dispatch test-coverage agent for spec review (./spec-reviewer-prompt.md)" [label="re-review"];
+    "Spec compliant?" -> "Dispatch zen-architect REVIEW mode (./code-quality-reviewer-prompt.md)" [label="yes"];
+    "Dispatch zen-architect REVIEW mode (./code-quality-reviewer-prompt.md)" -> "Quality approved?";
+    "Quality approved?" -> "Implementation agent fixes quality issues" [label="no"];
+    "Implementation agent fixes quality issues" -> "Dispatch zen-architect REVIEW mode (./code-quality-reviewer-prompt.md)" [label="re-review"];
+    "Quality approved?" -> "Mark task complete in TodoWrite" [label="yes"];
     "Mark task complete in TodoWrite" -> "More tasks remain?";
-    "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
-    "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
-    "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
+    "More tasks remain?" -> "Read task Agent field, dispatch that Amplifier agent (./implementer-prompt.md)" [label="yes"];
+    "More tasks remain?" -> "Dispatch post-task-cleanup agent" [label="no"];
+    "Dispatch post-task-cleanup agent" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
 
 ## Prompt Templates
 
-- `./implementer-prompt.md` - Dispatch implementer subagent
-- `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
-- `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
+- `./implementer-prompt.md` - Dispatch implementation agent (includes agent-specific context)
+- `./spec-reviewer-prompt.md` - Dispatch test-coverage agent for spec compliance
+- `./code-quality-reviewer-prompt.md` - Dispatch zen-architect for code quality
 
 ## Example Workflow
 
@@ -94,80 +113,51 @@ digraph process {
 You: I'm using Subagent-Driven Development to execute this plan.
 
 [Read plan file once: docs/plans/feature-plan.md]
-[Extract all 5 tasks with full text and context]
+[Extract all 5 tasks with full text, Agent fields, and context]
 [Create TodoWrite with all tasks]
 
-Task 1: Hook installation script
+Task 1: Design auth module schema (Agent: database-architect)
 
-[Get Task 1 text and context (already extracted)]
-[Dispatch implementation subagent with full task text + context]
+[Dispatch database-architect agent with full task text + context]
 
-Implementer: "Before I begin - should the hook be installed at user or system level?"
+database-architect: "Should we use separate tables for roles and permissions, or a combined approach?"
 
-You: "User level (~/.config/superpowers/hooks/)"
+You: "Separate tables — we need fine-grained permission assignment."
 
-Implementer: "Got it. Implementing now..."
-[Later] Implementer:
-  - Implemented install-hook command
-  - Added tests, 5/5 passing
-  - Self-review: Found I missed --force flag, added it
+database-architect: "Got it. Implementing now..."
+[Later] database-architect:
+  - Created migration for users, roles, permissions tables
+  - Added indexes for common query patterns
+  - Tests: 4/4 passing
   - Committed
 
-[Dispatch spec compliance reviewer]
-Spec reviewer: ✅ Spec compliant - all requirements met, nothing extra
+[Dispatch test-coverage agent for spec compliance]
+test-coverage: ✅ Spec compliant - schema matches requirements
 
-[Get git SHAs, dispatch code quality reviewer]
-Code reviewer: Strengths: Good test coverage, clean. Issues: None. Approved.
+[Dispatch zen-architect REVIEW mode for code quality]
+zen-architect: Strengths: Clean schema. Issues: None. Approved.
 
 [Mark Task 1 complete]
 
-Task 2: Recovery modes
+Task 2: Implement auth middleware (Agent: modular-builder)
 
-[Get Task 2 text and context (already extracted)]
-[Dispatch implementation subagent with full task text + context]
+[Dispatch modular-builder agent with full task text + context]
 
-Implementer: [No questions, proceeds]
-Implementer:
-  - Added verify/repair modes
-  - 8/8 tests passing
-  - Self-review: All good
-  - Committed
-
-[Dispatch spec compliance reviewer]
-Spec reviewer: ❌ Issues:
-  - Missing: Progress reporting (spec says "report every 100 items")
-  - Extra: Added --json flag (not requested)
-
-[Implementer fixes issues]
-Implementer: Removed --json flag, added progress reporting
-
-[Spec reviewer reviews again]
-Spec reviewer: ✅ Spec compliant now
-
-[Dispatch code quality reviewer]
-Code reviewer: Strengths: Solid. Issues (Important): Magic number (100)
-
-[Implementer fixes]
-Implementer: Extracted PROGRESS_INTERVAL constant
-
-[Code reviewer reviews again]
-Code reviewer: ✅ Approved
-
-[Mark Task 2 complete]
-
+modular-builder: [No questions, proceeds with bricks-and-studs approach]
 ...
 
 [After all tasks]
-[Dispatch final code-reviewer]
-Final reviewer: All requirements met, ready to merge
+[Dispatch post-task-cleanup agent]
+post-task-cleanup: Removed 2 unused imports, no other issues.
 
+[Use superpowers:finishing-a-development-branch]
 Done!
 ```
 
 ## Advantages
 
 **vs. Manual execution:**
-- Subagents follow TDD naturally
+- Specialist agents bring domain expertise per task
 - Fresh context per task (no confusion)
 - Parallel-safe (subagents don't interfere)
 - Subagent can ask questions (before AND during work)
@@ -180,18 +170,19 @@ Done!
 **Efficiency gains:**
 - No file reading overhead (controller provides full text)
 - Controller curates exactly what context is needed
-- Subagent gets complete information upfront
+- Agent brings domain expertise (database-architect knows schema patterns)
 - Questions surfaced before work begins (not after)
 
 **Quality gates:**
 - Self-review catches issues before handoff
-- Two-stage review: spec compliance, then code quality
+- Spec compliance via test-coverage agent (testing expert verifies completeness)
+- Code quality via zen-architect REVIEW mode (architecture expert verifies quality)
+- Security review via security-guardian (when applicable)
+- Post-task-cleanup ensures hygiene
 - Review loops ensure fixes actually work
-- Spec compliance prevents over/under-building
-- Code quality ensures implementation is well-built
 
 **Cost:**
-- More subagent invocations (implementer + 2 reviewers per task)
+- More subagent invocations (implementer + 2-3 reviewers per task)
 - Controller does more prep work (extracting all tasks upfront)
 - Review loops add iterations
 - But catches issues early (cheaper than debugging later)
@@ -211,6 +202,7 @@ Done!
 - Let implementer self-review replace actual review (both are needed)
 - **Start code quality review before spec compliance is ✅** (wrong order)
 - Move to next task while either review has open issues
+- Override the plan's Agent field without good reason
 
 **If subagent asks questions:**
 - Answer clearly and completely
@@ -231,9 +223,16 @@ Done!
 
 **Required workflow skills:**
 - **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
-- **superpowers:writing-plans** - Creates the plan this skill executes
+- **superpowers:writing-plans** - Creates the plan this skill executes (with Agent: fields)
 - **superpowers:requesting-code-review** - Code review template for reviewer subagents
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
+
+**Amplifier agents used:**
+- **Implementation agents** - Per task's Agent: field (modular-builder, database-architect, etc.)
+- **test-coverage** - Spec compliance reviewer
+- **zen-architect** - Code quality reviewer (REVIEW mode)
+- **security-guardian** - Security reviewer (when applicable)
+- **post-task-cleanup** - Final hygiene pass
 
 **Subagents should use:**
 - **superpowers:test-driven-development** - Subagents follow TDD for each task
