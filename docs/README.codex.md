@@ -31,11 +31,11 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 3. Restart Codex.
 
-The installer creates a symlink from `~/.agents/skills/superpowers` to the repo's `skills/` directory and adds a gatekeeper block to `~/.codex/AGENTS.md`. Existing users with the old bootstrap setup are migrated automatically.
+The installer links `~/.agents/skills/superpowers` to the repo's `skills/` directory (symlink on macOS/Linux, junction on Windows) and adds a gatekeeper block to `~/.codex/AGENTS.md`. Existing users with the old bootstrap setup are migrated automatically.
 
 ### Windows
 
-The installer tries symlinks first, then falls back to junctions (`mklink /J`) if symlinks require Developer Mode. Both work for Codex skill discovery.
+The installer creates a junction (`mklink /J`) on Windows, which works without Developer Mode. On macOS/Linux it creates a standard symlink. Both work for Codex skill discovery.
 
 ## How It Works
 
@@ -88,6 +88,8 @@ description: Use when [condition] - [what it does]
 [Your skill content here]
 ```
 
+The `description` field is how Codex decides when to activate a skill automatically — write it as a clear trigger condition.
+
 ## Updating
 
 ```bash
@@ -112,9 +114,9 @@ Then remove the block between `<!-- superpowers:begin -->` and `<!-- superpowers
 2. Check skills exist: `ls ~/.codex/superpowers/skills`
 3. Restart Codex — skills are discovered at startup
 
-### Windows symlink issues
+### Windows junction issues
 
-If the installer reports symlink failure, ensure Developer Mode is enabled or run as administrator. The installer will attempt a junction fallback automatically.
+The installer creates junctions on Windows, which normally work without special permissions. If junction creation fails, try running PowerShell as administrator.
 
 ### Node.js not found
 

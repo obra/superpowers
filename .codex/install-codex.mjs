@@ -64,19 +64,21 @@ function createSymlink() {
     }
   }
 
-  // Create the symlink (or junction on Windows)
+  // Create the link (symlink on macOS/Linux, junction on Windows)
+  const linkType = isWindows ? 'junction' : 'dir';
+  const linkLabel = isWindows ? 'junction' : 'symlink';
   try {
-    symlinkSync(repoSkillsDir, symlinkPath, 'junction');
-    console.log(`✓ Created symlink: ${symlinkPath} → ${repoSkillsDir}`);
+    symlinkSync(repoSkillsDir, symlinkPath, linkType);
+    console.log(`✓ Created ${linkLabel}: ${symlinkPath} → ${repoSkillsDir}`);
   } catch (err) {
     if (isWindows) {
-      // Symlink failed on Windows — try junction via mklink /J
+      // Node API failed on Windows — try junction via cmd.exe
       try {
         execSync(`cmd /c mklink /J "${symlinkPath}" "${repoSkillsDir}"`, { stdio: 'pipe' });
         console.log(`✓ Created junction: ${symlinkPath} → ${repoSkillsDir}`);
       } catch (junctionErr) {
-        console.error(`✗ Failed to create symlink or junction: ${junctionErr.message}`);
-        console.error(`  On Windows, enable Developer Mode or run as administrator.`);
+        console.error(`✗ Failed to create junction: ${junctionErr.message}`);
+        console.error(`  Try running PowerShell as administrator.`);
         process.exit(1);
       }
     } else {
