@@ -17,6 +17,29 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
 
+## Amplifier Agent Assignment
+
+Each task gets an `Agent:` field specifying which Amplifier agent will handle it during execution. Consult `AMPLIFIER-AGENTS.md` at the repo root for the full mapping.
+
+**Auto-assign by scanning the task description:**
+- Implementation tasks (build, create, add) → `modular-builder`
+- Test tasks (test, coverage, verify) → `test-coverage`
+- Fix/debug tasks (fix, debug, error) → `bug-hunter`
+- Security tasks (auth, secrets, permissions) → `security-guardian`
+- API tasks (endpoint, contract, route) → `api-contract-designer`
+- Database tasks (schema, migration, query) → `database-architect`
+- UI tasks (component, frontend, visual) → `component-designer`
+- Integration tasks (API, MCP, external) → `integration-specialist`
+- Performance tasks (optimize, bottleneck) → `performance-optimizer`
+
+When in doubt, use `modular-builder` for building and `bug-hunter` for fixing.
+
+**Review tasks use dedicated agents:**
+- Spec compliance review → `test-coverage`
+- Code quality review → `zen-architect` (REVIEW mode)
+- Security review → `security-guardian`
+- Final cleanup → `post-task-cleanup`
+
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**
@@ -33,7 +56,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development to execute this plan task-by-task. Each task specifies its Agent — dispatch that Amplifier agent as the subagent for implementation.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -49,6 +72,8 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 ```markdown
 ### Task N: [Component Name]
 
+**Agent:** [agent-name from AMPLIFIER-AGENTS.md]
+
 **Files:**
 - Create: `exact/path/to/file.py`
 - Modify: `exact/path/to/existing.py:123-145`
@@ -56,11 +81,11 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Step 1: Write the failing test**
 
-```python
+` ` `python
 def test_specific_behavior():
     result = function(input)
     assert result == expected
-```
+` ` `
 
 **Step 2: Run test to verify it fails**
 
@@ -69,10 +94,10 @@ Expected: FAIL with "function not defined"
 
 **Step 3: Write minimal implementation**
 
-```python
+` ` `python
 def function(input):
     return expected
-```
+` ` `
 
 **Step 4: Run test to verify it passes**
 
@@ -81,10 +106,24 @@ Expected: PASS
 
 **Step 5: Commit**
 
-```bash
+` ` `bash
 git add tests/path/test.py src/path/file.py
 git commit -m "feat: add specific feature"
+` ` `
 ```
+
+## Review Tasks
+
+Include explicit review tasks in the plan for security-sensitive or complex implementations:
+
+```markdown
+### Task N+1: Security Review
+
+**Agent:** security-guardian
+
+**Scope:** Review Tasks 1-N for OWASP Top 10, secret detection, auth patterns
+**Output:** Security findings with file:line references
+**Action:** If issues found, create fix tasks and re-review
 ```
 
 ## Remember
@@ -93,6 +132,7 @@ git commit -m "feat: add specific feature"
 - Exact commands with expected output
 - Reference relevant skills with @ syntax
 - DRY, YAGNI, TDD, frequent commits
+- Every task has an Agent: field
 
 ## Execution Handoff
 
@@ -100,7 +140,7 @@ After saving the plan, offer execution choice:
 
 **"Plan complete and saved to `docs/plans/<filename>.md`. Two execution options:**
 
-**1. Subagent-Driven (this session)** - I dispatch fresh subagent per task, review between tasks, fast iteration
+**1. Subagent-Driven (this session)** - I dispatch fresh Amplifier agents per task (using each task's Agent field), with two-stage review between tasks
 
 **2. Parallel Session (separate)** - Open new session with executing-plans, batch execution with checkpoints
 
@@ -109,7 +149,7 @@ After saving the plan, offer execution choice:
 **If Subagent-Driven chosen:**
 - **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
 - Stay in this session
-- Fresh subagent per task + code review
+- Fresh Amplifier agent per task + two-stage review
 
 **If Parallel Session chosen:**
 - Guide them to open new session in worktree
