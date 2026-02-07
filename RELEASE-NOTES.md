@@ -63,6 +63,20 @@ Claude Code 2.1.x changed how hooks execute on Windows: it now auto-detects `.sh
 
 Fix: hooks.json now calls session-start.sh directly. Claude Code 2.1.x handles the bash invocation automatically. Also added .gitattributes to enforce LF line endings for shell scripts (fixes CRLF issues on Windows checkout).
 
+**Brainstorming visual companion: reduced token cost and improved persistence**
+
+The visual companion now generates much smaller HTML per screen. The server automatically wraps bare content fragments in the frame template (header, CSS theme, feedback footer, interactive JS), so Claude writes only the content portion (~30 lines instead of ~260). Full HTML documents are still served as-is when Claude needs complete control.
+
+Other improvements:
+- `toggleSelect`/`send`/`selectedChoice` moved from inline template script to `helper.js` (auto-injected)
+- `start-server.sh --project-dir` persists mockups under `.superpowers/brainstorm/` instead of `/tmp`
+- `stop-server.sh` only deletes ephemeral `/tmp` sessions, preserving persistent ones
+- Dark mode fix: `sendToClaude` confirmation page now uses CSS variables instead of hardcoded colors
+- Skill restructured: SKILL.md is minimal (prompt + pointer); all visual companion details in progressive disclosure doc (`visual-companion.md`)
+- Prompt to user now notes the feature is new, token-intensive, and can be slow
+- Deleted redundant `CLAUDE-INSTRUCTIONS.md` (content folded into `visual-companion.md`)
+- Test fixes: correct env var (`BRAINSTORM_DIR`), polling-based startup wait, new tests for frame wrapping
+
 ### Improvements
 
 **Instruction priority clarified in using-superpowers**
