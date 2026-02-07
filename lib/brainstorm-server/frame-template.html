@@ -232,28 +232,5 @@
     </div>
   </div>
 
-  <script>
-    let selectedChoice = null;
-
-    function toggleSelect(el) {
-      const container = el.closest('.options') || el.closest('.cards');
-      if (container) {
-        container.querySelectorAll('.option, .card').forEach(o => o.classList.remove('selected'));
-      }
-      el.classList.add('selected');
-      selectedChoice = el.dataset.choice;
-    }
-
-    function send() {
-      const feedbackEl = document.getElementById('feedback');
-      const feedback = feedbackEl.value.trim();
-      const payload = {};
-      if (selectedChoice) payload.choice = selectedChoice;
-      if (feedback) payload.feedback = feedback;
-      if (Object.keys(payload).length === 0) return;
-      brainstorm.sendToClaude(payload);
-      feedbackEl.value = '';
-    }
-  </script>
 </body>
 </html>
