@@ -1,16 +1,40 @@
 #!/bin/bash
 # Start the brainstorm server and output connection info
-# Usage: start-server.sh
+# Usage: start-server.sh [--project-dir <path>]
 #
-# Starts server on a random high port, outputs JSON with URL
-# Each session gets its own temp directory to avoid conflicts
-# Server runs in background, PID saved for cleanup
+# Starts server on a random high port, outputs JSON with URL.
+# Each session gets its own directory to avoid conflicts.
+#
+# Options:
+#   --project-dir <path>  Store session files under <path>/.superpowers/brainstorm/
+#                         instead of /tmp. Files persist after server stops.
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+# Parse arguments
+PROJECT_DIR=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --project-dir)
+      PROJECT_DIR="$2"
+      shift 2
+      ;;
+    *)
+      echo "{\"error\": \"Unknown argument: $1\"}"
+      exit 1
+      ;;
+  esac
+done
+
 # Generate unique session directory
 SESSION_ID="$$-$(date +%s)"
-SCREEN_DIR="/tmp/brainstorm-${SESSION_ID}"
+
+if [[ -n "$PROJECT_DIR" ]]; then
+  SCREEN_DIR="${PROJECT_DIR}/.superpowers/brainstorm/${SESSION_ID}"
+else
+  SCREEN_DIR="/tmp/brainstorm-${SESSION_ID}"
+fi
+
 PID_FILE="${SCREEN_DIR}/.server.pid"
 LOG_FILE="${SCREEN_DIR}/.server.log"
 
@@ -33,7 +57,6 @@ echo "$SERVER_PID" > "$PID_FILE"
 # Wait for server-started message (check log file)
 for i in {1..50}; do
   if grep -q "server-started" "$LOG_FILE" 2>/dev/null; then
-    # Extract and output the server-started line
     grep "server-started" "$LOG_FILE" | head -1
     exit 0
   fi

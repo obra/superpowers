@@ -42,10 +42,16 @@ async function runTests() {
   const server = startServer();
 
   let stdout = '';
+  let stderr = '';
   server.stdout.on('data', (data) => { stdout += data.toString(); });
-  server.stderr.on('data', (data) => { console.error('Server stderr:', data.toString()); });
+  server.stderr.on('data', (data) => { stderr += data.toString(); });
 
-  await sleep(1000);
+  // Wait for server to start (up to 3 seconds)
+  for (let i = 0; i < 30; i++) {
+    if (stdout.includes('server-started')) break;
+    await sleep(100);
+  }
+  if (stderr) console.error('Server stderr:', stderr);
 
   try {
     // Test 1: Server starts and outputs JSON
