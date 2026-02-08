@@ -1,13 +1,13 @@
 ---
 name: subagent-driven-development
-description: Use when executing implementation plans with independent tasks in the current session
+description: Use when executing implementation plans with independent tasks in the current session, coordinating through git-notes
 ---
 
 # Subagent-Driven Development
 
-Execute plan by dispatching fresh subagent per task, with two-stage review after each: spec compliance review first, then code quality review.
+Execute plan by dispatching fresh subagent per task, coordinating through shared state in git-notes, with two-stage review after each: spec compliance review first, then code quality review.
 
-**Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
+**Core principle:** Fresh subagent per task + git-notes coordination + two-stage review (spec then quality) = high quality, fast iteration
 
 ## When to Use
 
@@ -32,6 +32,7 @@ digraph when_to_use {
 **vs. Executing Plans (parallel session):**
 - Same session (no context switch)
 - Fresh subagent per task (no context pollution)
+- Coordinate through shared state in git-notes (share findings, patterns, etc.)
 - Two-stage review after each task: spec compliance first, then code quality
 - Faster iteration (no human-in-loop between tasks)
 
@@ -43,6 +44,7 @@ digraph process {
 
     subgraph cluster_per_task {
         label="Per Task";
+        "Read shared state from git notes" [shape=box];
         "Dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
         "Implementer subagent asks questions?" [shape=diamond];
         "Answer questions, provide context" [shape=box];
@@ -54,6 +56,7 @@ digraph process {
         "Code quality reviewer subagent approves?" [shape=diamond];
         "Implementer subagent fixes quality issues" [shape=box];
         "Mark task complete in TodoWrite" [shape=box];
+        "Update findings in git notes" [shape=box];
     }
 
     "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
@@ -61,7 +64,8 @@ digraph process {
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
+    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Read shared state from git notes";
+    "Read shared state from git notes" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -75,8 +79,9 @@ digraph process {
     "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
     "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
     "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
-    "Mark task complete in TodoWrite" -> "More tasks remain?";
-    "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
+    "Mark task complete in TodoWrite" -> "Update findings in git notes";
+    "Update findings in git notes" -> "More tasks remain?";
+    "More tasks remain?" -> "Read shared state from git notes" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
     "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
 }
@@ -211,6 +216,7 @@ Done!
 - Let implementer self-review replace actual review (both are needed)
 - **Start code quality review before spec compliance is ✅** (wrong order)
 - Move to next task while either review has open issues
+- Skip coordination via git-notes (missing shared context for later tasks)
 
 **If subagent asks questions:**
 - Answer clearly and completely
@@ -234,6 +240,9 @@ Done!
 - **superpowers:writing-plans** - Creates the plan this skill executes
 - **superpowers:requesting-code-review** - Code review template for reviewer subagents
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
+
+**Required coordination:**
+- **git-notes** - REQUIRED: Use to store and retrieve shared state across subagents (e.g., discovered patterns, common issues)
 
 **Subagents should use:**
 - **superpowers:test-driven-development** - Subagents follow TDD for each task
