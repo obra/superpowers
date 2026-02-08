@@ -9,6 +9,9 @@ import path from 'path';
 import fs from 'fs';
 import os from 'os';
 import { fileURLToPath } from 'url';
+import { getState } from '../../lib/git-notes-state.js';
+import { indexSkills } from '../../lib/index-skills.js';
+import { stripFrontmatter } from '../../lib/skills-core.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -89,6 +92,38 @@ ${toolMapping}
       const bootstrap = getBootstrapContent();
       if (bootstrap) {
         (output.system ||= []).push(bootstrap);
+      }
+
+      // Persona Detection & Automated Injection
+      const state = getState();
+      const lastAgent = state.metadata?.last_agent;
+      const userMessage = _input.message?.content || '';
+
+      const detectedRoles = [];
+      if (lastAgent === 'Zen Architect' || userMessage.includes('@zen-architect')) detectedRoles.push('role:architect');
+      if (lastAgent === 'Modular Builder' || userMessage.includes('@modular-builder')) detectedRoles.push('role:builder');
+      if (lastAgent === 'Bug Hunter' || userMessage.includes('@bug-hunter')) detectedRoles.push('role:hunter');
+
+      if (detectedRoles.length > 0) {
+        const skills = indexSkills(superpowersSkillsDir);
+        const seenSkills = new Set();
+        for (const role of detectedRoles) {
+          const matchedSkills = skills.filter(s => s.semantic_tags && s.semantic_tags.includes(role));
+          for (const skill of matchedSkills) {
+            if (seenSkills.has(skill.skillFile)) continue;
+            try {
+              const skillFile = skill.skillFile;
+              if (fs.existsSync(skillFile)) {
+                const skillContent = fs.readFileSync(skillFile, 'utf8');
+                const body = stripFrontmatter(skillContent);
+                (output.system ||= []).push(body);
+                seenSkills.add(skillFile);
+              }
+            } catch (err) {
+              // Silent fail for injection
+            }
+          }
+        }
       }
     }
   };
