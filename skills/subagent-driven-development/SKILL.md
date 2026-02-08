@@ -1,6 +1,7 @@
 ---
 name: subagent-driven-development
 description: Use when executing implementation plans with independent tasks in the current session, coordinating through git-notes
+semantic_tags: [role:builder]
 ---
 
 # Subagent-Driven Development
