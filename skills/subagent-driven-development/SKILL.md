@@ -57,6 +57,7 @@ digraph process {
         "Implementer subagent fixes quality issues" [shape=box];
         "Mark task complete in TodoWrite" [shape=box];
         "Update findings in git notes" [shape=box];
+        "Visualize session state (superpowers visualize)" [shape=box style=filled fillcolor=lightblue];
     }
 
     "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
@@ -80,7 +81,8 @@ digraph process {
     "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
     "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
     "Mark task complete in TodoWrite" -> "Update findings in git notes";
-    "Update findings in git notes" -> "More tasks remain?";
+    "Update findings in git notes" -> "Visualize session state (superpowers visualize)";
+    "Visualize session state (superpowers visualize)" -> "More tasks remain?";
     "More tasks remain?" -> "Read shared state from git notes" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
     "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
@@ -217,6 +219,7 @@ Done!
 - **Start code quality review before spec compliance is ✅** (wrong order)
 - Move to next task while either review has open issues
 - Skip coordination via git-notes (missing shared context for later tasks)
+- **Skip reactive visualization** (user needs to see current session state after each task)
 
 **If subagent asks questions:**
 - Answer clearly and completely
