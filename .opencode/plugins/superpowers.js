@@ -77,6 +77,7 @@ When skills reference tools you don't have, substitute OpenCode equivalents:
 - \`Task\` tool with subagents → Use OpenCode's subagent system (@mention)
 - \`Skill\` tool → OpenCode's native \`skill\` tool
 - \`Read\`, \`Write\`, \`Edit\`, \`Bash\` → Your native tools
+- 💡 **Memory:** Use \`recall\` to access long-term project knowledge (decisions, patterns).
 
 **Available Superpowers Skills:**
 ${skillIndex}

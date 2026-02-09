@@ -21,6 +21,7 @@ Start by understanding the current project context, then ask questions one at a 
 - Prefer multiple choice questions when possible, but open-ended is fine too
 - Only one question per message - if a topic needs more exploration, break it into multiple questions
 - Focus on understanding: purpose, constraints, success criteria
+- Before proposing a design, use `recall --path knowledge_base.decisions` to review existing architectural constraints.
 
 **Exploring approaches:**
 - Propose 2-3 different approaches with trade-offs
