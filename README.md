@@ -2,6 +2,13 @@
 
 Superpowers is a complete software development workflow for your coding agents, built on top of a set of composable "skills" and some initial instructions that make sure your agent uses them.
 
+## Documentation
+
+- **[COMPREHENSIVE-SYSTEM-DOCS.md](docs/COMPREHENSIVE-SYSTEM-DOCS.md)** - Comprehensive overview of the Superpowers framework, Amplifier integration, and Git-based memory approach.
+- **[AMPLIFIER-AGENTS.md](AMPLIFIER-AGENTS.md)** - Full reference for Amplifier specialized agents and their mapping to task types.
+- **[docs/README.codex.md](docs/README.codex.md)** - Documentation for Codex users.
+- **[docs/README.opencode.md](docs/README.opencode.md)** - Documentation for OpenCode users.
+
 ## How it works
 
 It starts from the moment you fire up your coding agent. As soon as it sees that you're building something, it *doesn't* just jump into trying to write code. Instead, it steps back and asks you what you're really trying to do. 
