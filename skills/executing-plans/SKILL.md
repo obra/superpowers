@@ -45,9 +45,10 @@ Based on feedback:
 ### Step 5: Complete Development
 
 After all tasks complete and verified:
-- Announce: "I'm using the finishing-a-development-branch skill to complete this work."
-- **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
-- Follow that skill to verify tests, present options, execute choice
+1. **Mark plan as executed:** Update the plan file's YAML frontmatter from `status: pending` to `status: executed`
+2. Announce: "I'm using the finishing-a-development-branch skill to complete this work."
+3. **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
+4. Follow that skill to verify tests, present options, execute choice
 
 ## When to Stop and Ask for Help
 

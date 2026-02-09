@@ -31,6 +31,10 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 **Every plan MUST start with this header:**
 
 ```markdown
+---
+status: pending
+---
+
 # [Feature Name] Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
@@ -43,6 +47,8 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 ---
 ```
+
+**Status values:** `pending` (awaiting execution), `executed` (fully implemented). The `executing-plans` skill updates status to `executed` on completion.
 
 ## Task Structure
 
