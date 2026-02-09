@@ -82,6 +82,8 @@ When multiple skills could apply, use this order:
 
 The skill itself tells you which.
 
-## User Instructions
-
-Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
+## Token Efficiency
+- **Be Concise:** Use minimal words to achieve the goal.
+- **Batch Operations:** Perform multiple file reads/edits in a single turn.
+- **Leverage Caching:** Avoid changing the system prompt or reading the same large files repeatedly.
+- **Use the Index:** Refer to the Skill Index in the system prompt. Only load full skill content (using the `skill` tool) when you need to follow a complex workflow.

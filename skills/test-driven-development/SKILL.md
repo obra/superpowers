@@ -2,6 +2,7 @@
 name: test-driven-development
 description: Use when implementing any feature or bugfix, before writing implementation code
 semantic_tags: [role:builder]
+recommended_model: flash
 ---
 
 # Test-Driven Development (TDD)

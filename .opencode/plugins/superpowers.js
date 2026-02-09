@@ -64,12 +64,29 @@ export const SuperpowersPlugin = async ({ client, directory }) => {
     const fullContent = fs.readFileSync(skillPath, 'utf8');
     const { content } = extractAndStripFrontmatter(fullContent);
 
+    // Generate Skill Index for static injection
+    const allSkills = indexSkills(superpowersSkillsDir);
+    const skillIndex = allSkills.map(s => {
+      const tags = s.semantic_tags ? ` [Tags: ${s.semantic_tags.join(', ')}]` : '';
+      return `- **${s.name}**: ${s.description}${tags}`;
+    }).join('\n');
+
     const toolMapping = `**Tool Mapping for OpenCode:**
 When skills reference tools you don't have, substitute OpenCode equivalents:
 - \`TodoWrite\` → \`update_plan\`
 - \`Task\` tool with subagents → Use OpenCode's subagent system (@mention)
 - \`Skill\` tool → OpenCode's native \`skill\` tool
 - \`Read\`, \`Write\`, \`Edit\`, \`Bash\` → Your native tools
+
+**Available Superpowers Skills:**
+${skillIndex}
+
+**🚀 Model Selection Recommendations:**
+- **Planning/Architecture:** Use **Gemini 3 Pro** (`/model google/gemini-3-pro-preview`).
+- **Implementation/TDD:** Use **Gemini 3 Flash** (`/model google/gemini-3-flash-preview`).
+- **Subagents:** Orchestrator should always dispatch subagents using **Flash** to save TPM.
+
+**IMPORTANT:** The above is just an index. To use a skill, you MUST load it using the \`skill\` tool (e.g., \`use skill tool to load superpowers/brainstorming\`).
 
 **Skills location:**
 Superpowers skills are in \`${configDir}/skills/superpowers/\`
@@ -92,38 +109,6 @@ ${toolMapping}
       const bootstrap = getBootstrapContent();
       if (bootstrap) {
         (output.system ||= []).push(bootstrap);
-      }
-
-      // Persona Detection & Automated Injection
-      const state = getState();
-      const lastAgent = state.metadata?.last_agent;
-      const userMessage = _input.message?.content || '';
-
-      const detectedRoles = [];
-      if (lastAgent === 'Zen Architect' || userMessage.includes('@zen-architect')) detectedRoles.push('role:architect');
-      if (lastAgent === 'Modular Builder' || userMessage.includes('@modular-builder')) detectedRoles.push('role:builder');
-      if (lastAgent === 'Bug Hunter' || userMessage.includes('@bug-hunter')) detectedRoles.push('role:hunter');
-
-      if (detectedRoles.length > 0) {
-        const skills = indexSkills(superpowersSkillsDir);
-        const seenSkills = new Set();
-        for (const role of detectedRoles) {
-          const matchedSkills = skills.filter(s => s.semantic_tags && s.semantic_tags.includes(role));
-          for (const skill of matchedSkills) {
-            if (seenSkills.has(skill.skillFile)) continue;
-            try {
-              const skillFile = skill.skillFile;
-              if (fs.existsSync(skillFile)) {
-                const skillContent = fs.readFileSync(skillFile, 'utf8');
-                const body = stripFrontmatter(skillContent);
-                (output.system ||= []).push(body);
-                seenSkills.add(skillFile);
-              }
-            } catch (err) {
-              // Silent fail for injection
-            }
-          }
-        }
       }
     }
   };

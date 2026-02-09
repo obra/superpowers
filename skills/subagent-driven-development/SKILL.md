@@ -2,13 +2,19 @@
 name: subagent-driven-development
 description: Use when executing implementation plans with independent tasks in the current session, coordinating through git-notes
 semantic_tags: [role:builder]
+recommended_model: flash
 ---
 
 # Subagent-Driven Development
 
 Execute plan by dispatching fresh subagent per task, coordinating through shared state in git-notes, with two-stage review after each: spec compliance review first, then code quality review.
 
-**Core principle:** Fresh subagent per task + git-notes coordination + two-stage review (spec then quality) = high quality, fast iteration
+**IMPORTANT: Model Optimization**
+- **Main Session:** Use Gemini 3 Pro for complex coordination and review if needed.
+- **Subagents:** ALWAYS dispatch subagents using **Gemini 3 Flash** to maximize speed and TPM efficiency.
+- **Switching:** Use `/model google/gemini-3-flash-preview` before turn if needed.
+
+**Core principle:** Fresh subagent per task (Flash) + git-notes coordination + two-stage review (spec then quality) = high quality, fast iteration
 
 ## When to Use
 
