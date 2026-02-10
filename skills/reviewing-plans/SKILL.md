@@ -13,7 +13,7 @@ Verify an implementation plan against the actual codebase before execution. Plan
 
 **Announce at start:** "I'm using the reviewing-plans skill to review this plan before execution."
 
-**Input:** Plan file path (e.g., `docs/plans/2025-02-10-feature-name.md`)
+**Input:** Plan file path (e.g., `docs/plans/feature-name/2025-02-10-plan.md`)
 
 ## When to Use
 
@@ -152,7 +152,7 @@ What's likely to break during automated execution?
 
 ### Step 4: Produce Review Report
 
-Use the output format below. Save to `docs/plans/` alongside the plan.
+Use the output format below. Save to the same project folder alongside the plan.
 
 ### Step 5: Present Resolution Options
 
@@ -168,7 +168,7 @@ If approved: make targeted edits to the plan file. Show a summary of changes mad
 **NEEDS REVISION** (structural issues):
 > "I found [N] significant issues requiring restructuring. I can create a revised version. Shall I create `[plan-name]-v2.md`?"
 
-If approved: create new versioned plan preserving the original. Save as `docs/plans/YYYY-MM-DD-feature-name-v2.md`.
+If approved: create new versioned plan preserving the original. Save as `docs/plans/<project>/YYYY-MM-DD-plan-v2.md`.
 
 **In either case:** Let the user choose which approach they prefer. Don't assume.
 
@@ -213,7 +213,7 @@ If approved: create new versioned plan preserving the original. Save as `docs/pl
 ...
 ```
 
-**Save report to:** `docs/plans/YYYY-MM-DD-feature-name-review.md`
+**Save report to:** `docs/plans/<project>/YYYY-MM-DD-review.md`
 
 ## Rules
 
