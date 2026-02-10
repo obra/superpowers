@@ -20,6 +20,8 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 - `<project>` is a kebab-case name inferred from the feature (e.g., `auth-system`, `dashboard-redesign`)
 - Create the project directory if it doesn't exist
 - If a design doc already exists in a project folder (from brainstorming), use that same folder
+- Example: feature "auth system" → `docs/plans/auth-system/2026-02-10-plan.md`
+- Do NOT save directly to `docs/plans/` — always use a project subdirectory
 
 ## Bite-Sized Task Granularity
 

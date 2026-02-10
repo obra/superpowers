@@ -168,7 +168,7 @@ If approved: make targeted edits to the plan file. Show a summary of changes mad
 **NEEDS REVISION** (structural issues):
 > "I found [N] significant issues requiring restructuring. I can create a revised version. Shall I create `[plan-name]-v2.md`?"
 
-If approved: create new versioned plan preserving the original. Save as `docs/plans/<project>/YYYY-MM-DD-plan-v2.md`.
+If approved: create new versioned plan preserving the original. Save as `docs/plans/<project>/YYYY-MM-DD-plan-v2.md` (same project folder as the original).
 
 **In either case:** Let the user choose which approach they prefer. Don't assume.
 
@@ -213,7 +213,7 @@ If approved: create new versioned plan preserving the original. Save as `docs/pl
 ...
 ```
 
-**Save report to:** `docs/plans/<project>/YYYY-MM-DD-review.md`
+**Save report to:** `docs/plans/<project>/YYYY-MM-DD-review.md` — same project folder as the plan being reviewed. Do NOT save directly to `docs/plans/`.
 
 ## Rules
 

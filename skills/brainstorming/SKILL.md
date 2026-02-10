@@ -34,10 +34,12 @@ Start by understanding the current project context, then ask questions one at a 
 
 ## After the Design
 
-**Documentation:**
-- Write the validated design to `docs/plans/<project>/YYYY-MM-DD-design.md`
+**Save design to:** `docs/plans/<project>/YYYY-MM-DD-design.md`
+
 - `<project>` is a kebab-case name inferred from the topic (e.g., `opencode-support`, `auth-system`)
 - Create the project directory if it doesn't exist
+- Example: topic "notification system" → `docs/plans/notification-system/2026-02-10-design.md`
+- Do NOT save directly to `docs/plans/` — always use a project subdirectory
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 
