@@ -82,3 +82,6 @@ After all tasks complete and verified:
 - **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
 - **superpowers:writing-plans** - Creates the plan this skill executes
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
+
+**Optional workflow skill:**
+- **superpowers:reviewing-plans** - Review plan against codebase before execution (recommended for complex plans)

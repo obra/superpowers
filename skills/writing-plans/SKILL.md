@@ -98,7 +98,11 @@ git commit -m "feat: add specific feature"
 
 After saving the plan, offer execution choice:
 
-**"Plan complete and saved to `docs/plans/<filename>.md`. Two execution options:**
+**"Plan complete and saved to `docs/plans/<filename>.md`.**
+
+**For complex or high-risk plans:** Consider reviewing first with `superpowers:reviewing-plans` in a fresh session to catch naming mismatches, wrong paths, and structural issues before execution.
+
+**Execution options:**
 
 **1. Subagent-Driven (this session)** - I dispatch fresh subagent per task, review between tasks, fast iteration
 
