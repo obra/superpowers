@@ -52,7 +52,9 @@ If reviewing in the same session: acknowledge that you share the plan writer's b
 
 ### Step 1: Read and Understand the Plan
 
-Read the plan document. Identify:
+Read the plan document. Also check for a design doc in the same project folder (e.g., `YYYY-MM-DD-design.md`). If one exists, use it as a reference when assessing completeness — the plan should cover what the design specifies.
+
+Identify:
 - What feature/change is being implemented
 - What files, services, components are being created or modified
 - What existing code the plan references or extends
