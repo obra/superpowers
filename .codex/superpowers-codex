@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const skillsCore = require('../lib/skills-core');
+const { pathToFileURL } = require('url');
 
 // Paths
 const homeDir = os.homedir();
@@ -11,9 +11,20 @@ const superpowersSkillsDir = path.join(homeDir, '.codex', 'superpowers', 'skills
 const personalSkillsDir = path.join(homeDir, '.codex', 'skills');
 const bootstrapFile = path.join(homeDir, '.codex', 'superpowers', '.codex', 'superpowers-bootstrap.md');
 const superpowersRepoDir = path.join(homeDir, '.codex', 'superpowers');
+const skillsCoreModulePath = path.join(__dirname, '..', 'lib', 'skills-core.js');
+let skillsCorePromise = null;
+
+async function loadSkillsCore() {
+    if (!skillsCorePromise) {
+        const moduleUrl = pathToFileURL(skillsCoreModulePath).href;
+        skillsCorePromise = import(moduleUrl).then((moduleNs) => moduleNs.default || moduleNs);
+    }
+
+    return skillsCorePromise;
+}
 
 // Utility functions
-function printSkill(skillPath, sourceType) {
+function printSkill(skillPath, sourceType, skillsCore) {
     const skillFile = path.join(skillPath, 'SKILL.md');
     const relPath = sourceType === 'personal'
         ? path.relative(personalSkillsDir, skillPath)
@@ -34,7 +45,7 @@ function printSkill(skillPath, sourceType) {
 }
 
 // Commands
-function runFindSkills() {
+function runFindSkills(skillsCore) {
     console.log('Available skills:');
     console.log('==================');
     console.log('');
@@ -46,7 +57,7 @@ function runFindSkills() {
     for (const skill of personalSkills) {
         const relPath = path.relative(personalSkillsDir, skill.path);
         foundSkills.add(relPath);
-        printSkill(skill.path, 'personal');
+        printSkill(skill.path, 'personal', skillsCore);
     }
 
     // Find superpowers skills (only if not already found in personal)
@@ -54,7 +65,7 @@ function runFindSkills() {
     for (const skill of superpowersSkills) {
         const relPath = path.relative(superpowersSkillsDir, skill.path);
         if (!foundSkills.has(relPath)) {
-            printSkill(skill.path, 'superpowers');
+            printSkill(skill.path, 'superpowers', skillsCore);
         }
     }
 
@@ -69,7 +80,7 @@ function runFindSkills() {
     console.log('Note: All skills are disclosed at session start via bootstrap.');
 }
 
-function runBootstrap() {
+function runBootstrap(skillsCore) {
     console.log('# Superpowers Bootstrap for Codex');
     console.log('# ================================');
     console.log('');
@@ -103,7 +114,7 @@ function runBootstrap() {
     // Run find-skills to show available skills
     console.log('## Available Skills:');
     console.log('');
-    runFindSkills();
+    runFindSkills(skillsCore);
 
     console.log('');
     console.log('---');
@@ -112,7 +123,7 @@ function runBootstrap() {
     // Load the using-superpowers skill automatically
     console.log('## Auto-loading superpowers:using-superpowers skill:');
     console.log('');
-    runUseSkill('superpowers:using-superpowers');
+    runUseSkill('superpowers:using-superpowers', skillsCore);
 
     console.log('');
     console.log('---');
@@ -123,7 +134,7 @@ function runBootstrap() {
     console.log('# Remember: If a skill applies to your task, you MUST use it!');
 }
 
-function runUseSkill(skillName) {
+function runUseSkill(skillName, skillsCore) {
     if (!skillName) {
         console.log('Usage: superpowers-codex use-skill <skill-name>');
         console.log('Examples:');
@@ -203,7 +214,7 @@ function runUseSkill(skillName) {
         console.log(`Error: Skill not found: ${actualSkillPath}`);
         console.log('');
         console.log('Available skills:');
-        runFindSkills();
+        runFindSkills(skillsCore);
         return;
     }
 
@@ -238,30 +249,60 @@ function runUseSkill(skillName) {
 
 }
 
-// Main CLI
-const command = process.argv[2];
-const arg = process.argv[3];
-
-switch (command) {
-    case 'bootstrap':
-        runBootstrap();
-        break;
-    case 'use-skill':
-        runUseSkill(arg);
-        break;
-    case 'find-skills':
-        runFindSkills();
-        break;
-    default:
-        console.log('Superpowers for Codex');
-        console.log('Usage:');
-        console.log('  superpowers-codex bootstrap              # Run complete bootstrap with all skills');
-        console.log('  superpowers-codex use-skill <skill-name> # Load a specific skill');
-        console.log('  superpowers-codex find-skills            # List all available skills');
-        console.log('');
-        console.log('Examples:');
-        console.log('  superpowers-codex bootstrap');
-        console.log('  superpowers-codex use-skill superpowers:brainstorming');
-        console.log('  superpowers-codex use-skill my-custom-skill');
-        break;
+function printUsage() {
+    console.log('Superpowers for Codex');
+    console.log('Usage:');
+    console.log('  superpowers-codex bootstrap              # Run complete bootstrap with all skills');
+    console.log('  superpowers-codex use-skill <skill-name> # Load a specific skill');
+    console.log('  superpowers-codex find-skills            # List all available skills');
+    console.log('');
+    console.log('Examples:');
+    console.log('  superpowers-codex bootstrap');
+    console.log('  superpowers-codex use-skill superpowers:brainstorming');
+    console.log('  superpowers-codex use-skill my-custom-skill');
 }
+
+async function main() {
+    const command = process.argv[2];
+    const arg = process.argv[3];
+
+    if (!command) {
+        printUsage();
+        return;
+    }
+
+    if (command !== 'bootstrap' && command !== 'use-skill' && command !== 'find-skills') {
+        printUsage();
+        return;
+    }
+
+    let skillsCore;
+    try {
+        skillsCore = await loadSkillsCore();
+    } catch (error) {
+        console.error(`Error: Failed to load skills core module from ${skillsCoreModulePath}`);
+        console.error(error && error.message ? error.message : String(error));
+        process.exitCode = 1;
+        return;
+    }
+
+    switch (command) {
+        case 'bootstrap':
+            runBootstrap(skillsCore);
+            break;
+        case 'use-skill':
+            runUseSkill(arg, skillsCore);
+            break;
+        case 'find-skills':
+            runFindSkills(skillsCore);
+            break;
+        default:
+            printUsage();
+            break;
+    }
+}
+
+main().catch((error) => {
+    console.error(error && error.stack ? error.stack : String(error));
+    process.exitCode = 1;
+});
