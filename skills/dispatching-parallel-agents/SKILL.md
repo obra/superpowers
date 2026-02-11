@@ -71,16 +71,30 @@ Each domain is independent - fixing tool approval doesn't affect abort tests.
 
 Match each domain to the right agent from the mapping table above. Each specialist brings domain expertise — a `bug-hunter` uses hypothesis-driven analysis, a `security-guardian` checks OWASP patterns, a `performance-optimizer` measures before fixing.
 
-### 3. Dispatch in Parallel
+### 3. Announce and Dispatch in Parallel
+
+**Before dispatching, output a visible status block showing all agents being launched:**
 
 ```
-Single message, three parallel Task calls:
-- Task bug-hunter: "Fix 3 failing tests in auth.test.ts — timing issues"
-- Task integration-specialist: "API connection failures to payment service"
-- Task performance-optimizer: "Response time regression in /api/search"
+>> Dispatching 3 parallel agents:
+>>   1. bug-hunter (model: sonnet) — Fix 3 failing tests in auth.test.ts
+>>   2. integration-specialist (model: sonnet) — API connection failures to payment service
+>>   3. performance-optimizer (model: sonnet) — Response time regression in /api/search
 ```
 
-All three run concurrently with specialist knowledge.
+Then dispatch all in a single message with multiple Task calls:
+```
+Task(subagent_type="bug-hunter", model="sonnet", description="Fix auth test failures", prompt="...")
+Task(subagent_type="integration-specialist", model="sonnet", description="Fix payment API", prompt="...")
+Task(subagent_type="performance-optimizer", model="sonnet", description="Fix search latency", prompt="...")
+```
+
+**Model selection for parallel agents:**
+- Most parallel investigations need reasoning → `sonnet`
+- Simple/mechanical checks (lint, format) → `haiku`
+- Security or architecture review → `opus`
+
+All agents run concurrently with specialist knowledge. **Never dispatch silently — the user should always see which specialists are working on what.**
 
 ### 4. Review and Integrate
 

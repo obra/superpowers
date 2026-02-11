@@ -133,20 +133,42 @@ digraph process {
 }
 ```
 
+## Dispatch Announcements
+
+**Before every Task dispatch, output a visible status line to the user:**
+
+```
+>> Dispatching [agent-name] (model: [model]) for Task N: [short description]
+>>   Review level: [1/2/3] | Files: [count] | Complexity: [simple/standard/complex]
+```
+
+For review dispatches:
+```
+>> Dispatching [reviewer-agent] (model: [model]) — [review type] review for Task N
+```
+
+This gives the user visibility into which specialist is handling what, at what cost tier, and what review depth applies. **Never dispatch silently.**
+
 ## Model Selection
 
-Use the least powerful model that can handle each role to conserve cost and increase speed.
+Use the least powerful model that can handle each role. Map to the `model` parameter on the Task tool:
 
-**Mechanical implementation tasks** (isolated functions, clear specs, 1-2 files): use a fast, cheap model. Most implementation tasks are mechanical when the plan is well-specified.
+| Role | Model Parameter | When |
+|------|----------------|------|
+| `haiku` | Mechanical implementation | 1-2 files, clear spec, isolated function, config change |
+| `sonnet` | Standard implementation | Multi-file, integration, pattern matching, debugging |
+| `opus` | Architecture/design/review | Design judgment, broad codebase understanding, security review |
 
-**Integration and judgment tasks** (multi-file coordination, pattern matching, debugging): use a standard model.
+**Concrete mapping by agent type:**
+- `modular-builder` with clear spec → `haiku` (upgrade to `sonnet` if multi-file)
+- `bug-hunter` → `sonnet` (needs reasoning about root causes)
+- `database-architect` → `sonnet` (schema design needs judgment)
+- `test-coverage` (spec review) → `haiku` (checklist comparison)
+- `zen-architect` (quality review) → `sonnet` (needs architecture judgment)
+- `security-guardian` → `opus` (security requires deepest analysis)
+- `post-task-cleanup` → `haiku` (mechanical cleanup)
 
-**Architecture, design, and review tasks**: use the most capable available model.
-
-**Task complexity signals:**
-- Touches 1-2 files with a complete spec → cheap model
-- Touches multiple files with integration concerns → standard model
-- Requires design judgment or broad codebase understanding → most capable model
+**When to upgrade:** If a `haiku` agent returns BLOCKED or NEEDS_CONTEXT, re-dispatch with `sonnet`. If `sonnet` is blocked, try `opus`.
 
 ## Handling Implementer Status
 
@@ -181,9 +203,10 @@ You: I'm using Subagent-Driven Development to execute this plan.
 [Extract all 5 tasks with full text, Agent fields, and context]
 [Create TodoWrite with all tasks]
 
-Task 1: Design auth module schema (Agent: database-architect)
+Task 1/5: Design auth module schema
 
-[Dispatch database-architect agent with full task text + context]
+>> Dispatching database-architect (model: sonnet) for Task 1: Design auth module schema
+>>   Review level: 2 | Files: 3 | Complexity: standard
 
 database-architect: "Should we use separate tables for roles and permissions, or a combined approach?"
 
@@ -191,28 +214,39 @@ You: "Separate tables — we need fine-grained permission assignment."
 
 database-architect: "Got it. Implementing now..."
 [Later] database-architect:
+  Status: DONE
   - Created migration for users, roles, permissions tables
   - Added indexes for common query patterns
   - Tests: 4/4 passing
   - Committed
 
-[Dispatch test-coverage agent for spec compliance]
+>> Dispatching test-coverage (model: haiku) — spec compliance review for Task 1
 test-coverage: ✅ Spec compliant - schema matches requirements
 
-[Dispatch zen-architect REVIEW mode for code quality]
-zen-architect: Strengths: Clean schema. Issues: None. Approved.
+[Mark Task 1 complete — Level 2 review passed, skipping quality review]
 
-[Mark Task 1 complete]
+Task 2/5: Implement auth middleware
 
-Task 2: Implement auth middleware (Agent: modular-builder)
+>> Dispatching modular-builder (model: haiku) for Task 2: Implement auth middleware
+>>   Review level: 1 | Files: 1 | Complexity: simple
 
-[Dispatch modular-builder agent with full task text + context]
+modular-builder: Status: DONE — implemented middleware with tests passing
+[Mark Task 2 complete — Level 1 self-review sufficient]
 
-modular-builder: [No questions, proceeds with bricks-and-studs approach]
+Task 3/5: Add JWT token validation
+
+>> Dispatching security-guardian (model: opus) for Task 3: Add JWT token validation
+>>   Review level: 3 | Files: 4 | Complexity: complex (security-sensitive)
+
+security-guardian: Status: DONE — implemented with OWASP best practices
+>> Dispatching test-coverage (model: haiku) — spec compliance review for Task 3
+>> Dispatching zen-architect (model: sonnet) — code quality review for Task 3
+[Both reviews pass]
+[Mark Task 3 complete]
+
 ...
 
-[After all tasks]
-[Dispatch post-task-cleanup agent]
+>> Dispatching post-task-cleanup (model: haiku) for final hygiene pass
 post-task-cleanup: Removed 2 unused imports, no other issues.
 
 [Use superpowers:finishing-a-development-branch]
