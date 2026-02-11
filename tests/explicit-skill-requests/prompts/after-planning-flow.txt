@@ -1,4 +1,4 @@
-Great, the plan is complete. I've saved it to docs/plans/auth-system.md.
+Great, the plan is complete. I've saved it to docs/superpowers/plans/auth-system.md.
 
 Here's a summary of what we designed:
 - Task 1: Add User Model with email/password fields
