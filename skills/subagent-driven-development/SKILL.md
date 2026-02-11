@@ -54,6 +54,10 @@ Each task in the plan has an `Agent:` field. Use it as the `subagent_type` when 
 
 **After all tasks complete:**
 - Dispatch `post-task-cleanup` agent for codebase hygiene
+- **Memorize key decisions** made during implementation (see `${CLAUDE_PLUGIN_ROOT}/MEMORY-WORKFLOW.md`):
+  - Architecture decisions → `memorize knowledge_base.decisions --value '{...}'`
+  - New patterns established → `memorize knowledge_base.patterns --value '{...}'`
+  - Domain terms clarified → `memorize knowledge_base.glossary --value '{...}'`
 - Then use superpowers:finishing-a-development-branch
 
 ## Review Levels

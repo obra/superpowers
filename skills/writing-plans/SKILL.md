@@ -15,6 +15,10 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
+**Before planning:** Recall existing project decisions and patterns to avoid contradicting established architecture:
+- `node ${CLAUDE_PLUGIN_ROOT}/../commands/recall.js knowledge_base.decisions`
+- `node ${CLAUDE_PLUGIN_ROOT}/../commands/recall.js knowledge_base.patterns`
+
 **Context:** This should be run in a dedicated worktree (created by brainstorming skill).
 
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
