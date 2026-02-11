@@ -89,10 +89,10 @@ Task(subagent_type="integration-specialist", model="sonnet", description="Fix pa
 Task(subagent_type="performance-optimizer", model="sonnet", description="Fix search latency", prompt="...")
 ```
 
-**Model selection for parallel agents:**
-- Most parallel investigations need reasoning → `sonnet`
-- Simple/mechanical checks (lint, format) → `haiku`
-- Security or architecture review → `opus`
+**Model selection for parallel agents** (see `${CLAUDE_PLUGIN_ROOT}/MODEL-PROVIDERS.md` for cross-provider mapping):
+- Most parallel investigations need reasoning → `sonnet` (Gemini: Pro)
+- Simple/mechanical checks (lint, format) → `haiku` (Gemini: Flash)
+- Security or architecture review → `opus` (Gemini: Pro)
 
 All agents run concurrently with specialist knowledge. **Never dispatch silently — the user should always see which specialists are working on what.**
 

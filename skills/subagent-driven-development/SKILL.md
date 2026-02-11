@@ -151,24 +151,26 @@ This gives the user visibility into which specialist is handling what, at what c
 
 ## Model Selection
 
-Use the least powerful model that can handle each role. Map to the `model` parameter on the Task tool:
+Use the least powerful model that can handle each role. See `${CLAUDE_PLUGIN_ROOT}/MODEL-PROVIDERS.md` for cross-provider mapping (Claude, Gemini, etc.).
 
-| Role | Model Parameter | When |
-|------|----------------|------|
-| `haiku` | Mechanical implementation | 1-2 files, clear spec, isolated function, config change |
-| `sonnet` | Standard implementation | Multi-file, integration, pattern matching, debugging |
-| `opus` | Architecture/design/review | Design judgment, broad codebase understanding, security review |
+**Claude Code** — map to the `model` parameter on the Task tool:
+
+| Tier | Claude `model` | Gemini equivalent | When |
+|------|---------------|-------------------|------|
+| Fast | `haiku` | Flash | Mechanical implementation: 1-2 files, clear spec, config change |
+| Balanced | `sonnet` | Pro | Standard: multi-file, integration, pattern matching, debugging |
+| Deep | `opus` | Pro | Architecture/design/review: broad judgment, security review |
 
 **Concrete mapping by agent type:**
-- `modular-builder` with clear spec → `haiku` (upgrade to `sonnet` if multi-file)
-- `bug-hunter` → `sonnet` (needs reasoning about root causes)
-- `database-architect` → `sonnet` (schema design needs judgment)
-- `test-coverage` (spec review) → `haiku` (checklist comparison)
-- `zen-architect` (quality review) → `sonnet` (needs architecture judgment)
-- `security-guardian` → `opus` (security requires deepest analysis)
-- `post-task-cleanup` → `haiku` (mechanical cleanup)
+- `modular-builder` with clear spec → `haiku` / Flash (upgrade to `sonnet` / Pro if multi-file)
+- `bug-hunter` → `sonnet` / Pro (needs reasoning about root causes)
+- `database-architect` → `sonnet` / Pro (schema design needs judgment)
+- `test-coverage` (spec review) → `haiku` / Flash (checklist comparison)
+- `zen-architect` (quality review) → `sonnet` / Pro (needs architecture judgment)
+- `security-guardian` → `opus` / Pro (security requires deepest analysis)
+- `post-task-cleanup` → `haiku` / Flash (mechanical cleanup)
 
-**When to upgrade:** If a `haiku` agent returns BLOCKED or NEEDS_CONTEXT, re-dispatch with `sonnet`. If `sonnet` is blocked, try `opus`.
+**When to upgrade:** If a `haiku`/Flash agent returns BLOCKED or NEEDS_CONTEXT, re-dispatch with `sonnet`/Pro. If `sonnet`/Pro is blocked, try `opus`.
 
 ## Handling Implementer Status
 
