@@ -65,10 +65,14 @@ export const SuperpowersPlugin = async ({ client, directory }) => {
     const { content } = extractAndStripFrontmatter(fullContent);
 
     // Generate Skill Index for static injection
-    const allSkills = indexSkills(superpowersSkillsDir);
+    const allSkills = [
+      ...indexSkills(superpowersSkillsDir, 'superpowers'),
+      ...indexSkills(path.join(configDir, 'skills/amplifier'), 'amplifier'),
+      ...indexSkills(path.join(configDir, 'skills/claude-tools'), 'claude-tools')
+    ];
     const skillIndex = allSkills.map(s => {
       const tags = s.semantic_tags ? ` [Tags: ${s.semantic_tags.join(', ')}]` : '';
-      return `- **${s.name}**: ${s.description}${tags}`;
+      return `- **${s.sourceType}:${s.name}**: ${s.description}${tags}`;
     }).join('\n');
 
     const toolMapping = `**Tool Mapping for OpenCode:**
@@ -78,19 +82,20 @@ When skills reference tools you don't have, substitute OpenCode equivalents:
 - \`Skill\` tool → OpenCode's native \`skill\` tool
 - \`Read\`, \`Write\`, \`Edit\`, \`Bash\` → Your native tools
 - 💡 **Memory:** Use \`recall\` to access long-term project knowledge (decisions, patterns).
+- 📡 **UI Signals:** The user can trigger skills via the Portal's Ctrl+P palette. These appear as files in \`.opencode/signals/\`. If you see a new signal, acknowledge it and initiate the skill context.
 
-**Available Superpowers Skills:**
+**Available Skills:**
 ${skillIndex}
 
 **🚀 Model Selection Recommendations:**
-- **Planning/Architecture:** Use **Gemini 3 Pro** (`/model google/gemini-3-pro-preview`).
-- **Implementation/TDD:** Use **Gemini 3 Flash** (`/model google/gemini-3-flash-preview`).
+- **Planning/Architecture:** Use **Gemini 3 Pro** (\`/model google/gemini-3-pro-preview\`).
+- **Implementation/TDD:** Use **Gemini 3 Flash** (\`/model google/gemini-3-flash-preview\`).
 - **Subagents:** Orchestrator should always dispatch subagents using **Flash** to save TPM.
 
-**IMPORTANT:** The above is just an index. To use a skill, you MUST load it using the \`skill\` tool (e.g., \`use skill tool to load superpowers/brainstorming\`).
+**IMPORTANT:** The above is just an index. To use a skill, you MUST load it using the \`skill\` tool (e.g., \`use skill tool to load amplifier/zen-architect\`).
 
 **Skills location:**
-Superpowers skills are in \`${configDir}/skills/superpowers/\`
+Skills are in \`${configDir}/skills/{namespace}/\`
 Use OpenCode's native \`skill\` tool to list and load skills.`;
 
     return `<EXTREMELY_IMPORTANT>
