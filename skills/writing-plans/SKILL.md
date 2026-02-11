@@ -37,7 +37,7 @@ This structure informs the task decomposition. Each task should produce self-con
 
 ## Amplifier Agent Assignment
 
-Each task gets an `Agent:` field specifying which Amplifier agent will handle it during execution. Consult `AMPLIFIER-AGENTS.md` in the superpowers plugin directory for the full mapping.
+Each task gets an `Agent:` field specifying which Amplifier agent will handle it during execution. Read `${CLAUDE_PLUGIN_ROOT}/AMPLIFIER-AGENTS.md` for the full mapping.
 
 **Auto-assign by scanning the task description:**
 - Implementation tasks (build, create, add) → `modular-builder`

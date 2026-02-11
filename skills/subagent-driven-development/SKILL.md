@@ -39,22 +39,46 @@ digraph when_to_use {
 
 ## Amplifier Agent Dispatch
 
-Each task in the plan has an `Agent:` field. Use it to dispatch the right specialist:
+Each task in the plan has an `Agent:` field. Use it as the `subagent_type` when dispatching:
 
 1. Read the task's `Agent:` field (e.g., `modular-builder`, `bug-hunter`, `database-architect`)
-2. Dispatch that agent via the Task tool
-3. Pass the full task text + context (never make subagent read the plan file)
-4. The agent brings domain expertise to the implementation
+2. **Dispatch using Task tool with `subagent_type` set to the Agent: field value.** Example: if the plan says `Agent: modular-builder`, call `Task(subagent_type="modular-builder", description="Implement Task N: ...", prompt="...")`
+3. Pass the full task text + context in the prompt (never make subagent read the plan file)
+4. The agent brings domain expertise to the implementation — `modular-builder` builds clean modules, `bug-hunter` does hypothesis-driven debugging, `database-architect` designs schemas
 
-**Review agents (from AMPLIFIER-AGENTS.md):**
-- Spec compliance review → dispatch `test-coverage` agent
-- Code quality review → dispatch `zen-architect` agent (REVIEW mode)
-- Security-sensitive tasks → add `security-guardian` as third reviewer
+**Review agents (from `${CLAUDE_PLUGIN_ROOT}/AMPLIFIER-AGENTS.md`):**
+- Spec compliance review → `Task(subagent_type="test-coverage", ...)`
+- Code quality review → `Task(subagent_type="zen-architect", ...)` in REVIEW mode
+- Security-sensitive tasks → add `Task(subagent_type="security-guardian", ...)` as third reviewer
 - Parallel review is OK: spec-compliance and security reviews are read-only, they can run concurrently
 
 **After all tasks complete:**
 - Dispatch `post-task-cleanup` agent for codebase hygiene
 - Then use superpowers:finishing-a-development-branch
+
+## Review Levels
+
+Not every task needs full two-stage review. Match review depth to task risk:
+
+**Level 1 — Self-review only** (simple, low-risk tasks):
+- Task touches 1-2 files with clear spec
+- No security implications
+- Agent self-reviews, tests pass, commit → done
+- Examples: rename, add field, simple CRUD, config change
+
+**Level 2 — Spec compliance review** (standard tasks):
+- Task touches multiple files or has integration concerns
+- Dispatch `test-coverage` agent for spec compliance after implementation
+- Skip separate code quality review
+- Examples: new feature module, API endpoint, database migration
+
+**Level 3 — Full two-stage review** (complex or security-sensitive tasks):
+- Task involves security, auth, data handling, or architectural decisions
+- Dispatch `test-coverage` for spec compliance, THEN `zen-architect` for code quality
+- Add `security-guardian` for security-sensitive work
+- Examples: auth flow, payment handling, data migration, public API
+
+**How to choose:** Default to Level 2. Upgrade to Level 3 for security/architecture. Downgrade to Level 1 only when the task is trivially simple.
 
 ## The Process
 
@@ -64,19 +88,19 @@ digraph process {
 
     subgraph cluster_per_task {
         label="Per Task";
-        "Read task Agent field, dispatch that Amplifier agent (./implementer-prompt.md)" [shape=box];
+        "Read task Agent field, dispatch Amplifier agent (./implementer-prompt.md)" [shape=box];
         "Agent asks questions?" [shape=diamond];
         "Answer questions, provide context" [shape=box];
         "Agent implements, tests, commits, self-reviews" [shape=box];
-        "Dispatch test-coverage agent for spec review (./spec-reviewer-prompt.md)" [shape=box];
+        "Determine review level (see Review Levels)" [shape=diamond style=filled fillcolor=lightyellow];
+        "Level 1: self-review sufficient" [shape=box];
+        "Level 2+: Dispatch test-coverage for spec review" [shape=box];
         "Spec compliant?" [shape=diamond];
         "Implementation agent fixes spec gaps" [shape=box];
-        "Dispatch zen-architect REVIEW mode (./code-quality-reviewer-prompt.md)" [shape=box];
+        "Level 3: Dispatch zen-architect REVIEW mode" [shape=box];
         "Quality approved?" [shape=diamond];
         "Implementation agent fixes quality issues" [shape=box];
         "Mark task complete in TodoWrite" [shape=box];
-        "Update findings in git notes" [shape=box];
-        "Visualize session state (superpowers visualize)" [shape=box style=filled fillcolor=lightblue];
     }
 
     "Read plan, extract all tasks with Agent fields, note context, create TodoWrite" [shape=box];
@@ -84,22 +108,26 @@ digraph process {
     "Dispatch post-task-cleanup agent" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with Agent fields, note context, create TodoWrite" -> "Read task Agent field, dispatch that Amplifier agent (./implementer-prompt.md)";
-    "Read task Agent field, dispatch that Amplifier agent (./implementer-prompt.md)" -> "Agent asks questions?";
+    "Read plan, extract all tasks with Agent fields, note context, create TodoWrite" -> "Read task Agent field, dispatch Amplifier agent (./implementer-prompt.md)";
+    "Read task Agent field, dispatch Amplifier agent (./implementer-prompt.md)" -> "Agent asks questions?";
     "Agent asks questions?" -> "Answer questions, provide context" [label="yes"];
-    "Answer questions, provide context" -> "Read task Agent field, dispatch that Amplifier agent (./implementer-prompt.md)";
+    "Answer questions, provide context" -> "Read task Agent field, dispatch Amplifier agent (./implementer-prompt.md)";
     "Agent asks questions?" -> "Agent implements, tests, commits, self-reviews" [label="no"];
-    "Agent implements, tests, commits, self-reviews" -> "Dispatch test-coverage agent for spec review (./spec-reviewer-prompt.md)";
-    "Dispatch test-coverage agent for spec review (./spec-reviewer-prompt.md)" -> "Spec compliant?";
+    "Agent implements, tests, commits, self-reviews" -> "Determine review level (see Review Levels)";
+    "Determine review level (see Review Levels)" -> "Level 1: self-review sufficient" [label="simple"];
+    "Determine review level (see Review Levels)" -> "Level 2+: Dispatch test-coverage for spec review" [label="standard/complex"];
+    "Level 1: self-review sufficient" -> "Mark task complete in TodoWrite";
+    "Level 2+: Dispatch test-coverage for spec review" -> "Spec compliant?";
     "Spec compliant?" -> "Implementation agent fixes spec gaps" [label="no"];
-    "Implementation agent fixes spec gaps" -> "Dispatch test-coverage agent for spec review (./spec-reviewer-prompt.md)" [label="re-review"];
-    "Spec compliant?" -> "Dispatch zen-architect REVIEW mode (./code-quality-reviewer-prompt.md)" [label="yes"];
-    "Dispatch zen-architect REVIEW mode (./code-quality-reviewer-prompt.md)" -> "Quality approved?";
+    "Implementation agent fixes spec gaps" -> "Level 2+: Dispatch test-coverage for spec review" [label="re-review"];
+    "Spec compliant?" -> "Level 3: Dispatch zen-architect REVIEW mode" [label="yes + complex"];
+    "Spec compliant?" -> "Mark task complete in TodoWrite" [label="yes + standard"];
+    "Level 3: Dispatch zen-architect REVIEW mode" -> "Quality approved?";
     "Quality approved?" -> "Implementation agent fixes quality issues" [label="no"];
-    "Implementation agent fixes quality issues" -> "Dispatch zen-architect REVIEW mode (./code-quality-reviewer-prompt.md)" [label="re-review"];
+    "Implementation agent fixes quality issues" -> "Level 3: Dispatch zen-architect REVIEW mode" [label="re-review"];
     "Quality approved?" -> "Mark task complete in TodoWrite" [label="yes"];
     "Mark task complete in TodoWrite" -> "More tasks remain?";
-    "More tasks remain?" -> "Read task Agent field, dispatch that Amplifier agent (./implementer-prompt.md)" [label="yes"];
+    "More tasks remain?" -> "Read task Agent field, dispatch Amplifier agent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch post-task-cleanup agent" [label="no"];
     "Dispatch post-task-cleanup agent" -> "Use superpowers:finishing-a-development-branch";
 }
@@ -219,7 +247,7 @@ Done!
 - Review loops ensure fixes actually work
 
 **Cost:**
-- More subagent invocations (implementer + 2-3 reviewers per task)
+- More subagent invocations (implementer + 1-3 reviewers depending on review level)
 - Controller does more prep work (extracting all tasks upfront)
 - Review loops add iterations
 - But catches issues early (cheaper than debugging later)
@@ -228,7 +256,7 @@ Done!
 
 **Never:**
 - Start implementation on main/master branch without explicit user consent
-- Skip reviews (spec compliance OR code quality)
+- Skip reviews entirely (even Level 1 tasks need self-review; Level 2+ need spec compliance)
 - Proceed with unfixed issues
 - Dispatch multiple implementation subagents in parallel (conflicts)
 - Make subagent read plan file (provide full text instead)
@@ -236,7 +264,8 @@ Done!
 - Ignore subagent questions (answer before letting them proceed)
 - Accept "close enough" on spec compliance (spec reviewer found issues = not done)
 - Skip review loops (reviewer found issues = implementer fixes = review again)
-- Let implementer self-review replace actual review (both are needed)
+- Let implementer self-review replace actual review on Level 2+ tasks (both are needed)
+- Use Level 1 (self-review only) for security-sensitive tasks — always upgrade to Level 3
 - **Start code quality review before spec compliance is ✅** (wrong order)
 - Move to next task while either review has open issues
 - Override the plan's Agent field without good reason

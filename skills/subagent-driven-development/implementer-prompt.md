@@ -1,16 +1,19 @@
 # Implementer Subagent Prompt Template
 
-Use this template when dispatching an implementation agent. The agent type comes from the task's `Agent:` field in the plan.
+Use this template when dispatching an implementation agent. The `subagent_type` parameter comes from the task's `Agent:` field in the plan.
+
+**CRITICAL: Use the Agent: field value as the `subagent_type` parameter.** This dispatches the specialized Amplifier agent, not a generic one.
 
 ```
-Task tool ([agent-name from task]):
+Task tool:
+  subagent_type: "[agent-name from task's Agent: field]"
   description: "Implement Task N: [task name]"
   prompt: |
     You are the [agent-name] agent implementing Task N: [task name]
 
     ## Your Strengths
 
-    [Brief description of what this agent specializes in, from AMPLIFIER-AGENTS.md.
+    [Brief description of what this agent specializes in, from ${CLAUDE_PLUGIN_ROOT}/AMPLIFIER-AGENTS.md.
      Examples:
      - modular-builder: "You build self-contained, regeneratable modules following the bricks-and-studs philosophy."
      - database-architect: "You design clean schemas, optimize queries, and handle migrations."

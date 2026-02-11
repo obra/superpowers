@@ -13,11 +13,13 @@ Start by understanding the current project context, then ask questions one at a 
 
 ## Session Start
 
-Before diving into the idea:
+Before diving into the idea, gather context **sequentially** (do NOT run these in parallel — parallel tool calls cause silent failures):
 
 1. **Context gathering** — Check project state (files, docs, recent commits, open branches, existing plans)
-2. **Memory consultation** — Search episodic memory for related past conversations, decisions, and lessons learned (use episodic-memory:search-conversations if available)
-3. **Agent awareness** — Identify which Amplifier agents are relevant for this task (consult `AMPLIFIER-AGENTS.md` in the superpowers plugin directory for the full mapping)
+2. **Memory consultation** — Search episodic memory for related past conversations, decisions, and lessons learned (use episodic-memory:search-conversations if available). Do this AFTER step 1 completes.
+3. **Agent awareness** — Read `${CLAUDE_PLUGIN_ROOT}/AMPLIFIER-AGENTS.md` to identify which Amplifier agents are relevant. Do this AFTER step 2 completes.
+
+If any step fails (e.g., episodic memory unavailable), continue with the next step — don't abort the entire session start. Report what context you gathered and what you couldn't access.
 
 Surface the relevant agents early: "For this task, we'll likely use zen-architect for design, modular-builder for implementation, and test-coverage for verification."
 
