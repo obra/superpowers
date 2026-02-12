@@ -48,7 +48,7 @@ rm -rf ~/.config/opencode/skills/superpowers
 # 4. Create symlinks
 
 cd ~/.config/opencode/plugins/
- ../superpowers/.opencode/plugins/superpowers.js superpowers.js
+ln -s ../superpowers/.opencode/plugins/superpowers.js superpowers.js
 cd ~/.config/opencode/skills
 ln -s ../superpowers/skills superpowers
 
