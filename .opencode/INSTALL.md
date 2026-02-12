@@ -19,8 +19,9 @@ Create a symlink so OpenCode discovers the plugin:
 
 ```bash
 mkdir -p ~/.config/opencode/plugins
-rm -f ~/.config/opencode/plugins/superpowers.js
-ln -s ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js ~/.config/opencode/plugins/superpowers.js
+cd ~/.config/opencode/plugins
+rm -f superpowers.js
+ln -s ../superpowers/.opencode/plugins/superpowers.js superpowers.js
 ```
 
 ### 3. Symlink Skills
@@ -29,8 +30,9 @@ Create a symlink so OpenCode's native skill tool discovers superpowers skills:
 
 ```bash
 mkdir -p ~/.config/opencode/skills
-rm -rf ~/.config/opencode/skills/superpowers
-ln -s ~/.config/opencode/superpowers/skills ~/.config/opencode/skills/superpowers
+cd ~/.config/opencode/skills
+rm -rf superpowers
+ln -s ../superpowers/skills superpowers
 ```
 
 ### 4. Restart OpenCode
