@@ -103,7 +103,7 @@ When executing commands, adapt to the user's OS. Do not assume a POSIX environme
 | `cp -r` | `xcopy /e /i /y` | Copy directory |
 | `grep "text"` | `findstr "text"` | Search in files |
 | `cat file` | `type file` | View file content |
-| `touch file` | `echo. > file` | Create empty file |
+| `touch file` | `type nul > file` | Create empty file (CMD) |
 
 **Pro Tip:** Use the `run_command` tool to check environment before assuming command syntax.
 
