@@ -7,7 +7,18 @@ Complete guide for using Superpowers with [OpenCode.ai](https://opencode.ai).
 Tell OpenCode:
 
 ```
-Clone https://github.com/obra/superpowers to ~/.config/opencode/superpowers, then create directory ~/.config/opencode/plugins, then symlink ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js to ~/.config/opencode/plugins/superpowers.js, then symlink ~/.config/opencode/superpowers/skills to ~/.config/opencode/skills/superpowers, then restart opencode.
+Run the following commands:
+git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
+mkdir -p ~/.config/opencode/plugins
+cd ~/.config/opencode/plugins/
+rm -f superpowers.js
+ln -s ../superpowers/.opencode/plugins/superpowers.js superpowers.js
+mkdir -p ~/.config/opencode/skills
+cd ~/.config/opencode/skills
+rm -rf superpowers
+ln -s ../superpowers/skills superpowers
+
+Then restart opencode.
 ```
 
 ## Manual Installation
@@ -35,8 +46,11 @@ rm -f ~/.config/opencode/plugins/superpowers.js
 rm -rf ~/.config/opencode/skills/superpowers
 
 # 4. Create symlinks
-ln -s ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js ~/.config/opencode/plugins/superpowers.js
-ln -s ~/.config/opencode/superpowers/skills ~/.config/opencode/skills/superpowers
+
+cd ~/.config/opencode/plugins/
+ ../superpowers/.opencode/plugins/superpowers.js superpowers.js
+cd ~/.config/opencode/skills
+ln -s ../superpowers/skills superpowers
 
 # 5. Restart OpenCode
 ```
