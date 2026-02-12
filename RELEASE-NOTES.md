@@ -1,5 +1,16 @@
 # Horspowers Release Notes
 
+## v4.3.4 (2026-02-12)
+
+### Bug Fixes
+
+**移除对旧配置文件的依赖**
+- 修复 `brainstorming` 和 `writing-plans` 技能中对 `.superpowers-config.yaml` 的引用
+- 移除 `session-end.sh` hook 中对旧配置文件的检测逻辑
+- 确保所有技能和脚本仅依赖 `.horspowers-config.yaml`
+
+---
+
 ## v4.3.3 (2026-01-27)
 
 ### Improvements

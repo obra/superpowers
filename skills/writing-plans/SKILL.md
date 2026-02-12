@@ -106,7 +106,7 @@ git commit -m "feat: add specific feature"
 
 Before offering execution choice, check if documentation is enabled:
 
-IF `.superpowers-config.yaml` exists AND `documentation.enabled: true`:
+IF `.horspowers-config.yaml` exists AND `documentation.enabled: true`:
 
   **Step 1: Search related documents (输入文档上下文):**
   Run: Search `docs/plans/` for related design documents

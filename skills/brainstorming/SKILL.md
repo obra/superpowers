@@ -38,7 +38,7 @@ Start by understanding the current project context, then ask questions one at a 
 
 **Documentation Integration (遵循最小必要文档原则):**
 
-IF `.superpowers-config.yaml` exists AND `documentation.enabled: true`:
+IF `.horspowers-config.yaml` exists AND `documentation.enabled: true`:
 
   **Initialize if needed:**
   IF session context shows `docs_auto_init:true`:

@@ -30,8 +30,6 @@ is_docs_enabled() {
         local config_file=""
         if [ -f "$current_dir/.horspowers-config.yaml" ]; then
             config_file="$current_dir/.horspowers-config.yaml"
-        elif [ -f "$current_dir/.superpowers-config.yaml" ]; then
-            config_file="$current_dir/.superpowers-config.yaml"
         fi
 
         if [ -n "$config_file" ]; then
