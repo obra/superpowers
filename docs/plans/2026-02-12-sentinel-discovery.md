@@ -17,7 +17,7 @@
 
 ### Task 2: Implement Skill Discovery Index
 **Files:**
-- Create: `lib/scripts/generate_skills_index.py`
+- Create: `lib/scripts/generate_skills_index.js`
 - Create: `skills/SKILLS_INDEX.md`
 
 ### Task 3: Implement Sentinel Logic (Progress Tracking)
