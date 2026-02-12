@@ -49,7 +49,7 @@ rm -rf ~/.config/opencode/skills/superpowers
 
 cd ~/.config/opencode/plugins/
 ln -s ../superpowers/.opencode/plugins/superpowers.js superpowers.js
-cd ~/.config/opencode/skills
+cd ~/.config/opencode/skills/
 ln -s ../superpowers/skills superpowers
 
 # 5. Restart OpenCode
