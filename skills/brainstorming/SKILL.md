@@ -108,17 +108,31 @@ Adjust the table based on what the design actually needs. Not every project need
 ## After the Design
 
 **Documentation:**
-- Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
-  - (User preferences for spec location override this default)
-- Include the Agent Allocation section in the design doc
-- Use elements-of-style:writing-clearly-and-concisely skill if available
-- Commit the design document to git
+- Delegate spec writing and review to a subagent, keeping only the result in main context:
 
-**Spec Review Loop:**
-After writing the spec document:
-1. Dispatch spec-document-reviewer subagent (see spec-document-reviewer-prompt.md)
-2. If Issues Found: fix, re-dispatch, repeat until Approved
-3. If loop exceeds 5 iterations, surface to human for guidance
+```
+Task(subagent_type="general-purpose", model="sonnet", description="Write and validate design spec", prompt="
+  Write a design spec document from the following validated design.
+
+  ## Validated Design
+  [paste the complete design text including Agent Allocation table]
+
+  ## Instructions
+  1. Write the spec to: docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md
+  2. Include all sections: Problem, Goal, Changes, Impact, Files Changed, Agent Allocation, Test Plan
+  3. Self-review against this checklist:
+     - All requirements from the design are captured
+     - Agent allocation table is included
+     - File paths are concrete (not placeholder)
+     - No ambiguous language ('should', 'could', 'might' replaced with specifics)
+     - Acceptance criteria are testable
+  4. Fix any issues found during self-review
+  5. Commit the spec: git add <file> && git commit -m 'docs: add <topic> design spec'
+  6. Return: file path, git commit hash, review status (pass/fail), any concerns (MAX 100 words)
+")
+```
+
+- (User preferences for spec location override the default path)
 
 **Workflow routing — recommend the right execution path:**
 - **Simple task** (1-2 files, clear requirements) → implement directly with the appropriate Amplifier agent
