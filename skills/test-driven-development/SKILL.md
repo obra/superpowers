@@ -353,6 +353,13 @@ When adding mocks or test utilities, read @testing-anti-patterns.md and testing-
 - Adding test-only methods to production classes
 - Mocking without understanding dependencies
 
+## Pytest Best Practices
+
+When using pytest, read @pytest-best-practices.md for project structure and test organization:
+- Tests in a sibling directory mirroring the source structure
+- Test files named after source files with `test_` prefix
+- Tests grouped in classes for logical cohesion, subclassing, and class-level parameterization
+
 ## Final Rule
 
 ```
