@@ -26,7 +26,7 @@ Thanks!
 
 ## Installation
 
-**Note:** Installation differs by platform. Claude Code has a built-in plugin system. Codex and OpenCode require manual setup.
+**Note:** Installation differs by platform. Claude Code has a built-in plugin system. Codex, OpenCode, and Factory Droid CLI require manual setup.
 
 ### Claude Code (via Plugin Marketplace)
 
@@ -65,6 +65,16 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 ```
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
+
+### Factory Droid CLI
+
+Tell Droid:
+
+```
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.factory/INSTALL.droid.md
+```
+
+**Detailed docs:** [docs/README.droid.md](docs/README.droid.md)
 
 ## The Basic Workflow
 
