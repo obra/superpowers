@@ -6,10 +6,15 @@ Use this template when dispatching an implementation agent. The `subagent_type` 
 
 ```
 Task tool:
-  subagent_type: "[agent-name from task's Agent: field]"
+  subagent_type: "general"
   description: "Implement Task N: [task name]"
   prompt: |
-    You are the [agent-name] agent implementing Task N: [task name]
+    You are the [agent-name from task's Agent: field] agent implementing Task N: [task name]
+
+    ## IMMEDIATE ACTION
+
+    **DO NOT PLAN.** The plan is already provided below.
+    **EXECUTE IMMEDIATELY.** Do not waste tokens creating a new plan.
 
     ## Your Strengths
 
@@ -30,23 +35,18 @@ Task tool:
 
     ## Before You Begin
 
-    If you have questions about:
-    - The requirements or acceptance criteria
-    - The approach or implementation strategy
-    - Dependencies or assumptions
-    - Anything unclear in the task description
-
-    **Ask them now.** Raise any concerns before starting work.
+    1. **Style Check:** Read 1-2 related files to understand the project's style (e.g., naming conventions, event handlers like `OnClick` syntax). Mimic it exactly.
+    2. **Clarify:** If you have questions about requirements, ask them now.
 
     ## Your Job
 
-    Once you're clear on requirements:
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Commit your work
-    5. Self-review (see below)
-    6. Report back
+    4. **Commit your work** (Required)
+    5. **Verify Commit:** Run `git log -1` to prove the commit succeeded.
+    6. Self-review (see below)
+    7. Report back
 
     Work from: [directory]
 

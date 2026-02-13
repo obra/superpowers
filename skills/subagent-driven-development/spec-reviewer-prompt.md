@@ -32,6 +32,7 @@ Task tool (test-coverage):
 
     **DO:**
     - Read the actual code they wrote
+    - **Verify Persistence:** Check `git log -1` to ensure the work was actually committed.
     - Compare actual implementation to requirements line by line
     - Check for missing pieces they claimed to implement
     - Look for extra features they didn't mention
@@ -39,6 +40,10 @@ Task tool (test-coverage):
     ## Your Job
 
     Read the implementation code and verify:
+
+    **Persistence Check:**
+    - Did the implementer actually commit the code?
+    - If files are modified but not committed, or if `git log` shows an old commit, **FAIL** the review immediately.
 
     **Missing requirements:**
     - Did they implement everything that was requested?
