@@ -16,6 +16,16 @@ Task tool:
     **DO NOT PLAN.** The plan is already provided below.
     **EXECUTE IMMEDIATELY.** Do not waste tokens creating a new plan.
 
+    ## Output Discipline
+
+    When reporting back, keep your response concise to protect the caller's context:
+    - List files created/modified with paths (not full contents)
+    - Summarize what changed in each file (1-2 lines per file)
+    - Include test results: pass/fail counts and command used
+    - Include git commit hash from `git log -1 --format="%H %s"`
+    - If a file is >200 lines, report the path and summary, not the full content
+    - Keep total report under 200 lines
+
     ## Your Strengths
 
     [Brief description of what this agent specializes in, from ${CLAUDE_PLUGIN_ROOT}/AMPLIFIER-AGENTS.md.
