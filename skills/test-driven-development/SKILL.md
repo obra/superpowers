@@ -198,6 +198,96 @@ Next failing test for next feature.
 | **Clear** | Name describes behavior | `test('test1')` |
 | **Shows intent** | Demonstrates desired API | Obscures what code should do |
 
+## Pytest: Group Tests in Classes
+
+When the test framework is **pytest**, organize unit tests into **test classes** — not free functions.
+
+**Why classes, not loose functions:**
+- **Logical grouping** — tests for one unit live together
+- **Subclassing** — shared setup and test inheritance across related test suites
+- **Single parameterization** — `@pytest.mark.parametrize` on the class applies to every method inside it
+
+<Good>
+```python
+@pytest.mark.parametrize("backend", ["sqlite", "postgres"])
+class TestOrderRepository:
+    """All tests run against both backends via single class-level parametrize."""
+
+    def test_creates_order(self, backend):
+        repo = make_repo(backend)
+        order = repo.create(item="widget", qty=1)
+        assert repo.get(order.id).item == "widget"
+
+    def test_rejects_duplicate_id(self, backend):
+        repo = make_repo(backend)
+        repo.create(id="ORD-1", item="widget", qty=1)
+        with pytest.raises(DuplicateOrderError):
+            repo.create(id="ORD-1", item="gadget", qty=2)
+
+    def test_lists_by_status(self, backend):
+        repo = make_repo(backend)
+        repo.create(item="a", qty=1, status="pending")
+        repo.create(item="b", qty=2, status="shipped")
+        assert len(repo.list_by_status("pending")) == 1
+```
+One `parametrize` on the class — every test method gets both backends. Group is obvious. Subclass to add DB-specific tests.
+</Good>
+
+<Bad>
+```python
+def test_creates_order_sqlite():
+    ...
+
+def test_creates_order_postgres():
+    ...
+
+def test_rejects_duplicate_id_sqlite():
+    ...
+
+def test_rejects_duplicate_id_postgres():
+    ...
+```
+Duplicated per-backend. No grouping. No way to subclass shared behavior.
+</Bad>
+
+**Subclassing for shared behavior:**
+
+```python
+class TestBaseCache:
+    """Shared tests any cache implementation must pass."""
+
+    def make_cache(self):
+        raise NotImplementedError
+
+    def test_stores_and_retrieves(self):
+        cache = self.make_cache()
+        cache.set("k", "v")
+        assert cache.get("k") == "v"
+
+    def test_returns_none_for_missing_key(self):
+        cache = self.make_cache()
+        assert cache.get("missing") is None
+
+
+class TestRedisCache(TestBaseCache):
+    def make_cache(self):
+        return RedisCache(host="localhost")
+
+
+class TestInMemoryCache(TestBaseCache):
+    def make_cache(self):
+        return InMemoryCache()
+```
+
+Both `TestRedisCache` and `TestInMemoryCache` inherit and run all shared tests. Add implementation-specific tests by adding methods to the subclass.
+
+**Rules:**
+- One class per unit under test (e.g., `TestOrderRepository`, `TestEmailValidator`)
+- Class name starts with `Test` (pytest discovery)
+- No `__init__` method (pytest requirement)
+- Use fixtures or factory methods for setup, not `setUp`/`tearDown`
+- Class-level `@pytest.mark.parametrize` for cross-cutting variations (backends, configs, modes)
+
 ## Why Order Matters
 
 **"I'll write tests after to verify it works"**
