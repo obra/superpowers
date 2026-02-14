@@ -13,20 +13,43 @@ Start by understanding the current project context, then ask questions one at a 
 
 ## Session Start
 
-Before diving into the idea, gather context **sequentially** (do NOT run these in parallel — parallel tool calls cause silent failures):
+Before diving into the idea, gather context by dispatching a **context scout subagent**. This runs all context gathering in a separate context window, returning only a concise summary to the main session.
 
-1. **Context gathering** — Check project state (files, docs, recent commits, open branches, existing plans)
-2. **Memory consultation** — Do this AFTER step 1 completes:
-   - Search episodic memory for related past conversations (use episodic-memory:search-conversations if available)
-   - Recall project decisions: `node ${CLAUDE_PLUGIN_ROOT}/../commands/recall.js knowledge_base.decisions`
-   - Recall domain glossary: `node ${CLAUDE_PLUGIN_ROOT}/../commands/recall.js knowledge_base.glossary`
-3. **Agent awareness** — Read `${CLAUDE_PLUGIN_ROOT}/AMPLIFIER-AGENTS.md` to identify which Amplifier agents are relevant. Do this AFTER step 2 completes.
+1. **Determine topic** from the user's message or ask what they want to work on.
+2. **Dispatch context scout:**
+
+```
+Task(subagent_type="general-purpose", model="haiku", description="Gather session context for [topic]", prompt="
+  Gather project context for a brainstorming session about [topic].
+
+  Run these steps and compile a summary:
+  1. Run: git status --short && git log --oneline -5
+  2. Search episodic memory for conversations about [topic] (use episodic-memory:search-conversations if available)
+  3. Run: node ${CLAUDE_PLUGIN_ROOT}/../commands/recall.js knowledge_base.decisions
+  4. Run: node ${CLAUDE_PLUGIN_ROOT}/../commands/recall.js knowledge_base.glossary
+  5. Check for existing specs: ls docs/superpowers/specs/ (if directory exists)
+  6. Read ${CLAUDE_PLUGIN_ROOT}/AMPLIFIER-AGENTS.md
+
+  If any step fails, skip it and continue.
+
+  Return a structured summary (MAX 500 words, this is critical):
+  ## Project State
+  [branch, uncommitted changes, recent commits — 2-3 lines]
+
+  ## Related Past Decisions
+  [any ADRs or patterns relevant to topic — bullet list or 'None found']
+
+  ## Relevant Agents
+  [which Amplifier agents are likely needed for this task — bullet list]
+
+  ## Existing Specs
+  [any related design docs — list or 'None found']
+")
+```
+
+3. **Present summary** to user and proceed to The Process.
 
 See `${CLAUDE_PLUGIN_ROOT}/MEMORY-WORKFLOW.md` for when to use which memory system.
-
-If any step fails (e.g., episodic memory unavailable), continue with the next step — don't abort the entire session start. Report what context you gathered and what you couldn't access.
-
-Surface the relevant agents early: "For this task, we'll likely use zen-architect for design, modular-builder for implementation, and test-coverage for verification."
 
 ## The Process
 
@@ -85,17 +108,31 @@ Adjust the table based on what the design actually needs. Not every project need
 ## After the Design
 
 **Documentation:**
-- Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
-  - (User preferences for spec location override this default)
-- Include the Agent Allocation section in the design doc
-- Use elements-of-style:writing-clearly-and-concisely skill if available
-- Commit the design document to git
+- Delegate spec writing and review to a subagent, keeping only the result in main context:
 
-**Spec Review Loop:**
-After writing the spec document:
-1. Dispatch spec-document-reviewer subagent (see spec-document-reviewer-prompt.md)
-2. If Issues Found: fix, re-dispatch, repeat until Approved
-3. If loop exceeds 5 iterations, surface to human for guidance
+```
+Task(subagent_type="general-purpose", model="sonnet", description="Write and validate design spec", prompt="
+  Write a design spec document from the following validated design.
+
+  ## Validated Design
+  [paste the complete design text including Agent Allocation table]
+
+  ## Instructions
+  1. Write the spec to: docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md
+  2. Include all sections: Problem, Goal, Changes, Impact, Files Changed, Agent Allocation, Test Plan
+  3. Self-review against this checklist:
+     - All requirements from the design are captured
+     - Agent allocation table is included
+     - File paths are concrete (not placeholder)
+     - No ambiguous language ('should', 'could', 'might' replaced with specifics)
+     - Acceptance criteria are testable
+  4. Fix any issues found during self-review
+  5. Commit the spec: git add <file> && git commit -m 'docs: add <topic> design spec'
+  6. Return: file path, git commit hash, review status (pass/fail), any concerns (MAX 100 words)
+")
+```
+
+- (User preferences for spec location override the default path)
 
 **Workflow routing — recommend the right execution path:**
 - **Simple task** (1-2 files, clear requirements) → implement directly with the appropriate Amplifier agent

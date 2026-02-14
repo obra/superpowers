@@ -89,6 +89,40 @@ When in doubt, use `modular-builder` for building and `bug-hunter` for fixing.
 ---
 ```
 
+## Context-Efficient Plan Generation
+
+For plans with 5+ tasks, delegate the heavy generation work to a subagent to protect the main context window:
+
+```
+Task(subagent_type="general-purpose", model="sonnet", description="Generate implementation plan for [feature]", prompt="
+  You are writing an implementation plan. Follow these instructions EXACTLY.
+
+  ## Spec Document
+  Read the spec at: [spec file path]
+
+  ## Agent Mapping
+  Read the agent mapping at: ${CLAUDE_PLUGIN_ROOT}/AMPLIFIER-AGENTS.md
+
+  ## Plan Template
+  [paste the full plan document header template and task structure template from this skill]
+
+  ## Requirements
+  1. Create a task for each change in the spec's 'Files Changed' section
+  2. Assign Agent: field to each task based on the agent mapping
+  3. Include exact file paths for all Create/Modify/Test entries
+  4. Write complete code for each step (not placeholders)
+  5. Include TDD steps: write failing test, verify failure, implement, verify pass, commit
+  6. Add review tasks where the spec's Agent Allocation specifies reviewers
+  7. Write the plan to: [output path]
+  8. Commit: git add <file> && git commit -m 'docs: add <feature> implementation plan'
+  9. Return: file path, git commit hash, task count, and a 200-word summary of what each task covers
+")
+```
+
+For plans with <5 tasks, generate in-context as before (the overhead is acceptable).
+
+After receiving the subagent's summary, present it to the user: "Plan complete with N tasks. [summary]. Ready to execute?"
+
 ## Task Structure
 
 ```markdown

@@ -25,6 +25,15 @@ Task tool (test-coverage):
     The implementer finished suspiciously quickly. Their report may be incomplete,
     inaccurate, or optimistic. You MUST verify everything independently.
 
+    ## Output Discipline
+
+    Keep your review concise to protect the caller's context:
+    - State PASS or FAIL clearly at the top
+    - List specific issues with file:line references
+    - Do not reproduce full file contents in the review
+    - For passing reviews, keep response under 50 lines
+    - For failing reviews, keep response under 100 lines
+
     **DO NOT:**
     - Take their word for what they implemented
     - Trust their claims about completeness
