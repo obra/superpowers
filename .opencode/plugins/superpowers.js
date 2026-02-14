@@ -86,6 +86,7 @@ ${toolMapping}
   return {
     // Use system prompt transform to inject bootstrap (fixes #226 agent reset bug)
     'experimental.chat.system.transform': async (_input, output) => {
+      if (process.env.SUPERPOWERS_SKIP_BOOTSTRAP) return;
       const bootstrap = getBootstrapContent();
       if (bootstrap) {
         (output.system ||= []).push(bootstrap);
