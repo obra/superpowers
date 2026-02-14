@@ -49,6 +49,30 @@ After all tasks complete and verified:
 - **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
 - Follow that skill to verify tests, present options, execute choice
 
+### Team Mode (Claude Code Only)
+
+If `TeamCreate` is available and the user opted in during the writing-plans handoff, parallelize tasks within each batch.
+
+**What changes:**
+- Step 2 (Execute Batch): Instead of executing 3 tasks sequentially, spawn a team and assign batch tasks to team members working in parallel
+- Step 3 (Report): Wait for all batch members to complete, then report combined results
+- Steps 1, 4, 5: Unchanged (plan review, feedback loop, and completion stay the same)
+
+**What doesn't change:**
+- Batch boundaries and human review checkpoints remain
+- Default batch size is still 3 tasks
+- "Ready for feedback" checkpoint after each batch
+- The human-in-the-loop approval between batches is preserved
+
+**Team lifecycle per batch:**
+1. `TeamCreate` for the batch (or reuse existing team)
+2. Assign batch tasks to team members
+3. Wait for all to complete
+4. Report results, wait for feedback
+5. `TeamDelete` when all work is done (or reuse for next batch)
+
+**Cross-platform note:** Team mode requires Claude Code with teams enabled (beta). On Codex, OpenCode, or Claude Code without teams, use the standard sequential batch execution. Always detect capability before offering team mode.
+
 ## When to Stop and Ask for Help
 
 **STOP executing immediately when:**

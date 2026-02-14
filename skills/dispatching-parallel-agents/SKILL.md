@@ -79,6 +79,37 @@ When agents return:
 - Run full test suite
 - Integrate all changes
 
+## Team Mode (Claude Code Only)
+
+If `TeamCreate` is available and the user opts in, use a coordinated team instead of individual `Task` calls.
+
+### Standard Mode vs Team Mode
+
+| Aspect | Standard (Task calls) | Team Mode |
+|--------|----------------------|-----------|
+| Dispatch | Individual `Task` tool calls | `TeamCreate` + team members |
+| Communication | None between agents | `SendMessage` for sharing findings |
+| Progress tracking | Wait for Task return | Shared `TaskList` with live status |
+| Result collection | Read each Task result | Agents report via messages + `TaskUpdate` |
+| Best for | Quick independent investigations | Longer investigations needing coordination |
+
+### When to Prefer Team Mode
+
+- Investigations may need to share context mid-flight (e.g., "I found the root cause is in module X, check if it affects your area too")
+- More than 3 parallel agents (better lifecycle management)
+- Agents may discover dependencies during investigation
+
+### Team Mode Pattern
+
+1. **Create team:** `TeamCreate` with descriptive name
+2. **Spawn investigators:** One team member per independent domain
+3. **Let them work:** Agents investigate, can message each other if relevant findings
+4. **Collect results:** Team lead monitors `TaskList`, reads agent messages
+5. **Integrate:** Same as standard - verify fixes don't conflict, run full suite
+6. **Shutdown:** `shutdown_request` to all members, then `TeamDelete`
+
+**Cross-platform note:** Team mode requires Claude Code with teams enabled (beta). On Codex, OpenCode, or Claude Code without teams, use the standard parallel `Task` dispatch. Always detect capability before offering team mode.
+
 ## Agent Prompt Structure
 
 Good agent prompts are:

@@ -96,13 +96,17 @@ git commit -m "feat: add specific feature"
 
 ## Execution Handoff
 
-After saving the plan, offer execution choice:
+After saving the plan, check for team support and offer execution choice:
 
-**"Plan complete and saved to `docs/plans/<filename>.md`. Two execution options:**
+**Detection:** Before presenting options, check if the `TeamCreate` tool is available in this environment. If it is, include Option 3 below. If not, only show Options 1 and 2.
+
+**"Plan complete and saved to `docs/plans/<filename>.md`. Execution options:**
 
 **1. Subagent-Driven (this session)** - I dispatch fresh subagent per task, review between tasks, fast iteration
 
 **2. Parallel Session (separate)** - Open new session with executing-plans, batch execution with checkpoints
+
+**3. Team-Based (parallel, this session)** *(only if TeamCreate is available)* - Spawn an agent team with parallel implementers and reviewers, coordinated via shared task list
 
 **Which approach?"**
 
@@ -114,3 +118,9 @@ After saving the plan, offer execution choice:
 **If Parallel Session chosen:**
 - Guide them to open new session in worktree
 - **REQUIRED SUB-SKILL:** New session uses superpowers:executing-plans
+
+**If Team-Based chosen:**
+- **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development (team mode)
+- Stay in this session
+- `TeamCreate` to spawn parallel implementers
+- Shared `TaskList` for coordination

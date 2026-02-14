@@ -16,7 +16,9 @@ digraph when_to_use {
     "Have implementation plan?" [shape=diamond];
     "Tasks mostly independent?" [shape=diamond];
     "Stay in this session?" [shape=diamond];
-    "subagent-driven-development" [shape=box];
+    "TeamCreate available and user opted in?" [shape=diamond];
+    "subagent-driven-development (team mode)" [shape=box];
+    "subagent-driven-development (standard)" [shape=box];
     "executing-plans" [shape=box];
     "Manual execution or brainstorm first" [shape=box];
 
@@ -24,8 +26,10 @@ digraph when_to_use {
     "Have implementation plan?" -> "Manual execution or brainstorm first" [label="no"];
     "Tasks mostly independent?" -> "Stay in this session?" [label="yes"];
     "Tasks mostly independent?" -> "Manual execution or brainstorm first" [label="no - tightly coupled"];
-    "Stay in this session?" -> "subagent-driven-development" [label="yes"];
+    "Stay in this session?" -> "TeamCreate available and user opted in?" [label="yes"];
     "Stay in this session?" -> "executing-plans" [label="no - parallel session"];
+    "TeamCreate available and user opted in?" -> "subagent-driven-development (team mode)" [label="yes"];
+    "TeamCreate available and user opted in?" -> "subagent-driven-development (standard)" [label="no"];
 }
 ```
 
@@ -34,6 +38,12 @@ digraph when_to_use {
 - Fresh subagent per task (no context pollution)
 - Two-stage review after each task: spec compliance first, then code quality
 - Faster iteration (no human-in-loop between tasks)
+
+**Team mode vs. Standard mode:**
+- True parallelism (multiple implementers working simultaneously on independent tasks)
+- Persistent coordination via `SendMessage` and shared `TaskList`
+- Review gates remain sequential per task (spec then quality)
+- Requires Claude Code with teams feature enabled (beta)
 
 ## The Process
 
@@ -81,6 +91,88 @@ digraph process {
     "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
+
+## Team Mode (Claude Code Only)
+
+When the user opts into team mode and `TeamCreate` is available, use this alternative flow instead of the standard sequential process above.
+
+**Core difference:** Independent tasks run in parallel via team members. Review gates remain sequential per task.
+
+### Team Composition
+
+- **Team Lead (you):** Orchestrates work, assigns tasks, reviews results
+- **Implementer agents:** One per independent task, spawned as team members
+- **Reviewer agents:** Dispatched per task after implementation completes (spec then quality)
+
+### Team Mode Process
+
+```dot
+digraph team_process {
+    rankdir=TB;
+
+    "Read plan, extract tasks, identify independent groups" [shape=box];
+    "TeamCreate with implementer agents" [shape=box];
+    "Assign independent tasks to implementers via TaskCreate" [shape=box];
+    "Implementers work in parallel" [shape=box];
+    "As each implementer completes:" [shape=box];
+
+    subgraph cluster_per_task {
+        label="Per Completed Task (sequential)";
+        "Dispatch spec reviewer for task" [shape=box];
+        "Spec passes?" [shape=diamond];
+        "Send fix instructions to implementer" [shape=box];
+        "Dispatch code quality reviewer" [shape=box];
+        "Quality passes?" [shape=diamond];
+        "Send quality fix instructions" [shape=box];
+        "Mark task complete" [shape=box];
+    }
+
+    "More tasks to assign?" [shape=diamond];
+    "Assign next batch to idle implementers" [shape=box];
+    "All tasks complete" [shape=box];
+    "Shutdown team" [shape=box];
+    "Final code review + finishing-a-development-branch" [shape=box];
+
+    "Read plan, extract tasks, identify independent groups" -> "TeamCreate with implementer agents";
+    "TeamCreate with implementer agents" -> "Assign independent tasks to implementers via TaskCreate";
+    "Assign independent tasks to implementers via TaskCreate" -> "Implementers work in parallel";
+    "Implementers work in parallel" -> "As each implementer completes:";
+    "As each implementer completes:" -> "Dispatch spec reviewer for task";
+    "Dispatch spec reviewer for task" -> "Spec passes?";
+    "Spec passes?" -> "Send fix instructions to implementer" [label="no"];
+    "Send fix instructions to implementer" -> "Dispatch spec reviewer for task";
+    "Spec passes?" -> "Dispatch code quality reviewer" [label="yes"];
+    "Dispatch code quality reviewer" -> "Quality passes?";
+    "Quality passes?" -> "Send quality fix instructions" [label="no"];
+    "Send quality fix instructions" -> "Dispatch code quality reviewer";
+    "Quality passes?" -> "Mark task complete" [label="yes"];
+    "Mark task complete" -> "More tasks to assign?";
+    "More tasks to assign?" -> "Assign next batch to idle implementers" [label="yes"];
+    "Assign next batch to idle implementers" -> "Implementers work in parallel";
+    "More tasks to assign?" -> "All tasks complete" [label="no"];
+    "All tasks complete" -> "Shutdown team";
+    "Shutdown team" -> "Final code review + finishing-a-development-branch";
+}
+```
+
+### Key Constraints in Team Mode
+
+- **Review gates are still sequential per task:** spec review must pass before code quality review
+- **Dependent tasks must wait:** only dispatch tasks whose dependencies are complete
+- **Implementers on different tasks in parallel is OK:** they work on separate files
+- **Implementers on the same task is NOT OK:** one implementer per task
+- **Team lead handles review dispatch:** don't delegate review scheduling to implementers
+- **Use SendMessage for fix instructions:** when a reviewer finds issues, message the implementer with specific fixes needed
+- **Use shared TaskList for tracking:** all task state lives in the team's task list
+
+### Team Lifecycle
+
+1. **Create:** `TeamCreate` at start of execution
+2. **Staff:** Spawn implementer agents as team members via `Task` with `team_name`
+3. **Assign:** Create tasks via `TaskCreate`, assign via `TaskUpdate` with `owner`
+4. **Coordinate:** Use `SendMessage` for review feedback, fix instructions
+5. **Shutdown:** Send `shutdown_request` to all team members when complete
+6. **Cleanup:** `TeamDelete` after all members shut down
 
 ## Prompt Templates
 
@@ -211,6 +303,13 @@ Done!
 - Let implementer self-review replace actual review (both are needed)
 - **Start code quality review before spec compliance is ✅** (wrong order)
 - Move to next task while either review has open issues
+
+**Team mode specific - Never:**
+- Use team mode when `TeamCreate` is not available (fall back to standard mode)
+- Assume team mode works on non-Claude-Code environments (Codex, OpenCode)
+- Skip the user choice - always ask before spawning a team
+- Let implementers self-assign tasks (team lead assigns via `TaskUpdate`)
+- Forget to shutdown the team (always send `shutdown_request` + `TeamDelete`)
 
 **If subagent asks questions:**
 - Answer clearly and completely
