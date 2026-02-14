@@ -163,9 +163,11 @@ digraph team_process {
 - **Implementers on the same task is NOT OK:** one implementer per task
 - **Team lead handles review dispatch:** don't delegate review scheduling to implementers
 - **Use SendMessage for fix instructions:** when a reviewer finds issues, message the implementer with specific fixes needed
-- **Use shared TaskList for tracking:** all task state lives in the team's task list
+- **Use shared TaskList for tracking:** in team mode, the team's `TaskList` replaces `TodoWrite` as the single source of truth for task state. Do not maintain both simultaneously to avoid split-brain state
 
 ### Team Lifecycle
+
+**Note:** `TeamCreate`, `TaskCreate`, `TaskUpdate`, `TaskList`, `SendMessage`, and `TeamDelete` are Claude Code built-in tools provided by the runtime as part of the teams API (currently in beta).
 
 1. **Create:** `TeamCreate` at start of execution
 2. **Staff:** Spawn implementer agents as team members via `Task` with `team_name`

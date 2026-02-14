@@ -6,11 +6,13 @@
 
 **Architecture:** Each execution skill gets a "Team Mode" section that activates only when Claude Code teams are detected and the user opts in. The existing sequential subagent pattern remains the default. A shared detection-and-choice pattern is documented once and referenced by all three skills.
 
-**Tech Stack:** Markdown skill files (SKILL.md), Claude Code tools (TeamCreate, SendMessage, TaskCreate/TaskUpdate/TaskList, Task)
+**Tech Stack:** Markdown skill files (SKILL.md), Claude Code built-in tools for team creation and messaging (TeamCreate, SendMessage, TeamDelete) and task management (TaskCreate, TaskUpdate, TaskList), plus the existing Task tool
 
 **Design doc:** `docs/plans/2026-02-13-team-based-plan-execution-design.md`
 
 ---
+
+## Implementation Tasks
 
 ### Task 1: Add team detection and choice pattern to `writing-plans`
 

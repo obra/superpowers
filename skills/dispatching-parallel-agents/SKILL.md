@@ -83,6 +83,8 @@ When agents return:
 
 If `TeamCreate` is available and the user opts in, use a coordinated team instead of individual `Task` calls.
 
+**Note:** `TeamCreate`, `TaskList`, `TaskUpdate`, `SendMessage`, and `TeamDelete` are Claude Code built-in tools provided by the runtime as part of the teams API (currently in beta).
+
 ### Standard Mode vs Team Mode
 
 | Aspect | Standard (Task calls) | Team Mode |
