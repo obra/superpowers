@@ -283,12 +283,14 @@ Insert before "When to Stop and Ask for Help":
 ```markdown
 ### Team Mode (Claude Code Only)
 
-If `TeamCreate` is available and the user opted in during the writing-plans handoff, parallelize tasks within each batch.
+Before executing the first batch, check if the `TeamCreate` tool is available. If it is, ask the user: "Agent teams are available. Would you like to parallelize tasks within batches, or proceed with standard sequential execution?" If not available or the user declines, use the standard sequential flow.
 
 **What changes:**
-- Step 2 (Execute Batch): Instead of executing 3 tasks sequentially, spawn a team and assign batch tasks to team members working in parallel
+- Step 2 (Execute Batch): Instead of executing 3 tasks sequentially, assign batch tasks to team members working in parallel
 - Step 3 (Report): Wait for all batch members to complete, then report combined results
 - Steps 1, 4, 5: Unchanged (plan review, feedback loop, and completion stay the same)
+
+**Independence constraint:** Only parallelize tasks within a batch if they are independent (touch different files, no implicit dependencies). If tasks in a batch may conflict, fall back to sequential execution for that batch.
 
 **What doesn't change:**
 - Batch boundaries and human review checkpoints remain
@@ -296,12 +298,11 @@ If `TeamCreate` is available and the user opted in during the writing-plans hand
 - "Ready for feedback" checkpoint after each batch
 - The human-in-the-loop approval between batches is preserved
 
-**Team lifecycle per batch:**
-1. `TeamCreate` for the batch
-2. Assign batch tasks to team members
-3. Wait for all to complete
-4. Report results, wait for feedback
-5. `TeamDelete` (or reuse for next batch)
+**Team lifecycle:**
+1. `TeamCreate` once before the first batch
+2. For each batch: assign tasks to team members, wait for all to complete, report results, wait for feedback
+3. Reuse the same team across batches (no need to recreate)
+4. `TeamDelete` after the final batch completes and all work is done
 ```
 
 **Step 2: Commit**
