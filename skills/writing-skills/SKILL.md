@@ -17,7 +17,7 @@ You write test cases (pressure scenarios with subagents), watch them fail (basel
 
 **REQUIRED BACKGROUND:** You MUST understand superpowers:test-driven-development before using this skill. That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill adapts TDD to documentation.
 
-**Official guidance:** For Anthropic's official skill authoring best practices, see anthropic-best-practices.md. This document provides additional patterns and guidelines that complement the TDD-focused approach in this skill.
+**Official guidance:** For Anthropic's official skill authoring best practices, see anthropic-best-practices.md. This document provides additional patterns and guidelines that complement the TDD-focused approach in this skill. For the comprehensive guide covering planning, testing, distribution, and patterns, see [The Complete Guide to Building Skills for Claude](https://resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf).
 
 ## What is a Skill?
 
@@ -76,7 +76,9 @@ API docs, syntax guides, tool documentation (office docs)
 skills/
   skill-name/
     SKILL.md              # Main reference (required)
-    supporting-file.*     # Only if needed
+    scripts/              # Optional - executable code (Python, Bash, etc.)
+    references/           # Optional - documentation loaded as needed
+    assets/               # Optional - templates, fonts, icons used in output
 ```
 
 **Flat namespace** - all skills in one searchable namespace
@@ -93,14 +95,14 @@ skills/
 ## SKILL.md Structure
 
 **Frontmatter (YAML):**
-- Only two fields supported: `name` and `description`
-- Max 1024 characters total
-- `name`: Use letters, numbers, and hyphens only (no parentheses, special chars)
-- `description`: Third-person, describes ONLY when to use (NOT what it does)
-  - Start with "Use when..." to focus on triggering conditions
-  - Include specific symptoms, situations, and contexts
-  - **NEVER summarize the skill's process or workflow** (see CSO section for why)
+- Two required fields: `name` and `description`; optional: `license`, `compatibility`, `allowed-tools`, `metadata`
+- Max 1024 characters for description
+- `name`: Kebab-case only, no spaces or capitals (must match folder name). No "claude" or "anthropic" prefix (reserved).
+- `description`: Third-person, includes WHAT it does + WHEN to use it + key capabilities
+  - Include specific symptoms, situations, and trigger phrases users would say
+  - **NEVER summarize the skill's workflow/process steps** (see CSO section for why)
   - Keep under 500 characters if possible
+- No XML angle brackets (`<` or `>`) in frontmatter (security restriction)
 
 ```markdown
 ---
@@ -147,27 +149,35 @@ Concrete results
 
 **Format:** Start with "Use when..." to focus on triggering conditions
 
-**CRITICAL: Description = When to Use, NOT What the Skill Does**
+**CRITICAL: Description = WHAT + WHEN, never HOW**
 
-The description should ONLY describe triggering conditions. Do NOT summarize the skill's process or workflow in the description.
+The description should include what the skill does and when to use it, following the formula: `[What it does] + [When to use it] + [Key capabilities]`. However, it must NOT describe the skill's internal workflow or process steps.
 
 **Why this matters:** Testing revealed that when a description summarizes the skill's workflow, Claude may follow the description instead of reading the full skill content. A description saying "code review between tasks" caused Claude to do ONE review, even though the skill's flowchart clearly showed TWO reviews (spec compliance then code quality).
 
 When the description was changed to just "Use when executing implementation plans with independent tasks" (no workflow summary), Claude correctly read the flowchart and followed the two-stage review process.
 
+**The distinction:**
+- WHAT it does (capabilities) = Good ✅ — helps Claude decide relevance
+- WHEN to use it (triggers) = Good ✅ — helps Claude decide timing
+- HOW it works (workflow steps) = Bad ❌ — creates a shortcut Claude will take
+
 **The trap:** Descriptions that summarize workflow create a shortcut Claude will take. The skill body becomes documentation Claude skips.
 
 ```yaml
-# ❌ BAD: Summarizes workflow - Claude may follow this instead of reading skill
+# ❌ BAD: Summarizes workflow (HOW) - Claude may follow this instead of reading skill
 description: Use when executing plans - dispatches subagent per task with code review between tasks
 
-# ❌ BAD: Too much process detail
+# ❌ BAD: Too much process detail (HOW)
 description: Use for TDD - write test first, watch it fail, write minimal code, refactor
 
-# ✅ GOOD: Just triggering conditions, no workflow summary
+# ✅ GOOD: WHAT + WHEN, no workflow summary
 description: Use when executing implementation plans with independent tasks in the current session
 
-# ✅ GOOD: Triggering conditions only
+# ✅ GOOD: WHAT + WHEN + key capabilities
+description: Analyzes Figma design files and generates developer handoff documentation. Use when user uploads .fig files, asks for "design specs", "component documentation", or "design-to-code handoff".
+
+# ✅ GOOD: WHAT + WHEN with trigger phrases
 description: Use when implementing any feature or bugfix, before writing implementation code
 ```
 
@@ -370,6 +380,11 @@ pptx/
   scripts/       # Executable tools
 ```
 When: Reference material too large for inline
+
+**See also:** For skill patterns, troubleshooting, and planning guidance from Anthropic's Complete Guide:
+- [skill-patterns.md](skill-patterns.md) — 5 named patterns (sequential workflow, multi-MCP, iterative refinement, context-aware, domain-specific)
+- [troubleshooting.md](troubleshooting.md) — Common issues and fixes
+- [planning-and-design.md](planning-and-design.md) — Use cases, success criteria, testing, distribution
 
 ## The Iron Law (Same as TDD)
 

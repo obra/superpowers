@@ -4,7 +4,12 @@
 
 Good Skills are concise, well-structured, and tested with real usage. This guide provides practical authoring decisions to help you write Skills that Claude can discover and use effectively.
 
-For conceptual background on how Skills work, see the [Skills overview](/en/docs/agents-and-tools/agent-skills/overview).
+For conceptual background on how Skills work, see the [Skills overview](/en/docs/agents-and-tools/agent-skills/overview). For the comprehensive guide covering planning, testing, distribution, and patterns, see Anthropic's [Complete Guide to Building Skills for Claude](https://resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf).
+
+**Additional reference files in this skill:**
+- [planning-and-design.md](planning-and-design.md) — Use case categories, success criteria, testing approach, distribution
+- [skill-patterns.md](skill-patterns.md) — 5 named patterns (sequential workflow, multi-MCP, iterative refinement, context-aware, domain-specific)
+- [troubleshooting.md](troubleshooting.md) — Common issues and fixes (upload errors, triggering problems, instructions not followed)
 
 ## Core principles
 
@@ -143,14 +148,15 @@ What works perfectly for Opus might need more detail for Haiku. If you plan to u
 
 ## Skill structure
 
-<Note>
-  **YAML Frontmatter**: The SKILL.md frontmatter supports two fields:
+**YAML Frontmatter** — Two required fields, several optional:
 
-  * `name` - Human-readable name of the Skill (64 characters maximum)
-  * `description` - One-line description of what the Skill does and when to use it (1024 characters maximum)
+**Required:**
+* `name` - Kebab-case only, no spaces or capitals, must match folder name (64 chars max). No "claude" or "anthropic" prefix (reserved).
+* `description` - What the Skill does and when to use it (1024 chars max)
 
-  For complete Skill structure details, see the [Skills overview](/en/docs/agents-and-tools/agent-skills/overview#skill-structure).
-</Note>
+**Optional:** `license` (MIT, Apache-2.0, etc.), `compatibility` (environment requirements, 1-500 chars), `allowed-tools` (restrict tool access), `metadata` (custom key-value pairs: author, version, mcp-server, category, tags)
+
+**Security restrictions:** No XML angle brackets (`<` or `>`) in frontmatter — it appears in Claude's system prompt.
 
 ### Naming conventions
 
@@ -182,6 +188,12 @@ Consistent naming makes it easier to:
 * Organize and search through multiple Skills
 * Maintain a professional, cohesive skill library
 
+### Critical naming and file rules
+
+* `SKILL.md` must be exact case (not SKILL.MD, skill.md, etc.)
+* Folder names: kebab-case only (`notion-project-setup` ✅, `Notion Project Setup` ❌, `notion_project_setup` ❌)
+* No README.md inside skill folders — all documentation goes in SKILL.md or references/
+
 ### Writing effective descriptions
 
 The `description` field enables Skill discovery and should include both what the Skill does and when to use it.
@@ -197,6 +209,10 @@ The `description` field enables Skill discovery and should include both what the
 **Be specific and include key terms**. Include both what the Skill does and specific triggers/contexts for when to use it.
 
 Each Skill has exactly one description field. The description is critical for skill selection: Claude uses it to choose the right Skill from potentially 100+ available Skills. Your description must provide enough detail for Claude to know when to select this Skill, while the rest of SKILL.md provides the implementation details.
+
+**Description formula:** `[What it does] + [When to use it] + [Key capabilities]`
+
+Include WHAT and WHEN, but NOT HOW (workflow steps in descriptions cause Claude to shortcut the actual skill content — see the SKILL.md CSO section for details).
 
 Effective examples:
 
