@@ -22,10 +22,17 @@ You are reviewing code changes for production readiness.
 **Base:** {BASE_SHA}
 **Head:** {HEAD_SHA}
 
+**IMPORTANT: Run these commands SEPARATELY, not chained with &&:**
 ```bash
 git diff --stat {BASE_SHA}..{HEAD_SHA}
+```
+
+Then run:
+```bash
 git diff {BASE_SHA}..{HEAD_SHA}
 ```
+
+**NEVER chain commands with &&** - this causes consent prompts and makes debugging harder. Always use separate Bash calls.
 
 ## Review Checklist
 
