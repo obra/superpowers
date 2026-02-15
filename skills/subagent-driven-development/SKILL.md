@@ -53,6 +53,9 @@ digraph process {
         "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
         "Code quality reviewer subagent approves?" [shape=diamond];
         "Implementer subagent fixes quality issues" [shape=box];
+        "Dispatch security reviewer subagent (./security-reviewer-prompt.md)?" [shape=diamond];
+        "Security reviewer subagent approves?" [shape=diamond];
+        "Implementer subagent fixes security issues" [shape=box];
         "Mark task complete in TodoWrite" [shape=box];
     }
 
@@ -74,7 +77,11 @@ digraph process {
     "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
     "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
     "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
-    "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
+    "Code quality reviewer subagent approves?" -> "Dispatch security reviewer subagent (./security-reviewer-prompt.md)?" [label="yes"];
+    "Dispatch security reviewer subagent (./security-reviewer-prompt.md)?" -> "Security reviewer subagent approves?" [shape=diamond];
+    "Security reviewer subagent approves?" -> "Implementer subagent fixes security issues" [label="no"];
+    "Implementer subagent fixes security issues" -> "Dispatch security reviewer subagent (./security-reviewer-prompt.md)?" [label="re-review"];
+    "Security reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
     "Mark task complete in TodoWrite" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
@@ -87,6 +94,7 @@ digraph process {
 - `./implementer-prompt.md` - Dispatch implementer subagent
 - `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
 - `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
+- `./security-reviewer-prompt.md` - Dispatch security reviewer subagent (for security-sensitive changes)
 
 ## Example Workflow
 
@@ -185,10 +193,11 @@ Done!
 
 **Quality gates:**
 - Self-review catches issues before handoff
-- Two-stage review: spec compliance, then code quality
+- Two-stage review: spec compliance, then code quality, then security (optional)
 - Review loops ensure fixes actually work
 - Spec compliance prevents over/under-building
 - Code quality ensures implementation is well-built
+- Security review catches vulnerabilities in security-sensitive changes
 
 **Cost:**
 - More subagent invocations (implementer + 2 reviewers per task)

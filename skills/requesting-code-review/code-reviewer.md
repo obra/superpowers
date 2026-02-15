@@ -36,6 +36,15 @@ git diff {BASE_SHA}..{HEAD_SHA}
 
 ## Review Checklist
 
+**Security (MUST check):**
+- No hardcoded secrets, API keys, or credentials?
+- Input validation on all user inputs?
+- No SQL injection vulnerabilities?
+- Authentication/authorization properly enforced?
+- Sensitive data properly protected?
+- No command injection risks?
+- Dependencies have no known vulnerabilities?
+
 **Code Quality:**
 - Clean separation of concerns?
 - Proper error handling?
@@ -48,6 +57,7 @@ git diff {BASE_SHA}..{HEAD_SHA}
 - Scalability considerations?
 - Performance implications?
 - Security concerns?
+- Defense in depth applied?
 
 **Testing:**
 - Tests actually test logic (not mocks)?
