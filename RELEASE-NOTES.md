@@ -1,93 +1,65 @@
 # Superpowers Release Notes
 
-## Unreleased
+## Unreleased (Fork: psklarkins/superpowers)
 
-### Breaking Changes
+### Amplifier Integration
 
-**Specs and plans directory restructured**
+**Brainstorming skill enhanced with Amplifier agent awareness**
 
-- Specs (brainstorming output) now go to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
-- Plans (writing-plans output) now go to `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
-- User preferences for spec/plan locations override these defaults
-- Migration: move existing files from `docs/plans/` to new locations if desired
+- Context scout dispatches to gather project state, decisions, and available agents
+- Agent Allocation section required in all designs
+- Workflow routing considers Amplifier agent capabilities
 
-**Brainstorming → writing-plans transition enforced**
+**Writing-plans skill uses Amplifier agents**
 
-- After design approval, brainstorming now requires using writing-plans skill
-- Platform planning features (e.g., EnterPlanMode) should not be used
-- Direct implementation without writing-plans is not allowed
+- Each task gets Agent: field for Amplifier agent dispatch
+- Auto-assignment by task type (implementation, test, debug, security, etc.)
+- Review tasks use dedicated agents (test-coverage, zen-architect, security-guardian)
+- Context-efficient plan generation delegates to subagent for 5+ task plans
 
-**Subagent-driven development now mandatory on capable harnesses**
+**Skills customized for integrated workflow**
 
-- On harnesses with subagent support (Claude Code), subagent-driven-development is now required after plan approval
-- No longer offers a choice between subagent-driven and executing-plans
-- Executing-plans is only used on harnesses without subagent capability
+- Subagent-driven development dispatches Amplifier agents as specialists
+- Dispatching-parallel-agents selects Amplifier specialists per domain
+- Memory workflow integrated with git-notes state manager
 
-**OpenCode: Switched to native skills system**
+### Previous Fork Changes
 
-Superpowers for OpenCode now uses OpenCode's native `skill` tool instead of custom `use_skill`/`find_skills` tools. This is a cleaner integration that works with OpenCode's built-in skill discovery.
+- Specs/plans directory restructured (`docs/superpowers/specs/` and `docs/superpowers/plans/`)
+- Brainstorming → writing-plans transition enforced
+- Subagent-driven development mandatory on capable harnesses
+- OpenCode native skills support
+- Visual companion for brainstorming (opt-in, browser-based)
+- Instruction priority hierarchy in using-superpowers
+- Windows hook fixes (run-hook.cmd wrapper, escape_for_json performance)
+- Output discipline for implementer and reviewer prompts
+- Context gathering delegated to scout subagents
 
-**Migration required:** Skills must be symlinked to `~/.config/opencode/skills/superpowers/` (see updated installation docs).
+## v4.3.0 (2026-02-12)
 
-### Fixes
+This fix should dramatically improve superpowers skills compliance and should reduce the chances of Claude entering its native plan mode unintentionally.
 
-**OpenCode: Fixed agent reset on session start (#226)**
+### Changed
 
-The previous bootstrap injection method using `session.prompt({ noReply: true })` caused OpenCode to reset the selected agent to "build" on first message. Now uses `experimental.chat.system.transform` hook which modifies the system prompt directly without side effects.
+**Brainstorming skill now enforces its workflow instead of describing it**
 
-**OpenCode: Fixed Windows installation (#232)**
+Models were skipping the design phase and jumping straight to implementation skills like frontend-design, or collapsing the entire brainstorming process into a single text block. The skill now uses hard gates, a mandatory checklist, and a graphviz process flow to enforce compliance:
 
-- Removed dependency on `skills-core.js` (eliminates broken relative imports when file is copied instead of symlinked)
-- Added comprehensive Windows installation docs for cmd.exe, PowerShell, and Git Bash
-- Documented proper symlink vs junction usage for each platform
+- `<HARD-GATE>`: no implementation skills, code, or scaffolding until design is presented and user approves
+- Explicit checklist (6 items) that must be created as tasks and completed in order
+- Graphviz process flow with `writing-plans` as the only valid terminal state
+- Anti-pattern callout for "this is too simple to need a design" — the exact rationalization models use to skip the process
+- Design section sizing based on section complexity, not project complexity
 
-### New Features
+**Using-superpowers workflow graph intercepts EnterPlanMode**
 
-**Visual companion for brainstorming skill**
+Added an `EnterPlanMode` intercept to the skill flow graph. When the model is about to enter Claude's native plan mode, it checks whether brainstorming has happened and routes through the brainstorming skill instead. Plan mode is never entered.
 
-Added optional browser-based visual companion for brainstorming sessions. When users have a browser available, brainstorming can display interactive screens showing current phase, questions, and design decisions in a more readable format than terminal output.
+### Fixed
 
-Components:
-- `lib/brainstorm-server/` - WebSocket server for real-time updates
-- `skills/brainstorming/visual-companion.md` - Integration guide
-- Helper scripts for session management with proper isolation
-- Browser helper library for event capture
+**SessionStart hook now runs synchronously**
 
-The visual companion is opt-in and falls back gracefully to terminal-only operation.
-
-### Bug Fixes
-
-**Fixed Windows hook execution for Claude Code 2.1.x**
-
-Claude Code 2.1.x changed how hooks execute on Windows: it now auto-detects `.sh` files in commands and prepends `bash `. This broke the polyglot wrapper pattern because `bash "run-hook.cmd" session-start.sh` tries to execute the .cmd file as a bash script.
-
-Fix: hooks.json now calls session-start.sh directly. Claude Code 2.1.x handles the bash invocation automatically. Also added .gitattributes to enforce LF line endings for shell scripts (fixes CRLF issues on Windows checkout).
-
-**Brainstorming visual companion: reduced token cost and improved persistence**
-
-The visual companion now generates much smaller HTML per screen. The server automatically wraps bare content fragments in the frame template (header, CSS theme, feedback footer, interactive JS), so Claude writes only the content portion (~30 lines instead of ~260). Full HTML documents are still served as-is when Claude needs complete control.
-
-Other improvements:
-- `toggleSelect`/`send`/`selectedChoice` moved from inline template script to `helper.js` (auto-injected)
-- `start-server.sh --project-dir` persists mockups under `.superpowers/brainstorm/` instead of `/tmp`
-- `stop-server.sh` only deletes ephemeral `/tmp` sessions, preserving persistent ones
-- Dark mode fix: `sendToClaude` confirmation page now uses CSS variables instead of hardcoded colors
-- Skill restructured: SKILL.md is minimal (prompt + pointer); all visual companion details in progressive disclosure doc (`visual-companion.md`)
-- Prompt to user now notes the feature is new, token-intensive, and can be slow
-- Deleted redundant `CLAUDE-INSTRUCTIONS.md` (content folded into `visual-companion.md`)
-- Test fixes: correct env var (`BRAINSTORM_DIR`), polling-based startup wait, new tests for frame wrapping
-
-### Improvements
-
-**Instruction priority clarified in using-superpowers**
-
-Added explicit instruction priority hierarchy to prevent conflicts with user preferences:
-
-1. User's explicit instructions (CLAUDE.md, direct requests) — highest priority
-2. Superpowers skills — override default system behavior where they conflict
-3. Default system prompt — lowest priority
-
-This ensures users remain in control. If CLAUDE.md says "don't use TDD" and a skill says "always use TDD," CLAUDE.md wins.
+Changed `async: true` to `async: false` in hooks.json. When async, the hook could fail to complete before the model's first turn, meaning using-superpowers instructions weren't in context for the first message.
 
 ## v4.2.0 (2026-02-05)
 

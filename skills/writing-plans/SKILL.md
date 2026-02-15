@@ -125,7 +125,7 @@ After receiving the subagent's summary, present it to the user: "Plan complete w
 
 ## Task Structure
 
-```markdown
+````markdown
 ### Task N: [Component Name]
 
 **Agent:** [agent-name from AMPLIFIER-AGENTS.md]
@@ -137,11 +137,11 @@ After receiving the subagent's summary, present it to the user: "Plan complete w
 
 - [ ] **Step 1: Write the failing test**
 
-` ` `python
+```python
 def test_specific_behavior():
     result = function(input)
     assert result == expected
-` ` `
+```
 
 - [ ] **Step 2: Run test to verify it fails**
 
@@ -150,10 +150,10 @@ Expected: FAIL with "function not defined"
 
 - [ ] **Step 3: Write minimal implementation**
 
-` ` `python
+```python
 def function(input):
     return expected
-` ` `
+```
 
 - [ ] **Step 4: Run test to verify it passes**
 
@@ -162,11 +162,11 @@ Expected: PASS
 
 - [ ] **Step 5: Commit**
 
-` ` `bash
+```bash
 git add tests/path/test.py src/path/file.py
 git commit -m "feat: add specific feature"
-` ` `
 ```
+````
 
 ## Review Tasks
 
@@ -196,11 +196,11 @@ After completing each chunk of the plan:
 
 1. Dispatch plan-document-reviewer subagent (see plan-document-reviewer-prompt.md) for the current chunk
    - Provide: chunk content, path to spec document
-2. If ❌ Issues Found:
+2. If Issues Found:
    - Fix the issues in the chunk
    - Re-dispatch reviewer for that chunk
-   - Repeat until ✅ Approved
-3. If ✅ Approved: proceed to next chunk (or execution handoff if last chunk)
+   - Repeat until Approved
+3. If Approved: proceed to next chunk (or execution handoff if last chunk)
 
 **Chunk boundaries:** Use `## Chunk N: <name>` headings to delimit chunks. Each chunk should be ≤1000 lines and logically self-contained.
 
