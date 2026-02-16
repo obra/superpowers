@@ -45,7 +45,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
    cmd /c mklink /J "$env:USERPROFILE\.gemini\antigravity\skills\superpowers" "$env:USERPROFILE\.gemini\antigravity\superpowers\skills"
    ```
 
-3. Configure bootstrap — add to `~/.gemini/GEMINI.md` (Linux/macOS) or `%USERPROFILE%\.gemini\GEMINI.md` (Windows):
+3. Configure bootstrap — create or edit `~/.gemini/GEMINI.md` (Linux/macOS) or `%USERPROFILE%\.gemini\GEMINI.md` (Windows), then add:
 
    ```markdown
    ## Superpowers

@@ -36,7 +36,7 @@ Antigravity IDE has native skill discovery. Just clone and symlink.
 
 3. **Configure bootstrap** (ensures skills activate automatically):
 
-   Add to `~/.gemini/GEMINI.md` (Linux/macOS) or `%USERPROFILE%\.gemini\GEMINI.md` (Windows):
+   Create or edit `~/.gemini/GEMINI.md` (Linux/macOS) or `%USERPROFILE%\.gemini\GEMINI.md` (Windows), then add:
 
    ```markdown
    ## Superpowers
