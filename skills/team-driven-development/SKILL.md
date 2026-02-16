@@ -458,7 +458,12 @@ Justified if: Coordination saves >3 hours of human time
 
 ## Real-World Example
 
-See `./example-auth-feature.md` for a complete walkthrough of using team-driven development for an authentication feature with 8 tasks, 4 agents, and inter-agent coordination.
+See `./example-auth-feature.md` for a complete walkthrough of using team-driven development for an authentication feature. This example shows:
+- 8 tasks executed by 4 agents (lead + 2 implementers + reviewer)
+- Inter-agent coordination for API contracts
+- Security review catching 8 issues through adversarial discussion
+- Parallel implementation reducing wall-clock time
+- Cost comparison: $180 (teams) vs $70 (subagents), justified by security value and 75min time savings
 
 ## Troubleshooting
 
