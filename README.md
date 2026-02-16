@@ -74,7 +74,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 3. **writing-plans** - Activates with approved design. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
 
-4. **subagent-driven-development** or **executing-plans** - Activates with plan. Dispatches fresh subagent per task with two-stage review (spec compliance, then code quality), or executes in batches with human checkpoints.
+4. **subagent-driven-development**, **team-driven-development**, or **executing-plans** - Activates with plan. Dispatches fresh subagent per task with two-stage review (spec compliance, then code quality), uses collaborative agent teams with inter-agent communication for complex coordinated work, or executes in batches with human checkpoints.
 
 5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
 
@@ -105,6 +105,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 - **using-git-worktrees** - Parallel development branches
 - **finishing-a-development-branch** - Merge/PR decision workflow
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
+- **team-driven-development** - Collaborative agent teams with direct inter-agent communication for coordinated work (experimental, Opus 4.6+)
 
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
