@@ -39,8 +39,15 @@ REM (plugin still works, just without SessionStart context injection)
 exit /b 0
 CMDBLOCK
 
-# Unix: run the named script directly
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+# Unix: run the named script directly.
+# Prefer CLAUDE_PLUGIN_ROOT (set by Claude Code) over deriving from $0,
+# which resolves to the cwd instead of the script location when Claude Code
+# invokes the command via sh -c (BASH_SOURCE unavailable, $0 unreliable).
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ]; then
+  SCRIPT_DIR="${CLAUDE_PLUGIN_ROOT}/hooks"
+else
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+fi
 SCRIPT_NAME="$1"
 shift
 exec bash "${SCRIPT_DIR}/${SCRIPT_NAME}" "$@"
