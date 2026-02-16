@@ -49,6 +49,22 @@ This guide helps you choose between Claude's Agent Teams and the traditional Sub
 - Parallel task execution
 ```
 
+### Team Composition Flexibility
+
+**Subagents (rigid structure):**
+- Fixed 3-role pattern per task: Implementer → Spec Reviewer → Code Quality Reviewer
+- Same structure every time, no customization
+- Roles are predetermined by the skill
+
+**Agent Teams (flexible composition):**
+- **Customizable roles** based on project needs
+- Examples: Frontend/Backend specialists, Security expert, Performance analyst, Documentation writer
+- Team size adaptable (3-6 agents)
+- Roles can be specialized (e.g., "React specialist") or generalized (e.g., "Full-stack developer")
+- Mix and match based on task complexity
+
+**Key insight:** Subagents are a fixed workflow; agent teams are a collaboration framework you adapt to your needs.
+
 ### Communication Model
 
 **Subagents:**
@@ -201,6 +217,7 @@ Typical multiplier: 2-4x cost of subagent approach
 | **Context persistence** | ❌ Fresh per task | ✅ Per agent |
 | **Self-coordination** | ❌ No | ✅ Yes |
 | **Adversarial review** | ❌ No | ✅ Yes |
+| **Team composition** | ❌ Fixed (1 impl + 2 reviewers) | ✅ Flexible (customize roles) |
 | **Cost efficiency** | ✅ High | ❌ Low |
 | **Setup complexity** | ✅ Simple | ⚠️ Complex |
 | **Wall-clock speed** | ⚠️ Sequential | ✅ Parallel |

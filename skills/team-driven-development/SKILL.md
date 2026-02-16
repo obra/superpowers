@@ -98,7 +98,9 @@ Your implementation plan should identify:
 
 ## Team Composition
 
-### Recommended Roles
+**⚡ Flexible by Design:** Unlike the fixed subagent structure (always 1 implementer + 2 reviewers), agent teams support **any role composition** based on your project needs. The roles below are recommendations, not requirements.
+
+### Common Role Patterns
 
 **Team Lead (required):**
 - Orchestrates team and manages shared task list
@@ -123,6 +125,15 @@ Your implementation plan should identify:
 - Evaluates multiple approaches
 - Shares findings with team
 - Helps make architectural decisions
+
+### Customization Examples
+
+Adapt roles to your project:
+- **Full-stack feature:** Frontend specialist + Backend specialist + Integration tester
+- **Security-critical:** Implementer + Security reviewer + Penetration tester
+- **Documentation-heavy:** Developer + Technical writer + Examples creator
+- **Performance work:** Implementer + Performance analyst + Optimization specialist
+- **Legacy migration:** Code migrator + Test writer + Compatibility verifier
 
 ### Team Size Guidelines
 
