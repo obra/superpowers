@@ -421,15 +421,15 @@ Escalate to human when:
 ## Integration
 
 **Required workflow skills:**
-- **superpowers:using-git-worktrees** - REQUIRED: Isolated workspace for team
-- **superpowers:writing-plans** - Creates plan, identifies coordination needs
-- **superpowers:test-driven-development** - Teammates follow TDD
-- **superpowers:finishing-a-development-branch** - Complete after team done
+- **h-superpowers:using-git-worktrees** - REQUIRED: Isolated workspace for team
+- **h-superpowers:writing-plans** - Creates plan, identifies coordination needs
+- **h-superpowers:test-driven-development** - Teammates follow TDD
+- **h-superpowers:finishing-a-development-branch** - Complete after team done
 
 **Alternative workflows:**
-- **superpowers:subagent-driven-development** - Use for independent tasks instead
-- **superpowers:dispatching-parallel-agents** - Use for truly independent parallel work
-- **superpowers:executing-plans** - Use for sequential manual execution
+- **h-superpowers:subagent-driven-development** - Use for independent tasks instead
+- **h-superpowers:dispatching-parallel-agents** - Use for truly independent parallel work
+- **h-superpowers:executing-plans** - Use for sequential manual execution
 
 ## Cost Management
 
