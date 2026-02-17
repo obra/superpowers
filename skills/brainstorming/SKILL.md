@@ -94,3 +94,4 @@ digraph brainstorming {
 - **Explore alternatives** - Always propose 2-3 approaches before settling
 - **Incremental validation** - Present design, get approval before moving on
 - **Be flexible** - Go back and clarify when something doesn't make sense
+- **Preserve existing features** - When adding new functionality, ensure existing behavior is not broken or replaced; clarify if the user wants to extend or replace

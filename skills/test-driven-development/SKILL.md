@@ -203,6 +203,61 @@ Next failing test for next feature.
 | **Clear** | Name describes behavior | `test('test1')` |
 | **Shows intent** | Demonstrates desired API | Obscures what code should do |
 
+## Boundary Coverage
+
+**Test boundary values first, then mid-range values.**
+
+When testing variables with ranges (numbers, dates, collections), always include boundary values in your test cases:
+
+| Range Type | Boundary Values | Mid-Range Values |
+|------------|-----------------|------------------|
+| `[0, 1)` | `0`, `0.999...` (near 1) | `0.5` |
+| `[1, 100]` | `1`, `100` | `50` |
+| `(-∞, 0]` | `0`, `-1`, `-999...` | `-50` |
+| `[a, z]` | `'a'`, `'z'` | `'m'` |
+| `empty to N` | `0`, `1`, `N-1`, `N` | `N/2` |
+
+**Why boundaries matter:**
+- Most bugs occur at boundaries (off-by-one, inclusive vs exclusive, overflow)
+- Testing only mid-range values (0.25, 0.5, 0.75) misses boundary bugs
+- Boundary tests prove your understanding of the valid range
+
+<Good>
+```typescript
+// Testing a function accepting [0, 1) - inclusive zero, exclusive upper bound
+test('accepts values from 0 to just below 1', () => {
+  expect(processRatio(0)).toBe(0);           // lower boundary
+  expect(processRatio(0.999999999)).toBeCloseTo(1); // just below upper
+  expect(processRatio(0.5)).toBe(0.5);      // mid-range
+});
+
+test('rejects invalid values', () => {
+  expect(() => processRatio(-0.1)).toThrow(); // below lower
+  expect(() => processRatio(1)).toThrow();    // at upper (exclusive)
+});
+```
+</Good>
+
+<Bad>
+```typescript
+// Only mid-range values - misses boundary bugs!
+test('accepts valid ratios', () => {
+  expect(processRatio(0.25)).toBe(0.25);
+  expect(processRatio(0.5)).toBe(0.5);
+  expect(processRatio(0.75)).toBe(0.75);
+});
+```
+</Bad>
+
+**Gate Function:**
+```
+When writing tests for a range variable:
+1. Identify the exact boundaries (min, max, inclusive/exclusive)
+2. Write tests for each boundary value FIRST
+3. Then add 1-2 mid-range values
+4. Test values JUST outside boundaries (should fail/reject)
+```
+
 ## Why Order Matters
 
 **"I'll write tests after to verify it works"**

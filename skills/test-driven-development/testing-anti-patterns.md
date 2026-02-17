@@ -290,6 +290,76 @@ TDD cycle:
 - Can't explain why mock is needed
 - Mocking "just to be safe"
 
+## Anti-Pattern 6: Testing Schema Introspection Instead of Behavior
+
+**The violation:**
+```sql
+-- ❌ BAD: Testing that a database field exists with correct type
+SELECT table, name, type FROM system.columns
+WHERE database = 'default' AND table = 'users' AND name = 'email'
+```
+
+```typescript
+// ❌ BAD: Querying system tables to verify schema changes
+test('user table has email column', async () => {
+  const result = await db.query(
+    "SELECT column_name FROM information_schema.columns " +
+    "WHERE table_name = 'users' AND column_name = 'email'"
+  );
+  expect(result.rows).toHaveLength(1);
+});
+```
+
+**Why this is wrong:**
+- Tests verify implementation details (schema), not behavior (code works)
+- Schema can change for valid reasons (renaming, type migration) without breaking behavior
+- Doesn't prove the application actually functions correctly
+- Creates brittle tests that break on legitimate refactoring
+
+**The fix:**
+```typescript
+// ✅ GOOD: Test actual application behavior
+test('can create and retrieve user by email', async () => {
+  const user = await createUser({ email: 'test@example.com' });
+  const found = await findUserByEmail('test@example.com');
+  
+  expect(found.email).toBe('test@example.com');
+});
+
+test('validates email format', async () => {
+  await expect(
+    createUser({ email: 'invalid' })
+  ).rejects.toThrow('Invalid email format');
+});
+```
+
+### Gate Function
+
+```
+BEFORE writing tests for schema/database changes:
+  Ask: "Am I testing that the schema is correct, or that the code works?"
+
+  IF testing schema:
+    STOP - This is implementation testing, not behavior testing
+    
+  Instead:
+    1. Find or write tests that verify the functionality using the schema
+    2. If no such tests exist, write behavior tests first
+    3. Then refactor the schema - behavior tests prove it still works
+
+  Schema tests are only appropriate when:
+    - Enforcing database-level constraints (foreign keys, unique indexes)
+    - These constraints ARE the behavior being tested
+```
+
+### The Bottom Line
+
+**Test what the code does, not how the data is stored.**
+
+If you're querying system tables or introspecting schema, ask: "What behavior does this schema enable?"
+
+Write tests for that behavior. The schema tests will pass or fail based on implementation, but behavior tests prove the system works.
+
 ## The Bottom Line
 
 **Mocks are tools to isolate, not things to test.**
