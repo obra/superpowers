@@ -123,11 +123,12 @@ Which would you prefer? If focusing, which feature first?
 **If user picks one feature:** Continue the normal single-feature path. Note the other features for future sessions.
 
 **If user picks all features (multi-feature mode):**
-1. Identify shared dependencies between features — code that multiple features need but that doesn't exist yet
-2. Design each feature independently but note integration points
-3. Present designs per-feature (each gets its own approval)
-4. Write one design doc per feature, plus one for each shared dependency
-5. At transition, invoke writing-plans with multi-feature context so it creates a coordination manifest
+1. Run the multi-worktree readiness audit (see superpowers:using-git-worktrees) — identify port conflicts, environment gaps, platform-specific needs (scratch orgs, venvs, etc.) that could block parallel development. Remediation tasks become part of the shared dependency plan or a setup phase in the coordination manifest.
+2. Identify shared dependencies between features — code that multiple features need but that doesn't exist yet
+3. Design each feature independently but note integration points
+4. Present designs per-feature (each gets its own approval)
+5. Write one design doc per feature, plus one for each shared dependency
+6. At transition, invoke writing-plans with multi-feature context so it creates a coordination manifest
 
 **Key constraint:** Each agent works on one feature or one shared dependency. Never assign an agent work that spans features. This preserves agent context and prevents cross-feature interference.
 

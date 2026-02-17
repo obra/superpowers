@@ -129,21 +129,39 @@ The manifest defines execution order and worktree-to-plan mapping:
 **Shared Dependencies:**
 - Dependency 1: [name] — `YYYY-MM-DD-<shared-dep-1>.md`
 
+## Environment Readiness
+
+> From the multi-worktree readiness audit (superpowers:using-git-worktrees).
+
+**Findings:**
+- [List audit results: port conflicts, env gaps, platform needs]
+
+**Remediation (Phase 0):**
+- [Tasks to fix before worktree creation — e.g., "add PORT env var support", "create scratch orgs"]
+
 ## Execution Order
 
 ```mermaid
 graph TD
-    dep1[Shared Dep 1] --> feat1[Feature 1]
+    setup[Phase 0: Environment Readiness] --> dep1[Shared Dep 1]
+    dep1 --> feat1[Feature 1]
     dep1 --> feat2[Feature 2]
 ```
+
+### Phase 0: Environment Readiness (before any worktree creation)
+
+| Task | Description |
+|------|-------------|
+| [remediation-task] | [e.g., "Add PORT env var to dev server config"] |
+| [remediation-task] | [e.g., "Create scratch orgs for feature-1 and feature-2"] |
 
 ### Phase 1: Shared Dependencies (sequential or parallel if independent)
 
 | Order | Plan | Worktree Branch | Blocked By |
 |-------|------|-----------------|------------|
-| 1 | shared-dep-1 | feature/shared-dep-1 | — |
+| 1 | shared-dep-1 | feature/shared-dep-1 | Phase 0 |
 
-### Phase 2: Features (parallel after dependencies distributed)
+### Phase 2: Features (parallel after dependencies distributed, if readiness allows)
 
 | Order | Plan | Worktree Branch | Blocked By |
 |-------|------|-----------------|------------|

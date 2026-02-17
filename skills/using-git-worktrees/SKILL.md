@@ -175,9 +175,115 @@ Ready to implement <feature-name>
 - **Problem:** Breaks on projects using different tools
 - **Fix:** Auto-detect from project files (package.json, etc.)
 
+## Multi-Worktree Readiness Audit
+
+**REQUIRED before creating multiple worktrees.** Parallel worktrees share a machine, and many project conventions assume a single working copy. Audit and resolve these before creating any worktrees for multi-feature work.
+
+### Git Habits That Break
+
+| Habit | Problem | Fix |
+|-------|---------|-----|
+| `git add .` or `git add -A` | Stages files from the wrong context if run from the wrong directory | Always use explicit file paths: `git add src/auth/login.ts` |
+| `git checkout <branch>` | Worktrees lock their branch — you can't check out a branch that another worktree has checked out | Never switch branches inside a worktree. Each worktree owns its branch. |
+| `git stash` | Stash is global across worktrees — stashing in one can leak into another | Avoid stash in multi-worktree setups. Commit or discard instead. |
+| Relative paths in scripts | Scripts using `../` or assuming repo root may resolve incorrectly | Use `git rev-parse --show-toplevel` to get the worktree's root |
+
+### Port and Service Conflicts
+
+Multiple worktrees running dev servers, watchers, or test suites will fight over shared ports and resources.
+
+**Audit checklist:**
+
+```bash
+# Search for hardcoded ports in project config
+grep -rn "port" .env* vite.config.* webpack.config.* next.config.* docker-compose.* 2>/dev/null
+grep -rn "PORT" package.json Makefile 2>/dev/null
+```
+
+**Common conflicts and mitigations:**
+
+| Resource | Problem | Mitigation |
+|----------|---------|------------|
+| Dev server port (3000, 8080, etc.) | Two worktrees can't bind the same port | Use `PORT=0` for random port, or assign per-worktree: `PORT=300N` |
+| Database | Shared local DB means shared state | Use per-worktree DB name, or use Docker with unique container names |
+| Docker containers | Name collisions, port conflicts | Prefix container names with worktree/feature name |
+| File watchers (webpack, vite, tsc) | Multiple watchers on overlapping paths can thrash | Only run watchers in the worktree you're actively working in |
+| Lock files (`.lock`, `pidfile`) | Process in one worktree blocks another | Use per-worktree lock paths, or check for locks before starting |
+
+**If the project can't easily support parallel servers:** Note this in the coordination manifest. The orchestrator should run dependency and feature worktrees sequentially rather than in parallel, or accept that only one worktree runs a dev server at a time.
+
+### Platform-Specific Isolation
+
+Some platforms require more than just a separate directory — they need entirely separate environments.
+
+**Salesforce / SFDX:**
+- Each feature worktree likely needs its own scratch org
+- Create orgs before feature execution: `sf org create scratch --alias feature-1-org`
+- Map worktree → org in the coordination manifest so agents authenticate to the right org
+- Scratch org limits may constrain how many features can run in parallel
+
+**Mobile (iOS/Android):**
+- Simulators and emulators bind to specific ports and device IDs
+- Build caches (DerivedData, Gradle build dir) should be per-worktree
+- CocoaPods / Gradle dependencies need separate install per worktree
+
+### Dependency Installation
+
+Each worktree is a separate directory tree. Dependency managers install into the worktree, not globally (usually). Every worktree needs its own install.
+
+| Ecosystem | What to watch for |
+|-----------|-------------------|
+| **Node.js** | `node_modules/` is per-worktree — `npm install` in each. If using a lockfile, all worktrees get the same versions (good). If using workspaces or monorepo tools (nx, turbo), verify they resolve paths relative to the worktree root, not a hardcoded parent. |
+| **Python** | Virtual environments are per-directory. Create a separate venv per worktree: `python -m venv .venv` in each. If using `pyenv` with `.python-version`, the file is shared via git — that's fine, but the venv is not. Poetry and pipenv create envs keyed to directory path, so they naturally isolate. |
+| **Rust** | `target/` is per-worktree by default. No special handling needed. Cargo caches are global and shared safely. |
+| **Go** | Module cache is global and shared safely. `go build` outputs are per-directory. No special handling. |
+| **Java/Kotlin** | Gradle and Maven caches are global. Build dirs (`.gradle/`, `target/`) are per-worktree. Watch for Gradle daemon port conflicts if running parallel builds. |
+| **Ruby** | Bundler installs to `vendor/bundle` per-worktree if configured. Run `bundle install` in each worktree. |
+
+### Environment Files
+
+`.env` files are typically gitignored and won't exist in new worktrees. The orchestrator must handle this:
+
+```bash
+# After creating each worktree, copy environment config
+cp .env "$WORKTREE_DIR/feature-1/.env"
+
+# Or if env differs per feature (different ports, different DB names):
+# Create a modified .env per worktree
+sed 's/PORT=3000/PORT=3001/' .env > "$WORKTREE_DIR/feature-1/.env"
+```
+
+**If `.env` contains secrets:** Ask the user rather than copying automatically. Never commit `.env` files.
+
+### The Readiness Report
+
+After auditing, present findings before creating worktrees:
+
+```
+Multi-worktree readiness audit:
+
+✅ No port conflicts found (project uses PORT env var)
+✅ node_modules will install per-worktree
+⚠️  .env not tracked — will copy to each worktree
+⚠️  docker-compose.yml uses hardcoded container name "app-db"
+   → Will need unique names per worktree, or run sequentially
+❌ Salesforce project — each worktree needs its own scratch org
+   → Will create scratch orgs before feature execution
+
+Proceed with worktree creation? Or address issues first?
+```
+
+**If blockers found:** Fix them before creating worktrees. This might mean:
+- Adding port configuration support to the project
+- Creating a `.env.template` that uses dynamic values
+- Documenting scratch org creation in the coordination manifest
+- Deciding to run features sequentially instead of in parallel
+
+These fixes become tasks in the shared dependency plan or in the coordination manifest's setup phase.
+
 ## Multi-Feature Worktrees
 
-When a coordination manifest exists (multi-feature mode), each feature and each shared dependency gets its own worktree. The orchestrator creates them all up front.
+When a coordination manifest exists (multi-feature mode), each feature and each shared dependency gets its own worktree. The orchestrator creates them all up front — **after the readiness audit above passes.**
 
 ### Creating Multiple Worktrees
 
@@ -239,12 +345,14 @@ git merge feature/shared-dep-1 --no-edit
 
 | Phase | Action |
 |-------|--------|
-| Setup | Create all worktrees (dependencies + features) |
+| Readiness audit | Identify port conflicts, env gaps, platform needs (see above) |
+| Remediation | Fix blockers — add port config, create scratch orgs, prepare env files |
+| Setup | Create all worktrees (dependencies + features), install deps in each |
 | Dependency execution | One agent per dependency worktree |
 | Distribution | Merge completed dependency branches into feature worktrees |
-| Feature execution | One agent per feature worktree (parallel) |
+| Feature execution | One agent per feature worktree (parallel if readiness allows, sequential otherwise) |
 | Integration | Merge feature branches into base in dependency order |
-| Cleanup | Remove all worktrees after integration |
+| Cleanup | Remove all worktrees, scratch orgs, temp env files after integration |
 
 ### Key Rule: One Agent Per Worktree
 
