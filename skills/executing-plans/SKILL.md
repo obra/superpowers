@@ -1,15 +1,15 @@
 ---
 name: executing-plans
-description: Use when you have a written implementation plan to execute in a separate session with review checkpoints
+description: Use when you have a written implementation plan to execute continuously until complete, stopping only on blockers
 ---
 
 # Executing Plans
 
 ## Overview
 
-Load plan, review critically, execute tasks in batches, report for review between batches.
+Load plan, review critically, execute all tasks continuously. Stop only on blockers.
 
-**Core principle:** Batch execution with checkpoints for architect review.
+**Core principle:** Continuous execution — keep moving, stop only when blocked.
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
@@ -21,63 +21,51 @@ Load plan, review critically, execute tasks in batches, report for review betwee
 3. If concerns: Raise them with the user before starting
 4. If no concerns: Create TodoWrite and proceed
 
-### Step 2: Execute Batch
-**Default: First 3 tasks**
-
+### Step 2: Execute Tasks
 For each task:
 1. Mark as in_progress
 2. Follow each step exactly (plan has bite-sized steps)
 3. Run verifications as specified
 4. Mark as completed
+5. **Continue to the next task immediately** — don't stop for feedback
 
-### Step 3: Report
-When batch complete:
-- Show what was implemented
-- Show verification output
-- Say: "Ready for feedback."
+Show brief inline progress as you go (task name, verification result). The user can interrupt anytime if they want to redirect.
 
-### Step 4: Continue
-Based on feedback:
-- Apply changes if needed
-- Execute next batch
-- Repeat until complete
-
-### Step 5: Complete Development
+### Step 3: Complete Development
 
 After all tasks complete and verified:
-- **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
+- Announce: "I'm using the finishing-a-development-branch skill to complete this work."
+- **REQUIRED SUB-SKILL:** Use finishing-a-development-branch
 - Follow that skill to verify tests, present options, execute choice
 
-## When to Stop and Ask for Help
+## When to Stop
 
 **STOP executing immediately when:**
-- Hit a blocker mid-batch (missing dependency, test fails, instruction unclear)
+- Hit a blocker (missing dependency, test fails, instruction unclear)
 - Plan has critical gaps preventing starting
 - You don't understand an instruction
 - Verification fails repeatedly
 
-**Ask for clarification rather than guessing.**
+**Ask for clarification rather than guessing. Don't force through blockers.**
 
 ## When to Revisit Earlier Steps
 
 **Return to Review (Step 1) when:**
-- User updates the plan based on your feedback
+- The user updates the plan based on your feedback
 - Fundamental approach needs rethinking
-
-**Don't force through blockers** - stop and ask.
 
 ## Remember
 - Review plan critically first
 - Follow plan steps exactly
 - Don't skip verifications
 - Reference skills when plan says to
-- Between batches: just report and wait
+- **Keep executing** — don't stop between tasks for feedback
 - Stop when blocked, don't guess
 - Never start implementation on main/master branch without explicit user consent
 
 ## Integration
 
 **Required workflow skills:**
-- **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
-- **superpowers:writing-plans** - Creates the plan this skill executes
-- **superpowers:finishing-a-development-branch** - Complete development after all tasks
+- **using-git-worktrees** - Suggest isolated workspace before starting (user decides)
+- **writing-plans** - Creates the plan this skill executes
+- **finishing-a-development-branch** - Complete development after all tasks

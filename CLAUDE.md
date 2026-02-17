@@ -35,6 +35,8 @@ Resolve conflicts in favor of local customizations when they're in files you've 
 - **Updated worktree references** to sibling convention (`project--branch`)
 - **Replaced Jesse-specific paths** (e.g., `/home/jesse/` in tmux skill)
 - **AskUserQuestion over interviews** in brainstorming and plan handoffs
+- **executing-plans: continuous execution** — replaced batch-with-checkpoints model with continuous execution (stop only on blockers). Merged from essentials
+- **brainstorming: richer AskUserQuestion guidance** — multiSelect tips, recommended-option-first pattern. Merged from essentials
 
 ### What We Kept (and Why)
 
