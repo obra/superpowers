@@ -175,6 +175,81 @@ Ready to implement <feature-name>
 - **Problem:** Breaks on projects using different tools
 - **Fix:** Auto-detect from project files (package.json, etc.)
 
+## Multi-Feature Worktrees
+
+When a coordination manifest exists (multi-feature mode), each feature and each shared dependency gets its own worktree. The orchestrator creates them all up front.
+
+### Creating Multiple Worktrees
+
+Follow the same directory selection and safety verification as single worktrees. Create one worktree per plan entry:
+
+```bash
+# From the manifest — shared dependencies first
+git worktree add "$WORKTREE_DIR/shared-dep-1" -b feature/shared-dep-1
+git worktree add "$WORKTREE_DIR/feature-1" -b feature/feature-1
+git worktree add "$WORKTREE_DIR/feature-2" -b feature/feature-2
+```
+
+Run project setup and baseline tests in each worktree (same as single worktree flow).
+
+Report all worktrees at once:
+
+```
+Worktrees ready:
+  shared-dep-1  → <full-path>  (tests passing)
+  feature-1     → <full-path>  (tests passing)
+  feature-2     → <full-path>  (tests passing)
+```
+
+### Dependency Distribution
+
+When a shared dependency completes (all tasks done, tests green, reviewed), its changes must be distributed to every dependent feature worktree before those features begin implementation.
+
+**Process:**
+
+```bash
+# In the shared dependency worktree — ensure all work is committed
+cd "$WORKTREE_DIR/shared-dep-1"
+git log --oneline -5  # Verify commits look right
+
+# In each dependent feature worktree — merge the dependency branch
+cd "$WORKTREE_DIR/feature-1"
+git merge feature/shared-dep-1 --no-edit
+
+# Verify tests still pass after merge
+<test command>
+
+# Repeat for each dependent feature worktree
+cd "$WORKTREE_DIR/feature-2"
+git merge feature/shared-dep-1 --no-edit
+<test command>
+```
+
+**If merge conflicts occur:**
+- Resolve them in the feature worktree
+- Conflicts likely mean the dependency and feature touched the same code — escalate to the user
+- Do NOT proceed with feature implementation until the merge is clean and tests pass
+
+**If tests fail after merge:**
+- The dependency introduced a breaking change for the feature's baseline
+- Investigate and fix before proceeding
+- This is a sign the dependency's scope may need adjustment
+
+### Worktree Lifecycle in Multi-Feature Mode
+
+| Phase | Action |
+|-------|--------|
+| Setup | Create all worktrees (dependencies + features) |
+| Dependency execution | One agent per dependency worktree |
+| Distribution | Merge completed dependency branches into feature worktrees |
+| Feature execution | One agent per feature worktree (parallel) |
+| Integration | Merge feature branches into base in dependency order |
+| Cleanup | Remove all worktrees after integration |
+
+### Key Rule: One Agent Per Worktree
+
+Each worktree is a single agent's workspace. The agent works only within that worktree on the plan assigned to it. The orchestrator (lead agent or the user) coordinates between worktrees — agents never reach into another worktree.
+
 ## Example Workflow
 
 ```
@@ -210,9 +285,10 @@ Ready to implement auth feature
 
 **Called by:**
 - **brainstorming** (Phase 4) - REQUIRED when design is approved and implementation follows
+- **writing-plans** (multi-feature handoff) - Creates all worktrees per coordination manifest
 - **subagent-driven-development** - REQUIRED before executing any tasks
 - **executing-plans** - REQUIRED before executing any tasks
 - Any skill needing isolated workspace
 
 **Pairs with:**
-- **finishing-a-development-branch** - REQUIRED for cleanup after work complete
+- **finishing-a-development-branch** - REQUIRED for cleanup after work complete (called per worktree in multi-feature mode)

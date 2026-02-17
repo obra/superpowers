@@ -363,6 +363,73 @@ When all tasks marked complete:
 4. **Lead consolidates** - Creates summary of what was accomplished
 5. **Use finishing-a-development-branch** - Standard completion workflow
 
+## Multi-Feature Orchestration
+
+When a coordination manifest defines multiple features with shared dependencies, the team lead acts as **orchestrator** and sequences team deployments across worktrees.
+
+### Sequencing Team Deployments
+
+The orchestrator follows the manifest's execution order:
+
+```
+Phase 1: Deploy teams to shared dependency worktrees
+  → Wait for completion + review
+  → Distribute dependency branches to feature worktrees
+
+Phase 2: Deploy teams to feature worktrees (parallel)
+  → Each team operates independently in its own worktree
+  → Teams never reach into another worktree
+
+Phase 3: Integration
+  → Merge features into base branch per manifest order
+```
+
+### One Team Per Worktree
+
+Each worktree gets its own team (or subagent, for simpler plans). Teams are scoped to a single feature or dependency:
+
+```
+Worktree: .worktrees/shared-user-model
+  Team: lead + implementer-1 + reviewer-1
+  Plan: docs/plans/2025-03-15-shared-user-model.md
+
+Worktree: .worktrees/auth-feature
+  Team: lead + implementer-2 + reviewer-2
+  Plan: docs/plans/2025-03-15-auth-feature.md
+
+Worktree: .worktrees/reporting-feature
+  Team: lead + implementer-3 + reviewer-3
+  Plan: docs/plans/2025-03-15-reporting-feature.md
+```
+
+An agent that needs information from another feature's domain asks the orchestrator, not the other team's agents directly. This prevents context bleed.
+
+### Dependency-Aware Scheduling
+
+The orchestrator must not start a feature team until all of that feature's shared dependencies are:
+1. Complete (all tasks done, tests passing)
+2. Reviewed (code quality approved)
+3. Distributed (merged into the feature's worktree, tests passing post-merge)
+
+If dependencies are independent of each other, their teams can run in parallel. If dependencies have their own ordering (dependency B depends on dependency A), they must be sequenced.
+
+### Cost Implications
+
+Multi-feature orchestration multiplies team cost:
+
+```
+Single feature team (4 agents):   ~$160-180
+3-feature orchestration:
+  1 shared dependency team (3):   ~$100
+  2 feature teams (4 each):       ~$320
+  Orchestrator overhead:           ~$50
+  Total:                           ~$470
+
+vs. sequential single-feature:     ~$480-540  (3 × $160-180)
+```
+
+Parallel execution saves wall-clock time without significant cost increase. The orchestrator overhead is offset by eliminating context-switching between features.
+
 ## Communication Best Practices
 
 ### When to Message vs Execute
@@ -421,13 +488,13 @@ Escalate to human when:
 ## Integration
 
 **Required workflow skills:**
-- **superpowers:using-git-worktrees** - REQUIRED: Isolated workspace for team
-- **superpowers:writing-plans** - Creates plan, identifies coordination needs
+- **superpowers:using-git-worktrees** - REQUIRED: Isolated workspace for team (one per feature/dependency in multi-feature mode)
+- **superpowers:writing-plans** - Creates plan and coordination manifest for multi-feature
 - **superpowers:test-driven-development** - Teammates follow TDD
-- **superpowers:finishing-a-development-branch** - Complete after team done
+- **superpowers:finishing-a-development-branch** - Complete after team done (per worktree, then integration)
 
 **Alternative workflows:**
-- **superpowers:subagent-driven-development** - Use for independent tasks instead
+- **superpowers:subagent-driven-development** - Use for independent tasks or simpler feature worktrees that don't need full teams
 - **superpowers:dispatching-parallel-agents** - Use for truly independent parallel work
 - **superpowers:executing-plans** - Use for sequential manual execution
 

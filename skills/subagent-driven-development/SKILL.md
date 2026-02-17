@@ -164,6 +164,15 @@ Final reviewer: All requirements met, ready to merge
 Done!
 ```
 
+## Multi-Feature Context
+
+When dispatched by an orchestrator as part of a multi-feature coordination manifest, this skill executes one plan in one worktree. The same single-feature process applies with these additions:
+
+- **Scope is your plan only.** The orchestrator assigned you a specific plan file — execute only that plan's tasks.
+- **Shared dependencies are pre-merged.** The orchestrator distributed completed dependency branches into your worktree before starting you. Treat that code as existing baseline.
+- **Report completion to orchestrator.** After all tasks pass review and finishing-a-development-branch runs, the orchestrator handles integration with other feature branches.
+- **Never cross worktree boundaries.** If you discover your feature needs code from another feature's domain, flag it to the orchestrator — don't implement it yourself.
+
 ## Advantages
 
 **vs. Manual execution:**

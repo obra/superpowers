@@ -25,10 +25,11 @@ You MUST create a task for each of these items and complete them in order:
 
 1. **Explore project context** — check files, docs, recent commits
 2. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-3. **Propose 2-3 approaches** — with trade-offs and your recommendation
-4. **Present design** — in sections scaled to their complexity, get user approval after each section
-5. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` and commit
-6. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+3. **Scope check: single or multi-feature?** — detect whether the request spans multiple distinct features (see Multi-Feature Detection below)
+4. **Propose 2-3 approaches** — with trade-offs and your recommendation
+5. **Present design** — in sections scaled to their complexity, get user approval after each section
+6. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` and commit
+7. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
 
@@ -36,6 +37,9 @@ You MUST create a task for each of these items and complete them in order:
 digraph brainstorming {
     "Explore project context" [shape=box];
     "Ask clarifying questions" [shape=box];
+    "Multi-feature detection" [shape=diamond];
+    "User picks focus" [shape=box];
+    "User accepts multi-feature (higher risk)" [shape=box];
     "Propose 2-3 approaches" [shape=box];
     "Present design sections" [shape=box];
     "User approves design?" [shape=diamond];
@@ -43,7 +47,12 @@ digraph brainstorming {
     "Invoke writing-plans skill" [shape=doublecircle];
 
     "Explore project context" -> "Ask clarifying questions";
-    "Ask clarifying questions" -> "Propose 2-3 approaches";
+    "Ask clarifying questions" -> "Multi-feature detection";
+    "Multi-feature detection" -> "Propose 2-3 approaches" [label="single feature"];
+    "Multi-feature detection" -> "User picks focus" [label="multiple features detected"];
+    "User picks focus" -> "Propose 2-3 approaches" [label="narrowed to one"];
+    "Multi-feature detection" -> "User accepts multi-feature (higher risk)" [label="user chooses all"];
+    "User accepts multi-feature (higher risk)" -> "Propose 2-3 approaches";
     "Propose 2-3 approaches" -> "Present design sections";
     "Present design sections" -> "User approves design?";
     "User approves design?" -> "Present design sections" [label="no, revise"];
@@ -85,6 +94,42 @@ digraph brainstorming {
 **Implementation:**
 - Invoke the writing-plans skill to create a detailed implementation plan
 - Do NOT invoke any other skill. writing-plans is the next step.
+
+## Multi-Feature Detection
+
+After clarifying questions, assess whether the request contains multiple distinct features. A "distinct feature" is functionality that could ship independently — it has its own user-facing behavior, its own tests, and its own reason to exist.
+
+**Signals of multi-feature scope:**
+- User describes unrelated behaviors in a single request ("add auth AND a reporting dashboard")
+- Different subsystems or layers affected with no shared purpose
+- Request would naturally map to multiple PRs in a code review
+
+**If multiple features detected, present the scope check:**
+
+```
+I've identified N distinct features in this request:
+
+1. **Feature A** — [one-line description]
+2. **Feature B** — [one-line description]
+3. **Shared dependency** — [if any: e.g., "both need a new user model"]
+
+Options:
+1. Focus on one feature (recommended — lower risk, cleaner PRs)
+2. Proceed with all features (higher risk — requires multi-feature orchestration)
+
+Which would you prefer? If focusing, which feature first?
+```
+
+**If user picks one feature:** Continue the normal single-feature path. Note the other features for future sessions.
+
+**If user picks all features (multi-feature mode):**
+1. Identify shared dependencies between features — code that multiple features need but that doesn't exist yet
+2. Design each feature independently but note integration points
+3. Present designs per-feature (each gets its own approval)
+4. Write one design doc per feature, plus one for each shared dependency
+5. At transition, invoke writing-plans with multi-feature context so it creates a coordination manifest
+
+**Key constraint:** Each agent works on one feature or one shared dependency. Never assign an agent work that spans features. This preserves agent context and prevents cross-feature interference.
 
 ## Key Principles
 

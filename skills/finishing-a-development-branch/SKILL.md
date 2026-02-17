@@ -158,6 +158,41 @@ git worktree remove <worktree-path>
 | 3. Keep as-is | - | - | ✓ | - |
 | 4. Discard | - | - | - | ✓ (force) |
 
+## Multi-Feature Completion
+
+When this skill is called as part of a multi-feature coordination manifest, there are two levels of completion:
+
+### Per-Worktree Completion (called by each agent)
+
+Each agent finishing its feature/dependency worktree follows the normal process above (verify tests → present options → execute). Typically the agent chooses **Option 3 (Keep as-is)** because integration is handled by the orchestrator.
+
+### Orchestrator Integration (after all worktrees complete)
+
+The orchestrator merges completed branches into the base branch in the order defined by the coordination manifest:
+
+```bash
+# 1. Merge shared dependencies first
+git checkout <base-branch>
+git merge feature/shared-dep-1 --no-edit
+<test command>  # Must pass before continuing
+
+# 2. Merge features in manifest order
+git merge feature/feature-1 --no-edit
+<test command>  # Must pass before continuing
+
+git merge feature/feature-2 --no-edit
+<test command>  # Must pass — full integration verified
+```
+
+**If merge conflicts occur:** Resolve in context of the base branch. The conflict likely means two features touched the same code — this is the integration risk the user accepted in multi-feature mode.
+
+**If tests fail after a feature merge:** The feature may have an incompatibility with previously merged work. Fix before merging the next feature.
+
+**After all merges:**
+- Clean up all worktrees: `git worktree remove <path>` for each
+- Clean up feature branches: `git branch -d <branch>` for each
+- Report final integration status
+
 ## Common Mistakes
 
 **Skipping test verification**
@@ -195,6 +230,8 @@ git worktree remove <worktree-path>
 **Called by:**
 - **subagent-driven-development** (Step 7) - After all tasks complete
 - **executing-plans** (Step 5) - After all batches complete
+- **Orchestrator** (multi-feature mode) - Per worktree, then integration merge
 
 **Pairs with:**
-- **using-git-worktrees** - Cleans up worktree created by that skill
+- **using-git-worktrees** - Cleans up worktree(s) created by that skill
+- **writing-plans** (coordination manifest) - Defines integration order for multi-feature

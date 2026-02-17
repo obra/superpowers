@@ -49,6 +49,22 @@ After all tasks complete and verified:
 - **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
 - Follow that skill to verify tests, present options, execute choice
 
+## Multi-Feature Context
+
+When executing a plan that is part of a multi-feature coordination manifest, you are one agent in one worktree working on one plan. The orchestrator manages the bigger picture.
+
+**What changes:**
+- Your plan file is one of several referenced by a coordination manifest
+- You work only in your assigned worktree — never modify files outside it
+- Shared dependencies may have been merged into your worktree before you started — treat them as existing code, not something you build
+- When you finish, report completion to the orchestrator. Do NOT start work on another feature's plan
+
+**What stays the same:**
+- Load and review your plan exactly as in single-feature mode
+- Execute in batches with checkpoints
+- Follow all the same quality gates
+- Use finishing-a-development-branch when your plan is done
+
 ## When to Stop and Ask for Help
 
 **STOP executing immediately when:**
@@ -80,5 +96,10 @@ After all tasks complete and verified:
 
 **Required workflow skills:**
 - **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
-- **superpowers:writing-plans** - Creates the plan this skill executes
+- **superpowers:writing-plans** - Creates the plan this skill executes (and coordination manifest in multi-feature mode)
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
+
+**Multi-feature context:**
+- Orchestrator dispatches one executing-plans agent per worktree
+- Agent works only on the plan assigned to its worktree
+- Shared dependencies are distributed by the orchestrator before feature agents start
