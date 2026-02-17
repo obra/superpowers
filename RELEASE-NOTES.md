@@ -1,5 +1,31 @@
 # Superpowers Release Notes
 
+## v4.3.0 (2026-02-12)
+
+This fix should dramatically improve superpowers skills compliance and should reduce the chances of Claude entering its native plan mode unintentionally.
+
+### Changed
+
+**Brainstorming skill now enforces its workflow instead of describing it**
+
+Models were skipping the design phase and jumping straight to implementation skills like frontend-design, or collapsing the entire brainstorming process into a single text block. The skill now uses hard gates, a mandatory checklist, and a graphviz process flow to enforce compliance:
+
+- `<HARD-GATE>`: no implementation skills, code, or scaffolding until design is presented and user approves
+- Explicit checklist (6 items) that must be created as tasks and completed in order
+- Graphviz process flow with `writing-plans` as the only valid terminal state
+- Anti-pattern callout for "this is too simple to need a design" — the exact rationalization models use to skip the process
+- Design section sizing based on section complexity, not project complexity
+
+**Using-superpowers workflow graph intercepts EnterPlanMode**
+
+Added an `EnterPlanMode` intercept to the skill flow graph. When the model is about to enter Claude's native plan mode, it checks whether brainstorming has happened and routes through the brainstorming skill instead. Plan mode is never entered.
+
+### Fixed
+
+**SessionStart hook now runs synchronously**
+
+Changed `async: true` to `async: false` in hooks.json. When async, the hook could fail to complete before the model's first turn, meaning using-superpowers instructions weren't in context for the first message.
+
 ## v4.2.0 (2026-02-05)
 
 ### Breaking Changes
