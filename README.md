@@ -71,6 +71,22 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
 
+### Gemini CLI / Antigravity
+
+[Gemini CLI](https://geminicli.com) / [Antigravity](https://antigravity.google)
+
+Tell Gemini (or run locally):
+
+```bash
+# Clone the repo
+git clone https://github.com/obra/superpowers.git ~/.gemini/superpowers
+
+# Run the installer
+~/.gemini/superpowers/.gemini/install.sh
+```
+
+**Detailed docs:** [.gemini/INSTALL.md](.gemini/INSTALL.md)
+
 ### Verify Installation
 
 Start a new session in your chosen platform and ask for something that should trigger a skill (for example, "help me plan this feature" or "let's debug this issue"). The agent should automatically invoke the relevant superpowers skill.
