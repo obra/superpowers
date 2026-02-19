@@ -10,7 +10,7 @@
 ### 1. Clone Superpowers
 
 ```bash
-git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
+git clone https://github.com/danhkhoi/press-craft.git ~/.config/opencode/press-craft
 ```
 
 ### 2. Register the Plugin
@@ -20,7 +20,7 @@ Create a symlink so OpenCode discovers the plugin:
 ```bash
 mkdir -p ~/.config/opencode/plugins
 rm -f ~/.config/opencode/plugins/superpowers.js
-ln -s ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js ~/.config/opencode/plugins/superpowers.js
+ln -s ~/.config/opencode/press-craft/.opencode/plugins/superpowers.js ~/.config/opencode/plugins/superpowers.js
 ```
 
 ### 3. Symlink Skills
@@ -30,7 +30,7 @@ Create a symlink so OpenCode's native skill tool discovers superpowers skills:
 ```bash
 mkdir -p ~/.config/opencode/skills
 rm -rf ~/.config/opencode/skills/superpowers
-ln -s ~/.config/opencode/superpowers/skills ~/.config/opencode/skills/superpowers
+ln -s ~/.config/opencode/press-craft/skills ~/.config/opencode/skills/superpowers
 ```
 
 ### 4. Restart OpenCode
@@ -87,7 +87,7 @@ Create project-specific skills in `.opencode/skills/` within your project.
 ## Updating
 
 ```bash
-cd ~/.config/opencode/superpowers
+cd ~/.config/opencode/press-craft
 git pull
 ```
 
@@ -96,13 +96,13 @@ git pull
 ### Plugin not loading
 
 1. Check plugin symlink: `ls -l ~/.config/opencode/plugins/superpowers.js`
-2. Check source exists: `ls ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js`
+2. Check source exists: `ls ~/.config/opencode/press-craft/.opencode/plugins/superpowers.js`
 3. Check OpenCode logs for errors
 
 ### Skills not found
 
 1. Check skills symlink: `ls -l ~/.config/opencode/skills/superpowers`
-2. Verify it points to: `~/.config/opencode/superpowers/skills`
+2. Verify it points to: `~/.config/opencode/press-craft/skills`
 3. Use `skill` tool to list what's discovered
 
 ### Tool mapping
@@ -115,5 +115,5 @@ When skills reference Claude Code tools:
 
 ## Getting Help
 
-- Report issues: https://github.com/obra/superpowers/issues
-- Full documentation: https://github.com/obra/superpowers/blob/main/docs/README.opencode.md
+- Report issues: https://github.com/danhkhoi/press-craft/issues
+- Full documentation: https://github.com/danhkhoi/press-craft/blob/main/docs/README.opencode.md

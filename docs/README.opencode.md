@@ -7,7 +7,7 @@ Complete guide for using Superpowers with [OpenCode.ai](https://opencode.ai).
 Tell OpenCode:
 
 ```
-Clone https://github.com/obra/superpowers to ~/.config/opencode/superpowers, then create directory ~/.config/opencode/plugins, then symlink ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js to ~/.config/opencode/plugins/superpowers.js, then symlink ~/.config/opencode/superpowers/skills to ~/.config/opencode/skills/superpowers, then restart opencode.
+Clone https://github.com/danhkhoi/press-craft to ~/.config/opencode/press-craft, then create directory ~/.config/opencode/plugins, then symlink ~/.config/opencode/press-craft/.opencode/plugins/superpowers.js to ~/.config/opencode/plugins/superpowers.js, then symlink ~/.config/opencode/press-craft/skills to ~/.config/opencode/skills/superpowers, then restart opencode.
 ```
 
 ## Manual Installation
@@ -21,10 +21,10 @@ Clone https://github.com/obra/superpowers to ~/.config/opencode/superpowers, the
 
 ```bash
 # 1. Install Superpowers (or update existing)
-if [ -d ~/.config/opencode/superpowers ]; then
-  cd ~/.config/opencode/superpowers && git pull
+if [ -d ~/.config/opencode/press-craft ]; then
+  cd ~/.config/opencode/press-craft && git pull
 else
-  git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
+  git clone https://github.com/danhkhoi/press-craft.git ~/.config/opencode/press-craft
 fi
 
 # 2. Create directories
@@ -35,8 +35,8 @@ rm -f ~/.config/opencode/plugins/superpowers.js
 rm -rf ~/.config/opencode/skills/superpowers
 
 # 4. Create symlinks
-ln -s ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js ~/.config/opencode/plugins/superpowers.js
-ln -s ~/.config/opencode/superpowers/skills ~/.config/opencode/skills/superpowers
+ln -s ~/.config/opencode/press-craft/.opencode/plugins/superpowers.js ~/.config/opencode/plugins/superpowers.js
+ln -s ~/.config/opencode/press-craft/skills ~/.config/opencode/skills/superpowers
 
 # 5. Restart OpenCode
 ```
@@ -66,7 +66,7 @@ Run as Administrator, or with Developer Mode enabled:
 
 ```cmd
 :: 1. Install Superpowers
-git clone https://github.com/obra/superpowers.git "%USERPROFILE%\.config\opencode\superpowers"
+git clone https://github.com/danhkhoi/press-craft.git "%USERPROFILE%\.config\opencode\press-craft"
 
 :: 2. Create directories
 mkdir "%USERPROFILE%\.config\opencode\plugins" 2>nul
@@ -77,10 +77,10 @@ del "%USERPROFILE%\.config\opencode\plugins\superpowers.js" 2>nul
 rmdir "%USERPROFILE%\.config\opencode\skills\superpowers" 2>nul
 
 :: 4. Create plugin symlink (requires Developer Mode or Admin)
-mklink "%USERPROFILE%\.config\opencode\plugins\superpowers.js" "%USERPROFILE%\.config\opencode\superpowers\.opencode\plugins\superpowers.js"
+mklink "%USERPROFILE%\.config\opencode\plugins\superpowers.js" "%USERPROFILE%\.config\opencode\press-craft\.opencode\plugins\superpowers.js"
 
 :: 5. Create skills junction (works without special privileges)
-mklink /J "%USERPROFILE%\.config\opencode\skills\superpowers" "%USERPROFILE%\.config\opencode\superpowers\skills"
+mklink /J "%USERPROFILE%\.config\opencode\skills\superpowers" "%USERPROFILE%\.config\opencode\press-craft\skills"
 
 :: 6. Restart OpenCode
 ```
@@ -91,7 +91,7 @@ Run as Administrator, or with Developer Mode enabled:
 
 ```powershell
 # 1. Install Superpowers
-git clone https://github.com/obra/superpowers.git "$env:USERPROFILE\.config\opencode\superpowers"
+git clone https://github.com/danhkhoi/press-craft.git "$env:USERPROFILE\.config\opencode\press-craft"
 
 # 2. Create directories
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.config\opencode\plugins"
@@ -102,10 +102,10 @@ Remove-Item "$env:USERPROFILE\.config\opencode\plugins\superpowers.js" -Force -E
 Remove-Item "$env:USERPROFILE\.config\opencode\skills\superpowers" -Force -ErrorAction SilentlyContinue
 
 # 4. Create plugin symlink (requires Developer Mode or Admin)
-New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.config\opencode\plugins\superpowers.js" -Target "$env:USERPROFILE\.config\opencode\superpowers\.opencode\plugins\superpowers.js"
+New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.config\opencode\plugins\superpowers.js" -Target "$env:USERPROFILE\.config\opencode\press-craft\.opencode\plugins\superpowers.js"
 
 # 5. Create skills junction (works without special privileges)
-New-Item -ItemType Junction -Path "$env:USERPROFILE\.config\opencode\skills\superpowers" -Target "$env:USERPROFILE\.config\opencode\superpowers\skills"
+New-Item -ItemType Junction -Path "$env:USERPROFILE\.config\opencode\skills\superpowers" -Target "$env:USERPROFILE\.config\opencode\press-craft\skills"
 
 # 6. Restart OpenCode
 ```
@@ -116,7 +116,7 @@ Note: Git Bash's native `ln` command copies files instead of creating symlinks. 
 
 ```bash
 # 1. Install Superpowers
-git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
+git clone https://github.com/danhkhoi/press-craft.git ~/.config/opencode/press-craft
 
 # 2. Create directories
 mkdir -p ~/.config/opencode/plugins ~/.config/opencode/skills
@@ -126,10 +126,10 @@ rm -f ~/.config/opencode/plugins/superpowers.js 2>/dev/null
 rm -rf ~/.config/opencode/skills/superpowers 2>/dev/null
 
 # 4. Create plugin symlink (requires Developer Mode or Admin)
-cmd //c "mklink \"$(cygpath -w ~/.config/opencode/plugins/superpowers.js)\" \"$(cygpath -w ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js)\""
+cmd //c "mklink \"$(cygpath -w ~/.config/opencode/plugins/superpowers.js)\" \"$(cygpath -w ~/.config/opencode/press-craft/.opencode/plugins/superpowers.js)\""
 
 # 5. Create skills junction (works without special privileges)
-cmd //c "mklink /J \"$(cygpath -w ~/.config/opencode/skills/superpowers)\" \"$(cygpath -w ~/.config/opencode/superpowers/skills)\""
+cmd //c "mklink /J \"$(cygpath -w ~/.config/opencode/skills/superpowers)\" \"$(cygpath -w ~/.config/opencode/press-craft/skills)\""
 
 # 6. Restart OpenCode
 ```
@@ -273,7 +273,7 @@ Skills are discovered by OpenCode's native skill system. Each skill has a `SKILL
 ## Updating
 
 ```bash
-cd ~/.config/opencode/superpowers
+cd ~/.config/opencode/press-craft
 git pull
 ```
 
@@ -308,8 +308,8 @@ If you see `Cannot find module` errors on Windows:
 
 ## Getting Help
 
-- Report issues: https://github.com/obra/superpowers/issues
-- Main documentation: https://github.com/obra/superpowers
+- Report issues: https://github.com/danhkhoi/press-craft/issues
+- Main documentation: https://github.com/danhkhoi/press-craft
 - OpenCode docs: https://opencode.ai/docs/
 
 ## Testing
