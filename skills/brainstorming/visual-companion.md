@@ -4,16 +4,15 @@ Browser-based visual brainstorming companion for showing mockups, diagrams, and 
 
 ## When to Use
 
-Use the visual companion when the content needs **spatial or visual representation** to communicate — when seeing it is better than reading about it.
+Use the visual companion when seeing beats describing:
 
-- **UI mockups** — layouts, navigation, component designs, page flows
-- **Architecture diagrams** — box-and-arrow component relationships, data flow
-- **Design polish** — look and feel, color, typography, spacing
-- **Spatial relationships** — state machines, system topologies
+- **UI mockups** — layouts, navigation, component designs
+- **Architecture diagrams** — system components, data flow, relationships
+- **Complex choices** — multi-option decisions with visual trade-offs
+- **Design polish** — when the question is about look and feel
+- **Spatial relationships** — file structures, database schemas, state machines
 
-**The test:** If your content is primarily text (descriptions, bullet points, pros/cons lists, code snippets), it belongs in the terminal even when the visual companion is running. The browser is not a prettier terminal — it's for content that can't be communicated as effectively in text.
-
-**When brainstorming a UI feature:** The primary use of the visual companion should be **mocking up the product itself** — what will the end user see? Show the wizard steps, the page layouts, the component designs. Architecture and implementation questions still go in the terminal.
+Don't use it for simple text questions, code review, or when the user prefers terminal-only interaction.
 
 ## How It Works
 
@@ -83,6 +82,7 @@ Use `--url-host` to control what hostname is printed in the returned URL JSON.
 Write just the content that goes inside the page. The server wraps it in the frame template automatically (header, theme CSS, selection indicator, and all interactive infrastructure).
 
 **Minimal example:**
+
 ```html
 <h2>Which layout works better?</h2>
 <p class="subtitle">Consider readability and visual hierarchy</p>
@@ -112,6 +112,7 @@ That's it. No `<html>`, no CSS, no `<script>` tags needed. The server provides a
 The frame template provides these CSS classes for your content:
 
 ### Options (A/B/C choices)
+
 ```html
 <div class="options">
   <div class="option" data-choice="a" onclick="toggleSelect(this)">
@@ -125,6 +126,7 @@ The frame template provides these CSS classes for your content:
 ```
 
 **Multi-select:** Add `data-multiselect` to the container to let users select multiple options. Each click toggles the item. The indicator bar shows the count.
+
 ```html
 <div class="options" data-multiselect>
   <!-- same option markup — users can select/deselect multiple -->
@@ -132,6 +134,7 @@ The frame template provides these CSS classes for your content:
 ```
 
 ### Cards (visual designs)
+
 ```html
 <div class="cards">
   <div class="card" data-choice="design1" onclick="toggleSelect(this)">
@@ -145,6 +148,7 @@ The frame template provides these CSS classes for your content:
 ```
 
 ### Mockup container
+
 ```html
 <div class="mockup">
   <div class="mockup-header">Preview: Dashboard Layout</div>
@@ -153,6 +157,7 @@ The frame template provides these CSS classes for your content:
 ```
 
 ### Split view (side-by-side)
+
 ```html
 <div class="split">
   <div class="mockup"><!-- left --></div>
@@ -161,6 +166,7 @@ The frame template provides these CSS classes for your content:
 ```
 
 ### Pros/Cons
+
 ```html
 <div class="pros-cons">
   <div class="pros"><h4>Pros</h4><ul><li>Benefit</li></ul></div>
@@ -169,6 +175,7 @@ The frame template provides these CSS classes for your content:
 ```
 
 ### Mock elements (wireframe building blocks)
+
 ```html
 <div class="mock-nav">Logo | Home | About | Contact</div>
 <div style="display: flex;">
@@ -181,6 +188,7 @@ The frame template provides these CSS classes for your content:
 ```
 
 ### Typography and sections
+
 - `h2` — page title
 - `h3` — section heading
 - `.subtitle` — secondary text below title
