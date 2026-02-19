@@ -109,6 +109,13 @@ The frame template provides these CSS classes for your content:
 </div>
 ```
 
+**Multi-select:** Add `data-multiselect` to the container to let users select multiple options. Each click toggles the item. The indicator bar shows the count.
+```html
+<div class="options" data-multiselect>
+  <!-- same option markup — users can select/deselect multiple -->
+</div>
+```
+
 ### Cards (visual designs)
 ```html
 <div class="cards">
