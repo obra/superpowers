@@ -53,6 +53,16 @@ Task tool (general-purpose):
     - Did they solve the wrong problem?
     - Did they implement the right feature but wrong way?
 
+    ## Decisions Log Context
+
+    <DECISIONS>
+    {ORCHESTRATOR_PASTES_DECISIONS_LOG_HERE}
+    </DECISIONS>
+
+    If the Decisions Log records an intentional deviation from the plan
+    (with rationale), that is NOT a spec violation. Evaluate the deviation
+    against the recorded rationale, not against the original plan text.
+
     **Verify by reading code, not by trusting report.**
 
     Report:

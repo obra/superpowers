@@ -44,6 +44,21 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 ---
 ```
 
+## Companion Files (Persistent Planning)
+
+After writing the plan, generate two companion files using @persistent-planning templates:
+
+1. `docs/plans/YYYY-MM-DD-<feature>-findings.md`
+   - Copy findings-template.md
+   - Fill `{FEATURE_NAME}` with the feature name
+
+2. `docs/plans/YYYY-MM-DD-<feature>-progress.md`
+   - Copy progress-template.md
+   - Fill `{FEATURE_NAME}` and `{DATE}`
+   - Pre-populate Task Status with all tasks from plan (all `- [ ]`)
+
+Confirm all three files exist before offering execution options.
+
 ## Task Structure
 
 ````markdown

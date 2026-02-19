@@ -15,6 +15,17 @@ Task tool (superpowers:code-reviewer):
   BASE_SHA: [commit before task]
   HEAD_SHA: [current commit]
   DESCRIPTION: [task summary]
+
+  ## Implementation Context
+
+  <ERROR_HISTORY>
+  {ORCHESTRATOR_PASTES_ERROR_LOG_HERE}
+  </ERROR_HISTORY>
+
+  If the error log shows repeated failures with a standard approach,
+  and the implementer chose an alternative, evaluate the alternative
+  on its merits. A working non-standard approach that avoids a known
+  failure is preferable to a "clean" approach that doesn't work.
 ```
 
 **Code reviewer returns:** Strengths, Issues (Critical/Important/Minor), Assessment

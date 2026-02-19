@@ -14,6 +14,19 @@ if [ -d "$legacy_skills_dir" ]; then
     warning_message="\n\n<important-reminder>IN YOUR FIRST REPLY AFTER SEEING THIS MESSAGE YOU MUST TELL THE USER:⚠️ **WARNING:** Superpowers now uses Claude Code's skills system. Custom skills in ~/.config/superpowers/skills will not be read. Move custom skills to ~/.claude/skills instead. To make this message go away, remove ~/.config/superpowers/skills</important-reminder>"
 fi
 
+# Detect active plans for session recovery
+active_plan_message=""
+if [ -d "docs/plans" ]; then
+    for pf in docs/plans/*-progress.md; do
+        [ -f "$pf" ] || continue
+        if grep -q '^\- \[ \]' "$pf"; then
+            PLAN_BASE=$(basename "$pf" | sed 's/-progress\.md$//')
+            active_plan_message="\n\n<important-reminder>Active plan detected: ${PLAN_BASE}\nUse @persistent-planning session recovery protocol.\nRead: docs/plans/${PLAN_BASE}-progress.md and docs/plans/${PLAN_BASE}-findings.md</important-reminder>"
+            break
+        fi
+    done
+fi
+
 # Read using-superpowers content
 using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>&1 || echo "Error reading using-superpowers skill")
 
@@ -32,7 +45,8 @@ escape_for_json() {
 
 using_superpowers_escaped=$(escape_for_json "$using_superpowers_content")
 warning_escaped=$(escape_for_json "$warning_message")
-session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}\n</EXTREMELY_IMPORTANT>"
+active_plan_escaped=$(escape_for_json "$active_plan_message")
+session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}${active_plan_escaped}\n</EXTREMELY_IMPORTANT>"
 
 # Output context injection as JSON.
 # Keep both shapes for compatibility:

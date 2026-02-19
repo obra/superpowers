@@ -82,6 +82,21 @@ digraph process {
 }
 ```
 
+## Persistent Planning Integration
+
+Before dispatching EACH implementer subagent:
+1. Read `*-findings.md` for the active plan
+2. If findings > 200 lines, use only the Summary section
+3. Include findings content in subagent prompt under `## Context from Previous Tasks`
+4. Check Error Log for failures relevant to this task's domain
+
+After EACH task completes (all reviews pass):
+1. Update `*-progress.md`: check off task with timestamp
+2. Append any new findings from implementer's report to `*-findings.md`
+3. Record review results in progress.md Review Results table
+4. Every 2 tasks: re-read findings and assess cross-cutting concerns
+5. If plan change needed: record decision in findings Decisions Log (do NOT edit the plan)
+
 ## Prompt Templates
 
 - `./implementer-prompt.md` - Dispatch implementer subagent

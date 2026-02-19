@@ -16,6 +16,17 @@ Task tool (general-purpose):
 
     [Scene-setting: where this fits, dependencies, architectural context]
 
+    ## Context from Previous Tasks
+
+    <FINDINGS>
+    {ORCHESTRATOR_PASTES_FINDINGS_CONTENT_HERE}
+    </FINDINGS>
+
+    Use this context to:
+    - Avoid approaches that already failed (see Error Log)
+    - Reuse discovered resources and patterns
+    - Respect decisions that deviated from the original plan
+
     ## Before You Begin
 
     If you have questions about:
@@ -67,6 +78,18 @@ Task tool (general-purpose):
 
     If you find issues during self-review, fix them now before reporting.
 
+    ## Reporting New Discoveries
+
+    In your completion report, include a section:
+
+    ### Discoveries
+    - Technical insights: [any architecture/API/codebase discoveries]
+    - Useful files: [paths to files future tasks might need]
+    - Gotchas: [anything surprising or non-obvious]
+    - Failed approaches: [what you tried that didn't work and why]
+
+    The orchestrator will merge these into the shared findings file.
+
     ## Report Format
 
     When done, report:
@@ -74,5 +97,6 @@ Task tool (general-purpose):
     - What you tested and test results
     - Files changed
     - Self-review findings (if any)
+    - Discoveries (see above)
     - Any issues or concerns
 ```

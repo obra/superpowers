@@ -49,6 +49,25 @@ After all tasks complete and verified:
 - **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
 - Follow that skill to verify tests, present options, execute choice
 
+## Persistent Planning Integration
+
+Before starting execution:
+1. Verify companion files exist (`*-findings.md`, `*-progress.md`)
+2. If missing, generate them from @persistent-planning templates
+
+After each task in a batch:
+1. Update `*-progress.md` task status with timestamp
+
+Between batches (during report):
+1. Include progress summary from `*-progress.md`
+2. Note any findings or error patterns from `*-findings.md`
+3. Update Session Log in progress.md
+
+On session recovery (after `/clear`):
+1. Read `*-progress.md` to find last completed task
+2. Resume from next unchecked task
+3. Follow @persistent-planning session-recovery.md protocol
+
 ## When to Stop and Ask for Help
 
 **STOP executing immediately when:**
