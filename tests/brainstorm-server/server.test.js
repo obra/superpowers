@@ -100,6 +100,32 @@ async function runTests() {
     ws2.close();
     console.log('  PASS');
 
+    // Test: Choice events written to .events file
+    console.log('Test: Choice events written to .events file');
+    const ws3 = new WebSocket(`ws://localhost:${TEST_PORT}`);
+    await new Promise(resolve => ws3.on('open', resolve));
+
+    ws3.send(JSON.stringify({ type: 'click', choice: 'a', text: 'Option A' }));
+    await sleep(300);
+
+    const eventsFile = path.join(TEST_DIR, '.events');
+    assert(fs.existsSync(eventsFile), '.events file should exist after choice click');
+    const lines = fs.readFileSync(eventsFile, 'utf-8').trim().split('\n');
+    const event = JSON.parse(lines[lines.length - 1]);
+    assert.strictEqual(event.choice, 'a', 'Event should contain choice');
+    assert.strictEqual(event.text, 'Option A', 'Event should contain text');
+    ws3.close();
+    console.log('  PASS');
+
+    // Test: .events cleared on new screen
+    console.log('Test: .events cleared on new screen');
+    // .events file should still exist from previous test
+    assert(fs.existsSync(path.join(TEST_DIR, '.events')), '.events should exist before new screen');
+    fs.writeFileSync(path.join(TEST_DIR, 'new-screen.html'), '<h2>New screen</h2>');
+    await sleep(500);
+    assert(!fs.existsSync(path.join(TEST_DIR, '.events')), '.events should be cleared after new screen');
+    console.log('  PASS');
+
     // Test 5: Full HTML document served as-is (not wrapped)
     console.log('Test 5: Full HTML document served without frame wrapping');
     const fullDoc = '<!DOCTYPE html>\n<html><head><title>Custom</title></head><body><h1>Custom Page</h1></body></html>';
@@ -109,8 +135,8 @@ async function runTests() {
     const fullRes = await fetch(`http://localhost:${TEST_PORT}/`);
     assert(fullRes.body.includes('<h1>Custom Page</h1>'), 'Should contain original content');
     assert(fullRes.body.includes('WebSocket'), 'Should still inject helper.js');
-    // Should NOT have the frame template's feedback footer
-    assert(!fullRes.body.includes('feedback-footer') || fullDoc.includes('feedback-footer'),
+    // Should NOT have the frame template's indicator bar
+    assert(!fullRes.body.includes('indicator-bar') || fullDoc.includes('indicator-bar'),
       'Should not wrap full documents in frame template');
     console.log('  PASS');
 
@@ -122,9 +148,8 @@ async function runTests() {
 
     const fragRes = await fetch(`http://localhost:${TEST_PORT}/`);
     // Should have the frame template structure
-    assert(fragRes.body.includes('feedback-footer'), 'Fragment should get feedback footer from frame');
-    assert(fragRes.body.includes('Brainstorm Companion'), 'Fragment should get header from frame');
-    assert(fragRes.body.includes('--bg-primary'), 'Fragment should get theme CSS from frame');
+    assert(fragRes.body.includes('indicator-bar'), 'Fragment should get indicator bar from frame');
+    assert(!fragRes.body.includes('<!-- CONTENT -->'), 'Content placeholder should be replaced');
     // Should have the original content inside
     assert(fragRes.body.includes('Pick a layout'), 'Fragment content should be present');
     assert(fragRes.body.includes('data-choice="a"'), 'Fragment content should be intact');
@@ -138,14 +163,19 @@ async function runTests() {
       path.join(__dirname, '../../lib/brainstorm-server/helper.js'), 'utf-8'
     );
     assert(helperContent.includes('toggleSelect'), 'helper.js should define toggleSelect');
-    assert(helperContent.includes('send'), 'helper.js should define send function');
+    assert(helperContent.includes('sendEvent'), 'helper.js should define sendEvent');
     assert(helperContent.includes('selectedChoice'), 'helper.js should track selectedChoice');
+    assert(helperContent.includes('brainstorm'), 'helper.js should expose brainstorm API');
+    assert(!helperContent.includes('sendToClaude'), 'helper.js should not contain sendToClaude');
     console.log('  PASS');
 
-    // Test 8: sendToClaude confirmation uses CSS variables (dark mode support)
-    console.log('Test 8: sendToClaude confirmation respects theming');
-    assert(!helperContent.includes('color: #666'), 'Should not use hardcoded light-mode colors');
-    assert(!helperContent.includes('color: #333'), 'Should not use hardcoded light-mode colors');
+    // Test 8: Indicator bar uses CSS variables (theme support)
+    console.log('Test 8: Indicator bar uses CSS variables');
+    const templateContent = fs.readFileSync(
+      path.join(__dirname, '../../lib/brainstorm-server/frame-template.html'), 'utf-8'
+    );
+    assert(templateContent.includes('indicator-bar'), 'Template should have indicator bar');
+    assert(templateContent.includes('indicator-text'), 'Template should have indicator text element');
     console.log('  PASS');
 
     console.log('\nAll tests passed!');

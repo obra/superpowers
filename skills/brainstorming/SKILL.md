@@ -113,12 +113,16 @@ After writing the spec document:
 - **Incremental validation** - Present design, get approval before moving on
 - **Be flexible** - Go back and clarify when something doesn't make sense
 
-## Visual Companion (Claude Code Only)
+## Visual Companion
 
 A browser-based visual companion for showing mockups, diagrams, and options during brainstorming. Use it whenever visual representation would make feedback easier than text descriptions alone.
 
-**When the topic involves visual decisions, ask:**
-> "This involves some visual decisions. I can show mockups in a browser window so you can see options and give feedback visually. This feature is still new — it can be token-intensive and a bit slow, but it works well for layout, design, and architecture questions. Want to try it? (Requires opening a local URL)"
+**You do NOT need browser access or browser-control tools.** You start a Node.js web server (via shell command) and write HTML files to a directory. The user opens the URL in their own browser. That's it. If you can run shell commands, you can use the visual companion. Works on any platform — Claude Code, Codex, or any environment with shell access.
+
+**When the topic involves visual decisions, ask — and this MUST be the only question in the message:**
+> "This involves some visual decisions. I can start a local web server that serves mockups — you'd open a URL in your browser to see options and click to select. Want to try it?"
+
+Do not combine this with clarifying questions or other content. Wait for the user's response before continuing. If they decline, proceed with text-only brainstorming.
 
 If they agree, read the detailed guide before proceeding:
-`${CLAUDE_PLUGIN_ROOT}/skills/brainstorming/visual-companion.md`
+`skills/brainstorming/visual-companion.md`

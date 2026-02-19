@@ -15,9 +15,9 @@ Don't use it for simple text questions, code review, or when the user prefers te
 
 ## How It Works
 
-The server watches a directory for HTML files and serves the newest one to the browser. You write HTML content, the user sees it in their browser, clicks options or types feedback, and you receive their response as JSON.
+The server watches a directory for HTML files and serves the newest one to the browser. You write HTML content, the user sees it in their browser and can click to select options. Selections are recorded to a `.events` file that you read on your next turn.
 
-**Content fragments vs full documents:** If your HTML file starts with `<!DOCTYPE` or `<html`, the server serves it as-is (just injects the helper script). Otherwise, the server automatically wraps your content in the frame template — adding the header, CSS theme, feedback footer, and all interactive infrastructure. **Write content fragments by default.** Only write full documents when you need complete control over the page.
+**Content fragments vs full documents:** If your HTML file starts with `<!DOCTYPE` or `<html`, the server serves it as-is (just injects the helper script). Otherwise, the server automatically wraps your content in the frame template — adding the header, CSS theme, selection indicator, and all interactive infrastructure. **Write content fragments by default.** Only write full documents when you need complete control over the page.
 
 ## Starting a Session
 
@@ -33,36 +33,39 @@ Save `screen_dir` from the response. Tell user to open the URL.
 
 **Note:** Pass the project root as `--project-dir` so mockups persist in `.superpowers/brainstorm/` and survive server restarts. Without it, files go to `/tmp` and get cleaned up. Remind the user to add `.superpowers/` to `.gitignore` if it's not already there.
 
+**If background processes are reaped in your environment:** run in foreground from a persistent terminal session:
+
+```bash
+${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/start-server.sh --project-dir /path/to/project --foreground
+```
+
+In `--foreground` mode, the command stays attached and serves until interrupted.
+
 ## The Loop
 
-1. **Start watcher first** (background bash) — avoids race condition:
-   ```bash
-   ${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/wait-for-feedback.sh $SCREEN_DIR
-   ```
-
-2. **Write HTML** to a new file in `screen_dir`:
+1. **Write HTML** to a new file in `screen_dir`:
    - Use semantic filenames: `platform.html`, `visual-style.html`, `layout.html`
    - **Never reuse filenames** — each screen gets a fresh file
    - Use Write tool — **never use cat/heredoc** (dumps noise into terminal)
    - Server automatically serves the newest file
 
-3. **Tell user what to expect:**
+2. **Tell user what to expect and end your turn:**
    - Remind them of the URL (every step, not just first)
    - Give a brief text summary of what's on screen (e.g., "Showing 3 layout options for the homepage")
+   - Ask them to respond in the terminal: "Take a look and let me know what you think. Click to select an option if you'd like."
 
-4. **Wait for feedback** — call `TaskOutput(task_id, block=true, timeout=600000)`
-   - If timeout, call TaskOutput again (watcher still running)
-   - After 3 timeouts (30 min), say "Let me know when you want to continue"
+3. **On your next turn** — after the user responds in the terminal:
+   - Read `$SCREEN_DIR/.events` if it exists — this contains the user's browser interactions (clicks, selections) as JSON lines
+   - Merge with the user's terminal text to get the full picture
+   - The terminal message is the primary feedback; `.events` provides structured interaction data
 
-5. **Process feedback** — returns JSON like `{"choice": "a", "feedback": "make header smaller"}`
+4. **Iterate or advance** — if feedback changes current screen, write a new file (e.g., `layout-v2.html`). Only move to the next question when the current step is validated.
 
-6. **Iterate or advance** — if feedback changes current screen, write a new file (e.g., `layout-v2.html`). Only move to the next question when the current step is validated.
-
-7. Repeat until done.
+5. Repeat until done.
 
 ## Writing Content Fragments
 
-Write just the content that goes inside the page. The server wraps it in the frame template automatically (header, theme CSS, feedback footer, interactive JS).
+Write just the content that goes inside the page. The server wraps it in the frame template automatically (header, theme CSS, selection indicator, and all interactive infrastructure).
 
 **Minimal example:**
 ```html
@@ -162,16 +165,19 @@ The frame template provides these CSS classes for your content:
 - `.section` — content block with bottom margin
 - `.label` — small uppercase label text
 
-## User Feedback Format
+## Browser Events Format
 
-```json
-{
-  "choice": "option-id",
-  "feedback": "user notes"
-}
+When the user clicks options in the browser, their interactions are recorded to `$SCREEN_DIR/.events` (one JSON object per line). The file is cleared automatically when you push a new screen.
+
+```jsonl
+{"type":"click","choice":"a","text":"Option A - Simple Layout","timestamp":1706000101}
+{"type":"click","choice":"c","text":"Option C - Complex Grid","timestamp":1706000108}
+{"type":"click","choice":"b","text":"Option B - Hybrid","timestamp":1706000115}
 ```
 
-Both fields are optional — user may select without notes, or send notes without a selection.
+The full event stream shows the user's exploration path — they may click multiple options before settling. The last `choice` event is typically the final selection, but the pattern of clicks can reveal hesitation or preferences worth asking about.
+
+If `.events` doesn't exist, the user didn't interact with the browser — use only their terminal text.
 
 ## Design Tips
 
@@ -200,4 +206,4 @@ If the session used `--project-dir`, mockup files persist in `.superpowers/brain
 ## Reference
 
 - Frame template (CSS reference): `${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/frame-template.html`
-- Helper script (JS API): `${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/helper.js`
+- Helper script (client-side): `${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/helper.js`

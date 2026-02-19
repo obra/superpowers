@@ -8,12 +8,11 @@
      *
      * This template provides a consistent frame with:
      * - OS-aware light/dark theming
-     * - Fixed header and feedback footer
+     * - Fixed header and selection indicator bar
      * - Scrollable main content area
      * - CSS helpers for common UI patterns
      *
-     * CLAUDE: Replace the contents of #claude-content with your content.
-     * Keep the header, main wrapper, and feedback-footer intact.
+     * Content is injected via placeholder comment in #claude-content.
      */
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -79,37 +78,21 @@
     .main { flex: 1; overflow-y: auto; }
     #claude-content { padding: 2rem; min-height: 100%; }
 
-    .feedback-footer {
+    .indicator-bar {
       background: var(--bg-secondary);
       border-top: 1px solid var(--border);
-      padding: 0.75rem 1.5rem;
+      padding: 0.5rem 1.5rem;
       flex-shrink: 0;
+      text-align: center;
     }
-    .feedback-footer label { display: block; font-size: 0.65rem; color: var(--text-secondary); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.05em; }
-    .feedback-row { display: flex; gap: 0.5rem; }
-    .feedback-footer textarea {
-      flex: 1;
-      background: var(--bg-primary);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 0.5rem 0.75rem;
-      color: var(--text-primary);
-      font-family: inherit;
-      font-size: 0.85rem;
-      resize: none;
-      height: 36px;
+    .indicator-bar span {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
     }
-    .feedback-footer textarea:focus { outline: none; border-color: var(--accent); }
-    .feedback-footer button {
-      background: var(--accent);
-      color: white;
-      border: none;
-      padding: 0 1rem;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      cursor: pointer;
+    .indicator-bar .selected-text {
+      color: var(--accent);
+      font-weight: 500;
     }
-    .feedback-footer button:hover { background: var(--accent-hover); }
 
     /* ===== TYPOGRAPHY ===== */
     h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; }
@@ -218,18 +201,12 @@
 
   <div class="main">
     <div id="claude-content">
-      <!-- CLAUDE: Replace this content -->
-      <h2>Visual Brainstorming</h2>
-      <p class="subtitle">Claude will show mockups and options here.</p>
+      <!-- CONTENT -->
     </div>
   </div>
 
-  <div class="feedback-footer">
-    <label>Feedback for Claude</label>
-    <div class="feedback-row">
-      <textarea id="feedback" placeholder="Add notes (optional)..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send()}"></textarea>
-      <button onclick="send()">Send</button>
-    </div>
+  <div class="indicator-bar">
+    <span id="indicator-text">Click an option above, then return to the terminal</span>
   </div>
 
 </body>
