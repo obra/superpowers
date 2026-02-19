@@ -4,15 +4,25 @@ Browser-based visual brainstorming companion for showing mockups, diagrams, and 
 
 ## When to Use
 
-Use the visual companion when seeing beats describing:
+Decide per-question, not per-session. The test: **would the user understand this better by seeing it than reading it?**
 
-- **UI mockups** — layouts, navigation, component designs
-- **Architecture diagrams** — system components, data flow, relationships
-- **Complex choices** — multi-option decisions with visual trade-offs
-- **Design polish** — when the question is about look and feel
-- **Spatial relationships** — file structures, database schemas, state machines
+**Use the browser** when the content itself is visual:
 
-Don't use it for simple text questions, code review, or when the user prefers terminal-only interaction.
+- **UI mockups** — wireframes, layouts, navigation structures, component designs
+- **Architecture diagrams** — system components, data flow, relationship maps
+- **Side-by-side visual comparisons** — comparing two layouts, two color schemes, two design directions
+- **Design polish** — when the question is about look and feel, spacing, visual hierarchy
+- **Spatial relationships** — state machines, flowcharts, entity relationships rendered as diagrams
+
+**Use the terminal** when the content is text or tabular:
+
+- **Requirements and scope questions** — "what does X mean?", "which features are in scope?"
+- **Conceptual A/B/C choices** — picking between approaches described in words
+- **Tradeoff lists** — pros/cons, comparison tables
+- **Technical decisions** — API design, data modeling, architectural approach selection
+- **Clarifying questions** — anything where the answer is words, not a visual preference
+
+A question *about* a UI topic is not automatically a visual question. "What kind of wizard do you want?" is conceptual — use the terminal. "Which of these wizard layouts feels right?" is visual — use the browser.
 
 ## How It Works
 
