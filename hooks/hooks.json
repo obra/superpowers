@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh",
+            "command": "bash -lc 'ROOT=\"$CLAUDE_PLUGIN_ROOT\"; if command -v cygpath >/dev/null 2>&1; then ROOT=\"$(cygpath -u \"$ROOT\")\"; fi; \"$ROOT/hooks/session-start.sh\"'",
             "async": false
           }
         ]
