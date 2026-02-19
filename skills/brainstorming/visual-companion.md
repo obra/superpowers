@@ -4,14 +4,16 @@ Browser-based visual brainstorming companion for showing mockups, diagrams, and 
 
 ## When to Use
 
-Use the visual companion when seeing beats describing:
-- **UI mockups** — layouts, navigation, component designs
-- **Architecture diagrams** — system components, data flow, relationships
-- **Complex choices** — multi-option decisions with visual trade-offs
-- **Design polish** — when the question is about look and feel
-- **Spatial relationships** — file structures, database schemas, state machines
+Use the visual companion when the content needs **spatial or visual representation** to communicate — when seeing it is better than reading about it.
 
-Don't use it for simple text questions, code review, or when the user prefers terminal-only interaction.
+- **UI mockups** — layouts, navigation, component designs, page flows
+- **Architecture diagrams** — box-and-arrow component relationships, data flow
+- **Design polish** — look and feel, color, typography, spacing
+- **Spatial relationships** — state machines, system topologies
+
+**The test:** If your content is primarily text (descriptions, bullet points, pros/cons lists, code snippets), it belongs in the terminal even when the visual companion is running. The browser is not a prettier terminal — it's for content that can't be communicated as effectively in text.
+
+**When brainstorming a UI feature:** The primary use of the visual companion should be **mocking up the product itself** — what will the end user see? Show the wizard steps, the page layouts, the component designs. Architecture and implementation questions still go in the terminal.
 
 ## How It Works
 
@@ -33,6 +35,8 @@ Save `screen_dir` from the response. Tell user to open the URL.
 
 **Note:** Pass the project root as `--project-dir` so mockups persist in `.superpowers/brainstorm/` and survive server restarts. Without it, files go to `/tmp` and get cleaned up. Remind the user to add `.superpowers/` to `.gitignore` if it's not already there.
 
+**Codex behavior:** In Codex (`CODEX_CI=1`), `start-server.sh` auto-switches to foreground mode by default because background jobs may be reaped. Use `--background` only if your environment reliably preserves detached processes.
+
 **If background processes are reaped in your environment:** run in foreground from a persistent terminal session:
 
 ```bash
@@ -40,6 +44,17 @@ ${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/start-server.sh --project-dir /path/
 ```
 
 In `--foreground` mode, the command stays attached and serves until interrupted.
+
+If the URL is unreachable from your browser (common in remote/containerized setups), bind a non-loopback host:
+
+```bash
+${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/start-server.sh \
+  --project-dir /path/to/project \
+  --host 0.0.0.0 \
+  --url-host localhost
+```
+
+Use `--url-host` to control what hostname is printed in the returned URL JSON.
 
 ## The Loop
 
