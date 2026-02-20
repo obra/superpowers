@@ -59,7 +59,7 @@ Tell Qwen:
 Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.qwen/INSTALL.md
 ```
 
-**Detailed docs:** [.qwen/INSTALL.md](.qwen/INSTALL.md)
+**Detailed docs:** [docs/README.qwen.md](docs/README.qwen.md)
 
 ### Codex
 

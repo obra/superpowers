@@ -6,7 +6,7 @@ Guide for using Superpowers with [Qwen Code CLI](https://github.com/QwenLM/qwen-
 
 Tell Qwen:
 
-```
+```text
 Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.qwen/INSTALL.md
 ```
 
@@ -62,7 +62,7 @@ Skills reference Claude Code tools. Qwen equivalents:
 | `Edit` / `replace` | `replace` |
 | `Search` | `search_file_content` |
 | `Glob` | `glob` |
-| `Bash` | `run_shell_command` |
+| `Shell` | `run_shell_command` |
 | `WebFetch` | `web_fetch` |
 
 ## Updating

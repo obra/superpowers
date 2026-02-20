@@ -58,7 +58,7 @@ You should see symlinks pointing to skill directories in `~/.qwen/superpowers/sk
 
 Use Qwen's native skill discovery:
 
-```
+```text
 /skills
 ```
 
@@ -66,13 +66,13 @@ Use Qwen's native skill discovery:
 
 Ask Qwen to use a specific skill:
 
-```
+```text
 use the brainstorming skill
 ```
 
 Or reference it directly:
 
-```
+```text
 help me plan this feature using the writing-plans skill
 ```
 

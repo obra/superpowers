@@ -19,13 +19,6 @@ if [ ! -d "$REPO_SKILLS_DIR" ]; then
     exit 1
 fi
 
-# Ensure directories exist
-mkdir -p "$QWEN_DIR"
-mkdir -p "$SKILLS_DIR"
-
-# --- Link skills individually (hub pattern) ---
-echo "Linking skills from $REPO_SKILLS_DIR to $SKILLS_DIR..."
-
 # If skills dir is a symlink (old-style), convert to directory
 if [ -L "$SKILLS_DIR" ]; then
     echo "Converting $SKILLS_DIR from symlink to directory..."
@@ -33,9 +26,18 @@ if [ -L "$SKILLS_DIR" ]; then
     mkdir -p "$SKILLS_DIR"
 fi
 
+# Ensure directories exist
+mkdir -p "$QWEN_DIR"
+mkdir -p "$SKILLS_DIR"
+
+# --- Link skills individually (hub pattern) ---
+echo "Linking skills from $REPO_SKILLS_DIR to $SKILLS_DIR..."
+
 for skill_path in "$REPO_SKILLS_DIR"/*/; do
     if [ -d "$skill_path" ]; then
         skill_name=$(basename "$skill_path")
+        # Strip trailing slash from path
+        skill_path="${skill_path%/}"
         target_path="$SKILLS_DIR/$skill_name"
 
         if [ -e "$target_path" ] || [ -L "$target_path" ]; then
@@ -95,8 +97,8 @@ else
     echo "Injecting Superpowers context into $QWEN_MD..."
 fi
 
-# Trim trailing blank lines
-awk 'NF{p=1} p' "$QWEN_MD" > "${QWEN_MD}.tmp" && mv "${QWEN_MD}.tmp" "$QWEN_MD"
+# Trim trailing blank lines (defensive: ensures output even for empty files)
+awk 'NF{p=1} p; END{if(!p)print ""}' "$QWEN_MD" > "${QWEN_MD}.tmp" && mv "${QWEN_MD}.tmp" "$QWEN_MD"
 
 # Append context block
 echo -e "\n\n$CONTEXT_BLOCK" >> "$QWEN_MD"
