@@ -2,6 +2,19 @@
 
 **Load this reference when:** reviewing a skill library for quality issues, preparing to fix skill routing problems, or verifying skills meet best practices before deployment.
 
+## Contents
+
+1. [When to Audit](#when-to-audit)
+2. [Audit Checklist](#audit-checklist)
+   - [Phase 1: Structure Scan](#phase-1-structure-scan)
+   - [Phase 2: Description Quality](#phase-2-description-quality)
+   - [Phase 3: Trigger Overlap Detection](#phase-3-trigger-overlap-detection)
+   - [Phase 4: Progressive Disclosure Check](#phase-4-progressive-disclosure-check)
+   - [Phase 5: Context Budget Check](#phase-5-context-budget-check)
+3. [Audit Report Template](#audit-report-template)
+4. [Real-World Example](#real-world-example)
+5. [Connection to TDD](#connection-to-tdd)
+
 ## Overview
 
 Writing-skills teaches how to CREATE skills with TDD. This reference teaches how to AUDIT existing skills — finding structural issues, trigger conflicts, and quality gaps across a skill library.
@@ -22,13 +35,13 @@ Writing-skills teaches how to CREATE skills with TDD. This reference teaches how
 
 Check every skill for structural compliance:
 
-```
+```text
 For each skill directory:
 - [ ] SKILL.md exists (exact spelling, case-sensitive)
 - [ ] YAML frontmatter has --- delimiters
 - [ ] name: present, kebab-case, matches folder name
 - [ ] description: present, under 1024 chars
-- [ ] description: starts with action/trigger, NOT "A skill for..."
+- [ ] description: starts with trigger condition, NOT "A skill for..."
 - [ ] SKILL.md under 500 lines
 - [ ] All file references resolve (no broken links)
 ```
@@ -42,20 +55,22 @@ for dir in */; do
   # Check SKILL.md exists
   [ ! -f "$file" ] && echo "FAIL: $skill — missing SKILL.md" && continue
 
+  status="OK"
+
   # Check frontmatter
-  head -1 "$file" | grep -q "^---" || echo "FAIL: $skill — no frontmatter"
+  head -1 "$file" | grep -q "^---" || { echo "FAIL: $skill — no frontmatter"; status="FAIL"; }
 
   # Check name field
-  grep -q "^name:" "$file" || echo "FAIL: $skill — no name field"
+  grep -q "^name:" "$file" || { echo "FAIL: $skill — no name field"; status="FAIL"; }
 
   # Check description field
-  grep -q "^description:" "$file" || echo "FAIL: $skill — no description"
+  grep -q "^description:" "$file" || { echo "FAIL: $skill — no description"; status="FAIL"; }
 
   # Check line count
   lines=$(wc -l < "$file")
   [ "$lines" -gt 500 ] && echo "WARN: $skill — $lines lines (target: <500)"
 
-  echo "OK: $skill ($lines lines)"
+  echo "$status: $skill ($lines lines)"
 done
 ```
 
@@ -63,9 +78,9 @@ done
 
 For each skill's description field:
 
-```
-- [ ] Describes WHAT it does (action verb, not "A skill for...")
-- [ ] Describes WHEN to use it (trigger phrases users say)
+```text
+- [ ] Describes ONLY WHEN to use it (trigger conditions, symptoms — NOT what it does)
+- [ ] Starts with "Use when..." or equivalent trigger phrase
 - [ ] Written in third person
 - [ ] Does NOT summarize workflow (CSO trap — see SKILL.md § CSO)
 - [ ] Under 500 characters (ideal) / 1024 characters (max)
@@ -75,7 +90,7 @@ For each skill's description field:
 
 | Anti-Pattern | Fix |
 |-------------|-----|
-| "A skill for managing X" | "Manage X. Use when [triggers]." |
+| "A skill for managing X" | "Use when [specific triggers for X]." |
 | No trigger phrases | Add "Use when...", "Invoke when user mentions..." |
 | Summarizes workflow steps | Remove process details, keep only triggers |
 | First person ("I help you...") | Third person ("Helps with...") |
@@ -125,7 +140,7 @@ done
 
 For skills over 300 lines:
 
-```
+```text
 - [ ] Core routing/triggers in SKILL.md (not buried in ref/)
 - [ ] Detailed workflows extracted to ref/ or separate files
 - [ ] All @ref/ or [file](file.md) links resolve to existing files
@@ -141,7 +156,7 @@ All skill descriptions combined consume context on every conversation. Check the
 total=0
 for dir in */; do
   [ ! -f "$dir/SKILL.md" ] && continue
-  chars=$(grep -A20 "^description:" "$dir/SKILL.md" | head -20 | wc -c)
+  chars=$(grep "^description:" "$dir/SKILL.md" | sed 's/^description:[[:space:]]*//' | wc -c)
   total=$((total + chars))
 done
 echo "Total description chars: $total (budget: ~16,000)"
