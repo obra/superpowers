@@ -94,7 +94,7 @@ For each skill's description field:
 | No trigger phrases | Add "Use when...", "Invoke when user mentions..." |
 | Summarizes workflow steps | Remove process details, keep only triggers |
 | First person ("I help you...") | Third person ("Helps with...") |
-| Too vague ("Helps with documents") | Specific ("Extract text from PDFs, fill forms") |
+| Too vague ("Helps with documents") | Trigger-specific ("Use when user needs to extract text from PDFs or fill out forms") |
 
 ### Phase 3: Trigger Overlap Detection
 
@@ -174,7 +174,7 @@ After running the audit, summarize findings:
 
 ## Summary
 - Skills audited: X
-- PASS: X | NEEDS_IMPROVEMENT: X | FAIL: X
+- OK: X | WARN: X | FAIL: X | SKIP: X
 
 ## Critical Issues
 1. [Issue]: [Skills affected] — [Fix]
