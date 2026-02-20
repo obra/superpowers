@@ -33,10 +33,10 @@ Then start pi and use `/skill:brainstorming` to confirm skills load.
 
 ## Updating
 
-Update superpowers (and any other installed packages):
+Update superpowers:
 
 ```bash
-pi update
+pi update https://github.com/obra/superpowers
 ```
 
 Or pull manually if using a local path:
