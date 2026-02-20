@@ -51,6 +51,10 @@ In Cursor Agent chat, install from marketplace:
 /plugin-add superpowers
 ```
 
+### Gemini CLI
+
+**Detailed docs:** [docs/README.gemini.md](docs/README.gemini.md)
+
 ### Codex
 
 Tell Codex:
