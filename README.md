@@ -51,6 +51,10 @@ In Cursor Agent chat, install from marketplace:
 /plugin-add superpowers
 ```
 
+### Qwen Code CLI
+
+**Detailed docs:** [docs/README.qwen.md](docs/README.qwen.md)
+
 ### Codex
 
 Tell Codex:
