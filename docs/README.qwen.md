@@ -1,10 +1,28 @@
 # Superpowers for Qwen Code CLI
 
-Guide for using Superpowers with Qwen Code CLI via native skill discovery.
+Guide for using Superpowers with Qwen Code CLI.
 
-## Quick Install
+> **Note:** Qwen Code is based on Gemini CLI, so it can also install Gemini CLI extensions directly. The `gemini-extension.json` in this repo is auto-converted to `qwen-extension.json` format during install.
 
-Qwen Code CLI offers native skill discovery. To integrate Superpowers, simply clone the Superpowers repository and create a symbolic link from its `skills` directory to Qwen Code CLI's skill discovery path.
+## Quick Install (Extension)
+
+The recommended way to install Superpowers is via the Qwen Code extension system:
+
+```bash
+qwen extensions install https://github.com/obra/superpowers
+```
+
+This automatically installs all skills, commands, agents, and context.
+
+To update:
+
+```bash
+qwen extensions update superpowers
+```
+
+## Alternative Install (Manual Symlink)
+
+If you prefer manual setup, clone the repository and symlink the skills directory.
 
 ### Steps
 
@@ -12,7 +30,6 @@ Qwen Code CLI offers native skill discovery. To integrate Superpowers, simply cl
     ```bash
     git clone https://github.com/obra/superpowers.git ~/.qwen/superpowers
     ```
-    (You can choose any location for the clone, `~/.qwen/superpowers` is just an example for user-level installation.)
 
 2.  **Create the Skills Directory** (if it doesn't exist):
     ```bash
@@ -23,9 +40,10 @@ Qwen Code CLI offers native skill discovery. To integrate Superpowers, simply cl
     ```bash
     ln -s ~/.qwen/superpowers/skills ~/.qwen/skills/superpowers
     ```
-    This command creates a symlink named `superpowers` inside `~/.qwen/skills/` that points to the actual `skills` directory within your cloned Superpowers repository.
 
 4.  **Restart Qwen Code CLI** (if it's currently running).
+
+> **Note:** The manual approach only installs skills. Commands (`/brainstorm`, `/write-plan`, `/execute-plan`) and the code-reviewer agent require the extension install.
 
 ## How It Works
 
@@ -40,21 +58,34 @@ Once installed, Superpowers skills are discovered automatically. Qwen Code CLI w
 -   The task matches a skill's description
 -   The `using-superpowers` skill directs Qwen Code CLI to use one
 
-You can use the `/skills list` command within Qwen Code CLI to view all available skills, including those provided by Superpowers.
+You can use the `/skills` command within Qwen Code CLI to view all available skills, including those provided by Superpowers.
 
 ## Updating Superpowers
 
-To update Superpowers, navigate to your cloned repository and pull the latest changes:
+**Extension install:**
+
+```bash
+qwen extensions update superpowers
+```
+
+**Manual install:**
 
 ```bash
 cd ~/.qwen/superpowers
 git pull
 ```
-After pulling, restart Qwen Code CLI to ensure the updated skills are loaded.
+
+Restart Qwen Code CLI after updating.
 
 ## Uninstalling Superpowers
 
-To uninstall, simply remove the symbolic link and the cloned repository:
+**Extension install:**
+
+```bash
+qwen extensions uninstall superpowers
+```
+
+**Manual install:**
 
 ```bash
 rm ~/.qwen/skills/superpowers
