@@ -6,7 +6,7 @@ disable-model-invocation: true
 Invoke the scaffolding skill and follow it exactly as presented to you.
 
 Arguments:
-- First argument: project type (software, claude-code-plugin, course, content)
+- First argument: project type (software, claude-code-plugin, course, content, business, personal)
 - Second argument: project name
 - `--dry-run`: Preview what would be generated without creating files
 - Example: `/scaffold software my-app`
