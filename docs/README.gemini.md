@@ -1,10 +1,26 @@
 # Superpowers for Gemini CLI
 
-Guide for using Superpowers with Google's Gemini CLI via native skill discovery.
+Guide for using Superpowers with Google's Gemini CLI.
 
-## Quick Install
+## Quick Install (Extension)
 
-Gemini CLI offers native skill discovery. To integrate Superpowers, simply clone the Superpowers repository and create a symbolic link from its `skills` directory to Gemini CLI's skill discovery path.
+The recommended way to install Superpowers is via the Gemini CLI extension system:
+
+```bash
+gemini extensions install https://github.com/obra/superpowers
+```
+
+This automatically installs all skills, commands, agents, and context.
+
+To update:
+
+```bash
+gemini extensions update superpowers
+```
+
+## Alternative Install (Manual Symlink)
+
+If you prefer manual setup, clone the repository and symlink the skills directory.
 
 ### Steps
 
@@ -23,9 +39,10 @@ Gemini CLI offers native skill discovery. To integrate Superpowers, simply clone
     ```bash
     ln -s ~/.gemini/superpowers/skills ~/.gemini/skills/superpowers
     ```
-    This command creates a symlink named `superpowers` inside `~/.gemini/skills/` that points to the actual `skills` directory within your cloned Superpowers repository.
 
 4.  **Restart Gemini CLI** (if it's currently running).
+
+> **Note:** The manual approach only installs skills. Commands (`/brainstorm`, `/write-plan`, `/execute-plan`) and the code-reviewer agent require the extension install.
 
 ## How It Works
 
@@ -44,17 +61,30 @@ You can use the `/skills list` command within Gemini CLI to view all available s
 
 ## Updating Superpowers
 
-To update Superpowers, navigate to your cloned repository and pull the latest changes:
+**Extension install:**
+
+```bash
+gemini extensions update superpowers
+```
+
+**Manual install:**
 
 ```bash
 cd ~/.gemini/superpowers
 git pull
 ```
-After pulling, restart Gemini CLI to ensure the updated skills are loaded.
+
+Restart Gemini CLI after updating.
 
 ## Uninstalling Superpowers
 
-To uninstall, simply remove the symbolic link and the cloned repository:
+**Extension install:**
+
+```bash
+gemini extensions uninstall superpowers
+```
+
+**Manual install:**
 
 ```bash
 rm ~/.gemini/skills/superpowers

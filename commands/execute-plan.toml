@@ -1,0 +1,3 @@
+description = "Execute plan in batches with review checkpoints"
+
+prompt = "Activate the executing-plans skill and follow it exactly as presented to you."

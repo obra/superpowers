@@ -53,6 +53,10 @@ In Cursor Agent chat, install from marketplace:
 
 ### Gemini CLI
 
+```bash
+gemini extensions install https://github.com/obra/superpowers
+```
+
 **Detailed docs:** [docs/README.gemini.md](docs/README.gemini.md)
 
 ### Codex
