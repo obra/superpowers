@@ -143,6 +143,12 @@ Pi discovers skills from multiple locations. On name collision, the first skill 
 pi update
 ```
 
+`pi update` updates all installed packages. To update only Superpowers:
+
+```bash
+pi update https://github.com/obra/superpowers
+```
+
 For local path installs, pull manually:
 
 ```bash
