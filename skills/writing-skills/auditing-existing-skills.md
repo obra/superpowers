@@ -110,7 +110,8 @@ For each skill's description field:
 # Extract descriptions
 for dir in */; do
   skill="${dir%/}"
-  desc=$(grep -A5 "^description:" "$dir/SKILL.md" | head -6)
+  [ ! -f "$dir/SKILL.md" ] && echo "SKIP: $skill — no SKILL.md" && continue
+  desc=$(grep "^description:" "$dir/SKILL.md" | sed 's/^description:[[:space:]]*//')
   echo "=== $skill ==="
   echo "$desc"
   echo
