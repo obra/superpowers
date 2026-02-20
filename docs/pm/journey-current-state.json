@@ -1,0 +1,87 @@
+{
+  "project": "Claude Code Scaffolding Platform — Current State",
+  "persona": { "name": "Milind", "archetype": "The Strategic Builder" },
+  "phases": [
+    {
+      "name": "Trigger",
+      "actions": ["Recognize the problem", "Assess urgency", "Decide to build"],
+      "touchpoints": ["Client conversations", "Business review", "Personal notebook"],
+      "thoughts": ["This is a real problem. I can build something to solve it."],
+      "emotions": [{ "type": "motivated", "intensity": 5 }],
+      "pain_points": [],
+      "opportunities": ["Capture this energy and channel it into structured discovery"]
+    },
+    {
+      "name": "Crystallize",
+      "actions": ["Write problem in notebook", "Think through dimensions"],
+      "touchpoints": ["Physical notebook"],
+      "thoughts": ["Let me get this clear in my head before I start."],
+      "emotions": [{ "type": "focused", "intensity": 4 }],
+      "pain_points": ["Analog capture disconnected from digital workflow"],
+      "opportunities": ["Replace notebook with conversational AI PM"]
+    },
+    {
+      "name": "Scaffolding",
+      "actions": ["Create project directory", "Write CLAUDE.md from scratch", "Set up directory structure", "Define conventions"],
+      "touchpoints": ["Terminal", "Claude Code", "File system", "Previous project templates"],
+      "thoughts": ["I've done this a dozen times. Why am I doing it again from scratch?"],
+      "emotions": [{ "type": "friction", "intensity": 2 }],
+      "pain_points": ["No repeatable process", "Different every time", "Takes 20-40 minutes of pure setup", "Kills momentum before any product thinking"],
+      "opportunities": ["Project-type templates with auto-generated scaffolding"]
+    },
+    {
+      "name": "Configuration",
+      "actions": ["Set up spec-driven development", "Configure memory and session tracking"],
+      "touchpoints": ["CLAUDE.md", "Project config files"],
+      "thoughts": ["I need to make sure the agent has enough context to not go off the rails."],
+      "emotions": [{ "type": "momentum fading", "intensity": 2 }],
+      "pain_points": ["Manual and error-prone", "No standard for what a well-configured project looks like"],
+      "opportunities": ["Bundle configuration into scaffolding templates"]
+    },
+    {
+      "name": "Requirements",
+      "actions": ["Run /brainstorm", "Explain needs conversationally", "Manually enrich shallow output"],
+      "touchpoints": ["/brainstorm command", "Claude Code"],
+      "thoughts": ["This output is surface-level. It missed the nuances I mentioned."],
+      "emotions": [{ "type": "frustrated", "intensity": 2 }],
+      "pain_points": ["/brainstorm doesn't ask probing follow-ups", "Output lacks depth on edge cases", "Manual enrichment defeats the purpose"],
+      "opportunities": ["Structured PM discovery with 6 phases", "System that asks the right questions"]
+    },
+    {
+      "name": "Planning",
+      "actions": ["Review generated plan", "Identify gaps", "Patch requirements"],
+      "touchpoints": ["/write-plan command"],
+      "thoughts": ["Garbage in, garbage out."],
+      "emotions": [{ "type": "concerned", "intensity": 2 }],
+      "pain_points": ["Plans inherit shallow requirements", "No visual artifacts for review"],
+      "opportunities": ["Visual decision-support at planning stage", "Judgment gates with approve/revise/reject"]
+    },
+    {
+      "name": "Implementation",
+      "actions": ["Agent builds features", "Agent skips tests", "Agent drifts from intent"],
+      "touchpoints": ["Agent execution", "Code output"],
+      "thoughts": ["It built an auth system I didn't ask for and the core logic is wrong."],
+      "emotions": [{ "type": "angry", "intensity": 1 }],
+      "pain_points": ["Agent drift from shallow requirements", "No testing discipline", "Expensive Opus tokens wasted", "No progressive disclosure"],
+      "opportunities": ["Model routing by task complexity", "Scoped agents", "Test-first development"]
+    },
+    {
+      "name": "Rework",
+      "actions": ["Scrap wrong modules", "Rewrite requirements", "Restart implementation"],
+      "touchpoints": ["Claude Code", "Git revert/branch"],
+      "thoughts": ["I'm spending more time managing the AI than building it myself."],
+      "emotions": [{ "type": "exhausted", "intensity": 1 }],
+      "pain_points": ["Token waste from rebuilding", "Time waste from multiple cycles", "Context lost between iterations"],
+      "opportunities": ["Get requirements right upfront", "Checkpoint/rollback system"]
+    },
+    {
+      "name": "Outcome",
+      "actions": ["Project stalls or is abandoned"],
+      "touchpoints": ["Notebook", "Mental backlog"],
+      "thoughts": ["The AI is brilliant. The orchestration is broken."],
+      "emotions": [{ "type": "defeated", "intensity": 1 }],
+      "pain_points": ["Business problems remain unsolved", "Time and money spent with no return", "Erodes confidence in AI-assisted development"],
+      "opportunities": ["End-to-end orchestration that prevents this outcome"]
+    }
+  ]
+}
