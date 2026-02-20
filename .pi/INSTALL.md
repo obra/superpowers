@@ -50,3 +50,9 @@ cd /path/to/superpowers && git pull
 ```bash
 pi remove https://github.com/obra/superpowers
 ```
+
+Or, if installed from a local path:
+
+```bash
+pi remove /path/to/superpowers
+```
