@@ -53,11 +53,13 @@ In Cursor Agent chat, install from marketplace:
 
 ### Qwen Code CLI
 
-```bash
-qwen extensions install https://github.com/obra/superpowers
+Tell Qwen:
+
+```
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.qwen/INSTALL.md
 ```
 
-**Detailed docs:** [docs/README.qwen.md](docs/README.qwen.md)
+**Detailed docs:** [.qwen/INSTALL.md](.qwen/INSTALL.md)
 
 ### Codex
 
