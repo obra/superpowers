@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experience Map: Claude Code Scaffolding Platform — Current State</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8f9fa; color: #333; }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; padding: 2rem; text-align: center;
+        }
+        .header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        .header .subtitle { opacity: 0.9; font-size: 1.1rem; }
+        .header .date { opacity: 0.7; font-size: 0.85rem; margin-top: 0.5rem; }
+
+        .persona-bar {
+            background: white; padding: 1rem 2rem;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex; align-items: center; gap: 1rem;
+        }
+        .persona-avatar {
+            width: 48px; height: 48px; border-radius: 50%;
+            background: #667eea; display: flex; align-items: center;
+            justify-content: center; color: white; font-size: 1.2rem; font-weight: bold;
+        }
+        .persona-info h3 { font-size: 1rem; }
+        .persona-info p { font-size: 0.85rem; color: #666; }
+
+        .journey-container { padding: 2rem; overflow-x: auto; }
+        .phases { display: flex; gap: 1rem; min-width: max-content; }
+
+        .phase {
+            background: white; border-radius: 12px; padding: 1.5rem;
+            min-width: 280px; max-width: 320px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .phase:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+
+        .phase-header {
+            font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;
+            padding-bottom: 0.5rem; border-bottom: 3px solid #667eea;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .phase-number {
+            background: #667eea; color: white; width: 24px; height: 24px;
+            border-radius: 50%; display: inline-flex; align-items: center;
+            justify-content: center; font-size: 0.75rem; flex-shrink: 0;
+        }
+
+        .phase-section { margin-bottom: 1rem; }
+        .phase-section h4 {
+            font-size: 0.75rem; text-transform: uppercase;
+            letter-spacing: 0.05em; color: #999; margin-bottom: 0.5rem;
+        }
+        .phase-section ul { list-style: none; }
+        .phase-section li { font-size: 0.9rem; padding: 0.25rem 0; }
+
+        .emotion-bar-container {
+            background: #f0f0f0; border-radius: 4px; height: 8px; overflow: hidden;
+        }
+        .emotion-bar { height: 100%; border-radius: 4px; transition: width 0.5s; }
+        .emotion-positive { background: linear-gradient(90deg, #4CAF50, #8BC34A); }
+        .emotion-neutral { background: linear-gradient(90deg, #FF9800, #FFC107); }
+        .emotion-negative { background: linear-gradient(90deg, #f44336, #FF5722); }
+
+        .pain-point {
+            background: #fff3f3; border-left: 3px solid #f44336;
+            padding: 0.5rem; margin: 0.25rem 0;
+            border-radius: 0 4px 4px 0; font-size: 0.85rem;
+        }
+        .opportunity {
+            background: #f3fff3; border-left: 3px solid #4CAF50;
+            padding: 0.5rem; margin: 0.25rem 0;
+            border-radius: 0 4px 4px 0; font-size: 0.85rem;
+        }
+
+        .emotion-curve {
+            padding: 2rem; background: white;
+            margin: 0 2rem 2rem; border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .emotion-curve h3 { margin-bottom: 1rem; font-size: 1rem; color: #666; }
+
+        .summary-section {
+            padding: 0 2rem 2rem; display: grid;
+            grid-template-columns: 1fr 1fr; gap: 1rem;
+        }
+        .summary-card {
+            background: white; border-radius: 12px; padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .summary-card h3 { font-size: 1rem; margin-bottom: 0.75rem; color: #666; }
+        .summary-card ul { list-style: none; }
+        .summary-card li { padding: 0.25rem 0; font-size: 0.9rem; }
+        .summary-card li::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 0.5rem; }
+        .summary-card.pains li::before { background: #f44336; }
+        .summary-card.opps li::before { background: #4CAF50; }
+
+        .footer {
+            text-align: center; padding: 2rem; color: #999; font-size: 0.85rem;
+        }
+
+        @media print {
+            .phase { break-inside: avoid; }
+            body { background: white; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Experience Map</h1>
+        <div class="subtitle">Claude Code Scaffolding Platform — Current State</div>
+        <div class="date">Generated 2026-02-20</div>
+    </div>
+
+    <div class="persona-bar">
+        <div class="persona-avatar">M</div>
+        <div class="persona-info">
+            <h3>Milind</h3>
+            <p>The Strategic Builder</p>
+        </div>
+    </div>
+
+    <div class="journey-container">
+        <div class="phases">
+
+            <div class="phase">
+                <div class="phase-header">
+                    <span class="phase-number">1</span>
+                    Trigger
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Actions</h4>
+                    <ul>
+                        <li>Recognize the problem</li>
+                        <li>Assess urgency</li>
+                        <li>Decide to build</li>
+                    </ul>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Touchpoints</h4>
+                    <ul>
+                        <li>Client conversations</li>
+                        <li>Business review</li>
+                        <li>Personal notebook</li>
+                    </ul>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Thoughts</h4>
+                    <ul>
+                        <li>"This is a real problem. I can build something to solve it."</li>
+                    </ul>
+                </div>
+                <div class="phase-section">
+                    <h4>Emotion: Motivated</h4>
+                    <div class="emotion-bar-container">
+                        <div class="emotion-bar emotion-positive" style="width: 100%"></div>
+                    </div>
+                </div>
+                
+                
+                <div class="phase-section">
+                    <h4>Opportunities</h4>
+                    <div class="opportunity">Capture this energy and channel it into structured discovery</div>
+                </div>
+            </div>
+            <div class="phase">
+                <div class="phase-header">
+                    <span class="phase-number">2</span>
+                    Crystallize
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Actions</h4>
+                    <ul>
+                        <li>Write problem in notebook</li>
+                        <li>Think through dimensions</li>
+                    </ul>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Touchpoints</h4>
+                    <ul>
+                        <li>Physical notebook</li>
+                    </ul>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Thoughts</h4>
+                    <ul>
+                        <li>"Let me get this clear in my head before I start."</li>
+                    </ul>
+                </div>
+                <div class="phase-section">
+                    <h4>Emotion: Focused</h4>
+                    <div class="emotion-bar-container">
+                        <div class="emotion-bar emotion-positive" style="width: 80%"></div>
+                    </div>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Pain Points</h4>
+                    <div class="pain-point">Analog capture disconnected from digital workflow</div>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Opportunities</h4>
+                    <div class="opportunity">Replace notebook with conversational AI PM</div>
+                </div>
+            </div>
+            <div class="phase">
+                <div class="phase-header">
+                    <span class="phase-number">3</span>
+                    Scaffolding
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Actions</h4>
+                    <ul>
+                        <li>Create project directory</li>
+                        <li>Write CLAUDE.md from scratch</li>
+                        <li>Set up directory structure</li>
+                        <li>Define conventions</li>
+                    </ul>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Touchpoints</h4>
+                    <ul>
+                        <li>Terminal</li>
+                        <li>Claude Code</li>
+                        <li>File system</li>
+                        <li>Previous project templates</li>
+                    </ul>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Thoughts</h4>
+                    <ul>
+                        <li>"I've done this a dozen times. Why am I doing it again from scratch?"</li>
+                    </ul>
+                </div>
+                <div class="phase-section">
+                    <h4>Emotion: Friction</h4>
+                    <div class="emotion-bar-container">
+                        <div class="emotion-bar emotion-negative" style="width: 40%"></div>
+                    </div>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Pain Points</h4>
+                    <div class="pain-point">No repeatable process</div>
+                    <div class="pain-point">Different every time</div>
+                    <div class="pain-point">Takes 20-40 minutes of pure setup</div>
+                    <div class="pain-point">Kills momentum before any product thinking</div>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Opportunities</h4>
+                    <div class="opportunity">Project-type templates with auto-generated scaffolding</div>
+                </div>
+            </div>
+            <div class="phase">
+                <div class="phase-header">
+                    <span class="phase-number">4</span>
+                    Configuration
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Actions</h4>
+                    <ul>
+                        <li>Set up spec-driven development</li>
+                        <li>Configure memory and session tracking</li>
+                    </ul>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Touchpoints</h4>
+                    <ul>
+                        <li>CLAUDE.md</li>
+                        <li>Project config files</li>
+                    </ul>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Thoughts</h4>
+                    <ul>
+                        <li>"I need to make sure the agent has enough context to not go off the rails."</li>
+                    </ul>
+                </div>
+                <div class="phase-section">
+                    <h4>Emotion: Momentum fading</h4>
+                    <div class="emotion-bar-container">
+                        <div class="emotion-bar emotion-negative" style="width: 40%"></div>
+                    </div>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Pain Points</h4>
+                    <div class="pain-point">Manual and error-prone</div>
+                    <div class="pain-point">No standard for what a well-configured project looks like</div>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Opportunities</h4>
+                    <div class="opportunity">Bundle configuration into scaffolding templates</div>
+                </div>
+            </div>
+            <div class="phase">
+                <div class="phase-header">
+                    <span class="phase-number">5</span>
+                    Requirements
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Actions</h4>
+                    <ul>
+                        <li>Run /brainstorm</li>
+                        <li>Explain needs conversationally</li>
+                        <li>Manually enrich shallow output</li>
+                    </ul>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Touchpoints</h4>
+                    <ul>
+                        <li>/brainstorm command</li>
+                        <li>Claude Code</li>
+                    </ul>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Thoughts</h4>
+                    <ul>
+                        <li>"This output is surface-level. It missed the nuances I mentioned."</li>
+                    </ul>
+                </div>
+                <div class="phase-section">
+                    <h4>Emotion: Frustrated</h4>
+                    <div class="emotion-bar-container">
+                        <div class="emotion-bar emotion-negative" style="width: 40%"></div>
+                    </div>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Pain Points</h4>
+                    <div class="pain-point">/brainstorm doesn't ask probing follow-ups</div>
+                    <div class="pain-point">Output lacks depth on edge cases</div>
+                    <div class="pain-point">Manual enrichment defeats the purpose</div>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Opportunities</h4>
+                    <div class="opportunity">Structured PM discovery with 6 phases</div>
+                    <div class="opportunity">System that asks the right questions</div>
+                </div>
+            </div>
+            <div class="phase">
+                <div class="phase-header">
+                    <span class="phase-number">6</span>
+                    Planning
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Actions</h4>
+                    <ul>
+                        <li>Review generated plan</li>
+                        <li>Identify gaps</li>
+                        <li>Patch requirements</li>
+                    </ul>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Touchpoints</h4>
+                    <ul>
+                        <li>/write-plan command</li>
+                    </ul>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Thoughts</h4>
+                    <ul>
+                        <li>"Garbage in, garbage out."</li>
+                    </ul>
+                </div>
+                <div class="phase-section">
+                    <h4>Emotion: Concerned</h4>
+                    <div class="emotion-bar-container">
+                        <div class="emotion-bar emotion-negative" style="width: 40%"></div>
+                    </div>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Pain Points</h4>
+                    <div class="pain-point">Plans inherit shallow requirements</div>
+                    <div class="pain-point">No visual artifacts for review</div>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Opportunities</h4>
+                    <div class="opportunity">Visual decision-support at planning stage</div>
+                    <div class="opportunity">Judgment gates with approve/revise/reject</div>
+                </div>
+            </div>
+            <div class="phase">
+                <div class="phase-header">
+                    <span class="phase-number">7</span>
+                    Implementation
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Actions</h4>
+                    <ul>
+                        <li>Agent builds features</li>
+                        <li>Agent skips tests</li>
+                        <li>Agent drifts from intent</li>
+                    </ul>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Touchpoints</h4>
+                    <ul>
+                        <li>Agent execution</li>
+                        <li>Code output</li>
+                    </ul>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Thoughts</h4>
+                    <ul>
+                        <li>"It built an auth system I didn't ask for and the core logic is wrong."</li>
+                    </ul>
+                </div>
+                <div class="phase-section">
+                    <h4>Emotion: Angry</h4>
+                    <div class="emotion-bar-container">
+                        <div class="emotion-bar emotion-negative" style="width: 20%"></div>
+                    </div>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Pain Points</h4>
+                    <div class="pain-point">Agent drift from shallow requirements</div>
+                    <div class="pain-point">No testing discipline</div>
+                    <div class="pain-point">Expensive Opus tokens wasted</div>
+                    <div class="pain-point">No progressive disclosure</div>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Opportunities</h4>
+                    <div class="opportunity">Model routing by task complexity</div>
+                    <div class="opportunity">Scoped agents</div>
+                    <div class="opportunity">Test-first development</div>
+                </div>
+            </div>
+            <div class="phase">
+                <div class="phase-header">
+                    <span class="phase-number">8</span>
+                    Rework
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Actions</h4>
+                    <ul>
+                        <li>Scrap wrong modules</li>
+                        <li>Rewrite requirements</li>
+                        <li>Restart implementation</li>
+                    </ul>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Touchpoints</h4>
+                    <ul>
+                        <li>Claude Code</li>
+                        <li>Git revert/branch</li>
+                    </ul>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Thoughts</h4>
+                    <ul>
+                        <li>"I'm spending more time managing the AI than building it myself."</li>
+                    </ul>
+                </div>
+                <div class="phase-section">
+                    <h4>Emotion: Exhausted</h4>
+                    <div class="emotion-bar-container">
+                        <div class="emotion-bar emotion-negative" style="width: 20%"></div>
+                    </div>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Pain Points</h4>
+                    <div class="pain-point">Token waste from rebuilding</div>
+                    <div class="pain-point">Time waste from multiple cycles</div>
+                    <div class="pain-point">Context lost between iterations</div>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Opportunities</h4>
+                    <div class="opportunity">Get requirements right upfront</div>
+                    <div class="opportunity">Checkpoint/rollback system</div>
+                </div>
+            </div>
+            <div class="phase">
+                <div class="phase-header">
+                    <span class="phase-number">9</span>
+                    Outcome
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Actions</h4>
+                    <ul>
+                        <li>Project stalls or is abandoned</li>
+                    </ul>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Touchpoints</h4>
+                    <ul>
+                        <li>Notebook</li>
+                        <li>Mental backlog</li>
+                    </ul>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Thoughts</h4>
+                    <ul>
+                        <li>"The AI is brilliant. The orchestration is broken."</li>
+                    </ul>
+                </div>
+                <div class="phase-section">
+                    <h4>Emotion: Defeated</h4>
+                    <div class="emotion-bar-container">
+                        <div class="emotion-bar emotion-negative" style="width: 20%"></div>
+                    </div>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Pain Points</h4>
+                    <div class="pain-point">Business problems remain unsolved</div>
+                    <div class="pain-point">Time and money spent with no return</div>
+                    <div class="pain-point">Erodes confidence in AI-assisted development</div>
+                </div>
+                
+                <div class="phase-section">
+                    <h4>Opportunities</h4>
+                    <div class="opportunity">End-to-end orchestration that prevents this outcome</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="emotion-curve">
+        <h3>Emotional Journey</h3>
+        <svg viewBox="0 0 800 200" width="100%" height="200">
+            <line x1="55" y1="140" x2="740" y2="140" stroke="#eee" stroke-width="1"/>
+    <text x="50" y="144" text-anchor="end" font-size="10" fill="#999">Frustrated</text>
+      <line x1="55" y1="120" x2="740" y2="120" stroke="#eee" stroke-width="1"/>
+    
+      <line x1="55" y1="100" x2="740" y2="100" stroke="#eee" stroke-width="1"/>
+    <text x="50" y="104" text-anchor="end" font-size="10" fill="#999">Neutral</text>
+      <line x1="55" y1="80" x2="740" y2="80" stroke="#eee" stroke-width="1"/>
+    
+      <line x1="55" y1="60" x2="740" y2="60" stroke="#eee" stroke-width="1"/>
+    <text x="50" y="64" text-anchor="end" font-size="10" fill="#999">Delighted</text>
+            <path d="M 60 60 L 145 80 L 230 120 L 315 120 L 400 120 L 485 120 L 570 140 L 655 140 L 740 140" fill="none" stroke="#667eea" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="60" cy="60" r="6" fill="#4CAF50" stroke="white" stroke-width="2"/>
+      <text x="60" y="46" text-anchor="middle" font-size="11" fill="#666">5.0</text>
+      <circle cx="145" cy="80" r="6" fill="#4CAF50" stroke="white" stroke-width="2"/>
+      <text x="145" y="66" text-anchor="middle" font-size="11" fill="#666">4.0</text>
+      <circle cx="230" cy="120" r="6" fill="#f44336" stroke="white" stroke-width="2"/>
+      <text x="230" y="106" text-anchor="middle" font-size="11" fill="#666">2.0</text>
+      <circle cx="315" cy="120" r="6" fill="#f44336" stroke="white" stroke-width="2"/>
+      <text x="315" y="106" text-anchor="middle" font-size="11" fill="#666">2.0</text>
+      <circle cx="400" cy="120" r="6" fill="#f44336" stroke="white" stroke-width="2"/>
+      <text x="400" y="106" text-anchor="middle" font-size="11" fill="#666">2.0</text>
+      <circle cx="485" cy="120" r="6" fill="#f44336" stroke="white" stroke-width="2"/>
+      <text x="485" y="106" text-anchor="middle" font-size="11" fill="#666">2.0</text>
+      <circle cx="570" cy="140" r="6" fill="#f44336" stroke="white" stroke-width="2"/>
+      <text x="570" y="126" text-anchor="middle" font-size="11" fill="#666">1.0</text>
+      <circle cx="655" cy="140" r="6" fill="#f44336" stroke="white" stroke-width="2"/>
+      <text x="655" y="126" text-anchor="middle" font-size="11" fill="#666">1.0</text>
+      <circle cx="740" cy="140" r="6" fill="#f44336" stroke="white" stroke-width="2"/>
+      <text x="740" y="126" text-anchor="middle" font-size="11" fill="#666">1.0</text>
+            <text x="60" y="192" text-anchor="middle" font-size="10" fill="#999">Trigger</text>
+      <text x="145" y="192" text-anchor="middle" font-size="10" fill="#999">Crystallize</text>
+      <text x="230" y="192" text-anchor="middle" font-size="10" fill="#999">Scaffolding</text>
+      <text x="315" y="192" text-anchor="middle" font-size="10" fill="#999">Configuration</text>
+      <text x="400" y="192" text-anchor="middle" font-size="10" fill="#999">Requirements</text>
+      <text x="485" y="192" text-anchor="middle" font-size="10" fill="#999">Planning</text>
+      <text x="570" y="192" text-anchor="middle" font-size="10" fill="#999">Implementation</text>
+      <text x="655" y="192" text-anchor="middle" font-size="10" fill="#999">Rework</text>
+      <text x="740" y="192" text-anchor="middle" font-size="10" fill="#999">Outcome</text>
+        </svg>
+    </div>
+
+    <div class="summary-section">
+        <div class="summary-card pains">
+            <h3>All Pain Points</h3>
+            <ul>
+                <li>Analog capture disconnected from digital workflow</li>
+                <li>No repeatable process</li>
+                <li>Different every time</li>
+                <li>Takes 20-40 minutes of pure setup</li>
+                <li>Kills momentum before any product thinking</li>
+                <li>Manual and error-prone</li>
+                <li>No standard for what a well-configured project looks like</li>
+                <li>/brainstorm doesn't ask probing follow-ups</li>
+                <li>Output lacks depth on edge cases</li>
+                <li>Manual enrichment defeats the purpose</li>
+                <li>Plans inherit shallow requirements</li>
+                <li>No visual artifacts for review</li>
+                <li>Agent drift from shallow requirements</li>
+                <li>No testing discipline</li>
+                <li>Expensive Opus tokens wasted</li>
+                <li>No progressive disclosure</li>
+                <li>Token waste from rebuilding</li>
+                <li>Time waste from multiple cycles</li>
+                <li>Context lost between iterations</li>
+                <li>Business problems remain unsolved</li>
+                <li>Time and money spent with no return</li>
+                <li>Erodes confidence in AI-assisted development</li>
+            </ul>
+        </div>
+        <div class="summary-card opps">
+            <h3>All Opportunities</h3>
+            <ul>
+                <li>Capture this energy and channel it into structured discovery</li>
+                <li>Replace notebook with conversational AI PM</li>
+                <li>Project-type templates with auto-generated scaffolding</li>
+                <li>Bundle configuration into scaffolding templates</li>
+                <li>Structured PM discovery with 6 phases</li>
+                <li>System that asks the right questions</li>
+                <li>Visual decision-support at planning stage</li>
+                <li>Judgment gates with approve/revise/reject</li>
+                <li>Model routing by task complexity</li>
+                <li>Scoped agents</li>
+                <li>Test-first development</li>
+                <li>Get requirements right upfront</li>
+                <li>Checkpoint/rollback system</li>
+                <li>End-to-end orchestration that prevents this outcome</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="footer">
+        Generated by PM Artifacts Generator
+    </div>
+</body>
+</html>
