@@ -55,7 +55,7 @@ In Cursor Agent chat, install from marketplace:
 
 Tell Qwen:
 
-```
+```text
 Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.qwen/INSTALL.md
 ```
 
@@ -65,7 +65,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 Tell Codex:
 
-```
+```text
 Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md
 ```
 
@@ -75,7 +75,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 Tell OpenCode:
 
-```
+```text
 Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
 ```
 
