@@ -94,7 +94,7 @@ digraph brainstorming {
 
 ## Key Principles
 
-- **Batch independent questions** — up to 4 per AskUserQuestion call, multiple batches if more than 4
+- **Batch independent text questions** — up to 4 per AskUserQuestion call, multiple batches if more than 4
 - **Visual questions last, one at a time** — use `markdown` preview field for ASCII mockups
 - **Surface implicit alternatives** — don't assume; offer interpretations as options with brief explanations
 - **Multiple-choice preferred** — easier to answer than open-ended when possible
