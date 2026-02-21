@@ -59,14 +59,14 @@ digraph brainstorming {
 **Understanding the idea:**
 - Check out the current project state first (files, docs, recent commits)
 - Focus on understanding: purpose, constraints, success criteria
-- Prefer multiple choice questions when possible, but open-ended is fine too
+- Prefer multiple-choice questions when possible, but open-ended is fine too
 
 **Asking questions — smart batching:**
 - Classify questions as **text** (word-described choices) or **visual** (need ASCII mockups to compare)
 - Ask all text questions first, visual questions last
 - Batch up to 4 independent text questions per AskUserQuestion call; use multiple batches if more than 4
 - Never dump all questions with a single "all correct / some not correct" toggle — each question gets its own options
-- Ask visual questions ONE AT A TIME, using the `markdown` preview field on each option for ASCII mockups
+- Ask visual questions **one at a time**, using the `markdown` preview field on each option for ASCII mockups
 - When a question involves an ambiguous concept, briefly explain the difference and offer each interpretation as a separate option
 
 **Exploring approaches:**
@@ -94,10 +94,10 @@ digraph brainstorming {
 
 ## Key Principles
 
-- **Batch independent questions** — up to 4 per AskUserQuestion call, multiple batches if needed
+- **Batch independent questions** — up to 4 per AskUserQuestion call, multiple batches if more than 4
 - **Visual questions last, one at a time** — use `markdown` preview field for ASCII mockups
 - **Surface implicit alternatives** — don't assume; offer interpretations as options with brief explanations
-- **Multiple choice preferred** — easier to answer than open-ended when possible
+- **Multiple-choice preferred** — easier to answer than open-ended when possible
 - **YAGNI ruthlessly** — remove unnecessary features from all designs
 - **Explore alternatives** — always propose 2-3 approaches before settling
 - **Incremental validation** — present design, get approval before moving on
