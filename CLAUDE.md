@@ -1,8 +1,8 @@
-# Superpowers — SDLC Orchestration Fork (Pod-Based v2)
+# Superpowers — SDLC Orchestration Fork (Pod-Based v2.1)
 
 ## SDLC Orchestration Extension
 
-This fork adds a pod-based SDLC orchestration system on top of Superpowers. The v2 redesign replaces the sequential 10-stage pipeline with a department-based organizational structure modeled after human product teams: department Leads own their phases, a Founder synthesizes cross-department decisions using the Double Diamond (converge-diverge) protocol, and feedback loops allow late-stage findings to send work back to earlier phases.
+This fork adds a pod-based SDLC orchestration system on top of Superpowers. The v2.1 update extends the v2 pod-based pipeline with: an AI Employee Framework (consolidated into global `~/.claude/CLAUDE.md`), SAFe-aligned backlog management, persistent cross-project memory, and a PM tool selection decision (OpenProject). The v2.1 optimization consolidates the Foundation Layer from 4 standalone files + 18 agent sections into a single ~500-token `## AI Employee Framework` section in the global CLAUDE.md — reducing per-pipeline token cost by ~7K tokens/run and eliminating the worst-case 168K token risk.
 
 ### Added Commands
 - `/orchestrate` — Run the full pod-based SDLC pipeline (Product Discovery → Design → Architecture → Implementation → Quality → Ship)
@@ -118,7 +118,7 @@ Step C4 — Diverge-2 (Execute): Next phase runs with resolution in context
 
 | Skill | Purpose |
 |-------|---------|
-| `orchestration` | Pod-based pipeline management, phase dispatch, converge-diverge sync, pod brief, feedback loops |
+| `orchestration` | Pod-based pipeline management, phase dispatch, converge-diverge sync, pod brief, feedback loops, SAFe backlog management, memory search |
 | `pm-discovery` | Product Lead-led discovery with researcher dispatch (converge-diverge internally) |
 | `judgment-gates` | Severity gates + converge-diverge sync gates + rework gates |
 | `context-management` | Context scoping: pod brief (≤3K tokens), sync resolutions, consumed artifacts, token budget |
@@ -127,6 +127,7 @@ Step C4 — Diverge-2 (Execute): Next phase runs with resolution in context
 | `security-scan` | npm audit + secret scanning + OWASP Top 10 review |
 | `browser-testing` | SDLC context for browser-test stage; uses agent-browser plugin |
 | `scaffolding` | Project type templates and generation engine |
+| `knowledge-compounding` | **NEW** — Cross-project memory: extract learnings/patterns/heuristics at pipeline end, search memory at pipeline start |
 
 ---
 
@@ -199,7 +200,8 @@ Late-stage findings can send work back to earlier phases:
 
 | File | Purpose |
 |------|---------|
-| `pipeline-default.yaml` | 6-phase pod-based pipeline config |
+| `pipeline-default.yaml` | 6-phase pod-based pipeline config with SAFe fields (epic, capabilities, backlogs, pi, iterations) |
+| `backlog-template.md` | **NEW** — SAFe backlog template (Epic → Capability → Feature → Story hierarchy) |
 | `pod-brief-template.md` | Pod brief initialization template |
 | `product-standards.md` | Product dept non-negotiables |
 | `engineering-standards.md` | Engineering dept non-negotiables |
@@ -220,6 +222,64 @@ Late-stage findings can send work back to earlier phases:
 
 ---
 
+## AI Employee Framework (Consolidated in v2.1 Optimization)
+
+All agents operate within a shared behavioral framework defined in `~/.claude/CLAUDE.md` (global):
+
+| Location | Content | Tokens |
+|----------|---------|--------|
+| `~/.claude/CLAUDE.md` → `## AI Employee Framework` | Vision, operating norms, constitutional principles, behavioral examples, decision hierarchy, authority boundaries | ~500 (loaded once per session) |
+| Each agent's `## Identity` section | 1-2 line role-specific directive | ~40 per agent |
+| `~/.claude/foundation/archive/` | Original 4 foundation files archived (vision, mission, constitution, characteristics) | not loaded |
+
+**Architecture change from original v2.1**: The 4 standalone foundation files and 18 agent `## Foundation` sections (4 bullets each) are replaced by a single global section + 1-line per-agent `## Identity`. Token savings: ~7K tokens/run realistic, ~168K worst-case risk eliminated.
+
+---
+
+## Persistent Memory (NEW in v2.1)
+
+Cross-project knowledge base in `~/.claude/memory/`:
+
+```
+~/.claude/memory/
+├── index.md                  — searchable index (keyword-matched at pipeline start)
+├── learnings/                — cross-project lessons from pipeline runs
+├── patterns/                 — execution patterns that produced strong outcomes
+└── heuristics/               — decision rules derived from multiple projects
+```
+
+**At pipeline start**: Orchestrator searches memory for relevant prior learnings → top 3 included in pod brief.
+**At pipeline end**: `knowledge-compounding` skill extracts and stores new entries.
+
+---
+
+## SAFe Alignment (NEW in v2.1)
+
+| SAFe Concept | Our Implementation |
+|---|---|
+| Epic | Full product build — defined in `pipeline.yaml` `epic` section |
+| Capability | Cross-cutting concern — defined in `pipeline.yaml` `capabilities` section |
+| Feature | Deliverable unit within a phase — managed per Lead in team backlogs |
+| Story | User stories from PM spec |
+| PI (Program Increment) | One full pipeline run |
+| Iteration | One phase within the PI |
+| Inspect & Adapt | Converge-diverge sync at each phase boundary |
+
+Backlogs created at `docs/pm/backlog/`:
+- `portfolio-backlog.md` + `program-backlog.md` → Product Lead
+- `{dept}-team-backlog.md` → each Lead for their department
+
+---
+
+## PM Tool Decision (NEW in v2.1)
+
+**Selected**: OpenProject Community Edition (self-hosted, Docker Compose)
+**Decision record**: `docs/pm/decisions/2026-02-21-pm-tool-selection.md`
+**Why**: SAFe 4-level hierarchy, OpenAPI 3.1 REST API, active maintenance (v17.1.1 Feb 2026), Rails Engine plugin system for AI context fields
+**Status**: Decided — integration implementation (Phase 5 of feedback plan) pending
+
+---
+
 ## Design Philosophy
 
 1. **Judgment before tools** — severity gates + converge-diverge syncs surface decisions that matter
@@ -229,6 +289,8 @@ Late-stage findings can send work back to earlier phases:
 5. **Don't reinvent** — `why-reinvent` skill applied at every architecture decision; use what exists
 6. **Leads resist** — department Leads are authorized and required to push back on mediocre work
 7. **Context as dictionary** — filesystem artifacts are shared state; no growing chat logs
+8. **AI-native identity** — agents leverage AI strengths; no mimicking human limitations or hedging when data is available
+9. **Compound intelligence** — every pipeline run makes the next one smarter via structured memory
 
 ---
 
@@ -255,4 +317,5 @@ Late-stage findings can send work back to earlier phases:
 - v1 full autonomous pipeline run: 2026-02-20
 - v1 results: 38 tests, 100% passing, 3 real bugs caught
 - v1 learnings: `docs/pm/learnings/process/2026-02-20-enhanced-sdlc-pipeline-first-run.md`
-- v2 first run: pending
+- v2 first run: pending (CatHabits v2 — 289 tests, 91.66% coverage, 16 decision records, 5 syncs)
+- v2.1 (this update): AI Employee Foundation Layer, SAFe backlogs, persistent memory, PM tool decision; Foundation Layer consolidated into global CLAUDE.md (optimization)
