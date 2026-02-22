@@ -99,6 +99,7 @@ Start a new session in your chosen platform and ask for something that should tr
 
 **Testing**
 - **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
+- **end-to-end-validation** - Validate real user-path behavior with deterministic evidence
 
 **Debugging**
 - **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
