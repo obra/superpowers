@@ -276,8 +276,12 @@ Backlogs created at `docs/pm/backlog/`:
 **Selected**: OpenProject Community Edition (self-hosted, Docker Compose)
 **Decision record**: `docs/pm/decisions/2026-02-21-pm-tool-selection.md`
 **Why**: SAFe 4-level hierarchy, OpenAPI 3.1 REST API, active maintenance (v17.1.1 Feb 2026), Rails Engine plugin system for AI context fields
-**Status**: Live — Docker Compose running at `http://localhost:8080`. CLI (`~/.claude/scripts/op`) fully operational. API key configured in `~/.claude/scripts/.op-config`.
-**CLI commands verified**: list-projects, create-pi, list-pis, list-types, list-statuses, create-wp, add-comment, update-wp, get-wp
+**Status**: Live and fully integrated (Phase 6 complete).
+- Docker Compose running at `http://localhost:8080`
+- CLI (`~/.claude/scripts/op`) verified end-to-end across all 6 sync events
+- SAFe types configured: Epic (222), Capability (225), Feature (221), User story (223), Task (218)
+- Custom fields: Pod Brief Hash, Responsible Agent, Pipeline Phase, Quality Level
+- Human review workflow documented in `~/.claude/skills/openproject-sync/SKILL.md`
 
 ---
 
@@ -320,4 +324,4 @@ Backlogs created at `docs/pm/backlog/`:
 - v1 learnings: `docs/pm/learnings/process/2026-02-20-enhanced-sdlc-pipeline-first-run.md`
 - v2 first run: pending (CatHabits v2 — 289 tests, 91.66% coverage, 16 decision records, 5 syncs)
 - v2.1 (this update): AI Employee Foundation Layer, SAFe backlogs, persistent memory, PM tool decision; Foundation Layer consolidated into global CLAUDE.md (optimization)
-- v2.1 OpenProject integration: Docker instance live, Python CLI (`~/.claude/scripts/op`) built and verified end-to-end (2026-02-21)
+- v2.1 OpenProject integration (Phase 5-6 complete): Docker live, CLI verified, SAFe types + custom fields configured, full 6-event sync validated, human review workflow documented (2026-02-22)
