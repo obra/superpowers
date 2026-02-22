@@ -14,3 +14,6 @@ Addresses issue #455: workflow gap for real user-path validation.
 
 ## Verification
 - `bash tests/skills/test-end-to-end-validation-skill.sh`
+
+## Advanced Mode
+- Optional plugin for stricter contracts and schema-governed artifacts: https://github.com/gh-xj/harness-engineering-plugin
