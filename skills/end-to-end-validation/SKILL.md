@@ -1,11 +1,11 @@
 ---
 name: end-to-end-validation
-description: Validate user-visible behavior with deterministic commands and evidence artifacts before final completion.
+description: Use when you need to validate user-visible behavior for real user flows with deterministic commands and evidence artifacts before final completion.
 ---
 
 # End-to-End Validation
 
-## Trigger
+## When to Use
 Use before claiming a feature works for real user flows.
 
 ## Required command contract

@@ -21,6 +21,8 @@ tests/
 
 ### Skill Smoke Checks
 
+Run from the **repository root**:
+
 ```bash
 bash tests/skills/test-end-to-end-validation-skill.sh
 ```
