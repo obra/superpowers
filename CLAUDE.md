@@ -1,12 +1,14 @@
-# Superpowers — SDLC Orchestration Fork (Pod-Based v2.1)
+<!-- pipeline:v3 -->
+# Superpowers — SDLC Orchestration Fork (Pipeline v3)
 
 ## SDLC Orchestration Extension
 
-This fork adds a pod-based SDLC orchestration system on top of Superpowers. The v2.1 update extends the v2 pod-based pipeline with: an AI Employee Framework (consolidated into global `~/.claude/CLAUDE.md`), SAFe-aligned backlog management, persistent cross-project memory, and a PM tool selection decision (OpenProject). The v2.1 optimization consolidates the Foundation Layer from 4 standalone files + 18 agent sections into a single ~500-token `## AI Employee Framework` section in the global CLAUDE.md — reducing per-pipeline token cost by ~7K tokens/run and eliminating the worst-case 168K token risk.
+This fork adds a Pipeline v3 SDLC orchestration system on top of Superpowers. v3 moves from 6 sequential phases (v2.1) to parallel iteration teams within token-budgeted timeboxes. All department teams run concurrently within each iteration. Integration Points fire when work is done OR when the timebox expires — whichever comes first.
+
+**Canonical architecture reference**: `docs/pm/references/pipeline-v3-architecture.md`
 
 ### Added Commands
-- `/orchestrate` — Run the full pod-based SDLC pipeline (Product Discovery → Design → Architecture → Implementation → Quality → Ship)
-- `/yolo-orchestrate` — Fully autonomous pipeline run (Founder makes decisions autonomously, logs all findings)
+- `/orchestrate` — Run the full Pipeline v3 SDLC (PI Planning → Iterations 1–3 + IP Iteration)
 - `/scaffold` — Generate project scaffolding from YAML templates
 - `/pm-discover` — Standalone PM discovery (Product Lead conducts discovery + researcher dispatch)
 
@@ -15,7 +17,7 @@ This fork adds a pod-based SDLC orchestration system on top of Superpowers. The 
 ## Organizational Structure
 
 ```
-FOUNDER (opus) ← final decision maker, cross-dept sync via converge-diverge, rework authority
+FOUNDER (opus) ← final decision maker, Integration Point resolution, rework authority
 │
 ├── Product Department
 │   ├── Product Lead (opus)             — dept accountability, research synthesis, resistance
@@ -43,74 +45,130 @@ FOUNDER (opus) ← final decision maker, cross-dept sync via converge-diverge, r
 │   └── Release Readiness (opus)       — holistic PM spec vs. implementation check
 │
 └── Staff
-    ├── Orchestrator (opus)            — pipeline conductor, pod brief, sync facilitation
+    ├── Orchestrator (opus)            — pipeline conductor, pod brief, Integration Point facilitation
     └── Humanizer (sonnet)             — strips AI patterns from human-facing output
 ```
 
 ---
 
-## Pipeline: 6 Phases
+## Pipeline: v3 Iterations
 
 ```
-Phase 1: PRODUCT DISCOVERY
-  Product Lead dispatches (converge-diverge internally):
-  ├── [DIVERGE] Domain Researcher + Market Researcher (parallel)
-  ├── [CONVERGE] Product Lead synthesizes → product-lead-synthesis.md
-  ├── [DIVERGE] UX Researcher + Onboarding Designer (parallel)
-  ├── [CONVERGE] Product Lead synthesizes → final-product-brief.md
-  └── Artifact Generator → 6 PM artifacts
-  ★ SYNC: Product + Design + Engineering + Quality Leads → Founder resolves
-
-Phase 2: DESIGN
-  Design Lead dispatches:
-  ├── Creates design system (colors/WCAG, typography, spacing, components, breakpoints)
-  └── Visual Designer → HTML mockups (onboarding, core screen, empty states)
-  ★ SYNC: Product + Design + Engineering Leads → Founder resolves
-
-Phase 3: ARCHITECTURE
-  Engineering Lead dispatches:
-  ├── why-reinvent skill → technology evaluation
-  ├── superpowers:brainstorming → design doc
-  └── superpowers:writing-plans → TDD implementation plan
-  ★ SYNC: Engineering + Design + Product Leads → Founder resolves
-
-Phase 4: IMPLEMENTATION
-  Engineering Lead dispatches:
-  ├── superpowers:using-git-worktrees → environment setup
-  ├── superpowers:subagent-driven-development → implementation (mockups in context)
-  └── ux-reviewer → compare screenshots to mockups
-  ★ SYNC: Engineering + Design Leads → Founder resolves
-
-Phase 5: QUALITY
-  Quality Lead dispatches (converge-diverge internally):
-  ├── [DIVERGE] Static Analysis + Security Scan + Browser Test (parallel)
-  ├── [CONVERGE] Quality Lead synthesizes → quality-synthesis.md
-  └── Release Readiness Reviewer → holistic ship check
-  ★ FINAL SYNC: Quality + Engineering + Product Leads → Founder makes ship/no-ship
-
-Phase 6: SHIP
-  superpowers:finishing-a-development-branch (gate: always)
+PI-001
+├── PI Planning          — all 4 Leads + Founder, token budget allocation, ROAM risks, program board
+│
+├── Iteration 1: Foundation   — all 4 department teams run concurrently, token-budgeted
+│   Product:     Domain research + Market research → PM spec + 6 artifacts
+│   Design:      Design system + HTML mockups (onboarding, core, empty states)
+│   Engineering: why-reinvent evaluation + architecture design doc + TDD plan
+│   Quality:     Definition of Done + acceptance criteria review
+│   ──────────────────────────────────────────────────────────────────────
+│   Integration Point 1: "Spec Lock"         (dual trigger — see below)
+│
+├── Iteration 2: Build        — all 4 department teams run concurrently, token-budgeted
+│   Product:     Backlog grooming + WSJF prioritization + story refinement
+│   Design:      Mockup revisions from IP-1 resolution + design QA
+│   Engineering: Implementation (enablers first, then features, subagent-driven)
+│   Quality:     Static analysis + ongoing code review
+│   ──────────────────────────────────────────────────────────────────────
+│   Integration Point 2: "Feature Complete"  (dual trigger — see below)
+│
+├── Iteration 3: Harden       — all 4 department teams run concurrently, token-budgeted
+│   Product:     Release notes + onboarding verification
+│   Design:      Final UX review + WCAG compliance check
+│   Engineering: Bug fixes + performance + UX screenshot vs. mockup comparison
+│   Quality:     Browser tests + security scan + Release Readiness review
+│   ──────────────────────────────────────────────────────────────────────
+│   Integration Point 3: "Ship Decision"     (dual trigger — see below)
+│
+└── IP Iteration: Learn       — retros, knowledge compounding, ship
+    All Leads:   Retrospectives + mini-learnings
+    Orchestrator: knowledge-compounding skill → ~/.claude/memory/
+    Engineering: superpowers:finishing-a-development-branch
 ```
+
+**Dual-trigger Integration Points**: an Integration Point fires when ALL key_outputs for that iteration exist in the filesystem (fast path) OR when ALL teams have exhausted their token budgets (timebox path) — whichever comes first. The hook `pipeline-subagent-stop.sh` evaluates both conditions after every task completion.
+
+**Token Budget Defaults**:
+```
+PI total: ~7M tokens
+  PI Planning:    500K
+  Iteration 1:    1.5M  (Product-heavy: research + PM spec)
+  Iteration 2:    2.0M  (Engineering-heavy: implementation)
+  Iteration 3:    1.5M  (Quality-heavy: testing + hardening)
+  IP Iteration:   1.5M  (Balanced: retros + ship)
+```
+
+Token budget is the AI equivalent of sprint hours. Set at PI Planning in `pipeline.json`, enforced per-team per-iteration by `pipeline-subagent-stop.sh`. When a team hits 80% of its budget, the hook injects a budget-alert into the next dispatch context. When a team exhausts its budget, the team is marked complete for that iteration regardless of remaining tasks — partial output is accepted and logged.
 
 ---
 
-## Converge-Diverge Sync Protocol
+## Integration Point Protocol
 
-At each phase boundary, the Orchestrator facilitates a 4-step sync:
+At each Integration Point, the Orchestrator facilitates a 4-step sync:
 
 ```
-Step C1 — Converge-1 (Share State): All Leads write sync briefs in parallel
-           → docs/sync/phase-N/briefs/<dept>-brief.md
+Step C1 — Share State: All Leads write sync briefs in parallel
+           → docs/sync/iteration-{N}/briefs/<dept>-brief.md
 
-Step C2 — Diverge-1 (Cross-Pollinate): All Leads read other briefs, write responses in parallel
-           → docs/sync/phase-N/responses/<dept>-response.md
-           [Skip if < 3 Leads OR pure execution phase]
+Step C2 — Cross-Pollinate: All Leads read other briefs, write responses in parallel
+           → docs/sync/iteration-{N}/responses/<dept>-response.md
+           [Skip if < 3 Leads have material findings]
 
-Step C3 — Converge-2 (Founder Decides): Founder reads all briefs + responses, writes resolution
-           → docs/sync/phase-N/resolution.md
+Step C3 — Founder Resolves: reads all briefs + responses, writes resolution
+           → docs/sync/iteration-{N}/resolution.md
 
-Step C4 — Diverge-2 (Execute): Next phase runs with resolution in context
+Step C4 — Execute: next iteration begins with resolution in context
 ```
+
+Resolution files are injected by `pipeline-pre-dispatch.sh` into every subsequent task context. Leads do not need to re-read them manually — the hook handles context injection.
+
+---
+
+## Hook Architecture
+
+6 hooks automate coordination at ~0 orchestrator token cost:
+
+```
+~/.claude/scripts/hooks/
+├── pipeline-session-start.sh   — validate pipeline.json on session start; surface blocked tasks
+├── pipeline-pre-dispatch.sh    — inject budget context + dep key_outputs before task dispatch
+├── pipeline-subagent-start.sh  — record task start time + mark task in_progress in pipeline.json
+├── pipeline-subagent-stop.sh   — parse TASK_RESULT, update task state, check budget thresholds,
+│                                  evaluate dual-trigger Integration Point conditions
+├── pipeline-post-dispatch.sh   — inject newly-unblocked tasks + budget alerts after task completes
+└── pipeline-stop-guard.sh      — verify no skipped tasks, check expected key_outputs exist
+```
+
+Hooks read and write `docs/pm/pipeline.json` (project-level state). No orchestrator tokens are spent on state management — hooks handle it entirely.
+
+---
+
+## Pipeline File
+
+`docs/pm/pipeline.json` — one file per project. Replaces both `pipeline.yaml` + `.pipeline-state.json` from v2.1.
+
+**Template**: `~/.claude/skills/orchestration/templates/pipeline-v3-template.json`
+
+**Structure**:
+```json
+{
+  "constants": { ... },      // immutable once set: project name, epic, capabilities, token budgets
+  "state": {                 // updated per task by hooks
+    "current_iteration": 1,
+    "integration_points": { ... },
+    "teams": {
+      "product":     { "budget_used": 0, "budget_total": 375000, "status": "active" },
+      "design":      { "budget_used": 0, "budget_total": 375000, "status": "active" },
+      "engineering": { "budget_used": 0, "budget_total": 375000, "status": "active" },
+      "quality":     { "budget_used": 0, "budget_total": 375000, "status": "active" }
+    },
+    "tasks": { ... }
+  }
+}
+```
+
+Dependencies are declared in `constants.iterations.{N}.dependencies` per team. The `pipeline-pre-dispatch.sh` hook resolves dependencies and injects `key_outputs` from upstream tasks automatically. No manual artifact passing by the Orchestrator.
 
 ---
 
@@ -118,16 +176,16 @@ Step C4 — Diverge-2 (Execute): Next phase runs with resolution in context
 
 | Skill | Purpose |
 |-------|---------|
-| `orchestration` | Pod-based pipeline management, phase dispatch, converge-diverge sync, pod brief, feedback loops, SAFe backlog management, memory search |
-| `pm-discovery` | Product Lead-led discovery with researcher dispatch (converge-diverge internally) |
-| `judgment-gates` | Severity gates + converge-diverge sync gates + rework gates |
+| `orchestration` | v3 pipeline management: iteration dispatch, Integration Point facilitation, token budget tracking, pod brief, feedback loops, SAFe backlog management, memory search |
+| `pm-discovery` | Product Lead-led discovery with researcher dispatch (parallel within Iteration 1) |
+| `judgment-gates` | Severity gates + Integration Point sync gates + rework gates |
 | `context-management` | Context scoping: pod brief (≤3K tokens), sync resolutions, consumed artifacts, token budget |
 | `why-reinvent` | Before building custom: evaluate existing solutions, recommend adopt or build |
 | `static-analysis` | TypeScript, linting, coverage gate (P1 on type errors or coverage < 80%) |
 | `security-scan` | npm audit + secret scanning + OWASP Top 10 review |
-| `browser-testing` | SDLC context for browser-test stage; uses agent-browser plugin |
+| `browser-testing` | SDLC context for Iteration 3 browser-test work; uses agent-browser plugin |
 | `scaffolding` | Project type templates and generation engine |
-| `knowledge-compounding` | **NEW** — Cross-project memory: extract learnings/patterns/heuristics at pipeline end, search memory at pipeline start |
+| `knowledge-compounding` | Cross-project memory: extract learnings/patterns/heuristics at IP Iteration end, search memory at PI Planning |
 
 ---
 
@@ -172,27 +230,27 @@ Step C4 — Diverge-2 (Execute): Next phase runs with resolution in context
 ### Staff
 | Agent | Role |
 |-------|------|
-| `orchestrator` (opus) | Pipeline conductor. Pod brief. Converge-diverge facilitation. Feedback loops. |
+| `orchestrator` (opus) | Pipeline conductor. Pod brief. Integration Point facilitation. Feedback loops. |
 | `humanizer` (sonnet) | Strips AI verbal tics from human-facing output |
 
 ---
 
 ## Shared Memory: Pod Brief
 
-`docs/pm/.pod-brief.md` — read by every agent in every phase. Maintained by Orchestrator.
+`docs/pm/.pod-brief.md` — read by every agent in every iteration. Maintained by Orchestrator.
 
-**Contents:** project vision, key decisions (running log), domain context, design principles, technical constraints, open questions, feedback log.
+**Contents**: project vision, key decisions (running log), domain context, design principles, technical constraints, open questions, feedback log.
 
-**Token cap:** 3,000 tokens. Orchestrator summarizes when it grows.
+**Token cap**: 3,000 tokens. Orchestrator summarizes when it grows.
 
 ---
 
 ## Feedback Loops
 
-Late-stage findings can send work back to earlier phases:
-- Max 2 cycles between any phase pair before Founder escalation
+Late-iteration findings can send work back to earlier iterations:
+- Max 2 cycles between any iteration pair before Founder escalation
 - Feedback written to `docs/pm/feedback/YYYY-MM-DD-<from>-to-<target>.md`
-- Orchestrator re-dispatches target phase Lead with feedback in context
+- Orchestrator re-dispatches target iteration Lead with feedback in context
 
 ---
 
@@ -200,8 +258,8 @@ Late-stage findings can send work back to earlier phases:
 
 | File | Purpose |
 |------|---------|
-| `pipeline-default.yaml` | 6-phase pod-based pipeline config with SAFe fields (epic, capabilities, backlogs, pi, iterations) |
-| `backlog-template.md` | **NEW** — SAFe backlog template (Epic → Capability → Feature → Story hierarchy) |
+| `pipeline-v3-template.json` | v3 pipeline config (constants + state, token budgets, iterations, key_outputs) |
+| `backlog-template.md` | SAFe backlog template (Epic → Capability → Feature → Story hierarchy) |
 | `pod-brief-template.md` | Pod brief initialization template |
 | `product-standards.md` | Product dept non-negotiables |
 | `engineering-standards.md` | Engineering dept non-negotiables |
@@ -209,7 +267,7 @@ Late-stage findings can send work back to earlier phases:
 | `quality-standards.md` | Quality dept non-negotiables |
 | `sync-brief-template.md` | Lead sync brief format |
 | `sync-response-template.md` | Lead cross-pollination response format |
-| `converge-diverge-protocol.md` | Generic converge-diverge protocol reference |
+| `integration-point-protocol.md` | Integration Point sync protocol reference |
 
 ---
 
@@ -222,7 +280,7 @@ Late-stage findings can send work back to earlier phases:
 
 ---
 
-## AI Employee Framework (Consolidated in v2.1 Optimization)
+## AI Employee Framework
 
 All agents operate within a shared behavioral framework defined in `~/.claude/CLAUDE.md` (global):
 
@@ -230,67 +288,88 @@ All agents operate within a shared behavioral framework defined in `~/.claude/CL
 |----------|---------|--------|
 | `~/.claude/CLAUDE.md` → `## AI Employee Framework` | Vision, operating norms, constitutional principles, behavioral examples, decision hierarchy, authority boundaries | ~500 (loaded once per session) |
 | Each agent's `## Identity` section | 1-2 line role-specific directive | ~40 per agent |
-| `~/.claude/foundation/archive/` | Original 4 foundation files archived (vision, mission, constitution, characteristics) | not loaded |
 
-**Architecture change from original v2.1**: The 4 standalone foundation files and 18 agent `## Foundation` sections (4 bullets each) are replaced by a single global section + 1-line per-agent `## Identity`. Token savings: ~7K tokens/run realistic, ~168K worst-case risk eliminated.
+Token savings vs. original v2: ~7K tokens/run realistic. The 4 standalone foundation files and 18 agent `## Foundation` sections are replaced by a single global section + 1-line per-agent `## Identity`.
 
 ---
 
-## Persistent Memory (NEW in v2.1)
+## Persistent Memory
 
 Cross-project knowledge base in `~/.claude/memory/`:
 
 ```
 ~/.claude/memory/
-├── index.md                  — searchable index (keyword-matched at pipeline start)
+├── index.md                  — searchable index (keyword-matched at PI Planning)
 ├── learnings/                — cross-project lessons from pipeline runs
 ├── patterns/                 — execution patterns that produced strong outcomes
 └── heuristics/               — decision rules derived from multiple projects
 ```
 
-**At pipeline start**: Orchestrator searches memory for relevant prior learnings → top 3 included in pod brief.
-**At pipeline end**: `knowledge-compounding` skill extracts and stores new entries.
+**At PI Planning**: Orchestrator searches memory for relevant prior learnings → top 3 included in pod brief.
+**At IP Iteration end**: `knowledge-compounding` skill extracts and stores new entries.
 
 ---
 
-## SAFe Alignment (NEW in v2.1)
+## SAFe Alignment
 
-| SAFe Concept | Our Implementation |
+| SAFe Concept | v3 Implementation |
 |---|---|
-| Epic | Full product build — defined in `pipeline.yaml` `epic` section |
-| Capability | Cross-cutting concern — defined in `pipeline.yaml` `capabilities` section |
-| Feature | Deliverable unit within a phase — managed per Lead in team backlogs |
+| Epic | Full product build — defined in `pipeline.json` `constants.epic` section |
+| Capability | Cross-cutting concern — defined in `pipeline.json` `constants.capabilities` |
+| Feature | Deliverable unit within an iteration — managed per Lead in team backlogs |
 | Story | User stories from PM spec |
 | PI (Program Increment) | One full pipeline run |
-| Iteration | One phase within the PI |
-| Inspect & Adapt | Converge-diverge sync at each phase boundary |
+| Iteration | One of 3 timeboxed parallel-team iterations within the PI |
+| Inspect & Adapt | Integration Point sync at each iteration boundary |
+| PI Planning | All 4 Leads + Founder: PI Objectives, ROAM risks, program board, token budget allocation |
+| System Demo | IP-2 (Engineering Lead) + IP-3 (Quality Lead) — browser demo of all Must Have stories |
+| WSJF | Iteration 2 start — Product Lead scores features by Business Value × Time Criticality × Risk Reduction / Job Size |
+| Iteration Planning | Each Lead writes iteration plan before iteration work starts |
+| Retrospective | Each Lead writes retro + mini-learnings at IP Iteration |
+| Feature Parallelism | Iteration 2 — enablers first, then up to 3 feature groups in parallel |
+| Enabler Features | Each task tagged `type: enabler` or `type: business`; enablers ordered first |
+| Program Board | Created at PI Planning; updated at each Integration Point by Orchestrator |
+| Definition of Done | `docs/pm/definition-of-done.md` — Epic / Feature / Story checklists; checked by Leads in retro |
+| IP Iteration | Analytics-driven optimization — retros + knowledge compounding + ship |
 
-Backlogs created at `docs/pm/backlog/`:
+**Not applicable** (with rationale):
+- Daily Standup: AI agents don't lose context — pod brief = state transfer
+- Scrum of Scrums: One pipeline, not multiple ARTs — Integration Points cover this
+
+SAFe metrics tracked in `pipeline.json` state under `safe_metrics`.
+
+Backlogs at `docs/pm/backlog/`:
 - `portfolio-backlog.md` + `program-backlog.md` → Product Lead
 - `{dept}-team-backlog.md` → each Lead for their department
 
+PI Planning artifacts at `docs/pm/pi-planning/`:
+- `pi-objectives.md`, `roam-risks.md`, `iteration-goals.md`, `pi-resolution.md`
+
+Iteration plans at `docs/pm/iteration-plans/iteration-{N}-plan.md`
+Retrospectives at `docs/pm/retrospectives/iteration-{N}-retro.md`
+System demos at `docs/pm/demos/iteration-{N}-demo.md`
+IP Iteration Report at `docs/pm/ip-iteration/pi-001-optimization-report.md`
+
 ---
 
-## PM Tool Decision (NEW in v2.1)
+## OpenProject Integration (Optional)
 
-**Selected**: OpenProject Community Edition (self-hosted, Docker Compose)
+OpenProject Community Edition (self-hosted, Docker Compose) is available as an optional human review layer. It is disabled by default in v3.
+
 **Decision record**: `docs/pm/decisions/2026-02-21-pm-tool-selection.md`
-**Why**: SAFe 4-level hierarchy, OpenAPI 3.1 REST API, active maintenance (v17.1.1 Feb 2026), Rails Engine plugin system for AI context fields
-**Status**: Live and fully integrated (Phase 6 complete).
-- Docker Compose running at `http://localhost:8080`
-- CLI (`~/.claude/scripts/op`) verified end-to-end across all 6 sync events
-- SAFe types configured: Epic (222), Capability (225), Feature (221), User story (223), Task (218)
-- Custom fields: Pod Brief Hash, Responsible Agent, Pipeline Phase, Quality Level
-- Human review workflow documented in `~/.claude/skills/openproject-sync/SKILL.md`
+**CLI**: `~/.claude/scripts/op` — verified end-to-end for all sync events
+**Enable**: set `constants.integrations.openproject.enabled: true` in `pipeline.json`
+
+When enabled, the Orchestrator syncs Integration Point resolutions to OpenProject work packages via the `op` CLI. SAFe types (Epic, Capability, Feature, User story, Task) and custom fields (Pod Brief Hash, Responsible Agent, Pipeline Iteration, Quality Level) are pre-configured.
 
 ---
 
 ## Design Philosophy
 
-1. **Judgment before tools** — severity gates + converge-diverge syncs surface decisions that matter
+1. **Judgment before tools** — severity gates + Integration Point syncs surface decisions that matter
 2. **Research before ask** — exhaust automated research before asking the human
 3. **Verify before trust** — anti-rationalization verification at every stage
-4. **Amplification not replacement** — the human validates at gates; agents produce, not replace
+4. **Amplification not replacement** — the human validates at Integration Points; agents produce, not replace
 5. **Don't reinvent** — `why-reinvent` skill applied at every architecture decision; use what exists
 6. **Leads resist** — department Leads are authorized and required to push back on mediocre work
 7. **Context as dictionary** — filesystem artifacts are shared state; no growing chat logs
@@ -299,29 +378,50 @@ Backlogs created at `docs/pm/backlog/`:
 
 ---
 
-## v1 → v2 Comparison
+## Version Governance
 
-| Aspect | v1 (sequential) | v2 (pod-based) |
-|--------|-----------------|----------------|
-| Structure | 10 sequential stages | 6 phases with parallel stages + feedback loops |
-| Quality control | Verifier classifies P1/P2/P3 | Leads enforce standards + Founder decides at sync |
-| Communication | One-way artifact passing | Structured handoffs + converge-diverge sync sessions |
-| Decision making | Verifier flags, user approves | Leads present trade-offs, Founder synthesizes |
-| PM depth | Generic artifact generation | Domain + UX + onboarding research before artifacts |
-| Design | None | Full design phase with HTML mockups before any code |
-| Feedback loops | None | Max 2 cycles between any two phases |
-| Shared context | Scoped consumes/produces | Pod brief (3K cap) + sync resolutions + artifacts |
-| Resistance | Nobody pushes back | Leads resist; Founder rejects mediocre work |
-| "Why reinvent" | Not systematic | Applied at every architecture decision |
+Every file with pipeline-specific instructions is tagged:
+
+```
+<!-- pipeline:v3 -->
+...pipeline-specific content...
+<!-- /pipeline:v3 -->
+```
+
+Search for all v3-aware files:
+```bash
+grep -r "pipeline:v3" ~/.claude/
+```
+
+Canonical reference for the full v3 architecture specification:
+`docs/pm/references/pipeline-v3-architecture.md`
+
+Prior versions archived at:
+- v2.1: `docs/pm/references/archive/pipeline-v2.1-architecture.md`
+- v1: `docs/pm/references/archive/pipeline-v1-architecture.md`
+
+---
+
+## v2.1 → v3 Comparison
+
+| Aspect | v2.1 (sequential phases) | v3 (parallel iterations) |
+|--------|--------------------------|--------------------------|
+| Execution | 6 sequential phases | 3 iterations + IP Iteration; all teams parallel within each |
+| Timebox | No | Token budget per team per iteration |
+| Coordination | Converge-diverge protocol at phase end | Hook-automated state + Integration Points |
+| State management | `pipeline.yaml` + `.pipeline-state.json` | Single `pipeline.json` (constants + state) |
+| Dependency tracking | Phase produces/consumes lists | `key_outputs` in `pipeline.json`, injected by hooks |
+| OpenProject | Optional but on-by-default | Disabled by default; opt-in via `pipeline.json` |
+| Idle time | Teams wait for sequential phases to complete | Teams run concurrently; no idle between phases |
+| Hook automation | None | 6 hooks handle state, budget, unblocking, guard |
+| Integration Point trigger | Manual phase gate | Dual-trigger: artifacts exist OR budgets exhausted |
 
 ---
 
 ## Tested Against
 
-- CatHabits MVP (React + TypeScript + Vite — mobile-first web app)
-- v1 full autonomous pipeline run: 2026-02-20
-- v1 results: 38 tests, 100% passing, 3 real bugs caught
-- v1 learnings: `docs/pm/learnings/process/2026-02-20-enhanced-sdlc-pipeline-first-run.md`
-- v2 first run: pending (CatHabits v2 — 289 tests, 91.66% coverage, 16 decision records, 5 syncs)
-- v2.1 (this update): AI Employee Foundation Layer, SAFe backlogs, persistent memory, PM tool decision; Foundation Layer consolidated into global CLAUDE.md (optimization)
-- v2.1 OpenProject integration (Phase 5-6 complete): Docker live, CLI verified, SAFe types + custom fields configured, full 6-event sync validated, human review workflow documented (2026-02-22)
+- CatHabits MVP v1: 38 tests, 100% passing — v1 pipeline run (2026-02-20)
+- CatHabits MVP v2: 289 tests, 91.66% coverage, 16 decision records, 5 syncs — v2.1 pipeline run (2026-02-20)
+- v2.1 OpenProject integration: Docker live, CLI verified, SAFe types + custom fields configured, full 6-event sync validated (2026-02-22)
+- v3: Pending — Sudoku MVP test run (parallel iteration validation, token budget enforcement, dual-trigger Integration Points)
+<!-- /pipeline:v3 -->
