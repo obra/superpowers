@@ -139,16 +139,17 @@ if [ -d "$PROMPT_TEMPLATES_DIR" ]; then
                 continue
             fi
 
-            if [ -L "$target_skill" ]; then
-                rm "$target_skill"
-            fi
-
             # Skip if target directory is itself a symlink (would modify the repo source)
             target_dir="$(dirname "$target_skill")"
             if [ -L "$target_dir" ]; then
                 echo "  ⚠ Skipping $(basename "$target_skill"): parent directory is a symlink (would modify repo source)"
                 continue
             fi
+
+            if [ -L "$target_skill" ]; then
+                rm "$target_skill"
+            fi
+
             # Use relative path for portability
             if ln -sr "$template" "$target_skill" 2>/dev/null; then
                 : # GNU ln with -r support
@@ -214,10 +215,9 @@ else
 fi
 
 # Trim trailing blank lines (prevents accumulation on repeated runs)
-if sed -i.bak -e :a -e '/^\n*$/{$d;N;ba' -e '}' "$QWEN_MD" 2>/dev/null; then
+if sed -i.bak -e :a -e '/^[[:space:]]*$/{$d;N;ba' -e '}' "$QWEN_MD" 2>/dev/null; then
     rm -f "${QWEN_MD}.bak"
-elif awk '{print; n=0} /^$/{n++} END{for(i=0;i<n-1;i++)print ""}' "$QWEN_MD" > "${QWEN_MD}.tmp" 2>/dev/null; then
-    # Fallback: awk version for systems without GNU sed (macOS/BSD)
+elif awk '{lines[NR]=$0} END{e=NR; while(e>0 && lines[e]=="") e--; for(i=1;i<=e;i++) print lines[i]}' "$QWEN_MD" > "${QWEN_MD}.tmp" 2>/dev/null; then
     mv "${QWEN_MD}.tmp" "$QWEN_MD"
 else
     echo "Warning: Could not trim blank lines from $QWEN_MD" >&2
