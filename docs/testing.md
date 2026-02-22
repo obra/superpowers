@@ -24,7 +24,7 @@ tests/
 Run from the **repository root**:
 
 ```bash
-bash tests/skills/test-end-to-end-validation-skill.sh
+bash tests/skills/test-harness-engineering-skill.sh
 ```
 
 ### Integration Tests
