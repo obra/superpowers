@@ -31,6 +31,23 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 **2. Dispatch code-reviewer subagent:**
 
+**For Qwen Code CLI:**
+```python
+task(
+    subagent_type="code-reviewer",
+    description="Code review for [feature]",
+    prompt="""
+    WHAT_WAS_IMPLEMENTED: [What you just built]
+    PLAN_OR_REQUIREMENTS: [What it should do]
+    BASE_SHA: [Starting commit]
+    HEAD_SHA: [Ending commit]
+    DESCRIPTION: [Brief summary]
+    """
+)
+```
+
+**For Claude Code:**
+
 Use Task tool with superpowers:code-reviewer type, fill template at `code-reviewer.md`
 
 **Placeholders:**

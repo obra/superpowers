@@ -541,6 +541,16 @@ Run pressure scenario with subagent WITHOUT the skill. Document exact behavior:
 - What rationalizations did they use (verbatim)?
 - Which pressures triggered violations?
 
+**For Qwen Code CLI:**
+```python
+task(subagent_type="general-purpose", description="Test pressure scenario")
+```
+
+**For Claude Code:**
+```typescript
+Task("Test pressure scenario")
+```
+
 This is "watch the test fail" - you must see what agents naturally do before writing the skill.
 
 ### GREEN: Write Minimal Skill

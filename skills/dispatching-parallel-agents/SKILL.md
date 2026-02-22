@@ -63,6 +63,14 @@ Each agent gets:
 
 ### 3. Dispatch in Parallel
 
+```python
+# In Qwen Code CLI environment
+task(subagent_type="general-purpose", description="Fix agent-tool-abort.test.ts failures")
+task(subagent_type="general-purpose", description="Fix batch-completion-behavior.test.ts failures")
+task(subagent_type="general-purpose", description="Fix tool-approval-race-conditions.test.ts failures")
+# All three run concurrently
+```
+
 ```typescript
 // In Claude Code / AI environment
 Task("Fix agent-tool-abort.test.ts failures")
