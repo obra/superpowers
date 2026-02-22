@@ -4,8 +4,9 @@ set -e
 # ==============================================================================
 # Superpowers Installer for Qwen Code CLI
 # ==============================================================================
-# 1. Symlinks each skill individually into ~/.qwen/skills/ (hub pattern)
-# 2. Injects Superpowers context block into ~/.qwen/QWEN.md
+# 1. Symlinks each skill individually into ~/.qwen/skills/
+# 2. Symlinks each agent definition individually into ~/.qwen/agents/
+# 3. Injects Superpowers context block into ~/.qwen/QWEN.md
 # ==============================================================================
 
 QWEN_DIR="$HOME/.qwen"
@@ -61,6 +62,43 @@ for skill_path in "$REPO_SKILLS_DIR"/*/; do
     fi
 done
 
+# --- Link agents individually (hub pattern) ---
+AGENTS_DIR="$QWEN_DIR/agents"
+REPO_AGENTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/agents"
+
+mkdir -p "$AGENTS_DIR"
+
+if [ -d "$REPO_AGENTS_DIR" ]; then
+    echo "Linking agents from $REPO_AGENTS_DIR to $AGENTS_DIR..."
+    for agent_path in "$REPO_AGENTS_DIR"/*.md; do
+        if [ -f "$agent_path" ]; then
+            agent_name=$(basename "$agent_path")
+            target_path="$AGENTS_DIR/$agent_name"
+
+            if [ -e "$target_path" ] || [ -L "$target_path" ]; then
+                if [ -L "$target_path" ]; then
+                    rm "$target_path"
+                else
+                    echo "  ⚠ $target_path exists and is not a symlink. Skipping."
+                    continue
+                fi
+            fi
+
+            # Use relative path for portability
+            if ln -sr "$agent_path" "$target_path" 2>/dev/null; then
+                : # GNU ln with -r support
+            else
+                rel_path="$(python3 -c "import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))" "$agent_path" "$AGENTS_DIR")"
+                ln -s "$rel_path" "$target_path"
+            fi
+            echo "  ✓ $agent_name"
+        fi
+    done
+else
+    echo "No agents directory found at $REPO_AGENTS_DIR, skipping agent linking."
+fi
+
+
 # --- Context injection into QWEN.md ---
 CONTEXT_HEADER="<!-- SUPERPOWERS-CONTEXT-START -->"
 CONTEXT_FOOTER="<!-- SUPERPOWERS-CONTEXT-END -->"
@@ -69,18 +107,18 @@ read -r -d '' CONTEXT_BLOCK << 'EOM' || true
 <!-- SUPERPOWERS-CONTEXT-START -->
 # Superpowers Configuration
 
-You have been granted Superpowers. These are specialized skills located in `~/.qwen/skills`.
+You have been granted Superpowers. These are specialized skills located in `~/.qwen/skills` and subagent definitions in `~/.qwen/agents`.
 
-## Skill Discovery & Usage
-- **ALWAYS** check for relevant skills in `~/.qwen/skills` before starting a task.
+## Skill & Agent Discovery
+- **ALWAYS** check for relevant skills in `~/.qwen/skills` and available agents in `~/.qwen/agents` before starting a task.
 - If a skill applies (e.g., "brainstorming", "testing"), you **MUST** follow it.
-- To "use" a skill, read its content and follow the instructions.
+- To use a skill, read its `SKILL.md` file. To use a subagent, use the `task()` tool with the appropriate `subagent_type` matching the agent's name.
 
 ## Terminology Mapping
 The skills were originally written for Claude Code. Interpret as follows:
 - **"Claude"** or **"Claude Code"** → **"Qwen"** (You).
-- **"Task" tool** → Sequential execution. Perform tasks sequentially yourself.
-- **"Skill" tool** → read_file. To invoke a skill, read `~/.qwen/skills/<skill-name>/SKILL.md`.
+- **"Task" tool** → Use your native `task()` tool. The required subagents (`implementer`, `spec-reviewer`, `code-reviewer`) have been linked into `~/.qwen/agents`.
+- **"Skill" tool** → `read_file`. To invoke a skill, read `~/.qwen/skills/<skill-name>/SKILL.md`.
 - **"TodoWrite"** → Write/update a plan file (e.g., `plan.md`).
 - File operations → your native tools (`read_file`, `write_file`, `replace`, etc.)
 - Search → `search_file_content` or `glob`

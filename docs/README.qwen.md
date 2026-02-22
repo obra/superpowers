@@ -54,9 +54,12 @@ Skills reference Claude Code tools. Qwen equivalents:
 
 | Claude Code | Qwen Code |
 |-------------|-----------|
-| `Task` (subagents) | Sequential execution |
+| `Task` (subagents) | `task()` tool |
 | `Skill` tool | `read_file` on `~/.qwen/skills/<skill>/SKILL.md` |
 | `TodoWrite` | Write/update `plan.md` |
+
+**Note on Qwen Subagent Configuration:**
+Qwen Code CLI supports native subagent delegation via its `task()` tool. To enable Superpowers' subagent workflows (like `subagent-driven-development` or `dispatching-parallel-agents`), you will need to define corresponding subagents in `~/.qwen/agents/` using Markdown+YAML configuration files (e.g., `implementer.md`, `code-reviewer.md`). These files define the subagent's role, system prompt, and allowed tools.
 | `read_file` | `read_file` |
 | `write_file` | `write_file` |
 | `Edit` / `replace` | `replace` |
