@@ -19,6 +19,12 @@ tests/
 
 ## Running Tests
 
+### Skill Smoke Checks
+
+```bash
+bash tests/skills/test-end-to-end-validation-skill.sh
+```
+
 ### Integration Tests
 
 Integration tests execute real Claude Code sessions with actual skills:
