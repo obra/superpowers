@@ -6,7 +6,8 @@ set -e
 # ==============================================================================
 # 1. Symlinks each skill individually into ~/.qwen/skills/
 # 2. Symlinks each agent definition individually into ~/.qwen/agents/
-# 3. Injects Superpowers context block into ~/.qwen/QWEN.md
+# 3. Symlinks Qwen-specific prompt templates for subagent skills
+# 4. Injects Superpowers context block into ~/.qwen/QWEN.md
 # ==============================================================================
 
 QWEN_DIR="$HOME/.qwen"
@@ -96,6 +97,41 @@ if [ -d "$REPO_AGENTS_DIR" ]; then
     done
 else
     echo "No agents directory found at $REPO_AGENTS_DIR, skipping agent linking."
+fi
+
+# --- Symlink Qwen-specific prompt templates for subagent skills ---
+PROMPT_TEMPLATES_DIR="$REPO_AGENTS_DIR"
+
+if [ -d "$PROMPT_TEMPLATES_DIR" ]; then
+    echo "Linking Qwen prompt templates to subagent skills..."
+    for template in "$PROMPT_TEMPLATES_DIR"/*-prompt-template.md; do
+        if [ -f "$template" ]; then
+            template_name=$(basename "$template")
+            # Map template names to skill directories
+            if [[ "$template_name" == "implementer-prompt-template.md" ]]; then
+                target_skill="$SKILLS_DIR/subagent-driven-development/implementer-prompt.md"
+            elif [[ "$template_name" == "spec-reviewer-prompt-template.md" ]]; then
+                target_skill="$SKILLS_DIR/subagent-driven-development/spec-reviewer-prompt.md"
+            elif [[ "$template_name" == "code-reviewer-prompt-template.md" ]]; then
+                target_skill="$SKILLS_DIR/subagent-driven-development/code-quality-reviewer-prompt.md"
+            else
+                continue
+            fi
+
+            if [ -L "$target_skill" ]; then
+                rm "$target_skill"
+            fi
+
+            # Use relative path for portability
+            if ln -sr "$template" "$target_skill" 2>/dev/null; then
+                : # GNU ln with -r support
+            else
+                rel_path="$(python3 -c "import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))" "$template" "$(dirname "$target_skill")")"
+                ln -s "$rel_path" "$target_skill"
+            fi
+            echo "  ✓ $(basename "$target_skill")"
+        fi
+    done
 fi
 
 
