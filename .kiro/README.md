@@ -21,12 +21,12 @@ This project uses Kiro for AI-assisted development with Superpowers skills.
 
 ## Superpowers Skills
 
-All skills are prefixed with `sp-` to avoid conflicts:
+All skills are prefixed with `sp-` to avoid conflicts (the list below omits the prefix for brevity; actual command/file names include it):
 
-- **Development Workflow**: `brainstorming`, `writing-plans`, `executing-plans`, `subagent-driven-development`
-- **Code Quality**: `test-driven-development`, `systematic-debugging`, `requesting-code-review`, `receiving-code-review`, `verification-before-completion`
-- **Git Operations**: `using-git-worktrees`, `finishing-a-development-branch`
-- **Advanced**: `dispatching-parallel-agents`, `writing-skills`
+- **Development Workflow**: `sp-brainstorming`, `sp-writing-plans`, `sp-executing-plans`, `sp-subagent-driven-development`
+- **Code Quality**: `sp-test-driven-development`, `sp-systematic-debugging`, `sp-requesting-code-review`, `sp-receiving-code-review`, `sp-verification-before-completion`
+- **Git Operations**: `sp-using-git-worktrees`, `sp-finishing-a-development-branch`
+- **Advanced**: `sp-dispatching-parallel-agents`, `sp-writing-skills`
 
 ## Skill Location
 
