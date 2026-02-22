@@ -9,6 +9,18 @@ Execute plan by dispatching fresh subagent per task, with two-stage review after
 
 **Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
 
+<HARD-GATE>
+DO NOT mark any task complete without dispatching BOTH reviewer subagents.
+This is non-negotiable. No exceptions. No "going faster."
+
+For EVERY task, you MUST dispatch:
+1. Spec compliance reviewer subagent (./spec-reviewer-prompt.md)
+2. Code quality reviewer subagent (./code-quality-reviewer-prompt.md)
+
+If you skip either review, you are violating this skill. Period.
+Skipping reviews is the #1 failure mode of this workflow. Do not rationalize it.
+</HARD-GATE>
+
 ## When to Use
 
 ```dot
@@ -81,6 +93,36 @@ digraph process {
     "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
+
+## Completion Gate (Mandatory Per Task)
+
+Before marking ANY task complete, verify ALL of these are true:
+
+```
+□ Implementer subagent dispatched and completed
+□ Spec reviewer subagent dispatched → result was ✅
+□ Code quality reviewer subagent dispatched → result was ✅
+□ Any issues found by reviewers were fixed AND re-reviewed
+```
+
+**If ANY box is unchecked → DO NOT mark task complete.**
+**"Going faster" by skipping reviews = going slower (rework later).**
+**This gate applies to every task. No exceptions. ESPECIALLY the last tasks.**
+
+## Rationalization Prevention
+
+These thoughts mean STOP — you are about to skip a required review:
+
+| Thought | Reality |
+|---------|---------|
+| "I'll skip reviews to go faster" | Skipping reviews = rework later = slower |
+| "This task was simple, doesn't need review" | ALL tasks get reviewed. No exceptions. |
+| "Context is getting long, let me streamline" | Reviews are not optional streamlining |
+| "I already reviewed it mentally" | Mental review ≠ dispatched reviewer subagent |
+| "Just for the last few tasks" | ESPECIALLY the last tasks need reviews |
+| "The implementer's self-review was thorough" | Self-review does not replace reviewer subagents |
+| "I'll review them all at the end" | Per-task review catches issues early |
+| "Almost done, let me just finish up" | "Almost done" is when corners get cut most |
 
 ## Prompt Templates
 
@@ -200,7 +242,7 @@ Done!
 
 **Never:**
 - Start implementation on main/master branch without explicit user consent
-- Skip reviews (spec compliance OR code quality)
+- **NEVER skip reviews (spec compliance OR code quality) — this is the #1 failure mode of this workflow**
 - Proceed with unfixed issues
 - Dispatch multiple implementation subagents in parallel (conflicts)
 - Make subagent read plan file (provide full text instead)
