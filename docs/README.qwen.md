@@ -65,7 +65,7 @@ Skills reference Claude Code tools. Qwen equivalents:
 | `Shell` | `run_shell_command` |
 | `WebFetch` | `web_fetch` |
 
-**Note on Subagent Configuration:** Qwen Code CLI supports native subagent delegation via its `task()` tool. To enable Superpowers' subagent workflows (like `subagent-driven-development` or `dispatching-parallel-agents`), you will need to define corresponding subagents in `~/.qwen/agents/` using Markdown+YAML configuration files (e.g., `implementer.md`, `code-reviewer.md`). These files define the subagent's role, system prompt, and allowed tools. The installer automatically links the required subagents.
+**Note on Subagent Configuration:** Qwen Code CLI supports native subagent delegation via its `task()` tool. To enable Superpowers' subagent workflows (like `subagent-driven-development` or `dispatching-parallel-agents`), the installer automatically links the required subagent definitions (`implementer`, `spec-reviewer`, `code-reviewer`) into `~/.qwen/agents/` using Markdown+YAML configuration files. These files define each subagent's role, system prompt, and allowed tools. If you want additional custom subagents beyond these, you can define them manually by adding more Markdown+YAML files in `~/.qwen/agents/`.
 
 ## Updating
 
