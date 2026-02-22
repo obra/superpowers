@@ -49,7 +49,14 @@ for skill_path in "$REPO_SKILLS_DIR"/*/; do
             fi
         fi
 
-        ln -s "$skill_path" "$target_path"
+        # Use relative path for portability (repo relocation doesn't break links)
+        if ln -sr "$skill_path" "$target_path" 2>/dev/null; then
+            : # GNU ln with -r support
+        else
+            # Fallback: compute relative path with Python
+            rel_path="$(python3 -c "import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))" "$skill_path" "$SKILLS_DIR")"
+            ln -s "$rel_path" "$target_path"
+        fi
         echo "  ✓ $skill_name"
     fi
 done
@@ -97,11 +104,16 @@ else
     echo "Injecting Superpowers context into $QWEN_MD..."
 fi
 
-# Trim leading blank lines (defensive: ensures output even for empty files)
-awk 'NF{p=1} p; END{if(!p)print ""}' "$QWEN_MD" > "${QWEN_MD}.tmp" && mv "${QWEN_MD}.tmp" "$QWEN_MD"
+# Trim trailing blank lines (prevents accumulation on repeated runs)
+if sed -i.bak -e :a -e '/^\n*$/{$d;N;ba' -e '}' "$QWEN_MD" 2>/dev/null; then
+    rm -f "${QWEN_MD}.bak"
+else
+    # Fallback: awk version for systems without GNU sed
+    awk '{print; n=0} /^$/{n++} END{for(i=0;i<n-1;i++)print ""}' "$QWEN_MD" > "${QWEN_MD}.tmp" && mv "${QWEN_MD}.tmp" "$QWEN_MD"
+fi
 
-# Append context block
-echo -e "\n\n$CONTEXT_BLOCK" >> "$QWEN_MD"
+# Append context block with single newline separator
+printf '\n%s\n' "$CONTEXT_BLOCK" >> "$QWEN_MD"
 
 echo ""
 echo "✅ Installation complete!"
