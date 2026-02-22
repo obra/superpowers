@@ -19,7 +19,8 @@ git clone https://github.com/obra/superpowers.git ~/.qwen/superpowers && ~/.qwen
 ## What the Installer Does
 
 1. Symlinks each skill individually into `~/.qwen/skills/` (hub pattern — your custom skills coexist safely)
-2. Injects a Superpowers context block into `~/.qwen/QWEN.md` with:
+2. Symlinks agent definitions into `~/.qwen/agents/` (required for subagent workflows)
+3. Injects a Superpowers context block into `~/.qwen/QWEN.md` with:
    - Skill discovery instructions
    - Terminology mapping (Claude Code tools → Qwen equivalents)
 

@@ -13,7 +13,8 @@ set -e
 QWEN_DIR="$HOME/.qwen"
 SKILLS_DIR="$QWEN_DIR/skills"
 QWEN_MD="$QWEN_DIR/QWEN.md"
-REPO_SKILLS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../skills" && pwd)"
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_SKILLS_DIR="$REPO_DIR/skills"
 
 # Validate
 if [ ! -d "$REPO_SKILLS_DIR" ]; then
@@ -44,7 +45,13 @@ for skill_path in "$REPO_SKILLS_DIR"/*/; do
 
         if [ -e "$target_path" ] || [ -L "$target_path" ]; then
             if [ -L "$target_path" ]; then
-                rm "$target_path"
+                link_target="$(realpath "$target_path" 2>/dev/null || readlink "$target_path")"
+                if [[ "$link_target" == "$REPO_DIR"* ]]; then
+                    rm "$target_path"
+                else
+                    echo "  ⚠ $skill_name points to $link_target (not this repo). Skipping."
+                    continue
+                fi
             else
                 echo "  ⚠ $target_path exists and is not a symlink. Skipping."
                 continue
@@ -81,7 +88,13 @@ if [ -d "$REPO_AGENTS_DIR" ]; then
 
             if [ -e "$target_path" ] || [ -L "$target_path" ]; then
                 if [ -L "$target_path" ]; then
-                    rm "$target_path"
+                    link_target="$(realpath "$target_path" 2>/dev/null || readlink "$target_path")"
+                    if [[ "$link_target" == "$REPO_DIR"* ]]; then
+                        rm "$target_path"
+                    else
+                        echo "  ⚠ $agent_name points to $link_target (not this repo). Skipping."
+                        continue
+                    fi
                 else
                     echo "  ⚠ $target_path exists and is not a symlink. Skipping."
                     continue
@@ -130,6 +143,12 @@ if [ -d "$PROMPT_TEMPLATES_DIR" ]; then
                 rm "$target_skill"
             fi
 
+            # Skip if target directory is itself a symlink (would modify the repo source)
+            target_dir="$(dirname "$target_skill")"
+            if [ -L "$target_dir" ]; then
+                echo "  ⚠ Skipping $(basename "$target_skill"): parent directory is a symlink (would modify repo source)"
+                continue
+            fi
             # Use relative path for portability
             if ln -sr "$template" "$target_skill" 2>/dev/null; then
                 : # GNU ln with -r support
@@ -204,8 +223,12 @@ else
     echo "Warning: Could not trim blank lines from $QWEN_MD" >&2
 fi
 
-# Append context block with single newline separator
-printf '\n%s\n' "$CONTEXT_BLOCK" >> "$QWEN_MD"
+# Append context block (add newline separator only if file already has content)
+if [ -s "$QWEN_MD" ]; then
+    printf '\n%s\n' "$CONTEXT_BLOCK" >> "$QWEN_MD"
+else
+    printf '%s\n' "$CONTEXT_BLOCK" >> "$QWEN_MD"
+fi
 
 echo ""
 echo "✅ Installation complete!"

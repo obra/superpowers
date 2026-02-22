@@ -30,6 +30,7 @@ git clone https://github.com/obra/superpowers.git ~/.qwen/superpowers
 This will:
 - Create `~/.qwen/skills/` if it doesn't exist
 - Symlink each skill individually into `~/.qwen/skills/` (hub pattern)
+- Symlink agent definitions into `~/.qwen/agents/`
 - Inject the Superpowers context block into `~/.qwen/QWEN.md`
 
 ### 3. Restart Qwen Code CLI
@@ -80,7 +81,7 @@ help me plan this feature using the writing-plans skill
 
 When skills reference Claude Code tools, Qwen equivalents are:
 - `TodoWrite` → write/update a plan file (e.g., `plan.md`)
-- `Task` with subagents → sequential execution
+- `Task` with subagents → `task()` tool with subagent dispatch
 - `Skill` tool → `read_file` on `~/.qwen/skills/<skill>/SKILL.md`
 - `read_file` → `read_file`
 - `write_file` → `write_file`
@@ -109,7 +110,7 @@ Skills update instantly through the symlinks.
 2. **Remove the agent symlinks:**
 
    ```bash
-   find ~/.qwen/agents -type l -lname '*/superpowers/agents/*' -delete
+   find ~/.qwen/agents -type l -lname '*/superpowers/.qwen/agents/*' -delete
    ```
 
 3. **Clean up QWEN.md:** Edit `~/.qwen/QWEN.md` and remove the block between
