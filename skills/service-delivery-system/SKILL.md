@@ -1,118 +1,163 @@
 ---
 name: service-delivery-system
-description: Use when managing client service engagements from intake to delivery, coordinating multi-stage deliverables, tracking milestones across agency projects, or ensuring consistent quality before client handoff
+description: Use when executing the Antigravity Agency OS to build, deliver, and monetize contractor lead-gen websites — covering market intel, node builds, cold outreach, and MRR monetization for the Razor/Blade model
 ---
 
-# Service Delivery System
+# Antigravity Agency OS v5.0 — Service Delivery System
 
 ## Overview
 
-A structured process for running client engagements from first contact to final delivery. Prevents dropped deliverables, scope creep, and inconsistent quality across agency work.
+The complete operational machine for building, cloning, and scaling high-ticket contractor lead-gen assets using the **B.L.A.S.T. Protocol** and **Razor/Blade Model**.
 
-**Core principle:** Every engagement needs explicit scope, milestones, and acceptance criteria confirmed in writing before work begins.
+**Core principle:** The website (Node) is the handle — free. Recurring services are the blades — MRR.
 
-## When to Use
+**Tech stack:** Antigravity · Instantly · Vercel · Astro
 
-- Starting a new client engagement or project
-- Coordinating deliverables across multiple contributors or agents
-- Hitting missed milestones or scope confusion mid-project
-- Preparing to hand off work to a client
+## The Four Agency Philosophies
 
-**Don't use when:** Work is purely internal with no client deliverable.
+| # | Name | Rule |
+|---|------|------|
+| 01 | **Proof Over Profit** | First client is your anchor. Lead with free value to destroy friction and build the case study. |
+| 02 | **Boring is Profitable** | Target high-ticket, high-friction niches: HVAC, Fencing, Roofing, Junk Removal. |
+| 03 | **The 1% Advantage** | Leverage industry domain knowledge to write copy that sounds like an expert, not a marketer. |
+| 04 | **Razor/Blade MRR** | Website is the handle (free). Ongoing services are the blades (recurring revenue). |
 
-## The Six Stages
+---
 
-### Stage 1: Intake & Scoping
+## Step 1 & 2: Market Intel — Map, Scrape & Enrich
 
-Capture before starting any work:
-- Client name, contact, and communication channel
-- Service type (match to catalog)
-- Deliverable definition: what "done" looks like, in concrete terms
-- Hard deadlines and milestones
-- Acceptance criteria the client will use to approve delivery
+**Goal:** Locate boring, validate revenue, extract leads.
 
-**Output:** Scope document signed off by client before Stage 2 begins.
+**Lead criteria:**
+- 20+ local businesses per niche
+- Outdated existing websites
+- Strong Google Review history (social proof potential)
 
-### Stage 2: Setup & Kickoff
+**Extraction tools:** Instant Data Scraper · Appify G-Maps MCP
 
-- Create project workspace (see Directory Structure below)
-- Assign a single delivery owner accountable for the engagement
-- Break work into milestones with explicit dates
-- Schedule client check-ins at 25%, 50%, 75% completion
-- Confirm kickoff in writing
+**Enrichment tools:** AnyMailFinder API · Custom Enrichment Skill
 
-### Stage 3: Execution
+---
 
-- Track each milestone against committed dates
-- Escalate blockers immediately—don't wait for the next check-in
-- Log all client communications in `communications/`
-- Version all deliverables (never overwrite without keeping prior version)
+## Step 3: The Forge Engine — B.L.A.S.T. Build Protocol
 
-### Stage 4: Quality Review
+Convert research into a deterministic, high-performance Node using the **3-Layer A.N.T. Architecture**.
 
-Two-person review minimum before anything reaches the client.
+### A.N.T. Architecture Layers
 
-Review checklist:
-- [ ] Every scope item is complete
-- [ ] Deliverables match agreed format and spec
-- [ ] Client-facing content reviewed for accuracy and tone
-- [ ] No known issues left open
+| Layer | Name | Purpose |
+|-------|------|---------|
+| 1 | **Architecture** | The Directive Layer. Master SOP, Vault, and Elite 6 Skills stored in `/.agent/skills/`. |
+| 2 | **Navigation** | The System Pilot Layer. Orchestrates AI logic using DOE framework and B.L.A.S.T. steps. |
+| 3 | **Execution** | The Tooling Layer. Deterministic Astro components, Tailwind v4, Schema generation. |
 
-Do not advance to Stage 5 with open review issues.
+### B.L.A.S.T. Steps
 
-### Stage 5: Delivery & Handoff
+| Letter | Step | Description |
+|--------|------|-------------|
+| **B** | Blueprint | Vault & Discovery |
+| **L** | Link | API & Sync |
+| **A** | Architect | Structural Node |
+| **S** | Stylize | Luxury Industrial Vibe |
+| **T** | Trigger | Audit & Deploy |
 
-- Package deliverables in the agreed format
-- Include a delivery summary: what's included and how to use it
-- Send and confirm receipt with the client
-- Schedule a post-delivery check-in (1–2 weeks out) before closing the project
+### Technical Commandments
 
-### Stage 6: Post-Delivery
+- 100/100 Lighthouse — non-negotiable
+- Zero "Div Soup" — semantic HTML only
+- Mandatory 8px Grid Law
+- 44×44px minimum tap targets
 
-- Collect client feedback (structured: what worked, what didn't)
-- Document lessons learned in `review-notes.md`
-- Archive project files
-- Update service catalog if the engagement revealed gaps
+### Automation Stack
 
-## Directory Structure
+`Google AI Studio` · `Stitch Agent` · `Whisk (Imagen 4.0)` · `Nano Banana` · `Cloudflare Pages`
+
+---
+
+## Step 4: Execute Outreach — Instantly Sequences
+
+**Hook:** Lead every sequence with a unique **Vercel Preview Link** of their built site.
+
+**Cadence (Stop on Reply: ENABLED):**
+
+| Day | Email | Content |
+|-----|-------|---------|
+| 1 | Preview | The link only. No pitch. |
+| 3 | Follow-up | Soft check-in |
+| 7 | Proof | Results / social proof |
+| 14 | Value | Insight relevant to their niche |
+| 28 | Final | Last contact |
+
+**Rules:**
+- Email 1 = link only, zero sales pitch
+- Personalization variable: `{{Business_Name}}` throughout
+
+---
+
+## Step 5: Yield & Monetize — Razor/Blade Model
+
+### The Entry Offer (The Handle)
+
+**Under $300/mo — "No-Brainer" pricing:**
+- Node Hosting & Daily Maintenance
+- AI Lead-Qualification Chatbot
+- Email/SMS Lead Notification System
+
+### High-Ticket MRR Upsells (The Blades)
+
+| Service | Price |
+|---------|-------|
+| Local SEO Silos (neighborhood spoke expansion) | $500–$1,500/mo |
+| Review Generation (automated SMS/email loops) | $200/mo |
+| Email Automator (seasonal nurture + holiday offers) | $300/mo |
+| Authority Content (buying guides, AI search targeting) | $400/mo |
+
+**Agreement strategy:** Month-to-month only. Eliminate risk for the contractor. Retain through ROI.
+
+---
+
+## The Scaling Flywheel (Phase 8)
+
+Activate after 3+ paying clients with proof of results.
 
 ```
-services/
-  catalog/
-    <service-name>.md           # Definition, scope, standard timeline
-  engagements/
-    <YYYY-MM-DD>-<client>/
-      scope.md                  # Approved scope document
-      deliverables/             # Versioned work products
-      communications/           # Client correspondence log
-      review-notes.md           # QA notes + post-delivery feedback
+01 Collect & Proof
+   → Video testimonials + case studies from every build
+   → Use in the next outreach wave
+
+02 Clone the Node
+   → Config-Driven Architecture
+   → Replicate winning build for 10-50 businesses in same niche
+
+03 Raise the Barrier
+   → Stop offering free websites
+   → Position as niche authority
+   → Charge $2.5k+ setup fee + MRR
 ```
 
-## Quick Reference
+---
 
-| Stage | Required Output | Gate to Next Stage |
-|-------|-----------------|--------------------|
-| Intake | Scope document | Client written approval |
-| Setup | Workspace + milestones | Team confirmed |
-| Execution | Versioned deliverables | All milestones hit |
-| Review | Checklist complete | Zero open issues |
-| Delivery | Delivered + receipt confirmed | Client acknowledgment |
-| Post-delivery | Feedback + archive | Filed and closed |
+## The Elite 6 Skill Stack
 
-## Escalation Rules
+Lives in `/.agent/skills/`. Governs every AI agent action.
 
-- **Milestone slipping >20%:** Alert delivery owner immediately, don't absorb silently
-- **Scope creep request:** Stop, re-scope, get written approval before continuing
-- **Client unresponsive >2 business days:** Escalate to account lead
-- **Open issues at review:** Fix before delivery—never ship known defects
+| Skill | Core Function |
+|-------|--------------|
+| **UX/UI Pro Max** | 8px Grid & Luxury Industrial Vibe |
+| **Hormozi Copy Pro** | Value Equation & No-Brainer Offers |
+| **Local SEO Silo** | Programmatic Neighborhood Spokes |
+| **Keyword Research** | LSI Entity & Search Intent Mapping |
+| **Geo Schema Expert** | Map Pack Dominance & FAQ Schema |
+| **Security Pro** | Privacy, Anti-Spam & Secret Hardening |
 
-## Common Mistakes
+---
 
-| Mistake | Fix |
-|---------|-----|
-| Starting work before written scope approval | Gate Stage 2 on explicit client sign-off |
-| No milestone dates at kickoff | Set all dates in Stage 2, not mid-project |
-| Single-person review | Minimum two reviewers—creator + independent |
-| Delivering without confirming receipt | Follow up until client acknowledges |
-| Skipping post-delivery check-in | Book it at kickoff so it doesn't get dropped |
-| Scope creep absorbed silently | Every change goes through re-scoping, no exceptions |
+## Quick Reference: Full Delivery Flow
+
+```
+Step 1+2: Market Intel     → Scrape + Enrich leads (20+ per niche)
+Step 3:   Build Node       → B.L.A.S.T. protocol via A.N.T. architecture
+Step 4:   Outreach         → Preview link → 5-touch Instantly cadence
+Step 5:   Monetize         → <$300/mo handle → blade upsells
+Phase 8:  Scale            → Clone → Proof → Raise barrier
+```
