@@ -13,3 +13,4 @@ Skills reference Claude Code tools. Use these Qwen equivalents:
 - File operations → `read_file`, `write_file`, `replace`
 - Search → `search_file_content`, `glob`
 - Shell → `run_shell_command`
+- Web fetch → `web_fetch`

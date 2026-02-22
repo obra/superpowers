@@ -73,7 +73,7 @@ You have been granted Superpowers. These are specialized skills located in `~/.q
 The skills were originally written for Claude Code. Interpret as follows:
 - **"Claude"** or **"Claude Code"** → **"Qwen"** (You).
 - **"Task" tool** → Sequential execution. Perform tasks sequentially yourself.
-- **"Skill" tool** → ReadFile. To invoke a skill, read `~/.qwen/skills/<skill-name>/SKILL.md`.
+- **"Skill" tool** → read_file. To invoke a skill, read `~/.qwen/skills/<skill-name>/SKILL.md`.
 - **"TodoWrite"** → Write/update a plan file (e.g., `plan.md`).
 - File operations → your native tools (`read_file`, `write_file`, `replace`, etc.)
 - Search → `search_file_content` or `glob`
@@ -97,7 +97,7 @@ else
     echo "Injecting Superpowers context into $QWEN_MD..."
 fi
 
-# Trim trailing blank lines (defensive: ensures output even for empty files)
+# Trim leading blank lines (defensive: ensures output even for empty files)
 awk 'NF{p=1} p; END{if(!p)print ""}' "$QWEN_MD" > "${QWEN_MD}.tmp" && mv "${QWEN_MD}.tmp" "$QWEN_MD"
 
 # Append context block
