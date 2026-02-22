@@ -1,3 +1,6 @@
+# Qwen Code CLI Subagent Definition
+# Format: YAML frontmatter + Markdown system prompt
+# See: https://qwenlm.github.io/qwen-code-docs/en/users/features/sub-agents/
 ---
 name: code-reviewer
 description: A subagent focused on reviewing code for quality, best practices, and maintainability.

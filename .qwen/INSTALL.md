@@ -106,10 +106,16 @@ Skills update instantly through the symlinks.
    find ~/.qwen/skills -type l -lname '*/superpowers/skills/*' -delete
    ```
 
-2. **Clean up QWEN.md:** Edit `~/.qwen/QWEN.md` and remove the block between
+2. **Remove the agent symlinks:**
+
+   ```bash
+   find ~/.qwen/agents -type l -lname '*/superpowers/agents/*' -delete
+   ```
+
+3. **Clean up QWEN.md:** Edit `~/.qwen/QWEN.md` and remove the block between
    `<!-- SUPERPOWERS-CONTEXT-START -->` and `<!-- SUPERPOWERS-CONTEXT-END -->`.
 
-3. **Remove the repo:**
+4. **Remove the repo:**
 
    ```bash
    rm -rf ~/.qwen/superpowers

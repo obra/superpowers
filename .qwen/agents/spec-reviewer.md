@@ -1,3 +1,6 @@
+# Qwen Code CLI Subagent Definition
+# Format: YAML frontmatter + Markdown system prompt
+# See: https://qwenlm.github.io/qwen-code-docs/en/users/features/sub-agents/
 ---
 name: spec-reviewer
 description: A subagent that verifies an implementation matches its specification exactly.

@@ -1,3 +1,6 @@
+# Qwen Code CLI Subagent Definition
+# Format: YAML frontmatter + Markdown system prompt
+# See: https://qwenlm.github.io/qwen-code-docs/en/users/features/sub-agents/
 ---
 name: implementer
 description: A subagent specialized in implementing tasks, writing tests, and self-reviewing code.

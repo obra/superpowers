@@ -57,9 +57,6 @@ Skills reference Claude Code tools. Qwen equivalents:
 | `Task` (subagents) | `task()` tool |
 | `Skill` tool | `read_file` on `~/.qwen/skills/<skill>/SKILL.md` |
 | `TodoWrite` | Write/update `plan.md` |
-
-**Note on Qwen Subagent Configuration:**
-Qwen Code CLI supports native subagent delegation via its `task()` tool. To enable Superpowers' subagent workflows (like `subagent-driven-development` or `dispatching-parallel-agents`), you will need to define corresponding subagents in `~/.qwen/agents/` using Markdown+YAML configuration files (e.g., `implementer.md`, `code-reviewer.md`). These files define the subagent's role, system prompt, and allowed tools.
 | `read_file` | `read_file` |
 | `write_file` | `write_file` |
 | `Edit` / `replace` | `replace` |
@@ -67,6 +64,8 @@ Qwen Code CLI supports native subagent delegation via its `task()` tool. To enab
 | `Glob` | `glob` |
 | `Shell` | `run_shell_command` |
 | `WebFetch` | `web_fetch` |
+
+**Note on Subagent Configuration:** Qwen Code CLI supports native subagent delegation via its `task()` tool. To enable Superpowers' subagent workflows (like `subagent-driven-development` or `dispatching-parallel-agents`), you will need to define corresponding subagents in `~/.qwen/agents/` using Markdown+YAML configuration files (e.g., `implementer.md`, `code-reviewer.md`). These files define the subagent's role, system prompt, and allowed tools. The installer automatically links the required subagents.
 
 ## Updating
 
@@ -83,9 +82,14 @@ Skills update instantly through the symlinks.
    find ~/.qwen/skills -type l -lname '*/superpowers/skills/*' -delete
    ```
 
-2. Edit `~/.qwen/QWEN.md` and remove the block between `<!-- SUPERPOWERS-CONTEXT-START -->` and `<!-- SUPERPOWERS-CONTEXT-END -->`.
+2. Remove agent symlinks:
+   ```bash
+   find ~/.qwen/agents -type l -lname '*/superpowers/agents/*' -delete
+   ```
 
-3. Remove the repo:
+3. Edit `~/.qwen/QWEN.md` and remove the block between `<!-- SUPERPOWERS-CONTEXT-START -->` and `<!-- SUPERPOWERS-CONTEXT-END -->`.
+
+4. Remove the repo:
    ```bash
    rm -rf ~/.qwen/superpowers
    ```

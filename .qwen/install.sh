@@ -54,10 +54,13 @@ for skill_path in "$REPO_SKILLS_DIR"/*/; do
         # Use relative path for portability (repo relocation doesn't break links)
         if ln -sr "$skill_path" "$target_path" 2>/dev/null; then
             : # GNU ln with -r support
-        else
+        elif command -v python3 >/dev/null 2>&1; then
             # Fallback: compute relative path with Python
             rel_path="$(python3 -c "import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))" "$skill_path" "$SKILLS_DIR")"
             ln -s "$rel_path" "$target_path"
+        else
+            echo "  ⚠ Warning: Neither GNU ln -sr nor python3 available. Using absolute path (less portable)."
+            ln -s "$skill_path" "$target_path"
         fi
         echo "  ✓ $skill_name"
     fi
@@ -88,9 +91,12 @@ if [ -d "$REPO_AGENTS_DIR" ]; then
             # Use relative path for portability
             if ln -sr "$agent_path" "$target_path" 2>/dev/null; then
                 : # GNU ln with -r support
-            else
+            elif command -v python3 >/dev/null 2>&1; then
                 rel_path="$(python3 -c "import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))" "$agent_path" "$AGENTS_DIR")"
                 ln -s "$rel_path" "$target_path"
+            else
+                echo "  ⚠ Warning: Neither GNU ln -sr nor python3 available. Using absolute path (less portable)."
+                ln -s "$agent_path" "$target_path"
             fi
             echo "  ✓ $agent_name"
         fi
@@ -104,8 +110,10 @@ PROMPT_TEMPLATES_DIR="$REPO_AGENTS_DIR"
 
 if [ -d "$PROMPT_TEMPLATES_DIR" ]; then
     echo "Linking Qwen prompt templates to subagent skills..."
+    templates_linked=0
     for template in "$PROMPT_TEMPLATES_DIR"/*-prompt-template.md; do
         if [ -f "$template" ]; then
+            templates_linked=$((templates_linked + 1))
             template_name=$(basename "$template")
             # Map template names to skill directories
             if [[ "$template_name" == "implementer-prompt-template.md" ]]; then
@@ -125,13 +133,21 @@ if [ -d "$PROMPT_TEMPLATES_DIR" ]; then
             # Use relative path for portability
             if ln -sr "$template" "$target_skill" 2>/dev/null; then
                 : # GNU ln with -r support
-            else
+            elif command -v python3 >/dev/null 2>&1; then
                 rel_path="$(python3 -c "import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))" "$template" "$(dirname "$target_skill")")"
                 ln -s "$rel_path" "$target_skill"
+            else
+                echo "  ⚠ Warning: Neither GNU ln -sr nor python3 available. Using absolute path (less portable)."
+                ln -s "$template" "$target_skill"
             fi
             echo "  ✓ $(basename "$target_skill")"
         fi
     done
+    if [ "$templates_linked" -eq 0 ]; then
+        echo "  ℹ No prompt template files found in $PROMPT_TEMPLATES_DIR"
+    fi
+else
+    echo "No agents directory found at $REPO_AGENTS_DIR, skipping agent linking."
 fi
 
 
@@ -181,9 +197,11 @@ fi
 # Trim trailing blank lines (prevents accumulation on repeated runs)
 if sed -i.bak -e :a -e '/^\n*$/{$d;N;ba' -e '}' "$QWEN_MD" 2>/dev/null; then
     rm -f "${QWEN_MD}.bak"
+elif awk '{print; n=0} /^$/{n++} END{for(i=0;i<n-1;i++)print ""}' "$QWEN_MD" > "${QWEN_MD}.tmp" 2>/dev/null; then
+    # Fallback: awk version for systems without GNU sed (macOS/BSD)
+    mv "${QWEN_MD}.tmp" "$QWEN_MD"
 else
-    # Fallback: awk version for systems without GNU sed
-    awk '{print; n=0} /^$/{n++} END{for(i=0;i<n-1;i++)print ""}' "$QWEN_MD" > "${QWEN_MD}.tmp" && mv "${QWEN_MD}.tmp" "$QWEN_MD"
+    echo "Warning: Could not trim blank lines from $QWEN_MD" >&2
 fi
 
 # Append context block with single newline separator
