@@ -23,7 +23,7 @@ Task N from [plan-file]
 
 ## Code Review
 
-Review the code changes between BASE_SHA and HEAD_SHA for:
+Review the code changes between [BASE_SHA] and [HEAD_SHA] for:
 
 **Readability:**
 - Is the code easy to understand?
