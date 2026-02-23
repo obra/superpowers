@@ -1,5 +1,26 @@
 # Superpowers Release Notes
 
+## v4.3.1 (2026-02-23)
+
+### Added
+
+**GitHub Copilot CLI native plugin support**
+
+Superpowers can now be installed as a native GitHub Copilot CLI plugin. Install via:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/obra/superpowers/main/.copilot/install.sh | bash
+```
+
+- `.copilot/plugin.json` — plugin manifest with skills, agents, and hooks configuration
+- `.copilot/hooks/hooks.json` and `session-start.sh` — session-start hook that verifies skills and agents directories
+- `.copilot/install.sh` — installs skills and agents into `~/.copilot/` and injects Superpowers context into `~/.copilot/copilot-instructions.md`
+
+### Fixed
+
+- Agent file convention updated to `.agent.md` extension; install script now prefers `.agent.md` over plain `.md` when both exist
+- Fixed incorrect symlink paths in INSTALL.md and README for uninstall instructions
+
 ## v4.3.0 (2026-02-12)
 
 This fix should dramatically improve superpowers skills compliance and should reduce the chances of Claude entering its native plan mode unintentionally.

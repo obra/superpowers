@@ -35,6 +35,7 @@ mkdir -p "$SKILLS_DIR"
 # --- Link skills individually (hub pattern) ---
 echo "Linking skills from $REPO_SKILLS_DIR to $SKILLS_DIR..."
 
+skills_linked=0
 for skill_path in "$REPO_SKILLS_DIR"/*/; do
     if [ -d "$skill_path" ]; then
         skill_name=$(basename "$skill_path")
@@ -69,15 +70,16 @@ for skill_path in "$REPO_SKILLS_DIR"/*/; do
             ln -s "$skill_path" "$target_path"
         fi
         echo "  ✓ $skill_name"
+        skills_linked=$((skills_linked + 1))
     fi
 done
-
 # --- Link agents individually (hub pattern) ---
 AGENTS_DIR="$COPILOT_DIR/agents"
 REPO_AGENTS_DIR="$REPO_DIR/agents"
 
 mkdir -p "$AGENTS_DIR"
 
+agents_linked=0
 if [ -d "$REPO_AGENTS_DIR" ] && [ "$(ls -A "$REPO_AGENTS_DIR" 2>/dev/null)" ]; then
     echo "Linking agents from $REPO_AGENTS_DIR to $AGENTS_DIR..."
     for agent_path in "$REPO_AGENTS_DIR"/*.md; do
@@ -117,6 +119,7 @@ if [ -d "$REPO_AGENTS_DIR" ] && [ "$(ls -A "$REPO_AGENTS_DIR" 2>/dev/null)" ]; t
                 ln -s "$agent_path" "$target_path"
             fi
             echo "  ✓ $agent_name"
+            agents_linked=$((agents_linked + 1))
         fi
     done
 else
@@ -183,6 +186,6 @@ else
 fi
 
 echo ""
-echo "✅ Installation complete!"
+echo "✅ Installation complete! ($skills_linked skills linked, $agents_linked agents linked)"
 echo "Restart GitHub Copilot CLI to activate Superpowers."
 echo "Try asking: 'Do you have superpowers?'"

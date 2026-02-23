@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SessionStart hook for Copilot CLI superpowers plugin
-# Validates skills and agents are accessible
+# Checks that skills and agents directories exist
 
 set -euo pipefail
 
