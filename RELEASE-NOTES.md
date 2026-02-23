@@ -8,7 +8,11 @@
 
 Superpowers can now be installed as a native GitHub Copilot CLI plugin. Install via:
 
-```sh
+```bash
+# Recommended: install via the Copilot CLI plugin manager
+copilot plugin add obra/superpowers
+
+# Or manually:
 git clone https://github.com/obra/superpowers.git ~/.copilot/superpowers
 ~/.copilot/superpowers/.copilot/install.sh
 ```
@@ -24,6 +28,7 @@ Superpowers now works with Cursor's plugin system. Includes a `.cursor-plugin/pl
 ### Fixed
 
 - Agent file convention updated to `.agent.md` extension; install script now prefers `.agent.md` over plain `.md` when both exist
+- Fixed `install.sh` agent path: was incorrectly resolving to `.copilot/agents/` instead of the project-root `agents/` directory, causing agents to not be installed
 - Fixed incorrect symlink paths in INSTALL.md and README for uninstall instructions
 
 **Windows: Restored polyglot wrapper for reliable hook execution (#518, #504, #491, #487, #466, #440)**

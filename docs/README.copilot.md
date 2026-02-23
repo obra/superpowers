@@ -42,6 +42,7 @@ Once installed, skills are discovered automatically. Copilot will activate them 
 - `~/.copilot/skills/` — personal skills (where Superpowers installs)
 - `~/.claude/skills/` — also scanned if present
 - `.github/skills/`, `.claude/skills/` in the project directory
+- Custom directories via `COPILOT_SKILLS_DIRS` environment variable
 
 ## Updating
 
