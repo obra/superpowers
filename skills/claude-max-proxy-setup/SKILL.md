@@ -14,54 +14,53 @@ The [claude-max-api-proxy](https://docs.openclaw.ai/providers/claude-max-api-pro
 ## Prerequisites
 
 - Claude Max ($200/mo) or Claude Pro ($20/mo) subscription
-- Claude Code CLI installed and authenticated (`claude --version`)
-- Your agent running on the same machine (or network-accessible)
+- Claude Code CLI installed and authenticated on the same machine
+- Agent using an OpenAI-compatible API client (OpenClaw, LiteLLM, etc.)
 
 Verify CLI is ready:
 
 ```bash
 claude --version
-claude config list | grep -i auth
 ```
 
 ## Installation
 
 ```bash
-npm install -g @anthropic-ai/claude-max-api-proxy
+npm install -g claude-max-api-proxy
 ```
 
 Start the proxy (default port 3456):
 
 ```bash
-claude-max-api-proxy --port 3456
+claude-max-api
 ```
 
-For persistent operation, run as a background service:
+For persistent operation:
 
 ```bash
-nohup claude-max-api-proxy --port 3456 > /tmp/proxy.log 2>&1 &
+nohup claude-max-api > /tmp/proxy.log 2>&1 &
 echo $! > /tmp/proxy.pid
 ```
 
 ## OpenClaw Configuration
 
-Update your OpenClaw agent config to route through the proxy:
+Update your OpenClaw agent config (`~/.openclaw/config.json5`):
 
-```json
+```json5
 {
-  "providers": {
-    "openai": {
-      "baseUrl": "http://localhost:3456/v1",
-      "apiKey": "not-needed"
-    }
+  env: {
+    OPENAI_API_KEY: "not-needed",
+    OPENAI_BASE_URL: "http://localhost:3456/v1",
   },
-  "model": {
-    "primary": "openai/claude-opus-4-6"
-  }
+  agents: {
+    defaults: {
+      model: { primary: "openai/claude-opus-4" },
+    },
+  },
 }
 ```
 
-For remote servers, replace `localhost` with the host IP or use an SSH tunnel:
+For remote servers, use an SSH tunnel:
 
 ```bash
 ssh -L 3456:localhost:3456 user@your-server
@@ -69,60 +68,48 @@ ssh -L 3456:localhost:3456 user@your-server
 
 ## Verification
 
-Test that requests route through the proxy (not direct API):
-
 ```bash
 curl http://localhost:3456/v1/models \
   -H "Authorization: Bearer not-needed"
 ```
 
-Check proxy logs to confirm traffic:
-
-```bash
-tail -f /tmp/proxy.log
-```
-
-A successful request shows `[PROXY] Routed to claude-max` in the logs.
-
-## Common Mistakes
-
-### Proxy not running when agent starts
-
-- **Problem:** Agent falls back to direct API billing silently
-- **Fix:** Add proxy health check to agent startup: `curl -s http://localhost:3456/health || exit 1`
-
-### Wrong model ID format
-
-- **Problem:** `claude-opus-4-6` returns 404 through proxy
-- **Fix:** Use `openai/claude-opus-4-6` format (OpenAI-compatible prefix required)
-
-### Proxy running but not routing
-
-- **Problem:** Still being billed per token
-- **Fix:** Verify `baseUrl` points to proxy, not `api.anthropic.com`
-
 ## Quick Reference
 
 | Model | Proxy model ID |
 |-------|----------------|
-| Claude Opus 4.6 | `openai/claude-opus-4-6` |
-| Claude Sonnet 4.6 | `openai/claude-sonnet-4-6` |
-| Claude Haiku 4.5 | `openai/claude-haiku-4-5` |
+| Claude Opus 4 | `openai/claude-opus-4` |
+| Claude Sonnet 4 | `openai/claude-sonnet-4` |
+| Claude Haiku 4 | `openai/claude-haiku-4` |
+
+## Common Mistakes
+
+### Wrong package name
+
+- **Problem:** `npm install -g @anthropic-ai/claude-max-api-proxy` returns 404
+- **Fix:** The package is `claude-max-api-proxy` (no scope prefix)
+
+### Wrong start command
+
+- **Problem:** `claude-max-api-proxy` not found after install
+- **Fix:** The binary is `claude-max-api` (no `-proxy` suffix)
+
+### Proxy not running when agent starts
+
+- **Problem:** Agent falls back to direct API billing silently
+- **Fix:** Add proxy health check to startup: `curl -sf http://localhost:3456/v1/models || exit 1`
+
+### Wrong config location
+
+- **Problem:** Config change has no effect
+- **Fix:** Set via `env` block in config, not agent-level model override alone
 
 ## Red Flags
 
 **Never:**
-- Start agent without verifying proxy is running
-- Use direct `api.anthropic.com` endpoint alongside proxy
-- Share proxy access across untrusted networks without auth
+- Start agent without verifying proxy is running first
+- Mix direct `api.anthropic.com` calls with proxy calls in the same agent
+- Share proxy access across untrusted networks without a reverse proxy + auth layer
 
 **Always:**
 - Confirm zero API charges appear in Anthropic console after switching
 - Restart proxy after Claude Code CLI re-authentication
-
-## Need Help?
-
-Full setup service (0.008 ETH) including remote configuration, troubleshooting, and 30-day support:
-- Hire: [Moltlaunch Agent #18890](https://moltlaunch.xyz/agent/18890)
-- DM: [@mr_clawford on MoltX](https://social.moltx.io/mr_clawford)
-- Guide: [error403agent.github.io/clawford/claude-max-proxy.html](https://error403agent.github.io/clawford/claude-max-proxy.html)
