@@ -45,7 +45,7 @@ for skill_path in "$REPO_SKILLS_DIR"/*/; do
 
         if [ -e "$target_path" ] || [ -L "$target_path" ]; then
             if [ -L "$target_path" ]; then
-                link_target="$(realpath "$target_path" 2>/dev/null || readlink "$target_path")"
+                link_target="$(realpath "$target_path" 2>/dev/null || python3 -c "import os,sys; print(os.path.realpath(sys.argv[1]))" "$target_path" 2>/dev/null || readlink "$target_path")"
                 if [[ "$link_target" == "$REPO_DIR"* ]]; then
                     rm "$target_path"
                 else
@@ -95,7 +95,7 @@ if [ -d "$REPO_AGENTS_DIR" ] && [ "$(ls -A "$REPO_AGENTS_DIR" 2>/dev/null)" ]; t
 
             if [ -e "$target_path" ] || [ -L "$target_path" ]; then
                 if [ -L "$target_path" ]; then
-                    link_target="$(realpath "$target_path" 2>/dev/null || readlink "$target_path")"
+                    link_target="$(realpath "$target_path" 2>/dev/null || python3 -c "import os,sys; print(os.path.realpath(sys.argv[1]))" "$target_path" 2>/dev/null || readlink "$target_path")"
                     if [[ "$link_target" == "$REPO_DIR"* ]]; then
                         rm "$target_path"
                     else
@@ -173,8 +173,10 @@ fi
 if sed -i.bak -e :a -e '/^[[:space:]]*$/{$d;N;ba' -e '}' "$COPILOT_INSTRUCTIONS" 2>/dev/null; then
     rm -f "${COPILOT_INSTRUCTIONS}.bak"
 elif awk '{lines[NR]=$0} END{e=NR; while(e>0 && lines[e]=="") e--; for(i=1;i<=e;i++) print lines[i]}' "$COPILOT_INSTRUCTIONS" > "${COPILOT_INSTRUCTIONS}.tmp" 2>/dev/null; then
+    rm -f "${COPILOT_INSTRUCTIONS}.bak"
     mv "${COPILOT_INSTRUCTIONS}.tmp" "$COPILOT_INSTRUCTIONS"
 else
+    rm -f "${COPILOT_INSTRUCTIONS}.bak"
     echo "Warning: Could not trim blank lines from $COPILOT_INSTRUCTIONS" >&2
 fi
 
