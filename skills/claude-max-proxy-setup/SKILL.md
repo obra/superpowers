@@ -7,7 +7,9 @@ description: Use when an agent or developer wants to reduce Claude API costs, ro
 
 ## Overview
 
-The [claude-max-api-proxy](https://docs.openclaw.ai/providers/claude-max-api-proxy) routes API requests through your Claude Max or Pro subscription instead of billing per token. Agents running on OpenClaw, Claude Code, or any OpenAI-compatible client can eliminate variable API costs entirely.
+> **Community tool** — `claude-max-api-proxy` is a third-party tool, not officially supported by Anthropic. Use at your own discretion.
+
+The [claude-max-api-proxy](https://docs.openclaw.ai/providers/claude-max-api-proxy) routes API requests through your Claude Max or Pro subscription instead of billing per token. Agents running on OpenClaw or any OpenAI-compatible client can eliminate variable API costs.
 
 **Core principle:** Run the proxy where Claude Code CLI is authenticated → point your agent at it → zero additional API charges.
 
@@ -35,11 +37,24 @@ Start the proxy (default port 3456):
 claude-max-api
 ```
 
-For persistent operation:
+For persistent operation (systemd example):
+
+```ini
+# /etc/systemd/system/claude-max-proxy.service
+[Unit]
+Description=Claude Max API Proxy
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/claude-max-api
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
 
 ```bash
-nohup claude-max-api > /tmp/proxy.log 2>&1 &
-echo $! > /tmp/proxy.pid
+systemctl enable --now claude-max-proxy
 ```
 
 ## OpenClaw Configuration
@@ -95,7 +110,7 @@ curl http://localhost:3456/v1/models \
 
 ### Proxy not running when agent starts
 
-- **Problem:** Agent falls back to direct API billing silently
+- **Problem:** Agent throws connection refused errors, not a silent fallback
 - **Fix:** Add proxy health check to startup: `curl -sf http://localhost:3456/v1/models || exit 1`
 
 ### Wrong config location
