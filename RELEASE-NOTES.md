@@ -28,7 +28,7 @@ Superpowers now works with Cursor's plugin system. Includes a `.cursor-plugin/pl
 ### Fixed
 
 - Agent file convention updated to `.agent.md` extension; install script now prefers `.agent.md` over plain `.md` when both exist
-- Fixed `install.sh` agent path: was incorrectly resolving to `.copilot/agents/` instead of the project-root `agents/` directory, causing agents to not be installed
+- Fixed `install.sh` agent path: the script previously referenced `.copilot/agents/` and now correctly references the project-root `agents/` directory; this corrects agent install/uninstall behavior by ensuring agent definitions are properly linked from the repository.
 - Fixed incorrect symlink paths in INSTALL.md and README for uninstall instructions
 
 **Windows: Restored polyglot wrapper for reliable hook execution (#518, #504, #491, #487, #466, #440)**
