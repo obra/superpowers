@@ -91,6 +91,10 @@ Start a new session in your chosen platform and ask for something that should tr
 
 7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
 
+### Quick tasks
+
+Prefix a request with `quick:` to bypass Superpowers workflows for that one message, e.g. `quick: rename this file`.
+
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
 ## What's Inside

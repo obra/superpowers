@@ -168,6 +168,10 @@ Look for `<SYMLINK>` or `<JUNCTION>` in the output.
 
 ## Usage
 
+### Quick tasks
+
+Prefix a request with `quick:` to bypass Superpowers workflows for that one message, e.g. `quick: rename this file`.
+
 ### Finding Skills
 
 Use OpenCode's native `skill` tool to list all available skills:
