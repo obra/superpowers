@@ -4,6 +4,14 @@ Guide for using Superpowers with GitHub Copilot CLI.
 
 ## Quick Install
 
+### Plugin Install (Recommended)
+
+```bash
+copilot plugin add https://github.com/obra/superpowers
+```
+
+### Manual Install
+
 ```bash
 git clone https://github.com/obra/superpowers.git ~/.copilot/superpowers && ~/.copilot/superpowers/.copilot/install.sh
 ```
@@ -33,8 +41,7 @@ Once installed, skills are discovered automatically. Copilot will activate them 
 
 - `~/.copilot/skills/` — personal skills (where Superpowers installs)
 - `~/.claude/skills/` — also scanned if present
-- `.github/skills/`, `.agents/skills/`, `.claude/skills/` in the project directory
-- Custom directories via `COPILOT_SKILLS_DIRS` environment variable
+- `.github/skills/`, `.claude/skills/` in the project directory
 
 ## Updating
 

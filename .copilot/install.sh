@@ -74,7 +74,7 @@ done
 
 # --- Link agents individually (hub pattern) ---
 AGENTS_DIR="$COPILOT_DIR/agents"
-REPO_AGENTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/agents"
+REPO_AGENTS_DIR="$REPO_DIR/agents"
 
 mkdir -p "$AGENTS_DIR"
 

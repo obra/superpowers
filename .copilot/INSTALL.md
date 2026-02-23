@@ -9,6 +9,14 @@ Enable superpowers skills in [GitHub Copilot CLI](https://docs.github.com/en/cop
 
 ## Quick Install
 
+### Plugin Install (Recommended)
+
+```bash
+copilot plugin add https://github.com/obra/superpowers
+```
+
+### Manual Install
+
 ```bash
 git clone https://github.com/obra/superpowers.git ~/.copilot/superpowers && ~/.copilot/superpowers/.copilot/install.sh
 ```

@@ -81,10 +81,14 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 ### GitHub Copilot CLI
 
-Tell Copilot CLI:
-
+```bash
+copilot plugin add https://github.com/obra/superpowers
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.copilot/INSTALL.md
+
+Or install manually:
+
+```bash
+git clone https://github.com/obra/superpowers.git ~/.copilot/superpowers && ~/.copilot/superpowers/.copilot/install.sh
 ```
 
 **Detailed docs:** [docs/README.copilot.md](docs/README.copilot.md)
