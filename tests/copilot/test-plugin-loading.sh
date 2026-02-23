@@ -64,7 +64,7 @@ echo "Test 5: Checking hooks.json validity..."
 hooks_file="$REPO_ROOT/.copilot/hooks/hooks.json"
 if python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$hooks_file" 2>/dev/null; then
     echo "  [PASS] hooks.json is valid JSON"
-elif node -e "JSON.parse(require('fs').readFileSync('$hooks_file','utf8'))" 2>/dev/null; then
+elif node -e "require(process.argv[1])" -- "$hooks_file" 2>/dev/null; then
     echo "  [PASS] hooks.json is valid JSON"
 elif jq empty "$hooks_file" 2>/dev/null; then
     echo "  [PASS] hooks.json is valid JSON"
@@ -105,7 +105,8 @@ else
     echo "  [FAIL] Second install run failed"
     exit 1
 fi
-block_count=$(grep -c "SUPERPOWERS-CONTEXT-START" "$COPILOT_DIR/copilot-instructions.md" 2>/dev/null || echo 0)
+block_count=$(grep -c "SUPERPOWERS-CONTEXT-START" "$COPILOT_DIR/copilot-instructions.md" 2>/dev/null || true)
+block_count=${block_count:-0}
 if [ "$block_count" -eq 1 ]; then
     echo "  [PASS] Context block appears exactly once after double install"
 else

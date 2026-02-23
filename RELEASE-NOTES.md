@@ -9,7 +9,8 @@
 Superpowers can now be installed as a native GitHub Copilot CLI plugin. Install via:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/obra/superpowers/main/.copilot/install.sh | bash
+git clone https://github.com/obra/superpowers.git ~/.copilot/superpowers
+~/.copilot/superpowers/.copilot/install.sh
 ```
 
 - `.copilot/plugin.json` — plugin manifest with skills, agents, and hooks configuration
