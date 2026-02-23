@@ -58,6 +58,10 @@ Skills are discovered automatically. Codex activates them when:
 - The task matches a skill's description
 - The `using-superpowers` skill directs Codex to use one
 
+### Quick tasks
+
+Prefix a request with `quick:` to bypass Superpowers workflows for that one message, e.g. `quick: rename this file`.
+
 ### Personal Skills
 
 Create your own skills in `~/.agents/skills/`:

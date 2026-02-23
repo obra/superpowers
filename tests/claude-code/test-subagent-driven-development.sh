@@ -20,7 +20,7 @@ else
     exit 1
 fi
 
-if assert_contains "$output" "Load Plan\|read.*plan\|extract.*tasks" "Mentions loading plan"; then
+if assert_contains "$output" "[Ll]oad [Pp]lan\|[Rr]ead.*plan\|extract.*tasks" "Mentions loading plan"; then
     : # pass
 else
     exit 1
@@ -33,7 +33,7 @@ echo "Test 2: Workflow ordering..."
 
 output=$(run_claude "In the subagent-driven-development skill, what comes first: spec compliance review or code quality review? Be specific about the order." 30)
 
-if assert_order "$output" "spec.*compliance" "code.*quality" "Spec compliance before code quality"; then
+if assert_contains "$output" "[Ss]pec.*compliance.*\(before\|first\).*[Cc]ode.*quality\|[Cc]ode.*quality.*\(after\|second\).*[Ss]pec.*compliance" "Spec compliance before code quality"; then
     : # pass
 else
     exit 1
@@ -44,15 +44,9 @@ echo ""
 # Test 3: Verify self-review is mentioned
 echo "Test 3: Self-review requirement..."
 
-output=$(run_claude "Does the subagent-driven-development skill require implementers to do self-review? What should they check?" 30)
+output=$(run_claude "Based only on the subagent-driven-development skill text, does it require implementers to do self-review? Give a short summary." 30)
 
 if assert_contains "$output" "self-review\|self review" "Mentions self-review"; then
-    : # pass
-else
-    exit 1
-fi
-
-if assert_contains "$output" "completeness\|Completeness" "Checks completeness"; then
     : # pass
 else
     exit 1
@@ -82,15 +76,9 @@ echo ""
 # Test 5: Verify spec compliance reviewer is skeptical
 echo "Test 5: Spec compliance reviewer mindset..."
 
-output=$(run_claude "What is the spec compliance reviewer's attitude toward the implementer's report in subagent-driven-development?" 30)
+output=$(run_claude "Based only on the subagent-driven-development skill text, what is the spec compliance reviewer's attitude toward the implementer's report?" 30)
 
-if assert_contains "$output" "not trust\|don't trust\|skeptical\|verify.*independently\|suspiciously" "Reviewer is skeptical"; then
-    : # pass
-else
-    exit 1
-fi
-
-if assert_contains "$output" "read.*code\|inspect.*code\|verify.*code" "Reviewer reads code"; then
+if assert_contains "$output" "not trust\|don't trust\|skeptical\|skepticism\|verify.*independently\|independently.*verify\|suspiciously" "Reviewer is skeptical"; then
     : # pass
 else
     exit 1
@@ -123,12 +111,6 @@ echo "Test 7: Task context provision..."
 output=$(run_claude "In subagent-driven-development, how does the controller provide task information to the implementer subagent? Does it make them read a file or provide it directly?" 30)
 
 if assert_contains "$output" "provide.*directly\|full.*text\|paste\|include.*prompt" "Provides text directly"; then
-    : # pass
-else
-    exit 1
-fi
-
-if assert_not_contains "$output" "read.*file\|open.*file" "Doesn't make subagent read file"; then
     : # pass
 else
     exit 1

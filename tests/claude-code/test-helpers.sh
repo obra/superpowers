@@ -114,12 +114,40 @@ assert_order() {
     if [ "$line_a" -lt "$line_b" ]; then
         echo "  [PASS] $test_name (A at line $line_a, B at line $line_b)"
         return 0
-    else
-        echo "  [FAIL] $test_name"
-        echo "  Expected '$pattern_a' before '$pattern_b'"
-        echo "  But found A at line $line_a, B at line $line_b"
-        return 1
     fi
+
+    if [ "$line_a" -eq "$line_b" ]; then
+        local line_text
+        line_text=$(echo "$output" | sed -n "${line_a}p")
+        local order
+        order=$(python3 - "$line_text" "$pattern_a" "$pattern_b" <<'PY'
+import re
+import sys
+
+line = sys.argv[1]
+pattern_a = sys.argv[2]
+pattern_b = sys.argv[3]
+
+match_a = re.search(pattern_a, line)
+match_b = re.search(pattern_b, line)
+
+if not match_a or not match_b:
+    sys.exit(2)
+
+print("ok" if match_a.start() < match_b.start() else "bad")
+PY
+)
+
+        if [ "$order" = "ok" ]; then
+            echo "  [PASS] $test_name (A and B on same line)"
+            return 0
+        fi
+    fi
+
+    echo "  [FAIL] $test_name"
+    echo "  Expected '$pattern_a' before '$pattern_b'"
+    echo "  But found A at line $line_a, B at line $line_b"
+    return 1
 }
 
 # Create a temporary test project directory
