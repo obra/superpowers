@@ -17,6 +17,10 @@ Do NOT invoke any skills, workflows, or checklists for that request.
 This opt-out applies only to the current user message.
 </QUICK_MODE>
 
+Quick mode only applies when this using-superpowers skill is loaded via the normal Superpowers bootstrap.
+"Superpowers rules" refers only to skills and workflows in this repo; base system and developer instructions still apply.
+Match is case-sensitive and must begin at character 1 with no leading whitespace; respond directly to the remainder after the `quick:` prefix.
+
 ## How to Access Skills
 
 **In Claude Code:** Use the `Skill` tool. When you invoke a skill, its content is loaded and presented to you—follow it directly. Never use the Read tool on skill files.
