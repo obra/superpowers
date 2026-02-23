@@ -85,7 +85,7 @@ Skills update instantly through the symlinks.
 
 2. Remove agent symlinks:
    ```bash
-   find ~/.qwen/agents -type l -lname '*/superpowers/agents/*' -delete
+   find ~/.qwen/agents -type l -lname '*/superpowers/.qwen/agents/*' -delete
    ```
 
 3. Edit `~/.qwen/QWEN.md` and remove the block between `<!-- SUPERPOWERS-CONTEXT-START -->` and `<!-- SUPERPOWERS-CONTEXT-END -->`.

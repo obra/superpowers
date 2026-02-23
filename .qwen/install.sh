@@ -126,7 +126,6 @@ if [ -d "$PROMPT_TEMPLATES_DIR" ]; then
     templates_linked=0
     for template in "$PROMPT_TEMPLATES_DIR"/*-prompt-template.md; do
         if [ -f "$template" ]; then
-            templates_linked=$((templates_linked + 1))
             template_name=$(basename "$template")
             # Map template names to skill directories
             if [[ "$template_name" == "implementer-prompt-template.md" ]]; then
@@ -161,6 +160,7 @@ if [ -d "$PROMPT_TEMPLATES_DIR" ]; then
                 ln -s "$template" "$target_skill"
             fi
             echo "  ✓ $(basename "$target_skill")"
+            templates_linked=$((templates_linked + 1))
         fi
     done
     if [ "$templates_linked" -eq 0 ]; then
