@@ -2,7 +2,7 @@
   "name": "superpowers",
   "displayName": "Superpowers",
   "description": "Core skills library: TDD, debugging, collaboration patterns, and proven techniques",
-  "version": "4.3.0",
+  "version": "4.3.1",
   "author": {
     "name": "Jesse Vincent",
     "email": "jesse@fsck.com"
