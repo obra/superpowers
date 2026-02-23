@@ -14,9 +14,11 @@ The skills were originally written for Claude Code. Interpret as follows:
 - **"Task" tool** → Use sub-agents. Agent definitions are in `~/.gemini/agents/`.
 - **"Skill" tool** → Use `activate_skill` tool with the skill name.
 - **"TodoWrite"** → Write/update a task list (e.g., `task.md` or `plan.md`).
-- File operations → `read_file`, `write_file`, `replace`
-- Search → `search_file_content`, `grep`
-- Shell → `run_shell_command`
-- Web fetch → `web_fetch`
+- File operations → `view_file`, `write_to_file`, `replace_file_content`, `multi_replace_file_content`
+- Directory listing → `list_dir`
+- Code structure → `view_file_outline`, `view_code_item`
+- Search → `search_file_content`, `glob`
+- Shell → `run_command`
+- Web fetch → `read_url_content`
 - Web search → `google_web_search`
 <!-- SUPERPOWERS-CONTEXT-END -->

@@ -53,8 +53,9 @@ cd ~/.gemini/superpowers && git pull
 
 ```bash
 find ~/.gemini/skills -type l -lname '*/superpowers/skills/*' -delete
-find ~/.gemini/agents -type l -lname '*/superpowers/.gemini/agents/*' -delete
-# Edit ~/.gemini/GEMINI.md and remove the SUPERPOWERS-CONTEXT block
+find ~/.gemini/agents -type l -lname '*/superpowers/agents/*' -delete
+# Remove the injected Superpowers context block from GEMINI.md
+sed -i.bak '/<!-- SUPERPOWERS-CONTEXT-START -->/,/<!-- SUPERPOWERS-CONTEXT-END -->/d' ~/.gemini/GEMINI.md && rm -f ~/.gemini/GEMINI.md.bak
 rm -rf ~/.gemini/superpowers
 ```
 
