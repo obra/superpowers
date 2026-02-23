@@ -2,6 +2,8 @@
 
 Guide for using Superpowers with GitHub Copilot CLI.
 
+> **Also using VS Code?** The same install works for both CLI and VS Code Agent Mode. See [README.vscode-copilot.md](README.vscode-copilot.md) for VS Code-specific details.
+
 ## Quick Install
 
 ### Plugin Install (Recommended)
@@ -68,3 +70,7 @@ rm -rf ~/.copilot/superpowers
 3. **Check copilot-instructions.md**: `cat ~/.copilot/copilot-instructions.md` — should contain the SUPERPOWERS-CONTEXT block
 
 If issues persist, please report them on the [Superpowers GitHub repository](https://github.com/obra/superpowers/issues).
+
+### Using VS Code instead of CLI?
+
+The same `~/.copilot/skills/` directory is shared between Copilot CLI and VS Code Agent Mode. If you installed via the script above, your skills are already available in VS Code 1.109+. See [README.vscode-copilot.md](README.vscode-copilot.md) for VS Code-specific details.

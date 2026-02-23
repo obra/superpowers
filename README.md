@@ -26,7 +26,7 @@ Thanks!
 
 ## Installation
 
-**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex and OpenCode require manual setup.
+**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex and OpenCode require manual setup. VS Code Copilot uses the same install as Copilot CLI.
 
 
 ### Claude Code (via Plugin Marketplace)
@@ -90,6 +90,16 @@ git clone https://github.com/obra/superpowers.git ~/.copilot/superpowers && ~/.c
 ```
 
 **Detailed docs:** [docs/README.copilot.md](docs/README.copilot.md)
+
+### VS Code Copilot (Agent Mode)
+
+Requires VS Code 1.109+ with GitHub Copilot. Same install as Copilot CLI:
+
+```bash
+git clone https://github.com/obra/superpowers.git ~/.copilot/superpowers && ~/.copilot/superpowers/.copilot/install.sh
+```
+
+**Detailed docs:** [docs/README.vscode-copilot.md](docs/README.vscode-copilot.md)
 
 ### Verify Installation
 
