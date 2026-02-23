@@ -2,7 +2,7 @@
 set -e
 
 # ==============================================================================
-# Superpowers Installer for Gemini CLI
+# Superpowers Installer for Antigravity / Gemini CLI
 # ==============================================================================
 # 1. Symlinks each skill individually into ~/.gemini/skills/
 # 2. Symlinks each agent definition individually into ~/.gemini/agents/
@@ -128,21 +128,21 @@ read -r -d '' CONTEXT_BLOCK << 'EOM' || true
 You have been granted Superpowers. These are specialized skills located in `~/.gemini/skills` and agent definitions in `~/.gemini/agents`.
 
 ## Skill & Agent Discovery
-- **ALWAYS** check for relevant skills before starting a task.
+- **ALWAYS** check for relevant skills in `~/.gemini/skills` before starting a task.
 - If a skill applies (e.g., "brainstorming", "testing"), you **MUST** follow it.
-- Use the `activate_skill` tool to load a skill. Use `/skills list` to see available skills.
+- To use a skill, read its `SKILL.md` file using `view_file` on `~/.gemini/skills/<skill-name>/SKILL.md`.
 
 ## Terminology Mapping
 The skills were originally written for Claude Code. Interpret as follows:
-- **"Claude"** or **"Claude Code"** → **"Gemini"** (You).
-- **"Task" tool** → Use sub-agents. Agent definitions are in `~/.gemini/agents/`.
-- **"Skill" tool** → Use `activate_skill` tool with the skill name.
-- **"TodoWrite"** → Write/update a plan file (e.g., `plan.md`).
-- File operations → your native tools (`read_file`, `write_file`, `replace`, etc.)
-- Search → `search_file_content` or `glob`
-- Shell → `run_shell_command`
-- Web fetch → `web_fetch`
-- Web search → `google_web_search`
+- **"Claude"** or **"Claude Code"** → **"Antigravity"** (You).
+- **"Task" tool** → Use `browser_subagent` for browser tasks, or break work into structured steps with `task_boundary`.
+- **"Skill" tool** → Use `view_file` on `~/.gemini/skills/<skill-name>/SKILL.md`.
+- **"TodoWrite"** → Write/update a plan file (e.g., `task.md` in your artifact directory).
+- File operations → `view_file`, `write_to_file`, `replace_file_content`, `multi_replace_file_content`
+- Search → `grep_search`, `find_by_name`
+- Shell → `run_command`
+- Web fetch → `read_url_content`
+- Web search → `search_web`
 <!-- SUPERPOWERS-CONTEXT-END -->
 EOM
 
@@ -179,5 +179,5 @@ fi
 
 echo ""
 echo "✅ Installation complete!"
-echo "Restart Gemini CLI to activate Superpowers."
+echo "Restart Antigravity (or Gemini CLI) to activate Superpowers."
 echo "Try asking: 'Do you have superpowers?'"

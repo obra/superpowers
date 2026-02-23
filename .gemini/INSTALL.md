@@ -1,11 +1,11 @@
-# Installing Superpowers for Gemini CLI
+# Installing Superpowers for Antigravity
 
-Enable superpowers skills in [Gemini CLI](https://geminicli.com) via native skill discovery.
+Enable Superpowers skills in [Antigravity](https://deepmind.google), the agentic AI coding assistant by Google DeepMind, via native skill discovery.
 
 ## Prerequisites
 
 - Git
-- Gemini CLI installed
+- Antigravity installed
 
 ## Quick Install
 
@@ -33,13 +33,13 @@ This will:
 - Symlink agent definitions into `~/.gemini/agents/`
 - Inject the Superpowers context block into `~/.gemini/GEMINI.md`
 
-### 3. Restart Gemini CLI
+### 3. Restart Antigravity
 
-Quit and relaunch to discover the skills.
+Quit and relaunch to pick up the new skills and context.
 
 ## Verification
 
-Ask Gemini:
+Ask Antigravity:
 
 > "Do you have superpowers?"
 
@@ -57,15 +57,11 @@ You should see symlinks pointing to skill directories in `~/.gemini/superpowers/
 
 ### Finding Skills
 
-Use Gemini's native skill discovery:
-
-```text
-/skills list
-```
+Skills are discovered automatically. Antigravity reads each skill's `SKILL.md` file when a matching task is detected.
 
 ### Loading a Skill
 
-Ask Gemini to use a specific skill:
+Ask Antigravity to use a specific skill:
 
 ```text
 use the brainstorming skill
@@ -79,18 +75,17 @@ help me plan this feature using the writing-plans skill
 
 ### Tool Mapping
 
-When skills reference Claude Code tools, Gemini equivalents are:
-- `TodoWrite` → write/update a plan file (e.g., `plan.md`)
-- `Task` with subagents → sub-agents in `~/.gemini/agents/`
-- `Skill` tool → `activate_skill` tool with the skill name
-- `read_file` → `read_file`
-- `write_file` → `write_file`
-- `replace` → `replace`
-- `search` → `search_file_content`
-- `glob` → `glob`
-- `shell` → `run_shell_command`
-- `web_fetch` → `web_fetch`
-- web search → `google_web_search`
+When skills reference Claude Code tools, Antigravity equivalents are:
+- `TodoWrite` → write/update a plan file (e.g., `task.md`)
+- `Task` with subagents → `browser_subagent` / `task_boundary`
+- `Skill` tool → `view_file` on `~/.gemini/skills/<skill>/SKILL.md`
+- `read_file` → `view_file`
+- `write_file` → `write_to_file`
+- `Edit` / `replace` → `replace_file_content`, `multi_replace_file_content`
+- `search` → `grep_search`, `find_by_name`
+- `shell` → `run_command`
+- `web_fetch` → `read_url_content`
+- Web search → `search_web`
 
 ## Updating
 

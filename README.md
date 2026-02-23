@@ -59,6 +59,14 @@ gemini extensions install https://github.com/obra/superpowers
 
 **Detailed docs:** [docs/README.gemini.md](docs/README.gemini.md)
 
+### Antigravity
+
+```bash
+git clone https://github.com/obra/superpowers.git ~/.gemini/superpowers && ~/.gemini/superpowers/.gemini/install.sh
+```
+
+**Detailed docs:** [docs/README.antigravity.md](docs/README.antigravity.md)
+
 ### Codex
 
 Tell Codex:
