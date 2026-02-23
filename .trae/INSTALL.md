@@ -22,14 +22,14 @@ Install by cloning the repo and linking skills using the hub-pattern installer.
 2. **Install (link) skills:**
 
    ```bash
-   bash ~/.trae/superpowers/scripts/install-trae.sh
+   bash ~/.trae/superpowers/.trae/install.sh
    ```
 
    **If you want project-local skills instead:**
 
    ```bash
    cd /path/to/your/project
-   bash ~/.trae/superpowers/scripts/install-trae.sh --project
+   bash ~/.trae/superpowers/.trae/install.sh --project
    ```
 
 3. **Restart TRAE** to refresh skill discovery.
@@ -42,7 +42,7 @@ After restart, ask TRAE to load or use a skill (for example: "use using-superpow
 
 ```bash
 cd ~/.trae/superpowers && git pull
-bash ~/.trae/superpowers/scripts/install-trae.sh
+bash ~/.trae/superpowers/.trae/install.sh
 ```
 
 ## Uninstalling

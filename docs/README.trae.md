@@ -28,7 +28,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 2. Link skills into TRAE's global skills directory:
 
    ```bash
-   bash ~/.trae/superpowers/scripts/install-trae.sh
+   bash ~/.trae/superpowers/.trae/install.sh
    ```
 
 3. Restart TRAE.
@@ -39,7 +39,7 @@ If TRAE isn’t picking up global skills in your environment, you can install in
 
 ```bash
 cd /path/to/your/project
-bash ~/.trae/superpowers/scripts/install-trae.sh --project
+bash ~/.trae/superpowers/.trae/install.sh --project
 ```
 
 ## How It Works
@@ -49,17 +49,17 @@ TRAE supports skills defined by `SKILL.md` folders and discovers:
 - **Global skills** from `~/.trae/skills/`
 - **Project skills** from `.trae/skills/` within your current project
 
-This repo ships skills under `./skills/`. The installer links them individually into `~/.trae/skills/` so:
+TRAE discovers top-level skill folders under `~/.trae/skills/` (no nested discovery), so the installer creates individual symlinks. This means:
 
-- Updates happen by `git pull` in the clone
 - Your existing global skills remain intact
-- User-owned skill directories are never overwritten
+- Users can selectively remove symlinks for skills they don't need
+- Re-run the installer after `git pull` to sync added or removed skills (it's idempotent)
 
 ## Updating
 
 ```bash
 cd ~/.trae/superpowers && git pull
-bash ~/.trae/superpowers/scripts/install-trae.sh
+bash ~/.trae/superpowers/.trae/install.sh
 ```
 
 ## Troubleshooting
