@@ -4,11 +4,28 @@
 
 ### Added
 
-**Cursor support**
+**Support for Cursor, Gemini CLI, and Antigravity (#531, #535, #537)**
 
-Superpowers now works with Cursor's plugin system. Includes a `.cursor-plugin/plugin.json` manifest and Cursor-specific installation instructions in the README. The SessionStart hook output now includes an `additional_context` field alongside the existing `hookSpecificOutput.additionalContext` for Cursor hook compatibility.
+Superpowers now works with Cursor's plugin system, Google's Gemini CLI, and the Antigravity assistant.
+- Added `.cursor-plugin/plugin.json` for Cursor support
+- Added `gemini-extension.json` for Gemini CLI support
+- Added `antigravity-extension.json` for Antigravity support
+- Unified installation and configuration via `.gemini/install.sh` for all Google-backed assistants
+
+**Copilot CLI support and security improvements (#533)**
+
+- Implemented standard tool mapping for GitHub Copilot CLI in `.copilot/`
+- Updated documentation to use pinned versioned URLs (v4.3.1) for immutable installation
+- Added security advisories for manual script inspection via `curl`
+
+**Qwen Code CLI support (#516)**
+
+- Added agent definitions and installation instructions for Qwen Code CLI in `.qwen/`
 
 ### Fixed
+
+- Agent file convention updated to `.agent.md` extension; install script now prefers `.agent.md` over plain `.md` when both exist
+- Fixed `install.sh` agent path: the script previously referenced `.copilot/agents/` and now correctly references the project-root `agents/` directory; this corrects agent install/uninstall behavior by ensuring agent definitions are properly linked from the repository.
 
 **Windows: Restored polyglot wrapper for reliable hook execution (#518, #504, #491, #487, #466, #440)**
 

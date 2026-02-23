@@ -72,7 +72,10 @@ git clone https://github.com/obra/superpowers.git ~/.gemini/superpowers && ~/.ge
 Tell Codex:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/v4.3.1/.codex/INSTALL.md
+
+> [!TIP]
+> Always download and inspect installation scripts before running them. Use `curl -fsSL <url> -o install-superpowers.sh && less install-superpowers.sh && bash install-superpowers.sh` to verify content.
 ```
 
 **Detailed docs:** [docs/README.codex.md](docs/README.codex.md)
@@ -82,7 +85,10 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 Tell OpenCode:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/v4.3.1/.opencode/INSTALL.md
+
+> [!TIP]
+> Always download and inspect installation scripts before running them. Use `curl -fsSL <url> -o install-superpowers.sh && less install-superpowers.sh && bash install-superpowers.sh` to verify content.
 ```
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)

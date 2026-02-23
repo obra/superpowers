@@ -72,14 +72,22 @@ Skills update instantly through the symlinks.
    find ~/.gemini/skills -type l -lname '*/superpowers/skills/*' -delete
    ```
 
-2. Remove agent symlinks:
+2. Remove Antigravity-specific skill symlinks (if applicable):
    ```bash
-   find ~/.gemini/agents -type l -lname '*/superpowers/.gemini/agents/*' -delete
+   find ~/.gemini/antigravity/skills -type l -lname '*/superpowers/skills/*' -delete
    ```
 
-3. Edit `~/.gemini/GEMINI.md` and remove the block between `<!-- SUPERPOWERS-CONTEXT-START -->` and `<!-- SUPERPOWERS-CONTEXT-END -->`.
+3. Remove agent symlinks:
+   ```bash
+   find ~/.gemini/agents -type l -lname '*/superpowers/agents/*' -delete
+   ```
 
-4. Remove the repo:
+4. Remove the injected Superpowers context block from GEMINI.md:
+   ```bash
+   sed -i.bak '/<!-- SUPERPOWERS-CONTEXT-START -->/,/<!-- SUPERPOWERS-CONTEXT-END -->/d' ~/.gemini/GEMINI.md && rm -f ~/.gemini/GEMINI.md.bak
+   ```
+
+5. Remove the repo:
    ```bash
    rm -rf ~/.gemini/superpowers
    ```

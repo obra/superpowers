@@ -44,7 +44,7 @@ for skill_path in "$REPO_SKILLS_DIR"/*/; do
 
         if [ -e "$target_path" ] || [ -L "$target_path" ]; then
             if [ -L "$target_path" ]; then
-                link_target="$(realpath "$target_path" 2>/dev/null || readlink "$target_path")"
+                link_target="$(realpath -m "$target_path" 2>/dev/null || python3 -c "import os; print(os.path.abspath(os.path.realpath('$target_path')))" 2>/dev/null || readlink "$target_path")"
                 if [[ "$link_target" == "$REPO_DIR"* ]]; then
                     rm "$target_path"
                 else
@@ -87,11 +87,11 @@ if [ -d "$REPO_AGENTS_DIR" ]; then
 
             if [ -e "$target_path" ] || [ -L "$target_path" ]; then
                 if [ -L "$target_path" ]; then
-                    link_target="$(realpath "$target_path" 2>/dev/null || readlink "$target_path")"
+                    link_target="$(realpath -m "$target_path" 2>/dev/null || python3 -c "import os; print(os.path.abspath(os.path.realpath('$target_path')))" 2>/dev/null || readlink "$target_path")"
                     if [[ "$link_target" == "$REPO_DIR"* ]]; then
                         rm "$target_path"
                     else
-                        echo "  ⚠ $agent_name points to $link_target (not this repo). Skipping."
+                        echo "  ⚠ $agent_name already exists (not this repo). Skipping."
                         continue
                     fi
                 else
@@ -130,7 +130,7 @@ if [ -d "$HOME/.gemini/antigravity" ]; then
 
             if [ -e "$target_path" ] || [ -L "$target_path" ]; then
                 if [ -L "$target_path" ]; then
-                    link_target="$(realpath "$target_path" 2>/dev/null || readlink "$target_path")"
+                    link_target="$(realpath -m "$target_path" 2>/dev/null || python3 -c "import os; print(os.path.abspath(os.path.realpath('$target_path')))" 2>/dev/null || readlink "$target_path")"
                     if [[ "$link_target" == "$REPO_DIR"* ]]; then
                         rm "$target_path"
                     else
@@ -178,7 +178,7 @@ The skills were originally written for Claude Code. Interpret as follows:
 - **"Claude"** or **"Claude Code"** → **"Antigravity"** (You).
 - **"Task" tool** → Use `browser_subagent` for browser tasks, or break work into structured steps with `task_boundary`.
 - **"Skill" tool** → Use `view_file` on `~/.gemini/skills/<skill-name>/SKILL.md`.
-- **"TodoWrite"** → Write/update a plan file (e.g., `task.md` in your artifact directory).
+- **"TodoWrite"** → Write/update a task list (e.g., `task.md` or `plan.md`).
 - File operations → `view_file`, `write_to_file`, `replace_file_content`, `multi_replace_file_content`
 - Directory listing → `list_dir`
 - Code structure → `view_file_outline`, `view_code_item`
@@ -207,10 +207,8 @@ else
     echo "Injecting Superpowers context into $GEMINI_MD..."
 fi
 
-# Trim trailing blank lines (prevents accumulation on repeated runs)
-if sed -i.bak -e :a -e '/^[[:space:]]*$/{$d;N;ba' -e '}' "$GEMINI_MD" 2>/dev/null; then
-    rm -f "${GEMINI_MD}.bak"
-elif awk '{lines[NR]=$0} END{e=NR; while(e>0 && lines[e]=="") e--; for(i=1;i<=e;i++) print lines[i]}' "$GEMINI_MD" > "${GEMINI_MD}.tmp" 2>/dev/null; then
+# Trim trailing blank/whitespace-only lines (prevents accumulation on repeated runs)
+if awk '{lines[NR]=$0} END{e=NR; while(e>0 && lines[e] ~ /^[[:space:]]*$/) e--; for(i=1;i<=e;i++) print lines[i]}' "$GEMINI_MD" > "${GEMINI_MD}.tmp" 2>/dev/null; then
     mv "${GEMINI_MD}.tmp" "$GEMINI_MD"
 else
     echo "Warning: Could not trim blank lines from $GEMINI_MD" >&2

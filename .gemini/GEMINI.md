@@ -1,9 +1,3 @@
-# Superpowers
-
-You have the Superpowers skills library installed. Before taking any action, you MUST read the `using-superpowers` skill to learn how to use the skills system properly.
-
-This is not optional. Read `using-superpowers` BEFORE your first response in every conversation.
-
 <!-- SUPERPOWERS-CONTEXT-START -->
 # Superpowers Configuration
 
@@ -19,7 +13,7 @@ The skills were originally written for Claude Code. Interpret as follows:
 - **"Claude"** or **"Claude Code"** → **"Antigravity"** (You).
 - **"Task" tool** → Use `browser_subagent` for browser tasks, or break work into structured steps with `task_boundary`.
 - **"Skill" tool** → Use `view_file` on `~/.gemini/skills/<skill-name>/SKILL.md`.
-- **"TodoWrite"** → Write/update a plan file (e.g., `task.md` in your artifact directory).
+- **"TodoWrite"** → Write/update a task list (e.g., `task.md` or `plan.md`).
 - File operations → `view_file`, `write_to_file`, `replace_file_content`, `multi_replace_file_content`
 - Directory listing → `list_dir`
 - Code structure → `view_file_outline`, `view_code_item`
