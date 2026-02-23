@@ -32,7 +32,7 @@ Qwen Code also supports extension-based install:
 qwen extensions install https://github.com/obra/superpowers
 ```
 
-> **Note:** The extension install uses `qwen-extension.json` and provides the `QWEN.md` context file. However, the install-script approach above is recommended because it provides individual skill symlinks and injects the full context block with tool mappings.
+> **Note:** The extension install uses `qwen-extension.json` and provides the `.qwen/QWEN.md` context file. However, the install-script approach above is recommended because it provides individual skill symlinks and injects the full context block with tool mappings.
 
 ## How It Works
 

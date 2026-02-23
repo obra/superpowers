@@ -2,5 +2,5 @@
   "name": "superpowers",
   "version": "4.3.0",
   "description": "Core skills library: TDD, debugging, collaboration patterns, and proven techniques for coding agents",
-  "contextFileName": "QWEN.md"
+  "contextFileName": ".qwen/QWEN.md"
 }
