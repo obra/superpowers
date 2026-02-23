@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SessionStart hook for Copilot CLI superpowers plugin
-# Ensures the superpowers skill cache is up to date
+# Validates skills and agents are accessible
 
 set -euo pipefail
 
@@ -11,6 +11,11 @@ PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 if [ ! -d "${PLUGIN_ROOT}/skills" ]; then
     echo "Warning: Superpowers skills directory not found at ${PLUGIN_ROOT}/skills" >&2
     exit 0
+fi
+
+# Verify agents directory exists
+if [ ! -d "${PLUGIN_ROOT}/agents" ]; then
+    echo "Warning: Superpowers agents directory not found at ${PLUGIN_ROOT}/agents" >&2
 fi
 
 exit 0

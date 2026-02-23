@@ -429,7 +429,7 @@ These changes address observed agent behavior where they rationalize around skil
 - Fixes #55
 
 ### Files Changed
-- New: `agents/code-reviewer.md` - Agent definition with review checklist and output format
+- New: `agents/code-reviewer.agent.md` - Agent definition with review checklist and output format
 - Updated: `skills/requesting-code-review/SKILL.md` - References to `superpowers:code-reviewer`
 - Updated: `skills/subagent-driven-development/SKILL.md` - References to `superpowers:code-reviewer`
 

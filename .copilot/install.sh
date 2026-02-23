@@ -82,6 +82,12 @@ if [ -d "$REPO_AGENTS_DIR" ] && [ "$(ls -A "$REPO_AGENTS_DIR" 2>/dev/null)" ]; t
     echo "Linking agents from $REPO_AGENTS_DIR to $AGENTS_DIR..."
     for agent_path in "$REPO_AGENTS_DIR"/*.md; do
         if [ -f "$agent_path" ]; then
+            # Prefer .agent.md over plain .md when both exist
+            base_name="${agent_path##*/}"
+            if [[ "$base_name" != *.agent.md ]]; then
+                agent_md_version="${agent_path%.md}.agent.md"
+                [ -f "$agent_md_version" ] && continue
+            fi
             agent_name=$(basename "$agent_path")
             target_path="$AGENTS_DIR/$agent_name"
 

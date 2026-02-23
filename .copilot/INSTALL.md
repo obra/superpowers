@@ -114,7 +114,7 @@ Skills update instantly through the symlinks.
 2. **Remove the agent symlinks:**
 
    ```bash
-   find ~/.copilot/agents -type l -lname '*/superpowers/.copilot/agents/*' -delete
+   find ~/.copilot/agents -type l -lname '*/superpowers/agents/*' -delete
    ```
 
 3. **Clean up copilot-instructions.md:** Edit `~/.copilot/copilot-instructions.md` and remove the block between

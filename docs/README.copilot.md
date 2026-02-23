@@ -53,7 +53,7 @@ cd ~/.copilot/superpowers && git pull
 
 ```bash
 find ~/.copilot/skills -type l -lname '*/superpowers/skills/*' -delete
-find ~/.copilot/agents -type l -lname '*/superpowers/.copilot/agents/*' -delete
+find ~/.copilot/agents -type l -lname '*/superpowers/agents/*' -delete
 # Edit ~/.copilot/copilot-instructions.md and remove the SUPERPOWERS-CONTEXT block
 rm -rf ~/.copilot/superpowers
 ```
