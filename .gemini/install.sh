@@ -74,7 +74,7 @@ done
 
 # --- Link agents individually (hub pattern) ---
 AGENTS_DIR="$GEMINI_DIR/agents"
-REPO_AGENTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/agents"
+REPO_AGENTS_DIR="$REPO_DIR/agents"
 
 mkdir -p "$AGENTS_DIR"
 
@@ -137,9 +137,9 @@ The skills were originally written for Claude Code. Interpret as follows:
 - **"Claude"** or **"Claude Code"** → **"Gemini"** (You).
 - **"Task" tool** → Use sub-agents. Agent definitions are in `~/.gemini/agents/`.
 - **"Skill" tool** → Use `activate_skill` tool with the skill name.
-- **"TodoWrite"** → Write/update a plan file (e.g., `plan.md`).
-- File operations → your native tools (`read_file`, `write_file`, `replace`, etc.)
-- Search → `search_file_content` or `glob`
+- **"TodoWrite"** → Write/update a task list (e.g., `task.md` or `plan.md`).
+- File operations → `read_file`, `write_file`, `replace`
+- Search → `search_file_content`, `grep`
 - Shell → `run_shell_command`
 - Web fetch → `web_fetch`
 - Web search → `google_web_search`
