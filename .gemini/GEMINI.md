@@ -21,8 +21,13 @@ The skills were originally written for Claude Code. Interpret as follows:
 - **"Skill" tool** → Use `view_file` on `~/.gemini/skills/<skill-name>/SKILL.md`.
 - **"TodoWrite"** → Write/update a plan file (e.g., `task.md` in your artifact directory).
 - File operations → `view_file`, `write_to_file`, `replace_file_content`, `multi_replace_file_content`
+- Directory listing → `list_dir`
+- Code structure → `view_file_outline`, `view_code_item`
 - Search → `grep_search`, `find_by_name`
 - Shell → `run_command`
 - Web fetch → `read_url_content`
 - Web search → `search_web`
+- Image generation → `generate_image`
+- User communication (during tasks) → `notify_user`
+- MCP tools → available via `mcp_*` tool prefix
 <!-- SUPERPOWERS-CONTEXT-END -->

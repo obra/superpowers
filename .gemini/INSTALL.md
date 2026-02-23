@@ -30,6 +30,7 @@ git clone https://github.com/obra/superpowers.git ~/.gemini/superpowers
 This will:
 - Create `~/.gemini/skills/` if it doesn't exist
 - Symlink each skill individually into `~/.gemini/skills/` (hub pattern)
+- Symlink skills into `~/.gemini/antigravity/skills/` if Antigravity is detected
 - Symlink agent definitions into `~/.gemini/agents/`
 - Inject the Superpowers context block into `~/.gemini/GEMINI.md`
 
@@ -82,10 +83,15 @@ When skills reference Claude Code tools, Antigravity equivalents are:
 - `read_file` → `view_file`
 - `write_file` → `write_to_file`
 - `Edit` / `replace` → `replace_file_content`, `multi_replace_file_content`
+- Directory listing → `list_dir`
+- Code structure → `view_file_outline`, `view_code_item`
 - `search` → `grep_search`, `find_by_name`
 - `shell` → `run_command`
 - `web_fetch` → `read_url_content`
 - Web search → `search_web`
+- Image generation → `generate_image`
+- User communication (during tasks) → `notify_user`
+- MCP tools → available via `mcp_*` tool prefix
 
 ## Updating
 

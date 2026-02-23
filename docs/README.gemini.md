@@ -1,6 +1,9 @@
-# Superpowers for Gemini CLI
+# Superpowers for Gemini CLI / Antigravity
 
-Guide for using Superpowers with Google's Gemini CLI.
+Guide for using Superpowers with Google's Gemini CLI and the Antigravity AI coding assistant.
+
+> [!NOTE]
+> Antigravity and Gemini CLI share the same configuration path and core implementation. For Antigravity-specific documentation, see [README.antigravity.md](README.antigravity.md).
 
 ## Quick Install
 

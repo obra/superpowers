@@ -15,8 +15,9 @@ Then restart Antigravity.
 ## What the Installer Does
 
 1. Symlinks each skill individually into `~/.gemini/skills/` (hub pattern — your custom skills coexist safely)
-2. Symlinks agent definitions into `~/.gemini/agents/`
-3. Injects a Superpowers context block into `~/.gemini/GEMINI.md` with:
+2. Symlinks skills into `~/.gemini/antigravity/skills/` if Antigravity is detected on the system
+3. Symlinks agent definitions into `~/.gemini/agents/`
+4. Injects a Superpowers context block into `~/.gemini/GEMINI.md` with:
    - Skill discovery instructions
    - Terminology mapping (Claude Code tools → Antigravity equivalents)
 
@@ -43,13 +44,18 @@ Skills reference Claude Code tools. Antigravity equivalents:
 | `Skill` tool | `view_file` on `~/.gemini/skills/<skill>/SKILL.md` |
 | `Task` (subagents) | `browser_subagent` / `task_boundary` |
 | `TodoWrite` | Write/update `task.md` in your artifact directory |
-| `Read` / `view_file` | `view_file` |
+| `Read` / `read_file` | `view_file` |
 | `Write` / `write_file` | `write_to_file` |
 | `Edit` / `replace` | `replace_file_content`, `multi_replace_file_content` |
+| `LS` / directory listing | `list_dir` |
+| Code structure | `view_file_outline`, `view_code_item` |
 | `Search` | `grep_search`, `find_by_name` |
 | `Shell` | `run_command` |
 | `WebFetch` | `read_url_content` |
 | Web Search | `search_web` |
+| Image generation | `generate_image` |
+| User communication (during tasks) | `notify_user` |
+| MCP integrations | `mcp_*` tools (e.g. `mcp_StitchMCP_*`, `mcp_context7_*`) |
 
 ## Updating
 

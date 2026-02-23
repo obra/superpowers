@@ -74,7 +74,7 @@ done
 
 # --- Link agents individually (hub pattern) ---
 AGENTS_DIR="$GEMINI_DIR/agents"
-REPO_AGENTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/agents"
+REPO_AGENTS_DIR="$REPO_DIR/agents"
 
 mkdir -p "$AGENTS_DIR"
 
@@ -117,6 +117,47 @@ else
     echo "No agents directory found at $REPO_AGENTS_DIR, skipping agent linking."
 fi
 
+# --- Also link skills into Antigravity-specific path ---
+ANTIGRAVITY_SKILLS_DIR="$HOME/.gemini/antigravity/skills"
+if [ -d "$HOME/.gemini/antigravity" ]; then
+    mkdir -p "$ANTIGRAVITY_SKILLS_DIR"
+    echo "Linking skills into Antigravity path $ANTIGRAVITY_SKILLS_DIR..."
+    for skill_path in "$REPO_SKILLS_DIR"/*/; do
+        if [ -d "$skill_path" ]; then
+            skill_name=$(basename "$skill_path")
+            skill_path="${skill_path%/}"
+            target_path="$ANTIGRAVITY_SKILLS_DIR/$skill_name"
+
+            if [ -e "$target_path" ] || [ -L "$target_path" ]; then
+                if [ -L "$target_path" ]; then
+                    link_target="$(realpath "$target_path" 2>/dev/null || readlink "$target_path")"
+                    if [[ "$link_target" == "$REPO_DIR"* ]]; then
+                        rm "$target_path"
+                    else
+                        echo "  ⚠ $skill_name already exists (not this repo). Skipping."
+                        continue
+                    fi
+                else
+                    echo "  ⚠ $target_path exists and is not a symlink. Skipping."
+                    continue
+                fi
+            fi
+
+            if ln -sr "$skill_path" "$target_path" 2>/dev/null; then
+                :
+            elif command -v python3 >/dev/null 2>&1; then
+                rel_path="$(python3 -c "import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))" "$skill_path" "$ANTIGRAVITY_SKILLS_DIR")"
+                ln -s "$rel_path" "$target_path"
+            else
+                ln -s "$skill_path" "$target_path"
+            fi
+            echo "  ✓ $skill_name"
+        fi
+    done
+else
+    echo "Antigravity not detected at ~/.gemini/antigravity — skipping Antigravity-specific skill path."
+fi
+
 # --- Context injection into GEMINI.md ---
 CONTEXT_HEADER="<!-- SUPERPOWERS-CONTEXT-START -->"
 CONTEXT_FOOTER="<!-- SUPERPOWERS-CONTEXT-END -->"
@@ -139,10 +180,15 @@ The skills were originally written for Claude Code. Interpret as follows:
 - **"Skill" tool** → Use `view_file` on `~/.gemini/skills/<skill-name>/SKILL.md`.
 - **"TodoWrite"** → Write/update a plan file (e.g., `task.md` in your artifact directory).
 - File operations → `view_file`, `write_to_file`, `replace_file_content`, `multi_replace_file_content`
+- Directory listing → `list_dir`
+- Code structure → `view_file_outline`, `view_code_item`
 - Search → `grep_search`, `find_by_name`
 - Shell → `run_command`
 - Web fetch → `read_url_content`
 - Web search → `search_web`
+- Image generation → `generate_image`
+- User communication (during tasks) → `notify_user`
+- MCP tools → available via `mcp_*` tool prefix
 <!-- SUPERPOWERS-CONTEXT-END -->
 EOM
 
