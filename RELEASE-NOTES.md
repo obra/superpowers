@@ -1,5 +1,27 @@
 # Superpowers Release Notes
 
+## v4.3.1 (2026-02-21)
+
+### Added
+
+**Cursor support**
+
+Superpowers now works with Cursor's plugin system. Includes a `.cursor-plugin/plugin.json` manifest and Cursor-specific installation instructions in the README. The SessionStart hook output now includes an `additional_context` field alongside the existing `hookSpecificOutput.additionalContext` for Cursor hook compatibility.
+
+### Fixed
+
+**Windows: Restored polyglot wrapper for reliable hook execution (#518, #504, #491, #487, #466, #440)**
+
+Claude Code's `.sh` auto-detection on Windows was prepending `bash` to the hook command, breaking execution. The fix:
+
+- Renamed `session-start.sh` to `session-start` (extensionless) so auto-detection doesn't interfere
+- Restored `run-hook.cmd` polyglot wrapper with multi-location bash discovery (standard Git for Windows paths, then PATH fallback)
+- Exits silently if no bash is found rather than erroring
+- On Unix, the wrapper runs the script directly via `exec bash`
+- Uses POSIX-safe `dirname "$0"` path resolution (works on dash/sh, not just bash)
+
+This fixes SessionStart failures on Windows with spaces in paths, missing WSL, `set -euo pipefail` fragility on MSYS, and backslash mangling.
+
 ## v4.3.0 (2026-02-12)
 
 This fix should dramatically improve superpowers skills compliance and should reduce the chances of Claude entering its native plan mode unintentionally.
