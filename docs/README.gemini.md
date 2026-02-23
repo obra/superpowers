@@ -2,92 +2,59 @@
 
 Guide for using Superpowers with Google's Gemini CLI.
 
-## Quick Install (Extension)
+## Quick Install
 
-The recommended way to install Superpowers is via the Gemini CLI extension system:
+```bash
+git clone https://github.com/obra/superpowers.git ~/.gemini/superpowers && ~/.gemini/superpowers/.gemini/install.sh
+```
+
+This will:
+- Symlink each skill individually into `~/.gemini/skills/` (hub pattern)
+- Symlink agent definitions into `~/.gemini/agents/`
+- Inject the Superpowers context block into `~/.gemini/GEMINI.md`
+
+Then restart Gemini CLI.
+
+## Extension Install
+
+You can also install via the Gemini CLI extension system, which uses the same native skill discovery:
 
 ```bash
 gemini extensions install https://github.com/obra/superpowers
 ```
 
-This automatically installs all skills, commands, agents, and context.
-
-To update:
-
-```bash
-gemini extensions update superpowers
-```
-
-## Alternative Install (Manual Symlink)
-
-If you prefer manual setup, clone the repository and symlink the skills directory.
-
-### Steps
-
-1.  **Clone the Superpowers Repository** (if you haven't already):
-    ```bash
-    git clone https://github.com/obra/superpowers.git ~/.gemini/superpowers
-    ```
-    (You can choose any location for the clone, `~/.gemini/superpowers` is just an example for user-level installation.)
-
-2.  **Create the Skills Directory** (if it doesn't exist):
-    ```bash
-    mkdir -p ~/.gemini/skills
-    ```
-
-3.  **Create a Symbolic Link**:
-    ```bash
-    ln -s ~/.gemini/superpowers/skills ~/.gemini/skills/superpowers
-    ```
-
-4.  **Restart Gemini CLI** (if it's currently running).
-
-> **Note:** The manual approach only installs skills. Commands (`/brainstorm`, `/write-plan`, `/execute-plan`) and the code-reviewer agent require the extension install.
+> **Note:** The install script approach above is recommended because it provides individual skill symlinks and injects the full context block with tool mappings into `~/.gemini/GEMINI.md`.
 
 ## How It Works
 
-Gemini CLI automatically scans `~/.gemini/skills/` (for user-level skills) or `.gemini/skills/` (for project-level skills) at startup. It discovers skills by looking for directories containing a `SKILL.md` file. By creating the symlink, all Superpowers skills become discoverable by your Gemini CLI instance.
+Gemini CLI (v0.24.0+) natively supports Agent Skills. At startup it scans `~/.gemini/skills/` for directories containing a `SKILL.md` file and injects their name and description into the system prompt. When a task matches a skill's description, Gemini calls the `activate_skill` tool to load the full instructions.
 
-The `using-superpowers` skill, which is part of Superpowers, is automatically discovered and will guide Gemini CLI on when and how to utilize the other Superpowers skills, ensuring proper context injection and usage.
+The installer creates individual symlinks (hub pattern) so each skill is discoverable independently. Skills update instantly whenever you `git pull`.
 
 ## Usage
 
-Once installed, Superpowers skills are discovered automatically. Gemini CLI will activate them when:
--   You mention a skill by name (e.g., "use brainstorming")
--   The task matches a skill's description
--   The `using-superpowers` skill directs Gemini CLI to use one
+Once installed, skills are discovered automatically. Gemini will activate them when:
+- You mention a skill by name (e.g., "use brainstorming")
+- The task matches a skill's description
 
-You can use the `/skills list` command within Gemini CLI to view all available skills, including those provided by Superpowers.
+You can also list and manage skills:
 
-## Updating Superpowers
-
-**Extension install:**
-
-```bash
-gemini extensions update superpowers
+```text
+/skills list
 ```
 
-**Manual install:**
+## Updating
 
 ```bash
-cd ~/.gemini/superpowers
-git pull
+cd ~/.gemini/superpowers && git pull
 ```
 
-Restart Gemini CLI after updating.
-
-## Uninstalling Superpowers
-
-**Extension install:**
+## Uninstalling
 
 ```bash
-gemini extensions uninstall superpowers
-```
-
-**Manual install:**
-
-```bash
-rm ~/.gemini/skills/superpowers
+find ~/.gemini/skills -type l -lname '*/superpowers/skills/*' -delete
+find ~/.gemini/agents -type l -lname '*/superpowers/.gemini/agents/*' -delete
+# Edit ~/.gemini/GEMINI.md and remove the SUPERPOWERS-CONTEXT block
 rm -rf ~/.gemini/superpowers
 ```
 
@@ -95,15 +62,8 @@ rm -rf ~/.gemini/superpowers
 
 ### Skills not showing up
 
-1.  **Verify the Symlink**: Ensure the symbolic link is correctly created.
-    ```bash
-    ls -l ~/.gemini/skills/superpowers
-    ```
-    It should show an arrow pointing to your Superpowers `skills` directory.
-2.  **Check Skills Directory**: Confirm that the Superpowers `skills` directory contains actual `SKILL.md` files.
-    ```bash
-    ls ~/.gemini/superpowers/skills
-    ```
-3.  **Restart Gemini CLI**: Skills are typically discovered at startup.
+1. **Check symlinks**: `ls -l ~/.gemini/skills/` — should show symlinks into your superpowers clone
+2. **Check Gemini version**: Skills require v0.24.0+. Run `gemini --version`
+3. **Restart Gemini CLI**: Skills are discovered at startup
 
-If issues persist, please report them on the Superpowers GitHub repository.
+If issues persist, please report them on the [Superpowers GitHub repository](https://github.com/obra/superpowers/issues).
