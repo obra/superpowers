@@ -51,14 +51,6 @@ In Cursor Agent chat, install from marketplace:
 /plugin-add superpowers
 ```
 
-### Gemini CLI
-
-```bash
-gemini extensions install https://github.com/obra/superpowers
-```
-
-**Detailed docs:** [docs/README.gemini.md](docs/README.gemini.md)
-
 ### Codex
 
 Tell Codex:
