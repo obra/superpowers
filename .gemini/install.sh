@@ -114,46 +114,7 @@ if [ -d "$REPO_AGENTS_DIR" ]; then
         fi
     done
 else
-    echo "No agents directory found at "$REPO_AGENTS_DIR", skipping agent linking."
 fi
-
-# --- Enable experimental.skills in settings.json ---
-SETTINGS_FILE="$GEMINI_DIR/settings.json"
-
-enable_experimental_skills() {
-    if [ ! -f "$SETTINGS_FILE" ]; then
-        echo "Creating $SETTINGS_FILE with experimental.skills enabled..."
-        printf '{\n  "experimental": {\n    "skills": true\n  }\n}\n' > "$SETTINGS_FILE"
-        return
-    fi
-
-    # Check if already enabled
-    if grep -q '"skills"' "$SETTINGS_FILE" 2>/dev/null; then
-        echo "experimental.skills already present in $SETTINGS_FILE"
-        return
-    fi
-
-    echo "Enabling experimental.skills in $SETTINGS_FILE..."
-    if command -v jq >/dev/null 2>&1; then
-        jq '.experimental = (.experimental // {}) + {"skills": true}' "$SETTINGS_FILE" > "${SETTINGS_FILE}.tmp" \
-            && mv "${SETTINGS_FILE}.tmp" "$SETTINGS_FILE"
-    elif command -v python3 >/dev/null 2>&1; then
-        python3 -c "
-import json, sys
-with open(sys.argv[1], 'r') as f:
-    d = json.load(f)
-d.setdefault('experimental', {})['skills'] = True
-with open(sys.argv[1], 'w') as f:
-    json.dump(d, f, indent=2)
-    f.write('\n')
-" "$SETTINGS_FILE"
-    else
-        echo "  ⚠ Neither jq nor python3 available. Please manually add to $SETTINGS_FILE:"
-        echo '    "experimental": { "skills": true }'
-    fi
-}
-
-enable_experimental_skills
 
 # --- Context injection into GEMINI.md ---
 CONTEXT_HEADER="<!-- SUPERPOWERS-CONTEXT-START -->"
