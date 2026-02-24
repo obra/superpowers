@@ -1,14 +1,35 @@
 # Superpowers Release Notes
 
-## v4.3.1 (2026-02-21)
+## v4.3.1 (2026-02-23)
 
 ### Added
+
+**GitHub Copilot CLI native plugin support**
+
+Superpowers can now be installed as a native GitHub Copilot CLI plugin. Install via:
+
+```bash
+# Recommended: install via the Copilot CLI plugin manager
+copilot plugin add obra/superpowers
+
+# Or manually:
+git clone https://github.com/obra/superpowers.git ~/.copilot/superpowers
+~/.copilot/superpowers/.copilot/install.sh
+```
+
+- `.copilot/plugin.json` — plugin manifest with skills, agents, and hooks configuration
+- `.copilot/hooks/hooks.json` and `session-start.sh` — session-start hook that verifies skills and agents directories
+- `.copilot/install.sh` — installs skills and agents into `~/.copilot/` and injects Superpowers context into `~/.copilot/copilot-instructions.md`
 
 **Cursor support**
 
 Superpowers now works with Cursor's plugin system. Includes a `.cursor-plugin/plugin.json` manifest and Cursor-specific installation instructions in the README. The SessionStart hook output now includes an `additional_context` field alongside the existing `hookSpecificOutput.additionalContext` for Cursor hook compatibility.
 
 ### Fixed
+
+- Agent file convention updated to `.agent.md` extension; install script now prefers `.agent.md` over plain `.md` when both exist
+- Fixed `install.sh` agent path: the script previously referenced `.copilot/agents/` and now correctly references the project-root `agents/` directory; this corrects agent install/uninstall behavior by ensuring agent definitions are properly linked from the repository.
+- Fixed incorrect symlink paths in INSTALL.md and README for uninstall instructions
 
 **Windows: Restored polyglot wrapper for reliable hook execution (#518, #504, #491, #487, #466, #440)**
 
@@ -451,7 +472,7 @@ These changes address observed agent behavior where they rationalize around skil
 - Fixes #55
 
 ### Files Changed
-- New: `agents/code-reviewer.md` - Agent definition with review checklist and output format
+- New: `agents/code-reviewer.agent.md` - Agent definition with review checklist and output format
 - Updated: `skills/requesting-code-review/SKILL.md` - References to `superpowers:code-reviewer`
 - Updated: `skills/subagent-driven-development/SKILL.md` - References to `superpowers:code-reviewer`
 

@@ -26,7 +26,7 @@ Thanks!
 
 ## Installation
 
-**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex and OpenCode require manual setup.
+**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex and OpenCode require manual setup. VS Code Copilot uses the same install as Copilot CLI.
 
 
 ### Claude Code (via Plugin Marketplace)
@@ -55,8 +55,11 @@ In Cursor Agent chat, install from marketplace:
 
 Tell Codex:
 
-```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md
+```text
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/v4.3.1/.codex/INSTALL.md
+
+> [!TIP]
+> Always download and inspect installation scripts before running them. Use `curl -fsSL <url> -o install-superpowers.sh && less install-superpowers.sh && bash install-superpowers.sh` to verify content.
 ```
 
 **Detailed docs:** [docs/README.codex.md](docs/README.codex.md)
@@ -65,11 +68,38 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 Tell OpenCode:
 
-```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
+```text
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/v4.3.1/.opencode/INSTALL.md
+
+> [!TIP]
+> Always download and inspect installation scripts before running them. Use `curl -fsSL <url> -o install-superpowers.sh && less install-superpowers.sh && bash install-superpowers.sh` to verify content.
 ```
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
+
+### GitHub Copilot CLI
+
+```bash
+copilot plugin add https://github.com/obra/superpowers
+```
+
+Or install manually:
+
+```bash
+git clone https://github.com/obra/superpowers.git ~/.copilot/superpowers && ~/.copilot/superpowers/.copilot/install.sh
+```
+
+**Detailed docs:** [docs/README.copilot.md](docs/README.copilot.md)
+
+### VS Code Copilot (Agent Mode)
+
+Requires VS Code 1.109+ with GitHub Copilot. Same install as Copilot CLI:
+
+```bash
+git clone https://github.com/obra/superpowers.git ~/.copilot/superpowers && ~/.copilot/superpowers/.copilot/install.sh
+```
+
+**Detailed docs:** [docs/README.vscode-copilot.md](docs/README.vscode-copilot.md)
 
 ### Verify Installation
 
