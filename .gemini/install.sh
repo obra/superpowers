@@ -116,27 +116,28 @@ if [ -d "$REPO_AGENTS_DIR" ]; then
     echo "No agents directory found at "$REPO_AGENTS_DIR", skipping agent linking."
 fi
 
-# --- Register deterministic hook router in settings.json ---
+# --- Register deterministic hooks in settings.json ---
 SETTINGS_FILE="$GEMINI_DIR/settings.json"
 
-enable_router_hook() {
+register_hooks() {
     # Ensure settings.json exists
     if [ ! -f "$SETTINGS_FILE" ]; then
         echo "Creating basic $SETTINGS_FILE for hook registration..."
-        printf '{\n  "hooks": {\n    "beforeAgent": []\n  }\n}\n' > "$SETTINGS_FILE"
+        printf '{\n  "hooks": {}\n}\n' > "$SETTINGS_FILE"
     fi
 
-    echo "Registering superpowers-router hook in $SETTINGS_FILE..."
+    echo "Registering Superpowers hooks in $SETTINGS_FILE..."
     
-    # Path to the script
+    # Paths to the scripts
     ROUTER_PATH="$REPO_DIR/agents/superpowers-router.js"
+    GUARD_PATH="$REPO_DIR/agents/superpowers-guard.js"
     
-    # Python script to safely inject/update the hook without breaking existing ones
     if command -v python3 >/dev/null 2>&1; then
         python3 -c "
 import json, sys
 settings_path = sys.argv[1]
 router_path = sys.argv[2]
+guard_path = sys.argv[3]
 try:
     with open(settings_path, 'r') as f:
         d = json.load(f)
@@ -144,33 +145,42 @@ except (FileNotFoundError, json.JSONDecodeError):
     d = {}
 
 hooks = d.setdefault('hooks', {})
+
+# BeforeAgent: deterministic phrase router
 beforeAgent = hooks.setdefault('beforeAgent', [])
-
-# Remove existing superpower-router if it exists
-beforeAgent = [h for h in beforeAgent if h.get('name') != 'superpowers-router']
-
-# Append our router
+beforeAgent = [h for h in beforeAgent if h.get('name') not in ('superpowers-router',)]
 beforeAgent.append({
     'name': 'superpowers-router',
     'command': 'node',
     'args': [router_path],
     'matcher': '.*'
 })
-
 hooks['beforeAgent'] = beforeAgent
+
+# BeforeTool: agent-behavior guard (commit/merge interception)
+beforeTool = hooks.setdefault('beforeTool', [])
+beforeTool = [h for h in beforeTool if h.get('name') not in ('superpowers-guard',)]
+beforeTool.append({
+    'name': 'superpowers-guard',
+    'command': 'node',
+    'args': [guard_path],
+    'matcher': '.*'
+})
+hooks['beforeTool'] = beforeTool
 
 with open(settings_path, 'w') as f:
     json.dump(d, f, indent=2)
     f.write('\n')
-" "$SETTINGS_FILE" "$ROUTER_PATH"
-        echo "  ✓ Registered superpowers-router hook."
+" "$SETTINGS_FILE" "$ROUTER_PATH" "$GUARD_PATH"
+        echo "  ✓ Registered superpowers-router (BeforeAgent)"
+        echo "  ✓ Registered superpowers-guard (BeforeTool)"
     else
-        echo "  ⚠ python3 not found. Could not auto-register hooks. Please add manually:"
-        echo "  \"hooks\": { \"beforeAgent\": [{ \"name\": \"superpowers-router\", \"command\": \"node\", \"args\": [\"$ROUTER_PATH\"], \"matcher\": \".*\" }] }"
+        echo "  ⚠ python3 not found. Could not auto-register hooks."
+        echo "  Please add hooks manually to $SETTINGS_FILE. See docs/README.gemini.md."
     fi
 }
 
-enable_router_hook
+register_hooks
 
 # --- Context injection into GEMINI.md ---
 CONTEXT_HEADER="<!-- SUPERPOWERS-CONTEXT-START -->"

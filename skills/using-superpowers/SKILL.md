@@ -15,6 +15,8 @@ This is not negotiable. This is not optional. You cannot rationalize your way ou
 
 **In Claude Code:** Use the `Skill` tool. When you invoke a skill, its content is loaded and presented to you—follow it directly. Never use the Read tool on skill files.
 
+**In Gemini CLI:** Use the `activate_skill` tool with the skill name. When activated, the skill's SKILL.md and directory are loaded into your context. Use `/skills list` to see available skills.
+
 **In other environments:** Check your platform's documentation for how skills are loaded.
 
 # Using Skills
@@ -30,7 +32,7 @@ digraph skill_flow {
     "Already brainstormed?" [shape=diamond];
     "Invoke brainstorming skill" [shape=box];
     "Might any skill apply?" [shape=diamond];
-    "Invoke Skill tool" [shape=box];
+    "Invoke activate_skill tool" [shape=box];
     "Announce: 'Using [skill] to [purpose]'" [shape=box];
     "Has checklist?" [shape=diamond];
     "Create TodoWrite todo per item" [shape=box];
@@ -43,9 +45,9 @@ digraph skill_flow {
     "Invoke brainstorming skill" -> "Might any skill apply?";
 
     "User message received" -> "Might any skill apply?";
-    "Might any skill apply?" -> "Invoke Skill tool" [label="yes, even 1%"];
+    "Might any skill apply?" -> "Invoke activate_skill tool" [label="yes, even 1%"];
     "Might any skill apply?" -> "Respond (including clarifications)" [label="definitely not"];
-    "Invoke Skill tool" -> "Announce: 'Using [skill] to [purpose]'";
+    "Invoke activate_skill tool" -> "Announce: 'Using [skill] to [purpose]'";
     "Announce: 'Using [skill] to [purpose]'" -> "Has checklist?";
     "Has checklist?" -> "Create TodoWrite todo per item" [label="yes"];
     "Has checklist?" -> "Follow skill exactly" [label="no"];
