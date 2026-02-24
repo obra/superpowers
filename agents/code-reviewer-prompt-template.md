@@ -1,3 +1,10 @@
+---
+name: code-reviewer-prompt-template
+description: |
+  Prompt template for dispatching code quality reviewer subagents. Use this template after spec compliance review passes, to verify implementation quality, maintainability, and best practices.
+model: inherit
+---
+
 # Code Quality Reviewer Prompt Template for Gemini CLI
 
 Use this template when dispatching a code quality reviewer subagent using Gemini CLI's sub-agent system.

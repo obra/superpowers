@@ -1,3 +1,10 @@
+---
+name: spec-reviewer-prompt-template
+description: |
+  Prompt template for dispatching spec compliance reviewer subagents. Use this template when the subagent-driven-development skill needs to verify an implementer built exactly what was requested.
+model: inherit
+---
+
 # Spec Compliance Reviewer Prompt Template for Gemini CLI
 
 Use this template when dispatching a spec compliance reviewer subagent using Gemini CLI's sub-agent system.

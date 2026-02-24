@@ -1,3 +1,10 @@
+---
+name: implementer-prompt-template
+description: |
+  Prompt template for dispatching implementer subagents. Use this template when the subagent-driven-development skill needs to dispatch a fresh implementer to work on a task from an implementation plan.
+model: inherit
+---
+
 # Implementer Subagent Prompt Template for Gemini CLI
 
 Use this template when dispatching an implementer subagent using Gemini CLI's sub-agent system.
