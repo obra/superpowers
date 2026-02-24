@@ -63,6 +63,15 @@ Each agent gets:
 
 ### 3. Dispatch in Parallel
 
+```javascript
+// In Gemini CLI environment (using sub-agents)
+// Each sub-agent runs concurrently with its own context
+activate_skill("dispatching-parallel-agents")
+// Agent 1: "Fix agent-tool-abort.test.ts failures"
+// Agent 2: "Fix batch-completion-behavior.test.ts failures"
+// Agent 3: "Fix tool-approval-race-conditions.test.ts failures"
+```
+
 ```typescript
 // In Claude Code / AI environment
 Task("Fix agent-tool-abort.test.ts failures")
