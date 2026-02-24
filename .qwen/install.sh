@@ -171,6 +171,50 @@ else
 fi
 
 
+# --- Link custom commands (deterministic skill triggers) ---
+COMMANDS_DIR="$QWEN_DIR/commands"
+REPO_COMMANDS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/commands"
+
+mkdir -p "$COMMANDS_DIR"
+
+if [ -d "$REPO_COMMANDS_DIR" ]; then
+    echo "Linking custom commands from $REPO_COMMANDS_DIR to $COMMANDS_DIR..."
+    for cmd_path in "$REPO_COMMANDS_DIR"/*.md; do
+        if [ -f "$cmd_path" ]; then
+            cmd_name=$(basename "$cmd_path")
+            target_path="$COMMANDS_DIR/$cmd_name"
+
+            if [ -e "$target_path" ] || [ -L "$target_path" ]; then
+                if [ -L "$target_path" ]; then
+                    link_target="$(realpath "$target_path" 2>/dev/null || readlink "$target_path")"
+                    if [[ "$link_target" == "$REPO_DIR"* ]]; then
+                        rm "$target_path"
+                    else
+                        echo "  ⚠ $cmd_name points to $link_target (not this repo). Skipping."
+                        continue
+                    fi
+                else
+                    echo "  ⚠ $target_path exists and is not a symlink. Skipping."
+                    continue
+                fi
+            fi
+
+            if ln -sr "$cmd_path" "$target_path" 2>/dev/null; then
+                :
+            elif command -v python3 >/dev/null 2>&1; then
+                rel_path="$(python3 -c "import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))" "$cmd_path" "$COMMANDS_DIR")"
+                ln -s "$rel_path" "$target_path"
+            else
+                echo "  ⚠ Warning: Neither GNU ln -sr nor python3 available. Using absolute path (less portable)."
+                ln -s "$cmd_path" "$target_path"
+            fi
+            echo "  ✓ /${cmd_name%.md}"
+        fi
+    done
+else
+    echo "No commands directory found at $REPO_COMMANDS_DIR, skipping command linking."
+fi
+
 # --- Context injection into QWEN.md ---
 CONTEXT_HEADER="<!-- SUPERPOWERS-CONTEXT-START -->"
 CONTEXT_FOOTER="<!-- SUPERPOWERS-CONTEXT-END -->"
@@ -196,6 +240,17 @@ The skills were originally written for Claude Code. Interpret as follows:
 - Search → `search_file_content` or `glob`
 - Shell → `run_shell_command`
 - Web fetch → `web_fetch`
+
+## Quick Skill Commands
+These slash commands deterministically activate specific skills:
+- `/brainstorm` — brainstorming (design before implementation)
+- `/debug` — systematic debugging
+- `/plan` — write implementation plans
+- `/tdd` — test-driven development
+- `/review` — request code review
+- `/verify` — verification before completion
+- `/execute` — execute an implementation plan
+- `/finish` — finish a development branch
 <!-- SUPERPOWERS-CONTEXT-END -->
 EOM
 
