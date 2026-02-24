@@ -147,6 +147,16 @@ Skills update automatically when you update the plugin:
 /plugin update superpowers
 ```
 
+## Community Extensions
+
+Projects built on top of Superpowers:
+
+| Extension | What It Adds |
+|-----------|-------------|
+| [Autonomous Coding Toolkit](https://github.com/parthalon025/autonomous-coding-toolkit) | Headless batch execution, quality gates between every batch, 79 community lessons, Multi-Armed Bandit routing, fresh context per batch |
+
+*Built something on Superpowers? Open a PR to add it here.*
+
 ## License
 
 MIT License - see LICENSE file for details
