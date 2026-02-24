@@ -63,8 +63,9 @@ rm -rf ~/.gemini/superpowers
 
 ### Skills not showing up
 
-1. **Check symlinks**: `ls -l ~/.gemini/skills/` — should show symlinks into your superpowers clone
-2. **Check Gemini version**: Skills require v0.24.0+. Run `gemini --version`
-3. **Restart Gemini CLI**: Skills are discovered at startup
+1. **Check experimental.skills is enabled**: Run `/settings` in Gemini CLI → search "Skills" → ensure `experimental.skills` is `true`. The install script enables this automatically, but verify it's set.
+2. **Check symlinks**: `ls -l ~/.gemini/skills/` — should show symlinks into your superpowers clone
+3. **Check Gemini version**: Skills require v0.24.0+. Run `gemini --version`
+4. **Restart Gemini CLI**: Skills are discovered at startup
 
 If issues persist, please report them on the [Superpowers GitHub repository](https://github.com/obra/superpowers/issues).
