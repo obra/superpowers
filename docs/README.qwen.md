@@ -64,7 +64,7 @@ Skills reference Claude Code tools. Qwen equivalents:
 | `Edit` / `replace` | `replace` |
 | `Search` | `search_file_content` |
 | `Glob` | `glob` |
-| `Shell` | `run_shell_command` |
+| `Bash` | `run_shell_command` |
 | `WebFetch` | `web_fetch` |
 
 **Note on Subagent Configuration:** The installer automatically links the required subagent definitions (`implementer`, `spec-reviewer`, `code-reviewer`) into `~/.qwen/agents/`. These Markdown+YAML files define each subagent's role, system prompt, and allowed tools. To add custom subagents beyond these, create additional Markdown+YAML files in `~/.qwen/agents/`.

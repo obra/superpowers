@@ -63,7 +63,7 @@ for skill_path in "$REPO_SKILLS_DIR"/*/; do
             : # GNU ln with -r support
         elif command -v python3 >/dev/null 2>&1; then
             # Fallback: compute relative path with Python
-            rel_path="$(python3 -c "import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))" "$skill_path" "$SKILLS_DIR")"
+            rel_path="$(python3 -c 'import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))' "$skill_path" "$SKILLS_DIR")"
             ln -s "$rel_path" "$target_path"
         else
             echo "  ⚠ Warning: Neither GNU ln -sr nor python3 available. Using absolute path (less portable)."
@@ -105,7 +105,7 @@ if [ -d "$REPO_AGENTS_DIR" ]; then
             if ln -sr "$agent_path" "$target_path" 2>/dev/null; then
                 : # GNU ln with -r support
             elif command -v python3 >/dev/null 2>&1; then
-                rel_path="$(python3 -c "import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))" "$agent_path" "$AGENTS_DIR")"
+                rel_path="$(python3 -c 'import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))' "$agent_path" "$AGENTS_DIR")"
                 ln -s "$rel_path" "$target_path"
             else
                 echo "  ⚠ Warning: Neither GNU ln -sr nor python3 available. Using absolute path (less portable)."
@@ -156,7 +156,7 @@ if [ -d "$PROMPT_TEMPLATES_DIR" ]; then
             if ln -sr "$template" "$target_skill" 2>/dev/null; then
                 : # GNU ln with -r support
             elif command -v python3 >/dev/null 2>&1; then
-                rel_path="$(python3 -c "import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))" "$template" "$(dirname "$target_skill")")"
+                rel_path="$(python3 -c 'import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))' "$template" "$(dirname "$target_skill")")"
                 ln -s "$rel_path" "$target_skill"
             else
                 echo "  ⚠ Warning: Neither GNU ln -sr nor python3 available. Using absolute path (less portable)."
@@ -205,7 +205,7 @@ if [ -d "$REPO_COMMANDS_DIR" ]; then
             if ln -sr "$cmd_path" "$target_path" 2>/dev/null; then
                 :
             elif command -v python3 >/dev/null 2>&1; then
-                rel_path="$(python3 -c "import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))" "$cmd_path" "$COMMANDS_DIR")"
+                rel_path="$(python3 -c 'import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))' "$cmd_path" "$COMMANDS_DIR")"
                 ln -s "$rel_path" "$target_path"
             else
                 echo "  ⚠ Warning: Neither GNU ln -sr nor python3 available. Using absolute path (less portable)."
@@ -273,9 +273,10 @@ else
 fi
 
 # Trim trailing blank/whitespace-only lines (prevents accumulation on repeated runs)
-if awk '{lines[NR]=$0} END{e=NR; while(e>0 && lines[e] ~ /^[[:space:]]*$/) e--; for(i=1;i<=e;i++) print lines[i]}' "$QWEN_MD" > "${QWEN_MD}.tmp" 2>/dev/null; then
+if awk '{lines[NR]=$0} END{if(NR==0){exit 0}; e=NR; while(e>0 && lines[e] ~ /^[[:space:]]*$/) e--; for(i=1;i<=e;i++) print lines[i]}' "$QWEN_MD" > "${QWEN_MD}.tmp" 2>/dev/null; then
     mv "${QWEN_MD}.tmp" "$QWEN_MD"
 else
+    rm -f "${QWEN_MD}.tmp"
     echo "Warning: Could not trim blank lines from $QWEN_MD" >&2
 fi
 

@@ -89,7 +89,7 @@ When skills reference Claude Code tools, Qwen equivalents are:
 - `replace` → `replace`
 - `search` → `search_file_content`
 - `glob` → `glob`
-- `shell` → `run_shell_command`
+- `bash` → `run_shell_command`
 - `web_fetch` → `web_fetch`
 
 ## Updating
