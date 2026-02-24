@@ -20,17 +20,14 @@ git clone https://github.com/obra/superpowers.git ~/.copilot/superpowers && ~/.c
 ```
 
 This will:
-- Symlink each skill individually into `~/.copilot/skills/` (hub pattern)
-- Symlink agent definitions into `~/.copilot/agents/`
+- Register the local repository with Copilot CLI using `copilot plugin install`
 - Inject the Superpowers context block into `~/.copilot/copilot-instructions.md`
 
 Then restart GitHub Copilot CLI.
 
 ## How It Works
 
-GitHub Copilot CLI natively supports skills. At startup it scans `~/.copilot/skills/` for directories containing a `SKILL.md` file and makes them available as skills. When a task matches a skill's description, Copilot invokes the skill tool to load the full instructions.
-
-The installer creates individual symlinks (hub pattern) so each skill is discoverable independently. Skills update instantly whenever you `git pull`.
+GitHub Copilot CLI natively supports skills via its plugin system. A `plugin.json` file declares the paths to skills, agents, commands, and hooks. The installer uses `copilot plugin install` to register your local clone as a plugin.
 
 Custom instructions are also read from `~/.copilot/copilot-instructions.md`, which the installer uses to inject the Superpowers context block—ensuring Copilot knows to use the skills system on every session start.
 
@@ -40,11 +37,11 @@ Once installed, skills are discovered automatically. Copilot will activate them 
 - You mention a skill by name (e.g., "use brainstorming")
 - The task matches a skill's description
 
-### Skill directories scanned by Copilot CLI
+### Skill discovery directories
 
-- `~/.copilot/skills/` — personal skills (where Superpowers installs)
-- `~/.claude/skills/` — also scanned if present
-- `.github/skills/`, `.claude/skills/` in the project directory
+Copilot CLI loads skills via registered plugins (`copilot plugin list`) and explicit project-level directories:
+- Registered plugin skills (`~/.copilot/installed-plugins/`)
+- `.github/skills/` or `.claude/skills/` in the active project directory
 - Custom directories via `COPILOT_SKILLS_DIRS` environment variable
 
 ## Updating
@@ -66,11 +63,8 @@ copilot plugin uninstall superpowers
 ### Manual Uninstall (if installed manually)
 
 ```bash
-# Remove skill symlinks
-find ~/.copilot/skills -type l -lname '*/superpowers/skills/*' -delete
-
-# Remove agent symlinks
-find ~/.copilot/agents -type l -lname '*/superpowers/agents/*' -delete
+# Unregister plugin from Copilot CLI
+copilot plugin uninstall superpowers
 
 # Remove context block from copilot-instructions.md
 sed -i.bak '/<!-- SUPERPOWERS-CONTEXT-START -->/,/<!-- SUPERPOWERS-CONTEXT-END -->/d' ~/.copilot/copilot-instructions.md && rm -f ~/.copilot/copilot-instructions.md.bak
