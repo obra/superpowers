@@ -31,6 +31,7 @@ This will:
 - Create `~/.qwen/skills/` if it doesn't exist
 - Symlink each skill individually into `~/.qwen/skills/` (hub pattern)
 - Symlink agent definitions into `~/.qwen/agents/` (implementer, spec-reviewer, code-reviewer)
+- Symlink custom commands into `~/.qwen/commands/` (deterministic skill triggers)
 - Inject the Superpowers context block into `~/.qwen/QWEN.md`
 
 ### 3. Restart Qwen Code CLI
@@ -94,10 +95,10 @@ When skills reference Claude Code tools, Qwen equivalents are:
 ## Updating
 
 ```bash
-cd ~/.qwen/superpowers && git pull
+cd ~/.qwen/superpowers && git pull && .qwen/install.sh
 ```
 
-Skills update instantly through the symlinks.
+Re-running the installer ensures any new skills, agents, or commands added upstream are linked correctly.
 
 ## Uninstalling
 
@@ -113,10 +114,16 @@ Skills update instantly through the symlinks.
    find ~/.qwen/agents -type l -lname '*/superpowers/.qwen/agents/*' -delete
    ```
 
-3. **Clean up QWEN.md:** Edit `~/.qwen/QWEN.md` and remove the block between
+3. **Remove the command symlinks:**
+
+   ```bash
+   find ~/.qwen/commands -type l -lname '*/superpowers/.qwen/commands/*' -delete
+   ```
+
+4. **Clean up QWEN.md:** Edit `~/.qwen/QWEN.md` and remove the block between
    `<!-- SUPERPOWERS-CONTEXT-START -->` and `<!-- SUPERPOWERS-CONTEXT-END -->`.
 
-4. **Remove the repo:**
+5. **Remove the repo:**
 
    ```bash
    rm -rf ~/.qwen/superpowers

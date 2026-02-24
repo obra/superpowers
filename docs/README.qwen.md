@@ -20,7 +20,8 @@ git clone https://github.com/obra/superpowers.git ~/.qwen/superpowers && ~/.qwen
 
 1. Symlinks each skill individually into `~/.qwen/skills/` (hub pattern — your custom skills coexist safely)
 2. Symlinks agent definitions into `~/.qwen/agents/` (required for subagent workflows)
-3. Injects a Superpowers context block into `~/.qwen/QWEN.md` with:
+3. Symlinks custom commands into `~/.qwen/commands/` (deterministic skill triggers like `/brainstorm`)
+4. Injects a Superpowers context block into `~/.qwen/QWEN.md` with:
    - Skill discovery instructions
    - Terminology mapping (Claude Code tools → Qwen equivalents)
 
@@ -66,15 +67,15 @@ Skills reference Claude Code tools. Qwen equivalents:
 | `Shell` | `run_shell_command` |
 | `WebFetch` | `web_fetch` |
 
-**Note on Subagent Configuration:** Qwen Code CLI supports native subagent delegation via its `task()` tool. To enable Superpowers' subagent workflows (like `subagent-driven-development` or `dispatching-parallel-agents`), the installer automatically links the required subagent definitions (`implementer`, `spec-reviewer`, `code-reviewer`) into `~/.qwen/agents/` using Markdown+YAML configuration files. These files define each subagent's role, system prompt, and allowed tools. If you want additional custom subagents beyond these, you can define them manually by adding more Markdown+YAML files in `~/.qwen/agents/`.
+**Note on Subagent Configuration:** The installer automatically links the required subagent definitions (`implementer`, `spec-reviewer`, `code-reviewer`) into `~/.qwen/agents/`. These Markdown+YAML files define each subagent's role, system prompt, and allowed tools. To add custom subagents beyond these, create additional Markdown+YAML files in `~/.qwen/agents/`.
 
 ## Updating
 
 ```bash
-cd ~/.qwen/superpowers && git pull
+cd ~/.qwen/superpowers && git pull && .qwen/install.sh
 ```
 
-Skills update instantly through the symlinks.
+> **Note:** Re-running the installer ensures any new skills, agents, or commands added upstream are linked correctly.
 
 ## Uninstalling
 
@@ -88,9 +89,14 @@ Skills update instantly through the symlinks.
    find ~/.qwen/agents -type l -lname '*/superpowers/.qwen/agents/*' -delete
    ```
 
-3. Edit `~/.qwen/QWEN.md` and remove the block between `<!-- SUPERPOWERS-CONTEXT-START -->` and `<!-- SUPERPOWERS-CONTEXT-END -->`.
+3. Remove command symlinks:
+   ```bash
+   find ~/.qwen/commands -type l -lname '*/superpowers/.qwen/commands/*' -delete
+   ```
 
-4. Remove the repo:
+4. Edit `~/.qwen/QWEN.md` and remove the block between `<!-- SUPERPOWERS-CONTEXT-START -->` and `<!-- SUPERPOWERS-CONTEXT-END -->`.
+
+5. Remove the repo:
    ```bash
    rm -rf ~/.qwen/superpowers
    ```

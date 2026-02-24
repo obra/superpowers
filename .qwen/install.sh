@@ -147,6 +147,9 @@ if [ -d "$PROMPT_TEMPLATES_DIR" ]; then
 
             if [ -L "$target_skill" ]; then
                 rm "$target_skill"
+            elif [ -f "$target_skill" ]; then
+                echo "  ⚠ $(basename "$target_skill") exists as a regular file. Skipping."
+                continue
             fi
 
             # Use relative path for portability
@@ -269,10 +272,8 @@ else
     echo "Injecting Superpowers context into $QWEN_MD..."
 fi
 
-# Trim trailing blank lines (prevents accumulation on repeated runs)
-if sed -i.bak -e :a -e '/^[[:space:]]*$/{$d;N;ba' -e '}' "$QWEN_MD" 2>/dev/null; then
-    rm -f "${QWEN_MD}.bak"
-elif awk '{lines[NR]=$0} END{e=NR; while(e>0 && lines[e]=="") e--; for(i=1;i<=e;i++) print lines[i]}' "$QWEN_MD" > "${QWEN_MD}.tmp" 2>/dev/null; then
+# Trim trailing blank/whitespace-only lines (prevents accumulation on repeated runs)
+if awk '{lines[NR]=$0} END{e=NR; while(e>0 && lines[e] ~ /^[[:space:]]*$/) e--; for(i=1;i<=e;i++) print lines[i]}' "$QWEN_MD" > "${QWEN_MD}.tmp" 2>/dev/null; then
     mv "${QWEN_MD}.tmp" "$QWEN_MD"
 else
     echo "Warning: Could not trim blank lines from $QWEN_MD" >&2
