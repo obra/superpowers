@@ -24,17 +24,19 @@ Every project goes through this process. A todo list, a single-function utility,
 You MUST create a task for each of these items and complete them in order:
 
 1. **Explore project context** — check files, docs, recent commits
-2. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-3. **Propose 2-3 approaches** — with trade-offs and your recommendation
-4. **Present design** — in sections scaled to their complexity, get user approval after each section
-5. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` and commit
-6. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+2. **Challenge product assumptions** — proactively question the framing before accepting it
+3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
+4. **Propose 2-3 approaches** — with trade-offs and your recommendation
+5. **Present design** — in sections scaled to their complexity, get user approval after each section
+6. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` and commit
+7. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
 
 ```dot
 digraph brainstorming {
     "Explore project context" [shape=box];
+    "Challenge product assumptions" [shape=box];
     "Ask clarifying questions" [shape=box];
     "Propose 2-3 approaches" [shape=box];
     "Present design sections" [shape=box];
@@ -42,7 +44,8 @@ digraph brainstorming {
     "Write design doc" [shape=box];
     "Invoke writing-plans skill" [shape=doublecircle];
 
-    "Explore project context" -> "Ask clarifying questions";
+    "Explore project context" -> "Challenge product assumptions";
+    "Challenge product assumptions" -> "Ask clarifying questions";
     "Ask clarifying questions" -> "Propose 2-3 approaches";
     "Propose 2-3 approaches" -> "Present design sections";
     "Present design sections" -> "User approves design?";
@@ -53,6 +56,28 @@ digraph brainstorming {
 ```
 
 **The terminal state is invoking writing-plans.** Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY skill you invoke after brainstorming is writing-plans.
+
+## Challenging Product Assumptions
+
+Before diving into clarifying questions, take a moment to challenge the framing of the request. This is what a senior PM or founding product designer would naturally do — push back on assumptions before committing to a solution.
+
+**Challenge questions to consider:**
+
+- "Which user state/lifecycle does this feature serve, and what problem does it solve for them?"
+- "If we build this, what would users actually do with it?"
+- "Does this assumption still hold in the scaled / multi-tenant version of the product?"
+- "Is there a simpler or lower-cost alternative that solves the same problem?"
+- "Who is this for and what would they actually do with it?"
+
+**Example:**
+
+User says: "I want all users to have their own public page — rename the creator page to user page"
+
+Without challenge: Skill proceeds to design a user page feature.
+
+With challenge: Skill asks "A public page is meaningful when there's content to show. What would a non-creator user put on their page? Who would visit it?" — which surfaces that the feature may not be needed at this stage.
+
+The user then reconsiders the assumption entirely, saving implementation effort.
 
 ## The Process
 
