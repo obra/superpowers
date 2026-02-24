@@ -15,6 +15,8 @@ This is not negotiable. This is not optional. You cannot rationalize your way ou
 
 **In Claude Code:** Use the `Skill` tool. When you invoke a skill, its content is loaded and presented to you—follow it directly. Never use the Read tool on skill files.
 
+**In Qwen Code CLI:** Read the skill file with `read_file("~/.qwen/skills/<skill-name>/SKILL.md")`. Use `/skills` to see available skills. Use custom commands like `/brainstorm`, `/debug`, `/plan` for deterministic activation.
+
 **In other environments:** Check your platform's documentation for how skills are loaded.
 
 # Using Skills
