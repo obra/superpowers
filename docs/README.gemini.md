@@ -5,6 +5,16 @@ Guide for using Superpowers with Google's Gemini CLI.
 ## Quick Install
 
 ```bash
+gemini extensions install https://github.com/obra/superpowers
+```
+
+Then restart Gemini CLI.
+
+## Manual Install (Recommended for power users)
+
+For individual skill symlinks and full `~/.gemini/GEMINI.md` context injection:
+
+```bash
 git clone https://github.com/obra/superpowers.git ~/.gemini/superpowers && ~/.gemini/superpowers/.gemini/install.sh
 ```
 
@@ -14,16 +24,6 @@ This will:
 - Inject the Superpowers context block into `~/.gemini/GEMINI.md`
 
 Then restart Gemini CLI.
-
-## Extension Install
-
-You can also install via the Gemini CLI extension system, which uses the same native skill discovery:
-
-```bash
-gemini extensions install https://github.com/obra/superpowers
-```
-
-> **Note:** The install script approach above is recommended because it provides individual skill symlinks and injects the full context block with tool mappings into `~/.gemini/GEMINI.md`.
 
 ## How It Works
 
