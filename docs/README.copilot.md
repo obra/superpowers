@@ -9,7 +9,7 @@ Guide for using Superpowers with GitHub Copilot CLI.
 ### Plugin Install (Recommended)
 
 ```bash
-copilot plugin add https://github.com/obra/superpowers
+copilot plugin install https://github.com/obra/superpowers
 ```
 
 ### Manual Install
@@ -55,6 +55,14 @@ cd ~/.copilot/superpowers && git pull && .copilot/install.sh
 > **Note:** Re-running the installer ensures any new skills, agents, or hooks added upstream are linked correctly.
 
 ## Uninstalling
+
+### Plugin Uninstall (if installed via plugin)
+
+```bash
+copilot plugin uninstall superpowers
+```
+
+### Manual Uninstall (if installed manually)
 
 ```bash
 # Remove skill symlinks
