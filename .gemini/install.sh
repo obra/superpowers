@@ -44,7 +44,7 @@ for skill_path in "$REPO_SKILLS_DIR"/*/; do
 
         if [ -e "$target_path" ] || [ -L "$target_path" ]; then
             if [ -L "$target_path" ]; then
-                link_target="$(realpath -m "$target_path" 2>/dev/null || python3 -c "import os; print(os.path.abspath(os.path.realpath('$target_path')))" 2>/dev/null || readlink "$target_path")"
+                link_target="$(realpath -m "$target_path" 2>/dev/null || python3 -c 'import os,sys; print(os.path.abspath(os.path.realpath(sys.argv[1])))' "$target_path" 2>/dev/null || readlink "$target_path")"
                 if [[ "$link_target" == "$REPO_DIR"* ]]; then
                     rm "$target_path"
                 else
@@ -87,7 +87,7 @@ if [ -d "$REPO_AGENTS_DIR" ]; then
 
             if [ -e "$target_path" ] || [ -L "$target_path" ]; then
                 if [ -L "$target_path" ]; then
-                    link_target="$(realpath -m "$target_path" 2>/dev/null || python3 -c "import os; print(os.path.abspath(os.path.realpath('$target_path')))" 2>/dev/null || readlink "$target_path")"
+                    link_target="$(realpath -m "$target_path" 2>/dev/null || python3 -c 'import os,sys; print(os.path.abspath(os.path.realpath(sys.argv[1])))' "$target_path" 2>/dev/null || readlink "$target_path")"
                     if [[ "$link_target" == "$REPO_DIR"* ]]; then
                         rm "$target_path"
                     else
@@ -113,7 +113,8 @@ if [ -d "$REPO_AGENTS_DIR" ]; then
             echo "  ✓ $agent_name"
         fi
     done
-    echo "No agents directory found at "$REPO_AGENTS_DIR", skipping agent linking."
+else
+    echo "No agents directory found at $REPO_AGENTS_DIR, skipping agent linking."
 fi
 
 # --- Register deterministic hooks in settings.json ---
@@ -128,9 +129,14 @@ register_hooks() {
 
     echo "Registering Superpowers hooks in $SETTINGS_FILE..."
     
-    # Paths to the scripts
+    # Paths to the scripts (require Node.js at runtime)
     ROUTER_PATH="$REPO_DIR/agents/superpowers-router.js"
     GUARD_PATH="$REPO_DIR/agents/superpowers-guard.js"
+    
+    if ! command -v node >/dev/null 2>&1; then
+        echo "  ⚠ Node.js not found. Hooks require Node.js to run."
+        echo "  Install Node.js (https://nodejs.org) for deterministic skill routing."
+    fi
     
     if command -v python3 >/dev/null 2>&1; then
         python3 -c "

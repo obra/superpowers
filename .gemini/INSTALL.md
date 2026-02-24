@@ -5,7 +5,9 @@ Enable superpowers skills in [Gemini CLI](https://geminicli.com) via native skil
 ## Prerequisites
 
 - Git
-- Gemini CLI installed
+- Gemini CLI v0.24.0+ installed
+- Node.js (required for deterministic skill routing hooks)
+- Python 3 (used by installer for safe JSON manipulation)
 
 ## Quick Install
 
@@ -31,6 +33,7 @@ This will:
 - Create `~/.gemini/skills/` if it doesn't exist
 - Symlink each skill individually into `~/.gemini/skills/` (hub pattern)
 - Symlink agent definitions into `~/.gemini/agents/`
+- Register BeforeAgent/BeforeTool hooks in `~/.gemini/settings.json`
 - Inject the Superpowers context block into `~/.gemini/GEMINI.md`
 
 ### 3. Restart Gemini CLI
@@ -80,17 +83,16 @@ help me plan this feature using the writing-plans skill
 ### Tool Mapping
 
 When skills reference Claude Code tools, Gemini equivalents are:
-- `TodoWrite` → write/update a plan file (e.g., `plan.md`)
+- `TodoWrite` → write/update a task list (e.g., `task.md` or `plan.md`)
 - `Task` with subagents → sub-agents in `~/.gemini/agents/`
 - `Skill` tool → `activate_skill` tool with the skill name
-- `read_file` → `read_file`
-- `write_file` → `write_file`
-- `replace` → `replace`
-- `search` → `search_file_content`
-- `glob` → `glob`
-- `shell` → `run_shell_command`
-- `web_fetch` → `web_fetch`
-- web search → `google_web_search`
+- File operations → `view_file`, `write_to_file`, `replace_file_content`, `multi_replace_file_content`
+- Directory listing → `list_dir`
+- Code structure → `view_file_outline`, `view_code_item`
+- Search → `search_file_content`, `glob`
+- Shell → `run_command`
+- Web fetch → `read_url_content`
+- Web search → `google_web_search`
 
 ## Updating
 
@@ -114,12 +116,23 @@ Skills update instantly through the symlinks.
    find ~/.gemini/agents -type l -lname '*/superpowers/agents/*' -delete
    ```
 
-3. **Clean up GEMINI.md:**
+3. **Remove hooks from settings.json:**
    ```bash
-   sed -i.bak '/<!-- SUPERPOWERS-CONTEXT-START -->/,/<!-- SUPERPOWERS-CONTEXT-END -->/d' ~/.gemini/GEMINI.md && rm -f ~/.gemini/GEMINI.md.bak
+   python3 -c "
+import json
+with open('$HOME/.gemini/settings.json') as f: d = json.load(f)
+for k in ('beforeAgent','beforeTool'):
+    d.get('hooks',{}).get(k,[])[:] = [h for h in d.get('hooks',{}).get(k,[]) if 'superpowers' not in h.get('name','')]
+with open('$HOME/.gemini/settings.json','w') as f: json.dump(d,f,indent=2); f.write('\n')
+"
    ```
 
-4. **Remove the repo:**
+4. **Clean up GEMINI.md:**
+   ```bash
+   sed -i.bak '/<\!-- SUPERPOWERS-CONTEXT-START -->/, /<\!-- SUPERPOWERS-CONTEXT-END -->/d' ~/.gemini/GEMINI.md && rm -f ~/.gemini/GEMINI.md.bak
+   ```
+
+5. **Remove the repo:**
 
    ```bash
    rm -rf ~/.gemini/superpowers

@@ -21,6 +21,7 @@ git clone https://github.com/obra/superpowers.git ~/.gemini/superpowers && ~/.ge
 This will:
 - Symlink each skill individually into `~/.gemini/skills/` (hub pattern)
 - Symlink agent definitions into `~/.gemini/agents/`
+- Register BeforeAgent/BeforeTool hooks in `~/.gemini/settings.json` (requires Node.js)
 - Inject the Superpowers context block into `~/.gemini/GEMINI.md`
 
 Then restart Gemini CLI.
@@ -46,16 +47,28 @@ You can also list and manage skills:
 ## Updating
 
 ```bash
-cd ~/.gemini/superpowers && git pull
+cd ~/.gemini/superpowers && git pull && .gemini/install.sh
 ```
+
+> **Note:** Re-running the installer ensures any new skills, agents, or hooks added upstream are linked correctly.
 
 ## Uninstalling
 
 ```bash
-find ~/.gemini/skills -type l -lname '*/superpowers/skills/*' -delete
-find ~/.gemini/agents -type l -lname '*/superpowers/agents/*' -delete
+# Remove skill and agent symlinks
+find ~/.gemini/skills -type l -lname '*/superpowers/skills/*' -delete 2>/dev/null
+find ~/.gemini/agents -type l -lname '*/superpowers/agents/*' -delete 2>/dev/null
+# Remove hooks from settings.json
+python3 -c "
+import json
+with open('$HOME/.gemini/settings.json') as f: d = json.load(f)
+for k in ('beforeAgent','beforeTool'):
+    d.get('hooks',{}).get(k,[])[:] = [h for h in d.get('hooks',{}).get(k,[]) if 'superpowers' not in h.get('name','')]
+with open('$HOME/.gemini/settings.json','w') as f: json.dump(d,f,indent=2); f.write('\n')
+"
 # Remove the injected Superpowers context block from GEMINI.md
 sed -i.bak '/<!-- SUPERPOWERS-CONTEXT-START -->/,/<!-- SUPERPOWERS-CONTEXT-END -->/d' ~/.gemini/GEMINI.md && rm -f ~/.gemini/GEMINI.md.bak
+# Remove the repo
 rm -rf ~/.gemini/superpowers
 ```
 
