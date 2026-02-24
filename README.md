@@ -55,7 +55,7 @@ In Cursor Agent chat, install from marketplace:
 
 Tell Codex:
 
-```
+```text
 Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/v4.3.1/.codex/INSTALL.md
 
 > [!TIP]
@@ -68,7 +68,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 Tell OpenCode:
 
-```
+```text
 Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/v4.3.1/.opencode/INSTALL.md
 
 > [!TIP]

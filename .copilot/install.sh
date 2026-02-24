@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 # ==============================================================================
 # Superpowers Installer for GitHub Copilot CLI
@@ -45,7 +45,7 @@ for skill_path in "$REPO_SKILLS_DIR"/*/; do
 
         if [ -e "$target_path" ] || [ -L "$target_path" ]; then
             if [ -L "$target_path" ]; then
-                link_target="$(realpath "$target_path" 2>/dev/null || python3 -c "import os,sys; print(os.path.realpath(sys.argv[1]))" "$target_path" 2>/dev/null || readlink "$target_path")"
+                link_target="$(realpath -m "$target_path" 2>/dev/null || python3 -c 'import os,sys; print(os.path.abspath(os.path.realpath(sys.argv[1])))' "$target_path" 2>/dev/null || readlink "$target_path")"
                 if [[ "$link_target" == "$REPO_DIR"* ]]; then
                     rm "$target_path"
                 else
@@ -63,7 +63,7 @@ for skill_path in "$REPO_SKILLS_DIR"/*/; do
             : # GNU ln with -r support
         elif command -v python3 >/dev/null 2>&1; then
             # Fallback: compute relative path with Python
-            rel_path="$(python3 -c "import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))" "$skill_path" "$SKILLS_DIR")"
+            rel_path="$(python3 -c 'import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))' "$skill_path" "$SKILLS_DIR")"
             ln -s "$rel_path" "$target_path"
         else
             echo "  ⚠ Warning: Neither GNU ln -sr nor python3 available. Using absolute path (less portable)."
@@ -85,6 +85,7 @@ if [ -d "$REPO_AGENTS_DIR" ] && [ "$(ls -A "$REPO_AGENTS_DIR" 2>/dev/null)" ]; t
     for agent_path in "$REPO_AGENTS_DIR"/*.md; do
         if [ -f "$agent_path" ]; then
             # Prefer .agent.md over plain .md when both exist
+            # Note: This behavior relies on alphabetical globbing order (*.agent.md visited before *.md)
             base_name="${agent_path##*/}"
             if [[ "$base_name" != *.agent.md ]]; then
                 agent_md_version="${agent_path%.md}.agent.md"
@@ -95,7 +96,7 @@ if [ -d "$REPO_AGENTS_DIR" ] && [ "$(ls -A "$REPO_AGENTS_DIR" 2>/dev/null)" ]; t
 
             if [ -e "$target_path" ] || [ -L "$target_path" ]; then
                 if [ -L "$target_path" ]; then
-                    link_target="$(realpath "$target_path" 2>/dev/null || python3 -c "import os,sys; print(os.path.realpath(sys.argv[1]))" "$target_path" 2>/dev/null || readlink "$target_path")"
+                    link_target="$(realpath -m "$target_path" 2>/dev/null || python3 -c 'import os,sys; print(os.path.abspath(os.path.realpath(sys.argv[1])))' "$target_path" 2>/dev/null || readlink "$target_path")"
                     if [[ "$link_target" == "$REPO_DIR"* ]]; then
                         rm "$target_path"
                     else
@@ -112,7 +113,7 @@ if [ -d "$REPO_AGENTS_DIR" ] && [ "$(ls -A "$REPO_AGENTS_DIR" 2>/dev/null)" ]; t
             if ln -sr "$agent_path" "$target_path" 2>/dev/null; then
                 : # GNU ln with -r support
             elif command -v python3 >/dev/null 2>&1; then
-                rel_path="$(python3 -c "import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))" "$agent_path" "$AGENTS_DIR")"
+                rel_path="$(python3 -c 'import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))' "$agent_path" "$AGENTS_DIR")"
                 ln -s "$rel_path" "$target_path"
             else
                 echo "  ⚠ Warning: Neither GNU ln -sr nor python3 available. Using absolute path (less portable)."
@@ -161,10 +162,14 @@ if [ ! -f "$COPILOT_INSTRUCTIONS" ]; then
 fi
 
 # Idempotent: remove existing block if present
-if grep -q "$CONTEXT_HEADER" "$COPILOT_INSTRUCTIONS"; then
+if grep -q "$CONTEXT_HEADER" "$COPILOT_INSTRUCTIONS" 2>/dev/null; then
     echo "Updating Superpowers context in $COPILOT_INSTRUCTIONS..."
-    sed -i.bak "/$CONTEXT_HEADER/,/$CONTEXT_FOOTER/d" "$COPILOT_INSTRUCTIONS"
-    rm -f "${COPILOT_INSTRUCTIONS}.bak"
+    awk -v start="$CONTEXT_HEADER" -v end="$CONTEXT_FOOTER" '
+        $0 == start { in_block=1; next }
+        $0 == end { in_block=0; next }
+        !in_block { print }
+    ' "$COPILOT_INSTRUCTIONS" > "${COPILOT_INSTRUCTIONS}.tmp" 2>/dev/null
+    mv "${COPILOT_INSTRUCTIONS}.tmp" "$COPILOT_INSTRUCTIONS"
 else
     echo "Injecting Superpowers context into $COPILOT_INSTRUCTIONS..."
 fi

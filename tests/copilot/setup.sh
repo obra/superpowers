@@ -15,7 +15,7 @@ export -f cleanup_test_env
 export REPO_ROOT
 
 # Create temp home directory for isolation
-TEST_HOME=$(mktemp -d)
+TEST_HOME="$(mktemp -d)"
 export TEST_HOME
 export HOME="$TEST_HOME"
 
