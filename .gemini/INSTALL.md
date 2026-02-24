@@ -6,6 +6,8 @@ Enable Superpowers skills in [Antigravity](https://deepmind.google), the agentic
 
 - Git
 - Antigravity installed
+- Node.js (required for deterministic skill routing hooks)
+- Python 3 (used by installer for safe JSON manipulation)
 
 ## Quick Install
 
@@ -32,6 +34,7 @@ This will:
 - Symlink each skill individually into `~/.gemini/skills/` (hub pattern)
 - Symlink skills into `~/.gemini/antigravity/skills/` if Antigravity is detected
 - Symlink agent definitions into `~/.gemini/agents/`
+- Register BeforeAgent/BeforeTool hooks in `~/.gemini/settings.json`
 - Inject the Superpowers context block into `~/.gemini/GEMINI.md`
 
 ### 3. Restart Antigravity
@@ -96,10 +99,10 @@ When skills reference Claude Code tools, Antigravity equivalents are:
 ## Updating
 
 ```bash
-cd ~/.gemini/superpowers && git pull
+cd ~/.gemini/superpowers && git pull && .gemini/install.sh
 ```
 
-Skills update instantly through the symlinks.
+Re-running the installer ensures any new skills, agents, or hooks added upstream are linked correctly.
 
 ## Uninstalling
 
@@ -115,12 +118,23 @@ Skills update instantly through the symlinks.
    find ~/.gemini/agents -type l -lname '*/superpowers/agents/*' -delete
    ```
 
-3. **Clean up GEMINI.md:**
+3. **Remove hooks from settings.json:**
+   ```bash
+   python3 -c "
+import json
+with open('$HOME/.gemini/settings.json') as f: d = json.load(f)
+for k in ('beforeAgent','beforeTool'):
+    d.get('hooks',{}).get(k,[])[:] = [h for h in d.get('hooks',{}).get(k,[]) if 'superpowers' not in h.get('name','')]
+with open('$HOME/.gemini/settings.json','w') as f: json.dump(d,f,indent=2); f.write('\n')
+" 2>/dev/null || true
+   ```
+
+4. **Clean up GEMINI.md:**
    ```bash
    sed -i.bak '/<!-- SUPERPOWERS-CONTEXT-START -->/,/<!-- SUPERPOWERS-CONTEXT-END -->/d' ~/.gemini/GEMINI.md && rm -f ~/.gemini/GEMINI.md.bak
    ```
 
-4. **Remove the repo:**
+5. **Remove the repo:**
 
    ```bash
    rm -rf ~/.gemini/superpowers

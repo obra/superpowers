@@ -60,10 +60,10 @@ Skills reference Claude Code tools. Antigravity equivalents:
 ## Updating
 
 ```bash
-cd ~/.gemini/superpowers && git pull
+cd ~/.gemini/superpowers && git pull && .gemini/install.sh
 ```
 
-Skills update instantly through the symlinks.
+> **Note:** Re-running the installer ensures any new skills, agents, or hooks added upstream are linked correctly.
 
 ## Uninstalling
 
@@ -74,7 +74,7 @@ Skills update instantly through the symlinks.
 
 2. Remove Antigravity-specific skill symlinks (if applicable):
    ```bash
-   find ~/.gemini/antigravity/skills -type l -lname '*/superpowers/skills/*' -delete
+   find ~/.gemini/antigravity/skills -type l -lname '*/superpowers/skills/*' -delete 2>/dev/null
    ```
 
 3. Remove agent symlinks:
@@ -82,12 +82,23 @@ Skills update instantly through the symlinks.
    find ~/.gemini/agents -type l -lname '*/superpowers/agents/*' -delete
    ```
 
-4. Remove the injected Superpowers context block from GEMINI.md:
+4. Remove hooks from settings.json (if installed):
+   ```bash
+   python3 -c "
+import json
+with open('$HOME/.gemini/settings.json') as f: d = json.load(f)
+for k in ('beforeAgent','beforeTool'):
+    d.get('hooks',{}).get(k,[])[:] = [h for h in d.get('hooks',{}).get(k,[]) if 'superpowers' not in h.get('name','')]
+with open('$HOME/.gemini/settings.json','w') as f: json.dump(d,f,indent=2); f.write('\n')
+" 2>/dev/null || true
+   ```
+
+5. Remove the injected Superpowers context block from GEMINI.md:
    ```bash
    sed -i.bak '/<!-- SUPERPOWERS-CONTEXT-START -->/,/<!-- SUPERPOWERS-CONTEXT-END -->/d' ~/.gemini/GEMINI.md && rm -f ~/.gemini/GEMINI.md.bak
    ```
 
-5. Remove the repo:
+6. Remove the repo:
    ```bash
    rm -rf ~/.gemini/superpowers
    ```

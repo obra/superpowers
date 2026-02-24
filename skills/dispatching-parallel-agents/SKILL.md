@@ -63,6 +63,14 @@ Each agent gets:
 
 ### 3. Dispatch in Parallel
 
+```javascript
+// In Antigravity environment (using sub-agents / browser_subagent)
+// Each sub-agent runs concurrently with its own context
+// Agent 1: "Fix agent-tool-abort.test.ts failures"
+// Agent 2: "Fix batch-completion-behavior.test.ts failures"
+// Agent 3: "Fix tool-approval-race-conditions.test.ts failures"
+```
+
 ```typescript
 // In Claude Code / AI environment
 Task("Fix agent-tool-abort.test.ts failures")

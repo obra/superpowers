@@ -31,6 +31,19 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 **2. Dispatch code-reviewer subagent:**
 
+**For Antigravity:**
+```
+Dispatch sub-agent with code-reviewer role:
+  WHAT_WAS_IMPLEMENTED: [What you just built]
+  PLAN_OR_REQUIREMENTS: [What it should do]
+  BASE_SHA: [Starting commit]
+  HEAD_SHA: [Ending commit]
+  DESCRIPTION: [Brief summary]
+Use the code-reviewer agent definition from agents/code-reviewer.md
+```
+
+**For Claude Code:**
+
 Use Task tool with superpowers:code-reviewer type, fill template at `code-reviewer.md`
 
 **Placeholders:**
