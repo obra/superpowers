@@ -26,7 +26,7 @@ Thanks!
 
 ## Installation
 
-**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex and OpenCode require manual setup.
+**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Gemini CLI and Antigravity provide native extension/symlink support. Codex and OpenCode require manual setup.
 
 
 ### Claude Code (via Plugin Marketplace)

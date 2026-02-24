@@ -1,6 +1,6 @@
 # Installing Superpowers for Antigravity
 
-Enable Superpowers skills in [Antigravity](https://deepmind.google), the agentic AI coding assistant by Google DeepMind, via native skill discovery.
+Enable Superpowers skills in [Antigravity](https://antigravity.google/download), the agentic AI coding assistant by Google DeepMind, via native skill discovery.
 
 ## Prerequisites
 
@@ -112,7 +112,13 @@ Re-running the installer ensures any new skills, agents, or hooks added upstream
    find ~/.gemini/skills -type l -lname '*/superpowers/skills/*' -delete
    ```
 
-2. **Remove the agent symlinks:**
+2. **Remove Antigravity-specific skill symlinks (if applicable):**
+
+   ```bash
+   find ~/.gemini/antigravity/skills -type l -lname '*/superpowers/skills/*' -delete 2>/dev/null
+   ```
+
+3. **Remove the agent symlinks:**
 
    ```bash
    find ~/.gemini/agents -type l -lname '*/superpowers/agents/*' -delete

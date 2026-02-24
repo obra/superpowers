@@ -1,6 +1,6 @@
 # Superpowers for Antigravity
 
-Guide for using Superpowers with [Antigravity](https://deepmind.google), the agentic AI coding assistant by Google DeepMind.
+Guide for using Superpowers with [Antigravity](https://antigravity.google/download), the agentic AI coding assistant by Google DeepMind.
 
 ## Quick Install
 
@@ -117,9 +117,9 @@ with open('$HOME/.gemini/settings.json','w') as f: json.dump(d,f,indent=2); f.wr
    ```
 3. Restart Antigravity.
 
-### Skills reference unknown tools
+### Skills reference unknown tools or aren't showing up
 
-The context block in `~/.gemini/GEMINI.md` contains tool mappings. If it's missing, re-run the installer:
+If you installed Antigravity *after* running the Superpowers installer, or if the context block in `~/.gemini/GEMINI.md` is missing, you need to re-run the installer so it can detect Antigravity and create the necessary symlinks:
 
 ```bash
 ~/.gemini/superpowers/.gemini/install.sh

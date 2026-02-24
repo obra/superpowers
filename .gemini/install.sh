@@ -32,23 +32,37 @@ fi
 mkdir -p "$GEMINI_DIR"
 mkdir -p "$SKILLS_DIR"
 
-# --- Link skills individually (hub pattern) ---
-echo "Linking skills from $REPO_SKILLS_DIR to $SKILLS_DIR..."
+# Helper: safely compute symlink target
+safe_realpath() {
+    local path="$1"
+    realpath -m "$path" 2>/dev/null || python3 -c 'import os,sys; print(os.path.abspath(os.path.realpath(sys.argv[1])))' "$path" 2>/dev/null || readlink "$path"
+}
 
-for skill_path in "$REPO_SKILLS_DIR"/*/; do
-    if [ -d "$skill_path" ]; then
-        skill_name=$(basename "$skill_path")
-        # Strip trailing slash from path
-        skill_path="${skill_path%/}"
-        target_path="$SKILLS_DIR/$skill_name"
+# Helper: link items (skills or agents)
+link_items_into() {
+    local src_dir="$1" target_dir="$2" item_type="$3"
+    [ -d "$src_dir" ] || return 0
+    mkdir -p "$target_dir"
+    echo "Linking $item_type from $src_dir to $target_dir..."
+
+    for item_path in "$src_dir"/*; do
+        if [ "$item_type" = "skills" ]; then
+            [ -d "$item_path" ] || continue
+        else
+            [ -f "$item_path" ] || continue
+        fi
+        local item_name target_path link_target rel_path
+        item_name=$(basename "$item_path")
+        item_path="${item_path%/}"
+        target_path="$target_dir/$item_name"
 
         if [ -e "$target_path" ] || [ -L "$target_path" ]; then
             if [ -L "$target_path" ]; then
-                link_target="$(realpath -m "$target_path" 2>/dev/null || python3 -c "import os; print(os.path.abspath(os.path.realpath('$target_path')))" 2>/dev/null || readlink "$target_path")"
+                link_target="$(safe_realpath "$target_path")"
                 if [[ "$link_target" == "$REPO_DIR"* ]]; then
                     rm "$target_path"
                 else
-                    echo "  ⚠ $skill_name points to $link_target (not this repo). Skipping."
+                    echo "  ⚠ $item_name points to $link_target (not this repo). Skipping."
                     continue
                 fi
             else
@@ -57,62 +71,27 @@ for skill_path in "$REPO_SKILLS_DIR"/*/; do
             fi
         fi
 
-        # Use relative path for portability (repo relocation doesn't break links)
-        if ln -sr "$skill_path" "$target_path" 2>/dev/null; then
+        if ln -sr "$item_path" "$target_path" 2>/dev/null; then
             : # GNU ln with -r support
         elif command -v python3 >/dev/null 2>&1; then
-            # Fallback: compute relative path with Python
-            rel_path="$(python3 -c "import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))" "$skill_path" "$SKILLS_DIR")"
+            rel_path="$(python3 -c 'import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))' "$item_path" "$target_dir")"
             ln -s "$rel_path" "$target_path"
         else
             echo "  ⚠ Warning: Neither GNU ln -sr nor python3 available. Using absolute path (less portable)."
-            ln -s "$skill_path" "$target_path"
+            ln -s "$item_path" "$target_path"
         fi
-        echo "  ✓ $skill_name"
-    fi
-done
+        echo "  ✓ $item_name"
+    done
+}
 
-# --- Link agents individually (hub pattern) ---
+# --- Link skills (hub pattern) ---
+link_items_into "$REPO_SKILLS_DIR" "$SKILLS_DIR" "skills"
+
+# --- Link agents (hub pattern) ---
 AGENTS_DIR="$GEMINI_DIR/agents"
 REPO_AGENTS_DIR="$REPO_DIR/agents"
-
-mkdir -p "$AGENTS_DIR"
-
 if [ -d "$REPO_AGENTS_DIR" ]; then
-    echo "Linking agents from $REPO_AGENTS_DIR to $AGENTS_DIR..."
-    for agent_path in "$REPO_AGENTS_DIR"/*.md; do
-        if [ -f "$agent_path" ]; then
-            agent_name=$(basename "$agent_path")
-            target_path="$AGENTS_DIR/$agent_name"
-
-            if [ -e "$target_path" ] || [ -L "$target_path" ]; then
-                if [ -L "$target_path" ]; then
-                    link_target="$(realpath -m "$target_path" 2>/dev/null || python3 -c "import os; print(os.path.abspath(os.path.realpath('$target_path')))" 2>/dev/null || readlink "$target_path")"
-                    if [[ "$link_target" == "$REPO_DIR"* ]]; then
-                        rm "$target_path"
-                    else
-                        echo "  ⚠ $agent_name already exists (not this repo). Skipping."
-                        continue
-                    fi
-                else
-                    echo "  ⚠ $target_path exists and is not a symlink. Skipping."
-                    continue
-                fi
-            fi
-
-            # Use relative path for portability
-            if ln -sr "$agent_path" "$target_path" 2>/dev/null; then
-                : # GNU ln with -r support
-            elif command -v python3 >/dev/null 2>&1; then
-                rel_path="$(python3 -c "import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))" "$agent_path" "$AGENTS_DIR")"
-                ln -s "$rel_path" "$target_path"
-            else
-                echo "  ⚠ Warning: Neither GNU ln -sr nor python3 available. Using absolute path (less portable)."
-                ln -s "$agent_path" "$target_path"
-            fi
-            echo "  ✓ $agent_name"
-        fi
-    done
+    link_items_into "$REPO_AGENTS_DIR" "$AGENTS_DIR" "agents"
 else
     echo "No agents directory found at $REPO_AGENTS_DIR, skipping agent linking."
 fi
@@ -120,40 +99,7 @@ fi
 # --- Also link skills into Antigravity-specific path ---
 ANTIGRAVITY_SKILLS_DIR="$HOME/.gemini/antigravity/skills"
 if [ -d "$HOME/.gemini/antigravity" ]; then
-    mkdir -p "$ANTIGRAVITY_SKILLS_DIR"
-    echo "Linking skills into Antigravity path $ANTIGRAVITY_SKILLS_DIR..."
-    for skill_path in "$REPO_SKILLS_DIR"/*/; do
-        if [ -d "$skill_path" ]; then
-            skill_name=$(basename "$skill_path")
-            skill_path="${skill_path%/}"
-            target_path="$ANTIGRAVITY_SKILLS_DIR/$skill_name"
-
-            if [ -e "$target_path" ] || [ -L "$target_path" ]; then
-                if [ -L "$target_path" ]; then
-                    link_target="$(realpath -m "$target_path" 2>/dev/null || python3 -c "import os; print(os.path.abspath(os.path.realpath('$target_path')))" 2>/dev/null || readlink "$target_path")"
-                    if [[ "$link_target" == "$REPO_DIR"* ]]; then
-                        rm "$target_path"
-                    else
-                        echo "  ⚠ $skill_name already exists (not this repo). Skipping."
-                        continue
-                    fi
-                else
-                    echo "  ⚠ $target_path exists and is not a symlink. Skipping."
-                    continue
-                fi
-            fi
-
-            if ln -sr "$skill_path" "$target_path" 2>/dev/null; then
-                :
-            elif command -v python3 >/dev/null 2>&1; then
-                rel_path="$(python3 -c "import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))" "$skill_path" "$ANTIGRAVITY_SKILLS_DIR")"
-                ln -s "$rel_path" "$target_path"
-            else
-                ln -s "$skill_path" "$target_path"
-            fi
-            echo "  ✓ $skill_name"
-        fi
-    done
+    link_items_into "$REPO_SKILLS_DIR" "$ANTIGRAVITY_SKILLS_DIR" "skills"
 else
     echo "Antigravity not detected at ~/.gemini/antigravity — skipping Antigravity-specific skill path."
 fi
