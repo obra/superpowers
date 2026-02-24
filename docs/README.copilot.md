@@ -9,7 +9,7 @@ Guide for using Superpowers with GitHub Copilot CLI.
 ### Plugin Install (Recommended)
 
 ```bash
-copilot plugin install https://github.com/obra/superpowers
+copilot plugin install obra/superpowers
 ```
 
 ### Manual Install
