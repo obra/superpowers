@@ -113,8 +113,64 @@ if [ -d "$REPO_AGENTS_DIR" ]; then
             echo "  ✓ $agent_name"
         fi
     done
-else
+    echo "No agents directory found at "$REPO_AGENTS_DIR", skipping agent linking."
 fi
+
+# --- Register deterministic hook router in settings.json ---
+SETTINGS_FILE="$GEMINI_DIR/settings.json"
+
+enable_router_hook() {
+    # Ensure settings.json exists
+    if [ ! -f "$SETTINGS_FILE" ]; then
+        echo "Creating basic $SETTINGS_FILE for hook registration..."
+        printf '{\n  "hooks": {\n    "beforeAgent": []\n  }\n}\n' > "$SETTINGS_FILE"
+    fi
+
+    echo "Registering superpowers-router hook in $SETTINGS_FILE..."
+    
+    # Path to the script
+    ROUTER_PATH="$REPO_DIR/agents/superpowers-router.js"
+    
+    # Python script to safely inject/update the hook without breaking existing ones
+    if command -v python3 >/dev/null 2>&1; then
+        python3 -c "
+import json, sys
+settings_path = sys.argv[1]
+router_path = sys.argv[2]
+try:
+    with open(settings_path, 'r') as f:
+        d = json.load(f)
+except (FileNotFoundError, json.JSONDecodeError):
+    d = {}
+
+hooks = d.setdefault('hooks', {})
+beforeAgent = hooks.setdefault('beforeAgent', [])
+
+# Remove existing superpower-router if it exists
+beforeAgent = [h for h in beforeAgent if h.get('name') != 'superpowers-router']
+
+# Append our router
+beforeAgent.append({
+    'name': 'superpowers-router',
+    'command': 'node',
+    'args': [router_path],
+    'matcher': '.*'
+})
+
+hooks['beforeAgent'] = beforeAgent
+
+with open(settings_path, 'w') as f:
+    json.dump(d, f, indent=2)
+    f.write('\n')
+" "$SETTINGS_FILE" "$ROUTER_PATH"
+        echo "  ✓ Registered superpowers-router hook."
+    else
+        echo "  ⚠ python3 not found. Could not auto-register hooks. Please add manually:"
+        echo "  \"hooks\": { \"beforeAgent\": [{ \"name\": \"superpowers-router\", \"command\": \"node\", \"args\": [\"$ROUTER_PATH\"], \"matcher\": \".*\" }] }"
+    fi
+}
+
+enable_router_hook
 
 # --- Context injection into GEMINI.md ---
 CONTEXT_HEADER="<!-- SUPERPOWERS-CONTEXT-START -->"
