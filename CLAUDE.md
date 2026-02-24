@@ -44,6 +44,12 @@ FOUNDER (opus) ← final decision maker, Integration Point resolution, rework au
 │   ├── Security Reviewer (sonnet)     — OWASP Top 10 source code analysis
 │   └── Release Readiness (opus)       — holistic PM spec vs. implementation check
 │
+├── Marketing Department (optional — active when marketing ∈ active_teams)
+│   ├── Marketing Lead (opus)           — dept accountability, positioning, copy strategy, launch
+│   ├── Content Marketer (sonnet)      — copy, cold email, social content, launch strategy
+│   ├── Growth Marketer (sonnet)       — CRO, analytics tracking, A/B tests, churn prevention
+│   └── SEO Specialist (sonnet)        — SEO audit, AI SEO, programmatic SEO, schema markup
+│
 └── Staff
     ├── Orchestrator (opus)            — pipeline conductor, pod brief, Integration Point facilitation
     └── Humanizer (sonnet)             — strips AI patterns from human-facing output
@@ -55,49 +61,54 @@ FOUNDER (opus) ← final decision maker, Integration Point resolution, rework au
 
 ```
 PI-001
-├── PI Planning          — all 4 Leads + Founder, token budget allocation, ROAM risks, program board
+├── PI Planning          — all active Leads + Founder, token budget allocation, ROAM risks, program board
 │
-├── Iteration 1: Foundation   — all 4 department teams run concurrently, token-budgeted
+├── Iteration 1: Foundation   — all active teams run concurrently, token-budgeted
 │   Product:     Domain research + Market research → PM spec + 6 artifacts
 │   Design:      Design system + HTML mockups (onboarding, core, empty states)
 │   Engineering: why-reinvent evaluation + architecture design doc + TDD plan
 │   Quality:     Definition of Done + acceptance criteria review
+│   Marketing:   Product context + competitor positioning  [if active]
 │   ──────────────────────────────────────────────────────────────────────
 │   Integration Point 1: "Spec Lock"         (dual trigger — see below)
 │
-├── Iteration 2: Build        — all 4 department teams run concurrently, token-budgeted
+├── Iteration 2: Build        — all active teams run concurrently, token-budgeted
 │   Product:     Backlog grooming + WSJF prioritization + story refinement
 │   Design:      Mockup revisions from IP-1 resolution + design QA
 │   Engineering: Implementation (enablers first, then features, subagent-driven)
 │   Quality:     Static analysis + ongoing code review
+│   Marketing:   Landing page copy + SEO setup + analytics tracking  [if active]
 │   ──────────────────────────────────────────────────────────────────────
 │   Integration Point 2: "Feature Complete"  (dual trigger — see below)
 │
-├── Iteration 3: Harden       — all 4 department teams run concurrently, token-budgeted
+├── Iteration 3: Harden       — all active teams run concurrently, token-budgeted
 │   Product:     Release notes + onboarding verification
 │   Design:      Final UX review + WCAG compliance check
 │   Engineering: Bug fixes + performance + UX screenshot vs. mockup comparison
 │   Quality:     Browser tests + security scan + Release Readiness review
+│   Marketing:   CRO audit + launch prep  [if active]
 │   ──────────────────────────────────────────────────────────────────────
 │   Integration Point 3: "Ship Decision"     (dual trigger — see below)
 │
 └── IP Iteration: Learn       — retros, knowledge compounding, ship
-    All Leads:   Retrospectives + mini-learnings
+    All active Leads: Retrospectives + mini-learnings
     Orchestrator: knowledge-compounding skill → ~/.claude/memory/
     Engineering: superpowers:finishing-a-development-branch
 ```
 
-**Dual-trigger Integration Points**: an Integration Point fires when ALL key_outputs for that iteration exist in the filesystem (fast path) OR when ALL teams have exhausted their token budgets (timebox path) — whichever comes first. The hook `pipeline-subagent-stop.sh` evaluates both conditions after every task completion.
+**Dual-trigger Integration Points**: an Integration Point fires when ALL key_outputs for that iteration exist in the filesystem (fast path) OR when ALL active teams have exhausted their token budgets (timebox path) — whichever comes first. The hook `pipeline-subagent-stop.sh` evaluates both conditions after every task completion.
 
-**Token Budget Defaults**:
+**Token Budget Defaults** (5-team run with marketing active):
 ```
-PI total: ~7M tokens
+PI total: ~7.85M tokens
   PI Planning:    500K
-  Iteration 1:    1.5M  (Product-heavy: research + PM spec)
-  Iteration 2:    2.0M  (Engineering-heavy: implementation)
-  Iteration 3:    1.5M  (Quality-heavy: testing + hardening)
-  IP Iteration:   1.5M  (Balanced: retros + ship)
+  Iteration 1:    1.65M  (Product-heavy: research + PM spec + marketing foundation)
+  Iteration 2:    2.05M  (Engineering-heavy: implementation + marketing copy/SEO)
+  Iteration 3:    1.55M  (Quality-heavy: testing + hardening + CRO/launch prep)
+  IP Iteration:   1.60M  (Balanced: retros + ship + marketing retro)
 ```
+
+**Per-Project Team Selection**: Teams are selected at PI Planning intake (question 6). The Orchestrator writes `active_teams` to `pipeline.json` and prunes inactive team entries. The `pipeline-post-dispatch.sh` hook reads `active_teams` dynamically — existing `pipeline.json` files without this field fall back to the original 4-team default.
 
 Token budget is the AI equivalent of sprint hours. Set at PI Planning in `pipeline.json`, enforced per-team per-iteration by `pipeline-subagent-stop.sh`. When a team hits 80% of its budget, the hook injects a budget-alert into the next dispatch context. When a team exhausts its budget, the team is marked complete for that iteration regardless of remaining tasks — partial output is accepted and logged.
 
@@ -227,6 +238,14 @@ Dependencies are declared in `constants.iterations.{N}.dependencies` per team. T
 | `security-reviewer` (sonnet) | OWASP Top 10 source code analysis |
 | `release-readiness-reviewer` (opus) | PM spec coverage, onboarding verification, cross-cutting concerns, feedback loop authority |
 
+### Marketing Team (sonnet) — active when marketing ∈ active_teams
+| Agent | Role |
+|-------|------|
+| `marketing-lead` (opus) | Marketing Department lead. Positioning, copy strategy, CRO, SEO, launch prep. Dispatches 3 workers. |
+| `content-marketer` (sonnet) | Copy, cold email, social content, competitor alternatives, launch strategy |
+| `growth-marketer` (sonnet) | CRO (page, signup, onboarding), analytics tracking, A/B tests, churn prevention, referral |
+| `seo-specialist` (sonnet) | SEO audit, AI SEO, programmatic SEO, schema markup, content strategy, paid ads |
+
 ### Staff
 | Agent | Role |
 |-------|------|
@@ -258,13 +277,14 @@ Late-iteration findings can send work back to earlier iterations:
 
 | File | Purpose |
 |------|---------|
-| `pipeline-v3-template.json` | v3 pipeline config (constants + state, token budgets, iterations, key_outputs) |
+| `pipeline-v3-template.json` | v3 pipeline config (constants + state, token budgets, iterations, active_teams, key_outputs) |
 | `backlog-template.md` | SAFe backlog template (Epic → Capability → Feature → Story hierarchy) |
 | `pod-brief-template.md` | Pod brief initialization template |
 | `product-standards.md` | Product dept non-negotiables |
 | `engineering-standards.md` | Engineering dept non-negotiables |
 | `design-standards.md` | Design dept non-negotiables |
 | `quality-standards.md` | Quality dept non-negotiables |
+| `marketing-standards.md` | Marketing dept non-negotiables (10 standards) |
 | `sync-brief-template.md` | Lead sync brief format |
 | `sync-response-template.md` | Lead cross-pollination response format |
 | `integration-point-protocol.md` | Integration Point sync protocol reference |
@@ -277,6 +297,26 @@ Late-iteration findings can send work back to earlier iterations:
   - Install: `npx skills add vercel-labs/agent-browser --yes --global`
   - Fallback: `npx playwright` (v1.58.2)
 - `frontend-design` — Used by Visual Designer for high-quality HTML mockups
+- `marketingskills` (coreyhaines31) — 29 marketing skills used by Marketing department agents
+  - Install: `npx skills add coreyhaines31/marketingskills --yes --global`
+  - Installs to: `~/.agents/skills/` (symlinked to `~/.claude/skills/`)
+  - Security review: CONDITIONAL PASS — clean manifest, no hooks, env-var credentials only
+  - Skills: copywriting, page-cro, seo-audit, analytics-tracking, launch-strategy, cold-email, competitor-alternatives, and 22 others
+
+## Per-Project Team Selection
+
+Teams are selected at PI Planning intake. The Orchestrator asks question 6 during Step 0:
+```
+Which teams to activate? (default: all)
+[product] [design] [engineering] [quality] [marketing]
+```
+
+Selection is written to `pipeline.json` as `active_teams`:
+```json
+{ "active_teams": ["product", "engineering", "quality"] }
+```
+
+The Orchestrator prunes inactive teams from all iteration entries in pipeline.json (Step 0.5). The `pipeline-post-dispatch.sh` hook reads `active_teams` dynamically. Existing `pipeline.json` files without this field fall back to the 4-team default `["product","design","engineering","quality"]`, preserving backward compatibility.
 
 ---
 
@@ -321,7 +361,7 @@ Cross-project knowledge base in `~/.claude/memory/`:
 | PI (Program Increment) | One full pipeline run |
 | Iteration | One of 3 timeboxed parallel-team iterations within the PI |
 | Inspect & Adapt | Integration Point sync at each iteration boundary |
-| PI Planning | All 4 Leads + Founder: PI Objectives, ROAM risks, program board, token budget allocation |
+| PI Planning | All active Leads + Founder: PI Objectives, ROAM risks, program board, token budget allocation |
 | System Demo | IP-2 (Engineering Lead) + IP-3 (Quality Lead) — browser demo of all Must Have stories |
 | WSJF | Iteration 2 start — Product Lead scores features by Business Value × Time Criticality × Risk Reduction / Job Size |
 | Iteration Planning | Each Lead writes iteration plan before iteration work starts |
