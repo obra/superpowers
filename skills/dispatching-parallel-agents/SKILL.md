@@ -63,6 +63,14 @@ Each agent gets:
 
 ### 3. Dispatch in Parallel
 
+```
+# In VS Code Copilot / Copilot CLI (using runSubagent)
+# Each subagent runs concurrently with isolated context
+runSubagent: "Fix agent-tool-abort.test.ts failures"
+runSubagent: "Fix batch-completion-behavior.test.ts failures"
+runSubagent: "Fix tool-approval-race-conditions.test.ts failures"
+```
+
 ```typescript
 // In Claude Code / AI environment
 Task("Fix agent-tool-abort.test.ts failures")

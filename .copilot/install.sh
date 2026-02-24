@@ -144,13 +144,13 @@ You have been granted Superpowers. These are specialized skills located in `~/.c
 ## Terminology Mapping
 The skills were originally written for Claude Code. Interpret as follows:
 - **"Claude"** or **"Claude Code"** → **"Copilot"** (You).
-- **"Task" tool** → Use sub-agents (explore, task, general-purpose, code-review).
-- **"Skill" tool** → Use the `skill` tool with the skill name.
+- **"Task" tool** → Use `runSubagent` for context-isolated subagent delegation.
+- **"Skill" tool** → Skills auto-activate on prompt match, or invoke as slash commands.
 - **"TodoWrite"** → Write/update a plan file (e.g., `plan.md`).
-- File operations → your native tools (view, edit, create, bash, etc.)
-- Search → grep or glob tools
-- Shell → bash tool
-- Web fetch → web_fetch tool
+- File operations → `view`, `edit`, `create` tools
+- Search → `grep`, `glob` tools
+- Shell → `bash` tool
+- Web fetch → `web_fetch` tool
 <!-- SUPERPOWERS-CONTEXT-END -->
 EOM
 
@@ -169,14 +169,11 @@ else
     echo "Injecting Superpowers context into $COPILOT_INSTRUCTIONS..."
 fi
 
-# Trim trailing blank lines (prevents accumulation on repeated runs)
-if sed -i.bak -e :a -e '/^[[:space:]]*$/{$d;N;ba' -e '}' "$COPILOT_INSTRUCTIONS" 2>/dev/null; then
-    rm -f "${COPILOT_INSTRUCTIONS}.bak"
-elif awk '{lines[NR]=$0} END{e=NR; while(e>0 && lines[e]=="") e--; for(i=1;i<=e;i++) print lines[i]}' "$COPILOT_INSTRUCTIONS" > "${COPILOT_INSTRUCTIONS}.tmp" 2>/dev/null; then
-    rm -f "${COPILOT_INSTRUCTIONS}.bak"
+# Trim trailing blank/whitespace-only lines (prevents accumulation on repeated runs)
+if awk '{lines[NR]=$0} END{if(NR==0){exit 0}; e=NR; while(e>0 && lines[e] ~ /^[[:space:]]*$/) e--; for(i=1;i<=e;i++) print lines[i]}' "$COPILOT_INSTRUCTIONS" > "${COPILOT_INSTRUCTIONS}.tmp" 2>/dev/null; then
     mv "${COPILOT_INSTRUCTIONS}.tmp" "$COPILOT_INSTRUCTIONS"
 else
-    rm -f "${COPILOT_INSTRUCTIONS}.bak"
+    rm -f "${COPILOT_INSTRUCTIONS}.tmp"
     echo "Warning: Could not trim blank lines from $COPILOT_INSTRUCTIONS" >&2
 fi
 

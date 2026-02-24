@@ -49,15 +49,24 @@ Once installed, skills are discovered automatically. Copilot will activate them 
 ## Updating
 
 ```bash
-cd ~/.copilot/superpowers && git pull
+cd ~/.copilot/superpowers && git pull && .copilot/install.sh
 ```
+
+> **Note:** Re-running the installer ensures any new skills, agents, or hooks added upstream are linked correctly.
 
 ## Uninstalling
 
 ```bash
+# Remove skill symlinks
 find ~/.copilot/skills -type l -lname '*/superpowers/skills/*' -delete
+
+# Remove agent symlinks
 find ~/.copilot/agents -type l -lname '*/superpowers/agents/*' -delete
-# Edit ~/.copilot/copilot-instructions.md and remove the SUPERPOWERS-CONTEXT block
+
+# Remove context block from copilot-instructions.md
+sed -i.bak '/<!-- SUPERPOWERS-CONTEXT-START -->/,/<!-- SUPERPOWERS-CONTEXT-END -->/d' ~/.copilot/copilot-instructions.md && rm -f ~/.copilot/copilot-instructions.md.bak
+
+# Remove the repo
 rm -rf ~/.copilot/superpowers
 ```
 
