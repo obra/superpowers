@@ -11,6 +11,7 @@ Guide for using Superpowers with GitHub Copilot CLI.
 ```bash
 copilot plugin install obra/superpowers
 ```
+> **Note:** The `copilot plugin install` command only installs from the repository's default (`main`) branch. To install a specific branch or version, use the Manual Install method below.
 
 ### Manual Install
 
