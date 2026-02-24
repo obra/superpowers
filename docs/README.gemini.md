@@ -56,8 +56,8 @@ cd ~/.gemini/superpowers && git pull && .gemini/install.sh
 
 ```bash
 # Remove skill and agent symlinks
-find ~/.gemini/skills -type l -lname '*/superpowers/skills/*' -delete 2>/dev/null
-find ~/.gemini/agents -type l -lname '*/superpowers/agents/*' -delete 2>/dev/null
+[ -d ~/.gemini/skills ] && find ~/.gemini/skills -type l -lname '*/superpowers/skills/*' -delete 2>/dev/null
+[ -d ~/.gemini/agents ] && find ~/.gemini/agents -type l -lname '*/superpowers/agents/*' -delete 2>/dev/null
 # Remove hooks from settings.json
 python3 -c "
 import json

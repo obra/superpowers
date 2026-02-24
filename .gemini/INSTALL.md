@@ -86,12 +86,12 @@ When skills reference Claude Code tools, Gemini equivalents are:
 - `TodoWrite` → write/update a task list (e.g., `task.md` or `plan.md`)
 - `Task` with subagents → sub-agents in `~/.gemini/agents/`
 - `Skill` tool → `activate_skill` tool with the skill name
-- File operations → `view_file`, `write_to_file`, `replace_file_content`, `multi_replace_file_content`
-- Directory listing → `list_dir`
-- Code structure → `view_file_outline`, `view_code_item`
-- Search → `search_file_content`, `glob`
-- Shell → `run_command`
-- Web fetch → `read_url_content`
+- File operations → `read_file`, `write_file`, `replace`
+- Directory listing → `list_directory`
+- Code structure → Use shell tools or `read_file`
+- Search → Use shell tools (e.g., `grep_search` if available, or `run_shell_command` with `grep`)
+- Shell → `run_shell_command`
+- Web fetch → `web_fetch`
 - Web search → `google_web_search`
 
 ## Updating
@@ -107,13 +107,13 @@ Skills update instantly through the symlinks.
 1. **Remove the skill symlinks:**
 
    ```bash
-   find ~/.gemini/skills -type l -lname '*/superpowers/skills/*' -delete
+   [ -d ~/.gemini/skills ] && find ~/.gemini/skills -type l -lname '*/superpowers/skills/*' -delete
    ```
 
 2. **Remove the agent symlinks:**
 
    ```bash
-   find ~/.gemini/agents -type l -lname '*/superpowers/agents/*' -delete
+   [ -d ~/.gemini/agents ] && find ~/.gemini/agents -type l -lname '*/superpowers/agents/*' -delete
    ```
 
 3. **Remove hooks from settings.json:**

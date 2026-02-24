@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 # ==============================================================================
 # Superpowers Installer for Gemini CLI
@@ -62,7 +62,7 @@ for skill_path in "$REPO_SKILLS_DIR"/*/; do
             : # GNU ln with -r support
         elif command -v python3 >/dev/null 2>&1; then
             # Fallback: compute relative path with Python
-            rel_path="$(python3 -c "import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))" "$skill_path" "$SKILLS_DIR")"
+            rel_path="$(python3 -c 'import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))' "$skill_path" "$SKILLS_DIR")"
             ln -s "$rel_path" "$target_path"
         else
             echo "  ⚠ Warning: Neither GNU ln -sr nor python3 available. Using absolute path (less portable)."
@@ -104,7 +104,7 @@ if [ -d "$REPO_AGENTS_DIR" ]; then
             if ln -sr "$agent_path" "$target_path" 2>/dev/null; then
                 : # GNU ln with -r support
             elif command -v python3 >/dev/null 2>&1; then
-                rel_path="$(python3 -c "import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))" "$agent_path" "$AGENTS_DIR")"
+                rel_path="$(python3 -c 'import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))' "$agent_path" "$AGENTS_DIR")"
                 ln -s "$rel_path" "$target_path"
             else
                 echo "  ⚠ Warning: Neither GNU ln -sr nor python3 available. Using absolute path (less portable)."
@@ -192,32 +192,14 @@ register_hooks
 CONTEXT_HEADER="<!-- SUPERPOWERS-CONTEXT-START -->"
 CONTEXT_FOOTER="<!-- SUPERPOWERS-CONTEXT-END -->"
 
-read -r -d '' CONTEXT_BLOCK << 'EOM' || true
-<!-- SUPERPOWERS-CONTEXT-START -->
-# Superpowers Configuration
-
-You have been granted Superpowers. These are specialized skills located in `~/.gemini/skills` and agent definitions in `~/.gemini/agents`.
-
-## Skill & Agent Discovery
-- **ALWAYS** check for relevant skills before starting a task.
-- If a skill applies (e.g., "brainstorming", "testing"), you **MUST** follow it.
-- Use the `activate_skill` tool to load a skill. Use `/skills list` to see available skills.
-
-## Terminology Mapping
-The skills were originally written for Claude Code. Interpret as follows:
-- **"Claude"** or **"Claude Code"** → **"Gemini"** (You).
-- **"Task" tool** → Use sub-agents. Agent definitions are in `~/.gemini/agents/`.
-- **"Skill" tool** → Use `activate_skill` tool with the skill name.
-- **"TodoWrite"** → Write/update a task list (e.g., `task.md` or `plan.md`).
-- File operations → `view_file`, `write_to_file`, `replace_file_content`, `multi_replace_file_content`
-- Directory listing → `list_dir`
-- Code structure → `view_file_outline`, `view_code_item`
-- Search → `search_file_content`, `glob`
-- Shell → `run_command`
-- Web fetch → `read_url_content`
-- Web search → `google_web_search`
-<!-- SUPERPOWERS-CONTEXT-END -->
-EOM
+# Read context block from repo
+CONTEXT_BLOCK_SOURCE="$REPO_DIR/.gemini/GEMINI.md"
+if [ -f "$CONTEXT_BLOCK_SOURCE" ]; then
+    CONTEXT_BLOCK=$(awk "/$CONTEXT_HEADER/{flag=1} flag; /$CONTEXT_FOOTER/{flag=0}" "$CONTEXT_BLOCK_SOURCE")
+else
+    echo "Error: Could not find context block source at $CONTEXT_BLOCK_SOURCE"
+    exit 1
+fi
 
 # Create GEMINI.md if missing
 if [ ! -f "$GEMINI_MD" ]; then
