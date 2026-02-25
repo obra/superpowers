@@ -31,6 +31,32 @@ pi list
 
 Then start pi and use `/skill:brainstorming` to confirm skills load.
 
+## Configure Required Subagents
+
+Some Superpowers skills call a `code-reviewer` subagent.
+
+Pi packages do not install agent profiles automatically, so install the bundled profile once:
+
+If installed from GitHub:
+
+```bash
+mkdir -p ~/.pi/agent/agents
+ln -sf ~/.pi/agent/git/github.com/obra/superpowers/.pi/agents/code-reviewer.md ~/.pi/agent/agents/code-reviewer.md
+```
+
+If installed from a local path:
+
+```bash
+mkdir -p ~/.pi/agent/agents
+ln -sf /path/to/superpowers/.pi/agents/code-reviewer.md ~/.pi/agent/agents/code-reviewer.md
+```
+
+Verify:
+
+```bash
+ls ~/.pi/agent/agents/code-reviewer.md
+```
+
 ## Updating
 
 Update superpowers:
