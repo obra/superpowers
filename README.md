@@ -115,6 +115,25 @@ Start a new session in your chosen platform and ask for something that should tr
 - **finishing-a-development-branch** - Merge/PR decision workflow
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
 
+### Model-Aware Agents (OpenCode)
+
+When running in [OpenCode](https://opencode.ai), the superpowers plugin registers dedicated agents with appropriate model tiers via the `config` hook:
+
+| Agent | Role | Default Model |
+|-------|------|---------------|
+| `@implementer-sp` | Implements tasks from plan, writes code, tests, commits | Sonnet |
+| `@spec-reviewer-sp` | Verifies implementation matches spec, catches missing/extra work | Sonnet |
+| `@code-reviewer-sp` | Deep code review — architecture, quality, security | Opus |
+
+This means brainstorming and planning run on whatever model you choose (typically a stronger one), while implementation is automatically dispatched to cost-effective models. No manual model switching needed.
+
+**Override agent models** in your `opencode.json`:
+```json
+{ "agent": { "implementer-sp": { "model": "anthropic/claude-haiku-4-5" } } }
+```
+
+User-defined agents always take priority over plugin defaults.
+
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
 - **using-superpowers** - Introduction to the skills system
