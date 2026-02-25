@@ -141,11 +141,30 @@ See `skills/writing-skills/SKILL.md` for the complete guide.
 
 ## Updating
 
+### Claude Code
+
 Skills update automatically when you update the plugin:
 
 ```bash
 /plugin update superpowers
 ```
+
+### Codex
+
+```bash
+cd ~/.codex/superpowers && git pull
+```
+
+Skills update instantly through the symlink.
+
+### OpenCode
+
+```bash
+cd ~/.config/opencode/superpowers
+git pull
+```
+
+Restart OpenCode to load the updates.
 
 ## License
 
