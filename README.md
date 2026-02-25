@@ -164,7 +164,7 @@ Skills update automatically when you update the plugin:
 /plugin update superpowers
 ```
 
-For manual installations (Codex, OpenCode, OpenClaw), pull the latest changes:
+For OpenClaw (manual clone), pull the latest changes:
 
 ```bash
 cd ~/.openclaw/superpowers && git pull   # OpenClaw

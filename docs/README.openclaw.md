@@ -21,7 +21,7 @@ OpenClaw has native skill discovery — it scans `~/.openclaw/skills/` for direc
 
 The installation clones the superpowers repo and creates individual symlinks from each skill into OpenClaw's managed skills directory:
 
-```
+```text
 ~/.openclaw/
 ├── superpowers/                    # Git clone (source of truth)
 │   └── skills/
