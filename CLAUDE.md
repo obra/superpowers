@@ -8,7 +8,7 @@ This fork adds a Pipeline v3 SDLC orchestration system on top of Superpowers. v3
 **Canonical architecture reference**: `docs/pm/references/pipeline-v3-architecture.md`
 
 ### Added Commands
-- `/orchestrate` — Run the full Pipeline v3 SDLC (PI Planning → Iterations 1–3 + IP Iteration)
+- `/orchestration` — Run the full Pipeline v3 SDLC (PI Planning → Iterations 1–3 + IP Iteration)
 - `/scaffold` — Generate project scaffolding from YAML templates
 - `/pm-discover` — Standalone PM discovery (Product Lead conducts discovery + researcher dispatch)
 

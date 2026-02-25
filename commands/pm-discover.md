@@ -5,4 +5,4 @@ disable-model-invocation: true
 
 Invoke the pm-discovery skill and follow it exactly as presented to you.
 
-This runs PM discovery as a standalone workflow, independent of the full SDLC pipeline. Use `/orchestrate` instead if you want the full pipeline (which includes PM discovery as stage 1).
+This runs PM discovery as a standalone workflow, independent of the full SDLC pipeline. Use `/orchestration` instead if you want the full pipeline (which includes PM discovery as stage 1).
