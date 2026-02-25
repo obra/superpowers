@@ -10,7 +10,7 @@ Complete guide for using Superpowers with [pi](https://github.com/mariozechner/p
 pi install https://github.com/obra/superpowers
 ```
 
-Pi clones the repository and discovers all skills from the `skills/` directory automatically. No plugins, hooks, or bootstrap scripts required.
+Pi clones the repository and discovers all skills from the `skills/` directory automatically. No plugins, hooks, or bootstrap scripts required for skill loading. For subagent-based workflows, install the bundled agent profile from `.pi/agents/`.
 
 ## Installation Options
 
@@ -54,6 +54,36 @@ pi list
 ```
 
 Then start pi and type `/skill:brainstorming` to confirm skills load.
+
+### Configure Required Subagent Profiles
+
+Some Superpowers skills dispatch a `code-reviewer` subagent.
+
+| Agent profile | Used by |
+|---|---|
+| `code-reviewer` | `requesting-code-review` and workflows that depend on it |
+
+Pi packages do not auto-install agent profiles, so install the bundled profile once:
+
+If installed from GitHub:
+
+```bash
+mkdir -p ~/.pi/agent/agents
+ln -sf ~/.pi/agent/git/github.com/obra/superpowers/.pi/agents/code-reviewer.md ~/.pi/agent/agents/code-reviewer.md
+```
+
+If installed from a local path:
+
+```bash
+mkdir -p ~/.pi/agent/agents
+ln -sf /path/to/superpowers/.pi/agents/code-reviewer.md ~/.pi/agent/agents/code-reviewer.md
+```
+
+Verify:
+
+```bash
+ls ~/.pi/agent/agents/code-reviewer.md
+```
 
 ## Usage
 
@@ -102,7 +132,7 @@ Skills are written for Claude Code. Pi equivalents:
 |---|---|---|
 | `Skill` tool | `read` tool / `/skill:name` | Pi loads skill content via `read` |
 | `TodoWrite` | — | No direct equivalent; use markdown checklists |
-| `Task` with subagents | `subagent` tool | Pi's native delegation system |
+| `Task` with subagents | `subagent` tool | Requires a subagent extension and matching agent profiles (for example `code-reviewer`) |
 | `Read` | `read` | Same |
 | `Write` | `write` | Same |
 | `Edit` | `edit` | Same |
@@ -110,7 +140,9 @@ Skills are written for Claude Code. Pi equivalents:
 
 ### Subagent Differences
 
-Claude Code's `Task` tool spawns a subagent with isolated context. Pi's `subagent` tool provides similar functionality with three modes:
+Pi core does not include built-in subagents. If your Pi harness provides a `subagent` tool, it maps to Claude Code's `Task` behavior.
+
+Pi `subagent` tools typically provide three modes:
 
 - **single** — one agent, one task (closest to Claude Code's `Task`)
 - **parallel** — multiple independent tasks
@@ -136,6 +168,15 @@ Pi discovers skills from multiple locations. On name collision, the first skill 
 - **Project** — `.pi/skills/`
 - **Settings/Packages** — `skills` array and installed packages
 - **CLI** — `--skill <path>`
+
+### Harness-Specific Files
+
+Pi-specific resources live in `.pi/` in this repository:
+
+- `.pi/INSTALL.md`
+- `.pi/agents/code-reviewer.md`
+
+If we add Pi-specific extensions later, they should live under `.pi/extensions/`.
 
 ## Updating
 
@@ -188,7 +229,8 @@ If the agent attempts a Claude Code tool that doesn't exist in pi, remind it of 
 - **No `TodoWrite`** — Pi has no built-in task tracking tool. Skills that use `TodoWrite` checklists produce markdown checklists instead.
 - **No hooks system** — Pi doesn't inject bootstrap content on session start. The `using-superpowers` skill triggers via its description in `<available_skills>`.
 - **Skill loading** — Claude Code has a dedicated `Skill` tool. Pi uses `read` on SKILL.md files. Functionally equivalent, syntactically different.
-- **Subagent model** — Pi's `subagent` tool supports single/parallel/chain modes. Claude Code's `Task` maps to single mode.
+- **Subagent model** — Pi core does not include built-in subagents. If your harness provides a `subagent` tool, Claude Code's `Task` usually maps to single mode.
+- **Agent profiles** — Pi packages do not auto-install agent profiles. Superpowers ships required Pi profiles in `.pi/agents/`; install them in `~/.pi/agent/agents/`.
 
 ## Getting Help
 
