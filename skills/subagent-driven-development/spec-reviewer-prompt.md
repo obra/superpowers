@@ -6,6 +6,7 @@ Use this template when dispatching a spec compliance reviewer subagent.
 
 ```
 Task tool (general-purpose):
+  model: "sonnet"
   description: "Review spec compliance for Task N"
   prompt: |
     You are reviewing whether an implementation matches its specification.
