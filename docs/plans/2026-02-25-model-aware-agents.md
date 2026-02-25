@@ -2,7 +2,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Register dedicated subagents (sp-implementer, sp-spec-reviewer, sp-code-reviewer) with appropriate model tiers via the plugin config hook, and update the subagent-driven-development skill to dispatch to these agents instead of generic subagents.
+**Goal:** Register dedicated subagents (implementer-sp, spec-reviewer-sp, code-reviewer-sp) with appropriate model tiers via the plugin config hook, and update the subagent-driven-development skill to dispatch to these agents instead of generic subagents.
 
 **Architecture:** Extend the existing `superpowers.js` OpenCode plugin with a `config` hook that injects agent definitions into `config.agent`. Agent prompts are embedded from the existing prompt templates. The skill markdown is updated to reference named agents. User config takes priority over plugin defaults.
 
@@ -33,8 +33,8 @@ config: async (config) => {
   // Only set defaults — don't overwrite user-defined agents
   const agents = config.agent || {};
 
-  if (!agents['sp-implementer']) {
-    agents['sp-implementer'] = {
+  if (!agents['implementer-sp']) {
+    agents['implementer-sp'] = {
       description: 'Superpowers: implements tasks from plan following TDD. Writes code, tests, commits.',
       model: 'anthropic/claude-sonnet-4-6',
       mode: 'subagent',
@@ -44,8 +44,8 @@ config: async (config) => {
     };
   }
 
-  if (!agents['sp-spec-reviewer']) {
-    agents['sp-spec-reviewer'] = {
+  if (!agents['spec-reviewer-sp']) {
+    agents['spec-reviewer-sp'] = {
       description: 'Superpowers: reviews implementation against spec. Verifies completeness, catches missing/extra work.',
       model: 'anthropic/claude-sonnet-4-6',
       mode: 'subagent',
@@ -55,8 +55,8 @@ config: async (config) => {
     };
   }
 
-  if (!agents['sp-code-reviewer']) {
-    agents['sp-code-reviewer'] = {
+  if (!agents['code-reviewer-sp']) {
+    agents['code-reviewer-sp'] = {
       description: 'Superpowers: deep code review — architecture, quality, security, maintainability.',
       model: 'anthropic/claude-opus-4-6',
       mode: 'subagent',
@@ -73,7 +73,7 @@ config: async (config) => {
 **Step 3: Verify the plugin loads without errors**
 
 Run: `cd /home/alex/Projects/opencode && opencode run "list all agents" --agent build`
-Expected: should see sp-implementer, sp-spec-reviewer, sp-code-reviewer in agent list alongside built-ins.
+Expected: should see implementer-sp, spec-reviewer-sp, code-reviewer-sp in agent list alongside built-ins.
 
 **Step 4: Commit**
 
@@ -93,9 +93,9 @@ git commit -m "feat: register model-aware agents via config hook"
 **Step 1: Replace generic dispatch references with named agents**
 
 In the Process flowchart and text, replace:
-- `"Dispatch implementer subagent (./implementer-prompt.md)"` → `"Dispatch @sp-implementer with task text and context"`
-- `"Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)"` → `"Dispatch @sp-spec-reviewer with requirements and report"`
-- `"Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)"` → `"Dispatch @sp-code-reviewer with SHAs and description"`
+- `"Dispatch implementer subagent (./implementer-prompt.md)"` → `"Dispatch @implementer-sp with task text and context"`
+- `"Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)"` → `"Dispatch @spec-reviewer-sp with requirements and report"`
+- `"Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)"` → `"Dispatch @code-reviewer-sp with SHAs and description"`
 
 **Step 2: Update the Prompt Templates section**
 
@@ -116,13 +116,13 @@ When running in OpenCode, use the dedicated agents registered by the superpowers
 
 | Agent | Role | Default Model |
 |-------|------|---------------|
-| `@sp-implementer` | Writes code, tests, commits | sonnet |
-| `@sp-spec-reviewer` | Verifies implementation matches spec | sonnet |
-| `@sp-code-reviewer` | Deep code review | opus |
+| `@implementer-sp` | Writes code, tests, commits | sonnet |
+| `@spec-reviewer-sp` | Verifies implementation matches spec | sonnet |
+| `@code-reviewer-sp` | Deep code review | opus |
 
 Users can override models in their `opencode.json`:
 ```json
-{ "agent": { "sp-implementer": { "model": "anthropic/claude-haiku-4-5" } } }
+{ "agent": { "implementer-sp": { "model": "anthropic/claude-haiku-4-5" } } }
 ```
 
 ## Prompt Templates (Claude Code / Codex fallback)
@@ -135,7 +135,7 @@ If named agents are not available (e.g. in Claude Code or Codex), use the prompt
 
 **Step 3: Update the Example Workflow section**
 
-Replace generic "[Dispatch implementation subagent with full task text + context]" with "[Dispatch @sp-implementer with full task text + context]" etc.
+Replace generic "[Dispatch implementation subagent with full task text + context]" with "[Dispatch @implementer-sp with full task text + context]" etc.
 
 **Step 4: Commit**
 
@@ -157,7 +157,7 @@ git commit -m "feat: update subagent-driven-development to use named agents"
 After the line `- Invoke the writing-plans skill to create a detailed implementation plan`, add:
 
 ```markdown
-- **Model routing:** When using OpenCode, the superpowers plugin registers dedicated agents (`@sp-implementer`, `@sp-spec-reviewer`, `@sp-code-reviewer`) with appropriate model tiers. Brainstorming and planning run on the current (typically stronger) model; implementation is automatically dispatched to cost-effective models. No manual model switching needed.
+- **Model routing:** When using OpenCode, the superpowers plugin registers dedicated agents (`@implementer-sp`, `@spec-reviewer-sp`, `@code-reviewer-sp`) with appropriate model tiers. Brainstorming and planning run on the current (typically stronger) model; implementation is automatically dispatched to cost-effective models. No manual model switching needed.
 ```
 
 **Step 2: Commit**
@@ -201,21 +201,21 @@ ln -s /home/alex/Projects/opencode/superpowers/skills /home/alex/Projects/openco
 **Step 3: Verify agents are registered**
 
 Run: `cd /home/alex/Projects/opencode && opencode agent list`
-Expected: sp-implementer, sp-spec-reviewer, sp-code-reviewer appear with correct models.
+Expected: implementer-sp, spec-reviewer-sp, code-reviewer-sp appear with correct models.
 
 **Step 4: Verify agent invocation works**
 
-Run: `cd /home/alex/Projects/opencode && opencode run "@sp-implementer say hello and list your tools"`
+Run: `cd /home/alex/Projects/opencode && opencode run "@implementer-sp say hello and list your tools"`
 Expected: Response comes from sonnet (not opus), agent has access to bash/read/write/edit tools.
 
 **Step 5: Verify user override works**
 
 Temporarily add to opencode.json:
 ```json
-"agent": { "sp-implementer": { "model": "anthropic/claude-haiku-4-5" } }
+"agent": { "implementer-sp": { "model": "anthropic/claude-haiku-4-5" } }
 ```
 
-Run: `cd /home/alex/Projects/opencode && opencode run "@sp-implementer what model are you?"`
+Run: `cd /home/alex/Projects/opencode && opencode run "@implementer-sp what model are you?"`
 Expected: Response comes from haiku.
 
 Remove the override after testing.

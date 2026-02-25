@@ -43,14 +43,14 @@ digraph process {
 
     subgraph cluster_per_task {
         label="Per Task";
-        "Dispatch @sp-implementer with task text and context" [shape=box];
+        "Dispatch @implementer-sp with task text and context" [shape=box];
         "Implementer asks questions?" [shape=diamond];
         "Answer questions, provide context" [shape=box];
         "Implementer implements, tests, commits, self-reviews" [shape=box];
-        "Dispatch @sp-spec-reviewer with requirements and report" [shape=box];
+        "Dispatch @spec-reviewer-sp with requirements and report" [shape=box];
         "Spec reviewer confirms code matches spec?" [shape=diamond];
         "Implementer fixes spec gaps" [shape=box];
-        "Dispatch @sp-code-reviewer with SHAs and description" [shape=box];
+        "Dispatch @code-reviewer-sp with SHAs and description" [shape=box];
         "Code reviewer approves?" [shape=diamond];
         "Implementer fixes quality issues" [shape=box];
         "Mark task complete in TodoWrite" [shape=box];
@@ -58,27 +58,27 @@ digraph process {
 
     "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
     "More tasks remain?" [shape=diamond];
-    "Dispatch @sp-code-reviewer for entire implementation" [shape=box];
+    "Dispatch @code-reviewer-sp for entire implementation" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch @sp-implementer with task text and context";
-    "Dispatch @sp-implementer with task text and context" -> "Implementer asks questions?";
+    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch @implementer-sp with task text and context";
+    "Dispatch @implementer-sp with task text and context" -> "Implementer asks questions?";
     "Implementer asks questions?" -> "Answer questions, provide context" [label="yes"];
-    "Answer questions, provide context" -> "Dispatch @sp-implementer with task text and context";
+    "Answer questions, provide context" -> "Dispatch @implementer-sp with task text and context";
     "Implementer asks questions?" -> "Implementer implements, tests, commits, self-reviews" [label="no"];
-    "Implementer implements, tests, commits, self-reviews" -> "Dispatch @sp-spec-reviewer with requirements and report";
-    "Dispatch @sp-spec-reviewer with requirements and report" -> "Spec reviewer confirms code matches spec?";
+    "Implementer implements, tests, commits, self-reviews" -> "Dispatch @spec-reviewer-sp with requirements and report";
+    "Dispatch @spec-reviewer-sp with requirements and report" -> "Spec reviewer confirms code matches spec?";
     "Spec reviewer confirms code matches spec?" -> "Implementer fixes spec gaps" [label="no"];
-    "Implementer fixes spec gaps" -> "Dispatch @sp-spec-reviewer with requirements and report" [label="re-review"];
-    "Spec reviewer confirms code matches spec?" -> "Dispatch @sp-code-reviewer with SHAs and description" [label="yes"];
-    "Dispatch @sp-code-reviewer with SHAs and description" -> "Code reviewer approves?";
+    "Implementer fixes spec gaps" -> "Dispatch @spec-reviewer-sp with requirements and report" [label="re-review"];
+    "Spec reviewer confirms code matches spec?" -> "Dispatch @code-reviewer-sp with SHAs and description" [label="yes"];
+    "Dispatch @code-reviewer-sp with SHAs and description" -> "Code reviewer approves?";
     "Code reviewer approves?" -> "Implementer fixes quality issues" [label="no"];
-    "Implementer fixes quality issues" -> "Dispatch @sp-code-reviewer with SHAs and description" [label="re-review"];
+    "Implementer fixes quality issues" -> "Dispatch @code-reviewer-sp with SHAs and description" [label="re-review"];
     "Code reviewer approves?" -> "Mark task complete in TodoWrite" [label="yes"];
     "Mark task complete in TodoWrite" -> "More tasks remain?";
-    "More tasks remain?" -> "Dispatch @sp-implementer with task text and context" [label="yes"];
-    "More tasks remain?" -> "Dispatch @sp-code-reviewer for entire implementation" [label="no"];
-    "Dispatch @sp-code-reviewer for entire implementation" -> "Use superpowers:finishing-a-development-branch";
+    "More tasks remain?" -> "Dispatch @implementer-sp with task text and context" [label="yes"];
+    "More tasks remain?" -> "Dispatch @code-reviewer-sp for entire implementation" [label="no"];
+    "Dispatch @code-reviewer-sp for entire implementation" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
 
@@ -88,13 +88,13 @@ When running in OpenCode, use the dedicated agents registered by the superpowers
 
 | Agent | Role | Default Model |
 |-------|------|---------------|
-| `@sp-implementer` | Writes code, tests, commits | sonnet |
-| `@sp-spec-reviewer` | Verifies implementation matches spec | sonnet |
-| `@sp-code-reviewer` | Deep code review | opus |
+| `@implementer-sp` | Writes code, tests, commits | sonnet |
+| `@spec-reviewer-sp` | Verifies implementation matches spec | sonnet |
+| `@code-reviewer-sp` | Deep code review | opus |
 
 Users can override agent models in their `opencode.json`:
 ```json
-{ "agent": { "sp-implementer": { "model": "anthropic/claude-haiku-4-5" } } }
+{ "agent": { "implementer-sp": { "model": "anthropic/claude-haiku-4-5" } } }
 ```
 
 ## Prompt Templates (Claude Code / Codex fallback)
@@ -116,7 +116,7 @@ You: I'm using Subagent-Driven Development to execute this plan.
 Task 1: Hook installation script
 
 [Get Task 1 text and context (already extracted)]
-[Dispatch @sp-implementer with full task text + context]
+[Dispatch @implementer-sp with full task text + context]
 
 Implementer: "Before I begin - should the hook be installed at user or system level?"
 
@@ -129,10 +129,10 @@ Implementer: "Got it. Implementing now..."
   - Self-review: Found I missed --force flag, added it
   - Committed
 
-[Dispatch @sp-spec-reviewer]
+[Dispatch @spec-reviewer-sp]
 Spec reviewer: ✅ Spec compliant - all requirements met, nothing extra
 
-[Get git SHAs, dispatch @sp-code-reviewer]
+[Get git SHAs, dispatch @code-reviewer-sp]
 Code reviewer: Strengths: Good test coverage, clean. Issues: None. Approved.
 
 [Mark Task 1 complete]
@@ -140,7 +140,7 @@ Code reviewer: Strengths: Good test coverage, clean. Issues: None. Approved.
 Task 2: Recovery modes
 
 [Get Task 2 text and context (already extracted)]
-[Dispatch @sp-implementer with full task text + context]
+[Dispatch @implementer-sp with full task text + context]
 
 Implementer: [No questions, proceeds]
 Implementer:
@@ -149,7 +149,7 @@ Implementer:
   - Self-review: All good
   - Committed
 
-[Dispatch @sp-spec-reviewer]
+[Dispatch @spec-reviewer-sp]
 Spec reviewer: ❌ Issues:
   - Missing: Progress reporting (spec says "report every 100 items")
   - Extra: Added --json flag (not requested)
@@ -160,7 +160,7 @@ Implementer: Removed --json flag, added progress reporting
 [Spec reviewer reviews again]
 Spec reviewer: ✅ Spec compliant now
 
-[Dispatch @sp-code-reviewer]
+[Dispatch @code-reviewer-sp]
 Code reviewer: Strengths: Solid. Issues (Important): Magic number (100)
 
 [Implementer fixes]
@@ -174,7 +174,7 @@ Code reviewer: ✅ Approved
 ...
 
 [After all tasks]
-[Dispatch @sp-code-reviewer for entire implementation]
+[Dispatch @code-reviewer-sp for entire implementation]
 Final reviewer: All requirements met, ready to merge
 
 Done!

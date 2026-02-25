@@ -60,7 +60,7 @@ const readFileOrNull = (filePath) => {
 // These are the system prompts that each agent receives.
 // The controller (orchestrator) still provides task-specific context via @mention.
 const AGENT_PROMPTS = {
-  'sp-implementer': `You are an implementation agent for the superpowers subagent-driven development workflow.
+  'implementer-sp': `You are an implementation agent for the superpowers subagent-driven development workflow.
 
 Your job is to implement a task from a plan. The controller will provide:
 - Full task description (from the plan)
@@ -102,7 +102,7 @@ When done, report:
 - Self-review findings (if any)
 - Any issues or concerns`,
 
-  'sp-spec-reviewer': `You are a spec compliance reviewer for the superpowers subagent-driven development workflow.
+  'spec-reviewer-sp': `You are a spec compliance reviewer for the superpowers subagent-driven development workflow.
 
 Your job is to verify that an implementation matches its specification — nothing more, nothing less.
 
@@ -135,7 +135,7 @@ Read the implementation code and verify:
 - ✅ Spec compliant (if everything matches after code inspection)
 - ❌ Issues found: [list specifically what's missing or extra, with file:line references]`,
 
-  'sp-code-reviewer': `You are a senior code reviewer for the superpowers subagent-driven development workflow.
+  'code-reviewer-sp': `You are a senior code reviewer for the superpowers subagent-driven development workflow.
 
 You review code changes for production readiness. Only dispatched after spec compliance passes.
 
@@ -184,21 +184,21 @@ The controller will provide:
 
 // Default agent configurations
 const AGENT_DEFAULTS = {
-  'sp-implementer': {
+  'implementer-sp': {
     description: 'Superpowers: implements tasks from plan following TDD. Writes code, tests, commits.',
     model: 'anthropic/claude-sonnet-4-6',
     mode: 'subagent',
     tools: { bash: true, read: true, write: true, edit: true, glob: true, grep: true, list: true, todoread: true, todowrite: true },
     permission: { edit: 'allow', bash: { '*': 'allow' } }
   },
-  'sp-spec-reviewer': {
+  'spec-reviewer-sp': {
     description: 'Superpowers: reviews implementation against spec. Verifies completeness, catches missing/extra work.',
     model: 'anthropic/claude-sonnet-4-6',
     mode: 'subagent',
     tools: { read: true, glob: true, grep: true, list: true, bash: true },
     permission: { bash: { '*': 'allow' } }
   },
-  'sp-code-reviewer': {
+  'code-reviewer-sp': {
     description: 'Superpowers: deep code review — architecture, quality, security, maintainability.',
     model: 'anthropic/claude-opus-4-6',
     mode: 'subagent',
