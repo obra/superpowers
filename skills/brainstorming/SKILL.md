@@ -85,6 +85,7 @@ digraph brainstorming {
 **Implementation:**
 - Invoke the writing-plans skill to create a detailed implementation plan
 - Do NOT invoke any other skill. writing-plans is the next step.
+- **Model routing (OpenCode):** The superpowers plugin registers dedicated agents (`@sp-implementer`, `@sp-spec-reviewer`, `@sp-code-reviewer`) with appropriate model tiers. Brainstorming and planning run on the current (typically stronger) model; implementation is automatically dispatched to cost-effective models via subagent-driven-development. No manual model switching needed.
 
 ## Key Principles
 
