@@ -6,9 +6,11 @@ Complete guide for using Superpowers with OpenClaw.
 
 ```bash
 git clone https://github.com/obra/superpowers.git ~/.openclaw/superpowers
+mkdir -p ~/.openclaw/skills
 for skill in ~/.openclaw/superpowers/skills/*/; do
   name=$(basename "$skill")
-  [ ! -e ~/.openclaw/skills/"$name" ] && ln -s "$skill" ~/.openclaw/skills/"$name"
+  [ ! -e ~/.openclaw/skills/"$name" ] && [ ! -L ~/.openclaw/skills/"$name" ] && \
+    ln -s "$skill" ~/.openclaw/skills/"$name"
 done
 openclaw gateway restart
 ```
@@ -27,8 +29,8 @@ The installation clones the superpowers repo and creates individual symlinks fro
 │       ├── test-driven-development/SKILL.md
 │       └── ...
 ├── skills/                         # Managed skills directory
-│   ├── brainstorming -> ../superpowers/skills/brainstorming/
-│   ├── test-driven-development -> ../superpowers/skills/test-driven-development/
+│   ├── brainstorming -> ~/.openclaw/superpowers/skills/brainstorming/
+│   ├── test-driven-development -> ~/.openclaw/superpowers/skills/test-driven-development/
 │   └── ...
 └── openclaw.json
 ```
@@ -55,7 +57,7 @@ openclaw skills check          # Check readiness
 
 ## Filtering Skills Per Agent
 
-By default, all agents see all installed skills. To restrict skills per agent:
+By default, all agents see all installed skills. To restrict skills per agent, edit `~/.openclaw/openclaw.json`:
 
 ```json
 {

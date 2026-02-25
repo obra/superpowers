@@ -16,9 +16,11 @@ Enable superpowers skills in OpenClaw via native skill discovery. Clone, symlink
 
 2. **Create skill symlinks:**
    ```bash
+   mkdir -p ~/.openclaw/skills
    for skill in ~/.openclaw/superpowers/skills/*/; do
      name=$(basename "$skill")
-     [ ! -e ~/.openclaw/skills/"$name" ] && ln -s "$skill" ~/.openclaw/skills/"$name"
+     [ ! -e ~/.openclaw/skills/"$name" ] && [ ! -L ~/.openclaw/skills/"$name" ] && \
+       ln -s "$skill" ~/.openclaw/skills/"$name"
    done
    ```
 
@@ -49,7 +51,7 @@ Skills update instantly through symlinks. New skills from upstream require re-ru
 
 ```bash
 for link in ~/.openclaw/skills/*; do
-  [ -L "$link" ] && readlink "$link" | grep -q "superpowers" && rm "$link"
+  [ -L "$link" ] && readlink "$link" | grep -q ".openclaw/superpowers" && rm "$link"
 done
 ```
 

@@ -77,9 +77,11 @@ Run in your terminal:
 
 ```bash
 git clone https://github.com/obra/superpowers.git ~/.openclaw/superpowers
+mkdir -p ~/.openclaw/skills
 for skill in ~/.openclaw/superpowers/skills/*/; do
   name=$(basename "$skill")
-  [ ! -e ~/.openclaw/skills/"$name" ] && ln -s "$skill" ~/.openclaw/skills/"$name"
+  [ ! -e ~/.openclaw/skills/"$name" ] && [ ! -L ~/.openclaw/skills/"$name" ] && \
+    ln -s "$skill" ~/.openclaw/skills/"$name"
 done
 openclaw gateway restart
 ```
@@ -160,6 +162,12 @@ Skills update automatically when you update the plugin:
 
 ```bash
 /plugin update superpowers
+```
+
+For manual installations (Codex, OpenCode, OpenClaw), pull the latest changes:
+
+```bash
+cd ~/.openclaw/superpowers && git pull   # OpenClaw
 ```
 
 ## License
