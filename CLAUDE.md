@@ -1,9 +1,9 @@
-<!-- pipeline:v3 -->
-# Superpowers — SDLC Orchestration Fork (Pipeline v3)
+<!-- pipeline:v3.1 -->
+# Superpowers — SDLC Orchestration Fork (Pipeline v3.1)
 
 ## SDLC Orchestration Extension
 
-This fork adds a Pipeline v3 SDLC orchestration system on top of Superpowers. v3 moves from 6 sequential phases (v2.1) to parallel iteration teams within token-budgeted timeboxes. All department teams run concurrently within each iteration. Integration Points fire when work is done OR when the timebox expires — whichever comes first.
+This fork adds a Pipeline v3.1 SDLC orchestration system on top of Superpowers. v3.1 builds on v3's parallel iteration teams within token-budgeted timeboxes, adding structured intent capture, human engagement at Integration Points, format-aware output via Agentic Output Architecture (AOA), and PI continuation across sessions. All department teams run concurrently within each iteration. Integration Points fire when work is done OR when the timebox expires — whichever comes first.
 
 **Canonical architecture reference**: `docs/pm/references/pipeline-v3-architecture.md`
 
@@ -126,10 +126,15 @@ Step C2 — Cross-Pollinate: All Leads read other briefs, write responses in par
            → docs/sync/iteration-{N}/responses/<dept>-response.md
            [Skip if < 3 Leads have material findings]
 
-Step C3 — Founder Resolves: reads all briefs + responses, writes resolution
+Step C3 — Founder Resolves: reads all briefs + responses + intent.md, writes resolution
            → docs/sync/iteration-{N}/resolution.md
 
-Step C4 — Execute: next iteration begins with resolution in context
+Step C3.5 — Human Engagement (v3.1, interactive only): Orchestrator scores findings
+             against intent, presents 3-5 targeted questions, captures feedback
+             → docs/pm/ip-feedback/iteration-{N}-human-feedback.md
+             [Skipped in --auto mode]
+
+Step C4 — Execute: next iteration begins with resolution + C3.5 feedback in context
 ```
 
 Resolution files are injected by `pipeline-pre-dispatch.sh` into every subsequent task context. Leads do not need to re-read them manually — the hook handles context injection.
@@ -187,7 +192,7 @@ Dependencies are declared in `constants.iterations.{N}.dependencies` per team. T
 
 | Skill | Purpose |
 |-------|---------|
-| `orchestration` | v3 pipeline management: iteration dispatch, Integration Point facilitation, token budget tracking, pod brief, feedback loops, SAFe backlog management, memory search |
+| `orchestration` | v3.1 pipeline management: iteration dispatch, Integration Point facilitation, token budget tracking, pod brief, feedback loops, SAFe backlog management, memory search, intent capture, AOA output |
 | `pm-discovery` | Product Lead-led discovery with researcher dispatch (parallel within Iteration 1) |
 | `judgment-gates` | Severity gates + Integration Point sync gates + rework gates |
 | `context-management` | Context scoping: pod brief (≤3K tokens), sync resolutions, consumed artifacts, token budget |
@@ -197,6 +202,8 @@ Dependencies are declared in `constants.iterations.{N}.dependencies` per team. T
 | `browser-testing` | SDLC context for Iteration 3 browser-test work; uses agent-browser plugin |
 | `scaffolding` | Project type templates and generation engine |
 | `knowledge-compounding` | Cross-project memory: extract learnings/patterns/heuristics at IP Iteration end, search memory at PI Planning |
+| `intent-engineering` | Structured intent capture for autonomous AI sessions: goals, anti-goals, judgment boundaries, success criteria, consumer profile |
+| `agentic-output-architecture` | Format-aware output delivery: matches consumer profile to optimal artifact format (Markdown, HTML, JSON, etc.) |
 
 ---
 
@@ -277,7 +284,7 @@ Late-iteration findings can send work back to earlier iterations:
 
 | File | Purpose |
 |------|---------|
-| `pipeline-v3-template.json` | v3 pipeline config (constants + state, token budgets, iterations, active_teams, key_outputs) |
+| `pipeline-v3-template.json` | v3.1 pipeline config (constants + state, token budgets, iterations, active_teams, key_outputs, intent, ip_feedback) |
 | `backlog-template.md` | SAFe backlog template (Epic → Capability → Feature → Story hierarchy) |
 | `pod-brief-template.md` | Pod brief initialization template |
 | `product-standards.md` | Product dept non-negotiables |
@@ -288,6 +295,8 @@ Late-iteration findings can send work back to earlier iterations:
 | `sync-brief-template.md` | Lead sync brief format |
 | `sync-response-template.md` | Lead cross-pollination response format |
 | `integration-point-protocol.md` | Integration Point sync protocol reference |
+| `intent-template.md` | Template for `docs/pm/intent.md` — structured intent capture with consumer profile |
+| `ip-feedback-template.md` | Template for human feedback capture at C3.5 engagement gates |
 
 ---
 
@@ -423,14 +432,14 @@ When enabled, the Orchestrator syncs Integration Point resolutions to OpenProjec
 Every file with pipeline-specific instructions is tagged:
 
 ```
-<!-- pipeline:v3 -->
+<!-- pipeline:v3.1 -->
 ...pipeline-specific content...
-<!-- /pipeline:v3 -->
+<!-- /pipeline:v3.1 -->
 ```
 
-Search for all v3-aware files:
+Search for all v3.1-aware files:
 ```bash
-grep -r "pipeline:v3" ~/.claude/
+grep -r "pipeline:v3.1" ~/.claude/
 ```
 
 Canonical reference for the full v3 architecture specification:
@@ -442,19 +451,44 @@ Prior versions archived at:
 
 ---
 
-## v2.1 → v3 Comparison
+## v2.1 → v3 → v3.1 Comparison
 
-| Aspect | v2.1 (sequential phases) | v3 (parallel iterations) |
-|--------|--------------------------|--------------------------|
-| Execution | 6 sequential phases | 3 iterations + IP Iteration; all teams parallel within each |
-| Timebox | No | Token budget per team per iteration |
-| Coordination | Converge-diverge protocol at phase end | Hook-automated state + Integration Points |
-| State management | `pipeline.yaml` + `.pipeline-state.json` | Single `pipeline.json` (constants + state) |
-| Dependency tracking | Phase produces/consumes lists | `key_outputs` in `pipeline.json`, injected by hooks |
-| OpenProject | Optional but on-by-default | Disabled by default; opt-in via `pipeline.json` |
-| Idle time | Teams wait for sequential phases to complete | Teams run concurrently; no idle between phases |
-| Hook automation | None | 6 hooks handle state, budget, unblocking, guard |
-| Integration Point trigger | Manual phase gate | Dual-trigger: artifacts exist OR budgets exhausted |
+| Aspect | v2.1 (sequential) | v3 (parallel) | v3.1 (parallel + intent) |
+|--------|--------------------|----------------|--------------------------|
+| Execution | 6 sequential phases | 3 iterations + IP; parallel teams | Same as v3 |
+| Timebox | No | Token budget per team | Same as v3 |
+| Coordination | Converge-diverge at phase end | Hook-automated + Integration Points | Same + C3.5 human engagement |
+| State management | `pipeline.yaml` + `.pipeline-state.json` | Single `pipeline.json` | Same + intent + ip_feedback fields |
+| Intent capture | None | None | Structured `docs/pm/intent.md` at PI start |
+| Human engagement | Phase gates only | Integration Points only | IP + C3.5 scored questions at each IP |
+| Output format | Markdown only | Markdown only | AOA format selection from consumer profile |
+| PI continuation | N/A | N/A | Archive + carry-forward across PIs |
+| Dependency tracking | Phase produces/consumes | `key_outputs` via hooks | Same + judgment boundaries + intent |
+| Hook automation | None | 6 hooks | Same 6 hooks (enhanced with intent injection) |
+
+---
+
+## v3.1 Additions
+
+### Intent Engineering
+
+Structured intent capture at PI start via `docs/pm/intent.md`. Contains goals, anti-goals (minimum 2), judgment boundaries, success criteria, and a consumer profile for AOA format selection. Intent persists across sessions and is injected into every task dispatch via the `pipeline-pre-dispatch.sh` hook (judgment boundaries) and Orchestrator-constructed context (agent-to-agent intent protocol).
+
+Auto mode (`--auto`) requires project-level intent with enforced minimums before the pipeline proceeds (Step 0-A gate).
+
+### Human Engagement (C3.5)
+
+At each Integration Point (interactive mode only), the Orchestrator scores Founder resolution findings against `intent.md` success criteria and anti-goals, then presents 3-5 targeted questions. Responses are written to `docs/pm/ip-feedback/iteration-{N}-human-feedback.md` and included in the next iteration's dispatch context via context-management Layer 5.5.
+
+### Agentic Output Architecture (AOA)
+
+DOA summaries at Integration Points are curated (findings scored against intent: "What You Need to Know" vs. "Full Details") and formatted via AOA based on the consumer profile in `intent.md`. Three consumer slots drive format selection: `consumer_type`, `consumption_environment`, `preferred_affordance`. Falls back to Markdown if AOA skill is unavailable or consumer profile is not captured.
+
+Applies to: IP summaries (`docs/pm/doa/ip-{N}-summary.{ext}`), PI complete summary, PI artifact package.
+
+### PI Continuation
+
+When a completed PI is detected, the Orchestrator offers to continue to PI-002 (or start fresh). Continuation archives current PI artifacts to `docs/pm/archive/PI-{NNN}/`, preserves `intent.md`, learnings, decisions, and pod brief, then resets `pipeline.json` for the next PI with `constants.intent` carried forward. Tier and bias are re-evaluated at intake.
 
 ---
 
@@ -464,4 +498,5 @@ Prior versions archived at:
 - CatHabits MVP v2: 289 tests, 91.66% coverage, 16 decision records, 5 syncs — v2.1 pipeline run (2026-02-20)
 - v2.1 OpenProject integration: Docker live, CLI verified, SAFe types + custom fields configured, full 6-event sync validated (2026-02-22)
 - v3: Pending — Sudoku MVP test run (parallel iteration validation, token budget enforcement, dual-trigger Integration Points)
-<!-- /pipeline:v3 -->
+- v3.1: Pending — intent capture, C3.5 engagement, AOA format selection, PI continuation validation
+<!-- /pipeline:v3.1 -->
