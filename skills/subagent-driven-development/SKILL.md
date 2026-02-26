@@ -58,7 +58,7 @@ digraph process {
 
     "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
     "More tasks remain?" [shape=diamond];
-    "Dispatch final code reviewer subagent for entire implementation" [shape=box];
+    "Use superpowers:implementation-review for fresh-eyes review of entire feature" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -77,8 +77,8 @@ digraph process {
     "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
     "Mark task complete in TodoWrite" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
-    "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
-    "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
+    "More tasks remain?" -> "Use superpowers:implementation-review for fresh-eyes review of entire feature" [label="no"];
+    "Use superpowers:implementation-review for fresh-eyes review of entire feature" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
 
@@ -158,9 +158,15 @@ Code reviewer: ✅ Approved
 ...
 
 [After all tasks]
-[Dispatch final code-reviewer]
-Final reviewer: All requirements met, ready to merge
+[Use superpowers:implementation-review — fresh-eyes review of entire feature]
+Implementation reviewer: Found 2 cross-task issues:
+  - Duplicated constant in fetcher.ts and cache.ts
+  - Error message in cli.ts doesn't explain what went wrong
 
+[Fix cross-task issues, re-run implementation review]
+Implementation reviewer: No cross-task issues remaining
+
+[Use superpowers:finishing-a-development-branch]
 Done!
 ```
 
@@ -233,6 +239,7 @@ Done!
 - **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
 - **superpowers:writing-plans** - Creates the plan this skill executes
 - **superpowers:requesting-code-review** - Code review template for reviewer subagents
+- **superpowers:implementation-review** - Fresh-eyes review of entire feature after all tasks
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
 
 **Subagents should use:**

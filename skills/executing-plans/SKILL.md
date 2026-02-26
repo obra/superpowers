@@ -42,9 +42,16 @@ Based on feedback:
 - Execute next batch
 - Repeat until complete
 
-### Step 5: Complete Development
+### Step 5: Implementation Review
 
 After all tasks complete and verified:
+- **REQUIRED SUB-SKILL:** Use superpowers:implementation-review
+- Fresh-eyes review of entire feature (base-branch..HEAD, not just final batch)
+- Fix any cross-task issues found, re-run until clean
+
+### Step 6: Complete Development
+
+After implementation review passes:
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
 - **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
 - Follow that skill to verify tests, present options, execute choice
@@ -81,4 +88,5 @@ After all tasks complete and verified:
 **Required workflow skills:**
 - **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
 - **superpowers:writing-plans** - Creates the plan this skill executes
+- **superpowers:implementation-review** - Fresh-eyes review of entire feature after all batches
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
