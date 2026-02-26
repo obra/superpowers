@@ -47,15 +47,6 @@ const normalizePath = (p, homeDir) => {
   return path.resolve(normalized);
 };
 
-// Read a file and return its content, or null if not found
-const readFileOrNull = (filePath) => {
-  try {
-    return fs.readFileSync(filePath, 'utf8');
-  } catch {
-    return null;
-  }
-};
-
 // Agent prompt definitions for subagent-driven development workflow.
 // These are the system prompts that each agent receives.
 // The controller (orchestrator) still provides task-specific context via @mention.
@@ -259,12 +250,12 @@ ${toolMapping}
       const agents = config.agent || {};
 
       for (const [name, defaults] of Object.entries(AGENT_DEFAULTS)) {
-        if (!agents[name]) {
-          agents[name] = {
-            ...defaults,
-            prompt: AGENT_PROMPTS[name]
-          };
-        }
+        // Shallow-merge: plugin defaults first, then user overrides win
+        agents[name] = {
+          ...defaults,
+          prompt: AGENT_PROMPTS[name],
+          ...(agents[name] || {})
+        };
       }
 
       config.agent = agents;
