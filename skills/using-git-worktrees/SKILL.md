@@ -17,6 +17,33 @@ Git worktrees create isolated workspaces sharing the same repository, allowing w
 
 Follow this priority order:
 
+### 0. Check for gtr (git-worktree-runner)
+
+```bash
+test -f .gtrconfig && command -v git-gtr >/dev/null 2>&1
+```
+
+**If `.gtrconfig` exists AND `git gtr` is installed:** This project uses [git-worktree-runner](https://github.com/coderabbitai/git-worktree-runner).
+Delegate ALL worktree operations to `git gtr` and **skip all manual steps below** (Steps 1–3).
+**`.gtrconfig` takes absolute precedence** over `.worktrees/` or `worktrees/` directories — even if they exist.
+
+- **Create:** `git gtr new <BRANCH_NAME> --yes`
+- **Location:** gtr places worktrees at `<repo-root>-worktrees/<branch>` automatically (outside the repo root)
+- **Setup:** gtr runs `[hooks] postCreate` commands from `.gtrconfig` (dependency install, file copy, etc.)
+  - If `.gtrconfig` has **no** `postCreate` hooks, fall back to Step 3 (Run Project Setup) for dependency installation
+- **Baseline tests:** Still run tests after gtr completes to verify clean state
+- **Report (suggest to user, do NOT execute):** `git gtr editor <branch>` to open in editor, or `git gtr ai <branch>` to start a new AI session in the worktree
+
+**Error handling:** If `git gtr new` fails (parse error, config issue, etc.):
+1. Report the error output to the user
+2. Ask whether to (a) fix `.gtrconfig` and retry, or (b) fall back to manual worktree creation (continue from Step 1)
+
+**If `.gtrconfig` exists but `git gtr` is NOT installed:**
+- Warn: ".gtrconfig found but git-gtr is not installed. Install from https://github.com/coderabbitai/git-worktree-runner"
+- Ask user: install gtr, or proceed with manual worktree creation (Steps 1–3)?
+
+**Skip to:** "Verify Clean Baseline" (Step 4) after successful `git gtr new` — unless postCreate hooks are absent (then do Step 3 first).
+
 ### 1. Check Existing Directories
 
 ```bash
@@ -26,6 +53,8 @@ ls -d worktrees 2>/dev/null      # Alternative
 ```
 
 **If found:** Use that directory. If both exist, `.worktrees` wins.
+
+> **Note:** If Step 0 matched (`.gtrconfig` detected with `git gtr` available), skip this step entirely. `.gtrconfig` always takes precedence over `.worktrees/` or `worktrees/`.
 
 ### 2. Check CLAUDE.md
 
@@ -49,6 +78,8 @@ Which would you prefer?
 ```
 
 ## Safety Verification
+
+> **Note:** If using gtr (Step 0), this section does not apply — gtr places worktrees outside the repository root at `<repo-root>-worktrees/`, so `.gitignore` verification is unnecessary.
 
 ### For Project-Local Directories (.worktrees or worktrees)
 
@@ -145,6 +176,8 @@ Ready to implement <feature-name>
 
 | Situation | Action |
 |-----------|--------|
+| `.gtrconfig` + `git gtr` installed | Use `git gtr new --yes` (skip Steps 1–3, gtr takes precedence) |
+| `.gtrconfig` but no `git gtr` | Warn user, offer install or manual fallback |
 | `.worktrees/` exists | Use it (verify ignored) |
 | `worktrees/` exists | Use it (verify ignored) |
 | Both exist | Use `.worktrees/` |
@@ -175,11 +208,42 @@ Ready to implement <feature-name>
 - **Problem:** Breaks on projects using different tools
 - **Fix:** Auto-detect from project files (package.json, etc.)
 
+### Ignoring .gtrconfig
+
+- **Problem:** Manual worktree creation overrides project's gtr conventions, creates worktree at wrong path
+- **Fix:** Always check for `.gtrconfig` first; if present and `git gtr` is installed, use `git gtr new --yes`
+
+### Running git gtr ai in current session
+
+- **Problem:** Spawns a nested AI instance inside the existing Claude session
+- **Fix:** Only SUGGEST `git gtr ai <branch>` to the user; never execute it yourself
+
 ## Example Workflow
+
+### gtr Project (.gtrconfig present)
 
 ```
 You: I'm using the using-git-worktrees skill to set up an isolated workspace.
 
+[Check .gtrconfig - exists]
+[Check git gtr installed - confirmed]
+[Run: git gtr new feature/auth --yes]
+[gtr copies .env.example, remotion/public/jingle, remotion/public/bg, .claude/hooks]
+[gtr runs postCreate hooks: pnpm install --frozen-lockfile, cp .env.example .env, copy-claude-memory.sh]
+[Run tests - 47 passing]
+
+Worktree ready at /home/user/myproject-worktrees/feature-auth
+Tests passing (47 tests, 0 failures)
+Ready to implement auth feature
+Suggest to user: git gtr editor feature/auth or git gtr ai feature/auth
+```
+
+### Manual Project (no .gtrconfig)
+
+```
+You: I'm using the using-git-worktrees skill to set up an isolated workspace.
+
+[Check .gtrconfig - not found]
 [Check .worktrees/ - exists]
 [Verify ignored - git check-ignore confirms .worktrees/ is ignored]
 [Create worktree: git worktree add .worktrees/auth -b feature/auth]
@@ -199,12 +263,16 @@ Ready to implement auth feature
 - Proceed with failing tests without asking
 - Assume directory location when ambiguous
 - Skip CLAUDE.md check
+- Use manual `git worktree add` when `.gtrconfig` exists and `git gtr` is available
+- Run `git gtr ai` or `git gtr editor` yourself (suggest to user only)
 
 **Always:**
 - Follow directory priority: existing > CLAUDE.md > ask
 - Verify directory is ignored for project-local
 - Auto-detect and run project setup
 - Verify clean test baseline
+- Check for `.gtrconfig` before any manual worktree operation
+- Use `--yes` flag with `git gtr new` to avoid interactive prompts
 
 ## Integration
 
@@ -216,3 +284,7 @@ Ready to implement auth feature
 
 **Pairs with:**
 - **finishing-a-development-branch** - REQUIRED for cleanup after work complete
+
+**gtr path note:** When gtr is used, the worktree path is determined by gtr output (typically `<repo-root>-worktrees/<branch>`), not `.worktrees/<branch>`. Calling skills must use the reported path, not assume a fixed location.
+
+**Follow-up needed:** `finishing-a-development-branch` (Step 5) currently uses `git worktree remove <path>` for cleanup. For gtr-created worktrees, `git gtr rm <branch>` should be used instead to properly run `preRemove` hooks and clean up gtr-managed resources. A separate update to that skill is required.
