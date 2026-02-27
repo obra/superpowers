@@ -52,24 +52,45 @@ class TestParseSkillFile:
         assert skill.is_command is False
 
     def test_multiline_description_not_truncated(self, tmp_path: Path) -> None:
-        """A description with embedded newlines (via re.DOTALL) is fully captured.
+        """A long single-line description with special chars is fully captured.
 
-        This test specifically verifies the re.DOTALL fix: without it, only the
-        first line of a multi-line description would be captured.
+        Verifies that _FRONTMATTER_RE (with re.DOTALL) captures the full
+        frontmatter block even when descriptions contain long values with
+        brackets, hyphens, and other special characters.
         """
-        # Simulate a SKILL.md where description value has special characters
         content = (
             '---\n'
             'name: test-skill\n'
-            'description: "You MUST use this before any creative work - '
-            'creating features, building components, adding functionality, '
+            'description: "You MUST use this before creating features, '
+            'building components, adding functionality, '
             'or modifying behavior. Explores user intent."\n'
             '---\n\n# Body\n'
         )
         skill = parse_skill_file(content, tmp_path / "SKILL.md")
-        # Must not be truncated at any intermediate character
         assert "Explores user intent." in skill.description
         assert "building components" in skill.description
+
+    def test_description_spanning_frontmatter_block(self, tmp_path: Path) -> None:
+        """re.DOTALL on _FRONTMATTER_RE captures the full block across newlines.
+
+        Note: _KEY_VALUE_RE is single-line only (re.MULTILINE, not re.DOTALL).
+        A description with an actual embedded newline inside the quotes would be
+        truncated to the first line — this is a documented constraint. What
+        re.DOTALL *does* protect against is a multi-line frontmatter block being
+        cut short by the outer regex. This test verifies that.
+        """
+        # Two-field frontmatter — re.DOTALL ensures the entire block
+        # (spanning multiple lines) is captured before the closing ---
+        content = (
+            '---\n'
+            'name: my-skill\n'
+            'description: "A description on line two of the block"\n'
+            '---\n\n# Body here\n'
+        )
+        skill = parse_skill_file(content, tmp_path / "SKILL.md")
+        assert skill.name == "my-skill"
+        assert "A description on line two" in skill.description
+        assert skill.body == "# Body here"
 
     def test_description_with_brackets_and_colons(self, tmp_path: Path) -> None:
         """Description fields containing brackets and colons are preserved."""

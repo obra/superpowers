@@ -153,17 +153,17 @@ class TestWriteCommandToml:
 
 class TestWriteManifest:
     def test_creates_json_file(self, tmp_path: Path) -> None:
-        out = write_manifest([], tmp_path)
+        out = write_manifest(tmp_path)
         assert out.name == "gemini-extension.json"
         assert out.exists()
 
     def test_valid_json(self, tmp_path: Path) -> None:
-        out = write_manifest([], tmp_path)
+        out = write_manifest(tmp_path)
         data = json.loads(out.read_text(encoding="utf-8"))
         assert isinstance(data, dict)
 
     def test_required_fields_present(self, tmp_path: Path) -> None:
-        out = write_manifest([], tmp_path)
+        out = write_manifest(tmp_path)
         data = json.loads(out.read_text(encoding="utf-8"))
         assert "name" in data
         assert "version" in data
@@ -171,12 +171,12 @@ class TestWriteManifest:
         assert "contextFileName" in data
 
     def test_context_file_name_is_gemini_md(self, tmp_path: Path) -> None:
-        out = write_manifest([], tmp_path)
+        out = write_manifest(tmp_path)
         data = json.loads(out.read_text(encoding="utf-8"))
         assert data["contextFileName"] == "GEMINI.md"
 
     def test_name_is_lowercase_hyphenated(self, tmp_path: Path) -> None:
-        out = write_manifest([], tmp_path)
+        out = write_manifest(tmp_path)
         data = json.loads(out.read_text(encoding="utf-8"))
         name = data["name"]
         assert name == name.lower()

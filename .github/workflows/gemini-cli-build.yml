@@ -31,7 +31,7 @@ jobs:
 
       - name: Run Gemini Builder pipeline
         run: |
-          python -m scripts.gemini-builder.mapper \
+          python scripts/gemini-builder/mapper.py \
             --skills-dir ./skills \
             --commands-dir ./commands \
             --output-dir ./dist

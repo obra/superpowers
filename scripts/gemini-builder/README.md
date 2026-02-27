@@ -8,7 +8,7 @@ A build pipeline that compiles the `obra/superpowers` skills into a
 Reads every `SKILL.md` file in `skills/` and produces a ready-to-install
 Gemini CLI extension directory:
 
-```
+```text
 dist/
 ├── gemini-extension.json   ← Extension manifest
 ├── GEMINI.md               ← Global context (loaded every session)

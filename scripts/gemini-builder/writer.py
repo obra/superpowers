@@ -226,12 +226,11 @@ def write_command_toml(skill: Skill, commands_dir: Path) -> Path:
     return output_path
 
 
-def write_manifest(skills: list[Skill], out_dir: Path) -> Path:
+def write_manifest(out_dir: Path) -> Path:
     """
     Writes ``gemini-extension.json`` registering the extension with the Gemini CLI.
 
     Args:
-        skills:  Full list of parsed skills (used to count commands in logging).
         out_dir: Output directory (must already exist).
 
     Returns:

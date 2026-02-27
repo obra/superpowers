@@ -146,7 +146,7 @@ def run(
         toml_path = write_command_toml(skill, commands_out_dir)
         logger.info("  Wrote commands/%s (%d bytes)", toml_path.name, toml_path.stat().st_size)
 
-    manifest_path = write_manifest(skills, output_dir)
+    manifest_path = write_manifest(output_dir)
     logger.info("  Wrote %s", manifest_path.name)
 
     logger.info("Done. Output directory: %s", output_dir.resolve())

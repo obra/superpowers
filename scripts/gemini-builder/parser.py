@@ -64,10 +64,13 @@ class Skill:
 # contain brackets, colons, and other special characters.
 _FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n?(.*)", re.DOTALL)
 
-# Matches a frontmatter key: supports both bare and quoted values.
+# Matches a frontmatter key-value pair — single-line values only.
 #   name: brainstorming
-#   description: "You MUST use this before..."
-# Multi-line quoted strings are handled by the DOTALL-inclusive outer match.
+#   description: "You MUST use this..."
+# Note: multi-line quoted values (with an actual embedded newline) are NOT
+# supported here. re.MULTILINE makes ^ and $ match line boundaries, but
+# value capture stops at end-of-line. All current SKILL.md descriptions
+# are single-line, so this is a deliberate, documented constraint.
 _KEY_VALUE_RE = re.compile(
     r'^(?P<key>[a-zA-Z_][a-zA-Z0-9_-]*)\s*:\s*(?P<value>.+?)$',
     re.MULTILINE,
