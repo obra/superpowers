@@ -25,7 +25,7 @@ If you haven't checked every category below against the diff, you cannot claim c
 
 **Always before:**
 - Merging to main/production branch
-- Creating pull requests
+- Marking pull requests as merge-ready (or requesting final approval)
 - Claiming implementation is complete
 
 **Especially when:**
