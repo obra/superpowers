@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -e
+
+REPO="$(git rev-parse --show-toplevel)"
+BUN="${BUN_PATH:-bun}"
+
+# Try to find bun if not on PATH
+if ! command -v "$BUN" &>/dev/null; then
+  for candidate in "$HOME/.bun/bin/bun" "/usr/local/bin/bun"; do
+    if [ -x "$candidate" ]; then
+      BUN="$candidate"
+      break
+    fi
+  done
+fi
+
+echo "[pre-push] Running backend tests..."
+(cd "$REPO/crew/backend" && "$BUN" test)
+
+echo "[pre-push] Checking app-core types..."
+(cd "$REPO/crew/frontend/packages/app-core" && pnpm check)
+
+echo "[pre-push] Checking local-web types..."
+(cd "$REPO/crew/frontend/packages/local-web" && pnpm check)
+
+echo "[pre-push] All checks passed."
