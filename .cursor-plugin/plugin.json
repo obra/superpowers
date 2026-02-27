@@ -4,11 +4,11 @@
   "description": "Core skills library: TDD, debugging, collaboration patterns, and proven techniques",
   "version": "4.3.1",
   "author": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com"
+    "name": "Steins Z",
+    "email": "steins.z@outlook.com"
   },
-  "homepage": "https://github.com/obra/superpowers",
-  "repository": "https://github.com/obra/superpowers",
+  "homepage": "https://github.com/steins024/superpowers",
+  "repository": "https://github.com/steins024/superpowers",
   "license": "MIT",
   "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows"],
   "skills": "./skills/",

@@ -7,7 +7,7 @@ Complete guide for using Superpowers with [OpenCode.ai](https://opencode.ai).
 Tell OpenCode:
 
 ```
-Clone https://github.com/obra/superpowers to ~/.config/opencode/superpowers, then create directory ~/.config/opencode/plugins, then symlink ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js to ~/.config/opencode/plugins/superpowers.js, then symlink ~/.config/opencode/superpowers/skills to ~/.config/opencode/skills/superpowers, then restart opencode.
+Clone https://github.com/steins024/superpowers to ~/.config/opencode/superpowers, then create directory ~/.config/opencode/plugins, then symlink ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js to ~/.config/opencode/plugins/superpowers.js, then symlink ~/.config/opencode/superpowers/skills to ~/.config/opencode/skills/superpowers, then restart opencode.
 ```
 
 ## Manual Installation
@@ -24,7 +24,7 @@ Clone https://github.com/obra/superpowers to ~/.config/opencode/superpowers, the
 if [ -d ~/.config/opencode/superpowers ]; then
   cd ~/.config/opencode/superpowers && git pull
 else
-  git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
+  git clone https://github.com/steins024/superpowers.git ~/.config/opencode/superpowers
 fi
 
 # 2. Create directories
@@ -66,7 +66,7 @@ Run as Administrator, or with Developer Mode enabled:
 
 ```cmd
 :: 1. Install Superpowers
-git clone https://github.com/obra/superpowers.git "%USERPROFILE%\.config\opencode\superpowers"
+git clone https://github.com/steins024/superpowers.git "%USERPROFILE%\.config\opencode\superpowers"
 
 :: 2. Create directories
 mkdir "%USERPROFILE%\.config\opencode\plugins" 2>nul
@@ -91,7 +91,7 @@ Run as Administrator, or with Developer Mode enabled:
 
 ```powershell
 # 1. Install Superpowers
-git clone https://github.com/obra/superpowers.git "$env:USERPROFILE\.config\opencode\superpowers"
+git clone https://github.com/steins024/superpowers.git "$env:USERPROFILE\.config\opencode\superpowers"
 
 # 2. Create directories
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.config\opencode\plugins"
@@ -116,7 +116,7 @@ Note: Git Bash's native `ln` command copies files instead of creating symlinks. 
 
 ```bash
 # 1. Install Superpowers
-git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
+git clone https://github.com/steins024/superpowers.git ~/.config/opencode/superpowers
 
 # 2. Create directories
 mkdir -p ~/.config/opencode/plugins ~/.config/opencode/skills
@@ -308,8 +308,8 @@ If you see `Cannot find module` errors on Windows:
 
 ## Getting Help
 
-- Report issues: https://github.com/obra/superpowers/issues
-- Main documentation: https://github.com/obra/superpowers
+- Report issues: https://github.com/steins024/superpowers/issues
+- Main documentation: https://github.com/steins024/superpowers
 - OpenCode docs: https://opencode.ai/docs/
 
 ## Testing
