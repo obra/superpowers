@@ -10,7 +10,7 @@
 ### 1. Clone Superpowers
 
 ```bash
-git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
+git clone https://github.com/steins024/superpowers.git ~/.config/opencode/superpowers
 ```
 
 ### 2. Register the Plugin
@@ -115,5 +115,5 @@ When skills reference Claude Code tools:
 
 ## Getting Help
 
-- Report issues: https://github.com/obra/superpowers/issues
-- Full documentation: https://github.com/obra/superpowers/blob/main/docs/README.opencode.md
+- Report issues: https://github.com/steins024/superpowers/issues
+- Full documentation: https://github.com/steins024/superpowers/blob/main/docs/README.opencode.md
