@@ -1,0 +1,588 @@
+{
+  "settings": {
+    "common": {
+      "unsavedChanges": "• Tienes cambios sin guardar",
+      "discardChangesConfirm": "Discard unsaved changes?"
+    },
+    "unsavedChanges": {
+      "title": "Cambios sin guardar",
+      "message": "Tienes cambios sin guardar. ¿Estás seguro de que deseas cerrar sin guardar?",
+      "discard": "Descartar cambios",
+      "cancel": "Seguir editando"
+    },
+    "layout": {
+      "nav": {
+        "title": "Configuración",
+        "general": "General",
+        "generalDesc": "Tema, notificaciones y preferencias",
+        "projects": "Proyectos",
+        "projectsDesc": "Repositorios de proyectos y configuración",
+        "repos": "Repositorios",
+        "reposDesc": "Scripts y configuración de repositorios",
+        "agents": "Agentes",
+        "agentsDesc": "Configuraciones de agentes",
+        "mcp": "Servidores MCP",
+        "mcpDesc": "Servidores de Protocolo de Contexto de Modelo (MCP)",
+        "organizations": "Organization Settings",
+        "organizationsDesc": "Manage organization members and permissions",
+        "remote-projects": "Proyectos",
+        "remote-projectsDesc": "Gestionar proyectos",
+        "relay": "Remote Access",
+        "relayDesc": "Relay tunnel and enrollment"
+      }
+    },
+    "general": {
+      "loading": "Cargando configuración...",
+      "loadError": "Error al cargar la configuración.",
+      "save": {
+        "button": "Guardar Configuración",
+        "success": "✓ ¡Configuración guardada!",
+        "error": "Error al guardar la configuración",
+        "unsavedChanges": "• Tienes cambios sin guardar",
+        "discard": "Descartar"
+      },
+      "appearance": {
+        "title": "Apariencia",
+        "description": "Personaliza cómo se ve la aplicación.",
+        "theme": {
+          "label": "Tema",
+          "placeholder": "Seleccionar tema",
+          "helper": "Elige tus colores preferidos."
+        },
+        "language": {
+          "label": "Idioma",
+          "placeholder": "Selecciona tu idioma",
+          "helper": "Elige tu idioma preferido. El predeterminado del navegador sigue el idioma de tu sistema."
+        }
+      },
+      "taskExecution": {
+        "title": "Agente de Código Predeterminado",
+        "description": "Elige el agente de código predeterminado para las tareas.",
+        "executor": {
+          "label": "Configuración predeterminada del Agente",
+          "placeholder": "Seleccionar perfil",
+          "helper": "Define la configuración predeterminada del agente que se usará al iniciar una tarea."
+        },
+        "variant": "PREDETERMINADO",
+        "defaultLabel": "Predeterminado"
+      },
+      "editor": {
+        "title": "Editor",
+        "description": "Configura cómo quieres editar tu código.",
+        "type": {
+          "label": "Tipo de Editor",
+          "placeholder": "Seleccionar editor",
+          "helper": "Elige tu editor de código preferido."
+        },
+        "customCommand": {
+          "label": "Comando de Editor Personalizado",
+          "placeholder": "ej., code, subl, vim",
+          "helper": "Ingresa el comando para lanzar tu editor personalizado. Se utilizará para abrir archivos."
+        },
+        "remoteSsh": {
+          "host": {
+            "label": "Host SSH Remoto (Opcional)",
+            "placeholder": "ej., nombre de host o dirección IP",
+            "helper": "Configura esto si Vibe Kanban se ejecuta en un servidor remoto. Cuando se establece, al hacer clic en \"Abrir en Editor\" se generará una URL para abrir tu editor a través de SSH en lugar de ejecutar un comando local."
+          },
+          "user": {
+            "label": "Usuario SSH Remoto (Opcional)",
+            "placeholder": "ej., nombre de usuario",
+            "helper": "Nombre de usuario SSH para la conexión remota. Si no se establece, VS Code usará tu configuración SSH o te lo pedirá."
+          }
+        },
+        "autoInstallExtension": {
+          "label": "Auto-install VS Code Extension",
+          "helper": "Automatically install the Vibe Kanban extension when opening a project in VS Code or Cursor. This runs in the background and has no effect if the extension is already installed."
+        },
+        "availability": {
+          "checking": "Verificando disponibilidad...",
+          "available": "Disponible",
+          "notFound": "No encontrado en PATH"
+        }
+      },
+      "github": {
+        "title": "Integración con GitHub",
+        "cliSetup": {
+          "title": "Configuración de GitHub CLI",
+          "description": "La autenticación de GitHub CLI es necesaria para crear pull requests e interactuar con repositorios de GitHub.",
+          "setupWillTitle": "Esta configuración:",
+          "steps": {
+            "checkInstalled": "Verificará si GitHub CLI (gh) está instalado",
+            "installHomebrew": "Lo instalará vía Homebrew si es necesario (macOS)",
+            "authenticate": "Autenticará con GitHub usando OAuth"
+          },
+          "setupNote": "La configuración se ejecutará en la ventana de chat. Necesitarás completar la autenticación en tu navegador.",
+          "runSetup": "Ejecutar Configuración",
+          "running": "Ejecutando...",
+          "errors": {
+            "brewMissing": "Homebrew no está instalado. Instálalo para habilitar la configuración automática.",
+            "notSupported": "La configuración automática no es compatible con esta plataforma. Instala GitHub CLI manualmente.",
+            "setupFailed": "Error al ejecutar la configuración de GitHub CLI."
+          },
+          "help": {
+            "homebrew": {
+              "description": "La instalación automática requiere Homebrew. Instala Homebrew desde",
+              "brewSh": "brew.sh",
+              "manualInstall": "y luego vuelve a ejecutar la configuración. Alternativamente, instala GitHub CLI manualmente con:",
+              "afterInstall": "Después de la instalación, autentica con:"
+            },
+            "manual": {
+              "description": "Instala GitHub CLI desde la",
+              "officialDocs": "documentación oficial",
+              "andAuthenticate": "y luego autentica con tu cuenta de GitHub."
+            }
+          }
+        }
+      },
+      "git": {
+        "title": "Git",
+        "description": "Configurar preferencias de nombres de ramas git",
+        "branchPrefix": {
+          "label": "Prefijo de Rama",
+          "placeholder": "vk",
+          "helper": "Prefijo para nombres de ramas generadas automáticamente. Dejar vacío para no usar prefijo.",
+          "preview": "Vista previa:",
+          "previewWithPrefix": "{{prefix}}/1a2b-nombre-tarea",
+          "previewNoPrefix": "1a2b-nombre-tarea",
+          "errors": {
+            "slash": "El prefijo no puede contener '/'.",
+            "startsWithDot": "El prefijo no puede comenzar con '.'.",
+            "endsWithDot": "El prefijo no puede terminar con '.' o '.lock'.",
+            "invalidSequence": "Contiene secuencia no válida (.., @{).",
+            "invalidChars": "Contiene caracteres no válidos.",
+            "controlChars": "Contiene caracteres de control."
+          }
+        },
+        "workspaceDir": {
+          "label": "Directorio de Espacios de Trabajo",
+          "placeholder": "~/",
+          "helper": "Los espacios de trabajo se crearán en un subdirectorio .vibe-kanban-workspaces dentro de esta ruta. Dejar vacío para usar el valor predeterminado del sistema. Los cambios requieren reiniciar la aplicación.",
+          "browse": "Explorar",
+          "dialogTitle": "Seleccionar Directorio de Espacios de Trabajo",
+          "dialogDescription": "Elija un directorio. Los espacios de trabajo se crearán en un subdirectorio .vibe-kanban-workspaces dentro de él."
+        }
+      },
+      "pullRequests": {
+        "title": "Pull Requests",
+        "description": "Configura el comportamiento de creación de PR",
+        "autoDescription": {
+          "label": "Auto-generar descripción de PR por defecto",
+          "helper": "Cuando está habilitado, el agente de IA actualizará automáticamente el título y la descripción del PR después de la creación."
+        },
+        "customPrompt": {
+          "useCustom": "Usar prompt personalizado",
+          "helper": "Prompt personalizado para el agente de IA al generar descripciones de PR. Usa {pr_number} y {pr_url} como marcadores de posición."
+        }
+      },
+      "commits": {
+        "title": "Commits",
+        "description": "Configura el comportamiento de commits para los intentos de tareas",
+        "reminder": {
+          "label": "Recordatorio de commit",
+          "helper": "Solicitar a los agentes compatibles que confirmen los cambios antes de detenerse."
+        },
+        "customPrompt": {
+          "useCustom": "Usar prompt personalizado",
+          "helper": "Prompt personalizado para el recordatorio de commit. El estado de git se añadirá automáticamente."
+        }
+      },
+      "notifications": {
+        "title": "Notificaciones",
+        "description": "Controla cuándo y cómo recibes notificaciones.",
+        "sound": {
+          "label": "Notificaciones de Sonido",
+          "helper": "Reproduce un sonido cuando una tarea termina de ejecutarse.",
+          "fileLabel": "Sonido",
+          "filePlaceholder": "Seleccionar sonido",
+          "fileHelper": "Elige el sonido que se reproducirá al completar las tareas. Haz clic en el botón de volumen para escucharlo."
+        },
+        "push": {
+          "label": "Notificaciones Push",
+          "helper": "Muestra notificaciones del sistema cuando las tareas terminan de ejecutarse."
+        }
+      },
+      "messageInput": {
+        "title": "Entrada de mensajes",
+        "description": "Configura cómo se envían los mensajes en el chat.",
+        "shortcut": {
+          "label": "Enviar mensaje con",
+          "helper": "Elige el atajo de teclado para enviar mensajes.",
+          "enterLabel": "Enter (Shift+Enter para nueva línea)"
+        }
+      },
+      "privacy": {
+        "title": "Privacidad",
+        "description": "Ayuda a mejorar Vibe-Kanban compartiendo datos de uso anónimos.",
+        "telemetry": {
+          "label": "Habilitar Telemetría",
+          "helper": "Habilita el seguimiento anónimo para ayudar a mejorar la aplicación. No se recopilan prompts ni información del proyecto."
+        }
+      },
+      "taskTemplates": {
+        "title": "Etiquetas",
+        "description": "Crea fragmentos de texto reutilizables que se pueden insertar en descripciones de tareas usando @nombre_etiqueta."
+      },
+      "tags": {
+        "manager": {
+          "title": "Etiquetas de Tareas",
+          "addTag": "Agregar Etiqueta",
+          "noTags": "Aún no hay etiquetas. Crea fragmentos de texto reutilizables para descripciones de tareas comunes. Usa @nombre_etiqueta en cualquier tarea.",
+          "table": {
+            "tagName": "Nombre de Etiqueta",
+            "content": "Contenido",
+            "actions": "Acciones"
+          },
+          "actions": {
+            "editTag": "Editar etiqueta",
+            "deleteTag": "Eliminar etiqueta"
+          },
+          "deleteConfirm": "¿Estás seguro de que deseas eliminar la etiqueta \"{{tagName}}\"?"
+        },
+        "dialog": {
+          "createTitle": "Crear Etiqueta",
+          "editTitle": "Editar Etiqueta",
+          "tagName": {
+            "label": "Nombre de Etiqueta",
+            "required": "*",
+            "hint": "Usa este nombre con @ en descripciones de tareas: @{{tagName}}",
+            "placeholder": "ej., corrección_error, plan_prueba, docs_api",
+            "error": "El nombre de la etiqueta no puede contener espacios. Usa guiones bajos en su lugar (ej., mi_etiqueta)"
+          },
+          "content": {
+            "label": "Contenido",
+            "required": "*",
+            "hint": "Texto que se insertará cuando uses @{{tagName}} en descripciones de tareas",
+            "placeholder": "Ingresa el texto que se insertará cuando uses esta etiqueta"
+          },
+          "errors": {
+            "nameRequired": "El nombre de la etiqueta es obligatorio",
+            "saveFailed": "Error al guardar la etiqueta"
+          },
+          "buttons": {
+            "cancel": "Cancelar",
+            "create": "Crear",
+            "update": "Actualizar"
+          }
+        }
+      },
+      "safety": {
+        "title": "Avisos legales y de seguridad",
+        "description": "Reinicia las confirmaciones de seguridad y de introducción.",
+        "disclaimer": {
+          "title": "Confirmación de Descargo",
+          "description": "Restablecer el aviso de seguridad.",
+          "button": "Restablecer"
+        },
+        "onboarding": {
+          "title": "Introducción",
+          "description": "Restablece el flujo de Introducción.",
+          "button": "Restablecer"
+        }
+      },
+      "beta": {
+        "title": "Funciones Beta",
+        "description": "Prueba funciones experimentales antes de su lanzamiento.",
+        "workspaces": {
+          "label": "Habilitar Beta de Workspaces",
+          "helper": "Usa la nueva interfaz de workspaces al ver intentos de tareas. Las tareas se abrirán primero en la vista de tareas, y los intentos se abrirán en la nueva vista de workspaces."
+        }
+      }
+    },
+    "agents": {
+      "title": "Configuraciones de Agentes de Código",
+      "description": "Personaliza el comportamiento de los agentes con diferentes configuraciones.",
+      "loading": "Cargando configuraciones de agentes...",
+      "selectAgent": "Seleccionar agente",
+      "save": {
+        "button": "Guardar Configuraciones de Agentes",
+        "success": "✓ ¡Configuración guardada con éxito!",
+        "unsavedChanges": "• Tienes cambios sin guardar"
+      },
+      "availability": {
+        "checking": "Comprobando...",
+        "checkingAvailability": "Comprobando disponibilidad...",
+        "available": "Agente disponible",
+        "notFoundSimple": "Agente no encontrado",
+        "loginDetected": "Uso reciente detectado",
+        "loginDetectedTooltip": "Se encontraron credenciales de autenticación recientes para este agente",
+        "installationFound": "Uso previo detectado",
+        "installationFoundTooltip": "Se encontró la configuración del agente. Es posible que debas iniciar sesión para usarlo."
+      },
+      "editor": {
+        "formLabel": "Editar JSON",
+        "agentLabel": "Agente",
+        "agentPlaceholder": "Seleccionar tipo",
+        "configLabel": "Configuración",
+        "configPlaceholder": "Seleccionar configuración",
+        "createNew": "Crear nuevo...",
+        "deleteTitle": "No se puede eliminar la última configuración",
+        "deleteButton": "Eliminar {{name}}",
+        "deleteText": "Eliminar",
+        "makeDefault": "Establecer por defecto",
+        "isDefault": "Por defecto",
+        "jsonLabel": "Configuración de Agente (JSON)",
+        "jsonPlaceholder": "Cargando perfiles...",
+        "jsonLoading": "Cargando...",
+        "pathLabel": "Ubicación del archivo de configuración:"
+      },
+      "errors": {
+        "deleteFailed": "Error al eliminar la configuración. Por favor, inténtalo de nuevo.",
+        "saveFailed": "Error al guardar la configuración de los agentes. Por favor, inténtalo de nuevo.",
+        "saveConfigFailed": "Error al guardar la configuración. Por favor, inténtalo de nuevo.",
+        "schemaNotFound": "Esquema no encontrado para el tipo de ejecutor: {{executor}}"
+      },
+      "tree": {
+        "search": "Buscar configuraciones...",
+        "expandAll": "Expandir todo",
+        "collapseAll": "Contraer todo",
+        "noResults": "No se encontraron configuraciones",
+        "noConfigs": "No hay configuraciones disponibles",
+        "selectConfig": "Selecciona una configuración de la barra lateral para ver y editar sus ajustes."
+      },
+      "deleteConfigDialog": {
+        "title": "¿Eliminar configuración?",
+        "description": "Esto eliminará permanentemente \"{{configName}}\" del ejecutor {{executorType}}. Esta acción no se puede deshacer."
+      }
+    },
+    "mcp": {
+      "title": "Configuración de Servidor MCP",
+      "description": "Configura los servidores del Protocolo de Contexto de Modelos (MCP) para ampliar las capacidades del agente de codificación con herramientas y recursos personalizados.",
+      "loading": "Cargando configuración MCP...",
+      "applying": "Aplicando configuración...",
+      "loadingStates": {
+        "jsonEditor": "Cargando...",
+        "configuration": "Cargando configuración actual del servidor MCP..."
+      },
+      "labels": {
+        "agent": "Agente",
+        "agentPlaceholder": "Seleccionar",
+        "agentHelper": "Elige para qué agente configurar los servidores MCP.",
+        "serverConfig": "Configuración de Servidor (JSON)",
+        "popularServers": "Servidores populares",
+        "serverHelper": "Haz clic en una tarjeta para insertar ese Servidor MCP en el JSON de arriba.",
+        "saveLocation": "Los cambios se guardarán en:"
+      },
+      "errors": {
+        "loadFailed": "Error al cargar la configuración.",
+        "invalidJson": "Formato JSON inválido",
+        "validationError": "Error de validación",
+        "saveFailed": "Error al guardar servidores MCP",
+        "applyFailed": "Error al aplicar la configuración del servidor MCP",
+        "addServerFailed": "Error al agregar servidor preconfigurado",
+        "mcpError": "Error de Configuración MCP: {{error}}",
+        "notSupported": "MCP No Soportado",
+        "supportMessage": "Para usar servidores MCP, por favor selecciona un agente diferente que soporte MCP (Claude, Amp, Gemini, Codex, o Opencode) arriba."
+      },
+      "save": {
+        "button": "Guardar Configuración MCP",
+        "success": "¡Configuración Guardada!",
+        "successMessage": "✓ ¡Configuración MCP guardada exitosamente!",
+        "loading": "Cargando configuración actual del servidor MCP...",
+        "unsavedChanges": "• Tienes cambios sin guardar"
+      }
+    },
+    "projects": {
+      "title": "Configuración de Proyectos",
+      "description": "Configura scripts y ajustes específicos del proyecto.",
+      "loading": "Cargando proyectos...",
+      "loadError": "Error al cargar proyectos.",
+      "selector": {
+        "label": "Seleccionar Proyecto",
+        "placeholder": "Elige un proyecto para configurar",
+        "helper": "Selecciona un proyecto para ver y editar su configuración.",
+        "noProjects": "No hay proyectos disponibles"
+      },
+      "general": {
+        "title": "Configuración General",
+        "description": "Configura la información básica del proyecto.",
+        "name": {
+          "label": "Nombre del Proyecto",
+          "placeholder": "Ingresa el nombre del proyecto",
+          "helper": "Un nombre para mostrar para este proyecto."
+        },
+        "repoPath": {
+          "label": "Ruta del Repositorio Git",
+          "placeholder": "/ruta/a/tu/repositorio/existente",
+          "helper": "La ruta absoluta a tu repositorio git en disco."
+        }
+      },
+      "save": {
+        "button": "Guardar Configuración del Proyecto",
+        "success": "✓ ¡Configuración del proyecto guardada exitosamente!",
+        "error": "Error al guardar la configuración del proyecto",
+        "unsavedChanges": "• Tienes cambios sin guardar",
+        "discard": "Descartar",
+        "confirmSwitch": "Tienes cambios sin guardar. ¿Estás seguro de que quieres cambiar de proyecto? Tus cambios se perderán.",
+        "saving": "Saving..."
+      },
+      "repositories": {
+        "title": "Repositorios",
+        "description": "Administra los repositorios git en este proyecto",
+        "noRepositories": "No hay repositorios configurados",
+        "addRepository": "Agregar Repositorio"
+      }
+    },
+    "repos": {
+      "title": "Configuración del Repositorio",
+      "description": "Configura los scripts que se ejecutan cuando este repositorio se usa en workspaces.",
+      "loading": "Cargando repositorios...",
+      "loadError": "Error al cargar repositorios.",
+      "selector": {
+        "label": "Seleccionar Repositorio",
+        "placeholder": "Elige un repositorio para configurar",
+        "helper": "Selecciona un repositorio para ver y editar su configuración.",
+        "noRepos": "No hay repositorios disponibles"
+      },
+      "general": {
+        "title": "Configuración General",
+        "description": "Configura la información básica del repositorio.",
+        "displayName": {
+          "label": "Nombre para Mostrar",
+          "placeholder": "Ingresa el nombre para mostrar",
+          "helper": "Un nombre amigable para este repositorio."
+        },
+        "path": {
+          "label": "Ruta del Repositorio"
+        },
+        "defaultWorkingDir": {
+          "label": "Directorio de Trabajo Predeterminado",
+          "placeholder": "ej., packages/frontend",
+          "helper": "Subdirectorio relativo a la raíz del repositorio donde se ejecuta el agente de codificación para espacios de trabajo de un solo repositorio. Se establece al crear el espacio de trabajo. Déjelo vacío para usar la raíz del repositorio."
+        },
+        "defaultTargetBranch": {
+          "label": "Rama Objetivo Predeterminada",
+          "placeholder": "Seleccionar una rama",
+          "helper": "La rama base predeterminada para nuevos workspaces. Los worktrees se ramifican desde esta rama y los PRs la tendrán como objetivo.",
+          "search": "Buscar ramas",
+          "noBranches": "No se encontraron ramas",
+          "loading": "Cargando ramas...",
+          "useCurrent": "Usar rama actual"
+        }
+      },
+      "scripts": {
+        "title": "Scripts y Configuración",
+        "description": "Configura los scripts de instalación, limpieza y archivos a copiar para este repositorio. Estos scripts se ejecutan cada vez que el repositorio se usa en cualquier workspace.",
+        "setup": {
+          "label": "Script de Instalación",
+          "helper": "Este script se ejecuta desde dentro del worktree después de crearse y antes de que comience el agente de codificación. Úsalo para tareas de configuración como instalar dependencias o preparar el entorno.",
+          "parallelLabel": "Ejecutar script de instalación en paralelo con el agente de codificación",
+          "parallelHelper": "Cuando está habilitado, el script de instalación se ejecuta simultáneamente con el agente de codificación en lugar de esperar a que se complete la configuración primero."
+        },
+        "cleanup": {
+          "label": "Script de Limpieza",
+          "helper": "Este script se ejecuta desde dentro del worktree después de la ejecución del agente de codificación, solo si se realizaron cambios. Úsalo para tareas de garantía de calidad como ejecutar linters, formateadores, pruebas u otros pasos de validación."
+        },
+        "archive": {
+          "label": "Script de Archivo",
+          "helper": "Este script se ejecuta desde dentro del worktree cuando se archiva el espacio de trabajo. Úsalo para tareas de limpieza como detener servicios, liberar recursos o guardar estado."
+        },
+        "copyFiles": {
+          "label": "Copiar Archivos",
+          "helper": "Lista separada por comas de archivos para copiar del directorio del repositorio original al worktree. Útil para archivos de entorno como .env. ¡Asegúrate de que estén en gitignore!",
+          "placeholder": "Rutas de archivos o patrones glob (ej., .env, config/*.json)"
+        },
+        "devServer": {
+          "label": "Script del Servidor de Desarrollo",
+          "helper": "Inicia un servidor de desarrollo para este repositorio. Los scripts se ejecutan desde el directorio worktree del repositorio."
+        }
+      },
+      "save": {
+        "button": "Guardar Configuración del Repositorio",
+        "success": "¡Configuración del repositorio guardada exitosamente!",
+        "error": "Error al guardar la configuración del repositorio",
+        "unsavedChanges": "Tienes cambios sin guardar",
+        "discard": "Descartar",
+        "confirmSwitch": "Tienes cambios sin guardar. ¿Estás seguro de que quieres cambiar de repositorio? Tus cambios se perderán."
+      }
+    },
+    "relay": {
+      "title": "Remote Access",
+      "description": "Allow access to this instance from the web via relay tunnel.",
+      "enabled": {
+        "label": "Enable remote access",
+        "helper": "When enabled, this instance can be accessed remotely through a relay tunnel."
+      },
+      "enrollmentCode": {
+        "label": "Enrollment Code",
+        "helper": "Enter this code in the browser to pair with this instance.",
+        "loginRequired": "Log in to generate an enrollment code.",
+        "fetchError": "Failed to fetch enrollment code.",
+        "show": "Show enrollment code"
+      }
+    },
+    "remoteProjects": {
+      "title": "Remote Projects",
+      "description": "Manage cloud-synced projects across organizations.",
+      "loading": "Loading remote projects...",
+      "loadError": "Failed to load organizations",
+      "noProjects": "No projects yet. Create one to get started.",
+      "selectOrg": "Select an organization",
+      "createSuccess": "Project created successfully",
+      "deleteSuccess": "Project deleted successfully",
+      "nameRequired": "Project name is required",
+      "saveSuccess": "Project updated successfully",
+      "saveError": "Failed to update project",
+      "columns": {
+        "organizations": "Organizations",
+        "projects": "Projects"
+      },
+      "actions": {
+        "addProject": "Add Project"
+      },
+      "form": {
+        "name": {
+          "label": "Project Name",
+          "placeholder": "Enter project name"
+        },
+        "color": {
+          "label": "Project Color"
+        },
+        "statuses": {
+          "label": "Project Statuses",
+          "description": "Manage kanban columns for this project."
+        }
+      },
+      "loginRequired": {
+        "title": "Sign in required",
+        "description": "Sign in to manage your remote projects.",
+        "action": "Sign in"
+      }
+    }
+  },
+  "integrations": {
+    "github": {
+      "cliSetup": {
+        "title": "Configuración de GitHub CLI",
+        "description": "Se requiere autenticación de GitHub CLI para crear pull requests e interactuar con repositorios de GitHub.",
+        "setupWillTitle": "Esta configuración:",
+        "steps": {
+          "checkInstalled": "Verificar si GitHub CLI (gh) está instalado",
+          "installHomebrew": "Instalarlo a través de Homebrew si es necesario (macOS)",
+          "authenticate": "Autenticar con GitHub usando OAuth"
+        },
+        "setupNote": "La configuración se ejecutará en la ventana de chat. Necesitarás completar la autenticación en tu navegador.",
+        "runSetup": "Ejecutar Configuración",
+        "running": "Ejecutando...",
+        "errors": {
+          "brewMissing": "Homebrew no está instalado. Instálalo para habilitar la configuración automática.",
+          "notSupported": "La configuración automática no está soportada en esta plataforma. Instala GitHub CLI manualmente.",
+          "setupFailed": "Error al ejecutar la configuración de GitHub CLI."
+        },
+        "help": {
+          "homebrew": {
+            "description": "La instalación automática requiere Homebrew. Instala Homebrew desde",
+            "brewSh": "brew.sh",
+            "manualInstall": "y luego vuelve a ejecutar la configuración. Alternativamente, instala GitHub CLI manualmente con:",
+            "afterInstall": "Después de la instalación, autentica con:"
+          },
+          "manual": {
+            "description": "Instala GitHub CLI desde la",
+            "officialDocs": "documentación oficial",
+            "andAuthenticate": "y luego autentica con tu cuenta de GitHub."
+          }
+        }
+      }
+    }
+  }
+}

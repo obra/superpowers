@@ -1,0 +1,40 @@
+{
+  "title": "專案",
+  "subtitle": "管理您的專案並追蹤進度",
+  "createProject": "建立專案",
+  "loading": "載入專案中...",
+  "repoSearch": {
+    "searching": "正在搜尋儲存庫...",
+    "stillSearching": "仍在搜尋... ({{seconds}}秒)",
+    "takingLonger": "搜尋時間比平時長。您可以在下方手動瀏覽。",
+    "noReposFound": "在常見位置未找到儲存庫。",
+    "browseHint": "使用下方選項瀏覽儲存庫。"
+  },
+  "errors": {
+    "fetchFailed": "取得專案失敗",
+    "deleteFailed": "刪除專案失敗"
+  },
+  "empty": {
+    "title": "還沒有專案",
+    "description": "先建立您的第一個專案。",
+    "createFirst": "建立您的第一個專案"
+  },
+  "projectNotFound": "您要查找的專案不存在或已被刪除。",
+  "viewProject": "查看專案",
+  "openInIDE": "在 IDE 中開啟",
+  "createdDate": "建立於 {{date}}",
+  "createProjectDialog": {
+    "title": "Create Project",
+    "description": "Create a new project in this organization.",
+    "nameLabel": "Project name",
+    "namePlaceholder": "Enter project name",
+    "selectColor": "Select project color",
+    "creating": "Creating...",
+    "createButton": "Create Project"
+  },
+  "deleteProjectDialog": {
+    "title": "Delete Project?",
+    "description": "This will permanently delete \"{{name}}\" and all its issues. This action cannot be undone.",
+    "error": "Failed to delete project. Please try again."
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "createDialog": {
+    "title": "Créer une nouvelle organisation",
+    "description": "Créez une nouvelle organisation pour collaborer avec votre équipe.",
+    "nameLabel": "Nom de l'organisation",
+    "namePlaceholder": "ex: Acme Corporation",
+    "slugLabel": "Identifiant",
+    "slugPlaceholder": "ex: acme-corporation",
+    "slugHelper": "Utilisé dans les URLs. Uniquement des lettres minuscules, chiffres et tirets.",
+    "creating": "Création en cours...",
+    "createButton": "Créer l'organisation"
+  },
+  "inviteDialog": {
+    "title": "Inviter un membre",
+    "description": "Envoyez une invitation pour rejoindre votre organisation.",
+    "emailLabel": "Adresse e-mail",
+    "emailPlaceholder": "collegue@exemple.com",
+    "roleLabel": "Rôle",
+    "rolePlaceholder": "Sélectionner un rôle",
+    "roleHelper": "Les administrateurs peuvent gérer les membres et les paramètres de l'organisation.",
+    "sending": "Envoi en cours...",
+    "sendButton": "Envoyer l'invitation",
+    "subscriptionRequired": "Abonnement requis pour ajouter plus de membres",
+    "upgradePrompt": "Mettez à niveau le plan de votre organisation pour inviter des membres supplémentaires.",
+    "upgradeButton": "Mettre à niveau"
+  },
+  "roles": {
+    "member": "Membre",
+    "admin": "Administrateur"
+  },
+  "memberList": {
+    "title": "Membres",
+    "description": "Gérez les membres et leurs rôles dans {{orgName}}",
+    "inviteButton": "Inviter un membre",
+    "loading": "Chargement des membres...",
+    "none": "Aucun membre trouvé",
+    "you": "Vous"
+  },
+  "invitationList": {
+    "title": "Invitations en attente",
+    "description": "Voir les invitations en attente pour {{orgName}}",
+    "loading": "Chargement des invitations...",
+    "none": "Aucune invitation en attente",
+    "invited": "Invité le {{date}}",
+    "pending": "En attente"
+  },
+  "settings": {
+    "title": "Paramètres de l'organisation",
+    "description": "Gérez les membres et les permissions de l'organisation",
+    "selectLabel": "Sélectionner une organisation",
+    "selectPlaceholder": "Sélectionner une organisation",
+    "selectHelper": "Choisissez une organisation pour voir et gérer ses membres",
+    "noOrganizations": "Aucune organisation disponible",
+    "loadingOrganizations": "Chargement des organisations...",
+    "loadError": "Échec du chargement des organisations",
+    "dangerZone": "Zone de danger",
+    "dangerZoneDescription": "Actions irréversibles et destructives",
+    "deleteOrganization": "Supprimer l'organisation",
+    "deleteOrganizationDescription": "Supprime définitivement cette organisation et toutes ses données",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer {{orgName}} ? Cette action est irréversible.",
+    "deleteSuccess": "Organisation supprimée avec succès",
+    "deleteError": "Échec de la suppression de l'organisation"
+  },
+  "loginRequired": {
+    "title": "Connexion requise",
+    "description": "Vous devez être connecté pour gérer les paramètres de l'organisation.",
+    "action": "Connexion"
+  },
+  "confirmRemoveMember": "Êtes-vous sûr de vouloir retirer ce membre de l'organisation ?",
+  "sharedProjects": {
+    "title": "Projets partagés",
+    "description": "Projets distants dans {{orgName}} et leurs liens vers des projets locaux",
+    "loading": "Chargement des projets...",
+    "noProjects": "Aucun projet partagé trouvé dans cette organisation",
+    "notLinked": "Non lié",
+    "linkedTo": "Lié à : {{projectName}}",
+    "linked": "Lié",
+    "linkProject": "Lier un projet...",
+    "noAvailableProjects": "Aucun projet disponible"
+  },
+  "billing": {
+    "title": "Facturation et abonnement",
+    "description": "Gérez l'abonnement et les paramètres de facturation de votre organisation",
+    "manageButton": "Gérer la facturation",
+    "openInBrowser": "S'ouvre dans un nouvel onglet du navigateur"
+  },
+  "personalOrg": {
+    "cannotInvite": "Les organisations personnelles ne peuvent pas avoir de membres supplémentaires.",
+    "createOrgPrompt": "Créez une organisation pour collaborer avec d'autres.",
+    "createOrgButton": "Créer une organisation"
+  }
+}

@@ -1,0 +1,588 @@
+{
+  "settings": {
+    "common": {
+      "unsavedChanges": "• 您有未保存的更改",
+      "discardChangesConfirm": "Discard unsaved changes?"
+    },
+    "unsavedChanges": {
+      "title": "未保存的更改",
+      "message": "您有未保存的更改。确定要关闭而不保存吗？",
+      "discard": "放弃更改",
+      "cancel": "继续编辑"
+    },
+    "layout": {
+      "nav": {
+        "title": "设置",
+        "general": "常规",
+        "generalDesc": "主题、通知和偏好设置",
+        "projects": "项目",
+        "projectsDesc": "项目仓库和配置",
+        "repos": "仓库",
+        "reposDesc": "仓库脚本和配置",
+        "agents": "代理",
+        "agentsDesc": "编码代理配置",
+        "mcp": "MCP 服务器",
+        "mcpDesc": "模型上下文协议服务器",
+        "organizations": "组织设置",
+        "organizationsDesc": "管理组织成员和权限",
+        "remote-projects": "项目",
+        "remote-projectsDesc": "管理项目",
+        "relay": "Remote Access",
+        "relayDesc": "Relay tunnel and enrollment"
+      }
+    },
+    "general": {
+      "loading": "加载设置中...",
+      "loadError": "加载配置失败。",
+      "save": {
+        "button": "保存设置",
+        "success": "✓ 设置保存成功！",
+        "error": "保存配置失败",
+        "unsavedChanges": "• 您有未保存的更改",
+        "discard": "放弃"
+      },
+      "appearance": {
+        "title": "外观",
+        "description": "自定义应用程序的外观和感觉。",
+        "theme": {
+          "label": "主题",
+          "placeholder": "选择主题",
+          "helper": "选择您喜欢的配色方案。"
+        },
+        "language": {
+          "label": "语言",
+          "placeholder": "选择语言",
+          "helper": "选择您喜欢的语言。浏览器默认将跟随您的系统语言。"
+        }
+      },
+      "taskExecution": {
+        "title": "默认编码代理",
+        "description": "选择任务的默认编码代理。",
+        "executor": {
+          "label": "默认代理配置",
+          "placeholder": "选择配置文件",
+          "helper": "选择创建任务尝试时使用的默认代理配置。"
+        },
+        "variant": "默认",
+        "defaultLabel": "默认"
+      },
+      "editor": {
+        "title": "编辑器",
+        "description": "配置您的代码编辑体验。",
+        "type": {
+          "label": "编辑器类型",
+          "placeholder": "选择编辑器",
+          "helper": "选择您喜欢的代码编辑器界面。"
+        },
+        "customCommand": {
+          "label": "自定义编辑器命令",
+          "placeholder": "例如：code、subl、vim",
+          "helper": "输入启动自定义编辑器的命令。这将用于打开文件。"
+        },
+        "remoteSsh": {
+          "host": {
+            "label": "远程 SSH 主机（可选）",
+            "placeholder": "例如：主机名或 IP 地址",
+            "helper": "如果 Vibe Kanban 在远程服务器上运行，请设置此项。设置后，点击在编辑器中打开将生成 URL 以通过 SSH 打开编辑器，而不是执行本地命令。"
+          },
+          "user": {
+            "label": "远程 SSH 用户（可选）",
+            "placeholder": "例如：用户名",
+            "helper": "远程连接的 SSH 用户名。如果未设置，VS Code 将使用您的 SSH 配置或提示您输入。"
+          }
+        },
+        "autoInstallExtension": {
+          "label": "Auto-install VS Code Extension",
+          "helper": "Automatically install the Vibe Kanban extension when opening a project in VS Code or Cursor. This runs in the background and has no effect if the extension is already installed."
+        },
+        "availability": {
+          "checking": "检查可用性...",
+          "available": "可用",
+          "notFound": "在 PATH 中未找到"
+        }
+      },
+      "github": {
+        "title": "GitHub 集成",
+        "cliSetup": {
+          "title": "GitHub CLI 设置",
+          "description": "需要 GitHub CLI 身份验证才能创建拉取请求并与 GitHub 仓库交互。",
+          "setupWillTitle": "此设置将：",
+          "steps": {
+            "checkInstalled": "检查是否安装了 GitHub CLI (gh)",
+            "installHomebrew": "如果需要，通过 Homebrew 安装它（macOS）",
+            "authenticate": "使用 OAuth 进行 GitHub 身份验证"
+          },
+          "setupNote": "设置将在聊天窗口中运行。您需要在浏览器中完成身份验证。",
+          "runSetup": "运行设置",
+          "running": "运行中...",
+          "errors": {
+            "brewMissing": "未安装 Homebrew。安装它以启用自动设置。",
+            "notSupported": "此平台不支持自动设置。请手动安装 GitHub CLI。",
+            "setupFailed": "运行 GitHub CLI 设置失败。"
+          },
+          "help": {
+            "homebrew": {
+              "description": "自动安装需要 Homebrew。从",
+              "brewSh": "brew.sh",
+              "manualInstall": "安装 Homebrew，然后重新运行设置。或者，使用以下命令手动安装 GitHub CLI：",
+              "afterInstall": "安装后，使用以下命令进行身份验证："
+            },
+            "manual": {
+              "description": "从",
+              "officialDocs": "官方文档",
+              "andAuthenticate": "安装 GitHub CLI，然后使用您的 GitHub 账户进行身份验证。"
+            }
+          }
+        }
+      },
+      "git": {
+        "title": "Git",
+        "description": "配置 git 分支命名偏好",
+        "branchPrefix": {
+          "label": "分支前缀",
+          "placeholder": "vk",
+          "helper": "自动生成的分支名称的前缀。留空表示无前缀。",
+          "preview": "预览：",
+          "previewWithPrefix": "{{prefix}}/1a2b-task-name",
+          "previewNoPrefix": "1a2b-task-name",
+          "errors": {
+            "slash": "前缀不能包含 '/'。",
+            "startsWithDot": "前缀不能以 '.' 开头。",
+            "endsWithDot": "前缀不能以 '.' 或 '.lock' 结尾。",
+            "invalidSequence": "包含无效序列（..、@{）。",
+            "invalidChars": "包含无效字符。",
+            "controlChars": "包含控制字符。"
+          }
+        },
+        "workspaceDir": {
+          "label": "工作区目录",
+          "placeholder": "~/",
+          "helper": "工作区将在此路径内的 .vibe-kanban-workspaces 子目录中创建。留空以使用系统默认值。更改需要重启应用程序。",
+          "browse": "浏览",
+          "dialogTitle": "选择工作区目录",
+          "dialogDescription": "选择一个目录。工作区将在其中的 .vibe-kanban-workspaces 子目录中创建。"
+        }
+      },
+      "pullRequests": {
+        "title": "拉取请求",
+        "description": "配置PR创建行为",
+        "autoDescription": {
+          "label": "默认自动生成PR描述",
+          "helper": "启用后，AI代理将在创建PR后自动更新标题和描述。"
+        },
+        "customPrompt": {
+          "useCustom": "使用自定义提示",
+          "helper": "生成PR描述时AI代理使用的自定义提示。使用{pr_number}和{pr_url}作为占位符。"
+        }
+      },
+      "commits": {
+        "title": "提交",
+        "description": "配置任务尝试的提交行为",
+        "reminder": {
+          "label": "提交提醒",
+          "helper": "提示支持的代理在停止前提交更改。"
+        },
+        "customPrompt": {
+          "useCustom": "使用自定义提示",
+          "helper": "提交提醒的自定义提示。git 状态将自动追加。"
+        }
+      },
+      "notifications": {
+        "title": "通知",
+        "description": "控制何时以及如何接收通知。",
+        "sound": {
+          "label": "声音通知",
+          "helper": "任务尝试完成运行时播放声音。",
+          "fileLabel": "声音",
+          "filePlaceholder": "选择声音",
+          "fileHelper": "选择任务完成时播放的声音。点击音量按钮预览。"
+        },
+        "push": {
+          "label": "推送通知",
+          "helper": "任务尝试完成运行时显示系统通知。"
+        }
+      },
+      "messageInput": {
+        "title": "消息输入",
+        "description": "配置在聊天输入中发送消息的方式。",
+        "shortcut": {
+          "label": "发送消息快捷键",
+          "helper": "选择发送消息的键盘快捷键。",
+          "enterLabel": "Enter（Shift+Enter 换行）"
+        }
+      },
+      "privacy": {
+        "title": "隐私",
+        "description": "通过共享匿名使用数据帮助改进 Vibe-Kanban。",
+        "telemetry": {
+          "label": "启用遥测",
+          "helper": "启用匿名使用事件跟踪以帮助改进应用程序。不会收集提示或项目信息。"
+        }
+      },
+      "taskTemplates": {
+        "title": "标签",
+        "description": "创建可使用 @tag_name 插入到任务描述中的可重用文本片段。"
+      },
+      "tags": {
+        "manager": {
+          "title": "任务标签",
+          "addTag": "添加标签",
+          "noTags": "还没有标签。为常见任务描述创建可重用的文本片段。在任何任务中使用 @tag_name。",
+          "table": {
+            "tagName": "标签名称",
+            "content": "内容",
+            "actions": "操作"
+          },
+          "actions": {
+            "editTag": "编辑标签",
+            "deleteTag": "删除标签"
+          },
+          "deleteConfirm": "您确定要删除标签 {{tagName}} 吗？"
+        },
+        "dialog": {
+          "createTitle": "创建标签",
+          "editTitle": "编辑标签",
+          "tagName": {
+            "label": "标签名称",
+            "required": "*",
+            "hint": "在任务描述中使用 @ 加此名称：@{{tagName}}",
+            "placeholder": "例如：bug_fix、test_plan、api_docs",
+            "error": "标签名称不能包含空格。请使用下划线代替（例如：my_tag）"
+          },
+          "content": {
+            "label": "内容",
+            "required": "*",
+            "hint": "当您在任务描述中使用 @{{tagName}} 时将插入的文本",
+            "placeholder": "输入使用此标签时将插入的文本"
+          },
+          "errors": {
+            "nameRequired": "标签名称是必需的",
+            "saveFailed": "保存标签失败"
+          },
+          "buttons": {
+            "cancel": "取消",
+            "create": "创建",
+            "update": "更新"
+          }
+        }
+      },
+      "safety": {
+        "title": "安全和免责声明",
+        "description": "重置安全警告和入门流程的确认。",
+        "disclaimer": {
+          "title": "免责声明确认",
+          "description": "重置安全免责声明。",
+          "button": "重置"
+        },
+        "onboarding": {
+          "title": "入门流程",
+          "description": "重置入门流程。",
+          "button": "重置"
+        }
+      },
+      "beta": {
+        "title": "Beta 功能",
+        "description": "在正式发布前试用实验性功能。",
+        "workspaces": {
+          "label": "启用工作区 Beta",
+          "helper": "查看任务尝试时使用新的工作区界面。任务将首先在任务视图中打开，尝试将在新的工作区视图中打开。"
+        }
+      }
+    },
+    "agents": {
+      "title": "编码代理配置",
+      "description": "使用不同的配置自定义编码代理的行为。",
+      "loading": "加载代理配置中...",
+      "selectAgent": "选择代理",
+      "save": {
+        "button": "保存代理配置",
+        "success": "✓ 执行器配置保存成功！",
+        "unsavedChanges": "• 您有未保存的更改"
+      },
+      "availability": {
+        "checking": "检查中...",
+        "checkingAvailability": "正在检查可用性...",
+        "available": "代理可用",
+        "notFoundSimple": "未找到代理",
+        "loginDetected": "检测到最近使用",
+        "loginDetectedTooltip": "找到此代理的最近身份验证凭据",
+        "installationFound": "检测到以前使用",
+        "installationFoundTooltip": "找到代理配置。您可能需要登录才能使用它。"
+      },
+      "editor": {
+        "formLabel": "编辑 JSON",
+        "agentLabel": "代理",
+        "agentPlaceholder": "选择执行器类型",
+        "configLabel": "配置",
+        "configPlaceholder": "选择配置",
+        "createNew": "新建...",
+        "deleteTitle": "无法删除最后一个配置",
+        "deleteButton": "删除 {{name}}",
+        "deleteText": "删除",
+        "makeDefault": "设为默认",
+        "isDefault": "默认",
+        "jsonLabel": "代理配置（JSON）",
+        "jsonPlaceholder": "加载配置文件中...",
+        "jsonLoading": "加载中...",
+        "pathLabel": "配置文件位置："
+      },
+      "errors": {
+        "deleteFailed": "删除配置失败。请重试。",
+        "saveFailed": "保存代理配置失败。请重试。",
+        "saveConfigFailed": "保存配置失败。请重试。",
+        "schemaNotFound": "未找到执行器类型 {{executor}} 的架构"
+      },
+      "tree": {
+        "search": "搜索配置...",
+        "expandAll": "全部展开",
+        "collapseAll": "全部折叠",
+        "noResults": "没有匹配的配置",
+        "noConfigs": "没有可用的配置",
+        "selectConfig": "从侧边栏选择一个配置来查看和编辑其设置。"
+      },
+      "deleteConfigDialog": {
+        "title": "删除配置？",
+        "description": "这将从 {{executorType}} 执行器中永久删除\"{{configName}}\"。此操作无法撤销。"
+      }
+    },
+    "mcp": {
+      "title": "MCP 服务器配置",
+      "description": "配置模型上下文协议服务器，使用自定义工具和资源扩展编码代理功能。",
+      "loading": "加载 MCP 配置中...",
+      "applying": "应用配置中...",
+      "labels": {
+        "agent": "代理",
+        "agentPlaceholder": "选择执行器",
+        "agentHelper": "选择要为其配置 MCP 服务器的代理。",
+        "serverConfig": "服务器配置（JSON）",
+        "popularServers": "热门服务器",
+        "serverHelper": "点击卡片将该 MCP 服务器插入到上面的 JSON 中。",
+        "saveLocation": "更改将保存到："
+      },
+      "loadingStates": {
+        "jsonEditor": "加载中...",
+        "configuration": "加载当前 MCP 服务器配置..."
+      },
+      "errors": {
+        "loadFailed": "加载配置失败。",
+        "invalidJson": "无效的 JSON 格式",
+        "validationError": "验证错误",
+        "saveFailed": "保存 MCP 服务器失败",
+        "applyFailed": "应用 MCP 服务器配置失败",
+        "addServerFailed": "添加预配置服务器失败",
+        "mcpError": "MCP 配置错误：{{error}}",
+        "notSupported": "不支持 MCP",
+        "supportMessage": "要使用 MCP 服务器，请在上方选择支持 MCP 的其他执行器（Claude、Amp、Gemini、Codex 或 Opencode）。"
+      },
+      "save": {
+        "button": "保存 MCP 配置",
+        "success": "设置已保存！",
+        "successMessage": "✓ MCP 配置保存成功！",
+        "loading": "加载当前 MCP 服务器配置...",
+        "unsavedChanges": "• 您有未保存的更改"
+      }
+    },
+    "projects": {
+      "title": "项目配置",
+      "description": "配置特定于项目的脚本和设置。",
+      "loading": "加载项目中...",
+      "loadError": "加载项目失败。",
+      "selector": {
+        "label": "选择项目",
+        "placeholder": "选择要配置的项目",
+        "helper": "选择项目以查看和编辑其配置。",
+        "noProjects": "没有可用的项目"
+      },
+      "general": {
+        "title": "常规设置",
+        "description": "配置基本项目信息。",
+        "name": {
+          "label": "项目名称",
+          "placeholder": "输入项目名称",
+          "helper": "此项目的显示名称。"
+        },
+        "repoPath": {
+          "label": "Git 仓库路径",
+          "placeholder": "/path/to/your/existing/repo",
+          "helper": "磁盘上 git 仓库的绝对路径。"
+        }
+      },
+      "save": {
+        "button": "保存项目设置",
+        "success": "✓ 项目设置保存成功！",
+        "error": "保存项目设置失败",
+        "unsavedChanges": "• 您有未保存的更改",
+        "discard": "放弃",
+        "confirmSwitch": "您有未保存的更改。您确定要切换项目吗？您的更改将丢失。",
+        "saving": "Saving..."
+      },
+      "repositories": {
+        "title": "仓库",
+        "description": "管理此项目中的 Git 仓库",
+        "noRepositories": "未配置仓库",
+        "addRepository": "添加仓库"
+      }
+    },
+    "repos": {
+      "title": "仓库配置",
+      "description": "配置此仓库在工作区中使用时运行的脚本。",
+      "loading": "加载仓库中...",
+      "loadError": "加载仓库失败。",
+      "selector": {
+        "label": "选择仓库",
+        "placeholder": "选择要配置的仓库",
+        "helper": "选择仓库以查看和编辑其配置。",
+        "noRepos": "没有可用的仓库"
+      },
+      "general": {
+        "title": "常规设置",
+        "description": "配置仓库基本信息。",
+        "displayName": {
+          "label": "显示名称",
+          "placeholder": "输入显示名称",
+          "helper": "此仓库的友好名称。"
+        },
+        "path": {
+          "label": "仓库路径"
+        },
+        "defaultWorkingDir": {
+          "label": "默认工作目录",
+          "placeholder": "例如：packages/frontend",
+          "helper": "单仓库工作区中编码代理运行的子目录。在创建工作区时设置。留空则使用仓库根目录。"
+        },
+        "defaultTargetBranch": {
+          "label": "默认目标分支",
+          "placeholder": "选择分支",
+          "helper": "新工作区的默认基础分支。工作树从此分支创建，PR 将以此分支为目标。",
+          "search": "搜索分支",
+          "noBranches": "未找到分支",
+          "loading": "正在加载分支...",
+          "useCurrent": "使用当前分支"
+        }
+      },
+      "scripts": {
+        "title": "脚本和配置",
+        "description": "配置此仓库的设置脚本、清理脚本和要复制的文件。这些脚本在仓库用于任何工作区时都会运行。",
+        "setup": {
+          "label": "设置脚本",
+          "helper": "此脚本从工作树内部运行，在创建后、编码代理启动前执行。用于设置任务，如安装依赖项或准备环境。",
+          "parallelLabel": "与编码代理并行运行设置脚本",
+          "parallelHelper": "启用后，设置脚本将与编码代理同时运行，而不是等待设置完成后再启动。"
+        },
+        "cleanup": {
+          "label": "清理脚本",
+          "helper": "此脚本从工作树内部运行，在编码代理执行后执行（仅在进行了更改时）。用于质量保证任务，如运行 linter、格式化程序、测试或其他验证步骤。"
+        },
+        "archive": {
+          "label": "归档脚本",
+          "helper": "当工作区被归档时，此脚本从工作树内部运行。用于清理任务，如停止服务、释放资源或保存状态。"
+        },
+        "copyFiles": {
+          "label": "复制文件",
+          "helper": "要从原始仓库目录复制到工作树的文件的逗号分隔列表。对 .env 等环境文件很有用。确保这些文件被 gitignore！",
+          "placeholder": "文件路径或 glob 模式（例如：.env、config/*.json）"
+        },
+        "devServer": {
+          "label": "开发服务器脚本",
+          "helper": "为此仓库启动开发服务器。脚本从仓库的工作树目录执行。"
+        }
+      },
+      "save": {
+        "button": "保存仓库设置",
+        "success": "仓库设置保存成功！",
+        "error": "保存仓库设置失败",
+        "unsavedChanges": "您有未保存的更改",
+        "discard": "放弃",
+        "confirmSwitch": "您有未保存的更改。您确定要切换仓库吗？您的更改将丢失。"
+      }
+    },
+    "relay": {
+      "title": "Remote Access",
+      "description": "Allow access to this instance from the web via relay tunnel.",
+      "enabled": {
+        "label": "Enable remote access",
+        "helper": "When enabled, this instance can be accessed remotely through a relay tunnel."
+      },
+      "enrollmentCode": {
+        "label": "Enrollment Code",
+        "helper": "Enter this code in the browser to pair with this instance.",
+        "loginRequired": "Log in to generate an enrollment code.",
+        "fetchError": "Failed to fetch enrollment code.",
+        "show": "Show enrollment code"
+      }
+    },
+    "remoteProjects": {
+      "title": "Remote Projects",
+      "description": "Manage cloud-synced projects across organizations.",
+      "loading": "Loading remote projects...",
+      "loadError": "Failed to load organizations",
+      "noProjects": "No projects yet. Create one to get started.",
+      "selectOrg": "Select an organization",
+      "createSuccess": "Project created successfully",
+      "deleteSuccess": "Project deleted successfully",
+      "nameRequired": "Project name is required",
+      "saveSuccess": "Project updated successfully",
+      "saveError": "Failed to update project",
+      "columns": {
+        "organizations": "Organizations",
+        "projects": "Projects"
+      },
+      "actions": {
+        "addProject": "Add Project"
+      },
+      "form": {
+        "name": {
+          "label": "Project Name",
+          "placeholder": "Enter project name"
+        },
+        "color": {
+          "label": "Project Color"
+        },
+        "statuses": {
+          "label": "Project Statuses",
+          "description": "Manage kanban columns for this project."
+        }
+      },
+      "loginRequired": {
+        "title": "Sign in required",
+        "description": "Sign in to manage your remote projects.",
+        "action": "Sign in"
+      }
+    }
+  },
+  "integrations": {
+    "github": {
+      "cliSetup": {
+        "title": "GitHub CLI 设置",
+        "description": "需要 GitHub CLI 身份验证才能创建拉取请求并与 GitHub 仓库交互。",
+        "setupWillTitle": "此设置将：",
+        "steps": {
+          "checkInstalled": "检查是否安装了 GitHub CLI (gh)",
+          "installHomebrew": "如果需要，通过 Homebrew 安装它（macOS）",
+          "authenticate": "使用 OAuth 进行 GitHub 身份验证"
+        },
+        "setupNote": "设置将在聊天窗口中运行。您需要在浏览器中完成身份验证。",
+        "runSetup": "运行设置",
+        "running": "运行中...",
+        "errors": {
+          "brewMissing": "未安装 Homebrew。安装它以启用自动设置。",
+          "notSupported": "此平台不支持自动设置。请手动安装 GitHub CLI。",
+          "setupFailed": "运行 GitHub CLI 设置失败。"
+        },
+        "help": {
+          "homebrew": {
+            "description": "自动安装需要 Homebrew。从",
+            "brewSh": "brew.sh",
+            "manualInstall": "安装 Homebrew，然后重新运行设置。或者，使用以下命令手动安装 GitHub CLI：",
+            "afterInstall": "安装后，使用以下命令进行身份验证："
+          },
+          "manual": {
+            "description": "从",
+            "officialDocs": "官方文档",
+            "andAuthenticate": "安装 GitHub CLI，然后使用您的 GitHub 账户进行身份验证。"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "@crew/crew",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "concurrently -n backend,frontend -c blue,green \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && bun run src/index.ts",
+    "dev:frontend": "cd frontend/packages/local-web && pnpm dev"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}

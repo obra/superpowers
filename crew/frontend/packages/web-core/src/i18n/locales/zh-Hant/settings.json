@@ -1,0 +1,588 @@
+{
+  "settings": {
+    "common": {
+      "unsavedChanges": "• 您有未儲存的變更",
+      "discardChangesConfirm": "Discard unsaved changes?"
+    },
+    "unsavedChanges": {
+      "title": "未儲存的變更",
+      "message": "您有未儲存的變更。確定要關閉而不儲存嗎？",
+      "discard": "放棄變更",
+      "cancel": "繼續編輯"
+    },
+    "layout": {
+      "nav": {
+        "title": "設定",
+        "general": "一般",
+        "generalDesc": "主題、通知與偏好設定",
+        "projects": "專案",
+        "projectsDesc": "專案儲存庫與設定",
+        "repos": "儲存庫",
+        "reposDesc": "儲存庫腳本與設定",
+        "agents": "代理",
+        "agentsDesc": "編碼代理設定",
+        "mcp": "MCP 伺服器",
+        "mcpDesc": "模型上下文協議伺服器",
+        "organizations": "組織設定",
+        "organizationsDesc": "管理組織成員與權限",
+        "remote-projects": "專案",
+        "remote-projectsDesc": "管理專案",
+        "relay": "Remote Access",
+        "relayDesc": "Relay tunnel and enrollment"
+      }
+    },
+    "general": {
+      "loading": "載入設定中...",
+      "loadError": "載入設定失敗。",
+      "save": {
+        "button": "儲存設定",
+        "success": "✓ 設定儲存成功！",
+        "error": "儲存設定失敗",
+        "unsavedChanges": "• 您有未儲存的變更",
+        "discard": "放棄"
+      },
+      "appearance": {
+        "title": "外觀",
+        "description": "自訂應用程式的外觀與風格。",
+        "theme": {
+          "label": "主題",
+          "placeholder": "選擇主題",
+          "helper": "選擇您喜歡的配色方案。"
+        },
+        "language": {
+          "label": "語言",
+          "placeholder": "選擇語言",
+          "helper": "選擇您偏好的語言。瀏覽器預設將跟隨系統語言。"
+        }
+      },
+      "taskExecution": {
+        "title": "預設編碼代理",
+        "description": "選擇任務的預設編碼代理。",
+        "executor": {
+          "label": "預設代理設定檔",
+          "placeholder": "選擇設定檔",
+          "helper": "選擇建立任務嘗試時要使用的預設代理設定檔。"
+        },
+        "variant": "預設",
+        "defaultLabel": "預設"
+      },
+      "editor": {
+        "title": "編輯器",
+        "description": "設定您的程式碼編輯體驗。",
+        "type": {
+          "label": "編輯器類型",
+          "placeholder": "選擇編輯器",
+          "helper": "選擇您偏好的程式碼編輯器介面。"
+        },
+        "customCommand": {
+          "label": "自訂編輯器指令",
+          "placeholder": "例如：code、subl、vim",
+          "helper": "輸入啟動自訂編輯器的指令，用於開啟檔案。"
+        },
+        "remoteSsh": {
+          "host": {
+            "label": "遠端 SSH 主機（選填）",
+            "placeholder": "例如：主機名稱或 IP 位址",
+            "helper": "若 Vibe Kanban 在遠端伺服器上執行，請設定此項。設定後，點擊在編輯器中開啟將產生 URL 以透過 SSH 開啟編輯器，而非執行本機指令。"
+          },
+          "user": {
+            "label": "遠端 SSH 使用者（選填）",
+            "placeholder": "例如：使用者名稱",
+            "helper": "遠端連線的 SSH 使用者名稱。若未設定，VS Code 將使用您的 SSH 設定或提示輸入。"
+          }
+        },
+        "autoInstallExtension": {
+          "label": "Auto-install VS Code Extension",
+          "helper": "Automatically install the Vibe Kanban extension when opening a project in VS Code or Cursor. This runs in the background and has no effect if the extension is already installed."
+        },
+        "availability": {
+          "checking": "檢查可用性...",
+          "available": "可用",
+          "notFound": "在 PATH 中找不到"
+        }
+      },
+      "github": {
+        "title": "GitHub 整合",
+        "cliSetup": {
+          "title": "GitHub CLI 設定",
+          "description": "需要 GitHub CLI 驗證才能建立 PR 並與 GitHub 儲存庫互動。",
+          "setupWillTitle": "此設定將：",
+          "steps": {
+            "checkInstalled": "檢查是否已安裝 GitHub CLI (gh)",
+            "installHomebrew": "如有需要，透過 Homebrew 安裝（macOS）",
+            "authenticate": "使用 OAuth 進行 GitHub 驗證"
+          },
+          "setupNote": "設定會在聊天視窗中執行。您需要在瀏覽器中完成驗證。",
+          "runSetup": "執行設定",
+          "running": "執行中...",
+          "errors": {
+            "brewMissing": "未安裝 Homebrew。請安裝以啟用自動設定。",
+            "notSupported": "此平台不支援自動設定。請手動安裝 GitHub CLI。",
+            "setupFailed": "執行 GitHub CLI 設定失敗。"
+          },
+          "help": {
+            "homebrew": {
+              "description": "自動安裝需要 Homebrew。請至",
+              "brewSh": "brew.sh",
+              "manualInstall": "安裝 Homebrew，然後重新執行設定。或使用以下指令手動安裝 GitHub CLI：",
+              "afterInstall": "安裝後，使用以下指令進行驗證："
+            },
+            "manual": {
+              "description": "從",
+              "officialDocs": "官方文件",
+              "andAuthenticate": "安裝 GitHub CLI，並使用您的 GitHub 帳號進行驗證。"
+            }
+          }
+        }
+      },
+      "git": {
+        "title": "Git",
+        "description": "設定 Git 分支命名偏好",
+        "branchPrefix": {
+          "label": "分支前綴",
+          "placeholder": "vk",
+          "helper": "自動產生的分支名稱前綴。留空表示不使用前綴。",
+          "preview": "預覽：",
+          "previewWithPrefix": "{{prefix}}/1a2b-task-name",
+          "previewNoPrefix": "1a2b-task-name",
+          "errors": {
+            "slash": "前綴不能包含 '/'。",
+            "startsWithDot": "前綴不能以 '.' 開頭。",
+            "endsWithDot": "前綴不能以 '.' 或 '.lock' 結尾。",
+            "invalidSequence": "包含無效序列（..、@{）。",
+            "invalidChars": "包含無效字元。",
+            "controlChars": "包含控制字元。"
+          }
+        },
+        "workspaceDir": {
+          "label": "工作區目錄",
+          "placeholder": "~/",
+          "helper": "工作區將在此路徑內的 .vibe-kanban-workspaces 子目錄中建立。留空以使用系統預設值。變更需要重新啟動應用程式。",
+          "browse": "瀏覽",
+          "dialogTitle": "選擇工作區目錄",
+          "dialogDescription": "選擇一個目錄。工作區將在其中的 .vibe-kanban-workspaces 子目錄中建立。"
+        }
+      },
+      "pullRequests": {
+        "title": "PR",
+        "description": "設定 PR 建立行為",
+        "autoDescription": {
+          "label": "預設自動產生 PR 描述",
+          "helper": "啟用後，AI 代理會在建立 PR 後自動更新標題與描述。"
+        },
+        "customPrompt": {
+          "useCustom": "使用自訂提示",
+          "helper": "產生 PR 描述時 AI 代理使用的自訂提示。使用 {pr_number} 與 {pr_url} 作為佔位符。"
+        }
+      },
+      "commits": {
+        "title": "提交",
+        "description": "設定任務嘗試的提交行為",
+        "reminder": {
+          "label": "提交提醒",
+          "helper": "提示支援的代理在停止前提交變更。"
+        },
+        "customPrompt": {
+          "useCustom": "使用自訂提示",
+          "helper": "提交提醒的自訂提示。git 狀態將自動追加。"
+        }
+      },
+      "notifications": {
+        "title": "通知",
+        "description": "控制何時與如何接收通知。",
+        "sound": {
+          "label": "音效通知",
+          "helper": "任務嘗試完成執行時播放音效。",
+          "fileLabel": "音效",
+          "filePlaceholder": "選擇音效",
+          "fileHelper": "選擇任務完成時播放的音效。點擊音量按鈕可預覽。"
+        },
+        "push": {
+          "label": "推播通知",
+          "helper": "任務嘗試完成執行時顯示系統通知。"
+        }
+      },
+      "messageInput": {
+        "title": "訊息輸入",
+        "description": "設定在聊天輸入中傳送訊息的方式。",
+        "shortcut": {
+          "label": "傳送訊息快捷鍵",
+          "helper": "選擇傳送訊息的鍵盤快捷鍵。",
+          "enterLabel": "Enter（Shift+Enter 換行）"
+        }
+      },
+      "privacy": {
+        "title": "隱私",
+        "description": "透過分享匿名使用資料來協助改善 Vibe Kanban。",
+        "telemetry": {
+          "label": "啟用遙測",
+          "helper": "啟用匿名使用事件追蹤以協助改善應用程式。不會收集提示或專案資訊。"
+        }
+      },
+      "taskTemplates": {
+        "title": "標籤",
+        "description": "建立可用 @tag_name 插入任務描述的可重用文字片段。"
+      },
+      "tags": {
+        "manager": {
+          "title": "任務標籤",
+          "addTag": "新增標籤",
+          "noTags": "尚無標籤。為常見任務描述建立可重用文字片段。在任何任務中使用 @tag_name。",
+          "table": {
+            "tagName": "標籤名稱",
+            "content": "內容",
+            "actions": "操作"
+          },
+          "actions": {
+            "editTag": "編輯標籤",
+            "deleteTag": "刪除標籤"
+          },
+          "deleteConfirm": "您確定要刪除標籤 {{tagName}} 嗎？"
+        },
+        "dialog": {
+          "createTitle": "建立標籤",
+          "editTitle": "編輯標籤",
+          "tagName": {
+            "label": "標籤名稱",
+            "required": "*",
+            "hint": "在任務描述中使用 @ 加上此名稱：@{{tagName}}",
+            "placeholder": "例如：bug_fix、test_plan、api_docs",
+            "error": "標籤名稱不能包含空白。請使用底線（例如：my_tag）"
+          },
+          "content": {
+            "label": "內容",
+            "required": "*",
+            "hint": "在任務描述中使用 @{{tagName}} 時會插入的文字",
+            "placeholder": "輸入使用此標籤時要插入的文字"
+          },
+          "errors": {
+            "nameRequired": "標籤名稱為必填",
+            "saveFailed": "儲存標籤失敗"
+          },
+          "buttons": {
+            "cancel": "取消",
+            "create": "建立",
+            "update": "更新"
+          }
+        }
+      },
+      "safety": {
+        "title": "安全與免責聲明",
+        "description": "重設安全警告與入門流程確認。",
+        "disclaimer": {
+          "title": "免責聲明確認",
+          "description": "重設安全免責聲明。",
+          "button": "重設"
+        },
+        "onboarding": {
+          "title": "入門流程",
+          "description": "重設入門流程。",
+          "button": "重設"
+        }
+      },
+      "beta": {
+        "title": "Beta 功能",
+        "description": "在正式發布前試用實驗性功能。",
+        "workspaces": {
+          "label": "啟用工作區 Beta",
+          "helper": "查看任務嘗試時使用新的工作區介面。任務將首先在任務檢視中開啟，嘗試將在新的工作區檢視中開啟。"
+        }
+      }
+    },
+    "agents": {
+      "title": "編碼代理設定",
+      "description": "使用不同設定自訂編碼代理的行為。",
+      "loading": "載入代理設定中...",
+      "selectAgent": "選擇代理",
+      "save": {
+        "button": "儲存代理設定",
+        "success": "✓ 執行器設定儲存成功！",
+        "unsavedChanges": "• 您有未儲存的變更"
+      },
+      "availability": {
+        "checking": "檢查中...",
+        "checkingAvailability": "正在檢查可用性...",
+        "available": "代理可用",
+        "notFoundSimple": "找不到代理",
+        "loginDetected": "偵測到最近使用",
+        "loginDetectedTooltip": "找到此代理的最近驗證憑證",
+        "installationFound": "偵測到曾使用",
+        "installationFoundTooltip": "找到代理設定。您可能需要登入才能使用。"
+      },
+      "editor": {
+        "formLabel": "編輯 JSON",
+        "agentLabel": "代理",
+        "agentPlaceholder": "選擇執行器類型",
+        "configLabel": "設定",
+        "configPlaceholder": "選擇設定",
+        "createNew": "新建...",
+        "deleteTitle": "無法刪除最後一個設定",
+        "deleteButton": "刪除 {{name}}",
+        "deleteText": "刪除",
+        "makeDefault": "設為預設",
+        "isDefault": "預設",
+        "jsonLabel": "代理設定（JSON）",
+        "jsonPlaceholder": "載入設定檔中...",
+        "jsonLoading": "載入中...",
+        "pathLabel": "設定檔位置："
+      },
+      "errors": {
+        "deleteFailed": "刪除設定失敗。請重試。",
+        "saveFailed": "儲存代理設定失敗。請重試。",
+        "saveConfigFailed": "儲存設定失敗。請重試。",
+        "schemaNotFound": "找不到執行器類型 {{executor}} 的結構描述"
+      },
+      "tree": {
+        "search": "搜尋設定...",
+        "expandAll": "全部展開",
+        "collapseAll": "全部收合",
+        "noResults": "沒有符合的設定",
+        "noConfigs": "沒有可用的設定",
+        "selectConfig": "從側邊欄選擇一個設定來查看和編輯其設定。"
+      },
+      "deleteConfigDialog": {
+        "title": "刪除設定？",
+        "description": "這將從 {{executorType}} 執行器中永久刪除「{{configName}}」。此操作無法復原。"
+      }
+    },
+    "mcp": {
+      "title": "MCP 伺服器設定",
+      "description": "設定模型上下文協議伺服器，使用自訂工具與資源擴充編碼代理功能。",
+      "loading": "載入 MCP 設定中...",
+      "applying": "套用設定中...",
+      "labels": {
+        "agent": "代理",
+        "agentPlaceholder": "選擇執行器",
+        "agentHelper": "選擇要設定 MCP 伺服器的代理。",
+        "serverConfig": "伺服器設定（JSON）",
+        "popularServers": "熱門伺服器",
+        "serverHelper": "點擊卡片將該 MCP 伺服器插入到上方 JSON 中。",
+        "saveLocation": "變更將儲存到："
+      },
+      "loadingStates": {
+        "jsonEditor": "載入中...",
+        "configuration": "載入目前 MCP 伺服器設定..."
+      },
+      "errors": {
+        "loadFailed": "載入設定失敗。",
+        "invalidJson": "JSON 格式無效",
+        "validationError": "驗證錯誤",
+        "saveFailed": "儲存 MCP 伺服器失敗",
+        "applyFailed": "套用 MCP 伺服器設定失敗",
+        "addServerFailed": "新增預設伺服器失敗",
+        "mcpError": "MCP 設定錯誤：{{error}}",
+        "notSupported": "不支援 MCP",
+        "supportMessage": "要使用 MCP 伺服器，請在上方選擇支援 MCP 的其他執行器（Claude、Amp、Gemini、Codex 或 Opencode）。"
+      },
+      "save": {
+        "button": "儲存 MCP 設定",
+        "success": "設定已儲存！",
+        "successMessage": "✓ MCP 設定儲存成功！",
+        "loading": "載入目前 MCP 伺服器設定...",
+        "unsavedChanges": "• 您有未儲存的變更"
+      }
+    },
+    "projects": {
+      "title": "專案設定",
+      "description": "設定專案專屬的腳本與選項。",
+      "loading": "載入專案中...",
+      "loadError": "載入專案失敗。",
+      "selector": {
+        "label": "選擇專案",
+        "placeholder": "選擇要設定的專案",
+        "helper": "選擇專案以查看與編輯其設定。",
+        "noProjects": "沒有可用的專案"
+      },
+      "general": {
+        "title": "一般設定",
+        "description": "設定基本專案資訊。",
+        "name": {
+          "label": "專案名稱",
+          "placeholder": "輸入專案名稱",
+          "helper": "此專案的顯示名稱。"
+        },
+        "repoPath": {
+          "label": "Git 儲存庫路徑",
+          "placeholder": "/path/to/your/existing/repo",
+          "helper": "磁碟上的 Git 儲存庫絕對路徑。"
+        }
+      },
+      "save": {
+        "button": "儲存專案設定",
+        "success": "✓ 專案設定儲存成功！",
+        "error": "儲存專案設定失敗",
+        "unsavedChanges": "• 您有未儲存的變更",
+        "discard": "放棄",
+        "confirmSwitch": "您有未儲存的變更。確定要切換專案嗎？您的變更將會遺失。",
+        "saving": "Saving..."
+      },
+      "repositories": {
+        "title": "儲存庫",
+        "description": "管理此專案中的 Git 儲存庫",
+        "noRepositories": "未設定儲存庫",
+        "addRepository": "新增儲存庫"
+      }
+    },
+    "repos": {
+      "title": "儲存庫設定",
+      "description": "設定此儲存庫在工作區中使用時執行的腳本。",
+      "loading": "載入儲存庫中...",
+      "loadError": "載入儲存庫失敗。",
+      "selector": {
+        "label": "選擇儲存庫",
+        "placeholder": "選擇要設定的儲存庫",
+        "helper": "選擇儲存庫以查看與編輯其設定。",
+        "noRepos": "沒有可用的儲存庫"
+      },
+      "general": {
+        "title": "一般設定",
+        "description": "設定基本儲存庫資訊。",
+        "displayName": {
+          "label": "顯示名稱",
+          "placeholder": "輸入顯示名稱",
+          "helper": "此儲存庫的易讀名稱。"
+        },
+        "path": {
+          "label": "儲存庫路徑"
+        },
+        "defaultWorkingDir": {
+          "label": "預設工作目錄",
+          "placeholder": "例如：packages/frontend",
+          "helper": "單儲存庫工作區中程式碼代理執行的子目錄。在建立工作區時設定。留空則使用儲存庫根目錄。"
+        },
+        "defaultTargetBranch": {
+          "label": "預設目標分支",
+          "placeholder": "選擇分支",
+          "helper": "新工作區的預設基礎分支。工作樹從此分支建立，PR 將以此分支為目標。",
+          "search": "搜尋分支",
+          "noBranches": "找不到分支",
+          "loading": "正在載入分支...",
+          "useCurrent": "使用目前分支"
+        }
+      },
+      "scripts": {
+        "title": "腳本與設定",
+        "description": "設定此儲存庫的設定腳本、清理腳本與要複製的檔案。這些腳本在儲存庫用於任何工作區時執行。",
+        "setup": {
+          "label": "設定腳本",
+          "helper": "此腳本在工作樹內執行，於建立後、編碼代理啟動前執行。用於安裝相依套件或準備環境等設定工作。",
+          "parallelLabel": "與編碼代理平行執行設定腳本",
+          "parallelHelper": "啟用後，設定腳本將與編碼代理同時執行，而不是等待設定完成後再啟動。"
+        },
+        "cleanup": {
+          "label": "清理腳本",
+          "helper": "此腳本在工作樹內執行，於編碼代理執行後（僅在有變更時）執行。用於品質保證工作，如執行 linter、格式化工具、測試或其他驗證步驟。"
+        },
+        "archive": {
+          "label": "歸檔腳本",
+          "helper": "當工作區被歸檔時，此腳本在工作樹內執行。用於清理工作，如停止服務、釋放資源或儲存狀態。"
+        },
+        "copyFiles": {
+          "label": "複製檔案",
+          "helper": "要從原始儲存庫目錄複製到工作樹的檔案清單（以逗號分隔）。適合用於 .env 等環境檔案。請確保這些檔案已加入 gitignore！",
+          "placeholder": "檔案路徑或 glob 模式（例如：.env、config/*.json）"
+        },
+        "devServer": {
+          "label": "開發伺服器腳本",
+          "helper": "啟動此儲存庫的開發伺服器。腳本會從儲存庫的工作樹目錄執行。"
+        }
+      },
+      "save": {
+        "button": "儲存儲存庫設定",
+        "success": "儲存庫設定儲存成功！",
+        "error": "儲存儲存庫設定失敗",
+        "unsavedChanges": "您有未儲存的變更",
+        "discard": "放棄",
+        "confirmSwitch": "您有未儲存的變更。確定要切換儲存庫嗎？您的變更將會遺失。"
+      }
+    },
+    "relay": {
+      "title": "Remote Access",
+      "description": "Allow access to this instance from the web via relay tunnel.",
+      "enabled": {
+        "label": "Enable remote access",
+        "helper": "When enabled, this instance can be accessed remotely through a relay tunnel."
+      },
+      "enrollmentCode": {
+        "label": "Enrollment Code",
+        "helper": "Enter this code in the browser to pair with this instance.",
+        "loginRequired": "Log in to generate an enrollment code.",
+        "fetchError": "Failed to fetch enrollment code.",
+        "show": "Show enrollment code"
+      }
+    },
+    "remoteProjects": {
+      "title": "Remote Projects",
+      "description": "Manage cloud-synced projects across organizations.",
+      "loading": "Loading remote projects...",
+      "loadError": "Failed to load organizations",
+      "noProjects": "No projects yet. Create one to get started.",
+      "selectOrg": "Select an organization",
+      "createSuccess": "Project created successfully",
+      "deleteSuccess": "Project deleted successfully",
+      "nameRequired": "Project name is required",
+      "saveSuccess": "Project updated successfully",
+      "saveError": "Failed to update project",
+      "columns": {
+        "organizations": "Organizations",
+        "projects": "Projects"
+      },
+      "actions": {
+        "addProject": "Add Project"
+      },
+      "form": {
+        "name": {
+          "label": "Project Name",
+          "placeholder": "Enter project name"
+        },
+        "color": {
+          "label": "Project Color"
+        },
+        "statuses": {
+          "label": "Project Statuses",
+          "description": "Manage kanban columns for this project."
+        }
+      },
+      "loginRequired": {
+        "title": "Sign in required",
+        "description": "Sign in to manage your remote projects.",
+        "action": "Sign in"
+      }
+    }
+  },
+  "integrations": {
+    "github": {
+      "cliSetup": {
+        "title": "GitHub CLI 設定",
+        "description": "需要 GitHub CLI 驗證才能建立 PR 並與 GitHub 儲存庫互動。",
+        "setupWillTitle": "此設定將：",
+        "steps": {
+          "checkInstalled": "檢查是否已安裝 GitHub CLI (gh)",
+          "installHomebrew": "如有需要，透過 Homebrew 安裝（macOS）",
+          "authenticate": "使用 OAuth 進行 GitHub 驗證"
+        },
+        "setupNote": "設定會在聊天視窗中執行。您需要在瀏覽器中完成驗證。",
+        "runSetup": "執行設定",
+        "running": "執行中...",
+        "errors": {
+          "brewMissing": "未安裝 Homebrew。請安裝以啟用自動設定。",
+          "notSupported": "此平台不支援自動設定。請手動安裝 GitHub CLI。",
+          "setupFailed": "執行 GitHub CLI 設定失敗。"
+        },
+        "help": {
+          "homebrew": {
+            "description": "自動安裝需要 Homebrew。請至",
+            "brewSh": "brew.sh",
+            "manualInstall": "安裝 Homebrew，然後重新執行設定。或使用以下指令手動安裝 GitHub CLI：",
+            "afterInstall": "安裝後，使用以下指令進行驗證："
+          },
+          "manual": {
+            "description": "從",
+            "officialDocs": "官方文件",
+            "andAuthenticate": "安裝 GitHub CLI，並使用您的 GitHub 帳號進行驗證。"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "createDialog": {
+    "title": "Create New Organization",
+    "description": "Create a new organization to collaborate with your team.",
+    "nameLabel": "Organization Name",
+    "namePlaceholder": "e.g., Acme Corporation",
+    "slugLabel": "Slug",
+    "slugPlaceholder": "e.g., acme-corporation",
+    "slugHelper": "Used in URLs. Lowercase letters, numbers, and hyphens only.",
+    "creating": "Creating...",
+    "createButton": "Create Organization"
+  },
+  "inviteDialog": {
+    "title": "Invite Member",
+    "description": "Send an invitation to join your organization.",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "colleague@example.com",
+    "roleLabel": "Role",
+    "rolePlaceholder": "Select a role",
+    "roleHelper": "Admins can manage members and organization settings.",
+    "sending": "Sending...",
+    "sendButton": "Send Invitation",
+    "subscriptionRequired": "더 많은 멤버를 추가하려면 구독이 필요합니다",
+    "upgradePrompt": "추가 멤버를 초대하려면 조직의 플랜을 업그레이드하세요.",
+    "upgradeButton": "플랜 업그레이드"
+  },
+  "roles": {
+    "member": "Member",
+    "admin": "Admin"
+  },
+  "memberList": {
+    "title": "Members",
+    "description": "Manage members and their roles in {{orgName}}",
+    "inviteButton": "Invite Member",
+    "loading": "Loading members...",
+    "none": "No members found",
+    "you": "You"
+  },
+  "invitationList": {
+    "title": "Pending Invitations",
+    "description": "View pending invitations for {{orgName}}",
+    "loading": "Loading invitations...",
+    "none": "No pending invitations",
+    "invited": "Invited {{date}}",
+    "pending": "Pending"
+  },
+  "settings": {
+    "title": "Organization Settings",
+    "description": "Manage organization members and permissions",
+    "selectLabel": "Select Organization",
+    "selectPlaceholder": "Select an organization",
+    "selectHelper": "Choose an organization to view and manage its members",
+    "noOrganizations": "No organizations available",
+    "loadingOrganizations": "Loading organizations...",
+    "loadError": "Failed to load organizations",
+    "dangerZone": "Danger Zone",
+    "dangerZoneDescription": "Irreversible and destructive actions",
+    "deleteOrganization": "Delete Organization",
+    "deleteOrganizationDescription": "Permanently delete this organization and all its data",
+    "confirmDelete": "Are you sure you want to delete {{orgName}}? This action cannot be undone.",
+    "deleteSuccess": "Organization deleted successfully",
+    "deleteError": "Failed to delete organization"
+  },
+  "loginRequired": {
+    "title": "로그인 필요",
+    "description": "조직 설정을 관리하려면 로그인해야 합니다.",
+    "action": "로그인"
+  },
+  "confirmRemoveMember": "Are you sure you want to remove this member from the organization?",
+  "sharedProjects": {
+    "title": "공유 프로젝트",
+    "description": "{{orgName}}의 원격 프로젝트와 로컬 프로젝트 링크",
+    "loading": "프로젝트 로딩 중...",
+    "noProjects": "이 조직에서 공유 프로젝트를 찾을 수 없습니다",
+    "notLinked": "연결되지 않음",
+    "linkedTo": "연결됨: {{projectName}}",
+    "linked": "연결됨",
+    "linkProject": "프로젝트 연결...",
+    "noAvailableProjects": "사용 가능한 프로젝트 없음"
+  },
+  "billing": {
+    "title": "결제 및 구독",
+    "description": "조직의 구독 및 결제 설정 관리",
+    "manageButton": "결제 관리",
+    "openInBrowser": "새 브라우저 탭에서 열림"
+  },
+  "personalOrg": {
+    "cannotInvite": "개인 조직에는 추가 멤버를 포함할 수 없습니다.",
+    "createOrgPrompt": "다른 사람과 협업하려면 조직을 만드세요.",
+    "createOrgButton": "조직 만들기"
+  }
+}

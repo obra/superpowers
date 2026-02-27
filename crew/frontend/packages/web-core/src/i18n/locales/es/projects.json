@@ -1,0 +1,40 @@
+{
+  "title": "Proyectos",
+  "subtitle": "Gestiona tus proyectos y sigue su progreso",
+  "createProject": "Crear Proyecto",
+  "loading": "Cargando proyectos...",
+  "repoSearch": {
+    "searching": "Buscando repositorios...",
+    "stillSearching": "Aún buscando... ({{seconds}}s)",
+    "takingLonger": "Esto está tardando más de lo habitual. Puedes buscar manualmente abajo.",
+    "noReposFound": "No se encontraron repositorios en ubicaciones comunes.",
+    "browseHint": "Usa la opción de abajo para buscar un repositorio."
+  },
+  "errors": {
+    "fetchFailed": "Error al cargar proyectos",
+    "deleteFailed": "Error al eliminar el proyecto"
+  },
+  "empty": {
+    "title": "Aún no hay proyectos",
+    "description": "Comienza creando tu primer proyecto.",
+    "createFirst": "Crear tu primer proyecto"
+  },
+  "projectNotFound": "El proyecto que buscas no existe o ha sido eliminado.",
+  "viewProject": "Ver Proyecto",
+  "openInIDE": "Abrir en IDE",
+  "createdDate": "Creado {{date}}",
+  "createProjectDialog": {
+    "title": "Create Project",
+    "description": "Create a new project in this organization.",
+    "nameLabel": "Project name",
+    "namePlaceholder": "Enter project name",
+    "selectColor": "Select project color",
+    "creating": "Creating...",
+    "createButton": "Create Project"
+  },
+  "deleteProjectDialog": {
+    "title": "Delete Project?",
+    "description": "This will permanently delete \"{{name}}\" and all its issues. This action cannot be undone.",
+    "error": "Failed to delete project. Please try again."
+  }
+}

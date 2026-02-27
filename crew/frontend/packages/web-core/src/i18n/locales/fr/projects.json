@@ -1,0 +1,40 @@
+{
+  "title": "Projets",
+  "subtitle": "Gérez vos projets et suivez leur progression",
+  "createProject": "Créer un projet",
+  "loading": "Chargement des projets...",
+  "repoSearch": {
+    "searching": "Recherche de dépôts...",
+    "stillSearching": "Recherche en cours... ({{seconds}}s)",
+    "takingLonger": "Cela prend plus de temps que prévu. Vous pouvez parcourir manuellement ci-dessous.",
+    "noReposFound": "Aucun dépôt trouvé dans les emplacements courants.",
+    "browseHint": "Utilisez l'option ci-dessous pour parcourir et trouver un dépôt."
+  },
+  "errors": {
+    "fetchFailed": "Échec de la récupération des projets",
+    "deleteFailed": "Échec de la suppression du projet"
+  },
+  "empty": {
+    "title": "Aucun projet pour le moment",
+    "description": "Commencez par créer votre premier projet.",
+    "createFirst": "Créer votre premier projet"
+  },
+  "projectNotFound": "Le projet que vous recherchez n'existe pas ou a été supprimé.",
+  "viewProject": "Voir le projet",
+  "openInIDE": "Ouvrir dans l'IDE",
+  "createdDate": "Créé le {{date}}",
+  "createProjectDialog": {
+    "title": "Create Project",
+    "description": "Create a new project in this organization.",
+    "nameLabel": "Project name",
+    "namePlaceholder": "Enter project name",
+    "selectColor": "Select project color",
+    "creating": "Creating...",
+    "createButton": "Create Project"
+  },
+  "deleteProjectDialog": {
+    "title": "Delete Project?",
+    "description": "This will permanently delete \"{{name}}\" and all its issues. This action cannot be undone.",
+    "error": "Failed to delete project. Please try again."
+  }
+}

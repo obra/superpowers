@@ -1,0 +1,770 @@
+{
+  "dropzone": {
+    "dropImagesHere": "將圖片拖放到這裡",
+    "supportedFormats": "支援 PNG、JPG、GIF、WebP、SVG 格式"
+  },
+  "gitPanel": {
+    "create": {
+      "warnings": {
+        "noReposSelected": "請至少選擇一個儲存庫以開始"
+      }
+    },
+    "advanced": {
+      "workingBranch": "工作分支",
+      "placeholder": "例如：acme Corp"
+    }
+  },
+  "loading": "載入任務中...",
+  "empty": {
+    "noTasks": "找不到此專案的任務。",
+    "createFirst": "建立第一個任務",
+    "noSearchResults": "沒有任務符合您的搜尋。"
+  },
+  "actions": {
+    "addTask": "新增任務"
+  },
+  "filters": {
+    "sharedToggleAria": "切換共享任務",
+    "sharedToggleTooltip": "顯示/隱藏共享內容"
+  },
+  "rebase": {
+    "common": {
+      "action": "重基底",
+      "inProgress": "重基底中...",
+      "withTarget": "重基底到 {{branch}}"
+    },
+    "dialog": {
+      "title": "重基底任務嘗試",
+      "description": "選擇新的基底分支以將此任務嘗試重基底到該分支上。",
+      "upstreamLabel": "上游分支",
+      "upstreamPlaceholder": "選擇上游分支",
+      "targetLabel": "目標分支",
+      "targetPlaceholder": "選擇目標分支",
+      "advanced": "進階"
+    },
+    "status": {
+      "inProgress": "重基底進行中{{counts}}",
+      "needed": "需要重基底{{dirty}}{{counts}}",
+      "dirtyMarker": "（髒）"
+    }
+  },
+  "branches": {
+    "changeTarget": {
+      "dialog": {
+        "title": "變更目標分支",
+        "description": "為任務嘗試選擇新的目標分支。",
+        "placeholder": "選擇目標分支",
+        "action": "變更分支",
+        "inProgress": "變更中..."
+      }
+    }
+  },
+  "repos": {
+    "changeRepo": {
+      "dialog": {
+        "title": "變更儲存庫",
+        "description": "選擇用於 Git 操作的儲存庫。",
+        "label": "儲存庫",
+        "placeholder": "選擇儲存庫",
+        "action": "變更儲存庫"
+      }
+    },
+    "selector": {
+      "placeholder": "選擇儲存庫",
+      "empty": "沒有可用的儲存庫"
+    }
+  },
+  "repoBranchSelector": {
+    "label": "基底分支"
+  },
+  "attemptRepoSelector": {
+    "label": "儲存庫",
+    "addButton": "新增",
+    "empty": "尚未選擇儲存庫。請至少新增一個儲存庫。",
+    "selectBranch": "選擇分支",
+    "addRepo": {
+      "title": "選擇 Git 儲存庫",
+      "description": "選擇要新增到此嘗試的 Git 儲存庫"
+    }
+  },
+  "preview": {
+    "title": "預覽",
+    "selectAttempt": "選擇嘗試以查看預覽",
+    "troubleAlert": {
+      "title": "我們在預覽您的應用程式時遇到問題：",
+      "item1": "開發伺服器是否成功啟動？可能有錯誤需要處理，或需要安裝相依套件。",
+      "item2": "您的開發伺服器是否以格式將 URL 與連接埠輸出到終端機",
+      "item2Suffix": "？（這是我們判斷它是否在執行的方式）",
+      "item3": "您是否安裝了 Web Companion（點擊編輯所需）？如果沒有，請",
+      "item3Link": "依照此處的安裝說明操作",
+      "fixScript": "修復開發腳本"
+    },
+    "noServer": {
+      "title": "沒有執行中的開發伺服器",
+      "startPrompt": "請啟動開發伺服器以查看預覽",
+      "setupTitle": "必須設定開發伺服器腳本才能使用預覽功能",
+      "setupPrompt": "要使用即時預覽與點擊編輯，請為此專案新增開發伺服器腳本。",
+      "companionPrompt": "要使用點擊編輯功能，請將瀏覽器 Companion 加到您的專案。",
+      "companionLink": "查看安裝指南",
+      "startButton": "啟動開發伺服器",
+      "configureButton": "設定",
+      "stopAndEditButton": "停止開發伺服器並解決問題",
+      "fixScript": "修復開發腳本",
+      "editDevScript": "編輯開發伺服器腳本",
+      "learnMore": "了解更多關於測試應用程式的資訊"
+    },
+    "devScript": {
+      "saveAndStart": "儲存並啟動",
+      "saveOnly": "僅儲存",
+      "saveChanges": "儲存變更",
+      "cancel": "取消",
+      "errors": {
+        "notLoaded": "專案未載入",
+        "empty": "開發腳本不得為空"
+      }
+    },
+    "logs": {
+      "title": "開發伺服器日誌",
+      "hide": "隱藏",
+      "show": "顯示",
+      "label": "日誌",
+      "viewFull": "查看完整日誌"
+    },
+    "noDevScript": "未設定開發指令碼",
+    "noDevScriptHint": "在專案設定中新增開發指令碼以啟用預覽。",
+    "browser": {
+      "title": "開發伺服器預覽",
+      "devServerFallback": "開發伺服器"
+    },
+    "urlInput": {
+      "placeholder": "輸入 URL..."
+    },
+    "iframe": {
+      "title": "開發伺服器預覽"
+    },
+    "toolbar": {
+      "refresh": "重新整理預覽",
+      "copyUrl": "複製 URL",
+      "openInTab": "在新分頁開啟",
+      "stopDevServer": "停止開發伺服器",
+      "clickToEdit": "點擊以編輯 URL",
+      "resetUrl": "重設為偵測到的 URL",
+      "clearUrlOverride": "清除 URL 覆寫",
+      "desktopView": "桌面檢視",
+      "mobileView": "行動裝置檢視 (390x844)",
+      "responsiveView": "響應式檢視（可調整大小）",
+      "startDevServer": "啟動開發伺服器",
+      "submitUrl": "提交 URL",
+      "toggleDevTools": "切換 DevTools"
+    },
+    "loading": {
+      "startingServer": "正在啟動開發伺服器...",
+      "waitingForServer": "正在等待伺服器...",
+      "loadingPreview": "正在載入預覽...",
+      "manualUrlHint": "尚未偵測到 URL。您可以在上方工具列中手動輸入 URL。"
+    }
+  },
+  "diff": {
+    "viewModes": {
+      "inline": "行內檢視",
+      "split": "分割檢視"
+    },
+    "ignoreWhitespace": "忽略空白變更",
+    "errorLoadingDiff": "載入差異失敗：{{error}}",
+    "expandAll": "展開所有差異",
+    "collapseAll": "收合所有差異",
+    "filesChanged_one": "{{count}} 個檔案已變更",
+    "filesChanged_other": "{{count}} 個檔案已變更",
+    "noChanges": "尚未進行任何變更",
+    "largeDiff": {
+      "title": "大型檔案",
+      "linesChanged": "{{count}} 行已變更",
+      "loadAnyway": "仍然載入差異",
+      "warning": "大型差異可能會降低瀏覽器速度。"
+    }
+  },
+  "taskPanel": {
+    "noTaskSelected": "未選擇任務",
+    "loadingAttempts": "載入嘗試中...",
+    "errorLoadingAttempts": "載入嘗試失敗",
+    "attemptsCount": "嘗試（{{count}}）",
+    "noAttempts": "尚無嘗試"
+  },
+  "processes": {
+    "noLogsAvailable": "沒有可用的日誌",
+    "selectAttempt": "選擇嘗試以查看執行程序。",
+    "errorLoadingUpdates": "載入程序的即時更新失敗。",
+    "reconnecting": "重新連線中...",
+    "loading": "載入執行程序中...",
+    "noProcesses": "找不到此嘗試的執行程序。",
+    "processId": "程序 ID：{{id}}",
+    "deleted": "已刪除",
+    "deletedTooltip": "因復原而刪除：時間軸已回復到檢查點，後續執行已移除",
+    "agent": "代理：",
+    "exit": "退出：{{code}}",
+    "started": "開始：{{date}}",
+    "completed": "完成：{{date}}",
+    "detailsTitle": "程序詳情",
+    "backToList": "返回列表",
+    "loadingDetails": "載入程序詳情中...",
+    "errorLoadingDetails": "載入程序詳情失敗。請重試。",
+    "copyLogs": "複製日誌",
+    "logsCopied": "已複製！"
+  },
+  "taskHeader": {
+    "editTask": "編輯任務",
+    "deleteTask": "刪除任務",
+    "closePanel": "關閉面板"
+  },
+  "navigateToParent": "導航到父任務嘗試",
+  "toolbar": {
+    "actions": "操作",
+    "noAttempts": "尚無嘗試",
+    "startFirstAttempt": "開始第一次嘗試以開始處理此任務",
+    "startAttempt": "開始嘗試"
+  },
+  "followUp": {
+    "stop": "停止",
+    "clearReviewComments": "清除審查評論",
+    "resolveConflicts": "解決衝突",
+    "send": "傳送",
+    "unqueuing": "取消佇列中...",
+    "edit": "編輯",
+    "queuing": "佇列中...",
+    "queueForNextTurn": "排入下一輪",
+    "queue": "佇列",
+    "cancelQueue": "取消佇列",
+    "queuedMessage": "訊息已加入佇列 - 會在目前執行完成後處理",
+    "runSetupScript": "執行設定腳本",
+    "runCleanupScript": "執行清理腳本",
+    "runArchiveScript": "執行封存腳本",
+    "noSetupScript": "未為此專案設定設定腳本",
+    "noCleanupScript": "未為此專案設定清理腳本",
+    "noArchiveScript": "未為此專案設定封存腳本",
+    "scriptsDisabledWhileRunning": "程序執行時無法執行腳本"
+  },
+  "todos": {
+    "title_one": "待辦事項（{{count}}）",
+    "title_other": "待辦事項（{{count}}）"
+  },
+  "todoPopup": {
+    "title": "任務",
+    "progress": "{{completed}}/{{total}} 已完成",
+    "noTasks": "暫無任務"
+  },
+  "projects": {
+    "create": {
+      "dialog": {
+        "title": "建立專案",
+        "description": "輸入新專案的名稱。"
+      },
+      "form": {
+        "nameLabel": "名稱",
+        "namePlaceholder": "我的專案"
+      },
+      "errors": {
+        "createFailed": "建立專案失敗"
+      }
+    }
+  },
+  "attempt": {
+    "actions": {
+      "openInIde": "在 IDE 中開啟",
+      "openMenu": "開啟選單",
+      "startDevServer": "啟動開發伺服器",
+      "stopDevServer": "停止開發伺服器"
+    },
+    "labels": {
+      "attempt": "嘗試",
+      "agent": "代理",
+      "branch": "分支",
+      "diffs": "差異",
+      "summaryAndActions": "摘要與操作"
+    },
+    "agent": "代理",
+    "path": "路徑",
+    "openInEditor": "在 {{editor}} 中查看變更",
+    "copied": "已複製！",
+    "clickToCopy": "複製工作樹路徑",
+    "stopDev": "停止開發",
+    "pauseDev": "暫停開發",
+    "startDev": "啟動開發",
+    "viewDevLogs": "查看開發伺服器日誌",
+    "stopping": "停止中...",
+    "stopAttempt": "停止嘗試",
+    "newAttempt": "新嘗試",
+    "viewHistory": "查看嘗試歷史",
+    "createSubtask": "建立子任務",
+    "preview": "預覽",
+    "diffs": "差異",
+    "gitActions": "Git 操作",
+    "tryAgain": "重試",
+    "runSetup": "執行設定",
+    "setupHelpText": "{{agent}} 未正確設定。點擊執行設定以安裝並登入。",
+    "devScriptMissingTooltip": "要啟動開發伺服器，請為此專案新增開發腳本"
+  },
+  "git": {
+    "labels": {
+      "taskBranch": "任務分支"
+    },
+    "branch": {
+      "current": "目前"
+    },
+    "forcePushDialog": {
+      "title": "需要強制推送",
+      "description": "遠端分支{{branchLabel}}已與本機分支分岔。一般推送被拒絕。",
+      "warning": "強制推送將以本機變更覆寫遠端變更。此操作無法復原。",
+      "note": "僅在您確定要取代遠端分支歷史時才繼續。",
+      "error": "強制推送失敗"
+    },
+    "status": {
+      "commits_one": "提交",
+      "commits_other": "提交",
+      "conflicts": "衝突",
+      "upToDate": "最新",
+      "ahead": "領先",
+      "behind": "落後"
+    },
+    "states": {
+      "merged": "已合併！",
+      "merging": "合併中...",
+      "merge": "合併",
+      "rebasing": "重基底中...",
+      "rebase": "重基底",
+      "pushed": "已推送！",
+      "pushing": "推送中...",
+      "push": "推送",
+      "pushFailed": "失敗",
+      "forcePush": "強制推送",
+      "forcePushing": "強制推送中...",
+      "creating": "建立中...",
+      "createPr": "建立 PR"
+    },
+    "errors": {
+      "changeTargetBranch": "變更目標分支失敗",
+      "pushChanges": "推送變更失敗",
+      "mergeChanges": "合併變更失敗",
+      "rebaseBranch": "重基底分支失敗",
+      "branchStatusUnavailable": "無法取得分支狀態。您仍然可以變更目標分支。"
+    },
+    "pr": {
+      "open": "開啟 PR #{{number}}",
+      "number": "PR #{{number}}",
+      "merged": "已合併PR #{{prNumber}}"
+    },
+    "actions": {
+      "title": "Git 操作",
+      "changeTarget": "變更目標",
+      "prMerged": "PR #{{number}} 已合併",
+      "loginRequired": {
+        "title": "登入以管理 Git 操作",
+        "description": "登入 Vibe Kanban，才能推送分支、合併變更或為此任務建立 PR。",
+        "action": "登入"
+      }
+    },
+    "mergeDialog": {
+      "title": "合併變更",
+      "description": "這將把您的變更合併到目標分支。確定要繼續嗎？"
+    },
+    "createRepo": {
+      "dialog": {
+        "title": "建立新儲存庫",
+        "description": "初始化新的 Git 儲存庫"
+      },
+      "form": {
+        "nameLabel": "名稱",
+        "namePlaceholder": "my-project",
+        "locationLabel": "位置",
+        "locationPlaceholder": "目前目錄"
+      },
+      "browseDialog": {
+        "title": "選擇父目錄",
+        "description": "選擇新儲存庫的建立位置"
+      },
+      "errors": {
+        "nameRequired": "儲存庫名稱為必填",
+        "createFailed": "建立儲存庫失敗"
+      },
+      "buttons": {
+        "createRepository": "建立儲存庫"
+      },
+      "states": {
+        "creating": "建立中..."
+      }
+    }
+  },
+  "createAttemptDialog": {
+    "title": "建立嘗試",
+    "description": "使用編碼代理開始新的嘗試。將建立 Git 工作樹與任務分支。",
+    "baseBranch": "基底分支",
+    "loadingBranches": "載入分支中...",
+    "selectBranch": "選擇分支",
+    "error": "建立嘗試失敗。請重試。",
+    "creating": "建立中...",
+    "start": "開始"
+  },
+  "viewProcessesDialog": {
+    "title": "執行程序"
+  },
+  "viewRelatedTasksDialog": {
+    "title": "相關任務",
+    "empty": "此嘗試沒有相關任務",
+    "error": "載入相關任務失敗",
+    "tasksCount": "任務（{{count}}）",
+    "columns": {
+      "title": "標題",
+      "description": "描述",
+      "status": "狀態"
+    }
+  },
+  "attemptHeaderActions": {
+    "preview": "預覽",
+    "diffs": "差異",
+    "relatedTasks": "相關任務",
+    "tryNewUI": "試用新界面"
+  },
+  "actionsMenu": {
+    "attempt": "嘗試",
+    "openInIde": "在 IDE 中開啟嘗試",
+    "viewProcesses": "查看程序",
+    "viewRelatedTasks": "查看相關任務",
+    "createNewAttempt": "建立新嘗試",
+    "createSubtask": "建立子任務",
+    "gitActions": "Git 操作",
+    "editBranchName": "編輯分支名稱",
+    "task": "任務",
+    "duplicate": "複製",
+    "startReview": "開始審查",
+    "startingReview": "正在開始審查..."
+  },
+  "editBranchName": {
+    "dialog": {
+      "title": "編輯分支名稱",
+      "description": "輸入分支的新名稱。如果有未關閉的 PR，則無法重新命名。",
+      "branchNameLabel": "分支名稱",
+      "placeholder": "例如：feature/my-branch",
+      "renaming": "重新命名中...",
+      "action": "重新命名分支"
+    }
+  },
+  "startReviewDialog": {
+    "title": "開始審查",
+    "description": "請求編碼代理審查您的變更並提供反饋。",
+    "additionalInstructions": "附加說明（可選）",
+    "reviewComments": "審查評論（{{count}}）",
+    "includeGitContext": "包含 Git 上下文",
+    "includeGitContextDescription": "告訴代理如何查看此分支上的所有變更",
+    "newSession": "新工作階段"
+  },
+  "resolveConflicts": {
+    "dialog": {
+      "title": "解決衝突",
+      "description": "偵測到衝突。選擇您希望代理如何解決它們。",
+      "sessionLabel": "工作階段",
+      "existingSession": "在目前工作階段中繼續",
+      "newSession": "新工作階段",
+      "resolve": "解決衝突",
+      "resolving": "開始中...",
+      "filesWithConflicts_one": "{{count}} 個檔案有衝突",
+      "filesWithConflicts_other": "{{count}} 個檔案有衝突",
+      "andMore": "...還有 {{count}} 個"
+    }
+  },
+  "rebaseInProgress": {
+    "dialog": {
+      "title": "變基進行中",
+      "description": "正在無衝突地變基到 {{targetBranch}}。請選擇如何繼續。",
+      "hint": "您可以繼續變基以完成操作，或中止以返回之前的狀態。",
+      "continue": "繼續變基",
+      "continuing": "繼續中...",
+      "abort": "中止變基",
+      "aborting": "中止中...",
+      "continueError": "繼續變基失敗。可能存在未解決的衝突。",
+      "abortError": "中止變基失敗。請重試。"
+    }
+  },
+  "createPrDialog": {
+    "title": "建立 PR",
+    "description": "為此任務嘗試建立 PR。",
+    "titleLabel": "標題",
+    "titlePlaceholder": "輸入 PR 標題",
+    "descriptionLabel": "描述（選填）",
+    "descriptionPlaceholder": "輸入 PR 描述",
+    "baseBranchLabel": "基底分支",
+    "loadingBranches": "載入分支中...",
+    "selectBaseBranch": "選擇基底分支",
+    "draftLabel": "建立為草稿",
+    "autoGenerateLabel": "請求 AI 代理產生更好的 PR 描述",
+    "creating": "建立中...",
+    "createButton": "建立 PR",
+    "errors": {
+      "insufficientPermissions": "權限不足。請確認 CLI 具有必要權限。",
+      "repoNotFoundOrNoAccess": "找不到儲存庫或沒有存取權。請檢查儲存庫權限並確保已完成驗證。",
+      "failedToCreate": "建立 PR 失敗",
+      "gitCliNotLoggedIn": "Git 尚未驗證。請執行 gh auth login（或設定 Git 憑證）後重試。",
+      "gitCliNotInstalled": "未安裝 Git CLI。請安裝 Git 以建立 PR。",
+      "targetBranchNotFound": "遠端不存在目標分支 {{branch}}。建立 PR 前請確認該分支存在。"
+    },
+    "loginRequired": {
+      "title": "登入以建立 PR",
+      "description": "您需要登入才能為此任務建立 PR。我們會將您導向登入頁面。",
+      "action": "登入"
+    }
+  },
+  "showcases": {
+    "taskPanel": {
+      "companion": {
+        "title": "Vibe Kanban Companion 點選功能",
+        "description": "點擊預覽視窗中的任何 UI 元件以精準選取它。編碼代理將收到確切的 DOM 選擇器與元件層級結構，減少模糊回饋。"
+      },
+      "installation": {
+        "title": "開發伺服器與 Companion 安裝",
+        "description": "為預覽設定開發伺服器命令，設定腳本可在設定中配置。使用編碼代理自動安裝 Vibe Kanban Web Companion。"
+      },
+      "codeReview": {
+        "title": "內建程式碼審查",
+        "description": "使用加號圖示直接在差異檢視中新增特定行的評論。所有回饋會彙整並作為完整審查送給編碼代理。"
+      },
+      "pullRequest": {
+        "title": "從任務建立 PR",
+        "description": "直接從任務嘗試合併變更或建立 PR。PR 對話框會從任務詳情預填標題與描述，簡化流程。"
+      },
+      "tags": {
+        "title": "自訂提示標籤",
+        "description": "將自訂提示儲存為標籤，並可嵌入新任務或後續訊息。重用常見指示以維持一致流程。"
+      }
+    },
+    "buttons": {
+      "previous": "上一個",
+      "next": "下一個",
+      "finish": "完成"
+    }
+  },
+  "prComments": {
+    "dialog": {
+      "title": "選擇 PR 評論",
+      "noComments": "此 PR 沒有評論",
+      "selectAll": "全選",
+      "deselectAll": "取消全選",
+      "add": "新增",
+      "selectedCount": "已選擇 {{selected}} / {{total}}"
+    },
+    "card": {
+      "review": "審查",
+      "tooltip": "點擊查看，雙擊編輯"
+    }
+  },
+  "taskFormDialog": {
+    "createTitle": "建立新任務",
+    "editTitle": "編輯任務",
+    "titlePlaceholder": "任務標題",
+    "descriptionPlaceholder": "新增更多細節（選填）。輸入 @ 搜尋檔案。",
+    "statusLabel": "狀態",
+    "statusOptions": {
+      "todo": "待辦",
+      "inprogress": "進行中",
+      "inreview": "審查中",
+      "done": "完成",
+      "cancelled": "已取消"
+    },
+    "startLabel": "開始",
+    "attachImage": "附加圖片",
+    "dropImagesHere": "將圖片放在這裡",
+    "updating": "更新中...",
+    "updateTask": "更新任務",
+    "starting": "開始中...",
+    "creating": "建立中...",
+    "create": "建立",
+    "discardDialog": {
+      "title": "放棄未儲存的變更？",
+      "description": "您有未儲存的變更。確定要放棄嗎？",
+      "continueEditing": "繼續編輯",
+      "discardChanges": "放棄變更"
+    }
+  },
+  "terminal": {
+    "selectWorkspace": "選擇一個工作區以開啟終端機"
+  },
+  "restoreLogsDialog": {
+    "title": "確認重試",
+    "titleReset": "確認重設",
+    "historyChange": {
+      "title": "歷史紀錄變更",
+      "willDelete": "將刪除此程序",
+      "willDeleteProcesses_one": "將刪除 {{count}} 個程序",
+      "willDeleteProcesses_other": "將刪除 {{count}} 個程序",
+      "andLaterProcesses_one": "及後續 {{count}} 個程序",
+      "andLaterProcesses_other": "及後續 {{count}} 個程序",
+      "fromHistory": "從歷史紀錄中刪除。",
+      "codingAgentRuns_one": "{{count}} 次編碼代理執行",
+      "codingAgentRuns_other": "{{count}} 次編碼代理執行",
+      "scriptProcesses_one": "{{count}} 個腳本程序",
+      "scriptProcesses_other": "{{count}} 個腳本程序",
+      "setupCleanupBreakdown": "({{setup}} 個設定，{{cleanup}} 個清理)",
+      "permanentWarning": "此操作會永久變更歷史紀錄，無法復原。"
+    },
+    "uncommittedChanges": {
+      "title": "偵測到未提交的變更",
+      "description_one": "您有 {{count}} 個未提交的變更",
+      "description_other": "您有 {{count}} 個未提交的變更",
+      "andUntracked_one": "與 {{count}} 個未追蹤的檔案",
+      "andUntracked_other": "與 {{count}} 個未追蹤的檔案",
+      "acknowledgeLabel": "我了解這些變更可能會受到影響"
+    },
+    "resetWorktree": {
+      "title": "重設工作樹",
+      "enabled": "已啟用",
+      "disabled": "已停用",
+      "disabledUncommitted": "已停用（偵測到未提交的變更）",
+      "restoreDescription": "您的工作樹將還原到此提交。",
+      "rollbackCommits_one": "從目前 HEAD 回滾 {{count}} 個提交。",
+      "rollbackCommits_other": "從目前 HEAD 回滾 {{count}} 個提交。",
+      "discardChanges_one": "捨棄 {{count}} 個未提交的變更。",
+      "discardChanges_other": "捨棄 {{count}} 個未提交的變更。",
+      "untrackedPresent_one": "存在 {{count}} 個未追蹤的檔案（不受重設影響）。",
+      "untrackedPresent_other": "存在 {{count}} 個未追蹤的檔案（不受重設影響）。",
+      "forceReset": "強制重設（捨棄未提交的變更）",
+      "uncommittedWillDiscard": "未提交的變更將被捨棄。",
+      "uncommittedPresentHint": "存在未提交的變更。請啟用強制重設或先提交/暫存後再繼續。"
+    },
+    "buttons": {
+      "retry": "重試",
+      "reset": "重設"
+    }
+  },
+  "conversation": {
+    "you": "你",
+    "thinking": "思考中",
+    "todo": "待辦",
+    "todos": "待辦事項",
+    "completed": "已完成",
+    "incomplete": "未完成",
+    "pending": "待處理",
+    "inProgress": "進行中",
+    "skipped": "已跳過",
+    "error": "錯誤",
+    "retry": "重試",
+    "showMore": "顯示更多",
+    "showLess": "收起",
+    "actions": {
+      "cancel": "取消",
+      "submitFeedback": "提交回饋",
+      "stop": "停止",
+      "stopping": "停止中",
+      "loading": "載入中",
+      "send": "傳送",
+      "sending": "傳送中",
+      "queue": "加入佇列",
+      "cancelQueue": "取消佇列",
+      "requestChanges": "請求變更",
+      "approve": "核准",
+      "clearReviewComments": "清除審查評論",
+      "edit": "編輯訊息",
+      "scrollToPreviousMessage": "Go to previous message",
+      "reset": "重設",
+      "resetTooltip": "重設到此時點"
+    },
+    "approval": {
+      "conflictWarning": "衝突檔案需要手動解決",
+      "conflicts_one": "{{count}}個衝突檔案需要手動解決",
+      "conflicts_other": "{{count}}個衝突檔案需要手動解決"
+    },
+    "executors": "執行器",
+    "saveAsDefault": "設為預設",
+    "script": {
+      "clickToViewLogs": "點擊查看日誌",
+      "completedSuccessfully": "成功完成",
+      "exitCode": "結束代碼: {{code}}",
+      "running": "執行中..."
+    },
+    "scriptPlaceholder": {
+      "setupTitle": "設定腳本",
+      "setupDescription": "未配置設定腳本。設定腳本在程式碼代理啟動前執行。",
+      "cleanupTitle": "清理腳本",
+      "cleanupDescription": "未配置清理腳本。清理腳本在程式碼代理完成後執行。",
+      "configure": "設定"
+    },
+    "unableToRenderDiff": "無法顯示差異。",
+    "updatedTodos": "更新的待辦事項",
+    "viewInChangesPanel": "在變更面板中檢視",
+    "sessions": {
+      "newSession": "新工作階段",
+      "latest": "最新",
+      "previous": "上一個",
+      "label": "工作階段",
+      "noPreviousSessions": "沒有先前的工作階段"
+    },
+    "reviewComments": {
+      "count_one": "{{count}} 則審查評論將被包含",
+      "count_other": "{{count}} 則審查評論將被包含"
+    },
+    "workspace": {
+      "create": "建立",
+      "creating": "建立中..."
+    },
+    "fileEntry": {
+      "created": "已建立",
+      "modified": "已修改",
+      "deleted": "已刪除",
+      "renamed": "已重新命名"
+    }
+  },
+  "scriptFixer": {
+    "title": "修復腳本",
+    "setupScriptTitle": "修復設定腳本",
+    "cleanupScriptTitle": "修復清理腳本",
+    "archiveScriptTitle": "修復封存腳本",
+    "devServerTitle": "修復開發伺服器腳本",
+    "scriptLabel": "腳本（編輯）",
+    "logsLabel": "上次執行日誌",
+    "saveButton": "儲存",
+    "saveAndTestButton": "儲存並測試",
+    "saving": "儲存中...",
+    "testing": "測試中...",
+    "noLogs": "沒有可用的執行日誌",
+    "selectRepo": "儲存庫",
+    "fixScript": "修復腳本",
+    "statusRunning": "執行中...",
+    "statusSuccess": "成功完成",
+    "statusFailed": "失敗，結束代碼 {{exitCode}}",
+    "statusKilled": "程序已被終止"
+  },
+  "createWorkspaceFromPr": {
+    "title": "從 PR 建立工作區",
+    "description": "選擇一個開啟的拉取請求來建立工作區。將使用 PR 標題自動建立任務。",
+    "repositoryLabel": "儲存庫",
+    "remoteLabel": "遠端儲存庫",
+    "pullRequestLabel": "拉取請求",
+    "loadingRepositories": "正在載入儲存庫...",
+    "loadingRemotes": "正在載入遠端儲存庫...",
+    "noRepositoriesFound": "找不到儲存庫",
+    "loadingPullRequests": "正在載入拉取請求...",
+    "selectRepositoryFirst": "請先選擇儲存庫",
+    "noPullRequestsFound": "找不到開啟的拉取請求",
+    "runSetupScript": "執行設定腳本",
+    "creating": "建立中...",
+    "createWorkspace": "建立工作區",
+    "selectRepository": "選擇儲存庫",
+    "selectRemote": "選擇遠端儲存庫",
+    "selectPullRequest": "選擇拉取請求",
+    "searchPrsPlaceholder": "按編號或標題搜尋 PR...",
+    "noMatchingPrs": "沒有符合的拉取請求",
+    "default": "預設",
+    "openPrInBrowser": "在瀏覽器中開啟 PR",
+    "errors": {
+      "cliNotInstalled": "{{provider}} CLI 未安裝",
+      "unsupportedProvider": "不支援的 Git 提供者",
+      "failedToLoadPrs": "載入拉取請求失敗",
+      "prNotFound": "找不到拉取請求",
+      "repoNotInProject": "儲存庫不在任何專案中",
+      "failedToCreateWorkspace": "建立工作區失敗"
+    }
+  },
+  "shareDialog": {
+    "loginRequired": {
+      "title": "Sign in required",
+      "description": "Sign in to access this feature.",
+      "action": "Sign in"
+    }
+  }
+}

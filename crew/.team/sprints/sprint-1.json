@@ -1,0 +1,8 @@
+{
+  "id": 1,
+  "name": "Sprint 1 — Bootstrap",
+  "start": "2026-02-24",
+  "end": "2026-03-07",
+  "goal": "Get the kanban backend and a minimal frontend running end-to-end against .team/ MD files.",
+  "status": "active"
+}

@@ -1,0 +1,588 @@
+{
+  "settings": {
+    "common": {
+      "unsavedChanges": "• 未保存の変更があります",
+      "discardChangesConfirm": "Discard unsaved changes?"
+    },
+    "unsavedChanges": {
+      "title": "未保存の変更",
+      "message": "未保存の変更があります。保存せずに閉じてもよろしいですか？",
+      "discard": "変更を破棄",
+      "cancel": "編集を続ける"
+    },
+    "layout": {
+      "nav": {
+        "title": "設定",
+        "general": "一般",
+        "generalDesc": "テーマ、通知、および設定",
+        "projects": "プロジェクト",
+        "projectsDesc": "プロジェクトリポジトリと設定",
+        "repos": "リポジトリ",
+        "reposDesc": "リポジトリスクリプトと設定",
+        "agents": "エージェント",
+        "agentsDesc": "コーディングエージェントの設定",
+        "mcp": "MCPサーバー",
+        "mcpDesc": "モデルコンテキストプロトコルサーバー",
+        "organizations": "Organization Settings",
+        "organizationsDesc": "Manage organization members and permissions",
+        "remote-projects": "プロジェクト",
+        "remote-projectsDesc": "プロジェクトを管理",
+        "relay": "Remote Access",
+        "relayDesc": "Relay tunnel and enrollment"
+      }
+    },
+    "general": {
+      "loading": "設定を読み込み中...",
+      "loadError": "設定の読み込みに失敗しました。",
+      "save": {
+        "button": "設定を保存",
+        "success": "✓ 設定が正常に保存されました！",
+        "error": "設定の保存に失敗しました",
+        "unsavedChanges": "• 未保存の変更があります",
+        "discard": "破棄"
+      },
+      "appearance": {
+        "title": "外観",
+        "description": "アプリケーションの見た目と操作感をカスタマイズします。",
+        "theme": {
+          "label": "テーマ",
+          "placeholder": "テーマを選択",
+          "helper": "お好みの色スキームを選択してください。"
+        },
+        "language": {
+          "label": "言語",
+          "placeholder": "言語を選択",
+          "helper": "お好みの言語を選択してください。ブラウザ設定では、システム言語に従います。"
+        }
+      },
+      "taskExecution": {
+        "title": "デフォルトコーディングエージェント",
+        "description": "タスクのデフォルトコーディングエージェントを選択します。",
+        "executor": {
+          "label": "デフォルトエージェント設定",
+          "placeholder": "プロファイルを選択",
+          "helper": "タスク試行を作成する際に使用するデフォルトエージェント設定を選択してください。"
+        },
+        "variant": "デフォルト",
+        "defaultLabel": "デフォルト"
+      },
+      "editor": {
+        "title": "エディター",
+        "description": "コード編集体験を設定します。",
+        "type": {
+          "label": "エディタータイプ",
+          "placeholder": "エディターを選択",
+          "helper": "お好みのコードエディターインターフェースを選択してください。"
+        },
+        "customCommand": {
+          "label": "カスタムエディターコマンド",
+          "placeholder": "例: code, subl, vim",
+          "helper": "カスタムエディターを起動するコマンドを入力してください。ファイルを開くために使用されます。"
+        },
+        "remoteSsh": {
+          "host": {
+            "label": "リモートSSHホスト（オプション）",
+            "placeholder": "例: ホスト名またはIPアドレス",
+            "helper": "Vibe Kanbanがリモートサーバーで実行されている場合に設定してください。設定すると、「エディターで開く」をクリックしたときに、ローカルコマンドを実行する代わりにSSH経由でエディターを開くURLが生成されます。"
+          },
+          "user": {
+            "label": "リモートSSHユーザー（オプション）",
+            "placeholder": "例: ユーザー名",
+            "helper": "リモート接続のSSHユーザー名。設定されていない場合、VS CodeはSSH設定を使用するか、入力を求めます。"
+          }
+        },
+        "autoInstallExtension": {
+          "label": "Auto-install VS Code Extension",
+          "helper": "Automatically install the Vibe Kanban extension when opening a project in VS Code or Cursor. This runs in the background and has no effect if the extension is already installed."
+        },
+        "availability": {
+          "checking": "利用可能性を確認中...",
+          "available": "利用可能",
+          "notFound": "PATHに見つかりません"
+        }
+      },
+      "github": {
+        "title": "GitHub連携",
+        "cliSetup": {
+          "title": "GitHub CLIセットアップ",
+          "description": "GitHub CLI認証は、プルリクエストの作成とGitHubリポジトリとのやり取りに必要です。",
+          "setupWillTitle": "このセットアップでは以下を実行します：",
+          "steps": {
+            "checkInstalled": "GitHub CLI (gh) がインストールされているか確認",
+            "installHomebrew": "必要に応じてHomebrewでインストール（macOS）",
+            "authenticate": "OAuthを使用してGitHubで認証"
+          },
+          "setupNote": "セットアップはチャットウィンドウで実行されます。ブラウザで認証を完了する必要があります。",
+          "runSetup": "セットアップを実行",
+          "running": "実行中...",
+          "errors": {
+            "brewMissing": "Homebrewがインストールされていません。自動セットアップを有効にするにはインストールしてください。",
+            "notSupported": "このプラットフォームでは自動セットアップがサポートされていません。GitHub CLIを手動でインストールしてください。",
+            "setupFailed": "GitHub CLIセットアップの実行に失敗しました。"
+          },
+          "help": {
+            "homebrew": {
+              "description": "自動インストールにはHomebrewが必要です。Homebrewを",
+              "brewSh": "brew.sh",
+              "manualInstall": "からインストールして、セットアップを再実行してください。または、次のコマンドでGitHub CLIを手動でインストールできます：",
+              "afterInstall": "インストール後、次のコマンドで認証します："
+            },
+            "manual": {
+              "description": "GitHub CLIを",
+              "officialDocs": "公式ドキュメント",
+              "andAuthenticate": "からインストールし、GitHubアカウントで認証してください。"
+            }
+          }
+        }
+      },
+      "git": {
+        "title": "Git",
+        "description": "Gitブランチ名の設定",
+        "branchPrefix": {
+          "label": "ブランチプレフィックス",
+          "placeholder": "vk",
+          "helper": "自動生成されるブランチ名のプレフィックス。空欄にするとプレフィックスなしになります。",
+          "preview": "プレビュー：",
+          "previewWithPrefix": "{{prefix}}/1a2b-タスク名",
+          "previewNoPrefix": "1a2b-タスク名",
+          "errors": {
+            "slash": "プレフィックスに'/'を含めることはできません。",
+            "startsWithDot": "プレフィックスは'.'で始めることができません。",
+            "endsWithDot": "プレフィックスは'.'または'.lock'で終わることができません。",
+            "invalidSequence": "無効なシーケンス（..、@{）が含まれています。",
+            "invalidChars": "無効な文字が含まれています。",
+            "controlChars": "制御文字が含まれています。"
+          }
+        },
+        "workspaceDir": {
+          "label": "ワークスペースディレクトリ",
+          "placeholder": "~/",
+          "helper": "このパス内の .vibe-kanban-workspaces サブディレクトリにワークスペースが作成されます。システムのデフォルトを使用する場合は空白のままにしてください。変更を反映するにはアプリの再起動が必要です。",
+          "browse": "参照",
+          "dialogTitle": "ワークスペースディレクトリを選択",
+          "dialogDescription": "ディレクトリを選択してください。ワークスペースはその中の .vibe-kanban-workspaces サブディレクトリに作成されます。"
+        }
+      },
+      "pullRequests": {
+        "title": "プルリクエスト",
+        "description": "PR作成の動作を設定",
+        "autoDescription": {
+          "label": "デフォルトでPR説明を自動生成",
+          "helper": "有効にすると、AIエージェントがPR作成後に自動的にタイトルと説明を更新します。"
+        },
+        "customPrompt": {
+          "useCustom": "カスタムプロンプトを使用",
+          "helper": "PR説明生成時のAIエージェント用カスタムプロンプト。{pr_number}と{pr_url}をプレースホルダーとして使用できます。"
+        }
+      },
+      "commits": {
+        "title": "コミット",
+        "description": "タスク試行のコミット動作を設定",
+        "reminder": {
+          "label": "コミットリマインダー",
+          "helper": "対応エージェントに停止前の変更コミットを促します。"
+        },
+        "customPrompt": {
+          "useCustom": "カスタムプロンプトを使用",
+          "helper": "コミットリマインダー用のカスタムプロンプト。gitステータスは自動的に追加されます。"
+        }
+      },
+      "notifications": {
+        "title": "通知",
+        "description": "通知を受け取るタイミングと方法を制御します。",
+        "sound": {
+          "label": "音声通知",
+          "helper": "タスク試行の実行が完了したときに音を再生します。",
+          "fileLabel": "音声",
+          "filePlaceholder": "音声を選択",
+          "fileHelper": "タスク完了時に再生する音声を選択してください。音量ボタンをクリックしてプレビューできます。"
+        },
+        "push": {
+          "label": "プッシュ通知",
+          "helper": "タスク試行の実行が完了したときにシステム通知を表示します。"
+        }
+      },
+      "messageInput": {
+        "title": "メッセージ入力",
+        "description": "チャット入力でメッセージを送信する方法を設定します。",
+        "shortcut": {
+          "label": "メッセージ送信キー",
+          "helper": "メッセージを送信するキーボードショートカットを選択してください。",
+          "enterLabel": "Enter（Shift+Enterで改行）"
+        }
+      },
+      "privacy": {
+        "title": "プライバシー",
+        "description": "匿名の使用データを共有してVibe-Kanbanの改善にご協力ください。",
+        "telemetry": {
+          "label": "テレメトリを有効化",
+          "helper": "アプリケーションの改善に役立つ匿名の使用イベント追跡を有効にします。プロンプトやプロジェクト情報は収集されません。"
+        }
+      },
+      "taskTemplates": {
+        "title": "タグ",
+        "description": "@tag_nameを使用してタスクの説明に挿入できる再利用可能なテキストスニペットを作成します。"
+      },
+      "tags": {
+        "manager": {
+          "title": "タスクタグ",
+          "addTag": "タグを追加",
+          "noTags": "タグはまだありません。タスクの説明によく使うテキストスニペットを作成してください。@tag_nameで使用できます。",
+          "table": {
+            "tagName": "タグ名",
+            "content": "内容",
+            "actions": "操作"
+          },
+          "actions": {
+            "editTag": "タグを編集",
+            "deleteTag": "タグを削除"
+          },
+          "deleteConfirm": "タグ「{{tagName}}」を削除してもよろしいですか？"
+        },
+        "dialog": {
+          "createTitle": "タグを作成",
+          "editTitle": "タグを編集",
+          "tagName": {
+            "label": "タグ名",
+            "required": "*",
+            "hint": "タスクの説明で@を付けて使用します：@{{tagName}}",
+            "placeholder": "例：bug_fix、test_plan、api_docs",
+            "error": "タグ名にスペースを含めることはできません。アンダースコアを使用してください（例：my_tag）"
+          },
+          "content": {
+            "label": "内容",
+            "required": "*",
+            "hint": "タスクの説明で@{{tagName}}を使用すると挿入されるテキスト",
+            "placeholder": "このタグを使用するときに挿入されるテキストを入力してください"
+          },
+          "errors": {
+            "nameRequired": "タグ名は必須です",
+            "saveFailed": "タグの保存に失敗しました"
+          },
+          "buttons": {
+            "cancel": "キャンセル",
+            "create": "作成",
+            "update": "更新"
+          }
+        }
+      },
+      "safety": {
+        "title": "安全性と免責事項",
+        "description": "安全警告とオンボーディングの承認をリセットします。",
+        "disclaimer": {
+          "title": "免責事項の承認",
+          "description": "安全免責事項をリセットします。",
+          "button": "リセット"
+        },
+        "onboarding": {
+          "title": "オンボーディング",
+          "description": "オンボーディングフローをリセットします。",
+          "button": "リセット"
+        }
+      },
+      "beta": {
+        "title": "ベータ機能",
+        "description": "リリース前の実験的な機能を試す。",
+        "workspaces": {
+          "label": "ワークスペースベータを有効化",
+          "helper": "タスク試行を表示する際に新しいワークスペースインターフェースを使用します。タスクは最初にタスクビューで開き、試行は新しいワークスペースビューで開きます。"
+        }
+      }
+    },
+    "agents": {
+      "title": "コーディングエージェント設定",
+      "description": "コーディングエージェントの動作を異なる設定でカスタマイズします。",
+      "loading": "エージェント設定を読み込み中...",
+      "selectAgent": "エージェントを選択",
+      "save": {
+        "button": "エージェント設定を保存",
+        "success": "✓ 実行設定が正常に保存されました！",
+        "unsavedChanges": "• 未保存の変更があります"
+      },
+      "availability": {
+        "checking": "確認中...",
+        "checkingAvailability": "利用可能性を確認中...",
+        "available": "エージェント利用可能",
+        "notFoundSimple": "エージェントが見つかりません",
+        "loginDetected": "最近の使用を検出",
+        "loginDetectedTooltip": "このエージェントの最近の認証情報が見つかりました",
+        "installationFound": "以前の使用を検出",
+        "installationFoundTooltip": "エージェント設定が見つかりました。使用するにはログインが必要な場合があります。"
+      },
+      "editor": {
+        "formLabel": "JSONを編集",
+        "agentLabel": "エージェント",
+        "agentPlaceholder": "実行タイプを選択",
+        "configLabel": "設定",
+        "configPlaceholder": "設定を選択",
+        "createNew": "新規作成...",
+        "deleteTitle": "最後の設定は削除できません",
+        "deleteButton": "{{name}}を削除",
+        "deleteText": "削除",
+        "makeDefault": "デフォルトに設定",
+        "isDefault": "デフォルト",
+        "jsonLabel": "エージェント設定（JSON）",
+        "jsonPlaceholder": "プロファイルを読み込み中...",
+        "jsonLoading": "読み込み中...",
+        "pathLabel": "設定ファイルの場所："
+      },
+      "errors": {
+        "deleteFailed": "設定の削除に失敗しました。もう一度お試しください。",
+        "saveFailed": "エージェント設定の保存に失敗しました。もう一度お試しください。",
+        "saveConfigFailed": "設定の保存に失敗しました。もう一度お試しください。",
+        "schemaNotFound": "実行タイプ {{executor}} のスキーマが見つかりません"
+      },
+      "tree": {
+        "search": "設定を検索...",
+        "expandAll": "すべて展開",
+        "collapseAll": "すべて折りたたむ",
+        "noResults": "一致する設定がありません",
+        "noConfigs": "利用可能な設定がありません",
+        "selectConfig": "サイドバーから設定を選択して、その設定を表示・編集できます。"
+      },
+      "deleteConfigDialog": {
+        "title": "設定を削除しますか？",
+        "description": "「{{configName}}」を{{executorType}}エグゼキューターから完全に削除します。この操作は元に戻せません。"
+      }
+    },
+    "mcp": {
+      "title": "MCPサーバー設定",
+      "description": "モデルコンテキストプロトコルサーバーを設定して、コーディングエージェントの機能をカスタムツールとリソースで拡張します。",
+      "loading": "MCP設定を読み込み中...",
+      "applying": "設定を適用中...",
+      "labels": {
+        "agent": "エージェント",
+        "agentPlaceholder": "実行器を選択",
+        "agentHelper": "MCPサーバーを設定するエージェントを選択してください。",
+        "serverConfig": "サーバー設定（JSON）",
+        "popularServers": "人気サーバー",
+        "serverHelper": "カードをクリックして、そのMCPサーバーを上記のJSONに挿入します。",
+        "saveLocation": "変更は次の場所に保存されます："
+      },
+      "loadingStates": {
+        "jsonEditor": "読み込み中...",
+        "configuration": "現在のMCPサーバー設定を読み込み中..."
+      },
+      "errors": {
+        "loadFailed": "設定の読み込みに失敗しました。",
+        "invalidJson": "無効なJSON形式です",
+        "validationError": "検証エラー",
+        "saveFailed": "MCPサーバーの保存に失敗しました",
+        "applyFailed": "MCPサーバー設定の適用に失敗しました",
+        "addServerFailed": "事前設定サーバーの追加に失敗しました",
+        "mcpError": "MCP設定エラー：{{error}}",
+        "notSupported": "MCPはサポートされていません",
+        "supportMessage": "MCPサーバーを使用するには、MCP（Claude、Amp、Gemini、Codex、またはOpencode）をサポートする別の実行器を上記で選択してください。"
+      },
+      "save": {
+        "button": "MCP設定を保存",
+        "success": "設定が保存されました！",
+        "successMessage": "✓ MCP設定が正常に保存されました！",
+        "loading": "現在のMCPサーバー設定を読み込み中...",
+        "unsavedChanges": "• 未保存の変更があります"
+      }
+    },
+    "projects": {
+      "title": "プロジェクト設定",
+      "description": "プロジェクト固有のスクリプトと設定を構成します。",
+      "loading": "プロジェクトを読み込み中...",
+      "loadError": "プロジェクトの読み込みに失敗しました。",
+      "selector": {
+        "label": "プロジェクトを選択",
+        "placeholder": "設定するプロジェクトを選択",
+        "helper": "プロジェクトを選択して、その設定を表示および編集します。",
+        "noProjects": "利用可能なプロジェクトがありません"
+      },
+      "general": {
+        "title": "一般設定",
+        "description": "プロジェクトの基本情報を設定します。",
+        "name": {
+          "label": "プロジェクト名",
+          "placeholder": "プロジェクト名を入力",
+          "helper": "このプロジェクトの表示名。"
+        },
+        "repoPath": {
+          "label": "Gitリポジトリパス",
+          "placeholder": "/既存の/リポジトリ/へのパス",
+          "helper": "ディスク上のgitリポジトリへの絶対パス。"
+        }
+      },
+      "save": {
+        "button": "プロジェクト設定を保存",
+        "success": "✓ プロジェクト設定が正常に保存されました！",
+        "error": "プロジェクト設定の保存に失敗しました",
+        "unsavedChanges": "• 未保存の変更があります",
+        "discard": "破棄",
+        "confirmSwitch": "未保存の変更があります。本当にプロジェクトを切り替えますか？変更は失われます。",
+        "saving": "Saving..."
+      },
+      "repositories": {
+        "title": "リポジトリ",
+        "description": "このプロジェクトのGitリポジトリを管理",
+        "noRepositories": "リポジトリが設定されていません",
+        "addRepository": "リポジトリを追加"
+      }
+    },
+    "repos": {
+      "title": "リポジトリ設定",
+      "description": "このリポジトリがワークスペースで使用されるときに実行されるスクリプトを設定します。",
+      "loading": "リポジトリを読み込み中...",
+      "loadError": "リポジトリの読み込みに失敗しました。",
+      "selector": {
+        "label": "リポジトリを選択",
+        "placeholder": "設定するリポジトリを選択",
+        "helper": "リポジトリを選択して、その設定を表示および編集します。",
+        "noRepos": "利用可能なリポジトリがありません"
+      },
+      "general": {
+        "title": "一般設定",
+        "description": "リポジトリの基本情報を設定します。",
+        "displayName": {
+          "label": "表示名",
+          "placeholder": "表示名を入力",
+          "helper": "このリポジトリのわかりやすい名前。"
+        },
+        "path": {
+          "label": "リポジトリパス"
+        },
+        "defaultWorkingDir": {
+          "label": "デフォルト作業ディレクトリ",
+          "placeholder": "例: packages/frontend",
+          "helper": "単一リポジトリワークスペースでコーディングエージェントが実行されるサブディレクトリ。ワークスペース作成時に設定されます。リポジトリのルートを使用する場合は空のままにしてください。"
+        },
+        "defaultTargetBranch": {
+          "label": "デフォルトターゲットブランチ",
+          "placeholder": "ブランチを選択",
+          "helper": "新しいワークスペースのデフォルトベースブランチ。ワークツリーはこのブランチから分岐し、PRはこのブランチをターゲットにします。",
+          "search": "ブランチを検索",
+          "noBranches": "ブランチが見つかりません",
+          "loading": "ブランチを読み込み中...",
+          "useCurrent": "現在のブランチを使用"
+        }
+      },
+      "scripts": {
+        "title": "スクリプトと設定",
+        "description": "このリポジトリのセットアップ、クリーンアップスクリプト、およびコピーするファイルを設定します。これらのスクリプトは、リポジトリがどのワークスペースでも使用されるたびに実行されます。",
+        "setup": {
+          "label": "セットアップスクリプト",
+          "helper": "このスクリプトはワークツリー内から、作成後かつコーディングエージェントの開始前に実行されます。依存関係のインストールや環境の準備などのセットアップタスクに使用してください。",
+          "parallelLabel": "セットアップスクリプトをコーディングエージェントと並行して実行",
+          "parallelHelper": "有効にすると、セットアップスクリプトはセットアップの完了を待たずに、コーディングエージェントと同時に実行されます。"
+        },
+        "cleanup": {
+          "label": "クリーンアップスクリプト",
+          "helper": "このスクリプトはワークツリー内から、コーディングエージェントの実行後に実行されます（変更が行われた場合のみ）。リンター、フォーマッター、テスト、またはその他の検証ステップの実行など、品質保証タスクに使用してください。"
+        },
+        "archive": {
+          "label": "アーカイブスクリプト",
+          "helper": "このスクリプトはワークスペースがアーカイブされるときにワークツリー内から実行されます。サービスの停止、リソースの解放、状態の保存などのクリーンアップタスクに使用してください。"
+        },
+        "copyFiles": {
+          "label": "ファイルをコピー",
+          "helper": "元のリポジトリディレクトリからワークツリーにコピーするファイルのカンマ区切りリスト。.envなどの環境ファイルに役立ちます。gitignoreされていることを確認してください！",
+          "placeholder": "ファイルパスまたはglobパターン（例：.env、config/*.json）"
+        },
+        "devServer": {
+          "label": "開発サーバースクリプト",
+          "helper": "このリポジトリの開発サーバーを起動します。スクリプトはリポジトリのワークツリーディレクトリから実行されます。"
+        }
+      },
+      "save": {
+        "button": "リポジトリ設定を保存",
+        "success": "リポジトリ設定が正常に保存されました！",
+        "error": "リポジトリ設定の保存に失敗しました",
+        "unsavedChanges": "未保存の変更があります",
+        "discard": "破棄",
+        "confirmSwitch": "未保存の変更があります。本当にリポジトリを切り替えますか？変更は失われます。"
+      }
+    },
+    "relay": {
+      "title": "Remote Access",
+      "description": "Allow access to this instance from the web via relay tunnel.",
+      "enabled": {
+        "label": "Enable remote access",
+        "helper": "When enabled, this instance can be accessed remotely through a relay tunnel."
+      },
+      "enrollmentCode": {
+        "label": "Enrollment Code",
+        "helper": "Enter this code in the browser to pair with this instance.",
+        "loginRequired": "Log in to generate an enrollment code.",
+        "fetchError": "Failed to fetch enrollment code.",
+        "show": "Show enrollment code"
+      }
+    },
+    "remoteProjects": {
+      "title": "Remote Projects",
+      "description": "Manage cloud-synced projects across organizations.",
+      "loading": "Loading remote projects...",
+      "loadError": "Failed to load organizations",
+      "noProjects": "No projects yet. Create one to get started.",
+      "selectOrg": "Select an organization",
+      "createSuccess": "Project created successfully",
+      "deleteSuccess": "Project deleted successfully",
+      "nameRequired": "Project name is required",
+      "saveSuccess": "Project updated successfully",
+      "saveError": "Failed to update project",
+      "columns": {
+        "organizations": "Organizations",
+        "projects": "Projects"
+      },
+      "actions": {
+        "addProject": "Add Project"
+      },
+      "form": {
+        "name": {
+          "label": "Project Name",
+          "placeholder": "Enter project name"
+        },
+        "color": {
+          "label": "Project Color"
+        },
+        "statuses": {
+          "label": "Project Statuses",
+          "description": "Manage kanban columns for this project."
+        }
+      },
+      "loginRequired": {
+        "title": "Sign in required",
+        "description": "Sign in to manage your remote projects.",
+        "action": "Sign in"
+      }
+    }
+  },
+  "integrations": {
+    "github": {
+      "cliSetup": {
+        "title": "GitHub CLI セットアップ",
+        "description": "プルリクエストの作成とGitHubリポジトリとのやり取りには、GitHub CLI認証が必要です。",
+        "setupWillTitle": "このセットアップは次のことを行います：",
+        "steps": {
+          "checkInstalled": "GitHub CLI (gh) がインストールされているか確認",
+          "installHomebrew": "必要に応じてHomebrewでインストール（macOS）",
+          "authenticate": "OAuthを使用してGitHubで認証"
+        },
+        "setupNote": "セットアップはチャットウィンドウで実行されます。ブラウザで認証を完了する必要があります。",
+        "runSetup": "セットアップを実行",
+        "running": "実行中...",
+        "errors": {
+          "brewMissing": "Homebrewがインストールされていません。自動セットアップを有効にするにはインストールしてください。",
+          "notSupported": "このプラットフォームでは自動セットアップがサポートされていません。GitHub CLIを手動でインストールしてください。",
+          "setupFailed": "GitHub CLIセットアップの実行に失敗しました。"
+        },
+        "help": {
+          "homebrew": {
+            "description": "自動インストールにはHomebrewが必要です。次からHomebrewをインストールしてください",
+            "brewSh": "brew.sh",
+            "manualInstall": "その後、セットアップを再実行してください。または、次のコマンドでGitHub CLIを手動でインストールしてください：",
+            "afterInstall": "インストール後、次のコマンドで認証してください："
+          },
+          "manual": {
+            "description": "次からGitHub CLIをインストールしてください",
+            "officialDocs": "公式ドキュメント",
+            "andAuthenticate": "その後、GitHubアカウントで認証してください。"
+          }
+        }
+      }
+    }
+  }
+}

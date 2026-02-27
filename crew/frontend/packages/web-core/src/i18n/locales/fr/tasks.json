@@ -1,0 +1,770 @@
+{
+  "dropzone": {
+    "dropImagesHere": "Déposez les images ici",
+    "supportedFormats": "PNG, JPG, GIF, WebP, SVG supportés"
+  },
+  "gitPanel": {
+    "create": {
+      "warnings": {
+        "noReposSelected": "Veuillez sélectionner au moins un dépôt pour commencer"
+      }
+    },
+    "advanced": {
+      "workingBranch": "Branche de travail",
+      "placeholder": "ex: Acme Corp"
+    }
+  },
+  "loading": "Chargement des tâches...",
+  "empty": {
+    "noTasks": "Aucune tâche trouvée pour ce projet.",
+    "createFirst": "Créer la première tâche",
+    "noSearchResults": "Aucune tâche ne correspond à votre recherche."
+  },
+  "actions": {
+    "addTask": "Ajouter une tâche"
+  },
+  "filters": {
+    "sharedToggleAria": "Basculer les tâches partagées",
+    "sharedToggleTooltip": "Afficher/masquer le contenu partagé"
+  },
+  "rebase": {
+    "common": {
+      "action": "Rebaser",
+      "inProgress": "Rebasage en cours...",
+      "withTarget": "Rebaser sur {{branch}}"
+    },
+    "dialog": {
+      "title": "Rebaser la tentative de tâche",
+      "description": "Choisissez une nouvelle branche de base pour rebaser cette tentative de tâche.",
+      "upstreamLabel": "Branche amont",
+      "upstreamPlaceholder": "Sélectionner une branche amont",
+      "targetLabel": "Branche cible",
+      "targetPlaceholder": "Sélectionner une branche cible",
+      "advanced": "Avancé"
+    },
+    "status": {
+      "inProgress": "Rebasage en cours{{counts}}",
+      "needed": "Rebasage nécessaire{{dirty}}{{counts}}",
+      "dirtyMarker": " (modifié)"
+    }
+  },
+  "branches": {
+    "changeTarget": {
+      "dialog": {
+        "title": "Changer la branche cible",
+        "description": "Choisissez une nouvelle branche cible pour la tentative de tâche.",
+        "placeholder": "Sélectionner une branche cible",
+        "action": "Changer de branche",
+        "inProgress": "Changement en cours..."
+      }
+    }
+  },
+  "repos": {
+    "changeRepo": {
+      "dialog": {
+        "title": "Changer de dépôt",
+        "description": "Choisissez un dépôt pour les opérations git.",
+        "label": "Dépôt",
+        "placeholder": "Sélectionner un dépôt",
+        "action": "Changer de dépôt"
+      }
+    },
+    "selector": {
+      "placeholder": "Sélectionner un dépôt",
+      "empty": "Aucun dépôt disponible"
+    }
+  },
+  "preview": {
+    "title": "Aperçu",
+    "selectAttempt": "Sélectionnez une tentative pour voir l'aperçu",
+    "troubleAlert": {
+      "title": "Nous avons des difficultés à prévisualiser votre application :",
+      "item1": "Le serveur de développement a-t-il démarré correctement ? Il peut y avoir un bug à résoudre, ou peut-être que les dépendances doivent être installées.",
+      "item2": "Votre serveur de développement a-t-il affiché l'URL et le port dans le terminal au format",
+      "item2Suffix": " ? (c'est ainsi que nous savons qu'il fonctionne)",
+      "item3": "Avez-vous installé le Web Companion (requis pour le clic-pour-éditer) ? Sinon, veuillez",
+      "item3Link": "suivre les instructions d'installation ici",
+      "fixScript": "Corriger le script de développement"
+    },
+    "noServer": {
+      "title": "Aucun serveur de développement en cours d'exécution",
+      "startPrompt": "Veuillez démarrer un serveur de développement pour voir l'aperçu",
+      "setupTitle": "Vous devez configurer un script de serveur de développement pour utiliser la fonction d'aperçu",
+      "setupPrompt": "Pour utiliser l'aperçu en direct et le clic-pour-éditer, veuillez ajouter un script de serveur de développement à ce projet.",
+      "companionPrompt": "Pour la fonctionnalité clic-pour-éditer, ajoutez le browser companion à votre projet.",
+      "companionLink": "Voir le guide d'installation",
+      "startButton": "Démarrer le serveur de développement",
+      "configureButton": "Configurer",
+      "stopAndEditButton": "Arrêter le serveur de développement et résoudre les problèmes",
+      "fixScript": "Corriger le script de développement",
+      "editDevScript": "Modifier le script du serveur de développement",
+      "learnMore": "En savoir plus sur le test des applications"
+    },
+    "devScript": {
+      "saveAndStart": "Enregistrer et démarrer",
+      "saveOnly": "Enregistrer uniquement",
+      "saveChanges": "Enregistrer les modifications",
+      "cancel": "Annuler",
+      "errors": {
+        "notLoaded": "Projet non chargé",
+        "empty": "Le script de développement ne peut pas être vide"
+      }
+    },
+    "logs": {
+      "title": "Logs du serveur de développement",
+      "hide": "Masquer",
+      "show": "Afficher",
+      "label": "Logs",
+      "viewFull": "Voir tous les logs"
+    },
+    "noDevScript": "Aucun script de développement configuré",
+    "noDevScriptHint": "Configurez un script de développement dans les paramètres du projet pour utiliser l'aperçu",
+    "iframe": {
+      "title": "Aperçu du serveur de développement"
+    },
+    "toolbar": {
+      "refresh": "Actualiser l'aperçu",
+      "copyUrl": "Copier l'URL",
+      "openInTab": "Ouvrir dans un nouvel onglet",
+      "stopDevServer": "Arrêter le serveur de développement",
+      "clickToEdit": "Cliquer pour modifier l'URL",
+      "resetUrl": "Réinitialiser à l'URL détectée",
+      "clearUrlOverride": "Effacer le remplacement d'URL",
+      "desktopView": "Vue bureau",
+      "mobileView": "Vue mobile (390x844)",
+      "responsiveView": "Vue responsive (redimensionnable)",
+      "startDevServer": "Démarrer le serveur de développement",
+      "submitUrl": "Valider l'URL",
+      "toggleDevTools": "Basculer DevTools"
+    },
+    "loading": {
+      "startingServer": "Démarrage du serveur de développement...",
+      "waitingForServer": "En attente du serveur...",
+      "loadingPreview": "Chargement de l'aperçu...",
+      "manualUrlHint": "Aucune URL détectée pour l'instant. Vous pouvez saisir une URL manuellement dans la barre d'outils ci-dessus."
+    },
+    "browser": {
+      "title": "Aperçu du serveur de développement",
+      "devServerFallback": "Serveur de développement"
+    },
+    "urlInput": {
+      "placeholder": "Saisir l'URL..."
+    }
+  },
+  "diff": {
+    "viewModes": {
+      "inline": "Vue en ligne",
+      "split": "Vue divisée"
+    },
+    "ignoreWhitespace": "Ignorer les changements d'espaces",
+    "errorLoadingDiff": "Échec du chargement du diff : {{error}}",
+    "expandAll": "Développer tous les diffs",
+    "collapseAll": "Réduire tous les diffs",
+    "filesChanged_one": "{{count}} fichier modifié",
+    "filesChanged_other": "{{count}} fichiers modifiés",
+    "noChanges": "Aucune modification n'a encore été effectuée",
+    "largeDiff": {
+      "title": "Fichier volumineux",
+      "linesChanged": "{{count}} lignes modifiées",
+      "loadAnyway": "Charger le diff quand même",
+      "warning": "Les gros diffs peuvent ralentir votre navigateur."
+    }
+  },
+  "taskPanel": {
+    "noTaskSelected": "Aucune tâche sélectionnée",
+    "loadingAttempts": "Chargement des tentatives...",
+    "errorLoadingAttempts": "Échec du chargement des tentatives",
+    "attemptsCount": "Tentatives ({{count}})",
+    "noAttempts": "Aucune tentative pour le moment"
+  },
+  "processes": {
+    "noLogsAvailable": "Aucun log disponible",
+    "selectAttempt": "Sélectionnez une tentative pour voir les processus d'exécution.",
+    "errorLoadingUpdates": "Échec du chargement des mises à jour en direct pour les processus.",
+    "reconnecting": "Reconnexion...",
+    "loading": "Chargement des processus d'exécution...",
+    "noProcesses": "Aucun processus d'exécution trouvé pour cette tentative.",
+    "processId": "ID du processus : {{id}}",
+    "deleted": "Supprimé",
+    "deletedTooltip": "Supprimé par restauration : la timeline a été restaurée à un point de contrôle et les exécutions ultérieures ont été supprimées",
+    "agent": "Agent :",
+    "exit": "Sortie : {{code}}",
+    "started": "Démarré : {{date}}",
+    "completed": "Terminé : {{date}}",
+    "detailsTitle": "Détails du processus",
+    "backToList": "Retour à la liste",
+    "loadingDetails": "Chargement des détails du processus...",
+    "errorLoadingDetails": "Échec du chargement des détails du processus. Veuillez réessayer.",
+    "copyLogs": "Copier les logs",
+    "logsCopied": "Copié !"
+  },
+  "taskHeader": {
+    "editTask": "Modifier la tâche",
+    "deleteTask": "Supprimer la tâche",
+    "closePanel": "Fermer le panneau"
+  },
+  "navigateToParent": "Naviguer vers la tentative de tâche parente",
+  "toolbar": {
+    "actions": "Actions",
+    "noAttempts": "Aucune tentative pour le moment",
+    "startFirstAttempt": "Démarrez votre première tentative pour commencer à travailler sur cette tâche",
+    "startAttempt": "Démarrer une tentative"
+  },
+  "followUp": {
+    "stop": "Arrêter",
+    "clearReviewComments": "Effacer les commentaires de révision",
+    "resolveConflicts": "Résoudre les conflits",
+    "send": "Envoyer",
+    "unqueuing": "Retrait de la file...",
+    "edit": "Modifier",
+    "queuing": "Mise en file...",
+    "queueForNextTurn": "Mettre en file pour le prochain tour",
+    "queue": "File d'attente",
+    "cancelQueue": "Annuler la file",
+    "queuedMessage": "Message en file d'attente - s'exécutera lorsque l'exécution actuelle sera terminée",
+    "runSetupScript": "Exécuter le script de configuration",
+    "runCleanupScript": "Exécuter le script de nettoyage",
+    "runArchiveScript": "Exécuter le script d'archivage",
+    "noSetupScript": "Aucun script de configuration configuré pour ce projet",
+    "noCleanupScript": "Aucun script de nettoyage configuré pour ce projet",
+    "noArchiveScript": "Aucun script d'archivage configuré pour ce projet",
+    "scriptsDisabledWhileRunning": "Impossible d'exécuter les scripts pendant qu'un processus est en cours"
+  },
+  "todos": {
+    "title_one": "À faire ({{count}})",
+    "title_other": "À faire ({{count}})"
+  },
+  "todoPopup": {
+    "title": "Tâches",
+    "progress": "{{completed}}/{{total}} terminées",
+    "noTasks": "Aucune tâche"
+  },
+  "projects": {
+    "create": {
+      "dialog": {
+        "title": "Créer un projet",
+        "description": "Saisissez un nom pour votre nouveau projet."
+      },
+      "form": {
+        "nameLabel": "Nom",
+        "namePlaceholder": "Mon projet"
+      },
+      "errors": {
+        "createFailed": "Échec de la création du projet"
+      }
+    }
+  },
+  "conversation": {
+    "executors": "Exécuteurs",
+    "saveAsDefault": "Enregistrer par défaut",
+    "you": "Vous",
+    "thinking": "Réflexion",
+    "todo": "À faire",
+    "todos": "À faire",
+    "completed": "terminé",
+    "incomplete": "incomplet",
+    "pending": "en attente",
+    "inProgress": "en cours",
+    "skipped": "ignoré",
+    "error": "Erreur",
+    "retry": "Réessayer",
+    "showMore": "Afficher plus",
+    "showLess": "Afficher moins",
+    "actions": {
+      "cancel": "Annuler",
+      "submitFeedback": "Soumettre le feedback",
+      "stop": "Arrêter",
+      "stopping": "Arrêt en cours",
+      "loading": "Chargement",
+      "send": "Envoyer",
+      "sending": "Envoi en cours",
+      "queue": "File d'attente",
+      "cancelQueue": "Annuler la file",
+      "requestChanges": "Demander des modifications",
+      "approve": "Approuver",
+      "clearReviewComments": "Effacer les commentaires de révision",
+      "edit": "Modifier le message",
+      "scrollToPreviousMessage": "Go to previous message",
+      "reset": "Réinitialiser",
+      "resetTooltip": "Réinitialiser à ce point"
+    },
+    "approval": {
+      "conflictWarning": "Les fichiers en conflit nécessitent une résolution manuelle",
+      "conflicts_one": "{{count}} conflit",
+      "conflicts_other": "{{count}} conflits"
+    },
+    "sessions": {
+      "newSession": "Nouvelle session",
+      "latest": "Plus récent",
+      "previous": "Précédent",
+      "label": "Sessions",
+      "noPreviousSessions": "Aucune session précédente"
+    },
+    "reviewComments": {
+      "count_one": "{{count}} commentaire de révision sera inclus",
+      "count_other": "{{count}} commentaires de révision seront inclus"
+    },
+    "workspace": {
+      "create": "Créer",
+      "creating": "Création en cours..."
+    },
+    "fileEntry": {
+      "created": "Créé",
+      "modified": "Modifié",
+      "deleted": "Supprimé",
+      "renamed": "Renommé"
+    },
+    "script": {
+      "running": "Exécution en cours...",
+      "exitCode": "Code de sortie : {{code}}",
+      "completedSuccessfully": "Terminé avec succès",
+      "clickToViewLogs": "Cliquer pour voir les logs"
+    },
+    "scriptPlaceholder": {
+      "setupTitle": "Script de configuration",
+      "setupDescription": "Aucun script de configuration. Les scripts de configuration s'exécutent avant le démarrage de l'agent de codage.",
+      "cleanupTitle": "Script de nettoyage",
+      "cleanupDescription": "Aucun script de nettoyage. Les scripts de nettoyage s'exécutent après la fin de l'agent de codage.",
+      "configure": "Configurer"
+    },
+    "updatedTodos": "À faire mis à jour",
+    "viewInChangesPanel": "Voir dans le panneau des modifications",
+    "unableToRenderDiff": "Impossible d'afficher le diff."
+  },
+  "attempt": {
+    "actions": {
+      "openInIde": "Ouvrir dans l'IDE",
+      "openMenu": "Ouvrir le menu",
+      "startDevServer": "Démarrer le serveur de développement",
+      "stopDevServer": "Arrêter le serveur de développement"
+    },
+    "labels": {
+      "attempt": "Tentative",
+      "agent": "Agent",
+      "branch": "Branche",
+      "diffs": "Diffs",
+      "summaryAndActions": "Résumé et actions"
+    },
+    "agent": "Agent",
+    "path": "Chemin",
+    "openInEditor": "Voir les modifications dans {{editor}}",
+    "copied": "Copié !",
+    "clickToCopy": "Copier le chemin du worktree",
+    "stopDev": "Arrêter le développement",
+    "pauseDev": "Mettre en pause",
+    "startDev": "Démarrer le développement",
+    "viewDevLogs": "Voir les logs du serveur de développement",
+    "stopping": "Arrêt en cours...",
+    "stopAttempt": "Arrêter la tentative",
+    "newAttempt": "Nouvelle tentative",
+    "viewHistory": "Voir l'historique des tentatives",
+    "createSubtask": "Créer une sous-tâche",
+    "preview": "Aperçu",
+    "diffs": "Diffs",
+    "gitActions": "Actions Git",
+    "tryAgain": "Réessayer",
+    "runSetup": "Exécuter la configuration",
+    "setupHelpText": "{{agent}} n'est pas configuré correctement. Cliquez sur 'Exécuter la configuration' pour l'installer et vous connecter.",
+    "devScriptMissingTooltip": "Pour démarrer le serveur de développement, ajoutez un script de développement à ce projet"
+  },
+  "git": {
+    "labels": {
+      "taskBranch": "Branche de la tâche"
+    },
+    "branch": {
+      "current": "actuelle"
+    },
+    "forcePushDialog": {
+      "title": "Push forcé requis",
+      "description": "La branche distante{{branchLabel}} a divergé de votre branche locale. Un push normal a été rejeté.",
+      "warning": "Le push forcé écrasera les modifications distantes avec vos modifications locales. Cette action ne peut pas être annulée.",
+      "note": "Procédez uniquement si vous êtes certain de vouloir remplacer l'historique de la branche distante.",
+      "error": "Échec du push forcé"
+    },
+    "status": {
+      "commits_one": "commit",
+      "commits_other": "commits",
+      "conflicts": "Conflits",
+      "upToDate": "À jour",
+      "ahead": "en avance",
+      "behind": "en retard"
+    },
+    "states": {
+      "merged": "Fusionné !",
+      "merging": "Fusion en cours...",
+      "merge": "Fusionner",
+      "rebasing": "Rebasage en cours...",
+      "rebase": "Rebaser",
+      "pushed": "Poussé !",
+      "pushing": "Push en cours...",
+      "push": "Push",
+      "pushFailed": "Échec",
+      "forcePush": "Push forcé",
+      "forcePushing": "Push forcé en cours...",
+      "creating": "Création en cours...",
+      "createPr": "Créer une PR"
+    },
+    "errors": {
+      "changeTargetBranch": "Échec du changement de branche cible",
+      "pushChanges": "Échec du push des modifications",
+      "mergeChanges": "Échec de la fusion des modifications",
+      "rebaseBranch": "Échec du rebasage de la branche",
+      "branchStatusUnavailable": "Impossible de récupérer le statut de la branche. Vous pouvez toujours changer la branche cible."
+    },
+    "pr": {
+      "open": "Ouvrir la PR #{{number}}",
+      "number": "PR #{{number}}",
+      "merged": "PR #{{prNumber}} fusionnée"
+    },
+    "actions": {
+      "title": "Actions Git",
+      "changeTarget": "Changer la cible",
+      "prMerged": "La PR #{{number}} est déjà fusionnée",
+      "loginRequired": {
+        "title": "Connectez-vous pour gérer les actions git",
+        "description": "Connectez-vous à Vibe Kanban pour pouvoir pousser des branches, fusionner des modifications ou ouvrir des pull requests pour cette tâche.",
+        "action": "Se connecter"
+      }
+    },
+    "mergeDialog": {
+      "title": "Fusionner les modifications",
+      "description": "Cela fusionnera vos modifications dans la branche cible. Êtes-vous sûr de vouloir continuer ?"
+    },
+    "createRepo": {
+      "dialog": {
+        "title": "Créer un nouveau dépôt",
+        "description": "Initialiser un nouveau dépôt git"
+      },
+      "form": {
+        "nameLabel": "Nom",
+        "namePlaceholder": "mon-projet",
+        "locationLabel": "Emplacement",
+        "locationPlaceholder": "Répertoire actuel"
+      },
+      "browseDialog": {
+        "title": "Sélectionner le répertoire parent",
+        "description": "Choisissez où créer le nouveau dépôt"
+      },
+      "errors": {
+        "nameRequired": "Le nom du dépôt est requis",
+        "createFailed": "Échec de la création du dépôt"
+      },
+      "buttons": {
+        "createRepository": "Créer le dépôt"
+      },
+      "states": {
+        "creating": "Création en cours..."
+      }
+    }
+  },
+  "createAttemptDialog": {
+    "title": "Créer une tentative",
+    "description": "Démarrez une nouvelle tentative avec un agent de codage. Un worktree git et une branche de tâche seront créés.",
+    "baseBranch": "Branche de base",
+    "loadingBranches": "Chargement des branches...",
+    "selectBranch": "Sélectionner une branche",
+    "error": "Échec de la création de la tentative. Veuillez réessayer.",
+    "creating": "Création en cours...",
+    "start": "Démarrer"
+  },
+  "repoBranchSelector": {
+    "label": "Branche de base"
+  },
+  "attemptRepoSelector": {
+    "label": "Dépôts",
+    "addButton": "Ajouter",
+    "empty": "Aucun dépôt sélectionné. Ajoutez au moins un dépôt.",
+    "selectBranch": "Sélectionner une branche",
+    "addRepo": {
+      "title": "Sélectionner un dépôt Git",
+      "description": "Choisissez un dépôt git à ajouter à cette tentative"
+    }
+  },
+  "viewProcessesDialog": {
+    "title": "Processus d'exécution"
+  },
+  "viewRelatedTasksDialog": {
+    "title": "Tâches associées",
+    "empty": "Aucune tâche associée pour cette tentative",
+    "error": "Échec du chargement des tâches associées",
+    "tasksCount": "Tâches ({{count}})",
+    "columns": {
+      "title": "Titre",
+      "description": "Description",
+      "status": "Statut"
+    }
+  },
+  "attemptHeaderActions": {
+    "preview": "Aperçu",
+    "diffs": "Diffs",
+    "relatedTasks": "Tâches associées",
+    "tryNewUI": "essayer la nouvelle interface"
+  },
+  "actionsMenu": {
+    "attempt": "Tentative",
+    "openInIde": "Ouvrir la tentative dans l'IDE",
+    "viewProcesses": "Voir les processus",
+    "viewRelatedTasks": "Voir les tâches associées",
+    "createNewAttempt": "Créer une nouvelle tentative",
+    "createSubtask": "Créer une sous-tâche",
+    "gitActions": "Actions Git",
+    "editBranchName": "Modifier le nom de la branche",
+    "startReview": "Démarrer la révision",
+    "startingReview": "Démarrage de la révision...",
+    "task": "Tâche",
+    "duplicate": "Dupliquer"
+  },
+  "editBranchName": {
+    "dialog": {
+      "title": "Modifier le nom de la branche",
+      "description": "Saisissez un nouveau nom pour la branche. Impossible de renommer s'il existe une PR ouverte.",
+      "branchNameLabel": "Nom de la branche",
+      "placeholder": "ex: feature/ma-branche",
+      "renaming": "Renommage en cours...",
+      "action": "Renommer la branche"
+    }
+  },
+  "startReviewDialog": {
+    "title": "Démarrer la révision",
+    "description": "Demandez à l'agent de codage de réviser vos modifications et de fournir des commentaires.",
+    "additionalInstructions": "Instructions supplémentaires (optionnel)",
+    "reviewComments": "Commentaires de révision ({{count}})",
+    "includeGitContext": "Inclure le contexte git",
+    "includeGitContextDescription": "Indique à l'agent comment voir toutes les modifications effectuées sur cette branche",
+    "newSession": "Nouvelle session"
+  },
+  "resolveConflicts": {
+    "dialog": {
+      "title": "Résoudre les conflits",
+      "description": "Des conflits ont été détectés. Choisissez comment vous voulez que l'agent les résolve.",
+      "sessionLabel": "Session",
+      "existingSession": "Continuer dans la session actuelle",
+      "newSession": "Démarrer une nouvelle session",
+      "resolve": "Résoudre les conflits",
+      "resolving": "Démarrage...",
+      "filesWithConflicts_one": "{{count}} fichier a des conflits",
+      "filesWithConflicts_other": "{{count}} fichiers ont des conflits",
+      "andMore": "...et {{count}} autres"
+    }
+  },
+  "rebaseInProgress": {
+    "dialog": {
+      "title": "Rebase en cours",
+      "description": "Un rebase vers {{targetBranch}} est en cours sans conflits. Choisissez comment procéder.",
+      "hint": "Vous pouvez continuer le rebase pour le terminer, ou abandonner pour revenir à l'état précédent.",
+      "continue": "Continuer le rebase",
+      "continuing": "Continuation...",
+      "abort": "Abandonner le rebase",
+      "aborting": "Abandon...",
+      "continueError": "Échec de la continuation du rebase. Il peut y avoir des conflits non résolus.",
+      "abortError": "Échec de l'abandon du rebase. Veuillez réessayer."
+    }
+  },
+  "createPrDialog": {
+    "title": "Créer une Pull Request",
+    "description": "Créer une pull request pour cette tentative de tâche.",
+    "titleLabel": "Titre",
+    "titlePlaceholder": "Saisir le titre de la PR",
+    "descriptionLabel": "Description (optionnel)",
+    "descriptionPlaceholder": "Saisir la description de la PR",
+    "baseBranchLabel": "Branche de base",
+    "loadingBranches": "Chargement des branches...",
+    "selectBaseBranch": "Sélectionner la branche de base",
+    "draftLabel": "Créer comme brouillon",
+    "autoGenerateLabel": "Générer automatiquement la description de la PR avec l'IA",
+    "creating": "Création en cours...",
+    "createButton": "Créer la PR",
+    "errors": {
+      "insufficientPermissions": "Permissions insuffisantes. Veuillez vous assurer que le CLI dispose des permissions nécessaires.",
+      "repoNotFoundOrNoAccess": "Dépôt non trouvé ou accès refusé. Veuillez vérifier votre accès au dépôt et vous assurer que vous êtes authentifié.",
+      "failedToCreate": "Échec de la création de la PR",
+      "gitCliNotLoggedIn": "Git n'est pas authentifié. Exécutez \"gh auth login\" (ou configurez les identifiants Git) et réessayez.",
+      "gitCliNotInstalled": "Git CLI n'est pas installé. Installez Git pour créer une PR.",
+      "targetBranchNotFound": "La branche cible '{{branch}}' n'existe pas sur le dépôt distant. Veuillez vous assurer que la branche existe avant de créer une pull request."
+    },
+    "loginRequired": {
+      "title": "Connectez-vous pour créer une pull request",
+      "description": "Vous devez vous connecter avant de pouvoir ouvrir une pull request pour cette tâche. Nous vous amènerons à la page de connexion.",
+      "action": "Se connecter"
+    }
+  },
+  "showcases": {
+    "taskPanel": {
+      "companion": {
+        "title": "Vibe Kanban Companion - Pointer et cliquer",
+        "description": "Cliquez sur n'importe quel composant d'interface dans la fenêtre d'aperçu pour le sélectionner précisément. L'agent de codage reçoit les sélecteurs DOM exacts et la hiérarchie des composants, éliminant les retours ambigus."
+      },
+      "installation": {
+        "title": "Installation du serveur de développement et du Companion",
+        "description": "Définissez une commande de serveur de développement pour les aperçus, avec un script de configuration paramétrable dans les options. Utilisez un agent de codage pour installer automatiquement le web companion Vibe Kanban."
+      },
+      "codeReview": {
+        "title": "Révision de code intégrée",
+        "description": "Ajoutez des commentaires spécifiques aux lignes directement dans la vue des diffs avec l'icône plus. Tous les retours sont collectés et envoyés comme une révision complète à l'agent de codage."
+      },
+      "pullRequest": {
+        "title": "Créer une PR depuis la tâche",
+        "description": "Fusionnez vos modifications ou créez des pull requests directement depuis les tentatives de tâches. La boîte de dialogue PR pré-remplit le titre et la description à partir des détails de votre tâche pour des workflows simplifiés."
+      },
+      "tags": {
+        "title": "Tags de prompts personnalisés",
+        "description": "Enregistrez des prompts personnalisés comme tags et intégrez-les dans de nouvelles tâches ou messages de suivi. Réutilisez les instructions courantes pour maintenir la cohérence de votre workflow."
+      }
+    },
+    "buttons": {
+      "previous": "Précédent",
+      "next": "Suivant",
+      "finish": "Terminer"
+    }
+  },
+  "prComments": {
+    "dialog": {
+      "title": "Sélectionner les commentaires de la PR",
+      "noComments": "Aucun commentaire trouvé sur cette PR",
+      "selectAll": "Tout sélectionner",
+      "deselectAll": "Tout désélectionner",
+      "add": "Ajouter",
+      "selectedCount": "{{selected}} sur {{total}} sélectionnés"
+    },
+    "card": {
+      "review": "Révision",
+      "tooltip": "Cliquer pour voir, double-cliquer pour modifier"
+    }
+  },
+  "taskFormDialog": {
+    "createTitle": "Créer une nouvelle tâche",
+    "editTitle": "Modifier la tâche",
+    "titlePlaceholder": "Titre de la tâche...",
+    "descriptionPlaceholder": "Ajouter plus de détails (optionnel). Tapez @ pour rechercher des fichiers.",
+    "statusLabel": "Statut",
+    "statusOptions": {
+      "todo": "À faire",
+      "inprogress": "En cours",
+      "inreview": "En révision",
+      "done": "Terminé",
+      "cancelled": "Annulé"
+    },
+    "startLabel": "Démarrer",
+    "attachImage": "Joindre une image",
+    "dropImagesHere": "Déposez les images ici",
+    "updating": "Mise à jour...",
+    "updateTask": "Mettre à jour la tâche",
+    "starting": "Démarrage...",
+    "creating": "Création...",
+    "create": "Créer",
+    "discardDialog": {
+      "title": "Abandonner les modifications non enregistrées ?",
+      "description": "Vous avez des modifications non enregistrées. Êtes-vous sûr de vouloir les abandonner ?",
+      "continueEditing": "Continuer la modification",
+      "discardChanges": "Abandonner les modifications"
+    }
+  },
+  "terminal": {
+    "selectWorkspace": "Sélectionnez un espace de travail pour ouvrir le terminal"
+  },
+  "restoreLogsDialog": {
+    "title": "Confirmer la nouvelle tentative",
+    "titleReset": "Confirmer la réinitialisation",
+    "historyChange": {
+      "title": "Changement d'historique",
+      "willDelete": "Supprimera ce processus",
+      "willDeleteProcesses_one": "Supprimera {{count}} processus",
+      "willDeleteProcesses_other": "Supprimera {{count}} processus",
+      "andLaterProcesses_one": "et {{count}} processus ultérieur",
+      "andLaterProcesses_other": "et {{count}} processus ultérieurs",
+      "fromHistory": "de l'historique.",
+      "codingAgentRuns_one": "{{count}} exécution d'agent de codage",
+      "codingAgentRuns_other": "{{count}} exécutions d'agent de codage",
+      "scriptProcesses_one": "{{count}} processus de script",
+      "scriptProcesses_other": "{{count}} processus de scripts",
+      "setupCleanupBreakdown": "({{setup}} configuration, {{cleanup}} nettoyage)",
+      "permanentWarning": "Cela modifie définitivement l'historique et ne peut pas être annulé."
+    },
+    "uncommittedChanges": {
+      "title": "Modifications non commitées détectées",
+      "description_one": "Vous avez {{count}} modification non commitée",
+      "description_other": "Vous avez {{count}} modifications non commitées",
+      "andUntracked_one": " et {{count}} fichier non suivi",
+      "andUntracked_other": " et {{count}} fichiers non suivis",
+      "acknowledgeLabel": "Je comprends que ces modifications peuvent être affectées"
+    },
+    "resetWorktree": {
+      "title": "Réinitialiser le worktree",
+      "enabled": "Activé",
+      "disabled": "Désactivé",
+      "disabledUncommitted": "Désactivé (modifications non commitées détectées)",
+      "restoreDescription": "Votre worktree sera restauré à ce commit.",
+      "rollbackCommits_one": "Annuler {{count}} commit depuis le HEAD actuel.",
+      "rollbackCommits_other": "Annuler {{count}} commits depuis le HEAD actuel.",
+      "discardChanges_one": "Abandonner {{count}} modification non commitée.",
+      "discardChanges_other": "Abandonner {{count}} modifications non commitées.",
+      "untrackedPresent_one": "{{count}} fichier non suivi présent (non affecté par la réinitialisation).",
+      "untrackedPresent_other": "{{count}} fichiers non suivis présents (non affectés par la réinitialisation).",
+      "forceReset": "Forcer la réinitialisation (abandonner les modifications non commitées)",
+      "uncommittedWillDiscard": "Les modifications non commitées seront abandonnées.",
+      "uncommittedPresentHint": "Modifications non commitées présentes. Activez la réinitialisation forcée ou commitez/stashez pour continuer."
+    },
+    "buttons": {
+      "retry": "Réessayer",
+      "reset": "Réinitialiser"
+    }
+  },
+  "scriptFixer": {
+    "title": "Corriger le script",
+    "setupScriptTitle": "Corriger le script de configuration",
+    "cleanupScriptTitle": "Corriger le script de nettoyage",
+    "archiveScriptTitle": "Corriger le script d'archivage",
+    "devServerTitle": "Corriger le script du serveur de développement",
+    "scriptLabel": "Script (modifier)",
+    "logsLabel": "Logs de la dernière exécution",
+    "saveButton": "Enregistrer",
+    "saveAndTestButton": "Enregistrer et tester",
+    "saving": "Enregistrement...",
+    "testing": "Test en cours...",
+    "noLogs": "Aucun log d'exécution disponible",
+    "selectRepo": "Dépôt",
+    "fixScript": "Corriger le script",
+    "statusRunning": "Exécution en cours...",
+    "statusSuccess": "Terminé avec succès",
+    "statusFailed": "Échec avec le code de sortie {{exitCode}}",
+    "statusKilled": "Le processus a été interrompu"
+  },
+  "createWorkspaceFromPr": {
+    "title": "Créer un espace de travail à partir d'une PR",
+    "description": "Sélectionnez une pull request ouverte pour créer un espace de travail. Une tâche sera créée automatiquement avec le titre de la PR.",
+    "repositoryLabel": "Dépôt",
+    "remoteLabel": "Distant",
+    "pullRequestLabel": "Pull Request",
+    "loadingRepositories": "Chargement des dépôts...",
+    "loadingRemotes": "Chargement des distants...",
+    "noRepositoriesFound": "Aucun dépôt trouvé",
+    "loadingPullRequests": "Chargement des pull requests...",
+    "selectRepositoryFirst": "Sélectionnez d'abord un dépôt",
+    "noPullRequestsFound": "Aucune pull request ouverte trouvée",
+    "runSetupScript": "Exécuter le script de configuration",
+    "creating": "Création...",
+    "createWorkspace": "Créer l'espace de travail",
+    "selectRepository": "Sélectionner un dépôt",
+    "selectRemote": "Sélectionner un distant",
+    "selectPullRequest": "Sélectionner une pull request",
+    "searchPrsPlaceholder": "Rechercher des PRs par numéro ou titre...",
+    "noMatchingPrs": "Aucune pull request correspondante",
+    "default": "par défaut",
+    "openPrInBrowser": "Ouvrir la PR dans le navigateur",
+    "errors": {
+      "cliNotInstalled": "{{provider}} CLI n'est pas installé",
+      "unsupportedProvider": "Fournisseur Git non pris en charge",
+      "failedToLoadPrs": "Échec du chargement des pull requests",
+      "prNotFound": "Pull request non trouvée",
+      "repoNotInProject": "Le dépôt n'est dans aucun projet",
+      "failedToCreateWorkspace": "Échec de la création de l'espace de travail"
+    }
+  },
+  "shareDialog": {
+    "loginRequired": {
+      "title": "Sign in required",
+      "description": "Sign in to access this feature.",
+      "action": "Sign in"
+    }
+  }
+}

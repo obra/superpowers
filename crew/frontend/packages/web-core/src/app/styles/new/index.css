@@ -1,0 +1,449 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&family=IBM+Plex+Mono:ital,wght@0,100..700;1,100..700&family=Noto+Emoji:wght@300..700&family=Roboto:wght@500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 1) THEME TOKENS */
+@layer base {
+  /* Light defaults */
+  :root {
+    color-scheme: light;
+    --_background: 0 0% 95%;
+    --_foreground: 0 0% 5%;
+    --_primary: 0 0% 5%;
+    --_primary-foreground: 0 0% 100%;
+    --_secondary: 0 0% 95%;
+    --_secondary-foreground: 0 0% 16%;
+    --_muted: 0 0% 89%;
+    --_muted-foreground: 0 0% 56%;
+    --_accent: 0 0% 92%;
+    --_accent-foreground: 0 0% 5%;
+    --_destructive: 0 59% 57%;
+    --_destructive-foreground: 0 0% 100%;
+    --_border: 0 0% 85%;
+    --_input: 0 0% 96%;
+    --_ring: 0 0% 5%;
+    --_radius: 0.125rem;
+
+    /* Status (light) */
+    --_success: 117 38% 50%;
+    --_success-foreground: 117 38% 20%;
+    --_warning: 32 95% 44%;
+    --_warning-foreground: 32 95% 14%;
+    --_info: 217 91% 60%;
+    --_info-foreground: 0 0% 5%;
+    --_neutral: 0 0% 92%;
+    --_neutral-foreground: 0 0% 5%;
+
+    /* Console (light) */
+    --_console-background: 0 0% 100%;
+    --_console-foreground: 0 0% 5%;
+    --_console-success: 117 38% 50%;
+    --_console-error: 0 59% 57%;
+
+    /* Syntax highlighting (light) */
+    --_syntax-keyword: #d73a49;
+    --_syntax-function: #6f42c1;
+    --_syntax-constant: #005cc5;
+    --_syntax-string: #032f62;
+    --_syntax-variable: #e36209;
+    --_syntax-comment: #6a737d;
+    --_syntax-tag: #22863a;
+    --_syntax-punctuation: #24292e;
+    --_syntax-deleted: #b31d28;
+
+    /* Text (light) */
+    --text-high: 0 0% 5%;
+    --text-normal: 0 0% 20%;
+    --text-low: 0 0% 39%;
+
+    /* Background (light) - with VS Code overrides */
+    --_bg-primary-default: 0 0% 100%;
+    --_bg-secondary-default: 0 0% 95%;
+    --_bg-panel-default: 0 0% 89%;
+    --bg-primary: var(--vscode-editor-background, var(--_bg-primary-default));
+    --bg-secondary: var(
+      --vscode-editorWidget-background,
+      var(--_bg-secondary-default)
+    );
+    --bg-panel: var(--vscode-input-background, var(--_bg-panel-default));
+
+    /* Accent (light) */
+    --brand: 25 82% 54%;
+    --brand-hover: 25 75% 62%;
+    --brand-secondary: 25 82% 37%;
+    --error: 0 59% 57%;
+    --success: 117 38% 50%;
+    --merged: 271 81% 46%;
+
+    /* Text on accent */
+    --text-on-brand: 0 0% 100%;
+  }
+
+  /* Dark mode */
+  .dark {
+    color-scheme: dark;
+
+    /* Internal variables (dark) - needed for public tokens */
+    --_background: 0 0% 13%;
+    --_foreground: 0 0% 96%;
+    --_primary: 240 4.8% 95.9%;
+    --_primary-foreground: 240 5.9% 10%;
+    --_secondary: 0 0% 12%;
+    --_secondary-foreground: 0 0% 77%;
+    --_muted: 0 0% 16%;
+    --_muted-foreground: 0 0% 64%;
+    --_accent: 0 0% 20%;
+    --_accent-foreground: 0 0% 96%;
+    --_destructive: 0 59% 57%;
+    --_destructive-foreground: 0 0% 96%;
+    --_border: 0 0% 20%;
+    --_input: 0 0% 20%;
+    --_ring: 0 0% 77%;
+
+    /* Status (dark) */
+    --_success: 117 38% 50%;
+    --_success-foreground: 117 38% 90%;
+    --_warning: 32.2 95% 44.1%;
+    --_warning-foreground: 32.2 95% 90%;
+    --_info: 217.2 91.2% 59.8%;
+    --_info-foreground: 217.2 91.2% 90%;
+    --_neutral: 0 0% 20%;
+    --_neutral-foreground: 0 0% 90%;
+
+    /* Text (dark) */
+    --text-high: 0 0% 96%;
+    --text-normal: 0 0% 77%;
+    --text-low: 0 0% 56%;
+
+    /* Background (dark) - with VS Code overrides */
+    --_bg-primary-default: 0 0% 13%;
+    --_bg-secondary-default: 0 0% 11%;
+    --_bg-panel-default: 0 0% 16%;
+    --bg-primary: var(--vscode-editor-background, var(--_bg-primary-default));
+    --bg-secondary: var(
+      --vscode-editorWidget-background,
+      var(--_bg-secondary-default)
+    );
+    --bg-panel: var(--vscode-input-background, var(--_bg-panel-default));
+
+    /* Accent (dark) */
+    --brand: 25 82% 54%;
+    --brand-hover: 25 75% 62%;
+    --brand-secondary: 25 82% 37%;
+    --error: 0 59% 57%;
+    --success: 117 38% 50%;
+    --merged: 271 81% 66%;
+
+    /* Text on accent */
+    --text-on-brand: 0 0% 100%;
+    /* Console (dark) */
+    --_console-background: 0 0% 0%;
+    --_console-foreground: 210 40% 98%;
+    --_console-success: 138.5 76.5% 47.7%;
+    --_console-error: 0 84.2% 60.2%;
+
+    /* Syntax highlighting (dark) */
+    --_syntax-keyword: #ff7b72;
+    --_syntax-function: #d2a8ff;
+    --_syntax-constant: #79c0ff;
+    --_syntax-string: #a5d6ff;
+    --_syntax-variable: #ffa657;
+    --_syntax-comment: #8b949e;
+    --_syntax-tag: #7ee787;
+    --_syntax-punctuation: #c9d1d9;
+    --_syntax-deleted: #ffdcd7;
+  }
+}
+
+/* 2) PUBLIC TOKENS */
+@layer base {
+  :root {
+    --background: var(--vscode-editor-background, var(--_background));
+    --foreground: var(--vscode-editor-foreground, var(--_foreground));
+
+    --card: var(--muted);
+    --card-foreground: var(--muted-foreground);
+    --popover: var(--background);
+    --popover-foreground: var(--foreground);
+
+    --primary: var(--vscode-button-background, var(--_primary));
+    --primary-foreground: var(
+      --vscode-editor-foreground,
+      var(--_primary-foreground)
+    );
+    --secondary: var(--vscode-input-background, var(--_secondary));
+    --secondary-foreground: var(
+      --vscode-input-foreground,
+      var(--_secondary-foreground)
+    );
+
+    --muted: var(--vscode-editor-background, var(--_muted));
+    --muted-foreground: var(
+      --vscode-descriptionForeground,
+      var(--_muted-foreground)
+    );
+    --accent: var(--vscode-focusBorder, var(--_accent));
+    --accent-foreground: var(
+      --vscode-editor-foreground,
+      var(--_accent-foreground)
+    );
+
+    --destructive: var(--vscode-errorForeground, var(--_destructive));
+    --destructive-foreground: var(
+      --vscode-button-foreground,
+      var(--_destructive-foreground)
+    );
+
+    --border: var(--vscode-input-background, var(--_border));
+    --input: var(--vscode-input-background, var(--_input));
+    --ring: var(--vscode-focusBorder, var(--_ring));
+
+    --radius: var(--_radius);
+
+    /* Status */
+    --success: var(--vscode-testing-iconPassed, var(--_success));
+    --success-foreground: var(
+      --vscode-editor-foreground,
+      var(--_success-foreground)
+    );
+    --warning: var(--vscode-testing-iconQueued, var(--_warning));
+    --warning-foreground: var(
+      --vscode-descriptionForeground,
+      var(--_warning-foreground)
+    );
+    --info: var(--vscode-focusBorder, var(--_info));
+    --info-foreground: var(--vscode-editor-foreground, var(--_info-foreground));
+    --neutral: var(--vscode-input-background, var(--_neutral));
+    --neutral-foreground: var(
+      --vscode-editor-foreground,
+      var(--_neutral-foreground)
+    );
+
+    /* Console/terminal */
+    --console-background: var(
+      --vscode-editor-background,
+      var(--_console-background)
+    );
+    --console-foreground: var(
+      --vscode-terminal-foreground,
+      var(--_console-foreground)
+    );
+    --console-success: var(
+      --vscode-testing-iconPassed,
+      var(--_console-success)
+    );
+    --console-error: var(--vscode-terminal-ansiRed, var(--_console-error));
+
+    /* Syntax highlighting */
+    --syntax-keyword: var(--_syntax-keyword);
+    --syntax-function: var(--_syntax-function);
+    --syntax-constant: var(--_syntax-constant);
+    --syntax-string: var(--_syntax-string);
+    --syntax-variable: var(--_syntax-variable);
+    --syntax-comment: var(--_syntax-comment);
+    --syntax-tag: var(--_syntax-tag);
+    --syntax-punctuation: var(--_syntax-punctuation);
+    --syntax-deleted: var(--_syntax-deleted);
+
+    /* Allotment */
+    --separator-border: hsl(var(--border));
+    --focus-border: hsl(var(--brand));
+  }
+}
+
+/* 3) Base styles */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    @apply border-border;
+  }
+
+  html,
+  body,
+  #root {
+    @apply min-h-screen;
+    @apply font-normal;
+    @apply bg-background text-foreground font-ibm-plex-sans;
+  }
+
+  *:focus {
+    @apply ring-inset;
+  }
+
+  .logo {
+    @apply fill-foreground;
+  }
+
+  a,
+  button,
+  button * {
+    @apply transition-colors duration-200;
+    cursor: pointer;
+  }
+}
+
+/* ANSI color classes for fancy-ansi - optimized for both light and dark modes */
+@layer components {
+  /* Light mode: use darker shades for contrast on light backgrounds */
+  .ansi-red {
+    @apply text-red-700 dark:text-red-400;
+  }
+
+  .ansi-green {
+    @apply text-green-700 dark:text-green-400;
+  }
+
+  .ansi-yellow {
+    @apply text-yellow-700 dark:text-yellow-400;
+  }
+
+  .ansi-blue {
+    @apply text-blue-700 dark:text-blue-400;
+  }
+
+  .ansi-magenta {
+    @apply text-purple-700 dark:text-purple-400;
+  }
+
+  .ansi-cyan {
+    @apply text-cyan-700 dark:text-cyan-400;
+  }
+
+  .ansi-white {
+    @apply text-gray-600 dark:text-gray-200;
+  }
+
+  .ansi-black {
+    @apply text-black dark:text-gray-900;
+  }
+
+  .ansi-bright-red {
+    @apply text-red-600 dark:text-red-300;
+  }
+
+  .ansi-bright-green {
+    @apply text-green-600 dark:text-green-300;
+  }
+
+  .ansi-bright-yellow {
+    @apply text-amber-600 dark:text-yellow-300;
+  }
+
+  .ansi-bright-blue {
+    @apply text-blue-600 dark:text-blue-300;
+  }
+
+  .ansi-bright-magenta {
+    @apply text-purple-600 dark:text-purple-300;
+  }
+
+  .ansi-bright-cyan {
+    @apply text-cyan-600 dark:text-cyan-300;
+  }
+
+  .ansi-bright-white {
+    @apply text-gray-500 dark:text-gray-100;
+  }
+
+  .ansi-bright-black {
+    @apply text-gray-600 dark:text-gray-500;
+  }
+
+  .ansi-bold {
+    @apply font-bold;
+  }
+
+  .ansi-italic {
+    @apply italic;
+  }
+
+  .ansi-underline {
+    @apply underline;
+  }
+}
+
+/* Animated border for running chat box */
+@keyframes border-flash {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@layer components {
+  .chat-box-running {
+    @apply relative;
+  }
+
+  .chat-box-running::before {
+    content: '';
+    @apply absolute inset-0 pointer-events-none rounded-t-md;
+    padding: 1px;
+    padding-bottom: 0;
+    background: linear-gradient(
+      45deg,
+      transparent,
+      hsl(var(--brand-secondary)),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: border-flash 2s linear infinite;
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  .create-issue-attention {
+    @apply relative;
+  }
+
+  .create-issue-attention::before {
+    content: '';
+    @apply absolute inset-0 pointer-events-none rounded-sm;
+    padding: 1px;
+    background: linear-gradient(
+      120deg,
+      transparent,
+      hsl(var(--brand)),
+      transparent
+    );
+    background-size: 220% 100%;
+    animation: border-flash 1.2s linear infinite;
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .create-issue-attention::before {
+      animation: none;
+    }
+  }
+}
+
+/* Color emoji utility - uses system color emoji fonts for reactions */
+@layer utilities {
+  .color-emoji {
+    font-family:
+      'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji',
+      'Android Emoji', 'EmojiSymbols', sans-serif;
+  }
+}
+
+@config '../../../../../local-web/tailwind.new.config.js';

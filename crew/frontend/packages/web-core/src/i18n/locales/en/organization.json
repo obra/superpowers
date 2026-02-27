@@ -1,0 +1,92 @@
+{
+  "createDialog": {
+    "title": "Create New Organization",
+    "description": "Create a new organization to collaborate with your team.",
+    "nameLabel": "Organization Name",
+    "namePlaceholder": "e.g., Acme Corporation",
+    "slugLabel": "Slug",
+    "slugPlaceholder": "e.g., acme-corporation",
+    "slugHelper": "Used in URLs. Lowercase letters, numbers, and hyphens only.",
+    "creating": "Creating...",
+    "createButton": "Create Organization"
+  },
+  "inviteDialog": {
+    "title": "Invite Member",
+    "description": "Send an invitation to join your organization.",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "colleague@example.com",
+    "roleLabel": "Role",
+    "rolePlaceholder": "Select a role",
+    "roleHelper": "Admins can manage members and organization settings.",
+    "sending": "Sending...",
+    "sendButton": "Send Invitation",
+    "subscriptionRequired": "Subscription required to add more members",
+    "upgradePrompt": "Upgrade your organization's plan to invite additional members.",
+    "upgradeButton": "Upgrade Plan"
+  },
+  "roles": {
+    "member": "Member",
+    "admin": "Admin"
+  },
+  "memberList": {
+    "title": "Members",
+    "description": "Manage members and their roles in {{orgName}}",
+    "inviteButton": "Invite Member",
+    "loading": "Loading members...",
+    "none": "No members found",
+    "you": "You"
+  },
+  "invitationList": {
+    "title": "Pending Invitations",
+    "description": "View pending invitations for {{orgName}}",
+    "loading": "Loading invitations...",
+    "none": "No pending invitations",
+    "invited": "Invited {{date}}",
+    "pending": "Pending"
+  },
+  "settings": {
+    "title": "Organization Settings",
+    "description": "Manage organization members and permissions",
+    "selectLabel": "Select Organization",
+    "selectPlaceholder": "Select an organization",
+    "selectHelper": "Choose an organization to view and manage its members",
+    "noOrganizations": "No organizations available",
+    "loadingOrganizations": "Loading organizations...",
+    "loadError": "Failed to load organizations",
+    "dangerZone": "Danger Zone",
+    "dangerZoneDescription": "Irreversible and destructive actions",
+    "deleteOrganization": "Delete Organization",
+    "deleteOrganizationDescription": "Permanently delete this organization and all its data",
+    "confirmDelete": "Are you sure you want to delete {{orgName}}? This action cannot be undone.",
+    "deleteSuccess": "Organization deleted successfully",
+    "deleteError": "Failed to delete organization"
+  },
+  "loginRequired": {
+    "title": "Sign in required",
+    "description": "You need to sign in to manage organization settings.",
+    "action": "Sign in"
+  },
+  "confirmRemoveMember": "Are you sure you want to remove this member from the organization?",
+  "sharedProjects": {
+    "title": "Shared Projects",
+    "description": "Remote projects in {{orgName}} and their links to local projects",
+    "loading": "Loading projects...",
+    "noProjects": "No shared projects found in this organization",
+    "notLinked": "Not linked",
+    "linkedTo": "Linked to: {{projectName}}",
+    "linked": "Linked",
+    "linkProject": "Link project...",
+    "noAvailableProjects": "No available projects"
+  },
+  "billing": {
+    "title": "Billing & Subscription",
+    "description": "Manage your organization's subscription and billing settings",
+    "manageButton": "Manage Billing",
+    "openInBrowser": "Opens in a new browser tab"
+  },
+  "personalOrg": {
+    "cannotInvite": "Personal organizations cannot have additional members.",
+    "createOrgPrompt": "Create an organization to collaborate with others.",
+    "createOrgButton": "Create Organization"
+  }
+}

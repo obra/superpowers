@@ -1,0 +1,651 @@
+{
+  "editorNames": {
+    "custom": "自訂"
+  },
+  "buttons": {
+    "save": "儲存",
+    "cancel": "取消",
+    "send": "傳送",
+    "delete": "刪除",
+    "edit": "編輯",
+    "create": "建立",
+    "continue": "繼續",
+    "reset": "重設",
+    "manage": "管理",
+    "connect": "連線",
+    "disconnect": "中斷連線",
+    "close": "關閉",
+    "replay": "重播",
+    "discard": "放棄",
+    "addItem": "新增項目",
+    "reply": "回覆",
+    "retry": "Retry"
+  },
+  "form": {
+    "notSpecified": "未指定",
+    "selectOption": "選擇一個選項..."
+  },
+  "states": {
+    "loading": "載入中...",
+    "loadingHistory": "載入歷史紀錄",
+    "saving": "儲存中...",
+    "error": "錯誤",
+    "success": "成功",
+    "reconnecting": "重新連線中"
+  },
+  "language": {
+    "browserDefault": "瀏覽器預設"
+  },
+  "conversation": {
+    "plan": "計畫",
+    "planToggle": {
+      "show": "顯示計畫",
+      "hide": "隱藏計畫"
+    },
+    "toolDetailsToggle": {
+      "show": "顯示詳細資訊",
+      "hide": "隱藏詳細資訊"
+    },
+    "args": "參數",
+    "output": "輸出",
+    "result": "結果",
+    "deniedByUser": "使用者拒絕了 {{toolName}}",
+    "taskCompleted": "任務完成",
+    "ran": "執行了",
+    "tool": "工具",
+    "thinking": "思考中",
+    "toolSummary": {
+      "read": "讀取 {{path}}",
+      "searched": "搜尋 \"{{query}}\"",
+      "fetched": "取得 {{url}}",
+      "ranCommand": "執行命令",
+      "createdTask": "建立任務：{{description}}",
+      "todoOperation": "{{operation}} 待辦事項"
+    },
+    "fixScript": "修復腳本",
+    "subagent": {
+      "defaultType": "子代理"
+    }
+  },
+  "folderPicker": {
+    "legend": "點擊資料夾名稱進行導覽 • 使用操作按鈕進行選擇",
+    "manualPathLabel": "手動輸入路徑:",
+    "go": "前往",
+    "searchLabel": "搜尋目前目錄:",
+    "selectCurrent": "選取目前",
+    "gitRepo": "Git 儲存庫",
+    "selectPath": "選取路徑"
+  },
+  "branchSelector": {
+    "placeholder": "選擇分支",
+    "searchPlaceholder": "搜尋分支...",
+    "empty": "找不到分支",
+    "badges": {
+      "current": "目前",
+      "remote": "遠端"
+    },
+    "currentDisabled": "無法選擇目前分支"
+  },
+  "breadcrumb": {
+    "more": "更多"
+  },
+  "orgMembers": {
+    "moreCount": "還有 {{count}} 位"
+  },
+  "orgSwitcher": {
+    "title": "切換組織",
+    "description": "選擇要切換到的組織。",
+    "loadError": "載入組織失敗。請重試。",
+    "noOrganizations": "您不是任何組織的成員。",
+    "menuItem": "組織",
+    "loadingPlaceholder": "載入組織中...",
+    "selectPlaceholder": "選擇組織",
+    "currentBadge": "（目前）",
+    "organizations": "組織",
+    "createOrganization": "建立組織",
+    "orgSettings": "組織設定",
+    "migrate": "遷移"
+  },
+  "ok": "確定",
+  "error": "錯誤",
+  "signIn": "登入",
+  "signOut": "登出",
+  "devMode": {
+    "banner": "開發模式 - 這是開發版本"
+  },
+  "oauth": {
+    "title": "登入 Vibe Kanban",
+    "description": "登入以加入組織並與團隊共享任務",
+    "continueWithGitHub": "使用 GitHub 繼續",
+    "continueWithGoogle": "使用 Google 繼續",
+    "waitingTitle": "完成身分驗證",
+    "waitingDescription": "已開啟彈出視窗進行驗證",
+    "waitingForAuth": "等待身分驗證...",
+    "popupInstructions": "如果彈出視窗未開啟，請檢查您的彈出視窗攔截器設定。",
+    "back": "返回",
+    "successTitle": "身分驗證成功！",
+    "welcomeBack": "歡迎回來，{{name}}",
+    "errorTitle": "身分驗證失敗",
+    "errorDescription": "驗證您的帳號時發生問題",
+    "tryAgain": "重試"
+  },
+  "navbar": {
+    "tryNewUI": "試用新界面"
+  },
+  "toolbar": {
+    "sortBy": "排序方式",
+    "groupBy": "分組方式"
+  },
+  "sorting": {
+    "ascending": "升序",
+    "descending": "降序"
+  },
+  "grouping": {
+    "date": "日期",
+    "assignee": "負責人",
+    "label": "標籤"
+  },
+  "workspaces": {
+    "title": "工作區",
+    "searchPlaceholder": "搜尋...",
+    "active": "活躍",
+    "archived": "已封存",
+    "loading": "載入中...",
+    "notFound": "找不到工作區",
+    "selectToStart": "選擇一個工作區開始",
+    "draft": "草稿",
+    "viewArchive": "檢視封存",
+    "backToActive": "返回活躍",
+    "noArchived": "沒有已封存的工作區",
+    "noWorkspaces": "沒有工作區",
+    "newWorkspace": "新工作區",
+    "needsAttention": "需要關注",
+    "idle": "閒置",
+    "running": "執行中",
+    "pin": "釘選",
+    "unpin": "取消釘選",
+    "archive": "封存",
+    "more": "更多操作",
+    "rename": {
+      "title": "重新命名工作區",
+      "description": "輸入此工作區的新名稱。",
+      "nameLabel": "名稱",
+      "placeholder": "輸入工作區名稱",
+      "action": "重新命名",
+      "renaming": "正在重新命名..."
+    },
+    "unlinkFromIssue": "從問題取消關聯",
+    "deleteWorkspace": "刪除工作區",
+    "unlink": "取消關聯",
+    "delete": "刪除",
+    "unlinkConfirmMessage": "確定要將此工作區與問題取消關聯嗎？工作區仍將存在，但不再與此問題關聯。",
+    "deleteConfirmMessage": "確定要刪除此工作區嗎？這將取消與問題的關聯並刪除本地工作區。此操作無法復原。",
+    "unlinkError": "取消關聯工作區失敗",
+    "deleteError": "刪除工作區失敗",
+    "filesChanged": "{{count}} 個檔案",
+    "deleteDialog": {
+      "title": "刪除工作區",
+      "description": "確定要刪除此工作區嗎？此操作無法復原。",
+      "deleteBranchLabel": "刪除分支",
+      "cannotDeleteOpenPr": "PR 開啟時無法刪除分支",
+      "unlinkFromIssueLabel": "同時取消與議題的關聯"
+    },
+    "linkError": "Failed to link workspace"
+  },
+  "fileTree": {
+    "searchPlaceholder": "搜尋檔案...",
+    "noResults": "沒有匹配的檔案",
+    "title": "檔案",
+    "showGitHubComments": "顯示 GitHub 評論",
+    "hideGitHubComments": "隱藏 GitHub 評論",
+    "prevGitHubComment": "上一個有評論的檔案",
+    "nextGitHubComment": "下一個有評論的檔案"
+  },
+  "sections": {
+    "changes": "變更",
+    "repositories": "儲存庫",
+    "addRepositories": "新增儲存庫",
+    "project": "專案",
+    "processes": "程序",
+    "devServer": "開發伺服器",
+    "advanced": "進階",
+    "workingBranch": "工作分支",
+    "recent": "最近",
+    "other": "其他",
+    "devServerPreview": "開發伺服器預覽",
+    "terminal": "終端機",
+    "notes": "筆記"
+  },
+  "notes": {
+    "placeholder": "新增關於此工作區的筆記...",
+    "selectWorkspace": "選擇一個工作區以查看筆記"
+  },
+  "repos": {
+    "loading": "正在載入儲存庫...",
+    "noRecentRepos": "找不到最近的儲存庫",
+    "noReposAdded": "尚未新增儲存庫",
+    "noReposAddedHint": "從下方選項中新增一個或多個儲存庫到此工作區"
+  },
+  "actions": {
+    "browseRepos": "瀏覽磁碟上的儲存庫",
+    "createNewRepo": "在磁碟上建立新儲存庫",
+    "viewInChangesPanel": "在變更面板中檢視",
+    "copyPath": "複製路徑",
+    "copyWorktreePath": "複製工作樹路徑",
+    "openInIde": "在IDE中開啟",
+    "repoSettings": "儲存庫設定",
+    "cancel": "取消",
+    "saveChanges": "儲存變更",
+    "copied": "已複製",
+    "collapse": "收起"
+  },
+  "comments": {
+    "addReviewComment": "新增審查評論",
+    "addPlaceholder": "新增評論...",
+    "editPlaceholder": "編輯評論...",
+    "copyToReview": "複製到審查"
+  },
+  "confirm": {
+    "defaultConfirm": "確認",
+    "defaultCancel": "取消"
+  },
+  "dialogs": {
+    "selectGitRepository": "選擇 Git 儲存庫",
+    "chooseExistingRepo": "從檔案系統中選擇現有儲存庫"
+  },
+  "empty": {
+    "noChanges": "沒有要顯示的變更"
+  },
+  "commandBar": {
+    "noResults": "找不到結果。",
+    "back": "返回",
+    "defaultPlaceholder": "輸入命令或搜尋...",
+    "selectBranch": "Select Branch",
+    "selectBranchFor": "Select Branch for {{repoName}}"
+  },
+  "chatBox": {
+    "variants": "變體",
+    "customise": "自訂"
+  },
+  "projects": {
+    "noProjectFound": "找不到專案",
+    "createFirstPrompt": "請先建立專案以開始處理任務。",
+    "createNew": "建立新專案",
+    "noProjectsFound": "找不到專案"
+  },
+  "betaWorkspaces": {
+    "title": "試用新介面",
+    "intro": "我們從頭重建了 Vibe Kanban 的介面，您已獲邀試用。",
+    "newUiDescription": "新介面針對日常工作進行最佳化：管理代理、預覽變更和審查程式碼。它還解鎖了舊介面中無法使用的功能：",
+    "newFeatures": {
+      "multiRepo": "同時編輯多個儲存庫",
+      "multiAgent": "在單一工作區中執行多個代理對話（甚至跨不同代理）",
+      "commandBar": "使用命令列更快地導覽"
+    },
+    "oldUiDescription": "目前，部分功能仍保留在目前介面中：",
+    "oldFeatures": {
+      "kanban": "在看板上管理任務",
+      "settings": "變更設定",
+      "projects": "管理專案"
+    },
+    "transition": "在接下來幾週的過渡期間，您將在兩者之間切換。",
+    "optOutNote": "想要退出？您可以隨時在設定中切換回目前介面。",
+    "joinBeta": "加入 Beta",
+    "maybeLater": "稍後再說"
+  },
+  "workspacesGuide": {
+    "welcome": {
+      "title": "歡迎",
+      "content": "歡迎使用 Workspaces，這是 Vibe Kanban 的全新設計介面。我們正在向部分使用者推出以獲取早期回饋。您可以隨時透過導覽列中的回饋圖示分享您的想法。"
+    },
+    "commandBar": {
+      "title": "命令列",
+      "content": "命令列是您的導覽中心。使用 CMD+K 開啟它，可以搜尋和存取工作區中的所有可用操作。"
+    },
+    "contextBar": {
+      "title": "上下文列",
+      "content": "上下文列讓您可以快速切換不同面板。將它拖曳到最適合您的位置。"
+    },
+    "sidebar": {
+      "title": "工作區側邊欄",
+      "content": "一目了然地檢視所有工作區的狀態。通知會醒目提示需要關注的工作區。封存已合併的工作區以保持側邊欄整潔。"
+    },
+    "multiRepo": {
+      "title": "多儲存庫支援",
+      "content": "將多個儲存庫新增到單一工作區。在處理一個儲存庫時可以參考另一個儲存庫的程式碼，或者同時在多個儲存庫中實作變更。"
+    },
+    "sessions": {
+      "title": "多工作階段",
+      "content": "在單一工作區內建立多個代理對話工作階段，包括與不同代理的工作階段。這可以幫助您繞過對話限制，或在單獨的執行緒中啟動審查代理。"
+    },
+    "preview": {
+      "title": "預覽變更",
+      "content": "無需切換上下文，即可在內建瀏覽器中預覽您的工作。支援桌面、行動裝置和自訂視口尺寸測試。"
+    },
+    "diffs": {
+      "title": "差異和評論",
+      "content": "重新設計的差異面板包含變更的檔案樹。直接在差異上評論以向代理提供回饋，當您的工作區連結到 PR 時還可以檢視 GitHub 評論。"
+    },
+    "classicUi": {
+      "title": "返回經典介面",
+      "content": "點擊導覽列左側的退出圖示可返回經典看板。要完全停用新介面，請在設定中的「測試版功能」下更新「啟用 Workspaces 測試版」選項。"
+    }
+  },
+  "logs": {
+    "searchLogs": "搜尋日誌",
+    "selectProcessToView": "選擇一個程序以查看日誌"
+  },
+  "processes": {
+    "noProcesses": "無程序",
+    "terminal": "終端機"
+  },
+  "search": {
+    "matchCount": "{{current}} / {{total}}",
+    "noMatches": "無匹配項"
+  },
+  "contextUsage": {
+    "label": "上下文使用量",
+    "emptyTooltip": "上下文使用量將在下一次回覆後顯示",
+    "tooltip": "上下文：{{percentage}}% · {{used}} / {{total}} tokens",
+    "ariaLabel": "上下文使用量：{{percentage}}%"
+  },
+  "shortcuts": {
+    "title": "鍵盤快捷鍵",
+    "inWorkspace": "(在工作區中)",
+    "sequentialHint": "組合快捷鍵：先按第一個鍵，然後在500毫秒內按第二個鍵。",
+    "configurableHint": "可在 設定 → 一般 → 訊息輸入 中設定",
+    "groups": {
+      "quickActions": "快捷操作",
+      "navigation": "導覽",
+      "modifiers": "修飾鍵",
+      "goTo": "前往 (G ...)",
+      "workspace": "工作區 (W ...)",
+      "view": "檢視 (V ...)",
+      "issues": "問題 (I ...)",
+      "git": "Git (X ...)",
+      "yank": "複製 (Y ...)",
+      "toggle": "切換 (T ...)",
+      "run": "執行 (R ...)"
+    },
+    "actions": {
+      "showHelp": "顯示說明",
+      "closeCancel": "關閉/取消",
+      "createNewTask": "建立新任務",
+      "deleteSelected": "刪除所選",
+      "focusSearch": "聚焦搜尋",
+      "moveDown": "向下移動",
+      "moveUp": "向上移動",
+      "moveLeft": "向左移動",
+      "moveRight": "向右移動",
+      "openCommandBar": "開啟命令列",
+      "formatInlineCode": "Format inline code",
+      "sendMessage": "傳送訊息",
+      "settings": "前往設定",
+      "new-workspace": "前往新工作區",
+      "duplicate-workspace": "複製工作區",
+      "rename-workspace": "重新命名工作區",
+      "pin-workspace": "釘選/取消釘選工作區",
+      "archive-workspace": "封存工作區",
+      "delete-workspace": "刪除工作區",
+      "toggle-changes-mode": "切換變更面板",
+      "toggle-logs-mode": "切換日誌面板",
+      "toggle-preview-mode": "切換預覽面板",
+      "toggle-left-sidebar": "切換左側邊欄",
+      "toggle-left-main-panel": "切換聊天面板",
+      "create-issue": "建立問題",
+      "change-issue-status": "變更狀態",
+      "change-issue-priority": "變更優先順序",
+      "change-assignees": "變更負責人",
+      "make-sub-issue-of": "設為子問題",
+      "add-sub-issue": "新增子問題",
+      "remove-parent-issue": "移除父級",
+      "link-workspace": "關聯工作區",
+      "duplicate-issue": "複製問題",
+      "delete-issue": "刪除問題",
+      "git-create-pr": "建立 Pull Request",
+      "git-merge": "合併分支",
+      "git-rebase": "變基分支",
+      "git-push": "推送變更",
+      "copy-path": "複製路徑",
+      "copy-raw-logs": "複製原始日誌",
+      "toggle-dev-server": "切換開發伺服器",
+      "toggle-wrap-lines": "切換自動換行",
+      "run-setup-script": "執行設定腳本",
+      "run-cleanup-script": "執行清理腳本",
+      "run-archive-script": "執行封存腳本"
+    }
+  },
+  "typeahead": {
+    "tags": "標籤",
+    "files": "檔案",
+    "commands": "指令",
+    "chooseRepo": "選擇儲存庫",
+    "selectedRepo": "已選擇儲存庫：{{repoName}}",
+    "missingRepo": "所選儲存庫已無法使用。",
+    "noTagsOrFiles": "找不到標籤或檔案",
+    "createTag": "建立新標籤",
+    "noCommands": "此代理沒有可用的指令。"
+  },
+  "kanban": {
+    "noStatusesFound": "找不到此專案的狀態",
+    "noVisibleStatuses": "所有狀態已隱藏。請使用顯示設定或切換到其他標籤頁查看問題。",
+    "noProjectFound": "找不到專案",
+    "noOrganizationFound": "找不到組織",
+    "unassigned": "未指派",
+    "noTagsAvailable": "無可用標籤",
+    "createNewIssue": "建立新問題",
+    "createNewTag": "建立新標籤",
+    "searchTags": "搜尋標籤...",
+    "selectColorFor": "選擇顏色：",
+    "createTag": "建立",
+    "filesCount": "{{count}} 個檔案",
+    "attachmentsTitle": "附件 ({{count}})",
+    "deleteAttachmentAria": "刪除 {{filename}}",
+    "noPrCreated": "未建立 PR",
+    "noCommentsYet": "尚無評論",
+    "createdBy": "建立者",
+    "comments": "評論",
+    "enterCommentPlaceholder": "在此輸入評論...",
+    "attachImage": "附加圖片",
+    "attachFile": "附加檔案",
+    "attachFileHint": "附加檔案（每個檔案最大 20MB）",
+    "attach": "附加",
+    "dropImagesHere": "將圖片拖放到這裡",
+    "dropFilesHere": "將檔案拖放到這裡",
+    "imageDropHint": "PNG、JPG、GIF，最大 20MB",
+    "fileDropHint": "任意檔案類型，最大 20MB",
+    "unknownFile": "未知檔案",
+    "unknownUser": "未知使用者",
+    "deletedUser": "已刪除使用者",
+    "replyQuotePrefix": "寫道：",
+    "moreActions": "更多操作",
+    "closePanel": "關閉面板",
+    "copyLink": "複製連結",
+    "issueTitlePlaceholder": "問題標題...",
+    "issueDescriptionPlaceholder": "輸入任務描述...",
+    "createDraftWorkspaceImmediately": "立即建立草稿工作區",
+    "createDraftWorkspaceDescription": "勾選後自動建立工作區",
+    "createIssue": "建立任務",
+    "newIssue": "新問題",
+    "previewCodeBlock": "[程式碼區塊]",
+    "previewImage": "[圖片]",
+    "previewImageWithName": "[圖片: {{name}}]",
+    "previewFile": "[檔案]",
+    "previewFileWithName": "[檔案: {{name}}]",
+    "imageAttachmentNameFallback": "附件",
+    "removeImage": "移除圖片",
+    "maxImagesAtOnce": "一次最多上傳 {{count}} 張圖片",
+    "maxFilesAtOnce": "一次最多上傳 {{count}} 個檔案",
+    "fileNotImage": "檔案 {{filename}} 不是圖片",
+    "fileExceedsLimit": "檔案 {{filename}} 超過 20MB 限制",
+    "unknownError": "未知錯誤",
+    "failedToUploadFile": "上傳 {{filename}} 失敗：{{message}}",
+    "downloadAttachment": "下載附件",
+    "downloadAttachmentAria": "下載 {{filename}}",
+    "subIssues": "子任務",
+    "noSubIssues": "無子任務",
+    "markIndependentIssue": "標記為獨立問題",
+    "parentIssue": "父級",
+    "subIssueIndicator": "↳",
+    "showSubIssues": "顯示子任務",
+    "viewTabs": {
+      "active": "活動",
+      "all": "全部"
+    },
+    "loginRequired": {
+      "title": "需要登入",
+      "description": "請登入以查看此專案。",
+      "action": "登入"
+    },
+    "team": "Team",
+    "personal": "Personal",
+    "searchPlaceholder": "Search issues...",
+    "filters": "Filters",
+    "clearFilters": "Clear filters",
+    "filtersDescription": "Adjust filters and sorting for this board view.",
+    "filterByTag": "Filter by tag",
+    "filterByPriority": "Filter by priority",
+    "tags": "Tags",
+    "sortBy": "Sort",
+    "workspaceSidebar": {
+      "sortDialogTitle": "Sort workspaces",
+      "sortDialogDescription": "Choose how workspaces are ordered in the sidebar.",
+      "sortByLabel": "Sort by",
+      "sortOrderLabel": "Sort order",
+      "sortUpdatedAt": "Updated at",
+      "sortCreatedAt": "Created at",
+      "filterDialogTitle": "Filter workspaces",
+      "filterDialogDescription": "Narrow down workspaces by project and PR state.",
+      "projectFilterLabel": "Project",
+      "prFilterLabel": "PR",
+      "prFilterAll": "All",
+      "prFilterHasPr": "Has PR",
+      "prFilterNoPr": "No PR",
+      "noProject": "No project",
+      "sortButtonTitle": "Sort workspaces",
+      "filterButtonTitle": "Filter workspaces"
+    },
+    "sortAscending": "Ascending",
+    "sortDescending": "Descending",
+    "assignee": "Assignee",
+    "self": "Me",
+    "priority": "Priority",
+    "subIssuesFilterLabel": "Sub-issues",
+    "workspacesFilterLabel": "Workspaces",
+    "selectAssignees": "Select assignees...",
+    "relationships": "Relationships",
+    "noRelationships": "No relationships",
+    "openProjectsGuide": "Projects guide",
+    "editProjectSettings": "Edit project settings",
+    "linkWorkspace": "Link workspace...",
+    "createNewWorkspace": "Create new workspace",
+    "workspaces": "Workspaces",
+    "showingWorkspaces": "Showing {{count}} of {{total}}",
+    "changeColor": "Change color",
+    "editName": "Edit name",
+    "deleteStatus": "Delete status",
+    "cannotDeleteWithIssues": "Move issues first",
+    "lastVisibleStatus": "At least one status must be visible",
+    "showStatus": "Show status",
+    "hideStatus": "Hide status",
+    "newStatus": "New Status",
+    "visibleColumns": "Visible Columns",
+    "dragToRearrange": "Drag to re-arrange",
+    "addColumn": "Add column",
+    "projectsGuide": {
+      "intro": {
+        "title": "Welcome",
+        "content": "Welcome to Vibe Kanban. Use the help sections in this panel to learn how things work, then create your first issue. You can re-open this help dialog or give feedback anytime from the navbar."
+      },
+      "welcome": {
+        "title": "Projects",
+        "content": "The project page is where you manage issues. You can view your issues as a kanban board, or as a list, and filter by status, tag, assignee and more."
+      },
+      "issues": {
+        "title": "Issues",
+        "content": "Each issue represents a feature or problem to solve. Issues have statuses, priorities, assignees, tags, relationships, comments, sub-issues and more."
+      },
+      "workspaces": {
+        "title": "Workspaces",
+        "content": "To start working on an issue, create a workspace. A single issue can have multiple workspaces. Issues describe the work to be done, workspaces are where the work happens."
+      },
+      "organizations": {
+        "title": "Invite your team",
+        "content": "We've automatically created a personal organization, and initial project so you can easily get started with Vibe Kanban. You can also create new organizations and invite your team to collaborate."
+      }
+    }
+  },
+  "createMode": {
+    "headings": {
+      "repoStep": "你想在哪些儲存庫上工作？",
+      "chatStep": "你想做什麼工作？"
+    },
+    "repoPicker": {
+      "actions": {
+        "recent": "最近",
+        "browse": "瀏覽",
+        "create": "建立"
+      }
+    }
+  },
+  "modelSelector": {
+    "preset": "預設配置",
+    "custom": "自訂",
+    "permissions": "權限",
+    "permissionAuto": "自動",
+    "permissionAsk": "詢問",
+    "permissionPlan": "計畫",
+    "nextTurn": "下一個回合",
+    "agent": "代理",
+    "default": "預設",
+    "model": "模型",
+    "providers": "提供者"
+  },
+  "syncError": {
+    "networkErrors": "網路錯誤",
+    "streamsAffected": "{{count}} 個資料流受影響",
+    "streamsAffected_other": "{{count}} 個資料流受影響",
+    "status": "(狀態 {{status}})",
+    "refreshPage": "重新整理頁面"
+  },
+  "onboardingSignIn": {
+    "subtitle": "Sign in to continue",
+    "signedInAs": "Signed in as {{name}}.",
+    "moreOptions": "More options",
+    "featureHeader": "Feature",
+    "signedInHeader": "Signed in",
+    "skipSignInHeader": "Don't sign in",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "migration": {
+    "allProjectsMigrated": "您的所有專案已遷移到雲端。",
+    "continueToProjects": "繼續前往專案"
+  },
+  "appBar": {
+    "kanban": {
+      "tooltip": "看板",
+      "title": "看板",
+      "description": "登入以使用看板管理您的編碼代理。",
+      "migrateOldProjects": "遷移舊專案"
+    }
+  },
+  "errors": {
+    "generic": "An unexpected error occurred"
+  },
+  "personal": "Personal",
+  "changeStatus": {
+    "title": "Change Status",
+    "descriptionSingle": "Change status for \"{{title}}\"",
+    "descriptionMultiple": "Change status for {{count}} issues",
+    "action": "Change Status"
+  },
+  "askQuestion": {
+    "title": "代理正在提問",
+    "selectMultiple": "多選",
+    "confirmSelection": "確認選擇",
+    "submitting": "正在提交回答...",
+    "answeredCount": "已回答{{count}}個問題",
+    "answeredCount_other": "已回答{{count}}個問題"
+  }
+}

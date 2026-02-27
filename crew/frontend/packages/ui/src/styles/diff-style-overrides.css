@@ -1,0 +1,975 @@
+.light {
+  --line-added: 160 77% 88%;
+  --line-removed: 10 100% 90%;
+  --line-unchanged: var(--bg-primary);
+  --line-number-color: var(--text-low);
+}
+
+.dark {
+  --line-added: 130 30% 20%;
+  --line-removed: 12 30% 18%;
+  --line-unchanged: var(--bg-panel);
+  --line-number-color: var(--text-low);
+}
+
+.diff-tailwindcss-wrapper .container {
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .diff-tailwindcss-wrapper .container {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 768px) {
+  .diff-tailwindcss-wrapper .container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .diff-tailwindcss-wrapper .container {
+    max-width: 1024px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .diff-tailwindcss-wrapper .container {
+    max-width: 1280px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .diff-tailwindcss-wrapper .container {
+    max-width: 1536px;
+  }
+}
+
+.diff-tailwindcss-wrapper .invisible {
+  visibility: hidden;
+}
+
+.diff-tailwindcss-wrapper .absolute {
+  position: absolute;
+}
+
+.diff-tailwindcss-wrapper .relative {
+  position: relative;
+}
+
+.diff-tailwindcss-wrapper .sticky {
+  position: sticky;
+}
+
+.diff-tailwindcss-wrapper .left-0 {
+  left: 0px;
+}
+
+.diff-tailwindcss-wrapper .left-\[100\%\] {
+  left: 100%;
+}
+
+.diff-tailwindcss-wrapper .right-\[100\%\] {
+  right: 100%;
+}
+
+.diff-tailwindcss-wrapper .top-0 {
+  top: 0px;
+}
+
+.diff-tailwindcss-wrapper .top-\[1px\] {
+  top: 1px;
+}
+
+.diff-tailwindcss-wrapper .top-\[50\%\] {
+  top: 50%;
+}
+
+.diff-tailwindcss-wrapper .z-\[1\] {
+  z-index: 1;
+}
+
+.diff-tailwindcss-wrapper .ml-\[-1\.5em\] {
+  margin-left: -1.5em;
+}
+
+.diff-tailwindcss-wrapper .block {
+  display: block;
+}
+
+.diff-tailwindcss-wrapper .inline-block {
+  display: inline-block;
+}
+
+.diff-tailwindcss-wrapper .flex {
+  display: flex;
+}
+
+.diff-tailwindcss-wrapper .table {
+  display: table;
+}
+
+.diff-tailwindcss-wrapper .hidden {
+  display: none;
+}
+
+.diff-tailwindcss-wrapper .h-\[50\%\] {
+  height: 50%;
+}
+
+.diff-tailwindcss-wrapper .h-full {
+  height: 100%;
+}
+
+.diff-tailwindcss-wrapper .min-h-\[28px\] {
+  min-height: 28px;
+}
+
+.diff-tailwindcss-wrapper .w-\[1\%\] {
+  width: 1%;
+}
+
+.diff-tailwindcss-wrapper .w-\[1\.5em\] {
+  width: 1.5em;
+}
+
+.diff-tailwindcss-wrapper .w-\[1\.5px\] {
+  width: 1.5px;
+}
+
+.diff-tailwindcss-wrapper .w-\[10px\] {
+  width: 10px;
+}
+
+.diff-tailwindcss-wrapper .w-\[1px\] {
+  width: 1px;
+}
+
+.diff-tailwindcss-wrapper .w-\[50\%\] {
+  width: 50%;
+}
+
+.diff-tailwindcss-wrapper .w-full {
+  width: 100%;
+}
+
+.diff-tailwindcss-wrapper .w-max {
+  width: -moz-max-content;
+  width: max-content;
+}
+
+.diff-tailwindcss-wrapper .min-w-\[100px\] {
+  min-width: 100px;
+}
+
+.diff-tailwindcss-wrapper .min-w-\[40px\] {
+  min-width: 40px;
+}
+
+.diff-tailwindcss-wrapper .min-w-full {
+  min-width: 100%;
+}
+
+.diff-tailwindcss-wrapper .flex-shrink-0 {
+  flex-shrink: 0;
+}
+
+.diff-tailwindcss-wrapper .shrink-0 {
+  flex-shrink: 0;
+}
+
+.diff-tailwindcss-wrapper .basis-\[50\%\] {
+  flex-basis: 50%;
+}
+
+.diff-tailwindcss-wrapper .table-fixed {
+  table-layout: fixed;
+}
+
+.diff-tailwindcss-wrapper .border-collapse {
+  border-collapse: collapse;
+}
+
+.diff-tailwindcss-wrapper .border-spacing-0 {
+  --tw-border-spacing-x: 0px;
+  --tw-border-spacing-y: 0px;
+  border-spacing: var(--tw-border-spacing-x) var(--tw-border-spacing-y);
+}
+
+.diff-tailwindcss-wrapper .origin-center {
+  transform-origin: center;
+}
+
+.diff-tailwindcss-wrapper .translate-x-\[-50\%\] {
+  --tw-translate-x: -50%;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y))
+    rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y))
+    scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.diff-tailwindcss-wrapper .translate-x-\[50\%\] {
+  --tw-translate-x: 50%;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y))
+    rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y))
+    scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.diff-tailwindcss-wrapper .translate-y-\[-50\%\] {
+  --tw-translate-y: -50%;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y))
+    rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y))
+    scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.diff-tailwindcss-wrapper .cursor-pointer {
+  cursor: pointer;
+}
+
+.diff-tailwindcss-wrapper .select-none {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.diff-tailwindcss-wrapper .flex-col {
+  flex-direction: column;
+}
+
+.diff-tailwindcss-wrapper .items-start {
+  align-items: flex-start;
+}
+
+.diff-tailwindcss-wrapper .items-center {
+  align-items: center;
+}
+
+.diff-tailwindcss-wrapper .justify-center {
+  justify-content: center;
+}
+
+.diff-tailwindcss-wrapper .overflow-x-auto {
+  overflow-x: auto;
+}
+
+.diff-tailwindcss-wrapper .overflow-y-hidden {
+  overflow-y: hidden;
+}
+
+.diff-tailwindcss-wrapper .whitespace-nowrap {
+  white-space: nowrap;
+}
+
+.diff-tailwindcss-wrapper .break-all {
+  word-break: break-all;
+}
+
+.diff-tailwindcss-wrapper .rounded-\[0\.2em\] {
+  border-radius: 0.2em;
+}
+
+.diff-tailwindcss-wrapper .rounded-\[2px\] {
+  border-radius: 2px;
+}
+
+.diff-tailwindcss-wrapper .rounded-md {
+  border-radius: 0.375rem;
+}
+
+.diff-tailwindcss-wrapper .border-l-\[1px\] {
+  border-left-width: 1px;
+}
+
+.diff-tailwindcss-wrapper .fill-current {
+  fill: currentColor;
+}
+
+.diff-tailwindcss-wrapper .p-0 {
+  padding: 0px;
+}
+
+.diff-tailwindcss-wrapper .p-\[1px\] {
+  padding: 1px;
+}
+
+.diff-tailwindcss-wrapper .px-\[10px\] {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.diff-tailwindcss-wrapper .py-\[2px\] {
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.diff-tailwindcss-wrapper .py-\[6px\] {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.diff-tailwindcss-wrapper .pl-\[1\.5em\] {
+  padding-left: 1.5em;
+}
+
+.diff-tailwindcss-wrapper .pl-\[10px\] {
+  padding-left: 10px;
+}
+
+.diff-tailwindcss-wrapper .pl-\[2\.0em\] {
+  padding-left: 2em;
+}
+
+.diff-tailwindcss-wrapper .pr-\[10px\] {
+  padding-right: 10px;
+}
+
+.diff-tailwindcss-wrapper .text-right {
+  text-align: right;
+}
+
+.diff-tailwindcss-wrapper .indent-\[0\.2em\] {
+  text-indent: 0.2em;
+}
+
+.diff-tailwindcss-wrapper .align-top {
+  vertical-align: top;
+}
+
+.diff-tailwindcss-wrapper .align-middle {
+  vertical-align: middle;
+}
+
+.diff-tailwindcss-wrapper .text-\[1\.2em\] {
+  font-size: 1.2em;
+}
+
+.diff-tailwindcss-wrapper .leading-\[1\.4\] {
+  line-height: 1.4;
+}
+
+.diff-tailwindcss-wrapper .leading-\[1\.6\] {
+  line-height: 1.6;
+}
+
+.diff-tailwindcss-wrapper .\!text-red-500 {
+  --tw-text-opacity: 1 !important;
+  color: rgb(239 68 68 / var(--tw-text-opacity, 1)) !important;
+}
+
+.diff-tailwindcss-wrapper .opacity-\[0\.5\] {
+  opacity: 0.5;
+}
+
+.diff-tailwindcss-wrapper .filter {
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast)
+    var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate)
+    var(--tw-sepia) var(--tw-drop-shadow);
+}
+
+.diff-tailwindcss-wrapper .transition-transform {
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+.diff-tailwindcss-wrapper * {
+  box-sizing: border-box;
+}
+
+.diff-tailwindcss-wrapper .diff-style-root {
+  --diff-border--: var(--border);
+  --diff-add-content--: hsl(var(--line-added));
+  --diff-del-content--: hsl(var(--line-removed));
+  --diff-add-lineNumber--: hsl(var(--line-added));
+  --diff-del-lineNumber--: hsl(var(--line-removed));
+  --diff-plain-content--: hsl(var(--line-unchanged));
+  --diff-expand-content--: hsl(var(--muted));
+  --diff-plain-lineNumber--: hsl(var(--line-unchanged));
+  --diff-expand-lineNumber--: hsl(var(--muted));
+  --diff-plain-lineNumber-color--: hsl(var(--line-number-color));
+  --diff-expand-lineNumber-color--: hsl(var(--muted-foreground));
+  --diff-hunk-content--: hsl(var(--muted));
+  --diff-hunk-lineNumber--: hsl(var(--muted));
+  --diff-hunk-lineNumber-hover--: hsl(var(--muted-foreground) / 0.7);
+  --diff-add-content-highlight--: hsl(var(--line-added) / 0.4);
+  --diff-del-content-highlight--: hsl(var(--line-removed) / 0.4);
+  --diff-add-widget--: hsl(var(--muted-foreground) / 0.7);
+  --diff-add-widget-color--: hsl(var(--muted));
+  --diff-empty-content--: hsl(var(--background));
+  --diff-hunk-content-color--: hsl(var(--muted-foreground) / 0.7);
+}
+
+.diff-tailwindcss-wrapper .diff-style-root .diff-line-syntax-raw *,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw * {
+  color: var(--diff-view-light, inherit);
+  font-weight: var(--diff-view-light-font-weight, inherit);
+}
+
+.diff-tailwindcss-wrapper[data-theme='dark'] .diff-line-syntax-raw * {
+  color: var(--diff-view-dark, inherit);
+  font-weight: var(--diff-view-dark-font-weight, inherit);
+}
+
+.diff-tailwindcss-wrapper table,
+.diff-tailwindcss-wrapper tr,
+.diff-tailwindcss-wrapper td {
+  border-color: transparent;
+  /* border-width: 0px; */
+  text-align: left;
+}
+
+.diff-tailwindcss-wrapper .diff-line-old-num,
+.diff-tailwindcss-wrapper .diff-line-new-num,
+.diff-tailwindcss-wrapper .diff-line-num {
+  text-align: right;
+}
+
+.diff-tailwindcss-wrapper .diff-style-root tr {
+  content-visibility: auto;
+}
+
+.diff-tailwindcss-wrapper .diff-add-widget-wrapper {
+  transform-origin: center;
+  transform: translateX(-50%) !important;
+}
+
+.diff-tailwindcss-wrapper .diff-line-old-content .diff-add-widget-wrapper,
+.diff-tailwindcss-wrapper .diff-line-new-content .diff-add-widget-wrapper {
+  transform: translateX(50%) !important;
+}
+
+.diff-tailwindcss-wrapper .diff-add-widget-wrapper:hover {
+  transform: translateX(-50%) scale(1.1) !important;
+}
+
+.diff-tailwindcss-wrapper .diff-line-old-content .diff-add-widget-wrapper:hover,
+.diff-tailwindcss-wrapper
+  .diff-line-new-content
+  .diff-add-widget-wrapper:hover {
+  transform: translateX(50%) scale(1.1) !important;
+}
+
+.diff-tailwindcss-wrapper .diff-widget-tooltip {
+  position: relative;
+}
+
+.diff-tailwindcss-wrapper .diff-add-widget,
+.diff-tailwindcss-wrapper .diff-widget-tooltip {
+  font-family: inherit;
+  font-feature-settings: 'liga' off;
+  font-variation-settings: inherit;
+  font-size: 100%;
+  font-weight: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  margin: 0;
+  text-transform: none;
+  /* border-width: 0px; */
+  background-color: transparent;
+  background-image: none;
+}
+
+.diff-tailwindcss-wrapper .diff-widget-tooltip::after {
+  display: none;
+  box-sizing: border-box;
+  background-color: #555555;
+  position: absolute;
+  content: attr(data-title);
+  font-size: 11px;
+  padding: 1px 2px;
+  border-radius: 4px;
+  overflow: hidden;
+  top: 50%;
+  white-space: nowrap;
+  transform: translateY(-50%);
+  left: calc(100% + 8px);
+  color: #ffffff;
+}
+
+.diff-tailwindcss-wrapper .diff-widget-tooltip::before {
+  display: none;
+  box-sizing: border-box;
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: calc(100% - 2px);
+  transform: translateY(-50%);
+  border: 6px solid transparent;
+  border-right-color: #555555;
+}
+
+.diff-tailwindcss-wrapper .diff-widget-tooltip:hover {
+  background-color: var(--diff-hunk-lineNumber-hover--);
+  color: white;
+}
+
+.diff-tailwindcss-wrapper .diff-widget-tooltip:hover::before {
+  display: block;
+}
+
+.diff-tailwindcss-wrapper .diff-widget-tooltip:hover::after {
+  display: block;
+}
+
+.diff-line-extend-wrapper * {
+  color: initial;
+}
+
+.diff-line-widget-wrapper * {
+  color: initial;
+}
+
+.diff-tailwindcss-wrapper .diff-line-syntax-raw pre code.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 1em;
+}
+
+.diff-tailwindcss-wrapper .diff-line-syntax-raw code.hljs {
+  padding: 3px 5px;
+}
+
+/*!
+  Theme: GitHub
+  Description: Light theme as seen on github.com
+  Author: github.com
+  Maintainer: @Hirse
+  Updated: 2021-05-15
+
+  Outdated base version: https://github.com/primer/github-syntax-light
+  Current colors taken from GitHub's CSS
+*/
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs {
+  color: var(--syntax-punctuation);
+  background: #ffffff;
+}
+
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-doctag,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-keyword,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-meta .hljs-keyword,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-template-tag,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-template-variable,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-type,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-variable.language_ {
+  /* prettylights-syntax-keyword */
+  color: var(--syntax-keyword);
+}
+
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-title,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-title.class_,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-title.class_.inherited__,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-title.function_ {
+  /* prettylights-syntax-entity */
+  color: var(--syntax-function);
+}
+
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-attr,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-attribute,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-literal,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-meta,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-number,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-operator,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-variable,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-selector-attr,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-selector-class,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-selector-id {
+  /* prettylights-syntax-constant */
+  color: var(--syntax-constant);
+}
+
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-regexp,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-string,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-meta .hljs-string {
+  /* prettylights-syntax-string */
+  color: var(--syntax-string);
+}
+
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-built_in,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-symbol {
+  /* prettylights-syntax-variable */
+  color: var(--syntax-variable);
+}
+
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-comment,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-code,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-formula {
+  /* prettylights-syntax-comment */
+  color: var(--syntax-comment);
+}
+
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-name,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-quote,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-selector-tag,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-selector-pseudo {
+  /* prettylights-syntax-entity-tag */
+  color: var(--syntax-tag);
+}
+
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-subst {
+  /* prettylights-syntax-storage-modifier-import */
+  color: var(--syntax-punctuation);
+}
+
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-section {
+  /* prettylights-syntax-markup-heading */
+  color: var(--syntax-constant);
+  font-weight: bold;
+}
+
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-bullet {
+  /* prettylights-syntax-markup-list */
+  color: #735c0f;
+}
+
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-emphasis {
+  /* prettylights-syntax-markup-italic */
+  color: var(--syntax-punctuation);
+  font-style: italic;
+}
+
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-strong {
+  /* prettylights-syntax-markup-bold */
+  color: var(--syntax-punctuation);
+  font-weight: bold;
+}
+
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-addition {
+  /* prettylights-syntax-markup-inserted */
+  color: var(--syntax-tag);
+  background-color: #f0fff4;
+}
+
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-deletion {
+  /* prettylights-syntax-markup-deleted */
+  color: var(--syntax-deleted);
+  background-color: #ffeef0;
+}
+
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-char.escape_,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-link,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-params,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-property,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-punctuation,
+.diff-tailwindcss-wrapper .diff-line-syntax-raw .hljs-tag {
+  /* purposely ignored */
+}
+
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  pre
+  code.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 1em;
+}
+
+.diff-tailwindcss-wrapper[data-theme='dark'] .diff-line-syntax-raw code.hljs {
+  padding: 3px 5px;
+}
+
+/*!
+  Theme: GitHub Dark
+  Description: Dark theme as seen on github.com
+  Author: github.com
+  Maintainer: @Hirse
+  Updated: 2021-05-15
+
+  Outdated base version: https://github.com/primer/github-syntax-dark
+  Current colors taken from GitHub's CSS
+*/
+.diff-tailwindcss-wrapper[data-theme='dark'] .diff-line-syntax-raw .hljs {
+  color: var(--syntax-punctuation);
+  background: #0d1117;
+}
+
+.diff-tailwindcss-wrapper[data-theme='dark'] .diff-line-syntax-raw .hljs-doctag,
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-keyword,
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-meta
+  .hljs-keyword,
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-template-tag,
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-template-variable,
+.diff-tailwindcss-wrapper[data-theme='dark'] .diff-line-syntax-raw .hljs-type,
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-variable.language_ {
+  /* prettylights-syntax-keyword */
+  color: var(--syntax-keyword);
+}
+
+.diff-tailwindcss-wrapper[data-theme='dark'] .diff-line-syntax-raw .hljs-title,
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-title.class_,
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-title.class_.inherited__,
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-title.function_ {
+  /* prettylights-syntax-entity */
+  color: var(--syntax-function);
+}
+
+.diff-tailwindcss-wrapper[data-theme='dark'] .diff-line-syntax-raw .hljs-attr,
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-attribute,
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-literal,
+.diff-tailwindcss-wrapper[data-theme='dark'] .diff-line-syntax-raw .hljs-meta,
+.diff-tailwindcss-wrapper[data-theme='dark'] .diff-line-syntax-raw .hljs-number,
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-operator,
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-variable,
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-selector-attr,
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-selector-class,
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-selector-id {
+  /* prettylights-syntax-constant */
+  color: var(--syntax-constant);
+}
+
+.diff-tailwindcss-wrapper[data-theme='dark'] .diff-line-syntax-raw .hljs-regexp,
+.diff-tailwindcss-wrapper[data-theme='dark'] .diff-line-syntax-raw .hljs-string,
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-meta
+  .hljs-string {
+  /* prettylights-syntax-string */
+  color: var(--syntax-string);
+}
+
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-built_in,
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-symbol {
+  /* prettylights-syntax-variable */
+  color: var(--syntax-variable);
+}
+
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-comment,
+.diff-tailwindcss-wrapper[data-theme='dark'] .diff-line-syntax-raw .hljs-code,
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-formula {
+  /* prettylights-syntax-comment */
+  color: var(--syntax-comment);
+}
+
+.diff-tailwindcss-wrapper[data-theme='dark'] .diff-line-syntax-raw .hljs-name,
+.diff-tailwindcss-wrapper[data-theme='dark'] .diff-line-syntax-raw .hljs-quote,
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-selector-tag,
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-selector-pseudo {
+  /* prettylights-syntax-entity-tag */
+  color: var(--syntax-tag);
+}
+
+.diff-tailwindcss-wrapper[data-theme='dark'] .diff-line-syntax-raw .hljs-subst {
+  /* prettylights-syntax-storage-modifier-import */
+  color: var(--syntax-punctuation);
+}
+
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-section {
+  /* prettylights-syntax-markup-heading */
+  color: #1f6feb;
+  font-weight: bold;
+}
+
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-bullet {
+  /* prettylights-syntax-markup-list */
+  color: #f2cc60;
+}
+
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-emphasis {
+  /* prettylights-syntax-markup-italic */
+  color: var(--syntax-punctuation);
+  font-style: italic;
+}
+
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-strong {
+  /* prettylights-syntax-markup-bold */
+  color: var(--syntax-punctuation);
+  font-weight: bold;
+}
+
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-addition {
+  /* prettylights-syntax-markup-inserted */
+  color: #aff5b4;
+  background-color: #033a16;
+}
+
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-deletion {
+  /* prettylights-syntax-markup-deleted */
+  color: var(--syntax-deleted);
+  background-color: #67060c;
+}
+
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-char.escape_,
+.diff-tailwindcss-wrapper[data-theme='dark'] .diff-line-syntax-raw .hljs-link,
+.diff-tailwindcss-wrapper[data-theme='dark'] .diff-line-syntax-raw .hljs-params,
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-property,
+.diff-tailwindcss-wrapper[data-theme='dark']
+  .diff-line-syntax-raw
+  .hljs-punctuation,
+.diff-tailwindcss-wrapper[data-theme='dark'] .diff-line-syntax-raw .hljs-tag {
+  /* purposely ignored */
+}
+
+.diff-tailwindcss-wrapper .hover\:scale-110:hover {
+  --tw-scale-x: 1.1;
+  --tw-scale-y: 1.1;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y))
+    rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y))
+    scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.diff-tailwindcss-wrapper .group:hover .group-hover\:visible {
+  visibility: visible;
+}
+
+/* =============================================================================
+   Pierre/Diffs Overrides - Remove black bars (padding on [data-code])
+   ============================================================================= */
+
+/* Remove padding that creates black bars above/below diff content */
+diffs-container [data-code] {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* Alternative: Set the gap-block variable to 0 */
+diffs-container {
+  --diffs-gap-block: 0;
+}
+
+/* =============================================================================
+   Pierre/Diffs Design Overrides - Match Old @git-diff-view/react Design
+   ============================================================================= */
+
+/* Font: Use IBM Plex Mono to match old design */
+diffs-container {
+  --diffs-font-family: 'IBM Plex Mono', 'SF Mono', Monaco, Consolas, monospace;
+  --diffs-font-size: 12px;
+  --diffs-line-height: 18px;
+}
+
+/* Light Mode Colors - Match old design */
+.light diffs-container,
+diffs-container[data-theme-type='light'] {
+  /* Addition colors - soft green (HSL 160 77% 88%) */
+  --diffs-light-addition-color: hsl(160, 77%, 40%);
+  --diffs-bg-addition-override: hsl(160, 77%, 88%);
+  --diffs-bg-addition-number-override: hsl(160, 77%, 85%);
+  --diffs-bg-addition-hover-override: hsl(160, 77%, 82%);
+
+  /* Deletion colors - soft red (HSL 10 100% 90%) */
+  --diffs-light-deletion-color: hsl(10, 100%, 45%);
+  --diffs-bg-deletion-override: hsl(10, 100%, 90%);
+  --diffs-bg-deletion-number-override: hsl(10, 100%, 87%);
+  --diffs-bg-deletion-hover-override: hsl(10, 100%, 84%);
+
+  /* Context/unchanged - white background */
+  --diffs-light-bg: hsl(0, 0%, 100%);
+  --diffs-bg-context-override: hsl(0, 0%, 98%);
+
+  /* Line numbers */
+  --diffs-fg-number-override: hsl(0, 0%, 39%);
+}
+
+/* Dark Mode Colors - Match old design */
+.dark diffs-container,
+diffs-container[data-theme-type='dark'] {
+  /* Addition colors - dark green (HSL 130 30% 20%) */
+  --diffs-dark-addition-color: hsl(130, 50%, 50%);
+  --diffs-bg-addition-override: hsl(130, 30%, 20%);
+  --diffs-bg-addition-number-override: hsl(130, 30%, 18%);
+  --diffs-bg-addition-hover-override: hsl(130, 30%, 25%);
+
+  /* Deletion colors - dark red (HSL 12 30% 18%) */
+  --diffs-dark-deletion-color: hsl(12, 50%, 55%);
+  --diffs-bg-deletion-override: hsl(12, 30%, 18%);
+  --diffs-bg-deletion-number-override: hsl(12, 30%, 16%);
+  --diffs-bg-deletion-hover-override: hsl(12, 30%, 23%);
+
+  /* Context/unchanged - match app's bg-panel (lighter gray, not black) */
+  /* --diffs-bg directly overrides the base since light-dark() may not pick up --diffs-dark-bg */
+  --diffs-bg: hsl(0, 0%, 20%);
+  --diffs-dark-bg: hsl(0, 0%, 20%);
+  --diffs-bg-context-override: hsl(0, 0%, 20%);
+  --diffs-bg-hover-override: hsl(0, 0%, 25%);
+
+  /* Line numbers */
+  --diffs-fg-number-override: hsl(0, 0%, 56%);
+}
+
+/* =============================================================================
+   Hover Utility Button Positioning
+   ============================================================================= */
+
+/*
+ * The [data-hover-slot] in shadow DOM is positioned at right:0 of the number column.
+ * The slotted content needs to appear BETWEEN the number and code columns.
+ * Using left:100% positions it just to the right of the hover slot container.
+ */
+diffs-container [slot='hover-slot'] {
+  left: 100%;
+  right: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 4px;
+}
+
+/* Style the hover utility button - no visual changes on hover */
+diffs-container [slot='hover-slot'] button,
+diffs-container [slot='hover-slot'] button:hover,
+diffs-container [slot='hover-slot'] button:focus,
+diffs-container [slot='hover-slot'] button:active {
+  background-color: hsl(var(--brand) / 0.2);
+  color: hsl(var(--brand));
+  border: none;
+  outline: none;
+  box-shadow: none;
+}

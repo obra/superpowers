@@ -1,0 +1,36 @@
+/**
+ * Shared code highlight theme classes for Prism token types.
+ * Used by both Lexical's codeHighlight theme and InlineCodeNode rendering.
+ */
+export const CODE_HIGHLIGHT_CLASSES: Record<string, string> = {
+  atrule: 'text-[var(--syntax-keyword)]',
+  attr: 'text-[var(--syntax-constant)]',
+  boolean: 'text-[var(--syntax-constant)]',
+  builtin: 'text-[var(--syntax-variable)]',
+  cdata: 'text-[var(--syntax-comment)]',
+  char: 'text-[var(--syntax-string)]',
+  class: 'text-[var(--syntax-function)]',
+  'class-name': 'text-[var(--syntax-function)]',
+  comment: 'text-[var(--syntax-comment)] italic',
+  constant: 'text-[var(--syntax-constant)]',
+  deleted: 'text-[var(--syntax-deleted)]',
+  doctype: 'text-[var(--syntax-comment)]',
+  entity: 'text-[var(--syntax-function)]',
+  function: 'text-[var(--syntax-function)]',
+  important: 'text-[var(--syntax-keyword)] font-bold',
+  inserted: 'text-[var(--syntax-tag)]',
+  keyword: 'text-[var(--syntax-keyword)]',
+  namespace: 'text-[var(--syntax-comment)]',
+  number: 'text-[var(--syntax-constant)]',
+  operator: 'text-[var(--syntax-constant)]',
+  prolog: 'text-[var(--syntax-comment)]',
+  property: 'text-[var(--syntax-constant)]',
+  punctuation: 'text-[var(--syntax-punctuation)]',
+  regex: 'text-[var(--syntax-string)]',
+  selector: 'text-[var(--syntax-tag)]',
+  string: 'text-[var(--syntax-string)]',
+  symbol: 'text-[var(--syntax-variable)]',
+  tag: 'text-[var(--syntax-tag)]',
+  url: 'text-[var(--syntax-constant)]',
+  variable: 'text-[var(--syntax-variable)]',
+};

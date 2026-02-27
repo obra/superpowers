@@ -1,0 +1,33 @@
+/* Hide line numbers for replace (old/new) diffs rendered via DiffView */
+.edit-diff-hide-nums .diff-line-old-num,
+.edit-diff-hide-nums .diff-line-new-num,
+.edit-diff-hide-nums .diff-line-num,
+.edit-diff-hide-nums .diff-line-hunk-action {
+  display: none !important;
+}
+
+/* Ensure number gutters don't consume space when hidden */
+.edit-diff-hide-nums .diff-line-old-num + .diff-line-old-content,
+.edit-diff-hide-nums .diff-line-new-num + .diff-line-new-content,
+.edit-diff-hide-nums .diff-line-num + .diff-line-content {
+  padding-left: 0 !important;
+}
+
+.plain-file-content .diff-style-root {
+  /* neutralize addition backgrounds */
+  --diff-add-content--: hsl(var(--background));
+  --diff-add-content-highlight--: hsl(var(--background));
+}
+
+.plain-file-content .diff-line-content-operator {
+  display: none !important; /* hide leading '+' operator column */
+}
+
+.plain-file-content .diff-line-content-item {
+  padding-left: 0 !important; /* remove indent left by operator column */
+}
+
+/* hide unified hunk header rows (e.g. @@ -1,+n @@) */
+.plain-file-content .diff-line-hunk-content {
+  display: none !important;
+}

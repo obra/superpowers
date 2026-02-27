@@ -1,0 +1,387 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   ReactBits Design System — Crew
+   "Terminal Glass" — technical precision meets atmospheric depth
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Fonts ─────────────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&display=swap');
+
+/* ─── Raw design tokens ──────────────────────────────────────────────────────── */
+:root {
+  /* Extra rb-* tokens for effects (not constrained to HSL format) */
+  --rb-accent:     #059669;
+  --rb-accent2:    #4f46e5;
+  --rb-accent-dim: rgba(5, 150, 105, 0.10);
+  --rb-glow:       rgba(5, 150, 105, 0.14);
+  --rb-s-backlog:  #94a3b8;
+  --rb-s-todo:     #3b82f6;
+  --rb-s-progress: #f59e0b;
+  --rb-s-review:   #8b5cf6;
+  --rb-s-done:     #10b981;
+  --rb-shadow-sm:  0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.03);
+  --rb-shadow:     0 4px 16px rgba(0,0,0,0.09), 0 2px 6px rgba(0,0,0,0.04);
+  --rb-shadow-lg:  0 20px 48px rgba(0,0,0,0.12);
+}
+
+.dark {
+  --rb-accent:     #34d399;
+  --rb-accent2:    #818cf8;
+  --rb-accent-dim: rgba(52, 211, 153, 0.09);
+  --rb-glow:       rgba(52, 211, 153, 0.12);
+  --rb-s-backlog:  #475569;
+  --rb-s-todo:     #60a5fa;
+  --rb-s-progress: #fbbf24;
+  --rb-s-review:   #a78bfa;
+  --rb-s-done:     #34d399;
+  --rb-shadow-sm:  0 1px 4px rgba(0,0,0,0.40);
+  --rb-shadow:     0 4px 20px rgba(0,0,0,0.55);
+  --rb-shadow-lg:  0 20px 60px rgba(0,0,0,0.70);
+}
+
+/* ─── Override vibe-kanban theme variables (must be HSL numbers) ─────────────── */
+/* Light */
+:root {
+  --_background:          220 15% 97%;
+  --_foreground:          220 30%  8%;
+  --_primary:             220 30%  8%;
+  --_primary-foreground:  0   0% 100%;
+  --_secondary:           220 20% 95%;
+  --_secondary-foreground:215 14% 35%;
+  --_muted:               220 15% 93%;
+  --_muted-foreground:    218  8% 62%;
+  --_border:              220 13% 91%;
+  --_input:               220 20% 96%;
+
+  /* bg-* (used by Tailwind color utilities) */
+  --_bg-primary-default:  220 15% 97%;
+  --_bg-secondary-default:  0  0% 100%;
+  --_bg-panel-default:    220 20% 95%;
+
+  /* text-* */
+  --text-high:    220 30% 8%;
+  --text-normal:  215 14% 35%;
+  --text-low:     218  8% 65%;
+
+  /* brand = emerald */
+  --brand:          160 84% 32%;
+  --brand-hover:    160 76% 40%;
+  --brand-secondary:160 84% 24%;
+  --text-on-brand:   0  0% 100%;
+
+  /* status */
+  --_success: 142 71% 45%;
+  --_error:     0 84% 60%;
+  --error: 0 84% 60%;
+}
+
+/* Dark */
+.dark {
+  --_background:          228 40%  5%;
+  --_foreground:          218 28% 93%;
+  --_primary:             218 28% 93%;
+  --_primary-foreground:  228 40%  5%;
+  --_secondary:           225 33%  8%;
+  --_secondary-foreground:218 14% 60%;
+  --_muted:               224 28% 12%;
+  --_muted-foreground:    218 14% 47%;
+  --_border:              224 20% 17%;
+  --_input:               224 28% 12%;
+
+  --_bg-primary-default:  228 40%  5%;
+  --_bg-secondary-default:225 33%  8%;
+  --_bg-panel-default:    224 32% 11%;
+
+  --text-high:    218 28% 93%;
+  --text-normal:  218 14% 60%;
+  --text-low:     220 14% 38%;
+
+  --brand:          151 52% 52%;
+  --brand-hover:    151 55% 58%;
+  --brand-secondary:151 52% 36%;
+  --text-on-brand:  228 40%  5%;
+
+  --_success: 151 55% 52%;
+  --_error:     0 72% 55%;
+  --error: 0 72% 55%;
+}
+
+/* ─── Base overrides ─────────────────────────────────────────────────────────── */
+html, body, #root {
+  font-family: 'Instrument Sans', system-ui, sans-serif !important;
+}
+
+/* Aurora atmospheric background (dark only) */
+.dark body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 75% 45% at 15% -5%,  rgba(52,211,153,0.055) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 40% at 85% 110%, rgba(129,140,248,0.045) 0%, transparent 65%);
+  animation: rb-aurora 12s ease-in-out infinite alternate;
+}
+
+.dark #root { position: relative; z-index: 1; }
+
+@keyframes rb-aurora {
+  from { opacity: 0.7; }
+  to   { opacity: 1.0; }
+}
+
+/* ─── Glass surface (dark mode cards) ───────────────────────────────────────── */
+.dark .rb-glass {
+  background: rgba(12, 16, 24, 0.70) !important;
+  backdrop-filter: blur(14px) saturate(1.5);
+  -webkit-backdrop-filter: blur(14px) saturate(1.5);
+}
+
+/* ─── Card ───────────────────────────────────────────────────────────────────── */
+.rb-card {
+  border-radius: 12px;
+  border: 1px solid hsl(var(--_border));
+  box-shadow: var(--rb-shadow-sm);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.rb-card-hover:hover {
+  box-shadow: var(--rb-shadow);
+  border-color: hsl(var(--_muted));
+}
+
+/* ─── Kanban card lift + shine ───────────────────────────────────────────────── */
+.rb-lift {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  cursor: pointer;
+}
+.rb-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--rb-shadow);
+  border-color: hsl(var(--_muted));
+}
+.rb-lift:active { transform: translateY(0); }
+
+@keyframes rb-shine-sweep {
+  from { left: -70%; }
+  to   { left: 160%; }
+}
+.rb-shine { position: relative; overflow: hidden; }
+.rb-shine::after {
+  content: '';
+  position: absolute; top: 0; left: -70%;
+  width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.055) 50%, transparent);
+  transform: skewX(-12deg);
+  pointer-events: none;
+  opacity: 0;
+}
+.rb-shine:hover::after {
+  opacity: 1;
+  animation: rb-shine-sweep 0.55s ease forwards;
+}
+
+/* ─── Status — dots ──────────────────────────────────────────────────────────── */
+.rb-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.rb-dot-backlog  { background: var(--rb-s-backlog); }
+.rb-dot-todo     { background: var(--rb-s-todo);     box-shadow: 0 0 5px var(--rb-s-todo); }
+.rb-dot-progress { background: var(--rb-s-progress); box-shadow: 0 0 5px var(--rb-s-progress); }
+.rb-dot-review   { background: var(--rb-s-review);   box-shadow: 0 0 5px var(--rb-s-review); }
+.rb-dot-done     { background: var(--rb-s-done);     box-shadow: 0 0 5px var(--rb-s-done); }
+
+/* ─── Status — column top borders ───────────────────────────────────────────── */
+.rb-col-backlog  { border-top: 2px solid var(--rb-s-backlog) !important; }
+.rb-col-todo     { border-top: 2px solid var(--rb-s-todo) !important; }
+.rb-col-progress { border-top: 2px solid var(--rb-s-progress) !important; }
+.rb-col-review   { border-top: 2px solid var(--rb-s-review) !important; }
+.rb-col-done     { border-top: 2px solid var(--rb-s-done) !important; }
+
+/* ─── Status — card left borders ────────────────────────────────────────────── */
+.rb-bar-backlog  { border-left: 3px solid var(--rb-s-backlog) !important; border-radius: 0 10px 10px 0 !important; }
+.rb-bar-todo     { border-left: 3px solid var(--rb-s-todo) !important;     border-radius: 0 10px 10px 0 !important; }
+.rb-bar-progress { border-left: 3px solid var(--rb-s-progress) !important; border-radius: 0 10px 10px 0 !important; }
+.rb-bar-review   { border-left: 3px solid var(--rb-s-review) !important;   border-radius: 0 10px 10px 0 !important; }
+.rb-bar-done     { border-left: 3px solid var(--rb-s-done) !important;     border-radius: 0 10px 10px 0 !important; }
+
+/* ─── Priority colors ────────────────────────────────────────────────────────── */
+.rb-p0 { color: #ef4444; font-weight: 600; }
+.rb-p1 { color: #f97316; }
+.rb-p2 { color: hsl(var(--text-normal)); }
+.rb-p3 { color: hsl(var(--text-low)); }
+
+/* ─── Nav active glow ────────────────────────────────────────────────────────── */
+.rb-nav-active {
+  background: var(--rb-accent-dim) !important;
+  color: var(--rb-accent) !important;
+  box-shadow: 0 0 14px var(--rb-glow);
+}
+
+/* ─── Gradient text ──────────────────────────────────────────────────────────── */
+.rb-gradient-text {
+  background: linear-gradient(115deg, var(--rb-accent) 0%, var(--rb-accent2) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Typography ─────────────────────────────────────────────────────────────── */
+.rb-display { font-family: 'Syne', sans-serif !important; }
+.rb-mono    { font-family: 'JetBrains Mono', monospace !important; font-size: 0.8em; }
+
+/* ─── Tag pill ───────────────────────────────────────────────────────────────── */
+.rb-tag {
+  display: inline-flex; align-items: center;
+  padding: 2px 7px;
+  border-radius: 100px;
+  font-size: 10.5px; font-weight: 500;
+  background: hsl(var(--_muted));
+  color: hsl(var(--text-normal));
+  border: 1px solid hsl(var(--_border));
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+/* ─── Buttons ────────────────────────────────────────────────────────────────── */
+.rb-btn-primary {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--rb-accent);
+  color: #fff;
+  border: none; border-radius: 8px;
+  padding: 7px 14px; font-size: 13px; font-weight: 600;
+  font-family: 'Instrument Sans', sans-serif;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.15s;
+}
+.dark .rb-btn-primary { color: #000; }
+.rb-btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
+
+.rb-btn-ghost {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: transparent;
+  color: hsl(var(--text-normal));
+  border: 1px solid hsl(var(--_border)); border-radius: 8px;
+  padding: 7px 14px; font-size: 13px;
+  font-family: 'Instrument Sans', sans-serif;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.rb-btn-ghost:hover {
+  border-color: hsl(var(--_muted));
+  color: hsl(var(--text-high));
+  background: hsl(var(--_secondary));
+}
+
+.rb-btn-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 7px;
+  background: transparent;
+  color: hsl(var(--text-low));
+  border: none; cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.rb-btn-icon:hover { color: hsl(var(--text-high)); background: hsl(var(--_muted)); }
+
+/* ─── Inputs ─────────────────────────────────────────────────────────────────── */
+.rb-input {
+  background: hsl(var(--_input));
+  border: 1px solid hsl(var(--_border)); border-radius: 8px;
+  padding: 8px 12px; font-size: 13px;
+  color: hsl(var(--text-high));
+  font-family: 'Instrument Sans', sans-serif;
+  outline: none; width: 100%;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.rb-input:focus { border-color: var(--rb-accent); box-shadow: 0 0 0 3px var(--rb-glow); }
+
+.rb-textarea {
+  background: hsl(var(--_input));
+  border: 1px solid hsl(var(--_border)); border-radius: 8px;
+  padding: 10px 12px; font-size: 12.5px;
+  color: hsl(var(--text-high));
+  font-family: 'JetBrains Mono', monospace;
+  outline: none; width: 100%; resize: vertical; min-height: 160px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  line-height: 1.75;
+}
+.rb-textarea:focus { border-color: var(--rb-accent); box-shadow: 0 0 0 3px var(--rb-glow); }
+
+.rb-select {
+  background: transparent; border: none;
+  color: inherit;
+  font-family: 'Instrument Sans', sans-serif; font-size: 13px;
+  cursor: pointer; outline: none;
+}
+
+/* ─── Section label ──────────────────────────────────────────────────────────── */
+.rb-label {
+  font-size: 10.5px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.09em;
+  color: hsl(var(--text-low));
+}
+
+/* ─── Badge ──────────────────────────────────────────────────────────────────── */
+.rb-badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: 100px;
+  font-size: 11px; font-weight: 600; border: 1px solid;
+}
+.rb-badge-proposed   { background: rgba(251,191,36,0.12);  color:#f59e0b; border-color:rgba(251,191,36,0.3);  }
+.rb-badge-accepted   { background: rgba(16,185,129,0.12);  color:#10b981; border-color:rgba(16,185,129,0.3);  }
+.rb-badge-deprecated { background: rgba(239,68,68,0.12);   color:#ef4444; border-color:rgba(239,68,68,0.3);   }
+.rb-badge-superseded { background: rgba(148,163,184,0.12); color:#94a3b8; border-color:rgba(148,163,184,0.3); }
+
+/* ─── Page animation ─────────────────────────────────────────────────────────── */
+@keyframes rb-up {
+  from { opacity: 0; transform: translateY(7px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+.rb-page { animation: rb-up 0.22s ease forwards; }
+
+/* Staggered card entrance */
+.rb-page .rb-card:nth-child(1) { animation: rb-up 0.2s 0.00s ease both; }
+.rb-page .rb-card:nth-child(2) { animation: rb-up 0.2s 0.04s ease both; }
+.rb-page .rb-card:nth-child(3) { animation: rb-up 0.2s 0.08s ease both; }
+.rb-page .rb-card:nth-child(4) { animation: rb-up 0.2s 0.12s ease both; }
+.rb-page .rb-card:nth-child(5) { animation: rb-up 0.2s 0.16s ease both; }
+.rb-page .rb-card:nth-child(n+6) { animation: rb-up 0.2s 0.20s ease both; }
+
+/* ─── Dragging state ─────────────────────────────────────────────────────────── */
+[data-dragging="true"],
+.rb-dragging {
+  box-shadow: var(--rb-shadow-lg) !important;
+  opacity: 0.95;
+}
+
+/* ─── SpotlightCard ──────────────────────────────────────────────────────────── */
+.rb-spotlight {
+  position: relative;
+  overflow: hidden;
+  --mouse-x: 50%;
+  --mouse-y: 50%;
+  --spotlight-color: rgba(255, 255, 255, 0.10);
+}
+.rb-spotlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle 110px at var(--mouse-x) var(--mouse-y), var(--spotlight-color), transparent 100%);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+  z-index: 2;
+  mix-blend-mode: overlay;
+}
+.rb-spotlight:hover::before { opacity: 1; }
+
+/* ─── AnimatedCard — CSS-only entry (avoids DnD transform conflict) ──────────── */
+@keyframes rb-card-in {
+  from { opacity: 0; transform: scale(0.93) translateY(6px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);   }
+}
+.rb-card-in {
+  animation: rb-card-in 0.2s ease-out both;
+}

@@ -1,0 +1,92 @@
+{
+  "createDialog": {
+    "title": "建立新組織",
+    "description": "建立新組織以與團隊協作。",
+    "nameLabel": "組織名稱",
+    "namePlaceholder": "例如：Acme 公司",
+    "slugLabel": "短標識",
+    "slugPlaceholder": "例如：acme-corporation",
+    "slugHelper": "用於 URL。僅限小寫字母、數字與連字號。",
+    "creating": "建立中...",
+    "createButton": "建立組織"
+  },
+  "inviteDialog": {
+    "title": "邀請成員",
+    "description": "發送邀請加入您的組織。",
+    "emailLabel": "電子郵件地址",
+    "emailPlaceholder": "colleague@example.com",
+    "roleLabel": "角色",
+    "rolePlaceholder": "選擇角色",
+    "roleHelper": "管理員可以管理成員與組織設定。",
+    "sending": "發送中...",
+    "sendButton": "發送邀請",
+    "subscriptionRequired": "新增更多成員需要訂閱",
+    "upgradePrompt": "升級您的組織方案以邀請更多成員。",
+    "upgradeButton": "升級方案"
+  },
+  "roles": {
+    "member": "成員",
+    "admin": "管理員"
+  },
+  "memberList": {
+    "title": "成員",
+    "description": "管理 {{orgName}} 中的成員與角色",
+    "inviteButton": "邀請成員",
+    "loading": "載入成員中...",
+    "none": "找不到成員",
+    "you": "您"
+  },
+  "invitationList": {
+    "title": "待處理邀請",
+    "description": "查看 {{orgName}} 的待處理邀請",
+    "loading": "載入邀請中...",
+    "none": "沒有待處理的邀請",
+    "invited": "邀請於 {{date}}",
+    "pending": "待處理"
+  },
+  "settings": {
+    "title": "組織設定",
+    "description": "管理組織成員與權限",
+    "selectLabel": "選擇組織",
+    "selectPlaceholder": "選擇組織",
+    "selectHelper": "選擇要查看與管理成員的組織",
+    "noOrganizations": "沒有可用的組織",
+    "loadingOrganizations": "載入組織中...",
+    "loadError": "載入組織失敗",
+    "dangerZone": "危險區域",
+    "dangerZoneDescription": "不可逆且具破壞性的操作",
+    "deleteOrganization": "刪除組織",
+    "deleteOrganizationDescription": "永久刪除此組織及其所有資料",
+    "confirmDelete": "您確定要刪除 {{orgName}} 嗎？此操作無法復原。",
+    "deleteSuccess": "組織刪除成功",
+    "deleteError": "刪除組織失敗"
+  },
+  "loginRequired": {
+    "title": "需要登入",
+    "description": "您需要登入才能管理組織設定。",
+    "action": "登入"
+  },
+  "confirmRemoveMember": "您確定要從組織中移除此成員嗎？",
+  "sharedProjects": {
+    "title": "共享專案",
+    "description": "{{orgName}}中的遠端專案及其與本地專案的連結",
+    "loading": "正在載入專案...",
+    "noProjects": "此組織中未找到共享專案",
+    "notLinked": "未連結",
+    "linkedTo": "已連結至：{{projectName}}",
+    "linked": "已連結",
+    "linkProject": "連結專案...",
+    "noAvailableProjects": "沒有可用專案"
+  },
+  "billing": {
+    "title": "帳單與訂閱",
+    "description": "管理您組織的訂閱與帳單設定",
+    "manageButton": "管理帳單",
+    "openInBrowser": "在新瀏覽器分頁中開啟"
+  },
+  "personalOrg": {
+    "cannotInvite": "個人組織不能新增其他成員。",
+    "createOrgPrompt": "建立組織以與他人協作。",
+    "createOrgButton": "建立組織"
+  }
+}

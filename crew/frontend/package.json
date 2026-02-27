@@ -1,0 +1,58 @@
+{
+  "name": "vibe-kanban",
+  "version": "0.1.19",
+  "private": true,
+  "bin": {
+    "vibe-kanban": "npx-cli/bin/cli.js"
+  },
+  "files": [
+    "npx-cli/bin/cli.js",
+    "npx-cli/dist/**"
+  ],
+  "scripts": {
+    "lint": "pnpm run local-web:lint && pnpm run ui:lint && pnpm run backend:lint",
+    "format": "cargo fmt --all && pnpm run web-core:format && pnpm run local-web:format && pnpm run remote-web:format",
+    "check": "pnpm run local-web:check && pnpm run ui:check && pnpm run backend:check",
+    "dev": "export FRONTEND_PORT=$(node scripts/setup-dev-environment.js frontend) && export BACKEND_PORT=$(node scripts/setup-dev-environment.js backend) && export PREVIEW_PROXY_PORT=$(node scripts/setup-dev-environment.js preview_proxy) && export VK_ALLOWED_ORIGINS=\"http://localhost:${FRONTEND_PORT}\" && export VITE_VK_SHARED_API_BASE=${VK_SHARED_API_BASE:-} && concurrently \"pnpm run backend:dev:watch\" \"pnpm run local-web:dev\"",
+    "test:npm": "./test-npm-package.sh",
+    "local-web:lint": "pnpm --filter @vibe/local-web run lint",
+    "local-web:legacy-path-guard": "./scripts/check-legacy-frontend-paths.sh",
+    "web-core:format": "pnpm --filter @vibe/web-core run format",
+    "local-web:dev": "cd packages/local-web && pnpm run dev -- --port ${FRONTEND_PORT:-3000}",
+    "local-web:check": "pnpm --filter @vibe/local-web run check",
+    "local-web:format": "pnpm --filter @vibe/local-web run format",
+    "remote-web:format": "pnpm --filter @vibe/remote-web run format",
+    "ui:lint": "pnpm --filter @vibe/ui run lint",
+    "ui:check": "pnpm --filter @vibe/ui run check",
+    "backend:lint": "cargo clippy --workspace --all-targets --features qa-mode -- -D warnings",
+    "backend:dev": "BACKEND_PORT=$(node scripts/setup-dev-environment.js backend) pnpm run backend:dev:watch",
+    "backend:check": "cargo check",
+    "backend:dev:watch": "DISABLE_WORKTREE_CLEANUP=1 RUST_LOG=debug cargo watch -w crates -x 'run --bin server'",
+    "dev:qa": "export FRONTEND_PORT=$(node scripts/setup-dev-environment.js frontend) && export BACKEND_PORT=$(node scripts/setup-dev-environment.js backend) && export PREVIEW_PROXY_PORT=$(node scripts/setup-dev-environment.js preview_proxy) && export VK_ALLOWED_ORIGINS=\"http://localhost:${FRONTEND_PORT}\" && export VITE_VK_SHARED_API_BASE=${VK_SHARED_API_BASE:-} && concurrently \"pnpm run backend:dev:watch:qa\" \"pnpm run local-web:dev\"",
+    "generate-types": "cargo run --bin generate_types",
+    "generate-types:check": "cargo run --bin generate_types -- --check",
+    "remote:generate-types": "cargo run --manifest-path crates/remote/Cargo.toml --bin remote-generate-types",
+    "remote:generate-types:check": "cargo run --manifest-path crates/remote/Cargo.toml --bin remote-generate-types -- --check",
+    "prepare-db": "node scripts/prepare-db.js",
+    "prepare-db:check": "node scripts/prepare-db.js --check",
+    "build:bippy-bundle": "node scripts/build-bippy-bundle.mjs",
+    "build:npx": "bash ./local-build.sh",
+    "prepack": "pnpm run build:npx",
+    "remote:dev": "cd crates/remote && docker compose --env-file .env.remote up --build ; docker compose --env-file .env.remote down -v",
+    "remote:dev:clean": "cd crates/remote && docker compose --env-file .env.remote down -v",
+    "remote:prepare-db": "cd crates/remote && bash scripts/prepare-db.sh",
+    "remote:prepare-db:check": "cd crates/remote && bash scripts/prepare-db.sh --check"
+  },
+  "devDependencies": {
+    "bippy": "0.5.28",
+    "concurrently": "^8.2.2",
+    "esbuild": "^0.27.2",
+    "jwt-decode": "^4.0.0",
+    "vite": "^7.3.1"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=8"
+  },
+  "packageManager": "pnpm@10.13.1"
+}

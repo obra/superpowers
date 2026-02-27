@@ -1,0 +1,651 @@
+{
+  "editorNames": {
+    "custom": "カスタム"
+  },
+  "folderPicker": {
+    "legend": "フォルダ名をクリックして移動 • アクションボタンで選択",
+    "manualPathLabel": "パスを手動入力:",
+    "go": "移動",
+    "searchLabel": "現在のディレクトリを検索:",
+    "selectCurrent": "現在を選択",
+    "gitRepo": "git リポジトリ",
+    "selectPath": "パスを選択"
+  },
+  "branchSelector": {
+    "badges": {
+      "current": "現在",
+      "remote": "リモート"
+    },
+    "currentDisabled": "現在のブランチは選択できません",
+    "empty": "ブランチが見つかりません",
+    "placeholder": "ブランチを選択",
+    "searchPlaceholder": "ブランチを検索..."
+  },
+  "breadcrumb": {
+    "more": "More"
+  },
+  "buttons": {
+    "cancel": "キャンセル",
+    "close": "閉じる",
+    "connect": "接続",
+    "continue": "続行",
+    "create": "作成",
+    "delete": "削除",
+    "disconnect": "切断",
+    "discard": "破棄",
+    "edit": "編集",
+    "manage": "管理",
+    "replay": "再生",
+    "reset": "リセット",
+    "save": "保存",
+    "send": "送信",
+    "addItem": "項目を追加",
+    "reply": "返信",
+    "retry": "Retry"
+  },
+  "form": {
+    "notSpecified": "指定なし",
+    "selectOption": "オプションを選択..."
+  },
+  "conversation": {
+    "args": "引数",
+    "deniedByUser": "{{toolName}} がユーザーによって拒否されました",
+    "output": "出力",
+    "plan": "計画",
+    "planToggle": {
+      "hide": "計画を非表示",
+      "show": "計画を表示"
+    },
+    "result": "結果",
+    "toolDetailsToggle": {
+      "hide": "詳細を非表示",
+      "show": "詳細を表示"
+    },
+    "taskCompleted": "タスク完了",
+    "ran": "実行",
+    "tool": "ツール",
+    "thinking": "思考中",
+    "toolSummary": {
+      "read": "{{path}} を読み込み",
+      "searched": "「{{query}}」を検索",
+      "fetched": "{{url}} を取得",
+      "ranCommand": "コマンドを実行",
+      "createdTask": "タスクを作成: {{description}}",
+      "todoOperation": "{{operation}} Todo"
+    },
+    "fixScript": "スクリプトを修正",
+    "subagent": {
+      "defaultType": "サブエージェント"
+    }
+  },
+  "language": {
+    "browserDefault": "ブラウザ設定"
+  },
+  "states": {
+    "error": "エラー",
+    "loading": "読み込み中...",
+    "loadingHistory": "履歴を読み込み中",
+    "reconnecting": "再接続中",
+    "saving": "保存中...",
+    "success": "成功"
+  },
+  "orgMembers": {
+    "moreCount": "他 {{count}} 人"
+  },
+  "orgSwitcher": {
+    "title": "組織を切り替える",
+    "description": "切り替える組織を選択してください。",
+    "loadError": "組織の読み込みに失敗しました。もう一度お試しください。",
+    "noOrganizations": "あなたはどの組織にも所属していません。",
+    "menuItem": "組織",
+    "loadingPlaceholder": "組織を読み込み中...",
+    "selectPlaceholder": "組織を選択",
+    "currentBadge": " (現在)",
+    "organizations": "組織",
+    "createOrganization": "組織を作成",
+    "orgSettings": "組織の設定",
+    "migrate": "移行"
+  },
+  "navbar": {
+    "tryNewUI": "新しいUIを試す"
+  },
+  "ok": "OK",
+  "error": "エラー",
+  "signIn": "サインイン",
+  "signOut": "サインアウト",
+  "devMode": {
+    "banner": "開発モード - これは開発ビルドです"
+  },
+  "oauth": {
+    "title": "Vibe Kanbanにサインイン",
+    "description": "サインインして組織に参加し、チームとタスクを共有します",
+    "continueWithGitHub": "GitHubで続行",
+    "continueWithGoogle": "Googleで続行",
+    "waitingTitle": "認証を完了",
+    "waitingDescription": "認証用のポップアップウィンドウが開きました",
+    "waitingForAuth": "認証を待っています...",
+    "popupInstructions": "ポップアップウィンドウが開かない場合は、ポップアップブロックの設定を確認してください。",
+    "back": "戻る",
+    "successTitle": "認証成功！",
+    "welcomeBack": "おかえりなさい、{{name}}",
+    "errorTitle": "認証失敗",
+    "errorDescription": "アカウントの認証中に問題が発生しました",
+    "tryAgain": "再試行"
+  },
+  "toolbar": {
+    "sortBy": "並べ替え",
+    "groupBy": "グループ化"
+  },
+  "sorting": {
+    "ascending": "昇順",
+    "descending": "降順"
+  },
+  "grouping": {
+    "date": "日付",
+    "assignee": "担当者",
+    "label": "ラベル"
+  },
+  "workspaces": {
+    "title": "ワークスペース",
+    "searchPlaceholder": "検索...",
+    "active": "アクティブ",
+    "archived": "アーカイブ済み",
+    "loading": "読み込み中...",
+    "notFound": "ワークスペースが見つかりません",
+    "selectToStart": "ワークスペースを選択して開始",
+    "draft": "下書き",
+    "viewArchive": "アーカイブを表示",
+    "backToActive": "アクティブに戻る",
+    "noArchived": "アーカイブされたワークスペースはありません",
+    "noWorkspaces": "ワークスペースがありません",
+    "newWorkspace": "新しいワークスペース",
+    "needsAttention": "対応が必要",
+    "idle": "待機中",
+    "running": "実行中",
+    "pin": "ピン留め",
+    "unpin": "ピン留め解除",
+    "archive": "アーカイブ",
+    "more": "その他の操作",
+    "rename": {
+      "title": "ワークスペースの名前を変更",
+      "description": "このワークスペースの新しい名前を入力してください。",
+      "nameLabel": "名前",
+      "placeholder": "ワークスペース名を入力",
+      "action": "名前を変更",
+      "renaming": "名前を変更中..."
+    },
+    "unlinkFromIssue": "課題からリンク解除",
+    "deleteWorkspace": "ワークスペースを削除",
+    "unlink": "リンク解除",
+    "delete": "削除",
+    "unlinkConfirmMessage": "このワークスペースを課題からリンク解除してもよろしいですか？ワークスペースは引き続き存在しますが、この課題との関連付けは解除されます。",
+    "deleteConfirmMessage": "このワークスペースを削除してもよろしいですか？これにより課題からのリンクが解除され、ローカルワークスペースが削除されます。この操作は元に戻せません。",
+    "unlinkError": "ワークスペースのリンク解除に失敗しました",
+    "deleteError": "ワークスペースの削除に失敗しました",
+    "filesChanged": "{{count}}ファイル",
+    "deleteDialog": {
+      "title": "ワークスペースを削除",
+      "description": "このワークスペースを削除してもよろしいですか？この操作は元に戻せません。",
+      "deleteBranchLabel": "ブランチを削除",
+      "cannotDeleteOpenPr": "PRがオープン中はブランチを削除できません",
+      "unlinkFromIssueLabel": "イシューからもリンク解除する"
+    },
+    "linkError": "Failed to link workspace"
+  },
+  "fileTree": {
+    "searchPlaceholder": "ファイルを検索...",
+    "noResults": "一致するファイルがありません",
+    "title": "ファイル",
+    "showGitHubComments": "GitHubコメントを表示",
+    "hideGitHubComments": "GitHubコメントを非表示",
+    "prevGitHubComment": "前のコメント付きファイル",
+    "nextGitHubComment": "次のコメント付きファイル"
+  },
+  "sections": {
+    "changes": "変更",
+    "repositories": "リポジトリ",
+    "addRepositories": "リポジトリを追加",
+    "project": "プロジェクト",
+    "processes": "プロセス",
+    "devServer": "開発サーバー",
+    "advanced": "詳細設定",
+    "workingBranch": "作業ブランチ",
+    "recent": "最近",
+    "other": "その他",
+    "devServerPreview": "開発サーバープレビュー",
+    "terminal": "ターミナル",
+    "notes": "メモ"
+  },
+  "notes": {
+    "placeholder": "このワークスペースについてメモを追加...",
+    "selectWorkspace": "メモを表示するにはワークスペースを選択してください"
+  },
+  "repos": {
+    "loading": "リポジトリを読み込み中...",
+    "noRecentRepos": "最近のリポジトリが見つかりません",
+    "noReposAdded": "リポジトリが追加されていません",
+    "noReposAddedHint": "下のオプションからこのワークスペースにリポジトリを追加してください"
+  },
+  "actions": {
+    "browseRepos": "ディスク上のリポジトリを参照",
+    "createNewRepo": "ディスク上に新しいリポジトリを作成",
+    "viewInChangesPanel": "変更パネルで表示",
+    "copyPath": "パスをコピー",
+    "copyWorktreePath": "ワークツリーパスをコピー",
+    "openInIde": "IDEで開く",
+    "repoSettings": "リポジトリ設定",
+    "cancel": "キャンセル",
+    "saveChanges": "変更を保存",
+    "copied": "コピーしました",
+    "collapse": "折りたたむ"
+  },
+  "comments": {
+    "addReviewComment": "レビューコメントを追加",
+    "addPlaceholder": "コメントを追加...",
+    "editPlaceholder": "コメントを編集...",
+    "copyToReview": "レビューにコピー"
+  },
+  "confirm": {
+    "defaultConfirm": "確認",
+    "defaultCancel": "キャンセル"
+  },
+  "dialogs": {
+    "selectGitRepository": "Gitリポジトリを選択",
+    "chooseExistingRepo": "ファイルシステムから既存のリポジトリを選択してください"
+  },
+  "empty": {
+    "noChanges": "表示する変更がありません"
+  },
+  "commandBar": {
+    "noResults": "結果が見つかりません。",
+    "back": "戻る",
+    "defaultPlaceholder": "コマンドを入力または検索...",
+    "selectBranch": "Select Branch",
+    "selectBranchFor": "Select Branch for {{repoName}}"
+  },
+  "chatBox": {
+    "variants": "バリアント",
+    "customise": "カスタマイズ"
+  },
+  "projects": {
+    "noProjectFound": "プロジェクトが見つかりません",
+    "createFirstPrompt": "タスクを開始するには、まずプロジェクトを作成してください。",
+    "createNew": "新しいプロジェクトを作成",
+    "noProjectsFound": "プロジェクトが見つかりません"
+  },
+  "betaWorkspaces": {
+    "title": "新しいUIを試す",
+    "intro": "Vibe KanbanのUIをゼロから再構築しました。あなたは試用に招待されています。",
+    "newUiDescription": "新しいUIは日常業務に最適化されています：エージェントの管理、変更のプレビュー、コードのレビュー。また、旧UIでは利用できない機能も利用可能になります：",
+    "newFeatures": {
+      "multiRepo": "複数のリポジトリを同時に編集",
+      "multiAgent": "単一のワークスペースで複数のエージェント会話（異なるエージェント間でも）を実行",
+      "commandBar": "コマンドバーでより高速なナビゲーション"
+    },
+    "oldUiDescription": "現時点では、いくつかの機能は現在のUIに残っています：",
+    "oldFeatures": {
+      "kanban": "カンバンボードでのタスク管理",
+      "settings": "設定の変更",
+      "projects": "プロジェクトの管理"
+    },
+    "transition": "今後数週間の移行期間中は、両方のUIを行き来します。",
+    "optOutNote": "オプトアウトしたい場合は、設定からいつでも現在のUIに戻すことができます。",
+    "joinBeta": "ベータに参加",
+    "maybeLater": "後で"
+  },
+  "workspacesGuide": {
+    "welcome": {
+      "title": "ようこそ",
+      "content": "Vibe Kanbanの新しいUIであるWorkspacesへようこそ。早期フィードバックのために一部のユーザーに先行公開しています。ナビバーのフィードバックアイコンからいつでもご意見をお聞かせください。"
+    },
+    "commandBar": {
+      "title": "コマンドバー",
+      "content": "コマンドバーはナビゲーションの中心となるハブです。CMD+Kで開いて、ワークスペースで利用可能なすべてのアクションを検索・アクセスできます。"
+    },
+    "contextBar": {
+      "title": "コンテキストバー",
+      "content": "コンテキストバーでペイン間をすばやく切り替えられます。使いやすい場所にドラッグして配置できます。"
+    },
+    "sidebar": {
+      "title": "ワークスペースサイドバー",
+      "content": "すべてのワークスペースの状態を一目で確認できます。通知により注意が必要なワークスペースがハイライトされます。マージ済みのワークスペースをアーカイブしてサイドバーを整理しましょう。"
+    },
+    "multiRepo": {
+      "title": "マルチリポジトリ対応",
+      "content": "1つのワークスペースに複数のリポジトリを追加できます。別のリポジトリで作業しながら他のリポジトリのコードを参照したり、複数のリポジトリにまたがる変更を同時に実装できます。"
+    },
+    "sessions": {
+      "title": "複数セッション",
+      "content": "1つのワークスペース内で複数のエージェント会話セッションを作成できます（異なるエージェントとのセッションも含む）。これにより会話の制限を回避したり、別スレッドでレビューエージェントを起動できます。"
+    },
+    "preview": {
+      "title": "変更のプレビュー",
+      "content": "コンテキストを切り替えることなく、内蔵ブラウザで作業をプレビューできます。デスクトップ、モバイル、カスタムビューポートサイズでテストできます。"
+    },
+    "diffs": {
+      "title": "差分とコメント",
+      "content": "再設計された差分パネルには変更のファイルツリーが含まれています。差分に直接コメントしてエージェントにフィードバックを送ったり、ワークスペースがPRにリンクされている場合はGitHubコメントを表示できます。"
+    },
+    "classicUi": {
+      "title": "クラシックUIに戻る",
+      "content": "ナビバー左側の終了アイコンをクリックすると、クラシックカンバンボードに戻ります。新しいUIを完全に無効にするには、設定の「ベータ機能」にある「Workspacesベータを有効にする」オプションを更新してください。"
+    }
+  },
+  "logs": {
+    "searchLogs": "ログを検索",
+    "selectProcessToView": "プロセスを選択してログを表示"
+  },
+  "processes": {
+    "noProcesses": "プロセスがありません",
+    "terminal": "ターミナル"
+  },
+  "search": {
+    "matchCount": "{{current}} / {{total}}",
+    "noMatches": "一致なし"
+  },
+  "contextUsage": {
+    "label": "コンテキスト使用量",
+    "emptyTooltip": "コンテキスト使用量は次の返信後に表示されます",
+    "tooltip": "コンテキスト: {{percentage}}% · {{used}} / {{total}} tokens",
+    "ariaLabel": "コンテキスト使用量: {{percentage}}%"
+  },
+  "shortcuts": {
+    "title": "キーボードショートカット",
+    "inWorkspace": "(ワークスペース内)",
+    "sequentialHint": "シーケンシャルショートカット：最初のキーを押し、500ms以内に2番目のキーを押してください。",
+    "configurableHint": "設定 → 一般 → メッセージ入力で設定可能",
+    "groups": {
+      "quickActions": "クイックアクション",
+      "navigation": "ナビゲーション",
+      "modifiers": "修飾キー",
+      "goTo": "移動 (G ...)",
+      "workspace": "ワークスペース (W ...)",
+      "view": "表示 (V ...)",
+      "issues": "課題 (I ...)",
+      "git": "Git (X ...)",
+      "yank": "コピー (Y ...)",
+      "toggle": "切り替え (T ...)",
+      "run": "実行 (R ...)"
+    },
+    "actions": {
+      "showHelp": "このヘルプを表示",
+      "closeCancel": "閉じる/キャンセル",
+      "createNewTask": "新しいタスクを作成",
+      "deleteSelected": "選択を削除",
+      "focusSearch": "検索にフォーカス",
+      "moveDown": "下に移動",
+      "moveUp": "上に移動",
+      "moveLeft": "左に移動",
+      "moveRight": "右に移動",
+      "openCommandBar": "コマンドバーを開く",
+      "formatInlineCode": "Format inline code",
+      "sendMessage": "メッセージを送信",
+      "settings": "設定に移動",
+      "new-workspace": "新しいワークスペースに移動",
+      "duplicate-workspace": "ワークスペースを複製",
+      "rename-workspace": "ワークスペースの名前を変更",
+      "pin-workspace": "ワークスペースをピン留め/解除",
+      "archive-workspace": "ワークスペースをアーカイブ",
+      "delete-workspace": "ワークスペースを削除",
+      "toggle-changes-mode": "変更パネルの切り替え",
+      "toggle-logs-mode": "ログパネルの切り替え",
+      "toggle-preview-mode": "プレビューパネルの切り替え",
+      "toggle-left-sidebar": "左サイドバーの切り替え",
+      "toggle-left-main-panel": "チャットパネルの切り替え",
+      "create-issue": "課題を作成",
+      "change-issue-status": "ステータスを変更",
+      "change-issue-priority": "優先度を変更",
+      "change-assignees": "担当者を変更",
+      "make-sub-issue-of": "サブ課題にする",
+      "add-sub-issue": "サブ課題を追加",
+      "remove-parent-issue": "親課題を解除",
+      "link-workspace": "ワークスペースをリンク",
+      "duplicate-issue": "課題を複製",
+      "delete-issue": "課題を削除",
+      "git-create-pr": "Pull Requestを作成",
+      "git-merge": "ブランチをマージ",
+      "git-rebase": "ブランチをリベース",
+      "git-push": "変更をプッシュ",
+      "copy-path": "パスをコピー",
+      "copy-raw-logs": "生ログをコピー",
+      "toggle-dev-server": "開発サーバーの切り替え",
+      "toggle-wrap-lines": "行折り返しの切り替え",
+      "run-setup-script": "セットアップスクリプトを実行",
+      "run-cleanup-script": "クリーンアップスクリプトを実行",
+      "run-archive-script": "アーカイブスクリプトを実行"
+    }
+  },
+  "typeahead": {
+    "tags": "タグ",
+    "files": "ファイル",
+    "commands": "コマンド",
+    "chooseRepo": "リポジトリを選択",
+    "selectedRepo": "選択中のリポジトリ: {{repoName}}",
+    "missingRepo": "選択したリポジトリは利用できなくなりました。",
+    "noTagsOrFiles": "タグまたはファイルが見つかりません",
+    "createTag": "新しいタグを作成",
+    "noCommands": "このエージェントで利用可能なコマンドはありません。"
+  },
+  "kanban": {
+    "noStatusesFound": "このプロジェクトのステータスが見つかりません",
+    "noVisibleStatuses": "すべてのステータスが非表示です。表示設定を使用するか、別のタブに切り替えて課題を表示してください。",
+    "noProjectFound": "プロジェクトが見つかりません",
+    "noOrganizationFound": "組織が見つかりません",
+    "unassigned": "未割り当て",
+    "noTagsAvailable": "利用可能なタグがありません",
+    "createNewIssue": "新しい課題を作成",
+    "createNewTag": "新しいタグを作成",
+    "searchTags": "タグを検索...",
+    "selectColorFor": "色を選択:",
+    "createTag": "作成",
+    "filesCount": "{{count}}ファイル",
+    "attachmentsTitle": "添付ファイル ({{count}})",
+    "deleteAttachmentAria": "{{filename}} を削除",
+    "noPrCreated": "PRが作成されていません",
+    "noCommentsYet": "コメントはまだありません",
+    "createdBy": "作成者",
+    "comments": "コメント",
+    "enterCommentPlaceholder": "コメントを入力してください...",
+    "attachImage": "画像を添付",
+    "attachFile": "ファイルを添付",
+    "attachFileHint": "ファイルを添付（1ファイル最大20MB）",
+    "attach": "添付",
+    "dropImagesHere": "ここに画像をドロップ",
+    "dropFilesHere": "ここにファイルをドロップ",
+    "imageDropHint": "PNG、JPG、GIF、最大20MB",
+    "fileDropHint": "任意のファイル形式、最大20MB",
+    "unknownFile": "不明なファイル",
+    "unknownUser": "不明なユーザー",
+    "deletedUser": "削除済みユーザー",
+    "replyQuotePrefix": "が書きました:",
+    "moreActions": "その他の操作",
+    "closePanel": "パネルを閉じる",
+    "copyLink": "リンクをコピー",
+    "issueTitlePlaceholder": "課題タイトル...",
+    "issueDescriptionPlaceholder": "タスクの説明を入力してください...",
+    "createDraftWorkspaceImmediately": "下書きワークスペースをすぐに作成",
+    "createDraftWorkspaceDescription": "チェックするとワークスペースを自動作成します",
+    "createIssue": "タスクを作成",
+    "newIssue": "新しい課題",
+    "previewCodeBlock": "[コードブロック]",
+    "previewImage": "[画像]",
+    "previewImageWithName": "[画像: {{name}}]",
+    "previewFile": "[ファイル]",
+    "previewFileWithName": "[ファイル: {{name}}]",
+    "imageAttachmentNameFallback": "添付ファイル",
+    "removeImage": "画像を削除",
+    "maxImagesAtOnce": "一度に最大 {{count}} 枚までアップロードできます",
+    "maxFilesAtOnce": "一度に最大 {{count}} 個までアップロードできます",
+    "fileNotImage": "{{filename}} は画像ではありません",
+    "fileExceedsLimit": "{{filename}} は20MBの上限を超えています",
+    "unknownError": "不明なエラー",
+    "failedToUploadFile": "{{filename}} のアップロードに失敗しました: {{message}}",
+    "downloadAttachment": "添付ファイルをダウンロード",
+    "downloadAttachmentAria": "{{filename}} をダウンロード",
+    "subIssues": "サブ課題",
+    "noSubIssues": "サブ課題なし",
+    "markIndependentIssue": "独立した課題としてマーク",
+    "parentIssue": "親",
+    "subIssueIndicator": "↳",
+    "showSubIssues": "サブ課題を表示",
+    "viewTabs": {
+      "active": "アクティブ",
+      "all": "すべて"
+    },
+    "loginRequired": {
+      "title": "サインインが必要です",
+      "description": "このプロジェクトを表示するにはサインインしてください。",
+      "action": "サインイン"
+    },
+    "team": "Team",
+    "personal": "Personal",
+    "searchPlaceholder": "Search issues...",
+    "filters": "Filters",
+    "clearFilters": "Clear filters",
+    "filtersDescription": "Adjust filters and sorting for this board view.",
+    "filterByTag": "Filter by tag",
+    "filterByPriority": "Filter by priority",
+    "tags": "Tags",
+    "sortBy": "Sort",
+    "workspaceSidebar": {
+      "sortDialogTitle": "Sort workspaces",
+      "sortDialogDescription": "Choose how workspaces are ordered in the sidebar.",
+      "sortByLabel": "Sort by",
+      "sortOrderLabel": "Sort order",
+      "sortUpdatedAt": "Updated at",
+      "sortCreatedAt": "Created at",
+      "filterDialogTitle": "Filter workspaces",
+      "filterDialogDescription": "Narrow down workspaces by project and PR state.",
+      "projectFilterLabel": "Project",
+      "prFilterLabel": "PR",
+      "prFilterAll": "All",
+      "prFilterHasPr": "Has PR",
+      "prFilterNoPr": "No PR",
+      "noProject": "No project",
+      "sortButtonTitle": "Sort workspaces",
+      "filterButtonTitle": "Filter workspaces"
+    },
+    "sortAscending": "Ascending",
+    "sortDescending": "Descending",
+    "assignee": "Assignee",
+    "self": "Me",
+    "priority": "Priority",
+    "subIssuesFilterLabel": "Sub-issues",
+    "workspacesFilterLabel": "Workspaces",
+    "selectAssignees": "Select assignees...",
+    "relationships": "Relationships",
+    "noRelationships": "No relationships",
+    "openProjectsGuide": "Projects guide",
+    "editProjectSettings": "Edit project settings",
+    "linkWorkspace": "Link workspace...",
+    "createNewWorkspace": "Create new workspace",
+    "workspaces": "Workspaces",
+    "showingWorkspaces": "Showing {{count}} of {{total}}",
+    "changeColor": "Change color",
+    "editName": "Edit name",
+    "deleteStatus": "Delete status",
+    "cannotDeleteWithIssues": "Move issues first",
+    "lastVisibleStatus": "At least one status must be visible",
+    "showStatus": "Show status",
+    "hideStatus": "Hide status",
+    "newStatus": "New Status",
+    "visibleColumns": "Visible Columns",
+    "dragToRearrange": "Drag to re-arrange",
+    "addColumn": "Add column",
+    "projectsGuide": {
+      "intro": {
+        "title": "Welcome",
+        "content": "Welcome to Vibe Kanban. Use the help sections in this panel to learn how things work, then create your first issue. You can re-open this help dialog or give feedback anytime from the navbar."
+      },
+      "welcome": {
+        "title": "Projects",
+        "content": "The project page is where you manage issues. You can view your issues as a kanban board, or as a list, and filter by status, tag, assignee and more."
+      },
+      "issues": {
+        "title": "Issues",
+        "content": "Each issue represents a feature or problem to solve. Issues have statuses, priorities, assignees, tags, relationships, comments, sub-issues and more."
+      },
+      "workspaces": {
+        "title": "Workspaces",
+        "content": "To start working on an issue, create a workspace. A single issue can have multiple workspaces. Issues describe the work to be done, workspaces are where the work happens."
+      },
+      "organizations": {
+        "title": "Invite your team",
+        "content": "We've automatically created a personal organization, and initial project so you can easily get started with Vibe Kanban. You can also create new organizations and invite your team to collaborate."
+      }
+    }
+  },
+  "createMode": {
+    "headings": {
+      "repoStep": "どのリポジトリで作業しますか？",
+      "chatStep": "何に取り組みますか？"
+    },
+    "repoPicker": {
+      "actions": {
+        "recent": "最近",
+        "browse": "参照",
+        "create": "作成"
+      }
+    }
+  },
+  "modelSelector": {
+    "preset": "プリセット",
+    "custom": "カスタマイズ",
+    "permissions": "権限",
+    "permissionAuto": "自動",
+    "permissionAsk": "確認",
+    "permissionPlan": "計画",
+    "nextTurn": "次のターン",
+    "agent": "エージェント",
+    "default": "デフォルト",
+    "model": "モデル",
+    "providers": "プロバイダー"
+  },
+  "syncError": {
+    "networkErrors": "ネットワークエラー",
+    "streamsAffected": "{{count}}件のストリームが影響を受けています",
+    "streamsAffected_other": "{{count}}件のストリームが影響を受けています",
+    "status": "(ステータス {{status}})",
+    "refreshPage": "ページを更新"
+  },
+  "onboardingSignIn": {
+    "subtitle": "Sign in to continue",
+    "signedInAs": "Signed in as {{name}}.",
+    "moreOptions": "More options",
+    "featureHeader": "Feature",
+    "signedInHeader": "Signed in",
+    "skipSignInHeader": "Don't sign in",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "migration": {
+    "allProjectsMigrated": "すべてのプロジェクトはすでにクラウドに移行済みです。",
+    "continueToProjects": "プロジェクトに進む"
+  },
+  "appBar": {
+    "kanban": {
+      "tooltip": "カンバン",
+      "title": "カンバンボード",
+      "description": "サインインしてカンバンボードでコーディングエージェントを整理しましょう。",
+      "migrateOldProjects": "古いプロジェクトを移行"
+    }
+  },
+  "errors": {
+    "generic": "An unexpected error occurred"
+  },
+  "personal": "Personal",
+  "changeStatus": {
+    "title": "Change Status",
+    "descriptionSingle": "Change status for \"{{title}}\"",
+    "descriptionMultiple": "Change status for {{count}} issues",
+    "action": "Change Status"
+  },
+  "askQuestion": {
+    "title": "エージェントが質問しています",
+    "selectMultiple": "複数選択",
+    "confirmSelection": "選択を確定",
+    "submitting": "回答を送信中...",
+    "answeredCount": "{{count}}件の質問に回答済み",
+    "answeredCount_other": "{{count}}件の質問に回答済み"
+  }
+}

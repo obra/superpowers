@@ -1,0 +1,40 @@
+{
+  "title": "项目",
+  "subtitle": "管理您的项目并跟踪其进度",
+  "createProject": "创建项目",
+  "loading": "加载项目中...",
+  "repoSearch": {
+    "searching": "正在搜索仓库...",
+    "stillSearching": "仍在搜索... ({{seconds}}秒)",
+    "takingLonger": "搜索时间比平时长。您可以在下方手动浏览。",
+    "noReposFound": "在常见位置未找到仓库。",
+    "browseHint": "使用下方选项浏览仓库。"
+  },
+  "errors": {
+    "fetchFailed": "获取项目失败",
+    "deleteFailed": "删除项目失败"
+  },
+  "empty": {
+    "title": "还没有项目",
+    "description": "通过创建您的第一个项目开始。",
+    "createFirst": "创建您的第一个项目"
+  },
+  "projectNotFound": "您查找的项目不存在或已被删除。",
+  "viewProject": "查看项目",
+  "openInIDE": "在 IDE 中打开",
+  "createdDate": "创建于 {{date}}",
+  "createProjectDialog": {
+    "title": "Create Project",
+    "description": "Create a new project in this organization.",
+    "nameLabel": "Project name",
+    "namePlaceholder": "Enter project name",
+    "selectColor": "Select project color",
+    "creating": "Creating...",
+    "createButton": "Create Project"
+  },
+  "deleteProjectDialog": {
+    "title": "Delete Project?",
+    "description": "This will permanently delete \"{{name}}\" and all its issues. This action cannot be undone.",
+    "error": "Failed to delete project. Please try again."
+  }
+}

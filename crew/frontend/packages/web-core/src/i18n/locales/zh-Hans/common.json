@@ -1,0 +1,651 @@
+{
+  "editorNames": {
+    "custom": "自定义"
+  },
+  "buttons": {
+    "save": "保存",
+    "cancel": "取消",
+    "send": "发送",
+    "delete": "删除",
+    "edit": "编辑",
+    "create": "创建",
+    "continue": "继续",
+    "reset": "重置",
+    "manage": "管理",
+    "connect": "连接",
+    "disconnect": "断开连接",
+    "close": "关闭",
+    "replay": "重播",
+    "discard": "放弃",
+    "addItem": "添加项目",
+    "reply": "回复",
+    "retry": "Retry"
+  },
+  "form": {
+    "notSpecified": "未指定",
+    "selectOption": "选择一个选项..."
+  },
+  "states": {
+    "loading": "加载中...",
+    "loadingHistory": "加载历史记录",
+    "saving": "保存中...",
+    "error": "错误",
+    "success": "成功",
+    "reconnecting": "重新连接中"
+  },
+  "language": {
+    "browserDefault": "浏览器默认"
+  },
+  "conversation": {
+    "plan": "计划",
+    "planToggle": {
+      "show": "显示计划",
+      "hide": "隐藏计划"
+    },
+    "toolDetailsToggle": {
+      "show": "显示详情",
+      "hide": "隐藏详情"
+    },
+    "args": "参数",
+    "output": "输出",
+    "result": "结果",
+    "deniedByUser": "用户拒绝了 {{toolName}}",
+    "taskCompleted": "任务完成",
+    "ran": "执行了",
+    "tool": "工具",
+    "thinking": "思考中",
+    "toolSummary": {
+      "read": "读取 {{path}}",
+      "searched": "搜索 \"{{query}}\"",
+      "fetched": "获取 {{url}}",
+      "ranCommand": "执行命令",
+      "createdTask": "创建任务：{{description}}",
+      "todoOperation": "{{operation}} 待办事项"
+    },
+    "fixScript": "修复脚本",
+    "subagent": {
+      "defaultType": "子代理"
+    }
+  },
+  "folderPicker": {
+    "legend": "点击文件夹名称进行导航 • 使用操作按钮进行选择",
+    "manualPathLabel": "手动输入路径:",
+    "go": "前往",
+    "searchLabel": "搜索当前目录:",
+    "selectCurrent": "选择当前",
+    "gitRepo": "git 仓库",
+    "selectPath": "选择路径"
+  },
+  "branchSelector": {
+    "placeholder": "选择分支",
+    "searchPlaceholder": "搜索分支...",
+    "empty": "未找到分支",
+    "badges": {
+      "current": "当前",
+      "remote": "远程"
+    },
+    "currentDisabled": "无法选择当前分支"
+  },
+  "breadcrumb": {
+    "more": "更多"
+  },
+  "orgMembers": {
+    "moreCount": "还有 {{count}} 位"
+  },
+  "orgSwitcher": {
+    "title": "切换组织",
+    "description": "选择要切换到的组织。",
+    "loadError": "加载组织失败。请重试。",
+    "noOrganizations": "您不是任何组织的成员。",
+    "menuItem": "组织",
+    "loadingPlaceholder": "加载组织中...",
+    "selectPlaceholder": "选择组织",
+    "currentBadge": "（当前）",
+    "organizations": "组织",
+    "createOrganization": "创建组织",
+    "orgSettings": "组织设置",
+    "migrate": "迁移"
+  },
+  "navbar": {
+    "tryNewUI": "试用新界面"
+  },
+  "ok": "确定",
+  "error": "错误",
+  "signIn": "登录",
+  "signOut": "退出登录",
+  "devMode": {
+    "banner": "开发模式 - 这是开发版本"
+  },
+  "oauth": {
+    "title": "登录 Vibe Kanban",
+    "description": "登录以加入组织并与团队共享任务",
+    "continueWithGitHub": "使用 GitHub 继续",
+    "continueWithGoogle": "使用 Google 继续",
+    "waitingTitle": "完成身份验证",
+    "waitingDescription": "已打开弹出窗口进行身份验证",
+    "waitingForAuth": "等待身份验证...",
+    "popupInstructions": "如果弹出窗口未打开，请检查您的弹窗拦截器设置。",
+    "back": "返回",
+    "successTitle": "身份验证成功！",
+    "welcomeBack": "欢迎回来，{{name}}",
+    "errorTitle": "身份验证失败",
+    "errorDescription": "验证您的账户时出现问题",
+    "tryAgain": "重试"
+  },
+  "toolbar": {
+    "sortBy": "排序方式",
+    "groupBy": "分组方式"
+  },
+  "sorting": {
+    "ascending": "升序",
+    "descending": "降序"
+  },
+  "grouping": {
+    "date": "日期",
+    "assignee": "负责人",
+    "label": "标签"
+  },
+  "workspaces": {
+    "title": "工作区",
+    "searchPlaceholder": "搜索...",
+    "active": "活跃",
+    "archived": "已归档",
+    "loading": "加载中...",
+    "notFound": "未找到工作区",
+    "selectToStart": "选择一个工作区开始",
+    "draft": "草稿",
+    "viewArchive": "查看归档",
+    "backToActive": "返回活跃",
+    "noArchived": "没有已归档的工作区",
+    "noWorkspaces": "没有工作区",
+    "newWorkspace": "新工作区",
+    "needsAttention": "需要注意",
+    "idle": "空闲",
+    "running": "运行中",
+    "pin": "置顶",
+    "unpin": "取消置顶",
+    "archive": "归档",
+    "more": "更多操作",
+    "rename": {
+      "title": "重命名工作区",
+      "description": "输入此工作区的新名称。",
+      "nameLabel": "名称",
+      "placeholder": "输入工作区名称",
+      "action": "重命名",
+      "renaming": "正在重命名..."
+    },
+    "unlinkFromIssue": "从问题取消关联",
+    "deleteWorkspace": "删除工作区",
+    "unlink": "取消关联",
+    "delete": "删除",
+    "unlinkConfirmMessage": "确定要将此工作区与问题取消关联吗？工作区仍将存在，但不再与此问题关联。",
+    "deleteConfirmMessage": "确定要删除此工作区吗？这将取消与问题的关联并删除本地工作区。此操作无法撤销。",
+    "unlinkError": "取消关联工作区失败",
+    "deleteError": "删除工作区失败",
+    "filesChanged": "{{count}} 个文件",
+    "deleteDialog": {
+      "title": "删除工作区",
+      "description": "确定要删除此工作区吗？此操作无法撤销。",
+      "deleteBranchLabel": "删除分支",
+      "cannotDeleteOpenPr": "PR 开启时无法删除分支",
+      "unlinkFromIssueLabel": "同时取消与议题的关联"
+    },
+    "linkError": "Failed to link workspace"
+  },
+  "fileTree": {
+    "searchPlaceholder": "搜索文件...",
+    "noResults": "没有匹配的文件",
+    "title": "文件",
+    "showGitHubComments": "显示 GitHub 评论",
+    "hideGitHubComments": "隐藏 GitHub 评论",
+    "prevGitHubComment": "上一个有评论的文件",
+    "nextGitHubComment": "下一个有评论的文件"
+  },
+  "sections": {
+    "changes": "更改",
+    "repositories": "仓库",
+    "addRepositories": "添加仓库",
+    "project": "项目",
+    "processes": "进程",
+    "devServer": "开发服务器",
+    "advanced": "高级",
+    "workingBranch": "工作分支",
+    "recent": "最近",
+    "other": "其他",
+    "devServerPreview": "开发服务器预览",
+    "terminal": "终端",
+    "notes": "笔记"
+  },
+  "notes": {
+    "placeholder": "添加关于此工作区的笔记...",
+    "selectWorkspace": "选择一个工作区以查看笔记"
+  },
+  "repos": {
+    "loading": "正在加载仓库...",
+    "noRecentRepos": "未找到最近的仓库",
+    "noReposAdded": "未添加仓库",
+    "noReposAddedHint": "从下面的选项中添加一个或多个仓库到此工作区"
+  },
+  "actions": {
+    "browseRepos": "浏览磁盘上的仓库",
+    "createNewRepo": "在磁盘上创建新仓库",
+    "viewInChangesPanel": "在更改面板中查看",
+    "copyPath": "复制路径",
+    "copyWorktreePath": "复制工作树路径",
+    "openInIde": "在IDE中打开",
+    "repoSettings": "仓库设置",
+    "cancel": "取消",
+    "saveChanges": "保存更改",
+    "copied": "已复制",
+    "collapse": "收起"
+  },
+  "comments": {
+    "addReviewComment": "添加审查评论",
+    "addPlaceholder": "添加评论...",
+    "editPlaceholder": "编辑评论...",
+    "copyToReview": "复制到审查"
+  },
+  "confirm": {
+    "defaultConfirm": "确认",
+    "defaultCancel": "取消"
+  },
+  "dialogs": {
+    "selectGitRepository": "选择 Git 仓库",
+    "chooseExistingRepo": "从文件系统中选择现有仓库"
+  },
+  "empty": {
+    "noChanges": "没有要显示的更改"
+  },
+  "commandBar": {
+    "noResults": "未找到结果。",
+    "back": "返回",
+    "defaultPlaceholder": "输入命令或搜索...",
+    "selectBranch": "Select Branch",
+    "selectBranchFor": "Select Branch for {{repoName}}"
+  },
+  "chatBox": {
+    "variants": "变体",
+    "customise": "自定义"
+  },
+  "projects": {
+    "noProjectFound": "未找到项目",
+    "createFirstPrompt": "请先创建项目以开始处理任务。",
+    "createNew": "创建新项目",
+    "noProjectsFound": "未找到项目"
+  },
+  "betaWorkspaces": {
+    "title": "试用新界面",
+    "intro": "我们从头重建了 Vibe Kanban 的界面，您已被邀请试用。",
+    "newUiDescription": "新界面针对日常工作进行了优化：管理代理、预览更改和审查代码。它还解锁了旧界面中不可用的功能：",
+    "newFeatures": {
+      "multiRepo": "同时编辑多个仓库",
+      "multiAgent": "在单个工作区中运行多个代理对话（甚至跨不同代理）",
+      "commandBar": "使用命令栏更快地导航"
+    },
+    "oldUiDescription": "目前，一些功能仍保留在当前界面中：",
+    "oldFeatures": {
+      "kanban": "在看板上管理任务",
+      "settings": "更改设置",
+      "projects": "管理项目"
+    },
+    "transition": "在接下来几周的过渡期间，您将在两者之间切换。",
+    "optOutNote": "想要退出？您可以随时在设置中切换回当前界面。",
+    "joinBeta": "加入 Beta",
+    "maybeLater": "稍后再说"
+  },
+  "workspacesGuide": {
+    "welcome": {
+      "title": "欢迎",
+      "content": "欢迎使用 Workspaces，这是 Vibe Kanban 的全新设计界面。我们正在向部分用户推出以获取早期反馈。您可以随时通过导航栏中的反馈图标分享您的想法。"
+    },
+    "commandBar": {
+      "title": "命令栏",
+      "content": "命令栏是您的导航中心。使用 CMD+K 打开它，可以搜索和访问工作区中的所有可用操作。"
+    },
+    "contextBar": {
+      "title": "上下文栏",
+      "content": "上下文栏让您可以快速切换不同面板。将它拖动到最适合您的位置。"
+    },
+    "sidebar": {
+      "title": "工作区侧边栏",
+      "content": "一目了然地查看所有工作区的状态。通知会突出显示需要关注的工作区。归档已合并的工作区以保持侧边栏整洁。"
+    },
+    "multiRepo": {
+      "title": "多仓库支持",
+      "content": "将多个仓库添加到单个工作区。在处理一个仓库时可以引用另一个仓库的代码，或者同时在多个仓库中实现更改。"
+    },
+    "sessions": {
+      "title": "多会话",
+      "content": "在单个工作区内创建多个代理对话会话，包括与不同代理的会话。这可以帮助您绕过对话限制，或在单独的线程中启动审查代理。"
+    },
+    "preview": {
+      "title": "预览更改",
+      "content": "无需切换上下文，即可在内置浏览器中预览您的工作。支持桌面、移动设备和自定义视口尺寸测试。"
+    },
+    "diffs": {
+      "title": "差异和评论",
+      "content": "重新设计的差异面板包含更改的文件树。直接在差异上评论以向代理提供反馈，当您的工作区链接到 PR 时还可以查看 GitHub 评论。"
+    },
+    "classicUi": {
+      "title": "返回经典界面",
+      "content": "点击导航栏左侧的退出图标可返回经典看板。要完全禁用新界面，请在设置中的「测试版功能」下更新「启用 Workspaces 测试版」选项。"
+    }
+  },
+  "logs": {
+    "searchLogs": "搜索日志",
+    "selectProcessToView": "选择一个进程以查看日志"
+  },
+  "processes": {
+    "noProcesses": "无进程",
+    "terminal": "终端"
+  },
+  "search": {
+    "matchCount": "{{current}} / {{total}}",
+    "noMatches": "无匹配项"
+  },
+  "contextUsage": {
+    "label": "上下文使用量",
+    "emptyTooltip": "上下文使用量将在下一次回复后显示",
+    "tooltip": "上下文：{{percentage}}% · {{used}} / {{total}} tokens",
+    "ariaLabel": "上下文使用量：{{percentage}}%"
+  },
+  "shortcuts": {
+    "title": "键盘快捷键",
+    "inWorkspace": "(在工作区中)",
+    "sequentialHint": "组合快捷键：先按第一个键，然后在500毫秒内按第二个键。",
+    "configurableHint": "可在 设置 → 常规 → 消息输入 中配置",
+    "groups": {
+      "quickActions": "快捷操作",
+      "navigation": "导航",
+      "modifiers": "修饰键",
+      "goTo": "前往 (G ...)",
+      "workspace": "工作区 (W ...)",
+      "view": "视图 (V ...)",
+      "issues": "问题 (I ...)",
+      "git": "Git (X ...)",
+      "yank": "复制 (Y ...)",
+      "toggle": "切换 (T ...)",
+      "run": "运行 (R ...)"
+    },
+    "actions": {
+      "showHelp": "显示帮助",
+      "closeCancel": "关闭/取消",
+      "createNewTask": "创建新任务",
+      "deleteSelected": "删除所选",
+      "focusSearch": "聚焦搜索",
+      "moveDown": "向下移动",
+      "moveUp": "向上移动",
+      "moveLeft": "向左移动",
+      "moveRight": "向右移动",
+      "openCommandBar": "打开命令栏",
+      "formatInlineCode": "Format inline code",
+      "sendMessage": "发送消息",
+      "settings": "前往设置",
+      "new-workspace": "前往新工作区",
+      "duplicate-workspace": "复制工作区",
+      "rename-workspace": "重命名工作区",
+      "pin-workspace": "置顶/取消置顶工作区",
+      "archive-workspace": "归档工作区",
+      "delete-workspace": "删除工作区",
+      "toggle-changes-mode": "切换更改面板",
+      "toggle-logs-mode": "切换日志面板",
+      "toggle-preview-mode": "切换预览面板",
+      "toggle-left-sidebar": "切换左侧边栏",
+      "toggle-left-main-panel": "切换聊天面板",
+      "create-issue": "创建问题",
+      "change-issue-status": "更改状态",
+      "change-issue-priority": "更改优先级",
+      "change-assignees": "更改负责人",
+      "make-sub-issue-of": "设为子问题",
+      "add-sub-issue": "添加子问题",
+      "remove-parent-issue": "移除父级",
+      "link-workspace": "关联工作区",
+      "duplicate-issue": "复制问题",
+      "delete-issue": "删除问题",
+      "git-create-pr": "创建 Pull Request",
+      "git-merge": "合并分支",
+      "git-rebase": "变基分支",
+      "git-push": "推送更改",
+      "copy-path": "复制路径",
+      "copy-raw-logs": "复制原始日志",
+      "toggle-dev-server": "切换开发服务器",
+      "toggle-wrap-lines": "切换自动换行",
+      "run-setup-script": "运行设置脚本",
+      "run-cleanup-script": "运行清理脚本",
+      "run-archive-script": "运行归档脚本"
+    }
+  },
+  "typeahead": {
+    "tags": "标签",
+    "files": "文件",
+    "commands": "命令",
+    "chooseRepo": "选择仓库",
+    "selectedRepo": "已选择仓库：{{repoName}}",
+    "missingRepo": "所选仓库已不可用。",
+    "noTagsOrFiles": "未找到标签或文件",
+    "createTag": "创建新标签",
+    "noCommands": "此代理没有可用的命令。"
+  },
+  "kanban": {
+    "noStatusesFound": "未找到此项目的状态",
+    "noVisibleStatuses": "所有状态已隐藏。请使用显示设置或切换到其他标签页查看问题。",
+    "noProjectFound": "未找到项目",
+    "noOrganizationFound": "未找到组织",
+    "unassigned": "未分配",
+    "noTagsAvailable": "无可用标签",
+    "createNewIssue": "创建新问题",
+    "createNewTag": "创建新标签",
+    "searchTags": "搜索标签...",
+    "selectColorFor": "选择颜色：",
+    "createTag": "创建",
+    "filesCount": "{{count}} 个文件",
+    "attachmentsTitle": "附件 ({{count}})",
+    "deleteAttachmentAria": "删除 {{filename}}",
+    "noPrCreated": "未创建 PR",
+    "noCommentsYet": "暂无评论",
+    "createdBy": "创建者",
+    "comments": "评论",
+    "enterCommentPlaceholder": "在此输入评论...",
+    "attachImage": "附加图片",
+    "attachFile": "附加文件",
+    "attachFileHint": "附加文件（每个文件最大 20MB）",
+    "attach": "附加",
+    "dropImagesHere": "将图片拖放到这里",
+    "dropFilesHere": "将文件拖放到这里",
+    "imageDropHint": "PNG、JPG、GIF，最大 20MB",
+    "fileDropHint": "任意文件类型，最大 20MB",
+    "unknownFile": "未知文件",
+    "unknownUser": "未知用户",
+    "deletedUser": "已删除用户",
+    "replyQuotePrefix": "写道：",
+    "moreActions": "更多操作",
+    "closePanel": "关闭面板",
+    "copyLink": "复制链接",
+    "issueTitlePlaceholder": "问题标题...",
+    "issueDescriptionPlaceholder": "输入任务描述...",
+    "createDraftWorkspaceImmediately": "立即创建草稿工作区",
+    "createDraftWorkspaceDescription": "勾选后自动创建工作区",
+    "createIssue": "创建任务",
+    "newIssue": "新问题",
+    "previewCodeBlock": "[代码块]",
+    "previewImage": "[图片]",
+    "previewImageWithName": "[图片: {{name}}]",
+    "previewFile": "[文件]",
+    "previewFileWithName": "[文件: {{name}}]",
+    "imageAttachmentNameFallback": "附件",
+    "removeImage": "移除图片",
+    "maxImagesAtOnce": "一次最多上传 {{count}} 张图片",
+    "maxFilesAtOnce": "一次最多上传 {{count}} 个文件",
+    "fileNotImage": "文件 {{filename}} 不是图片",
+    "fileExceedsLimit": "文件 {{filename}} 超过 20MB 限制",
+    "unknownError": "未知错误",
+    "failedToUploadFile": "上传 {{filename}} 失败：{{message}}",
+    "downloadAttachment": "下载附件",
+    "downloadAttachmentAria": "下载 {{filename}}",
+    "subIssues": "子任务",
+    "noSubIssues": "无子任务",
+    "markIndependentIssue": "标记为独立问题",
+    "parentIssue": "父级",
+    "subIssueIndicator": "↳",
+    "showSubIssues": "显示子任务",
+    "viewTabs": {
+      "active": "活动",
+      "all": "全部"
+    },
+    "loginRequired": {
+      "title": "需要登录",
+      "description": "请登录以查看此项目。",
+      "action": "登录"
+    },
+    "team": "Team",
+    "personal": "Personal",
+    "searchPlaceholder": "Search issues...",
+    "filters": "Filters",
+    "clearFilters": "Clear filters",
+    "filtersDescription": "Adjust filters and sorting for this board view.",
+    "filterByTag": "Filter by tag",
+    "filterByPriority": "Filter by priority",
+    "tags": "Tags",
+    "sortBy": "Sort",
+    "workspaceSidebar": {
+      "sortDialogTitle": "Sort workspaces",
+      "sortDialogDescription": "Choose how workspaces are ordered in the sidebar.",
+      "sortByLabel": "Sort by",
+      "sortOrderLabel": "Sort order",
+      "sortUpdatedAt": "Updated at",
+      "sortCreatedAt": "Created at",
+      "filterDialogTitle": "Filter workspaces",
+      "filterDialogDescription": "Narrow down workspaces by project and PR state.",
+      "projectFilterLabel": "Project",
+      "prFilterLabel": "PR",
+      "prFilterAll": "All",
+      "prFilterHasPr": "Has PR",
+      "prFilterNoPr": "No PR",
+      "noProject": "No project",
+      "sortButtonTitle": "Sort workspaces",
+      "filterButtonTitle": "Filter workspaces"
+    },
+    "sortAscending": "Ascending",
+    "sortDescending": "Descending",
+    "assignee": "Assignee",
+    "self": "Me",
+    "priority": "Priority",
+    "subIssuesFilterLabel": "Sub-issues",
+    "workspacesFilterLabel": "Workspaces",
+    "selectAssignees": "Select assignees...",
+    "relationships": "Relationships",
+    "noRelationships": "No relationships",
+    "openProjectsGuide": "Projects guide",
+    "editProjectSettings": "Edit project settings",
+    "linkWorkspace": "Link workspace...",
+    "createNewWorkspace": "Create new workspace",
+    "workspaces": "Workspaces",
+    "showingWorkspaces": "Showing {{count}} of {{total}}",
+    "changeColor": "Change color",
+    "editName": "Edit name",
+    "deleteStatus": "Delete status",
+    "cannotDeleteWithIssues": "Move issues first",
+    "lastVisibleStatus": "At least one status must be visible",
+    "showStatus": "Show status",
+    "hideStatus": "Hide status",
+    "newStatus": "New Status",
+    "visibleColumns": "Visible Columns",
+    "dragToRearrange": "Drag to re-arrange",
+    "addColumn": "Add column",
+    "projectsGuide": {
+      "intro": {
+        "title": "Welcome",
+        "content": "Welcome to Vibe Kanban. Use the help sections in this panel to learn how things work, then create your first issue. You can re-open this help dialog or give feedback anytime from the navbar."
+      },
+      "welcome": {
+        "title": "Projects",
+        "content": "The project page is where you manage issues. You can view your issues as a kanban board, or as a list, and filter by status, tag, assignee and more."
+      },
+      "issues": {
+        "title": "Issues",
+        "content": "Each issue represents a feature or problem to solve. Issues have statuses, priorities, assignees, tags, relationships, comments, sub-issues and more."
+      },
+      "workspaces": {
+        "title": "Workspaces",
+        "content": "To start working on an issue, create a workspace. A single issue can have multiple workspaces. Issues describe the work to be done, workspaces are where the work happens."
+      },
+      "organizations": {
+        "title": "Invite your team",
+        "content": "We've automatically created a personal organization, and initial project so you can easily get started with Vibe Kanban. You can also create new organizations and invite your team to collaborate."
+      }
+    }
+  },
+  "createMode": {
+    "headings": {
+      "repoStep": "你想在哪些仓库上工作？",
+      "chatStep": "你想做什么工作？"
+    },
+    "repoPicker": {
+      "actions": {
+        "recent": "最近",
+        "browse": "浏览",
+        "create": "创建"
+      }
+    }
+  },
+  "modelSelector": {
+    "preset": "预设",
+    "custom": "自定义",
+    "permissions": "权限",
+    "permissionAuto": "自动",
+    "permissionAsk": "询问",
+    "permissionPlan": "计划",
+    "nextTurn": "下一个回合",
+    "agent": "代理",
+    "default": "默认",
+    "model": "模型",
+    "providers": "提供商"
+  },
+  "syncError": {
+    "networkErrors": "网络错误",
+    "streamsAffected": "{{count}} 个数据流受影响",
+    "streamsAffected_other": "{{count}} 个数据流受影响",
+    "status": "(状态 {{status}})",
+    "refreshPage": "刷新页面"
+  },
+  "onboardingSignIn": {
+    "subtitle": "Sign in to continue",
+    "signedInAs": "Signed in as {{name}}.",
+    "moreOptions": "More options",
+    "featureHeader": "Feature",
+    "signedInHeader": "Signed in",
+    "skipSignInHeader": "Don't sign in",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "migration": {
+    "allProjectsMigrated": "您的所有项目已迁移到云端。",
+    "continueToProjects": "继续前往项目"
+  },
+  "appBar": {
+    "kanban": {
+      "tooltip": "看板",
+      "title": "看板",
+      "description": "登录以使用看板管理您的编码代理。",
+      "migrateOldProjects": "迁移旧项目"
+    }
+  },
+  "errors": {
+    "generic": "An unexpected error occurred"
+  },
+  "personal": "Personal",
+  "changeStatus": {
+    "title": "Change Status",
+    "descriptionSingle": "Change status for \"{{title}}\"",
+    "descriptionMultiple": "Change status for {{count}} issues",
+    "action": "Change Status"
+  },
+  "askQuestion": {
+    "title": "代理正在提问",
+    "selectMultiple": "多选",
+    "confirmSelection": "确认选择",
+    "submitting": "正在提交回答...",
+    "answeredCount": "已回答{{count}}个问题",
+    "answeredCount_other": "已回答{{count}}个问题"
+  }
+}

@@ -1,0 +1,770 @@
+{
+  "dropzone": {
+    "dropImagesHere": "将图片拖放到这里",
+    "supportedFormats": "支持 PNG、JPG、GIF、WebP、SVG 格式"
+  },
+  "gitPanel": {
+    "create": {
+      "warnings": {
+        "noReposSelected": "请至少选择一个仓库以开始"
+      }
+    },
+    "advanced": {
+      "workingBranch": "工作分支",
+      "placeholder": "例如：Acme Corp"
+    }
+  },
+  "loading": "加载任务中...",
+  "empty": {
+    "noTasks": "未找到此项目的任务。",
+    "createFirst": "创建第一个任务",
+    "noSearchResults": "没有任务匹配您的搜索。"
+  },
+  "actions": {
+    "addTask": "添加任务"
+  },
+  "filters": {
+    "sharedToggleAria": "切换共享任务",
+    "sharedToggleTooltip": "显示/隐藏共享内容"
+  },
+  "rebase": {
+    "common": {
+      "action": "变基",
+      "inProgress": "变基中...",
+      "withTarget": "变基到 {{branch}}"
+    },
+    "dialog": {
+      "title": "变基任务尝试",
+      "description": "选择一个新的基础分支以将此任务尝试变基到其上。",
+      "upstreamLabel": "上游分支",
+      "upstreamPlaceholder": "选择上游分支",
+      "targetLabel": "目标分支",
+      "targetPlaceholder": "选择目标分支",
+      "advanced": "高级"
+    },
+    "status": {
+      "inProgress": "变基进行中{{counts}}",
+      "needed": "需要变基{{dirty}}{{counts}}",
+      "dirtyMarker": "（脏）"
+    }
+  },
+  "branches": {
+    "changeTarget": {
+      "dialog": {
+        "title": "更改目标分支",
+        "description": "为任务尝试选择新的目标分支。",
+        "placeholder": "选择目标分支",
+        "action": "更改分支",
+        "inProgress": "更改中..."
+      }
+    }
+  },
+  "repos": {
+    "changeRepo": {
+      "dialog": {
+        "title": "更改仓库",
+        "description": "选择用于 Git 操作的仓库。",
+        "label": "仓库",
+        "placeholder": "选择仓库",
+        "action": "更改仓库"
+      }
+    },
+    "selector": {
+      "placeholder": "选择仓库",
+      "empty": "没有可用的仓库"
+    }
+  },
+  "repoBranchSelector": {
+    "label": "基础分支"
+  },
+  "attemptRepoSelector": {
+    "label": "仓库",
+    "addButton": "添加",
+    "empty": "未选择仓库。请至少添加一个仓库。",
+    "selectBranch": "选择分支",
+    "addRepo": {
+      "title": "选择 Git 仓库",
+      "description": "选择要添加到此尝试的 Git 仓库"
+    }
+  },
+  "preview": {
+    "title": "预览",
+    "selectAttempt": "选择尝试以查看预览",
+    "troubleAlert": {
+      "title": "我们在预览您的应用程序时遇到问题：",
+      "item1": "开发服务器是否成功启动？可能有一个您需要解决的错误，或者可能需要安装依赖项。",
+      "item2": "您的开发服务器是否以格式打印 URL 和端口到终端",
+      "item2Suffix": "？（这就是我们如何知道它正在运行）",
+      "item3": "您是否安装了 Web Companion（点击编辑所需）？如果没有，请",
+      "item3Link": "按照此处的安装说明操作",
+      "fixScript": "修复开发脚本"
+    },
+    "noServer": {
+      "title": "没有运行开发服务器",
+      "startPrompt": "请启动开发服务器以查看预览",
+      "setupTitle": "必须设置开发服务器脚本才能使用预览功能",
+      "setupPrompt": "要使用实时预览和点击编辑，请为此项目添加开发服务器脚本。",
+      "companionPrompt": "要使用点击编辑功能，请将浏览器伴侣添加到您的项目。",
+      "companionLink": "查看安装指南",
+      "startButton": "启动开发服务器",
+      "configureButton": "配置",
+      "stopAndEditButton": "停止开发服务器并解决问题",
+      "fixScript": "修复开发脚本",
+      "editDevScript": "编辑开发服务器脚本",
+      "learnMore": "了解更多关于测试应用程序的信息"
+    },
+    "devScript": {
+      "saveAndStart": "保存并启动",
+      "saveOnly": "仅保存",
+      "saveChanges": "保存更改",
+      "cancel": "取消",
+      "errors": {
+        "notLoaded": "项目未加载",
+        "empty": "开发脚本不能为空"
+      }
+    },
+    "logs": {
+      "title": "开发服务器日志",
+      "hide": "隐藏",
+      "show": "显示",
+      "label": "日志",
+      "viewFull": "查看完整日志"
+    },
+    "noDevScript": "未配置开发脚本",
+    "noDevScriptHint": "在项目设置中添加开发脚本以启用预览。",
+    "browser": {
+      "title": "开发服务器预览",
+      "devServerFallback": "开发服务器"
+    },
+    "urlInput": {
+      "placeholder": "输入 URL..."
+    },
+    "iframe": {
+      "title": "开发服务器预览"
+    },
+    "toolbar": {
+      "refresh": "刷新预览",
+      "copyUrl": "复制 URL",
+      "openInTab": "在新标签页中打开",
+      "stopDevServer": "停止开发服务器",
+      "clickToEdit": "点击编辑 URL",
+      "resetUrl": "重置为检测到的 URL",
+      "clearUrlOverride": "清除 URL 覆盖",
+      "desktopView": "桌面视图",
+      "mobileView": "移动视图 (390x844)",
+      "responsiveView": "响应式视图（可调整大小）",
+      "startDevServer": "启动开发服务器",
+      "submitUrl": "提交 URL",
+      "toggleDevTools": "切换 DevTools"
+    },
+    "loading": {
+      "startingServer": "正在启动开发服务器...",
+      "waitingForServer": "正在等待服务器...",
+      "loadingPreview": "正在加载预览...",
+      "manualUrlHint": "尚未检测到 URL。您可以在上方工具栏中手动输入 URL。"
+    }
+  },
+  "diff": {
+    "viewModes": {
+      "inline": "内联视图",
+      "split": "分割视图"
+    },
+    "ignoreWhitespace": "忽略空格更改",
+    "errorLoadingDiff": "加载差异失败：{{error}}",
+    "expandAll": "展开所有差异",
+    "collapseAll": "折叠所有差异",
+    "filesChanged_one": "{{count}} 个文件已更改",
+    "filesChanged_other": "{{count}} 个文件已更改",
+    "noChanges": "尚未进行任何更改",
+    "largeDiff": {
+      "title": "大文件",
+      "linesChanged": "{{count}} 行已更改",
+      "loadAnyway": "仍然加载差异",
+      "warning": "大型差异可能会降低浏览器速度。"
+    }
+  },
+  "taskPanel": {
+    "noTaskSelected": "未选择任务",
+    "loadingAttempts": "加载尝试中...",
+    "errorLoadingAttempts": "加载尝试失败",
+    "attemptsCount": "尝试（{{count}}）",
+    "noAttempts": "还没有尝试"
+  },
+  "processes": {
+    "noLogsAvailable": "没有可用的日志",
+    "selectAttempt": "选择尝试以查看执行进程。",
+    "errorLoadingUpdates": "加载进程的实时更新失败。",
+    "reconnecting": "重新连接中...",
+    "loading": "加载执行进程中...",
+    "noProcesses": "未找到此尝试的执行进程。",
+    "processId": "进程 ID：{{id}}",
+    "deleted": "已删除",
+    "deletedTooltip": "因恢复而删除：时间轴已恢复到检查点，后续执行已被移除",
+    "agent": "代理：",
+    "exit": "退出：{{code}}",
+    "started": "开始：{{date}}",
+    "completed": "完成：{{date}}",
+    "detailsTitle": "进程详情",
+    "backToList": "返回列表",
+    "loadingDetails": "加载进程详情中...",
+    "errorLoadingDetails": "加载进程详情失败。请重试。",
+    "copyLogs": "复制日志",
+    "logsCopied": "已复制！"
+  },
+  "taskHeader": {
+    "editTask": "编辑任务",
+    "deleteTask": "删除任务",
+    "closePanel": "关闭面板"
+  },
+  "navigateToParent": "导航到父任务尝试",
+  "toolbar": {
+    "actions": "操作",
+    "noAttempts": "还没有尝试",
+    "startFirstAttempt": "开始您的第一次尝试以开始处理此任务",
+    "startAttempt": "开始尝试"
+  },
+  "followUp": {
+    "stop": "停止",
+    "clearReviewComments": "清除审查评论",
+    "resolveConflicts": "解决冲突",
+    "send": "发送",
+    "unqueuing": "取消队列中...",
+    "edit": "编辑",
+    "queuing": "排队中...",
+    "queueForNextTurn": "排队到下一轮",
+    "queue": "队列",
+    "cancelQueue": "取消队列",
+    "queuedMessage": "消息已排队 - 将在当前运行完成时执行",
+    "runSetupScript": "运行设置脚本",
+    "runCleanupScript": "运行清理脚本",
+    "runArchiveScript": "运行归档脚本",
+    "noSetupScript": "未为此项目配置设置脚本",
+    "noCleanupScript": "未为此项目配置清理脚本",
+    "noArchiveScript": "未为此项目配置归档脚本",
+    "scriptsDisabledWhileRunning": "进程运行时无法运行脚本"
+  },
+  "todos": {
+    "title_one": "待办事项（{{count}}）",
+    "title_other": "待办事项（{{count}}）"
+  },
+  "todoPopup": {
+    "title": "任务",
+    "progress": "{{completed}}/{{total}} 已完成",
+    "noTasks": "暂无任务"
+  },
+  "projects": {
+    "create": {
+      "dialog": {
+        "title": "创建项目",
+        "description": "输入新项目的名称。"
+      },
+      "form": {
+        "nameLabel": "名称",
+        "namePlaceholder": "我的项目"
+      },
+      "errors": {
+        "createFailed": "创建项目失败"
+      }
+    }
+  },
+  "attempt": {
+    "actions": {
+      "openInIde": "在 IDE 中打开",
+      "openMenu": "打开菜单",
+      "startDevServer": "启动开发服务器",
+      "stopDevServer": "停止开发服务器"
+    },
+    "labels": {
+      "attempt": "尝试",
+      "agent": "代理",
+      "branch": "分支",
+      "diffs": "差异",
+      "summaryAndActions": "摘要和操作"
+    },
+    "agent": "代理",
+    "path": "路径",
+    "openInEditor": "在 {{editor}} 中查看更改",
+    "copied": "已复制！",
+    "clickToCopy": "复制工作树路径",
+    "stopDev": "停止开发",
+    "pauseDev": "暂停开发",
+    "startDev": "启动开发",
+    "viewDevLogs": "查看开发服务器日志",
+    "stopping": "停止中...",
+    "stopAttempt": "停止尝试",
+    "newAttempt": "新尝试",
+    "viewHistory": "查看尝试历史",
+    "createSubtask": "创建子任务",
+    "preview": "预览",
+    "diffs": "差异",
+    "gitActions": "Git 操作",
+    "tryAgain": "重试",
+    "runSetup": "运行设置",
+    "setupHelpText": "{{agent}} 未正确设置。点击运行设置以安装并登录。",
+    "devScriptMissingTooltip": "要启动开发服务器，请为此项目添加开发脚本"
+  },
+  "git": {
+    "labels": {
+      "taskBranch": "任务分支"
+    },
+    "branch": {
+      "current": "当前"
+    },
+    "forcePushDialog": {
+      "title": "需要强制推送",
+      "description": "远程分支{{branchLabel}}已与您的本地分支分离。常规推送被拒绝。",
+      "warning": "强制推送将用您的本地更改覆盖远程更改。此操作无法撤消。",
+      "note": "仅当您确定要替换远程分支历史记录时才继续。",
+      "error": "强制推送失败"
+    },
+    "status": {
+      "commits_one": "提交",
+      "commits_other": "提交",
+      "conflicts": "冲突",
+      "upToDate": "最新",
+      "ahead": "领先",
+      "behind": "落后"
+    },
+    "states": {
+      "merged": "已合并！",
+      "merging": "合并中...",
+      "merge": "合并",
+      "rebasing": "变基中...",
+      "rebase": "变基",
+      "pushed": "已推送！",
+      "pushing": "推送中...",
+      "push": "推送",
+      "pushFailed": "失败",
+      "forcePush": "强制推送",
+      "forcePushing": "强制推送中...",
+      "creating": "创建中...",
+      "createPr": "创建 PR"
+    },
+    "errors": {
+      "changeTargetBranch": "更改目标分支失败",
+      "pushChanges": "推送更改失败",
+      "mergeChanges": "合并更改失败",
+      "rebaseBranch": "变基分支失败",
+      "branchStatusUnavailable": "无法获取分支状态。您仍然可以更改目标分支。"
+    },
+    "pr": {
+      "open": "打开 PR #{{number}}",
+      "number": "PR #{{number}}",
+      "merged": "已合并PR #{{prNumber}}"
+    },
+    "actions": {
+      "title": "Git 操作",
+      "changeTarget": "更改目标",
+      "prMerged": "PR #{{number}} 已合并",
+      "loginRequired": {
+        "title": "登录以管理 git 操作",
+        "description": "登录 Vibe Kanban，以便您可以推送分支、合并更改或为此任务打开拉取请求。",
+        "action": "登录"
+      }
+    },
+    "mergeDialog": {
+      "title": "合并更改",
+      "description": "这将把您的更改合并到目标分支。您确定要继续吗？"
+    },
+    "createRepo": {
+      "dialog": {
+        "title": "创建新仓库",
+        "description": "初始化新的git仓库"
+      },
+      "form": {
+        "nameLabel": "名称",
+        "namePlaceholder": "my-project",
+        "locationLabel": "位置",
+        "locationPlaceholder": "当前目录"
+      },
+      "browseDialog": {
+        "title": "选择父目录",
+        "description": "选择创建新仓库的位置"
+      },
+      "errors": {
+        "nameRequired": "仓库名称是必填的",
+        "createFailed": "创建仓库失败"
+      },
+      "buttons": {
+        "createRepository": "创建仓库"
+      },
+      "states": {
+        "creating": "创建中..."
+      }
+    }
+  },
+  "createAttemptDialog": {
+    "title": "创建尝试",
+    "description": "使用编码代理开始新的尝试。将创建 git 工作树和任务分支。",
+    "baseBranch": "基础分支",
+    "loadingBranches": "加载分支中...",
+    "selectBranch": "选择分支",
+    "error": "创建尝试失败。请重试。",
+    "creating": "创建中...",
+    "start": "开始"
+  },
+  "viewProcessesDialog": {
+    "title": "执行进程"
+  },
+  "viewRelatedTasksDialog": {
+    "title": "相关任务",
+    "empty": "此尝试没有相关任务",
+    "error": "加载相关任务失败",
+    "tasksCount": "任务（{{count}}）",
+    "columns": {
+      "title": "标题",
+      "description": "描述",
+      "status": "状态"
+    }
+  },
+  "attemptHeaderActions": {
+    "preview": "预览",
+    "diffs": "差异",
+    "relatedTasks": "相关任务",
+    "tryNewUI": "试用新界面"
+  },
+  "actionsMenu": {
+    "attempt": "尝试",
+    "openInIde": "在 IDE 中打开尝试",
+    "viewProcesses": "查看进程",
+    "viewRelatedTasks": "查看相关任务",
+    "createNewAttempt": "创建新尝试",
+    "createSubtask": "创建子任务",
+    "gitActions": "Git 操作",
+    "editBranchName": "编辑分支名称",
+    "task": "任务",
+    "duplicate": "复制",
+    "startReview": "开始审查",
+    "startingReview": "正在开始审查..."
+  },
+  "editBranchName": {
+    "dialog": {
+      "title": "编辑分支名称",
+      "description": "输入分支的新名称。如果存在未关闭的 PR，则无法重命名。",
+      "branchNameLabel": "分支名称",
+      "placeholder": "例如：feature/my-branch",
+      "renaming": "重命名中...",
+      "action": "重命名分支"
+    }
+  },
+  "startReviewDialog": {
+    "title": "开始审查",
+    "description": "请求编码代理审查您的更改并提供反馈。",
+    "additionalInstructions": "附加说明（可选）",
+    "reviewComments": "审查评论（{{count}}）",
+    "includeGitContext": "包含 Git 上下文",
+    "includeGitContextDescription": "告诉代理如何查看此分支上的所有更改",
+    "newSession": "新会话"
+  },
+  "resolveConflicts": {
+    "dialog": {
+      "title": "解决冲突",
+      "description": "检测到冲突。选择您希望代理如何解决它们。",
+      "sessionLabel": "会话",
+      "existingSession": "在当前会话中继续",
+      "newSession": "新会话",
+      "resolve": "解决冲突",
+      "resolving": "开始中...",
+      "filesWithConflicts_one": "{{count}} 个文件有冲突",
+      "filesWithConflicts_other": "{{count}} 个文件有冲突",
+      "andMore": "...还有 {{count}} 个"
+    }
+  },
+  "rebaseInProgress": {
+    "dialog": {
+      "title": "变基进行中",
+      "description": "正在无冲突地变基到 {{targetBranch}}。请选择如何继续。",
+      "hint": "您可以继续变基以完成操作，或中止以返回之前的状态。",
+      "continue": "继续变基",
+      "continuing": "继续中...",
+      "abort": "中止变基",
+      "aborting": "中止中...",
+      "continueError": "继续变基失败。可能存在未解决的冲突。",
+      "abortError": "中止变基失败。请重试。"
+    }
+  },
+  "createPrDialog": {
+    "title": "创建拉取请求",
+    "description": "为此任务尝试创建拉取请求。",
+    "titleLabel": "标题",
+    "titlePlaceholder": "输入 PR 标题",
+    "descriptionLabel": "描述（可选）",
+    "descriptionPlaceholder": "输入 PR 描述",
+    "baseBranchLabel": "基础分支",
+    "loadingBranches": "加载分支中...",
+    "selectBaseBranch": "选择基础分支",
+    "draftLabel": "创建为草稿",
+    "autoGenerateLabel": "请求AI代理生成更好的PR描述",
+    "creating": "创建中...",
+    "createButton": "创建 PR",
+    "errors": {
+      "insufficientPermissions": "权限不足。请确保 CLI 具有必要的权限。",
+      "repoNotFoundOrNoAccess": "未找到仓库或无访问权限。请检查您的仓库访问权限并确保您已通过身份验证。",
+      "failedToCreate": "创建 PR 失败",
+      "gitCliNotLoggedIn": "Git 未通过身份验证。运行 gh auth login（或配置 Git 凭据）然后重试。",
+      "gitCliNotInstalled": "未安装 Git CLI。安装 Git 以创建 PR。",
+      "targetBranchNotFound": "远程上不存在目标分支 {{branch}}。请在创建拉取请求之前确保该分支存在。"
+    },
+    "loginRequired": {
+      "title": "登录以创建拉取请求",
+      "description": "您需要登录才能为此任务打开拉取请求。我们将带您到登录页面。",
+      "action": "登录"
+    }
+  },
+  "showcases": {
+    "taskPanel": {
+      "companion": {
+        "title": "Vibe Kanban Companion 点选功能",
+        "description": "点击预览窗口中的任何 UI 组件以精确选择它。编码代理接收确切的 DOM 选择器和组件层次结构，消除模糊的反馈。"
+      },
+      "installation": {
+        "title": "开发服务器和 Companion 安装",
+        "description": "为预览设置开发服务器命令，在设置中可配置设置脚本。使用编码代理自动安装 Vibe Kanban Web Companion。"
+      },
+      "codeReview": {
+        "title": "内置代码审查",
+        "description": "使用加号图标直接在差异视图中添加特定行的评论。所有反馈都被收集并作为完整审查发送给编码代理。"
+      },
+      "pullRequest": {
+        "title": "从任务创建 PR",
+        "description": "直接从任务尝试合并您的更改或创建拉取请求。PR 对话框会从您的任务详情预填充标题和描述，以简化工作流程。"
+      },
+      "tags": {
+        "title": "自定义提示标签",
+        "description": "将自定义提示保存为标签，并将其嵌入到新任务或后续消息中。重用常见说明以保持工作流程的一致性。"
+      }
+    },
+    "buttons": {
+      "previous": "上一个",
+      "next": "下一个",
+      "finish": "完成"
+    }
+  },
+  "prComments": {
+    "dialog": {
+      "title": "选择 PR 评论",
+      "noComments": "此 PR 未找到评论",
+      "selectAll": "全选",
+      "deselectAll": "取消全选",
+      "add": "添加",
+      "selectedCount": "已选择 {{selected}} / {{total}}"
+    },
+    "card": {
+      "review": "审查",
+      "tooltip": "点击查看，双击编辑"
+    }
+  },
+  "taskFormDialog": {
+    "createTitle": "创建新任务",
+    "editTitle": "编辑任务",
+    "titlePlaceholder": "任务标题",
+    "descriptionPlaceholder": "添加更多详情（可选）。输入 @ 搜索文件。",
+    "statusLabel": "状态",
+    "statusOptions": {
+      "todo": "待办",
+      "inprogress": "进行中",
+      "inreview": "审查中",
+      "done": "完成",
+      "cancelled": "已取消"
+    },
+    "startLabel": "开始",
+    "attachImage": "附加图片",
+    "dropImagesHere": "在此处放置图片",
+    "updating": "更新中...",
+    "updateTask": "更新任务",
+    "starting": "开始中...",
+    "creating": "创建中...",
+    "create": "创建",
+    "discardDialog": {
+      "title": "放弃未保存的更改？",
+      "description": "您有未保存的更改。您确定要放弃它们吗？",
+      "continueEditing": "继续编辑",
+      "discardChanges": "放弃更改"
+    }
+  },
+  "terminal": {
+    "selectWorkspace": "选择一个工作区以打开终端"
+  },
+  "restoreLogsDialog": {
+    "title": "确认重试",
+    "titleReset": "确认重置",
+    "historyChange": {
+      "title": "历史记录变更",
+      "willDelete": "将删除此进程",
+      "willDeleteProcesses_one": "将删除 {{count}} 个进程",
+      "willDeleteProcesses_other": "将删除 {{count}} 个进程",
+      "andLaterProcesses_one": "及后续 {{count}} 个进程",
+      "andLaterProcesses_other": "及后续 {{count}} 个进程",
+      "fromHistory": "从历史记录中删除。",
+      "codingAgentRuns_one": "{{count}} 个编程代理运行",
+      "codingAgentRuns_other": "{{count}} 个编程代理运行",
+      "scriptProcesses_one": "{{count}} 个脚本进程",
+      "scriptProcesses_other": "{{count}} 个脚本进程",
+      "setupCleanupBreakdown": "({{setup}} 个设置，{{cleanup}} 个清理)",
+      "permanentWarning": "此操作将永久更改历史记录，无法撤消。"
+    },
+    "uncommittedChanges": {
+      "title": "检测到未提交的更改",
+      "description_one": "您有 {{count}} 个未提交的更改",
+      "description_other": "您有 {{count}} 个未提交的更改",
+      "andUntracked_one": "和 {{count}} 个未跟踪的文件",
+      "andUntracked_other": "和 {{count}} 个未跟踪的文件",
+      "acknowledgeLabel": "我了解这些更改可能会受到影响"
+    },
+    "resetWorktree": {
+      "title": "重置工作树",
+      "enabled": "已启用",
+      "disabled": "已禁用",
+      "disabledUncommitted": "已禁用（检测到未提交的更改）",
+      "restoreDescription": "您的工作树将被恢复到此提交。",
+      "rollbackCommits_one": "从当前 HEAD 回滚 {{count}} 个提交。",
+      "rollbackCommits_other": "从当前 HEAD 回滚 {{count}} 个提交。",
+      "discardChanges_one": "丢弃 {{count}} 个未提交的更改。",
+      "discardChanges_other": "丢弃 {{count}} 个未提交的更改。",
+      "untrackedPresent_one": "存在 {{count}} 个未跟踪的文件（不受重置影响）。",
+      "untrackedPresent_other": "存在 {{count}} 个未跟踪的文件（不受重置影响）。",
+      "forceReset": "强制重置（丢弃未提交的更改）",
+      "uncommittedWillDiscard": "未提交的更改将被丢弃。",
+      "uncommittedPresentHint": "存在未提交的更改。请打开强制重置或提交/暂存后继续。"
+    },
+    "buttons": {
+      "retry": "重试",
+      "reset": "重置"
+    }
+  },
+  "conversation": {
+    "you": "你",
+    "thinking": "思考中",
+    "todo": "待办",
+    "todos": "待办事项",
+    "completed": "已完成",
+    "incomplete": "未完成",
+    "pending": "待处理",
+    "inProgress": "进行中",
+    "skipped": "已跳过",
+    "error": "错误",
+    "retry": "重试",
+    "showMore": "显示更多",
+    "showLess": "收起",
+    "actions": {
+      "cancel": "取消",
+      "submitFeedback": "提交反馈",
+      "stop": "停止",
+      "stopping": "停止中",
+      "loading": "加载中",
+      "send": "发送",
+      "sending": "发送中",
+      "queue": "加入队列",
+      "cancelQueue": "取消队列",
+      "requestChanges": "请求更改",
+      "approve": "批准",
+      "clearReviewComments": "清除审查评论",
+      "edit": "编辑消息",
+      "scrollToPreviousMessage": "Go to previous message",
+      "reset": "重置",
+      "resetTooltip": "重置到此时点"
+    },
+    "approval": {
+      "conflictWarning": "冲突文件需要手动解决",
+      "conflicts_one": "{{count}}个冲突",
+      "conflicts_other": "{{count}}个冲突"
+    },
+    "sessions": {
+      "newSession": "新会话",
+      "latest": "最新",
+      "previous": "上一个",
+      "label": "会话",
+      "noPreviousSessions": "没有以前的会话"
+    },
+    "reviewComments": {
+      "count_one": "{{count}} 条审查评论将被包含",
+      "count_other": "{{count}} 条审查评论将被包含"
+    },
+    "workspace": {
+      "create": "创建",
+      "creating": "创建中..."
+    },
+    "fileEntry": {
+      "created": "已创建",
+      "modified": "已修改",
+      "deleted": "已删除",
+      "renamed": "已重命名"
+    },
+    "script": {
+      "running": "运行中...",
+      "exitCode": "退出代码: {{code}}",
+      "completedSuccessfully": "成功完成",
+      "clickToViewLogs": "点击查看日志"
+    },
+    "scriptPlaceholder": {
+      "setupTitle": "设置脚本",
+      "setupDescription": "未配置设置脚本。设置脚本在编码代理启动前运行。",
+      "cleanupTitle": "清理脚本",
+      "cleanupDescription": "未配置清理脚本。清理脚本在编码代理完成后运行。",
+      "configure": "配置"
+    },
+    "executors": "执行器",
+    "saveAsDefault": "设为默认",
+    "updatedTodos": "更新的待办事项",
+    "viewInChangesPanel": "在更改面板中查看",
+    "unableToRenderDiff": "无法显示差异。"
+  },
+  "scriptFixer": {
+    "title": "修复脚本",
+    "setupScriptTitle": "修复设置脚本",
+    "cleanupScriptTitle": "修复清理脚本",
+    "archiveScriptTitle": "修复归档脚本",
+    "devServerTitle": "修复开发服务器脚本",
+    "scriptLabel": "脚本（编辑）",
+    "logsLabel": "上次执行日志",
+    "saveButton": "保存",
+    "saveAndTestButton": "保存并测试",
+    "saving": "保存中...",
+    "testing": "测试中...",
+    "noLogs": "没有可用的执行日志",
+    "selectRepo": "仓库",
+    "fixScript": "修复脚本",
+    "statusRunning": "运行中...",
+    "statusSuccess": "成功完成",
+    "statusFailed": "失败，退出代码 {{exitCode}}",
+    "statusKilled": "进程已被终止"
+  },
+  "createWorkspaceFromPr": {
+    "title": "从 PR 创建工作区",
+    "description": "选择一个打开的拉取请求来创建工作区。将使用 PR 标题自动创建任务。",
+    "repositoryLabel": "仓库",
+    "remoteLabel": "远程仓库",
+    "pullRequestLabel": "拉取请求",
+    "loadingRepositories": "正在加载仓库...",
+    "loadingRemotes": "正在加载远程仓库...",
+    "noRepositoriesFound": "未找到仓库",
+    "loadingPullRequests": "正在加载拉取请求...",
+    "selectRepositoryFirst": "请先选择仓库",
+    "noPullRequestsFound": "未找到打开的拉取请求",
+    "runSetupScript": "运行设置脚本",
+    "creating": "创建中...",
+    "createWorkspace": "创建工作区",
+    "selectRepository": "选择仓库",
+    "selectRemote": "选择远程仓库",
+    "selectPullRequest": "选择拉取请求",
+    "searchPrsPlaceholder": "按编号或标题搜索 PR...",
+    "noMatchingPrs": "没有匹配的拉取请求",
+    "default": "默认",
+    "openPrInBrowser": "在浏览器中打开 PR",
+    "errors": {
+      "cliNotInstalled": "{{provider}} CLI 未安装",
+      "unsupportedProvider": "不支持的 Git 提供商",
+      "failedToLoadPrs": "加载拉取请求失败",
+      "prNotFound": "未找到拉取请求",
+      "repoNotInProject": "仓库不在任何项目中",
+      "failedToCreateWorkspace": "创建工作区失败"
+    }
+  },
+  "shareDialog": {
+    "loginRequired": {
+      "title": "Sign in required",
+      "description": "Sign in to access this feature.",
+      "action": "Sign in"
+    }
+  }
+}

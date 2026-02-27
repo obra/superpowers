@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon-vk-light.svg" media="(prefers-color-scheme: light)">
+    <link rel="icon" type="image/svg+xml" href="/favicon-vk-dark.svg" media="(prefers-color-scheme: dark)">
+    <link rel="apple-touch-icon" href="/favicon-vk-light.svg">
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crew</title>
+</head>
+
+<body>
+    <div id="root"></div>
+    <script>
+      // Polyfill crypto.randomUUID for non-secure contexts (e.g. HTTP access
+      // via LAN IP). Required because @tanstack/db calls crypto.randomUUID()
+      // directly without a fallback.
+      // See: https://github.com/TanStack/db/issues/784
+      if (typeof crypto !== 'undefined' && typeof crypto.randomUUID !== 'function') {
+        crypto.randomUUID = function () {
+          var bytes = new Uint8Array(16);
+          if (typeof crypto.getRandomValues === 'function') {
+            crypto.getRandomValues(bytes);
+          } else {
+            for (var i = 0; i < 16; i++) bytes[i] = Math.floor(Math.random() * 256);
+          }
+          // Set RFC 4122 v4 version and variant bits
+          bytes[6] = (bytes[6] & 0x0f) | 0x40;
+          bytes[8] = (bytes[8] & 0x3f) | 0x80;
+          var h = [];
+          for (var j = 0; j < 16; j++) h.push(bytes[j].toString(16).padStart(2, '0'));
+          return (
+            h[0] + h[1] + h[2] + h[3] + '-' +
+            h[4] + h[5] + '-' +
+            h[6] + h[7] + '-' +
+            h[8] + h[9] + '-' +
+            h[10] + h[11] + h[12] + h[13] + h[14] + h[15]
+          );
+        };
+      }
+    </script>
+    <script type="module" src="/src/app/entry/Bootstrap.tsx"></script>
+</body>
+
+</html>

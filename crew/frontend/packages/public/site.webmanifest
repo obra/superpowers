@@ -1,0 +1,21 @@
+{
+  "name": "Vibe Kanban",
+  "short_name": "VK",
+  "icons": [
+    {
+      "src": "/favicon-vk-light.svg",
+      "sizes": "any",
+      "purpose": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/favicon-vk-light-maskable.svg",
+      "sizes": "any",
+      "purpose": "maskable",
+      "type": "image/svg+xml"
+    }
+  ],
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "display": "standalone"
+}
