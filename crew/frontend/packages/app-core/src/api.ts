@@ -71,7 +71,7 @@ export const updatePerson = (username: string, patch: Partial<Person>): Promise<
 // ─── Knowledge & Decisions ────────────────────────────────────────────────────
 
 export const fetchKnowledge = (): Promise<import('./types.js').KnowledgeEntry[]> =>
-  fetch(`${BASE}/knowledge`).then(json)
+  fetch(`${BASE}/knowledge`).then(json<import('./types.js').KnowledgeEntry[]>)
 
 export const fetchDecisions = (): Promise<import('./types.js').Decision[]> =>
-  fetch(`${BASE}/decisions`).then(json)
+  fetch(`${BASE}/decisions`).then(json<import('./types.js').Decision[]>)

@@ -6,12 +6,17 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "scripts": {
+    "test": "vitest run",
+    "check": "tsc --noEmit"
+  },
   "dependencies": {
     "@tanstack/react-query": "^5.85.5",
     "react": "^18.2.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vitest": "^3.0.0"
   }
 }
