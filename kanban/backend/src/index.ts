@@ -3,6 +3,8 @@ import { cors } from 'hono/cors'
 import { streamSSE } from 'hono/streaming'
 import { watch } from 'chokidar'
 import { join } from 'path'
+import { FileRegistry } from './registry/file-registry'
+import { createAuthRouter } from './routes/auth'
 import tasksRouter from './routes/tasks.js'
 import sprintsRouter from './routes/sprints.js'
 import peopleRouter from './routes/people.js'
@@ -20,10 +22,13 @@ const app = new Hono()
 app.use('*', cors({
   origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'],
   allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type'],
+  allowHeaders: ['Content-Type', 'Authorization'],
 }))
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
+
+const registry = new FileRegistry(join(import.meta.dir, '../../data/users.json'))
+app.route('/auth', createAuthRouter(registry))
 
 app.route('/api/tasks', tasksRouter)
 app.route('/api/sprints', sprintsRouter)
