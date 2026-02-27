@@ -1,11 +1,12 @@
 import { Outlet, createRootRoute, Link, useRouterState, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import {
   SquaresFourIcon, UsersIcon, BookOpenIcon,
   LightbulbIcon, LightningIcon, SunIcon, MoonIcon,
 } from '@phosphor-icons/react'
 import Magnet from '@web/components/Magnet'
-import { isAuthenticated } from '@vibe/app-core'
+import { isAuthenticated, authHeaders } from '@vibe/app-core'
 
 const NAV = [
   { to: '/',           icon: SquaresFourIcon, label: 'Board',     exact: true  },
@@ -43,6 +44,24 @@ function RootLayout() {
       navigate({ to: '/login' })
     }
   }, [pathname])
+
+  // FRE detection: if authenticated but no projects, go to /welcome
+  const { data: projects } = useQuery<any[]>({
+    queryKey: ['projects'],
+    queryFn: async () => {
+      const res = await fetch('/api/projects', { headers: authHeaders() })
+      if (!res.ok) return []
+      return res.json()
+    },
+    enabled: isAuthenticated() && !PUBLIC_PATHS.includes(pathname),
+  })
+
+  useEffect(() => {
+    const frePaths = [...PUBLIC_PATHS]
+    if (isAuthenticated() && Array.isArray(projects) && projects.length === 0 && !frePaths.includes(pathname)) {
+      navigate({ to: '/welcome' })
+    }
+  }, [projects, pathname])
 
   // Show full-page layout (no sidebar) for public routes
   if (PUBLIC_PATHS.includes(pathname)) {
