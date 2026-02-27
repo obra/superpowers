@@ -1,41 +1,66 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
-# 1. Check that ~/.superpowers exists; if not, clone it
-if [ ! -d "$HOME/.superpowers" ]; then
-  echo "Cloning obra/superpowers..."
-  git clone https://github.com/obra/superpowers "$HOME/.superpowers"
-else
-  echo "Superpowers already cloned at ~/.superpowers. Updating..."
-  cd "$HOME/.superpowers" && git pull
+# Configurable inputs (override via env vars)
+SUPERPOWERS_REPO_URL="${SUPERPOWERS_REPO_URL:-https://github.com/obra/superpowers.git}"
+SUPERPOWERS_REPO_REF="${SUPERPOWERS_REPO_REF:-main}"
+SUPERPOWERS_DIR="${SUPERPOWERS_DIR:-$HOME/.superpowers}"
+OPENCLAW_SKILLS_DIR="${OPENCLAW_SKILLS_DIR:-$HOME/.openclaw/skills}"
+WORKSPACE_AGENTS="${OPENCLAW_WORKSPACE_AGENTS:-$HOME/.openclaw/workspace/AGENTS.md}"
+WRAPPER_MARKER="<!-- superpowers-openclaw-wrapper -->"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Preflight checks
+if ! command -v git >/dev/null 2>&1; then
+  echo "ERROR: git is required but not found in PATH."
+  exit 1
 fi
 
-# 2. Create ~/.openclaw/skills/ if it doesn't exist
-mkdir -p "$HOME/.openclaw/skills"
+echo "Superpowers OpenClaw wrapper config:"
+echo "  SUPERPOWERS_REPO_URL=$SUPERPOWERS_REPO_URL"
+echo "  SUPERPOWERS_REPO_REF=$SUPERPOWERS_REPO_REF"
+echo "  SUPERPOWERS_DIR=$SUPERPOWERS_DIR"
+echo "  OPENCLAW_SKILLS_DIR=$OPENCLAW_SKILLS_DIR"
+echo "  WORKSPACE_AGENTS=$WORKSPACE_AGENTS"
 
-# 3. Create all 14 symlinks, skipping any that already exist
+# 1) Clone or update superpowers
+if [ ! -d "$SUPERPOWERS_DIR/.git" ]; then
+  echo "Cloning Superpowers repo..."
+  git clone --depth 1 --branch "$SUPERPOWERS_REPO_REF" "$SUPERPOWERS_REPO_URL" "$SUPERPOWERS_DIR"
+else
+  echo "Superpowers already present at $SUPERPOWERS_DIR. Updating..."
+  git -C "$SUPERPOWERS_DIR" remote set-url origin "$SUPERPOWERS_REPO_URL"
+  git -C "$SUPERPOWERS_DIR" fetch origin "$SUPERPOWERS_REPO_REF"
+  git -C "$SUPERPOWERS_DIR" checkout "$SUPERPOWERS_REPO_REF"
+  git -C "$SUPERPOWERS_DIR" pull --ff-only origin "$SUPERPOWERS_REPO_REF"
+fi
+
+# 2) Create target skills dir
+mkdir -p "$OPENCLAW_SKILLS_DIR"
+
+# 3) Symlink all skill directories
+if [ ! -d "$SUPERPOWERS_DIR/skills" ]; then
+  echo "ERROR: skills directory not found at $SUPERPOWERS_DIR/skills"
+  exit 1
+fi
+
 echo "Creating symlinks..."
-for skill_dir in "$HOME/.superpowers/skills"/*/; do
-  # Ensure it is a valid directory
-  if [ -d "$skill_dir" ]; then
-    skill_name=$(basename "$skill_dir")
-    target="$HOME/.openclaw/skills/$skill_name"
-    if [ ! -L "$target" ] && [ ! -e "$target" ]; then
-      ln -s "$skill_dir" "$target"
-      echo "  Linked $skill_name"
-    else
-      echo "  Skipped $skill_name (already exists)"
-    fi
+for skill_dir in "$SUPERPOWERS_DIR"/skills/*/; do
+  [ -d "$skill_dir" ] || continue
+  skill_name="$(basename "$skill_dir")"
+  target="$OPENCLAW_SKILLS_DIR/$skill_name"
+  if [ ! -L "$target" ] && [ ! -e "$target" ]; then
+    ln -s "$skill_dir" "$target"
+    echo "  Linked $skill_name"
+  else
+    echo "  Skipped $skill_name (already exists)"
   fi
 done
 
-# 4. Check whether AGENTS.md already contains a Superpowers block; if not, append the contents of AGENTS-snippet.md
-WORKSPACE_AGENTS="$HOME/.openclaw/workspace/AGENTS.md"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
+# 4) Inject AGENTS snippet if not already present
 if [ -f "$WORKSPACE_AGENTS" ]; then
-  if grep -q "## Superpowers" "$WORKSPACE_AGENTS"; then
-    echo "Superpowers block already exists in $WORKSPACE_AGENTS. Skipping snippet injection."
+  if grep -q "$WRAPPER_MARKER" "$WORKSPACE_AGENTS"; then
+    echo "Wrapper snippet already present in $WORKSPACE_AGENTS. Skipping snippet injection."
   else
     echo "Injecting Superpowers block into $WORKSPACE_AGENTS..."
     echo "" >> "$WORKSPACE_AGENTS"
@@ -43,16 +68,16 @@ if [ -f "$WORKSPACE_AGENTS" ]; then
     echo "Snippet injected."
   fi
 else
-  echo "Workspace AGENTS.md not found at $WORKSPACE_AGENTS. Please manually append the contents of AGENTS-snippet.md to your AGENTS.md when ready."
+  echo "Workspace AGENTS.md not found at $WORKSPACE_AGENTS."
+  echo "Please manually append $SCRIPT_DIR/AGENTS-snippet.md to your AGENTS.md when ready."
 fi
 
-# 5. Run openclaw skills info using-superpowers to verify
+# 5) Optional verification
 echo "Verifying installation..."
-if command -v openclaw &> /dev/null; then
+if command -v openclaw >/dev/null 2>&1; then
   openclaw skills info using-superpowers || echo "Skill check failed, check openclaw configuration."
 else
   echo "openclaw command not found in PATH, skipping automatic verification."
 fi
 
-# 6. Print a success summary
 echo "Superpowers OpenClaw Wrapper installation complete!"

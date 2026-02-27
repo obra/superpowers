@@ -1,3 +1,4 @@
+<!-- superpowers-openclaw-wrapper -->
 ## Superpowers
 
 You have access to the Superpowers skill framework. Superpowers provides a set of
@@ -27,5 +28,5 @@ When Superpowers skill instructions reference tools, use these OpenClaw equivale
 | `Bash` | Use `bash` or `system.run` |
 | `WebFetch`/`WebSearch` | Use the `browser` tool |
 
-Skills are located at `~/.openclaw/skills/superpowers/` and will be discovered
+Skills are located at `~/.openclaw/skills/<skill-name>/` and will be discovered
 automatically by OpenClaw's skill loader.

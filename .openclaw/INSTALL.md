@@ -1,65 +1,80 @@
 # Superpowers Wrapper for OpenClaw
 
-This wrapper enables OpenClaw to natively discover and load skills from the [Superpowers](https://github.com/obra/superpowers) framework. By symlinking the canonical skills directly into OpenClaw's skill directory, you ensure you always have access to the latest upstream improvements without maintaining a duplicate fork.
+This wrapper enables OpenClaw to discover and load skills from the [Superpowers](https://github.com/obra/superpowers) framework.
+By symlinking skills into OpenClaw's local skills directory, you keep installation simple and updates easy.
 
 ## Section 1 — Prerequisites
 
-- **OpenClaw**: Must be installed and configured on your system.
-- **OpenClaw Workspace**: A valid workspace initialized (typically with an `AGENTS.md` file).
+- **OpenClaw** is installed and configured.
+- A workspace with an `AGENTS.md` exists (or you know where to create it).
+- `git` is available in your shell.
 
-## Section 2 — Clone and Symlink
+## Section 2 — Automated Setup (Recommended)
 
-First, clone the framework to a stable location, then symlink the skills into OpenClaw's shared skills directory.
-
-### Automated Setup
-
-Run the included `setup.sh` script to automate cloning, symlinking, and snippet injection:
+Run the included setup script:
 
 ```bash
 ./setup.sh
 ```
 
-### Manual Setup
+By default, it uses:
 
-Alternatively, you can run the following commands manually:
+- Repo: `https://github.com/obra/superpowers.git`
+- Ref: `main`
+- Clone dir: `~/.superpowers`
+- Skills dir: `~/.openclaw/skills`
+- Workspace AGENTS path: `~/.openclaw/workspace/AGENTS.md`
+
+### Optional overrides
+
+You can override defaults with environment variables:
+
+```bash
+SUPERPOWERS_REPO_URL="https://github.com/caasols/superpowers.git" \
+SUPERPOWERS_REPO_REF="feat/openclaw-wrapper" \
+OPENCLAW_WORKSPACE_AGENTS="$HOME/.openclaw/workspace/AGENTS.md" \
+./setup.sh
+```
+
+Useful variables:
+
+- `SUPERPOWERS_REPO_URL`
+- `SUPERPOWERS_REPO_REF`
+- `SUPERPOWERS_DIR`
+- `OPENCLAW_SKILLS_DIR`
+- `OPENCLAW_WORKSPACE_AGENTS`
+
+## Section 3 — Manual Setup
 
 ```bash
 # Clone superpowers to a stable location
-git clone https://github.com/obra/superpowers ~/.superpowers
+git clone https://github.com/obra/superpowers.git ~/.superpowers
 
-# Symlink skills into OpenClaw's shared skills directory
+# Symlink skills into OpenClaw's local skills directory
 mkdir -p ~/.openclaw/skills
-
 for skill in ~/.superpowers/skills/*/; do
   ln -s "$skill" ~/.openclaw/skills/"$(basename "$skill")"
 done
 ```
 
-## Section 3 — Bootstrap Injection
-
-OpenClaw needs to be aware of Superpowers at the start of each session.
-
-1. Open your workspace's baseline document (typically `~/.openclaw/workspace/AGENTS.md` or similar).
-2. Copy the contents of [`AGENTS-snippet.md`](AGENTS-snippet.md) and paste it at the bottom.
-
-*(Note: `setup.sh` attempts to do this automatically if your workspace is at `~/.openclaw/workspace/AGENTS.md`.)*
+Then append `.openclaw/AGENTS-snippet.md` to your workspace `AGENTS.md`.
 
 ## Section 4 — Verify Installation
 
-You can verify the skills are discovered by OpenClaw by running:
+If `openclaw` is available in `PATH`:
 
 ```bash
 openclaw skills info using-superpowers
 ```
 
-You should see an output indicating `eligible=true` and `source=local`.
+You should see the skill resolved from local storage.
 
 ## Section 5 — Keeping Skills Updated
 
-Because the skills are symlinked rather than copied, updating to the newest upstream version is a single command.
+Because skills are symlinked, update is a pull:
 
 ```bash
 cd ~/.superpowers && git pull
 ```
 
-No reinstallation required!
+No reinstall required.
