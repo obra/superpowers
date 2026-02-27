@@ -61,11 +61,17 @@ app.patch('/:id', async (c) => {
 
 // PUT /tasks/:id/status — update status only
 app.put('/:id/status', async (c) => {
-  const id = c.req.param('id')
-  const { status } = await c.req.json<{ status: TaskStatus }>()
-  const task = updateTaskStatus(id, status)
-  if (!task) return c.json({ error: 'Not found' }, 404)
-  return c.json(task)
+  try {
+    const id = c.req.param('id')
+    const { status } = await c.req.json<{ status: TaskStatus }>()
+    console.log(`Updating task ${id} status to ${status}`)
+    const task = updateTaskStatus(id, status)
+    if (!task) return c.json({ error: 'Not found' }, 404)
+    return c.json(task)
+  } catch (err) {
+    console.error('Error updating task status:', err)
+    return c.json({ error: String(err) }, 500)
+  }
 })
 
 // DELETE /tasks/:id — delete task (removes .md file)

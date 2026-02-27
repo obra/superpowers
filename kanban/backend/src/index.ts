@@ -10,7 +10,7 @@ import knowledgeRouter from './routes/knowledge.js'
 import decisionsRouter from './routes/decisions.js'
 import { listTasks, listSprints, listPeople } from './store/index.js'
 
-const TEAM_DIR = process.env.TEAM_DIR ?? join(process.cwd(), '../..', '.team')
+const TEAM_DIR = process.env.TEAM_DIR ?? join(process.cwd(), '..', '.team')
 const PORT = parseInt(process.env.PORT ?? '3001', 10)
 
 // ─── App ──────────────────────────────────────────────────────────────────────

@@ -8,7 +8,7 @@ import type { Task, Sprint, Person, KnowledgeEntry, Decision, TaskStatus } from 
 
 // Root of the .team/ directory — resolved relative to the project being managed
 // Can be overridden via TEAM_DIR env var
-const TEAM_DIR = process.env.TEAM_DIR ?? join(process.cwd(), '../..', '.team')
+const TEAM_DIR = process.env.TEAM_DIR ?? join(process.cwd(), '..', '.team')
 
 function ensureDir(path: string) {
   if (!existsSync(path)) mkdirSync(path, { recursive: true })
@@ -54,8 +54,14 @@ export function writeTask(task: Task): void {
   ensureDir(join(TEAM_DIR, 'tasks'))
   const { body, ...frontmatter } = task
   frontmatter.updated = new Date().toISOString().split('T')[0]
+
+  // Remove undefined values (YAML cannot serialize undefined)
+  const cleanFrontmatter = Object.fromEntries(
+    Object.entries(frontmatter).filter(([_, v]) => v !== undefined)
+  )
+
   const file = join(TEAM_DIR, 'tasks', `${task.id}.md`)
-  writeFileSync(file, matter.stringify(body, frontmatter))
+  writeFileSync(file, matter.stringify(body, cleanFrontmatter))
 }
 
 export function updateTaskStatus(id: string, status: TaskStatus): Task | null {

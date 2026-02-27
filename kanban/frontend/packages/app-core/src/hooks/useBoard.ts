@@ -1,11 +1,14 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchBoard } from '../api.js'
 import type { Board } from '../types.js'
 
 export const BOARD_KEY = ['board'] as const
 
-const EMPTY_BOARD: Board = { tasks: [], sprints: [], people: [] }
+const EMPTY_TASKS: Board['tasks'] = []
+const EMPTY_SPRINTS: Board['sprints'] = []
+const EMPTY_PEOPLE: Board['people'] = []
+const EMPTY_BOARD: Board = { tasks: EMPTY_TASKS, sprints: EMPTY_SPRINTS, people: EMPTY_PEOPLE }
 
 export function useBoard() {
   const queryClient = useQueryClient()
@@ -31,12 +34,20 @@ export function useBoard() {
     return () => es.close()
   }, [queryClient])
 
+  const tasks = data?.tasks ?? EMPTY_TASKS
+  const sprints = data?.sprints ?? EMPTY_SPRINTS
+  const people = data?.people ?? EMPTY_PEOPLE
+  const activeSprint = useMemo(
+    () => sprints.find(s => s.status === 'active') ?? null,
+    [sprints]
+  )
+
   return {
     board: data ?? EMPTY_BOARD,
-    tasks: data?.tasks ?? [],
-    sprints: data?.sprints ?? [],
-    people: data?.people ?? [],
-    activeSprint: data?.sprints.find(s => s.status === 'active') ?? null,
+    tasks,
+    sprints,
+    people,
+    activeSprint,
     isLoading,
     error,
   }

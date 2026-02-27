@@ -1,0 +1,14 @@
+{
+  "name": "Jingxia Kanban",
+  "short_name": "Kanban",
+  "icons": [
+    {
+      "src": "/favicon-vk-light.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "theme_color": "#34d399",
+  "background_color": "#0f172a",
+  "display": "standalone"
+}
