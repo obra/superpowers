@@ -15,3 +15,6 @@ dist/
 
 # Logs
 *.log
+
+# User data (never commit)
+data/users.json
