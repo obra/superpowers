@@ -15,7 +15,7 @@ Every code change is a potential attack surface. Review BEFORE merge, not after 
 
 ## The Iron Law
 
-```
+```text
 NO MERGE WITHOUT SECURITY CHECKLIST COMPLETION
 ```
 
@@ -70,7 +70,7 @@ If you haven't checked every category below against the diff, you cannot claim c
 
 ## Hard Gate
 
-```
+```text
 BEFORE claiming merge-ready:
 
 1. DIFF:   Review every changed file in the diff
