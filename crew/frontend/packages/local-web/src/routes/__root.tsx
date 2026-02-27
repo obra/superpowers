@@ -1,10 +1,11 @@
-import { Outlet, createRootRoute, Link, useRouterState } from '@tanstack/react-router'
+import { Outlet, createRootRoute, Link, useRouterState, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import {
   SquaresFourIcon, UsersIcon, BookOpenIcon,
   LightbulbIcon, LightningIcon, SunIcon, MoonIcon,
 } from '@phosphor-icons/react'
 import Magnet from '@web/components/Magnet'
+import { isAuthenticated } from '@vibe/app-core'
 
 const NAV = [
   { to: '/',           icon: SquaresFourIcon, label: 'Board',     exact: true  },
@@ -12,6 +13,8 @@ const NAV = [
   { to: '/knowledge',  icon: BookOpenIcon,    label: 'Knowledge', exact: false },
   { to: '/decisions',  icon: LightbulbIcon,   label: 'Decisions', exact: false },
 ] as const
+
+const PUBLIC_PATHS = ['/login', '/auth/callback', '/welcome']
 
 function RootLayout() {
   const [dark, setDark] = useState(() =>
@@ -32,6 +35,19 @@ function RootLayout() {
   }, [])
 
   const pathname = useRouterState({ select: s => s.location.pathname })
+  const navigate = useNavigate()
+
+  // Route guard: redirect to /login if not authenticated on protected routes
+  useEffect(() => {
+    if (!PUBLIC_PATHS.includes(pathname) && !isAuthenticated()) {
+      navigate({ to: '/login' })
+    }
+  }, [pathname])
+
+  // Show full-page layout (no sidebar) for public routes
+  if (PUBLIC_PATHS.includes(pathname)) {
+    return <Outlet />
+  }
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'hsl(var(--_background))' }}>
