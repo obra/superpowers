@@ -7,7 +7,7 @@ Tests cover:
 - Malformed frontmatter (missing delimiters) raises ValueError.
 - Missing required fields (name, description) raise ValueError.
 - Slugification is correct (hyphens, lowercase, no consecutive hyphens).
-- Classification cross-references the existing commands/ directory.
+- Classification defaults all skills to commands (zero-maintenance design).
 - Command slug overrides work correctly.
 """
 
@@ -49,6 +49,7 @@ class TestParseSkillFile:
         assert "You MUST" in skill.description
         assert "Help turn ideas" in skill.body
         assert skill.source_path == path
+        # Default is_command is False on the raw Skill; classify_skills sets it.
         assert skill.is_command is False
 
     def test_multiline_description_not_truncated(self, tmp_path: Path) -> None:
@@ -152,36 +153,20 @@ class TestClassifySkills:
         content = f'---\nname: {slug}\ndescription: "d"\n---\n\n# Body\n'
         return parse_skill_file(content, tmp_path / f"{slug}-SKILL.md")
 
-    def test_cross_references_commands_dir(self, tmp_path: Path) -> None:
-        """Skills matching command file stems in commands/ are classified as commands."""
-        commands_dir = tmp_path / "commands"
-        commands_dir.mkdir()
-        (commands_dir / "brainstorming.md").write_text("x", encoding="utf-8")
+    def test_default_is_command(self, tmp_path: Path) -> None:
+        """Without any overrides, ALL skills are classified as commands by default.
 
-        skills = [
-            self._make_skill("brainstorming", tmp_path),
-            self._make_skill("systematic-debugging", tmp_path),
-        ]
-        classify_skills(skills, commands_dir=commands_dir)
-
-        assert skills[0].is_command is True
-        assert skills[1].is_command is False
-
-    def test_slug_overrides_take_precedence(self, tmp_path: Path) -> None:
-        """Explicit override slugs are always classified as commands."""
-        skills = [self._make_skill("systematic-debugging", tmp_path)]
-        classify_skills(skills, commands_dir=None, command_slug_overrides=["systematic-debugging"])
-        assert skills[0].is_command is True
-
-    def test_default_is_context(self, tmp_path: Path) -> None:
-        """Without any commands dir or overrides all skills are context."""
+        This is the zero-maintenance design: any new skill added to skills/
+        automatically becomes a Gemini CLI slash command without manual updates.
+        """
         skills = [self._make_skill("brainstorming", tmp_path)]
         classify_skills(skills, commands_dir=None)
-        assert skills[0].is_command is False
+        assert skills[0].is_command is True
 
     def test_missing_commands_dir_handled_gracefully(self, tmp_path: Path) -> None:
         """When commands_dir doesn't exist, classification doesn't raise."""
         skills = [self._make_skill("brainstorming", tmp_path)]
         non_existent = tmp_path / "no-such-dir"
         classify_skills(skills, commands_dir=non_existent)
-        assert skills[0].is_command is False
+        # Still a command — default is all-commands.
+        assert skills[0].is_command is True

@@ -205,7 +205,14 @@ def write_command_toml(skill: Skill, commands_dir: Path) -> Path:
         return text.replace("\\", "\\\\").replace('"""', '\\"\\"\\"')
 
     # Use TOML multi-line basic strings to faithfully preserve markdown body.
-    description_escaped = skill.description.replace('"', '\\"')
+    # Single-line basic strings (description) MUST escape backslashes and control characters.
+    description_escaped = (
+        skill.description.replace("\\", "\\\\")
+        .replace('"', '\\"')
+        .replace("\n", "\\n")
+        .replace("\r", "\\r")
+        .replace("\t", "\\t")
+    )
     body_escaped = _toml_escape(skill.body)
 
     toml_content = (

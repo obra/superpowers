@@ -9,16 +9,16 @@ Wires the three pipeline stages together:
 Usage::
 
     # Default paths (run from repo root)
-    python -m scripts.gemini-builder.mapper
+    python scripts/gemini-builder/mapper.py
 
     # Explicit paths
-    python -m scripts.gemini-builder.mapper --skills-dir ./skills --output-dir ./dist
+    python scripts/gemini-builder/mapper.py --skills-dir ./skills --output-dir ./dist
 
     # Override which skills become commands
-    python -m scripts.gemini-builder.mapper --commands brainstorming,test-driven-development
+    python scripts/gemini-builder/mapper.py --commands brainstorming,test-driven-development
 
     # Dry run — print the plan without writing anything
-    python -m scripts.gemini-builder.mapper --dry-run
+    python scripts/gemini-builder/mapper.py --dry-run
 """
 
 from __future__ import annotations
@@ -107,8 +107,9 @@ def run(
             logger.warning("  Skipping %s — %s", path.name, exc)
 
     if parse_errors:
-        logger.warning(
-            "%d skill(s) had parse errors and were skipped.", len(parse_errors)
+        details = "\n".join(f"- {msg}" for msg in parse_errors)
+        raise ValueError(
+            f"{len(parse_errors)} skill(s) failed to parse:\n{details}"
         )
 
     classify_skills(
@@ -138,7 +139,8 @@ def run(
     logger.info("Stage 3/3 — Writing artifacts to: %s", output_dir)
     clean_output_dir(output_dir)
 
-    gemini_md_path = write_gemini_md(context_skills, output_dir)
+    # All skills go into GEMINI.md for always-loaded behavioral context.
+    gemini_md_path = write_gemini_md(skills, output_dir)
     logger.info("  Wrote %s (%d bytes)", gemini_md_path.name, gemini_md_path.stat().st_size)
 
     commands_out_dir = output_dir / "commands"
@@ -160,7 +162,7 @@ def run(
 
 def _build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="python -m scripts.gemini-builder.mapper",
+        prog="python scripts/gemini-builder/mapper.py",
         description=(
             "Translate obra/superpowers SKILL.md files into a "
             "Gemini CLI extension directory."
@@ -169,16 +171,16 @@ def _build_arg_parser() -> argparse.ArgumentParser:
         epilog="""
 Examples:
   # Run with defaults from the repo root:
-  python -m scripts.gemini-builder.mapper
+  python scripts/gemini-builder/mapper.py
 
   # Custom paths:
-  python -m scripts.gemini-builder.mapper --skills-dir ./skills --output-dir ./dist
+  python scripts/gemini-builder/mapper.py --skills-dir ./skills --output-dir ./dist
 
   # Override command classification:
-  python -m scripts.gemini-builder.mapper --commands brainstorming,systematic-debugging
+  python scripts/gemini-builder/mapper.py --commands brainstorming,systematic-debugging
 
   # Preview without writing:
-  python -m scripts.gemini-builder.mapper --dry-run
+  python scripts/gemini-builder/mapper.py --dry-run
 """,
     )
     parser.add_argument(

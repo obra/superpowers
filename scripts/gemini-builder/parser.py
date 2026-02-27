@@ -194,64 +194,39 @@ def classify_skills(
     command_slug_overrides: list[str] | None = None,
 ) -> list[Skill]:
     """
-    Classifies each ``Skill`` as a command or global context, mutating
-    ``Skill.is_command`` in-place and returning the same list.
+    Classifies every ``Skill`` as a command, mutating ``Skill.is_command``
+    in-place and returning the same list.
 
-    Classification priority (highest to lowest):
-    1. Explicit ``--commands`` overrides passed by the user.
-    2. Cross-reference with existing ``commands/*.md`` files in the repo.
-       A skill is a command when any command file's stem OR its text body
-       contains the skill's slug or name. This two-pass approach handles
-       the real-world mismatch between command file names and skill slugs
-       (e.g. ``brainstorm.md`` references the ``brainstorming`` skill,
-       ``execute-plan.md`` references ``executing-plans``).
-    3. Default: global context (``is_command = False``).
+    Default behaviour (zero-maintenance design):
+        ALL skills are classified as commands so that any skill added to
+        ``skills/`` automatically becomes a Gemini CLI slash command without
+        any manual update to ``commands/`` or configuration files.
 
-    Rationale for cross-referencing existing commands/:
-        The obra/superpowers repo ships three pre-defined commands
-        (brainstorm, execute-plan, write-plan). By treating the existing
-        commands/ as the ground truth we stay in sync with upstream intent
-        without hard-coding slug names.
+    Override behaviour:
+        If ``command_slug_overrides`` is provided those slugs are guaranteed
+        to be commands (same result as the default, but explicit).
+
+    ``commands_dir`` is accepted for backward compatibility but no longer
+    drives classification — the cross-reference logic has been removed in
+    favour of the all-commands default.
 
     Args:
         skills:                 List of parsed ``Skill`` objects.
-        commands_dir:           Path to the repo's ``commands/`` directory.
-                                May be None if cross-referencing is not needed.
+        commands_dir:           Accepted but unused (kept for API compatibility).
         command_slug_overrides: Optional list of slug strings that should
-                                always be treated as commands regardless of
-                                the commands directory contents.
+                                always be treated as commands (no-op under the
+                                current all-commands default, but respected).
 
     Returns:
-        The same ``skills`` list with ``is_command`` flags set.
+        The same ``skills`` list with ``is_command`` set to ``True`` for all
+        entries.
     """
     override_set: set[str] = set(command_slug_overrides or [])
 
-    # Build a combined set of tokens from command files:
-    # Pass 1 — file stem (e.g. "brainstorm" from brainstorm.md)
-    # Pass 2 — all words/slugs referenced in the file body (handles the case
-    #           where brainstorm.md body contains "superpowers:brainstorming")
-    referenced_tokens: set[str] = set()
-    if commands_dir and commands_dir.is_dir():
-        for cmd_file in sorted(commands_dir.iterdir()):
-            if cmd_file.suffix != ".md":
-                continue
-            # File stem contributes a token (exact match)
-            referenced_tokens.add(cmd_file.stem)
-            # Extract all hyphenated/alphanumeric tokens from the body
-            # that could be skill slugs (length ≥ 4 avoids noise)
-            try:
-                body_text = cmd_file.read_text(encoding="utf-8")
-                for token in re.findall(r"[a-z][a-z0-9-]{3,}", body_text):
-                    referenced_tokens.add(token)
-            except (OSError, UnicodeDecodeError):
-                pass  # Non-readable files are silently skipped
-
     for skill in skills:
-        # A skill matches if its slug or name appears in the referenced tokens
-        skill.is_command = (
-            skill.slug in override_set
-            or skill.slug in referenced_tokens
-            or skill.name in referenced_tokens
-        )
+        # All skills are commands by default (zero-maintenance design).
+        # Explicit overrides are a no-op in practice but kept for forward
+        # compatibility with any future deny-list mechanism.
+        skill.is_command = True or skill.slug in override_set or skill.name in override_set
 
     return skills

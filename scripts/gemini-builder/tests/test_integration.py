@@ -76,7 +76,7 @@ def fake_skills_tree(tmp_path: Path) -> tuple[Path, Path, Path]:
         encoding="utf-8",
     )
 
-    # Matching command file — makes brainstorming a command
+    # All three skills — all default to is_command=True in the new design.
     commands_dir.mkdir(parents=True)
     (commands_dir / "brainstorming.md").write_text(
         '---\ndisable-model-invocation: true\n---\n\nInvoke brainstorming skill.\n',
@@ -106,24 +106,26 @@ class TestFullPipeline:
         run(skills_dir, output_dir, commands_dir=commands_dir)
         assert (output_dir / "GEMINI.md").exists()
 
-    def test_gemini_md_contains_context_skills(
+    def test_gemini_md_contains_all_skills(
         self, fake_skills_tree: tuple[Path, Path, Path]
     ) -> None:
+        """All skills appear in GEMINI.md as always-loaded context."""
         skills_dir, commands_dir, output_dir = fake_skills_tree
         run(skills_dir, output_dir, commands_dir=commands_dir)
         content = (output_dir / "GEMINI.md").read_text(encoding="utf-8")
         assert "test-driven-development" in content
         assert "systematic-debugging" in content
+        assert "brainstorming" in content  # also in GEMINI.md now
 
-    def test_command_skill_not_in_gemini_md(
+    def test_all_skills_have_toml_commands(
         self, fake_skills_tree: tuple[Path, Path, Path]
     ) -> None:
-        """Command skills should appear in TOML files, not in GEMINI.md body."""
+        """All skills generate a TOML command file (zero-maintenance design)."""
         skills_dir, commands_dir, output_dir = fake_skills_tree
         run(skills_dir, output_dir, commands_dir=commands_dir)
-        content = (output_dir / "GEMINI.md").read_text(encoding="utf-8")
-        # brainstorming is a command, its section should not be in GEMINI.md
-        assert "## brainstorming" not in content
+        assert (output_dir / "commands" / "brainstorming.toml").exists()
+        assert (output_dir / "commands" / "test-driven-development.toml").exists()
+        assert (output_dir / "commands" / "systematic-debugging.toml").exists()
 
     def test_command_toml_is_generated(
         self, fake_skills_tree: tuple[Path, Path, Path]

@@ -28,16 +28,16 @@ From the repository root:
 
 ```bash
 # Build to ./dist (CI default)
-python -m scripts.gemini-builder.mapper
+python scripts/gemini-builder/mapper.py
 
 # Build to a local test directory
-python -m scripts.gemini-builder.mapper --output-dir ./local-gemini-superpowers
+python scripts/gemini-builder/mapper.py --output-dir ./local-gemini-superpowers
 
 # Preview without writing anything
-python -m scripts.gemini-builder.mapper --dry-run
+python scripts/gemini-builder/mapper.py --dry-run
 
 # Force additional skills to be commands
-python -m scripts.gemini-builder.mapper --commands systematic-debugging
+python scripts/gemini-builder/mapper.py --commands systematic-debugging
 ```
 
 ## Running Tests

@@ -145,6 +145,22 @@ class TestWriteCommandToml:
         write_command_toml(_make_skill("s", is_command=True), commands_dir)
         assert commands_dir.is_dir()
 
+    def test_description_escaping_regression(self, tmp_path: Path) -> None:
+        """Verify that backslashes and control characters in description are escaped."""
+        if sys.version_info < (3, 11):
+            pytest.skip("tomllib requires Python 3.11+")
+        import tomllib
+
+        special_desc = "Backslash \\ and tab\t and newline\n"
+        skill = _make_skill("special", description=special_desc, is_command=True)
+        out = write_command_toml(skill, tmp_path / "commands")
+
+        # This should parse successfully if escaped correctly
+        with open(out, "rb") as f:
+            data = tomllib.load(f)
+
+        assert data["description"] == special_desc
+
 
 # ---------------------------------------------------------------------------
 # write_manifest
