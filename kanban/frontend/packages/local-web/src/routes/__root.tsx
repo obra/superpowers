@@ -4,6 +4,7 @@ import {
   SquaresFourIcon, UsersIcon, BookOpenIcon,
   LightbulbIcon, LightningIcon, SunIcon, MoonIcon,
 } from '@phosphor-icons/react'
+import Magnet from '@web/components/Magnet'
 
 const NAV = [
   { to: '/',           icon: SquaresFourIcon, label: 'Board',     exact: true  },
@@ -57,30 +58,32 @@ function RootLayout() {
         {NAV.map(({ to, icon: Icon, label, exact }) => {
           const active = exact ? pathname === to : pathname.startsWith(to)
           return (
-            <Link key={to} to={to} title={label}
-              className={active ? 'rb-nav-active' : ''}
-              style={{
-                width: 38, height: 38, borderRadius: 10,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: active ? 'var(--rb-accent)' : 'hsl(var(--text-low))',
-                textDecoration: 'none',
-                transition: 'all 0.15s',
-              }}
-              onMouseEnter={e => {
-                if (!active) {
-                  (e.currentTarget as HTMLElement).style.background = 'hsl(var(--_muted))'
-                  ;(e.currentTarget as HTMLElement).style.color = 'hsl(var(--text-high))'
-                }
-              }}
-              onMouseLeave={e => {
-                if (!active) {
-                  (e.currentTarget as HTMLElement).style.background = ''
-                  ;(e.currentTarget as HTMLElement).style.color = 'hsl(var(--text-low))'
-                }
-              }}
-            >
-              <Icon size={18} weight={active ? 'fill' : 'regular'} />
-            </Link>
+            <Magnet key={to} magnetStrength={3} padding={48}>
+              <Link to={to} title={label}
+                className={active ? 'rb-nav-active' : ''}
+                style={{
+                  width: 38, height: 38, borderRadius: 10,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: active ? 'var(--rb-accent)' : 'hsl(var(--text-low))',
+                  textDecoration: 'none',
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => {
+                  if (!active) {
+                    (e.currentTarget as HTMLElement).style.background = 'hsl(var(--_muted))'
+                    ;(e.currentTarget as HTMLElement).style.color = 'hsl(var(--text-high))'
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!active) {
+                    (e.currentTarget as HTMLElement).style.background = ''
+                    ;(e.currentTarget as HTMLElement).style.color = 'hsl(var(--text-low))'
+                  }
+                }}
+              >
+                <Icon size={18} weight={active ? 'fill' : 'regular'} />
+              </Link>
+            </Magnet>
           )
         })}
 

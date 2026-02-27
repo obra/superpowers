@@ -10,6 +10,10 @@ import { PlusIcon } from '@phosphor-icons/react'
 import { useBoard } from '@app/hooks/useBoard'
 import { useUpdateTaskStatus } from '@app/hooks/useMutations'
 import type { Task, TaskPriority, TaskStatus } from '@app/types'
+import SpotlightCard from '@web/components/SpotlightCard'
+import CountUp from '@web/components/CountUp'
+import ClickSpark from '@web/components/ClickSpark'
+import AnimatedCard from '@web/components/AnimatedCard'
 
 // ─── Column config ──────────────────────────────────────────────────────────
 
@@ -86,6 +90,8 @@ function BoardPage() {
     [updateStatus],
   )
 
+  const isDark = document.documentElement.classList.contains('dark')
+
   if (isLoading) {
     return (
       <div style={{
@@ -128,21 +134,29 @@ function BoardPage() {
         </div>
       )}
 
-      {/* ── Kanban board ── */}
+      {/* ── Kanban board with ClickSpark ── */}
       <div style={{ flex: 1, overflowX: 'auto', overflowY: 'hidden', padding: '16px 18px' }}>
         <KanbanProvider onDragEnd={handleDragEnd}>
-          <div style={{ display: 'flex', gap: 10, height: '100%', alignItems: 'flex-start' }}>
-            {STATUS_COLUMNS.map(col => (
-              <Column
-                key={col.id}
-                col={col}
-                taskIds={columns[col.id] ?? []}
-                taskMap={taskMap}
-                onCardClick={id => void navigate({ to: '/tasks/$id', params: { id } })}
-                onAdd={() => void navigate({ to: '/' })}
-              />
-            ))}
-          </div>
+          <ClickSpark
+            sparkColor={isDark ? '#34d399' : '#10b981'}
+            sparkCount={7}
+            sparkRadius={22}
+            sparkSize={7}
+          >
+            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', minWidth: 'max-content', padding: 2 }}>
+              {STATUS_COLUMNS.map(col => (
+                <Column
+                  key={col.id}
+                  col={col}
+                  taskIds={columns[col.id] ?? []}
+                  taskMap={taskMap}
+                  isDark={isDark}
+                  onCardClick={id => void navigate({ to: '/tasks/$id', params: { id } })}
+                  onAdd={() => void navigate({ to: '/' })}
+                />
+              ))}
+            </div>
+          </ClickSpark>
         </KanbanProvider>
       </div>
     </div>
@@ -155,12 +169,14 @@ function Column({
   col,
   taskIds,
   taskMap,
+  isDark,
   onCardClick,
   onAdd,
 }: {
   col: (typeof STATUS_COLUMNS)[number]
   taskIds: string[]
   taskMap: Record<string, Task>
+  isDark: boolean
   onCardClick: (id: string) => void
   onAdd: () => void
 }) {
@@ -189,8 +205,9 @@ function Column({
           }}>
             {col.name}
           </span>
-          <span className="rb-mono" style={{ fontSize: 10, color: 'hsl(var(--text-low))' }}>
-            {taskIds.length}
+          {/* CountUp — re-triggers animation when count changes */}
+          <span style={{ fontSize: 10, color: 'hsl(var(--text-low))' }}>
+            <CountUp key={taskIds.length} to={taskIds.length} duration={0.6} className="rb-mono" />
           </span>
         </div>
         <button
@@ -224,7 +241,10 @@ function Column({
                   index={index}
                   onClick={() => onCardClick(task.id)}
                 >
-                  <TaskCard task={task} statusKey={sk} />
+                  {/* AnimatedCard entry animation (CSS-only, no DnD conflict) */}
+                  <AnimatedCard index={index}>
+                    <TaskCard task={task} statusKey={sk} isDark={isDark} />
+                  </AnimatedCard>
                 </KanbanCard>
               )
             })}
@@ -235,12 +255,13 @@ function Column({
   )
 }
 
-// ─── Task card visual ───────────────────────────────────────────────────────
+// ─── Task card visual (SpotlightCard) ───────────────────────────────────────
 
-function TaskCard({ task, statusKey }: { task: Task; statusKey: string }) {
+function TaskCard({ task, statusKey, isDark }: { task: Task; statusKey: string; isDark: boolean }) {
   return (
-    <div
-      className={`rb-card rb-lift rb-shine rb-glass rb-bar-${statusKey}`}
+    <SpotlightCard
+      className={`rb-card rb-lift rb-glass rb-bar-${statusKey}`}
+      spotlightColor={isDark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.07)'}
       style={{
         background: 'hsl(var(--_bg-primary-default))',
         padding: '9px 11px',
@@ -306,7 +327,7 @@ function TaskCard({ task, statusKey }: { task: Task; statusKey: string }) {
           </span>
         </div>
       )}
-    </div>
+    </SpotlightCard>
   )
 }
 

@@ -355,3 +355,33 @@ html, body, #root {
   box-shadow: var(--rb-shadow-lg) !important;
   opacity: 0.95;
 }
+
+/* ─── SpotlightCard ──────────────────────────────────────────────────────────── */
+.rb-spotlight {
+  position: relative;
+  overflow: hidden;
+  --mouse-x: 50%;
+  --mouse-y: 50%;
+  --spotlight-color: rgba(255, 255, 255, 0.10);
+}
+.rb-spotlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle 110px at var(--mouse-x) var(--mouse-y), var(--spotlight-color), transparent 100%);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+  z-index: 2;
+  mix-blend-mode: overlay;
+}
+.rb-spotlight:hover::before { opacity: 1; }
+
+/* ─── AnimatedCard — CSS-only entry (avoids DnD transform conflict) ──────────── */
+@keyframes rb-card-in {
+  from { opacity: 0; transform: scale(0.93) translateY(6px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);   }
+}
+.rb-card-in {
+  animation: rb-card-in 0.2s ease-out both;
+}
