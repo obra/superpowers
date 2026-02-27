@@ -8,7 +8,9 @@ import type { Task, Sprint, Person, KnowledgeEntry, Decision, TaskStatus } from 
 
 // Root of the .team/ directory — resolved relative to the project being managed
 // Can be overridden via TEAM_DIR env var
-const TEAM_DIR = process.env.TEAM_DIR ?? join(process.cwd(), '../..', '.team')
+function getTeamDir(): string {
+  return process.env.TEAM_DIR ?? join(process.cwd(), '../..', '.team')
+}
 
 function ensureDir(path: string) {
   if (!existsSync(path)) mkdirSync(path, { recursive: true })
@@ -17,7 +19,7 @@ function ensureDir(path: string) {
 // ─── Tasks ────────────────────────────────────────────────────────────────────
 
 export function listTasks(): Task[] {
-  const dir = join(TEAM_DIR, 'tasks')
+  const dir = join(getTeamDir(), 'tasks')
   if (!existsSync(dir)) return []
 
   return readdirSync(dir)
@@ -27,7 +29,7 @@ export function listTasks(): Task[] {
 }
 
 export function readTask(id: string): Task | null {
-  const file = join(TEAM_DIR, 'tasks', `${id}.md`)
+  const file = join(getTeamDir(), 'tasks', `${id}.md`)
   if (!existsSync(file)) return null
 
   const { data, content } = matter(readFileSync(file, 'utf8'))
@@ -51,10 +53,10 @@ export function readTask(id: string): Task | null {
 }
 
 export function writeTask(task: Task): void {
-  ensureDir(join(TEAM_DIR, 'tasks'))
+  ensureDir(join(getTeamDir(), 'tasks'))
   const { body, ...frontmatter } = task
   frontmatter.updated = new Date().toISOString().split('T')[0]
-  const file = join(TEAM_DIR, 'tasks', `${task.id}.md`)
+  const file = join(getTeamDir(), 'tasks', `${task.id}.md`)
   writeFileSync(file, matter.stringify(body, frontmatter))
 }
 
@@ -67,7 +69,7 @@ export function updateTaskStatus(id: string, status: TaskStatus): Task | null {
 }
 
 export function deleteTask(id: string): boolean {
-  const file = join(TEAM_DIR, 'tasks', `${id}.md`)
+  const file = join(getTeamDir(), 'tasks', `${id}.md`)
   if (!existsSync(file)) return false
   unlinkSync(file)
   return true
@@ -76,7 +78,7 @@ export function deleteTask(id: string): boolean {
 // ─── Sprints ──────────────────────────────────────────────────────────────────
 
 export function listSprints(): Sprint[] {
-  const dir = join(TEAM_DIR, 'sprints')
+  const dir = join(getTeamDir(), 'sprints')
   if (!existsSync(dir)) return []
 
   return readdirSync(dir)
@@ -93,15 +95,15 @@ export function activeSprint(): Sprint | null {
 }
 
 export function writeSprint(sprint: Sprint): void {
-  ensureDir(join(TEAM_DIR, 'sprints'))
-  const file = join(TEAM_DIR, 'sprints', `sprint-${sprint.id}.json`)
+  ensureDir(join(getTeamDir(), 'sprints'))
+  const file = join(getTeamDir(), 'sprints', `sprint-${sprint.id}.json`)
   writeFileSync(file, JSON.stringify(sprint, null, 2))
 }
 
 // ─── People ───────────────────────────────────────────────────────────────────
 
 export function listPeople(): Person[] {
-  const dir = join(TEAM_DIR, 'people')
+  const dir = join(getTeamDir(), 'people')
   if (!existsSync(dir)) return []
 
   return readdirSync(dir)
@@ -111,7 +113,7 @@ export function listPeople(): Person[] {
 }
 
 export function readPerson(username: string): Person | null {
-  const file = join(TEAM_DIR, 'people', `${username}.md`)
+  const file = join(getTeamDir(), 'people', `${username}.md`)
   if (!existsSync(file)) return null
 
   const { data, content } = matter(readFileSync(file, 'utf8'))
@@ -128,17 +130,17 @@ export function readPerson(username: string): Person | null {
 }
 
 export function writePerson(person: Person): void {
-  ensureDir(join(TEAM_DIR, 'people'))
+  ensureDir(join(getTeamDir(), 'people'))
   const { body, ...frontmatter } = person
   frontmatter.updated = new Date().toISOString().split('T')[0]
-  const file = join(TEAM_DIR, 'people', `${person.username}.md`)
+  const file = join(getTeamDir(), 'people', `${person.username}.md`)
   writeFileSync(file, matter.stringify(body, frontmatter))
 }
 
 // ─── Knowledge ────────────────────────────────────────────────────────────────
 
 export function listKnowledge(): KnowledgeEntry[] {
-  const dir = join(TEAM_DIR, 'knowledge')
+  const dir = join(getTeamDir(), 'knowledge')
   if (!existsSync(dir)) return []
 
   return readdirSync(dir)
@@ -160,7 +162,7 @@ export function listKnowledge(): KnowledgeEntry[] {
 // ─── Decisions (ADR) ──────────────────────────────────────────────────────────
 
 export function listDecisions(): Decision[] {
-  const dir = join(TEAM_DIR, 'decisions')
+  const dir = join(getTeamDir(), 'decisions')
   if (!existsSync(dir)) return []
 
   return readdirSync(dir)
