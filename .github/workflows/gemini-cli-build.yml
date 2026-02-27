@@ -1,0 +1,65 @@
+name: Build Gemini CLI Extension
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Allow manual trigger for testing
+
+# Prevent concurrent runs from stepping on each other
+concurrency:
+  group: gemini-cli-build
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    name: Compile Skills → Gemini Extension
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to push to gemini-cli branch
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history needed for branch push
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run Gemini Builder pipeline
+        run: |
+          python -m scripts.gemini-builder.mapper \
+            --skills-dir ./skills \
+            --commands-dir ./commands \
+            --output-dir ./dist
+        # Exit non-zero on any pipeline error — the step fails the job
+        # No dependencies to install: the mapper is stdlib-only
+
+      - name: Verify output artifacts
+        run: |
+          echo "=== Generated artifacts ==="
+          ls -lh dist/
+          ls -lh dist/commands/ 2>/dev/null || echo "(no commands generated)"
+          echo ""
+          echo "=== Manifest ==="
+          python -m json.tool dist/gemini-extension.json
+
+      - name: Deploy to gemini-cli branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gemini-cli
+          # Force-push so the branch always reflects the latest compiled output.
+          # This branch is purely a build artifact — not for human commits.
+          force_orphan: true
+          user_name: "github-actions[bot]"
+          user_email: "github-actions[bot]@users.noreply.github.com"
+          commit_message: |
+            chore: auto-build Gemini CLI extension from ${{ github.sha }}
+
+            Compiled by the gemini-cli-build workflow.
+            Source: ${{ github.ref }} @ ${{ github.sha }}

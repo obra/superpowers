@@ -2,3 +2,12 @@
 .private-journal/
 .claude/
 .DS_Store
+
+# Gemini CLI extension build artifacts — never commit to main
+local-gemini-superpowers/
+dist/
+
+# Python cache — never track bytecode
+__pycache__/
+*.pyc
+*.pyo

@@ -147,11 +147,36 @@ Skills update automatically when you update the plugin:
 /plugin update superpowers
 ```
 
-## License
-
-MIT License - see LICENSE file for details
+## MIT License - see LICENSE file for details
 
 ## Support
 
 - **Issues**: https://github.com/obra/superpowers/issues
 - **Marketplace**: https://github.com/obra/superpowers-marketplace
+
+---
+
+### Gemini CLI
+
+Install the pre-compiled Gemini CLI extension directly from the `gemini-cli` branch:
+
+```bash
+gemini extensions install https://github.com/obra/superpowers --ref=gemini-cli
+```
+
+This branch is automatically rebuilt by CI every time skills are updated on `main` — no manual steps required.
+
+Once installed, Superpowers skills are available as global context and slash commands in every Gemini CLI session:
+
+| What you get | Where it comes from |
+|---|---|
+| Behavioral guidelines in every session | `GEMINI.md` (all context skills) |
+| `/brainstorming` slash command | `commands/brainstorming.toml` |
+| `/executing-plans` slash command | `commands/executing-plans.toml` |
+| `/writing-plans` slash command | `commands/writing-plans.toml` |
+
+**Update the extension:**
+
+```bash
+gemini extensions update superpowers
+```
