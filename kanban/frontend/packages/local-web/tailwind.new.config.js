@@ -173,5 +173,5 @@ module.exports = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate"), require("@tailwindcss/container-queries"), require("tailwind-scrollbar")({ nocompatible: true })],
+  plugins: [require("tailwindcss-animate"), require("tailwind-scrollbar")({ nocompatible: true })],
 }

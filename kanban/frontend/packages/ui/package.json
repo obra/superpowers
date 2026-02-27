@@ -1,0 +1,19 @@
+{
+  "name": "@vibe/ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./components/*": "./src/components/*/index.tsx"
+  },
+  "dependencies": {
+    "@hello-pangea/dnd": "^18.0.1",
+    "react": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.43",
+    "typescript": "^5.9.2"
+  }
+}
