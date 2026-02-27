@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "name": "superpowers-init",
+            "type": "command",
+            "command": "node ${extensionPath}/hooks/session-start.js",
+            "description": "Initialize Superpowers skill library"
+          }
+        ]
+      }
+    ]
+  }
+}

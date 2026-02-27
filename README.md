@@ -71,6 +71,29 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
 
+### Gemini CLI
+
+Gemini CLI has native support for Agent Skills and Extensions. Install Superpowers:
+
+```bash
+gemini extensions install https://github.com/obra/superpowers.git --path .gemini-cli
+```
+
+Then restart Gemini CLI:
+
+```bash
+gemini restart
+```
+
+**Verify Installation:**
+
+```bash
+gemini skills list        # Should show 14+ superpowers skills
+gemini skills info brainstorming  # Show skill details
+```
+
+**Detailed docs:** [docs/README.gemini-cli.md](docs/README.gemini-cli.md)
+
 ### Verify Installation
 
 Start a new session in your chosen platform and ask for something that should trigger a skill (for example, "help me plan this feature" or "let's debug this issue"). The agent should automatically invoke the relevant superpowers skill.
