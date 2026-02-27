@@ -56,8 +56,9 @@ export function writeTask(task: Task): void {
   ensureDir(join(getTeamDir(), 'tasks'))
   const { body, ...frontmatter } = task
   frontmatter.updated = new Date().toISOString().split('T')[0]
+  const clean = Object.fromEntries(Object.entries(frontmatter).filter(([, v]) => v !== undefined))
   const file = join(getTeamDir(), 'tasks', `${task.id}.md`)
-  writeFileSync(file, matter.stringify(body, frontmatter))
+  writeFileSync(file, matter.stringify(body, clean))
 }
 
 export function updateTaskStatus(id: string, status: TaskStatus): Task | null {
