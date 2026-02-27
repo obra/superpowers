@@ -27,6 +27,8 @@ This is not negotiable. This is not optional. You cannot rationalize your way ou
 digraph skill_flow {
     "User message received" [shape=doublecircle];
     "About to EnterPlanMode?" [shape=doublecircle];
+    "User requesting handoff/pause?" [shape=diamond];
+    "Allow native plan mode" [shape=box];
     "Already brainstormed?" [shape=diamond];
     "Invoke brainstorming skill" [shape=box];
     "Might any skill apply?" [shape=diamond];
@@ -37,7 +39,9 @@ digraph skill_flow {
     "Follow skill exactly" [shape=box];
     "Respond (including clarifications)" [shape=doublecircle];
 
-    "About to EnterPlanMode?" -> "Already brainstormed?";
+    "About to EnterPlanMode?" -> "User requesting handoff/pause?";
+    "User requesting handoff/pause?" -> "Allow native plan mode" [label="yes - explicit handoff"];
+    "User requesting handoff/pause?" -> "Already brainstormed?" [label="no"];
     "Already brainstormed?" -> "Invoke brainstorming skill" [label="no"];
     "Already brainstormed?" -> "Might any skill apply?" [label="yes"];
     "Invoke brainstorming skill" -> "Might any skill apply?";
@@ -93,3 +97,9 @@ The skill itself tells you which.
 ## User Instructions
 
 Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
+
+## Plan Mode for Handoff
+
+When the user explicitly requests plan mode as a **context handoff mechanism** (e.g., "enter plan mode to hand off", "plan for the next session", "I need to pause and hand off"), allow native plan mode directly — do NOT route through brainstorming. This enables the "clear and proceed" workflow for transferring work to a fresh context window.
+
+For within-phase handoffs (mid-brainstorm, mid-execution, mid-debug), use **superpowers:session-pause** instead — plan mode only produces implementation plans and can't capture mid-phase state.

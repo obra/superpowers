@@ -29,6 +29,20 @@ For each task:
 2. Follow each step exactly (plan has bite-sized steps)
 3. Run verifications as specified
 4. Mark as completed
+5. **Update checkpoint** — write progress to `.superpowers/handoff/execution-progress.json`
+
+**Checkpoint format:**
+```json
+{
+  "plan": "docs/plans/YYYY-MM-DD-feature.md",
+  "completed": [1, 2, 3],
+  "next": 4,
+  "last_commit": "abc1234",
+  "updated": "YYYY-MM-DD"
+}
+```
+
+On session start, if a checkpoint file exists, read it to determine which tasks are already complete — do not re-execute them.
 
 ### Step 3: Report
 When batch complete:
@@ -45,6 +59,8 @@ Based on feedback:
 ### Step 5: Complete Development
 
 After all tasks complete and verified:
+- Delete `.superpowers/handoff/execution-progress.json` (checkpoint cleanup)
+- Clean up `.superpowers/handoff/` directory if empty
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
 - **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
 - Follow that skill to verify tests, present options, execute choice
@@ -82,3 +98,5 @@ After all tasks complete and verified:
 - **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
 - **superpowers:writing-plans** - Creates the plan this skill executes
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
+- **superpowers:session-pause** - Use when context fills up mid-execution to hand off to a fresh session
+- **superpowers:session-resume** - Use at session start to load checkpoint and continue from last completed task
