@@ -59,7 +59,16 @@ for skill_dir in "$SUPERPOWERS_DIR"/skills/*; do
   [ -d "$skill_dir" ] || continue
   skill_name="$(basename "$skill_dir")"
   target="$OPENCLAW_SKILLS_DIR/$skill_name"
-  if [ ! -L "$target" ] && [ ! -e "$target" ]; then
+  if [ -L "$target" ]; then
+    current_target="$(readlink "$target" || true)"
+    if [ "$current_target" != "$skill_dir" ] || [ ! -e "$target" ]; then
+      rm "$target"
+      ln -s "$skill_dir" "$target"
+      echo "  Linked $skill_name"
+    else
+      echo "  Skipped $skill_name (already exists)"
+    fi
+  elif [ ! -e "$target" ]; then
     ln -s "$skill_dir" "$target"
     echo "  Linked $skill_name"
   else
