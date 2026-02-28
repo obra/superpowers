@@ -21,23 +21,24 @@ async function main() {
       process.exit(0); // Don't block on missing env var
     }
 
-    // Superpowers metadata
-    const skills = [
-      'brainstorming',
-      'dispatching-parallel-agents',
-      'executing-plans',
-      'finishing-a-development-branch',
-      'receiving-code-review',
-      'requesting-code-review',
-      'subagent-driven-development',
-      'systematic-debugging',
-      'test-driven-development',
-      'using-git-worktrees',
-      'using-superpowers',
-      'verification-before-completion',
-      'writing-plans',
-      'writing-skills'
-    ];
+    const fs = require('fs');
+    const path = require('path');
+
+    // Find the skills directory relative to this script
+    const skillsDir = path.resolve(__dirname, '../skills');
+    let skills = [];
+
+    try {
+      if (fs.existsSync(skillsDir)) {
+        skills = fs.readdirSync(skillsDir).filter(file => {
+          const isDir = fs.statSync(path.join(skillsDir, file)).isDirectory();
+          const hasSkillMd = fs.existsSync(path.join(skillsDir, file, 'SKILL.md'));
+          return isDir && hasSkillMd;
+        });
+      }
+    } catch (e) {
+      console.error('Warning: Could not read skills directory:', e.message);
+    }
 
     // Output status
     const output = {
