@@ -1,6 +1,6 @@
 {
   "name": "superpowers",
-  "version": "4.3.2",
+  "version": "0.3-gemini",
   "description": "Core skills library: TDD, debugging, collaboration patterns, and proven techniques for coding agents",
   "contextFileName": "GEMINI.md",
   "hooks": [

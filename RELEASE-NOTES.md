@@ -1,6 +1,6 @@
 # Superpowers Release Notes
 
-## v4.3.2 (2026-02-28)
+## v0.3-gemini (2026-02-28)
 
 ### Added
 
