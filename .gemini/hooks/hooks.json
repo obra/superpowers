@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "session-start": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "script": "session-start.js"
+      }
+    ]
+  }
+}

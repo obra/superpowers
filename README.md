@@ -54,8 +54,15 @@ In Cursor Agent chat, install from marketplace:
 ### Gemini CLI
 
 ```bash
-gemini extensions install https://github.com/obra/superpowers
+gemini extension install https://github.com/obra/superpowers
 ```
+
+**Or use the enhanced installer**:
+```bash
+git clone https://github.com/obra/superpowers.git ~/.gemini/superpowers && ~/.gemini/superpowers/.gemini/install.sh
+```
+
+**Important**: Gemini CLI treats skills as advisory context. **You must explicitly invoke skills by name** for reliable activation.
 
 **Detailed docs:** [docs/README.gemini.md](docs/README.gemini.md)
 
