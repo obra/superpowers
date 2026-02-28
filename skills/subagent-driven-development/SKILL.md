@@ -5,11 +5,11 @@ description: Use when executing implementation plans with independent tasks in t
 
 # Subagent-Driven Development
 
-Execute plan by dispatching fresh subagent per task, with two-stage review after each: spec compliance review first, then code quality review.
+Execute plan by dispatching fresh subagent per task, with combined spec+quality review after each. In team mode: persistent validator agents eliminate per-review startup overhead and enable cross-task gap detection.
 
 **Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
 
-**Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
+**Core principle:** Fresh subagent per task + evidence-cited review = high quality, fast iteration. Team mode adds persistent validators for speed and cross-task memory.
 
 ## When to Use
 
@@ -18,7 +18,9 @@ digraph when_to_use {
     "Have implementation plan?" [shape=diamond];
     "Tasks mostly independent?" [shape=diamond];
     "Stay in this session?" [shape=diamond];
-    "subagent-driven-development" [shape=box];
+    "TeamCreate available and user opted in?" [shape=diamond];
+    "subagent-driven-development (team mode)" [shape=box];
+    "subagent-driven-development (standard)" [shape=box];
     "executing-plans" [shape=box];
     "Manual execution or brainstorm first" [shape=box];
 
@@ -26,16 +28,24 @@ digraph when_to_use {
     "Have implementation plan?" -> "Manual execution or brainstorm first" [label="no"];
     "Tasks mostly independent?" -> "Stay in this session?" [label="yes"];
     "Tasks mostly independent?" -> "Manual execution or brainstorm first" [label="no - tightly coupled"];
-    "Stay in this session?" -> "subagent-driven-development" [label="yes"];
+    "Stay in this session?" -> "TeamCreate available and user opted in?" [label="yes"];
     "Stay in this session?" -> "executing-plans" [label="no - parallel session"];
+    "TeamCreate available and user opted in?" -> "subagent-driven-development (team mode)" [label="yes"];
+    "TeamCreate available and user opted in?" -> "subagent-driven-development (standard)" [label="no"];
 }
 ```
 
 **vs. Executing Plans (parallel session):**
 - Same session (no context switch)
 - Fresh subagent per task (no context pollution)
-- Two-stage review after each task: spec compliance first, then code quality
+- Evidence-cited review after each task (mandatory file:line citations)
 - Faster iteration (no human-in-loop between tasks)
+
+**Team mode vs. Standard mode:**
+- True parallelism (multiple implementers working simultaneously on independent tasks)
+- Persistent validators: no per-review startup overhead, cross-task gap detection
+- Combined spec+quality review in a single pass (one agent call per task instead of two)
+- Requires Claude Code with teams feature enabled
 
 ## The Process
 
