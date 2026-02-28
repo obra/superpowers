@@ -9,6 +9,7 @@ Guide for using Superpowers with Google's Gemini CLI.
 ```bash
 git clone https://github.com/obra/superpowers.git ~/.gemini/superpowers && ~/.gemini/superpowers/.gemini/install.sh
 ```
+The installer enables deterministic routing hooks by default (use `--no-hooks` to disable).
 
 ### Method 2: Native Extension (Gemini CLI v0.28.0+)
 
@@ -37,7 +38,7 @@ git clone https://github.com/obra/superpowers.git ~/.gemini/antigravity/skills/s
 ### What Works Well
 - Skills are discoverable via `/skills list`
 - Manual skill invocation works reliably
-- Deterministic routing via hooks (requires Node.js)
+- Deterministic routing via hooks (enabled by default, requires Node.js)
 - Symlink-based updates (hub pattern)
 - YOLO mode for auto-approval of skill activations
 

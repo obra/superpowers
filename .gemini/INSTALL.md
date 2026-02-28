@@ -43,7 +43,7 @@ This will:
 1. Clone the repository to `~/.gemini/superpowers`
 2. Run the enhanced installer script
 3. Create skill symlinks using the hub pattern
-4. Register deterministic routing hooks
+4. Register deterministic routing hooks (enabled by default, use --no-hooks to skip)
 5. Inject Superpowers context into `~/.gemini/GEMINI.md`
 
 ## Installation Methods
@@ -64,7 +64,13 @@ git clone https://github.com/obra/superpowers.git ~/.gemini/superpowers
 - Skills update instantly via git pull
 - Individual symlinks prevent conflicts
 - Compatible with all Gemini CLI versions
-- Supports deterministic routing hooks
+- Supports deterministic routing hooks (enabled by default)
+
+**Options**:
+- `--antigravity`: Install for Antigravity skill marketplace
+- `--native`: Show native extension installation instructions  
+- `--no-hooks`: Skip hook registration (use YOLO mode or explicit invocation)
+- `--help`: Show help message
 
 ### Method 2: Native Extension Installation
 
@@ -142,7 +148,7 @@ help me plan this feature using the writing-plans skill
 
 ### Deterministic Routing (Optional)
 
-If you have Node.js installed, the installer registers hooks for deterministic skill routing:
+If you have Node.js installed, the installer registers hooks for deterministic skill routing by default (use --no-hooks flag to disable):
 
 - **`beforeAgent` hook**: `superpowers-router` - analyzes user prompts and suggests relevant skills
 - **`beforeTool` hook**: `superpowers-guard` - intercepts commit/merge operations and suggests verification skills

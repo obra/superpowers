@@ -2,23 +2,23 @@
 set -euo pipefail
 
 # ==============================================================================
-# Superpowers Enhanced Installer for Gemini CLI
+# Superpowers Hybrid Installer for Gemini CLI
 # ==============================================================================
 # Features:
-# 1. Hub pattern symlinks for skills and agents
+# 1. Hub pattern symlinks for skills and agents (default)
 # 2. Antigravity support (--antigravity flag)
-# 3. Native extension detection and suggestion
-# 4. Cross-platform symlink creation
-# 5. Deterministic hook registration (beforeAgent/beforeTool)
-# 6. Context injection into GEMINI.md
+# 3. Native extension detection and suggestion (--native flag)
+# 4. Deterministic hook registration enabled by default (--no-hooks to disable)
+# 5. Cross-platform compatibility with GEMINI_HOME support
 # ==============================================================================
 
-readonly VERSION="4.3.1"
+readonly VERSION="5.0.0"
 readonly SCRIPT_NAME="install.sh"
 readonly REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-# Default configuration
-MODE="standard"  # standard, antigravity, native
+# Configuration
+MODE="standard"           # standard, antigravity, native
+ENABLE_HOOKS=true         # Default: enable deterministic routing hooks
 GEMINI_DIR="${GEMINI_HOME:-$HOME/.gemini}"
 SKILLS_DIR="$GEMINI_DIR/skills"
 AGENTS_DIR="$GEMINI_DIR/agents"
@@ -61,31 +61,39 @@ die() {
 
 print_help() {
     cat << EOF
-Superpowers Installer for Gemini CLI v${VERSION}
+Superpowers Hybrid Installer for Gemini CLI v${VERSION}
+
+A unified installer supporting multiple installation methods with deterministic
+skill routing hooks enabled by default.
 
 Usage: $SCRIPT_NAME [OPTIONS]
 
 Options:
-  --antigravity    Install for Antigravity (skills go to ~/.gemini/antigravity/skills/)
-  --native         Suggest native extension installation (gemini extension install)
+  --antigravity    Install for Antigravity (~/.gemini/antigravity/skills/)
+  --native         Show native extension installation instructions
+  --no-hooks       Skip hook registration (use YOLO mode instead)
   --help           Show this help message
 
 Environment Variables:
-  GEMINI_HOME      Override the Gemini directory (default: ~/.gemini)
+  GEMINI_HOME      Override Gemini directory (default: ~/.gemini)
+
+Installation Methods:
+  1. Standard (default): Hub pattern symlinks with deterministic hooks
+  2. Antigravity: Install to Antigravity's skill directory
+  3. Native Extension: Gemini CLI v0.28.0+ extension system
+
+Auto-Activation Strategies:
+  • Hooks (default): Deterministic routing via superpowers-router/superpowers-guard
+  • YOLO Mode: Use --yolo flag or Ctrl+Y for Gemini CLI auto-approval
+  • Explicit Invocation: "use the brainstorming skill"
 
 Examples:
-  $SCRIPT_NAME                    # Standard installation (hub pattern)
-  $SCRIPT_NAME --antigravity      # Install for Antigravity users
-  $SCRIPT_NAME --native           # Show native extension instructions
+  $SCRIPT_NAME                    # Standard with hooks
+  $SCRIPT_NAME --antigravity      # Antigravity with hooks
+  $SCRIPT_NAME --native           # Native extension instructions
+  $SCRIPT_NAME --no-hooks         # Skip hooks (use YOLO/explicit invocation)
 
-Without options, the installer will:
-  1. Create symlinks for each skill in ~/.gemini/skills/
-  2. Create symlinks for each agent in ~/.gemini/agents/
-  3. Register deterministic routing hooks in ~/.gemini/settings.json
-  4. Inject Superpowers context into ~/.gemini/GEMINI.md
-  5. Provide verification steps
-
-For more details, see: $REPO_DIR/.gemini/INSTALL.md
+For more details: $REPO_DIR/.gemini/INSTALL.md
 EOF
 }
 
@@ -105,6 +113,10 @@ parse_arguments() {
                 MODE="native"
                 shift
                 ;;
+            --no-hooks)
+                ENABLE_HOOKS=false
+                shift
+                ;;
             --help|-h)
                 print_help
                 exit 0
@@ -119,30 +131,37 @@ parse_arguments() {
 }
 
 validate_prerequisites() {
-    # Check if skills directory exists
+    # Check skills directory exists
     if [ ! -d "$REPO_SKILLS_DIR" ]; then
         die "Skills directory not found at $REPO_SKILLS_DIR"
-    fi
-
-    # Check for required commands
-    if ! command -v git >/dev/null 2>&1; then
-        log_warning "Git not found. Installation may fail if repository is not already cloned."
     fi
 
     # Check Gemini CLI version if available
     if command -v gemini >/dev/null 2>&1; then
         GEMINI_VERSION=$(gemini --version 2>/dev/null || echo "unknown")
         log_info "Gemini CLI version: $GEMINI_VERSION"
-        # Version check for native extensions
+        
+        # Version check for native extensions and YOLO mode
         if [[ "$GEMINI_VERSION" =~ ^v?([0-9]+)\.([0-9]+) ]]; then
             major="${BASH_REMATCH[1]}"
             minor="${BASH_REMATCH[2]}"
+            
             if [ "$major" -eq 0 ] && [ "$minor" -lt 28 ]; then
-                log_warning "Gemini CLI v0.28.0+ recommended for native extension support. You have $GEMINI_VERSION"
+                log_warning "Gemini CLI v0.28.0+ recommended for native extensions. You have $GEMINI_VERSION"
+            fi
+            
+            if [ "$major" -eq 0 ] && [ "$minor" -ge 31 ]; then
+                log_info "YOLO mode available (--yolo flag or Ctrl+Y)"
             fi
         fi
     else
         log_warning "Gemini CLI not found in PATH. Ensure it's installed before using skills."
+    fi
+    
+    # Check for Node.js if hooks enabled
+    if [ "$ENABLE_HOOKS" = true ] && ! command -v node >/dev/null 2>&1; then
+        log_warning "Node.js not found. Hooks require Node.js to run."
+        log_warning "Install Node.js or use --no-hooks flag."
     fi
 }
 
@@ -162,35 +181,38 @@ create_symlink() {
     local target="$2"
     local name="$3"
     
-    # Check if target already exists
-    if [ -e "$target" ] || [ -L "$target" ]; then
-        if [ -L "$target" ]; then
-            # Resolve symlink target
-            local link_target
-            link_target="$(realpath -m "$target" 2>/dev/null || python3 -c 'import os,sys; print(os.path.abspath(os.path.realpath(sys.argv[1])))' "$target" 2>/dev/null || readlink "$target")"
-            if [[ "$link_target" == "$REPO_DIR"* ]]; then
-                rm "$target"
-                log_info "  Updating existing symlink: $name"
-            else
-                log_warning "  $name points to $link_target (not this repo). Skipping."
-                return 1
-            fi
+    # Remove existing symlink if it points to our repo
+    if [ -L "$target" ]; then
+        local link_target
+        if command -v realpath >/dev/null 2>&1; then
+            link_target="$(realpath "$target")"
+        elif command -v python3 >/dev/null 2>&1; then
+            link_target="$(python3 -c "import os; print(os.path.realpath('$target'))")"
         else
-            log_warning "  $target exists and is not a symlink. Skipping."
+            link_target="$(readlink -f "$target" 2>/dev/null || readlink "$target")"
+        fi
+        
+        if [[ "$link_target" == "$REPO_DIR"* ]]; then
+            rm "$target"
+            log_info "  Updating existing symlink: $name"
+        else
+            log_warning "  $name points elsewhere ($link_target). Skipping."
             return 1
         fi
+    elif [ -e "$target" ]; then
+        log_warning "  $target exists and is not a symlink. Skipping."
+        return 1
     fi
     
-    # Create symlink with relative path for portability
+    # Create relative symlink if possible
     if ln -sr "$source" "$target" 2>/dev/null; then
         : # GNU ln with -r support
     elif command -v python3 >/dev/null 2>&1; then
-        # Fallback: compute relative path with Python
         local rel_path
-        rel_path="$(python3 -c 'import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))' "$source" "$(dirname "$target")")"
+        rel_path="$(python3 -c "import os,sys; print(os.path.relpath(sys.argv[1], os.path.dirname(sys.argv[2])))" "$source" "$target")"
         ln -s "$rel_path" "$target"
     else
-        log_warning "  Neither GNU ln -sr nor python3 available. Using absolute path (less portable)."
+        log_warning "  Using absolute path (less portable)"
         ln -s "$source" "$target"
     fi
     
@@ -199,13 +221,13 @@ create_symlink() {
 }
 
 link_skills() {
-    log_info "Linking skills from $REPO_SKILLS_DIR to $SKILLS_DIR"
+    log_info "Linking skills to $SKILLS_DIR"
     
     local count=0
     for skill_path in "$REPO_SKILLS_DIR"/*/; do
         if [ -d "$skill_path" ]; then
             skill_name=$(basename "$skill_path")
-            skill_path="${skill_path%/}"  # Strip trailing slash
+            skill_path="${skill_path%/}"
             target_path="$SKILLS_DIR/$skill_name"
             
             if create_symlink "$skill_path" "$target_path" "$skill_name"; then
@@ -219,11 +241,11 @@ link_skills() {
 
 link_agents() {
     if [ ! -d "$REPO_AGENTS_DIR" ]; then
-        log_info "No agents directory found at $REPO_AGENTS_DIR, skipping agent linking."
+        log_info "No agents directory found, skipping"
         return
     fi
     
-    log_info "Linking agents from $REPO_AGENTS_DIR to $AGENTS_DIR"
+    log_info "Linking agents to $AGENTS_DIR"
     
     local count=0
     for agent_path in "$REPO_AGENTS_DIR"/*.md; do
@@ -241,18 +263,21 @@ link_agents() {
 }
 
 # ------------------------------------------------------------------------------
-# Hook Registration
+# Hook Registration (Enabled by Default)
 # ------------------------------------------------------------------------------
 
 register_hooks() {
-    # Check if Node.js is available (required for hooks)
+    if [ "$ENABLE_HOOKS" != true ]; then
+        log_info "Skipping hook registration (--no-hooks flag used)"
+        return 0
+    fi
+    
     if ! command -v node >/dev/null 2>&1; then
-        log_warning "Node.js not found. Hooks require Node.js to run."
-        log_warning "Install Node.js (https://nodejs.org) for deterministic skill routing."
+        log_warning "Node.js not found. Cannot register hooks."
+        log_warning "Install Node.js or use YOLO mode/ explicit skill invocation."
         return 1
     fi
     
-    # Check if hook scripts exist
     local ROUTER_PATH="$REPO_DIR/agents/superpowers-router.js"
     local GUARD_PATH="$REPO_DIR/agents/superpowers-guard.js"
     
@@ -263,9 +288,8 @@ register_hooks() {
     
     log_info "Registering Superpowers hooks in $SETTINGS_FILE"
     
-    # Ensure settings.json exists
+    # Create settings.json if missing
     if [ ! -f "$SETTINGS_FILE" ]; then
-        log_info "Creating basic $SETTINGS_FILE for hook registration..."
         printf '{\n  "hooks": {}\n}\n' > "$SETTINGS_FILE"
     fi
     
@@ -275,6 +299,7 @@ import json, sys
 settings_path = sys.argv[1]
 router_path = sys.argv[2]
 guard_path = sys.argv[3]
+
 try:
     with open(settings_path, 'r') as f:
         d = json.load(f)
@@ -294,7 +319,7 @@ beforeAgent.append({
 })
 hooks['beforeAgent'] = beforeAgent
 
-# BeforeTool: agent-behavior guard (commit/merge interception)
+# BeforeTool: agent-behavior guard
 beforeTool = hooks.setdefault('beforeTool', [])
 beforeTool = [h for h in beforeTool if h.get('name') not in ('superpowers-guard',)]
 beforeTool.append({
@@ -309,12 +334,13 @@ with open(settings_path, 'w') as f:
     json.dump(d, f, indent=2)
     f.write('\n')
 " "$SETTINGS_FILE" "$ROUTER_PATH" "$GUARD_PATH"
+        
         log_success "Registered superpowers-router (BeforeAgent)"
         log_success "Registered superpowers-guard (BeforeTool)"
         return 0
     else
         log_warning "python3 not found. Could not auto-register hooks."
-        log_warning "Please add hooks manually to $SETTINGS_FILE. See $REPO_DIR/docs/README.gemini.md."
+        log_warning "Add hooks manually to $SETTINGS_FILE"
         return 1
     fi
 }
@@ -324,49 +350,44 @@ with open(settings_path, 'w') as f:
 # ------------------------------------------------------------------------------
 
 inject_context() {
+    local CONTEXT_SOURCE="$REPO_DIR/.gemini/GEMINI.md"
     local CONTEXT_HEADER="<!-- SUPERPOWERS-CONTEXT-START -->"
     local CONTEXT_FOOTER="<!-- SUPERPOWERS-CONTEXT-END -->"
     
-    # Read context block from repo
-    local CONTEXT_BLOCK_SOURCE="$REPO_DIR/.gemini/GEMINI.md"
-    if [ ! -f "$CONTEXT_BLOCK_SOURCE" ]; then
-        log_error "Could not find context block source at $CONTEXT_BLOCK_SOURCE"
+    if [ ! -f "$CONTEXT_SOURCE" ]; then
+        log_error "Context source not found at $CONTEXT_SOURCE"
         return 1
     fi
     
+    # Extract context block
     local CONTEXT_BLOCK
-    CONTEXT_BLOCK=$(awk "/$CONTEXT_HEADER/{flag=1} flag; /$CONTEXT_FOOTER/{flag=0}" "$CONTEXT_BLOCK_SOURCE")
+    CONTEXT_BLOCK=$(awk "/$CONTEXT_HEADER/{flag=1} flag; /$CONTEXT_FOOTER/{flag=0}" "$CONTEXT_SOURCE")
     
     # Create GEMINI.md if missing
     if [ ! -f "$GEMINI_MD" ]; then
-        log_info "Creating $GEMINI_MD..."
         touch "$GEMINI_MD"
     fi
     
-    # Idempotent: remove existing block if present
+    # Remove existing block if present
     if grep -q "$CONTEXT_HEADER" "$GEMINI_MD"; then
-        log_info "Updating Superpowers context in $GEMINI_MD..."
+        log_info "Updating Superpowers context"
         sed -i.bak "/$CONTEXT_HEADER/,/$CONTEXT_FOOTER/d" "$GEMINI_MD"
         rm -f "${GEMINI_MD}.bak"
     else
-        log_info "Injecting Superpowers context into $GEMINI_MD..."
+        log_info "Injecting Superpowers context"
     fi
     
-    # Trim trailing blank/whitespace-only lines (prevents accumulation on repeated runs)
-    if awk '{lines[NR]=$0} END{e=NR; while(e>0 && lines[e] ~ /^[[:space:]]*$/) e--; for(i=1;i<=e;i++) print lines[i]}' "$GEMINI_MD" > "${GEMINI_MD}.tmp" 2>/dev/null; then
-        mv "${GEMINI_MD}.tmp" "$GEMINI_MD"
-    else
-        log_warning "Could not trim blank lines from $GEMINI_MD"
-    fi
+    # Clean up trailing whitespace
+    sed -i.bak '/^[[:space:]]*$/d' "$GEMINI_MD" 2>/dev/null && rm -f "${GEMINI_MD}.bak" || true
     
-    # Append context block (add newline separator only if file already has content)
+    # Append context block
     if [ -s "$GEMINI_MD" ]; then
         printf '\n%s\n' "$CONTEXT_BLOCK" >> "$GEMINI_MD"
     else
         printf '%s\n' "$CONTEXT_BLOCK" >> "$GEMINI_MD"
     fi
     
-    log_success "Injected Superpowers context into $GEMINI_MD"
+    log_success "Injected context into $GEMINI_MD"
 }
 
 # ------------------------------------------------------------------------------
@@ -380,25 +401,85 @@ ${BLUE}════════════════════════�
 ${GREEN}Native Extension Installation${NC}
 ═══════════════════════════════════════════════════════════════════════════════
 
-For Gemini CLI v0.28.0+, you can install Superpowers as a native extension:
+For Gemini CLI v0.28.0+, install as a native extension:
 
   ${YELLOW}gemini extension install $REPO_DIR/.gemini${NC}
 
-Benefits of native extension installation:
+Benefits:
   • Clean integration with Gemini's extension system
   • Automatic updates via ${YELLOW}gemini extension update superpowers${NC}
   • Better future compatibility
-  • No symlink management required
+  • Includes deterministic routing hooks
 
 After installation, restart Gemini CLI.
 
-To switch back to hub pattern installation, first uninstall the extension:
-
+To switch back to hub pattern:
   ${YELLOW}gemini extension uninstall superpowers${NC}
 
-Then run this installer again without --native.
-
 EOF
+}
+
+# ------------------------------------------------------------------------------
+# Post-Installation Summary
+# ------------------------------------------------------------------------------
+
+show_summary() {
+    local hooks_status="Enabled"
+    if [ "$ENABLE_HOOKS" != true ]; then
+        hooks_status="Disabled (--no-hooks)"
+    fi
+    
+    cat << EOF
+
+${BLUE}═══════════════════════════════════════════════════════════════════════════════${NC}
+${GREEN}✅ Installation Complete${NC}
+═══════════════════════════════════════════════════════════════════════════════
+
+Installation Summary:
+• Mode: ${MODE}
+• Hooks: ${hooks_status}
+• Skills: ${SKILLS_DIR}
+• Agents: ${AGENTS_DIR}
+
+Next Steps:
+1. ${YELLOW}Restart Gemini CLI${NC}
+2. Ask: ${YELLOW}"Do you have superpowers?"${NC}
+3. List skills: ${YELLOW}/skills list${NC}
+
+Auto-Activation Methods:
+EOF
+
+    if [ "$ENABLE_HOOKS" = true ]; then
+        cat << EOF
+• ${GREEN}Deterministic Hooks${NC}: superpowers-router analyzes prompts
+• ${YELLOW}YOLO Mode${NC}: Use ${YELLOW}--yolo${NC} flag or Ctrl+Y
+• ${YELLOW}Explicit Invocation${NC}: "use the brainstorming skill"
+EOF
+    else
+        cat << EOF
+• ${YELLOW}YOLO Mode${NC}: Use ${YELLOW}--yolo${NC} flag or Ctrl+Y (recommended)
+• ${YELLOW}Explicit Invocation${NC}: "use the brainstorming skill"
+• ${YELLOW}Manual Skill Checks${NC}: Check /skills list before starting work
+EOF
+    fi
+
+    cat << EOF
+
+To Update:
+  ${YELLOW}cd $REPO_DIR && git pull && .gemini/install.sh${NC}
+
+For troubleshooting: ${REPO_DIR}/.gemini/INSTALL.md
+EOF
+
+    if [ "$MODE" = "antigravity" ]; then
+        cat << EOF
+
+${YELLOW}Antigravity Notes:${NC}
+• Skills installed to $SKILLS_DIR
+• Antigravity auto-discovers skills
+• Restart Antigravity if running
+EOF
+    fi
 }
 
 # ------------------------------------------------------------------------------
@@ -406,8 +487,7 @@ EOF
 # ------------------------------------------------------------------------------
 
 main() {
-    log_info "Superpowers Installer v${VERSION}"
-    log_info "Mode: ${MODE}"
+    log_info "Superpowers Hybrid Installer v${VERSION}"
     
     parse_arguments "$@"
     
@@ -421,57 +501,22 @@ main() {
     
     log_info "Starting installation in mode: $MODE"
     log_info "Gemini directory: $GEMINI_DIR"
+    log_info "Hooks enabled: $ENABLE_HOOKS"
     
-    # Core installation steps
+    # Core installation
     link_skills
     link_agents
     register_hooks
     inject_context
     
-    # Post-installation instructions
-    cat << EOF
-
-${BLUE}═══════════════════════════════════════════════════════════════════════════════${NC}
-${GREEN}✅ Installation Complete!${NC}
-═══════════════════════════════════════════════════════════════════════════════
-
-Next steps:
-1. ${YELLOW}Restart Gemini CLI${NC} to activate Superpowers
-2. Ask Gemini: ${YELLOW}"Do you have superpowers?"${NC}
-3. List available skills: ${YELLOW}/skills list${NC}
-
-Important notes:
-• Gemini CLI treats skill context as ${YELLOW}advisory${NC}, not mandatory
-• For reliable skill activation, ${YELLOW}explicitly mention skill names${NC}
-• Example: "use the brainstorming skill" or "help me debug using systematic-debugging"
-
-Installation mode: ${MODE}
-Skills directory: ${SKILLS_DIR}
-Agents directory: ${AGENTS_DIR}
-
-To update Superpowers:
-  ${YELLOW}cd $REPO_DIR && git pull && .gemini/install.sh${NC}
-
-For troubleshooting, see: ${REPO_DIR}/.gemini/INSTALL.md
-
-EOF
-    
-    if [ "$MODE" = "antigravity" ]; then
-        cat << EOF
-${YELLOW}Antigravity Installation Notes:${NC}
-• Skills are installed to $GEMINI_DIR/skills/
-• Antigravity will automatically discover these skills
-• Restart Antigravity if running
-
-EOF
-    fi
+    # Summary
+    show_summary
 }
 
 # ------------------------------------------------------------------------------
 # Script Entry Point
 # ------------------------------------------------------------------------------
 
-# Only run main if script is executed, not sourced
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
     main "$@"
 fi
