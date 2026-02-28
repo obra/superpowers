@@ -158,7 +158,7 @@ Wait for their answer. If they're context-constrained or unsure, tell them to ru
 
 - **Team Lead (you):** Orchestrates work, assigns tasks, routes reviews, handles escalations
 - **Implementer agents:** One per independent task group, spawned as team members, work in parallel
-- **Validator agents (2):** Persistent team members, each handles combined spec+quality review. Declared idle/busy via TaskUpdate.
+- **Validator agents (2):** Persistent team members, each handles combined spec+quality review. Availability signaled via SendMessage.
 
 ```
 Team:
@@ -235,9 +235,9 @@ The SHA map lets the validator re-read prior task diffs when it infers dependenc
 
 ### Validator Idle State Tracking
 
-Validator agents (2) declare their state via TaskUpdate: `in_progress` when they receive a review request, `completed` when they return a verdict. Team lead relies on this TaskUpdate state as the authoritative availability signal. Team lead also observes message flow as a secondary activity indicator — a validator is treated as busy from the moment they receive a review request until their verdict arrives. Team lead does not send a second review to a validator before receiving their verdict for the first.
+A validator is treated as busy from the moment they receive a review request until their SendMessage verdict arrives. Team lead treats SendMessage receipt as the authoritative availability signal — not TaskUpdate state. Team lead does not send a second review to a validator before receiving their SendMessage verdict for the first.
 
-Validators notify the team lead when their verdict is ready via `SendMessage` and update their TaskUpdate state to `completed`. The team lead checks TaskUpdate state before routing any new review request.
+Validators notify the team lead when their verdict is ready via `SendMessage`. The team lead routes the next available review request only after receiving that message.
 
 ### Re-Review Loop Bound
 
