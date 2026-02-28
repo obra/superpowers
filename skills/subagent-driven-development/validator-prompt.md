@@ -75,7 +75,7 @@ For each gap: ❌ MISSING — [requirement], expected: [what spec says], found: 
 - ✅ APPROVED — all requirements cited, no Critical or Important issues
 - ❌ NEEDS FIXES — [bulleted list of exactly what must change]
 
-After sending this verdict, update your task status: TaskUpdate(status: "completed") and notify the team lead.
+After sending this verdict, notify the team lead via `SendMessage` so they know you are available for the next review.
 
 ## Re-Review Protocol
 

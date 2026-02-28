@@ -175,7 +175,7 @@ digraph team_process {
 
     subgraph cluster_per_task {
         label="Per Completed Task (team lead orchestrates)";
-        "Find idle validator (check TaskList)" [shape=box];
+        "Find idle validator (awaiting verdict from last review?)" [shape=box];
         "Send review request to idle validator via SendMessage" [shape=box];
         "Validator runs combined spec+quality review" [shape=box];
         "Verdict: APPROVED?" [shape=diamond];
@@ -195,8 +195,8 @@ digraph team_process {
     "TeamCreate: spawn implementers + 2 validators" -> "Assign independent tasks to implementers via TaskCreate + TaskUpdate";
     "Assign independent tasks to implementers via TaskCreate + TaskUpdate" -> "Implementers work in parallel";
     "Implementers work in parallel" -> "Implementer N finishes, sends report to team lead";
-    "Implementer N finishes, sends report to team lead" -> "Find idle validator (check TaskList)";
-    "Find idle validator (check TaskList)" -> "Send review request to idle validator via SendMessage";
+    "Implementer N finishes, sends report to team lead" -> "Find idle validator (awaiting verdict from last review?)";
+    "Find idle validator (awaiting verdict from last review?)" -> "Send review request to idle validator via SendMessage";
     "Send review request to idle validator via SendMessage" -> "Validator runs combined spec+quality review";
     "Validator runs combined spec+quality review" -> "Verdict: APPROVED?";
     "Verdict: APPROVED?" -> "Send fix instructions to implementer N" [label="no"];
@@ -229,11 +229,9 @@ The SHA map lets the validator re-read prior task diffs when it infers dependenc
 
 ### Validator Idle State Tracking
 
-Validators use TaskUpdate to declare availability:
-- On receiving a review request: `TaskUpdate(taskId: their-current-task-id, status: "in_progress")`
-- After sending verdict: `TaskUpdate(status: "completed")`, then notify team lead
+Team lead tracks validator availability via message flow: a validator is busy from the moment they receive a review request until you receive their verdict. Team lead does not send a second review to a validator before receiving their verdict for the first.
 
-Team lead checks TaskList before routing. If both validators show `in_progress`, wait rather than double-sending.
+Validators notify the team lead when their verdict is ready via `SendMessage`. The team lead uses message receipt as the availability signal.
 
 ### Re-Review Loop Bound
 
@@ -262,7 +260,7 @@ If a validator does not respond within 60 seconds of receiving a review request:
 ### Key Constraints in Team Mode
 
 - **One implementer per task** — never assign two implementers to the same task (conflicts)
-- **One validator per active review** — check TaskList before routing; don't double-send
+- **One validator per active review** — don't send a review to a validator before receiving their verdict for the prior one
 - **Cycle cap is 3** — after 3 rejections, escalate to human, do not continue looping
 - **SHA map is required** — team lead maintains it; validators cannot re-read dependencies without it
 - **Team lead assigns via TaskUpdate** — implementers do not self-assign tasks
@@ -454,7 +452,8 @@ validator-1 (Task 2 re-review):
 
 **Quality gates:**
 - Self-review catches issues before handoff
-- Two-stage review: spec compliance, then code quality
+- Standard mode: two-stage review (spec compliance, then code quality)
+- Team mode: single-pass validator (combined spec+quality, one call per task)
 - Review loops ensure fixes actually work
 - Spec compliance prevents over/under-building
 - Code quality ensures implementation is well-built
@@ -482,7 +481,7 @@ validator-1 (Task 2 re-review):
 - Let implementer self-review replace actual review (both are needed)
 - **Standard mode only:** Start code quality review before spec compliance is ✅ (wrong order)
 - Move to next task while any review has open issues
-- **Team mode only:** Send a review to a validator that is already mid-review (check TaskList first)
+- **Team mode only:** Send a review to a validator before receiving their verdict for the previous review
 - **Team mode only:** Dispatch a fresh review subagent when a validator is available (use the validator)
 - **Team mode only:** Exceed 3 review cycles without escalating to human
 - **Team mode only:** Skip the SHA map in review requests (validators cannot re-read dependencies without it)
@@ -495,9 +494,9 @@ validator-1 (Task 2 re-review):
 - Don't rush them into implementation
 
 **If reviewer finds issues:**
-- Implementer (same subagent) fixes them
-- Reviewer reviews again
-- Repeat until approved
+- Standard mode: Implementer (same subagent) fixes them, re-dispatch reviewer
+- Team mode: `SendMessage` to the implementer with specific fix instructions, route back to idle validator
+- Repeat until approved (max 3 cycles in team mode — escalate to human after 3 rejections)
 - Don't skip the re-review
 
 **If subagent fails task:**
