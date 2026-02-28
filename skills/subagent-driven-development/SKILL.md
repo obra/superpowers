@@ -131,8 +131,8 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 **Standard mode:**
 - `./implementer-prompt.md` - Implementer subagent
-- `./spec-reviewer-prompt.md` - Spec compliance reviewer (dispatch first)
-- Code quality review: use superpowers:requesting-code-review (dispatch after spec passes)
+- `./spec-reviewer-prompt.md` - Spec compliance reviewer (standard mode only)
+- `./code-quality-reviewer-prompt.md` - Code quality reviewer (standard mode only, dispatched after spec passes)
 
 **Team mode:**
 - `./implementer-prompt.md` - Implementer subagent (same template)
@@ -142,24 +142,11 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 When `TeamCreate` is available and the user opts in, use this flow instead of standard sequential execution.
 
+**Pre-Flight:** Before spawning the team, run `/compact` if the current session has 20 or more turns. Team lead context bloat slows all orchestration turns — start lean. Implementer agents always start fresh, so compacting benefits the lead without affecting them.
+
 **Prerequisite:** Run the SDK memory validation test (see design doc) before first use. Confirm team members retain conversation context between `SendMessage` calls.
 
 **Core difference:** Persistent validator agents replace fresh-subagent-per-review. Validators accumulate codebase context across tasks and run combined spec+quality review in a single pass.
-
-### Pre-Flight: Context Compaction
-
-**Before creating the team, compact your context.**
-
-Agent team members start fresh (good — they don't inherit the team lead's context). But the team lead's own context grows with every orchestration turn. A team lead with 50k+ tokens of context is slower and more expensive per turn — and orchestration is turn-heavy.
-
-**Recommended:** Run `/compact` (or equivalent context compaction) before `TeamCreate`. Ideally after the plan is written and approved, before any implementation begins. At minimum: compact before spawning if the conversation has had 20+ turns.
-
-**What to preserve through compaction:**
-- The plan file path (you can re-read it)
-- The team name you intend to use
-- Any clarifications or decisions made during design that aren't in the plan
-
-**You do not need to remember:** conversation history, design deliberations, review feedback — the plan file captures the decisions.
 
 ### Team Composition
 
@@ -282,16 +269,16 @@ If a validator does not respond within 60 seconds of receiving a review request:
 - **Shutdown protocol required** — always send `shutdown_request` to all members before `TeamDelete`
 - **Never dispatch a fresh review subagent when a validator is available** — use the persistent validator
 - **Validator approval of a re-opened task is required before re-reviewing its dependents**
+- **Never skip context compaction** — run `/compact` before `TeamCreate` if session has 20+ turns
 
 ### Team Lifecycle
 
-1. **Before TeamCreate:** compact context (`/compact`) if conversation has had 20+ turns
-2. `TeamCreate` once at start
-3. Spawn implementers and 2 validators via Agent tool with `team_name`
-4. Assign initial independent tasks via TaskCreate + TaskUpdate
-5. As tasks complete: route to idle validator, handle verdict, assign next tasks
-6. When all tasks complete: send `shutdown_request` to all, `TeamDelete`
-7. Final code review + `finishing-a-development-branch`
+1. `/compact` if session has 20+ turns, then `TeamCreate`
+2. Spawn implementers and 2 validators via Agent tool with `team_name`
+3. Assign initial independent tasks via TaskCreate + TaskUpdate
+4. As tasks complete: route to idle validator, handle verdict, assign next tasks
+5. When all tasks complete: send `shutdown_request` to all, `TeamDelete`
+6. Final code review + `finishing-a-development-branch`
 
 ## Example Workflow
 
@@ -318,11 +305,13 @@ Implementer: "Got it. Implementing now..."
   - Self-review: Found I missed --force flag, added it
   - Committed
 
-[Dispatch spec compliance reviewer]
-Spec reviewer: ✅ Spec compliant - all requirements met, nothing extra
-
-[Get git SHAs, dispatch code quality reviewer]
-Code reviewer: Strengths: Good test coverage, clean. Issues: None. Approved.
+[Route to validator-1 via SendMessage with task spec, implementer report, BASE_SHA, HEAD_SHA, SHA map]
+Validator-1:
+  Spec Compliance: ✅ all requirements cited
+    - Evidence section → implementer-prompt.md:70 — `## Mandatory Evidence (Required Before Reporting)`
+    - Rejection instruction → implementer-prompt.md:88 — `A report submitted without this evidence...`
+  Code Quality: Strengths: Clean integration. Issues: None.
+  ✅ APPROVED
 
 [Mark Task 1 complete]
 
@@ -338,25 +327,23 @@ Implementer:
   - Self-review: All good
   - Committed
 
-[Dispatch spec compliance reviewer]
-Spec reviewer: ❌ Issues:
-  - Missing: Progress reporting (spec says "report every 100 items")
-  - Extra: Added --json flag (not requested)
+[Route to validator-2 via SendMessage with task spec, report, SHAs, SHA map]
+Validator-2:
+  Spec Compliance:
+    - Requirement "verify mode" → `src/recovery.py:15` — `def verify(items): ...`  ✅
+    - Requirement "repair mode" → `src/recovery.py:42` — `def repair(items): ...`  ✅
+    - Requirement "report every 100 items" → MISSING  ❌
+  Code Quality: Issues: --json flag not in spec (extra feature)
+  ❌ NEEDS FIXES — missing progress reporting, remove --json flag
 
-[Implementer fixes issues]
-Implementer: Removed --json flag, added progress reporting
+[SendMessage to implementer: fix progress reporting, remove --json]
+Implementer: Removed --json flag, added progress reporting, 10/10 tests passing
 
-[Spec reviewer reviews again]
-Spec reviewer: ✅ Spec compliant now
-
-[Dispatch code quality reviewer]
-Code reviewer: Strengths: Solid. Issues (Important): Magic number (100)
-
-[Implementer fixes]
-Implementer: Extracted PROGRESS_INTERVAL constant
-
-[Code reviewer reviews again]
-Code reviewer: ✅ Approved
+[Route to validator-2: re-review]
+Validator-2:
+    - Requirement "report every 100 items" → `src/recovery.py:58` — `if count % 100 == 0: report(count)`  ✅
+  Code Quality: Strengths: Solid. Issues (Minor): Magic number 100 → extract constant
+  ✅ APPROVED (minor noted, not blocking)
 
 [Mark Task 2 complete]
 
@@ -470,10 +457,12 @@ validator-1 (Task 2 re-review):
 - Code quality ensures implementation is well-built
 
 **Cost:**
-- Standard mode: implementer + 2 reviewers per task (sequential); more agent startups
-- Team mode: 5 agents started once (3 implementers + 2 validators); reviews parallel with implementation; combined review = 1 validator call per task instead of 2 sequential reviewer calls
-- Both modes: review loops add iterations, but catch issues early (cheaper than debugging later)
-- Team mode overhead: team lead context grows during orchestration; compact before TeamCreate to keep turns fast
+- Team mode: implementer invocations + 1 validator call per task (down from 2 in standard mode)
+- Standard mode: implementer + 2 reviewer invocations per task
+- Controller does more prep work (extracting all tasks upfront)
+- Review loops add iterations
+- Team lead context grows across tasks — compact before TeamCreate (20+ turns) to avoid orchestration slowdown
+- But catches issues early (cheaper than debugging later)
 
 ## Red Flags
 
