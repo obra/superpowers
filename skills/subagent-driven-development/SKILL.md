@@ -369,6 +369,73 @@ Final reviewer: All requirements met, ready to merge
 Done!
 ```
 
+### Team Mode Example Workflow
+
+```
+You: I'm using Subagent-Driven Development (team mode) for this plan.
+
+[Compact context first — run /compact before spawning team]
+
+[Read plan, extract 5 tasks, identify 3 independent groups]
+[TeamCreate team "impl-plan"]
+[Spawn: implementer-1, implementer-2, implementer-3, validator-1, validator-2]
+[SHA map: {}  <- empty at start, grows as tasks complete]
+
+[Assign Task 1 to implementer-1, Task 2 to implementer-2, Task 4 to implementer-3]
+[Implementers work in parallel]
+
+implementer-2 (Task 2 finishes first):
+  - Added feature X
+  - 8/8 tests passing, test output: [...]
+  - git diff --stat: 3 files, +120/-5 lines
+  - Committed (HEAD: abc1234)
+
+[Check TaskList - validator-1 is idle]
+[SendMessage to validator-1: Task 2 spec + report + BASE=..., HEAD=abc1234, SHA map={}]
+[TaskUpdate validator-1 task: in_progress]
+
+implementer-1 (Task 1 finishes):
+  - Implemented hook installer
+  - 5/5 tests passing
+  - Committed (HEAD: def5678)
+
+[Check TaskList - validator-2 is idle, validator-1 still reviewing Task 2]
+[SendMessage to validator-2: Task 1 spec + report + BASE=..., HEAD=def5678, SHA map={}]
+
+validator-1 (Task 2 verdict):
+  Spec Compliance:
+    Requirement "does X" -> `src/feature.py:42` - `def do_x(input): ...`  ✅
+    Requirement "handles Y" -> MISSING - no implementation found
+  Code Quality: Strengths: clean. Issues: none.
+  Verdict: NEEDS FIXES - implement Y handling
+
+[SHA map: {task-2: abc1234}]
+[SendMessage to implementer-2: fix Y handling as specified in requirement 3]
+
+validator-2 (Task 1 verdict):
+  Spec Compliance:
+    Requirement "installs hook" -> `scripts/install.sh:15` - `cp hook.sh ~/.config/...`  ✅
+    Requirement "supports --force" -> `scripts/install.sh:28` - `if [[ "$1" == "--force" ]]`  ✅
+  Code Quality: Strengths: good tests. Issues (Minor): no error on missing dir.
+  Verdict: APPROVED (minor noted, not blocking)
+
+[Mark Task 1 complete. SHA map: {task-1: def5678, task-2: abc1234}]
+[Assign Task 3 to implementer-1 (now idle)]
+
+implementer-2 (Task 2 fix):
+  - Added Y handling, 10/10 tests passing
+  - Committed (HEAD: ghi9012)
+
+[SendMessage to validator-1: Task 2 re-review, HEAD=ghi9012, SHA map={task-1: def5678}]
+
+validator-1 (Task 2 re-review):
+  Requirement "handles Y" -> `src/feature.py:67` - `def handle_y(input): ...`  ✅
+  Verdict: APPROVED
+
+[Mark Task 2 complete. SHA map updated.]
+...
+```
+
 ## Advantages
 
 **vs. Manual execution:**
@@ -381,6 +448,13 @@ Done!
 - Same session (no handoff)
 - Continuous progress (no waiting)
 - Review checkpoints automatic
+
+**Team mode adds:**
+- No per-review startup overhead (validators are already running)
+- Combined spec+quality in one pass (one validator call per task)
+- Cross-task gap detection (validators re-read dependencies from VCS, not memory)
+- Reviews run concurrently with ongoing implementation
+- Lean team lead context (compact before spawning keeps orchestration turns fast)
 
 **Efficiency gains:**
 - No file reading overhead (controller provides full text)
@@ -396,10 +470,10 @@ Done!
 - Code quality ensures implementation is well-built
 
 **Cost:**
-- More subagent invocations (implementer + 2 reviewers per task)
-- Controller does more prep work (extracting all tasks upfront)
-- Review loops add iterations
-- But catches issues early (cheaper than debugging later)
+- Standard mode: implementer + 2 reviewers per task (sequential); more agent startups
+- Team mode: 5 agents started once (3 implementers + 2 validators); reviews parallel with implementation; combined review = 1 validator call per task instead of 2 sequential reviewer calls
+- Both modes: review loops add iterations, but catch issues early (cheaper than debugging later)
+- Team mode overhead: team lead context grows during orchestration; compact before TeamCreate to keep turns fast
 
 ## Red Flags
 
