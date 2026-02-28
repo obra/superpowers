@@ -120,6 +120,8 @@ If a validator incorrectly approves task N, downstream tasks may be reviewed aga
 
 **Validator rotation (large plans):** For plans with more than 8 tasks, start a fresh validator after every 5 tasks completed. **Explicit tradeoff:** plans with >8 tasks are exactly the ones most likely to have cross-task gaps — rotation partially resets the cross-task memory that would catch them. The re-read rule still protects against gaps where the task spec explicitly mentions prior tasks; undeclared implicit cross-task dependencies may not be caught after a rotation. Rotation trades full cross-task coverage for bounded context cost. Document this explicitly in SKILL.md so users of large plans understand the limitation.
 
+**Rotation handoff:** Before the outgoing validator is replaced, have it send the team lead a brief dependency summary — any cross-task relationships it observed across the tasks it reviewed (e.g., "task 3 uses the auth helper introduced in task 1; task 5 extends the schema from task 2"). The team lead includes this summary in the first review request to the incoming validator. This preserves the most important cross-task knowledge across the rotation boundary without requiring the incoming validator to re-read all prior diffs.
+
 ### Validator Failure Recovery
 
 If a validator does not respond within 60 seconds of receiving a review request:
@@ -147,8 +149,8 @@ If the SDK validation test shows no context retention, abandon the persistent te
 
 ### Phase 2 (after SDK validation):
 - `SKILL.md` — update team composition, process diagram, red flags, add context rotation rule with explicit cross-task limitation disclosure
-- `spec-reviewer-prompt.md` — extend to combined spec+quality validator prompt
-- `code-quality-reviewer-prompt.md` — **delete.** Before deleting: run `grep -r "code-quality-reviewer-prompt" .` in the repo root and update any found references. If clean, delete directly.
+- `validator-prompt.md` — **create new.** Combined spec+quality prompt for persistent validator team members (SendMessage payload, not Task dispatch). `spec-reviewer-prompt.md` is unchanged from Phase 1 — it remains for standard mode spec compliance only.
+- `code-quality-reviewer-prompt.md` — **delete.** Before deleting: run `grep -r "code-quality-reviewer-prompt" .` in the repo root and update any found references. Standard mode references should point to `superpowers:requesting-code-review` directly.
 
 ### Not changed:
 - `executing-plans` skill: unchanged

@@ -255,6 +255,8 @@ Maximum **3 review cycles per task.** After 3 rejections, team lead pauses plan 
 
 **Validator rotation (large plans):** For plans with more than 8 tasks, replace a validator with a fresh one after every 5 tasks that validator has reviewed. Note: this partially resets cross-task memory for exactly the plans most likely to have cross-task gaps. The re-read rule still protects dependencies that are stated explicitly in the task spec; undeclared implicit dependencies may not be caught post-rotation. This tradeoff (bounded context cost vs. full cross-task coverage) is intentional.
 
+**Rotation handoff:** Before retiring the outgoing validator, ask it to send you a brief dependency summary of any cross-task relationships it observed (e.g., "task 3 uses the auth helper from task 1; task 5 extends the schema from task 2"). Include this summary in the first review request to the incoming validator. This preserves the most critical cross-task knowledge across the rotation boundary.
+
 ### Validator Failure Recovery
 
 If a validator does not respond within 60 seconds of receiving a review request:
