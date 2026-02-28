@@ -62,7 +62,7 @@ digraph process {
         "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [shape=box];
         "Spec reviewer subagent confirms code matches spec?" [shape=diamond];
         "Implementer subagent fixes spec gaps" [shape=box];
-        "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
+        "Dispatch code quality reviewer subagent (superpowers:requesting-code-review)" [shape=box];
         "Code quality reviewer subagent approves?" [shape=diamond];
         "Implementer subagent fixes quality issues" [shape=box];
         "Mark task complete in TodoWrite" [shape=box];
@@ -82,10 +82,10 @@ digraph process {
     "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" -> "Spec reviewer subagent confirms code matches spec?";
     "Spec reviewer subagent confirms code matches spec?" -> "Implementer subagent fixes spec gaps" [label="no"];
     "Implementer subagent fixes spec gaps" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="re-review"];
-    "Spec reviewer subagent confirms code matches spec?" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="yes"];
-    "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
+    "Spec reviewer subagent confirms code matches spec?" -> "Dispatch code quality reviewer subagent (superpowers:requesting-code-review)" [label="yes"];
+    "Dispatch code quality reviewer subagent (superpowers:requesting-code-review)" -> "Code quality reviewer subagent approves?";
     "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
-    "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
+    "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (superpowers:requesting-code-review)" [label="re-review"];
     "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
     "Mark task complete in TodoWrite" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
@@ -405,17 +405,23 @@ Done!
 
 **Never:**
 - Start implementation on main/master branch without explicit user consent
-- Skip reviews (spec compliance OR code quality)
+- Skip reviews (in standard mode: spec compliance AND quality; in team mode: the validator pass)
 - Proceed with unfixed issues
-- Dispatch multiple implementation subagents in parallel (conflicts)
+- Dispatch multiple implementation subagents in parallel on the same task (conflicts)
 - Make subagent read plan file (provide full text instead)
 - Skip scene-setting context (subagent needs to understand where task fits)
 - Ignore subagent questions (answer before letting them proceed)
-- Accept "close enough" on spec compliance (spec reviewer found issues = not done)
+- Accept "close enough" on spec compliance (citation missing = not done)
 - Skip review loops (reviewer found issues = implementer fixes = review again)
 - Let implementer self-review replace actual review (both are needed)
-- **Start code quality review before spec compliance is ✅** (wrong order)
-- Move to next task while either review has open issues
+- **Standard mode only:** Start code quality review before spec compliance is ✅ (wrong order)
+- Move to next task while any review has open issues
+- **Team mode only:** Send a review to a validator that is already mid-review (check TaskList first)
+- **Team mode only:** Dispatch a fresh review subagent when a validator is available (use the validator)
+- **Team mode only:** Exceed 3 review cycles without escalating to human
+- **Team mode only:** Skip the SHA map in review requests (validators cannot re-read dependencies without it)
+- Accept a ✅ verdict that has no per-requirement file:line citations (invalid — request re-review)
+- **Team mode only:** Skip context compaction before TeamCreate when context is large (20+ turns)
 
 **If subagent asks questions:**
 - Answer clearly and completely
