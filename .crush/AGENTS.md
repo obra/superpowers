@@ -12,28 +12,27 @@ Each skill is a `SKILL.md` file with YAML frontmatter describing when to use it.
 ## CRITICAL: You Must Use Skills
 
 **Before ANY response or action**, check if a skill applies. Even a 1% chance means you
-MUST check. Use the skill tool to list and load skills.
+MUST check.
 
 If a skill applies to your task, you DO NOT HAVE A CHOICE. YOU MUST USE IT.
 
 ## How to Use Skills
 
-1. Before responding to any request, check: "Does a superpowers skill apply?"
-2. Use the skill tool to list available skills: `list skills`
-3. Load the relevant skill: `load skill superpowers/brainstorming`
-4. Follow the skill exactly.
+1. Before responding to any request, check `<available_skills>` in your context.
+2. If a skill matches, read its SKILL.md file using the file path in `<location>`.
+3. Follow the skill exactly.
 
 ## Tool Mapping
 
 Skills were originally written for Claude Code. In Crush, substitute:
 - `TodoWrite` → create a task list or todo file
-- `Task` tool with subagents → use Crush's native subagent/parallel execution
-- `Skill` tool → use Crush's native skill tool
+- `Task` tool with subagents → use Crush's Agent tool for complex subtasks
+- `Skill` tool → read the skill file at the `<location>` path from `<available_skills>`
 - `Read`, `Write`, `Edit`, `Bash` → your native Crush tools
 
 ## Skill Priority
 
-Project skills (`.crush.json` `skills_paths`) > Personal skills (`~/.config/crush/skills/`) >
+Project skills (`crush.json` `options.skills_paths`) > Personal skills (`~/.config/crush/skills/`) >
 Superpowers skills (`~/.config/crush/skills/superpowers/`)
 
 ## Common Skills

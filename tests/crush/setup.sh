@@ -22,9 +22,6 @@ cp -r "$REPO_ROOT/.crush" "$HOME/.config/crush/superpowers/"
 mkdir -p "$HOME/.config/crush/skills"
 ln -s "$HOME/.config/crush/superpowers/skills" "$HOME/.config/crush/skills/superpowers"
 
-# Append bootstrap to AGENTS.md
-cat "$HOME/.config/crush/superpowers/.crush/AGENTS.md" >> "$HOME/.config/crush/AGENTS.md"
-
 # Create a personal test skill fixture
 mkdir -p "$HOME/.config/crush/skills/personal-test"
 cat > "$HOME/.config/crush/skills/personal-test/SKILL.md" <<'EOF'
@@ -41,7 +38,6 @@ EOF
 
 echo "Setup complete: $TEST_HOME"
 echo "Skills installed at: $HOME/.config/crush/skills/superpowers"
-echo "AGENTS.md at: $HOME/.config/crush/AGENTS.md"
 
 # Cleanup helper
 cleanup_test_env() {

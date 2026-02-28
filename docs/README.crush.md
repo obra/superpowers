@@ -35,20 +35,15 @@ rm -rf ~/.config/crush/skills/superpowers
 
 # 4. Create symlink
 ln -s ~/.config/crush/superpowers/skills ~/.config/crush/skills/superpowers
-
-# 5. Append bootstrap to global AGENTS.md
-mkdir -p ~/.config/crush
-cat ~/.config/crush/superpowers/.crush/AGENTS.md >> ~/.config/crush/AGENTS.md
 ```
 
 #### Verify Installation
 
 ```bash
 ls -l ~/.config/crush/skills/superpowers
-grep -c superpowers ~/.config/crush/AGENTS.md
 ```
 
-The symlink should point to your superpowers `skills/` directory, and the AGENTS.md grep should return a non-zero count.
+The symlink should point to your superpowers `skills/` directory.
 
 ### Windows
 
@@ -77,10 +72,6 @@ Remove-Item "$crush\skills\superpowers" -Force -ErrorAction SilentlyContinue
 # 4. Create junction (works without special privileges)
 New-Item -ItemType Junction -Path "$crush\skills\superpowers" `
   -Target "$crush\superpowers\skills"
-
-# 5. Append bootstrap to global AGENTS.md
-New-Item -ItemType Directory -Force -Path $crush
-Get-Content "$crush\superpowers\.crush\AGENTS.md" | Add-Content "$crush\AGENTS.md"
 ```
 
 #### Verify Installation
@@ -111,22 +102,28 @@ via a symlink:
 ~/.config/crush/skills/superpowers/ → ~/.config/crush/superpowers/skills/
 ```
 
-### Bootstrap Injection
+Crush also checks `~/.config/agents/skills/` (a cross-agent shared path) and any
+paths listed in `options.skills_paths` in your `crush.json`.
 
-Crush reads `~/.config/crush/AGENTS.md` automatically at session start. The
-superpowers bootstrap snippet (from `.crush/AGENTS.md`) is appended once
-during installation, injecting persistent context about the skills system and tool
-mappings into every Crush session.
+### Skill Activation
+
+At the start of each session, Crush scans all skill directories and injects discovered
+skills into the system prompt as `<available_skills>` XML. Each entry includes the
+skill's `name`, `description`, and file `location`.
+
+Crush reads the full `SKILL.md` file when a task matches a skill's description. The
+`using-superpowers` skill (description: "Use when starting any conversation") ensures
+skill discipline is established at the start of every session.
 
 ### Tool Mapping
 
-Skills were originally written for Claude Code. The bootstrap provides mappings:
+Skills were originally written for Claude Code. In Crush, substitute:
 
 | Claude Code Tool | Crush Equivalent |
 |---|---|
 | `TodoWrite` | Create a task list or todo file |
-| `Task` with subagents | Crush's native parallel execution |
-| `Skill` tool | Crush's native skill tool |
+| `Task` with subagents | Use Crush's Agent tool for complex subtasks |
+| `Skill` tool | Read the skill file at the `<location>` path from `<available_skills>` |
 | `Read`, `Write`, `Edit`, `Bash` | Your native Crush tools |
 
 ---
@@ -135,14 +132,19 @@ Skills were originally written for Claude Code. The bootstrap provides mappings:
 
 ### Finding Skills
 
-Use Crush's native skill tool to list all available skills. Superpowers skills appear
-under the `superpowers/` namespace.
+Skills appear in `<available_skills>` in Crush's context at the start of each session.
+Superpowers skills appear under the `superpowers/` namespace in the file path.
 
 ### Loading a Skill
 
+Ask Crush to use a skill by name, for example:
+
 ```
-load skill superpowers/brainstorming
+use the brainstorming skill
 ```
+
+Or just describe what you want to do — Crush matches the task to the right skill
+automatically based on skill descriptions.
 
 ### Personal Skills
 
@@ -165,6 +167,9 @@ description: Use when [condition] - [what it does]
 [Your skill content here]
 ```
 
+> **Note:** The `name` field in the frontmatter must match the directory name exactly
+> (case-insensitive). A skill named `my-skill` must live in a `my-skill/` directory.
+
 ### Project Skills
 
 Add a `skills_paths` entry to your project's `crush.json` or `.crush.json`:
@@ -183,9 +188,15 @@ Then create `.crush-skills/my-project-skill/SKILL.md` in your project root.
 
 Crush discovers skills in this priority order:
 
-1. **Project skills** (via `crush.json` `skills_paths`) — Highest priority
+1. **Project skills** (via `crush.json` `options.skills_paths`) — Highest priority
 2. **Personal skills** (`~/.config/crush/skills/`)
 3. **Superpowers skills** (`~/.config/crush/skills/superpowers/`) — via symlink
+
+You can also override the default discovery directory entirely with `CRUSH_SKILLS_DIR`:
+
+```bash
+export CRUSH_SKILLS_DIR=~/.config/crush/skills
+```
 
 ---
 
@@ -205,9 +216,6 @@ rm ~/.config/crush/skills/superpowers
 rm -rf ~/.config/crush/superpowers
 ```
 
-Remove the superpowers block from `~/.config/crush/AGENTS.md` manually (it begins
-with `# Superpowers` and ends before any other sections you may have added).
-
 ---
 
 ## Troubleshooting
@@ -217,12 +225,18 @@ with `# Superpowers` and ends before any other sections you may have added).
 1. Verify the symlink: `ls -la ~/.config/crush/skills/superpowers`
 2. Check target resolves: `ls ~/.config/crush/superpowers/skills/`
 3. Restart Crush — skills are discovered at startup
+4. Check override: ensure `CRUSH_SKILLS_DIR` is not set to a different path
 
-### Bootstrap not active
+### Custom skills directory
 
-1. Check: `cat ~/.config/crush/AGENTS.md | grep -i superpowers`
-2. Re-run the bootstrap append (Step 5 in installation)
-3. Ensure you're not accidentally overwriting `AGENTS.md` on each launch
+To override the default path, set `CRUSH_SKILLS_DIR`:
+
+```bash
+export CRUSH_SKILLS_DIR=/path/to/your/skills
+```
+
+Or add additional paths without overriding the default using `options.skills_paths` in
+`~/.config/crush/crush.json`.
 
 ### Windows junction issues
 

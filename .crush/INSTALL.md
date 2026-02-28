@@ -30,24 +30,7 @@ New-Item -ItemType Junction -Path "$env:LOCALAPPDATA\crush\skills\superpowers" `
   -Target "$env:LOCALAPPDATA\crush\superpowers\skills"
 ```
 
-### 3. Inject the Bootstrap
-
-Append the superpowers context to your global Crush AGENTS.md:
-
-```bash
-mkdir -p ~/.config/crush
-cat ~/.config/crush/superpowers/.crush/AGENTS.md >> ~/.config/crush/AGENTS.md
-```
-
-**Windows (PowerShell):**
-
-```powershell
-$crush = "$env:LOCALAPPDATA\crush"
-New-Item -ItemType Directory -Force -Path $crush
-Get-Content "$crush\superpowers\.crush\AGENTS.md" | Add-Content "$crush\AGENTS.md"
-```
-
-### 4. Restart Crush
+### 3. Restart Crush
 
 Restart Crush. Ask "do you have superpowers?" to verify.
 
@@ -55,20 +38,33 @@ Restart Crush. Ask "do you have superpowers?" to verify.
 
 ```bash
 ls -la ~/.config/crush/skills/superpowers
-cat ~/.config/crush/AGENTS.md | grep -i superpowers
 ```
+
+## How Skills Work
+
+Crush natively discovers skills from `~/.config/crush/skills/` at startup and injects
+them into the system prompt. Superpowers skills (including `using-superpowers`) are
+automatically listed in the `<available_skills>` section of every session.
+
+Crush reads each skill's `SKILL.md` when the task description matches. No special
+commands needed — just work normally and Crush activates the right skill.
 
 ## Usage
 
 ### Finding Skills
 
-Use Crush's native skill tool to list all available skills.
+Skills appear in `<available_skills>` in Crush's context at the start of each session.
 
 ### Loading a Skill
 
+Ask Crush to use a skill by name, for example:
+
 ```
-load skill superpowers/brainstorming
+use the brainstorming skill
 ```
+
+Or just describe what you want to do — Crush will match the task to the right skill
+automatically based on the skill descriptions.
 
 ### Personal Skills
 
@@ -90,6 +86,8 @@ description: Use when [condition] - [what it does]
 
 [Your skill content here]
 ```
+
+> **Note:** The `name` field must match the directory name exactly.
 
 ### Project Skills
 
@@ -123,8 +121,6 @@ rm ~/.config/crush/skills/superpowers
 rm -rf ~/.config/crush/superpowers
 ```
 
-Remove the superpowers block from `~/.config/crush/AGENTS.md` manually.
-
 ## Troubleshooting
 
 ### Skills not found
@@ -132,11 +128,17 @@ Remove the superpowers block from `~/.config/crush/AGENTS.md` manually.
 1. Check symlink: `ls -la ~/.config/crush/skills/superpowers`
 2. Verify target: `ls ~/.config/crush/superpowers/skills/`
 3. Restart Crush — skills are discovered at startup
+4. Override with env var: `CRUSH_SKILLS_DIR=~/.config/crush/skills crush`
 
-### Bootstrap not active
+### Skills in a custom directory
 
-1. Check AGENTS.md: `cat ~/.config/crush/AGENTS.md | grep superpowers`
-2. Re-run the bootstrap append command (Step 3)
+Set `CRUSH_SKILLS_DIR` to override the default discovery path:
+
+```bash
+export CRUSH_SKILLS_DIR=~/.config/crush/skills
+```
+
+Or use `options.skills_paths` in `crush.json` to add extra paths without overriding the default.
 
 ## Getting Help
 

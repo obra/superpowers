@@ -51,30 +51,56 @@ else
     exit 1
 fi
 
-# Test 5: AGENTS.md bootstrap source exists in .crush/
-echo "Test 5: Checking .crush/AGENTS.md source..."
-if [ -f "$HOME/.config/crush/superpowers/.crush/AGENTS.md" ]; then
-    echo "  [PASS] .crush/AGENTS.md exists"
-else
-    echo "  [FAIL] .crush/AGENTS.md not found"
-    exit 1
-fi
-
-# Test 6: Bootstrap was injected into ~/.config/crush/AGENTS.md
-echo "Test 6: Checking AGENTS.md bootstrap injection..."
-if grep -q "superpowers" "$HOME/.config/crush/AGENTS.md" 2>/dev/null; then
-    echo "  [PASS] Bootstrap found in ~/.config/crush/AGENTS.md"
-else
-    echo "  [FAIL] Bootstrap not found in ~/.config/crush/AGENTS.md"
-    exit 1
-fi
-
-# Test 7: INSTALL.md exists in .crush/
-echo "Test 7: Checking .crush/INSTALL.md..."
+# Test 5: INSTALL.md exists in .crush/
+echo "Test 5: Checking .crush/INSTALL.md..."
 if [ -f "$HOME/.config/crush/superpowers/.crush/INSTALL.md" ]; then
     echo "  [PASS] .crush/INSTALL.md exists"
 else
     echo "  [FAIL] .crush/INSTALL.md not found"
+    exit 1
+fi
+
+# Test 6: All skills have required frontmatter fields (name and description)
+echo "Test 6: Checking skill frontmatter validity..."
+invalid_skills=()
+while IFS= read -r skill_file; do
+    # Extract name field
+    name=$(grep -m1 "^name:" "$skill_file" | sed 's/^name: *//' | tr -d '"' || true)
+    # Extract description field
+    desc=$(grep -m1 "^description:" "$skill_file" | sed 's/^description: *//' | tr -d '"' || true)
+    if [ -z "$name" ] || [ -z "$desc" ]; then
+        invalid_skills+=("$skill_file (name='$name' desc='$desc')")
+    fi
+done < <(find -L "$HOME/.config/crush/skills/superpowers" -name "SKILL.md")
+
+if [ ${#invalid_skills[@]} -eq 0 ]; then
+    echo "  [PASS] All skills have valid name and description"
+else
+    echo "  [FAIL] Skills missing required frontmatter:"
+    for s in "${invalid_skills[@]}"; do
+        echo "    - $s"
+    done
+    exit 1
+fi
+
+# Test 7: Skill name matches directory name
+echo "Test 7: Checking skill name/directory consistency..."
+mismatched=()
+while IFS= read -r skill_file; do
+    dir_name="$(basename "$(dirname "$skill_file")")"
+    skill_name=$(grep -m1 "^name:" "$skill_file" | sed 's/^name: *//' | tr -d '"' || true)
+    if [ "${dir_name,,}" != "${skill_name,,}" ]; then
+        mismatched+=("$skill_file: dir='$dir_name' name='$skill_name'")
+    fi
+done < <(find -L "$HOME/.config/crush/skills/superpowers" -name "SKILL.md")
+
+if [ ${#mismatched[@]} -eq 0 ]; then
+    echo "  [PASS] All skill names match their directory names"
+else
+    echo "  [FAIL] Skill name/directory mismatches:"
+    for s in "${mismatched[@]}"; do
+        echo "    - $s"
+    done
     exit 1
 fi
 
