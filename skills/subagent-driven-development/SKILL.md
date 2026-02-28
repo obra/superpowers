@@ -132,7 +132,7 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 **Standard mode:**
 - `./implementer-prompt.md` - Implementer subagent
 - `./spec-reviewer-prompt.md` - Spec compliance reviewer (standard mode only)
-- `./code-quality-reviewer-prompt.md` - Code quality reviewer (standard mode only, dispatched after spec passes)
+- `superpowers:requesting-code-review` — Code quality reviewer (standard mode only, dispatched after spec passes)
 
 **Team mode:**
 - `./implementer-prompt.md` - Implementer subagent (same template)
