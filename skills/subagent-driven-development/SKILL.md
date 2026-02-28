@@ -142,7 +142,13 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 When `TeamCreate` is available and the user opts in, use this flow instead of standard sequential execution.
 
-**Pre-Flight:** Before spawning the team, run `/compact` if the current session has 20 or more turns. Team lead context bloat slows all orchestration turns — start lean. Implementer agents always start fresh, so compacting benefits the lead without affecting them.
+**Pre-Flight (required — do this before `TeamCreate`):** The team lead is this session. As the plan executes, this session's context fills with task reports, verdicts, and coordination messages. Once it fills, orchestration stops mid-plan. Implementer and validator agents start fresh regardless, so compacting only benefits the lead.
+
+Before spawning the team, you MUST check context state and prompt the user:
+
+> "Before I create the team: this session will act as team lead for the full plan. Its context fills as tasks complete — if it runs out mid-plan, orchestration stops. **How much context do you have left?** If you're below ~50% or have had a long conversation already, run `/compact` now before I proceed."
+
+Wait for their answer. If they're context-constrained or unsure, tell them to run `/compact` and wait for confirmation before calling `TeamCreate`. Do not skip this check.
 
 **Prerequisite:** Run the SDK memory validation test (see design doc) before first use. Confirm team members retain conversation context between `SendMessage` calls.
 
@@ -267,11 +273,11 @@ If a validator does not respond within 60 seconds of receiving a review request:
 - **Shutdown protocol required** — always send `shutdown_request` to all members before `TeamDelete`
 - **Never dispatch a fresh review subagent when a validator is available** — use the persistent validator
 - **Validator approval of a re-opened task is required before re-reviewing its dependents**
-- **Never skip context compaction** — run `/compact` before `TeamCreate` if session has 20+ turns
+- **Never skip the pre-flight context check** — ask the user about context state before `TeamCreate`; if they're below ~50% remaining, wait for `/compact` before proceeding
 
 ### Team Lifecycle
 
-1. `/compact` if session has 20+ turns, then `TeamCreate`
+1. Ask user about context state; wait for `/compact` if below ~50% remaining, then `TeamCreate`
 2. Spawn implementers and 2 validators via Agent tool with `team_name`
 3. Assign initial independent tasks via TaskCreate + TaskUpdate
 4. As tasks complete: route to idle validator, handle verdict, assign next tasks
@@ -362,7 +368,8 @@ Done!
 ```
 You: I'm using Subagent-Driven Development (team mode) for this plan.
 
-[Compact context first — run /compact before spawning team]
+[Pre-flight: "How much context do you have left? If below ~50%, run /compact before I proceed."]
+[Wait for user confirmation before continuing]
 
 [Read plan, extract 5 tasks, identify 3 independent groups]
 [TeamCreate team "impl-plan"]
@@ -463,7 +470,7 @@ validator-1 (Task 2 re-review):
 - Standard mode: implementer + 2 reviewer invocations per task
 - Controller does more prep work (extracting all tasks upfront)
 - Review loops add iterations
-- Team lead context grows across tasks — compact before TeamCreate (20+ turns) to avoid orchestration slowdown
+- Team lead context grows across tasks — pre-flight check prompts user to compact if below ~50% remaining; a full team lead context stops orchestration mid-plan
 - But catches issues early (cheaper than debugging later)
 
 ## Red Flags
@@ -486,7 +493,7 @@ validator-1 (Task 2 re-review):
 - **Team mode only:** Exceed 3 review cycles without escalating to human
 - **Team mode only:** Skip the SHA map in review requests (validators cannot re-read dependencies without it)
 - Accept a ✅ verdict that has no per-requirement file:line citations (invalid — request re-review)
-- **Team mode only:** Skip context compaction before TeamCreate when context is large (20+ turns)
+- **Team mode only:** Skip the pre-flight context check — always ask the user about remaining context before `TeamCreate`; proceeding with a near-full context will cause orchestration to fail mid-plan
 
 **If subagent asks questions:**
 - Answer clearly and completely
