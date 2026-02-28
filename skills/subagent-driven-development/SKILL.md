@@ -305,13 +305,13 @@ Implementer: "Got it. Implementing now..."
   - Self-review: Found I missed --force flag, added it
   - Committed
 
-[Route to validator-1 via SendMessage with task spec, implementer report, BASE_SHA, HEAD_SHA, SHA map]
-Validator-1:
-  Spec Compliance: ✅ all requirements cited
-    - Evidence section → implementer-prompt.md:70 — `## Mandatory Evidence (Required Before Reporting)`
-    - Rejection instruction → implementer-prompt.md:88 — `A report submitted without this evidence...`
-  Code Quality: Strengths: Clean integration. Issues: None.
-  ✅ APPROVED
+[Dispatch spec compliance reviewer]
+Spec reviewer: ✅ Spec compliant
+  - [requirement 1] → `file:line` — [excerpt]
+  - [requirement 2] → `file:line` — [excerpt]
+
+[Get git SHAs, dispatch code quality reviewer via superpowers:requesting-code-review]
+Code reviewer: Strengths: Good test coverage, clean. Issues: None. ✅ Approved.
 
 [Mark Task 1 complete]
 
@@ -327,23 +327,26 @@ Implementer:
   - Self-review: All good
   - Committed
 
-[Route to validator-2 via SendMessage with task spec, report, SHAs, SHA map]
-Validator-2:
-  Spec Compliance:
-    - Requirement "verify mode" → `src/recovery.py:15` — `def verify(items): ...`  ✅
-    - Requirement "repair mode" → `src/recovery.py:42` — `def repair(items): ...`  ✅
-    - Requirement "report every 100 items" → MISSING  ❌
-  Code Quality: Issues: --json flag not in spec (extra feature)
-  ❌ NEEDS FIXES — missing progress reporting, remove --json flag
+[Dispatch spec compliance reviewer]
+Spec reviewer: ❌ Issues:
+  - Missing: Progress reporting (spec says "report every 100 items") → no `file:line` found
+  - Extra: Added --json flag (not requested)
 
-[SendMessage to implementer: fix progress reporting, remove --json]
-Implementer: Removed --json flag, added progress reporting, 10/10 tests passing
+[Implementer fixes issues]
+Implementer: Removed --json flag, added progress reporting
 
-[Route to validator-2: re-review]
-Validator-2:
-    - Requirement "report every 100 items" → `src/recovery.py:58` — `if count % 100 == 0: report(count)`  ✅
-  Code Quality: Strengths: Solid. Issues (Minor): Magic number 100 → extract constant
-  ✅ APPROVED (minor noted, not blocking)
+[Spec reviewer reviews again]
+Spec reviewer: ✅ Spec compliant now
+  - Requirement "report every 100 items" → `src/recovery.py:58` — `if count % 100 == 0: report(count)`
+
+[Dispatch code quality reviewer via superpowers:requesting-code-review]
+Code reviewer: Strengths: Solid. Issues (Important): Magic number (100) → extract constant
+
+[Implementer fixes]
+Implementer: Extracted PROGRESS_INTERVAL constant
+
+[Code reviewer reviews again]
+Code reviewer: ✅ Approved
 
 [Mark Task 2 complete]
 
