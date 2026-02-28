@@ -265,6 +265,17 @@ If a validator does not respond within 60 seconds of receiving a review request:
 3. Fall back to a fresh subagent review for that task using `validator-prompt.md`
 4. Mark the failed validator's slot unavailable; do not reuse it
 
+### Recovering After Compaction
+
+If the team lead session is compacted mid-plan, **do not assume the task list was lost.** `TaskList` is external storage — it survives compaction. On resumption:
+
+1. Run `TaskList` immediately to read authoritative task state (completed, in_progress, pending)
+2. Check validator TaskUpdate state to see which validators are busy
+3. Only send status-check messages to implementers whose tasks show `in_progress` but have not yet sent a report — do not broadcast to all members
+4. Resume orchestration from the recovered state; do not restart the plan
+
+Pinging all implementers after compaction is unnecessary and expensive. `TaskList` is the source of truth.
+
 ### Key Constraints in Team Mode
 
 - **One implementer per task** — never assign two implementers to the same task (conflicts)
