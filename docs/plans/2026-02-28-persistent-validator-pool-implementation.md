@@ -248,6 +248,8 @@ Add a one-line note to the top of this plan file (under the header) indicating t
 
 ### Task 4b: (FALLBACK ONLY — skip if SDK retains context) Combined-review fresh subagent
 
+> **⚠️ SKIPPED — SDK memory was retained (tested 2026-02-28).** The persistent validator topology in Tasks 5–10 was implemented instead. The `validator-prompt.md` created in this PR is for persistent team members (not fresh subagents); its content does not match the fallback description below. Task 4b is preserved here for reference only, in case SDK memory retention changes in a future Claude Code version.
+
 **Only run this task if the SDK memory test in Task 4 failed.**
 
 This fallback combines spec+quality into a single fresh subagent per task (parallel with the next implementation), rather than using a persistent validator pool.
