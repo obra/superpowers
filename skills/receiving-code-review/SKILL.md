@@ -1,213 +1,213 @@
 ---
 name: receiving-code-review
-description: Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation
+description: 在收到代码审查反馈时使用，在实施建议之前使用，尤其是当反馈看起来不清晰或技术上有疑问时——需要技术严谨性和验证，而不是表演性认同或盲目实施
 ---
 
-# Code Review Reception
+# 代码审查接收
 
-## Overview
+## 概述
 
-Code review requires technical evaluation, not emotional performance.
+代码审查需要技术评估，而不是情绪表演。
 
-**Core principle:** Verify before implementing. Ask before assuming. Technical correctness over social comfort.
+**核心原则：** 实施之前先验证。假设之前先提问。技术正确性优先于社交舒适度。
 
-## The Response Pattern
-
-```
-WHEN receiving code review feedback:
-
-1. READ: Complete feedback without reacting
-2. UNDERSTAND: Restate requirement in own words (or ask)
-3. VERIFY: Check against codebase reality
-4. EVALUATE: Technically sound for THIS codebase?
-5. RESPOND: Technical acknowledgment or reasoned pushback
-6. IMPLEMENT: One item at a time, test each
-```
-
-## Forbidden Responses
-
-**NEVER:**
-- "You're absolutely right!" (explicit CLAUDE.md violation)
-- "Great point!" / "Excellent feedback!" (performative)
-- "Let me implement that now" (before verification)
-
-**INSTEAD:**
-- Restate the technical requirement
-- Ask clarifying questions
-- Push back with technical reasoning if wrong
-- Just start working (actions > words)
-
-## Handling Unclear Feedback
+## 响应模式
 
 ```
-IF any item is unclear:
-  STOP - do not implement anything yet
-  ASK for clarification on unclear items
+当收到代码审查反馈时：
 
-WHY: Items may be related. Partial understanding = wrong implementation.
+1. 阅读：完整阅读反馈，不要急于反应
+2. 理解：用自己的话复述需求（或者提问）
+3. 验证：对照代码库的实际情况进行检查
+4. 评估：对于当前代码库来说技术上合理吗？
+5. 回应：技术性确认或有理有据的反驳
+6. 实施：逐项实施，逐项测试
 ```
 
-**Example:**
-```
-your human partner: "Fix 1-6"
-You understand 1,2,3,6. Unclear on 4,5.
+## 禁止的回应
 
-❌ WRONG: Implement 1,2,3,6 now, ask about 4,5 later
-✅ RIGHT: "I understand items 1,2,3,6. Need clarification on 4 and 5 before proceeding."
-```
+**绝对不要：**
+- "你说得完全对！"（明确违反 CLAUDE.md 规定）
+- "说得好！" / "反馈很棒！"（表演性的）
+- "让我现在就实施"（在验证之前）
 
-## Source-Specific Handling
+**应该：**
+- 复述技术需求
+- 提出澄清性问题
+- 如果有误，用技术推理进行反驳
+- 直接开始工作（行动 > 言语）
 
-### From your human partner
-- **Trusted** - implement after understanding
-- **Still ask** if scope unclear
-- **No performative agreement**
-- **Skip to action** or technical acknowledgment
-
-### From External Reviewers
-```
-BEFORE implementing:
-  1. Check: Technically correct for THIS codebase?
-  2. Check: Breaks existing functionality?
-  3. Check: Reason for current implementation?
-  4. Check: Works on all platforms/versions?
-  5. Check: Does reviewer understand full context?
-
-IF suggestion seems wrong:
-  Push back with technical reasoning
-
-IF can't easily verify:
-  Say so: "I can't verify this without [X]. Should I [investigate/ask/proceed]?"
-
-IF conflicts with your human partner's prior decisions:
-  Stop and discuss with your human partner first
-```
-
-**your human partner's rule:** "External feedback - be skeptical, but check carefully"
-
-## YAGNI Check for "Professional" Features
+## 处理不清晰的反馈
 
 ```
-IF reviewer suggests "implementing properly":
-  grep codebase for actual usage
+如果任何条目不清晰：
+  停止 - 不要实施任何内容
+  针对不清晰的条目提问
 
-  IF unused: "This endpoint isn't called. Remove it (YAGNI)?"
-  IF used: Then implement properly
+原因：条目之间可能相互关联。部分理解 = 错误实施。
 ```
 
-**your human partner's rule:** "You and reviewer both report to me. If we don't need this feature, don't add it."
-
-## Implementation Order
-
+**示例：**
 ```
-FOR multi-item feedback:
-  1. Clarify anything unclear FIRST
-  2. Then implement in this order:
-     - Blocking issues (breaks, security)
-     - Simple fixes (typos, imports)
-     - Complex fixes (refactoring, logic)
-  3. Test each fix individually
-  4. Verify no regressions
+你的人类搭档："修复 1-6"
+你理解 1、2、3、6。对 4、5 不确定。
+
+❌ 错误：现在实施 1、2、3、6，稍后再问 4、5
+✅ 正确："我理解条目 1、2、3、6。在继续之前需要对 4 和 5 进行澄清。"
 ```
 
-## When To Push Back
+## 按来源分类处理
 
-Push back when:
-- Suggestion breaks existing functionality
-- Reviewer lacks full context
-- Violates YAGNI (unused feature)
-- Technically incorrect for this stack
-- Legacy/compatibility reasons exist
-- Conflicts with your human partner's architectural decisions
+### 来自你的人类搭档
+- **可信赖** - 理解后即可实施
+- 如果范围不清晰**仍然要提问**
+- **不要表演性认同**
+- **直接行动**或给出技术性确认
 
-**How to push back:**
-- Use technical reasoning, not defensiveness
-- Ask specific questions
-- Reference working tests/code
-- Involve your human partner if architectural
-
-**Signal if uncomfortable pushing back out loud:** "Strange things are afoot at the Circle K"
-
-## Acknowledging Correct Feedback
-
-When feedback IS correct:
+### 来自外部审查者
 ```
-✅ "Fixed. [Brief description of what changed]"
-✅ "Good catch - [specific issue]. Fixed in [location]."
-✅ [Just fix it and show in the code]
+在实施之前：
+  1. 检查：对于当前代码库来说技术上正确吗？
+  2. 检查：是否会破坏现有功能？
+  3. 检查：当前实现的原因是什么？
+  4. 检查：是否在所有平台/版本上都能工作？
+  5. 检查：审查者是否了解完整上下文？
 
-❌ "You're absolutely right!"
-❌ "Great point!"
-❌ "Thanks for catching that!"
-❌ "Thanks for [anything]"
-❌ ANY gratitude expression
+如果建议似乎有误：
+  用技术推理进行反驳
+
+如果无法轻松验证：
+  如实说明："在没有 [X] 的情况下我无法验证这一点。我应该 [调查/提问/继续] 吗？"
+
+如果与你的人类搭档之前的决策冲突：
+  先停下来与你的人类搭档讨论
 ```
 
-**Why no thanks:** Actions speak. Just fix it. The code itself shows you heard the feedback.
+**你的人类搭档的规则：** "外部反馈——保持怀疑，但要仔细检查"
 
-**If you catch yourself about to write "Thanks":** DELETE IT. State the fix instead.
+## YAGNI 检查"专业"功能
 
-## Gracefully Correcting Your Pushback
-
-If you pushed back and were wrong:
 ```
-✅ "You were right - I checked [X] and it does [Y]. Implementing now."
-✅ "Verified this and you're correct. My initial understanding was wrong because [reason]. Fixing."
+如果审查者建议"正确实现"：
+  在代码库中 grep 实际用法
 
-❌ Long apology
-❌ Defending why you pushed back
-❌ Over-explaining
+  如果未使用："这个端点没有被调用。移除它（YAGNI）？"
+  如果在使用：那么正确实现
 ```
 
-State the correction factually and move on.
+**你的人类搭档的规则：** "你和审查者都向我汇报。如果我们不需要这个功能，就不要添加它。"
 
-## Common Mistakes
+## 实施顺序
 
-| Mistake | Fix |
-|---------|-----|
-| Performative agreement | State requirement or just act |
-| Blind implementation | Verify against codebase first |
-| Batch without testing | One at a time, test each |
-| Assuming reviewer is right | Check if breaks things |
-| Avoiding pushback | Technical correctness > comfort |
-| Partial implementation | Clarify all items first |
-| Can't verify, proceed anyway | State limitation, ask for direction |
-
-## Real Examples
-
-**Performative Agreement (Bad):**
 ```
-Reviewer: "Remove legacy code"
-❌ "You're absolutely right! Let me remove that..."
+对于多条目反馈：
+  1. 首先澄清任何不清晰的内容
+  2. 然后按以下顺序实施：
+     - 阻塞性问题（崩溃、安全性）
+     - 简单修复（拼写错误、导入）
+     - 复杂修复（重构、逻辑）
+  3. 逐个测试每个修复
+  4. 验证没有回归问题
 ```
 
-**Technical Verification (Good):**
+## 何时应该反驳
+
+在以下情况下进行反驳：
+- 建议会破坏现有功能
+- 审查者缺乏完整上下文
+- 违反 YAGNI（未使用的功能）
+- 对于当前技术栈来说技术上不正确
+- 存在遗留/兼容性原因
+- 与你的人类搭档的架构决策冲突
+
+**如何反驳：**
+- 使用技术推理，而不是防御性态度
+- 提出具体问题
+- 引用正常工作的测试/代码
+- 如果涉及架构问题，让你的人类搭档参与
+
+**如果不方便公开反驳时的暗号：** "Strange things are afoot at the Circle K"
+
+## 确认正确的反馈
+
+当反馈确实正确时：
 ```
-Reviewer: "Remove legacy code"
-✅ "Checking... build target is 10.15+, this API needs 13+. Need legacy for backward compat. Current impl has wrong bundle ID - fix it or drop pre-13 support?"
+✅ "已修复。[简要描述更改内容]"
+✅ "发现得好——[具体问题]。已在 [位置] 修复。"
+✅ [直接修复并在代码中展示]
+
+❌ "你说得完全对！"
+❌ "说得好！"
+❌ "感谢你发现了这个！"
+❌ "感谢你 [任何事情]"
+❌ 任何感谢性表达
 ```
 
-**YAGNI (Good):**
+**为什么不要说感谢：** 行动说明一切。直接修复就好。代码本身就表明你听取了反馈。
+
+**如果发现自己即将写"感谢"：** 删掉它。改为陈述修复内容。
+
+## 优雅地纠正你的反驳
+
+如果你反驳了但发现自己是错的：
 ```
-Reviewer: "Implement proper metrics tracking with database, date filters, CSV export"
-✅ "Grepped codebase - nothing calls this endpoint. Remove it (YAGNI)? Or is there usage I'm missing?"
+✅ "你是对的——我检查了 [X]，它确实 [Y]。正在实施。"
+✅ "验证了这一点，你是正确的。我最初的理解有误，因为 [原因]。正在修复。"
+
+❌ 冗长的道歉
+❌ 为自己的反驳辩护
+❌ 过度解释
 ```
 
-**Unclear Item (Good):**
+客观地陈述纠正内容，然后继续前进。
+
+## 常见错误
+
+| 错误 | 修正方法 |
+|------|----------|
+| 表演性认同 | 陈述需求或直接行动 |
+| 盲目实施 | 先对照代码库验证 |
+| 批量处理不测试 | 逐项进行，逐项测试 |
+| 假设审查者是对的 | 检查是否会破坏功能 |
+| 回避反驳 | 技术正确性 > 舒适度 |
+| 部分实施 | 先澄清所有条目 |
+| 无法验证却继续执行 | 说明局限性，请求指示 |
+
+## 实际示例
+
+**表演性认同（不好的做法）：**
 ```
-your human partner: "Fix items 1-6"
-You understand 1,2,3,6. Unclear on 4,5.
-✅ "Understand 1,2,3,6. Need clarification on 4 and 5 before implementing."
+审查者："移除遗留代码"
+❌ "你说得完全对！让我来移除那个……"
 ```
 
-## GitHub Thread Replies
+**技术验证（好的做法）：**
+```
+审查者："移除遗留代码"
+✅ "正在检查……构建目标是 10.15+，这个 API 需要 13+。为了向后兼容需要保留遗留代码。当前实现的 bundle ID 有误——修复它还是放弃 13 以下版本的支持？"
+```
 
-When replying to inline review comments on GitHub, reply in the comment thread (`gh api repos/{owner}/{repo}/pulls/{pr}/comments/{id}/replies`), not as a top-level PR comment.
+**YAGNI（好的做法）：**
+```
+审查者："实现正确的指标追踪，包括数据库、日期过滤器、CSV 导出"
+✅ "在代码库中搜索过了——没有任何地方调用这个端点。移除它（YAGNI）？还是有我遗漏的使用场景？"
+```
 
-## The Bottom Line
+**不清晰的条目（好的做法）：**
+```
+你的人类搭档："修复条目 1-6"
+你理解 1、2、3、6。对 4、5 不确定。
+✅ "理解 1、2、3、6。在实施之前需要对 4 和 5 进行澄清。"
+```
 
-**External feedback = suggestions to evaluate, not orders to follow.**
+## GitHub 讨论串回复
 
-Verify. Question. Then implement.
+在 GitHub 上回复行内审查评论时，请在评论讨论串中回复（`gh api repos/{owner}/{repo}/pulls/{pr}/comments/{id}/replies`），而不是作为顶层 PR 评论。
 
-No performative agreement. Technical rigor always.
+## 最终要点
+
+**外部反馈 = 需要评估的建议，而不是必须执行的命令。**
+
+验证。质疑。然后实施。
+
+不要表演性认同。始终保持技术严谨。

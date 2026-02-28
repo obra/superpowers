@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 
 /**
- * Render graphviz diagrams from a skill's SKILL.md to SVG files.
+ * 将技能的 SKILL.md 中的 graphviz 图表渲染为 SVG 文件。
  *
- * Usage:
- *   ./render-graphs.js <skill-directory>           # Render each diagram separately
- *   ./render-graphs.js <skill-directory> --combine # Combine all into one diagram
+ * 用法：
+ *   ./render-graphs.js <技能目录>           # 分别渲染每个图表
+ *   ./render-graphs.js <技能目录> --combine # 将所有图表合并为一个
  *
- * Extracts all ```dot blocks from SKILL.md and renders to SVG.
- * Useful for helping your human partner visualize the process flows.
+ * 从 SKILL.md 中提取所有 ```dot 代码块并渲染为 SVG。
+ * 用于帮助你的人类伙伴可视化流程图。
  *
- * Requires: graphviz (dot) installed on system
+ * 依赖：系统需安装 graphviz (dot)
  */
 
 const fs = require('fs');
@@ -25,7 +25,7 @@ function extractDotBlocks(markdown) {
   while ((match = regex.exec(markdown)) !== null) {
     const content = match[1].trim();
 
-    // Extract digraph name
+    // 提取 digraph 名称
     const nameMatch = content.match(/digraph\s+(\w+)/);
     const name = nameMatch ? nameMatch[1] : `graph_${blocks.length + 1}`;
 
@@ -36,13 +36,13 @@ function extractDotBlocks(markdown) {
 }
 
 function extractGraphBody(dotContent) {
-  // Extract just the body (nodes and edges) from a digraph
+  // 从 digraph 中提取主体部分（节点和边）
   const match = dotContent.match(/digraph\s+\w+\s*\{([\s\S]*)\}/);
   if (!match) return '';
 
   let body = match[1];
 
-  // Remove rankdir (we'll set it once at the top level)
+  // 移除 rankdir（我们将在顶层统一设置）
   body = body.replace(/^\s*rankdir\s*=\s*\w+\s*;?\s*$/gm, '');
 
   return body.trim();
@@ -51,7 +51,7 @@ function extractGraphBody(dotContent) {
 function combineGraphs(blocks, skillName) {
   const bodies = blocks.map((block, i) => {
     const body = extractGraphBody(block.content);
-    // Wrap each subgraph in a cluster for visual grouping
+    // 将每个子图包装在集群中以便视觉分组
     return `  subgraph cluster_${i} {
     label="${block.name}";
     ${body.split('\n').map(line => '  ' + line).join('\n')}
@@ -75,7 +75,7 @@ function renderToSvg(dotContent) {
       maxBuffer: 10 * 1024 * 1024
     });
   } catch (err) {
-    console.error('Error running dot:', err.message);
+    console.error('运行 dot 时出错：', err.message);
     if (err.stderr) console.error(err.stderr.toString());
     return null;
   }
@@ -87,12 +87,12 @@ function main() {
   const skillDirArg = args.find(a => !a.startsWith('--'));
 
   if (!skillDirArg) {
-    console.error('Usage: render-graphs.js <skill-directory> [--combine]');
+    console.error('用法：render-graphs.js <技能目录> [--combine]');
     console.error('');
-    console.error('Options:');
-    console.error('  --combine    Combine all diagrams into one SVG');
+    console.error('选项：');
+    console.error('  --combine    将所有图表合并为一个 SVG');
     console.error('');
-    console.error('Example:');
+    console.error('示例：');
     console.error('  ./render-graphs.js ../subagent-driven-development');
     console.error('  ./render-graphs.js ../subagent-driven-development --combine');
     process.exit(1);
@@ -103,15 +103,15 @@ function main() {
   const skillName = path.basename(skillDir).replace(/-/g, '_');
 
   if (!fs.existsSync(skillFile)) {
-    console.error(`Error: ${skillFile} not found`);
+    console.error(`错误：未找到 ${skillFile}`);
     process.exit(1);
   }
 
-  // Check if dot is available
+  // 检查 dot 是否可用
   try {
     execSync('which dot', { encoding: 'utf-8' });
   } catch {
-    console.error('Error: graphviz (dot) not found. Install with:');
+    console.error('错误：未找到 graphviz (dot)。请使用以下方式安装：');
     console.error('  brew install graphviz    # macOS');
     console.error('  apt install graphviz     # Linux');
     process.exit(1);
@@ -121,11 +121,11 @@ function main() {
   const blocks = extractDotBlocks(markdown);
 
   if (blocks.length === 0) {
-    console.log('No ```dot blocks found in', skillFile);
+    console.log('在', skillFile, '中未找到 ```dot 代码块');
     process.exit(0);
   }
 
-  console.log(`Found ${blocks.length} diagram(s) in ${path.basename(skillDir)}/SKILL.md`);
+  console.log(`在 ${path.basename(skillDir)}/SKILL.md 中找到 ${blocks.length} 个图表`);
 
   const outputDir = path.join(skillDir, 'diagrams');
   if (!fs.existsSync(outputDir)) {
@@ -133,36 +133,36 @@ function main() {
   }
 
   if (combine) {
-    // Combine all graphs into one
+    // 将所有图表合并为一个
     const combined = combineGraphs(blocks, skillName);
     const svg = renderToSvg(combined);
     if (svg) {
       const outputPath = path.join(outputDir, `${skillName}_combined.svg`);
       fs.writeFileSync(outputPath, svg);
-      console.log(`  Rendered: ${skillName}_combined.svg`);
+      console.log(`  已渲染：${skillName}_combined.svg`);
 
-      // Also write the dot source for debugging
+      // 同时写入 dot 源文件以便调试
       const dotPath = path.join(outputDir, `${skillName}_combined.dot`);
       fs.writeFileSync(dotPath, combined);
-      console.log(`  Source: ${skillName}_combined.dot`);
+      console.log(`  源文件：${skillName}_combined.dot`);
     } else {
-      console.error('  Failed to render combined diagram');
+      console.error('  合并图表渲染失败');
     }
   } else {
-    // Render each separately
+    // 分别渲染每个图表
     for (const block of blocks) {
       const svg = renderToSvg(block.content);
       if (svg) {
         const outputPath = path.join(outputDir, `${block.name}.svg`);
         fs.writeFileSync(outputPath, svg);
-        console.log(`  Rendered: ${block.name}.svg`);
+        console.log(`  已渲染：${block.name}.svg`);
       } else {
-        console.error(`  Failed: ${block.name}`);
+        console.error(`  失败：${block.name}`);
       }
     }
   }
 
-  console.log(`\nOutput: ${outputDir}/`);
+  console.log(`\n输出目录：${outputDir}/`);
 }
 
 main();

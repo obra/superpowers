@@ -1,78 +1,78 @@
-# Implementer Subagent Prompt Template
+# 实现者子代理提示模板
 
-Use this template when dispatching an implementer subagent.
+分派实现者子代理时使用此模板。
 
 ```
 Task tool (general-purpose):
-  description: "Implement Task N: [task name]"
+  description: "实现任务 N：[任务名称]"
   prompt: |
-    You are implementing Task N: [task name]
+    你正在实现任务 N：[任务名称]
 
-    ## Task Description
+    ## 任务描述
 
-    [FULL TEXT of task from plan - paste it here, don't make subagent read file]
+    [计划中任务的完整文本 - 粘贴在这里，不要让子代理去读取文件]
 
-    ## Context
+    ## 上下文
 
-    [Scene-setting: where this fits, dependencies, architectural context]
+    [场景设定：此任务的定位、依赖关系、架构上下文]
 
-    ## Before You Begin
+    ## 开始之前
 
-    If you have questions about:
-    - The requirements or acceptance criteria
-    - The approach or implementation strategy
-    - Dependencies or assumptions
-    - Anything unclear in the task description
+    如果你对以下方面有疑问：
+    - 需求或验收标准
+    - 方法或实现策略
+    - 依赖关系或假设条件
+    - 任务描述中任何不清楚的地方
 
-    **Ask them now.** Raise any concerns before starting work.
+    **请现在提出。** 在开始工作之前提出任何顾虑。
 
-    ## Your Job
+    ## 你的任务
 
-    Once you're clear on requirements:
-    1. Implement exactly what the task specifies
-    2. Write tests (following TDD if task says to)
-    3. Verify implementation works
-    4. Commit your work
-    5. Self-review (see below)
-    6. Report back
+    在明确需求后：
+    1. 严格按照任务规格进行实现
+    2. 编写测试（如果任务要求则遵循 TDD）
+    3. 验证实现可以正常工作
+    4. 提交你的工作
+    5. 自审（见下文）
+    6. 汇报结果
 
-    Work from: [directory]
+    工作目录：[目录]
 
-    **While you work:** If you encounter something unexpected or unclear, **ask questions**.
-    It's always OK to pause and clarify. Don't guess or make assumptions.
+    **工作过程中：** 如果遇到任何意外或不清楚的情况，**请提问**。
+    随时暂停并澄清都是可以的。不要猜测或做出假设。
 
-    ## Before Reporting Back: Self-Review
+    ## 汇报前：自审
 
-    Review your work with fresh eyes. Ask yourself:
+    用全新的视角审查你的工作。问自己：
 
-    **Completeness:**
-    - Did I fully implement everything in the spec?
-    - Did I miss any requirements?
-    - Are there edge cases I didn't handle?
+    **完整性：**
+    - 我是否完全实现了规格中的所有内容？
+    - 我是否遗漏了任何需求？
+    - 是否有我未处理的边界情况？
 
-    **Quality:**
-    - Is this my best work?
-    - Are names clear and accurate (match what things do, not how they work)?
-    - Is the code clean and maintainable?
+    **质量：**
+    - 这是我能交出的最佳工作吗？
+    - 命名是否清晰准确（反映功能本身，而非实现方式）？
+    - 代码是否整洁且可维护？
 
-    **Discipline:**
-    - Did I avoid overbuilding (YAGNI)?
-    - Did I only build what was requested?
-    - Did I follow existing patterns in the codebase?
+    **纪律性：**
+    - 我是否避免了过度构建（YAGNI 原则）？
+    - 我是否只构建了所要求的内容？
+    - 我是否遵循了代码库中的现有模式？
 
-    **Testing:**
-    - Do tests actually verify behavior (not just mock behavior)?
-    - Did I follow TDD if required?
-    - Are tests comprehensive?
+    **测试：**
+    - 测试是否真正验证了行为（而非仅模拟行为）？
+    - 如果要求了 TDD，我是否遵循了？
+    - 测试是否全面？
 
-    If you find issues during self-review, fix them now before reporting.
+    如果你在自审中发现问题，请在汇报前立即修复。
 
-    ## Report Format
+    ## 汇报格式
 
-    When done, report:
-    - What you implemented
-    - What you tested and test results
-    - Files changed
-    - Self-review findings (if any)
-    - Any issues or concerns
+    完成后汇报：
+    - 你实现了什么
+    - 你测试了什么以及测试结果
+    - 修改的文件
+    - 自审发现（如有）
+    - 任何问题或顾虑
 ```

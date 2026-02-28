@@ -1,96 +1,96 @@
 ---
 name: brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
+description: "在任何创意工作之前必须使用此技能——包括创建功能、构建组件、添加功能或修改行为。在实施之前探索用户意图、需求和设计。"
 ---
 
-# Brainstorming Ideas Into Designs
+# 将创意头脑风暴转化为设计方案
 
-## Overview
+## 概述
 
-Help turn ideas into fully formed designs and specs through natural collaborative dialogue.
+通过自然的协作对话，帮助将创意转化为完整的设计和规格说明。
 
-Start by understanding the current project context, then ask questions one at a time to refine the idea. Once you understand what you're building, present the design and get user approval.
+首先了解当前项目的上下文，然后逐一提出问题以完善创意。一旦你理解了要构建的内容，就展示设计方案并获得用户批准。
 
 <HARD-GATE>
-Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
+在你展示设计方案并获得用户批准之前，不要调用任何实施技能、编写任何代码、搭建任何项目或采取任何实施行动。无论项目看起来多么简单，这条规则都适用于每一个项目。
 </HARD-GATE>
 
-## Anti-Pattern: "This Is Too Simple To Need A Design"
+## 反模式："这太简单了，不需要设计"
 
-Every project goes through this process. A todo list, a single-function utility, a config change — all of them. "Simple" projects are where unexamined assumptions cause the most wasted work. The design can be short (a few sentences for truly simple projects), but you MUST present it and get approval.
+每个项目都要经过这个流程。待办事项列表、单功能工具、配置变更——所有项目都不例外。"简单"项目恰恰是未经检验的假设导致最多无效工作的地方。设计可以很简短（对于真正简单的项目只需几句话），但你必须展示设计方案并获得批准。
 
-## Checklist
+## 检查清单
 
-You MUST create a task for each of these items and complete them in order:
+你必须为以下每一项创建任务，并按顺序完成：
 
-1. **Explore project context** — check files, docs, recent commits
-2. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-3. **Propose 2-3 approaches** — with trade-offs and your recommendation
-4. **Present design** — in sections scaled to their complexity, get user approval after each section
-5. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` and commit
-6. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+1. **探索项目上下文** — 检查文件、文档和最近的提交记录
+2. **提出澄清问题** — 逐一提问，了解目的/约束条件/成功标准
+3. **提出 2-3 种方案** — 包含权衡分析和你的推荐建议
+4. **展示设计方案** — 按各部分的复杂程度分段展示，每段展示后获取用户批准
+5. **编写设计文档** — 保存至 `docs/plans/YYYY-MM-DD-<topic>-design.md` 并提交
+6. **过渡到实施阶段** — 调用 writing-plans 技能创建实施计划
 
-## Process Flow
+## 流程图
 
 ```dot
 digraph brainstorming {
-    "Explore project context" [shape=box];
-    "Ask clarifying questions" [shape=box];
-    "Propose 2-3 approaches" [shape=box];
-    "Present design sections" [shape=box];
-    "User approves design?" [shape=diamond];
-    "Write design doc" [shape=box];
-    "Invoke writing-plans skill" [shape=doublecircle];
+    "探索项目上下文" [shape=box];
+    "提出澄清问题" [shape=box];
+    "提出 2-3 种方案" [shape=box];
+    "分段展示设计方案" [shape=box];
+    "用户批准设计？" [shape=diamond];
+    "编写设计文档" [shape=box];
+    "调用 writing-plans 技能" [shape=doublecircle];
 
-    "Explore project context" -> "Ask clarifying questions";
-    "Ask clarifying questions" -> "Propose 2-3 approaches";
-    "Propose 2-3 approaches" -> "Present design sections";
-    "Present design sections" -> "User approves design?";
-    "User approves design?" -> "Present design sections" [label="no, revise"];
-    "User approves design?" -> "Write design doc" [label="yes"];
-    "Write design doc" -> "Invoke writing-plans skill";
+    "探索项目上下文" -> "提出澄清问题";
+    "提出澄清问题" -> "提出 2-3 种方案";
+    "提出 2-3 种方案" -> "分段展示设计方案";
+    "分段展示设计方案" -> "用户批准设计？";
+    "用户批准设计？" -> "分段展示设计方案" [label="否，修改"];
+    "用户批准设计？" -> "编写设计文档" [label="是"];
+    "编写设计文档" -> "调用 writing-plans 技能";
 }
 ```
 
-**The terminal state is invoking writing-plans.** Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY skill you invoke after brainstorming is writing-plans.
+**终止状态是调用 writing-plans。** 不要调用 frontend-design、mcp-builder 或任何其他实施技能。头脑风暴之后唯一调用的技能是 writing-plans。
 
-## The Process
+## 流程详解
 
-**Understanding the idea:**
-- Check out the current project state first (files, docs, recent commits)
-- Ask questions one at a time to refine the idea
-- Prefer multiple choice questions when possible, but open-ended is fine too
-- Only one question per message - if a topic needs more exploration, break it into multiple questions
-- Focus on understanding: purpose, constraints, success criteria
+**理解创意：**
+- 首先查看当前项目状态（文件、文档、最近的提交记录）
+- 逐一提出问题以完善创意
+- 尽可能使用选择题，但开放式问题也可以
+- 每条消息只提一个问题——如果某个主题需要更深入的探索，将其拆分为多个问题
+- 重点理解：目的、约束条件、成功标准
 
-**Exploring approaches:**
-- Propose 2-3 different approaches with trade-offs
-- Present options conversationally with your recommendation and reasoning
-- Lead with your recommended option and explain why
+**探索方案：**
+- 提出 2-3 种不同的方案及其权衡分析
+- 以对话的方式展示选项，附上你的推荐建议和理由
+- 先展示你推荐的方案并解释原因
 
-**Presenting the design:**
-- Once you believe you understand what you're building, present the design
-- Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
-- Ask after each section whether it looks right so far
-- Cover: architecture, components, data flow, error handling, testing
-- Be ready to go back and clarify if something doesn't make sense
+**展示设计方案：**
+- 一旦你认为已经理解了要构建的内容，就展示设计方案
+- 根据每个部分的复杂程度调整篇幅：简单的用几句话，复杂的可以用 200-300 字
+- 每展示完一个部分后，询问是否正确
+- 涵盖：架构、组件、数据流、错误处理、测试
+- 如果有不明确的地方，随时准备回过头来澄清
 
-## After the Design
+## 设计完成后
 
-**Documentation:**
-- Write the validated design to `docs/plans/YYYY-MM-DD-<topic>-design.md`
-- Use elements-of-style:writing-clearly-and-concisely skill if available
-- Commit the design document to git
+**文档编写：**
+- 将验证通过的设计写入 `docs/plans/YYYY-MM-DD-<topic>-design.md`
+- 如果可用，使用 elements-of-style:writing-clearly-and-concisely 技能
+- 将设计文档提交到 git
 
-**Implementation:**
-- Invoke the writing-plans skill to create a detailed implementation plan
-- Do NOT invoke any other skill. writing-plans is the next step.
+**实施：**
+- 调用 writing-plans 技能创建详细的实施计划
+- 不要调用任何其他技能。writing-plans 是下一步。
 
-## Key Principles
+## 核心原则
 
-- **One question at a time** - Don't overwhelm with multiple questions
-- **Multiple choice preferred** - Easier to answer than open-ended when possible
-- **YAGNI ruthlessly** - Remove unnecessary features from all designs
-- **Explore alternatives** - Always propose 2-3 approaches before settling
-- **Incremental validation** - Present design, get approval before moving on
-- **Be flexible** - Go back and clarify when something doesn't make sense
+- **一次一个问题** — 不要用多个问题让用户应接不暇
+- **优先使用选择题** — 在可能的情况下，比开放式问题更容易回答
+- **严格遵循 YAGNI 原则** — 从所有设计中移除不必要的功能
+- **探索替代方案** — 在确定方案之前，始终提出 2-3 种方案
+- **增量验证** — 展示设计方案，获得批准后再继续
+- **保持灵活** — 当某些内容不明确时，回过头来澄清
