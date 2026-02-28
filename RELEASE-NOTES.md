@@ -1,5 +1,32 @@
 # Superpowers Release Notes
 
+## v4.3.2 (2026-02-28)
+
+### Added
+
+**Gemini CLI support**
+
+Superpowers now works with Gemini CLI's extension system. Includes a `.gemini/` directory with `gemini-extension.json` manifest, hooks for session-start events, and an enhanced installer supporting multiple installation patterns (hub pattern, native extension, Antigravity compatibility).
+
+- `.gemini/gemini-extension.json` - Extension manifest with version and hooks configuration
+- `.gemini/hooks/session-start.js` - Injects superpowers context at session start
+- `.gemini/install.sh` - Hybrid installer with `--no-hooks` flag for YOLO mode
+- `.gemini/GEMINI.md` - Gemini-specific usage guidance
+- `.gemini/INSTALL.md` - Installation instructions for all methods
+- Deterministic routing hooks (`superpowers-router`, `superpowers-guard`) for skill routing
+- Documentation covering realistic expectations about Gemini's advisory context model
+
+### Changed
+
+**Gemini: Unified hybrid implementation**
+
+Consolidated all PR approaches into a single `.gemini/` directory structure with enhanced installer supporting:
+- Hub pattern installation
+- Native extensions
+- Antigravity compatibility
+
+Hooks enabled by default for deterministic skill routing, with `--no-hooks` option for YOLO mode users.
+
 ## v4.3.1 (2026-02-21)
 
 ### Added
