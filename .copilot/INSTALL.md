@@ -19,12 +19,12 @@ Install skills into your project's `.github/skills/` directory:
 # Clone Superpowers to a known location
 git clone https://github.com/obra/superpowers.git ~/.local/share/superpowers
 
-# In your project directory, create symlink
+# In your project directory, symlink each skill directly
 mkdir -p .github/skills
-ln -s ~/.local/share/superpowers/skills .github/skills/superpowers
+ln -s ~/.local/share/superpowers/skills/* .github/skills/
 ```
 
-**Benefits:** Skills are available to all team members who clone the repo and have Copilot enabled.
+**Note:** Each developer must run these steps locally. The symlinks target a user-specific path and should not be committed to the repo.
 
 ### Option 2: Personal Installation (Skills Available Everywhere)
 
@@ -36,7 +36,7 @@ git clone https://github.com/obra/superpowers.git ~/.local/share/superpowers
 
 # Create symlink in Copilot's personal skills directory
 mkdir -p ~/.copilot/skills
-ln -s ~/.local/share/superpowers/skills ~/.copilot/skills/superpowers
+ln -s ~/.local/share/superpowers/skills/* ~/.copilot/skills/
 ```
 
 **Benefits:** Skills follow you across all projects where you use Copilot.
@@ -44,12 +44,12 @@ ln -s ~/.local/share/superpowers/skills ~/.copilot/skills/superpowers
 ### Option 3: Direct Clone into .github/skills/ (Simple but Less Flexible)
 
 ```bash
-# In your project directory
+# In your project directory, add as a submodule
 mkdir -p .github/skills
-git clone https://github.com/obra/superpowers.git .github/skills/superpowers
+git submodule add https://github.com/obra/superpowers.git .github/skills/superpowers
 ```
 
-**Note:** This creates a nested git repo. Updates require `cd .github/skills/superpowers && git pull`.
+**Note:** This adds a git submodule. Updates require `cd .github/skills/superpowers && git pull`. Team members need to run `git submodule update --init` after cloning.
 
 ## Verification
 
@@ -63,13 +63,13 @@ git clone https://github.com/obra/superpowers.git .github/skills/superpowers
 
 Try invoking a skill directly:
 
-```
+```text
 /brainstorming help me design a new feature
 ```
 
 Or let Copilot auto-select skills based on context:
 
-```
+```text
 I need to debug a complex race condition in my async code
 ```
 
@@ -88,10 +88,10 @@ Skills update immediately—no restart needed.
 
 ### Skills not appearing in /skills menu
 
-1. **Check symlink**: 
+1. **Check symlinks**:
    ```bash
-   ls -la .github/skills/superpowers  # for repo-level
-   ls -la ~/.copilot/skills/superpowers  # for personal
+   ls -la .github/skills/  # for repo-level
+   ls -la ~/.copilot/skills/  # for personal
    ```
 
 2. **Verify SKILL.md files exist**:
@@ -128,7 +128,7 @@ The CLI will automatically load relevant skills (like test-driven-development).
 
 When assigning issues to Copilot coding agent on GitHub.com:
 
-1. Ensure your repository has `.github/skills/superpowers` symlink
+1. Ensure your repository has skills symlinked in `.github/skills/`
 2. The coding agent automatically discovers and uses skills
 3. Skills are listed in the agent's execution logs
 
