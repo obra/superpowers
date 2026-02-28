@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+#
+# Pre-commit hook: auto-sync AGENTS.md → platform-specific files
+# If AGENTS.md was modified, run sync and stage the generated files.
+#
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+SYNC_SCRIPT="$REPO_ROOT/scripts/sync-agents.sh"
+
+# Only run if AGENTS.md is staged for commit
+if git diff --cached --name-only | grep -q '^AGENTS\.md$'; then
+  if [ ! -x "$SYNC_SCRIPT" ]; then
+    echo "WARNING: scripts/sync-agents.sh not found or not executable"
+    echo "Run: chmod +x scripts/sync-agents.sh"
+    exit 1
+  fi
+
+  echo "[pre-commit] AGENTS.md changed, syncing platform files..."
+  bash "$SYNC_SCRIPT"
+
+  # Stage the generated files
+  git add "$REPO_ROOT/CLAUDE.md" \
+          "$REPO_ROOT/.cursorrules" \
+          "$REPO_ROOT/.github/copilot-instructions.md"
+
+  echo "[pre-commit] Synced and staged: CLAUDE.md, .cursorrules, .github/copilot-instructions.md"
+fi

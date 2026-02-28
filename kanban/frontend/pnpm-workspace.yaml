@@ -1,0 +1,6 @@
+packages:
+  - packages/*
+
+onlyBuiltDependencies:
+  - core-js
+  - esbuild
