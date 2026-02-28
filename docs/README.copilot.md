@@ -101,6 +101,8 @@ ln -s ~/.local/share/superpowers/skills/* ~/.copilot/skills/
 cd your-project
 mkdir -p .github/skills
 git submodule add https://github.com/obra/superpowers.git .github/skills/superpowers
+# Expose skills at Copilot's expected discovery path
+ln -s .github/skills/superpowers/skills/* .github/skills/
 ```
 
 **Tradeoffs**:

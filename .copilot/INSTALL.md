@@ -47,9 +47,11 @@ ln -s ~/.local/share/superpowers/skills/* ~/.copilot/skills/
 # In your project directory, add as a submodule
 mkdir -p .github/skills
 git submodule add https://github.com/obra/superpowers.git .github/skills/superpowers
+# Expose skills at Copilot's expected discovery path
+ln -s .github/skills/superpowers/skills/* .github/skills/
 ```
 
-**Note:** This adds a git submodule. Updates require `cd .github/skills/superpowers && git pull`. Team members need to run `git submodule update --init` after cloning.
+**Note:** This adds a git submodule. Updates require `cd .github/skills/superpowers && git pull`. Team members need `git submodule update --init` after cloning.
 
 ## Verification
 
