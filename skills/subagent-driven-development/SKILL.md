@@ -5,7 +5,7 @@ description: Use when executing implementation plans with independent tasks in t
 
 # Subagent-Driven Development
 
-Execute plan by dispatching fresh subagent per task, with combined spec+quality review after each. In team mode: persistent validator agents eliminate per-review startup overhead and enable cross-task gap detection.
+Execute plan by dispatching fresh subagent per task. Standard Mode: sequential two-pass review after each task — spec compliance first, then code quality. Team Mode: persistent validator agents run combined spec+quality review in a single pass, eliminating per-review startup overhead and enabling cross-task gap detection.
 
 **Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
 
