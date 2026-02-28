@@ -235,9 +235,9 @@ The SHA map lets the validator re-read prior task diffs when it infers dependenc
 
 ### Validator Idle State Tracking
 
-Team lead tracks validator availability via message flow: a validator is busy from the moment they receive a review request until you receive their verdict. Team lead does not send a second review to a validator before receiving their verdict for the first.
+Validator agents (2) declare their state via TaskUpdate: `in_progress` when they receive a review request, `completed` when they return a verdict. Team lead relies on this TaskUpdate state as the authoritative availability signal. Team lead also observes message flow as a secondary activity indicator — a validator is treated as busy from the moment they receive a review request until their verdict arrives. Team lead does not send a second review to a validator before receiving their verdict for the first.
 
-Validators notify the team lead when their verdict is ready via `SendMessage`. The team lead uses message receipt as the availability signal.
+Validators notify the team lead when their verdict is ready via `SendMessage` and update their TaskUpdate state to `completed`. The team lead checks TaskUpdate state before routing any new review request.
 
 ### Re-Review Loop Bound
 
