@@ -73,11 +73,11 @@ All skills in this library follow these principles:
 ## Installation
 
 This repository is meant to be consumed by AI coding agents. See installation instructions:
-- [GitHub Copilot](.copilot/INSTALL.md)
+- [GitHub Copilot](../.copilot/INSTALL.md)
 - [Claude Code](https://github.com/obra/superpowers#claude-code-via-plugin-marketplace)
 - [Cursor](https://github.com/obra/superpowers#cursor-via-plugin-marketplace)
-- [Codex](.codex/INSTALL.md)
-- [OpenCode](.opencode/INSTALL.md)
+- [Codex](../.codex/INSTALL.md)
+- [OpenCode](../.opencode/INSTALL.md)
 
 ## Learn More
 
