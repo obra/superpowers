@@ -149,4 +149,4 @@ See the main [README.md](../README.md) for the complete skills library. Key skil
 ## Getting Help
 
 - **Issues**: https://github.com/obra/superpowers/issues
-- **Documentation**: https://github.com/obra/superpowers/blob/main/docs/README.copilot.md
+- **Documentation**: ../docs/README.copilot.md
