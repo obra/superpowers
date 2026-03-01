@@ -53,7 +53,7 @@ Final code reviewer → Cleanup transient files → Use finishing-a-development-
 
 | Subagent Type | Model | Rationale |
 |---------------|-------|-----------|
-| Implementer | `sonnet/opus` | Requires coding intelligence |
+| Implementer | `inherit` | Requires coding intelligence |
 | Spec Reviewer | `haiku` | Validation task, pattern matching |
 | Code Quality Reviewer | `haiku` | Validation task, checklist-based |
 
