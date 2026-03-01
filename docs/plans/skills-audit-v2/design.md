@@ -19,7 +19,7 @@ Second-pass audit of all 16 Superpowers skills, ensuring end-to-end workflow con
 
 ## Architecture: Three Layers
 
-### Layer 1 — E2E Consistency Fixes (16 items)
+### Layer 1 — E2E Consistency Fixes (17 items)
 
 Surgical edits to existing skills fixing contradictions, missing cross-references, broken handoffs, and stale references discovered by the workflow audit.
 
@@ -53,6 +53,7 @@ Surgical edits to existing skills fixing contradictions, missing cross-reference
 | CX-5 | Clarify "Agent tool" usage in agent-team prompts (partially fixed, clean up remaining confusion) | `agent-team-driven-development/spec-reviewer-prompt.md` |
 | W2-1 | Make worktree handoff for parallel session path more explicit | `writing-plans/SKILL.md`, `executing-plans/SKILL.md` |
 | W3-1 | Add bold REQUIRED SUB-SKILL callout for finishing in subagent-driven-development | `subagent-driven-development/SKILL.md` |
+| CX-21 | Add user confirmation gates at team decision (step 8) and implementation transition (step 9) | `brainstorming/SKILL.md` |
 
 ### Layer 2 — Fork Innovations (4 items)
 
@@ -82,7 +83,7 @@ Ideas from closed issues, open PRs, and unmerged PR diffs that our v4.5.0 audit 
 
 | File | Layer 1 | Layer 2 | Layer 3 | Total changes |
 |------|---------|---------|---------|---------------|
-| `brainstorming/SKILL.md` | CX-11 | Plan mode, — | Quick mode | 3 |
+| `brainstorming/SKILL.md` | CX-11, CX-21 | Plan mode, — | Quick mode | 4 |
 | `writing-plans/SKILL.md` | CX-14, W2-1 | Plan mode, Plan status | — | 4 |
 | `executing-plans/SKILL.md` | CX-20, W2-1 | Plan mode, Plan status | Plan verification | 5 |
 | `using-superpowers/SKILL.md` | — | Red flags | — | 1 |
@@ -99,7 +100,7 @@ Ideas from closed issues, open PRs, and unmerged PR diffs that our v4.5.0 audit 
 | `writing-skills/SKILL.md` | CX-9, W6-1 | — | — | 2 |
 | `hooks/session-start` | — | — | Hook fixes | 1 |
 
-**Total: ~26 changes across 16 files**
+**Total: ~27 changes across 16 files**
 
 ## Deferred / Future Work
 
