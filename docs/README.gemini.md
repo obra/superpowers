@@ -107,10 +107,11 @@ Gemini CLI (v0.24.0+) natively supports Agent Skills. At startup it scans `~/.ge
 ### Skill Activation
 When a task matches a skill's description, Gemini *may* call the `activate_skill` tool to load the full instructions. However, **auto-activation is not reliable** due to Gemini's architectural design (see [Issue #128](https://github.com/obra/superpowers/issues/128)).
 
-### Deterministic Routing (Optional)
-If you have Node.js installed, the installer registers hooks for deterministic skill routing:
-- `beforeAgent` hook: `superpowers-router` - analyzes prompts and suggests skills
-- `beforeTool` hook: `superpowers-guard` - intercepts commit/merge operations
+### Deterministic Skill Routing
+
+Superpowers relies on Gemini CLI hooks to interpret intent and route you to the correct tools:
+- `BeforeAgent` hook: `superpowers-router` - analyzes prompts and suggests skills
+- `BeforeTool` hook: `superpowers-guard` - intercepts commit/merge operations
 
 These hooks attempt to bridge the auto-activation gap by analyzing user prompts and explicitly suggesting relevant skills.
 
@@ -207,11 +208,39 @@ cd ~/.gemini/antigravity/skills/superpowers && git pull
 
 # Remove hooks from settings.json
 python3 -c "
-import json
-with open('$HOME/.gemini/settings.json') as f: d = json.load(f)
-for k in ('beforeAgent','beforeTool'):
-    d.get('hooks',{}).get(k,[])[:] = [h for h in d.get('hooks',{}).get(k,[]) if 'superpowers' not in h.get('name','')]
-with open('$HOME/.gemini/settings.json','w') as f: json.dump(d,f,indent=2); f.write('\n')
+import json, sys, os
+settings_path = os.path.expanduser('~/.gemini/settings.json')
+
+try:
+    with open(settings_path, 'r') as f:
+        d = json.load(f)
+    
+    hooks = d.get('hooks', {})
+    changed = False
+    
+    # Clean up both legacy (camelCase) and correctly cased (PascalCase) hook names
+    for k in ('beforeAgent', 'beforeTool', 'BeforeAgent', 'BeforeTool'):
+        if k in hooks:
+            original_len = len(hooks[k])
+            hooks[k] = [h for h in hooks[k] if h.get('name') not in ('superpowers-router', 'superpowers-guard')]
+            if len(hooks[k]) != original_len:
+                changed = True
+            
+            # Remove the key entirely if it's empty
+            if len(hooks[k]) == 0:
+                del hooks[k]
+                changed = True
+    
+    if changed:
+        with open(settings_path, 'w') as f:
+            json.dump(d, f, indent=2)
+            f.write('\n')
+except FileNotFoundError:
+    pass # settings.json might not exist
+except json.JSONDecodeError:
+    sys.stderr.write(f'Error: Could not decode JSON from {settings_path}\n')
+except Exception as e:
+    sys.stderr.write(f'An unexpected error occurred: {e}\n')
 "
 
 # Remove the injected Superpowers context block from GEMINI.md

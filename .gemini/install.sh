@@ -308,27 +308,33 @@ except (FileNotFoundError, json.JSONDecodeError):
 
 hooks = d.setdefault('hooks', {})
 
+# Cleanup legacy camelCase hook names
+if 'beforeAgent' in hooks:
+    del hooks['beforeAgent']
+if 'beforeTool' in hooks:
+    del hooks['beforeTool']
+
 # BeforeAgent: deterministic phrase router
-beforeAgent = hooks.setdefault('beforeAgent', [])
-beforeAgent = [h for h in beforeAgent if h.get('name') not in ('superpowers-router',)]
-beforeAgent.append({
+BeforeAgent = hooks.setdefault('BeforeAgent', [])
+BeforeAgent = [h for h in BeforeAgent if h.get('name') not in ('superpowers-router',)]
+BeforeAgent.append({
     'name': 'superpowers-router',
     'command': 'node',
     'args': [router_path],
     'matcher': '.*'
 })
-hooks['beforeAgent'] = beforeAgent
+hooks['BeforeAgent'] = BeforeAgent
 
 # BeforeTool: agent-behavior guard
-beforeTool = hooks.setdefault('beforeTool', [])
-beforeTool = [h for h in beforeTool if h.get('name') not in ('superpowers-guard',)]
-beforeTool.append({
+BeforeTool = hooks.setdefault('BeforeTool', [])
+BeforeTool = [h for h in BeforeTool if h.get('name') not in ('superpowers-guard',)]
+BeforeTool.append({
     'name': 'superpowers-guard',
     'command': 'node',
     'args': [guard_path],
     'matcher': '.*'
 })
-hooks['beforeTool'] = beforeTool
+hooks['BeforeTool'] = BeforeTool
 
 with open(settings_path, 'w') as f:
     json.dump(d, f, indent=2)

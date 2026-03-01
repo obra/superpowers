@@ -215,11 +215,43 @@ cd ~/.gemini/antigravity/skills/superpowers && git pull
 
 # Remove hooks from settings.json
 python3 -c "
-import json
-with open('$HOME/.gemini/settings.json') as f: d = json.load(f)
-for k in ('beforeAgent','beforeTool'):
-    d.get('hooks',{}).get(k,[])[:] = [h for h in d.get('hooks',{}).get(k,[]) if 'superpowers' not in h.get('name','')]
-with open('$HOME/.gemini/settings.json','w') as f: json.dump(d,f,indent=2); f.write('\n')
+#!/usr/bin/env python3
+import json, sys
+settings_path = '$HOME/.gemini/settings.json'
+
+try:
+    with open(settings_path, 'r') as f:
+        d = json.load(f)
+    
+    hooks = d.get('hooks', {})
+    changed = False
+    
+    # Clean up both legacy (PascalCase) and current (camelCase) hook names
+    for k in ('beforeAgent', 'beforeTool', 'BeforeAgent', 'BeforeTool'):
+        if k in hooks:
+            original_len = len(hooks[k])
+            hooks[k] = [h for h in hooks[k] if h.get('name') not in ('superpowers-router', 'superpowers-guard')]
+            if len(hooks[k]) != original_len:
+                changed = True
+            
+            # Remove the key entirely if it's empty
+            if len(hooks[k]) == 0:
+                del hooks[k]
+                changed = True
+    
+    if changed:
+        with open(settings_path, 'w') as f:
+            json.dump(d, f, indent=2)
+            f.write('\n')
+
+except FileNotFoundError:
+    # settings.json might not exist, which is fine for uninstall
+    pass
+except json.JSONDecodeError:
+    # settings.json might be malformed, skip modification
+    sys.stderr.write(f'Warning: Could not parse {settings_path}. Skipping hook removal.\n')
+except Exception as e:
+    sys.stderr.write(f'Error during hook removal: {e}\n')
 "
 
 # Clean up GEMINI.md
