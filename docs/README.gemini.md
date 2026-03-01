@@ -74,11 +74,7 @@ git clone https://github.com/obra/superpowers.git ~/.gemini/superpowers
 For Gemini CLI v0.28.0+ with native extension support:
 
 ```bash
-# Clone to any location
-git clone https://github.com/obra/superpowers.git
-
-# Install as native extension
-gemini extension install ./superpowers/.gemini
+gemini extension install https://github.com/obra/superpowers
 ```
 
 **Benefits**:

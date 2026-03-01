@@ -178,7 +178,7 @@ A **hybrid architecture** combining:
 - Maintain context injection with idempotent markers
 
 #### 2. Native Extension Support
-- Adopt extension manifest from PR #570 but place in `.gemini/` directory
+- Adopt extension manifest from PR #570 and keep at repository root
 - Include session-start hooks for deterministic skill routing
 - Support `gemini extensions install https://github.com/obra/superpowers`
 - Include MCP server for enhanced tool compatibility (optional)

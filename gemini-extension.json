@@ -2,11 +2,11 @@
   "name": "superpowers",
   "version": "0.3-gemini",
   "description": "Core skills library: TDD, debugging, collaboration patterns, and proven techniques for coding agents",
-  "contextFileName": "GEMINI.md",
+  "contextFileName": ".gemini/GEMINI.md",
   "hooks": [
     {
       "event": "session-start",
-      "script": "hooks/session-start.js",
+      "script": ".gemini/hooks/session-start.js",
       "matcher": "startup|resume|clear|compact"
     }
   ]
