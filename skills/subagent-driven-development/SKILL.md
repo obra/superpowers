@@ -278,6 +278,7 @@ Pinging all implementers after compaction is unnecessary and expensive. `TaskLis
 
 ### Key Constraints in Team Mode
 
+- **Team lead never implements** — the team lead only orchestrates; all code changes must be made by implementer subagents. This applies even to small patches or fixups after a validator rejection. If the team lead makes code changes directly, those changes bypass the validator review and invalidate the verification guarantee.
 - **One implementer per task** — never assign two implementers to the same task (conflicts)
 - **One validator per active review** — don't send a review to a validator before receiving their verdict for the prior one
 - **Cycle cap is 3** — after 3 rejections, escalate to human, do not continue looping
@@ -501,6 +502,7 @@ validator-1 (Task 2 re-review):
 - Let implementer self-review replace actual review (both are needed)
 - **Standard mode only:** Start code quality review before spec compliance is ✅ (wrong order)
 - Move to next task while any review has open issues
+- **Team mode only:** Implement code directly as team lead — even a one-line fix. If a validator rejects a task, send fix instructions to the implementer via `SendMessage`, not fix the code yourself. Team lead code changes bypass verification entirely.
 - **Team mode only:** Send a review to a validator before receiving their verdict for the previous review
 - **Team mode only:** Dispatch a fresh review subagent when a validator is available (use the validator)
 - **Team mode only:** Exceed 3 review cycles without escalating to human
