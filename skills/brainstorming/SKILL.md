@@ -98,7 +98,7 @@ digraph brainstorming {
 - Cover: architecture, components, data flow, error handling
 - **Testing strategy** — explicitly address:
   - What needs tests (unit, integration, e2e)?
-  - If the project will have 4+ parallelizable tasks: recommend **pipelined TDD** — a QA agent writes failing tests one wave ahead of implementers, so implementers always have pre-written tests to run RED then GREEN
+  - If the project will have 4+ parallelizable tasks: recommend **pipelined TDD** — within each wave, a QA agent writes failing tests for the NEXT wave's tasks in parallel while implementers work on the CURRENT wave. Implementers always have pre-written tests to run RED then GREEN. Wave 0 can combine foundation work (migrations, config) with QA writing tests for Wave 1.
   - If solo/serial execution: recommend **solo TDD** — each agent writes its own test first
   - Include test expectations per component (what to test, expected failures)
 - Be ready to revise based on feedback

@@ -220,21 +220,40 @@ Include immediately after the header when Team Fitness Check passes.
 
 ### Waves
 
+**Wave 0: [Foundation/Setup]**
+- Task A ([role-name]) — migrations, schema, config scaffolding, etc.
+- *(parallel)* QA writes failing tests for Wave 1 tasks (if pipelined TDD)
+
+  *Parallel-safe because:* QA writes test files; foundation tasks write different files
+
 **Wave 1: [Theme]**
 - Task N ([role-name]) — [one-line summary]
+- *(parallel)* QA writes failing tests for Wave 2 tasks
 
   *Parallel-safe because:* [different directories, no import relationship]
+  *QA parallel because:* QA writes test files in lead's worktree; implementers work in their own worktrees
 
 **Wave 2: [Theme]** — needs Wave 1 [what specifically]
 - Task X ([role-name]) — [one-line summary]
+- *(parallel)* QA writes failing tests for Wave 3 tasks (or verifies all tests on final wave)
 
   *Depends on Wave 1:* [specific outputs — file paths, types, tables]
+
+**Important:** QA test-writing is always a parallel activity WITHIN each wave, not a separate sequential step. Implementers and QA work simultaneously — implementers run pre-written tests RED→GREEN while QA writes the next wave's tests.
 
 ### Dependency Graph
 
 ```
-Task 1 ──→ Task 3 ──→ Task 5
-Task 2 ──→ Task 4 ──↗
+Wave 0: foundation + QA tests W1
+              │
+              ▼
+Wave 1: impl + QA tests W2
+              │
+              ▼
+Wave 2: impl + QA tests W3
+              │
+              ▼
+Wave 3: impl + QA verify all
 ```
 ```
 

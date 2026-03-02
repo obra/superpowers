@@ -60,12 +60,14 @@ When a roster exists from composing-teams, use the agent definitions and models 
 
 When a QA agent is in the team roster, use pipelined TDD:
 
-| Wave | QA does | Implementers do |
-|------|---------|-----------------|
-| Wave 0 | Write tests for Wave 1 tasks | — |
-| Wave 1 | Write tests for Wave 2 tasks | Implement Wave 1 (tests already exist) |
-| Wave N | Write tests for Wave N+1 tasks | Implement Wave N |
-| Final wave | Verify all tests pass | Implement final tasks |
+| Wave | Implementers do | QA does (in parallel) |
+|------|-----------------|----------------------|
+| Wave 0 | Foundation tasks (migrations, config, scaffolding) | Write tests for Wave 1 tasks |
+| Wave 1 | Implement Wave 1 (tests already exist) → RED then GREEN | Write tests for Wave 2 tasks |
+| Wave N | Implement Wave N → RED then GREEN | Write tests for Wave N+1 tasks |
+| Final wave | Implement final tasks | Verify all tests pass |
+
+**QA and implementers work in parallel within each wave.** QA is not a separate sequential step — it runs alongside implementers, writing the next wave's tests while current-wave implementation happens.
 
 **QA writes in the lead's worktree** (not a separate QA worktree). Test files don't conflict with implementer worktrees. Implementers branch from the lead's worktree where tests already exist.
 
