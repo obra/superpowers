@@ -11,7 +11,7 @@ Execute plan by dispatching fresh subagent per task, with two-stage review after
 
 **Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
 
-**Subagent lifecycle:** Each task gets a fresh subagent. The subagent persists within that task (including any re-review loops) but is not reused across tasks. fresh per task, persistent within task.
+**Subagent lifecycle:** Each task gets a fresh subagent. The subagent persists within that task (including any re-review loops) but is not reused across tasks.
 
 ## When to Use
 
