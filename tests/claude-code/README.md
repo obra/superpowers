@@ -92,6 +92,20 @@ Tests skill content and requirements (~2 minutes):
 - Review loops documented
 - Task context provision documented
 
+#### test-using-superpowers.sh
+Tests the bootstrap skill (~2 minutes):
+- Skill loading and recognition
+- Skill discovery mechanism
+- Auto-triggering behaviour
+- Brainstorming as prerequisite
+- Skills are mandatory
+
+#### test-team-driven-development.sh
+Tests team-driven-development skill content and requirements (~2 minutes):
+- Skill loading and accessibility
+- Team workflow structure
+- Role definitions and responsibilities
+
 ### Integration Tests (use --integration flag)
 
 #### test-subagent-driven-development-integration.sh
@@ -114,6 +128,18 @@ Full workflow execution test (~10-30 minutes):
 - Our improvements are actually applied
 - Subagents follow the skill correctly
 - Final code is functional and tested
+
+#### test-team-driven-development-integration.sh
+Full team workflow execution test (~10-30 minutes):
+- Creates real test project with team-based implementation
+- Executes plan using team-driven-development
+- Verifies team coordination and task completion
+
+#### test-team-worktree-integration.sh
+Team worktree isolation test (~10-30 minutes):
+- Tests team workflow with git worktree isolation
+- Verifies worktree creation and cleanup
+- Validates team members work in isolated branches
 
 ## Adding New Tests
 

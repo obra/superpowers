@@ -210,6 +210,8 @@ export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 
 ### What Requires User Testing
 
+> **Update:** These items were validated through the integration test suite added post-merge. See `tests/claude-code/test-team-driven-development-integration.sh`.
+
 Since agent teams are experimental and require Opus 4.6+:
 - ⏳ Actual team spawning and coordination
 - ⏳ Message passing infrastructure

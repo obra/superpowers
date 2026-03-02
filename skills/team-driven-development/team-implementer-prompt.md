@@ -23,6 +23,18 @@ Other team members:
 Shared task list: ~/.claude/teams/[team-name]/tasks.json
 Your inbox: ~/.claude/teams/[team-name]/inboxes/[your-role].json
 
+## Your Workspace
+
+[One of the following, as assigned by the lead:]
+
+**Shared worktree:** All agents work in [worktree-path] on branch [branch-name].
+Coordinate with teammates to avoid editing the same files simultaneously.
+
+**Your own worktree:** You work in [your-worktree-path] on branch [your-branch].
+You have full isolation — no merge conflicts with other agents during development.
+The lead will merge branches after all work is reviewed.
+[Any resource config: PORT=X, scratch org alias, env var overrides, etc.]
+
 ## What We're Building
 
 [2-3 sentence summary of the overall project]

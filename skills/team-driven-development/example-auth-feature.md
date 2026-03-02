@@ -167,10 +167,10 @@ File: `~/.claude/teams/auth-feature/tasks.json`
 You're already active as the lead. Initialize inboxes:
 
 ```bash
-echo '[]' > ~/.claude/teams/auth-feature/inboxes/lead.json
-echo '[]' > ~/.claude/teams/auth-feature/inboxes/backend-impl.json
-echo '[]' > ~/.claude/teams/auth-feature/inboxes/frontend-impl.json
-echo '[]' > ~/.claude/teams/auth-feature/inboxes/security-reviewer.json
+echo '{"messages": []}' > ~/.claude/teams/auth-feature/inboxes/lead.json
+echo '{"messages": []}' > ~/.claude/teams/auth-feature/inboxes/backend-impl.json
+echo '{"messages": []}' > ~/.claude/teams/auth-feature/inboxes/frontend-impl.json
+echo '{"messages": []}' > ~/.claude/teams/auth-feature/inboxes/security-reviewer.json
 ```
 
 ### Spawn Backend Implementer

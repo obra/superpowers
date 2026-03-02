@@ -74,7 +74,8 @@ def format_tokens(n):
     return f"{n:,}"
 
 def calculate_cost(usage, input_cost_per_m=3.0, output_cost_per_m=15.0):
-    """Calculate estimated cost in dollars."""
+    """Calculate estimated cost in dollars.
+    Note: Default pricing is for Sonnet. Opus runs will show lower-than-actual costs."""
     total_input = usage['input_tokens'] + usage['cache_creation'] + usage['cache_read']
     input_cost = total_input * input_cost_per_m / 1_000_000
     output_cost = usage['output_tokens'] * output_cost_per_m / 1_000_000

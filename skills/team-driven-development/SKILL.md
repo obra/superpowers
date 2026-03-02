@@ -95,6 +95,27 @@ Your implementation plan should identify:
 - Which tasks have dependencies on each other
 - Where coordination between agents is beneficial
 - Suggested team composition (roles needed)
+- Workspace isolation strategy (see below)
+
+#### Workspace Isolation (Planner's Discretion)
+
+The planning agent decides whether the team shares a single worktree or agents get their own. **Default: all agents share one worktree** created by the lead before spawning teammates. This is simpler and sufficient for most work.
+
+**When to consider per-agent worktrees:**
+- **A/B testing** — agents implementing competing approaches that shouldn't interfere
+- **Co-located feature parallelism** — simultaneous development on files/modules that would cause contention, even though the branches merge cleanly afterward
+- **Any scenario where concurrent writes to overlapping files would create conflicts faster than agents can coordinate**
+
+**Feasibility check (required before choosing per-agent worktrees):**
+The planner must verify that isolated worktrees won't hit resource conflicts:
+- **Ports** — do dev servers, databases, or APIs bind to fixed ports? Each worktree needs its own.
+- **Scratch orgs / cloud resources** — Salesforce scratch orgs, cloud sandboxes, etc. may need one per agent
+- **Shared state** — databases, caches, lock files, or build artifacts that assume a single workspace
+- **Disk space** — each worktree duplicates working files; large repos multiply this
+
+If resource conflicts exist, the plan should either document how to resolve them (different ports via env vars, separate scratch orgs, etc.) or fall back to shared worktree with sequential task execution for the conflicting areas.
+
+**The planner documents the decision** in the implementation plan so the lead knows which setup to use. The lead does NOT make this decision independently.
 
 ## Team Composition
 
@@ -380,11 +401,13 @@ When monitoring TaskList, a task showing "completed" only means the implementer 
 
 When all tasks marked complete AND reviewed:
 
-1. **Team review session** - Lead coordinates final review
-2. **Conflict resolution** - If multiple agents modified same files
-3. **Integration testing** - Run full test suite
-4. **Lead consolidates** - Creates summary of what was accomplished
-5. **Use finishing-a-development-branch** - Standard completion workflow
+1. **Worktree merge** (per-agent worktrees only) - Lead merges agent branches into the team branch in dependency order, running tests after each merge, then removes agent worktrees
+2. **Team review session** - Lead coordinates final review
+3. **Conflict resolution** - If multiple agents modified same files (more common in shared worktree; in per-agent worktrees, conflicts surface during merge)
+4. **Integration testing** - Run full test suite
+5. **Lead consolidates** - Creates summary of what was accomplished
+6. **Worktree cleanup** - Remove the team worktree after merge to main
+7. **Use finishing-a-development-branch** - Standard completion workflow
 
 ## Communication Best Practices
 
@@ -474,7 +497,7 @@ rm -f "$LOCK"
 ## Integration
 
 **Required workflow skills:**
-- **h-superpowers:using-git-worktrees** - REQUIRED: Isolated workspace for team
+- **h-superpowers:using-git-worktrees** - REQUIRED: Lead creates workspace before spawning team (or per-agent worktrees if planner specified — see Plan Preparation)
 - **h-superpowers:writing-plans** - Creates plan, identifies coordination needs
 - **h-superpowers:test-driven-development** - Teammates follow TDD
 - **h-superpowers:finishing-a-development-branch** - Complete after team done

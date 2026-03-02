@@ -27,6 +27,8 @@ escape_for_json() {
     s="${s//$'\n'/\\n}"
     s="${s//$'\r'/\\r}"
     s="${s//$'\t'/\\t}"
+    s="${s//$'\b'/\\b}"
+    s="${s//$'\f'/\\f}"
     printf '%s' "$s"
 }
 
@@ -34,13 +36,6 @@ using_superpowers_escaped=$(escape_for_json "$using_superpowers_content")
 warning_escaped=$(escape_for_json "$warning_message")
 
 # Output context injection as JSON
-cat <<EOF
-{
-  "hookSpecificOutput": {
-    "hookEventName": "SessionStart",
-    "additionalContext": "<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'h-superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}\n</EXTREMELY_IMPORTANT>"
-  }
-}
-EOF
+printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "<EXTREMELY_IMPORTANT>\\nYou have superpowers.\\n\\n**Below is the full content of your '\''h-superpowers:using-superpowers'\'' skill - your introduction to using skills. For all other skills, use the '\''Skill'\'' tool:**\\n\\n%s\\n\\n%s\\n</EXTREMELY_IMPORTANT>"\n  }\n}\n' "$using_superpowers_escaped" "$warning_escaped"
 
 exit 0

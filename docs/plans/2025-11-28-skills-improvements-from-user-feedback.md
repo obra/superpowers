@@ -1,3 +1,5 @@
+> **Note:** This is an early draft with untracked completion status. Some proposed improvements may have been implemented; others remain open.
+
 # Skills Improvements from User Feedback
 
 **Date:** 2025-11-28

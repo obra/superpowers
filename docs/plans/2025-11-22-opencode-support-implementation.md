@@ -1,3 +1,5 @@
+> **Status: SUPERSEDED** — The actual implementation used a different approach. See RELEASE-NOTES v4.1.0.
+
 # OpenCode Support Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use h-superpowers:executing-plans to implement this plan task-by-task.

@@ -23,7 +23,7 @@ else
 fi
 
 # Verify symlink target exists
-if [ -f "$(readlink -f "$HOME/.config/opencode/plugins/h-superpowers.js")" ]; then
+if [ -f "$(python3 -c "import os; print(os.path.realpath('$HOME/.config/opencode/plugins/h-superpowers.js'))")" ]; then
     echo "  [PASS] Plugin symlink target exists"
 else
     echo "  [FAIL] Plugin symlink target does not exist"

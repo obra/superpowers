@@ -83,6 +83,8 @@ This guide helps you choose between Claude's Agent Teams and the traditional Sub
 
 ### Cost Structure
 
+> **Note:** Cost estimates below are approximate and based on early-2025 pricing. Actual costs may vary based on model, usage patterns, and pricing changes.
+
 **Subagent Approach:**
 ```
 Per task:

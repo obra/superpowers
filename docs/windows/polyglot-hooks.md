@@ -1,3 +1,5 @@
+> **Note:** This polyglot pattern was superseded in v4.2.0. The current approach uses `hooks.json` calling `session-start.sh` directly. This document is retained for historical reference.
+
 # Cross-Platform Polyglot Hooks for Claude Code
 
 Claude Code plugins need hooks that work on Windows, macOS, and Linux. This document explains the polyglot wrapper technique that makes this possible.

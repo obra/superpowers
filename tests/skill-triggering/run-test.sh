@@ -45,12 +45,12 @@ cd "$OUTPUT_DIR"
 
 echo "Plugin dir: $PLUGIN_DIR"
 echo "Running claude -p with naive prompt..."
-timeout 300 claude -p "$PROMPT" \
+timeout 300 env -u CLAUDECODE claude -p "$PROMPT" \
     --plugin-dir "$PLUGIN_DIR" \
-    --dangerously-skip-permissions \
+    --permission-mode bypassPermissions \
     --max-turns "$MAX_TURNS" \
     --output-format stream-json \
-    > "$LOG_FILE" 2>&1 || true
+    < /dev/null > "$LOG_FILE" 2>&1 || true
 
 echo ""
 echo "=== Results ==="

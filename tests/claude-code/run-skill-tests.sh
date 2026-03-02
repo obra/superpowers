@@ -65,6 +65,7 @@ while [[ $# -gt 0 ]]; do
             echo "Integration Tests (use --integration):"
             echo "  test-subagent-driven-development-integration.sh  Full subagent workflow execution"
             echo "  test-team-driven-development-integration.sh      Full agent team workflow execution"
+            echo "  test-team-worktree-integration.sh                Per-agent worktree workflow execution"
             exit 0
             ;;
         *)
@@ -86,6 +87,7 @@ tests=(
 integration_tests=(
     "test-subagent-driven-development-integration.sh"
     "test-team-driven-development-integration.sh"
+    "test-team-worktree-integration.sh"
 )
 
 # Add integration tests if requested

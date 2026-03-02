@@ -24,7 +24,7 @@ Added an `EnterPlanMode` intercept to the skill flow graph. When the model is ab
 
 **SessionStart hook now runs synchronously**
 
-Changed `async: true` to `async: false` in hooks.json. When async, the hook could fail to complete before the model's first turn, meaning using-superpowers instructions weren't in context for the first message.
+Changed `async: true` to `async: false` in hooks.json. (Reverts the v4.2.0 async change; synchronous execution is now preferred for reliable context injection.) When async, the hook could fail to complete before the model's first turn, meaning using-superpowers instructions weren't in context for the first message.
 
 ## v4.2.0 (2026-02-05)
 
@@ -548,6 +548,8 @@ We now use Anthropic's first-party skills system!
 ---
 
 # Superpowers v2.0.0 Release Notes
+
+> **Note:** The skills-repository-separation architecture described below was later reverted. Skills now live in the main plugin repository.
 
 ## Overview
 

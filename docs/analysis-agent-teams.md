@@ -54,6 +54,9 @@ Agent Teams (introduced in Opus 4.6) provide:
 ### Technical Architecture
 
 **Communication primitives:**
+
+> **Note:** The actual implementation uses the `SendMessage` tool rather than the primitives described below, which were based on early design assumptions.
+
 ```
 - send_message: Agent-to-agent messaging
 - read_inbox: Check for new messages

@@ -14,7 +14,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Simple frontmatter extraction (avoid dependency on skills-core for bootstrap)
 const extractAndStripFrontmatter = (content) => {
-  const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  const match = content.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
   if (!match) return { frontmatter: {}, content };
 
   const frontmatterStr = match[1];

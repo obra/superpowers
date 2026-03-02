@@ -1,3 +1,5 @@
+> **Status: SUPERSEDED** — The actual implementation used a different approach. See RELEASE-NOTES v4.1.0.
+
 # OpenCode Support Design
 
 **Date:** 2025-11-22

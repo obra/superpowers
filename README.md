@@ -119,7 +119,7 @@ The whole thing — design through PR — typically runs without you touching co
 - **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
 - **verification-before-completion** - Ensure it's actually fixed
 
-**Collaboration** 
+**Collaboration**
 - **brainstorming** - Socratic design refinement
 - **writing-plans** - Detailed implementation plans
 - **executing-plans** - Batch execution with checkpoints
@@ -130,6 +130,9 @@ The whole thing — design through PR — typically runs without you touching co
 - **finishing-a-development-branch** - Merge/PR decision workflow
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
 - **team-driven-development** - Collaborative agent teams with direct inter-agent communication for coordinated work (experimental, Opus 4.6+)
+
+**Agents**
+- **code-reviewer** - Bundled agent for systematic code review against plans and coding standards
 
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)

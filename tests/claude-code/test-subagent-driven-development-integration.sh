@@ -356,13 +356,15 @@ else
 fi
 echo ""
 
-# Token Usage Analysis
-echo "========================================="
-echo " Token Usage Analysis"
-echo "========================================="
-echo ""
-python3 "$SCRIPT_DIR/analyze-token-usage.py" "$SESSION_FILE"
-echo ""
+# Token Usage Analysis (if script exists and session was found)
+if [ -f "$SCRIPT_DIR/analyze-token-usage.py" ] && [ -n "$SESSION_FILE" ]; then
+    echo "========================================="
+    echo " Token Usage Analysis"
+    echo "========================================="
+    echo ""
+    python3 "$SCRIPT_DIR/analyze-token-usage.py" "$SESSION_FILE" 2>/dev/null || echo "  (analysis script not available)"
+    echo ""
+fi
 
 # Summary
 echo "========================================"

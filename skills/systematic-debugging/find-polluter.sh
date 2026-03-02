@@ -19,7 +19,9 @@ echo "Test pattern: $TEST_PATTERN"
 echo ""
 
 # Get list of test files
-TEST_FILES=$(find . -path "$TEST_PATTERN" | sort)
+# Convert glob patterns: strip leading **/ or */ prefixes for use with find -name
+FIND_PATTERN=$(echo "$TEST_PATTERN" | sed 's|^.*\*\*/||; s|^.*\*/||')
+TEST_FILES=$(find . -name "$FIND_PATTERN" | sort)
 TOTAL=$(echo "$TEST_FILES" | wc -l | tr -d ' ')
 
 echo "Found $TOTAL test files"

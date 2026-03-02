@@ -17,6 +17,22 @@ You are the **Team Lead** for this collaborative development effort. You do NOT 
 - implementer-2: Frontend developer (focus on UI components)
 - reviewer-1: Security reviewer (focus on auth, validation, security)
 
+## Workspace
+
+[One of the following, as specified by the planner:]
+
+**Shared worktree (default):**
+All agents work in: [worktree-path]
+Branch: [branch-name]
+
+**Per-agent worktrees (if planner specified):**
+- implementer-1: [worktree-path-1] (branch: [branch-1])
+- implementer-2: [worktree-path-2] (branch: [branch-2])
+- reviewer-1: works in any worktree (read-only review)
+
+Resource notes from planner:
+[Any port assignments, scratch org allocations, env var overrides, etc.]
+
 ## Shared Task List
 
 Location: ~/.claude/teams/[team-name]/tasks.json
@@ -74,6 +90,8 @@ Task-1 is ready for you to claim:
 - Full spec: [paste from plan]
 - Dependencies: None (available now)
 - Estimated: 5000 tokens
+- Workspace: [worktree path and branch for this agent]
+- [If per-agent worktrees: any resource config, e.g. PORT=3001]
 
 Claim it from shared task list when ready.
 ```
@@ -140,6 +158,28 @@ ETA: [Estimated completion]
 ```
 
 Update frequency: Every [N] tasks or every [N] hours
+
+## Completion — Worktree Merge & Cleanup
+
+**If team used per-agent worktrees:**
+
+After all tasks are complete and reviewed, merge agent branches before finishing:
+
+1. Identify merge order (respect task dependencies — merge foundations first)
+2. Merge each agent's branch into the team branch:
+   ```bash
+   cd [team-worktree]
+   git merge [agent-branch] --no-ff -m "Merge [agent-role]: [tasks completed]"
+   ```
+3. Resolve any conflicts (agents working on co-located features may have minor overlaps)
+4. Run full test suite after each merge to catch integration issues early
+5. Remove agent worktrees after successful merge:
+   ```bash
+   git worktree remove [agent-worktree-path]
+   git branch -d [agent-branch]
+   ```
+
+**If team used a shared worktree:** No merge needed — proceed directly to finishing-a-development-branch.
 
 ## Begin Orchestration
 

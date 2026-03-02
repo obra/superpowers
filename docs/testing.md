@@ -11,10 +11,17 @@ Testing skills that involve subagents, workflows, and complex interactions requi
 ```
 tests/
 ├── claude-code/
-│   ├── test-helpers.sh                    # Shared test utilities
-│   ├── test-subagent-driven-development-integration.sh
-│   ├── analyze-token-usage.py             # Token analysis tool
-│   └── run-skill-tests.sh                 # Test runner (if exists)
+│   ├── README.md                                        # Test documentation
+│   ├── test-helpers.sh                                  # Shared test utilities
+│   ├── run-skill-tests.sh                               # Test runner (unit + integration)
+│   ├── analyze-token-usage.py                           # Token analysis tool
+│   ├── monitor-session.py                               # Real-time session monitor
+│   ├── test-subagent-driven-development.sh              # Unit tests
+│   ├── test-subagent-driven-development-integration.sh  # Integration tests
+│   ├── test-team-driven-development.sh                  # Unit tests
+│   ├── test-team-driven-development-integration.sh      # Integration tests
+│   ├── test-team-worktree-integration.sh                # Worktree integration tests
+│   └── test-using-superpowers.sh                        # Unit tests
 ```
 
 ## Running Tests
@@ -35,7 +42,7 @@ cd tests/claude-code
 
 - Must run from the **superpowers plugin directory** (not from temp directories)
 - Claude Code must be installed and available as `claude` command
-- Local dev marketplace must be enabled: `"superpowers@superpowers-dev": true` in `~/.claude/settings.json`
+- Local dev marketplace must be enabled: `"h-superpowers@superpowers-dev": true` in `~/.claude/settings.json`
 
 ## Integration Test: subagent-driven-development
 
@@ -183,7 +190,7 @@ ls -lt "$SESSION_DIR"/*.jsonl | head -5
 
 **Solutions**:
 1. Ensure you're running FROM the superpowers directory: `cd /path/to/superpowers && tests/...`
-2. Check `~/.claude/settings.json` has `"superpowers@superpowers-dev": true` in `enabledPlugins`
+2. Check `~/.claude/settings.json` has `"h-superpowers@superpowers-dev": true` in `enabledPlugins`
 3. Verify skill exists in `skills/` directory
 
 ### Permission Errors
