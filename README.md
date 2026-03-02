@@ -71,6 +71,22 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
 
+### GitHub Copilot (VS Code / VS Code Insiders)
+
+Superpowers integrates with the GitHub Copilot Chat extension.  Follow the
+guided instructions below or fetch the full guide:
+
+```
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.copilot/INSTALL.md
+```
+
+(You can also install the Copilot extension itself via the VS Code CLI:
+`code --install-extension GitHub.copilot` or
+`code-insiders --install-extension GitHub.copilot`.)
+
+**Detailed docs:** none at the moment; the installation guide above is
+self-contained.
+
 ### Verify Installation
 
 Start a new session in your chosen platform and ask for something that should trigger a skill (for example, "help me plan this feature" or "let's debug this issue"). The agent should automatically invoke the relevant superpowers skill.
