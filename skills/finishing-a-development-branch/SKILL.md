@@ -1,6 +1,6 @@
 ---
 name: finishing-a-development-branch
-description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup
+description: Use when implementation is complete and all tests pass, to decide how to integrate or discard the work
 ---
 
 # Finishing a Development Branch
@@ -194,6 +194,7 @@ git worktree remove <worktree-path>
 
 **Called by:**
 - **subagent-driven-development** (Step 7) - After all tasks complete
+- **team-driven-development** (Step 6) - After lead consolidates team results
 - **executing-plans** (Step 5) - After all batches complete
 
 **Pairs with:**

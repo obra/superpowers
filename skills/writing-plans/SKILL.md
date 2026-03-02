@@ -33,7 +33,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use h-superpowers:executing-plans to implement this plan task-by-task.
+> **For Claude:** REQUIRED SUB-SKILL: Use h-superpowers:subagent-driven-development, h-superpowers:team-driven-development, or h-superpowers:executing-plans to implement this plan (ask user which approach).
 
 **Goal:** [One sentence describing what this builds]
 
@@ -98,11 +98,13 @@ git commit -m "feat: add specific feature"
 
 After saving the plan, offer execution choice:
 
-**"Plan complete and saved to `docs/plans/<filename>.md`. Two execution options:**
+**"Plan complete and saved to `docs/plans/<filename>.md`. Three execution options:**
 
 **1. Subagent-Driven (this session)** - I dispatch fresh subagent per task, review between tasks, fast iteration
 
-**2. Parallel Session (separate)** - Open new session with executing-plans, batch execution with checkpoints
+**2. Team-Driven (this session, experimental)** - Multiple persistent agents work in parallel with direct inter-agent communication; best when tasks need coordination. Requires Opus 4.6+ and `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`. Costs 2–4x more.
+
+**3. Parallel Session (separate)** - Open new session with executing-plans, batch execution with human checkpoints
 
 **Which approach?"**
 
@@ -110,6 +112,11 @@ After saving the plan, offer execution choice:
 - **REQUIRED SUB-SKILL:** Use h-superpowers:subagent-driven-development
 - Stay in this session
 - Fresh subagent per task + code review
+
+**If Team-Driven chosen:**
+- **REQUIRED SUB-SKILL:** Use h-superpowers:team-driven-development
+- Stay in this session
+- Persistent agents + peer-to-peer communication
 
 **If Parallel Session chosen:**
 - Guide them to open new session in worktree

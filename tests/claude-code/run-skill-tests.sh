@@ -77,6 +77,7 @@ done
 
 # List of skill tests to run (fast unit tests)
 tests=(
+    "test-using-superpowers.sh"
     "test-subagent-driven-development.sh"
     "test-team-driven-development.sh"
 )

@@ -1,6 +1,9 @@
-# Superpowers
+# Hartye-Superpowers
 
-Superpowers is a complete software development workflow for your coding agents, built on top of a set of composable "skills" and some initial instructions that make sure your agent uses them.
+Hartye-Superpowers is a fork of [Jesse Vincent's Superpowers](https://github.com/obra/superpowers) — a complete software development workflow for coding agents, built on composable "skills" and initial instructions that ensure your agent uses them. This fork adds **agent team support** (multi-agent peer-to-peer coordination) and other enhancements on top of the original.
+
+> **Original project:** [obra/superpowers](https://github.com/obra/superpowers) by [Jesse Vincent](https://blog.fsck.com/2025/10/09/superpowers/)
+> **This fork:** [ehartye/Hartye-superpowers](https://github.com/ehartye/Hartye-superpowers) maintained by Eric Hartye
 
 ## How it works
 
@@ -17,11 +20,7 @@ There's a bunch more to it, but that's the core of the system. And because the s
 
 ## Sponsorship
 
-If Superpowers has helped you do stuff that makes money and you are so inclined, I'd greatly appreciate it if you'd consider [sponsoring my opensource work](https://github.com/sponsors/obra).
-
-Thanks! 
-
-- Jesse
+If Superpowers has been useful to you and you'd like to support the original author's open-source work, consider [sponsoring Jesse Vincent](https://github.com/sponsors/obra).
 
 
 ## Installation
@@ -33,25 +32,25 @@ Thanks!
 In Claude Code, register the marketplace first:
 
 ```bash
-/plugin marketplace add obra/superpowers-marketplace
+/plugin marketplace add ehartye/Hartye-superpowers
 ```
 
-Then install the plugin from this marketplace:
+Then install the plugin:
 
 ```bash
-/plugin install superpowers@superpowers-marketplace
+/plugin install h-superpowers@Hartye-superpowers
 ```
 
 ### Verify Installation
 
-Start a new session and ask Claude to help with something that would trigger a skill (e.g., "help me plan this feature" or "let's debug this issue"). Claude should automatically invoke the relevant superpowers skill.
+Start a new session and tell Claude: **"I want to add a dark mode toggle to my app."** Claude should pause, ask clarifying questions about your design (brainstorming skill), rather than immediately writing code. That's the signal it's working.
 
 ### Codex
 
 Tell Codex:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/ehartye/Hartye-superpowers/refs/heads/main/.codex/INSTALL.md
 ```
 
 **Detailed docs:** [docs/README.codex.md](docs/README.codex.md)
@@ -61,7 +60,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 Tell OpenCode:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/ehartye/Hartye-superpowers/refs/heads/main/.opencode/INSTALL.md
 ```
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
@@ -83,6 +82,31 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
+
+## Your First Session
+
+Here's what a typical first feature looks like with Superpowers active:
+
+**You:** "I want to add a dark mode toggle to my app."
+
+**Claude (brainstorming):** Asks 3–5 clarifying questions — Where should the toggle live? Should it persist across sessions? Which components need to respect the theme?
+
+**You:** Answer the questions. Claude presents the design back in readable sections. You approve.
+
+**Claude (using-git-worktrees):** Creates a new branch (`feature/dark-mode`) and an isolated worktree so your main branch is untouched.
+
+**Claude (writing-plans):** Produces a step-by-step implementation plan — exact files, code snippets, test commands. Asks which execution style you want:
+- **Subagent-driven** (this session, fast, Claude handles each task with automated review)
+- **Team-driven** (parallel agents for complex coordinated work, experimental)
+- **Parallel session** (you open a new session and use executing-plans with the plan file)
+
+**You:** "Subagent-driven."
+
+**Claude:** Dispatches a fresh subagent per task. Each task is reviewed for spec compliance and code quality before moving on. You watch progress or walk away.
+
+**Claude (finishing-a-development-branch):** When tasks complete, runs tests, then presents exactly four options: merge locally, open a PR, keep the branch, or discard. You choose; Claude executes.
+
+The whole thing — design through PR — typically runs without you touching code.
 
 ## What's Inside
 
@@ -118,13 +142,13 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 - **Complexity reduction** - Simplicity as primary goal
 - **Evidence over claims** - Verify before declaring success
 
-Read more: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
+Read more about the original project: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/) by Jesse Vincent.
 
 ## Contributing
 
 Skills live directly in this repository. To contribute:
 
-1. Fork the repository
+1. Fork [ehartye/Hartye-superpowers](https://github.com/ehartye/Hartye-superpowers)
 2. Create a branch for your skill
 3. Follow the `writing-skills` skill for creating and testing new skills
 4. Submit a PR
@@ -136,7 +160,7 @@ See `skills/writing-skills/SKILL.md` for the complete guide.
 Skills update automatically when you update the plugin:
 
 ```bash
-/plugin update superpowers
+/plugin update h-superpowers
 ```
 
 ## License
@@ -145,5 +169,5 @@ MIT License - see LICENSE file for details
 
 ## Support
 
-- **Issues**: https://github.com/obra/superpowers/issues
-- **Marketplace**: https://github.com/obra/superpowers-marketplace
+- **Issues**: https://github.com/ehartye/Hartye-superpowers/issues
+- **Upstream project**: https://github.com/obra/superpowers
