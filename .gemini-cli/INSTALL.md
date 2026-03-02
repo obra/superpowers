@@ -107,7 +107,7 @@ gemini extensions update superpowers
 
 - Full docs: [../docs/README.gemini-cli.md](../docs/README.gemini-cli.md)
 - Troubleshooting: [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
-- Issues: https://github.com/obra/superpowers/issues
+- Issues: https://github.com/sh3lan93/superpowers/issues
 
 ## Uninstalling
 
