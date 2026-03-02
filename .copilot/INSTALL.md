@@ -51,9 +51,9 @@ if (Test-Path "$env:USERPROFILE\.copilot\superpowers") {
     git clone https://github.com/obra/superpowers.git "$env:USERPROFILE\.copilot\superpowers"
 }
 
-# 2. Create the skills symlink
+# 2. Create the skills junction
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.agents\skills"
-New-Item -ItemType SymbolicLink -Force -Path "$env:USERPROFILE\.agents\skills\superpowers" -Target "$env:USERPROFILE\.copilot\superpowers\skills"
+New-Item -ItemType Junction -Force -Path "$env:USERPROFILE\.agents\skills\superpowers" -Target "$env:USERPROFILE\.copilot\superpowers\skills"
 ```
 
 The `~/.agents/skills/superpowers` symlink is what Copilot (and other platforms)
