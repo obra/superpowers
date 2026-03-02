@@ -13,6 +13,10 @@ Write implementation plans that specify **what to build, where to put it, and wh
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
+<HARD-GATE>
+Do NOT use `EnterPlanMode` or `ExitPlanMode` during plan writing. These tools trap the session in plan mode where Write/Edit tools are restricted, preventing the writing-plans skill from saving the plan document.
+</HARD-GATE>
+
 ## Verification Gate
 
 Before starting, check `.superpowers/state.yml`:
@@ -48,6 +52,8 @@ docs/plans/<project>/
 
 **Do NOT use date-prefixed filenames** (`docs/plans/YYYY-MM-DD-feature.md`). The directory name carries enough context and state.yml stores the path for cross-session discovery.
 
+**Worktree context:** The plan executes in the worktree at `worktree.main.path` (from state.yml). Include this path context in the plan header so executors know where to work.
+
 ## After Writing
 
 Write to state.yml:
@@ -60,6 +66,8 @@ plan:
   total_tasks: N
 phase: planning
 ```
+
+**Plan frontmatter status:** The plan.md template includes `status: pending` in its YAML frontmatter. Executors update this to `status: executed` on completion. This allows tools and agents to check plan status directly from the document without consulting state.yml.
 
 ## Bite-Sized Task Granularity
 
@@ -75,6 +83,10 @@ Within each task, the implementer follows TDD: write failing test, verify it fai
 ### plan.md
 
 ```markdown
+---
+status: pending
+---
+
 # [Feature Name] Implementation Plan
 
 > See [design](design.md) for context and rationale.
@@ -104,7 +116,10 @@ Within each task, the implementer follows TDD: write failing test, verify it fai
 | 2 | [behavior] | [specific error message or missing symbol] |
 ```
 
-**Write the header last** — after the Team Fitness Check determines execution approach.
+**Write the header last.** Why: the header includes the execution approach recommendation (serial vs. team), which you cannot know until you have:
+1. Drafted all tasks and their dependencies
+2. Run the Team Fitness Check (see below) to determine whether parallel execution is warranted
+3. Decided the execution approach — only then write the header with the correct `> **For Claude:** Use [execution-skill]` line
 
 ### tasks/<NN>-<slug>.md (one per task, for 4+ task plans)
 
