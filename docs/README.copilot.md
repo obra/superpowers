@@ -8,7 +8,7 @@
 
 ### Why this works
 
-Copilot Chat loads user plugins from the `~/.agents/skills` directory just like
+Copilot Chat loads user skills from the `~/.agents/skills` directory just like
 other agents such as Codex or Claude Code.  By creating a symlink from your
 local clone into that directory Copilot will automatically pick up the
 superpowers skills on startup.
