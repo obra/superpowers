@@ -98,11 +98,13 @@ git commit -m "feat: add specific feature"
 
 After saving the plan, offer execution choice:
 
-**"Plan complete and saved to `docs/plans/<filename>.md`. Two execution options:**
+**"Plan complete and saved to `docs/plans/<filename>.md`. Three execution options:**
 
 **1. Subagent-Driven (this session)** - I dispatch fresh subagent per task, review between tasks, fast iteration
 
 **2. Parallel Session (separate)** - Open new session with executing-plans, batch execution with checkpoints
+
+**3. Agent Team (this session)** - Spawn a team of agents to execute tasks in parallel
 
 **Which approach?"**
 
@@ -114,3 +116,9 @@ After saving the plan, offer execution choice:
 **If Parallel Session chosen:**
 - Guide them to open new session in worktree
 - **REQUIRED SUB-SKILL:** New session uses superpowers:executing-plans
+
+**If Agent Team chosen:**
+- **REQUIRED SUB-SKILL:** Use superpowers:dispatching-parallel-agents
+- Stay in this session
+- Use TeamCreate to form an agent team with task assignments from the plan
+- Agents work in parallel on independent tasks, sequentially on dependent ones
