@@ -73,8 +73,8 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 ### GitHub Copilot (VS Code / VS Code Insiders)
 
-Superpowers integrates with the GitHub Copilot Chat extension.  Follow the
-guided instructions below or fetch the full guide:
+Superpowers integrates with the GitHub Copilot Chat extension. To install, have
+Copilot fetch and follow the installation guide at the URL below:
 
 ```
 Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.copilot/INSTALL.md
