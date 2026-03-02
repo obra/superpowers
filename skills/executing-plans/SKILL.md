@@ -13,6 +13,10 @@ Load plan, review critically, execute tasks in batches, report evidence for revi
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
+<HARD-GATE>
+Do NOT use `EnterPlanMode` or `ExitPlanMode` during plan execution. These tools trap the session in plan mode where Write/Edit tools are restricted, preventing implementation work.
+</HARD-GATE>
+
 ## Session Start: Cold Resume
 
 On every session start, check for `.superpowers/state.yml`:
@@ -36,6 +40,8 @@ Before executing any batch, verify:
 - All previous batch tasks marked complete in state.yml
 - Worktree is on the right branch (`git status`)
 
+**Worktree:** Execute all tasks in `worktree.main.path` from state.yml. If worktree is null (user opted out), execute in the current directory.
+
 ## The Process
 
 ### Step 1: Load and Review Plan
@@ -50,6 +56,15 @@ Review plan critically:
 - Identify questions or concerns
 - If concerns: raise with the user before starting
 - If no concerns: create tasks with TaskCreate and proceed
+
+### Plan Verification (3-Example Rule)
+
+Before executing the first task, spot-check 3 claims from the plan against the actual codebase:
+1. Pick 3 file paths, function names, or architectural assumptions from the plan
+2. Verify each exists and matches what the plan expects
+3. If any check fails: flag it, assess impact, revise the affected tasks before proceeding
+
+This catches stale plans, renamed files, and wrong assumptions before wasted implementation work.
 
 ### Step 2: Execute Batch
 
@@ -121,6 +136,7 @@ After all tasks complete, before calling finishing-a-development-branch, run a f
 ### Step 6: Complete Development
 
 After cross-cutting review passes:
+- Update the plan document's YAML frontmatter from `status: pending` to `status: executed`.
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
 - **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
 
@@ -141,6 +157,14 @@ After cross-cutting review passes:
 - Fundamental approach needs rethinking
 
 **Don't force through blockers** — stop and ask.
+
+### Plan Revision Escalation
+
+If during execution you discover the plan is fundamentally wrong (not just a minor adjustment):
+- **STOP execution** — do not silently deviate from the plan
+- **Report to the user:** what you found, why the plan needs revision, what you recommend
+- **Wait for approval** before continuing with a modified approach
+- Minor adjustments (file path changes, small API differences) are fine — document them in the task completion report
 
 ## Remember
 - Check state.yml on session start for cold resume
