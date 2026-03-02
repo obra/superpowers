@@ -13,7 +13,7 @@ This directory contains the Gemini CLI extension for Superpowers.
 ## Installation
 
 ```bash
-gemini extensions install https://github.com/obra/superpowers.git --path .gemini-cli
+gemini extensions install https://github.com/sh3lan93/superpowers.git --path .gemini-cli
 ```
 
 ## Verification

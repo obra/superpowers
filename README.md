@@ -76,7 +76,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 Gemini CLI has native support for Agent Skills and Extensions. Install Superpowers:
 
 ```bash
-gemini extensions install https://github.com/obra/superpowers.git --path .gemini-cli
+gemini extensions install https://github.com/sh3lan93/superpowers.git --path .gemini-cli
 ```
 
 Then restart Gemini CLI:

@@ -23,7 +23,7 @@ All skills are **automatically discovered** and **activate when relevant** to yo
 ### Quick Install (Recommended)
 
 ```bash
-gemini extensions install https://github.com/obra/superpowers.git --path .gemini-cli
+gemini extensions install https://github.com/sh3lan93/superpowers.git --path .gemini-cli
 gemini restart
 ```
 
@@ -431,7 +431,7 @@ Then go to: https://github.com/obra/superpowers/issues
 
 ```bash
 # Installation
-gemini extensions install https://github.com/obra/superpowers.git --path .gemini-cli
+gemini extensions install https://github.com/sh3lan93/superpowers.git --path .gemini-cli
 
 # Restart to apply
 gemini restart

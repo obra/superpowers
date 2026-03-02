@@ -3,7 +3,7 @@
 ## Quick Install
 
 ```bash
-gemini extensions install https://github.com/obra/superpowers.git --path .gemini-cli
+gemini extensions install https://github.com/sh3lan93/superpowers.git --path .gemini-cli
 ```
 
 Then restart Gemini CLI:
@@ -91,7 +91,7 @@ gemini extensions update superpowers
 3. If still missing, reinstall:
    ```bash
    gemini extensions uninstall superpowers
-   gemini extensions install https://github.com/obra/superpowers.git --path .gemini-cli
+   gemini extensions install https://github.com/sh3lan93/superpowers.git --path .gemini-cli
    ```
 
 ### Skills not activating?

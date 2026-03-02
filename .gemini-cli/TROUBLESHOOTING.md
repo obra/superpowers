@@ -19,7 +19,7 @@
 
 3. Try installing from local path:
    ```bash
-   git clone https://github.com/obra/superpowers.git /tmp/superpowers
+   git clone https://github.com/sh3lan93/superpowers.git /tmp/superpowers
    gemini extensions install /tmp/superpowers/.gemini-cli
    ```
 
@@ -41,7 +41,7 @@
    ls ~/.gemini/extensions/superpowers/
 
    # Fix: Reinstall
-   gemini extensions install https://github.com/obra/superpowers.git --path .gemini-cli
+   gemini extensions install https://github.com/sh3lan93/superpowers.git --path .gemini-cli
    ```
 
 2. **Skills directory missing**
@@ -251,7 +251,7 @@ gemini extensions update superpowers
 
 # If that doesn't work, reinstall:
 gemini extensions uninstall superpowers
-gemini extensions install https://github.com/obra/superpowers.git --path .gemini-cli
+gemini extensions install https://github.com/sh3lan93/superpowers.git --path .gemini-cli
 ```
 
 ---
