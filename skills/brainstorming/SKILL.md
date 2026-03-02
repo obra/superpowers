@@ -9,15 +9,21 @@ description: "You MUST use this before any creative work - creating features, bu
 
 Help turn ideas into fully formed designs and specs through natural collaborative dialogue.
 
+**Announce at start:** "I'm using the brainstorming skill to explore and design before implementing."
+
 Start by understanding the current project context, then ask questions one at a time to refine the idea. Once you understand what you're building, present the design and get user approval.
 
 <HARD-GATE>
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
 </HARD-GATE>
 
+<HARD-GATE>
+Do NOT use `EnterPlanMode` or `ExitPlanMode` during brainstorming. These tools trap the session in plan mode where Write/Edit tools are restricted, preventing the brainstorming skill from writing the design document. Use the brainstorming skill's own structured process instead.
+</HARD-GATE>
+
 ## Anti-Pattern: "This Is Too Simple To Need A Design"
 
-Every project goes through this process. A todo list, a single-function utility, a config change — all of them. "Simple" projects are where unexamined assumptions cause the most wasted work. The design can be short (a few sentences for truly simple projects), but you MUST present it and get approval.
+Every project goes through this process. A todo list, a single-function utility, a config change — all of them. "Simple" projects are where unexamined assumptions cause the most wasted work. The design can be short (a few sentences for truly simple tasks), but you MUST present it and get approval before proceeding to implementation.
 
 ## Checklist
 
@@ -122,8 +128,11 @@ Apply this structured decision framework — do NOT compose a team based on vibe
 
 **Compose a team only if ALL three criteria are met.** Otherwise skip directly to writing-plans.
 
+Present your team composition recommendation to the user and ask for confirmation before proceeding.
+
 **Implementation (step 9):**
 - Invoke `superpowers:writing-plans` to create the implementation plan
+- Ask the user if they are satisfied with the brainstorming output and ready to transition to implementation planning before invoking writing-plans.
 
 ## Key Principles
 
