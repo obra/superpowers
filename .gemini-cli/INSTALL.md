@@ -6,12 +6,6 @@
 gemini extensions install https://github.com/sh3lan93/superpowers.git --path .gemini-cli
 ```
 
-Then restart Gemini CLI:
-
-```bash
-gemini restart
-```
-
 ## Verify Installation
 
 Check that skills are discovered:
