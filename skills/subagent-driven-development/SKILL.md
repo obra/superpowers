@@ -7,7 +7,11 @@ description: Use when executing implementation plans with independent tasks in t
 
 Execute plan by dispatching fresh subagent per task, with two-stage review after each: spec compliance review first, then code quality review.
 
+**Announce at start:** "I'm using the subagent-driven-development skill to execute tasks with independent subagents."
+
 **Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
+
+**Subagent lifecycle:** Each task gets a fresh subagent. The subagent persists within that task (including any re-review loops) but is not reused across tasks. fresh per task, persistent within task.
 
 ## When to Use
 
@@ -300,6 +304,8 @@ Done!
 - **superpowers:writing-plans** - Creates the plan this skill executes
 - **superpowers:requesting-code-review** - Code review template for reviewer subagents
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
+
+**REQUIRED:** After all tasks are complete, invoke `superpowers:finishing-a-development-branch` to handle merge/PR/cleanup. Do not skip this step.
 
 **Subagents should use:**
 - **superpowers:test-driven-development** - Subagents follow TDD for each task
