@@ -8,7 +8,7 @@ Dispatch as a **subagent** (not a team member) for fresh, unbiased review.
 
 ```yaml
 Agent tool:
-  subagent_type: superpowers:code-reviewer
+  subagent_type: general-purpose
   description: "Spec review: Task N"
   prompt: |
     You are reviewing whether an implementation matches its specification.

@@ -18,10 +18,10 @@ Task tool (general-purpose):
 
     [From implementer's report]
 
-    ## CRITICAL: Do Not Trust the Report
+    ## CRITICAL: Verify Independently
 
-    The implementer finished suspiciously quickly. Their report may be incomplete,
-    inaccurate, or optimistic. You MUST verify everything independently.
+    Verify all claims in the implementer's report independently. Check that every
+    acceptance criterion is met with concrete evidence.
 
     **DO NOT:**
     - Take their word for what they implemented
