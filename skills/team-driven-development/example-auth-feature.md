@@ -34,7 +34,7 @@ claude --version  # Verify Opus 4.6+
 ### Set Up Git Worktree
 
 ```bash
-# Using superpowers:using-git-worktrees
+# Using h-superpowers:using-git-worktrees
 git worktree add ../auth-feature -b feature/authentication
 cd ../auth-feature
 ```
@@ -612,7 +612,7 @@ Summary:
 - Backend/frontend coordination smooth (5 coordination messages)
 - All tests passing
 
-Ready for superpowers:finishing-a-development-branch
+Ready for h-superpowers:finishing-a-development-branch
 ```
 
 ## Step 5: Team Completion

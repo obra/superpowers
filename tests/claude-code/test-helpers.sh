@@ -1,31 +1,50 @@
 #!/usr/bin/env bash
 # Helper functions for Claude Code skill tests
 
-# Run Claude Code with a prompt and capture output
+# Resolve plugin directory (repo root)
+PLUGIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+# Run Claude Code with a prompt and store result in CLAUDE_OUTPUT.
+# claude -p hangs when stdout is captured via $() subshells (no TTY),
+# so this writes to a temp file and reads it back into a variable.
 # Usage: run_claude "prompt text" [timeout_seconds] [allowed_tools]
+#   Result is stored in global CLAUDE_OUTPUT variable.
+CLAUDE_OUTPUT=""
 run_claude() {
     local prompt="$1"
     local timeout="${2:-60}"
     local allowed_tools="${3:-}"
     local output_file=$(mktemp)
+    CLAUDE_OUTPUT=""
 
-    # Build command
-    local cmd="claude -p \"$prompt\""
+    # Build command as array to avoid bash -c quoting issues
+    # --max-turns limits tool invocations to prevent infinite skill-loading loops
+    local -a cmd_args=(-p "$prompt" --plugin-dir "$PLUGIN_DIR" --max-turns 10)
     if [ -n "$allowed_tools" ]; then
-        cmd="$cmd --allowed-tools=$allowed_tools"
+        cmd_args+=(--allowed-tools="$allowed_tools")
     fi
 
     # Run Claude in headless mode with timeout
-    if timeout "$timeout" bash -c "$cmd" > "$output_file" 2>&1; then
-        cat "$output_file"
-        rm -f "$output_file"
-        return 0
-    else
-        local exit_code=$?
-        cat "$output_file" >&2
-        rm -f "$output_file"
-        return $exit_code
-    fi
+    # Unset CLAUDECODE to allow nested invocations when tests are run from within Claude Code
+    # < /dev/null prevents claude from blocking on stdin in non-interactive scripts
+    # Always return 0 so set -e doesn't abort the test script.
+    # Tests check CLAUDE_OUTPUT content, not exit codes.
+    # Retry once on empty response (handles transient API/rate-limit failures).
+    local attempts=0
+    while [ $attempts -lt 2 ]; do
+        timeout "$timeout" env -u CLAUDECODE claude "${cmd_args[@]}" < /dev/null > "$output_file" 2>&1 || true
+        CLAUDE_OUTPUT=$(cat "$output_file")
+        if [ -n "$CLAUDE_OUTPUT" ] && [ "$CLAUDE_OUTPUT" != " " ]; then
+            break
+        fi
+        attempts=$((attempts + 1))
+        if [ $attempts -lt 2 ]; then
+            echo "  (empty response, retrying...)"
+            sleep 2
+        fi
+    done
+    rm -f "$output_file"
+    return 0
 }
 
 # Check if output contains a pattern
@@ -34,6 +53,11 @@ assert_contains() {
     local output="$1"
     local pattern="$2"
     local test_name="${3:-test}"
+
+    if [ -z "$output" ] || [ "$output" = " " ]; then
+        echo "  [FAIL] $test_name (empty response from Claude)"
+        return 1
+    fi
 
     if echo "$output" | grep -q "$pattern"; then
         echo "  [PASS] $test_name"
@@ -123,10 +147,13 @@ assert_order() {
 }
 
 # Create a temporary test project directory
+# Returns the REAL (symlink-resolved) path, which is what Claude Code uses
+# for session storage (e.g. macOS /var/folders → /private/var/folders).
 # Usage: test_project=$(create_test_project)
 create_test_project() {
     local test_dir=$(mktemp -d)
-    echo "$test_dir"
+    # Resolve symlinks so session path computation matches Claude Code's behavior
+    cd "$test_dir" && pwd -P
 }
 
 # Cleanup test project
@@ -191,12 +218,5 @@ EOF
     echo "$plan_file"
 }
 
-# Export functions for use in tests
-export -f run_claude
-export -f assert_contains
-export -f assert_not_contains
-export -f assert_count
-export -f assert_order
-export -f create_test_project
-export -f cleanup_test_project
-export -f create_test_plan
+# Note: functions are available when test scripts source this file.
+# CLAUDE_OUTPUT global is set by run_claude - do not capture via $().
