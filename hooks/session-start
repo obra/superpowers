@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Requires bash (not sh/dash) — uses ANSI-C quoting and arrays
 # SessionStart hook for superpowers plugin
 
 set -euo pipefail

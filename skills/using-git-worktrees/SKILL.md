@@ -64,6 +64,29 @@ grep -i "worktree\|setup\|install" CLAUDE.md 2>/dev/null
 
 If a setup command is specified, use it. Otherwise auto-detect below.
 
+### 1.5. Copy Environment Files
+
+Worktrees share the git repository but NOT untracked files. Copy these if they exist:
+
+```bash
+# From the repo root (worktree.repo_root in state.yml):
+REPO_ROOT="$(git rev-parse --show-superproject-working-tree 2>/dev/null || git worktree list --porcelain | head -1 | sed 's/worktree //')"
+
+# Environment files
+[ -f "$REPO_ROOT/.env" ] && cp "$REPO_ROOT/.env" .
+[ -f "$REPO_ROOT/.env.local" ] && cp "$REPO_ROOT/.env.local" .
+
+# Database configs
+[ -f "$REPO_ROOT/database.yml" ] && cp "$REPO_ROOT/database.yml" .
+
+# MCP configuration
+[ -d "$REPO_ROOT/.mcp" ] && cp -r "$REPO_ROOT/.mcp" .
+
+# Check CLAUDE.md for project-specific files to copy
+```
+
+**If the user's project has unusual env files, ask which ones to copy.**
+
 ### 2. Run Project Setup
 
 Auto-detect and run appropriate setup:
