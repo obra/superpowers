@@ -11,6 +11,8 @@ Execute plans by orchestrating a team of persistent specialist agents working in
 
 ## When to Use
 
+**Announce at start:** "I'm using the agent-team-driven-development skill to orchestrate parallel specialist agents."
+
 - Have an implementation plan with 4+ tasks
 - Tasks have identifiable independence (can run in parallel)
 - Tasks span 2+ specialist domains
@@ -260,6 +262,14 @@ digraph agent_team {
 3. Shutdown all implementers via `SendMessage` with `type: "shutdown_request"`
 4. `TeamDelete` after all members confirm shutdown
 5. Use `superpowers:finishing-a-development-branch`
+
+### Cross-Task Dependency Check
+
+Before marking the plan complete, review all completed tasks together for cross-task issues:
+- Import/export mismatches between tasks that were implemented in parallel
+- Shared state assumptions that conflict across task boundaries
+- Interface contracts that evolved during implementation but weren't propagated
+- Test assertions in one task that depend on implementation details of another
 
 ## Dependency Analysis
 
