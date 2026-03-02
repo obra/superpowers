@@ -203,6 +203,7 @@ TAIL_PID=$!
 
 cd "$TEST_PROJECT" && timeout 3500 env -u CLAUDECODE claude -p "$PROMPT" \
     --plugin-dir "$PLUGIN_DIR" \
+    --permission-mode bypassPermissions \
     --max-turns 20 \
     < /dev/null > "$OUTPUT_FILE" 2>&1 || {
     echo ""

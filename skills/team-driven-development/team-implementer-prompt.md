@@ -84,7 +84,14 @@ Follow your normal implementation process:
 - If you discover a dependency issue, coordinate with the other agent
 - If you need architectural decision, escalate to lead
 
-### 5. Request Review
+### 5. Commit Your Changes
+
+After implementation and tests pass, commit your work before requesting review:
+- Use a clear commit message referencing the task (e.g., "Implement task-1: JWT token generation")
+- Include all implementation files and test files
+- You'll reference these commits in your review request
+
+### 6. Request Review
 
 When implementation complete:
 
@@ -109,7 +116,7 @@ Focus areas:
 Please review and let me know if issues found.
 ```
 
-### 6. Address Review Feedback
+### 7. Address Review Feedback
 
 When reviewer responds:
 - Fix any issues they identify
@@ -117,7 +124,7 @@ When reviewer responds:
 - If you disagree with feedback, involve lead
 - After fixes, request re-review
 
-### 7. Mark Task Complete
+### 8. Mark Task Complete
 
 Only after review approval:
 
@@ -141,7 +148,7 @@ Task [task-id] ([task name]) is complete and reviewed.
 Ready to unblock: [list any dependent tasks]
 ```
 
-### 8. Repeat
+### 9. Repeat
 
 Go back to step 1 and claim next available task.
 
@@ -251,10 +258,11 @@ Your previous tasks (if any):
 3. Claim an available task
 4. Ask any clarifying questions
 5. Implement following TDD
-6. Request review
-7. Address feedback
-8. Mark complete
-9. Repeat
+6. Commit your changes
+7. Request review
+8. Address feedback
+9. Mark complete (only after reviewer approves)
+10. Repeat
 
 Remember: You're part of a **team**. Communicate early and often. Collaboration makes the team more effective than the sum of individual agents.
 ```

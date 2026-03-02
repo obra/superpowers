@@ -304,9 +304,11 @@ Task tool (general-purpose):
 2. Claim available task (or wait if dependencies not met)
 3. Implement task following TDD
 4. Communicate blockers or questions to relevant teammate
-5. Request review when complete
-6. Address review feedback
-7. Mark task complete in shared list
+5. Request review from reviewer when implementation complete — **do NOT mark task complete yet**
+6. Address review feedback, request re-review if needed
+7. Mark task complete in shared list **ONLY after reviewer approves**
+
+**⚠️ Critical:** Implementers must NOT mark a task as "completed" until a reviewer has explicitly approved it. Running tests is NOT sufficient — reviewer approval is required. The lead should treat tasks as still in-progress until the reviewer sends an approval message.
 
 ### 5. Message Passing Patterns
 
@@ -363,9 +365,20 @@ CRITICAL:
 Please fix and request re-review.
 ```
 
-### 6. Completion
+### 6. Quality Gates (Lead Responsibility)
 
-When all tasks marked complete:
+The lead must enforce these gates — do not rely solely on task status:
+
+- **Review before completion:** A task is NOT done when the implementer finishes coding. It is done when the reviewer explicitly approves it. The lead should track both implementation status AND review status.
+- **Review before dependencies unlock:** Do not let agents start a dependent task until the dependency is both implemented AND reviewed/approved.
+- **Verify reviewer actually reviewed:** Check that the reviewer read the code and ran tests independently — not just rubber-stamped.
+
+**Recommended: Use task metadata to track review status separately.**
+When monitoring TaskList, a task showing "completed" only means the implementer is done. The lead should also check for reviewer approval messages before considering a task truly finished and unblocking dependent work.
+
+### 7. Completion
+
+When all tasks marked complete AND reviewed:
 
 1. **Team review session** - Lead coordinates final review
 2. **Conflict resolution** - If multiple agents modified same files
