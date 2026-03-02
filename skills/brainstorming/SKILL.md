@@ -95,7 +95,12 @@ digraph brainstorming {
 **Step 5 — Present design:**
 - Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
 - Ask after each section whether it looks right so far
-- Cover: architecture, components, data flow, error handling, testing
+- Cover: architecture, components, data flow, error handling
+- **Testing strategy** — explicitly address:
+  - What needs tests (unit, integration, e2e)?
+  - If the project will have 4+ parallelizable tasks: recommend **pipelined TDD** — a QA agent writes failing tests one wave ahead of implementers, so implementers always have pre-written tests to run RED then GREEN
+  - If solo/serial execution: recommend **solo TDD** — each agent writes its own test first
+  - Include test expectations per component (what to test, expected failures)
 - Be ready to revise based on feedback
 
 ## After the Design
@@ -127,6 +132,8 @@ Apply this structured decision framework — do NOT compose a team based on vibe
 | Specialist domains | 2+ distinct areas of expertise | |
 
 **Compose a team only if ALL three criteria are met.** Otherwise skip directly to writing-plans.
+
+**If composing a team:** recommend a QA/test-writer agent for pipelined TDD when the project has testable code. This enables the interleaved wave pattern: QA writes tests one wave ahead, implementers always have failing tests waiting. See `superpowers:agent-team-driven-development` Pipelined TDD section.
 
 Present your team composition recommendation to the user and ask for confirmation before proceeding.
 
