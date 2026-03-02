@@ -60,6 +60,13 @@ These thoughts mean STOP — you're rationalizing:
 | "I remember this skill" | Skills evolve. Read current version, don't recall. |
 | "This doesn't need a formal skill" | If a skill exists, use it. |
 | "I'll just do this one thing first" | Check BEFORE doing anything. |
+| "The user said to skip the skill" | Users direct WHAT to build, skills direct HOW. Check anyway. |
+| "I already know the answer" | Skills add structure, not just knowledge. Use the process. |
+| "This skill is too heavyweight for this" | Scale the output, not skip the process. Short designs are fine. |
+| "I'll come back to the skill after" | After never comes. Check BEFORE acting. |
+| "The skill doesn't exactly fit" | Partial fit is better than no structure. Adapt, don't skip. |
+| "I'm in the middle of something" | Pause. Check. Skills prevent rework that costs more than the pause. |
+| "The previous turn didn't use a skill" | Each turn is independent. Past mistakes don't justify current ones. |
 
 ## Skill Priority
 
