@@ -175,6 +175,10 @@ Use worktree isolation for file-safe parallel work
 **Exploratory debugging:** You don't know what's broken yet
 **Shared state:** Agents would interfere (editing same files, using same resources)
 
+### Platform Note
+
+Some platforms (e.g., Codex) cannot dispatch agents in parallel. On these platforms, execute tasks sequentially instead — the same tasks, the same isolation, but one at a time rather than concurrent.
+
 ## Real Example from Session
 
 **Scenario:** 6 test failures across 3 files after major refactoring
@@ -225,3 +229,12 @@ From debugging session (2025-10-03):
 - All investigations completed concurrently
 - All fixes integrated successfully
 - Zero conflicts between agent changes
+
+## Integration
+
+**Called by:**
+- **subagent-driven-development** — for parallel task execution within a session
+- **agent-team-driven-development** — for spawning parallel implementer agents
+
+**Pairs with:**
+- **using-git-worktrees** — parallel agents often need isolated worktrees
