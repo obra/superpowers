@@ -196,17 +196,15 @@ digraph process {
 
 ### 1. Initialize Team
 
-```markdown
-Team name: feature-authentication
-Plan file: docs/plans/authentication-feature.md
+Use the `init-team.sh` script to create the team directory structure:
 
-Team composition:
-- Lead: You (orchestrator)
-- Teammate: implementer-1 (backend)
-- Teammate: implementer-2 (frontend)  
-- Teammate: reviewer-1 (security focus)
+```bash
+# From the skills/team-driven-development/ directory
+./init-team.sh feature-authentication lead implementer-1 implementer-2 reviewer-1
+```
 
-Create team structure:
+This creates:
+```
 ~/.claude/teams/feature-authentication/
   ├── tasks.json
   └── inboxes/
@@ -214,6 +212,18 @@ Create team structure:
       ├── implementer-1.json
       ├── implementer-2.json
       └── reviewer-1.json
+```
+
+Or create manually:
+```markdown
+Team name: feature-authentication
+Plan file: docs/plans/authentication-feature.md
+
+Team composition:
+- Lead: You (orchestrator)
+- Teammate: implementer-1 (backend)
+- Teammate: implementer-2 (frontend)
+- Teammate: reviewer-1 (security focus)
 ```
 
 ### 2. Create Shared Task List
@@ -402,11 +412,41 @@ Escalate to human when:
 **Never:**
 - Start team without enabling `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`
 - Exceed 6 agents (coordination overhead too high)
-- Let agents claim same task (race condition)
+- Let agents self-claim tasks concurrently (race condition — use lead-only assignment instead)
 - Skip the shared task list (how do agents coordinate?)
 - Ignore messages from teammates (breaks collaboration)
 - Mix team and subagent approaches in same workflow
 - Forget to budget for full sessions per agent
+
+**Task assignment — avoiding race conditions:**
+
+The safest approach is **lead-only task assignment**: the lead agent reads the task list and explicitly assigns tasks to teammates via message, rather than letting teammates self-claim. This eliminates concurrent write conflicts entirely.
+
+```
+Lead assigns:
+  "implementer-1: please take task-1 (JWT generation)"
+  "implementer-2: please take task-3 (Login UI) after task-2 completes"
+```
+
+If you prefer self-claiming, the safest primitive is a sentinel lock file — create an empty file to "claim" a task and check if it already exists:
+
+```bash
+# Teammate claims task-1 atomically (works alongside tasks.json)
+LOCK="${HOME}/.claude/teams/<name>/locks/task-1.lock"
+mkdir -p "$(dirname "$LOCK")"
+# ln -s is atomic on POSIX filesystems; fails if file exists
+if ln -s "$$" "$LOCK" 2>/dev/null; then
+    echo "claimed task-1"
+    # update tasks.json to set status to "in-progress"
+else
+    echo "already taken"
+fi
+```
+
+Release the lock when the task is complete by removing the sentinel file:
+```bash
+rm -f "$LOCK"
+```
 
 **If agents conflict:**
 - Lead arbitrates based on plan requirements
@@ -484,8 +524,8 @@ See `./example-auth-feature.md` for a complete walkthrough of using team-driven 
 - Try explicit enable: `export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
 
 **"Agents claiming same task"**
-- Implement task locking in shared task list
-- Lead assigns tasks explicitly instead of let agents claim
+- **Preferred fix:** Switch to lead-only assignment (see Red Flags section above)
+- Alternatively: use atomic file rename locking for self-claiming
 - Smaller team (less contention)
 
 **"Too many messages, no progress"**

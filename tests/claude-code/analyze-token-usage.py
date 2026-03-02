@@ -64,8 +64,8 @@ def analyze_main_session(filepath):
                         subagent_usage[agent_id]['output_tokens'] += usage.get('output_tokens', 0)
                         subagent_usage[agent_id]['cache_creation'] += usage.get('cache_creation_input_tokens', 0)
                         subagent_usage[agent_id]['cache_read'] += usage.get('cache_read_input_tokens', 0)
-            except:
-                pass
+            except Exception as e:
+                print(f"[WARN] skipping malformed line: {e}", file=sys.stderr)
 
     return main_usage, dict(subagent_usage)
 

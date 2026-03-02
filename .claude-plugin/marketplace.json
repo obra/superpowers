@@ -2,8 +2,8 @@
   "name": "superpowers-dev",
   "description": "Development marketplace for Superpowers core skills library",
   "owner": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com"
+    "name": "Eric Hartye",
+    "email": "eric@hartye.com"
   },
   "plugins": [
     {
@@ -12,8 +12,8 @@
       "version": "4.3.0",
       "source": "./",
       "author": {
-        "name": "Jesse Vincent",
-        "email": "jesse@fsck.com"
+        "name": "Eric Hartye",
+        "email": "eric@hartye.com"
       }
     }
   ]
