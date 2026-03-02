@@ -248,3 +248,8 @@ When replying to inline review comments on GitHub, reply in the comment thread (
 Verify. Question. Then implement.
 
 No performative agreement. Technical rigor always.
+
+## Integration
+
+**Pairs with:**
+- **requesting-code-review** — the other side of the review process; handles dispatching review and processing results

@@ -175,3 +175,15 @@ This allows session-resume to know the last verified state without re-running al
 Run the command. Read the output. THEN claim the result.
 
 This is non-negotiable.
+
+## Integration
+
+**Called by:**
+- **subagent-driven-development** — REQUIRED after each task completion
+- **agent-team-driven-development** — REQUIRED for implementer completion reports
+- **executing-plans** — REQUIRED before marking any task done
+- **requesting-code-review** — reviewer uses evidence format for findings
+
+**Pairs with:**
+- **requesting-code-review** — reviewer uses the canonical evidence format defined here
+- **finishing-a-development-branch** — final verification before merge/PR

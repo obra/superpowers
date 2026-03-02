@@ -143,4 +143,7 @@ For tasks touching auth, payment, or sensitive data: after standard code quality
 - Show code/tests that prove it works
 - Request clarification
 
+**Pairs with:**
+- **receiving-code-review** — the other side of the review process; handles responding to review feedback
+
 See template at: requesting-code-review/code-reviewer.md
