@@ -2,6 +2,7 @@
 name: agent-teams
 description: Use when coordinating parallel work that requires inter-agent communication, shared task lists, competing hypotheses, or cross-layer ownership across multiple files
 license: MIT
+compatibility: "claude-code >= 2.1.64"
 metadata:
   author: cameronsjo
   version: "1.0"
