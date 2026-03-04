@@ -68,12 +68,18 @@ export const SuperpowersPlugin = async ({ client, directory }) => {
 
     // If the core bootstrap skill is missing, degrade gracefully with a diagnostic
     if (!fs.existsSync(skillPath)) {
+      // Log full path details locally for debugging, but keep injected text generic
+      console.error(
+        '[superpowers][opencode] using-superpowers skill missing at expected path',
+        { skillPath, configDir }
+      );
+
       return `<EXTREMELY_IMPORTANT>
 Superpowers for OpenCode appear to be installed, but the critical skill \`using-superpowers/SKILL.md\` is missing.
 
 This usually means the Superpowers skills directory is incomplete or not mounted correctly.
 
-Please verify that Superpowers is installed at \`${configDir}/superpowers\` and that the \`skills/using-superpowers/SKILL.md\` file exists.
+Please verify that Superpowers is installed correctly and that the \`skills/using-superpowers/SKILL.md\` file exists.
 
 Until this is fixed, you should proceed cautiously: you do NOT have the full Superpowers bootstrap instructions loaded.
 </EXTREMELY_IMPORTANT>`;
@@ -85,13 +91,17 @@ Until this is fixed, you should proceed cautiously: you do NOT have the full Sup
       ({ content } = extractAndStripFrontmatter(fullContent));
       content = stripFencedCodeBlocks(content);
     } catch (err) {
-      // If anything goes wrong while reading/parsing, still provide a useful diagnostic message
+      // Log full error details locally, but keep injected text generic
+      console.error(
+        '[superpowers][opencode] failed to load using-superpowers skill',
+        { skillPath, err }
+      );
+
       return `<EXTREMELY_IMPORTANT>
 Superpowers for OpenCode encountered an error while loading the \`using-superpowers\` skill.
 
-Error details (for debugging only): ${String(err && err.message ? err.message : err)}
-
-Please check that \`skills/using-superpowers/SKILL.md\` is readable and correctly formatted. You can also reinstall Superpowers or consult the docs for OpenCode integration.
+The plugin could not read or parse \`skills/using-superpowers/SKILL.md\`.
+Check local logs for detailed error information.
 
 Until this is fixed, you should proceed cautiously: you do NOT have the full Superpowers bootstrap instructions loaded.
 </EXTREMELY_IMPORTANT>`;
@@ -128,10 +138,17 @@ ${toolMapping}
           (output.system ||= []).push(bootstrap);
         }
       } catch (err) {
+          // Log detailed error information locally without leaking it into the prompt
+          console.error(
+            '[superpowers][opencode] unexpected error generating bootstrap content',
+            { err }
+          );
+
         (output.system ||= []).push(`<EXTREMELY_IMPORTANT>
 Superpowers for OpenCode failed to generate bootstrap content due to an unexpected error.
 
-Error details (for debugging only): ${String(err && err.message ? err.message : err)}
+An unexpected bootstrap generation error occurred.
+Check local logs for detailed error information.
 
 Workaround: set \`SUPERPOWERS_OPENCODE_DISABLE_BOOTSTRAP=1\` and restart OpenCode.
 </EXTREMELY_IMPORTANT>`);
