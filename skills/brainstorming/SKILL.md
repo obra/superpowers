@@ -57,7 +57,7 @@ digraph brainstorming {
 }
 ```
 
-**Both terminal states lead to writing-plans.** If continuing in this session, invoke writing-plans directly. If starting a fresh session, end here — the user will invoke writing-plans in the new session with the design doc path. Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY next step after brainstorming is writing-plans.
+**Both terminal states lead to writing-plans.** If continuing in this session, first use `using-git-worktrees` to ensure the dedicated worktree is ready, then invoke writing-plans directly. If starting a fresh session, end here — the user will use `using-git-worktrees` in the new session, then invoke writing-plans with the design doc path. Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY implementation skill after brainstorming is writing-plans.
 
 ## The Process
 
