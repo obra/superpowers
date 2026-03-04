@@ -35,9 +35,23 @@ const extractAndStripFrontmatter = (content) => {
 
 // OpenCode may attempt to render injected system prompts; strip fenced code blocks
 // to avoid renderer-specific crashes (e.g. ```dot blocks) while keeping the core text.
+// We replace stripped blocks with a clear placeholder so downstream consumers
+// can see that additional content existed but was removed for compatibility.
 const stripFencedCodeBlocks = (content) => {
   if (!content || typeof content !== 'string') return content;
-  return content.replace(/```[\s\S]*?```/g, '').trim();
+  let strippedAny = false;
+  const placeholder = '[code block removed for rendering compatibility]';
+
+  const result = content.replace(/```[\s\S]*?```/g, () => {
+    strippedAny = true;
+    return `\n${placeholder}\n`;
+  });
+
+  if (strippedAny) {
+    console.warn('[superpowers][opencode] stripped fenced code block(s) from bootstrap content for rendering compatibility');
+  }
+
+  return result.trim();
 };
 
 // Normalize a path: trim whitespace, expand ~, resolve to absolute

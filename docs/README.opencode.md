@@ -318,6 +318,19 @@ Workarounds:
 SUPERPOWERS_OPENCODE_DISABLE_BOOTSTRAP=1 opencode
 ```
 
+On Windows, use the equivalent for your shell:
+
+```cmd
+:: Command Prompt
+set SUPERPOWERS_OPENCODE_DISABLE_BOOTSTRAP=1 && opencode
+```
+
+```powershell
+# PowerShell
+$env:SUPERPOWERS_OPENCODE_DISABLE_BOOTSTRAP = '1'
+opencode
+```
+
 2. **Reinstall using the symlink instructions** above and restart OpenCode.
 
 ## Getting Help

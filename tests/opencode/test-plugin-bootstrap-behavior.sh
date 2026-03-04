@@ -58,6 +58,15 @@ await plugin['experimental.chat.system.transform'](input, output);
 const system = output.system || [];
 const combined = system.join('\n');
 
+if (process.env.SUPERPOWERS_OPENCODE_DISABLE_BOOTSTRAP === '1') {
+  if (combined && combined.length > 0) {
+    console.error('expected no bootstrap content when SUPERPOWERS_OPENCODE_DISABLE_BOOTSTRAP=1');
+    process.exit(1);
+  }
+
+  process.exit(0);
+}
+
 if (process.env.EXPECT_DIAGNOSTIC === '1') {
   if (!combined.includes('proceed cautiously') || !combined.includes('using-superpowers')) {
     console.error('expected diagnostic message when using-superpowers is missing or unreadable');
@@ -102,6 +111,17 @@ else
 
   mv "$USING_SKILL_PATH.bak" "$USING_SKILL_PATH"
 fi
+
+echo "Test 3: Bootstrap is disabled when SUPERPOWERS_OPENCODE_DISABLE_BOOTSTRAP=1..."
+export SUPERPOWERS_OPENCODE_DISABLE_BOOTSTRAP="1"
+unset EXPECT_DIAGNOSTIC
+if run_transform; then
+  echo "  [PASS] No bootstrap content injected when disabled via env var"
+else
+  echo "  [FAIL] Expected no bootstrap content when SUPERPOWERS_OPENCODE_DISABLE_BOOTSTRAP=1"
+  exit 1
+fi
+unset SUPERPOWERS_OPENCODE_DISABLE_BOOTSTRAP
 
 echo ""
 echo "=== Plugin bootstrap behavior tests passed ==="
