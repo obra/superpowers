@@ -29,7 +29,7 @@ You MUST create a task for each of these items and complete them in order:
 4. **Present design** — in sections scaled to their complexity, get user approval after each section
 5. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` and commit
 6. **Offer context reset** — design doc is saved to file; ask if user wants a fresh session for planning
-7. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+7. **Transition to implementation (if continuing)** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
 
