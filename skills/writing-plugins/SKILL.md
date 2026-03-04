@@ -1,20 +1,20 @@
 ---
-name: building-plugins
+name: writing-plugins
 description: Use when creating a new Claude Code plugin, converting standalone config into a plugin, planning plugin architecture, or deciding which component types a plugin needs
 ---
 
-# Building Plugins
+# Writing Plugins
 
 ## Overview
 
 A plugin is a directory of components (skills, hooks, agents, MCP servers, LSP servers) that extends Claude Code. This skill guides the **process** of building one — component selection, architecture, development workflow, and distribution. For component **implementation**, it delegates to `plugin-dev:*` skills.
 
-**Announce at start:** "I'm using the building-plugins skill to [create/plan/convert] [plugin name/description]."
+**Announce at start:** "I'm using the writing-plugins skill to [create/plan/convert] [plugin name/description]."
 
 ## Process
 
 ```dot
-digraph building_plugins {
+digraph writing_plugins {
     rankdir=TB;
     node [shape=box];
 

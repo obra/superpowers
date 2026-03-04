@@ -1,5 +1,5 @@
 ---
-name: building-subagents
+name: writing-subagents
 description: >
   Use when creating new subagents, editing existing subagent configurations,
   evaluating subagents against Claude Code best practices, or choosing between
@@ -11,7 +11,7 @@ metadata:
   version: "1.0"
 ---
 
-# Building Subagents
+# Writing Subagents
 
 ## Overview
 
