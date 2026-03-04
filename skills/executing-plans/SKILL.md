@@ -1,6 +1,10 @@
 ---
 name: executing-plans
 description: Use when you have a written implementation plan to execute continuously until complete, stopping only on blockers
+license: MIT
+metadata:
+  author: obra
+  version: "1.0"
 ---
 
 # Executing Plans

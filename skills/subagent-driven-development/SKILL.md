@@ -1,6 +1,10 @@
 ---
 name: subagent-driven-development
 description: Use when executing implementation plans with independent tasks in the current session
+license: MIT
+metadata:
+  author: obra
+  version: "1.0"
 ---
 
 # Subagent-Driven Development

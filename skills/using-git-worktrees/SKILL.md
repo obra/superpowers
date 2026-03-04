@@ -1,6 +1,10 @@
 ---
 name: using-git-worktrees
 description: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - creates isolated git worktrees as sibling directories with per-worktree dependencies
+license: MIT
+metadata:
+  author: obra
+  version: "1.0"
 ---
 
 # Using Git Worktrees

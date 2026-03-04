@@ -1,6 +1,10 @@
 ---
 name: requesting-code-review
 description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
+license: MIT
+metadata:
+  author: obra
+  version: "1.0"
 ---
 
 # Requesting Code Review
