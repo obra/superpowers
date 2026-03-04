@@ -2,8 +2,11 @@
 
 Use this template when dispatching an implementer subagent.
 
+**Recommended model:** `sonnet` (clear spec, standard implementation)
+**Escalate to `opus`:** ambiguous spec, complex architecture, debugging required
+
 ```
-Task tool (general-purpose):
+Task tool (general-purpose, model: sonnet):
   description: "Implement Task N: [task name]"
   prompt: |
     You are implementing Task N: [task name]

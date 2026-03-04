@@ -88,6 +88,27 @@ digraph process {
 - `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
 - `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
 
+## Model Selection Per Subagent Role
+
+Use **superpowers:dynamic-model-selection** to optimize cost. Not every subagent needs the most powerful model.
+
+| Subagent Role | Default Model | When to Escalate to Opus |
+|---------------|---------------|--------------------------|
+| Implementer | `sonnet` | Ambiguous spec, complex architecture, debugging required |
+| Spec reviewer | `sonnet` | Never - spec comparison is well-defined |
+| Code quality reviewer | `sonnet` | Cross-system review, security-sensitive code |
+| Final reviewer | `opus` | Always - needs system-wide understanding |
+
+**Example dispatch with model selection:**
+```
+[Dispatch implementer subagent: model=sonnet]     // Clear spec, standard implementation
+[Dispatch spec reviewer: model=sonnet]             // Comparing code vs requirements
+[Dispatch code quality reviewer: model=sonnet]     // Pattern matching against best practices
+[Dispatch final reviewer: model=opus]              // Cross-cutting system-wide review
+```
+
+**Escalation rule:** If a sonnet implementer asks too many questions or produces low-quality output, re-dispatch with opus for that task.
+
 ## Example Workflow
 
 ```
@@ -195,6 +216,7 @@ Done!
 - Controller does more prep work (extracting all tasks upfront)
 - Review loops add iterations
 - But catches issues early (cheaper than debugging later)
+- **Use dynamic-model-selection to reduce cost:** sonnet for implementers/reviewers, opus only for final review and complex tasks
 
 ## Red Flags
 
