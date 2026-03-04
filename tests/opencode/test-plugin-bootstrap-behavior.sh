@@ -10,11 +10,17 @@ echo "=== Test: Plugin Bootstrap Behavior ==="
 # Source setup to create isolated environment
 source "$SCRIPT_DIR/setup.sh"
 
-# Trap to cleanup on exit
-trap cleanup_test_env EXIT
-
 PLUGIN_FILE="$HOME/.config/opencode/superpowers/.opencode/plugins/superpowers.js"
 USING_SKILL_PATH="$HOME/.config/opencode/superpowers/skills/using-superpowers/SKILL.md"
+
+restore_missing_skill() {
+  if [ -f "$USING_SKILL_PATH.bak" ]; then
+    mv "$USING_SKILL_PATH.bak" "$USING_SKILL_PATH" 2>/dev/null || true
+  fi
+}
+
+# Trap to cleanup on exit (restores missing skill file and cleans test env)
+trap 'restore_missing_skill; cleanup_test_env' EXIT
 
 if [ ! -f "$PLUGIN_FILE" ]; then
     echo "  [FAIL] Plugin file not found at $PLUGIN_FILE"
@@ -23,8 +29,6 @@ fi
 
 # Helper: run a small Node snippet that exercises experimental.chat.system.transform
 run_transform() {
-    local expect_diagnostic="$1"
-
     node --input-type=module <<'NODE'
 import path from 'path';
 import { pathToFileURL } from 'url';
@@ -78,7 +82,7 @@ NODE
 echo "Test 1: Normal bootstrap content when using-superpowers exists..."
 export PLUGIN_FILE_PATH="$PLUGIN_FILE"
 export EXPECT_DIAGNOSTIC="0"
-run_transform "0"
+run_transform
 echo "  [PASS] Normal bootstrap content injected"
 
 echo "Test 2: Diagnostic bootstrap when using-superpowers is missing..."
@@ -86,10 +90,9 @@ if [ ! -f "$USING_SKILL_PATH" ]; then
   echo "  [SKIP] using-superpowers skill not found in test environment; cannot verify missing-skill behavior"
 else
   mv "$USING_SKILL_PATH" "$USING_SKILL_PATH.bak"
-  trap 'mv "$USING_SKILL_PATH.bak" "$USING_SKILL_PATH" 2>/dev/null || true' EXIT
 
   export EXPECT_DIAGNOSTIC="1"
-  if run_transform "1"; then
+  if run_transform; then
     echo "  [PASS] Diagnostic message emitted when using-superpowers is missing"
   else
     echo "  [FAIL] Expected diagnostic message when using-superpowers is missing"
