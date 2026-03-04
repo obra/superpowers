@@ -12,10 +12,12 @@ source "$SCRIPT_DIR/setup.sh"
 
 PLUGIN_FILE="$HOME/.config/opencode/superpowers/.opencode/plugins/superpowers.js"
 USING_SKILL_PATH="$HOME/.config/opencode/superpowers/skills/using-superpowers/SKILL.md"
+RENAMED_SKILL=0
 
 restore_missing_skill() {
-  if [ -f "$USING_SKILL_PATH.bak" ]; then
+  if [ "$RENAMED_SKILL" = "1" ] && [ -f "$USING_SKILL_PATH.bak" ]; then
     mv "$USING_SKILL_PATH.bak" "$USING_SKILL_PATH" 2>/dev/null || true
+    RENAMED_SKILL=0
   fi
 }
 
@@ -99,17 +101,19 @@ if [ ! -f "$USING_SKILL_PATH" ]; then
   echo "  [SKIP] using-superpowers skill not found in test environment; cannot verify missing-skill behavior"
 else
   mv "$USING_SKILL_PATH" "$USING_SKILL_PATH.bak"
-
+  RENAMED_SKILL=1
   export EXPECT_DIAGNOSTIC="1"
   if run_transform; then
     echo "  [PASS] Diagnostic message emitted when using-superpowers is missing"
   else
     echo "  [FAIL] Expected diagnostic message when using-superpowers is missing"
     mv "$USING_SKILL_PATH.bak" "$USING_SKILL_PATH"
+    RENAMED_SKILL=0
     exit 1
   fi
 
   mv "$USING_SKILL_PATH.bak" "$USING_SKILL_PATH"
+  RENAMED_SKILL=0
 fi
 
 echo "Test 3: Bootstrap is disabled when SUPERPOWERS_OPENCODE_DISABLE_BOOTSTRAP=1..."

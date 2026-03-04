@@ -152,11 +152,11 @@ ${toolMapping}
           (output.system ||= []).push(bootstrap);
         }
       } catch (err) {
-          // Log detailed error information locally without leaking it into the prompt
-          console.error(
-            '[superpowers][opencode] unexpected error generating bootstrap content',
-            { err }
-          );
+        // Log detailed error information locally without leaking it into the prompt
+        console.error(
+          '[superpowers][opencode] unexpected error generating bootstrap content',
+          { err }
+        );
 
         (output.system ||= []).push(`<EXTREMELY_IMPORTANT>
 Superpowers for OpenCode failed to generate bootstrap content due to an unexpected error.
