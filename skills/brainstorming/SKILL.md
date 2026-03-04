@@ -98,7 +98,7 @@ IF `.superpowers-config.yaml` exists AND `documentation.enabled: true`:
           const sync = createBeadsSync('.');
           const epicId = sync.syncEpic('${DESIGN_FILE}', '${TOPIC}', { labels: ['horspowers','design'] });
           if (epicId) console.log('✓ Epic synced to beads:', epicId);
-          " 2>/dev/null || echo "[beads] Sync skipped (CLI not available)"
+          " 2>/dev/null || echo "⚠️  [beads] beads.enabled: true but beads CLI not found. Install: https://github.com/steveyegge/beads"
         fi
         ```
 

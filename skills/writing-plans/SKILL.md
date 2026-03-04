@@ -202,10 +202,12 @@ IF `.superpowers-config.yaml` exists AND `documentation.enabled: true`:
         console.log('✓ Task synced to beads:', taskId);
         if (epicId) console.log('  Parent epic:', epicId);
       }
+    } else if (!sync.isAvailable()) {
+      console.log('⚠️  [beads] beads.enabled: true but beads CLI not found. Install: https://github.com/steveyegge/beads');
     } else {
-      console.log('[beads] Integration not enabled or CLI not available');
+      console.log('[beads] Integration not enabled');
     }
-    " 2>/dev/null || echo "[beads] Sync skipped"
+    " 2>/dev/null || echo "⚠️  [beads] beads.enabled: true but beads CLI not found. Install: https://github.com/steveyegge/beads"
     ```
 
   Store the document path as `$TASK_DOC` for progress tracking throughout implementation.
