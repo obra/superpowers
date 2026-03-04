@@ -174,6 +174,40 @@ IF `.superpowers-config.yaml` exists AND `documentation.enabled: true`:
   IF core document count > 3:
     WARN user: "当前核心文档数量为 ${count.total} 个，超过了建议的 3 个上限。建议检查是否所有文档都是必需的。"
 
+  **Step 6: Beads 同步 (IF enabled):**
+  IF `.horspowers-config.yaml` exists AND `beads.enabled: true`:
+    ```bash
+    # 同步任务到 beads
+    node -e "
+    const { createBeadsSync } = require('./lib/beads-sync.js');
+    const sync = createBeadsSync(process.cwd());
+
+    if (sync.canSync()) {
+      // 查找关联的 Epic（从 design 文档）
+      const epicId = sync.findCurrentEpic();
+
+      // 读取任务标题
+      const fs = require('fs');
+      const taskContent = fs.readFileSync(process.env.TASK_DOC, 'utf8');
+      const titleMatch = taskContent.match(/^# 任务:\s*(.+)/m);
+      const taskTitle = titleMatch ? titleMatch[1] : 'Implementation Task';
+
+      // 创建 beads task 并关联到 epic
+      const taskId = sync.createTask(process.env.TASK_DOC, taskTitle, epicId, {
+        labels: ['horspowers','task'],
+        priority: 1
+      });
+
+      if (taskId) {
+        console.log('✓ Task synced to beads:', taskId);
+        if (epicId) console.log('  Parent epic:', epicId);
+      }
+    } else {
+      console.log('[beads] Integration not enabled or CLI not available');
+    }
+    " 2>/dev/null || echo "[beads] Sync skipped"
+    ```
+
   Store the document path as `$TASK_DOC` for progress tracking throughout implementation.
 
 ## Execution Handoff

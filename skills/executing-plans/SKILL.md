@@ -171,6 +171,20 @@ IF `.horspowers-config.yaml` exists AND `documentation.enabled: true`:
 ### Step 2: Execute Batch
 **Default: First 3 tasks**
 
+**Beads 状态同步 (IF enabled):**
+Before starting first task:
+```bash
+IF `$TASK_DOC` is set AND beads integration enabled:
+  node -e "
+  const { createBeadsSync } = require('./lib/beads-sync.js');
+  const sync = createBeadsSync(process.cwd());
+  if (sync.canSync() && process.env.TASK_DOC) {
+    const success = sync.updateStatus(process.env.TASK_DOC, 'in_progress', { claim: true });
+    if (success) console.log('✓ Task status updated: in_progress');
+  }
+  " 2>/dev/null
+```
+
 For each task:
 1. Mark as in_progress
 2. Follow each step exactly (plan has bite-sized steps)
@@ -212,6 +226,19 @@ if (fs.existsSync(taskDoc)) {
 "
 ```
 
+**Beads 同步 (IF enabled):**
+```bash
+IF `$TASK_DOC` is set AND beads integration enabled:
+  node -e "
+  const { createBeadsSync } = require('./lib/beads-sync.js');
+  const sync = createBeadsSync(process.cwd());
+  if (sync.canSync() && process.env.TASK_DOC) {
+    const notes = 'Checkpoint: Batch ' + process.env.BATCH_NUM + ' completed';
+    sync.updateStatus(process.env.TASK_DOC, 'in_progress', { notes: notes });
+  }
+  " 2>/dev/null
+```
+
 This allows session resume - if the session is interrupted, the next session can read the checkpoint and continue from the right place.
 
 ### Step 3: Report
@@ -229,6 +256,23 @@ Based on feedback:
 ### Step 5: Complete Development
 
 After all tasks complete and verified:
+
+**Beads 同步 (IF enabled) - 关闭任务:**
+```bash
+IF `$TASK_DOC` is set AND beads integration enabled:
+  node -e "
+  const { createBeadsSync } = require('./lib/beads-sync.js');
+  const sync = createBeadsSync(process.cwd());
+  if (sync.canSync() && process.env.TASK_DOC) {
+    const success = sync.closeTask(process.env.TASK_DOC, {
+      reason: 'Implementation completed',
+      continue: true
+    });
+    if (success) console.log('✓ Task closed in beads');
+  }
+  " 2>/dev/null
+```
+
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
 - **REQUIRED SUB-SKILL:** Use horspowers:finishing-a-development-branch
 - Follow that skill to verify tests, present options, execute choice

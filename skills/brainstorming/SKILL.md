@@ -73,6 +73,35 @@ IF `.superpowers-config.yaml` exists AND `documentation.enabled: true`:
       - ## 结果评估: [设计实施后的效果评估]
       - ## 相关文档: [计划文档链接]
 
+      **Beads 同步 (IF enabled):**
+      IF `.horspowers-config.yaml` exists AND `beads.enabled: true`:
+        Run beads sync to create/update Epic:
+        ```bash
+        node -e "
+        const { createBeadsSync } = require('./lib/beads-sync.js');
+        const sync = createBeadsSync(process.cwd());
+        if (sync.canSync()) {
+          const epicId = sync.syncEpic('${DESIGN_FILE}', '${TOPIC}', { labels: ['horspowers','design'] });
+          if (epicId) console.log('Synced to beads epic:', epicId);
+        }
+        "
+        ```
+        OR use shell command:
+        ```bash
+        # Check if beads integration is enabled
+        BEADS_ENABLED=$(node -e "const { isBeadsEnabled } = require('./lib/beads-sync.js'); console.log(isBeadsEnabled(process.cwd()));" 2>/dev/null || echo "false")
+        if [ "$BEADS_ENABLED" = "true" ]; then
+          DESIGN_FILE="docs/plans/YYYY-MM-DD-design-<topic>.md"
+          # Sync to beads (will create or update epic)
+          node -e "
+          const { createBeadsSync } = require('./lib/beads-sync.js');
+          const sync = createBeadsSync('.');
+          const epicId = sync.syncEpic('${DESIGN_FILE}', '${TOPIC}', { labels: ['horspowers','design'] });
+          if (epicId) console.log('✓ Epic synced to beads:', epicId);
+          " 2>/dev/null || echo "[beads] Sync skipped (CLI not available)"
+        fi
+        ```
+
     ELSE (user chooses 跳过):
       DO NOT create design document
       PROCEED directly to writing-plans
