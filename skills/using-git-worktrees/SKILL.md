@@ -149,8 +149,8 @@ When merging agent branches back to main:
 
 **Called by:**
 - **brainstorming** — when design is approved and implementation follows
-- **subagent-driven-development** — before executing any tasks
 - **executing-plans** — before executing any tasks
+- **agent-teams** — for isolating each teammate's work
 
 **Pairs with:**
 - **finishing-a-development-branch** — for cleanup after work complete

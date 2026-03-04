@@ -102,6 +102,6 @@ git commit -m "feat: add specific feature"
 
 After saving the plan, use AskUserQuestion to offer execution choice:
 
-- **Subagent-Driven (this session)** — Fresh subagent per task, review between tasks, fast iteration. Uses superpowers:subagent-driven-development
-- **Parallel Session (separate)** — Open new session in worktree, batch execution with checkpoints. Uses superpowers:executing-plans
+- **Execute plan (this session)** — Batch execution with checkpoints. Uses superpowers:executing-plans
+- **Agent team (parallel)** — Coordinate multiple teammates for cross-layer work. Uses superpowers:agent-teams
 - **Not yet** — Just save the plan for later

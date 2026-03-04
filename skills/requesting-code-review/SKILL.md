@@ -16,9 +16,9 @@ Dispatch superpowers:code-reviewer subagent to catch issues before they cascade.
 ## When to Request Review
 
 **Mandatory:**
-- After each task in subagent-driven development
 - After completing major feature
 - Before merge to main
+- Between tasks in agent team workflows
 
 **Optional but valuable:**
 - When stuck (fresh perspective)
@@ -80,10 +80,9 @@ You: [Fix progress indicators]
 
 ## Integration with Workflows
 
-**Subagent-Driven Development:**
-- Review after EACH task
-- Catch issues before they compound
-- Fix before moving to next task
+**Agent Teams:**
+- Each teammate reviews their own work before reporting back
+- Lead can dispatch reviewer teammate for cross-cutting concerns
 
 **Executing Plans:**
 - Review after each batch (3 tasks)

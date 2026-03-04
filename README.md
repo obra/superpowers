@@ -4,7 +4,7 @@ A complete software development workflow for coding agents, built on composable 
 
 > Maintained fork of [obra/superpowers](https://github.com/obra/superpowers) by [@cameronsjo](https://github.com/cameronsjo).
 
-Superpowers starts from the moment you fire up your coding agent. Instead of jumping straight into code, it steps back and asks what you're really trying to do. It teases out a spec, shows it in digestible chunks, builds an implementation plan emphasizing TDD and YAGNI, then launches subagent-driven development to execute autonomously — often for hours without deviating from the plan.
+Superpowers starts from the moment you fire up your coding agent. Instead of jumping straight into code, it steps back and asks what you're really trying to do. It teases out a spec, shows it in digestible chunks, builds an implementation plan emphasizing TDD and YAGNI, then executes autonomously — often for hours without deviating from the plan.
 
 Skills trigger automatically. You don't need to do anything special.
 
@@ -23,7 +23,7 @@ Skills trigger automatically. You don't need to do anything special.
 
 3. **writing-plans** - Activates with approved design. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
 
-4. **subagent-driven-development** or **executing-plans** - Activates with plan. Dispatches fresh subagent per task with two-stage review (spec compliance, then code quality), or executes in batches with human checkpoints.
+4. **executing-plans** or **agent-teams** - Activates with plan. Executes tasks in batches with human checkpoints, or coordinates parallel teammates for cross-layer work.
 
 5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
 
@@ -48,12 +48,11 @@ Skills trigger automatically. You don't need to do anything special.
 - **brainstorming** - Socratic design refinement
 - **writing-plans** - Detailed implementation plans
 - **executing-plans** - Batch execution with checkpoints
-- **dispatching-parallel-agents** - Concurrent subagent workflows
+- **agent-teams** - Coordinate parallel Claude Code sessions with shared task lists
 - **requesting-code-review** - Pre-review checklist
 - **receiving-code-review** - Responding to feedback
 - **using-git-worktrees** - Parallel development branches
 - **finishing-a-development-branch** - Merge/PR decision workflow
-- **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
 
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
