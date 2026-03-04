@@ -13,9 +13,27 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** This should be run in a dedicated worktree (created by brainstorming skill).
-
 **Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
+
+## Prerequisites & Design Doc Input
+
+**Worktree:** This skill must run inside a dedicated worktree created by `using-git-worktrees`. If no worktree is active, prompt the user to run `using-git-worktrees` first.
+
+**Design doc path:** The brainstorming skill produces a design doc at `docs/plans/YYYY-MM-DD-<topic>-design.md` and passes its path to this skill — either as an argument to the skill invocation (e.g., the user says "writing-plans docs/plans/2026-03-04-foo-design.md") or as context already present in the conversation from the brainstorming session.
+
+**At the start of plan generation**, locate and read the design doc:
+1. If the path was provided, read it directly.
+2. If not provided, check `docs/plans/` for the most recent `*-design.md` file and confirm with the user.
+3. If the design doc is missing or unreadable, **stop and tell the user** — do not proceed without it.
+
+**Extract and incorporate** the following from the design doc into the plan:
+- **Objectives** — derive the plan's Goal from the design doc's stated purpose
+- **Assumptions & decisions** — carry forward architectural choices, rejected alternatives, and constraints into the plan's Architecture section
+- **Components & data flow** — map design sections to concrete implementation tasks
+- **Error handling & edge cases** — translate into specific test cases
+- **Risks** — note any risks or trade-offs identified during brainstorming as callouts in relevant tasks
+
+The generated plan must reference the design doc path at the top (e.g., `**Design doc:** docs/plans/YYYY-MM-DD-<topic>-design.md`) so the executing engineer can consult it for rationale.
 
 ## Bite-Sized Task Granularity
 
@@ -35,9 +53,11 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** [One sentence describing what this builds]
+**Design doc:** `docs/plans/YYYY-MM-DD-<topic>-design.md`
 
-**Architecture:** [2-3 sentences about approach]
+**Goal:** [One sentence — derived from the design doc's stated purpose]
+
+**Architecture:** [2-3 sentences — carry forward decisions and rejected alternatives from the design doc]
 
 **Tech Stack:** [Key technologies/libraries]
 
