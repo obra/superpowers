@@ -28,7 +28,8 @@ You MUST create a task for each of these items and complete them in order:
 3. **Propose 2-3 approaches** — with trade-offs and your recommendation
 4. **Present design** — in sections scaled to their complexity, get user approval after each section
 5. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` and commit
-6. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+6. **Offer context reset** — design doc is saved to file; ask if user wants a fresh session for planning
+7. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
 
@@ -48,7 +49,10 @@ digraph brainstorming {
     "Present design sections" -> "User approves design?";
     "User approves design?" -> "Present design sections" [label="no, revise"];
     "User approves design?" -> "Write design doc" [label="yes"];
-    "Write design doc" -> "Invoke writing-plans skill";
+    "Write design doc" -> "Fresh session?";
+    "Fresh session?" [shape=diamond];
+    "Fresh session?" -> "End: user opens new session\nwith writing-plans" [label="yes"];
+    "Fresh session?" -> "Invoke writing-plans skill" [label="no, continue"];
 }
 ```
 
@@ -82,7 +86,16 @@ digraph brainstorming {
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 
-**Implementation:**
+**Context Reset Option:**
+
+After committing the design doc, ask the user:
+
+> "Design doc saved and committed. The brainstorming context (Q&A, exploration, approach comparisons) is now captured in the design doc file. You can **continue in this session** or **start a fresh session** to free up context window space. In a new session, just say `writing-plans` and point to the design doc. Which do you prefer?"
+
+- If **fresh session**: end here. The user will open a new conversation and invoke writing-plans with the design doc path.
+- If **continue**: invoke writing-plans skill in this session as normal.
+
+**Implementation (if continuing):**
 - Invoke the writing-plans skill to create a detailed implementation plan
 - Do NOT invoke any other skill. writing-plans is the next step.
 
