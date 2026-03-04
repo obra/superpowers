@@ -30,9 +30,9 @@ Thanks!
 
 ### Claude Code Official Marketplace
 
-Superpowers is available via the [official claude plugin marketplace](https://github.com/anthropics/claude-plugins-official/pull/148)
+Superpowers is available via the [official Claude plugin marketplace](https://claude.com/plugins/superpowers)
 
-Install the plugin from claude marketplace:
+Install the plugin from Claude marketplace:
 
 ```bash
 /plugin install superpowers@claude-plugins-official
