@@ -4,6 +4,7 @@ description: >
   Use when creating new skills, editing existing skills, or verifying skills
   work before deployment
 license: MIT
+compatibility: "claude-code >= 2.1.59"
 metadata:
   author: obra
   version: "1.0"
