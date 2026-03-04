@@ -97,8 +97,8 @@ After committing the design doc, ask the user:
 - If **continue**: use `using-git-worktrees` to create a dedicated worktree, then invoke writing-plans skill in this session as normal.
 
 **Implementation (if continuing):**
-- Invoke the writing-plans skill to create a detailed implementation plan
-- Do NOT invoke any other skill. writing-plans is the next step.
+- Run `using-git-worktrees` to create a dedicated worktree, then invoke the writing-plans skill to create a detailed implementation plan
+- Do NOT invoke any other implementation skill. The ONLY next steps are using-git-worktrees setup followed by writing-plans.
 
 ## Key Principles
 
