@@ -2,8 +2,8 @@
 
 Use this template when dispatching an implementer subagent.
 
-**Recommended model:** `sonnet` (clear spec, standard implementation)
-**Escalate to `opus`:** ambiguous spec, complex architecture, debugging required
+**Recommended model:** `sonnet` (clear spec, single-file scope)
+**Escalate to `opus`:** multi-file changes, new subsystem creation, ambiguous spec, complex architecture, debugging required
 
 ```
 Task tool (general-purpose, model: sonnet):

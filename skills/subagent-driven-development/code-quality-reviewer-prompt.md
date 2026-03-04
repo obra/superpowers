@@ -4,13 +4,13 @@ Use this template when dispatching a code quality reviewer subagent.
 
 **Purpose:** Verify implementation is well-built (clean, tested, maintainable)
 
-**Recommended model:** `sonnet` (pattern matching against known best practices)
-**Escalate to `opus`:** cross-system review, security-sensitive code
+**Recommended model:** `opus` (quality review benefits from deeper reasoning about coupling, edge cases, architectural drift)
+**Sonnet acceptable for:** trivial single-function changes with no architectural impact
 
 **Only dispatch after spec compliance review passes.**
 
 ```
-Task tool (superpowers:code-reviewer, model: sonnet):
+Task tool (superpowers:code-reviewer, model: opus):
   Use template at requesting-code-review/code-reviewer.md
 
   WHAT_WAS_IMPLEMENTED: [from implementer's report]

@@ -67,8 +67,8 @@ Before dispatching, assess each task's complexity and assign the right model.
 See **superpowers:dynamic-model-selection** for the full routing guide.
 
 **Quick rule:**
-- Unknown root cause / needs reasoning → `opus`
-- Known issue / clear fix → `sonnet`
+- Unknown root cause / needs reasoning / quality review → `opus`
+- Known issue / clear single-file fix / simple spec check → `sonnet`
 - Mechanical change (renames, imports) → `haiku`
 
 ### 4. Dispatch in Parallel

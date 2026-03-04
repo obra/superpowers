@@ -9,7 +9,7 @@ description: Use when dispatching subagents to select the right model (opus/sonn
 
 Not every task needs your most powerful model. Match model capability to task complexity to optimize cost without sacrificing quality.
 
-**Core principle:** Use the cheapest model that can reliably complete the task.
+**Core principle:** Match model power to task impact. Use opus for tasks where deeper reasoning materially improves outcomes, sonnet for well-defined execution, haiku for mechanical work.
 
 ## Model Tiers
 
@@ -21,9 +21,9 @@ Not every task needs your most powerful model. Match model capability to task co
 
 ## Task Routing Table
 
-### Tier 1: Opus (Complex Reasoning Required)
+### Tier 1: Opus (Deep Reasoning, Quality-Critical)
 
-Use when the task requires judgment, creativity, or dealing with ambiguity.
+Use when the task requires judgment, creativity, ambiguity handling, or when quality materially benefits from deeper reasoning.
 
 | Task | Why Opus |
 |------|----------|
@@ -34,16 +34,18 @@ Use when the task requires judgment, creativity, or dealing with ambiguity.
 | Security review | Requires adversarial thinking |
 | Plan creation (writing-plans) | Needs deep understanding of project context |
 | Brainstorming | Creative exploration of design alternatives |
+| Code quality review | Catches subtle issues: hidden coupling, edge cases, architectural drift |
+| Implementation with multi-file changes | Cross-file coordination benefits from system-level reasoning |
+| Complex spec compliance review | Multi-requirement specs with implicit constraints |
 
 ### Tier 2: Sonnet (Clear Spec, Moderate Complexity)
 
-Use when the task is well-defined but requires coding skill.
+Use when the task is well-defined and scoped, requiring solid execution but not deep reasoning.
 
 | Task | Why Sonnet |
 |------|------------|
-| Implementing plan tasks | Spec is clear, just needs solid execution |
-| Code review (quality) | Pattern matching against known best practices |
-| Spec compliance review | Comparing code against explicit requirements |
+| Implementing single-file plan tasks | Spec is clear, scope is contained |
+| Simple spec compliance review | Comparing code against a short, explicit requirements list |
 | Test writing from spec | Requirements are clear, need good test design |
 | Refactoring within a file | Scope is contained, patterns are clear |
 | Bug fix with known cause | Root cause identified, just needs the fix |
@@ -79,7 +81,9 @@ digraph model_selection {
 
     "New subagent task" -> "Requires judgment or creativity?";
     "Requires judgment or creativity?" -> "opus" [label="yes"];
-    "Requires judgment or creativity?" -> "Has clear spec/requirements?";
+    "Requires judgment or creativity?" -> "Quality-critical review?" [label="no"];
+    "Quality-critical review?" -> "opus" [label="yes"];
+    "Quality-critical review?" -> "Has clear spec/requirements?";
     "Has clear spec/requirements?" -> "sonnet" [label="yes"];
     "Has clear spec/requirements?" -> "opus" [label="no - ambiguous"];
     "sonnet" -> "Mechanical or formulaic?" [style=invis];
@@ -90,8 +94,8 @@ digraph model_selection {
 ```
 
 **Quick decision rule:**
-1. Ambiguous, creative, or multi-system? → **opus**
-2. Clear spec, real coding needed? → **sonnet**
+1. Ambiguous, creative, multi-system, or quality-critical review? → **opus**
+2. Clear spec, single-file scope, straightforward execution? → **sonnet**
 3. Could a script do it? → **haiku**
 
 ## How to Apply
@@ -121,14 +125,12 @@ Agent(subagent_type: "Explore", model: "haiku",
 
 When executing a plan with subagent-driven-development:
 
-| Subagent Role | Recommended Model | Rationale |
-|---------------|-------------------|-----------|
-| Implementer | `sonnet` | Clear spec from plan, needs solid coding |
-| Spec reviewer | `sonnet` | Comparing code to explicit requirements |
-| Code quality reviewer | `sonnet` | Pattern matching against best practices |
-| Final cross-cutting reviewer | `opus` | Needs to see system-wide interactions |
-
-**Exception:** If a task involves complex architecture or debugging, escalate the implementer to `opus`.
+| Subagent Role | Default Model | Escalation | Rationale |
+|---------------|---------------|------------|-----------|
+| Implementer | `sonnet` | → `opus` for multi-file, new subsystem, ambiguous spec | Clear single-file spec needs solid coding; multi-file needs system reasoning |
+| Spec reviewer | `sonnet` | → `opus` for complex multi-requirement specs | Simple comparisons are well-defined; complex specs have implicit constraints |
+| Code quality reviewer | `opus` | — | Quality review benefits from deeper reasoning about coupling, edge cases, architectural drift |
+| Final cross-cutting reviewer | `opus` | — | Needs to see system-wide interactions |
 
 ### In Parallel Agent Dispatch
 
@@ -149,16 +151,19 @@ Typical subagent-driven-development session (5 tasks):
 |------------------------|---------------------|
 | 5x implementer (opus) | 5x implementer (sonnet) |
 | 5x spec reviewer (opus) | 5x spec reviewer (sonnet) |
-| 5x quality reviewer (opus) | 5x quality reviewer (sonnet) |
+| 5x quality reviewer (opus) | 5x quality reviewer (opus) |
 | 1x final reviewer (opus) | 1x final reviewer (opus) |
-| **16 opus calls** | **15 sonnet + 1 opus** |
+| **16 opus calls** | **10 sonnet + 6 opus** |
+
+This balances cost savings (~40% reduction) with quality — opus handles all review and reasoning tasks where its deeper analysis adds real value, while sonnet handles well-scoped implementation and simple spec checks.
 
 ## When to Escalate
 
 Start with the recommended tier, but escalate if:
 
 - **haiku → sonnet:** Task turns out more complex than expected, haiku produces low-quality output
-- **sonnet → opus:** Implementation requires architectural decisions not covered in the spec, or encounters unexpected complexity
+- **sonnet → opus (implementer):** Multi-file changes, new subsystem creation, ambiguous spec, architectural decisions not covered in spec, or unexpected complexity
+- **sonnet → opus (spec reviewer):** Complex multi-requirement spec with implicit constraints or cross-cutting concerns
 - **Any tier:** Subagent asks questions that suggest the task needs more reasoning power
 
 ## Red Flags

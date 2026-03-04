@@ -94,20 +94,22 @@ Use **superpowers:dynamic-model-selection** to optimize cost. Not every subagent
 
 | Subagent Role | Default Model | When to Escalate to Opus |
 |---------------|---------------|--------------------------|
-| Implementer | `sonnet` | Ambiguous spec, complex architecture, debugging required |
-| Spec reviewer | `sonnet` | Never - spec comparison is well-defined |
-| Code quality reviewer | `sonnet` | Cross-system review, security-sensitive code |
-| Final reviewer | `opus` | Always - needs system-wide understanding |
+| Implementer | `sonnet` | Multi-file changes, new subsystem, ambiguous spec, complex architecture, debugging |
+| Spec reviewer | `sonnet` | Complex multi-requirement specs with implicit constraints |
+| Code quality reviewer | `opus` | Always — catches subtle issues that sonnet misses (hidden coupling, edge cases, architectural drift) |
+| Final reviewer | `opus` | Always — needs system-wide understanding |
 
 **Example dispatch with model selection:**
 ```
-[Dispatch implementer subagent: model=sonnet]     // Clear spec, standard implementation
-[Dispatch spec reviewer: model=sonnet]             // Comparing code vs requirements
-[Dispatch code quality reviewer: model=sonnet]     // Pattern matching against best practices
+[Dispatch implementer subagent: model=sonnet]     // Clear spec, single-file scope
+[Dispatch spec reviewer: model=sonnet]             // Comparing code vs explicit requirements
+[Dispatch code quality reviewer: model=opus]       // Deep analysis of quality, coupling, edge cases
 [Dispatch final reviewer: model=opus]              // Cross-cutting system-wide review
 ```
 
-**Escalation rule:** If a sonnet implementer asks too many questions or produces low-quality output, re-dispatch with opus for that task.
+**Escalation rules:**
+- **Implementer → opus:** If task touches multiple files, creates a new subsystem, has ambiguous spec, or sonnet asks too many questions / produces low-quality output
+- **Spec reviewer → opus:** If spec has many interrelated requirements or implicit constraints that need interpretation
 
 ## Example Workflow
 
@@ -216,7 +218,7 @@ Done!
 - Controller does more prep work (extracting all tasks upfront)
 - Review loops add iterations
 - But catches issues early (cheaper than debugging later)
-- **Use dynamic-model-selection to reduce cost:** sonnet for implementers/reviewers, opus only for final review and complex tasks
+- **Use dynamic-model-selection to balance cost and quality:** sonnet for implementation/spec review, opus for quality review and final review (~40% cost reduction vs all-opus while maintaining high quality gates)
 
 ## Red Flags
 
