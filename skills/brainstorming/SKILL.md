@@ -42,6 +42,7 @@ digraph brainstorming {
     "User approves design?" [shape=diamond];
     "Write design doc" [shape=box];
     "Invoke writing-plans skill" [shape=doublecircle];
+    "End: user opens new session\nwith writing-plans" [shape=doublecircle];
 
     "Explore project context" -> "Ask clarifying questions";
     "Ask clarifying questions" -> "Propose 2-3 approaches";
@@ -56,7 +57,7 @@ digraph brainstorming {
 }
 ```
 
-**The terminal state is invoking writing-plans.** Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY skill you invoke after brainstorming is writing-plans.
+**Both terminal states lead to writing-plans.** If continuing in this session, invoke writing-plans directly. If starting a fresh session, end here — the user will invoke writing-plans in the new session with the design doc path. Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY next step after brainstorming is writing-plans.
 
 ## The Process
 
@@ -90,10 +91,10 @@ digraph brainstorming {
 
 After committing the design doc, ask the user:
 
-> "Design doc saved and committed. The brainstorming context (Q&A, exploration, approach comparisons) is now captured in the design doc file. You can **continue in this session** or **start a fresh session** to free up context window space. In a new session, just say `writing-plans` and point to the design doc. Which do you prefer?"
+> "Design doc saved and committed. The brainstorming context (Q&A, exploration, approach comparisons) is now captured in the design doc file. You can **continue in this session** or **start a fresh session** to free up context window space. In a new session, use `using-git-worktrees` to create a dedicated worktree, then say `writing-plans` and point to the design doc. Which do you prefer?"
 
-- If **fresh session**: end here. The user will open a new conversation and invoke writing-plans with the design doc path.
-- If **continue**: invoke writing-plans skill in this session as normal.
+- If **fresh session**: end here. The user will open a new conversation, use `using-git-worktrees` to create a dedicated worktree, then invoke `writing-plans` with the design doc path.
+- If **continue**: use `using-git-worktrees` to create a dedicated worktree, then invoke writing-plans skill in this session as normal.
 
 **Implementation (if continuing):**
 - Invoke the writing-plans skill to create a detailed implementation plan
