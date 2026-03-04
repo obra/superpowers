@@ -1,5 +1,41 @@
 # Horspowers Release Notes
 
+## v4.4.0 (2026-03-04)
+
+### New Features
+
+**Beads 任务追踪集成**
+
+新增与 [Beads](https://github.com/steveyegge/beads) 任务追踪工具的自动同步功能，将 Horspowers 工作流与任务管理无缝衔接。
+
+- `lib/beads-sync.js` - Beads 同步核心模块
+  * 自动检测 beads CLI 可用性
+  * 设计文档同步为 Epic
+  * 任务文档同步为 Task
+  * 执行状态自动更新
+  * 双向 ID 关联（存储在文档 frontmatter 中）
+
+- `lib/config-manager.js` - 配置更新
+  * 新增 `beads` 配置段
+  * 支持 `enabled`, `auto_sync`, `sync_on_start`, `sync_on_complete` 选项
+
+- 技能集成：
+  * `brainstorming` - 创建设计文档后自动同步到 Beads Epic
+  * `writing-plans` - 创建任务文档后自动同步到 Beads Task
+  * `executing-plans` - 执行时自动更新任务状态（in_progress → closed）
+
+启用方式：
+```yaml
+# .horspowers-config.yaml
+beads:
+  enabled: true
+  auto_sync: true
+  sync_on_start: true
+  sync_on_complete: true
+```
+
+---
+
 ## v4.3.3 (2026-01-27)
 
 ### Improvements
