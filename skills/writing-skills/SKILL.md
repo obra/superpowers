@@ -75,33 +75,96 @@ Way of thinking about problems (flatten-with-flags, test-invariants)
 ### Reference
 API docs, syntax guides, tool documentation (office docs)
 
-## Directory Structure
+## Skill ↔ Subagent Patterns (as of Claude Code 2.1.64)
 
+Skills and subagents have two inverse integration patterns. Choose based on who controls the context:
+
+| Pattern | How | When |
+|---------|-----|------|
+| **Skill loads into subagent** | Subagent frontmatter: `skills: [my-skill]` | Subagent needs domain knowledge at startup |
+| **Skill runs in a subagent** | Skill frontmatter: `context: fork` | Skill needs isolation (heavy output, restricted tools) |
+
+### Subagent loads skill (`skills:` in subagent)
+
+The subagent controls its own system prompt. Skill content is injected at startup — the subagent gets the knowledge without needing to discover and load it.
+
+```yaml
+# In agents/api-builder.md
+---
+name: api-builder
+description: Build API endpoints following team conventions
+skills:
+  - api-conventions
+  - error-handling-patterns
+---
+```
+
+### Skill runs in a subagent (`context: fork`)
+
+The skill controls the prompt. Execution happens in an isolated subagent context, keeping verbose output out of the main conversation.
+
+```yaml
+# In skills/my-skill/SKILL.md frontmatter
+---
+name: my-skill
+description: Use when running expensive analysis
+context: fork
+agent: my-custom-agent  # optional, uses default subagent if omitted
+---
+```
+
+**When NOT to use either pattern:**
+- Skill needs frequent back-and-forth with the user → run in main conversation
+- Skill is lightweight and shares context with other work → keep inline
+
+## Directory Structure
 
 ```
 skills/
   skill-name/
-    SKILL.md              # Main reference (required)
-    supporting-file.*     # Only if needed
+    SKILL.md              # Main reference (required, ≤500 lines)
+    references/           # Heavy content, progressive disclosure
+      detailed-topic.md
+      api-reference.md
+    scripts/              # Executable tools (optional)
 ```
 
 **Flat namespace** - all skills in one searchable namespace
 
-**Separate files for:**
-1. **Heavy reference** (100+ lines) - API docs, comprehensive syntax
-2. **Reusable tools** - Scripts, utilities, templates
+**The `references/` convention:** Extract heavy content (100+ lines) into `references/` subdirectory. SKILL.md stays focused on concepts and decision tables; references hold implementation details, API docs, and comprehensive syntax. Link from SKILL.md's References section.
 
-**Keep inline:**
+**Self-referencing with `${CLAUDE_SKILL_DIR}`:** Use this variable to reference files within the skill's own directory. It resolves to the skill's absolute path at runtime, making references portable across installations:
+
+```markdown
+See [API Reference](${CLAUDE_SKILL_DIR}/references/api-reference.md) for details.
+```
+
+**Keep inline in SKILL.md:**
 - Principles and concepts
 - Code patterns (< 50 lines)
-- Everything else
+- Decision tables and flowcharts
 
 ## SKILL.md Structure
 
 **Frontmatter (YAML):**
-- Only two fields supported: `name` and `description`
-- Max 1024 characters total
-- `name`: Use letters, numbers, and hyphens only (no parentheses, special chars)
+
+Two specs govern skill frontmatter (as of Claude Code 2.1.64). Required fields from the Agent Skills spec, plus optional Claude Code fields:
+
+| Field | Required | Source | Purpose |
+|-------|----------|--------|---------|
+| `name` | Yes | Agent Skills | Identifier (letters, numbers, hyphens only) |
+| `description` | Yes | Agent Skills | When to use (see CSO section) |
+| `license` | No | Agent Skills | SPDX identifier (e.g., `MIT`) |
+| `metadata` | No | Agent Skills | `author`, `version`, etc. |
+| `user-invocable` | No | Claude Code | Whether user can call via `/skill-name` |
+| `model` | No | Claude Code | Model override for skill execution |
+| `context` | No | Claude Code | Set to `fork` to run in a subagent |
+| `agent` | No | Claude Code | Subagent name when `context: fork` |
+| `hooks` | No | Claude Code | Lifecycle hooks scoped to skill |
+| `argument-hint` | No | Claude Code | Placeholder text for skill arguments |
+| `disable-model-invocation` | No | Claude Code | Prevent Claude from auto-invoking |
+
+- Max 1024 characters total for frontmatter
 - `description`: Third-person, describes ONLY when to use (NOT what it does)
   - Start with "Use when..." to focus on triggering conditions
   - Include specific symptoms, situations, and contexts
@@ -110,8 +173,12 @@ skills/
 
 ```markdown
 ---
-name: Skill-Name-With-Hyphens
+name: skill-name-with-hyphens
 description: Use when [specific triggering conditions and symptoms]
+license: MIT
+metadata:
+  author: your-name
+  version: "1.0"
 ---
 
 # Skill Name
@@ -164,43 +231,24 @@ When the description was changed to just "Use when executing implementation plan
 **The trap:** Descriptions that summarize workflow create a shortcut Claude will take. The skill body becomes documentation Claude skips.
 
 ```yaml
-# ❌ BAD: Summarizes workflow - Claude may follow this instead of reading skill
+# ❌ BAD: Summarizes workflow — Claude follows this instead of reading skill
 description: Use when executing plans - dispatches subagent per task with code review between tasks
 
-# ❌ BAD: Too much process detail
-description: Use for TDD - write test first, watch it fail, write minimal code, refactor
-
-# ✅ GOOD: Just triggering conditions, no workflow summary
-description: Use when executing implementation plans with independent tasks in the current session
-
-# ✅ GOOD: Triggering conditions only
-description: Use when implementing any feature or bugfix, before writing implementation code
-```
-
-**Content:**
-- Use concrete triggers, symptoms, and situations that signal this skill applies
-- Describe the *problem* (race conditions, inconsistent behavior) not *language-specific symptoms* (setTimeout, sleep)
-- Keep triggers technology-agnostic unless the skill itself is technology-specific
-- If skill is technology-specific, make that explicit in the trigger
-- Write in third person (injected into system prompt)
-- **NEVER summarize the skill's process or workflow**
-
-```yaml
-# ❌ BAD: Too abstract, vague, doesn't include when to use
+# ❌ BAD: Too abstract / first person / technology-specific for generic skill
 description: For async testing
-
-# ❌ BAD: First person
 description: I can help you with async tests when they're flaky
-
-# ❌ BAD: Mentions technology but skill isn't specific to it
 description: Use when tests use setTimeout/sleep and are flaky
 
-# ✅ GOOD: Starts with "Use when", describes problem, no workflow
+# ✅ GOOD: Triggering conditions only, no workflow summary
+description: Use when executing implementation plans with independent tasks in the current session
 description: Use when tests have race conditions, timing dependencies, or pass/fail inconsistently
-
-# ✅ GOOD: Technology-specific skill with explicit trigger
-description: Use when using React Router and handling authentication redirects
 ```
+
+**Rules:**
+- Start with "Use when..." — describe the *problem*, not language-specific symptoms
+- Write in third person (injected into system prompt)
+- Keep triggers technology-agnostic unless the skill itself is technology-specific
+- **NEVER summarize the skill's process or workflow**
 
 ### 2. Keyword Coverage
 
@@ -219,6 +267,8 @@ Use words Claude would search for:
 ### 4. Token Efficiency (Critical)
 
 **Problem:** getting-started and frequently-referenced skills load into EVERY conversation. Every token counts.
+
+**Hard limit:** SKILL.md MUST NOT exceed 500 lines. Skills over 500 lines MUST extract content into `references/` subdirectory.
 
 **Target word counts:**
 - getting-started workflows: <150 words each
@@ -321,27 +371,30 @@ You're good at porting - one great example is enough.
 ### Self-Contained Skill
 ```
 defense-in-depth/
-  SKILL.md    # Everything inline
+  SKILL.md    # Everything inline (<500 lines)
 ```
 When: All content fits, no heavy reference needed
 
-### Skill with Reusable Tool
+### Skill with References
 ```
-condition-based-waiting/
-  SKILL.md    # Overview + patterns
-  example.ts  # Working helpers to adapt
+writing-skills/
+  SKILL.md              # Concepts + decision tables
+  references/           # Progressive disclosure
+    flowchart-usage.md
+    testing-all-skill-types.md
 ```
-When: Tool is reusable code, not just narrative
+When: Reference material exceeds inline threshold (100+ lines)
 
-### Skill with Heavy Reference
+### Skill with Tools and References
 ```
 pptx/
-  SKILL.md       # Overview + workflows
-  pptxgenjs.md   # 600 lines API reference
-  ooxml.md       # 500 lines XML structure
-  scripts/       # Executable tools
+  SKILL.md              # Overview + workflows
+  references/
+    pptxgenjs.md        # 600 lines API reference
+    ooxml.md            # 500 lines XML structure
+  scripts/              # Executable tools
 ```
-When: Reference material too large for inline
+When: Both heavy reference and reusable scripts needed
 
 ## The Iron Law (Same as TDD)
 
@@ -364,39 +417,16 @@ Edit skill without testing? Same violation.
 
 **REQUIRED BACKGROUND:** The superpowers:test-driven-development skill explains why this matters. Same principles apply to documentation.
 
-## Common Rationalizations for Skipping Testing
+## Red Flags — STOP and Start Over
 
-| Excuse | Reality |
-|--------|---------|
-| "Skill is obviously clear" | Clear to you ≠ clear to other agents. Test it. |
-| "It's just a reference" | References can have gaps, unclear sections. Test retrieval. |
-| "Testing is overkill" | Untested skills have issues. Always. 15 min testing saves hours. |
-| "I'll test if problems emerge" | Problems = agents can't use skill. Test BEFORE deploying. |
-| "Too tedious to test" | Testing is less tedious than debugging bad skill in production. |
-| "I'm confident it's good" | Overconfidence guarantees issues. Test anyway. |
-| "Academic review is enough" | Reading ≠ using. Test application scenarios. |
-| "No time to test" | Deploying untested skill wastes more time fixing it later. |
+Any of these thoughts mean delete code and restart with TDD:
 
-**All of these mean: Test before deploying. No exceptions.**
+- "Skill is obviously clear" / "Testing is overkill" / "I'm confident it's good"
+- "I already manually tested it" / "Academic review is enough"
+- "Tests after achieve the same purpose" / "It's about spirit not ritual"
+- Code before test, or "This is different because..."
 
-## Red Flags - STOP and Start Over
-
-- Code before test
-- "I already manually tested it"
-- "Tests after achieve the same purpose"
-- "It's about spirit not ritual"
-- "This is different because..."
-
-**All of these mean: Delete code. Start over with TDD.**
-```
-
-### Update CSO for Violation Symptoms
-
-Add to description: symptoms of when you're ABOUT to violate the rule:
-
-```yaml
-description: use when implementing any feature or bugfix, before writing implementation code
-```
+Clear to you ≠ clear to other agents. Reading ≠ using. 15 min testing saves hours. **No exceptions.**
 
 ## RED-GREEN-REFACTOR for Skills
 
@@ -421,7 +451,7 @@ Run same scenarios WITH skill. Agent should now comply.
 
 Agent found new rationalization? Add explicit counter. Re-test until bulletproof.
 
-**Testing methodology:** See @testing-skills-with-subagents.md for the complete testing methodology:
+**Testing methodology:** See [Testing Skills with Subagents](references/testing-skills-with-subagents.md) for the complete methodology:
 - How to write pressure scenarios
 - Pressure types (time, sunk cost, authority, exhaustion)
 - Plugging holes systematically
@@ -429,37 +459,11 @@ Agent found new rationalization? Add explicit counter. Re-test until bulletproof
 
 ## Anti-Patterns
 
-### ❌ Narrative Example
-"In session 2025-10-03, we found empty projectDir caused..."
-**Why bad:** Too specific, not reusable
-
-### ❌ Multi-Language Dilution
-example-js.js, example-py.py, example-go.go
-**Why bad:** Mediocre quality, maintenance burden
-
-### ❌ Code in Flowcharts
-```dot
-step1 [label="import fs"];
-step2 [label="read file"];
-```
-**Why bad:** Can't copy-paste, hard to read
-
-### ❌ Generic Labels
-helper1, helper2, step3, pattern4
-**Why bad:** Labels should have semantic meaning
-
-## STOP: Before Moving to Next Skill
-
-**After writing ANY skill, you MUST STOP and complete the deployment process.**
-
-**Do NOT:**
-- Create multiple skills in batch without testing each
-- Move to next skill before current one is verified
-- Skip testing because "batching is more efficient"
-
-**The deployment checklist below is MANDATORY for EACH skill.**
-
-Deploying untested skills = deploying untested code. It's a violation of quality standards.
+- **Narrative:** "In session 2025-10-03, we found..." — too specific, not reusable
+- **Multi-language:** example-js.js, example-py.py — mediocre quality, maintenance burden
+- **Code in flowcharts:** `step1 [label="import fs"]` — can't copy-paste
+- **Generic labels:** helper1, step3, pattern4 — labels need semantic meaning
+- **Batch creation:** Creating multiple skills without testing each — deploy and test ONE at a time
 
 ## Discovery Workflow
 
