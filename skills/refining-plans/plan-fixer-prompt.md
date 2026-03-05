@@ -51,6 +51,7 @@ Task tool (general-purpose):
       - severity: [critical|important]
         requirement: [exact text from plan]
         concern: [original concern]
+        recommendation: [proposed resolution from simulator]
         applied_change: [what was changed]
         location: [which section]
     skipped:
