@@ -78,7 +78,7 @@ Default max iterations: 5. For each round:
 3. **Dispatch plan-fixer** — provide plan file path, critical + important findings, original snapshot
 4. **Check convergence:**
    - No critical/important findings → CONVERGED
-   - Critical count unchanged (round 2+) or same concern persists (round 3+) → ESCALATE
+   - Same critical concern persists across rounds (round 2+) → ESCALATE
    - Drift detection: plan changed direction → ESCALATE
    - Otherwise → CONTINUE
 
