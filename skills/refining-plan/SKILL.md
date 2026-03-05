@@ -28,28 +28,9 @@ digraph when_to_use {
 }
 ```
 
-**Use when:**
-- Plan just created by writing-plans, before execution
-- Plan has known gaps needing systematic discovery
-- Complex plan with multiple tasks and dependencies
-
-**Don't use when:**
-- Plan is trivial (1-2 simple tasks)
-- Already refined and stable
-
-## Checklist
-
-You MUST create a task for each of these items and complete them in order:
-
-1. Read plan, detect domain, snapshot original text
-2. Generate role profiles for plan-simulator and plan-fixer
-3. Run simulation round (dispatch plan-simulator subagent)
-4. Evaluate findings (skip to report if no critical/important)
-5. Run fix round (dispatch plan-fixer subagent)
-6. Check convergence (continue, converge, or escalate)
-7. Present report and offer execution choice
-
 ## The Process
+
+You MUST create a task for each phase step and complete in order.
 
 ```dot
 digraph refine_plan {
@@ -63,7 +44,6 @@ digraph refine_plan {
     "Check convergence" [shape=diamond];
     "Present report" [shape=box style=filled fillcolor=lightgreen];
     "Escalate to user" [shape=box style=filled fillcolor=lightyellow];
-    "Offer execution choice" [shape=doublecircle];
 
     "Read plan, detect domain, snapshot original" -> "Generate role profiles";
     "Generate role profiles" -> "Dispatch Task(plan-simulator)";
@@ -76,16 +56,12 @@ digraph refine_plan {
     "Check convergence" -> "Escalate to user" [label="ESCALATE"];
     "Escalate to user" -> "Dispatch Task(plan-simulator)" [label="user: continue"];
     "Escalate to user" -> "Present report" [label="user: stop"];
-    "Present report" -> "Offer execution choice";
 }
 ```
 
 ### Phase 1: Domain Detection
 
-Read the plan file and determine:
-1. **Domain**: backend, frontend, infrastructure, data, plugin-dev, ML/AI, devops, full-stack, other
-2. **Technologies**: tools, frameworks, languages mentioned
-3. **Key concerns**: highest-risk areas
+Read the plan and determine domain (backend, frontend, infrastructure, data, plugin-dev, ML/AI, devops, full-stack, other), technologies, and key concerns.
 
 Generate role profiles:
 - plan-simulator: "Senior {domain} engineer who pressure-tests {technology} plans"
@@ -97,40 +73,20 @@ Log detected domain and roles before proceeding.
 
 Default max iterations: 5. For each round:
 
-**Step 1: Dispatch plan-simulator subagent**
-
-Use `./plan-simulator-prompt.md` template. Provide:
-- Full plan text (don't make subagent read file)
-- Generated role profile
-- Iteration number
-- Previous fixes summary (if iteration > 1)
-
-**Step 2: Evaluate findings**
-
-If no critical or important findings → CONVERGED, skip to Phase 3.
-
-**Step 3: Dispatch plan-fixer subagent**
-
-Use `./plan-fixer-prompt.md` template. Provide:
-- Plan file path (fixer edits the file)
-- Critical + important findings only
-- Original plan snapshot for reference
-
-**Step 4: Check convergence**
-
-Apply in order:
-1. **Diminishing returns** (round 2+): critical count unchanged → CONVERGED
-2. **Recurring criticals** (round 3+): same concern text persists → ESCALATE to user
-3. **Drift detection**: plan fundamentally changed direction → ESCALATE to user
-4. **Otherwise**: CONTINUE
+1. **Dispatch plan-simulator** — provide full plan text, role profile, iteration number, previous fixes summary (if iteration > 1)
+2. **Evaluate** — no critical/important findings → CONVERGED, skip to Phase 3
+3. **Dispatch plan-fixer** — provide plan file path, critical + important findings, original snapshot
+4. **Check convergence:**
+   - Diminishing returns (round 2+): critical count unchanged → CONVERGED
+   - Recurring criticals (round 3+): same concern persists → ESCALATE
+   - Drift detection: plan changed direction → ESCALATE
+   - Otherwise: CONTINUE
 
 Track per round: `Round {N}: critical={X} important={Y} minor={Z} → {signal}`
 
 ### Phase 3: Report & Handoff
 
-Present summary:
-
-```
+```markdown
 ## Plan Refinement Complete
 
 **Plan:** {plan_path}
@@ -157,30 +113,11 @@ Then offer execution choice:
 
 **Which approach?"**
 
-## Prompt Templates
-
-- `./plan-simulator-prompt.md` - Dispatch plan-simulator subagent
-- `./plan-fixer-prompt.md` - Dispatch plan-fixer subagent
-
 ## Red Flags
 
 **Never:**
 - Skip simulation and go straight to execution
 - Let plan-fixer restructure the plan (only patch gaps)
-- Continue iterating after CONVERGED signal
-- Ignore ESCALATE signal (always surface to user)
+- Continue after CONVERGED or ignore ESCALATE signal
 - Run plan-fixer without simulation findings
 - Modify the plan yourself (only plan-fixer subagent edits)
-
-**If findings persist across 3+ rounds:**
-- The issue likely needs a human decision, not more iteration
-- ESCALATE rather than continuing
-
-## Integration
-
-**Required workflow skills:**
-- **superpowers:writing-plans** — Creates the plan this skill refines
-
-**Alternative workflow:**
-- **superpowers:subagent-driven-development** — Execute refined plan (same session)
-- **superpowers:executing-plans** — Execute refined plan (parallel session)

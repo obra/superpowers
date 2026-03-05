@@ -2,7 +2,7 @@
 
 Use this template when dispatching a plan-simulator subagent to pressure-test a plan.
 
-```
+```text
 Task tool (general-purpose):
   description: "Simulate plan: [plan name]"
   prompt: |

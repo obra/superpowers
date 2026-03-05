@@ -2,7 +2,7 @@
 
 Use this template when dispatching a plan-fixer subagent to apply targeted fixes to a plan.
 
-```
+```text
 Task tool (general-purpose):
   description: "Fix plan gaps: [plan name]"
   prompt: |
@@ -44,10 +44,14 @@ Task tool (general-purpose):
     FIXED: addressed={N} skipped={M}
 
     changes:
-      - finding: [original concern]
+      - severity: [critical|important]
+        requirement: [exact text from plan]
+        finding: [original concern]
         action: [what was changed]
         location: [which section]
     skipped:
-      - finding: [concern]
+      - severity: [critical|important|minor]
+        requirement: [exact text from plan]
+        finding: [concern]
         reason: [why skipped — e.g., "minor severity", "conflicts with plan intent"]
 ```
