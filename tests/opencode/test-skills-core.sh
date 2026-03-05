@@ -245,6 +245,134 @@ else
     exit 1
 fi
 
+# Test 3b: Test findSkillsInDir with symlinked skill directories
+echo ""
+echo "Test 3b: Testing findSkillsInDir with symlinks..."
+
+# Create a real skill outside the scan directory
+mkdir -p "$TEST_HOME/external-skills/symlinked-skill"
+cat > "$TEST_HOME/external-skills/symlinked-skill/SKILL.md" <<'SKILL_EOF'
+---
+name: symlinked-skill
+description: A symlinked skill
+---
+# Symlinked Skill
+SKILL_EOF
+
+# Create scan directory with a symlink to the external skill
+mkdir -p "$TEST_HOME/symlink-test-dir"
+ln -s "$TEST_HOME/external-skills/symlinked-skill" "$TEST_HOME/symlink-test-dir/symlinked-skill"
+
+# Create a broken symlink (target doesn't exist)
+ln -s "$TEST_HOME/nonexistent-skill" "$TEST_HOME/symlink-test-dir/broken-link"
+
+# Also add a regular skill for comparison
+mkdir -p "$TEST_HOME/symlink-test-dir/regular-skill"
+cat > "$TEST_HOME/symlink-test-dir/regular-skill/SKILL.md" <<'SKILL_EOF'
+---
+name: regular-skill
+description: A regular skill
+---
+# Regular Skill
+SKILL_EOF
+
+result=$(node -e "
+const fs = require('fs');
+const path = require('path');
+
+function extractFrontmatter(filePath) {
+    try {
+        const content = fs.readFileSync(filePath, 'utf8');
+        const lines = content.split('\n');
+        let inFrontmatter = false;
+        let name = '';
+        let description = '';
+        for (const line of lines) {
+            if (line.trim() === '---') {
+                if (inFrontmatter) break;
+                inFrontmatter = true;
+                continue;
+            }
+            if (inFrontmatter) {
+                const match = line.match(/^(\w+):\s*(.*)$/);
+                if (match) {
+                    const [, key, value] = match;
+                    if (key === 'name') name = value.trim();
+                    if (key === 'description') description = value.trim();
+                }
+            }
+        }
+        return { name, description };
+    } catch (error) {
+        return { name: '', description: '' };
+    }
+}
+
+function findSkillsInDir(dir, sourceType, maxDepth = 3) {
+    const skills = [];
+    if (!fs.existsSync(dir)) return skills;
+    function recurse(currentDir, depth) {
+        if (depth > maxDepth) return;
+        const entries = fs.readdirSync(currentDir, { withFileTypes: true });
+        for (const entry of entries) {
+            const fullPath = path.join(currentDir, entry.name);
+            const isDir = entry.isDirectory();
+            const isSymlinkDir = entry.isSymbolicLink() && (() => {
+                try { return fs.statSync(fullPath).isDirectory(); } catch { return false; }
+            })();
+            if (isDir || isSymlinkDir) {
+                const skillFile = path.join(fullPath, 'SKILL.md');
+                if (fs.existsSync(skillFile)) {
+                    const { name, description } = extractFrontmatter(skillFile);
+                    skills.push({
+                        path: fullPath,
+                        skillFile: skillFile,
+                        name: name || entry.name,
+                        description: description || '',
+                        sourceType: sourceType
+                    });
+                }
+                recurse(fullPath, depth + 1);
+            }
+        }
+    }
+    recurse(dir, 0);
+    return skills;
+}
+
+const skills = findSkillsInDir('$TEST_HOME/symlink-test-dir', 'test', 3);
+console.log(JSON.stringify(skills, null, 2));
+" 2>&1)
+
+symlink_count=$(echo "$result" | grep -c '"name":' || echo "0")
+
+if [ "$symlink_count" -ge 2 ]; then
+    echo "  [PASS] findSkillsInDir found skills including symlinked (found $symlink_count)"
+else
+    echo "  [FAIL] findSkillsInDir did not find symlinked skills (expected >= 2, found $symlink_count)"
+    echo "  Result: $result"
+    exit 1
+fi
+
+if echo "$result" | grep -q '"name": "symlinked-skill"'; then
+    echo "  [PASS] findSkillsInDir found symlinked skill directory"
+else
+    echo "  [FAIL] findSkillsInDir did not find symlinked skill"
+    echo "  Result: $result"
+    exit 1
+fi
+
+if echo "$result" | grep -q '"name": "regular-skill"'; then
+    echo "  [PASS] findSkillsInDir still finds regular skills alongside symlinks"
+else
+    echo "  [FAIL] findSkillsInDir broke regular skill discovery"
+    echo "  Result: $result"
+    exit 1
+fi
+
+# The broken symlink should not cause a crash - if we got here, it didn't
+echo "  [PASS] Broken symlink did not cause a crash"
+
 # Test 4: Test resolveSkillPath function
 echo ""
 echo "Test 4: Testing resolveSkillPath..."
