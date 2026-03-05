@@ -7,6 +7,8 @@ description: Use when a plan has been written and needs pressure-testing before 
 
 Iteratively simulate and refine a plan until stable: simulate → find issues → fix → check convergence → repeat.
 
+**Core principle:** Simulate before executing — catch gaps on paper, not in code
+
 **Announce at start:** "I'm using the refine-plan skill to pressure-test this plan."
 
 ## When to Use
@@ -37,7 +39,7 @@ digraph when_to_use {
 
 ## Checklist
 
-You MUST create a TodoWrite item for each:
+You MUST create a task for each of these items and complete them in order:
 
 1. Read plan, detect domain, snapshot original text
 2. Generate role profiles for simulator and fixer
@@ -176,9 +178,9 @@ Then offer execution choice:
 
 ## Integration
 
-**Upstream (invokes this skill):**
-- **superpowers:writing-plans** — Chains to refine-plan before execution
+**Required workflow skills:**
+- **superpowers:writing-plans** — Creates the plan this skill refines
 
-**Downstream (this skill invokes):**
+**Alternative workflow:**
 - **superpowers:subagent-driven-development** — Execute refined plan (same session)
 - **superpowers:executing-plans** — Execute refined plan (parallel session)
