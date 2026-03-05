@@ -37,11 +37,21 @@ digraph when_to_use {
 - Plan is trivial (1-2 simple tasks)
 - Already refined and stable
 
+## Context Detection
+
+Before starting, locate the plan file. Check in order — use the first match:
+
+1. **Conversation context** — plan path mentioned in recent messages (e.g., writing-plans just saved it)
+2. **Most recent plan** — `ls -t docs/plans/*.md | head -1`
+3. **Ask user** — only if neither above yields a result
+
+Never ask the user for the plan path if it can be detected. Never ask for max iterations — default is 5.
+
 ## Checklist
 
 You MUST create a task for each of these items and complete them in order:
 
-1. Read plan, detect domain, snapshot original text
+1. Detect plan file (see Context Detection above), read it, detect domain, snapshot original text
 2. Generate role profiles for simulator and fixer
 3. Run simulation round (dispatch simulator subagent)
 4. Evaluate findings (skip to report if no critical/important)
@@ -80,9 +90,9 @@ digraph refine_plan {
 }
 ```
 
-### Phase 1: Domain Detection
+### Phase 1: Locate Plan & Detect Domain
 
-Read the plan file and determine:
+Locate the plan file using Context Detection (above). Read it and determine:
 1. **Domain**: backend, frontend, infrastructure, data, plugin-dev, ML/AI, devops, full-stack, other
 2. **Technologies**: tools, frameworks, languages mentioned
 3. **Key concerns**: highest-risk areas
@@ -165,6 +175,8 @@ Then offer execution choice:
 ## Red Flags
 
 **Never:**
+- Ask the user for the plan path when it can be detected from context
+- Ask the user for max iterations — always default to 5
 - Skip simulation and go straight to execution
 - Let fixer restructure the plan (only patch gaps)
 - Continue iterating after CONVERGED signal
