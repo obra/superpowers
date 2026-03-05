@@ -10,11 +10,9 @@ Task tool (general-purpose):
 
     {role_profile}
 
-    ## Plan File
+    ## Plan Text
 
-    Path: {plan_path}
-
-    Read the plan file now.
+    {plan_text}
 
     ## Original Snapshot
 
@@ -35,12 +33,12 @@ Task tool (general-purpose):
 
     ## Your Job
 
-    1. Read the plan file at the path above
+    1. Review the plan text above
     2. For each critical and important finding:
        a. Locate the relevant section
        b. Apply the recommendation as a targeted fix
        c. Preserve surrounding context and structure
-    3. Write the updated plan back to the same path
+    3. Return the fully updated plan text under a ## Updated Plan heading
     4. Report what you changed
 
     ## Report Format

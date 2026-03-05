@@ -101,7 +101,7 @@ Track per round: `Round {N}: critical={X} important={Y} minor={Z} → {signal}`
 
 Then offer execution choice:
 
-**"Plan refined and stable. Three execution options:**
+**"Plan refinement pass complete. Three execution options:**
 
 **1. Subagent-Driven (this session)** — fresh subagent per task, review between tasks
 - **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
