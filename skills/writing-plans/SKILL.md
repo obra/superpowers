@@ -33,7 +33,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:refining-plan to pressure-test this plan, then superpowers:executing-plans to implement task-by-task.
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:refining-plans to pressure-test this plan, then superpowers:executing-plans to implement task-by-task.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -101,7 +101,7 @@ After saving the plan, offer execution choice:
 **"Plan complete and saved to `docs/plans/<filename>.md`. Three options:**
 
 **1. Refine first** — Pressure-test plan before execution, catch gaps early
-- **REQUIRED SUB-SKILL:** Use superpowers:refining-plan
+- **REQUIRED SUB-SKILL:** Use superpowers:refining-plans
 
 **2. Subagent-Driven (this session)** — Skip refinement, fresh subagent per task, review between tasks
 - **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development

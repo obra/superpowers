@@ -1,5 +1,5 @@
 ---
-name: refining-plan
+name: refining-plans
 description: Use when a plan has been written and needs pressure-testing before execution, or when a plan has known gaps that need systematic discovery
 ---
 
@@ -9,7 +9,7 @@ Iteratively simulate and refine a plan until stable: simulate â†’ find issues â†
 
 **Core principle:** Simulate before executing â€” catch gaps on paper, not in code
 
-**Announce at start:** "I'm using the refining-plan skill to pressure-test this plan."
+**Announce at start:** "I'm using the refining-plans skill to pressure-test this plan."
 
 ## When to Use
 
@@ -17,14 +17,14 @@ Iteratively simulate and refine a plan until stable: simulate â†’ find issues â†
 digraph when_to_use {
     "Have a written plan?" [shape=diamond];
     "Plan already tested?" [shape=diamond];
-    "refining-plan" [shape=box];
+    "refining-plans" [shape=box];
     "Execute the plan" [shape=box];
     "Write a plan first" [shape=box];
 
     "Have a written plan?" -> "Plan already tested?" [label="yes"];
     "Have a written plan?" -> "Write a plan first" [label="no"];
     "Plan already tested?" -> "Execute the plan" [label="yes, stable"];
-    "Plan already tested?" -> "refining-plan" [label="no"];
+    "Plan already tested?" -> "refining-plans" [label="no"];
 }
 ```
 
