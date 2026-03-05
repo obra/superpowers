@@ -8,8 +8,6 @@ Task tool (general-purpose):
   prompt: |
     You are applying targeted fixes to a plan based on simulation findings.
 
-    ## Your Role
-
     {role_profile}
 
     ## Plan File
@@ -41,7 +39,7 @@ Task tool (general-purpose):
     3. Write the updated plan back to the same path
     4. Report what you changed
 
-    ## Output Format
+    ## Report Format
 
     FIXED: addressed={N} skipped={M}
 

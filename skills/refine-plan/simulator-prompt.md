@@ -8,8 +8,6 @@ Task tool (general-purpose):
   prompt: |
     You are simulating plan execution to surface gaps before implementation.
 
-    ## Your Role
-
     {role_profile}
 
     ## Plan Content
@@ -24,6 +22,15 @@ Task tool (general-purpose):
     If not, that's a finding. Document it.
 
     {iteration_context}
+
+    **DO:**
+    - Skip clear requirements silently — only flag genuine gaps
+    - Focus on WHAT decisions are missing, NOT HOW to implement
+    - If iteration > 1, focus on sections affected by previous fixes
+
+    **DO NOT:**
+    - Flag requirements that are already clear
+    - Suggest HOW to implement — only flag WHAT is missing
 
     ## Simulation Lenses
 
@@ -44,7 +51,7 @@ Task tool (general-purpose):
     | **Important** | Needs clarification to proceed correctly | "Error message text not defined for invalid input" |
     | **Minor** | Nice to clarify but won't block | "Loading spinner behavior not specified" |
 
-    ## Output Format
+    ## Report Format
 
     Return findings as structured text:
 
@@ -62,11 +69,4 @@ Task tool (general-purpose):
       - requirement: [exact text from plan]
         concern: [what's missing or ambiguous]
         recommendation: [your best-guess resolution]
-
-    ## Important
-
-    - Skip clear requirements silently — only flag genuine gaps
-    - Focus on WHAT decisions are missing, NOT HOW to implement
-    - Silence = no concern found
-    - If iteration > 1, focus on sections affected by previous fixes
 ```
