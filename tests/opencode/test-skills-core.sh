@@ -198,26 +198,39 @@ function extractFrontmatter(filePath) {
 
 function findSkillsInDir(dir, sourceType, maxDepth = 3) {
     const skills = [];
+    const activePaths = new Set();
     if (!fs.existsSync(dir)) return skills;
     function recurse(currentDir, depth) {
         if (depth > maxDepth) return;
-        const entries = fs.readdirSync(currentDir, { withFileTypes: true });
-        for (const entry of entries) {
-            const fullPath = path.join(currentDir, entry.name);
-            if (entry.isDirectory()) {
-                const skillFile = path.join(fullPath, 'SKILL.md');
-                if (fs.existsSync(skillFile)) {
-                    const { name, description } = extractFrontmatter(skillFile);
-                    skills.push({
-                        path: fullPath,
-                        skillFile: skillFile,
-                        name: name || entry.name,
-                        description: description || '',
-                        sourceType: sourceType
-                    });
+        let realCurrentDir;
+        try { realCurrentDir = fs.realpathSync(currentDir); } catch { return; }
+        if (activePaths.has(realCurrentDir)) return;
+        activePaths.add(realCurrentDir);
+        try {
+            const entries = fs.readdirSync(currentDir, { withFileTypes: true });
+            for (const entry of entries) {
+                const fullPath = path.join(currentDir, entry.name);
+                const isDir = entry.isDirectory();
+                const isSymlinkDir = entry.isSymbolicLink() && (() => {
+                    try { return fs.statSync(fullPath).isDirectory(); } catch { return false; }
+                })();
+                if (isDir || isSymlinkDir) {
+                    const skillFile = path.join(fullPath, 'SKILL.md');
+                    if (fs.existsSync(skillFile)) {
+                        const { name, description } = extractFrontmatter(skillFile);
+                        skills.push({
+                            path: fullPath,
+                            skillFile: skillFile,
+                            name: name || entry.name,
+                            description: description || '',
+                            sourceType: sourceType
+                        });
+                    }
+                    recurse(fullPath, depth + 1);
                 }
-                recurse(fullPath, depth + 1);
             }
+        } finally {
+            activePaths.delete(realCurrentDir);
         }
     }
     recurse(dir, 0);
@@ -310,30 +323,39 @@ function extractFrontmatter(filePath) {
 
 function findSkillsInDir(dir, sourceType, maxDepth = 3) {
     const skills = [];
+    const activePaths = new Set();
     if (!fs.existsSync(dir)) return skills;
     function recurse(currentDir, depth) {
         if (depth > maxDepth) return;
-        const entries = fs.readdirSync(currentDir, { withFileTypes: true });
-        for (const entry of entries) {
-            const fullPath = path.join(currentDir, entry.name);
-            const isDir = entry.isDirectory();
-            const isSymlinkDir = entry.isSymbolicLink() && (() => {
-                try { return fs.statSync(fullPath).isDirectory(); } catch { return false; }
-            })();
-            if (isDir || isSymlinkDir) {
-                const skillFile = path.join(fullPath, 'SKILL.md');
-                if (fs.existsSync(skillFile)) {
-                    const { name, description } = extractFrontmatter(skillFile);
-                    skills.push({
-                        path: fullPath,
-                        skillFile: skillFile,
-                        name: name || entry.name,
-                        description: description || '',
-                        sourceType: sourceType
-                    });
+        let realCurrentDir;
+        try { realCurrentDir = fs.realpathSync(currentDir); } catch { return; }
+        if (activePaths.has(realCurrentDir)) return;
+        activePaths.add(realCurrentDir);
+        try {
+            const entries = fs.readdirSync(currentDir, { withFileTypes: true });
+            for (const entry of entries) {
+                const fullPath = path.join(currentDir, entry.name);
+                const isDir = entry.isDirectory();
+                const isSymlinkDir = entry.isSymbolicLink() && (() => {
+                    try { return fs.statSync(fullPath).isDirectory(); } catch { return false; }
+                })();
+                if (isDir || isSymlinkDir) {
+                    const skillFile = path.join(fullPath, 'SKILL.md');
+                    if (fs.existsSync(skillFile)) {
+                        const { name, description } = extractFrontmatter(skillFile);
+                        skills.push({
+                            path: fullPath,
+                            skillFile: skillFile,
+                            name: name || entry.name,
+                            description: description || '',
+                            sourceType: sourceType
+                        });
+                    }
+                    recurse(fullPath, depth + 1);
                 }
-                recurse(fullPath, depth + 1);
             }
+        } finally {
+            activePaths.delete(realCurrentDir);
         }
     }
     recurse(dir, 0);
@@ -372,6 +394,110 @@ fi
 
 # The broken symlink should not cause a crash - if we got here, it didn't
 echo "  [PASS] Broken symlink did not cause a crash"
+
+# Test 3c: Test findSkillsInDir handles symlink cycles
+echo ""
+echo "Test 3c: Testing findSkillsInDir with symlink cycle..."
+
+# Create a directory with a symlink pointing back to its parent (cycle)
+mkdir -p "$TEST_HOME/cycle-test-dir/real-skill"
+cat > "$TEST_HOME/cycle-test-dir/real-skill/SKILL.md" <<'SKILL_EOF'
+---
+name: cycle-skill
+description: Skill in a directory with a symlink cycle
+---
+# Cycle Skill
+SKILL_EOF
+
+# Create a symlink cycle: cycle-test-dir/loop -> cycle-test-dir
+ln -s "$TEST_HOME/cycle-test-dir" "$TEST_HOME/cycle-test-dir/loop"
+
+result=$(node -e "
+const fs = require('fs');
+const path = require('path');
+
+function extractFrontmatter(filePath) {
+    try {
+        const content = fs.readFileSync(filePath, 'utf8');
+        const lines = content.split('\n');
+        let inFrontmatter = false;
+        let name = '';
+        let description = '';
+        for (const line of lines) {
+            if (line.trim() === '---') {
+                if (inFrontmatter) break;
+                inFrontmatter = true;
+                continue;
+            }
+            if (inFrontmatter) {
+                const match = line.match(/^(\w+):\s*(.*)$/);
+                if (match) {
+                    const [, key, value] = match;
+                    if (key === 'name') name = value.trim();
+                    if (key === 'description') description = value.trim();
+                }
+            }
+        }
+        return { name, description };
+    } catch (error) {
+        return { name: '', description: '' };
+    }
+}
+
+function findSkillsInDir(dir, sourceType, maxDepth = 3) {
+    const skills = [];
+    const activePaths = new Set();
+    if (!fs.existsSync(dir)) return skills;
+    function recurse(currentDir, depth) {
+        if (depth > maxDepth) return;
+        let realCurrentDir;
+        try { realCurrentDir = fs.realpathSync(currentDir); } catch { return; }
+        if (activePaths.has(realCurrentDir)) return;
+        activePaths.add(realCurrentDir);
+        try {
+            const entries = fs.readdirSync(currentDir, { withFileTypes: true });
+            for (const entry of entries) {
+                const fullPath = path.join(currentDir, entry.name);
+                const isDir = entry.isDirectory();
+                const isSymlinkDir = entry.isSymbolicLink() && (() => {
+                    try { return fs.statSync(fullPath).isDirectory(); } catch { return false; }
+                })();
+                if (isDir || isSymlinkDir) {
+                    const skillFile = path.join(fullPath, 'SKILL.md');
+                    if (fs.existsSync(skillFile)) {
+                        const { name, description } = extractFrontmatter(skillFile);
+                        skills.push({
+                            path: fullPath,
+                            skillFile: skillFile,
+                            name: name || entry.name,
+                            description: description || '',
+                            sourceType: sourceType
+                        });
+                    }
+                    recurse(fullPath, depth + 1);
+                }
+            }
+        } finally {
+            activePaths.delete(realCurrentDir);
+        }
+    }
+    recurse(dir, 0);
+    return skills;
+}
+
+const skills = findSkillsInDir('$TEST_HOME/cycle-test-dir', 'test', 3);
+console.log(JSON.stringify(skills, null, 2));
+" 2>&1)
+
+cycle_count=$(echo "$result" | grep -c '"name":' || echo "0")
+
+if [ "$cycle_count" -eq 1 ]; then
+    echo "  [PASS] findSkillsInDir found skill exactly once despite symlink cycle (found $cycle_count)"
+else
+    echo "  [FAIL] findSkillsInDir should find skill exactly once with symlink cycle (found $cycle_count)"
+    echo "  Result: $result"
+    exit 1
+fi
 
 # Test 4: Test resolveSkillPath function
 echo ""
