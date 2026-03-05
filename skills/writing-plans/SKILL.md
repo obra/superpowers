@@ -98,13 +98,24 @@ git commit -m "feat: add specific feature"
 
 After saving the plan, offer execution choice:
 
-**"Plan complete and saved to `docs/plans/<filename>.md`. Two execution options:**
+**"Plan complete and saved to `docs/plans/<filename>.md`. Three options:**
 
-**1. Subagent-Driven (this session)** - I dispatch fresh subagent per task, review between tasks, fast iteration
+**1. Refine first (recommended)** - Pressure-test plan before execution, catch gaps early
+- **REQUIRED SUB-SKILL:** Use superpowers:refine-plan
 
-**2. Parallel Session (separate)** - Open new session with executing-plans, batch execution with checkpoints
+**2. Subagent-Driven (this session)** - Skip refinement, dispatch fresh subagent per task, review between tasks
+- **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
+- Stay in this session
+- Fresh subagent per task + code review
+
+**3. Parallel Session (separate)** - Skip refinement, open new session with executing-plans, batch execution with checkpoints
+- **REQUIRED SUB-SKILL:** New session uses superpowers:executing-plans
 
 **Which approach?"**
+
+**If Refine first chosen:**
+- **REQUIRED SUB-SKILL:** Use superpowers:refine-plan
+- Refine-plan will offer execution choice after refinement completes
 
 **If Subagent-Driven chosen:**
 - **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
