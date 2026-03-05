@@ -14,7 +14,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Simple frontmatter extraction (avoid dependency on skills-core for bootstrap)
 const extractAndStripFrontmatter = (content) => {
-  const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)([\s\S]*)$/);
   if (!match) return { frontmatter: {}, content };
 
   const frontmatterStr = match[1];
@@ -52,9 +52,8 @@ export const SuperpowersPlugin = async ({ client, directory }) => {
   const envConfigDir = normalizePath(process.env.OPENCODE_CONFIG_DIR, homeDir);
   const configDir = envConfigDir || path.join(homeDir, '.config/opencode');
 
-  // Helper to generate bootstrap content
-  const getBootstrapContent = () => {
-    // Try to load using-superpowers skill
+  // Build bootstrap once to avoid per-request file I/O and string work.
+  const bootstrapContent = (() => {
     const skillPath = path.join(superpowersSkillsDir, 'using-superpowers', 'SKILL.md');
     if (!fs.existsSync(skillPath)) return null;
 
@@ -73,22 +72,21 @@ Superpowers skills are in \`${configDir}/skills/superpowers/\`
 Use OpenCode's native \`skill\` tool to list and load skills.`;
 
     return `<EXTREMELY_IMPORTANT>
-You have superpowers.
+You have superpowers-custom.
 
-**IMPORTANT: The using-superpowers skill content is included below. It is ALREADY LOADED - you are currently following it. Do NOT use the skill tool to load "using-superpowers" again - that would be redundant.**
+**The \`using-superpowers\` guidance below is already loaded. Do not load it again.**
 
 ${content}
 
 ${toolMapping}
 </EXTREMELY_IMPORTANT>`;
-  };
+  })();
 
   return {
     // Use system prompt transform to inject bootstrap (fixes #226 agent reset bug)
     'experimental.chat.system.transform': async (_input, output) => {
-      const bootstrap = getBootstrapContent();
-      if (bootstrap) {
-        (output.system ||= []).push(bootstrap);
+      if (bootstrapContent) {
+        (output.system ||= []).push(bootstrapContent);
       }
     }
   };

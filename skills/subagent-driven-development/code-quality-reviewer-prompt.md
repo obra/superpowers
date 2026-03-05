@@ -1,20 +1,16 @@
 # Code Quality Reviewer Prompt Template
 
-Use this template when dispatching a code quality reviewer subagent.
-
-**Purpose:** Verify implementation is well-built (clean, tested, maintainable)
-
-**Only dispatch after spec compliance review passes.**
+Dispatch only after spec compliance passes.
 
 ```
-Task tool (superpowers:code-reviewer):
+Task tool (superpowers-custom:code-reviewer):
   Use template at requesting-code-review/code-reviewer.md
 
-  WHAT_WAS_IMPLEMENTED: [from implementer's report]
-  PLAN_OR_REQUIREMENTS: Task N from [plan-file]
-  BASE_SHA: [commit before task]
-  HEAD_SHA: [current commit]
-  DESCRIPTION: [task summary]
+  WHAT_WAS_IMPLEMENTED: <implementer summary>
+  PLAN_OR_REQUIREMENTS: Task N from <plan-file>
+  BASE_SHA: <pre-task sha>
+  HEAD_SHA: <post-task sha>
+  DESCRIPTION: <task summary>
 ```
 
-**Code reviewer returns:** Strengths, Issues (Critical/Important/Minor), Assessment
+Require reviewer output ordered by severity with file references.

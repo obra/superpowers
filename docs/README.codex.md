@@ -71,7 +71,7 @@ Create `~/.agents/skills/my-skill/SKILL.md`:
 ```markdown
 ---
 name: my-skill
-description: Use when [condition] - [what it does]
+description: Use when <specific trigger conditions>
 ---
 
 # My Skill

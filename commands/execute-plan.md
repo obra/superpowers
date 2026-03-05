@@ -1,6 +1,6 @@
 ---
-description: Execute plan in batches with review checkpoints
+description: Use when executing an existing implementation plan in batched checkpoints
 disable-model-invocation: true
 ---
 
-Invoke the superpowers:executing-plans skill and follow it exactly as presented to you
+Invoke the superpowers-custom:executing-plans skill and follow it exactly.

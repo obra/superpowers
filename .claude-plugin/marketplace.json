@@ -1,15 +1,15 @@
 {
-  "name": "superpowers-dev",
-  "description": "Development marketplace for Superpowers core skills library",
+  "name": "optimized-superpowers",
+  "description": "Development marketplace for Superpowers Custom skills library",
   "owner": {
     "name": "Jesse Vincent",
     "email": "jesse@fsck.com"
   },
   "plugins": [
     {
-      "name": "superpowers",
-      "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
-      "version": "4.3.1",
+      "name": "optimized-superpowers",
+      "description": "Custom optimized Superpowers skills library for Claude Code",
+      "version": "4.3.1-custom.1",
       "source": "./",
       "author": {
         "name": "Jesse Vincent",

@@ -197,7 +197,7 @@ Create `~/.config/opencode/skills/my-skill/SKILL.md`:
 ```markdown
 ---
 name: my-skill
-description: Use when [condition] - [what it does]
+description: Use when <specific trigger conditions>
 ---
 
 # My Skill
@@ -219,7 +219,7 @@ Create `.opencode/skills/my-project-skill/SKILL.md`:
 ```markdown
 ---
 name: my-project-skill
-description: Use when [condition] - [what it does]
+description: Use when <specific trigger conditions>
 ---
 
 # My Project Skill

@@ -77,19 +77,21 @@ Start a new session in your chosen platform and ask for something that should tr
 
 ## The Basic Workflow
 
-1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
+1. **adaptive-workflow-selector** - Activates first. Chooses `lightweight` vs `full` workflow path based on scope/risk.
 
-2. **using-git-worktrees** - Activates after design approval. Creates isolated workspace on new branch, runs project setup, verifies clean test baseline.
+2. **context-management** - Activates in long/noisy sessions. Compresses durable state to `state.md` and reduces context pollution.
 
-3. **writing-plans** - Activates with approved design. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
+3. **brainstorming** (full path) - Produces approved design before implementation changes.
 
-4. **subagent-driven-development** or **executing-plans** - Activates with plan. Dispatches fresh subagent per task with two-stage review (spec compliance, then code quality), or executes in batches with human checkpoints.
+4. **using-git-worktrees** - Creates isolated workspace on a feature branch and verifies clean baseline.
 
-5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
+5. **writing-plans** - Creates executable implementation plan with exact paths and verification steps.
 
-6. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
+6. **subagent-driven-development** or **executing-plans** - Executes the plan with staged verification.
 
-7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
+7. **test-driven-development** + **systematic-debugging** + **requesting-code-review** - Applied during execution for quality gates.
+
+8. **verification-before-completion** + **finishing-a-development-branch** - Final evidence and branch integration/cleanup.
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
@@ -118,6 +120,8 @@ Start a new session in your chosen platform and ask for something that should tr
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
 - **using-superpowers** - Introduction to the skills system
+- **adaptive-workflow-selector** - Select lightweight vs full process path
+- **context-management** - Summarize durable state and prune noisy context
 
 ## Philosophy
 
