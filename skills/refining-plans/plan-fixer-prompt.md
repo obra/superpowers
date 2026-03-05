@@ -16,6 +16,10 @@ Task tool (general-purpose):
 
     Read the plan file now.
 
+    ## Original Snapshot
+
+    {original_snapshot}
+
     ## Findings to Address
 
     {findings}
@@ -46,12 +50,12 @@ Task tool (general-purpose):
     changes:
       - severity: [critical|important]
         requirement: [exact text from plan]
-        finding: [original concern]
-        action: [what was changed]
+        concern: [original concern]
+        applied_change: [what was changed]
         location: [which section]
     skipped:
       - severity: [critical|important|minor]
         requirement: [exact text from plan]
-        finding: [concern]
+        concern: [concern]
         reason: [why skipped — e.g., "minor severity", "conflicts with plan intent"]
 ```
