@@ -28,7 +28,8 @@ You MUST create a task for each of these items and complete them in order:
 3. **Propose 2-3 approaches** — with trade-offs and your recommendation
 4. **Present design** — in sections scaled to their complexity, get user approval after each section
 5. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` and commit
-6. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+6. **Offer context reset** — design doc is saved to file; ask if user wants a fresh session for planning
+7. **Transition to implementation (if continuing)** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
 
@@ -41,6 +42,7 @@ digraph brainstorming {
     "User approves design?" [shape=diamond];
     "Write design doc" [shape=box];
     "Invoke writing-plans skill" [shape=doublecircle];
+    "End: user opens new session\nwith writing-plans" [shape=doublecircle];
 
     "Explore project context" -> "Ask clarifying questions";
     "Ask clarifying questions" -> "Propose 2-3 approaches";
@@ -48,11 +50,14 @@ digraph brainstorming {
     "Present design sections" -> "User approves design?";
     "User approves design?" -> "Present design sections" [label="no, revise"];
     "User approves design?" -> "Write design doc" [label="yes"];
-    "Write design doc" -> "Invoke writing-plans skill";
+    "Write design doc" -> "Fresh session?";
+    "Fresh session?" [shape=diamond];
+    "Fresh session?" -> "End: user opens new session\nwith writing-plans" [label="yes"];
+    "Fresh session?" -> "Invoke writing-plans skill" [label="no, continue"];
 }
 ```
 
-**The terminal state is invoking writing-plans.** Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY skill you invoke after brainstorming is writing-plans.
+**Both terminal states lead to writing-plans.** If continuing in this session, first use `using-git-worktrees` to ensure the dedicated worktree is ready, then invoke writing-plans directly. If starting a fresh session, end here — the user will use `using-git-worktrees` in the new session, then invoke writing-plans with the design doc path. Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY implementation skill after brainstorming is writing-plans.
 
 ## The Process
 
@@ -82,9 +87,18 @@ digraph brainstorming {
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 
-**Implementation:**
-- Invoke the writing-plans skill to create a detailed implementation plan
-- Do NOT invoke any other skill. writing-plans is the next step.
+**Context Reset Option:**
+
+After committing the design doc, ask the user:
+
+> "Design doc saved and committed. The brainstorming context (Q&A, exploration, approach comparisons) is now captured in the design doc file. You can **continue in this session** or **start a fresh session** to free up context window space. In a new session, use `using-git-worktrees` to create a dedicated worktree, then say `writing-plans` and point to the design doc. Which do you prefer?"
+
+- If **fresh session**: end here. The user will open a new conversation, use `using-git-worktrees` to create a dedicated worktree, then invoke `writing-plans` with the design doc path.
+- If **continue**: use `using-git-worktrees` to create a dedicated worktree, then invoke writing-plans skill in this session as normal.
+
+**Implementation (if continuing):**
+- Run `using-git-worktrees` to create a dedicated worktree, then invoke the writing-plans skill to create a detailed implementation plan
+- Do NOT invoke any other implementation skill. The ONLY next steps are using-git-worktrees setup followed by writing-plans.
 
 ## Key Principles
 
