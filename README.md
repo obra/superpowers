@@ -115,6 +115,9 @@ Start a new session in your chosen platform and ask for something that should tr
 - **finishing-a-development-branch** - Merge/PR decision workflow
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
 
+**Cost Optimization**
+- **dynamic-model-selection** - Match model tier (opus/sonnet/haiku) to task complexity for cost-efficient subagent dispatch
+
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
 - **using-superpowers** - Introduction to the skills system

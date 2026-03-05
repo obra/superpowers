@@ -88,6 +88,29 @@ digraph process {
 - `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
 - `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
 
+## Model Selection Per Subagent Role
+
+Use **superpowers:dynamic-model-selection** to optimize cost. Not every subagent needs the most powerful model.
+
+| Subagent Role | Default Model | When to Escalate to Opus |
+|---------------|---------------|--------------------------|
+| Implementer | `sonnet` | Multi-file changes, new subsystem, ambiguous spec, complex architecture, debugging |
+| Spec reviewer | `sonnet` | Complex multi-requirement specs with implicit constraints |
+| Code quality reviewer | `opus` | Always — catches subtle issues that sonnet misses (hidden coupling, edge cases, architectural drift) |
+| Final reviewer | `opus` | Always — needs system-wide understanding |
+
+**Example dispatch with model selection:**
+```
+[Dispatch implementer subagent: model=sonnet]     // Clear spec, single-file scope
+[Dispatch spec reviewer: model=sonnet]             // Comparing code vs explicit requirements
+[Dispatch code quality reviewer: model=opus]       // Deep analysis of quality, coupling, edge cases
+[Dispatch final reviewer: model=opus]              // Cross-cutting system-wide review
+```
+
+**Escalation rules:**
+- **Implementer → opus:** If task touches multiple files, creates a new subsystem, has ambiguous spec, or sonnet asks too many questions / produces low-quality output
+- **Spec reviewer → opus:** If spec has many interrelated requirements or implicit constraints that need interpretation
+
 ## Example Workflow
 
 ```
@@ -195,6 +218,7 @@ Done!
 - Controller does more prep work (extracting all tasks upfront)
 - Review loops add iterations
 - But catches issues early (cheaper than debugging later)
+- **Use dynamic-model-selection to balance cost and quality:** sonnet for implementation/spec review, opus for quality review and final review (~40% cost reduction vs all-opus while maintaining high quality gates)
 
 ## Red Flags
 

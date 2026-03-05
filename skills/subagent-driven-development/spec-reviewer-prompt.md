@@ -4,8 +4,11 @@ Use this template when dispatching a spec compliance reviewer subagent.
 
 **Purpose:** Verify implementer built what was requested (nothing more, nothing less)
 
+**Recommended model:** `sonnet` (comparing code against explicit requirements is well-defined)
+**Escalate to `opus`:** complex multi-requirement specs with implicit constraints or cross-cutting concerns
+
 ```
-Task tool (general-purpose):
+Task tool (general-purpose, model: sonnet):
   description: "Review spec compliance for Task N"
   prompt: |
     You are reviewing whether an implementation matches its specification.

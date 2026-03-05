@@ -61,17 +61,27 @@ Each agent gets:
 - **Constraints:** Don't change other code
 - **Expected output:** Summary of what you found and fixed
 
-### 3. Dispatch in Parallel
+### 3. Select Models Per Task
+
+Before dispatching, assess each task's complexity and assign the right model.
+See **superpowers:dynamic-model-selection** for the full routing guide.
+
+**Quick rule:**
+- Unknown root cause / needs reasoning / quality review → `opus`
+- Known issue / clear single-file fix / simple spec check → `sonnet`
+- Mechanical change (renames, imports) → `haiku`
+
+### 4. Dispatch in Parallel
 
 ```typescript
-// In Claude Code / AI environment
-Task("Fix agent-tool-abort.test.ts failures")
-Task("Fix batch-completion-behavior.test.ts failures")
-Task("Fix tool-approval-race-conditions.test.ts failures")
+// In Claude Code / AI environment - match model to task complexity
+Agent(model: "sonnet", prompt: "Fix agent-tool-abort.test.ts failures")      // Known timing issues
+Agent(model: "sonnet", prompt: "Fix batch-completion-behavior.test.ts")      // Structural bug
+Agent(model: "opus", prompt: "Fix tool-approval-race-conditions.test.ts")    // Race condition needs reasoning
 // All three run concurrently
 ```
 
-### 4. Review and Integrate
+### 5. Review and Integrate
 
 When agents return:
 - Read each summary
@@ -139,11 +149,11 @@ Return: Summary of what you found and what you fixed.
 
 **Decision:** Independent domains - abort logic separate from batch completion separate from race conditions
 
-**Dispatch:**
+**Dispatch (with model selection):**
 ```
-Agent 1 → Fix agent-tool-abort.test.ts
-Agent 2 → Fix batch-completion-behavior.test.ts
-Agent 3 → Fix tool-approval-race-conditions.test.ts
+Agent 1 (sonnet) → Fix agent-tool-abort.test.ts           // Known timing issues
+Agent 2 (sonnet) → Fix batch-completion-behavior.test.ts   // Structural bug
+Agent 3 (opus)   → Fix tool-approval-race-conditions.test.ts  // Race condition
 ```
 
 **Results:**
