@@ -77,10 +77,10 @@ Default max iterations: 5. For each round:
 2. **Evaluate** — no critical/important findings → CONVERGED, skip to Phase 3
 3. **Dispatch plan-fixer** — provide plan file path, critical + important findings, original snapshot
 4. **Check convergence:**
-   - Diminishing returns (round 2+): critical count unchanged → CONVERGED
-   - Recurring criticals (round 3+): same concern persists → ESCALATE
+   - No critical/important findings → CONVERGED
+   - Critical count unchanged (round 2+) or same concern persists (round 3+) → ESCALATE
    - Drift detection: plan changed direction → ESCALATE
-   - Otherwise: CONTINUE
+   - Otherwise → CONTINUE
 
 Track per round: `Round {N}: critical={X} important={Y} minor={Z} → {signal}`
 
