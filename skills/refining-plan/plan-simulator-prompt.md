@@ -1,6 +1,6 @@
-# Simulator Subagent Prompt Template
+# Plan-Simulator Subagent Prompt Template
 
-Use this template when dispatching a simulator subagent to pressure-test a plan.
+Use this template when dispatching a plan-simulator subagent to pressure-test a plan.
 
 ```
 Task tool (general-purpose):
