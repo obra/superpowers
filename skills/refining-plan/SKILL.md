@@ -1,15 +1,15 @@
 ---
-name: refine-plan
+name: refining-plan
 description: Use when a plan has been written and needs pressure-testing before execution, or when a plan has known gaps that need systematic discovery
 ---
 
-# Refine Plan
+# Refining Plan
 
 Iteratively simulate and refine a plan until stable: simulate → find issues → fix → check convergence → repeat.
 
 **Core principle:** Simulate before executing — catch gaps on paper, not in code
 
-**Announce at start:** "I'm using the refine-plan skill to pressure-test this plan."
+**Announce at start:** "I'm using the refining-plan skill to pressure-test this plan."
 
 ## When to Use
 
@@ -17,14 +17,14 @@ Iteratively simulate and refine a plan until stable: simulate → find issues �
 digraph when_to_use {
     "Have a written plan?" [shape=diamond];
     "Plan already tested?" [shape=diamond];
-    "refine-plan" [shape=box];
+    "refining-plan" [shape=box];
     "Execute the plan" [shape=box];
     "Write a plan first" [shape=box];
 
     "Have a written plan?" -> "Plan already tested?" [label="yes"];
     "Have a written plan?" -> "Write a plan first" [label="no"];
     "Plan already tested?" -> "Execute the plan" [label="yes, stable"];
-    "Plan already tested?" -> "refine-plan" [label="no"];
+    "Plan already tested?" -> "refining-plan" [label="no"];
 }
 ```
 
@@ -37,25 +37,15 @@ digraph when_to_use {
 - Plan is trivial (1-2 simple tasks)
 - Already refined and stable
 
-## Context Detection
-
-Before starting, locate the plan file. Check in order — use the first match:
-
-1. **Conversation context** — plan path mentioned in recent messages (e.g., writing-plans just saved it)
-2. **Most recent plan** — `ls -t docs/plans/*.md | head -1`
-3. **Ask user** — only if neither above yields a result
-
-Never ask the user for the plan path if it can be detected. Never ask for max iterations — default is 5.
-
 ## Checklist
 
 You MUST create a task for each of these items and complete them in order:
 
-1. Detect plan file (see Context Detection above), read it, detect domain, snapshot original text
-2. Generate role profiles for simulator and fixer
-3. Run simulation round (dispatch simulator subagent)
+1. Read plan, detect domain, snapshot original text
+2. Generate role profiles for plan-simulator and plan-fixer
+3. Run simulation round (dispatch plan-simulator subagent)
 4. Evaluate findings (skip to report if no critical/important)
-5. Run fix round (dispatch fixer subagent)
+5. Run fix round (dispatch plan-fixer subagent)
 6. Check convergence (continue, converge, or escalate)
 7. Present report and offer execution choice
 
@@ -67,39 +57,39 @@ digraph refine_plan {
 
     "Read plan, detect domain, snapshot original" [shape=box];
     "Generate role profiles" [shape=box];
-    "Dispatch Task(simulator)" [shape=box];
+    "Dispatch Task(plan-simulator)" [shape=box];
     "Any critical/important?" [shape=diamond];
-    "Dispatch Task(fixer)" [shape=box];
+    "Dispatch Task(plan-fixer)" [shape=box];
     "Check convergence" [shape=diamond];
     "Present report" [shape=box style=filled fillcolor=lightgreen];
     "Escalate to user" [shape=box style=filled fillcolor=lightyellow];
     "Offer execution choice" [shape=doublecircle];
 
     "Read plan, detect domain, snapshot original" -> "Generate role profiles";
-    "Generate role profiles" -> "Dispatch Task(simulator)";
-    "Dispatch Task(simulator)" -> "Any critical/important?";
+    "Generate role profiles" -> "Dispatch Task(plan-simulator)";
+    "Dispatch Task(plan-simulator)" -> "Any critical/important?";
     "Any critical/important?" -> "Present report" [label="none found"];
-    "Any critical/important?" -> "Dispatch Task(fixer)" [label="yes"];
-    "Dispatch Task(fixer)" -> "Check convergence";
-    "Check convergence" -> "Dispatch Task(simulator)" [label="CONTINUE"];
+    "Any critical/important?" -> "Dispatch Task(plan-fixer)" [label="yes"];
+    "Dispatch Task(plan-fixer)" -> "Check convergence";
+    "Check convergence" -> "Dispatch Task(plan-simulator)" [label="CONTINUE"];
     "Check convergence" -> "Present report" [label="CONVERGED"];
     "Check convergence" -> "Escalate to user" [label="ESCALATE"];
-    "Escalate to user" -> "Dispatch Task(simulator)" [label="user: continue"];
+    "Escalate to user" -> "Dispatch Task(plan-simulator)" [label="user: continue"];
     "Escalate to user" -> "Present report" [label="user: stop"];
     "Present report" -> "Offer execution choice";
 }
 ```
 
-### Phase 1: Locate Plan & Detect Domain
+### Phase 1: Domain Detection
 
-Locate the plan file using Context Detection (above). Read it and determine:
+Read the plan file and determine:
 1. **Domain**: backend, frontend, infrastructure, data, plugin-dev, ML/AI, devops, full-stack, other
 2. **Technologies**: tools, frameworks, languages mentioned
 3. **Key concerns**: highest-risk areas
 
 Generate role profiles:
-- Simulator: "Senior {domain} engineer who pressure-tests {technology} plans"
-- Fixer: "{domain} specialist who patches {technology} plan gaps"
+- plan-simulator: "Senior {domain} engineer who pressure-tests {technology} plans"
+- plan-fixer: "{domain} specialist who patches {technology} plan gaps"
 
 Log detected domain and roles before proceeding.
 
@@ -107,9 +97,9 @@ Log detected domain and roles before proceeding.
 
 Default max iterations: 5. For each round:
 
-**Step 1: Dispatch simulator subagent**
+**Step 1: Dispatch plan-simulator subagent**
 
-Use `./simulator-prompt.md` template. Provide:
+Use `./plan-simulator-prompt.md` template. Provide:
 - Full plan text (don't make subagent read file)
 - Generated role profile
 - Iteration number
@@ -119,9 +109,9 @@ Use `./simulator-prompt.md` template. Provide:
 
 If no critical or important findings → CONVERGED, skip to Phase 3.
 
-**Step 3: Dispatch fixer subagent**
+**Step 3: Dispatch plan-fixer subagent**
 
-Use `./fixer-prompt.md` template. Provide:
+Use `./plan-fixer-prompt.md` template. Provide:
 - Plan file path (fixer edits the file)
 - Critical + important findings only
 - Original plan snapshot for reference
@@ -169,20 +159,18 @@ Then offer execution choice:
 
 ## Prompt Templates
 
-- `./simulator-prompt.md` — Dispatch simulator subagent
-- `./fixer-prompt.md` — Dispatch fixer subagent
+- `./plan-simulator-prompt.md` - Dispatch plan-simulator subagent
+- `./plan-fixer-prompt.md` - Dispatch plan-fixer subagent
 
 ## Red Flags
 
 **Never:**
-- Ask the user for the plan path when it can be detected from context
-- Ask the user for max iterations — always default to 5
 - Skip simulation and go straight to execution
-- Let fixer restructure the plan (only patch gaps)
+- Let plan-fixer restructure the plan (only patch gaps)
 - Continue iterating after CONVERGED signal
 - Ignore ESCALATE signal (always surface to user)
-- Run fixer without simulation findings
-- Modify the plan yourself (only fixer subagent edits)
+- Run plan-fixer without simulation findings
+- Modify the plan yourself (only plan-fixer subagent edits)
 
 **If findings persist across 3+ rounds:**
 - The issue likely needs a human decision, not more iteration

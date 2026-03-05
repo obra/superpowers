@@ -1,6 +1,6 @@
-# Fixer Subagent Prompt Template
+# Plan-Fixer Subagent Prompt Template
 
-Use this template when dispatching a fixer subagent to apply targeted fixes to a plan.
+Use this template when dispatching a plan-fixer subagent to apply targeted fixes to a plan.
 
 ```
 Task tool (general-purpose):
