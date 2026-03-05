@@ -55,9 +55,9 @@ In Cursor Agent chat, install from marketplace:
 
 Tell Codex:
 
-```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md
-```
+`Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md`
+Or
+`use the ./codex/install.sh to install it. The script has options to verify the installation and update it.`
 
 **Detailed docs:** [docs/README.codex.md](docs/README.codex.md)
 

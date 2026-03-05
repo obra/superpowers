@@ -6,9 +6,28 @@ Guide for using Superpowers with OpenAI Codex via native skill discovery.
 
 Tell Codex:
 
-```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md
-```
+`Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md`
+Or
+`run the ./codex/install.sh helper script in this repo. It wraps install, update, verification, migration, and removal in one place.`
+
+
+
+## Scripted install & management
+
+The repository ships with `codex/install.sh` (make it executable via `chmod +x ./codex/install.sh`). It is a thin shell helper that performs everything the manual steps describe:
+1. Clones (or pulls) `https://github.com/obra/superpowers.git` into `~/.codex/superpowers`.
+2. Ensures the `~/.agents/skills` directory exists.
+3. Creates or refreshes `~/.agents/skills/superpowers` as a symlink (or PowerShell symbolic link/junction on Windows) that points at the cloned `skills/` tree.
+
+The script exposes the following commands:
+- `./codex/install.sh` (or `./codex/install.sh install` / `update`): install or refresh Superpowers via the symlink workflow described above. Install/update share the same implementation so you can't accidentally do the wrong thing.
+- `./codex/install.sh migrate`: same as install/update but additionally reminds you to remove any legacy `superpowers-codex bootstrap` block from `~/.codex/AGENTS.md`.
+- `./codex/install.sh remove`: deletes the symlink/junction and the local clone so you can start over.
+- `./codex/install.sh doctor`: checks the home directory, git, target directories, PowerShell (when on Windows), the existing repo, and the legacy bootstrap block, printing `[OK]/[FAIL]/[INFO]` lines so you can confirm every prerequisite is met.
+
+On Linux and macOS the helper relies on POSIX shell tools, and on Windows it runs `pwsh`/`powershell` under the hood so the same script works across platforms.
+
+Running `doctor` gives you the same verification mentioned earlier: it confirms git is available, the link target directory is createable, the old bootstrap block is removed, and the repo/symlink are where they need to be. That ensures the program fulfills the options documented in this file.
 
 ## Manual Installation
 
