@@ -1,6 +1,6 @@
 ---
 name: brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
+description: "Use when non-interactive work must still present a design before implementation and proceed without questions or approval requests."
 ---
 
 # Brainstorming Ideas Into Designs
@@ -10,6 +10,8 @@ description: "You MUST use this before any creative work - creating features, bu
 Help turn ideas into fully formed designs and specs through non-interactive, evidence-backed reasoning.
 
 Start by understanding the current project context, then derive constraints from repo/docs/env/logs. Present a concise design and proceed with safe defaults without asking questions or requesting approval.
+
+**Core principle:** No implementation before a recorded design. No approval gating in non-interactive runs.
 
 <HARD-GATE>
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and recorded decisions. This applies to EVERY project regardless of perceived simplicity. In non-interactive runs, do not request approval.
@@ -68,6 +70,49 @@ digraph brainstorming {
 - Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
 - Cover: architecture, components, data flow, error handling, testing
 - Record decisions/assumptions explicitly; do not ask questions
+
+## Quick Reference
+
+| Situation | Do | Do Not |
+| --- | --- | --- |
+| Non-interactive constraint | Derive constraints from repo/docs/env/logs, record decisions | Ask questions or request approval |
+| Ambiguity remains | Choose safest default and note it | Block on approval or user input |
+| Design complete | Proceed to writing-plans | Skip design or jump to implementation |
+
+## Example (non-interactive)
+
+Goal: update CI to add PR triggers without asking for approval.
+
+Design (concise):
+- Scope: workflow YAML only; no runtime changes.
+- Approach: add PR event triggers, keep existing push triggers unless policy says otherwise.
+- Risks: CI load increase; mitigate by limiting paths or branches.
+- Testing: run existing workflow lint/validation.
+
+Decisions recorded:
+- Minimal diff to workflows only.
+- No new dependencies unless required by CI tools.
+- If policy is ambiguous, default to conservative trigger scope.
+
+## Common Mistakes
+
+- Asking for approval despite non-interactive constraints.
+- Skipping design because the change seems small.
+- Leaving ambiguity unresolved instead of recording a safe default.
+
+## Rationalization Table
+
+| Excuse | Reality |
+| --- | --- |
+| "I need approval before proceeding" | Non-interactive runs require recorded decisions instead of approval requests. |
+| "It’s too small to design" | Small changes still require a concise design and decision log. |
+| "No data, so I must block" | Use safest defaults when evidence is incomplete and record them. |
+
+## Red Flags
+
+- “Waiting for approval” appears in output.
+- Any questions are asked to the user.
+- Implementation starts before the design is presented and decisions recorded.
 
 ## After the Design
 
