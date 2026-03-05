@@ -26,7 +26,9 @@ git clone https://github.com/obra/superpowers.git ~/.kiro/superpowers
 # 2. Copy each skill into Kiro's skills directory
 mkdir -p ~/.kiro/skills
 for skill in ~/.kiro/superpowers/skills/*/; do
-  cp -R "$skill" ~/.kiro/skills/"$(basename "$skill")"
+  target=~/.kiro/skills/"$(basename "$skill")"
+  rm -rf "$target"
+  cp -R "$skill" "$target"
 done
 
 # 3. Restart Kiro
@@ -82,7 +84,9 @@ mkdir -p ~/.kiro/skills
 
 # 3. Copy each skill into Kiro's skills directory
 for skill in ~/.kiro/superpowers/skills/*/; do
-  cp -R "$skill" ~/.kiro/skills/"$(basename "$skill")"
+  target=~/.kiro/skills/"$(basename "$skill")"
+  rm -rf "$target"
+  cp -R "$skill" "$target"
 done
 
 # 4. Restart Kiro
@@ -149,7 +153,9 @@ After pulling, re-copy skills to pick up changes:
 **macOS / Linux:**
 ```bash
 for skill in ~/.kiro/superpowers/skills/*/; do
-  cp -R "$skill" ~/.kiro/skills/"$(basename "$skill")"
+  target=~/.kiro/skills/"$(basename "$skill")"
+  rm -rf "$target"
+  cp -R "$skill" "$target"
 done
 ```
 

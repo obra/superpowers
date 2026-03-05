@@ -32,7 +32,9 @@ If the skills are not yet installed, copy each skill directory into `~/.kiro/ski
 ```bash
 mkdir -p ~/.kiro/skills
 for skill in <path-to-superpowers-repo>/skills/*/; do
-  cp -R "$skill" ~/.kiro/skills/"$(basename "$skill")"
+  target=~/.kiro/skills/"$(basename "$skill")"
+  rm -rf "$target"
+  cp -R "$skill" "$target"
 done
 ```
 
