@@ -32,7 +32,7 @@ This fix should dramatically improve superpowers skills compliance and should re
 
 Models were skipping the design phase and jumping straight to implementation skills like frontend-design, or collapsing the entire brainstorming process into a single text block. The skill now uses hard gates, a mandatory checklist, and a graphviz process flow to enforce compliance:
 
-- `<HARD-GATE>`: no implementation skills, code, or scaffolding until design is presented and user approves
+- `<HARD-GATE>`: no implementation skills, code, or scaffolding until design is presented and decisions are recorded (no approval gate in non-interactive runs)
 - Explicit checklist (6 items) that must be created as tasks and completed in order
 - Graphviz process flow with `writing-plans` as the only valid terminal state
 - Anti-pattern callout for "this is too simple to need a design" — the exact rationalization models use to skip the process
