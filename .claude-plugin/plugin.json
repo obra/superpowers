@@ -1,7 +1,7 @@
 {
   "name": "hyperpowers",
   "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "author": {
     "name": "Bradley Windybank",
     "email": "bradley@windybank.net"

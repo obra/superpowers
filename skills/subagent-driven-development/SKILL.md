@@ -2,6 +2,7 @@
 name: subagent-driven-development
 description: Use when executing implementation plans with independent tasks in the current session
 allowed-tools: Bash, Read, Grep, Glob, Task, TodoWrite, AskUserQuestion
+user-invocable: false
 ---
 
 # Subagent-Driven Development

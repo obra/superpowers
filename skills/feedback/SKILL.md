@@ -2,6 +2,7 @@
 name: feedback
 description: Use when user provides feedback on a design, research, or plan document, or invokes /hyperpowers:feedback
 allowed-tools: Read, Grep, Glob, Edit, Write, AskUserQuestion, WebSearch, WebFetch, Task
+user-invocable: false
 ---
 
 # Feedback Skill

@@ -2,6 +2,7 @@
 name: using-git-worktrees
 description: Use when starting feature work that needs isolation from current workspace
 allowed-tools: Bash, Read, Grep, Glob, AskUserQuestion
+user-invocable: false
 ---
 
 # Using Git Worktrees

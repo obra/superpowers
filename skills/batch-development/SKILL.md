@@ -2,6 +2,7 @@
 name: batch-development
 description: Use when executing implementation plans with human-in-loop batch checkpoints between tasks
 allowed-tools: Bash, Read, Grep, Glob, Task, TodoWrite, AskUserQuestion
+user-invocable: false
 ---
 
 # Batch Development

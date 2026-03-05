@@ -3,6 +3,14 @@
 > **Note:** This project was forked from "Superpowers" by Jesse Vincent and renamed to "Hyperpowers".
 > Historical release notes below may reference the original name and author.
 
+## v1.5.0 (2026-03-06)
+
+### Changes
+
+**Make all skills non-user-invocable**
+
+Added `user-invocable: false` to all 19 skill frontmatters. Skills remain auto-triggerable but no longer appear as slash commands, eliminating duplicates between skills and commands (e.g., `/brainstorm` vs `/brainstorming`). Only the commands in `commands/` now appear as slash commands.
+
 ## v4.0.0 (2025-12-17)
 
 ### New Features
