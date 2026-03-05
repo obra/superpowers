@@ -228,7 +228,7 @@ if (fs.existsSync(taskDoc)) {
 "
 ```
 
-**Beads 同步 (IF enabled):**
+**Beads 同步 (IF enabled) - 仅更新进度，不关闭:**
 ```bash
 IF `$TASK_DOC` is set AND beads integration enabled:
   node -e "
@@ -237,8 +237,10 @@ IF `$TASK_DOC` is set AND beads integration enabled:
   if (sync.isEnabled() && !sync.isAvailable()) {
     console.warn('⚠️  [beads] beads.enabled: true but beads CLI not found. Install: https://github.com/steveyegge/beads');
   } else if (sync.canSync() && process.env.TASK_DOC) {
+    // 仅更新进度备注，不关闭任务（关闭需要用户确认）
     const notes = 'Checkpoint: Batch ' + process.env.BATCH_NUM + ' completed';
     sync.updateStatus(process.env.TASK_DOC, 'in_progress', { notes: notes });
+    console.log('✓ Task progress updated in beads (status: in_progress)');
   }
   " 2>/dev/null || true
 ```
@@ -261,22 +263,70 @@ Based on feedback:
 
 After all tasks complete and verified:
 
-**Beads 同步 (IF enabled) - 关闭任务:**
-```bash
+**Beads 同步 (IF enabled) - 询问后关闭任务:**
+
 IF `$TASK_DOC` is set AND beads integration enabled:
-  node -e "
-  const { createBeadsSync } = require('./lib/beads-sync.js');
-  const sync = createBeadsSync(process.cwd());
-  if (sync.isEnabled() && !sync.isAvailable()) {
-    console.warn('⚠️  [beads] beads.enabled: true but beads CLI not found. Install: https://github.com/steveyegge/beads');
-  } else if (sync.canSync() && process.env.TASK_DOC) {
-    const success = sync.closeTask(process.env.TASK_DOC, {
-      reason: 'Implementation completed',
-      continue: true
-    });
-    if (success) console.log('✓ Task closed in beads');
-  }
-  " 2>/dev/null || true
+
+**必须询问用户确认：**
+
+```
+✅ 所有任务已完成并通过验证
+
+📋 验收确认
+
+当前任务已达到完成标准：
+- 所有计划步骤已执行
+- 测试通过
+- 代码已提交
+
+═══════════════════════════════════════════════════
+
+询问用户：
+"当前任务已完成，请验收。是否关闭 beads 中的任务状态？"
+
+选项：
+1. ✅ 确认关闭 - 将任务状态更新为 closed
+2. ⏸️ 暂不关闭 - 保持当前状态，稍后手动处理
+3. 📝 添加备注 - 先添加完成备注，再关闭
+
+═══════════════════════════════════════════════════
+```
+
+**IF user confirms 关闭:**
+```bash
+node -e "
+const { createBeadsSync } = require('./lib/beads-sync.js');
+const sync = createBeadsSync(process.cwd());
+if (sync.canSync() && process.env.TASK_DOC) {
+  const success = sync.closeTask(process.env.TASK_DOC, {
+    reason: 'Implementation completed - verified by user',
+    continue: true
+  });
+  if (success) console.log('✓ Task closed in beads');
+}
+" 2>/dev/null || true
+```
+
+**IF user chooses 暂不关闭:**
+- 记录到任务文档：用户选择暂不关闭 beads 状态
+- 继续后续流程（finishing-a-development-branch）
+- 任务在 beads 中保持 open 状态，用户可手动关闭
+
+**IF user chooses 添加备注:**
+- 询问用户完成备注内容
+- 同步到 beads：
+```bash
+node -e "
+const { createBeadsSync } = require('./lib/beads-sync.js');
+const sync = createBeadsSync(process.cwd());
+if (sync.canSync() && process.env.TASK_DOC) {
+  sync.updateStatus(process.env.TASK_DOC, 'in_progress', { notes: '${USER_NOTES}' });
+  sync.closeTask(process.env.TASK_DOC, {
+    reason: '${USER_NOTES}',
+    continue: true
+  });
+}
+" 2>/dev/null || true
 ```
 
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."

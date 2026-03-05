@@ -306,6 +306,79 @@ git worktree remove <worktree-path>
 
 **For Option 3:** Keep worktree.
 
+### Step 6: Beads Epic 关闭确认 (IF enabled)
+
+**IF `beads.enabled: true` AND 当前有关联的 Epic:**
+
+```bash
+# 检查是否有 Epic 需要关闭
+node -e "
+const { createBeadsSync } = require('./lib/beads-sync.js');
+const sync = createBeadsSync(process.cwd());
+if (sync.canSync()) {
+  const epicId = sync.findCurrentEpic();
+  if (epicId) {
+    console.log('Found epic:', epicId);
+    // 检查 Epic 下的所有任务是否都已完成
+    const epicStatus = sync.syncFromBeads(epicId);
+    console.log('Epic status:', epicStatus ? epicStatus.status : 'unknown');
+  } else {
+    console.log('No active epic found');
+  }
+}
+" 2>/dev/null || true
+```
+
+**必须询问用户确认：**
+
+```
+═══════════════════════════════════════════════════
+📎 Beads Epic 关闭确认
+═══════════════════════════════════════════════════
+
+检测到当前功能关联到 Epic: bd-xxx
+
+该 Epic 下的开发工作已完成：
+- 所有任务已执行并通过验证
+- 代码已合并/提交
+- 分支处理完成
+
+是否关闭该 Epic？
+
+选项：
+1. ✅ 确认关闭 - 将 Epic 状态更新为 closed
+2. ⏸️ 暂不关闭 - 保持当前状态（如有后续工作）
+3. 📝 添加备注后关闭 - 添加完成备注
+
+═══════════════════════════════════════════════════
+```
+
+**IF user confirms 关闭:**
+```bash
+node -e "
+const { createBeadsSync } = require('./lib/beads-sync.js');
+const sync = createBeadsSync(process.cwd());
+if (sync.canSync()) {
+  const epicId = sync.findCurrentEpic();
+  if (epicId) {
+    const success = sync.closeTask(epicId, {
+      reason: 'Feature implementation completed and merged - verified by user',
+      continue: true
+    });
+    if (success) console.log('✓ Epic closed in beads:', epicId);
+  }
+}
+" 2>/dev/null || true
+```
+
+**IF user chooses 暂不关闭:**
+- 记录提示：Epic 保持 open 状态，用户可稍后手动关闭
+- 继续结束流程
+
+**IF user chooses 添加备注后关闭:**
+- 询问用户完成备注
+- 同步到 beads 并关闭
+
 ## Quick Reference
 
 | Option | Merge | Push | Keep Worktree | Cleanup Branch |
