@@ -92,6 +92,9 @@ Then: Cleanup worktree (Step 5)
 # Push branch
 git push -u origin <feature-branch>
 
+# Verify push succeeded
+git log origin/<feature-branch> -1 --oneline
+
 # Create PR
 gh pr create --title "<title>" --body "$(cat <<'EOF'
 ## Summary
@@ -101,6 +104,9 @@ gh pr create --title "<title>" --body "$(cat <<'EOF'
 - [ ] <verification steps>
 EOF
 )"
+
+# Confirm PR was created
+gh pr view --json url,title,state
 ```
 
 Then: Cleanup worktree (Step 5)
@@ -183,12 +189,14 @@ git worktree remove <worktree-path>
 - Merge without verifying tests on result
 - Delete work without confirmation
 - Force-push without explicit request
+- Assume push/PR succeeded without checking
 
 **Always:**
 - Verify tests before offering options
 - Present exactly 4 options
 - Get typed confirmation for Option 4
 - Clean up worktree for Options 1 & 4 only
+- Confirm PR was created with `gh pr view` after Option 2
 
 ## Integration
 
