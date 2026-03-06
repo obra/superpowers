@@ -1,5 +1,13 @@
 # Superpowers Release Notes
 
+## v4.3.1.nad (2026-03-06)
+
+### Added
+
+**Started using AskQuestion**
+
+Added AskQuestion support
+
 ## v4.3.1 (2026-02-21)
 
 ### Added
