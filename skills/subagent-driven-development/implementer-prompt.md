@@ -1,6 +1,8 @@
-# Implementer Subagent Prompt Template
+# Implementation Subagent Prompt Template
 
-Use this template when dispatching an implementer subagent.
+Use this template when dispatching the implementation role via the Task tool with subagent type `general-purpose`.
+
+`Implementer` is a role name in this workflow, not a registered agent type.
 
 ```
 Task tool (general-purpose):

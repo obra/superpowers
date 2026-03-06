@@ -137,7 +137,26 @@ fi
 echo ""
 
 # Test 8: Verify worktree requirement
-echo "Test 8: Worktree requirement..."
+echo "Test 8: Implementer role mapping..."
+
+output=$(run_claude "In the subagent-driven-development skill, what kind of subagent handles implementation tasks? Is 'Implementer' a registered agent type or just a role name?" 30)
+
+if assert_contains "$output" "general-purpose\|general purpose" "Implementation uses general-purpose subagent"; then
+    : # pass
+else
+    exit 1
+fi
+
+if assert_contains "$output" "role\|not.*registered\|not.*agent type" "Implementer described as role, not type"; then
+    : # pass
+else
+    exit 1
+fi
+
+echo ""
+
+# Test 9: Verify worktree requirement
+echo "Test 9: Worktree requirement..."
 
 output=$(run_claude "What workflow skills are required before using subagent-driven-development? List any prerequisites or required skills." 30)
 
@@ -149,8 +168,8 @@ fi
 
 echo ""
 
-# Test 9: Verify main branch warning
-echo "Test 9: Main branch red flag..."
+# Test 10: Verify main branch warning
+echo "Test 10: Main branch red flag..."
 
 output=$(run_claude "In subagent-driven-development, is it okay to start implementation directly on the main branch?" 30)
 
