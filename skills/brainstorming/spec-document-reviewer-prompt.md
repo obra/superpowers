@@ -23,6 +23,7 @@ Task tool (general-purpose):
     | Consistency | Internal contradictions, conflicting requirements |
     | Clarity | Ambiguous requirements |
     | YAGNI | Unrequested features, over-engineering |
+    | Scope | Focused enough for a single plan — not covering multiple independent subsystems |
     | Architecture | Units with clear boundaries, well-defined interfaces, independently understandable and testable |
 
     ## CRITICAL
