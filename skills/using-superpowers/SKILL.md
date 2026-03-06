@@ -13,10 +13,11 @@ Technical execution includes code edits, debugging, planning, review, test statu
 
 ## Entry Sequence
 
-1. For technical tasks, invoke `adaptive-workflow-selector` first.
-2. If session context is long/noisy, invoke `context-management` and refresh `state.md`.
-3. Invoke selected workflow skills in order.
-4. If no skill applies, continue normally.
+1. Invoke `token-efficiency` at session start — applies to all sessions, always.
+2. For technical tasks, invoke `adaptive-workflow-selector`.
+3. If session context is long/noisy, invoke `context-management` and refresh `state.md`.
+4. Invoke selected workflow skills in order.
+5. If no skill applies, continue normally.
 
 ## Routing Guide
 

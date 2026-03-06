@@ -122,6 +122,7 @@ Start a new session in your chosen platform and ask for something that should tr
 - **using-superpowers** - Introduction to the skills system
 - **adaptive-workflow-selector** - Select lightweight vs full process path
 - **context-management** - Summarize durable state and prune noisy context
+- **token-efficiency** - Always-on operational standard: concise responses, parallel tool batching, no redundant work, proactive context compression. Invoked at every session start.
 - **prompt-optimizer** - Optional pre-processing to refine vague or multi-part user requests
 - **claude-md-creator** - Create lean, high-signal CLAUDE/AGENTS context files for repositories
 
