@@ -55,6 +55,15 @@ Use only when tasks are independent and touch disjoint files.
 
 If any overlap or shared-state risk exists, revert to single-task sequence.
 
+## Blocked Task Protocol
+
+When an implementer fails on the same task after 2 attempts:
+
+1. Stop. Do not attempt a third implementation.
+2. Surface the block to the user with: task name, failure evidence, and what was tried.
+3. If the block is architectural or design-level: invoke `senior-engineer` subagent to review the approach before attempting again.
+4. If the user is unavailable and the task is non-critical: document the block in `state.md` and advance to the next independent task. Never silently skip or mark a blocked task complete.
+
 ## Hard Rules
 
 - Do not execute implementation on `main`/`master` without explicit user permission.

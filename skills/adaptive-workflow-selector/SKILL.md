@@ -38,6 +38,18 @@ Return JSON only:
 }
 ```
 
+## Skill Invocation Guide
+
+**Micro tasks** (typo fix, single variable rename, 1-line config change): Skip this selector entirely. Just do it.
+
+**Lightweight path** — invoke only:
+- `test-driven-development` (if behavior changes)
+- `verification-before-completion`
+
+Skip on lightweight: `brainstorming`, `writing-plans`, `using-git-worktrees`, `dispatching-parallel-agents`, `subagent-driven-development`.
+
+**Full path** — follow `using-superpowers` routing guide for the full pipeline.
+
 ## Guardrails
 
 - Never skip `test-driven-development` for behavior changes.
