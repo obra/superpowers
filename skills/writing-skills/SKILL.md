@@ -344,6 +344,22 @@ Choose most relevant language:
 
 You're good at porting - one great example is enough.
 
+## Character Safety Gotcha (Claude Code parser bug)
+
+**Never put exclamation marks inside single-backtick inline code spans.**
+
+Claude Code can mis-parse those spans as shell operators and reject the skill at load time with a bash permission-check error.
+
+Workarounds:
+- Spell operators out in prose (`exclamation-equals`, `exclamation-tilde`) instead of writing symbols inline
+- Put exact syntax in fenced code blocks when needed
+- Avoid placing exclamation marks directly next to backticks, even in examples
+
+References:
+- https://github.com/anthropics/claude-code/issues/13655
+- https://github.com/anthropics/claude-code/issues/12762
+- https://github.com/anthropics/claude-code/issues/12781
+
 ## File Organization
 
 ### Self-Contained Skill
