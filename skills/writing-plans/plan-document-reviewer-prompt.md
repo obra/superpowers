@@ -22,6 +22,8 @@ Task tool (general-purpose):
     | Completeness | TODOs, placeholders, incomplete tasks, missing steps |
     | Spec Alignment | Chunk covers relevant spec requirements, no scope creep |
     | Task Decomposition | Tasks atomic, clear boundaries, steps actionable |
+    | File Structure | Files have clear single responsibilities, split by responsibility not layer |
+    | File Size | Would any new or modified file likely grow large enough to be hard to reason about as a whole? |
     | Task Syntax | Checkbox syntax (`- [ ]`) on steps for tracking |
     | Chunk Size | Each chunk under 1000 lines |
 
@@ -32,6 +34,7 @@ Task tool (general-purpose):
     - Steps that say "similar to X" without actual content
     - Incomplete task definitions
     - Missing verification steps or expected outputs
+    - Files planned to hold multiple responsibilities or likely to grow unwieldy
 
     ## Output Format
 
