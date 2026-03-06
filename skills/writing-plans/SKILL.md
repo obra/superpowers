@@ -9,6 +9,8 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
 
+TDD in plans is mandatory, not optional. Plans that put implementation before a failing test are invalid and must be revised before execution handoff.
+
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
@@ -44,7 +46,15 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 ---
 ```
 
-## Task Structure
+## Task Structure (MANDATORY)
+
+Every implementation task MUST follow this exact 5-step order:
+
+1. **Step 1: Write the failing test** (include complete test code)
+2. **Step 2: Run test to verify it fails** (include exact command + expected failure)
+3. **Step 3: Write minimal implementation** (only enough to pass the new test)
+4. **Step 4: Run test to verify it passes** (include exact command + expected success)
+5. **Step 5: Commit**
 
 ````markdown
 ### Task N: [Component Name]
@@ -87,12 +97,26 @@ git commit -m "feat: add specific feature"
 ```
 ````
 
+## Task Structure Validation (MANDATORY)
+
+Before saving the plan, verify every implementation task follows the exact 5-step TDD order.
+
+- If a task starts with implementation work (for example: "add field", "update service", "implement method"), STOP and rewrite it into TDD order.
+- If tests appear after implementation, STOP and rewrite.
+- Do not hand off execution until every implementation task is TDD-compliant.
+
+Allowed exceptions (must be explicitly justified in the plan):
+- Pure documentation-only tasks
+- Pure configuration-only tasks
+- Schema/migration-only tasks (still require a separate test task to validate behavior)
+
 ## Remember
 - Exact file paths always
 - Complete code in plan (not "add validation")
 - Exact commands with expected output
 - Reference relevant skills with @ syntax
-- DRY, YAGNI, TDD, frequent commits
+- DRY, YAGNI, strict TDD order, frequent commits
+- Reject and rewrite any plan that violates failing-test-first
 
 ## Execution Handoff
 
