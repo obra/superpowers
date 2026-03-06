@@ -27,6 +27,10 @@ If CLAUDE.md says "don't use TDD" and a skill says "always use TDD," follow CLAU
 
 **In other environments:** Check your platform's documentation for how skills are loaded.
 
+## Platform Adaptation
+
+Skills use Claude Code tool names. Non-CC platforms: see `references/codex-tools.md` for tool equivalents.
+
 # Using Skills
 
 ## The Rule
