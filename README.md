@@ -96,12 +96,12 @@ Start a new session in your chosen platform and ask for something that should tr
 ### Skills Library
 
 **Testing**
-- **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
+- **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns: mock behavior, test-only methods, incomplete mocks, interface drift, and more)
 - **testing-specialist** - Advanced test strategy and coverage design for complex or high-risk behavior
 
 **Debugging**
 - **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
-- **verification-before-completion** - Ensure it's actually fixed
+- **verification-before-completion** - Evidence gate for completion claims, including configuration change verification (verifies outcomes reflect intended changes, not just that operations succeeded)
 
 **Collaboration** 
 - **brainstorming** - Socratic design refinement
@@ -112,10 +112,10 @@ Start a new session in your chosen platform and ask for something that should tr
 - **receiving-code-review** - Responding to feedback
 - **using-git-worktrees** - Parallel development branches
 - **finishing-a-development-branch** - Merge/PR decision workflow
-- **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
+- **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality), blocked-task escalation protocol, and E2E process hygiene
 - **senior-engineer** - Senior engineering collaborator for complex or architectural work
 - **security-reviewer** - Structured security and quality review for sensitive changes
-- **frontend-craftmanship** - Production-grade, accessible frontend implementation standards
+- **frontend-craftmanship** - Production-grade, accessible frontend implementation standards with concrete checklist (semantic HTML, CSS tokens, focus-visible, prefers-reduced-motion, WCAG AA contrast, fluid typography)
 
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)

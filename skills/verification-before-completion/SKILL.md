@@ -41,3 +41,22 @@ Before any completion claim:
 ## Rule
 
 If evidence is missing, report current status as unverified and run the command.
+
+## Configuration Change Verification
+
+When a change affects provider selection, feature flags, environment variables, or credentials:
+
+Do not claim success based on operation success alone. Verify the **outcome reflects the intended change**.
+
+| Change | Insufficient | Required |
+|--------|-------------|----------|
+| Switch API/LLM provider | Status 200 | Response contains expected provider or model name |
+| Enable feature flag | No errors | Feature behavior is actually active |
+| Change environment | Deploy succeeds | Logs or env vars reference the new environment |
+| Set credentials | Auth succeeds | Authenticated identity or context is correct |
+
+**Gate:**
+1. Identify: what should be *different* after this change?
+2. Locate: where is that difference observable? (response field, log line, runtime behavior)
+3. Run: a command that shows the observable difference.
+4. Verify: output contains the expected difference — not just that the operation completed.

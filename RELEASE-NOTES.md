@@ -1,5 +1,61 @@
 # Superpowers Release Notes
 
+## v4.4.0 (2026-03-06)
+
+This release closes the gap between what the skills document and what agents actually do wrong. Improvements are sourced from a systematic AI self-review of the plugin combined with the previously-documented real-session failure patterns from `docs/plans/2025-11-28-skills-improvements-from-user-feedback.md`.
+
+### Added
+
+**verification-before-completion: Configuration Change Verification**
+
+Added a dedicated section for changes that affect provider selection, feature flags, environment variables, or credentials. The core gap: agents verified that operations *succeeded* but not that outcomes reflected the *intended change*. The documented failure — a subagent testing an LLM integration, receiving status 200, and reporting "OpenAI working" while still hitting Anthropic — is now addressed with a gate that requires identifying, locating, and verifying the observable difference, not just operation completion. Includes a reference table of insufficient vs required evidence for common change types.
+
+**testing-anti-patterns: Anti-Pattern 6 — Mock-Interface Drift**
+
+Added the sixth anti-pattern: deriving mocks from implementation code rather than the interface definition. The documented failure: both the production code and the mock used `cleanup()` when the interface defined `close()`. Tests passed. Runtime crashed. TypeScript cannot catch this in inline `vi.fn()` mocks. The gate function requires reading the interface file *before* looking at the code under test, then mocking only methods with exactly the names defined in the interface. A failing test caused by a method-name mismatch is correctly treated as a bug in the code, not the mock.
+
+**subagent-driven-development: E2E Process Hygiene section**
+
+Added process cleanup instructions for subagents that start background services. Subagents are stateless and have no knowledge of processes started by previous subagents. Documented failure: 4+ accumulated server processes causing port conflicts and E2E tests hitting stale servers with wrong config. The section provides the exact `pkill`/`lsof`/`pgrep` pattern to include in subagent prompts for service-dependent tasks.
+
+**subagent-driven-development: Blocked Task Protocol section**
+
+Added escalation rules for fundamentally blocked tasks: stop after 2 failed attempts, surface the block to the user with evidence, invoke `senior-engineer` for architectural blocks, and document non-critical blocks in `state.md` rather than silently skipping them. Prevents the undefined behavior of infinite retry loops or silent task omission.
+
+**adaptive-workflow-selector: Skill Invocation Guide**
+
+Added concrete skill lists for each workflow path, solving the gap where the selector chose a path but never specified what that path contained. Three tiers: micro tasks (skip the selector entirely), lightweight (only `test-driven-development` + `verification-before-completion`), and full (follow the `using-superpowers` routing guide).
+
+**frontend-craftmanship: Concrete Standards Checklist**
+
+Replaced aspirational guidance ("accessible, responsive, Core Web Vitals") with a verifiable, output-changing checklist across four categories: structure (semantic HTML, heading hierarchy), accessibility (alt text, aria-label, focus-visible, WCAG AA contrast), CSS (design tokens, clamp() typography, prefers-reduced-motion, mobile-first), and performance (lazy loading, layout shift prevention).
+
+### Fixed
+
+**requesting-code-review: Reviewer file access**
+
+Added explicit file reading instruction to both `skills/requesting-code-review/code-reviewer.md` and `agents/code-reviewer.md`. Documented failure: reviewer subagents reporting "file doesn't appear to exist" for files that did exist, because no instruction told them to explicitly load files before reviewing. Reviewers must now run `git diff --name-only` and use the Read tool on each file before analyzing the diff.
+
+**subagent-driven-development/implementer-prompt: Self-review produces fixes, not just findings**
+
+Enhanced step 5 of the implementer prompt: self-review now explicitly requires fixing identified issues and re-running verification before reporting, rather than just noting them. Eliminates the unnecessary round-trip where an implementer who already knows the fix has to report it and wait for a separate fixer subagent.
+
+**context-management: state.md canonical location**
+
+Specified that `state.md` should be written at the project root, or next to the active plan file if one exists. Previously unspecified, causing inconsistency across sessions.
+
+### Improved
+
+**using-superpowers: Routing guide now covers all specialist skills**
+
+Added two missing routing entries: `frontend-craftmanship` for UI/frontend implementation tasks, and `security-reviewer` for security-sensitive changes before merge. The routing guide is now comprehensive across all active specialist skills.
+
+**dispatching-parallel-agents: Integration verification strengthened**
+
+Step 6 "Run integration verification" now specifies: execute the full project test suite plus any cross-domain checks, and do not mark the wave complete until integration passes. Removes ambiguity about what "integration verification" means in practice.
+
+---
+
 ## v4.3.1 (2026-02-21)
 
 ### Added

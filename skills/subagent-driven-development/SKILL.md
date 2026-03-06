@@ -55,6 +55,26 @@ Use only when tasks are independent and touch disjoint files.
 
 If any overlap or shared-state risk exists, revert to single-task sequence.
 
+## E2E Process Hygiene
+
+When dispatching subagents that start background services (servers, databases, queues):
+
+Subagents are stateless — they do not know about processes started by previous subagents. Accumulated background processes cause port conflicts, stale responses, and false test results.
+
+Include in the subagent prompt for any E2E or service-dependent task:
+
+```
+Before starting any service:
+1. Kill existing instances: pkill -f "<service-pattern>" 2>/dev/null || true
+2. Verify the port is free: lsof -i :<port> && echo "ERROR: port still in use" || echo "Port free"
+
+After tests complete:
+1. Kill the service you started.
+2. Verify cleanup: pgrep -f "<service-pattern>" && echo "WARNING: still running" || echo "Cleanup verified"
+```
+
+Exception: persistent dev servers the user explicitly keeps running — document them in `state.md`.
+
 ## Blocked Task Protocol
 
 When an implementer fails on the same task after 2 attempts:

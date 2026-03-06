@@ -248,6 +248,71 @@ TDD cycle:
 4. THEN claim complete
 ```
 
+## Anti-Pattern 6: Mocks Derived from Implementation, Not Interface
+
+**The violation:**
+```typescript
+// Interface (CORRECT) defines close()
+interface PlatformAdapter {
+  close(): Promise<void>;
+}
+
+// Code (BUGGY) calls cleanup()
+await adapter.cleanup();
+
+// Mock (MATCHES BUG) defines cleanup()
+vi.mock('adapter', () => ({
+  cleanup: vi.fn().mockResolvedValue(undefined),  // Wrong method name!
+}));
+
+// Tests pass. Runtime crashes: "adapter.cleanup is not a function"
+```
+
+**Why this is wrong:**
+- Mock encodes the bug into the test — both code and mock are wrong in the same way
+- TypeScript cannot catch method name mismatches in inline `vi.fn()` mocks
+- Test gives false confidence; production crashes
+
+**The fix:**
+```typescript
+// ✅ GOOD: Derive mock from the interface definition, not the code under test
+
+// Step 1: Open the interface file (PlatformAdapter)
+// Step 2: List exactly the methods defined there
+// Step 3: Mock ONLY those methods with EXACTLY those names
+
+const mock = {
+  close: vi.fn().mockResolvedValue(undefined),  // From interface!
+};
+
+// Now the test FAILS because code calls cleanup() which doesn't exist in mock
+// That failure reveals the bug BEFORE runtime
+```
+
+### Gate Function
+
+```
+BEFORE writing any mock:
+
+  1. STOP — do NOT look at what the code under test calls
+  2. FIND the interface/type definition for the dependency
+  3. READ the interface file
+  4. LIST the methods defined in the interface
+  5. MOCK exactly those methods with exactly those names
+
+  IF test fails because code calls a method not in the mock:
+    ✅ GOOD — the test found a bug in the code
+    Fix the code to call the correct interface method, NOT the mock
+
+  Red flags:
+    - "I'll mock what the code calls"
+    - Copying method names from implementation, not interface
+    - Mock written without reading the interface
+    - "Test is failing so I'll add this method to the mock"
+```
+
+**Detection after the fact:** Runtime error "X is not a function" while tests pass → check if X is mocked → compare mock methods to interface → look for name mismatches.
+
 ## When Mocks Become Too Complex
 
 **Warning signs:**

@@ -10,6 +10,20 @@ You are reviewing code changes for production readiness.
 - BASE_SHA: {BASE_SHA}
 - HEAD_SHA: {HEAD_SHA}
 
+## Required: Read Files Before Reviewing
+
+Before analyzing, explicitly read the changed files:
+
+```bash
+git diff --name-only {BASE_SHA}..{HEAD_SHA}
+```
+
+Use the Read tool to load each file listed. If a file cannot be found:
+- Try alternate paths from the diff output
+- Report: "Cannot locate [path] — review may be incomplete"
+
+Do NOT proceed with findings until you have read the actual code.
+
 ## Review Scope
 
 ```bash

@@ -29,6 +29,8 @@ Technical execution includes code edits, debugging, planning, review, test statu
 - Extra review flow: `requesting-code-review` / `receiving-code-review`
 - Independent parallel tasks: `dispatching-parallel-agents`
 - Context compression: `context-management`
+- UI/frontend implementation: apply `frontend-craftmanship` standards
+- Security-sensitive changes (auth, data handling, exposed APIs): `security-reviewer` before merge
 
 ## Context Hygiene
 

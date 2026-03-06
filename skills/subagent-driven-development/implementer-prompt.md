@@ -19,7 +19,7 @@ Task tool (general-purpose):
     2. Implement only requested scope.
     3. Run task verification commands.
     4. Commit changes.
-    5. Perform a self-review before reporting.
+    5. Perform a self-review before reporting. If self-review finds fixable issues: fix them, re-run verification, then include findings in report.
 
     ## Report format
     - Implemented:

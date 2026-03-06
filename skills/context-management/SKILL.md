@@ -23,7 +23,7 @@ Use when any applies:
 - Verified facts/evidence
 - Open questions/risks
 
-2. Write `state.md` with concise sections:
+2. Write `state.md` at the project root (or next to the active plan file if one exists) with concise sections:
 - `Current Goal`
 - `Decisions`
 - `Plan Status`

@@ -22,8 +22,8 @@ If any condition fails, run sequentially.
 2. Write one focused prompt per domain.
 3. Dispatch all prompts concurrently.
 4. Collect summaries and changed files.
-5. Resolve conflicts.
-6. Run integration verification.
+5. Resolve conflicts between summaries and changed files.
+6. Run integration verification: execute the full project test suite plus any cross-domain checks. Do not mark the wave complete until integration passes.
 
 ## Prompt Requirements
 
