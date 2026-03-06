@@ -29,6 +29,21 @@ Announce: `I'm using subagent-driven-development to execute this plan.`
 4. Run final whole-branch review.
 5. Invoke `finishing-a-development-branch`.
 
+### (Claude Code only) Native task sync
+
+If the plan has an associated `.tasks.json` file and native tasks:
+
+- When you first extract tasks from the plan, you may ensure there is one native task per plan task (creating any missing ones with `TaskCreate` and full task text).
+- Each time a task passes both spec-compliance and code-quality review, you may:
+
+```yaml
+TaskUpdate:
+  taskId: <task-id>
+  status: completed
+```
+
+- Keep the `.tasks.json` file in sync with the native task statuses and `lastUpdated` timestamps so other sessions can resume execution with the same task graph.
+
 ## Optional Speed Mode: Parallel Waves
 
 Use only when tasks are independent and touch disjoint files.

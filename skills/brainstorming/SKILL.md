@@ -22,6 +22,27 @@ Do not write code, edit files, or invoke implementation skills until design appr
 7. Save approved design to `docs/plans/YYYY-MM-DD-<topic>-design.md`.
 8. Invoke `writing-plans`.
 
+### Claude Code native tasks (optional)
+
+When running in Claude Code with native tasks available (v2.1.16+):
+
+- After the user approves each major design section, you may create a native task for that component:
+
+```yaml
+TaskCreate:
+  subject: "Implement <Component / Area>"
+  description: |
+    Key requirements from the approved design section.
+
+    Acceptance Criteria:
+    - [ ] <criterion 1>
+    - [ ] <criterion 2>
+  activeForm: "Implementing <Component / Area>"
+```
+
+- Keep track of task IDs if you expect `writing-plans` to add dependencies later.
+- Before handing off to `writing-plans`, you may call `TaskList` to show the current task structure.
+
 ## Design Contents
 
 Include:

@@ -24,6 +24,31 @@ Announce: `I'm using the executing-plans skill to implement this plan.`
 9. For particularly complex or architectural tasks, consider invoking `senior-engineer` for design and approach validation before implementation.
 10. For tasks involving UI/UX or frontend implementation, apply guidance from `frontend-craftmanship` to ensure production-grade, accessible interfaces.
 
+### (Claude Code only) Align with native tasks
+
+When native tasks and a `.tasks.json` file exist:
+
+- At the start of execution, use `TaskList` and the `.tasks.json` next to the plan (for example `docs/plans/<plan>.md.tasks.json`) to:
+  - Reconcile which tasks are `pending`, `in_progress`, or `completed`.
+  - Recreate any missing native tasks or dependencies with `TaskCreate` / `TaskUpdate`.
+- As you start a task from the plan, you may:
+
+```yaml
+TaskUpdate:
+  taskId: <task-id>
+  status: in_progress
+```
+
+- When you complete a task and its verifications:
+
+```yaml
+TaskUpdate:
+  taskId: <task-id>
+  status: completed
+```
+
+- After each status change, update the corresponding entry in `.tasks.json` (status and `lastUpdated` timestamp) so new sessions can resume correctly.
+
 ## Execution Rules
 
 - Do not skip plan steps unless user approves deviation.

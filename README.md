@@ -1,11 +1,12 @@
 # Superpowers (Optimized Fork)
 
-This repository is an **optimized fork** of the original [obra/superpowers](https://github.com/obra/superpowers) plugin. It keeps the same core promise — A complete software development workflow for your coding agents built from composable “skills” and strong initial instructions—but applies additional research-driven improvements to make the workflow **leaner, faster, and more robust** in modern agent IDEs.
+This repository is an **optimized fork** of the original [obra/superpowers](https://github.com/obra/superpowers) plugin. It keeps the same core promise — A complete software development workflow for your coding agents built from composable “skills” and strong initial instructions — but applies additional research-driven improvements to make the workflow **leaner, faster, and more robust** in modern agent IDEs.
 
 Key changes include:
 - **Reduced prompt overhead and context pollution**, guided by findings in `docs/plans/2026-03-05-agent-workflow-optimization.md` (e.g., concise skills, smaller always-on instructions, explicit context hygiene).
 - An **adaptive workflow selector** and **context management** that choose between lightweight vs full workflows and actively prune noisy history.
-- Integrated **specialist skills** (senior engineer, security reviewer, testing specialist, frontend craftsmanship, prompt optimizer, CLAUDE/AGENTS creator) that plug into the same Superpowers phases instead of living as ad‑hoc solo tools.
+- Integrated **specialist skills** (senior engineer, security reviewer, testing specialist, frontend craftsmanship, prompt optimizer, CLAUDE/AGENTS creator) that plug into the same Superpowers phases.
+- Optional **Claude Code native task integration** (v2.1.16+): when available, plans and execution can mirror tasks into Claude’s native TaskList with dependencies and status updates, giving “execution on rails” and real-time progress visibility similar to `pcvelz/superpowers`, while remaining a no-op in other environments.
 
 ## How it works
 

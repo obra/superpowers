@@ -12,3 +12,7 @@ Additional specialized skills are available and orchestrated through this workfl
 - `testing-specialist` for advanced testing strategy.
 - `frontend-craftmanship` for production-grade UI/UX work.
 - `prompt-optimizer` and `claude-md-creator` for improving prompts and repository-level agent context.
+
+Claude Code (optional, if available):
+- Use the native task tools (`TaskCreate`, `TaskUpdate`, `TaskList`) as described in the skills to mirror plan tasks into Claude’s TaskList for dependency tracking and progress visibility.
+- In your project’s `.claude/settings.json`, you may choose to deny `EnterPlanMode` so that Superpowers skills manage planning and execution flow instead of Claude Code’s automatic Plan mode.
