@@ -136,7 +136,7 @@ fi
 
 echo ""
 
-# Test 8: Verify worktree requirement
+# Test 8: Verify implementer role mapping
 echo "Test 8: Implementer role mapping..."
 
 output=$(run_claude "In the subagent-driven-development skill, what kind of subagent handles implementation tasks? Is 'Implementer' a registered agent type or just a role name?" 30)
