@@ -49,3 +49,4 @@ Repeat per behavior.
 - Use `systematic-debugging` to find root cause before writing the fix test.
 - Use `verification-before-completion` before success claims.
 - Read `testing-anti-patterns.md` when introducing heavy mocking.
+- For complex, high-risk, or hard-to-test behavior, consider using `testing-specialist` to design a deeper test strategy (e.g., property-based tests, broader coverage, or layered test suites) while still following this RED–GREEN–REFACTOR cycle.

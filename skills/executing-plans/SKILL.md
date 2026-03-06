@@ -21,6 +21,8 @@ Announce: `I'm using the executing-plans skill to implement this plan.`
 6. Run required verification commands for each task.
 7. Report completed work and evidence.
 8. Wait for feedback, then continue with next batch.
+9. For particularly complex or architectural tasks, consider invoking `senior-engineer` for design and approach validation before implementation.
+10. For tasks involving UI/UX or frontend implementation, apply guidance from `frontend-craftmanship` to ensure production-grade, accessible interfaces.
 
 ## Execution Rules
 

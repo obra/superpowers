@@ -1,27 +1,22 @@
-# Superpowers
+# Superpowers (Optimized Fork)
 
-Superpowers is a complete software development workflow for your coding agents, built on top of a set of composable "skills" and some initial instructions that make sure your agent uses them.
+This repository is an **optimized fork** of the original [obra/superpowers](https://github.com/obra/superpowers) plugin. It keeps the same core promise — A complete software development workflow for your coding agents built from composable “skills” and strong initial instructions—but applies additional research-driven improvements to make the workflow **leaner, faster, and more robust** in modern agent IDEs.
+
+Key changes include:
+- **Reduced prompt overhead and context pollution**, guided by findings in `docs/plans/2026-03-05-agent-workflow-optimization.md` (e.g., concise skills, smaller always-on instructions, explicit context hygiene).
+- An **adaptive workflow selector** and **context management** that choose between lightweight vs full workflows and actively prune noisy history.
+- Integrated **specialist skills** (senior engineer, security reviewer, testing specialist, frontend craftsmanship, prompt optimizer, CLAUDE/AGENTS creator) that plug into the same Superpowers phases instead of living as ad‑hoc solo tools.
 
 ## How it works
 
-It starts from the moment you fire up your coding agent. As soon as it sees that you're building something, it *doesn't* just jump into trying to write code. Instead, it steps back and asks you what you're really trying to do. 
+From the moment you fire up your coding agent, this fork follows the Superpowers approach: it first steps back to understand what you’re really trying to do instead of jumping straight into code. It then collaborates with you to tease out a clear spec and shows it in chunks short enough to read and digest.
 
-Once it's teased a spec out of the conversation, it shows it to you in chunks short enough to actually read and digest. 
+Once you approve the design, your agent puts together an implementation plan that an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing could follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY, while this fork’s optimizations keep the instructions focused and token‑efficient.
 
-After you've signed off on the design, your agent puts together an implementation plan that's clear enough for an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing to follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY. 
+Next up, once you say “go”, it launches either a *subagent-driven-development* process or *executing-plans*, having agents work through each engineering task with staged reviews (spec compliance, then code quality) and integrated specialists where useful (e.g., security-reviewer on sensitive changes, frontend-craftmanship on UI work).
 
-Next up, once you say "go", it launches a *subagent-driven-development* process, having agents work through each engineering task, inspecting and reviewing their work, and continuing forward. It's not uncommon for Claude to be able to work autonomously for a couple hours at a time without deviating from the plan you put together.
+Because the skills trigger automatically and are optimized for smaller, more relevant context windows, you don’t need to do anything special. Your coding agent just has **optimized Superpowers**.
 
-There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Superpowers.
-
-
-## Sponsorship
-
-If Superpowers has helped you do stuff that makes money and you are so inclined, I'd greatly appreciate it if you'd consider [sponsoring my opensource work](https://github.com/sponsors/obra).
-
-Thanks! 
-
-- Jesse
 
 
 ## Installation
@@ -101,6 +96,7 @@ Start a new session in your chosen platform and ask for something that should tr
 
 **Testing**
 - **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
+- **testing-specialist** - Advanced test strategy and coverage design for complex or high-risk behavior
 
 **Debugging**
 - **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
@@ -116,12 +112,17 @@ Start a new session in your chosen platform and ask for something that should tr
 - **using-git-worktrees** - Parallel development branches
 - **finishing-a-development-branch** - Merge/PR decision workflow
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
+- **senior-engineer** - Senior engineering collaborator for complex or architectural work
+- **security-reviewer** - Structured security and quality review for sensitive changes
+- **frontend-craftmanship** - Production-grade, accessible frontend implementation standards
 
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
 - **using-superpowers** - Introduction to the skills system
 - **adaptive-workflow-selector** - Select lightweight vs full process path
 - **context-management** - Summarize durable state and prune noisy context
+- **prompt-optimizer** - Optional pre-processing to refine vague or multi-part user requests
+- **claude-md-creator** - Create lean, high-signal CLAUDE/AGENTS context files for repositories
 
 ## Philosophy
 

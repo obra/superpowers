@@ -24,6 +24,8 @@ Announce: `I'm using subagent-driven-development to execute this plan.`
 - Run code-quality review.
 - If quality fails, return to implementer and re-review.
 - Mark task complete.
+   - For complex or high-risk tasks, you may dispatch a `senior-engineer` subagent to review or refine the approach before or after the implementer’s work.
+   - For tasks centered on frontend/UI, you may apply `frontend-craftmanship` standards to guide structure, styling, and accessibility.
 4. Run final whole-branch review.
 5. Invoke `finishing-a-development-branch`.
 

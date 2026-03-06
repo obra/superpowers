@@ -15,10 +15,12 @@ Do not write code, edit files, or invoke implementation skills until design appr
 
 1. Inspect project context (relevant files, docs, recent commits).
 2. Ask clarifying questions one at a time.
-3. Propose 2-3 approaches with trade-offs and a recommendation.
-4. Present design in short sections; confirm each section.
-5. Save approved design to `docs/plans/YYYY-MM-DD-<topic>-design.md`.
-6. Invoke `writing-plans`.
+3. For especially vague or multi-part requests, optionally invoke `prompt-optimizer` once to refine the user’s goal before designing.
+4. Propose 2-3 approaches with trade-offs and a recommendation.
+5. Present design in short sections; confirm each section.
+6. If the repo lacks `CLAUDE.md` / `AGENTS.md` and long-term collaboration is expected, consider using `claude-md-creator` to create a minimal, high-signal context file.
+7. Save approved design to `docs/plans/YYYY-MM-DD-<topic>-design.md`.
+8. Invoke `writing-plans`.
 
 ## Design Contents
 

@@ -17,7 +17,8 @@ Request review early to catch issues before they spread.
 
 1. Determine review range (`BASE_SHA` -> `HEAD_SHA`).
 2. Dispatch `superpowers-custom:code-reviewer` using `requesting-code-review/code-reviewer.md`.
-3. Provide:
+3. For security-relevant work (auth, sensitive data, exposed endpoints, infrastructure), also invoke `security-reviewer` to perform a dedicated security and high-level quality pass.
+4. Provide:
 - What changed
 - Requirement or plan reference
 - SHA range
