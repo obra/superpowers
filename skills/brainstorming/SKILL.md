@@ -28,7 +28,9 @@ You MUST create a task for each of these items and complete them in order:
 3. **Propose 2-3 approaches** — with trade-offs and your recommendation
 4. **Present design** — in sections scaled to their complexity, get user approval after each section
 5. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` and commit
-6. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+6. **Ask implementation gate** — ask: "Ready to set up for implementation?"
+7. **Create isolated worktree** — invoke `using-git-worktrees`
+8. **Create implementation plan** — invoke `writing-plans` and save to `docs/plans/YYYY-MM-DD-<topic>-plan.md`
 
 ## Process Flow
 
@@ -40,6 +42,8 @@ digraph brainstorming {
     "Present design sections" [shape=box];
     "User approves design?" [shape=diamond];
     "Write design doc" [shape=box];
+    "Ready to set up implementation?" [shape=diamond];
+    "Invoke using-git-worktrees" [shape=box];
     "Invoke writing-plans skill" [shape=doublecircle];
 
     "Explore project context" -> "Ask clarifying questions";
@@ -48,11 +52,14 @@ digraph brainstorming {
     "Present design sections" -> "User approves design?";
     "User approves design?" -> "Present design sections" [label="no, revise"];
     "User approves design?" -> "Write design doc" [label="yes"];
-    "Write design doc" -> "Invoke writing-plans skill";
+    "Write design doc" -> "Ready to set up implementation?";
+    "Ready to set up implementation?" -> "Invoke using-git-worktrees" [label="yes"];
+    "Ready to set up implementation?" -> "Present design sections" [label="not yet"];
+    "Invoke using-git-worktrees" -> "Invoke writing-plans skill";
 }
 ```
 
-**The terminal state is invoking writing-plans.** Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY skill you invoke after brainstorming is writing-plans.
+**The terminal state is invoking writing-plans.** For implementation, invoke `using-git-worktrees` first, then `writing-plans`. Do NOT invoke unrelated implementation skills directly from brainstorming.
 
 ## The Process
 
@@ -83,8 +90,10 @@ digraph brainstorming {
 - Commit the design document to git
 
 **Implementation:**
-- Invoke the writing-plans skill to create a detailed implementation plan
-- Do NOT invoke any other skill. writing-plans is the next step.
+- Ask: **"Ready to set up for implementation?"** and wait for confirmation
+- Invoke `using-git-worktrees` to create an isolated workspace
+- Invoke `writing-plans` to create a detailed implementation plan
+- Ensure the plan is saved as `docs/plans/YYYY-MM-DD-<topic>-plan.md` (never overwrite `*-design.md`)
 
 ## Key Principles
 
