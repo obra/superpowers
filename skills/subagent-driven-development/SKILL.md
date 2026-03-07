@@ -29,6 +29,23 @@ digraph when_to_use {
 }
 ```
 
+## Task Classification
+
+Before dispatching each task, classify it into a tier. The tier determines which reviews run.
+
+| Tier | Signals | Review pipeline |
+|------|---------|-----------------|
+| **Simple** | ≤2 files touched, follows existing pattern explicitly, no new abstraction, pure addition | Implementer self-review only |
+| **Standard** | 3–5 files, new feature with clear spec, no new abstractions | Implementer + spec reviewer |
+| **Complex** | New abstractions, cross-cutting concerns, >5 files, architectural change, ambiguous spec | Full: implementer + spec reviewer + quality reviewer |
+
+**Classification rules:**
+- Classify **before** dispatching the implementer subagent
+- Default to **Standard** when uncertain — never round down to Simple
+- Declare the tier in the task context sent to the implementer: `**Review tier: Simple / Standard / Complex**`
+- You may escalate tier mid-task if the implementer report reveals unexpected complexity
+- Simple must be earned: all Simple signals must be present, not just some
+
 **vs. Executing Plans (parallel session):**
 - Same session (no context switch)
 - Fresh subagent per task (no context pollution)
@@ -43,10 +60,13 @@ digraph process {
 
     subgraph cluster_per_task {
         label="Per Task";
+        "Classify task tier" [shape=box];
+        "Tier?" [shape=diamond];
         "Dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
         "Implementer subagent asks questions?" [shape=diamond];
         "Answer questions, provide context" [shape=box];
         "Implementer subagent implements, tests, commits, self-reviews" [shape=box];
+        "Simple: self-review done?" [shape=diamond];
         "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [shape=box];
         "Spec reviewer subagent confirms code matches spec?" [shape=diamond];
         "Implementer subagent fixes spec gaps" [shape=box];
@@ -56,12 +76,20 @@ digraph process {
         "Mark task complete in TodoWrite" [shape=box];
     }
 
+    "Classify task tier" -> "Tier?";
+    "Tier?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="all tiers"];
+    "Implementer subagent implements, tests, commits, self-reviews" -> "Simple: self-review done?" [label="tier=Simple"];
+    "Simple: self-review done?" -> "Mark task complete in TodoWrite" [label="yes"];
+    "Implementer subagent implements, tests, commits, self-reviews" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="tier=Standard or Complex"];
+    "Spec reviewer subagent confirms code matches spec?" -> "Mark task complete in TodoWrite" [label="yes, tier=Standard"];
+    "Spec reviewer subagent confirms code matches spec?" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="yes, tier=Complex"];
+
     "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
+    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Classify task tier";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -191,7 +219,8 @@ Done!
 - Code quality ensures implementation is well-built
 
 **Cost:**
-- More subagent invocations (implementer + 2 reviewers per task)
+- Subagent invocations vary by tier: Simple (1), Standard (2), Complex (3)
+- Classify honestly — over-classifying as Simple risks quality gaps
 - Controller does more prep work (extracting all tasks upfront)
 - Review loops add iterations
 - But catches issues early (cheaper than debugging later)
@@ -211,6 +240,12 @@ Done!
 - Let implementer self-review replace actual review (both are needed)
 - **Start code quality review before spec compliance is ✅** (wrong order)
 - Move to next task while either review has open issues
+
+**Task classification:**
+- Don't default to Simple to save tokens — default is Standard
+- Don't skip classifying (just dispatching without declaring tier)
+- Don't assign Simple to tasks that modify more than 2 files
+- Don't forget to escalate tier if implementer report reveals complexity
 
 **If subagent asks questions:**
 - Answer clearly and completely
