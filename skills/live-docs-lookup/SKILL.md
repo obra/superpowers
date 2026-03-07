@@ -47,11 +47,11 @@ code. Stale IDs produce confusing "model not found" errors.
 Restrict the search to the provider's official docs domain to avoid landing on
 blog posts or unofficial mirrors:
 - Anthropic: `site:platform.claude.com/docs`
-- OpenAI: `site:platform.openai.com/docs`
+- OpenAI: `site:developers.openai.com`
 - Google: `site:ai.google.dev`
 
 Example queries: `site:platform.claude.com/docs adaptive thinking` or
-`site:platform.openai.com/docs responses API`. Doc URLs move; the information
+`site:developers.openai.com responses API`. Doc URLs move; the information
 is always findable on the canonical domain.
 
 Fetch only what's relevant to the task. Three parallel fetches is ideal; don't
