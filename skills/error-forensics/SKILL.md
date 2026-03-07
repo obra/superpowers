@@ -21,7 +21,7 @@ Use when you have any of:
 
 **Do NOT use when:**
 - The user has already identified root cause and just wants implementation
-- The error is trivially obvious from a single line (typo, missing file named explicitly)
+- The error is trivially obvious from a single line (typo, missing file named explicitly) — note: a SyntaxError with a line number is NOT trivially obvious; the cause (extra brace, missing bracket, multi-line expression) requires file inspection
 
 ## The Four Stages
 
@@ -119,6 +119,7 @@ Always produce this structured report, regardless of confidence:
 | Low | Do NOT offer to apply. Ask clarifying questions instead. |
 
 **AskUserQuestion options:**
+> If `AskUserQuestion` is unavailable (e.g., subagent context), ask via plain text with the same options listed explicitly.
 - Apply now
 - Show me the exact changes first
 - Skip — I'll handle it
@@ -137,6 +138,7 @@ Always produce this structured report, regardless of confidence:
 - Claiming confidence is High when evidence is indirect or assumes anything
 - Offering to apply when confidence is Low
 - Skipping the structured report for "obvious" errors
+- Calling confidence Medium or High when the only evidence is an exit code or single ambiguous signal
 - Fixing the symptom (the line that threw) instead of the root cause (why it threw)
 
 ## Common Mistakes
@@ -147,6 +149,7 @@ Always produce this structured report, regardless of confidence:
 | Running `npm install` to "just check" | Only read-only commands during investigation |
 | High confidence from a single stack frame | Trace to origin; a stack frame is a symptom |
 | Proposing fix when confidence is Low | Ask clarifying questions first |
+| Inflating confidence to Medium/High when evidence is minimal (e.g., only an exit code) | Label confidence honestly as Low and ask clarifying questions |
 | Skipping Diagnostic Trail section | Omit only if truly no follow-up commands ran |
 
 ## Integration
