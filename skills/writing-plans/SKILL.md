@@ -93,6 +93,7 @@ git commit -m "feat: add specific feature"
 - Exact commands with expected output
 - Reference relevant skills with @ syntax
 - DRY, YAGNI, TDD, frequent commits
+- **Commits must NOT include Co-Authored-By lines for Claude, Cursor, or any AI tool**
 
 ## Execution Handoff
 
