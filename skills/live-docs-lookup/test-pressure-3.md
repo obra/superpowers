@@ -20,10 +20,10 @@ and correctly flagged `gemini-pro` as outdated (Gemini 1.0).
 
 **Confirmed failure — stale model IDs:**
 The baseline recommended `gemini-1.5-flash` and `gemini-1.5-pro` as current
-models. As of March 2026, `gemini-2.0-flash` is the recommended default and
-the 1.5 series has been superseded. The baseline even acknowledged its own
-uncertainty ("check the docs for latest models") — but still gave 1.5-series
-IDs, which developers will copy-paste into production code.
+models — at least one generation behind the actual recommended models at time
+of testing. The baseline even acknowledged its own uncertainty ("check the docs
+for latest models") — but still gave the stale IDs, which developers will
+copy-paste into production code.
 
 **Pattern:** The baseline correctly reasoned about SDK choice and correctly
 rejected the most obviously stale model (`gemini-pro`), but couldn't catch

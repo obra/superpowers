@@ -134,23 +134,22 @@ The live context is now loaded — carry it forward.
 Things that change often and are most likely to be wrong in training data:
 
 ### Anthropic
-- **`budget_tokens`** — deprecated on Opus 4.6 and Sonnet 4.6; use `thinking: {type: "adaptive"}`
-- **`output_format`** — deprecated; use `output_config: {format: {...}}`
-- **Prefill on Opus 4.6** — not supported; use structured outputs or system prompt
-- **Model ID suffixes** — never construct date-suffixed IDs from memory; always verify exact alias from models page
-- **Files API beta header** — still requires `anthropic-beta: files-api-2025-04-14`
-- **Compaction beta header** — requires `anthropic-beta: compact-2026-01-12`, Opus 4.6 only
-- **Docs base URL** — `docs.anthropic.com` now redirects to `platform.claude.com/docs/en/`
+- **`budget_tokens` / thinking params** — syntax and supported models have changed across versions; verify current API shape in docs
+- **`output_format` / output config params** — naming has changed; verify current parameter structure from docs
+- **Model ID suffixes** — never construct date-suffixed IDs from memory; copy exact aliases from the models page
+- **Beta headers** (Files API, Compaction, etc.) — required headers and values change; verify current values from docs before using
+- **Docs base URL** — has moved before; if a URL fails, re-find on `platform.claude.com/docs`
 
 ### OpenAI
-- **Responses API vs Chat Completions** — Responses API is newer and preferred for agentic use cases; they are not interchangeable
-- **Model ID naming** — `o1`, `o3`, `o3-mini`, `gpt-4o` variants change frequently; always verify from models page
-- **SDK v1 breaking changes** — the openai Python SDK v1 was a complete rewrite from v0; code written for v0 will break
-- **Structured outputs vs JSON mode** — structured outputs are newer and more reliable; JSON mode is an older pattern
+- **API surface choice** — verify which API the docs currently recommend for the user's use case
+- **Model IDs** — always copy from the live models page
+- **SDK migration details** — confirm version-specific breaking changes before suggesting code
+- **Output formatting features** — verify the current recommended pattern from the docs
 
 ### Google
-- **Gemini API vs Vertex AI** — two different SDKs and endpoint structures; clarify which the user is targeting before advising
-- **Model names** — `gemini-2.0-flash`, `gemini-1.5-pro`, etc. change frequently; always verify
+- **Gemini API vs Vertex AI** — clarify which surface the user is targeting, then fetch the matching docs
+- **SDK choice and imports** — verify the current recommended SDK/import path from live docs
+- **Model IDs** — always verify from the live models page
 
 ---
 
