@@ -28,7 +28,7 @@ Check imports, environment variables, model names, or the user's stated intent:
 |--------|----------|
 | `import anthropic`, `from anthropic import`, `ANTHROPIC_API_KEY`, model names like `claude-*`, `opus`, `sonnet`, `haiku` | **Anthropic** |
 | `from openai import`, `import openai`, `OPENAI_API_KEY`, model names like `gpt-*`, `o1`, `o3`, `chatgpt-*` | **OpenAI** |
-| `import google.generativeai`, `import vertexai`, `GOOGLE_API_KEY`, model names like `gemini-*` | **Google** |
+| `import google.generativeai`, `from google import genai`, `import vertexai`, `GOOGLE_API_KEY`, model names like `gemini-*` | **Google** |
 
 If multiple providers are in scope (e.g. a multi-provider app), fetch docs for each.
 If unclear, ask the user which SDK they're targeting before fetching.
@@ -44,9 +44,15 @@ of outdated guidance, and the user will copy-paste whatever you put in example
 code. Stale IDs produce confusing "model not found" errors.
 
 **If a URL fails or returns a redirect/404**, don't stop — search for it instead.
-Use web search with the doc topic and provider name (e.g. "anthropic adaptive thinking docs"
-or "openai responses API reference") to find the current URL, then fetch that.
-Doc URLs move; the information is always findable.
+Restrict the search to the provider's official docs domain to avoid landing on
+blog posts or unofficial mirrors:
+- Anthropic: `site:platform.claude.com/docs`
+- OpenAI: `site:platform.openai.com/docs`
+- Google: `site:ai.google.dev`
+
+Example queries: `site:platform.claude.com/docs adaptive thinking` or
+`site:platform.openai.com/docs responses API`. Doc URLs move; the information
+is always findable on the canonical domain.
 
 Fetch only what's relevant to the task. Three parallel fetches is ideal; don't
 flood context with docs the user doesn't need.

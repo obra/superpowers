@@ -115,6 +115,9 @@ Start a new session in your chosen platform and ask for something that should tr
 - **finishing-a-development-branch** - Merge/PR decision workflow
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
 
+**AI SDK Grounding**
+- **live-docs-lookup** - Fetch current AI SDK/API docs before answering (Anthropic, OpenAI, Google) — prevents stale model IDs, deprecated params, missed APIs
+
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
 - **using-superpowers** - Introduction to the skills system

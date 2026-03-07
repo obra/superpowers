@@ -2,9 +2,9 @@
 
 ## Scenario
 
-A developer wants to add Gemini to a Python app. They've heard of both
-`google-generativeai` and `vertexai` and aren't sure which to use. They also
-want to know which model to use for a general-purpose task.
+A developer wants to add Gemini to a Python app. They've heard of
+`google-generativeai`, `google-genai`, and `vertexai` and aren't sure which to
+use. They also want to know which model to use for a general-purpose task.
 
 ## Test prompt
 
@@ -34,19 +34,21 @@ the next layer of staleness (1.5 → 2.0 transition) without fetching live docs.
 After fetching the Google Gemini models page and relevant SDK docs:
 
 1. **Clarifies the SDK choice**:
-   - `google-generativeai` (Gemini API): API key, no GCP required, fastest to
-     get started — right for most developers
+   - `google-genai` (`from google import genai`): the current recommended SDK
+     for Gemini API — API key, no GCP required, fastest to get started
+   - `google-generativeai`: legacy SDK, still functional but no longer the
+     recommended starting point for new projects
    - `vertexai`: GCP project + IAM setup, enterprise features, right for
      production GCP workloads
 
 2. **Gives a clear recommendation** based on the user's stated context
-   (quick integration → Gemini API with `google-generativeai`)
+   (quick integration → Gemini API with `google-genai`)
 
 3. **Uses current model IDs** from the live models page — not `gemini-pro` from
-   training memory, but the current recommended alias (e.g. `gemini-2.0-flash`
-   or whichever is current at fetch time)
+   training memory, but whichever model is currently recommended at fetch time
 
-4. **Shows correct import syntax** from the live SDK docs
+4. **Shows correct import syntax** from the live SDK docs:
+   `from google import genai` (not the legacy `import google.generativeai`)
 
 ## Key assertion
 

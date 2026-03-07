@@ -16,12 +16,13 @@ mention of the Messages Batches API, which offers 50% cost reduction and is
 purpose-built for exactly this use case.
 
 **2. Treated web search and web fetch as custom tools.** The Anthropic Messages
-API provides web search (`web_search_20260209`) and web fetch
-(`web_fetch_20260209`) as native server-hosted tools — Anthropic runs them,
-the developer just declares them in the `tools` array. The agent didn't know
-about these and instead designed a custom client-side implementation that the
-developer would have to build and host themselves. The architecture was
-unnecessarily complex.
+API provides web search and web fetch as native server-hosted tools — Anthropic
+runs them, the developer just declares them in the `tools` array. The agent
+didn't know about these and instead designed a custom client-side implementation
+that the developer would have to build and host themselves. The architecture was
+unnecessarily complex. (The specific `type` identifiers for these tools, e.g.
+`web_search_20260209` as of March 2026, should always be verified in the
+official docs before use — Anthropic versions them and they change.)
 
 **3. Used deprecated tool name syntax.** The tool names in the generated code
 referenced outdated versioned identifiers. Even the tool declarations were
