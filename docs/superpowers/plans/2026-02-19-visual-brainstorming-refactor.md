@@ -1,6 +1,6 @@
 # Visual Brainstorming Refactor Implementation Plan
 
-> **For Claude:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Refactor visual brainstorming from blocking TUI feedback model to non-blocking "Browser Displays, Terminal Commands" architecture.
 

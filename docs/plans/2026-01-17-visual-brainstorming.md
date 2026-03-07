@@ -1,6 +1,6 @@
 # Visual Brainstorming Companion Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Give Claude a browser-based visual companion for brainstorming sessions - show mockups, prototypes, and interactive choices alongside terminal conversation.
 
