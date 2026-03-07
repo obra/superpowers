@@ -7,7 +7,7 @@ This skill was created after a concrete failure in a real project.
 A developer used superpowers (brainstorming → writing-plans → executing-plans)
 to build a research tool that calls the Anthropic Messages API to analyze data
 on 1000 companies from an Excel file. The agent planned and implemented the
-tool competently — but made three silent mistakes, all caused by stale training
+tool competently — but made two silent mistakes, all caused by stale training
 data:
 
 **1. Missed the Messages Batches API.** The agent knew the workload was large
@@ -15,16 +15,7 @@ data:
 mention of the Messages Batches API, which offers 50% cost reduction and is
 purpose-built for exactly this use case.
 
-**2. Treated web search and web fetch as custom tools.** The Anthropic Messages
-API provides web search and web fetch as native server-hosted tools — Anthropic
-runs them, the developer just declares them in the `tools` array. The agent
-didn't know about these and instead designed a custom client-side implementation
-that the developer would have to build and host themselves. The architecture was
-unnecessarily complex. (The specific `type` identifiers for these tools, e.g.
-`web_search_20260209` as of March 2026, should always be verified in the
-official docs before use — Anthropic versions them and they change.)
-
-**3. Used deprecated tool name syntax.** The tool names in the generated code
+**2. Used deprecated tool name syntax.** The tool names in the generated code
 referenced outdated versioned identifiers. Even the tool declarations were
 stale.
 
@@ -40,8 +31,8 @@ from training memory alone will confidently give wrong answers — not because i
 doesn't know the topic, but because what it knows is stale.
 
 The gap is invisible to users. The agent doesn't say "I'm not sure about this."
-It says "here's your code" — and the code uses deprecated tool names, misses
-a 50% cost saving, and solves in 500 lines what could be done in 50.
+It says "here's your code" — and the code uses deprecated tool names and misses
+a 50% cost saving.
 
 ## Baseline failures documented
 
