@@ -16,6 +16,14 @@ Task tool (general-purpose):
 
     [Scene-setting: where this fits, dependencies, architectural context]
 
+    ## Review Tier
+
+    **Tier:** [Simple / Standard / Complex]
+
+    [Simple: Your self-review IS the review. No external reviewer will follow. Be thorough — your self-review is the quality gate.]
+    [Standard: A spec reviewer will check your work after you report back. Focus on spec compliance.]
+    [Complex: Both a spec reviewer and a code quality reviewer will check your work. Focus on correctness, tests, and clean implementation.]
+
     ## Before You Begin
 
     If you have questions about:
