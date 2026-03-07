@@ -79,15 +79,14 @@ flood context with docs the user doesn't need.
 
 | Feature | URL |
 |---------|-----|
-| **Model IDs** *(always fetch)* | `https://platform.openai.com/docs/models` |
-| Chat completions | `https://platform.openai.com/docs/api-reference/chat` |
-| Responses API | `https://platform.openai.com/docs/api-reference/responses` |
-| Function calling / tools | `https://platform.openai.com/docs/guides/function-calling` |
-| Streaming | `https://platform.openai.com/docs/api-reference/streaming` |
-| Structured outputs | `https://platform.openai.com/docs/guides/structured-outputs` |
-| Assistants API | `https://platform.openai.com/docs/api-reference/assistants` |
-| Batch API | `https://platform.openai.com/docs/api-reference/batch` |
-| Rate limits | `https://platform.openai.com/docs/guides/rate-limits` |
+| **Model IDs** *(always fetch)* | `https://developers.openai.com/api/docs/models` |
+| Chat completions | `https://developers.openai.com/api/reference/chat-completions/overview` |
+| Responses API | `https://developers.openai.com/api/reference/responses/overview` |
+| Function calling / tools | `https://developers.openai.com/api/docs/guides/function-calling` |
+| Streaming | `https://developers.openai.com/api/docs/guides/streaming-responses` |
+| Structured outputs | `https://developers.openai.com/api/docs/guides/structured-outputs` |
+| Batch API | `https://developers.openai.com/api/docs/guides/batch` |
+| Rate limits | `https://developers.openai.com/api/docs/guides/rate-limits` |
 
 ### Google / Gemini
 
