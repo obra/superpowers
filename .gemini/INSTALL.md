@@ -12,10 +12,10 @@ gemini skills link <path_to_superpowers>/skills/brainstorming/
 ```
 
 ### 2. Remote Installation from GitHub
-Install directly into your user or workspace scope from this fork:
+Install directly into your user or workspace scope from the official repository:
 
 ```bash
-gemini skills install https://github.com/samuelfa/superpowers.git --path skills/brainstorming
+gemini skills install https://github.com/obra/superpowers.git --path skills/brainstorming
 ```
 
 ## Verify Installation

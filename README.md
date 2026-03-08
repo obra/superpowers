@@ -76,7 +76,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 Tell Gemini CLI:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/samuelfa/superpowers/refs/heads/feat/gemini-support/.gemini/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.gemini/INSTALL.md
 ```
 
 **Detailed docs:** [.gemini/INSTALL.md](.gemini/INSTALL.md)
