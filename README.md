@@ -28,7 +28,6 @@ This optimized version builds on the original [obra/superpowers](https://github.
 | **Specialist skills** | Core workflow only | +6 specialists (senior-engineer, security-reviewer, testing-specialist, frontend-craftsmanship, prompt-optimizer, claude-md-creator) |
 | **Discipline enforcement** | Instructional tone | Rationalization tables, red flags, iron laws, and forbidden phrases in critical skills |
 | **Token efficiency** | No explicit controls | Always-on `token-efficiency` standard with context hygiene rules |
-| **Platform support** | Claude Code | Claude Code, Cursor, Codex, OpenCode |
 | **Cross-session state** | None | `context-management` persists durable state to `state.md` |
 | **Trigger reliability** | Generic descriptions | Assertive "MUST USE" descriptions with explicit trigger phrases |
 
