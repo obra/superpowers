@@ -1,0 +1,14 @@
+# Superpowers Dependencies for Gemini CLI
+
+While Superpowers is primarily a collection of behavioral skills, some features require external tools to be available in the environment where Gemini CLI is running.
+
+## Core Requirements
+- Git: Required for using-git-worktrees and finishing-a-development-branch.
+- Standard UNIX Tools: grep, find, sed, ls are used by various debugging and exploration skills.
+
+## Optional Requirements
+- Node.js (v18+): Required for the writing-skills tool if you wish to use the render-graphs.js utility.
+- Bash/Zsh: Required for running the systematic-debugging helper scripts.
+
+## Project-Specific Dependencies
+Skills like test-driven-development and verification-before-completion will attempt to run your project's native commands (e.g., npm test, pytest, make, etc.). Ensure your local project environment is correctly set up.
