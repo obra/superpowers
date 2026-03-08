@@ -4,14 +4,22 @@ Superpowers skills are fully compatible with Gemini CLI's Agent Skills standard.
 
 ## Installation via Gemini CLI
 
-### 1. Linking Local Skills (Recommended for Development)
-If you have cloned this repository locally, you can link specific skills so updates are reflected immediately:
+### 1. Linking All Skills (Recommended for Local Use)
+If you have cloned this repository locally, the fastest way to get started is by running the included installation script:
+
+```bash
+cd superpowers/
+./scripts/gemini-install.sh
+```
+
+### 2. Linking Individual Local Skills
+If you want to link specific skills so updates are reflected immediately:
 
 ```bash
 gemini skills link <path_to_superpowers>/skills/brainstorming/
 ```
 
-### 2. Remote Installation from GitHub
+### 3. Remote Installation from GitHub
 Install directly into your user or workspace scope from the official repository:
 
 ```bash
@@ -25,4 +33,4 @@ Start an interactive session and list your active skills:
 /skills list
 ```
 
-You should see `brainstorming` (and any other linked skills) as enabled. To trigger it, simply ask for help planning a feature or building a new component.
+You should see all linked skills as enabled. To trigger them, simply start a conversation.
