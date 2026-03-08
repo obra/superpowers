@@ -2,7 +2,7 @@
   "name": "superpowers-optimized",
   "description": "Optimized agentic skills framework for Claude Code",
   "owner": {
-    "name": "Tjerk Pieksma (REPOZY)"
+    "name": "REPOZY"
   },
   "originalAuthor": {
     "name": "Jesse Vincent",
@@ -15,7 +15,7 @@
       "version": "1.0.0",
       "source": "./",
       "author": {
-        "name": "Tjerk Pieksma (REPOZY)"
+        "name": "REPOZY"
       }
     }
   ]
