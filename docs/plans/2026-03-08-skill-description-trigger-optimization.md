@@ -65,7 +65,7 @@ Skills that define the Superpowers methodology (using-superpowers, adaptive-work
 - `finishing-a-development-branch` (after verification)
 
 **On-demand specialists:**
-- `frontend-craftmanship`
+- `frontend-craftsmanship`
 - `security-reviewer`
 - `testing-specialist`
 - `requesting-code-review`
@@ -189,7 +189,7 @@ description: >
   after verification-before-completion passes.
 ```
 
-**frontend-craftmanship:**
+**frontend-craftsmanship:**
 ```yaml
 description: >
   MUST USE for any frontend, UI, or web interface implementation.

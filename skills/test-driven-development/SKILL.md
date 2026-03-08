@@ -12,26 +12,58 @@ Write failing tests first. Then write minimal code to pass.
 
 ## Iron Law
 
-No production code before a failing test proves the behavior is missing.
+**No production code before a failing test proves the behavior is missing.**
 
-If code was written first, delete it and restart from a test.
+If code was written first, **delete it** and restart from a test. No exceptions.
+
+This is the hardest rule to follow and the most important. Every rationalization to skip it leads to untested behavior that breaks later.
 
 ## Cycle
 
-1. **RED**: Add one small failing test for one behavior.
-2. **VERIFY RED**: Run test and confirm failure is for the expected reason.
-3. **GREEN**: Write minimal production code to pass.
-4. **VERIFY GREEN**: Run target tests (and relevant broader tests) to confirm pass.
-5. **REFACTOR**: Improve structure without changing behavior; keep tests green.
+1. **RED**: Write one small failing test for one behavior.
+2. **VERIFY RED**: Run the test. Confirm it fails **for the expected reason** (not a syntax error or import issue).
+3. **GREEN**: Write the **minimum** production code to make the test pass. Nothing more.
+4. **VERIFY GREEN**: Run the target test and relevant broader tests. Confirm pass.
+5. **REFACTOR**: Improve structure without changing behavior. Tests must stay green.
 
-Repeat per behavior.
+Repeat per behavior. Never skip VERIFY steps.
+
+## Right vs Wrong
+
+**Wrong — code first:**
+```
+1. Write the handler function
+2. Write tests to verify it works
+3. All tests pass on first run ← this means the tests prove nothing
+```
+
+**Right — test first:**
+```
+1. Write test: POST /users returns 201 with valid body
+2. Run test → FAILS (handler doesn't exist yet) ← good
+3. Write minimal handler to return 201
+4. Run test → PASSES ← test proved the behavior was missing, now it works
+5. Refactor handler if needed, tests stay green
+```
+
+## Rationalization Table — Do Not Skip Tests
+
+| Temptation | Why it fails |
+|---|---|
+| "This is too simple to test" | Simple code has the longest lifespan. It will be changed by someone who doesn't know the intent. |
+| "I'll write tests after" | After never comes. And tests written after pass immediately, proving nothing. |
+| "I'm just refactoring, no new behavior" | If behavior doesn't change, existing tests must stay green. Run them. |
+| "Tests slow me down" | Tests save you from debugging sessions that take 10x longer. |
+| "The type system catches this" | Types catch shape errors, not logic errors. Test the logic. |
+| "I need to see the shape of the code first" | Spike in a scratch file. Then delete it and TDD the real implementation. |
 
 ## Test Quality Rules
 
 - One behavior per test.
-- Clear behavior-oriented test names.
+- Clear behavior-oriented test names (e.g., `test_expired_token_returns_401`).
 - Prefer real behavior checks over mock-only assertions.
 - Cover edge and error paths for changed behavior.
+- A test that has never been seen failing is not a test — it's a wish.
 
 ## Anti-Patterns
 
@@ -39,17 +71,18 @@ Repeat per behavior.
 - Adding multiple features before rerunning tests.
 - Accepting passing tests that never failed first.
 - Fixing bugs without a regression test.
+- Testing mock behavior instead of real behavior.
 
 ## Completion Checklist
 
-- Every changed behavior has a test.
-- Each new test was observed failing before implementation.
-- Changed tests pass.
-- Relevant suite passes.
+- [ ] Every changed behavior has a test.
+- [ ] Each new test was observed failing before implementation.
+- [ ] Changed tests pass.
+- [ ] Relevant suite passes.
 
 ## Related
 
 - Use `systematic-debugging` to find root cause before writing the fix test.
 - Use `verification-before-completion` before success claims.
 - Read `testing-anti-patterns.md` when introducing heavy mocking.
-- For complex, high-risk, or hard-to-test behavior, consider using `testing-specialist` to design a deeper test strategy (e.g., property-based tests, broader coverage, or layered test suites) while still following this RED–GREEN–REFACTOR cycle.
+- For complex, high-risk, or hard-to-test behavior, consider using `testing-specialist` to design a deeper test strategy while still following this RED-GREEN-REFACTOR cycle.

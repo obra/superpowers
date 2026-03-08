@@ -1,13 +1,17 @@
 {
   "name": "superpowers-optimized",
-  "description": "Custom optimized Superpowers skills library for Claude Code",
-  "version": "4.3.1-custom.1",
+  "description": "Optimized agentic skills framework for Claude Code — workflow routing, token efficiency, and discipline enforcement",
+  "version": "1.0.0",
   "author": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com"
+    "name": "Tjerk Pieksma (REPOZY)"
   },
-  "homepage": "https://github.com/obra/superpowers",
-  "repository": "https://github.com/obra/superpowers",
+  "originalAuthor": {
+    "name": "Jesse Vincent",
+    "email": "jesse@fsck.com",
+    "repository": "https://github.com/obra/superpowers"
+  },
+  "homepage": "https://github.com/REPOZY/superpowers-optimized",
+  "repository": "https://github.com/REPOZY/superpowers-optimized",
   "license": "MIT",
-  "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows"]
+  "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows", "agentic", "token-efficiency"]
 }

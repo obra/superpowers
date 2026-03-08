@@ -26,13 +26,12 @@ Core operating standard for all sessions. Apply permanently from activation.
 
 ## Context Rules
 
-Trigger `context-management` when any applies:
-- Session exceeds 8 turns
-- Context contains repeated failed attempts or abandoned hypotheses
-- User shifts to a significantly different topic
-- Prompt length is visibly growing with each turn
+Use `context-management` when cross-session persistence is needed:
+- User asks to save state or compress context
+- Work will continue in a new session
+- Complex task has accumulated decisions that must survive a session restart
 
-After compression, continue with `state.md` + current user message + required skill files only.
+Within a session, Claude Code handles context compression automatically — do not invoke `context-management` just because the session is long.
 
 ## Front-Loading
 

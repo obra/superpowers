@@ -26,7 +26,7 @@ Added escalation rules for fundamentally blocked tasks: stop after 2 failed atte
 
 Added concrete skill lists for each workflow path, solving the gap where the selector chose a path but never specified what that path contained. Three tiers: micro tasks (skip the selector entirely), lightweight (only `test-driven-development` + `verification-before-completion`), and full (follow the `using-superpowers` routing guide).
 
-**frontend-craftmanship: Concrete Standards Checklist**
+**frontend-craftsmanship: Concrete Standards Checklist**
 
 Replaced aspirational guidance ("accessible, responsive, Core Web Vitals") with a verifiable, output-changing checklist across four categories: structure (semantic HTML, heading hierarchy), accessibility (alt text, aria-label, focus-visible, WCAG AA contrast), CSS (design tokens, clamp() typography, prefers-reduced-motion, mobile-first), and performance (lazy loading, layout shift prevention).
 
@@ -48,7 +48,7 @@ Specified that `state.md` should be written at the project root, or next to the 
 
 **using-superpowers: Routing guide now covers all specialist skills**
 
-Added two missing routing entries: `frontend-craftmanship` for UI/frontend implementation tasks, and `security-reviewer` for security-sensitive changes before merge. The routing guide is now comprehensive across all active specialist skills.
+Added two missing routing entries: `frontend-craftsmanship` for UI/frontend implementation tasks, and `security-reviewer` for security-sensitive changes before merge. The routing guide is now comprehensive across all active specialist skills.
 
 **dispatching-parallel-agents: Integration verification strengthened**
 

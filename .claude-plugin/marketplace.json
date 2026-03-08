@@ -1,19 +1,21 @@
 {
   "name": "superpowers-optimized",
-  "description": "Development marketplace for Superpowers Custom skills library",
+  "description": "Optimized agentic skills framework for Claude Code",
   "owner": {
+    "name": "Tjerk Pieksma (REPOZY)"
+  },
+  "originalAuthor": {
     "name": "Jesse Vincent",
     "email": "jesse@fsck.com"
   },
   "plugins": [
     {
       "name": "superpowers-optimized",
-      "description": "Custom optimized Superpowers skills library for Claude Code",
-      "version": "4.3.1-custom.1",
+      "description": "Optimized agentic skills framework for Claude Code — workflow routing, token efficiency, and discipline enforcement",
+      "version": "1.0.0",
       "source": "./",
       "author": {
-        "name": "Jesse Vincent",
-        "email": "jesse@fsck.com"
+        "name": "Tjerk Pieksma (REPOZY)"
       }
     }
   ]

@@ -21,6 +21,8 @@ This skill MUST be invoked when any of the following occur:
 - Any technical work is about to begin without a skill selected
 - The user asks "what should I use" or "which workflow"
 
+**Exception:** Micro tasks (typo fix, single variable rename, 1-line config change) can skip the entry sequence entirely. Just do them.
+
 ## Core Rule
 
 Before technical execution, select workflow skills explicitly and follow them.
@@ -31,7 +33,7 @@ Technical execution includes code edits, debugging, planning, review, test statu
 
 1. Invoke `token-efficiency` at session start — applies to all sessions, always.
 2. For technical tasks, invoke `adaptive-workflow-selector`.
-3. If session context is long/noisy, invoke `context-management` and refresh `state.md`.
+3. If resuming work from a prior session, read `state.md` if it exists. Use `context-management` to save state before ending a session with ongoing work.
 4. Invoke selected workflow skills in order.
 5. If no skill applies, continue normally.
 
@@ -45,8 +47,8 @@ Technical execution includes code edits, debugging, planning, review, test statu
 - Branch integration: `finishing-a-development-branch`
 - Extra review flow: `requesting-code-review` / `receiving-code-review`
 - Independent parallel tasks: `dispatching-parallel-agents`
-- Context compression: `context-management`
-- UI/frontend implementation: apply `frontend-craftmanship` standards
+- Cross-session state persistence: `context-management`
+- UI/frontend implementation: apply `frontend-craftsmanship` standards
 - Security-sensitive changes (auth, data handling, exposed APIs): `security-reviewer` before merge
 
 ## Context Hygiene

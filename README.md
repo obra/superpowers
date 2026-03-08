@@ -6,7 +6,7 @@ Key changes include:
 - **Reduced prompt overhead and context pollution**, guided by findings in `docs/plans/2026-03-05-agent-workflow-optimization.md` (e.g., concise skills, smaller always-on instructions, explicit context hygiene).
 - An **adaptive workflow selector** and **context management** that choose between lightweight vs full workflows and actively prune noisy history.
 - Integrated **specialist skills** (senior engineer, security reviewer, testing specialist, frontend craftsmanship, prompt optimizer, CLAUDE/AGENTS creator) that plug into the same Superpowers phases.
-- Optional **Claude Code native task integration** (v2.1.16+): when available, plans and execution can mirror tasks into Claude’s native TaskList with dependencies and status updates, giving “execution on rails” and real-time progress visibility similar to `pcvelz/superpowers`, while remaining a no-op in other environments.
+- **Discipline enforcement** via rationalization tables and red flags in critical skills (systematic-debugging, test-driven-development) — psychologically engineered to prevent LLM shortcuts.
 
 ## How it works
 
@@ -14,7 +14,7 @@ From the moment you fire up your coding agent, this fork follows the Superpowers
 
 Once you approve the design, your agent puts together an implementation plan that an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing could follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY, while this fork’s optimizations keep the instructions focused and token‑efficient.
 
-Next up, once you say “go”, it launches either a *subagent-driven-development* process or *executing-plans*, having agents work through each engineering task with staged reviews (spec compliance, then code quality) and integrated specialists where useful (e.g., security-reviewer on sensitive changes, frontend-craftmanship on UI work).
+Next up, once you say “go”, it launches either a *subagent-driven-development* process or *executing-plans*, having agents work through each engineering task with staged reviews (spec compliance, then code quality) and integrated specialists where useful (e.g., security-reviewer on sensitive changes, frontend-craftsmanship on UI work).
 
 Because the skills trigger automatically and are optimized for smaller, more relevant context windows, you don’t need to do anything special. Your coding agent just has **optimized Superpowers**.
 
@@ -75,7 +75,7 @@ Start a new session in your chosen platform and ask for something that should tr
 
 1. **adaptive-workflow-selector** - Activates first. Chooses `lightweight` vs `full` workflow path based on scope/risk.
 
-2. **context-management** - Activates in long/noisy sessions. Compresses durable state to `state.md` and reduces context pollution.
+2. **context-management** - Persists durable state to `state.md` for cross-session continuity.
 
 3. **brainstorming** (full path) - Produces approved design before implementation changes.
 
@@ -115,14 +115,14 @@ Start a new session in your chosen platform and ask for something that should tr
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality), blocked-task escalation protocol, and E2E process hygiene
 - **senior-engineer** - Senior engineering collaborator for complex or architectural work
 - **security-reviewer** - Structured security and quality review for sensitive changes
-- **frontend-craftmanship** - Production-grade, accessible frontend implementation standards with concrete checklist (semantic HTML, CSS tokens, focus-visible, prefers-reduced-motion, WCAG AA contrast, fluid typography)
+- **frontend-craftsmanship** - Production-grade, accessible frontend implementation standards with concrete checklist (semantic HTML, CSS tokens, focus-visible, prefers-reduced-motion, WCAG AA contrast, fluid typography)
 
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
 - **using-superpowers** - Introduction to the skills system
 - **adaptive-workflow-selector** - Select lightweight vs full process path
-- **context-management** - Summarize durable state and prune noisy context
-- **token-efficiency** - Always-on operational standard: concise responses, parallel tool batching, no redundant work, proactive context compression. Invoked at every session start.
+- **context-management** - Persist durable state to `state.md` for cross-session continuity
+- **token-efficiency** - Always-on operational standard: concise responses, parallel tool batching, no redundant work. Invoked at every session start.
 - **prompt-optimizer** - Optional pre-processing to refine vague or multi-part user requests
 - **claude-md-creator** - Create lean, high-signal CLAUDE/AGENTS context files for repositories
 
@@ -160,5 +160,5 @@ MIT License - see LICENSE file for details
 
 ## Support
 
-- **Issues**: https://github.com/obra/superpowers/issues
-- **Marketplace**: https://github.com/obra/superpowers-marketplace
+- **Issues**: https://github.com/REPOZY/superpowers-optimized/issues
+- **Original**: https://github.com/obra/superpowers

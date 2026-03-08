@@ -11,8 +11,6 @@ description: >
 
 Create an implementation plan another agent can execute with minimal ambiguity.
 
-> When running in Claude Code with native tasks support, this skill can also mirror plan tasks into native tasks for dependency tracking and progress visibility. In other environments, ignore the native-task notes below and use the markdown plan only.
-
 ## Output Path
 
 Save to `docs/plans/YYYY-MM-DD-<feature-name>.md`.
@@ -39,13 +37,6 @@ Save to `docs/plans/YYYY-MM-DD-<feature-name>.md`.
 - Include exact verification commands and expected outcomes.
 - Use TDD ordering when code behavior changes.
 - For especially complex or ambiguous features, you may first run `prompt-optimizer` on the user’s request to tighten scope before finalizing the plan.
-
-### (Claude Code only) Initialize native tasks
-
-If native tasks are available:
-
-1. Call `TaskList` once at the start to see if tasks already exist from `brainstorming`.
-2. If tasks exist, you will enrich them as you write the plan; if not, you will create them as you go.
 
 ## Task Template
 
@@ -74,32 +65,6 @@ git add <files>
 git commit -m "<message>"
 ```
 ````
-
-### (Claude Code only) Mirror plan tasks to native tasks
-
-For each `Task N` you define in the plan, you may also create or update a native task:
-
-```yaml
-TaskCreate:
-  subject: "Task N: <Name>"
-  description: |
-    [Copy the task content you just wrote: files, steps, and acceptance criteria.]
-  activeForm: "Implementing <Name>"
-```
-
-After all tasks are created, you may use `TaskUpdate` to express dependencies (for example, Task 2 blocked by Task 1):
-
-```yaml
-TaskUpdate:
-  taskId: <dependent-task-id>
-  addBlockedBy: [<prerequisite-task-id>]
-```
-
-To enable cross-session resume, keep a small JSON sidecar next to the plan file (for example `docs/plans/2026-01-15-feature.md.tasks.json`) that records:
-
-- The plan path.
-- Each task’s id, subject, status, and `blockedBy` list.
-- `lastUpdated` as an ISO timestamp.
 
 ## Quality Bar
 

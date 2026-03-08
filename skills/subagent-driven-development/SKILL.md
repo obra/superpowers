@@ -29,24 +29,9 @@ Announce: `I'm using subagent-driven-development to execute this plan.`
 - If quality fails, return to implementer and re-review.
 - Mark task complete.
    - For complex or high-risk tasks, you may dispatch a `senior-engineer` subagent to review or refine the approach before or after the implementer’s work.
-   - For tasks centered on frontend/UI, you may apply `frontend-craftmanship` standards to guide structure, styling, and accessibility.
+   - For tasks centered on frontend/UI, you may apply `frontend-craftsmanship` standards to guide structure, styling, and accessibility.
 4. Run final whole-branch review.
 5. Invoke `finishing-a-development-branch`.
-
-### (Claude Code only) Native task sync
-
-If the plan has an associated `.tasks.json` file and native tasks:
-
-- When you first extract tasks from the plan, you may ensure there is one native task per plan task (creating any missing ones with `TaskCreate` and full task text).
-- Each time a task passes both spec-compliance and code-quality review, you may:
-
-```yaml
-TaskUpdate:
-  taskId: <task-id>
-  status: completed
-```
-
-- Keep the `.tasks.json` file in sync with the native task statuses and `lastUpdated` timestamps so other sessions can resume execution with the same task graph.
 
 ## Optional Speed Mode: Parallel Waves
 
@@ -67,6 +52,7 @@ Subagents are stateless — they do not know about processes started by previous
 
 Include in the subagent prompt for any E2E or service-dependent task:
 
+**Unix/macOS:**
 ```
 Before starting any service:
 1. Kill existing instances: pkill -f "<service-pattern>" 2>/dev/null || true
@@ -75,6 +61,17 @@ Before starting any service:
 After tests complete:
 1. Kill the service you started.
 2. Verify cleanup: pgrep -f "<service-pattern>" && echo "WARNING: still running" || echo "Cleanup verified"
+```
+
+**Windows:**
+```
+Before starting any service:
+1. Kill existing instances: taskkill /F /IM "<process-name>" 2>nul || echo "No existing process"
+2. Verify the port is free: netstat -ano | findstr :<port> && echo "ERROR: port still in use" || echo "Port free"
+
+After tests complete:
+1. Kill the service you started.
+2. Verify cleanup: tasklist | findstr "<process-name>" && echo "WARNING: still running" || echo "Cleanup verified"
 ```
 
 Exception: persistent dev servers the user explicitly keeps running — document them in `state.md`.

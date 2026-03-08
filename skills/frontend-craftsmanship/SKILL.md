@@ -1,11 +1,11 @@
 ---
-name: professional-frontend-craftsmanship
+name: frontend-craftsmanship
 description: >
   Production-grade frontend standards: visual quality, accessibility,
   responsive design, and professional polish. Apply when building UI
   components, websites, dashboards, or landing pages. Routed by
   using-superpowers for frontend tasks, or invoke directly via
-  /frontend-craftmanship.
+  /frontend-craftsmanship.
 ---
 
 # Professional Frontend Craftsmanship

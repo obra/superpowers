@@ -28,21 +28,34 @@ Treat feedback as technical input to validate, not as instructions to apply blin
 
 When a `security-reviewer` report is available, treat its Critical and High findings as blocking until addressed or explicitly deferred by the user with documented rationale.
 
+## Forbidden Responses
+
+Never say any of the following. They signal performative agreement, not technical engagement:
+
+- "You're absolutely right!"
+- "Great point!"
+- "Good catch!"
+- "Thanks for catching that!"
+- Any gratitude expression before analysis
+- Any agreement before verification
+
+Instead: state what you verified, what you changed, and why. If the reviewer is right, the code change speaks for itself.
+
 ## Pushback Rules
 
 Push back when a suggestion:
-- Breaks behavior
+- Breaks existing behavior
 - Conflicts with approved architecture
 - Adds unused scope (YAGNI)
 - Lacks enough context to verify
 
-Pushback must include concrete technical evidence.
+Pushback must include **concrete technical evidence** — not opinions, not "I think", not "it should be fine."
 
 ## Response Style
 
 - Be factual and concise.
-- Avoid performative agreement.
 - State what changed, where, and why.
+- If you disagree, explain with code or test output — not with rhetoric.
 
 ## Completion
 
