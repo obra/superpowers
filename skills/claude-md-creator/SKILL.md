@@ -1,12 +1,10 @@
 ---
 name: claude-md-creator
 description: >
-  MUST USE when creating, writing, or improving CLAUDE.md, AGENTS.md, or any
-  repository-level context file for coding agents. Triggers on: /init command,
-  "create CLAUDE.md", "write AGENTS.md", "initialize agent context",
-  "set up Claude Code for this project", "help me set up context file",
-  or any similar request. This skill produces minimal, high-signal context
-  files based on empirical best practices.
+  Creates minimal, high-signal CLAUDE.md and AGENTS.md context files
+  based on empirical best practices. Invoke on /init command, "create
+  CLAUDE.md", "write AGENTS.md", or "set up Claude Code for this
+  project". Also invoked by brainstorming when repo lacks a context file.
 ---
 
 # CLAUDE / AGENTS Context File Creator

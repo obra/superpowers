@@ -36,7 +36,7 @@ escape_for_json() {
 
 using_superpowers_escaped=$(escape_for_json "$using_superpowers_content")
 warning_escaped=$(escape_for_json "$warning_message")
-session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers-custom.\n\n**The `superpowers-custom:using-superpowers` guidance is loaded below. For all other skills, use the `Skill` tool.**\n\n${using_superpowers_escaped}\n\n${warning_escaped}\n</EXTREMELY_IMPORTANT>"
+session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers-optimized.\n\n**The `superpowers-optimized:using-superpowers` guidance is loaded below. For all other skills, use the `Skill` tool.**\n\n${using_superpowers_escaped}\n\n${warning_escaped}\n</EXTREMELY_IMPORTANT>"
 
 # Output context injection as JSON.
 # Keep both shapes for compatibility:

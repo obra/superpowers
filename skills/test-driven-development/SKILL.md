@@ -1,10 +1,9 @@
 ---
 name: test-driven-development
 description: >
-  MUST USE when implementing or fixing behavior to ensure tests are written
-  first and verified failing before code changes. Triggers on: "write tests
-  first", "TDD", any behavior change during implementation, bug fixes that
-  need regression tests.
+  Red-green-refactor cycle: write failing tests before production code for
+  any behavior change. Routed by using-superpowers when behavior changes
+  are needed, or invoke directly via /test-driven-development or "TDD".
 ---
 
 # Test-Driven Development

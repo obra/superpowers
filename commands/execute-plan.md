@@ -3,4 +3,4 @@ description: Use when executing an existing implementation plan in batched check
 disable-model-invocation: true
 ---
 
-Invoke the superpowers-custom:executing-plans skill and follow it exactly.
+Invoke the superpowers-optimized:executing-plans skill and follow it exactly.

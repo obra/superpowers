@@ -1,6 +1,6 @@
 # Installing Superpowers Optimized for Codex
 
-Enable optimized superpowers skills in Codex via native skill discovery. Just clone and symlink.
+Enable superpowers-optimized skills in Codex via native skill discovery. Just clone and symlink.
 
 ## Prerequisites
 

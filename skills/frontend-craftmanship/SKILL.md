@@ -1,11 +1,11 @@
 ---
 name: professional-frontend-craftsmanship
 description: >
-  MUST USE for any frontend, UI, or web interface implementation.
-  Enforces production-grade visual quality, accessibility, responsive
-  design, and professional polish. Triggers on: "build a UI", "frontend",
-  "website", "landing page", "dashboard", "make it look professional",
-  "modern design", any React/Vue/Svelte/HTML component work.
+  Production-grade frontend standards: visual quality, accessibility,
+  responsive design, and professional polish. Apply when building UI
+  components, websites, dashboards, or landing pages. Routed by
+  using-superpowers for frontend tasks, or invoke directly via
+  /frontend-craftmanship.
 ---
 
 # Professional Frontend Craftsmanship

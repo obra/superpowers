@@ -1,10 +1,13 @@
 ---
 name: using-superpowers
 description: >
-  MUST INVOKE at the start of every session and before any technical work.
-  Selects and sequences the correct superpowers workflow skills.
-  Triggers on: session start, new task, topic change, any technical request
-  that hasn't been routed through a skill yet.
+  BLOCKING REQUIREMENT — invoke this skill BEFORE writing any code, editing
+  files, debugging, planning, reviewing, or making any technical tool calls
+  beyond reading files. This is the mandatory workflow router for ALL technical
+  tasks. Matches: "implement", "build", "fix", "debug", "refactor", "optimize",
+  "add feature", "change", "update", "create", "develop", "plan", "review",
+  "test", or ANY request that involves code changes. Do NOT skip this skill
+  even if the task seems simple. Invoke FIRST, then follow its routing.
 ---
 
 # Using Superpowers

@@ -1,10 +1,9 @@
 ---
 name: verification-before-completion
 description: >
-  MUST USE before claiming completion, correctness, or readiness for
-  commit/PR. Requires fresh verification evidence (test output, build
-  success, manual check). Triggers on: "done", "finished", "ready to
-  commit", "ready for PR", "ship it", any completion claim.
+  Invoke BEFORE saying "done", "tests pass", "ready to merge", or any
+  completion claim. Requires fresh command output as evidence — no
+  completion without proof. Also routed by using-superpowers at task end.
 ---
 
 # Verification Before Completion

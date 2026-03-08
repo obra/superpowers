@@ -72,7 +72,7 @@ Superpowers skills are in \`${configDir}/skills/superpowers/\`
 Use OpenCode's native \`skill\` tool to list and load skills.`;
 
     return `<EXTREMELY_IMPORTANT>
-You have superpowers-custom.
+You have superpowers-optimized.
 
 **The \`using-superpowers\` guidance below is already loaded. Do not load it again.**
 

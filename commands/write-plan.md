@@ -3,4 +3,4 @@ description: Use when an approved design should be turned into an executable imp
 disable-model-invocation: true
 ---
 
-Invoke the superpowers-custom:writing-plans skill and follow it exactly.
+Invoke the superpowers-optimized:writing-plans skill and follow it exactly.

@@ -1,10 +1,10 @@
 ---
 name: writing-plans
 description: >
-  MUST USE when requirements are approved and implementation needs to be
-  decomposed into executable tasks before coding starts. Triggers on:
-  "write a plan", "plan the implementation", "break this down",
-  after brainstorming approval, "how do we build this".
+  Decomposes approved requirements into executable task plans with
+  verification commands and TDD ordering. Invoke after design approval
+  or when user says "write a plan", "break this down". Routed by
+  brainstorming as the next step after design approval.
 ---
 
 # Writing Plans
@@ -22,7 +22,7 @@ Save to `docs/plans/YYYY-MM-DD-<feature-name>.md`.
 ```markdown
 # <Feature Name> Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers-custom:executing-plans to implement this plan task-by-task.
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers-optimized:executing-plans to implement this plan task-by-task.
 
 **Goal:** <single sentence>
 **Architecture:** <2-4 sentences>

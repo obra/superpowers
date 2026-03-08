@@ -1,10 +1,10 @@
 ---
 name: receiving-code-review
 description: >
-  MUST USE when handling review feedback to verify suggestions, resolve
-  unclear items, and implement changes with technical rigor. Triggers on:
-  review comments received, "address review feedback", "fix review comments",
-  PR review responses.
+  Handles review feedback with technical rigor: verify suggestions,
+  resolve unclear items, implement fixes in priority order. Invoke when
+  review comments are received or user says "address review feedback".
+  Routed by using-superpowers when review feedback arrives.
 ---
 
 # Receiving Code Review

@@ -3,7 +3,7 @@
 Dispatch only after spec compliance passes.
 
 ```
-Task tool (superpowers-custom:code-reviewer):
+Task tool (superpowers-optimized:code-reviewer):
   Use template at requesting-code-review/code-reviewer.md
 
   WHAT_WAS_IMPLEMENTED: <implementer summary>

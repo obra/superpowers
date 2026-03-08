@@ -1,10 +1,10 @@
 ---
 name: subagent-driven-development
 description: >
-  MUST USE when executing a plan in the current session using parallel
-  subagents for per-task implementation with staged reviews. Triggers on:
-  "use subagents", "parallel implementation", large plans with independent
-  tasks, when executing-plans would benefit from parallelization.
+  Executes plans using parallel subagents with per-task implementation
+  and staged review gates. Invoke for parallel plan execution in the
+  current session. Routed by writing-plans handoff or using-superpowers
+  for large plans with independent tasks.
 ---
 
 # Subagent-Driven Development

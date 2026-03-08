@@ -1,9 +1,11 @@
 ---
 name: testing-specialist
 description: >
-  MUST USE when building comprehensive test suites or when test quality
-  is the primary concern. Triggers on: "write tests", "improve test
-  coverage", "test suite", "testing strategy", dedicated testing tasks.
+  Expert test strategy and comprehensive test suite design: unit,
+  integration, E2E, property-based, and performance testing. Invoke
+  for dedicated testing tasks like "write tests", "improve coverage",
+  or "testing strategy". Routed by using-superpowers or
+  test-driven-development for complex testing needs.
 ---
 
 # Testing Specialist

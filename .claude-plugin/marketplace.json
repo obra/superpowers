@@ -1,5 +1,5 @@
 {
-  "name": "optimized-superpowers",
+  "name": "superpowers-optimized",
   "description": "Development marketplace for Superpowers Custom skills library",
   "owner": {
     "name": "Jesse Vincent",
@@ -7,7 +7,7 @@
   },
   "plugins": [
     {
-      "name": "optimized-superpowers",
+      "name": "superpowers-optimized",
       "description": "Custom optimized Superpowers skills library for Claude Code",
       "version": "4.3.1-custom.1",
       "source": "./",

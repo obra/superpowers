@@ -1,10 +1,10 @@
 ---
 name: adaptive-workflow-selector
 description: >
-  MUST USE before any technical execution to classify task complexity as
-  lightweight or full and select the minimum safe workflow path.
-  Triggers on: any implementation request, bug fix, feature request,
-  refactor, or code change before work begins.
+  Classifies task complexity as lightweight or full and selects the minimum
+  safe workflow path. Invoked by using-superpowers as step 2 of the workflow
+  routing — do not invoke independently unless explicitly requested via
+  /adaptive-workflow-selector.
 ---
 
 # Adaptive Workflow Selector

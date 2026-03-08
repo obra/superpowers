@@ -1,11 +1,11 @@
 ---
 name: senior-engineer
 description: >
-  MUST USE for complex implementation and coding tasks requiring architectural
-  review. Enforces structured software engineering: requirements verification,
-  edge case analysis, and incremental development. Triggers on: "implement",
-  "build", "code this", "create", "develop", complex or high-risk tasks,
-  architectural decisions, major refactoring.
+  Expert software engineering guidance for complex implementation tasks.
+  Provides requirements verification, edge case analysis, architectural
+  review, and incremental development methodology. Routed by
+  using-superpowers for complex or architectural tasks, or invoke directly
+  via /senior-engineer.
 ---
 
 # Senior Engineer

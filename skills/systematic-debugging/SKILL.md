@@ -1,11 +1,11 @@
 ---
 name: systematic-debugging
 description: >
-  MUST USE when a bug, test failure, error, or unexpected behavior appears
-  and root cause is not yet proven. Triggers on: "it's broken", "this fails",
-  "error", "bug", "not working", "unexpected behavior", test failures,
-  stack traces, error logs. Enforces hypothesis-driven root cause analysis
-  before any fix attempt.
+  Invoke BEFORE attempting any fix when a bug, test failure, error, or
+  unexpected behavior appears. Enforces hypothesis-driven root cause
+  analysis — no fix without evidence. Triggers on: error messages, stack
+  traces, "it's broken", "not working", "bug", test failures. Also routed
+  by using-superpowers for debugging tasks.
 ---
 
 # Systematic Debugging

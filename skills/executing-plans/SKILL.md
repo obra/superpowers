@@ -1,9 +1,10 @@
 ---
 name: executing-plans
 description: >
-  MUST USE when executing an existing implementation plan in batches with
-  review checkpoints. Triggers on: "execute the plan", "start building",
-  "follow the plan", when a plan.md exists and user wants to begin work.
+  Executes an existing implementation plan in controlled batches with
+  verification checkpoints. Invoke when a plan.md exists and user says
+  "execute the plan", "start building", or "follow the plan". Routed by
+  using-superpowers or writing-plans handoff.
 ---
 
 # Executing Plans
@@ -73,4 +74,4 @@ Do not carry long historical summaries that are unrelated to the current batch.
 
 After all tasks pass verification:
 1. Announce `finishing-a-development-branch`.
-2. Invoke `superpowers-custom:finishing-a-development-branch`.
+2. Invoke `superpowers-optimized:finishing-a-development-branch`.
