@@ -1,6 +1,10 @@
 ---
 name: verification-before-completion
-description: Use before claiming completion, correctness, or readiness for commit/PR to require fresh verification evidence.
+description: >
+  MUST USE before claiming completion, correctness, or readiness for
+  commit/PR. Requires fresh verification evidence (test output, build
+  success, manual check). Triggers on: "done", "finished", "ready to
+  commit", "ready for PR", "ship it", any completion claim.
 ---
 
 # Verification Before Completion

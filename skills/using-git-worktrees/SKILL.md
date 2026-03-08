@@ -1,6 +1,9 @@
 ---
 name: using-git-worktrees
-description: Use before implementation when work should be isolated from the current branch or workspace.
+description: >
+  Use before implementation when work should be isolated from the current
+  branch. Triggers on: "use a worktree", "isolate this work",
+  "don't touch main", experimental or risky changes that need isolation.
 ---
 
 # Using Git Worktrees

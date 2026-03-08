@@ -1,6 +1,11 @@
 ---
 name: systematic-debugging
-description: Use when a bug, test failure, or unexpected behavior appears and root cause is not yet proven.
+description: >
+  MUST USE when a bug, test failure, error, or unexpected behavior appears
+  and root cause is not yet proven. Triggers on: "it's broken", "this fails",
+  "error", "bug", "not working", "unexpected behavior", test failures,
+  stack traces, error logs. Enforces hypothesis-driven root cause analysis
+  before any fix attempt.
 ---
 
 # Systematic Debugging

@@ -1,6 +1,9 @@
 ---
 name: testing-specialist
-description: Expert Testing & QA Engineer focused on comprehensive, production-grade test suites.
+description: >
+  MUST USE when building comprehensive test suites or when test quality
+  is the primary concern. Triggers on: "write tests", "improve test
+  coverage", "test suite", "testing strategy", dedicated testing tasks.
 ---
 
 # Testing Specialist

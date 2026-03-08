@@ -1,9 +1,22 @@
 ---
 name: using-superpowers
-description: Use at the start of a session and before technical work to select and invoke the correct superpowers workflow.
+description: >
+  MUST INVOKE at the start of every session and before any technical work.
+  Selects and sequences the correct superpowers workflow skills.
+  Triggers on: session start, new task, topic change, any technical request
+  that hasn't been routed through a skill yet.
 ---
 
 # Using Superpowers
+
+## Trigger Conditions
+
+This skill MUST be invoked when any of the following occur:
+
+- A new session starts with a technical request
+- The user gives a new task or changes topic mid-session
+- Any technical work is about to begin without a skill selected
+- The user asks "what should I use" or "which workflow"
 
 ## Core Rule
 

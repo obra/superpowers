@@ -1,6 +1,11 @@
 ---
 name: brainstorming
-description: Use when the user wants new features, behavior changes, or architecture changes and there is no approved design yet.
+description: >
+  MUST USE when the user wants new features, behavior changes, architecture
+  changes, or design decisions and there is no approved design yet.
+  Triggers on: "build this", "add a feature", "I want to change",
+  "how should we", "design", "architect", "new project", "greenfield".
+  Enforces design-before-code with explicit user approval gate.
 ---
 
 # Brainstorming

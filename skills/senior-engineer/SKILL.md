@@ -1,6 +1,11 @@
 ---
 name: senior-engineer
-description: Expert Senior Software Engineer serving as dedicated coding collaborator for full software development lifecycle tasks.
+description: >
+  MUST USE for complex implementation and coding tasks requiring architectural
+  review. Enforces structured software engineering: requirements verification,
+  edge case analysis, and incremental development. Triggers on: "implement",
+  "build", "code this", "create", "develop", complex or high-risk tasks,
+  architectural decisions, major refactoring.
 ---
 
 # Senior Engineer

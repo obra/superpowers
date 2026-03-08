@@ -1,6 +1,9 @@
 ---
 name: executing-plans
-description: Use when executing an existing implementation plan in batches with review checkpoints.
+description: >
+  MUST USE when executing an existing implementation plan in batches with
+  review checkpoints. Triggers on: "execute the plan", "start building",
+  "follow the plan", when a plan.md exists and user wants to begin work.
 ---
 
 # Executing Plans

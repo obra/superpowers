@@ -1,6 +1,10 @@
 ---
 name: security-reviewer
-description: Expert Security Engineer and Senior Code Reviewer focused on secure coding, vulnerability detection, and high-quality code reviews.
+description: >
+  MUST USE for security-sensitive code: authentication, authorization,
+  data handling, API endpoints, input validation, secrets management.
+  Triggers on: "security review", "is this secure", auth code, API
+  routes handling user data, before merging security-critical changes.
 ---
 
 # Security Reviewer

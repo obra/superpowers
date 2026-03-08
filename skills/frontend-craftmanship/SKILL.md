@@ -1,6 +1,11 @@
 ---
 name: professional-frontend-craftsmanship
-description: Create production-grade, visually sophisticated, and highly accessible frontend interfaces that look and perform like premium professional products.
+description: >
+  MUST USE for any frontend, UI, or web interface implementation.
+  Enforces production-grade visual quality, accessibility, responsive
+  design, and professional polish. Triggers on: "build a UI", "frontend",
+  "website", "landing page", "dashboard", "make it look professional",
+  "modern design", any React/Vue/Svelte/HTML component work.
 ---
 
 # Professional Frontend Craftsmanship

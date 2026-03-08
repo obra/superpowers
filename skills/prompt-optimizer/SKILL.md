@@ -1,6 +1,10 @@
 ---
 name: prompt-optimizer
-description: Analyse raw user prompts, generate a small set of improved variants, and let the user choose one before execution to increase clarity and downstream quality.
+description: >
+  Use when the user wants to improve a prompt before execution. Generates
+  optimized variants and lets the user choose. Triggers on: "optimize this
+  prompt", "improve my prompt", "make this prompt better", "rewrite this
+  instruction".
 ---
 
 # Prompt Optimizer

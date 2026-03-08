@@ -1,6 +1,9 @@
 ---
 name: writing-skills
-description: Use when creating or updating skills and validating that they trigger correctly and improve agent behavior.
+description: >
+  Use when creating or updating Superpowers skills and validating trigger
+  accuracy. Triggers on: "create a skill", "write a skill", "update this
+  skill", "improve skill triggering", skill development tasks.
 ---
 
 # Writing Skills

@@ -1,6 +1,10 @@
 ---
 name: writing-plans
-description: Use when requirements are approved and implementation should be decomposed into executable tasks before coding starts.
+description: >
+  MUST USE when requirements are approved and implementation needs to be
+  decomposed into executable tasks before coding starts. Triggers on:
+  "write a plan", "plan the implementation", "break this down",
+  after brainstorming approval, "how do we build this".
 ---
 
 # Writing Plans

@@ -1,6 +1,10 @@
 ---
 name: context-management
-description: Use in long or noisy multi-turn sessions to compress prior state into state.md and reduce context pollution before continuing.
+description: >
+  Use in long or noisy sessions to compress prior state into state.md
+  and reduce context pollution. Triggers on: sessions exceeding 8 turns,
+  repeated failures, topic shifts, "compress context", "clean up session",
+  when token usage is visibly growing.
 ---
 
 # Context Management

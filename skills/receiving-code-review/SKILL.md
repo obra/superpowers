@@ -1,6 +1,10 @@
 ---
 name: receiving-code-review
-description: Use when handling review feedback to verify suggestions, resolve unclear items, and implement changes with technical rigor.
+description: >
+  MUST USE when handling review feedback to verify suggestions, resolve
+  unclear items, and implement changes with technical rigor. Triggers on:
+  review comments received, "address review feedback", "fix review comments",
+  PR review responses.
 ---
 
 # Receiving Code Review

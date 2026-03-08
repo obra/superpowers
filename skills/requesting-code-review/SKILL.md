@@ -1,6 +1,10 @@
 ---
 name: requesting-code-review
-description: Use after meaningful code changes or before merge to request structured review against requirements and quality standards.
+description: >
+  MUST USE after meaningful code changes or before merge to request
+  structured review against requirements and quality standards.
+  Triggers on: "review my code", "code review", "check this before merge",
+  after implementation is complete and tests pass.
 ---
 
 # Requesting Code Review

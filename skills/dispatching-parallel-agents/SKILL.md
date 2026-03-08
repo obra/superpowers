@@ -1,6 +1,10 @@
 ---
 name: dispatching-parallel-agents
-description: Use when multiple tasks are independent enough to run concurrently without file or state conflicts.
+description: >
+  Use when multiple tasks are independent and can run concurrently without
+  file or state conflicts. Triggers on: "run these in parallel",
+  "do these at the same time", plans with 3+ independent tasks,
+  when subagent-driven-development identifies parallelizable work.
 ---
 
 # Dispatching Parallel Agents

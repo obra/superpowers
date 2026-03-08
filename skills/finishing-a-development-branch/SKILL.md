@@ -1,6 +1,10 @@
 ---
 name: finishing-a-development-branch
-description: Use when implementation is verified and you need to choose merge, PR, keep, or discard branch outcomes.
+description: >
+  MUST USE when implementation is verified and you need to choose the
+  branch outcome: merge, PR, keep, or discard. Triggers on: "merge this",
+  "create a PR", "we're done with this branch", "clean up the branch",
+  after verification-before-completion passes.
 ---
 
 # Finishing a Development Branch

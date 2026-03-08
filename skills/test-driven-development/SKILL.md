@@ -1,6 +1,10 @@
 ---
 name: test-driven-development
-description: Use when implementing or fixing behavior so tests are written first and verified failing before code changes.
+description: >
+  MUST USE when implementing or fixing behavior to ensure tests are written
+  first and verified failing before code changes. Triggers on: "write tests
+  first", "TDD", any behavior change during implementation, bug fixes that
+  need regression tests.
 ---
 
 # Test-Driven Development
