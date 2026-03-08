@@ -1,5 +1,7 @@
 # Creation Log: Systematic Debugging Skill
 
+> **Note:** This is a historical document from the original superpowers repo. File paths referenced below (e.g., `skills/debugging/`, `skills/testing/`, `skills/meta/`) reflect the original directory structure and may not match the current layout.
+
 Reference example of extracting, structuring, and bulletproofing a critical skill.
 
 ## Source Material

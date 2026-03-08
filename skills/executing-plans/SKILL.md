@@ -49,4 +49,4 @@ Do not carry long historical summaries that are unrelated to the current batch.
 
 After all tasks pass verification:
 1. Announce `finishing-a-development-branch`.
-2. Invoke `superpowers-optimized:finishing-a-development-branch`.
+2. Invoke `finishing-a-development-branch`.

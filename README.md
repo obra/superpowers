@@ -1,6 +1,6 @@
 # Superpowers (Optimized Fork)
 
-This repository is an **optimized fork** of the original [obra/superpowers](https://github.com/obra/superpowers) plugin. It keeps the same core promise — A complete software development workflow for your coding agents built from composable “skills” and strong initial instructions — but applies additional research-driven improvements to make the workflow **leaner, faster, and more robust** in modern agent IDEs.
+This repository is an **optimized fork** of the original [obra/superpowers](https://github.com/obra/superpowers) plugin. It keeps the same core promise — A complete software development workflow for your coding agents built from composable "skills" and strong initial instructions — but applies additional research-driven improvements to make the workflow **leaner, faster, and more robust** in modern agent IDEs.
 
 Key changes include:
 - **Reduced prompt overhead and context pollution**, guided by findings in `docs/plans/2026-03-05-agent-workflow-optimization.md` (e.g., concise skills, smaller always-on instructions, explicit context hygiene).
@@ -10,13 +10,13 @@ Key changes include:
 
 ## How it works
 
-From the moment you fire up your coding agent, this fork follows the Superpowers approach: it first steps back to understand what you’re really trying to do instead of jumping straight into code. It then collaborates with you to tease out a clear spec and shows it in chunks short enough to read and digest.
+From the moment you fire up your coding agent, this fork follows the Superpowers approach: it first steps back to understand what you're really trying to do instead of jumping straight into code. It then collaborates with you to tease out a clear spec and shows it in chunks short enough to read and digest.
 
-Once you approve the design, your agent puts together an implementation plan that an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing could follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY, while this fork’s optimizations keep the instructions focused and token‑efficient.
+Once you approve the design, your agent puts together an implementation plan that an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing could follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY, while this fork's optimizations keep the instructions focused and token‑efficient.
 
-Next up, once you say “go”, it launches either a *subagent-driven-development* process or *executing-plans*, having agents work through each engineering task with staged reviews (spec compliance, then code quality) and integrated specialists where useful (e.g., security-reviewer on sensitive changes, frontend-craftsmanship on UI work).
+Next up, once you say "go", it launches either a *subagent-driven-development* process or *executing-plans*, having agents work through each engineering task with staged reviews (spec compliance, then code quality) and integrated specialists where useful (e.g., security-reviewer on sensitive changes, frontend-craftsmanship on UI work).
 
-Because the skills trigger automatically and are optimized for smaller, more relevant context windows, you don’t need to do anything special. Your coding agent just has **optimized Superpowers**.
+Because the skills trigger automatically and are optimized for smaller, more relevant context windows, you don't need to do anything special. Your coding agent just has **optimized Superpowers**.
 
 
 
@@ -30,13 +30,13 @@ Because the skills trigger automatically and are optimized for smaller, more rel
 In Claude Code, register the marketplace first:
 
 ```bash
-/plugin marketplace add obra/superpowers-marketplace
+/plugin marketplace add REPOZY/superpowers-optimized
 ```
 
 Then install the plugin from this marketplace:
 
 ```bash
-/plugin install superpowers@superpowers-marketplace
+/plugin install superpowers@superpowers-optimized
 ```
 
 ### Cursor (via Plugin Marketplace)
@@ -52,7 +52,7 @@ In Cursor Agent chat, install from marketplace:
 Tell Codex:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/REPOZY/superpowers-optimized/refs/heads/main/.codex/INSTALL.md
 ```
 
 **Detailed docs:** [docs/README.codex.md](docs/README.codex.md)
@@ -62,7 +62,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 Tell OpenCode:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/REPOZY/superpowers-optimized/refs/heads/main/.opencode/INSTALL.md
 ```
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
@@ -103,7 +103,7 @@ Start a new session in your chosen platform and ask for something that should tr
 - **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
 - **verification-before-completion** - Evidence gate for completion claims, including configuration change verification (verifies outcomes reflect intended changes, not just that operations succeeded)
 
-**Collaboration** 
+**Collaboration**
 - **brainstorming** - Socratic design refinement
 - **writing-plans** - Detailed implementation plans
 - **executing-plans** - Batch execution with checkpoints

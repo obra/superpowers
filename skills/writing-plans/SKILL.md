@@ -20,7 +20,7 @@ Save to `docs/plans/YYYY-MM-DD-<feature-name>.md`.
 ```markdown
 # <Feature Name> Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers-optimized:executing-plans to implement this plan task-by-task.
+> **For Claude:** REQUIRED SUB-SKILL: Use the appropriate execution skill (`executing-plans` or `subagent-driven-development`) to implement this plan.
 
 **Goal:** <single sentence>
 **Architecture:** <2-4 sentences>

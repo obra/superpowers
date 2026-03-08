@@ -1,8 +1,10 @@
 # Superpowers-Optimized: Comprehensive Audit & Suggestions
 
+> **Status: RESOLVED** — All bugs listed in Part 1 have been fixed. This document is retained as a historical record of the initial audit.
+
 > Audit performed 2026-03-08 by Claude Opus 4.6
 > Compared against original: https://github.com/obra/superpowers (v4.3.1, 14 skills)
-> Audited version: superpowers-optimized v4.3.1-custom.1 (25 skills)
+> Audited version: superpowers-optimized v4.3.1-custom.1 (25 skills) → now v1.0.0
 
 ---
 
