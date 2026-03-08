@@ -1,0 +1,19 @@
+{
+  "name": "superpowers",
+  "version": "1.0.0",
+  "description": "A complete software development workflow for your coding agents.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "gemini",
+    "mcp",
+    "skills",
+    "agent",
+    "ai",
+    "workflow"
+  ],
+  "author": "Jesse Vincent",
+  "license": "MIT"
+}
