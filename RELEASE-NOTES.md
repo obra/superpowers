@@ -1,93 +1,96 @@
 # Superpowers Release Notes
 
-## Unreleased
+## v5.0.0
 
 ### Breaking Changes
 
 **Specs and plans directory restructured**
 
-- Specs (brainstorming output) now go to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
-- Plans (writing-plans output) now go to `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
+- Specs (brainstorming output) now save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
+- Plans (writing-plans output) now save to `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
 - User preferences for spec/plan locations override these defaults
+- All internal skill references, test files, and example paths updated to match
 - Migration: move existing files from `docs/plans/` to new locations if desired
 
-**Brainstorming → writing-plans transition enforced**
+**Subagent-driven development mandatory on capable harnesses**
 
-- After design approval, brainstorming now requires using writing-plans skill
-- Platform planning features (e.g., EnterPlanMode) should not be used
-- Direct implementation without writing-plans is not allowed
+Writing-plans no longer offers a choice between subagent-driven and executing-plans. On harnesses with subagent support (Claude Code, Codex), subagent-driven-development is required. Executing-plans is reserved for harnesses without subagent capability, and now tells the user that Superpowers works better on a subagent-capable platform.
 
-**Subagent-driven development now mandatory on capable harnesses**
+**Executing-plans no longer batches**
 
-- On harnesses with subagent support (Claude Code), subagent-driven-development is now required after plan approval
-- No longer offers a choice between subagent-driven and executing-plans
-- Executing-plans is only used on harnesses without subagent capability
+Removed the "execute 3 tasks then stop for review" pattern. Plans now execute continuously, stopping only for blockers.
 
-**OpenCode: Switched to native skills system**
+**Slash commands deprecated**
 
-Superpowers for OpenCode now uses OpenCode's native `skill` tool instead of custom `use_skill`/`find_skills` tools. This is a cleaner integration that works with OpenCode's built-in skill discovery.
-
-**Migration required:** Skills must be symlinked to `~/.config/opencode/skills/superpowers/` (see updated installation docs).
-
-### Fixes
-
-**OpenCode: Fixed agent reset on session start (#226)**
-
-The previous bootstrap injection method using `session.prompt({ noReply: true })` caused OpenCode to reset the selected agent to "build" on first message. Now uses `experimental.chat.system.transform` hook which modifies the system prompt directly without side effects.
-
-**OpenCode: Fixed Windows installation (#232)**
-
-- Removed dependency on `skills-core.js` (eliminates broken relative imports when file is copied instead of symlinked)
-- Added comprehensive Windows installation docs for cmd.exe, PowerShell, and Git Bash
-- Documented proper symlink vs junction usage for each platform
+`/brainstorm`, `/write-plan`, and `/execute-plan` now show deprecation notices pointing users to the corresponding skills. Commands will be removed in the next major release.
 
 ### New Features
 
-**Visual companion for brainstorming skill**
+**Visual brainstorming companion**
 
-Added optional browser-based visual companion for brainstorming sessions. When users have a browser available, brainstorming can display interactive screens showing current phase, questions, and design decisions in a more readable format than terminal output.
+Optional browser-based companion for brainstorming sessions. When a topic would benefit from visuals, the brainstorming skill offers to show mockups, diagrams, comparisons, and other content in a browser window alongside terminal conversation.
 
-Components:
-- `lib/brainstorm-server/` - WebSocket server for real-time updates
-- `skills/brainstorming/visual-companion.md` - Integration guide
-- Helper scripts for session management with proper isolation
-- Browser helper library for event capture
+- `lib/brainstorm-server/` — WebSocket server with browser helper library, session management scripts, and dark/light themed frame template ("Superpowers Brainstorming" with GitHub link)
+- `skills/brainstorming/visual-companion.md` — Progressive disclosure guide for server workflow, screen authoring, and feedback collection
+- Brainstorming skill adds a visual companion decision point to its process flow: after exploring project context, the skill evaluates whether upcoming questions involve visual content and offers the companion in its own message
+- Per-question decision: even after accepting, each question is evaluated for whether browser or terminal is more appropriate
+- Integration tests in `tests/brainstorm-server/`
 
-The visual companion is opt-in and falls back gracefully to terminal-only operation.
+**Document review system**
 
-### Bug Fixes
+Automated review loops for spec and plan documents using subagent dispatch:
 
-**Fixed Windows hook execution for Claude Code 2.1.x**
+- `skills/brainstorming/spec-document-reviewer-prompt.md` — Reviewer checks completeness, consistency, architecture, and YAGNI
+- `skills/writing-plans/plan-document-reviewer-prompt.md` — Reviewer checks spec alignment, task decomposition, file structure, and file size
+- Brainstorming dispatches spec reviewer after writing design docs
+- Writing-plans includes chunk-based plan review loop after each section
+- Review loops repeat until approved or escalate after 5 iterations
+- End-to-end tests in `tests/claude-code/test-document-review-system.sh`
+- Design spec and implementation plan in `docs/superpowers/`
 
-Claude Code 2.1.x changed how hooks execute on Windows: it now auto-detects `.sh` files in commands and prepends `bash `. This broke the polyglot wrapper pattern because `bash "run-hook.cmd" session-start.sh` tries to execute the .cmd file as a bash script.
+**Architecture guidance across the skill pipeline**
 
-Fix: hooks.json now calls session-start.sh directly. Claude Code 2.1.x handles the bash invocation automatically. Also added .gitattributes to enforce LF line endings for shell scripts (fixes CRLF issues on Windows checkout).
+Design-for-isolation and file-size-awareness guidance added to brainstorming, writing-plans, and subagent-driven-development:
 
-**Brainstorming visual companion: reduced token cost and improved persistence**
+- **Brainstorming** — New sections: "Design for isolation and clarity" (clear boundaries, well-defined interfaces, independently testable units) and "Working in existing codebases" (follow existing patterns, targeted improvements only)
+- **Writing-plans** — New "File Structure" section: map out files and responsibilities before defining tasks. New "Scope Check" backstop: catch multi-subsystem specs that should have been decomposed during brainstorming
+- **SDD implementer** — New "Code Organization" section (follow plan's file structure, report concerns about growing files) and "When You're in Over Your Head" escalation guidance
+- **SDD code quality reviewer** — Now checks architecture, unit decomposition, plan conformance, and file growth
+- **Spec/plan reviewers** — Architecture and file size added to review criteria
 
-The visual companion now generates much smaller HTML per screen. The server automatically wraps bare content fragments in the frame template (header, CSS theme, feedback footer, interactive JS), so Claude writes only the content portion (~30 lines instead of ~260). Full HTML documents are still served as-is when Claude needs complete control.
+**Subagent-driven development improvements**
 
-Other improvements:
-- `toggleSelect`/`send`/`selectedChoice` moved from inline template script to `helper.js` (auto-injected)
-- `start-server.sh --project-dir` persists mockups under `.superpowers/brainstorm/` instead of `/tmp`
-- `stop-server.sh` only deletes ephemeral `/tmp` sessions, preserving persistent ones
-- Dark mode fix: `sendToClaude` confirmation page now uses CSS variables instead of hardcoded colors
-- Skill restructured: SKILL.md is minimal (prompt + pointer); all visual companion details in progressive disclosure doc (`visual-companion.md`)
-- Prompt to user now notes the feature is new, token-intensive, and can be slow
-- Deleted redundant `CLAUDE-INSTRUCTIONS.md` (content folded into `visual-companion.md`)
-- Test fixes: correct env var (`BRAINSTORM_DIR`), polling-based startup wait, new tests for frame wrapping
+- **Model selection** — Guidance for choosing model capability by task type: cheap models for mechanical implementation, standard for integration, capable for architecture and review
+- **Implementer status protocol** — Subagents now report DONE, DONE_WITH_CONCERNS, BLOCKED, or NEEDS_CONTEXT. Controller handles each status appropriately: re-dispatching with more context, upgrading model capability, breaking tasks apart, or escalating to human
+- **Scope assessment** — Brainstorming now assesses whether a project is too large for a single spec. Multi-subsystem requests are flagged early and decomposed into sub-projects, each with its own spec → plan → implementation cycle
 
 ### Improvements
 
-**Instruction priority clarified in using-superpowers**
+**Instruction priority hierarchy**
 
-Added explicit instruction priority hierarchy to prevent conflicts with user preferences:
+Added explicit priority ordering to using-superpowers:
 
-1. User's explicit instructions (CLAUDE.md, direct requests) — highest priority
-2. Superpowers skills — override default system behavior where they conflict
+1. User's explicit instructions (CLAUDE.md, AGENTS.md, direct requests) — highest priority
+2. Superpowers skills — override default system behavior
 3. Default system prompt — lowest priority
 
-This ensures users remain in control. If CLAUDE.md says "don't use TDD" and a skill says "always use TDD," CLAUDE.md wins.
+If CLAUDE.md or AGENTS.md says "don't use TDD" and a skill says "always use TDD," the user's instructions win.
+
+**SUBAGENT-STOP gate**
+
+Added `<SUBAGENT-STOP>` block to using-superpowers. Subagents dispatched for specific tasks now skip the skill instead of activating the 1% rule and invoking full skill workflows.
+
+**Multi-platform improvements**
+
+- Codex tool mapping moved to progressive disclosure reference file (`references/codex-tools.md`)
+- Platform Adaptation pointer added so non-Claude-Code platforms can find tool equivalents
+- Plan headers now address "agentic workers" instead of "Claude" specifically
+- Collab feature requirement documented in `docs/README.codex.md`
+
+**Writing-plans template updates**
+
+- Plan steps now use checkbox syntax (`- [ ] **Step N:**`) for progress tracking
+- Plan header references both subagent-driven-development and executing-plans with platform-aware routing
 
 ## v4.3.1 (2026-02-21)
 
