@@ -71,6 +71,17 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
 
+### Gemini CLI
+
+Tell Gemini CLI:
+
+```
+Fetch and follow instructions from https://raw.githubusercontent.com/samuelfa/superpowers/refs/heads/feat/gemini-support/.gemini/INSTALL.md
+```
+
+**Detailed docs:** [.gemini/INSTALL.md](.gemini/INSTALL.md)
+
+
 ### Verify Installation
 
 Start a new session in your chosen platform and ask for something that should trigger a skill (for example, "help me plan this feature" or "let's debug this issue"). The agent should automatically invoke the relevant superpowers skill.
