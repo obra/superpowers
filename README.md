@@ -18,7 +18,21 @@ Next up, once you say "go", it launches either a *subagent-driven-development* p
 
 Because the skills trigger automatically and are optimized for smaller, more relevant context windows, you don't need to do anything special. Your coding agent just has **optimized Superpowers**.
 
+## Why This Fork
 
+This optimized version builds on the original [obra/superpowers](https://github.com/obra/superpowers) with targeted improvements:
+
+| | Original | Optimized |
+|---|---|---|
+| **Workflow routing** | Manual skill selection | Automatic routing via `adaptive-workflow-selector` with micro/lightweight/full tiers |
+| **Specialist skills** | Core workflow only | +6 specialists (senior-engineer, security-reviewer, testing-specialist, frontend-craftsmanship, prompt-optimizer, claude-md-creator) |
+| **Discipline enforcement** | Instructional tone | Rationalization tables, red flags, iron laws, and forbidden phrases in critical skills |
+| **Token efficiency** | No explicit controls | Always-on `token-efficiency` standard with context hygiene rules |
+| **Platform support** | Claude Code | Claude Code, Cursor, Codex, OpenCode |
+| **Cross-session state** | None | `context-management` persists durable state to `state.md` |
+| **Trigger reliability** | Generic descriptions | Assertive "MUST USE" descriptions with explicit trigger phrases |
+
+The result: everything the original does, plus routing, specialists, discipline enforcement, and multi-platform support — in fewer tokens.
 
 ## Installation
 

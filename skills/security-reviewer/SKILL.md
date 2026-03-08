@@ -1,11 +1,11 @@
 ---
 name: security-reviewer
 description: >
-  Security analysis and code review for auth, data handling, API
-  endpoints, input validation, and secrets management. Invoke for
-  security-sensitive changes or when user says "security review".
-  Routed by using-superpowers or requesting-code-review for
-  security-critical code.
+  MUST USE for security-sensitive code: authentication, authorization,
+  data handling, API endpoints, input validation, secrets management.
+  Triggers on: "security review", "is this secure", auth code, API
+  routes handling user data, before merging security-critical changes.
+  Routed by using-superpowers or requesting-code-review.
 ---
 
 # Security Reviewer

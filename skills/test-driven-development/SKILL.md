@@ -1,9 +1,11 @@
 ---
 name: test-driven-development
 description: >
-  Red-green-refactor cycle: write failing tests before production code for
-  any behavior change. Routed by using-superpowers when behavior changes
-  are needed, or invoke directly via /test-driven-development or "TDD".
+  MUST USE for any behavior change: write failing tests before production
+  code. No exceptions. Triggers on: "TDD", "write tests first", any
+  implementation task, bug fix needing regression tests, behavior changes
+  during execution. Routed by using-superpowers, or invoke directly via
+  /test-driven-development.
 ---
 
 # Test-Driven Development

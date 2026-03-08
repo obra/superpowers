@@ -1,10 +1,10 @@
 ---
 name: executing-plans
 description: >
-  Executes an existing implementation plan in controlled batches with
-  verification checkpoints. Invoke when a plan.md exists and user says
-  "execute the plan", "start building", or "follow the plan". Routed by
-  using-superpowers or writing-plans handoff.
+  MUST USE when a plan.md exists and implementation needs to begin.
+  Executes in controlled batches with verification checkpoints. Triggers
+  on: "execute the plan", "start building", "follow the plan", "go".
+  Routed by using-superpowers or writing-plans handoff.
 ---
 
 # Executing Plans

@@ -1,7 +1,7 @@
 # Skill Description Trigger Optimization - (IMPLEMENTED IN FULL)
 
 **Date:** 2026-03-08
-**Status:** Phases 1-3 Complete (Phase 4: Validation pending user testing)
+**Status:** Phases 1-3 Complete — "MUST USE" language applied to all workflow-critical skills (Phase 4: Validation pending user testing)
 **Goal:** Increase skill invocation rates by optimizing the `description` frontmatter across all 23 skills.
 
 ## Problem

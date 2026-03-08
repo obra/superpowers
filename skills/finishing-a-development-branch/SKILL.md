@@ -1,10 +1,11 @@
 ---
 name: finishing-a-development-branch
 description: >
-  Closes development work with explicit integration choice: merge, PR,
-  keep, or discard. Invoke when branch work is verified and ready to
-  integrate. Triggers on: "merge this", "create a PR", "we're done with
-  this branch". Routed by using-superpowers or executing-plans at completion.
+  MUST USE when implementation is verified and you need to choose the
+  branch outcome: merge, PR, keep, or discard. Triggers on: "merge this",
+  "create a PR", "we're done with this branch", "clean up the branch",
+  after verification-before-completion passes. Routed by using-superpowers
+  or executing-plans at completion.
 ---
 
 # Finishing a Development Branch
