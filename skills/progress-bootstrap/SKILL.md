@@ -79,7 +79,7 @@ abc123d (or TBD)
 | --- | --- | --- | --- | --- |
 ~~~
 
-5. Ensure `.progress/entries/<YYYY>/` exists for current year.
+5. Ensure `.progress/entries/<YYYY>/` exists for the UTC year derived from the current system clock (`new Date().getUTCFullYear()`); in CI or distributed runs, every agent must use that same UTC-based year so `YYYY` resolves consistently.
 6. Create `.progress/entries/<YYYY>/.gitkeep` if the year folder is empty.
 
 ## Error Handling
