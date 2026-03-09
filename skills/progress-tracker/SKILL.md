@@ -24,7 +24,7 @@ Skip or defer when:
 
 ## Prerequisite
 
-If `.progress/` or `.progress/PROGRESS.md` is missing, run `progress-bootstrap` first.
+If `.progress/`, `.progress/PROGRESS.md`, or `.progress/entries/<YYYY>/` for the current year is missing, run `progress-bootstrap` first.
 
 ## Required Entry Fields
 
