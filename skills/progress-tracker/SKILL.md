@@ -62,6 +62,7 @@ Each new entry appends one row.
 - Do not use `.agents/`.
 - `Related Commit Message` is mandatory.
 - If commit hash is unavailable, use `TBD` and update later.
+- When replacing `TBD` with a real hash, create the implementation commit first, then update the progress entry and commit that progress change separately.
 - Never rewrite historical sections except intentional corrections.
 
 ## Suggested Entry Template
