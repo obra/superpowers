@@ -35,17 +35,27 @@ warning_escaped=$(escape_for_json "$warning_message")
 session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}\n</EXTREMELY_IMPORTANT>"
 
 # Output context injection as JSON.
-# Keep both shapes for compatibility:
-# - Cursor hooks expect additional_context.
-# - Claude hooks expect hookSpecificOutput.additionalContext.
-cat <<EOF
+# Cursor hooks expect additional_context.
+# Claude Code hooks expect hookSpecificOutput.additionalContext.
+# Claude Code reads BOTH fields without deduplication, so we must only
+# emit the field consumed by the current platform to avoid double injection.
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ]; then
+  # Claude Code sets CLAUDE_PLUGIN_ROOT — emit only hookSpecificOutput
+  cat <<EOF
 {
-  "additional_context": "${session_context}",
   "hookSpecificOutput": {
     "hookEventName": "SessionStart",
     "additionalContext": "${session_context}"
   }
 }
 EOF
+else
+  # Other platforms (Cursor, etc.) — emit only additional_context
+  cat <<EOF
+{
+  "additional_context": "${session_context}"
+}
+EOF
+fi
 
 exit 0
