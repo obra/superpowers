@@ -60,6 +60,7 @@ digraph brainstorming {
 - Check out the current project state first (files, docs, recent commits)
 - Ask questions one at a time to refine the idea
 - Prefer multiple choice questions when possible, but open-ended is fine too
+- ALWAYS use the AskUserQuestion tool for multiple choice questions — never present options as lettered text lists in chat
 - Only one question per message - if a topic needs more exploration, break it into multiple questions
 - Focus on understanding: purpose, constraints, success criteria
 
@@ -89,7 +90,7 @@ digraph brainstorming {
 ## Key Principles
 
 - **One question at a time** - Don't overwhelm with multiple questions
-- **Multiple choice preferred** - Easier to answer than open-ended when possible
+- **Multiple choice preferred** - Always use the AskUserQuestion tool, never inline lettered lists
 - **YAGNI ruthlessly** - Remove unnecessary features from all designs
 - **Explore alternatives** - Always propose 2-3 approaches before settling
 - **Incremental validation** - Present design, get approval before moving on
