@@ -108,7 +108,7 @@ git pull
 ### Tool mapping
 
 When skills reference Claude Code tools:
-- `TodoWrite` → `update_plan`
+- `TodoWrite` → `todowrite`
 - `Task` with subagents → `@mention` syntax
 - `Skill` tool → OpenCode's native `skill` tool
 - File operations → your native tools
