@@ -5,3 +5,5 @@
 node_modules/
 inspo
 triage/
+vendor
+vendors
