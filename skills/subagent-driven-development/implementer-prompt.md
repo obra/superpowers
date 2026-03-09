@@ -46,7 +46,7 @@ Task tool (general-purpose):
 
     Verify the committed state is complete:
     1. Run `git status` - check for untracked files that should have been committed
-    2. Especially check for new files you created - `git add` only stages tracked files by default
+    2. Especially check for new files you created - `git commit -a` only commits tracked files, so new files need explicit `git add`
     3. If you find untracked files that belong to your work, stage them and amend the commit
     4. Run `git diff HEAD` to confirm nothing is left uncommitted
 
