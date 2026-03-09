@@ -51,6 +51,18 @@ In Cursor Agent chat, install from marketplace:
 /plugin-add superpowers
 ```
 
+### Kiro IDE (via Powers Panel)
+
+In Kiro, open the Powers panel and import from GitHub:
+
+1. Click "Import from GitHub"
+2. Enter: `https://github.com/obra/superpowers/tree/main/.kiro-power` (must point to the `.kiro-power` subdirectory, not the repo root)
+3. Install the power
+
+The agent will automatically set up skills for `/` slash command access.
+
+**Manual install / detailed docs:** [.kiro-power/INSTALL.md](.kiro-power/INSTALL.md)
+
 ### Codex
 
 Tell Codex:
