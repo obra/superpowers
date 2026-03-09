@@ -306,6 +306,33 @@ If you see `Cannot find module` errors on Windows:
 2. Check OpenCode version supports `experimental.chat.system.transform` hook
 3. Restart OpenCode after plugin changes
 
+### Rendering issues after installing the plugin
+
+If OpenCode shows a rendering glitch after installing Superpowers, it may be caused by the injected bootstrap text being rendered by OpenCode's UI.
+
+Workarounds:
+
+1. **Disable bootstrap injection** (keeps the plugin installed, but stops injecting system prompt content):
+
+```bash
+SUPERPOWERS_OPENCODE_DISABLE_BOOTSTRAP=1 opencode
+```
+
+On Windows, use the equivalent for your shell:
+
+```cmd
+:: Command Prompt
+set SUPERPOWERS_OPENCODE_DISABLE_BOOTSTRAP=1 && opencode
+```
+
+```powershell
+# PowerShell
+$env:SUPERPOWERS_OPENCODE_DISABLE_BOOTSTRAP = '1'
+opencode
+```
+
+2. **Reinstall using the symlink instructions** above and restart OpenCode.
+
 ## Getting Help
 
 - Report issues: https://github.com/obra/superpowers/issues

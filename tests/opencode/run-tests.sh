@@ -43,10 +43,11 @@ while [[ $# -gt 0 ]]; do
             echo "  --help, -h         Show this help"
             echo ""
             echo "Tests:"
-            echo "  test-plugin-loading.sh  Verify plugin installation and structure"
-            echo "  test-skills-core.sh     Test skills-core.js library functions"
-            echo "  test-tools.sh           Test use_skill and find_skills tools (integration)"
-            echo "  test-priority.sh        Test skill priority resolution (integration)"
+            echo "  test-plugin-loading.sh          Verify plugin installation and structure"
+            echo "  test-skills-core.sh             Test skills-core.js library functions"
+            echo "  test-plugin-bootstrap-behavior.sh  Test bootstrap injection and diagnostics"
+            echo "  test-tools.sh                   Test use_skill and find_skills tools (integration)"
+            echo "  test-priority.sh                Test skill priority resolution (integration)"
             exit 0
             ;;
         *)
@@ -61,6 +62,7 @@ done
 tests=(
     "test-plugin-loading.sh"
     "test-skills-core.sh"
+    "test-plugin-bootstrap-behavior.sh"
 )
 
 # Integration tests (require OpenCode)
