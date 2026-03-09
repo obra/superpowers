@@ -1,7 +1,5 @@
 # Superpowers-Optimized
 
-Optimized fork of [obra/superpowers](https://github.com/obra/superpowers) — an agentic skills framework for Claude Code.
-
 ## Key Commands
 
 ```bash
@@ -15,28 +13,19 @@ bash tests/explicit-skill-requests/run-all.sh
 bash tests/subagent-driven-dev/run-test.sh
 ```
 
-## Project Structure
+## Critical Constraints
 
-- `skills/` — Each subdirectory contains a `SKILL.md` with YAML frontmatter (`name`, `description`) and the skill body
-- `agents/` — Subagent definitions (e.g., `code-reviewer.md`)
-- `commands/` — Slash command redirects to skills
-- `hooks/` — Session-start hooks
-- `lib/skills-core.js` — Shared skill discovery utilities
-- `tests/` — Integration and trigger tests
-- `docs/plans/` — Design docs and implementation plans
+- Never reference `TaskCreate`/`TaskUpdate`/`TaskList` — these are not real Claude Code tools
+- `using-superpowers` is the mandatory entry point for all technical work (except micro tasks) — do not invoke other workflow skills directly
+- All three plugin manifests (`.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.cursor-plugin/plugin.json`) must be updated together — they are strictly validated and unrecognized keys cause installation failure
+- `context-management` is for cross-session persistence only — Claude Code handles in-session compression automatically
+- Discipline-critical skills (`systematic-debugging`, `test-driven-development`, `verification-before-completion`) must include rationalization tables and red flags to prevent LLM shortcuts
 
 ## Conventions
 
 - Skill names use `lowercase-hyphen-case`
-- Skill `description` frontmatter defines **when to trigger**, not what the skill does
-- Keep SKILL.md files concise; move detailed references to subdirectory files
-- All cross-skill references must match the `name:` in the target's frontmatter exactly
+- Skill `description` frontmatter uses assertive trigger language ("MUST USE", "BLOCKING", "Invoke BEFORE") — polite phrasing reads as optional to LLMs
+- All cross-skill references must match the `name:` in the target's YAML frontmatter exactly
 - Plans go in `docs/plans/YYYY-MM-DD-<topic>.md`
-- Platform: support both Unix and Windows in process management commands
-
-## Critical Constraints
-
-- Never add `TaskCreate`/`TaskUpdate`/`TaskList` references — these are not real Claude Code tools
-- The `using-superpowers` skill is the mandatory entry point for all technical work (except micro tasks)
-- Discipline-critical skills (`systematic-debugging`, `test-driven-development`, `verification-before-completion`) must include rationalization tables and red flags to enforce LLM compliance
-- `context-management` is for cross-session persistence only — Claude Code handles in-session compression automatically
+- Support both Unix and Windows in process management commands
+- Keep SKILL.md files concise; move detailed references to subdirectory files

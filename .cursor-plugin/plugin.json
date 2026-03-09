@@ -4,11 +4,7 @@
   "description": "Optimized agentic skills framework — workflow routing, token efficiency, and discipline enforcement",
   "version": "1.0.0",
   "author": {
-    "name": "REPOZY"
-  },
-  "originalAuthor": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com"
+    "name": "Jesse Vincent, forked by REPOZY"
   },
   "homepage": "https://github.com/REPOZY/superpowers-optimized",
   "repository": "https://github.com/REPOZY/superpowers-optimized",

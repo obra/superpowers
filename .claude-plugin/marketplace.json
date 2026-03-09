@@ -2,11 +2,7 @@
   "name": "superpowers-optimized",
   "description": "Optimized agentic skills framework for Claude Code",
   "owner": {
-    "name": "REPOZY"
-  },
-  "originalAuthor": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com"
+    "name": "Jesse Vincent, forked by REPOZY"
   },
   "plugins": [
     {
