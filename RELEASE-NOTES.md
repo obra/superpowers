@@ -1,5 +1,53 @@
 # Superpowers Release Notes
 
+## v4.3.1 (2026-02-21)
+
+### Added
+
+**Cursor support**
+
+Superpowers now works with Cursor's plugin system. Includes a `.cursor-plugin/plugin.json` manifest and Cursor-specific installation instructions in the README. The SessionStart hook output now includes an `additional_context` field alongside the existing `hookSpecificOutput.additionalContext` for Cursor hook compatibility.
+
+### Fixed
+
+**Windows: Restored polyglot wrapper for reliable hook execution (#518, #504, #491, #487, #466, #440)**
+
+Claude Code's `.sh` auto-detection on Windows was prepending `bash` to the hook command, breaking execution. The fix:
+
+- Renamed `session-start.sh` to `session-start` (extensionless) so auto-detection doesn't interfere
+- Restored `run-hook.cmd` polyglot wrapper with multi-location bash discovery (standard Git for Windows paths, then PATH fallback)
+- Exits silently if no bash is found rather than erroring
+- On Unix, the wrapper runs the script directly via `exec bash`
+- Uses POSIX-safe `dirname "$0"` path resolution (works on dash/sh, not just bash)
+
+This fixes SessionStart failures on Windows with spaces in paths, missing WSL, `set -euo pipefail` fragility on MSYS, and backslash mangling.
+
+## v4.3.0 (2026-02-12)
+
+This fix should dramatically improve superpowers skills compliance and should reduce the chances of Claude entering its native plan mode unintentionally.
+
+### Changed
+
+**Brainstorming skill now enforces its workflow instead of describing it**
+
+Models were skipping the design phase and jumping straight to implementation skills like frontend-design, or collapsing the entire brainstorming process into a single text block. The skill now uses hard gates, a mandatory checklist, and a graphviz process flow to enforce compliance:
+
+- `<HARD-GATE>`: no implementation skills, code, or scaffolding until design is presented and user approves
+- Explicit checklist (6 items) that must be created as tasks and completed in order
+- Graphviz process flow with `writing-plans` as the only valid terminal state
+- Anti-pattern callout for "this is too simple to need a design" — the exact rationalization models use to skip the process
+- Design section sizing based on section complexity, not project complexity
+
+**Using-superpowers workflow graph intercepts EnterPlanMode**
+
+Added an `EnterPlanMode` intercept to the skill flow graph. When the model is about to enter Claude's native plan mode, it checks whether brainstorming has happened and routes through the brainstorming skill instead. Plan mode is never entered.
+
+### Fixed
+
+**SessionStart hook now runs synchronously**
+
+Changed `async: true` to `async: false` in hooks.json. When async, the hook could fail to complete before the model's first turn, meaning using-superpowers instructions weren't in context for the first message.
+
 ## v4.2.0 (2026-02-05)
 
 ### Breaking Changes
