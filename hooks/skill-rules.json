@@ -1,0 +1,123 @@
+{
+  "rules": [
+    {
+      "skill": "systematic-debugging",
+      "type": "process",
+      "priority": "critical",
+      "keywords": ["bug", "error", "broken", "not working", "crash", "exception", "stack trace", "failing", "fails", "failure", "traceback", "undefined", "null pointer", "segfault"],
+      "intentPatterns": ["fix\\s+(this|the|a)\\s+(bug|error|issue)", "why\\s+(is|does|isn't)", "not\\s+work(ing)?", "stopped\\s+working", "something\\s+(is\\s+)?wrong", "unexpected\\s+(behavior|result|output|error)"]
+    },
+    {
+      "skill": "test-driven-development",
+      "type": "process",
+      "priority": "critical",
+      "keywords": ["tdd", "test first", "write tests", "failing test", "red green", "test driven"],
+      "intentPatterns": ["write\\s+(a\\s+)?test", "add\\s+test", "test\\s+(for|that|this)", "need(s)?\\s+test"]
+    },
+    {
+      "skill": "verification-before-completion",
+      "type": "process",
+      "priority": "critical",
+      "keywords": ["ready to merge", "ship it", "wrap up"],
+      "intentPatterns": ["(i('m|\\s+am)|we('re|\\s+are))\\s+(done|finished)\\s*(with|here|now|$)", "ready\\s+(to|for)\\s+(merge|ship|deploy|pr)", "this\\s+is\\s+(done|complete|ready)\\s+(to|for)", "let('s|\\s+us)\\s+(merge|ship|commit)"]
+    },
+    {
+      "skill": "brainstorming",
+      "type": "workflow",
+      "priority": "high",
+      "keywords": ["design", "architect", "new feature", "build this", "add a feature", "how should we", "new project", "from scratch"],
+      "intentPatterns": ["(build|create|design|architect)\\s+(a|the|this|new)", "how\\s+should\\s+(we|i)", "what('s|\\s+is)\\s+the\\s+best\\s+(way|approach)", "i\\s+want\\s+to\\s+(add|build|create)"]
+    },
+    {
+      "skill": "writing-plans",
+      "type": "workflow",
+      "priority": "high",
+      "keywords": ["write a plan", "break this down", "plan the implementation", "decompose", "task list"],
+      "intentPatterns": ["(write|create|make)\\s+(a\\s+)?plan", "break\\s+(this|it)\\s+down", "plan\\s+(the|this)\\s+implementation"]
+    },
+    {
+      "skill": "executing-plans",
+      "type": "workflow",
+      "priority": "high",
+      "keywords": ["execute the plan", "follow the plan", "start building", "implement the plan"],
+      "intentPatterns": ["(execute|follow|implement|run)\\s+(the|this)\\s+plan", "start\\s+(building|implementing|coding)", "let('s|\\s+us)\\s+(go|start|begin)"]
+    },
+    {
+      "skill": "subagent-driven-development",
+      "type": "workflow",
+      "priority": "medium",
+      "keywords": ["parallel", "subagent", "run in parallel", "concurrent"],
+      "intentPatterns": ["(run|do|execute)\\s+(these|them|tasks?)\\s+(in\\s+)?parallel", "use\\s+subagent"]
+    },
+    {
+      "skill": "finishing-a-development-branch",
+      "type": "workflow",
+      "priority": "high",
+      "keywords": ["merge", "create a pr", "pull request", "done with this branch", "clean up branch", "push this"],
+      "intentPatterns": ["(merge|push)\\s+(this|the)\\s+(branch|code|changes)", "create\\s+(a\\s+)?(pr|pull\\s+request)", "(done|finished)\\s+with\\s+(this\\s+)?branch"]
+    },
+    {
+      "skill": "requesting-code-review",
+      "type": "workflow",
+      "priority": "medium",
+      "keywords": ["review", "code review", "check this", "look over", "review my code"],
+      "intentPatterns": ["review\\s+(my|the|this)\\s+code", "check\\s+(this|these)\\s+(before|for)", "look\\s+(over|at)\\s+(my|the|this)"]
+    },
+    {
+      "skill": "frontend-craftsmanship",
+      "type": "domain",
+      "priority": "high",
+      "keywords": ["frontend", "ui", "ux", "website", "landing page", "dashboard", "component", "react", "vue", "svelte", "html", "css", "responsive", "accessibility"],
+      "intentPatterns": ["(build|create|make|design)\\s+(a\\s+)?(ui|frontend|website|page|dashboard|component)", "make\\s+it\\s+look\\s+(good|better|professional|nice)", "(style|design)\\s+(this|the)"]
+    },
+    {
+      "skill": "security-reviewer",
+      "type": "domain",
+      "priority": "high",
+      "keywords": ["security", "auth", "authentication", "authorization", "vulnerability", "owasp", "xss", "sql injection", "csrf", "secrets"],
+      "intentPatterns": ["(is|are)\\s+(this|these)\\s+secure", "security\\s+review", "check\\s+(for\\s+)?vulnerabilit"]
+    },
+    {
+      "skill": "senior-engineer",
+      "type": "domain",
+      "priority": "medium",
+      "keywords": ["architecture", "refactor", "complex", "scalab", "design pattern", "solid principles", "trade-off"],
+      "intentPatterns": ["(review|check)\\s+(the\\s+)?architecture", "how\\s+should\\s+.+\\s+be\\s+(structured|designed|architected)"]
+    },
+    {
+      "skill": "testing-specialist",
+      "type": "domain",
+      "priority": "medium",
+      "keywords": ["test strategy", "test coverage", "integration test", "e2e test", "unit test", "property-based", "performance test", "improve coverage"],
+      "intentPatterns": ["(improve|increase|add)\\s+(test\\s+)?coverage", "(write|create|design)\\s+(a\\s+)?test\\s+strategy", "what\\s+tests?\\s+(should|do)\\s+(i|we)"]
+    },
+    {
+      "skill": "context-management",
+      "type": "workflow",
+      "priority": "low",
+      "keywords": ["save state", "compress context", "continue later", "pick up later", "cross-session"],
+      "intentPatterns": ["save\\s+(the\\s+)?(state|context|progress)", "continue\\s+(this\\s+)?later", "pick\\s+(this\\s+)?up\\s+(later|tomorrow|next)"]
+    },
+    {
+      "skill": "using-git-worktrees",
+      "type": "workflow",
+      "priority": "medium",
+      "keywords": ["worktree", "isolate", "isolated branch", "don't touch main", "experimental"],
+      "intentPatterns": ["use\\s+(a\\s+)?worktree", "isolate\\s+(this|the)\\s+work", "don('t|\\s+not)\\s+touch\\s+main"]
+    },
+    {
+      "skill": "claude-md-creator",
+      "type": "workflow",
+      "priority": "medium",
+      "keywords": ["init", "claude.md", "agents.md", "set up claude code", "create claude.md"],
+      "intentPatterns": ["(create|update|write)\\s+claude\\.md", "set\\s+up\\s+claude\\s+code", "\\/init"]
+    },
+    {
+      "skill": "prompt-optimizer",
+      "type": "workflow",
+      "priority": "low",
+      "keywords": ["optimize prompt", "improve prompt", "rewrite prompt", "better prompt"],
+      "intentPatterns": ["(optimize|improve|rewrite|make.+better)\\s+(this\\s+|my\\s+)?prompt"]
+    }
+  ]
+}

@@ -7,12 +7,13 @@
   "plugins": [
     {
       "name": "superpowers-optimized",
-      "description": "Optimized agentic skills framework for Claude Code — workflow routing, token efficiency, and discipline enforcement",
+      "description": "Optimized agentic skills framework for Claude Code — workflow routing, token efficiency, discipline enforcement, and safety hooks",
       "version": "1.0.0",
       "source": "./",
       "author": {
         "name": "REPOZY"
-      }
+      },
+      "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows", "agentic", "token-efficiency", "hooks", "safety"]
     }
   ]
 }

@@ -9,7 +9,7 @@
   "homepage": "https://github.com/REPOZY/superpowers-optimized",
   "repository": "https://github.com/REPOZY/superpowers-optimized",
   "license": "MIT",
-  "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows", "agentic", "token-efficiency"],
+  "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows", "agentic", "token-efficiency", "hooks", "safety"],
   "skills": "./skills/",
   "agents": "./agents/",
   "commands": "./commands/",
