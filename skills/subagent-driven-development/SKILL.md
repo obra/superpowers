@@ -53,6 +53,7 @@ digraph process {
         "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
         "Code quality reviewer subagent approves?" [shape=diamond];
         "Implementer subagent fixes quality issues" [shape=box];
+        "Controller: verify no untracked files (git status)" [shape=box];
         "Mark task complete in TodoWrite" [shape=box];
     }
 
@@ -74,7 +75,8 @@ digraph process {
     "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
     "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
     "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
-    "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
+    "Code quality reviewer subagent approves?" -> "Controller: verify no untracked files (git status)" [label="yes"];
+    "Controller: verify no untracked files (git status)" -> "Mark task complete in TodoWrite";
     "Mark task complete in TodoWrite" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
@@ -119,6 +121,8 @@ Spec reviewer: ✅ Spec compliant - all requirements met, nothing extra
 [Get git SHAs, dispatch code quality reviewer]
 Code reviewer: Strengths: Good test coverage, clean. Issues: None. Approved.
 
+[Controller: git status check - no untracked files, clean]
+
 [Mark Task 1 complete]
 
 Task 2: Recovery modes
@@ -152,6 +156,9 @@ Implementer: Extracted PROGRESS_INTERVAL constant
 
 [Code reviewer reviews again]
 Code reviewer: ✅ Approved
+
+[Controller: git status check - found untracked test fixture file]
+[Dispatch implementer to stage and amend]
 
 [Mark Task 2 complete]
 
@@ -189,6 +196,7 @@ Done!
 - Review loops ensure fixes actually work
 - Spec compliance prevents over/under-building
 - Code quality ensures implementation is well-built
+- Post-commit verification catches untracked files
 
 **Cost:**
 - More subagent invocations (implementer + 2 reviewers per task)
@@ -222,6 +230,11 @@ Done!
 - Reviewer reviews again
 - Repeat until approved
 - Don't skip the re-review
+
+**After each subagent completes (controller-side check):**
+- Run `git status` to check for untracked files before marking the task complete
+- If untracked files exist that belong to the task, dispatch the implementer subagent to stage and amend
+- This catches cases where the subagent committed without `git add`-ing new files
 
 **If subagent fails task:**
 - Dispatch fix subagent with specific instructions
