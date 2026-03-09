@@ -33,13 +33,22 @@ Task tool (general-purpose):
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
     4. Commit your work
-    5. Self-review (see below)
-    6. Report back
+    5. Verify committed state (see below)
+    6. Self-review (see below)
+    7. Report back
 
     Work from: [directory]
 
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
+
+    ## After Committing
+
+    Verify the committed state is complete:
+    1. Run `git status` - check for untracked files that should have been committed
+    2. Especially check for new files you created - `git commit -a` only commits tracked files, so new files need explicit `git add`
+    3. If you find untracked files that belong to your work, stage them and amend the commit
+    4. Run `git diff HEAD` to confirm nothing is left uncommitted
 
     ## Before Reporting Back: Self-Review
 
