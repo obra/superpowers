@@ -142,13 +142,17 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 When `TeamCreate` is available and the user opts in, use this flow instead of standard sequential execution.
 
-**Pre-Flight (required — do this before `TeamCreate`):** The team lead is this session. As the plan executes, this session's context fills with task reports, verdicts, and coordination messages. Once it fills, orchestration stops mid-plan. Implementer and validator agents start fresh regardless, so compacting only benefits the lead.
+**Pre-Flight (required — do this before `TeamCreate`):** The team lead is this session. As the plan executes, this session's context fills with task reports, verdicts, and coordination messages. Once it fills, orchestration stops mid-plan. The solution is to start with a clean context rather than compacting.
 
-Before spawning the team, you MUST check context state and prompt the user:
+Before spawning the team, synthesize a complete self-contained execution prompt and present it via `EnterPlanMode`. The prompt must embed everything needed so the fresh session requires no prior conversation history:
 
-> "Before I create the team: this session will act as team lead for the full plan. Its context fills as tasks complete — if it runs out mid-plan, orchestration stops. **How much context do you have left?** If you're below ~50% or have had a long conversation already, run `/compact` now before I proceed."
+- Full plan text (all tasks with complete requirement text)
+- Architecture context (relevant files, patterns, conventions)
+- Team composition and roles
+- Initial task assignments per implementer
+- Instruction to execute in team mode using `TeamCreate`
 
-Wait for their answer. If they're context-constrained or unsure, tell them to run `/compact` and wait for confirmation before calling `TeamCreate`. Do not skip this check.
+Present this as the plan. The user selects **"clear context and auto-accept edits"** (option 1 / Shift+Tab) — this clears the accumulated context and begins execution immediately with a clean slate. Do not ask the user about context health or prompt them to `/compact`.
 
 **Prerequisite:** Run the SDK memory validation test (see design doc) before first use. Confirm team members retain conversation context between `SendMessage` calls.
 
@@ -287,11 +291,11 @@ Pinging all implementers after compaction is unnecessary and expensive. `TaskLis
 - **Shutdown protocol required** — always send `shutdown_request` to all members before `TeamDelete`
 - **Never dispatch a fresh review subagent when a validator is available** — use the persistent validator
 - **Validator approval of a re-opened task is required before re-reviewing its dependents**
-- **Never skip the pre-flight context check** — ask the user about context state before `TeamCreate`; if they're below ~50% remaining, wait for `/compact` before proceeding
+- **Never skip the pre-flight synthesize step** — generate the complete self-contained execution prompt and present via `EnterPlanMode` before `TeamCreate`; this gives the team lead a clean context from the start
 
 ### Team Lifecycle
 
-1. Ask user about context state; wait for `/compact` if below ~50% remaining, then `TeamCreate`
+1. Synthesize complete self-contained execution prompt → `EnterPlanMode` → user selects "clear context and auto-accept edits" → `TeamCreate`
 2. Spawn implementers and 2 validators via Agent tool with `team_name`
 3. Assign initial independent tasks via TaskCreate + TaskUpdate
 4. As tasks complete: route to idle validator, handle verdict, assign next tasks
@@ -382,10 +386,9 @@ Done!
 ```
 You: I'm using Subagent-Driven Development (team mode) for this plan.
 
-[Pre-flight: "How much context do you have left? If below ~50%, run /compact before I proceed."]
-[Wait for user confirmation before continuing]
-
 [Read plan, extract 5 tasks, identify 3 independent groups]
+[Synthesize complete execution prompt with full task text, architecture context, team composition]
+[EnterPlanMode with synthesized prompt → user selects "clear context and auto-accept edits"]
 [TeamCreate team "impl-plan"]
 [Spawn: implementer-1, implementer-2, implementer-3, validator-1, validator-2]
 [SHA map: {}  <- empty at start, grows as tasks complete]
@@ -484,7 +487,7 @@ validator-1 (Task 2 re-review):
 - Standard mode: implementer + 2 reviewer invocations per task
 - Controller does more prep work (extracting all tasks upfront)
 - Review loops add iterations
-- Team lead context grows across tasks — pre-flight check prompts user to compact if below ~50% remaining; a full team lead context stops orchestration mid-plan
+- Team lead context grows across tasks — pre-flight synthesizes a clean-start prompt so orchestration begins with full context headroom
 - But catches issues early (cheaper than debugging later)
 
 ## Red Flags
@@ -508,7 +511,7 @@ validator-1 (Task 2 re-review):
 - **Team mode only:** Exceed 3 review cycles without escalating to human
 - **Team mode only:** Skip the SHA map in review requests (validators cannot re-read dependencies without it)
 - Accept a ✅ verdict that has no per-requirement file:line citations (invalid — request re-review)
-- **Team mode only:** Skip the pre-flight context check — always ask the user about remaining context before `TeamCreate`; proceeding with a near-full context will cause orchestration to fail mid-plan
+- **Team mode only:** Skip the pre-flight synthesize step — always generate the self-contained prompt and present via `EnterPlanMode` before `TeamCreate`; skipping means the team lead starts with accumulated context that can fill mid-plan
 
 **If subagent asks questions:**
 - Answer clearly and completely
