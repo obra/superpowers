@@ -1,6 +1,6 @@
 # Superpowers Release Notes
 
-## v5.0.0
+## v5.0.0 (2026-03-09)
 
 ### Breaking Changes
 
@@ -42,7 +42,7 @@ Automated review loops for spec and plan documents using subagent dispatch:
 
 - `skills/brainstorming/spec-document-reviewer-prompt.md` — Reviewer checks completeness, consistency, architecture, and YAGNI
 - `skills/writing-plans/plan-document-reviewer-prompt.md` — Reviewer checks spec alignment, task decomposition, file structure, and file size
-- Brainstorming dispatches spec reviewer after writing design docs
+- Brainstorming dispatches spec reviewer after writing the design doc
 - Writing-plans includes chunk-based plan review loop after each section
 - Review loops repeat until approved or escalate after 5 iterations
 - End-to-end tests in `tests/claude-code/test-document-review-system.sh`
@@ -57,12 +57,12 @@ Design-for-isolation and file-size-awareness guidance added to brainstorming, wr
 - **SDD implementer** — New "Code Organization" section (follow plan's file structure, report concerns about growing files) and "When You're in Over Your Head" escalation guidance
 - **SDD code quality reviewer** — Now checks architecture, unit decomposition, plan conformance, and file growth
 - **Spec/plan reviewers** — Architecture and file size added to review criteria
+- **Scope assessment** — Brainstorming now assesses whether a project is too large for a single spec. Multi-subsystem requests are flagged early and decomposed into sub-projects, each with its own spec → plan → implementation cycle
 
 **Subagent-driven development improvements**
 
 - **Model selection** — Guidance for choosing model capability by task type: cheap models for mechanical implementation, standard for integration, capable for architecture and review
 - **Implementer status protocol** — Subagents now report DONE, DONE_WITH_CONCERNS, BLOCKED, or NEEDS_CONTEXT. Controller handles each status appropriately: re-dispatching with more context, upgrading model capability, breaking tasks apart, or escalating to human
-- **Scope assessment** — Brainstorming now assesses whether a project is too large for a single spec. Multi-subsystem requests are flagged early and decomposed into sub-projects, each with its own spec → plan → implementation cycle
 
 ### Improvements
 
@@ -91,6 +91,8 @@ Added `<SUBAGENT-STOP>` block to using-superpowers. Subagents dispatched for spe
 
 - Plan steps now use checkbox syntax (`- [ ] **Step N:**`) for progress tracking
 - Plan header references both subagent-driven-development and executing-plans with platform-aware routing
+
+---
 
 ## v4.3.1 (2026-02-21)
 
