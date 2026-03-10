@@ -1,3 +1,12 @@
+[![GitHub stars](https://img.shields.io/github/stars/REPOZY/superpowers-optimized?style=flat)](https://github.com/REPOZY/superpowers-optimized/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/REPOZY/superpowers-optimized?style=flat)](https://github.com/REPOZY/superpowers-optimized/network/members)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-Anthropic-purple)](https://docs.anthropic.com/en/docs/claude-code)
+[![Cursor](https://img.shields.io/badge/Cursor-AI%20IDE-orange)](https://www.cursor.com/)
+[![Codex CLI](https://img.shields.io/badge/Codex%20CLI-OpenAI-green)](https://github.com/openai/codex)
+[![GitHub last commit](https://img.shields.io/github/last-commit/REPOZY/superpowers-optimized)](https://github.com/REPOZY/superpowers-optimized/commits/main)
+[![GitHub issues](https://img.shields.io/github/issues/REPOZY/superpowers-optimized)](https://github.com/REPOZY/superpowers-optimized/issues)
+
 # Superpowers (Optimized Fork)
 
 This repository is an **optimized fork** of the original [obra/superpowers](https://github.com/obra/superpowers) plugin. It keeps the same core promise — A complete software development workflow for your coding agents built from composable "skills" and strong initial instructions — but applies additional research-driven improvements to make the workflow **leaner, faster, and more robust** in modern agent IDEs.
