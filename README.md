@@ -26,7 +26,7 @@ Thanks!
 
 ## Installation
 
-**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex and OpenCode require manual setup.
+**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Gemini CLI and Antigravity provide native extension/symlink support. Codex and OpenCode require manual setup.
 
 ### Claude Code Official Marketplace
 
@@ -60,12 +60,31 @@ In Cursor Agent chat, install from marketplace:
 /plugin-add superpowers
 ```
 
+### Gemini CLI
+
+```bash
+gemini extensions install https://github.com/obra/superpowers
+```
+
+**Detailed docs:** [docs/README.gemini.md](docs/README.gemini.md)
+
+### Antigravity
+
+```bash
+git clone https://github.com/obra/superpowers.git ~/.gemini/superpowers && ~/.gemini/superpowers/.gemini/install.sh
+```
+
+**Detailed docs:** [docs/README.antigravity.md](docs/README.antigravity.md)
+
 ### Codex
 
 Tell Codex:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/v4.3.1/.codex/INSTALL.md
+
+> [!TIP]
+> Always download and inspect installation scripts before running them. Use `curl -fsSL <url> -o install-superpowers.sh && less install-superpowers.sh && bash install-superpowers.sh` to verify content.
 ```
 
 **Detailed docs:** [docs/README.codex.md](docs/README.codex.md)
@@ -75,7 +94,10 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 Tell OpenCode:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/v4.3.1/.opencode/INSTALL.md
+
+> [!TIP]
+> Always download and inspect installation scripts before running them. Use `curl -fsSL <url> -o install-superpowers.sh && less install-superpowers.sh && bash install-superpowers.sh` to verify content.
 ```
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
