@@ -77,6 +77,20 @@ launchctl load ~/Library/LaunchAgents/com.superpowers.worktree-gc.plist
 (crontab -l 2>/dev/null; echo "@reboot $HOME/.config/superpowers/lib/worktree-gc-daemon") | crontab -
 ```
 
+### Log Rotation (Optional)
+
+To prevent log file growth, add this to `/etc/logrotate.d/superpowers-worktree-gc`:
+
+```
+$HOME/.config/superpowers/worktree-gc.log {
+    weekly
+    rotate 4
+    compress
+    missingok
+    notifempty
+}
+```
+
 ### Install Git Hooks
 
 For automatic cleanup after merge:

@@ -63,7 +63,16 @@ register_worktree() {
 # Update worktree status
 update_status() {
     local worktree_id="$1"
-    local new_status="$2"  # active | pr_opened | merged | abandoned | cleanup_pending
+    local new_status="$2"
+    
+    # Validate status
+    case "$new_status" in
+        active|pr_opened|merged|abandoned|cleanup_pending) ;;
+        *)
+            echo "Error: Invalid status '$new_status'. Must be: active, pr_opened, merged, abandoned, or cleanup_pending" >&2
+            return 1
+            ;;
+    esac
     
     if command -v jq >/dev/null 2>&1; then
         local tmp_file="${REGISTRY_FILE}.tmp"
@@ -212,8 +221,7 @@ detect_status_changes() {
                 fi
             fi
         else
-            # Branch doesn't exist, mark as abandoned
-            update_status "$wt_id" "abandoned"
+            # Branch doesn't exist, mark directly as cleanup_pending
             update_status "$wt_id" "cleanup_pending"
         fi
     done
@@ -235,15 +243,27 @@ case "${1:-}" in
         register_worktree "$2" "$3" "${4:-$(pwd)}" "${5:-{}}"
         ;;
     update)
+        if [ -z "${2:-}" ] || [ -z "${3:-}" ]; then
+            echo "Error: update requires <id> and <status> arguments" >&2
+            exit 1
+        fi
         update_status "$2" "$3"
         ;;
     list)
         list_project_worktrees "${2:-$(pwd)}"
         ;;
     find)
+        if [ -z "${2:-}" ]; then
+            echo "Error: find requires <branch> argument" >&2
+            exit 1
+        fi
         find_by_branch "$2"
         ;;
     unregister)
+        if [ -z "${2:-}" ]; then
+            echo "Error: unregister requires <id> argument" >&2
+            exit 1
+        fi
         unregister_worktree "$2"
         ;;
     gc)
