@@ -130,12 +130,18 @@ chokidar.watch(SCREEN_DIR, { ignoreInitial: true })
   });
 
 server.listen(PORT, HOST, () => {
-  console.log(JSON.stringify({
+  const info = JSON.stringify({
     type: 'server-started',
     port: PORT,
     host: HOST,
     url_host: URL_HOST,
     url: `http://${URL_HOST}:${PORT}`,
     screen_dir: SCREEN_DIR
-  }));
+  });
+  console.log(info);
+  // Write to .server-info so agents can find connection details
+  // even when stdout is hidden (e.g. background execution)
+  const fs = require('fs');
+  const path = require('path');
+  fs.writeFileSync(path.join(SCREEN_DIR, '.server-info'), info + '\n');
 });
