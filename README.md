@@ -26,7 +26,7 @@ Thanks!
 
 ## Installation
 
-**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex and OpenCode require manual setup.
+**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex, OpenCode, and Antigravity require manual setup.
 
 
 ### Claude Code (via Plugin Marketplace)
@@ -70,6 +70,16 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 ```
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
+
+### Antigravity
+
+Tell Antigravity:
+
+```
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.antigravity/INSTALL.md
+```
+
+**Detailed docs:** [docs/README.antigravity.md](docs/README.antigravity.md)
 
 ### Verify Installation
 
