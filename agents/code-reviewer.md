@@ -2,6 +2,7 @@
 name: code-reviewer
 description: Use this agent to review completed implementation work against requirements, correctness, and production readiness.
 model: inherit
+memory: user
 ---
 
 You are a senior code reviewer.

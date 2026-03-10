@@ -6,6 +6,7 @@ Key changes include:
 - **Reduced prompt overhead and context pollution**, guided by findings in `docs/plans/2026-03-05-agent-workflow-optimization.md` (e.g., concise skills, smaller always-on instructions, explicit context hygiene).
 - An **adaptive workflow selector** and **context management** that choose between lightweight vs full workflows and actively prune noisy history.
 - Integrated **specialist skills** (senior engineer, security reviewer, testing specialist, frontend craftsmanship, prompt optimizer, CLAUDE/AGENTS creator) that plug into the same Superpowers phases.
+- A **hooks system** with proactive skill routing, edit tracking, stop reminders, and **safety guards** that block dangerous commands and protect secrets.
 - **Discipline enforcement** via rationalization tables and red flags in critical skills (systematic-debugging, test-driven-development) — psychologically engineered to prevent LLM shortcuts.
 
 ## How it works
@@ -28,10 +29,12 @@ This optimized version builds on the original [obra/superpowers](https://github.
 | **Specialist skills** | Core workflow only | +6 specialists (senior-engineer, security-reviewer, testing-specialist, frontend-craftsmanship, prompt-optimizer, claude-md-creator) |
 | **Discipline enforcement** | Instructional tone | Rationalization tables, red flags, iron laws, and forbidden phrases in critical skills |
 | **Token efficiency** | No explicit controls | Always-on `token-efficiency` standard with context hygiene rules |
-| **Cross-session state** | None | `context-management` persists durable state to `state.md` |
+| **Hooks system** | None | 5 hooks: skill activator, edit tracker, stop reminders, dangerous command blocker, secrets protector |
+| **Safety guards** | None | PreToolUse hooks block dangerous bash commands and protect sensitive files (3-tier: critical/high/strict) |
+| **Cross-session state** | None | `context-management` persists durable state; code-reviewer agent retains learnings via `memory: user` |
 | **Trigger reliability** | Generic descriptions | Assertive "MUST USE" descriptions with explicit trigger phrases |
 
-The result: everything the original does, plus routing, specialists, discipline enforcement, and multi-platform support — in fewer tokens.
+The result: everything the original does, plus routing, specialists, discipline enforcement, safety hooks, and multi-platform support — in fewer tokens.
 
 ## Installation
 
@@ -57,7 +60,7 @@ Then install the plugin from this marketplace:
 In Cursor Agent chat, install from marketplace:
 
 ```text
-/plugin-add superpowers
+/plugin-add superpowers-optimized
 ```
 
 ### Codex
@@ -130,6 +133,16 @@ Start a new session in your chosen platform and ask for something that should tr
 - **security-reviewer** - Structured security and quality review for sensitive changes
 - **frontend-craftsmanship** - Production-grade, accessible frontend implementation standards with concrete checklist (semantic HTML, CSS tokens, focus-visible, prefers-reduced-motion, WCAG AA contrast, fluid typography)
 
+**Hooks**
+- **skill-activator** (UserPromptSubmit) - Proactively matches user prompts to relevant skills before Claude processes them, reinforcing the routing system
+- **track-edits** (PostToolUse) - Logs all Edit/Write operations for downstream awareness (feeds stop-reminders)
+- **stop-reminders** (Stop) - Reminds about untested changes and uncommitted work when Claude finishes a response
+- **block-dangerous-commands** (PreToolUse) - Blocks destructive bash commands (rm -rf, force push, drop table, etc.) with 3-tier severity
+- **protect-secrets** (PreToolUse) - Prevents reading, modifying, or exfiltrating sensitive files (.env, SSH keys, credentials, etc.)
+
+**Agents**
+- **code-reviewer** - Senior code review agent with persistent cross-session memory (`memory: user`)
+
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
 - **using-superpowers** - Introduction to the skills system
@@ -164,7 +177,7 @@ See `skills/writing-skills/SKILL.md` for the complete guide.
 Skills update automatically when you update the plugin:
 
 ```bash
-/plugin update superpowers
+/plugin update superpowers-optimized
 ```
 
 ## License
