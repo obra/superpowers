@@ -1,5 +1,52 @@
 # Superpowers Release Notes
 
+## Unreleased
+
+### Agentskills Compliance
+
+**Brainstorm-server moved into skill directory**
+
+- Moved `lib/brainstorm-server/` → `skills/brainstorming/scripts/` per the [agentskills.io](https://agentskills.io) specification
+- All `${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/` references replaced with relative `scripts/` paths
+- Skills are now fully portable across platforms — no platform-specific env vars needed to locate scripts
+- `lib/` directory removed (was the last remaining content)
+
+### New Features
+
+**Gemini CLI extension** *(WIP)*
+
+- Native Gemini CLI extension support via `gemini-extension.json` and `GEMINI.md` at repo root
+- `GEMINI.md` @imports `using-superpowers` skill and tool mapping table at session start
+- Gemini CLI tool mapping reference (`skills/using-superpowers/references/gemini-tools.md`) — translates Claude Code tool names (Read, Write, Edit, Bash, etc.) to Gemini CLI equivalents (read_file, write_file, replace, etc.)
+- Documents Gemini CLI limitations: no subagent support, skills fall back to `executing-plans`
+- Extension root at repo root for cross-platform compatibility (avoids Windows symlink issues)
+
+### Bug Fixes
+
+**User review gate in brainstorming** (#565)
+
+- Added explicit user review step between spec completion and writing-plans handoff
+- User must approve the spec before implementation planning begins
+- Checklist, process flow, and prose updated with the new gate
+
+**Session-start hook emits context only once per platform**
+
+- Hook now detects whether it's running in Claude Code or another platform
+- Emits `hookSpecificOutput` for Claude Code, `additional_context` for others — prevents double context injection
+
+**Linting fix in token analysis script**
+
+- `except:` → `except Exception:` in `tests/claude-code/analyze-token-usage.py`
+
+### Maintenance
+
+**Removed dead code**
+
+- Deleted `lib/skills-core.js` and its test (`tests/opencode/test-skills-core.js`) — unused since February 2026
+- Removed skills-core existence check from `tests/opencode/test-plugin-loading.sh`
+
+---
+
 ## v5.0.0 (2026-03-09)
 
 ### Breaking Changes

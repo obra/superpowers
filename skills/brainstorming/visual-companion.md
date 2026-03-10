@@ -34,7 +34,7 @@ The server watches a directory for HTML files and serves the newest one to the b
 
 ```bash
 # Start server with persistence (mockups saved to project)
-${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/start-server.sh --project-dir /path/to/project
+scripts/start-server.sh --project-dir /path/to/project
 
 # Returns: {"type":"server-started","port":52341,"url":"http://localhost:52341",
 #           "screen_dir":"/path/to/project/.superpowers/brainstorm/12345-1706000000"}
@@ -49,7 +49,7 @@ Save `screen_dir` from the response. Tell user to open the URL.
 **If background processes are reaped in your environment:** run in foreground from a persistent terminal session:
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/start-server.sh --project-dir /path/to/project --foreground
+scripts/start-server.sh --project-dir /path/to/project --foreground
 ```
 
 In `--foreground` mode, the command stays attached and serves until interrupted.
@@ -57,7 +57,7 @@ In `--foreground` mode, the command stays attached and serves until interrupted.
 If the URL is unreachable from your browser (common in remote/containerized setups), bind a non-loopback host:
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/start-server.sh \
+scripts/start-server.sh \
   --project-dir /path/to/project \
   --host 0.0.0.0 \
   --url-host localhost
@@ -249,12 +249,12 @@ If `.events` doesn't exist, the user didn't interact with the browser — use on
 ## Cleaning Up
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/stop-server.sh $SCREEN_DIR
+scripts/stop-server.sh $SCREEN_DIR
 ```
 
 If the session used `--project-dir`, mockup files persist in `.superpowers/brainstorm/` for later reference. Only `/tmp` sessions get deleted on stop.
 
 ## Reference
 
-- Frame template (CSS reference): `${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/frame-template.html`
-- Helper script (client-side): `${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/helper.js`
+- Frame template (CSS reference): `scripts/frame-template.html`
+- Helper script (client-side): `scripts/helper.js`
