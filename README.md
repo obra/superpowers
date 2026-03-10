@@ -18,7 +18,7 @@ Key changes include:
 
 ## How it works
 
-From the moment you fire up your coding agent, this fork follows the Superpowers approach: it first steps back to understand what you're really trying to do instead of jumping straight into code. It then collaborates with you to tease out a clear spec and shows it in chunks short enough to read and digest.
+From the moment you fire up your coding agent, this fork follows the original Superpowers approach: it first steps back to understand what you're really trying to do instead of jumping straight into code. It then collaborates with you to tease out a clear spec and shows it in chunks short enough to read and digest.
 
 Once you approve the design, your agent puts together an implementation plan that an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing could follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY, while this fork's optimizations keep the instructions focused and token‑efficient.
 
