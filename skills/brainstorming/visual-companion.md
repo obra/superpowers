@@ -44,15 +44,29 @@ Save `screen_dir` from the response. Tell user to open the URL.
 
 **Note:** Pass the project root as `--project-dir` so mockups persist in `.superpowers/brainstorm/` and survive server restarts. Without it, files go to `/tmp` and get cleaned up. Remind the user to add `.superpowers/` to `.gitignore` if it's not already there.
 
-**Codex behavior:** In Codex (`CODEX_CI=1`), `start-server.sh` auto-switches to foreground mode by default because background jobs may be reaped. Use `--background` only if your environment reliably preserves detached processes.
+**Launching the server by platform:**
 
-**If background processes are reaped in your environment:** run in foreground from a persistent terminal session:
-
+**Claude Code:**
 ```bash
+# Default mode works — the script backgrounds the server itself
+scripts/start-server.sh --project-dir /path/to/project
+```
+
+**Codex:**
+```bash
+# Codex reaps background processes. The script auto-detects CODEX_CI and
+# switches to foreground mode. Run it normally — no extra flags needed.
+scripts/start-server.sh --project-dir /path/to/project
+```
+
+**Gemini CLI:**
+```bash
+# Use --foreground and set is_background: true on your shell tool call
+# so the process survives across turns
 scripts/start-server.sh --project-dir /path/to/project --foreground
 ```
 
-In `--foreground` mode, the command stays attached and serves until interrupted.
+**Other environments:** The server must keep running in the background across conversation turns. If your environment reaps detached processes, use `--foreground` and launch the command with your platform's background execution mechanism.
 
 If the URL is unreachable from your browser (common in remote/containerized setups), bind a non-loopback host:
 

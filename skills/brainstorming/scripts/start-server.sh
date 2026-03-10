@@ -59,7 +59,7 @@ if [[ -z "$URL_HOST" ]]; then
   fi
 fi
 
-# Codex environments may reap detached/background processes. Prefer foreground by default.
+# Some environments reap detached/background processes. Auto-foreground when detected.
 if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
   FOREGROUND="true"
 fi
