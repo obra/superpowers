@@ -20,9 +20,17 @@ if [ -z "$MERGED_BRANCH" ]; then
 fi
 
 # Find matching worktrees
-WORKTREE_INFO=$("$WORKTREE_MANAGER" find "$MERGED_BRANCH" 2>/dev/null || true)
++# Get first matching worktree (there could be multiple across projects)
++WORKTREE_INFO=$("$WORKTREE_MANAGER" find "$MERGED_BRANCH" 2>/dev/null | jq -s '.[0]' || true)
++
++if [ -n "$WORKTREE_INFO" ]; then
+    exit 0
+fi
 
-if [ -n "$WORKTREE_INFO" ]; then
+# Find matching worktrees
++WORKTREE_INFO=$("$WORKTREE_MANAGER" find "$MERGED_BRANCH" 2>/dev/null | jq -s '.[0]' || true)
++
++if [ -n "$WORKTREE_INFO" ]; then
     WORKTREE_ID=$(echo "$WORKTREE_INFO" | jq -r '.id')
     WORKTREE_PATH=$(echo "$WORKTREE_INFO" | jq -r '.path')
     

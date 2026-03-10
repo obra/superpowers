@@ -39,24 +39,19 @@ register_worktree() {
     local metadata="${4:-{}}"
     
     local worktree_id="wt_$(date +%s)_$(echo "$branch" | tr -c '[:alnum:]' '_')"
+    local created_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     
-    local entry=$(cat <<EOF
-{
-  "id": "$worktree_id",
-  "path": "$worktree_path",
-  "branch": "$branch",
-  "project_root": "$project_root",
-  "created_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-  "status": "active",
-  "metadata": $metadata
-}
-EOF
-)
-    
-    # Add to registry
+    # Add to registry using jq for proper JSON escaping
     if command -v jq >/dev/null 2>&1; then
         local tmp_file="${REGISTRY_FILE}.tmp"
-        jq --argjson entry "$entry" '.worktrees += [$entry]' "$REGISTRY_FILE" > "$tmp_file"
+        jq --arg id "$worktree_id" \
+           --arg path "$worktree_path" \
+           --arg branch "$branch" \
+           --arg project_root "$project_root" \
+           --arg created_at "$created_at" \
+           --argjson metadata "$metadata" \
+           '.worktrees += [{id: $id, path: $path, branch: $branch, project_root: $project_root, created_at: $created_at, status: "active", metadata: $metadata}]' \
+           "$REGISTRY_FILE" > "$tmp_file"
         mv "$tmp_file" "$REGISTRY_FILE"
         echo "$worktree_id"
     else
