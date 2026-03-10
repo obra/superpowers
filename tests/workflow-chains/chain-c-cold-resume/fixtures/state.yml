@@ -1,0 +1,7 @@
+phase: executing
+plan:
+  path: docs/plans/feature/plan.md
+  status: executing
+  completed_tasks: [1, 2, 3]
+  current_wave: 2
+last_updated: "2026-03-10T00:00:00Z"

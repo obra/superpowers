@@ -1,0 +1,12 @@
+{
+  "name": "auth-system",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "node --test src/**/*.test.js",
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.0"
+  }
+}
