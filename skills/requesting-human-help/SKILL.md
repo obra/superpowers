@@ -35,10 +35,15 @@ Ad hoc help requests fail: they're inconsistent, lack context, and return unveri
 
 Present every help request as a structured block. Include ALL fields — missing fields are the top cause of execution errors.
 
-```
+```text
 ## Human Help Needed
 
 **Goal:** [One sentence: what outcome is needed]
+
+**Involvement level:** [clarification | execution | approval/takeover]
+- clarification: human answers a question so the agent can continue
+- execution: human performs steps the agent cannot
+- approval/takeover: human must approve or own the action before agent proceeds
 
 **Why I can't do this:** [Specific blocker — capability limit or risk reason]
 
@@ -69,7 +74,7 @@ Present every help request as a structured block. Include ALL fields — missing
 
 When the human responds, verify before proceeding:
 
-```
+```text
 FOR EACH acceptance criterion:
   - Is it addressed in the response?
   - Is evidence provided (log, screenshot, output)?
@@ -90,7 +95,7 @@ IF all criteria met:
 
 Every request creates a record:
 
-```
+```text
 REQUEST → [structured block above]
 HUMAN ACTION → [what they did]
 EVIDENCE → [artifact they returned]
