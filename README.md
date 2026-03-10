@@ -1,11 +1,8 @@
 [![GitHub stars](https://img.shields.io/github/stars/REPOZY/superpowers-optimized?style=flat)](https://github.com/REPOZY/superpowers-optimized/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/REPOZY/superpowers-optimized?style=flat)](https://github.com/REPOZY/superpowers-optimized/network/members)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Claude Code](https://img.shields.io/badge/Claude%20Code-Anthropic-purple)](https://docs.anthropic.com/en/docs/claude-code)
 [![Cursor](https://img.shields.io/badge/Cursor-AI%20IDE-orange)](https://www.cursor.com/)
-[![Codex CLI](https://img.shields.io/badge/Codex%20CLI-OpenAI-green)](https://github.com/openai/codex)
-[![GitHub last commit](https://img.shields.io/github/last-commit/REPOZY/superpowers-optimized)](https://github.com/REPOZY/superpowers-optimized/commits/main)
-[![GitHub issues](https://img.shields.io/github/issues/REPOZY/superpowers-optimized)](https://github.com/REPOZY/superpowers-optimized/issues)
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-Anthropic-purple)](https://docs.anthropic.com/en/docs/claude-code)
+[![Codex](https://img.shields.io/badge/Codex%20CLI-OpenAI-green)](https://github.com/openai/codex)
 
 # Superpowers (Optimized Fork)
 
