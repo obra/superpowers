@@ -85,8 +85,14 @@ fi
 SUPERPOWERS_SESSION_MODE="${SUPERPOWERS_MODE:-}"
 if [ -n "$SUPERPOWERS_SESSION_MODE" ]; then
     case "$SUPERPOWERS_SESSION_MODE" in
-        enabled|always|opt-out)
+        enabled|always)
             SUPERPOWERS_ENABLED=true
+            ;;
+        opt-out)
+            SUPERPOWERS_ENABLED=true
+            if [ -f "${PROJECT_ROOT}/.superpowers/disabled" ]; then
+                SUPERPOWERS_ENABLED=false
+            fi
             ;;
         disabled|never)
             SUPERPOWERS_ENABLED=false
@@ -107,7 +113,7 @@ fi
 # 4. Legacy skills directory warning
 LEGACY_SKILLS_DIR="${HOME}/.config/superpowers/skills"
 if [ -d "$LEGACY_SKILLS_DIR" ]; then
-    LEGACY_WARNING="\n\n<important-reminder>⚠️ **WARNING:** Superpowers now uses Claude Code's skills system. Custom skills in ~/.config/superpowers/skills will not be read. Move to ~/.claude/skills instead. Remove the directory to dismiss this message.</important-reminder>"
+    LEGACY_WARNING=$'\n\n<important-reminder>⚠️ **WARNING:** Superpowers now uses Claude Code'\''s skills system. Custom skills in ~/.config/superpowers/skills will not be read. Move to ~/.claude/skills instead. Remove the directory to dismiss this message.</important-reminder>'
 fi
 
 # ==============================================================================
@@ -162,6 +168,9 @@ else
     elif [ -f "${PROJECT_ROOT}/.superpowers/config.yaml" ] && \
          grep -q "mode: never" "${PROJECT_ROOT}/.superpowers/config.yaml"; then
         DISABLE_REASON="config_never"
+    elif [ -f "${PROJECT_ROOT}/.superpowers/config.yaml" ] && \
+         grep -q "mode: opt-in" "${PROJECT_ROOT}/.superpowers/config.yaml"; then
+        DISABLE_REASON="opt_in"
     elif grep -q "mode: opt-in" "${PLUGIN_ROOT}/lib/config.yaml" 2>/dev/null; then
         DISABLE_REASON="opt_in"
     fi
@@ -193,7 +202,7 @@ fi
 
 CONTENT_ESCAPED=$(escape_for_json "$CONTENT")
 
-SESSION_CONTEXT="<EXTREMELY_IMPORTANT>\n${CONTENT_ESCAPED}\n</EXTREMELY_IMPORTANT>"
+SESSION_CONTEXT=$'<EXTREMELY_IMPORTANT>\n'"${CONTENT_ESCAPED}"$'\n</EXTREMELY_IMPORTANT>'
 
 # Output JSON
 cat <<EOF
