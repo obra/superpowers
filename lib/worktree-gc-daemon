@@ -7,22 +7,24 @@ set -euo pipefail
 SUPERPOWERS_LIB="${HOME}/.config/superpowers/lib"
 WORKTREE_MANAGER="${SUPERPOWERS_LIB}/worktree-manager"
 DAEMON_PID_FILE="/tmp/superpowers-worktree-gc.pid"
+DAEMON_LOCK_FILE="/tmp/superpowers-worktree-gc.lock"
 LOG_FILE="${HOME}/.config/superpowers/worktree-gc.log"
 
-# Check if already running
-if [ -f "$DAEMON_PID_FILE" ]; then
-    OLD_PID=$(cat "$DAEMON_PID_FILE")
-    if kill -0 "$OLD_PID" 2>/dev/null; then
-        echo "Daemon already running (PID: $OLD_PID)"
-        exit 0
-    fi
+# Ensure log directory exists
+mkdir -p "$(dirname "$LOG_FILE")"
+
+# Atomic lock acquisition using flock
+exec 200>"$DAEMON_LOCK_FILE"
+if ! flock -n 200; then
+    echo "Daemon already running (lock held)" >&2
+    exit 0
 fi
 
-# Write PID
-echo $$ > "$DAEMON_PID_FILE"
-
 # Cleanup on exit
-trap 'rm -f "$DAEMON_PID_FILE"' EXIT
+trap 'flock -u 200; rm -f "$DAEMON_PID_FILE"' EXIT
+
+# Write PID while holding lock
+echo $$ > "$DAEMON_PID_FILE"
 
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"

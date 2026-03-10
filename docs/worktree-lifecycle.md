@@ -50,10 +50,31 @@ Cleanup only happens when:
 ### Enable GC Daemon (Recommended)
 
 ```bash
-# Start daemon on login
-ln -s ~/.config/superpowers/lib/worktree-gc-daemon ~/Library/LaunchAgents/  # macOS
-# OR
-echo "@reboot ~/.config/superpowers/lib/worktree-gc-daemon" | crontab -  # Linux
+# macOS: Create a proper LaunchAgent plist
+cat > ~/Library/LaunchAgents/com.superpowers.worktree-gc.plist << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.superpowers.worktree-gc</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-c</string>
+        <string>$HOME/.config/superpowers/lib/worktree-gc-daemon</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <false/>
+</dict>
+</plist>
+EOF
+launchctl load ~/Library/LaunchAgents/com.superpowers.worktree-gc.plist
+
+# Linux: Append to existing crontab (preserves existing entries)
+(crontab -l 2>/dev/null; echo "@reboot $HOME/.config/superpowers/lib/worktree-gc-daemon") | crontab -
 ```
 
 ### Install Git Hooks

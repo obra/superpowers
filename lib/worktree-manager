@@ -114,6 +114,22 @@ unregister_worktree() {
     fi
 }
 
+# ==============================================================================
+# Utility Functions  
+# ==============================================================================
+
+# Portable base64 decode (works on both GNU and BSD/macOS)
+base64_decode() {
+    local input="$1"
+    if echo "$input" | base64 --decode >/dev/null 2>&1; then
+        echo "$input" | base64 --decode
+    elif echo "$input" | base64 -D >/dev/null 2>&1; then
+        echo "$input" | base64 -D  
+    else
+        echo "$input" | base64 -d
+    fi
+}
+
 # Garbage collection
 run_gc() {
     echo "[$(date)] Running worktree garbage collection..."
@@ -128,16 +144,32 @@ run_gc() {
     fi
     
     for wt_b64 in $cleanup_pending; do
-        local wt_json=$(echo "$wt_b64" | base64 -d)
+        local wt_json=$(base64_decode "$wt_b64")
         local wt_path=$(echo "$wt_json" | jq -r '.path')
         local wt_id=$(echo "$wt_json" | jq -r '.id')
         
         if [ -d "$wt_path" ]; then
             # Verify no uncommitted changes
             if (cd "$wt_path" && git diff-index --quiet HEAD -- 2>/dev/null); then
-                # Safe to clean
+                # Safe to clean - use git worktree remove for consistency
                 echo "[$(date)] Cleaning worktree: $wt_path"
-                rm -rf "$wt_path"
+                
+                # Get main repo path
+                local main_repo
+                main_repo=$(cd "$wt_path" && git rev-parse --git-common-dir 2>/dev/null | sed 's|/\.git$||')
+                
+                if [ -n "$main_repo" ] && [ -d "$main_repo" ]; then
+                    # Try git worktree remove first
+                    if (cd "$main_repo" && git worktree remove "$wt_path" --force 2>/dev/null); then
+                        :
+                    else
+                        # Fallback to rm if git command fails
+                        rm -rf "$wt_path"
+                    fi
+                else
+                    rm -rf "$wt_path"
+                fi
+                
                 unregister_worktree "$wt_id"
             else
                 echo "[$(date)] Skipping worktree with uncommitted changes: $wt_path"
@@ -165,7 +197,7 @@ detect_status_changes() {
     active_worktrees=$(jq -r '.worktrees[] | select(.status == "active" or .status == "pr_opened") | @base64' "$REGISTRY_FILE" 2>/dev/null || true)
     
     for wt_b64 in $active_worktrees; do
-        local wt_json=$(echo "$wt_b64" | base64 -d)
+        local wt_json=$(base64_decode "$wt_b64")
         local wt_branch=$(echo "$wt_json" | jq -r '.branch')
         local wt_id=$(echo "$wt_json" | jq -r '.id')
         local wt_project=$(echo "$wt_json" | jq -r '.project_root')
@@ -179,8 +211,7 @@ detect_status_changes() {
                 
                 if [ "$pr_status" = "MERGED" ]; then
                     update_status "$wt_id" "merged"
-                    # Schedule cleanup after delay
-                    (sleep 3600 && update_status "$wt_id" "cleanup_pending" && run_gc) &
+                    # Daemon will handle transition to cleanup_pending
                 elif [ "$pr_status" = "OPEN" ]; then
                     update_status "$wt_id" "pr_opened"
                 fi
@@ -201,7 +232,12 @@ case "${1:-}" in
         ;;
     register)
         init_registry
-        register_worktree "${2:-}" "${3:-}" "${4:-$(pwd)}" "${5:-{}}"
+        if [ -z "${2:-}" ] || [ -z "${3:-}" ]; then
+            echo "Error: register requires <path> and <branch> arguments" >&2
+            echo "Usage: $0 register <path> <branch> [project_root] [metadata]" >&2
+            exit 1
+        fi
+        register_worktree "$2" "$3" "${4:-$(pwd)}" "${5:-{}}"
         ;;
     update)
         update_status "$2" "$3"

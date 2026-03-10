@@ -10,8 +10,14 @@ if [ ! -x "$WORKTREE_MANAGER" ]; then
     exit 0
 fi
 
-# Get merged branch name
-MERGED_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+# Get the branch that was merged (from reflog)
+# Post-merge hook fires after merge, so we parse the reflog to find source branch
+MERGED_BRANCH=$(git reflog -1 --format='%gs' | sed -n 's/.*merge \([^:]*\).*/\1/p')
+
+# Fallback: if we can't determine merged branch, exit silently
+if [ -z "$MERGED_BRANCH" ]; then
+    exit 0
+fi
 
 # Find matching worktrees
 WORKTREE_INFO=$("$WORKTREE_MANAGER" find "$MERGED_BRANCH" 2>/dev/null || true)
@@ -22,28 +28,10 @@ if [ -n "$WORKTREE_INFO" ]; then
     
     echo "🎉 Branch '$MERGED_BRANCH' merged!"
     
-    # Verify worktree is safe to clean
-    if [ -d "$WORKTREE_PATH" ]; then
-        cd "$WORKTREE_PATH"
-        if git diff-index --quiet HEAD -- 2>/dev/null; then
-            # Schedule cleanup with delay (give user time to react)
-            echo "⏳ Worktree cleanup scheduled in 1 hour: $WORKTREE_PATH"
-            echo "   To cancel: $WORKTREE_MANAGER update $WORKTREE_ID active"
-            
-            # Update status to merged first
-            "$WORKTREE_MANAGER" update "$WORKTREE_ID" "merged"
-            
-            # Schedule cleanup in background
-            (
-                sleep 3600  # 1 hour delay
-                "$WORKTREE_MANAGER" update "$WORKTREE_ID" "cleanup_pending"
-                "$WORKTREE_MANAGER" gc
-            ) &
-        else
-            echo "⚠️  Worktree has uncommitted changes, skipping auto-cleanup"
-            echo "   Path: $WORKTREE_PATH"
-        fi
-    fi
+    # Update status to merged (daemon will handle cleanup)
+    "$WORKTREE_MANAGER" update "$WORKTREE_ID" "merged"
+    
+    echo "✅ Worktree marked as merged. GC daemon will clean up: $WORKTREE_PATH"
 fi
 
 exit 0
