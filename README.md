@@ -26,7 +26,7 @@ Thanks!
 
 ## Installation
 
-**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex and OpenCode require manual setup.
+**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex, OpenCode, and OpenClaw require manual setup.
 
 ### Claude Code Official Marketplace
 
@@ -79,6 +79,23 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 ```
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
+
+### OpenClaw
+
+Run in your terminal:
+
+```bash
+git clone https://github.com/obra/superpowers.git ~/.openclaw/superpowers
+mkdir -p ~/.openclaw/skills
+for skill in ~/.openclaw/superpowers/skills/*/; do
+  name=$(basename "$skill")
+  [ ! -e ~/.openclaw/skills/"$name" ] && [ ! -L ~/.openclaw/skills/"$name" ] && \
+    ln -s "$skill" ~/.openclaw/skills/"$name"
+done
+openclaw gateway restart
+```
+
+**Detailed docs:** [docs/README.openclaw.md](docs/README.openclaw.md)
 
 ### Verify Installation
 
@@ -154,6 +171,12 @@ Skills update automatically when you update the plugin:
 
 ```bash
 /plugin update superpowers
+```
+
+For OpenClaw (manual clone), pull the latest changes:
+
+```bash
+cd ~/.openclaw/superpowers && git pull   # OpenClaw
 ```
 
 ## License
