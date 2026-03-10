@@ -38,14 +38,10 @@ session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the 
 # Keep both shapes for compatibility:
 # - Cursor hooks expect additional_context.
 # - Claude hooks expect hookSpecificOutput.additionalContext.
-cat <<EOF
-{
-  "additional_context": "${session_context}",
-  "hookSpecificOutput": {
-    "hookEventName": "SessionStart",
-    "additionalContext": "${session_context}"
-  }
-}
-EOF
+#
+# Uses printf instead of heredoc (cat <<EOF) to work around a bash 5.3+
+# bug where heredoc variable expansion hangs when content exceeds ~512 bytes.
+# See: https://github.com/obra/superpowers/issues/571
+printf '{\n  "additional_context": "%s",\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$session_context" "$session_context"
 
 exit 0
