@@ -57,8 +57,10 @@ Then install the plugin from this marketplace:
 In Cursor Agent chat, install from marketplace:
 
 ```text
-/plugin-add superpowers
+/add-plugin superpowers
 ```
+
+or search for "superpowers" in the plugin marketplace.
 
 ### Codex
 
