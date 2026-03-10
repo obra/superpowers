@@ -53,18 +53,20 @@ register_worktree() {
     local worktree_id="wt_$(date +%s)_$(echo "$branch" | tr -c '[:alnum:]' '_')"
     local created_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     
-    # Add to registry using jq for proper JSON escaping
+    # Add to registry with locking for concurrent access
     if command -v jq >/dev/null 2>&1; then
-        local tmp_file="${REGISTRY_FILE}.tmp"
-        jq --arg id "$worktree_id" \
-           --arg path "$worktree_path" \
-           --arg branch "$branch" \
-           --arg project_root "$project_root" \
-           --arg created_at "$created_at" \
-           --argjson metadata "$metadata" \
-           '.worktrees += [{id: $id, path: $path, branch: $branch, project_root: $project_root, created_at: $created_at, status: "active", metadata: $metadata}]' \
-           "$REGISTRY_FILE" > "$tmp_file"
-        mv "$tmp_file" "$REGISTRY_FILE"
+        (
+            flock -x 200
+            jq --arg id "$worktree_id" \
+               --arg path "$worktree_path" \
+               --arg branch "$branch" \
+               --arg project_root "$project_root" \
+               --arg created_at "$created_at" \
+               --argjson metadata "$metadata" \
+               '.worktrees += [{id: $id, path: $path, branch: $branch, project_root: $project_root, created_at: $created_at, status: "active", metadata: $metadata}]' \
+               "$REGISTRY_FILE" > "${REGISTRY_FILE}.tmp" && \
+            mv "${REGISTRY_FILE}.tmp" "$REGISTRY_FILE"
+        ) 200>"$LOCK_FILE"
         echo "$worktree_id"
     else
         echo "Error: jq required for worktree registry" >&2
@@ -87,11 +89,13 @@ update_status() {
     esac
     
     if command -v jq >/dev/null 2>&1; then
-        local tmp_file="${REGISTRY_FILE}.tmp"
-        jq --arg id "$worktree_id" --arg status "$new_status" \
-            '(.worktrees[] | select(.id == $id)).status = $status' \
-            "$REGISTRY_FILE" > "$tmp_file"
-        mv "$tmp_file" "$REGISTRY_FILE"
+        (
+            flock -x 200
+            jq --arg id "$worktree_id" --arg status "$new_status" \
+                '(.worktrees[] | select(.id == $id)).status = $status' \
+                "$REGISTRY_FILE" > "${REGISTRY_FILE}.tmp" && \
+            mv "${REGISTRY_FILE}.tmp" "$REGISTRY_FILE"
+        ) 200>"$LOCK_FILE"
     fi
 }
 
@@ -122,11 +126,13 @@ unregister_worktree() {
     local worktree_id="$1"
     
     if command -v jq >/dev/null 2>&1; then
-        local tmp_file="${REGISTRY_FILE}.tmp"
-        jq --arg id "$worktree_id" \
-            '.worktrees = [.worktrees[] | select(.id != $id)]' \
-            "$REGISTRY_FILE" > "$tmp_file"
-        mv "$tmp_file" "$REGISTRY_FILE"
+        (
+            flock -x 200
+            jq --arg id "$worktree_id" \
+                '.worktrees = [.worktrees[] | select(.id != $id)]' \
+                "$REGISTRY_FILE" > "${REGISTRY_FILE}.tmp" && \
+            mv "${REGISTRY_FILE}.tmp" "$REGISTRY_FILE"
+        ) 200>"$LOCK_FILE"
     fi
 }
 
@@ -199,10 +205,13 @@ run_gc() {
         fi
     done
     
-    # Update last GC time
-    local tmp_file="${REGISTRY_FILE}.tmp"
-    jq '.metadata.last_gc = "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"' "$REGISTRY_FILE" > "$tmp_file"
-    mv "$tmp_file" "$REGISTRY_FILE"
+    # Update last GC time with locking and proper jq --arg usage
+    local ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    (
+        flock -x 200
+        jq --arg ts "$ts" '.metadata.last_gc = $ts' "$REGISTRY_FILE" > "${REGISTRY_FILE}.tmp" && \
+        mv "${REGISTRY_FILE}.tmp" "$REGISTRY_FILE"
+    ) 200>"$LOCK_FILE"
 }
 
 # Detect branch status changes
