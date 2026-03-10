@@ -1,6 +1,6 @@
 ---
 name: using-superpowers
-description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
+description: Core agent workflow framework. Use when starting any conversation, question, or coding task - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
 ---
 
 <SUBAGENT-STOP>
@@ -28,6 +28,8 @@ If CLAUDE.md or AGENTS.md says "don't use TDD" and a skill says "always use TDD,
 ## How to Access Skills
 
 **In Claude Code:** Use the `Skill` tool. When you invoke a skill, its content is loaded and presented to you—follow it directly. Never use the Read tool on skill files.
+
+**In Qwen Code CLI:** Read the skill file with `read_file("~/.qwen/skills/<skill-name>/SKILL.md")`. Use `/skills` to see available skills. Use custom commands like `/brainstorm`, `/debug`, `/plan` for deterministic activation.
 
 **In other environments:** Check your platform's documentation for how skills are loaded.
 

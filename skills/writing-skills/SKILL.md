@@ -9,7 +9,7 @@ description: Use when creating new skills, editing existing skills, or verifying
 
 **Writing skills IS Test-Driven Development applied to process documentation.**
 
-**Personal skills live in agent-specific directories (`~/.claude/skills` for Claude Code, `~/.agents/skills/` for Codex)** 
+**Personal skills live in agent-specific directories (`~/.claude/skills` for Claude Code, `~/.agents/skills/` for Codex, `~/.qwen/skills/` for Qwen Code CLI)** 
 
 You write test cases (pressure scenarios with subagents), watch them fail (baseline behavior), write the skill (documentation), watch tests pass (agents comply), and refactor (close loopholes).
 
@@ -540,6 +540,16 @@ Run pressure scenario with subagent WITHOUT the skill. Document exact behavior:
 - What choices did they make?
 - What rationalizations did they use (verbatim)?
 - Which pressures triggered violations?
+
+**For Qwen Code CLI:**
+```python
+task(subagent_type="general-purpose", description="Test pressure scenario")
+```
+
+**For Claude Code:**
+```typescript
+Task("Test pressure scenario")
+```
 
 This is "watch the test fail" - you must see what agents naturally do before writing the skill.
 

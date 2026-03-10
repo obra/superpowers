@@ -26,7 +26,7 @@ Thanks!
 
 ## Installation
 
-**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex and OpenCode require manual setup.
+**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex, OpenCode, and Qwen Code CLI require manual setup.
 
 ### Claude Code Official Marketplace
 
@@ -64,7 +64,7 @@ In Cursor Agent chat, install from marketplace:
 
 Tell Codex:
 
-```
+```text
 Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md
 ```
 
@@ -74,11 +74,21 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 Tell OpenCode:
 
-```
+```text
 Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
 ```
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
+
+### Qwen Code CLI
+
+Tell Qwen:
+
+```text
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.qwen/INSTALL.md
+```
+
+**Detailed docs:** [docs/README.qwen.md](docs/README.qwen.md)
 
 ### Verify Installation
 
