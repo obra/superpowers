@@ -7,7 +7,19 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 REGISTRY_DIR="${HOME}/.config/superpowers"
 REGISTRY_FILE="${REGISTRY_DIR}/worktree-registry.json"
+LOCK_FILE="${REGISTRY_FILE}.lock"
 PROJECT_ROOT="${PROJECT_ROOT:-$(pwd)}"
+
+# ==============================================================================
+# Locking for concurrent access
+# ==============================================================================
+
+with_registry_lock() {
+    (
+        flock -x 200
+        "$@"
+    ) 200>"$LOCK_FILE"
+}
 
 # Ensure registry exists
 init_registry() {
@@ -153,8 +165,8 @@ run_gc() {
         local wt_id=$(echo "$wt_json" | jq -r '.id')
         
         if [ -d "$wt_path" ]; then
-            # Verify no uncommitted changes
-            if (cd "$wt_path" && git diff-index --quiet HEAD -- 2>/dev/null); then
+            # Verify no changes (including untracked files)
+            if (cd "$wt_path" && [ -z "$(git status --porcelain --untracked-files=all 2>/dev/null)" ]); then
                 # Safe to clean - use git worktree remove for consistency
                 echo "[$(date)] Cleaning worktree: $wt_path"
                 
@@ -209,22 +221,19 @@ detect_status_changes() {
         local wt_id=$(echo "$wt_json" | jq -r '.id')
         local wt_project=$(echo "$wt_json" | jq -r '.project_root')
         
-        # Check if branch still exists
-        if (cd "$wt_project" 2>/dev/null && git show-ref --verify --quiet "refs/heads/$wt_branch"); then
-            # Branch exists, check for PR status (requires gh CLI)
-            if command -v gh >/dev/null 2>&1; then
-                local pr_status
-                pr_status=$(cd "$wt_project" 2>/dev/null && gh pr view "$wt_branch" --json state -q '.state' 2>/dev/null || echo "none")
-                
-                if [ "$pr_status" = "MERGED" ]; then
-                    update_status "$wt_id" "merged"
-                    # Daemon will handle transition to cleanup_pending
-                elif [ "$pr_status" = "OPEN" ]; then
-                    update_status "$wt_id" "pr_opened"
-                fi
-            fi
-        else
-            # Branch doesn't exist, mark directly as cleanup_pending
+        # Check PR status first (works even if local branch is deleted)
+        local pr_status="none"
+        if command -v gh >/dev/null 2>&1; then
+            pr_status=$(cd "$wt_project" 2>/dev/null && gh pr view "$wt_branch" --json state -q '.state' 2>/dev/null || echo "none")
+        fi
+        
+        if [ "$pr_status" = "MERGED" ]; then
+            update_status "$wt_id" "merged"
+            # Daemon will handle transition to cleanup_pending after grace period
+        elif [ "$pr_status" = "OPEN" ]; then
+            update_status "$wt_id" "pr_opened"
+        elif ! (cd "$wt_project" 2>/dev/null && git show-ref --verify --quiet "refs/heads/$wt_branch"); then
+            # No PR found and branch doesn't exist - truly abandoned
             update_status "$wt_id" "cleanup_pending"
         fi
     done
