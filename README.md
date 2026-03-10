@@ -60,6 +60,34 @@ In Cursor Agent chat, install from marketplace:
 /plugin-add superpowers
 ```
 
+### GitHub Copilot
+
+GitHub Copilot natively supports the Agent Skills standard. Install skills at repository or personal level:
+
+**Repository-level** (per-developer setup for repository skills):
+```bash
+# Clone once
+git clone https://github.com/obra/superpowers.git ~/.local/share/superpowers
+
+# In your project directory, symlink each skill directly
+mkdir -p .github/skills
+ln -s ~/.local/share/superpowers/skills/* .github/skills/
+```
+
+**Personal** (skills follow you everywhere):
+```bash
+# Clone once
+git clone https://github.com/obra/superpowers.git ~/.local/share/superpowers
+
+# Symlink to personal skills
+mkdir -p ~/.copilot/skills
+ln -s ~/.local/share/superpowers/skills/* ~/.copilot/skills/
+```
+
+**Verify**: In VS Code, type `/skills` in Copilot Chat. You should see Superpowers skills listed.
+
+**Detailed docs:** [docs/README.copilot.md](docs/README.copilot.md)
+
 ### Codex
 
 Tell Codex:
