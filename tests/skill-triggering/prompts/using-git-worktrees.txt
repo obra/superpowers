@@ -1,0 +1,1 @@
+I need to work on a new feature without touching my current branch. It would be ideal to have a completely isolated workspace where changes don't interfere with what I have checked out now. How should I set that up?

@@ -1,0 +1,1 @@
+I want to build a new feature for user notifications — things like email alerts, in-app banners, and push notifications. I'm not sure of the best approach yet. Can you help me think through the options and tradeoffs before we commit to anything?

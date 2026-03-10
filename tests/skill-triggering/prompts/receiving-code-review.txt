@@ -1,0 +1,7 @@
+Here's the code review feedback I got on my pull request:
+
+- "This function is too long, consider splitting it up"
+- "Missing error handling for the API call on line 47"
+- "The variable name `data` is too generic, be more specific"
+
+Can you help me work through each of these and make the changes?

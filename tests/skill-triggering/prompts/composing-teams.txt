@@ -1,0 +1,1 @@
+We're about to start a large refactor that involves API design, database schema changes, and frontend updates. What agents should we use for this project, and how should we structure the team?

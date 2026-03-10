@@ -1,0 +1,1 @@
+I want to create a new skill for database migrations — something that agents can invoke to run migrations safely, check status, and roll back if needed. How do I go about packaging that as a reusable skill?

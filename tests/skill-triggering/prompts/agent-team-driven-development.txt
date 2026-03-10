@@ -1,0 +1,1 @@
+I have a plan with 8 tasks across 3 specialist domains — backend API, frontend components, and database migrations. These are mostly independent and could be worked on simultaneously. Can we parallelize this across multiple specialized agents working at the same time?

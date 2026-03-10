@@ -1,0 +1,1 @@
+I have a plan at docs/plans/2024-02-10-payment-integration.md with 5 tasks. Each task should be executed cleanly in isolation with a fresh context. Can you run each one using a separate agent?
