@@ -11,6 +11,8 @@ PROJECT_ROOT="$(pwd)"
 SUPERPOWERS_ENABLED=true
 INJECTION_MODE="full"
 LEGACY_WARNING=""
+DISABLE_REASON="unknown"
+PROJECT_OVERRIDES_ENABLED=true
 
 # ==============================================================================
 # Configuration Parsing
@@ -20,6 +22,11 @@ LEGACY_WARNING=""
 parse_config() {
     local config_file="$1"
     if [ -f "$config_file" ]; then
+        # Check per_project_enabled flag
+        if grep -q "per_project_enabled: false" "$config_file"; then
+            PROJECT_OVERRIDES_ENABLED=false
+        fi
+        
         # Extract mode
         if grep -q "mode: opt-in" "$config_file"; then
             if [ ! -f "${PROJECT_ROOT}/.superpowers/enabled" ]; then
@@ -45,6 +52,7 @@ parse_config() {
             CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
             if [[ "$CURRENT_BRANCH" == "main" || "$CURRENT_BRANCH" == "master" ]]; then
                 SUPERPOWERS_ENABLED=false
+                DISABLE_REASON="disabled_on_main_branch"
             fi
         fi
         
@@ -58,6 +66,7 @@ parse_config() {
         if grep -q "require_git_repo: true" "$config_file"; then
             if ! git rev-parse --git-dir > /dev/null 2>&1; then
                 SUPERPOWERS_ENABLED=false
+                DISABLE_REASON="require_git_repo"
             fi
         fi
     fi
@@ -77,7 +86,7 @@ if [ -f "${PLUGIN_ROOT}/lib/config.yaml" ]; then
     parse_config "${PLUGIN_ROOT}/lib/config.yaml"
 fi
 
-if [ -f "${PROJECT_ROOT}/.superpowers/config.yaml" ]; then
+if [ "$PROJECT_OVERRIDES_ENABLED" = "true" ] && [ -f "${PROJECT_ROOT}/.superpowers/config.yaml" ]; then
     parse_config "${PROJECT_ROOT}/.superpowers/config.yaml"
 fi
 
@@ -190,6 +199,14 @@ Superpowers disabled globally.\n\nTo enable:\n- Remove ~/.superpowers/disabled f
             CONTENT=$'<SUPERPOWERS_AVAILABLE>
 Superpowers set to '\''never'\'' in config.\n\nTo enable:\n- Edit .superpowers/config.yaml and change mode\n</SUPERPOWERS_AVAILABLE>'
             ;;
+        disabled_on_main_branch)
+            CONTENT=$'<SUPERPOWERS_AVAILABLE>
+Superpowers disabled on main/master branch.\n\nThis is a context-aware setting.\n- Switch to a feature branch to enable\n</SUPERPOWERS_AVAILABLE>'
+            ;;
+        require_git_repo)
+            CONTENT=$'<SUPERPOWERS_AVAILABLE>
+Superpowers requires a git repository.\n\nThis is a context-aware setting.\n- Navigate to a git repository to enable\n</SUPERPOWERS_AVAILABLE>'
+            ;;
         opt_in)
             CONTENT=$'<SUPERPOWERS_AVAILABLE>
 Superpowers in opt-in mode.\n\nTo enable:\n- Create .superpowers/enabled file\n- Or run: /superpowers on\n</SUPERPOWERS_AVAILABLE>'
@@ -203,7 +220,7 @@ fi
 
 CONTENT_ESCAPED=$(escape_for_json "$CONTENT")
 
-SESSION_CONTEXT=$'<EXTREMELY_IMPORTANT>\n'"${CONTENT_ESCAPED}"$'\n</EXTREMELY_IMPORTANT>'
+SESSION_CONTEXT="<EXTREMELY_IMPORTANT>\n${CONTENT_ESCAPED}\n</EXTREMELY_IMPORTANT>"
 
 # Output JSON
 cat <<EOF
