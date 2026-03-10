@@ -25,22 +25,35 @@ Enable superpowers skills in Google Antigravity via native skill discovery. Just
    cmd /c mklink /J "$env:USERPROFILE\.agents\skills\superpowers" "$env:USERPROFILE\.antigravity\superpowers\skills"
    ```
 
-3. **Install the global workflow bootstrap:**
+3. **Install Antigravity-adapted skills:**
 
-   This copies the `using-superpowers` bootstrap into Antigravity's global workflows directory so it triggers in every conversation, regardless of workspace.
+   These are condensed, Antigravity-native versions of the upstream skills that reference the correct Antigravity tools (`browser_subagent`, `task.md`, `view_file`) instead of Claude Code tools. They include `subagent-development`, an Antigravity-exclusive self-orchestration skill.
+
+   ```bash
+   cp -r ~/.antigravity/superpowers/.antigravity/skills/* ~/.agents/skills/
+   ```
+
+   **Windows (PowerShell):**
+   ```powershell
+   Copy-Item -Recurse -Force "$env:USERPROFILE\.antigravity\superpowers\.antigravity\skills\*" "$env:USERPROFILE\.agents\skills\"
+   ```
+
+4. **Install the global workflow bootstrap:**
+
+   This copies the Antigravity-native `superpowers-bootstrap` into Antigravity's global workflows directory so it triggers in every conversation, regardless of workspace.
 
    ```bash
    mkdir -p ~/.gemini/antigravity/global_workflows
-   cp ~/.antigravity/superpowers/skills/using-superpowers/SKILL.md ~/.gemini/antigravity/global_workflows/superpowers.md
+   cp ~/.antigravity/superpowers/.antigravity/skills/superpowers-bootstrap/SKILL.md ~/.gemini/antigravity/global_workflows/superpowers.md
    ```
 
    **Windows (PowerShell):**
    ```powershell
    New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.gemini\antigravity\global_workflows"
-   Copy-Item "$env:USERPROFILE\.antigravity\superpowers\skills\using-superpowers\SKILL.md" "$env:USERPROFILE\.gemini\antigravity\global_workflows\superpowers.md"
+   Copy-Item "$env:USERPROFILE\.antigravity\superpowers\.antigravity\skills\superpowers-bootstrap\SKILL.md" "$env:USERPROFILE\.gemini\antigravity\global_workflows\superpowers.md"
    ```
 
-4. **Restart Antigravity** to discover the skills.
+5. **Restart Antigravity** to discover the skills.
 
 ## Verify
 
@@ -61,7 +74,18 @@ You should see a symlink (or junction on Windows) pointing to your superpowers s
 cd ~/.antigravity/superpowers && git pull
 ```
 
-Skills update instantly through the symlink.
+Skills update instantly through the symlink. To update the adapted skills and global workflow bootstrap after pulling:
+
+```bash
+cp -r ~/.antigravity/superpowers/.antigravity/skills/* ~/.agents/skills/
+cp ~/.antigravity/superpowers/.antigravity/skills/superpowers-bootstrap/SKILL.md ~/.gemini/antigravity/global_workflows/superpowers.md
+```
+
+**Windows (PowerShell):**
+```powershell
+Copy-Item -Recurse -Force "$env:USERPROFILE\.antigravity\superpowers\.antigravity\skills\*" "$env:USERPROFILE\.agents\skills\"
+Copy-Item "$env:USERPROFILE\.antigravity\superpowers\.antigravity\skills\superpowers-bootstrap\SKILL.md" "$env:USERPROFILE\.gemini\antigravity\global_workflows\superpowers.md"
+```
 
 ## Uninstalling
 
