@@ -80,6 +80,16 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
 
+### TRAE
+
+Tell TRAE:
+
+```
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.trae/INSTALL.md
+```
+
+**Detailed docs:** [docs/README.trae.md](docs/README.trae.md)
+
 ### Verify Installation
 
 Start a new session in your chosen platform and ask for something that should trigger a skill (for example, "help me plan this feature" or "let's debug this issue"). The agent should automatically invoke the relevant superpowers skill.
