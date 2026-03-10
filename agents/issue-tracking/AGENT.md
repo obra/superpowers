@@ -1,7 +1,6 @@
 ---
 name: issue-tracking
 model: haiku
-tools: Bash, Read, Grep, Glob
 description: |
   Abstracts issue tracker operations across beads, GitHub Issues, Jira MCP, and Notion MCP.
   Dispatched by skills for detection, discovery, status updates, creation, and closing.
