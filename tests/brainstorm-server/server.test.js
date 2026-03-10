@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const assert = require('assert');
 
-const SERVER_PATH = path.join(__dirname, '../../lib/brainstorm-server/index.js');
+const SERVER_PATH = path.join(__dirname, '../../skills/brainstorming/scripts/index.js');
 const TEST_PORT = 3334;
 const TEST_DIR = '/tmp/brainstorm-test';
 
@@ -160,7 +160,7 @@ async function runTests() {
     // Test 7: Helper.js includes toggleSelect and send functions
     console.log('Test 7: Helper.js provides toggleSelect and send');
     const helperContent = fs.readFileSync(
-      path.join(__dirname, '../../lib/brainstorm-server/helper.js'), 'utf-8'
+      path.join(__dirname, '../../skills/brainstorming/scripts/helper.js'), 'utf-8'
     );
     assert(helperContent.includes('toggleSelect'), 'helper.js should define toggleSelect');
     assert(helperContent.includes('sendEvent'), 'helper.js should define sendEvent');
@@ -172,7 +172,7 @@ async function runTests() {
     // Test 8: Indicator bar uses CSS variables (theme support)
     console.log('Test 8: Indicator bar uses CSS variables');
     const templateContent = fs.readFileSync(
-      path.join(__dirname, '../../lib/brainstorm-server/frame-template.html'), 'utf-8'
+      path.join(__dirname, '../../skills/brainstorming/scripts/frame-template.html'), 'utf-8'
     );
     assert(templateContent.includes('indicator-bar'), 'Template should have indicator bar');
     assert(templateContent.includes('indicator-text'), 'Template should have indicator text element');
