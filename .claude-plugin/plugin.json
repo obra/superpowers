@@ -3,8 +3,7 @@
   "description": "Optimized agentic skills framework for Claude Code — workflow routing, token efficiency, and discipline enforcement",
   "version": "1.0.0",
   "author": {
-    "name": "Jesse Vincent, forked by REPOZY",
-    "repository": "https://github.com/REPOZY/superpowers-optimized"
+    "name": "Jesse Vincent, forked by REPOZY"
   },
   "homepage": "https://github.com/obra/superpowers",
   "repository": "https://github.com/REPOZY/superpowers-optimized",
