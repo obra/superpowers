@@ -1,9 +1,9 @@
-[![GitHub stars](https://img.shields.io/github/stars/REPOZY/superpowers-optimized?style=flat)](https://github.com/REPOZY/superpowers-optimized/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/REPOZY/superpowers-optimized?style=flat&color=yellow)](https://github.com/REPOZY/superpowers-optimized/stargazers)
 [![Install](https://img.shields.io/badge/install-REPOZY%2Fsuperpowers--optimized-5B3FFF?logo=claude)](https://github.com/REPOZY/superpowers-optimized#installation)
-[![Cursor](https://img.shields.io/badge/Cursor-AI%20IDE-orange)](https://www.cursor.com/)
-[![Claude Code](https://img.shields.io/badge/Claude%20Code-Anthropic-purple)](https://docs.anthropic.com/en/docs/claude-code)
+[![Cursor](https://img.shields.io/badge/Cursor-AI%20IDE-teal)](https://www.cursor.com/)
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-Anthropic-orange)](https://docs.anthropic.com/en/docs/claude-code)
 [![Codex](https://img.shields.io/badge/Codex%20CLI-OpenAI-green)](https://github.com/openai/codex)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 # Superpowers (Optimized Fork)
 
