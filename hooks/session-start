@@ -48,6 +48,13 @@ parse_config() {
             fi
         fi
         
+        if grep -q "lightweight_on_detached_head: true" "$config_file"; then
+            CURRENT_BRANCH=${CURRENT_BRANCH:-$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")}
+            if [ "$CURRENT_BRANCH" = "HEAD" ] && [ "$INJECTION_MODE" = "full" ]; then
+                INJECTION_MODE="lightweight"
+            fi
+        fi
+        
         if grep -q "require_git_repo: true" "$config_file"; then
             if ! git rev-parse --git-dir > /dev/null 2>&1; then
                 SUPERPOWERS_ENABLED=false
@@ -65,18 +72,35 @@ if [ -f "${HOME}/.superpowers/disabled" ]; then
     SUPERPOWERS_ENABLED=false
 fi
 
-# 2. Check project-level config
-if [ -f "${PROJECT_ROOT}/.superpowers/config.yaml" ]; then
-    parse_config "${PROJECT_ROOT}/.superpowers/config.yaml"
-elif [ -f "${PLUGIN_ROOT}/lib/config.yaml" ]; then
+# 2. Check configs (layered: plugin defaults → project overrides)
+if [ -f "${PLUGIN_ROOT}/lib/config.yaml" ]; then
     parse_config "${PLUGIN_ROOT}/lib/config.yaml"
 fi
 
-# 3. Check environment variable override
-if [ "${SUPERPOWERS_MODE:-}" = "disabled" ]; then
-    SUPERPOWERS_ENABLED=false
-elif [ "${SUPERPOWERS_MODE:-}" = "enabled" ]; then
-    SUPERPOWERS_ENABLED=true
+if [ -f "${PROJECT_ROOT}/.superpowers/config.yaml" ]; then
+    parse_config "${PROJECT_ROOT}/.superpowers/config.yaml"
+fi
+
+# 3. Check environment variable override (highest priority)
+SUPERPOWERS_SESSION_MODE="${SUPERPOWERS_MODE:-}"
+if [ -n "$SUPERPOWERS_SESSION_MODE" ]; then
+    case "$SUPERPOWERS_SESSION_MODE" in
+        enabled|always|opt-out)
+            SUPERPOWERS_ENABLED=true
+            ;;
+        disabled|never)
+            SUPERPOWERS_ENABLED=false
+            ;;
+        opt-in)
+            # For opt-in, require explicit .superpowers/enabled
+            if [ ! -f "${PROJECT_ROOT}/.superpowers/enabled" ]; then
+                SUPERPOWERS_ENABLED=false
+            fi
+            ;;
+        *)
+            # Unknown mode, warn but continue
+            ;;
+    esac
 fi
 
 # 4. Legacy skills directory warning
@@ -100,6 +124,10 @@ escape_for_json() {
 }
 
 if [ "$SUPERPOWERS_ENABLED" = "true" ]; then
+    # Initialize variables
+    CONTENT=""
+    CONTENT_FILE=""
+    
     # Determine which content to inject based on mode
     case "$INJECTION_MODE" in
         full)
@@ -114,15 +142,45 @@ if [ "$SUPERPOWERS_ENABLED" = "true" ]; then
             ;;
     esac
     
-    if [ -f "$CONTENT_FILE" ]; then
+    if [ -n "$CONTENT_FILE" ] && [ -f "$CONTENT_FILE" ]; then
         CONTENT=$(cat "$CONTENT_FILE")
     fi
     
     CONTENT="${CONTENT}${LEGACY_WARNING}"
     
 else
-    # Send availability notice
-    CONTENT="<SUPERPOWERS_AVAILABLE>\nSuperpowers is installed but not active.\n\nTo enable:\n- Project level: Create .superpowers/enabled file\n- Global: Remove ~/.superpowers/disabled\n- Command: /superpowers on\n\nCurrent mode: opt-in (requires explicit activation)\n</SUPERPOWERS_AVAILABLE>"
+    # Determine why Superpowers is disabled for accurate notice
+    DISABLE_REASON="unknown"
+    
+    if [ -n "$SUPERPOWERS_SESSION_MODE" ]; then
+        DISABLE_REASON="env_var"
+    elif [ -f "${HOME}/.superpowers/disabled" ]; then
+        DISABLE_REASON="global_disabled"
+    elif [ -f "${PROJECT_ROOT}/.superpowers/config.yaml" ] && \
+         grep -q "mode: never" "${PROJECT_ROOT}/.superpowers/config.yaml"; then
+        DISABLE_REASON="config_never"
+    elif grep -q "mode: opt-in" "${PLUGIN_ROOT}/lib/config.yaml" 2>/dev/null; then
+        DISABLE_REASON="opt_in"
+    fi
+    
+    # Generate mode-specific notice
+    case "$DISABLE_REASON" in
+        env_var)
+            CONTENT="<SUPERPOWERS_AVAILABLE>\nSuperpowers disabled by environment variable.\n\nTo enable:\n- Unset SUPERPOWERS_MODE or set to 'enabled'\n- Current: SUPERPOWERS_MODE=$SUPERPOWERS_SESSION_MODE\n</SUPERPOWERS_AVAILABLE>"
+            ;;
+        global_disabled)
+            CONTENT="<SUPERPOWERS_AVAILABLE>\nSuperpowers disabled globally.\n\nTo enable:\n- Remove ~/.superpowers/disabled file\n</SUPERPOWERS_AVAILABLE>"
+            ;;
+        config_never)
+            CONTENT="<SUPERPOWERS_AVAILABLE>\nSuperpowers set to 'never' in config.\n\nTo enable:\n- Edit .superpowers/config.yaml and change mode\n</SUPERPOWERS_AVAILABLE>"
+            ;;
+        opt_in)
+            CONTENT="<SUPERPOWERS_AVAILABLE>\nSuperpowers in opt-in mode.\n\nTo enable:\n- Create .superpowers/enabled file\n- Or run: /superpowers on\n</SUPERPOWERS_AVAILABLE>"
+            ;;
+        *)
+            CONTENT="<SUPERPOWERS_AVAILABLE>\nSuperpowers is installed but not active.\n\nTo enable:\n- Create .superpowers/enabled file\n- Or run: /superpowers on\n</SUPERPOWERS_AVAILABLE>"
+            ;;
+    esac
 fi
 
 CONTENT_ESCAPED=$(escape_for_json "$CONTENT")
