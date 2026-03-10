@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Git post-merge hook for automatic worktree cleanup
+# Install: Copy to .git/hooks/post-merge and make executable
+
+SUPERPOWERS_LIB="${HOME}/.config/superpowers/lib"
+WORKTREE_MANAGER="${SUPERPOWERS_LIB}/worktree-manager"
+
+# Only run if superpowers is installed
+if [ ! -x "$WORKTREE_MANAGER" ]; then
+    exit 0
+fi
+
+# Get merged branch name
+MERGED_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+# Find matching worktrees
+WORKTREE_INFO=$("$WORKTREE_MANAGER" find "$MERGED_BRANCH" 2>/dev/null || true)
+
+if [ -n "$WORKTREE_INFO" ]; then
+    WORKTREE_ID=$(echo "$WORKTREE_INFO" | jq -r '.id')
+    WORKTREE_PATH=$(echo "$WORKTREE_INFO" | jq -r '.path')
+    
+    echo "🎉 Branch '$MERGED_BRANCH' merged!"
+    
+    # Verify worktree is safe to clean
+    if [ -d "$WORKTREE_PATH" ]; then
+        cd "$WORKTREE_PATH"
+        if git diff-index --quiet HEAD -- 2>/dev/null; then
+            # Schedule cleanup with delay (give user time to react)
+            echo "⏳ Worktree cleanup scheduled in 1 hour: $WORKTREE_PATH"
+            echo "   To cancel: $WORKTREE_MANAGER update $WORKTREE_ID active"
+            
+            # Update status to merged first
+            "$WORKTREE_MANAGER" update "$WORKTREE_ID" "merged"
+            
+            # Schedule cleanup in background
+            (
+                sleep 3600  # 1 hour delay
+                "$WORKTREE_MANAGER" update "$WORKTREE_ID" "cleanup_pending"
+                "$WORKTREE_MANAGER" gc
+            ) &
+        else
+            echo "⚠️  Worktree has uncommitted changes, skipping auto-cleanup"
+            echo "   Path: $WORKTREE_PATH"
+        fi
+    fi
+fi
+
+exit 0

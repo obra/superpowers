@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Worktree Garbage Collection Daemon
+# Runs periodically to clean up abandoned worktrees
+
+set -euo pipefail
+
+SUPERPOWERS_LIB="${HOME}/.config/superpowers/lib"
+WORKTREE_MANAGER="${SUPERPOWERS_LIB}/worktree-manager"
+DAEMON_PID_FILE="/tmp/superpowers-worktree-gc.pid"
+LOG_FILE="${HOME}/.config/superpowers/worktree-gc.log"
+
+# Check if already running
+if [ -f "$DAEMON_PID_FILE" ]; then
+    OLD_PID=$(cat "$DAEMON_PID_FILE")
+    if kill -0 "$OLD_PID" 2>/dev/null; then
+        echo "Daemon already running (PID: $OLD_PID)"
+        exit 0
+    fi
+fi
+
+# Write PID
+echo $$ > "$DAEMON_PID_FILE"
+
+# Cleanup on exit
+trap 'rm -f "$DAEMON_PID_FILE"' EXIT
+
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"
+}
+
+log "Worktree GC daemon started (PID: $$)"
+
+# Main loop
+while true; do
+    # Detect status changes
+    if [ -x "$WORKTREE_MANAGER" ]; then
+        "$WORKTREE_MANAGER" detect >> "$LOG_FILE" 2>&1 || true
+        
+        # Run garbage collection
+        "$WORKTREE_MANAGER" gc >> "$LOG_FILE" 2>&1 || true
+    fi
+    
+    # Sleep for 1 hour
+    sleep 3600
+done

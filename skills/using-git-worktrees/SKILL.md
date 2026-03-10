@@ -95,6 +95,14 @@ esac
 
 # Create worktree with new branch
 git worktree add "$path" -b "$BRANCH_NAME"
+
+# Register with worktree lifecycle manager
+if [ -x "${HOME}/.config/superpowers/lib/worktree-manager" ]; then
+  "${HOME}/.config/superpowers/lib/worktree-manager" register \
+    "$path" "$BRANCH_NAME" "$(pwd)" \
+    "{\"created_by\": \"superpowers\", \"skill\": \"using-git-worktrees\"}"
+fi
+
 cd "$path"
 ```
 
