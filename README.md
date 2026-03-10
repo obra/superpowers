@@ -43,6 +43,41 @@ This optimized version builds on the original [obra/superpowers](https://github.
 
 The result: everything the original does, plus routing, specialists, discipline enforcement, safety hooks, and multi-platform support — in fewer tokens.
 
+## Research-Driven Optimizations
+
+The optimizations in this fork are grounded in two recent research papers on LLM agent behavior:
+
+### Minimal context files outperform verbose ones
+
+**Paper:** [Evaluating AGENTS.md: Are Repository-Level Context Files Helpful for Coding Agents?](https://arxiv.org/abs/2602.11988) (AGENTbench, 138 tasks, 12 repos, 4 agents)
+
+Key findings that shaped this fork:
+- **LLM-generated context files decreased success rates by ~2-3%** while increasing inference costs by over 20%. More instructions made tasks *harder*, not easier.
+- **Developer-written context files only helped ~4%** — and only when kept minimal. Detailed directory enumerations and comprehensive overviews didn't help agents find relevant files faster.
+- **Agents used 14-22% more reasoning tokens** when given longer context files, suggesting cognitive overload rather than helpful guidance.
+- **Agents followed instructions compliantly** (using mentioned tools 1.6-2.5x more often) but this compliance didn't translate to better outcomes.
+
+**What we changed:** Every skill was rewritten as a concise operational checklist instead of verbose prose. The `CLAUDE.md` contains only minimal requirements (specific tooling, critical constraints, conventions). The `adaptive-workflow-selector` skips unnecessary skill loading for simple tasks. The result is lower prompt overhead in every session and fewer failures from instruction overload.
+
+### Prior assistant responses can degrade performance
+
+**Paper:** [Do LLMs Benefit from Their Own Words?](https://arxiv.org/abs/2602.24287) (4 models, real-world multi-turn conversations)
+
+Key findings that shaped this fork:
+- **Removing prior assistant responses often maintained comparable quality** while reducing context by 5-10x. Models over-condition on their own previous outputs.
+- **Context pollution is real:** models propagate errors across turns — incorrect code parameters carry over, hallucinated facts persist, and stylistic artifacts constrain subsequent responses.
+- **~36% of prompts in ongoing conversations are self-contained "new asks"** that perform equally well without assistant history.
+- **One-sentence summaries of prior responses outperformed full context**, suggesting long reasoning chains degrade subsequent performance.
+
+**What we changed:** The `context-management` skill actively prunes noisy history and persists only durable state across sessions. Subagent prompts request only task-local constraints and evidence rather than carrying forward full conversation history. Execution skills avoid long historical carryover unless required for correctness. The `token-efficiency` standard enforces these rules as an always-on operational baseline.
+
+### Combined impact
+
+These research insights drive three core principles throughout the fork:
+1. **Less is more** — concise skills, minimal always-on instructions, and explicit context hygiene
+2. **Fresh context beats accumulated context** — subagents get clean, task-scoped prompts instead of inheriting polluted history
+3. **Compliance ≠ competence** — agents follow instructions reliably, so the instructions themselves must be carefully engineered (rationalization tables, red flags, forbidden phrases) rather than simply comprehensive
+
 ## Installation
 
 **Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex and OpenCode require manual setup.
