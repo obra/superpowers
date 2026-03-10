@@ -1,5 +1,45 @@
 # Superpowers Release Notes
 
+## v4.5.0 (2026-03-10)
+
+This release adds a comprehensive hooks system with proactive skill routing, edit tracking, stop reminders, and two safety guard hooks. Also includes cross-session memory for the code-reviewer agent and README corrections.
+
+### Added
+
+**Hooks System — 5 new hooks for proactive workflow enforcement and safety**
+
+The plugin now ships a full hooks pipeline registered in `hooks/hooks.json`:
+
+- **skill-activator** (UserPromptSubmit) — Matches user prompts against 17 keyword/regex rules in `hooks/skill-rules.json` before Claude processes them. Injects up to 3 relevant skill suggestions wrapped in `<user-prompt-submit-hook>` tags, reinforcing the `using-superpowers` routing system deterministically. Returns `{}` for non-matching prompts (zero token cost).
+
+- **track-edits** (PostToolUse, matcher: Edit|Write) — Logs every file edit to `~/.claude/hooks-logs/edit-log.txt` with ISO timestamp, tool name, and resolved file path. Auto-rotates at 500 lines with a size-based check (50KB threshold) to avoid reading the file on every write. Feeds data to `stop-reminders`. Never blocks.
+
+- **stop-reminders** (Stop) — Generates contextual reminders when Claude finishes a response: TDD reminder (source files changed without corresponding test files), commit reminder (5+ files modified). Uses a file-based TTL guard (`stop-hook-fired.lock`, 2-minute expiry) to prevent the infinite loop where Stop hook output causes Claude to resume.
+
+- **block-dangerous-commands** (PreToolUse, matcher: Bash) — Blocks destructive bash commands across 3 severity tiers (critical/high/strict). Default level: `high`. Covers 26 patterns including `rm -rf /`, `git push --force`, `DROP TABLE`, `chmod 777`, `mkfs`, `:(){ :|:& };:`, and more. Logs blocked operations to `~/.claude/hooks-logs/YYYY-MM-DD.jsonl`. Based on claude-code-hooks by karanb192 (MIT License).
+
+- **protect-secrets** (PreToolUse, matcher: Read|Edit|Write|Bash) — Prevents reading, modifying, or exfiltrating sensitive files. 30 sensitive file patterns (`.env`, SSH keys, AWS credentials, PEM files, etc.) + 31 bash exfiltration patterns (`curl -d @.env`, `scp id_rsa`, `cat .env`, etc.). Allowlist for safe files (`.env.example`, `.env.template`). Allowlist intentionally NOT applied to bash commands to prevent bypass via chained commands like `cat .env.example && cat .env`. Based on claude-code-hooks by karanb192 (MIT License).
+
+**code-reviewer agent: Cross-session memory**
+
+Added `memory: user` to `agents/code-reviewer.md`. The code-reviewer agent now retains learnings about codebase patterns, recurring issues, and project conventions across reviews via `~/.claude/user-memory/`.
+
+### Fixed
+
+**README: Incorrect plugin names in install/update commands**
+
+- Cursor install command: `/plugin-add superpowers` → `/plugin-add superpowers-optimized`
+- Update command: `/plugin update superpowers` → `/plugin update superpowers-optimized`
+
+**README: Missing documentation for hooks and agents**
+
+- Added Hooks subsection to "What's Inside" listing all 5 hooks
+- Added Agents subsection documenting the code-reviewer with `memory: user`
+- Updated comparison table with Hooks system and Safety guards rows
+- Updated intro and summary to mention hooks and safety guards
+
+---
+
 ## v4.4.0 (2026-03-06)
 
 This release closes the gap between what the skills document and what agents actually do wrong. Improvements are sourced from a systematic AI self-review of the plugin combined with the previously-documented real-session failure patterns from `docs/plans/2025-11-28-skills-improvements-from-user-feedback.md`.

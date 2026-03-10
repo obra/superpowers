@@ -55,12 +55,24 @@ Then install the plugin from this marketplace:
 /plugin install superpowers@superpowers-optimized
 ```
 
+To update to the latest version:
+
+```bash
+/plugin update superpowers-optimized
+```
+
 ### Cursor (via Plugin Marketplace)
 
 In Cursor Agent chat, install from marketplace:
 
 ```text
 /plugin-add superpowers-optimized
+```
+
+To update to the latest version:
+
+```text
+/plugin-update superpowers-optimized
 ```
 
 ### Codex
@@ -71,6 +83,8 @@ Tell Codex:
 Fetch and follow instructions from https://raw.githubusercontent.com/REPOZY/superpowers-optimized/refs/heads/main/.codex/INSTALL.md
 ```
 
+To update, re-run the same fetch command — it will pull the latest version.
+
 **Detailed docs:** [docs/README.codex.md](docs/README.codex.md)
 
 ### OpenCode
@@ -80,6 +94,8 @@ Tell OpenCode:
 ```
 Fetch and follow instructions from https://raw.githubusercontent.com/REPOZY/superpowers-optimized/refs/heads/main/.opencode/INSTALL.md
 ```
+
+To update, re-run the same fetch command — it will pull the latest version.
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
 
@@ -171,14 +187,6 @@ Skills live directly in this repository. To contribute:
 4. Submit a PR
 
 See `skills/writing-skills/SKILL.md` for the complete guide.
-
-## Updating
-
-Skills update automatically when you update the plugin:
-
-```bash
-/plugin update superpowers-optimized
-```
 
 ## License
 
