@@ -1,0 +1,47 @@
+# Superpowers Configuration
+# This file controls Superpowers activation behavior
+
+activation:
+  # Mode: "always" | "opt-in" | "opt-out" | "never"
+  # - always: Superpowers activates on every session (default)
+  # - opt-in: Only activate when .superpowers/enabled file exists
+  # - opt-out: Activate unless .superpowers/disabled file exists
+  # - never: Never activate (uninstall to fully remove)
+  mode: always
+  
+  # Allow project-level overrides
+  per_project_enabled: true
+  
+  # Activation level when enabled
+  # - "full": Complete Superpowers workflow (brainstorming, TDD, etc)
+  # - "lightweight": Only core skills (using-superpowers, brainstorming)
+  # - "minimal": Only using-superpowers skill
+  level: full
+  
+  # Skills to always load (regardless of level)
+  whitelist_skills:
+    - using-superpowers
+  
+  # Skills to never load (blacklist)
+  blacklist_skills: []
+  
+  # Context-aware activation
+  context_aware:
+    # Disable when on main/master branch
+    disable_on_main_branch: false
+    
+    # Use lightweight mode when in detached HEAD
+    lightweight_on_detached_head: false
+    
+    # Only activate when in a git repository
+    require_git_repo: false
+
+# Future: per-skill configuration
+skills:
+  brainstorming:
+    enabled: true
+    auto_trigger: true
+    
+  test-driven-development:
+    enabled: true
+    enforce_red_green_refactor: true

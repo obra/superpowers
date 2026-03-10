@@ -1,25 +1,94 @@
 #!/usr/bin/env bash
-# SessionStart hook for superpowers plugin
+# session-start with opt-in activation support
 
 set -euo pipefail
 
-# Determine plugin root directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+PROJECT_ROOT="$(pwd)"
 
-# Check if legacy skills directory exists and build warning
-warning_message=""
-legacy_skills_dir="${HOME}/.config/superpowers/skills"
-if [ -d "$legacy_skills_dir" ]; then
-    warning_message="\n\n<important-reminder>IN YOUR FIRST REPLY AFTER SEEING THIS MESSAGE YOU MUST TELL THE USER:⚠️ **WARNING:** Superpowers now uses Claude Code's skills system. Custom skills in ~/.config/superpowers/skills will not be read. Move custom skills to ~/.claude/skills instead. To make this message go away, remove ~/.config/superpowers/skills</important-reminder>"
+# Default configuration
+SUPERPOWERS_ENABLED=true
+INJECTION_MODE="full"
+LEGACY_WARNING=""
+
+# ==============================================================================
+# Configuration Parsing
+# ==============================================================================
+
+# Parse YAML config (simple implementation)
+parse_config() {
+    local config_file="$1"
+    if [ -f "$config_file" ]; then
+        # Extract mode
+        if grep -q "mode: opt-in" "$config_file"; then
+            if [ ! -f "${PROJECT_ROOT}/.superpowers/enabled" ]; then
+                SUPERPOWERS_ENABLED=false
+            fi
+        elif grep -q "mode: never" "$config_file"; then
+            SUPERPOWERS_ENABLED=false
+        elif grep -q "mode: opt-out" "$config_file"; then
+            if [ -f "${PROJECT_ROOT}/.superpowers/disabled" ]; then
+                SUPERPOWERS_ENABLED=false
+            fi
+        fi
+        
+        # Extract level
+        if grep -q "level: lightweight" "$config_file"; then
+            INJECTION_MODE="lightweight"
+        elif grep -q "level: minimal" "$config_file"; then
+            INJECTION_MODE="minimal"
+        fi
+        
+        # Check context-aware settings
+        if grep -q "disable_on_main_branch: true" "$config_file"; then
+            CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+            if [[ "$CURRENT_BRANCH" == "main" || "$CURRENT_BRANCH" == "master" ]]; then
+                SUPERPOWERS_ENABLED=false
+            fi
+        fi
+        
+        if grep -q "require_git_repo: true" "$config_file"; then
+            if ! git rev-parse --git-dir > /dev/null 2>&1; then
+                SUPERPOWERS_ENABLED=false
+            fi
+        fi
+    fi
+}
+
+# ==============================================================================
+# Check Activation State
+# ==============================================================================
+
+# 1. Check global disable file
+if [ -f "${HOME}/.superpowers/disabled" ]; then
+    SUPERPOWERS_ENABLED=false
 fi
 
-# Read using-superpowers content
-using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>&1 || echo "Error reading using-superpowers skill")
+# 2. Check project-level config
+if [ -f "${PROJECT_ROOT}/.superpowers/config.yaml" ]; then
+    parse_config "${PROJECT_ROOT}/.superpowers/config.yaml"
+elif [ -f "${PLUGIN_ROOT}/lib/config.yaml" ]; then
+    parse_config "${PLUGIN_ROOT}/lib/config.yaml"
+fi
 
-# Escape string for JSON embedding using bash parameter substitution.
-# Each ${s//old/new} is a single C-level pass - orders of magnitude
-# faster than the character-by-character loop this replaces.
+# 3. Check environment variable override
+if [ "${SUPERPOWERS_MODE:-}" = "disabled" ]; then
+    SUPERPOWERS_ENABLED=false
+elif [ "${SUPERPOWERS_MODE:-}" = "enabled" ]; then
+    SUPERPOWERS_ENABLED=true
+fi
+
+# 4. Legacy skills directory warning
+LEGACY_SKILLS_DIR="${HOME}/.config/superpowers/skills"
+if [ -d "$LEGACY_SKILLS_DIR" ]; then
+    LEGACY_WARNING="\n\n<important-reminder>⚠️ **WARNING:** Superpowers now uses Claude Code's skills system. Custom skills in ~/.config/superpowers/skills will not be read. Move to ~/.claude/skills instead. Remove the directory to dismiss this message.</important-reminder>"
+fi
+
+# ==============================================================================
+# Context Injection
+# ==============================================================================
+
 escape_for_json() {
     local s="$1"
     s="${s//\\/\\\\}"
@@ -30,20 +99,43 @@ escape_for_json() {
     printf '%s' "$s"
 }
 
-using_superpowers_escaped=$(escape_for_json "$using_superpowers_content")
-warning_escaped=$(escape_for_json "$warning_message")
-session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}\n</EXTREMELY_IMPORTANT>"
+if [ "$SUPERPOWERS_ENABLED" = "true" ]; then
+    # Determine which content to inject based on mode
+    case "$INJECTION_MODE" in
+        full)
+            CONTENT_FILE="${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md"
+            ;;
+        lightweight)
+            # Create lightweight content (only core skills)
+            CONTENT="<EXTREMELY_IMPORTANT>\nSuperpowers is active in lightweight mode.\n\nCore skills available:\n- brainstorming: Design before implementation\n- using-superpowers: How to use Superpowers\n\nFull workflow (TDD, subagent-driven-development) is disabled.\nEnable with: /superpowers level full\n</EXTREMELY_IMPORTANT>"
+            ;;
+        minimal)
+            CONTENT="<EXTREMELY_IMPORTANT>\nSuperpowers is active in minimal mode.\n\nOnly using-superpowers skill is loaded.\nEnable more: /superpowers level lightweight|full\n</EXTREMELY_IMPORTANT>"
+            ;;
+    esac
+    
+    if [ -f "$CONTENT_FILE" ]; then
+        CONTENT=$(cat "$CONTENT_FILE")
+    fi
+    
+    CONTENT="${CONTENT}${LEGACY_WARNING}"
+    
+else
+    # Send availability notice
+    CONTENT="<SUPERPOWERS_AVAILABLE>\nSuperpowers is installed but not active.\n\nTo enable:\n- Project level: Create .superpowers/enabled file\n- Global: Remove ~/.superpowers/disabled\n- Command: /superpowers on\n\nCurrent mode: opt-in (requires explicit activation)\n</SUPERPOWERS_AVAILABLE>"
+fi
 
-# Output context injection as JSON.
-# Keep both shapes for compatibility:
-# - Cursor hooks expect additional_context.
-# - Claude hooks expect hookSpecificOutput.additionalContext.
+CONTENT_ESCAPED=$(escape_for_json "$CONTENT")
+
+SESSION_CONTEXT="<EXTREMELY_IMPORTANT>\n${CONTENT_ESCAPED}\n</EXTREMELY_IMPORTANT>"
+
+# Output JSON
 cat <<EOF
 {
-  "additional_context": "${session_context}",
+  "additional_context": "${SESSION_CONTEXT}",
   "hookSpecificOutput": {
     "hookEventName": "SessionStart",
-    "additionalContext": "${session_context}"
+    "additionalContext": "${SESSION_CONTEXT}"
   }
 }
 EOF
