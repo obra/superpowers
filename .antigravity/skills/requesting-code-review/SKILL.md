@@ -8,13 +8,16 @@ description: Use when completing tasks, implementing major features, or before m
 > **This skill mirrors the `/requesting-code-review` workflow.**
 
 ## Overview
+
 **Core principle:** Review early, review often.
 
 ## When to Request
+
 **Mandatory:** After major features, before merge, after complex bug fixes.
 **Optional:** When stuck, before refactoring.
 
 ## Pre-Review Checklist
+
 - [ ] All tests pass
 - [ ] No linter errors
 - [ ] Build succeeds
@@ -22,7 +25,8 @@ description: Use when completing tasks, implementing major features, or before m
 - [ ] Commit messages are clear
 
 ## Review Request Format
-```
+
+```md
 **What:** [What was implemented]
 **Why:** [What problem it solves]
 **Changes:** [Files modified, key decisions]
@@ -31,8 +35,9 @@ description: Use when completing tasks, implementing major features, or before m
 ```
 
 ## Acting on Feedback
-| Priority | Action |
-|----------|--------|
-| Critical | Fix immediately |
-| Important | Fix before proceeding |
-| Minor | Note for later |
+
+| Priority  | Action                  |
+| --------- | ----------------------- |
+| Critical  | Fix immediately         |
+| Important | Fix before proceeding   |
+| Minor     | Note for later          |

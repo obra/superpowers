@@ -9,17 +9,20 @@ Enable superpowers skills in Google Antigravity via native skill discovery. Just
 ## Installation
 
 1. **Clone the superpowers repository:**
+
    ```bash
    git clone https://github.com/obra/superpowers.git ~/.antigravity/superpowers
    ```
 
 2. **Create the skills symlink:**
+
    ```bash
    mkdir -p ~/.agents/skills
    ln -s ~/.antigravity/superpowers/skills ~/.agents/skills/superpowers
    ```
 
    **Windows (PowerShell):**
+
    ```powershell
    New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.agents\skills"
    cmd /c mklink /J "$env:USERPROFILE\.agents\skills\superpowers" "$env:USERPROFILE\.antigravity\superpowers\skills"
@@ -34,6 +37,7 @@ Enable superpowers skills in Google Antigravity via native skill discovery. Just
    ```
 
    **Windows (PowerShell):**
+
    ```powershell
    Copy-Item -Recurse -Force "$env:USERPROFILE\.antigravity\superpowers\.antigravity\skills\*" "$env:USERPROFILE\.agents\skills\"
    ```
@@ -48,6 +52,7 @@ Enable superpowers skills in Google Antigravity via native skill discovery. Just
    ```
 
    **Windows (PowerShell):**
+
    ```powershell
    New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.gemini\antigravity\global_workflows"
    Copy-Item "$env:USERPROFILE\.antigravity\superpowers\.antigravity\skills\superpowers-bootstrap\SKILL.md" "$env:USERPROFILE\.gemini\antigravity\global_workflows\superpowers.md"
@@ -62,6 +67,7 @@ ls -la ~/.agents/skills/superpowers
 ```
 
 **Windows (PowerShell):**
+
 ```powershell
 Get-ChildItem "$env:USERPROFILE\.agents\skills" | Where-Object { $_.LinkType }
 ```
@@ -77,12 +83,17 @@ cd ~/.antigravity/superpowers && git pull
 Skills update instantly through the symlink. To update the adapted skills and global workflow bootstrap after pulling:
 
 ```bash
+for skill_dir in ~/.antigravity/superpowers/.antigravity/skills/*/; do
+  rm -rf ~/.agents/skills/$(basename "$skill_dir")
+done
 cp -r ~/.antigravity/superpowers/.antigravity/skills/* ~/.agents/skills/
 cp ~/.antigravity/superpowers/.antigravity/skills/superpowers-bootstrap/SKILL.md ~/.gemini/antigravity/global_workflows/superpowers.md
 ```
 
 **Windows (PowerShell):**
+
 ```powershell
+Get-ChildItem -Directory "$env:USERPROFILE\.antigravity\superpowers\.antigravity\skills" | ForEach-Object { Remove-Item -Recurse -Force "$env:USERPROFILE\.agents\skills\$($_.Name)" -ErrorAction Ignore }
 Copy-Item -Recurse -Force "$env:USERPROFILE\.antigravity\superpowers\.antigravity\skills\*" "$env:USERPROFILE\.agents\skills\"
 Copy-Item "$env:USERPROFILE\.antigravity\superpowers\.antigravity\skills\superpowers-bootstrap\SKILL.md" "$env:USERPROFILE\.gemini\antigravity\global_workflows\superpowers.md"
 ```
@@ -91,12 +102,17 @@ Copy-Item "$env:USERPROFILE\.antigravity\superpowers\.antigravity\skills\superpo
 
 ```bash
 rm ~/.agents/skills/superpowers
+for skill_dir in ~/.antigravity/superpowers/.antigravity/skills/*/; do
+  rm -rf ~/.agents/skills/$(basename "$skill_dir")
+done
 rm ~/.gemini/antigravity/global_workflows/superpowers.md
 ```
 
 **Windows (PowerShell):**
+
 ```powershell
 Remove-Item "$env:USERPROFILE\.agents\skills\superpowers"
+Get-ChildItem -Directory "$env:USERPROFILE\.antigravity\superpowers\.antigravity\skills" | ForEach-Object { Remove-Item -Recurse -Force "$env:USERPROFILE\.agents\skills\$($_.Name)" -ErrorAction Ignore }
 Remove-Item "$env:USERPROFILE\.gemini\antigravity\global_workflows\superpowers.md"
 ```
 

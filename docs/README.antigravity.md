@@ -6,7 +6,7 @@ Complete guide for using Superpowers with Google Antigravity.
 
 Tell Antigravity:
 
-```
+```text
 Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.antigravity/INSTALL.md
 ```
 
@@ -158,12 +158,17 @@ cd ~/.antigravity/superpowers && git pull
 Skills update instantly through the symlink. However, the adapted skills and global workflow bootstrap are copies, not symlinks. After pulling, re-copy them:
 
 ```bash
+for skill_dir in ~/.antigravity/superpowers/.antigravity/skills/*/; do
+  rm -rf ~/.agents/skills/$(basename "$skill_dir")
+done
 cp -r ~/.antigravity/superpowers/.antigravity/skills/* ~/.agents/skills/
 cp ~/.antigravity/superpowers/.antigravity/skills/superpowers-bootstrap/SKILL.md ~/.gemini/antigravity/global_workflows/superpowers.md
 ```
 
 **Windows (PowerShell):**
+
 ```powershell
+Get-ChildItem -Directory "$env:USERPROFILE\.antigravity\superpowers\.antigravity\skills" | ForEach-Object { Remove-Item -Recurse -Force "$env:USERPROFILE\.agents\skills\$($_.Name)" -ErrorAction Ignore }
 Copy-Item -Recurse -Force "$env:USERPROFILE\.antigravity\superpowers\.antigravity\skills\*" "$env:USERPROFILE\.agents\skills\"
 Copy-Item "$env:USERPROFILE\.antigravity\superpowers\.antigravity\skills\superpowers-bootstrap\SKILL.md" "$env:USERPROFILE\.gemini\antigravity\global_workflows\superpowers.md"
 ```
@@ -172,12 +177,17 @@ Copy-Item "$env:USERPROFILE\.antigravity\superpowers\.antigravity\skills\superpo
 
 ```bash
 rm ~/.agents/skills/superpowers
+for skill_dir in ~/.antigravity/superpowers/.antigravity/skills/*/; do
+  rm -rf ~/.agents/skills/$(basename "$skill_dir")
+done
 rm ~/.gemini/antigravity/global_workflows/superpowers.md
 ```
 
 **Windows (PowerShell):**
+
 ```powershell
-Remove-Item "$env:USERPROFILE\.agents\skills\superpowers"
+Remove-Item -Force "$env:USERPROFILE\.agents\skills\superpowers" -ErrorAction Ignore
+Get-ChildItem -Directory "$env:USERPROFILE\.antigravity\superpowers\.antigravity\skills" | ForEach-Object { Remove-Item -Recurse -Force "$env:USERPROFILE\.agents\skills\$($_.Name)" -ErrorAction Ignore }
 Remove-Item "$env:USERPROFILE\.gemini\antigravity\global_workflows\superpowers.md"
 ```
 
