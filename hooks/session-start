@@ -93,6 +93,7 @@ if [ -n "$SUPERPOWERS_SESSION_MODE" ]; then
             ;;
         opt-in)
             # For opt-in, require explicit .superpowers/enabled
+            SUPERPOWERS_ENABLED=true
             if [ ! -f "${PROJECT_ROOT}/.superpowers/enabled" ]; then
                 SUPERPOWERS_ENABLED=false
             fi
