@@ -88,11 +88,6 @@ fi
 
 cd "$SCRIPT_DIR"
 
-# Auto-install dependencies if missing
-if [[ ! -d "node_modules" ]]; then
-  npm install --production --no-fund --no-audit 2>&1 | tail -1 >&2
-fi
-
 # Foreground mode for environments that reap detached/background processes.
 if [[ "$FOREGROUND" == "true" ]]; then
   echo "$$" > "$PID_FILE"
