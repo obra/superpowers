@@ -1,13 +1,6 @@
 {
   "name": "superpowers",
   "description": "Core skills library: TDD, debugging, collaboration patterns, and proven techniques",
-  "version": "3.5.1",
-  "contextFileName": "GEMINI.md",
-  "mcpServers": {
-    "superpowers": {
-      "command": "node",
-      "args": ["${extensionPath}${/}mcp-server${/}dist${/}superpowers.js"],
-      "cwd": "${extensionPath}"
-    }
-  }
+  "version": "5.0.0",
+  "contextFileName": "GEMINI.md"
 }
