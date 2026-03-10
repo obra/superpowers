@@ -8,6 +8,5 @@
   "homepage": "https://github.com/obra/superpowers",
   "repository": "https://github.com/REPOZY/superpowers-optimized",
   "license": "MIT",
-  "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows", "agentic", "token-efficiency", "hooks", "safety"],
-  "hooks": "./hooks/hooks.json"
+  "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows", "agentic", "token-efficiency", "hooks", "safety"]
 }

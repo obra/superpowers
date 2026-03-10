@@ -12,6 +12,5 @@
   "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows", "agentic", "token-efficiency", "hooks", "safety"],
   "skills": "./skills/",
   "agents": "./agents/",
-  "commands": "./commands/",
-  "hooks": "./hooks/hooks.json"
+  "commands": "./commands/"
 }
