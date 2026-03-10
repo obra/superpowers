@@ -165,12 +165,15 @@ run_gc() {
                 if [ -n "$main_repo" ] && [ -d "$main_repo" ]; then
                     # Try git worktree remove first
                     if (cd "$main_repo" && git worktree remove "$wt_path" --force 2>/dev/null); then
-                        :
+                        :  # Success
                     else
-                        # Fallback to rm if git command fails
-                        rm -rf "$wt_path"
+                        # Git worktree remove failed - log error and keep entry pending
+                        echo "[$(date)] ERROR: git worktree remove failed for $wt_path" >&2
+                        echo "[$(date)] Keeping registry entry pending manual cleanup" >&2
+                        continue  # Skip unregister_worktree
                     fi
                 else
+                    # No main repo found, safe to remove directory
                     rm -rf "$wt_path"
                 fi
                 
