@@ -1,11 +1,13 @@
 # Installing Superpowers for Trae IDE
 
+> **Windows users:** These instructions use bash and Unix paths. For PowerShell/Command Prompt steps, see [docs/README.trae.md](https://github.com/obra/superpowers/blob/main/docs/README.trae.md#windows).
+
 ## Prerequisites
 
 - [Trae IDE](https://www.trae.ai) installed
 - Git installed
 
-## Installation Steps
+## Installation Steps (macOS / Linux)
 
 ### 1. Clone Superpowers
 
@@ -19,7 +21,15 @@ Create a symlink so Trae's native skill discovery finds superpowers skills:
 
 ```bash
 mkdir -p ~/.trae/skills
-rm -rf ~/.trae/skills/superpowers
+
+# Safe removal: unlink only if it's already a symlink
+if [ -L ~/.trae/skills/superpowers ]; then
+  rm ~/.trae/skills/superpowers
+elif [ -e ~/.trae/skills/superpowers ]; then
+  echo "ERROR: ~/.trae/skills/superpowers exists and is not a symlink. Remove it manually." >&2
+  exit 1
+fi
+
 ln -s ~/.trae/superpowers/skills ~/.trae/skills/superpowers
 ```
 
@@ -35,7 +45,7 @@ Verify by asking: "do you have superpowers?"
 
 Trae automatically discovers and suggests skills based on context. You can also explicitly request them:
 
-```
+```text
 use the brainstorming skill
 ```
 
@@ -89,7 +99,7 @@ git pull
 
 Add a User Rule in Trae IDE via **Settings > Rules & Skills > User Rules** with the following content:
 
-```
+```text
 You have access to superpowers skills located at ~/.trae/skills/superpowers/.
 Before responding to any task, check if a superpowers skill applies.
 To load a skill, read the SKILL.md file from ~/.trae/skills/superpowers/{skill-name}/SKILL.md

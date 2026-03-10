@@ -84,7 +84,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 Tell Trae's AI agent:
 
-```
+```text
 Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.trae/INSTALL.md
 ```
 

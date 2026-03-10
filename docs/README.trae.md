@@ -6,7 +6,7 @@ Complete guide for using Superpowers with [Trae IDE](https://www.trae.ai).
 
 Tell Trae's AI agent:
 
-```
+```text
 Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.trae/INSTALL.md
 ```
 
@@ -30,8 +30,13 @@ fi
 # 2. Create skills directory
 mkdir -p ~/.trae/skills
 
-# 3. Remove old symlink if it exists
-rm -rf ~/.trae/skills/superpowers
+# 3. Remove old symlink if it exists (safe: fails loudly if it's a real directory)
+if [ -L ~/.trae/skills/superpowers ]; then
+  rm ~/.trae/skills/superpowers
+elif [ -e ~/.trae/skills/superpowers ]; then
+  echo "ERROR: ~/.trae/skills/superpowers exists and is not a symlink. Remove it manually." >&2
+  exit 1
+fi
 
 # 4. Create symlink
 ln -s ~/.trae/superpowers/skills ~/.trae/skills/superpowers
@@ -115,7 +120,7 @@ The `using-superpowers` skill (description: *"Use when starting any conversation
 
 You can always request a skill directly:
 
-```
+```text
 use the brainstorming skill
 use the test-driven-development skill
 use the systematic-debugging skill
@@ -164,7 +169,7 @@ Trae IDE discovers skills from these locations (highest to lowest priority):
 
 For the best experience, add a User Rule in Trae IDE via **Settings > Rules & Skills > User Rules**:
 
-```
+```text
 You have access to superpowers skills at ~/.trae/skills/superpowers/.
 Before responding to any task, check if a relevant skill applies.
 Read skill files from ~/.trae/skills/superpowers/{skill-name}/SKILL.md to load them.
