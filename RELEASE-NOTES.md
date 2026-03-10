@@ -21,6 +21,17 @@
 - Documents Gemini CLI limitations: no subagent support, skills fall back to `executing-plans`
 - Extension root at repo root for cross-platform compatibility (avoids Windows symlink issues)
 
+### Improvements
+
+**Multi-platform brainstorm server launch**
+
+- Per-platform launch instructions in visual-companion.md: Claude Code (default mode), Codex (auto-foreground via `CODEX_CI`), Gemini CLI (`--foreground` with `is_background`), and fallback for other environments
+- Server now writes startup JSON to `$SCREEN_DIR/.server-info` so agents can find the URL and port even when stdout is hidden by background execution
+
+**OpenCode tool mapping fix**
+
+- `TodoWrite` → `todowrite` (was incorrectly mapped to `update_plan`); verified against OpenCode source
+
 ### Bug Fixes
 
 **User review gate in brainstorming** (#565)
