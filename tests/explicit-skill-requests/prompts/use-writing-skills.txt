@@ -1,0 +1,1 @@
+Use writing-skills to create a new skill for database migrations
