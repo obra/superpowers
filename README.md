@@ -45,7 +45,7 @@ The result: everything the original does, plus routing, specialists, discipline 
 
 ## Research-Driven Optimizations
 
-The optimizations in this fork are grounded in two recent research papers on LLM agent behavior:
+The optimizations in this fork are grounded in three research papers on LLM agent behavior:
 
 ### Minimal context files outperform verbose ones
 
@@ -71,12 +71,25 @@ Key findings that shaped this fork:
 
 **What we changed:** The `context-management` skill actively prunes noisy history and persists only durable state across sessions. Subagent prompts request only task-local constraints and evidence rather than carrying forward full conversation history. Execution skills avoid long historical carryover unless required for correctness. The `token-efficiency` standard enforces these rules as an always-on operational baseline.
 
+### Single reasoning chains fail on hard problems
+
+**Paper:** [Self-Consistency Improves Chain of Thought Reasoning in Language Models](https://arxiv.org/abs/2203.11171) (Wang et al., ICLR 2023)
+
+Key findings that shaped this fork:
+- **A single chain-of-thought can be confident but wrong** — the model picks one reasoning path and commits, even when that path contains an arithmetic slip, wrong assumption, or incorrect causal direction.
+- **Generating multiple independent reasoning paths and taking majority vote significantly improves accuracy** across arithmetic, commonsense, and symbolic reasoning tasks.
+- **Consistency correlates with accuracy** — when paths agree, the answer is almost always correct. When they scatter, the problem is genuinely hard or ambiguous, which is itself a useful signal.
+- **Diversity of reasoning matters more than quantity** — 5 genuinely different paths outperform 10 paths that all reason the same way.
+
+**What we changed:** The `systematic-debugging` skill now applies self-consistency during root cause diagnosis (Phase 3): before committing to a hypothesis, the agent generates 3-5 independent root cause hypotheses via different reasoning approaches, takes a majority vote, and reports confidence. Low-confidence diagnoses (<= 50% agreement) trigger a hard stop — gather more evidence before touching code. The `verification-before-completion` skill applies the same technique when evaluating whether evidence actually proves the completion claim, catching the failure mode where evidence is interpreted through a single (potentially wrong) lens. The underlying technique lives in `self-consistency-reasoner` and fires only during these high-stakes reasoning moments, keeping the token cost targeted.
+
 ### Combined impact
 
-These research insights drive three core principles throughout the fork:
+These research insights drive four core principles throughout the fork:
 1. **Less is more** — concise skills, minimal always-on instructions, and explicit context hygiene
 2. **Fresh context beats accumulated context** — subagents get clean, task-scoped prompts instead of inheriting polluted history
 3. **Compliance ≠ competence** — agents follow instructions reliably, so the instructions themselves must be carefully engineered (rationalization tables, red flags, forbidden phrases) rather than simply comprehensive
+4. **Verify your own reasoning** — multi-path self-consistency at critical decision points (diagnosis, verification) catches confident-but-wrong single-chain failures before they become expensive mistakes
 
 ## Installation
 
@@ -174,8 +187,9 @@ Start a new session in your chosen platform and ask for something that should tr
 - **testing-specialist** - Advanced test strategy and coverage design for complex or high-risk behavior
 
 **Debugging**
-- **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
-- **verification-before-completion** - Evidence gate for completion claims, including configuration change verification (verifies outcomes reflect intended changes, not just that operations succeeded)
+- **systematic-debugging** - 4-phase root cause process with self-consistency reasoning for hypothesis validation (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
+- **verification-before-completion** - Evidence gate for completion claims with multi-path verification reasoning, including configuration change verification (verifies outcomes reflect intended changes, not just that operations succeeded)
+- **self-consistency-reasoner** - Internal multi-path reasoning technique (Wang et al., ICLR 2023) embedded in systematic-debugging and verification-before-completion to catch confident-but-wrong single-chain reasoning
 
 **Collaboration**
 - **brainstorming** - Socratic design refinement

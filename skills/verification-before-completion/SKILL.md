@@ -45,6 +45,19 @@ Before any completion claim:
 
 If evidence is missing, report current status as unverified and run the command.
 
+## Self-Consistency Verification
+
+When the verification reasoning is non-trivial (multi-step inference, ambiguous evidence, or configuration changes), apply multi-path reasoning (see `self-consistency-reasoner`) before declaring the verdict:
+
+1. Generate 3 **independent** reasoning paths evaluating: "Does this evidence actually prove the claim?"
+2. Each path should approach the evaluation differently: one checks what the evidence proves, one checks what it *doesn't* prove, one considers alternative explanations for the output.
+3. Take the majority-vote verdict:
+   - **All agree "verified"**: claim is proven.
+   - **Majority agrees but minority dissents**: flag what the dissenting path identified — it may reveal a gap in the evidence.
+   - **No majority**: evidence is insufficient. Do not claim completion. State what additional evidence is needed.
+
+This prevents the most expensive verification failure: confidently declaring "done" based on evidence that doesn't actually prove what you think it proves.
+
 ## Configuration Change Verification
 
 When a change affects provider selection, feature flags, environment variables, or credentials:

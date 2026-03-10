@@ -33,7 +33,18 @@ This is non-negotiable. Every fix must trace back to a proven root cause. A fix 
 - List concrete differences — these are your investigation leads.
 
 ### Phase 3: Hypothesize and Test
-- State **one** hypothesis clearly before testing it.
+
+**Self-Consistency Gate** — Before committing to a hypothesis, apply multi-path reasoning (see `self-consistency-reasoner`):
+
+1. Generate 3-5 **independent** root cause hypotheses. Vary your approach: trace forward from inputs, backward from the error, from recent changes, from similar past bugs.
+2. For each path, reason independently to a conclusion — do not let earlier hypotheses contaminate later ones.
+3. Take the majority-vote diagnosis. Report confidence:
+   - **High** (80-100% agreement): proceed to test the majority hypothesis.
+   - **Moderate** (60-79%): proceed but note the minority hypothesis — test it next if the majority fails.
+   - **Low** (<=50%): **STOP.** Do not pick a hypothesis. The bug is ambiguous or multi-causal. Gather more evidence (add logging, reproduce under different conditions) before choosing a direction.
+
+Then for the selected hypothesis:
+- State it clearly before testing it.
 - Run the **smallest** possible test/change to validate or disprove it.
 - If disproven, discard it entirely and form a new hypothesis.
 - **Never stack guesses.** One hypothesis at a time, tested in isolation.
@@ -77,5 +88,6 @@ If you catch yourself doing any of these, **restart from Phase 1**:
 
 ## Related Skills
 
+- `self-consistency-reasoner` — multi-path reasoning for root cause diagnosis
 - `test-driven-development` — write the regression test before the fix
 - `verification-before-completion` — prove the fix with fresh evidence

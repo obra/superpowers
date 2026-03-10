@@ -1,5 +1,64 @@
 # Superpowers Release Notes
 
+## v4.6.0 (2026-03-11)
+
+This release integrates self-consistency reasoning (Wang et al., ICLR 2023) into the two skills where single-chain reasoning failures are most expensive: root cause diagnosis and completion verification. Also includes plugin manifest fixes, marketplace metadata improvements, and README updates with research-driven optimization documentation and shields.io badges.
+
+### Added
+
+**self-consistency-reasoner — Multi-path reasoning technique for high-stakes inference**
+
+New internal skill based on the Self-Consistency method (Wang et al., ICLR 2023). Generates N independent reasoning paths and takes majority vote to catch confident-but-wrong single-chain failures. Not invoked independently — embedded in the skills that need it. Key design decisions:
+
+- Scoped to fire only during high-stakes multi-step inference where being wrong has real cost
+- Path count scales to difficulty: 3 for binary verification, 5 for root cause diagnosis, 7 for complex multi-factor problems
+- Low confidence (<=50% agreement) triggers a hard stop, not a best-guess — ambiguity is surfaced, not hidden
+- Process is internal: users see only the aggregated result and confidence level
+
+**systematic-debugging: Self-Consistency Gate in Phase 3**
+
+Phase 3 (Hypothesize and Test) now requires multi-path reasoning before committing to a root cause hypothesis. The agent generates 3-5 independent hypotheses via different approaches (trace forward from inputs, backward from error, from recent changes, from similar past bugs), takes majority vote, and gates on confidence:
+- High (80-100%): proceed to test
+- Moderate (60-79%): proceed but note minority hypothesis as fallback
+- Low (<=50%): hard stop — gather more evidence before choosing a direction
+
+This directly addresses the most expensive debugging failure mode: latching onto the first plausible hypothesis and committing 3+ edits before discovering the root cause was different.
+
+**verification-before-completion: Self-Consistency Verification**
+
+Added multi-path verification for non-trivial completion claims. When the evidence evaluation requires multi-step inference, the agent generates 3 independent reasoning paths evaluating "does this evidence actually prove the claim?" — one checking what the evidence proves, one checking what it doesn't prove, one considering alternative explanations. Catches the failure mode where evidence is interpreted through a single (potentially wrong) lens, leading to false "done" declarations.
+
+**README: Research-Driven Optimizations section**
+
+Added comprehensive documentation of the three research papers that ground the fork's optimizations:
+- arXiv:2602.11988 (AGENTbench) — why minimal context files outperform verbose ones
+- arXiv:2602.24287 — why prior assistant responses degrade performance
+- Wang et al., ICLR 2023 — why single reasoning chains fail on hard problems
+
+Each paper section includes key findings, what was changed in the fork, and the four core principles that emerged.
+
+**README: shields.io badges**
+
+Added badges for GitHub stars, install command (links to Installation section), Cursor, Claude Code, Codex CLI, and MIT license.
+
+### Fixed
+
+**Plugin manifest: Duplicate hooks error**
+
+Removed `"hooks": "./hooks/hooks.json"` from both `.claude-plugin/plugin.json` and `.cursor-plugin/plugin.json`. Claude Code auto-loads `hooks/hooks.json` from the standard path, so explicitly declaring it caused a "Duplicate hooks file detected" error on plugin installation.
+
+**Plugin manifest: Invalid author.repository field**
+
+Removed `repository` from inside the `author` object in `.claude-plugin/plugin.json`. The `author` field only supports `name` and `email` per the plugin schema. The top-level `repository` field was already correctly set.
+
+### Improved
+
+**Marketplace metadata**
+
+Enhanced `.claude-plugin/marketplace.json` with `metadata.description`, plugin-level `homepage`, `repository`, `license`, `category`, and `tags` fields for better discoverability.
+
+---
+
 ## v4.5.0 (2026-03-10)
 
 This release adds a comprehensive hooks system with proactive skill routing, edit tracking, stop reminders, and two safety guard hooks. Also includes cross-session memory for the code-reviewer agent and README corrections.
