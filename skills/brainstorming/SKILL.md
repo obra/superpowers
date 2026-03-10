@@ -83,6 +83,7 @@ digraph brainstorming {
 - Ask after each section whether it looks right so far
 - Cover: architecture, components, data flow, error handling, testing
 - Be ready to go back and clarify if something doesn't make sense
+- **No code blocks or file paths** — design docs describe ideas and architecture, not implementation. Code snippets and specific file paths belong in the implementation plan (writing-plans), not the design doc. File paths in design docs go stale when files are moved.
 
 **Design for isolation and clarity:**
 
@@ -105,6 +106,7 @@ digraph brainstorming {
   - (User preferences for spec location override this default)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
+- **Design docs must not contain code blocks or specific file paths.** Keep them focused on ideas, architecture, component descriptions, data flow, trade-offs, and success criteria. Implementation details go in the writing-plans output, not here.
 
 **Spec Review Loop:**
 After writing the spec document:
