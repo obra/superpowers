@@ -136,10 +136,12 @@ if [ "$SUPERPOWERS_ENABLED" = "true" ]; then
             ;;
         lightweight)
             # Create lightweight content (only core skills)
-            CONTENT="<EXTREMELY_IMPORTANT>\nSuperpowers is active in lightweight mode.\n\nCore skills available:\n- brainstorming: Design before implementation\n- using-superpowers: How to use Superpowers\n\nFull workflow (TDD, subagent-driven-development) is disabled.\nEnable with: /superpowers level full\n</EXTREMELY_IMPORTANT>"
+            CONTENT=$'<EXTREMELY_IMPORTANT>
+Superpowers is active in lightweight mode.\n\nCore skills available:\n- brainstorming: Design before implementation\n- using-superpowers: How to use Superpowers\n\nFull workflow (TDD, subagent-driven-development) is disabled.\nEnable with: /superpowers level full\n</EXTREMELY_IMPORTANT>"
             ;;
         minimal)
-            CONTENT="<EXTREMELY_IMPORTANT>\nSuperpowers is active in minimal mode.\n\nOnly using-superpowers skill is loaded.\nEnable more: /superpowers level lightweight|full\n</EXTREMELY_IMPORTANT>"
+            CONTENT=$'<EXTREMELY_IMPORTANT>
+Superpowers is active in minimal mode.\n\nOnly using-superpowers skill is loaded.\nEnable more: /superpowers level lightweight|full\n</EXTREMELY_IMPORTANT>"
             ;;
     esac
     
@@ -167,19 +169,24 @@ else
     # Generate mode-specific notice
     case "$DISABLE_REASON" in
         env_var)
-            CONTENT="<SUPERPOWERS_AVAILABLE>\nSuperpowers disabled by environment variable.\n\nTo enable:\n- Unset SUPERPOWERS_MODE or set to 'enabled'\n- Current: SUPERPOWERS_MODE=$SUPERPOWERS_SESSION_MODE\n</SUPERPOWERS_AVAILABLE>"
+            CONTENT=$'<SUPERPOWERS_AVAILABLE>
+Superpowers disabled by environment variable.\n\nTo enable:\n- Unset SUPERPOWERS_MODE or set to 'enabled'\n- Current: SUPERPOWERS_MODE=$SUPERPOWERS_SESSION_MODE\n</SUPERPOWERS_AVAILABLE>"
             ;;
         global_disabled)
-            CONTENT="<SUPERPOWERS_AVAILABLE>\nSuperpowers disabled globally.\n\nTo enable:\n- Remove ~/.superpowers/disabled file\n</SUPERPOWERS_AVAILABLE>"
+            CONTENT=$'<SUPERPOWERS_AVAILABLE>
+Superpowers disabled globally.\n\nTo enable:\n- Remove ~/.superpowers/disabled file\n</SUPERPOWERS_AVAILABLE>"
             ;;
         config_never)
-            CONTENT="<SUPERPOWERS_AVAILABLE>\nSuperpowers set to 'never' in config.\n\nTo enable:\n- Edit .superpowers/config.yaml and change mode\n</SUPERPOWERS_AVAILABLE>"
+            CONTENT=$'<SUPERPOWERS_AVAILABLE>
+Superpowers set to 'never' in config.\n\nTo enable:\n- Edit .superpowers/config.yaml and change mode\n</SUPERPOWERS_AVAILABLE>"
             ;;
         opt_in)
-            CONTENT="<SUPERPOWERS_AVAILABLE>\nSuperpowers in opt-in mode.\n\nTo enable:\n- Create .superpowers/enabled file\n- Or run: /superpowers on\n</SUPERPOWERS_AVAILABLE>"
+            CONTENT=$'<SUPERPOWERS_AVAILABLE>
+Superpowers in opt-in mode.\n\nTo enable:\n- Create .superpowers/enabled file\n- Or run: /superpowers on\n</SUPERPOWERS_AVAILABLE>"
             ;;
         *)
-            CONTENT="<SUPERPOWERS_AVAILABLE>\nSuperpowers is installed but not active.\n\nTo enable:\n- Create .superpowers/enabled file\n- Or run: /superpowers on\n</SUPERPOWERS_AVAILABLE>"
+            CONTENT=$'<SUPERPOWERS_AVAILABLE>
+Superpowers is installed but not active.\n\nTo enable:\n- Create .superpowers/enabled file\n- Or run: /superpowers on\n</SUPERPOWERS_AVAILABLE>"
             ;;
     esac
 fi
