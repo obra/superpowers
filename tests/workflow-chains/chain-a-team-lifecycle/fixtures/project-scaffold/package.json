@@ -1,0 +1,12 @@
+{
+  "name": "ecommerce-platform",
+  "version": "0.1.0",
+  "description": "Minimal e-commerce platform scaffold",
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "start": "node src/index.js"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

@@ -1,0 +1,12 @@
+{
+  "name": "auth-service",
+  "version": "0.1.0",
+  "description": "Standalone auth service scaffold",
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "start": "node src/index.js"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
