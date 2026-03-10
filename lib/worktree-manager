@@ -4,7 +4,6 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 REGISTRY_DIR="${HOME}/.config/superpowers"
 REGISTRY_FILE="${REGISTRY_DIR}/worktree-registry.json"
 LOCK_FILE="${REGISTRY_FILE}.lock"
