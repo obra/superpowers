@@ -1,3 +1,0 @@
-declare const MAX_VALUE: 1.7976931348623157e+308;
-
-export = MAX_VALUE;
