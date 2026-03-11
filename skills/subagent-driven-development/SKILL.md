@@ -7,7 +7,7 @@ description: Use when executing implementation plans with independent tasks in t
 
 Execute plan by dispatching fresh subagent per task, with two-stage review after each: spec compliance review first, then code quality review.
 
-**Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
+**Core principle:** Fresh subagent per task + strictly sequential dispatch (no background tasks) + two-stage review (spec then quality) = high quality, fast iteration
 
 ## When to Use
 
@@ -235,7 +235,9 @@ Done!
 - Start implementation on main/master branch without explicit user consent
 - Skip reviews (spec compliance OR code quality)
 - Proceed with unfixed issues
-- Dispatch multiple implementation subagents in parallel (conflicts)
+- Dispatch any implementation subagent with `run_in_background: true` or retrieve results via `TaskOutput`
+  - Keep implementation dispatch strictly synchronous (one task at a time)
+  - Rationale: background retrieval can return truncated transcript fragments and break review gates
 - Make subagent read plan file (provide full text instead)
 - Skip scene-setting context (subagent needs to understand where task fits)
 - Ignore subagent questions (answer before letting them proceed)
