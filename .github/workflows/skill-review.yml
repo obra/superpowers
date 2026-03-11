@@ -11,4 +11,4 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - uses: tesslio/skill-review@main
+      - uses: tesslio/skill-review@3505a029f9a978284a74edacfbf7045625627db3 # main
