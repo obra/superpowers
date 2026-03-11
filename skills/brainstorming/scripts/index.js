@@ -30,25 +30,24 @@ function wrapInFrame(content) {
 
 // Find the newest .html file in the directory by mtime
 function getNewestScreen() {
-  let files;
   try {
-    files = fs.readdirSync(SCREEN_DIR)
+    const files = fs.readdirSync(SCREEN_DIR)
       .filter(f => f.endsWith('.html'))
-      .map(f => ({
-        name: f,
-        path: path.join(SCREEN_DIR, f),
-        mtime: fs.statSync(path.join(SCREEN_DIR, f)).mtime.getTime()
-      }))
+      .map(f => {
+        const p = path.join(SCREEN_DIR, f);
+        return { path: p, mtime: fs.statSync(p).mtime.getTime() };
+      })
       .sort((a, b) => b.mtime - a.mtime);
+    return files.length > 0 ? files[0].path : null;
   } catch {
     return null;
   }
-  return files.length > 0 ? files[0].path : null;
 }
 
 const WAITING_PAGE = `<!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
   <title>Brainstorm Companion</title>
   <style>
     body { font-family: system-ui, sans-serif; padding: 2rem; max-width: 800px; margin: 0 auto; }
@@ -67,12 +66,8 @@ const WAITING_PAGE = `<!DOCTYPE html>
 const WS_GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 const clients = new Set();
 
-function wsAccept(key) {
-  return crypto.createHash('sha1').update(key + WS_GUID).digest('base64');
-}
-
-function wsSend(socket, data) {
-  const payload = Buffer.from(typeof data === 'string' ? data : JSON.stringify(data));
+function wsSend(socket, msg) {
+  const payload = Buffer.from(msg);
   const len = payload.length;
   let header;
   if (len < 126) {
@@ -169,14 +164,10 @@ function handleWsConnection(socket) {
   socket.on('error', () => clients.delete(socket));
 }
 
-function broadcast(data) {
-  const msg = typeof data === 'string' ? data : JSON.stringify(data);
+function broadcast(obj) {
+  const msg = JSON.stringify(obj);
   for (const client of clients) {
-    try {
-      wsSend(client, msg);
-    } catch {
-      clients.delete(client);
-    }
+    try { wsSend(client, msg); } catch { clients.delete(client); }
   }
 }
 
@@ -220,7 +211,7 @@ server.on('upgrade', (req, socket, head) => {
     socket.destroy();
     return;
   }
-  const accept = wsAccept(key);
+  const accept = crypto.createHash('sha1').update(key + WS_GUID).digest('base64');
   socket.write(
     'HTTP/1.1 101 Switching Protocols\r\n' +
     'Upgrade: websocket\r\n' +
