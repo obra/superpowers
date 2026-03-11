@@ -32,10 +32,19 @@
     }
   }
 
+  // Frame UI: selection tracking
+  window.selectedChoice = null;
+  let _handledByListener = false;
+
   // Capture clicks on choice elements
   document.addEventListener('click', (e) => {
     const target = e.target.closest('[data-choice]');
     if (!target) return;
+
+    // Auto-toggle selection so onclick="toggleSelect(this)" isn't required in content
+    _handledByListener = true;
+    _doToggleSelect(target);
+    setTimeout(() => { _handledByListener = false; }, 0);
 
     sendEvent({
       type: 'click',
@@ -44,7 +53,7 @@
       id: target.id || null
     });
 
-    // Update indicator bar (defer so toggleSelect runs first)
+    // Update indicator bar
     setTimeout(() => {
       const indicator = document.getElementById('indicator-text');
       if (!indicator) return;
@@ -61,12 +70,15 @@
     }, 0);
   });
 
-  // Frame UI: selection tracking
-  window.selectedChoice = null;
+  window.toggleSelect = (el) => {
+    // Prevent double-toggle when both onclick and the click listener fire
+    if (_handledByListener) return;
+    _doToggleSelect(el);
+  };
 
-  window.toggleSelect = function(el) {
+  function _doToggleSelect(el) {
     const container = el.closest('.options') || el.closest('.cards');
-    const multi = container && container.dataset.multiselect !== undefined;
+    const multi = container?.dataset.multiselect !== undefined;
     if (container && !multi) {
       container.querySelectorAll('.option, .card').forEach(o => o.classList.remove('selected'));
     }
@@ -76,7 +88,7 @@
       el.classList.add('selected');
     }
     window.selectedChoice = el.dataset.choice;
-  };
+  }
 
   // Expose API for explicit use
   window.brainstorm = {
