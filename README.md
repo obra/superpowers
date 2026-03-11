@@ -127,12 +127,12 @@ When running in [OpenCode](https://opencode.ai), the superpowers plugin register
 
 This means brainstorming and planning run on whatever model you choose (typically a stronger one), while implementation is automatically dispatched to cost-effective models. No manual model switching needed.
 
-**Override agent models** in your `opencode.json`:
+On first startup, Superpowers scaffolds `~/.config/opencode/superpowers.jsonc`. Edit agent models there:
 ```json
 { "agent": { "implementer-sp": { "model": "anthropic/claude-haiku-4-5" } } }
 ```
 
-User-defined agents always take priority over plugin defaults.
+The plugin loads `superpowers.jsonc` during its `config` hook, so subagent model selection lives there instead of requiring manual `opencode.json` edits.
 
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)

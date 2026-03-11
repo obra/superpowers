@@ -47,6 +47,28 @@ const normalizePath = (p, homeDir) => {
   return path.resolve(normalized);
 };
 
+const stripJsonComments = (content) => content
+  .replace(/\/\*[\s\S]*?\*\//g, '')
+  .replace(/^\s*\/\/.*$/gm, '');
+
+const isPlainObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+
+const deepMerge = (base, override) => {
+  if (!isPlainObject(base) || !isPlainObject(override)) {
+    return override;
+  }
+
+  const merged = { ...base };
+  for (const [key, value] of Object.entries(override)) {
+    if (isPlainObject(value) && isPlainObject(merged[key])) {
+      merged[key] = deepMerge(merged[key], value);
+      continue;
+    }
+    merged[key] = value;
+  }
+  return merged;
+};
+
 // Agent prompt definitions for subagent-driven development workflow.
 // These are the system prompts that each agent receives.
 // The controller (orchestrator) still provides task-specific context via @mention.
@@ -198,11 +220,48 @@ const AGENT_DEFAULTS = {
   }
 };
 
+const DEFAULT_SUPERPOWERS_CONFIG = `{
+  // Superpowers-specific OpenCode overrides.
+  // Edit models here instead of creating agent entries manually in opencode.json.
+  "agent": {
+    "implementer-sp": {
+      "model": "anthropic/claude-sonnet-4-6"
+    },
+    "spec-reviewer-sp": {
+      "model": "anthropic/claude-sonnet-4-6"
+    },
+    "code-reviewer-sp": {
+      "model": "anthropic/claude-opus-4-6"
+    }
+  }
+}
+`;
+
 export const SuperpowersPlugin = async ({ client, directory }) => {
   const homeDir = os.homedir();
   const superpowersSkillsDir = path.resolve(__dirname, '../../skills');
   const envConfigDir = normalizePath(process.env.OPENCODE_CONFIG_DIR, homeDir);
   const configDir = envConfigDir || path.join(homeDir, '.config/opencode');
+  const superpowersConfigPath = path.join(configDir, 'superpowers.jsonc');
+
+  const ensureSuperpowersConfig = () => {
+    if (fs.existsSync(superpowersConfigPath)) return;
+    fs.mkdirSync(path.dirname(superpowersConfigPath), { recursive: true });
+    fs.writeFileSync(superpowersConfigPath, DEFAULT_SUPERPOWERS_CONFIG, 'utf8');
+  };
+
+  const loadSuperpowersConfig = () => {
+    ensureSuperpowersConfig();
+
+    try {
+      const rawContent = fs.readFileSync(superpowersConfigPath, 'utf8');
+      const parsed = JSON.parse(stripJsonComments(rawContent));
+      return isPlainObject(parsed) ? parsed : {};
+    } catch (error) {
+      console.warn(`[superpowers] Failed to parse ${superpowersConfigPath}: ${error.message}`);
+      return {};
+    }
+  };
 
   // Helper to generate bootstrap content
   const getBootstrapContent = () => {
@@ -245,12 +304,15 @@ ${toolMapping}
     },
 
     // Register model-aware agents for subagent-driven development.
-    // User-defined agents in opencode.json take priority — we only set defaults.
+    // User-defined superpowers config is loaded from superpowers.jsonc.
+    // Plugin-managed agent prompts/tools are still enforced here.
     config: async (config) => {
-      const agents = config.agent || {};
+      const superpowersConfig = loadSuperpowersConfig();
+      const mergedConfig = deepMerge(config, superpowersConfig);
+      const agents = mergedConfig.agent || {};
 
       for (const [name, defaults] of Object.entries(AGENT_DEFAULTS)) {
-        // Shallow-merge: plugin defaults first, then user overrides win
+        // Plugin defaults provide prompts/tools; superpowers.jsonc can override models and other fields.
         agents[name] = {
           ...defaults,
           prompt: AGENT_PROMPTS[name],
@@ -258,7 +320,7 @@ ${toolMapping}
         };
       }
 
-      config.agent = agents;
+      Object.assign(config, mergedConfig, { agent: agents });
     }
   };
 };

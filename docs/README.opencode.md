@@ -50,6 +50,8 @@ ls -l ~/.config/opencode/skills/superpowers
 
 Both should show symlinks pointing to the superpowers directory.
 
+On first startup after installation, Superpowers also creates `~/.config/opencode/superpowers.jsonc` if it does not exist. Edit that file to change subagent models without touching `opencode.json`.
+
 ### Windows
 
 **Prerequisites:**

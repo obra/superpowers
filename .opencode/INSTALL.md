@@ -35,9 +35,21 @@ ln -s ~/.config/opencode/superpowers/skills ~/.config/opencode/skills/superpower
 
 ### 4. Restart OpenCode
 
-Restart OpenCode. The plugin will automatically inject superpowers context.
+Restart OpenCode. On first startup, the plugin will automatically create `~/.config/opencode/superpowers.jsonc` if it does not exist, then inject superpowers context.
 
 Verify by asking: "do you have superpowers?"
+
+### 5. Optional: Customize Subagent Models
+
+Edit `~/.config/opencode/superpowers.jsonc` to change the models used by Superpowers subagents:
+
+```json
+{
+  "agent": {
+    "implementer-sp": { "model": "anthropic/claude-haiku-4-5" }
+  }
+}
+```
 
 ## Usage
 
