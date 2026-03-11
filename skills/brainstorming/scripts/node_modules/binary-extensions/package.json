@@ -1,0 +1,40 @@
+{
+	"name": "binary-extensions",
+	"version": "2.3.0",
+	"description": "List of binary file extensions",
+	"license": "MIT",
+	"repository": "sindresorhus/binary-extensions",
+	"funding": "https://github.com/sponsors/sindresorhus",
+	"author": {
+		"name": "Sindre Sorhus",
+		"email": "sindresorhus@gmail.com",
+		"url": "https://sindresorhus.com"
+	},
+	"sideEffects": false,
+	"engines": {
+		"node": ">=8"
+	},
+	"scripts": {
+		"test": "xo && ava && tsd"
+	},
+	"files": [
+		"index.js",
+		"index.d.ts",
+		"binary-extensions.json",
+		"binary-extensions.json.d.ts"
+	],
+	"keywords": [
+		"binary",
+		"extensions",
+		"extension",
+		"file",
+		"json",
+		"list",
+		"array"
+	],
+	"devDependencies": {
+		"ava": "^1.4.1",
+		"tsd": "^0.7.2",
+		"xo": "^0.24.0"
+	}
+}

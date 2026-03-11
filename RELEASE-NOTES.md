@@ -1,5 +1,94 @@
 # Superpowers Release Notes
 
+## v5.0.1 (2026-03-10)
+
+### Agentskills Compliance
+
+**Brainstorm-server moved into skill directory**
+
+- Moved `lib/brainstorm-server/` → `skills/brainstorming/scripts/` per the [agentskills.io](https://agentskills.io) specification
+- All `${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/` references replaced with relative `scripts/` paths
+- Skills are now fully portable across platforms — no platform-specific env vars needed to locate scripts
+- `lib/` directory removed (was the last remaining content)
+
+### New Features
+
+**Gemini CLI extension**
+
+- Native Gemini CLI extension support via `gemini-extension.json` and `GEMINI.md` at repo root
+- `GEMINI.md` @imports `using-superpowers` skill and tool mapping table at session start
+- Gemini CLI tool mapping reference (`skills/using-superpowers/references/gemini-tools.md`) — translates Claude Code tool names (Read, Write, Edit, Bash, etc.) to Gemini CLI equivalents (read_file, write_file, replace, etc.)
+- Documents Gemini CLI limitations: no subagent support, skills fall back to `executing-plans`
+- Extension root at repo root for cross-platform compatibility (avoids Windows symlink issues)
+- Install instructions added to README
+
+### Improvements
+
+**Multi-platform brainstorm server launch**
+
+- Per-platform launch instructions in visual-companion.md: Claude Code (default mode), Codex (auto-foreground via `CODEX_CI`), Gemini CLI (`--foreground` with `is_background`), and fallback for other environments
+- Server now writes startup JSON to `$SCREEN_DIR/.server-info` so agents can find the URL and port even when stdout is hidden by background execution
+
+**Brainstorm server dependencies bundled**
+
+- `node_modules` vendored into the repo so the brainstorm server works immediately on fresh plugin installs without requiring `npm` at runtime
+- Removed `fsevents` from bundled deps (macOS-only native binary; chokidar falls back gracefully without it)
+- Fallback auto-install via `npm install` if `node_modules` is missing
+
+**OpenCode tool mapping fix**
+
+- `TodoWrite` → `todowrite` (was incorrectly mapped to `update_plan`); verified against OpenCode source
+
+### Bug Fixes
+
+**Windows/Linux: single quotes break SessionStart hook** (#577, #529, #644, PR #585)
+
+- Single quotes around `${CLAUDE_PLUGIN_ROOT}` in hooks.json fail on Windows (cmd.exe doesn't recognize single quotes as path delimiters) and on Linux (single quotes prevent variable expansion)
+- Fix: replaced single quotes with escaped double quotes — works across macOS bash, Windows cmd.exe, Windows Git Bash, and Linux, with and without spaces in paths
+- Verified on Windows 11 (NT 10.0.26200.0) with Claude Code 2.1.72 and Git for Windows
+
+**Brainstorming spec review loop skipped** (#677)
+
+- The spec review loop (dispatch spec-document-reviewer subagent, iterate until approved) existed in the prose "After the Design" section but was missing from the checklist and process flow diagram
+- Since agents follow the diagram and checklist more reliably than prose, the spec review step was being skipped entirely
+- Added step 7 (spec review loop) to the checklist and corresponding nodes to the dot graph
+- Tested with `claude --plugin-dir` and `claude-session-driver`: worker now correctly dispatches the reviewer
+
+**Cursor install command** (PR #676)
+
+- Fixed Cursor install command in README: `/plugin-add` → `/add-plugin` (confirmed via Cursor 2.5 release announcement)
+
+**User review gate in brainstorming** (#565)
+
+- Added explicit user review step between spec completion and writing-plans handoff
+- User must approve the spec before implementation planning begins
+- Checklist, process flow, and prose updated with the new gate
+
+**Session-start hook emits context only once per platform**
+
+- Hook now detects whether it's running in Claude Code or another platform
+- Emits `hookSpecificOutput` for Claude Code, `additional_context` for others — prevents double context injection
+
+**Linting fix in token analysis script**
+
+- `except:` → `except Exception:` in `tests/claude-code/analyze-token-usage.py`
+
+### Maintenance
+
+**Removed dead code**
+
+- Deleted `lib/skills-core.js` and its test (`tests/opencode/test-skills-core.js`) — unused since February 2026
+- Removed skills-core existence check from `tests/opencode/test-plugin-loading.sh`
+
+### Community
+
+- @karuturi — Claude Code official marketplace install instructions (PR #610)
+- @mvanhorn — session-start hook dual-emit fix, OpenCode tool mapping fix
+- @daniel-graham — linting fix for bare except
+- PR #585 author — Windows/Linux hooks quoting fix
+
+---
+
 ## v5.0.0 (2026-03-09)
 
 ### Breaking Changes
