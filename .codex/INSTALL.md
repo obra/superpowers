@@ -1,35 +1,67 @@
 # Installing Superpowers for Codex
 
-Quick setup to enable superpowers skills in Codex.
+Enable superpowers skills in Codex via native skill discovery. Just clone and symlink.
+
+## Prerequisites
+
+- Git
 
 ## Installation
 
-1. **Clone superpowers repository**:
+1. **Clone the superpowers repository:**
    ```bash
-   mkdir -p ~/.codex/superpowers
-   cd ~/.codex/superpowers
-   git clone https://github.com/obra/superpowers.git .
+   git clone https://github.com/obra/superpowers.git ~/.codex/superpowers
    ```
 
-2. **Create personal skills directory**:
+2. **Create the skills symlink:**
    ```bash
-   mkdir -p ~/.codex/skills
+   mkdir -p ~/.agents/skills
+   ln -s ~/.codex/superpowers/skills ~/.agents/skills/superpowers
    ```
 
-3. **Update ~/.codex/AGENTS.md** to include this superpowers section:
-   ```markdown
-   ## Superpowers System
-
-   <EXTREMELY_IMPORTANT>
-   You have superpowers. Superpowers teach you new skills and capabilities. RIGHT NOW run: `~/.codex/superpowers/.codex/superpowers-codex bootstrap` and follow the instructions it returns.
-   </EXTREMELY_IMPORTANT>
+   **Windows (PowerShell):**
+   ```powershell
+   New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.agents\skills"
+   cmd /c mklink /J "$env:USERPROFILE\.agents\skills\superpowers" "$env:USERPROFILE\.codex\superpowers\skills"
    ```
 
-## Verification
+3. **Restart Codex** (quit and relaunch the CLI) to discover the skills.
 
-Test the installation:
+## Migrating from old bootstrap
+
+If you installed superpowers before native skill discovery, you need to:
+
+1. **Update the repo:**
+   ```bash
+   cd ~/.codex/superpowers && git pull
+   ```
+
+2. **Create the skills symlink** (step 2 above) — this is the new discovery mechanism.
+
+3. **Remove the old bootstrap block** from `~/.codex/AGENTS.md` — any block referencing `superpowers-codex bootstrap` is no longer needed.
+
+4. **Restart Codex.**
+
+## Verify
+
 ```bash
-~/.codex/superpowers/.codex/superpowers-codex bootstrap
+ls -la ~/.agents/skills/superpowers
 ```
 
-You should see skill listings and bootstrap instructions. The system is now ready for use.
+You should see a symlink (or junction on Windows) pointing to your superpowers skills directory.
+
+## Updating
+
+```bash
+cd ~/.codex/superpowers && git pull
+```
+
+Skills update instantly through the symlink.
+
+## Uninstalling
+
+```bash
+rm ~/.agents/skills/superpowers
+```
+
+Optionally delete the clone: `rm -rf ~/.codex/superpowers`.

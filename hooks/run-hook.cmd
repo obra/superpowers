@@ -1,43 +1,46 @@
 : << 'CMDBLOCK'
 @echo off
-REM ============================================================================
-REM DEPRECATED: This polyglot wrapper is no longer used as of Claude Code 2.1.x
-REM ============================================================================
+REM Cross-platform polyglot wrapper for hook scripts.
+REM On Windows: cmd.exe runs the batch portion, which finds and calls bash.
+REM On Unix: the shell interprets this as a script (: is a no-op in bash).
 REM
-REM Claude Code 2.1.x changed the Windows execution model for hooks:
+REM Hook scripts use extensionless filenames (e.g. "session-start" not
+REM "session-start.sh") so Claude Code's Windows auto-detection -- which
+REM prepends "bash" to any command containing .sh -- doesn't interfere.
 REM
-REM   Before (2.0.x): Hooks ran with shell:true, using the system default shell.
-REM                   This wrapper provided cross-platform compatibility by
-REM                   being both a valid .cmd file (Windows) and bash script.
-REM
-REM   After (2.1.x):  Claude Code now auto-detects .sh files in hook commands
-REM                   and prepends "bash " on Windows. This broke the wrapper
-REM                   because the command:
-REM                     "run-hook.cmd" session-start.sh
-REM                   became:
-REM                     bash "run-hook.cmd" session-start.sh
-REM                   ...and bash cannot execute a .cmd file.
-REM
-REM The fix: hooks.json now calls session-start.sh directly. Claude Code 2.1.x
-REM handles the bash invocation automatically on Windows.
-REM
-REM This file is kept for reference and potential backward compatibility.
-REM ============================================================================
-REM
-REM Original purpose: Polyglot wrapper to run .sh scripts cross-platform
 REM Usage: run-hook.cmd <script-name> [args...]
-REM The script should be in the same directory as this wrapper
 
 if "%~1"=="" (
     echo run-hook.cmd: missing script name >&2
     exit /b 1
 )
-"C:\Program Files\Git\bin\bash.exe" -l "%~dp0%~1" %2 %3 %4 %5 %6 %7 %8 %9
-exit /b
+
+set "HOOK_DIR=%~dp0"
+
+REM Try Git for Windows bash in standard locations
+if exist "C:\Program Files\Git\bin\bash.exe" (
+    "C:\Program Files\Git\bin\bash.exe" "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
+    exit /b %ERRORLEVEL%
+)
+if exist "C:\Program Files (x86)\Git\bin\bash.exe" (
+    "C:\Program Files (x86)\Git\bin\bash.exe" "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
+    exit /b %ERRORLEVEL%
+)
+
+REM Try bash on PATH (e.g. user-installed Git Bash, MSYS2, Cygwin)
+where bash >nul 2>nul
+if %ERRORLEVEL% equ 0 (
+    bash "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
+    exit /b %ERRORLEVEL%
+)
+
+REM No bash found - exit silently rather than error
+REM (plugin still works, just without SessionStart context injection)
+exit /b 0
 CMDBLOCK
 
-# Unix shell runs from here
+# Unix: run the named script directly
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SCRIPT_NAME="$1"
 shift
-"${SCRIPT_DIR}/${SCRIPT_NAME}" "$@"
+exec bash "${SCRIPT_DIR}/${SCRIPT_NAME}" "$@"

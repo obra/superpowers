@@ -14,7 +14,7 @@ echo "Test 1: Skill loading..."
 
 output=$(run_claude "What is the subagent-driven-development skill? Describe its key steps briefly." 30)
 
-if assert_contains "$output" "subagent-driven-development" "Skill is recognized"; then
+if assert_contains "$output" "subagent-driven-development\|Subagent-Driven Development\|Subagent Driven" "Skill is recognized"; then
     : # pass
 else
     exit 1
@@ -129,6 +129,32 @@ else
 fi
 
 if assert_not_contains "$output" "read.*file\|open.*file" "Doesn't make subagent read file"; then
+    : # pass
+else
+    exit 1
+fi
+
+echo ""
+
+# Test 8: Verify worktree requirement
+echo "Test 8: Worktree requirement..."
+
+output=$(run_claude "What workflow skills are required before using subagent-driven-development? List any prerequisites or required skills." 30)
+
+if assert_contains "$output" "using-git-worktrees\|worktree" "Mentions worktree requirement"; then
+    : # pass
+else
+    exit 1
+fi
+
+echo ""
+
+# Test 9: Verify main branch warning
+echo "Test 9: Main branch red flag..."
+
+output=$(run_claude "In subagent-driven-development, is it okay to start implementation directly on the main branch?" 30)
+
+if assert_contains "$output" "worktree\|feature.*branch\|not.*main\|never.*main\|avoid.*main\|don't.*main\|consent\|permission" "Warns against main branch"; then
     : # pass
 else
     exit 1
