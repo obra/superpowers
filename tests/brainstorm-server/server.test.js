@@ -117,6 +117,38 @@ async function runTests() {
     ws3.close();
     console.log('  PASS');
 
+    // Test: Choice events via brainstorm.choice() API (sends value, not choice)
+    console.log('Test: brainstorm.choice() API events normalized');
+    // Clear .events first
+    try { fs.unlinkSync(path.join(TEST_DIR, '.events')); } catch {}
+    const ws3b = new WebSocket(`ws://localhost:${TEST_PORT}`);
+    await new Promise(resolve => ws3b.on('open', resolve));
+
+    ws3b.send(JSON.stringify({ type: 'choice', value: 'b' }));
+    await sleep(300);
+
+    const eventsFile2 = path.join(TEST_DIR, '.events');
+    assert(fs.existsSync(eventsFile2), '.events file should exist after brainstorm.choice() call');
+    const lines2 = fs.readFileSync(eventsFile2, 'utf-8').trim().split('\n');
+    const event2 = JSON.parse(lines2[lines2.length - 1]);
+    assert.strictEqual(event2.choice, 'b', 'Event should normalize value into choice');
+    ws3b.close();
+    console.log('  PASS');
+
+    // Test: Client cannot override source field
+    console.log('Test: source field cannot be overridden by client');
+    stdout = '';
+    const ws3c = new WebSocket(`ws://localhost:${TEST_PORT}`);
+    await new Promise(resolve => ws3c.on('open', resolve));
+
+    ws3c.send(JSON.stringify({ type: 'click', source: 'malicious', text: 'X' }));
+    await sleep(300);
+
+    assert(stdout.includes('"source":"user-event"'), 'Source should be server-assigned');
+    assert(!stdout.includes('"source":"malicious"'), 'Client should not override source');
+    ws3c.close();
+    console.log('  PASS');
+
     // Test: .events cleared on new screen
     console.log('Test: .events cleared on new screen');
     // .events file should still exist from previous test

@@ -64,7 +64,7 @@ const WAITING_PAGE = `<!DOCTYPE html>
 
 // --- Minimal WebSocket server ---
 
-const WS_GUID = '258EAFA5-E914-47DA-95CA-5AB5DC964131';
+const WS_GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 const clients = new Set();
 
 function wsAccept(key) {
@@ -149,10 +149,14 @@ function handleWsConnection(socket) {
         // Text frame
         try {
           const event = JSON.parse(frame.data.toString());
-          console.log(JSON.stringify({ source: 'user-event', ...event }));
-          if (event.choice) {
+          const normalizedEvent = {
+            ...event,
+            choice: event.choice ?? event.value
+          };
+          console.log(JSON.stringify({ ...normalizedEvent, source: 'user-event' }));
+          if (normalizedEvent.choice != null) {
             const eventsFile = path.join(SCREEN_DIR, '.events');
-            fs.appendFileSync(eventsFile, JSON.stringify(event) + '\n');
+            fs.appendFileSync(eventsFile, JSON.stringify(normalizedEvent) + '\n');
           }
         } catch {
           // Ignore malformed JSON
@@ -186,8 +190,12 @@ const server = http.createServer((req, res) => {
     if (!screenFile) {
       html = WAITING_PAGE;
     } else {
-      const raw = fs.readFileSync(screenFile, 'utf-8');
-      html = isFullDocument(raw) ? raw : wrapInFrame(raw);
+      try {
+        const raw = fs.readFileSync(screenFile, 'utf-8');
+        html = isFullDocument(raw) ? raw : wrapInFrame(raw);
+      } catch {
+        html = WAITING_PAGE;
+      }
     }
 
     // Inject helper script
@@ -249,6 +257,13 @@ try {
       console.log(JSON.stringify({ type: 'screen-updated', file: filePath }));
       broadcast({ type: 'reload' });
     }
+  });
+  watcher.on('error', (err) => {
+    console.error(JSON.stringify({
+      type: 'warning',
+      message: 'fs.watch failed, file watching disabled',
+      error: err.message
+    }));
   });
   watchReady = true;
 } catch {
