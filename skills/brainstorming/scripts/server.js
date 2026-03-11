@@ -88,7 +88,7 @@ const MIME_TYPES = {
 
 const WAITING_PAGE = `<!DOCTYPE html>
 <html>
-<head><title>Brainstorm Companion</title>
+<head><meta charset="utf-8"><title>Brainstorm Companion</title>
 <style>body { font-family: system-ui, sans-serif; padding: 2rem; max-width: 800px; margin: 0 auto; }
 h1 { color: #333; } p { color: #666; }</style>
 </head>
@@ -136,7 +136,7 @@ function handleRequest(req, res) {
       html += helperInjection;
     }
 
-    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     res.end(html);
   } else if (req.method === 'GET' && req.url.startsWith('/files/')) {
     const fileName = req.url.slice(7);
