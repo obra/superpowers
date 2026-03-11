@@ -1,6 +1,7 @@
 ---
 name: execute-plan
 description: "Use when executing an implementation plan. Offers batch, validated-batch, subagent, or one-shot approaches."
+disable-model-invocation: true
 ---
 
 Execute an implementation plan. First, determine which execution style to use.
