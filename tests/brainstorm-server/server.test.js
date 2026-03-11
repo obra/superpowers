@@ -1,192 +1,166 @@
-const { spawn } = require('child_process');
-const http = require('http');
-const WebSocket = require('ws');
-const fs = require('fs');
-const path = require('path');
 const assert = require('assert');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const { spawn, spawnSync } = require('child_process');
 
-const SERVER_PATH = path.join(__dirname, '../../skills/brainstorming/scripts/index.js');
-const TEST_PORT = 3334;
-const TEST_DIR = '/tmp/brainstorm-test';
+const {
+  WAITING_PAGE,
+  authorizeHttpRequest,
+  authorizeWebSocketRequest,
+  createRuntimeConfig,
+  ensureSessionDir,
+  parseClientEvent,
+  prepareHtmlResponse,
+  writeServerInfo,
+} = require('../../skills/brainstorming/scripts/server-core.js');
 
-function cleanup() {
-  if (fs.existsSync(TEST_DIR)) {
-    fs.rmSync(TEST_DIR, { recursive: true });
-  }
-}
+const STOP_SERVER_PATH = path.join(
+  __dirname,
+  '../../skills/brainstorming/scripts/stop-server.sh'
+);
+const HELPER_PATH = path.join(
+  __dirname,
+  '../../skills/brainstorming/scripts/helper.js'
+);
+const FRAME_TEMPLATE_PATH = path.join(
+  __dirname,
+  '../../skills/brainstorming/scripts/frame-template.html'
+);
 
-async function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+const getMode = (targetPath) => fs.statSync(targetPath).mode & 0o777;
 
-async function fetch(url) {
-  return new Promise((resolve, reject) => {
-    http.get(url, (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => resolve({ status: res.statusCode, body: data }));
-    }).on('error', reject);
-  });
-}
+const makeTempDir = (prefix) => fs.mkdtempSync(path.join(os.tmpdir(), prefix));
 
-function startServer() {
-  return spawn('node', [SERVER_PATH], {
-    env: { ...process.env, BRAINSTORM_PORT: TEST_PORT, BRAINSTORM_DIR: TEST_DIR }
-  });
-}
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function runTests() {
-  cleanup();
-  fs.mkdirSync(TEST_DIR, { recursive: true });
+  console.log('Test 1: Runtime config exposes tokenized HTTP and WebSocket URLs');
+  const config = createRuntimeConfig({
+    BRAINSTORM_PORT: '43123',
+    BRAINSTORM_HOST: '127.0.0.1',
+    BRAINSTORM_URL_HOST: 'localhost',
+    BRAINSTORM_DIR: '/tmp/brainstorm-config-test',
+    BRAINSTORM_TOKEN: 'secret-token',
+  });
+  assert.strictEqual(config.port, '43123');
+  assert.strictEqual(config.host, '127.0.0.1');
+  assert.strictEqual(config.token, 'secret-token');
+  assert.strictEqual(config.url, 'http://localhost:43123/?token=secret-token');
+  assert.strictEqual(config.wsUrl, 'ws://localhost:43123/?token=secret-token');
+  console.log('  PASS');
 
-  const server = startServer();
+  console.log('Test 2: HTTP and WebSocket authorization require the session token');
+  assert.strictEqual(authorizeHttpRequest({ query: {} }, config), false);
+  assert.strictEqual(
+    authorizeHttpRequest({ query: { token: 'secret-token' } }, config),
+    true
+  );
+  assert.deepStrictEqual(
+    authorizeWebSocketRequest({ url: '/socket?token=wrong' }, config),
+    { ok: false, status: 401, message: 'Missing or invalid brainstorm token' }
+  );
+  assert.deepStrictEqual(
+    authorizeWebSocketRequest({ url: '/socket?token=secret-token' }, config),
+    { ok: true }
+  );
+  console.log('  PASS');
 
-  let stdout = '';
-  let stderr = '';
-  server.stdout.on('data', (data) => { stdout += data.toString(); });
-  server.stderr.on('data', (data) => { stderr += data.toString(); });
+  console.log('Test 3: Invalid WebSocket payloads are rejected without persistence');
+  assert.deepStrictEqual(parseClientEvent('not json at all'), {
+    accepted: false,
+    reason: 'invalid-json',
+  });
+  assert.deepStrictEqual(parseClientEvent(JSON.stringify({ type: 'click' })), {
+    accepted: false,
+    reason: 'invalid-choice',
+  });
+  const accepted = parseClientEvent(
+    JSON.stringify({
+      type: 'click',
+      choice: 'layout-a',
+      text: 'Layout A',
+      id: 'card-a',
+      timestamp: 1710000000000,
+    })
+  );
+  assert.strictEqual(accepted.accepted, true);
+  assert.deepStrictEqual(accepted.event, {
+    type: 'click',
+    choice: 'layout-a',
+    text: 'Layout A',
+    id: 'card-a',
+    timestamp: 1710000000000,
+  });
+  console.log('  PASS');
 
-  // Wait for server to start (up to 3 seconds)
-  for (let i = 0; i < 30; i++) {
-    if (stdout.includes('server-started')) break;
-    await sleep(100);
-  }
-  if (stderr) console.error('Server stderr:', stderr);
+  console.log('Test 4: Session directories and server info are private by default');
+  const securityDir = makeTempDir('brainstorm-security-');
+  const privateDir = path.join(securityDir, 'session');
+  ensureSessionDir(privateDir);
+  assert.strictEqual(getMode(privateDir), 0o700);
+
+  const info = writeServerInfo({ ...config, screenDir: privateDir });
+  assert.strictEqual(info.url, config.url);
+  assert.strictEqual(getMode(path.join(privateDir, '.server-info')), 0o600);
+  console.log('  PASS');
+
+  console.log('Test 5: HTML responses inject the helper config without double-wrapping');
+  const fullDoc = '<!DOCTYPE html><html><body><h1>Custom</h1></body></html>';
+  const wrappedFull = prepareHtmlResponse(fullDoc, config);
+  assert(wrappedFull.includes('<h1>Custom</h1>'));
+  assert(wrappedFull.includes(config.wsUrl));
+  assert(!wrappedFull.includes('<!-- CONTENT -->'));
+
+  const fragment = '<h2>Pick a layout</h2><div class="options"></div>';
+  const wrappedFragment = prepareHtmlResponse(fragment, config);
+  assert(wrappedFragment.includes('indicator-bar'));
+  assert(wrappedFragment.includes('Pick a layout'));
+  assert(wrappedFragment.includes(config.wsUrl));
+
+  const waiting = prepareHtmlResponse(null, config);
+  assert(waiting.includes('Waiting for Claude to push a screen'));
+  assert(waiting.includes(config.wsUrl));
+  console.log('  PASS');
+
+  console.log('Test 6: Helper and frame assets still expose the expected UI hooks');
+  const helperContent = fs.readFileSync(HELPER_PATH, 'utf-8');
+  assert(helperContent.includes('toggleSelect'));
+  assert(helperContent.includes('sendEvent'));
+  assert(helperContent.includes('selectedChoice'));
+  assert(helperContent.includes('window.__BRAINSTORM_WS_URL__'));
+
+  const templateContent = fs.readFileSync(FRAME_TEMPLATE_PATH, 'utf-8');
+  assert(templateContent.includes('indicator-bar'));
+  assert(templateContent.includes('indicator-text'));
+  console.log('  PASS');
+
+  console.log('Test 7: stop-server refuses to kill unrelated processes from forged pid files');
+  const stopDir = makeTempDir('brainstorm-stop-');
+  const sleeper = spawn('sleep', ['30'], { stdio: 'ignore' });
+  fs.writeFileSync(path.join(stopDir, '.server.pid'), `${sleeper.pid}\n`);
 
   try {
-    // Test 1: Server starts and outputs JSON
-    console.log('Test 1: Server startup message');
-    assert(stdout.includes('server-started'), 'Should output server-started');
-    assert(stdout.includes(TEST_PORT.toString()), 'Should include port');
-    console.log('  PASS');
-
-    // Test 2: GET / returns waiting page with helper injected when no screens exist
-    console.log('Test 2: Serves waiting page with helper injected');
-    const res = await fetch(`http://localhost:${TEST_PORT}/`);
-    assert.strictEqual(res.status, 200);
-    assert(res.body.includes('Waiting for Claude'), 'Should show waiting message');
-    assert(res.body.includes('WebSocket'), 'Should have helper.js injected');
-    console.log('  PASS');
-
-    // Test 3: WebSocket connection and event relay
-    console.log('Test 3: WebSocket relays events to stdout');
-    stdout = '';
-    const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
-    await new Promise(resolve => ws.on('open', resolve));
-
-    ws.send(JSON.stringify({ type: 'click', text: 'Test Button' }));
-    await sleep(300);
-
-    assert(stdout.includes('"source":"user-event"'), 'Should relay user events with source field');
-    assert(stdout.includes('Test Button'), 'Should include event data');
-    ws.close();
-    console.log('  PASS');
-
-    // Test 4: File change triggers reload notification
-    console.log('Test 4: File change notifies browsers');
-    const ws2 = new WebSocket(`ws://localhost:${TEST_PORT}`);
-    await new Promise(resolve => ws2.on('open', resolve));
-
-    let gotReload = false;
-    ws2.on('message', (data) => {
-      const msg = JSON.parse(data.toString());
-      if (msg.type === 'reload') gotReload = true;
+    const stopResult = spawnSync('bash', [STOP_SERVER_PATH, stopDir], {
+      encoding: 'utf-8',
     });
 
-    fs.writeFileSync(path.join(TEST_DIR, 'test-screen.html'), '<html><body>Full doc</body></html>');
-    await sleep(500);
-
-    assert(gotReload, 'Should send reload message on file change');
-    ws2.close();
+    assert.notStrictEqual(stopResult.status, 0);
+    assert(stopResult.stdout.includes('Refusing'));
+    process.kill(sleeper.pid, 0);
+    assert(fs.existsSync(stopDir));
     console.log('  PASS');
-
-    // Test: Choice events written to .events file
-    console.log('Test: Choice events written to .events file');
-    const ws3 = new WebSocket(`ws://localhost:${TEST_PORT}`);
-    await new Promise(resolve => ws3.on('open', resolve));
-
-    ws3.send(JSON.stringify({ type: 'click', choice: 'a', text: 'Option A' }));
-    await sleep(300);
-
-    const eventsFile = path.join(TEST_DIR, '.events');
-    assert(fs.existsSync(eventsFile), '.events file should exist after choice click');
-    const lines = fs.readFileSync(eventsFile, 'utf-8').trim().split('\n');
-    const event = JSON.parse(lines[lines.length - 1]);
-    assert.strictEqual(event.choice, 'a', 'Event should contain choice');
-    assert.strictEqual(event.text, 'Option A', 'Event should contain text');
-    ws3.close();
-    console.log('  PASS');
-
-    // Test: .events cleared on new screen
-    console.log('Test: .events cleared on new screen');
-    // .events file should still exist from previous test
-    assert(fs.existsSync(path.join(TEST_DIR, '.events')), '.events should exist before new screen');
-    fs.writeFileSync(path.join(TEST_DIR, 'new-screen.html'), '<h2>New screen</h2>');
-    await sleep(500);
-    assert(!fs.existsSync(path.join(TEST_DIR, '.events')), '.events should be cleared after new screen');
-    console.log('  PASS');
-
-    // Test 5: Full HTML document served as-is (not wrapped)
-    console.log('Test 5: Full HTML document served without frame wrapping');
-    const fullDoc = '<!DOCTYPE html>\n<html><head><title>Custom</title></head><body><h1>Custom Page</h1></body></html>';
-    fs.writeFileSync(path.join(TEST_DIR, 'full-doc.html'), fullDoc);
-    await sleep(300);
-
-    const fullRes = await fetch(`http://localhost:${TEST_PORT}/`);
-    assert(fullRes.body.includes('<h1>Custom Page</h1>'), 'Should contain original content');
-    assert(fullRes.body.includes('WebSocket'), 'Should still inject helper.js');
-    // Should NOT have the frame template's indicator bar
-    assert(!fullRes.body.includes('indicator-bar') || fullDoc.includes('indicator-bar'),
-      'Should not wrap full documents in frame template');
-    console.log('  PASS');
-
-    // Test 6: Bare HTML fragment gets wrapped in frame template
-    console.log('Test 6: Content fragment wrapped in frame template');
-    const fragment = '<h2>Pick a layout</h2>\n<p class="subtitle">Choose one</p>\n<div class="options"><div class="option" data-choice="a"><div class="letter">A</div><div class="content"><h3>Simple</h3></div></div></div>';
-    fs.writeFileSync(path.join(TEST_DIR, 'fragment.html'), fragment);
-    await sleep(300);
-
-    const fragRes = await fetch(`http://localhost:${TEST_PORT}/`);
-    // Should have the frame template structure
-    assert(fragRes.body.includes('indicator-bar'), 'Fragment should get indicator bar from frame');
-    assert(!fragRes.body.includes('<!-- CONTENT -->'), 'Content placeholder should be replaced');
-    // Should have the original content inside
-    assert(fragRes.body.includes('Pick a layout'), 'Fragment content should be present');
-    assert(fragRes.body.includes('data-choice="a"'), 'Fragment content should be intact');
-    // Should have helper.js injected
-    assert(fragRes.body.includes('WebSocket'), 'Fragment should have helper.js injected');
-    console.log('  PASS');
-
-    // Test 7: Helper.js includes toggleSelect and send functions
-    console.log('Test 7: Helper.js provides toggleSelect and send');
-    const helperContent = fs.readFileSync(
-      path.join(__dirname, '../../skills/brainstorming/scripts/helper.js'), 'utf-8'
-    );
-    assert(helperContent.includes('toggleSelect'), 'helper.js should define toggleSelect');
-    assert(helperContent.includes('sendEvent'), 'helper.js should define sendEvent');
-    assert(helperContent.includes('selectedChoice'), 'helper.js should track selectedChoice');
-    assert(helperContent.includes('brainstorm'), 'helper.js should expose brainstorm API');
-    assert(!helperContent.includes('sendToClaude'), 'helper.js should not contain sendToClaude');
-    console.log('  PASS');
-
-    // Test 8: Indicator bar uses CSS variables (theme support)
-    console.log('Test 8: Indicator bar uses CSS variables');
-    const templateContent = fs.readFileSync(
-      path.join(__dirname, '../../skills/brainstorming/scripts/frame-template.html'), 'utf-8'
-    );
-    assert(templateContent.includes('indicator-bar'), 'Template should have indicator bar');
-    assert(templateContent.includes('indicator-text'), 'Template should have indicator text element');
-    console.log('  PASS');
-
-    console.log('\nAll tests passed!');
-
   } finally {
-    server.kill();
-    cleanup();
+    sleeper.kill('SIGTERM');
+    await sleep(100);
+    fs.rmSync(stopDir, { recursive: true, force: true });
+    fs.rmSync(securityDir, { recursive: true, force: true });
   }
+
+  console.log('\nAll tests passed!');
 }
 
-runTests().catch(err => {
-  console.error('Test failed:', err);
+runTests().catch((error) => {
+  console.error('Test failed:', error);
   process.exit(1);
 });

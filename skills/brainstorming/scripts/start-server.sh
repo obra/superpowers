@@ -15,6 +15,7 @@
 #   --background          Force background mode (overrides Codex auto-foreground).
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+umask 077
 
 # Parse arguments
 PROJECT_DIR=""
@@ -75,9 +76,11 @@ fi
 
 PID_FILE="${SCREEN_DIR}/.server.pid"
 LOG_FILE="${SCREEN_DIR}/.server.log"
+BRAINSTORM_TOKEN="$(node -e "process.stdout.write(require('crypto').randomBytes(18).toString('hex'))")"
 
 # Create fresh session directory
 mkdir -p "$SCREEN_DIR"
+chmod 700 "$SCREEN_DIR"
 
 # Kill any existing server
 if [[ -f "$PID_FILE" ]]; then
@@ -91,13 +94,13 @@ cd "$SCRIPT_DIR"
 # Foreground mode for environments that reap detached/background processes.
 if [[ "$FOREGROUND" == "true" ]]; then
   echo "$$" > "$PID_FILE"
-  env BRAINSTORM_DIR="$SCREEN_DIR" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" node index.js
+  env BRAINSTORM_DIR="$SCREEN_DIR" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" BRAINSTORM_TOKEN="$BRAINSTORM_TOKEN" node index.js
   exit $?
 fi
 
 # Start server, capturing output to log file
 # Use nohup to survive shell exit; disown to remove from job table
-nohup env BRAINSTORM_DIR="$SCREEN_DIR" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" node index.js > "$LOG_FILE" 2>&1 &
+nohup env BRAINSTORM_DIR="$SCREEN_DIR" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" BRAINSTORM_TOKEN="$BRAINSTORM_TOKEN" node index.js > "$LOG_FILE" 2>&1 &
 SERVER_PID=$!
 disown "$SERVER_PID" 2>/dev/null
 echo "$SERVER_PID" > "$PID_FILE"

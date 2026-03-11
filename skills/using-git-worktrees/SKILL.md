@@ -100,7 +100,14 @@ cd "$path"
 
 ### 3. Run Project Setup
 
-Auto-detect and run appropriate setup:
+Only run setup commands when both conditions hold:
+
+- The repository is trusted enough to execute its install/build hooks
+- The user explicitly asked for setup or approved the networked dependency step
+
+If either condition is not true, skip this section and report that the worktree is ready but dependencies/tests were not bootstrapped.
+
+When it is safe and explicitly desired, auto-detect and run appropriate setup:
 
 ```bash
 # Node.js

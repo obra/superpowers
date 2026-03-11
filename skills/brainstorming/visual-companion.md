@@ -80,6 +80,8 @@ scripts/start-server.sh \
 ```
 
 Use `--url-host` to control what hostname is printed in the returned URL JSON.
+The returned URL now includes a session token. Treat that URL as a secret capability: only share it with the intended reviewer, and prefer loopback or another trusted network boundary whenever possible.
+Only bind `0.0.0.0` or another non-loopback host when the surrounding network is trusted enough for the mockup content you are serving.
 
 ## The Loop
 

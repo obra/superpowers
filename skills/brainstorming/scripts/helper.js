@@ -1,7 +1,24 @@
 (function() {
-  const WS_URL = 'ws://' + window.location.host;
+  const WS_URL = window.__BRAINSTORM_WS_URL__ || ('ws://' + window.location.host);
   let ws = null;
   let eventQueue = [];
+
+  function setIndicatorText(summary) {
+    const indicator = document.getElementById('indicator-text');
+    if (!indicator) return;
+
+    indicator.textContent = '';
+    if (!summary) {
+      indicator.textContent = 'Click an option above, then return to the terminal';
+      return;
+    }
+
+    const selectedText = document.createElement('span');
+    selectedText.className = 'selected-text';
+    selectedText.textContent = summary;
+    indicator.appendChild(selectedText);
+    indicator.appendChild(document.createTextNode(' - return to terminal to continue'));
+  }
 
   function connect() {
     ws = new WebSocket(WS_URL);
@@ -46,17 +63,15 @@
 
     // Update indicator bar (defer so toggleSelect runs first)
     setTimeout(() => {
-      const indicator = document.getElementById('indicator-text');
-      if (!indicator) return;
       const container = target.closest('.options') || target.closest('.cards');
       const selected = container ? container.querySelectorAll('.selected') : [];
       if (selected.length === 0) {
-        indicator.textContent = 'Click an option above, then return to the terminal';
+        setIndicatorText(null);
       } else if (selected.length === 1) {
         const label = selected[0].querySelector('h3, .content h3, .card-body h3')?.textContent?.trim() || selected[0].dataset.choice;
-        indicator.innerHTML = '<span class="selected-text">' + label + ' selected</span> — return to terminal to continue';
+        setIndicatorText(label + ' selected');
       } else {
-        indicator.innerHTML = '<span class="selected-text">' + selected.length + ' selected</span> — return to terminal to continue';
+        setIndicatorText(selected.length + ' selected');
       }
     }, 0);
   });
