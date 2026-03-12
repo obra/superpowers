@@ -118,6 +118,7 @@ These research insights drive four core principles throughout the fork:
 3. **Compliance ≠ competence** — agents follow instructions reliably, so the instructions themselves must be carefully engineered (rationalization tables, red flags, forbidden phrases) rather than simply comprehensive
 4. **Verify your own reasoning** — multi-path self-consistency at critical decision points (diagnosis, verification) catches confident-but-wrong single-chain failures before they become expensive mistakes
 
+
 ---
 
 
@@ -141,8 +142,6 @@ These research insights drive four core principles throughout the fork:
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
----
-
 
 
 ## Skills Library
@@ -156,8 +155,6 @@ These research insights drive four core principles throughout the fork:
 - **verification-before-completion** - Evidence gate for completion claims with multi-path verification reasoning, including configuration change verification (verifies outcomes reflect intended changes, not just that operations succeeded)
 - **self-consistency-reasoner** - Internal multi-path reasoning technique (Wang et al., ICLR 2023) embedded in systematic-debugging and verification-before-completion to catch confident-but-wrong single-chain reasoning
 
-
----
 
 
 ## Collaboration
@@ -195,10 +192,7 @@ These research insights drive four core principles throughout the fork:
 - **claude-md-creator** - Create lean, high-signal CLAUDE/AGENTS context files for repositories
 
 
----
-
-
-## Philosophy
+### Philosophy
 
 - **Test-Driven Development** - Write tests first, always
 - **Systematic over ad-hoc** - Process over guessing
@@ -208,7 +202,7 @@ These research insights drive four core principles throughout the fork:
 Read more: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
 
 
-## Contributing
+### Contributing
 
 Skills live directly in this repository. To contribute:
 
@@ -220,7 +214,7 @@ Skills live directly in this repository. To contribute:
 See `skills/writing-skills/SKILL.md` for the complete guide.
 
 
-## License
+### License
 
 MIT License - see LICENSE file for details
 
