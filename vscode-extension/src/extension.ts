@@ -88,7 +88,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             { language: 'rust' }
         ];
 
-        documentSelectors.forEach((selector: vscode.DocumentSelector) => {
+        documentSelectors.forEach((selector) => {
             context.subscriptions.push(
                 vscode.languages.registerCodeActionsProvider(
                     selector,
@@ -136,11 +136,32 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 }
 
 function registerCommands(context: vscode.ExtensionContext): void {
-    // Show Skills Command
+    // Show Skills Command - accepts optional skill name argument
     context.subscriptions.push(
-        vscode.commands.registerCommand('superpowers.showSkills', async () => {
+        vscode.commands.registerCommand('superpowers.showSkills', async (skillName?: string) => {
             try {
                 const skills = skillsManager.getAllSkills();
+
+                // If a skill name was provided as argument, go directly to that skill
+                if (skillName) {
+                    const foundSkill = skills.find(
+                        s => s.name.toLowerCase() === skillName.toLowerCase()
+                    );
+                    if (foundSkill) {
+                        await showSkillDetails(foundSkill, context);
+                        await analyticsClient.trackEvent('skill_viewed', {
+                            skill_name: foundSkill.name,
+                            skills_count: skills.length
+                        });
+                        return;
+                    }
+                    // Skill not found - show friendly error and fall through to picker
+                    vscode.window.showWarningMessage(
+                        `Skill "${skillName}" not found. Select from available skills.`
+                    );
+                }
+
+                // Default behavior: show quick pick
                 const items = skills.map(skill => ({
                     label: skill.name,
                     description: skill.description,
@@ -383,6 +404,11 @@ async function showSkillDetails(skill: Skill, context: vscode.ExtensionContext):
                 const skillToExecute = skillsManager.getSkill(message.skill);
                 if (skillToExecute) {
                     await executeSkill(skillToExecute, { source: 'webview' });
+                    // Track skill execution from webview
+                    await analyticsClient.trackEvent('skill_executed', {
+                        skill: skillToExecute.name,
+                        source: 'webview'
+                    });
                 }
             }
         },
@@ -431,13 +457,17 @@ async function executeSkill(skill: Skill, execContext: SkillExecutionContext = {
 }
 
 function getSkillWebviewContent(skill: Skill): string {
-    // Escape all user-provided content to prevent XSS
+    // Escape all user-provided content to prevent XSS in HTML context
     const safeName = escapeHtml(skill.name);
     const safeDescription = escapeHtml(skill.description || 'No description available');
     const safePath = escapeHtml(skill.path || 'N/A');
     const safeContent = skill.content 
         ? escapeHtml(skill.content)
         : '<p>Open the skill file to see detailed instructions.</p>';
+
+    // Use JSON.stringify for JavaScript string context to properly escape
+    // backslashes, newlines, quotes, etc. that escapeHtml doesn't handle
+    const jsSafeName = JSON.stringify(skill.name);
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -510,8 +540,9 @@ function getSkillWebviewContent(skill: Skill): string {
     <button class="execute-btn" onclick="executeSkill()">Execute This Skill</button>
     <script>
         const vscode = acquireVsCodeApi();
+        const skillName = ${jsSafeName};
         function executeSkill() {
-            vscode.postMessage({ command: 'execute', skill: '${safeName}' });
+            vscode.postMessage({ command: 'execute', skill: skillName });
         }
     </script>
 </body>
