@@ -77,6 +77,7 @@ const PORT = process.env.BRAINSTORM_PORT || (49152 + Math.floor(Math.random() * 
 const HOST = process.env.BRAINSTORM_HOST || '127.0.0.1';
 const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'localhost' : HOST);
 const SCREEN_DIR = process.env.BRAINSTORM_DIR || '/tmp/brainstorm';
+const OWNER_PID = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_OWNER_PID) : null;
 
 const MIME_TYPES = {
   '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript',
@@ -294,22 +295,30 @@ function startServer() {
   });
   watcher.on('error', (err) => console.error('fs.watch error:', err.message));
 
-  // Exit if no activity for 30 minutes (prevents orphaned servers)
-  const idleCheck = setInterval(() => {
-    if (Date.now() - lastActivity > IDLE_TIMEOUT_MS) {
-      console.log(JSON.stringify({ type: 'server-stopped', reason: 'idle timeout' }));
-      const infoFile = path.join(SCREEN_DIR, '.server-info');
-      if (fs.existsSync(infoFile)) fs.unlinkSync(infoFile);
-      fs.writeFileSync(
-        path.join(SCREEN_DIR, '.server-stopped'),
-        JSON.stringify({ reason: 'idle timeout', timestamp: Date.now() }) + '\n'
-      );
-      watcher.close();
-      clearInterval(idleCheck);
-      server.close(() => process.exit(0));
-    }
-  }, 60 * 1000); // check every minute
-  idleCheck.unref(); // don't keep process alive just for the timer
+  function shutdown(reason) {
+    console.log(JSON.stringify({ type: 'server-stopped', reason }));
+    const infoFile = path.join(SCREEN_DIR, '.server-info');
+    if (fs.existsSync(infoFile)) fs.unlinkSync(infoFile);
+    fs.writeFileSync(
+      path.join(SCREEN_DIR, '.server-stopped'),
+      JSON.stringify({ reason, timestamp: Date.now() }) + '\n'
+    );
+    watcher.close();
+    clearInterval(lifecycleCheck);
+    server.close(() => process.exit(0));
+  }
+
+  function ownerAlive() {
+    if (!OWNER_PID) return true;
+    try { process.kill(OWNER_PID, 0); return true; } catch (e) { return false; }
+  }
+
+  // Check every 60s: exit if owner process died or idle for 30 minutes
+  const lifecycleCheck = setInterval(() => {
+    if (!ownerAlive()) shutdown('owner process exited');
+    else if (Date.now() - lastActivity > IDLE_TIMEOUT_MS) shutdown('idle timeout');
+  }, 60 * 1000);
+  lifecycleCheck.unref();
 
   server.listen(PORT, HOST, () => {
     const info = JSON.stringify({
