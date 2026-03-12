@@ -5,6 +5,7 @@ Claude Code plugins need hooks that work on Windows, macOS, and Linux. This docu
 ## The Problem
 
 Claude Code runs hook commands through the system's default shell:
+
 - **Windows**: CMD.exe
 - **macOS/Linux**: bash or sh
 
@@ -83,11 +84,13 @@ Note: The path must be quoted because `${CLAUDE_PLUGIN_ROOT}` may contain spaces
 ## Requirements
 
 ### Windows
+
 - **Git for Windows** must be installed (provides `bash.exe` and `cygpath`)
 - Default installation path: `C:\Program Files\Git\bin\bash.exe`
 - If Git is installed elsewhere, the wrapper needs modification
 
 ### Unix (macOS/Linux)
+
 - Standard bash or sh shell
 - The `.cmd` file must have execute permission (`chmod +x`)
 
@@ -96,23 +99,27 @@ Note: The path must be quoted because `${CLAUDE_PLUGIN_ROOT}` may contain spaces
 Your actual hook logic goes in the `.sh` file. To ensure it works on Windows (via Git Bash):
 
 ### Do:
+
 - Use pure bash builtins when possible
 - Use `$(command)` instead of backticks
 - Quote all variable expansions: `"$VAR"`
 - Use `printf` or here-docs for output
 
 ### Avoid:
+
 - External commands that may not be in PATH (sed, awk, grep)
 - If you must use them, they're available in Git Bash but ensure PATH is set up (use `bash -l`)
 
 ### Example: JSON Escaping Without sed/awk
 
 Instead of:
+
 ```bash
 escaped=$(echo "$content" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | awk '{printf "%s\\n", $0}')
 ```
 
 Use pure bash:
+
 ```bash
 escape_for_json() {
     local input="$1"
@@ -138,6 +145,7 @@ escape_for_json() {
 For plugins with multiple hooks, you can create a generic wrapper that takes the script name as an argument:
 
 ### run-hook.cmd
+
 ```cmd
 : << 'CMDBLOCK'
 @echo off
@@ -148,13 +156,14 @@ exit /b
 CMDBLOCK
 
 # Unix shell runs from here
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SCRIPT_NAME="$1"
 shift
 "${SCRIPT_DIR}/${SCRIPT_NAME}" "$@"
 ```
 
 ### hooks.json using the reusable wrapper
+
 ```json
 {
   "hooks": {
@@ -187,19 +196,25 @@ shift
 ## Troubleshooting
 
 ### "bash is not recognized"
+
 CMD can't find bash. The wrapper uses the full path `C:\Program Files\Git\bin\bash.exe`. If Git is installed elsewhere, update the path.
 
 ### "cygpath: command not found" or "dirname: command not found"
+
 Bash isn't running as a login shell. Ensure `-l` flag is used.
 
 ### Path has weird `\/` in it
+
 `${CLAUDE_PLUGIN_ROOT}` expanded to a Windows path ending with backslash, then `/hooks/...` was appended. Use `cygpath` to convert the entire path.
 
 ### Script opens in text editor instead of running
+
 The hooks.json is pointing directly to the `.sh` file. Point to the `.cmd` wrapper instead.
 
 ### Works in terminal but not as hook
+
 Claude Code may run hooks differently. Test by simulating the hook environment:
+
 ```powershell
 $env:CLAUDE_PLUGIN_ROOT = "C:\path\to\plugin"
 cmd /c "C:\path\to\plugin\hooks\session-start.cmd"
