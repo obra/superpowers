@@ -124,6 +124,7 @@ function getNewestScreen() {
 // ========== HTTP Request Handler ==========
 
 function handleRequest(req, res) {
+  touchActivity();
   if (req.method === 'GET' && req.url === '/') {
     const screenFile = getNewestScreen();
     let html = screenFile
@@ -225,6 +226,7 @@ function handleMessage(text) {
     console.error('Failed to parse WebSocket message:', e.message);
     return;
   }
+  touchActivity();
   console.log(JSON.stringify({ source: 'user-event', ...event }));
   if (event.choice) {
     const eventsFile = path.join(SCREEN_DIR, '.events');
@@ -237,6 +239,15 @@ function broadcast(msg) {
   for (const socket of clients) {
     try { socket.write(frame); } catch (e) { clients.delete(socket); }
   }
+}
+
+// ========== Activity Tracking ==========
+
+const IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+let lastActivity = Date.now();
+
+function touchActivity() {
+  lastActivity = Date.now();
 }
 
 // ========== File Watching ==========
@@ -267,6 +278,7 @@ function startServer() {
       const filePath = path.join(SCREEN_DIR, filename);
 
       if (!fs.existsSync(filePath)) return; // file was deleted
+      touchActivity();
 
       if (!knownFiles.has(filename)) {
         knownFiles.add(filename);
@@ -281,6 +293,23 @@ function startServer() {
     }, 100));
   });
   watcher.on('error', (err) => console.error('fs.watch error:', err.message));
+
+  // Exit if no activity for 30 minutes (prevents orphaned servers)
+  const idleCheck = setInterval(() => {
+    if (Date.now() - lastActivity > IDLE_TIMEOUT_MS) {
+      console.log(JSON.stringify({ type: 'server-stopped', reason: 'idle timeout' }));
+      const infoFile = path.join(SCREEN_DIR, '.server-info');
+      if (fs.existsSync(infoFile)) fs.unlinkSync(infoFile);
+      fs.writeFileSync(
+        path.join(SCREEN_DIR, '.server-stopped'),
+        JSON.stringify({ reason: 'idle timeout', timestamp: Date.now() }) + '\n'
+      );
+      watcher.close();
+      clearInterval(idleCheck);
+      server.close(() => process.exit(0));
+    }
+  }, 60 * 1000); // check every minute
+  idleCheck.unref(); // don't keep process alive just for the timer
 
   server.listen(PORT, HOST, () => {
     const info = JSON.stringify({
