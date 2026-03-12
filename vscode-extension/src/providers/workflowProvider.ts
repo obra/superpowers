@@ -57,6 +57,14 @@ export class WorkflowProvider implements vscode.TreeDataProvider<WorkflowItem> {
 
     /**
      * Updates the status of a workflow step.
+     *
+     * TODO: Wire this into executeSkill() to provide real-time progress updates.
+     * Call updateStep() at key lifecycle points:
+     * - Before execution: updateStep('Initialize', 'active')
+     * - During execution: updateStep(stepName, 'active'/'completed', details)
+     * - On success: updateStep('Verify Results', 'completed')
+     * - On failure: updateStep(currentStep, 'failed', errorMessage)
+     *
      * @param stepName - Name of the step to update
      * @param status - New status
      * @param details - Optional details
@@ -183,7 +191,7 @@ class WorkflowItem extends vscode.TreeItem {
     /**
      * Creates a new WorkflowItem.
      * @param label - Display label
-     * @param description - Item description (removed redundant assignment)
+     * @param description - Item description
      * @param status - Step status
      * @param collapsibleState - Collapsible state
      */
@@ -194,7 +202,6 @@ class WorkflowItem extends vscode.TreeItem {
         public readonly collapsibleState: vscode.TreeItemCollapsibleState
     ) {
         super(label, collapsibleState);
-        // Use description directly without reassignment (readonly parameter)
         this.tooltip = description;
 
         // Map status to appropriate icons

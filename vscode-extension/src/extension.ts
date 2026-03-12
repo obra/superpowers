@@ -93,6 +93,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         );
 
         // Register code action provider for skill suggestions
+        // Create a SINGLE provider instance and register for all selectors
         const documentSelectors: vscode.DocumentSelector = [
             { language: 'javascript' },
             { language: 'typescript' },
@@ -101,23 +102,22 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             { language: 'rust' }
         ];
 
-        documentSelectors.forEach((selector: vscode.DocumentSelector) => {
+        const codeActionProvider = new SkillsCodeActionProvider(skillsManager, skillSuggester);
+        for (const selector of documentSelectors) {
             context.subscriptions.push(
                 vscode.languages.registerCodeActionsProvider(
                     selector,
-                    new SkillsCodeActionProvider(skillsManager, skillSuggester),
+                    codeActionProvider,
                     { providedCodeActionKinds: SkillsCodeActionProvider.providedCodeActionKinds }
                 )
             );
-        });
+        }
 
         // Register hover provider for skill hints
         if (config.get('showInlineHints', true)) {
+            const hoverProvider = new HoverProvider(skillsManager, skillSuggester);
             context.subscriptions.push(
-                vscode.languages.registerHoverProvider(
-                    documentSelectors,
-                    new HoverProvider(skillsManager, skillSuggester)
-                )
+                vscode.languages.registerHoverProvider(documentSelectors, hoverProvider)
             );
         }
 
@@ -510,6 +510,9 @@ function getSkillWebviewContent(skill: Skill): string {
         ? escapeHtml(skill.content)
         : '<p>Open the skill file to see detailed instructions.</p>';
 
+    // Use JSON.stringify for safe JS string interpolation (prevents XSS)
+    const jsSafeName = JSON.stringify(skill.name);
+
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -581,8 +584,9 @@ function getSkillWebviewContent(skill: Skill): string {
     <button class="execute-btn" onclick="executeSkill()">Execute This Skill</button>
     <script>
         const vscode = acquireVsCodeApi();
+        const skillName = ${jsSafeName};
         function executeSkill() {
-            vscode.postMessage({ command: 'execute', skill: '${safeName}' });
+            vscode.postMessage({ command: 'execute', skill: skillName });
         }
     </script>
 </body>

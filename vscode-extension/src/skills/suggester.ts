@@ -39,7 +39,7 @@ export class SkillSuggester {
         // Testing patterns
         {
             pattern: 'describe\\s*\\(|it\\s*\\(|test\\s*\\(',
-            flags: '',  // No 'g' flag
+            flags: '',
             matches: [
                 { skill: 'test-driven-development', reason: 'Test file detected - TDD workflow recommended' }
             ]
@@ -103,7 +103,7 @@ export class SkillSuggester {
         // Review patterns
         {
             pattern: 'review|refactor|optimize',
-            flags: 'i',  // Case insensitive, but no 'g'
+            flags: 'i',
             matches: [
                 { skill: 'requesting-code-review', reason: 'Review keywords detected' }
             ]
@@ -128,10 +128,12 @@ export class SkillSuggester {
         }
     ];
 
-    // Language-specific suggestions
+    // Language-specific suggestions - includes JSX/TSX support with normalized keys
     private readonly languageSkills: Map<string, string[]> = new Map([
         ['javascript', ['test-driven-development', 'systematic-debugging']],
+        ['javascriptreact', ['test-driven-development', 'systematic-debugging']],
         ['typescript', ['test-driven-development', 'systematic-debugging', 'brainstorming']],
+        ['typescriptreact', ['test-driven-development', 'systematic-debugging', 'brainstorming']],
         ['python', ['test-driven-development', 'systematic-debugging']],
         ['go', ['test-driven-development', 'systematic-debugging']],
         ['rust', ['test-driven-development', 'systematic-debugging']]
@@ -172,8 +174,9 @@ export class SkillSuggester {
             }
         }
 
-        // Language-based suggestions
-        const langSkills = this.languageSkills.get(language) || [];
+        // Language-based suggestions - normalize language to lowercase
+        const normalizedLanguage = language.toLowerCase();
+        const langSkills = this.languageSkills.get(normalizedLanguage) || [];
         for (const skillName of langSkills) {
             if (!suggestions.has(skillName)) {
                 suggestions.set(skillName, {
