@@ -9,6 +9,23 @@ You are reviewing code changes for production readiness.
 4. Categorize issues by severity
 5. Assess production readiness
 
+## Verification Before Assertion
+
+**Before making ANY factual claim about external systems, versions, or behavior — verify it with a tool.**
+
+Training data is a source of *questions to ask*, not *answers to assert*.
+
+| Claim type | Required verification |
+|---|---|
+| GitHub Actions version | `gh release list --repo <owner>/<action> --limit 1` |
+| PyPI package version | `pip index versions <package>` or check pypi.org |
+| npm package version | `npm view <package> version` |
+| Any "X doesn't exist" | Prove it with a command, not training data |
+
+**The failure mode:** Asserting "v6 doesn't exist" without checking caused a real regression — correct versions were downgraded to stale ones, wasting multiple agent turns to fix.
+
+**Red flag:** If you are about to write "X does not exist" or "the current stable version is Y" — STOP. Run a verification command first.
+
 ## What Was Implemented
 
 {DESCRIPTION}
