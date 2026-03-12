@@ -7,7 +7,7 @@ Complete guide for using Superpowers with [OpenCode.ai](https://opencode.ai).
 Tell OpenCode:
 
 ```
-Clone https://github.com/obra/superpowers to ~/.config/opencode/superpowers, then create directory ~/.config/opencode/plugins, then symlink ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js to ~/.config/opencode/plugins/superpowers.js, then symlink ~/.config/opencode/superpowers/skills to ~/.config/opencode/skills/superpowers, then restart opencode.
+Use `OPENCODE_CONFIG_DIR` as the install root if it is set; otherwise use the default (`~/.config/opencode` on macOS/Linux or `%USERPROFILE%\.config\opencode` on Windows). Then clone https://github.com/obra/superpowers to `<config-dir>/superpowers`, create `<config-dir>/plugins`, symlink `<config-dir>/superpowers/.opencode/plugins/superpowers.js` to `<config-dir>/plugins/superpowers.js`, symlink `<config-dir>/superpowers/skills` to `<config-dir>/skills/superpowers`, then restart opencode.
 ```
 
 ## Manual Installation
@@ -17,26 +17,30 @@ Clone https://github.com/obra/superpowers to ~/.config/opencode/superpowers, the
 - [OpenCode.ai](https://opencode.ai) installed
 - Git installed
 
+> **Note:** All paths below use the default config directory (`~/.config/opencode` on macOS/Linux, `%USERPROFILE%\.config\opencode` on Windows). If you have `OPENCODE_CONFIG_DIR` set, the install scripts will use that instead.
+
 ### macOS / Linux
 
 ```bash
+OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}"
+
 # 1. Install Superpowers (or update existing)
-if [ -d ~/.config/opencode/superpowers ]; then
-  cd ~/.config/opencode/superpowers && git pull
+if [ -d "$OPENCODE_CONFIG_DIR/superpowers" ]; then
+  cd "$OPENCODE_CONFIG_DIR/superpowers" && git pull
 else
-  git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
+  git clone https://github.com/obra/superpowers.git "$OPENCODE_CONFIG_DIR/superpowers"
 fi
 
 # 2. Create directories
-mkdir -p ~/.config/opencode/plugins ~/.config/opencode/skills
+mkdir -p "$OPENCODE_CONFIG_DIR/plugins" "$OPENCODE_CONFIG_DIR/skills"
 
 # 3. Remove old symlinks/directories if they exist
-rm -f ~/.config/opencode/plugins/superpowers.js
-rm -rf ~/.config/opencode/skills/superpowers
+rm -f "$OPENCODE_CONFIG_DIR/plugins/superpowers.js"
+rm -rf "$OPENCODE_CONFIG_DIR/skills/superpowers"
 
 # 4. Create symlinks
-ln -s ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js ~/.config/opencode/plugins/superpowers.js
-ln -s ~/.config/opencode/superpowers/skills ~/.config/opencode/skills/superpowers
+ln -s "$OPENCODE_CONFIG_DIR/superpowers/.opencode/plugins/superpowers.js" "$OPENCODE_CONFIG_DIR/plugins/superpowers.js"
+ln -s "$OPENCODE_CONFIG_DIR/superpowers/skills" "$OPENCODE_CONFIG_DIR/skills/superpowers"
 
 # 5. Restart OpenCode
 ```
@@ -44,8 +48,9 @@ ln -s ~/.config/opencode/superpowers/skills ~/.config/opencode/skills/superpower
 #### Verify Installation
 
 ```bash
-ls -l ~/.config/opencode/plugins/superpowers.js
-ls -l ~/.config/opencode/skills/superpowers
+OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}"
+ls -l "$OPENCODE_CONFIG_DIR/plugins/superpowers.js"
+ls -l "$OPENCODE_CONFIG_DIR/skills/superpowers"
 ```
 
 Both should show symlinks pointing to the superpowers directory.
@@ -65,22 +70,24 @@ Pick your shell below: [Command Prompt](#command-prompt) | [PowerShell](#powersh
 Run as Administrator, or with Developer Mode enabled:
 
 ```cmd
+if not defined OPENCODE_CONFIG_DIR set OPENCODE_CONFIG_DIR=%USERPROFILE%\.config\opencode
+
 :: 1. Install Superpowers
-git clone https://github.com/obra/superpowers.git "%USERPROFILE%\.config\opencode\superpowers"
+git clone https://github.com/obra/superpowers.git "%OPENCODE_CONFIG_DIR%\superpowers"
 
 :: 2. Create directories
-mkdir "%USERPROFILE%\.config\opencode\plugins" 2>nul
-mkdir "%USERPROFILE%\.config\opencode\skills" 2>nul
+mkdir "%OPENCODE_CONFIG_DIR%\plugins" 2>nul
+mkdir "%OPENCODE_CONFIG_DIR%\skills" 2>nul
 
 :: 3. Remove existing links (safe for reinstalls)
-del "%USERPROFILE%\.config\opencode\plugins\superpowers.js" 2>nul
-rmdir "%USERPROFILE%\.config\opencode\skills\superpowers" 2>nul
+del "%OPENCODE_CONFIG_DIR%\plugins\superpowers.js" 2>nul
+rmdir "%OPENCODE_CONFIG_DIR%\skills\superpowers" 2>nul
 
 :: 4. Create plugin symlink (requires Developer Mode or Admin)
-mklink "%USERPROFILE%\.config\opencode\plugins\superpowers.js" "%USERPROFILE%\.config\opencode\superpowers\.opencode\plugins\superpowers.js"
+mklink "%OPENCODE_CONFIG_DIR%\plugins\superpowers.js" "%OPENCODE_CONFIG_DIR%\superpowers\.opencode\plugins\superpowers.js"
 
 :: 5. Create skills junction (works without special privileges)
-mklink /J "%USERPROFILE%\.config\opencode\skills\superpowers" "%USERPROFILE%\.config\opencode\superpowers\skills"
+mklink /J "%OPENCODE_CONFIG_DIR%\skills\superpowers" "%OPENCODE_CONFIG_DIR%\superpowers\skills"
 
 :: 6. Restart OpenCode
 ```
@@ -90,22 +97,24 @@ mklink /J "%USERPROFILE%\.config\opencode\skills\superpowers" "%USERPROFILE%\.co
 Run as Administrator, or with Developer Mode enabled:
 
 ```powershell
+if (-not $env:OPENCODE_CONFIG_DIR) { $env:OPENCODE_CONFIG_DIR = "$env:USERPROFILE\.config\opencode" }
+
 # 1. Install Superpowers
-git clone https://github.com/obra/superpowers.git "$env:USERPROFILE\.config\opencode\superpowers"
+git clone https://github.com/obra/superpowers.git "$env:OPENCODE_CONFIG_DIR\superpowers"
 
 # 2. Create directories
-New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.config\opencode\plugins"
-New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.config\opencode\skills"
+New-Item -ItemType Directory -Force -Path "$env:OPENCODE_CONFIG_DIR\plugins"
+New-Item -ItemType Directory -Force -Path "$env:OPENCODE_CONFIG_DIR\skills"
 
 # 3. Remove existing links (safe for reinstalls)
-Remove-Item "$env:USERPROFILE\.config\opencode\plugins\superpowers.js" -Force -ErrorAction SilentlyContinue
-Remove-Item "$env:USERPROFILE\.config\opencode\skills\superpowers" -Force -ErrorAction SilentlyContinue
+Remove-Item "$env:OPENCODE_CONFIG_DIR\plugins\superpowers.js" -Force -ErrorAction SilentlyContinue
+Remove-Item "$env:OPENCODE_CONFIG_DIR\skills\superpowers" -Force -ErrorAction SilentlyContinue
 
 # 4. Create plugin symlink (requires Developer Mode or Admin)
-New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.config\opencode\plugins\superpowers.js" -Target "$env:USERPROFILE\.config\opencode\superpowers\.opencode\plugins\superpowers.js"
+New-Item -ItemType SymbolicLink -Path "$env:OPENCODE_CONFIG_DIR\plugins\superpowers.js" -Target "$env:OPENCODE_CONFIG_DIR\superpowers\.opencode\plugins\superpowers.js"
 
 # 5. Create skills junction (works without special privileges)
-New-Item -ItemType Junction -Path "$env:USERPROFILE\.config\opencode\skills\superpowers" -Target "$env:USERPROFILE\.config\opencode\superpowers\skills"
+New-Item -ItemType Junction -Path "$env:OPENCODE_CONFIG_DIR\skills\superpowers" -Target "$env:OPENCODE_CONFIG_DIR\superpowers\skills"
 
 # 6. Restart OpenCode
 ```
@@ -115,21 +124,23 @@ New-Item -ItemType Junction -Path "$env:USERPROFILE\.config\opencode\skills\supe
 Note: Git Bash's native `ln` command copies files instead of creating symlinks. Use `cmd //c mklink` instead (the `//c` is Git Bash syntax for `/c`).
 
 ```bash
+OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}"
+
 # 1. Install Superpowers
-git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
+git clone https://github.com/obra/superpowers.git "$OPENCODE_CONFIG_DIR/superpowers"
 
 # 2. Create directories
-mkdir -p ~/.config/opencode/plugins ~/.config/opencode/skills
+mkdir -p "$OPENCODE_CONFIG_DIR/plugins" "$OPENCODE_CONFIG_DIR/skills"
 
 # 3. Remove existing links (safe for reinstalls)
-rm -f ~/.config/opencode/plugins/superpowers.js 2>/dev/null
-rm -rf ~/.config/opencode/skills/superpowers 2>/dev/null
+rm -f "$OPENCODE_CONFIG_DIR/plugins/superpowers.js" 2>/dev/null
+rm -rf "$OPENCODE_CONFIG_DIR/skills/superpowers" 2>/dev/null
 
 # 4. Create plugin symlink (requires Developer Mode or Admin)
-cmd //c "mklink \"$(cygpath -w ~/.config/opencode/plugins/superpowers.js)\" \"$(cygpath -w ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js)\""
+cmd //c "mklink \"$(cygpath -w "$OPENCODE_CONFIG_DIR/plugins/superpowers.js")\" \"$(cygpath -w "$OPENCODE_CONFIG_DIR/superpowers/.opencode/plugins/superpowers.js")\""
 
 # 5. Create skills junction (works without special privileges)
-cmd //c "mklink /J \"$(cygpath -w ~/.config/opencode/skills/superpowers)\" \"$(cygpath -w ~/.config/opencode/superpowers/skills)\""
+cmd //c "mklink /J \"$(cygpath -w "$OPENCODE_CONFIG_DIR/skills/superpowers")\" \"$(cygpath -w "$OPENCODE_CONFIG_DIR/superpowers/skills")\""
 
 # 6. Restart OpenCode
 ```
@@ -142,14 +153,16 @@ If running OpenCode inside WSL, use the [macOS / Linux](#macos--linux) instructi
 
 **Command Prompt:**
 ```cmd
-dir /AL "%USERPROFILE%\.config\opencode\plugins"
-dir /AL "%USERPROFILE%\.config\opencode\skills"
+if not defined OPENCODE_CONFIG_DIR set OPENCODE_CONFIG_DIR=%USERPROFILE%\.config\opencode
+dir /AL "%OPENCODE_CONFIG_DIR%\plugins"
+dir /AL "%OPENCODE_CONFIG_DIR%\skills"
 ```
 
 **PowerShell:**
 ```powershell
-Get-ChildItem "$env:USERPROFILE\.config\opencode\plugins" | Where-Object { $_.LinkType }
-Get-ChildItem "$env:USERPROFILE\.config\opencode\skills" | Where-Object { $_.LinkType }
+if (-not $env:OPENCODE_CONFIG_DIR) { $env:OPENCODE_CONFIG_DIR = "$env:USERPROFILE\.config\opencode" }
+Get-ChildItem "$env:OPENCODE_CONFIG_DIR\plugins" | Where-Object { $_.LinkType }
+Get-ChildItem "$env:OPENCODE_CONFIG_DIR\skills" | Where-Object { $_.LinkType }
 ```
 
 Look for `<SYMLINK>` or `<JUNCTION>` in the output.
@@ -189,7 +202,7 @@ use skill tool to load superpowers/brainstorming
 Create your own skills in `~/.config/opencode/skills/`:
 
 ```bash
-mkdir -p ~/.config/opencode/skills/my-skill
+mkdir -p "${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}/skills/my-skill"
 ```
 
 Create `~/.config/opencode/skills/my-skill/SKILL.md`:
@@ -273,7 +286,7 @@ Skills are discovered by OpenCode's native skill system. Each skill has a `SKILL
 ## Updating
 
 ```bash
-cd ~/.config/opencode/superpowers
+cd "${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}/superpowers"
 git pull
 ```
 
@@ -284,7 +297,7 @@ Restart OpenCode to load the updates.
 ### Plugin not loading
 
 1. Check plugin exists: `ls ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js`
-2. Check symlink/junction: `ls -l ~/.config/opencode/plugins/` (macOS/Linux) or `dir /AL %USERPROFILE%\.config\opencode\plugins` (Windows)
+2. Check symlink/junction: `ls -l ~/.config/opencode/plugins/` (macOS/Linux) or `dir /AL "%USERPROFILE%\.config\opencode\plugins"` (Windows)
 3. Check OpenCode logs: `opencode run "test" --print-logs --log-level DEBUG`
 4. Look for plugin loading message in logs
 
