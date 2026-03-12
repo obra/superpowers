@@ -166,11 +166,21 @@ Agent 3 → Fix tool-approval-race-conditions.test.ts
 
 ## Verification
 
-After agents return:
+After agents return, complete ALL steps before reporting done:
+
 1. **Review each summary** - Understand what changed
 2. **Check for conflicts** - Did agents edit same code?
-3. **Run full suite** - Verify all fixes work together
+3. **Run full suite** - This is a hard gate, not optional
+
+```bash
+npm test / cargo test / pytest / go test ./...
+```
+
+**If suite fails:** Stop. Do not report completion. Fix conflicts or re-dispatch the failing domain.
+
 4. **Spot check** - Agents can make systematic errors
+
+**Never report integration complete without step 3 output in hand.**
 
 ## Real-World Impact
 
