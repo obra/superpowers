@@ -27,7 +27,8 @@ For each task:
 1. Mark as in_progress
 2. Follow each step exactly (plan has bite-sized steps)
 3. Run verifications as specified
-4. Mark as completed
+4. **Update `PROGRESS.md` (at project root)** - REQUIRED: Add a line with current timestamp, task status, and commit hash/evidence.
+5. Mark as completed
 
 ### Step 3: Complete Development
 
