@@ -1,0 +1,26 @@
+# Source files
+src/**
+*.ts
+
+# Build config
+tsconfig.json
+.eslintrc.json
+.eslintignore
+
+# Development files
+.vscode/**
+.vscode-test/**
+.gitignore
+.git/**
+
+# Test files
+test/**
+
+# Node modules
+node_modules/**
+
+# Source maps
+**/*.map
+
+# Lock files
+package-lock.json

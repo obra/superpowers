@@ -1,8 +1,4 @@
 "use strict";
-/**
- * Skills Tree View Provider
- * Displays available skills in the sidebar
- */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -45,26 +41,16 @@ class SkillsProvider {
         this._onDidChangeTreeData = new vscode.EventEmitter();
         this.onDidChangeTreeData = this._onDidChangeTreeData.event;
     }
-    refresh() {
-        this._onDidChangeTreeData.fire();
-    }
-    getTreeItem(element) {
-        return element;
-    }
+    refresh() { this._onDidChangeTreeData.fire(); }
+    getTreeItem(element) { return element; }
     getChildren(element) {
         if (!element) {
-            // Root level - show skill categories
             const categories = this.skillsManager.getCategories();
             return Promise.resolve(categories.map(cat => new SkillItem(cat.name, `${cat.count} skills`, vscode.TreeItemCollapsibleState.Collapsed, undefined, cat.name)));
         }
         else if (element.category) {
-            // Category level - show skills
             const skills = this.skillsManager.getSkillsByCategory(element.category);
-            return Promise.resolve(skills.map(skill => new SkillItem(skill.name, skill.description || '', vscode.TreeItemCollapsibleState.None, skill, undefined, {
-                command: 'superpowers.openSkillFile',
-                title: 'Open Skill',
-                arguments: [new SkillItem(skill.name, '', vscode.TreeItemCollapsibleState.None, skill)]
-            })));
+            return Promise.resolve(skills.map(skill => new SkillItem(skill.name, skill.description || '', vscode.TreeItemCollapsibleState.None, skill, undefined, { command: 'superpowers.openSkillFile', title: 'Open', arguments: [skill] })));
         }
         return Promise.resolve([]);
     }
@@ -78,7 +64,6 @@ class SkillItem extends vscode.TreeItem {
         this.collapsibleState = collapsibleState;
         this.skill = skill;
         this.category = category;
-        this.command = command;
         this.description = description;
         this.command = command;
         if (skill) {

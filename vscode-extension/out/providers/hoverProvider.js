@@ -1,8 +1,4 @@
 "use strict";
-/**
- * Hover Provider for Skill Hints
- * Shows skill suggestions on hover over relevant code patterns
- */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -39,47 +35,36 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HoverProvider = void 0;
 const vscode = __importStar(require("vscode"));
-const suggester_1 = require("../skills/suggester");
 class HoverProvider {
-    constructor(skillsManager) {
+    constructor(skillsManager, suggester) {
         this.skillsManager = skillsManager;
-        this.suggester = new suggester_1.SkillSuggester(skillsManager);
+        this.suggester = suggester;
     }
     async provideHover(document, position, token) {
+        if (token.isCancellationRequested)
+            return undefined;
         const range = document.getWordRangeAtPosition(position);
         if (!range)
             return undefined;
-        const word = document.getText(range);
         const line = document.lineAt(position.line).text;
         const contextRange = new vscode.Range(new vscode.Position(Math.max(0, position.line - 5), 0), new vscode.Position(Math.min(document.lineCount - 1, position.line + 5), 999));
         const context = document.getText(contextRange);
-        // Check for skill-triggering patterns
-        const suggestions = await this.suggester.suggestForContext(context, document.languageId);
-        if (suggestions.length === 0)
+        if (token.isCancellationRequested)
             return undefined;
-        // Filter to relevant suggestions for this hover
-        const relevantSuggestions = suggestions.filter(s => {
-            const skill = this.skillsManager.getSkill(s.skillName);
-            if (!skill?.triggers)
-                return false;
-            return skill.triggers.some(t => line.toLowerCase().includes(t.toLowerCase()) ||
-                word.toLowerCase() === t.toLowerCase());
-        });
-        if (relevantSuggestions.length === 0)
+        const suggestions = await this.suggester.suggestForContext(context, document.languageId);
+        if (suggestions.length === 0 || token.isCancellationRequested)
             return undefined;
         const markdown = new vscode.MarkdownString();
         markdown.isTrusted = true;
-        markdown.supportHtml = true;
         markdown.appendMarkdown('**⚡ Superpowers Skills**\n\n');
-        for (const suggestion of relevantSuggestions.slice(0, 3)) {
+        for (const suggestion of suggestions.slice(0, 3)) {
             const skill = this.skillsManager.getSkill(suggestion.skillName);
             if (skill) {
                 markdown.appendMarkdown(`- [${skill.name}](command:superpowers.showSkills "${skill.description}")\n`);
                 markdown.appendMarkdown(`  _${suggestion.reason}_\n`);
             }
         }
-        markdown.appendMarkdown('\n---\n');
-        markdown.appendMarkdown('[View All Skills](command:superpowers.showSkills)');
+        markdown.appendMarkdown('\n---\n[View All Skills](command:superpowers.showSkills)');
         return new vscode.Hover(markdown, range);
     }
 }

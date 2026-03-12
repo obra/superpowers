@@ -4,6 +4,16 @@
   "description": "Integrate Superpowers AI coding skills directly into VS Code",
   "version": "1.0.0",
   "publisher": "superpowers-contrib",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/obra/superpowers.git",
+    "directory": "vscode-extension"
+  },
+  "bugs": {
+    "url": "https://github.com/obra/superpowers/issues"
+  },
+  "homepage": "https://github.com/obra/superpowers#readme",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -113,6 +123,5 @@
     "@typescript-eslint/parser": "^6.13.0",
     "eslint": "^8.54.0",
     "typescript": "^5.3.2"
-  },
-  "license": "MIT"
+  }
 }

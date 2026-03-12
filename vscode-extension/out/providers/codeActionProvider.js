@@ -1,8 +1,4 @@
 "use strict";
-/**
- * Code Action Provider for Skill Suggestions
- * Suggests relevant skills based on code context
- */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -39,18 +35,20 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SkillsCodeActionProvider = void 0;
 const vscode = __importStar(require("vscode"));
-const suggester_1 = require("../skills/suggester");
 class SkillsCodeActionProvider {
-    constructor(skillsManager) {
+    constructor(skillsManager, suggester) {
         this.skillsManager = skillsManager;
-        this.suggester = new suggester_1.SkillSuggester(skillsManager);
+        this.suggester = suggester;
     }
-    async provideCodeActions(document, range, context, token) {
-        const actions = [];
+    async provideCodeActions(document, range, _context, token) {
+        if (token.isCancellationRequested)
+            return [];
         const code = document.getText(range);
         const fullCode = document.getText();
-        const language = document.languageId;
-        const suggestions = await this.suggester.suggestForContext(code || fullCode, language);
+        const suggestions = await this.suggester.suggestForContext(code || fullCode, document.languageId);
+        if (token.isCancellationRequested)
+            return [];
+        const actions = [];
         for (const suggestion of suggestions.slice(0, 5)) {
             const action = new vscode.CodeAction(`⚡ ${suggestion.skillName}: ${suggestion.reason}`, vscode.CodeActionKind.QuickFix);
             action.command = {
@@ -61,10 +59,7 @@ class SkillsCodeActionProvider {
             actions.push(action);
         }
         const browseAction = new vscode.CodeAction('🔍 Browse All Skills', vscode.CodeActionKind.QuickFix);
-        browseAction.command = {
-            command: 'superpowers.showSkills',
-            title: 'Browse Skills'
-        };
+        browseAction.command = { command: 'superpowers.showSkills', title: 'Browse Skills' };
         actions.push(browseAction);
         return actions;
     }

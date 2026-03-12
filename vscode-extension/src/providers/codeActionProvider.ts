@@ -1,10 +1,5 @@
-/**
- * Code Action Provider for Skill Suggestions
- * Suggests relevant skills based on code context
- */
-
 import * as vscode from 'vscode';
-import { SkillsManager, Skill } from '../skills/manager';
+import { SkillsManager } from '../skills/manager';
 import { SkillSuggester } from '../skills/suggester';
 
 export class SkillsCodeActionProvider implements vscode.CodeActionProvider {
@@ -13,49 +8,42 @@ export class SkillsCodeActionProvider implements vscode.CodeActionProvider {
         vscode.CodeActionKind.Refactor
     ];
 
-    private suggester: SkillSuggester;
-
-    constructor(private skillsManager: SkillsManager) {
-        this.suggester = new SkillSuggester(skillsManager);
-    }
+    constructor(
+        private skillsManager: SkillsManager,
+        private suggester: SkillSuggester
+    ) {}
 
     async provideCodeActions(
         document: vscode.TextDocument,
         range: vscode.Range | vscode.Selection,
-        context: vscode.CodeActionContext,
+        _context: vscode.CodeActionContext,
         token: vscode.CancellationToken
     ): Promise<vscode.CodeAction[]> {
-        const actions: vscode.CodeAction[] = [];
+        if (token.isCancellationRequested) return [];
 
         const code = document.getText(range);
         const fullCode = document.getText();
-        const language = document.languageId;
+        const suggestions = await this.suggester.suggestForContext(code || fullCode, document.languageId);
 
-        const suggestions = await this.suggester.suggestForContext(code || fullCode, language);
+        if (token.isCancellationRequested) return [];
+
+        const actions: vscode.CodeAction[] = [];
 
         for (const suggestion of suggestions.slice(0, 5)) {
             const action = new vscode.CodeAction(
                 `⚡ ${suggestion.skillName}: ${suggestion.reason}`,
                 vscode.CodeActionKind.QuickFix
             );
-            
             action.command = {
                 command: 'superpowers.showSkills',
                 title: 'Show Skill',
                 arguments: [suggestion.skillName]
             };
-
             actions.push(action);
         }
 
-        const browseAction = new vscode.CodeAction(
-            '🔍 Browse All Skills',
-            vscode.CodeActionKind.QuickFix
-        );
-        browseAction.command = {
-            command: 'superpowers.showSkills',
-            title: 'Browse Skills'
-        };
+        const browseAction = new vscode.CodeAction('🔍 Browse All Skills', vscode.CodeActionKind.QuickFix);
+        browseAction.command = { command: 'superpowers.showSkills', title: 'Browse Skills' };
         actions.push(browseAction);
 
         return actions;

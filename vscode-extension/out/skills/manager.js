@@ -45,6 +45,7 @@ class SkillsManager {
     constructor(customPath = '') {
         this.skills = new Map();
         this.categories = new Map();
+        this.isDisposed = false;
         this.skillsPath = customPath || this.getDefaultSkillsPath();
     }
     async initialize() {
@@ -52,7 +53,7 @@ class SkillsManager {
         this.watchForChanges();
     }
     getDefaultSkillsPath() {
-        // Common installation locations
+        // Common installation locations for various AI coding tools
         const homeDir = process.env.HOME || process.env.USERPROFILE || '';
         const possiblePaths = [
             // Claude Code plugin path
@@ -81,24 +82,32 @@ class SkillsManager {
             this.addBuiltinSkills();
             return;
         }
-        const entries = fs.readdirSync(this.skillsPath, { withFileTypes: true });
-        for (const entry of entries) {
-            if (!entry.isDirectory())
-                continue;
-            const skillDir = path.join(this.skillsPath, entry.name);
-            const skillFile = path.join(skillDir, 'SKILL.md');
-            if (fs.existsSync(skillFile)) {
-                const skill = this.parseSkillFile(skillFile);
-                if (skill) {
-                    this.skills.set(skill.name, skill);
-                    // Categorize
-                    const category = this.categorizeSkill(skill);
-                    if (!this.categories.has(category)) {
-                        this.categories.set(category, []);
+        try {
+            const entries = fs.readdirSync(this.skillsPath, { withFileTypes: true });
+            for (const entry of entries) {
+                if (this.isDisposed)
+                    return;
+                if (!entry.isDirectory())
+                    continue;
+                const skillDir = path.join(this.skillsPath, entry.name);
+                const skillFile = path.join(skillDir, 'SKILL.md');
+                if (fs.existsSync(skillFile)) {
+                    const skill = this.parseSkillFile(skillFile);
+                    if (skill) {
+                        this.skills.set(skill.name, skill);
+                        // Categorize
+                        const category = this.categorizeSkill(skill);
+                        if (!this.categories.has(category)) {
+                            this.categories.set(category, []);
+                        }
+                        this.categories.get(category).push(skill);
                     }
-                    this.categories.get(category).push(skill);
                 }
             }
+        }
+        catch (error) {
+            console.error('Failed to discover skills:', error);
+            this.addBuiltinSkills();
         }
     }
     addBuiltinSkills() {
@@ -140,14 +149,14 @@ class SkillsManager {
                 triggers: ['review', 'code review']
             }
         ];
-        builtinSkills.forEach(skill => {
+        for (const skill of builtinSkills) {
             this.skills.set(skill.name, skill);
             const category = this.categorizeSkill(skill);
             if (!this.categories.has(category)) {
                 this.categories.set(category, []);
             }
             this.categories.get(category).push(skill);
-        });
+        }
     }
     parseSkillFile(filePath) {
         try {
@@ -219,11 +228,16 @@ class SkillsManager {
     watchForChanges() {
         if (!this.skillsPath)
             return;
-        const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(this.skillsPath, '**/SKILL.md'));
-        watcher.onDidChange(() => this.discoverSkills());
-        watcher.onDidCreate(() => this.discoverSkills());
-        watcher.onDidDelete(() => this.discoverSkills());
-        this.watchDisposable = watcher;
+        try {
+            const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(this.skillsPath, '**/SKILL.md'));
+            watcher.onDidChange(() => this.discoverSkills());
+            watcher.onDidCreate(() => this.discoverSkills());
+            watcher.onDidDelete(() => this.discoverSkills());
+            this.watchDisposable = watcher;
+        }
+        catch (error) {
+            console.error('Failed to create file watcher:', error);
+        }
     }
     getAllSkills() {
         return Array.from(this.skills.values());
@@ -241,7 +255,13 @@ class SkillsManager {
         return this.categories.get(category) || [];
     }
     dispose() {
-        this.watchDisposable?.dispose();
+        this.isDisposed = true;
+        if (this.watchDisposable) {
+            this.watchDisposable.dispose();
+            this.watchDisposable = undefined;
+        }
+        this.skills.clear();
+        this.categories.clear();
     }
 }
 exports.SkillsManager = SkillsManager;

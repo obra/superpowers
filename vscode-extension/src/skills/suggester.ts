@@ -3,7 +3,7 @@
  * Analyzes code context and suggests relevant skills
  */
 
-import { SkillsManager, Skill } from './manager';
+import { SkillsManager } from './manager';
 
 export interface SkillSuggestion {
     skillName: string;
@@ -11,56 +11,109 @@ export interface SkillSuggestion {
     confidence: number;
 }
 
+/**
+ * Pattern definition for skill triggers
+ */
+interface PatternDefinition {
+    pattern: string;  // Regex source string
+    flags: string;    // Regex flags
+    matches: { skill: string; reason: string }[];
+}
+
 export class SkillSuggester {
-    // Pattern-based skill triggers
-    private readonly patterns: Map<RegExp, { skill: string; reason: string }[]> = new Map([
+    // Pattern definitions stored as strings to avoid regex state issues
+    private readonly patternDefinitions: PatternDefinition[] = [
         // Testing patterns
-        [/describe\s*\(|it\s*\(|test\s*\(/, [
-            { skill: 'test-driven-development', reason: 'Test file detected - TDD workflow recommended' }
-        ]],
-        [/expect\s*\(|assert\(/, [
-            { skill: 'test-driven-development', reason: 'Assertion patterns suggest testing context' }
-        ]],
+        {
+            pattern: 'describe\\s*\\(|it\\s*\\(|test\\s*\\(',
+            flags: 'g',
+            matches: [
+                { skill: 'test-driven-development', reason: 'Test file detected - TDD workflow recommended' }
+            ]
+        },
+        {
+            pattern: 'expect\\s*\\(|assert\\(',
+            flags: 'g',
+            matches: [
+                { skill: 'test-driven-development', reason: 'Assertion patterns suggest testing context' }
+            ]
+        },
 
         // Error/debugging patterns
-        [/Error:|Exception:|throw new/, [
-            { skill: 'systematic-debugging', reason: 'Error patterns detected - systematic debugging recommended' }
-        ]],
-        [/console\.log|console\.error|debugger/, [
-            { skill: 'systematic-debugging', reason: 'Debug statements found - consider systematic approach' }
-        ]],
-        [/TODO:|FIXME:|BUG:/, [
-            { skill: 'systematic-debugging', reason: 'Issue markers detected' }
-        ]],
+        {
+            pattern: 'Error:|Exception:|throw new',
+            flags: 'g',
+            matches: [
+                { skill: 'systematic-debugging', reason: 'Error patterns detected - systematic debugging recommended' }
+            ]
+        },
+        {
+            pattern: 'console\\.log|console\\.error|debugger',
+            flags: 'g',
+            matches: [
+                { skill: 'systematic-debugging', reason: 'Debug statements found - consider systematic approach' }
+            ]
+        },
+        {
+            pattern: 'TODO:|FIXME:|BUG:',
+            flags: 'g',
+            matches: [
+                { skill: 'systematic-debugging', reason: 'Issue markers detected' }
+            ]
+        },
 
         // Planning/design patterns
-        [/\/\/\s*PLAN:|\/\/\s*DESIGN:|\/\*\*\s*\*/, [
-            { skill: 'writing-plans', reason: 'Planning comments detected' }
-        ]],
-        [/interface\s+\w+|type\s+\w+\s*=/, [
-            { skill: 'brainstorming', reason: 'Type definitions suggest design phase' }
-        ]],
+        {
+            pattern: '//\\s*PLAN:|//\\s*DESIGN:|/\\*\\*\\s*\\*/',
+            flags: 'g',
+            matches: [
+                { skill: 'writing-plans', reason: 'Planning comments detected' }
+            ]
+        },
+        {
+            pattern: 'interface\\s+\\w+|type\\s+\\w+\\s*=',
+            flags: 'g',
+            matches: [
+                { skill: 'brainstorming', reason: 'Type definitions suggest design phase' }
+            ]
+        },
 
         // Git patterns
-        [/git\s+checkout|git\s+branch|git\s+merge/, [
-            { skill: 'using-git-worktrees', reason: 'Git operations detected' }
-        ]],
+        {
+            pattern: 'git\\s+checkout|git\\s+branch|git\\s+merge',
+            flags: 'g',
+            matches: [
+                { skill: 'using-git-worktrees', reason: 'Git operations detected' }
+            ]
+        },
 
         // Review patterns
-        [/review|refactor|optimize/, [
-            { skill: 'requesting-code-review', reason: 'Review keywords detected' }
-        ]],
+        {
+            pattern: 'review|refactor|optimize',
+            flags: 'gi',  // Case insensitive
+            matches: [
+                { skill: 'requesting-code-review', reason: 'Review keywords detected' }
+            ]
+        },
 
         // Async/concurrency patterns
-        [/async\s+|await\s+|Promise\.|\.then\(/, [
-            { skill: 'systematic-debugging', reason: 'Async code can have subtle bugs - systematic debugging helps' }
-        ]],
+        {
+            pattern: 'async\\s+|await\\s+|Promise\\.|\\.then\\(',
+            flags: 'g',
+            matches: [
+                { skill: 'systematic-debugging', reason: 'Async code can have subtle bugs - systematic debugging helps' }
+            ]
+        },
 
         // API patterns
-        [/fetch\(|axios\.|\.get\(|\.post\(/, [
-            { skill: 'systematic-debugging', reason: 'API calls benefit from error handling review' }
-        ]]
-    ]);
+        {
+            pattern: 'fetch\\(|axios\\.|\\.get\\(|\\.post\\(',
+            flags: 'g',
+            matches: [
+                { skill: 'systematic-debugging', reason: 'API calls benefit from error handling review' }
+            ]
+        }
+    ];
 
     // Language-specific suggestions
     private readonly languageSkills: Map<string, string[]> = new Map([
@@ -76,10 +129,13 @@ export class SkillSuggester {
     async suggestForContext(code: string, language: string): Promise<SkillSuggestion[]> {
         const suggestions: Map<string, SkillSuggestion> = new Map();
 
-        // Pattern-based suggestions
-        for (const [pattern, matches] of this.patterns) {
-            if (pattern.test(code)) {
-                for (const match of matches) {
+        // Pattern-based suggestions - create fresh RegExp each time to avoid state issues
+        for (const def of this.patternDefinitions) {
+            // Create a new RegExp instance for each check to avoid lastIndex pollution
+            const regex = new RegExp(def.pattern, def.flags);
+            
+            if (regex.test(code)) {
+                for (const match of def.matches) {
                     const existing = suggestions.get(match.skill);
                     if (!existing || existing.confidence < 0.7) {
                         suggestions.set(match.skill, {
@@ -115,14 +171,14 @@ export class SkillSuggester {
 
         // Verify skills exist
         const validSuggestions: SkillSuggestion[] = [];
-        for (const [name, suggestion] of suggestions) {
-            const skill = this.skillsManager.getSkill(name);
+        for (const [, suggestion] of suggestions) {
+            const skill = this.skillsManager.getSkill(suggestion.skillName);
             if (skill) {
                 validSuggestions.push(suggestion);
             }
         }
 
-        // Sort by confidence
+        // Sort by confidence (highest first)
         return validSuggestions.sort((a, b) => b.confidence - a.confidence);
     }
 
