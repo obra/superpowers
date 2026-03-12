@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Git post-merge hook for automatic worktree cleanup
+# Install: Copy to .git/hooks/post-merge and make executable
+
+SUPERPOWERS_LIB="${HOME}/.config/superpowers/lib"
+WORKTREE_MANAGER="${SUPERPOWERS_LIB}/worktree-manager"
+
+# Only run if superpowers is installed
+if [ ! -x "$WORKTREE_MANAGER" ]; then
+    exit 0
+fi
+
+# Get the branch that was merged (from reflog)
+# Post-merge hook fires after merge, so we parse the reflog to find source branch
+MERGED_BRANCH=$(git reflog -1 --format='%gs' | sed -n 's/.*merge \([^:]*\).*/\1/p')
+
+# Fallback: if we can't determine merged branch, exit silently
+if [ -z "$MERGED_BRANCH" ]; then
+    exit 0
+fi
+
+# Find matching worktrees
++# Get first matching worktree (there could be multiple across projects)
++WORKTREE_INFO=$("$WORKTREE_MANAGER" find "$MERGED_BRANCH" 2>/dev/null | jq -s '.[0]' || true)
++
++if [ -n "$WORKTREE_INFO" ]; then
+    exit 0
+fi
+
+# Find matching worktrees
++WORKTREE_INFO=$("$WORKTREE_MANAGER" find "$MERGED_BRANCH" 2>/dev/null | jq -s '.[0]' || true)
++
++if [ -n "$WORKTREE_INFO" ]; then
+    WORKTREE_ID=$(echo "$WORKTREE_INFO" | jq -r '.id')
+    WORKTREE_PATH=$(echo "$WORKTREE_INFO" | jq -r '.path')
+    
+    echo "🎉 Branch '$MERGED_BRANCH' merged!"
+    
+    # Update status to merged (daemon will handle cleanup)
+    "$WORKTREE_MANAGER" update "$WORKTREE_ID" "merged"
+    
+    echo "✅ Worktree marked as merged. GC daemon will clean up: $WORKTREE_PATH"
+fi
+
+exit 0

@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# Worktree Garbage Collection Daemon
+# Runs periodically to clean up abandoned worktrees
+
+set -euo pipefail
+
+SUPERPOWERS_LIB="${HOME}/.config/superpowers/lib"
+WORKTREE_MANAGER="${SUPERPOWERS_LIB}/worktree-manager"
+DAEMON_PID_FILE="/tmp/superpowers-worktree-gc.pid"
+DAEMON_LOCK_FILE="/tmp/superpowers-worktree-gc.lock"
+LOG_FILE="${HOME}/.config/superpowers/worktree-gc.log"
+
+# Ensure log directory exists
+mkdir -p "$(dirname "$LOG_FILE")"
+
+# Handle shutdown signals
+RUNNING=1
+shutdown() {
+    log "Daemon shutting down"
+    RUNNING=0
+}
+trap 'shutdown' SIGTERM SIGINT
+
+# Atomic lock acquisition using flock
+exec 200>"$DAEMON_LOCK_FILE"
+if ! flock -n 200; then
+    echo "Daemon already running (lock held)" >&2
+    exit 0
+fi
+
+# Cleanup on exit
+trap 'flock -u 200; rm -f "$DAEMON_PID_FILE"' EXIT
+
+# Write PID while holding lock
+echo $$ > "$DAEMON_PID_FILE"
+
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"
+}
+
+log "Worktree GC daemon started (PID: $$)"
+
+# Main loop
+while [ "$RUNNING" = "1" ]; do
+    # Detect status changes
+    if [ -x "$WORKTREE_MANAGER" ]; then
+        "$WORKTREE_MANAGER" detect >> "$LOG_FILE" 2>&1 || true
+        
+        # Run garbage collection
+        "$WORKTREE_MANAGER" gc >> "$LOG_FILE" 2>&1 || true
+    fi
+    
+    # Sleep for 1 hour (in short intervals to allow graceful shutdown)
+    for i in $(seq 1 360); do
+        if [ "$RUNNING" = "0" ]; then
+            break
+        fi
+        sleep 10
+    done
+done

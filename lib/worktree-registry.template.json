@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": 1,
+  "worktrees": [],
+  "metadata": {
+    "last_updated": "2026-03-10T00:00:00Z",
+    "gc_policy": {
+      "enabled": true,
+      "interval_hours": 1,
+      "cleanup_delay_hours": 24,
+      "max_age_days": 30
+    }
+  }
+}
