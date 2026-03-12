@@ -13,21 +13,13 @@ Git worktrees create isolated workspaces sharing the same repository, allowing w
 
 **Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
 
+**Important:** Prefer global worktree locations by default to avoid nested-worktree `CLAUDE.md` double-loading.
+
 ## Directory Selection Process
 
 Follow this priority order:
 
-### 1. Check Existing Directories
-
-```bash
-# Check in priority order
-ls -d .worktrees 2>/dev/null     # Preferred (hidden)
-ls -d worktrees 2>/dev/null      # Alternative
-```
-
-**If found:** Use that directory. If both exist, `.worktrees` wins.
-
-### 2. Check CLAUDE.md
+### 1. Check CLAUDE.md Preference First
 
 ```bash
 grep -i "worktree.*director" CLAUDE.md 2>/dev/null
@@ -35,18 +27,43 @@ grep -i "worktree.*director" CLAUDE.md 2>/dev/null
 
 **If preference specified:** Use it without asking.
 
-### 3. Ask User
+### 2. Reuse Existing Directory Convention
 
-If no directory exists and no CLAUDE.md preference:
+```bash
+project=$(basename "$(git rev-parse --show-toplevel)")
+
+# Check existing locations
+ls -d "$HOME/.config/superpowers/worktrees/$project" 2>/dev/null  # Preferred (global)
+ls -d .worktrees 2>/dev/null                                        # Project-local (hidden)
+ls -d worktrees 2>/dev/null                                         # Project-local (visible)
+```
+
+**If found:** Reuse that location to keep consistency. If both project-local directories exist, `.worktrees` wins.
+
+### 3. Default to Global Location (Recommended)
+
+If no directory exists and no CLAUDE.md preference, default to:
+
+```bash
+~/.config/superpowers/worktrees/<project-name>/
+```
+
+**Why default global:** Project-local worktrees can cause parent `CLAUDE.md` files to be loaded in nested worktrees, creating conflicting instructions.
+
+### 4. Ask User If They Need Project-Local
+
+If the user has a strong preference for project-local worktrees, ask explicitly:
 
 ```
-No worktree directory found. Where should I create worktrees?
+No existing worktree directory found. I recommend the global location to avoid duplicate CLAUDE.md loading:
 
-1. .worktrees/ (project-local, hidden)
-2. ~/.config/superpowers/worktrees/<project-name>/ (global location)
+1. ~/.config/superpowers/worktrees/<project-name>/ (recommended)
+2. .worktrees/ (project-local, hidden)
 
 Which would you prefer?
 ```
+
+If user has no preference, use option 1.
 
 ## Safety Verification
 
@@ -145,10 +162,12 @@ Ready to implement <feature-name>
 
 | Situation | Action |
 |-----------|--------|
-| `.worktrees/` exists | Use it (verify ignored) |
-| `worktrees/` exists | Use it (verify ignored) |
-| Both exist | Use `.worktrees/` |
-| Neither exists | Check CLAUDE.md → Ask user |
+| CLAUDE.md specifies location | Use that location |
+| Global worktree dir exists | Reuse global location |
+| `.worktrees/` exists | Reuse it (verify ignored) |
+| `worktrees/` exists | Reuse it (verify ignored) |
+| Neither exists | Default to global location |
+| User requests project-local | Use `.worktrees/` (verify ignored) |
 | Directory not ignored | Add to .gitignore + commit |
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
@@ -163,7 +182,7 @@ Ready to implement <feature-name>
 ### Assuming directory location
 
 - **Problem:** Creates inconsistency, violates project conventions
-- **Fix:** Follow priority: existing > CLAUDE.md > ask
+- **Fix:** Follow priority: CLAUDE.md preference > existing convention > global default > ask if needed
 
 ### Proceeding with failing tests
 
@@ -180,13 +199,14 @@ Ready to implement <feature-name>
 ```
 You: I'm using the using-git-worktrees skill to set up an isolated workspace.
 
-[Check .worktrees/ - exists]
-[Verify ignored - git check-ignore confirms .worktrees/ is ignored]
-[Create worktree: git worktree add .worktrees/auth -b feature/auth]
+[Check CLAUDE.md - no preference]
+[No existing worktree dir found]
+[Use global default: ~/.config/superpowers/worktrees/myproject/feature-auth]
+[Create worktree: git worktree add ~/.config/superpowers/worktrees/myproject/feature-auth -b feature/auth]
 [Run npm install]
 [Run npm test - 47 passing]
 
-Worktree ready at /Users/jesse/myproject/.worktrees/auth
+Worktree ready at /Users/jesse/.config/superpowers/worktrees/myproject/feature-auth
 Tests passing (47 tests, 0 failures)
 Ready to implement auth feature
 ```
@@ -201,7 +221,7 @@ Ready to implement auth feature
 - Skip CLAUDE.md check
 
 **Always:**
-- Follow directory priority: existing > CLAUDE.md > ask
+- Follow directory priority: CLAUDE.md preference > existing convention > global default
 - Verify directory is ignored for project-local
 - Auto-detect and run project setup
 - Verify clean test baseline
