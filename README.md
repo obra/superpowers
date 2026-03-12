@@ -222,4 +222,4 @@ MIT License - see LICENSE file for details
 **Support**  
 - Issues: https://github.com/REPOZY/superpowers-optimized/issues  
 - Original: https://github.com/obra/superpowers  
-- Discussions: enabled on this repository for questions and feature requests
+- Discussions: https://github.com/REPOZY/superpowers-optimized/discussions
