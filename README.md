@@ -38,7 +38,7 @@ The agent will automatically route to the correct workflow, apply safety guards,
 **Claude Code**
 
 1. /plugin marketplace add REPOZY/superpowers-optimized
-2. /plugin install superpowers@superpowers-optimized
+2. /plugin install superpowers-optimized@superpowers-optimized
 
 
 **Cursor**
