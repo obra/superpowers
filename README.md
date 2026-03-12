@@ -37,8 +37,8 @@ The agent will automatically route to the correct workflow, apply safety guards,
 
 **Claude Code**
 
-/plugin marketplace add REPOZY/superpowers-optimized
-/plugin install superpowers@superpowers-optimized
+1. /plugin marketplace add REPOZY/superpowers-optimized
+2. /plugin install superpowers@superpowers-optimized
 
 
 **Cursor**
@@ -52,11 +52,9 @@ Tell the agent:
 Fetch and follow instructions from https://raw.githubusercontent.com/REPOZY/superpowers-optimized/refs/heads/main/.codex/INSTALL.md
 
 
-
 Full platform-specific guides and update commands are in the [Installation section](#installation) below.
 
 ---
-
 
 **How it works**  
 From the moment you fire up your coding agent, this fork follows the original Superpowers approach: it first steps back to understand what you're really trying to do instead of jumping straight into code. It then collaborates with you to tease out a clear spec and shows it in chunks short enough to read and digest.
