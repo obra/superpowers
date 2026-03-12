@@ -14,6 +14,7 @@
     "url": "https://github.com/obra/superpowers/issues"
   },
   "homepage": "https://github.com/obra/superpowers#readme",
+  "icon": "resources/icon.png",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -28,12 +29,17 @@
     "skills",
     "tdd",
     "debugging",
-    "superpowers"
+    "superpowers",
+    "claude",
+    "cursor",
+    "copilot"
   ],
   "activationEvents": [
     "onLanguage:javascript",
     "onLanguage:typescript",
     "onLanguage:python",
+    "onLanguage:go",
+    "onLanguage:rust",
     "onCommand:superpowers.showSkills"
   ],
   "main": "./out/extension.js",
@@ -104,8 +110,9 @@
     "keybindings": [
       {
         "command": "superpowers.showSkills",
-        "key": "ctrl+shift+s",
-        "mac": "cmd+shift+s"
+        "key": "ctrl+alt+shift+s",
+        "mac": "cmd+alt+shift+s",
+        "when": "editorFocus"
       }
     ]
   },
@@ -114,7 +121,8 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
@@ -122,6 +130,7 @@
     "@typescript-eslint/eslint-plugin": "^6.13.0",
     "@typescript-eslint/parser": "^6.13.0",
     "eslint": "^8.54.0",
-    "typescript": "^5.3.2"
+    "typescript": "^5.3.2",
+    "@vscode/vsce": "^2.22.0"
   }
 }

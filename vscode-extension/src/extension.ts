@@ -1,13 +1,13 @@
 /**
  * Superpowers VS Code Extension
- * 
+ *
  * Main entry point for the extension.
  * Integrates Superpowers skills into VS Code with:
  * - Skill suggestions via Code Actions
  * - Plan visualization in Tree View
  * - Workflow tracking and status
  * - Quick access to skill documentation
- * 
+ *
  * @author Superpowers Contributors
  * @license MIT
  */
@@ -21,7 +21,9 @@ import { SkillsManager, Skill } from './skills/manager';
 import { SkillSuggester } from './skills/suggester';
 import { HoverProvider } from './providers/hoverProvider';
 
-// Type definitions for better type safety
+/**
+ * Context passed to skill execution functions
+ */
 interface SkillExecutionContext {
     input?: string;
     file?: string;
@@ -30,11 +32,14 @@ interface SkillExecutionContext {
     source?: string;
 }
 
+/**
+ * Webview panel with optional skill attachment
+ */
 interface SkillPanel extends vscode.WebviewPanel {
     skill?: Skill;
 }
 
-// Module-level state
+/** Module-level state for extension components */
 let skillsProvider: SkillsProvider;
 let workflowProvider: WorkflowProvider;
 let analyticsClient: AnalyticsClient;
@@ -42,7 +47,9 @@ let skillsManager: SkillsManager;
 let skillSuggester: SkillSuggester;
 
 /**
- * Escape HTML entities to prevent XSS attacks
+ * Escape HTML entities to prevent XSS attacks.
+ * @param unsafe - Raw string that may contain HTML special characters
+ * @returns Sanitized string safe for HTML interpolation
  */
 function escapeHtml(unsafe: string): string {
     return unsafe
@@ -53,6 +60,12 @@ function escapeHtml(unsafe: string): string {
         .replace(/'/g, "&#039;");
 }
 
+/**
+ * Activates the Superpowers extension.
+ * Initializes all components, registers providers and commands,
+ * and sets up the status bar item.
+ * @param context - VS Code extension context for subscriptions
+ */
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     console.log('Superpowers extension is activating...');
 
@@ -63,7 +76,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             config.get('analyticsEnabled', true),
             config.get('analyticsPort', 3334)
         );
-        
+
         skillsManager = new SkillsManager(config.get('skillsPath', ''));
         await skillsManager.initialize();
 
@@ -135,11 +148,38 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     }
 }
 
+/**
+ * Registers all extension commands with VS Code.
+ * @param context - Extension context for managing subscriptions
+ */
 function registerCommands(context: vscode.ExtensionContext): void {
-    // Show Skills Command
+    // Show Skills Command - accepts optional skill name argument
     context.subscriptions.push(
-        vscode.commands.registerCommand('superpowers.showSkills', async () => {
+        vscode.commands.registerCommand('superpowers.showSkills', async (arg?: string | SkillItem) => {
             try {
+                // If argument provided, try to resolve to a skill
+                if (arg) {
+                    let skill: Skill | undefined;
+
+                    if (typeof arg === 'string') {
+                        // Direct skill name passed
+                        skill = skillsManager.getSkill(arg);
+                    } else if (arg && typeof arg === 'object' && 'skill' in arg) {
+                        // SkillItem passed
+                        skill = (arg as SkillItem).skill;
+                    }
+
+                    if (skill) {
+                        await showSkillDetails(skill, context);
+                        await analyticsClient.trackEvent('skill_viewed', {
+                            skill: skill.name,
+                            source: 'direct'
+                        });
+                        return;
+                    }
+                }
+
+                // No argument or not found - show picker
                 const skills = skillsManager.getAllSkills();
                 const items = skills.map(skill => ({
                     label: skill.name,
@@ -315,7 +355,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
                 const port = vscode.workspace.getConfiguration('superpowers')
                     .get('analyticsPort', 3334);
                 const url = `http://localhost:${port}`;
-                
+
                 const action = await vscode.window.showInformationMessage(
                     `Analytics dashboard runs at ${url}`,
                     'Open in Browser',
@@ -341,17 +381,33 @@ function registerCommands(context: vscode.ExtensionContext): void {
         })
     );
 
+    // Open Skill File - accepts both Skill and SkillItem
     context.subscriptions.push(
-        vscode.commands.registerCommand('superpowers.openSkillFile', async (item: SkillItem) => {
+        vscode.commands.registerCommand('superpowers.openSkillFile', async (item: Skill | SkillItem) => {
             try {
-                if (item.skill?.path && item.skill.path !== 'built-in') {
-                    const document = await vscode.workspace.openTextDocument(item.skill.path);
-                    await vscode.window.showTextDocument(document);
-                } else {
+                // Handle both Skill and SkillItem types
+                let skillPath: string | undefined;
+                let isBuiltIn = false;
+
+                if ('path' in item && item.path) {
+                    // Direct Skill object
+                    skillPath = item.path;
+                    isBuiltIn = item.path === 'built-in';
+                } else if ('skill' in item && item.skill?.path) {
+                    // SkillItem with nested skill
+                    skillPath = item.skill.path;
+                    isBuiltIn = item.skill.path === 'built-in';
+                }
+
+                if (isBuiltIn || !skillPath) {
                     vscode.window.showInformationMessage(
                         'This is a built-in skill. Install the full Superpowers package for skill files.'
                     );
+                    return;
                 }
+
+                const document = await vscode.workspace.openTextDocument(skillPath);
+                await vscode.window.showTextDocument(document);
             } catch (error) {
                 vscode.window.showErrorMessage(`Failed to open skill file: ${error}`);
             }
@@ -359,12 +415,17 @@ function registerCommands(context: vscode.ExtensionContext): void {
     );
 }
 
+/**
+ * Displays a skill's details in a webview panel.
+ * @param skill - The skill to display
+ * @param context - Extension context for managing subscriptions
+ */
 async function showSkillDetails(skill: Skill, context: vscode.ExtensionContext): Promise<void> {
     const panel: SkillPanel = vscode.window.createWebviewPanel(
         'skillDetails',
         skill.name,
         vscode.ViewColumn.Beside,
-        { 
+        {
             enableScripts: true,
             retainContextWhenHidden: true
         }
@@ -388,9 +449,15 @@ async function showSkillDetails(skill: Skill, context: vscode.ExtensionContext):
     );
 }
 
+/**
+ * Executes a skill with progress tracking and cleanup.
+ * Uses try/finally to ensure workflowProvider.clearActiveSkill() is always called.
+ * @param skill - The skill to execute
+ * @param execContext - Context for skill execution
+ */
 async function executeSkill(skill: Skill, execContext: SkillExecutionContext = {}): Promise<void> {
     workflowProvider.setActiveSkill(skill.name);
-    
+
     await vscode.window.withProgress({
         location: vscode.ProgressLocation.Notification,
         title: `Executing ${skill.name}...`,
@@ -398,41 +465,48 @@ async function executeSkill(skill: Skill, execContext: SkillExecutionContext = {
     }, async (progress, token) => {
         progress.report({ message: 'Loading skill instructions' });
 
-        // Check for cancellation
-        if (token.isCancellationRequested) {
+        try {
+            // Check for cancellation
+            if (token.isCancellationRequested) {
+                return;
+            }
+
+            // In a real implementation, this would integrate with Claude Code
+            // or send commands to the AI coding agent
+
+            const action = await vscode.window.showInformationMessage(
+                `${skill.name} skill loaded. In a full implementation, this would guide you through the skill workflow.`,
+                'Open Skill File',
+                'View Instructions'
+            );
+
+            if (token.isCancellationRequested) {
+                return;
+            }
+
+            if (action === 'Open Skill File' && skill.path && skill.path !== 'built-in') {
+                const document = await vscode.workspace.openTextDocument(skill.path);
+                await vscode.window.showTextDocument(document);
+            }
+        } finally {
+            // Always clear active skill, even on exception or cancellation
             workflowProvider.clearActiveSkill();
-            return;
         }
-
-        // In a real implementation, this would integrate with Claude Code
-        // or send commands to the AI coding agent
-        
-        const action = await vscode.window.showInformationMessage(
-            `${skill.name} skill loaded. In a full implementation, this would guide you through the skill workflow.`,
-            'Open Skill File',
-            'View Instructions'
-        );
-
-        if (token.isCancellationRequested) {
-            workflowProvider.clearActiveSkill();
-            return;
-        }
-
-        if (action === 'Open Skill File' && skill.path && skill.path !== 'built-in') {
-            const document = await vscode.workspace.openTextDocument(skill.path);
-            await vscode.window.showTextDocument(document);
-        }
-
-        workflowProvider.clearActiveSkill();
     });
 }
 
+/**
+ * Generates the HTML content for a skill webview panel.
+ * All user-provided content is escaped to prevent XSS.
+ * @param skill - The skill to render
+ * @returns Escaped HTML string for the webview
+ */
 function getSkillWebviewContent(skill: Skill): string {
     // Escape all user-provided content to prevent XSS
     const safeName = escapeHtml(skill.name);
     const safeDescription = escapeHtml(skill.description || 'No description available');
     const safePath = escapeHtml(skill.path || 'N/A');
-    const safeContent = skill.content 
+    const safeContent = skill.content
         ? escapeHtml(skill.content)
         : '<p>Open the skill file to see detailed instructions.</p>';
 
@@ -452,7 +526,7 @@ function getSkillWebviewContent(skill: Skill): string {
             color: var(--vscode-foreground);
         }
         h1 { color: var(--vscode-titleBar-activeForeground); }
-        h2 { 
+        h2 {
             color: var(--vscode-sideBarTitle-foreground);
             margin-top: 1.5rem;
             border-bottom: 1px solid var(--vscode-panel-border);
@@ -515,10 +589,23 @@ function getSkillWebviewContent(skill: Skill): string {
 </html>`;
 }
 
-export function deactivate(): void {
+/**
+ * Deactivates the extension and disposes all resources.
+ * Ensures analytics client flushes before disposal.
+ */
+export async function deactivate(): Promise<void> {
     console.log('Superpowers extension deactivated');
-    
-    // Properly dispose all resources
-    analyticsClient?.dispose();
-    skillsManager?.dispose();
+
+    // Await analytics client disposal to ensure final flush
+    if (analyticsClient) {
+        await analyticsClient.dispose();
+    }
+
+    // Dispose other resources
+    if (workflowProvider) {
+        workflowProvider.dispose();
+    }
+    if (skillsManager) {
+        skillsManager.dispose();
+    }
 }

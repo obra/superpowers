@@ -5,22 +5,30 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SkillSuggester = void 0;
+/**
+ * Analyzes code context and suggests relevant Superpowers skills.
+ */
 class SkillSuggester {
+    /**
+     * Creates a new SkillSuggester instance.
+     * @param skillsManager - The skills manager for skill lookup
+     */
     constructor(skillsManager) {
         this.skillsManager = skillsManager;
         // Pattern definitions stored as strings to avoid regex state issues
+        // Note: We exclude the 'g' flag since .test() with 'g' updates lastIndex
         this.patternDefinitions = [
             // Testing patterns
             {
                 pattern: 'describe\\s*\\(|it\\s*\\(|test\\s*\\(',
-                flags: 'g',
+                flags: '', // No 'g' flag
                 matches: [
                     { skill: 'test-driven-development', reason: 'Test file detected - TDD workflow recommended' }
                 ]
             },
             {
                 pattern: 'expect\\s*\\(|assert\\(',
-                flags: 'g',
+                flags: '',
                 matches: [
                     { skill: 'test-driven-development', reason: 'Assertion patterns suggest testing context' }
                 ]
@@ -28,21 +36,21 @@ class SkillSuggester {
             // Error/debugging patterns
             {
                 pattern: 'Error:|Exception:|throw new',
-                flags: 'g',
+                flags: '',
                 matches: [
                     { skill: 'systematic-debugging', reason: 'Error patterns detected - systematic debugging recommended' }
                 ]
             },
             {
                 pattern: 'console\\.log|console\\.error|debugger',
-                flags: 'g',
+                flags: '',
                 matches: [
                     { skill: 'systematic-debugging', reason: 'Debug statements found - consider systematic approach' }
                 ]
             },
             {
                 pattern: 'TODO:|FIXME:|BUG:',
-                flags: 'g',
+                flags: '',
                 matches: [
                     { skill: 'systematic-debugging', reason: 'Issue markers detected' }
                 ]
@@ -50,14 +58,14 @@ class SkillSuggester {
             // Planning/design patterns
             {
                 pattern: '//\\s*PLAN:|//\\s*DESIGN:|/\\*\\*\\s*\\*/',
-                flags: 'g',
+                flags: '',
                 matches: [
                     { skill: 'writing-plans', reason: 'Planning comments detected' }
                 ]
             },
             {
                 pattern: 'interface\\s+\\w+|type\\s+\\w+\\s*=',
-                flags: 'g',
+                flags: '',
                 matches: [
                     { skill: 'brainstorming', reason: 'Type definitions suggest design phase' }
                 ]
@@ -65,7 +73,7 @@ class SkillSuggester {
             // Git patterns
             {
                 pattern: 'git\\s+checkout|git\\s+branch|git\\s+merge',
-                flags: 'g',
+                flags: '',
                 matches: [
                     { skill: 'using-git-worktrees', reason: 'Git operations detected' }
                 ]
@@ -73,7 +81,7 @@ class SkillSuggester {
             // Review patterns
             {
                 pattern: 'review|refactor|optimize',
-                flags: 'gi', // Case insensitive
+                flags: 'i', // Case insensitive, but no 'g'
                 matches: [
                     { skill: 'requesting-code-review', reason: 'Review keywords detected' }
                 ]
@@ -81,7 +89,7 @@ class SkillSuggester {
             // Async/concurrency patterns
             {
                 pattern: 'async\\s+|await\\s+|Promise\\.|\\.then\\(',
-                flags: 'g',
+                flags: '',
                 matches: [
                     { skill: 'systematic-debugging', reason: 'Async code can have subtle bugs - systematic debugging helps' }
                 ]
@@ -89,7 +97,7 @@ class SkillSuggester {
             // API patterns
             {
                 pattern: 'fetch\\(|axios\\.|\\.get\\(|\\.post\\(',
-                flags: 'g',
+                flags: '',
                 matches: [
                     { skill: 'systematic-debugging', reason: 'API calls benefit from error handling review' }
                 ]
@@ -104,12 +112,19 @@ class SkillSuggester {
             ['rust', ['test-driven-development', 'systematic-debugging']]
         ]);
     }
+    /**
+     * Suggests skills based on code context and language.
+     * @param code - The code to analyze
+     * @param language - The programming language
+     * @returns Array of skill suggestions sorted by confidence
+     */
     async suggestForContext(code, language) {
         const suggestions = new Map();
-        // Pattern-based suggestions - create fresh RegExp each time to avoid state issues
+        // Pattern-based suggestions - create fresh RegExp each time
         for (const def of this.patternDefinitions) {
-            // Create a new RegExp instance for each check to avoid lastIndex pollution
-            const regex = new RegExp(def.pattern, def.flags);
+            // Build flags without 'g' to avoid lastIndex pollution
+            const safeFlags = (def.flags || '').replace(/g/g, '');
+            const regex = new RegExp(def.pattern, safeFlags);
             if (regex.test(code)) {
                 for (const match of def.matches) {
                     const existing = suggestions.get(match.skill);
@@ -153,6 +168,11 @@ class SkillSuggester {
         // Sort by confidence (highest first)
         return validSuggestions.sort((a, b) => b.confidence - a.confidence);
     }
+    /**
+     * Analyzes file context for additional suggestions.
+     * @param code - The code to analyze
+     * @returns Array of context-based suggestions
+     */
     analyzeFileContext(code) {
         const suggestions = [];
         // Check for large files
@@ -184,9 +204,9 @@ class SkillSuggester {
                 });
             }
         }
-        // Check for error handling
-        const hasTryCatch = code.includes('try {') || code.includes('catch (');
-        const hasAsync = code.includes('async ') || code.includes('await ');
+        // Check for error handling with more robust detection
+        const hasTryCatch = /\btry\s*\{/.test(code) && /\bcatch\s*\(/.test(code);
+        const hasAsync = /\basync\b/.test(code) && /\bawait\b/.test(code);
         if (hasAsync && !hasTryCatch) {
             suggestions.push({
                 skillName: 'systematic-debugging',

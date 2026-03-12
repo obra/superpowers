@@ -1,18 +1,5 @@
 {
-  "skillMetrics": {
-    "test-skill": {
-      "invocations": 1,
-      "totalTokens": 500,
-      "avgDuration": 0,
-      "successRate": 100,
-      "successes": 1,
-      "failures": 0,
-      "totalDuration": 0,
-      "lastInvoked": "2026-03-12T04:02:50.389Z",
-      "platforms": {
-        "unknown": 1
-      }
-    }
-  },
-  "lastUpdated": "2026-03-12T04:02:50.389Z"
+  "skillMetrics": {},
+  "totalEvents": 0,
+  "lastUpdated": null
 }
