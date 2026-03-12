@@ -56,6 +56,8 @@ Full platform-specific guides and update commands are in the [Installation secti
 
 ---
 
+
+
 **How it works**  
 From the moment you fire up your coding agent, this fork follows the original Superpowers approach: it first steps back to understand what you're really trying to do instead of jumping straight into code. It then collaborates with you to tease out a clear spec and shows it in chunks short enough to read and digest.
 
@@ -64,6 +66,9 @@ Once you approve the design, your agent puts together an implementation plan tha
 Next up, once you say "go", it launches either a *subagent-driven-development* process or *executing-plans*, having agents work through each engineering task with staged reviews (spec compliance, then code quality) and integrated specialists where useful (e.g., security-reviewer on sensitive changes, frontend-craftsmanship on UI work).
 
 Because the skills trigger automatically and are optimized for smaller, more relevant context windows, you don't need to do anything special. Your coding agent just has **optimized Superpowers**.
+
+---
+
 
 **Research-Driven Optimizations**  
 The optimizations in this fork are grounded in three research papers on LLM agent behavior:
@@ -112,6 +117,8 @@ These research insights drive four core principles throughout the fork:
 3. **Compliance ≠ competence** — agents follow instructions reliably, so the instructions themselves must be carefully engineered (rationalization tables, red flags, forbidden phrases) rather than simply comprehensive
 4. **Verify your own reasoning** — multi-path self-consistency at critical decision points (diagnosis, verification) catches confident-but-wrong single-chain failures before they become expensive mistakes
 
+---
+
 
 **The Basic Workflow**  
 1. **adaptive-workflow-selector** - Activates first. Chooses `lightweight` vs `full` workflow path based on scope/risk.
@@ -132,6 +139,9 @@ These research insights drive four core principles throughout the fork:
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
+---
+
+
 
 **Skills Library**
 
@@ -143,6 +153,10 @@ These research insights drive four core principles throughout the fork:
 - **systematic-debugging** - 4-phase root cause process with self-consistency reasoning for hypothesis validation (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
 - **verification-before-completion** - Evidence gate for completion claims with multi-path verification reasoning, including configuration change verification (verifies outcomes reflect intended changes, not just that operations succeeded)
 - **self-consistency-reasoner** - Internal multi-path reasoning technique (Wang et al., ICLR 2023) embedded in systematic-debugging and verification-before-completion to catch confident-but-wrong single-chain reasoning
+
+
+---
+
 
 **Collaboration**
 - **brainstorming** - Socratic design refinement
@@ -176,6 +190,9 @@ These research insights drive four core principles throughout the fork:
 - **token-efficiency** - Always-on operational standard: concise responses, parallel tool batching, no redundant work. Invoked at every session start.
 - **prompt-optimizer** - Optional pre-processing to refine vague or multi-part user requests
 - **claude-md-creator** - Create lean, high-signal CLAUDE/AGENTS context files for repositories
+
+
+---
 
 
 **Philosophy**
