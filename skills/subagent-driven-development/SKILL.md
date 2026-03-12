@@ -11,6 +11,19 @@ Execute plan by dispatching fresh subagent per task, with two-stage review after
 
 **Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
 
+<HARD-GATE>
+DO NOT mark any task complete without dispatching BOTH reviewer subagents.
+This is non-negotiable. No exceptions. No "going faster."
+
+For EVERY task, you MUST dispatch:
+
+1. Spec compliance reviewer subagent (./spec-reviewer-prompt.md)
+2. Code quality reviewer subagent (./code-quality-reviewer-prompt.md)
+
+If you skip either review, you are violating this skill. Period.
+Skipping reviews is the #1 failure mode of this workflow. Do not rationalize it.
+</HARD-GATE>
+
 ## When to Use
 
 ```dot
@@ -32,6 +45,7 @@ digraph when_to_use {
 ```
 
 **vs. Executing Plans (parallel session):**
+
 - Same session (no context switch)
 - Fresh subagent per task (no context pollution)
 - Two-stage review after each task: spec compliance first, then code quality
@@ -83,6 +97,36 @@ digraph process {
     "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
+
+## Completion Gate (Mandatory Per Task)
+
+Before marking ANY task complete, verify ALL of these are true:
+
+```text
+□ Implementer subagent dispatched and completed
+□ Spec reviewer subagent dispatched → result was ✅
+□ Code quality reviewer subagent dispatched → result was ✅
+□ Any issues found by reviewers were fixed AND re-reviewed
+```
+
+**If ANY box is unchecked → DO NOT mark task complete.**
+**"Going faster" by skipping reviews = going slower (rework later).**
+**This gate applies to every task. No exceptions. ESPECIALLY the last tasks.**
+
+## Rationalization Prevention
+
+These thoughts mean STOP — you are about to skip a required review:
+
+| Thought                                      | Reality                                         |
+| -------------------------------------------- | ----------------------------------------------- |
+| "I'll skip reviews to go faster"             | Skipping reviews = rework later = slower        |
+| "This task was simple, doesn't need review"  | ALL tasks get reviewed. No exceptions.          |
+| "Context is getting long, let me streamline" | Reviews are not optional streamlining           |
+| "I already reviewed it mentally"             | Mental review ≠ dispatched reviewer subagent    |
+| "Just for the last few tasks"                | ESPECIALLY the last tasks need reviews          |
+| "The implementer's self-review was thorough" | Self-review does not replace reviewer subagents |
+| "I'll review them all at the end"            | Per-task review catches issues early            |
+| "Almost done, let me just finish up"         | "Almost done" is when corners get cut most      |
 
 ## Model Selection
 
@@ -202,23 +246,27 @@ Done!
 ## Advantages
 
 **vs. Manual execution:**
+
 - Subagents follow TDD naturally
 - Fresh context per task (no confusion)
 - Parallel-safe (subagents don't interfere)
 - Subagent can ask questions (before AND during work)
 
 **vs. Executing Plans:**
+
 - Same session (no handoff)
 - Continuous progress (no waiting)
 - Review checkpoints automatic
 
 **Efficiency gains:**
+
 - No file reading overhead (controller provides full text)
 - Controller curates exactly what context is needed
 - Subagent gets complete information upfront
 - Questions surfaced before work begins (not after)
 
 **Quality gates:**
+
 - Self-review catches issues before handoff
 - Two-stage review: spec compliance, then code quality
 - Review loops ensure fixes actually work
@@ -226,6 +274,7 @@ Done!
 - Code quality ensures implementation is well-built
 
 **Cost:**
+
 - More subagent invocations (implementer + 2 reviewers per task)
 - Controller does more prep work (extracting all tasks upfront)
 - Review loops add iterations
@@ -234,8 +283,9 @@ Done!
 ## Red Flags
 
 **Never:**
+
 - Start implementation on main/master branch without explicit user consent
-- Skip reviews (spec compliance OR code quality)
+- **NEVER skip reviews (spec compliance OR code quality) — this is the #1 failure mode of this workflow**
 - Proceed with unfixed issues
 - Dispatch multiple implementation subagents in parallel (conflicts)
 - Make subagent read plan file (provide full text instead)
@@ -248,30 +298,36 @@ Done!
 - Move to next task while either review has open issues
 
 **If subagent asks questions:**
+
 - Answer clearly and completely
 - Provide additional context if needed
 - Don't rush them into implementation
 
 **If reviewer finds issues:**
+
 - Implementer (same subagent) fixes them
 - Reviewer reviews again
 - Repeat until approved
 - Don't skip the re-review
 
 **If subagent fails task:**
+
 - Dispatch fix subagent with specific instructions
 - Don't try to fix manually (context pollution)
 
 ## Integration
 
 **Required workflow skills:**
+
 - **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
 - **superpowers:writing-plans** - Creates the plan this skill executes
 - **superpowers:requesting-code-review** - Code review template for reviewer subagents
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
 
 **Subagents should use:**
+
 - **superpowers:test-driven-development** - Subagents follow TDD for each task
 
 **Alternative workflow:**
+
 - **superpowers:executing-plans** - Use for parallel session instead of same-session execution
