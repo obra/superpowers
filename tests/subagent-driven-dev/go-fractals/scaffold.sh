@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Scaffold the Go Fractals test project
 # Usage: ./scaffold.sh /path/to/target/directory
 
