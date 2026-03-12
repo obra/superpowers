@@ -88,6 +88,14 @@ Then: Cleanup worktree (Step 5)
 
 #### Option 2: Push and Create PR
 
+**Check for related GitHub issues** before creating the PR:
+- Look at the branch name for issue numbers (e.g., `fix-123`, `issue-456`, `600-feat-...`)
+- Check commit messages for issue references (`#123`, `fixes #123`)
+- Check plan files or task descriptions for issue links
+- Only use closing keywords for issues this PR actually resolves; ignore incidental references from unrelated commits or notes
+- If the PR resolves multiple issues, include one closing line per issue
+- If no resolved issue is found, omit the closing line entirely - don't fabricate one
+
 ```bash
 # Push branch
 git push -u origin <feature-branch>
@@ -99,6 +107,8 @@ gh pr create --title "<title>" --body "$(cat <<'EOF'
 
 ## Test Plan
 - [ ] <verification steps>
+
+<One `Closes #NNN` line per issue this PR resolves, otherwise omit this block>
 EOF
 )"
 ```
