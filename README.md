@@ -58,7 +58,7 @@ Full platform-specific guides and update commands are in the [Installation secti
 
 
 
-**How it works**  
+## How it works
 From the moment you fire up your coding agent, this fork follows the original Superpowers approach: it first steps back to understand what you're really trying to do instead of jumping straight into code. It then collaborates with you to tease out a clear spec and shows it in chunks short enough to read and digest.
 
 Once you approve the design, your agent puts together an implementation plan that an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing could follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY, while this fork's optimizations keep the instructions focused and token‑efficient.
@@ -70,7 +70,8 @@ Because the skills trigger automatically and are optimized for smaller, more rel
 ---
 
 
-**Research-Driven Optimizations**  
+## Research-Driven Optimizations
+
 The optimizations in this fork are grounded in three research papers on LLM agent behavior:
 
 ### Minimal context files outperform verbose ones
@@ -120,7 +121,8 @@ These research insights drive four core principles throughout the fork:
 ---
 
 
-**The Basic Workflow**  
+## The Basic Workflow
+
 1. **adaptive-workflow-selector** - Activates first. Chooses `lightweight` vs `full` workflow path based on scope/risk.
 
 2. **context-management** - Persists durable state to `state.md` for cross-session continuity.
@@ -143,7 +145,7 @@ These research insights drive four core principles throughout the fork:
 
 
 
-**Skills Library**
+## Skills Library
 
 **Testing**
 - **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns: mock behavior, test-only methods, incomplete mocks, interface drift, and more)
@@ -158,7 +160,8 @@ These research insights drive four core principles throughout the fork:
 ---
 
 
-**Collaboration**
+## Collaboration
+
 - **brainstorming** - Socratic design refinement
 - **writing-plans** - Detailed implementation plans
 - **executing-plans** - Batch execution with checkpoints
@@ -195,7 +198,7 @@ These research insights drive four core principles throughout the fork:
 ---
 
 
-**Philosophy**
+## Philosophy
 
 - **Test-Driven Development** - Write tests first, always
 - **Systematic over ad-hoc** - Process over guessing
@@ -205,7 +208,7 @@ These research insights drive four core principles throughout the fork:
 Read more: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
 
 
-**Contributing**
+## Contributing
 
 Skills live directly in this repository. To contribute:
 
@@ -217,7 +220,7 @@ Skills live directly in this repository. To contribute:
 See `skills/writing-skills/SKILL.md` for the complete guide.
 
 
-**License**
+## License
 
 MIT License - see LICENSE file for details
 
