@@ -1,0 +1,31 @@
+{
+  "name": "superpowers-analytics",
+  "version": "1.0.0",
+  "description": "AI-Powered Skill Analytics Dashboard for Superpowers",
+  "main": "src/api/server.js",
+  "scripts": {
+    "dev": "node src/api/server.js",
+    "start": "node src/api/server.js",
+    "build": "echo 'No build step required for Node.js backend'",
+    "test": "node test/analytics.test.js"
+  },
+  "keywords": [
+    "superpowers",
+    "analytics",
+    "ai",
+    "coding-agent"
+  ],
+  "author": "Contributor",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "chart.js": "^4.4.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

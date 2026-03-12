@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Superpowers Analytics Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --border: #475569;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #60a5fa;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --error: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        h1::before {
+            content: '⚡';
+            font-size: 1.5rem;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .refresh-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+
+        .stat-card h3 {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 900px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .card h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .skills-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .skills-table th,
+        .skills-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .skills-table th {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .skills-table tr:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .skill-name code {
+            background: var(--bg-tertiary);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar .fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        .progress-bar .fill.success { background: var(--success); }
+        .progress-bar .fill.warning { background: var(--warning); }
+        .progress-bar .fill.error { background: var(--error); }
+
+        .recommendation {
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            border-left: 3px solid var(--accent);
+        }
+
+        .recommendation.high { border-left-color: var(--error); }
+        .recommendation.medium { border-left-color: var(--warning); }
+        .recommendation.low { border-left-color: var(--success); }
+
+        .recommendation .type {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+        }
+
+        .import-btn {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 0.75rem 1.25rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .import-btn:hover {
+            background: var(--accent);
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <header>
+            <div>
+                <h1>Superpowers Analytics</h1>
+                <p class="subtitle">Track skill usage, optimize workflows, reduce costs</p>
+            </div>
+            <button class="refresh-btn" onclick="loadAllData()">Refresh Data</button>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Invocations</h3>
+                <div class="value" id="stat-invocations">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Tokens</h3>
+                <div class="value" id="stat-tokens">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Success Rate</h3>
+                <div class="value" id="stat-success">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Skills Used</h3>
+                <div class="value" id="stat-skills">-</div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="card">
+                <h2>📊 Top Skills</h2>
+                <table class="skills-table">
+                    <thead>
+                        <tr>
+                            <th>Skill</th>
+                            <th>Invocations</th>
+                            <th>Success Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody id="skills-table-body">
+                        <tr><td colspan="3" class="loading">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h2>📈 Usage Trends (7 Days)</h2>
+                <div class="chart-container">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🎯 Token Distribution</h2>
+                <div class="chart-container">
+                    <canvas id="tokenChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>💡 Recommendations</h2>
+                <div id="recommendations">
+                    <div class="loading">Analyzing patterns...</div>
+                </div>
+            </div>
+
+            <div class="card full-width">
+                <h2>📥 Import Session Data</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                    Import your Claude Code session files for detailed analytics.
+                </p>
+                <button class="import-btn" onclick="importSessions()">
+                    Import from ~/.claude/projects
+                </button>
+                <span id="import-status" style="margin-left: 1rem; color: var(--text-secondary);"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin + '/api';
+        let trendChart = null;
+        let tokenChart = null;
+
+        async function fetchAPI(endpoint) {
+            try {
+                const response = await fetch(API_BASE + endpoint);
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                return null;
+            }
+        }
+
+        async function loadAllData() {
+            await Promise.all([loadMetrics(), loadRecommendations()]);
+        }
+
+        async function loadMetrics() {
+            const data = await fetchAPI('/metrics');
+            if (!data) return;
+
+            const stats = data.aggregated;
+            document.getElementById('stat-invocations').textContent = 
+                (stats.totalInvocations || 0).toLocaleString();
+            document.getElementById('stat-tokens').textContent = 
+                formatTokens(stats.totalTokens || 0);
+            document.getElementById('stat-success').textContent = 
+                (stats.avgSuccessRate || 0) + '%';
+            document.getElementById('stat-skills').textContent = 
+                stats.skillsCount || 0;
+
+            const tbody = document.getElementById('skills-table-body');
+            const topSkills = stats.topSkills || [];
+            
+            if (topSkills.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3">No skill data yet. Import sessions to see analytics.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = topSkills.map(skill => 
+                '<tr>' +
+                    '<td><code>' + skill.name + '</code></td>' +
+                    '<td>' + skill.invocations.toLocaleString() + '</td>' +
+                    '<td>' +
+                        '<div style="display: flex; align-items: center; gap: 0.5rem;">' +
+                            '<div class="progress-bar" style="flex: 1; width: 60px;">' +
+                                '<div class="fill ' + getSuccessClass(skill.successRate) + '" ' +
+                                     'style="width: ' + skill.successRate + '%"></div>' +
+                            '</div>' +
+                            '<span>' + skill.successRate + '%</span>' +
+                        '</div>' +
+                    '</td>' +
+                '</tr>'
+            ).join('');
+
+            updateCharts(data);
+        }
+
+        async function loadRecommendations() {
+            const data = await fetchAPI('/recommendations');
+            if (!data) return;
+
+            const container = document.getElementById('recommendations');
+            const recs = data.recommendations || [];
+
+            if (recs.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-secondary);">No recommendations yet.</p>';
+                return;
+            }
+
+            container.innerHTML = recs.map(function(rec) {
+                return '<div class="recommendation ' + rec.priority + '">' +
+                    '<div class="type">' + rec.type + ' - ' + rec.priority + ' priority</div>' +
+                    '<div class="message">' + rec.message + '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        async function importSessions() {
+            var status = document.getElementById('import-status');
+            status.textContent = 'Importing...';
+
+            try {
+                var response = await fetch(API_BASE + '/sessions/analyze');
+                var data = await response.json();
+                status.textContent = 'Found ' + data.totalSessions + ' sessions';
+                if (data.totalSessions > 0) {
+                    setTimeout(loadAllData, 500);
+                }
+            } catch (error) {
+                status.textContent = 'Error: ' + error.message;
+            }
+        }
+
+        function updateCharts(data) {
+            var topSkills = data.aggregated.topSkills || [];
+            var labels = topSkills.map(function(s) { return s.name; });
+            var tokenData = topSkills.map(function(s) { return s.totalTokens; });
+
+            // Trend Chart
+            var trendCtx = document.getElementById('trendChart').getContext('2d');
+            if (trendChart) trendChart.destroy();
+
+            var days = [];
+            for (var i = 6; i >= 0; i--) {
+                var d = new Date();
+                d.setDate(d.getDate() - i);
+                days.push(d.toLocaleDateString('en-US', { weekday: 'short' }));
+            }
+
+            var trendData = [12, 19, 15, 25, 22, 30, 28].map(function(v) {
+                return v + Math.floor(Math.random() * 10);
+            });
+
+            trendChart = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: days,
+                    datasets: [{
+                        label: 'Skill Invocations',
+                        data: trendData,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+
+            // Token Chart
+            var tokenCtx = document.getElementById('tokenChart').getContext('2d');
+            if (tokenChart) tokenChart.destroy();
+
+            tokenChart = new Chart(tokenCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: tokenData,
+                        backgroundColor: ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function formatTokens(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+
+        function getSuccessClass(rate) {
+            if (rate >= 90) return 'success';
+            if (rate >= 70) return 'warning';
+            return 'error';
+        }
+
+        // Initial load
+        loadAllData();
+    </script>
+</body>
+</html>

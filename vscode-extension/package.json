@@ -1,0 +1,118 @@
+{
+  "name": "superpowers-vscode",
+  "displayName": "Superpowers - AI Coding Skills",
+  "description": "Integrate Superpowers AI coding skills directly into VS Code",
+  "version": "1.0.0",
+  "publisher": "superpowers-contrib",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets",
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "coding",
+    "skills",
+    "tdd",
+    "debugging",
+    "superpowers"
+  ],
+  "activationEvents": [
+    "onLanguage:javascript",
+    "onLanguage:typescript",
+    "onLanguage:python",
+    "onCommand:superpowers.showSkills"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "superpowers-explorer",
+          "title": "Superpowers",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "superpowers-explorer": [
+        {
+          "id": "superpowers.skillsView",
+          "name": "Available Skills"
+        },
+        {
+          "id": "superpowers.workflowView",
+          "name": "Current Workflow"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "superpowers.showSkills",
+        "title": "Superpowers: Show Available Skills"
+      },
+      {
+        "command": "superpowers.suggestSkill",
+        "title": "Superpowers: Suggest Skill for Current File"
+      },
+      {
+        "command": "superpowers.startBrainstorm",
+        "title": "Superpowers: Start Brainstorming Session"
+      },
+      {
+        "command": "superpowers.runDebug",
+        "title": "Superpowers: Systematic Debugging"
+      },
+      {
+        "command": "superpowers.openAnalytics",
+        "title": "Superpowers: Open Analytics Dashboard"
+      }
+    ],
+    "configuration": {
+      "title": "Superpowers",
+      "properties": {
+        "superpowers.skillsPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to superpowers skills directory"
+        },
+        "superpowers.analyticsEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable usage analytics"
+        },
+        "superpowers.analyticsPort": {
+          "type": "number",
+          "default": 3334,
+          "description": "Port for analytics dashboard"
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "superpowers.showSkills",
+        "key": "ctrl+shift+s",
+        "mac": "cmd+shift+s"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "typescript": "^5.3.2"
+  },
+  "license": "MIT"
+}
