@@ -22,8 +22,9 @@ This repository delivers everything the original Superpowers plugin does, plus a
 | Cross-session memory     | None                          | Persistent state.md + reviewer memory          | Continuous learning across sessions|
 
 **Token example** (measured on a typical feature-implementation task):  
-Original → 4 820 tokens  
-Optimized → 1 290 tokens (73 % reduction)
+Original → 4820 tokens  
+Optimized → 1290 tokens (73 % reduction)
+
 
 ### Try it in 30 seconds
 In any supported agent IDE, start a new chat and paste:
