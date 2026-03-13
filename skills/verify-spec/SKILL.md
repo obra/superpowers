@@ -125,7 +125,8 @@ while iteration <= max_iterations:
 
     # 4. Check if done
     remaining_fails = [tasks with failure metadata and not completed]
-    if not remaining_fails: break
+    remaining_pending = [tasks from TaskList where status == "pending"]
+    if not remaining_fails and not remaining_pending: break
 
     # 5. Collect server logs
     Read recent server output using TaskOutput on the stored server task_id
