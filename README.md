@@ -64,10 +64,10 @@ or search for "superpowers" in the plugin marketplace.
 
 ### GitHub Copilot CLI
 
-In Copilot CLI, install directly from the plugin system:
+Install from the terminal:
 
-```text
-/plugin install obra/superpowers
+```bash
+copilot plugin install obra/superpowers
 ```
 
 All skills become `/skill-name` slash commands immediately.

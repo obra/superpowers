@@ -9,8 +9,8 @@ Enable superpowers skills in GitHub Copilot CLI. The recommended method uses the
 
 ## Recommended: Plugin Install
 
-```text
-/plugin install obra/superpowers
+```bash
+copilot plugin install obra/superpowers
 ```
 
 All skills become `/skill-name` slash commands immediately. No further setup needed.
@@ -38,8 +38,8 @@ All skills become `/skill-name` slash commands immediately. No further setup nee
 
 ## Verify
 
-```text
-/skills list
+```bash
+copilot plugin list
 ```
 
 You should see all superpowers skills listed as available slash commands.
@@ -47,8 +47,8 @@ You should see all superpowers skills listed as available slash commands.
 ## Updating
 
 **Plugin install:**
-```text
-/plugin update superpowers
+```bash
+copilot plugin update superpowers
 ```
 
 **Manual install:**
@@ -61,8 +61,8 @@ Skills update instantly through the symlink.
 ## Uninstalling
 
 **Plugin install:**
-```text
-/plugin uninstall superpowers
+```bash
+copilot plugin uninstall superpowers
 ```
 
 **Manual install:**

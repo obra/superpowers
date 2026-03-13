@@ -4,8 +4,8 @@ Guide for using Superpowers with GitHub Copilot CLI via native plugin discovery.
 
 ## Quick Install
 
-```text
-/plugin install obra/superpowers
+```bash
+copilot plugin install obra/superpowers
 ```
 
 All skills become `/skill-name` slash commands immediately.
@@ -110,8 +110,8 @@ See `skills/using-superpowers/references/copilot-tools.md` for the full mapping.
 ## Updating
 
 **Plugin install:**
-```text
-/plugin update superpowers
+```bash
+copilot plugin update superpowers
 ```
 
 **Manual install:**
@@ -124,8 +124,8 @@ Skills update instantly through the symlink.
 ## Uninstalling
 
 **Plugin install:**
-```text
-/plugin uninstall superpowers
+```bash
+copilot plugin uninstall superpowers
 ```
 
 **Manual install:**
@@ -145,7 +145,7 @@ Optionally delete the clone: `rm -rf ~/.copilot/superpowers` (Windows: `Remove-I
 ### Plugin install issues
 
 1. Ensure Copilot CLI is up to date
-2. Try `/plugin list` to check if superpowers is registered
+2. Try `copilot plugin list` to check if superpowers is registered
 3. Restart Copilot CLI after installation
 
 ### Manual install issues
