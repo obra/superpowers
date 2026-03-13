@@ -55,13 +55,15 @@ Flow: `/refine-specs` → SKILL.md orchestrates → dispatches spec-simulator (T
 - [ ] **Phase 2: Iteration Loop** (max 5)
   - Step 1: Dispatch spec-simulator — provide full spec text inline, role profile, iteration number, previous fixes summary
   - Step 2: Evaluate — no critical/important → CONVERGED
-  - Step 3: Dispatch spec-fixer — provide spec file path, full spec text inline, critical + important findings, original snapshot
+  - Step 3: Dispatch spec-fixer — provide spec file path, full spec text inline, critical + important findings, original snapshot. Instruct fixer to mark all inferred additions with `[inferred]` tag.
+  - Step 3b: After fixer completes, re-read the spec file to get updated text for next simulation round (fixer edits in-place, so orchestrator must refresh its copy)
   - Step 4: Track per round: `Round {N}: critical={X} important={Y} minor={Z} → {signal}`
   - Step 5: Check convergence (CONVERGED / ESCALATE / CONTINUE rules from spec)
 - [ ] **Phase 3: Report & Handoff**
   - Iteration summary table (Round, Critical, Important, Minor, Signal)
   - Two options: "Generate plan" (invoke superpowers:writing-plans) or "Refine again"
   - On ESCALATE: present stuck findings with context
+- [ ] Document `[inferred]` tag in SKILL.md: note that the spec-fixer marks all inferred additions with `[inferred]` so downstream readers can distinguish original decisions from gap-fills
 - [ ] Add "Red Flags" section:
   - Never skip simulation
   - Never let spec-fixer restructure the spec
