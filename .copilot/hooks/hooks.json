@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "bash": "./.copilot/hooks/session-start",
+        "powershell": "./.copilot/hooks/session-start.ps1",
+        "timeoutSec": 30,
+        "comment": "Superpowers session initialization — update checks and legacy warnings"
+      }
+    ]
+  }
+}
