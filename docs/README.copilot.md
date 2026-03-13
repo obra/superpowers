@@ -4,7 +4,7 @@ Guide for using Superpowers with GitHub Copilot CLI via native plugin discovery.
 
 ## Quick Install
 
-```
+```text
 /plugin install obra/superpowers
 ```
 
@@ -45,7 +45,7 @@ cmd /c mklink /J "$env:USERPROFILE\.copilot\skills\superpowers" "$env:USERPROFIL
 
 Copilot CLI has native plugin discovery — it reads `plugin.json` at the repository root, discovers the skills directory, and registers each skill as a slash command. The `using-superpowers` skill is discovered automatically and enforces skill usage discipline — no additional configuration needed.
 
-```
+```text
 plugin.json → skills/ → /skill-name slash commands
 ```
 
@@ -109,7 +109,7 @@ See `skills/using-superpowers/references/copilot-tools.md` for the full mapping.
 ## Updating
 
 **Plugin install:**
-```
+```text
 /plugin update superpowers
 ```
 
@@ -123,7 +123,7 @@ Skills update instantly through the symlink.
 ## Uninstalling
 
 **Plugin install:**
-```
+```text
 /plugin uninstall superpowers
 ```
 

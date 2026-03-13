@@ -66,7 +66,7 @@ or search for "superpowers" in the plugin marketplace.
 
 In Copilot CLI, install directly from the plugin system:
 
-```
+```text
 /plugin install obra/superpowers
 ```
 
