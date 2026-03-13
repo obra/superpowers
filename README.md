@@ -62,6 +62,20 @@ In Cursor Agent chat, install from marketplace:
 
 or search for "superpowers" in the plugin marketplace.
 
+### AdaL
+
+In AdaL, register the marketplace:
+
+```bash
+/plugin marketplace add obra/superpowers-marketplace
+```
+
+Then install the plugin:
+
+```bash
+/plugin install superpowers@superpowers-marketplace
+```
+
 ### Codex
 
 Tell Codex:
