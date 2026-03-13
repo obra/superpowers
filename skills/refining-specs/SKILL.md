@@ -154,3 +154,13 @@ The spec-fixer marks every piece of information it adds that was not explicitly 
 - Re-read the spec file after every fix round — fixer edits in-place
 - CONVERGED means stop iterating; ESCALATE means surface to user
 - Orchestrator never edits the spec directly — only spec-fixer subagent touches the file
+
+## Integration
+
+**Required workflow skills:**
+- **superpowers:brainstorming** — creates the spec this skill refines
+- **superpowers:writing-plans** — invoked after spec converges
+
+**Required templates:**
+- `spec-simulator-prompt.md` — prompt template for simulator subagent
+- `spec-fixer-prompt.md` — prompt template for fixer subagent
