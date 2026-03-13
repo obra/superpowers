@@ -1,0 +1,37 @@
+name: Sync with upstream
+
+on:
+  schedule:
+    - cron: "17 9 * * *" # Daily at 9:17 AM UTC
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Add upstream
+        run: git remote add upstream https://github.com/obra/superpowers.git
+
+      - name: Fetch upstream
+        run: git fetch upstream
+
+      - name: Merge upstream/main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git merge upstream/main --no-edit || {
+            echo "::warning::Merge conflict detected — skipping auto-sync"
+            git merge --abort
+            exit 1
+          }
+
+      - name: Push
+        run: git push origin main
