@@ -31,6 +31,10 @@ Invoke the superpowers:refining-specs skill and follow it exactly as presented t
 
 ## Orchestration Flow (SKILL.md)
 
+**Announce at start:** "I'm using the refining-specs skill to pressure-test this spec." [inferred]
+
+**When to Use decision tree:** Mirror refining-plans — "Have a spec?" → "Spec already tested?" → refining-specs / "Write a spec first" / "Generate plan". [inferred]
+
 Three phases mirroring refining-plans:
 
 ### Phase 1: Setup
@@ -46,22 +50,25 @@ Three phases mirroring refining-plans:
 
 Each round:
 
-1. **Dispatch spec-simulator subagent** with:
+1. **Dispatch spec-simulator subagent** (via Task tool, general-purpose) with:
    - Full spec text inline (not file path — simulator is read-only, so inline avoids file I/O and keeps the full text in context for analysis)
    - Role profile
    - Iteration number
-   - Summary of previous fixes (if iteration > 1)
+   - Iteration context: if iteration 1, state "First pass — examine everything"; if iteration > 1, provide summary of previous fixes so simulator focuses on affected sections [inferred]
 
 2. **Evaluate findings:**
    - No critical/important issues → **CONVERGED**, skip to Phase 3
    - Has findings → proceed to fix
 
-3. **Dispatch spec-fixer subagent** with:
-   - Spec file path (fixer needs the path because it edits the file directly)
+3. **Dispatch spec-fixer subagent** (via Task tool, general-purpose) with:
+   - Spec file path (fixer needs the path because it edits the file directly using the Edit tool for minimal inline patches) [inferred]
+   - Full spec text inline (so fixer has full context without needing to re-read) [inferred]
    - Critical + important findings only
    - Original snapshot for drift reference
 
-4. **Check convergence:**
+4. **Track per round:** `Round {N}: critical={X} important={Y} minor={Z} → {signal}` [inferred]
+
+5. **Check convergence:**
    - No critical/important findings → **CONVERGED**
    - Critical count unchanged (round 2+) OR same concern persists (round 3+) → **ESCALATE**
    - Drift detected (spec changed direction from snapshot) → **ESCALATE**
@@ -132,7 +139,7 @@ minor:
   - ...
 ```
 
-**Constraint:** The simulator never modifies the spec. It only reports findings.
+**Constraint:** The simulator never modifies the spec. It only reports findings. The simulator uses a Task tool (general-purpose) and has no file write access. [inferred]
 
 ## Spec Fixer
 
@@ -153,6 +160,8 @@ Before:
 
 After (if spec mentions JWT elsewhere and REST patterns):
 > The API returns user data as a JSON response body with standard REST envelope `{ data, error, meta }`. [inferred] Authentication is validated via the JWT token specified in the Auth section. [inferred]
+
+**Fixer mechanism:** The spec-fixer subagent receives the spec file path and uses the Edit tool for inline patches. It also receives the full spec text inline and the original snapshot so it can detect drift. It returns the report format below but does NOT return full updated text — it edits the file in place. [inferred]
 
 **Red flags (never do):**
 - Remove or contradict a stated decision
