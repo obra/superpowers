@@ -47,7 +47,7 @@ Three phases mirroring refining-plans:
 Each round:
 
 1. **Dispatch spec-simulator subagent** with:
-   - Full spec text inline (not file path)
+   - Full spec text inline (not file path — simulator is read-only, so inline avoids file I/O and keeps the full text in context for analysis)
    - Role profile
    - Iteration number
    - Summary of previous fixes (if iteration > 1)
@@ -57,7 +57,7 @@ Each round:
    - Has findings → proceed to fix
 
 3. **Dispatch spec-fixer subagent** with:
-   - Spec file path (fixer edits directly)
+   - Spec file path (fixer needs the path because it edits the file directly)
    - Critical + important findings only
    - Original snapshot for drift reference
 
