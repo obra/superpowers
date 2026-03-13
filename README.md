@@ -39,22 +39,25 @@ The agent will automatically route to the correct workflow, apply safety guards,
 
 **Claude Code**
 
-1. /plugin marketplace add REPOZY/superpowers-optimized
-2. /plugin install superpowers-optimized@superpowers-optimized
-
+```
+/plugin marketplace add REPOZY/superpowers-optimized
+/plugin install superpowers-optimized@superpowers-optimized
+```
 
 **Cursor**
 
+```
 /plugin-add superpowers-optimized
-
+```
 
 **Codex / OpenCode**
+
 Tell the agent:
-
+```
 Fetch and follow instructions from https://raw.githubusercontent.com/REPOZY/superpowers-optimized/refs/heads/main/.codex/INSTALL.md
+```
 
-
-Full platform-specific guides and update commands are in the [Installation section](#installation) below.
+Full install and update commands for all platforms are in the [Installation](#installation) section below.
 
 ---
 
@@ -225,6 +228,67 @@ These research insights drive four core principles throughout the fork:
 - **Proportional overhead** — Micro-tasks skip everything, full tasks get the full pipeline
 
 Read more: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
+
+
+---
+
+
+## Installation
+
+### Claude Code
+
+**Install**
+```
+/plugin marketplace add REPOZY/superpowers-optimized
+/plugin install superpowers-optimized@superpowers-optimized
+```
+
+**Update**
+```
+/plugin update superpowers-optimized
+```
+
+**Uninstall**
+```
+/plugin uninstall superpowers-optimized
+```
+
+---
+
+### Cursor
+
+**Install**
+```
+/plugin-add superpowers-optimized
+```
+
+**Update**
+```
+/plugin-update superpowers-optimized
+```
+
+**Uninstall**
+```
+/plugin-remove superpowers-optimized
+```
+
+---
+
+### Codex / OpenCode
+
+**Install** — tell the agent:
+```
+Fetch and follow instructions from https://raw.githubusercontent.com/REPOZY/superpowers-optimized/refs/heads/main/.codex/INSTALL.md
+```
+
+**Update** — tell the agent:
+```
+Fetch and follow the update instructions from https://raw.githubusercontent.com/REPOZY/superpowers-optimized/refs/heads/main/.codex/INSTALL.md
+```
+
+Or manually: `git pull` in your local clone of the repository.
+
+---
 
 
 ### Contributing

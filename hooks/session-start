@@ -7,23 +7,85 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-# Check if legacy skills directory exists and build warning
+# ── Update check ──────────────────────────────────────────────────────────────
+# Compares the installed version against the remote plugin.json on GitHub.
+# Runs with a 3-second timeout and fails silently — never blocks session start.
+# Result is cached for 24h in ~/.claude/hooks-logs/update-check.cache to avoid
+# hitting GitHub on every single session start.
+
+update_notice=""
+
+check_for_updates() {
+    local cache_dir="${HOME}/.claude/hooks-logs"
+    local cache_file="${cache_dir}/update-check.cache"
+    local cache_ttl=86400  # 24 hours in seconds
+
+    # Read local version
+    local local_version
+    local_version=$(grep '"version"' "${PLUGIN_ROOT}/.claude-plugin/plugin.json" 2>/dev/null \
+        | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo "")
+    [ -z "$local_version" ] && return
+
+    # Check cache freshness (skip remote fetch if cache is recent)
+    local cached_remote=""
+    if [ -f "$cache_file" ]; then
+        local cache_age=$(( $(date +%s) - $(date -r "$cache_file" +%s 2>/dev/null || echo 0) ))
+        if [ "$cache_age" -lt "$cache_ttl" ]; then
+            cached_remote=$(cat "$cache_file" 2>/dev/null || echo "")
+        fi
+    fi
+
+    # Fetch remote version if cache is stale or missing
+    local remote_version="$cached_remote"
+    if [ -z "$remote_version" ]; then
+        remote_version=$(curl -sf --max-time 3 \
+            "https://raw.githubusercontent.com/REPOZY/superpowers-optimized/refs/heads/main/.claude-plugin/plugin.json" \
+            2>/dev/null \
+            | grep '"version"' | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo "")
+        # Cache the result (even if empty, to avoid hammering on no-internet)
+        if [ -n "$remote_version" ]; then
+            mkdir -p "$cache_dir"
+            printf '%s' "$remote_version" > "$cache_file"
+        fi
+    fi
+
+    [ -z "$remote_version" ] && return
+    [ "$remote_version" = "$local_version" ] && return
+
+    # Semver comparison: is remote > local?
+    local IFS='.'
+    local local_parts=($local_version)
+    local remote_parts=($remote_version)
+    for i in 0 1 2; do
+        local l="${local_parts[$i]:-0}"
+        local r="${remote_parts[$i]:-0}"
+        if [ "$r" -gt "$l" ]; then
+            update_notice="\n\n<important-reminder>IN YOUR FIRST REPLY AFTER SEEING THIS MESSAGE YOU MUST TELL THE USER: \U0001F504 **Superpowers Optimized v${remote_version} is available** (you have v${local_version}). Run \`/plugin update superpowers-optimized\` to update.</important-reminder>"
+            return
+        elif [ "$l" -gt "$r" ]; then
+            return  # local is ahead of remote (dev build)
+        fi
+    done
+}
+
+# Run silently — a failure here must never break the session
+check_for_updates 2>/dev/null || true
+
+# ── Legacy skills warning ──────────────────────────────────────────────────────
 warning_message=""
 legacy_skills_dir="${HOME}/.config/superpowers/skills"
 if [ -d "$legacy_skills_dir" ]; then
     warning_message="\n\n<important-reminder>IN YOUR FIRST REPLY AFTER SEEING THIS MESSAGE YOU MUST TELL THE USER:⚠️ **WARNING:** Superpowers now uses Claude Code's skills system. Custom skills in ~/.config/superpowers/skills will not be read. Move custom skills to ~/.claude/skills instead. To make this message go away, remove ~/.config/superpowers/skills</important-reminder>"
 fi
 
-# Read using-superpowers body (skip YAML frontmatter to reduce prompt noise)
+# ── Load using-superpowers skill body ─────────────────────────────────────────
 using_superpowers_content=$(awk '
 NR == 1 && $0 == "---" { in_frontmatter = 1; next }
 in_frontmatter && $0 == "---" { in_frontmatter = 0; next }
 !in_frontmatter { print }
 ' "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>&1 || echo "Error reading using-superpowers skill")
 
-# Escape string for JSON embedding using bash parameter substitution.
-# Each ${s//old/new} is a single C-level pass - orders of magnitude
-# faster than the character-by-character loop this replaces.
+# ── JSON escaping ──────────────────────────────────────────────────────────────
 escape_for_json() {
     local s="$1"
     s="${s//\\/\\\\}"
@@ -36,12 +98,11 @@ escape_for_json() {
 
 using_superpowers_escaped=$(escape_for_json "$using_superpowers_content")
 warning_escaped=$(escape_for_json "$warning_message")
-session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers-optimized.\n\n**The `superpowers-optimized:using-superpowers` guidance is loaded below. For all other skills, use the `Skill` tool.**\n\n${using_superpowers_escaped}\n\n${warning_escaped}\n</EXTREMELY_IMPORTANT>"
+update_escaped=$(escape_for_json "$update_notice")
 
-# Output context injection as JSON.
-# Keep both shapes for compatibility:
-# - Cursor hooks expect additional_context.
-# - Claude hooks expect hookSpecificOutput.additionalContext.
+session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers-optimized.\n\n**The \`superpowers-optimized:using-superpowers\` guidance is loaded below. For all other skills, use the \`Skill\` tool.**\n\n${using_superpowers_escaped}\n\n${warning_escaped}${update_escaped}\n</EXTREMELY_IMPORTANT>"
+
+# ── Output ─────────────────────────────────────────────────────────────────────
 cat <<EOF
 {
   "additional_context": "${session_context}",
