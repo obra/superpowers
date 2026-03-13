@@ -78,7 +78,7 @@ So your agent becomes a **repeatable shipping machine** instead of a one-shot co
 ### 🟧 Claude Code — Official Marketplace (recommended)
 
 Superpowers is available via the official Claude plugin marketplace:  
-https://claude.com/plugins/superpowers
+[Claude Plugin Marketplace - Superpowers](https://claude.com/plugins/superpowers)
 
 ```bash
 /plugin install superpowers@claude-plugins-official
