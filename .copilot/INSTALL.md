@@ -42,7 +42,7 @@ All skills become `/skill-name` slash commands immediately. No further setup nee
 copilot plugin list
 ```
 
-You should see all superpowers skills listed as available slash commands.
+You should see `superpowers` listed as an installed plugin. Then start a Copilot CLI session and try a slash command (e.g., `/using-superpowers`) to confirm skills are available.
 
 ## Updating
 
