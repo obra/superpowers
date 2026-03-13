@@ -34,24 +34,33 @@ So your agent becomes a **repeatable shipping machine** instead of a one-shot co
 
 ---
 
-## 🧠 The “Superpowers loop”
-
-<table>
-  <tr>
-    <td width="20%" align="center"><b>1</b><br/>🧩 Clarify</td>
-    <td width="20%" align="center"><b>2</b><br/>🧱 Spec</td>
-    <td width="20%" align="center"><b>3</b><br/>🗺️ Plan</td>
-    <td width="20%" align="center"><b>4</b><br/>🛠️ Execute</td>
-    <td width="20%" align="center"><b>5</b><br/>🧪 Verify</td>
-  </tr>
-  <tr>
-    <td align="center">Ask the right questions first</td>
-    <td align="center">Write a design you can read</td>
-    <td align="center">Break work into tiny tasks</td>
-    <td align="center">Use worktrees + subagents</td>
-    <td align="center">TDD + evidence-based completion</td>
-  </tr>
-</table>
+@@
+ ## 🧠 The “Superpowers loop”
+ 
+ <table>
+   <tr>
+-    <td width="20%" align="center"><b>1</b><br/>🧩 Clarify</td>
+-    <td width="20%" align="center"><b>2</b><br/>🧱 Spec</td>
+-    <td width="20%" align="center"><b>3</b><br/>🗺️ Plan</td>
+-    <td width="20%" align="center"><b>4</b><br/>🛠️ Execute</td>
+-    <td width="20%" align="center"><b>5</b><br/>🧪 Verify</td>
++    <td width="16.6%" align="center"><b>1</b><br/>🧩 Clarify</td>
++    <td width="16.6%" align="center"><b>2</b><br/>🧱 Spec</td>
++    <td width="16.6%" align="center"><b>3</b><br/>🗺️ Plan</td>
++    <td width="16.6%" align="center"><b>4</b><br/>🛠️ Execute</td>
++    <td width="16.6%" align="center"><b>5</b><br/>🧾 Review</td>
++    <td width="16.6%" align="center"><b>6</b><br/>🧪 Verify</td>
+   </tr>
+   <tr>
+     <td align="center">Ask the right questions first</td>
+     <td align="center">Write a design you can read</td>
+     <td align="center">Break work into tiny tasks</td>
+     <td align="center">Use worktrees + subagents</td>
+-    <td align="center">TDD + evidence-based completion</td>
++    <td align="center">Spec compliance, then code quality</td>
++    <td align="center">TDD + evidence-based completion</td>
+   </tr>
+ </table>
 
 ---
 
