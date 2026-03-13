@@ -62,7 +62,8 @@ $settingsJson | Set-Content $SettingsFile -Encoding UTF8
 Write-Host "OK settings.json configured" -ForegroundColor Green
 
 # 4. Install worktrunk (optional)
-if (-not (Get-Command wt -ErrorAction SilentlyContinue)) {
+$cargoBin = "$env:USERPROFILE\.cargo\bin\wt.exe"
+if (-not (Test-Path $cargoBin)) {
     if (Get-Command cargo -ErrorAction SilentlyContinue) {
         Write-Host "Installing worktrunk..." -ForegroundColor Yellow
         cargo install worktrunk
