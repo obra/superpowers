@@ -44,6 +44,8 @@ All agents use `subagent_type: "general-purpose"` to ensure access to all tools 
 
 **Agent result parsing:** Agents report in structured text format. Claude Code reads the agent's output and extracts the relevant fields — no JSON parsing required.
 
+**Harness requirement:** This skill dispatches 6 specialized subagents and requires a platform with subagent support (such as Claude Code or Codex). If subagents are not available, notify the user and stop — verify-spec cannot run in single-agent mode.
+
 ## The Process
 
 You MUST follow these phases in order.
