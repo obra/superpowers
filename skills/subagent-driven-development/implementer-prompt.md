@@ -38,6 +38,22 @@ Task tool (general-purpose):
 
     Work from: [directory]
 
+    ## Tool Usage
+
+    **IMPORTANT: Use dedicated Claude Code tools for file operations — never bash commands.**
+
+    | Operation | Use this | NOT this |
+    |-----------|----------|----------|
+    | Read files | `Read` tool | `cat`, `head`, `tail`, `sed` |
+    | Create files | `Write` tool | `echo >`, `cat <<EOF` |
+    | Edit files | `Edit` tool | `sed`, `awk`, `perl -i` |
+    | Find files | `Glob` tool | `find`, `ls` |
+    | Search content | `Grep` tool | `grep`, `rg` |
+    | Everything else | `Bash` tool | — |
+
+    Reserve `Bash` exclusively for running tests, git commands, package managers, and other system/terminal operations.
+    Using bash to modify files produces invisible changes that can't be reviewed and silently break files.
+
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
 
