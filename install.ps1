@@ -78,9 +78,9 @@ Write-Host ""
 Write-Host "=== 설치 완료 ===" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "사용 방법:"
-Write-Host "  /brainstorm   — 아이디어 설계 대화"
-Write-Host "  /write-plan   — 구현 계획서 작성"
-Write-Host "  /execute-plan — 계획 단계별 실행"
-Write-Host "  wt switch <branch> — 병렬 worktree 전환"
+Write-Host "  /brainstorm   -아이디어 설계 대화"
+Write-Host "  /write-plan   -구현 계획서 작성"
+Write-Host "  /execute-plan -계획 단계별 실행"
+Write-Host "  wt switch [branch] - 병렬 worktree 전환"
 Write-Host ""
 Write-Host "새 Claude Code 세션을 시작하면 superpowers가 자동으로 활성화됩니다." -ForegroundColor Green
