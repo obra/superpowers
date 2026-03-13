@@ -36,7 +36,7 @@ Save to `docs/plans/YYYY-MM-DD-<feature-name>.md`.
 - Use exact file paths.
 - Include exact verification commands and expected outcomes.
 - Use TDD ordering when code behavior changes.
-- For especially complex or ambiguous features, you may first run `prompt-optimizer` on the user’s request to tighten scope before finalizing the plan.
+- For ambiguous features, ask clarifying questions before finalizing the plan rather than guessing.
 
 ## Task Template
 

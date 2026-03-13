@@ -1,5 +1,146 @@
 # Superpowers Release Notes
 
+## v5.0.0 (2026-03-13)
+
+Major overhaul focused on signal-to-noise ratio: every skill must earn its place by changing behavior Claude wouldn't follow on its own. Role-play skills merged into the skills that use them, router redesigned for zero-cost micro-tasks, and two new killer features added (error recovery intelligence and progress visibility).
+
+### Breaking Changes
+
+**6 skills removed (merged or deleted)**
+
+The following skills no longer exist as standalone skills. Their useful parts have been absorbed into the skills that invoke them:
+
+- `senior-engineer` — Engineering rigor sections merged into `brainstorming` (design-phase) and `executing-plans` (implementation-phase). The role-play prompt ("you are an expert with 30 years experience") was removed as it didn't change behavior — specific rules do.
+- `testing-specialist` — Advanced test strategy (integration, E2E, property-based, performance, flaky test diagnosis, coverage strategy) merged into `test-driven-development` as a new "Advanced Test Strategy" section.
+- `security-reviewer` — Full OWASP/CWE security checklist, severity enforcement, and auto-trigger conditions merged into `requesting-code-review` as a built-in "Security Review" section. The `protect-secrets.js` hook continues to handle automated enforcement.
+- `adaptive-workflow-selector` — 3-tier complexity classification (micro/lightweight/full) folded directly into `using-superpowers` as an inline "Complexity Classification" section. No longer requires a separate skill invocation.
+- `prompt-optimizer` — Removed. Rarely triggered, marginal value. Brainstorming already handles ambiguous requests through clarifying questions.
+- `writing-skills` — Removed. Developer-only meta-skill, not user-facing value. Contributing guide updated in README.
+
+**Skill count: 24 → 19** (5 deleted, 1 new)
+
+**`adaptive-workflow-selector` no longer exists as a standalone skill.** If your CLAUDE.md or custom workflows reference it, update them to use `using-superpowers` which now handles complexity classification inline.
+
+### Added
+
+**error-recovery — Project-specific error-to-solution intelligence**
+
+New skill that maintains `known-issues.md` at the project root — a mapping of recurring errors to their proven solutions. Designed for errors that waste time when rediscovered each session: environment setup, missing services, platform-specific issues, configuration problems.
+
+- Consulted automatically by `systematic-debugging` in a new Phase 0 (before investigation begins)
+- Read by `using-superpowers` during the entry sequence when the file exists
+- Updated after resolving bugs that meet recurrence criteria (environment-dependent, config, platform-specific)
+- Entries kept concise: error pattern, cause, fix command, context
+- File capped at 50 entries with pruning guidance
+
+**track-session-stats.js — Progress visibility hook**
+
+New PostToolUse hook (triggered on Skill tool calls) that tracks skill invocations to `session-stats.json`. Provides:
+- Session duration
+- Total skill invocations with per-skill breakdown
+- Auto-expires after 2 hours (new session)
+- Integrated into `stop-reminders.js` which now surfaces a session summary line
+
+**Micro-task detection in skill-activator.js**
+
+The UserPromptSubmit hook now detects micro-tasks (typo fixes, variable renames, import additions, etc.) and outputs `{}` — zero routing overhead. Patterns include:
+- "fix the typo on line 42" → skipped
+- "rename foo to bar" → skipped
+- "add missing import" → skipped
+- "build me a new auth system" → routed normally
+
+**Confidence threshold in skill-activator.js**
+
+Skill matching now requires a minimum score of 2 (was 1). Single-keyword matches that produced false positives are filtered out:
+- "review" alone → no suggestion (was: suggested code review)
+- "review my code before merge" → correctly routes to requesting-code-review
+
+**3-tier complexity classification in using-superpowers**
+
+Replaces the separate `adaptive-workflow-selector` skill with an inline classification:
+- **Micro**: typo fix, single rename, 1-line config change → skip everything, just do it
+- **Lightweight**: ~2 files, no new behavior/architecture → implement directly, only verification-before-completion at the end
+- **Full**: anything else → complete pipeline (brainstorming → planning → execution → review → verify)
+
+**Lightweight fast path**
+
+Lightweight tasks now skip brainstorming, planning, worktrees, and parallel dispatch. Only gate: `verification-before-completion` when done. This eliminates the previous 3-skill-invocation overhead for small changes.
+
+### Changed
+
+**brainstorming: Added Engineering Rigor section**
+
+Absorbed from senior-engineer: requirements verification, edge case identification, explicit trade-off evaluation, SOLID principles, architectural risk flagging. Removed prompt-optimizer reference.
+
+**executing-plans: Added Engineering Rigor for Complex Tasks section**
+
+Absorbed from senior-engineer: approach validation against requirements, edge case identification, simpler alternative consideration, hidden coupling prevention. Removed senior-engineer reference.
+
+**test-driven-development: Added Advanced Test Strategy section**
+
+Absorbed from testing-specialist: integration tests, E2E tests, property-based tests, performance tests, flaky test diagnosis, coverage strategy. Removed testing-specialist reference.
+
+**requesting-code-review: Added Security Review (Built-In) section**
+
+Absorbed from security-reviewer: OWASP Top 10/CWE scan, input validation, auth flow review, secrets handling, dependency vulnerabilities, logging hygiene. Auto-triggers when changes touch auth, data handling, APIs, secrets, crypto, or infrastructure. Critical/High findings block merge. Updated description to include security-related trigger keywords.
+
+**receiving-code-review: Updated security finding reference**
+
+Removed standalone security-reviewer reference. Security findings now come from the integrated security section in requesting-code-review.
+
+**subagent-driven-development: Removed senior-engineer references**
+
+Replaced "invoke senior-engineer subagent" with inline guidance: validate approach against requirements, consider simpler alternatives. Blocked task protocol updated similarly.
+
+**writing-plans: Removed prompt-optimizer reference**
+
+Replaced with direct guidance: ask clarifying questions for ambiguous features rather than invoking a separate prompt optimization step.
+
+**systematic-debugging: Added Phase 0 (Check Known Issues)**
+
+New first phase before investigation: check `known-issues.md` for the error message/code/test name, try documented solution first. If it works, stop — no further investigation needed. Added post-fix prompt to update known-issues.md for recurring errors.
+
+**using-superpowers: Complete rewrite**
+
+- Entry sequence simplified: token-efficiency → classify complexity → check state.md → check known-issues.md → follow appropriate path
+- Removed adaptive-workflow-selector invocation
+- Added inline complexity classification (micro/lightweight/full)
+- Removed security-reviewer from routing guide (now built into requesting-code-review)
+- Updated red flags section
+
+**token-efficiency: Updated description**
+
+Removed adaptive-workflow-selector reference. Added "exploration tracking" to description.
+
+**skill-rules.json: Rebuilt**
+
+- Removed 6 rules for deleted skills (adaptive-workflow-selector, senior-engineer, testing-specialist, security-reviewer, prompt-optimizer, writing-skills)
+- Added error-recovery rule
+- Merged security keywords into requesting-code-review rule
+- Merged testing-specialist keywords into test-driven-development rule
+- Total: 16 → 14 rules
+
+**hooks.json: Added track-session-stats**
+
+New PostToolUse hook entry for Skill matcher, running `track-session-stats.js`.
+
+**stop-reminders.js: Added session stats summary**
+
+Now loads `session-stats.json` and includes a session summary line (duration, skill count, breakdown) in stop-hook output alongside existing TDD and commit reminders.
+
+**AGENTS.minimal.md: Updated to reflect new skill set**
+
+Removed references to adaptive-workflow-selector, senior-engineer, security-reviewer, testing-specialist, prompt-optimizer. Added error-recovery and known-issues.md guidance.
+
+**README.md: Complete rewrite**
+
+- Added workflow diagram showing the complete hook and routing flow
+- Updated feature comparison table (7 hooks, 3-tier routing, integrated security, error recovery, progress visibility)
+- Updated Skills Library to 19 skills organized by category (Core Workflow, Design & Planning, Execution, Quality & Testing, Review & Integration, Intelligence)
+- Listed all 7 hooks with their matchers and descriptions
+- Updated contributing guide (removed writing-skills reference)
+- Added "Proportional overhead" to philosophy section
+
 ## v4.6.0 (2026-03-11)
 
 This release integrates self-consistency reasoning (Wang et al., ICLR 2023) into the two skills where single-chain reasoning failures are most expensive: root cause diagnosis and completion verification. Also includes plugin manifest fixes, marketplace metadata improvements, and README updates with research-driven optimization documentation and shields.io badges.

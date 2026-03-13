@@ -28,8 +28,8 @@ Announce: `I'm using subagent-driven-development to execute this plan.`
 - Run code-quality review.
 - If quality fails, return to implementer and re-review.
 - Mark task complete.
-   - For complex or high-risk tasks, you may dispatch a `senior-engineer` subagent to review or refine the approach before or after the implementer’s work.
-   - For tasks centered on frontend/UI, you may apply `frontend-craftsmanship` standards to guide structure, styling, and accessibility.
+   - For complex or high-risk tasks, validate the approach against requirements and consider simpler alternatives before or after the implementer’s work.
+   - For tasks centered on frontend/UI, apply `frontend-craftsmanship` standards to guide structure, styling, and accessibility.
 4. Run final whole-branch review.
 5. Invoke `finishing-a-development-branch`.
 
@@ -82,7 +82,7 @@ When an implementer fails on the same task after 2 attempts:
 
 1. Stop. Do not attempt a third implementation.
 2. Surface the block to the user with: task name, failure evidence, and what was tried.
-3. If the block is architectural or design-level: invoke `senior-engineer` subagent to review the approach before attempting again.
+3. If the block is architectural or design-level: reassess the approach — validate against requirements, identify edge cases, and consider simpler alternatives before attempting again.
 4. If the user is unavailable and the task is non-critical: document the block in `state.md` and advance to the next independent task. Never silently skip or mark a blocked task complete.
 
 ## Hard Rules

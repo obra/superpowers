@@ -6,6 +6,11 @@
  * context about which superpowers-optimized skills are relevant.
  * This reinforces the using-superpowers routing system deterministically.
  *
+ * Features:
+ * - Micro-task detection: short, specific prompts skip skill routing entirely
+ * - Confidence threshold: only suggests skills when match confidence is meaningful
+ * - Smart routing: fewer false positives, zero overhead for simple tasks
+ *
  * Input:  stdin JSON with { prompt, session_id, cwd, ... }
  * Output: stdout JSON with additionalContext suggesting relevant skills
  */
@@ -29,9 +34,47 @@ try {
 
 const PRIORITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
 
+// Minimum score threshold — matches below this are discarded as noise
+const CONFIDENCE_THRESHOLD = 2;
+
+/**
+ * Detect micro-tasks that should skip skill routing entirely.
+ * Returns true if the prompt is clearly a small, specific action.
+ */
+function isMicroTask(prompt) {
+  if (!prompt || typeof prompt !== 'string') return false;
+
+  const lower = prompt.toLowerCase().trim();
+  const wordCount = lower.split(/\s+/).length;
+
+  // Very short prompts with specific action words are likely micro-tasks
+  if (wordCount <= 8) {
+    const microPatterns = [
+      /^(fix|change|rename|update|replace|set|remove|delete|add)\s+(the\s+)?(typo|name|variable|import|spacing|indent)/i,
+      /^rename\s+\S+\s+to\s+\S+$/i,
+      /^(change|update|set)\s+.+\s+(to|=)\s+.+$/i,
+      /^remove\s+(the\s+)?(unused|extra|duplicate)\s+/i,
+      /^add\s+(a\s+)?(missing\s+)?(import|comma|semicolon|bracket|paren)/i,
+      /^fix\s+(the\s+)?(typo|spelling|whitespace|indent(ation)?)/i,
+    ];
+
+    if (microPatterns.some(p => p.test(lower))) {
+      return true;
+    }
+  }
+
+  // Single-line file reference with small action
+  if (wordCount <= 12 && /line\s+\d+/i.test(lower) && /(fix|change|update|rename|remove)/i.test(lower)) {
+    return true;
+  }
+
+  return false;
+}
+
 /**
  * Score a prompt against skill rules.
  * Returns matched rules sorted by priority, max 3.
+ * Applies confidence threshold to filter weak matches.
  */
 function matchSkills(prompt) {
   if (!prompt || typeof prompt !== 'string') return [];
@@ -61,7 +104,8 @@ function matchSkills(prompt) {
       }
     }
 
-    if (score > 0) {
+    // Apply confidence threshold — single keyword matches are noise
+    if (score >= CONFIDENCE_THRESHOLD) {
       matches.push({
         skill: rule.skill,
         priority: rule.priority,
@@ -109,6 +153,12 @@ async function main() {
     const data = JSON.parse(input);
     const prompt = data.prompt || '';
 
+    // Micro-task fast path: skip routing entirely
+    if (isMicroTask(prompt)) {
+      process.stdout.write('{}');
+      return;
+    }
+
     const matches = matchSkills(prompt);
 
     if (matches.length === 0) {
@@ -132,5 +182,5 @@ async function main() {
 if (require.main === module) {
   main();
 } else {
-  module.exports = { matchSkills, buildContext, RULES };
+  module.exports = { matchSkills, buildContext, isMicroTask, RULES, CONFIDENCE_THRESHOLD };
 }

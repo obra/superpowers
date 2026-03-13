@@ -31,6 +31,15 @@
             "command": "node '${CLAUDE_PLUGIN_ROOT}/hooks/track-edits.js'"
           }
         ]
+      },
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node '${CLAUDE_PLUGIN_ROOT}/hooks/track-session-stats.js'"
+          }
+        ]
       }
     ],
     "Stop": [

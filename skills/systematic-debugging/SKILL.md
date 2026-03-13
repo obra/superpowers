@@ -20,6 +20,11 @@ This is non-negotiable. Every fix must trace back to a proven root cause. A fix 
 
 ## Four Phases
 
+### Phase 0: Check Known Issues
+- If `known-issues.md` exists at the project root, search it for the error message, error code, or failing test name.
+- If a match is found, try the documented solution **first**. If it resolves the issue, stop — no further investigation needed.
+- If no match or the documented solution doesn't work, proceed to Phase 1.
+
 ### Phase 1: Investigate
 - Read the **full** error output — not just the last line.
 - Reproduce the bug reliably. If you cannot reproduce, you cannot fix.
@@ -86,8 +91,13 @@ If you catch yourself doing any of these, **restart from Phase 1**:
 - `defense-in-depth.md` — validation at every data layer
 - `condition-based-waiting.md` — replace timeouts with condition polling
 
+## Post-Fix: Update Known Issues
+
+After resolving a bug that is likely to recur (environment-dependent, configuration, platform-specific, or external-state errors), offer to add the error→solution mapping to `known-issues.md` using the format defined in `error-recovery`.
+
 ## Related Skills
 
 - `self-consistency-reasoner` — multi-path reasoning for root cause diagnosis
 - `test-driven-development` — write the regression test before the fix
 - `verification-before-completion` — prove the fix with fresh evidence
+- `error-recovery` — consult and update project-specific known issues

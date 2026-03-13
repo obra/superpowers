@@ -25,8 +25,16 @@ Announce: `I'm using the executing-plans skill to implement this plan.`
 6. Run required verification commands for each task.
 7. Report completed work and evidence.
 8. Wait for feedback, then continue with next batch.
-9. For particularly complex or architectural tasks, consider invoking `senior-engineer` for design and approach validation before implementation.
-10. For tasks involving UI/UX or frontend implementation, apply guidance from `frontend-craftsmanship` to ensure production-grade, accessible interfaces.
+9. For tasks involving UI/UX or frontend implementation, apply guidance from `frontend-craftsmanship` to ensure production-grade, accessible interfaces.
+
+## Engineering Rigor for Complex Tasks
+
+When a task is architectural, high-risk, or touches cross-module boundaries:
+- Validate the approach against requirements and constraints before coding.
+- Identify edge cases and error paths specific to this task.
+- Consider simpler architectures or alternative approaches.
+- Ensure changes remain maintainable and don't create hidden coupling.
+- If 2 implementation attempts fail, pause and reassess the approach rather than forcing a third attempt.
 
 ## Execution Rules
 

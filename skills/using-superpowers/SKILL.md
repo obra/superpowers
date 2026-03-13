@@ -32,24 +32,45 @@ Technical execution includes code edits, debugging, planning, review, test statu
 ## Entry Sequence
 
 1. Invoke `token-efficiency` at session start — applies to all sessions, always.
-2. For technical tasks, invoke `adaptive-workflow-selector`.
+2. Classify the task as **micro**, **lightweight**, or **full** (see Complexity Classification below).
 3. If resuming work from a prior session, read `state.md` if it exists. Use `context-management` to save state before ending a session with ongoing work.
-4. Invoke selected workflow skills in order.
-5. If no skill applies, continue normally.
+4. If `known-issues.md` exists at the project root, read it to avoid rediscovering known error→solution mappings.
+5. Follow the path for the classified complexity level.
+
+## Complexity Classification
+
+Classify every task into one of three levels. Do not invoke a separate skill for this — decide inline.
+
+### Micro (skip everything)
+- Typo fix, single variable rename, 1-line config change
+- **Action:** Just do it. No skills needed.
+
+### Lightweight (fast path)
+All of these must be true:
+- Change scope is small (~2 files or fewer)
+- No new behavior or architecture change
+- No cross-module dependency risk
+- No migration or data-shape change
+
+**Action:** Go directly to implementation. Only gate: invoke `verification-before-completion` when done. Skip brainstorming, planning, worktrees, and parallel dispatch.
+
+### Full (complete pipeline)
+Anything that doesn't qualify as micro or lightweight.
+
+**Action:** Follow the Routing Guide below for the full skill pipeline.
 
 ## Routing Guide
 
-- New behavior or architecture: `brainstorming` -> `writing-plans`
+- New behavior or architecture: `brainstorming` → `writing-plans`
 - Plan execution (same session): `subagent-driven-development`
 - Plan execution (separate session): `executing-plans`
-- Bug/test failure: `systematic-debugging` -> `test-driven-development`
+- Bug/test failure: `systematic-debugging` → `test-driven-development`
 - Completion claim: `verification-before-completion`
 - Branch integration: `finishing-a-development-branch`
-- Extra review flow: `requesting-code-review` / `receiving-code-review`
+- Code review (includes security): `requesting-code-review` / `receiving-code-review`
 - Independent parallel tasks: `dispatching-parallel-agents`
 - Cross-session state persistence: `context-management`
 - UI/frontend implementation: apply `frontend-craftsmanship` standards
-- Security-sensitive changes (auth, data handling, exposed APIs): `security-reviewer` before merge
 
 ## Context Hygiene
 
@@ -64,7 +85,7 @@ When output feeds another agent/tool step, prefer JSON or YAML schemas defined b
 ## Red Flags
 
 - "I'll just do this first without a skill"
-- "No need to run selector; this is obvious"
 - "Keep all prior assistant text in context"
+- Claiming "done" without running verification
 
 If a red flag appears, restart from Entry Sequence.

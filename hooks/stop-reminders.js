@@ -22,6 +22,7 @@ const LOG_DIR = path.join(
   'hooks-logs'
 );
 const EDIT_LOG = path.join(LOG_DIR, 'edit-log.txt');
+const STATS_FILE = path.join(LOG_DIR, 'session-stats.json');
 const GUARD_FILE = path.join(LOG_DIR, 'stop-hook-fired.lock');
 
 // Guard: only fire once per session (prevent infinite loop)
@@ -125,11 +126,45 @@ function getRecentEdits() {
 }
 
 /**
- * Generate contextual reminders based on edit history.
+ * Load session statistics for progress visibility.
+ */
+function getSessionStats() {
+  try {
+    if (!fs.existsSync(STATS_FILE)) return null;
+    return JSON.parse(fs.readFileSync(STATS_FILE, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Format session stats into a brief summary line.
+ */
+function formatStatsSummary(stats) {
+  if (!stats || stats.totalSkillCalls === 0) return null;
+
+  const duration = Math.round((Date.now() - new Date(stats.startedAt).getTime()) / 60000);
+  const skillNames = Object.entries(stats.skillInvocations)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, count]) => `${name} (${count}x)`)
+    .join(', ');
+
+  return `Session summary: ${duration}min, ${stats.totalSkillCalls} skill invocations [${skillNames}]`;
+}
+
+/**
+ * Generate contextual reminders based on edit history and session stats.
  * Returns array of reminder strings.
  */
 function generateReminders(edits) {
   const reminders = [];
+
+  // Session stats summary (always include if available)
+  const stats = getSessionStats();
+  const statsSummary = formatStatsSummary(stats);
+  if (statsSummary) {
+    reminders.push(statsSummary);
+  }
 
   if (edits.length === 0) return reminders;
 

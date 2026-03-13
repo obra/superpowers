@@ -9,20 +9,22 @@
 
 **The production-grade fork of obra/superpowers** — same trusted workflow, dramatically leaner, safer, and more intelligent.
 
-This repository delivers everything the original Superpowers plugin does, plus automatic workflow routing, six specialist agents, built-in safety guards, and research-backed token reductions of **up to 73 %** per session. Developers using Claude Code, Cursor, Codex, and OpenCode report faster iterations, fewer hallucinations, and zero accidental destructive commands.
+This repository delivers everything the original Superpowers plugin does, plus automatic workflow routing, built-in safety guards, integrated security review, error recovery intelligence, and research-backed token reductions of **up to 73 %** per session. Developers using Claude Code, Cursor, Codex, and OpenCode report faster iterations, fewer hallucinations, and zero accidental destructive commands.
 
 ### Why developers switch
 | Feature                  | Original Superpowers          | Superpowers Optimized                          | Real-world impact                  |
 |--------------------------|-------------------------------|------------------------------------------------|------------------------------------|
-| Workflow selection       | Manual                        | Automatic (lightweight / full)                 | No extra commands                  |
-| Specialist skills        | None                          | +6 (senior engineer, security reviewer, testing specialist, frontend craftsmanship, prompt optimizer, CLAUDE.md creator) | Targeted expertise on demand       |
-| Safety & hooks           | None                          | 5 proactive hooks (dangerous-command blocker, secrets protector, edit tracker, stop reminders, skill activator) | Zero risk of rm -rf or secret leaks|
-| Token efficiency         | Standard                      | Always-on context hygiene + pruning            | 5–10× smaller context windows      |
+| Workflow selection       | Manual                        | Automatic 3-tier (micro / lightweight / full)  | Zero overhead on simple tasks      |
+| Safety & hooks           | None                          | 7 proactive hooks (dangerous-command blocker, secrets protector, edit tracker, session stats, stop reminders, skill activator, session start) | Zero risk of rm -rf or secret leaks|
+| Security review          | None                          | Built into code review with OWASP checklist    | Security catches before merge      |
+| Error recovery           | None                          | Project-specific known-issues.md               | No rediscovering the same bug      |
+| Token efficiency         | Standard                      | Always-on context hygiene + exploration tracking | 5-10x smaller context windows     |
 | Discipline enforcement   | Instructional tone             | Rationalization tables, red flags, iron laws   | Fewer LLM shortcuts                |
-| Cross-session memory     | None                          | Persistent state.md + reviewer memory          | Continuous learning across sessions|
+| Progress visibility      | None                          | Session stats (skills used, duration, actions)  | See what the plugin did for you    |
+| Cross-session memory     | None                          | Persistent state.md + known-issues.md          | Continuous learning across sessions|
 
-**Token example** (measured on a typical feature-implementation task):  
-Original → 4820 tokens  
+**Token example** (measured on a typical feature-implementation task):
+Original → 4820 tokens
 Optimized → 1290 tokens (73 % reduction)
 
 
@@ -31,7 +33,7 @@ In any supported agent IDE, start a new chat and paste:
 
 Activate Superpowers Optimized and plan a secure user-authentication endpoint with full TDD and security review.
 
-The agent will automatically route to the correct workflow, apply safety guards, and bring in the security-reviewer specialist — no manual skill selection required.
+The agent will automatically route to the correct workflow, apply safety guards, and run an integrated security review during code review — no manual skill selection required.
 
 ### Installation (one command on most platforms)
 
@@ -46,7 +48,7 @@ The agent will automatically route to the correct workflow, apply safety guards,
 /plugin-add superpowers-optimized
 
 
-**Codex / OpenCode**  
+**Codex / OpenCode**
 Tell the agent:
 
 Fetch and follow instructions from https://raw.githubusercontent.com/REPOZY/superpowers-optimized/refs/heads/main/.codex/INSTALL.md
@@ -56,16 +58,62 @@ Full platform-specific guides and update commands are in the [Installation secti
 
 ---
 
+## How It Works
 
+```
+User sends a prompt
+        │
+        ▼
+┌─ skill-activator.js (UserPromptSubmit hook) ──────────────┐
+│  Is this a micro-task? ("fix typo on line 42")            │
+│    YES → {} (no routing, zero overhead)                   │
+│    NO  → Score against 14 skill rules                     │
+│          Score < 2? → {} (weak match, skip)               │
+│          Score ≥ 2? → Inject skill suggestions            │
+└───────────────────────────────────────────────────────────┘
+        │
+        ▼
+┌─ using-superpowers (always loaded at SessionStart) ───────┐
+│  Classify: micro / lightweight / full                     │
+│                                                           │
+│  MICRO → just do it                                       │
+│  LIGHTWEIGHT → implement → verification-before-completion │
+│  FULL → route to appropriate pipeline:                    │
+│    New feature → brainstorming → writing-plans → execute  │
+│    Bug/error  → systematic-debugging → TDD → verify       │
+│    Review     → requesting-code-review (w/ security)      │
+│    Done?      → verification-before-completion            │
+│    Merge?     → finishing-a-development-branch            │
+└───────────────────────────────────────────────────────────┘
+        │
+        ▼  (meanwhile, running on every tool call)
+┌─ Safety Hooks (PreToolUse) ───────────────────────────────┐
+│  block-dangerous-commands.js → 30+ patterns (rm -rf, etc) │
+│  protect-secrets.js → 50+ patterns (.env, SSH keys, etc)  │
+└───────────────────────────────────────────────────────────┘
+        │
+        ▼  (after every Edit/Write and Skill call)
+┌─ Tracking Hooks (PostToolUse) ────────────────────────────┐
+│  track-edits.js → logs file changes for TDD reminders     │
+│  track-session-stats.js → logs skill invocations          │
+└───────────────────────────────────────────────────────────┘
+        │
+        ▼  (when Claude stops responding)
+┌─ Stop Hook ───────────────────────────────────────────────┐
+│  stop-reminders.js →                                      │
+│    "5 source files modified without tests"                │
+│    "12 files changed, consider committing"                │
+│    "Session: 45min, 8 skill invocations [debugging 3x]"  │
+└───────────────────────────────────────────────────────────┘
+```
 
-## How it works
-From the moment you fire up your coding agent, this fork follows the original Superpowers approach: it first steps back to understand what you're really trying to do instead of jumping straight into code. It then collaborates with you to tease out a clear spec and shows it in chunks short enough to read and digest.
+From the moment you fire up your coding agent, the plugin first steps back to understand what you're really trying to do instead of jumping straight into code. It collaborates with you to tease out a clear spec and shows it in chunks short enough to read and digest.
 
-Once you approve the design, your agent puts together an implementation plan that an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing could follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY, while this fork's optimizations keep the instructions focused and token‑efficient.
+Once you approve the design, your agent puts together an implementation plan that emphasizes true red/green TDD, YAGNI, and DRY, while the optimizations keep instructions focused and token-efficient.
 
-Next up, once you say "go", it launches either a *subagent-driven-development* process or *executing-plans*, having agents work through each engineering task with staged reviews (spec compliance, then code quality) and integrated specialists where useful (e.g., security-reviewer on sensitive changes, frontend-craftsmanship on UI work).
+Once you say "go", it launches either *subagent-driven-development* or *executing-plans*, working through each task with staged reviews (spec compliance, then code quality, with integrated security analysis on sensitive changes).
 
-Because the skills trigger automatically and are optimized for smaller, more relevant context windows, you don't need to do anything special. Your coding agent just has **optimized Superpowers**.
+**The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions. But the overhead is proportional — micro-tasks skip everything, lightweight tasks get one gate, full tasks get the complete pipeline.
 
 ---
 
@@ -84,7 +132,7 @@ Key findings that shaped this fork:
 - **Agents used 14-22% more reasoning tokens** when given longer context files, suggesting cognitive overload rather than helpful guidance.
 - **Agents followed instructions compliantly** (using mentioned tools 1.6-2.5x more often) but this compliance didn't translate to better outcomes.
 
-**What we changed:** Every skill was rewritten as a concise operational checklist instead of verbose prose. The `CLAUDE.md` contains only minimal requirements (specific tooling, critical constraints, conventions). The `adaptive-workflow-selector` skips unnecessary skill loading for simple tasks. The result is lower prompt overhead in every session and fewer failures from instruction overload.
+**What we changed:** Every skill was rewritten as a concise operational checklist instead of verbose prose. The `CLAUDE.md` contains only minimal requirements (specific tooling, critical constraints, conventions). The 3-tier complexity classification (micro/lightweight/full) skips unnecessary skill loading for simple tasks. The result is lower prompt overhead in every session and fewer failures from instruction overload.
 
 ### Prior assistant responses can degrade performance
 
@@ -115,89 +163,66 @@ Key findings that shaped this fork:
 These research insights drive four core principles throughout the fork:
 1. **Less is more** — concise skills, minimal always-on instructions, and explicit context hygiene
 2. **Fresh context beats accumulated context** — subagents get clean, task-scoped prompts instead of inheriting polluted history
-3. **Compliance ≠ competence** — agents follow instructions reliably, so the instructions themselves must be carefully engineered (rationalization tables, red flags, forbidden phrases) rather than simply comprehensive
+3. **Compliance != competence** — agents follow instructions reliably, so the instructions themselves must be carefully engineered (rationalization tables, red flags, forbidden phrases) rather than simply comprehensive
 4. **Verify your own reasoning** — multi-path self-consistency at critical decision points (diagnosis, verification) catches confident-but-wrong single-chain failures before they become expensive mistakes
 
 
 ---
 
 
-## The Basic Workflow
+## Skills Library (19 skills)
 
-1. **adaptive-workflow-selector** - Activates first. Chooses `lightweight` vs `full` workflow path based on scope/risk.
+### Core Workflow
+- **using-superpowers** — Mandatory workflow router with 3-tier complexity classification (micro/lightweight/full)
+- **token-efficiency** — Always-on: concise responses, parallel tool batching, exploration tracking, no redundant work
+- **context-management** — Persist durable state to `state.md` for cross-session continuity
 
-2. **context-management** - Persists durable state to `state.md` for cross-session continuity.
+### Design & Planning
+- **brainstorming** — Socratic design refinement with engineering rigor (requirements verification, edge case analysis, trade-off evaluation)
+- **writing-plans** — Executable implementation plans with exact paths, verification commands, and TDD ordering
+- **claude-md-creator** — Create lean, high-signal CLAUDE/AGENTS context files for repositories
 
-3. **brainstorming** (full path) - Produces approved design before implementation changes.
+### Execution
+- **executing-plans** — Batch execution with verification checkpoints and engineering rigor for complex tasks
+- **subagent-driven-development** — Parallel subagent execution with two-stage review gates (spec compliance, then code quality), blocked-task escalation, and E2E process hygiene
+- **dispatching-parallel-agents** — Concurrent subagent workflows for independent tasks
+- **using-git-worktrees** — Isolated workspace creation on feature branches
 
-4. **using-git-worktrees** - Creates isolated workspace on a feature branch and verifies clean baseline.
+### Quality & Testing
+- **test-driven-development** — RED-GREEN-REFACTOR cycle with rationalization tables, testing anti-patterns, and advanced test strategy (integration, E2E, property-based, performance)
+- **systematic-debugging** — 5-phase root cause process: known-issues check, investigation, pattern comparison, self-consistency hypothesis testing, fix-and-verify
+- **verification-before-completion** — Evidence gate for completion claims with multi-path verification reasoning and configuration change verification
+- **self-consistency-reasoner** — Internal multi-path reasoning technique (Wang et al., ICLR 2023) embedded in debugging and verification
 
-5. **writing-plans** - Creates executable implementation plan with exact paths and verification steps.
+### Review & Integration
+- **requesting-code-review** — Structured code review with integrated security analysis (OWASP, auth flows, secrets handling, dependency vulnerabilities)
+- **receiving-code-review** — Technical feedback handling with pushback rules and no-sycophancy enforcement
+- **finishing-a-development-branch** — 4-option branch completion (merge/PR/keep/discard) with safety gates
 
-6. **subagent-driven-development** or **executing-plans** - Executes the plan with staged verification.
+### Intelligence
+- **error-recovery** — Maintains project-specific `known-issues.md` mapping recurring errors to solutions, consulted before debugging
+- **frontend-craftsmanship** — Production-grade, accessible frontend standards (semantic HTML, CSS tokens, WCAG AA, fluid typography, reduced-motion)
 
-7. **test-driven-development** + **systematic-debugging** + **requesting-code-review** - Applied during execution for quality gates.
+### Hooks (7 total)
+- **skill-activator** (UserPromptSubmit) — Micro-task detection + confidence-threshold skill matching
+- **track-edits** (PostToolUse: Edit/Write) — Logs file changes for TDD reminders
+- **track-session-stats** (PostToolUse: Skill) — Tracks skill invocations for progress visibility
+- **stop-reminders** (Stop) — TDD reminders, commit nudges, and session summary
+- **block-dangerous-commands** (PreToolUse: Bash) — 30+ patterns blocking destructive commands with 3-tier severity
+- **protect-secrets** (PreToolUse: Read/Edit/Write/Bash) — 50+ patterns protecting sensitive files with allowlisting
+- **session-start** (SessionStart) — Injects using-superpowers routing into every session
 
-8. **verification-before-completion** + **finishing-a-development-branch** - Final evidence and branch integration/cleanup.
-
-**The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
-
-
-
-## Skills Library
-
-**Testing**
-- **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns: mock behavior, test-only methods, incomplete mocks, interface drift, and more)
-- **testing-specialist** - Advanced test strategy and coverage design for complex or high-risk behavior
-
-**Debugging**
-- **systematic-debugging** - 4-phase root cause process with self-consistency reasoning for hypothesis validation (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
-- **verification-before-completion** - Evidence gate for completion claims with multi-path verification reasoning, including configuration change verification (verifies outcomes reflect intended changes, not just that operations succeeded)
-- **self-consistency-reasoner** - Internal multi-path reasoning technique (Wang et al., ICLR 2023) embedded in systematic-debugging and verification-before-completion to catch confident-but-wrong single-chain reasoning
-
-
-
-## Collaboration
-
-- **brainstorming** - Socratic design refinement
-- **writing-plans** - Detailed implementation plans
-- **executing-plans** - Batch execution with checkpoints
-- **dispatching-parallel-agents** - Concurrent subagent workflows
-- **requesting-code-review** - Pre-review checklist
-- **receiving-code-review** - Responding to feedback
-- **using-git-worktrees** - Parallel development branches
-- **finishing-a-development-branch** - Merge/PR decision workflow
-- **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality), blocked-task escalation protocol, and E2E process hygiene
-- **senior-engineer** - Senior engineering collaborator for complex or architectural work
-- **security-reviewer** - Structured security and quality review for sensitive changes
-- **frontend-craftsmanship** - Production-grade, accessible frontend implementation standards with concrete checklist (semantic HTML, CSS tokens, focus-visible, prefers-reduced-motion, WCAG AA contrast, fluid typography)
-
-**Hooks**
-- **skill-activator** (UserPromptSubmit) - Proactively matches user prompts to relevant skills before Claude processes them, reinforcing the routing system
-- **track-edits** (PostToolUse) - Logs all Edit/Write operations for downstream awareness (feeds stop-reminders)
-- **stop-reminders** (Stop) - Reminds about untested changes and uncommitted work when Claude finishes a response
-- **block-dangerous-commands** (PreToolUse) - Blocks destructive bash commands (rm -rf, force push, drop table, etc.) with 3-tier severity
-- **protect-secrets** (PreToolUse) - Prevents reading, modifying, or exfiltrating sensitive files (.env, SSH keys, credentials, etc.)
-
-**Agents**
-- **code-reviewer** - Senior code review agent with persistent cross-session memory (`memory: user`)
-
-**Meta**
-- **writing-skills** - Create new skills following best practices (includes testing methodology)
-- **using-superpowers** - Introduction to the skills system
-- **adaptive-workflow-selector** - Select lightweight vs full process path
-- **context-management** - Persist durable state to `state.md` for cross-session continuity
-- **token-efficiency** - Always-on operational standard: concise responses, parallel tool batching, no redundant work. Invoked at every session start.
-- **prompt-optimizer** - Optional pre-processing to refine vague or multi-part user requests
-- **claude-md-creator** - Create lean, high-signal CLAUDE/AGENTS context files for repositories
+### Agents
+- **code-reviewer** — Senior code review agent with persistent cross-session memory
 
 
 ### Philosophy
 
-- **Test-Driven Development** - Write tests first, always
-- **Systematic over ad-hoc** - Process over guessing
-- **Complexity reduction** - Simplicity as primary goal
-- **Evidence over claims** - Verify before declaring success
+- **Test-Driven Development** — Write tests first, always
+- **Systematic over ad-hoc** — Process over guessing
+- **Complexity reduction** — Simplicity as primary goal
+- **Evidence over claims** — Verify before declaring success
+- **Proportional overhead** — Micro-tasks skip everything, full tasks get the full pipeline
 
 Read more: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
 
@@ -208,10 +233,8 @@ Skills live directly in this repository. To contribute:
 
 1. Fork the repository
 2. Create a branch for your skill
-3. Follow the `writing-skills` skill for creating and testing new skills
+3. Follow the existing skill structure in `skills/` (each skill has a `SKILL.md` with YAML frontmatter)
 4. Submit a PR
-
-See `skills/writing-skills/SKILL.md` for the complete guide.
 
 
 ### License
@@ -219,7 +242,7 @@ See `skills/writing-skills/SKILL.md` for the complete guide.
 MIT License - see LICENSE file for details
 
 
-**Support**  
-- Issues: https://github.com/REPOZY/superpowers-optimized/issues  
-- Original: https://github.com/obra/superpowers  
+**Support**
+- Issues: https://github.com/REPOZY/superpowers-optimized/issues
+- Original: https://github.com/obra/superpowers
 - Discussions: https://github.com/REPOZY/superpowers-optimized/discussions

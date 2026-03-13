@@ -26,7 +26,7 @@ Treat feedback as technical input to validate, not as instructions to apply blin
 3. Maintainability issues
 4. Minor polish
 
-When a `security-reviewer` report is available, treat its Critical and High findings as blocking until addressed or explicitly deferred by the user with documented rationale.
+Treat Critical and High security findings as blocking until addressed or explicitly deferred by the user with documented rationale.
 
 ## Forbidden Responses
 

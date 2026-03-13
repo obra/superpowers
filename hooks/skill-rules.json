@@ -11,8 +11,8 @@
       "skill": "test-driven-development",
       "type": "process",
       "priority": "critical",
-      "keywords": ["tdd", "test first", "write tests", "failing test", "red green", "test driven"],
-      "intentPatterns": ["write\\s+(a\\s+)?test", "add\\s+test", "test\\s+(for|that|this)", "need(s)?\\s+test"]
+      "keywords": ["tdd", "test first", "write tests", "failing test", "red green", "test driven", "test strategy", "test coverage", "integration test", "e2e test", "unit test", "improve coverage"],
+      "intentPatterns": ["write\\s+(a\\s+)?test", "add\\s+test", "test\\s+(for|that|this)", "need(s)?\\s+test", "(improve|increase|add)\\s+(test\\s+)?coverage", "(write|create|design)\\s+(a\\s+)?test\\s+strategy"]
     },
     {
       "skill": "verification-before-completion",
@@ -60,8 +60,8 @@
       "skill": "requesting-code-review",
       "type": "workflow",
       "priority": "medium",
-      "keywords": ["review", "code review", "check this", "look over", "review my code"],
-      "intentPatterns": ["review\\s+(my|the|this)\\s+code", "check\\s+(this|these)\\s+(before|for)", "look\\s+(over|at)\\s+(my|the|this)"]
+      "keywords": ["review", "code review", "check this", "look over", "review my code", "security review", "is this secure", "security", "vulnerability"],
+      "intentPatterns": ["review\\s+(my|the|this)\\s+code", "check\\s+(this|these)\\s+(before|for)", "look\\s+(over|at)\\s+(my|the|this)", "(is|are)\\s+(this|these)\\s+secure", "security\\s+review", "check\\s+(for\\s+)?vulnerabilit"]
     },
     {
       "skill": "frontend-craftsmanship",
@@ -71,25 +71,11 @@
       "intentPatterns": ["(build|create|make|design)\\s+(a\\s+)?(ui|frontend|website|page|dashboard|component)", "make\\s+it\\s+look\\s+(good|better|professional|nice)", "(style|design)\\s+(this|the)"]
     },
     {
-      "skill": "security-reviewer",
-      "type": "domain",
-      "priority": "high",
-      "keywords": ["security", "auth", "authentication", "authorization", "vulnerability", "owasp", "xss", "sql injection", "csrf", "secrets"],
-      "intentPatterns": ["(is|are)\\s+(this|these)\\s+secure", "security\\s+review", "check\\s+(for\\s+)?vulnerabilit"]
-    },
-    {
-      "skill": "senior-engineer",
-      "type": "domain",
+      "skill": "error-recovery",
+      "type": "workflow",
       "priority": "medium",
-      "keywords": ["architecture", "refactor", "complex", "scalab", "design pattern", "solid principles", "trade-off"],
-      "intentPatterns": ["(review|check)\\s+(the\\s+)?architecture", "how\\s+should\\s+.+\\s+be\\s+(structured|designed|architected)"]
-    },
-    {
-      "skill": "testing-specialist",
-      "type": "domain",
-      "priority": "medium",
-      "keywords": ["test strategy", "test coverage", "integration test", "e2e test", "unit test", "property-based", "performance test", "improve coverage"],
-      "intentPatterns": ["(improve|increase|add)\\s+(test\\s+)?coverage", "(write|create|design)\\s+(a\\s+)?test\\s+strategy", "what\\s+tests?\\s+(should|do)\\s+(i|we)"]
+      "keywords": ["known issues", "save this fix", "remember this error", "recurring error", "known-issues"],
+      "intentPatterns": ["(save|record|remember)\\s+(this\\s+)?(fix|error|solution)", "(update|add to|check)\\s+known.?issues"]
     },
     {
       "skill": "context-management",
@@ -111,13 +97,6 @@
       "priority": "medium",
       "keywords": ["init", "claude.md", "agents.md", "set up claude code", "create claude.md"],
       "intentPatterns": ["(create|update|write)\\s+claude\\.md", "set\\s+up\\s+claude\\s+code", "\\/init"]
-    },
-    {
-      "skill": "prompt-optimizer",
-      "type": "workflow",
-      "priority": "low",
-      "keywords": ["optimize prompt", "improve prompt", "rewrite prompt", "better prompt"],
-      "intentPatterns": ["(optimize|improve|rewrite|make.+better)\\s+(this\\s+|my\\s+)?prompt"]
     }
   ]
 }

@@ -21,8 +21,7 @@ Do not write code, edit files, or invoke implementation skills until design appr
 
 1. Inspect project context (relevant files, docs, recent commits).
 2. Ask all clarifying questions together in a single turn. Use multiple-choice format where possible to reduce round trips.
-3. For especially vague or multi-part requests, optionally invoke `prompt-optimizer` once to refine the user’s goal before designing.
-4. Propose 2-3 approaches with trade-offs and a recommendation.
+3. Propose 2-3 approaches with trade-offs and a recommendation.
 5. Present design in short sections; confirm each section.
 6. If the repo lacks `CLAUDE.md` / `AGENTS.md` and long-term collaboration is expected, consider using `claude-md-creator` to create a minimal, high-signal context file.
 7. Save approved design to `docs/plans/YYYY-MM-DD-<topic>-design.md`.
@@ -37,6 +36,15 @@ Include:
 - Error handling
 - Testing strategy
 - Rollout or migration notes (if needed)
+
+## Engineering Rigor
+
+Apply senior engineering judgment during design:
+- Verify requirements are complete and unambiguous before designing.
+- Identify edge cases, error paths, and cross-platform concerns early.
+- Evaluate trade-offs explicitly (performance vs. readability, flexibility vs. simplicity).
+- Prioritize modularity, SOLID principles, and production-ready standards.
+- Flag architectural risks that will be expensive to fix later.
 
 ## Interaction Rules
 
