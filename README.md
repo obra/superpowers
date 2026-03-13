@@ -35,29 +35,7 @@ Activate Superpowers Optimized and plan a secure user-authentication endpoint wi
 
 The agent will automatically route to the correct workflow, apply safety guards, and run an integrated security review during code review — no manual skill selection required.
 
-### Installation (one command on most platforms)
-
-**Claude Code**
-
-```
-/plugin marketplace add REPOZY/superpowers-optimized
-/plugin install superpowers-optimized@superpowers-optimized
-```
-
-**Cursor**
-
-```
-/plugin-add superpowers-optimized
-```
-
-**Codex / OpenCode**
-
-Tell the agent:
-```
-Fetch and follow instructions from https://raw.githubusercontent.com/REPOZY/superpowers-optimized/refs/heads/main/.codex/INSTALL.md
-```
-
-Full install and update commands for all platforms are in the [Installation](#installation) section below.
+See [Installation](#installation) for install, update, and uninstall commands on all platforms.
 
 ---
 
