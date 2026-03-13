@@ -39,6 +39,8 @@ digraph when_to_use {
 
 You MUST create a task for each phase step and complete in order.
 
+**Harness requirement:** This skill dispatches simulator and fixer subagents each iteration. It requires a platform with subagent support (such as Claude Code or Codex). If subagents are not available, notify the user and stop — refining-specs cannot run in single-agent mode.
+
 ```dot
 digraph refine_spec {
     rankdir=TB;
