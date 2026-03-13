@@ -22,6 +22,28 @@ verify-spec is NOT a gate — the user chooses to invoke it. The existing skills
 - Pure library/package work with no runnable app
 - Spec only describes data models or internal architecture with no observable behavior
 
+**Invocation:** The user invokes this skill via `/verify-spec` or by asking Claude Code to verify a spec. Claude Code loads `skills/verify-spec/SKILL.md` and follows it.
+
+## Prerequisites
+
+- **Playwright MCP plugin** must be configured for web app verification. If not available, the skill falls back to API/CLI verification methods only. If the spec describes browser-based features and Playwright is unavailable, the skill notifies the user and stops.
+- **A runnable app** — the project must have a start command detectable from project files.
+- **A spec file** — the spec must exist in `docs/superpowers/specs/`.
+
+## Files Produced
+
+| File | Purpose |
+|------|---------|
+| `skills/verify-spec/SKILL.md` | The orchestration skill — Claude Code follows this |
+| `skills/verify-spec/server-runner-prompt.md` | Prompt template for the server runner agent |
+| `skills/verify-spec/scenario-generator-prompt.md` | Prompt template for the scenario generator agent |
+| `skills/verify-spec/navigator-prompt.md` | Prompt template for the navigator agent |
+| `skills/verify-spec/planner-prompt.md` | Prompt template for the planner agent |
+| `skills/verify-spec/coder-prompt.md` | Prompt template for the coder agent |
+| `skills/verify-spec/test-writer-prompt.md` | Prompt template for the test writer agent |
+
+No existing files are modified.
+
 ## The 5 Subagents
 
 Each iteration dispatches up to 5 specialized agents. Claude Code orchestrates them.
@@ -104,11 +126,13 @@ The scenario generator detects project type from the spec and tells the navigato
 
 ### Checklist Tracking
 
-Claude Code maintains a feature checklist throughout. Each scenario is one of:
+Claude Code maintains the feature checklist using the TaskCreate/TaskUpdate tools. Each scenario from the scenario generator becomes a task. Task status maps to:
 - `pending` — not yet tested
-- `pass` — navigator confirmed, test written
-- `fail` — navigator found issue, fix in progress
-- `blocked` — coder couldn't fix, surfaced to user
+- `in_progress` — navigator is currently testing
+- `completed` — navigator confirmed, test written
+- Tasks with `blocked` metadata — coder couldn't fix, surfaced to user
+
+Using the task system ensures checklist state persists across long iteration loops without relying on context window memory.
 
 ## Subagent Prompt Design
 
@@ -118,7 +142,8 @@ Each agent gets a precisely crafted inline prompt. No agent reads files — Clau
 - Project directory path
 - Instruction to auto-detect start command (check package.json scripts, Makefile, Cargo.toml, manage.py, docker-compose, etc.)
 - Instruction to run the app and watch stdout/stderr for 10-15 seconds
-- Report format: `{ status: "running" | "failed", command: "...", port: N, errors: [...], warnings: [...] }`
+- Instruction to detect port from: (1) stdout output matching common patterns like "listening on port XXXX", (2) framework defaults (e.g., Vite=5173, Next.js=3000, Django=8000), (3) project config files (e.g., vite.config.ts, next.config.js)
+- Report format: `{ status: "running" | "failed", command: "...", port: N, port_source: "stdout" | "config" | "framework_default", errors: [...], warnings: [...] }`
 
 **Scenario Generator prompt receives:**
 - Full spec text (pasted inline)
@@ -148,10 +173,52 @@ Each agent gets a precisely crafted inline prompt. No agent reads files — Clau
 
 **Test Writer prompt receives:**
 - Confirmed scenario(s) with navigator evidence of passing
-- Project type and test framework to use
+- Project type and test framework to use (determined by the scenario generator based on project type detection: Playwright for web, supertest for API, shell scripts for CLI — but if the project already has an existing test framework detected in devDependencies or test config files, use that instead)
 - Existing test files (if any, for consistency)
-- Instruction to write Playwright/supertest/CLI e2e tests
+- Instruction to write e2e tests matching the detected framework
 - For consolidation pass: all individual tests + instruction to ensure coherence and add cross-feature tests
+- Test writers for individual features dispatch in parallel (independent scenarios, no shared state)
+
+## Orchestration (SKILL.md Behavior)
+
+The SKILL.md file is what Claude Code follows when the user invokes verify-spec. It is the orchestrator. Here is what it does step by step:
+
+### Step 1: Load Spec
+- Accept spec file path as argument, or auto-detect the most recent spec in `docs/superpowers/specs/`
+- Read the spec file content into context
+
+### Step 2: Setup (Iteration 0)
+- Dispatch Server Runner (haiku, `run_in_background: true`) and Scenario Generator (opus) in parallel
+- Server Runner: auto-detect start command, launch app, report status with port
+- Scenario Generator: read spec text (pasted inline), produce scenario checklist
+- If server fails: dispatch Planner (opus) to analyze error + Coder (sonnet) to fix → restart (max 3 attempts)
+- Create a task per scenario using TaskCreate (status: pending)
+- Store server URL (from server runner's port report) for navigator
+
+### Step 3: Verify-Fix Loop
+- Check TaskList for pending scenarios
+- Dispatch Navigator (sonnet) with unchecked scenarios + server URL
+- Parse navigator results:
+  - For each PASS: update task to completed, dispatch Test Writer (sonnet) in parallel
+  - For each FAIL: update task metadata with failure evidence
+- If all tasks completed → go to Step 4
+- If FAILs exist:
+  - Collect failure evidence from tasks
+  - Dispatch Planner (opus) with failures + server logs
+  - Dispatch Coder (sonnet) with planner's fix plan + relevant file contents
+  - If coder BLOCKED → re-dispatch with opus → if still BLOCKED → surface to user, go to Step 4
+  - Restart server if coder changed server-side code
+  - Increment iteration counter → repeat Step 3
+- If iteration counter > 10 → surface remaining issues, go to Step 4
+
+### Step 4: Finalization
+- Dispatch Test Writer (sonnet) consolidation pass with all individual test files
+- Print verification report to terminal
+- Stop the server (kill the background process)
+- Announce completion
+
+### Agent Result Parsing
+Claude Code reads each agent's text output and extracts structured data. Agents report in the formats specified in the prompt design section. Claude Code does not require JSON parsing — it reads the agent's natural language output and extracts the relevant fields.
 
 ## Output & Deliverables
 
