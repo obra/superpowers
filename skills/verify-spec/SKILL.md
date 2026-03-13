@@ -48,6 +48,52 @@ All agents use `subagent_type: "general-purpose"` to ensure access to all tools 
 
 You MUST follow these phases in order.
 
+```dot
+digraph verify_spec {
+    rankdir=TB;
+
+    "Load spec, detect environment" [shape=box];
+    "Dispatch Server Runner +\nScenario Generator (parallel)" [shape=box];
+    "Server started?" [shape=diamond];
+    "Plan + fix server (max 3)" [shape=box];
+    "Create scenario tasks" [shape=box];
+    "Dispatch Navigator\nwith pending scenarios" [shape=box];
+    "All scenarios pass?" [shape=diamond];
+    "Dispatch Test Writer\n(background, per pass)" [shape=box];
+    "Collect logs, dispatch Planner" [shape=box];
+    "Dispatch Coder with fix plan" [shape=box];
+    "Coder blocked?" [shape=diamond];
+    "Retry with opus" [shape=box];
+    "Still blocked?" [shape=diamond];
+    "Restart server,\nreset failed scenarios" [shape=box];
+    "Iteration <= 10?" [shape=diamond];
+    "Consolidate tests,\nprint report, commit, stop server" [shape=box style=filled fillcolor=lightgreen];
+    "Surface to user" [shape=box style=filled fillcolor=lightyellow];
+
+    "Load spec, detect environment" -> "Dispatch Server Runner +\nScenario Generator (parallel)";
+    "Dispatch Server Runner +\nScenario Generator (parallel)" -> "Server started?";
+    "Server started?" -> "Create scenario tasks" [label="yes"];
+    "Server started?" -> "Plan + fix server (max 3)" [label="no"];
+    "Plan + fix server (max 3)" -> "Server started?";
+    "Create scenario tasks" -> "Dispatch Navigator\nwith pending scenarios";
+    "Dispatch Navigator\nwith pending scenarios" -> "All scenarios pass?";
+    "All scenarios pass?" -> "Dispatch Test Writer\n(background, per pass)" [label="some pass"];
+    "All scenarios pass?" -> "Consolidate tests,\nprint report, commit, stop server" [label="all pass"];
+    "Dispatch Test Writer\n(background, per pass)" -> "Collect logs, dispatch Planner";
+    "All scenarios pass?" -> "Collect logs, dispatch Planner" [label="some fail"];
+    "Collect logs, dispatch Planner" -> "Dispatch Coder with fix plan";
+    "Dispatch Coder with fix plan" -> "Coder blocked?";
+    "Coder blocked?" -> "Restart server,\nreset failed scenarios" [label="no"];
+    "Coder blocked?" -> "Retry with opus" [label="yes"];
+    "Retry with opus" -> "Still blocked?";
+    "Still blocked?" -> "Surface to user" [label="yes"];
+    "Still blocked?" -> "Restart server,\nreset failed scenarios" [label="no"];
+    "Restart server,\nreset failed scenarios" -> "Iteration <= 10?";
+    "Iteration <= 10?" -> "Dispatch Navigator\nwith pending scenarios" [label="yes"];
+    "Iteration <= 10?" -> "Surface to user" [label="no"];
+}
+```
+
 ### Phase 0: Load Spec & Detect Environment
 
 1. Accept spec file path as argument, or auto-detect the most recent spec in `docs/superpowers/specs/`
