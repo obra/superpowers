@@ -2,8 +2,8 @@
   "name": "superpowers-dev",
   "description": "Development marketplace for Superpowers core skills library",
   "owner": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com"
+    "name": "Pilo",
+    "email": "404.pilo.code@gmail.com"
   },
   "plugins": [
     {
@@ -12,8 +12,8 @@
       "version": "5.0.7",
       "source": "./",
       "author": {
-        "name": "Jesse Vincent",
-        "email": "jesse@fsck.com"
+        "name": "Yassel Piloto",
+        "email": "404pilo@users.noreply.github.com"
       }
     }
   ]
