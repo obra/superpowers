@@ -26,7 +26,7 @@ Thanks!
 
 ## Installation
 
-**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex and OpenCode require manual setup.
+**Note:** Installation differs by platform. Claude Code, Cursor, and GitHub Copilot CLI have built-in plugin systems. Codex and OpenCode require manual setup.
 
 ### Claude Code Official Marketplace
 
@@ -61,6 +61,18 @@ In Cursor Agent chat, install from marketplace:
 ```
 
 or search for "superpowers" in the plugin marketplace.
+
+### GitHub Copilot CLI
+
+In Copilot CLI, install directly from the plugin system:
+
+```
+/plugin install obra/superpowers
+```
+
+All skills become `/skill-name` slash commands immediately.
+
+**Detailed docs:** [docs/README.copilot.md](docs/README.copilot.md)
 
 ### Codex
 
