@@ -13,6 +13,20 @@ Validate that implemented code delivers what the spec describes by running the a
 
 ## When to Use
 
+```dot
+digraph when_to_use {
+    "Plan executed?" [shape=diamond];
+    "Observable behavior?" [shape=diamond];
+    "verify-spec" [shape=box];
+    "Not applicable" [shape=box];
+
+    "Plan executed?" -> "Observable behavior?" [label="yes"];
+    "Plan executed?" -> "Not applicable" [label="no"];
+    "Observable behavior?" -> "verify-spec" [label="yes"];
+    "Observable behavior?" -> "Not applicable" [label="no"];
+}
+```
+
 - After executing a plan, before finishing the branch
 - When you want confidence that the spec is fully delivered
 - When you want e2e tests generated from the spec
