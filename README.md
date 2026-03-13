@@ -2,7 +2,7 @@
 
 # ⚡ Superpowers
 
-### Agentic skills framework & software development methodology that *actually ships*
+## Agentic skills framework & software development methodology that *actually ships*
 
 <p>
   <a href="https://github.com/obra/superpowers/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/obra/superpowers?style=for-the-badge&color=ffcc00&labelColor=1b1b1b"></a>
