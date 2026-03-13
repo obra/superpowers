@@ -262,6 +262,14 @@ if iteration > max_iterations:
    - Use TaskStop on the stored task_id
    - Fallback: `lsof -i :{port} -t | xargs kill` if task_id unavailable
 
+### After Verification
+
+**The terminal state is invoking finishing-a-development-branch.** After the verification report is printed and tests committed, announce:
+
+> "I'm using the finishing-a-development-branch skill to complete this work."
+
+**REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch to present merge/PR options.
+
 ## Guard Rails
 
 ### Iron Law
@@ -294,4 +302,4 @@ if iteration > max_iterations:
 - Coder BLOCKED after opus retry
 - Server won't start after 3 attempts
 - Iteration cap (10) reached with unresolved features
-- Spec is ambiguous — scenario generator can't determine expected behavior
+- Spec is ambiguous — scenario generator can't determine expected behavior. Suggest superpowers:refining-specs to resolve ambiguity before retrying.
