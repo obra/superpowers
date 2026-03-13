@@ -303,3 +303,12 @@ if iteration > max_iterations:
 - Server won't start after 3 attempts
 - Iteration cap (10) reached with unresolved features
 - Spec is ambiguous — scenario generator can't determine expected behavior. Suggest superpowers:refining-specs to resolve ambiguity before retrying.
+
+## Remember
+
+- Navigator evidence is the only proof — coder claims are not enough
+- Minimal fixes only — stay on the planner's fix plan, don't wander
+- Every confirmed feature gets an e2e test — that's the deliverable
+- Always stop the server when the skill completes
+- Surface blockers to the user — don't guess past them
+- Iteration cap exists for a reason — if 10 rounds can't fix it, a human needs to look
