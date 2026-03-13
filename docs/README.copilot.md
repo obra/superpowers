@@ -43,15 +43,16 @@ cmd /c mklink /J "$env:USERPROFILE\.copilot\skills\superpowers" "$env:USERPROFIL
 
 ## How It Works
 
-Copilot CLI has native plugin discovery — it reads `plugin.json` at the repository root, discovers the skills directory, and registers each skill as a slash command. The `using-superpowers` skill is discovered automatically and enforces skill usage discipline — no additional configuration needed.
+Copilot CLI has native plugin discovery — it reads `plugin.json` at the repository root, discovers the skills directory, registers each skill as a slash command, and loads configured hooks (e.g., `sessionStart` for update checks). The `using-superpowers` skill is discovered automatically and enforces skill usage discipline — no additional configuration needed.
 
 ```text
-plugin.json → skills/ → /skill-name slash commands
+plugin.json → skills/ + hooks/ → /skill-name slash commands + session hooks
 ```
 
 ## Usage
 
 Skills activate in three ways:
+
 - **Direct invocation:** Type `/brainstorming`, `/test-driven-development`, etc.
 - **Task-based auto-invocation:** The agent recognizes when a task matches a skill's description
 - **`using-superpowers` direction:** This meta-skill directs the agent to check for relevant skills before any action
