@@ -28,6 +28,13 @@ digraph when_to_use {
 }
 ```
 
+## When NOT to Use
+
+- No written spec exists yet — use superpowers:brainstorming first
+- The "spec" is a rough idea or notes, not a design document
+- Already in planning or execution phase — too late for spec refinement
+- Spec describes only internal architecture with no observable behavior gaps to find
+
 ## The Process
 
 You MUST create a task for each phase step and complete in order.
