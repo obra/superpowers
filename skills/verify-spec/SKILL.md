@@ -326,3 +326,14 @@ if iteration > max_iterations:
 - Always stop the server when the skill completes
 - Surface blockers to the user — don't guess past them
 - Iteration cap exists for a reason — if 10 rounds can't fix it, a human needs to look
+
+## Integration
+
+**Required workflow skills:**
+- **superpowers:executing-plans** or **superpowers:subagent-driven-development** — produces the implementation this skill verifies
+- **superpowers:finishing-a-development-branch** — invoked after verification to present merge/PR options
+
+**Related skills:**
+- **superpowers:brainstorming** — creates the spec this skill verifies against
+- **superpowers:writing-plans** — creates the plan that was executed
+- **superpowers:refining-specs** — suggested when spec ambiguity blocks verification
