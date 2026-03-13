@@ -137,3 +137,42 @@ From 24 failure memories:
 Run the command. Read the output. THEN claim the result.
 
 This is non-negotiable.
+
+## Verifying Configuration Changes
+
+When testing changes to configuration, providers, feature flags, or environment:
+
+**Don't just verify the operation succeeded. Verify the output reflects the intended change.**
+
+### Common Failure Pattern
+
+Operation succeeds because *some* valid config exists, but it's not the config you intended to test.
+
+### Examples
+
+| Change | Insufficient | Required |
+|--------|-------------|----------|
+| Switch LLM provider | Status 200 | Response contains expected model name |
+| Enable feature flag | No errors | Feature behavior actually active |
+| Change environment | Deploy succeeds | Logs/vars reference new environment |
+| Set credentials | Auth succeeds | Authenticated user/context is correct |
+
+### Gate Function
+
+```
+BEFORE claiming configuration change works:
+
+1. IDENTIFY: What should be DIFFERENT after this change?
+2. LOCATE: Where is that difference observable?
+   - Response field (model name, user ID)
+   - Log line (environment, provider)
+   - Behavior (feature active/inactive)
+3. RUN: Command that shows the observable difference
+4. VERIFY: Output contains expected difference
+5. ONLY THEN: Claim configuration change works
+
+Red flags:
+  - "Request succeeded" without checking content
+  - Checking status code but not response body
+  - Verifying no errors but not positive confirmation
+```

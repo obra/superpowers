@@ -1,6 +1,8 @@
 .worktrees/
 .private-journal/
-.claude/
+.claude/*
+!.claude/hooks/
+!.claude/settings.json
 .DS_Store
 node_modules/
 inspo
