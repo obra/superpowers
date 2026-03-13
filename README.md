@@ -103,7 +103,7 @@ User sends a prompt
 │  stop-reminders.js →                                      │
 │    "5 source files modified without tests"                │
 │    "12 files changed, consider committing"                │
-│    "Session: 45min, 8 skill invocations [debugging 3x]"  │
+│    "Session: 45min, 8 skill invocations [debugging 3x]"   │
 └───────────────────────────────────────────────────────────┘
 ```
 
