@@ -119,13 +119,13 @@ Track per round: `Round {N}: critical={X} important={Y} minor={Z} → {signal}`
 
 Then offer next steps:
 
-**"Spec refinement pass complete. Two options:**
+**The terminal state is invoking writing-plans** when the spec converges, or **re-running refining-specs** if the user wants another pass.
 
-**1. Generate plan** — invoke superpowers:writing-plans to produce an implementation plan from this spec
+After presenting the report, announce:
 
-**2. Refine again** — run another round of refinement
+> "Spec refinement complete and committed. Ready to generate an implementation plan using writing-plans, or run another refinement pass?"
 
-**Which approach?"**
+Do NOT invoke any implementation skill directly. The only next skills are writing-plans or another refining-specs pass.
 
 On ESCALATE: present stuck findings with context on what was tried. User can make the decision themselves and re-run, or accept the spec as-is with known gaps.
 
