@@ -12,6 +12,8 @@ All skills become `/skill-name` slash commands immediately.
 
 ## Manual Installation
 
+**Note:** Manual installation provides skills only. Session hooks (update checks, legacy warnings) and plugin registration require the plugin install method above.
+
 ### Prerequisites
 
 - GitHub Copilot CLI (`copilot` command)

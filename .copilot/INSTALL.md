@@ -17,6 +17,8 @@ All skills become `/skill-name` slash commands immediately. No further setup nee
 
 ## Alternative: Manual Installation
 
+**Note:** Manual installation provides skills only. Session hooks (update checks, legacy warnings) and plugin registration require the plugin install method above.
+
 1. **Clone the superpowers repository:**
    ```bash
    git clone https://github.com/obra/superpowers.git ~/.copilot/superpowers
@@ -38,11 +40,15 @@ All skills become `/skill-name` slash commands immediately. No further setup nee
 
 ## Verify
 
+**Plugin install:**
+
 ```bash
 copilot plugin list
 ```
 
-You should see `superpowers` listed as an installed plugin. Then start a Copilot CLI session and try a slash command (e.g., `/using-superpowers`) to confirm skills are available.
+You should see `superpowers` listed as an installed plugin.
+
+**Manual install:** Start a Copilot CLI session and try a slash command (e.g., `/using-superpowers`) to confirm skills are available.
 
 ## Updating
 
