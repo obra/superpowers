@@ -19,11 +19,12 @@ if (Test-Path $legacyDir) {
 # Check for available updates (non-blocking, best-effort)
 $gitDir = Join-Path $PluginRoot ".git"
 if ((Get-Command git -ErrorAction SilentlyContinue) -and (Test-Path $gitDir)) {
-    git -C $PluginRoot fetch --quiet 2>$null
-    $local = git -C $PluginRoot rev-parse HEAD 2>$null
-    $remote = git -C $PluginRoot rev-parse '@{u}' 2>$null
+    $env:GIT_TERMINAL_PROMPT = "0"
+    git -C "$PluginRoot" fetch --quiet 2>$null
+    $local = git -C "$PluginRoot" rev-parse HEAD 2>$null
+    $remote = git -C "$PluginRoot" rev-parse '@{u}' 2>$null
     if ($local -and $remote -and ($local -ne $remote)) {
-        Write-Host "[superpowers] Update available. Run: cd $PluginRoot; git pull" -ForegroundColor Cyan
+        Write-Host "[superpowers] Update available. Run: cd '$PluginRoot'; git pull" -ForegroundColor Cyan
     }
 }
 

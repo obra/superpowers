@@ -19,11 +19,11 @@ fi
 
 # Check for available updates (non-blocking, best-effort)
 if command -v git &>/dev/null && [ -d "${PLUGIN_ROOT}/.git" ]; then
-    git -C "${PLUGIN_ROOT}" fetch --quiet 2>/dev/null || true
+    GIT_TERMINAL_PROMPT=0 git -C "${PLUGIN_ROOT}" fetch --quiet 2>/dev/null || true
     LOCAL=$(git -C "${PLUGIN_ROOT}" rev-parse HEAD 2>/dev/null || echo "")
     REMOTE=$(git -C "${PLUGIN_ROOT}" rev-parse '@{u}' 2>/dev/null || echo "")
     if [ -n "$LOCAL" ] && [ -n "$REMOTE" ] && [ "$LOCAL" != "$REMOTE" ]; then
-        echo "[superpowers] Update available. Run: cd ${PLUGIN_ROOT} && git pull" >&2
+        echo "[superpowers] Update available. Run: cd '${PLUGIN_ROOT}' && git pull" >&2
     fi
 fi
 
