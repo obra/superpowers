@@ -39,6 +39,12 @@ digraph when_to_use {
 
 You MUST create a task for each phase step and complete in order.
 
+1. **Read spec & detect domain** — identify domain, technologies, key concerns
+2. **Generate role profiles** — create simulator and fixer personas
+3. **Run simulation loop** — dispatch simulator, evaluate findings, dispatch fixer, check convergence
+4. **Present refinement report** — summarize rounds, findings, and final state
+5. **Hand off** — invoke writing-plans or offer another refinement pass
+
 **Harness requirement:** This skill dispatches simulator and fixer subagents each iteration. It requires a platform with subagent support (such as Claude Code or Codex). If subagents are not available, notify the user and stop — refining-specs cannot run in single-agent mode.
 
 ```dot
