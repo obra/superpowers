@@ -78,6 +78,8 @@ The scenario generator detects project type from the spec and tells the navigato
 
 **Cost profile per iteration:** 1 haiku + 1 opus (planner) + 2 sonnet (navigator + coder) + N sonnet (test writers for passing features). Scenario generator (opus) runs only once in iteration 0.
 
+**Agent dispatch configuration:** Model selection is achieved via the `model` parameter on the Agent tool (enum: "sonnet", "opus", "haiku") [inferred]. All agents use `subagent_type: "general-purpose"` to ensure access to all tools including MCP tools (e.g., Playwright for the Navigator) [inferred].
+
 **Model override:** The skill specifies these as defaults. If the coder reports BLOCKED, Claude Code can re-dispatch with opus for more reasoning power before surfacing to the user.
 
 ## The Main Loop
@@ -105,7 +107,7 @@ The scenario generator detects project type from the spec and tells the navigato
    - Minimal changes only
    - Reports DONE or BLOCKED
    - If BLOCKED → surface to user, exit loop
-6. Server Runner restarts app if needed
+6. Server Runner restarts app (default: always restart after any coder fix; planner may mark "no restart needed" for client-only changes) [inferred]
 7. Update checklist, increment iteration → back to step 1
 
 **Iteration cap:** Max 10 iterations. If unresolved issues remain, surface them to the user with the current state of the checklist and fixes attempted.
@@ -141,9 +143,9 @@ Each agent gets a precisely crafted inline prompt. No agent reads files — Clau
 **Server Runner prompt receives:**
 - Project directory path
 - Instruction to auto-detect start command (check package.json scripts, Makefile, Cargo.toml, manage.py, docker-compose, etc.)
-- Instruction to run the app and watch stdout/stderr for 10-15 seconds
+- Instruction to start the app using Bash `run_in_background: true`, capture the PID from the background process, then use TaskOutput with a timeout to read initial stdout/stderr for 10-15 seconds [inferred]
 - Instruction to detect port from: (1) stdout output matching common patterns like "listening on port XXXX", (2) framework defaults (e.g., Vite=5173, Next.js=3000, Django=8000), (3) project config files (e.g., vite.config.ts, next.config.js)
-- Report format: `{ status: "running" | "failed", command: "...", port: N, port_source: "stdout" | "config" | "framework_default", errors: [...], warnings: [...] }`
+- Report format: `{ status: "running" | "failed", command: "...", pid: N, port: N, port_source: "stdout" | "config" | "framework_default", errors: [...], warnings: [...] }` (pid field is required for clean shutdown) [inferred]
 
 **Scenario Generator prompt receives:**
 - Full spec text (pasted inline)
@@ -173,7 +175,7 @@ Each agent gets a precisely crafted inline prompt. No agent reads files — Clau
 
 **Test Writer prompt receives:**
 - Confirmed scenario(s) with navigator evidence of passing
-- Project type and test framework to use (determined by the scenario generator based on project type detection: Playwright for web, supertest for API, shell scripts for CLI — but if the project already has an existing test framework detected in devDependencies or test config files, use that instead)
+- Project type and test framework to use (Claude Code detects the existing test framework by reading package.json devDependencies and test config files before dispatching the scenario generator, and includes the detected framework in both the scenario generator's and test writer's prompts [inferred]. Defaults: Playwright for web, supertest for API, shell scripts for CLI — but if the project already has an existing test framework detected, use that instead)
 - Existing test files (if any, for consistency)
 - Instruction to write e2e tests matching the detected framework
 - For consolidation pass: all individual tests + instruction to ensure coherence and add cross-feature tests
@@ -188,18 +190,18 @@ The SKILL.md file is what Claude Code follows when the user invokes verify-spec.
 - Read the spec file content into context
 
 ### Step 2: Setup (Iteration 0)
-- Dispatch Server Runner (haiku, `run_in_background: true`) and Scenario Generator (opus) in parallel
-- Server Runner: auto-detect start command, launch app, report status with port
+- Dispatch Server Runner (haiku) and Scenario Generator (opus) in parallel using Agent tool with `run_in_background: true`, collecting results via TaskOutput [inferred]
+- Server Runner: auto-detect start command, launch app using Bash `run_in_background: true` internally to start the server process, then monitor stdout/stderr and report status with port [inferred]
 - Scenario Generator: read spec text (pasted inline), produce scenario checklist
 - If server fails: dispatch Planner (opus) to analyze error + Coder (sonnet) to fix → restart (max 3 attempts)
 - Create a task per scenario using TaskCreate (status: pending)
-- Store server URL (from server runner's port report) for navigator
+- Store server URL (from server runner's port report) for navigator and server PID for clean shutdown during finalization [inferred]
 
 ### Step 3: Verify-Fix Loop
 - Check TaskList for pending scenarios
-- Dispatch Navigator (sonnet) with unchecked scenarios + server URL
+- Dispatch Navigator (sonnet) with unchecked scenarios + server URL. If the navigator does not report on all dispatched scenarios (e.g., due to context limits or timeout), unreported scenarios remain pending and are re-dispatched to a fresh navigator in the next iteration [inferred]. This is consistent with the task system — only scenarios explicitly marked PASS or FAIL change status — but affects iteration count and cost [inferred].
 - Parse navigator results:
-  - For each PASS: update task to completed, dispatch Test Writer (sonnet) in parallel
+  - For each PASS: update task to completed, dispatch Test Writer (sonnet) in parallel using Agent tool with `run_in_background: true`, collecting results via TaskOutput [inferred]
   - For each FAIL: update task metadata with failure evidence
 - If all tasks completed → go to Step 4
 - If FAILs exist:
@@ -207,14 +209,14 @@ The SKILL.md file is what Claude Code follows when the user invokes verify-spec.
   - Dispatch Planner (opus) with failures + server logs
   - Dispatch Coder (sonnet) with planner's fix plan + relevant file contents
   - If coder BLOCKED → re-dispatch with opus → if still BLOCKED → surface to user, go to Step 4
-  - Restart server if coder changed server-side code
+  - Restart server after any coder fix by default — the cost of an unnecessary restart (a few seconds) is far lower than testing stale code (a wasted iteration) [inferred]. The planner may explicitly mark "no restart needed" in its fix plan for client-only changes if it has high confidence [inferred].
   - Increment iteration counter → repeat Step 3
 - If iteration counter > 10 → surface remaining issues, go to Step 4
 
 ### Step 4: Finalization
 - Dispatch Test Writer (sonnet) consolidation pass with all individual test files
 - Print verification report to terminal
-- Stop the server (kill the background process)
+- Stop the server using the PID from the server runner's report (`kill <PID>`). Fallback: `lsof -i :<PORT> -t | xargs kill` if PID is unavailable [inferred]
 - Announce completion
 
 ### Agent Result Parsing
