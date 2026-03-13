@@ -139,3 +139,12 @@ The spec-fixer marks every piece of information it adds that was not explicitly 
 - Continue after CONVERGED or ignore ESCALATE signal
 - Run spec-fixer without simulation findings
 - Modify the spec yourself (only spec-fixer subagent edits)
+
+## Remember
+
+- Simulate before planning — never skip straight to plan generation
+- Fixer only patches gaps inline — never restructures
+- Every addition gets an `[inferred]` tag — distinguish original decisions from gap-fills
+- Re-read the spec file after every fix round — fixer edits in-place
+- CONVERGED means stop iterating; ESCALATE means surface to user
+- Orchestrator never edits the spec directly — only spec-fixer subagent touches the file
