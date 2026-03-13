@@ -4,8 +4,8 @@ Skills use Claude Code tool names. When you encounter these in a skill, use your
 
 | Skill references | Copilot CLI equivalent |
 |-----------------|------------------------|
-| `Skill` tool (invoke a skill) | `/skill-name` slash command — skills invoke directly |
-| `EnterPlanMode` | Shift+Tab or `/plan` |
+| `Skill` tool (invoke a skill) | Skills activate automatically via `/skills` or agent auto-invocation |
+| `EnterPlanMode` | `/plan` |
 | `TodoWrite` (task tracking) | `TodoWrite` (same name) |
 | `Task` tool (dispatch subagent) | `Task` (same name) |
 | Multiple `Task` calls (parallel) | Multiple `Task` calls (same pattern) |
@@ -17,6 +17,6 @@ Skills use Claude Code tool names. When you encounter these in a skill, use your
 
 ## Key Difference
 
-The main difference from Claude Code is skill invocation. Instead of using a `Skill` tool, invoke skills directly as `/skill-name` slash commands or let the agent auto-invoke based on context.
+The main difference from Claude Code is skill invocation. Instead of using a `Skill` tool, skills are managed via `/skills` and activate automatically based on context and skill descriptions.
 
 All other tools share the same names across both platforms.

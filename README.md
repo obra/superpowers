@@ -70,7 +70,7 @@ Install from the terminal:
 copilot plugin install obra/superpowers
 ```
 
-All skills become `/skill-name` slash commands immediately.
+All 14 skills are available immediately.
 
 **Detailed docs:** [docs/README.copilot.md](docs/README.copilot.md)
 

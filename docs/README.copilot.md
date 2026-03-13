@@ -8,7 +8,7 @@ Guide for using Superpowers with GitHub Copilot CLI via native plugin discovery.
 copilot plugin install obra/superpowers
 ```
 
-All skills become `/skill-name` slash commands immediately.
+All 14 skills are available immediately.
 
 ## Manual Installation
 
@@ -45,38 +45,38 @@ cmd /c mklink /J "$env:USERPROFILE\.copilot\skills\superpowers" "$env:USERPROFIL
 
 ## How It Works
 
-Copilot CLI has native plugin discovery — it reads `plugin.json` at the repository root, discovers the skills directory, registers each skill as a slash command, and loads configured hooks (e.g., `sessionStart` for update checks). The `using-superpowers` skill is discovered automatically and enforces skill usage discipline — no additional configuration needed.
+Copilot CLI has native plugin discovery — it reads `plugin.json` at the repository root, discovers the skills directory, makes each skill available to the agent, and loads configured hooks (e.g., `sessionStart` for update checks). The `using-superpowers` skill is discovered automatically and enforces skill usage discipline — no additional configuration needed.
 
 ```text
-plugin.json → skills/ + hooks/ → /skill-name slash commands + session hooks
+plugin.json → skills/ + hooks/ → available skills + session hooks
 ```
 
 ## Usage
 
 Skills activate in three ways:
 
-- **Direct invocation:** Type `/brainstorming`, `/test-driven-development`, etc.
+- **Direct invocation:** Use `/skills` to browse and activate skills by name
 - **Task-based auto-invocation:** The agent recognizes when a task matches a skill's description
 - **`using-superpowers` direction:** This meta-skill directs the agent to check for relevant skills before any action
 
-### Available Slash Commands
+### Available Skills
 
-| Slash Command | Purpose |
-|--------------|---------|
-| `/brainstorming` | Explore intent, requirements, and design before implementation |
-| `/dispatching-parallel-agents` | Run 2+ independent tasks concurrently via subagents |
-| `/executing-plans` | Execute implementation plans with review checkpoints |
-| `/finishing-a-development-branch` | Guide merge, PR, or cleanup when work is complete |
-| `/receiving-code-review` | Handle code review feedback with technical rigor |
-| `/requesting-code-review` | Pre-review checklist before merging |
-| `/subagent-driven-development` | Fast iteration with two-stage review |
-| `/systematic-debugging` | 4-phase root cause debugging process |
-| `/test-driven-development` | RED-GREEN-REFACTOR cycle enforcement |
-| `/using-git-worktrees` | Create isolated workspaces for feature work |
-| `/using-superpowers` | Introduction to the skills system |
-| `/verification-before-completion` | Verify work before claiming success |
-| `/writing-plans` | Create detailed implementation plans from specs |
-| `/writing-skills` | Create or edit skills following best practices |
+| Skill | Purpose |
+|-------|---------|
+| `brainstorming` | Explore intent, requirements, and design before implementation |
+| `dispatching-parallel-agents` | Run 2+ independent tasks concurrently via subagents |
+| `executing-plans` | Execute implementation plans with review checkpoints |
+| `finishing-a-development-branch` | Guide merge, PR, or cleanup when work is complete |
+| `receiving-code-review` | Handle code review feedback with technical rigor |
+| `requesting-code-review` | Pre-review checklist before merging |
+| `subagent-driven-development` | Fast iteration with two-stage review |
+| `systematic-debugging` | 4-phase root cause debugging process |
+| `test-driven-development` | RED-GREEN-REFACTOR cycle enforcement |
+| `using-git-worktrees` | Create isolated workspaces for feature work |
+| `using-superpowers` | Introduction to the skills system |
+| `verification-before-completion` | Verify work before claiming success |
+| `writing-plans` | Create detailed implementation plans from specs |
+| `writing-skills` | Create or edit skills following best practices |
 
 ### Personal Skills
 
@@ -105,7 +105,7 @@ Personal skills with the `superpowers:` prefix shadow built-in skills of the sam
 
 ## Tool Mapping
 
-Most tools share identical names between Claude Code and Copilot CLI. The main difference is skill invocation — use `/skill-name` slash commands instead of the `Skill` tool.
+Most tools share identical names between Claude Code and Copilot CLI. The main difference is skill invocation — skills activate via `/skills` and agent auto-invocation instead of the `Skill` tool.
 
 See `skills/using-superpowers/references/copilot-tools.md` for the full mapping.
 
