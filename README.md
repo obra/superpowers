@@ -1,8 +1,3 @@
-<!--
-Tip: GitHub renders only a subset of HTML/CSS. This README uses safe HTML (tables, <img>, <details>)
-and “color” via badges, icons, and sections rather than custom CSS.
--->
-
 <div align="center">
 
 # ⚡ Superpowers
@@ -20,22 +15,6 @@ and “color” via badges, icons, and sections rather than custom CSS.
   <a href="https://github.com/sponsors/obra"><img alt="Sponsor" src="https://img.shields.io/badge/Sponsor-obra-ff4d8d?style=for-the-badge&labelColor=1b1b1b"></a>
   <a href="https://claude.com/plugins/superpowers"><img alt="Claude plugin" src="https://img.shields.io/badge/Claude%20Plugin-Official%20Marketplace-f97316?style=for-the-badge&labelColor=1b1b1b"></a>
 </p>
-
----
-
-<table>
-  <tr>
-    <td align="center"><b>⭐ Stars</b><br/>80,917</td>
-    <td align="center"><b>🍴 Forks</b><br/>6,275</td>
-    <td align="center"><b>👀 Watchers</b><br/>80,917</td>
-    <td align="center"><b>🐞 Open issues</b><br/>125</td>
-    <td align="center"><b>📜 License</b><br/>MIT</td>
-  </tr>
-</table>
-
-<sub>
-Stats snapshot from GitHub repository metadata (last push: 2026-03-12).
-</sub>
 
 </div>
 
@@ -137,7 +116,7 @@ Tell Codex:
 Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md
 ```
 
-Detailed docs: `docs/README.codex.md`
+**Detailed docs:** [docs/README.codex.md](docs/README.codex.md)
 
 ### 🟩 OpenCode
 
@@ -147,7 +126,7 @@ Tell OpenCode:
 Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
 ```
 
-Detailed docs: `docs/README.opencode.md`
+**Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
 
 ### 🟪 Gemini CLI
 
