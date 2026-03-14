@@ -15,7 +15,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { spawnSync } = require('child_process');
 
 function extractDotBlocks(markdown) {
   const blocks = [];
@@ -72,14 +72,26 @@ ${bodies.join('\n\n')}
 
 function renderToSvg(dotContent) {
   try {
-    return execSync('dot -Tsvg', {
+    const result = spawnSync('dot', ['-Tsvg'], {
       input: dotContent,
       encoding: 'utf-8',
       maxBuffer: 10 * 1024 * 1024
     });
+
+    if (result.error) {
+      console.error('Error running dot:', result.error.message);
+      return null;
+    }
+
+    if (result.status !== 0) {
+      console.error('Error running dot: process exited with status', result.status);
+      if (result.stderr) console.error(result.stderr);
+      return null;
+    }
+
+    return result.stdout;
   } catch (err) {
-    console.error('Error running dot:', err.message);
-    if (err.stderr) console.error(err.stderr.toString());
+    console.error('Unexpected error running dot:', err.message);
     return null;
   }
 }
@@ -111,9 +123,8 @@ function main() {
   }
 
   // Check if dot is available
-  try {
-    execSync('which dot', { encoding: 'utf-8' });
-  } catch {
+  const dotCheck = spawnSync('dot', ['-V']);
+  if (dotCheck.error) {
     console.error('Error: graphviz (dot) not found. Install with:');
     console.error('  brew install graphviz    # macOS');
     console.error('  apt install graphviz     # Linux');
