@@ -53,12 +53,16 @@ export const SuperpowersPlugin = async ({ client, directory }) => {
   const configDir = envConfigDir || path.join(homeDir, '.config/opencode');
 
   // Helper to generate bootstrap content
-  const getBootstrapContent = () => {
+  const getBootstrapContent = async () => {
     // Try to load using-superpowers skill
     const skillPath = path.join(superpowersSkillsDir, 'using-superpowers', 'SKILL.md');
-    if (!fs.existsSync(skillPath)) return null;
+    let fullContent;
+    try {
+      fullContent = await fs.promises.readFile(skillPath, 'utf8');
+    } catch (err) {
+      return null;
+    }
 
-    const fullContent = fs.readFileSync(skillPath, 'utf8');
     const { content } = extractAndStripFrontmatter(fullContent);
 
     const toolMapping = `**Tool Mapping for OpenCode:**
@@ -86,7 +90,7 @@ ${toolMapping}
   return {
     // Use system prompt transform to inject bootstrap (fixes #226 agent reset bug)
     'experimental.chat.system.transform': async (_input, output) => {
-      const bootstrap = getBootstrapContent();
+      const bootstrap = await getBootstrapContent();
       if (bootstrap) {
         (output.system ||= []).push(bootstrap);
       }
