@@ -66,6 +66,14 @@ function runTests() {
     }
   });
 
+  test('computeAcceptKey throws TypeError for non-string or empty inputs', () => {
+    assert.throws(() => ws.computeAcceptKey(), TypeError, 'Should throw for undefined');
+    assert.throws(() => ws.computeAcceptKey(null), TypeError, 'Should throw for null');
+    assert.throws(() => ws.computeAcceptKey(123), TypeError, 'Should throw for number');
+    assert.throws(() => ws.computeAcceptKey({}), TypeError, 'Should throw for object');
+    assert.throws(() => ws.computeAcceptKey(''), TypeError, 'Should throw for empty string');
+  });
+
   // ========== Frame Encoding ==========
   console.log('\n--- Frame Encoding (server -> client) ---');
 
