@@ -1,7 +1,7 @@
-.worktrees/
-.private-journal/
 .claude/
 .DS_Store
-node_modules/
+.private-journal/
+.worktrees/
 inspo
+node_modules/
 triage/
