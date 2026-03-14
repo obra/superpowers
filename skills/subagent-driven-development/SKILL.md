@@ -144,6 +144,8 @@ When `TeamCreate` is available and the user opts in, use this flow instead of st
 
 **Pre-Flight (required — do this before `TeamCreate`):** The team lead is this session. As the plan executes, this session's context fills with task reports, verdicts, and coordination messages. Once it fills, orchestration stops mid-plan. The solution is to start with a clean context rather than compacting.
 
+**Re-entry guard:** If you are reading these instructions after context was already cleared by plan mode (i.e., you can see a synthesized execution prompt in the current plan), skip the pre-flight entirely and proceed directly to `TeamCreate`. The pre-flight already happened in the previous context — doing it again causes a double-clear loop.
+
 Before spawning the team, synthesize a complete self-contained execution prompt and present it via `EnterPlanMode`. The prompt must embed everything needed so the fresh session requires no prior conversation history:
 
 - Full plan text (all tasks with complete requirement text)
@@ -151,6 +153,7 @@ Before spawning the team, synthesize a complete self-contained execution prompt 
 - Team composition and roles
 - Initial task assignments per implementer
 - Instruction to execute in team mode using `TeamCreate`
+- **Explicit instruction: "BEGIN EXECUTION — proceed directly to TeamCreate. Do NOT re-enter plan mode or re-invoke the subagent-driven-development skill."**
 
 Present this as the plan. The user selects **"clear context and auto-accept edits"** (option 1 / Shift+Tab) — this clears the accumulated context and begins execution immediately with a clean slate. Do not ask the user about context health or prompt them to `/compact`.
 
@@ -294,6 +297,7 @@ Pinging all implementers after compaction is unnecessary and expensive. `TaskLis
 - **Never dispatch a fresh review subagent when a validator is available** — use the persistent validator
 - **Validator approval of a re-opened task is required before re-reviewing its dependents**
 - **Never skip the pre-flight synthesize step** — generate the complete self-contained execution prompt and present via `EnterPlanMode` before `TeamCreate`; this gives the team lead a clean context from the start
+- **Never call `EnterPlanMode` more than once per plan execution** — after context clear, the plan is visible and execution should begin immediately with `TeamCreate`. Re-entering plan mode causes a double-clear loop that loses all progress.
 
 ### Team Lifecycle
 
@@ -519,6 +523,7 @@ validator-1 (Task 2 re-review):
 - **Team mode only:** Skip the SHA map in review requests (validators cannot re-read dependencies without it)
 - Accept a ✅ verdict that has no per-requirement file:line citations (invalid — request re-review)
 - **Team mode only:** Skip the pre-flight synthesize step — always generate the self-contained prompt and present via `EnterPlanMode` before `TeamCreate`; skipping means the team lead starts with accumulated context that can fill mid-plan
+- **Team mode only:** Call `EnterPlanMode` after context was already cleared by plan mode — this causes a double-clear loop. After clear, proceed directly to `TeamCreate`
 
 **If subagent asks questions:**
 - Answer clearly and completely
