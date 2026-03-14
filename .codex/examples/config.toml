@@ -24,7 +24,8 @@ config_file = "agents/reviewer.toml"
 description = "Wait-focused agent for polling long-running verification and background commands."
 config_file = "agents/monitor.toml"
 
-# Optional role. Requires a browser MCP server such as chrome_devtools.
+# Optional role. Requires a browser MCP server configured in your real
+# ~/.codex/config.toml or project .codex/config.toml.
 [agents.browser_debugger]
 description = "UI debugger that reproduces browser flows and captures evidence before code changes."
 config_file = "agents/browser-debugger.toml"

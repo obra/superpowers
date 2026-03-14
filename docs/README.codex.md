@@ -85,6 +85,11 @@ treated as experimental. It requires:
 codex_hooks = true
 ```
 
+After copying the example into your real `~/.codex/` or project `.codex/`
+directory, rewrite the `command` paths in `hooks.json` to absolute paths or
+OS-specific wrappers. Codex runs hooks from the session working directory, so
+plain relative `hooks/...` commands break once the template is copied.
+
 ## Multi-Agent Roles
 
 The example role catalog includes:
@@ -97,9 +102,10 @@ The example role catalog includes:
 - `spec_reviewer` - exact-scope verification for a task
 - `quality_reviewer` - correctness, tests, and maintainability review
 
-The `browser_debugger` role is optional. It assumes a browser MCP server such
-as `chrome_devtools`. If you do not have browser tooling configured, use the
-same prompts with `explorer + worker` instead.
+The `browser_debugger` role is optional. Configure a browser MCP server in your
+real `~/.codex/config.toml` (or project `.codex/config.toml`) and let the role
+inherit it. Keep the role file transport-agnostic; if you do not have browser
+tooling configured, use the same prompts with `explorer + worker` instead.
 
 ## Prompt Library
 
@@ -184,19 +190,25 @@ rm -rf ~/.codex/superpowers
    `~/.codex/agents/` or project `.codex/agents/`
 3. Check that the `config_file` paths in your real config point to existing
    files
+4. Keep browser MCP configuration in your real config layer; do not copy a
+   partial `[mcp_servers.<id>]` block into a role file
 
 ### Browser debugger not available
 
-If you do not have a browser MCP server configured, remove `browser_debugger`
-from the prompt and use `explorer + worker` instead. The rest of the workflow
-still applies.
+If you do not have a browser MCP server configured in your real
+`~/.codex/config.toml` (or project `.codex/config.toml`), remove
+`browser_debugger` from the prompt and use `explorer + worker` instead. The
+rest of the workflow still applies.
 
 ### Experimental hooks not firing
 
 1. Confirm `[features] codex_hooks = true`
 2. Copy `.codex/examples/hooks.json` and `.codex/examples/hooks/` into your
    real `~/.codex/` or project `.codex/`
-3. Remember that this surface is experimental and may change with Codex
+3. Rewrite each hook `command` to an absolute path or OS-specific wrapper in
+   that real location; copied templates cannot rely on relative `hooks/...`
+   paths
+4. Remember that this surface is experimental and may change with Codex
 
 ## Getting Help
 

@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 hooks/session-start.py",
+            "command": "python3 /absolute/path/to/.codex/hooks/session-start.py",
             "statusMessage": "running superpowers session-start hook"
           }
         ]
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 hooks/stop.py",
+            "command": "python3 /absolute/path/to/.codex/hooks/stop.py",
             "statusMessage": "running superpowers stop hook"
           }
         ]

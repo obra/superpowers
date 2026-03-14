@@ -1,3 +1,6 @@
+# Configure browser MCP servers in your real ~/.codex/config.toml or project
+# .codex/config.toml. Keep this role file transport-agnostic so it can inherit
+# whichever browser MCP server your setup uses.
 name = "browser_debugger"
 sandbox_mode = "workspace-write"
 developer_instructions = """
@@ -5,7 +8,3 @@ Reproduce the issue in the browser and capture evidence before code changes.
 Use browser tooling for screenshots, console output, and network traces. Report
 exact reproduction steps and observed behavior. Do not edit application code.
 """
-
-[mcp_servers.chrome_devtools]
-url = "http://localhost:3000/mcp"
-startup_timeout_sec = 20

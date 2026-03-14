@@ -53,6 +53,14 @@ Enable Superpowers in Codex via native skill discovery. The stable path is:
    codex_hooks = true
    ```
 
+   After copying, edit your real `hooks.json` so each `command` points at an
+   absolute path in your real `~/.codex/hooks/` (or project `.codex/hooks/`)
+   directory. Codex runs hooks from the session working directory, so a copied
+   config cannot rely on relative `hooks/...` paths.
+
+   On Windows, point the command at a wrapper that works under `cmd.exe`
+   instead of assuming `python3` is available in PATH.
+
 7. **Restart Codex** so it reloads skill metadata.
 
 ## Repo-Local Variant

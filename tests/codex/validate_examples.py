@@ -120,6 +120,12 @@ def validate_config_and_roles(errors: list[str]) -> dict[str, dict]:
                 f"{role_path} should define non-empty developer_instructions",
                 errors,
             )
+            if role == "browser_debugger":
+                expect(
+                    "mcp_servers" not in role_data,
+                    f"{role_path} should inherit browser MCP config from the main config instead of defining transport-specific MCP entries",
+                    errors,
+                )
 
     return expected_roles
 
@@ -146,6 +152,22 @@ def validate_hooks_and_scripts(errors: list[str]) -> None:
     hook_keys = set(hooks.get("hooks", {}).keys())
     expect({"SessionStart", "Stop"} <= hook_keys, "hooks.json must include SessionStart and Stop", errors)
 
+    relative_hook_command = re.compile(r"(^|[\"'])((python|python3|py)\s+)?hooks[/\\]")
+    for event_name, event_defs in hooks.get("hooks", {}).items():
+        for event_def in event_defs:
+            for hook in event_def.get("hooks", []):
+                command = hook.get("command", "")
+                expect(
+                    isinstance(command, str) and command.strip() != "",
+                    f"{hooks_path} {event_name} hook should define a non-empty command",
+                    errors,
+                )
+                expect(
+                    not relative_hook_command.search(command),
+                    f"{hooks_path} {event_name} hook must use an absolute path or wrapper, not a relative hooks/... command",
+                    errors,
+                )
+
     script_paths = [
         CODEX_EXAMPLES / "notify.py",
         CODEX_EXAMPLES / "hooks" / "session-start.py",
@@ -160,10 +182,14 @@ def validate_hooks_and_scripts(errors: list[str]) -> None:
 
 def validate_docs(errors: list[str]) -> None:
     codex_doc = read_text(ROOT / "docs" / "README.codex.md")
+    install_doc = read_text(ROOT / ".codex" / "INSTALL.md")
     expect("browser_debugger" in codex_doc, "docs/README.codex.md should mention browser_debugger", errors)
     expect("optional" in codex_doc.lower(), "docs/README.codex.md should mark browser_debugger as optional", errors)
     expect("MCP" in codex_doc, "docs/README.codex.md should mention MCP for browser_debugger", errors)
     expect("explorer + worker" in codex_doc, "docs/README.codex.md should describe the explorer + worker fallback", errors)
+    expect("inherit" in codex_doc.lower(), "docs/README.codex.md should describe role inheritance for browser_debugger", errors)
+    expect("absolute path" in codex_doc.lower(), "docs/README.codex.md should explain absolute hook command paths", errors)
+    expect("absolute path" in install_doc.lower(), ".codex/INSTALL.md should explain absolute hook command paths", errors)
 
 
 def validate_obsolete_strings(errors: list[str]) -> None:
@@ -171,6 +197,8 @@ def validate_obsolete_strings(errors: list[str]) -> None:
         ROOT / "README.md",
         ROOT / "docs" / "README.codex.md",
         ROOT / ".codex" / "INSTALL.md",
+        ROOT / ".codex" / "examples" / "config.toml",
+        ROOT / ".codex" / "examples" / "agents" / "browser-debugger.toml",
         ROOT / "skills" / "using-superpowers" / "SKILL.md",
         ROOT / "skills" / "dispatching-parallel-agents" / "SKILL.md",
         ROOT / "skills" / "subagent-driven-development" / "SKILL.md",
@@ -185,6 +213,7 @@ def validate_obsolete_strings(errors: list[str]) -> None:
         "TodoWrite",
         "code-reviewer subagent",
         "collab = true",
+        "chrome_devtools",
     ]
     for path in active_files:
         text = read_text(path)

@@ -78,7 +78,8 @@ Codex support now includes:
 - `agents/openai.yaml` metadata on every public skill
 - a role catalog under `.codex/examples/agents/`
 - a prompt library under `.codex/examples/prompts/`
-- stable `notify` and optional experimental `codex_hooks` examples
+- stable `notify` and copy-and-adapt examples for optional experimental
+  `codex_hooks`
 
 ### OpenCode
 
