@@ -1,12 +1,13 @@
 # Spec Compliance Reviewer Prompt Template
 
-Use this template when dispatching a spec compliance reviewer subagent.
+Use this template when spawning a spec compliance reviewer as an Agent Team member.
+
+**Dispatch method:** `Agent(team_name="<team>", name="spec-rev-task-N", model="opus", prompt="<below>")`
 
 **Purpose:** Verify implementer built what was requested (nothing more, nothing less)
 
 ```
-Task tool (general-purpose):
-  description: "Review spec compliance for Task N"
+Agent(team_name="<team>", name="spec-rev-task-N", model="opus"):
   prompt: |
     You are reviewing whether an implementation matches its specification.
 
