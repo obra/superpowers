@@ -19,7 +19,7 @@ const { execSync } = require('child_process');
 
 function extractDotBlocks(markdown) {
   const blocks = [];
-  const regex = /```dot\n([\s\S]*?)```/g;
+  const regex = /```dot\r?\n([\s\S]*?)```/g;
   let match;
 
   while ((match = regex.exec(markdown)) !== null) {
@@ -37,10 +37,13 @@ function extractDotBlocks(markdown) {
 
 function extractGraphBody(dotContent) {
   // Extract just the body (nodes and edges) from a digraph
-  const match = dotContent.match(/digraph\s+\w+\s*\{([\s\S]*)\}/);
-  if (!match) return '';
+  // Using a more robust match that finds the outermost braces
+  const start = dotContent.indexOf('{');
+  const end = dotContent.lastIndexOf('}');
 
-  let body = match[1];
+  if (start === -1 || end === -1 || end <= start) return '';
+
+  let body = dotContent.substring(start + 1, end);
 
   // Remove rankdir (we'll set it once at the top level)
   body = body.replace(/^\s*rankdir\s*=\s*\w+\s*;?\s*$/gm, '');
@@ -165,4 +168,13 @@ function main() {
   console.log(`\nOutput: ${outputDir}/`);
 }
 
-main();
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  extractDotBlocks,
+  extractGraphBody,
+  combineGraphs,
+  renderToSvg
+};
