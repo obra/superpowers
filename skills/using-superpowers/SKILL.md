@@ -23,6 +23,14 @@ This skill MUST be invoked when any of the following occur:
 
 **Exception:** Micro tasks (typo fix, single variable rename, 1-line config change) can skip the entry sequence entirely. Just do them.
 
+## Instruction Priority (highest to lowest)
+
+1. Explicit user instructions in the current conversation
+2. Project-level CLAUDE.md / AGENTS.md
+3. Superpowers skill instructions
+
+If a user explicitly overrides a skill's behavior, follow the user. Skills are defaults, not mandates.
+
 ## Core Rule
 
 Before technical execution, select workflow skills explicitly and follow them.

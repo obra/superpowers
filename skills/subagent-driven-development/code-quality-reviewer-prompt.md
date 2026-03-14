@@ -2,6 +2,8 @@
 
 Dispatch only after spec compliance passes.
 
+Include in the reviewer prompt: "You are a focused subagent. Do NOT invoke any skills from the superpowers-optimized plugin. Do NOT use the Skill tool. Your only job is the review task described below."
+
 ```
 Task tool (superpowers-optimized:code-reviewer):
   Use template at requesting-code-review/code-reviewer.md

@@ -10,7 +10,7 @@
     {
       "name": "superpowers-optimized",
       "description": "Optimized agentic skills framework for Claude Code — workflow routing, token efficiency, discipline enforcement, and safety hooks",
-      "version": "5.0.0",
+      "version": "5.1.0",
       "source": "./",
       "author": {
         "name": "REPOZY"

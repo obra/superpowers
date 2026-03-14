@@ -29,6 +29,10 @@ If any condition fails, run sequentially.
 5. Resolve conflicts between summaries and changed files.
 6. Run integration verification: execute the full project test suite plus any cross-domain checks. Do not mark the wave complete until integration passes.
 
+## Context Isolation
+
+Never forward parent session context or history to subagents. Construct each subagent's prompt from scratch using only the items listed below. Subagents must not receive conversation history, prior reasoning chains, or context from other subagent runs.
+
 ## Prompt Requirements
 
 Each agent prompt must include:
@@ -36,6 +40,7 @@ Each agent prompt must include:
 - Acceptance criteria
 - Constraints (what not to touch)
 - Required output format
+- Skill leakage prevention: "You are a focused subagent. Do NOT invoke any skills from the superpowers-optimized plugin. Do NOT use the Skill tool. Your only job is the task described below."
 
 ## Risks
 

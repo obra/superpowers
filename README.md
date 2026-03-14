@@ -159,18 +159,18 @@ These research insights drive four core principles throughout the fork:
 ## Skills Library (19 skills)
 
 ### Core Workflow
-- **using-superpowers** — Mandatory workflow router with 3-tier complexity classification (micro/lightweight/full)
+- **using-superpowers** — Mandatory workflow router with 3-tier complexity classification (micro/lightweight/full) and instruction priority hierarchy
 - **token-efficiency** — Always-on: concise responses, parallel tool batching, exploration tracking, no redundant work
 - **context-management** — Persist durable state to `state.md` for cross-session continuity
 
 ### Design & Planning
-- **brainstorming** — Socratic design refinement with engineering rigor (requirements verification, edge case analysis, trade-off evaluation)
-- **writing-plans** — Executable implementation plans with exact paths, verification commands, and TDD ordering
+- **brainstorming** — Socratic design refinement with engineering rigor, project-level scope decomposition, and architecture guidance for existing codebases
+- **writing-plans** — Executable implementation plans with exact paths, verification commands, TDD ordering, and pre-execution plan review gate
 - **claude-md-creator** — Create lean, high-signal CLAUDE/AGENTS context files for repositories
 
 ### Execution
 - **executing-plans** — Batch execution with verification checkpoints and engineering rigor for complex tasks
-- **subagent-driven-development** — Parallel subagent execution with two-stage review gates (spec compliance, then code quality), blocked-task escalation, and E2E process hygiene
+- **subagent-driven-development** — Parallel subagent execution with two-stage review gates (spec compliance, then code quality), blocked-task escalation, E2E process hygiene, context isolation, and skill leakage prevention
 - **dispatching-parallel-agents** — Concurrent subagent workflows for independent tasks
 - **using-git-worktrees** — Isolated workspace creation on feature branches
 
@@ -258,6 +258,22 @@ Read more: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superp
 ---
 
 ### Codex / OpenCode
+
+**Install** — tell the agent:
+```
+Fetch and follow instructions from https://raw.githubusercontent.com/REPOZY/superpowers-optimized/refs/heads/main/.codex/INSTALL.md
+```
+
+**Update** — tell the agent:
+```
+Fetch and follow the update instructions from https://raw.githubusercontent.com/REPOZY/superpowers-optimized/refs/heads/main/.codex/INSTALL.md
+```
+
+Or manually: `git pull` in your local clone of the repository.
+
+---
+
+### Gemini CLI
 
 **Install** — tell the agent:
 ```

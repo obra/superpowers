@@ -93,15 +93,21 @@ When an implementer fails on the same task after 2 attempts:
 - Do not accept unresolved review findings.
 - Do not ask subagents to read long plan files when task text can be passed directly.
 
-## Context Hygiene
+## Context Isolation
 
-For each subagent prompt include only:
+Never forward parent session context or history to subagents. Construct each subagent's prompt from scratch using only:
 - Task text
 - Acceptance criteria
 - Needed file paths
 - Relevant constraints
 
-Exclude unrelated prior assistant analysis and old failed hypotheses.
+Exclude unrelated prior assistant analysis and old failed hypotheses. Subagents must not receive conversation history, prior reasoning chains, or context from other subagent runs.
+
+## Subagent Skill Leakage Prevention
+
+Subagents can discover superpowers-optimized skills via filesystem access and invoke them, causing a focused implementer to behave as a workflow orchestrator. Every subagent prompt MUST include this instruction:
+
+> You are a focused subagent. Do NOT invoke any skills from the superpowers-optimized plugin. Do NOT use the Skill tool. Your only job is the task described below.
 
 ## Prompt Templates
 

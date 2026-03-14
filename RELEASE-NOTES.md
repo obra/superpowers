@@ -1,5 +1,39 @@
 # Superpowers Release Notes
 
+## v5.1.0 (2026-03-14)
+
+Upstream sync and hardening release. Adopts the most impactful changes from obra/superpowers (69 commits behind), adds new safety mechanisms, and removes deprecated features.
+
+### New Features
+
+**Subagent context isolation** — All delegation skills (`subagent-driven-development`, `dispatching-parallel-agents`, `executing-plans`) now explicitly prohibit forwarding parent session context or history to subagents. Each subagent prompt is constructed from scratch with only task-scoped information. This prevents context pollution where subagents inherit the parent's reasoning chains and behave incorrectly (e.g., a reviewer acting as a lead developer).
+
+**Subagent skill leakage prevention** — All subagent prompt templates now include an explicit instruction preventing subagents from discovering and invoking superpowers-optimized skills via filesystem access. Without this, a focused implementer subagent could discover workflow skills like `brainstorming` or `executing-plans` and derail into orchestration mode instead of doing its assigned task.
+
+**Instruction priority hierarchy** — `using-superpowers` now declares an explicit priority order: (1) explicit user instructions, (2) project-level CLAUDE.md/AGENTS.md, (3) Superpowers skill instructions. Skills are defaults, not mandates — if a user explicitly overrides a skill's behavior, the agent follows the user.
+
+**Plan review gate** — `writing-plans` now dispatches a plan-reviewer subagent after saving a plan, before offering execution options. The reviewer checks for vague steps, missing file paths, hidden dependencies, incorrect TDD ordering, and scope gaps against the approved design. Bad plans are revised before execution begins.
+
+**Project scope decomposition** — `brainstorming` now assesses whether a project is too large for a single spec (4+ independent subsystems or 20+ tasks) and decomposes into sub-projects with separate specs. This prevents the common failure mode of trying to design an entire system in one monolithic document.
+
+**Architecture guidance for existing codebases** — `brainstorming` now includes explicit guidance to study existing patterns before proposing new ones, match project conventions, and design for isolation (minimizing blast radius per change).
+
+### Changes
+
+**Recommended subagent-driven-development** — `writing-plans` now labels `subagent-driven-development` as the recommended execution path (parallel with per-task review gates) and `executing-plans` as the alternative (sequential, simpler). User choice is preserved.
+
+**Slash commands removed** — The `commands/` directory (`/brainstorm`, `/execute-plan`, `/write-plan`) has been removed. Skills are now the primary mechanism in Claude Code. Natural language routing via `skill-activator.js` and the `using-superpowers` router handle all workflow selection automatically — no manual command invocation needed.
+
+**Gemini CLI support** — Added Gemini CLI installation instructions to README.
+
+**Compatibility warning** — README now includes a prominent note about potential interference from other plugins or custom skills/agents that overlap with this plugin's domains.
+
+### Fixes
+
+**Linux hook variable expansion** — All 7 hook entries in `hooks.json` changed from single quotes to escaped double quotes around `${CLAUDE_PLUGIN_ROOT}`. Single quotes prevented shell variable expansion on Linux, causing "No such file or directory" errors (upstream issue #577).
+
+---
+
 ## v5.0.0 (2026-03-13)
 
 Major overhaul focused on signal-to-noise ratio: every skill must earn its place by changing behavior Claude wouldn't follow on its own. Role-play skills merged into the skills that use them, router redesigned for zero-cost micro-tasks, and two new killer features added (error recovery intelligence and progress visibility).

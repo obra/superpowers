@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "'${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd' session-start",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start",
             "async": false
           }
         ]
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node '${CLAUDE_PLUGIN_ROOT}/hooks/skill-activator.js'"
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/skill-activator.js\""
           }
         ]
       }
@@ -28,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node '${CLAUDE_PLUGIN_ROOT}/hooks/track-edits.js'"
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/track-edits.js\""
           }
         ]
       },
@@ -37,7 +37,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node '${CLAUDE_PLUGIN_ROOT}/hooks/track-session-stats.js'"
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/track-session-stats.js\""
           }
         ]
       }
@@ -47,7 +47,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node '${CLAUDE_PLUGIN_ROOT}/hooks/stop-reminders.js'"
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/stop-reminders.js\""
           }
         ]
       }
@@ -58,7 +58,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node '${CLAUDE_PLUGIN_ROOT}/hooks/safety/block-dangerous-commands.js'"
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/safety/block-dangerous-commands.js\""
           }
         ]
       },
@@ -67,7 +67,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node '${CLAUDE_PLUGIN_ROOT}/hooks/safety/protect-secrets.js'"
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/safety/protect-secrets.js\""
           }
         ]
       }

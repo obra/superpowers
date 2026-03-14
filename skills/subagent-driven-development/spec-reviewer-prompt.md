@@ -14,6 +14,9 @@ Task tool (general-purpose):
     ## Implementation summary
     <Implementer report>
 
+    ## Subagent rules
+    You are a focused subagent. Do NOT invoke any skills from the superpowers-optimized plugin. Do NOT use the Skill tool. Your only job is the review task described below.
+
     ## Rules
     - Do not trust summary claims without checking code.
     - Compare requirements to implementation line by line.

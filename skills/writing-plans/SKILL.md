@@ -73,9 +73,20 @@ git commit -m "<message>"
 - Call out migrations, feature flags, and rollback checks when relevant.
 - Prefer small vertical slices over large horizontal phases.
 
+## Plan Review
+
+After saving the plan, dispatch a plan-reviewer subagent to check for:
+- Vague or ambiguous steps
+- Missing file paths or verification commands
+- Hidden dependencies between tasks
+- Incorrect TDD ordering
+- Scope gaps compared to the approved design
+
+If the reviewer finds issues, revise the plan before offering execution options.
+
 ## Handoff
 
-After saving, present exactly two options:
+After review passes, present exactly two options:
 
-1. `subagent-driven-development` in this session
-2. `executing-plans` in a separate session
+1. **Recommended:** `subagent-driven-development` in this session — parallel execution with per-task review gates (best quality)
+2. **Alternative:** `executing-plans` in a separate session — sequential batch execution (simpler, works in any session)

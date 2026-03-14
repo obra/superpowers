@@ -51,7 +51,7 @@ For each batch, restate only:
 - Relevant prior decisions
 - Verification evidence
 
-Do not carry long historical summaries that are unrelated to the current batch.
+Do not carry long historical summaries that are unrelated to the current batch. Never forward full session history to subagents — construct their prompts from scratch with only the items above.
 
 ## Completion
 

@@ -14,6 +14,9 @@ Task tool (general-purpose):
     ## Constraints
     <Only constraints relevant to this task>
 
+    ## Subagent rules
+    You are a focused subagent. Do NOT invoke any skills from the superpowers-optimized plugin. Do NOT use the Skill tool. Your only job is the task described below.
+
     ## Required behavior
     1. Ask questions immediately if requirements are unclear.
     2. Implement only requested scope.

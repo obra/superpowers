@@ -20,12 +20,14 @@ Do not write code, edit files, or invoke implementation skills until design appr
 ## Checklist
 
 1. Inspect project context (relevant files, docs, recent commits).
-2. Ask all clarifying questions together in a single turn. Use multiple-choice format where possible to reduce round trips.
-3. Propose 2-3 approaches with trade-offs and a recommendation.
+2. Assess scope: if the project touches 4+ independent subsystems or would require 20+ implementation tasks, decompose into sub-projects. Design each sub-project as a separate spec. Present the decomposition to the user for approval before designing individual specs.
+3. Ask all clarifying questions together in a single turn. Use multiple-choice format where possible to reduce round trips.
+4. Propose 2-3 approaches with trade-offs and a recommendation.
 5. Present design in short sections; confirm each section.
-6. If the repo lacks `CLAUDE.md` / `AGENTS.md` and long-term collaboration is expected, consider using `claude-md-creator` to create a minimal, high-signal context file.
-7. Save approved design to `docs/plans/YYYY-MM-DD-<topic>-design.md`.
-8. Invoke `writing-plans`.
+6. For existing codebases: study existing patterns before proposing new ones. Match the project's conventions unless there's a compelling reason to diverge. Design for isolation — prefer changes that minimize blast radius and don't require coordinating across many files.
+7. If the repo lacks `CLAUDE.md` / `AGENTS.md` and long-term collaboration is expected, consider using `claude-md-creator` to create a minimal, high-signal context file.
+8. Save approved design to `docs/plans/YYYY-MM-DD-<topic>-design.md`.
+9. Invoke `writing-plans`.
 
 ## Design Contents
 

@@ -2,7 +2,7 @@
   "name": "superpowers-optimized",
   "displayName": "Superpowers Optimized",
   "description": "Optimized agentic skills framework — workflow routing, token efficiency, and discipline enforcement",
-  "version": "5.0.0",
+  "version": "5.1.0",
   "author": {
     "name": "Jesse Vincent, forked by REPOZY"
   },
@@ -11,6 +11,5 @@
   "license": "MIT",
   "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows", "agentic", "token-efficiency", "hooks", "safety"],
   "skills": "./skills/",
-  "agents": "./agents/",
-  "commands": "./commands/"
+  "agents": "./agents/"
 }
