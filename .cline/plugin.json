@@ -1,0 +1,18 @@
+{
+  "name": "superpowers-cline",
+  "displayName": "Superpowers for Cline",
+  "description": "Core skills library for Cline: TDD, debugging, and collaboration patterns.",
+  "version": "6.0.0",
+  "author": {
+    "name": "Jesse Vincent",
+    "email": "jesse@fsck.com"
+  },
+  "homepage": "https://github.com/obra/superpowers",
+  "repository": "https://github.com/obra/superpowers",
+  "license": "MIT",
+  "keywords": ["skills", "tdd", "debugging", "cline", "workflows"],
+  "paths": {
+    "bootstrap": "./bootstrap.md",
+    "skills": "./skills/"
+  }
+}
