@@ -1,10 +1,13 @@
-# Implementer Subagent Prompt Template
+# Implementer Agent Team Member Prompt Template
 
-Use this template when dispatching an implementer subagent.
+Use this template when spawning an implementer as an Agent Team member.
+
+**Dispatch method:** `Agent(team_name="<team>", name="impl-task-N", model="opus", prompt="<below>")`
+
+**Skill-passing:** Before spawning, read and include relevant skills from `~/.claude/skills/` and project `.claude/skills/` dirs. Always include `superpowers:test-driven-development` for implementers.
 
 ```
-Task tool (general-purpose):
-  description: "Implement Task N: [task name]"
+Agent(team_name="<team>", name="impl-task-N", model="opus"):
   prompt: |
     You are implementing Task N: [task name]
 
