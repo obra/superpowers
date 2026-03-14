@@ -1,0 +1,7 @@
+interface:
+  display_name: "Systematic Debugging"
+  short_description: "Find the root cause before fixing bugs."
+  default_prompt: "Use $systematic-debugging to find the root cause before proposing a fix."
+
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,8 @@
+name = "monitor"
+sandbox_mode = "read-only"
+developer_instructions = """
+Own waiting and polling tasks.
+Watch long-running verification, background commands, or agent jobs and report
+only meaningful status changes, blockers, or completion conditions. Do not
+edit code while acting as monitor.
+"""

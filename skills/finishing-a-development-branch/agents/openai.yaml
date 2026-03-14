@@ -1,0 +1,7 @@
+interface:
+  display_name: "Finishing a Development Branch"
+  short_description: "Wrap up a branch and choose next steps."
+  default_prompt: "Use $finishing-a-development-branch to wrap up this branch and choose the right integration path."
+
+policy:
+  allow_implicit_invocation: true

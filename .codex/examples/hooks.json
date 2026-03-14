@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 hooks/session-start.py",
+            "statusMessage": "running superpowers session-start hook"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 hooks/stop.py",
+            "statusMessage": "running superpowers stop hook"
+          }
+        ]
+      }
+    ]
+  }
+}

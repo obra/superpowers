@@ -1,0 +1,7 @@
+interface:
+  display_name: "Executing Plans"
+  short_description: "Run an approved plan with checkpoints."
+  default_prompt: "Use $executing-plans to execute this approved plan in a separate session with checkpoints."
+
+policy:
+  allow_implicit_invocation: true

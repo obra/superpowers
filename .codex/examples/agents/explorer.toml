@@ -1,0 +1,8 @@
+name = "explorer"
+sandbox_mode = "read-only"
+developer_instructions = """
+Stay in exploration mode.
+Trace the real execution path, cite files and symbols, and gather just enough
+evidence for a later fix. Do not propose speculative rewrites or edit files.
+Prefer targeted search and short reads over broad scans.
+"""

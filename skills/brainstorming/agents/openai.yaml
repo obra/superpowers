@@ -1,0 +1,7 @@
+interface:
+  display_name: "Brainstorming"
+  short_description: "Turn rough ideas into an approved design."
+  default_prompt: "Use $brainstorming to turn this feature idea into an approved design."
+
+policy:
+  allow_implicit_invocation: true

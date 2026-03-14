@@ -1,0 +1,41 @@
+[features]
+multi_agent = true
+# Experimental; only enable when copying hooks.json and hooks/ into your real
+# ~/.codex/ or project .codex/ directory.
+# codex_hooks = true
+
+[agents]
+max_threads = 6
+max_depth = 1
+
+[agents.explorer]
+description = "Read-only codebase explorer for tracing execution paths and gathering evidence before edits."
+config_file = "agents/explorer.toml"
+
+[agents.worker]
+description = "Implementation-focused agent for the smallest defensible change within an explicit file scope."
+config_file = "agents/worker.toml"
+
+[agents.reviewer]
+description = "Final reviewer for correctness, regressions, and missing tests before merge or handoff."
+config_file = "agents/reviewer.toml"
+
+[agents.monitor]
+description = "Wait-focused agent for polling long-running verification and background commands."
+config_file = "agents/monitor.toml"
+
+# Optional role. Requires a browser MCP server such as chrome_devtools.
+[agents.browser_debugger]
+description = "UI debugger that reproduces browser flows and captures evidence before code changes."
+config_file = "agents/browser-debugger.toml"
+
+[agents.spec_reviewer]
+description = "Read-only reviewer that checks exact scope compliance against the approved task."
+config_file = "agents/spec-reviewer.toml"
+
+[agents.quality_reviewer]
+description = "Read-only reviewer focused on correctness, tests, and maintainability after scope is approved."
+config_file = "agents/quality-reviewer.toml"
+
+# Update this path after copying the example into your real ~/.codex/ folder.
+notify = ["python3", "/Users/YOU/.codex/notify.py"]

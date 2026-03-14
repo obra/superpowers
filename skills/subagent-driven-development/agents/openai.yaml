@@ -1,0 +1,7 @@
+interface:
+  display_name: "Subagent-Driven Development"
+  short_description: "Execute a plan with worker and reviewer roles."
+  default_prompt: "Use $subagent-driven-development to execute this plan with worker and reviewer roles."
+
+policy:
+  allow_implicit_invocation: true

@@ -5,7 +5,10 @@ description: Use when completing tasks, implementing major features, or before m
 
 # Requesting Code Review
 
-Dispatch superpowers:code-reviewer subagent to catch issues before they cascade. The reviewer gets precisely crafted context for evaluation — never your session's history. This keeps the reviewer focused on the work product, not your thought process, and preserves your own context for continued work.
+Use the Codex `reviewer` role to catch issues before they cascade. Give the
+reviewer precise scope, explicit SHAs, and the plan or requirements that define
+success. The reviewer should focus on the work product, not your session
+history.
 
 **Core principle:** Review early, review often.
 
@@ -24,27 +27,37 @@ Dispatch superpowers:code-reviewer subagent to catch issues before they cascade.
 ## How to Request
 
 **1. Get git SHAs:**
+
 ```bash
 BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
 HEAD_SHA=$(git rev-parse HEAD)
 ```
 
-**2. Dispatch code-reviewer subagent:**
+**2. Dispatch the `reviewer` role:**
 
-Use Task tool with superpowers:code-reviewer type, fill template at `code-reviewer.md`
+Use a prompt like:
 
-**Placeholders:**
-- `{WHAT_WAS_IMPLEMENTED}` - What you just built
-- `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_SHA}` - Starting commit
-- `{HEAD_SHA}` - Ending commit
-- `{DESCRIPTION}` - Brief summary
+```text
+Review this change from BASE_SHA to HEAD_SHA.
+Have reviewer inspect correctness, regressions, security risks, and missing
+tests against the stated plan or requirements. Summarize findings first, with
+the highest-risk issues at the top.
+```
+
+Provide:
+
+- what was implemented
+- the plan or requirements
+- `BASE_SHA`
+- `HEAD_SHA`
+- a short description of the change
 
 **3. Act on feedback:**
+
 - Fix Critical issues immediately
 - Fix Important issues before proceeding
 - Note Minor issues for later
-- Push back if reviewer is wrong (with reasoning)
+- Push back if reviewer is wrong, with technical reasoning
 
 ## Example
 
@@ -56,14 +69,12 @@ You: Let me request code review before proceeding.
 BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
 HEAD_SHA=$(git rev-parse HEAD)
 
-[Dispatch superpowers:code-reviewer subagent]
-  WHAT_WAS_IMPLEMENTED: Verification and repair functions for conversation index
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md
-  BASE_SHA: a7981ec
-  HEAD_SHA: 3df7661
-  DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
+[Dispatch reviewer role]
+Review this change from a7981ec to 3df7661.
+Have reviewer inspect correctness, regressions, and missing tests against Task 2
+from docs/superpowers/plans/deployment-plan.md.
 
-[Subagent returns]:
+[Reviewer returns]:
   Strengths: Clean architecture, real tests
   Issues:
     Important: Missing progress indicators
@@ -102,4 +113,6 @@ You: [Fix progress indicators]
 - Show code/tests that prove it works
 - Request clarification
 
-See template at: requesting-code-review/code-reviewer.md
+The existing guidance in `agents/code-reviewer.md` is still useful as reviewer
+source material, but the Codex contract is the `reviewer` role, not a legacy
+tool-specific subagent type.

@@ -1,25 +1,51 @@
 # Codex Tool Mapping
 
-Skills use Claude Code tool names. When you encounter these in a skill, use your platform equivalent:
+Many Superpowers skills were originally written around Claude Code tool names.
+When a skill uses those older names, translate them to the Codex surface below.
 
-| Skill references | Codex equivalent |
-|-----------------|------------------|
+| Legacy skill wording | Codex equivalent |
+|----------------------|------------------|
 | `Task` tool (dispatch subagent) | `spawn_agent` |
-| Multiple `Task` calls (parallel) | Multiple `spawn_agent` calls |
-| Task returns result | `wait` |
-| Task completes automatically | `close_agent` to free slot |
+| Multiple parallel `Task` calls | multiple `spawn_agent` calls |
+| Large homogeneous fan-out | `spawn_agents_on_csv` |
+| Follow-up to a running subagent | `send_input` |
+| Reopen a previously closed agent | `resume_agent` |
+| Wait for agent results | `wait` |
+| Close completed agent threads | `close_agent` |
 | `TodoWrite` (task tracking) | `update_plan` |
-| `Skill` tool (invoke a skill) | Skills load natively — just follow the instructions |
-| `Read`, `Write`, `Edit` (files) | Use your native file tools |
-| `Bash` (run commands) | Use your native shell tools |
+| `Skill` tool (invoke a skill) | native skill discovery, or explicit `$skill-name` |
+| Reviewer / implementer agent labels | named Codex roles in `.codex/examples/agents/` |
 
-## Subagent dispatch requires collab
+## Enable Multi-Agent
 
-Add to your Codex config (`~/.codex/config.toml`):
+Add to your real Codex config (`~/.codex/config.toml` or project
+`.codex/config.toml`):
 
 ```toml
 [features]
-collab = true
+multi_agent = true
 ```
 
-This enables `spawn_agent`, `wait`, and `close_agent` for skills like `dispatching-parallel-agents` and `subagent-driven-development`.
+## Role Catalog
+
+Superpowers ships Codex role examples under `.codex/examples/agents/`:
+
+- `explorer` - read-only code path tracing
+- `worker` - minimal implementation owner
+- `reviewer` - final branch or PR review
+- `monitor` - polling and wait-heavy tasks
+- `browser_debugger` - optional UI reproduction with browser MCP
+- `spec_reviewer` - task scope compliance
+- `quality_reviewer` - correctness, tests, and maintenance
+
+These roles are examples, not active project config. Copy them into your real
+Codex config directory if you want Codex to use them.
+
+## Stable vs Experimental
+
+- **Stable:** `.agents/skills`, `agents/openai.yaml`, `multi_agent`, and
+  `notify`
+- **Experimental:** `codex_hooks` with `hooks.json`
+
+The hooks example in `.codex/examples/` is source-derived from Codex and should
+be treated as experimental.

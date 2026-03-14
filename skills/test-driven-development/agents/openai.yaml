@@ -1,0 +1,7 @@
+interface:
+  display_name: "Test-Driven Development"
+  short_description: "Drive changes from failing tests first."
+  default_prompt: "Use $test-driven-development to drive this change with failing tests first."
+
+policy:
+  allow_implicit_invocation: true

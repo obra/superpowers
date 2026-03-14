@@ -1,0 +1,7 @@
+interface:
+  display_name: "Using Git Worktrees"
+  short_description: "Set up an isolated worktree safely."
+  default_prompt: "Use $using-git-worktrees to set up an isolated worktree for this planned change."
+
+policy:
+  allow_implicit_invocation: true

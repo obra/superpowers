@@ -1,0 +1,7 @@
+interface:
+  display_name: "Verification Before Completion"
+  short_description: "Verify work before claiming success."
+  default_prompt: "Use $verification-before-completion to verify this work before claiming success."
+
+policy:
+  allow_implicit_invocation: true

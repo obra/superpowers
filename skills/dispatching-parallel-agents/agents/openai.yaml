@@ -1,0 +1,7 @@
+interface:
+  display_name: "Dispatching Parallel Agents"
+  short_description: "Split independent work across focused roles."
+  default_prompt: "Use $dispatching-parallel-agents to split these independent failures into focused parallel agents."
+
+policy:
+  allow_implicit_invocation: true

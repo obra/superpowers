@@ -1,6 +1,7 @@
 # Superpowers for Codex
 
-Guide for using Superpowers with OpenAI Codex via native skill discovery.
+Guide for using Superpowers with OpenAI Codex via native skill discovery,
+Codex-native role configs, and multi-agent prompt patterns.
 
 ## Quick Install
 
@@ -24,7 +25,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
    git clone https://github.com/obra/superpowers.git ~/.codex/superpowers
    ```
 
-2. Create the skills symlink:
+2. Create the user-level skills symlink:
    ```bash
    mkdir -p ~/.agents/skills
    ln -s ~/.codex/superpowers/skills ~/.agents/skills/superpowers
@@ -32,60 +33,114 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 3. Restart Codex.
 
-4. **For subagent skills** (optional): Skills like `dispatching-parallel-agents` and `subagent-driven-development` require Codex's collab feature. Add to your Codex config:
-   ```toml
-   [features]
-   collab = true
-   ```
+4. Optional but recommended: enable multi-agent and copy the role examples from
+   `~/.codex/superpowers/.codex/examples/`.
 
 ### Windows
 
-Use a junction instead of a symlink (works without Developer Mode):
+Use a junction instead of a symlink:
 
 ```powershell
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.agents\skills"
 cmd /c mklink /J "$env:USERPROFILE\.agents\skills\superpowers" "$env:USERPROFILE\.codex\superpowers\skills"
 ```
 
+## Repo-Local Skills Pattern
+
+Codex also scans repo-local `.agents/skills/` folders from your working
+directory up to the repo root. If you want Superpowers available only inside a
+specific project, create a repo-local symlink instead of using the user-level
+one:
+
+```bash
+mkdir -p .agents/skills
+ln -s ~/.codex/superpowers/skills .agents/skills/superpowers
+```
+
+This is useful when you want project-scoped skill availability without changing
+your global Codex setup.
+
+## Recommended Codex Setup
+
+Superpowers now ships a Codex example bundle under `.codex/examples/`. It is
+not an active project config; it is a copy-and-adapt template.
+
+### Stable pieces
+
+- `.codex/examples/config.toml` - enables `multi_agent` and wires example roles
+- `.codex/examples/agents/` - role-specific TOML files
+- `.codex/examples/prompts/` - ready-to-paste orchestration prompts
+- `.codex/examples/notify.py` - stable notification example
+
+### Experimental pieces
+
+- `.codex/examples/hooks.json`
+- `.codex/examples/hooks/`
+
+The hooks example is source-derived from the Codex codebase and should be
+treated as experimental. It requires:
+
+```toml
+[features]
+codex_hooks = true
+```
+
+## Multi-Agent Roles
+
+The example role catalog includes:
+
+- `explorer` - read-only code path tracing and evidence gathering
+- `worker` - the smallest defensible implementation
+- `reviewer` - final branch or PR review
+- `monitor` - polling and long-running verification
+- `browser_debugger` - optional browser-driven UI reproduction
+- `spec_reviewer` - exact-scope verification for a task
+- `quality_reviewer` - correctness, tests, and maintainability review
+
+The `browser_debugger` role is optional. It assumes a browser MCP server such
+as `chrome_devtools`. If you do not have browser tooling configured, use the
+same prompts with `explorer + worker` instead.
+
+## Prompt Library
+
+Superpowers now ships Codex-style prompt examples under
+`.codex/examples/prompts/`.
+
+Notable patterns:
+
+- `dispatching-parallel-agents.md` - independent domains, UI debugging with
+  `browser_debugger + explorer + worker`, and `spawn_agents_on_csv`
+- `subagent-driven-development.md` - per-task execution with
+  `worker -> spec_reviewer -> quality_reviewer -> monitor -> reviewer`
+
+These examples are written in the same style as the Codex multi-agent docs:
+“Have X do Y” with explicit role assignment and orchestration goals.
+
 ## How It Works
 
-Codex has native skill discovery — it scans `~/.agents/skills/` at startup, parses SKILL.md frontmatter, and loads skills on demand. Superpowers skills are made visible through a single symlink:
+Codex discovers skills natively from `.agents/skills/` and reads `SKILL.md`
+frontmatter to decide when a skill applies. Superpowers also ships
+`agents/openai.yaml` metadata inside each public skill directory for better
+Codex UI presentation and default prompt examples.
 
-```
-~/.agents/skills/superpowers/ → ~/.codex/superpowers/skills/
-```
-
-The `using-superpowers` skill is discovered automatically and enforces skill usage discipline — no additional configuration needed.
+Codex loads `AGENTS.md` guidance separately from skills. You do not need an old
+bootstrap block in `~/.codex/AGENTS.md`; native skill discovery is now the
+integration path.
 
 ## Usage
 
 Skills are discovered automatically. Codex activates them when:
-- You mention a skill by name (e.g., "use brainstorming")
-- The task matches a skill's description
-- The `using-superpowers` skill directs Codex to use one
 
-### Personal Skills
+- You mention a skill by name, such as `$brainstorming`
+- The request matches a skill description
+- Another Superpowers skill directs Codex to use one
 
-Create your own skills in `~/.agents/skills/`:
+For the two role-heavy workflows:
 
-```bash
-mkdir -p ~/.agents/skills/my-skill
-```
-
-Create `~/.agents/skills/my-skill/SKILL.md`:
-
-```markdown
----
-name: my-skill
-description: Use when [condition] - [what it does]
----
-
-# My Skill
-
-[Your skill content here]
-```
-
-The `description` field is how Codex decides when to activate a skill automatically — write it as a clear trigger condition.
+- `dispatching-parallel-agents` teaches how to split independent work across
+  Codex roles
+- `subagent-driven-development` teaches the per-task review pipeline with
+  `worker`, `spec_reviewer`, and `quality_reviewer`
 
 ## Updating
 
@@ -93,7 +148,8 @@ The `description` field is how Codex decides when to activate a skill automatica
 cd ~/.codex/superpowers && git pull
 ```
 
-Skills update instantly through the symlink.
+The symlinked skills update immediately after the pull. Restart Codex if you
+want it to reload skill metadata at session start.
 
 ## Uninstalling
 
@@ -102,23 +158,45 @@ rm ~/.agents/skills/superpowers
 ```
 
 **Windows (PowerShell):**
+
 ```powershell
 Remove-Item "$env:USERPROFILE\.agents\skills\superpowers"
 ```
 
-Optionally delete the clone: `rm -rf ~/.codex/superpowers` (Windows: `Remove-Item -Recurse -Force "$env:USERPROFILE\.codex\superpowers"`).
+Optionally delete the clone:
+
+```bash
+rm -rf ~/.codex/superpowers
+```
 
 ## Troubleshooting
 
 ### Skills not showing up
 
 1. Verify the symlink: `ls -la ~/.agents/skills/superpowers`
-2. Check skills exist: `ls ~/.codex/superpowers/skills`
-3. Restart Codex — skills are discovered at startup
+2. Check the skill directories exist: `find ~/.codex/superpowers/skills -maxdepth 2 -name SKILL.md`
+3. Restart Codex so it reloads skill metadata
 
-### Windows junction issues
+### Multi-agent roles not working
 
-Junctions normally work without special permissions. If creation fails, try running PowerShell as administrator.
+1. Confirm `[features] multi_agent = true` in your real `~/.codex/config.toml`
+2. Copy the role examples from `.codex/examples/agents/` into your real
+   `~/.codex/agents/` or project `.codex/agents/`
+3. Check that the `config_file` paths in your real config point to existing
+   files
+
+### Browser debugger not available
+
+If you do not have a browser MCP server configured, remove `browser_debugger`
+from the prompt and use `explorer + worker` instead. The rest of the workflow
+still applies.
+
+### Experimental hooks not firing
+
+1. Confirm `[features] codex_hooks = true`
+2. Copy `.codex/examples/hooks.json` and `.codex/examples/hooks/` into your
+   real `~/.codex/` or project `.codex/`
+3. Remember that this surface is experimental and may change with Codex
 
 ## Getting Help
 

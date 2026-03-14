@@ -1,0 +1,7 @@
+interface:
+  display_name: "Writing Plans"
+  short_description: "Turn a spec into an implementable plan."
+  default_prompt: "Use $writing-plans to turn this approved spec into an implementable task plan."
+
+policy:
+  allow_implicit_invocation: true

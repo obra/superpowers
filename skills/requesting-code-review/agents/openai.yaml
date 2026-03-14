@@ -1,0 +1,7 @@
+interface:
+  display_name: "Requesting Code Review"
+  short_description: "Review a change before continuing or merging."
+  default_prompt: "Use $requesting-code-review to review this change before I continue or merge."
+
+policy:
+  allow_implicit_invocation: true

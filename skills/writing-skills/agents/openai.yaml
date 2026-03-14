@@ -1,0 +1,7 @@
+interface:
+  display_name: "Writing Skills"
+  short_description: "Create or update a skill and validate it."
+  default_prompt: "Use $writing-skills to create or update a skill and validate that it works."
+
+policy:
+  allow_implicit_invocation: false

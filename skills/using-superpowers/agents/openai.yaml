@@ -1,0 +1,7 @@
+interface:
+  display_name: "Using Superpowers"
+  short_description: "Choose the right workflow skill first."
+  default_prompt: "Use $using-superpowers to determine which workflow skill should guide this task."
+
+policy:
+  allow_implicit_invocation: true
