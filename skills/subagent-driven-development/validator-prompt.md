@@ -19,12 +19,11 @@ You are reviewing Task N: [task name]
 
 ## Implementer Report
 
-[Full report from implementer, including their evidence: test output, diff stat, files changed.
-Do NOT trust this report — use it only as a starting point. Verify everything independently.]
+[Full report from implementer, including their evidence: test output, diff stat, files changed.]
 
 ## CRITICAL: Do Not Trust the Report
 
-Read the actual code. The report may be optimistic, incomplete, or inaccurate.
+The report may be optimistic, incomplete, or inaccurate. Read the actual code — verify everything independently.
 
 ## Git Information
 
@@ -75,7 +74,7 @@ For each gap: ❌ MISSING — [requirement], expected: [what spec says], found: 
 - ✅ APPROVED — all requirements cited, no Critical or Important issues
 - ❌ NEEDS FIXES — [bulleted list of exactly what must change]
 
-After sending this verdict, notify the team lead via `SendMessage` so they know you are available for the next review.
+After sending this verdict, notify the team lead via `SendMessage` so they know you are available for the next review. Also update your review task status via `TaskUpdate(status: 'completed')` so your availability survives compaction.
 
 ## Re-Review Protocol
 

@@ -154,7 +154,7 @@ Before spawning the team, synthesize a complete self-contained execution prompt 
 
 Present this as the plan. The user selects **"clear context and auto-accept edits"** (option 1 / Shift+Tab) — this clears the accumulated context and begins execution immediately with a clean slate. Do not ask the user about context health or prompt them to `/compact`.
 
-**Prerequisite:** Run the SDK memory validation test (see design doc) before first use. Confirm team members retain conversation context between `SendMessage` calls.
+**Prerequisite (validated 2026-02-28):** Team members retain conversation context between `SendMessage` calls — confirmed via SDK memory validation test (see design doc). No action needed.
 
 **Core difference:** Persistent validator agents replace fresh-subagent-per-review. Validators accumulate codebase context across tasks and run combined spec+quality review in a single pass.
 
@@ -237,11 +237,13 @@ SHA map (for dependency re-reads): [dict of prior task → their HEAD_SHA, e.g. 
 
 The SHA map lets the validator re-read prior task diffs when it infers dependencies from the task spec. Team lead maintains this map as tasks complete.
 
+The team lead creates a review task (via `TaskCreate`) for each review assignment and includes the task ID in the `SendMessage` to the validator. The team lead also sets the review task to `in_progress` via `TaskUpdate` — this marks the validator as busy and survives compaction.
+
 ### Validator Idle State Tracking
 
-A validator is treated as busy from the moment they receive a review request until their SendMessage verdict arrives. Team lead treats SendMessage receipt as the authoritative availability signal — not TaskUpdate state. Team lead does not send a second review to a validator before receiving their SendMessage verdict for the first.
+During normal operation, a validator is treated as busy from the moment they receive a review request until their SendMessage verdict arrives. Team lead treats SendMessage receipt as the primary availability signal. Team lead does not send a second review to a validator before receiving their SendMessage verdict for the first.
 
-Validators notify the team lead when their verdict is ready via `SendMessage`. The team lead routes the next available review request only after receiving that message.
+Validators notify the team lead when their verdict is ready via `SendMessage` and also update their review task via `TaskUpdate(status: 'completed')`. The team lead sets the review task to `in_progress` when assigning the review. This two-writer pattern (team lead owns idle → busy, validator owns busy → idle) provides durable state that survives compaction — see "Recovering After Compaction."
 
 ### Re-Review Loop Bound
 
@@ -274,7 +276,7 @@ If a validator does not respond within 60 seconds of receiving a review request:
 If the team lead session is compacted mid-plan, **do not assume the task list was lost.** `TaskList` is external storage — it survives compaction. On resumption:
 
 1. Run `TaskList` immediately to read authoritative task state (completed, in_progress, pending)
-2. Check validator TaskUpdate state to see which validators are busy
+2. Check validator review task state via TaskList — `in_progress` means busy (team lead set this when assigning), `completed` means idle (validator set this after verdict). See "Validator Idle State Tracking" for the two-writer pattern.
 3. Only send status-check messages to implementers whose tasks show `in_progress` but have not yet sent a report — do not broadcast to all members
 4. Resume orchestration from the recovered state; do not restart the plan
 
@@ -402,17 +404,20 @@ implementer-2 (Task 2 finishes first):
   - git diff --stat: 3 files, +120/-5 lines
   - Committed (HEAD: abc1234)
 
-[Check TaskList - validator-1 is idle]
-[SendMessage to validator-1: Task 2 spec + report + BASE=..., HEAD=abc1234, SHA map={}]
-[TaskUpdate validator-1 task: in_progress]
+[validator-1 is idle (last review task: completed)]
+[TaskCreate review task for validator-1]
+[SendMessage to validator-1: Task 2 spec + report + review task ID + BASE=..., HEAD=abc1234, SHA map={}]
+[TaskUpdate validator-1 review task: in_progress]
 
 implementer-1 (Task 1 finishes):
   - Implemented hook installer
   - 5/5 tests passing
   - Committed (HEAD: def5678)
 
-[Check TaskList - validator-2 is idle, validator-1 still reviewing Task 2]
-[SendMessage to validator-2: Task 1 spec + report + BASE=..., HEAD=def5678, SHA map={}]
+[validator-2 is idle, validator-1 still reviewing Task 2]
+[TaskCreate review task for validator-2]
+[SendMessage to validator-2: Task 1 spec + report + review task ID + BASE=..., HEAD=def5678, SHA map={}]
+[TaskUpdate validator-2 review task: in_progress]
 
 validator-1 (Task 2 verdict):
   Spec Compliance:
@@ -420,6 +425,8 @@ validator-1 (Task 2 verdict):
     Requirement "handles Y" -> MISSING - no implementation found
   Code Quality: Strengths: clean. Issues: none.
   Verdict: NEEDS FIXES - implement Y handling
+  [SendMessage to team lead: verdict + available]
+  [TaskUpdate review task: completed]
 
 [SHA map: {task-2: abc1234}]
 [SendMessage to implementer-2: fix Y handling as specified in requirement 3]
@@ -466,7 +473,7 @@ validator-1 (Task 2 re-review):
 - Combined spec+quality in one pass (one validator call per task)
 - Cross-task gap detection (validators re-read dependencies from VCS, not memory)
 - Reviews run concurrently with ongoing implementation
-- Lean team lead context (compact before spawning keeps orchestration turns fast)
+- Lean team lead context (EnterPlanMode clears context before spawning, keeping orchestration turns fast)
 
 **Efficiency gains:**
 - No file reading overhead (controller provides full text)
