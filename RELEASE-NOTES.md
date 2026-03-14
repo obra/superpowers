@@ -2,7 +2,7 @@
 
 ## v5.1.0 (2026-03-14)
 
-Upstream sync and hardening release. Adopts the most impactful changes from obra/superpowers (69 commits behind), adds new safety mechanisms, and removes deprecated features.
+Upstream sync and hardening release. Adopts the most impactful changes from obra/superpowers, adds new safety mechanisms, and removes deprecated features.
 
 ### New Features
 
