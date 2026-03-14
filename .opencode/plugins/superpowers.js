@@ -52,16 +52,25 @@ export const SuperpowersPlugin = async ({ client, directory }) => {
   const envConfigDir = normalizePath(process.env.OPENCODE_CONFIG_DIR, homeDir);
   const configDir = envConfigDir || path.join(homeDir, '.config/opencode');
 
-  // Helper to generate bootstrap content
+  // Cache for bootstrap content so we only read and process SKILL.md once
+  let bootstrapContentPromise = null;
+
+  // Helper to generate bootstrap content (memoized)
   const getBootstrapContent = () => {
-    // Try to load using-superpowers skill
-    const skillPath = path.join(superpowersSkillsDir, 'using-superpowers', 'SKILL.md');
-    if (!fs.existsSync(skillPath)) return null;
+    if (!bootstrapContentPromise) {
+      bootstrapContentPromise = (async () => {
+        // Try to load using-superpowers skill
+        const skillPath = path.join(superpowersSkillsDir, 'using-superpowers', 'SKILL.md');
+        let fullContent;
+        try {
+          fullContent = await fs.promises.readFile(skillPath, 'utf8');
+        } catch (err) {
+          return null;
+        }
 
-    const fullContent = fs.readFileSync(skillPath, 'utf8');
-    const { content } = extractAndStripFrontmatter(fullContent);
+        const { content } = extractAndStripFrontmatter(fullContent);
 
-    const toolMapping = `**Tool Mapping for OpenCode:**
+        const toolMapping = `**Tool Mapping for OpenCode:**
 When skills reference tools you don't have, substitute OpenCode equivalents:
 - \`TodoWrite\` → \`todowrite\`
 - \`Task\` tool with subagents → Use OpenCode's subagent system (@mention)
@@ -72,7 +81,7 @@ When skills reference tools you don't have, substitute OpenCode equivalents:
 Superpowers skills are in \`${configDir}/skills/superpowers/\`
 Use OpenCode's native \`skill\` tool to list and load skills.`;
 
-    return `<EXTREMELY_IMPORTANT>
+        return `<EXTREMELY_IMPORTANT>
 You have superpowers.
 
 **IMPORTANT: The using-superpowers skill content is included below. It is ALREADY LOADED - you are currently following it. Do NOT use the skill tool to load "using-superpowers" again - that would be redundant.**
@@ -81,12 +90,16 @@ ${content}
 
 ${toolMapping}
 </EXTREMELY_IMPORTANT>`;
+      })();
+    }
+
+    return bootstrapContentPromise;
   };
 
   return {
     // Use system prompt transform to inject bootstrap (fixes #226 agent reset bug)
     'experimental.chat.system.transform': async (_input, output) => {
-      const bootstrap = getBootstrapContent();
+      const bootstrap = await getBootstrapContent();
       if (bootstrap) {
         (output.system ||= []).push(bootstrap);
       }
