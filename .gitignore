@@ -3,6 +3,5 @@
 .claude/
 .DS_Store
 node_modules/
-!skills/brainstorming/scripts/node_modules/
 inspo
 triage/
