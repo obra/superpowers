@@ -111,50 +111,81 @@ function wrapInFrame(content) {
   return frameTemplate.replace('<!-- CONTENT -->', content);
 }
 
-function getNewestScreen() {
-  const files = fs.readdirSync(SCREEN_DIR)
-    .filter(f => f.endsWith('.html'))
-    .map(f => {
-      const fp = path.join(SCREEN_DIR, f);
-      return { path: fp, mtime: fs.statSync(fp).mtime.getTime() };
-    })
-    .sort((a, b) => b.mtime - a.mtime);
-  return files.length > 0 ? files[0].path : null;
+async function getNewestScreen() {
+  const entries = await fs.promises.readdir(SCREEN_DIR, { withFileTypes: true });
+  const htmlFiles = entries.filter(e => e.isFile() && e.name.endsWith('.html'));
+
+  if (htmlFiles.length === 0) return null;
+
+  const filesWithTime = await Promise.all(htmlFiles.map(async (e) => {
+    const fp = path.join(SCREEN_DIR, e.name);
+    const stats = await fs.promises.stat(fp);
+    return { path: fp, mtime: stats.mtime.getTime() };
+  }));
+
+  filesWithTime.sort((a, b) => b.mtime - a.mtime);
+  return filesWithTime[0].path;
 }
 
 // ========== HTTP Request Handler ==========
 
-function handleRequest(req, res) {
+async function handleRequest(req, res) {
   touchActivity();
-  if (req.method === 'GET' && req.url === '/') {
-    const screenFile = getNewestScreen();
-    let html = screenFile
-      ? (raw => isFullDocument(raw) ? raw : wrapInFrame(raw))(fs.readFileSync(screenFile, 'utf-8'))
-      : WAITING_PAGE;
+  try {
+    if (req.method === 'GET' && req.url === '/') {
+      const screenFile = await getNewestScreen();
+      let html;
+      if (screenFile) {
+        const raw = await fs.promises.readFile(screenFile, 'utf-8');
+        html = isFullDocument(raw) ? raw : wrapInFrame(raw);
+      } else {
+        html = WAITING_PAGE;
+      }
 
-    if (html.includes('</body>')) {
-      html = html.replace('</body>', helperInjection + '\n</body>');
+      if (html.includes('</body>')) {
+        html = html.replace('</body>', () => helperInjection + '\n</body>');
+      } else {
+        html += helperInjection;
+      }
+
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(html);
+    } else if (req.method === 'GET' && req.url.startsWith('/files/')) {
+      const fileName = req.url.slice(7);
+      const filePath = path.join(SCREEN_DIR, path.basename(fileName));
+
+      try {
+        await fs.promises.access(filePath, fs.constants.R_OK);
+      } catch (e) {
+        res.writeHead(404);
+        res.end('Not found');
+        return;
+      }
+
+      const ext = path.extname(filePath).toLowerCase();
+      const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+      res.writeHead(200, { 'Content-Type': contentType });
+
+      const stream = fs.createReadStream(filePath);
+      stream.on('error', (err) => {
+        if (!res.headersSent) {
+          res.writeHead(500);
+          res.end('Internal Server Error');
+        } else {
+          res.end();
+        }
+      });
+      stream.pipe(res);
     } else {
-      html += helperInjection;
-    }
-
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(html);
-  } else if (req.method === 'GET' && req.url.startsWith('/files/')) {
-    const fileName = req.url.slice(7);
-    const filePath = path.join(SCREEN_DIR, path.basename(fileName));
-    if (!fs.existsSync(filePath)) {
       res.writeHead(404);
       res.end('Not found');
-      return;
     }
-    const ext = path.extname(filePath).toLowerCase();
-    const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-    res.writeHead(200, { 'Content-Type': contentType });
-    res.end(fs.readFileSync(filePath));
-  } else {
-    res.writeHead(404);
-    res.end('Not found');
+  } catch (err) {
+    console.error('Request handling error:', err);
+    if (!res.headersSent) {
+      res.writeHead(500);
+      res.end('Internal Server Error');
+    }
   }
 }
 
