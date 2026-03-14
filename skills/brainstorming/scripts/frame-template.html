@@ -126,6 +126,11 @@
       font-weight: 600; font-size: 0.85rem; flex-shrink: 0;
     }
     .option.selected .letter { background: var(--accent); color: white; }
+    .option:focus-visible, .card:focus-visible, .mock-button:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
     .option .content { flex: 1; }
     .option .content h3 { font-size: 0.95rem; margin-bottom: 0.15rem; }
     .option .content p { color: var(--text-secondary); font-size: 0.85rem; margin: 0; }
