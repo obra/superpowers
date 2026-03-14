@@ -162,18 +162,7 @@ function handleRequest(req, res) {
 
 const clients = new Set();
 
-function handleUpgrade(req, socket) {
-  const key = req.headers['sec-websocket-key'];
-  if (!key) { socket.destroy(); return; }
-
-  const accept = computeAcceptKey(key);
-  socket.write(
-    'HTTP/1.1 101 Switching Protocols\r\n' +
-    'Upgrade: websocket\r\n' +
-    'Connection: Upgrade\r\n' +
-    'Sec-WebSocket-Accept: ' + accept + '\r\n\r\n'
-  );
-
+function setupSocketCommunication(socket) {
   let buffer = Buffer.alloc(0);
   clients.add(socket);
 
@@ -217,6 +206,21 @@ function handleUpgrade(req, socket) {
 
   socket.on('close', () => clients.delete(socket));
   socket.on('error', () => clients.delete(socket));
+}
+
+function handleUpgrade(req, socket) {
+  const key = req.headers['sec-websocket-key'];
+  if (!key) { socket.destroy(); return; }
+
+  const accept = computeAcceptKey(key);
+  socket.write(
+    'HTTP/1.1 101 Switching Protocols\r\n' +
+    'Upgrade: websocket\r\n' +
+    'Connection: Upgrade\r\n' +
+    'Sec-WebSocket-Accept: ' + accept + '\r\n\r\n'
+  );
+
+  setupSocketCommunication(socket);
 }
 
 function handleMessage(text) {
