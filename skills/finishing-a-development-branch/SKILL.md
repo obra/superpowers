@@ -53,7 +53,7 @@ Present exactly these 4 options:
 ```
 Implementation complete. What would you like to do?
 
-1. Merge back to <base-branch> locally
+1. Push and create a Draft Pull Request
 2. Push and create a Pull Request
 3. Keep the branch as-is (I'll handle it later)
 4. Discard this work
@@ -65,23 +65,21 @@ Which option?
 
 ### Step 4: Execute Choice
 
-#### Option 1: Merge Locally
+#### Option 1: Push and Create Draft PR
 
 ```bash
-# Switch to base branch
-git checkout <base-branch>
+# Push branch
+git push -u origin <feature-branch>
 
-# Pull latest
-git pull
+# Create draft PR
+gh pr create --draft --title "<title>" --body "$(cat <<'EOF'
+## Summary
+<2-3 bullets of what changed>
 
-# Merge feature branch
-git merge <feature-branch>
-
-# Verify tests on merged result
-<test command>
-
-# If tests pass
-git branch -d <feature-branch>
+## Test Plan
+- [ ] <verification steps>
+EOF
+)"
 ```
 
 Then: Cleanup worktree (Step 5)
@@ -135,7 +133,7 @@ Then: Cleanup worktree (Step 5)
 
 ### Step 5: Cleanup Worktree
 
-**For Options 1, 2, 4:**
+**For Option 4:**
 
 Check if in worktree:
 ```bash
@@ -147,13 +145,13 @@ If yes:
 git worktree remove <worktree-path>
 ```
 
-**For Option 3:** Keep worktree.
+**For Options 1, 2, 3:** Keep worktree.
 
 ## Quick Reference
 
-| Option | Merge | Push | Keep Worktree | Cleanup Branch |
+| Option | Draft | Push | Keep Worktree | Cleanup Branch |
 |--------|-------|------|---------------|----------------|
-| 1. Merge locally | ✓ | - | - | ✓ |
+| 1. Draft PR | ✓ | ✓ | ✓ | - |
 | 2. Create PR | - | ✓ | ✓ | - |
 | 3. Keep as-is | - | - | ✓ | - |
 | 4. Discard | - | - | - | ✓ (force) |
@@ -169,8 +167,8 @@ git worktree remove <worktree-path>
 - **Fix:** Present exactly 4 structured options
 
 **Automatic worktree cleanup**
-- **Problem:** Remove worktree when might need it (Option 2, 3)
-- **Fix:** Only cleanup for Options 1 and 4
+- **Problem:** Remove worktree when might need it (Options 1, 2, 3)
+- **Fix:** Only cleanup for Option 4
 
 **No confirmation for discard**
 - **Problem:** Accidentally delete work
@@ -188,7 +186,7 @@ git worktree remove <worktree-path>
 - Verify tests before offering options
 - Present exactly 4 options
 - Get typed confirmation for Option 4
-- Clean up worktree for Options 1 & 4 only
+- Clean up worktree for Option 4 only
 
 ## Integration
 
