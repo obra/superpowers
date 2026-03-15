@@ -9,7 +9,12 @@ const OPCODES = { TEXT: 0x01, CLOSE: 0x08, PING: 0x09, PONG: 0x0A };
 const WS_MAGIC = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 
 function computeAcceptKey(clientKey) {
-  return crypto.createHash('sha1').update(clientKey + WS_MAGIC).digest('base64');
+  if (typeof clientKey !== 'string' || !clientKey) {
+    throw new TypeError('clientKey must be a non-empty string');
+  }
+  return crypto.createHash('sha1')
+    .update(clientKey + WS_MAGIC, 'binary')
+    .digest('base64');
 }
 
 function encodeFrame(opcode, payload) {
@@ -103,30 +108,52 @@ const helperInjection = '<script>\n' + helperScript + '\n</script>';
 // ========== Helper Functions ==========
 
 function isFullDocument(html) {
-  // Extract a short prefix to avoid calling toLowerCase() on massive HTML strings
-  // which requires a large memory allocation and blocks the event loop.
-  const prefix = html.trimStart().slice(0, 100).toLowerCase();
-  return prefix.startsWith('<!doctype') || prefix.startsWith('<html');
+  // Optimize: only check the start of the document to avoid
+  // allocating a full lowercase copy of potentially large HTML files
+  const trimmed = html.trimStart().substring(0, 20).toLowerCase();
+  return trimmed.startsWith('<!doctype') || trimmed.startsWith('<html');
 }
 
 function wrapInFrame(content) {
   return frameTemplate.replace('<!-- CONTENT -->', () => content);
 }
 
+let cachedNewestScreen = undefined;
+
 async function getNewestScreen() {
+  if (cachedNewestScreen !== undefined) {
+    return cachedNewestScreen;
+  }
+
   const entries = await fs.promises.readdir(SCREEN_DIR, { withFileTypes: true });
   const htmlFiles = entries.filter(e => e.isFile() && e.name.endsWith('.html'));
 
-  if (htmlFiles.length === 0) return null;
+  if (htmlFiles.length === 0) {
+    cachedNewestScreen = null;
+    return null;
+  }
 
-  const filesWithTime = await Promise.all(htmlFiles.map(async (e) => {
+  let newestPath = null;
+  let maxMtime = -1;
+
+  // Process sequentially to avoid EMFILE issues with large number of files
+  for (const e of htmlFiles) {
     const fp = path.join(SCREEN_DIR, e.name);
-    const stats = await fs.promises.stat(fp);
-    return { path: fp, mtime: stats.mtime.getTime() };
-  }));
+    try {
+        const stats = await fs.promises.stat(fp);
+        const time = stats.mtime.getTime();
+        if (time > maxMtime) {
+          maxMtime = time;
+          newestPath = fp;
+        }
+    } catch (err) {
+        // file could be deleted while we are checking it, skip
+        console.error("Error stat-ing file:", err);
+    }
+  }
 
-  filesWithTime.sort((a, b) => b.mtime - a.mtime);
-  return filesWithTime[0].path;
+  cachedNewestScreen = newestPath;
+  return newestPath;
 }
 
 // ========== HTTP Request Handler ==========
@@ -308,6 +335,7 @@ function startServer() {
   server.on('upgrade', handleUpgrade);
 
   const watcher = fs.watch(SCREEN_DIR, (eventType, filename) => {
+    cachedNewestScreen = undefined;
     if (!filename || !filename.endsWith('.html')) return;
 
     if (debounceTimers.has(filename)) clearTimeout(debounceTimers.get(filename));

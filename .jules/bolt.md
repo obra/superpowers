@@ -1,3 +1,3 @@
-## 2026-03-15 - [O(1) String Lowercasing in Node.js Event Loop]
-**Learning:** Node.js `toLowerCase()` on massive strings (like entire HTML documents) blocks the event loop and requires large memory allocations.
-**Action:** Always extract a short prefix using `.slice()` before calling `.toLowerCase()` when only checking the start of a large string.
+## 2026-03-14 - Optimize isFullDocument string allocation
+**Learning:** Brainstorm server receives full HTML screens that can be multi-megabytes. Calling `toLowerCase()` on the entire string before checking the first few characters for `<!doctype` causes huge unnecessary memory allocations and blocks the event loop.
+**Action:** Only substring the first few characters (e.g., 20) of large text payloads before calling string transformation functions like `toLowerCase()` when doing prefix checks.
