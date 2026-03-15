@@ -64,6 +64,17 @@ if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "t
   FOREGROUND="true"
 fi
 
+# Windows/Git Bash reaps nohup background processes. Auto-foreground when detected.
+if [[ "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
+  case "${OSTYPE:-}" in
+    msys*|cygwin*|mingw*) FOREGROUND="true" ;;
+  esac
+  # Git Bash sets MSYSTEM (MINGW64, MINGW32, MSYS)
+  if [[ -n "${MSYSTEM:-}" ]]; then
+    FOREGROUND="true"
+  fi
+fi
+
 # Generate unique session directory
 SESSION_ID="$$-$(date +%s)"
 
@@ -91,9 +102,14 @@ cd "$SCRIPT_DIR"
 # Resolve the harness PID (grandparent of this script).
 # $PPID is the ephemeral shell the harness spawned to run us — it dies
 # when this script exits. The harness itself is $PPID's parent.
-OWNER_PID="$(ps -o ppid= -p "$PPID" 2>/dev/null | tr -d ' ')"
-if [[ -z "$OWNER_PID" || "$OWNER_PID" == "1" ]]; then
+# Skip ps-based resolution on Windows where MSYS2 ps doesn't support -o ppid=.
+if [[ -n "${MSYSTEM:-}" ]] || [[ "${OSTYPE:-}" == msys* ]] || [[ "${OSTYPE:-}" == cygwin* ]]; then
   OWNER_PID="$PPID"
+else
+  OWNER_PID="$(ps -o ppid= -p "$PPID" 2>/dev/null | tr -d ' ')"
+  if [[ -z "$OWNER_PID" || "$OWNER_PID" == "1" ]]; then
+    OWNER_PID="$PPID"
+  fi
 fi
 
 # Foreground mode for environments that reap detached/background processes.

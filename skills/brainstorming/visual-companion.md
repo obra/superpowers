@@ -61,6 +61,14 @@ scripts/start-server.sh --project-dir /path/to/project
 scripts/start-server.sh --project-dir /path/to/project
 ```
 
+**Windows (Git Bash / Claude Code on Windows):**
+```bash
+# Windows/Git Bash reaps nohup background processes. The script auto-detects
+# this via OSTYPE/MSYSTEM and switches to foreground mode automatically.
+# No extra flags needed.
+scripts/start-server.sh --project-dir /path/to/project
+```
+
 **Gemini CLI:**
 ```bash
 # Use --foreground and set is_background: true on your shell tool call
