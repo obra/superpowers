@@ -15,7 +15,7 @@ This repository delivers everything the original Superpowers plugin does, plus a
 | Feature                  | Original Superpowers          | Superpowers Optimized                          | Real-world impact                  |
 |--------------------------|-------------------------------|------------------------------------------------|------------------------------------|
 | Workflow selection       | Manual                        | Automatic 3-tier (micro / lightweight / full)  | Zero overhead on simple tasks      |
-| Safety & hooks           | None                          | 7 proactive hooks (dangerous-command blocker, secrets protector, edit tracker, session stats, stop reminders, skill activator, session start) | Zero risk of rm -rf or secret leaks|
+| Safety & hooks           | None                          | 8 proactive hooks (dangerous-command blocker, secrets protector, subagent guard, edit tracker, session stats, stop reminders, skill activator, session start) | Zero risk of rm -rf or secret leaks|
 | Security review          | None                          | Built into code review with OWASP checklist    | Security catches before merge      |
 | Error recovery           | None                          | Project-specific known-issues.md               | No rediscovering the same bug      |
 | Token efficiency         | Standard                      | Always-on context hygiene + exploration tracking | 5-10x smaller context windows     |
@@ -82,6 +82,14 @@ User sends a prompt
 ┌─ Tracking Hooks (PostToolUse) ────────────────────────────┐
 │  track-edits.js → logs file changes for TDD reminders     │
 │  track-session-stats.js → logs skill invocations          │
+└───────────────────────────────────────────────────────────┘
+        │
+        ▼  (when Claude stops responding)
+┌─ Subagent Guard (SubagentStop) ──────────────────────────┐
+│  subagent-guard.js →                                      │
+│    Detects skill leakage in subagent output                │
+│    Blocks stop + forces redo if violation found            │
+│    Logs violations for visibility                          │
 └───────────────────────────────────────────────────────────┘
         │
         ▼  (when Claude stops responding)
@@ -189,13 +197,14 @@ These research insights drive four core principles throughout the fork:
 - **error-recovery** — Maintains project-specific `known-issues.md` mapping recurring errors to solutions, consulted before debugging
 - **frontend-craftsmanship** — Production-grade, accessible frontend standards (semantic HTML, CSS tokens, WCAG AA, fluid typography, reduced-motion)
 
-### Hooks (7 total)
+### Hooks (8 total)
 - **skill-activator** (UserPromptSubmit) — Micro-task detection + confidence-threshold skill matching
 - **track-edits** (PostToolUse: Edit/Write) — Logs file changes for TDD reminders
 - **track-session-stats** (PostToolUse: Skill) — Tracks skill invocations for progress visibility
 - **stop-reminders** (Stop) — TDD reminders, commit nudges, and session summary
 - **block-dangerous-commands** (PreToolUse: Bash) — 30+ patterns blocking destructive commands with 3-tier severity
 - **protect-secrets** (PreToolUse: Read/Edit/Write/Bash) — 50+ patterns protecting sensitive files with allowlisting
+- **subagent-guard** (SubagentStop) — Detects and blocks subagent skill leakage with automatic recovery
 - **session-start** (SessionStart) — Injects using-superpowers routing into every session
 
 ### Agents
