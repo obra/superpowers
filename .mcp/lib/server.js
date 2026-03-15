@@ -50,7 +50,7 @@ export function createServer() {
     'list_skills',
     'Returns the name and description of every available Superpowers skill. ' +
     'Call this first to discover which skills exist before deciding which to load.',
-    {},   // no input parameters
+    {},
     safe(async () => {
       const skills = listSkills();
       return {
@@ -68,8 +68,10 @@ export function createServer() {
   server.tool(
     'load_skill',
     'Returns the full instruction content of a specific Superpowers skill. ' +
-    'The content is the active skill text to follow — frontmatter is stripped.',
-    { name: z.string().describe('Skill name, e.g. "brainstorming" or "test-driven-development"') },
+    'The content is the active skill text to follow -- frontmatter is stripped.',
+    {
+      name: z.string().describe('Skill name, e.g. "brainstorming" or "test-driven-development"')
+    },
     safe(async ({ name }) => {
       const skill = loadSkill(name);
       return {
@@ -125,10 +127,9 @@ export function createServer() {
   // skill://{name} — individual skill content
   server.resource(
     'skill',
-    new URL('skill://placeholder'),   // template placeholder; SDK uses listChanged for dynamic
+    'skill://{name}',
     { description: 'Superpowers skill content. Use skill://{name} to access a specific skill.' },
-    async (uri) => {
-      const name = uri.hostname || uri.pathname.replace(/^\//, '');
+    async (uri, { name }) => {
       try {
         const skill = loadSkill(name);
         return {
@@ -154,7 +155,7 @@ export function createServer() {
   // superpowers://bootstrap
   server.resource(
     'bootstrap',
-    new URL('superpowers://bootstrap'),
+    'superpowers://bootstrap',
     { description: 'Universal Superpowers bootstrap document.' },
     async (uri) => ({
       contents: [{
@@ -168,7 +169,7 @@ export function createServer() {
   // superpowers://capabilities
   server.resource(
     'capabilities',
-    new URL('superpowers://capabilities'),
+    'superpowers://capabilities',
     { description: 'CAPABILITIES.md — maps abstract capabilities to platform-native tools.' },
     async (uri) => ({
       contents: [{
