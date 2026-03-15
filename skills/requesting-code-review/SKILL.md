@@ -42,10 +42,12 @@ When changes touch security-relevant areas, the code review **must** include a s
 
 **Security checklist:**
 - OWASP Top 10 and CWE vulnerability scan
+- OWASP API Security Top 10: broken object/function-level authorization, unrestricted resource consumption, SSRF, mass assignment, improper inventory management
 - Input validation and injection risk (SQL, XSS, CSRF, command injection)
-- Auth flow correctness (session handling, token expiry, privilege escalation)
+- Auth flow correctness (session handling, token expiry, privilege escalation, rate limiting on auth endpoints)
 - Secrets handling (no hardcoded credentials, proper env var usage)
 - Dependency vulnerabilities (known CVEs in imported packages)
+- API hardening (security headers, CORS configuration, error message sanitization, rate limiting)
 - Logging hygiene (no secrets in logs, adequate audit trail)
 
 **Severity enforcement:**
