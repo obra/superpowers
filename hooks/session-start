@@ -43,11 +43,14 @@ session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the 
 # Uses printf instead of heredoc (cat <<EOF) to work around a bash 5.3+
 # bug where heredoc variable expansion hangs when content exceeds ~512 bytes.
 # See: https://github.com/obra/superpowers/issues/571
-if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ]; then
+if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
+  # Cursor sets CURSOR_PLUGIN_ROOT (may also set CLAUDE_PLUGIN_ROOT) — emit additional_context
+  printf '{\n  "additional_context": "%s"\n}\n' "$session_context"
+elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ]; then
   # Claude Code sets CLAUDE_PLUGIN_ROOT — emit only hookSpecificOutput
   printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$session_context"
 else
-  # Other platforms (Cursor, etc.) — emit only additional_context
+  # Other platforms — emit additional_context as fallback
   printf '{\n  "additional_context": "%s"\n}\n' "$session_context"
 fi
 
