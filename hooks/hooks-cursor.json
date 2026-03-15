@@ -3,7 +3,7 @@
   "hooks": {
     "sessionStart": [
       {
-        "command": "\"${CURSOR_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start"
+        "command": "./hooks/session-start"
       }
     ]
   }

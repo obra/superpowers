@@ -8,6 +8,7 @@
 - **Portable shebangs**: Replace `#!/bin/bash` with `#!/usr/bin/env bash` in all 13 shell scripts. Fixes execution on NixOS, FreeBSD, and macOS with Homebrew bash where `/bin/bash` is outdated or missing. ([#700](https://github.com/obra/superpowers/pull/700), dupes: [#747](https://github.com/obra/superpowers/pull/747))
 - **POSIX-safe hook script**: Replace `${BASH_SOURCE[0]:-$0}` with `$0` in `hooks/session-start` and polyglot-hooks docs. Fixes 'Bad substitution' error on Ubuntu/Debian where `/bin/sh` is dash. ([#553](https://github.com/obra/superpowers/pull/553))
 - **Bash 5.3+ hook hang**: Replace heredoc (`cat <<EOF`) with `printf` in `hooks/session-start`. Fixes indefinite hang on macOS with Homebrew bash 5.3+ caused by a bash regression with large variable expansion in heredocs. ([#572](https://github.com/obra/superpowers/pull/572), [#571](https://github.com/obra/superpowers/issues/571))
+- **Cursor hooks support**: Add `hooks/hooks-cursor.json` with Cursor's camelCase format (`sessionStart`, `version: 1`) and update `.cursor-plugin/plugin.json` to reference it. Fix platform detection in `session-start` to check `CURSOR_PLUGIN_ROOT` first (Cursor may also set `CLAUDE_PLUGIN_ROOT`). (Based on [#709](https://github.com/obra/superpowers/pull/709))
 
 ### Already fixed on dev (closed PRs)
 
