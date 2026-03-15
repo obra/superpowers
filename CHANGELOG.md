@@ -5,6 +5,7 @@
 ### Fixed
 
 - **Brainstorm server on Windows**: Auto-detect Windows/Git Bash (`OSTYPE=msys*`, `MSYSTEM`) and switch to foreground mode, fixing silent server failure caused by `nohup`/`disown` process reaping. Applies to all Windows shells (CMD, PowerShell, Git Bash) since they all route through Git Bash. (fixes #737, based on #740)
+- **Portable shebangs**: Replace `#!/bin/bash` with `#!/usr/bin/env bash` in all 13 shell scripts. Fixes execution on NixOS, FreeBSD, and macOS with Homebrew bash where `/bin/bash` is outdated or missing. (closes #700)
 
 ### Known Issues
 
