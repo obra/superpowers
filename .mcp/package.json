@@ -1,0 +1,45 @@
+{
+  "name": "superpowers-mcp",
+  "version": "1.0.0",
+  "description": "MCP server exposing Superpowers skills to any MCP-compatible agent — no file paths, no symlinks, just works.",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "superpowers-mcp": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "lib/",
+    "../skills/",
+    "../universal/"
+  ],
+  "scripts": {
+    "start": "node index.js",
+    "test": "node --test test/"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "mcp",
+    "skills",
+    "superpowers",
+    "tdd",
+    "debugging",
+    "agentic",
+    "workflows"
+  ],
+  "author": {
+    "name": "Jesse Vincent",
+    "email": "jesse@fsck.com"
+  },
+  "homepage": "https://github.com/obra/superpowers",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/obra/superpowers.git"
+  },
+  "license": "MIT"
+}
