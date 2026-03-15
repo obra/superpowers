@@ -269,6 +269,22 @@ function setupSocketCommunication(socket) {
 }
 
 function handleUpgrade(req, socket) {
+  const origin = req.headers['origin'];
+  if (origin) {
+    try {
+      const originUrl = new URL(origin);
+      if (originUrl.hostname !== 'localhost' && originUrl.hostname !== '127.0.0.1' && originUrl.hostname !== HOST) {
+        socket.write('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n');
+        socket.destroy();
+        return;
+      }
+    } catch (e) {
+      socket.write('HTTP/1.1 400 Bad Request\r\nConnection: close\r\n\r\n');
+      socket.destroy();
+      return;
+    }
+  }
+
   const key = req.headers['sec-websocket-key'];
   if (!key) { socket.destroy(); return; }
 

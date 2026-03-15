@@ -193,6 +193,36 @@ async function runTests() {
       ws.close();
     });
 
+    await test('rejects WebSocket upgrade with disallowed Origin', async () => {
+      const ws = new WebSocket(`ws://localhost:${TEST_PORT}`, {
+        headers: { Origin: 'https://evil.com' }
+      });
+      let gotError = false;
+      await new Promise((resolve) => {
+        ws.on('error', (err) => {
+          gotError = true;
+          assert(err.message.includes('403'), 'Should reject with 403 Forbidden');
+          resolve();
+        });
+        ws.on('open', () => {
+          ws.close();
+          resolve();
+        });
+      });
+      assert(gotError, 'Should have failed with error');
+    });
+
+    await test('accepts WebSocket upgrade with valid Origin', async () => {
+      const ws = new WebSocket(`ws://localhost:${TEST_PORT}`, {
+        headers: { Origin: 'http://localhost' }
+      });
+      await new Promise((resolve, reject) => {
+        ws.on('open', resolve);
+        ws.on('error', reject);
+      });
+      ws.close();
+    });
+
     await test('relays user events to stdout with source field', async () => {
       stdoutAccum = '';
       const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
