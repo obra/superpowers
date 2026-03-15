@@ -1,73 +1,153 @@
-import sys
 import unittest
+import os
+import json
 import importlib.util
-from pathlib import Path
+import tempfile
 
-# Add the parent directory to sys.path to import analyze_token_usage
-sys.path.append(str(Path(__file__).parent.parent))
-
-# Load module safely using importlib.util
-module_path = str(Path(__file__).parent / 'analyze-token-usage.py')
-spec = importlib.util.spec_from_file_location("analyze_token_usage", module_path)
+# Import the module with a dash in its name
+spec = importlib.util.spec_from_file_location(
+    "analyze_token_usage",
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "analyze-token-usage.py")
+)
 analyze_token_usage = importlib.util.module_from_spec(spec)
-sys.modules["analyze_token_usage"] = analyze_token_usage
 spec.loader.exec_module(analyze_token_usage)
 
-class TestCalculateCost(unittest.TestCase):
+class TestAnalyzeTokenUsage(unittest.TestCase):
+    def setUp(self):
+        self.temp_file = tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.jsonl')
+        self.test_file = self.temp_file.name
 
-    def test_calculate_cost_default_rates(self):
-        # Default costs: input $3/M, output $15/M
-        usage = {
-            'input_tokens': 1000000,
-            'cache_creation': 0,
-            'cache_read': 0,
-            'output_tokens': 1000000
-        }
-        cost = analyze_token_usage.calculate_cost(usage)
-        self.assertEqual(cost, 18.0)
+    def tearDown(self):
+        self.temp_file.close()
+        if os.path.exists(self.test_file):
+            os.remove(self.test_file)
 
-    def test_calculate_cost_with_cache(self):
-        # Test with cache usage
-        usage_with_cache = {
-            'input_tokens': 500000,
-            'cache_creation': 250000,
-            'cache_read': 250000,
-            'output_tokens': 2000000
-        }
-        # Total input: 1M * 3 = 3
-        # Total output: 2M * 15 = 30
-        cost = analyze_token_usage.calculate_cost(usage_with_cache)
-        self.assertEqual(cost, 33.0)
+    def write_jsonl(self, data):
+        with open(self.test_file, 'w') as f:
+            for item in data:
+                f.write(json.dumps(item) + '\n')
 
-    def test_calculate_cost_custom_rates(self):
-        usage = {
-            'input_tokens': 1000000,
-            'cache_creation': 0,
-            'cache_read': 0,
-            'output_tokens': 1000000
-        }
-        # Test with custom costs
-        cost = analyze_token_usage.calculate_cost(usage, input_cost_per_m=5.0, output_cost_per_m=10.0)
-        self.assertEqual(cost, 15.0)
+    def test_analyze_main_session_empty(self):
+        self.write_jsonl([])
+        main_usage, subagent_usage = analyze_token_usage.analyze_main_session(self.test_file)
 
-    def test_calculate_cost_zero_usage(self):
-        # Test zero usage
-        zero_usage = {
-            'input_tokens': 0,
-            'cache_creation': 0,
-            'cache_read': 0,
-            'output_tokens': 0
-        }
-        cost = analyze_token_usage.calculate_cost(zero_usage)
-        self.assertEqual(cost, 0.0)
+        self.assertEqual(main_usage['messages'], 0)
+        self.assertEqual(len(subagent_usage), 0)
 
-    def test_calculate_cost_missing_keys(self):
-        # Test with missing keys - should raise KeyError based on implementation
-        missing_keys_usage = {
-            'input_tokens': 1000000
-        }
-        with self.assertRaises(KeyError):
-            analyze_token_usage.calculate_cost(missing_keys_usage)
+    def test_analyze_main_session_assistant_messages(self):
+        data = [
+            {
+                "type": "assistant",
+                "message": {
+                    "usage": {
+                        "input_tokens": 100,
+                        "output_tokens": 50,
+                        "cache_creation_input_tokens": 10,
+                        "cache_read_input_tokens": 5
+                    }
+                }
+            },
+            {
+                "type": "assistant",
+                "message": {
+                    "usage": {
+                        "input_tokens": 200,
+                        "output_tokens": 100
+                    }
+                }
+            }
+        ]
+        self.write_jsonl(data)
+        main_usage, subagent_usage = analyze_token_usage.analyze_main_session(self.test_file)
+
+        self.assertEqual(main_usage['messages'], 2)
+        self.assertEqual(main_usage['input_tokens'], 300)
+        self.assertEqual(main_usage['output_tokens'], 150)
+        self.assertEqual(main_usage['cache_creation'], 10)
+        self.assertEqual(main_usage['cache_read'], 5)
+        self.assertEqual(len(subagent_usage), 0)
+
+    def test_analyze_main_session_subagent_messages(self):
+        data = [
+            {
+                "type": "user",
+                "toolUseResult": {
+                    "agentId": "agent-123",
+                    "usage": {
+                        "input_tokens": 150,
+                        "output_tokens": 75,
+                        "cache_creation_input_tokens": 20,
+                        "cache_read_input_tokens": 0
+                    },
+                    "prompt": "You are a helpful assistant.\nThis is a test prompt."
+                }
+            },
+            {
+                "type": "user",
+                "toolUseResult": {
+                    "agentId": "agent-123",
+                    "usage": {
+                        "input_tokens": 50,
+                        "output_tokens": 25
+                    }
+                }
+            },
+            {
+                "type": "user",
+                "toolUseResult": {
+                    "agentId": "agent-456",
+                    "usage": {
+                        "input_tokens": 300,
+                        "output_tokens": 100
+                    },
+                    "prompt": "Test agent 2."
+                }
+            }
+        ]
+        self.write_jsonl(data)
+        main_usage, subagent_usage = analyze_token_usage.analyze_main_session(self.test_file)
+
+        self.assertEqual(main_usage['messages'], 0)
+        self.assertEqual(len(subagent_usage), 2)
+
+        agent_123 = subagent_usage['agent-123']
+        self.assertEqual(agent_123['messages'], 2)
+        self.assertEqual(agent_123['input_tokens'], 200)
+        self.assertEqual(agent_123['output_tokens'], 100)
+        self.assertEqual(agent_123['cache_creation'], 20)
+        self.assertEqual(agent_123['cache_read'], 0)
+        self.assertEqual(agent_123['description'], "a helpful assistant.")
+
+        agent_456 = subagent_usage['agent-456']
+        self.assertEqual(agent_456['messages'], 1)
+        self.assertEqual(agent_456['input_tokens'], 300)
+        self.assertEqual(agent_456['description'], "Test agent 2.")
+
+    def test_analyze_main_session_mixed_and_invalid(self):
+        # Write some valid JSON, some invalid JSON, and some JSON without the expected fields
+        with open(self.test_file, 'w') as f:
+            f.write(json.dumps({
+                "type": "assistant",
+                "message": {
+                    "usage": {
+                        "input_tokens": 10
+                    }
+                }
+            }) + '\n')
+            f.write("invalid json\n")
+            f.write(json.dumps({"type": "other"}) + '\n')
+            f.write(json.dumps({
+                "type": "user",
+                "toolUseResult": {
+                    "agentId": "agent-1"
+                    # missing usage
+                }
+            }) + '\n')
+
+        main_usage, subagent_usage = analyze_token_usage.analyze_main_session(self.test_file)
+        self.assertEqual(main_usage['messages'], 1)
+        self.assertEqual(main_usage['input_tokens'], 10)
+        self.assertEqual(len(subagent_usage), 0)
 
 if __name__ == '__main__':
     unittest.main()

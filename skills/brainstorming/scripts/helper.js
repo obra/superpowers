@@ -32,6 +32,30 @@
     }
   }
 
+  // Make all choice elements keyboard accessible automatically
+  function enhanceAccessibility() {
+    document.querySelectorAll('[data-choice]').forEach(el => {
+      if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0');
+      if (!el.hasAttribute('role')) el.setAttribute('role', 'button');
+    });
+  }
+
+  // Run on load and whenever DOM changes (since content might be injected)
+  enhanceAccessibility();
+  const observer = new MutationObserver(enhanceAccessibility);
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  // Handle keyboard interaction (Enter / Space)
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      const target = e.target.closest('[data-choice]');
+      if (target) {
+        e.preventDefault(); // Prevent scrolling on Space
+        target.click(); // Trigger the click handler
+      }
+    }
+  });
+
   // Capture clicks on choice elements
   document.addEventListener('click', (e) => {
     const target = e.target.closest('[data-choice]');
