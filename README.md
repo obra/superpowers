@@ -164,12 +164,14 @@ These research insights drive four core principles throughout the fork:
 ---
 
 
-## Skills Library (19 skills)
+## Skills Library (20 skills)
 
 ### Core Workflow
 - **using-superpowers** — Mandatory workflow router with 3-tier complexity classification (micro/lightweight/full) and instruction priority hierarchy
 - **token-efficiency** — Always-on: concise responses, parallel tool batching, exploration tracking, no redundant work
 - **context-management** — Persist durable state to `state.md` for cross-session continuity
+
+- **premise-check** — Validates whether proposed work should exist before investing in it; triggers reassessment when new evidence changes the original motivation
 
 ### Design & Planning
 - **brainstorming** — Socratic design refinement with engineering rigor, project-level scope decomposition, and architecture guidance for existing codebases

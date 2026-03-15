@@ -18,6 +18,8 @@ Upstream sync and hardening release. Adopts the most impactful changes from obra
 
 **Architecture guidance for existing codebases** — `brainstorming` now includes explicit guidance to study existing patterns before proposing new ones, match project conventions, and design for isolation (minimizing blast radius per change).
 
+**Premise check skill** — New `premise-check` skill validates whether proposed work should exist before investing in it. Forces three questions (does the problem exist? is the solution proportional? what's the cost of not building?) and triggers reassessment when new evidence weakens the original motivation for in-progress work. Prevents over-engineering by catching unnecessary complexity before it's built.
+
 ### Changes
 
 **Recommended subagent-driven-development** — `writing-plans` now labels `subagent-driven-development` as the recommended execution path (parallel with per-task review gates) and `executing-plans` as the alternative (sequential, simpler). User choice is preserved.
