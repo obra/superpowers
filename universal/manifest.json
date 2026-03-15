@@ -1,0 +1,22 @@
+{
+  "name": "superpowers-universal",
+  "displayName": "Superpowers Universal Core",
+  "description": "Core skills library: TDD, debugging, collaboration patterns (Platform Agnostic).",
+  "version": "6.0.0",
+  "author": {
+    "name": "Jesse Vincent",
+    "email": "jesse@fsck.com"
+  },
+  "homepage": "https://github.com/obra/superpowers",
+  "repository": "https://github.com/obra/superpowers",
+  "license": "MIT",
+  "keywords": ["skills", "tdd", "debugging", "collaboration", "agentic", "workflows", "universal"],
+  "paths": {
+    "bootstrap": "./bootstrap.md",
+    "skills": "./skills/",
+    "capabilities": "./CAPABILITIES.md",
+    "agents": "./agents/",
+    "commands": "./commands/",
+    "hooks": "./hooks/"
+  }
+}
