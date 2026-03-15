@@ -37,6 +37,10 @@ If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "alw
 
 Skills use Claude Code tool names. Non-CC platforms: see `references/codex-tools.md` (Codex) for tool equivalents. Gemini CLI users get the tool mapping loaded automatically via GEMINI.md.
 
+## Structured User Input
+
+When a skill pauses for user input — confirming a design, choosing between approaches, answering clarifying questions — prefer the `AskUserQuestion` tool if available. It provides a structured UI with selectable options, making questions visually distinct from output and reducing ambiguity. Fall back to plain text on platforms that don't support it.
+
 # Using Skills
 
 ## The Rule
