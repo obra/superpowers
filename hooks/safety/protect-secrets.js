@@ -104,6 +104,36 @@ const BASH_PATTERNS = [
   { level: 'strict', id: 'base64-secrets',       regex: /\bbase64\b[^|;]*(\.env|credentials|secrets|id_rsa|\.pem)/i,       reason: 'Base64 encoding secrets' },
 ];
 
+// Hardcoded secret patterns — scans content being written for leaked credentials.
+// When detected, blocks the write and instructs the agent to use environment variables instead.
+const HARDCODED_SECRET_PATTERNS = [
+  { id: 'aws-access-key',    regex: /AKIA[0-9A-Z]{16}/,                                                                     name: 'AWS access key',               envHint: 'AWS_ACCESS_KEY_ID' },
+  { id: 'aws-secret-key',    regex: /(?:aws_secret_access_key|secret_key|aws_secret)\s*[:=]\s*['"]?[0-9a-zA-Z/+]{40}/,      name: 'AWS secret key',               envHint: 'AWS_SECRET_ACCESS_KEY' },
+  { id: 'github-token',      regex: /gh[ps]_[A-Za-z0-9_]{36,}/,                                                             name: 'GitHub token',                 envHint: 'GITHUB_TOKEN' },
+  { id: 'openai-key',        regex: /sk-[A-Za-z0-9]{32,}/,                                                                  name: 'OpenAI API key',               envHint: 'OPENAI_API_KEY' },
+  { id: 'anthropic-key',     regex: /sk-ant-[A-Za-z0-9_-]{32,}/,                                                            name: 'Anthropic API key',            envHint: 'ANTHROPIC_API_KEY' },
+  { id: 'stripe-key',        regex: /sk_(live|test)_[A-Za-z0-9]{24,}/,                                                      name: 'Stripe secret key',            envHint: 'STRIPE_SECRET_KEY' },
+  { id: 'stripe-pub-key',    regex: /pk_(live|test)_[A-Za-z0-9]{24,}/,                                                      name: 'Stripe publishable key',       envHint: 'STRIPE_PUBLISHABLE_KEY' },
+  { id: 'private-key-block', regex: /-----BEGIN (?:RSA |EC |DSA )?PRIVATE KEY-----/,                                         name: 'private key PEM block',        envHint: 'PRIVATE_KEY (load from file)' },
+  { id: 'generic-api-key',   regex: /(?:api[_-]?key|apikey|secret[_-]?key)\s*[:=]\s*['"][A-Za-z0-9]{16,}['"]/i,             name: 'hardcoded API key',            envHint: 'API_KEY' },
+  { id: 'connection-string',  regex: /(?:postgres|mysql|mongodb|redis|amqp):\/\/[^:\s]+:[^@\s]+@/,                           name: 'connection string with password', envHint: 'DATABASE_URL' },
+  { id: 'slack-token',       regex: /xox[bporas]-[A-Za-z0-9-]{10,}/,                                                        name: 'Slack token',                  envHint: 'SLACK_TOKEN' },
+  { id: 'sendgrid-key',      regex: /SG\.[A-Za-z0-9_-]{22}\.[A-Za-z0-9_-]{43}/,                                             name: 'SendGrid API key',             envHint: 'SENDGRID_API_KEY' },
+  { id: 'twilio-key',        regex: /SK[0-9a-fA-F]{32}/,                                                                    name: 'Twilio API key',               envHint: 'TWILIO_API_KEY' },
+  { id: 'supabase-key',      regex: /sbp_[A-Za-z0-9]{40,}/,                                                                 name: 'Supabase service key',         envHint: 'SUPABASE_SERVICE_ROLE_KEY' },
+];
+
+// Files where hardcoded secrets are expected and should not be flagged
+const CONTENT_SCAN_ALLOWLIST = [
+  /\.env(\..*)?$/i,           // .env files are WHERE secrets belong
+  /\.env\.example$/i,         // Example env files may have placeholder patterns
+  /\.env\.sample$/i,
+  /\.env\.template$/i,
+  /known-issues\.md$/i,       // Error documentation may reference key formats
+  /SKILL\.md$/i,              // Skill files may document patterns
+  /RELEASE-NOTES\.md$/i,      // Release notes may reference patterns
+];
+
 const LEVELS = { critical: 1, high: 2, strict: 3 };
 const EMOJIS = { critical: '🔐', high: '🛡️', strict: '⚠️' };
 
@@ -150,9 +180,41 @@ function checkBashCommand(cmd, safetyLevel = SAFETY_LEVEL) {
   return { blocked: false, pattern: null };
 }
 
+function isContentScanAllowlisted(filePath) {
+  return filePath && CONTENT_SCAN_ALLOWLIST.some(p => p.test(filePath));
+}
+
+function checkWriteContent(toolName, toolInput) {
+  if (!['Edit', 'Write'].includes(toolName)) return { blocked: false, pattern: null };
+
+  const filePath = toolInput?.file_path || '';
+  if (isContentScanAllowlisted(filePath)) return { blocked: false, pattern: null };
+
+  // Extract content being written: Write uses 'content', Edit uses 'new_string'
+  const content = toolName === 'Write' ? toolInput?.content : toolInput?.new_string;
+  if (!content || typeof content !== 'string') return { blocked: false, pattern: null };
+
+  for (const p of HARDCODED_SECRET_PATTERNS) {
+    if (p.regex.test(content)) {
+      return {
+        blocked: true,
+        pattern: {
+          level: 'critical',
+          id: `hardcoded-${p.id}`,
+          reason: `Hardcoded ${p.name} detected in content. Move the value to an environment variable (e.g. .env file) and reference it as process.env.${p.envHint} instead.`,
+        },
+      };
+    }
+  }
+  return { blocked: false, pattern: null };
+}
+
 function check(toolName, toolInput, safetyLevel = SAFETY_LEVEL) {
   if (['Read', 'Edit', 'Write'].includes(toolName)) {
-    return checkFilePath(toolInput?.file_path, safetyLevel);
+    const fileResult = checkFilePath(toolInput?.file_path, safetyLevel);
+    if (fileResult.blocked) return fileResult;
+    // Also scan content being written for hardcoded secrets
+    return checkWriteContent(toolName, toolInput);
   }
   if (toolName === 'Bash') {
     return checkBashCommand(toolInput?.command, safetyLevel);
@@ -202,7 +264,8 @@ if (require.main === module) {
   main();
 } else {
   module.exports = {
-    SENSITIVE_FILES, BASH_PATTERNS, ALLOWLIST, LEVELS, SAFETY_LEVEL,
-    check, checkFilePath, checkBashCommand, isAllowlisted,
+    SENSITIVE_FILES, BASH_PATTERNS, HARDCODED_SECRET_PATTERNS, CONTENT_SCAN_ALLOWLIST,
+    ALLOWLIST, LEVELS, SAFETY_LEVEL,
+    check, checkFilePath, checkBashCommand, checkWriteContent, isAllowlisted, isContentScanAllowlisted,
   };
 }

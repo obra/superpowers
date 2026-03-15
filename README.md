@@ -77,7 +77,9 @@ User sends a prompt
         ▼  (meanwhile, running on every tool call)
 ┌─ Safety Hooks (PreToolUse) ───────────────────────────────┐
 │  block-dangerous-commands.js → 30+ patterns (rm -rf, etc) │
-│  protect-secrets.js → 50+ patterns (.env, SSH keys, etc)  │
+│  protect-secrets.js → 50+ file patterns + 14 content      │
+│    patterns (blocks hardcoded API keys, tokens, PEM blocks │
+│    in source code — instructs agent to use env vars)       │
 └───────────────────────────────────────────────────────────┘
         │
         ▼  (after every Edit/Write and Skill call)
@@ -207,7 +209,7 @@ These research insights drive four core principles throughout the fork:
 - **track-session-stats** (PostToolUse: Skill) — Tracks skill invocations for progress visibility
 - **stop-reminders** (Stop) — TDD reminders, commit nudges, and session summary
 - **block-dangerous-commands** (PreToolUse: Bash) — 30+ patterns blocking destructive commands with 3-tier severity
-- **protect-secrets** (PreToolUse: Read/Edit/Write/Bash) — 50+ patterns protecting sensitive files with allowlisting
+- **protect-secrets** (PreToolUse: Read/Edit/Write/Bash) — 50+ file patterns protecting sensitive files + 14 content patterns detecting hardcoded secrets (API keys, tokens, PEM blocks, connection strings) in source code with actionable env var guidance
 - **subagent-guard** (SubagentStop) — Detects and blocks subagent skill leakage with automatic recovery
 - **session-start** (SessionStart) — Injects using-superpowers routing into every session
 

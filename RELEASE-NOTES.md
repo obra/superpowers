@@ -12,6 +12,8 @@ Adversarial red team analysis and auto-fix pipeline. Code review now goes beyond
 
 **Red team integration in code review** — `requesting-code-review` now dispatches the red team agent in parallel with the code reviewer when changes touch complex logic, concurrency, state management, data transformation pipelines, retry/recovery logic, or performance-critical paths.
 
+**Hardcoded secret content scanning** — `protect-secrets.js` now scans the content of Edit and Write operations for hardcoded secrets before the write happens. Detects 14 patterns: AWS access/secret keys, GitHub tokens, OpenAI keys, Anthropic keys, Stripe keys, private key PEM blocks, generic API key assignments, database connection strings with passwords, Slack tokens, SendGrid keys, Twilio keys, and Supabase keys. On detection, the write is blocked and the agent is instructed to move the value to an environment variable (e.g. `.env` file) and reference it via `process.env.VARIABLE_NAME` instead. Files where secrets are expected (`.env`, documentation) are allowlisted.
+
 ### Changes
 
 **Subagent guard updated** — `hooks/subagent-guard.js` now includes violation patterns for `premise-check` and `red-team` skills, preventing subagents from invoking these skills via filesystem discovery.
