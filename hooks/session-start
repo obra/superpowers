@@ -39,23 +39,16 @@ session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the 
 # Claude Code hooks expect hookSpecificOutput.additionalContext.
 # Claude Code reads BOTH fields without deduplication, so we must only
 # emit the field consumed by the current platform to avoid double injection.
+#
+# Uses printf instead of heredoc (cat <<EOF) to work around a bash 5.3+
+# bug where heredoc variable expansion hangs when content exceeds ~512 bytes.
+# See: https://github.com/obra/superpowers/issues/571
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ]; then
   # Claude Code sets CLAUDE_PLUGIN_ROOT — emit only hookSpecificOutput
-  cat <<EOF
-{
-  "hookSpecificOutput": {
-    "hookEventName": "SessionStart",
-    "additionalContext": "${session_context}"
-  }
-}
-EOF
+  printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$session_context"
 else
   # Other platforms (Cursor, etc.) — emit only additional_context
-  cat <<EOF
-{
-  "additional_context": "${session_context}"
-}
-EOF
+  printf '{\n  "additional_context": "%s"\n}\n' "$session_context"
 fi
 
 exit 0
