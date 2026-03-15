@@ -64,6 +64,16 @@ if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "t
   FOREGROUND="true"
 fi
 
+# Windows/Git Bash reaps nohup background processes. Auto-foreground when detected.
+if [[ "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
+  case "${OSTYPE:-}" in
+    msys*|cygwin*|mingw*) FOREGROUND="true" ;;
+  esac
+  if [[ -n "${MSYSTEM:-}" ]]; then
+    FOREGROUND="true"
+  fi
+fi
+
 # Generate unique session directory
 SESSION_ID="$$-$(date +%s)"
 
