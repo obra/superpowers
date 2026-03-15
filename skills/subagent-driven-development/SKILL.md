@@ -61,6 +61,8 @@ digraph process {
     "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Dispatch fresh-eyes reviewer subagent (./fresh-eyes-reviewer-prompt.md)" [shape=box];
+    "Fresh-eyes reviewer finds cross-task issues?" [shape=diamond];
+    "Fix cross-task issues" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -80,7 +82,10 @@ digraph process {
     "Mark task complete in TodoWrite" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch fresh-eyes reviewer subagent (./fresh-eyes-reviewer-prompt.md)" [label="no"];
-    "Dispatch fresh-eyes reviewer subagent (./fresh-eyes-reviewer-prompt.md)" -> "Use superpowers:finishing-a-development-branch";
+    "Dispatch fresh-eyes reviewer subagent (./fresh-eyes-reviewer-prompt.md)" -> "Fresh-eyes reviewer finds cross-task issues?";
+    "Fresh-eyes reviewer finds cross-task issues?" -> "Fix cross-task issues" [label="yes"];
+    "Fix cross-task issues" -> "Dispatch fresh-eyes reviewer subagent (./fresh-eyes-reviewer-prompt.md)" [label="re-review"];
+    "Fresh-eyes reviewer finds cross-task issues?" -> "Use superpowers:finishing-a-development-branch" [label="no"];
 }
 ```
 
@@ -122,7 +127,7 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 - `./implementer-prompt.md` - Dispatch implementer subagent
 - `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
 - `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
-- `./fresh-eyes-reviewer-prompt.md` - Dispatch fresh-eyes reviewer after all tasks complete
+- `./fresh-eyes-reviewer-prompt.md` - Dispatch fresh-eyes reviewer subagent
 
 ## Example Workflow
 
@@ -232,6 +237,7 @@ Done!
 - Review loops ensure fixes actually work
 - Spec compliance prevents over/under-building
 - Code quality ensures implementation is well-built
+- Fresh-eyes review catches cross-task issues invisible to per-task reviewers
 
 **Cost:**
 - More subagent invocations (implementer + 2 reviewers per task)
@@ -243,7 +249,7 @@ Done!
 
 **Never:**
 - Start implementation on main/master branch without explicit user consent
-- Skip reviews (spec compliance OR code quality)
+- Skip reviews (spec compliance, code quality, OR fresh-eyes)
 - Proceed with unfixed issues
 - Dispatch multiple implementation subagents in parallel (conflicts)
 - Make subagent read plan file (provide full text instead)

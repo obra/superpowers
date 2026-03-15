@@ -6,7 +6,7 @@ Use this template when dispatching a fresh-eyes reviewer after all tasks complet
 
 **Only dispatch after all tasks are complete and their individual reviews have passed.**
 
-```
+````
 Task tool (general-purpose):
   description: "Fresh-eyes review of entire feature implementation"
   prompt: |
@@ -63,10 +63,10 @@ Task tool (general-purpose):
     - Read EVERY file in the diff, not just a sample
     - Be specific: file:line references
     - DO NOT modify any files — read-only review
-```
+````
 
 **Dispatch with:**
-- `{BASE_SHA}`: where the feature branch diverged (`git merge-base HEAD origin/main`)
+- `{BASE_SHA}`: where the feature branch diverged (e.g. `git merge-base HEAD origin/main`)
 - `{HEAD_SHA}`: current tip (`git rev-parse HEAD`)
 - `{FEATURE_SUMMARY}`: what the feature does (1-2 sentences)
 - `{TASK_LIST}`: list of tasks that were implemented
