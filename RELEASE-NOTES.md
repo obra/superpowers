@@ -1,5 +1,23 @@
 # Superpowers Release Notes
 
+## v5.2.0 (2026-03-15)
+
+Adversarial red team analysis and auto-fix pipeline. Code review now goes beyond checklists — it actively tries to break your code, then fixes what it finds.
+
+### New Features
+
+**Red team agent** — New `agents/red-team.md` adversarially attacks completed implementations to find concrete failure scenarios that checklist-based review misses. Focuses on 7 attack categories: logic bugs, adversarial inputs, state corruption, concurrency & timing, resource exhaustion, error cascading, and assumption violations. Each finding includes a specific trigger, root cause with file:line references, and a test case skeleton. Explicitly does NOT overlap with the OWASP/CWE security review — its domain is adversarial logic analysis.
+
+**Auto-fix pipeline** — When the red team report contains Critical or High findings, `requesting-code-review` now runs an auto-fix pipeline: for each finding, the test case skeleton is fleshed into a real test (must fail — proving the scenario is real), then the code is fixed to pass the test, then the full suite is verified for regressions. False positives are caught naturally (test passes → finding was invalid → skip). Medium findings are tracked for later, not auto-fixed.
+
+**Red team integration in code review** — `requesting-code-review` now dispatches the red team agent in parallel with the code reviewer when changes touch complex logic, concurrency, state management, data transformation pipelines, retry/recovery logic, or performance-critical paths.
+
+### Changes
+
+**Subagent guard updated** — `hooks/subagent-guard.js` now includes violation patterns for `premise-check` and `red-team` skills, preventing subagents from invoking these skills via filesystem discovery.
+
+---
+
 ## v5.1.0 (2026-03-14)
 
 Upstream sync and hardening release. Adopts the most impactful changes from obra/superpowers, adds new safety mechanisms, and removes deprecated features.

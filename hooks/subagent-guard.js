@@ -41,6 +41,8 @@ const VIOLATION_PATTERNS = [
   /claude-md-creator skill/i,
   /self-consistency-reasoner skill/i,
   /using-git-worktrees skill/i,
+  /premise-check skill/i,
+  /red-team skill/i,
 ];
 
 function logViolation(agentId, agentType, matchedPattern) {

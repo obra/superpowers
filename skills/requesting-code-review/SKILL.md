@@ -54,6 +54,41 @@ When changes touch security-relevant areas, the code review **must** include a s
 - Critical/High security findings **block merge** until addressed or the user explicitly accepts the risk with documented rationale.
 - Medium security findings should be fixed before merge unless explicitly deferred.
 
+## Adversarial Red Team (Optional)
+
+For changes involving complex logic, concurrency, state management, or critical data paths, dispatch `superpowers-optimized:red-team` in parallel with the code reviewer.
+
+**Triggers when changes touch:**
+- State machines or multi-step workflows
+- Concurrent access to shared resources
+- Complex business logic with branching conditions
+- Data transformation pipelines
+- Retry/recovery/rollback logic
+- Performance-critical paths handling large inputs
+
+The red team agent finds concrete failure scenarios (specific inputs, race conditions, state corruption, resource exhaustion) that checklist-based review misses. It does NOT duplicate the security review — its focus is adversarial logic analysis, not OWASP/CWE compliance.
+
+**Red team critical findings block merge** alongside security critical findings.
+
+## Auto-Fix Pipeline
+
+When the red team report contains Critical or High findings, run the auto-fix pipeline before proceeding. Do NOT skip findings or batch them — process each one individually in severity order (Critical first).
+
+**For each Critical/High finding:**
+
+1. **Write the failing test.** Take the test case skeleton from the red team report, flesh it out into a real test, and run it. It MUST fail — this proves the scenario is real. If the test passes, the finding was a false positive; skip it and note that in the triage.
+2. **Fix the code.** Make the minimum change to pass the test. Do not refactor or improve surrounding code.
+3. **Run the full test suite.** Confirm no regressions. If a regression appears, fix it before moving to the next finding.
+
+**After all Critical/High findings are processed:**
+- Re-run the full test suite one final time.
+- Report: how many findings were real (test failed), how many were false positives (test passed), what was fixed.
+
+**Skip conditions:**
+- If the red team report has zero Critical/High findings, skip the pipeline entirely.
+- Medium findings are tracked for later, not auto-fixed.
+- If the user explicitly says to skip auto-fix, respect that.
+
 ## Triage Rules
 
 - Fix all Critical issues before proceeding.

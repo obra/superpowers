@@ -17,6 +17,7 @@ This repository delivers everything the original Superpowers plugin does, plus a
 | Workflow selection       | Manual                        | Automatic 3-tier (micro / lightweight / full)  | Zero overhead on simple tasks      |
 | Safety & hooks           | None                          | 8 proactive hooks (dangerous-command blocker, secrets protector, subagent guard, edit tracker, session stats, stop reminders, skill activator, session start) | Zero risk of rm -rf or secret leaks|
 | Security review          | None                          | Built into code review with OWASP checklist    | Security catches before merge      |
+| Adversarial red team     | None                          | Red team agent + auto-fix pipeline             | Finds bugs checklists miss, fixes them with TDD |
 | Error recovery           | None                          | Project-specific known-issues.md               | No rediscovering the same bug      |
 | Token efficiency         | Standard                      | Always-on context hygiene + exploration tracking | 5-10x smaller context windows     |
 | Discipline enforcement   | Instructional tone             | Rationalization tables, red flags, iron laws   | Fewer LLM shortcuts                |
@@ -40,7 +41,7 @@ See [Installation](#installation) for install, update, and uninstall commands on
 ---
 
 > [!IMPORTANT]
-> **Compatibility note:** This plugin includes a comprehensive workflow router and 19 specialized skills that cover debugging, planning, code review, TDD, execution, and more. Other plugins, or custom skills/agents in your `.claude/skills/` and `.claude/agents/` folders, may interfere if they cover overlapping domains. Duplicate or competing skills can cause trigger conflicts, contradictory instructions, and unnecessary context bloat. For best results, disable or remove skills from other sources that overlap with this plugin's skill set.
+> **Compatibility note:** This plugin includes a comprehensive workflow router and 20 specialized skills that cover debugging, planning, code review, TDD, execution, and more. Other plugins, or custom skills/agents in your `.claude/skills/` and `.claude/agents/` folders, may interfere if they cover overlapping domains. Duplicate or competing skills can cause trigger conflicts, contradictory instructions, and unnecessary context bloat. For best results, disable or remove skills from other sources that overlap with this plugin's skill set.
 
 ---
 
@@ -68,6 +69,7 @@ User sends a prompt
 │    New feature → brainstorming → writing-plans → execute  │
 │    Bug/error  → systematic-debugging → TDD → verify       │
 │    Review     → requesting-code-review (w/ security)      │
+│                 + red-team → auto-fix pipeline            │
 │    Done?      → verification-before-completion            │
 │    Merge?     → finishing-a-development-branch            │
 └───────────────────────────────────────────────────────────┘
@@ -105,7 +107,7 @@ From the moment you fire up your coding agent, the plugin first steps back to un
 
 Once you approve the design, your agent puts together an implementation plan that emphasizes true red/green TDD, YAGNI, and DRY, while the optimizations keep instructions focused and token-efficient.
 
-Once you say "go", it launches either *subagent-driven-development* or *executing-plans*, working through each task with staged reviews (spec compliance, then code quality, with integrated security analysis on sensitive changes).
+Once you say "go", it launches either *subagent-driven-development* or *executing-plans*, working through each task with staged reviews (spec compliance, then code quality, with integrated security analysis on sensitive changes). For complex logic, the *red-team* agent adversarially attacks the code to find concrete failure scenarios — and the auto-fix pipeline converts each critical finding into a failing test, then a fix, then a regression check.
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions. But the overhead is proportional — micro-tasks skip everything, lightweight tasks get one gate, full tasks get the complete pipeline.
 
@@ -191,7 +193,7 @@ These research insights drive four core principles throughout the fork:
 - **self-consistency-reasoner** — Internal multi-path reasoning technique (Wang et al., ICLR 2023) embedded in debugging and verification
 
 ### Review & Integration
-- **requesting-code-review** — Structured code review with integrated security analysis (OWASP, auth flows, secrets handling, dependency vulnerabilities)
+- **requesting-code-review** — Structured code review with integrated security analysis (OWASP, auth flows, secrets handling, dependency vulnerabilities), adversarial red team dispatch, and auto-fix pipeline for critical findings
 - **receiving-code-review** — Technical feedback handling with pushback rules and no-sycophancy enforcement
 - **finishing-a-development-branch** — 4-option branch completion (merge/PR/keep/discard) with safety gates
 
@@ -211,6 +213,7 @@ These research insights drive four core principles throughout the fork:
 
 ### Agents
 - **code-reviewer** — Senior code review agent with persistent cross-session memory
+- **red-team** — Adversarial analysis agent that constructs concrete failure scenarios (logic bugs, race conditions, state corruption, resource exhaustion, assumption violations) — complements checklist-based security review
 
 
 ### Philosophy
