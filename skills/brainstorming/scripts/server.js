@@ -103,8 +103,10 @@ const helperInjection = '<script>\n' + helperScript + '\n</script>';
 // ========== Helper Functions ==========
 
 function isFullDocument(html) {
-  const trimmed = html.trimStart().toLowerCase();
-  return trimmed.startsWith('<!doctype') || trimmed.startsWith('<html');
+  // Extract a short prefix to avoid calling toLowerCase() on massive HTML strings
+  // which requires a large memory allocation and blocks the event loop.
+  const prefix = html.trimStart().slice(0, 100).toLowerCase();
+  return prefix.startsWith('<!doctype') || prefix.startsWith('<html');
 }
 
 function wrapInFrame(content) {
