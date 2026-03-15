@@ -1,5 +1,11 @@
 # Superpowers Release Notes
 
+## v5.0.3 (2026-03-15)
+
+### Bug Fixes
+
+- **Stop firing SessionStart hook on `--resume`** — the startup hook was re-injecting context on resumed sessions, which already have the context in their conversation history. The hook now fires only on `startup`, `clear`, and `compact`.
+
 ## v5.0.2 (2026-03-11)
 
 ### Zero-Dependency Brainstorm Server
