@@ -7,10 +7,13 @@
 
 ## Installation Steps
 
+> **Custom config directory:** If you've set `OPENCODE_CONFIG_DIR`, the commands below will use it automatically. Otherwise they default to `~/.config/opencode`.
+
 ### 1. Clone Superpowers
 
 ```bash
-git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
+OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}"
+git clone https://github.com/obra/superpowers.git "$OPENCODE_CONFIG_DIR/superpowers"
 ```
 
 ### 2. Register the Plugin
@@ -18,9 +21,10 @@ git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
 Create a symlink so OpenCode discovers the plugin:
 
 ```bash
-mkdir -p ~/.config/opencode/plugins
-rm -f ~/.config/opencode/plugins/superpowers.js
-ln -s ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js ~/.config/opencode/plugins/superpowers.js
+OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}"
+mkdir -p "$OPENCODE_CONFIG_DIR/plugins"
+rm -f "$OPENCODE_CONFIG_DIR/plugins/superpowers.js"
+ln -s "$OPENCODE_CONFIG_DIR/superpowers/.opencode/plugins/superpowers.js" "$OPENCODE_CONFIG_DIR/plugins/superpowers.js"
 ```
 
 ### 3. Symlink Skills
@@ -28,9 +32,10 @@ ln -s ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js ~/.config/
 Create a symlink so OpenCode's native skill tool discovers superpowers skills:
 
 ```bash
-mkdir -p ~/.config/opencode/skills
-rm -rf ~/.config/opencode/skills/superpowers
-ln -s ~/.config/opencode/superpowers/skills ~/.config/opencode/skills/superpowers
+OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}"
+mkdir -p "$OPENCODE_CONFIG_DIR/skills"
+rm -rf "$OPENCODE_CONFIG_DIR/skills/superpowers"
+ln -s "$OPENCODE_CONFIG_DIR/superpowers/skills" "$OPENCODE_CONFIG_DIR/skills/superpowers"
 ```
 
 ### 4. Restart OpenCode
@@ -59,13 +64,14 @@ use skill tool to load superpowers/brainstorming
 
 ### Personal Skills
 
-Create your own skills in `~/.config/opencode/skills/`:
+Create your own skills in your OpenCode skills directory:
 
 ```bash
-mkdir -p ~/.config/opencode/skills/my-skill
+OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}"
+mkdir -p "$OPENCODE_CONFIG_DIR/skills/my-skill"
 ```
 
-Create `~/.config/opencode/skills/my-skill/SKILL.md`:
+Create a `SKILL.md` in that directory:
 
 ```markdown
 ---
@@ -87,7 +93,8 @@ Create project-specific skills in `.opencode/skills/` within your project.
 ## Updating
 
 ```bash
-cd ~/.config/opencode/superpowers
+OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}"
+cd "$OPENCODE_CONFIG_DIR/superpowers"
 git pull
 ```
 
@@ -95,15 +102,20 @@ git pull
 
 ### Plugin not loading
 
-1. Check plugin symlink: `ls -l ~/.config/opencode/plugins/superpowers.js`
-2. Check source exists: `ls ~/.config/opencode/superpowers/.opencode/plugins/superpowers.js`
-3. Check OpenCode logs for errors
+```bash
+OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}"
+ls -l "$OPENCODE_CONFIG_DIR/plugins/superpowers.js"
+ls "$OPENCODE_CONFIG_DIR/superpowers/.opencode/plugins/superpowers.js"
+```
 
 ### Skills not found
 
-1. Check skills symlink: `ls -l ~/.config/opencode/skills/superpowers`
-2. Verify it points to: `~/.config/opencode/superpowers/skills`
-3. Use `skill` tool to list what's discovered
+```bash
+OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}"
+ls -l "$OPENCODE_CONFIG_DIR/skills/superpowers"
+```
+
+Verify the symlink points to `$OPENCODE_CONFIG_DIR/superpowers/skills`. Use `skill` tool to list what's discovered.
 
 ### Tool mapping
 
