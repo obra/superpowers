@@ -118,20 +118,42 @@ function wrapInFrame(content) {
   return frameTemplate.replace('<!-- CONTENT -->', () => content);
 }
 
+let cachedNewestScreen = undefined;
+
 async function getNewestScreen() {
+  if (cachedNewestScreen !== undefined) {
+    return cachedNewestScreen;
+  }
+
   const entries = await fs.promises.readdir(SCREEN_DIR, { withFileTypes: true });
   const htmlFiles = entries.filter(e => e.isFile() && e.name.endsWith('.html'));
 
-  if (htmlFiles.length === 0) return null;
+  if (htmlFiles.length === 0) {
+    cachedNewestScreen = null;
+    return null;
+  }
 
-  const filesWithTime = await Promise.all(htmlFiles.map(async (e) => {
+  let newestPath = null;
+  let maxMtime = -1;
+
+  // Process sequentially to avoid EMFILE issues with large number of files
+  for (const e of htmlFiles) {
     const fp = path.join(SCREEN_DIR, e.name);
-    const stats = await fs.promises.stat(fp);
-    return { path: fp, mtime: stats.mtime.getTime() };
-  }));
+    try {
+        const stats = await fs.promises.stat(fp);
+        const time = stats.mtime.getTime();
+        if (time > maxMtime) {
+          maxMtime = time;
+          newestPath = fp;
+        }
+    } catch (err) {
+        // file could be deleted while we are checking it, skip
+        console.error("Error stat-ing file:", err);
+    }
+  }
 
-  filesWithTime.sort((a, b) => b.mtime - a.mtime);
-  return filesWithTime[0].path;
+  cachedNewestScreen = newestPath;
+  return newestPath;
 }
 
 // ========== HTTP Request Handler ==========
@@ -313,6 +335,7 @@ function startServer() {
   server.on('upgrade', handleUpgrade);
 
   const watcher = fs.watch(SCREEN_DIR, (eventType, filename) => {
+    cachedNewestScreen = undefined;
     if (!filename || !filename.endsWith('.html')) return;
 
     if (debounceTimers.has(filename)) clearTimeout(debounceTimers.get(filename));
