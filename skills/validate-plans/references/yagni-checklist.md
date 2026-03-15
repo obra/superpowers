@@ -153,7 +153,7 @@ const PRIMARY_COLOR = "#007bff";  // Extract when theming needed
 - Theme system for single theme
 - 10 button variants when 2 are used
 - Responsive breakpoints for unsupported devices
-- Accessibility features for internal tools
+- Animation library for static content
 
 **Questions to Ask:**
 - Will we actually have multiple themes?
