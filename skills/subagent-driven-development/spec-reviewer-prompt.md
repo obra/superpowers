@@ -8,6 +8,8 @@ Use this template when dispatching a spec compliance reviewer subagent.
 Task tool (general-purpose):
   description: "Review spec compliance for Task N"
   prompt: |
+    REVIEW ONLY. DO NOT EDIT FILES. DO NOT COMMIT. DO NOT IMPLEMENT FIXES.
+
     You are reviewing whether an implementation matches its specification.
 
     ## What Was Requested
@@ -56,6 +58,7 @@ Task tool (general-purpose):
     **Verify by reading code, not by trusting report.**
 
     Report:
-    - ✅ Spec compliant (if everything matches after code inspection)
-    - ❌ Issues found: [list specifically what's missing or extra, with file:line references]
+    - First line must be exactly: `APPROVED` or `ISSUES FOUND`
+    - If approved, briefly state why after `APPROVED`
+    - If issues found, list specifically what's missing or extra, with file:line references
 ```

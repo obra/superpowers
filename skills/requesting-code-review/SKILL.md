@@ -33,6 +33,21 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 Use Task tool with superpowers:code-reviewer type, fill template at `code-reviewer.md`
 
+**Reviewer dispatch rules:**
+- Always use a fresh reviewer with clean context.
+- Never reuse or resume a previous reviewer.
+- Provide only the work product and the minimum context needed to review it.
+- Never pass your session transcript or implementation chatter.
+- Make the prompt boundary explicit: review only, no edits, no implementation, no commits.
+- Require the reviewer to start with `APPROVED` or `ISSUES FOUND`.
+
+**Reviewer runtime rules:**
+- If the harness supports reviewer-specific model, profile, or effort controls, use the lightest reviewer configuration that can still do the job well.
+- If the harness does not expose reviewer controls, use the default reviewer configuration without inventing one.
+- Use long waits for reviewer verdicts.
+- If the harness distinguishes timeout from failure, treat timeout as `no verdict yet`, not as review failure.
+- Only declare review failure on actual error, cancellation, or unusable output.
+
 **Placeholders:**
 - `{WHAT_WAS_IMPLEMENTED}` - What you just built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
@@ -96,6 +111,8 @@ You: [Fix progress indicators]
 - Ignore Critical issues
 - Proceed with unfixed Important issues
 - Argue with valid technical feedback
+- Reuse a reviewer from an earlier pass
+- Treat a short reviewer timeout as proof the review failed
 
 **If reviewer wrong:**
 - Push back with technical reasoning

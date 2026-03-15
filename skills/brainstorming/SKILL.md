@@ -119,9 +119,12 @@ digraph brainstorming {
 **Spec Review Loop:**
 After writing the spec document:
 
-1. Dispatch spec-document-reviewer subagent (see spec-document-reviewer-prompt.md)
-2. If Issues Found: fix, re-dispatch, repeat until Approved
-3. If loop exceeds 5 iterations, surface to human for guidance
+1. Dispatch spec-document-reviewer subagent (see spec-document-reviewer-prompt.md) with precisely crafted review context — never your session history
+2. Use a fresh reviewer with clean context. Never reuse or resume a prior reviewer.
+3. If the harness supports reviewer-specific model, profile, or effort controls, use the lightest reviewer configuration that can still do the review competently
+4. Use long waits for reviewer verdicts. If the harness distinguishes timeout from failure, timeout means `no verdict yet`, not review failure.
+5. If `ISSUES FOUND`: fix, re-dispatch, repeat until `APPROVED`
+6. If loop exceeds 5 iterations, surface to human for guidance
 
 **User Review Gate:**
 After the spec review loop passes, ask the user to review the written spec before proceeding:

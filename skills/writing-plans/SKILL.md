@@ -116,11 +116,11 @@ After completing each chunk of the plan:
 
 1. Dispatch plan-document-reviewer subagent (see plan-document-reviewer-prompt.md) with precisely crafted review context — never your session history. This keeps the reviewer focused on the plan, not your thought process.
    - Provide: chunk content, path to spec document
-2. If ❌ Issues Found:
+2. If `ISSUES FOUND`:
    - Fix the issues in the chunk
    - Re-dispatch reviewer for that chunk
-   - Repeat until ✅ Approved
-3. If ✅ Approved: proceed to next chunk (or execution handoff if last chunk)
+   - Repeat until `APPROVED`
+3. If `APPROVED`: proceed to next chunk (or execution handoff if last chunk)
 
 **Chunk boundaries:** Use `## Chunk N: <name>` headings to delimit chunks. Each chunk should be ≤1000 lines and logically self-contained.
 
@@ -128,6 +128,9 @@ After completing each chunk of the plan:
 - Same agent that wrote the plan fixes it (preserves context)
 - If loop exceeds 5 iterations, surface to human for guidance
 - Reviewers are advisory - explain disagreements if you believe feedback is incorrect
+- Plan reviewers follow the same isolation rules as code reviewers: fresh reviewer, clean context, no transcript history, no reuse
+- If the harness supports reviewer-specific model, profile, or effort controls, use the lightest reviewer configuration that can still review the chunk competently
+- Use long waits for reviewer verdicts; if the harness distinguishes timeout from failure, timeout means `no verdict yet`, not review failure
 
 ## Execution Handoff
 

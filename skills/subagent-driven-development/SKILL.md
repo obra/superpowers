@@ -99,6 +99,28 @@ Use the least powerful model that can handle each role to conserve cost and incr
 - Touches multiple files with integration concerns → standard model
 - Requires design judgment or broad codebase understanding → most capable model
 
+If the harness exposes reviewer-specific model, profile, or effort controls, use the lightest reviewer configuration that can still perform the review competently. Narrow diff checks and spec-compliance checks usually fit a fast reviewer profile. Broad architectural or final-merge reviews may justify a stronger profile. If the harness does not expose reviewer controls, use the default reviewer configuration without inventing one.
+
+## Reviewer Dispatch Rules
+
+Reviewers are a special case. They must stay isolated from implementation context.
+
+- Always launch reviewers as fresh agents with clean context.
+- Never reuse, resume, or continue a reviewer. If you need re-review after changes, launch a new reviewer.
+- Give reviewers only the artifact to review plus the minimum context needed to evaluate it.
+- Never pass your session transcript, implementation chatter, or private working notes.
+- Review prompts must make the boundary explicit: review only, no edits, no implementation, no commits.
+- Require a rigid verdict header so drift is obvious immediately. Use `APPROVED` or `ISSUES FOUND` as the first line.
+
+### Reviewer Waiting
+
+Reviewer tasks often take longer than implementation tasks because they must derive context from the work product itself.
+
+- Use long waits for reviewer verdicts when the harness supports waiting.
+- If the harness distinguishes timeout from failure, treat timeout as `no verdict yet`, not as review failure.
+- Only declare a review failed when the harness reports an actual error, cancellation, or unusable result.
+- If reviewers can complete asynchronously, keep working and collect the verdict when it arrives.
+
 ## Handling Implementer Status
 
 Implementer subagents report one of four statuses. Handle each appropriately:
@@ -149,10 +171,12 @@ Implementer: "Got it. Implementing now..."
   - Committed
 
 [Dispatch spec compliance reviewer]
-Spec reviewer: ✅ Spec compliant - all requirements met, nothing extra
+Spec reviewer: APPROVED
+  All requirements met, nothing extra.
 
 [Get git SHAs, dispatch code quality reviewer]
-Code reviewer: Strengths: Good test coverage, clean. Issues: None. Approved.
+Code reviewer: APPROVED
+  Strengths: Good test coverage, clean. Issues: None.
 
 [Mark Task 1 complete]
 
@@ -169,7 +193,7 @@ Implementer:
   - Committed
 
 [Dispatch spec compliance reviewer]
-Spec reviewer: ❌ Issues:
+Spec reviewer: ISSUES FOUND
   - Missing: Progress reporting (spec says "report every 100 items")
   - Extra: Added --json flag (not requested)
 
@@ -177,7 +201,8 @@ Spec reviewer: ❌ Issues:
 Implementer: Removed --json flag, added progress reporting
 
 [Spec reviewer reviews again]
-Spec reviewer: ✅ Spec compliant now
+Spec reviewer: APPROVED
+  Spec compliant now.
 
 [Dispatch code quality reviewer]
 Code reviewer: Strengths: Solid. Issues (Important): Magic number (100)
@@ -186,7 +211,7 @@ Code reviewer: Strengths: Solid. Issues (Important): Magic number (100)
 Implementer: Extracted PROGRESS_INTERVAL constant
 
 [Code reviewer reviews again]
-Code reviewer: ✅ Approved
+Code reviewer: APPROVED
 
 [Mark Task 2 complete]
 
@@ -194,7 +219,8 @@ Code reviewer: ✅ Approved
 
 [After all tasks]
 [Dispatch final code-reviewer]
-Final reviewer: All requirements met, ready to merge
+Final reviewer: APPROVED
+  All requirements met, ready to merge.
 
 Done!
 ```
@@ -244,8 +270,10 @@ Done!
 - Accept "close enough" on spec compliance (spec reviewer found issues = not done)
 - Skip review loops (reviewer found issues = implementer fixes = review again)
 - Let implementer self-review replace actual review (both are needed)
-- **Start code quality review before spec compliance is ✅** (wrong order)
+- **Start code quality review before spec compliance is `APPROVED`** (wrong order)
 - Move to next task while either review has open issues
+- Reuse a reviewer from an earlier review pass
+- Treat a short reviewer timeout as proof the reviewer failed
 
 **If subagent asks questions:**
 - Answer clearly and completely

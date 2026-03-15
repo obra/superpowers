@@ -10,6 +10,8 @@ Use this template when dispatching a spec document reviewer subagent.
 Task tool (general-purpose):
   description: "Review spec document"
   prompt: |
+    REVIEW ONLY. DO NOT EDIT FILES. DO NOT COMMIT. DO NOT IMPLEMENT FIXES.
+
     You are a spec document reviewer. Verify this spec is complete and ready for planning.
 
     **Spec to review:** [SPEC_FILE_PATH]
@@ -36,15 +38,15 @@ Task tool (general-purpose):
 
     ## Output Format
 
-    ## Spec Review
+    First line must be exactly: `APPROVED` or `ISSUES FOUND`
 
-    **Status:** ✅ Approved | ❌ Issues Found
+    ## Issues (if any)
 
-    **Issues (if any):**
     - [Section X]: [specific issue] - [why it matters]
 
-    **Recommendations (advisory):**
+    ## Recommendations (advisory)
+
     - [suggestions that don't block approval]
 ```
 
-**Reviewer returns:** Status, Issues (if any), Recommendations
+**Reviewer returns:** Verdict, Issues (if any), Recommendations

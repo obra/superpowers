@@ -10,6 +10,8 @@ Use this template when dispatching a plan document reviewer subagent.
 Task tool (general-purpose):
   description: "Review plan chunk N"
   prompt: |
+    REVIEW ONLY. DO NOT EDIT FILES. DO NOT COMMIT. DO NOT IMPLEMENT FIXES.
+
     You are a plan document reviewer. Verify this plan chunk is complete and ready for implementation.
 
     **Plan chunk to review:** [PLAN_FILE_PATH] - Chunk N only
@@ -38,15 +40,15 @@ Task tool (general-purpose):
 
     ## Output Format
 
-    ## Plan Review - Chunk N
+    First line: `APPROVED` or `ISSUES FOUND`
 
-    **Status:** Approved | Issues Found
+    ## Issues (if any)
 
-    **Issues (if any):**
     - [Task X, Step Y]: [specific issue] - [why it matters]
 
-    **Recommendations (advisory):**
+    ## Recommendations (advisory)
+
     - [suggestions that don't block approval]
 ```
 
-**Reviewer returns:** Status, Issues (if any), Recommendations
+**Reviewer returns:** Verdict, Issues (if any), Recommendations

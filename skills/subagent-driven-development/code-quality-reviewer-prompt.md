@@ -8,6 +8,9 @@ Use this template when dispatching a code quality reviewer subagent.
 
 ```
 Task tool (superpowers:code-reviewer):
+  Review prompt must begin with:
+    REVIEW ONLY. DO NOT EDIT FILES. DO NOT COMMIT. DO NOT IMPLEMENT FIXES.
+
   Use template at requesting-code-review/code-reviewer.md
 
   WHAT_WAS_IMPLEMENTED: [from implementer's report]
@@ -23,4 +26,4 @@ Task tool (superpowers:code-reviewer):
 - Is the implementation following the file structure from the plan?
 - Did this implementation create new files that are already large, or significantly grow existing files? (Don't flag pre-existing file sizes — focus on what this change contributed.)
 
-**Code reviewer returns:** Strengths, Issues (Critical/Important/Minor), Assessment
+**Code reviewer returns:** First line `APPROVED` or `ISSUES FOUND`, then Strengths, Issues (Critical/Important/Minor), Assessment
