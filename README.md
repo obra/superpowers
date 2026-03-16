@@ -5,8 +5,8 @@
 [![Codex](https://img.shields.io/badge/Codex%20CLI-OpenAI-green)](https://github.com/openai/codex)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-<video width="630" height="300" src="SuperpowersHeader.mp4"></video>
 
+<video width="630" height="300" src="SuperpowersHeader.mp4"></video>
 
 # Superpowers Optimized
 
