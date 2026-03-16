@@ -1,5 +1,212 @@
 # Superpowers Release Notes
 
+## v5.0.2 (2026-03-11)
+
+### Zero-Dependency Brainstorm Server
+
+**Removed all vendored node_modules — server.js is now fully self-contained**
+
+- Replaced Express/Chokidar/WebSocket dependencies with zero-dependency Node.js server using built-in `http`, `fs`, and `crypto` modules
+- Removed ~1,200 lines of vendored `node_modules/`, `package.json`, and `package-lock.json`
+- Custom WebSocket protocol implementation (RFC 6455 framing, ping/pong, proper close handshake)
+- Native `fs.watch()` file watching replaces Chokidar
+- Full test suite: HTTP serving, WebSocket protocol, file watching, and integration tests
+
+### Brainstorm Server Reliability
+
+- **Auto-exit after 30 minutes idle** — server shuts down when no clients are connected, preventing orphaned processes
+- **Owner process tracking** — server monitors the parent harness PID and exits when the owning session dies
+- **Liveness check** — skill verifies server is responsive before reusing an existing instance
+- **Encoding fix** — proper `<meta charset="utf-8">` on served HTML pages
+
+### Subagent Context Isolation
+
+- All delegation skills (brainstorming, dispatching-parallel-agents, requesting-code-review, subagent-driven-development, writing-plans) now include context isolation principle
+- Subagents receive only the context they need, preventing context window pollution
+
+## v5.0.1 (2026-03-10)
+
+### Agentskills Compliance
+
+**Brainstorm-server moved into skill directory**
+
+- Moved `lib/brainstorm-server/` → `skills/brainstorming/scripts/` per the [agentskills.io](https://agentskills.io) specification
+- All `${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/` references replaced with relative `scripts/` paths
+- Skills are now fully portable across platforms — no platform-specific env vars needed to locate scripts
+- `lib/` directory removed (was the last remaining content)
+
+### New Features
+
+**Gemini CLI extension**
+
+- Native Gemini CLI extension support via `gemini-extension.json` and `GEMINI.md` at repo root
+- `GEMINI.md` @imports `using-superpowers` skill and tool mapping table at session start
+- Gemini CLI tool mapping reference (`skills/using-superpowers/references/gemini-tools.md`) — translates Claude Code tool names (Read, Write, Edit, Bash, etc.) to Gemini CLI equivalents (read_file, write_file, replace, etc.)
+- Documents Gemini CLI limitations: no subagent support, skills fall back to `executing-plans`
+- Extension root at repo root for cross-platform compatibility (avoids Windows symlink issues)
+- Install instructions added to README
+
+### Improvements
+
+**Multi-platform brainstorm server launch**
+
+- Per-platform launch instructions in visual-companion.md: Claude Code (default mode), Codex (auto-foreground via `CODEX_CI`), Gemini CLI (`--foreground` with `is_background`), and fallback for other environments
+- Server now writes startup JSON to `$SCREEN_DIR/.server-info` so agents can find the URL and port even when stdout is hidden by background execution
+
+**Brainstorm server dependencies bundled**
+
+- `node_modules` vendored into the repo so the brainstorm server works immediately on fresh plugin installs without requiring `npm` at runtime
+- Removed `fsevents` from bundled deps (macOS-only native binary; chokidar falls back gracefully without it)
+- Fallback auto-install via `npm install` if `node_modules` is missing
+
+**OpenCode tool mapping fix**
+
+- `TodoWrite` → `todowrite` (was incorrectly mapped to `update_plan`); verified against OpenCode source
+
+### Bug Fixes
+
+**Windows/Linux: single quotes break SessionStart hook** (#577, #529, #644, PR #585)
+
+- Single quotes around `${CLAUDE_PLUGIN_ROOT}` in hooks.json fail on Windows (cmd.exe doesn't recognize single quotes as path delimiters) and on Linux (single quotes prevent variable expansion)
+- Fix: replaced single quotes with escaped double quotes — works across macOS bash, Windows cmd.exe, Windows Git Bash, and Linux, with and without spaces in paths
+- Verified on Windows 11 (NT 10.0.26200.0) with Claude Code 2.1.72 and Git for Windows
+
+**Brainstorming spec review loop skipped** (#677)
+
+- The spec review loop (dispatch spec-document-reviewer subagent, iterate until approved) existed in the prose "After the Design" section but was missing from the checklist and process flow diagram
+- Since agents follow the diagram and checklist more reliably than prose, the spec review step was being skipped entirely
+- Added step 7 (spec review loop) to the checklist and corresponding nodes to the dot graph
+- Tested with `claude --plugin-dir` and `claude-session-driver`: worker now correctly dispatches the reviewer
+
+**Cursor install command** (PR #676)
+
+- Fixed Cursor install command in README: `/plugin-add` → `/add-plugin` (confirmed via Cursor 2.5 release announcement)
+
+**User review gate in brainstorming** (#565)
+
+- Added explicit user review step between spec completion and writing-plans handoff
+- User must approve the spec before implementation planning begins
+- Checklist, process flow, and prose updated with the new gate
+
+**Session-start hook emits context only once per platform**
+
+- Hook now detects whether it's running in Claude Code or another platform
+- Emits `hookSpecificOutput` for Claude Code, `additional_context` for others — prevents double context injection
+
+**Linting fix in token analysis script**
+
+- `except:` → `except Exception:` in `tests/claude-code/analyze-token-usage.py`
+
+### Maintenance
+
+**Removed dead code**
+
+- Deleted `lib/skills-core.js` and its test (`tests/opencode/test-skills-core.js`) — unused since February 2026
+- Removed skills-core existence check from `tests/opencode/test-plugin-loading.sh`
+
+### Community
+
+- @karuturi — Claude Code official marketplace install instructions (PR #610)
+- @mvanhorn — session-start hook dual-emit fix, OpenCode tool mapping fix
+- @daniel-graham — linting fix for bare except
+- PR #585 author — Windows/Linux hooks quoting fix
+
+---
+
+## v5.0.0 (2026-03-09)
+
+### Breaking Changes
+
+**Specs and plans directory restructured**
+
+- Specs (brainstorming output) now save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
+- Plans (writing-plans output) now save to `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
+- User preferences for spec/plan locations override these defaults
+- All internal skill references, test files, and example paths updated to match
+- Migration: move existing files from `docs/plans/` to new locations if desired
+
+**Subagent-driven development mandatory on capable harnesses**
+
+Writing-plans no longer offers a choice between subagent-driven and executing-plans. On harnesses with subagent support (Claude Code, Codex), subagent-driven-development is required. Executing-plans is reserved for harnesses without subagent capability, and now tells the user that Superpowers works better on a subagent-capable platform.
+
+**Executing-plans no longer batches**
+
+Removed the "execute 3 tasks then stop for review" pattern. Plans now execute continuously, stopping only for blockers.
+
+**Slash commands deprecated**
+
+`/brainstorm`, `/write-plan`, and `/execute-plan` now show deprecation notices pointing users to the corresponding skills. Commands will be removed in the next major release.
+
+### New Features
+
+**Visual brainstorming companion**
+
+Optional browser-based companion for brainstorming sessions. When a topic would benefit from visuals, the brainstorming skill offers to show mockups, diagrams, comparisons, and other content in a browser window alongside terminal conversation.
+
+- `lib/brainstorm-server/` — WebSocket server with browser helper library, session management scripts, and dark/light themed frame template ("Superpowers Brainstorming" with GitHub link)
+- `skills/brainstorming/visual-companion.md` — Progressive disclosure guide for server workflow, screen authoring, and feedback collection
+- Brainstorming skill adds a visual companion decision point to its process flow: after exploring project context, the skill evaluates whether upcoming questions involve visual content and offers the companion in its own message
+- Per-question decision: even after accepting, each question is evaluated for whether browser or terminal is more appropriate
+- Integration tests in `tests/brainstorm-server/`
+
+**Document review system**
+
+Automated review loops for spec and plan documents using subagent dispatch:
+
+- `skills/brainstorming/spec-document-reviewer-prompt.md` — Reviewer checks completeness, consistency, architecture, and YAGNI
+- `skills/writing-plans/plan-document-reviewer-prompt.md` — Reviewer checks spec alignment, task decomposition, file structure, and file size
+- Brainstorming dispatches spec reviewer after writing the design doc
+- Writing-plans includes chunk-based plan review loop after each section
+- Review loops repeat until approved or escalate after 5 iterations
+- End-to-end tests in `tests/claude-code/test-document-review-system.sh`
+- Design spec and implementation plan in `docs/superpowers/`
+
+**Architecture guidance across the skill pipeline**
+
+Design-for-isolation and file-size-awareness guidance added to brainstorming, writing-plans, and subagent-driven-development:
+
+- **Brainstorming** — New sections: "Design for isolation and clarity" (clear boundaries, well-defined interfaces, independently testable units) and "Working in existing codebases" (follow existing patterns, targeted improvements only)
+- **Writing-plans** — New "File Structure" section: map out files and responsibilities before defining tasks. New "Scope Check" backstop: catch multi-subsystem specs that should have been decomposed during brainstorming
+- **SDD implementer** — New "Code Organization" section (follow plan's file structure, report concerns about growing files) and "When You're in Over Your Head" escalation guidance
+- **SDD code quality reviewer** — Now checks architecture, unit decomposition, plan conformance, and file growth
+- **Spec/plan reviewers** — Architecture and file size added to review criteria
+- **Scope assessment** — Brainstorming now assesses whether a project is too large for a single spec. Multi-subsystem requests are flagged early and decomposed into sub-projects, each with its own spec → plan → implementation cycle
+
+**Subagent-driven development improvements**
+
+- **Model selection** — Guidance for choosing model capability by task type: cheap models for mechanical implementation, standard for integration, capable for architecture and review
+- **Implementer status protocol** — Subagents now report DONE, DONE_WITH_CONCERNS, BLOCKED, or NEEDS_CONTEXT. Controller handles each status appropriately: re-dispatching with more context, upgrading model capability, breaking tasks apart, or escalating to human
+
+### Improvements
+
+**Instruction priority hierarchy**
+
+Added explicit priority ordering to using-superpowers:
+
+1. User's explicit instructions (CLAUDE.md, AGENTS.md, direct requests) — highest priority
+2. Superpowers skills — override default system behavior
+3. Default system prompt — lowest priority
+
+If CLAUDE.md or AGENTS.md says "don't use TDD" and a skill says "always use TDD," the user's instructions win.
+
+**SUBAGENT-STOP gate**
+
+Added `<SUBAGENT-STOP>` block to using-superpowers. Subagents dispatched for specific tasks now skip the skill instead of activating the 1% rule and invoking full skill workflows.
+
+**Multi-platform improvements**
+
+- Codex tool mapping moved to progressive disclosure reference file (`references/codex-tools.md`)
+- Platform Adaptation pointer added so non-Claude-Code platforms can find tool equivalents
+- Plan headers now address "agentic workers" instead of "Claude" specifically
+- Collab feature requirement documented in `docs/README.codex.md`
+
+**Writing-plans template updates**
+
+- Plan steps now use checkbox syntax (`- [ ] **Step N:**`) for progress tracking
+- Plan header references both subagent-driven-development and executing-plans with platform-aware routing
+
+---
+
 ## v4.3.1 (2026-02-21)
 
 ### Added

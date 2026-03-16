@@ -1,6 +1,5 @@
 ---
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores requirements and design before implementation."
-disable-model-invocation: true
+description: "Deprecated - use the superpowers:brainstorming skill instead"
 ---
 
-Invoke the superpowers:brainstorming skill and follow it exactly as presented to you
+Tell your human partner that this command is deprecated and will be removed in the next major release. They should ask you to use the "superpowers brainstorming" skill instead.

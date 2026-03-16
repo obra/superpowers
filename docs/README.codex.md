@@ -32,6 +32,12 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 3. Restart Codex.
 
+4. **For subagent skills** (optional): Skills like `dispatching-parallel-agents` and `subagent-driven-development` require Codex's collab feature. Add to your Codex config:
+   ```toml
+   [features]
+   collab = true
+   ```
+
 ### Windows
 
 Use a junction instead of a symlink (works without Developer Mode):
