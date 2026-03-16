@@ -6,7 +6,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 
-<video width="630" height="300" src="SuperpowersHeader.mp4"></video>
+https://github.com/user-attachments/assets/3feddb75c3d9e2c0339d62cbaff4252a1d171fa9
+
 
 # Superpowers Optimized
 
