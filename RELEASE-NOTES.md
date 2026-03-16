@@ -1,5 +1,12 @@
 # Superpowers Release Notes
 
+## v5.0.3 (unreleased)
+
+### Slash Command Cleanup
+
+- Removed deprecated slash command redirects (`/superpowers:brainstorm`, `/superpowers:write-plan`, `/superpowers:execute-plan`) from fresh installs.
+- New installs now only surface current skill names, reducing autocomplete clutter and confusion.
+
 ## v5.0.2 (2026-03-11)
 
 ### Zero-Dependency Brainstorm Server
