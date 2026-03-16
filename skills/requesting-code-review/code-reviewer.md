@@ -32,9 +32,11 @@ git diff {BASE_SHA}..{HEAD_SHA}
 **Code Quality:**
 - Clean separation of concerns?
 - Proper error handling?
-- Type safety (if applicable)?
 - DRY principle followed?
 - Edge cases handled?
+- Sandi Metz rules respected? (≤100-line classes, ≤5-line methods, ≤4 params, ≤1 instance var passed to views)
+- Thin controllers, fat models (DHH philosophy)?
+- No phantom skill references or missing dependencies?
 
 **Architecture:**
 - Sound design decisions?
@@ -47,6 +49,11 @@ git diff {BASE_SHA}..{HEAD_SHA}
 - Edge cases covered?
 - Integration tests where needed?
 - All tests passing?
+- Using Minitest (not RSpec)?
+- Using fixtures (not factories)?
+- Using `build` instead of `create` when persistence not needed?
+- No system tests (`ApplicationSystemTestCase`)?
+- `bin/rails test` passes?
 
 **Requirements:**
 - All plan requirements met?
@@ -111,9 +118,9 @@ git diff {BASE_SHA}..{HEAD_SHA}
 
 ```
 ### Strengths
-- Clean database schema with proper migrations (db.ts:15-42)
+- Clean database schema with proper migrations (db/schema.rb:15-42)
 - Comprehensive test coverage (18 tests, all edge cases)
-- Good error handling with fallbacks (summarizer.ts:85-92)
+- Good error handling with fallbacks (app/models/user.rb:85-92)
 
 ### Issues
 
@@ -124,13 +131,13 @@ git diff {BASE_SHA}..{HEAD_SHA}
    - Fix: Add --help case with usage examples
 
 2. **Date validation missing**
-   - File: search.ts:25-27
+   - File: app/models/search.rb:25-27
    - Issue: Invalid dates silently return no results
-   - Fix: Validate ISO format, throw error with example
+   - Fix: Validate format, raise with example
 
 #### Minor
 1. **Progress indicators**
-   - File: indexer.ts:130
+   - File: app/controllers/imports_controller.rb:130
    - Issue: No "X of Y" counter for long operations
    - Impact: Users don't know how long to wait
 

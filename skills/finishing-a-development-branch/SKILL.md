@@ -21,7 +21,8 @@ Guide completion of development work by presenting clear options and handling ch
 
 ```bash
 # Run project's test suite
-npm test / cargo test / pytest / go test ./...
+bin/rails test          # Ruby on Rails
+# npm test / cargo test / pytest / go test ./...  (other project types)
 ```
 
 **If tests fail:**

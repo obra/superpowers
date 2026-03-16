@@ -38,16 +38,16 @@ Error: git init failed in /Users/jesse/project/packages/core
 
 ### 2. Find Immediate Cause
 **What code directly causes this?**
-```typescript
-await execFileAsync('git', ['init'], { cwd: projectDir });
+```ruby
+Open3.capture3("git", "init", chdir: project_dir)
 ```
 
 ### 3. Ask: What Called This?
-```typescript
-WorktreeManager.createSessionWorktree(projectDir, sessionId)
-  → called by Session.initializeWorkspace()
-  → called by Session.create()
-  → called by test at Project.create()
+```ruby
+WorktreeManager#create_session_worktree(project_dir, session_id)
+  → called by Session#initialize_workspace
+  → called by Session.create
+  → called by test in ProjectTest
 ```
 
 ### 4. Keep Tracing Up
@@ -67,26 +67,21 @@ Project.create('name', context.tempDir); // Accessed before beforeEach!
 
 When you can't trace manually, add instrumentation:
 
-```typescript
-// Before the problematic operation
-async function gitInit(directory: string) {
-  const stack = new Error().stack;
-  console.error('DEBUG git init:', {
-    directory,
-    cwd: process.cwd(),
-    nodeEnv: process.env.NODE_ENV,
-    stack,
-  });
+```ruby
+# Before the problematic operation
+def git_init(directory)
+  $stderr.puts "DEBUG git init: dir=#{directory} cwd=#{Dir.pwd} env=#{Rails.env}"
+  $stderr.puts caller.first(10).join("\n")
 
-  await execFileAsync('git', ['init'], { cwd: directory });
-}
+  Open3.capture3("git", "init", chdir: directory)
+end
 ```
 
-**Critical:** Use `console.error()` in tests (not logger - may not show)
+**Critical:** Use `$stderr.puts` in tests (not `Rails.logger` — may be suppressed)
 
 **Run and capture:**
 ```bash
-npm test 2>&1 | grep 'DEBUG git init'
+bin/rails test 2>&1 | grep 'DEBUG git init'
 ```
 
 **Analyze stack traces:**
@@ -101,7 +96,7 @@ If something appears during tests but you don't know which test:
 Use the bisection script `find-polluter.sh` in this directory:
 
 ```bash
-./find-polluter.sh '.git' 'src/**/*.test.ts'
+./find-polluter.sh '.git' 'test/**/*_test.rb'
 ```
 
 Runs tests one-by-one, stops at first polluter. See script for usage.

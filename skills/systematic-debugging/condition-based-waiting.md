@@ -33,53 +33,46 @@ digraph when_to_use {
 
 ## Core Pattern
 
-```typescript
-// ❌ BEFORE: Guessing at timing
-await new Promise(r => setTimeout(r, 50));
-const result = getResult();
-expect(result).toBeDefined();
+```ruby
+# ❌ BEFORE: Guessing at timing
+sleep 0.05
+result = get_result
+assert result
 
-// ✅ AFTER: Waiting for condition
-await waitFor(() => getResult() !== undefined);
-const result = getResult();
-expect(result).toBeDefined();
+# ✅ AFTER: Waiting for condition
+wait_for { get_result }
+result = get_result
+assert result
 ```
 
 ## Quick Patterns
 
 | Scenario | Pattern |
 |----------|---------|
-| Wait for event | `waitFor(() => events.find(e => e.type === 'DONE'))` |
-| Wait for state | `waitFor(() => machine.state === 'ready')` |
-| Wait for count | `waitFor(() => items.length >= 5)` |
-| Wait for file | `waitFor(() => fs.existsSync(path))` |
-| Complex condition | `waitFor(() => obj.ready && obj.value > 10)` |
+| Wait for event | `wait_for { events.find { _1[:type] == "DONE" } }` |
+| Wait for state | `wait_for { machine.state == :ready }` |
+| Wait for count | `wait_for { items.length >= 5 }` |
+| Wait for file | `wait_for { File.exist?(path) }` |
+| Complex condition | `wait_for { obj.ready? && obj.value > 10 }` |
 
 ## Implementation
 
-Generic polling function:
-```typescript
-async function waitFor<T>(
-  condition: () => T | undefined | null | false,
-  description: string,
-  timeoutMs = 5000
-): Promise<T> {
-  const startTime = Date.now();
-
-  while (true) {
-    const result = condition();
-    if (result) return result;
-
-    if (Date.now() - startTime > timeoutMs) {
-      throw new Error(`Timeout waiting for ${description} after ${timeoutMs}ms`);
-    }
-
-    await new Promise(r => setTimeout(r, 10)); // Poll every 10ms
-  }
-}
+Generic polling helper:
+```ruby
+def wait_for(description: "condition", timeout: 5)
+  deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout
+  loop do
+    result = yield
+    return result if result
+    if Process.clock_gettime(Process::CLOCK_MONOTONIC) > deadline
+      raise "Timeout waiting for #{description} after #{timeout}s"
+    end
+    sleep 0.01  # poll every 10ms
+  end
+end
 ```
 
-See `condition-based-waiting-example.ts` in this directory for complete implementation with domain-specific helpers (`waitForEvent`, `waitForEventCount`, `waitForEventMatch`) from actual debugging session.
+See `condition-based-waiting-example.rb` in this directory for a complete implementation with domain-specific helpers (`wait_for_event`, `wait_for_event_count`, `wait_for_event_match`) from an actual debugging session.
 
 ## Common Mistakes
 
@@ -94,11 +87,11 @@ See `condition-based-waiting-example.ts` in this directory for complete implemen
 
 ## When Arbitrary Timeout IS Correct
 
-```typescript
-// Tool ticks every 100ms - need 2 ticks to verify partial output
-await waitForEvent(manager, 'TOOL_STARTED'); // First: wait for condition
-await new Promise(r => setTimeout(r, 200));   // Then: wait for timed behavior
-// 200ms = 2 ticks at 100ms intervals - documented and justified
+```ruby
+# Tool ticks every 100ms - need 2 ticks to verify partial output
+wait_for_event(manager, :tool_started)  # First: wait for condition
+sleep 0.2                               # Then: wait for timed behavior
+# 0.2s = 2 ticks at 100ms intervals — documented and justified
 ```
 
 **Requirements:**

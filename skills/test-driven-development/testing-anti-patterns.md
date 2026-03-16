@@ -21,31 +21,33 @@ Tests must verify real behavior, not mock behavior. Mocks are a means to isolate
 ## Anti-Pattern 1: Testing Mock Behavior
 
 **The violation:**
-```typescript
-// ❌ BAD: Testing that the mock exists
-test('renders sidebar', () => {
-  render(<Page />);
-  expect(screen.getByTestId('sidebar-mock')).toBeInTheDocument();
-});
+```ruby
+# ❌ BAD: Testing that the stub was called, not what happened
+test "sidebar renders" do
+  sidebar = stub(render: "<nav>stub</nav>")
+  page = Page.new(sidebar: sidebar)
+  page.render
+  assert sidebar.received_render  # testing the stub, not the page
+end
 ```
 
 **Why this is wrong:**
-- You're verifying the mock works, not that the component works
-- Test passes when mock is present, fails when it's not
+- You're verifying the stub works, not that the page works
+- Test passes when stub is present, fails when it's not
 - Tells you nothing about real behavior
 
 **your human partner's correction:** "Are we testing the behavior of a mock?"
 
 **The fix:**
-```typescript
-// ✅ GOOD: Test real component or don't mock it
-test('renders sidebar', () => {
-  render(<Page />);  // Don't mock sidebar
-  expect(screen.getByRole('navigation')).toBeInTheDocument();
-});
+```ruby
+# ✅ GOOD: Test real controller response or don't stub it
+test "shows navigation" do
+  get dashboard_url
+  assert_dom "nav", text: /Dashboard/  # test real output
+end
 
-// OR if sidebar must be mocked for isolation:
-// Don't assert on the mock - test Page's behavior with sidebar present
+# OR if collaborator must be isolated:
+# Don't assert on the stub — test the subject's observable behavior
 ```
 
 ### Gate Function
@@ -63,17 +65,17 @@ BEFORE asserting on any mock element:
 ## Anti-Pattern 2: Test-Only Methods in Production
 
 **The violation:**
-```typescript
-// ❌ BAD: destroy() only used in tests
-class Session {
-  async destroy() {  // Looks like production API!
-    await this._workspaceManager?.destroyWorkspace(this.id);
-    // ... cleanup
-  }
-}
+```ruby
+# ❌ BAD: reset_state only called in tests
+class Session
+  def reset_state  # Looks like production API!
+    @workspace = nil
+    @events.clear
+  end
+end
 
-// In tests
-afterEach(() => session.destroy());
+# In tests
+teardown { @session.reset_state }
 ```
 
 **Why this is wrong:**
@@ -83,20 +85,18 @@ afterEach(() => session.destroy());
 - Confuses object lifecycle with entity lifecycle
 
 **The fix:**
-```typescript
-// ✅ GOOD: Test utilities handle test cleanup
-// Session has no destroy() - it's stateless in production
+```ruby
+# ✅ GOOD: Use teardown helpers or fixtures, not production methods
+# Session has no reset_state — each test gets a fresh instance
 
-// In test-utils/
-export async function cleanupSession(session: Session) {
-  const workspace = session.getWorkspaceInfo();
-  if (workspace) {
-    await workspaceManager.destroyWorkspace(workspace.id);
-  }
-}
+# In test helper
+def new_session
+  Session.new(workspace: workspaces(:default))
+end
 
-// In tests
-afterEach(() => cleanupSession(session));
+# In tests
+setup { @session = new_session }
+# No teardown needed — fixtures wrap each test in a rolled-back transaction
 ```
 
 ### Gate Function
@@ -118,34 +118,32 @@ BEFORE adding any method to production class:
 ## Anti-Pattern 3: Mocking Without Understanding
 
 **The violation:**
-```typescript
-// ❌ BAD: Mock breaks test logic
-test('detects duplicate server', () => {
-  // Mock prevents config write that test depends on!
-  vi.mock('ToolCatalog', () => ({
-    discoverAndCacheTools: vi.fn().mockResolvedValue(undefined)
-  }));
-
-  await addServer(config);
-  await addServer(config);  // Should throw - but won't!
-});
+```ruby
+# ❌ BAD: Stub prevents side effect the test depends on
+test "detects duplicate server" do
+  # Stubbing add_to_catalog wipes out the config write!
+  ServerRegistry.stub(:add_to_catalog, nil) do
+    add_server(config)
+    add_server(config)  # Should raise — but won't!
+  end
+end
 ```
 
 **Why this is wrong:**
-- Mocked method had side effect test depended on (writing config)
+- Stubbed method had side effect test depended on
 - Over-mocking to "be safe" breaks actual behavior
 - Test passes for wrong reason or fails mysteriously
 
 **The fix:**
-```typescript
-// ✅ GOOD: Mock at correct level
-test('detects duplicate server', () => {
-  // Mock the slow part, preserve behavior test needs
-  vi.mock('MCPServerManager'); // Just mock slow server startup
-
-  await addServer(config);  // Config written
-  await addServer(config);  // Duplicate detected ✓
-});
+```ruby
+# ✅ GOOD: Stub only the slow external boundary, preserve behavior
+test "detects duplicate server" do
+  # Stub the slow HTTP call, not the config write
+  HTTPClient.stub(:connect, true) do
+    add_server(config)        # config written
+    assert_raises(DuplicateServerError) { add_server(config) }
+  end
+end
 ```
 
 ### Gate Function
@@ -177,34 +175,33 @@ BEFORE mocking any method:
 ## Anti-Pattern 4: Incomplete Mocks
 
 **The violation:**
-```typescript
-// ❌ BAD: Partial mock - only fields you think you need
-const mockResponse = {
-  status: 'success',
-  data: { userId: '123', name: 'Alice' }
-  // Missing: metadata that downstream code uses
-};
-
-// Later: breaks when code accesses response.metadata.requestId
+```ruby
+# ❌ BAD: Partial stub hash — missing fields downstream code uses
+stub_response = {
+  status: "success",
+  data: { user_id: "123", name: "Alice" }
+  # Missing: metadata that downstream code accesses
+}
+# Later: breaks with NoMethodError when code calls response[:metadata][:request_id]
 ```
 
 **Why this is wrong:**
-- **Partial mocks hide structural assumptions** - You only mocked fields you know about
-- **Downstream code may depend on fields you didn't include** - Silent failures
-- **Tests pass but integration fails** - Mock incomplete, real API complete
-- **False confidence** - Test proves nothing about real behavior
+- **Partial mocks hide structural assumptions** — you only stubbed fields you know about
+- **Downstream code may depend on fields you didn't include** — silent failures
+- **Tests pass but integration fails** — stub incomplete, real API complete
+- **False confidence** — test proves nothing about real behavior
 
-**The Iron Rule:** Mock the COMPLETE data structure as it exists in reality, not just fields your immediate test uses.
+**The Iron Rule:** Mirror the COMPLETE data structure as it exists in reality, not just fields your immediate test uses.
 
 **The fix:**
-```typescript
-// ✅ GOOD: Mirror real API completeness
-const mockResponse = {
-  status: 'success',
-  data: { userId: '123', name: 'Alice' },
-  metadata: { requestId: 'req-789', timestamp: 1234567890 }
-  // All fields real API returns
-};
+```ruby
+# ✅ GOOD: Mirror real API response completely
+stub_response = {
+  status: "success",
+  data: { user_id: "123", name: "Alice" },
+  metadata: { request_id: "req-789", timestamp: Time.now.to_i }
+  # All keys the real API returns
+}
 ```
 
 ### Gate Function

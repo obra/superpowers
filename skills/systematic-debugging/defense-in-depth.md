@@ -22,66 +22,53 @@ Different layers catch different cases:
 ### Layer 1: Entry Point Validation
 **Purpose:** Reject obviously invalid input at API boundary
 
-```typescript
-function createProject(name: string, workingDirectory: string) {
-  if (!workingDirectory || workingDirectory.trim() === '') {
-    throw new Error('workingDirectory cannot be empty');
-  }
-  if (!existsSync(workingDirectory)) {
-    throw new Error(`workingDirectory does not exist: ${workingDirectory}`);
-  }
-  if (!statSync(workingDirectory).isDirectory()) {
-    throw new Error(`workingDirectory is not a directory: ${workingDirectory}`);
-  }
-  // ... proceed
-}
+```ruby
+def create_project(name, working_directory)
+  raise ArgumentError, "working_directory cannot be empty" if working_directory.blank?
+  raise ArgumentError, "working_directory does not exist: #{working_directory}" unless Dir.exist?(working_directory)
+  raise ArgumentError, "working_directory is not a directory: #{working_directory}" unless File.directory?(working_directory)
+  # ... proceed
+end
 ```
 
 ### Layer 2: Business Logic Validation
 **Purpose:** Ensure data makes sense for this operation
 
-```typescript
-function initializeWorkspace(projectDir: string, sessionId: string) {
-  if (!projectDir) {
-    throw new Error('projectDir required for workspace initialization');
-  }
-  // ... proceed
-}
+```ruby
+def initialize_workspace(project_dir, session_id)
+  raise ArgumentError, "project_dir required for workspace initialization" if project_dir.blank?
+  # ... proceed
+end
 ```
 
 ### Layer 3: Environment Guards
 **Purpose:** Prevent dangerous operations in specific contexts
 
-```typescript
-async function gitInit(directory: string) {
-  // In tests, refuse git init outside temp directories
-  if (process.env.NODE_ENV === 'test') {
-    const normalized = normalize(resolve(directory));
-    const tmpDir = normalize(resolve(tmpdir()));
-
-    if (!normalized.startsWith(tmpDir)) {
-      throw new Error(
-        `Refusing git init outside temp dir during tests: ${directory}`
-      );
-    }
-  }
-  // ... proceed
-}
+```ruby
+def git_init(directory)
+  # In tests, refuse git init outside temp directories
+  if Rails.env.test?
+    tmp = Rails.root.join("tmp").to_s
+    unless File.expand_path(directory).start_with?(tmp)
+      raise "Refusing git init outside tmp/ during tests: #{directory}"
+    end
+  end
+  # ... proceed
+end
 ```
 
 ### Layer 4: Debug Instrumentation
 **Purpose:** Capture context for forensics
 
-```typescript
-async function gitInit(directory: string) {
-  const stack = new Error().stack;
-  logger.debug('About to git init', {
-    directory,
-    cwd: process.cwd(),
-    stack,
-  });
-  // ... proceed
-}
+```ruby
+def git_init(directory)
+  Rails.logger.debug("About to git init", {
+    directory: directory,
+    cwd: Dir.pwd,
+    caller: caller.first(5)
+  })
+  # ... proceed
+end
 ```
 
 ## Applying the Pattern

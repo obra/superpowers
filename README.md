@@ -1,6 +1,30 @@
-# Superpowers
+# Superpowers (Ruby/Rails Edition)
+
+A Ruby on Rails–focused fork of [obra/superpowers](https://github.com/obra/superpowers) — a complete software development workflow for coding agents built on composable "skills".
+
+## Ruby/Rails Focus
+
+This fork extends the core superpowers workflow with a full Ruby on Rails skills library:
+
+- **Ruby language** idioms, modern features (3.x+), OOD philosophy
+- **Rails testing** with Minitest and fixtures (no RSpec, no Capybara, no system tests)
+- **Brakeman** security scanning
+- **Sandi Metz rules** for maintainable OOP
+- **Official Rails guides** indexed for quick reference
+- **37signals/Basecamp patterns** derived from Fizzy codebase analysis
+- **Hotwire** (Turbo + Stimulus) skills from Hotwire Club
+
+All examples, test commands, and file references use Ruby/Rails conventions throughout.
 
 Superpowers is a complete software development workflow for your coding agents, built on top of a set of composable "skills" and some initial instructions that make sure your agent uses them.
+
+
+Here are the sources that I used to get the skills that are embeded here: 
+- https://github.com/el-feo/ai-context
+- https://github.com/nateberkopec/dotfiles
+- https://github.com/marckohlbrugge/unofficial-37signals-coding-style-guide
+- https://github.com/rails/rails/tree/main/guides
+- https://github.com/TheHotwireClub/hotwire_club-skills
 
 ## How it works
 
@@ -120,14 +144,29 @@ Start a new session in your chosen platform and ask for something that should tr
 
 ### Skills Library
 
+**Ruby/Rails**
+- **ruby** - Ruby 3.x+ idioms, error handling, performance, OOD philosophy
+- **brakeman** - Rails security static analysis
+- **sandi-metz-rules** - OOP design rules for maintainable Ruby
+- **rails-guides** - Official Rails documentation index (ActiveRecord, routing, controllers, views, jobs, mailers, Action Cable, etc.)
+- **37signals-style** - 37signals/Basecamp Rails patterns (controllers, models, Hotwire, testing, etc.)
+
+**Hotwire / Turbo / Stimulus**
+- **hwc-stimulus-fundamentals** - Stimulus controller lifecycle, values, targets, outlets
+- **hwc-forms-validation** - Hotwire form workflows, inline editing, validation errors
+- **hwc-navigation-content** - Turbo Frame pagination, tabbed navigation, lazy loading
+- **hwc-realtime-streaming** - Turbo Streams over WebSocket/SSE, live updates
+- **hwc-ux-feedback** - Loading states, optimistic UI, progress indicators
+- **hwc-media-content** - Image/video/audio uploads, previews, playback
+
 **Testing**
-- **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
+- **test-driven-development** - RED-GREEN-REFACTOR cycle with Ruby/Minitest examples (includes testing anti-patterns and Rails testing strategy)
 
 **Debugging**
 - **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
 - **verification-before-completion** - Ensure it's actually fixed
 
-**Collaboration** 
+**Collaboration**
 - **brainstorming** - Socratic design refinement
 - **writing-plans** - Detailed implementation plans
 - **executing-plans** - Batch execution with checkpoints

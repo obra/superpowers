@@ -1,6 +1,6 @@
 {
   "name": "superpowers",
-  "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
+  "description": "Ruby/Rails skills library for Claude Code: TDD with Minitest, Rails patterns, Hotwire, Brakeman, Sandi Metz rules, 37signals style, and proven development workflows",
   "version": "5.0.5",
   "author": {
     "name": "Jesse Vincent",
@@ -9,5 +9,5 @@
   "homepage": "https://github.com/obra/superpowers",
   "repository": "https://github.com/obra/superpowers",
   "license": "MIT",
-  "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows"]
+  "keywords": ["skills", "ruby", "rails", "tdd", "minitest", "hotwire", "turbo", "stimulus", "brakeman", "debugging", "collaboration", "best-practices", "workflows"]
 }

@@ -103,6 +103,10 @@ cd "$path"
 Auto-detect and run appropriate setup:
 
 ```bash
+# Ruby on Rails (primary)
+if [ -f Gemfile ]; then bundle install; fi
+if [ -f Gemfile ] && [ -f config/database.yml ]; then bin/rails db:test:prepare; fi
+
 # Node.js
 if [ -f package.json ]; then npm install; fi
 
@@ -122,11 +126,14 @@ if [ -f go.mod ]; then go mod download; fi
 Run tests to ensure worktree starts clean:
 
 ```bash
-# Examples - use project-appropriate command
-npm test
-cargo test
-pytest
-go test ./...
+# Ruby on Rails (primary)
+bin/rails test
+
+# Other project types
+npm test      # Node.js
+cargo test    # Rust
+pytest        # Python
+go test ./... # Go
 ```
 
 **If tests fail:** Report failures, ask whether to proceed or investigate.
@@ -183,8 +190,9 @@ You: I'm using the using-git-worktrees skill to set up an isolated workspace.
 [Check .worktrees/ - exists]
 [Verify ignored - git check-ignore confirms .worktrees/ is ignored]
 [Create worktree: git worktree add .worktrees/auth -b feature/auth]
-[Run npm install]
-[Run npm test - 47 passing]
+[Run bundle install]
+[Run bin/rails db:test:prepare]
+[Run bin/rails test - 47 passing]
 
 Worktree ready at /Users/jesse/myproject/.worktrees/auth
 Tests passing (47 tests, 0 failures)

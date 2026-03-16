@@ -1,6 +1,6 @@
 {
   "name": "superpowers",
-  "description": "Core skills library: TDD, debugging, collaboration patterns, and proven techniques",
+  "description": "Ruby/Rails skills library: TDD with Minitest, Rails patterns, Hotwire, Brakeman, Sandi Metz rules, 37signals style, and proven development workflows",
   "version": "5.0.0",
   "contextFileName": "GEMINI.md"
 }
