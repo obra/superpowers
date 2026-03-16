@@ -1,5 +1,29 @@
 # Superpowers Release Notes
 
+## v5.1.0-rails (2026-03-16)
+
+### Intent-Level Plans
+
+**Plans now use intent-level steps by default instead of complete code**
+
+- Plan steps describe WHAT to build ("add presence validation for email"), not HOW (full code blocks)
+- Exact code reserved for fragile operations: migrations, data migrations, destructive ops, non-obvious config
+- Plans are 3-5x shorter, reducing context bloat for executors
+- Executor agents read the codebase and convention skills to determine implementation details
+
+### Model Selection for Intent-Level Plans
+
+- Clarified that intent-level plan steps require at least a standard model (not cheap)
+- Cheap model reserved for tasks with exact code in the plan or trivially simple gem calls
+- Added "intent-level implementation tasks" as an explicit category in model selection guidance
+
+### Tested with RED-GREEN-REFACTOR
+
+Both changes validated through TDD-for-skills methodology:
+- 5 baseline scenarios documented agent behavior with complete-code plans
+- Same scenarios re-run with intent-level guidance — agents correctly discriminate between fragile and routine operations
+- Model selection stress-tested with pressure to "pick cheapest possible" — updated guidance prevents inappropriate cheap selections
+
 ## v5.0.2 (2026-03-11)
 
 ### Zero-Dependency Brainstorm Server

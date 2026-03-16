@@ -7,9 +7,9 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+Write implementation plans as bite-sized tasks. Document which files to touch, what to build, how to test it. DRY. YAGNI. TDD. Frequent commits.
 
-Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
+Assume the executor is a skilled developer with access to the codebase and convention skills. They can read existing code, infer patterns, and write idiomatic implementations. They need to know WHAT to build and WHERE, not HOW to write every line.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
@@ -42,7 +42,7 @@ superpowers:rails-stimulus-conventions
 superpowers:rails-testing-conventions
 ```
 
-Then apply conventions directly in task code (not "follow conventions" - actual code).
+The executor will load these skills and apply them. Plans reference conventions by name, not by duplicating their content.
 
 | Rationalization | Reality |
 |-----------------|---------|
@@ -103,46 +103,47 @@ This structure informs the task decomposition. Each task should produce self-con
 ### Task N: [Component Name]
 
 **Files:**
-- Create: `exact/path/to/file.py`
-- Modify: `exact/path/to/existing.py:123-145`
-- Test: `tests/exact/path/to/test.py`
+- Create: `exact/path/to/file.rb`
+- Modify: `exact/path/to/existing.rb`
+- Test: `spec/exact/path/to/file_spec.rb`
 
 - [ ] **Step 1: Write the failing test**
-
-```python
-def test_specific_behavior():
-    result = function(input)
-    assert result == expected
-```
+Test that [specific behavior] works: [describe what to test and key assertions]
 
 - [ ] **Step 2: Run test to verify it fails**
-
-Run: `pytest tests/path/test.py::test_name -v`
-Expected: FAIL with "function not defined"
+Run: `bundle exec rspec spec/path/file_spec.rb`
+Expected: FAIL with "message"
 
 - [ ] **Step 3: Write minimal implementation**
-
-```python
-def function(input):
-    return expected
-```
+[Describe what to implement — intent-level for routine code, exact code for fragile ops]
 
 - [ ] **Step 4: Run test to verify it passes**
-
-Run: `pytest tests/path/test.py::test_name -v`
+Run: `bundle exec rspec spec/path/file_spec.rb`
 Expected: PASS
 
 - [ ] **Step 5: Commit**
-
 ```bash
-git add tests/path/test.py src/path/file.py
-git commit -m "feat: add specific feature"
+git add [files]
+git commit -m "feat: description"
 ```
 ````
 
+**When to include exact code in a step:**
+- Migrations and data migrations (wrong code = data loss, hard to reverse)
+- Destructive operations (rm, DROP, truncate)
+- Non-obvious config (cron syntax, external API specifics, env vars, middleware registration)
+
+**When intent is enough:**
+- Model validations, associations, scopes
+- Controller actions, strong params
+- Policy methods
+- Job structure
+- Test structure (describe what to test, not every line)
+
 ## Remember
 - Exact file paths always
-- Complete code in plan (not "add validation")
+- Intent-level steps by default ("add presence validation for email", "add index action with search filtering")
+- Exact code ONLY for: migrations (including data migrations), destructive operations, non-obvious config (cron syntax, middleware registration, API-specific error handling)
 - Exact commands with expected output
 - Reference relevant skills with @ syntax
 - DRY, YAGNI, TDD, frequent commits

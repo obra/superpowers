@@ -98,14 +98,17 @@ digraph process {
 
 Use the least powerful model that can handle each role to conserve cost and increase speed.
 
-**Mechanical implementation tasks** (isolated functions, clear specs, 1-2 files): use a fast, cheap model. Most implementation tasks are mechanical when the plan is well-specified.
+**Mechanical implementation tasks** (plan provides exact code to copy, or task is a single well-known gem/library call): use a fast, cheap model.
+
+**Intent-level implementation tasks** (plan describes WHAT to build, implementer reads codebase and convention skills to determine HOW): use a standard model. Most plan tasks are this level.
 
 **Integration and judgment tasks** (multi-file coordination, pattern matching, debugging): use a standard model.
 
 **Architecture, design, and review tasks**: use the most capable available model.
 
 **Task complexity signals:**
-- Touches 1-2 files with a complete spec → cheap model
+- Plan provides exact code, or trivially simple (e.g., `acts_as_list scope: :order`) → cheap model
+- Plan describes intent, implementer infers implementation from codebase → standard model
 - Touches multiple files with integration concerns → standard model
 - Requires design judgment or broad codebase understanding → most capable model
 
