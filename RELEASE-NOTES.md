@@ -1,5 +1,15 @@
 # Superpowers Release Notes
 
+## v5.0.4 (2026-03-16)
+
+### Review Loop Refinements
+
+- **Single whole-plan review** — plan reviewer now reviews the complete plan in one pass instead of chunk-by-chunk. Removed all chunk-related concepts (`## Chunk N:` headings, 1000-line chunk limits, per-chunk dispatch).
+- **Raised the bar for blocking issues** — both spec and plan reviewer prompts now include a "Calibration" section: only flag issues that would cause real problems during implementation. Minor wording, stylistic preferences, and formatting quibbles should not block approval.
+- **Reduced max review iterations** — from 5 to 3 for both spec and plan review loops. If the reviewer is calibrated correctly, 3 rounds is plenty.
+- **Streamlined reviewer checklists** — spec reviewer trimmed from 7 categories to 5; plan reviewer from 7 to 4. Removed formatting-focused checks (task syntax, chunk size) in favor of substance (buildability, spec alignment).
+- **Generic agent language** — brainstorm companion waiting page now says "the agent" instead of "Claude".
+
 ## v5.0.3 (2026-03-15)
 
 ### Bug Fixes
