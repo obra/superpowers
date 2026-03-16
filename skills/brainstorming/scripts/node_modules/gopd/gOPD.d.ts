@@ -1,1 +1,0 @@
-export = Object.getOwnPropertyDescriptor;

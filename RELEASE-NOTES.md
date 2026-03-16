@@ -1,5 +1,29 @@
 # Superpowers Release Notes
 
+## v5.0.2 (2026-03-11)
+
+### Zero-Dependency Brainstorm Server
+
+**Removed all vendored node_modules — server.js is now fully self-contained**
+
+- Replaced Express/Chokidar/WebSocket dependencies with zero-dependency Node.js server using built-in `http`, `fs`, and `crypto` modules
+- Removed ~1,200 lines of vendored `node_modules/`, `package.json`, and `package-lock.json`
+- Custom WebSocket protocol implementation (RFC 6455 framing, ping/pong, proper close handshake)
+- Native `fs.watch()` file watching replaces Chokidar
+- Full test suite: HTTP serving, WebSocket protocol, file watching, and integration tests
+
+### Brainstorm Server Reliability
+
+- **Auto-exit after 30 minutes idle** — server shuts down when no clients are connected, preventing orphaned processes
+- **Owner process tracking** — server monitors the parent harness PID and exits when the owning session dies
+- **Liveness check** — skill verifies server is responsive before reusing an existing instance
+- **Encoding fix** — proper `<meta charset="utf-8">` on served HTML pages
+
+### Subagent Context Isolation
+
+- All delegation skills (brainstorming, dispatching-parallel-agents, requesting-code-review, subagent-driven-development, writing-plans) now include context isolation principle
+- Subagents receive only the context they need, preventing context window pollution
+
 ## v5.0.1 (2026-03-10)
 
 ### Agentskills Compliance
