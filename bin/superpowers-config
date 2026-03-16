@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
+CONFIG_FILE="$STATE_DIR/config.yaml"
+
+case "${1:-}" in
+  get)
+    KEY="${2:?Usage: superpowers-config get <key>}"
+    if [ -f "$CONFIG_FILE" ]; then
+      awk -F': *' -v key="$KEY" '$1 == key { print $2 }' "$CONFIG_FILE" | tail -1 | tr -d '[:space:]' || true
+    fi
+    ;;
+  set)
+    KEY="${2:?Usage: superpowers-config set <key> <value>}"
+    VALUE="${3:?Usage: superpowers-config set <key> <value>}"
+    mkdir -p "$STATE_DIR"
+    TMP_FILE="$(mktemp)"
+    if [ -f "$CONFIG_FILE" ]; then
+      awk -F': *' -v key="$KEY" -v value="$VALUE" '
+        BEGIN { updated = 0 }
+        $1 == key { print key ": " value; updated = 1; next }
+        { print }
+        END {
+          if (!updated) {
+            print key ": " value
+          }
+        }
+      ' "$CONFIG_FILE" > "$TMP_FILE"
+    else
+      printf '%s: %s\n' "$KEY" "$VALUE" > "$TMP_FILE"
+    fi
+    mv "$TMP_FILE" "$CONFIG_FILE"
+    ;;
+  list)
+    cat "$CONFIG_FILE" 2>/dev/null || true
+    ;;
+  *)
+    echo "Usage: superpowers-config {get|set|list} [key] [value]"
+    exit 1
+    ;;
+esac

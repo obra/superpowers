@@ -1,9 +1,9 @@
 # Implementer Subagent Prompt Template
 
-Use this template when dispatching an implementer subagent.
+Use this template when dispatching an implementer sub-agent or custom agent.
 
 ```
-Task tool (general-purpose):
+Implementation sub-agent / custom agent:
   description: "Implement Task N: [task name]"
   prompt: |
     You are implementing Task N: [task name]

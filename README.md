@@ -1,124 +1,165 @@
 # Superpowers
 
-Superpowers is a complete software development workflow for your coding agents, built on top of a set of composable "skills" and some initial instructions that make sure your agent uses them.
+Superpowers is a complete software development workflow for coding agents, built from composable skills plus a small runtime layer that makes the agent actually use them. In this repository, the active runtime package targets Codex and GitHub Copilot local installs.
+
+## Provenance
+
+The core project in this fork started from upstream Superpowers: https://github.com/obra/superpowers
+
+This fork keeps that core workflow and extends it with additional skill structure, review flow, and runtime patterns adapted from gstack: https://github.com/garrytan/gstack
 
 ## How it works
 
-It starts from the moment you fire up your coding agent. As soon as it sees that you're building something, it *doesn't* just jump into trying to write code. Instead, it steps back and asks you what you're really trying to do. 
+It starts from the moment you fire up your coding agent. As soon as it sees that you're building something, it *doesn't* just jump into trying to write code. Instead, it steps back and asks you what you're really trying to do.
 
-Once it's teased a spec out of the conversation, it shows it to you in chunks short enough to actually read and digest. 
+The entrypoint for that behavior is the `using-superpowers` skill. It is discovered natively by the harness, checks whether another skill applies before the agent responds, and routes the session into the right workflow. Product work usually goes into the spec and planning pipeline; bugs, code-review feedback, and completion checks trigger different skills instead of forcing the same path every time.
 
-After you've signed off on the design, your agent puts together an implementation plan that's clear enough for an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing to follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY. 
+Once it's teased a spec out of the conversation, it shows it to you in chunks short enough to actually read and digest.
 
-Next up, once you say "go", it launches a *subagent-driven-development* process, having agents work through each engineering task, inspecting and reviewing their work, and continuing forward. It's not uncommon for Claude to be able to work autonomously for a couple hours at a time without deviating from the plan you put together.
+After that written spec exists, your agent runs a CEO or founder review pass to challenge the scope, tighten the reasoning, and make sure the spec is worth building.
+
+Then your agent puts together an implementation plan that's clear enough for an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing to follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY.
+
+Before implementation begins, that written plan gets its own engineering review pass so architecture, testing, failure modes, and rollout details are locked in.
+
+Next up, once you say "go", implementation follows one of two execution paths: *subagent-driven-development* when same-session isolated-agent workflows are available, or *executing-plans* when the work should proceed in a separate session. In both cases, the written plan is executed task by task, reviewed before completion, and handed off through the normal branch-finishing flow. It's not uncommon for a well-grounded coding agent to be able to work autonomously for a couple hours at a time without deviating from the plan you put together.
 
 There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Superpowers.
 
 
-## Sponsorship
-
-If Superpowers has helped you do stuff that makes money and you are so inclined, I'd greatly appreciate it if you'd consider [sponsoring my opensource work](https://github.com/sponsors/obra).
-
-Thanks! 
-
-- Jesse
-
-
 ## Installation
 
-**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex and OpenCode require manual setup.
+Superpowers uses a single shared checkout for its supported runtime surfaces. Codex and GitHub Copilot local installs both point at `~/.superpowers/install`; only the discovery links differ.
 
-### Claude Code Official Marketplace
+Shared runtime layout:
 
-Superpowers is available via the [official Claude plugin marketplace](https://claude.com/plugins/superpowers)
+- `~/.superpowers/install` - canonical checkout
+- `~/.agents/skills/superpowers -> ~/.superpowers/install/skills`
+- `Unix-like: ~/.codex/agents/code-reviewer.toml -> ~/.superpowers/install/.codex/agents/code-reviewer.toml`
+- `~/.copilot/skills/superpowers -> ~/.superpowers/install/skills`
+- `Unix-like: ~/.copilot/agents/code-reviewer.agent.md -> ~/.superpowers/install/agents/code-reviewer.md`
 
-Install the plugin from Claude marketplace:
+On Unix-like installs, the Codex reviewer agent is symlinked to the shared checkout.
 
-```bash
-/plugin install superpowers@claude-plugins-official
-```
+On Windows, the Codex reviewer agent is copied from the shared checkout and must be refreshed after updates.
 
-### Claude Code (via Plugin Marketplace)
+On Unix-like installs, the Copilot agent is symlinked to the shared checkout.
 
-In Claude Code, register the marketplace first:
-
-```bash
-/plugin marketplace add obra/superpowers-marketplace
-```
-
-Then install the plugin from this marketplace:
-
-```bash
-/plugin install superpowers@superpowers-marketplace
-```
-
-### Cursor (via Plugin Marketplace)
-
-In Cursor Agent chat, install from marketplace:
-
-```text
-/add-plugin superpowers
-```
-
-or search for "superpowers" in the plugin marketplace.
+On Windows, the Copilot agent is copied from the shared checkout and must be refreshed after updates.
 
 ### Codex
 
 Tell Codex:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/dmulcahey/superpowers/refs/heads/main/.codex/INSTALL.md
 ```
 
 **Detailed docs:** [docs/README.codex.md](docs/README.codex.md)
 
-### OpenCode
+### GitHub Copilot Local Installs
 
-Tell OpenCode:
+Tell GitHub Copilot:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/dmulcahey/superpowers/refs/heads/main/.copilot/INSTALL.md
 ```
 
-**Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
+**Detailed docs:** [docs/README.copilot.md](docs/README.copilot.md)
 
-### Gemini CLI
+### Migrating Existing Platform-Specific Installs
+
+If you already have `~/.codex/superpowers` or `~/.copilot/superpowers`, migrate them into the single shared checkout with:
 
 ```bash
-gemini extensions install https://github.com/obra/superpowers
+tmpdir=$(mktemp -d)
+git clone --depth 1 https://github.com/dmulcahey/superpowers.git "$tmpdir/superpowers"
+"$tmpdir/superpowers/bin/superpowers-migrate-install"
+rm -rf "$tmpdir"
 ```
 
-To update:
+If `~/.superpowers/install` already exists, run `~/.superpowers/install/bin/superpowers-migrate-install` instead.
 
-```bash
-gemini extensions update superpowers
+**Windows (PowerShell):**
+```powershell
+if (Test-Path "$env:USERPROFILE\.superpowers\install") {
+  & "$env:USERPROFILE\.superpowers\install\bin\superpowers-migrate-install.ps1"
+} else {
+  $tmpRoot = Join-Path $env:TEMP "superpowers-migrate"
+  $tmpDir = Join-Path $tmpRoot ([guid]::NewGuid().ToString())
+  git clone --depth 1 https://github.com/dmulcahey/superpowers.git (Join-Path $tmpDir "superpowers")
+  & (Join-Path $tmpDir "superpowers\bin\superpowers-migrate-install.ps1")
+  Remove-Item -Recurse -Force $tmpDir
+}
 ```
+
+After migrating, finish the normal platform setup:
+
+- Codex: create or refresh `~/.agents/skills/superpowers`
+- Codex: create or refresh `~/.codex/agents/code-reviewer.toml`
+- GitHub Copilot: create or refresh `~/.copilot/skills/superpowers`
+- GitHub Copilot: create or refresh `~/.copilot/agents/code-reviewer.agent.md`
 
 ### Verify Installation
 
 Start a new session in your chosen platform and ask for something that should trigger a skill (for example, "help me plan this feature" or "let's debug this issue"). The agent should automatically invoke the relevant superpowers skill.
 
+### Runtime State and Automation
+
+Runtime state lives in `~/.superpowers/`.
+
+- Preferences live in `~/.superpowers/config.yaml`
+- Session-awareness markers live in `~/.superpowers/sessions/`
+- Contributor field reports live in `~/.superpowers/contributor-logs/`
+- Update-check cache, snooze, and just-upgraded markers live under the same state root
+
+All 16 checked-in `skills/*/SKILL.md` files are generated from adjacent `SKILL.md.tmpl` sources. Regenerate them with `node scripts/gen-skill-docs.mjs` and validate freshness with `node scripts/gen-skill-docs.mjs --check`.
+
+The shipped reviewer agent artifacts are generated from `agents/code-reviewer.instructions.md`. Regenerate them with `node scripts/gen-agent-docs.mjs` and validate freshness with `node scripts/gen-agent-docs.mjs --check`.
+
+When changing the generated skill runtime, run `node scripts/gen-skill-docs.mjs --check` before `bash tests/codex-runtime/test-runtime-instructions.sh`.
+
+To enable contributor mode for the installed runtime, run `~/.superpowers/install/bin/superpowers-config set superpowers_contributor true`.
+
+Windows (PowerShell): `& "$env:USERPROFILE\.superpowers\install\bin\superpowers-config.ps1" set superpowers_contributor true`
+
+If you disable update notices, re-enable them with `~/.superpowers/install/bin/superpowers-config set update_check true`.
+
+Windows (PowerShell): `& "$env:USERPROFILE\.superpowers\install\bin\superpowers-config.ps1" set update_check true`
+
+## What Actually Runs
+
+- `skills/` contains the 16 public Superpowers skills. `using-superpowers` is the entry skill; `brainstorming`, `plan-ceo-review`, `writing-plans`, and `plan-eng-review` form the default planning chain.
+- `scripts/gen-skill-docs.mjs` renders every checked-in `SKILL.md` from its template and injects the shared runtime preamble used across the skill library.
+- `bin/superpowers-migrate-install` consolidates legacy platform-specific installs into the single shared checkout and recreates compatibility links when needed.
+- `bin/superpowers-config` and `bin/superpowers-update-check` manage local runtime state, contributor mode, and per-session upgrade notices under `~/.superpowers/`.
+- `superpowers-upgrade/SKILL.md` is the inline upgrade workflow the generated preambles hand off to when a newer runtime version is available.
+- `review/TODOS-format.md` is the canonical TODO format reference used by the plan-review skills.
+- `agents/code-reviewer.instructions.md` is the shared reviewer source that generates `agents/code-reviewer.md` for GitHub Copilot and `.codex/agents/code-reviewer.toml` for Codex.
+
 ## The Basic Workflow
 
-1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
+Default pipeline: `brainstorming -> plan-ceo-review -> writing-plans -> plan-eng-review -> implementation`
 
-2. **using-git-worktrees** - Activates after design approval. Creates isolated workspace on new branch, runs project setup, verifies clean test baseline.
+That is the default path for new feature and product work. Other task types take their own first-class routes: `systematic-debugging` handles bugs and failing tests, `receiving-code-review` handles incoming review feedback before you implement it, and `verification-before-completion` gates any claim that work is done or passing.
 
-3. **writing-plans** - Activates with approved design. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
+1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves the written spec.
 
-4. **subagent-driven-development** or **executing-plans** - Activates with plan. Dispatches fresh subagent per task with two-stage review (spec compliance, then code quality), or executes in batches with human checkpoints.
+2. **plan-ceo-review** - Activates after the spec is written. Runs a founder-mode review of the written spec before implementation planning.
 
-5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
+3. **writing-plans** - Activates with an approved spec. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
 
-6. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
+4. **plan-eng-review** - Activates after the plan is written. Reviews the full written plan before implementation starts.
 
-7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
+5. **implementation** - `using-git-worktrees`, `subagent-driven-development` or `executing-plans`, `test-driven-development`, `requesting-code-review`, and `finishing-a-development-branch` activate as execution proceeds.
 
-**The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
+**The agent checks for relevant skills before any task.** These are mandatory workflows, not suggestions.
 
 ## What's Inside
 
 ### Skills Library
+
+The public runtime currently exposes 16 skills.
 
 **Testing**
 - **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
@@ -129,10 +170,12 @@ Start a new session in your chosen platform and ask for something that should tr
 
 **Collaboration** 
 - **brainstorming** - Socratic design refinement
+- **plan-ceo-review** - CEO/founder-mode spec review before implementation planning
 - **writing-plans** - Detailed implementation plans
-- **executing-plans** - Batch execution with checkpoints
+- **plan-eng-review** - Engineering review of the written plan before implementation
+- **executing-plans** - Separate-session plan execution
 - **dispatching-parallel-agents** - Concurrent subagent workflows
-- **requesting-code-review** - Pre-review checklist
+- **requesting-code-review** - Code-review dispatch and triage
 - **receiving-code-review** - Responding to feedback
 - **using-git-worktrees** - Parallel development branches
 - **finishing-a-development-branch** - Merge/PR decision workflow
@@ -149,26 +192,32 @@ Start a new session in your chosen platform and ask for something that should tr
 - **Complexity reduction** - Simplicity as primary goal
 - **Evidence over claims** - Verify before declaring success
 
-Read more: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
+Read more: [Superpowers background](https://blog.fsck.com/2025/10/09/superpowers/)
 
 ## Contributing
 
-Skills live directly in this repository. To contribute:
+Skills and runtime helpers live directly in this repository. The editable source for generated skills is `skills/*/SKILL.md.tmpl`; the checked-in `SKILL.md` files are generated artifacts. To contribute:
 
 1. Fork the repository
-2. Create a branch for your skill
-3. Follow the `writing-skills` skill for creating and testing new skills
-4. Submit a PR
+2. Create a branch for your skill or runtime change
+3. Edit the relevant `SKILL.md.tmpl` or runtime file
+4. Regenerate generated skill docs with `node scripts/gen-skill-docs.mjs`
+5. Follow the `writing-skills` skill for creating and testing new skills
+6. Submit a PR
 
 See `skills/writing-skills/SKILL.md` for the complete guide.
 
 ## Updating
 
-Skills update automatically when you update the plugin:
+Update the shared checkout used by both supported platforms:
 
 ```bash
-/plugin update superpowers
+git -C ~/.superpowers/install pull
 ```
+
+If you are migrating from old per-platform clones, run `~/.superpowers/install/bin/superpowers-migrate-install` after updating so legacy paths keep resolving to the shared checkout. In PowerShell, use `& "$env:USERPROFILE\.superpowers\install\bin\superpowers-migrate-install.ps1"`.
+
+Every generated skill preamble runs `bin/superpowers-update-check` from the active install root. New sessions will announce `UPGRADE_AVAILABLE` or `JUST_UPGRADED` when the local runtime state says you should act.
 
 ## License
 
@@ -176,5 +225,5 @@ MIT License - see LICENSE file for details
 
 ## Support
 
-- **Issues**: https://github.com/obra/superpowers/issues
-- **Marketplace**: https://github.com/obra/superpowers-marketplace
+- **Issues**: https://github.com/dmulcahey/superpowers/issues
+- **Repository**: https://github.com/dmulcahey/superpowers

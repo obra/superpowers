@@ -2,6 +2,91 @@
 name: writing-skills
 description: Use when creating new skills, editing existing skills, or verifying skills work before deployment
 ---
+<!-- AUTO-GENERATED from SKILL.md.tmpl — do not edit directly -->
+<!-- Regenerate: node scripts/gen-skill-docs.mjs -->
+
+## Preamble (run first)
+
+```bash
+_IS_SUPERPOWERS_RUNTIME_ROOT() {
+  local candidate="$1"
+  [ -n "$candidate" ] &&
+  [ -x "$candidate/bin/superpowers-update-check" ] &&
+  [ -x "$candidate/bin/superpowers-config" ] &&
+  [ -f "$candidate/VERSION" ]
+}
+_REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+_SUPERPOWERS_ROOT=""
+_IS_SUPERPOWERS_RUNTIME_ROOT "$_REPO_ROOT" && _SUPERPOWERS_ROOT="$_REPO_ROOT"
+[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.superpowers/install" && _SUPERPOWERS_ROOT="$HOME/.superpowers/install"
+[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.codex/superpowers" && _SUPERPOWERS_ROOT="$HOME/.codex/superpowers"
+[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.copilot/superpowers" && _SUPERPOWERS_ROOT="$HOME/.copilot/superpowers"
+_UPD=""
+[ -n "$_SUPERPOWERS_ROOT" ] && _UPD=$("$_SUPERPOWERS_ROOT/bin/superpowers-update-check" 2>/dev/null || true)
+[ -n "$_UPD" ] && echo "$_UPD" || true
+_SP_STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
+mkdir -p "$_SP_STATE_DIR/sessions"
+touch "$_SP_STATE_DIR/sessions/$PPID"
+_SESSIONS=$(find "$_SP_STATE_DIR/sessions" -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' ')
+find "$_SP_STATE_DIR/sessions" -mmin +120 -type f -delete 2>/dev/null || true
+_CONTRIB=""
+[ -n "$_SUPERPOWERS_ROOT" ] && _CONTRIB=$("$_SUPERPOWERS_ROOT/bin/superpowers-config" get superpowers_contributor 2>/dev/null || true)
+```
+
+If output shows `UPGRADE_AVAILABLE <old> <new>`: read the installed `superpowers-upgrade/SKILL.md` from the same superpowers root (check the current repo when it contains the Superpowers runtime, then `$HOME/.superpowers/install`, then `$HOME/.codex/superpowers`, then `$HOME/.copilot/superpowers`) and follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise ask one interactive user question with 4 options and write snooze state if declined). If `JUST_UPGRADED <from> <to>`: tell the user "Running superpowers v{to} (just updated!)" and continue.
+
+## Interactive User Question Format
+
+**ALWAYS follow this structure for every interactive user question:**
+1. Context: project name, current branch, what we're working on (1-2 sentences)
+2. The specific question or decision point
+3. `RECOMMENDATION: Choose [X] because [one-line reason]`
+4. Lettered options: `A) ... B) ... C) ...`
+
+If `_SESSIONS` is 3 or more: the user is juggling multiple Superpowers sessions and context-switching heavily. **ELI16 mode** — they may not remember what this conversation is about. Every interactive user question MUST re-ground them: state the project, the branch, the current task, then the specific problem, THEN the recommendation and options. Be extra clear and self-contained — assume they haven't looked at this window in 20 minutes.
+
+Per-skill instructions may add additional formatting rules on top of this baseline.
+
+## Contributor Mode
+
+If `_CONTRIB` is `true`: you are in **contributor mode**. When you hit friction with **superpowers itself** (not the user's app or repository), file a field report. Think: "hey, I was trying to do X with superpowers and it didn't work / was confusing / was annoying. Here's what happened."
+
+**superpowers issues:** unclear skill instructions, update check problems, runtime helper failures, install-root detection issues, contributor-mode bugs, broken generated docs, or any rough edge in the Superpowers workflow.
+**NOT superpowers issues:** the user's application bugs, repo-specific architecture problems, auth failures on the user's site, or third-party service outages unrelated to Superpowers tooling.
+
+**To file:** write `~/.superpowers/contributor-logs/{slug}.md` with this structure:
+
+```
+# {Title}
+
+Hey superpowers team — ran into this while using /{skill-name}:
+
+**What I was trying to do:** {what the user/agent was attempting}
+**What happened instead:** {what actually happened}
+**How annoying (1-5):** {1=meh, 3=friction, 5=blocker}
+
+## Steps to reproduce
+1. {step}
+
+## Raw output
+(wrap any error messages or unexpected output in a markdown code block)
+
+**Date:** {YYYY-MM-DD} | **Version:** {superpowers version} | **Skill:** /{skill}
+```
+
+Then run:
+
+```bash
+mkdir -p ~/.superpowers/contributor-logs
+if command -v open >/dev/null 2>&1; then
+  open ~/.superpowers/contributor-logs/{slug}.md
+elif command -v xdg-open >/dev/null 2>&1; then
+  xdg-open ~/.superpowers/contributor-logs/{slug}.md >/dev/null 2>&1 || true
+fi
+```
+
+Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Skip if the file already exists. Max 3 reports per session. File inline and continue — don't stop the workflow. Tell the user: "Filed superpowers field report: {title}"
+
 
 # Writing Skills
 
@@ -9,7 +94,7 @@ description: Use when creating new skills, editing existing skills, or verifying
 
 **Writing skills IS Test-Driven Development applied to process documentation.**
 
-**Personal skills live in agent-specific directories (`~/.claude/skills` for Claude Code, `~/.agents/skills/` for Codex)** 
+**Personal skills live in `~/.agents/skills/` for Codex and `~/.copilot/skills/` for GitHub Copilot local installs**
 
 You write test cases (pressure scenarios with subagents), watch them fail (baseline behavior), write the skill (documentation), watch tests pass (agents comply), and refactor (close loopholes).
 
@@ -17,11 +102,11 @@ You write test cases (pressure scenarios with subagents), watch them fail (basel
 
 **REQUIRED BACKGROUND:** You MUST understand superpowers:test-driven-development before using this skill. That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill adapts TDD to documentation.
 
-**Official guidance:** For Anthropic's official skill authoring best practices, see anthropic-best-practices.md. This document provides additional patterns and guidelines that complement the TDD-focused approach in this skill.
+**Official guidance:** For platform-specific guidance, see `codex-best-practices.md` and `copilot-best-practices.md`. They complement the TDD-focused approach in this skill.
 
 ## What is a Skill?
 
-A **skill** is a reference guide for proven techniques, patterns, or tools. Skills help future Claude instances find and apply effective approaches.
+A **skill** is a reference guide for proven techniques, patterns, or tools. Skills help future Codex and GitHub Copilot instances find and apply effective approaches.
 
 **Skills are:** Reusable techniques, patterns, tools, reference guides
 
@@ -55,7 +140,7 @@ The entire skill creation process follows RED-GREEN-REFACTOR.
 **Don't create for:**
 - One-off solutions
 - Standard practices well-documented elsewhere
-- Project-specific conventions (put in CLAUDE.md)
+- Project-specific conventions (put in AGENTS.md)
 - Mechanical constraints (if it's enforceable with regex/validation, automate it—save documentation for judgment calls)
 
 ## Skill Types
@@ -137,13 +222,13 @@ Concrete results
 ```
 
 
-## Claude Search Optimization (CSO)
+## Skill Search Optimization (SSO)
 
-**Critical for discovery:** Future Claude needs to FIND your skill
+**Critical for discovery:** Future Codex and GitHub Copilot instances need to FIND your skill
 
 ### 1. Rich Description Field
 
-**Purpose:** Claude reads description to decide which skills to load for a given task. Make it answer: "Should I read this skill right now?"
+**Purpose:** Codex and GitHub Copilot read descriptions to decide which skills to load for a given task. Make it answer: "Should I read this skill right now?"
 
 **Format:** Start with "Use when..." to focus on triggering conditions
 
@@ -151,14 +236,14 @@ Concrete results
 
 The description should ONLY describe triggering conditions. Do NOT summarize the skill's process or workflow in the description.
 
-**Why this matters:** Testing revealed that when a description summarizes the skill's workflow, Claude may follow the description instead of reading the full skill content. A description saying "code review between tasks" caused Claude to do ONE review, even though the skill's flowchart clearly showed TWO reviews (spec compliance then code quality).
+**Why this matters:** Testing revealed that when a description summarizes the skill's workflow, agents may follow the description instead of reading the full skill content. A description saying "code review between tasks" caused an agent to do ONE review, even though the skill's flowchart clearly showed TWO reviews (spec compliance then code quality).
 
-When the description was changed to just "Use when executing implementation plans with independent tasks" (no workflow summary), Claude correctly read the flowchart and followed the two-stage review process.
+When the description was changed to just "Use when executing implementation plans with independent tasks" (no workflow summary), the agent correctly read the flowchart and followed the two-stage review process.
 
-**The trap:** Descriptions that summarize workflow create a shortcut Claude will take. The skill body becomes documentation Claude skips.
+**The trap:** Descriptions that summarize workflow create a shortcut the agent will take. The skill body becomes documentation the agent skips.
 
 ```yaml
-# ❌ BAD: Summarizes workflow - Claude may follow this instead of reading skill
+# ❌ BAD: Summarizes workflow - the agent may follow this instead of reading skill
 description: Use when executing plans - dispatches subagent per task with code review between tasks
 
 # ❌ BAD: Too much process detail
@@ -198,7 +283,7 @@ description: Use when using React Router and handling authentication redirects
 
 ### 2. Keyword Coverage
 
-Use words Claude would search for:
+Use words agents would search for:
 - Error messages: "Hook timed out", "ENOTEMPTY", "race condition"
 - Symptoms: "flaky", "hanging", "zombie", "pollution"
 - Synonyms: "timeout/hang/freeze", "cleanup/teardown/afterEach"
@@ -595,7 +680,7 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 
 ## Skill Creation Checklist (TDD Adapted)
 
-**IMPORTANT: Use TodoWrite to create todos for EACH checklist item below.**
+**IMPORTANT: Use your platform's task tracker to create todos for EACH checklist item below.**
 
 **RED Phase - Write Failing Test:**
 - [ ] Create pressure scenarios (3+ combined pressures for discipline skills)
@@ -634,7 +719,7 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 
 ## Discovery Workflow
 
-How future Claude finds your skill:
+How future Codex or GitHub Copilot finds your skill:
 
 1. **Encounters problem** ("tests are flaky")
 3. **Finds SKILL** (description matches)

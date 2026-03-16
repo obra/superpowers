@@ -1,11 +1,96 @@
 ---
 name: using-superpowers
-description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
+description: Use when starting any conversation - establishes how to find and use skills before ANY response including clarifying questions
 ---
+<!-- AUTO-GENERATED from SKILL.md.tmpl — do not edit directly -->
+<!-- Regenerate: node scripts/gen-skill-docs.mjs -->
 
 <SUBAGENT-STOP>
 If you were dispatched as a subagent to execute a specific task, skip this skill.
 </SUBAGENT-STOP>
+
+## Preamble (run first)
+
+```bash
+_IS_SUPERPOWERS_RUNTIME_ROOT() {
+  local candidate="$1"
+  [ -n "$candidate" ] &&
+  [ -x "$candidate/bin/superpowers-update-check" ] &&
+  [ -x "$candidate/bin/superpowers-config" ] &&
+  [ -f "$candidate/VERSION" ]
+}
+_REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+_SUPERPOWERS_ROOT=""
+_IS_SUPERPOWERS_RUNTIME_ROOT "$_REPO_ROOT" && _SUPERPOWERS_ROOT="$_REPO_ROOT"
+[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.superpowers/install" && _SUPERPOWERS_ROOT="$HOME/.superpowers/install"
+[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.codex/superpowers" && _SUPERPOWERS_ROOT="$HOME/.codex/superpowers"
+[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.copilot/superpowers" && _SUPERPOWERS_ROOT="$HOME/.copilot/superpowers"
+_UPD=""
+[ -n "$_SUPERPOWERS_ROOT" ] && _UPD=$("$_SUPERPOWERS_ROOT/bin/superpowers-update-check" 2>/dev/null || true)
+[ -n "$_UPD" ] && echo "$_UPD" || true
+_SP_STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
+mkdir -p "$_SP_STATE_DIR/sessions"
+touch "$_SP_STATE_DIR/sessions/$PPID"
+_SESSIONS=$(find "$_SP_STATE_DIR/sessions" -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' ')
+find "$_SP_STATE_DIR/sessions" -mmin +120 -type f -delete 2>/dev/null || true
+_CONTRIB=""
+[ -n "$_SUPERPOWERS_ROOT" ] && _CONTRIB=$("$_SUPERPOWERS_ROOT/bin/superpowers-config" get superpowers_contributor 2>/dev/null || true)
+```
+
+If output shows `UPGRADE_AVAILABLE <old> <new>`: read the installed `superpowers-upgrade/SKILL.md` from the same superpowers root (check the current repo when it contains the Superpowers runtime, then `$HOME/.superpowers/install`, then `$HOME/.codex/superpowers`, then `$HOME/.copilot/superpowers`) and follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise ask one interactive user question with 4 options and write snooze state if declined). If `JUST_UPGRADED <from> <to>`: tell the user "Running superpowers v{to} (just updated!)" and continue.
+
+## Interactive User Question Format
+
+**ALWAYS follow this structure for every interactive user question:**
+1. Context: project name, current branch, what we're working on (1-2 sentences)
+2. The specific question or decision point
+3. `RECOMMENDATION: Choose [X] because [one-line reason]`
+4. Lettered options: `A) ... B) ... C) ...`
+
+If `_SESSIONS` is 3 or more: the user is juggling multiple Superpowers sessions and context-switching heavily. **ELI16 mode** — they may not remember what this conversation is about. Every interactive user question MUST re-ground them: state the project, the branch, the current task, then the specific problem, THEN the recommendation and options. Be extra clear and self-contained — assume they haven't looked at this window in 20 minutes.
+
+Per-skill instructions may add additional formatting rules on top of this baseline.
+
+## Contributor Mode
+
+If `_CONTRIB` is `true`: you are in **contributor mode**. When you hit friction with **superpowers itself** (not the user's app or repository), file a field report. Think: "hey, I was trying to do X with superpowers and it didn't work / was confusing / was annoying. Here's what happened."
+
+**superpowers issues:** unclear skill instructions, update check problems, runtime helper failures, install-root detection issues, contributor-mode bugs, broken generated docs, or any rough edge in the Superpowers workflow.
+**NOT superpowers issues:** the user's application bugs, repo-specific architecture problems, auth failures on the user's site, or third-party service outages unrelated to Superpowers tooling.
+
+**To file:** write `~/.superpowers/contributor-logs/{slug}.md` with this structure:
+
+```
+# {Title}
+
+Hey superpowers team — ran into this while using /{skill-name}:
+
+**What I was trying to do:** {what the user/agent was attempting}
+**What happened instead:** {what actually happened}
+**How annoying (1-5):** {1=meh, 3=friction, 5=blocker}
+
+## Steps to reproduce
+1. {step}
+
+## Raw output
+(wrap any error messages or unexpected output in a markdown code block)
+
+**Date:** {YYYY-MM-DD} | **Version:** {superpowers version} | **Skill:** /{skill}
+```
+
+Then run:
+
+```bash
+mkdir -p ~/.superpowers/contributor-logs
+if command -v open >/dev/null 2>&1; then
+  open ~/.superpowers/contributor-logs/{slug}.md
+elif command -v xdg-open >/dev/null 2>&1; then
+  xdg-open ~/.superpowers/contributor-logs/{slug}.md >/dev/null 2>&1 || true
+fi
+```
+
+Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Skip if the file already exists. Max 3 reports per session. File inline and continue — don't stop the workflow. Tell the user: "Filed superpowers field report: {title}"
+
 
 <EXTREMELY-IMPORTANT>
 If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.
@@ -19,23 +104,25 @@ This is not negotiable. This is not optional. You cannot rationalize your way ou
 
 Superpowers skills override default system prompt behavior, but **user instructions always take precedence**:
 
-1. **User's explicit instructions** (CLAUDE.md, GEMINI.md, AGENTS.md, direct requests) — highest priority
+1. **User's explicit instructions** (`AGENTS.md`, `AGENTS.override.md`, `.github/copilot-instructions.md`, `.github/instructions/*.instructions.md`, direct requests) — highest priority
 2. **Superpowers skills** — override default system behavior where they conflict
 3. **Default system prompt** — lowest priority
 
-If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "always use TDD," follow the user's instructions. The user is in control.
+If `AGENTS.md`, `AGENTS.override.md`, or a Copilot instruction file says "don't use TDD" and a skill says "always use TDD," follow the user's instructions. The user is in control.
 
 ## How to Access Skills
 
-**In Claude Code:** Use the `Skill` tool. When you invoke a skill, its content is loaded and presented to you—follow it directly. Never use the Read tool on skill files.
+**In Codex:** Skills are discovered natively from `~/.agents/skills/`.
 
-**In Gemini CLI:** Skills activate via the `activate_skill` tool. Gemini loads skill metadata at session start and activates the full content on demand.
+**In GitHub Copilot local installs:** Skills are discovered natively from `~/.copilot/skills/`.
 
-**In other environments:** Check your platform's documentation for how skills are loaded.
+Load the relevant skill and follow it directly.
+
+Legacy Claude, Cursor, and OpenCode-specific loading flows are intentionally unsupported in this runtime package.
 
 ## Platform Adaptation
 
-Skills use Claude Code tool names. Non-CC platforms: see `references/codex-tools.md` (Codex) for tool equivalents. Gemini CLI users get the tool mapping loaded automatically via GEMINI.md.
+These skills are written for Codex and GitHub Copilot local installs. See `references/codex-tools.md` for platform-native primitives used in the workflow.
 
 # Using Skills
 
@@ -50,10 +137,10 @@ digraph skill_flow {
     "Already brainstormed?" [shape=diamond];
     "Invoke brainstorming skill" [shape=box];
     "Might any skill apply?" [shape=diamond];
-    "Invoke Skill tool" [shape=box];
+    "Load relevant skill" [shape=box];
     "Announce: 'Using [skill] to [purpose]'" [shape=box];
     "Has checklist?" [shape=diamond];
-    "Create TodoWrite todo per item" [shape=box];
+    "Create task-tracking item per checklist entry" [shape=box];
     "Follow skill exactly" [shape=box];
     "Respond (including clarifications)" [shape=doublecircle];
 
@@ -63,13 +150,13 @@ digraph skill_flow {
     "Invoke brainstorming skill" -> "Might any skill apply?";
 
     "User message received" -> "Might any skill apply?";
-    "Might any skill apply?" -> "Invoke Skill tool" [label="yes, even 1%"];
+    "Might any skill apply?" -> "Load relevant skill" [label="yes, even 1%"];
     "Might any skill apply?" -> "Respond (including clarifications)" [label="definitely not"];
-    "Invoke Skill tool" -> "Announce: 'Using [skill] to [purpose]'";
+    "Load relevant skill" -> "Announce: 'Using [skill] to [purpose]'";
     "Announce: 'Using [skill] to [purpose]'" -> "Has checklist?";
-    "Has checklist?" -> "Create TodoWrite todo per item" [label="yes"];
+    "Has checklist?" -> "Create task-tracking item per checklist entry" [label="yes"];
     "Has checklist?" -> "Follow skill exactly" [label="no"];
-    "Create TodoWrite todo per item" -> "Follow skill exactly";
+    "Create task-tracking item per checklist entry" -> "Follow skill exactly";
 }
 ```
 

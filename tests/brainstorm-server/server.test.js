@@ -118,7 +118,7 @@ async function runTests() {
     await test('serves waiting page when no screens exist', async () => {
       const res = await fetch(`http://localhost:${TEST_PORT}/`);
       assert.strictEqual(res.status, 200);
-      assert(res.body.includes('Waiting for Claude'), 'Should show waiting message');
+      assert(res.body.includes('Waiting for a new screen'), 'Should show waiting message');
     });
 
     await test('injects helper.js into waiting page', async () => {
@@ -403,7 +403,7 @@ async function runTests() {
       assert(template.includes('indicator-bar'), 'Should have indicator bar');
       assert(template.includes('indicator-text'), 'Should have indicator text');
       assert(template.includes('<!-- CONTENT -->'), 'Should have content placeholder');
-      assert(template.includes('claude-content'), 'Should have content container');
+      assert(template.includes('brainstorm-content'), 'Should have content container');
       return Promise.resolve();
     });
 

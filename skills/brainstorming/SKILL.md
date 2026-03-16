@@ -2,6 +2,91 @@
 name: brainstorming
 description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
 ---
+<!-- AUTO-GENERATED from SKILL.md.tmpl — do not edit directly -->
+<!-- Regenerate: node scripts/gen-skill-docs.mjs -->
+
+## Preamble (run first)
+
+```bash
+_IS_SUPERPOWERS_RUNTIME_ROOT() {
+  local candidate="$1"
+  [ -n "$candidate" ] &&
+  [ -x "$candidate/bin/superpowers-update-check" ] &&
+  [ -x "$candidate/bin/superpowers-config" ] &&
+  [ -f "$candidate/VERSION" ]
+}
+_REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+_SUPERPOWERS_ROOT=""
+_IS_SUPERPOWERS_RUNTIME_ROOT "$_REPO_ROOT" && _SUPERPOWERS_ROOT="$_REPO_ROOT"
+[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.superpowers/install" && _SUPERPOWERS_ROOT="$HOME/.superpowers/install"
+[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.codex/superpowers" && _SUPERPOWERS_ROOT="$HOME/.codex/superpowers"
+[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.copilot/superpowers" && _SUPERPOWERS_ROOT="$HOME/.copilot/superpowers"
+_UPD=""
+[ -n "$_SUPERPOWERS_ROOT" ] && _UPD=$("$_SUPERPOWERS_ROOT/bin/superpowers-update-check" 2>/dev/null || true)
+[ -n "$_UPD" ] && echo "$_UPD" || true
+_SP_STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
+mkdir -p "$_SP_STATE_DIR/sessions"
+touch "$_SP_STATE_DIR/sessions/$PPID"
+_SESSIONS=$(find "$_SP_STATE_DIR/sessions" -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' ')
+find "$_SP_STATE_DIR/sessions" -mmin +120 -type f -delete 2>/dev/null || true
+_CONTRIB=""
+[ -n "$_SUPERPOWERS_ROOT" ] && _CONTRIB=$("$_SUPERPOWERS_ROOT/bin/superpowers-config" get superpowers_contributor 2>/dev/null || true)
+```
+
+If output shows `UPGRADE_AVAILABLE <old> <new>`: read the installed `superpowers-upgrade/SKILL.md` from the same superpowers root (check the current repo when it contains the Superpowers runtime, then `$HOME/.superpowers/install`, then `$HOME/.codex/superpowers`, then `$HOME/.copilot/superpowers`) and follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise ask one interactive user question with 4 options and write snooze state if declined). If `JUST_UPGRADED <from> <to>`: tell the user "Running superpowers v{to} (just updated!)" and continue.
+
+## Interactive User Question Format
+
+**ALWAYS follow this structure for every interactive user question:**
+1. Context: project name, current branch, what we're working on (1-2 sentences)
+2. The specific question or decision point
+3. `RECOMMENDATION: Choose [X] because [one-line reason]`
+4. Lettered options: `A) ... B) ... C) ...`
+
+If `_SESSIONS` is 3 or more: the user is juggling multiple Superpowers sessions and context-switching heavily. **ELI16 mode** — they may not remember what this conversation is about. Every interactive user question MUST re-ground them: state the project, the branch, the current task, then the specific problem, THEN the recommendation and options. Be extra clear and self-contained — assume they haven't looked at this window in 20 minutes.
+
+Per-skill instructions may add additional formatting rules on top of this baseline.
+
+## Contributor Mode
+
+If `_CONTRIB` is `true`: you are in **contributor mode**. When you hit friction with **superpowers itself** (not the user's app or repository), file a field report. Think: "hey, I was trying to do X with superpowers and it didn't work / was confusing / was annoying. Here's what happened."
+
+**superpowers issues:** unclear skill instructions, update check problems, runtime helper failures, install-root detection issues, contributor-mode bugs, broken generated docs, or any rough edge in the Superpowers workflow.
+**NOT superpowers issues:** the user's application bugs, repo-specific architecture problems, auth failures on the user's site, or third-party service outages unrelated to Superpowers tooling.
+
+**To file:** write `~/.superpowers/contributor-logs/{slug}.md` with this structure:
+
+```
+# {Title}
+
+Hey superpowers team — ran into this while using /{skill-name}:
+
+**What I was trying to do:** {what the user/agent was attempting}
+**What happened instead:** {what actually happened}
+**How annoying (1-5):** {1=meh, 3=friction, 5=blocker}
+
+## Steps to reproduce
+1. {step}
+
+## Raw output
+(wrap any error messages or unexpected output in a markdown code block)
+
+**Date:** {YYYY-MM-DD} | **Version:** {superpowers version} | **Skill:** /{skill}
+```
+
+Then run:
+
+```bash
+mkdir -p ~/.superpowers/contributor-logs
+if command -v open >/dev/null 2>&1; then
+  open ~/.superpowers/contributor-logs/{slug}.md
+elif command -v xdg-open >/dev/null 2>&1; then
+  xdg-open ~/.superpowers/contributor-logs/{slug}.md >/dev/null 2>&1 || true
+fi
+```
+
+Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Skip if the file already exists. Max 3 reports per session. File inline and continue — don't stop the workflow. Tell the user: "Filed superpowers field report: {title}"
+
 
 # Brainstorming Ideas Into Designs
 
@@ -27,9 +112,7 @@ You MUST create a task for each of these items and complete them in order:
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
 6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
-7. **Spec review loop** — dispatch spec-document-reviewer subagent with precisely crafted review context (never your session history); fix issues and re-dispatch until approved (max 5 iterations, then surface to human)
-8. **User reviews written spec** — ask user to review the spec file before proceeding
-9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+7. **Automatic spec review handoff** — invoke `superpowers:plan-ceo-review` after writing the spec
 
 ## Process Flow
 
@@ -43,10 +126,7 @@ digraph brainstorming {
     "Present design sections" [shape=box];
     "User approves design?" [shape=diamond];
     "Write design doc" [shape=box];
-    "Spec review loop" [shape=box];
-    "Spec review passed?" [shape=diamond];
-    "User reviews spec?" [shape=diamond];
-    "Invoke writing-plans skill" [shape=doublecircle];
+    "Invoke plan-ceo-review skill" [shape=doublecircle];
 
     "Explore project context" -> "Visual questions ahead?";
     "Visual questions ahead?" -> "Offer Visual Companion\n(own message, no other content)" [label="yes"];
@@ -57,16 +137,11 @@ digraph brainstorming {
     "Present design sections" -> "User approves design?";
     "User approves design?" -> "Present design sections" [label="no, revise"];
     "User approves design?" -> "Write design doc" [label="yes"];
-    "Write design doc" -> "Spec review loop";
-    "Spec review loop" -> "Spec review passed?";
-    "Spec review passed?" -> "Spec review loop" [label="issues found,\nfix and re-dispatch"];
-    "Spec review passed?" -> "User reviews spec?" [label="approved"];
-    "User reviews spec?" -> "Write design doc" [label="changes requested"];
-    "User reviews spec?" -> "Invoke writing-plans skill" [label="approved"];
+    "Write design doc" -> "Invoke plan-ceo-review skill";
 }
 ```
 
-**The terminal state is invoking writing-plans.** Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY skill you invoke after brainstorming is writing-plans.
+**The terminal state is invoking plan-ceo-review.** Do NOT invoke frontend-design, mcp-builder, `writing-plans`, or any other implementation skill directly from brainstorming. `plan-ceo-review` owns the review loop and the handoff into `writing-plans`.
 
 ## The Process
 
@@ -116,24 +191,17 @@ digraph brainstorming {
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 
-**Spec Review Loop:**
+**CEO Review Handoff:**
 After writing the spec document:
 
-1. Dispatch spec-document-reviewer subagent (see spec-document-reviewer-prompt.md)
-2. If Issues Found: fix, re-dispatch, repeat until Approved
-3. If loop exceeds 5 iterations, surface to human for guidance
+1. Invoke `superpowers:plan-ceo-review` after writing the spec
+2. Do NOT ask for a separate final spec approval here; `plan-ceo-review` owns the interactive review and approval loop
+3. If `plan-ceo-review` requests changes, update the spec and continue through that skill until the written spec is approved
 
-**User Review Gate:**
-After the spec review loop passes, ask the user to review the written spec before proceeding:
+**Implementation Handoff:**
 
-> "Spec written and committed to `<path>`. Please review it and let me know if you want to make any changes before we start writing out the implementation plan."
-
-Wait for the user's response. If they request changes, make them and re-run the spec review loop. Only proceed once the user approves.
-
-**Implementation:**
-
-- Invoke the writing-plans skill to create a detailed implementation plan
-- Do NOT invoke any other skill. writing-plans is the next step.
+- Do NOT invoke `writing-plans` directly from brainstorming.
+- `plan-ceo-review` is the only next skill, and it invokes `writing-plans` after the written spec is resolved and approved.
 
 ## Key Principles
 
@@ -161,4 +229,4 @@ A browser-based companion for showing mockups, diagrams, and visual options duri
 A question about a UI topic is not automatically a visual question. "What does personality mean in this context?" is a conceptual question — use the terminal. "Which wizard layout works better?" is a visual question — use the browser.
 
 If they agree to the companion, read the detailed guide before proceeding:
-`skills/brainstorming/visual-companion.md`
+`visual-companion.md`

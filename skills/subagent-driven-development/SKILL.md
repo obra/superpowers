@@ -2,14 +2,101 @@
 name: subagent-driven-development
 description: Use when executing implementation plans with independent tasks in the current session
 ---
+<!-- AUTO-GENERATED from SKILL.md.tmpl — do not edit directly -->
+<!-- Regenerate: node scripts/gen-skill-docs.mjs -->
+
+## Preamble (run first)
+
+```bash
+_IS_SUPERPOWERS_RUNTIME_ROOT() {
+  local candidate="$1"
+  [ -n "$candidate" ] &&
+  [ -x "$candidate/bin/superpowers-update-check" ] &&
+  [ -x "$candidate/bin/superpowers-config" ] &&
+  [ -f "$candidate/VERSION" ]
+}
+_REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+_SUPERPOWERS_ROOT=""
+_IS_SUPERPOWERS_RUNTIME_ROOT "$_REPO_ROOT" && _SUPERPOWERS_ROOT="$_REPO_ROOT"
+[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.superpowers/install" && _SUPERPOWERS_ROOT="$HOME/.superpowers/install"
+[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.codex/superpowers" && _SUPERPOWERS_ROOT="$HOME/.codex/superpowers"
+[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.copilot/superpowers" && _SUPERPOWERS_ROOT="$HOME/.copilot/superpowers"
+_UPD=""
+[ -n "$_SUPERPOWERS_ROOT" ] && _UPD=$("$_SUPERPOWERS_ROOT/bin/superpowers-update-check" 2>/dev/null || true)
+[ -n "$_UPD" ] && echo "$_UPD" || true
+_SP_STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
+mkdir -p "$_SP_STATE_DIR/sessions"
+touch "$_SP_STATE_DIR/sessions/$PPID"
+_SESSIONS=$(find "$_SP_STATE_DIR/sessions" -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' ')
+find "$_SP_STATE_DIR/sessions" -mmin +120 -type f -delete 2>/dev/null || true
+_CONTRIB=""
+[ -n "$_SUPERPOWERS_ROOT" ] && _CONTRIB=$("$_SUPERPOWERS_ROOT/bin/superpowers-config" get superpowers_contributor 2>/dev/null || true)
+```
+
+If output shows `UPGRADE_AVAILABLE <old> <new>`: read the installed `superpowers-upgrade/SKILL.md` from the same superpowers root (check the current repo when it contains the Superpowers runtime, then `$HOME/.superpowers/install`, then `$HOME/.codex/superpowers`, then `$HOME/.copilot/superpowers`) and follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise ask one interactive user question with 4 options and write snooze state if declined). If `JUST_UPGRADED <from> <to>`: tell the user "Running superpowers v{to} (just updated!)" and continue.
+
+## Interactive User Question Format
+
+**ALWAYS follow this structure for every interactive user question:**
+1. Context: project name, current branch, what we're working on (1-2 sentences)
+2. The specific question or decision point
+3. `RECOMMENDATION: Choose [X] because [one-line reason]`
+4. Lettered options: `A) ... B) ... C) ...`
+
+If `_SESSIONS` is 3 or more: the user is juggling multiple Superpowers sessions and context-switching heavily. **ELI16 mode** — they may not remember what this conversation is about. Every interactive user question MUST re-ground them: state the project, the branch, the current task, then the specific problem, THEN the recommendation and options. Be extra clear and self-contained — assume they haven't looked at this window in 20 minutes.
+
+Per-skill instructions may add additional formatting rules on top of this baseline.
+
+## Contributor Mode
+
+If `_CONTRIB` is `true`: you are in **contributor mode**. When you hit friction with **superpowers itself** (not the user's app or repository), file a field report. Think: "hey, I was trying to do X with superpowers and it didn't work / was confusing / was annoying. Here's what happened."
+
+**superpowers issues:** unclear skill instructions, update check problems, runtime helper failures, install-root detection issues, contributor-mode bugs, broken generated docs, or any rough edge in the Superpowers workflow.
+**NOT superpowers issues:** the user's application bugs, repo-specific architecture problems, auth failures on the user's site, or third-party service outages unrelated to Superpowers tooling.
+
+**To file:** write `~/.superpowers/contributor-logs/{slug}.md` with this structure:
+
+```
+# {Title}
+
+Hey superpowers team — ran into this while using /{skill-name}:
+
+**What I was trying to do:** {what the user/agent was attempting}
+**What happened instead:** {what actually happened}
+**How annoying (1-5):** {1=meh, 3=friction, 5=blocker}
+
+## Steps to reproduce
+1. {step}
+
+## Raw output
+(wrap any error messages or unexpected output in a markdown code block)
+
+**Date:** {YYYY-MM-DD} | **Version:** {superpowers version} | **Skill:** /{skill}
+```
+
+Then run:
+
+```bash
+mkdir -p ~/.superpowers/contributor-logs
+if command -v open >/dev/null 2>&1; then
+  open ~/.superpowers/contributor-logs/{slug}.md
+elif command -v xdg-open >/dev/null 2>&1; then
+  xdg-open ~/.superpowers/contributor-logs/{slug}.md >/dev/null 2>&1 || true
+fi
+```
+
+Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Skip if the file already exists. Max 3 reports per session. File inline and continue — don't stop the workflow. Tell the user: "Filed superpowers field report: {title}"
+
 
 # Subagent-Driven Development
 
-Execute plan by dispatching fresh subagent per task, with two-stage review after each: spec compliance review first, then code quality review.
+Execute plan by dispatching a fresh sub-agent or custom agent per task, with two-stage review after each: spec compliance review first, then code quality review.
 
-**Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
+**Why isolated agents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
 
-**Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
+**Core principle:** Fresh isolated agent per task + two-stage review (spec then quality) = high quality, fast iteration
+
+**Platform note:** Current Codex releases enable subagent workflows by default, so this skill does not require a separate `multi_agent` feature flag. In Codex, prefer the built-in `worker` agent for implementation and fix tasks, the built-in `explorer` agent for read-heavy review and codebase analysis, and project or personal `.codex/agents/*.toml` custom agents only when the built-ins do not fit. Superpowers installs a `code-reviewer` custom agent for Codex review passes. In GitHub Copilot local installs, use the platform's native custom-agent or sub-agent support.
 
 ## When to Use
 
@@ -33,7 +120,7 @@ digraph when_to_use {
 
 **vs. Executing Plans (parallel session):**
 - Same session (no context switch)
-- Fresh subagent per task (no context pollution)
+- Fresh isolated agent per task (no context pollution)
 - Two-stage review after each task: spec compliance first, then code quality
 - Faster iteration (no human-in-loop between tasks)
 
@@ -55,15 +142,15 @@ digraph process {
         "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
         "Code quality reviewer subagent approves?" [shape=diamond];
         "Implementer subagent fixes quality issues" [shape=box];
-        "Mark task complete in TodoWrite" [shape=box];
+        "Mark task complete in task tracker" [shape=box];
     }
 
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
+    "Read plan, extract all tasks with full text, note context, create task-tracker checklist" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
+    "Read plan, extract all tasks with full text, note context, create task-tracker checklist" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -76,8 +163,8 @@ digraph process {
     "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
     "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
     "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
-    "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
-    "Mark task complete in TodoWrite" -> "More tasks remain?";
+    "Code quality reviewer subagent approves?" -> "Mark task complete in task tracker" [label="yes"];
+    "Mark task complete in task tracker" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
     "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
@@ -98,6 +185,12 @@ Use the least powerful model that can handle each role to conserve cost and incr
 - Touches 1-2 files with a complete spec → cheap model
 - Touches multiple files with integration concerns → standard model
 - Requires design judgment or broad codebase understanding → most capable model
+
+**Codex role mapping:**
+- Implementer → built-in `worker`
+- Spec reviewer → built-in `explorer` for read-heavy passes, or `default` when the review needs broader judgment
+- Code-quality reviewer → installed `code-reviewer` custom agent for the standard Superpowers review flow
+- Custom agent → only when you need task-specific instructions that the built-ins do not cover
 
 ## Handling Implementer Status
 
@@ -130,22 +223,22 @@ You: I'm using Subagent-Driven Development to execute this plan.
 
 [Read plan file once: docs/superpowers/plans/feature-plan.md]
 [Extract all 5 tasks with full text and context]
-[Create TodoWrite with all tasks]
+[Create task-tracker checklist with all tasks]
 
-Task 1: Hook installation script
+Task 1: Shared install migration docs
 
 [Get Task 1 text and context (already extracted)]
 [Dispatch implementation subagent with full task text + context]
 
-Implementer: "Before I begin - should the hook be installed at user or system level?"
+Implementer: "Before I begin - should the migration docs include both Unix shell and PowerShell commands?"
 
-You: "User level (~/.config/superpowers/hooks/)"
+You: "Yes. Keep the shared install root at ~/.superpowers/install and document both shells."
 
 Implementer: "Got it. Implementing now..."
 [Later] Implementer:
-  - Implemented install-hook command
+  - Updated shared-root migration docs
   - Added tests, 5/5 passing
-  - Self-review: Found I missed --force flag, added it
+  - Self-review: Found I missed the PowerShell temp-clone cleanup, added it
   - Committed
 
 [Dispatch spec compliance reviewer]
@@ -194,9 +287,11 @@ Code reviewer: ✅ Approved
 
 [After all tasks]
 [Dispatch final code-reviewer]
-Final reviewer: All requirements met, ready to merge
+Final reviewer: All requirements met, ready for branch completion
 
-Done!
+[Announce: I'm using the finishing-a-development-branch skill to complete this work.]
+[Invoke superpowers:finishing-a-development-branch]
+[Present merge/PR/keep/discard options and follow the chosen path]
 ```
 
 ## Advantages

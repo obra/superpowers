@@ -2,6 +2,91 @@
 name: dispatching-parallel-agents
 description: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies
 ---
+<!-- AUTO-GENERATED from SKILL.md.tmpl — do not edit directly -->
+<!-- Regenerate: node scripts/gen-skill-docs.mjs -->
+
+## Preamble (run first)
+
+```bash
+_IS_SUPERPOWERS_RUNTIME_ROOT() {
+  local candidate="$1"
+  [ -n "$candidate" ] &&
+  [ -x "$candidate/bin/superpowers-update-check" ] &&
+  [ -x "$candidate/bin/superpowers-config" ] &&
+  [ -f "$candidate/VERSION" ]
+}
+_REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+_SUPERPOWERS_ROOT=""
+_IS_SUPERPOWERS_RUNTIME_ROOT "$_REPO_ROOT" && _SUPERPOWERS_ROOT="$_REPO_ROOT"
+[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.superpowers/install" && _SUPERPOWERS_ROOT="$HOME/.superpowers/install"
+[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.codex/superpowers" && _SUPERPOWERS_ROOT="$HOME/.codex/superpowers"
+[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.copilot/superpowers" && _SUPERPOWERS_ROOT="$HOME/.copilot/superpowers"
+_UPD=""
+[ -n "$_SUPERPOWERS_ROOT" ] && _UPD=$("$_SUPERPOWERS_ROOT/bin/superpowers-update-check" 2>/dev/null || true)
+[ -n "$_UPD" ] && echo "$_UPD" || true
+_SP_STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
+mkdir -p "$_SP_STATE_DIR/sessions"
+touch "$_SP_STATE_DIR/sessions/$PPID"
+_SESSIONS=$(find "$_SP_STATE_DIR/sessions" -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' ')
+find "$_SP_STATE_DIR/sessions" -mmin +120 -type f -delete 2>/dev/null || true
+_CONTRIB=""
+[ -n "$_SUPERPOWERS_ROOT" ] && _CONTRIB=$("$_SUPERPOWERS_ROOT/bin/superpowers-config" get superpowers_contributor 2>/dev/null || true)
+```
+
+If output shows `UPGRADE_AVAILABLE <old> <new>`: read the installed `superpowers-upgrade/SKILL.md` from the same superpowers root (check the current repo when it contains the Superpowers runtime, then `$HOME/.superpowers/install`, then `$HOME/.codex/superpowers`, then `$HOME/.copilot/superpowers`) and follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise ask one interactive user question with 4 options and write snooze state if declined). If `JUST_UPGRADED <from> <to>`: tell the user "Running superpowers v{to} (just updated!)" and continue.
+
+## Interactive User Question Format
+
+**ALWAYS follow this structure for every interactive user question:**
+1. Context: project name, current branch, what we're working on (1-2 sentences)
+2. The specific question or decision point
+3. `RECOMMENDATION: Choose [X] because [one-line reason]`
+4. Lettered options: `A) ... B) ... C) ...`
+
+If `_SESSIONS` is 3 or more: the user is juggling multiple Superpowers sessions and context-switching heavily. **ELI16 mode** — they may not remember what this conversation is about. Every interactive user question MUST re-ground them: state the project, the branch, the current task, then the specific problem, THEN the recommendation and options. Be extra clear and self-contained — assume they haven't looked at this window in 20 minutes.
+
+Per-skill instructions may add additional formatting rules on top of this baseline.
+
+## Contributor Mode
+
+If `_CONTRIB` is `true`: you are in **contributor mode**. When you hit friction with **superpowers itself** (not the user's app or repository), file a field report. Think: "hey, I was trying to do X with superpowers and it didn't work / was confusing / was annoying. Here's what happened."
+
+**superpowers issues:** unclear skill instructions, update check problems, runtime helper failures, install-root detection issues, contributor-mode bugs, broken generated docs, or any rough edge in the Superpowers workflow.
+**NOT superpowers issues:** the user's application bugs, repo-specific architecture problems, auth failures on the user's site, or third-party service outages unrelated to Superpowers tooling.
+
+**To file:** write `~/.superpowers/contributor-logs/{slug}.md` with this structure:
+
+```
+# {Title}
+
+Hey superpowers team — ran into this while using /{skill-name}:
+
+**What I was trying to do:** {what the user/agent was attempting}
+**What happened instead:** {what actually happened}
+**How annoying (1-5):** {1=meh, 3=friction, 5=blocker}
+
+## Steps to reproduce
+1. {step}
+
+## Raw output
+(wrap any error messages or unexpected output in a markdown code block)
+
+**Date:** {YYYY-MM-DD} | **Version:** {superpowers version} | **Skill:** /{skill}
+```
+
+Then run:
+
+```bash
+mkdir -p ~/.superpowers/contributor-logs
+if command -v open >/dev/null 2>&1; then
+  open ~/.superpowers/contributor-logs/{slug}.md
+elif command -v xdg-open >/dev/null 2>&1; then
+  xdg-open ~/.superpowers/contributor-logs/{slug}.md >/dev/null 2>&1 || true
+fi
+```
+
+Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Skip if the file already exists. Max 3 reports per session. File inline and continue — don't stop the workflow. Tell the user: "Filed superpowers field report: {title}"
+
 
 # Dispatching Parallel Agents
 
@@ -12,6 +97,8 @@ You delegate tasks to specialized agents with isolated context. By precisely cra
 When you have multiple unrelated failures (different test files, different subsystems, different bugs), investigating them sequentially wastes time. Each investigation is independent and can happen in parallel.
 
 **Core principle:** Dispatch one agent per independent problem domain. Let them work concurrently.
+
+**Platform note:** Current Codex releases enable subagent workflows by default. In Codex, start with the built-in `explorer` agent for read-heavy investigation, switch to the built-in `worker` agent for execution-heavy fixes, and define `.codex/agents/*.toml` custom agents only when the built-ins do not fit. In GitHub Copilot local installs, use the platform's native custom-agent or sub-agent features.
 
 ## When to Use
 
@@ -65,13 +152,15 @@ Each agent gets:
 
 ### 3. Dispatch in Parallel
 
-```typescript
-// In Claude Code / AI environment
-Task("Fix agent-tool-abort.test.ts failures")
-Task("Fix batch-completion-behavior.test.ts failures")
-Task("Fix tool-approval-race-conditions.test.ts failures")
-// All three run concurrently
+```text
+Dispatch isolated agent: "Fix agent-tool-abort.test.ts failures"
+Dispatch isolated agent: "Fix batch-completion-behavior.test.ts failures"
+Dispatch isolated agent: "Fix tool-approval-race-conditions.test.ts failures"
+Wait for results
+Close or complete finished agents
 ```
+
+For Codex, that usually means `explorer` while the task is still investigation-heavy, then `worker` once the agent is primarily making and verifying code changes.
 
 ### 4. Review and Integrate
 

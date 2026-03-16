@@ -32,6 +32,8 @@ The server watches a directory for HTML files and serves the newest one to the b
 
 ## Starting a Session
 
+Unix-like shells:
+
 ```bash
 # Start server with persistence (mockups saved to project)
 scripts/start-server.sh --project-dir /path/to/project
@@ -40,35 +42,32 @@ scripts/start-server.sh --project-dir /path/to/project
 #           "screen_dir":"/path/to/project/.superpowers/brainstorm/12345-1706000000"}
 ```
 
+PowerShell:
+
+```powershell
+# Start server with persistence (mockups saved to project)
+scripts/start-server.ps1 --project-dir C:\path\to\project
+```
+
 Save `screen_dir` from the response. Tell user to open the URL.
 
 **Finding connection info:** The server writes its startup JSON to `$SCREEN_DIR/.server-info`. If you launched the server in the background and didn't capture stdout, read that file to get the URL and port. When using `--project-dir`, check `<project>/.superpowers/brainstorm/` for the session directory.
 
 **Note:** Pass the project root as `--project-dir` so mockups persist in `.superpowers/brainstorm/` and survive server restarts. Without it, files go to `/tmp` and get cleaned up. Remind the user to add `.superpowers/` to `.gitignore` if it's not already there.
 
-**Launching the server by platform:**
+**Launching the server in Codex or GitHub Copilot CLI:**
 
-**Claude Code:**
 ```bash
-# Default mode works — the script backgrounds the server itself
+# Codex reaps background processes, and GitHub Copilot local installs can
+# run the same command normally. The script auto-detects CODEX_CI and
+# switches to foreground mode when needed.
 scripts/start-server.sh --project-dir /path/to/project
 ```
 
-**Codex:**
-```bash
-# Codex reaps background processes. The script auto-detects CODEX_CI and
-# switches to foreground mode. Run it normally — no extra flags needed.
-scripts/start-server.sh --project-dir /path/to/project
+```powershell
+# Use the PowerShell wrapper when running from Windows shells.
+scripts/start-server.ps1 --project-dir C:\path\to\project
 ```
-
-**Gemini CLI:**
-```bash
-# Use --foreground and set is_background: true on your shell tool call
-# so the process survives across turns
-scripts/start-server.sh --project-dir /path/to/project --foreground
-```
-
-**Other environments:** The server must keep running in the background across conversation turns. If your environment reaps detached processes, use `--foreground` and launch the command with your platform's background execution mechanism.
 
 If the URL is unreachable from your browser (common in remote/containerized setups), bind a non-loopback host:
 
@@ -79,15 +78,22 @@ scripts/start-server.sh \
   --url-host localhost
 ```
 
+```powershell
+scripts/start-server.ps1 `
+  --project-dir C:\path\to\project `
+  --host 0.0.0.0 `
+  --url-host localhost
+```
+
 Use `--url-host` to control what hostname is printed in the returned URL JSON.
 
 ## The Loop
 
 1. **Check server is alive**, then **write HTML** to a new file in `screen_dir`:
-   - Before each write, check that `$SCREEN_DIR/.server-info` exists. If it doesn't (or `.server-stopped` exists), the server has shut down — restart it with `start-server.sh` before continuing. The server auto-exits after 30 minutes of inactivity.
+   - Before each write, check that `$SCREEN_DIR/.server-info` exists. If it doesn't (or `.server-stopped` exists), the server has shut down — restart it with `scripts/start-server.sh` on Unix-like shells or `scripts/start-server.ps1` from PowerShell before continuing. Reuse the same launch flags you started with originally (`--project-dir`, plus any `--host` / `--url-host` overrides), then save the new `screen_dir` from the restart response before writing more screens. The server auto-exits after 30 minutes of inactivity.
    - Use semantic filenames: `platform.html`, `visual-style.html`, `layout.html`
    - **Never reuse filenames** — each screen gets a fresh file
-   - Use Write tool — **never use cat/heredoc** (dumps noise into terminal)
+   - Use your normal file-editing workflow — **never use cat/heredoc** (dumps noise into terminal)
    - Server automatically serves the newest file
 
 2. **Tell user what to expect and end your turn:**
@@ -265,8 +271,16 @@ If `.events` doesn't exist, the user didn't interact with the browser — use on
 
 ## Cleaning Up
 
+Unix-like shells:
+
 ```bash
 scripts/stop-server.sh $SCREEN_DIR
+```
+
+PowerShell:
+
+```powershell
+scripts/stop-server.ps1 $SCREEN_DIR
 ```
 
 If the session used `--project-dir`, mockup files persist in `.superpowers/brainstorm/` for later reference. Only `/tmp` sessions get deleted on stop.

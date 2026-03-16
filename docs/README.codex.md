@@ -1,13 +1,13 @@
 # Superpowers for Codex
 
-Guide for using Superpowers with OpenAI Codex via native skill discovery.
+Guide for using Superpowers with OpenAI Codex via native skill discovery and the shared Superpowers runtime checkout.
 
 ## Quick Install
 
 Tell Codex:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/dmulcahey/superpowers/refs/heads/main/.codex/INSTALL.md
 ```
 
 ## Manual Installation
@@ -19,24 +19,24 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 ### Steps
 
-1. Clone the repo:
+1. Clone the repo into the shared runtime location:
    ```bash
-   git clone https://github.com/obra/superpowers.git ~/.codex/superpowers
+   git clone https://github.com/dmulcahey/superpowers.git ~/.superpowers/install
    ```
 
 2. Create the skills symlink:
    ```bash
    mkdir -p ~/.agents/skills
-   ln -s ~/.codex/superpowers/skills ~/.agents/skills/superpowers
+   ln -s ~/.superpowers/install/skills ~/.agents/skills/superpowers
    ```
 
-3. Restart Codex.
-
-4. **For subagent skills** (optional): Skills like `dispatching-parallel-agents` and `subagent-driven-development` require Codex's collab feature. Add to your Codex config:
-   ```toml
-   [features]
-   collab = true
+3. Install the `code-reviewer` custom agent:
+   ```bash
+   mkdir -p ~/.codex/agents
+   ln -s ~/.superpowers/install/.codex/agents/code-reviewer.toml ~/.codex/agents/code-reviewer.toml
    ```
+
+4. Restart Codex.
 
 ### Windows
 
@@ -44,18 +44,69 @@ Use a junction instead of a symlink (works without Developer Mode):
 
 ```powershell
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.agents\skills"
-cmd /c mklink /J "$env:USERPROFILE\.agents\skills\superpowers" "$env:USERPROFILE\.codex\superpowers\skills"
+cmd /c mklink /J "$env:USERPROFILE\.agents\skills\superpowers" "$env:USERPROFILE\.superpowers\install\skills"
+
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.codex\agents"
+Copy-Item "$env:USERPROFILE\.superpowers\install\.codex\agents\code-reviewer.toml" "$env:USERPROFILE\.codex\agents\code-reviewer.toml" -Force
 ```
+
+## Migrating Existing Installs
+
+If you already have `~/.codex/superpowers` or `~/.copilot/superpowers`, migrate them into the shared checkout with:
+
+```bash
+tmpdir=$(mktemp -d)
+git clone --depth 1 https://github.com/dmulcahey/superpowers.git "$tmpdir/superpowers"
+"$tmpdir/superpowers/bin/superpowers-migrate-install"
+rm -rf "$tmpdir"
+```
+
+If `~/.superpowers/install` already exists, run `~/.superpowers/install/bin/superpowers-migrate-install` instead.
+
+**Windows (PowerShell):**
+```powershell
+if (Test-Path "$env:USERPROFILE\.superpowers\install") {
+  & "$env:USERPROFILE\.superpowers\install\bin\superpowers-migrate-install.ps1"
+} else {
+  $tmpRoot = Join-Path $env:TEMP "superpowers-migrate"
+  $tmpDir = Join-Path $tmpRoot ([guid]::NewGuid().ToString())
+  git clone --depth 1 https://github.com/dmulcahey/superpowers.git (Join-Path $tmpDir "superpowers")
+  & (Join-Path $tmpDir "superpowers\bin\superpowers-migrate-install.ps1")
+  Remove-Item -Recurse -Force $tmpDir
+}
+```
+
+Migration only consolidates the checkout. After migrating, continue with steps 2 and 3 to create or refresh `~/.agents/skills/superpowers` and `~/.codex/agents/code-reviewer.toml`, then restart Codex.
 
 ## How It Works
 
 Codex has native skill discovery — it scans `~/.agents/skills/` at startup, parses SKILL.md frontmatter, and loads skills on demand. Superpowers skills are made visible through a single symlink:
 
 ```
-~/.agents/skills/superpowers/ → ~/.codex/superpowers/skills/
+~/.agents/skills/superpowers/ → ~/.superpowers/install/skills/
+Unix-like: ~/.codex/agents/code-reviewer.toml → ~/.superpowers/install/.codex/agents/code-reviewer.toml
+Windows: copy ~/.superpowers/install/.codex/agents/code-reviewer.toml to ~/.codex/agents/code-reviewer.toml
 ```
 
 The `using-superpowers` skill is discovered automatically and enforces skill usage discipline — no additional configuration needed.
+
+The `code-reviewer` custom agent is available after installation.
+
+## Codex Subagents
+
+Current Codex releases enable subagent workflows by default, so Superpowers does not require a separate `multi_agent` feature flag.
+
+Codex ships built-in `default`, `worker`, and `explorer` agents:
+
+- Use `worker` for implementation and fix tasks.
+- Use `explorer` for read-heavy debugging, review, and codebase exploration.
+- Use `default` when the task needs broader judgment instead of a narrow execution or exploration role.
+
+Superpowers also installs its `code-reviewer` custom agent to `~/.codex/agents/code-reviewer.toml`.
+
+If you want custom project-scoped agents, add TOML files under `.codex/agents/`. Personal custom agents live under `~/.codex/agents/`. Each custom agent file defines `name`, `description`, and `developer_instructions`; optional settings such as `nickname_candidates`, `model`, `model_reasoning_effort`, `sandbox_mode`, `mcp_servers`, and `skills.config` inherit from the parent session when omitted.
+
+Use `[agents]` in your Codex config for global subagent controls such as `max_threads`, `max_depth`, and `job_max_runtime_seconds`. Most installs can leave `[agents]` unset; Codex defaults to six open agent threads and a max depth of one direct child layer.
 
 ## Usage
 
@@ -63,6 +114,40 @@ Skills are discovered automatically. Codex activates them when:
 - You mention a skill by name (e.g., "use brainstorming")
 - The task matches a skill's description
 - The `using-superpowers` skill directs Codex to use one
+
+## Default Workflow
+
+Superpowers' default planning pipeline is:
+
+`brainstorming -> plan-ceo-review -> writing-plans -> plan-eng-review -> implementation`
+
+During implementation, `using-git-worktrees` prepares the isolated workspace, then either `subagent-driven-development` or `executing-plans` drives task execution. `test-driven-development`, `requesting-code-review`, and `finishing-a-development-branch` activate as that execution path requires.
+
+## Runtime Helpers
+
+Runtime helper state lives in `~/.superpowers/`. Generated skill preambles use this directory for session markers, contributor logs, and update-check cache files.
+
+Optional: enable contributor mode for future sessions with:
+
+```bash
+~/.superpowers/install/bin/superpowers-config set superpowers_contributor true
+```
+
+**Windows (PowerShell):**
+```powershell
+& "$env:USERPROFILE\.superpowers\install\bin\superpowers-config.ps1" set superpowers_contributor true
+```
+
+If you disable update notices, re-enable them with:
+
+```bash
+~/.superpowers/install/bin/superpowers-config set update_check true
+```
+
+**Windows (PowerShell):**
+```powershell
+& "$env:USERPROFILE\.superpowers\install\bin\superpowers-config.ps1" set update_check true
+```
 
 ### Personal Skills
 
@@ -90,31 +175,49 @@ The `description` field is how Codex decides when to activate a skill automatica
 ## Updating
 
 ```bash
-cd ~/.codex/superpowers && git pull
+cd ~/.superpowers/install && git pull
 ```
 
 Skills update instantly through the symlink.
+
+If you copied the Codex agent file on Windows, copy `~/.superpowers/install/.codex/agents/code-reviewer.toml` into `~/.codex/agents/code-reviewer.toml` again after updating.
+
+If you migrated from `~/.codex/superpowers` or `~/.copilot/superpowers`, rerun `~/.superpowers/install/bin/superpowers-migrate-install` after updating if you need to restore the compatibility links. In PowerShell, use `& "$env:USERPROFILE\.superpowers\install\bin\superpowers-migrate-install.ps1"`.
+
+Generated skill preambles run `~/.superpowers/install/bin/superpowers-update-check` automatically when that install root is active, so new sessions can surface `UPGRADE_AVAILABLE` or `JUST_UPGRADED` without extra setup.
 
 ## Uninstalling
 
 ```bash
 rm ~/.agents/skills/superpowers
+rm ~/.codex/agents/code-reviewer.toml
 ```
 
 **Windows (PowerShell):**
 ```powershell
 Remove-Item "$env:USERPROFILE\.agents\skills\superpowers"
+Remove-Item "$env:USERPROFILE\.codex\agents\code-reviewer.toml"
 ```
 
-Optionally delete the clone: `rm -rf ~/.codex/superpowers` (Windows: `Remove-Item -Recurse -Force "$env:USERPROFILE\.codex\superpowers"`).
+Optionally delete the shared clone if no other platform uses it: `rm -rf ~/.superpowers/install` (Windows: `Remove-Item -Recurse -Force "$env:USERPROFILE\.superpowers\install"`).
 
 ## Troubleshooting
 
 ### Skills not showing up
 
 1. Verify the symlink: `ls -la ~/.agents/skills/superpowers`
-2. Check skills exist: `ls ~/.codex/superpowers/skills`
-3. Restart Codex — skills are discovered at startup
+2. Verify the agent file: `ls -la ~/.codex/agents/code-reviewer.toml`
+3. Check skills exist: `ls ~/.superpowers/install/skills`
+4. Check the source agent exists: `ls ~/.superpowers/install/.codex/agents/code-reviewer.toml`
+5. Restart Codex — skills and agents are discovered at startup
+
+**Windows (PowerShell):**
+1. Verify the junction: `Get-Item "$env:USERPROFILE\.agents\skills\superpowers"`
+2. Verify the copied agent file: `Get-Item "$env:USERPROFILE\.codex\agents\code-reviewer.toml"`
+3. Check skills exist: `Get-ChildItem "$env:USERPROFILE\.superpowers\install\skills"`
+4. Check the source agent exists: `Get-Item "$env:USERPROFILE\.superpowers\install\.codex\agents\code-reviewer.toml"`
+5. If you updated Superpowers, recopy `code-reviewer.toml` into `~/.codex/agents/`
+6. Restart Codex — skills and agents are discovered at startup
 
 ### Windows junction issues
 
@@ -122,5 +225,5 @@ Junctions normally work without special permissions. If creation fails, try runn
 
 ## Getting Help
 
-- Report issues: https://github.com/obra/superpowers/issues
-- Main documentation: https://github.com/obra/superpowers
+- Report issues: https://github.com/dmulcahey/superpowers/issues
+- Main documentation: https://github.com/dmulcahey/superpowers

@@ -1,0 +1,209 @@
+---
+name: finishing-a-development-branch
+description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup
+---
+
+{{BASE_PREAMBLE}}
+
+
+# Finishing a Development Branch
+
+## Overview
+
+Guide completion of development work by presenting clear options and handling chosen workflow.
+
+**Core principle:** Verify tests → Present options → Execute choice → Clean up.
+
+**Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
+
+## The Process
+
+### Step 1: Verify Tests
+
+**Before presenting options, verify tests pass:**
+
+```bash
+# Run project's test suite
+npm test / cargo test / pytest / go test ./...
+```
+
+**If tests fail:**
+```
+Tests failing (<N> failures). Must fix before completing:
+
+[Show failures]
+
+Cannot proceed with merge/PR until tests pass.
+```
+
+Stop. Don't proceed to Step 2.
+
+**If tests pass:** Continue to Step 2.
+
+### Step 2: Determine Base Branch
+
+```bash
+# Try common base branches
+git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
+```
+
+If the merge-base result is ambiguous, ask one interactive user question using the required format:
+- Context: branch name and what is being completed
+- Recommendation: the most likely base branch from local git history
+- Options:
+  - `A)` Use `main`
+  - `B)` Use `master`
+  - `C)` Keep current branch and let the user specify a different base branch
+
+### Step 3: Present Options
+
+Ask one interactive user question using the required format.
+
+```
+A) Merge back to <base-branch> locally
+B) Push and create a Pull Request
+C) Keep the branch as-is for follow-up later
+D) Discard this work
+```
+
+Recommendation logic:
+- Recommend `B)` when a normal PR flow is available and the user has not signaled a different preference
+- Recommend `A)` when local integration is clearly preferred or PR tooling is unavailable
+- Recommend `C)` when the user has indicated they want to continue later
+- Never recommend `D)` by default
+
+### Step 4: Execute Choice
+
+#### Option A: Merge Locally
+
+```bash
+# Switch to base branch
+git checkout <base-branch>
+
+# Pull latest
+git pull
+
+# Merge feature branch
+git merge <feature-branch>
+
+# Verify tests on merged result
+<test command>
+
+# If tests pass
+git branch -d <feature-branch>
+```
+
+Then: Cleanup worktree (Step 5)
+
+#### Option B: Push and Create PR
+
+```bash
+# Push branch
+git push -u origin <feature-branch>
+
+# Create PR
+gh pr create --title "<title>" --body "$(cat <<'EOF'
+## Summary
+<2-3 bullets of what changed>
+
+## Test Plan
+- [ ] <verification steps>
+EOF
+)"
+```
+
+Then: Keep the branch and worktree for follow-up until the PR is merged.
+
+#### Option C: Keep As-Is
+
+Report: "Keeping branch <name>. Worktree preserved at <path>."
+
+**Don't cleanup worktree.**
+
+#### Option D: Discard
+
+**Confirm first:**
+```
+This will permanently delete:
+- Branch <name>
+- All commits: <commit-list>
+- Worktree at <path>
+
+Type 'discard' to confirm.
+```
+
+Wait for exact confirmation.
+
+If confirmed:
+```bash
+git checkout <base-branch>
+git branch -D <feature-branch>
+```
+
+Then: Cleanup worktree (Step 5)
+
+### Step 5: Cleanup Worktree
+
+**For Options A and D:**
+
+Check if in worktree:
+```bash
+git worktree list | grep $(git branch --show-current)
+```
+
+If yes:
+```bash
+git worktree remove <worktree-path>
+```
+
+**For Option C:** Keep worktree.
+
+## Quick Reference
+
+| Option | Merge | Push | Keep Worktree | Cleanup Branch |
+|--------|-------|------|---------------|----------------|
+| A. Merge locally | ✓ | - | - | ✓ |
+| B. Create PR | - | ✓ | ✓ | - |
+| C. Keep as-is | - | - | ✓ | - |
+| D. Discard | - | - | - | ✓ (force) |
+
+## Common Mistakes
+
+**Skipping test verification**
+- **Problem:** Merge broken code, create failing PR
+- **Fix:** Always verify tests before offering options
+
+**Open-ended questions**
+- **Problem:** "What should I do next?" → ambiguous
+- **Fix:** Present exactly 4 structured options
+
+**Automatic worktree cleanup**
+- **Problem:** Remove worktree when might need it (Option B, C)
+- **Fix:** Only cleanup for Options A and D
+
+**No confirmation for discard**
+- **Problem:** Accidentally delete work
+- **Fix:** Require typed "discard" confirmation
+
+## Red Flags
+
+**Never:**
+- Proceed with failing tests
+- Merge without verifying tests on result
+- Delete work without confirmation
+- Force-push without explicit request
+
+**Always:**
+- Verify tests before offering options
+- Present exactly 4 options
+- Get typed confirmation for Option D
+- Clean up worktree for Options A & D only
+
+## Integration
+
+**Called by:**
+- **subagent-driven-development** - After the final review passes and all tasks are complete
+- **executing-plans** - After the final review is resolved and all tasks are complete
+
+**Pairs with:**
+- **using-git-worktrees** - Cleans up worktree created by that skill

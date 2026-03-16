@@ -2,6 +2,91 @@
 name: finishing-a-development-branch
 description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup
 ---
+<!-- AUTO-GENERATED from SKILL.md.tmpl — do not edit directly -->
+<!-- Regenerate: node scripts/gen-skill-docs.mjs -->
+
+## Preamble (run first)
+
+```bash
+_IS_SUPERPOWERS_RUNTIME_ROOT() {
+  local candidate="$1"
+  [ -n "$candidate" ] &&
+  [ -x "$candidate/bin/superpowers-update-check" ] &&
+  [ -x "$candidate/bin/superpowers-config" ] &&
+  [ -f "$candidate/VERSION" ]
+}
+_REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+_SUPERPOWERS_ROOT=""
+_IS_SUPERPOWERS_RUNTIME_ROOT "$_REPO_ROOT" && _SUPERPOWERS_ROOT="$_REPO_ROOT"
+[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.superpowers/install" && _SUPERPOWERS_ROOT="$HOME/.superpowers/install"
+[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.codex/superpowers" && _SUPERPOWERS_ROOT="$HOME/.codex/superpowers"
+[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.copilot/superpowers" && _SUPERPOWERS_ROOT="$HOME/.copilot/superpowers"
+_UPD=""
+[ -n "$_SUPERPOWERS_ROOT" ] && _UPD=$("$_SUPERPOWERS_ROOT/bin/superpowers-update-check" 2>/dev/null || true)
+[ -n "$_UPD" ] && echo "$_UPD" || true
+_SP_STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
+mkdir -p "$_SP_STATE_DIR/sessions"
+touch "$_SP_STATE_DIR/sessions/$PPID"
+_SESSIONS=$(find "$_SP_STATE_DIR/sessions" -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' ')
+find "$_SP_STATE_DIR/sessions" -mmin +120 -type f -delete 2>/dev/null || true
+_CONTRIB=""
+[ -n "$_SUPERPOWERS_ROOT" ] && _CONTRIB=$("$_SUPERPOWERS_ROOT/bin/superpowers-config" get superpowers_contributor 2>/dev/null || true)
+```
+
+If output shows `UPGRADE_AVAILABLE <old> <new>`: read the installed `superpowers-upgrade/SKILL.md` from the same superpowers root (check the current repo when it contains the Superpowers runtime, then `$HOME/.superpowers/install`, then `$HOME/.codex/superpowers`, then `$HOME/.copilot/superpowers`) and follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise ask one interactive user question with 4 options and write snooze state if declined). If `JUST_UPGRADED <from> <to>`: tell the user "Running superpowers v{to} (just updated!)" and continue.
+
+## Interactive User Question Format
+
+**ALWAYS follow this structure for every interactive user question:**
+1. Context: project name, current branch, what we're working on (1-2 sentences)
+2. The specific question or decision point
+3. `RECOMMENDATION: Choose [X] because [one-line reason]`
+4. Lettered options: `A) ... B) ... C) ...`
+
+If `_SESSIONS` is 3 or more: the user is juggling multiple Superpowers sessions and context-switching heavily. **ELI16 mode** — they may not remember what this conversation is about. Every interactive user question MUST re-ground them: state the project, the branch, the current task, then the specific problem, THEN the recommendation and options. Be extra clear and self-contained — assume they haven't looked at this window in 20 minutes.
+
+Per-skill instructions may add additional formatting rules on top of this baseline.
+
+## Contributor Mode
+
+If `_CONTRIB` is `true`: you are in **contributor mode**. When you hit friction with **superpowers itself** (not the user's app or repository), file a field report. Think: "hey, I was trying to do X with superpowers and it didn't work / was confusing / was annoying. Here's what happened."
+
+**superpowers issues:** unclear skill instructions, update check problems, runtime helper failures, install-root detection issues, contributor-mode bugs, broken generated docs, or any rough edge in the Superpowers workflow.
+**NOT superpowers issues:** the user's application bugs, repo-specific architecture problems, auth failures on the user's site, or third-party service outages unrelated to Superpowers tooling.
+
+**To file:** write `~/.superpowers/contributor-logs/{slug}.md` with this structure:
+
+```
+# {Title}
+
+Hey superpowers team — ran into this while using /{skill-name}:
+
+**What I was trying to do:** {what the user/agent was attempting}
+**What happened instead:** {what actually happened}
+**How annoying (1-5):** {1=meh, 3=friction, 5=blocker}
+
+## Steps to reproduce
+1. {step}
+
+## Raw output
+(wrap any error messages or unexpected output in a markdown code block)
+
+**Date:** {YYYY-MM-DD} | **Version:** {superpowers version} | **Skill:** /{skill}
+```
+
+Then run:
+
+```bash
+mkdir -p ~/.superpowers/contributor-logs
+if command -v open >/dev/null 2>&1; then
+  open ~/.superpowers/contributor-logs/{slug}.md
+elif command -v xdg-open >/dev/null 2>&1; then
+  xdg-open ~/.superpowers/contributor-logs/{slug}.md >/dev/null 2>&1 || true
+fi
+```
+
+Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Skip if the file already exists. Max 3 reports per session. File inline and continue — don't stop the workflow. Tell the user: "Filed superpowers field report: {title}"
+
 
 # Finishing a Development Branch
 
@@ -44,28 +129,34 @@ Stop. Don't proceed to Step 2.
 git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 ```
 
-Or ask: "This branch split from main - is that correct?"
+If the merge-base result is ambiguous, ask one interactive user question using the required format:
+- Context: branch name and what is being completed
+- Recommendation: the most likely base branch from local git history
+- Options:
+  - `A)` Use `main`
+  - `B)` Use `master`
+  - `C)` Keep current branch and let the user specify a different base branch
 
 ### Step 3: Present Options
 
-Present exactly these 4 options:
+Ask one interactive user question using the required format.
 
 ```
-Implementation complete. What would you like to do?
-
-1. Merge back to <base-branch> locally
-2. Push and create a Pull Request
-3. Keep the branch as-is (I'll handle it later)
-4. Discard this work
-
-Which option?
+A) Merge back to <base-branch> locally
+B) Push and create a Pull Request
+C) Keep the branch as-is for follow-up later
+D) Discard this work
 ```
 
-**Don't add explanation** - keep options concise.
+Recommendation logic:
+- Recommend `B)` when a normal PR flow is available and the user has not signaled a different preference
+- Recommend `A)` when local integration is clearly preferred or PR tooling is unavailable
+- Recommend `C)` when the user has indicated they want to continue later
+- Never recommend `D)` by default
 
 ### Step 4: Execute Choice
 
-#### Option 1: Merge Locally
+#### Option A: Merge Locally
 
 ```bash
 # Switch to base branch
@@ -86,7 +177,7 @@ git branch -d <feature-branch>
 
 Then: Cleanup worktree (Step 5)
 
-#### Option 2: Push and Create PR
+#### Option B: Push and Create PR
 
 ```bash
 # Push branch
@@ -103,15 +194,15 @@ EOF
 )"
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Keep the branch and worktree for follow-up until the PR is merged.
 
-#### Option 3: Keep As-Is
+#### Option C: Keep As-Is
 
 Report: "Keeping branch <name>. Worktree preserved at <path>."
 
 **Don't cleanup worktree.**
 
-#### Option 4: Discard
+#### Option D: Discard
 
 **Confirm first:**
 ```
@@ -135,7 +226,7 @@ Then: Cleanup worktree (Step 5)
 
 ### Step 5: Cleanup Worktree
 
-**For Options 1, 2, 4:**
+**For Options A and D:**
 
 Check if in worktree:
 ```bash
@@ -147,16 +238,16 @@ If yes:
 git worktree remove <worktree-path>
 ```
 
-**For Option 3:** Keep worktree.
+**For Option C:** Keep worktree.
 
 ## Quick Reference
 
 | Option | Merge | Push | Keep Worktree | Cleanup Branch |
 |--------|-------|------|---------------|----------------|
-| 1. Merge locally | ✓ | - | - | ✓ |
-| 2. Create PR | - | ✓ | ✓ | - |
-| 3. Keep as-is | - | - | ✓ | - |
-| 4. Discard | - | - | - | ✓ (force) |
+| A. Merge locally | ✓ | - | - | ✓ |
+| B. Create PR | - | ✓ | ✓ | - |
+| C. Keep as-is | - | - | ✓ | - |
+| D. Discard | - | - | - | ✓ (force) |
 
 ## Common Mistakes
 
@@ -169,8 +260,8 @@ git worktree remove <worktree-path>
 - **Fix:** Present exactly 4 structured options
 
 **Automatic worktree cleanup**
-- **Problem:** Remove worktree when might need it (Option 2, 3)
-- **Fix:** Only cleanup for Options 1 and 4
+- **Problem:** Remove worktree when might need it (Option B, C)
+- **Fix:** Only cleanup for Options A and D
 
 **No confirmation for discard**
 - **Problem:** Accidentally delete work
@@ -187,14 +278,14 @@ git worktree remove <worktree-path>
 **Always:**
 - Verify tests before offering options
 - Present exactly 4 options
-- Get typed confirmation for Option 4
-- Clean up worktree for Options 1 & 4 only
+- Get typed confirmation for Option D
+- Clean up worktree for Options A & D only
 
 ## Integration
 
 **Called by:**
-- **subagent-driven-development** (Step 7) - After all tasks complete
-- **executing-plans** (Step 5) - After all batches complete
+- **subagent-driven-development** - After the final review passes and all tasks are complete
+- **executing-plans** - After the final review is resolved and all tasks are complete
 
 **Pairs with:**
 - **using-git-worktrees** - Cleans up worktree created by that skill

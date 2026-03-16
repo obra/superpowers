@@ -13,7 +13,7 @@
      * - Scrollable main content area
      * - CSS helpers for common UI patterns
      *
-     * Content is injected via placeholder comment in #claude-content.
+     * Content is injected via placeholder comment in #brainstorm-content.
      */
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -77,7 +77,7 @@
     .header .status::before { content: ''; width: 6px; height: 6px; background: var(--success); border-radius: 50%; }
 
     .main { flex: 1; overflow-y: auto; }
-    #claude-content { padding: 2rem; min-height: 100%; }
+    #brainstorm-content { padding: 2rem; min-height: 100%; }
 
     .indicator-bar {
       background: var(--bg-secondary);
@@ -196,12 +196,12 @@
 </head>
 <body>
   <div class="header">
-    <h1><a href="https://github.com/obra/superpowers" style="color: inherit; text-decoration: none;">Superpowers Brainstorming</a></h1>
+    <h1><a href="https://github.com/dmulcahey/superpowers" style="color: inherit; text-decoration: none;">Superpowers Brainstorming</a></h1>
     <div class="status">Connected</div>
   </div>
 
   <div class="main">
-    <div id="claude-content">
+    <div id="brainstorm-content">
       <!-- CONTENT -->
     </div>
   </div>
