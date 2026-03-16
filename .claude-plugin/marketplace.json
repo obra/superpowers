@@ -1,19 +1,19 @@
 {
-  "name": "superpowers-dev",
-  "description": "Development marketplace for Superpowers core skills library",
+  "name": "superpowers-ruby",
+  "description": "Marketplace for Superpowers Ruby/Rails skills library",
   "owner": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com"
+    "name": "Lucian Ghinda",
+    "email": "lucian.ghinda@gmail.com"
   },
   "plugins": [
     {
-      "name": "superpowers",
-      "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
+      "name": "superpowers-ruby",
+      "description": "Ruby/Rails skills library for Claude Code: TDD with Minitest, Rails patterns, Hotwire, Brakeman, Sandi Metz rules, 37signals style, and proven development workflows",
       "version": "5.0.5",
       "source": "./",
       "author": {
-        "name": "Jesse Vincent",
-        "email": "jesse@fsck.com"
+        "name": "Lucian Ghinda",
+        "email": "lucian.ghinda@gmail.com"
       }
     }
   ]

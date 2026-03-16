@@ -52,28 +52,22 @@ Thanks!
 
 **Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex and OpenCode require manual setup.
 
-### Claude Code Official Marketplace
+### Claude Code — Option 1: Install from GitHub
 
-Superpowers is available via the [official Claude plugin marketplace](https://claude.com/plugins/superpowers)
-
-Install the plugin from Claude marketplace:
+Register the marketplace, then install the plugin:
 
 ```bash
-/plugin install superpowers@claude-plugins-official
+/plugin marketplace add lucianghinda/superpowers-ruby
+/plugin install superpowers-ruby@superpowers-ruby
 ```
 
-### Claude Code (via Plugin Marketplace)
+### Claude Code — Option 2: Install from local clone
 
-In Claude Code, register the marketplace first:
-
-```bash
-/plugin marketplace add obra/superpowers-marketplace
-```
-
-Then install the plugin from this marketplace:
+Clone the repository and install from the local directory:
 
 ```bash
-/plugin install superpowers@superpowers-marketplace
+git clone https://github.com/lucianghinda/superpowers-ruby.git
+/plugin install ./superpowers-ruby
 ```
 
 ### Cursor (via Plugin Marketplace)
@@ -91,7 +85,7 @@ or search for "superpowers" in the plugin marketplace.
 Tell Codex:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/lucianghinda/superpowers-ruby/refs/heads/main/.codex/INSTALL.md
 ```
 
 **Detailed docs:** [docs/README.codex.md](docs/README.codex.md)
@@ -101,7 +95,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 Tell OpenCode:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/lucianghinda/superpowers-ruby/refs/heads/main/.opencode/INSTALL.md
 ```
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
@@ -109,13 +103,13 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 ### Gemini CLI
 
 ```bash
-gemini extensions install https://github.com/obra/superpowers
+gemini extensions install https://github.com/lucianghinda/superpowers-ruby
 ```
 
 To update:
 
 ```bash
-gemini extensions update superpowers
+gemini extensions update superpowers-ruby
 ```
 
 ### Verify Installation
@@ -206,7 +200,7 @@ See `skills/writing-skills/SKILL.md` for the complete guide.
 Skills update automatically when you update the plugin:
 
 ```bash
-/plugin update superpowers
+/plugin update superpowers-ruby
 ```
 
 ## License
@@ -222,5 +216,4 @@ For community support, questions, and sharing what you're building with Superpow
 ## Support
 
 - **Discord**: [Join us on Discord](https://discord.gg/Jd8Vphy9jq)
-- **Issues**: https://github.com/obra/superpowers/issues
-- **Marketplace**: https://github.com/obra/superpowers-marketplace
+- **Issues**: https://github.com/lucianghinda/superpowers-ruby/issues

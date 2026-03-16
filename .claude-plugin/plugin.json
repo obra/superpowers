@@ -1,13 +1,13 @@
 {
-  "name": "superpowers",
-  "description": "Ruby/Rails skills library for Claude Code: TDD with Minitest, Rails patterns, Hotwire, Brakeman, Sandi Metz rules, 37signals style, and proven development workflows",
+  "name": "superpowers-ruby",
+  "description": "Ruby/Rails skills library for Claude Code: TDD with Minitest, Rails patterns, Hotwire, Brakeman, Sandi Metz rules, 37signals style, and proven development workflows based on Jesse Vincent's superpowers",
   "version": "5.0.5",
   "author": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com"
+    "name": "Lucian Ghinda",
+    "email": "lucian.ghinda@gmail.com"
   },
-  "homepage": "https://github.com/obra/superpowers",
-  "repository": "https://github.com/obra/superpowers",
+  "homepage": "https://github.com/lucianghinda/superpowers-ruby",
+  "repository": "https://github.com/lucianghinda/superpowers-ruby",
   "license": "MIT",
   "keywords": ["skills", "ruby", "rails", "tdd", "minitest", "hotwire", "turbo", "stimulus", "brakeman", "debugging", "collaboration", "best-practices", "workflows"]
 }

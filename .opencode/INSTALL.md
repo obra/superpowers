@@ -10,7 +10,7 @@ Add superpowers to the `plugin` array in your `opencode.json` (global or project
 
 ```json
 {
-  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git"]
+  "plugin": ["superpowers-ruby@git+https://github.com/lucianghinda/superpowers-ruby.git"]
 }
 ```
 
@@ -25,10 +25,10 @@ If you previously installed superpowers using `git clone` and symlinks, remove t
 ```bash
 # Remove old symlinks
 rm -f ~/.config/opencode/plugins/superpowers.js
-rm -rf ~/.config/opencode/skills/superpowers
+rm -rf ~/.config/opencode/skills/superpowers-ruby
 
 # Optionally remove the cloned repo
-rm -rf ~/.config/opencode/superpowers
+rm -rf ~/.config/opencode/superpowers-ruby
 
 # Remove skills.paths from opencode.json if you added one for superpowers
 ```
@@ -41,7 +41,7 @@ Use OpenCode's native `skill` tool:
 
 ```
 use skill tool to list skills
-use skill tool to load superpowers/brainstorming
+use skill tool to load superpowers-ruby/brainstorming
 ```
 
 ## Updating
@@ -52,7 +52,7 @@ To pin a specific version:
 
 ```json
 {
-  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git#v5.0.3"]
+  "plugin": ["superpowers-ruby@git+https://github.com/lucianghinda/superpowers-ruby.git#v5.0.5"]
 }
 ```
 
@@ -79,5 +79,5 @@ When skills reference Claude Code tools:
 
 ## Getting Help
 
-- Report issues: https://github.com/obra/superpowers/issues
-- Full documentation: https://github.com/obra/superpowers/blob/main/docs/README.opencode.md
+- Report issues: https://github.com/lucianghinda/superpowers-ruby/issues
+- Full documentation: https://github.com/lucianghinda/superpowers-ruby/blob/main/docs/README.opencode.md
