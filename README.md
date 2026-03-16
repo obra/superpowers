@@ -6,9 +6,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 
-https://github.com/user-attachments/assets/3feddb75c3d9e2c0339d62cbaff4252a1d171fa9
-
-
 # Superpowers Optimized
 
 **The production-grade fork of obra/superpowers** — same trusted workflow, dramatically leaner, safer, and more intelligent.
