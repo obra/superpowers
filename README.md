@@ -82,6 +82,16 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
 
+### OpenClaw
+
+Tell your OpenClaw agent:
+
+```
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.openclaw/INSTALL.md
+```
+
+**Detailed docs:** [docs/README.openclaw.md](docs/README.openclaw.md)
+
 ### Gemini CLI
 
 ```bash
