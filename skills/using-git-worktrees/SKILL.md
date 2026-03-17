@@ -85,18 +85,20 @@ project=$(basename "$(git rev-parse --show-toplevel)")
 Before creating, check if a worktree for the branch already exists:
 
 ```bash
-existing_path=$(git worktree list --porcelain | awk '/^worktree /{wt=$2} /^branch refs\/heads\/<BRANCH_NAME>$/{print wt}')
+existing_path=$(git worktree list --porcelain \
+  | awk -v branch="refs/heads/$BRANCH_NAME" \
+      '/^worktree /{wt=$2} $0 == "branch " branch {print wt}')
 ```
 
 **If a worktree for the branch already exists:**
-1. Report: `"Worktree for <BRANCH_NAME> already exists at <existing_path>. Reusing it."`
+1. Report: `"Worktree for $BRANCH_NAME already exists at $existing_path. Reusing it."`
 2. Navigate to the existing path
 3. Pull latest changes from remote:
    ```bash
    git fetch origin
-   git pull origin "$BRANCH_NAME" 2>/dev/null || true  # no-op if branch not yet on remote
+   git pull origin "$BRANCH_NAME" || true  # ignore failures (e.g. no remote tracking branch yet)
    ```
-4. Skip directly to Step 3 (Run Project Setup)
+4. Skip directly to Step 4 (Run Project Setup)
 
 ### 3. Create Worktree (only if none exists)
 
@@ -116,7 +118,7 @@ git worktree add "$path" -b "$BRANCH_NAME"
 cd "$path"
 ```
 
-### 3. Run Project Setup
+### 4. Run Project Setup
 
 Auto-detect and run appropriate setup:
 
@@ -135,7 +137,7 @@ if [ -f pyproject.toml ]; then poetry install; fi
 if [ -f go.mod ]; then go mod download; fi
 ```
 
-### 4. Verify Clean Baseline
+### 5. Verify Clean Baseline
 
 Run tests to ensure worktree starts clean:
 
@@ -151,7 +153,7 @@ go test ./...
 
 **If tests pass:** Report ready.
 
-### 5. Report Location
+### 6. Report Location
 
 ```
 Worktree ready at <full-path>
@@ -201,12 +203,29 @@ Ready to implement <feature-name>
 
 ## Example Workflow
 
+**New worktree (branch does not exist yet):**
 ```
 You: I'm using the using-git-worktrees skill to set up an isolated workspace.
 
+[Check existing worktrees - none found for feature/auth]
 [Check .worktrees/ - exists]
 [Verify ignored - git check-ignore confirms .worktrees/ is ignored]
 [Create worktree: git worktree add .worktrees/auth -b feature/auth]
+[Run npm install]
+[Run npm test - 47 passing]
+
+Worktree ready at /Users/jesse/myproject/.worktrees/auth
+Tests passing (47 tests, 0 failures)
+Ready to implement auth feature
+```
+
+**Reusing existing worktree (branch already checked out):**
+```
+You: I'm using the using-git-worktrees skill to set up an isolated workspace.
+
+[Check existing worktrees - found feature/auth at .worktrees/auth]
+Worktree for feature/auth already exists at .worktrees/auth. Reusing it.
+[git fetch origin && git pull origin feature/auth]
 [Run npm install]
 [Run npm test - 47 passing]
 
