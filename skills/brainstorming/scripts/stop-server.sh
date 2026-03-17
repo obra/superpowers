@@ -17,31 +17,7 @@ PID_FILE="${SCREEN_DIR}/.server.pid"
 
 if [[ -f "$PID_FILE" ]]; then
   pid=$(cat "$PID_FILE")
-
-  # Try to stop gracefully, fallback to force if still alive
-  kill "$pid" 2>/dev/null || true
-
-  # Wait for graceful shutdown (up to ~2s)
-  for i in {1..20}; do
-    if ! kill -0 "$pid" 2>/dev/null; then
-      break
-    fi
-    sleep 0.1
-  done
-
-  # If still running, escalate to SIGKILL
-  if kill -0 "$pid" 2>/dev/null; then
-    kill -9 "$pid" 2>/dev/null || true
-
-    # Give SIGKILL a moment to take effect
-    sleep 0.1
-  fi
-
-  if kill -0 "$pid" 2>/dev/null; then
-    echo '{"status": "failed", "error": "process still running"}'
-    exit 1
-  fi
-
+  kill "$pid" 2>/dev/null
   rm -f "$PID_FILE" "${SCREEN_DIR}/.server.log"
 
   # Only delete ephemeral /tmp directories
