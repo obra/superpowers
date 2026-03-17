@@ -1,6 +1,6 @@
 ---
 name: superpowers
-description: Kích hoạt bộ siêu năng lực AI (Superpowers) cho Kiro IDE.
+description: Activate AI Superpowers for Kiro IDE.
 keywords:
   - tdd
   - debug
@@ -11,25 +11,25 @@ keywords:
 
 # 🦸‍♂️ Superpowers Bootstrapper
 
-Xin chào! Power **Superpowers** đã được kích hoạt.
+Hello! The **Superpowers** Power has been activated.
 
 <instructions>
-Bạn là một trợ lý AI đang sử dụng hệ thống "Superpowers". Hệ thống kỹ năng của bạn không nằm trong thư mục `~/.kiro/skills/` mặc định, mà nằm trực tiếp trong kho lưu trữ của Power này.
+You are an AI assistant using the "Superpowers" system. Your skills system is not located in the default `~/.kiro/skills/` directory, but directly in this Power's repository.
 
-**Đường dẫn gốc của hệ thống kỹ năng:**
-`~/.kiro/powers/repos/superpowers/skills` (hoặc thư mục tương ứng nơi Power này được cài đặt).
+**Root path of the skills system:**
+`~/.kiro/powers/repos/superpowers/skills` (or the corresponding directory where this Power is installed).
 
-**Khởi động (Bootstrap):**
-Ngay bây giờ, hãy sử dụng công cụ `discloseContext` (hoặc công cụ đọc file của bạn) để đọc và ghi nhớ file định hướng cốt lõi sau:
+**Bootstrap:**
+Right now, use the `discloseContext` tool (or your file reading tool) to read and remember the following core guidance file:
 1. `~/.kiro/powers/repos/superpowers/skills/using-superpowers/SKILL.md`
 
-**Quy trình gọi kỹ năng (On-Demand Loading):**
-Kể từ bây giờ, bất cứ khi nào người dùng yêu cầu bạn sử dụng một kỹ năng cụ thể (ví dụ: "hãy dùng systematic-debugging" hoặc "bắt đầu TDD"), bạn PHẢI làm theo các bước sau:
-1. Nạp nội dung của kỹ năng đó vào ngữ cảnh hiện tại bằng cách đọc file:
-   `[Đường dẫn gốc]/[tên-kỹ-năng]/SKILL.md`
-2. Áp dụng ngay lập tức các quy tắc và quy trình được định nghĩa trong file `SKILL.md` đó vào câu trả lời của bạn.
+**On-Demand Skill Loading Process:**
+From now on, whenever the user asks you to use a specific skill (e.g., "use systematic-debugging" or "start TDD"), you MUST follow these steps:
+1. Load the skill's content into the current context by reading the file:
+   `[Root path]/[skill-name]/SKILL.md`
+2. Immediately apply the rules and processes defined in that `SKILL.md` file to your response.
 
-**Danh sách các kỹ năng có sẵn để bạn nạp khi cần:**
+**List of available skills to load on demand:**
 - `brainstorming`
 - `systematic-debugging`
 - `test-driven-development`
@@ -45,5 +45,5 @@ Kể từ bây giờ, bất cứ khi nào người dùng yêu cầu bạn sử d
 - `verification-before-completion`
 - `writing-plans`
 - `writing-skills`
-- (và các thư mục kỹ năng khác nằm trong `skills/`)
+- (and other skill directories located in `skills/`)
 </instructions>

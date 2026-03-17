@@ -1,39 +1,39 @@
-# Cài đặt Superpowers cho Kiro IDE
+# Installing Superpowers for Kiro IDE
 
-Phương pháp này sử dụng cơ chế nạp ngữ cảnh tại chỗ (in-place context loading) của Kiro IDE. Bạn không cần phải copy bất kỳ file nào.
+This method uses Kiro IDE's in-place context loading mechanism. You don't need to copy any files.
 
-## Cách cài đặt qua Kiro IDE
+## Installation via Kiro IDE
 
-1. Mở **Kiro IDE**.
-2. Mở bảng **Powers Panel**.
-3. Chọn **Import from GitHub**.
-4. Nhập URL của kho lưu trữ này (hoặc URL fork của bạn).
-5. Kiro sẽ tự động clone repo về `~/.kiro/powers/repos/superpowers`.
+1. Open **Kiro IDE**.
+2. Open the **Powers Panel**.
+3. Select **Import from GitHub**.
+4. Enter the URL of this repository (or your fork's URL).
+5. Kiro will automatically clone the repo to `~/.kiro/powers/repos/superpowers`.
 
-## Cách sử dụng
+## Usage
 
-Vì các kỹ năng không được copy vật lý vào `~/.kiro/skills/`, **bạn sẽ không sử dụng được lệnh gạch chéo (slash commands như `/brainstorm`)**.
+Since skills are not physically copied to `~/.kiro/skills/`, **you will not be able to use slash commands (like `/brainstorm`)**.
 
-Thay vào đó, Power tự động kích hoạt thông qua **Từ khóa (Keywords)** hoặc **Ngôn ngữ tự nhiên**.
+Instead, the Power activates automatically through **Keywords** or **Natural Language**.
 
-Hãy chat với Agent các câu lệnh như:
-- *"Hãy dùng kỹ năng brainstorming để lên ý tưởng cho tính năng này."*
-- *"Kích hoạt systematic-debugging để tìm lỗi."*
-- *"Sử dụng superpowers để viết test."*
+Chat with the Agent using commands like:
+- *"Use the brainstorming skill to ideate this feature."*
+- *"Activate systematic-debugging to find the bug."*
+- *"Use superpowers to write tests."*
 
-Agent sẽ tự động gọi `discloseContext` để đọc file kỹ năng tương ứng từ repo và hỗ trợ bạn ngay lập tức.
+The Agent will automatically call `discloseContext` to read the corresponding skill file from the repo and assist you immediately.
 
-## Cập nhật (Update)
+## Updating
 
-Vì hệ thống đọc trực tiếp từ repo, để cập nhật các kỹ năng mới nhất, bạn chỉ cần thực hiện:
+Since the system reads directly from the repo, to update to the latest skills, you only need to:
 
 ```bash
 cd ~/.kiro/powers/repos/superpowers
 git pull
 ```
 
-## Lợi ích
+## Benefits
 
-1. **Zero Maintenance:** Không còn lệnh `cp -R`, không lo lỗi do symlink, và không phải viết script kiểm tra HĐH (Windows vs Unix).
-2. **Real-time Update:** Khi có PR mới gộp vào repo gốc, người dùng chỉ cần `git pull` là Agent sẽ đọc được nội dung mới ngay lập tức.
-3. **Đơn giản hóa:** Tránh được "maintenance nightmare" của việc copy file thủ công.
+1. **Zero Maintenance:** No `cp -R` commands, no symlink errors, and no need to write OS-checking scripts (Windows vs Unix).
+2. **Real-time Updates:** When new PRs are merged into the source repo, users just need to `git pull` and the Agent will read the new content immediately.
+3. **Simplified:** Avoids the "maintenance nightmare" of manual file copying.
