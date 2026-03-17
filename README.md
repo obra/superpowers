@@ -94,6 +94,21 @@ To update:
 gemini extensions update superpowers
 ```
 
+### Kiro IDE
+
+Superpowers supports **Kiro IDE** through its native Power system.
+
+Instead of cluttering your local skills directory, the Kiro Power uses an **in-place `discloseContext` loading mechanism**. This means zero maintenance: `git pull` instantly updates your skills.
+
+**Installation:**
+Import the repo via the Kiro Powers Panel (`.kiro-power` path).
+
+**Usage:**
+*Note: Global `/` slash commands are not supported in this mode.*
+Trigger skills naturally in the chat window. The agent will dynamically load the requested skill context directly from the cloned repository.
+- *"Use the systematic-debugging skill to fix this error."*
+- *"Let's do some test-driven-development."*
+
 ### Verify Installation
 
 Start a new session in your chosen platform and ask for something that should trigger a skill (for example, "help me plan this feature" or "let's debug this issue"). The agent should automatically invoke the relevant superpowers skill.
