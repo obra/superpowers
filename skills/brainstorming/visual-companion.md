@@ -42,30 +42,31 @@ scripts/start-server.sh --project-dir /path/to/project
 
 Save `screen_dir` from the response. Tell user to open the URL.
 
-**Finding connection info:** The server writes its startup JSON to `$SCREEN_DIR/.server-info`. If you launched the server in the background and didn't capture stdout, read that file to get the URL and port. When using `--project-dir`, check `<project>/.superpowers/brainstorm/` for the session directory.
+**Finding connection info:** The server writes its startup JSON to `$SCREEN_DIR/.server-info`. If you launched the server with `run_in_background: true` (Windows) or in the background and didn't capture stdout, read that file on your next turn to get the URL and port. When using `--project-dir`, check `<project>/.superpowers/brainstorm/` for the session directory.
 
 **Note:** Pass the project root as `--project-dir` so mockups persist in `.superpowers/brainstorm/` and survive server restarts. Without it, files go to `/tmp` and get cleaned up. Remind the user to add `.superpowers/` to `.gitignore` if it's not already there.
 
 **Launching the server by platform:**
 
-**Claude Code:**
+**Claude Code (macOS/Linux):**
 ```bash
 # Default mode works — the script backgrounds the server itself
 scripts/start-server.sh --project-dir /path/to/project
 ```
 
+**Claude Code (Windows):**
+```bash
+# Windows auto-detects Git Bash (OSTYPE/MSYSTEM) and forces --foreground mode.
+# Foreground mode blocks the Bash tool call, so you MUST set run_in_background: true
+# on the Bash tool so the harness (not the shell) keeps the process alive across turns.
+scripts/start-server.sh --project-dir /path/to/project
+```
+When calling this via the Bash tool, set `run_in_background: true`. The script auto-detects Windows and switches to foreground mode. Then read `$SCREEN_DIR/.server-info` on the next turn to get the URL and port.
+
 **Codex:**
 ```bash
 # Codex reaps background processes. The script auto-detects CODEX_CI and
 # switches to foreground mode. Run it normally — no extra flags needed.
-scripts/start-server.sh --project-dir /path/to/project
-```
-
-**Windows (Git Bash / CMD / PowerShell):**
-```bash
-# Windows/Git Bash reaps nohup background processes. The script auto-detects
-# this via OSTYPE/MSYSTEM and switches to foreground mode automatically.
-# No extra flags needed — all Windows shells route through Git Bash.
 scripts/start-server.sh --project-dir /path/to/project
 ```
 
