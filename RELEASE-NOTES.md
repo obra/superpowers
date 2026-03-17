@@ -478,7 +478,7 @@ Other subagent workflow improvements:
 New prompt templates in `skills/subagent-driven-development/`:
 - `implementer-prompt.md` - Includes self-review checklist, encourages questions
 - `spec-reviewer-prompt.md` - Skeptical verification against requirements
-- `code-quality-reviewer-prompt.md` - Standard code review
+- `validator-prompt.md` - Combined spec+quality review (team mode; replaces separate spec + quality reviewers)
 
 **Debugging techniques consolidated with tools**
 

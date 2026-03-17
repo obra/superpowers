@@ -134,8 +134,8 @@ After saving the plan:
 
 **If harness has subagents (Claude Code, etc.):**
 - **REQUIRED:** Use superpowers:subagent-driven-development
-- Do NOT offer a choice - subagent-driven is the standard approach
-- Fresh subagent per task + two-stage review
+- **If Team Mode is available (beta):** offer Standard vs Team Mode — Team mode runs parallel implementers with persistent validators; best for 3+ independent tasks
+- **Otherwise:** use Standard mode — sequential, fresh subagent per task, two-pass review
 
 **If harness does NOT have subagents:**
 - Execute plan in current session using superpowers:executing-plans

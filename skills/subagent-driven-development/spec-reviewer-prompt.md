@@ -55,7 +55,24 @@ Task tool (general-purpose):
 
     **Verify by reading code, not by trusting report.**
 
+    ## Citation Requirement (Mandatory)
+
+    For each requirement in the task spec, you MUST provide:
+    - The specific `file:line` where it is implemented
+    - A 2–3 line code excerpt or function signature as evidence
+
+    Example format:
+    - Requirement: "Function validates email format"
+    - Citation: `src/validators.py:42` — `def validate_email(addr): return bool(EMAIL_RE.match(addr))`
+
+    Mark any requirement with no citation found as **❌ MISSING**.
+
+    **A ✅ approval without per-requirement citations is invalid.** The controller will reject
+    prose-only verdicts. Do not write "I verified X is implemented" without citing the location.
+
     Report:
-    - ✅ Spec compliant (if everything matches after code inspection)
-    - ❌ Issues found: [list specifically what's missing or extra, with file:line references]
+    - ✅ Spec compliant — include for EACH requirement: [requirement text → `file:line` → excerpt]
+    - ❌ Issues found: [for each gap: requirement text, what was expected, what was found or missing, `file:line` if partially implemented]
+
+    A ✅ without the per-requirement citation table is not accepted.
 ```
