@@ -106,6 +106,12 @@ if [[ -z "$OWNER_PID" || "$OWNER_PID" == "1" ]]; then
   OWNER_PID="$PPID"
 fi
 
+# On Windows/MSYS2, the MSYS2 PID namespace is invisible to Node.js.
+# Skip owner-PID monitoring — the 30-minute idle timeout prevents orphans.
+case "${OSTYPE:-}" in
+  msys*|cygwin*|mingw*) OWNER_PID="" ;;
+esac
+
 # Foreground mode for environments that reap detached/background processes.
 if [[ "$FOREGROUND" == "true" ]]; then
   echo "$$" > "$PID_FILE"
