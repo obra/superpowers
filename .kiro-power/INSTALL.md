@@ -1,39 +1,57 @@
 # Installing Superpowers for Kiro IDE
 
-This method uses Kiro IDE's in-place context loading mechanism. You don't need to copy any files.
+## Installation
 
-## Installation via Kiro IDE
+1. Open **Kiro IDE**
+2. Open the **Powers Panel**
+3. Click **"Import power from GitHub"**
+4. Enter: `https://github.com/obra/superpowers`
+5. Install the power
 
-1. Open **Kiro IDE**.
-2. Open the **Powers Panel**.
-3. Select **Import from GitHub**.
-4. Enter the URL of this repository (or your fork's URL).
-5. Kiro will automatically clone the repo to `~/.kiro/powers/repos/superpowers`.
+That's it. The power activates automatically — no file copying, no symlinks.
 
 ## Usage
 
-Since skills are not physically copied to `~/.kiro/skills/`, **you will not be able to use slash commands (like `/brainstorm`)**.
+Skills activate based on keywords. Just chat naturally:
 
-Instead, the Power activates automatically through **Keywords** or **Natural Language**.
+- Mention **"debug"** or **"bug"** → systematic-debugging skill activates
+- Mention **"brainstorm"** or **"design"** → brainstorming skill activates
+- Mention **"tdd"** or **"test"** → test-driven-development skill activates
+- Mention **"plan"** → writing-plans skill activates
 
-Chat with the Agent using commands like:
-- *"Use the brainstorming skill to ideate this feature."*
-- *"Activate systematic-debugging to find the bug."*
-- *"Use superpowers to write tests."*
+Or ask explicitly:
 
-The Agent will automatically call `discloseContext` to read the corresponding skill file from the repo and assist you immediately.
+```
+"Use the systematic-debugging skill"
+"Start TDD"
+"Use brainstorming to plan this feature"
+```
+
+The agent will load the skill via `discloseContext` and follow it immediately.
+
+> **Note:** Slash commands (`/brainstorming`, `/tdd`, etc.) are not available with this installation method because Kiro does not currently follow symlinks in `~/.kiro/skills/`. Keyword activation covers the same use cases.
 
 ## Updating
 
-Since the system reads directly from the repo, to update to the latest skills, you only need to:
+Since skills are read directly from the cloned repository, a `git pull` is all you need:
 
 ```bash
 cd ~/.kiro/powers/repos/superpowers
 git pull
 ```
 
-## Benefits
+Restart Kiro. The agent immediately sees updated skill content on the next activation.
 
-1. **Zero Maintenance:** No `cp -R` commands, no symlink errors, and no need to write OS-checking scripts (Windows vs Unix).
-2. **Real-time Updates:** When new PRs are merged into the source repo, users just need to `git pull` and the Agent will read the new content immediately.
-3. **Simplified:** Avoids the "maintenance nightmare" of manual file copying.
+## Troubleshooting
+
+**Power not activating:**
+1. Verify the power appears in the Powers Panel
+2. Try mentioning a keyword like "debug" or "brainstorm" in chat
+3. Check that `POWER.md` exists in the installed power directory
+
+**Agent uses wrong tool names (e.g. `Bash` instead of `executeBash`):**
+Remind the agent: *"Use Kiro tools: `discloseContext` for skills, `invokeSubAgent` for subagents, `executeBash` for shell commands."*
+
+**Getting help:**
+- Issues: https://github.com/obra/superpowers/issues
+- Documentation: https://github.com/obra/superpowers
