@@ -1,5 +1,11 @@
 # Superpowers Release Notes
 
+## Unreleased
+
+### Bug Fixes
+
+- **Brainstorm server ESM fix** — renamed `server.js` → `server.cjs` so the brainstorming server starts correctly on Node.js 22+ where the root `package.json` `"type": "module"` caused `require()` to fail. (PR #784, fixes #774, #780, #783)
+
 ## v5.0.4 (2026-03-16)
 
 ### Review Loop Refinements
