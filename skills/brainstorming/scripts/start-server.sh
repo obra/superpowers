@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Start the brainstorm server and output connection info
 # Usage: start-server.sh [--project-dir <path>] [--host <bind-host>] [--url-host <display-host>] [--foreground] [--background]
 #
@@ -62,6 +62,16 @@ fi
 # Some environments reap detached/background processes. Auto-foreground when detected.
 if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
   FOREGROUND="true"
+fi
+
+# Windows/Git Bash reaps nohup background processes. Auto-foreground when detected.
+if [[ "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
+  case "${OSTYPE:-}" in
+    msys*|cygwin*|mingw*) FOREGROUND="true" ;;
+  esac
+  if [[ -n "${MSYSTEM:-}" ]]; then
+    FOREGROUND="true"
+  fi
 fi
 
 # Generate unique session directory
