@@ -26,6 +26,11 @@ Task tool (general-purpose):
 
     **Ask them now.** Raise any concerns before starting work.
 
+    ## Mandatory Reasoning Phase
+
+    Before yielding any code or test implementations, you MUST enclose your plan in a `<chain_of_thought>` XML block.
+    Evaluate the requirements, formulate your approach, and consider edge cases strictly within this block.
+
     ## Your Job
 
     Once you're clear on requirements:

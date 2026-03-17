@@ -23,4 +23,7 @@ Task tool (superpowers:code-reviewer):
 - Is the implementation following the file structure from the plan?
 - Did this implementation create new files that are already large, or significantly grow existing files? (Don't flag pre-existing file sizes — focus on what this change contributed.)
 
+**Mandatory Reasoning Phase**:
+Before deciding on strengths, issues, and your final assessment, you MUST document your file-by-file evaluation and reasoning within a `<chain_of_thought>` XML block.
+
 **Code reviewer returns:** Strengths, Issues (Critical/Important/Minor), Assessment

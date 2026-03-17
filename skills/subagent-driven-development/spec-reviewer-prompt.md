@@ -55,6 +55,9 @@ Task tool (general-purpose):
 
     **Verify by reading code, not by trusting report.**
 
+    **Mandatory Reasoning Phase**:
+    Before reporting the final outcome, you MUST systematically compare the actual code against the specification within a `<chain_of_thought>` XML block.
+
     Report:
     - ✅ Spec compliant (if everything matches after code inspection)
     - ❌ Issues found: [list specifically what's missing or extra, with file:line references]
