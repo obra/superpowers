@@ -8,13 +8,15 @@
  * not shipped to end users).
  */
 
-const { spawn } = require('child_process');
-const http = require('http');
-const WebSocket = require('ws');
-const fs = require('fs');
-const path = require('path');
-const assert = require('assert');
+import { spawn } from 'child_process';
+import http from 'http';
+import { WebSocket } from 'ws';
+import fs from 'fs';
+import path, { dirname } from 'path';
+import assert from 'assert';
+import { fileURLToPath } from 'url';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const SERVER_PATH = path.join(__dirname, '../../skills/brainstorming/scripts/server.js');
 const TEST_PORT = 3334;
 const TEST_DIR = '/tmp/brainstorm-test';

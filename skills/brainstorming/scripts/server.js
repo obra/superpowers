@@ -1,7 +1,10 @@
-const crypto = require('crypto');
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
+import crypto from 'crypto';
+import http from 'http';
+import fs from 'fs';
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // ========== WebSocket Protocol (RFC 6455) ==========
 
@@ -331,8 +334,8 @@ function startServer() {
   });
 }
 
-if (require.main === module) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   startServer();
 }
 
-module.exports = { computeAcceptKey, encodeFrame, decodeFrame, OPCODES };
+export { computeAcceptKey, encodeFrame, decodeFrame, OPCODES };
