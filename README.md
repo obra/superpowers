@@ -96,18 +96,28 @@ gemini extensions update superpowers
 
 ### Kiro IDE
 
-Superpowers supports **Kiro IDE** through its native Power system.
-
-Instead of cluttering your local skills directory, the Kiro Power uses an **in-place `discloseContext` loading mechanism**. This means zero maintenance: `git pull` instantly updates your skills.
+Superpowers supports **Kiro IDE** through its native Power system with automatic steering file loading.
 
 **Installation:**
-Import the repo via the Kiro Powers Panel (`.kiro-power` path).
+
+1. Head over to Kiro Powers panel
+2. Click "Add Custom Power"
+3. Select "Import power from a folder"
+4. Navigate to where you cloned this repository
+5. **Important**: Select the `Superpower` folder located under `.Kiro`
+   - Example: `C:\superpowers\.Kiro\Superpower` (Windows)
+   - Example: `/Users/yourname/superpowers/.Kiro/Superpower` (macOS)
+
+Once installed, all steering files will be automatically loaded and skills will activate based on context.
+
+**Alternative - GitHub Import:**
+You can also import via the Kiro Powers Panel using the `.kiro-power` path if you prefer the GitHub-based installation method.
 
 **Usage:**
-*Note: Global `/` slash commands are not supported in this mode.*
-Trigger skills naturally in the chat window. The agent will dynamically load the requested skill context directly from the cloned repository.
-- *"Use the systematic-debugging skill to fix this error."*
-- *"Let's do some test-driven-development."*
+Skills activate naturally through conversation - no slash commands needed. Just start describing what you want to build, and the agent will automatically follow the Superpowers workflows defined in the steering files.
+
+**Updating:**
+Run `git pull` in the repository folder to get the latest skills. Kiro reads directly from the folder you selected, so updates are instant.
 
 ### Verify Installation
 

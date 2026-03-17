@@ -5,12 +5,21 @@ A complete software development workflow system that transforms your coding agen
 ## Installation
 
 This power is designed to be installed in Kiro's power system. Once installed, all steering files will be automatically loaded and the skills will activate based on context.
-- **how to install** - 
-1, head over to kiro powers.
-2, intall it by "add custom power"
-3, Import power from a folder
-4, select the root (for example): "C:\superpowers\.Kiro\Superpower"
-**Important, make sure to select the "Superpower" folder located under ".kiro"
+
+**How to Install:**
+
+1. Head over to Kiro Powers panel
+2. Click "Add Custom Power"
+3. Select "Import power from a folder"
+4. Navigate to where you cloned or downloaded this repository
+5. **Important**: Select the `Superpower` folder located under `.Kiro`
+   - Example Windows: `C:\superpowers\.Kiro\Superpower`
+   - Example macOS: `/Users/yourname/superpowers/.Kiro/Superpower`
+   - Example Linux: `/home/yourname/superpowers/.Kiro/Superpower`
+
+**⚠️ Common Mistake**: Do not select the repository root or the `.Kiro` folder itself. You must select the `Superpower` subfolder that contains the `POWER.md` file and `steering/` directory.
+
+See [INSTALL.md](Superpower/INSTALL.md) for detailed installation instructions and troubleshooting.
 
 ## What You Get
 
