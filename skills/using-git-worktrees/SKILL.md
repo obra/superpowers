@@ -80,7 +80,25 @@ No .gitignore verification needed - outside project entirely.
 project=$(basename "$(git rev-parse --show-toplevel)")
 ```
 
-### 2. Create Worktree
+### 2. Check for Existing Worktree
+
+Before creating, check if a worktree for the branch already exists:
+
+```bash
+existing_path=$(git worktree list --porcelain | awk '/^worktree /{wt=$2} /^branch refs\/heads\/<BRANCH_NAME>$/{print wt}')
+```
+
+**If a worktree for the branch already exists:**
+1. Report: `"Worktree for <BRANCH_NAME> already exists at <existing_path>. Reusing it."`
+2. Navigate to the existing path
+3. Pull latest changes from remote:
+   ```bash
+   git fetch origin
+   git pull origin "$BRANCH_NAME" 2>/dev/null || true  # no-op if branch not yet on remote
+   ```
+4. Skip directly to Step 3 (Run Project Setup)
+
+### 3. Create Worktree (only if none exists)
 
 ```bash
 # Determine full path
@@ -145,6 +163,7 @@ Ready to implement <feature-name>
 
 | Situation | Action |
 |-----------|--------|
+| Worktree for branch already exists | Reuse it + `git pull` from remote |
 | `.worktrees/` exists | Use it (verify ignored) |
 | `worktrees/` exists | Use it (verify ignored) |
 | Both exist | Use `.worktrees/` |
@@ -154,6 +173,11 @@ Ready to implement <feature-name>
 | No package.json/Cargo.toml | Skip dependency install |
 
 ## Common Mistakes
+
+### Re-creating an existing worktree
+
+- **Problem:** `git worktree add` fails if the branch already has a worktree, or creates a duplicate directory
+- **Fix:** Always run `git worktree list --porcelain` first; if the branch is already checked out, reuse that path and pull from remote
 
 ### Skipping ignore verification
 
