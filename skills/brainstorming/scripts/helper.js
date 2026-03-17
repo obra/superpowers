@@ -1,7 +1,19 @@
 (function() {
-  const WS_URL = 'ws://' + window.location.host;
+  const wsUrl = new URL('/', window.location.href);
+  wsUrl.protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const WS_URL = wsUrl.toString();
   let ws = null;
   let eventQueue = [];
+
+  function setIndicatorMessage(indicator, label) {
+    const selectedText = document.createElement('span');
+    selectedText.className = 'selected-text';
+    selectedText.textContent = label;
+    indicator.replaceChildren(
+      selectedText,
+      document.createTextNode(' selected - return to terminal to continue')
+    );
+  }
 
   function connect() {
     ws = new WebSocket(WS_URL);
@@ -54,9 +66,9 @@
         indicator.textContent = 'Click an option above, then return to the terminal';
       } else if (selected.length === 1) {
         const label = selected[0].querySelector('h3, .content h3, .card-body h3')?.textContent?.trim() || selected[0].dataset.choice;
-        indicator.innerHTML = '<span class="selected-text">' + label + ' selected</span> — return to terminal to continue';
+        setIndicatorMessage(indicator, label);
       } else {
-        indicator.innerHTML = '<span class="selected-text">' + selected.length + ' selected</span> — return to terminal to continue';
+        setIndicatorMessage(indicator, String(selected.length));
       }
     }, 0);
   });

@@ -8,7 +8,7 @@
  * not shipped to end users).
  */
 
-const { spawn } = require('child_process');
+const { spawn, spawnSync } = require('child_process');
 const http = require('http');
 const WebSocket = require('ws');
 const fs = require('fs');
@@ -16,8 +16,11 @@ const path = require('path');
 const assert = require('assert');
 
 const SERVER_PATH = path.join(__dirname, '../../skills/brainstorming/scripts/server.js');
+const STOP_SERVER_PATH = path.join(__dirname, '../../skills/brainstorming/scripts/stop-server.sh');
 const TEST_PORT = 3334;
 const TEST_DIR = '/tmp/brainstorm-test';
+let sessionCookie = null;
+let serverInfo = null;
 
 function cleanup() {
   if (fs.existsSync(TEST_DIR)) {
@@ -29,9 +32,16 @@ async function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function fetch(url) {
+async function fetch(url, options = {}) {
   return new Promise((resolve, reject) => {
-    http.get(url, (res) => {
+    const requestUrl = new URL(url);
+    const req = http.request({
+      hostname: requestUrl.hostname,
+      port: requestUrl.port,
+      path: requestUrl.pathname + requestUrl.search,
+      method: options.method || 'GET',
+      headers: options.headers || {}
+    }, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => resolve({
@@ -39,7 +49,70 @@ async function fetch(url) {
         headers: res.headers,
         body: data
       }));
-    }).on('error', reject);
+    });
+    req.on('error', reject);
+    req.end();
+  });
+}
+
+function extractCookie(setCookieHeader) {
+  if (!setCookieHeader) return null;
+  const header = Array.isArray(setCookieHeader) ? setCookieHeader[0] : setCookieHeader;
+  return header.split(';')[0];
+}
+
+function wsUrl(pathname = '/') {
+  return `ws://localhost:${TEST_PORT}${pathname}`;
+}
+
+async function getSessionCookie(forceRefresh = false) {
+  if (sessionCookie && !forceRefresh) return sessionCookie;
+
+  const res = await fetch(serverInfo.url);
+  assert.strictEqual(res.status, 200, 'Authorized bootstrap URL should return 200');
+  sessionCookie = extractCookie(res.headers['set-cookie']);
+  assert(sessionCookie, 'Expected auth cookie from bootstrap request');
+  return sessionCookie;
+}
+
+async function authFetch(pathname = '/', options = {}) {
+  const cookie = await getSessionCookie();
+  return fetch(`http://localhost:${TEST_PORT}${pathname}`, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      Cookie: cookie
+    }
+  });
+}
+
+async function connectWs({ headers = {}, url = wsUrl('/'), withCookie = true } = {}) {
+  const finalHeaders = { ...headers };
+  if (withCookie) {
+    finalHeaders.Cookie = await getSessionCookie();
+  }
+
+  return new Promise((resolve, reject) => {
+    const ws = new WebSocket(url, { headers: finalHeaders });
+    ws.on('open', () => resolve(ws));
+    ws.on('error', reject);
+  });
+}
+
+async function expectWsHandshakeFailure({ headers = {}, url = wsUrl('/'), withCookie = false } = {}) {
+  const finalHeaders = { ...headers };
+  if (withCookie) {
+    finalHeaders.Cookie = await getSessionCookie();
+  }
+
+  return new Promise((resolve, reject) => {
+    const ws = new WebSocket(url, { headers: finalHeaders });
+    ws.on('open', () => reject(new Error('WebSocket unexpectedly connected')));
+    ws.on('unexpected-response', (_req, res) => {
+      resolve(res.statusCode);
+      res.resume();
+    });
+    ws.on('error', () => resolve(null));
   });
 }
 
@@ -76,6 +149,7 @@ async function runTests() {
   server.stdout.on('data', (data) => { stdoutAccum += data.toString(); });
 
   const { stdout: initialStdout } = await waitForServer(server);
+  serverInfo = JSON.parse(fs.readFileSync(path.join(TEST_DIR, '.server-info'), 'utf-8').trim());
   let passed = 0;
   let failed = 0;
 
@@ -100,36 +174,43 @@ async function runTests() {
       assert.strictEqual(msg.port, TEST_PORT);
       assert(msg.url, 'Should include URL');
       assert(msg.screen_dir, 'Should include screen_dir');
+      assert(!msg.url.includes('token='), 'Stdout should not expose auth token');
       return Promise.resolve();
     });
 
     await test('writes .server-info file', () => {
       const infoPath = path.join(TEST_DIR, '.server-info');
       assert(fs.existsSync(infoPath), '.server-info should exist');
-      const info = JSON.parse(fs.readFileSync(infoPath, 'utf-8').trim());
-      assert.strictEqual(info.type, 'server-started');
-      assert.strictEqual(info.port, TEST_PORT);
+      assert.strictEqual(serverInfo.type, 'server-started');
+      assert.strictEqual(serverInfo.port, TEST_PORT);
+      assert(serverInfo.url.includes('token='), 'Auth URL should include bootstrap token');
+      assert(serverInfo.auth_required, 'Should advertise auth requirement');
       return Promise.resolve();
     });
 
     // ========== HTTP Serving ==========
     console.log('\n--- HTTP Serving ---');
 
-    await test('serves waiting page when no screens exist', async () => {
+    await test('rejects unauthenticated HTTP requests', async () => {
       const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      assert.strictEqual(res.status, 403);
+    });
+
+    await test('serves waiting page when no screens exist', async () => {
+      const res = await fetch(serverInfo.url);
       assert.strictEqual(res.status, 200);
       assert(res.body.includes('Waiting for Claude'), 'Should show waiting message');
     });
 
     await test('injects helper.js into waiting page', async () => {
-      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      const res = await authFetch('/');
       assert(res.body.includes('WebSocket'), 'Should have helper.js injected');
       assert(res.body.includes('toggleSelect'), 'Should have toggleSelect from helper');
       assert(res.body.includes('brainstorm'), 'Should have brainstorm API from helper');
     });
 
     await test('returns Content-Type text/html', async () => {
-      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      const res = await authFetch('/');
       assert(res.headers['content-type'].includes('text/html'), 'Should be text/html');
     });
 
@@ -138,7 +219,7 @@ async function runTests() {
       fs.writeFileSync(path.join(TEST_DIR, 'full-doc.html'), fullDoc);
       await sleep(300);
 
-      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      const res = await authFetch('/');
       assert(res.body.includes('<h1>Custom Page</h1>'), 'Should contain original content');
       assert(res.body.includes('WebSocket'), 'Should still inject helper.js');
       assert(!res.body.includes('indicator-bar'), 'Should NOT wrap in frame template');
@@ -149,7 +230,7 @@ async function runTests() {
       fs.writeFileSync(path.join(TEST_DIR, 'fragment.html'), fragment);
       await sleep(300);
 
-      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      const res = await authFetch('/');
       assert(res.body.includes('indicator-bar'), 'Fragment should get indicator bar');
       assert(!res.body.includes('<!-- CONTENT -->'), 'Placeholder should be replaced');
       assert(res.body.includes('Pick a layout'), 'Fragment content should be present');
@@ -162,7 +243,7 @@ async function runTests() {
       fs.writeFileSync(path.join(TEST_DIR, 'newer.html'), '<h2>Newer</h2>');
       await sleep(300);
 
-      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      const res = await authFetch('/');
       assert(res.body.includes('Newer'), 'Should serve newest file');
     });
 
@@ -171,32 +252,49 @@ async function runTests() {
       fs.writeFileSync(path.join(TEST_DIR, 'data.json'), '{"not": "html"}');
       await sleep(300);
 
-      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      const res = await authFetch('/');
       assert(res.body.includes('Newer'), 'Should still serve newest HTML');
       assert(!res.body.includes('"not"'), 'Should not serve JSON');
     });
 
+    await test('serves static files after bootstrap auth cookie is set', async () => {
+      fs.writeFileSync(path.join(TEST_DIR, 'fixture.txt'), 'fixture');
+      const res = await authFetch('/files/fixture.txt');
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.body, 'fixture');
+    });
+
     await test('returns 404 for non-root paths', async () => {
-      const res = await fetch(`http://localhost:${TEST_PORT}/other`);
+      const res = await authFetch('/other');
       assert.strictEqual(res.status, 404);
     });
 
     // ========== WebSocket Communication ==========
     console.log('\n--- WebSocket Communication ---');
 
-    await test('accepts WebSocket upgrade on /', async () => {
-      const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
-      await new Promise((resolve, reject) => {
-        ws.on('open', resolve);
-        ws.on('error', reject);
+    await test('rejects unauthenticated WebSocket upgrade', async () => {
+      const statusCode = await expectWsHandshakeFailure({ withCookie: false });
+      assert.strictEqual(statusCode, 401);
+    });
+
+    await test('rejects cross-origin WebSocket upgrade even with auth cookie', async () => {
+      const statusCode = await expectWsHandshakeFailure({
+        headers: {
+          Cookie: await getSessionCookie(),
+          Origin: 'https://evil.example'
+        }
       });
+      assert.strictEqual(statusCode, 403);
+    });
+
+    await test('accepts WebSocket upgrade on /', async () => {
+      const ws = await connectWs();
       ws.close();
     });
 
     await test('relays user events to stdout with source field', async () => {
       stdoutAccum = '';
-      const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
-      await new Promise(resolve => ws.on('open', resolve));
+      const ws = await connectWs();
 
       ws.send(JSON.stringify({ type: 'click', text: 'Test Button' }));
       await sleep(300);
@@ -211,8 +309,7 @@ async function runTests() {
       const eventsFile = path.join(TEST_DIR, '.events');
       if (fs.existsSync(eventsFile)) fs.unlinkSync(eventsFile);
 
-      const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
-      await new Promise(resolve => ws.on('open', resolve));
+      const ws = await connectWs();
 
       ws.send(JSON.stringify({ type: 'click', choice: 'b', text: 'Option B' }));
       await sleep(300);
@@ -229,8 +326,7 @@ async function runTests() {
       const eventsFile = path.join(TEST_DIR, '.events');
       if (fs.existsSync(eventsFile)) fs.unlinkSync(eventsFile);
 
-      const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
-      await new Promise(resolve => ws.on('open', resolve));
+      const ws = await connectWs();
 
       ws.send(JSON.stringify({ type: 'hover', text: 'Something' }));
       await sleep(300);
@@ -240,13 +336,33 @@ async function runTests() {
       ws.close();
     });
 
+    await test('redacts sensitive metadata from logs and persisted events', async () => {
+      stdoutAccum = '';
+      const eventsFile = path.join(TEST_DIR, '.events');
+      if (fs.existsSync(eventsFile)) fs.unlinkSync(eventsFile);
+
+      const ws = await connectWs();
+      ws.send(JSON.stringify({
+        type: 'choice',
+        choice: 'approve',
+        token: 'sk-test-123',
+        password: 'hunter2',
+        nested: { clientSecret: 'shh' }
+      }));
+      await sleep(300);
+
+      const persisted = fs.readFileSync(eventsFile, 'utf-8');
+      assert(!persisted.includes('sk-test-123'), 'Persisted event should redact token');
+      assert(!persisted.includes('hunter2'), 'Persisted event should redact password');
+      assert(persisted.includes('[REDACTED]'), 'Persisted event should contain redaction marker');
+      assert(!stdoutAccum.includes('sk-test-123'), 'Logs should redact token');
+      assert(!stdoutAccum.includes('hunter2'), 'Logs should redact password');
+      ws.close();
+    });
+
     await test('handles multiple concurrent WebSocket clients', async () => {
-      const ws1 = new WebSocket(`ws://localhost:${TEST_PORT}`);
-      const ws2 = new WebSocket(`ws://localhost:${TEST_PORT}`);
-      await Promise.all([
-        new Promise(resolve => ws1.on('open', resolve)),
-        new Promise(resolve => ws2.on('open', resolve))
-      ]);
+      const ws1 = await connectWs();
+      const ws2 = await connectWs();
 
       let ws1Reload = false;
       let ws2Reload = false;
@@ -267,8 +383,7 @@ async function runTests() {
     });
 
     await test('cleans up closed clients from broadcast list', async () => {
-      const ws1 = new WebSocket(`ws://localhost:${TEST_PORT}`);
-      await new Promise(resolve => ws1.on('open', resolve));
+      const ws1 = await connectWs();
       ws1.close();
       await sleep(100);
 
@@ -279,15 +394,14 @@ async function runTests() {
     });
 
     await test('handles malformed JSON from client gracefully', async () => {
-      const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
-      await new Promise(resolve => ws.on('open', resolve));
+      const ws = await connectWs();
 
       // Send invalid JSON — server should not crash
       ws.send('not json at all {{{');
       await sleep(300);
 
       // Verify server is still responsive
-      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      const res = await authFetch('/');
       assert.strictEqual(res.status, 200, 'Server should still be running');
       ws.close();
     });
@@ -296,8 +410,7 @@ async function runTests() {
     console.log('\n--- File Watching ---');
 
     await test('sends reload on new .html file', async () => {
-      const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
-      await new Promise(resolve => ws.on('open', resolve));
+      const ws = await connectWs();
 
       let gotReload = false;
       ws.on('message', (data) => {
@@ -316,8 +429,7 @@ async function runTests() {
       fs.writeFileSync(filePath, '<h2>Original</h2>');
       await sleep(500);
 
-      const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
-      await new Promise(resolve => ws.on('open', resolve));
+      const ws = await connectWs();
 
       let gotReload = false;
       ws.on('message', (data) => {
@@ -332,8 +444,7 @@ async function runTests() {
     });
 
     await test('does NOT send reload for non-.html files', async () => {
-      const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
-      await new Promise(resolve => ws.on('open', resolve));
+      const ws = await connectWs();
 
       let gotReload = false;
       ws.on('message', (data) => {
@@ -379,6 +490,35 @@ async function runTests() {
       assert(stdoutAccum.includes('screen-updated'), 'Should log screen-updated');
     });
 
+    // ========== Lifecycle Scripts ==========
+    console.log('\n--- Lifecycle Scripts ---');
+
+    await test('stop-server removes canonical brainstorm dirs under /tmp', async () => {
+      const stopDir = `/tmp/brainstorm-stop-test-${Date.now()}`;
+      fs.mkdirSync(stopDir, { recursive: true });
+      fs.writeFileSync(path.join(stopDir, '.server.pid'), '999999');
+      fs.writeFileSync(path.join(stopDir, '.server.log'), 'test');
+
+      const result = spawnSync('bash', [STOP_SERVER_PATH, stopDir], { encoding: 'utf-8' });
+      assert.strictEqual(result.status, 0);
+      assert(!fs.existsSync(stopDir), 'Expected /tmp brainstorm dir to be removed');
+    });
+
+    await test('stop-server refuses to delete canonical paths outside /tmp', async () => {
+      const outsideDir = path.join(__dirname, `stop-server-poc-${Date.now()}`);
+      fs.mkdirSync(outsideDir, { recursive: true });
+      fs.writeFileSync(path.join(outsideDir, '.server.pid'), '999999');
+      fs.writeFileSync(path.join(outsideDir, '.server.log'), 'test');
+
+      const relativeFromTmp = path.relative('/tmp', outsideDir).split(path.sep).join('/');
+      const trickyPath = `/tmp/${relativeFromTmp}`;
+      const result = spawnSync('bash', [STOP_SERVER_PATH, trickyPath], { encoding: 'utf-8' });
+
+      assert.strictEqual(result.status, 0);
+      assert(fs.existsSync(outsideDir), 'Directory outside /tmp should remain on disk');
+      fs.rmSync(outsideDir, { recursive: true, force: true });
+    });
+
     // ========== Helper.js Content ==========
     console.log('\n--- Helper.js Verification ---');
 
@@ -415,6 +555,8 @@ async function runTests() {
     server.kill();
     await sleep(100);
     cleanup();
+    sessionCookie = null;
+    serverInfo = null;
   }
 }
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 # Start the brainstorm server and output connection info
-# Usage: start-server.sh [--project-dir <path>] [--host <bind-host>] [--url-host <display-host>] [--foreground] [--background]
+# Usage: start-server.sh [--project-dir <path>] [--host <bind-host>] [--url-host <display-host>] [--allow-remote] [--foreground] [--background]
 #
 # Starts server on a random high port, outputs JSON with URL.
 # Each session gets its own directory to avoid conflicts.
@@ -9,12 +9,13 @@
 #   --project-dir <path>  Store session files under <path>/.superpowers/brainstorm/
 #                         instead of /tmp. Files persist after server stops.
 #   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
-#                         Use 0.0.0.0 in remote/containerized environments.
+#   --allow-remote        Required with non-loopback --host values such as 0.0.0.0.
 #   --url-host <host>     Hostname shown in returned URL JSON.
 #   --foreground          Run server in the current terminal (no backgrounding).
 #   --background          Force background mode (overrides Codex auto-foreground).
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+umask 077
 
 # Parse arguments
 PROJECT_DIR=""
@@ -22,6 +23,19 @@ FOREGROUND="false"
 FORCE_BACKGROUND="false"
 BIND_HOST="127.0.0.1"
 URL_HOST=""
+ALLOW_REMOTE="false"
+
+is_loopback_host() {
+  case "$1" in
+    127.0.0.1|localhost|::1)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --project-dir)
@@ -35,6 +49,10 @@ while [[ $# -gt 0 ]]; do
     --url-host)
       URL_HOST="$2"
       shift 2
+      ;;
+    --allow-remote)
+      ALLOW_REMOTE="true"
+      shift
       ;;
     --foreground|--no-daemon)
       FOREGROUND="true"
@@ -59,6 +77,11 @@ if [[ -z "$URL_HOST" ]]; then
   fi
 fi
 
+if ! is_loopback_host "$BIND_HOST" && [[ "$ALLOW_REMOTE" != "true" ]]; then
+  echo '{"error": "Refusing to bind brainstorm server to a non-loopback host without --allow-remote"}'
+  exit 1
+fi
+
 # Some environments reap detached/background processes. Auto-foreground when detected.
 if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
   FOREGROUND="true"
@@ -78,6 +101,7 @@ LOG_FILE="${SCREEN_DIR}/.server.log"
 
 # Create fresh session directory
 mkdir -p "$SCREEN_DIR"
+chmod 700 "$SCREEN_DIR"
 
 # Kill any existing server
 if [[ -f "$PID_FILE" ]]; then
@@ -99,20 +123,20 @@ fi
 # Foreground mode for environments that reap detached/background processes.
 if [[ "$FOREGROUND" == "true" ]]; then
   echo "$$" > "$PID_FILE"
-  env BRAINSTORM_DIR="$SCREEN_DIR" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" BRAINSTORM_OWNER_PID="$OWNER_PID" node server.js
+  env BRAINSTORM_DIR="$SCREEN_DIR" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" BRAINSTORM_OWNER_PID="$OWNER_PID" BRAINSTORM_ALLOW_REMOTE="$([[ "$ALLOW_REMOTE" == "true" ]] && echo 1 || echo 0)" node server.js
   exit $?
 fi
 
 # Start server, capturing output to log file
 # Use nohup to survive shell exit; disown to remove from job table
-nohup env BRAINSTORM_DIR="$SCREEN_DIR" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" BRAINSTORM_OWNER_PID="$OWNER_PID" node server.js > "$LOG_FILE" 2>&1 &
+nohup env BRAINSTORM_DIR="$SCREEN_DIR" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" BRAINSTORM_OWNER_PID="$OWNER_PID" BRAINSTORM_ALLOW_REMOTE="$([[ "$ALLOW_REMOTE" == "true" ]] && echo 1 || echo 0)" node server.js > "$LOG_FILE" 2>&1 &
 SERVER_PID=$!
 disown "$SERVER_PID" 2>/dev/null
 echo "$SERVER_PID" > "$PID_FILE"
 
-# Wait for server-started message (check log file)
+# Wait for server-started info file
 for i in {1..50}; do
-  if grep -q "server-started" "$LOG_FILE" 2>/dev/null; then
+  if [[ -f "${SCREEN_DIR}/.server-info" ]]; then
     # Verify server is still alive after a short window (catches process reapers)
     alive="true"
     for _ in {1..20}; do
@@ -126,7 +150,7 @@ for i in {1..50}; do
       echo "{\"error\": \"Server started but was killed. Retry in a persistent terminal with: $SCRIPT_DIR/start-server.sh${PROJECT_DIR:+ --project-dir $PROJECT_DIR} --host $BIND_HOST --url-host $URL_HOST --foreground\"}"
       exit 1
     fi
-    grep "server-started" "$LOG_FILE" | head -1
+    cat "${SCREEN_DIR}/.server-info"
     exit 0
   fi
   sleep 0.1

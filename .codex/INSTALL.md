@@ -53,7 +53,10 @@ You should see a symlink (or junction on Windows) pointing to your superpowers s
 ## Updating
 
 ```bash
-cd ~/.codex/superpowers && git pull
+cd ~/.codex/superpowers
+git fetch --tags --force
+# Review and then check out the specific tag or commit you want to trust.
+git checkout <reviewed-tag-or-commit>
 ```
 
 Skills update instantly through the symlink.

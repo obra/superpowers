@@ -88,7 +88,9 @@ Create project-specific skills in `.opencode/skills/` within your project.
 
 ```bash
 cd ~/.config/opencode/superpowers
-git pull
+git fetch --tags --force
+# Review and then check out the specific tag or commit you want to trust.
+git checkout <reviewed-tag-or-commit>
 ```
 
 ## Troubleshooting

@@ -274,7 +274,9 @@ Skills are discovered by OpenCode's native skill system. Each skill has a `SKILL
 
 ```bash
 cd ~/.config/opencode/superpowers
-git pull
+git fetch --tags --force
+# Review and then check out the specific tag or commit you want to trust.
+git checkout <reviewed-tag-or-commit>
 ```
 
 Restart OpenCode to load the updates.

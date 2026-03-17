@@ -7,6 +7,15 @@ const path = require('path');
 
 const OPCODES = { TEXT: 0x01, CLOSE: 0x08, PING: 0x09, PONG: 0x0A };
 const WS_MAGIC = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
+const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '::1']);
+const AUTH_COOKIE_NAME = 'brainstorm_auth';
+const MAX_FRAME_PAYLOAD_BYTES = 256 * 1024;
+const MAX_CLIENTS = 20;
+const MAX_MESSAGES_PER_WINDOW = 60;
+const MESSAGE_WINDOW_MS = 10 * 1000;
+const AUTH_TTL_SECONDS = 30 * 60;
+const SENSITIVE_KEY_PATTERN = /(token|secret|pass(word)?|api[-_]?key|cookie|auth|credential)/i;
+const MAX_LOG_STRING_LENGTH = 4096;
 
 function computeAcceptKey(clientKey) {
   return crypto.createHash('sha1').update(clientKey + WS_MAGIC).digest('base64');
@@ -57,6 +66,10 @@ function decodeFrame(buffer) {
     offset = 10;
   }
 
+  if (payloadLen > MAX_FRAME_PAYLOAD_BYTES) {
+    throw new Error('WebSocket frame too large');
+  }
+
   const maskOffset = offset;
   const dataOffset = offset + 4;
   const totalLen = dataOffset + payloadLen;
@@ -78,6 +91,16 @@ const HOST = process.env.BRAINSTORM_HOST || '127.0.0.1';
 const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'localhost' : HOST);
 const SCREEN_DIR = process.env.BRAINSTORM_DIR || '/tmp/brainstorm';
 const OWNER_PID = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_OWNER_PID) : null;
+const ALLOW_REMOTE = process.env.BRAINSTORM_ALLOW_REMOTE === '1';
+const SESSION_TOKEN = process.env.BRAINSTORM_SESSION_TOKEN || crypto.randomBytes(32).toString('hex');
+const PORT_NUMBER = Number(PORT);
+const SERVER_ORIGIN = 'http://' + URL_HOST + ':' + PORT_NUMBER;
+
+if (!ALLOW_REMOTE && !LOOPBACK_HOSTS.has(HOST)) {
+  throw new Error(
+    `Refusing to bind brainstorm server to non-loopback host "${HOST}" without BRAINSTORM_ALLOW_REMOTE=1`
+  );
+}
 
 const MIME_TYPES = {
   '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript',
@@ -111,6 +134,109 @@ function wrapInFrame(content) {
   return frameTemplate.replace('<!-- CONTENT -->', content);
 }
 
+function parseRequestUrl(req) {
+  const host = req.headers.host || `${URL_HOST}:${PORT_NUMBER}`;
+  return new URL(req.url, `http://${host}`);
+}
+
+function parseCookies(cookieHeader) {
+  if (!cookieHeader) return {};
+
+  return cookieHeader.split(';').reduce((cookies, cookie) => {
+    const separatorIdx = cookie.indexOf('=');
+    if (separatorIdx === -1) return cookies;
+
+    const key = cookie.slice(0, separatorIdx).trim();
+    const value = cookie.slice(separatorIdx + 1).trim();
+    if (key) cookies[key] = value;
+    return cookies;
+  }, {});
+}
+
+function hasValidSessionToken(req, reqUrl) {
+  const cookies = parseCookies(req.headers.cookie);
+  return (
+    reqUrl.searchParams.get('token') === SESSION_TOKEN ||
+    cookies[AUTH_COOKIE_NAME] === SESSION_TOKEN
+  );
+}
+
+function buildAuthCookie() {
+  return `${AUTH_COOKIE_NAME}=${SESSION_TOKEN}; HttpOnly; SameSite=Strict; Max-Age=${AUTH_TTL_SECONDS}; Path=/`;
+}
+
+function applySecurityHeaders(res, extraHeaders = {}) {
+  for (const [key, value] of Object.entries({
+    'Cache-Control': 'no-store',
+    'Pragma': 'no-cache',
+    'Referrer-Policy': 'no-referrer',
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    ...extraHeaders
+  })) {
+    res.setHeader(key, value);
+  }
+}
+
+function sendHttpResponse(res, statusCode, body, headers = {}) {
+  applySecurityHeaders(res, headers);
+  res.writeHead(statusCode);
+  res.end(body);
+}
+
+function authorizeHttpRequest(req, res, reqUrl) {
+  if (!hasValidSessionToken(req, reqUrl)) {
+    sendHttpResponse(res, 403, 'Forbidden', { 'Content-Type': 'text/plain; charset=utf-8' });
+    return false;
+  }
+
+  if (reqUrl.searchParams.get('token') === SESSION_TOKEN) {
+    res.setHeader('Set-Cookie', buildAuthCookie());
+  }
+
+  return true;
+}
+
+function rejectUpgrade(socket, statusCode, reason) {
+  socket.write(
+    `HTTP/1.1 ${statusCode} ${reason}\r\n` +
+    'Connection: close\r\n' +
+    'Content-Type: text/plain; charset=utf-8\r\n\r\n' +
+    reason
+  );
+  socket.destroy();
+}
+
+function truncateString(value) {
+  if (value.length <= MAX_LOG_STRING_LENGTH) return value;
+  return value.slice(0, MAX_LOG_STRING_LENGTH) + '...[truncated]';
+}
+
+function sanitizeEventValue(value, currentKey = '') {
+  if (Array.isArray(value)) {
+    return value.map((entry) => sanitizeEventValue(entry));
+  }
+
+  if (value && typeof value === 'object') {
+    const sanitized = {};
+    for (const [key, entry] of Object.entries(value)) {
+      if (SENSITIVE_KEY_PATTERN.test(key)) {
+        sanitized[key] = '[REDACTED]';
+      } else {
+        sanitized[key] = sanitizeEventValue(entry, key);
+      }
+    }
+    return sanitized;
+  }
+
+  if (typeof value === 'string') {
+    if (SENSITIVE_KEY_PATTERN.test(currentKey)) return '[REDACTED]';
+    return truncateString(value);
+  }
+
+  return value;
+}
+
 function getNewestScreen() {
   const files = fs.readdirSync(SCREEN_DIR)
     .filter(f => f.endsWith('.html'))
@@ -125,8 +251,18 @@ function getNewestScreen() {
 // ========== HTTP Request Handler ==========
 
 function handleRequest(req, res) {
+  const reqUrl = parseRequestUrl(req);
+  const pathname = reqUrl.pathname;
   touchActivity();
-  if (req.method === 'GET' && req.url === '/') {
+
+  if (req.method !== 'GET') {
+    sendHttpResponse(res, 405, 'Method not allowed', { 'Content-Type': 'text/plain; charset=utf-8' });
+    return;
+  }
+
+  if (!authorizeHttpRequest(req, res, reqUrl)) return;
+
+  if (pathname === '/') {
     const screenFile = getNewestScreen();
     let html = screenFile
       ? (raw => isFullDocument(raw) ? raw : wrapInFrame(raw))(fs.readFileSync(screenFile, 'utf-8'))
@@ -138,23 +274,19 @@ function handleRequest(req, res) {
       html += helperInjection;
     }
 
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(html);
-  } else if (req.method === 'GET' && req.url.startsWith('/files/')) {
-    const fileName = req.url.slice(7);
+    sendHttpResponse(res, 200, html, { 'Content-Type': 'text/html; charset=utf-8' });
+  } else if (pathname.startsWith('/files/')) {
+    const fileName = decodeURIComponent(pathname.slice(7));
     const filePath = path.join(SCREEN_DIR, path.basename(fileName));
     if (!fs.existsSync(filePath)) {
-      res.writeHead(404);
-      res.end('Not found');
+      sendHttpResponse(res, 404, 'Not found', { 'Content-Type': 'text/plain; charset=utf-8' });
       return;
     }
     const ext = path.extname(filePath).toLowerCase();
     const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-    res.writeHead(200, { 'Content-Type': contentType });
-    res.end(fs.readFileSync(filePath));
+    sendHttpResponse(res, 200, fs.readFileSync(filePath), { 'Content-Type': contentType });
   } else {
-    res.writeHead(404);
-    res.end('Not found');
+    sendHttpResponse(res, 404, 'Not found', { 'Content-Type': 'text/plain; charset=utf-8' });
   }
 }
 
@@ -163,8 +295,34 @@ function handleRequest(req, res) {
 const clients = new Set();
 
 function handleUpgrade(req, socket) {
+  const reqUrl = parseRequestUrl(req);
   const key = req.headers['sec-websocket-key'];
-  if (!key) { socket.destroy(); return; }
+  const origin = req.headers.origin;
+
+  if (reqUrl.pathname !== '/') {
+    rejectUpgrade(socket, 404, 'Not Found');
+    return;
+  }
+
+  if (!key) {
+    rejectUpgrade(socket, 400, 'Missing WebSocket key');
+    return;
+  }
+
+  if (!hasValidSessionToken(req, reqUrl)) {
+    rejectUpgrade(socket, 401, 'Unauthorized');
+    return;
+  }
+
+  if (origin && origin !== SERVER_ORIGIN) {
+    rejectUpgrade(socket, 403, 'Forbidden');
+    return;
+  }
+
+  if (clients.size >= MAX_CLIENTS) {
+    rejectUpgrade(socket, 503, 'Too many clients');
+    return;
+  }
 
   const accept = computeAcceptKey(key);
   socket.write(
@@ -175,6 +333,8 @@ function handleUpgrade(req, socket) {
   );
 
   let buffer = Buffer.alloc(0);
+  let messageWindowStartedAt = Date.now();
+  let messageCount = 0;
   clients.add(socket);
 
   socket.on('data', (chunk) => {
@@ -193,6 +353,18 @@ function handleUpgrade(req, socket) {
 
       switch (result.opcode) {
         case OPCODES.TEXT:
+          if (Date.now() - messageWindowStartedAt >= MESSAGE_WINDOW_MS) {
+            messageWindowStartedAt = Date.now();
+            messageCount = 0;
+          }
+          messageCount += 1;
+          if (messageCount > MAX_MESSAGES_PER_WINDOW) {
+            const closeBuf = Buffer.alloc(2);
+            closeBuf.writeUInt16BE(1008);
+            socket.end(encodeFrame(OPCODES.CLOSE, closeBuf));
+            clients.delete(socket);
+            return;
+          }
           handleMessage(result.payload.toString());
           break;
         case OPCODES.CLOSE:
@@ -228,10 +400,11 @@ function handleMessage(text) {
     return;
   }
   touchActivity();
-  console.log(JSON.stringify({ source: 'user-event', ...event }));
+  const sanitizedEvent = sanitizeEventValue(event);
+  console.log(JSON.stringify({ source: 'user-event', ...sanitizedEvent }));
   if (event.choice) {
     const eventsFile = path.join(SCREEN_DIR, '.events');
-    fs.appendFileSync(eventsFile, JSON.stringify(event) + '\n');
+    fs.appendFileSync(eventsFile, JSON.stringify(sanitizedEvent) + '\n', { mode: 0o600 });
   }
 }
 
@@ -321,13 +494,24 @@ function startServer() {
   lifecycleCheck.unref();
 
   server.listen(PORT, HOST, () => {
-    const info = JSON.stringify({
+    const publicInfo = {
       type: 'server-started', port: Number(PORT), host: HOST,
-      url_host: URL_HOST, url: 'http://' + URL_HOST + ':' + PORT,
+      url_host: URL_HOST, url: SERVER_ORIGIN,
       screen_dir: SCREEN_DIR
-    });
-    console.log(info);
-    fs.writeFileSync(path.join(SCREEN_DIR, '.server-info'), info + '\n');
+    };
+    const privateInfo = {
+      ...publicInfo,
+      auth_required: true,
+      auth_token: SESSION_TOKEN,
+      url: `${SERVER_ORIGIN}/?token=${SESSION_TOKEN}`,
+      public_url: SERVER_ORIGIN
+    };
+    console.log(JSON.stringify(publicInfo));
+    fs.writeFileSync(
+      path.join(SCREEN_DIR, '.server-info'),
+      JSON.stringify(privateInfo) + '\n',
+      { mode: 0o600 }
+    );
   });
 }
 
@@ -335,4 +519,11 @@ if (require.main === module) {
   startServer();
 }
 
-module.exports = { computeAcceptKey, encodeFrame, decodeFrame, OPCODES };
+module.exports = {
+  AUTH_COOKIE_NAME,
+  MAX_FRAME_PAYLOAD_BYTES,
+  computeAcceptKey,
+  encodeFrame,
+  decodeFrame,
+  OPCODES
+};

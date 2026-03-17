@@ -329,6 +329,12 @@ function runTests() {
     assert.strictEqual(result.payload.length, 65536);
   });
 
+  test('rejects frames larger than the configured payload cap', () => {
+    const payload = 'Z'.repeat(ws.MAX_FRAME_PAYLOAD_BYTES + 1);
+    const frame = makeClientFrame(0x01, payload);
+    assert.throws(() => ws.decodeFrame(frame), /too large/i);
+  });
+
   // ========== Close Frame with Status Code ==========
   console.log('\n--- Close Frame Details ---');
 

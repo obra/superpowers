@@ -13,16 +13,31 @@ if [[ -z "$SCREEN_DIR" ]]; then
   exit 1
 fi
 
-PID_FILE="${SCREEN_DIR}/.server.pid"
+resolve_dir() {
+  local dir="$1"
+  if [[ -d "$dir" ]]; then
+    (cd "$dir" 2>/dev/null && pwd -P)
+  fi
+}
+
+SCREEN_DIR_REAL="$(resolve_dir "$SCREEN_DIR")"
+if [[ -n "$SCREEN_DIR_REAL" ]]; then
+  PID_FILE="${SCREEN_DIR_REAL}/.server.pid"
+  LOG_FILE="${SCREEN_DIR_REAL}/.server.log"
+else
+  PID_FILE="${SCREEN_DIR}/.server.pid"
+  LOG_FILE="${SCREEN_DIR}/.server.log"
+fi
 
 if [[ -f "$PID_FILE" ]]; then
   pid=$(cat "$PID_FILE")
   kill "$pid" 2>/dev/null
-  rm -f "$PID_FILE" "${SCREEN_DIR}/.server.log"
+  rm -f "$PID_FILE" "$LOG_FILE"
 
   # Only delete ephemeral /tmp directories
-  if [[ "$SCREEN_DIR" == /tmp/* ]]; then
-    rm -rf "$SCREEN_DIR"
+  TMP_ROOT="$(cd /tmp && pwd -P)"
+  if [[ -n "$SCREEN_DIR_REAL" && "$SCREEN_DIR_REAL" == "$TMP_ROOT"/brainstorm-* ]]; then
+    rm -rf -- "$SCREEN_DIR_REAL"
   fi
 
   echo '{"status": "stopped"}'

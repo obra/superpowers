@@ -103,19 +103,21 @@ cd "$path"
 Auto-detect and run appropriate setup:
 
 ```bash
-# Node.js
-if [ -f package.json ]; then npm install; fi
+# Node.js - prefer deterministic installs, and pause if there's no lockfile
+if [ -f package-lock.json ]; then npm ci; elif [ -f package.json ]; then echo "No package-lock.json - ask before running npm install"; exit 1; fi
 
 # Rust
-if [ -f Cargo.toml ]; then cargo build; fi
+if [ -f Cargo.toml ]; then cargo build --locked; fi
 
-# Python
-if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-if [ -f pyproject.toml ]; then poetry install; fi
+# Python - require pinned inputs before installing
+if [ -f requirements.txt ]; then pip install --require-hashes -r requirements.txt; fi
+if [ -f pyproject.toml ] && [ -f poetry.lock ]; then poetry install --sync; elif [ -f pyproject.toml ]; then echo "No poetry.lock - ask before running poetry install"; exit 1; fi
 
 # Go
 if [ -f go.mod ]; then go mod download; fi
 ```
+
+If the project lacks a lockfile, pinned hashes, or another deterministic install path, stop and ask the user whether the repository is trusted before executing any dependency installer.
 
 ### 4. Verify Clean Baseline
 

@@ -67,7 +67,7 @@ or search for "superpowers" in the plugin marketplace.
 Tell Codex:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md
+Clone a reviewed release or commit of obra/superpowers locally, then follow the .codex/INSTALL.md file from that checkout. Do not fetch INSTALL.md from refs/heads/main.
 ```
 
 **Detailed docs:** [docs/README.codex.md](docs/README.codex.md)
@@ -77,7 +77,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 Tell OpenCode:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
+Clone a reviewed release or commit of obra/superpowers locally, then follow the .opencode/INSTALL.md file from that checkout. Do not fetch INSTALL.md from refs/heads/main.
 ```
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)

@@ -36,7 +36,7 @@ The server watches a directory for HTML files and serves the newest one to the b
 # Start server with persistence (mockups saved to project)
 scripts/start-server.sh --project-dir /path/to/project
 
-# Returns: {"type":"server-started","port":52341,"url":"http://localhost:52341",
+# Returns: {"type":"server-started","port":52341,"url":"http://localhost:52341/?token=...",
 #           "screen_dir":"/path/to/project/.superpowers/brainstorm/12345-1706000000"}
 ```
 
@@ -76,6 +76,7 @@ If the URL is unreachable from your browser (common in remote/containerized setu
 scripts/start-server.sh \
   --project-dir /path/to/project \
   --host 0.0.0.0 \
+  --allow-remote \
   --url-host localhost
 ```
 
