@@ -34,7 +34,8 @@ digraph when_to_use {
 ```
 
 **Use when:**
-- 3+ test files failing with different root causes
+- 2+ independent tasks that can be worked on without shared state
+- 2+ test files failing with different root causes
 - Multiple subsystems broken independently
 - Each problem can be understood without context from others
 - No shared state between investigations
@@ -171,6 +172,13 @@ After agents return:
 2. **Check for conflicts** - Did agents edit same code?
 3. **Run full suite** - Verify all fixes work together
 4. **Spot check** - Agents can make systematic errors
+
+## Integration
+
+**Use with:**
+- **superpowers:systematic-debugging** - Apply systematic debugging within each parallel agent
+- **superpowers:verification-before-completion** - Verify all agent results before claiming success
+- **superpowers:subagent-driven-development** - For plan-based task execution with review stages
 
 ## Real-World Impact
 

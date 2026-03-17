@@ -208,7 +208,7 @@ You MUST complete each phase before proceeding to the next.
    - Are we "sticking with it through sheer inertia"?
    - Should we refactor architecture vs. continue fixing symptoms?
 
-   **Discuss with your human partner before attempting more fixes**
+   **Discuss with user before attempting more fixes**
 
    This is NOT a failed hypothesis - this is a wrong architecture.
 
@@ -231,7 +231,7 @@ If you catch yourself thinking:
 
 **If 3+ fixes failed:** Question the architecture (see Phase 4.5)
 
-## your human partner's Signals You're Doing It Wrong
+## User's Signals You're Doing It Wrong
 
 **Watch for these redirections:**
 - "Is that not happening?" - You assumed without verifying
@@ -283,14 +283,15 @@ These techniques are part of systematic debugging and available in this director
 - **`defense-in-depth.md`** - Add validation at multiple layers after finding root cause
 - **`condition-based-waiting.md`** - Replace arbitrary timeouts with condition polling
 
-**Related skills:**
+## Integration
+
+**Use before fixing:**
 - **superpowers:test-driven-development** - For creating failing test case (Phase 4, Step 1)
 - **superpowers:verification-before-completion** - Verify fix worked before claiming success
 
+**Use after debugging:**
+- **superpowers:dispatching-parallel-agents** - When multiple independent bugs are found, dispatch parallel agents
+
 ## Real-World Impact
 
-From debugging sessions:
-- Systematic approach: 15-30 minutes to fix
-- Random fixes approach: 2-3 hours of thrashing
-- First-time fix rate: 95% vs 40%
-- New bugs introduced: Near zero vs common
+Systematic approach consistently resolves bugs in fewer iterations with near-zero secondary bugs introduced. Random-fix approach often leads to hours of thrashing and regression introduction.

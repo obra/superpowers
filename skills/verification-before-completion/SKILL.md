@@ -49,6 +49,16 @@ Skip any step = lying, not verifying
 | Agent completed | VCS diff shows changes | Agent reports "success" |
 | Requirements met | Line-by-line checklist | Tests passing |
 
+## Quick Reference
+
+| Action | Verification Required |
+|--------|----------------------|
+| "Tests pass" | Run test suite, show 0 failures |
+| "Build succeeds" | Run build, show exit 0 |
+| "Bug fixed" | Reproduce original symptom, show it's gone |
+| "Ready to merge" | Tests + build + requirements checklist |
+| "Agent completed" | Check VCS diff independently |
+
 ## Red Flags - STOP
 
 - Using "should", "probably", "seems to"
@@ -65,11 +75,11 @@ Skip any step = lying, not verifying
 | Excuse | Reality |
 |--------|---------|
 | "Should work now" | RUN the verification |
-| "I'm confident" | Confidence ≠ evidence |
+| "I'm confident" | Confidence does not equal evidence |
 | "Just this once" | No exceptions |
-| "Linter passed" | Linter ≠ compiler |
+| "Linter passed" | Linter does not equal compiler |
 | "Agent said success" | Verify independently |
-| "I'm tired" | Exhaustion ≠ excuse |
+| "I'm tired" | Exhaustion does not equal excuse |
 | "Partial check is enough" | Partial proves nothing |
 | "Different words so rule doesn't apply" | Spirit over letter |
 
@@ -77,42 +87,42 @@ Skip any step = lying, not verifying
 
 **Tests:**
 ```
-✅ [Run test command] [See: 34/34 pass] "All tests pass"
-❌ "Should pass now" / "Looks correct"
+OK  [Run test command] [See: 34/34 pass] "All tests pass"
+BAD "Should pass now" / "Looks correct"
 ```
 
 **Regression tests (TDD Red-Green):**
 ```
-✅ Write → Run (pass) → Revert fix → Run (MUST FAIL) → Restore → Run (pass)
-❌ "I've written a regression test" (without red-green verification)
+OK  Write -> Run (pass) -> Revert fix -> Run (MUST FAIL) -> Restore -> Run (pass)
+BAD "I've written a regression test" (without red-green verification)
 ```
 
 **Build:**
 ```
-✅ [Run build] [See: exit 0] "Build passes"
-❌ "Linter passed" (linter doesn't check compilation)
+OK  [Run build] [See: exit 0] "Build passes"
+BAD "Linter passed" (linter doesn't check compilation)
 ```
 
 **Requirements:**
 ```
-✅ Re-read plan → Create checklist → Verify each → Report gaps or completion
-❌ "Tests pass, phase complete"
+OK  Re-read plan -> Create checklist -> Verify each -> Report gaps or completion
+BAD "Tests pass, phase complete"
 ```
 
 **Agent delegation:**
 ```
-✅ Agent reports success → Check VCS diff → Verify changes → Report actual state
-❌ Trust agent report
+OK  Agent reports success -> Check VCS diff -> Verify changes -> Report actual state
+BAD Trust agent report
 ```
 
 ## Why This Matters
 
-From 24 failure memories:
-- your human partner said "I don't believe you" - trust broken
-- Undefined functions shipped - would crash
-- Missing requirements shipped - incomplete features
-- Time wasted on false completion → redirect → rework
-- Violates: "Honesty is a core value. If you lie, you'll be replaced."
+From repeated verification failures observed across sessions:
+- User said "I don't believe you" — trust broken
+- Undefined functions shipped — would crash in production
+- Missing requirements shipped — incomplete features
+- Time wasted on false completion, redirect, rework
+- Unverified claims erode user trust and create compounding rework cycles
 
 ## When To Apply
 
@@ -129,6 +139,13 @@ From 24 failure memories:
 - Paraphrases and synonyms
 - Implications of success
 - ANY communication suggesting completion/correctness
+
+## Integration
+
+**Use with every workflow:**
+- **superpowers:systematic-debugging** - Verify fix worked before claiming bug resolved
+- **superpowers:subagent-driven-development** - Verify each subagent's work independently
+- **superpowers:dispatching-parallel-agents** - Verify each parallel agent's results before integrating
 
 ## The Bottom Line
 

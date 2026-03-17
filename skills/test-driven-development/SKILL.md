@@ -21,10 +21,12 @@ Write the test first. Watch it fail. Write minimal code to pass.
 - Refactoring
 - Behavior changes
 
-**Exceptions (ask your human partner):**
-- Throwaway prototypes
-- Generated code
+**Exceptions (confirm with user first):**
+- Throwaway prototypes or spike solutions
+- Generated code (scaffolding, codegen output)
 - Configuration files
+- Exploratory data analysis or rapid UI prototyping
+- One-off scripts not intended for production
 
 Thinking "skip TDD just this once"? Stop. That's rationalization.
 
@@ -235,7 +237,7 @@ The "waste" is keeping code you can't trust. Working code without real tests is 
 
 **"TDD is dogmatic, being pragmatic means adapting"**
 
-TDD IS pragmatic:
+TDD has genuine trade-offs in early exploration phases — the exceptions above acknowledge this. But for production code, TDD IS pragmatic:
 - Finds bugs before commit (faster than debugging after)
 - Prevents regressions (tests catch breaks immediately)
 - Documents behavior (tests show how to use code)
@@ -343,7 +345,7 @@ Can't check all boxes? You skipped TDD. Start over.
 
 | Problem | Solution |
 |---------|----------|
-| Don't know how to test | Write wished-for API. Write assertion first. Ask your human partner. |
+| Don't know how to test | Write wished-for API. Write assertion first. Ask user. |
 | Test too complicated | Design too complicated. Simplify interface. |
 | Must mock everything | Code too coupled. Use dependency injection. |
 | Test setup huge | Extract helpers. Still complex? Simplify design. |
@@ -361,6 +363,13 @@ When adding mocks or test utilities, read @testing-anti-patterns.md to avoid com
 - Adding test-only methods to production classes
 - Mocking without understanding dependencies
 
+## Integration
+
+**Pairs with:**
+- **superpowers:executing-plans** - Follow TDD during plan execution
+- **superpowers:systematic-debugging** - Write failing test to reproduce bugs
+- **superpowers:verification-before-completion** - Verify all tests pass before claiming done
+
 ## Final Rule
 
 ```
@@ -368,4 +377,4 @@ Production code → test exists and failed first
 Otherwise → not TDD
 ```
 
-No exceptions without your human partner's permission.
+No exceptions without user's permission.
