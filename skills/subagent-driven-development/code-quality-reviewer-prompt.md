@@ -12,6 +12,7 @@ Code-reviewer sub-agent / custom agent:
 
   WHAT_WAS_IMPLEMENTED: [from implementer's report]
   PLAN_OR_REQUIREMENTS: Task N from [plan-file]
+  BASE_BRANCH: [detected base branch]
   BASE_SHA: [commit before task]
   HEAD_SHA: [current commit]
   DESCRIPTION: [task summary]

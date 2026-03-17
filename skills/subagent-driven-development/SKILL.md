@@ -171,6 +171,26 @@ digraph process {
 }
 ```
 
+## Implementation Preflight
+
+Before dispatching any implementation subagent:
+
+1. Require the exact approved plan path as input. If you are not given one, stop and ask for it or route back to `superpowers:plan-eng-review`.
+2. Read that plan first and confirm these exact header lines:
+   - `**Workflow State:** Engineering Approved`
+   - `**Source Spec:** <path>`
+   - `**Source Spec Revision:** <integer>`
+3. Read the source spec named in the plan and confirm it is still `CEO Approved` at the same revision.
+4. Stop immediately and redirect:
+   - to `superpowers:plan-eng-review` if the plan is draft or malformed
+   - to `superpowers:writing-plans` if the source spec revision is stale
+5. Verify workspace readiness before dispatching subagents:
+   - stop on `main` or `master` unless the user explicitly approves in-place execution
+   - stop on detached HEAD
+   - stop if merge conflicts, unresolved index entries, rebase, or cherry-pick state is present
+   - if the working tree is dirty, stop and ask the user to confirm the workspace is intentionally prepared
+6. Do not auto-clean the workspace and do not auto-create a worktree.
+
 ## Model Selection
 
 Use the least powerful model that can handle each role to conserve cost and increase speed.
@@ -291,7 +311,7 @@ Final reviewer: All requirements met, ready for branch completion
 
 [Announce: I'm using the finishing-a-development-branch skill to complete this work.]
 [Invoke superpowers:finishing-a-development-branch]
-[Present merge/PR/keep/discard options and follow the chosen path]
+[Let that skill offer optional qa-only when appropriate, then present merge/PR/keep/discard options and follow the chosen path]
 ```
 
 ## Advantages
@@ -360,13 +380,19 @@ Final reviewer: All requirements met, ready for branch completion
 ## Integration
 
 **Required workflow skills:**
-- **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
 - **superpowers:writing-plans** - Creates the plan this skill executes
+- **superpowers:plan-eng-review** - Provides the approved plan and execution handoff
 - **superpowers:requesting-code-review** - Code review template for reviewer subagents
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
 
+**Optional completion gate:**
+- **superpowers:qa-only** - Report-only browser QA offered from the branch-finishing flow when the branch has UI or route changes
+
 **Subagents should use:**
 - **superpowers:test-driven-development** - Subagents follow TDD for each task
+
+**Optional manual prep:**
+- **superpowers:using-git-worktrees** - Use when the user wants isolated workspace management before execution
 
 **Alternative workflow:**
 - **superpowers:executing-plans** - Use for parallel session instead of same-session execution

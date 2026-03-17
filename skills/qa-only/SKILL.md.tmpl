@@ -1,0 +1,195 @@
+---
+name: qa-only
+description: Use when you need browser-based QA with evidence and reports, but do not want the agent to fix any code
+---
+
+{{BASE_PREAMBLE}}
+
+
+# QA-Only
+
+Report-only browser QA for web applications. Test like a user, gather evidence, score health, and never fix anything.
+
+## Browser prerequisite
+
+This skill depends on browser automation support from `playwright` or `playwright-interactive`.
+
+- Prefer `playwright` for CLI-first QA runs
+- Prefer `playwright-interactive` for persistent local-app debugging when it is already enabled
+
+If neither skill nor equivalent browser automation support is available, STOP and tell the user:
+
+`qa-only needs browser automation support. Install or enable the playwright skill (or an equivalent Playwright CLI workflow), then retry.`
+
+## Setup
+
+Parse these parameters from the request:
+
+| Parameter | Default | Example |
+|-----------|---------|---------|
+| Target URL | auto-detect or required | `https://app.example.com`, `http://127.0.0.1:3000` |
+| Tier | Standard | `Standard`, `Exhaustive` |
+| Mode | full | `--quick`, `--regression <baseline>` |
+| Output dir | `.superpowers/qa-reports/` | `Output to /tmp/qa` |
+| Scope | Diff or full app | `Focus on billing` |
+| Auth | none | `Use staging login` |
+
+Treat `quick` as a mode, not a tier.
+
+Map the parsed "Output dir" to `QA_OUTPUT_DIR` when the user provided one, then create the local output directory:
+
+```bash
+REPORT_DIR="${QA_OUTPUT_DIR:-.superpowers/qa-reports}"
+mkdir -p "$REPORT_DIR/screenshots"
+```
+
+## Test plan context
+
+Before falling back to git-diff heuristics, look for richer QA input:
+
+```bash
+REMOTE_URL=$(git remote get-url origin 2>/dev/null || true)
+SLUG=$(printf '%s\n' "$REMOTE_URL" | sed 's|.*[:/]\\([^/]*/[^/]*\\)\\.git$|\\1|;s|.*[:/]\\([^/]*/[^/]*\\)$|\\1|' | tr '/' '-')
+[ -n "$SLUG" ] || SLUG=$(basename "$_REPO_ROOT")
+BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo current)
+SAFE_BRANCH=$(printf '%s\n' "$BRANCH" | sed 's/[^[:alnum:]._-]/-/g')
+PLAN_ARTIFACT=$(ls -t "$_SP_STATE_DIR/projects/$SLUG"/*-"$SAFE_BRANCH"-test-plan-*.md 2>/dev/null | head -1)
+[ -n "$PLAN_ARTIFACT" ] || PLAN_ARTIFACT=$(ls -t "$_SP_STATE_DIR/projects/$SLUG"/*-test-plan-*.md 2>/dev/null | head -1)
+printf '%s\n' "$PLAN_ARTIFACT"
+```
+
+Prefer the newest artifact for the current branch under `$_SP_STATE_DIR/projects/$SLUG` when it exists. Only fall back to the newest project-wide test-plan artifact when there is no branch-specific match. This file is consumed by `superpowers:qa-only` as the primary QA handoff, ahead of lossy git-diff guessing.
+
+If no artifact exists, use:
+1. Explicit user scope
+2. Conversation context
+3. `diff-aware` inference from the current branch
+
+## Modes
+
+### diff-aware
+
+If no URL is provided and the repo is on a feature branch, automatically enter `diff-aware` mode:
+
+```bash
+BASE_BRANCH=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null || gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null || echo main)
+git fetch origin "$BASE_BRANCH" --quiet 2>/dev/null || true
+git diff "origin/$BASE_BRANCH...HEAD" --name-only 2>/dev/null || git diff "$BASE_BRANCH...HEAD" --name-only
+git log "origin/$BASE_BRANCH"..HEAD --oneline 2>/dev/null || git log "$BASE_BRANCH"..HEAD --oneline
+```
+
+From the changed files, infer:
+- affected pages and routes
+- touched forms, controls, or flows
+- adjacent regression surfaces worth checking
+
+Then use the browser automation skill to:
+- open the target page
+- inspect interactive elements
+- navigate the affected flow
+- capture screenshots and console/network evidence
+
+### full
+
+Systematic exploration of the app or the requested surface.
+
+### quick
+
+Fast smoke test: landing page plus the top navigation targets.
+
+### regression
+
+Load a previous baseline report or saved scorecard and compare score and issue deltas.
+
+## Workflow
+
+### Phase 1: Initialize
+
+1. Resolve URL or auto-detect the local app
+2. Create the local report skeleton from `$_SUPERPOWERS_ROOT/qa/templates/qa-report-template.md` when available
+3. Start a timer for duration tracking
+
+### Phase 2: Orient
+
+Use the browser automation skill to get a map of the app:
+- initial page load
+- interactive controls
+- console or failed-request health
+- framework clues
+
+### Phase 3: Explore
+
+For each affected page or route:
+- take a screenshot
+- check interactive elements
+- test forms and validation
+- test navigation in and out
+- check loading, empty, and error states
+- run a mobile pass if relevant
+
+Use the taxonomy in `$_SUPERPOWERS_ROOT/qa/references/issue-taxonomy.md` to classify each issue.
+
+### Phase 4: Document
+
+Document issues immediately. Every issue needs:
+- severity
+- category
+- URL or route
+- repro steps
+- evidence
+
+### Phase 5: Score Health
+
+Score the run across:
+- Console
+- Links
+- Visual
+- Functional
+- UX
+- Performance
+- Accessibility
+
+Use the shared rubric from the current template and state the final Health Score explicitly.
+
+### Phase 6: Write reports
+
+Write the local report to:
+- `$REPORT_DIR/qa-report-{domain}-{YYYY-MM-DD}.md`
+
+Also write a project-scoped outcome artifact:
+
+```bash
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+SAFE_BRANCH=$(printf '%s\n' "$BRANCH" | sed 's/[^[:alnum:]._-]/-/g')
+USER=$(whoami)
+DATETIME=$(date +%Y%m%d-%H%M%S)
+mkdir -p "$_SP_STATE_DIR/projects/$SLUG"
+```
+
+Write to:
+- `$_SP_STATE_DIR/projects/$SLUG/{user}-{safe-branch}-test-outcome-{datetime}.md`
+
+The project artifact should summarize:
+- what was tested
+- the Health Score
+- critical and high issues
+- deferred follow-ups
+- the local `qa-report` path
+
+## Output structure
+
+```
+$REPORT_DIR/
+├── qa-report-{domain}-{YYYY-MM-DD}.md
+└── screenshots/
+```
+
+Regression mode compares against an existing baseline artifact. `qa-only` should not invent or overwrite one implicitly.
+
+## Important rules
+
+- Never fix code in this skill
+- Every reported issue needs evidence
+- Verify issues are reproducible before documenting them
+- Redact credentials in notes and screenshots
+- If the browser prerequisite is missing, fail fast with the single actionable setup message above

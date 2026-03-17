@@ -1,0 +1,277 @@
+---
+name: qa-only
+description: Use when you need browser-based QA with evidence and reports, but do not want the agent to fix any code
+---
+<!-- AUTO-GENERATED from SKILL.md.tmpl — do not edit directly -->
+<!-- Regenerate: node scripts/gen-skill-docs.mjs -->
+
+## Preamble (run first)
+
+```bash
+_IS_SUPERPOWERS_RUNTIME_ROOT() {
+  local candidate="$1"
+  [ -n "$candidate" ] &&
+  [ -x "$candidate/bin/superpowers-update-check" ] &&
+  [ -x "$candidate/bin/superpowers-config" ] &&
+  [ -f "$candidate/VERSION" ]
+}
+_REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+_SUPERPOWERS_ROOT=""
+_IS_SUPERPOWERS_RUNTIME_ROOT "$_REPO_ROOT" && _SUPERPOWERS_ROOT="$_REPO_ROOT"
+[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.superpowers/install" && _SUPERPOWERS_ROOT="$HOME/.superpowers/install"
+[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.codex/superpowers" && _SUPERPOWERS_ROOT="$HOME/.codex/superpowers"
+[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.copilot/superpowers" && _SUPERPOWERS_ROOT="$HOME/.copilot/superpowers"
+_UPD=""
+[ -n "$_SUPERPOWERS_ROOT" ] && _UPD=$("$_SUPERPOWERS_ROOT/bin/superpowers-update-check" 2>/dev/null || true)
+[ -n "$_UPD" ] && echo "$_UPD" || true
+_SP_STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
+mkdir -p "$_SP_STATE_DIR/sessions"
+touch "$_SP_STATE_DIR/sessions/$PPID"
+_SESSIONS=$(find "$_SP_STATE_DIR/sessions" -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' ')
+find "$_SP_STATE_DIR/sessions" -mmin +120 -type f -delete 2>/dev/null || true
+_CONTRIB=""
+[ -n "$_SUPERPOWERS_ROOT" ] && _CONTRIB=$("$_SUPERPOWERS_ROOT/bin/superpowers-config" get superpowers_contributor 2>/dev/null || true)
+```
+
+If output shows `UPGRADE_AVAILABLE <old> <new>`: read the installed `superpowers-upgrade/SKILL.md` from the same superpowers root (check the current repo when it contains the Superpowers runtime, then `$HOME/.superpowers/install`, then `$HOME/.codex/superpowers`, then `$HOME/.copilot/superpowers`) and follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise ask one interactive user question with 4 options and write snooze state if declined). If `JUST_UPGRADED <from> <to>`: tell the user "Running superpowers v{to} (just updated!)" and continue.
+
+## Interactive User Question Format
+
+**ALWAYS follow this structure for every interactive user question:**
+1. Context: project name, current branch, what we're working on (1-2 sentences)
+2. The specific question or decision point
+3. `RECOMMENDATION: Choose [X] because [one-line reason]`
+4. Lettered options: `A) ... B) ... C) ...`
+
+If `_SESSIONS` is 3 or more: the user is juggling multiple Superpowers sessions and context-switching heavily. **ELI16 mode** — they may not remember what this conversation is about. Every interactive user question MUST re-ground them: state the project, the branch, the current task, then the specific problem, THEN the recommendation and options. Be extra clear and self-contained — assume they haven't looked at this window in 20 minutes.
+
+Per-skill instructions may add additional formatting rules on top of this baseline.
+
+## Contributor Mode
+
+If `_CONTRIB` is `true`: you are in **contributor mode**. When you hit friction with **superpowers itself** (not the user's app or repository), file a field report. Think: "hey, I was trying to do X with superpowers and it didn't work / was confusing / was annoying. Here's what happened."
+
+**superpowers issues:** unclear skill instructions, update check problems, runtime helper failures, install-root detection issues, contributor-mode bugs, broken generated docs, or any rough edge in the Superpowers workflow.
+**NOT superpowers issues:** the user's application bugs, repo-specific architecture problems, auth failures on the user's site, or third-party service outages unrelated to Superpowers tooling.
+
+**To file:** write `~/.superpowers/contributor-logs/{slug}.md` with this structure:
+
+```
+# {Title}
+
+Hey superpowers team — ran into this while using /{skill-name}:
+
+**What I was trying to do:** {what the user/agent was attempting}
+**What happened instead:** {what actually happened}
+**How annoying (1-5):** {1=meh, 3=friction, 5=blocker}
+
+## Steps to reproduce
+1. {step}
+
+## Raw output
+(wrap any error messages or unexpected output in a markdown code block)
+
+**Date:** {YYYY-MM-DD} | **Version:** {superpowers version} | **Skill:** /{skill}
+```
+
+Then run:
+
+```bash
+mkdir -p ~/.superpowers/contributor-logs
+if command -v open >/dev/null 2>&1; then
+  open ~/.superpowers/contributor-logs/{slug}.md
+elif command -v xdg-open >/dev/null 2>&1; then
+  xdg-open ~/.superpowers/contributor-logs/{slug}.md >/dev/null 2>&1 || true
+fi
+```
+
+Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Skip if the file already exists. Max 3 reports per session. File inline and continue — don't stop the workflow. Tell the user: "Filed superpowers field report: {title}"
+
+
+# QA-Only
+
+Report-only browser QA for web applications. Test like a user, gather evidence, score health, and never fix anything.
+
+## Browser prerequisite
+
+This skill depends on browser automation support from `playwright` or `playwright-interactive`.
+
+- Prefer `playwright` for CLI-first QA runs
+- Prefer `playwright-interactive` for persistent local-app debugging when it is already enabled
+
+If neither skill nor equivalent browser automation support is available, STOP and tell the user:
+
+`qa-only needs browser automation support. Install or enable the playwright skill (or an equivalent Playwright CLI workflow), then retry.`
+
+## Setup
+
+Parse these parameters from the request:
+
+| Parameter | Default | Example |
+|-----------|---------|---------|
+| Target URL | auto-detect or required | `https://app.example.com`, `http://127.0.0.1:3000` |
+| Tier | Standard | `Standard`, `Exhaustive` |
+| Mode | full | `--quick`, `--regression <baseline>` |
+| Output dir | `.superpowers/qa-reports/` | `Output to /tmp/qa` |
+| Scope | Diff or full app | `Focus on billing` |
+| Auth | none | `Use staging login` |
+
+Treat `quick` as a mode, not a tier.
+
+Map the parsed "Output dir" to `QA_OUTPUT_DIR` when the user provided one, then create the local output directory:
+
+```bash
+REPORT_DIR="${QA_OUTPUT_DIR:-.superpowers/qa-reports}"
+mkdir -p "$REPORT_DIR/screenshots"
+```
+
+## Test plan context
+
+Before falling back to git-diff heuristics, look for richer QA input:
+
+```bash
+REMOTE_URL=$(git remote get-url origin 2>/dev/null || true)
+SLUG=$(printf '%s\n' "$REMOTE_URL" | sed 's|.*[:/]\\([^/]*/[^/]*\\)\\.git$|\\1|;s|.*[:/]\\([^/]*/[^/]*\\)$|\\1|' | tr '/' '-')
+[ -n "$SLUG" ] || SLUG=$(basename "$_REPO_ROOT")
+BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo current)
+SAFE_BRANCH=$(printf '%s\n' "$BRANCH" | sed 's/[^[:alnum:]._-]/-/g')
+PLAN_ARTIFACT=$(ls -t "$_SP_STATE_DIR/projects/$SLUG"/*-"$SAFE_BRANCH"-test-plan-*.md 2>/dev/null | head -1)
+[ -n "$PLAN_ARTIFACT" ] || PLAN_ARTIFACT=$(ls -t "$_SP_STATE_DIR/projects/$SLUG"/*-test-plan-*.md 2>/dev/null | head -1)
+printf '%s\n' "$PLAN_ARTIFACT"
+```
+
+Prefer the newest artifact for the current branch under `$_SP_STATE_DIR/projects/$SLUG` when it exists. Only fall back to the newest project-wide test-plan artifact when there is no branch-specific match. This file is consumed by `superpowers:qa-only` as the primary QA handoff, ahead of lossy git-diff guessing.
+
+If no artifact exists, use:
+1. Explicit user scope
+2. Conversation context
+3. `diff-aware` inference from the current branch
+
+## Modes
+
+### diff-aware
+
+If no URL is provided and the repo is on a feature branch, automatically enter `diff-aware` mode:
+
+```bash
+BASE_BRANCH=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null || gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null || echo main)
+git fetch origin "$BASE_BRANCH" --quiet 2>/dev/null || true
+git diff "origin/$BASE_BRANCH...HEAD" --name-only 2>/dev/null || git diff "$BASE_BRANCH...HEAD" --name-only
+git log "origin/$BASE_BRANCH"..HEAD --oneline 2>/dev/null || git log "$BASE_BRANCH"..HEAD --oneline
+```
+
+From the changed files, infer:
+- affected pages and routes
+- touched forms, controls, or flows
+- adjacent regression surfaces worth checking
+
+Then use the browser automation skill to:
+- open the target page
+- inspect interactive elements
+- navigate the affected flow
+- capture screenshots and console/network evidence
+
+### full
+
+Systematic exploration of the app or the requested surface.
+
+### quick
+
+Fast smoke test: landing page plus the top navigation targets.
+
+### regression
+
+Load a previous baseline report or saved scorecard and compare score and issue deltas.
+
+## Workflow
+
+### Phase 1: Initialize
+
+1. Resolve URL or auto-detect the local app
+2. Create the local report skeleton from `$_SUPERPOWERS_ROOT/qa/templates/qa-report-template.md` when available
+3. Start a timer for duration tracking
+
+### Phase 2: Orient
+
+Use the browser automation skill to get a map of the app:
+- initial page load
+- interactive controls
+- console or failed-request health
+- framework clues
+
+### Phase 3: Explore
+
+For each affected page or route:
+- take a screenshot
+- check interactive elements
+- test forms and validation
+- test navigation in and out
+- check loading, empty, and error states
+- run a mobile pass if relevant
+
+Use the taxonomy in `$_SUPERPOWERS_ROOT/qa/references/issue-taxonomy.md` to classify each issue.
+
+### Phase 4: Document
+
+Document issues immediately. Every issue needs:
+- severity
+- category
+- URL or route
+- repro steps
+- evidence
+
+### Phase 5: Score Health
+
+Score the run across:
+- Console
+- Links
+- Visual
+- Functional
+- UX
+- Performance
+- Accessibility
+
+Use the shared rubric from the current template and state the final Health Score explicitly.
+
+### Phase 6: Write reports
+
+Write the local report to:
+- `$REPORT_DIR/qa-report-{domain}-{YYYY-MM-DD}.md`
+
+Also write a project-scoped outcome artifact:
+
+```bash
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+SAFE_BRANCH=$(printf '%s\n' "$BRANCH" | sed 's/[^[:alnum:]._-]/-/g')
+USER=$(whoami)
+DATETIME=$(date +%Y%m%d-%H%M%S)
+mkdir -p "$_SP_STATE_DIR/projects/$SLUG"
+```
+
+Write to:
+- `$_SP_STATE_DIR/projects/$SLUG/{user}-{safe-branch}-test-outcome-{datetime}.md`
+
+The project artifact should summarize:
+- what was tested
+- the Health Score
+- critical and high issues
+- deferred follow-ups
+- the local `qa-report` path
+
+## Output structure
+
+```
+$REPORT_DIR/
+├── qa-report-{domain}-{YYYY-MM-DD}.md
+└── screenshots/
+```
+
+Regression mode compares against an existing baseline artifact. `qa-only` should not invent or overwrite one implicitly.
+
+## Important rules
+
+- Never fix code in this skill
+- Every reported issue needs evidence
+- Verify issues are reproducible before documenting them
+- Redact credentials in notes and screenshots
+- If the browser prerequisite is missing, fail fast with the single actionable setup message above

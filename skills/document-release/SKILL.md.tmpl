@@ -1,0 +1,142 @@
+---
+name: document-release
+description: Use when implementation is complete and documentation, changelog, or TODO hygiene need a release-quality pass before merge
+---
+
+{{BASE_PREAMBLE}}
+
+
+# Document Release
+
+Audit and update project documentation after implementation work is complete. This skill is mostly automatic for factual corrections and conservative everywhere else.
+
+## Step 0: Detect base branch
+
+Determine which branch this work targets:
+
+```bash
+BASE_BRANCH=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null || gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null || echo main)
+git fetch origin "$BASE_BRANCH" --quiet 2>/dev/null || true
+```
+
+Use the detected branch as "the base branch" in the steps below.
+
+## Core rules
+
+**Only stop for:**
+- Risky narrative rewrites
+- Security or architecture explanation changes
+- Large removals or section reshaping
+- Ambiguous `VERSION` / release-notes consistency questions
+- New `TODOS.md` items that require judgment
+
+**Never stop for:**
+- Straight factual corrections from the diff
+- Updating file paths, counts, commands, or skill names
+- Fixing stale cross-references
+- Minor discoverability improvements
+
+## Step 1: Pre-flight and diff analysis
+
+Run repo-appropriate commands such as:
+
+```bash
+git diff "origin/$BASE_BRANCH...HEAD" --stat 2>/dev/null || git diff "$BASE_BRANCH...HEAD" --stat 2>/dev/null || git diff --stat
+git log "origin/$BASE_BRANCH"..HEAD --oneline 2>/dev/null || git log "$BASE_BRANCH"..HEAD --oneline || git log --oneline -20
+git diff "origin/$BASE_BRANCH...HEAD" --name-only 2>/dev/null || git diff "$BASE_BRANCH...HEAD" --name-only || git diff --name-only
+find . -maxdepth 2 -name "*.md" -not -path "./.git/*" -not -path "./node_modules/*" -not -path "./.superpowers/*" | sort
+```
+
+Classify the diff into:
+- New features or new public workflows
+- Changed behavior
+- Removed functionality
+- Infrastructure or contributor workflow changes
+
+## Step 2: Per-file documentation audit
+
+Read each documentation file and cross-reference it against the diff.
+
+**README.md**
+- Feature list still accurate?
+- Setup instructions still accurate?
+- Examples still valid?
+
+**ARCHITECTURE.md**
+- Diagrams and system descriptions still accurate?
+- Be conservative. Only update things clearly contradicted by the diff.
+
+**CONTRIBUTING.md / install docs / workflow docs**
+- Would a new contributor succeed with these instructions?
+- Do commands still exist?
+- Are generated-file or build instructions still correct?
+
+**Other `.md` files**
+- Identify the file's audience and purpose
+- Flag contradictions against the current diff
+
+Classify each change as:
+- `Auto-update` for safe factual corrections
+- `Ask user` for risky or subjective edits
+
+## Step 3: Apply safe factual updates
+
+Make the clear factual updates directly.
+
+For each file changed, record a one-line summary such as:
+- `README.md: added qa-only to the public skill list and updated the skill count`
+- `docs/README.codex.md: documented ~/.superpowers/projects/ artifact storage`
+
+Do not silently rewrite positioning, philosophy, or security promises.
+
+## Step 4: Ask about risky changes
+
+For each risky or questionable update, use one interactive user question:
+- State the doc file and the decision
+- Give a recommendation
+- Include a skip option
+
+Apply approved changes immediately after each answer.
+
+## Step 5: CHANGELOG or release-notes voice polish
+
+**CRITICAL — NEVER CLOBBER CHANGELOG ENTRIES**
+
+This step polishes voice. It does not replace history.
+
+If the repo keeps release history in `CHANGELOG.md`, use that file. Otherwise, use the equivalent release-notes file (for example `RELEASE-NOTES.md`) for this step.
+
+Rules:
+1. Read the full current release-history file before touching it
+2. Preserve existing entries and ordering
+3. Only polish wording inside the current entry when the meaning stays the same
+4. If an entry appears factually wrong or incomplete, ask instead of rewriting it
+
+If the diff does not touch the current release-history file, skip this step.
+
+## Step 6: Cross-doc consistency and discoverability
+
+After auditing files individually, do one discoverability pass:
+
+1. Do README and install docs describe the same public workflows?
+2. Does the latest `CHANGELOG.md` or release-notes entry align with `VERSION`, if both exist?
+3. Are important docs discoverable from README or the main contributor docs?
+
+If a doc exists but nothing links to it, flag it as a discoverability issue and make the smallest safe fix.
+
+## Step 7: TODOS.md cleanup
+
+If `TODOS.md` exists:
+- Mark obviously completed items when the diff closes them
+- Add new follow-up items only when they are concrete and justified by the diff
+- Ask the user before large reorganizations or subjective reprioritization
+
+## Output
+
+Provide:
+- Files audited
+- Files changed
+- Risky changes that were deferred or skipped
+- Any remaining discoverability, VERSION, or TODO questions
+
+If documentation still looks stale after the safe pass, say so explicitly.

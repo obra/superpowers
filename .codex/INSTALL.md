@@ -111,7 +111,7 @@ Use `[agents]` in your Codex config to tune global limits such as `max_threads`,
 
 ## Runtime Helpers
 
-Runtime helper state lives in `~/.superpowers/`. Generated skill preambles use this directory for session markers, contributor logs, and update-check cache files.
+Runtime helper state lives in `~/.superpowers/`. Generated skill preambles use this directory for session markers, contributor logs, update-check cache files, and project-scoped artifacts under `~/.superpowers/projects/`.
 
 Optional: enable contributor mode for future sessions with:
 

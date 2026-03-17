@@ -11,10 +11,22 @@ description: Use when a Superpowers design spec has been written and needs CEO o
 - Review the written spec artifact in `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`.
 - If the user names a specific spec path, use that path. Otherwise, inspect `docs/superpowers/specs/` and review the newest matching design doc.
 - If no current spec exists, stop and direct the agent back to `superpowers:brainstorming`.
+- The spec must include these exact header lines immediately below the title:
+
+```markdown
+**Workflow State:** Draft | CEO Approved
+**Spec Revision:** <integer>
+**Last Reviewed By:** brainstorming | plan-ceo-review
+```
+
+- If any header line is missing or malformed, normalize the spec to this contract before continuing and treat it as `Draft`.
 - When review decisions change the written spec, update the spec document before continuing.
+- Keep the spec in `Draft` until the review is fully resolved.
+- When approving the written spec, set `**Workflow State:** CEO Approved` and `**Last Reviewed By:** plan-ceo-review`.
+- `**Spec Revision:**` starts at `1`. If this review materially changes a previously approved spec, increment the revision and reset the spec to `Draft` until it is re-approved.
 - When the review is resolved and the written spec is approved, invoke `superpowers:writing-plans`.
 
-# Mega Plan Review Mode
+# Spec Review Mode
 
 ## Philosophy
 
@@ -71,8 +83,10 @@ Before doing anything else, run a system audit. This is not the spec review. It 
 Run repo-appropriate commands such as:
 
 ```bash
+BASE_BRANCH=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null || gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null || echo main)
+git fetch origin "$BASE_BRANCH" --quiet 2>/dev/null || true
 git log --oneline -30
-git diff --stat main...HEAD 2>/dev/null || git diff --stat
+git diff --stat "origin/$BASE_BRANCH...HEAD" 2>/dev/null || git diff --stat "$BASE_BRANCH...HEAD" 2>/dev/null || git diff --stat
 git stash list
 rg -l "TODO|FIXME|HACK|XXX"
 find . -type f -not -path "*/.git/*" | head -20

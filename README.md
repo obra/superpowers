@@ -22,7 +22,7 @@ Then your agent puts together an implementation plan that's clear enough for an 
 
 Before implementation begins, that written plan gets its own engineering review pass so architecture, testing, failure modes, and rollout details are locked in.
 
-Next up, once you say "go", implementation follows one of two execution paths: *subagent-driven-development* when same-session isolated-agent workflows are available, or *executing-plans* when the work should proceed in a separate session. In both cases, the written plan is executed task by task, reviewed before completion, and handed off through the normal branch-finishing flow. It's not uncommon for a well-grounded coding agent to be able to work autonomously for a couple hours at a time without deviating from the plan you put together.
+Next up, once you say "go", implementation follows one of two execution paths: *subagent-driven-development* when same-session isolated-agent workflows are available, or *executing-plans* when the work should proceed in a separate session. In both cases, execution starts from an engineering-approved current plan, runs a workspace-readiness preflight, then executes the plan task by task, reviews before completion, and hands off through the normal branch-finishing flow. Workspace preparation is the user's responsibility; invoke `using-git-worktrees` manually when you want isolated workspace management. It's not uncommon for a well-grounded coding agent to be able to work autonomously for a couple hours at a time without deviating from the plan you put together.
 
 There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Superpowers.
 
@@ -111,13 +111,14 @@ Runtime state lives in `~/.superpowers/`.
 - Preferences live in `~/.superpowers/config.yaml`
 - Session-awareness markers live in `~/.superpowers/sessions/`
 - Contributor field reports live in `~/.superpowers/contributor-logs/`
+- Project-scoped QA handoff artifacts live in `~/.superpowers/projects/`
 - Update-check cache, snooze, and just-upgraded markers live under the same state root
 
-All 16 checked-in `skills/*/SKILL.md` files are generated from adjacent `SKILL.md.tmpl` sources. Regenerate them with `node scripts/gen-skill-docs.mjs` and validate freshness with `node scripts/gen-skill-docs.mjs --check`.
+All 18 checked-in `skills/*/SKILL.md` files are generated from adjacent `SKILL.md.tmpl` sources. Regenerate them with `node scripts/gen-skill-docs.mjs` and validate freshness with `node scripts/gen-skill-docs.mjs --check`.
 
 The shipped reviewer agent artifacts are generated from `agents/code-reviewer.instructions.md`. Regenerate them with `node scripts/gen-agent-docs.mjs` and validate freshness with `node scripts/gen-agent-docs.mjs --check`.
 
-When changing the generated skill runtime, run `node scripts/gen-skill-docs.mjs --check` before `bash tests/codex-runtime/test-runtime-instructions.sh`.
+When changing the generated skill runtime, run `node scripts/gen-skill-docs.mjs --check` before `bash tests/codex-runtime/test-runtime-instructions.sh`, `bash tests/codex-runtime/test-workflow-enhancements.sh`, and `bash tests/codex-runtime/test-workflow-sequencing.sh`.
 
 To enable contributor mode for the installed runtime, run `~/.superpowers/install/bin/superpowers-config set superpowers_contributor true`.
 
@@ -129,12 +130,13 @@ Windows (PowerShell): `& "$env:USERPROFILE\.superpowers\install\bin\superpowers-
 
 ## What Actually Runs
 
-- `skills/` contains the 16 public Superpowers skills. `using-superpowers` is the entry skill; `brainstorming`, `plan-ceo-review`, `writing-plans`, and `plan-eng-review` form the default planning chain.
+- `skills/` contains the 18 public Superpowers skills. `using-superpowers` is the entry skill; `brainstorming`, `plan-ceo-review`, `writing-plans`, and `plan-eng-review` form the default planning chain.
 - `scripts/gen-skill-docs.mjs` renders every checked-in `SKILL.md` from its template and injects the shared runtime preamble used across the skill library.
 - `bin/superpowers-migrate-install` consolidates legacy platform-specific installs into the single shared checkout and recreates compatibility links when needed.
 - `bin/superpowers-config` and `bin/superpowers-update-check` manage local runtime state, contributor mode, and per-session upgrade notices under `~/.superpowers/`.
 - `superpowers-upgrade/SKILL.md` is the inline upgrade workflow the generated preambles hand off to when a newer runtime version is available.
-- `review/TODOS-format.md` is the canonical TODO format reference used by the plan-review skills.
+- `review/TODOS-format.md` and `review/checklist.md` are the shared review references used by the planning and code-review workflows.
+- `qa/references/issue-taxonomy.md` and `qa/templates/qa-report-template.md` are the shared QA references used by `qa-only`.
 - `agents/code-reviewer.instructions.md` is the shared reviewer source that generates `agents/code-reviewer.md` for GitHub Copilot and `.codex/agents/code-reviewer.toml` for Codex.
 
 ## The Basic Workflow
@@ -151,7 +153,7 @@ That is the default path for new feature and product work. Other task types take
 
 4. **plan-eng-review** - Activates after the plan is written. Reviews the full written plan before implementation starts.
 
-5. **implementation** - `using-git-worktrees`, `subagent-driven-development` or `executing-plans`, `test-driven-development`, `requesting-code-review`, and `finishing-a-development-branch` activate as execution proceeds.
+5. **implementation** - `subagent-driven-development` or `executing-plans` start from an engineering-approved current plan, run workspace-readiness checks, and execute the plan. The completion flow then runs `requesting-code-review`, may offer `qa-only` before landing, and may offer `document-release` before final branch cleanup or PR handoff. If the user wants an isolated workspace, invoke `using-git-worktrees` manually before execution.
 
 **The agent checks for relevant skills before any task.** These are mandatory workflows, not suggestions.
 
@@ -159,7 +161,7 @@ That is the default path for new feature and product work. Other task types take
 
 ### Skills Library
 
-The public runtime currently exposes 16 skills.
+The public runtime currently exposes 18 skills.
 
 **Testing**
 - **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
@@ -173,11 +175,13 @@ The public runtime currently exposes 16 skills.
 - **plan-ceo-review** - CEO/founder-mode spec review before implementation planning
 - **writing-plans** - Detailed implementation plans
 - **plan-eng-review** - Engineering review of the written plan before implementation
+- **qa-only** - Report-only browser QA with shared health scoring and artifacts
 - **executing-plans** - Separate-session plan execution
 - **dispatching-parallel-agents** - Concurrent subagent workflows
 - **requesting-code-review** - Code-review dispatch and triage
 - **receiving-code-review** - Responding to feedback
-- **using-git-worktrees** - Parallel development branches
+- **document-release** - Post-implementation documentation and changelog cleanup
+- **using-git-worktrees** - Optional isolated workspace setup
 - **finishing-a-development-branch** - Merge/PR decision workflow
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
 

@@ -98,10 +98,21 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** This should be run in a dedicated worktree (created by brainstorming skill).
-
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
+
+## Prerequisite Gate
+
+Before writing the plan, inspect the selected spec and validate these exact header lines:
+
+```markdown
+**Workflow State:** CEO Approved
+**Spec Revision:** <integer>
+**Last Reviewed By:** brainstorming | plan-ceo-review
+```
+
+- If the spec is missing these lines, or if `**Workflow State:**` is not `CEO Approved`, stop and direct the agent to `superpowers:plan-ceo-review`.
+- Do not write or extend an implementation plan from a draft spec.
 
 ## Scope Check
 
@@ -135,6 +146,11 @@ This structure informs the task decomposition. Each task should produce self-con
 # [Feature Name] Implementation Plan
 
 > **For Codex and GitHub Copilot workers:** REQUIRED: Use `superpowers:subagent-driven-development` when isolated-agent workflows are available in the current platform/session; otherwise use `superpowers:executing-plans`. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Workflow State:** Draft
+**Source Spec:** [Exact path to approved spec]
+**Source Spec Revision:** [Integer copied from approved spec]
+**Last Reviewed By:** writing-plans
 
 **Goal:** [One sentence describing what this builds]
 
@@ -193,6 +209,7 @@ git commit -m "feat: add specific feature"
 - Complete code in plan (not "add validation")
 - Exact commands with expected output
 - Reference relevant skills by name (for example `superpowers:test-driven-development`)
+- Copy the exact approved spec path and current `Spec Revision` into the plan header
 - DRY, YAGNI, TDD, frequent commits
 
 ## Plan Review Handoff

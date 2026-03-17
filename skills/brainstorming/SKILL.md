@@ -188,6 +188,17 @@ digraph brainstorming {
 
 - Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
+- Every spec MUST include these header lines immediately below the title:
+
+```markdown
+# [Feature Name]
+
+**Workflow State:** Draft
+**Spec Revision:** 1
+**Last Reviewed By:** brainstorming
+```
+
+- Use exact-match header lines. Later workflow stages parse them with regexes and treat missing or malformed fields as not approved.
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 

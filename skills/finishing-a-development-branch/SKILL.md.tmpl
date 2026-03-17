@@ -40,7 +40,53 @@ Stop. Don't proceed to Step 2.
 
 **If tests pass:** Continue to Step 2.
 
+### Step 1.5: Optional Pre-Landing Review Gate
+
+If a fresh review has not already been resolved for the current diff, invoke `superpowers:requesting-code-review` before presenting completion options.
+
+- Resolve all Critical issues before continuing
+- Resolve Important issues unless the user explicitly accepts the risk
+- If a fresh review already happened in the current workflow, continue silently
+
+### Step 1.75: Optional Pre-Landing QA Gate
+
+Before presenting completion options, look for a branch-specific QA handoff artifact:
+
+```bash
+REMOTE_URL=$(git remote get-url origin 2>/dev/null || true)
+SLUG=$(printf '%s\n' "$REMOTE_URL" | sed 's|.*[:/]\([^/]*/[^/]*\)\.git$|\1|;s|.*[:/]\([^/]*/[^/]*\)$|\1|' | tr '/' '-')
+[ -n "$SLUG" ] || SLUG=$(basename "$_REPO_ROOT")
+BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo current)
+SAFE_BRANCH=$(printf '%s\n' "$BRANCH" | sed 's/[^[:alnum:]._-]/-/g')
+PLAN_ARTIFACT=$(ls -t "$_SP_STATE_DIR/projects/$SLUG"/*-"$SAFE_BRANCH"-test-plan-*.md 2>/dev/null | head -1)
+printf '%s\n' "$PLAN_ARTIFACT"
+```
+
+If `PLAN_ARTIFACT` exists, read it before deciding whether browser QA applies.
+
+If a branch-specific test-plan artifact exists and it names pages, routes, or browser interactions, or the current change is clearly browser-facing, offer an optional handoff to `superpowers:qa-only` before completion options.
+
+Recommendation logic:
+- Recommend `A)` when a branch-specific test-plan artifact exists and it points at pages, routes, or browser interactions
+- Recommend `A)` when user-visible routes, forms, or browser flows changed
+- Skip the handoff when the branch is clearly non-browser work, even if a generic test-plan artifact exists
+
+Possible options:
+- `A)` Run `superpowers:qa-only` now and return here after the report is written
+- `B)` Skip QA handoff this time
+
+If a fresh `qa-only` report already happened in the current workflow, continue silently.
+
 ### Step 2: Determine Base Branch
+
+Try platform-aware detection first:
+
+```bash
+gh pr view --json baseRefName -q .baseRefName
+gh repo view --json defaultBranchRef -q .defaultBranchRef.name
+```
+
+If those commands fail or disagree with local history, use merge-base as a hint:
 
 ```bash
 # Try common base branches
@@ -77,16 +123,27 @@ Recommendation logic:
 #### Option A: Merge Locally
 
 ```bash
+# Refresh the base branch first
+git fetch origin <base-branch> --quiet || true
+
 # Switch to base branch
 git checkout <base-branch>
 
-# Pull latest
-git pull
+# Fast-forward to the latest merged remote state
+git merge --ff-only "origin/<base-branch>" 2>/dev/null || git pull --ff-only origin <base-branch>
+
+# Stop if the local base branch still does not match the merged remote state
+REMOTE_BASE=$(git rev-parse "origin/<base-branch>" 2>/dev/null || echo "")
+LOCAL_BASE=$(git rev-parse HEAD)
+if [ -n "$REMOTE_BASE" ] && [ "$LOCAL_BASE" != "$REMOTE_BASE" ]; then
+  echo "Base branch is not at the latest merged remote state. Stop and resolve that divergence before merging."
+  exit 1
+fi
 
 # Merge feature branch
 git merge <feature-branch>
 
-# Verify tests on merged result
+# Verify tests on merged result before cleanup
 <test command>
 
 # If tests pass
@@ -146,17 +203,32 @@ Then: Cleanup worktree (Step 5)
 
 **For Options A and D:**
 
-Check if in worktree:
+Locate the feature branch worktree by branch name, not the current branch:
 ```bash
-git worktree list | grep $(git branch --show-current)
+FEATURE_WORKTREE=$(git worktree list --porcelain | awk '
+  /^worktree / { wt=$2 }
+  /^branch refs\/heads\/<feature-branch>$/ { print wt }
+')
 ```
 
-If yes:
+If found:
 ```bash
-git worktree remove <worktree-path>
+[ -n "$FEATURE_WORKTREE" ] && git worktree remove "$FEATURE_WORKTREE"
 ```
 
 **For Option C:** Keep worktree.
+
+### Step 6: Optional Document Release Handoff
+
+For Options A, B, or C only: if the repo contains `CHANGELOG.md`, `RELEASE-NOTES.md`, `VERSION`, or `TODOS.md`, offer an optional handoff to `superpowers:document-release`.
+
+Recommendation logic:
+- Recommend running `superpowers:document-release` when user-visible behavior changed or release metadata exists
+- Skip the handoff when there are no docs or release surfaces to reconcile
+
+Possible options:
+- `A)` Run `superpowers:document-release` now
+- `B)` Skip documentation handoff this time
 
 ## Quick Reference
 
@@ -206,4 +278,5 @@ git worktree remove <worktree-path>
 - **executing-plans** - After the final review is resolved and all tasks are complete
 
 **Pairs with:**
-- **using-git-worktrees** - Cleans up worktree created by that skill
+- **qa-only** - Optional pre-landing browser QA before merge or PR decisions
+- **using-git-worktrees** - Optional cleanup for a worktree created by that skill

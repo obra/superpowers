@@ -7,11 +7,13 @@ cd "$REPO_ROOT"
 
 SKILL_DIRS=(
   "brainstorming"
+  "document-release"
   "dispatching-parallel-agents"
   "executing-plans"
   "finishing-a-development-branch"
   "plan-ceo-review"
   "plan-eng-review"
+  "qa-only"
   "receiving-code-review"
   "requesting-code-review"
   "subagent-driven-development"
@@ -64,10 +66,15 @@ FILES=(
   "bin/superpowers-update-check"
   "bin/superpowers-update-check.ps1"
   "review/TODOS-format.md"
+  "review/checklist.md"
+  "qa/references/issue-taxonomy.md"
+  "qa/templates/qa-report-template.md"
   "superpowers-upgrade/SKILL.md"
   "tests/codex-runtime/test-powershell-wrapper-bash-resolution.sh"
   "tests/codex-runtime/test-superpowers-migrate-install.sh"
   "tests/codex-runtime/test-superpowers-upgrade-skill.sh"
+  "tests/codex-runtime/test-workflow-enhancements.sh"
+  "tests/codex-runtime/test-workflow-sequencing.sh"
   "tests/brainstorm-server/test-launch-wrappers.sh"
 )
 
@@ -323,11 +330,13 @@ required_patterns=(
   "README.md:update_check true"
   "README.md:node scripts/gen-skill-docs.mjs --check"
   "README.md:bash tests/codex-runtime/test-runtime-instructions.sh"
+  "README.md:bash tests/codex-runtime/test-workflow-sequencing.sh"
   "docs/testing.md:tests/codex-runtime/"
   "docs/testing.md:tests/brainstorm-server/"
   "docs/testing.md:bash tests/codex-runtime/test-powershell-wrapper-bash-resolution.sh"
   "docs/testing.md:bash tests/brainstorm-server/test-launch-wrappers.sh"
   "docs/README.codex.md:brainstorming -> plan-ceo-review -> writing-plans -> plan-eng-review -> implementation"
+  'docs/README.codex.md:Workspace preparation is the user'"'"'s responsibility; invoke `using-git-worktrees` manually when you want isolated workspace management.'
   "docs/README.codex.md:Current Codex releases enable subagent workflows by default"
   "docs/README.codex.md:~/.codex/agents/code-reviewer.toml"
   "docs/README.codex.md:~/.superpowers/install/.codex/agents/code-reviewer.toml"
@@ -340,14 +349,18 @@ required_patterns=(
   "docs/README.codex.md:job_max_runtime_seconds"
   'docs/README.codex.md:`default`, `worker`, and `explorer` agents'
   "docs/README.copilot.md:brainstorming -> plan-ceo-review -> writing-plans -> plan-eng-review -> implementation"
+  'docs/README.copilot.md:Workspace preparation is the user'"'"'s responsibility; invoke `using-git-worktrees` manually when you want isolated workspace management.'
   "skills/brainstorming/SKILL.md:## Preamble (run first)"
   'skills/brainstorming/SKILL.md:7. **Automatic spec review handoff** — invoke `superpowers:plan-ceo-review` after writing the spec'
+  'skills/brainstorming/SKILL.md:**Workflow State:** Draft'
   "skills/brainstorming/SKILL.md:**The terminal state is invoking plan-ceo-review.**"
   "skills/writing-plans/SKILL.md:## Preamble (run first)"
   "skills/writing-plans/SKILL.md:## Plan Review Handoff"
+  'skills/writing-plans/SKILL.md:If the spec is missing these lines, or if `**Workflow State:**` is not `CEO Approved`, stop and direct the agent to `superpowers:plan-ceo-review`.'
   'skills/writing-plans/SKILL.md:Invoke `superpowers:plan-eng-review` after saving the full plan.'
   "skills/writing-plans/SKILL.md:**The terminal state is invoking plan-eng-review.**"
   "skills/plan-ceo-review/SKILL.md:docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md"
+  'skills/plan-ceo-review/SKILL.md:**Workflow State:** Draft | CEO Approved'
   "skills/plan-ceo-review/SKILL.md:_TODOS_FORMAT"
   'skills/plan-ceo-review/SKILL.md:If no current spec exists, stop and direct the agent back to `superpowers:brainstorming`.'
   'skills/plan-ceo-review/SKILL.md:When the review is resolved and the written spec is approved, invoke `superpowers:writing-plans`.'
@@ -355,6 +368,7 @@ required_patterns=(
   "skills/plan-ceo-review/SKILL.md:.github/copilot-instructions.md"
   "skills/plan-ceo-review/SKILL.md:.github/instructions/*.instructions.md"
   "skills/plan-eng-review/SKILL.md:docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md"
+  'skills/plan-eng-review/SKILL.md:**Workflow State:** Draft | Engineering Approved'
   "skills/plan-eng-review/SKILL.md:_TODOS_FORMAT"
   'skills/plan-eng-review/SKILL.md:If no current plan exists, stop and direct the agent back to `superpowers:writing-plans`.'
   "skills/plan-eng-review/SKILL.md:When the review is resolved and the written plan is approved, present the normal execution handoff."
@@ -365,6 +379,7 @@ required_patterns=(
   "skills/using-superpowers/SKILL.md:## Preamble (run first)"
   "skills/using-superpowers/SKILL.md:_IS_SUPERPOWERS_RUNTIME_ROOT()"
   "skills/using-superpowers/SKILL.md:\$HOME/.superpowers/install"
+  "skills/using-superpowers/SKILL.md:## Superpowers Workflow Router"
   "skills/using-superpowers/SKILL.md:Legacy Claude, Cursor, and OpenCode-specific loading flows are intentionally unsupported in this runtime package."
   "skills/using-superpowers/references/codex-tools.md:~/.copilot/skills/"
   "skills/using-git-worktrees/SKILL.md:## Preamble (run first)"
@@ -656,9 +671,9 @@ for pattern in \
   'skills/subagent-driven-development/SKILL.md:**vs. Executing Plans (parallel session):**' \
   'skills/subagent-driven-development/SKILL.md:- **superpowers:executing-plans** - Use for parallel session instead of same-session execution' \
   'skills/subagent-driven-development/SKILL.md:[Invoke superpowers:finishing-a-development-branch]' \
-  'README.md:implementation follows one of two execution paths: *subagent-driven-development* when same-session isolated-agent workflows are available, or *executing-plans* when the work should proceed in a separate session.' \
-  'docs/README.codex.md:During implementation, `using-git-worktrees` prepares the isolated workspace, then either `subagent-driven-development` or `executing-plans` drives task execution. `test-driven-development`, `requesting-code-review`, and `finishing-a-development-branch` activate as that execution path requires.' \
-  'docs/README.copilot.md:During implementation, `using-git-worktrees` prepares the isolated workspace, then either `subagent-driven-development` or `executing-plans` drives task execution. `test-driven-development`, `requesting-code-review`, and `finishing-a-development-branch` activate as that execution path requires.' \
+  'README.md:implementation follows one of two execution paths: *subagent-driven-development* when same-session isolated-agent workflows are available, or *executing-plans* when the work should proceed in a separate session. In both cases, execution starts from an engineering-approved current plan, runs a workspace-readiness preflight, then executes the plan task by task, reviews before completion, and hands off through the normal branch-finishing flow.' \
+  'docs/README.codex.md:During implementation, either `subagent-driven-development` or `executing-plans` starts from an engineering-approved current plan, runs a workspace-readiness preflight, and then drives task execution.' \
+  'docs/README.copilot.md:During implementation, either `subagent-driven-development` or `executing-plans` starts from an engineering-approved current plan, runs a workspace-readiness preflight, and then drives task execution.' \
   'README.md:- **requesting-code-review** - Code-review dispatch and triage'; do
   file="${pattern%%:*}"
   needle="${pattern#*:}"
@@ -705,6 +720,9 @@ for stale in \
   'No worktree directory found. Where should I create worktrees?' \
   'launches a *subagent-driven-development* process' \
   'Pre-review checklist' \
+  'created by brainstorming skill' \
+  'During implementation, `using-git-worktrees` prepares the isolated workspace' \
+  '- **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting' \
   '1. .worktrees/ (project-local, hidden)' \
   '2. ~/.config/superpowers/worktrees/<project-name>/ (global location)'; do
   if rg -n -F -- "$stale" README.md skills/executing-plans/SKILL.md skills/executing-plans/SKILL.md.tmpl skills/requesting-code-review/SKILL.md skills/requesting-code-review/SKILL.md.tmpl skills/finishing-a-development-branch/SKILL.md skills/finishing-a-development-branch/SKILL.md.tmpl skills/using-git-worktrees/SKILL.md skills/using-git-worktrees/SKILL.md.tmpl >/dev/null; then

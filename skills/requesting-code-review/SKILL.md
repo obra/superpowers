@@ -101,7 +101,7 @@ In Codex, Superpowers installs the `code-reviewer` custom agent alongside the sh
 **Mandatory:**
 - After each task in subagent-driven development
 - After completing major feature
-- Before merge to main
+- Before merge to the target base branch
 
 **Optional but valuable:**
 - When stuck (fresh perspective)
@@ -110,11 +110,15 @@ In Codex, Superpowers installs the `code-reviewer` custom agent alongside the sh
 
 ## How to Request
 
-**1. Get git SHAs:**
+**1. Detect the base branch and review range:**
 ```bash
-BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
+BASE_BRANCH=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null || gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null || echo main)
+git fetch origin "$BASE_BRANCH" --quiet 2>/dev/null || true
+BASE_SHA=$(git merge-base HEAD "origin/$BASE_BRANCH" 2>/dev/null || git merge-base HEAD "$BASE_BRANCH" 2>/dev/null || git rev-parse HEAD~1)
 HEAD_SHA=$(git rev-parse HEAD)
 ```
+
+The reviewer should use the shared review checklist from `review/checklist.md` in the repo when available, otherwise fall back to the installed Superpowers copy.
 
 **2. Dispatch the code-reviewer agent:**
 
@@ -123,6 +127,7 @@ Use the `code-reviewer` agent and fill the template at `code-reviewer.md`
 **Placeholders:**
 - `{WHAT_WAS_IMPLEMENTED}` - What you just built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
+- `{BASE_BRANCH}` - The detected base branch name
 - `{BASE_SHA}` - Starting commit
 - `{HEAD_SHA}` - Ending commit
 - `{DESCRIPTION}` - Brief summary
@@ -131,6 +136,7 @@ Use the `code-reviewer` agent and fill the template at `code-reviewer.md`
 - Fix Critical issues immediately
 - Fix Important issues before proceeding
 - Note Minor issues for later
+- Capture documentation or TODO follow-ups instead of silently dropping them
 - Push back if reviewer is wrong (with reasoning)
 
 ## Example
@@ -140,18 +146,20 @@ Use the `code-reviewer` agent and fill the template at `code-reviewer.md`
 
 You: Let me request code review before proceeding.
 
-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
+BASE_BRANCH=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null || gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null || echo main)
+BASE_SHA=$(git merge-base HEAD "origin/$BASE_BRANCH" 2>/dev/null || git merge-base HEAD "$BASE_BRANCH" 2>/dev/null || git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
 HEAD_SHA=$(git rev-parse HEAD)
 
 [Dispatch code-reviewer agent]
   WHAT_WAS_IMPLEMENTED: Verification and repair functions for conversation index
   PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md
+  BASE_BRANCH: main
   BASE_SHA: a7981ec
   HEAD_SHA: 3df7661
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
 
 [Subagent returns]:
-  Strengths: Clean architecture, real tests
+  Strengths: Clean architecture, real tests, checklist pass covered enum consumers
   Issues:
     Important: Missing progress indicators
     Minor: Magic number (100) for reporting interval

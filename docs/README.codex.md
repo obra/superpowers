@@ -121,11 +121,11 @@ Superpowers' default planning pipeline is:
 
 `brainstorming -> plan-ceo-review -> writing-plans -> plan-eng-review -> implementation`
 
-During implementation, `using-git-worktrees` prepares the isolated workspace, then either `subagent-driven-development` or `executing-plans` drives task execution. `test-driven-development`, `requesting-code-review`, and `finishing-a-development-branch` activate as that execution path requires.
+During implementation, either `subagent-driven-development` or `executing-plans` starts from an engineering-approved current plan, runs a workspace-readiness preflight, and then drives task execution. Workspace preparation is the user's responsibility; invoke `using-git-worktrees` manually when you want isolated workspace management. The completion flow runs `requesting-code-review`, may offer `qa-only` before landing, and may offer `document-release` before final cleanup or PR handoff.
 
 ## Runtime Helpers
 
-Runtime helper state lives in `~/.superpowers/`. Generated skill preambles use this directory for session markers, contributor logs, and update-check cache files.
+Runtime helper state lives in `~/.superpowers/`. Generated skill preambles use this directory for session markers, contributor logs, update-check cache files, and project-scoped artifacts under `~/.superpowers/projects/`.
 
 Optional: enable contributor mode for future sessions with:
 

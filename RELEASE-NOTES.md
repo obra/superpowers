@@ -2,6 +2,23 @@
 
 For release history before `v5.1.0 (2026-03-16)`, see the upstream README: https://github.com/obra/superpowers/blob/main/README.md
 
+## v5.2.0 (2026-03-16)
+
+### Workflow Enhancements
+
+**Added portable workflow imports from gstack without porting the browser daemon**
+
+- Added `review/checklist.md` and upgraded the reviewer contract to be checklist-driven and base-branch aware
+- Added the public `document-release` skill for post-implementation documentation cleanup
+- Added the public `qa-only` skill for report-only browser QA using external Playwright-based browser automation support
+- Added shared QA support assets at `qa/references/issue-taxonomy.md` and `qa/templates/qa-report-template.md`
+- Extended `plan-eng-review` with reusable test-plan artifact output under `~/.superpowers/projects/`
+- Extended `finishing-a-development-branch` with stronger base-branch detection plus optional code-review and document-release handoffs
+
+### Docs
+
+- README, platform READMEs, and install docs now document the 18-skill runtime and the `~/.superpowers/projects/` artifact convention
+
 ## v5.1.0 (2026-03-16)
 
 ### Generated Skill Runtime Preambles

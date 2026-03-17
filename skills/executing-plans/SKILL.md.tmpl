@@ -18,11 +18,24 @@ Load plan, review critically, execute all tasks in a separate session, request f
 
 ## The Process
 
-### Step 1: Load and Review Plan
-1. Read plan file
-2. Review critically - identify any questions or concerns about the plan
-3. If concerns: Raise them with your human partner before starting
-4. If no concerns: Track the work in your platform's task checklist and proceed
+### Step 1: Implementation Preflight
+1. Require the exact approved plan path as input. If you are not given one, stop and ask for it or route back to `superpowers:plan-eng-review`.
+2. Read the plan file first.
+3. Verify these exact header lines exist and are current:
+   - `**Workflow State:** Engineering Approved`
+   - `**Source Spec:** <path>`
+   - `**Source Spec Revision:** <integer>`
+4. Read the source spec named in the plan and confirm it is still `CEO Approved` at the same revision.
+5. Stop immediately and redirect:
+   - to `superpowers:plan-eng-review` if the plan is draft or malformed
+   - to `superpowers:writing-plans` if the source spec revision is stale
+6. Verify workspace readiness before starting:
+   - stop on `main` or `master` unless the user explicitly approves in-place execution
+   - stop on detached HEAD
+   - stop if merge conflicts, unresolved index entries, rebase, or cherry-pick state is present
+   - if the working tree is dirty, stop and ask the user to confirm the workspace is intentionally prepared
+7. Do not auto-clean the workspace and do not auto-create a worktree.
+8. If preflight passes, review the plan critically for execution concerns and then track the work in your platform's task checklist.
 
 ### Step 2: Execute Tasks
 
@@ -44,7 +57,7 @@ After all tasks complete and verified:
 After the final review is resolved:
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
 - **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
-- Follow that skill to verify tests, present options, execute choice
+- Follow that skill to verify tests, offer optional `superpowers:qa-only` when appropriate, present options, and execute the chosen completion path
 
 ## When to Stop and Ask for Help
 
@@ -66,16 +79,21 @@ After the final review is resolved:
 
 ## Remember
 - Review plan critically first
+- Start only from an engineering-approved current plan
 - Follow plan steps exactly
 - Don't skip verifications
 - Reference skills when plan says to
 - Stop when blocked, don't guess
 - Never start implementation on main/master branch without explicit user consent
+- Workspace preparation is the user's responsibility; `superpowers:using-git-worktrees` is optional, not automatic
 
 ## Integration
 
 **Required workflow skills:**
-- **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
 - **superpowers:writing-plans** - Creates the plan this skill executes
+- **superpowers:plan-eng-review** - Provides the approved plan and execution handoff
 - **superpowers:requesting-code-review** - REQUIRED: Final review gate after execution completes
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
+
+**Optional manual prep:**
+- **superpowers:using-git-worktrees** - Use when the user wants isolated workspace management before execution

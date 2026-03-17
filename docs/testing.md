@@ -13,6 +13,8 @@ Run these commands from the repository root:
 node scripts/gen-agent-docs.mjs --check
 node scripts/gen-skill-docs.mjs --check
 bash tests/codex-runtime/test-runtime-instructions.sh
+bash tests/codex-runtime/test-workflow-enhancements.sh
+bash tests/codex-runtime/test-workflow-sequencing.sh
 bash tests/codex-runtime/test-powershell-wrapper-bash-resolution.sh
 bash tests/codex-runtime/test-superpowers-config.sh
 bash tests/codex-runtime/test-superpowers-migrate-install.sh
@@ -31,7 +33,7 @@ npm --prefix tests/brainstorm-server test
 - Runtime helper contracts for config, update checks, migration, and upgrade flow
 - PowerShell wrapper behavior, including Git Bash selection and Windows path handling
 - Install documentation and supported runtime references
-- Required support files such as `VERSION`, `review/TODOS-format.md`, and `superpowers-upgrade/SKILL.md`
+- Required support files such as `VERSION`, `review/TODOS-format.md`, `review/checklist.md`, the shared QA assets, and `superpowers-upgrade/SKILL.md`
 
 ### `tests/brainstorm-server/`
 
@@ -48,6 +50,8 @@ npm --prefix tests/brainstorm-server test
 ## Notes
 
 - `test-runtime-instructions.sh` is the contract gate for supported install and runtime documentation
+- `test-workflow-enhancements.sh` covers the imported review, QA, and document-release workflow contracts
+- `test-workflow-sequencing.sh` covers artifact-state routing, stage gates, and the optional worktree policy
 - `test-powershell-wrapper-bash-resolution.sh` covers shared PowerShell wrapper bash selection and override behavior
 - `test-superpowers-update-check.sh` covers semver comparison, snooze handling, and just-upgraded markers
 - `test-superpowers-upgrade-skill.sh` covers install-root resolution and direct upgrade-flow version resolution

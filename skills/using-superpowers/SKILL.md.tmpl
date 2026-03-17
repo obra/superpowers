@@ -115,6 +115,30 @@ When multiple skills could apply, use this order:
 
 The skill itself tells you which.
 
+## Superpowers Workflow Router
+
+For feature, product, or workflow-change requests inside a Superpowers project, route by artifact state instead of skipping ahead based on the user's wording alone.
+
+Inspect `docs/superpowers/specs/` and `docs/superpowers/plans/` for the newest relevant artifacts, then parse these exact-match header lines:
+
+- Spec state: `^\*\*Workflow State:\*\* (Draft|CEO Approved)$`
+- Spec revision: `^\*\*Spec Revision:\*\* ([0-9]+)$`
+- Spec reviewer: `^\*\*Last Reviewed By:\*\* (brainstorming|plan-ceo-review)$`
+- Plan state: `^\*\*Workflow State:\*\* (Draft|Engineering Approved)$`
+- Plan source: `^\*\*Source Spec:\*\* (.+)$`
+- Plan source revision: `^\*\*Source Spec Revision:\*\* ([0-9]+)$`
+- Plan reviewer: `^\*\*Last Reviewed By:\*\* (writing-plans|plan-eng-review)$`
+
+Routing rules:
+
+1. No relevant spec artifact: invoke `superpowers:brainstorming`.
+2. Spec exists but is `Draft` or malformed: invoke `superpowers:plan-ceo-review`.
+3. Spec is `CEO Approved` and no relevant plan exists: invoke `superpowers:writing-plans`.
+4. Plan exists but is `Draft` or malformed: invoke `superpowers:plan-eng-review`.
+5. Plan is `Engineering Approved` but its `Source Spec Revision` does not match the latest approved spec revision: invoke `superpowers:writing-plans`.
+6. Plan is `Engineering Approved` and matches the latest approved spec revision: proceed to implementation through `superpowers:subagent-driven-development` or `superpowers:executing-plans`.
+7. If artifacts are ambiguous or incomplete, route to the earlier safe stage instead of skipping ahead.
+
 ## User Instructions
 
 Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
