@@ -26,11 +26,6 @@ SKILL_DIRS=(
   "writing-skills"
 )
 
-REVIEW_SKILLS=(
-  "plan-ceo-review"
-  "plan-eng-review"
-)
-
 FILES=(
   "README.md"
   ".codex/INSTALL.md"
@@ -205,59 +200,6 @@ echo "Generated skill docs pass freshness validation."
 node scripts/gen-agent-docs.mjs --check
 echo "Generated reviewer agent artifacts pass freshness validation."
 
-for skill in "${SKILL_DIRS[@]}"; do
-  skill_md="skills/$skill/SKILL.md"
-  skill_tmpl="skills/$skill/SKILL.md.tmpl"
-
-  if ! rg -n -F "<!-- AUTO-GENERATED from SKILL.md.tmpl — do not edit directly -->" "$skill_md" >/dev/null; then
-    echo "Missing generated header in $skill_md"
-    exit 1
-  fi
-
-  if ! rg -n -F "<!-- Regenerate: node scripts/gen-skill-docs.mjs -->" "$skill_md" >/dev/null; then
-    echo "Missing regenerate command in $skill_md"
-    exit 1
-  fi
-
-  for pattern in \
-    "## Preamble (run first)" \
-    "## Interactive User Question Format" \
-    "## Contributor Mode" \
-    "_SESSIONS" \
-    "SUPERPOWERS_STATE_DIR" \
-    "~/.superpowers/contributor-logs"; do
-    if ! rg -n -F "$pattern" "$skill_md" >/dev/null; then
-      echo "Missing shared preamble pattern '$pattern' in $skill_md"
-      exit 1
-    fi
-  done
-
-  if [[ " ${REVIEW_SKILLS[*]} " == *" $skill "* ]]; then
-    if ! rg -n -F "{{REVIEW_PREAMBLE}}" "$skill_tmpl" >/dev/null; then
-      echo "Missing review preamble placeholder in $skill_tmpl"
-      exit 1
-    fi
-    for pattern in \
-      "_TODOS_FORMAT" \
-      "## Agent Grounding" \
-      "AGENTS.override.md" \
-      ".github/copilot-instructions.md" \
-      ".github/instructions/*.instructions.md"; do
-      if ! rg -n -F "$pattern" "$skill_md" >/dev/null; then
-        echo "Missing review preamble pattern '$pattern' in $skill_md"
-        exit 1
-      fi
-    done
-  else
-    if ! rg -n -F "{{BASE_PREAMBLE}}" "$skill_tmpl" >/dev/null; then
-      echo "Missing base preamble placeholder in $skill_tmpl"
-      exit 1
-    fi
-  fi
-done
-
-echo "All generated skill docs include the expected base or review preamble structure."
-
 if rg -n -F '[ "$(basename "$_REPO_ROOT")" = "superpowers" ]' skills/*/SKILL.md >/dev/null; then
   echo "Generated skills should detect the current Superpowers checkout by runtime markers, not repo basename."
   exit 1
@@ -355,6 +297,7 @@ required_patterns=(
   'skills/brainstorming/SKILL.md:**Workflow State:** Draft'
   "skills/brainstorming/SKILL.md:**The terminal state is invoking plan-ceo-review.**"
   "skills/writing-plans/SKILL.md:## Preamble (run first)"
+  "skills/writing-plans/SKILL.md:Use when you have a CEO-approved Superpowers spec for a multi-step task and need an implementation plan, before touching code"
   "skills/writing-plans/SKILL.md:## Plan Review Handoff"
   'skills/writing-plans/SKILL.md:If the spec is missing these lines, or if `**Workflow State:**` is not `CEO Approved`, stop and direct the agent to `superpowers:plan-ceo-review`.'
   'skills/writing-plans/SKILL.md:Invoke `superpowers:plan-eng-review` after saving the full plan.'
@@ -364,14 +307,19 @@ required_patterns=(
   "skills/plan-ceo-review/SKILL.md:_TODOS_FORMAT"
   'skills/plan-ceo-review/SKILL.md:If no current spec exists, stop and direct the agent back to `superpowers:brainstorming`.'
   'skills/plan-ceo-review/SKILL.md:When the review is resolved and the written spec is approved, invoke `superpowers:writing-plans`.'
+  'skills/plan-ceo-review/SKILL.md:Do not draft a plan or offer implementation options from `plan-ceo-review`.'
+  'skills/plan-ceo-review/SKILL.md:**The terminal state is invoking writing-plans.**'
   'skills/plan-ceo-review/SKILL.md:AGENTS.override.md'
   "skills/plan-ceo-review/SKILL.md:.github/copilot-instructions.md"
   "skills/plan-ceo-review/SKILL.md:.github/instructions/*.instructions.md"
   "skills/plan-eng-review/SKILL.md:docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md"
+  "skills/plan-eng-review/SKILL.md:Use when a Superpowers implementation plan from a CEO-approved spec has been written and needs engineering review before execution"
   'skills/plan-eng-review/SKILL.md:**Workflow State:** Draft | Engineering Approved'
   "skills/plan-eng-review/SKILL.md:_TODOS_FORMAT"
   'skills/plan-eng-review/SKILL.md:If no current plan exists, stop and direct the agent back to `superpowers:writing-plans`.'
   "skills/plan-eng-review/SKILL.md:When the review is resolved and the written plan is approved, present the normal execution handoff."
+  'skills/plan-eng-review/SKILL.md:Do not start implementation inside `plan-eng-review`.'
+  'skills/plan-eng-review/SKILL.md:**The terminal state is presenting the execution handoff with the approved plan path.**'
   "skills/plan-eng-review/SKILL.md:AGENTS.override.md"
   "skills/plan-eng-review/SKILL.md:.github/copilot-instructions.md"
   "skills/plan-eng-review/SKILL.md:.github/instructions/*.instructions.md"
@@ -379,7 +327,9 @@ required_patterns=(
   "skills/using-superpowers/SKILL.md:## Preamble (run first)"
   "skills/using-superpowers/SKILL.md:_IS_SUPERPOWERS_RUNTIME_ROOT()"
   "skills/using-superpowers/SKILL.md:\$HOME/.superpowers/install"
+  "skills/using-superpowers/SKILL.md:then follow the artifact-state workflow: plan-ceo-review -> writing-plans -> plan-eng-review -> execution."
   "skills/using-superpowers/SKILL.md:## Superpowers Workflow Router"
+  "skills/using-superpowers/SKILL.md:Do NOT jump from brainstorming straight to implementation. For workflow-routed work, every stage owns the handoff into the next one."
   "skills/using-superpowers/SKILL.md:Legacy Claude, Cursor, and OpenCode-specific loading flows are intentionally unsupported in this runtime package."
   "skills/using-superpowers/references/codex-tools.md:~/.copilot/skills/"
   "skills/using-git-worktrees/SKILL.md:## Preamble (run first)"
@@ -662,12 +612,13 @@ for pattern in \
 done
 
 for pattern in \
-  'skills/executing-plans/SKILL.md:Use when you have a written implementation plan to execute in a separate session' \
+  'skills/executing-plans/SKILL.md:Use when you have an engineering-approved Superpowers implementation plan to execute in a separate session' \
   'skills/executing-plans/SKILL.md:Use this skill when implementation should happen in a separate session.' \
   'skills/executing-plans/SKILL.md:**REQUIRED SUB-SKILL:** Use `superpowers:requesting-code-review`' \
   'skills/executing-plans/SKILL.md:After the final review is resolved:' \
   'skills/finishing-a-development-branch/SKILL.md:- **subagent-driven-development** - After the final review passes and all tasks are complete' \
   'skills/finishing-a-development-branch/SKILL.md:- **executing-plans** - After the final review is resolved and all tasks are complete' \
+  'skills/subagent-driven-development/SKILL.md:Use when executing an engineering-approved Superpowers implementation plan with independent tasks in the current session' \
   'skills/subagent-driven-development/SKILL.md:**vs. Executing Plans (parallel session):**' \
   'skills/subagent-driven-development/SKILL.md:- **superpowers:executing-plans** - Use for parallel session instead of same-session execution' \
   'skills/subagent-driven-development/SKILL.md:[Invoke superpowers:finishing-a-development-branch]' \

@@ -102,10 +102,11 @@ These thoughts mean STOP—you're rationalizing:
 When multiple skills could apply, use this order:
 
 1. **Process skills first** (brainstorming, debugging) - these determine HOW to approach the task
-2. **Implementation skills second** (frontend-design, mcp-builder) - these guide execution
+2. **Workflow-stage skills second** (review, planning, execution) - these own the required handoffs once their prerequisites are satisfied
+3. **Domain-specific implementation skills last** - only after the active workflow stage allows them
 
-"Let's build X" → brainstorming first, then implementation skills.
-"Fix this bug" → debugging first, then domain-specific skills.
+"Let's build X" → brainstorming first, then follow the artifact-state workflow: plan-ceo-review -> writing-plans -> plan-eng-review -> execution.
+"Fix this bug" → debugging first, then if it changes Superpowers product or workflow behavior follow the artifact-state workflow; otherwise continue to the appropriate implementation skill.
 
 ## Skill Types
 
@@ -117,7 +118,9 @@ The skill itself tells you which.
 
 ## Superpowers Workflow Router
 
-For feature, product, or workflow-change requests inside a Superpowers project, route by artifact state instead of skipping ahead based on the user's wording alone.
+For feature requests, bugfixes that materially change Superpowers product or workflow behavior, product requests, or workflow-change requests inside a Superpowers project, route by artifact state instead of skipping ahead based on the user's wording alone.
+
+Do NOT jump from brainstorming straight to implementation. For workflow-routed work, every stage owns the handoff into the next one.
 
 Inspect `docs/superpowers/specs/` and `docs/superpowers/plans/` for the newest relevant artifacts, then parse these exact-match header lines:
 

@@ -116,6 +116,9 @@ Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Ski
 - When approving the written spec, set `**Workflow State:** CEO Approved` and `**Last Reviewed By:** plan-ceo-review`.
 - `**Spec Revision:**` starts at `1`. If this review materially changes a previously approved spec, increment the revision and reset the spec to `Draft` until it is re-approved.
 - When the review is resolved and the written spec is approved, invoke `superpowers:writing-plans`.
+- `superpowers:writing-plans` owns plan creation after approval. Do not draft a plan or offer implementation options from `plan-ceo-review`.
+
+**The terminal state is invoking writing-plans.**
 
 # Spec Review Mode
 

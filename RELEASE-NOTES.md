@@ -14,10 +14,19 @@ For release history before `v5.1.0 (2026-03-16)`, see the upstream README: https
 - Added shared QA support assets at `qa/references/issue-taxonomy.md` and `qa/templates/qa-report-template.md`
 - Extended `plan-eng-review` with reusable test-plan artifact output under `~/.superpowers/projects/`
 - Extended `finishing-a-development-branch` with stronger base-branch detection plus optional code-review and document-release handoffs
+- Tightened workflow-stage ownership across `using-superpowers`, `plan-ceo-review`, `plan-eng-review`, `writing-plans`, `executing-plans`, and `subagent-driven-development` so agents are explicitly routed through the required stage handoffs instead of shortcutting into later skills
+
+### Testing
+
+- Added deterministic `node:test` coverage for generated skill docs, workflow-routing contracts, fixture integrity, and `gen-skill-docs` unit behavior
+- Moved historical workflow artifact examples into dedicated fixtures under `tests/codex-runtime/fixtures/workflow-artifacts/` so sequencing tests no longer depend on root `docs/` content
+- Added opt-in eval scaffolding for `using-superpowers` routing quality and interactive-question formatting, with lightweight JSON observability under `~/.superpowers/evals/`
+- Expanded workflow sequencing tests to lock in approval-gated skill descriptions and explicit terminal-state handoffs between review, planning, and execution skills
 
 ### Docs
 
 - README, platform READMEs, and install docs now document the 18-skill runtime and the `~/.superpowers/projects/` artifact convention
+- Added `docs/test-suite-enhancement-plan.md` and updated `docs/testing.md` to document the new deterministic Node tests, workflow fixtures, and opt-in eval tier
 
 ## v5.1.0 (2026-03-16)
 

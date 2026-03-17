@@ -2,13 +2,13 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
-const ROOT = path.resolve(import.meta.dirname, '..');
-const SKILLS_DIR = path.join(ROOT, 'skills');
-const GENERATOR_CMD = 'node scripts/gen-skill-docs.mjs';
-const DRY_RUN = process.argv.includes('--check');
+export const ROOT = path.resolve(import.meta.dirname, '..');
+export const SKILLS_DIR = path.join(ROOT, 'skills');
+export const GENERATOR_CMD = 'node scripts/gen-skill-docs.mjs';
 
-function buildRootDetection() {
+export function buildRootDetection() {
   return [
     '_IS_SUPERPOWERS_RUNTIME_ROOT() {',
     '  local candidate="$1"',
@@ -26,7 +26,7 @@ function buildRootDetection() {
   ];
 }
 
-function buildBaseShellLines() {
+export function buildBaseShellLines() {
   return [
     ...buildRootDetection(),
     '_UPD=""',
@@ -42,7 +42,7 @@ function buildBaseShellLines() {
   ];
 }
 
-function buildReviewShellLines() {
+export function buildReviewShellLines() {
   return [
     ...buildBaseShellLines(),
     '_TODOS_FORMAT=""',
@@ -51,11 +51,11 @@ function buildReviewShellLines() {
   ];
 }
 
-function buildUpgradeNote() {
+export function buildUpgradeNote() {
   return 'If output shows `UPGRADE_AVAILABLE <old> <new>`: read the installed `superpowers-upgrade/SKILL.md` from the same superpowers root (check the current repo when it contains the Superpowers runtime, then `$HOME/.superpowers/install`, then `$HOME/.codex/superpowers`, then `$HOME/.copilot/superpowers`) and follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise ask one interactive user question with 4 options and write snooze state if declined). If `JUST_UPGRADED <from> <to>`: tell the user "Running superpowers v{to} (just updated!)" and continue.';
 }
 
-function buildQuestionFormat() {
+export function buildQuestionFormat() {
   return `## Interactive User Question Format
 
 **ALWAYS follow this structure for every interactive user question:**
@@ -69,7 +69,7 @@ If \`_SESSIONS\` is 3 or more: the user is juggling multiple Superpowers session
 Per-skill instructions may add additional formatting rules on top of this baseline.`;
 }
 
-function buildContributorMode() {
+export function buildContributorMode() {
   return `## Contributor Mode
 
 If \`_CONTRIB\` is \`true\`: you are in **contributor mode**. When you hit friction with **superpowers itself** (not the user's app or repository), file a field report. Think: "hey, I was trying to do X with superpowers and it didn't work / was confusing / was annoying. Here's what happened."
@@ -111,7 +111,7 @@ fi
 Slug: lowercase, hyphens, max 60 chars (for example \`skill-trigger-missed\`). Skip if the file already exists. Max 3 reports per session. File inline and continue — don't stop the workflow. Tell the user: "Filed superpowers field report: {title}"`;
 }
 
-function buildAgentGrounding() {
+export function buildAgentGrounding() {
   return `## Agent Grounding
 
 Honor the active repo instruction chain from \`AGENTS.md\`, \`AGENTS.override.md\`, \`.github/copilot-instructions.md\`, and \`.github/instructions/*.instructions.md\`, including nested \`AGENTS.md\` and \`AGENTS.override.md\` files closer to the current working directory.
@@ -119,7 +119,7 @@ Honor the active repo instruction chain from \`AGENTS.md\`, \`AGENTS.override.md
 These review skills are public Superpowers skills for Codex and GitHub Copilot local installs.`;
 }
 
-function generatePreamble({ review }) {
+export function generatePreamble({ review }) {
   const shellLines = review ? buildReviewShellLines() : buildBaseShellLines();
   const parts = [
     '## Preamble (run first)',
@@ -139,12 +139,12 @@ function generatePreamble({ review }) {
   return parts.join('\n');
 }
 
-const RESOLVERS = {
+export const RESOLVERS = {
   BASE_PREAMBLE: () => generatePreamble({ review: false }),
   REVIEW_PREAMBLE: () => generatePreamble({ review: true }),
 };
 
-function insertGeneratedHeader(content) {
+export function insertGeneratedHeader(content) {
   const header =
     '<!-- AUTO-GENERATED from SKILL.md.tmpl — do not edit directly -->\n' +
     `<!-- Regenerate: ${GENERATOR_CMD} -->`;
@@ -163,37 +163,42 @@ function insertGeneratedHeader(content) {
   return `${prefix}${header}\n\n${suffix}`;
 }
 
-function renderTemplate(templatePath) {
-  let content = fs.readFileSync(templatePath, 'utf8');
-  content = content.replace(/\{\{([A-Z_]+)\}\}/g, (_, name) => {
-    const resolver = RESOLVERS[name];
+export function renderTemplateContent(content, templatePath, resolvers = RESOLVERS) {
+  let rendered = content.replace(/\{\{([A-Z_]+)\}\}/g, (_, name) => {
+    const resolver = resolvers[name];
     if (!resolver) {
       throw new Error(`Unknown placeholder {{${name}}} in ${templatePath}`);
     }
     return resolver();
   });
 
-  if (/\{\{[A-Z_]+\}\}/.test(content)) {
+  if (/\{\{[A-Z_]+\}\}/.test(rendered)) {
     throw new Error(`Unresolved placeholder remains in ${templatePath}`);
   }
 
-  content = insertGeneratedHeader(content);
-  if (!content.endsWith('\n')) {
-    content += '\n';
+  rendered = insertGeneratedHeader(rendered);
+  if (!rendered.endsWith('\n')) {
+    rendered += '\n';
   }
-  return content;
+  return rendered;
 }
 
-function getTemplatePaths() {
+export function renderTemplate(templatePath, resolvers = RESOLVERS) {
+  const content = fs.readFileSync(templatePath, 'utf8');
+  return renderTemplateContent(content, templatePath, resolvers);
+}
+
+export function getTemplatePaths(skillsDir = SKILLS_DIR) {
   return fs
-    .readdirSync(SKILLS_DIR, { withFileTypes: true })
+    .readdirSync(skillsDir, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
-    .map((entry) => path.join(SKILLS_DIR, entry.name, 'SKILL.md.tmpl'))
+    .map((entry) => path.join(skillsDir, entry.name, 'SKILL.md.tmpl'))
     .filter((templatePath) => fs.existsSync(templatePath))
     .sort();
 }
 
-function main() {
+export function main(argv = process.argv.slice(2)) {
+  const dryRun = argv.includes('--check');
   const templates = getTemplatePaths();
   if (templates.length === 0) {
     throw new Error('No skill templates found.');
@@ -205,7 +210,7 @@ function main() {
     const skillPath = templatePath.replace(/\.tmpl$/, '');
     const rendered = renderTemplate(templatePath);
 
-    if (DRY_RUN) {
+    if (dryRun) {
       const current = fs.existsSync(skillPath) ? fs.readFileSync(skillPath, 'utf8') : '';
       if (current !== rendered) {
         stale.push(path.relative(ROOT, skillPath));
@@ -216,7 +221,7 @@ function main() {
     fs.writeFileSync(skillPath, rendered, 'utf8');
   }
 
-  if (DRY_RUN) {
+  if (dryRun) {
     if (stale.length > 0) {
       console.error('Generated skill docs are stale:');
       for (const file of stale) {
@@ -228,4 +233,6 @@ function main() {
   }
 }
 
-main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main();
+}

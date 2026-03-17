@@ -1,6 +1,6 @@
 ---
 name: subagent-driven-development
-description: Use when executing implementation plans with independent tasks in the current session
+description: Use when executing an engineering-approved Superpowers implementation plan with independent tasks in the current session
 ---
 
 {{BASE_PREAMBLE}}
@@ -20,17 +20,17 @@ Execute plan by dispatching a fresh sub-agent or custom agent per task, with two
 
 ```dot
 digraph when_to_use {
-    "Have implementation plan?" [shape=diamond];
+    "Have engineering-approved implementation plan?" [shape=diamond];
     "Tasks mostly independent?" [shape=diamond];
     "Stay in this session?" [shape=diamond];
     "subagent-driven-development" [shape=box];
     "executing-plans" [shape=box];
-    "Manual execution or brainstorm first" [shape=box];
+    "Return to using-superpowers artifact-state routing" [shape=box];
 
-    "Have implementation plan?" -> "Tasks mostly independent?" [label="yes"];
-    "Have implementation plan?" -> "Manual execution or brainstorm first" [label="no"];
+    "Have engineering-approved implementation plan?" -> "Tasks mostly independent?" [label="yes"];
+    "Have engineering-approved implementation plan?" -> "Return to using-superpowers artifact-state routing" [label="no"];
     "Tasks mostly independent?" -> "Stay in this session?" [label="yes"];
-    "Tasks mostly independent?" -> "Manual execution or brainstorm first" [label="no - tightly coupled"];
+    "Tasks mostly independent?" -> "executing-plans" [label="no - tightly coupled or better handled in one coordinator session"];
     "Stay in this session?" -> "subagent-driven-development" [label="yes"];
     "Stay in this session?" -> "executing-plans" [label="no - parallel session"];
 }

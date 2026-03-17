@@ -1,6 +1,6 @@
 ---
 name: plan-eng-review
-description: Use when a Superpowers implementation plan has been written and needs engineering review before execution
+description: Use when a Superpowers implementation plan from a CEO-approved spec has been written and needs engineering review before execution
 ---
 <!-- AUTO-GENERATED from SKILL.md.tmpl — do not edit directly -->
 <!-- Regenerate: node scripts/gen-skill-docs.mjs -->
@@ -118,6 +118,9 @@ Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Ski
 - Keep the plan in `Draft` while review issues remain open or while the source spec revision is stale.
 - Only write `**Workflow State:** Engineering Approved` as the last step of a successful review, and set `**Last Reviewed By:** plan-eng-review` at the same time.
 - When the review is resolved and the written plan is approved, present the normal execution handoff.
+- `superpowers:subagent-driven-development` and `superpowers:executing-plans` own implementation. Do not start implementation inside `plan-eng-review`.
+
+**The terminal state is presenting the execution handoff with the approved plan path.**
 
 # Plan Review Mode
 
