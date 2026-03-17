@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- **GitHub Copilot (VS Code) support**: New integration for Copilot agent mode via `.github/copilot-instructions.md`. Includes generator script (`scripts/generate-copilot-instructions.sh`) with `--prefix` flag for global/per-project installs, Copilot-adapted skill workflow, tool mapping, and full documentation. ([#764](https://github.com/obra/superpowers/issues/764))
+
 ### Fixed
 
 - **Brainstorm server on Windows**: Auto-detect Windows/Git Bash (`OSTYPE=msys*`, `MSYSTEM`) and switch to foreground mode, fixing silent server failure caused by `nohup`/`disown` process reaping. Applies to all Windows shells (CMD, PowerShell, Git Bash) since they all route through Git Bash. ([#737](https://github.com/obra/superpowers/issues/737), based on [#740](https://github.com/obra/superpowers/pull/740))
