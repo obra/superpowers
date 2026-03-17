@@ -1,26 +1,13 @@
 # Changelog
 
-## Unreleased
+## [5.0.5] - 2026-03-17
 
 ### Fixed
 
-- **Brainstorm server on Windows**: Auto-detect Windows/Git Bash (`OSTYPE=msys*`, `MSYSTEM`) and switch to foreground mode, fixing silent server failure caused by `nohup`/`disown` process reaping. Applies to all Windows shells (CMD, PowerShell, Git Bash) since they all route through Git Bash. ([#737](https://github.com/obra/superpowers/issues/737), based on [#740](https://github.com/obra/superpowers/pull/740))
+- **Brainstorm server ESM fix**: Renamed `server.js` → `server.cjs` so the brainstorming server starts correctly on Node.js 22+ where the root `package.json` `"type": "module"` caused `require()` to fail. ([PR #784](https://github.com/obra/superpowers/pull/784) by @sarbojitrana, fixes [#774](https://github.com/obra/superpowers/issues/774), [#780](https://github.com/obra/superpowers/issues/780), [#783](https://github.com/obra/superpowers/issues/783))
 - **Brainstorm owner-PID on Windows**: Skip `BRAINSTORM_OWNER_PID` lifecycle monitoring on Windows/MSYS2 where the PID namespace is invisible to Node.js. Prevents the server from self-terminating after 60 seconds. The 30-minute idle timeout remains as the safety net. ([#770](https://github.com/obra/superpowers/issues/770), docs from [PR #768](https://github.com/obra/superpowers/pull/768) by @lucasyhzhu-debug)
-- **Portable shebangs**: Replace `#!/bin/bash` with `#!/usr/bin/env bash` in all 13 shell scripts. Fixes execution on NixOS, FreeBSD, and macOS with Homebrew bash where `/bin/bash` is outdated or missing. ([#700](https://github.com/obra/superpowers/pull/700), dupes: [#747](https://github.com/obra/superpowers/pull/747))
-- **POSIX-safe hook script**: Replace `${BASH_SOURCE[0]:-$0}` with `$0` in `hooks/session-start` and polyglot-hooks docs. Fixes 'Bad substitution' error on Ubuntu/Debian where `/bin/sh` is dash. ([#553](https://github.com/obra/superpowers/pull/553))
-- **Bash 5.3+ hook hang**: Replace heredoc (`cat <<EOF`) with `printf` in `hooks/session-start`. Fixes indefinite hang on macOS with Homebrew bash 5.3+ caused by a bash regression with large variable expansion in heredocs. ([#572](https://github.com/obra/superpowers/pull/572), [#571](https://github.com/obra/superpowers/issues/571))
-- **Cursor hooks support**: Add `hooks/hooks-cursor.json` with Cursor's camelCase format (`sessionStart`, `version: 1`) and update `.cursor-plugin/plugin.json` to reference it. Fix platform detection in `session-start` to check `CURSOR_PLUGIN_ROOT` first (Cursor may also set `CLAUDE_PLUGIN_ROOT`). (Based on [#709](https://github.com/obra/superpowers/pull/709))
 - **stop-server.sh reliability**: Verify the server process actually died before reporting success. Waits up to 2 seconds for graceful shutdown, escalates to `SIGKILL`, and reports failure if the process survives. ([#723](https://github.com/obra/superpowers/issues/723))
 
 ### Changed
 
 - **Execution handoff**: Restore user choice between subagent-driven-development and executing-plans after plan writing. Subagent-driven is recommended but no longer mandatory. (Reverts `5e51c3e`)
-
-### Already fixed on dev (closed PRs)
-
-- **Windows hook quoting** ([#630](https://github.com/obra/superpowers/pull/630), [#529](https://github.com/obra/superpowers/issues/529)): `hooks.json` already uses escaped double quotes on dev.
-- **Windows symlink path** ([#539](https://github.com/obra/superpowers/pull/539)): Closed — the PR introduced a bug (literal `~` in path alongside `$env:USERPROFILE`). Current docs are correct.
-
-### Known Issues
-
-(None currently tracked.)
