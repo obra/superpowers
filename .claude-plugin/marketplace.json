@@ -1,7 +1,7 @@
 {
   "name": "ultrapowers",
   "metadata": {
-    "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques"
+    "description": "Research-driven development workflow for coding agents — core workflow, 52 dev skills, and 38 business skills"
   },
   "owner": {
     "name": "Ennio Maldonado",
@@ -10,9 +10,35 @@
   "plugins": [
     {
       "name": "ultrapowers",
-      "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
+      "description": "Core workflow: research-driven development with brainstorming, deep research, skills auditing, TDD, and subagent-driven development",
       "version": "5.0.5",
       "source": "./",
+      "author": {
+        "name": "Ennio Maldonado",
+        "url": "https://www.enniomaldonado.com"
+      }
+    },
+    {
+      "name": "ultrapowers-dev",
+      "description": "52 development skills: language best practices for 13 languages, 12 framework patterns, 7 agentic patterns, and architecture fundamentals",
+      "version": "1.0.0",
+      "source": {
+        "source": "github",
+        "repo": "ennio-datatide/ultrapowers-dev"
+      },
+      "author": {
+        "name": "Ennio Maldonado",
+        "url": "https://www.enniomaldonado.com"
+      }
+    },
+    {
+      "name": "ultrapowers-business",
+      "description": "38 business skills: marketing, SEO, copywriting, conversion optimization, compliance, finance, and sales enablement",
+      "version": "1.0.0",
+      "source": {
+        "source": "github",
+        "repo": "ennio-datatide/ultrapowers-business"
+      },
       "author": {
         "name": "Ennio Maldonado",
         "url": "https://www.enniomaldonado.com"
