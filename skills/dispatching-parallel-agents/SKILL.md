@@ -34,7 +34,7 @@ digraph when_to_use {
 ```
 
 **Use when:**
-- 3+ test files failing with different root causes
+- 2+ test files failing with different root causes
 - Multiple subsystems broken independently
 - Each problem can be understood without context from others
 - No shared state between investigations
@@ -180,3 +180,12 @@ From debugging session (2025-10-03):
 - All investigations completed concurrently
 - All fixes integrated successfully
 - Zero conflicts between agent changes
+
+## Integration
+
+**Called by:**
+- **superpowers:systematic-debugging** — when multiple independent failures are identified
+
+**Each dispatched agent should use:**
+- **superpowers:test-driven-development** — for writing failing tests and fixes
+- **superpowers:verification-before-completion** — before reporting success
