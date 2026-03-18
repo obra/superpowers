@@ -43,10 +43,10 @@ cp "$PROMPT_FILE" "$OUTPUT_DIR/prompt.txt"
 
 # Create a minimal project directory for the test
 PROJECT_DIR="$OUTPUT_DIR/project"
-mkdir -p "$PROJECT_DIR/docs/plans"
+mkdir -p "$PROJECT_DIR/docs/superpowers/plans"
 
 # Create a dummy plan file for mid-conversation tests
-cat > "$PROJECT_DIR/docs/plans/auth-system.md" << 'EOF'
+cat > "$PROJECT_DIR/docs/superpowers/plans/auth-system.md" << 'EOF'
 # Auth System Implementation Plan
 
 ## Task 1: Add User Model
