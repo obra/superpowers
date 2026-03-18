@@ -26,6 +26,22 @@ Task tool (general-purpose):
 
     **Ask them now.** Raise any concerns before starting work.
 
+    ## Tool Selection
+
+    Use dedicated tools instead of shell commands for file operations. Dedicated tools
+    are faster, require fewer permissions, and produce cleaner output.
+
+    | Task | Use | Instead of |
+    |------|-----|------------|
+    | Read file or lines | `Read(file_path, offset, limit)` | `cat`, `head`, `tail`, `sed -n` |
+    | Search file content | `Grep(pattern, path)` | `grep`, `rg`, `awk` |
+    | Find files by name | `Glob(pattern)` | `find`, `ls` |
+    | Edit files | `Edit` / `Write` | `sed -i`, `awk` |
+    | Run commands in a directory | `Bash(command, cwd="dir")` | `cd dir && command` |
+
+    Reserve `Bash` for commands that genuinely need a shell: running tests, build tools,
+    git operations, and project-specific scripts.
+
     ## Your Job
 
     Once you're clear on requirements:
