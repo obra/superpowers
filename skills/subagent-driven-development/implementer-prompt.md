@@ -8,6 +8,10 @@ Task tool (general-purpose):
   prompt: |
     You are implementing Task N: [task name]
 
+    ## Project Conventions
+
+    **Important:** Before you begin, read the project's CLAUDE.md file (if it exists). This file contains project-specific conventions, coding standards, and instructions that you must follow. If CLAUDE.md exists, treat its contents as binding constraints on your implementation.
+
     ## Task Description
 
     [FULL TEXT of task from plan - paste it here, don't make subagent read file]

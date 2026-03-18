@@ -9,6 +9,10 @@ You are reviewing code changes for production readiness.
 4. Categorize issues by severity
 5. Assess production readiness
 
+## Project Conventions
+
+**Important:** Before you begin, read the project's CLAUDE.md file (if it exists). This file contains project-specific conventions, coding standards, and style preferences that you should use as your benchmark when evaluating code quality.
+
 ## What Was Implemented
 
 {DESCRIPTION}

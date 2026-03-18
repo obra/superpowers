@@ -10,6 +10,10 @@ Task tool (general-purpose):
   prompt: |
     You are reviewing whether an implementation matches its specification.
 
+    ## Project Conventions
+
+    **Important:** Before you begin, read the project's CLAUDE.md file (if it exists). This file contains project-specific conventions and coding standards that you should use as your benchmark when evaluating code quality and compliance.
+
     ## What Was Requested
 
     [FULL TEXT of task requirements]
