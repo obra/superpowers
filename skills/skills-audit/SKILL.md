@@ -49,47 +49,64 @@ digraph skills_audit {
 
 ## Foundational Development Skills Checklist
 
-Before auditing domain-specific competencies, check that foundational best-practice skills exist **for the specific language/stack** identified in the spec. These are the building blocks every implementation needs.
+Before auditing domain-specific competencies, verify two things:
+1. **Language-agnostic category skills** exist for each relevant concern
+2. A **single language-specific best practices skill** exists for each language in the stack
 
-### Required Categories
+### Category Skills (Language-Agnostic)
 
-For each category, check if a skill exists that covers the **specific language or framework** being used (e.g., `python-testing-patterns` for Python, `rust-code-style` for Rust). A generic skill counts only if it explicitly covers the relevant language.
+Each category skill covers universal principles and patterns that apply regardless of language. There is **one skill per category**, not one per language.
 
-| Category | What it covers | Example skill names |
-|----------|---------------|-------------------|
-| **Testing / TDD** | Test framework, fixtures, mocking, TDD cycle for the language | `python-testing-patterns`, `rust-testing`, `typescript-testing` |
-| **Code style & conventions** | Naming, formatting, linting, idiomatic patterns | `python-code-style`, `rust-code-style`, `typescript-conventions` |
-| **Error handling** | Exception/Result patterns, validation, graceful degradation | `python-error-handling`, `rust-error-handling`, `error-handling-patterns` |
-| **Design patterns** | SOLID, DDD, composition, language-specific idioms | `python-design-patterns`, `ddd-patterns`, `typescript-advanced-types` |
-| **Architecture** | Monolith vs microservices, hexagonal, clean architecture | `architecture-patterns`, `microservices-patterns`, `monolith-patterns` |
-| **Database** | Schema design, migrations, query optimization, ORM patterns | `postgresql-table-design`, `sql-optimization-patterns`, `database-migration` |
-| **Caching** | Cache strategies, invalidation, Redis/Memcached patterns | `caching-patterns`, `redis-patterns` |
-| **API design** | REST/GraphQL conventions, versioning, pagination | `api-design-principles`, `openapi-spec-generation` |
-| **Observability** | Logging, metrics, tracing for the language | `python-observability`, `structured-logging` |
-| **Resilience** | Retries, circuit breakers, timeouts, backoff | `python-resilience`, `resilience-patterns` |
-| **Security / Auth** | Authentication, authorization, secrets management | `auth-implementation-patterns`, `secrets-management` |
-| **Background jobs** | Task queues, workers, event-driven processing | `python-background-jobs`, `async-patterns` |
-| **RAG / AI** | Retrieval-augmented generation, embeddings, vector search | `rag-implementation`, `embedding-strategies`, `similarity-search-patterns` |
-| **CI/CD** | Pipeline design, deployment strategies | `github-actions-templates`, `deployment-pipeline-design` |
-| **Type safety** | Type hints, generics, strict checking | `python-type-safety`, `typescript-advanced-types` |
+| Category | Skill name | What it covers |
+|----------|-----------|---------------|
+| **Testing / TDD** | `testing-tdd` | TDD cycle, test design, fixtures, mocking strategies, coverage |
+| **Error handling** | `error-handling` | Exception vs Result patterns, validation, graceful degradation |
+| **Design patterns** | `design-patterns` | SOLID, DDD, composition, separation of concerns |
+| **Architecture** | `architecture` | Monolith vs microservices, hexagonal, clean architecture, event-driven |
+| **Database** | `database-design` | Schema design, migrations, indexing, query optimization |
+| **Caching** | `caching` | Cache strategies, invalidation, TTL, write-through vs write-behind |
+| **API design** | `api-design` | REST/GraphQL conventions, versioning, pagination, error responses |
+| **Observability** | `observability` | Structured logging, metrics, distributed tracing |
+| **Resilience** | `resilience` | Retries, circuit breakers, timeouts, backoff, bulkheads |
+| **Security / Auth** | `auth-security` | Authentication, authorization, secrets management, OWASP |
+| **Background jobs** | `background-jobs` | Task queues, workers, event-driven processing, idempotency |
+| **RAG / AI** | `rag-ai` | Retrieval-augmented generation, embeddings, vector search, chunking |
+| **CI/CD** | `ci-cd` | Pipeline design, deployment strategies, rollback |
+| **Type safety** | `type-safety` | Type systems, generics, strict checking, contracts |
+
+### Language-Specific Best Practices (One Per Language)
+
+For each language in the stack, check if a single best practices skill exists. This skill covers **language-specific idioms, conventions, tooling, and gotchas** — things that differ from the universal patterns above.
+
+**Naming convention:** `<language>-best-practices` (e.g., `rust-best-practices`, `python-best-practices`, `typescript-best-practices`)
+
+**What a language skill covers:**
+- Idiomatic patterns and conventions for that language
+- Standard tooling (linters, formatters, package managers)
+- Language-specific error handling idioms (e.g., Rust's `Result`/`Option`, Python's exceptions)
+- Common pitfalls and anti-patterns specific to that language
+- Project structure conventions
+- Testing framework specifics (e.g., `cargo test` vs `pytest` vs `vitest`)
+
+**What a language skill does NOT cover:**
+- Universal concepts already in category skills (SOLID, TDD cycle, cache invalidation, etc.)
+- The language skill complements category skills, it doesn't duplicate them
 
 ### Which categories apply?
 
 Not every project needs every category. Use the spec to determine which are relevant:
 
-- **Always required:** Testing/TDD, Code style, Error handling, Design patterns
+- **Always required:** Testing/TDD, Error handling, Design patterns, + language best practices
 - **If it has a backend:** Architecture, Database, API design, Observability
 - **If it handles external calls:** Resilience, Caching
 - **If it has auth:** Security/Auth
 - **If it processes async work:** Background jobs
-- **If it uses AI/LLMs:** RAG/AI, Embedding strategies
+- **If it uses AI/LLMs:** RAG/AI
 - **If it deploys:** CI/CD
 
 ### Checking installed skills
 
-Many foundational skills may already be installed as plugins. Check the available skills list in the current session — skills like `python-testing-patterns`, `architecture-patterns`, `sql-optimization-patterns` etc. are commonly available as installed plugins.
-
-Mark these as **External** in the audit — they don't need to be created, just referenced in the implementation plan.
+Many category skills may already be installed as plugins. Check the available skills list in the current session. Mark installed ones as **External** — they don't need to be created, just referenced in the plan.
 
 ## Domain Competencies
 
@@ -131,47 +148,51 @@ For each skill found, note what it covers and whether its patterns are current p
 ```markdown
 ## Skills Audit Report
 
-### Language/Stack: [e.g., Rust + axum + SQLite]
+### Language/Stack: Rust + axum + SQLite
 
-### Foundational Skills
+### Language Best Practices
+| Language | Status | Skill | Action |
+|----------|--------|-------|--------|
+| Rust | Missing | — | Create `rust-best-practices` |
+
+### Category Skills
 | Category | Status | Skill | Action |
 |----------|--------|-------|--------|
-| Testing/TDD | External | `rust-code-style` (partial) | Create `rust-testing` |
-| Code style | External | `rust-code-style` | None |
-| Error handling | Missing | — | Create `rust-error-handling` |
-| Architecture | External | `architecture-patterns` | None |
-| Database | External | `sql-optimization-patterns` | None |
-| API design | External | `api-design-principles` | None |
-| Observability | Missing | — | Create `rust-observability` |
+| Testing/TDD | External | `testing-tdd` (installed) | None |
+| Error handling | Missing | — | Create `error-handling` |
+| Design patterns | External | `design-patterns` (installed) | None |
+| Architecture | External | `architecture` (installed) | None |
+| Database | External | `database-design` (installed) | None |
+| API design | External | `api-design` (installed) | None |
+| Observability | Missing | — | Create `observability` |
 
 ### Domain Competencies
 | Competency | Status | Existing Skill | Action |
 |------------|--------|---------------|--------|
-| WS server setup | Missing | — | Create `websocket-axum` |
-| Auth on upgrade | Missing | — | Add to `auth-patterns` |
-| Reconnection | Missing | — | Include in `websocket-axum` |
+| WS server setup | Missing | — | Create `websocket-patterns` |
+| Auth on upgrade | Missing | — | Add to `auth-security` |
+| Reconnection | Missing | — | Include in `websocket-patterns` |
 | Broadcasting | Covered | `event-bus` | None |
 
 ### Coverage Summary
 - Covered: X | Stale: X | Missing: X | External: X
 
 ### Skills to Create/Update
-1. **Create `rust-testing`** — TDD patterns for Rust
-2. **Create `rust-error-handling`** — Result/Option patterns, thiserror, anyhow
-3. **Create `websocket-axum`** — server setup, reconnection, heartbeat
+1. **Create `rust-best-practices`** — Rust idioms, tooling, project structure
+2. **Create `error-handling`** — universal error handling patterns
+3. **Create `websocket-patterns`** — server setup, reconnection, heartbeat
 
 ### Skills to Reference in Plan
-- `rust-code-style` (code style)
-- `architecture-patterns` (architecture)
-- `api-design-principles` (API design)
-- `event-bus` (broadcasting)
+- `testing-tdd`, `design-patterns`, `architecture` (category)
+- `rust-best-practices` (language)
+- `event-bus` (domain)
 ```
 
 ## Grouping Rules
 
-- **Same technology** → one skill (all Rust testing in one skill)
-- **Same concern** → one skill (all auth patterns together)
-- **Unrelated** → separate skills
+- **One skill per category** — language-agnostic, universal patterns
+- **One skill per language** — language-specific idioms and tooling
+- **Domain skills** — group by technology or concern
 - **One-off knowledge** → put in implementation plan, not a skill
 
 ## Output
