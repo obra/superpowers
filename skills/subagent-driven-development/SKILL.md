@@ -84,6 +84,14 @@ digraph process {
 }
 ```
 
+## Pre-Implementation Skills Check
+
+Before dispatching the first implementer subagent, verify that the plan includes **skill annotations** for each task. If a task references skills, confirm those skills are available (installed plugin or local `.claude/skills/` file).
+
+If skills are missing at this point, **stop and run the skills-audit skill** before proceeding. This catches cases where the audit was skipped or new gaps emerged during planning.
+
+When dispatching implementer subagents, include the relevant skill names in their prompt so they can invoke them during implementation.
+
 ## Model Selection
 
 Use the least powerful model that can handle each role to conserve cost and increase speed.

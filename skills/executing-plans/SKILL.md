@@ -18,8 +18,9 @@ Load plan, review critically, execute all tasks, report when complete.
 ### Step 1: Load and Review Plan
 1. Read plan file
 2. Review critically - identify any questions or concerns about the plan
-3. If concerns: Raise them with your human partner before starting
-4. If no concerns: Create TodoWrite and proceed
+3. **Verify skill annotations** — each task should reference the skills needed. Confirm those skills are available (installed plugin or local file). If skills are missing, stop and run ultrapowers:skills-audit before proceeding.
+4. If concerns: Raise them with your human partner before starting
+5. If no concerns: Create TodoWrite and proceed
 
 ### Step 2: Execute Tasks
 
