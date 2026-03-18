@@ -1,7 +1,7 @@
 {
   "name": "ultrapowers",
   "owner": {
-    "name": "ennio-datatide"
+    "name": "Ennio Maldonado"
   },
   "plugins": [
     {
@@ -10,7 +10,7 @@
       "version": "5.0.5",
       "source": "./",
       "author": {
-        "name": "ennio-datatide"
+        "name": "Ennio Maldonado"
       }
     }
   ]
