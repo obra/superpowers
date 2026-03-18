@@ -20,13 +20,7 @@ Ultrapowers is a fork of [Superpowers](https://github.com/obra/superpowers) by [
 
 ## Installation
 
-### Claude Code Official Marketplace
-
-```bash
-/plugin install ultrapowers@ennio-datatide
-```
-
-### Claude Code (via Plugin Marketplace)
+### Claude Code (via Ultrapowers Marketplace)
 
 Register the marketplace first:
 
@@ -114,6 +108,13 @@ Ultrapowers focuses on the core workflow. Domain-specific skills live in compani
 
 - **[ultrapowers-dev](https://github.com/ennio-datatide/ultrapowers-dev)** — Development skills: language best practices, framework patterns, agentic patterns, architecture
 - **[ultrapowers-business](https://github.com/ennio-datatide/ultrapowers-business)** — Business skills: marketing, compliance, finance, communication
+
+Install from the same marketplace:
+
+```bash
+/plugin install ultrapowers-dev@ultrapowers
+/plugin install ultrapowers-business@ultrapowers
+```
 
 ## Philosophy
 
