@@ -90,6 +90,11 @@ git clone https://github.com/ennio-datatide/ultrapowers.git
 - **Systematic over ad-hoc** — Process over guessing
 - **Evidence over claims** — Verify before declaring success
 
+## Companion Repos
+
+- **[ultrapowers-dev](https://github.com/ennio-datatide/ultrapowers-dev)** — Development skills: language best practices, framework patterns, agentic patterns, architecture
+- **[ultrapowers-misc](https://github.com/ennio-datatide/ultrapowers-misc)** — Non-dev skills: marketing, compliance, finance, communication
+
 ## License
 
 MIT License — see LICENSE file for details.
