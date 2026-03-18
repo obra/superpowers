@@ -24,3 +24,5 @@ Task tool (superpowers:code-reviewer):
 - Did this implementation create new files that are already large, or significantly grow existing files? (Don't flag pre-existing file sizes — focus on what this change contributed.)
 
 **Code reviewer returns:** Strengths, Issues (Critical/Important/Minor), Assessment
+
+**CRITICAL**: Before returning your review, you MUST enclose your step-by-step evaluation of the code quality within a `<chain_of_thought>` XML block.

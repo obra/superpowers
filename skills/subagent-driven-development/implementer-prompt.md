@@ -100,6 +100,7 @@ Task tool (general-purpose):
     ## Report Format
 
     When done, report:
+    - **CRITICAL**: Before you output your final report, you MUST enclose your internal reasoning and step-by-step implementation plan within a `<chain_of_thought>` XML block.
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
     - What you implemented (or what you attempted, if blocked)
     - What you tested and test results
