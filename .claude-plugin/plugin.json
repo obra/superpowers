@@ -3,9 +3,10 @@
   "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
   "version": "5.0.5",
   "author": {
-    "name": "Ennio Maldonado"
+    "name": "Ennio Maldonado",
+    "url": "https://www.enniomaldonado.com"
   },
-  "homepage": "https://github.com/ennio-datatide/ultrapowers",
+  "homepage": "https://www.datatide.com",
   "repository": "https://github.com/ennio-datatide/ultrapowers",
   "license": "MIT",
   "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows"]
