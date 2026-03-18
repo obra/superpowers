@@ -56,6 +56,18 @@ You understand 1,2,3,6. Unclear on 4,5.
 ✅ RIGHT: "I understand items 1,2,3,6. Need clarification on 4 and 5 before proceeding."
 ```
 
+## Fetching GitHub PR Feedback
+
+When receiving code review on a GitHub PR, fetch **all three** comment types — each contains different feedback:
+
+```
+gh api repos/{owner}/{repo}/pulls/{pr}/comments    # Inline review comments (line-specific)
+gh api repos/{owner}/{repo}/pulls/{pr}/reviews      # Review bodies (summary, approve/request changes)
+gh api repos/{owner}/{repo}/issues/{pr}/comments    # PR conversation comments (top-level discussion)
+```
+
+**Why all three:** Reviewers often put critical feedback in review summaries or top-level comments, not just inline. Missing any type means missing feedback.
+
 ## Source-Specific Handling
 
 ### From your human partner
