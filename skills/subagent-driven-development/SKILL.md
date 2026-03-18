@@ -125,7 +125,7 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 ## Plan File Tracking
 
-After marking a task complete in TodoWrite, update the plan file on disk — change `- [ ]` to `- [x]` for all completed steps in that task using the Edit tool. This keeps the plan file as a persistent progress record across sessions.
+After marking a task complete in TodoWrite, update the plan file on disk — change `- [ ]` to `- [x]` for all completed steps in that task using the `Edit` tool. This keeps the plan file as a persistent progress record across sessions.
 
 ## Example Workflow
 
