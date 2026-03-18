@@ -12,6 +12,8 @@ Every implementation step gets audited against the research findings and your pl
 
 The rest of the Superpowers workflow — TDD, subagent-driven development, code review, worktrees — runs unchanged, with the addition that each step is audited for quality.
 
+Another key difference: **you stay in control**. Ultrapowers does not auto-commit plans, does not auto-commit code, and does not auto-push. You decide when to commit and when to push. Plans are working documents, not git artifacts — commit them if you want to, or don't.
+
 ## Attribution
 
 Ultrapowers is a fork of [Superpowers](https://github.com/obra/superpowers) by [Jesse Vincent (obra)](https://blog.fsck.com) and the team at [Prime Radiant](https://primeradiant.com). The original Superpowers workflow is brilliant — Ultrapowers builds on top of it. If Superpowers has helped you, consider [sponsoring Jesse's work](https://github.com/sponsors/obra).
@@ -115,6 +117,7 @@ Ultrapowers focuses on the core workflow. Domain-specific skills live in compani
 
 ## Philosophy
 
+- **You own the workflow** — No auto-commits, no auto-pushes. You decide when code is ready to commit and when to push. Plans stay as working documents unless you choose to commit them
 - **Research before implementation** — Never build on assumptions when you can verify
 - **Knowledge compounds** — Skills capture learning for future sessions
 - **Audit everything** — Every step (except research itself) gets audited
