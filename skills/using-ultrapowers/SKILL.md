@@ -39,25 +39,15 @@ Skills use Claude Code tool names. Non-CC platforms: see `references/codex-tools
 
 # Workflow Preferences
 
-At the **start of any implementation workflow** (after brainstorming, before writing code), ask the user these two questions. Ask them together in a single message:
+Workflow preferences (auto-commit, auto-push, commit design docs) are collected during the **brainstorming** skill, after clarifying questions. All downstream skills respect these settings.
 
-1. **"Should I commit autonomously as I complete tasks, or would you prefer to commit manually at the end?"**
-2. **"Should I push to remote autonomously, or would you prefer to push manually?"**
+**Defaults** (if not explicitly set): no auto-commit, no auto-push, design docs local only.
 
-Store these preferences for the session. Default behavior if the user doesn't answer: **do not commit or push autonomously** — the user handles it.
-
-<HARD-RULE>
-**Design documents are NEVER committed to git.** Design specs, research briefs, and audit reports are local working documents only. This is not configurable — design docs stay local always.
-</HARD-RULE>
-
-### How preferences apply
-
-| Preference | Behavior |
-|------------|----------|
-| Auto-commit ON | Commit after each completed task/step |
-| Auto-commit OFF | Write code, run tests, but leave everything unstaged. User commits when ready. |
-| Auto-push ON | Push after commits (only if auto-commit is also ON) |
-| Auto-push OFF | Never push. User pushes when ready. |
+| Preference | Default | Behavior when ON |
+|------------|---------|-----------------|
+| Auto-commit | OFF | Commit after each completed task/step |
+| Auto-push | OFF | Push after commits (requires auto-commit ON) |
+| Commit design docs | OFF | Include design specs in git commits |
 
 # Using Skills
 

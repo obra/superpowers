@@ -24,12 +24,13 @@ You MUST create a task for each of these items and complete them in order:
 1. **Explore project context** — check files, docs, recent commits
 2. **Offer visual companion** (if topic will involve visual questions) — this is its own message, not combined with a clarifying question. See the Visual Companion section below.
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-4. **Propose 2-3 approaches** — with trade-offs and your recommendation
-5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/ultrapowers/specs/YYYY-MM-DD-<topic>-design.md` (LOCAL ONLY — never commit design docs)
-7. **Spec review loop** — dispatch spec-document-reviewer subagent with precisely crafted review context (never your session history); fix issues and re-dispatch until approved (max 3 iterations, then surface to human)
-8. **User reviews written spec** — ask user to review the spec file before proceeding
-9. **Transition to research** — invoke deep-research skill to capture current state of the art
+4. **Ask workflow preferences** — after clarifying questions are done, ask all three in a single message (see Workflow Preferences section below)
+5. **Propose 2-3 approaches** — with trade-offs and your recommendation
+6. **Present design** — in sections scaled to their complexity, get user approval after each section
+7. **Write design doc** — save to `docs/ultrapowers/specs/YYYY-MM-DD-<topic>-design.md` (commit only if user opted in)
+8. **Spec review loop** — dispatch spec-document-reviewer subagent with precisely crafted review context (never your session history); fix issues and re-dispatch until approved (max 3 iterations, then surface to human)
+9. **User reviews written spec** — ask user to review the spec file before proceeding
+10. **Transition to research** — invoke deep-research skill to capture current state of the art
 
 ## Process Flow
 
@@ -114,7 +115,7 @@ digraph brainstorming {
 - Write the validated design (spec) to `docs/ultrapowers/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
-- **NEVER commit design docs to git** — they are local working documents only
+- Commit the design document only if the user opted to commit design docs (see Workflow Preferences). Default: do not commit.
 
 **Spec Review Loop:**
 After writing the spec document:
@@ -144,6 +145,22 @@ Wait for the user's response. If they request changes, make them and re-run the 
 - **Explore alternatives** - Always propose 2-3 approaches before settling
 - **Incremental validation** - Present design, get approval before moving on
 - **Be flexible** - Go back and clarify when something doesn't make sense
+
+## Workflow Preferences
+
+After clarifying questions are complete (and before proposing approaches), ask the user all three questions in **a single message**:
+
+> "Before we move on to approaches, a few workflow preferences:
+> 1. **Auto-commit** — Should I commit autonomously as I complete tasks, or would you prefer to handle commits yourself?
+> 2. **Auto-push** — Should I push to remote autonomously, or would you prefer to push manually?
+> 3. **Commit design docs** — Should I commit design specs and research briefs to git, or keep them local only?"
+
+**Defaults if the user doesn't answer or says "whatever":**
+- Auto-commit: **OFF** (user commits manually)
+- Auto-push: **OFF** (user pushes manually)
+- Commit design docs: **OFF** (local only)
+
+Store these preferences for the session. All downstream skills (writing-plans, subagent-driven-development, writing-skills, finishing-a-development-branch) respect these settings.
 
 ## Visual Companion
 
