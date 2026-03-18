@@ -290,7 +290,14 @@ These techniques are part of systematic debugging and available in this director
 ## Real-World Impact
 
 From debugging sessions:
-- Systematic approach: 15-30 minutes to fix
-- Random fixes approach: 2-3 hours of thrashing
-- First-time fix rate: 95% vs 40%
-- New bugs introduced: Near zero vs common
+- Systematic approach consistently resolves bugs in fewer iterations with near-zero secondary bugs introduced. Random-fix approach often leads to hours of thrashing and regression introduction.
+
+## Integration
+
+**Called by:**
+- **superpowers:using-superpowers** — when any bug or unexpected behavior is detected
+
+**Downstream skills:**
+- **superpowers:dispatching-parallel-agents** — for multiple independent failures
+- **superpowers:test-driven-development** — for creating failing test case (Phase 4)
+- **superpowers:verification-before-completion** — verify fix before claiming success

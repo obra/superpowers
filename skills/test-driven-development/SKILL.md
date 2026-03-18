@@ -25,6 +25,8 @@ Write the test first. Watch it fail. Write minimal code to pass.
 - Throwaway prototypes
 - Generated code
 - Configuration files
+- Spike solutions (time-boxed exploration to validate feasibility before committing to an approach)
+- Exploratory data analysis, rapid UI prototyping, or one-off scripts (not production code)
 
 Thinking "skip TDD just this once"? Stop. That's rationalization.
 
@@ -235,6 +237,8 @@ The "waste" is keeping code you can't trust. Working code without real tests is 
 
 **"TDD is dogmatic, being pragmatic means adapting"**
 
+TDD has genuine trade-offs in early exploration phases — the exceptions above acknowledge this. But for production code,
+
 TDD IS pragmatic:
 - Finds bugs before commit (faster than debugging after)
 - Prevents regressions (tests catch breaks immediately)
@@ -369,3 +373,13 @@ Otherwise → not TDD
 ```
 
 No exceptions without your human partner's permission.
+
+## Integration
+
+**Called by:**
+- **superpowers:executing-plans** — TDD cycle for each implementation task
+- **superpowers:subagent-driven-development** — TDD cycle within subagent tasks
+- **superpowers:systematic-debugging** — creating failing test case (Phase 4, Step 1)
+
+**Pairs with:**
+- **superpowers:verification-before-completion** — verify RED/GREEN results before claiming success

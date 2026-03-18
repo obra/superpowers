@@ -49,6 +49,16 @@ Skip any step = lying, not verifying
 | Agent completed | VCS diff shows changes | Agent reports "success" |
 | Requirements met | Line-by-line checklist | Tests passing |
 
+## Quick Reference
+
+| Action | Verification Command |
+|--------|---------------------|
+| Claiming tests pass | Run full test suite, confirm 0 failures |
+| Claiming build succeeds | Run build command, confirm exit 0 |
+| Claiming bug is fixed | Run test reproducing original symptom |
+| Claiming requirements met | Re-read plan, check each item line-by-line |
+| Claiming agent completed | Check VCS diff, verify changes independently |
+
 ## Red Flags - STOP
 
 - Using "should", "probably", "seems to"
@@ -65,11 +75,11 @@ Skip any step = lying, not verifying
 | Excuse | Reality |
 |--------|---------|
 | "Should work now" | RUN the verification |
-| "I'm confident" | Confidence ≠ evidence |
+| "I'm confident" | Confidence does not equal evidence |
 | "Just this once" | No exceptions |
-| "Linter passed" | Linter ≠ compiler |
+| "Linter passed" | Linter does not equal compiler |
 | "Agent said success" | Verify independently |
-| "I'm tired" | Exhaustion ≠ excuse |
+| "I'm tired" | Exhaustion does not equal excuse |
 | "Partial check is enough" | Partial proves nothing |
 | "Different words so rule doesn't apply" | Spirit over letter |
 
@@ -107,12 +117,12 @@ Skip any step = lying, not verifying
 
 ## Why This Matters
 
-From 24 failure memories:
+From repeated verification failures observed across sessions:
 - your human partner said "I don't believe you" - trust broken
 - Undefined functions shipped - would crash
 - Missing requirements shipped - incomplete features
 - Time wasted on false completion → redirect → rework
-- Violates: "Honesty is a core value. If you lie, you'll be replaced."
+- Unverified claims erode user trust and create compounding rework cycles
 
 ## When To Apply
 
@@ -137,3 +147,15 @@ From 24 failure memories:
 Run the command. Read the output. THEN claim the result.
 
 This is non-negotiable.
+
+## Integration
+
+**This skill is always required before any completion claim.**
+
+**Called by:**
+- **superpowers:finishing-a-development-branch** — before presenting work as complete
+- **superpowers:test-driven-development** — verify RED/GREEN cycle results
+- **superpowers:systematic-debugging** — verify fix resolved the issue
+
+**Pairs with:**
+- **superpowers:requesting-code-review** — verification must pass before requesting review
