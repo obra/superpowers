@@ -23,4 +23,14 @@ Task tool (superpowers:code-reviewer):
 - Is the implementation following the file structure from the plan?
 - Did this implementation create new files that are already large, or significantly grow existing files? (Don't flag pre-existing file sizes — focus on what this change contributed.)
 
+**🔒 Security Review (MANDATORY):**
+The code reviewer MUST check for security issues using the OWASP Top 10 checklist in `requesting-code-review/code-reviewer.md`:
+- Injection prevention (SQL, XSS, command injection)
+- Authentication and authorization
+- Hardcoded secrets or credentials
+- Input validation and sanitization
+- Secure dependency versions
+- Path traversal prevention
+- Proper error handling (no sensitive data in errors)
+
 **Code reviewer returns:** Strengths, Issues (Critical/Important/Minor), Assessment

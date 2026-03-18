@@ -361,6 +361,109 @@ When adding mocks or test utilities, read @testing-anti-patterns.md to avoid com
 - Adding test-only methods to production classes
 - Mocking without understanding dependencies
 
+## 🔒 Security Testing Examples
+
+**CRITICAL:** Always test security behaviors, not just happy paths.
+
+### SQL Injection Prevention
+
+```typescript
+test('rejects SQL injection attempts in user query', async () => {
+  const malicious = "'; DROP TABLE users; --";
+  const result = await queryUser(malicious);
+  expect(result.error).toBe('Invalid input');
+  // Verify table still exists
+  const users = await db.query('SELECT COUNT(*) FROM users');
+  expect(users.count).toBeGreaterThan(0);
+});
+```
+
+### XSS Prevention
+
+```typescript
+test('escapes HTML in user input', async () => {
+  const malicious = '<script>alert("xss")</script>';
+  const result = await renderProfile({ bio: malicious });
+  expect(result).not.toContain('<script>');
+  expect(result).toContain('&lt;script&gt;');
+});
+```
+
+### Path Traversal Prevention
+
+```typescript
+test('rejects path traversal attempts', async () => {
+  const malicious = '../../../etc/passwd';
+  const result = await readFile(malicious);
+  expect(result.error).toBe('Invalid path');
+  expect(result.path).toBeUndefined();
+});
+```
+
+### Authentication/Authorization
+
+```typescript
+test('rejects unauthorized access to admin endpoints', async () => {
+  const response = await request(app)
+    .get('/admin/users')
+    .set('Authorization', 'Bearer invalid-token');
+  expect(response.status).toBe(401);
+});
+
+test('rejects regular user accessing admin endpoints', async () => {
+  const response = await request(app)
+    .get('/admin/users')
+    .set('Authorization', `Bearer ${userToken}`);
+  expect(response.status).toBe(403);
+});
+```
+
+### Secrets Detection
+
+```typescript
+test('does not expose secrets in error messages', async () => {
+  const result = await login({ email: 'test@test.com', password: 'wrong' });
+  expect(result.error).not.toContain('password');
+  expect(result.error).not.toContain(process.env.DB_PASSWORD);
+});
+```
+
+### Input Validation
+
+```typescript
+describe('input validation', () => {
+  test('rejects negative amounts', async () => {
+    const result = await transfer({ amount: -100, to: 'user2' });
+    expect(result.error).toBe('Amount must be positive');
+  });
+
+  test('rejects oversized inputs', async () => {
+    const hugeInput = 'x'.repeat(1000000);
+    const result = await processInput(hugeInput);
+    expect(result.error).toBe('Input too large');
+  });
+
+  test('validates email format', async () => {
+    const invalid = 'not-an-email';
+    const result = await createUser({ email: invalid });
+    expect(result.error).toBe('Invalid email format');
+  });
+});
+```
+
+### Security Verification Checklist
+
+Before marking security tests complete:
+
+- [ ] SQL injection tests for all database queries
+- [ ] XSS tests for all user-rendered content
+- [ ] Path traversal tests for file operations
+- [ ] Authentication tests (valid/invalid tokens)
+- [ ] Authorization tests (permission boundaries)
+- [ ] Input validation tests (edge cases, malicious input)
+- [ ] Secrets not exposed in errors/logs
+- [ ] Rate limiting tests (if applicable)
+
 ## Final Rule
 
 ```

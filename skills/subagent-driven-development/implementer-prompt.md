@@ -26,6 +26,20 @@ Task tool (general-purpose):
 
     **Ask them now.** Raise any concerns before starting work.
 
+    ## 🔒 Security Checklist (Before Implementation)
+
+    **MANDATORY security validation:**
+
+    - [ ] **File paths** are within project scope (no `../`, absolute paths outside project)
+    - [ ] **No hardcoded secrets** or credentials in code
+    - [ ] **Input validation** for all external data (user input, API responses, file contents)
+    - [ ] **Dependencies** checked for known vulnerabilities
+    - [ ] **SQL injection / XSS prevention** for any user-facing code
+    - [ ] **Authentication/authorization** properly implemented
+    - [ ] **Sensitive data** handled securely (no logging, proper encryption)
+
+    **If any check fails:** STOP and report to controller before proceeding.
+
     ## Your Job
 
     Once you're clear on requirements:

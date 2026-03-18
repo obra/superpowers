@@ -55,7 +55,40 @@ Task tool (general-purpose):
 
     **Verify by reading code, not by trusting report.**
 
+    ## 🔒 Security Verification (MANDATORY)
+
+    In addition to spec compliance, check for security issues:
+
+    **Code Injection Risks:**
+    - [ ] No `eval()`, `exec()`, or dynamic code execution
+    - [ ] No unsanitized input in SQL queries
+    - [ ] No unsanitized output in HTML/templates
+    - [ ] No command injection via shell commands
+
+    **Credential/Secret Handling:**
+    - [ ] No hardcoded API keys, passwords, or tokens
+    - [ ] Secrets loaded from environment variables or secure storage
+    - [ ] No secrets in logs or error messages
+
+    **Input Validation:**
+    - [ ] All user inputs validated and sanitized
+    - [ ] File paths validated (no path traversal)
+    - [ ] API responses validated before use
+
+    **Authentication/Authorization:**
+    - [ ] Proper authentication checks present
+    - [ ] Authorization enforced for sensitive operations
+    - [ ] Session management secure (if applicable)
+
+    **Suspicious Patterns:**
+    - [ ] No obfuscated or encoded content
+    - [ ] No unexpected network calls
+    - [ ] No file operations outside project scope
+
+    Report security issues as CRITICAL regardless of spec compliance.
+
     Report:
     - ✅ Spec compliant (if everything matches after code inspection)
     - ❌ Issues found: [list specifically what's missing or extra, with file:line references]
+    - 🚨 Security issues: [list any security vulnerabilities found]
 ```

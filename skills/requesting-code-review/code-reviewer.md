@@ -42,6 +42,18 @@ git diff {BASE_SHA}..{HEAD_SHA}
 - Performance implications?
 - Security concerns?
 
+**🔒 Security Review (OWASP Top 10):**
+- **Injection Prevention:** No SQL injection, XSS, command injection?
+- **Authentication:** Proper auth checks, no broken authentication?
+- **Sensitive Data:** No hardcoded secrets, proper encryption?
+- **Access Control:** Authorization enforced for all sensitive operations?
+- **Security Misconfiguration:** No default credentials, debug mode off?
+- **Input Validation:** All external input validated and sanitized?
+- **Dependencies:** No known vulnerable dependencies?
+- **Logging:** Sensitive data not logged?
+- **File Operations:** Path traversal prevented, proper permissions?
+- **External Content:** Fetched content treated as untrusted?
+
 **Testing:**
 - Tests actually test logic (not mocks)?
 - Edge cases covered?
