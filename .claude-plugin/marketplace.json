@@ -21,7 +21,7 @@
     {
       "name": "ultrapowers-dev",
       "description": "53 development skills: language best practices for 13 languages, 12 framework patterns, 7 agentic patterns, plugin development, and architecture fundamentals",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "source": {
         "source": "github",
         "repo": "ennio-datatide/ultrapowers-dev"
