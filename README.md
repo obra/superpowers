@@ -2,15 +2,15 @@
 
 Ultrapowers is a research-driven software development workflow for your coding agents. It extends [Superpowers](https://github.com/obra/superpowers) by Jesse Vincent with a **research-first pipeline** that ensures agents always work with current, verified knowledge before writing code.
 
+**[Documentation](https://www.datatide.com/ultrapowers)** · **[GitHub](https://github.com/ennio-datatide/ultrapowers)** · **[Issues](https://github.com/ennio-datatide/ultrapowers/issues)**
+
 ## How it works
 
 It starts the same way Superpowers does — your agent doesn't just jump into code. It steps back and asks what you're really trying to do.
 
 But then Ultrapowers goes further. After brainstorming, it **researches the current state of the art** for every technology and pattern involved. It audits your existing skills against what it finds, creates or updates skills to fill gaps, and only then moves into planning and implementation.
 
-Every implementation step gets audited against the research findings and your plan. The result: agents that build on verified knowledge, not assumptions.
-
-The rest of the Superpowers workflow — TDD, subagent-driven development, code review, worktrees — runs unchanged, with the addition that each step is audited for quality.
+Every implementation step gets audited against the research findings and your plan. The result: agents that build on verified knowledge, not assumptions. Knowledge compounds across sessions — your agent gets smarter over time.
 
 Another key difference: **you stay in control**. Ultrapowers does not auto-commit plans, does not auto-commit code, and does not auto-push. You decide when to commit and when to push. Plans are working documents, not git artifacts — commit them if you want to, or don't.
 
@@ -46,27 +46,33 @@ Start a new session and ask for something that should trigger a skill (for examp
 
 ## The Research-Driven Workflow
 
-1. **brainstorming** — Refines rough ideas through questions, explores alternatives, presents design in sections for validation.
+1. **brainstorming** — Your agent steps back and asks what you're really trying to do. Refines rough ideas through questions, explores alternatives, presents design in sections for validation.
 
-2. **deep-research** — Captures the current state of the art for all technologies and patterns in the spec. Uses context7, WebSearch, and documentation.
+2. **deep-research** — Researches the current state of the art for all technologies and patterns in the spec. Uses documentation, web search, and context to capture what's current — not what was true six months ago.
 
-3. **skills-audit** — Audits all available skills against research findings. Classifies each as Covered, Stale, Missing, or External.
+3. **skills-audit** — Audits all available skills against research findings. Classifies each as Covered, Stale, Missing, or External. Identifies exactly what needs to be created or updated.
 
-4. **skills-creation** — Creates new or updates existing skills to fill gaps identified by the audit.
+4. **skills-creation** — Creates new or updates existing skills to fill gaps identified by the audit. Knowledge is captured for future sessions.
 
-5. **using-git-worktrees** — Creates isolated workspace on new branch, runs project setup, verifies clean test baseline.
+5. **using-git-worktrees** — Creates isolated workspace on new branch, runs project setup, verifies clean test baseline. Your main branch stays untouched.
 
-6. **writing-plans** — Breaks work into bite-sized tasks (2-5 minutes each) with skill annotations on each step.
+6. **writing-plans** — Breaks work into bite-sized tasks (2-5 minutes each) with skill annotations on each step. Clear enough for any agent to follow.
 
-7. **subagent-driven-development** or **executing-plans** — Dispatches fresh subagent per task with audited two-stage review (spec compliance, then code quality).
+7. **subagent-driven-development** or **executing-plans** — Dispatches fresh subagent per task with audited two-stage review (spec compliance first, then code quality).
 
-8. **test-driven-development** — Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit.
+8. **test-driven-development** — Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
 
-9. **requesting-code-review** — Reviews against plan with audit checks. Critical issues block progress.
+9. **requesting-code-review** — Reviews against plan with audit checks. Critical issues block progress. No rubber-stamping.
 
-10. **finishing-a-development-branch** — Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
+10. **finishing-a-development-branch** — Verifies all tests pass, presents options (merge/PR/keep/discard), cleans up worktree. You decide what happens next.
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
+
+## Example
+
+> "Build me a real-time notification system using WebSockets."
+
+Ultrapowers brainstorms the design with you, researches current WebSocket best practices and libraries, audits your existing skills to find gaps, creates any missing skills, then plans and implements with TDD — all audited against the research. You review the code and commit when you're satisfied.
 
 ## What's Inside
 
@@ -106,8 +112,8 @@ Start a new session and ask for something that should trigger a skill (for examp
 
 Ultrapowers focuses on the core workflow. Domain-specific skills live in companion plugins:
 
-- **[ultrapowers-dev](https://github.com/ennio-datatide/ultrapowers-dev)** — Development skills: language best practices, framework patterns, agentic patterns, architecture
-- **[ultrapowers-business](https://github.com/ennio-datatide/ultrapowers-business)** — Business skills: marketing, compliance, finance, communication
+- **[ultrapowers-dev](https://github.com/ennio-datatide/ultrapowers-dev)** — 52 development skills: language best practices for 13 languages, 12 framework patterns, 7 agentic patterns, and architecture fundamentals
+- **[ultrapowers-business](https://github.com/ennio-datatide/ultrapowers-business)** — 38 business skills: marketing, SEO, copywriting, conversion optimization, compliance, finance, and sales enablement
 
 Install from the same marketplace:
 
@@ -119,12 +125,12 @@ Install from the same marketplace:
 ## Philosophy
 
 - **You own the workflow** — No auto-commits, no auto-pushes. You decide when code is ready to commit and when to push. Plans stay as working documents unless you choose to commit them
-- **Research before implementation** — Never build on assumptions when you can verify
-- **Knowledge compounds** — Skills capture learning for future sessions
-- **Audit everything** — Every step (except research itself) gets audited
-- **Test-Driven Development** — Write tests first, always
+- **Research before implementation** — Never build on assumptions when you can verify. Every session starts with research to capture what's current
+- **Knowledge compounds** — Skills capture learning for future sessions. The audit-create cycle means your agent improves with every project
+- **Audit everything** — Every step (except research itself) gets audited against the plan and findings. Spec compliance before code quality
+- **Test-Driven Development** — Write tests first, always. Code written before tests gets deleted
 - **Systematic over ad-hoc** — Process over guessing
-- **Evidence over claims** — Verify before declaring success
+- **Evidence over claims** — Verify before declaring success. If it's not tested, it's not done
 
 ## Updating
 
@@ -149,5 +155,6 @@ MIT License — see LICENSE file for details.
 
 Ultrapowers is built by [Ennio Maldonado](https://www.enniomaldonado.com) at [Datatide](https://www.datatide.com), extending the work of [Jesse Vincent](https://blog.fsck.com) and [Prime Radiant](https://primeradiant.com).
 
+- **Docs**: https://www.datatide.com/ultrapowers
 - **Issues**: https://github.com/ennio-datatide/ultrapowers/issues
 - **Superpowers Discord**: [Join the community](https://discord.gg/Jd8Vphy9jq)
