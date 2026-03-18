@@ -93,7 +93,7 @@ git clone https://github.com/ennio-datatide/ultrapowers.git
 ## Companion Repos
 
 - **[ultrapowers-dev](https://github.com/ennio-datatide/ultrapowers-dev)** — Development skills: language best practices, framework patterns, agentic patterns, architecture
-- **[ultrapowers-misc](https://github.com/ennio-datatide/ultrapowers-misc)** — Non-dev skills: marketing, compliance, finance, communication
+- **[ultrapowers-business](https://github.com/ennio-datatide/ultrapowers-business)** — Non-dev skills: marketing, compliance, finance, communication
 
 ## License
 
