@@ -37,6 +37,28 @@ If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "alw
 
 Skills use Claude Code tool names. Non-CC platforms: see `references/codex-tools.md` (Codex) for tool equivalents. Gemini CLI users get the tool mapping loaded automatically via GEMINI.md.
 
+# Workflow Preferences
+
+At the **start of any implementation workflow** (after brainstorming, before writing code), ask the user these two questions. Ask them together in a single message:
+
+1. **"Should I commit autonomously as I complete tasks, or would you prefer to commit manually at the end?"**
+2. **"Should I push to remote autonomously, or would you prefer to push manually?"**
+
+Store these preferences for the session. Default behavior if the user doesn't answer: **do not commit or push autonomously** — the user handles it.
+
+<HARD-RULE>
+**Design documents are NEVER committed to git.** Design specs, research briefs, and audit reports are local working documents only. This is not configurable — design docs stay local always.
+</HARD-RULE>
+
+### How preferences apply
+
+| Preference | Behavior |
+|------------|----------|
+| Auto-commit ON | Commit after each completed task/step |
+| Auto-commit OFF | Write code, run tests, but leave everything unstaged. User commits when ready. |
+| Auto-push ON | Push after commits (only if auto-commit is also ON) |
+| Auto-push OFF | Never push. User pushes when ready. |
+
 # Using Skills
 
 ## The Rule

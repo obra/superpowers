@@ -95,7 +95,7 @@ def function(input):
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: Commit** *(only if user enabled auto-commit)*
 
 ```bash
 git add tests/path/test.py src/path/file.py
@@ -108,7 +108,9 @@ git commit -m "feat: add specific feature"
 - Complete code in plan (not "add validation")
 - Exact commands with expected output
 - Reference relevant skills with @ syntax
-- DRY, YAGNI, TDD, frequent commits
+- DRY, YAGNI, TDD
+- **Commit steps are conditional** — include them in the plan but mark them as "only if auto-commit enabled". If the user chose manual commits, skip commit steps during execution.
+- **NEVER include design docs in commit steps** — design docs are local only
 
 ## Plan Review Loop
 
