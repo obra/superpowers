@@ -10,21 +10,150 @@ This fork keeps that core workflow and extends it with additional skill structur
 
 ## How it works
 
-It starts from the moment you fire up your coding agent. As soon as it sees that you're building something, it *doesn't* just jump into trying to write code. Instead, it steps back and asks you what you're really trying to do.
+Superpowers is not just a collection of prompts. It is a small runtime plus a skill library that turns the agent into a conservative workflow state machine.
 
-The entrypoint for that behavior is the `using-superpowers` skill. It is discovered natively by the harness, checks whether another skill applies before the agent responds, and routes the session into the right workflow. Product work usually goes into the spec and planning pipeline; bugs, code-review feedback, and completion checks trigger different skills instead of forcing the same path every time.
+Three layers matter:
 
-Once it's teased a spec out of the conversation, it shows it to you in chunks short enough to actually read and digest.
+- `using-superpowers` is the entry router. It runs before the agent responds, checks whether another skill applies, and decides which workflow owns the turn.
+- `superpowers-workflow-status` owns product-work routing up to `implementation_ready`.
+- `superpowers-plan-execution` owns execution state after an approved plan is handed off.
 
-After that written spec exists, your agent runs a CEO or founder review pass to challenge the scope, tighten the reasoning, and make sure the spec is worth building.
+The key design choice is that repo-visible artifacts remain authoritative, while local runtime state is only a rebuildable index:
 
-Then your agent puts together an implementation plan that's clear enough for an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing to follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY.
+- Spec approval truth lives in the spec headers in `docs/superpowers/specs/*.md`.
+- Plan approval truth lives in the plan headers in `docs/superpowers/plans/*.md`.
+- Execution truth lives in the approved plan's checklist and execution notes, plus the paired execution-evidence file.
+- The branch-scoped manifest under `~/.superpowers/projects/<repo-slug>/<user>-<safe-branch>-workflow-state.json` stores expected paths and the last derived routing status, but it is not the approval authority.
 
-Before implementation begins, that written plan gets its own engineering review pass so architecture, testing, failure modes, and rollout details are locked in.
+The full control flow looks like this:
 
-Next up, once you say "go", implementation starts from an engineering-approved current plan and the exact approved plan path. `plan-eng-review` presents that handoff, and `superpowers-plan-execution recommend --plan <approved-plan-path>` chooses between *subagent-driven-development* and *executing-plans*. In both cases, execution runs a workspace-readiness preflight, executes the plan task by task, reviews before completion, and hands off through the normal branch-finishing flow. Workspace preparation is the user's responsibility; invoke `using-git-worktrees` manually when you want isolated workspace management. It's not uncommon for a well-grounded coding agent to be able to work autonomously for a couple hours at a time without deviating from the plan you put together.
+```mermaid
+flowchart TD
+    MSG["User message"] --> PREAMBLE["Generated skill preamble<br/>detect install root, check upgrade state,<br/>mark session, enable contributor-mode hooks"]
+    PREAMBLE --> SKILL_CHECK{"Does any skill apply?"}
+    SKILL_CHECK -->|No| NORMAL["Respond normally"]
+    SKILL_CHECK -->|Yes| ROUTER_KIND{"What kind of work is this?"}
 
-There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Superpowers.
+    ROUTER_KIND -->|Bug / failing test / unexpected behavior| DEBUG_SKILL["superpowers:systematic-debugging"]
+    ROUTER_KIND -->|Incoming code review feedback| RECEIVE_REVIEW["superpowers:receiving-code-review"]
+    ROUTER_KIND -->|Claim that work is done or passing| VERIFY_DONE["superpowers:verification-before-completion"]
+    ROUTER_KIND -->|Feature / product / workflow change| WS_REFRESH["superpowers-workflow-status status --refresh"]
+
+    subgraph PRODUCT_ROUTER["Product-work router: helper-backed artifact state machine"]
+        direction TD
+
+        WS_REFRESH --> READ_STATE["Read branch-scoped manifest under ~/.superpowers/projects/...<br/>and inspect docs/superpowers/specs/*.md + docs/superpowers/plans/*.md"]
+        READ_STATE -.-> AUTHORITY_NOTE["Repo docs are authoritative.<br/>Manifest is a rebuildable local index of expected paths and derived status."]
+        READ_STATE --> HELPER_HEALTH{"Helper + manifest healthy?"}
+
+        HELPER_HEALTH -->|Helper unavailable or runtime failure| MANUAL_FALLBACK["Manual fallback in using-superpowers:<br/>inspect newest relevant spec/plan and parse exact headers"]
+        HELPER_HEALTH -->|Corrupt manifest| CORRUPT_RECOVERY["Backup corrupt manifest, warn,<br/>rebuild conservatively for this invocation"]
+        HELPER_HEALTH -->|Repo root or branch mismatch| IDENTITY_RECOVERY["Warn and rebuild from current repo context<br/>reason=repo_root_mismatch or branch_mismatch"]
+        HELPER_HEALTH -->|Yes| SPEC_GATE{"What does the current spec resolve to?"}
+
+        MANUAL_FALLBACK --> SPEC_GATE
+        CORRUPT_RECOVERY --> SPEC_GATE
+        IDENTITY_RECOVERY --> SPEC_GATE
+
+        SPEC_GATE -->|No spec artifact yet<br/>or missing expected spec| STATE_NEEDS_BRAIN["status=needs_brainstorming<br/>next_skill=superpowers:brainstorming"]
+        SPEC_GATE -->|Spec ambiguous| STATE_SPEC_AMBIG["status=spec_draft<br/>reason=fallback_ambiguity_spec<br/>next_skill=superpowers:plan-ceo-review"]
+        SPEC_GATE -->|Spec headers malformed| STATE_SPEC_BAD["status=spec_draft<br/>reason=malformed_spec_headers<br/>next_skill=superpowers:plan-ceo-review"]
+        SPEC_GATE -->|Spec Workflow State = Draft| STATE_SPEC_DRAFT["status=spec_draft<br/>next_skill=superpowers:plan-ceo-review"]
+        SPEC_GATE -->|Spec Workflow State = CEO Approved| PLAN_GATE{"What does the current plan resolve to?"}
+
+        PLAN_GATE -->|No plan artifact yet<br/>or missing expected plan| STATE_NEEDS_PLAN["status=spec_approved_needs_plan<br/>next_skill=superpowers:writing-plans"]
+        PLAN_GATE -->|Plan ambiguous| STATE_PLAN_AMBIG["status=spec_approved_needs_plan<br/>reason=fallback_ambiguity_plan<br/>next_skill=superpowers:writing-plans"]
+        PLAN_GATE -->|Plan headers malformed| STATE_PLAN_BAD["status=plan_draft<br/>reason=malformed_plan_headers<br/>next_skill=superpowers:plan-eng-review"]
+        PLAN_GATE -->|Plan Workflow State = Draft| STATE_PLAN_DRAFT["status=plan_draft<br/>next_skill=superpowers:plan-eng-review"]
+        PLAN_GATE -->|Plan Engineering Approved but source spec path/revision is stale| STATE_STALE_PLAN["status=stale_plan<br/>next_skill=superpowers:writing-plans"]
+        PLAN_GATE -->|Plan Engineering Approved and source spec matches latest approved spec revision| STATE_READY["status=implementation_ready<br/>next_skill is intentionally empty"]
+    end
+
+    subgraph ARTIFACT_LIFECYCLE["Artifact lifecycle: skills move the workflow by writing exact headers and syncing the helper"]
+        direction TD
+
+        BRAIN_SKILL["superpowers:brainstorming"] --> EXPECT_SPEC["expect --artifact spec --path <repo-relative-spec-path>"]
+        EXPECT_SPEC --> WRITE_SPEC["Write spec with exact headers:<br/>Workflow State: Draft<br/>Spec Revision: 1<br/>Last Reviewed By: brainstorming"]
+        WRITE_SPEC --> SYNC_SPEC["sync --artifact spec"]
+
+        PLAN_CEO_SKILL["superpowers:plan-ceo-review"] --> SPEC_REVIEW["Keep spec in Draft while review is unresolved.<br/>If materially changing an approved spec, increment Spec Revision."]
+        SPEC_REVIEW --> SPEC_APPROVE["Approve by writing:<br/>Workflow State: CEO Approved<br/>Last Reviewed By: plan-ceo-review"]
+        SPEC_APPROVE --> SYNC_APPROVED_SPEC["sync --artifact spec"]
+
+        WRITE_PLAN_SKILL["superpowers:writing-plans"] --> EXPECT_PLAN["expect --artifact plan --path <repo-relative-plan-path>"]
+        EXPECT_PLAN --> WRITE_PLAN["Write plan with exact headers:<br/>Workflow State: Draft<br/>Plan Revision: 1<br/>Execution Mode: none<br/>Source Spec: exact approved spec path<br/>Source Spec Revision: approved spec revision<br/>Last Reviewed By: writing-plans"]
+        WRITE_PLAN --> SYNC_PLAN["sync --artifact plan"]
+
+        PLAN_ENG_SKILL["superpowers:plan-eng-review"] --> PLAN_REVIEW["Keep plan in Draft until review resolves.<br/>Only the final successful review may approve execution."]
+        PLAN_REVIEW --> PLAN_APPROVE["Approve by writing:<br/>Workflow State: Engineering Approved<br/>Last Reviewed By: plan-eng-review"]
+        PLAN_APPROVE --> PLAN_REFRESH["superpowers-workflow-status status --refresh"]
+    end
+
+    STATE_NEEDS_BRAIN --> BRAIN_SKILL
+    STATE_SPEC_AMBIG --> PLAN_CEO_SKILL
+    STATE_SPEC_BAD --> PLAN_CEO_SKILL
+    STATE_SPEC_DRAFT --> PLAN_CEO_SKILL
+    SYNC_SPEC --> PLAN_CEO_SKILL
+    SYNC_APPROVED_SPEC --> WRITE_PLAN_SKILL
+    STATE_NEEDS_PLAN --> WRITE_PLAN_SKILL
+    STATE_PLAN_AMBIG --> WRITE_PLAN_SKILL
+    STATE_STALE_PLAN --> WRITE_PLAN_SKILL
+    SYNC_PLAN --> PLAN_ENG_SKILL
+    STATE_PLAN_BAD --> PLAN_ENG_SKILL
+    STATE_PLAN_DRAFT --> PLAN_ENG_SKILL
+    PLAN_REFRESH --> STATE_READY
+
+    STATE_READY --> EXEC_HANDOFF["plan-eng-review presents the exact approved plan path"]
+
+    subgraph EXECUTION_ROUTER["Execution handoff and helper-owned execution state"]
+        direction TD
+
+        EXEC_HANDOFF --> EXEC_RECOMMEND["superpowers-plan-execution recommend --plan <approved-plan-path>"]
+        EXEC_HANDOFF -.-> WORKTREE_NOTE["Workspace preparation is the user's responsibility;<br/>invoke using-git-worktrees manually when you want isolated workspace management."]
+        EXEC_RECOMMEND --> DECISION_FLAGS["Recommendation inputs:<br/>tasks_independent<br/>isolated_agents_available<br/>session_intent<br/>workspace_prepared<br/>same_session_viable"]
+        DECISION_FLAGS -->|Independent tasks + isolated agents available + same-session execution is viable| SUBAGENT_EXEC["Recommended: superpowers:subagent-driven-development"]
+        DECISION_FLAGS -->|Otherwise default conservatively| SINGLE_EXEC["Recommended: superpowers:executing-plans"]
+
+        SUBAGENT_EXEC --> EXEC_STATUS["superpowers-plan-execution status --plan <approved-plan-path><br/>validate Engineering Approved plan, Plan Revision,<br/>Execution Mode, source spec linkage, evidence path,<br/>execution fingerprint, and current step state"]
+        SINGLE_EXEC --> EXEC_STATUS
+        EXEC_STATUS -.-> EXEC_AUTHORITY["Approved plan markdown is the authoritative execution record.<br/>Execution evidence proves checked-off steps semantically."]
+
+        EXEC_STATUS --> STEP_UNCHECKED["Unchecked step<br/>- [ ] and no execution note"]
+        STEP_UNCHECKED -->|begin<br/>first begin persists chosen Execution Mode if it was none| STEP_ACTIVE["Unchecked step + Active note"]
+        STEP_ACTIVE -->|complete + evidence attempt| STEP_CHECKED["Checked step<br/>- [x]"]
+        STEP_ACTIVE -->|note --state interrupted| STEP_INTERRUPTED["Unchecked step + Interrupted note"]
+        STEP_ACTIVE -->|note --state blocked| STEP_BLOCKED["Unchecked step + Blocked note"]
+        STEP_INTERRUPTED -->|begin same step| STEP_ACTIVE
+        STEP_BLOCKED -->|begin same step after unblock| STEP_ACTIVE
+        STEP_CHECKED -->|reopen on material change| STEP_REOPENED["Unchecked step + Interrupted note<br/>latest successful evidence invalidated"]
+        STEP_REOPENED -->|begin same step| STEP_ACTIVE
+        STEP_ACTIVE -->|transfer to a previously completed repair step| STEP_TRANSFER["Park current step as Interrupted<br/>reopen repair step as Active"]
+        STEP_TRANSFER --> STEP_ACTIVE
+
+        EXEC_STATUS -.-> EXEC_RULES["Hard limits:<br/>one current-work step at a time<br/>one parked Interrupted step at most<br/>checked steps may not keep execution notes<br/>Blocked halts forward execution<br/>new approved revisions must start execution-clean"]
+
+        STEP_CHECKED --> MORE_STEPS{"More plan steps remain?"}
+        MORE_STEPS -->|Yes| STEP_UNCHECKED
+        MORE_STEPS -->|No| FINAL_REVIEW["superpowers:requesting-code-review<br/>must read status --plan and evidence_path"]
+        FINAL_REVIEW -->|Dirty execution state, stale evidence,<br/>missed reopen, or missing semantic proof| FAIL_CLOSED["Fail closed and return to execution<br/>or back to plan-eng-review"]
+        FINAL_REVIEW -->|Review resolved| FINISH_BRANCH["superpowers:finishing-a-development-branch<br/>must read status --plan and evidence_path"]
+        FINISH_BRANCH -->|Execution dirty or malformed| FAIL_CLOSED
+        FINISH_BRANCH --> QA_OR_COMPLETE["Optional qa-only for browser-facing work,<br/>then PR / merge / keep-branch completion flow"]
+    end
+```
+
+Workspace preparation is the user's responsibility; invoke `using-git-worktrees` manually when you want isolated workspace management.
+
+A few important consequences fall out of that state machine:
+
+- `expect` is how a skill records the intended future artifact path before the file exists; `sync` is how it reparses the real file and updates the manifest from repo truth.
+- `superpowers-workflow-status` always routes conservatively. If artifacts are ambiguous, malformed, missing, stale, or the local manifest is damaged, it falls back to the earlier safe stage instead of skipping ahead.
+- `implementation_ready` is a terminal routing state, not another skill. That is why `next_skill` is empty there and `plan-eng-review` owns the handoff into execution.
+- `superpowers-plan-execution recommend` is only valid before execution has started for that exact plan revision. After that, the plan's persisted `**Execution Mode:**` and the helper's `status --plan` output are the source of truth.
+- Execution is deliberately serial at the plan-step level. The execution helper allows subagents, but not multiple simultaneously active plan steps.
+- Final review and branch completion both fail closed if the approved plan and execution evidence disagree with reality.
+
+That is the reason Superpowers feels opinionated in practice: the agent is not merely told to follow a workflow; the runtime keeps re-deriving the safest next state from the repo, the local branch-scoped manifest, and the exact approval headers written by the prior skill.
 
 
 ## Installation
