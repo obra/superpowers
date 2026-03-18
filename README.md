@@ -76,7 +76,10 @@ flowchart TD
         EXPECT_SPEC --> WRITE_SPEC["Write spec with exact headers:<br/>Workflow State: Draft<br/>Spec Revision: 1<br/>Last Reviewed By: brainstorming"]
         WRITE_SPEC --> SYNC_SPEC["sync --artifact spec"]
 
-        PLAN_CEO_SKILL["superpowers:plan-ceo-review"] --> SPEC_REVIEW["Keep spec in Draft while review is unresolved.<br/>If materially changing an approved spec, increment Spec Revision."]
+        PLAN_CEO_SKILL["superpowers:plan-ceo-review"] --> CEO_ACCEL{"User explicitly requests<br/>accelerated / accelerator mode?"}
+        CEO_ACCEL -->|No| SPEC_REVIEW["Keep spec in Draft while review is unresolved.<br/>If materially changing an approved spec, increment Spec Revision."]
+        CEO_ACCEL -->|Yes| SPEC_ACCEL["Accelerated CEO review inside the skill:<br/>reviewer subagent drafts per-section packets<br/>human approves each section<br/>final approval remains human-owned"]
+        SPEC_ACCEL --> SPEC_REVIEW
         SPEC_REVIEW --> SPEC_APPROVE["Approve by writing:<br/>Workflow State: CEO Approved<br/>Last Reviewed By: plan-ceo-review"]
         SPEC_APPROVE --> SYNC_APPROVED_SPEC["sync --artifact spec"]
 
@@ -84,7 +87,10 @@ flowchart TD
         EXPECT_PLAN --> WRITE_PLAN["Write plan with exact headers:<br/>Workflow State: Draft<br/>Plan Revision: 1<br/>Execution Mode: none<br/>Source Spec: exact approved spec path<br/>Source Spec Revision: approved spec revision<br/>Last Reviewed By: writing-plans"]
         WRITE_PLAN --> SYNC_PLAN["sync --artifact plan"]
 
-        PLAN_ENG_SKILL["superpowers:plan-eng-review"] --> PLAN_REVIEW["Keep plan in Draft until review resolves.<br/>Only the final successful review may approve execution."]
+        PLAN_ENG_SKILL["superpowers:plan-eng-review"] --> ENG_ACCEL{"User explicitly requests<br/>accelerated / accelerator mode?"}
+        ENG_ACCEL -->|No| PLAN_REVIEW["Keep plan in Draft until review resolves.<br/>Only the final successful review may approve execution."]
+        ENG_ACCEL -->|Yes| PLAN_ACCEL["Accelerated ENG review inside the skill:<br/>reviewer subagent drafts per-section packets<br/>human approves each section<br/>QA handoff and final approval still apply"]
+        PLAN_ACCEL --> PLAN_REVIEW
         PLAN_REVIEW --> PLAN_APPROVE["Approve by writing:<br/>Workflow State: Engineering Approved<br/>Last Reviewed By: plan-eng-review"]
         PLAN_APPROVE --> PLAN_REFRESH["superpowers-workflow-status status --refresh"]
     end
@@ -285,6 +291,10 @@ Windows (PowerShell): `& "$env:USERPROFILE\.superpowers\install\bin\superpowers-
 Default pipeline: `brainstorming -> plan-ceo-review -> writing-plans -> plan-eng-review -> implementation`
 
 That is the default path for new feature and product work. Other task types take their own first-class routes: `systematic-debugging` handles bugs and failing tests, `receiving-code-review` handles incoming review feedback before you implement it, and `verification-before-completion` gates any claim that work is done or passing.
+
+Accelerated review is an opt-in branch inside `plan-ceo-review` and `plan-eng-review`, not a separate workflow stage.
+
+Only the user can initiate accelerated review, and section approval plus final approval remain human-owned even when the review uses reviewer subagents and persisted section packets.
 
 1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves the written spec.
 

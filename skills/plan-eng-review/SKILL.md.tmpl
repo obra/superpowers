@@ -37,6 +37,42 @@ description: Use when a Superpowers implementation plan from a CEO-approved spec
 
 Review this plan thoroughly before making any code changes. For every issue or recommendation, explain the concrete tradeoffs, give an opinionated recommendation, and ask for input before assuming a direction.
 
+## Accelerated Review Activation
+
+Accelerated review is available only when the user explicitly requests `accelerated` or `accelerator` mode for the current engineering review.
+
+Do not activate accelerated review from heuristics, vague wording like "make this fast", saved preferences, or agent-only judgment.
+
+If the user does not explicitly request accelerated review, run the normal engineering review flow and keep the standard Step 0 scope choice and approval gate unchanged.
+
+Use the existing ENG review sections defined in this skill as the canonical section boundaries. Accelerated review does not invent a separate section model or a separate workflow stage.
+
+Use `skills/plan-eng-review/accelerated-reviewer-prompt.md` when briefing the accelerated engineering reviewer subagent.
+
+That reviewer prompt, together with `review/review-accelerator-packet-contract.md`, defines the required section-packet schema and keeps the reviewer limited to draft-only output.
+
+## Accelerated ENG Section Flow
+
+Accelerated engineering review must process one canonical ENG section at a time through a section packet and explicit human section approval.
+
+Accelerated ENG `SMALL CHANGE` review must still limit the reviewer to one primary issue per canonical section and may not collapse into one bundled approval round.
+
+In accelerated review, keep routine issues bundled inside the section packet. Break out only escalated high-judgment issues into direct human questions before section approval.
+
+Persist accelerated engineering section packets under `~/.superpowers/projects/<slug>/...`.
+
+Resume accelerated engineering review only from the last approved-and-applied section boundary.
+
+If the source artifact fingerprint changes, treat saved accelerated ENG packets as stale and regenerate them before reuse.
+
+Accelerator artifacts must use bounded retention rather than accumulate indefinitely.
+
+Accelerated engineering review must preserve QA handoff generation, TODO flow, failure-mode output, and the normal execution handoff.
+
+Only the main review agent may write authoritative artifacts, apply approved patches, or change approval headers in accelerated engineering review.
+
+Final explicit human approval remains unchanged. Accelerated review may speed up section handling, but it may not bypass approval authority or the normal execution handoff boundary.
+
 ## Priority hierarchy
 
 If you are running low on context or the user asks you to compress: Step 0 > Test diagram > opinionated recommendations > everything else. Never skip Step 0 or the test diagram.
@@ -73,7 +109,9 @@ Then ask whether the user wants one of three options:
 
 1. **SCOPE REDUCTION:** The plan is overbuilt. Propose a minimal version that achieves the core goal, then review that.
 2. **BIG CHANGE:** Work through interactively, one section at a time: architecture, code quality, tests, performance.
-3. **SMALL CHANGE:** Compressed review. Step 0 plus one combined pass covering all 4 sections. For each section, pick the single most important issue.
+3. **SMALL CHANGE:** In normal non-accelerated review, use a compressed review. Step 0 plus one combined pass covering all 4 sections. For each section, pick the single most important issue.
+
+In accelerated review, `SMALL CHANGE` still uses canonical section packets and per-section approvals; only reviewer depth stays compressed.
 
 Critical: If the user does not select SCOPE REDUCTION, respect that decision fully. Your job becomes making the chosen plan succeed, not continuing to lobby for a smaller plan.
 
@@ -101,7 +139,7 @@ Evaluate:
 * Whether key flows deserve ASCII diagrams in the plan or in code comments
 * For each new codepath or integration point, one realistic production failure scenario and whether the plan accounts for it
 
-**STOP.** For each issue found in this section, use one interactive user question individually. One issue per question. Present options, state your recommendation, explain WHY. Do NOT batch multiple issues into one interactive user question. Only proceed to the next section after all issues in this section are resolved.
+**STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Present options, state your recommendation, explain WHY. Do NOT batch escalated issues into one interactive user question. Only proceed to the next section after the current section is resolved.
 
 ### 2. Code quality review
 
@@ -114,7 +152,7 @@ Evaluate:
 * Areas that are over-engineered or under-engineered relative to the preferences above
 * Existing ASCII diagrams in touched files. Are they still accurate after this change?
 
-**STOP.** For each issue found in this section, use one interactive user question individually. One issue per question. Present options, state your recommendation, explain WHY. Do NOT batch multiple issues into one interactive user question. Only proceed to the next section after all issues in this section are resolved.
+**STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Present options, state your recommendation, explain WHY. Do NOT batch escalated issues into one interactive user question. Only proceed to the next section after the current section is resolved.
 
 ### 3. Test review
 
@@ -122,7 +160,7 @@ Make a diagram of all new UX, new data flow, new codepaths, and new branching if
 
 For LLM or prompt changes, check the repo's prompt or evaluation docs. If this plan touches those patterns, state which eval suites must be run, which cases should be added, and what baselines to compare against. Then use one interactive user question to confirm the eval scope with the user.
 
-**STOP.** For each issue found in this section, use one interactive user question individually. One issue per question. Present options, state your recommendation, explain WHY. Do NOT batch multiple issues into one interactive user question. Only proceed to the next section after all issues in this section are resolved.
+**STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Present options, state your recommendation, explain WHY. Do NOT batch escalated issues into one interactive user question. Only proceed to the next section after the current section is resolved.
 
 ### Test Plan Artifact
 
@@ -171,20 +209,20 @@ Evaluate:
 * Caching opportunities
 * Slow or high-complexity code paths
 
-**STOP.** For each issue found in this section, use one interactive user question individually. One issue per question. Present options, state your recommendation, explain WHY. Do NOT batch multiple issues into one interactive user question. Only proceed to the next section after all issues in this section are resolved.
+**STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Present options, state your recommendation, explain WHY. Do NOT batch escalated issues into one interactive user question. Only proceed to the next section after the current section is resolved.
 
 ## CRITICAL RULE — How to ask questions
 
 Follow the Interactive User Question format above. Additional rules for plan reviews:
 
-* **One issue = one interactive user question.** Never combine multiple issues into one question.
+* **Normal review:** one issue = one interactive user question. In accelerated review, this rule applies only to escalated high-judgment issues; routine issues may stay in the section packet.
 * Describe the problem concretely, with file and line references when relevant.
 * Present 2-3 options, including "do nothing" where reasonable.
 * For each option, specify in one line: effort, risk, and maintenance burden.
 * Map the reasoning to the engineering preferences above.
 * Label with issue NUMBER + option LETTER, for example `3A`.
 * **Escape hatch:** If a section has no issues, say so and move on. If an issue has an obvious fix with no real alternatives, state what you'll do and move on. Only use an interactive user question when there is a genuine decision with meaningful tradeoffs.
-* **Exception:** SMALL CHANGE mode intentionally batches one issue per section into a single interactive user question round at the end, but each issue in that batch still requires its own recommendation, WHY, and lettered options.
+* **Exception:** In normal non-accelerated `SMALL CHANGE` mode, batch one issue per section into a single interactive user question round at the end, but each issue in that batch still requires its own recommendation, WHY, and lettered options. Accelerated `SMALL CHANGE` does not use this bundled round.
 
 ## Required outputs
 

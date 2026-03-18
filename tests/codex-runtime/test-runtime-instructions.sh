@@ -5,6 +5,15 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 cd "$REPO_ROOT"
 
+require_pattern() {
+  local file="$1"
+  local pattern="$2"
+  if ! rg -n -F -- "$pattern" "$file" >/dev/null; then
+    echo "Missing runtime instruction pattern '$pattern' in $file"
+    exit 1
+  fi
+}
+
 SKILL_DIRS=(
   "brainstorming"
   "document-release"
@@ -66,10 +75,13 @@ FILES=(
   "bin/superpowers-workflow.ps1"
   "bin/superpowers-workflow-status"
   "bin/superpowers-workflow-status.ps1"
+  "review/review-accelerator-packet-contract.md"
   "review/TODOS-format.md"
   "review/checklist.md"
   "qa/references/issue-taxonomy.md"
   "qa/templates/qa-report-template.md"
+  "skills/plan-ceo-review/accelerated-reviewer-prompt.md"
+  "skills/plan-eng-review/accelerated-reviewer-prompt.md"
   "superpowers-upgrade/SKILL.md"
   "tests/codex-runtime/test-powershell-wrapper-bash-resolution.sh"
   "tests/codex-runtime/test-superpowers-migrate-install.sh"
@@ -208,6 +220,27 @@ echo "Generated skill docs pass freshness validation."
 
 node scripts/gen-agent-docs.mjs --check
 echo "Generated reviewer agent artifacts pass freshness validation."
+
+require_pattern review/review-accelerator-packet-contract.md "required packet fields"
+require_pattern review/review-accelerator-packet-contract.md "fail-closed validation rule"
+require_pattern review/review-accelerator-packet-contract.md "main-agent-only write authority"
+require_pattern review/review-accelerator-packet-contract.md "source artifact fingerprint"
+require_pattern review/review-accelerator-packet-contract.md "approved-and-applied"
+require_pattern review/review-accelerator-packet-contract.md "bounded retention"
+
+require_pattern skills/plan-ceo-review/accelerated-reviewer-prompt.md "Return a structured section packet only."
+require_pattern skills/plan-ceo-review/accelerated-reviewer-prompt.md "Do not approve anything."
+require_pattern skills/plan-ceo-review/accelerated-reviewer-prompt.md "Do not write files."
+
+require_pattern skills/plan-eng-review/accelerated-reviewer-prompt.md "Respect BIG CHANGE vs SMALL CHANGE."
+require_pattern skills/plan-eng-review/accelerated-reviewer-prompt.md "For SMALL CHANGE, return at most one primary issue per canonical ENG section."
+require_pattern skills/plan-eng-review/accelerated-reviewer-prompt.md "Return a structured section packet only."
+require_pattern skills/plan-eng-review/accelerated-reviewer-prompt.md "Do not write files or approve execution."
+require_pattern skills/plan-eng-review/accelerated-reviewer-prompt.md "Escalate any high-judgment issue individually."
+require_pattern docs/README.codex.md 'Accelerated review is an opt-in branch inside `plan-ceo-review` and `plan-eng-review`, not a separate workflow stage.'
+require_pattern docs/README.codex.md "Only the user can initiate accelerated review, and section approval plus final approval remain human-owned even when the review uses reviewer subagents and persisted section packets."
+require_pattern docs/README.copilot.md 'Accelerated review is an opt-in branch inside `plan-ceo-review` and `plan-eng-review`, not a separate workflow stage.'
+require_pattern docs/README.copilot.md "Only the user can initiate accelerated review, and section approval plus final approval remain human-owned even when the review uses reviewer subagents and persisted section packets."
 
 if rg -n -F '[ "$(basename "$_REPO_ROOT")" = "superpowers" ]' skills/*/SKILL.md >/dev/null; then
   echo "Generated skills should detect the current Superpowers checkout by runtime markers, not repo basename."

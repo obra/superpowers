@@ -107,6 +107,10 @@ Superpowers' default planning pipeline is:
 
 `brainstorming -> plan-ceo-review -> writing-plans -> plan-eng-review -> implementation`
 
+Accelerated review is an opt-in branch inside `plan-ceo-review` and `plan-eng-review`, not a separate workflow stage.
+
+Only the user can initiate accelerated review, and section approval plus final approval remain human-owned even when the review uses reviewer subagents and persisted section packets.
+
 During implementation, either `subagent-driven-development` or `executing-plans` starts from an engineering-approved current plan, runs a workspace-readiness preflight, and then drives task execution. Workspace preparation is the user's responsibility; invoke `using-git-worktrees` manually when you want isolated workspace management. The completion flow runs `requesting-code-review`, may offer `qa-only` before landing, and may offer `document-release` before final cleanup or PR handoff.
 
 ## Runtime Helpers

@@ -1,5 +1,19 @@
 # TODOS
 
+## Review
+
+### Public Inspection Surface For Accelerator Packets
+
+**What:** Add a supported CLI or status/debug surface for persisted accelerated-review packets, resume eligibility, stale-fingerprint reasons, and retention state.
+
+**Why:** Once accelerated CEO/ENG review ships, operators will eventually need a safer and clearer way to inspect saved review state than reading raw files under `~/.superpowers/projects/...`.
+
+**Context:** The approved review-accelerator design intentionally keeps persisted packet state inside skill instructions, markdown artifacts, and deterministic tests. This should stay out of the current PR, but after real usage we should decide whether `superpowers-workflow` or `superpowers-workflow-status` needs a read-only inspection surface for packet history, resume diagnostics, and cleanup visibility.
+
+**Effort:** M
+**Priority:** P3
+**Depends on:** Shipping and exercising the core accelerated review flow first
+
 ## Completed
 
 ### Supported User-Facing Workflow CLI

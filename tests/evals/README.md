@@ -10,6 +10,7 @@ Current evals cover:
 
 - `using-superpowers` fail-closed routing behavior
 - the shared interactive-question format contract
+- `review-accelerator-contract`, which checks explicit user-only activation, ambiguous-wording rejection, per-section human approval, no automatic approval-state changes, main-agent-only write authority, and persisted-packet stale/regenerate language against the generated CEO/ENG `SKILL.md` files plus README excerpts from the current branch
 
 ## How To Run
 
@@ -31,6 +32,15 @@ EVALS=1 \
 OPENAI_API_KEY=... \
 EVAL_MODEL=... \
 node --test tests/evals/*.eval.mjs
+```
+
+Targeted workflow-contract run:
+
+```bash
+EVALS=1 \
+OPENAI_API_KEY=... \
+EVAL_MODEL=... \
+node --test tests/evals/interactive-question-format.eval.mjs tests/evals/review-accelerator-contract.eval.mjs
 ```
 
 ## Observability

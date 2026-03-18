@@ -128,6 +128,40 @@ Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Ski
 
 # Spec Review Mode
 
+## Accelerated Review Activation
+
+Accelerated review is available only when the user explicitly requests `accelerated` or `accelerator` mode for the current CEO review.
+
+Do not activate accelerated review from heuristics, vague wording like "make this fast", saved preferences, or agent-only judgment.
+
+If the user does not explicitly request accelerated review, run the normal CEO review flow and keep the standard Step 0 mode selection unchanged.
+
+## Accelerated CEO Section Flow
+
+Accelerated CEO review must process one canonical CEO section at a time through a section packet and explicit human section approval.
+
+Use the existing CEO review sections defined in this skill as the canonical section boundaries. Accelerated review does not invent a separate section model or a separate workflow stage.
+
+Use `skills/plan-ceo-review/accelerated-reviewer-prompt.md` when briefing the accelerated CEO reviewer subagent.
+
+That reviewer prompt, together with `review/review-accelerator-packet-contract.md`, defines the required section-packet schema and keeps the reviewer limited to draft-only output.
+
+In accelerated review, keep routine issues bundled inside the section packet. Break out only escalated high-judgment issues into direct human questions before section approval.
+
+Persist accelerated CEO section packets under `~/.superpowers/projects/<slug>/...`.
+
+Resume accelerated CEO review only from the last approved-and-applied section boundary.
+
+If the source artifact fingerprint changes, treat saved accelerated CEO packets as stale and regenerate them before reuse.
+
+Accelerator artifacts must use bounded retention rather than accumulate indefinitely.
+
+Final explicit human approval remains unchanged. Accelerated review may speed up section handling, but it may not bypass the final approval gate for the written spec.
+
+Accelerated CEO review must preserve required review outputs, including individual TODO and delight questions when they must remain human-owned.
+
+Only the main review agent may write authoritative artifacts, apply approved patches, or change approval headers in accelerated CEO review.
+
 ## Philosophy
 
 You are not here to rubber-stamp this spec. You are here to make it extraordinary, catch every landmine before it explodes, and ensure that when this moves into planning, it does so at the highest possible standard.
@@ -289,7 +323,7 @@ Context-dependent defaults:
 
 Once selected, commit fully. Do not silently drift.
 
-**STOP.** Use one interactive user question per issue. Do NOT batch. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the user responds.
+**STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Do NOT batch escalated issues. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the current section is resolved.
 
 ## Review Sections
 
@@ -314,7 +348,7 @@ Evaluate and diagram:
 
 Required ASCII diagram: full system architecture showing new components and their relationships to existing ones.
 
-**STOP.** Use one interactive user question per issue. Do NOT batch. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the user responds.
+**STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Do NOT batch escalated issues. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the current section is resolved.
 
 ### Section 2: Error & Rescue Map
 
@@ -349,7 +383,7 @@ Rules for this section:
 * For each GAP, specify the rescue action and what the user should see.
 * For LLM or AI service calls specifically: what happens when the response is malformed, empty, a refusal, or invalid JSON? Each of these is a distinct failure mode.
 
-**STOP.** Use one interactive user question per issue. Do NOT batch. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the user responds.
+**STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Do NOT batch escalated issues. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the current section is resolved.
 
 ### Section 3: Security & Threat Model
 
@@ -368,7 +402,7 @@ Evaluate:
 
 For each finding: threat, likelihood, impact, and whether the spec mitigates it.
 
-**STOP.** Use one interactive user question per issue. Do NOT batch. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the user responds.
+**STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Do NOT batch escalated issues. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the current section is resolved.
 
 ### Section 4: Data Flow & Interaction Edge Cases
 
@@ -410,7 +444,7 @@ Background job       | Job fails after 3 of   | ?        |
 
 Flag any unhandled edge case as a gap. For each gap, specify the fix.
 
-**STOP.** Use one interactive user question per issue. Do NOT batch. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the user responds.
+**STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Do NOT batch escalated issues. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the current section is resolved.
 
 ### Section 5: Code Quality Review
 
@@ -425,7 +459,7 @@ Evaluate:
 * Under-engineering check.
 * Cyclomatic complexity. Flag any new method that branches more than 5 times.
 
-**STOP.** Use one interactive user question per issue. Do NOT batch. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the user responds.
+**STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Do NOT batch escalated issues. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the current section is resolved.
 
 ### Section 6: Test Review
 
@@ -473,7 +507,7 @@ Load and stress test requirements: for any new codepath called frequently or pro
 
 For LLM or prompt changes, check the repo's prompt or evaluation docs. If this spec touches those patterns, state which eval suites must run, which cases should be added, and what baselines to compare against.
 
-**STOP.** Use one interactive user question per issue. Do NOT batch. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the user responds.
+**STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Do NOT batch escalated issues. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the current section is resolved.
 
 ### Section 7: Performance Review
 
@@ -487,7 +521,7 @@ Evaluate:
 * Slow paths.
 * Connection pool pressure.
 
-**STOP.** Use one interactive user question per issue. Do NOT batch. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the user responds.
+**STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Do NOT batch escalated issues. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the current section is resolved.
 
 ### Section 8: Observability & Debuggability Review
 
@@ -506,7 +540,7 @@ Evaluate:
 
 **EXPANSION mode addition:** What observability would make this feature a joy to operate?
 
-**STOP.** Use one interactive user question per issue. Do NOT batch. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the user responds.
+**STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Do NOT batch escalated issues. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the current section is resolved.
 
 ### Section 9: Deployment & Rollout Review
 
@@ -523,7 +557,7 @@ Evaluate:
 
 **EXPANSION mode addition:** What deploy infrastructure would make shipping this feature routine?
 
-**STOP.** Use one interactive user question per issue. Do NOT batch. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the user responds.
+**STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Do NOT batch escalated issues. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the current section is resolved.
 
 ### Section 10: Long-Term Trajectory Review
 
@@ -541,13 +575,13 @@ Evaluate:
 * What comes after this ships? Phase 2? Phase 3? Does the architecture support that trajectory?
 * Platform potential. Does this create capabilities other features can leverage?
 
-**STOP.** Use one interactive user question per issue. Do NOT batch. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the user responds.
+**STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Do NOT batch escalated issues. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the current section is resolved.
 
 ## CRITICAL RULE — How to ask questions
 
 Follow the Interactive User Question format above. Additional rules for plan reviews:
 
-* **One issue = one interactive user question.** Never combine multiple issues into one question.
+* **Normal review:** one issue = one interactive user question. In accelerated review, this rule applies only to escalated high-judgment issues; routine issues may stay in the section packet.
 * Describe the problem concretely, with file and line references when relevant.
 * Present 2-3 options, including "do nothing" where reasonable.
 * For each option: effort, risk, and maintenance burden in one line.
