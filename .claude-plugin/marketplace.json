@@ -1,9 +1,7 @@
 {
-  "name": "ultrapowers-dev",
-  "description": "Development marketplace for Ultrapowers core skills library",
+  "name": "ultrapowers",
   "owner": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com"
+    "name": "ennio-datatide"
   },
   "plugins": [
     {
@@ -12,8 +10,7 @@
       "version": "5.0.5",
       "source": "./",
       "author": {
-        "name": "Jesse Vincent",
-        "email": "jesse@fsck.com"
+        "name": "ennio-datatide"
       }
     }
   ]
