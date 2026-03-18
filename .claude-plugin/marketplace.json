@@ -1,5 +1,8 @@
 {
   "name": "ultrapowers",
+  "metadata": {
+    "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques"
+  },
   "owner": {
     "name": "Ennio Maldonado",
     "url": "https://www.datatide.com"
