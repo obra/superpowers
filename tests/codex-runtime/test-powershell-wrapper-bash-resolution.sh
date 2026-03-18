@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 HELPER="$REPO_ROOT/bin/superpowers-pwsh-common.ps1"
+PUBLIC_WORKFLOW_WRAPPER="$REPO_ROOT/bin/superpowers-workflow.ps1"
 WORKFLOW_WRAPPER="$REPO_ROOT/bin/superpowers-workflow-status.ps1"
 PLAN_EXEC_WRAPPER="$REPO_ROOT/bin/superpowers-plan-execution.ps1"
 
@@ -146,6 +147,100 @@ SH
   fi
 }
 
+assert_public_workflow_wrapper_behavior() {
+  local wrapper_path="$1"
+  local bash_log="$tmp_root/public-workflow-wrapper-bash.log"
+  local wrapper_output
+  local first_arg
+  local second_arg
+  local wrapper_exit
+
+  if [[ ! -f "$wrapper_path" ]]; then
+    echo "Expected public workflow PowerShell wrapper to exist: $wrapper_path"
+    exit 1
+  fi
+
+  cat > "$git_bin_dir/bash.exe" <<'SH'
+#!/bin/bash
+set -euo pipefail
+
+log_file="${SUPERPOWERS_TEST_BASH_LOG:?}"
+: > "$log_file"
+for arg in "$@"; do
+  printf '%s\n' "$arg" >> "$log_file"
+done
+
+printf 'Workflow status: Brainstorming needed\n'
+printf 'Why: No current workflow artifacts are available yet.\n'
+printf 'Next: Use superpowers:brainstorming\n'
+SH
+  chmod +x "$git_bin_dir/bash.exe"
+
+  wrapper_output="$(
+    PATH="$generic_dir:$git_cmd_dir:$PATH" \
+      SUPERPOWERS_TEST_BASH_LOG="$bash_log" \
+      "$pwsh_bin" -NoLogo -NoProfile -Command "& '$wrapper_path' status"
+  )"
+  if [[ "$wrapper_output" != *"Workflow status: Brainstorming needed"* ]]; then
+    echo "Expected public workflow wrapper to preserve human workflow output"
+    echo "Actual output: $wrapper_output"
+    exit 1
+  fi
+  if [[ "$wrapper_output" == *'"root":"'* ]]; then
+    echo "Expected public workflow wrapper to avoid JSON path conversion for human output"
+    echo "Actual output: $wrapper_output"
+    exit 1
+  fi
+
+  first_arg="$(sed -n '1p' "$bash_log")"
+  second_arg="$(sed -n '2p' "$bash_log")"
+  if [[ "$first_arg" != *"/bin/superpowers-workflow" ]]; then
+    echo "Expected public workflow wrapper to invoke Git Bash with the superpowers-workflow bash script"
+    echo "Actual first arg: $first_arg"
+    exit 1
+  fi
+  if [[ "$second_arg" != "status" ]]; then
+    echo "Expected public workflow wrapper to forward the status command"
+    echo "Actual args:"
+    cat "$bash_log"
+    exit 1
+  fi
+
+  cat > "$git_bin_dir/bash.exe" <<'SH'
+#!/bin/bash
+printf 'Workflow inspection failed: Read-only workflow resolution requires a git repo.\n'
+printf 'Debug:\n- failure_class=RepoContextUnavailable\n'
+exit 9
+SH
+  chmod +x "$git_bin_dir/bash.exe"
+
+  set +e
+  wrapper_output="$(
+    PATH="$generic_dir:$git_cmd_dir:$PATH" \
+      "$pwsh_bin" -NoLogo -NoProfile -Command "& '$wrapper_path' status --debug"
+  )"
+  wrapper_exit=$?
+  set -e
+
+  if [[ $wrapper_exit -ne 9 ]]; then
+    echo "Expected public workflow wrapper to preserve nonzero bash exit code"
+    echo "Expected: 9"
+    echo "Actual:   $wrapper_exit"
+    exit 1
+  fi
+  if [[ "$wrapper_output" != *"Workflow inspection failed: Read-only workflow resolution requires a git repo."* ]]; then
+    echo "Expected public workflow wrapper to preserve failure output"
+    echo "Actual output: $wrapper_output"
+    exit 1
+  fi
+  if [[ "$wrapper_output" != *"failure_class=RepoContextUnavailable"* ]]; then
+    echo "Expected public workflow wrapper to preserve debug diagnostics on failure"
+    echo "Actual output: $wrapper_output"
+    exit 1
+  fi
+}
+
+assert_public_workflow_wrapper_behavior "$PUBLIC_WORKFLOW_WRAPPER"
 assert_wrapper_behavior "$WORKFLOW_WRAPPER" "superpowers-workflow-status" "workflow-status"
 assert_wrapper_behavior "$PLAN_EXEC_WRAPPER" "superpowers-plan-execution" "plan-execution"
 

@@ -33,6 +33,7 @@ USER_NAME="$(whoami 2>/dev/null || echo user)"
 # manifest state stores repo identity plus canonical reason diagnostics
 # malformed spec/plan headers surface explicit malformed reasons
 # cross-slug recovery respects the bounded 12-candidate lookup budget
+# read-only resolve exposes side-effect-free parity for the public workflow CLI
 
 require_helper() {
   if [[ ! -x "$STATUS_BIN" ]]; then
@@ -129,6 +130,41 @@ run_command_succeeds() {
     exit 1
   fi
   printf '%s\n' "$output"
+}
+
+run_resolve_succeeds() {
+  local repo_dir="$1"
+  local label="$2"
+  local output
+  local status=0
+  shift 2
+  output="$(cd "$repo_dir" && "$STATUS_BIN" resolve "$@" 2>&1)" || status=$?
+  if [[ $status -ne 0 ]]; then
+    echo "Expected read-only resolve to succeed for: $label"
+    printf '%s\n' "$output"
+    exit 1
+  fi
+  printf '%s\n' "$output"
+}
+
+run_resolve_fails_with_env() {
+  local repo_dir="$1"
+  local label="$2"
+  local expected_output="$3"
+  local output
+  local status=0
+  shift 3
+  output="$(cd "$repo_dir" && env "$@" "$STATUS_BIN" resolve 2>&1)" || status=$?
+  if [[ $status -eq 0 ]]; then
+    echo "Expected read-only resolve to fail for: $label"
+    printf '%s\n' "$output"
+    exit 1
+  fi
+  if [[ -n "$expected_output" && "$output" != *"$expected_output"* && "${output,,}" != *"${expected_output,,}"* ]]; then
+    echo "Expected read-only resolve failure for ${label} to mention '${expected_output}'"
+    printf '%s\n' "$output"
+    exit 1
+  fi
 }
 
 assert_single_line() {
@@ -834,6 +870,112 @@ run_branch_isolated_manifests() {
   fi
 }
 
+run_read_only_resolve_parity() {
+  local repo="$REPO_DIR/read-only-resolve-parity"
+  local spec_path="$repo/docs/superpowers/specs/2026-03-18-resolve-parity.md"
+  local resolve_output
+
+  init_repo "$repo"
+  write_file "$spec_path" <<'EOF'
+# Resolve Parity Spec
+
+**Workflow State:** Draft
+**Spec Revision:** 1
+**Last Reviewed By:** brainstorming
+EOF
+
+  resolve_output="$(run_resolve_succeeds "$repo" "read-only resolve parity")"
+  assert_contains "$resolve_output" '"status":"spec_draft"' "read-only resolve status"
+  assert_contains "$resolve_output" '"next_skill":"superpowers:plan-ceo-review"' "read-only resolve next skill"
+  assert_contains "$resolve_output" '2026-03-18-resolve-parity.md' "read-only resolve spec path"
+}
+
+run_read_only_resolve_outside_repo() {
+  local outside_repo="$REPO_DIR/read-only-resolve-outside"
+  mkdir -p "$outside_repo"
+
+  run_command_fails "$outside_repo" "read-only resolve outside repo" "RepoContextUnavailable" resolve
+}
+
+run_read_only_resolve_invalid_command_input() {
+  local repo="$REPO_DIR/read-only-resolve-invalid-input"
+  init_repo "$repo"
+
+  run_command_fails "$repo" "read-only resolve invalid input" "InvalidCommandInput" resolve --bogus
+}
+
+run_read_only_resolve_contract_violation() {
+  local repo="$REPO_DIR/read-only-resolve-contract"
+  init_repo "$repo"
+
+  run_resolve_fails_with_env "$repo" "read-only resolve contract violation" "ResolverContractViolation" \
+    SUPERPOWERS_WORKFLOW_RESOLVE_TEST_FAILPOINT=invalid_contract
+}
+
+run_read_only_resolve_runtime_failure() {
+  local repo="$REPO_DIR/read-only-resolve-runtime-failure"
+  init_repo "$repo"
+
+  run_resolve_fails_with_env "$repo" "read-only resolve runtime failure" "ResolverRuntimeFailure" \
+    SUPERPOWERS_WORKFLOW_RESOLVE_TEST_FAILPOINT=runtime_failure
+}
+
+run_read_only_resolve_avoids_manifest_mutation() {
+  local repo="$REPO_DIR/read-only-resolve-no-mutation"
+  local spec_path="$repo/docs/superpowers/specs/2026-03-18-resolve-no-mutation.md"
+  local manifest_path
+  local before_snapshot="$REPO_DIR/resolve-manifest-before.json"
+
+  init_repo "$repo"
+  write_file "$spec_path" <<'EOF'
+# Resolve No Mutation Spec
+
+**Workflow State:** Draft
+**Spec Revision:** 1
+**Last Reviewed By:** brainstorming
+EOF
+
+  run_status_refresh "$repo" "resolve manifest bootstrap" "superpowers:plan-ceo-review" >/dev/null
+  manifest_path="$(manifest_path_for_branch "$repo")"
+  cp "$manifest_path" "$before_snapshot"
+
+  run_resolve_succeeds "$repo" "read-only resolve no mutation" >/dev/null
+  if ! cmp -s "$before_snapshot" "$manifest_path"; then
+    echo "Expected read-only resolve to leave the manifest byte-identical"
+    exit 1
+  fi
+}
+
+run_read_only_resolve_preserves_missing_expected_paths() {
+  local repo_spec="$REPO_DIR/read-only-resolve-missing-expected-spec"
+  local repo_plan="$REPO_DIR/read-only-resolve-missing-expected-plan"
+  local missing_spec="docs/superpowers/specs/2026-03-18-missing-expected-spec.md"
+  local missing_plan="docs/superpowers/plans/2026-03-18-missing-expected-plan.md"
+  local resolve_output
+
+  init_repo "$repo_spec"
+  run_command_succeeds "$repo_spec" "set expected missing spec for read-only resolve" \
+    expect --artifact spec --path "$missing_spec" >/dev/null
+  resolve_output="$(run_resolve_succeeds "$repo_spec" "read-only resolve preserves missing expected spec")"
+  assert_contains "$resolve_output" "\"spec_path\":\"$missing_spec\"" "read-only resolve missing expected spec path"
+  assert_contains "$resolve_output" '"reason":"missing_expected_spec"' "read-only resolve missing expected spec reason"
+
+  init_repo "$repo_plan"
+  write_file "$repo_plan/docs/superpowers/specs/2026-03-18-approved-spec.md" <<'EOF'
+# Approved Spec
+
+**Workflow State:** CEO Approved
+**Spec Revision:** 1
+**Last Reviewed By:** plan-ceo-review
+EOF
+
+  run_command_succeeds "$repo_plan" "set expected missing plan for read-only resolve" \
+    expect --artifact plan --path "$missing_plan" >/dev/null
+  resolve_output="$(run_resolve_succeeds "$repo_plan" "read-only resolve preserves missing expected plan")"
+  assert_contains "$resolve_output" "\"plan_path\":\"$missing_plan\"" "read-only resolve missing expected plan path"
+  assert_contains "$resolve_output" '"reason":"missing_expected_plan"' "read-only resolve missing expected plan reason"
+}
+
 run_implementation_ready() {
   local repo="$REPO_DIR/implementation-ready"
   local spec_path="$repo/docs/superpowers/specs/2026-03-17-implementation-ready-design.md"
@@ -901,6 +1043,13 @@ run_cross_slug_recovery
 run_cross_slug_recovery_budget_limit
 run_malformed_spec_headers
 run_malformed_plan_headers
+run_read_only_resolve_parity
+run_read_only_resolve_outside_repo
+run_read_only_resolve_invalid_command_input
+run_read_only_resolve_contract_violation
+run_read_only_resolve_runtime_failure
+run_read_only_resolve_avoids_manifest_mutation
+run_read_only_resolve_preserves_missing_expected_paths
 run_implementation_ready
 
 echo "superpowers-workflow-status regression scaffold passed."

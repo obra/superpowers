@@ -2,6 +2,16 @@
 
 For release history before `v5.1.0 (2026-03-16)`, see the upstream README: https://github.com/obra/superpowers/blob/main/README.md
 
+## v5.4.0 (2026-03-18)
+
+### Workflow Runtime
+
+- Added `bin/superpowers-workflow` and `bin/superpowers-workflow.ps1` as the supported public read-only workflow inspection CLI for `status`, `next`, `artifacts`, `explain`, and `help`
+- Added a side-effect-free internal `resolve` path inside `bin/superpowers-workflow-status` so the public CLI can inspect workflow state without creating or repairing manifests
+- Expanded workflow runtime regression coverage with `tests/codex-runtime/test-superpowers-workflow.sh` plus public-wrapper parity checks in `tests/codex-runtime/test-powershell-wrapper-bash-resolution.sh`
+- Hardened the public CLI review surface so artifact inspection works from repo subdirectories, `explain` emits a stable rerun command, and shipped TODO state stays aligned with the released runtime
+- Updated README and platform runtime docs to distinguish the public inspection CLI from the internal workflow helper surface
+
 ## v5.3.0 (2026-03-17)
 
 ### Execution Workflow

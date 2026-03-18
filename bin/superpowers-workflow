@@ -1,0 +1,445 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+STATUS_BIN="$SCRIPT_DIR/superpowers-workflow-status"
+
+# Public CLI data flow:
+# user command -> superpowers-workflow -> workflow-status resolve -> human renderer
+# status/expect/sync mutations stay inside the internal helper; this surface is read-only.
+
+json_field() {
+  local json="$1"
+  local key="$2"
+  printf '%s\n' "$json" | sed -nE "s/.*\"$key\"[[:space:]]*:[[:space:]]*\"([^\"]*)\".*/\\1/p" | head -n1
+}
+
+json_has_key() {
+  local json="$1"
+  local key="$2"
+  printf '%s\n' "$json" | grep -q "\"$key\"[[:space:]]*:"
+}
+
+usage() {
+  cat <<'EOF'
+Usage:
+  superpowers-workflow status [--debug]
+  superpowers-workflow next [--debug]
+  superpowers-workflow artifacts [--debug]
+  superpowers-workflow explain [--debug]
+  superpowers-workflow help
+EOF
+}
+
+human_status() {
+  case "$1" in
+    needs_brainstorming) printf 'Brainstorming needed' ;;
+    spec_draft) printf 'Spec review needed' ;;
+    spec_approved_needs_plan) printf 'Plan writing needed' ;;
+    plan_draft) printf 'Engineering plan review needed' ;;
+    stale_plan) printf 'Plan update needed' ;;
+    implementation_ready) printf 'Ready for implementation handoff' ;;
+    *) printf 'Workflow state unresolved' ;;
+  esac
+}
+
+contains_reason() {
+  local reason="$1"
+  local needle="$2"
+  case ",$reason," in
+    *",$needle,"*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+status_why_text() {
+  local status="$1"
+  case "$status" in
+    needs_brainstorming) printf 'No current workflow artifacts are available yet.' ;;
+    spec_draft) printf 'A current spec exists but it is not approved yet.' ;;
+    spec_approved_needs_plan) printf 'The spec is approved, but no current approved plan is available.' ;;
+    plan_draft) printf 'A current plan exists but it is not engineering-approved yet.' ;;
+    stale_plan) printf 'The approved plan no longer matches the latest approved spec.' ;;
+    implementation_ready) printf 'The approved plan matches the latest approved spec and is ready for execution handoff.' ;;
+    *) printf 'Superpowers could not explain this state.' ;;
+  esac
+}
+
+why_text() {
+  local status="$1"
+  local reason="$2"
+
+  if contains_reason "$reason" "fallback_ambiguity_spec"; then
+    printf 'Superpowers found multiple plausible specs and will not guess.'
+    return
+  fi
+  if contains_reason "$reason" "fallback_ambiguity_plan"; then
+    printf 'Superpowers found multiple plausible plans and will not guess.'
+    return
+  fi
+  if contains_reason "$reason" "malformed_spec_headers"; then
+    printf 'The current spec headers are missing or malformed.'
+    return
+  fi
+  if contains_reason "$reason" "malformed_plan_headers"; then
+    printf 'The current plan headers are missing or malformed.'
+    return
+  fi
+  if contains_reason "$reason" "missing_expected_spec"; then
+    printf 'A previously expected spec is missing.'
+    return
+  fi
+  if contains_reason "$reason" "missing_expected_plan"; then
+    printf 'A previously expected plan is missing.'
+    return
+  fi
+  if contains_reason "$reason" "repo_root_mismatch"; then
+    printf 'The local workflow manifest belongs to a different checkout path.'
+    return
+  fi
+  if contains_reason "$reason" "branch_mismatch"; then
+    printf 'The local workflow manifest belongs to a different branch.'
+    return
+  fi
+  if contains_reason "$reason" "repo_slug_recovered"; then
+    printf 'Superpowers recovered matching prior manifest state from an older repo slug.'
+    return
+  fi
+  if contains_reason "$reason" "repo_slug_recovery_ambiguous"; then
+    printf 'Multiple prior manifests matched, so Superpowers kept the safer route.'
+    return
+  fi
+  if contains_reason "$reason" "corrupt_manifest_present"; then
+    printf 'The local workflow manifest is corrupt, so Superpowers ignored it.'
+    return
+  fi
+
+  status_why_text "$status"
+}
+
+has_diagnostic_reason() {
+  local reason="$1"
+
+  contains_reason "$reason" "fallback_ambiguity_spec" && return 0
+  contains_reason "$reason" "fallback_ambiguity_plan" && return 0
+  contains_reason "$reason" "malformed_spec_headers" && return 0
+  contains_reason "$reason" "malformed_plan_headers" && return 0
+  contains_reason "$reason" "missing_expected_spec" && return 0
+  contains_reason "$reason" "missing_expected_plan" && return 0
+  contains_reason "$reason" "repo_root_mismatch" && return 0
+  contains_reason "$reason" "branch_mismatch" && return 0
+  contains_reason "$reason" "repo_slug_recovered" && return 0
+  contains_reason "$reason" "repo_slug_recovery_ambiguous" && return 0
+  contains_reason "$reason" "corrupt_manifest_present" && return 0
+
+  return 1
+}
+
+render_explain_reason_lines() {
+  local reason="$1"
+
+  contains_reason "$reason" "fallback_ambiguity_spec" && printf -- '- Superpowers found multiple plausible specs and will not guess.\n'
+  contains_reason "$reason" "fallback_ambiguity_plan" && printf -- '- Superpowers found multiple plausible plans and will not guess.\n'
+  contains_reason "$reason" "malformed_spec_headers" && printf -- '- The current spec headers are missing or malformed.\n'
+  contains_reason "$reason" "malformed_plan_headers" && printf -- '- The current plan headers are missing or malformed.\n'
+  contains_reason "$reason" "missing_expected_spec" && printf -- '- A previously expected spec is missing.\n'
+  contains_reason "$reason" "missing_expected_plan" && printf -- '- A previously expected plan is missing.\n'
+  contains_reason "$reason" "repo_root_mismatch" && printf -- '- The local workflow manifest belongs to a different checkout path.\n'
+  contains_reason "$reason" "branch_mismatch" && printf -- '- The local workflow manifest belongs to a different branch.\n'
+  contains_reason "$reason" "repo_slug_recovered" && printf -- '- Superpowers recovered matching prior manifest state from an older repo slug.\n'
+  contains_reason "$reason" "repo_slug_recovery_ambiguous" && printf -- '- Multiple prior manifests matched, so Superpowers kept the safer route.\n'
+  contains_reason "$reason" "corrupt_manifest_present" && printf -- '- The local workflow manifest is corrupt, so Superpowers ignored it.\n'
+  return 0
+}
+
+next_text() {
+  local status="$1"
+  local next_skill="$2"
+  local plan_path="$3"
+
+  if [ "$status" = "implementation_ready" ]; then
+    if [ -n "$plan_path" ]; then
+      printf 'Use the approved plan for execution handoff: %s' "$plan_path"
+    else
+      printf 'Use the approved plan for execution handoff.'
+    fi
+    return
+  fi
+
+  if [ -n "$next_skill" ]; then
+    printf 'Use %s' "$next_skill"
+    return
+  fi
+
+  printf 'Re-run the workflow inspection after resolving the current state.'
+}
+
+artifact_line() {
+  local label="$1"
+  local path="$2"
+  local root="$3"
+  if [ -z "$path" ]; then
+    printf -- '- %s: none\n' "$label"
+    return
+  fi
+  if [ -n "$root" ] && [ -f "$root/$path" ]; then
+    printf -- '- %s: %s (from repo docs)\n' "$label" "$path"
+  else
+    printf -- '- %s: %s (expected, missing)\n' "$label" "$path"
+  fi
+}
+
+render_debug() {
+  local resolve_json="$1"
+  local reason status failure_class manifest_source outcome
+  reason="$(json_field "$resolve_json" "reason")"
+  status="$(json_field "$resolve_json" "status")"
+  failure_class="$(json_field "$resolve_json" "failure_class")"
+  manifest_source="$(json_field "$resolve_json" "manifest_source_path")"
+  outcome="$(json_field "$resolve_json" "outcome")"
+
+  printf 'Debug:\n'
+  if [ -n "$outcome" ]; then
+    printf -- '- resolver_outcome=%s\n' "$outcome"
+  fi
+  if [ -n "$status" ]; then
+    printf -- '- status=%s\n' "$status"
+  fi
+  if [ -n "$reason" ]; then
+    printf -- '- reason=%s\n' "$reason"
+  fi
+  if [ -n "$manifest_source" ]; then
+    printf -- '- manifest_source_path=%s\n' "$manifest_source"
+  fi
+  if [ -n "$failure_class" ]; then
+    printf -- '- failure_class=%s\n' "$failure_class"
+  fi
+}
+
+contract_failure_json() {
+  local failure_class="$1"
+  local message="$2"
+  printf '{"outcome":"runtime_failure","failure_class":"%s","message":"%s"}\n' \
+    "$failure_class" \
+    "$(printf '%s' "$message" | sed 's/\\/\\\\/g; s/"/\\"/g')"
+}
+
+render_failure() {
+  local failure_json="$1"
+  local debug="$2"
+  local message failure_class
+  message="$(json_field "$failure_json" "message")"
+  failure_class="$(json_field "$failure_json" "failure_class")"
+  [ -n "$message" ] || message='Workflow inspection failed.'
+  printf 'Workflow inspection failed: %s\n' "$message" >&2
+  if [ "$debug" -eq 1 ]; then
+    render_debug "$failure_json" >&2
+  fi
+  return 1
+}
+
+validate_resolve_contract() {
+  local resolve_json="$1"
+  local outcome="$2"
+  local key
+
+  for key in outcome; do
+    json_has_key "$resolve_json" "$key" || return 1
+  done
+
+  case "$outcome" in
+    resolved)
+      for key in status next_skill spec_path plan_path manifest_path manifest_source_path root; do
+        json_has_key "$resolve_json" "$key" || return 1
+      done
+      ;;
+    runtime_failure)
+      for key in failure_class message; do
+        json_has_key "$resolve_json" "$key" || return 1
+      done
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+
+  return 0
+}
+
+resolve_or_fail() {
+  local debug="$1"
+  local resolve_json outcome status=0
+
+  resolve_json="$("$STATUS_BIN" resolve 2>&1)" || status=$?
+  if [ "$status" -ne 0 ]; then
+    outcome="$(json_field "$resolve_json" "outcome")"
+    if validate_resolve_contract "$resolve_json" "$outcome"; then
+      render_failure "$resolve_json" "$debug"
+      return 1
+    fi
+    render_failure "$(contract_failure_json "WrapperExecutionFailed" "Could not run the internal workflow resolver.")" "$debug"
+    return 1
+  fi
+
+  outcome="$(json_field "$resolve_json" "outcome")"
+  if ! validate_resolve_contract "$resolve_json" "$outcome"; then
+    render_failure "$(contract_failure_json "ResolverContractViolation" "Internal workflow resolver returned an invalid contract.")" "$debug"
+    return 1
+  fi
+
+  if [ "$outcome" != "resolved" ]; then
+    render_failure "$resolve_json" "$debug"
+    return 1
+  fi
+
+  printf '%s\n' "$resolve_json"
+}
+
+render_status() {
+  local resolve_json="$1"
+  local debug="$2"
+  local status next_skill spec_path plan_path reason
+  status="$(json_field "$resolve_json" "status")"
+  next_skill="$(json_field "$resolve_json" "next_skill")"
+  spec_path="$(json_field "$resolve_json" "spec_path")"
+  plan_path="$(json_field "$resolve_json" "plan_path")"
+  reason="$(json_field "$resolve_json" "reason")"
+
+  printf 'Workflow status: %s\n' "$(human_status "$status")"
+  printf 'Why: %s\n' "$(why_text "$status" "$reason")"
+  printf 'Next: %s\n' "$(next_text "$status" "$next_skill" "$plan_path")"
+  printf 'Spec: %s\n' "${spec_path:-none}"
+  printf 'Plan: %s\n' "${plan_path:-none}"
+  if [ "$debug" -eq 1 ]; then
+    render_debug "$resolve_json"
+  fi
+}
+
+render_next() {
+  local resolve_json="$1"
+  local debug="$2"
+  local status next_skill spec_path plan_path reason
+  status="$(json_field "$resolve_json" "status")"
+  next_skill="$(json_field "$resolve_json" "next_skill")"
+  spec_path="$(json_field "$resolve_json" "spec_path")"
+  plan_path="$(json_field "$resolve_json" "plan_path")"
+  reason="$(json_field "$resolve_json" "reason")"
+
+  printf 'Next safe step: %s\n' "$(next_text "$status" "$next_skill" "$plan_path")"
+  printf 'Reason:\n'
+  printf -- '- %s\n' "$(why_text "$status" "$reason")"
+  if [ -n "$spec_path" ]; then
+    printf -- '- Current spec: %s\n' "$spec_path"
+  fi
+  if [ -n "$plan_path" ]; then
+    printf -- '- Current plan: %s\n' "$plan_path"
+  fi
+  if [ "$debug" -eq 1 ]; then
+    render_debug "$resolve_json"
+  fi
+}
+
+render_artifacts() {
+  local resolve_json="$1"
+  local debug="$2"
+  local spec_path plan_path root
+  spec_path="$(json_field "$resolve_json" "spec_path")"
+  plan_path="$(json_field "$resolve_json" "plan_path")"
+  root="$(json_field "$resolve_json" "root")"
+
+  printf 'Workflow artifacts\n'
+  artifact_line "Spec" "$spec_path" "$root"
+  artifact_line "Plan" "$plan_path" "$root"
+  if [ "$debug" -eq 1 ]; then
+    render_debug "$resolve_json"
+  fi
+}
+
+render_explain() {
+  local resolve_json="$1"
+  local debug="$2"
+  local status next_skill spec_path plan_path reason
+  status="$(json_field "$resolve_json" "status")"
+  next_skill="$(json_field "$resolve_json" "next_skill")"
+  spec_path="$(json_field "$resolve_json" "spec_path")"
+  plan_path="$(json_field "$resolve_json" "plan_path")"
+  reason="$(json_field "$resolve_json" "reason")"
+
+  printf 'Why Superpowers chose this state\n'
+  printf -- '- State: %s\n' "$(human_status "$status")"
+  if has_diagnostic_reason "$reason"; then
+    render_explain_reason_lines "$reason"
+  else
+    printf -- '- %s\n' "$(status_why_text "$status")"
+  fi
+  if [ -n "$spec_path" ]; then
+    printf -- '- Spec: %s\n' "$spec_path"
+  fi
+  if [ -n "$plan_path" ]; then
+    printf -- '- Plan: %s\n' "$plan_path"
+  fi
+  printf 'What to do:\n'
+  printf '1. %s\n' "$(next_text "$status" "$next_skill" "$plan_path")"
+  printf '2. Re-run: superpowers-workflow status\n'
+  if [ "$debug" -eq 1 ]; then
+    render_debug "$resolve_json"
+  fi
+}
+
+command="help"
+debug=0
+
+if [ "$#" -gt 0 ] && [ "${1#--}" = "$1" ]; then
+  command="$1"
+  shift
+fi
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --debug) debug=1 ;;
+    *)
+      render_failure "{\"failure_class\":\"InvalidCommandInput\",\"message\":\"Unknown option: $1\"}" "$debug"
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+case "$command" in
+  help)
+    cat <<'EOF'
+Supported commands:
+  superpowers-workflow status
+  superpowers-workflow next
+  superpowers-workflow artifacts
+  superpowers-workflow explain
+  superpowers-workflow help
+
+Diagnostics:
+  --debug  Show resolver diagnostics without changing workflow state
+
+Internal note:
+  superpowers-workflow-status remains the internal helper surface.
+EOF
+    ;;
+  status)
+    resolve_json="$(resolve_or_fail "$debug")" || exit 1
+    render_status "$resolve_json" "$debug"
+    ;;
+  next)
+    resolve_json="$(resolve_or_fail "$debug")" || exit 1
+    render_next "$resolve_json" "$debug"
+    ;;
+  artifacts)
+    resolve_json="$(resolve_or_fail "$debug")" || exit 1
+    render_artifacts "$resolve_json" "$debug"
+    ;;
+  explain)
+    resolve_json="$(resolve_or_fail "$debug")" || exit 1
+    render_explain "$resolve_json" "$debug"
+    ;;
+  *)
+    render_failure "{\"failure_class\":\"InvalidCommandInput\",\"message\":\"Unsupported command: $command\"}" "$debug"
+    exit 1
+    ;;
+esac

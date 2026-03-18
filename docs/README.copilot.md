@@ -113,6 +113,12 @@ During implementation, either `subagent-driven-development` or `executing-plans`
 
 Runtime helper state lives in `~/.superpowers/`. Generated skill preambles use this directory for session markers, contributor logs, update-check cache files, and project-scoped artifacts under `~/.superpowers/projects/`.
 
+Superpowers ships a supported public workflow inspection surface:
+- `bin/superpowers-workflow` (Bash)
+- `bin/superpowers-workflow.ps1` (PowerShell wrapper)
+
+Use `status`, `next`, `artifacts`, `explain`, or `help` when you want to inspect workflow state directly from the terminal. These commands stay read-only: they do not create, repair, or rewrite branch-scoped manifests, and `next` stops at the execution handoff boundary instead of calling `superpowers-plan-execution recommend`.
+
 Superpowers also ships workflow-status runtime helpers:
 - `bin/superpowers-workflow-status` (Bash)
 - `bin/superpowers-workflow-status.ps1` (PowerShell wrapper)

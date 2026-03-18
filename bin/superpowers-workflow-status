@@ -2,7 +2,14 @@
 set -euo pipefail
 
 STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
-REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+GIT_REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+REPO_CONTEXT_AVAILABLE=1
+if [ -n "$GIT_REPO_ROOT" ]; then
+  REPO_ROOT="$GIT_REPO_ROOT"
+else
+  REPO_ROOT="$(pwd)"
+  REPO_CONTEXT_AVAILABLE=0
+fi
 
 hash_repo_root() {
   if command -v shasum >/dev/null 2>&1; then
@@ -64,7 +71,7 @@ NEXT_SKILL="superpowers:brainstorming"
 STATUS_NOTE=""
 
 usage() {
-  echo "Usage: superpowers-workflow-status {status|expect|sync} ..."
+  echo "Usage: superpowers-workflow-status {status|resolve|expect|sync} ..."
 }
 
 ensure_manifest_dir() {
@@ -97,6 +104,41 @@ emit_json() {
     printf ',"reason":"%s"' "$(json_escape "$reason")"
     printf ',"note":"%s"' "$(json_escape "$reason")"
   fi
+  printf '}\n'
+}
+
+emit_resolve_json() {
+  local status_code="$1"
+  local next_skill="$2"
+  local spec_path="$3"
+  local plan_path="$4"
+  local reason="${5:-}"
+  local source_path="${6:-}"
+  printf '{'
+  printf '"outcome":"resolved",'
+  printf '"status":"%s",' "$(json_escape "$status_code")"
+  printf '"next_skill":"%s",' "$(json_escape "$next_skill")"
+  printf '"spec_path":"%s",' "$(json_escape "$spec_path")"
+  printf '"plan_path":"%s",' "$(json_escape "$plan_path")"
+  printf '"manifest_path":"%s",' "$(json_escape "$MANIFEST_PATH")"
+  printf '"manifest_source_path":"%s",' "$(json_escape "$source_path")"
+  printf '"root":"%s"' "$(json_escape "$REPO_ROOT")"
+  if [ -n "$reason" ]; then
+    printf ',"reason":"%s"' "$(json_escape "$reason")"
+    printf ',"note":"%s"' "$(json_escape "$reason")"
+  fi
+  printf '}\n'
+}
+
+emit_resolve_failure() {
+  local failure_class="$1"
+  local message="$2"
+  printf '{'
+  printf '"outcome":"runtime_failure",'
+  printf '"failure_class":"%s",' "$(json_escape "$failure_class")"
+  printf '"message":"%s",' "$(json_escape "$message")"
+  printf '"manifest_path":"%s",' "$(json_escape "$MANIFEST_PATH")"
+  printf '"root":"%s"' "$(json_escape "$REPO_ROOT")"
   printf '}\n'
 }
 
@@ -162,6 +204,13 @@ reset_manifest_fields() {
   MANIFEST_SOURCE_PATH=""
   MANIFEST_VALID=0
   MANIFEST_CORRUPT=0
+}
+
+reset_manifest_diagnostics() {
+  MANIFEST_RECOVERED=0
+  MANIFEST_RECOVERY_AMBIGUOUS=0
+  MANIFEST_IDENTITY_MISMATCH=0
+  MANIFEST_IDENTITY_REASON=""
 }
 
 read_manifest_file() {
@@ -361,6 +410,7 @@ resolve_preferred_spec() {
         fi
         RESOLVED_SPEC_PATH="$normalized"
       else
+        RESOLVED_SPEC_PATH="$normalized"
         SPEC_EXPECTED_MISSING=1
       fi
     else
@@ -431,6 +481,7 @@ resolve_preferred_plan() {
         fi
         RESOLVED_PLAN_PATH="$normalized"
       else
+        RESOLVED_PLAN_PATH="$normalized"
         PLAN_EXPECTED_MISSING=1
       fi
     else
@@ -582,10 +633,7 @@ derive_status() {
 load_manifest_or_recover() {
   local rc=0
   local candidate matched="" matched_count=0 inspected=0 candidate_root candidate_branch
-  MANIFEST_RECOVERED=0
-  MANIFEST_RECOVERY_AMBIGUOUS=0
-  MANIFEST_IDENTITY_MISMATCH=0
-  MANIFEST_IDENTITY_REASON=""
+  reset_manifest_diagnostics
   if read_manifest; then
     if [ -n "$MANIFEST_REPO_ROOT" ] && [ "$MANIFEST_REPO_ROOT" != "$REPO_ROOT" ]; then
       MANIFEST_IDENTITY_MISMATCH=1
@@ -641,6 +689,70 @@ load_manifest_or_recover() {
   fi
 
   reset_manifest_fields
+  return 1
+}
+
+load_manifest_read_only() {
+  local rc=0
+  local current_manifest_corrupt=0
+  local candidate matched="" matched_count=0 inspected=0 candidate_root candidate_branch
+
+  reset_manifest_diagnostics
+  MANIFEST_CORRUPT=0
+
+  if read_manifest; then
+    if [ -n "$MANIFEST_REPO_ROOT" ] && [ "$MANIFEST_REPO_ROOT" != "$REPO_ROOT" ]; then
+      MANIFEST_IDENTITY_MISMATCH=1
+      MANIFEST_IDENTITY_REASON="repo_root_mismatch"
+    elif [ -n "$MANIFEST_BRANCH" ] && [ "$MANIFEST_BRANCH" != "$BRANCH" ]; then
+      MANIFEST_IDENTITY_MISMATCH=1
+      MANIFEST_IDENTITY_REASON="branch_mismatch"
+    fi
+    return 0
+  fi
+  rc=$?
+  if [ "$rc" -eq 2 ] || [ "$MANIFEST_CORRUPT" -eq 1 ]; then
+    current_manifest_corrupt=1
+    MANIFEST_SPEC_PATH=""
+    MANIFEST_PLAN_PATH=""
+  fi
+
+  shopt -s nullglob
+  for candidate in "$STATE_DIR"/projects/*/"${USER_NAME}-${SAFE_BRANCH}-workflow-state.json"; do
+    [ "$candidate" = "$MANIFEST_PATH" ] && continue
+    inspected=$((inspected + 1))
+    if [ "$inspected" -gt "$RECOVERY_CANDIDATE_LIMIT" ]; then
+      break
+    fi
+    if read_manifest_file "$candidate"; then
+      candidate_root="$MANIFEST_REPO_ROOT"
+      candidate_branch="$MANIFEST_BRANCH"
+      if [ "$candidate_root" = "$REPO_ROOT" ] && [ "$candidate_branch" = "$BRANCH" ]; then
+        matched="$candidate"
+        matched_count=$((matched_count + 1))
+        if [ "$matched_count" -gt 1 ]; then
+          break
+        fi
+      fi
+    fi
+  done
+  shopt -u nullglob
+
+  if [ "$matched_count" -gt 1 ]; then
+    MANIFEST_RECOVERY_AMBIGUOUS=1
+    reset_manifest_fields
+    MANIFEST_CORRUPT="$current_manifest_corrupt"
+    return 1
+  fi
+
+  if [ "$matched_count" -eq 1 ] && read_manifest_file "$matched"; then
+    MANIFEST_RECOVERED=1
+    MANIFEST_CORRUPT="$current_manifest_corrupt"
+    return 0
+  fi
+
+  reset_manifest_fields
+  MANIFEST_CORRUPT="$current_manifest_corrupt"
   return 1
 }
 
@@ -703,6 +815,29 @@ write_and_emit_result() {
   return 0
 }
 
+apply_resolution_diagnostics() {
+  local mode="${1:-mutating}"
+  local corrupted="${2:-0}"
+
+  if [ "$mode" = "mutating" ] && [ "$corrupted" -eq 1 ]; then
+    STATUS_CODE="needs_brainstorming"
+    NEXT_SKILL="superpowers:brainstorming"
+    STATUS_NOTE="corrupt_manifest_recovered"
+  elif [ "$mode" = "read_only" ] && [ "$MANIFEST_CORRUPT" -eq 1 ]; then
+    append_status_note "corrupt_manifest_present"
+  fi
+
+  if [ "$MANIFEST_IDENTITY_MISMATCH" -eq 1 ]; then
+    append_status_note "$MANIFEST_IDENTITY_REASON"
+  fi
+  if [ "$MANIFEST_RECOVERED" -eq 1 ]; then
+    append_status_note "repo_slug_recovered"
+  fi
+  if [ "$MANIFEST_RECOVERY_AMBIGUOUS" -eq 1 ]; then
+    append_status_note "repo_slug_recovery_ambiguous"
+  fi
+}
+
 cmd_status() {
   local refresh=0 summary=0 arg corrupted=0
   local persisted_paths persisted_spec persisted_plan
@@ -748,21 +883,7 @@ cmd_status() {
   fi
 
   derive_status
-
-  if [ "$corrupted" -eq 1 ]; then
-    STATUS_CODE="needs_brainstorming"
-    NEXT_SKILL="superpowers:brainstorming"
-    STATUS_NOTE="corrupt_manifest_recovered"
-  fi
-  if [ "$MANIFEST_IDENTITY_MISMATCH" -eq 1 ]; then
-    append_status_note "$MANIFEST_IDENTITY_REASON"
-  fi
-  if [ "$MANIFEST_RECOVERED" -eq 1 ]; then
-    append_status_note "repo_slug_recovered"
-  fi
-  if [ "$MANIFEST_RECOVERY_AMBIGUOUS" -eq 1 ]; then
-    append_status_note "repo_slug_recovery_ambiguous"
-  fi
+  apply_resolution_diagnostics mutating "$corrupted"
 
   persisted_paths="$(manifest_paths_for_write)"
   persisted_spec="$(printf '%s\n' "$persisted_paths" | sed -n '1p')"
@@ -773,6 +894,53 @@ cmd_status() {
   else
     write_and_emit_result "$persisted_spec" "$persisted_plan" json
   fi
+}
+
+cmd_resolve() {
+  local arg debug=0
+
+  while [ "$#" -gt 0 ]; do
+    arg="$1"
+    case "$arg" in
+      --debug) debug=1 ;;
+      *)
+        emit_resolve_failure "InvalidCommandInput" "Unknown resolve option: $arg"
+        return 1
+        ;;
+    esac
+    shift
+  done
+
+  case "${SUPERPOWERS_WORKFLOW_RESOLVE_TEST_FAILPOINT:-}" in
+    runtime_failure)
+      emit_resolve_failure "ResolverRuntimeFailure" "Injected read-only resolver failpoint triggered."
+      return 1
+      ;;
+    invalid_contract)
+      emit_resolve_failure "ResolverContractViolation" "Injected invalid resolve-contract failpoint triggered."
+      return 1
+      ;;
+  esac
+
+  if [ "${SUPERPOWERS_WORKFLOW_STATUS_TEST_FAILPOINT:-}" = "resolve_runtime_failure" ]; then
+    emit_resolve_failure "ResolverRuntimeFailure" "Injected read-only resolver failpoint triggered."
+    return 1
+  fi
+
+  if [ "$REPO_CONTEXT_AVAILABLE" -ne 1 ]; then
+    emit_resolve_failure "RepoContextUnavailable" "Read-only workflow resolution requires a git repo."
+    return 1
+  fi
+
+  load_manifest_read_only >/dev/null || true
+  derive_status
+  apply_resolution_diagnostics read_only 0
+
+  if [ "$debug" -eq 1 ]; then
+    :
+  fi
+
+  emit_resolve_json "$STATUS_CODE" "$NEXT_SKILL" "$RESOLVED_SPEC_PATH" "$RESOLVED_PLAN_PATH" "$STATUS_NOTE" "$MANIFEST_SOURCE_PATH"
 }
 
 cmd_expect() {
@@ -914,6 +1082,7 @@ cmd_sync() {
 
 case "${1:-}" in
   status) shift; cmd_status "$@" ;;
+  resolve) shift; cmd_resolve "$@" ;;
   expect) shift; cmd_expect "$@" ;;
   sync) shift; cmd_sync "$@" ;;
   *) usage; exit 1 ;;

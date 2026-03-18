@@ -246,6 +246,13 @@ Runtime state lives in `~/.superpowers/`.
 
 Generated workflow skills call `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status` (and `bin/superpowers-workflow-status.ps1` on Windows) as an internal runtime helper to resolve the next workflow stage, including bootstrap states before docs exist. Default `status` output is JSON for machine consumers; `status --summary` is a human-oriented one-line view. `reason` is the canonical diagnostic field, and any `note` field is only a compatibility alias. The helper's local manifest is rebuildable; repo docs remain authoritative for spec/plan approval state.
 
+Superpowers also ships a supported public workflow inspection CLI:
+
+- `bin/superpowers-workflow` (Bash)
+- `bin/superpowers-workflow.ps1` (PowerShell wrapper)
+
+Use `status`, `next`, `artifacts`, `explain`, or `help` to inspect workflow state without mutating repo docs or repairing local manifests. At `implementation_ready`, `next` stops at the execution handoff boundary and does not call `superpowers-plan-execution recommend`.
+
 All 18 checked-in `skills/*/SKILL.md` files are generated from adjacent `SKILL.md.tmpl` sources. Regenerate them with `node scripts/gen-skill-docs.mjs` and validate freshness with `node scripts/gen-skill-docs.mjs --check`.
 
 The shipped reviewer agent artifacts are generated from `agents/code-reviewer.instructions.md`. Regenerate them with `node scripts/gen-agent-docs.mjs` and validate freshness with `node scripts/gen-agent-docs.mjs --check`.
@@ -266,6 +273,7 @@ Windows (PowerShell): `& "$env:USERPROFILE\.superpowers\install\bin\superpowers-
 - `scripts/gen-skill-docs.mjs` renders every checked-in `SKILL.md` from its template and injects the shared runtime preamble used across the skill library.
 - `bin/superpowers-migrate-install` consolidates legacy platform-specific installs into the single shared checkout and recreates compatibility links when needed.
 - `bin/superpowers-config` and `bin/superpowers-update-check` manage local runtime state, contributor mode, and per-session upgrade notices under `~/.superpowers/`.
+- `bin/superpowers-workflow` and `bin/superpowers-workflow.ps1` are the supported public read-only workflow inspection surfaces for humans.
 - `bin/superpowers-workflow-status` and `bin/superpowers-workflow-status.ps1` maintain branch-scoped local workflow state and route skills conservatively when docs are missing or stale.
 - `superpowers-upgrade/SKILL.md` is the inline upgrade workflow the generated preambles hand off to when a newer runtime version is available.
 - `review/TODOS-format.md` and `review/checklist.md` are the shared review references used by the planning and code-review workflows.
@@ -287,6 +295,8 @@ That is the default path for new feature and product work. Other task types take
 4. **plan-eng-review** - Activates after the plan is written. Reviews the full written plan before implementation starts.
 
 5. **implementation** - `subagent-driven-development` or `executing-plans` start from an engineering-approved current plan, run workspace-readiness checks, and execute the plan. The completion flow then runs `requesting-code-review`, may offer `qa-only` before landing, and may offer `document-release` before final branch cleanup or PR handoff. If the user wants an isolated workspace, invoke `using-git-worktrees` manually before execution.
+
+Implementation starts from an engineering-approved current plan and the exact approved plan path. `plan-eng-review` presents that handoff, and `superpowers-plan-execution recommend --plan <approved-plan-path>` chooses between *subagent-driven-development* and *executing-plans*. In both cases, execution runs a workspace-readiness preflight, executes the plan task by task, reviews before completion, and hands off through the normal branch-finishing flow.
 
 **The agent checks for relevant skills before any task.** These are mandatory workflows, not suggestions.
 
