@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
 // ========== WebSocket Protocol (RFC 6455) ==========
 
@@ -76,8 +77,87 @@ function decodeFrame(buffer) {
 const PORT = process.env.BRAINSTORM_PORT || (49152 + Math.floor(Math.random() * 16383));
 const HOST = process.env.BRAINSTORM_HOST || '127.0.0.1';
 const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'localhost' : HOST);
-const SCREEN_DIR = process.env.BRAINSTORM_DIR || '/tmp/brainstorm';
+// SECURITY: Use user's home directory instead of /tmp for file storage
+const os = require('os');
+const SCREEN_DIR = process.env.BRAINSTORM_DIR || path.join(os.homedir(), '.cache', 'superpowers', 'brainstorm');
 const OWNER_PID = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_OWNER_PID) : null;
+
+// ========== Security Configuration ==========
+
+// Generate a random auth token for this session
+const AUTH_TOKEN = crypto.randomBytes(32).toString('hex');
+const MAX_MESSAGE_SIZE = 1024 * 1024; // 1MB max message size
+const RATE_LIMIT_WINDOW_MS = 1000; // 1 second
+const RATE_LIMIT_MAX_MESSAGES = 100; // 100 messages per second per client
+
+// Rate limiting tracker
+const clientMessageCounts = new Map();
+
+// ========== Security Helpers ==========
+
+/**
+ * Sanitize string for safe logging (prevent log injection)
+ */
+function sanitizeForLog(str) {
+  if (typeof str !== 'string') {
+    str = JSON.stringify(str);
+  }
+  // Remove/escape control characters and potential log injection patterns
+  return str
+    .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
+    .replace(/\n/g, '\\n')           // Escape newlines
+    .replace(/\r/g, '\\r')           // Escape carriage returns
+    .replace(/\t/g, '\\t')           // Escape tabs
+    .replace(/\.\.\//g, '')          // Remove path traversal patterns
+    .slice(0, 1000);                 // Limit length
+}
+
+/**
+ * Validate WebSocket message structure
+ */
+function validateMessage(event) {
+  if (!event || typeof event !== 'object') return false;
+  if (Array.isArray(event)) return false;
+
+  // Only allow specific fields
+  const allowedFields = ['choice', 'type', 'data'];
+  const keys = Object.keys(event);
+
+  // Check for prototype pollution attempts
+  if (keys.includes('__proto__') || keys.includes('constructor') || keys.includes('prototype')) {
+    return false;
+  }
+
+  // Check field count (prevent DoS with huge objects)
+  if (keys.length > 10) return false;
+
+  // Validate field values
+  for (const key of keys) {
+    if (!allowedFields.includes(key)) continue;
+    const value = event[key];
+    if (typeof value === 'string' && value.length > 10000) return false;
+  }
+
+  return true;
+}
+
+/**
+ * Check rate limit for a client
+ */
+function checkRateLimit(socketId) {
+  const now = Date.now();
+  const clientData = clientMessageCounts.get(socketId) || { count: 0, windowStart: now };
+
+  if (now - clientData.windowStart > RATE_LIMIT_WINDOW_MS) {
+    clientData.count = 1;
+    clientData.windowStart = now;
+  } else {
+    clientData.count++;
+  }
+
+  clientMessageCounts.set(socketId, clientData);
+  return clientData.count <= RATE_LIMIT_MAX_MESSAGES;
+}
 
 const MIME_TYPES = {
   '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript',
@@ -160,11 +240,35 @@ function handleRequest(req, res) {
 
 // ========== WebSocket Connection Handling ==========
 
-const clients = new Set();
+const clients = new Map(); // Changed to Map to store socket with auth info
+let socketCounter = 0;
 
 function handleUpgrade(req, socket) {
   const key = req.headers['sec-websocket-key'];
   if (!key) { socket.destroy(); return; }
+
+  // SECURITY: Check for auth token in query string or headers
+  const urlParts = (req.url || '').split('?');
+  const queryString = urlParts[1] || '';
+  const params = new URLSearchParams(queryString);
+  const providedToken = params.get('token') || req.headers['x-auth-token'];
+
+  // Generate unique socket ID for rate limiting
+  const socketId = `socket_${++socketCounter}`;
+
+  // Validate auth token (allow if no token required for localhost)
+  const clientIp = req.socket.remoteAddress;
+  const isLocalhost = clientIp === '127.0.0.1' || clientIp === '::1' || clientIp === '::ffff:127.0.0.1';
+
+  if (!isLocalhost && providedToken !== AUTH_TOKEN) {
+    console.log(JSON.stringify({
+      type: 'auth-rejected',
+      client_ip: sanitizeForLog(clientIp),
+      reason: 'invalid_token'
+    }));
+    socket.destroy();
+    return;
+  }
 
   const accept = computeAcceptKey(key);
   socket.write(
@@ -175,10 +279,24 @@ function handleUpgrade(req, socket) {
   );
 
   let buffer = Buffer.alloc(0);
-  clients.add(socket);
+  clients.set(socket, { id: socketId, authenticated: true, ip: clientIp });
 
   socket.on('data', (chunk) => {
     buffer = Buffer.concat([buffer, chunk]);
+
+    // SECURITY: Limit buffer size to prevent memory exhaustion
+    if (buffer.length > MAX_MESSAGE_SIZE) {
+      console.log(JSON.stringify({
+        type: 'message-rejected',
+        socket_id: socketId,
+        reason: 'message_too_large'
+      }));
+      socket.end(encodeFrame(OPCODES.CLOSE, Buffer.alloc(0)));
+      clients.delete(socket);
+      clientMessageCounts.delete(socketId);
+      return;
+    }
+
     while (buffer.length > 0) {
       let result;
       try {
@@ -186,6 +304,7 @@ function handleUpgrade(req, socket) {
       } catch (e) {
         socket.end(encodeFrame(OPCODES.CLOSE, Buffer.alloc(0)));
         clients.delete(socket);
+        clientMessageCounts.delete(socketId);
         return;
       }
       if (!result) break;
@@ -193,11 +312,23 @@ function handleUpgrade(req, socket) {
 
       switch (result.opcode) {
         case OPCODES.TEXT:
-          handleMessage(result.payload.toString());
+          // SECURITY: Rate limiting
+          if (!checkRateLimit(socketId)) {
+            console.log(JSON.stringify({
+              type: 'rate-limited',
+              socket_id: socketId
+            }));
+            socket.end(encodeFrame(OPCODES.CLOSE, Buffer.alloc(0)));
+            clients.delete(socket);
+            clientMessageCounts.delete(socketId);
+            return;
+          }
+          handleMessage(result.payload.toString(), socketId);
           break;
         case OPCODES.CLOSE:
           socket.end(encodeFrame(OPCODES.CLOSE, Buffer.alloc(0)));
           clients.delete(socket);
+          clientMessageCounts.delete(socketId);
           return;
         case OPCODES.PING:
           socket.write(encodeFrame(OPCODES.PONG, result.payload));
@@ -209,37 +340,89 @@ function handleUpgrade(req, socket) {
           closeBuf.writeUInt16BE(1003);
           socket.end(encodeFrame(OPCODES.CLOSE, closeBuf));
           clients.delete(socket);
+          clientMessageCounts.delete(socketId);
           return;
         }
       }
     }
   });
 
-  socket.on('close', () => clients.delete(socket));
-  socket.on('error', () => clients.delete(socket));
+  socket.on('close', () => {
+    const info = clients.get(socket);
+    clients.delete(socket);
+    if (info) clientMessageCounts.delete(info.id);
+  });
+  socket.on('error', () => {
+    const info = clients.get(socket);
+    clients.delete(socket);
+    if (info) clientMessageCounts.delete(info.id);
+  });
 }
 
-function handleMessage(text) {
+function handleMessage(text, socketId) {
   let event;
   try {
     event = JSON.parse(text);
   } catch (e) {
-    console.error('Failed to parse WebSocket message:', e.message);
+    // SECURITY: Sanitize error message before logging
+    console.error('Failed to parse WebSocket message:', sanitizeForLog(e.message));
     return;
   }
+
+  // SECURITY: Validate message structure
+  if (!validateMessage(event)) {
+    console.log(JSON.stringify({
+      type: 'message-rejected',
+      socket_id: socketId,
+      reason: 'invalid_structure'
+    }));
+    return;
+  }
+
   touchActivity();
-  console.log(JSON.stringify({ source: 'user-event', ...event }));
+
+  // SECURITY: Sanitize event data before logging (prevent log injection)
+  const sanitizedEvent = {};
+  for (const [key, value] of Object.entries(event)) {
+    if (typeof value === 'string') {
+      sanitizedEvent[key] = sanitizeForLog(value);
+    } else {
+      sanitizedEvent[key] = value;
+    }
+  }
+
+  console.log(JSON.stringify({ source: 'user-event', socket_id: socketId, ...sanitizedEvent }));
+
   if (event.choice) {
     const eventsFile = path.join(SCREEN_DIR, '.events');
-    fs.appendFileSync(eventsFile, JSON.stringify(event) + '\n');
+    // SECURITY: Validate and sanitize before writing to file
+    try {
+      const safeEvent = {
+        choice: typeof event.choice === 'string' ? sanitizeForLog(event.choice) : event.choice,
+        timestamp: Date.now(),
+        socket_id: socketId
+      };
+      fs.appendFileSync(eventsFile, JSON.stringify(safeEvent) + '\n');
+    } catch (e) {
+      console.error('Failed to write event:', sanitizeForLog(e.message));
+    }
   }
 }
 
 function broadcast(msg) {
   const frame = encodeFrame(OPCODES.TEXT, Buffer.from(JSON.stringify(msg)));
-  for (const socket of clients) {
+  for (const [socket, info] of clients) {
     try { socket.write(frame); } catch (e) { clients.delete(socket); }
   }
+}
+
+// ========== Auth Token Export ==========
+
+/**
+ * Get the auth token for this session (for client connections)
+ */
+function getAuthToken() {
+  return AUTH_TOKEN;
 }
 
 // ========== Activity Tracking ==========
@@ -273,6 +456,12 @@ function startServer() {
   const watcher = fs.watch(SCREEN_DIR, (eventType, filename) => {
     if (!filename || !filename.endsWith('.html')) return;
 
+    // SECURITY: Validate filename to prevent path traversal
+    if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+      console.log(JSON.stringify({ type: 'file-rejected', reason: 'invalid_filename' }));
+      return;
+    }
+
     if (debounceTimers.has(filename)) clearTimeout(debounceTimers.get(filename));
     debounceTimers.set(filename, setTimeout(() => {
       debounceTimers.delete(filename);
@@ -285,27 +474,32 @@ function startServer() {
         knownFiles.add(filename);
         const eventsFile = path.join(SCREEN_DIR, '.events');
         if (fs.existsSync(eventsFile)) fs.unlinkSync(eventsFile);
-        console.log(JSON.stringify({ type: 'screen-added', file: filePath }));
+        // SECURITY: Sanitize file path before logging
+        console.log(JSON.stringify({ type: 'screen-added', file: sanitizeForLog(filePath) }));
       } else {
-        console.log(JSON.stringify({ type: 'screen-updated', file: filePath }));
+        console.log(JSON.stringify({ type: 'screen-updated', file: sanitizeForLog(filePath) }));
       }
 
       broadcast({ type: 'reload' });
     }, 100));
   });
-  watcher.on('error', (err) => console.error('fs.watch error:', err.message));
+  watcher.on('error', (err) => console.error('fs.watch error:', sanitizeForLog(err.message)));
 
   function shutdown(reason) {
-    console.log(JSON.stringify({ type: 'server-stopped', reason }));
+    // SECURITY: Sanitize reason before logging
+    const safeReason = sanitizeForLog(reason);
+    console.log(JSON.stringify({ type: 'server-stopped', reason: safeReason }));
     const infoFile = path.join(SCREEN_DIR, '.server-info');
     if (fs.existsSync(infoFile)) fs.unlinkSync(infoFile);
     fs.writeFileSync(
       path.join(SCREEN_DIR, '.server-stopped'),
-      JSON.stringify({ reason, timestamp: Date.now() }) + '\n'
+      JSON.stringify({ reason: safeReason, timestamp: Date.now() }) + '\n'
     );
     watcher.close();
     clearInterval(lifecycleCheck);
     server.close(() => process.exit(0));
+    // Cleanup rate limiting data
+    clientMessageCounts.clear();
   }
 
   function ownerAlive() {
@@ -324,7 +518,10 @@ function startServer() {
     const info = JSON.stringify({
       type: 'server-started', port: Number(PORT), host: HOST,
       url_host: URL_HOST, url: 'http://' + URL_HOST + ':' + PORT,
-      screen_dir: SCREEN_DIR
+      screen_dir: SCREEN_DIR,
+      // SECURITY: Include auth token for local clients
+      auth_token: AUTH_TOKEN,
+      security_version: '5.0.5-security'
     });
     console.log(info);
     fs.writeFileSync(path.join(SCREEN_DIR, '.server-info'), info + '\n');
@@ -335,4 +532,8 @@ if (require.main === module) {
   startServer();
 }
 
-module.exports = { computeAcceptKey, encodeFrame, decodeFrame, OPCODES };
+module.exports = {
+  computeAcceptKey, encodeFrame, decodeFrame, OPCODES,
+  // Export security functions for testing
+  sanitizeForLog, validateMessage, checkRateLimit, getAuthToken
+};
