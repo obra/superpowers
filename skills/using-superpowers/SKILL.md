@@ -62,6 +62,7 @@ digraph skill_flow {
     "Already brainstormed?" -> "Might any skill apply?" [label="yes"];
     "Invoke brainstorming skill" -> "Might any skill apply?";
 
+    "User message received" -> "About to EnterPlanMode?" [label="check first"];
     "User message received" -> "Might any skill apply?";
     "Might any skill apply?" -> "Invoke Skill tool" [label="yes, even 1%"];
     "Might any skill apply?" -> "Respond (including clarifications)" [label="definitely not"];
@@ -70,6 +71,62 @@ digraph skill_flow {
     "Has checklist?" -> "Create TodoWrite todo per item" [label="yes"];
     "Has checklist?" -> "Follow skill exactly" [label="no"];
     "Create TodoWrite todo per item" -> "Follow skill exactly";
+}
+```
+
+## Skill Dependency Map
+
+```dot
+digraph skill_dependencies {
+    rankdir=LR;
+    node [shape=box];
+
+    // Entry points
+    brainstorming [style=filled, fillcolor="#ccffcc", label="superpowers:brainstorming"];
+    debugging [style=filled, fillcolor="#ccffcc", label="superpowers:systematic-debugging"];
+    writing_skills [style=filled, fillcolor="#ccffcc", label="superpowers:writing-skills"];
+
+    // Creative pipeline
+    worktree [label="superpowers:using-git-worktrees"];
+    writing_plans [label="superpowers:writing-plans"];
+    sdd [label="superpowers:subagent-driven-development"];
+    executing_plans [label="superpowers:executing-plans"];
+
+    // Implementation
+    tdd [label="superpowers:test-driven-development"];
+
+    // Debugging path
+    dispatching [label="superpowers:dispatching-parallel-agents"];
+
+    // Code review chain
+    requesting [label="superpowers:requesting-code-review"];
+    receiving [label="superpowers:receiving-code-review"];
+    verification [label="superpowers:verification-before-completion"];
+    finishing [label="superpowers:finishing-a-development-branch"];
+
+    // Creative pipeline edges
+    brainstorming -> worktree;
+    worktree -> writing_plans;
+    writing_plans -> sdd;
+    writing_plans -> executing_plans;
+
+    // Implementation edges
+    sdd -> tdd;
+    executing_plans -> tdd;
+
+    // Debugging path edges
+    debugging -> dispatching;
+    dispatching -> tdd;
+
+    // Code review chain edges
+    finishing -> requesting;
+    requesting -> receiving;
+    receiving -> verification;
+    verification -> finishing;
+
+    // Writing-skills dependencies
+    writing_skills -> brainstorming [style=dashed, label="references"];
+    writing_skills -> tdd [style=dashed, label="references"];
 }
 ```
 
@@ -110,6 +167,27 @@ When multiple skills could apply, use this order:
 
 The skill itself tells you which.
 
+## Rule Priority
+
+When skills conflict, follow this hierarchy:
+
+1. **Verification** (non-negotiable) — always verify before claiming completion
+2. **TDD** — write tests first for any production code
+3. **Debugging** — follow systematic process before proposing fixes
+4. **All other skills** — apply in context order
+
+Verification is never skipped, even when user instructions override TDD or debugging workflows.
+
 ## User Instructions
 
 Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
+
+## Integration
+
+**This skill is the entry point for all others.** It determines which skills to invoke and in what order.
+
+**Key downstream skills:**
+- **superpowers:brainstorming** — for any creative or feature work
+- **superpowers:systematic-debugging** — for any bug or unexpected behavior
+- **superpowers:verification-before-completion** — before any completion claim
+- **superpowers:test-driven-development** — before writing production code

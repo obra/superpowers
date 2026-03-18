@@ -9,9 +9,7 @@ Help turn ideas into fully formed designs and specs through natural collaborativ
 
 Start by understanding the current project context, then ask questions one at a time to refine the idea. Once you understand what you're building, present the design and get user approval.
 
-<HARD-GATE>
-Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
-</HARD-GATE>
+**Core constraint:** Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
 
 ## Anti-Pattern: "This Is Too Simple To Need A Design"
 
@@ -29,7 +27,8 @@ You MUST create a task for each of these items and complete them in order:
 6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
 7. **Spec review loop** — dispatch spec-document-reviewer subagent with precisely crafted review context (never your session history); fix issues and re-dispatch until approved (max 3 iterations, then surface to human)
 8. **User reviews written spec** — ask user to review the spec file before proceeding
-9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+9. **Create isolated worktree** — invoke superpowers:using-git-worktrees skill
+10. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
 
@@ -46,6 +45,7 @@ digraph brainstorming {
     "Spec review loop" [shape=box];
     "Spec review passed?" [shape=diamond];
     "User reviews spec?" [shape=diamond];
+    "Create worktree" [shape=box];
     "Invoke writing-plans skill" [shape=doublecircle];
 
     "Explore project context" -> "Visual questions ahead?";
@@ -62,7 +62,8 @@ digraph brainstorming {
     "Spec review passed?" -> "Spec review loop" [label="issues found,\nfix and re-dispatch"];
     "Spec review passed?" -> "User reviews spec?" [label="approved"];
     "User reviews spec?" -> "Write design doc" [label="changes requested"];
-    "User reviews spec?" -> "Invoke writing-plans skill" [label="approved"];
+    "User reviews spec?" -> "Create worktree" [label="approved"];
+    "Create worktree" -> "Invoke writing-plans skill";
 }
 ```
 
@@ -113,7 +114,6 @@ digraph brainstorming {
 
 - Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
-- Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 
 **Spec Review Loop:**
@@ -129,6 +129,11 @@ After the spec review loop passes, ask the user to review the written spec befor
 > "Spec written and committed to `<path>`. Please review it and let me know if you want to make any changes before we start writing out the implementation plan."
 
 Wait for the user's response. If they request changes, make them and re-run the spec review loop. Only proceed once the user approves.
+
+**Worktree:**
+
+- Invoke superpowers:using-git-worktrees to create an isolated workspace
+- This ensures implementation happens in a clean branch, not on main
 
 **Implementation:**
 
@@ -162,3 +167,14 @@ A question about a UI topic is not automatically a visual question. "What does p
 
 If they agree to the companion, read the detailed guide before proceeding:
 `skills/brainstorming/visual-companion.md`
+
+## Integration
+
+**This skill is the entry point for all creative and feature work.**
+
+**Downstream skills (in order):**
+- **superpowers:using-git-worktrees** — create isolated workspace (step 9)
+- **superpowers:writing-plans** — create implementation plan (step 10)
+
+**Called by:**
+- **superpowers:using-superpowers** — when creative or feature work is detected
