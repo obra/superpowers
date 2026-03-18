@@ -55,7 +55,7 @@ digraph process {
         "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
         "Code quality reviewer subagent approves?" [shape=diamond];
         "Implementer subagent fixes quality issues" [shape=box];
-        "Mark task complete in TodoWrite" [shape=box];
+        "Mark task complete in TodoWrite\nand update plan file checkboxes" [shape=box];
     }
 
     "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
@@ -76,8 +76,8 @@ digraph process {
     "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
     "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
     "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
-    "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
-    "Mark task complete in TodoWrite" -> "More tasks remain?";
+    "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite\nand update plan file checkboxes" [label="yes"];
+    "Mark task complete in TodoWrite\nand update plan file checkboxes" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
     "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
@@ -123,6 +123,10 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 - `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
 - `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
 
+## Plan File Tracking
+
+After marking a task complete in TodoWrite, update the plan file on disk — change `- [ ]` to `- [x]` for all completed steps in that task using the Edit tool. This keeps the plan file as a persistent progress record across sessions.
+
 ## Example Workflow
 
 ```
@@ -155,6 +159,7 @@ Spec reviewer: ✅ Spec compliant - all requirements met, nothing extra
 Code reviewer: Strengths: Good test coverage, clean. Issues: None. Approved.
 
 [Mark Task 1 complete]
+[Update plan file: change - [ ] to - [x] for Task 1 steps]
 
 Task 2: Recovery modes
 
@@ -189,6 +194,7 @@ Implementer: Extracted PROGRESS_INTERVAL constant
 Code reviewer: ✅ Approved
 
 [Mark Task 2 complete]
+[Update plan file: change - [ ] to - [x] for Task 2 steps]
 
 ...
 
