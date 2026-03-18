@@ -10,7 +10,7 @@ Enable ultrapowers skills in Codex via native skill discovery. Just clone and sy
 
 1. **Clone the ultrapowers repository:**
    ```bash
-   git clone https://github.com/obra/ultrapowers.git ~/.codex/ultrapowers
+   git clone https://github.com/ennio-datatide/ultrapowers.git ~/.codex/ultrapowers
    ```
 
 2. **Create the skills symlink:**

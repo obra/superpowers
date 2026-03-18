@@ -4,11 +4,11 @@
   "description": "Core skills library: TDD, debugging, collaboration patterns, and proven techniques",
   "version": "5.0.2",
   "author": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com"
+    "name": "Ennio Maldonado",
+    "url": "https://www.enniomaldonado.com"
   },
-  "homepage": "https://github.com/obra/ultrapowers",
-  "repository": "https://github.com/obra/ultrapowers",
+  "homepage": "https://www.datatide.com",
+  "repository": "https://github.com/ennio-datatide/ultrapowers",
   "license": "MIT",
   "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows"],
   "skills": "./skills/",

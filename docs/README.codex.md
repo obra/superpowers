@@ -7,7 +7,7 @@ Guide for using Ultrapowers with OpenAI Codex via native skill discovery.
 Tell Codex:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/ultrapowers/refs/heads/main/.codex/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/ennio-datatide/ultrapowers/refs/heads/main/.codex/INSTALL.md
 ```
 
 ## Manual Installation
@@ -21,7 +21,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/ultrap
 
 1. Clone the repo:
    ```bash
-   git clone https://github.com/obra/ultrapowers.git ~/.codex/ultrapowers
+   git clone https://github.com/ennio-datatide/ultrapowers.git ~/.codex/ultrapowers
    ```
 
 2. Create the skills symlink:
@@ -122,5 +122,5 @@ Junctions normally work without special permissions. If creation fails, try runn
 
 ## Getting Help
 
-- Report issues: https://github.com/obra/ultrapowers/issues
-- Main documentation: https://github.com/obra/ultrapowers
+- Report issues: https://github.com/ennio-datatide/ultrapowers/issues
+- Main documentation: https://github.com/ennio-datatide/ultrapowers

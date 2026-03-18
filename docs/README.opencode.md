@@ -8,7 +8,7 @@ Add ultrapowers to the `plugin` array in your `opencode.json` (global or project
 
 ```json
 {
-  "plugin": ["ultrapowers@git+https://github.com/obra/ultrapowers.git"]
+  "plugin": ["ultrapowers@git+https://github.com/ennio-datatide/ultrapowers.git"]
 }
 ```
 
@@ -84,7 +84,7 @@ To pin a specific version, use a branch or tag:
 
 ```json
 {
-  "plugin": ["ultrapowers@git+https://github.com/obra/ultrapowers.git#v5.0.3"]
+  "plugin": ["ultrapowers@git+https://github.com/ennio-datatide/ultrapowers.git#v5.0.5"]
 }
 ```
 
@@ -125,6 +125,6 @@ Skills written for Claude Code are automatically adapted for OpenCode:
 
 ## Getting Help
 
-- Report issues: https://github.com/obra/ultrapowers/issues
-- Main documentation: https://github.com/obra/ultrapowers
+- Report issues: https://github.com/ennio-datatide/ultrapowers/issues
+- Main documentation: https://github.com/ennio-datatide/ultrapowers
 - OpenCode docs: https://opencode.ai/docs/
