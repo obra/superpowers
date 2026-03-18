@@ -58,8 +58,12 @@ FILES=(
   "bin/superpowers-migrate-install"
   "bin/superpowers-migrate-install.ps1"
   "bin/superpowers-pwsh-common.ps1"
+  "bin/superpowers-plan-execution"
+  "bin/superpowers-plan-execution.ps1"
   "bin/superpowers-update-check"
   "bin/superpowers-update-check.ps1"
+  "bin/superpowers-workflow-status"
+  "bin/superpowers-workflow-status.ps1"
   "review/TODOS-format.md"
   "review/checklist.md"
   "qa/references/issue-taxonomy.md"
@@ -67,7 +71,9 @@ FILES=(
   "superpowers-upgrade/SKILL.md"
   "tests/codex-runtime/test-powershell-wrapper-bash-resolution.sh"
   "tests/codex-runtime/test-superpowers-migrate-install.sh"
+  "tests/codex-runtime/test-superpowers-plan-execution.sh"
   "tests/codex-runtime/test-superpowers-upgrade-skill.sh"
+  "tests/codex-runtime/test-superpowers-workflow-status.sh"
   "tests/codex-runtime/test-workflow-enhancements.sh"
   "tests/codex-runtime/test-workflow-sequencing.sh"
   "tests/brainstorm-server/test-launch-wrappers.sh"
@@ -622,7 +628,7 @@ for pattern in \
   'skills/subagent-driven-development/SKILL.md:**vs. Executing Plans (parallel session):**' \
   'skills/subagent-driven-development/SKILL.md:- **superpowers:executing-plans** - Use for parallel session instead of same-session execution' \
   'skills/subagent-driven-development/SKILL.md:[Invoke superpowers:finishing-a-development-branch]' \
-  'README.md:implementation follows one of two execution paths: *subagent-driven-development* when same-session isolated-agent workflows are available, or *executing-plans* when the work should proceed in a separate session. In both cases, execution starts from an engineering-approved current plan, runs a workspace-readiness preflight, then executes the plan task by task, reviews before completion, and hands off through the normal branch-finishing flow.' \
+  'README.md:implementation starts from an engineering-approved current plan and the exact approved plan path. `plan-eng-review` presents that handoff, and `superpowers-plan-execution recommend --plan <approved-plan-path>` chooses between *subagent-driven-development* and *executing-plans*. In both cases, execution runs a workspace-readiness preflight, executes the plan task by task, reviews before completion, and hands off through the normal branch-finishing flow.' \
   'docs/README.codex.md:During implementation, either `subagent-driven-development` or `executing-plans` starts from an engineering-approved current plan, runs a workspace-readiness preflight, and then drives task execution.' \
   'docs/README.copilot.md:During implementation, either `subagent-driven-development` or `executing-plans` starts from an engineering-approved current plan, runs a workspace-readiness preflight, and then drives task execution.' \
   'README.md:- **requesting-code-review** - Code-review dispatch and triage'; do
@@ -720,3 +726,15 @@ if rg -n -F 'rerun step 3 after updating' .copilot/INSTALL.md docs/README.copilo
 fi
 
 echo "Cross-platform reviewer agent artifacts and copied-agent wording are correct."
+
+if ! rg -n -F 'bash tests/codex-runtime/test-superpowers-plan-execution.sh' docs/testing.md >/dev/null; then
+  echo "docs/testing.md should include the plan-execution helper regression in the recommended validation order."
+  exit 1
+fi
+
+if ! rg -n -F 'node --test tests/brainstorm-server/server.test.js tests/brainstorm-server/ws-protocol.test.js' docs/testing.md >/dev/null; then
+  echo "docs/testing.md should document the full brainstorm-server node test command, not only npm test."
+  exit 1
+fi
+
+echo "docs/testing.md reflects the current helper and brainstorm-server validation commands."

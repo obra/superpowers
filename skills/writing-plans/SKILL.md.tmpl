@@ -18,6 +18,11 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
+- Before writing the plan, record the intended plan path with `expect`:
+
+```bash
+"$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status" expect --artifact plan --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md
+```
 
 ## Prerequisite Gate
 
@@ -66,6 +71,8 @@ This structure informs the task decomposition. Each task should produce self-con
 > **For Codex and GitHub Copilot workers:** REQUIRED: Use `superpowers:subagent-driven-development` when isolated-agent workflows are available in the current platform/session; otherwise use `superpowers:executing-plans`. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Workflow State:** Draft
+**Plan Revision:** 1
+**Execution Mode:** none
 **Source Spec:** [Exact path to approved spec]
 **Source Spec Revision:** [Integer copied from approved spec]
 **Last Reviewed By:** writing-plans
@@ -128,11 +135,19 @@ git commit -m "feat: add specific feature"
 - Exact commands with expected output
 - Reference relevant skills by name (for example `superpowers:test-driven-development`)
 - Copy the exact approved spec path and current `Spec Revision` into the plan header
+- New execution plans start at `**Plan Revision:** 1`
+- New execution plans start with `**Execution Mode:** none`
 - DRY, YAGNI, TDD, frequent commits
 
 ## Plan Review Handoff
 
 After saving the full plan:
+
+0. After the plan is written or updated, runs `sync --artifact plan`:
+
+```bash
+"$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status" sync --artifact plan --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md
+```
 
 1. Invoke `superpowers:plan-eng-review` after saving the full plan.
 2. Do NOT do chunk-by-chunk embedded review here.

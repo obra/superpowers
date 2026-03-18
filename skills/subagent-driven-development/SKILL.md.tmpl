@@ -60,15 +60,15 @@ digraph process {
         "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
         "Code quality reviewer subagent approves?" [shape=diamond];
         "Implementer subagent fixes quality issues" [shape=box];
-        "Mark task complete in task tracker" [shape=box];
+        "Confirm task's plan steps are checked off in approved plan" [shape=box];
     }
 
-    "Read plan, extract all tasks with full text, note context, create task-tracker checklist" [shape=box];
+    "Read plan, extract all tasks with full text and note context" [shape=box];
     "More tasks remain?" [shape=diamond];
-    "Dispatch final code reviewer subagent for entire implementation" [shape=box];
+    "Use superpowers:requesting-code-review for final review gate" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with full text, note context, create task-tracker checklist" -> "Dispatch implementer subagent (./implementer-prompt.md)";
+    "Read plan, extract all tasks with full text and note context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -81,11 +81,11 @@ digraph process {
     "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
     "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
     "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
-    "Code quality reviewer subagent approves?" -> "Mark task complete in task tracker" [label="yes"];
-    "Mark task complete in task tracker" -> "More tasks remain?";
+    "Code quality reviewer subagent approves?" -> "Confirm task's plan steps are checked off in approved plan" [label="yes"];
+    "Confirm task's plan steps are checked off in approved plan" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
-    "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
-    "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
+    "More tasks remain?" -> "Use superpowers:requesting-code-review for final review gate" [label="no"];
+    "Use superpowers:requesting-code-review for final review gate" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
 
@@ -108,6 +108,15 @@ Before dispatching any implementation subagent:
    - stop if merge conflicts, unresolved index entries, rebase, or cherry-pick state is present
    - if the working tree is dirty, stop and ask the user to confirm the workspace is intentionally prepared
 6. Do not auto-clean the workspace and do not auto-create a worktree.
+
+## Helper-Owned Execution State
+
+- calls `status --plan ...` during preflight
+- calls `begin` before starting work on a plan step
+- calls `complete` after each completed step
+- calls `note` when work is interrupted or blocked
+- On the first `begin` for a revision whose plan still says `**Execution Mode:** none`, initialize execution with `--execution-mode superpowers:subagent-driven-development`
+- The approved plan checklist is the execution progress record; do not create or maintain a separate authoritative task tracker.
 
 ## Model Selection
 
@@ -161,7 +170,7 @@ You: I'm using Subagent-Driven Development to execute this plan.
 
 [Read plan file once: docs/superpowers/plans/feature-plan.md]
 [Extract all 5 tasks with full text and context]
-[Create task-tracker checklist with all tasks]
+[Use the approved plan as the execution-progress record]
 
 Task 1: Shared install migration docs
 
@@ -185,7 +194,7 @@ Spec reviewer: ✅ Spec compliant - all requirements met, nothing extra
 [Get git SHAs, dispatch code quality reviewer]
 Code reviewer: Strengths: Good test coverage, clean. Issues: None. Approved.
 
-[Mark Task 1 complete]
+[Confirm Task 1's plan steps are checked off in the approved plan]
 
 Task 2: Recovery modes
 
@@ -224,8 +233,9 @@ Code reviewer: ✅ Approved
 ...
 
 [After all tasks]
-[Dispatch final code-reviewer]
-Final reviewer: All requirements met, ready for branch completion
+[Announce: I'm using the requesting-code-review skill for the final review pass.]
+[Invoke superpowers:requesting-code-review]
+[Resolve any Critical or Important findings]
 
 [Announce: I'm using the finishing-a-development-branch skill to complete this work.]
 [Invoke superpowers:finishing-a-development-branch]
@@ -300,7 +310,7 @@ Final reviewer: All requirements met, ready for branch completion
 **Required workflow skills:**
 - **superpowers:writing-plans** - Creates the plan this skill executes
 - **superpowers:plan-eng-review** - Provides the approved plan and execution handoff
-- **superpowers:requesting-code-review** - Code review template for reviewer subagents
+- **superpowers:requesting-code-review** - REQUIRED: Final review gate after execution completes
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
 
 **Optional completion gate:**

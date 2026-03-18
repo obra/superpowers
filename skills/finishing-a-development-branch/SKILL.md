@@ -130,6 +130,19 @@ If a fresh review has not already been resolved for the current diff, invoke `su
 - Resolve Important issues unless the user explicitly accepts the risk
 - If a fresh review already happened in the current workflow, continue silently
 
+### Step 1.6: Execution-State Gate
+
+Before presenting completion options:
+
+- If the current work was executed from an approved Superpowers plan, require the exact approved plan path from the current execution workflow context before presenting completion options.
+- Run `superpowers-plan-execution status --plan <approved-plan-path>` and read the returned `evidence_path` before presenting completion options.
+- If the exact approved plan path is unavailable or helper status fails, stop and return to the current execution flow instead of guessing.
+- If the current work is not governed by an approved Superpowers plan, skip this execution-state gate and continue.
+- rejects branch-completion handoff if the approved plan is execution-dirty or malformed
+- must not allow branch completion while any checked-off plan step still lacks semantic implementation evidence
+- consumes the same execution evidence artifact used by final review
+- must fail closed when it detects a missed reopen or stale evidence, but must not call `reopen` itself
+
 ### Step 1.75: Optional Pre-Landing QA Gate
 
 Before presenting completion options, look for a branch-specific QA handoff artifact:

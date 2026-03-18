@@ -18,12 +18,14 @@ bash tests/codex-runtime/test-runtime-instructions.sh
 bash tests/codex-runtime/test-workflow-enhancements.sh
 bash tests/codex-runtime/test-workflow-sequencing.sh
 bash tests/codex-runtime/test-powershell-wrapper-bash-resolution.sh
+bash tests/codex-runtime/test-superpowers-plan-execution.sh
+bash tests/codex-runtime/test-superpowers-workflow-status.sh
 bash tests/codex-runtime/test-superpowers-config.sh
 bash tests/codex-runtime/test-superpowers-migrate-install.sh
 bash tests/codex-runtime/test-superpowers-update-check.sh
 bash tests/codex-runtime/test-superpowers-upgrade-skill.sh
 bash tests/brainstorm-server/test-launch-wrappers.sh
-npm --prefix tests/brainstorm-server test
+node --test tests/brainstorm-server/server.test.js tests/brainstorm-server/ws-protocol.test.js
 ```
 
 ## What Each Suite Covers
@@ -39,7 +41,8 @@ npm --prefix tests/brainstorm-server test
 
 - Generated `skills/*/SKILL.md` freshness plus runtime-facing install and workflow contract checks
 - Generated reviewer-agent artifact freshness for Codex and GitHub Copilot
-- Runtime helper contracts for config, update checks, migration, and upgrade flow
+- Runtime helper contracts for config, plan execution, update checks, migration, and upgrade flow
+- Workflow-status helper contracts for branch-scoped workflow manifests and conservative stage routing
 - PowerShell wrapper behavior, including Git Bash selection and Windows path handling
 - Install documentation and supported runtime references
 - Required support files such as `VERSION`, `review/TODOS-format.md`, `review/checklist.md`, the shared QA assets, and `superpowers-upgrade/SKILL.md`
@@ -54,7 +57,7 @@ npm --prefix tests/brainstorm-server test
 ## When To Run What
 
 - Editing any `SKILL.md.tmpl`, runtime helper, or install/readme doc: run `node --test tests/codex-runtime/*.test.mjs` plus the full `tests/codex-runtime/` shell suite
-- Editing brainstorming server files under `skills/brainstorming/scripts/`: run `bash tests/brainstorm-server/test-launch-wrappers.sh` and `npm --prefix tests/brainstorm-server test`
+- Editing brainstorming server files under `skills/brainstorming/scripts/`: run `bash tests/brainstorm-server/test-launch-wrappers.sh` and `node --test tests/brainstorm-server/server.test.js tests/brainstorm-server/ws-protocol.test.js`
 - Editing both runtime and brainstorming-server files: run both suites
 
 ## Optional Evals
@@ -69,6 +72,9 @@ npm --prefix tests/brainstorm-server test
 - `test-workflow-sequencing.sh` covers artifact-state routing, stage gates, and the optional worktree policy using checked-in workflow fixtures in `tests/codex-runtime/fixtures/workflow-artifacts/`
 - `tests/codex-runtime/*.test.mjs` covers the deterministic generated-skill and fixture assertions that do not need shell execution
 - `test-powershell-wrapper-bash-resolution.sh` covers shared PowerShell wrapper bash selection and override behavior
+- `test-superpowers-plan-execution.sh` covers the execution helper state machine, evidence canonicalization, rollback behavior, and malformed evidence rejection
+- `test-superpowers-workflow-status.sh` covers workflow-state bootstrap, summary-mode parity, repo-identity recovery, malformed-artifact diagnostics, branch isolation, fallback refresh behavior, and conservative write-conflict handling
 - `test-superpowers-update-check.sh` covers semver comparison, snooze handling, and just-upgraded markers
 - `test-superpowers-upgrade-skill.sh` covers install-root resolution and direct upgrade-flow version resolution
 - `test-launch-wrappers.sh` covers the brainstorm launcher wrappers for Bash and PowerShell, including documented `C:\...` project paths
+- `tests/brainstorm-server/server.test.js` and `tests/brainstorm-server/ws-protocol.test.js` cover the brainstorming server's HTTP behavior and websocket protocol semantics

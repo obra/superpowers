@@ -107,6 +107,8 @@ Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Ski
 
 ```markdown
 **Workflow State:** Draft | Engineering Approved
+**Plan Revision:** <integer>
+**Execution Mode:** none | superpowers:executing-plans | superpowers:subagent-driven-development
 **Source Spec:** <path>
 **Source Spec Revision:** <integer>
 **Last Reviewed By:** writing-plans | plan-eng-review
@@ -334,12 +336,21 @@ Check the git log for this branch. If there are prior commits suggesting a previ
 
 ## Execution handoff
 
+Before presenting the final execution handoff, if `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status` is available, call `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status status --refresh`.
+
+- If the helper returns a non-empty `next_skill`, use that route instead of re-deriving state manually.
+- If the helper returns `status` `implementation_ready`, present the normal execution handoff below.
+- Only fall back to manual artifact inspection if the helper is unavailable or fails.
+
 When the review is resolved and the written plan is approved, present the normal execution handoff.
+
+During that handoff, call `superpowers-plan-execution recommend --plan <approved-plan-path>` and present the helper's recommended skill first.
 
 The handoff must include the exact approved plan path and must remind the execution skill to reject draft or stale plans.
 
-* If isolated-agent workflows are available in the current platform/session: use `superpowers:subagent-driven-development` with the approved plan path.
-* Otherwise use `superpowers:executing-plans` with the approved plan path.
+* Present the helper-recommended execution skill as the default path with the approved plan path.
+* If isolated-agent workflows are available in the current platform/session, show the other valid execution skill as an explicit override.
+* If isolated-agent workflows are unavailable, do not present `superpowers:subagent-driven-development` as an available override.
 
 Do not start implementation before the review is satisfied.
 

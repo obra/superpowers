@@ -28,7 +28,15 @@ In Codex, Superpowers installs the `code-reviewer` custom agent alongside the sh
 
 ## How to Request
 
-**1. Detect the base branch and review range:**
+**1. If this review is for plan-routed work, capture execution state first:**
+
+- For plan-routed final review, require the exact approved plan path from the current execution handoff or session context.
+- Run `superpowers-plan-execution status --plan <approved-plan-path>` before dispatching the reviewer.
+- If helper status fails, stop and return to the current execution flow; do not dispatch review against guessed plan state.
+- Pass the exact approved plan path and helper-reported execution evidence path into the reviewer context.
+- If the current review is not governed by an approved Superpowers plan, skip this execution-state gate and continue with the normal diff review.
+
+**2. Detect the base branch and review range:**
 ```bash
 BASE_BRANCH=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null || gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null || echo main)
 git fetch origin "$BASE_BRANCH" --quiet 2>/dev/null || true
@@ -38,19 +46,21 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 The reviewer should use the shared review checklist from `review/checklist.md` in the repo when available, otherwise fall back to the installed Superpowers copy.
 
-**2. Dispatch the code-reviewer agent:**
+**3. Dispatch the code-reviewer agent:**
 
 Use the `code-reviewer` agent and fill the template at `code-reviewer.md`
 
 **Placeholders:**
 - `{WHAT_WAS_IMPLEMENTED}` - What you just built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
+- `{APPROVED_PLAN_PATH}` - Exact approved plan path for plan-routed review, otherwise leave blank
+- `{EXECUTION_EVIDENCE_PATH}` - Helper-reported evidence artifact path for plan-routed review, otherwise leave blank
 - `{BASE_BRANCH}` - The detected base branch name
 - `{BASE_SHA}` - Starting commit
 - `{HEAD_SHA}` - Ending commit
 - `{DESCRIPTION}` - Brief summary
 
-**3. Act on feedback:**
+**4. Act on feedback:**
 - Fix Critical issues immediately
 - Fix Important issues before proceeding
 - Note Minor issues for later
@@ -64,6 +74,9 @@ Use the `code-reviewer` agent and fill the template at `code-reviewer.md`
 
 You: Let me request code review before proceeding.
 
+APPROVED_PLAN_PATH=docs/superpowers/plans/deployment-plan.md
+STATUS_JSON=$("$_SUPERPOWERS_ROOT/bin/superpowers-plan-execution" status --plan "$APPROVED_PLAN_PATH")
+EXECUTION_EVIDENCE_PATH=$(printf '%s\n' "$STATUS_JSON" | python3 -c 'import json,sys; print(json.load(sys.stdin)["evidence_path"])')
 BASE_BRANCH=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null || gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null || echo main)
 BASE_SHA=$(git merge-base HEAD "origin/$BASE_BRANCH" 2>/dev/null || git merge-base HEAD "$BASE_BRANCH" 2>/dev/null || git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
 HEAD_SHA=$(git rev-parse HEAD)
@@ -71,6 +84,8 @@ HEAD_SHA=$(git rev-parse HEAD)
 [Dispatch code-reviewer agent]
   WHAT_WAS_IMPLEMENTED: Verification and repair functions for conversation index
   PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md
+  APPROVED_PLAN_PATH: docs/superpowers/plans/deployment-plan.md
+  EXECUTION_EVIDENCE_PATH: docs/superpowers/execution-evidence/deployment-plan-r1-evidence.md
   BASE_BRANCH: main
   BASE_SHA: a7981ec
   HEAD_SHA: 3df7661
@@ -101,6 +116,12 @@ You: [Fix progress indicators]
 **Ad-Hoc Development:**
 - Review before merge
 - Review when stuck
+
+## Execution-State Gate
+
+- rejects final review if the plan has invalid execution state or required unfinished work not truthfully represented
+- consumes the execution evidence artifact for checked-off steps
+- must fail closed when it detects a missed reopen or stale evidence, but must not call `reopen` itself
 
 ## Red Flags
 

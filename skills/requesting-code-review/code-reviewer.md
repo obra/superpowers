@@ -5,10 +5,11 @@ You are reviewing code changes for production readiness against the shared Super
 **Your task:**
 1. Review `{WHAT_WAS_IMPLEMENTED}`
 2. Compare the diff against `{PLAN_OR_REQUIREMENTS}`
-3. Use the detected base branch and commit range below
-4. Apply the checklist from `review/checklist.md`
-5. Categorize issues as Critical, Important, or Minor
-6. Assess production readiness
+3. When provided, read the approved plan and execution evidence paths below
+4. Use the detected base branch and commit range below
+5. Apply the checklist from `review/checklist.md`
+6. Categorize issues as Critical, Important, or Minor
+7. Assess production readiness
 
 ## What Was Implemented
 
@@ -17,6 +18,11 @@ You are reviewing code changes for production readiness against the shared Super
 ## Requirements/Plan
 
 {PLAN_OR_REQUIREMENTS}
+
+## Approved Execution Context
+
+**Approved plan path:** {APPROVED_PLAN_PATH}
+**Execution evidence path:** {EXECUTION_EVIDENCE_PATH}
 
 ## Git Range to Review
 
@@ -27,6 +33,8 @@ You are reviewing code changes for production readiness against the shared Super
 ```bash
 CHECKLIST_PATH="review/checklist.md"
 [ -f "$CHECKLIST_PATH" ] || CHECKLIST_PATH="$HOME/.superpowers/install/review/checklist.md"
+[ -z "{APPROVED_PLAN_PATH}" ] || cat "{APPROVED_PLAN_PATH}"
+[ -z "{EXECUTION_EVIDENCE_PATH}" ] || cat "{EXECUTION_EVIDENCE_PATH}"
 git diff --stat {BASE_SHA}..{HEAD_SHA}
 git diff {BASE_SHA}..{HEAD_SHA}
 cat "$CHECKLIST_PATH"
@@ -48,7 +56,9 @@ cat "$CHECKLIST_PATH"
    - Any unjustified deviations?
    - Any missing verification, edge cases, or release hygiene?
 
-4. Keep the review terse and evidence-based. Do not invent issues outside the reviewed range.
+4. When approved plan and execution evidence paths are provided, read both artifacts and verify that checked-off plan steps are semantically satisfied by the implementation and explicitly evidenced.
+
+5. Keep the review terse and evidence-based. Do not invent issues outside the reviewed range.
 
 ## Output Format
 

@@ -22,7 +22,7 @@ Then your agent puts together an implementation plan that's clear enough for an 
 
 Before implementation begins, that written plan gets its own engineering review pass so architecture, testing, failure modes, and rollout details are locked in.
 
-Next up, once you say "go", implementation follows one of two execution paths: *subagent-driven-development* when same-session isolated-agent workflows are available, or *executing-plans* when the work should proceed in a separate session. In both cases, execution starts from an engineering-approved current plan, runs a workspace-readiness preflight, then executes the plan task by task, reviews before completion, and hands off through the normal branch-finishing flow. Workspace preparation is the user's responsibility; invoke `using-git-worktrees` manually when you want isolated workspace management. It's not uncommon for a well-grounded coding agent to be able to work autonomously for a couple hours at a time without deviating from the plan you put together.
+Next up, once you say "go", implementation starts from an engineering-approved current plan and the exact approved plan path. `plan-eng-review` presents that handoff, and `superpowers-plan-execution recommend --plan <approved-plan-path>` chooses between *subagent-driven-development* and *executing-plans*. In both cases, execution runs a workspace-readiness preflight, executes the plan task by task, reviews before completion, and hands off through the normal branch-finishing flow. Workspace preparation is the user's responsibility; invoke `using-git-worktrees` manually when you want isolated workspace management. It's not uncommon for a well-grounded coding agent to be able to work autonomously for a couple hours at a time without deviating from the plan you put together.
 
 There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Superpowers.
 
@@ -111,8 +111,11 @@ Runtime state lives in `~/.superpowers/`.
 - Preferences live in `~/.superpowers/config.yaml`
 - Session-awareness markers live in `~/.superpowers/sessions/`
 - Contributor field reports live in `~/.superpowers/contributor-logs/`
-- Project-scoped QA handoff artifacts live in `~/.superpowers/projects/`
+- Project-scoped artifacts live in `~/.superpowers/projects/`
+- Branch-scoped workflow manifests live at `~/.superpowers/projects/<repo-slug>/<user>-<safe-branch>-workflow-state.json`
 - Update-check cache, snooze, and just-upgraded markers live under the same state root
+
+Generated workflow skills call `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status` (and `bin/superpowers-workflow-status.ps1` on Windows) as an internal runtime helper to resolve the next workflow stage, including bootstrap states before docs exist. Default `status` output is JSON for machine consumers; `status --summary` is a human-oriented one-line view. `reason` is the canonical diagnostic field, and any `note` field is only a compatibility alias. The helper's local manifest is rebuildable; repo docs remain authoritative for spec/plan approval state.
 
 All 18 checked-in `skills/*/SKILL.md` files are generated from adjacent `SKILL.md.tmpl` sources. Regenerate them with `node scripts/gen-skill-docs.mjs` and validate freshness with `node scripts/gen-skill-docs.mjs --check`.
 
@@ -134,6 +137,7 @@ Windows (PowerShell): `& "$env:USERPROFILE\.superpowers\install\bin\superpowers-
 - `scripts/gen-skill-docs.mjs` renders every checked-in `SKILL.md` from its template and injects the shared runtime preamble used across the skill library.
 - `bin/superpowers-migrate-install` consolidates legacy platform-specific installs into the single shared checkout and recreates compatibility links when needed.
 - `bin/superpowers-config` and `bin/superpowers-update-check` manage local runtime state, contributor mode, and per-session upgrade notices under `~/.superpowers/`.
+- `bin/superpowers-workflow-status` and `bin/superpowers-workflow-status.ps1` maintain branch-scoped local workflow state and route skills conservatively when docs are missing or stale.
 - `superpowers-upgrade/SKILL.md` is the inline upgrade workflow the generated preambles hand off to when a newer runtime version is available.
 - `review/TODOS-format.md` and `review/checklist.md` are the shared review references used by the planning and code-review workflows.
 - `qa/references/issue-taxonomy.md` and `qa/templates/qa-report-template.md` are the shared QA references used by `qa-only`.

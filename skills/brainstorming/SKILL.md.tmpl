@@ -106,6 +106,12 @@ digraph brainstorming {
 
 - Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
+- Before writing the spec, record the intended spec path with `expect`:
+
+```bash
+"$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status" expect --artifact spec --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md
+```
+
 - Every spec MUST include these header lines immediately below the title:
 
 ```markdown
@@ -119,6 +125,11 @@ digraph brainstorming {
 - Use exact-match header lines. Later workflow stages parse them with regexes and treat missing or malformed fields as not approved.
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
+- After the spec is written or updated, runs `sync --artifact spec`:
+
+```bash
+"$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status" sync --artifact spec --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md
+```
 
 **CEO Review Handoff:**
 After writing the spec document:

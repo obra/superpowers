@@ -112,6 +112,12 @@ Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Ski
 
 - If any header line is missing or malformed, normalize the spec to this contract before continuing and treat it as `Draft`.
 - When review decisions change the written spec, update the spec document before continuing.
+- After each spec edit (including final approval edits), runs `sync --artifact spec` for the spec path:
+
+```bash
+"$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status" sync --artifact spec --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md
+```
+
 - Keep the spec in `Draft` until the review is fully resolved.
 - When approving the written spec, set `**Workflow State:** CEO Approved` and `**Last Reviewed By:** plan-ceo-review`.
 - `**Spec Revision:**` starts at `1`. If this review materially changes a previously approved spec, increment the revision and reset the spec to `Draft` until it is re-approved.

@@ -1,0 +1,1765 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+
+usage() {
+  cat <<'EOF' >&2
+Usage:
+  superpowers-plan-execution status --plan <approved-plan-path>
+  superpowers-plan-execution recommend --plan <approved-plan-path> [--isolated-agents available|unavailable] [--session-intent stay|separate|unknown] [--workspace-prepared yes|no|unknown]
+  superpowers-plan-execution begin ...
+  superpowers-plan-execution transfer ...
+  superpowers-plan-execution complete ...
+  superpowers-plan-execution note ...
+  superpowers-plan-execution reopen ...
+EOF
+}
+
+json_escape() {
+  local value="${1:-}"
+  value="${value//\\/\\\\}"
+  value="${value//\"/\\\"}"
+  value="${value//$'\n'/\\n}"
+  value="${value//$'\r'/\\r}"
+  printf '%s' "$value"
+}
+
+emit_error() {
+  local klass="$1"
+  local message="$2"
+  printf '{"error_class":"%s","message":"%s"}\n' \
+    "$(json_escape "$klass")" \
+    "$(json_escape "$message")"
+}
+
+hash_stream() {
+  if command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 | awk '{print $1}'
+    return
+  fi
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum | awk '{print $1}'
+    return
+  fi
+  cksum | awk '{print $1}'
+}
+
+normalize_repo_relative_path() {
+  local input="$1" part normalized=""
+  case "$input" in
+    ''|/*) return 1 ;;
+  esac
+  input="${input//\\//}"
+  while IFS= read -r part; do
+    case "$part" in
+      ''|'.') continue ;;
+      '..') return 1 ;;
+      *) normalized="${normalized:+$normalized/}$part" ;;
+    esac
+  done < <(printf '%s\n' "$input" | tr '/' '\n')
+  [ -n "$normalized" ] || return 1
+  printf '%s\n' "$normalized"
+}
+
+strip_plan_file_reference_suffix() {
+  printf '%s' "$1" | sed -E 's/:[0-9]+([:-][0-9]+)*$//'
+}
+
+normalize_plan_scope_path() {
+  local raw_value="$1"
+  local stripped
+
+  stripped="$(strip_plan_file_reference_suffix "$raw_value")"
+  normalize_repo_relative_path "$stripped"
+}
+
+derive_tasks_independent_from_plan() {
+  local plan_abs="$1"
+  local line
+  local current_task_index=-1
+  local in_files_block=0
+  local normalized_path
+  local tasks_independent="unknown"
+  local -a task_scopes=()
+  local -a task_write_counts=()
+  local -a task_file_blocks=()
+  local -a task_scope_parseable=()
+  local task_count=0
+  local i j path compare
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    if (( in_files_block )); then
+      if [[ "$line" =~ ^-\ (Create|Modify|Delete):\ \`(.+)\`$ ]]; then
+        task_file_blocks[$current_task_index]="yes"
+        normalized_path="$(normalize_plan_scope_path "${BASH_REMATCH[2]}")" || {
+          task_scope_parseable[$current_task_index]="no"
+          continue
+        }
+        task_write_counts[$current_task_index]=$(( ${task_write_counts[$current_task_index]:-0} + 1 ))
+        if [[ -n "${task_scopes[$current_task_index]:-}" ]]; then
+          task_scopes[$current_task_index]+=$'\n'"$normalized_path"
+        else
+          task_scopes[$current_task_index]="$normalized_path"
+        fi
+        continue
+      fi
+      if [[ "$line" =~ ^-\ Test:\ \`.+\`$ ]]; then
+        task_file_blocks[$current_task_index]="yes"
+        continue
+      fi
+      if [[ "$line" =~ ^-\ \[[[:space:]x]\]\  ]]; then
+        in_files_block=0
+      elif [[ "$line" =~ ^-\  ]]; then
+        task_file_blocks[$current_task_index]="yes"
+        task_scope_parseable[$current_task_index]="no"
+        continue
+      fi
+      if [[ -z "$line" || "$line" =~ ^[[:space:]]+$ ]]; then
+        continue
+      fi
+      in_files_block=0
+    fi
+
+    if [[ "$line" =~ ^##\ Task\ ([0-9]+): ]]; then
+      current_task_index=$task_count
+      task_scopes[$current_task_index]=""
+      task_write_counts[$current_task_index]=0
+      task_file_blocks[$current_task_index]="no"
+      task_scope_parseable[$current_task_index]="yes"
+      task_count=$((task_count + 1))
+      in_files_block=0
+      continue
+    fi
+
+    if (( current_task_index >= 0 )) && [[ "$line" == "**Files:**" ]]; then
+      task_file_blocks[$current_task_index]="yes"
+      in_files_block=1
+      continue
+    fi
+  done < "$plan_abs"
+
+  if (( task_count < 2 )); then
+    printf '%s\n' "$tasks_independent"
+    return 0
+  fi
+
+  for ((i=0; i<task_count; i++)); do
+    if [[ "${task_file_blocks[$i]}" != "yes" || "${task_scope_parseable[$i]}" != "yes" || "${task_write_counts[$i]}" == "0" ]]; then
+      printf '%s\n' "$tasks_independent"
+      return 0
+    fi
+  done
+
+  for ((i=0; i<task_count; i++)); do
+    while IFS= read -r path; do
+      [[ -n "$path" ]] || continue
+      for ((j=i+1; j<task_count; j++)); do
+        while IFS= read -r compare; do
+          [[ -n "$compare" ]] || continue
+          if [[ "$path" == "$compare" ]]; then
+            printf 'no\n'
+            return 0
+          fi
+        done <<< "${task_scopes[$j]}"
+      done
+    done <<< "${task_scopes[$i]}"
+  done
+
+  printf 'yes\n'
+  return 0
+}
+
+validate_persisted_normalized_text() {
+  local raw_value="$1"
+  local message="$2"
+  local overlong_message="${3:-}"
+  local max_len="${4:-}"
+  local normalized
+
+  normalized="$(normalize_whitespace "$raw_value")"
+  if [[ -z "$normalized" ]]; then
+    set_failure "MalformedExecutionState" "$message"
+    return 1
+  fi
+  if [[ -n "$max_len" ]] && (( ${#normalized} > max_len )); then
+    set_failure "MalformedExecutionState" "$overlong_message"
+    return 1
+  fi
+
+  PERSISTED_NORMALIZED_VALUE="$normalized"
+  return 0
+}
+
+validate_persisted_repo_relative_path() {
+  local raw_value="$1"
+  local message="$2"
+  local normalized
+
+  normalized="$(printf '%s' "$raw_value" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')"
+  normalized="$(normalize_repo_relative_path "$normalized")" || {
+    set_failure "MalformedExecutionState" "$message"
+    return 1
+  }
+
+  PERSISTED_NORMALIZED_PATH="$normalized"
+  return 0
+}
+
+validate_persisted_execution_source() {
+  local raw_value="$1"
+  local normalized
+
+  normalized="$(normalize_whitespace "$raw_value")"
+  case "$normalized" in
+    superpowers:executing-plans|superpowers:subagent-driven-development) ;;
+    *)
+      set_failure "MalformedExecutionState" "Execution evidence source must be one of the supported execution modes."
+      return 1
+      ;;
+  esac
+
+  if [[ "$PLAN_EXECUTION_MODE" != "none" && "$normalized" != "$PLAN_EXECUTION_MODE" ]]; then
+    set_failure "MalformedExecutionState" "Execution evidence source must exactly match the persisted execution mode for this plan revision."
+    return 1
+  fi
+
+  PERSISTED_EXECUTION_SOURCE="$normalized"
+  return 0
+}
+
+plan_rel_to_abs() {
+  local rel="$1"
+  printf '%s/%s\n' "$REPO_ROOT" "$rel"
+}
+
+derive_evidence_rel_path() {
+  local plan_rel="$1"
+  local revision="$2"
+  local base
+  base="$(basename "$plan_rel" .md)"
+  printf 'docs/superpowers/execution-evidence/%s-r%s-evidence.md\n' "$base" "$revision"
+}
+
+set_failure() {
+  LOAD_ERROR_CLASS="$1"
+  LOAD_ERROR_MESSAGE="$2"
+  return 1
+}
+
+reset_plan_parse_state() {
+  PLAN_WORKFLOW_STATE=""
+  PLAN_REVISION=""
+  PLAN_EXECUTION_MODE=""
+  PLAN_SOURCE_SPEC=""
+  PLAN_SOURCE_SPEC_REVISION=""
+  PLAN_LAST_REVIEWED_BY=""
+
+  STEP_COUNT=0
+  STEP_TASKS=()
+  STEP_NUMBERS=()
+  STEP_CHECKED=()
+  STEP_TITLES=()
+  STEP_NOTE_STATES=()
+  STEP_NOTE_SUMMARIES=()
+
+  PLAN_ACTIVE_TASK="null"
+  PLAN_ACTIVE_STEP="null"
+  PLAN_BLOCKING_TASK="null"
+  PLAN_BLOCKING_STEP="null"
+  PLAN_RESUME_TASK="null"
+  PLAN_RESUME_STEP="null"
+  PLAN_CHECKED_COUNT=0
+  PLAN_NOTE_COUNT=0
+}
+
+find_step_index() {
+  local task="$1"
+  local step="$2"
+  local i
+  for ((i=0; i<STEP_COUNT; i++)); do
+    if [[ "${STEP_TASKS[$i]}" == "$task" && "${STEP_NUMBERS[$i]}" == "$step" ]]; then
+      printf '%s\n' "$i"
+      return 0
+    fi
+  done
+  return 1
+}
+
+add_step() {
+  local task="$1"
+  local step="$2"
+  local checked="$3"
+  local title="$4"
+
+  if find_step_index "$task" "$step" >/dev/null 2>&1; then
+    set_failure "MalformedExecutionState" "Duplicate Task ${task} Step ${step} in approved plan."
+    return 1
+  fi
+
+  STEP_TASKS[$STEP_COUNT]="$task"
+  STEP_NUMBERS[$STEP_COUNT]="$step"
+  STEP_CHECKED[$STEP_COUNT]="$checked"
+  STEP_TITLES[$STEP_COUNT]="$title"
+  STEP_NOTE_STATES[$STEP_COUNT]=""
+  STEP_NOTE_SUMMARIES[$STEP_COUNT]=""
+  if [[ "$checked" == "x" ]]; then
+    PLAN_CHECKED_COUNT=$((PLAN_CHECKED_COUNT + 1))
+  fi
+  STEP_COUNT=$((STEP_COUNT + 1))
+  return 0
+}
+
+parse_plan_file() {
+  local plan_abs="$1"
+  local line line_no=0 current_task="" pending_index="" note_state note_summary
+  local active_count=0 blocked_count=0 interrupted_count=0 current_work_count=0
+
+  reset_plan_parse_state
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line_no=$((line_no + 1))
+
+    if [[ "$line" =~ ^\*\*Workflow\ State:\*\*\ (.+)$ ]]; then
+      PLAN_WORKFLOW_STATE="${BASH_REMATCH[1]}"
+    elif [[ "$line" =~ ^\*\*Plan\ Revision:\*\*\ ([0-9]+)$ ]]; then
+      PLAN_REVISION="${BASH_REMATCH[1]}"
+    elif [[ "$line" =~ ^\*\*Execution\ Mode:\*\*\ (.+)$ ]]; then
+      PLAN_EXECUTION_MODE="${BASH_REMATCH[1]}"
+    elif [[ "$line" =~ ^\*\*Source\ Spec:\*\*\ \`(.+)\`$ ]]; then
+      PLAN_SOURCE_SPEC="${BASH_REMATCH[1]}"
+    elif [[ "$line" =~ ^\*\*Source\ Spec\ Revision:\*\*\ ([0-9]+)$ ]]; then
+      PLAN_SOURCE_SPEC_REVISION="${BASH_REMATCH[1]}"
+    elif [[ "$line" =~ ^\*\*Last\ Reviewed\ By:\*\*\ (.+)$ ]]; then
+      PLAN_LAST_REVIEWED_BY="${BASH_REMATCH[1]}"
+    elif [[ "$line" =~ ^##\ Task\ ([0-9]+): ]]; then
+      current_task="${BASH_REMATCH[1]}"
+      pending_index=""
+    elif [[ "$line" =~ ^-\ \[([[:space:]x])\]\ \*\*Step\ ([0-9]+):\ (.*)\*\*$ ]]; then
+      [[ -n "$current_task" ]] || set_failure "MalformedExecutionState" "Found a step outside any task heading in approved plan." || return 1
+      add_step "$current_task" "${BASH_REMATCH[2]}" "$([[ "${BASH_REMATCH[1]}" == "x" ]] && printf 'x' || printf ' ')" "${BASH_REMATCH[3]}" || return 1
+      pending_index=$((STEP_COUNT - 1))
+    elif [[ "$line" =~ ^[[:space:]]+\*\*Execution\ Note:\*\*\ (.+)$ ]]; then
+      [[ -n "$pending_index" ]] || set_failure "MalformedExecutionState" "Execution note is not adjacent to an unchecked step." || return 1
+      [[ -z "${STEP_NOTE_STATES[$pending_index]}" ]] || set_failure "MalformedExecutionState" "Unchecked steps may not carry more than one execution note." || return 1
+      if [[ "${STEP_CHECKED[$pending_index]}" == "x" ]]; then
+        set_failure "MalformedExecutionState" "Checked steps may not retain execution notes."
+        return 1
+      fi
+
+      if [[ "${BASH_REMATCH[1]}" =~ ^(Active|Interrupted|Blocked)\ -\ (.+)$ ]]; then
+        note_state="${BASH_REMATCH[1]}"
+        note_summary="${BASH_REMATCH[2]}"
+      else
+        set_failure "MalformedExecutionState" "Execution notes must use canonical '<State> - <summary>' form."
+        return 1
+      fi
+
+      validate_persisted_normalized_text \
+        "$note_summary" \
+        "Execution note summaries may not be blank after whitespace normalization." \
+        "Execution note summaries may not exceed 120 characters after whitespace normalization." \
+        120 || return 1
+      STEP_NOTE_STATES[$pending_index]="$note_state"
+      STEP_NOTE_SUMMARIES[$pending_index]="$PERSISTED_NORMALIZED_VALUE"
+      PLAN_NOTE_COUNT=$((PLAN_NOTE_COUNT + 1))
+    elif [[ -n "$pending_index" && -n "$line" && ! "$line" =~ ^[[:space:]]+$ ]]; then
+      pending_index=""
+    fi
+  done < "$plan_abs"
+
+  local i task step
+  for ((i=0; i<STEP_COUNT; i++)); do
+    task="${STEP_TASKS[$i]}"
+    step="${STEP_NUMBERS[$i]}"
+    case "${STEP_NOTE_STATES[$i]}" in
+      Active)
+        active_count=$((active_count + 1))
+        current_work_count=$((current_work_count + 1))
+        PLAN_ACTIVE_TASK="$task"
+        PLAN_ACTIVE_STEP="$step"
+        ;;
+      Blocked)
+        blocked_count=$((blocked_count + 1))
+        current_work_count=$((current_work_count + 1))
+        PLAN_BLOCKING_TASK="$task"
+        PLAN_BLOCKING_STEP="$step"
+        ;;
+      Interrupted)
+        interrupted_count=$((interrupted_count + 1))
+        PLAN_RESUME_TASK="$task"
+        PLAN_RESUME_STEP="$step"
+        ;;
+      '')
+        ;;
+      *)
+        set_failure "MalformedExecutionState" "Unsupported execution note state '${STEP_NOTE_STATES[$i]}'."
+        return 1
+        ;;
+    esac
+  done
+
+  if (( current_work_count > 1 )); then
+    set_failure "MalformedExecutionState" "Plan may have at most one current-work note at a time."
+    return 1
+  fi
+  if (( interrupted_count > 1 )); then
+    set_failure "MalformedExecutionState" "Plan may have at most one interrupted resume note at a time."
+    return 1
+  fi
+
+  return 0
+}
+
+validate_source_spec() {
+  local source_rel="$1"
+  local expected_revision="$2"
+  local normalized source_abs spec_state spec_revision spec_reviewer
+
+  normalized="$(normalize_repo_relative_path "$source_rel")" || {
+    set_failure "PlanNotExecutionReady" "Approved plan source spec path is malformed."
+    return 1
+  }
+  source_abs="$(plan_rel_to_abs "$normalized")"
+  if [[ ! -f "$source_abs" ]]; then
+    set_failure "PlanNotExecutionReady" "Approved plan source spec does not exist."
+    return 1
+  fi
+
+  spec_state="$(sed -nE 's/^\*\*Workflow State:\*\* (.+)$/\1/p' "$source_abs" | head -n1)"
+  spec_revision="$(sed -nE 's/^\*\*Spec Revision:\*\* ([0-9]+)$/\1/p' "$source_abs" | head -n1)"
+  spec_reviewer="$(sed -nE 's/^\*\*Last Reviewed By:\*\* (.+)$/\1/p' "$source_abs" | head -n1)"
+
+  if [[ "$spec_state" != "CEO Approved" ]]; then
+    set_failure "PlanNotExecutionReady" "Approved plan source spec is not CEO Approved."
+    return 1
+  fi
+  if [[ "$spec_revision" != "$expected_revision" ]]; then
+    set_failure "PlanNotExecutionReady" "Approved plan source spec revision is stale."
+    return 1
+  fi
+  spec_reviewer="$(normalize_whitespace "$spec_reviewer")"
+  case "$spec_reviewer" in
+    brainstorming|plan-ceo-review) ;;
+    *)
+      set_failure "PlanNotExecutionReady" "Approved plan source spec Last Reviewed By header is missing or malformed."
+      return 1
+      ;;
+  esac
+
+  return 0
+}
+
+reset_evidence_parse_state() {
+  EVIDENCE_EXISTS=0
+  EVIDENCE_EMPTY_STATE=1
+  EVIDENCE_ATTEMPT_COUNT=0
+  EVIDENCE_SOURCE_COUNT=0
+  EVIDENCE_SOURCE_ONE=""
+  EVIDENCE_SOURCE_TWO=""
+  EVIDENCE_PATH_LINE=""
+  EVIDENCE_REVISION_LINE=""
+}
+
+parse_evidence_file() {
+  local evidence_abs="$1"
+  local expected_plan_rel="$2"
+  local expected_revision="$3"
+  local title_count path_count revision_count section_count step_section_count attempt_count
+
+  reset_evidence_parse_state
+  if [[ ! -f "$evidence_abs" ]]; then
+    EVIDENCE_EXISTS=0
+    EVIDENCE_EMPTY_STATE=1
+    return 0
+  fi
+
+  EVIDENCE_EXISTS=1
+
+  title_count="$(grep -c '^# Execution Evidence:' "$evidence_abs" || true)"
+  path_count="$(grep -c '^\*\*Plan Path:\*\* ' "$evidence_abs" || true)"
+  revision_count="$(grep -c '^\*\*Plan Revision:\*\* ' "$evidence_abs" || true)"
+  section_count="$(grep -c '^## Step Evidence$' "$evidence_abs" || true)"
+  step_section_count="$(grep -c '^### Task [0-9][0-9]* Step [0-9][0-9]*$' "$evidence_abs" || true)"
+  attempt_count="$(grep -c '^#### Attempt [0-9][0-9]*$' "$evidence_abs" || true)"
+
+  if [[ "$title_count" != "1" || "$path_count" != "1" || "$revision_count" != "1" || "$section_count" != "1" ]]; then
+    set_failure "MalformedExecutionState" "Execution evidence artifact header structure is malformed."
+    return 1
+  fi
+
+  EVIDENCE_PATH_LINE="$(sed -nE 's/^\*\*Plan Path:\*\* (.+)$/\1/p' "$evidence_abs" | head -n1)"
+  EVIDENCE_REVISION_LINE="$(sed -nE 's/^\*\*Plan Revision:\*\* ([0-9]+)$/\1/p' "$evidence_abs" | head -n1)"
+  if [[ "$EVIDENCE_PATH_LINE" != "$expected_plan_rel" || "$EVIDENCE_REVISION_LINE" != "$expected_revision" ]]; then
+    set_failure "MalformedExecutionState" "Execution evidence artifact does not match the current approved plan revision."
+    return 1
+  fi
+
+  if [[ "$step_section_count" == "0" && "$attempt_count" == "0" ]]; then
+    EVIDENCE_EMPTY_STATE=1
+    return 0
+  fi
+
+  if [[ "$step_section_count" == "0" || "$attempt_count" == "0" ]]; then
+    set_failure "MalformedExecutionState" "Execution evidence artifact is missing required step sections or attempts."
+    return 1
+  fi
+
+  EVIDENCE_EMPTY_STATE=0
+  EVIDENCE_ATTEMPT_COUNT="$attempt_count"
+
+  return 0
+}
+
+compute_execution_fingerprint() {
+  local plan_abs="$1"
+  local evidence_abs="$2"
+  {
+    printf 'plan\n'
+    cat "$plan_abs"
+    printf '\n--evidence--\n'
+    if [[ "$EVIDENCE_EMPTY_STATE" == "1" ]]; then
+      printf '__EMPTY_EVIDENCE__\n'
+    else
+      cat "$evidence_abs"
+    fi
+  } | hash_stream
+}
+
+normalize_whitespace() {
+  printf '%s' "$1" | tr '\r\n\t' '   ' | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//'
+}
+
+truncate_with_ellipsis() {
+  local text="$1"
+  local max_len="$2"
+  if (( ${#text} <= max_len )); then
+    printf '%s' "$text"
+    return
+  fi
+  if (( max_len <= 3 )); then
+    printf '%.*s' "$max_len" "$text"
+    return
+  fi
+  printf '%s...' "${text:0:max_len-3}"
+}
+
+active_summary_from_title() {
+  local normalized
+  normalized="$(normalize_whitespace "$1")"
+  truncate_with_ellipsis "$normalized" 120
+}
+
+reopen_note_summary() {
+  local normalized
+  normalized="$(normalize_whitespace "$1")"
+  truncate_with_ellipsis "Reopened: $normalized" 120
+}
+
+validate_required_normalized_text() {
+  local raw_value="$1"
+  local empty_message="$2"
+  local overlong_message="${3:-}"
+  local max_len="${4:-}"
+  local normalized
+
+  normalized="$(normalize_whitespace "$raw_value")"
+  if [[ -z "$normalized" ]]; then
+    set_failure "InvalidCommandInput" "$empty_message"
+    return 1
+  fi
+  if [[ -n "$max_len" ]] && (( ${#normalized} > max_len )); then
+    set_failure "InvalidCommandInput" "$overlong_message"
+    return 1
+  fi
+  REQUIRED_TEXT_NORMALIZED="$normalized"
+  return 0
+}
+
+validate_note_message() {
+  validate_required_normalized_text \
+    "$1" \
+    "Execution note summaries may not be blank after whitespace normalization." \
+    "Normalized execution note summaries may not exceed 120 characters." \
+    120 || return 1
+  NOTE_MESSAGE_NORMALIZED="$REQUIRED_TEXT_NORMALIZED"
+  return 0
+}
+
+assert_expected_fingerprint() {
+  local expected="$1"
+  if [[ "$expected" != "$EXECUTION_FINGERPRINT" ]]; then
+    set_failure "StaleMutation" "Execution state changed since the last parsed execution fingerprint."
+    return 1
+  fi
+  return 0
+}
+
+validate_execution_mode_source() {
+  local source="$1"
+  case "$source" in
+    superpowers:executing-plans|superpowers:subagent-driven-development) ;;
+    *)
+      set_failure "InvalidExecutionMode" "Execution source must be one of the supported execution modes."
+      return 1
+      ;;
+  esac
+  if [[ "$PLAN_EXECUTION_MODE" == "none" || "$source" != "$PLAN_EXECUTION_MODE" ]]; then
+    set_failure "InvalidExecutionMode" "Execution source must exactly match the persisted execution mode for this plan revision."
+    return 1
+  fi
+  return 0
+}
+
+scan_diff_name_status_stream() {
+  local query="$1"
+  local status path_one path_two
+
+  while IFS= read -r -d '' status; do
+    case "$status" in
+      R*|C*)
+        IFS= read -r -d '' path_one || return 1
+        IFS= read -r -d '' path_two || return 1
+        if [[ "$query" == "$path_one" || "$query" == "$path_two" ]]; then
+          printf '%s\n' "$path_two"
+          return 0
+        fi
+        ;;
+      *)
+        IFS= read -r -d '' path_one || return 1
+        if [[ "$query" == "$path_one" ]]; then
+          printf '%s\n' "$path_one"
+          return 0
+        fi
+        ;;
+    esac
+  done
+
+  return 1
+}
+
+resolve_path_from_current_change_set() {
+  local query="$1"
+  local resolved=""
+  local untracked=""
+
+  if resolved="$(
+    scan_diff_name_status_stream "$query" < <(
+      git -C "$REPO_ROOT" diff --name-status -z -M --cached 2>/dev/null || true
+      git -C "$REPO_ROOT" diff --name-status -z -M 2>/dev/null || true
+    )
+  )"; then
+    printf '%s\n' "$resolved"
+    return 0
+  fi
+
+  untracked="$(git -C "$REPO_ROOT" ls-files --others --exclude-standard -- "$query" 2>/dev/null | head -n1)"
+  if [[ "$untracked" == "$query" ]]; then
+    printf '%s\n' "$query"
+    return 0
+  fi
+
+  return 1
+}
+
+build_files_entry() {
+  local inputs=("$@")
+  local input normalized resolved
+  local collected=()
+
+  if (( ${#inputs[@]} == 0 )); then
+    FILES_ENTRY="None (no repo file changed)"
+    return 0
+  fi
+
+  for input in "${inputs[@]}"; do
+    normalized="$(normalize_repo_relative_path "$input")" || {
+      set_failure "InvalidCommandInput" "Evidence file paths must be normalized repo-relative paths inside the repo root."
+      return 1
+    }
+
+    if [[ -e "$REPO_ROOT/$normalized" || -L "$REPO_ROOT/$normalized" ]]; then
+      resolved="$normalized"
+    else
+      resolved="$(resolve_path_from_current_change_set "$normalized")" || {
+        set_failure "InvalidCommandInput" "Evidence file paths must exist or be represented in the current change set."
+        return 1
+      }
+    fi
+
+    collected+=("$resolved")
+  done
+
+  FILES_ENTRY="$(printf '%s\n' "${collected[@]}" | LC_ALL=C sort -u)"
+  return 0
+}
+
+reset_attempts_state() {
+  ATT_COUNT=0
+  ATT_TASKS=()
+  ATT_STEPS=()
+  ATT_NUMBERS=()
+  ATT_STATUS=()
+  ATT_RECORDED_AT=()
+  ATT_SOURCES=()
+  ATT_CLAIMS=()
+  ATT_FILES=()
+  ATT_VERIFICATION=()
+  ATT_INVALIDATION_REASONS=()
+}
+
+push_attempt() {
+  local task="$1"
+  local step="$2"
+  local number="$3"
+  ATT_TASKS[$ATT_COUNT]="$task"
+  ATT_STEPS[$ATT_COUNT]="$step"
+  ATT_NUMBERS[$ATT_COUNT]="$number"
+  ATT_STATUS[$ATT_COUNT]=""
+  ATT_RECORDED_AT[$ATT_COUNT]=""
+  ATT_SOURCES[$ATT_COUNT]=""
+  ATT_CLAIMS[$ATT_COUNT]=""
+  ATT_FILES[$ATT_COUNT]=""
+  ATT_VERIFICATION[$ATT_COUNT]=""
+  ATT_INVALIDATION_REASONS[$ATT_COUNT]=""
+  ATT_COUNT=$((ATT_COUNT + 1))
+}
+
+parse_evidence_attempts() {
+  local line current_task="" current_step="" current_index=""
+  local queued_line="" have_queued_line=0
+  local files_lines=()
+  local expected_stage=0
+  local last_task=0
+  local last_step=0
+  local last_attempt_number=0
+  local section_key=""
+  local seen_sections=""
+  reset_attempts_state
+
+  if [[ "$EVIDENCE_EXISTS" != "1" || "$EVIDENCE_EMPTY_STATE" == "1" ]]; then
+    return 0
+  fi
+
+  exec 3< "$EVIDENCE_ABS_PATH"
+  while true; do
+    if (( have_queued_line == 1 )); then
+      line="$queued_line"
+      have_queued_line=0
+    elif ! IFS= read -r line <&3; then
+      break
+    fi
+
+    if [[ -z "$line" ]]; then
+      continue
+    fi
+
+    if [[ "$line" =~ ^###\ Task\ ([0-9]+)\ Step\ ([0-9]+)$ ]]; then
+      if [[ -n "$current_index" && $expected_stage -ne 8 ]]; then
+        exec 3<&-
+        set_failure "MalformedExecutionState" "Execution evidence attempt is incomplete."
+        return 1
+      fi
+      if (( ${BASH_REMATCH[1]} < last_task || (${BASH_REMATCH[1]} == last_task && ${BASH_REMATCH[2]} <= last_step) )); then
+        exec 3<&-
+        set_failure "MalformedExecutionState" "Execution evidence step sections must be ordered canonically and appear once."
+        return 1
+      fi
+      section_key="|${BASH_REMATCH[1]}:${BASH_REMATCH[2]}|"
+      if [[ "$seen_sections" == *"$section_key"* ]]; then
+        exec 3<&-
+        set_failure "MalformedExecutionState" "Execution evidence step sections may not repeat."
+        return 1
+      fi
+      seen_sections+="$section_key"
+      current_task="${BASH_REMATCH[1]}"
+      current_step="${BASH_REMATCH[2]}"
+      last_task="${BASH_REMATCH[1]}"
+      last_step="${BASH_REMATCH[2]}"
+      current_index=""
+      last_attempt_number=0
+    elif [[ "$line" =~ ^####\ Attempt\ ([0-9]+)$ ]]; then
+      if [[ -n "$current_index" && $expected_stage -ne 8 ]]; then
+        exec 3<&-
+        set_failure "MalformedExecutionState" "Execution evidence attempt is incomplete."
+        return 1
+      fi
+      [[ -n "$current_task" ]] || { exec 3<&-; set_failure "MalformedExecutionState" "Execution evidence attempt is missing its step heading."; return 1; }
+      if (( ${BASH_REMATCH[1]} != last_attempt_number + 1 )); then
+        exec 3<&-
+        set_failure "MalformedExecutionState" "Execution evidence attempts must be contiguous and start at 1 within each step section."
+        return 1
+      fi
+      push_attempt "$current_task" "$current_step" "${BASH_REMATCH[1]}"
+      current_index=$((ATT_COUNT - 1))
+      last_attempt_number="${BASH_REMATCH[1]}"
+      expected_stage=1
+    elif [[ -n "$current_index" && "$line" =~ ^\*\*Status:\*\*\ (.+)$ ]]; then
+      [[ $expected_stage -eq 1 ]] || { exec 3<&-; set_failure "MalformedExecutionState" "Execution evidence fields are out of order."; return 1; }
+      ATT_STATUS[$current_index]="${BASH_REMATCH[1]}"
+      expected_stage=2
+    elif [[ -n "$current_index" && "$line" =~ ^\*\*Recorded\ At:\*\*\ (.+)$ ]]; then
+      [[ $expected_stage -eq 2 ]] || { exec 3<&-; set_failure "MalformedExecutionState" "Execution evidence fields are out of order."; return 1; }
+      ATT_RECORDED_AT[$current_index]="${BASH_REMATCH[1]}"
+      expected_stage=3
+    elif [[ -n "$current_index" && "$line" =~ ^\*\*Execution\ Source:\*\*\ (.+)$ ]]; then
+      [[ $expected_stage -eq 3 ]] || { exec 3<&-; set_failure "MalformedExecutionState" "Execution evidence fields are out of order."; return 1; }
+      validate_persisted_execution_source "${BASH_REMATCH[1]}" || {
+        exec 3<&-
+        return 1
+      }
+      ATT_SOURCES[$current_index]="$PERSISTED_EXECUTION_SOURCE"
+      if [[ "$EVIDENCE_SOURCE_COUNT" == "0" ]]; then
+        EVIDENCE_SOURCE_COUNT=1
+        EVIDENCE_SOURCE_ONE="$PERSISTED_EXECUTION_SOURCE"
+      elif [[ "$PERSISTED_EXECUTION_SOURCE" != "$EVIDENCE_SOURCE_ONE" ]]; then
+        EVIDENCE_SOURCE_COUNT=2
+        EVIDENCE_SOURCE_TWO="$PERSISTED_EXECUTION_SOURCE"
+        exec 3<&-
+        set_failure "MalformedExecutionState" "Execution evidence contains multiple distinct persisted execution sources for one revision."
+        return 1
+      fi
+      expected_stage=4
+    elif [[ -n "$current_index" && "$line" =~ ^\*\*Claim:\*\*\ (.+)$ ]]; then
+      [[ $expected_stage -eq 4 ]] || { exec 3<&-; set_failure "MalformedExecutionState" "Execution evidence fields are out of order."; return 1; }
+      validate_persisted_normalized_text \
+        "${BASH_REMATCH[1]}" \
+        "Execution evidence Claim text may not be blank after whitespace normalization." || {
+        exec 3<&-
+        return 1
+      }
+      ATT_CLAIMS[$current_index]="$PERSISTED_NORMALIZED_VALUE"
+      expected_stage=5
+    elif [[ -n "$current_index" && "$line" == "**Files:**" ]]; then
+      [[ $expected_stage -eq 5 ]] || { exec 3<&-; set_failure "MalformedExecutionState" "Execution evidence fields are out of order."; return 1; }
+      files_lines=()
+      while IFS= read -r line <&3; do
+        if [[ "$line" =~ ^-\ (.+)$ ]]; then
+          validate_persisted_repo_relative_path \
+            "${BASH_REMATCH[1]}" \
+            "Execution evidence Files bullets must be canonical repo-relative paths." || {
+            exec 3<&-
+            return 1
+          }
+          files_lines+=("$PERSISTED_NORMALIZED_PATH")
+          continue
+        fi
+        queued_line="$line"
+        have_queued_line=1
+        break
+      done
+      if (( ${#files_lines[@]} == 0 )); then
+        exec 3<&-
+        set_failure "MalformedExecutionState" "Execution evidence Files section must contain at least one bullet."
+        return 1
+      fi
+      ATT_FILES[$current_index]="$(printf '%s\n' "${files_lines[@]}")"
+      expected_stage=6
+    elif [[ -n "$current_index" && "$line" == "**Verification:**" ]]; then
+      [[ $expected_stage -eq 6 ]] || { exec 3<&-; set_failure "MalformedExecutionState" "Execution evidence fields are out of order."; return 1; }
+      if ! IFS= read -r line <&3; then
+        exec 3<&-
+        set_failure "MalformedExecutionState" "Execution evidence Verification section is incomplete."
+        return 1
+      fi
+      [[ "$line" =~ ^-\ (.+)$ ]] || { exec 3<&-; set_failure "MalformedExecutionState" "Execution evidence Verification section must contain exactly one bullet."; return 1; }
+      validate_persisted_normalized_text \
+        "${BASH_REMATCH[1]}" \
+        "Execution evidence Verification text may not be blank after whitespace normalization." || {
+        exec 3<&-
+        return 1
+      }
+      ATT_VERIFICATION[$current_index]="$PERSISTED_NORMALIZED_VALUE"
+      if IFS= read -r line <&3; then
+        if [[ "$line" =~ ^-\ (.+)$ ]]; then
+          exec 3<&-
+          set_failure "MalformedExecutionState" "Execution evidence Verification section may not contain more than one bullet."
+          return 1
+        fi
+        queued_line="$line"
+        have_queued_line=1
+      fi
+      expected_stage=7
+    elif [[ -n "$current_index" && "$line" =~ ^\*\*Invalidation\ Reason:\*\*\ (.+)$ ]]; then
+      [[ $expected_stage -eq 7 ]] || { exec 3<&-; set_failure "MalformedExecutionState" "Execution evidence fields are out of order."; return 1; }
+      validate_persisted_normalized_text \
+        "${BASH_REMATCH[1]}" \
+        "Execution evidence Invalidation Reason text may not be blank after whitespace normalization." || {
+        exec 3<&-
+        return 1
+      }
+      ATT_INVALIDATION_REASONS[$current_index]="$PERSISTED_NORMALIZED_VALUE"
+      expected_stage=8
+    elif [[ "$line" =~ ^#\ Execution\ Evidence: ]] || [[ "$line" =~ ^\*\*Plan\ Path:\*\* ]] || [[ "$line" =~ ^\*\*Plan\ Revision:\*\* ]] || [[ "$line" == "## Step Evidence" ]]; then
+      continue
+    else
+      exec 3<&-
+      set_failure "MalformedExecutionState" "Execution evidence contains unexpected content."
+      return 1
+    fi
+  done
+  exec 3<&-
+
+  if [[ -n "$current_index" && $expected_stage -ne 8 ]]; then
+    set_failure "MalformedExecutionState" "Execution evidence attempt is incomplete."
+    return 1
+  fi
+
+  local i
+  for ((i=0; i<ATT_COUNT; i++)); do
+    case "${ATT_STATUS[$i]}" in
+      Completed)
+        [[ -n "${ATT_INVALIDATION_REASONS[$i]}" && "${ATT_INVALIDATION_REASONS[$i]}" == "N/A" ]] || {
+          set_failure "MalformedExecutionState" "Completed attempts must use 'N/A' as the invalidation reason."
+          return 1
+        }
+        ;;
+      Invalidated)
+        [[ -n "${ATT_INVALIDATION_REASONS[$i]}" && "${ATT_INVALIDATION_REASONS[$i]}" != "N/A" ]] || {
+          set_failure "MalformedExecutionState" "Invalidated attempts must record a non-empty invalidation reason."
+          return 1
+        }
+        ;;
+      *)
+        set_failure "MalformedExecutionState" "Execution evidence attempts may only be Completed or Invalidated."
+        return 1
+        ;;
+    esac
+
+    [[ -n "${ATT_RECORDED_AT[$i]}" && -n "${ATT_SOURCES[$i]}" && -n "${ATT_CLAIMS[$i]}" && -n "${ATT_FILES[$i]}" && -n "${ATT_VERIFICATION[$i]}" ]] || {
+      set_failure "MalformedExecutionState" "Execution evidence attempts must contain every required field."
+      return 1
+    }
+  done
+
+  return 0
+}
+
+find_latest_attempt_index() {
+  local task="$1"
+  local step="$2"
+  local latest_index="" latest_num=0 i
+  for ((i=0; i<ATT_COUNT; i++)); do
+    if [[ "${ATT_TASKS[$i]}" == "$task" && "${ATT_STEPS[$i]}" == "$step" ]]; then
+      if (( ${ATT_NUMBERS[$i]} >= latest_num )); then
+        latest_num="${ATT_NUMBERS[$i]}"
+        latest_index="$i"
+      fi
+    fi
+  done
+  if [[ -n "$latest_index" ]]; then
+    printf '%s\n' "$latest_index"
+    return 0
+  fi
+  return 1
+}
+
+next_attempt_number() {
+  local task="$1"
+  local step="$2"
+  local latest
+  if latest="$(find_latest_attempt_index "$task" "$step" 2>/dev/null)"; then
+    printf '%s\n' "$((ATT_NUMBERS[$latest] + 1))"
+  else
+    printf '1\n'
+  fi
+}
+
+append_attempt() {
+  local task="$1"
+  local step="$2"
+  local source="$3"
+  local claim="$4"
+  local files_entry="$5"
+  local verification_entry="$6"
+  local number recorded_at
+
+  number="$(next_attempt_number "$task" "$step")"
+  recorded_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  push_attempt "$task" "$step" "$number"
+  ATT_STATUS[$((ATT_COUNT - 1))]="Completed"
+  ATT_RECORDED_AT[$((ATT_COUNT - 1))]="$recorded_at"
+  ATT_SOURCES[$((ATT_COUNT - 1))]="$source"
+  ATT_CLAIMS[$((ATT_COUNT - 1))]="$claim"
+  ATT_FILES[$((ATT_COUNT - 1))]="$files_entry"
+  ATT_VERIFICATION[$((ATT_COUNT - 1))]="$verification_entry"
+  ATT_INVALIDATION_REASONS[$((ATT_COUNT - 1))]="N/A"
+}
+
+invalidate_attempt() {
+  local attempt_index="$1"
+  local source="$2"
+  local reason="$3"
+  local recorded_at
+
+  recorded_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  ATT_STATUS[$attempt_index]="Invalidated"
+  ATT_RECORDED_AT[$attempt_index]="$recorded_at"
+  ATT_SOURCES[$attempt_index]="$source"
+  ATT_INVALIDATION_REASONS[$attempt_index]="$(normalize_whitespace "$reason")"
+}
+
+render_evidence_file() {
+  local dest="$1"
+  local topic base i j
+  base="$(basename "$PLAN_REL_PATH" .md)"
+  topic="$base"
+
+  {
+    printf '# Execution Evidence: %s\n\n' "$topic"
+    printf '**Plan Path:** %s\n' "$PLAN_REL_PATH"
+    printf '**Plan Revision:** %s\n\n' "$PLAN_REVISION"
+    printf '## Step Evidence\n'
+
+    if (( ATT_COUNT > 0 )); then
+      printf '\n'
+    fi
+
+    for ((i=0; i<STEP_COUNT; i++)); do
+      local task step has_attempt=0
+      task="${STEP_TASKS[$i]}"
+      step="${STEP_NUMBERS[$i]}"
+      for ((j=0; j<ATT_COUNT; j++)); do
+        if [[ "${ATT_TASKS[$j]}" == "$task" && "${ATT_STEPS[$j]}" == "$step" ]]; then
+          if (( has_attempt == 0 )); then
+            printf '### Task %s Step %s\n' "$task" "$step"
+            has_attempt=1
+          fi
+          printf '#### Attempt %s\n' "${ATT_NUMBERS[$j]}"
+          printf '**Status:** %s\n' "${ATT_STATUS[$j]}"
+          printf '**Recorded At:** %s\n' "${ATT_RECORDED_AT[$j]}"
+          printf '**Execution Source:** %s\n' "${ATT_SOURCES[$j]}"
+          printf '**Claim:** %s\n' "${ATT_CLAIMS[$j]}"
+          printf '**Files:**\n'
+          while IFS= read -r file_entry; do
+            [[ -n "$file_entry" ]] || continue
+            printf -- '- %s\n' "$file_entry"
+          done <<< "${ATT_FILES[$j]}"
+          printf '**Verification:**\n'
+          printf -- '- %s\n' "${ATT_VERIFICATION[$j]}"
+          printf '**Invalidation Reason:** %s\n' "${ATT_INVALIDATION_REASONS[$j]}"
+          printf '\n'
+        fi
+      done
+    done
+  } > "$dest"
+}
+
+find_step_or_fail() {
+  local task="$1"
+  local step="$2"
+  local index
+  if ! index="$(find_step_index "$task" "$step" 2>/dev/null)"; then
+    set_failure "InvalidStepTransition" "Requested task/step does not exist in the approved plan."
+    return 1
+  fi
+  STEP_INDEX_FOUND="$index"
+  return 0
+}
+
+render_plan_file() {
+  local src="$1"
+  local dest="$2"
+  local line current_task="" suppress_adjacent=0 note_state note_summary step_index mark title
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    if (( suppress_adjacent == 1 )); then
+      if [[ -z "$line" || "$line" =~ ^[[:space:]]+\*\*Execution\ Note:\*\* ]]; then
+        continue
+      fi
+      suppress_adjacent=0
+    fi
+
+    if [[ "$line" =~ ^\*\*Execution\ Mode:\*\*\ (.+)$ ]]; then
+      printf '**Execution Mode:** %s\n' "$PLAN_EXECUTION_MODE" >> "$dest"
+      continue
+    fi
+
+    if [[ "$line" =~ ^##\ Task\ ([0-9]+): ]]; then
+      current_task="${BASH_REMATCH[1]}"
+      printf '%s\n' "$line" >> "$dest"
+      continue
+    fi
+
+    if [[ "$line" =~ ^-\ \[([[:space:]x])\]\ \*\*Step\ ([0-9]+):\ (.*)\*\*$ ]]; then
+      step_index="$(find_step_index "$current_task" "${BASH_REMATCH[2]}")"
+      mark=' '
+      [[ "${STEP_CHECKED[$step_index]}" == "x" ]] && mark='x'
+      title="${STEP_TITLES[$step_index]}"
+      printf -- '- [%s] **Step %s: %s**\n' "$mark" "${STEP_NUMBERS[$step_index]}" "$title" >> "$dest"
+      note_state="${STEP_NOTE_STATES[$step_index]}"
+      note_summary="${STEP_NOTE_SUMMARIES[$step_index]}"
+      if [[ -n "$note_state" ]]; then
+        printf '\n  **Execution Note:** %s - %s\n' "$note_state" "$note_summary" >> "$dest"
+      fi
+      suppress_adjacent=1
+      continue
+    fi
+
+    printf '%s\n' "$line" >> "$dest"
+  done < "$src"
+}
+
+commit_plan_only() {
+  local operation="$1"
+  local plan_tmp plan_backup
+  plan_tmp="$(mktemp "${PLAN_ABS_PATH}.tmp.XXXXXX")"
+  plan_backup="$(mktemp "${PLAN_ABS_PATH}.bak.XXXXXX")"
+  cp "$PLAN_ABS_PATH" "$plan_backup"
+  render_plan_file "$PLAN_ABS_PATH" "$plan_tmp"
+
+  if [[ "${SUPERPOWERS_PLAN_EXECUTION_TEST_FAILPOINT:-}" == "${operation}_after_plan_write" ]]; then
+    rm -f "$plan_tmp" "$plan_backup"
+    set_failure "EvidenceWriteFailed" "Injected write failure during ${operation}."
+    return 1
+  fi
+
+  if ! mv "$plan_tmp" "$PLAN_ABS_PATH"; then
+    cp "$plan_backup" "$PLAN_ABS_PATH"
+    rm -f "$plan_tmp" "$plan_backup"
+    set_failure "EvidenceWriteFailed" "Could not persist the plan mutation."
+    return 1
+  fi
+  rm -f "$plan_backup"
+  return 0
+}
+
+commit_plan_and_evidence() {
+  local operation="$1"
+  local plan_tmp plan_backup evidence_tmp evidence_backup=""
+  mkdir -p "$(dirname "$EVIDENCE_ABS_PATH")"
+  plan_tmp="$(mktemp "${PLAN_ABS_PATH}.tmp.XXXXXX")"
+  evidence_tmp="$(mktemp "${EVIDENCE_ABS_PATH}.tmp.XXXXXX")"
+  plan_backup="$(mktemp "${PLAN_ABS_PATH}.bak.XXXXXX")"
+  cp "$PLAN_ABS_PATH" "$plan_backup"
+  if [[ -f "$EVIDENCE_ABS_PATH" ]]; then
+    evidence_backup="$(mktemp "${EVIDENCE_ABS_PATH}.bak.XXXXXX")"
+    cp "$EVIDENCE_ABS_PATH" "$evidence_backup"
+  fi
+
+  render_plan_file "$PLAN_ABS_PATH" "$plan_tmp"
+  render_evidence_file "$evidence_tmp"
+
+  if [[ "${SUPERPOWERS_PLAN_EXECUTION_TEST_FAILPOINT:-}" == "${operation}_after_plan_write" ]]; then
+    rm -f "$plan_tmp" "$evidence_tmp" "$plan_backup" "$evidence_backup"
+    set_failure "EvidenceWriteFailed" "Injected write failure during ${operation}."
+    return 1
+  fi
+
+  if ! mv "$evidence_tmp" "$EVIDENCE_ABS_PATH"; then
+    cp "$plan_backup" "$PLAN_ABS_PATH"
+    rm -f "$plan_tmp" "$evidence_tmp" "$plan_backup" "$evidence_backup"
+    set_failure "EvidenceWriteFailed" "Could not persist the evidence mutation."
+    return 1
+  fi
+
+  if ! mv "$plan_tmp" "$PLAN_ABS_PATH"; then
+    cp "$plan_backup" "$PLAN_ABS_PATH"
+    if [[ -n "$evidence_backup" ]]; then
+      cp "$evidence_backup" "$EVIDENCE_ABS_PATH"
+    else
+      rm -f "$EVIDENCE_ABS_PATH"
+    fi
+    rm -f "$plan_tmp" "$evidence_tmp" "$plan_backup" "$evidence_backup"
+    set_failure "EvidenceWriteFailed" "Could not persist the plan mutation."
+    return 1
+  fi
+
+  rm -f "$plan_backup" "$evidence_backup"
+  return 0
+}
+
+load_execution_state() {
+  local plan_rel="$1"
+  local plan_abs evidence_rel evidence_abs
+
+  LOAD_ERROR_CLASS=""
+  LOAD_ERROR_MESSAGE=""
+
+  PLAN_REL_PATH="$(normalize_repo_relative_path "$plan_rel")" || {
+    set_failure "InvalidCommandInput" "Plan path must be a normalized repo-relative path."
+    return 1
+  }
+  case "$PLAN_REL_PATH" in
+    docs/superpowers/plans/*) ;;
+    *)
+      set_failure "InvalidCommandInput" "Plan path must live under docs/superpowers/plans/."
+      return 1
+      ;;
+  esac
+
+  plan_abs="$(plan_rel_to_abs "$PLAN_REL_PATH")"
+  if [[ ! -f "$plan_abs" ]]; then
+    set_failure "InvalidCommandInput" "Approved plan file does not exist."
+    return 1
+  fi
+
+  parse_plan_file "$plan_abs" || return 1
+
+  if [[ "$PLAN_WORKFLOW_STATE" != "Engineering Approved" ]]; then
+    set_failure "PlanNotExecutionReady" "Plan is not Engineering Approved."
+    return 1
+  fi
+  if [[ -z "$PLAN_REVISION" ]]; then
+    set_failure "PlanNotExecutionReady" "Plan Revision header is missing or malformed."
+    return 1
+  fi
+  case "$PLAN_EXECUTION_MODE" in
+    none|superpowers:executing-plans|superpowers:subagent-driven-development) ;;
+    *)
+      set_failure "PlanNotExecutionReady" "Execution Mode header is missing, malformed, or out of range."
+      return 1
+      ;;
+  esac
+  if [[ -z "$PLAN_SOURCE_SPEC" || -z "$PLAN_SOURCE_SPEC_REVISION" ]]; then
+    set_failure "PlanNotExecutionReady" "Approved plan source spec headers are missing or malformed."
+    return 1
+  fi
+  PLAN_LAST_REVIEWED_BY="$(normalize_whitespace "$PLAN_LAST_REVIEWED_BY")"
+  case "$PLAN_LAST_REVIEWED_BY" in
+    writing-plans|plan-eng-review) ;;
+    *)
+      set_failure "PlanNotExecutionReady" "Approved plan Last Reviewed By header is missing or malformed."
+      return 1
+      ;;
+  esac
+
+  validate_source_spec "$PLAN_SOURCE_SPEC" "$PLAN_SOURCE_SPEC_REVISION" || return 1
+
+  evidence_rel="$(derive_evidence_rel_path "$PLAN_REL_PATH" "$PLAN_REVISION")"
+  evidence_abs="$(plan_rel_to_abs "$evidence_rel")"
+  EVIDENCE_REL_PATH="$evidence_rel"
+  EVIDENCE_ABS_PATH="$evidence_abs"
+  parse_evidence_file "$evidence_abs" "$PLAN_REL_PATH" "$PLAN_REVISION" || return 1
+  parse_evidence_attempts || return 1
+
+  if [[ "$PLAN_EXECUTION_MODE" == "none" ]]; then
+    if (( EVIDENCE_ATTEMPT_COUNT > 0 )); then
+      set_failure "MalformedExecutionState" "Execution evidence history cannot exist while Execution Mode is none."
+      return 1
+    fi
+    if (( PLAN_CHECKED_COUNT > 0 || PLAN_NOTE_COUNT > 0 )); then
+      set_failure "PlanNotExecutionReady" "Newly approved plan revisions must start execution-clean."
+      return 1
+    fi
+  fi
+
+  if [[ "$PLAN_EXECUTION_MODE" == "none" ]]; then
+    EXECUTION_STARTED="no"
+  else
+    EXECUTION_STARTED="yes"
+  fi
+  if (( PLAN_CHECKED_COUNT > 0 || PLAN_NOTE_COUNT > 0 || EVIDENCE_ATTEMPT_COUNT > 0 )); then
+    EXECUTION_STARTED="yes"
+  fi
+
+  EXECUTION_FINGERPRINT="$(compute_execution_fingerprint "$plan_abs" "$evidence_abs")"
+  PLAN_ABS_PATH="$plan_abs"
+  return 0
+}
+
+print_status_json() {
+  printf '{'
+  printf '"plan_revision":%s,' "$PLAN_REVISION"
+  printf '"execution_mode":"%s",' "$(json_escape "$PLAN_EXECUTION_MODE")"
+  printf '"execution_fingerprint":"%s",' "$(json_escape "$EXECUTION_FINGERPRINT")"
+  printf '"evidence_path":"%s",' "$(json_escape "$EVIDENCE_REL_PATH")"
+  printf '"execution_started":"%s",' "$(json_escape "$EXECUTION_STARTED")"
+  printf '"active_task":%s,' "$PLAN_ACTIVE_TASK"
+  printf '"active_step":%s,' "$PLAN_ACTIVE_STEP"
+  printf '"blocking_task":%s,' "$PLAN_BLOCKING_TASK"
+  printf '"blocking_step":%s,' "$PLAN_BLOCKING_STEP"
+  printf '"resume_task":%s,' "$PLAN_RESUME_TASK"
+  printf '"resume_step":%s' "$PLAN_RESUME_STEP"
+  printf '}\n'
+}
+
+run_status_with_plan() {
+  local plan_rel="$1"
+  load_execution_state "$plan_rel" || {
+    emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"
+    return 1
+  }
+  print_status_json
+}
+
+cmd_status() {
+  local plan_rel=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --plan)
+        [[ $# -ge 2 ]] || { emit_error "InvalidCommandInput" "status requires --plan."; return 1; }
+        plan_rel="$2"
+        shift 2
+        ;;
+      *)
+        emit_error "InvalidCommandInput" "Unknown status argument '$1'."
+        return 1
+        ;;
+    esac
+  done
+
+  [[ -n "$plan_rel" ]] || { emit_error "InvalidCommandInput" "status requires --plan."; return 1; }
+  run_status_with_plan "$plan_rel"
+}
+
+cmd_recommend() {
+  local plan_rel=""
+  local isolated_agents="unknown"
+  local session_intent="unknown"
+  local workspace_prepared="unknown"
+  local tasks_independent="unknown"
+  local same_session_viable="unknown"
+  local recommended_skill reason
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --plan)
+        [[ $# -ge 2 ]] || { emit_error "InvalidCommandInput" "recommend requires --plan."; return 1; }
+        plan_rel="$2"
+        shift 2
+        ;;
+      --isolated-agents)
+        [[ $# -ge 2 ]] || { emit_error "InvalidCommandInput" "recommend requires a value for --isolated-agents."; return 1; }
+        case "$2" in
+          available) isolated_agents="yes" ;;
+          unavailable) isolated_agents="no" ;;
+          *) emit_error "InvalidCommandInput" "isolated-agents must be available or unavailable."; return 1 ;;
+        esac
+        shift 2
+        ;;
+      --session-intent)
+        [[ $# -ge 2 ]] || { emit_error "InvalidCommandInput" "recommend requires a value for --session-intent."; return 1; }
+        case "$2" in
+          stay|separate|unknown) session_intent="$2" ;;
+          *) emit_error "InvalidCommandInput" "session-intent must be stay, separate, or unknown."; return 1 ;;
+        esac
+        shift 2
+        ;;
+      --workspace-prepared)
+        [[ $# -ge 2 ]] || { emit_error "InvalidCommandInput" "recommend requires a value for --workspace-prepared."; return 1; }
+        case "$2" in
+          yes|no|unknown) workspace_prepared="$2" ;;
+          *) emit_error "InvalidCommandInput" "workspace-prepared must be yes, no, or unknown."; return 1 ;;
+        esac
+        shift 2
+        ;;
+      *)
+        emit_error "InvalidCommandInput" "Unknown recommend argument '$1'."
+        return 1
+        ;;
+    esac
+  done
+
+  [[ -n "$plan_rel" ]] || { emit_error "InvalidCommandInput" "recommend requires --plan."; return 1; }
+
+  load_execution_state "$plan_rel" || {
+    emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"
+    return 1
+  }
+  if [[ "$EXECUTION_STARTED" == "yes" ]]; then
+    emit_error "RecommendAfterExecutionStart" "recommend is only valid before execution has started for this plan revision."
+    return 1
+  fi
+  tasks_independent="$(derive_tasks_independent_from_plan "$PLAN_ABS_PATH")"
+
+  if [[ "$session_intent" == "stay" && "$workspace_prepared" == "yes" ]]; then
+    same_session_viable="yes"
+  elif [[ "$session_intent" == "separate" || "$workspace_prepared" == "no" ]]; then
+    same_session_viable="no"
+  else
+    same_session_viable="unknown"
+  fi
+
+  if [[ "$tasks_independent" == "yes" && "$isolated_agents" == "yes" && "$same_session_viable" == "yes" ]]; then
+    recommended_skill="superpowers:subagent-driven-development"
+    reason="Independent tasks and same-session isolated execution are viable."
+  else
+    recommended_skill="superpowers:executing-plans"
+    reason="Defaulting conservatively because the available signals do not positively justify isolated same-session execution."
+  fi
+
+  printf '{'
+  printf '"recommended_skill":"%s",' "$(json_escape "$recommended_skill")"
+  printf '"reason":"%s",' "$(json_escape "$reason")"
+  printf '"decision_flags":{'
+  printf '"tasks_independent":"%s",' "$(json_escape "$tasks_independent")"
+  printf '"isolated_agents_available":"%s",' "$(json_escape "$isolated_agents")"
+  printf '"session_intent":"%s",' "$(json_escape "$session_intent")"
+  printf '"workspace_prepared":"%s",' "$(json_escape "$workspace_prepared")"
+  printf '"same_session_viable":"%s"' "$(json_escape "$same_session_viable")"
+  printf '}}\n'
+}
+
+cmd_begin() {
+  local plan_rel="" task="" step="" execution_mode_input="" expected_fp=""
+  local step_index summary
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --plan) plan_rel="${2:-}"; shift 2 ;;
+      --task) task="${2:-}"; shift 2 ;;
+      --step) step="${2:-}"; shift 2 ;;
+      --execution-mode) execution_mode_input="${2:-}"; shift 2 ;;
+      --expect-execution-fingerprint) expected_fp="${2:-}"; shift 2 ;;
+      *) emit_error "InvalidCommandInput" "Unknown begin argument '$1'."; return 1 ;;
+    esac
+  done
+
+  [[ -n "$plan_rel" && -n "$task" && -n "$step" && -n "$expected_fp" ]] || { emit_error "InvalidCommandInput" "begin requires --plan, --task, --step, and --expect-execution-fingerprint."; return 1; }
+  load_execution_state "$plan_rel" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  assert_expected_fingerprint "$expected_fp" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  find_step_or_fail "$task" "$step" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  step_index="$STEP_INDEX_FOUND"
+
+  if [[ "${STEP_CHECKED[$step_index]}" == "x" ]]; then
+    emit_error "InvalidStepTransition" "begin may not target a completed step."
+    return 1
+  fi
+
+  case "$PLAN_EXECUTION_MODE" in
+    none)
+      case "$execution_mode_input" in
+        superpowers:executing-plans|superpowers:subagent-driven-development) PLAN_EXECUTION_MODE="$execution_mode_input" ;;
+        *) emit_error "InvalidExecutionMode" "The first begin for a plan revision must supply a valid execution mode."; return 1 ;;
+      esac
+      ;;
+    *)
+      if [[ -n "$execution_mode_input" && "$execution_mode_input" != "$PLAN_EXECUTION_MODE" ]]; then
+        emit_error "InvalidExecutionMode" "begin may not change the persisted execution mode."
+        return 1
+      fi
+      ;;
+  esac
+
+  if [[ "$PLAN_ACTIVE_TASK" != "null" || "$PLAN_BLOCKING_TASK" != "null" || "$PLAN_RESUME_TASK" != "null" ]]; then
+    if [[ "$PLAN_ACTIVE_TASK" == "$task" && "$PLAN_ACTIVE_STEP" == "$step" ]]; then
+      print_status_json
+      return 0
+    fi
+    if [[ "$PLAN_BLOCKING_TASK" != "null" && ( "$PLAN_BLOCKING_TASK" != "$task" || "$PLAN_BLOCKING_STEP" != "$step" ) ]]; then
+      emit_error "InvalidStepTransition" "Blocked work must resume on the same step."
+      return 1
+    fi
+    if [[ "$PLAN_RESUME_TASK" != "null" && "$PLAN_ACTIVE_TASK" == "null" && "$PLAN_BLOCKING_TASK" == "null" && ( "$PLAN_RESUME_TASK" != "$task" || "$PLAN_RESUME_STEP" != "$step" ) ]]; then
+      emit_error "InvalidStepTransition" "Interrupted work must resume on the same step."
+      return 1
+    fi
+    if [[ "$PLAN_ACTIVE_TASK" != "null" && ( "$PLAN_ACTIVE_TASK" != "$task" || "$PLAN_ACTIVE_STEP" != "$step" ) ]]; then
+      emit_error "InvalidStepTransition" "A different step is already active."
+      return 1
+    fi
+    if [[ "$PLAN_BLOCKING_TASK" != "null" && "$PLAN_BLOCKING_TASK" == "$task" && "$PLAN_BLOCKING_STEP" == "$step" ]]; then
+      :
+    elif [[ "$PLAN_RESUME_TASK" != "null" && "$PLAN_RESUME_TASK" == "$task" && "$PLAN_RESUME_STEP" == "$step" ]]; then
+      :
+    elif [[ "$PLAN_ACTIVE_TASK" != "$task" || "$PLAN_ACTIVE_STEP" != "$step" ]]; then
+      emit_error "InvalidStepTransition" "begin may not bypass existing blocked or interrupted work."
+      return 1
+    fi
+  fi
+
+  summary="$(active_summary_from_title "${STEP_TITLES[$step_index]}")"
+  STEP_NOTE_STATES[$step_index]="Active"
+  STEP_NOTE_SUMMARIES[$step_index]="$summary"
+
+  commit_plan_only "begin" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  run_status_with_plan "$PLAN_REL_PATH"
+}
+
+cmd_transfer() {
+  local plan_rel="" repair_task="" repair_step="" source="" reason="" expected_fp=""
+  local active_index repair_index latest_attempt repair_summary parked_summary normalized_reason=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --plan) plan_rel="${2:-}"; shift 2 ;;
+      --repair-task) repair_task="${2:-}"; shift 2 ;;
+      --repair-step) repair_step="${2:-}"; shift 2 ;;
+      --source) source="${2:-}"; shift 2 ;;
+      --reason) reason="${2:-}"; shift 2 ;;
+      --expect-execution-fingerprint) expected_fp="${2:-}"; shift 2 ;;
+      *) emit_error "InvalidCommandInput" "Unknown transfer argument '$1'."; return 1 ;;
+    esac
+  done
+
+  [[ -n "$plan_rel" && -n "$repair_task" && -n "$repair_step" && -n "$source" && -n "$reason" && -n "$expected_fp" ]] || {
+    emit_error "InvalidCommandInput" "transfer requires --plan, --repair-task, --repair-step, --source, --reason, and --expect-execution-fingerprint."
+    return 1
+  }
+
+  validate_required_normalized_text \
+    "$reason" \
+    "Transfer reasons may not be blank after whitespace normalization." || {
+    emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"
+    return 1
+  }
+  normalized_reason="$REQUIRED_TEXT_NORMALIZED"
+
+  load_execution_state "$plan_rel" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  assert_expected_fingerprint "$expected_fp" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  validate_execution_mode_source "$source" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  parse_evidence_attempts || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+
+  [[ "$PLAN_ACTIVE_TASK" != "null" ]] || { emit_error "InvalidStepTransition" "transfer requires a current active step."; return 1; }
+  [[ "$PLAN_RESUME_TASK" == "null" ]] || { emit_error "InvalidStepTransition" "transfer may not create a second parked interrupted step."; return 1; }
+
+  find_step_or_fail "$PLAN_ACTIVE_TASK" "$PLAN_ACTIVE_STEP" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  active_index="$STEP_INDEX_FOUND"
+  find_step_or_fail "$repair_task" "$repair_step" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  repair_index="$STEP_INDEX_FOUND"
+
+  if [[ "${STEP_CHECKED[$repair_index]}" != "x" ]]; then
+    emit_error "InvalidStepTransition" "transfer may only reopen a currently completed repair step."
+    return 1
+  fi
+
+  if ! latest_attempt="$(find_latest_attempt_index "$repair_task" "$repair_step" 2>/dev/null)"; then
+    emit_error "EvidenceWriteFailed" "transfer could not find evidence to invalidate for the repair step."
+    return 1
+  fi
+
+  invalidate_attempt "$latest_attempt" "$source" "$normalized_reason"
+
+  parked_summary="Parked for repair of Task ${repair_task} Step ${repair_step}"
+  STEP_NOTE_STATES[$active_index]="Interrupted"
+  STEP_NOTE_SUMMARIES[$active_index]="$parked_summary"
+  STEP_CHECKED[$repair_index]=' '
+  repair_summary="$(active_summary_from_title "${STEP_TITLES[$repair_index]}")"
+  STEP_NOTE_STATES[$repair_index]="Active"
+  STEP_NOTE_SUMMARIES[$repair_index]="$repair_summary"
+
+  commit_plan_and_evidence "transfer" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  run_status_with_plan "$PLAN_REL_PATH"
+}
+
+cmd_complete() {
+  local plan_rel="" task="" step="" source="" claim="" verify_command="" verify_result="" manual_summary="" expected_fp=""
+  local files=()
+  local step_index verification_entry files_entry normalized_claim="" normalized_verify_command="" normalized_verify_result="" normalized_manual_summary=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --plan) plan_rel="${2:-}"; shift 2 ;;
+      --task) task="${2:-}"; shift 2 ;;
+      --step) step="${2:-}"; shift 2 ;;
+      --source) source="${2:-}"; shift 2 ;;
+      --claim) claim="${2:-}"; shift 2 ;;
+      --file) files+=("${2:-}"); shift 2 ;;
+      --verify-command) verify_command="${2:-}"; shift 2 ;;
+      --verify-result) verify_result="${2:-}"; shift 2 ;;
+      --manual-verify-summary) manual_summary="${2:-}"; shift 2 ;;
+      --expect-execution-fingerprint) expected_fp="${2:-}"; shift 2 ;;
+      *) emit_error "InvalidCommandInput" "Unknown complete argument '$1'."; return 1 ;;
+    esac
+  done
+
+  [[ -n "$plan_rel" && -n "$task" && -n "$step" && -n "$source" && -n "$claim" && -n "$expected_fp" ]] || {
+    emit_error "InvalidCommandInput" "complete requires --plan, --task, --step, --source, --claim, and --expect-execution-fingerprint."
+    return 1
+  }
+
+  validate_required_normalized_text \
+    "$claim" \
+    "Completion claims may not be blank after whitespace normalization." || {
+    emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"
+    return 1
+  }
+  normalized_claim="$REQUIRED_TEXT_NORMALIZED"
+
+  if [[ -n "$manual_summary" && ( -n "$verify_command" || -n "$verify_result" ) ]]; then
+    emit_error "InvalidCommandInput" "complete accepts exactly one verification mode."
+    return 1
+  fi
+  if [[ -n "$verify_command" || -n "$verify_result" ]]; then
+    if [[ -z "$verify_command" || -z "$verify_result" ]]; then
+      emit_error "InvalidCommandInput" "Command verification requires both --verify-command and --verify-result."
+      return 1
+    fi
+    validate_required_normalized_text \
+      "$verify_command" \
+      "Verification commands may not be blank after whitespace normalization." || {
+      emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"
+      return 1
+    }
+    normalized_verify_command="$REQUIRED_TEXT_NORMALIZED"
+    validate_required_normalized_text \
+      "$verify_result" \
+      "Verification results may not be blank after whitespace normalization." || {
+      emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"
+      return 1
+    }
+    normalized_verify_result="$REQUIRED_TEXT_NORMALIZED"
+    verification_entry="\`$normalized_verify_command\` -> $normalized_verify_result"
+  elif [[ -n "$manual_summary" ]]; then
+    validate_required_normalized_text \
+      "$manual_summary" \
+      "Manual verification summaries may not be blank after whitespace normalization." || {
+      emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"
+      return 1
+    }
+    normalized_manual_summary="$REQUIRED_TEXT_NORMALIZED"
+    verification_entry="Manual inspection only: $normalized_manual_summary"
+  else
+    emit_error "InvalidCommandInput" "complete requires exactly one verification mode."
+    return 1
+  fi
+
+  load_execution_state "$plan_rel" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  assert_expected_fingerprint "$expected_fp" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  validate_execution_mode_source "$source" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  parse_evidence_attempts || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  find_step_or_fail "$task" "$step" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  step_index="$STEP_INDEX_FOUND"
+
+  if [[ "$PLAN_ACTIVE_TASK" != "$task" || "$PLAN_ACTIVE_STEP" != "$step" ]]; then
+    emit_error "InvalidStepTransition" "complete may target only the current active step."
+    return 1
+  fi
+  if [[ "${STEP_CHECKED[$step_index]}" == "x" ]]; then
+    emit_error "InvalidStepTransition" "complete may not directly refresh an already checked step."
+    return 1
+  fi
+
+  if (( ${#files[@]} > 0 )); then
+    build_files_entry "${files[@]}" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  else
+    build_files_entry || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  fi
+  files_entry="$FILES_ENTRY"
+
+  STEP_CHECKED[$step_index]='x'
+  STEP_NOTE_STATES[$step_index]=""
+  STEP_NOTE_SUMMARIES[$step_index]=""
+  append_attempt "$task" "$step" "$source" "$normalized_claim" "$files_entry" "$verification_entry"
+
+  commit_plan_and_evidence "complete" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  run_status_with_plan "$PLAN_REL_PATH"
+}
+
+cmd_note() {
+  local plan_rel="" task="" step="" state="" message="" expected_fp=""
+  local step_index
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --plan) plan_rel="${2:-}"; shift 2 ;;
+      --task) task="${2:-}"; shift 2 ;;
+      --step) step="${2:-}"; shift 2 ;;
+      --state) state="${2:-}"; shift 2 ;;
+      --message) message="${2:-}"; shift 2 ;;
+      --expect-execution-fingerprint) expected_fp="${2:-}"; shift 2 ;;
+      *) emit_error "InvalidCommandInput" "Unknown note argument '$1'."; return 1 ;;
+    esac
+  done
+
+  [[ -n "$plan_rel" && -n "$task" && -n "$step" && -n "$state" && -n "$message" && -n "$expected_fp" ]] || {
+    emit_error "InvalidCommandInput" "note requires --plan, --task, --step, --state, --message, and --expect-execution-fingerprint."
+    return 1
+  }
+  case "$state" in
+    interrupted|blocked) ;;
+    *) emit_error "InvalidCommandInput" "note state must be interrupted or blocked."; return 1 ;;
+  esac
+
+  validate_note_message "$message" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  load_execution_state "$plan_rel" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  assert_expected_fingerprint "$expected_fp" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  find_step_or_fail "$task" "$step" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  step_index="$STEP_INDEX_FOUND"
+
+  if [[ "$PLAN_ACTIVE_TASK" == "$task" && "$PLAN_ACTIVE_STEP" == "$step" ]]; then
+    if [[ "$state" == "interrupted" && "$PLAN_RESUME_TASK" != "null" ]]; then
+      emit_error "InvalidStepTransition" "The current repair step cannot become interrupted while a parked step already exists."
+      return 1
+    fi
+  elif [[ "$state" == "blocked" && "$PLAN_ACTIVE_TASK" == "null" && "$PLAN_RESUME_TASK" == "$task" && "$PLAN_RESUME_STEP" == "$step" ]]; then
+    :
+  else
+    emit_error "InvalidStepTransition" "note may target only the current active step, except blocked follow-up after reopen."
+    return 1
+  fi
+
+  STEP_NOTE_STATES[$step_index]="$([[ "$state" == "interrupted" ]] && printf 'Interrupted' || printf 'Blocked')"
+  STEP_NOTE_SUMMARIES[$step_index]="$NOTE_MESSAGE_NORMALIZED"
+
+  commit_plan_only "note" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  run_status_with_plan "$PLAN_REL_PATH"
+}
+
+cmd_reopen() {
+  local plan_rel="" task="" step="" source="" reason="" expected_fp=""
+  local step_index latest_attempt normalized_reason=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --plan) plan_rel="${2:-}"; shift 2 ;;
+      --task) task="${2:-}"; shift 2 ;;
+      --step) step="${2:-}"; shift 2 ;;
+      --source) source="${2:-}"; shift 2 ;;
+      --reason) reason="${2:-}"; shift 2 ;;
+      --expect-execution-fingerprint) expected_fp="${2:-}"; shift 2 ;;
+      *) emit_error "InvalidCommandInput" "Unknown reopen argument '$1'."; return 1 ;;
+    esac
+  done
+
+  [[ -n "$plan_rel" && -n "$task" && -n "$step" && -n "$source" && -n "$reason" && -n "$expected_fp" ]] || {
+    emit_error "InvalidCommandInput" "reopen requires --plan, --task, --step, --source, --reason, and --expect-execution-fingerprint."
+    return 1
+  }
+
+  validate_required_normalized_text \
+    "$reason" \
+    "Reopen reasons may not be blank after whitespace normalization." || {
+    emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"
+    return 1
+  }
+  normalized_reason="$REQUIRED_TEXT_NORMALIZED"
+
+  load_execution_state "$plan_rel" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  assert_expected_fingerprint "$expected_fp" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  validate_execution_mode_source "$source" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  parse_evidence_attempts || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  find_step_or_fail "$task" "$step" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  step_index="$STEP_INDEX_FOUND"
+
+  if [[ "${STEP_CHECKED[$step_index]}" != "x" ]]; then
+    emit_error "InvalidStepTransition" "reopen may target only a currently completed step."
+    return 1
+  fi
+  if ! latest_attempt="$(find_latest_attempt_index "$task" "$step" 2>/dev/null)"; then
+    emit_error "EvidenceWriteFailed" "reopen could not find evidence to invalidate for the target step."
+    return 1
+  fi
+
+  invalidate_attempt "$latest_attempt" "$source" "$normalized_reason"
+  STEP_CHECKED[$step_index]=' '
+  STEP_NOTE_STATES[$step_index]="Interrupted"
+  STEP_NOTE_SUMMARIES[$step_index]="$(reopen_note_summary "$normalized_reason")"
+
+  commit_plan_and_evidence "reopen" || { emit_error "$LOAD_ERROR_CLASS" "$LOAD_ERROR_MESSAGE"; return 1; }
+  run_status_with_plan "$PLAN_REL_PATH"
+}
+
+main() {
+  local command="${1:-}"
+  case "$command" in
+    status) shift; cmd_status "$@" ;;
+    recommend) shift; cmd_recommend "$@" ;;
+    begin) shift; cmd_begin "$@" ;;
+    transfer) shift; cmd_transfer "$@" ;;
+    complete) shift; cmd_complete "$@" ;;
+    note) shift; cmd_note "$@" ;;
+    reopen) shift; cmd_reopen "$@" ;;
+    ''|-h|--help|help)
+      usage
+      exit 1
+      ;;
+    *)
+      emit_error "InvalidCommandInput" "Unknown subcommand '$command'."
+      return 1
+      ;;
+  esac
+}
+
+main "$@"

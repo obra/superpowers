@@ -117,15 +117,24 @@ Load plan, review critically, execute all tasks in a separate session, request f
    - stop if merge conflicts, unresolved index entries, rebase, or cherry-pick state is present
    - if the working tree is dirty, stop and ask the user to confirm the workspace is intentionally prepared
 7. Do not auto-clean the workspace and do not auto-create a worktree.
-8. If preflight passes, review the plan critically for execution concerns and then track the work in your platform's task checklist.
+8. If preflight passes, review the plan critically for execution concerns and use the approved plan checklist as the execution progress record.
+
+## Helper-Owned Execution State
+
+- calls `status --plan ...` during preflight
+- calls `begin` before starting work on a plan step
+- calls `complete` after each completed step
+- calls `note` when work is interrupted or blocked
+- On the first `begin` for a revision whose plan still says `**Execution Mode:** none`, initialize execution with `--execution-mode superpowers:executing-plans`
+- The approved plan checklist is the execution progress record; do not create or maintain a separate authoritative task tracker.
 
 ### Step 2: Execute Tasks
 
 For each task:
-1. Mark as in_progress
-2. Follow each step exactly (plan has bite-sized steps)
-3. Run verifications as specified
-4. Mark as completed
+1. Use the approved plan checklist as the visible progress record for the task's steps.
+2. Follow each step exactly (plan has bite-sized steps).
+3. Run verifications as specified.
+4. Call `complete` as soon as a step is truly satisfied so the plan checkbox flips to `- [x]`.
 
 ### Step 3: Request Final Review
 

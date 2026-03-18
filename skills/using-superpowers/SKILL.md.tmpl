@@ -122,6 +122,20 @@ For feature requests, bugfixes that materially change Superpowers product or wor
 
 Do NOT jump from brainstorming straight to implementation. For workflow-routed work, every stage owns the handoff into the next one.
 
+### Helper-first routing
+
+First, if `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status` is available, call `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status status --refresh`.
+
+- If the JSON result contains a non-empty `next_skill`, use that route.
+- If the JSON result reports `status` `implementation_ready`, proceed to the normal execution handoff using the exact approved plan path. Choose between `superpowers:subagent-driven-development` and `superpowers:executing-plans` through the helper-backed execution recommendation contract, not a top-level isolated-agent shortcut.
+- Only fall back to manual artifact inspection if the helper itself is unavailable or fails.
+
+When the helper succeeds, route using its JSON result and do not re-derive state manually.
+
+### Manual fallback routing
+
+If the helper is unavailable or fails, inspect artifacts manually using the rules below.
+
 Inspect `docs/superpowers/specs/` and `docs/superpowers/plans/` for the newest relevant artifacts, then parse these exact-match header lines:
 
 - Spec state: `^\*\*Workflow State:\*\* (Draft|CEO Approved)$`
@@ -139,7 +153,7 @@ Routing rules:
 3. Spec is `CEO Approved` and no relevant plan exists: invoke `superpowers:writing-plans`.
 4. Plan exists but is `Draft` or malformed: invoke `superpowers:plan-eng-review`.
 5. Plan is `Engineering Approved` but its `Source Spec Revision` does not match the latest approved spec revision: invoke `superpowers:writing-plans`.
-6. Plan is `Engineering Approved` and matches the latest approved spec revision: proceed to implementation through `superpowers:subagent-driven-development` or `superpowers:executing-plans`.
+6. Plan is `Engineering Approved` and matches the latest approved spec revision: proceed to implementation through the normal execution handoff for that approved plan path.
 7. If artifacts are ambiguous or incomplete, route to the earlier safe stage instead of skipping ahead.
 
 ## User Instructions
