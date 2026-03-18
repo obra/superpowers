@@ -1,5 +1,5 @@
 ---
-name: using-superpowers
+name: using-ultrapowers
 description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
 ---
 
@@ -17,10 +17,10 @@ This is not negotiable. This is not optional. You cannot rationalize your way ou
 
 ## Instruction Priority
 
-Superpowers skills override default system prompt behavior, but **user instructions always take precedence**:
+Ultrapowers skills override default system prompt behavior, but **user instructions always take precedence**:
 
 1. **User's explicit instructions** (CLAUDE.md, GEMINI.md, AGENTS.md, direct requests) — highest priority
-2. **Superpowers skills** — override default system behavior where they conflict
+2. **Ultrapowers skills** — override default system behavior where they conflict
 3. **Default system prompt** — lowest priority
 
 If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "always use TDD," follow the user's instructions. The user is in control.
@@ -97,10 +97,24 @@ These thoughts mean STOP—you're rationalizing:
 When multiple skills could apply, use this order:
 
 1. **Process skills first** (brainstorming, debugging) - these determine HOW to approach the task
-2. **Implementation skills second** (frontend-design, mcp-builder) - these guide execution
+2. **Research pipeline second** (deep-research → skills-audit → skills-creation) - ensures current knowledge
+3. **Implementation skills third** (writing-plans, TDD, mcp-builder) - these guide execution
 
-"Let's build X" → brainstorming first, then implementation skills.
+"Let's build X" → brainstorming → research pipeline → implementation skills.
 "Fix this bug" → debugging first, then domain-specific skills.
+
+## The Research Pipeline
+
+After brainstorming completes, the following chain runs automatically:
+
+```
+brainstorming → deep-research → skills-audit → skills-creation → writing-plans
+```
+
+- **deep-research**: Runs 100% of the time. Cannot be audited (new knowledge can't be validated against old knowledge).
+- **skills-audit**: Checks all supporting skills against research findings.
+- **skills-creation**: Creates/updates supporting skills to fill gaps.
+- **Every other step is audited** against the plan and skills for compliance.
 
 ## Skill Types
 

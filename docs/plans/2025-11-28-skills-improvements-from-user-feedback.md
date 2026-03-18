@@ -2,7 +2,7 @@
 
 **Date:** 2025-11-28
 **Status:** Draft
-**Source:** Two Claude instances using superpowers in real development scenarios
+**Source:** Two Claude instances using ultrapowers in real development scenarios
 
 ---
 
@@ -507,7 +507,7 @@ Directly addresses the failure pattern from feedback.
 BEFORE writing any tests:
 
 1. Read testing-anti-patterns skill:
-   Use Skill tool: superpowers:testing-anti-patterns
+   Use Skill tool: ultrapowers:testing-anti-patterns
 
 2. Apply gate functions from that skill when:
    - Writing mocks

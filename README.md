@@ -1,187 +1,100 @@
-# Superpowers
+# Ultrapowers
 
-Superpowers is a complete software development workflow for your coding agents, built on top of a set of composable "skills" and some initial instructions that make sure your agent uses them.
+Ultrapowers is a research-driven software development workflow for coding agents. It extends [Superpowers](https://github.com/obra/superpowers) by Jesse Vincent with a **research-first pipeline** that ensures agents always work with current, verified knowledge before writing code.
 
-## How it works
+## Attribution
 
-It starts from the moment you fire up your coding agent. As soon as it sees that you're building something, it *doesn't* just jump into trying to write code. Instead, it steps back and asks you what you're really trying to do. 
+Ultrapowers is a fork of [Superpowers](https://github.com/obra/superpowers) by [Jesse Vincent (obra)](https://blog.fsck.com) and the team at [Prime Radiant](https://primeradiant.com). The original Superpowers workflow is brilliant — Ultrapowers builds on top of it. If Superpowers has helped you, consider [sponsoring Jesse's work](https://github.com/sponsors/obra).
 
-Once it's teased a spec out of the conversation, it shows it to you in chunks short enough to actually read and digest. 
+Original license: MIT (see LICENSE file).
 
-After you've signed off on the design, your agent puts together an implementation plan that's clear enough for an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing to follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY. 
+## What's Different from Superpowers
 
-Next up, once you say "go", it launches a *subagent-driven-development* process, having agents work through each engineering task, inspecting and reviewing their work, and continuing forward. It's not uncommon for Claude to be able to work autonomously for a couple hours at a time without deviating from the plan you put together.
+Ultrapowers adds a **research-driven knowledge pipeline** between brainstorming and implementation:
 
-There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Superpowers.
+```
+Brainstorming → Deep Research → Skills Audit → Skills Creation → Planning → Implementation
+```
 
+After the brainstorming phase gathers context and user answers, Ultrapowers:
 
-## Sponsorship
+1. **Deep Research** — researches the current state of the art for every unfamiliar technology or pattern involved. Uses context7, WebSearch, and documentation to capture what's current.
+2. **Skills Audit** — audits all available supporting skills (outside ultrapowers) against the research findings. Classifies each competency as Covered, Stale, Missing, or External.
+3. **Skills Creation** — creates new or updates existing supporting skills to fill gaps identified by the audit.
+4. **Audited Implementation** — every implementation step (except deep-research) is audited against the skills and plan for compliance.
 
-If Superpowers has helped you do stuff that makes money and you are so inclined, I'd greatly appreciate it if you'd consider [sponsoring my opensource work](https://github.com/sponsors/obra).
+The rest of the Superpowers workflow (writing-plans, TDD, subagent-driven-development, code-review, etc.) runs unchanged, with the addition that each step is audited for quality.
 
-Thanks! 
+## The Full Workflow
 
-- Jesse
+1. **brainstorming** — Refines ideas through questions, explores alternatives, presents design for validation.
+2. **deep-research** — Captures current state of the art for all technologies/patterns in the spec.
+3. **skills-audit** — Checks existing skills against research findings, identifies gaps.
+4. **skills-creation** — Creates/updates skills to fill audit gaps.
+5. **using-git-worktrees** — Creates isolated workspace on new branch.
+6. **writing-plans** — Breaks work into tasks with skill annotations on each step.
+7. **subagent-driven-development** or **executing-plans** — Dispatches agents per task with audited review.
+8. **test-driven-development** — RED-GREEN-REFACTOR enforced during implementation.
+9. **requesting-code-review** — Reviews against plan with audit checks.
+10. **finishing-a-development-branch** — Verifies tests, presents merge/PR options.
 
+## Skills Library
+
+**Research Pipeline** (new in Ultrapowers)
+- **deep-research** — State-of-the-art research before implementation
+- **skills-audit** — Gap analysis of existing skills vs. requirements
+- **skills-creation** — Create/update skills from research findings
+
+**Testing**
+- **test-driven-development** — RED-GREEN-REFACTOR cycle
+
+**Debugging**
+- **systematic-debugging** — 4-phase root cause process
+- **verification-before-completion** — Ensure it's actually fixed
+
+**Collaboration**
+- **brainstorming** — Socratic design refinement
+- **writing-plans** — Detailed implementation plans with skill annotations
+- **executing-plans** — Batch execution with checkpoints
+- **dispatching-parallel-agents** — Concurrent subagent workflows
+- **requesting-code-review** — Pre-review checklist
+- **receiving-code-review** — Responding to feedback
+- **using-git-worktrees** — Parallel development branches
+- **finishing-a-development-branch** — Merge/PR decision workflow
+- **subagent-driven-development** — Fast iteration with audited two-stage review
+
+**Meta**
+- **writing-skills** — Create new skills following best practices
+- **using-ultrapowers** — Introduction to the skills system
 
 ## Installation
 
-**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex and OpenCode require manual setup.
-
-### Claude Code Official Marketplace
-
-Superpowers is available via the [official Claude plugin marketplace](https://claude.com/plugins/superpowers)
-
-Install the plugin from Claude marketplace:
+### Claude Code
 
 ```bash
-/plugin install superpowers@claude-plugins-official
+/plugin install ultrapowers@ennio-datatide
 ```
 
-### Claude Code (via Plugin Marketplace)
-
-In Claude Code, register the marketplace first:
+### From Source
 
 ```bash
-/plugin marketplace add obra/superpowers-marketplace
+git clone https://github.com/ennio-datatide/ultrapowers.git
 ```
-
-Then install the plugin from this marketplace:
-
-```bash
-/plugin install superpowers@superpowers-marketplace
-```
-
-### Cursor (via Plugin Marketplace)
-
-In Cursor Agent chat, install from marketplace:
-
-```text
-/add-plugin superpowers
-```
-
-or search for "superpowers" in the plugin marketplace.
-
-### Codex
-
-Tell Codex:
-
-```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md
-```
-
-**Detailed docs:** [docs/README.codex.md](docs/README.codex.md)
-
-### OpenCode
-
-Tell OpenCode:
-
-```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
-```
-
-**Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
-
-### Gemini CLI
-
-```bash
-gemini extensions install https://github.com/obra/superpowers
-```
-
-To update:
-
-```bash
-gemini extensions update superpowers
-```
-
-### Verify Installation
-
-Start a new session in your chosen platform and ask for something that should trigger a skill (for example, "help me plan this feature" or "let's debug this issue"). The agent should automatically invoke the relevant superpowers skill.
-
-## The Basic Workflow
-
-1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
-
-2. **using-git-worktrees** - Activates after design approval. Creates isolated workspace on new branch, runs project setup, verifies clean test baseline.
-
-3. **writing-plans** - Activates with approved design. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
-
-4. **subagent-driven-development** or **executing-plans** - Activates with plan. Dispatches fresh subagent per task with two-stage review (spec compliance, then code quality), or executes in batches with human checkpoints.
-
-5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
-
-6. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
-
-7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
-
-**The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
-
-## What's Inside
-
-### Skills Library
-
-**Testing**
-- **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
-
-**Debugging**
-- **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
-- **verification-before-completion** - Ensure it's actually fixed
-
-**Collaboration** 
-- **brainstorming** - Socratic design refinement
-- **writing-plans** - Detailed implementation plans
-- **executing-plans** - Batch execution with checkpoints
-- **dispatching-parallel-agents** - Concurrent subagent workflows
-- **requesting-code-review** - Pre-review checklist
-- **receiving-code-review** - Responding to feedback
-- **using-git-worktrees** - Parallel development branches
-- **finishing-a-development-branch** - Merge/PR decision workflow
-- **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
-
-**Meta**
-- **writing-skills** - Create new skills following best practices (includes testing methodology)
-- **using-superpowers** - Introduction to the skills system
 
 ## Philosophy
 
-- **Test-Driven Development** - Write tests first, always
-- **Systematic over ad-hoc** - Process over guessing
-- **Complexity reduction** - Simplicity as primary goal
-- **Evidence over claims** - Verify before declaring success
-
-Read more: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
-
-## Contributing
-
-Skills live directly in this repository. To contribute:
-
-1. Fork the repository
-2. Create a branch for your skill
-3. Follow the `writing-skills` skill for creating and testing new skills
-4. Submit a PR
-
-See `skills/writing-skills/SKILL.md` for the complete guide.
-
-## Updating
-
-Skills update automatically when you update the plugin:
-
-```bash
-/plugin update superpowers
-```
+- **Research before implementation** — Never build on assumptions when you can verify
+- **Knowledge compounds** — Skills capture learning for future sessions
+- **Audit everything** — Every step (except research itself) gets audited
+- **Test-Driven Development** — Write tests first, always
+- **Systematic over ad-hoc** — Process over guessing
+- **Evidence over claims** — Verify before declaring success
 
 ## License
 
-MIT License - see LICENSE file for details
+MIT License — see LICENSE file for details.
 
-## Community
+## Credits
 
-Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of the folks at [Prime Radiant](https://primeradiant.com).
-
-For community support, questions, and sharing what you're building with Superpowers, join us on [Discord](https://discord.gg/Jd8Vphy9jq).
-
-## Support
-
-- **Discord**: [Join us on Discord](https://discord.gg/Jd8Vphy9jq)
-- **Issues**: https://github.com/obra/superpowers/issues
-- **Marketplace**: https://github.com/obra/superpowers-marketplace
+- **Original Superpowers** by [Jesse Vincent (obra)](https://github.com/obra) and [Prime Radiant](https://primeradiant.com)
+- **Ultrapowers fork** by [Datatide](https://github.com/ennio-datatide)

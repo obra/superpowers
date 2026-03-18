@@ -1,8 +1,8 @@
 # OpenCode Support Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use ultrapowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Add full superpowers support for OpenCode.ai with a native JavaScript plugin that shares core functionality with the existing Codex implementation.
+**Goal:** Add full ultrapowers support for OpenCode.ai with a native JavaScript plugin that shares core functionality with the existing Codex implementation.
 
 **Architecture:** Extract common skill discovery/parsing logic into `lib/skills-core.js`, refactor Codex to use it, then build OpenCode plugin using their native plugin API with custom tools and session hooks.
 
@@ -16,7 +16,7 @@
 
 **Files:**
 - Create: `lib/skills-core.js`
-- Reference: `.codex/superpowers-codex` (lines 40-74)
+- Reference: `.codex/ultrapowers-codex` (lines 40-74)
 
 **Step 1: Create lib/skills-core.js with extractFrontmatter function**
 
@@ -98,7 +98,7 @@ git commit -m "feat: create shared skills core module with frontmatter parser"
 
 **Files:**
 - Modify: `lib/skills-core.js`
-- Reference: `.codex/superpowers-codex` (lines 97-136)
+- Reference: `.codex/ultrapowers-codex` (lines 97-136)
 
 **Step 1: Add findSkillsInDir function to skills-core.js**
 
@@ -109,7 +109,7 @@ Add before `module.exports`:
  * Find all SKILL.md files in a directory recursively.
  *
  * @param {string} dir - Directory to search
- * @param {string} sourceType - 'personal' or 'superpowers' for namespacing
+ * @param {string} sourceType - 'personal' or 'ultrapowers' for namespacing
  * @param {number} maxDepth - Maximum recursion depth (default: 3)
  * @returns {Array<{path: string, name: string, description: string, sourceType: string}>}
  */
@@ -180,7 +180,7 @@ git commit -m "feat: add skill discovery function to core module"
 
 **Files:**
 - Modify: `lib/skills-core.js`
-- Reference: `.codex/superpowers-codex` (lines 212-280)
+- Reference: `.codex/ultrapowers-codex` (lines 212-280)
 
 **Step 1: Add resolveSkillPath function**
 
@@ -189,20 +189,20 @@ Add before `module.exports`:
 ```javascript
 /**
  * Resolve a skill name to its file path, handling shadowing
- * (personal skills override superpowers skills).
+ * (personal skills override ultrapowers skills).
  *
- * @param {string} skillName - Name like "superpowers:brainstorming" or "my-skill"
- * @param {string} superpowersDir - Path to superpowers skills directory
+ * @param {string} skillName - Name like "ultrapowers:brainstorming" or "my-skill"
+ * @param {string} ultrapowersDir - Path to ultrapowers skills directory
  * @param {string} personalDir - Path to personal skills directory
  * @returns {{skillFile: string, sourceType: string, skillPath: string} | null}
  */
-function resolveSkillPath(skillName, superpowersDir, personalDir) {
-    // Strip superpowers: prefix if present
-    const forceSuperpowers = skillName.startsWith('superpowers:');
-    const actualSkillName = forceSuperpowers ? skillName.replace(/^superpowers:/, '') : skillName;
+function resolveSkillPath(skillName, ultrapowersDir, personalDir) {
+    // Strip ultrapowers: prefix if present
+    const forceUltrapowers = skillName.startsWith('ultrapowers:');
+    const actualSkillName = forceUltrapowers ? skillName.replace(/^ultrapowers:/, '') : skillName;
 
-    // Try personal skills first (unless explicitly superpowers:)
-    if (!forceSuperpowers && personalDir) {
+    // Try personal skills first (unless explicitly ultrapowers:)
+    if (!forceUltrapowers && personalDir) {
         const personalPath = path.join(personalDir, actualSkillName);
         const personalSkillFile = path.join(personalPath, 'SKILL.md');
         if (fs.existsSync(personalSkillFile)) {
@@ -214,14 +214,14 @@ function resolveSkillPath(skillName, superpowersDir, personalDir) {
         }
     }
 
-    // Try superpowers skills
-    if (superpowersDir) {
-        const superpowersPath = path.join(superpowersDir, actualSkillName);
-        const superpowersSkillFile = path.join(superpowersPath, 'SKILL.md');
-        if (fs.existsSync(superpowersSkillFile)) {
+    // Try ultrapowers skills
+    if (ultrapowersDir) {
+        const ultrapowersPath = path.join(ultrapowersDir, actualSkillName);
+        const ultrapowersSkillFile = path.join(ultrapowersPath, 'SKILL.md');
+        if (fs.existsSync(ultrapowersSkillFile)) {
             return {
-                skillFile: superpowersSkillFile,
-                sourceType: 'superpowers',
+                skillFile: ultrapowersSkillFile,
+                sourceType: 'ultrapowers',
                 skillPath: actualSkillName
             };
         }
@@ -259,7 +259,7 @@ git commit -m "feat: add skill path resolution with shadowing support"
 
 **Files:**
 - Modify: `lib/skills-core.js`
-- Reference: `.codex/superpowers-codex` (lines 16-38)
+- Reference: `.codex/ultrapowers-codex` (lines 16-38)
 
 **Step 1: Add checkForUpdates function**
 
@@ -333,7 +333,7 @@ git commit -m "feat: add git update checking to core module"
 ### Task 5: Update Codex to Import Shared Core
 
 **Files:**
-- Modify: `.codex/superpowers-codex` (add import at top)
+- Modify: `.codex/ultrapowers-codex` (add import at top)
 
 **Step 1: Add import statement**
 
@@ -345,13 +345,13 @@ const skillsCore = require('../lib/skills-core');
 
 **Step 2: Verify syntax**
 
-Run: `node -c .codex/superpowers-codex`
+Run: `node -c .codex/ultrapowers-codex`
 Expected: No output
 
 **Step 3: Commit**
 
 ```bash
-git add .codex/superpowers-codex
+git add .codex/ultrapowers-codex
 git commit -m "refactor: import shared skills core in codex"
 ```
 
@@ -360,7 +360,7 @@ git commit -m "refactor: import shared skills core in codex"
 ### Task 6: Replace extractFrontmatter with Core Version
 
 **Files:**
-- Modify: `.codex/superpowers-codex` (lines 40-74)
+- Modify: `.codex/ultrapowers-codex` (lines 40-74)
 
 **Step 1: Remove local extractFrontmatter function**
 
@@ -374,13 +374,13 @@ Affected lines approximately: 90, 310
 
 **Step 3: Verify script still works**
 
-Run: `.codex/superpowers-codex find-skills | head -20`
+Run: `.codex/ultrapowers-codex find-skills | head -20`
 Expected: Shows list of skills
 
 **Step 4: Commit**
 
 ```bash
-git add .codex/superpowers-codex
+git add .codex/ultrapowers-codex
 git commit -m "refactor: use shared extractFrontmatter in codex"
 ```
 
@@ -389,7 +389,7 @@ git commit -m "refactor: use shared extractFrontmatter in codex"
 ### Task 7: Replace findSkillsInDir with Core Version
 
 **Files:**
-- Modify: `.codex/superpowers-codex` (lines 97-136, approximately)
+- Modify: `.codex/ultrapowers-codex` (lines 97-136, approximately)
 
 **Step 1: Remove local findSkillsInDir function**
 
@@ -401,13 +401,13 @@ Replace calls from `findSkillsInDir(` to `skillsCore.findSkillsInDir(`
 
 **Step 3: Verify script still works**
 
-Run: `.codex/superpowers-codex find-skills | head -20`
+Run: `.codex/ultrapowers-codex find-skills | head -20`
 Expected: Shows list of skills
 
 **Step 4: Commit**
 
 ```bash
-git add .codex/superpowers-codex
+git add .codex/ultrapowers-codex
 git commit -m "refactor: use shared findSkillsInDir in codex"
 ```
 
@@ -416,7 +416,7 @@ git commit -m "refactor: use shared findSkillsInDir in codex"
 ### Task 8: Replace checkForUpdates with Core Version
 
 **Files:**
-- Modify: `.codex/superpowers-codex` (lines 16-38, approximately)
+- Modify: `.codex/ultrapowers-codex` (lines 16-38, approximately)
 
 **Step 1: Remove local checkForUpdates function**
 
@@ -428,13 +428,13 @@ Replace calls from `checkForUpdates(` to `skillsCore.checkForUpdates(`
 
 **Step 3: Verify script still works**
 
-Run: `.codex/superpowers-codex bootstrap | head -50`
+Run: `.codex/ultrapowers-codex bootstrap | head -50`
 Expected: Shows bootstrap content
 
 **Step 4: Commit**
 
 ```bash
-git add .codex/superpowers-codex
+git add .codex/ultrapowers-codex
 git commit -m "refactor: use shared checkForUpdates in codex"
 ```
 
@@ -445,7 +445,7 @@ git commit -m "refactor: use shared checkForUpdates in codex"
 ### Task 9: Create OpenCode Plugin Directory Structure
 
 **Files:**
-- Create: `.opencode/plugin/superpowers.js`
+- Create: `.opencode/plugin/ultrapowers.js`
 
 **Step 1: Create directory**
 
@@ -457,7 +457,7 @@ Run: `mkdir -p .opencode/plugin`
 #!/usr/bin/env node
 
 /**
- * Superpowers plugin for OpenCode.ai
+ * Ultrapowers plugin for OpenCode.ai
  *
  * Provides custom tools for loading and discovering skills,
  * with automatic bootstrap on session start.
@@ -469,13 +469,13 @@ const fs = require('fs');
 const os = require('os');
 
 const homeDir = os.homedir();
-const superpowersSkillsDir = path.join(homeDir, '.config/opencode/superpowers/skills');
+const ultrapowersSkillsDir = path.join(homeDir, '.config/opencode/ultrapowers/skills');
 const personalSkillsDir = path.join(homeDir, '.config/opencode/skills');
 
 /**
  * OpenCode plugin entry point
  */
-export const SuperpowersPlugin = async ({ project, client, $, directory, worktree }) => {
+export const UltrapowersPlugin = async ({ project, client, $, directory, worktree }) => {
   return {
     // Custom tools and hooks will go here
   };
@@ -484,13 +484,13 @@ export const SuperpowersPlugin = async ({ project, client, $, directory, worktre
 
 **Step 3: Verify file was created**
 
-Run: `ls -l .opencode/plugin/superpowers.js`
+Run: `ls -l .opencode/plugin/ultrapowers.js`
 Expected: File exists
 
 **Step 4: Commit**
 
 ```bash
-git add .opencode/plugin/superpowers.js
+git add .opencode/plugin/ultrapowers.js
 git commit -m "feat: create opencode plugin scaffold"
 ```
 
@@ -499,14 +499,14 @@ git commit -m "feat: create opencode plugin scaffold"
 ### Task 10: Implement use_skill Tool
 
 **Files:**
-- Modify: `.opencode/plugin/superpowers.js`
+- Modify: `.opencode/plugin/ultrapowers.js`
 
 **Step 1: Add use_skill tool implementation**
 
 Replace the plugin return statement with:
 
 ```javascript
-export const SuperpowersPlugin = async ({ project, client, $, directory, worktree }) => {
+export const UltrapowersPlugin = async ({ project, client, $, directory, worktree }) => {
   // Import zod for schema validation
   const { z } = await import('zod');
 
@@ -516,13 +516,13 @@ export const SuperpowersPlugin = async ({ project, client, $, directory, worktre
         name: 'use_skill',
         description: 'Load and read a specific skill to guide your work. Skills contain proven workflows, mandatory processes, and expert techniques.',
         schema: z.object({
-          skill_name: z.string().describe('Name of the skill to load (e.g., "superpowers:brainstorming" or "my-custom-skill")')
+          skill_name: z.string().describe('Name of the skill to load (e.g., "ultrapowers:brainstorming" or "my-custom-skill")')
         }),
         execute: async ({ skill_name }) => {
-          // Resolve skill path (handles shadowing: personal > superpowers)
+          // Resolve skill path (handles shadowing: personal > ultrapowers)
           const resolved = skillsCore.resolveSkillPath(
             skill_name,
-            superpowersSkillsDir,
+            ultrapowersSkillsDir,
             personalSkillsDir
           );
 
@@ -574,13 +574,13 @@ ${content}`;
 
 **Step 2: Verify syntax**
 
-Run: `node -c .opencode/plugin/superpowers.js`
+Run: `node -c .opencode/plugin/ultrapowers.js`
 Expected: No output
 
 **Step 3: Commit**
 
 ```bash
-git add .opencode/plugin/superpowers.js
+git add .opencode/plugin/ultrapowers.js
 git commit -m "feat: implement use_skill tool for opencode"
 ```
 
@@ -589,7 +589,7 @@ git commit -m "feat: implement use_skill tool for opencode"
 ### Task 11: Implement find_skills Tool
 
 **Files:**
-- Modify: `.opencode/plugin/superpowers.js`
+- Modify: `.opencode/plugin/ultrapowers.js`
 
 **Step 1: Add find_skills tool to tools array**
 
@@ -598,13 +598,13 @@ Add after the use_skill tool definition, before closing the tools array:
 ```javascript
       {
         name: 'find_skills',
-        description: 'List all available skills in the superpowers and personal skill libraries.',
+        description: 'List all available skills in the ultrapowers and personal skill libraries.',
         schema: z.object({}),
         execute: async () => {
           // Find skills in both directories
-          const superpowersSkills = skillsCore.findSkillsInDir(
-            superpowersSkillsDir,
-            'superpowers',
+          const ultrapowersSkills = skillsCore.findSkillsInDir(
+            ultrapowersSkillsDir,
+            'ultrapowers',
             3
           );
           const personalSkills = skillsCore.findSkillsInDir(
@@ -614,16 +614,16 @@ Add after the use_skill tool definition, before closing the tools array:
           );
 
           // Combine and format skills list
-          const allSkills = [...personalSkills, ...superpowersSkills];
+          const allSkills = [...personalSkills, ...ultrapowersSkills];
 
           if (allSkills.length === 0) {
-            return 'No skills found. Install superpowers skills to ~/.config/opencode/superpowers/skills/';
+            return 'No skills found. Install ultrapowers skills to ~/.config/opencode/ultrapowers/skills/';
           }
 
           let output = 'Available skills:\n\n';
 
           for (const skill of allSkills) {
-            const namespace = skill.sourceType === 'personal' ? '' : 'superpowers:';
+            const namespace = skill.sourceType === 'personal' ? '' : 'ultrapowers:';
             const skillName = skill.name || path.basename(skill.path);
 
             output += `${namespace}${skillName}\n`;
@@ -640,13 +640,13 @@ Add after the use_skill tool definition, before closing the tools array:
 
 **Step 2: Verify syntax**
 
-Run: `node -c .opencode/plugin/superpowers.js`
+Run: `node -c .opencode/plugin/ultrapowers.js`
 Expected: No output
 
 **Step 3: Commit**
 
 ```bash
-git add .opencode/plugin/superpowers.js
+git add .opencode/plugin/ultrapowers.js
 git commit -m "feat: implement find_skills tool for opencode"
 ```
 
@@ -655,7 +655,7 @@ git commit -m "feat: implement find_skills tool for opencode"
 ### Task 12: Implement Session Start Hook
 
 **Files:**
-- Modify: `.opencode/plugin/superpowers.js`
+- Modify: `.opencode/plugin/ultrapowers.js`
 
 **Step 1: Add session.started hook**
 
@@ -663,16 +663,16 @@ After the tools array, add:
 
 ```javascript
     'session.started': async () => {
-      // Read using-superpowers skill content
-      const usingSuperpowersPath = skillsCore.resolveSkillPath(
-        'using-superpowers',
-        superpowersSkillsDir,
+      // Read using-ultrapowers skill content
+      const usingUltrapowersPath = skillsCore.resolveSkillPath(
+        'using-ultrapowers',
+        ultrapowersSkillsDir,
         personalSkillsDir
       );
 
-      let usingSuperpowersContent = '';
-      if (usingSuperpowersPath) {
-        const fullContent = fs.readFileSync(usingSuperpowersPath.skillFile, 'utf8');
+      let usingUltrapowersContent = '';
+      if (usingUltrapowersPath) {
+        const fullContent = fs.readFileSync(usingUltrapowersPath.skillFile, 'utf8');
         // Strip frontmatter
         const lines = fullContent.split('\n');
         let inFrontmatter = false;
@@ -694,7 +694,7 @@ After the tools array, add:
           }
         }
 
-        usingSuperpowersContent = contentLines.join('\n').trim();
+        usingUltrapowersContent = contentLines.join('\n').trim();
       }
 
       // Tool mapping instructions
@@ -712,28 +712,28 @@ When skills reference tools you don't have, substitute OpenCode equivalents:
 - Utilities and helpers specific to that skill
 
 **Skills naming:**
-- Superpowers skills: \`superpowers:skill-name\` (from ~/.config/opencode/superpowers/skills/)
+- Ultrapowers skills: \`ultrapowers:skill-name\` (from ~/.config/opencode/ultrapowers/skills/)
 - Personal skills: \`skill-name\` (from ~/.config/opencode/skills/)
-- Personal skills override superpowers skills when names match
+- Personal skills override ultrapowers skills when names match
 `;
 
       // Check for updates (non-blocking)
       const hasUpdates = skillsCore.checkForUpdates(
-        path.join(homeDir, '.config/opencode/superpowers')
+        path.join(homeDir, '.config/opencode/ultrapowers')
       );
 
       const updateNotice = hasUpdates ?
-        '\n\n⚠️ **Updates available!** Run `cd ~/.config/opencode/superpowers && git pull` to update superpowers.' :
+        '\n\n⚠️ **Updates available!** Run `cd ~/.config/opencode/ultrapowers && git pull` to update ultrapowers.' :
         '';
 
       // Return context to inject into session
       return {
         context: `<EXTREMELY_IMPORTANT>
-You have superpowers.
+You have ultrapowers.
 
-**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'use_skill' tool:**
+**Below is the full content of your 'ultrapowers:using-ultrapowers' skill - your introduction to using skills. For all other skills, use the 'use_skill' tool:**
 
-${usingSuperpowersContent}
+${usingUltrapowersContent}
 
 ${toolMapping}${updateNotice}
 </EXTREMELY_IMPORTANT>`
@@ -743,13 +743,13 @@ ${toolMapping}${updateNotice}
 
 **Step 2: Verify syntax**
 
-Run: `node -c .opencode/plugin/superpowers.js`
+Run: `node -c .opencode/plugin/ultrapowers.js`
 Expected: No output
 
 **Step 3: Commit**
 
 ```bash
-git add .opencode/plugin/superpowers.js
+git add .opencode/plugin/ultrapowers.js
 git commit -m "feat: implement session.started hook for opencode"
 ```
 
@@ -765,7 +765,7 @@ git commit -m "feat: implement session.started hook for opencode"
 **Step 1: Create installation guide**
 
 ```markdown
-# Installing Superpowers for OpenCode
+# Installing Ultrapowers for OpenCode
 
 ## Prerequisites
 
@@ -775,27 +775,27 @@ git commit -m "feat: implement session.started hook for opencode"
 
 ## Installation Steps
 
-### 1. Install Superpowers Skills
+### 1. Install Ultrapowers Skills
 
 ```bash
-# Clone superpowers skills to OpenCode config directory
-mkdir -p ~/.config/opencode/superpowers
-git clone https://github.com/obra/superpowers.git ~/.config/opencode/superpowers
+# Clone ultrapowers skills to OpenCode config directory
+mkdir -p ~/.config/opencode/ultrapowers
+git clone https://github.com/obra/ultrapowers.git ~/.config/opencode/ultrapowers
 ```
 
 ### 2. Install the Plugin
 
-The plugin is included in the superpowers repository you just cloned.
+The plugin is included in the ultrapowers repository you just cloned.
 
 OpenCode will automatically discover it from:
-- `~/.config/opencode/superpowers/.opencode/plugin/superpowers.js`
+- `~/.config/opencode/ultrapowers/.opencode/plugin/ultrapowers.js`
 
 Or you can link it to the project-local plugin directory:
 
 ```bash
 # In your OpenCode project
 mkdir -p .opencode/plugin
-ln -s ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js .opencode/plugin/superpowers.js
+ln -s ~/.config/opencode/ultrapowers/.opencode/plugin/ultrapowers.js .opencode/plugin/ultrapowers.js
 ```
 
 ### 3. Restart OpenCode
@@ -803,7 +803,7 @@ ln -s ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js .opencode/p
 Restart OpenCode to load the plugin. On the next session, you should see:
 
 ```
-You have superpowers.
+You have ultrapowers.
 ```
 
 ## Usage
@@ -821,7 +821,7 @@ use find_skills tool
 Use the `use_skill` tool to load a specific skill:
 
 ```
-use use_skill tool with skill_name: "superpowers:brainstorming"
+use use_skill tool with skill_name: "ultrapowers:brainstorming"
 ```
 
 ### Personal Skills
@@ -845,12 +845,12 @@ description: Use when [condition] - [what it does]
 [Your skill content here]
 ```
 
-Personal skills override superpowers skills with the same name.
+Personal skills override ultrapowers skills with the same name.
 
 ## Updating
 
 ```bash
-cd ~/.config/opencode/superpowers
+cd ~/.config/opencode/ultrapowers
 git pull
 ```
 
@@ -858,13 +858,13 @@ git pull
 
 ### Plugin not loading
 
-1. Check plugin file exists: `ls ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js`
+1. Check plugin file exists: `ls ~/.config/opencode/ultrapowers/.opencode/plugin/ultrapowers.js`
 2. Check OpenCode logs for errors
 3. Verify Node.js is installed: `node --version`
 
 ### Skills not found
 
-1. Verify skills directory exists: `ls ~/.config/opencode/superpowers/skills`
+1. Verify skills directory exists: `ls ~/.config/opencode/ultrapowers/skills`
 2. Use `find_skills` tool to see what's discovered
 3. Check file structure: each skill should have a `SKILL.md` file
 
@@ -878,8 +878,8 @@ When a skill references a Claude Code tool you don't have:
 
 ## Getting Help
 
-- Report issues: https://github.com/obra/superpowers/issues
-- Documentation: https://github.com/obra/superpowers
+- Report issues: https://github.com/obra/ultrapowers/issues
+- Documentation: https://github.com/obra/ultrapowers
 ```
 
 **Step 2: Verify file created**
@@ -908,7 +908,7 @@ Find the section about supported platforms (search for "Codex" in the file), and
 ```markdown
 ### OpenCode
 
-Superpowers works with [OpenCode.ai](https://opencode.ai) through a native JavaScript plugin.
+Ultrapowers works with [OpenCode.ai](https://opencode.ai) through a native JavaScript plugin.
 
 **Installation:** See [.opencode/INSTALL.md](.opencode/INSTALL.md)
 
@@ -982,21 +982,21 @@ git commit -m "docs: add opencode support to release notes"
 ### Task 16: Test Codex Still Works
 
 **Files:**
-- Test: `.codex/superpowers-codex`
+- Test: `.codex/ultrapowers-codex`
 
 **Step 1: Test find-skills command**
 
-Run: `.codex/superpowers-codex find-skills | head -20`
+Run: `.codex/ultrapowers-codex find-skills | head -20`
 Expected: Shows list of skills with names and descriptions
 
 **Step 2: Test use-skill command**
 
-Run: `.codex/superpowers-codex use-skill superpowers:brainstorming | head -20`
+Run: `.codex/ultrapowers-codex use-skill ultrapowers:brainstorming | head -20`
 Expected: Shows brainstorming skill content
 
 **Step 3: Test bootstrap command**
 
-Run: `.codex/superpowers-codex bootstrap | head -30`
+Run: `.codex/ultrapowers-codex bootstrap | head -30`
 Expected: Shows bootstrap content with instructions
 
 **Step 4: If all tests pass, record success**
@@ -1015,7 +1015,7 @@ No commit needed - this is verification only.
 Run:
 ```bash
 ls -l lib/skills-core.js
-ls -l .opencode/plugin/superpowers.js
+ls -l .opencode/plugin/ultrapowers.js
 ls -l .opencode/INSTALL.md
 ```
 
@@ -1029,7 +1029,7 @@ Expected:
 .opencode/
 ├── INSTALL.md
 └── plugin/
-    └── superpowers.js
+    └── ultrapowers.js
 ```
 
 **Step 3: If structure correct, proceed**
@@ -1057,8 +1057,8 @@ Expected: Shows all commits from this implementation
 
 Create a completion summary showing:
 - Total commits made
-- Files created: `lib/skills-core.js`, `.opencode/plugin/superpowers.js`, `.opencode/INSTALL.md`
-- Files modified: `.codex/superpowers-codex`, `README.md`, `RELEASE-NOTES.md`
+- Files created: `lib/skills-core.js`, `.opencode/plugin/ultrapowers.js`, `.opencode/INSTALL.md`
+- Files modified: `.codex/ultrapowers-codex`, `README.md`, `RELEASE-NOTES.md`
 - Testing performed: Codex commands verified
 - Ready for: Testing with actual OpenCode installation
 
@@ -1086,9 +1086,9 @@ These steps require OpenCode to be installed and are not part of the automated i
 ## Success Criteria
 
 - [ ] `lib/skills-core.js` created with all core functions
-- [ ] `.codex/superpowers-codex` refactored to use shared core
+- [ ] `.codex/ultrapowers-codex` refactored to use shared core
 - [ ] Codex commands still work (find-skills, use-skill, bootstrap)
-- [ ] `.opencode/plugin/superpowers.js` created with tools and hooks
+- [ ] `.opencode/plugin/ultrapowers.js` created with tools and hooks
 - [ ] Installation guide created
 - [ ] README and RELEASE-NOTES updated
 - [ ] All changes committed
