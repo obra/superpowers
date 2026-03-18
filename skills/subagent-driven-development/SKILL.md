@@ -105,6 +105,7 @@ Before marking ANY task complete, verify ALL of these are true:
 □ Spec reviewer subagent dispatched → result was ✅
 □ Code quality reviewer subagent dispatched → result was ✅
 □ Any issues found by reviewers were fixed AND re-reviewed
+□ If any post-review fix changed behavior or scope, spec reviewer re-approved the final state
 ```
 
 **If ANY box is unchecked → DO NOT mark task complete.**
