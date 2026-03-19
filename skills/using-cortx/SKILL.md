@@ -1,7 +1,15 @@
 ---
-name: using-superpowers
+name: using-cortx
 description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
 ---
+
+## cortx MCP Dependency
+
+cortx-skills requires the cortx MCP server to be running. On session start:
+1. Call `memory_status` — if it fails, inform the user: "cortx MCP not connected. Install cortx and configure the MCP server."
+2. If connected and `cortx: skip memory on start` is NOT in CLAUDE.md, call `memory_recall` with the current working directory to load project context into your conversation.
+
+This memory prefetch gives you context about past design decisions, known error patterns, and causal chains before you start working.
 
 <SUBAGENT-STOP>
 If you were dispatched as a subagent to execute a specific task, skip this skill.
@@ -17,10 +25,10 @@ This is not negotiable. This is not optional. You cannot rationalize your way ou
 
 ## Instruction Priority
 
-Superpowers skills override default system prompt behavior, but **user instructions always take precedence**:
+Cortx skills override default system prompt behavior, but **user instructions always take precedence**:
 
 1. **User's explicit instructions** (CLAUDE.md, GEMINI.md, AGENTS.md, direct requests) — highest priority
-2. **Superpowers skills** — override default system behavior where they conflict
+2. **Cortx skills** — override default system behavior where they conflict
 3. **Default system prompt** — lowest priority
 
 If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "always use TDD," follow the user's instructions. The user is in control.
@@ -72,6 +80,25 @@ digraph skill_flow {
     "Create TodoWrite todo per item" -> "Follow skill exactly";
 }
 ```
+
+## Skill Catalog
+
+| Skill | Description |
+|-------|-------------|
+| `cortx:brainstorming` | Structured brainstorming before implementation |
+| `cortx:dispatching-parallel-agents` | Fan-out work to parallel sub-agents |
+| `cortx:executing-plans` | Execute a structured plan step by step |
+| `cortx:finishing-a-development-branch` | Clean up and finalize a feature branch |
+| `cortx:receiving-code-review` | Process and respond to code review feedback |
+| `cortx:requesting-code-review` | Request a thorough code review |
+| `cortx:subagent-driven-development` | Drive development through coordinated sub-agents |
+| `cortx:systematic-debugging` | Methodical debugging workflow |
+| `cortx:test-driven-development` | TDD red-green-refactor cycle |
+| `cortx:using-git-worktrees` | Manage parallel git worktrees |
+| `cortx:verification-before-completion` | Verify work before marking complete |
+| `cortx:writing-plans` | Write structured implementation plans |
+| `cortx:writing-skills` | Create new skills |
+| `cortx:auto` | Autonomous orchestration mode — takes an objective, decomposes, dispatches sub-agents, reviews, and drives to completion |
 
 ## Red Flags
 
