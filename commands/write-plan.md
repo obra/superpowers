@@ -1,6 +1,5 @@
 ---
-description: Create detailed implementation plan with bite-sized tasks
-disable-model-invocation: true
+description: "Deprecated - use the superpowers:writing-plans skill instead"
 ---
 
-Invoke the superpowers:writing-plans skill and follow it exactly as presented to you
+Tell your human partner that this command is deprecated and will be removed in the next major release. They should ask you to use the "superpowers writing-plans" skill instead.

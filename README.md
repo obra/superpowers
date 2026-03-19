@@ -28,6 +28,15 @@ Thanks!
 
 **Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex and OpenCode require manual setup.
 
+### Claude Code Official Marketplace
+
+Superpowers is available via the [official Claude plugin marketplace](https://claude.com/plugins/superpowers)
+
+Install the plugin from Claude marketplace:
+
+```bash
+/plugin install superpowers@claude-plugins-official
+```
 
 ### Claude Code (via Plugin Marketplace)
 
@@ -48,8 +57,10 @@ Then install the plugin from this marketplace:
 In Cursor Agent chat, install from marketplace:
 
 ```text
-/plugin-add superpowers
+/add-plugin superpowers
 ```
+
+or search for "superpowers" in the plugin marketplace.
 
 ### Codex
 
@@ -70,6 +81,18 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 ```
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
+
+### Gemini CLI
+
+```bash
+gemini extensions install https://github.com/obra/superpowers
+```
+
+To update:
+
+```bash
+gemini extensions update superpowers
+```
 
 ### Verify Installation
 
@@ -157,7 +180,14 @@ Skills update automatically when you update the plugin:
 
 MIT License - see LICENSE file for details
 
+## Community
+
+Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of the folks at [Prime Radiant](https://primeradiant.com).
+
+For community support, questions, and sharing what you're building with Superpowers, join us on [Discord](https://discord.gg/Jd8Vphy9jq).
+
 ## Support
 
+- **Discord**: [Join us on Discord](https://discord.gg/Jd8Vphy9jq)
 - **Issues**: https://github.com/obra/superpowers/issues
 - **Marketplace**: https://github.com/obra/superpowers-marketplace
