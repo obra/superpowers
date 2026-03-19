@@ -46,6 +46,14 @@ git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 
 Or ask: "This branch split from main - is that correct?"
 
+### cortx Wrap-Up
+
+Before presenting options to the user:
+1. Call `session_report` to generate and store the session summary in cortx
+2. Call `planning_list_tasks` to check for any tasks still in progress on the board
+3. For each completed task, call `planning_complete_task` to mark it done
+4. If tasks remain in progress, flag them to the user before proceeding
+
 ### Step 3: Present Options
 
 Present exactly these 4 options:
