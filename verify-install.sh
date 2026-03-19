@@ -98,16 +98,8 @@ main() {
   done
 
   echo ""
-  echo -e "${YELLOW}To fix, run:${NC}"
-  echo ""
-  echo "  git clone https://github.com/obra/superpowers.git /tmp/superpowers-fix"
-  echo "  cp -r /tmp/superpowers-fix/skills/{$(IFS=,; echo "${missing[*]}")} \\"
-  echo "    $skills_dir/"
-  echo "  rm -rf /tmp/superpowers-fix"
-  echo ""
-  echo "Then restart your Claude Code session."
-  echo ""
   echo -e "${YELLOW}This is a known issue with Claude Code's plugin download mechanism.${NC}"
+  echo "The fix needs to come from Claude Code itself."
   echo "See: https://github.com/anthropics/claude-code/issues/35989"
 
   exit 1
