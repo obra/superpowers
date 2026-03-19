@@ -361,6 +361,12 @@ When adding mocks or test utilities, read @testing-anti-patterns.md to avoid com
 - Adding test-only methods to production classes
 - Mocking without understanding dependencies
 
+## cortx Integration
+
+- **All test runs** use `proxy_exec` instead of direct Bash. This provides git checkpoints before dangerous operations and a full audit trail.
+- **Before writing a test**, call `memory_recall` with the error pattern or feature name. cortx may have seen a similar pattern in past sessions and can suggest test approaches.
+- **When a new test pattern is discovered** (novel assertion, edge case that caught a bug), call `memory_store` to persist it for future sessions.
+
 ## Final Rule
 
 ```
