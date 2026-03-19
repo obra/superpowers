@@ -1,0 +1,3 @@
+[submodule "construct_ai_docs"]
+	path = construct_ai_docs
+	url = https://github.com/Construct-AI-primary/construct_ai_docs.git
