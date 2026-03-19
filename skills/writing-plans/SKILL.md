@@ -33,6 +33,22 @@ Before defining tasks, map out which files will be created or modified and what 
 
 This structure informs the task decomposition. Each task should produce self-contained changes that make sense independently.
 
+## Board Synchronization (MANDATORY)
+
+After writing the plan, create tasks on the kanban board:
+
+1. Call `memory_recall` to find similar past implementations
+2. Call `planning_decompose` with:
+   - `objective`: the plan's goal
+   - `board_id`: the project's board (resolve via kanban-tracking or ask user)
+   - `tasks`: array matching 1:1 with plan tasks, including:
+     - `title`: task title from the plan
+     - `description`: full task description including acceptance criteria
+     - `priority`: based on dependency order
+     - `depends_on`: indexes of tasks this depends on (from the plan's task ordering)
+
+The plan markdown file remains as detailed reference (code snippets, file paths, verification commands). The board is the source of truth for task status and ordering.
+
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**
