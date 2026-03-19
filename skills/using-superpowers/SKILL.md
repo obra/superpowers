@@ -73,6 +73,62 @@ digraph skill_flow {
 }
 ```
 
+## Skill Dependency Map
+
+```dot
+digraph skill_dependencies {
+    rankdir=LR;
+    node [shape=box];
+
+    // Entry points
+    brainstorming [style=filled, fillcolor="#ccffcc", label="superpowers:brainstorming"];
+    debugging [style=filled, fillcolor="#ccffcc", label="superpowers:systematic-debugging"];
+    writing_skills [style=filled, fillcolor="#ccffcc", label="superpowers:writing-skills"];
+
+    // Creative pipeline
+    worktree [label="superpowers:using-git-worktrees"];
+    writing_plans [label="superpowers:writing-plans"];
+    sdd [label="superpowers:subagent-driven-development"];
+    executing_plans [label="superpowers:executing-plans"];
+
+    // Implementation
+    tdd [label="superpowers:test-driven-development"];
+
+    // Debugging path
+    dispatching [label="superpowers:dispatching-parallel-agents"];
+
+    // Code review chain
+    requesting [label="superpowers:requesting-code-review"];
+    receiving [label="superpowers:receiving-code-review"];
+    verification [label="superpowers:verification-before-completion"];
+    finishing [label="superpowers:finishing-a-development-branch"];
+
+    // Creative pipeline edges
+    brainstorming -> worktree;
+    worktree -> writing_plans;
+    writing_plans -> sdd;
+    writing_plans -> executing_plans;
+
+    // Implementation edges
+    sdd -> tdd;
+    executing_plans -> tdd;
+
+    // Debugging path edges
+    debugging -> dispatching;
+    dispatching -> tdd;
+
+    // Code review chain edges
+    finishing -> requesting;
+    requesting -> receiving;
+    receiving -> verification;
+    verification -> finishing;
+
+    // Writing-skills dependencies
+    writing_skills -> brainstorming [style=dashed, label="references"];
+    writing_skills -> tdd [style=dashed, label="references"];
+}
+```
+
 ## Red Flags
 
 These thoughts mean STOP—you're rationalizing:
