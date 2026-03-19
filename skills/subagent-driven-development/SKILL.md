@@ -1,15 +1,25 @@
 ---
-name: subagent-driven-development
-description: Use when executing implementation plans with independent tasks in the current session
+name: cortx:subagent-driven-development
+description: "Execute implementation plans by dispatching fresh subagents per task with cortx orchestration. Claims tasks from the board, dispatches implementers, runs two-stage review, validates gates, and releases. Use when executing a plan with subagent support."
 ---
 
 # Subagent-Driven Development
 
-Execute plan by dispatching fresh subagent per task, with two-stage review after each: spec compliance review first, then code quality review.
+Execute a plan by dispatching fresh subagent per task, with two-stage review
+after each: spec compliance first, then code quality. All progress tracked on
+the cortx board, all commands through `proxy_exec`.
 
-**Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
+**Why subagents:** You delegate tasks to specialized agents with isolated
+context. By precisely crafting their instructions and context, you ensure they
+stay focused and succeed at their task. They never inherit your session's
+context or history -- you construct exactly what they need. This also preserves
+your own context for coordination work.
 
-**Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
+**Core principle:** Fresh subagent per task + two-stage review + cortx board
+tracking + gate validation = high quality, fast iteration.
+
+**Announce at start:** "I'm using the subagent-driven-development skill to
+execute this plan."
 
 ## When to Use
 
@@ -17,25 +27,33 @@ Execute plan by dispatching fresh subagent per task, with two-stage review after
 digraph when_to_use {
     "Have implementation plan?" [shape=diamond];
     "Tasks mostly independent?" [shape=diamond];
-    "Stay in this session?" [shape=diamond];
-    "subagent-driven-development" [shape=box];
-    "executing-plans" [shape=box];
-    "Manual execution or brainstorm first" [shape=box];
+    "Subagents available?" [shape=diamond];
+    "cortx:subagent-driven-development" [shape=box];
+    "cortx:executing-plans" [shape=box];
+    "cortx:writing-plans first" [shape=box];
 
     "Have implementation plan?" -> "Tasks mostly independent?" [label="yes"];
-    "Have implementation plan?" -> "Manual execution or brainstorm first" [label="no"];
-    "Tasks mostly independent?" -> "Stay in this session?" [label="yes"];
-    "Tasks mostly independent?" -> "Manual execution or brainstorm first" [label="no - tightly coupled"];
-    "Stay in this session?" -> "subagent-driven-development" [label="yes"];
-    "Stay in this session?" -> "executing-plans" [label="no - parallel session"];
+    "Have implementation plan?" -> "cortx:writing-plans first" [label="no"];
+    "Tasks mostly independent?" -> "Subagents available?" [label="yes"];
+    "Tasks mostly independent?" -> "cortx:executing-plans" [label="no - tightly coupled"];
+    "Subagents available?" -> "cortx:subagent-driven-development" [label="yes"];
+    "Subagents available?" -> "cortx:executing-plans" [label="no"];
 }
 ```
 
-**vs. Executing Plans (parallel session):**
-- Same session (no context switch)
+**vs. cortx:executing-plans (inline execution):**
 - Fresh subagent per task (no context pollution)
 - Two-stage review after each task: spec compliance first, then code quality
-- Faster iteration (no human-in-loop between tasks)
+- Faster iteration (controller coordinates, subagents execute)
+- Same cortx board tracking and gate validation
+
+## Prerequisites
+
+Before starting execution, ensure:
+
+1. **Plan file exists** -- a written plan produced by `cortx:writing-plans`
+2. **Tasks on the board** -- created via `planning_decompose` during planning
+3. **Worktree ready** -- isolated workspace set up via `cortx:using-git-worktrees`
 
 ## The Process
 
@@ -44,234 +62,242 @@ digraph process {
     rankdir=TB;
 
     subgraph cluster_per_task {
-        label="Per Task";
-        "Dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
-        "Implementer subagent asks questions?" [shape=diamond];
-        "Answer questions, provide context" [shape=box];
-        "Implementer subagent implements, tests, commits, self-reviews" [shape=box];
-        "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [shape=box];
-        "Spec reviewer subagent confirms code matches spec?" [shape=diamond];
-        "Implementer subagent fixes spec gaps" [shape=box];
-        "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
-        "Code quality reviewer subagent approves?" [shape=diamond];
-        "Implementer subagent fixes quality issues" [shape=box];
-        "Mark task complete in TodoWrite" [shape=box];
+        label="Per Task (max 3 retries across all non-DONE statuses)";
+        "planning_claim_task" [shape=box];
+        "memory_recall for task context" [shape=box];
+        "Dispatch implementer subagent" [shape=box];
+        "Handle return status" [shape=diamond];
+        "Dispatch spec reviewer" [shape=box];
+        "Spec passes?" [shape=diamond];
+        "Dispatch code quality reviewer" [shape=box];
+        "Quality passes?" [shape=diamond];
+        "planning_validate_gates" [shape=box];
+        "Gates pass?" [shape=diamond];
+        "planning_release_task (done)" [shape=box];
+        "memory_store patterns" [shape=box];
+        "planning_escalate + release (failed)" [shape=box];
     }
 
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
-    "More tasks remain?" [shape=diamond];
-    "Dispatch final code reviewer subagent for entire implementation" [shape=box];
-    "Use cortx:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
+    "planning_next_task" [shape=box];
+    "More tasks?" [shape=diamond];
+    "Dispatch final code reviewer" [shape=box];
+    "cortx:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
-    "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
-    "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
-    "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
-    "Implementer subagent asks questions?" -> "Implementer subagent implements, tests, commits, self-reviews" [label="no"];
-    "Implementer subagent implements, tests, commits, self-reviews" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)";
-    "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" -> "Spec reviewer subagent confirms code matches spec?";
-    "Spec reviewer subagent confirms code matches spec?" -> "Implementer subagent fixes spec gaps" [label="no"];
-    "Implementer subagent fixes spec gaps" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="re-review"];
-    "Spec reviewer subagent confirms code matches spec?" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="yes"];
-    "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
-    "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
-    "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
-    "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
-    "Mark task complete in TodoWrite" -> "More tasks remain?";
-    "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
-    "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
-    "Dispatch final code reviewer subagent for entire implementation" -> "Use cortx:finishing-a-development-branch";
+    "planning_next_task" -> "planning_claim_task";
+    "planning_claim_task" -> "memory_recall for task context";
+    "memory_recall for task context" -> "Dispatch implementer subagent";
+    "Dispatch implementer subagent" -> "Handle return status";
+    "Handle return status" -> "Dispatch spec reviewer" [label="DONE"];
+    "Handle return status" -> "Dispatch implementer subagent" [label="retry (BLOCKED/\nNEEDS_CONTEXT/\nconcerns)"];
+    "Handle return status" -> "planning_escalate + release (failed)" [label="max retries hit"];
+    "Dispatch spec reviewer" -> "Spec passes?";
+    "Spec passes?" -> "Dispatch code quality reviewer" [label="yes"];
+    "Spec passes?" -> "Dispatch implementer subagent" [label="no (retry)"];
+    "Dispatch code quality reviewer" -> "Quality passes?";
+    "Quality passes?" -> "planning_validate_gates" [label="yes"];
+    "Quality passes?" -> "Dispatch implementer subagent" [label="critical issues (retry)"];
+    "planning_validate_gates" -> "Gates pass?";
+    "Gates pass?" -> "planning_release_task (done)" [label="yes"];
+    "Gates pass?" -> "Dispatch implementer subagent" [label="no (retry)"];
+    "planning_release_task (done)" -> "memory_store patterns";
+    "memory_store patterns" -> "More tasks?";
+    "planning_escalate + release (failed)" -> "More tasks?";
+    "More tasks?" -> "planning_next_task" [label="yes"];
+    "More tasks?" -> "Dispatch final code reviewer" [label="no"];
+    "Dispatch final code reviewer" -> "cortx:finishing-a-development-branch";
 }
 ```
 
+### 1. CLAIM
+
+Call `planning_next_task` to get the next task in board DAG order. Then call
+`planning_claim_task` with that task ID.
+
+### 2. CONTEXT
+
+Call `memory_recall` with queries relevant to the task -- file paths, domain
+terms, error patterns. Use the returned context as hints for the implementer.
+
+### 3. DISPATCH IMPLEMENTER
+
+Dispatch a fresh implementer subagent (see `./implementer-prompt.md`) with:
+
+- **Full task text** -- extracted from the plan, NOT a file path
+- **Memory context** -- hints from `memory_recall`
+- **Scene-setting** -- where this task fits in the plan, what tasks completed
+  before it, any patterns or constraints discovered so far
+- **Constraint** -- all shell commands must go through `proxy_exec`
+
+### 4. HANDLE RETURN STATUS
+
+The implementer reports one of four statuses:
+
+**DONE** -- proceed to step 5 (spec review).
+
+**DONE_WITH_CONCERNS** -- read the concerns. If they are blocking (correctness,
+scope), treat as BLOCKED. If they are observations ("this file is getting
+large"), note them and proceed to step 5. This counts as a retry only when
+treated as BLOCKED.
+
+**NEEDS_CONTEXT** -- enrich context via `memory_recall` + grep for the missing
+information. Re-dispatch a FRESH implementer with the enriched context. Counts
+as a retry.
+
+**BLOCKED** -- re-dispatch a FRESH implementer with the error context and any
+additional information gathered. Counts as a retry. Consider:
+1. If context problem -- provide more context
+2. If reasoning problem -- use a more capable model
+3. If task too large -- break into smaller pieces
+
+**Max retries: 3** across ALL non-DONE statuses combined (BLOCKED,
+NEEDS_CONTEXT, spec failures, quality failures, gate failures). When hit:
+- Call `planning_escalate` with attempt count, errors, and suggested next step
+- Call `planning_release_task` with status `failed`
+- Move to the next task
+
+### 5. SPEC REVIEW
+
+Dispatch a fresh spec-reviewer subagent (see `./spec-reviewer-prompt.md`).
+The reviewer checks that the implementation matches the spec exactly -- nothing
+missing, nothing extra.
+
+If the spec reviewer finds issues, re-dispatch a FRESH implementer with the
+reviewer feedback. This counts toward the retry limit.
+
+### 6. CODE QUALITY REVIEW
+
+Dispatch a fresh code-quality-reviewer subagent (see
+`./code-quality-reviewer-prompt.md`). The reviewer evaluates implementation
+quality, patterns, and maintainability.
+
+If the reviewer finds critical issues, re-dispatch a FRESH implementer with the
+reviewer feedback. This counts toward the retry limit.
+
+### 7. VALIDATE GATES
+
+Run quality checks via `proxy_exec`:
+- `cargo clippy --workspace -- -D warnings`
+- `cargo test --workspace`
+- `cargo build --workspace`
+
+All gates must pass. If any gate fails, re-dispatch a FRESH implementer with
+the error output. This counts toward the retry limit.
+
+### 8. RELEASE
+
+Call `planning_release_task` with the task ID and status `done`.
+
+Call `memory_store` with any patterns, gotchas, or solutions discovered during
+this task's implementation.
+
 ## Model Selection
 
-Use the least powerful model that can handle each role to conserve cost and increase speed.
+Use the least powerful model that can handle each role.
 
-**Mechanical implementation tasks** (isolated functions, clear specs, 1-2 files): use a fast, cheap model. Most implementation tasks are mechanical when the plan is well-specified.
+- **Mechanical** (1-2 files, clear spec): cheap model
+- **Integration** (multi-file coordination, debugging): standard model
+- **Architecture/design/review**: most capable model
 
-**Integration and judgment tasks** (multi-file coordination, pattern matching, debugging): use a standard model.
+## After All Tasks
 
-**Architecture, design, and review tasks**: use the most capable available model.
+When `planning_next_task` returns no remaining tasks:
 
-**Task complexity signals:**
-- Touches 1-2 files with a complete spec → cheap model
-- Touches multiple files with integration concerns → standard model
-- Requires design judgment or broad codebase understanding → most capable model
-
-## Handling Implementer Status
-
-Implementer subagents report one of four statuses. Handle each appropriately:
-
-**DONE:** Proceed to spec compliance review.
-
-**DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
-
-**NEEDS_CONTEXT:** The implementer needs information that wasn't provided. Provide the missing context and re-dispatch.
-
-**BLOCKED:** The implementer cannot complete the task. Assess the blocker:
-1. If it's a context problem, provide more context and re-dispatch with the same model
-2. If the task requires more reasoning, re-dispatch with a more capable model
-3. If the task is too large, break it into smaller pieces
-4. If the plan itself is wrong, escalate to the human
-
-**Never** ignore an escalation or force the same model to retry without changes. If the implementer said it's stuck, something needs to change.
+1. **Dispatch a final code reviewer** for the entire implementation -- this
+   reviewer looks at cross-task integration, consistency, and overall quality.
+2. **Invoke `cortx:finishing-a-development-branch`** to verify the full build,
+   present options to the user, and complete the branch.
 
 ## Prompt Templates
 
-- `./implementer-prompt.md` - Dispatch implementer subagent
-- `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
-- `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
+- `./implementer-prompt.md` -- dispatch implementer subagent
+- `./spec-reviewer-prompt.md` -- dispatch spec compliance reviewer subagent
+- `./code-quality-reviewer-prompt.md` -- dispatch code quality reviewer subagent
 
 ## Example Workflow
 
 ```
-You: I'm using Subagent-Driven Development to execute this plan.
+Controller: I'm using the subagent-driven-development skill to execute this plan.
 
-[Read plan file once: docs/superpowers/plans/feature-plan.md]
-[Extract all 5 tasks with full text and context]
-[Create TodoWrite with all tasks]
+[Read plan file, extract all tasks with full text and context]
 
-Task 1: Hook installation script
+--- Task 1: Hook installation script ---
 
-[Get Task 1 text and context (already extracted)]
-[Dispatch implementation subagent with full task text + context]
+[planning_next_task -> "task-1"]
+[planning_claim_task("task-1")]
+[memory_recall("hook installation, config paths")]
+[Dispatch implementer with task text + memory hints + scene-setting]
 
-Implementer: "Before I begin - should the hook be installed at user or system level?"
+Implementer: DONE - implemented install-hook, 5/5 tests, committed
 
-You: "User level (~/.config/superpowers/hooks/)"
+[Dispatch spec reviewer]  -> Spec compliant
+[Dispatch code quality reviewer] -> Approved
+[proxy_exec: clippy, test, build -- all pass]
+[planning_release_task("task-1", done)]
+[memory_store("install-hook uses ~/.config/superpowers/hooks/")]
 
-Implementer: "Got it. Implementing now..."
-[Later] Implementer:
-  - Implemented install-hook command
-  - Added tests, 5/5 passing
-  - Self-review: Found I missed --force flag, added it
-  - Committed
+--- Task 2: Recovery modes ---
 
-[Dispatch spec compliance reviewer]
-Spec reviewer: ✅ Spec compliant - all requirements met, nothing extra
+[planning_next_task -> "task-2"]
+[planning_claim_task("task-2")]
+[memory_recall("recovery modes, verify, repair")]
+[Dispatch implementer] -> DONE - added verify/repair, 8/8 tests
 
-[Get git SHAs, dispatch code quality reviewer]
-Code reviewer: Strengths: Good test coverage, clean. Issues: None. Approved.
+[Dispatch spec reviewer] -> Issues: missing progress reporting, extra --json flag
+[Re-dispatch FRESH implementer with feedback]              (retry 1/3)
+  -> DONE - removed --json, added progress reporting
+[Dispatch spec reviewer again] -> Spec compliant
 
-[Mark Task 1 complete]
+[Dispatch code quality reviewer] -> Magic number 100 should be constant
+[Re-dispatch FRESH implementer with feedback]              (retry 2/3)
+  -> DONE - extracted PROGRESS_INTERVAL constant
+[Dispatch code quality reviewer again] -> Approved
 
-Task 2: Recovery modes
+[proxy_exec: clippy, test, build -- all pass]
+[planning_release_task("task-2", done)]
+[memory_store("use named constants for magic numbers")]
 
-[Get Task 2 text and context (already extracted)]
-[Dispatch implementation subagent with full task text + context]
+--- No remaining tasks ---
 
-Implementer: [No questions, proceeds]
-Implementer:
-  - Added verify/repair modes
-  - 8/8 tests passing
-  - Self-review: All good
-  - Committed
-
-[Dispatch spec compliance reviewer]
-Spec reviewer: ❌ Issues:
-  - Missing: Progress reporting (spec says "report every 100 items")
-  - Extra: Added --json flag (not requested)
-
-[Implementer fixes issues]
-Implementer: Removed --json flag, added progress reporting
-
-[Spec reviewer reviews again]
-Spec reviewer: ✅ Spec compliant now
-
-[Dispatch code quality reviewer]
-Code reviewer: Strengths: Solid. Issues (Important): Magic number (100)
-
-[Implementer fixes]
-Implementer: Extracted PROGRESS_INTERVAL constant
-
-[Code reviewer reviews again]
-Code reviewer: ✅ Approved
-
-[Mark Task 2 complete]
-
-...
-
-[After all tasks]
-[Dispatch final code-reviewer]
-Final reviewer: All requirements met, ready to merge
-
-Done!
+[Dispatch final code reviewer for entire implementation]
+[Invoke cortx:finishing-a-development-branch]
 ```
-
-## Advantages
-
-**vs. Manual execution:**
-- Subagents follow TDD naturally
-- Fresh context per task (no confusion)
-- Parallel-safe (subagents don't interfere)
-- Subagent can ask questions (before AND during work)
-
-**vs. Executing Plans:**
-- Same session (no handoff)
-- Continuous progress (no waiting)
-- Review checkpoints automatic
-
-**Efficiency gains:**
-- No file reading overhead (controller provides full text)
-- Controller curates exactly what context is needed
-- Subagent gets complete information upfront
-- Questions surfaced before work begins (not after)
-
-**Quality gates:**
-- Self-review catches issues before handoff
-- Two-stage review: spec compliance, then code quality
-- Review loops ensure fixes actually work
-- Spec compliance prevents over/under-building
-- Code quality ensures implementation is well-built
-
-**Cost:**
-- More subagent invocations (implementer + 2 reviewers per task)
-- Controller does more prep work (extracting all tasks upfront)
-- Review loops add iterations
-- But catches issues early (cheaper than debugging later)
 
 ## Red Flags
 
 **Never:**
 - Start implementation on main/master branch without explicit user consent
 - Skip reviews (spec compliance OR code quality)
+- Skip gates -- every task must pass clippy, test, and build
+- Dispatch an implementer without claiming the task first
+- Use Bash directly -- all commands go through `proxy_exec`
 - Proceed with unfixed issues
 - Dispatch multiple implementation subagents in parallel (conflicts)
 - Make subagent read plan file (provide full text instead)
 - Skip scene-setting context (subagent needs to understand where task fits)
 - Ignore subagent questions (answer before letting them proceed)
-- Accept "close enough" on spec compliance (spec reviewer found issues = not done)
+- Accept "close enough" on spec compliance (reviewer found issues = not done)
 - Skip review loops (reviewer found issues = implementer fixes = review again)
 - Let implementer self-review replace actual review (both are needed)
-- **Start code quality review before spec compliance is ✅** (wrong order)
-- Move to next task while either review has open issues
+- Start code quality review before spec compliance passes (wrong order)
+- Move to next task while any review has open issues
+- Force the same model to retry without changes when it reported BLOCKED
 
-**If subagent asks questions:**
-- Answer clearly and completely
-- Provide additional context if needed
-- Don't rush them into implementation
+**If reviewer finds issues:** dispatch a FRESH implementer with feedback,
+reviewer reviews the fix, repeat until approved or retry limit hit.
 
-**If reviewer finds issues:**
-- Implementer (same subagent) fixes them
-- Reviewer reviews again
-- Repeat until approved
-- Don't skip the re-review
-
-**If subagent fails task:**
-- Dispatch fix subagent with specific instructions
-- Don't try to fix manually (context pollution)
+**If subagent is blocked:** dispatch a FRESH subagent with enriched context.
+Never reuse a stuck subagent -- fresh context is the point.
 
 ## Integration
 
-**Required workflow skills:**
-- **cortx:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
-- **cortx:writing-plans** - Creates the plan this skill executes
-- **cortx:requesting-code-review** - Code review template for reviewer subagents
-- **cortx:finishing-a-development-branch** - Complete development after all tasks
+**Required cortx skills:**
+- `cortx:using-git-worktrees` -- isolated workspace before starting
+- `cortx:writing-plans` -- produces the plan and board tasks this skill executes
+- `cortx:finishing-a-development-branch` -- completes development after all tasks
+- `cortx:using-cortx` -- cortx tool reference (proxy_exec, memory, planning)
 
 **Subagents should use:**
-- **cortx:test-driven-development** - Subagents follow TDD for each task
+- `cortx:test-driven-development` -- subagents follow TDD for each task
 
 **Alternative workflow:**
-- **cortx:executing-plans** - Use for parallel session instead of same-session execution
+- `cortx:executing-plans` -- inline execution without subagents
