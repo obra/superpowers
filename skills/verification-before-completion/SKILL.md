@@ -28,6 +28,7 @@ BEFORE claiming any status or expressing satisfaction:
 
 1. IDENTIFY: What command proves this claim?
 2. RUN: Execute the FULL command (fresh, complete)
+   All verification commands MUST go through `proxy_exec`. This ensures they are tracked in cortx's execution log and can be referenced in the session report.
 3. READ: Full output, check exit code, count failures
 4. VERIFY: Does output confirm the claim?
    - If NO: State actual status with evidence
