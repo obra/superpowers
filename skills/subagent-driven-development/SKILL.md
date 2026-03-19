@@ -233,7 +233,7 @@ Implementer: DONE - implemented install-hook, 5/5 tests, committed
 [Dispatch code quality reviewer] -> Approved
 [proxy_exec: clippy, test, build -- all pass]
 [planning_release_task("task-1", done)]
-[memory_store("install-hook uses ~/.config/superpowers/hooks/")]
+[memory_store("install-hook uses ~/.config/cortx/hooks/")]
 
 --- Task 2: Recovery modes ---
 

@@ -1,5 +1,5 @@
 ---
-name: writing-skills
+name: cortx:writing-skills
 description: Use when creating new skills, editing existing skills, or verifying skills work before deployment
 ---
 

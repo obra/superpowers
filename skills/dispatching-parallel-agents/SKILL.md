@@ -1,5 +1,5 @@
 ---
-name: dispatching-parallel-agents
+name: cortx:dispatching-parallel-agents
 description: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies
 ---
 

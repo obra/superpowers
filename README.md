@@ -29,7 +29,7 @@ In Claude Code:
 
 Sequential workflow with human validation at each stage:
 
-`/cortx:brainstorming` → `/cortx:writing-plans` → `/cortx:executing-plans` → `/cortx:finishing`
+`/cortx:brainstorming` → `/cortx:writing-plans` → `/cortx:executing-plans` → `/cortx:finishing-a-development-branch`
 
 1. **Brainstorming** — Refine the design through dialogue
 2. **Writing plans** — Break the design into detailed implementation tasks
@@ -54,15 +54,15 @@ The orchestrator decomposes the objective, dispatches tasks, reviews results, an
 | `cortx:writing-plans` | Detailed implementation plans |
 | `cortx:executing-plans` | Execute plans with cortx claim/gate/release cycle |
 | `cortx:subagent-driven-development` | Dispatch fresh subagent per task with review |
-| `cortx:tdd` | Red-green-refactor with memory |
-| `cortx:debugging` | Systematic root cause analysis with memory |
-| `cortx:verification` | Evidence before claims |
+| `cortx:test-driven-development` | Red-green-refactor with memory |
+| `cortx:systematic-debugging` | Systematic root cause analysis with memory |
+| `cortx:verification-before-completion` | Evidence before claims |
 | `cortx:requesting-code-review` | Code review dispatch |
 | `cortx:receiving-code-review` | Handle review feedback |
-| `cortx:worktrees` | Git worktree management |
-| `cortx:finishing` | Branch wrap-up (merge/PR/keep/discard) |
+| `cortx:using-git-worktrees` | Git worktree management |
+| `cortx:finishing-a-development-branch` | Branch wrap-up (merge/PR/keep/discard) |
 | `cortx:auto` | Autonomous orchestration mode |
-| `cortx:parallel-agents` | Concurrent subagent workflows |
+| `cortx:dispatching-parallel-agents` | Concurrent subagent workflows |
 | `cortx:writing-skills` | Create new skills |
 | `cortx:using-cortx` | Meta-skill: skill discovery and activation |
 
