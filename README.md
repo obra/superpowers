@@ -1,187 +1,96 @@
-# Superpowers
+# cortx-skills
 
-Superpowers is a complete software development workflow for your coding agents, built on top of a set of composable "skills" and some initial instructions that make sure your agent uses them.
+AI-native development workflow for coding agents, deeply integrated with [cortx](https://github.com/tienedev/cortx) MCP for orchestrated software development.
 
-## How it works
+Fork of [superpowers](https://github.com/obra/superpowers) by Jesse Vincent ([@obra](https://github.com/obra)).
 
-It starts from the moment you fire up your coding agent. As soon as it sees that you're building something, it *doesn't* just jump into trying to write code. Instead, it steps back and asks you what you're really trying to do. 
+> **cortx-skills replaces superpowers entirely.** Do not install both.
 
-Once it's teased a spec out of the conversation, it shows it to you in chunks short enough to actually read and digest. 
+## Prerequisites
 
-After you've signed off on the design, your agent puts together an implementation plan that's clear enough for an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing to follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY. 
-
-Next up, once you say "go", it launches a *subagent-driven-development* process, having agents work through each engineering task, inspecting and reviewing their work, and continuing forward. It's not uncommon for Claude to be able to work autonomously for a couple hours at a time without deviating from the plan you put together.
-
-There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Superpowers.
-
-
-## Sponsorship
-
-If Superpowers has helped you do stuff that makes money and you are so inclined, I'd greatly appreciate it if you'd consider [sponsoring my opensource work](https://github.com/sponsors/obra).
-
-Thanks! 
-
-- Jesse
-
+- **cortx binary** installed and on your PATH
+- **cortx MCP server running** — cortx-skills has a hard dependency on the cortx MCP server. All skills call cortx MCP tools (`proxy_exec`, `memory_recall`, `memory_store`, `planning_*`). There is no fallback.
 
 ## Installation
 
-**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex and OpenCode require manual setup.
+```bash
+git clone https://github.com/tienedev/cortx-skills
+```
 
-### Claude Code Official Marketplace
-
-Superpowers is available via the [official Claude plugin marketplace](https://claude.com/plugins/superpowers)
-
-Install the plugin from Claude marketplace:
+In Claude Code:
 
 ```bash
-/plugin install superpowers@claude-plugins-official
+/plugin install cortx-skills --path /path/to/cortx-skills
 ```
 
-### Claude Code (via Plugin Marketplace)
+## Two Modes
 
-In Claude Code, register the marketplace first:
+### Architecte Mode (human-in-the-loop)
 
-```bash
-/plugin marketplace add obra/superpowers-marketplace
-```
+Sequential workflow with human validation at each stage:
 
-Then install the plugin from this marketplace:
+`/cortx:brainstorming` → `/cortx:writing-plans` → `/cortx:executing-plans` → `/cortx:finishing`
 
-```bash
-/plugin install superpowers@superpowers-marketplace
-```
+1. **Brainstorming** — Refine the design through dialogue
+2. **Writing plans** — Break the design into detailed implementation tasks
+3. **Executing plans** — Execute tasks with cortx claim/gate/release cycle
+4. **Finishing** — Wrap up the branch (merge/PR/keep/discard)
 
-### Cursor (via Plugin Marketplace)
+### Auto Mode (autonomous)
 
-In Cursor Agent chat, install from marketplace:
-
-```text
-/add-plugin superpowers
-```
-
-or search for "superpowers" in the plugin marketplace.
-
-### Codex
-
-Tell Codex:
+Single command, fully autonomous execution:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md
+/cortx:auto "implement feature X"
 ```
 
-**Detailed docs:** [docs/README.codex.md](docs/README.codex.md)
+The orchestrator decomposes the objective, dispatches tasks, reviews results, and drives to completion without human intervention.
 
-### OpenCode
+## Available Skills
 
-Tell OpenCode:
+| Skill | Description |
+|-------|-------------|
+| `cortx:brainstorming` | Design refinement through dialogue |
+| `cortx:writing-plans` | Detailed implementation plans |
+| `cortx:executing-plans` | Execute plans with cortx claim/gate/release cycle |
+| `cortx:subagent-driven-development` | Dispatch fresh subagent per task with review |
+| `cortx:tdd` | Red-green-refactor with memory |
+| `cortx:debugging` | Systematic root cause analysis with memory |
+| `cortx:verification` | Evidence before claims |
+| `cortx:requesting-code-review` | Code review dispatch |
+| `cortx:receiving-code-review` | Handle review feedback |
+| `cortx:worktrees` | Git worktree management |
+| `cortx:finishing` | Branch wrap-up (merge/PR/keep/discard) |
+| `cortx:auto` | Autonomous orchestration mode |
+| `cortx:parallel-agents` | Concurrent subagent workflows |
+| `cortx:writing-skills` | Create new skills |
+| `cortx:using-cortx` | Meta-skill: skill discovery and activation |
+
+## cortx Integration
+
+All skills communicate through cortx MCP tools:
+
+- **`proxy_exec`** — secure command execution through the 7-layer pipeline
+- **`memory_recall` / `memory_store`** — persistent context across sessions
+- **`planning_list_tasks` / `planning_next_task` / `planning_complete_task`** — kanban-based task tracking
+
+## Auto Mode Quickstart
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
+/cortx:auto "add rate limiting to the API endpoints"
 ```
 
-**Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
+The orchestrator will:
+1. Recall relevant context from memory
+2. Decompose the objective into tasks on the kanban board
+3. Claim and execute each task through `proxy_exec`
+4. Review results and store learnings in memory
+5. Complete or escalate based on outcomes
 
-### Gemini CLI
+## Acknowledgments
 
-```bash
-gemini extensions install https://github.com/obra/superpowers
-```
-
-To update:
-
-```bash
-gemini extensions update superpowers
-```
-
-### Verify Installation
-
-Start a new session in your chosen platform and ask for something that should trigger a skill (for example, "help me plan this feature" or "let's debug this issue"). The agent should automatically invoke the relevant superpowers skill.
-
-## The Basic Workflow
-
-1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
-
-2. **using-git-worktrees** - Activates after design approval. Creates isolated workspace on new branch, runs project setup, verifies clean test baseline.
-
-3. **writing-plans** - Activates with approved design. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
-
-4. **subagent-driven-development** or **executing-plans** - Activates with plan. Dispatches fresh subagent per task with two-stage review (spec compliance, then code quality), or executes in batches with human checkpoints.
-
-5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
-
-6. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
-
-7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
-
-**The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
-
-## What's Inside
-
-### Skills Library
-
-**Testing**
-- **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
-
-**Debugging**
-- **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
-- **verification-before-completion** - Ensure it's actually fixed
-
-**Collaboration** 
-- **brainstorming** - Socratic design refinement
-- **writing-plans** - Detailed implementation plans
-- **executing-plans** - Batch execution with checkpoints
-- **dispatching-parallel-agents** - Concurrent subagent workflows
-- **requesting-code-review** - Pre-review checklist
-- **receiving-code-review** - Responding to feedback
-- **using-git-worktrees** - Parallel development branches
-- **finishing-a-development-branch** - Merge/PR decision workflow
-- **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
-
-**Meta**
-- **writing-skills** - Create new skills following best practices (includes testing methodology)
-- **using-superpowers** - Introduction to the skills system
-
-## Philosophy
-
-- **Test-Driven Development** - Write tests first, always
-- **Systematic over ad-hoc** - Process over guessing
-- **Complexity reduction** - Simplicity as primary goal
-- **Evidence over claims** - Verify before declaring success
-
-Read more: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
-
-## Contributing
-
-Skills live directly in this repository. To contribute:
-
-1. Fork the repository
-2. Create a branch for your skill
-3. Follow the `writing-skills` skill for creating and testing new skills
-4. Submit a PR
-
-See `skills/writing-skills/SKILL.md` for the complete guide.
-
-## Updating
-
-Skills update automatically when you update the plugin:
-
-```bash
-/plugin update superpowers
-```
+Fork of [superpowers](https://github.com/obra/superpowers) by Jesse Vincent ([@obra](https://github.com/obra)). The original skill architecture and workflow patterns are his work.
 
 ## License
 
-MIT License - see LICENSE file for details
-
-## Community
-
-Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of the folks at [Prime Radiant](https://primeradiant.com).
-
-For community support, questions, and sharing what you're building with Superpowers, join us on [Discord](https://discord.gg/Jd8Vphy9jq).
-
-## Support
-
-- **Discord**: [Join us on Discord](https://discord.gg/Jd8Vphy9jq)
-- **Issues**: https://github.com/obra/superpowers/issues
-- **Marketplace**: https://github.com/obra/superpowers-marketplace
+MIT License — see LICENSE file for details.
