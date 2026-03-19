@@ -110,6 +110,17 @@ When multiple skills could apply, use this order:
 
 The skill itself tells you which.
 
+## Rule Priority
+
+When skills conflict, follow this hierarchy:
+
+1. **Verification** (non-negotiable) — always verify before claiming completion
+2. **TDD** — write tests first for any production code
+3. **Debugging** — follow systematic process before proposing fixes
+4. **All other skills** — apply in context order
+
+Verification is never skipped, even when user instructions override TDD or debugging workflows.
+
 ## User Instructions
 
 Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
