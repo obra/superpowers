@@ -211,3 +211,7 @@ When replying to inline review comments on GitHub, reply in the comment thread (
 Verify. Question. Then implement.
 
 No performative agreement. Technical rigor always.
+
+## cortx Memory
+
+After implementing review feedback that reveals an important pattern or architectural decision, call `memory_store` to persist the finding for future sessions.

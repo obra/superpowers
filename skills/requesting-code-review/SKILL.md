@@ -23,6 +23,8 @@ Dispatch cortx:code-reviewer subagent to catch issues before they cascade. The r
 
 ## How to Request
 
+**cortx context enrichment:** Before dispatching the reviewer, call `memory_recall` with the feature name to retrieve the original design decisions and spec context. Include relevant findings in the reviewer's context.
+
 **1. Get git SHAs:**
 ```bash
 BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
