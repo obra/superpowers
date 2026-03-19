@@ -13,6 +13,8 @@ Random fixes waste time and create new bugs. Quick patches mask underlying issue
 
 **Violating the letter of this process is violating the spirit of debugging.**
 
+**Note:** All commands during debugging must go through `proxy_exec`. This provides git checkpoints, rollback capability, and execution tracking.
+
 ## The Iron Law
 
 ```
@@ -48,6 +50,8 @@ Use for ANY technical issue:
 You MUST complete each phase before proceeding to the next.
 
 ### Phase 1: Root Cause Investigation
+
+**cortx Memory Check:** Before investigating, call `memory_recall` with the error message or symptoms. cortx may have encountered this bug or a similar one in past sessions. If a causal chain exists, it can point directly to the resolution files — potentially skipping most of the investigation.
 
 **BEFORE attempting ANY fix:**
 
@@ -211,6 +215,8 @@ You MUST complete each phase before proceeding to the next.
    **Discuss with your human partner before attempting more fixes**
 
    This is NOT a failed hypothesis - this is a wrong architecture.
+
+**cortx Memory Persist:** After fixing, call `memory_store` to persist the root cause and fix as a causal chain. This ensures future sessions can recall this fix if the same error pattern reappears.
 
 ## Red Flags - STOP and Follow Process
 
