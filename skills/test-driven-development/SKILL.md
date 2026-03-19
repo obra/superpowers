@@ -25,6 +25,8 @@ Write the test first. Watch it fail. Write minimal code to pass.
 - Throwaway prototypes
 - Generated code
 - Configuration files
+- Spike solutions (time-boxed exploration to validate feasibility before committing to an approach)
+- Exploratory data analysis, rapid UI prototyping, or one-off scripts (not production code)
 
 Thinking "skip TDD just this once"? Stop. That's rationalization.
 
