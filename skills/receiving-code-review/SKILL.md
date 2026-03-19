@@ -211,12 +211,3 @@ When replying to inline review comments on GitHub, reply in the comment thread (
 Verify. Question. Then implement.
 
 No performative agreement. Technical rigor always.
-
-## Integration
-
-**Called by:**
-- **superpowers:requesting-code-review** — after code review is received
-
-**Pairs with:**
-- **superpowers:verification-before-completion** — verify each fix individually before claiming done
-- **superpowers:test-driven-development** — use TDD cycle when implementing review feedback
