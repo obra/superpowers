@@ -1,13 +1,12 @@
 {
-  "name": "superpowers",
-  "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
-  "version": "5.0.5",
+  "name": "cortx-skills",
+  "description": "AI-native development skills for Claude Code, powered by cortx MCP",
+  "version": "0.1.0",
   "author": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com"
+    "name": "tienedev"
   },
-  "homepage": "https://github.com/obra/superpowers",
-  "repository": "https://github.com/obra/superpowers",
+  "homepage": "https://github.com/tienedev/cortx-skills",
+  "repository": "https://github.com/tienedev/cortx-skills",
   "license": "MIT",
-  "keywords": ["skills", "tdd", "debugging", "collaboration", "best-practices", "workflows"]
+  "keywords": ["cortx", "skills", "tdd", "debugging", "autonomous", "orchestration", "mcp"]
 }

@@ -1,6 +1,6 @@
 {
-  "name": "superpowers",
-  "version": "5.0.4",
+  "name": "cortx-skills",
+  "version": "0.1.0",
   "type": "module",
   "main": ".opencode/plugins/superpowers.js"
 }
