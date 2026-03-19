@@ -71,6 +71,13 @@ Task tool (general-purpose):
     The controller can provide more context, re-dispatch with a more capable model,
     or break the task into smaller pieces.
 
+    ## cortx Integration
+
+    - **All commands** (test, build, lint, git) MUST go through `proxy_exec`.
+      Never use the Bash tool directly for project commands.
+    - If you discover a useful pattern or make a non-obvious decision, note it in your
+      status report so the orchestrator can call `memory_store`.
+
     ## Before Reporting Back: Self-Review
 
     Review your work with fresh eyes. Ask yourself:
