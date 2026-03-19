@@ -41,7 +41,7 @@ There's a bunch more to it, but that's the core of the system. And because the s
 
 ## Sponsorship
 
-If Superpowers has helped you do stuff that makes money and you are so inclined, I'd greatly appreciate it if you'd consider [sponsoring my opensource work](https://github.com/sponsors/obra).
+If Superpowers has helped you do stuff that makes money and you are so inclined, I'd greatly appreciate it if you'd consider [sponsoring my Jesse's opensource work](https://github.com/sponsors/obra).
 
 Thanks! 
 
