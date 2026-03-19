@@ -49,6 +49,16 @@ Skip any step = lying, not verifying
 | Agent completed | VCS diff shows changes | Agent reports "success" |
 | Requirements met | Line-by-line checklist | Tests passing |
 
+## Quick Reference
+
+| Action | Verification Command |
+|--------|---------------------|
+| Claiming tests pass | Run full test suite, confirm 0 failures |
+| Claiming build succeeds | Run build command, confirm exit 0 |
+| Claiming bug is fixed | Run test reproducing original symptom |
+| Claiming requirements met | Re-read plan, check each item line-by-line |
+| Claiming agent completed | Check VCS diff, verify changes independently |
+
 ## Red Flags - STOP
 
 - Using "should", "probably", "seems to"
