@@ -21,11 +21,11 @@ Fully autonomous end-to-end implementation pipeline. Takes a task description an
 
 - Need human-in-the-loop for design decisions — use brainstorming + writing-plans instead
 - Task is too vague to brainstorm even with expert panels — clarify first
-- Need git operations (commit, branch, PR) — caller's responsibility
+- Need git push, branch, or PR — caller's responsibility
 
 ## Non-Goals
 
-- Git operations (commit, branch, merge, PR) — caller controls these
+- Git push, branch creation, merge, or PR — caller controls these
 - Worktree management — caller decides execution context
 - Interactive user confirmation at any phase — everything autonomous
 
@@ -36,6 +36,33 @@ Accepts:
 - **Optional:** PRD reference, existing spec, design-principles.md, specific constraints
 
 If input is ambiguous or too vague, dispatch an expert panel to clarify intent rather than asking the user.
+
+## Git Policy
+
+The orchestrator owns committing but never pushes. Subagents never touch git.
+
+**Before Phase 1:** Ensure `docs/superpowers/plans/` is in `.gitignore`. If not, add it and commit the `.gitignore` change.
+
+**Commit points:**
+
+| When | What to commit | Message pattern |
+|------|---------------|-----------------|
+| After Phase 1 (spec produced) | `docs/superpowers/specs/YYYY-MM-DD-<slug>-design.md` | `feat(<slug>): add design spec` |
+| After Phase 2 (spec refined) | Updated spec file | `refine(<slug>): spec converged round {N}` |
+| After each Phase 5 task | Files from `FILES_TOUCHED` | `feat(<slug>): implement task {N} — {task name}` |
+| After Phase 6 fixes | Fixed files | `fix(<slug>): spec verification fixes` |
+| After Phase 7 (e2e tests) | Test files | `test(<slug>): add e2e tests` |
+
+**Never commit:**
+- Plans (`docs/superpowers/plans/`) — ephemeral working documents, must be gitignored
+- Temporary or intermediate files
+
+**Never:**
+- Push to remote
+- Create branches
+- Create PRs or merge
+
+**Subagent git override:** Implementer subagents are told: "Do not make any git operations (commit, branch, push). The orchestrator controls git. Skip any 'Commit your work' steps." The orchestrator commits after each task passes review.
 
 ## Resume Detection
 
@@ -191,7 +218,7 @@ Gathers all available project context: codebase structure, frameworks, test setu
 - If Pass 2 introduces no new `NEEDS_DECISION` tags → done
 - If new `NEEDS_DECISION` tags → resolve via expert panel, re-dispatch (max 3 total passes)
 
-**Exit criteria:** Spec file written with no remaining `NEEDS_DECISION` tags.
+**Exit criteria:** Spec file written with no remaining `NEEDS_DECISION` tags. **Commit the spec.**
 
 ### Phase 2: Spec Refinement
 
@@ -209,7 +236,7 @@ Gathers all available project context: codebase structure, frameworks, test setu
 
 Write `Refinement: CONVERGED round {N}` to `## Refinement Status` section of spec.
 
-**Exit criteria:** Spec converged or max iterations with expert panel resolution.
+**Exit criteria:** Spec converged or max iterations with expert panel resolution. **Commit the refined spec.**
 
 ### Phase 3: Plan Writing
 
@@ -248,8 +275,7 @@ Write `Refinement: CONVERGED round {N}` to `## Refinement Status` section of pla
 
 **Reuses:** `skills/subagent-driven-development/implementer-prompt.md`, `skills/subagent-driven-development/spec-reviewer-prompt.md`, `skills/subagent-driven-development/code-quality-reviewer-prompt.md`
 
-**CRITICAL GIT OVERRIDE:** When dispatching implementer subagents, prepend this instruction:
-"Do not make any git operations (commit, branch, push). The caller controls git. Skip any 'Commit your work' steps in the task."
+**Git:** Subagents do not commit (see Git Policy). The orchestrator commits after each task passes both reviews.
 
 **Model selection:**
 
@@ -261,15 +287,16 @@ Write `Refinement: CONVERGED round {N}` to `## Refinement Status` section of pla
 | Expert panel (when blocked) | sonnet (panelists), opus (moderator) |
 
 **Per-task flow:**
-1. Dispatch fresh implementer subagent with: full task text, spec excerpt, Phase 0 context, git override
+1. Dispatch fresh implementer subagent with: full task text, spec excerpt, Phase 0 context, git override (see Git Policy)
 2. Implementer MUST include `FILES_TOUCHED: [list]` in response
 3. Dispatch spec-reviewer → if issues, re-dispatch implementer (max 3 rounds)
 4. Dispatch code-quality-reviewer → if issues, re-dispatch implementer (max 3 rounds)
-5. If implementer reports `BLOCKED` or `NEEDS_CONTEXT`:
+5. **Orchestrator commits** the FILES_TOUCHED for this task
+6. If implementer reports `BLOCKED` or `NEEDS_CONTEXT`:
    - Dispatch expert panel to resolve
    - Re-dispatch fresh implementer with: original task + expert answers + FILES_TOUCHED from previous
 
-**Exit criteria:** All tasks completed and reviewed.
+**Exit criteria:** All tasks completed, reviewed, and committed.
 
 ### Phase 6: Spec Verification
 
@@ -304,7 +331,7 @@ Write `Refinement: CONVERGED round {N}` to `## Refinement Status` section of pla
 - Run tests to confirm passing
 - If tests fail: re-dispatch test-writer with failure output (max 3 attempts)
 
-**Exit criteria:** E2E tests written and passing.
+**Exit criteria:** E2E tests written and passing. **Commit the test files.**
 
 ## Orchestrator State
 
@@ -372,7 +399,9 @@ When all phases complete, output:
 - Skip spec refinement or plan refinement phases
 - Execute without verification (Phase 6)
 - Ship without e2e tests (Phase 7)
-- Make git operations (commit, push, branch, merge)
+- Push, create branches, create PRs, or merge
+- Commit plans (`docs/superpowers/plans/`) — they must be gitignored
+- Let subagents make git operations
 - Manage worktrees
 
 **Always:**
@@ -381,4 +410,7 @@ When all phases complete, output:
 - Run to completion — every phase
 - Use opus for moderator decisions, sonnet for panelists and implementation
 - Prepend research boilerplate to every subagent dispatch
-- Override git instructions in implementer prompts
+- Override git instructions in implementer prompts (see Git Policy)
+- Commit specs after producing and after refining
+- Commit after each completed task in Phase 5
+- Ensure `docs/superpowers/plans/` is gitignored before writing plans
