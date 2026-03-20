@@ -1,25 +1,53 @@
 (function() {
   const WS_URL = 'ws://' + window.location.host;
+  const BACKOFF_INITIAL = 500;
+  const BACKOFF_MAX = 30000;
+
   let ws = null;
   let eventQueue = [];
+  let backoff = BACKOFF_INITIAL;
+  let reconnectTimer = null;
+
+  function setStatus(state) {
+    var el = document.querySelector('.header .status');
+    if (!el) return;
+    var labels = { connected: 'Connected', reconnecting: 'Reconnecting\u2026', disconnected: 'Disconnected' };
+    var colors = { connected: 'var(--success)', reconnecting: 'var(--warning)', disconnected: 'var(--error)' };
+    el.textContent = labels[state] || state;
+    el.style.color = colors[state] || '';
+    el.style.setProperty('--status-color', colors[state] || 'var(--success)');
+  }
 
   function connect() {
+    if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+    setStatus('reconnecting');
     ws = new WebSocket(WS_URL);
 
-    ws.onopen = () => {
-      eventQueue.forEach(e => ws.send(JSON.stringify(e)));
+    ws.onopen = function() {
+      backoff = BACKOFF_INITIAL;
+      setStatus('connected');
+      eventQueue.forEach(function(e) { ws.send(JSON.stringify(e)); });
       eventQueue = [];
     };
 
-    ws.onmessage = (msg) => {
-      const data = JSON.parse(msg.data);
+    ws.onmessage = function(msg) {
+      var data = JSON.parse(msg.data);
       if (data.type === 'reload') {
         window.location.reload();
       }
     };
 
-    ws.onclose = () => {
-      setTimeout(connect, 1000);
+    ws.onerror = function() {
+      // onclose fires after onerror, so reconnect is handled there
+    };
+
+    ws.onclose = function() {
+      ws = null;
+      setStatus('disconnected');
+      reconnectTimer = setTimeout(function() {
+        backoff = Math.min(backoff * 2, BACKOFF_MAX);
+        connect();
+      }, backoff);
     };
   }
 
