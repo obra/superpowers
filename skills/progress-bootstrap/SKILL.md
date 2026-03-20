@@ -1,94 +1,89 @@
 ---
 name: progress-bootstrap
-description: Use when a project needs progress memory initialized or .progress structure is missing - creates the canonical .progress layout safely and idempotently
+description: Use when a repository needs category-based progress storage initialized or the canonical progress/ structure is missing
 ---
 
 # progress-bootstrap
 
 ## Overview
 
-Initialize project progress memory at `.progress/`.
+Initialize project progress memory under `progress/`.
 
-This skill sets up a canonical, tool-agnostic structure for implementation history and lessons learned.
+This skill sets up a canonical, tool-agnostic structure for progress records organized by category instead of a single global log.
 
 ## When to Use
 
 Use this skill when:
-- A repository does not have `.progress/`
-- `.progress/PROGRESS.md` is missing
-- `.progress/entries/<YYYY>/` is missing
+- A repository does not have `progress/`
+- `progress/<category>/PROGRESS.md` is missing for a required default category
+- `progress/<category>/entries/<YYYY-MM>/` is missing for a required default category
 - A user explicitly asks to initialize progress tracking
+
+This skill initializes the default categories only. It guarantees the default-category scaffold plus the current UTC month bucket. Non-default categories should only be created after their admission rule is explicitly defined, then they must follow the same structure contract rather than being inferred silently.
 
 ## Outputs
 
-- `.progress/PROGRESS.md`
-- `.progress/entries/<YYYY>/`
-- `.progress/entries/<YYYY>/.gitkeep` (if needed)
+- `progress/`
+- `progress/milestone/PROGRESS.md`
+- `progress/milestone/entries/<YYYY-MM>/`
+- `progress/milestone/entries/<YYYY-MM>/.gitkeep` (if needed)
+- `progress/debug/PROGRESS.md`
+- `progress/debug/entries/<YYYY-MM>/`
+- `progress/debug/entries/<YYYY-MM>/.gitkeep` (if needed)
+- `progress/refactor/PROGRESS.md`
+- `progress/refactor/entries/<YYYY-MM>/`
+- `progress/refactor/entries/<YYYY-MM>/.gitkeep` (if needed)
 
 ## Execution Rules
 
-- Canonical location is `.progress/`.
-- Do not use `.agents/`.
+- Canonical location is `progress/`.
+- Default categories are `milestone`, `debug`, and `refactor`.
+- Default bootstrap scope is limited to `milestone`, `debug`, and `refactor`.
 - Create missing files/directories only.
 - Never overwrite existing `PROGRESS.md` or entry files.
 - Keep operations idempotent (safe to run repeatedly).
 
 ## Execution Steps
 
-1. Check whether `.progress/` exists.
-2. Create `.progress/` if missing.
-3. Check whether `.progress/PROGRESS.md` exists.
-4. If missing, create `.progress/PROGRESS.md` with the complete file content below.
-   Do not replace it with section names, summaries, or alternate headings.
-   Preserve the line order and blank lines exactly as shown, using LF line endings and a trailing newline.
+1. Check whether `progress/` exists.
+2. Create `progress/` if missing.
+3. For each default category (`milestone`, `debug`, `refactor`):
+   - Ensure `progress/<category>/` exists.
+   - Ensure `progress/<category>/PROGRESS.md` exists.
+   - If `PROGRESS.md` is missing, create it from the category-specific template file listed below.
+   - Ensure `progress/<category>/entries/<YYYY-MM>/` exists for the current UTC month derived from the system clock (`YYYY-MM`).
+   - Create `progress/<category>/entries/<YYYY-MM>/.gitkeep` if the month folder is empty.
 
-~~~text
-## Entry Template
+Create the default category files from these exact templates under `template/`:
 
-```markdown
-# YYYY-MM-DD-N
+- `milestone` -> `template/milestone-progress-template.md`
+- `debug` -> `template/debug-progress-template.md`
+- `refactor` -> `template/refactor-progress-template.md`
 
-## Date
-YYYY-MM-DD
+For the default categories, use these admission rules:
 
-## Title
-[Short actionable title]
+- `milestone`: larger complete changes that form a meaningful feature, architecture adjustment, or workflow closure
+- `debug`: complete debugging closures where the problem is identified, fixed, and verified
+- `refactor`: larger complete structural improvements that substantially improve code organization, boundaries, or maintainability without centering on new user-facing behavior
 
-## Background / Issue
-[Context, trigger, constraints]
+Month folders are physical storage buckets only. `progress/<category>/PROGRESS.md` remains the category-wide global index and is not split per month.
 
-## Actions / Outcome
-- Approach 1: [what was tried] -> [result]
-- Approach 2: [what was tried] -> [result]
-- Final approach: [adopted approach] -> [why it worked]
+For non-default categories, create the same structure explicitly when that category is formally adopted:
 
-## Lessons / Refinements
-- [Reusable pattern]
-- [Avoidance note]
+- `progress/<category>/PROGRESS.md`
+- `progress/<category>/entries/<YYYY-MM>/`
+- `progress/<category>/entries/<YYYY-MM>/.gitkeep` if needed
 
-## Related Commit Message
-type(scope): summary
-
-## Related Commit Hash
-abc123d (or TBD)
-```
-
-## Global TOC
-
-| Page ID | Date | Title | Path | Keywords |
-| --- | --- | --- | --- | --- |
-~~~
-
-5. Ensure `.progress/entries/<YYYY>/` exists for the UTC year derived from the current system clock (`new Date().getUTCFullYear()`); in CI or distributed runs, every agent must use that same UTC-based year so `YYYY` resolves consistently.
-6. Create `.progress/entries/<YYYY>/.gitkeep` if the year folder is empty.
+For non-default categories, start from `template/category-progress-template.md` and fill in the repository-specific admission rule and notes.
 
 ## Error Handling
 
 - If write permission is missing, stop and report the exact path.
-- If `.progress` path is occupied by a file, stop and report conflict.
+- If `progress` path is occupied by a file, stop and report conflict.
 - If file creation fails, stop and return the failing command and reason.
 
 ## Notes
 
 - This skill initializes structure only.
-- Daily recording and TOC updates belong to `progress-tracker`.
+- Recording entries and updating category TOCs belong to `progress-tracker`.
+- Additional categories can be added later by creating the same `PROGRESS.md` + `entries/<YYYY-MM>/` structure.
