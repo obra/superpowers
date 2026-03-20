@@ -13,6 +13,7 @@ This fork extends the core superpowers workflow with a full Ruby on Rails skills
 - **Official Rails guides** indexed for quick reference
 - **37signals/Basecamp patterns** derived from Fizzy codebase analysis
 - **Hotwire** (Turbo + Stimulus) skills from Hotwire Club
+- **Commit messages** following Conventional Commits with Rails-specific body guidance
 
 All examples, test commands, and file references use Ruby/Rails conventions throughout.
 
@@ -144,6 +145,7 @@ Start a new session in your chosen platform and ask for something that should tr
 - **sandi-metz-rules** - OOP design rules for maintainable Ruby
 - **rails-guides** - Official Rails documentation index (ActiveRecord, routing, controllers, views, jobs, mailers, Action Cable, etc.)
 - **37signals-style** - 37signals/Basecamp Rails patterns (controllers, models, Hotwire, testing, etc.)
+- **ruby-commit-message** - Conventional Commits for Rails projects with body written for junior developers
 
 **Hotwire / Turbo / Stimulus**
 - **hwc-stimulus-fundamentals** - Stimulus controller lifecycle, values, targets, outlets
