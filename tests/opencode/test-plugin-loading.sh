@@ -32,7 +32,9 @@ fi
 
 # Test 2: Verify skills directory is populated
 echo "Test 2: Checking skills directory..."
-skill_count=$(find "$HOME/.config/opencode/superpowers/skills" -name "SKILL.md" | wc -l)
+plugin_file="$HOME/.config/opencode/superpowers/.opencode/plugins/superpowers.js"
+runtime_skills_dir=$(node --input-type=module -e "import path from 'path'; console.log(path.resolve(process.argv[1], '../../skills'));" "$(dirname "$plugin_file")")
+skill_count=$(find "$runtime_skills_dir" -name "SKILL.md" | wc -l)
 if [ "$skill_count" -gt 0 ]; then
     echo "  [PASS] Found $skill_count skills installed"
 else
@@ -42,7 +44,7 @@ fi
 
 # Test 4: Check using-superpowers skill exists (critical for bootstrap)
 echo "Test 4: Checking using-superpowers skill (required for bootstrap)..."
-if [ -f "$HOME/.config/opencode/superpowers/skills/using-superpowers/SKILL.md" ]; then
+if [ -f "$runtime_skills_dir/using-superpowers/SKILL.md" ]; then
     echo "  [PASS] using-superpowers skill exists"
 else
     echo "  [FAIL] using-superpowers skill not found (required for bootstrap)"
@@ -51,11 +53,26 @@ fi
 
 # Test 5: Verify plugin JavaScript syntax (basic check)
 echo "Test 5: Checking plugin JavaScript syntax..."
-plugin_file="$HOME/.config/opencode/superpowers/.opencode/plugins/superpowers.js"
 if node --check "$plugin_file" 2>/dev/null; then
     echo "  [PASS] Plugin JavaScript syntax is valid"
 else
     echo "  [FAIL] Plugin has JavaScript syntax errors"
+    exit 1
+fi
+
+# Test 5b: Verify bootstrap help text matches runtime path model
+echo "Test 5b: Checking bootstrap skills path text..."
+if grep -q '\${configDir}/skills/superpowers/' "$plugin_file"; then
+    echo "  [FAIL] Plugin still references old symlink-based skills path"
+    exit 1
+else
+    echo "  [PASS] Plugin does not reference old symlink-based skills path"
+fi
+
+if grep -q '\${superpowersSkillsDir}' "$plugin_file"; then
+    echo "  [PASS] Plugin references runtime skills path"
+else
+    echo "  [FAIL] Plugin does not reference runtime skills path"
     exit 1
 fi
 

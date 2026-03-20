@@ -17,9 +17,12 @@ trap cleanup_test_env EXIT
 # Create same skill "priority-test" in all three locations with different markers
 echo "Setting up priority test fixtures..."
 
+plugin_file="$HOME/.config/opencode/superpowers/.opencode/plugins/superpowers.js"
+superpowers_skills_dir=$(node --input-type=module -e "import path from 'path'; console.log(path.resolve(process.argv[1], '../../skills'));" "$(dirname "$plugin_file")")
+
 # 1. Create in superpowers location (lowest priority)
-mkdir -p "$HOME/.config/opencode/superpowers/skills/priority-test"
-cat > "$HOME/.config/opencode/superpowers/skills/priority-test/SKILL.md" <<'EOF'
+mkdir -p "$superpowers_skills_dir/priority-test"
+cat > "$superpowers_skills_dir/priority-test/SKILL.md" <<'EOF'
 ---
 name: priority-test
 description: Superpowers version of priority test skill
@@ -65,7 +68,7 @@ echo "  Created priority-test skill in all three locations"
 echo ""
 echo "Test 1: Verifying test fixtures..."
 
-if [ -f "$HOME/.config/opencode/superpowers/skills/priority-test/SKILL.md" ]; then
+if [ -f "$superpowers_skills_dir/priority-test/SKILL.md" ]; then
     echo "  [PASS] Superpowers version exists"
 else
     echo "  [FAIL] Superpowers version missing"
@@ -103,7 +106,7 @@ echo "  Running from outside project directory..."
 
 # Run from HOME (not in project) - should get personal version
 cd "$HOME"
-output=$(timeout 60s opencode run --print-logs "Use the use_skill tool to load the priority-test skill. Show me the exact content including any PRIORITY_MARKER text." 2>&1) || {
+output=$(timeout 60s opencode run --print-logs "Use the skill tool to load the priority-test skill. Show me the exact content including any PRIORITY_MARKER text." 2>&1) || {
     exit_code=$?
     if [ $exit_code -eq 124 ]; then
         echo "  [FAIL] OpenCode timed out after 60s"
@@ -129,7 +132,7 @@ echo "  Running from project directory..."
 
 # Run from project directory - should get project version
 cd "$TEST_HOME/test-project"
-output=$(timeout 60s opencode run --print-logs "Use the use_skill tool to load the priority-test skill. Show me the exact content including any PRIORITY_MARKER text." 2>&1) || {
+output=$(timeout 60s opencode run --print-logs "Use the skill tool to load the priority-test skill. Show me the exact content including any PRIORITY_MARKER text." 2>&1) || {
     exit_code=$?
     if [ $exit_code -eq 124 ]; then
         echo "  [FAIL] OpenCode timed out after 60s"
@@ -156,7 +159,7 @@ echo ""
 echo "Test 4: Testing superpowers: prefix forces superpowers version..."
 
 cd "$TEST_HOME/test-project"
-output=$(timeout 60s opencode run --print-logs "Use the use_skill tool to load superpowers:priority-test specifically. Show me the exact content including any PRIORITY_MARKER text." 2>&1) || {
+output=$(timeout 60s opencode run --print-logs "Use the skill tool to load superpowers:priority-test specifically. Show me the exact content including any PRIORITY_MARKER text." 2>&1) || {
     exit_code=$?
     if [ $exit_code -eq 124 ]; then
         echo "  [FAIL] OpenCode timed out after 60s"
@@ -178,7 +181,7 @@ echo ""
 echo "Test 5: Testing project: prefix forces project version..."
 
 cd "$HOME"  # Run from outside project but with project: prefix
-output=$(timeout 60s opencode run --print-logs "Use the use_skill tool to load project:priority-test specifically. Show me the exact content." 2>&1) || {
+output=$(timeout 60s opencode run --print-logs "Use the skill tool to load project:priority-test specifically. Show me the exact content." 2>&1) || {
     exit_code=$?
     if [ $exit_code -eq 124 ]; then
         echo "  [FAIL] OpenCode timed out after 60s"

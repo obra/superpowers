@@ -44,7 +44,7 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Tests:"
             echo "  test-plugin-loading.sh  Verify plugin installation and structure"
-            echo "  test-tools.sh           Test use_skill and find_skills tools (integration)"
+            echo "  test-tools.sh           Test native skill tool integration"
             echo "  test-priority.sh        Test skill priority resolution (integration)"
             exit 0
             ;;
