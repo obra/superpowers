@@ -27,8 +27,8 @@ You MUST create a task for each of these items and complete them in order:
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
 6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
-7. **Spec review loop** — dispatch spec-document-reviewer subagent with precisely crafted review context (never your session history); fix issues and re-dispatch until approved (max 3 iterations, then surface to human)
-8. **User reviews written spec** — ask user to review the spec file before proceeding
+7. **Spec review loop** — dispatch spec-document-reviewer subagent; fix issues and re-dispatch until approved (max 5 iterations, then surface to human)
+8. **User reviews written spec** — ask user to review the spec file; if changes requested, apply them and ask again; repeat until user explicitly approves
 9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
@@ -45,7 +45,9 @@ digraph brainstorming {
     "Write design doc" [shape=box];
     "Spec review loop" [shape=box];
     "Spec review passed?" [shape=diamond];
-    "User reviews spec?" [shape=diamond];
+    "Apply user changes" [shape=box];
+    "Ask user to review again" [shape=box];
+    "User satisfied?" [shape=diamond];
     "Invoke writing-plans skill" [shape=doublecircle];
 
     "Explore project context" -> "Visual questions ahead?";
@@ -60,9 +62,11 @@ digraph brainstorming {
     "Write design doc" -> "Spec review loop";
     "Spec review loop" -> "Spec review passed?";
     "Spec review passed?" -> "Spec review loop" [label="issues found,\nfix and re-dispatch"];
-    "Spec review passed?" -> "User reviews spec?" [label="approved"];
-    "User reviews spec?" -> "Write design doc" [label="changes requested"];
-    "User reviews spec?" -> "Invoke writing-plans skill" [label="approved"];
+    "Spec review passed?" -> "Ask user to review again" [label="approved"];
+    "Ask user to review again" -> "User satisfied?";
+    "User satisfied?" -> "Apply user changes" [label="changes requested"];
+    "Apply user changes" -> "Spec review loop" [label="re-run review"];
+    "User satisfied?" -> "Invoke writing-plans skill" [label="approved"];
 }
 ```
 
@@ -128,7 +132,15 @@ After the spec review loop passes, ask the user to review the written spec befor
 
 > "Spec written and committed to `<path>`. Please review it and let me know if you want to make any changes before we start writing out the implementation plan."
 
-Wait for the user's response. If they request changes, make them and re-run the spec review loop. Only proceed once the user approves.
+Wait for the user's response:
+- **If they approve:** proceed to invoke writing-plans skill
+- **If they request changes:**
+  1. Make the requested changes to the spec document
+  2. Re-run the spec review loop if needed
+  3. **Return to this User Review Gate** - ask again: "I've updated the spec based on your feedback. Please review the changes and let me know if you need any further modifications, or if we can proceed to the implementation plan."
+  4. Repeat this loop until the user explicitly approves
+
+**Critical:** Do NOT proceed to writing-plans until the user explicitly confirms they are satisfied with the spec.
 
 **Implementation:**
 
