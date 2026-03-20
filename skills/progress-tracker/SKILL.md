@@ -1,6 +1,6 @@
 ---
 name: progress-tracker
-description: Use when a closed, reviewable change unit should be recorded in progress/ under the appropriate category
+description: Use when a closed, reviewable change unit should be recorded in docs/superpowers/progress/ under the appropriate category
 ---
 
 # progress-tracker
@@ -37,10 +37,10 @@ Progress is not a work log. It is a record of complete, durable change units.
 
 Every entry must belong to exactly one category.
 
-Category admission rules are defined by the repository inside `progress/<category>/PROGRESS.md`, not hardcoded in this skill. The skill's job is to discover and follow that contract:
+Category admission rules are defined by the repository inside `docs/superpowers/progress/<category>/PROGRESS.md`, not hardcoded in this skill. The skill's job is to discover and follow that contract:
 
-- inspect the existing category directories under `progress/`
-- read candidate `progress/<category>/PROGRESS.md` files
+- inspect the existing category directories under `docs/superpowers/progress/`
+- read candidate `docs/superpowers/progress/<category>/PROGRESS.md` files
 - use each file's `Admission Rule` to decide where the change unit belongs
 - update the selected category's `Global TOC` when a new entry is written
 
@@ -52,7 +52,7 @@ Do not treat pure exploration as a recordable category unless the repository exp
 
 ## Prerequisite
 
-If `progress/` is missing, or no repository-defined category structure exists yet, run `progress-bootstrap` first. If the selected target category or target month bucket is still missing after bootstrap, use `progress-bootstrap` to establish the required structure before writing the entry.
+If `docs/superpowers/progress/` is missing, or no repository-defined category structure exists yet, run `progress-bootstrap` first. If the selected target category or target month bucket is still missing after bootstrap, use `progress-bootstrap` to establish the required structure before writing the entry.
 
 ## Required Entry Fields
 
@@ -74,16 +74,16 @@ Optional when useful:
 
 ## Entry Location and Naming
 
-- Root: `progress/`
-- Category index: `progress/<category>/PROGRESS.md`
-- Entries: `progress/<category>/entries/<YYYY-MM>/YYYY-MM-DD-N.md`
+- Root: `docs/superpowers/progress/`
+- Category index: `docs/superpowers/progress/<category>/PROGRESS.md`
+- Entries: `docs/superpowers/progress/<category>/entries/<YYYY-MM>/YYYY-MM-DD-N.md`
 - `N` increments for multiple entries in the same category on the same date
 
-Month folders are physical storage buckets only. `progress/<category>/PROGRESS.md` stays the category-wide global index and declaration file.
+Month folders are physical storage buckets only. `docs/superpowers/progress/<category>/PROGRESS.md` stays the category-wide global index and declaration file.
 
 ## TOC Contract
 
-Maintain the category-specific `Global TOC` table inside `progress/<category>/PROGRESS.md` using `template/toc-table-template.md`.
+Maintain the category-specific `Global TOC` table inside `docs/superpowers/progress/<category>/PROGRESS.md` using `template/toc-table-template.md`.
 
 Each new entry appends one row to its category `PROGRESS.md` only.
 
@@ -99,7 +99,7 @@ Example row format belongs in the repository's category `PROGRESS.md`, not in th
 
 ## Recording Rules
 
-- Canonical location is `progress/`.
+- Canonical location is `docs/superpowers/progress/`.
 - `Related Commits` must list real, existing commits only.
 - `Related Commits` should be ordered chronologically or by commit sequence.
 - `Keywords` in `PROGRESS.md` should be 2-5 short comma-separated terms summarizing the topic, area, or issue.
