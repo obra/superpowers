@@ -23,7 +23,7 @@ Before asking questions, dispatch a single Explore subagent:
 ```
 Task(
   description="Explore project structure",
-  prompt=[Use ./clarification-explorer-prompt.md template with user's request],
+  prompt=[Use ${CLAUDE_SKILL_DIR}/clarification-explorer-prompt.md template with user's request],
   subagent_type="Explore",
   model="haiku"
 )

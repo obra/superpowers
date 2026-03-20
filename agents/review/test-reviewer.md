@@ -1,7 +1,9 @@
 ---
 name: test-reviewer
 model: haiku
+effort: low
 tools: Read, Grep, Glob
+disallowedTools: Edit, Write, NotebookEdit
 description: |
   Use this agent to review test coverage, edge cases, and test quality.
   Dispatched by code review.

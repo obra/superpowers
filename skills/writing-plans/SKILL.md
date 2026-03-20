@@ -1,6 +1,7 @@
 ---
 name: writing-plans
 description: Use when you have a spec or requirements for a multi-step task, before touching code
+effort: high
 allowed-tools: Read, Grep, Glob, Write, Task, AskUserQuestion
 user-invocable: false
 ---
@@ -73,7 +74,7 @@ Proceed without asking when:
 - **Context-aware** - reference codebase findings, not generic templates
 - **One focus per question** - goal, scope, or constraints
 
-Use template: `./request-clarification-prompt.md`
+Use template: `${CLAUDE_SKILL_DIR}/request-clarification-prompt.md`
 
 ### Clarification Exploration Subagent
 
@@ -81,7 +82,7 @@ Dispatch a single Explore subagent before asking questions:
 
 - **Type:** `Explore` (read-only, fast)
 - **Model:** `haiku` (cheapest, sufficient for structure scanning)
-- **Template:** `./clarification-explorer-prompt.md`
+- **Template:** `${CLAUDE_SKILL_DIR}/clarification-explorer-prompt.md`
 - **Dispatch:** Synchronous (wait for results before proceeding)
 
 The subagent returns findings as text. Orchestrator writes findings to `docs/hyperpowers/handoffs/context-clarification-exploration.md` then uses them for question design.

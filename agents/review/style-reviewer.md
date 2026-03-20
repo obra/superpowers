@@ -1,7 +1,9 @@
 ---
 name: style-reviewer
 model: haiku
+effort: low
 tools: Read, Grep, Glob
+disallowedTools: Edit, Write, NotebookEdit
 description: |
   Use this agent to review code for style consistency with project conventions
   including naming, organization, and patterns. Dispatched by code review.

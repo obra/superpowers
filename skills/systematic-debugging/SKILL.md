@@ -1,6 +1,7 @@
 ---
 name: systematic-debugging
 description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes. Trigger phrases include "why isn't this working", "strange behavior", "investigate".
+effort: high
 context: fork
 allowed-tools: Read, Grep, Glob, Bash, Write, Edit
 user-invocable: false

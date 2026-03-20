@@ -1,7 +1,9 @@
 ---
 name: error-handling-analyst
 model: haiku
+effort: high
 tools: Read, Grep, Glob, Bash
+disallowedTools: Edit, Write, NotebookEdit
 description: |
   Use this agent to analyze error paths, exception patterns, failure modes,
   and logging/monitoring approaches in the codebase. Dispatched by the research skill.

@@ -1,7 +1,9 @@
 ---
 name: git-history-analyzer
 model: haiku
+effort: high
 tools: Read, Grep, Glob, Bash
+disallowedTools: Edit, Write, NotebookEdit
 description: |
   Use this agent to analyze git history for code evolution, past decisions,
   and contributor expertise. Dispatched by the research skill.

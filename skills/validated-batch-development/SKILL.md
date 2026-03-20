@@ -453,10 +453,10 @@ Use `hyperpowers:finishing-a-development-branch` skill:
 - **hyperpowers:finishing-a-development-branch** - Complete development after all tasks
 
 **Prompt templates (in this directory):**
-- `./batch-analyzer-prompt.md` - Dispatch batch analyzer subagent
-- `./build-validator-prompt.md` - Dispatch build+test validator subagent
-- `./spec-validator-prompt.md` - Dispatch spec compliance validator subagent
-- `./code-quality-validator-prompt.md` - Dispatch code quality validator subagent
+- `${CLAUDE_SKILL_DIR}/batch-analyzer-prompt.md` - Dispatch batch analyzer subagent
+- `${CLAUDE_SKILL_DIR}/build-validator-prompt.md` - Dispatch build+test validator subagent
+- `${CLAUDE_SKILL_DIR}/spec-validator-prompt.md` - Dispatch spec compliance validator subagent
+- `${CLAUDE_SKILL_DIR}/code-quality-validator-prompt.md` - Dispatch code quality validator subagent
 
 ## Comparison with Other Execution Skills
 

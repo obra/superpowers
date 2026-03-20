@@ -1,7 +1,9 @@
 ---
 name: architecture-boundaries-analyst
 model: haiku
+effort: high
 tools: Read, Grep, Glob, Bash
+disallowedTools: Edit, Write, NotebookEdit
 description: |
   Use this agent to analyze module boundaries, public interfaces, coupling patterns,
   and abstraction layers in the codebase. Dispatched by the research skill.

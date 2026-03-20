@@ -1,6 +1,7 @@
 ---
 name: issue-tracking
 model: haiku
+effort: low
 description: |
   Abstracts issue tracker operations across beads, GitHub Issues, Jira MCP, and Notion MCP.
   Dispatched by skills for detection, discovery, status updates, creation, and closing.

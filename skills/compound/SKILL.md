@@ -1,6 +1,7 @@
 ---
 name: compound
 description: Use when a non-trivial problem has been solved, when phrases like "that worked" or "it's fixed" appear after debugging, or when the user invokes /hyperpowers:compound. Proactively triggered on resolution phrases.
+effort: low
 allowed-tools: Read, Grep, Glob, Write
 user-invocable: false
 ---
@@ -74,7 +75,14 @@ Categorize the issue into one of 9 categories:
 
 ### Step 3: Create Solution Document
 
-Write to `docs/hyperpowers/solutions/{category}/{descriptive-name}-YYYY-MM-DD.md`:
+Write to **both** locations for maximum knowledge capture:
+
+1. **Project-local** (committed, project-specific): `docs/hyperpowers/solutions/{category}/{descriptive-name}-YYYY-MM-DD.md`
+2. **Global persistent** (cross-project, survives plugin updates): `${CLAUDE_PLUGIN_DATA}/solutions/{category}/{descriptive-name}-YYYY-MM-DD.md`
+
+The project-local copy is the primary record. The global copy builds a cross-project knowledge base that persists across plugin reinstalls.
+
+Solution document format for `docs/hyperpowers/solutions/{category}/{descriptive-name}-YYYY-MM-DD.md`:
 
 ```markdown
 # [Searchable Title - Include Error Message or Symptom]
@@ -114,10 +122,11 @@ Write to `docs/hyperpowers/solutions/{category}/{descriptive-name}-YYYY-MM-DD.md
 
 ### Step 4: Check for Patterns
 
-After saving, check if 3+ solutions exist in the same category with similar symptoms:
+After saving, check if 3+ solutions exist in the same category with similar symptoms across both local and global stores:
 
 ```bash
-ls docs/hyperpowers/solutions/{category}/ | wc -l
+ls docs/hyperpowers/solutions/{category}/ 2>/dev/null | wc -l
+ls "${CLAUDE_PLUGIN_DATA}/solutions/{category}/" 2>/dev/null | wc -l
 ```
 
 If pattern detected (3+ similar issues):

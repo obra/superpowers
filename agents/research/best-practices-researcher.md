@@ -1,7 +1,9 @@
 ---
 name: best-practices-researcher
 model: haiku
+effort: high
 tools: Read, Grep, Glob, WebSearch, WebFetch
+disallowedTools: Edit, Write, NotebookEdit
 description: |
   Use this agent to research current community best practices, security
   considerations, and performance patterns. Dispatched by the research skill.

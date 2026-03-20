@@ -1,7 +1,9 @@
 ---
 name: dependency-analyst
 model: haiku
+effort: high
 tools: Read, Grep, Glob, Bash
+disallowedTools: Edit, Write, NotebookEdit
 description: |
   Use this agent to analyze direct and transitive dependencies, version constraints,
   and upgrade considerations. Dispatched by the research skill.

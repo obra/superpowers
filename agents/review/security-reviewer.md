@@ -1,7 +1,9 @@
 ---
 name: security-reviewer
 model: haiku
+effort: low
 tools: Read, Grep, Glob
+disallowedTools: Edit, Write, NotebookEdit
 description: |
   Use this agent to review code for security vulnerabilities including
   injection, auth issues, and secrets handling. Dispatched by code review.

@@ -46,9 +46,9 @@ Final code reviewer → Cleanup transient files → Use finishing-a-development-
 
 ## Prompt Templates
 
-- `./implementer-prompt.md` - Dispatch implementer subagent
-- `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
-- `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
+- `${CLAUDE_SKILL_DIR}/implementer-prompt.md` - Dispatch implementer subagent
+- `${CLAUDE_SKILL_DIR}/spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
+- `${CLAUDE_SKILL_DIR}/code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
 
 ## Model Selection
 
@@ -242,6 +242,19 @@ IN_PROGRESS
 
 Status flags: `PENDING`, `IN_PROGRESS`, `READY_FOR_SPEC_REVIEW`, `READY_FOR_CODE_REVIEW`, `BLOCKED`, `DONE`
 
+## Worktree Isolation for Implementation Agents
+
+When tasks modify overlapping files, use `isolation: "worktree"` on the implementer dispatch to give each subagent its own git worktree. This prevents file conflicts and enables automatic cleanup.
+
+```
+Task(description: "Implement Task N: [task name]",
+     prompt: "[curated context]",
+     isolation: "worktree")
+```
+
+**Use when:** Tasks may modify shared files, or you want guaranteed isolation between sequential implementers.
+**Skip when:** Tasks touch completely different files and sequential execution already prevents conflicts.
+
 ## Context Pollution Warning
 
 Signs of pollution:
@@ -253,6 +266,7 @@ Prevention:
 - Fresh subagent per task (no reuse)
 - Explicit context curation before dispatch
 - Don't forward full conversation history
+- Use `isolation: "worktree"` for file-level isolation
 
 ## Red Flags
 

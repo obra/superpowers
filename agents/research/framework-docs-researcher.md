@@ -1,7 +1,9 @@
 ---
 name: framework-docs-researcher
 model: haiku
+effort: high
 tools: Read, Grep, Glob, WebFetch, WebSearch
+disallowedTools: Edit, Write, NotebookEdit
 description: |
   Use this agent to research framework documentation, API references,
   and configuration guides. Dispatched by the research skill.

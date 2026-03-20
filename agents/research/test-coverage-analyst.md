@@ -1,7 +1,9 @@
 ---
 name: test-coverage-analyst
 model: haiku
+effort: high
 tools: Read, Grep, Glob, Bash
+disallowedTools: Edit, Write, NotebookEdit
 description: |
   Use this agent to analyze existing test patterns, coverage gaps, testing strategies,
   and test utilities available in the codebase. Dispatched by the research skill.

@@ -72,14 +72,26 @@ Each subagent gets:
 
 ### 3. Dispatch in Parallel
 
+When subagents modify files, use `isolation: "worktree"` to give each agent its own git worktree. This prevents file conflicts between parallel agents and enables automatic cleanup.
+
 ```typescript
 // In Claude Code / AI environment
 // Use model: haiku for parallel investigation subagents (fast, cost-effective)
-Task("Fix agent-tool-abort.test.ts failures", model: "haiku")
-Task("Fix batch-completion-behavior.test.ts failures", model: "haiku")
-Task("Fix tool-approval-race-conditions.test.ts failures", model: "haiku")
-// All three run concurrently
+// Use isolation: "worktree" when agents modify files to prevent conflicts
+Task("Fix agent-tool-abort.test.ts failures", model: "haiku", isolation: "worktree")
+Task("Fix batch-completion-behavior.test.ts failures", model: "haiku", isolation: "worktree")
+Task("Fix tool-approval-race-conditions.test.ts failures", model: "haiku", isolation: "worktree")
+// All three run concurrently in isolated worktrees
 ```
+
+**When to use `isolation: "worktree"`:**
+- Agents modify files (implementation, fixes)
+- Multiple agents might touch overlapping files
+- You want automatic cleanup of agent workspaces
+
+**When NOT to use it:**
+- Read-only agents (research, review) — unnecessary overhead
+- Single agent dispatch — no conflict risk
 
 ### 4. Review and Integrate
 

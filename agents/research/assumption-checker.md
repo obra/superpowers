@@ -1,7 +1,9 @@
 ---
 name: assumption-checker
 model: haiku
+effort: medium
 tools: Read, Grep, Glob, WebSearch, WebFetch
+disallowedTools: Edit, Write, NotebookEdit
 description: |
   Use this agent to validate technical assumptions in research documents or
   implementation plans against current documentation and best practices.

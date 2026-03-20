@@ -1,7 +1,9 @@
 ---
 name: performance-reviewer
 model: haiku
+effort: low
 tools: Read, Grep, Glob
+disallowedTools: Edit, Write, NotebookEdit
 description: |
   Use this agent to review code for performance issues including N+1 queries,
   memory leaks, and scaling concerns. Dispatched by code review.

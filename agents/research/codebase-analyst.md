@@ -1,7 +1,9 @@
 ---
 name: codebase-analyst
 model: haiku
+effort: high
 tools: Read, Grep, Glob, Bash
+disallowedTools: Edit, Write, NotebookEdit
 description: |
   Use this agent to analyze codebase architecture, patterns, and similar implementations
   before planning new features. Dispatched by the research skill.
