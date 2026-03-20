@@ -112,14 +112,7 @@ The skill itself tells you which.
 
 ## Rule Priority
 
-When skills conflict, follow this hierarchy:
-
-1. **Verification** (non-negotiable) — always verify before claiming completion
-2. **TDD** — write tests first for any production code
-3. **Debugging** — follow systematic process before proposing fixes
-4. **All other skills** — apply in context order
-
-Verification is never skipped, even when user instructions override TDD or debugging workflows.
+**Verification is non-negotiable.** Even when other skills are skipped or adapted, always run verification commands before claiming completion. (Source: verification-before-completion/SKILL.md — "This is non-negotiable.")
 
 ## User Instructions
 
