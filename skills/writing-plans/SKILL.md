@@ -36,7 +36,7 @@ This structure informs the task decomposition. Each task should produce self-con
 ## TDD Structure Is Mandatory
 
 <HARD-GATE>
-Every task that produces or modifies code MUST follow RED-GREEN-REFACTOR structure: write failing test → verify it fails → write minimal implementation → verify it passes → commit. No exceptions.
+Every task that introduces or changes behavior MUST follow RED-GREEN-REFACTOR structure: write failing test → verify it fails → write minimal implementation → verify it passes → refactor → commit. No exceptions.
 </HARD-GATE>
 
 **This includes tasks that feel "untestable":**
@@ -44,7 +44,7 @@ Every task that produces or modifies code MUST follow RED-GREEN-REFACTOR structu
 - **Build pipeline changes** — write a test that runs the build and checks output
 - **Scaffolding/boilerplate** — write a test that verifies the scaffold works (e.g., app starts, route responds)
 
-If a task genuinely cannot have a test (e.g., "create .gitignore"), it must not contain any functional code. The moment a task includes logic, behavior, or integration — it needs a test first.
+If a task genuinely cannot have a test (e.g., "create .gitignore"), it must not contain any functional code. For tasks that only refactor, format, or make mechanically equivalent changes, rely on running the existing test suite rather than writing a new failing test. The moment a task introduces or changes logic, behavior, or integration — it needs a new or updated test first.
 
 ### Anti-Pattern: "Tests at the end"
 
