@@ -33,6 +33,23 @@ Before defining tasks, map out which files will be created or modified and what 
 
 This structure informs the task decomposition. Each task should produce self-contained changes that make sense independently.
 
+## TDD Structure Is Mandatory
+
+<HARD-GATE>
+Every task that produces or modifies code MUST follow RED-GREEN-REFACTOR structure: write failing test → verify it fails → write minimal implementation → verify it passes → commit. No exceptions.
+</HARD-GATE>
+
+**This includes tasks that feel "untestable":**
+- **Configuration/tooling setup** — write a smoke test that imports/runs the config and asserts expected values
+- **Build pipeline changes** — write a test that runs the build and checks output
+- **Scaffolding/boilerplate** — write a test that verifies the scaffold works (e.g., app starts, route responds)
+
+If a task genuinely cannot have a test (e.g., "create .gitignore"), it must not contain any functional code. The moment a task includes logic, behavior, or integration — it needs a test first.
+
+### Anti-Pattern: "Tests at the end"
+
+Plans that put all tests in a final "Add tests" task are NOT TDD. Tests written after implementation prove nothing — they pass immediately and you never see them catch the bug. Each task must have its own test step BEFORE its implementation step.
+
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**
