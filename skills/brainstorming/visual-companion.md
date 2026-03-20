@@ -40,7 +40,7 @@ scripts/start-server.sh --project-dir /path/to/project
 #           "screen_dir":"/path/to/project/.superpowers/brainstorm/12345-1706000000"}
 ```
 
-Save `screen_dir` from the response. Tell user to open the URL.
+Save `screen_dir` from the response. The script now attempts to auto-open the URL (WSL2/macOS/Linux desktop) on a best-effort basis. Still echo the URL to the user in case auto-open is unavailable.
 
 **Finding connection info:** The server writes its startup JSON to `$SCREEN_DIR/.server-info`. If you launched the server in the background and didn't capture stdout, read that file to get the URL and port. When using `--project-dir`, check `<project>/.superpowers/brainstorm/` for the session directory.
 

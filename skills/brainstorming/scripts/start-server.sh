@@ -16,6 +16,40 @@
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+is_wsl() {
+  grep -qiE "microsoft|wsl" /proc/version 2>/dev/null
+}
+
+open_url_best_effort() {
+  local url="$1"
+
+  # WSL: open in Windows default browser
+  if is_wsl; then
+    if [[ -x "/mnt/c/Windows/System32/cmd.exe" ]]; then
+      /mnt/c/Windows/System32/cmd.exe /c start "" "$url" >/dev/null 2>&1 || true
+      return 0
+    fi
+    if [[ -x "/mnt/c/Windows/system32/cmd.exe" ]]; then
+      /mnt/c/Windows/system32/cmd.exe /c start "" "$url" >/dev/null 2>&1 || true
+      return 0
+    fi
+  fi
+
+  # macOS
+  if command -v open >/dev/null 2>&1; then
+    open "$url" >/dev/null 2>&1 || true
+    return 0
+  fi
+
+  # Linux desktop (skip on headless shells)
+  if command -v xdg-open >/dev/null 2>&1 && [[ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]]; then
+    xdg-open "$url" >/dev/null 2>&1 || true
+    return 0
+  fi
+
+  return 0
+}
+
 # Parse arguments
 PROJECT_DIR=""
 FOREGROUND="false"
@@ -142,7 +176,11 @@ for i in {1..50}; do
       echo "{\"error\": \"Server started but was killed. Retry in a persistent terminal with: $SCRIPT_DIR/start-server.sh${PROJECT_DIR:+ --project-dir $PROJECT_DIR} --host $BIND_HOST --url-host $URL_HOST --foreground\"}"
       exit 1
     fi
-    grep "server-started" "$LOG_FILE" | head -1
+    server_started_line="$(grep "server-started" "$LOG_FILE" | head -1)"
+    if [[ "$server_started_line" =~ \"url\":\"([^\"]+)\" ]]; then
+      open_url_best_effort "${BASH_REMATCH[1]}"
+    fi
+    echo "$server_started_line"
     exit 0
   fi
   sleep 0.1
