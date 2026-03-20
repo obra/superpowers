@@ -37,13 +37,9 @@
       }
     };
 
-    ws.onerror = function() {
-      // onclose fires after onerror, so reconnect is handled there
-    };
-
     ws.onclose = function() {
       ws = null;
-      setStatus('disconnected');
+      setStatus('reconnecting');
       reconnectTimer = setTimeout(function() {
         backoff = Math.min(backoff * 2, BACKOFF_MAX);
         connect();
