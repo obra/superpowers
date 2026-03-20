@@ -1,6 +1,6 @@
 # Testing Superpowers
 
-This repository supports three automated validation surfaces:
+This repository has three primary automated validation surfaces plus opt-in or change-specific eval gates:
 
 - `tests/codex-runtime/*.test.mjs` for deterministic generated-skill, template, and fixture contracts
 - `tests/codex-runtime/` for install docs, generated skill preambles, helper binaries, and upgrade/migration behavior
@@ -25,6 +25,7 @@ bash tests/codex-runtime/test-superpowers-config.sh
 bash tests/codex-runtime/test-superpowers-migrate-install.sh
 bash tests/codex-runtime/test-superpowers-update-check.sh
 bash tests/codex-runtime/test-superpowers-upgrade-skill.sh
+bash tests/codex-runtime/test-superpowers-slug.sh
 bash tests/brainstorm-server/test-launch-wrappers.sh
 node --test tests/brainstorm-server/server.test.js tests/brainstorm-server/ws-protocol.test.js
 ```
@@ -62,10 +63,12 @@ node --test tests/brainstorm-server/server.test.js tests/brainstorm-server/ws-pr
 - Editing brainstorming server files under `skills/brainstorming/scripts/`: run `bash tests/brainstorm-server/test-launch-wrappers.sh` and `node --test tests/brainstorm-server/server.test.js tests/brainstorm-server/ws-protocol.test.js`
 - Editing both runtime and brainstorming-server files: run both suites
 
-## Optional Evals
+## Evals And Change-Specific Gates
 
-- `tests/evals/*.eval.mjs` is an opt-in quality tier for prompt-behavior checks
-- See `tests/evals/README.md` for required environment variables and logging behavior
+- `tests/evals/*.eval.mjs` remains an opt-in quality tier for the Node-driven prompt-behavior checks that still use `.eval.mjs`
+- `tests/evals/using-superpowers-routing.orchestrator.md` is the authoritative Item 1 routing gate and drives the repo-versioned scenario, runner, and judge markdown artifacts plus local per-scenario evidence bundles under `~/.superpowers/projects/<slug>/...`
+  This gate is agent-executed and does not run through `node --test` or the Node OpenAI-judge helper path. It is not part of the default deterministic validation order, but it is a required change-specific gate for Item 1 routing-safety work.
+- See `tests/evals/README.md` for the Node-based eval environment variables and for routing-eval logging behavior
 
 ## Notes
 
@@ -79,5 +82,6 @@ node --test tests/brainstorm-server/server.test.js tests/brainstorm-server/ws-pr
 - `test-superpowers-workflow-status.sh` covers the internal workflow-state helper, including bootstrap, summary-mode parity, repo-identity recovery, malformed-artifact diagnostics, branch isolation, fallback refresh behavior, and conservative write-conflict handling
 - `test-superpowers-update-check.sh` covers semver comparison, snooze handling, and just-upgraded markers
 - `test-superpowers-upgrade-skill.sh` covers install-root resolution and direct upgrade-flow version resolution
+- `test-superpowers-slug.sh` covers the shared slug helper, including missing-remote fallback, detached HEAD handling, and shell-safe escaped output
 - `test-launch-wrappers.sh` covers the brainstorm launcher wrappers for Bash and PowerShell, including documented `C:\...` project paths
 - `tests/brainstorm-server/server.test.js` and `tests/brainstorm-server/ws-protocol.test.js` cover the brainstorming server's HTTP behavior and websocket protocol semantics

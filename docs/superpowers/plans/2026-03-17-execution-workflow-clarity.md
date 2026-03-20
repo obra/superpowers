@@ -17,6 +17,8 @@
 
 ## What Already Exists
 
+Historical note: this section captures the draft-time repo state for this plan. For the current shipped state, use the repo contents and current release notes rather than the pre-implementation summary below.
+
 - `bin/superpowers-workflow-status` and `bin/superpowers-workflow-status.ps1` already provide the internal-helper shape to mirror: shell-first runtime logic, JSON output, bounded failure behavior, and wrapper parity.
 - `bin/superpowers-pwsh-common.ps1` already provides the Git Bash discovery and JSON path-conversion primitives needed by a new wrapper.
 - `tests/codex-runtime/test-superpowers-workflow-status.sh` already shows the preferred temp-repo regression style for workflow helpers.

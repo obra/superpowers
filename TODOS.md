@@ -2,6 +2,18 @@
 
 ## Review
 
+### Revisit Borrowed-Layer Drift Policy If Gstack Surface Grows
+
+**What:** Re-evaluate whether Superpowers needs an explicit recurring review policy for gstack-derived borrowed-layer drift if more upstream surface area continues landing here.
+
+**Why:** The current alignment spec intentionally stays narrow and tactical. If the borrowed layer keeps expanding, relying on one-off comparisons may stop being disciplined enough.
+
+**Context:** Deferred explicitly by `docs/superpowers/specs/2026-03-18-gstack-borrowed-layer-alignment-design.md`. This is not required for the current change and should stay out of the initial implementation plan.
+
+**Effort:** S
+**Priority:** P3
+**Depends on:** Shipping and operating the current 4-item alignment package first
+
 ### Public Inspection Surface For Accelerator Packets
 
 **What:** Add a supported CLI or status/debug surface for persisted accelerated-review packets, resume eligibility, stale-fingerprint reasons, and retention state.

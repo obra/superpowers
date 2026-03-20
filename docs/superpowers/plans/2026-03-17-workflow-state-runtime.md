@@ -17,6 +17,8 @@
 
 ## What Already Exists
 
+Historical note: this section captures the draft-time repo state for this plan. For the current shipped state, use the repo contents and current release notes rather than the pre-implementation summary below.
+
 - `bin/superpowers-config`, `bin/superpowers-update-check`, and `bin/superpowers-migrate-install` already define the runtime-helper surface this work should match.
 - `bin/superpowers-pwsh-common.ps1` already provides the Git Bash discovery and path-conversion primitives needed for PowerShell wrapper parity.
 - `skills/using-superpowers/SKILL.md` already defines the product-workflow routing contract; this change replaces ad hoc routing logic with a helper-backed mechanism, not a new workflow.

@@ -1,6 +1,6 @@
 ---
 name: qa-only
-description: Use when you need browser-based QA with evidence and reports, but do not want the agent to fix any code
+description: Use when you need browser-based QA, repro steps, screenshots, evidence, and reports, but do not want the agent to fix any code
 ---
 <!-- AUTO-GENERATED from SKILL.md.tmpl — do not edit directly -->
 <!-- Regenerate: node scripts/gen-skill-docs.mjs -->
@@ -16,6 +16,10 @@ _IS_SUPERPOWERS_RUNTIME_ROOT() {
   [ -f "$candidate/VERSION" ]
 }
 _REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+_BRANCH_RAW=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo current)
+[ -n "$_BRANCH_RAW" ] || _BRANCH_RAW="current"
+[ "$_BRANCH_RAW" != "HEAD" ] || _BRANCH_RAW="current"
+_BRANCH="$_BRANCH_RAW"
 _SUPERPOWERS_ROOT=""
 _IS_SUPERPOWERS_RUNTIME_ROOT "$_REPO_ROOT" && _SUPERPOWERS_ROOT="$_REPO_ROOT"
 [ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.superpowers/install" && _SUPERPOWERS_ROOT="$HOME/.superpowers/install"
@@ -130,12 +134,12 @@ mkdir -p "$REPORT_DIR/screenshots"
 Before falling back to git-diff heuristics, look for richer QA input:
 
 ```bash
-REMOTE_URL=$(git remote get-url origin 2>/dev/null || true)
-SLUG=$(printf '%s\n' "$REMOTE_URL" | sed 's|.*[:/]\\([^/]*/[^/]*\\)\\.git$|\\1|;s|.*[:/]\\([^/]*/[^/]*\\)$|\\1|' | tr '/' '-')
-[ -n "$SLUG" ] || SLUG=$(basename "$_REPO_ROOT")
-BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo current)
-SAFE_BRANCH=$(printf '%s\n' "$BRANCH" | sed 's/[^[:alnum:]._-]/-/g')
-PLAN_ARTIFACT=$(ls -t "$_SP_STATE_DIR/projects/$SLUG"/*-"$SAFE_BRANCH"-test-plan-*.md 2>/dev/null | head -1)
+_SLUG_ENV=$("$_SUPERPOWERS_ROOT/bin/superpowers-slug" 2>/dev/null || true)
+if [ -n "$_SLUG_ENV" ]; then
+  eval "$_SLUG_ENV"
+fi
+unset _SLUG_ENV
+PLAN_ARTIFACT=$(ls -t "$_SP_STATE_DIR/projects/$SLUG"/*-"$BRANCH"-test-plan-*.md 2>/dev/null | head -1)
 [ -n "$PLAN_ARTIFACT" ] || PLAN_ARTIFACT=$(ls -t "$_SP_STATE_DIR/projects/$SLUG"/*-test-plan-*.md 2>/dev/null | head -1)
 printf '%s\n' "$PLAN_ARTIFACT"
 ```
@@ -241,8 +245,11 @@ Write the local report to:
 Also write a project-scoped outcome artifact:
 
 ```bash
-BRANCH=$(git rev-parse --abbrev-ref HEAD)
-SAFE_BRANCH=$(printf '%s\n' "$BRANCH" | sed 's/[^[:alnum:]._-]/-/g')
+_SLUG_ENV=$("$_SUPERPOWERS_ROOT/bin/superpowers-slug" 2>/dev/null || true)
+if [ -n "$_SLUG_ENV" ]; then
+  eval "$_SLUG_ENV"
+fi
+unset _SLUG_ENV
 USER=$(whoami)
 DATETIME=$(date +%Y%m%d-%H%M%S)
 mkdir -p "$_SP_STATE_DIR/projects/$SLUG"

@@ -1,6 +1,6 @@
 ---
 name: finishing-a-development-branch
-description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup
+description: Use when implementation is complete, verification passes, and you need to decide how to integrate the work through merge, PR, or cleanup
 ---
 <!-- AUTO-GENERATED from SKILL.md.tmpl — do not edit directly -->
 <!-- Regenerate: node scripts/gen-skill-docs.mjs -->
@@ -16,6 +16,10 @@ _IS_SUPERPOWERS_RUNTIME_ROOT() {
   [ -f "$candidate/VERSION" ]
 }
 _REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+_BRANCH_RAW=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo current)
+[ -n "$_BRANCH_RAW" ] || _BRANCH_RAW="current"
+[ "$_BRANCH_RAW" != "HEAD" ] || _BRANCH_RAW="current"
+_BRANCH="$_BRANCH_RAW"
 _SUPERPOWERS_ROOT=""
 _IS_SUPERPOWERS_RUNTIME_ROOT "$_REPO_ROOT" && _SUPERPOWERS_ROOT="$_REPO_ROOT"
 [ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.superpowers/install" && _SUPERPOWERS_ROOT="$HOME/.superpowers/install"
@@ -148,12 +152,12 @@ Before presenting completion options:
 Before presenting completion options, look for a branch-specific QA handoff artifact:
 
 ```bash
-REMOTE_URL=$(git remote get-url origin 2>/dev/null || true)
-SLUG=$(printf '%s\n' "$REMOTE_URL" | sed 's|.*[:/]\([^/]*/[^/]*\)\.git$|\1|;s|.*[:/]\([^/]*/[^/]*\)$|\1|' | tr '/' '-')
-[ -n "$SLUG" ] || SLUG=$(basename "$_REPO_ROOT")
-BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo current)
-SAFE_BRANCH=$(printf '%s\n' "$BRANCH" | sed 's/[^[:alnum:]._-]/-/g')
-PLAN_ARTIFACT=$(ls -t "$_SP_STATE_DIR/projects/$SLUG"/*-"$SAFE_BRANCH"-test-plan-*.md 2>/dev/null | head -1)
+_SLUG_ENV=$("$_SUPERPOWERS_ROOT/bin/superpowers-slug" 2>/dev/null || true)
+if [ -n "$_SLUG_ENV" ]; then
+  eval "$_SLUG_ENV"
+fi
+unset _SLUG_ENV
+PLAN_ARTIFACT=$(ls -t "$_SP_STATE_DIR/projects/$SLUG"/*-"$BRANCH"-test-plan-*.md 2>/dev/null | head -1)
 printf '%s\n' "$PLAN_ARTIFACT"
 ```
 

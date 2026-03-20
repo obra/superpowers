@@ -23,15 +23,40 @@ require_absent_pattern() {
   fi
 }
 
+require_description_pattern() {
+  local file="$1"
+  local pattern="$2"
+  if ! sed -n '1,6p' "$file" | rg -n -F -- "$pattern" >/dev/null; then
+    echo "Missing workflow description pattern '$pattern' in $file"
+    exit 1
+  fi
+}
+
+require_description_absent_pattern() {
+  local file="$1"
+  local pattern="$2"
+  if sed -n '1,6p' "$file" | rg -n -F -- "$pattern" >/dev/null; then
+    echo "Unexpected workflow description pattern '$pattern' in $file"
+    exit 1
+  fi
+}
+
 require_pattern skills/brainstorming/SKILL.md "**Workflow State:** Draft"
 require_pattern skills/brainstorming/SKILL.md "**Spec Revision:** 1"
 require_pattern skills/brainstorming/SKILL.md "**Last Reviewed By:** brainstorming"
+require_description_pattern skills/brainstorming/SKILL.md "exploring a feature idea, behavior change, or architecture direction"
 require_pattern skills/brainstorming/SKILL.md "record the intended spec path with `expect`"
 require_pattern skills/brainstorming/SKILL.md '"$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status" expect --artifact spec --path'
 require_pattern skills/brainstorming/SKILL.md "runs `sync --artifact spec`"
 require_pattern skills/brainstorming/SKILL.md '"$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status" sync --artifact spec --path'
 
+require_description_pattern skills/using-superpowers/SKILL.md "deciding which skill or workflow stage applies"
+require_description_pattern skills/systematic-debugging/SKILL.md "investigating a bug, regression, test failure, or unexpected behavior"
+require_description_pattern skills/document-release/SKILL.md "release notes, changelog, TODO, or handoff documentation"
+require_description_pattern skills/qa-only/SKILL.md "browser-based QA, repro steps, screenshots, evidence, and reports"
+
 require_pattern skills/plan-ceo-review/SKILL.md "**Workflow State:** Draft | CEO Approved"
+require_description_pattern skills/plan-ceo-review/SKILL.md "written Superpowers design or architecture spec"
 require_pattern skills/plan-ceo-review/SKILL.md 'If any header line is missing or malformed, normalize the spec to this contract before continuing and treat it as `Draft`.'
 require_pattern skills/plan-ceo-review/SKILL.md 'When approving the written spec, set `**Workflow State:** CEO Approved`'
 require_pattern skills/plan-ceo-review/SKILL.md "If this review materially changes a previously approved spec, increment the revision"
@@ -58,6 +83,7 @@ require_pattern skills/writing-plans/SKILL.md "**Workflow State:** Draft"
 require_pattern skills/writing-plans/SKILL.md "**Source Spec:** [Exact path to approved spec]"
 require_pattern skills/writing-plans/SKILL.md "**Source Spec Revision:** [Integer copied from approved spec]"
 require_pattern skills/writing-plans/SKILL.md "**Last Reviewed By:** writing-plans"
+require_description_pattern skills/writing-plans/SKILL.md "need to write the implementation plan"
 require_pattern skills/writing-plans/SKILL.md "record the intended plan path with `expect`"
 require_pattern skills/writing-plans/SKILL.md '"$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status" expect --artifact plan --path'
 require_pattern skills/writing-plans/SKILL.md "runs `sync --artifact plan`"
@@ -126,12 +152,15 @@ require_absent_pattern skills/subagent-driven-development/SKILL.md "Mark task co
 require_absent_pattern skills/executing-plans/SKILL.md "track the work in your platform's task checklist"
 require_pattern skills/requesting-code-review/SKILL.md 'rejects final review if the plan has invalid execution state or required unfinished work not truthfully represented'
 require_pattern skills/requesting-code-review/SKILL.md 'must fail closed when it detects a missed reopen or stale evidence, but must not call `reopen` itself'
+require_description_pattern skills/requesting-code-review/SKILL.md 'Use after implementation work or a completed plan/task slice'
 require_pattern skills/requesting-code-review/SKILL.md 'For plan-routed final review, require the exact approved plan path from the current execution handoff or session context.'
 require_pattern skills/requesting-code-review/SKILL.md 'Run `superpowers-plan-execution status --plan <approved-plan-path>` before dispatching the reviewer.'
 require_pattern skills/requesting-code-review/SKILL.md 'If helper status fails, stop and return to the current execution flow; do not dispatch review against guessed plan state.'
 require_pattern skills/requesting-code-review/SKILL.md 'Pass the exact approved plan path and helper-reported execution evidence path into the reviewer context.'
+require_description_absent_pattern skills/requesting-code-review/SKILL.md 'implementing major features'
 require_pattern skills/finishing-a-development-branch/SKILL.md 'rejects branch-completion handoff if the approved plan is execution-dirty or malformed'
 require_pattern skills/finishing-a-development-branch/SKILL.md 'must not allow branch completion while any checked-off plan step still lacks semantic implementation evidence'
+require_description_pattern skills/finishing-a-development-branch/SKILL.md 'verification passes'
 require_pattern skills/finishing-a-development-branch/SKILL.md 'If the current work was executed from an approved Superpowers plan, require the exact approved plan path from the current execution workflow context before presenting completion options.'
 require_pattern skills/finishing-a-development-branch/SKILL.md 'Run `superpowers-plan-execution status --plan <approved-plan-path>` and read the returned `evidence_path` before presenting completion options.'
 require_pattern skills/finishing-a-development-branch/SKILL.md 'If the exact approved plan path is unavailable or helper status fails, stop and return to the current execution flow instead of guessing.'
@@ -171,6 +200,20 @@ require_pattern skills/requesting-code-review/code-reviewer.md '**Execution evid
 require_pattern skills/requesting-code-review/code-reviewer.md 'When approved plan and execution evidence paths are provided, read both artifacts and verify that checked-off plan steps are semantically satisfied by the implementation and explicitly evidenced.'
 require_absent_pattern skills/plan-ceo-review/SKILL.md '**STOP.** Use one interactive user question per issue. Do NOT batch.'
 require_absent_pattern skills/plan-eng-review/SKILL.md '**STOP.** For each issue found in this section, use one interactive user question individually. One issue per question.'
+
+for file in \
+  skills/plan-ceo-review/SKILL.md \
+  skills/writing-plans/SKILL.md \
+  skills/plan-eng-review/SKILL.md \
+  skills/executing-plans/SKILL.md \
+  skills/subagent-driven-development/SKILL.md \
+  skills/requesting-code-review/SKILL.md \
+  skills/finishing-a-development-branch/SKILL.md; do
+  require_description_absent_pattern "$file" "implement this"
+  require_description_absent_pattern "$file" "start coding"
+  require_description_absent_pattern "$file" "build this"
+  require_description_absent_pattern "$file" "plan this feature"
+done
 
 WORKFLOW_FIXTURE_DIR="tests/codex-runtime/fixtures/workflow-artifacts"
 

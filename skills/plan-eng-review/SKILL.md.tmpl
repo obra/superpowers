@@ -1,6 +1,6 @@
 ---
 name: plan-eng-review
-description: Use when a Superpowers implementation plan from a CEO-approved spec has been written and needs engineering review before execution
+description: Use when a written Superpowers implementation plan from a CEO-approved spec needs engineering review before execution
 ---
 
 {{REVIEW_PREAMBLE}}
@@ -167,11 +167,11 @@ For LLM or prompt changes, check the repo's prompt or evaluation docs. If this p
 After producing the test diagram, write a QA handoff artifact for cross-session reuse:
 
 ```bash
-REMOTE_URL=$(git remote get-url origin 2>/dev/null || true)
-SLUG=$(printf '%s\n' "$REMOTE_URL" | sed 's|.*[:/]\([^/]*/[^/]*\)\.git$|\1|;s|.*[:/]\([^/]*/[^/]*\)$|\1|' | tr '/' '-')
-[ -n "$SLUG" ] || SLUG=$(basename "$_REPO_ROOT")
-BRANCH=$(git rev-parse --abbrev-ref HEAD)
-SAFE_BRANCH=$(printf '%s\n' "$BRANCH" | sed 's/[^[:alnum:]._-]/-/g')
+_SLUG_ENV=$("$_SUPERPOWERS_ROOT/bin/superpowers-slug" 2>/dev/null || true)
+if [ -n "$_SLUG_ENV" ]; then
+  eval "$_SLUG_ENV"
+fi
+unset _SLUG_ENV
 USER=$(whoami)
 DATETIME=$(date +%Y%m%d-%H%M%S)
 mkdir -p "$_SP_STATE_DIR/projects/$SLUG"

@@ -2,6 +2,8 @@
 
 Working plan derived from the current Superpowers suite, the `gstack` comparison, and the fixture decoupling fix that moved historical workflow examples into `tests/codex-runtime/fixtures/workflow-artifacts/`.
 
+Historical note: Task 5's original `using-superpowers` routing-eval shape was later superseded by the doc-driven routing gate in `tests/evals/using-superpowers-routing.orchestrator.md`, `tests/evals/using-superpowers-routing.scenarios.md`, `tests/evals/using-superpowers-routing.runner.md`, and `tests/evals/using-superpowers-routing.judge.md`. The retired `tests/evals/using-superpowers-routing.eval.mjs` file referenced below has been removed.
+
 ## Completed Precondition
 
 - [x] Move historical workflow artifact examples out of `docs/superpowers/` and into `tests/codex-runtime/fixtures/workflow-artifacts/`
@@ -177,22 +179,24 @@ Expected: PASS
 
 ## Task 5: Add An Opt-In Eval Tier After Deterministic Coverage Is Stable
 
+Historical note: the `using-superpowers` routing portion of this task was later replaced by the doc-driven routing gate described above. The remaining `.eval.mjs` work in this task still reflects the opt-in Node-based eval tier. Any file or focus bullet below that names `using-superpowers-routing.eval.mjs` is preserved as historical provenance, not as current implementation guidance.
+
 **Files:**
-- Create: `tests/evals/using-superpowers-routing.eval.mjs`
+- Historical: `tests/evals/using-superpowers-routing.eval.mjs` was the original planned routing-eval file before the doc-driven replacement
 - Create: `tests/evals/interactive-question-format.eval.mjs`
 - Create: `tests/evals/README.md`
 - Modify: `docs/testing.md`
 
-- [ ] **Step 1: Keep evals opt-in and separate from CI-like local validation**
-- [x] **Step 1: Keep evals opt-in and separate from CI-like local validation**
+- [ ] **Step 1: Keep the Node-based eval tier opt-in and separate from CI-like local validation**
+- [x] **Step 1: Keep the Node-based eval tier opt-in and separate from CI-like local validation**
 
-Gate on an env var such as `EVALS=1` plus required API credentials.
+Gate the remaining Node-based `.eval.mjs` tier on an env var such as `EVALS=1` plus required API credentials.
 
 - [ ] **Step 2: Add a narrow first eval slice**
 - [x] **Step 2: Add a narrow first eval slice**
 
 Focus on high-risk prompt behavior:
-- `using-superpowers` routes to the earlier safe stage when artifacts are malformed
+- Historical routing target: `using-superpowers` routes to the earlier safe stage when artifacts are malformed
 - interactive-question prompts preserve context, recommendation, and option formatting
 
 - [ ] **Step 3: Add lightweight observability**
@@ -205,14 +209,15 @@ Record:
 - elapsed time
 - approximate cost when available
 
-- [ ] **Step 4: Document the eval contract separately from deterministic tests**
-- [x] **Step 4: Document the eval contract separately from deterministic tests**
+- [ ] **Step 4: Document the Node-based eval contract separately from deterministic tests**
+- [x] **Step 4: Document the Node-based eval contract separately from deterministic tests**
 
 Run:
 - deterministic suites by default from `docs/testing.md`
-- eval suites only when explicitly requested
+- Node-based `.eval.mjs` suites only when explicitly requested
+- required change-specific routing coverage through the separate doc-driven routing gate when that surface is in scope
 
-Expected: deterministic validation remains fast and stable; evals provide a second quality tier without blocking routine edits.
+Expected: deterministic validation remains fast and stable; the remaining Node-based evals provide a second quality tier without blocking routine edits.
 
 ## Recommended Execution Order
 

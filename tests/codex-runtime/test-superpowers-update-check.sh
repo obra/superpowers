@@ -30,6 +30,16 @@ reset_state() {
     "$STATE_DIR/config.yaml"
 }
 
+set_mtime_minutes_ago() {
+  local path="$1"
+  local minutes="$2"
+  local now target_epoch
+
+  now="$(date +%s)"
+  target_epoch=$(( now - (minutes * 60) ))
+  perl -e 'my ($path, $epoch) = @ARGV; utime($epoch, $epoch, $path) or die "utime($path): $!";' "$path" "$target_epoch"
+}
+
 assert_output() {
   local expected="$1"
   local actual="$2"
@@ -81,8 +91,33 @@ local_dir="$(make_install_dir 5.1.0)"
 remote_file="$(make_remote_file 5.2.0)"
 export SUPERPOWERS_DIR="$local_dir"
 export SUPERPOWERS_REMOTE_URL="file://$remote_file"
+printf '%s\n' "UP_TO_DATE 5.1.0" > "$STATE_DIR/last-update-check"
+output="$("$UPDATE_BIN" --force)"
+assert_output "UPGRADE_AVAILABLE 5.1.0 5.2.0" "$output" "--force bypasses cached up-to-date result"
+assert_cache "UPGRADE_AVAILABLE 5.1.0 5.2.0"
+rm -rf "$local_dir"
+rm -f "$remote_file"
+reset_state
+
+local_dir="$(make_install_dir 5.1.0)"
+remote_file="$(make_remote_file 5.2.0)"
+export SUPERPOWERS_DIR="$local_dir"
+export SUPERPOWERS_REMOTE_URL="file://$remote_file"
 output="$("$UPDATE_BIN")"
 assert_output "UPGRADE_AVAILABLE 5.1.0 5.2.0" "$output" "local behind remote"
+assert_cache "UPGRADE_AVAILABLE 5.1.0 5.2.0"
+rm -rf "$local_dir"
+rm -f "$remote_file"
+reset_state
+
+local_dir="$(make_install_dir 5.1.0)"
+remote_file="$(make_remote_file 5.2.0)"
+export SUPERPOWERS_DIR="$local_dir"
+export SUPERPOWERS_REMOTE_URL="file://$remote_file"
+printf '%s\n' "UP_TO_DATE 5.1.0" > "$STATE_DIR/last-update-check"
+set_mtime_minutes_ago "$STATE_DIR/last-update-check" 61
+output="$("$UPDATE_BIN")"
+assert_output "UPGRADE_AVAILABLE 5.1.0 5.2.0" "$output" "stale up-to-date cache refresh"
 assert_cache "UPGRADE_AVAILABLE 5.1.0 5.2.0"
 rm -rf "$local_dir"
 rm -f "$remote_file"
@@ -95,6 +130,30 @@ export SUPERPOWERS_REMOTE_URL="file://$remote_file"
 output="$("$UPDATE_BIN")"
 assert_output "UPGRADE_AVAILABLE 5.1.2 5.1.10" "$output" "multi-digit semver comparison"
 assert_cache "UPGRADE_AVAILABLE 5.1.2 5.1.10"
+rm -rf "$local_dir"
+rm -f "$remote_file"
+reset_state
+
+local_dir="$(make_install_dir 5.1.0)"
+remote_file="$(make_remote_file 5.0.0)"
+export SUPERPOWERS_DIR="$local_dir"
+export SUPERPOWERS_REMOTE_URL="file://$remote_file"
+printf '%s\n' "UPGRADE_AVAILABLE 5.1.0 5.2.0" > "$STATE_DIR/last-update-check"
+output="$("$UPDATE_BIN")"
+assert_output "UPGRADE_AVAILABLE 5.1.0 5.2.0" "$output" "fresh upgrade cache reuse"
+assert_cache "UPGRADE_AVAILABLE 5.1.0 5.2.0"
+rm -rf "$local_dir"
+rm -f "$remote_file"
+reset_state
+
+local_dir="$(make_install_dir 5.1.0)"
+remote_file="$(make_remote_file 5.0.0)"
+export SUPERPOWERS_DIR="$local_dir"
+export SUPERPOWERS_REMOTE_URL="file://$remote_file"
+printf '%s\n' "UPGRADE_AVAILABLE 5.1.0 5.2.0" > "$STATE_DIR/last-update-check"
+output="$("$UPDATE_BIN" --force)"
+assert_output "" "$output" "--force bypasses cached upgrade-available result"
+assert_cache "UP_TO_DATE 5.1.0"
 rm -rf "$local_dir"
 rm -f "$remote_file"
 reset_state
@@ -136,7 +195,7 @@ export SUPERPOWERS_DIR="$local_dir"
 export SUPERPOWERS_REMOTE_URL="file:///does/not/exist"
 printf '%s\n' "UPGRADE_AVAILABLE 5.1.0 5.2.0" > "$STATE_DIR/last-update-check"
 output="$("$UPDATE_BIN")"
-assert_output "" "$output" "remote lookup failure with pre-existing cache"
+assert_output "UPGRADE_AVAILABLE 5.1.0 5.2.0" "$output" "remote lookup failure with sticky upgrade cache"
 assert_cache "UPGRADE_AVAILABLE 5.1.0 5.2.0"
 rm -rf "$local_dir"
 reset_state

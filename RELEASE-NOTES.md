@@ -2,6 +2,21 @@
 
 For release history before `v5.1.0 (2026-03-16)`, see the upstream README: https://github.com/obra/superpowers/blob/main/README.md
 
+## v5.5.0 (2026-03-19)
+
+### Borrowed Layer Alignment
+
+- Added internal `bin/superpowers-slug` so workflow-status and the branch-aware workflow skills share one escaped `SLUG` plus artifact-safe `BRANCH` contract instead of re-deriving repo identity independently
+- Generated shared skill preambles now capture raw `_BRANCH` once for grounding while keeping helper `BRANCH` artifact-only for file and manifest naming
+- Broadened natural-language skill descriptions for discovery-facing workflow skills while preserving explicit prerequisite wording and fail-closed routing on late-stage skills
+- Replaced the retired JS-only `using-superpowers` routing gate with repo-versioned markdown scenario, runner, judge, and orchestrator artifacts plus per-scenario evidence bundles under `~/.superpowers/projects/<slug>/...`
+- `bin/superpowers-update-check` now supports `--force`, refreshes cached `UP_TO_DATE` results sooner, and keeps `UPGRADE_AVAILABLE` results sticky longer without changing semver-aware or `local_ahead` behavior
+
+### Testing
+
+- Added `tests/codex-runtime/test-superpowers-slug.sh` for helper fallback, escaping, detached-HEAD, and branch-shape coverage
+- Expanded deterministic generator, workflow, and runtime tests for branch-ownership contracts, fail-closed routing guardrails, and update-check freshness behavior
+
 ## v5.4.0 (2026-03-18)
 
 ### Workflow Runtime

@@ -1002,6 +1002,7 @@ invalidate_attempt() {
 render_evidence_file() {
   local dest="$1"
   local topic base i j
+  local wrote_section=0
   base="$(basename "$PLAN_REL_PATH" .md)"
   topic="$base"
 
@@ -1016,14 +1017,21 @@ render_evidence_file() {
     fi
 
     for ((i=0; i<STEP_COUNT; i++)); do
-      local task step has_attempt=0
+      local task step has_attempt=0 attempt_in_section=0
       task="${STEP_TASKS[$i]}"
       step="${STEP_NUMBERS[$i]}"
       for ((j=0; j<ATT_COUNT; j++)); do
         if [[ "${ATT_TASKS[$j]}" == "$task" && "${ATT_STEPS[$j]}" == "$step" ]]; then
           if (( has_attempt == 0 )); then
+            if (( wrote_section == 1 )); then
+              printf '\n'
+            fi
             printf '### Task %s Step %s\n' "$task" "$step"
             has_attempt=1
+            wrote_section=1
+          fi
+          if (( attempt_in_section > 0 )); then
+            printf '\n'
           fi
           printf '#### Attempt %s\n' "${ATT_NUMBERS[$j]}"
           printf '**Status:** %s\n' "${ATT_STATUS[$j]}"
@@ -1038,7 +1046,7 @@ render_evidence_file() {
           printf '**Verification:**\n'
           printf -- '- %s\n' "${ATT_VERIFICATION[$j]}"
           printf '**Invalidation Reason:** %s\n' "${ATT_INVALIDATION_REASONS[$j]}"
-          printf '\n'
+          attempt_in_section=$((attempt_in_section + 1))
         fi
       done
     done

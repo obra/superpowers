@@ -19,6 +19,8 @@
 
 ## What Already Exists
 
+Historical note: this section captures the draft-time repo state before the plan was executed. For the current shipped state, use the repo contents plus `docs/superpowers/execution-evidence/2026-03-18-supported-workflow-cli-r1-evidence.md`.
+
 - `bin/superpowers-workflow-status` already resolves workflow state, reads and writes branch-scoped manifests, and owns `expect` / `sync`.
 - `bin/superpowers-workflow-status.ps1` and `bin/superpowers-plan-execution.ps1` already establish the PowerShell wrapper pattern this feature should follow.
 - `tests/codex-runtime/test-superpowers-workflow-status.sh` already covers the internal helper's conservative routing, manifest recovery, malformed headers, and summary behavior.

@@ -1,6 +1,6 @@
 ---
 name: plan-ceo-review
-description: Use when a Superpowers design spec has been written and needs CEO or founder review before implementation planning
+description: Use when a written Superpowers design or architecture spec needs CEO or founder review before implementation planning
 ---
 <!-- AUTO-GENERATED from SKILL.md.tmpl — do not edit directly -->
 <!-- Regenerate: node scripts/gen-skill-docs.mjs -->
@@ -16,6 +16,10 @@ _IS_SUPERPOWERS_RUNTIME_ROOT() {
   [ -f "$candidate/VERSION" ]
 }
 _REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+_BRANCH_RAW=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo current)
+[ -n "$_BRANCH_RAW" ] || _BRANCH_RAW="current"
+[ "$_BRANCH_RAW" != "HEAD" ] || _BRANCH_RAW="current"
+_BRANCH="$_BRANCH_RAW"
 _SUPERPOWERS_ROOT=""
 _IS_SUPERPOWERS_RUNTIME_ROOT "$_REPO_ROOT" && _SUPERPOWERS_ROOT="$_REPO_ROOT"
 [ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.superpowers/install" && _SUPERPOWERS_ROOT="$HOME/.superpowers/install"

@@ -19,6 +19,8 @@
 
 ## What Already Exists
 
+Historical note: this section captures the draft-time repo state before the plan was executed. For the current shipped state, use the repo contents plus `docs/superpowers/execution-evidence/2026-03-17-execution-workflow-clarity-adversarial-follow-up-r1-evidence.md`.
+
 - `bin/superpowers-plan-execution` already implements the read/write execution-state contract and has a dedicated regression harness in `tests/codex-runtime/test-superpowers-plan-execution.sh`.
 - `skills/plan-eng-review/` already routes execution handoff through `superpowers-plan-execution recommend`.
 - `skills/using-superpowers/` plus `tests/codex-runtime/test-workflow-sequencing.sh` and `tests/codex-runtime/skill-doc-contracts.test.mjs` still encode the older execution-skill routing shortcut.

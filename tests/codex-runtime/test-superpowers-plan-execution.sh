@@ -90,6 +90,16 @@ assert_json_nonempty() {
   fi
 }
 
+assert_no_blank_line_at_eof() {
+  local path="$1"
+  local ending
+  ending="$(tail -c 2 "$path" | od -An -t x1 | tr -d '[:space:]')"
+  if [[ "$ending" == "0a0a" ]]; then
+    echo "Expected $path to end with a single trailing newline, not a blank line at EOF."
+    exit 1
+  fi
+}
+
 run_json_command() {
   local repo_dir="$1"
   shift
@@ -1212,6 +1222,7 @@ EOF
   run_json_command "$repo_dir" complete --plan "$PLAN_REL" --task 1 --step 1 --source superpowers:executing-plans --claim "Prepared the workspace" --file src/zeta.txt --file docs/alpha.md --file src/zeta.txt --manual-verify-summary "Verified by inspection" --expect-execution-fingerprint "$(json_value "$active" "execution_fingerprint")" >/dev/null
 
   evidence_rel="$(evidence_rel_path "$PLAN_REL" 1)"
+  assert_no_blank_line_at_eof "$repo_dir/$evidence_rel"
   evidence_text="$(cat "$repo_dir/$evidence_rel")"
   assert_contains "$evidence_text" $'**Files:**\n- docs/alpha.md\n- src/zeta.txt\n**Verification:**' "canonical files evidence"
 }

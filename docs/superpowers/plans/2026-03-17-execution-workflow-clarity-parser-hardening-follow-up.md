@@ -19,6 +19,8 @@
 
 ## What Already Exists
 
+Historical note: this section captures the draft-time repo state before the plan was executed. For the current shipped state, use the repo contents plus `docs/superpowers/execution-evidence/2026-03-17-execution-workflow-clarity-parser-hardening-follow-up-r1-evidence.md`.
+
 - `bin/superpowers-plan-execution` already blocks whitespace-only required mutation inputs on write.
 - `tests/codex-runtime/test-superpowers-plan-execution.sh` already covers the mutation-path regressions for blank `note`, `reopen`, `transfer`, `complete --claim`, and `complete --manual-verify-summary`.
 - The approved spec already says execution-note summaries are whitespace-normalized, evidence fields are non-empty and canonical, `**Files:**` entries must be normalized repo-relative paths inside the repo root, and the approved plan header contract includes `**Last Reviewed By:**`.
@@ -174,13 +176,15 @@ git commit -m "fix: harden execution state parsing"
 
 ## Task 3: Final Verification And Review Handoff
 
+Historical note: the `tests/evals/using-superpowers-routing.eval.mjs` command below predates the later doc-driven routing gate redesign. For current `using-superpowers` routing validation, use the repo-versioned markdown orchestrator/runner/judge flow under `tests/evals/using-superpowers-routing.*.md` instead of the removed `.eval.mjs` file.
+
 **Files:**
 - Modify: `bin/superpowers-plan-execution`
 - Modify: `tests/codex-runtime/test-superpowers-plan-execution.sh`
 - Test: `bash tests/codex-runtime/test-superpowers-plan-execution.sh`
 - Test: `bash tests/codex-runtime/test-workflow-sequencing.sh`
 - Test: `bash tests/codex-runtime/test-runtime-instructions.sh`
-- Test: `node --test tests/codex-runtime/gen-skill-docs.unit.test.mjs tests/codex-runtime/skill-doc-contracts.test.mjs tests/codex-runtime/skill-doc-generation.test.mjs tests/codex-runtime/workflow-fixtures.test.mjs tests/evals/using-superpowers-routing.eval.mjs tests/evals/interactive-question-format.eval.mjs`
+- Historical test: `node --test tests/codex-runtime/gen-skill-docs.unit.test.mjs tests/codex-runtime/skill-doc-contracts.test.mjs tests/codex-runtime/skill-doc-generation.test.mjs tests/codex-runtime/workflow-fixtures.test.mjs tests/evals/using-superpowers-routing.eval.mjs tests/evals/interactive-question-format.eval.mjs`
 - Test: `node --test tests/brainstorm-server/server.test.js tests/brainstorm-server/ws-protocol.test.js`
 - Test: `bash tests/brainstorm-server/test-launch-wrappers.sh`
 - Test: `node scripts/gen-skill-docs.mjs --check`
@@ -191,8 +195,8 @@ git commit -m "fix: harden execution state parsing"
 Run: `bash -lc 'for test_script in tests/codex-runtime/test-*.sh; do bash "$test_script"; done'`
 Expected: PASS
 
-Run: `node --test tests/codex-runtime/gen-skill-docs.unit.test.mjs tests/codex-runtime/skill-doc-contracts.test.mjs tests/codex-runtime/skill-doc-generation.test.mjs tests/codex-runtime/workflow-fixtures.test.mjs tests/evals/using-superpowers-routing.eval.mjs tests/evals/interactive-question-format.eval.mjs`
-Expected: PASS, with evals only skipping when their environment gate is intentionally unset
+Historical run: `node --test tests/codex-runtime/gen-skill-docs.unit.test.mjs tests/codex-runtime/skill-doc-contracts.test.mjs tests/codex-runtime/skill-doc-generation.test.mjs tests/codex-runtime/workflow-fixtures.test.mjs tests/evals/using-superpowers-routing.eval.mjs tests/evals/interactive-question-format.eval.mjs`
+Historical expected: PASS at the time, with evals only skipping when their environment gate was intentionally unset
 
 Run: `node --test tests/brainstorm-server/server.test.js tests/brainstorm-server/ws-protocol.test.js`
 Expected: PASS

@@ -273,6 +273,11 @@ done
 
 echo "Generated skills use marker-based current-repo detection."
 
+if [[ ! -x "bin/superpowers-slug" ]]; then
+  echo "Expected bin/superpowers-slug to exist and be executable."
+  exit 1
+fi
+
 if rg -n -F 'multi_agent = true' \
   .codex/INSTALL.md \
   docs/README.codex.md \
@@ -352,7 +357,7 @@ required_patterns=(
   'skills/brainstorming/SKILL.md:**Workflow State:** Draft'
   "skills/brainstorming/SKILL.md:**The terminal state is invoking plan-ceo-review.**"
   "skills/writing-plans/SKILL.md:## Preamble (run first)"
-  "skills/writing-plans/SKILL.md:Use when you have a CEO-approved Superpowers spec for a multi-step task and need an implementation plan, before touching code"
+  "skills/writing-plans/SKILL.md:Use when you have a CEO-approved Superpowers spec for a multi-step task and need to write the implementation plan before touching code"
   "skills/writing-plans/SKILL.md:## Plan Review Handoff"
   'skills/writing-plans/SKILL.md:If the spec is missing these lines, or if `**Workflow State:**` is not `CEO Approved`, stop and direct the agent to `superpowers:plan-ceo-review`.'
   'skills/writing-plans/SKILL.md:Invoke `superpowers:plan-eng-review` after saving the full plan.'
@@ -368,7 +373,7 @@ required_patterns=(
   "skills/plan-ceo-review/SKILL.md:.github/copilot-instructions.md"
   "skills/plan-ceo-review/SKILL.md:.github/instructions/*.instructions.md"
   "skills/plan-eng-review/SKILL.md:docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md"
-  "skills/plan-eng-review/SKILL.md:Use when a Superpowers implementation plan from a CEO-approved spec has been written and needs engineering review before execution"
+  "skills/plan-eng-review/SKILL.md:Use when a written Superpowers implementation plan from a CEO-approved spec needs engineering review before execution"
   'skills/plan-eng-review/SKILL.md:**Workflow State:** Draft | Engineering Approved'
   "skills/plan-eng-review/SKILL.md:_TODOS_FORMAT"
   'skills/plan-eng-review/SKILL.md:If no current plan exists, stop and direct the agent back to `superpowers:writing-plans`.'
@@ -667,13 +672,13 @@ for pattern in \
 done
 
 for pattern in \
-  'skills/executing-plans/SKILL.md:Use when you have an engineering-approved Superpowers implementation plan to execute in a separate session' \
+  'skills/executing-plans/SKILL.md:Use when you have an engineering-approved Superpowers implementation plan and need to execute it in a separate session' \
   'skills/executing-plans/SKILL.md:Use this skill when implementation should happen in a separate session.' \
   'skills/executing-plans/SKILL.md:**REQUIRED SUB-SKILL:** Use `superpowers:requesting-code-review`' \
   'skills/executing-plans/SKILL.md:After the final review is resolved:' \
   'skills/finishing-a-development-branch/SKILL.md:- **subagent-driven-development** - After the final review passes and all tasks are complete' \
   'skills/finishing-a-development-branch/SKILL.md:- **executing-plans** - After the final review is resolved and all tasks are complete' \
-  'skills/subagent-driven-development/SKILL.md:Use when executing an engineering-approved Superpowers implementation plan with independent tasks in the current session' \
+  'skills/subagent-driven-development/SKILL.md:Use when executing an engineering-approved Superpowers implementation plan with mostly independent tasks in the current session' \
   'skills/subagent-driven-development/SKILL.md:**vs. Executing Plans (parallel session):**' \
   'skills/subagent-driven-development/SKILL.md:- **superpowers:executing-plans** - Use for parallel session instead of same-session execution' \
   'skills/subagent-driven-development/SKILL.md:[Invoke superpowers:finishing-a-development-branch]' \
@@ -781,8 +786,53 @@ if ! rg -n -F 'bash tests/codex-runtime/test-superpowers-plan-execution.sh' docs
   exit 1
 fi
 
+if ! rg -n -F 'bash tests/codex-runtime/test-superpowers-slug.sh' docs/testing.md >/dev/null; then
+  echo "docs/testing.md should include the slug helper regression in the recommended validation order."
+  exit 1
+fi
+
 if ! rg -n -F 'node --test tests/brainstorm-server/server.test.js tests/brainstorm-server/ws-protocol.test.js' docs/testing.md >/dev/null; then
   echo "docs/testing.md should document the full brainstorm-server node test command, not only npm test."
+  exit 1
+fi
+
+if ! rg -n -F 'three primary automated validation surfaces plus opt-in or change-specific eval gates' docs/testing.md >/dev/null; then
+  echo "docs/testing.md should distinguish the primary deterministic suites from the opt-in or change-specific eval gates."
+  exit 1
+fi
+
+if ! rg -n -F 'This gate is agent-executed and does not run through `node --test` or the Node OpenAI-judge helper path.' docs/testing.md >/dev/null; then
+  echo "docs/testing.md should distinguish the agent-executed routing gate from the Node eval helper path."
+  exit 1
+fi
+
+if ! rg -n -F 'It is not part of the default deterministic validation order, but it is a required change-specific gate for Item 1 routing-safety work.' docs/testing.md >/dev/null; then
+  echo "docs/testing.md should describe the routing gate as change-specific required coverage, not a generic optional eval."
+  exit 1
+fi
+
+if ! rg -n -F 'the `using-superpowers` routing gate, which remains a required change-specific gate for Item 1 routing-safety work' tests/evals/README.md >/dev/null; then
+  echo "tests/evals/README.md should distinguish the required routing gate from the opt-in Node-based evals."
+  exit 1
+fi
+
+if ! rg -n -F 'Set these environment variables when you want the Node-based `.eval.mjs` tests to execute instead of skip:' tests/evals/README.md >/dev/null; then
+  echo "tests/evals/README.md should explain that the Node-based eval env vars control whether the evals execute instead of skip."
+  exit 1
+fi
+
+if ! rg -n -F 'Optional environment for the Node-based `.eval.mjs` tests:' tests/evals/README.md >/dev/null; then
+  echo "tests/evals/README.md should scope the optional env vars to the Node-based evals."
+  exit 1
+fi
+
+if ! rg -n -F 'the routing gate does not use `tests/evals/helpers/openai-judge.mjs`' tests/evals/README.md >/dev/null; then
+  echo "tests/evals/README.md should state that the routing gate is not driven by the Node OpenAI judge helper."
+  exit 1
+fi
+
+if ! rg -n -F 'See `tests/evals/README.md` for the Node-based eval environment variables and for routing-eval logging behavior' docs/testing.md >/dev/null; then
+  echo "docs/testing.md should point readers to the README with scoped eval-env wording."
   exit 1
 fi
 

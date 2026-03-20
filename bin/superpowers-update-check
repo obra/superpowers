@@ -8,6 +8,12 @@ MARKER_FILE="$STATE_DIR/just-upgraded-from"
 SNOOZE_FILE="$STATE_DIR/update-snoozed"
 VERSION_FILE="$SUPERPOWERS_DIR/VERSION"
 REMOTE_URL="${SUPERPOWERS_REMOTE_URL:-https://raw.githubusercontent.com/dmulcahey/superpowers/main/VERSION}"
+FORCE=0
+
+if [ "${1:-}" = "--force" ]; then
+  FORCE=1
+  shift
+fi
 
 compare_versions() {
   local left="$1"
@@ -118,19 +124,33 @@ if [ -f "$MARKER_FILE" ]; then
   exit 0
 fi
 
-if [ -f "$CACHE_FILE" ]; then
-  STALE=$(find "$CACHE_FILE" -mmin +720 2>/dev/null || true)
-  if [ -z "$STALE" ]; then
-    CACHED="$(cat "$CACHE_FILE" 2>/dev/null || true)"
-    case "$CACHED" in
-      UP_TO_DATE*)
+if [ "$FORCE" -eq 0 ] && [ -f "$CACHE_FILE" ]; then
+  CACHED="$(cat "$CACHE_FILE" 2>/dev/null || true)"
+  case "$CACHED" in
+    UP_TO_DATE*)
+      STALE="$(find "$CACHE_FILE" -mmin +60 2>/dev/null || true)"
+      if [ -z "$STALE" ]; then
         CACHED_VER="$(echo "$CACHED" | awk '{print $2}')"
         if [ "$CACHED_VER" = "$LOCAL" ]; then
           exit 0
         fi
-        ;;
-    esac
-  fi
+      fi
+      ;;
+    UPGRADE_AVAILABLE*)
+      STALE="$(find "$CACHE_FILE" -mmin +720 2>/dev/null || true)"
+      if [ -z "$STALE" ]; then
+        CACHED_LOCAL="$(echo "$CACHED" | awk '{print $2}')"
+        CACHED_REMOTE="$(echo "$CACHED" | awk '{print $3}')"
+        if [ "$CACHED_LOCAL" = "$LOCAL" ]; then
+          if check_snooze "$CACHED_REMOTE"; then
+            exit 0
+          fi
+          echo "$CACHED"
+          exit 0
+        fi
+      fi
+      ;;
+  esac
 fi
 
 mkdir -p "$STATE_DIR"

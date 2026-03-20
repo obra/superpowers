@@ -21,6 +21,12 @@ function getSkillPath(skill) {
   return path.join(SKILLS_DIR, skill, 'SKILL.md');
 }
 
+function getSkillDescription(skill) {
+  const frontmatter = parseFrontmatter(readUtf8(getSkillPath(skill)));
+  assert.ok(frontmatter, `${skill} should have frontmatter`);
+  return frontmatter.description;
+}
+
 test('templates declare exactly one base or review preamble placeholder', () => {
   for (const skill of listGeneratedSkills()) {
     const template = readUtf8(getTemplatePath(skill));
@@ -38,6 +44,48 @@ test('generated preamble bash block includes shared runtime-root, session, and c
     assert.match(bashBlock, /_IS_SUPERPOWERS_RUNTIME_ROOT\(\)/, `${skill} should define runtime-root detection`);
     assert.match(bashBlock, /_SESSIONS=/, `${skill} should track session count`);
     assert.match(bashBlock, /_CONTRIB=/, `${skill} should load contributor state`);
+  }
+});
+
+test('generated preambles capture _BRANCH exactly once and keep helper BRANCH out of grounding', () => {
+  const branchAssignmentPattern = /(?:^|\n)_BRANCH=/g;
+
+  for (const skill of listGeneratedSkills()) {
+    const content = readUtf8(getSkillPath(skill));
+    const bashBlock = extractBashBlockUnderHeading(content, 'Preamble (run first)');
+    const totalAssignments = content.match(branchAssignmentPattern) ?? [];
+    const preambleAssignments = bashBlock.match(branchAssignmentPattern) ?? [];
+    assert.equal(totalAssignments.length, 1, `${skill} should include one _BRANCH assignment in the full doc`);
+    assert.equal(preambleAssignments.length, 1, `${skill} should capture _BRANCH in the preamble`);
+    assert.doesNotMatch(bashBlock, /\bBRANCH=/, `${skill} should not define helper BRANCH in the preamble`);
+  }
+});
+
+test('generated branch-aware helper loads are guarded through _SLUG_ENV and eval the captured output only', () => {
+  for (const skill of ['qa-only', 'plan-eng-review', 'finishing-a-development-branch']) {
+    const content = readUtf8(getSkillPath(skill));
+    assert.match(content, /_SLUG_ENV=\$\("\$_SUPERPOWERS_ROOT\/bin\/superpowers-slug" 2>\/dev\/null \|\| true\)/, `${skill} should capture helper output into _SLUG_ENV`);
+    assert.match(content, /if \[ -n "\$_SLUG_ENV" \]; then\n\s+eval "\$_SLUG_ENV"\nfi/, `${skill} should only eval guarded helper output`);
+    assert.doesNotMatch(content, /eval "\$\("\$_SUPERPOWERS_ROOT\/bin\/superpowers-slug"\)/, `${skill} should not unguardedly eval helper command substitution`);
+  }
+});
+
+test('branch-aware skill docs consume the slug helper instead of inline sanitization fragments', () => {
+  for (const skill of ['qa-only', 'plan-eng-review', 'finishing-a-development-branch']) {
+    const content = readUtf8(getSkillPath(skill));
+    assert.match(content, /bin\/superpowers-slug/, `${skill} should use the shared slug helper`);
+    assert.doesNotMatch(content, /SAFE_BRANCH=\$\(/, `${skill} should not inline branch sanitization`);
+    assert.doesNotMatch(content, /(?:^|[^_])BRANCH=\$\(git rev-parse --abbrev-ref HEAD/, `${skill} should not inline raw branch capture`);
+    assert.doesNotMatch(content, /SLUG=\$\(printf '%s\\n' "\$REMOTE_URL"/, `${skill} should not inline repo slug derivation`);
+  }
+});
+
+test('helper BRANCH stays artifact-only in the branch-aware skill consumers', () => {
+  for (const skill of ['qa-only', 'finishing-a-development-branch']) {
+    const content = readUtf8(getSkillPath(skill));
+    const bashBlock = extractBashBlockUnderHeading(content, 'Preamble (run first)');
+    assert.match(content, /\$BRANCH/, `${skill} should use helper BRANCH in artifact selection`);
+    assert.doesNotMatch(bashBlock, /\$BRANCH/, `${skill} should not use helper BRANCH in the grounding preamble`);
   }
 });
 
@@ -83,18 +131,66 @@ test('workflow sequencing test uses local fixtures instead of historical docs pa
   assert.doesNotMatch(stripped, /docs\/superpowers\/plans\/2026-/);
 });
 
-test('workflow-critical skill descriptions encode approval-stage prerequisites', () => {
+test('broad-safe skill descriptions expand discovery language without taking over workflow authority', () => {
   const expected = {
-    'writing-plans': /CEO-approved Superpowers spec/,
-    'plan-eng-review': /CEO-approved spec/,
-    'subagent-driven-development': /engineering-approved Superpowers implementation plan/,
-    'executing-plans': /engineering-approved Superpowers implementation plan/,
+    'using-superpowers': [/which skill/i, /workflow stage applies/i],
+    'brainstorming': [/feature idea/i, /architecture direction/i],
+    'systematic-debugging': [/regression/i],
+    'document-release': [/release notes/i, /handoff documentation/i],
+    'qa-only': [/repro steps/i, /screenshots/i],
   };
 
-  for (const [skill, pattern] of Object.entries(expected)) {
-    const frontmatter = parseFrontmatter(readUtf8(getSkillPath(skill)));
-    assert.ok(frontmatter, `${skill} should have frontmatter`);
-    assert.match(frontmatter.description, pattern, `${skill} description should encode the required workflow gate`);
+  for (const [skill, patterns] of Object.entries(expected)) {
+    const description = getSkillDescription(skill);
+    for (const pattern of patterns) {
+      assert.match(description, pattern, `${skill} description should broaden discovery with ${pattern}`);
+    }
+  }
+});
+
+test('workflow-critical skill descriptions encode approval-stage prerequisites', () => {
+  const expected = {
+    'plan-ceo-review': [/written Superpowers design or architecture spec/i, /before implementation planning/i],
+    'writing-plans': [/CEO-approved Superpowers spec/i, /write the implementation plan/i],
+    'plan-eng-review': [/written Superpowers implementation plan/i, /CEO-approved spec/i],
+    'subagent-driven-development': [/engineering-approved Superpowers implementation plan/i, /mostly independent tasks/i],
+    'executing-plans': [/engineering-approved Superpowers implementation plan/i, /separate session/i],
+    'requesting-code-review': [/after implementation work/i, /completed plan\/task slice/i],
+    'finishing-a-development-branch': [/implementation is complete/i, /verification passes/i],
+  };
+
+  for (const [skill, patternOrPatterns] of Object.entries(expected)) {
+    const description = getSkillDescription(skill);
+    const patterns = Array.isArray(patternOrPatterns) ? patternOrPatterns : [patternOrPatterns];
+    for (const pattern of patterns) {
+      assert.match(description, pattern, `${skill} description should encode the required workflow gate`);
+    }
+  }
+});
+
+test('late-stage skill descriptions reject generic skip-ahead trigger phrases', () => {
+  const lateStageSkills = [
+    'plan-ceo-review',
+    'writing-plans',
+    'plan-eng-review',
+    'executing-plans',
+    'subagent-driven-development',
+    'requesting-code-review',
+    'finishing-a-development-branch',
+  ];
+  const forbiddenPatterns = [
+    /implement this/i,
+    /start coding/i,
+    /build this/i,
+    /plan this feature/i,
+    /implementing major features/i,
+  ];
+
+  for (const skill of lateStageSkills) {
+    const description = getSkillDescription(skill);
+    for (const pattern of forbiddenPatterns) {
+      assert.doesNotMatch(description, pattern, `${skill} description should not match ${pattern}`);
+    }
   }
 });
 

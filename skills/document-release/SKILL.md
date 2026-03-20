@@ -1,6 +1,6 @@
 ---
 name: document-release
-description: Use when implementation is complete and documentation, changelog, or TODO hygiene need a release-quality pass before merge
+description: Use when implementation is complete and release notes, changelog, TODO, or handoff documentation need a release-quality pass before merge
 ---
 <!-- AUTO-GENERATED from SKILL.md.tmpl — do not edit directly -->
 <!-- Regenerate: node scripts/gen-skill-docs.mjs -->
@@ -16,6 +16,10 @@ _IS_SUPERPOWERS_RUNTIME_ROOT() {
   [ -f "$candidate/VERSION" ]
 }
 _REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+_BRANCH_RAW=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo current)
+[ -n "$_BRANCH_RAW" ] || _BRANCH_RAW="current"
+[ "$_BRANCH_RAW" != "HEAD" ] || _BRANCH_RAW="current"
+_BRANCH="$_BRANCH_RAW"
 _SUPERPOWERS_ROOT=""
 _IS_SUPERPOWERS_RUNTIME_ROOT "$_REPO_ROOT" && _SUPERPOWERS_ROOT="$_REPO_ROOT"
 [ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.superpowers/install" && _SUPERPOWERS_ROOT="$HOME/.superpowers/install"

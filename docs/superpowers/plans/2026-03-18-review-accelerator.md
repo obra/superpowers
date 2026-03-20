@@ -19,6 +19,8 @@
 
 ## What Already Exists
 
+Historical note: this section captures the draft-time repo state before the plan was executed. For the current shipped state, use the repo contents plus `docs/superpowers/execution-evidence/2026-03-18-review-accelerator-r1-evidence.md`.
+
 - `skills/plan-ceo-review/SKILL.md.tmpl` and `skills/plan-eng-review/SKILL.md.tmpl` already own the human review loops, approval headers, and terminal handoffs for spec and plan review.
 - `scripts/gen-skill-docs.mjs` already regenerates checked-in `skills/*/SKILL.md` from the editable `.tmpl` sources and is validated by `node scripts/gen-skill-docs.mjs --check`.
 - `skills/subagent-driven-development/` already contains prompt assets for subagent orchestration, so this repo has an established place for reusable reviewer-prompt content.

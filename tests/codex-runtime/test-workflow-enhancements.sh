@@ -51,9 +51,9 @@ require_pattern skills/plan-eng-review/SKILL.md "test-plan"
 require_pattern skills/plan-eng-review/SKILL.md 'This file is consumed by `superpowers:qa-only`'
 require_pattern skills/plan-eng-review/SKILL.md "**Workflow State:** Draft | Engineering Approved"
 require_pattern skills/plan-eng-review/SKILL.md "**Source Spec Revision:** <integer>"
+require_pattern skills/plan-eng-review/SKILL.md 'bin/superpowers-slug'
 require_pattern skills/plan-ceo-review/SKILL.md 'BASE_BRANCH=$(gh pr view --json baseRefName -q .baseRefName'
 require_pattern skills/plan-ceo-review/SKILL.md "**Workflow State:** Draft | CEO Approved"
-require_pattern skills/plan-eng-review/SKILL.md 'SAFE_BRANCH=$(printf'
 
 require_pattern skills/qa-only/SKILL.md "playwright"
 require_pattern skills/qa-only/SKILL.md "diff-aware"
@@ -64,9 +64,9 @@ require_pattern skills/qa-only/SKILL.md 'REPORT_DIR="${QA_OUTPUT_DIR:-.superpowe
 require_pattern skills/qa-only/SKILL.md 'origin/$BASE_BRANCH...HEAD'
 require_pattern skills/qa-only/SKILL.md '| Tier | Standard | `Standard`, `Exhaustive` |'
 require_pattern skills/qa-only/SKILL.md '| Mode | full | `--quick`, `--regression <baseline>` |'
-require_pattern skills/qa-only/SKILL.md 'SAFE_BRANCH=$(printf'
+require_pattern skills/qa-only/SKILL.md 'bin/superpowers-slug'
 require_pattern skills/qa-only/SKILL.md 'PLAN_ARTIFACT=$(ls -t'
-require_pattern skills/qa-only/SKILL.md '*-"$SAFE_BRANCH"-test-plan-*.md'
+require_pattern skills/qa-only/SKILL.md '*-"$BRANCH"-test-plan-*.md'
 
 require_pattern skills/document-release/SKILL.md "CHANGELOG"
 require_pattern skills/document-release/SKILL.md "NEVER CLOBBER CHANGELOG ENTRIES"
@@ -85,10 +85,26 @@ require_pattern skills/finishing-a-development-branch/SKILL.md 'test-plan'
 require_pattern skills/finishing-a-development-branch/SKILL.md 'superpowers:document-release'
 require_pattern skills/finishing-a-development-branch/SKILL.md 'FEATURE_WORKTREE=$(git worktree list --porcelain'
 require_pattern skills/finishing-a-development-branch/SKILL.md "RELEASE-NOTES.md"
+require_pattern skills/finishing-a-development-branch/SKILL.md 'bin/superpowers-slug'
 require_pattern skills/requesting-code-review/SKILL.md "target base branch"
 
 if rg -n -F 'git diff main...HEAD --name-only' skills/qa-only/SKILL.md >/dev/null; then
   echo "qa-only should not hardcode main for diff-aware mode."
+  exit 1
+fi
+
+if rg -n -F 'SAFE_BRANCH=$(printf' skills/plan-eng-review/SKILL.md.tmpl skills/qa-only/SKILL.md.tmpl skills/finishing-a-development-branch/SKILL.md.tmpl >/dev/null; then
+  echo "Workflow templates should not inline branch sanitization fragments."
+  exit 1
+fi
+
+if rg -n -F 'BRANCH=$(git rev-parse --abbrev-ref HEAD' skills/qa-only/SKILL.md.tmpl skills/plan-eng-review/SKILL.md.tmpl skills/finishing-a-development-branch/SKILL.md.tmpl >/dev/null; then
+  echo "Workflow templates should consume the shared slug helper instead of inlining branch capture."
+  exit 1
+fi
+
+if rg -n -F 'SLUG=$(printf' skills/qa-only/SKILL.md.tmpl skills/plan-eng-review/SKILL.md.tmpl skills/finishing-a-development-branch/SKILL.md.tmpl >/dev/null; then
+  echo "Workflow templates should consume the shared slug helper instead of inlining repo slug derivation."
   exit 1
 fi
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
 GIT_REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 REPO_CONTEXT_AVAILABLE=1
@@ -36,11 +37,22 @@ derive_repo_slug() {
 }
 
 REMOTE_URL="$(git remote get-url origin 2>/dev/null || true)"
-SLUG="$(derive_repo_slug "$REMOTE_URL")"
 BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo current)"
 [ -n "$BRANCH" ] || BRANCH="current"
 [ "$BRANCH" != "HEAD" ] || BRANCH="current"
-SAFE_BRANCH="$(printf '%s\n' "$BRANCH" | sed 's/[^[:alnum:]._-]/-/g')"
+RAW_BRANCH="$BRANCH"
+SLUG=""
+SAFE_BRANCH=""
+if [ -x "$SCRIPT_DIR/superpowers-slug" ]; then
+  IDENTITY_OUTPUT="$("$SCRIPT_DIR/superpowers-slug" 2>/dev/null || true)"
+  if [ -n "$IDENTITY_OUTPUT" ]; then
+    eval "$IDENTITY_OUTPUT"
+    SAFE_BRANCH="$BRANCH"
+  fi
+fi
+[ -n "$SLUG" ] || SLUG="$(derive_repo_slug "$REMOTE_URL")"
+[ -n "$SAFE_BRANCH" ] || SAFE_BRANCH="$(printf '%s\n' "$RAW_BRANCH" | sed 's/[^[:alnum:]._-]/-/g')"
+BRANCH="$RAW_BRANCH"
 USER_NAME="$(whoami 2>/dev/null || echo user)"
 MANIFEST_PATH="$STATE_DIR/projects/$SLUG/${USER_NAME}-${SAFE_BRANCH}-workflow-state.json"
 FALLBACK_LIMIT="${SUPERPOWERS_WORKFLOW_STATUS_FALLBACK_LIMIT:-6}"

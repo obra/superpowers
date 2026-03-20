@@ -17,6 +17,8 @@
 
 ## What Already Exists
 
+Historical note: this section captures the draft-time repo state for this follow-up plan. For the current shipped state, use the repo contents and current release notes rather than the pre-implementation summary below.
+
 - `bin/superpowers-workflow-status` already implements branch-scoped manifests, bounded fallback discovery, corruption recovery, path validation, and conservative workflow routing.
 - `tests/codex-runtime/test-superpowers-workflow-status.sh` already covers bootstrap, stale plans, corruption recovery, write conflicts, branch isolation, fallback refresh behavior, and implementation-ready terminal state.
 - `skills/using-superpowers/SKILL.md` and `skills/plan-eng-review/SKILL.md` already route through the helper and special-case `implementation_ready`.

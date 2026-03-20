@@ -7,6 +7,7 @@ HELPER="$REPO_ROOT/bin/superpowers-pwsh-common.ps1"
 PUBLIC_WORKFLOW_WRAPPER="$REPO_ROOT/bin/superpowers-workflow.ps1"
 WORKFLOW_WRAPPER="$REPO_ROOT/bin/superpowers-workflow-status.ps1"
 PLAN_EXEC_WRAPPER="$REPO_ROOT/bin/superpowers-plan-execution.ps1"
+UPDATE_CHECK_WRAPPER="$REPO_ROOT/bin/superpowers-update-check.ps1"
 
 pwsh_bin="$(command -v pwsh || command -v powershell || true)"
 if [[ -z "$pwsh_bin" ]]; then
@@ -240,8 +241,61 @@ SH
   fi
 }
 
+assert_update_check_wrapper_behavior() {
+  local wrapper_path="$1"
+  local bash_log="$tmp_root/update-check-wrapper-bash.log"
+  local wrapper_exit
+  local first_arg
+  local second_arg
+
+  if [[ ! -f "$wrapper_path" ]]; then
+    echo "Expected update-check PowerShell wrapper to exist: $wrapper_path"
+    exit 1
+  fi
+
+  cat > "$git_bin_dir/bash.exe" <<'SH'
+#!/bin/bash
+set -euo pipefail
+
+log_file="${SUPERPOWERS_TEST_BASH_LOG:?}"
+: > "$log_file"
+for arg in "$@"; do
+  printf '%s\n' "$arg" >> "$log_file"
+done
+
+exit 0
+SH
+  chmod +x "$git_bin_dir/bash.exe"
+
+  PATH="$generic_dir:$git_cmd_dir:$PATH" \
+    SUPERPOWERS_TEST_BASH_LOG="$bash_log" \
+    "$pwsh_bin" -NoLogo -NoProfile -Command "& '$wrapper_path' --force" >/dev/null
+  wrapper_exit=$?
+
+  if [[ $wrapper_exit -ne 0 ]]; then
+    echo "Expected update-check wrapper to preserve zero bash exit code"
+    echo "Actual: $wrapper_exit"
+    exit 1
+  fi
+
+  first_arg="$(sed -n '1p' "$bash_log")"
+  second_arg="$(sed -n '2p' "$bash_log")"
+  if [[ "$first_arg" != *"/bin/superpowers-update-check" ]]; then
+    echo "Expected update-check wrapper to invoke Git Bash with the update-check bash script"
+    echo "Actual first arg: $first_arg"
+    exit 1
+  fi
+  if [[ "$second_arg" != "--force" ]]; then
+    echo "Expected update-check wrapper to forward --force to bash"
+    echo "Actual args:"
+    cat "$bash_log"
+    exit 1
+  fi
+}
+
 assert_public_workflow_wrapper_behavior "$PUBLIC_WORKFLOW_WRAPPER"
 assert_wrapper_behavior "$WORKFLOW_WRAPPER" "superpowers-workflow-status" "workflow-status"
 assert_wrapper_behavior "$PLAN_EXEC_WRAPPER" "superpowers-plan-execution" "plan-execution"
+assert_update_check_wrapper_behavior "$UPDATE_CHECK_WRAPPER"
 
 echo "PowerShell wrapper bash-resolution regression test passed."

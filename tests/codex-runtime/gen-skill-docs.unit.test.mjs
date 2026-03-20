@@ -47,5 +47,6 @@ test('renderTemplateContent always ends generated files with a trailing newline'
 
 test('base and review shell builders include their expected contract lines', () => {
   assert.equal(buildBaseShellLines().some((line) => line.includes('_SESSIONS=')), true);
+  assert.equal(buildBaseShellLines().some((line) => line.includes('_BRANCH=')), true);
   assert.equal(buildReviewShellLines().some((line) => line.includes('_TODOS_FORMAT=')), true);
 });
