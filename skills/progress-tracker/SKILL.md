@@ -1,102 +1,120 @@
 ---
 name: progress-tracker
-description: Use when completing meaningful implementation work - records structured progress entries in .progress and updates the global TOC
+description: Use when a closed, reviewable change unit should be recorded in progress/ under the appropriate category
 ---
 
 # progress-tracker
 
 ## Overview
 
-Record implementation memory in a structured, searchable format.
+Record durable progress memory for a completed change unit in a structured, searchable format.
 
-This skill captures what was attempted, what failed, what worked, and how code changes map to commits.
+This skill captures what was attempted, what worked, and how one or more related commits map to a single reviewable progress entry.
 
 ## When to Use
 
 Use this skill when:
-- A meaningful implementation milestone is completed
-- A bugfix or feature task closes with concrete outcomes
-- A user asks to log progress for current work
+- A closed, independently reviewable change unit has been completed
+- The work has a single clear goal and belongs to one progress category
+- A user explicitly asks to record progress for completed work
 
 Skip or defer when:
-- Work is pure exploration with no durable decision
-- Changes are trivial and add no reusable lessons
+- Work is pure exploration, reading, or experimentation
+- Work is still an intermediate state and cannot be reviewed on its own
+- Changes are trivial, scattered, or not worth preserving as a progress record
+
+## Trigger Contract
+
+Create a progress entry only when all of the following are true:
+
+1. **Single clear goal** - the related work serves one describable objective
+2. **Related commit set** - the work can be represented as one coherent change unit rather than unrelated edits; this may be one commit or multiple related commits
+3. **Independently reviewable result** - the result is closed and can be reviewed on its own
+
+Progress is not a work log. It is a record of complete, durable change units.
+
+## Category Admission Rules
+
+Every entry must belong to exactly one category.
+
+Category admission rules are defined by the repository inside `progress/<category>/PROGRESS.md`, not hardcoded in this skill. The skill's job is to discover and follow that contract:
+
+- inspect the existing category directories under `progress/`
+- read candidate `progress/<category>/PROGRESS.md` files
+- use each file's `Admission Rule` to decide where the change unit belongs
+- update the selected category's `Global TOC` when a new entry is written
+
+Do not assume category names, ordering, or business meaning from this skill alone. The repository is the source of truth.
+
+If no existing category fits, do not invent category structure inside this skill. Only create a new category when the repository's progress model explicitly allows it, and route that creation through `progress-bootstrap`; otherwise stop and ask for clarification.
+
+Do not treat pure exploration as a recordable category unless the repository explicitly defines a category whose admission rule requires a closed, reusable research outcome.
 
 ## Prerequisite
 
-If `.progress/`, `.progress/PROGRESS.md`, or `.progress/entries/<YYYY>/` for the current year is missing, run `progress-bootstrap` first.
+If `progress/` is missing, or no repository-defined category structure exists yet, run `progress-bootstrap` first. If the selected target category or target month bucket is still missing after bootstrap, use `progress-bootstrap` to establish the required structure before writing the entry.
 
 ## Required Entry Fields
 
 Each entry must include:
 
 1. Date
-2. Title
-3. Background / Issue
-4. Actions / Outcome
-5. Lessons / Refinements
-6. Related Commit Message (required)
-7. Related Commit Hash (recommended)
+2. Category
+3. Title
+4. Background / Issue
+5. Change Unit
+6. Actions / Outcome
+7. Lessons / Refinements
+8. Related Commits
+9. Integration Summary
+
+Optional when useful:
+
+- Commit Range
 
 ## Entry Location and Naming
 
-- Root: `.progress/`
-- Entry index: `.progress/PROGRESS.md`
-- Entries: `.progress/entries/<YYYY>/YYYY-MM-DD-N.md`
-- `N` increments for multiple entries on the same date
+- Root: `progress/`
+- Category index: `progress/<category>/PROGRESS.md`
+- Entries: `progress/<category>/entries/<YYYY-MM>/YYYY-MM-DD-N.md`
+- `N` increments for multiple entries in the same category on the same date
+
+Month folders are physical storage buckets only. `progress/<category>/PROGRESS.md` stays the category-wide global index and declaration file.
 
 ## TOC Contract
 
-Maintain a global TOC table in `.progress/PROGRESS.md` with:
+Maintain the category-specific `Global TOC` table inside `progress/<category>/PROGRESS.md` using `template/toc-table-template.md`.
 
-```markdown
-| Page ID | Date | Title | Path | Keywords |
-| --- | --- | --- | --- | --- |
-```
+Each new entry appends one row to its category `PROGRESS.md` only.
 
-Each new entry appends one row.
+Example row format belongs in the repository's category `PROGRESS.md`, not in this skill body.
 
-## Execution Rules
+## Entry Lifecycle Rules
 
-- Canonical location is `.progress/`.
-- Do not use `.agents/`.
-- `Related Commit Message` is mandatory.
-- If commit hash is unavailable, use `TBD` and update later.
-- When replacing `TBD` with a real hash, create the implementation commit first, then update the progress entry and commit that progress change separately.
+- Create an entry only after the change unit is closed.
+- One change unit maps to at most one progress entry.
+- One progress entry belongs to exactly one category.
+- After entry creation, only metadata or wording corrections should be made to that entry.
+- If new functional commits extend the implementation boundary, treat them as a new change unit and create a new entry instead of expanding the old one.
+
+## Recording Rules
+
+- Canonical location is `progress/`.
+- `Related Commits` must list real, existing commits only.
+- `Related Commits` should be ordered chronologically or by commit sequence.
+- `Keywords` in `PROGRESS.md` should be 2-5 short comma-separated terms summarizing the topic, area, or issue.
+- Do not record uncommitted work.
+- Do not include TODOs, implementation steps, or future option comparisons in progress entries.
 - Never rewrite historical sections except intentional corrections.
 
-## Suggested Entry Template
+## Templates
 
-```markdown
-# YYYY-MM-DD-N
-
-## Date
-YYYY-MM-DD
-
-## Title
-[Short actionable title]
-
-## Background / Issue
-[Context, trigger, constraints]
-
-## Actions / Outcome
-- Approach 1: [what was tried] -> [result]
-- Approach 2: [what was tried] -> [result]
-- Final approach: [adopted approach] -> [why it worked]
-
-## Lessons / Refinements
-- [Reusable pattern]
-- [Avoidance note]
-
-## Related Commit Message
-type(scope): summary
-
-## Related Commit Hash
-abc123d (or TBD)
-```
+- Entry template: `template/entry-template.md`
+- TOC table template: `template/toc-table-template.md`
 
 ## Error Handling
 
-- Missing commit message: stop and request it.
-- TOC missing: initialize via `progress-bootstrap`, then continue.
+- Missing target category structure: initialize or extend it via `progress-bootstrap` before writing the entry.
+- Missing real commits for `Related Commits`: stop and gather the actual commit list before writing.
 - Entry path collision: increment `N` and retry.
+- Unclear category selection: stop and choose a single category before writing.
