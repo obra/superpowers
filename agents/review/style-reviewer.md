@@ -1,7 +1,7 @@
 ---
 name: style-reviewer
 model: haiku
-effort: low
+effort: medium
 tools: Read, Grep, Glob
 disallowedTools: Edit, Write, NotebookEdit
 description: |
