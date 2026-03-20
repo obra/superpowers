@@ -211,3 +211,17 @@ When replying to inline review comments on GitHub, reply in the comment thread (
 Verify. Question. Then implement.
 
 No performative agreement. Technical rigor always.
+
+## Troubleshooting
+
+**Error:** Reviewer asks to add a feature/endpoint that isn't used anywhere
+Cause: Reviewer may not have full context of what's actually called
+Solution: `grep` the codebase for usage before implementing. If unused, reply: "Grepped codebase - nothing calls this. Remove it (YAGNI)? Or is there usage I'm missing?"
+
+**Error:** Reviewer's suggestion would break existing tests
+Cause: Reviewer lacks context on what the code does or what depends on it
+Solution: Run the tests to confirm the breakage, then push back with the specific failure: "Implementing this breaks `test_name` in `test_file.py`. Should I update the test, or is this suggestion based on incomplete context?"
+
+**Error:** Reviewer provides numbered feedback but some items are unclear
+Cause: Ambiguous phrasing or missing context in review comments
+Solution: Do NOT implement the clear items and ask about the unclear ones later. Clarify all items first: "I understand 1,2,3. Need clarification on 4 and 5 before proceeding."

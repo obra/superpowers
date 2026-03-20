@@ -43,7 +43,7 @@ If no directory exists and no CLAUDE.md preference:
 No worktree directory found. Where should I create worktrees?
 
 1. .worktrees/ (project-local, hidden)
-2. ~/.config/superpowers/worktrees/<project-name>/ (global location)
+2. ~/.config/superpowers/worktrees/{project-name}/ (global location)
 
 Which would you prefer?
 ```
@@ -136,9 +136,9 @@ go test ./...
 ### 5. Report Location
 
 ```
-Worktree ready at <full-path>
-Tests passing (<N> tests, 0 failures)
-Ready to implement <feature-name>
+Worktree ready at {full-path}
+Tests passing ({N} tests, 0 failures)
+Ready to implement {feature-name}
 ```
 
 ## Quick Reference

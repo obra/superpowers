@@ -26,7 +26,7 @@ npm test / cargo test / pytest / go test ./...
 
 **If tests fail:**
 ```
-Tests failing (<N> failures). Must fix before completing:
+Tests failing ({N} failures). Must fix before completing:
 
 [Show failures]
 
@@ -53,7 +53,7 @@ Present exactly these 4 options:
 ```
 Implementation complete. What would you like to do?
 
-1. Merge back to <base-branch> locally
+1. Merge back to {base-branch} locally
 2. Push and create a Pull Request
 3. Keep the branch as-is (I'll handle it later)
 4. Discard this work
@@ -69,19 +69,19 @@ Which option?
 
 ```bash
 # Switch to base branch
-git checkout <base-branch>
+git checkout {base-branch}
 
 # Pull latest
 git pull
 
 # Merge feature branch
-git merge <feature-branch>
+git merge {feature-branch}
 
 # Verify tests on merged result
-<test command>
+{test command}
 
 # If tests pass
-git branch -d <feature-branch>
+git branch -d {feature-branch}
 ```
 
 Then: Cleanup worktree (Step 5)
@@ -90,15 +90,15 @@ Then: Cleanup worktree (Step 5)
 
 ```bash
 # Push branch
-git push -u origin <feature-branch>
+git push -u origin {feature-branch}
 
 # Create PR
-gh pr create --title "<title>" --body "$(cat <<'EOF'
+gh pr create --title "{title}" --body "$(cat <<'EOF'
 ## Summary
-<2-3 bullets of what changed>
+{2-3 bullets of what changed}
 
 ## Test Plan
-- [ ] <verification steps>
+- [ ] {verification steps}
 EOF
 )"
 ```
@@ -107,7 +107,7 @@ Then: Cleanup worktree (Step 5)
 
 #### Option 3: Keep As-Is
 
-Report: "Keeping branch <name>. Worktree preserved at <path>."
+Report: "Keeping branch {name}. Worktree preserved at {path}."
 
 **Don't cleanup worktree.**
 
@@ -116,9 +116,9 @@ Report: "Keeping branch <name>. Worktree preserved at <path>."
 **Confirm first:**
 ```
 This will permanently delete:
-- Branch <name>
-- All commits: <commit-list>
-- Worktree at <path>
+- Branch {name}
+- All commits: {commit-list}
+- Worktree at {path}
 
 Type 'discard' to confirm.
 ```
@@ -127,8 +127,8 @@ Wait for exact confirmation.
 
 If confirmed:
 ```bash
-git checkout <base-branch>
-git branch -D <feature-branch>
+git checkout {base-branch}
+git branch -D {feature-branch}
 ```
 
 Then: Cleanup worktree (Step 5)
@@ -144,7 +144,7 @@ git worktree list | grep $(git branch --show-current)
 
 If yes:
 ```bash
-git worktree remove <worktree-path>
+git worktree remove {worktree-path}
 ```
 
 **For Option 3:** Keep worktree.
@@ -198,3 +198,40 @@ git worktree remove <worktree-path>
 
 **Pairs with:**
 - **using-git-worktrees** - Cleans up worktree created by that skill
+
+## Examples
+
+**Example 1: Merge locally after feature complete**
+
+User says: "I'm done with the feature, all tests pass"
+Actions:
+1. Run test suite - confirms passing
+2. Detect base branch is `main`
+3. Present 4 options
+4. User chooses Option 1 (merge locally)
+5. Checkout main, pull, merge, re-run tests, delete branch, remove worktree
+Result: "Branch merged to main, worktree cleaned up, branch deleted."
+
+**Example 2: Create a pull request**
+
+User says: "Push this and open a PR"
+Actions:
+1. Verify tests pass
+2. User implicitly chooses Option 2 (PR)
+3. Push branch, create PR with `gh pr create` using summary from commit messages
+4. Keep worktree (Option 2 does not clean up)
+Result: PR URL provided, worktree preserved for potential follow-up work
+
+## Troubleshooting
+
+**Error:** Tests fail at Step 1 - cannot proceed
+Cause: Implementation has broken tests
+Solution: Stop entirely. Report the specific failures. Do not present merge options until tests pass. Fix failures first using systematic-debugging.
+
+**Error:** `git merge` produces merge conflicts
+Cause: Both branches modified the same files
+Solution: Surface conflict details to user. Do not auto-resolve. Ask which version to keep or whether to use a rebasing strategy.
+
+**Error:** `gh pr create` fails - remote not set up
+Cause: Branch has no upstream remote configured
+Solution: Run `git push -u origin {branch-name}` first, then retry `gh pr create`.

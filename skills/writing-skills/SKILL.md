@@ -1,6 +1,6 @@
 ---
 name: writing-skills
-description: Use when creating new skills, editing existing skills, or verifying skills work before deployment
+description: Applies TDD to skill authoring: establish baseline behavior without the skill, write skill to address failures, refactor until bulletproof. Use when creating new skills, editing existing skills, or verifying skills work before deployment.
 ---
 
 # Writing Skills
@@ -17,7 +17,7 @@ You write test cases (pressure scenarios with subagents), watch them fail (basel
 
 **REQUIRED BACKGROUND:** You MUST understand superpowers:test-driven-development before using this skill. That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill adapts TDD to documentation.
 
-**Official guidance:** For Anthropic's official skill authoring best practices, see anthropic-best-practices.md. This document provides additional patterns and guidelines that complement the TDD-focused approach in this skill.
+**Official guidance:** For Anthropic's official skill authoring best practices, see `references/anthropic-best-practices.md`. This document provides additional patterns and guidelines that complement the TDD-focused approach in this skill.
 
 ## What is a Skill?
 
@@ -313,12 +313,12 @@ digraph when_flowchart {
 - Linear instructions → Numbered lists
 - Labels without semantic meaning (step1, helper2)
 
-See @graphviz-conventions.dot for graphviz style rules.
+See `references/graphviz-conventions.dot` for graphviz style rules.
 
-**Visualizing for your human partner:** Use `render-graphs.js` in this directory to render a skill's flowcharts to SVG:
+**Visualizing for your human partner:** Use `scripts/render-graphs.js` to render a skill's flowcharts to SVG:
 ```bash
-./render-graphs.js ../some-skill           # Each diagram separately
-./render-graphs.js ../some-skill --combine # All diagrams in one SVG
+./scripts/render-graphs.js ../some-skill           # Each diagram separately
+./scripts/render-graphs.js ../some-skill --combine # All diagrams in one SVG
 ```
 
 ## Code Examples
@@ -466,13 +466,12 @@ Skills that enforce discipline (like TDD) need to resist rationalization. Agents
 
 Don't just state the rule - forbid specific workarounds:
 
-<Bad>
+**❌ Bad:**
 ```markdown
 Write code before test? Delete it.
 ```
-</Bad>
 
-<Good>
+**✅ Good:**
 ```markdown
 Write code before test? Delete it. Start over.
 
@@ -482,7 +481,6 @@ Write code before test? Delete it. Start over.
 - Don't look at it
 - Delete means delete
 ```
-</Good>
 
 ### Address "Spirit vs Letter" Arguments
 
@@ -553,7 +551,7 @@ Run same scenarios WITH skill. Agent should now comply.
 
 Agent found new rationalization? Add explicit counter. Re-test until bulletproof.
 
-**Testing methodology:** See @testing-skills-with-subagents.md for the complete testing methodology:
+**Testing methodology:** See `references/testing-skills-with-subagents.md` for the complete testing methodology:
 - How to write pressure scenarios
 - Pressure types (time, sunk cost, authority, exhaustion)
 - Plugging holes systematically
@@ -653,3 +651,40 @@ Same cycle: RED (baseline) → GREEN (write skill) → REFACTOR (close loopholes
 Same benefits: Better quality, fewer surprises, bulletproof results.
 
 If you follow TDD for code, follow it for skills. It's the same discipline applied to documentation.
+
+## Examples
+
+**Example 1: Creating a new skill from scratch**
+
+User says: "Create a skill that runs our custom deployment checklist before every deploy"
+Actions:
+1. Establish baseline: test 5 "deploy to staging" queries without the skill - Claude does not run the checklist
+2. Write SKILL.md with clear description trigger: "Use when user says 'deploy', 'release', or 'push to staging/prod'"
+3. Test again: 4/5 queries trigger the skill automatically
+4. Identify loophole: "ship it" doesn't trigger - add to description triggers
+5. Retest: 5/5 trigger, 0 false positives on unrelated queries
+Result: Skill written, tested, bulletproof against rationalization
+
+**Example 2: Updating a skill that stopped working**
+
+User says: "The TDD skill isn't being used even when I ask to implement a feature"
+Actions:
+1. Read current description - trigger phrase is too narrow: "Use when implementing features"
+2. Baseline test: "add pagination to the API" → no trigger
+3. Update description: add "building", "adding", "creating" as trigger synonyms
+4. Retest 10 queries - 9/10 now trigger; 1 edge case noted
+Result: Undertriggering fixed; description refined with real test data
+
+## Troubleshooting
+
+**Error:** Skill triggers on everything (overtriggering)
+Cause: Description is too broad or trigger phrases match common vocabulary
+Solution: Add negative triggers to description: "Do NOT use for [common false positive]". Be more specific about context or file types required.
+
+**Error:** Skill doesn't trigger on obviously relevant queries
+Cause: Description doesn't include the vocabulary users actually use
+Solution: Ask yourself: "What would a user actually type?" Use those exact words. Test with paraphrases. Add synonyms.
+
+**Error:** Skill loads but Claude ignores its instructions
+Cause: Instructions are too verbose, buried, or ambiguous
+Solution: Move most important rule to the very top of SKILL.md body. Use bold headers for critical gates. Keep SKILL.md under 5,000 words; move details to `references/`.

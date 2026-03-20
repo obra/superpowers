@@ -1,6 +1,6 @@
 ---
 name: dispatching-parallel-agents
-description: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies
+description: Dispatches independent tasks to parallel agents simultaneously, reducing investigation and implementation time by working on multiple domains at once. Use when facing 2+ independent tasks with no shared state or sequential dependencies.
 ---
 
 # Dispatching Parallel Agents
@@ -180,3 +180,39 @@ From debugging session (2025-10-03):
 - All investigations completed concurrently
 - All fixes integrated successfully
 - Zero conflicts between agent changes
+
+## Examples
+
+**Example 1: Multiple failing test files**
+
+User says: "We have 6 test failures across 3 files - can you fix them?"
+Actions:
+1. Read the failures - identify they span independent subsystems
+2. Group by domain: abort logic, batch behavior, race conditions
+3. Craft focused prompts with exact test names and error messages for each domain
+4. Dispatch 3 agents in parallel via Task tool
+5. Review each agent's summary, verify no conflicts, run full suite
+Result: All 6 failures resolved concurrently in time of ~1 sequential fix
+
+**Example 2: Multi-subsystem investigation**
+
+User says: "The API is slow, the UI has rendering bugs, and the DB queries look wrong"
+Actions:
+1. Confirm these are independent domains with no shared state
+2. Dispatch: Agent 1 → API profiling, Agent 2 → UI rendering, Agent 3 → DB query analysis
+3. Collect summaries; integrate non-conflicting fixes
+Result: Three investigations completed simultaneously
+
+## Troubleshooting
+
+**Error:** Agent returns with no changes made
+Cause: Prompt was too vague or agent didn't have enough context to act
+Solution: Include exact error messages, file paths, and test names. Add explicit constraint: "Make the failing tests pass, modifying only the files listed."
+
+**Error:** Two agents edited the same file and their changes conflict
+Cause: Problem domains were not truly independent - they share code
+Solution: Stop, reconcile manually, then restructure remaining work as sequential tasks on the shared file.
+
+**Error:** Skill triggers but agent spawns are taking too long
+Cause: Each agent is doing too much - scope too broad
+Solution: Split further. Each agent should target one specific file or test, not a whole subsystem.

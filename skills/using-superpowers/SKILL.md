@@ -3,17 +3,13 @@ name: using-superpowers
 description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
 ---
 
-<SUBAGENT-STOP>
-If you were dispatched as a subagent to execute a specific task, skip this skill.
-</SUBAGENT-STOP>
+**SUBAGENT STOP:** If you were dispatched as a subagent to execute a specific task, skip this skill.
 
-<EXTREMELY-IMPORTANT>
-If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.
+**CRITICAL REQUIREMENT —** If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.
 
-IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
+**IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.**
 
 This is not negotiable. This is not optional. You cannot rationalize your way out of this.
-</EXTREMELY-IMPORTANT>
 
 ## Instruction Priority
 
@@ -113,3 +109,46 @@ The skill itself tells you which.
 ## User Instructions
 
 Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
+
+## Examples
+
+**Example 1: Feature request**
+
+User says: "Add a login page to my app"
+Actions:
+1. Recognize this is a new feature - brainstorming skill applies
+2. Invoke: `Skill("brainstorming")`
+3. Follow the brainstorming skill through design → spec → plan → implementation
+Result: Feature designed and approved before any code is written
+
+**Example 2: Bug report**
+
+User says: "Fix the broken test in auth.test.ts"
+Actions:
+1. Recognize a bug fix - systematic-debugging skill applies
+2. Invoke: `Skill("systematic-debugging")`
+3. Follow the debugging skill through Phase 1 (investigate) before any fix
+Result: Root cause found and fixed with a failing test first
+
+**Example 3: Unsure which skill applies**
+
+User says: "Can you look at my code and tell me if the pagination logic is correct?"
+Actions:
+1. 1% chance any skill applies - check
+2. No clear match for code review + question → no skill required
+3. Read the pagination code and answer directly
+Result: Correct - no skill forced where none fits
+
+## Troubleshooting
+
+**Error:** Multiple skills seem to apply to one task
+Cause: The task spans multiple concerns (e.g., build a feature AND it has a bug)
+Solution: Use Skill Priority order: process skills first (brainstorming → debugging), implementation skills second. Invoke the first-priority skill; it will guide you to subsequent skills.
+
+**Error:** Skill loaded but its instructions don't match this situation
+Cause: You invoked a skill that turns out not to fit
+Solution: The skill content determines this, not the description. If the skill doesn't fit after reading it, proceed without it. No need to force it.
+
+**Error:** Cannot find which skill to use for a request
+Cause: No skill exists for this task, or task is novel
+Solution: Check the skills directory. If nothing fits, proceed with your best judgment. Not every task needs a skill.

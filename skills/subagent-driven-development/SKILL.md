@@ -1,6 +1,6 @@
 ---
 name: subagent-driven-development
-description: Use when executing implementation plans with independent tasks in the current session
+description: Executes an implementation plan by dispatching a fresh subagent per task with two-stage review (spec compliance then code quality) after each. Use when executing plans with independent tasks in the current session.
 ---
 
 # Subagent-Driven Development
@@ -119,9 +119,9 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 ## Prompt Templates
 
-- `./implementer-prompt.md` - Dispatch implementer subagent
-- `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
-- `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
+- `./references/implementer-prompt.md` - Dispatch implementer subagent
+- `./references/spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
+- `./references/code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
 
 ## Example Workflow
 

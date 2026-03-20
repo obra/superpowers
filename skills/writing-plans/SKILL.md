@@ -1,6 +1,6 @@
 ---
 name: writing-plans
-description: Use when you have a spec or requirements for a multi-step task, before touching code
+description: Creates comprehensive bite-sized implementation plans with TDD steps, exact file paths, and inline code — everything a zero-context engineer needs to implement without guessing. Use when you have a spec or requirements for a multi-step task, before touching code.
 ---
 
 # Writing Plans
@@ -15,7 +15,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Context:** This should be run in a dedicated worktree (created by brainstorming skill).
 
-**Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
+**Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-{feature-name}.md`
 - (User preferences for plan location override this default)
 
 ## Scope Check
@@ -114,7 +114,7 @@ git commit -m "feat: add specific feature"
 
 After writing the complete plan:
 
-1. Dispatch a single plan-document-reviewer subagent (see plan-document-reviewer-prompt.md) with precisely crafted review context — never your session history. This keeps the reviewer focused on the plan, not your thought process.
+1. Dispatch a single plan-document-reviewer subagent (see references/plan-document-reviewer-prompt.md) with precisely crafted review context — never your session history. This keeps the reviewer focused on the plan, not your thought process.
    - Provide: path to the plan document, path to spec document
 2. If ❌ Issues Found: fix the issues, re-dispatch reviewer for the whole plan
 3. If ✅ Approved: proceed to execution handoff
@@ -128,7 +128,7 @@ After writing the complete plan:
 
 After saving the plan, offer execution choice:
 
-**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two execution options:**
+**"Plan complete and saved to `docs/superpowers/plans/{filename}.md`. Two execution options:**
 
 **1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
 
@@ -143,3 +143,40 @@ After saving the plan, offer execution choice:
 **If Inline Execution chosen:**
 - **REQUIRED SUB-SKILL:** Use superpowers:executing-plans
 - Batch execution with checkpoints for review
+
+## Examples
+
+**Example 1: Feature spec to plan**
+
+User says: "We have the spec at docs/superpowers/specs/2026-03-auth-design.md, write the plan"
+Actions:
+1. Read spec - identifies 3 components: token service, middleware, login endpoint
+2. Map file structure: 5 files to create, 2 to modify
+3. Write Task 1 (token service) with failing test → implementation → verify → commit steps
+4. Write Tasks 2-5 following same bite-sized TDD structure
+5. Dispatch plan-document-reviewer subagent with plan path + spec path
+6. Fix reviewer feedback, re-dispatch until approved
+7. Ask user to review before offering execution options
+Result: Plan at `docs/superpowers/plans/2026-03-20-auth.md` ready to execute
+
+**Example 2: Spec covers multiple subsystems**
+
+User says: "Write the plan for the e-commerce platform spec"
+Actions:
+1. Read spec - covers product catalog, checkout, payment, and user accounts
+2. Flag: "This spec covers 4 independent subsystems. Recommend separate plans: (1) catalog, (2) checkout, (3) payment, (4) accounts. Each produces working, testable software independently. Which to start with?"
+Result: Scope decomposed before plan is written
+
+## Troubleshooting
+
+**Error:** Spec is too vague to write concrete steps
+Cause: Design was not detailed enough during brainstorming
+Solution: Stop and return to spec author. Identify the specific gaps: "Task 3 requires knowing the database schema for `orders`. This wasn't specified in the spec. Please add it before I can write the plan."
+
+**Error:** Plan review loop exceeds 3 iterations
+Cause: Reviewer is flagging a structural issue that requires rethinking the approach
+Solution: Surface the specific recurring feedback to the human. Ask: "The reviewer keeps flagging [issue]. Should I restructure the plan around [alternative approach] or override the feedback?"
+
+**Error:** Reviewer feedback conflicts with something you know is correct
+Cause: Reviewer may lack context about a codebase-specific pattern
+Solution: Explain the disagreement: "Reviewer suggests using `fetch`, but this codebase uses `axios` throughout (see `src/api/client.ts`). Keeping `axios` for consistency." Apply if explanation holds.

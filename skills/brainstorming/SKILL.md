@@ -9,9 +9,7 @@ Help turn ideas into fully formed designs and specs through natural collaborativ
 
 Start by understanding the current project context, then ask questions one at a time to refine the idea. Once you understand what you're building, present the design and get user approval.
 
-<HARD-GATE>
-Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
-</HARD-GATE>
+**HARD GATE:** Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
 
 ## Anti-Pattern: "This Is Too Simple To Need A Design"
 
@@ -26,7 +24,7 @@ You MUST create a task for each of these items and complete them in order:
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
+6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-{topic}-design.md` and commit
 7. **Spec review loop** — dispatch spec-document-reviewer subagent with precisely crafted review context (never your session history); fix issues and re-dispatch until approved (max 3 iterations, then surface to human)
 8. **User reviews written spec** — ask user to review the spec file before proceeding
 9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
@@ -111,7 +109,7 @@ digraph brainstorming {
 
 **Documentation:**
 
-- Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
+- Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-{topic}-design.md`
   - (User preferences for spec location override this default)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
@@ -119,14 +117,14 @@ digraph brainstorming {
 **Spec Review Loop:**
 After writing the spec document:
 
-1. Dispatch spec-document-reviewer subagent (see spec-document-reviewer-prompt.md)
+1. Dispatch spec-document-reviewer subagent (see references/spec-document-reviewer-prompt.md)
 2. If Issues Found: fix, re-dispatch, repeat until Approved
 3. If loop exceeds 3 iterations, surface to human for guidance
 
 **User Review Gate:**
 After the spec review loop passes, ask the user to review the written spec before proceeding:
 
-> "Spec written and committed to `<path>`. Please review it and let me know if you want to make any changes before we start writing out the implementation plan."
+> "Spec written and committed to `{path}`. Please review it and let me know if you want to make any changes before we start writing out the implementation plan."
 
 Wait for the user's response. If they request changes, make them and re-run the spec review loop. Only proceed once the user approves.
 
@@ -161,4 +159,44 @@ A browser-based companion for showing mockups, diagrams, and visual options duri
 A question about a UI topic is not automatically a visual question. "What does personality mean in this context?" is a conceptual question — use the terminal. "Which wizard layout works better?" is a visual question — use the browser.
 
 If they agree to the companion, read the detailed guide before proceeding:
-`skills/brainstorming/visual-companion.md`
+`skills/brainstorming/references/visual-companion.md`
+
+## Examples
+
+**Example 1: New feature request**
+
+User says: "Add a user authentication system to my app"
+Actions:
+1. Explore project context (check existing files, stack, patterns)
+2. Ask: "Is this for a new project or adding to an existing one?"
+3. Ask: "Do you need social login (OAuth) or email/password only?"
+4. Propose 3 approaches (JWT + sessions, OAuth only, Firebase auth)
+5. Present design sections and get approval on each
+6. Write spec to `docs/superpowers/specs/2026-03-20-auth-design.md`
+7. Invoke writing-plans skill
+Result: Approved design doc committed, implementation plan ready to execute
+
+**Example 2: Simple config change**
+
+User says: "Change the default timeout from 30s to 60s"
+Actions:
+1. Explore codebase to find timeout configuration
+2. Recognize minimal scope - design will be brief
+3. Ask: "Is this change needed everywhere or just in specific contexts?"
+4. Present brief design: "Change `DEFAULT_TIMEOUT = 30` to `60` in `src/config.ts:14`"
+5. Get approval, write minimal spec, invoke writing-plans
+Result: Even a one-line change goes through design to surface hidden assumptions
+
+## Troubleshooting
+
+**Error:** Design discussion goes in circles - user keeps changing requirements
+Cause: Scope is too large or user hasn't committed to a direction
+Solution: Stop and help decompose into sub-projects. Identify the smallest independent piece to design first. Pin decisions as they're made.
+
+**Error:** User pushes back - "this is too simple for a design"
+Cause: Normal resistance. Simple projects are where unexamined assumptions cause the most wasted work.
+Solution: Keep the design short (2-3 sentences). The goal is approval, not documentation. Proceed quickly but do not skip.
+
+**Error:** Spec review loop exceeds 3 iterations
+Cause: Reviewer is flagging a genuine spec quality issue that needs human input
+Solution: Surface the specific feedback to the user and ask for guidance before attempting another fix.

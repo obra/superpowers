@@ -137,3 +137,39 @@ From 24 failure memories:
 Run the command. Read the output. THEN claim the result.
 
 This is non-negotiable.
+
+## Examples
+
+**Example 1: About to commit after fixing a bug**
+
+User says: "Ok fix that test and commit"
+Actions:
+1. Fix the failing test implementation
+2. BEFORE committing or saying "done" - run: `pytest tests/auth/test_login.py -v`
+3. Read output: "34 passed, 0 failed"
+4. Now claim: "Fixed. All 34 tests pass (see output above). Committing."
+Result: Claim backed by fresh evidence in the same message
+
+**Example 2: Agent delegation with verification**
+
+User says: "Have a subagent update the CSS styles"
+Actions:
+1. Dispatch subagent, it returns "styles updated successfully"
+2. Do NOT trust the report - check independently: `git diff --stat`
+3. Verify actual file changes match expected scope
+4. THEN report: "Verified - 3 CSS files updated (diff above). Changes look correct."
+Result: Independent verification rather than trusting agent's self-report
+
+## Troubleshooting
+
+**Error:** Verification command is slow to run
+Cause: Large test suite or slow build
+Solution: Run it anyway. Speed of verification does not justify skipping it. If too slow for every commit, at minimum verify the affected test file.
+
+**Error:** No automated verification exists for this type of change
+Cause: Manual testing required (UI change, UX flow, etc.)
+Solution: State explicitly what was manually verified and how: "Manually verified by opening app, navigating to Settings, confirming the toggle appears and saves state."
+
+**Error:** Tempted to say "should work" without running
+Cause: High confidence, impatience, or tiredness
+Solution: These are red flags. Run it. Confidence ≠ evidence. The rule has no exceptions.

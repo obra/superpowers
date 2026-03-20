@@ -1,6 +1,6 @@
 ---
 name: systematic-debugging
-description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes
+description: Guides systematic root cause investigation through four phases (reproduce, pattern, hypothesis, fix) to find and eliminate root causes instead of guessing. Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes.
 ---
 
 # Systematic Debugging
@@ -111,7 +111,7 @@ You MUST complete each phase before proceeding to the next.
 
    **WHEN error is deep in call stack:**
 
-   See `root-cause-tracing.md` in this directory for the complete backward tracing technique.
+   See `references/root-cause-tracing.md` in this directory for the complete backward tracing technique.
 
    **Quick version:**
    - Where does bad value originate?
@@ -279,9 +279,9 @@ If systematic investigation reveals issue is truly environmental, timing-depende
 
 These techniques are part of systematic debugging and available in this directory:
 
-- **`root-cause-tracing.md`** - Trace bugs backward through call stack to find original trigger
-- **`defense-in-depth.md`** - Add validation at multiple layers after finding root cause
-- **`condition-based-waiting.md`** - Replace arbitrary timeouts with condition polling
+- **`references/root-cause-tracing.md`** - Trace bugs backward through call stack to find original trigger
+- **`references/defense-in-depth.md`** - Add validation at multiple layers after finding root cause
+- **`references/condition-based-waiting.md`** - Replace arbitrary timeouts with condition polling
 
 **Related skills:**
 - **superpowers:test-driven-development** - For creating failing test case (Phase 4, Step 1)
@@ -294,3 +294,42 @@ From debugging sessions:
 - Random fixes approach: 2-3 hours of thrashing
 - First-time fix rate: 95% vs 40%
 - New bugs introduced: Near zero vs common
+
+## Examples
+
+**Example 1: Failing test with unknown cause**
+
+User says: "This test keeps failing and I don't know why"
+Actions:
+1. Phase 1: Read the full error message and stack trace carefully
+2. Reproduce consistently: run the test 3x to confirm it's deterministic
+3. Check recent changes: `git diff HEAD~3` reveals a cache layer was added
+4. Gather evidence: add logging at the cache entry/exit boundary
+5. Phase 2: Find working test that exercises similar code path
+6. Phase 3: Hypothesis - "Cache is returning stale data because TTL is 0"
+7. Phase 4: Write failing test reproducing the TTL=0 case, implement fix
+Result: Root cause identified and fixed with a test proving the fix
+
+**Example 2: Intermittent production bug**
+
+User says: "Users report a random 500 error but I can't reproduce it"
+Actions:
+1. Read error logs - find the stack trace and time pattern
+2. Cannot reproduce - gather more data: add diagnostic logging at all component boundaries
+3. Deploy logging, collect evidence for 24 hours
+4. Pattern analysis: only fails when request comes within 100ms of cache expiry
+Result: Race condition identified; fixed with proper mutex
+
+## Troubleshooting
+
+**Error:** Cannot reproduce the bug consistently
+Cause: Environmental, timing-dependent, or data-dependent issue
+Solution: Don't guess. Add diagnostic instrumentation at each component boundary, run in the actual environment, collect evidence before hypothesizing.
+
+**Error:** Fix #1, #2, and #3 all failed - a fourth fix seems needed
+Cause: The architecture itself may be the problem, not a bug in the implementation
+Solution: STOP. Question the pattern fundamentally: "Is this approach sound? Should we refactor the architecture instead?" Discuss with your human partner before attempting another fix.
+
+**Error:** Root cause is in an external library or API
+Cause: The bug originates outside your codebase
+Solution: Add a workaround at your system boundary with a clear comment explaining the external issue. Document the external bug if possible (link to issue tracker).
