@@ -1,0 +1,155 @@
+# Complete List of All 243 Pages
+
+## Global Sector Pages (00000-00199)
+- `00100-home.html` - Home
+- `00102-administration.html` - Administration
+- `0200-all-documents.html` - Administration
+- `03010-email-management.html` - Administration
+- `00106-timesheet` - Administration
+- `00105-travel-arrangements` - Administration
+- `00165-user-settings.html` - Settings
+- `00165-settings/partials/00165-01-personal-preferences.html` - Personal Preferences
+- `00165-settings/partials/00165-02-display-settings.html` - Display Settings
+- `00165-settings/partials/00165-03-notifications.html` - Notifications
+- `00100-user-login` - User Authentication
+- `00150-user-signup` - User Authentication
+- `00155-user-management` - User Authentication
+- `00175-auth-callback` - User Authentication
+- `00175-password-reset` - User Authentication
+- `00165-ui-settings` - UI Settings
+- `00165-debug-panel` - UI Settings
+- `0170-modal-management` - UI Settings
+- `00170-chatbot-management` - UI Settings
+- `00180-contributor-hub` - Contributor Hub
+
+## EPCM Sector Pages (00200-09999)
+- `00200-commercial.html` - Commercial
+- `0200-all-documents.html` - Commercial
+- `03010-email-management.html` - Commercial
+- `00300-construction.html` - Construction Management
+- `00425-contracts-pre-award.html` - Pre-Award Contracts
+- `00435-contracts-post-award.html` - Post-Award Contracts
+- `00595-contracts-documents.html` - Contract Documents
+- `00597-contracts-team-chat.html` - Contract Team Chat
+- `00825-architectural.html` - Architectural
+- `00835-chemical-engineering.html` - Chemical Engineering
+- `00850-civil-engineering.html` - Civil Engineering
+- `00860-electrical-engineering.html` - Electrical Engineering
+- `00870-mechanical-engineering.html` - Mechanical Engineering
+- `00872-developer.html` - Developer
+- `00875-sales.html` - Sales
+- `00880-board-of-directors.html` - Board of Directors
+- `00882-director-construction.html` - Director: Construction
+- `00883-director-contracts.html` - Director: Contracts
+- `00884-director-engineering.html` - Director: Engineering
+- `00884-1-director-finance.html` - Director: Finance
+- `00885-director-hse.html` - Director: HSE
+- `00886-director-logistics.html` - Director: Logistics
+- `00888-director-procurement.html` - Director: Procurement
+- `00890-director-projects.html` - Director: Projects
+- `00895-director-project.html` - Director: Project
+- `01000-environmental` - Environmental
+- `01100-ethics` - Ethics
+- `01300-governance` - Governance
+- `01400-health` - Health
+- `01500-human-resources` - Human Resources
+- `01600-local-content` - Local Content
+- `01700-logistics` - Logistics
+- `01750-legal` - Legal
+- `01800-operations` - Operations
+- `01801-stock-management` - Stock Management
+- `01870-fuel-lubricants-management` - Fuel & Lubricants Management
+- `01850-other-parties` - Other Parties
+- `01900-procurement` - Procurement
+- `02000-project-controls` - Project Controls
+- `02025-quantity-surveying` - Quantity Surveying
+- `02035-scheduling` - Scheduling
+- `02050-information-technology` - Information Technology
+- `02075-inspection` - Inspection
+- `02100-public-relations` - Public Relations
+- `02200-quality-assurance` - Quality Assurance
+- `02250-quality-control` - Quality Control
+- `02400-safety` - Safety
+- `02500-security` - Security
+- `03000-landscaping` - Landscaping
+- `00871-process-engineering` - Process Engineering
+- `00877-sundry` - Sundry
+
+## Contractor Sector Pages (20000-29999)
+- `20000-accounting-finance` - Accounting & Finance
+- `20000-construction` - Construction
+- `20005-construction` - Construction
+- `20005-finance` - Finance
+- `20010-contracts-subcontracts` - Contracts & Subcontracts
+- `20010-hse` - HSE
+- `20015-contracts` - Contracts
+- `20015-environmental` - Environmental
+- `20020-health` - Health
+- `20020-subcontracts` - Subcontracts
+- `20025-engineering` - Engineering
+- `20025-safety` - Safety
+- `20030-field-engineering` - Field Engineering
+- `20030-human-resources` - Human Resources
+- `20035-hse` - HSE
+- `20035-logistics` - Logistics
+- `20040-environmental` - Environmental
+- `20040-mining` - Mining
+- `20045-health` - Health
+- `20045-operations` - Operations
+- `20050-maintenance` - Maintenance
+- `20050-safety` - Safety
+- `20055-human-resources` - Human Resources
+- `20055-procurement-and-supply` - Procurement & Supply
+- `20060-legal` - Legal
+- `20060-purchasing` - Purchasing
+- `20065-marketing-and-business-development` - Marketing
+- `20065-materials-management` - Materials Management
+- `20070-operations-and-maintenance` - Operations & Maintenance
+- `20070-qaqc` - QA/QC
+- `20075-procurement` - Procurement
+- `20075-strategy` - Strategy
+- `20080-purchasing` - Purchasing
+- `20085-logistics` - Logistics
+- `20090-materials-management` - Materials Management
+- `20095-project-controls` - Project Controls
+- `20100-estimating` - Estimating
+- `20105-scheduling-and-planning` - Scheduling
+- `20110-project-management` - Project Management
+- `20115-quality-assurance` - Quality Assurance
+- `20120-quality-control` - Quality Control
+- `20125-risk-management` - Risk Management
+
+## Judicial Sector Pages (30000-39999)
+- `30000-board-of-directors` - Board of Directors
+- `30005-client-and-project-management` - Client Management
+- `30010-company-secretarial-services` - Company Services
+- `30015-corporate-commercial` - Corporate Commercial
+- `30020-corporate-and-ma-support` - Corporate Support
+- `30030-privacy-and-protection` - Privacy
+- `30035-employment-law` - Employment Law
+- `30040-environmental-sustainable-dev` - Sustainability
+- `30045-estate-planning-trusts` - Estate Planning
+- `30050-ethics` - Ethics
+- `30055-finance` - Finance
+- `30060-governance` - Governance
+- `30065-information-technology` - IT
+- `30070-intellectual-property` - Intellectual Property
+- `30075-leasing-eviction` - Leasing
+- `30080-litigation-alternative-dispute-mgmt` - Litigation
+- `30085-mining-infrastructure` - Mining
+- `30090-notary-public` - Notary
+- `30095-oversight-africa-group` - Oversight
+- `30100-partners-key` - Key Partners
+- `30105-partner-commercial` - Commercial Partners
+- `30110-partner-corporate` - Corporate Partners
+- `30115-partner-corporate-commercial` - Corporate Partners
+- `30120-partner-disputes` - Dispute Partners
+- `30125-partner-employment-law` - Employment Partners
+- `30130-partner-international-arbitration` - Arbitration
+- `30135-partner-mining-infrastructure` - Mining Partners
+- `30140-partners-managing` - Managing Partners
+- `30145-durban` - Durban Office
+- `30150-johannesburg` - Johannesburg Office
+- `30155-pro-bono` - Pro Bono
+- `30160-real-estate` - Real Estate
+- `30165-tax` - Tax

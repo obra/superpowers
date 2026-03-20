@@ -1,0 +1,25 @@
+# Memories Directory
+
+This directory contains the learning framework persistence for continuous improvement of procurement workflows.
+
+## Contents
+
+- `negotiation_history.json` - Historical negotiation patterns
+- `pricing_patterns.md` - Learned pricing trends
+- `supplier_performance.json` - Supplier performance tracking
+- `procurement_lessons.yaml` - Lessons learned from previous orders
+
+## Usage
+
+This directory stores learned knowledge from procurement workflows:
+1. Agents analyze completed orders and extract patterns
+2. Lessons learned are stored for future reference
+3. Pricing trends and negotiation tactics are preserved
+4. Supplier performance data is tracked over time
+
+## Status
+
+**Phase 1**: Core Infrastructure - ✅ COMPLETE
+**Phase 2**: Agent Integration - 🔄 IN PROGRESS
+
+This directory will be populated dynamically as procurement workflows are completed.

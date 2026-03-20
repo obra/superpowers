@@ -1,0 +1,61 @@
+{
+  "supplier_id": "ELECTRICO_003",
+  "company_name": "ElectriCo Cape Town",
+  "contact_info": {
+    "email": "sales@electrico.co.za",
+    "phone": "+27-21-555-0789",
+    "address": "78 Electrical Street, Cape Town, ZA"
+  },
+  "certifications": {
+    "cidb_grade": "GR6",
+    "iso_9001": true,
+    "iso_14001": true,
+    "bbee_level": "Level 1",
+    "sars_vat_registered": true
+  },
+  "products_services": [
+    {
+      "sku": "CABLE-COPPER-10MM",
+      "description": "Copper electrical cable, 10mm²",
+      "unit_price_zar": 45.50,
+      "lead_time_days": 5,
+      "moq": 500,
+      "stock_level": 2500,
+      "last_updated": "2026-03-15"
+    },
+    {
+      "sku": "SWITCHGEAR-400V",
+      "description": "400V electrical switchgear panel",
+      "unit_price_zar": 25000.00,
+      "lead_time_days": 21,
+      "moq": 1,
+      "stock_level": 15,
+      "last_updated": "2026-03-15"
+    }
+  ],
+  "logistics": {
+    "incoterms_supported": ["DDP", "FOB", "CIF"],
+    "preferred_carriers": ["Spoornet", "Imperial Logistics"],
+    "delivery_zones": ["Western Cape", "Eastern Cape", "Northern Cape"],
+    "customs_clearance": true
+  },
+  "performance_history": {
+    "on_time_delivery_rate": 0.98,
+    "quality_complaints": 1,
+    "total_orders": 180,
+    "average_order_value_zar": 125000.00,
+    "last_order_date": "2026-03-05"
+  },
+  "risk_profile": {
+    "financial_stability": "A",
+    "supply_chain_risk": "Low",
+    "geopolitical_exposure": "None",
+    "currency_risk": "Low"
+  },
+  "metadata": {
+    "created_date": "2025-03-10",
+    "last_audit_date": "2026-03-01",
+    "approved_by": "Technical Director",
+    "next_review_date": "2026-09-10"
+  }
+}

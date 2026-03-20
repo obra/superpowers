@@ -1,0 +1,3012 @@
+# I18N Translation Audit Report
+
+**Generated**: 2026-01-13T06:40:04.538Z
+
+## 📊 Summary
+
+- **Total Pages**: 151
+- **Total Translation Files**: 110
+- **Missing Translation Files**: 1476
+- **Languages with Issues**: ar, pt, es, fr, zu, xh, sw, de
+- **Consistency Score**: -55%
+
+## ⚠️  Missing Files by Language
+
+### EN (164 missing)
+- `00100-home.json`
+- `00100-user-login.json`
+- `00102-administration.json`
+- `00102-privacy-settings.json`
+- `00150-user-signup.json`
+- `00155-user-management.json`
+- `00165-debug-panel.json`
+- `00165-ui-settings.json`
+- `00170-chatbot-management.json`
+- `00170-modal-management.json`
+- `00175-auth-callback.json`
+- `00175-password-reset.json`
+- `00180-contributor-hub.json`
+- `00200-all-documents.json`
+- `00200-modals.json`
+- `00250-commercial.json`
+- `00300-construction.json`
+- `00300-modals.json`
+- `00400-contracts.json`
+- `00425-contracts-pre-award.json`
+- `00435-contracts-post-award.json`
+- `00435-modals.json`
+- `00800-design.json`
+- `00825-architectural.json`
+- `00835-chemical-engineering.json`
+- `00850-civil-engineering.json`
+- `00860-electrical-engineering.json`
+- `00870-mechanical-engineering.json`
+- `00871-process-engineering.json`
+- `00872-developer.json`
+- `00875-sales.json`
+- `00875-modals.json`
+- `00877-sundry.json`
+- `00880-board-of-directors.json`
+- `00882-director-construction.json`
+- `00883-director-contracts.json`
+- `00884-director-engineering.json`
+- `00885-director-hse.json`
+- `00886-director-logistics.json`
+- `00888-director-procurement.json`
+- `00889-director-finance.json`
+- `00890-director-projects.json`
+- `00895-director-project.json`
+- `00900-document-control.json`
+- `00900-modals.json`
+- `01000-environmental.json`
+- `01100-ethics.json`
+- `01200-finance.json`
+- `01200-modals.json`
+- `01300-governance.json`
+- `01300-modals.json`
+- `01300-hitl-review.json`
+- `01300-security-monitoring.json`
+- `01400-health.json`
+- `01500-human-resources.json`
+- `01500-modals.json`
+- `01600-local-content.json`
+- `0170-modal-management.json`
+- `01700-logistics.json`
+- `01700-modals.json`
+- `01750-legal.json`
+- `01800-operations.json`
+- `01800-modals.json`
+- `01850-other-parties.json`
+- `01900-procurement.json`
+- `01900-modals.json`
+- `01900-procurement-performance.json`
+- `02000-project-controls.json`
+- `02025-quantity-surveying.json`
+- `02025-modals.json`
+- `02035-scheduling.json`
+- `02050-coding-templates.json`
+- `02050-engineering-templates.json`
+- `02050-information-technology.json`
+- `02050-system-settings.json`
+- `02052-langraph-ui.json`
+- `02075-inspection.json`
+- `02075-modals.json`
+- `02100-public-relations.json`
+- `02200-agent-monitoring.json`
+- `02200-quality-assurance.json`
+- `02250-quality-control.json`
+- `02400-safety.json`
+- `02400-modals.json`
+- `02400-safety-performance.json`
+- `02500-security.json`
+- `03000-landscaping.json`
+- `03010-email-management.json`
+- `03010-modals.json`
+- `20000-accounting-finance.json`
+- `20000-construction.json`
+- `20005-construction.json`
+- `20005-finance.json`
+- `20010-contracts-subcontracts.json`
+- `20010-hse.json`
+- `20015-contracts.json`
+- `20015-environmental.json`
+- `20020-health.json`
+- `20020-subcontracts.json`
+- `20025-engineering.json`
+- `20025-safety.json`
+- `20030-field-engineering.json`
+- `20030-human-resources.json`
+- `20035-hse.json`
+- `20035-logistics.json`
+- `20040-environmental.json`
+- `20040-mining.json`
+- `20045-health.json`
+- `20045-operations.json`
+- `20050-maintenance.json`
+- `20050-safety.json`
+- `20055-human-resources.json`
+- `20055-procurement-and-supply.json`
+- `20060-legal.json`
+- `20060-purchasing.json`
+- `20065-marketing-and-business-development.json`
+- `20065-materials-management.json`
+- `20070-operations-and-maintenance.json`
+- `20070-qaqc.json`
+- `20075-procurement.json`
+- `20075-strategy.json`
+- `20080-purchasing.json`
+- `20085-logistics.json`
+- `20090-materials-management.json`
+- `20095-project-controls.json`
+- `20100-estimating.json`
+- `20105-scheduling-and-planning.json`
+- `20110-project-management.json`
+- `20115-quality-assurance.json`
+- `20120-quality-control.json`
+- `20125-risk-management.json`
+- `30000-board-of-directors.json`
+- `30005-client-and-project-management.json`
+- `30010-company-secretarial-services.json`
+- `30015-corporate-commercial.json`
+- `30020-corporate-and-ma-support.json`
+- `30030-privacy-and-protection.json`
+- `30035-employment-law.json`
+- `30040-environmental-sustainable-dev.json`
+- `30045-estate-planning-trusts.json`
+- `30050-ethics.json`
+- `30055-finance.json`
+- `30060-governance.json`
+- `30065-information-technology.json`
+- `30070-intellectual-property.json`
+- `30075-leasing-eviction.json`
+- `30080-litigation-alternative-dispute-mgmt.json`
+- `30085-mining-infrastructure.json`
+- `30090-notary-public.json`
+- `30095-oversight-africa-group.json`
+- `30100-partners-key.json`
+- `30105-partner-commercial.json`
+- `30110-partner-corporate.json`
+- `30115-partner-corporate-commercial.json`
+- `30120-partner-disputes.json`
+- `30125-partner-employment-law.json`
+- `30130-partner-international-arbitration.json`
+- `30135-partner-mining-infrastructure.json`
+- `30140-partners-managing.json`
+- `30145-durban.json`
+- `30150-johannesburg.json`
+- `30155-pro-bono.json`
+- `30160-real-estate.json`
+- `30165-tax.json`
+
+### AR (164 missing)
+- `00100-home.json`
+- `00100-user-login.json`
+- `00102-administration.json`
+- `00102-privacy-settings.json`
+- `00150-user-signup.json`
+- `00155-user-management.json`
+- `00165-debug-panel.json`
+- `00165-ui-settings.json`
+- `00170-chatbot-management.json`
+- `00170-modal-management.json`
+- `00175-auth-callback.json`
+- `00175-password-reset.json`
+- `00180-contributor-hub.json`
+- `00200-all-documents.json`
+- `00200-modals.json`
+- `00250-commercial.json`
+- `00300-construction.json`
+- `00300-modals.json`
+- `00400-contracts.json`
+- `00425-contracts-pre-award.json`
+- `00435-contracts-post-award.json`
+- `00435-modals.json`
+- `00800-design.json`
+- `00825-architectural.json`
+- `00835-chemical-engineering.json`
+- `00850-civil-engineering.json`
+- `00860-electrical-engineering.json`
+- `00870-mechanical-engineering.json`
+- `00871-process-engineering.json`
+- `00872-developer.json`
+- `00875-sales.json`
+- `00875-modals.json`
+- `00877-sundry.json`
+- `00880-board-of-directors.json`
+- `00882-director-construction.json`
+- `00883-director-contracts.json`
+- `00884-director-engineering.json`
+- `00885-director-hse.json`
+- `00886-director-logistics.json`
+- `00888-director-procurement.json`
+- `00889-director-finance.json`
+- `00890-director-projects.json`
+- `00895-director-project.json`
+- `00900-document-control.json`
+- `00900-modals.json`
+- `01000-environmental.json`
+- `01100-ethics.json`
+- `01200-finance.json`
+- `01200-modals.json`
+- `01300-governance.json`
+- `01300-modals.json`
+- `01300-hitl-review.json`
+- `01300-security-monitoring.json`
+- `01400-health.json`
+- `01500-human-resources.json`
+- `01500-modals.json`
+- `01600-local-content.json`
+- `0170-modal-management.json`
+- `01700-logistics.json`
+- `01700-modals.json`
+- `01750-legal.json`
+- `01800-operations.json`
+- `01800-modals.json`
+- `01850-other-parties.json`
+- `01900-procurement.json`
+- `01900-modals.json`
+- `01900-procurement-performance.json`
+- `02000-project-controls.json`
+- `02025-quantity-surveying.json`
+- `02025-modals.json`
+- `02035-scheduling.json`
+- `02050-coding-templates.json`
+- `02050-engineering-templates.json`
+- `02050-information-technology.json`
+- `02050-system-settings.json`
+- `02052-langraph-ui.json`
+- `02075-inspection.json`
+- `02075-modals.json`
+- `02100-public-relations.json`
+- `02200-agent-monitoring.json`
+- `02200-quality-assurance.json`
+- `02250-quality-control.json`
+- `02400-safety.json`
+- `02400-modals.json`
+- `02400-safety-performance.json`
+- `02500-security.json`
+- `03000-landscaping.json`
+- `03010-email-management.json`
+- `03010-modals.json`
+- `20000-accounting-finance.json`
+- `20000-construction.json`
+- `20005-construction.json`
+- `20005-finance.json`
+- `20010-contracts-subcontracts.json`
+- `20010-hse.json`
+- `20015-contracts.json`
+- `20015-environmental.json`
+- `20020-health.json`
+- `20020-subcontracts.json`
+- `20025-engineering.json`
+- `20025-safety.json`
+- `20030-field-engineering.json`
+- `20030-human-resources.json`
+- `20035-hse.json`
+- `20035-logistics.json`
+- `20040-environmental.json`
+- `20040-mining.json`
+- `20045-health.json`
+- `20045-operations.json`
+- `20050-maintenance.json`
+- `20050-safety.json`
+- `20055-human-resources.json`
+- `20055-procurement-and-supply.json`
+- `20060-legal.json`
+- `20060-purchasing.json`
+- `20065-marketing-and-business-development.json`
+- `20065-materials-management.json`
+- `20070-operations-and-maintenance.json`
+- `20070-qaqc.json`
+- `20075-procurement.json`
+- `20075-strategy.json`
+- `20080-purchasing.json`
+- `20085-logistics.json`
+- `20090-materials-management.json`
+- `20095-project-controls.json`
+- `20100-estimating.json`
+- `20105-scheduling-and-planning.json`
+- `20110-project-management.json`
+- `20115-quality-assurance.json`
+- `20120-quality-control.json`
+- `20125-risk-management.json`
+- `30000-board-of-directors.json`
+- `30005-client-and-project-management.json`
+- `30010-company-secretarial-services.json`
+- `30015-corporate-commercial.json`
+- `30020-corporate-and-ma-support.json`
+- `30030-privacy-and-protection.json`
+- `30035-employment-law.json`
+- `30040-environmental-sustainable-dev.json`
+- `30045-estate-planning-trusts.json`
+- `30050-ethics.json`
+- `30055-finance.json`
+- `30060-governance.json`
+- `30065-information-technology.json`
+- `30070-intellectual-property.json`
+- `30075-leasing-eviction.json`
+- `30080-litigation-alternative-dispute-mgmt.json`
+- `30085-mining-infrastructure.json`
+- `30090-notary-public.json`
+- `30095-oversight-africa-group.json`
+- `30100-partners-key.json`
+- `30105-partner-commercial.json`
+- `30110-partner-corporate.json`
+- `30115-partner-corporate-commercial.json`
+- `30120-partner-disputes.json`
+- `30125-partner-employment-law.json`
+- `30130-partner-international-arbitration.json`
+- `30135-partner-mining-infrastructure.json`
+- `30140-partners-managing.json`
+- `30145-durban.json`
+- `30150-johannesburg.json`
+- `30155-pro-bono.json`
+- `30160-real-estate.json`
+- `30165-tax.json`
+
+### PT (164 missing)
+- `00100-home.json`
+- `00100-user-login.json`
+- `00102-administration.json`
+- `00102-privacy-settings.json`
+- `00150-user-signup.json`
+- `00155-user-management.json`
+- `00165-debug-panel.json`
+- `00165-ui-settings.json`
+- `00170-chatbot-management.json`
+- `00170-modal-management.json`
+- `00175-auth-callback.json`
+- `00175-password-reset.json`
+- `00180-contributor-hub.json`
+- `00200-all-documents.json`
+- `00200-modals.json`
+- `00250-commercial.json`
+- `00300-construction.json`
+- `00300-modals.json`
+- `00400-contracts.json`
+- `00425-contracts-pre-award.json`
+- `00435-contracts-post-award.json`
+- `00435-modals.json`
+- `00800-design.json`
+- `00825-architectural.json`
+- `00835-chemical-engineering.json`
+- `00850-civil-engineering.json`
+- `00860-electrical-engineering.json`
+- `00870-mechanical-engineering.json`
+- `00871-process-engineering.json`
+- `00872-developer.json`
+- `00875-sales.json`
+- `00875-modals.json`
+- `00877-sundry.json`
+- `00880-board-of-directors.json`
+- `00882-director-construction.json`
+- `00883-director-contracts.json`
+- `00884-director-engineering.json`
+- `00885-director-hse.json`
+- `00886-director-logistics.json`
+- `00888-director-procurement.json`
+- `00889-director-finance.json`
+- `00890-director-projects.json`
+- `00895-director-project.json`
+- `00900-document-control.json`
+- `00900-modals.json`
+- `01000-environmental.json`
+- `01100-ethics.json`
+- `01200-finance.json`
+- `01200-modals.json`
+- `01300-governance.json`
+- `01300-modals.json`
+- `01300-hitl-review.json`
+- `01300-security-monitoring.json`
+- `01400-health.json`
+- `01500-human-resources.json`
+- `01500-modals.json`
+- `01600-local-content.json`
+- `0170-modal-management.json`
+- `01700-logistics.json`
+- `01700-modals.json`
+- `01750-legal.json`
+- `01800-operations.json`
+- `01800-modals.json`
+- `01850-other-parties.json`
+- `01900-procurement.json`
+- `01900-modals.json`
+- `01900-procurement-performance.json`
+- `02000-project-controls.json`
+- `02025-quantity-surveying.json`
+- `02025-modals.json`
+- `02035-scheduling.json`
+- `02050-coding-templates.json`
+- `02050-engineering-templates.json`
+- `02050-information-technology.json`
+- `02050-system-settings.json`
+- `02052-langraph-ui.json`
+- `02075-inspection.json`
+- `02075-modals.json`
+- `02100-public-relations.json`
+- `02200-agent-monitoring.json`
+- `02200-quality-assurance.json`
+- `02250-quality-control.json`
+- `02400-safety.json`
+- `02400-modals.json`
+- `02400-safety-performance.json`
+- `02500-security.json`
+- `03000-landscaping.json`
+- `03010-email-management.json`
+- `03010-modals.json`
+- `20000-accounting-finance.json`
+- `20000-construction.json`
+- `20005-construction.json`
+- `20005-finance.json`
+- `20010-contracts-subcontracts.json`
+- `20010-hse.json`
+- `20015-contracts.json`
+- `20015-environmental.json`
+- `20020-health.json`
+- `20020-subcontracts.json`
+- `20025-engineering.json`
+- `20025-safety.json`
+- `20030-field-engineering.json`
+- `20030-human-resources.json`
+- `20035-hse.json`
+- `20035-logistics.json`
+- `20040-environmental.json`
+- `20040-mining.json`
+- `20045-health.json`
+- `20045-operations.json`
+- `20050-maintenance.json`
+- `20050-safety.json`
+- `20055-human-resources.json`
+- `20055-procurement-and-supply.json`
+- `20060-legal.json`
+- `20060-purchasing.json`
+- `20065-marketing-and-business-development.json`
+- `20065-materials-management.json`
+- `20070-operations-and-maintenance.json`
+- `20070-qaqc.json`
+- `20075-procurement.json`
+- `20075-strategy.json`
+- `20080-purchasing.json`
+- `20085-logistics.json`
+- `20090-materials-management.json`
+- `20095-project-controls.json`
+- `20100-estimating.json`
+- `20105-scheduling-and-planning.json`
+- `20110-project-management.json`
+- `20115-quality-assurance.json`
+- `20120-quality-control.json`
+- `20125-risk-management.json`
+- `30000-board-of-directors.json`
+- `30005-client-and-project-management.json`
+- `30010-company-secretarial-services.json`
+- `30015-corporate-commercial.json`
+- `30020-corporate-and-ma-support.json`
+- `30030-privacy-and-protection.json`
+- `30035-employment-law.json`
+- `30040-environmental-sustainable-dev.json`
+- `30045-estate-planning-trusts.json`
+- `30050-ethics.json`
+- `30055-finance.json`
+- `30060-governance.json`
+- `30065-information-technology.json`
+- `30070-intellectual-property.json`
+- `30075-leasing-eviction.json`
+- `30080-litigation-alternative-dispute-mgmt.json`
+- `30085-mining-infrastructure.json`
+- `30090-notary-public.json`
+- `30095-oversight-africa-group.json`
+- `30100-partners-key.json`
+- `30105-partner-commercial.json`
+- `30110-partner-corporate.json`
+- `30115-partner-corporate-commercial.json`
+- `30120-partner-disputes.json`
+- `30125-partner-employment-law.json`
+- `30130-partner-international-arbitration.json`
+- `30135-partner-mining-infrastructure.json`
+- `30140-partners-managing.json`
+- `30145-durban.json`
+- `30150-johannesburg.json`
+- `30155-pro-bono.json`
+- `30160-real-estate.json`
+- `30165-tax.json`
+
+### ES (164 missing)
+- `00100-home.json`
+- `00100-user-login.json`
+- `00102-administration.json`
+- `00102-privacy-settings.json`
+- `00150-user-signup.json`
+- `00155-user-management.json`
+- `00165-debug-panel.json`
+- `00165-ui-settings.json`
+- `00170-chatbot-management.json`
+- `00170-modal-management.json`
+- `00175-auth-callback.json`
+- `00175-password-reset.json`
+- `00180-contributor-hub.json`
+- `00200-all-documents.json`
+- `00200-modals.json`
+- `00250-commercial.json`
+- `00300-construction.json`
+- `00300-modals.json`
+- `00400-contracts.json`
+- `00425-contracts-pre-award.json`
+- `00435-contracts-post-award.json`
+- `00435-modals.json`
+- `00800-design.json`
+- `00825-architectural.json`
+- `00835-chemical-engineering.json`
+- `00850-civil-engineering.json`
+- `00860-electrical-engineering.json`
+- `00870-mechanical-engineering.json`
+- `00871-process-engineering.json`
+- `00872-developer.json`
+- `00875-sales.json`
+- `00875-modals.json`
+- `00877-sundry.json`
+- `00880-board-of-directors.json`
+- `00882-director-construction.json`
+- `00883-director-contracts.json`
+- `00884-director-engineering.json`
+- `00885-director-hse.json`
+- `00886-director-logistics.json`
+- `00888-director-procurement.json`
+- `00889-director-finance.json`
+- `00890-director-projects.json`
+- `00895-director-project.json`
+- `00900-document-control.json`
+- `00900-modals.json`
+- `01000-environmental.json`
+- `01100-ethics.json`
+- `01200-finance.json`
+- `01200-modals.json`
+- `01300-governance.json`
+- `01300-modals.json`
+- `01300-hitl-review.json`
+- `01300-security-monitoring.json`
+- `01400-health.json`
+- `01500-human-resources.json`
+- `01500-modals.json`
+- `01600-local-content.json`
+- `0170-modal-management.json`
+- `01700-logistics.json`
+- `01700-modals.json`
+- `01750-legal.json`
+- `01800-operations.json`
+- `01800-modals.json`
+- `01850-other-parties.json`
+- `01900-procurement.json`
+- `01900-modals.json`
+- `01900-procurement-performance.json`
+- `02000-project-controls.json`
+- `02025-quantity-surveying.json`
+- `02025-modals.json`
+- `02035-scheduling.json`
+- `02050-coding-templates.json`
+- `02050-engineering-templates.json`
+- `02050-information-technology.json`
+- `02050-system-settings.json`
+- `02052-langraph-ui.json`
+- `02075-inspection.json`
+- `02075-modals.json`
+- `02100-public-relations.json`
+- `02200-agent-monitoring.json`
+- `02200-quality-assurance.json`
+- `02250-quality-control.json`
+- `02400-safety.json`
+- `02400-modals.json`
+- `02400-safety-performance.json`
+- `02500-security.json`
+- `03000-landscaping.json`
+- `03010-email-management.json`
+- `03010-modals.json`
+- `20000-accounting-finance.json`
+- `20000-construction.json`
+- `20005-construction.json`
+- `20005-finance.json`
+- `20010-contracts-subcontracts.json`
+- `20010-hse.json`
+- `20015-contracts.json`
+- `20015-environmental.json`
+- `20020-health.json`
+- `20020-subcontracts.json`
+- `20025-engineering.json`
+- `20025-safety.json`
+- `20030-field-engineering.json`
+- `20030-human-resources.json`
+- `20035-hse.json`
+- `20035-logistics.json`
+- `20040-environmental.json`
+- `20040-mining.json`
+- `20045-health.json`
+- `20045-operations.json`
+- `20050-maintenance.json`
+- `20050-safety.json`
+- `20055-human-resources.json`
+- `20055-procurement-and-supply.json`
+- `20060-legal.json`
+- `20060-purchasing.json`
+- `20065-marketing-and-business-development.json`
+- `20065-materials-management.json`
+- `20070-operations-and-maintenance.json`
+- `20070-qaqc.json`
+- `20075-procurement.json`
+- `20075-strategy.json`
+- `20080-purchasing.json`
+- `20085-logistics.json`
+- `20090-materials-management.json`
+- `20095-project-controls.json`
+- `20100-estimating.json`
+- `20105-scheduling-and-planning.json`
+- `20110-project-management.json`
+- `20115-quality-assurance.json`
+- `20120-quality-control.json`
+- `20125-risk-management.json`
+- `30000-board-of-directors.json`
+- `30005-client-and-project-management.json`
+- `30010-company-secretarial-services.json`
+- `30015-corporate-commercial.json`
+- `30020-corporate-and-ma-support.json`
+- `30030-privacy-and-protection.json`
+- `30035-employment-law.json`
+- `30040-environmental-sustainable-dev.json`
+- `30045-estate-planning-trusts.json`
+- `30050-ethics.json`
+- `30055-finance.json`
+- `30060-governance.json`
+- `30065-information-technology.json`
+- `30070-intellectual-property.json`
+- `30075-leasing-eviction.json`
+- `30080-litigation-alternative-dispute-mgmt.json`
+- `30085-mining-infrastructure.json`
+- `30090-notary-public.json`
+- `30095-oversight-africa-group.json`
+- `30100-partners-key.json`
+- `30105-partner-commercial.json`
+- `30110-partner-corporate.json`
+- `30115-partner-corporate-commercial.json`
+- `30120-partner-disputes.json`
+- `30125-partner-employment-law.json`
+- `30130-partner-international-arbitration.json`
+- `30135-partner-mining-infrastructure.json`
+- `30140-partners-managing.json`
+- `30145-durban.json`
+- `30150-johannesburg.json`
+- `30155-pro-bono.json`
+- `30160-real-estate.json`
+- `30165-tax.json`
+
+### FR (164 missing)
+- `00100-home.json`
+- `00100-user-login.json`
+- `00102-administration.json`
+- `00102-privacy-settings.json`
+- `00150-user-signup.json`
+- `00155-user-management.json`
+- `00165-debug-panel.json`
+- `00165-ui-settings.json`
+- `00170-chatbot-management.json`
+- `00170-modal-management.json`
+- `00175-auth-callback.json`
+- `00175-password-reset.json`
+- `00180-contributor-hub.json`
+- `00200-all-documents.json`
+- `00200-modals.json`
+- `00250-commercial.json`
+- `00300-construction.json`
+- `00300-modals.json`
+- `00400-contracts.json`
+- `00425-contracts-pre-award.json`
+- `00435-contracts-post-award.json`
+- `00435-modals.json`
+- `00800-design.json`
+- `00825-architectural.json`
+- `00835-chemical-engineering.json`
+- `00850-civil-engineering.json`
+- `00860-electrical-engineering.json`
+- `00870-mechanical-engineering.json`
+- `00871-process-engineering.json`
+- `00872-developer.json`
+- `00875-sales.json`
+- `00875-modals.json`
+- `00877-sundry.json`
+- `00880-board-of-directors.json`
+- `00882-director-construction.json`
+- `00883-director-contracts.json`
+- `00884-director-engineering.json`
+- `00885-director-hse.json`
+- `00886-director-logistics.json`
+- `00888-director-procurement.json`
+- `00889-director-finance.json`
+- `00890-director-projects.json`
+- `00895-director-project.json`
+- `00900-document-control.json`
+- `00900-modals.json`
+- `01000-environmental.json`
+- `01100-ethics.json`
+- `01200-finance.json`
+- `01200-modals.json`
+- `01300-governance.json`
+- `01300-modals.json`
+- `01300-hitl-review.json`
+- `01300-security-monitoring.json`
+- `01400-health.json`
+- `01500-human-resources.json`
+- `01500-modals.json`
+- `01600-local-content.json`
+- `0170-modal-management.json`
+- `01700-logistics.json`
+- `01700-modals.json`
+- `01750-legal.json`
+- `01800-operations.json`
+- `01800-modals.json`
+- `01850-other-parties.json`
+- `01900-procurement.json`
+- `01900-modals.json`
+- `01900-procurement-performance.json`
+- `02000-project-controls.json`
+- `02025-quantity-surveying.json`
+- `02025-modals.json`
+- `02035-scheduling.json`
+- `02050-coding-templates.json`
+- `02050-engineering-templates.json`
+- `02050-information-technology.json`
+- `02050-system-settings.json`
+- `02052-langraph-ui.json`
+- `02075-inspection.json`
+- `02075-modals.json`
+- `02100-public-relations.json`
+- `02200-agent-monitoring.json`
+- `02200-quality-assurance.json`
+- `02250-quality-control.json`
+- `02400-safety.json`
+- `02400-modals.json`
+- `02400-safety-performance.json`
+- `02500-security.json`
+- `03000-landscaping.json`
+- `03010-email-management.json`
+- `03010-modals.json`
+- `20000-accounting-finance.json`
+- `20000-construction.json`
+- `20005-construction.json`
+- `20005-finance.json`
+- `20010-contracts-subcontracts.json`
+- `20010-hse.json`
+- `20015-contracts.json`
+- `20015-environmental.json`
+- `20020-health.json`
+- `20020-subcontracts.json`
+- `20025-engineering.json`
+- `20025-safety.json`
+- `20030-field-engineering.json`
+- `20030-human-resources.json`
+- `20035-hse.json`
+- `20035-logistics.json`
+- `20040-environmental.json`
+- `20040-mining.json`
+- `20045-health.json`
+- `20045-operations.json`
+- `20050-maintenance.json`
+- `20050-safety.json`
+- `20055-human-resources.json`
+- `20055-procurement-and-supply.json`
+- `20060-legal.json`
+- `20060-purchasing.json`
+- `20065-marketing-and-business-development.json`
+- `20065-materials-management.json`
+- `20070-operations-and-maintenance.json`
+- `20070-qaqc.json`
+- `20075-procurement.json`
+- `20075-strategy.json`
+- `20080-purchasing.json`
+- `20085-logistics.json`
+- `20090-materials-management.json`
+- `20095-project-controls.json`
+- `20100-estimating.json`
+- `20105-scheduling-and-planning.json`
+- `20110-project-management.json`
+- `20115-quality-assurance.json`
+- `20120-quality-control.json`
+- `20125-risk-management.json`
+- `30000-board-of-directors.json`
+- `30005-client-and-project-management.json`
+- `30010-company-secretarial-services.json`
+- `30015-corporate-commercial.json`
+- `30020-corporate-and-ma-support.json`
+- `30030-privacy-and-protection.json`
+- `30035-employment-law.json`
+- `30040-environmental-sustainable-dev.json`
+- `30045-estate-planning-trusts.json`
+- `30050-ethics.json`
+- `30055-finance.json`
+- `30060-governance.json`
+- `30065-information-technology.json`
+- `30070-intellectual-property.json`
+- `30075-leasing-eviction.json`
+- `30080-litigation-alternative-dispute-mgmt.json`
+- `30085-mining-infrastructure.json`
+- `30090-notary-public.json`
+- `30095-oversight-africa-group.json`
+- `30100-partners-key.json`
+- `30105-partner-commercial.json`
+- `30110-partner-corporate.json`
+- `30115-partner-corporate-commercial.json`
+- `30120-partner-disputes.json`
+- `30125-partner-employment-law.json`
+- `30130-partner-international-arbitration.json`
+- `30135-partner-mining-infrastructure.json`
+- `30140-partners-managing.json`
+- `30145-durban.json`
+- `30150-johannesburg.json`
+- `30155-pro-bono.json`
+- `30160-real-estate.json`
+- `30165-tax.json`
+
+### ZU (164 missing)
+- `00100-home.json`
+- `00100-user-login.json`
+- `00102-administration.json`
+- `00102-privacy-settings.json`
+- `00150-user-signup.json`
+- `00155-user-management.json`
+- `00165-debug-panel.json`
+- `00165-ui-settings.json`
+- `00170-chatbot-management.json`
+- `00170-modal-management.json`
+- `00175-auth-callback.json`
+- `00175-password-reset.json`
+- `00180-contributor-hub.json`
+- `00200-all-documents.json`
+- `00200-modals.json`
+- `00250-commercial.json`
+- `00300-construction.json`
+- `00300-modals.json`
+- `00400-contracts.json`
+- `00425-contracts-pre-award.json`
+- `00435-contracts-post-award.json`
+- `00435-modals.json`
+- `00800-design.json`
+- `00825-architectural.json`
+- `00835-chemical-engineering.json`
+- `00850-civil-engineering.json`
+- `00860-electrical-engineering.json`
+- `00870-mechanical-engineering.json`
+- `00871-process-engineering.json`
+- `00872-developer.json`
+- `00875-sales.json`
+- `00875-modals.json`
+- `00877-sundry.json`
+- `00880-board-of-directors.json`
+- `00882-director-construction.json`
+- `00883-director-contracts.json`
+- `00884-director-engineering.json`
+- `00885-director-hse.json`
+- `00886-director-logistics.json`
+- `00888-director-procurement.json`
+- `00889-director-finance.json`
+- `00890-director-projects.json`
+- `00895-director-project.json`
+- `00900-document-control.json`
+- `00900-modals.json`
+- `01000-environmental.json`
+- `01100-ethics.json`
+- `01200-finance.json`
+- `01200-modals.json`
+- `01300-governance.json`
+- `01300-modals.json`
+- `01300-hitl-review.json`
+- `01300-security-monitoring.json`
+- `01400-health.json`
+- `01500-human-resources.json`
+- `01500-modals.json`
+- `01600-local-content.json`
+- `0170-modal-management.json`
+- `01700-logistics.json`
+- `01700-modals.json`
+- `01750-legal.json`
+- `01800-operations.json`
+- `01800-modals.json`
+- `01850-other-parties.json`
+- `01900-procurement.json`
+- `01900-modals.json`
+- `01900-procurement-performance.json`
+- `02000-project-controls.json`
+- `02025-quantity-surveying.json`
+- `02025-modals.json`
+- `02035-scheduling.json`
+- `02050-coding-templates.json`
+- `02050-engineering-templates.json`
+- `02050-information-technology.json`
+- `02050-system-settings.json`
+- `02052-langraph-ui.json`
+- `02075-inspection.json`
+- `02075-modals.json`
+- `02100-public-relations.json`
+- `02200-agent-monitoring.json`
+- `02200-quality-assurance.json`
+- `02250-quality-control.json`
+- `02400-safety.json`
+- `02400-modals.json`
+- `02400-safety-performance.json`
+- `02500-security.json`
+- `03000-landscaping.json`
+- `03010-email-management.json`
+- `03010-modals.json`
+- `20000-accounting-finance.json`
+- `20000-construction.json`
+- `20005-construction.json`
+- `20005-finance.json`
+- `20010-contracts-subcontracts.json`
+- `20010-hse.json`
+- `20015-contracts.json`
+- `20015-environmental.json`
+- `20020-health.json`
+- `20020-subcontracts.json`
+- `20025-engineering.json`
+- `20025-safety.json`
+- `20030-field-engineering.json`
+- `20030-human-resources.json`
+- `20035-hse.json`
+- `20035-logistics.json`
+- `20040-environmental.json`
+- `20040-mining.json`
+- `20045-health.json`
+- `20045-operations.json`
+- `20050-maintenance.json`
+- `20050-safety.json`
+- `20055-human-resources.json`
+- `20055-procurement-and-supply.json`
+- `20060-legal.json`
+- `20060-purchasing.json`
+- `20065-marketing-and-business-development.json`
+- `20065-materials-management.json`
+- `20070-operations-and-maintenance.json`
+- `20070-qaqc.json`
+- `20075-procurement.json`
+- `20075-strategy.json`
+- `20080-purchasing.json`
+- `20085-logistics.json`
+- `20090-materials-management.json`
+- `20095-project-controls.json`
+- `20100-estimating.json`
+- `20105-scheduling-and-planning.json`
+- `20110-project-management.json`
+- `20115-quality-assurance.json`
+- `20120-quality-control.json`
+- `20125-risk-management.json`
+- `30000-board-of-directors.json`
+- `30005-client-and-project-management.json`
+- `30010-company-secretarial-services.json`
+- `30015-corporate-commercial.json`
+- `30020-corporate-and-ma-support.json`
+- `30030-privacy-and-protection.json`
+- `30035-employment-law.json`
+- `30040-environmental-sustainable-dev.json`
+- `30045-estate-planning-trusts.json`
+- `30050-ethics.json`
+- `30055-finance.json`
+- `30060-governance.json`
+- `30065-information-technology.json`
+- `30070-intellectual-property.json`
+- `30075-leasing-eviction.json`
+- `30080-litigation-alternative-dispute-mgmt.json`
+- `30085-mining-infrastructure.json`
+- `30090-notary-public.json`
+- `30095-oversight-africa-group.json`
+- `30100-partners-key.json`
+- `30105-partner-commercial.json`
+- `30110-partner-corporate.json`
+- `30115-partner-corporate-commercial.json`
+- `30120-partner-disputes.json`
+- `30125-partner-employment-law.json`
+- `30130-partner-international-arbitration.json`
+- `30135-partner-mining-infrastructure.json`
+- `30140-partners-managing.json`
+- `30145-durban.json`
+- `30150-johannesburg.json`
+- `30155-pro-bono.json`
+- `30160-real-estate.json`
+- `30165-tax.json`
+
+### XH (164 missing)
+- `00100-home.json`
+- `00100-user-login.json`
+- `00102-administration.json`
+- `00102-privacy-settings.json`
+- `00150-user-signup.json`
+- `00155-user-management.json`
+- `00165-debug-panel.json`
+- `00165-ui-settings.json`
+- `00170-chatbot-management.json`
+- `00170-modal-management.json`
+- `00175-auth-callback.json`
+- `00175-password-reset.json`
+- `00180-contributor-hub.json`
+- `00200-all-documents.json`
+- `00200-modals.json`
+- `00250-commercial.json`
+- `00300-construction.json`
+- `00300-modals.json`
+- `00400-contracts.json`
+- `00425-contracts-pre-award.json`
+- `00435-contracts-post-award.json`
+- `00435-modals.json`
+- `00800-design.json`
+- `00825-architectural.json`
+- `00835-chemical-engineering.json`
+- `00850-civil-engineering.json`
+- `00860-electrical-engineering.json`
+- `00870-mechanical-engineering.json`
+- `00871-process-engineering.json`
+- `00872-developer.json`
+- `00875-sales.json`
+- `00875-modals.json`
+- `00877-sundry.json`
+- `00880-board-of-directors.json`
+- `00882-director-construction.json`
+- `00883-director-contracts.json`
+- `00884-director-engineering.json`
+- `00885-director-hse.json`
+- `00886-director-logistics.json`
+- `00888-director-procurement.json`
+- `00889-director-finance.json`
+- `00890-director-projects.json`
+- `00895-director-project.json`
+- `00900-document-control.json`
+- `00900-modals.json`
+- `01000-environmental.json`
+- `01100-ethics.json`
+- `01200-finance.json`
+- `01200-modals.json`
+- `01300-governance.json`
+- `01300-modals.json`
+- `01300-hitl-review.json`
+- `01300-security-monitoring.json`
+- `01400-health.json`
+- `01500-human-resources.json`
+- `01500-modals.json`
+- `01600-local-content.json`
+- `0170-modal-management.json`
+- `01700-logistics.json`
+- `01700-modals.json`
+- `01750-legal.json`
+- `01800-operations.json`
+- `01800-modals.json`
+- `01850-other-parties.json`
+- `01900-procurement.json`
+- `01900-modals.json`
+- `01900-procurement-performance.json`
+- `02000-project-controls.json`
+- `02025-quantity-surveying.json`
+- `02025-modals.json`
+- `02035-scheduling.json`
+- `02050-coding-templates.json`
+- `02050-engineering-templates.json`
+- `02050-information-technology.json`
+- `02050-system-settings.json`
+- `02052-langraph-ui.json`
+- `02075-inspection.json`
+- `02075-modals.json`
+- `02100-public-relations.json`
+- `02200-agent-monitoring.json`
+- `02200-quality-assurance.json`
+- `02250-quality-control.json`
+- `02400-safety.json`
+- `02400-modals.json`
+- `02400-safety-performance.json`
+- `02500-security.json`
+- `03000-landscaping.json`
+- `03010-email-management.json`
+- `03010-modals.json`
+- `20000-accounting-finance.json`
+- `20000-construction.json`
+- `20005-construction.json`
+- `20005-finance.json`
+- `20010-contracts-subcontracts.json`
+- `20010-hse.json`
+- `20015-contracts.json`
+- `20015-environmental.json`
+- `20020-health.json`
+- `20020-subcontracts.json`
+- `20025-engineering.json`
+- `20025-safety.json`
+- `20030-field-engineering.json`
+- `20030-human-resources.json`
+- `20035-hse.json`
+- `20035-logistics.json`
+- `20040-environmental.json`
+- `20040-mining.json`
+- `20045-health.json`
+- `20045-operations.json`
+- `20050-maintenance.json`
+- `20050-safety.json`
+- `20055-human-resources.json`
+- `20055-procurement-and-supply.json`
+- `20060-legal.json`
+- `20060-purchasing.json`
+- `20065-marketing-and-business-development.json`
+- `20065-materials-management.json`
+- `20070-operations-and-maintenance.json`
+- `20070-qaqc.json`
+- `20075-procurement.json`
+- `20075-strategy.json`
+- `20080-purchasing.json`
+- `20085-logistics.json`
+- `20090-materials-management.json`
+- `20095-project-controls.json`
+- `20100-estimating.json`
+- `20105-scheduling-and-planning.json`
+- `20110-project-management.json`
+- `20115-quality-assurance.json`
+- `20120-quality-control.json`
+- `20125-risk-management.json`
+- `30000-board-of-directors.json`
+- `30005-client-and-project-management.json`
+- `30010-company-secretarial-services.json`
+- `30015-corporate-commercial.json`
+- `30020-corporate-and-ma-support.json`
+- `30030-privacy-and-protection.json`
+- `30035-employment-law.json`
+- `30040-environmental-sustainable-dev.json`
+- `30045-estate-planning-trusts.json`
+- `30050-ethics.json`
+- `30055-finance.json`
+- `30060-governance.json`
+- `30065-information-technology.json`
+- `30070-intellectual-property.json`
+- `30075-leasing-eviction.json`
+- `30080-litigation-alternative-dispute-mgmt.json`
+- `30085-mining-infrastructure.json`
+- `30090-notary-public.json`
+- `30095-oversight-africa-group.json`
+- `30100-partners-key.json`
+- `30105-partner-commercial.json`
+- `30110-partner-corporate.json`
+- `30115-partner-corporate-commercial.json`
+- `30120-partner-disputes.json`
+- `30125-partner-employment-law.json`
+- `30130-partner-international-arbitration.json`
+- `30135-partner-mining-infrastructure.json`
+- `30140-partners-managing.json`
+- `30145-durban.json`
+- `30150-johannesburg.json`
+- `30155-pro-bono.json`
+- `30160-real-estate.json`
+- `30165-tax.json`
+
+### SW (164 missing)
+- `00100-home.json`
+- `00100-user-login.json`
+- `00102-administration.json`
+- `00102-privacy-settings.json`
+- `00150-user-signup.json`
+- `00155-user-management.json`
+- `00165-debug-panel.json`
+- `00165-ui-settings.json`
+- `00170-chatbot-management.json`
+- `00170-modal-management.json`
+- `00175-auth-callback.json`
+- `00175-password-reset.json`
+- `00180-contributor-hub.json`
+- `00200-all-documents.json`
+- `00200-modals.json`
+- `00250-commercial.json`
+- `00300-construction.json`
+- `00300-modals.json`
+- `00400-contracts.json`
+- `00425-contracts-pre-award.json`
+- `00435-contracts-post-award.json`
+- `00435-modals.json`
+- `00800-design.json`
+- `00825-architectural.json`
+- `00835-chemical-engineering.json`
+- `00850-civil-engineering.json`
+- `00860-electrical-engineering.json`
+- `00870-mechanical-engineering.json`
+- `00871-process-engineering.json`
+- `00872-developer.json`
+- `00875-sales.json`
+- `00875-modals.json`
+- `00877-sundry.json`
+- `00880-board-of-directors.json`
+- `00882-director-construction.json`
+- `00883-director-contracts.json`
+- `00884-director-engineering.json`
+- `00885-director-hse.json`
+- `00886-director-logistics.json`
+- `00888-director-procurement.json`
+- `00889-director-finance.json`
+- `00890-director-projects.json`
+- `00895-director-project.json`
+- `00900-document-control.json`
+- `00900-modals.json`
+- `01000-environmental.json`
+- `01100-ethics.json`
+- `01200-finance.json`
+- `01200-modals.json`
+- `01300-governance.json`
+- `01300-modals.json`
+- `01300-hitl-review.json`
+- `01300-security-monitoring.json`
+- `01400-health.json`
+- `01500-human-resources.json`
+- `01500-modals.json`
+- `01600-local-content.json`
+- `0170-modal-management.json`
+- `01700-logistics.json`
+- `01700-modals.json`
+- `01750-legal.json`
+- `01800-operations.json`
+- `01800-modals.json`
+- `01850-other-parties.json`
+- `01900-procurement.json`
+- `01900-modals.json`
+- `01900-procurement-performance.json`
+- `02000-project-controls.json`
+- `02025-quantity-surveying.json`
+- `02025-modals.json`
+- `02035-scheduling.json`
+- `02050-coding-templates.json`
+- `02050-engineering-templates.json`
+- `02050-information-technology.json`
+- `02050-system-settings.json`
+- `02052-langraph-ui.json`
+- `02075-inspection.json`
+- `02075-modals.json`
+- `02100-public-relations.json`
+- `02200-agent-monitoring.json`
+- `02200-quality-assurance.json`
+- `02250-quality-control.json`
+- `02400-safety.json`
+- `02400-modals.json`
+- `02400-safety-performance.json`
+- `02500-security.json`
+- `03000-landscaping.json`
+- `03010-email-management.json`
+- `03010-modals.json`
+- `20000-accounting-finance.json`
+- `20000-construction.json`
+- `20005-construction.json`
+- `20005-finance.json`
+- `20010-contracts-subcontracts.json`
+- `20010-hse.json`
+- `20015-contracts.json`
+- `20015-environmental.json`
+- `20020-health.json`
+- `20020-subcontracts.json`
+- `20025-engineering.json`
+- `20025-safety.json`
+- `20030-field-engineering.json`
+- `20030-human-resources.json`
+- `20035-hse.json`
+- `20035-logistics.json`
+- `20040-environmental.json`
+- `20040-mining.json`
+- `20045-health.json`
+- `20045-operations.json`
+- `20050-maintenance.json`
+- `20050-safety.json`
+- `20055-human-resources.json`
+- `20055-procurement-and-supply.json`
+- `20060-legal.json`
+- `20060-purchasing.json`
+- `20065-marketing-and-business-development.json`
+- `20065-materials-management.json`
+- `20070-operations-and-maintenance.json`
+- `20070-qaqc.json`
+- `20075-procurement.json`
+- `20075-strategy.json`
+- `20080-purchasing.json`
+- `20085-logistics.json`
+- `20090-materials-management.json`
+- `20095-project-controls.json`
+- `20100-estimating.json`
+- `20105-scheduling-and-planning.json`
+- `20110-project-management.json`
+- `20115-quality-assurance.json`
+- `20120-quality-control.json`
+- `20125-risk-management.json`
+- `30000-board-of-directors.json`
+- `30005-client-and-project-management.json`
+- `30010-company-secretarial-services.json`
+- `30015-corporate-commercial.json`
+- `30020-corporate-and-ma-support.json`
+- `30030-privacy-and-protection.json`
+- `30035-employment-law.json`
+- `30040-environmental-sustainable-dev.json`
+- `30045-estate-planning-trusts.json`
+- `30050-ethics.json`
+- `30055-finance.json`
+- `30060-governance.json`
+- `30065-information-technology.json`
+- `30070-intellectual-property.json`
+- `30075-leasing-eviction.json`
+- `30080-litigation-alternative-dispute-mgmt.json`
+- `30085-mining-infrastructure.json`
+- `30090-notary-public.json`
+- `30095-oversight-africa-group.json`
+- `30100-partners-key.json`
+- `30105-partner-commercial.json`
+- `30110-partner-corporate.json`
+- `30115-partner-corporate-commercial.json`
+- `30120-partner-disputes.json`
+- `30125-partner-employment-law.json`
+- `30130-partner-international-arbitration.json`
+- `30135-partner-mining-infrastructure.json`
+- `30140-partners-managing.json`
+- `30145-durban.json`
+- `30150-johannesburg.json`
+- `30155-pro-bono.json`
+- `30160-real-estate.json`
+- `30165-tax.json`
+
+### DE (164 missing)
+- `00100-home.json`
+- `00100-user-login.json`
+- `00102-administration.json`
+- `00102-privacy-settings.json`
+- `00150-user-signup.json`
+- `00155-user-management.json`
+- `00165-debug-panel.json`
+- `00165-ui-settings.json`
+- `00170-chatbot-management.json`
+- `00170-modal-management.json`
+- `00175-auth-callback.json`
+- `00175-password-reset.json`
+- `00180-contributor-hub.json`
+- `00200-all-documents.json`
+- `00200-modals.json`
+- `00250-commercial.json`
+- `00300-construction.json`
+- `00300-modals.json`
+- `00400-contracts.json`
+- `00425-contracts-pre-award.json`
+- `00435-contracts-post-award.json`
+- `00435-modals.json`
+- `00800-design.json`
+- `00825-architectural.json`
+- `00835-chemical-engineering.json`
+- `00850-civil-engineering.json`
+- `00860-electrical-engineering.json`
+- `00870-mechanical-engineering.json`
+- `00871-process-engineering.json`
+- `00872-developer.json`
+- `00875-sales.json`
+- `00875-modals.json`
+- `00877-sundry.json`
+- `00880-board-of-directors.json`
+- `00882-director-construction.json`
+- `00883-director-contracts.json`
+- `00884-director-engineering.json`
+- `00885-director-hse.json`
+- `00886-director-logistics.json`
+- `00888-director-procurement.json`
+- `00889-director-finance.json`
+- `00890-director-projects.json`
+- `00895-director-project.json`
+- `00900-document-control.json`
+- `00900-modals.json`
+- `01000-environmental.json`
+- `01100-ethics.json`
+- `01200-finance.json`
+- `01200-modals.json`
+- `01300-governance.json`
+- `01300-modals.json`
+- `01300-hitl-review.json`
+- `01300-security-monitoring.json`
+- `01400-health.json`
+- `01500-human-resources.json`
+- `01500-modals.json`
+- `01600-local-content.json`
+- `0170-modal-management.json`
+- `01700-logistics.json`
+- `01700-modals.json`
+- `01750-legal.json`
+- `01800-operations.json`
+- `01800-modals.json`
+- `01850-other-parties.json`
+- `01900-procurement.json`
+- `01900-modals.json`
+- `01900-procurement-performance.json`
+- `02000-project-controls.json`
+- `02025-quantity-surveying.json`
+- `02025-modals.json`
+- `02035-scheduling.json`
+- `02050-coding-templates.json`
+- `02050-engineering-templates.json`
+- `02050-information-technology.json`
+- `02050-system-settings.json`
+- `02052-langraph-ui.json`
+- `02075-inspection.json`
+- `02075-modals.json`
+- `02100-public-relations.json`
+- `02200-agent-monitoring.json`
+- `02200-quality-assurance.json`
+- `02250-quality-control.json`
+- `02400-safety.json`
+- `02400-modals.json`
+- `02400-safety-performance.json`
+- `02500-security.json`
+- `03000-landscaping.json`
+- `03010-email-management.json`
+- `03010-modals.json`
+- `20000-accounting-finance.json`
+- `20000-construction.json`
+- `20005-construction.json`
+- `20005-finance.json`
+- `20010-contracts-subcontracts.json`
+- `20010-hse.json`
+- `20015-contracts.json`
+- `20015-environmental.json`
+- `20020-health.json`
+- `20020-subcontracts.json`
+- `20025-engineering.json`
+- `20025-safety.json`
+- `20030-field-engineering.json`
+- `20030-human-resources.json`
+- `20035-hse.json`
+- `20035-logistics.json`
+- `20040-environmental.json`
+- `20040-mining.json`
+- `20045-health.json`
+- `20045-operations.json`
+- `20050-maintenance.json`
+- `20050-safety.json`
+- `20055-human-resources.json`
+- `20055-procurement-and-supply.json`
+- `20060-legal.json`
+- `20060-purchasing.json`
+- `20065-marketing-and-business-development.json`
+- `20065-materials-management.json`
+- `20070-operations-and-maintenance.json`
+- `20070-qaqc.json`
+- `20075-procurement.json`
+- `20075-strategy.json`
+- `20080-purchasing.json`
+- `20085-logistics.json`
+- `20090-materials-management.json`
+- `20095-project-controls.json`
+- `20100-estimating.json`
+- `20105-scheduling-and-planning.json`
+- `20110-project-management.json`
+- `20115-quality-assurance.json`
+- `20120-quality-control.json`
+- `20125-risk-management.json`
+- `30000-board-of-directors.json`
+- `30005-client-and-project-management.json`
+- `30010-company-secretarial-services.json`
+- `30015-corporate-commercial.json`
+- `30020-corporate-and-ma-support.json`
+- `30030-privacy-and-protection.json`
+- `30035-employment-law.json`
+- `30040-environmental-sustainable-dev.json`
+- `30045-estate-planning-trusts.json`
+- `30050-ethics.json`
+- `30055-finance.json`
+- `30060-governance.json`
+- `30065-information-technology.json`
+- `30070-intellectual-property.json`
+- `30075-leasing-eviction.json`
+- `30080-litigation-alternative-dispute-mgmt.json`
+- `30085-mining-infrastructure.json`
+- `30090-notary-public.json`
+- `30095-oversight-africa-group.json`
+- `30100-partners-key.json`
+- `30105-partner-commercial.json`
+- `30110-partner-corporate.json`
+- `30115-partner-corporate-commercial.json`
+- `30120-partner-disputes.json`
+- `30125-partner-employment-law.json`
+- `30130-partner-international-arbitration.json`
+- `30135-partner-mining-infrastructure.json`
+- `30140-partners-managing.json`
+- `30145-durban.json`
+- `30150-johannesburg.json`
+- `30155-pro-bono.json`
+- `30160-real-estate.json`
+- `30165-tax.json`
+
+## 🔗 Consistency Issues
+
+### AR missing files present in English
+- `01900-procurement-task-sequencing.json`
+
+### PT missing files present in English
+- `01900-procurement-task-sequencing.json`
+
+### ES missing files present in English
+- `01900-procurement-task-sequencing.json`
+
+### FR missing files present in English
+- `01900-procurement-task-sequencing.json`
+
+### ZU missing files present in English
+- `01900-procurement-task-sequencing.json`
+
+### XH missing files present in English
+- `01900-procurement-task-sequencing.json`
+
+### SW missing files present in English
+- `01900-procurement-task-sequencing.json`
+
+### DE missing files present in English
+- `01900-procurement-task-sequencing.json`
+
+## 🎯 Recommendations
+
+- **[HIGH]** missing page_translation: Create 00100-home.json in en directory
+- **[HIGH]** missing page_translation: Create 00100-home.json in ar directory
+- **[HIGH]** missing page_translation: Create 00100-home.json in pt directory
+- **[HIGH]** missing page_translation: Create 00100-home.json in es directory
+- **[HIGH]** missing page_translation: Create 00100-home.json in fr directory
+- **[HIGH]** missing page_translation: Create 00100-home.json in zu directory
+- **[HIGH]** missing page_translation: Create 00100-home.json in xh directory
+- **[HIGH]** missing page_translation: Create 00100-home.json in sw directory
+- **[HIGH]** missing page_translation: Create 00100-home.json in de directory
+- **[HIGH]** missing page_translation: Create 00100-user-login.json in en directory
+- **[HIGH]** missing page_translation: Create 00100-user-login.json in ar directory
+- **[HIGH]** missing page_translation: Create 00100-user-login.json in pt directory
+- **[HIGH]** missing page_translation: Create 00100-user-login.json in es directory
+- **[HIGH]** missing page_translation: Create 00100-user-login.json in fr directory
+- **[HIGH]** missing page_translation: Create 00100-user-login.json in zu directory
+- **[HIGH]** missing page_translation: Create 00100-user-login.json in xh directory
+- **[HIGH]** missing page_translation: Create 00100-user-login.json in sw directory
+- **[HIGH]** missing page_translation: Create 00100-user-login.json in de directory
+- **[HIGH]** missing page_translation: Create 00102-administration.json in en directory
+- **[HIGH]** missing page_translation: Create 00102-administration.json in ar directory
+- **[HIGH]** missing page_translation: Create 00102-administration.json in pt directory
+- **[HIGH]** missing page_translation: Create 00102-administration.json in es directory
+- **[HIGH]** missing page_translation: Create 00102-administration.json in fr directory
+- **[HIGH]** missing page_translation: Create 00102-administration.json in zu directory
+- **[HIGH]** missing page_translation: Create 00102-administration.json in xh directory
+- **[HIGH]** missing page_translation: Create 00102-administration.json in sw directory
+- **[HIGH]** missing page_translation: Create 00102-administration.json in de directory
+- **[HIGH]** missing page_translation: Create 00102-privacy-settings.json in en directory
+- **[HIGH]** missing page_translation: Create 00102-privacy-settings.json in ar directory
+- **[HIGH]** missing page_translation: Create 00102-privacy-settings.json in pt directory
+- **[HIGH]** missing page_translation: Create 00102-privacy-settings.json in es directory
+- **[HIGH]** missing page_translation: Create 00102-privacy-settings.json in fr directory
+- **[HIGH]** missing page_translation: Create 00102-privacy-settings.json in zu directory
+- **[HIGH]** missing page_translation: Create 00102-privacy-settings.json in xh directory
+- **[HIGH]** missing page_translation: Create 00102-privacy-settings.json in sw directory
+- **[HIGH]** missing page_translation: Create 00102-privacy-settings.json in de directory
+- **[HIGH]** missing page_translation: Create 00150-user-signup.json in en directory
+- **[HIGH]** missing page_translation: Create 00150-user-signup.json in ar directory
+- **[HIGH]** missing page_translation: Create 00150-user-signup.json in pt directory
+- **[HIGH]** missing page_translation: Create 00150-user-signup.json in es directory
+- **[HIGH]** missing page_translation: Create 00150-user-signup.json in fr directory
+- **[HIGH]** missing page_translation: Create 00150-user-signup.json in zu directory
+- **[HIGH]** missing page_translation: Create 00150-user-signup.json in xh directory
+- **[HIGH]** missing page_translation: Create 00150-user-signup.json in sw directory
+- **[HIGH]** missing page_translation: Create 00150-user-signup.json in de directory
+- **[HIGH]** missing page_translation: Create 00155-user-management.json in en directory
+- **[HIGH]** missing page_translation: Create 00155-user-management.json in ar directory
+- **[HIGH]** missing page_translation: Create 00155-user-management.json in pt directory
+- **[HIGH]** missing page_translation: Create 00155-user-management.json in es directory
+- **[HIGH]** missing page_translation: Create 00155-user-management.json in fr directory
+- **[HIGH]** missing page_translation: Create 00155-user-management.json in zu directory
+- **[HIGH]** missing page_translation: Create 00155-user-management.json in xh directory
+- **[HIGH]** missing page_translation: Create 00155-user-management.json in sw directory
+- **[HIGH]** missing page_translation: Create 00155-user-management.json in de directory
+- **[HIGH]** missing page_translation: Create 00165-debug-panel.json in en directory
+- **[HIGH]** missing page_translation: Create 00165-debug-panel.json in ar directory
+- **[HIGH]** missing page_translation: Create 00165-debug-panel.json in pt directory
+- **[HIGH]** missing page_translation: Create 00165-debug-panel.json in es directory
+- **[HIGH]** missing page_translation: Create 00165-debug-panel.json in fr directory
+- **[HIGH]** missing page_translation: Create 00165-debug-panel.json in zu directory
+- **[HIGH]** missing page_translation: Create 00165-debug-panel.json in xh directory
+- **[HIGH]** missing page_translation: Create 00165-debug-panel.json in sw directory
+- **[HIGH]** missing page_translation: Create 00165-debug-panel.json in de directory
+- **[HIGH]** missing page_translation: Create 00165-ui-settings.json in en directory
+- **[HIGH]** missing page_translation: Create 00165-ui-settings.json in ar directory
+- **[HIGH]** missing page_translation: Create 00165-ui-settings.json in pt directory
+- **[HIGH]** missing page_translation: Create 00165-ui-settings.json in es directory
+- **[HIGH]** missing page_translation: Create 00165-ui-settings.json in fr directory
+- **[HIGH]** missing page_translation: Create 00165-ui-settings.json in zu directory
+- **[HIGH]** missing page_translation: Create 00165-ui-settings.json in xh directory
+- **[HIGH]** missing page_translation: Create 00165-ui-settings.json in sw directory
+- **[HIGH]** missing page_translation: Create 00165-ui-settings.json in de directory
+- **[HIGH]** missing page_translation: Create 00170-chatbot-management.json in en directory
+- **[HIGH]** missing page_translation: Create 00170-chatbot-management.json in ar directory
+- **[HIGH]** missing page_translation: Create 00170-chatbot-management.json in pt directory
+- **[HIGH]** missing page_translation: Create 00170-chatbot-management.json in es directory
+- **[HIGH]** missing page_translation: Create 00170-chatbot-management.json in fr directory
+- **[HIGH]** missing page_translation: Create 00170-chatbot-management.json in zu directory
+- **[HIGH]** missing page_translation: Create 00170-chatbot-management.json in xh directory
+- **[HIGH]** missing page_translation: Create 00170-chatbot-management.json in sw directory
+- **[HIGH]** missing page_translation: Create 00170-chatbot-management.json in de directory
+- **[HIGH]** missing page_translation: Create 00170-modal-management.json in en directory
+- **[HIGH]** missing page_translation: Create 00170-modal-management.json in ar directory
+- **[HIGH]** missing page_translation: Create 00170-modal-management.json in pt directory
+- **[HIGH]** missing page_translation: Create 00170-modal-management.json in es directory
+- **[HIGH]** missing page_translation: Create 00170-modal-management.json in fr directory
+- **[HIGH]** missing page_translation: Create 00170-modal-management.json in zu directory
+- **[HIGH]** missing page_translation: Create 00170-modal-management.json in xh directory
+- **[HIGH]** missing page_translation: Create 00170-modal-management.json in sw directory
+- **[HIGH]** missing page_translation: Create 00170-modal-management.json in de directory
+- **[HIGH]** missing page_translation: Create 00175-auth-callback.json in en directory
+- **[HIGH]** missing page_translation: Create 00175-auth-callback.json in ar directory
+- **[HIGH]** missing page_translation: Create 00175-auth-callback.json in pt directory
+- **[HIGH]** missing page_translation: Create 00175-auth-callback.json in es directory
+- **[HIGH]** missing page_translation: Create 00175-auth-callback.json in fr directory
+- **[HIGH]** missing page_translation: Create 00175-auth-callback.json in zu directory
+- **[HIGH]** missing page_translation: Create 00175-auth-callback.json in xh directory
+- **[HIGH]** missing page_translation: Create 00175-auth-callback.json in sw directory
+- **[HIGH]** missing page_translation: Create 00175-auth-callback.json in de directory
+- **[HIGH]** missing page_translation: Create 00175-password-reset.json in en directory
+- **[HIGH]** missing page_translation: Create 00175-password-reset.json in ar directory
+- **[HIGH]** missing page_translation: Create 00175-password-reset.json in pt directory
+- **[HIGH]** missing page_translation: Create 00175-password-reset.json in es directory
+- **[HIGH]** missing page_translation: Create 00175-password-reset.json in fr directory
+- **[HIGH]** missing page_translation: Create 00175-password-reset.json in zu directory
+- **[HIGH]** missing page_translation: Create 00175-password-reset.json in xh directory
+- **[HIGH]** missing page_translation: Create 00175-password-reset.json in sw directory
+- **[HIGH]** missing page_translation: Create 00175-password-reset.json in de directory
+- **[HIGH]** missing page_translation: Create 00180-contributor-hub.json in en directory
+- **[HIGH]** missing page_translation: Create 00180-contributor-hub.json in ar directory
+- **[HIGH]** missing page_translation: Create 00180-contributor-hub.json in pt directory
+- **[HIGH]** missing page_translation: Create 00180-contributor-hub.json in es directory
+- **[HIGH]** missing page_translation: Create 00180-contributor-hub.json in fr directory
+- **[HIGH]** missing page_translation: Create 00180-contributor-hub.json in zu directory
+- **[HIGH]** missing page_translation: Create 00180-contributor-hub.json in xh directory
+- **[HIGH]** missing page_translation: Create 00180-contributor-hub.json in sw directory
+- **[HIGH]** missing page_translation: Create 00180-contributor-hub.json in de directory
+- **[HIGH]** missing page_translation: Create 00200-all-documents.json in en directory
+- **[HIGH]** missing page_translation: Create 00200-all-documents.json in ar directory
+- **[HIGH]** missing page_translation: Create 00200-all-documents.json in pt directory
+- **[HIGH]** missing page_translation: Create 00200-all-documents.json in es directory
+- **[HIGH]** missing page_translation: Create 00200-all-documents.json in fr directory
+- **[HIGH]** missing page_translation: Create 00200-all-documents.json in zu directory
+- **[HIGH]** missing page_translation: Create 00200-all-documents.json in xh directory
+- **[HIGH]** missing page_translation: Create 00200-all-documents.json in sw directory
+- **[HIGH]** missing page_translation: Create 00200-all-documents.json in de directory
+- **[HIGH]** missing page_translation: Create 00250-commercial.json in en directory
+- **[HIGH]** missing page_translation: Create 00250-commercial.json in ar directory
+- **[HIGH]** missing page_translation: Create 00250-commercial.json in pt directory
+- **[HIGH]** missing page_translation: Create 00250-commercial.json in es directory
+- **[HIGH]** missing page_translation: Create 00250-commercial.json in fr directory
+- **[HIGH]** missing page_translation: Create 00250-commercial.json in zu directory
+- **[HIGH]** missing page_translation: Create 00250-commercial.json in xh directory
+- **[HIGH]** missing page_translation: Create 00250-commercial.json in sw directory
+- **[HIGH]** missing page_translation: Create 00250-commercial.json in de directory
+- **[HIGH]** missing page_translation: Create 00300-construction.json in en directory
+- **[HIGH]** missing page_translation: Create 00300-construction.json in ar directory
+- **[HIGH]** missing page_translation: Create 00300-construction.json in pt directory
+- **[HIGH]** missing page_translation: Create 00300-construction.json in es directory
+- **[HIGH]** missing page_translation: Create 00300-construction.json in fr directory
+- **[HIGH]** missing page_translation: Create 00300-construction.json in zu directory
+- **[HIGH]** missing page_translation: Create 00300-construction.json in xh directory
+- **[HIGH]** missing page_translation: Create 00300-construction.json in sw directory
+- **[HIGH]** missing page_translation: Create 00300-construction.json in de directory
+- **[HIGH]** missing page_translation: Create 00400-contracts.json in en directory
+- **[HIGH]** missing page_translation: Create 00400-contracts.json in ar directory
+- **[HIGH]** missing page_translation: Create 00400-contracts.json in pt directory
+- **[HIGH]** missing page_translation: Create 00400-contracts.json in es directory
+- **[HIGH]** missing page_translation: Create 00400-contracts.json in fr directory
+- **[HIGH]** missing page_translation: Create 00400-contracts.json in zu directory
+- **[HIGH]** missing page_translation: Create 00400-contracts.json in xh directory
+- **[HIGH]** missing page_translation: Create 00400-contracts.json in sw directory
+- **[HIGH]** missing page_translation: Create 00400-contracts.json in de directory
+- **[HIGH]** missing page_translation: Create 00425-contracts-pre-award.json in en directory
+- **[HIGH]** missing page_translation: Create 00425-contracts-pre-award.json in ar directory
+- **[HIGH]** missing page_translation: Create 00425-contracts-pre-award.json in pt directory
+- **[HIGH]** missing page_translation: Create 00425-contracts-pre-award.json in es directory
+- **[HIGH]** missing page_translation: Create 00425-contracts-pre-award.json in fr directory
+- **[HIGH]** missing page_translation: Create 00425-contracts-pre-award.json in zu directory
+- **[HIGH]** missing page_translation: Create 00425-contracts-pre-award.json in xh directory
+- **[HIGH]** missing page_translation: Create 00425-contracts-pre-award.json in sw directory
+- **[HIGH]** missing page_translation: Create 00425-contracts-pre-award.json in de directory
+- **[HIGH]** missing page_translation: Create 00435-contracts-post-award.json in en directory
+- **[HIGH]** missing page_translation: Create 00435-contracts-post-award.json in ar directory
+- **[HIGH]** missing page_translation: Create 00435-contracts-post-award.json in pt directory
+- **[HIGH]** missing page_translation: Create 00435-contracts-post-award.json in es directory
+- **[HIGH]** missing page_translation: Create 00435-contracts-post-award.json in fr directory
+- **[HIGH]** missing page_translation: Create 00435-contracts-post-award.json in zu directory
+- **[HIGH]** missing page_translation: Create 00435-contracts-post-award.json in xh directory
+- **[HIGH]** missing page_translation: Create 00435-contracts-post-award.json in sw directory
+- **[HIGH]** missing page_translation: Create 00435-contracts-post-award.json in de directory
+- **[HIGH]** missing page_translation: Create 00800-design.json in en directory
+- **[HIGH]** missing page_translation: Create 00800-design.json in ar directory
+- **[HIGH]** missing page_translation: Create 00800-design.json in pt directory
+- **[HIGH]** missing page_translation: Create 00800-design.json in es directory
+- **[HIGH]** missing page_translation: Create 00800-design.json in fr directory
+- **[HIGH]** missing page_translation: Create 00800-design.json in zu directory
+- **[HIGH]** missing page_translation: Create 00800-design.json in xh directory
+- **[HIGH]** missing page_translation: Create 00800-design.json in sw directory
+- **[HIGH]** missing page_translation: Create 00800-design.json in de directory
+- **[HIGH]** missing page_translation: Create 00825-architectural.json in en directory
+- **[HIGH]** missing page_translation: Create 00825-architectural.json in ar directory
+- **[HIGH]** missing page_translation: Create 00825-architectural.json in pt directory
+- **[HIGH]** missing page_translation: Create 00825-architectural.json in es directory
+- **[HIGH]** missing page_translation: Create 00825-architectural.json in fr directory
+- **[HIGH]** missing page_translation: Create 00825-architectural.json in zu directory
+- **[HIGH]** missing page_translation: Create 00825-architectural.json in xh directory
+- **[HIGH]** missing page_translation: Create 00825-architectural.json in sw directory
+- **[HIGH]** missing page_translation: Create 00825-architectural.json in de directory
+- **[HIGH]** missing page_translation: Create 00835-chemical-engineering.json in en directory
+- **[HIGH]** missing page_translation: Create 00835-chemical-engineering.json in ar directory
+- **[HIGH]** missing page_translation: Create 00835-chemical-engineering.json in pt directory
+- **[HIGH]** missing page_translation: Create 00835-chemical-engineering.json in es directory
+- **[HIGH]** missing page_translation: Create 00835-chemical-engineering.json in fr directory
+- **[HIGH]** missing page_translation: Create 00835-chemical-engineering.json in zu directory
+- **[HIGH]** missing page_translation: Create 00835-chemical-engineering.json in xh directory
+- **[HIGH]** missing page_translation: Create 00835-chemical-engineering.json in sw directory
+- **[HIGH]** missing page_translation: Create 00835-chemical-engineering.json in de directory
+- **[HIGH]** missing page_translation: Create 00850-civil-engineering.json in en directory
+- **[HIGH]** missing page_translation: Create 00850-civil-engineering.json in ar directory
+- **[HIGH]** missing page_translation: Create 00850-civil-engineering.json in pt directory
+- **[HIGH]** missing page_translation: Create 00850-civil-engineering.json in es directory
+- **[HIGH]** missing page_translation: Create 00850-civil-engineering.json in fr directory
+- **[HIGH]** missing page_translation: Create 00850-civil-engineering.json in zu directory
+- **[HIGH]** missing page_translation: Create 00850-civil-engineering.json in xh directory
+- **[HIGH]** missing page_translation: Create 00850-civil-engineering.json in sw directory
+- **[HIGH]** missing page_translation: Create 00850-civil-engineering.json in de directory
+- **[HIGH]** missing page_translation: Create 00860-electrical-engineering.json in en directory
+- **[HIGH]** missing page_translation: Create 00860-electrical-engineering.json in ar directory
+- **[HIGH]** missing page_translation: Create 00860-electrical-engineering.json in pt directory
+- **[HIGH]** missing page_translation: Create 00860-electrical-engineering.json in es directory
+- **[HIGH]** missing page_translation: Create 00860-electrical-engineering.json in fr directory
+- **[HIGH]** missing page_translation: Create 00860-electrical-engineering.json in zu directory
+- **[HIGH]** missing page_translation: Create 00860-electrical-engineering.json in xh directory
+- **[HIGH]** missing page_translation: Create 00860-electrical-engineering.json in sw directory
+- **[HIGH]** missing page_translation: Create 00860-electrical-engineering.json in de directory
+- **[HIGH]** missing page_translation: Create 00870-mechanical-engineering.json in en directory
+- **[HIGH]** missing page_translation: Create 00870-mechanical-engineering.json in ar directory
+- **[HIGH]** missing page_translation: Create 00870-mechanical-engineering.json in pt directory
+- **[HIGH]** missing page_translation: Create 00870-mechanical-engineering.json in es directory
+- **[HIGH]** missing page_translation: Create 00870-mechanical-engineering.json in fr directory
+- **[HIGH]** missing page_translation: Create 00870-mechanical-engineering.json in zu directory
+- **[HIGH]** missing page_translation: Create 00870-mechanical-engineering.json in xh directory
+- **[HIGH]** missing page_translation: Create 00870-mechanical-engineering.json in sw directory
+- **[HIGH]** missing page_translation: Create 00870-mechanical-engineering.json in de directory
+- **[HIGH]** missing page_translation: Create 00871-process-engineering.json in en directory
+- **[HIGH]** missing page_translation: Create 00871-process-engineering.json in ar directory
+- **[HIGH]** missing page_translation: Create 00871-process-engineering.json in pt directory
+- **[HIGH]** missing page_translation: Create 00871-process-engineering.json in es directory
+- **[HIGH]** missing page_translation: Create 00871-process-engineering.json in fr directory
+- **[HIGH]** missing page_translation: Create 00871-process-engineering.json in zu directory
+- **[HIGH]** missing page_translation: Create 00871-process-engineering.json in xh directory
+- **[HIGH]** missing page_translation: Create 00871-process-engineering.json in sw directory
+- **[HIGH]** missing page_translation: Create 00871-process-engineering.json in de directory
+- **[HIGH]** missing page_translation: Create 00872-developer.json in en directory
+- **[HIGH]** missing page_translation: Create 00872-developer.json in ar directory
+- **[HIGH]** missing page_translation: Create 00872-developer.json in pt directory
+- **[HIGH]** missing page_translation: Create 00872-developer.json in es directory
+- **[HIGH]** missing page_translation: Create 00872-developer.json in fr directory
+- **[HIGH]** missing page_translation: Create 00872-developer.json in zu directory
+- **[HIGH]** missing page_translation: Create 00872-developer.json in xh directory
+- **[HIGH]** missing page_translation: Create 00872-developer.json in sw directory
+- **[HIGH]** missing page_translation: Create 00872-developer.json in de directory
+- **[HIGH]** missing page_translation: Create 00875-sales.json in en directory
+- **[HIGH]** missing page_translation: Create 00875-sales.json in ar directory
+- **[HIGH]** missing page_translation: Create 00875-sales.json in pt directory
+- **[HIGH]** missing page_translation: Create 00875-sales.json in es directory
+- **[HIGH]** missing page_translation: Create 00875-sales.json in fr directory
+- **[HIGH]** missing page_translation: Create 00875-sales.json in zu directory
+- **[HIGH]** missing page_translation: Create 00875-sales.json in xh directory
+- **[HIGH]** missing page_translation: Create 00875-sales.json in sw directory
+- **[HIGH]** missing page_translation: Create 00875-sales.json in de directory
+- **[HIGH]** missing page_translation: Create 00877-sundry.json in en directory
+- **[HIGH]** missing page_translation: Create 00877-sundry.json in ar directory
+- **[HIGH]** missing page_translation: Create 00877-sundry.json in pt directory
+- **[HIGH]** missing page_translation: Create 00877-sundry.json in es directory
+- **[HIGH]** missing page_translation: Create 00877-sundry.json in fr directory
+- **[HIGH]** missing page_translation: Create 00877-sundry.json in zu directory
+- **[HIGH]** missing page_translation: Create 00877-sundry.json in xh directory
+- **[HIGH]** missing page_translation: Create 00877-sundry.json in sw directory
+- **[HIGH]** missing page_translation: Create 00877-sundry.json in de directory
+- **[HIGH]** missing page_translation: Create 00880-board-of-directors.json in en directory
+- **[HIGH]** missing page_translation: Create 00880-board-of-directors.json in ar directory
+- **[HIGH]** missing page_translation: Create 00880-board-of-directors.json in pt directory
+- **[HIGH]** missing page_translation: Create 00880-board-of-directors.json in es directory
+- **[HIGH]** missing page_translation: Create 00880-board-of-directors.json in fr directory
+- **[HIGH]** missing page_translation: Create 00880-board-of-directors.json in zu directory
+- **[HIGH]** missing page_translation: Create 00880-board-of-directors.json in xh directory
+- **[HIGH]** missing page_translation: Create 00880-board-of-directors.json in sw directory
+- **[HIGH]** missing page_translation: Create 00880-board-of-directors.json in de directory
+- **[HIGH]** missing page_translation: Create 00882-director-construction.json in en directory
+- **[HIGH]** missing page_translation: Create 00882-director-construction.json in ar directory
+- **[HIGH]** missing page_translation: Create 00882-director-construction.json in pt directory
+- **[HIGH]** missing page_translation: Create 00882-director-construction.json in es directory
+- **[HIGH]** missing page_translation: Create 00882-director-construction.json in fr directory
+- **[HIGH]** missing page_translation: Create 00882-director-construction.json in zu directory
+- **[HIGH]** missing page_translation: Create 00882-director-construction.json in xh directory
+- **[HIGH]** missing page_translation: Create 00882-director-construction.json in sw directory
+- **[HIGH]** missing page_translation: Create 00882-director-construction.json in de directory
+- **[HIGH]** missing page_translation: Create 00883-director-contracts.json in en directory
+- **[HIGH]** missing page_translation: Create 00883-director-contracts.json in ar directory
+- **[HIGH]** missing page_translation: Create 00883-director-contracts.json in pt directory
+- **[HIGH]** missing page_translation: Create 00883-director-contracts.json in es directory
+- **[HIGH]** missing page_translation: Create 00883-director-contracts.json in fr directory
+- **[HIGH]** missing page_translation: Create 00883-director-contracts.json in zu directory
+- **[HIGH]** missing page_translation: Create 00883-director-contracts.json in xh directory
+- **[HIGH]** missing page_translation: Create 00883-director-contracts.json in sw directory
+- **[HIGH]** missing page_translation: Create 00883-director-contracts.json in de directory
+- **[HIGH]** missing page_translation: Create 00884-director-engineering.json in en directory
+- **[HIGH]** missing page_translation: Create 00884-director-engineering.json in ar directory
+- **[HIGH]** missing page_translation: Create 00884-director-engineering.json in pt directory
+- **[HIGH]** missing page_translation: Create 00884-director-engineering.json in es directory
+- **[HIGH]** missing page_translation: Create 00884-director-engineering.json in fr directory
+- **[HIGH]** missing page_translation: Create 00884-director-engineering.json in zu directory
+- **[HIGH]** missing page_translation: Create 00884-director-engineering.json in xh directory
+- **[HIGH]** missing page_translation: Create 00884-director-engineering.json in sw directory
+- **[HIGH]** missing page_translation: Create 00884-director-engineering.json in de directory
+- **[HIGH]** missing page_translation: Create 00885-director-hse.json in en directory
+- **[HIGH]** missing page_translation: Create 00885-director-hse.json in ar directory
+- **[HIGH]** missing page_translation: Create 00885-director-hse.json in pt directory
+- **[HIGH]** missing page_translation: Create 00885-director-hse.json in es directory
+- **[HIGH]** missing page_translation: Create 00885-director-hse.json in fr directory
+- **[HIGH]** missing page_translation: Create 00885-director-hse.json in zu directory
+- **[HIGH]** missing page_translation: Create 00885-director-hse.json in xh directory
+- **[HIGH]** missing page_translation: Create 00885-director-hse.json in sw directory
+- **[HIGH]** missing page_translation: Create 00885-director-hse.json in de directory
+- **[HIGH]** missing page_translation: Create 00886-director-logistics.json in en directory
+- **[HIGH]** missing page_translation: Create 00886-director-logistics.json in ar directory
+- **[HIGH]** missing page_translation: Create 00886-director-logistics.json in pt directory
+- **[HIGH]** missing page_translation: Create 00886-director-logistics.json in es directory
+- **[HIGH]** missing page_translation: Create 00886-director-logistics.json in fr directory
+- **[HIGH]** missing page_translation: Create 00886-director-logistics.json in zu directory
+- **[HIGH]** missing page_translation: Create 00886-director-logistics.json in xh directory
+- **[HIGH]** missing page_translation: Create 00886-director-logistics.json in sw directory
+- **[HIGH]** missing page_translation: Create 00886-director-logistics.json in de directory
+- **[HIGH]** missing page_translation: Create 00888-director-procurement.json in en directory
+- **[HIGH]** missing page_translation: Create 00888-director-procurement.json in ar directory
+- **[HIGH]** missing page_translation: Create 00888-director-procurement.json in pt directory
+- **[HIGH]** missing page_translation: Create 00888-director-procurement.json in es directory
+- **[HIGH]** missing page_translation: Create 00888-director-procurement.json in fr directory
+- **[HIGH]** missing page_translation: Create 00888-director-procurement.json in zu directory
+- **[HIGH]** missing page_translation: Create 00888-director-procurement.json in xh directory
+- **[HIGH]** missing page_translation: Create 00888-director-procurement.json in sw directory
+- **[HIGH]** missing page_translation: Create 00888-director-procurement.json in de directory
+- **[HIGH]** missing page_translation: Create 00889-director-finance.json in en directory
+- **[HIGH]** missing page_translation: Create 00889-director-finance.json in ar directory
+- **[HIGH]** missing page_translation: Create 00889-director-finance.json in pt directory
+- **[HIGH]** missing page_translation: Create 00889-director-finance.json in es directory
+- **[HIGH]** missing page_translation: Create 00889-director-finance.json in fr directory
+- **[HIGH]** missing page_translation: Create 00889-director-finance.json in zu directory
+- **[HIGH]** missing page_translation: Create 00889-director-finance.json in xh directory
+- **[HIGH]** missing page_translation: Create 00889-director-finance.json in sw directory
+- **[HIGH]** missing page_translation: Create 00889-director-finance.json in de directory
+- **[HIGH]** missing page_translation: Create 00890-director-projects.json in en directory
+- **[HIGH]** missing page_translation: Create 00890-director-projects.json in ar directory
+- **[HIGH]** missing page_translation: Create 00890-director-projects.json in pt directory
+- **[HIGH]** missing page_translation: Create 00890-director-projects.json in es directory
+- **[HIGH]** missing page_translation: Create 00890-director-projects.json in fr directory
+- **[HIGH]** missing page_translation: Create 00890-director-projects.json in zu directory
+- **[HIGH]** missing page_translation: Create 00890-director-projects.json in xh directory
+- **[HIGH]** missing page_translation: Create 00890-director-projects.json in sw directory
+- **[HIGH]** missing page_translation: Create 00890-director-projects.json in de directory
+- **[HIGH]** missing page_translation: Create 00895-director-project.json in en directory
+- **[HIGH]** missing page_translation: Create 00895-director-project.json in ar directory
+- **[HIGH]** missing page_translation: Create 00895-director-project.json in pt directory
+- **[HIGH]** missing page_translation: Create 00895-director-project.json in es directory
+- **[HIGH]** missing page_translation: Create 00895-director-project.json in fr directory
+- **[HIGH]** missing page_translation: Create 00895-director-project.json in zu directory
+- **[HIGH]** missing page_translation: Create 00895-director-project.json in xh directory
+- **[HIGH]** missing page_translation: Create 00895-director-project.json in sw directory
+- **[HIGH]** missing page_translation: Create 00895-director-project.json in de directory
+- **[HIGH]** missing page_translation: Create 00900-document-control.json in en directory
+- **[HIGH]** missing page_translation: Create 00900-document-control.json in ar directory
+- **[HIGH]** missing page_translation: Create 00900-document-control.json in pt directory
+- **[HIGH]** missing page_translation: Create 00900-document-control.json in es directory
+- **[HIGH]** missing page_translation: Create 00900-document-control.json in fr directory
+- **[HIGH]** missing page_translation: Create 00900-document-control.json in zu directory
+- **[HIGH]** missing page_translation: Create 00900-document-control.json in xh directory
+- **[HIGH]** missing page_translation: Create 00900-document-control.json in sw directory
+- **[HIGH]** missing page_translation: Create 00900-document-control.json in de directory
+- **[HIGH]** missing page_translation: Create 01000-environmental.json in en directory
+- **[HIGH]** missing page_translation: Create 01000-environmental.json in ar directory
+- **[HIGH]** missing page_translation: Create 01000-environmental.json in pt directory
+- **[HIGH]** missing page_translation: Create 01000-environmental.json in es directory
+- **[HIGH]** missing page_translation: Create 01000-environmental.json in fr directory
+- **[HIGH]** missing page_translation: Create 01000-environmental.json in zu directory
+- **[HIGH]** missing page_translation: Create 01000-environmental.json in xh directory
+- **[HIGH]** missing page_translation: Create 01000-environmental.json in sw directory
+- **[HIGH]** missing page_translation: Create 01000-environmental.json in de directory
+- **[HIGH]** missing page_translation: Create 01100-ethics.json in en directory
+- **[HIGH]** missing page_translation: Create 01100-ethics.json in ar directory
+- **[HIGH]** missing page_translation: Create 01100-ethics.json in pt directory
+- **[HIGH]** missing page_translation: Create 01100-ethics.json in es directory
+- **[HIGH]** missing page_translation: Create 01100-ethics.json in fr directory
+- **[HIGH]** missing page_translation: Create 01100-ethics.json in zu directory
+- **[HIGH]** missing page_translation: Create 01100-ethics.json in xh directory
+- **[HIGH]** missing page_translation: Create 01100-ethics.json in sw directory
+- **[HIGH]** missing page_translation: Create 01100-ethics.json in de directory
+- **[HIGH]** missing page_translation: Create 01200-finance.json in en directory
+- **[HIGH]** missing page_translation: Create 01200-finance.json in ar directory
+- **[HIGH]** missing page_translation: Create 01200-finance.json in pt directory
+- **[HIGH]** missing page_translation: Create 01200-finance.json in es directory
+- **[HIGH]** missing page_translation: Create 01200-finance.json in fr directory
+- **[HIGH]** missing page_translation: Create 01200-finance.json in zu directory
+- **[HIGH]** missing page_translation: Create 01200-finance.json in xh directory
+- **[HIGH]** missing page_translation: Create 01200-finance.json in sw directory
+- **[HIGH]** missing page_translation: Create 01200-finance.json in de directory
+- **[HIGH]** missing page_translation: Create 01300-governance.json in en directory
+- **[HIGH]** missing page_translation: Create 01300-governance.json in ar directory
+- **[HIGH]** missing page_translation: Create 01300-governance.json in pt directory
+- **[HIGH]** missing page_translation: Create 01300-governance.json in es directory
+- **[HIGH]** missing page_translation: Create 01300-governance.json in fr directory
+- **[HIGH]** missing page_translation: Create 01300-governance.json in zu directory
+- **[HIGH]** missing page_translation: Create 01300-governance.json in xh directory
+- **[HIGH]** missing page_translation: Create 01300-governance.json in sw directory
+- **[HIGH]** missing page_translation: Create 01300-governance.json in de directory
+- **[HIGH]** missing page_translation: Create 01300-hitl-review.json in en directory
+- **[HIGH]** missing page_translation: Create 01300-hitl-review.json in ar directory
+- **[HIGH]** missing page_translation: Create 01300-hitl-review.json in pt directory
+- **[HIGH]** missing page_translation: Create 01300-hitl-review.json in es directory
+- **[HIGH]** missing page_translation: Create 01300-hitl-review.json in fr directory
+- **[HIGH]** missing page_translation: Create 01300-hitl-review.json in zu directory
+- **[HIGH]** missing page_translation: Create 01300-hitl-review.json in xh directory
+- **[HIGH]** missing page_translation: Create 01300-hitl-review.json in sw directory
+- **[HIGH]** missing page_translation: Create 01300-hitl-review.json in de directory
+- **[HIGH]** missing page_translation: Create 01300-security-monitoring.json in en directory
+- **[HIGH]** missing page_translation: Create 01300-security-monitoring.json in ar directory
+- **[HIGH]** missing page_translation: Create 01300-security-monitoring.json in pt directory
+- **[HIGH]** missing page_translation: Create 01300-security-monitoring.json in es directory
+- **[HIGH]** missing page_translation: Create 01300-security-monitoring.json in fr directory
+- **[HIGH]** missing page_translation: Create 01300-security-monitoring.json in zu directory
+- **[HIGH]** missing page_translation: Create 01300-security-monitoring.json in xh directory
+- **[HIGH]** missing page_translation: Create 01300-security-monitoring.json in sw directory
+- **[HIGH]** missing page_translation: Create 01300-security-monitoring.json in de directory
+- **[HIGH]** missing page_translation: Create 01400-health.json in en directory
+- **[HIGH]** missing page_translation: Create 01400-health.json in ar directory
+- **[HIGH]** missing page_translation: Create 01400-health.json in pt directory
+- **[HIGH]** missing page_translation: Create 01400-health.json in es directory
+- **[HIGH]** missing page_translation: Create 01400-health.json in fr directory
+- **[HIGH]** missing page_translation: Create 01400-health.json in zu directory
+- **[HIGH]** missing page_translation: Create 01400-health.json in xh directory
+- **[HIGH]** missing page_translation: Create 01400-health.json in sw directory
+- **[HIGH]** missing page_translation: Create 01400-health.json in de directory
+- **[HIGH]** missing page_translation: Create 01500-human-resources.json in en directory
+- **[HIGH]** missing page_translation: Create 01500-human-resources.json in ar directory
+- **[HIGH]** missing page_translation: Create 01500-human-resources.json in pt directory
+- **[HIGH]** missing page_translation: Create 01500-human-resources.json in es directory
+- **[HIGH]** missing page_translation: Create 01500-human-resources.json in fr directory
+- **[HIGH]** missing page_translation: Create 01500-human-resources.json in zu directory
+- **[HIGH]** missing page_translation: Create 01500-human-resources.json in xh directory
+- **[HIGH]** missing page_translation: Create 01500-human-resources.json in sw directory
+- **[HIGH]** missing page_translation: Create 01500-human-resources.json in de directory
+- **[HIGH]** missing page_translation: Create 01600-local-content.json in en directory
+- **[HIGH]** missing page_translation: Create 01600-local-content.json in ar directory
+- **[HIGH]** missing page_translation: Create 01600-local-content.json in pt directory
+- **[HIGH]** missing page_translation: Create 01600-local-content.json in es directory
+- **[HIGH]** missing page_translation: Create 01600-local-content.json in fr directory
+- **[HIGH]** missing page_translation: Create 01600-local-content.json in zu directory
+- **[HIGH]** missing page_translation: Create 01600-local-content.json in xh directory
+- **[HIGH]** missing page_translation: Create 01600-local-content.json in sw directory
+- **[HIGH]** missing page_translation: Create 01600-local-content.json in de directory
+- **[HIGH]** missing page_translation: Create 0170-modal-management.json in en directory
+- **[HIGH]** missing page_translation: Create 0170-modal-management.json in ar directory
+- **[HIGH]** missing page_translation: Create 0170-modal-management.json in pt directory
+- **[HIGH]** missing page_translation: Create 0170-modal-management.json in es directory
+- **[HIGH]** missing page_translation: Create 0170-modal-management.json in fr directory
+- **[HIGH]** missing page_translation: Create 0170-modal-management.json in zu directory
+- **[HIGH]** missing page_translation: Create 0170-modal-management.json in xh directory
+- **[HIGH]** missing page_translation: Create 0170-modal-management.json in sw directory
+- **[HIGH]** missing page_translation: Create 0170-modal-management.json in de directory
+- **[HIGH]** missing page_translation: Create 01700-logistics.json in en directory
+- **[HIGH]** missing page_translation: Create 01700-logistics.json in ar directory
+- **[HIGH]** missing page_translation: Create 01700-logistics.json in pt directory
+- **[HIGH]** missing page_translation: Create 01700-logistics.json in es directory
+- **[HIGH]** missing page_translation: Create 01700-logistics.json in fr directory
+- **[HIGH]** missing page_translation: Create 01700-logistics.json in zu directory
+- **[HIGH]** missing page_translation: Create 01700-logistics.json in xh directory
+- **[HIGH]** missing page_translation: Create 01700-logistics.json in sw directory
+- **[HIGH]** missing page_translation: Create 01700-logistics.json in de directory
+- **[HIGH]** missing page_translation: Create 01750-legal.json in en directory
+- **[HIGH]** missing page_translation: Create 01750-legal.json in ar directory
+- **[HIGH]** missing page_translation: Create 01750-legal.json in pt directory
+- **[HIGH]** missing page_translation: Create 01750-legal.json in es directory
+- **[HIGH]** missing page_translation: Create 01750-legal.json in fr directory
+- **[HIGH]** missing page_translation: Create 01750-legal.json in zu directory
+- **[HIGH]** missing page_translation: Create 01750-legal.json in xh directory
+- **[HIGH]** missing page_translation: Create 01750-legal.json in sw directory
+- **[HIGH]** missing page_translation: Create 01750-legal.json in de directory
+- **[HIGH]** missing page_translation: Create 01800-operations.json in en directory
+- **[HIGH]** missing page_translation: Create 01800-operations.json in ar directory
+- **[HIGH]** missing page_translation: Create 01800-operations.json in pt directory
+- **[HIGH]** missing page_translation: Create 01800-operations.json in es directory
+- **[HIGH]** missing page_translation: Create 01800-operations.json in fr directory
+- **[HIGH]** missing page_translation: Create 01800-operations.json in zu directory
+- **[HIGH]** missing page_translation: Create 01800-operations.json in xh directory
+- **[HIGH]** missing page_translation: Create 01800-operations.json in sw directory
+- **[HIGH]** missing page_translation: Create 01800-operations.json in de directory
+- **[HIGH]** missing page_translation: Create 01850-other-parties.json in en directory
+- **[HIGH]** missing page_translation: Create 01850-other-parties.json in ar directory
+- **[HIGH]** missing page_translation: Create 01850-other-parties.json in pt directory
+- **[HIGH]** missing page_translation: Create 01850-other-parties.json in es directory
+- **[HIGH]** missing page_translation: Create 01850-other-parties.json in fr directory
+- **[HIGH]** missing page_translation: Create 01850-other-parties.json in zu directory
+- **[HIGH]** missing page_translation: Create 01850-other-parties.json in xh directory
+- **[HIGH]** missing page_translation: Create 01850-other-parties.json in sw directory
+- **[HIGH]** missing page_translation: Create 01850-other-parties.json in de directory
+- **[HIGH]** missing page_translation: Create 01900-procurement.json in en directory
+- **[HIGH]** missing page_translation: Create 01900-procurement.json in ar directory
+- **[HIGH]** missing page_translation: Create 01900-procurement.json in pt directory
+- **[HIGH]** missing page_translation: Create 01900-procurement.json in es directory
+- **[HIGH]** missing page_translation: Create 01900-procurement.json in fr directory
+- **[HIGH]** missing page_translation: Create 01900-procurement.json in zu directory
+- **[HIGH]** missing page_translation: Create 01900-procurement.json in xh directory
+- **[HIGH]** missing page_translation: Create 01900-procurement.json in sw directory
+- **[HIGH]** missing page_translation: Create 01900-procurement.json in de directory
+- **[HIGH]** missing page_translation: Create 01900-procurement-performance.json in en directory
+- **[HIGH]** missing page_translation: Create 01900-procurement-performance.json in ar directory
+- **[HIGH]** missing page_translation: Create 01900-procurement-performance.json in pt directory
+- **[HIGH]** missing page_translation: Create 01900-procurement-performance.json in es directory
+- **[HIGH]** missing page_translation: Create 01900-procurement-performance.json in fr directory
+- **[HIGH]** missing page_translation: Create 01900-procurement-performance.json in zu directory
+- **[HIGH]** missing page_translation: Create 01900-procurement-performance.json in xh directory
+- **[HIGH]** missing page_translation: Create 01900-procurement-performance.json in sw directory
+- **[HIGH]** missing page_translation: Create 01900-procurement-performance.json in de directory
+- **[HIGH]** missing page_translation: Create 02000-project-controls.json in en directory
+- **[HIGH]** missing page_translation: Create 02000-project-controls.json in ar directory
+- **[HIGH]** missing page_translation: Create 02000-project-controls.json in pt directory
+- **[HIGH]** missing page_translation: Create 02000-project-controls.json in es directory
+- **[HIGH]** missing page_translation: Create 02000-project-controls.json in fr directory
+- **[HIGH]** missing page_translation: Create 02000-project-controls.json in zu directory
+- **[HIGH]** missing page_translation: Create 02000-project-controls.json in xh directory
+- **[HIGH]** missing page_translation: Create 02000-project-controls.json in sw directory
+- **[HIGH]** missing page_translation: Create 02000-project-controls.json in de directory
+- **[HIGH]** missing page_translation: Create 02025-quantity-surveying.json in en directory
+- **[HIGH]** missing page_translation: Create 02025-quantity-surveying.json in ar directory
+- **[HIGH]** missing page_translation: Create 02025-quantity-surveying.json in pt directory
+- **[HIGH]** missing page_translation: Create 02025-quantity-surveying.json in es directory
+- **[HIGH]** missing page_translation: Create 02025-quantity-surveying.json in fr directory
+- **[HIGH]** missing page_translation: Create 02025-quantity-surveying.json in zu directory
+- **[HIGH]** missing page_translation: Create 02025-quantity-surveying.json in xh directory
+- **[HIGH]** missing page_translation: Create 02025-quantity-surveying.json in sw directory
+- **[HIGH]** missing page_translation: Create 02025-quantity-surveying.json in de directory
+- **[HIGH]** missing page_translation: Create 02035-scheduling.json in en directory
+- **[HIGH]** missing page_translation: Create 02035-scheduling.json in ar directory
+- **[HIGH]** missing page_translation: Create 02035-scheduling.json in pt directory
+- **[HIGH]** missing page_translation: Create 02035-scheduling.json in es directory
+- **[HIGH]** missing page_translation: Create 02035-scheduling.json in fr directory
+- **[HIGH]** missing page_translation: Create 02035-scheduling.json in zu directory
+- **[HIGH]** missing page_translation: Create 02035-scheduling.json in xh directory
+- **[HIGH]** missing page_translation: Create 02035-scheduling.json in sw directory
+- **[HIGH]** missing page_translation: Create 02035-scheduling.json in de directory
+- **[HIGH]** missing page_translation: Create 02050-coding-templates.json in en directory
+- **[HIGH]** missing page_translation: Create 02050-coding-templates.json in ar directory
+- **[HIGH]** missing page_translation: Create 02050-coding-templates.json in pt directory
+- **[HIGH]** missing page_translation: Create 02050-coding-templates.json in es directory
+- **[HIGH]** missing page_translation: Create 02050-coding-templates.json in fr directory
+- **[HIGH]** missing page_translation: Create 02050-coding-templates.json in zu directory
+- **[HIGH]** missing page_translation: Create 02050-coding-templates.json in xh directory
+- **[HIGH]** missing page_translation: Create 02050-coding-templates.json in sw directory
+- **[HIGH]** missing page_translation: Create 02050-coding-templates.json in de directory
+- **[HIGH]** missing page_translation: Create 02050-engineering-templates.json in en directory
+- **[HIGH]** missing page_translation: Create 02050-engineering-templates.json in ar directory
+- **[HIGH]** missing page_translation: Create 02050-engineering-templates.json in pt directory
+- **[HIGH]** missing page_translation: Create 02050-engineering-templates.json in es directory
+- **[HIGH]** missing page_translation: Create 02050-engineering-templates.json in fr directory
+- **[HIGH]** missing page_translation: Create 02050-engineering-templates.json in zu directory
+- **[HIGH]** missing page_translation: Create 02050-engineering-templates.json in xh directory
+- **[HIGH]** missing page_translation: Create 02050-engineering-templates.json in sw directory
+- **[HIGH]** missing page_translation: Create 02050-engineering-templates.json in de directory
+- **[HIGH]** missing page_translation: Create 02050-information-technology.json in en directory
+- **[HIGH]** missing page_translation: Create 02050-information-technology.json in ar directory
+- **[HIGH]** missing page_translation: Create 02050-information-technology.json in pt directory
+- **[HIGH]** missing page_translation: Create 02050-information-technology.json in es directory
+- **[HIGH]** missing page_translation: Create 02050-information-technology.json in fr directory
+- **[HIGH]** missing page_translation: Create 02050-information-technology.json in zu directory
+- **[HIGH]** missing page_translation: Create 02050-information-technology.json in xh directory
+- **[HIGH]** missing page_translation: Create 02050-information-technology.json in sw directory
+- **[HIGH]** missing page_translation: Create 02050-information-technology.json in de directory
+- **[HIGH]** missing page_translation: Create 02050-system-settings.json in en directory
+- **[HIGH]** missing page_translation: Create 02050-system-settings.json in ar directory
+- **[HIGH]** missing page_translation: Create 02050-system-settings.json in pt directory
+- **[HIGH]** missing page_translation: Create 02050-system-settings.json in es directory
+- **[HIGH]** missing page_translation: Create 02050-system-settings.json in fr directory
+- **[HIGH]** missing page_translation: Create 02050-system-settings.json in zu directory
+- **[HIGH]** missing page_translation: Create 02050-system-settings.json in xh directory
+- **[HIGH]** missing page_translation: Create 02050-system-settings.json in sw directory
+- **[HIGH]** missing page_translation: Create 02050-system-settings.json in de directory
+- **[HIGH]** missing page_translation: Create 02052-langraph-ui.json in en directory
+- **[HIGH]** missing page_translation: Create 02052-langraph-ui.json in ar directory
+- **[HIGH]** missing page_translation: Create 02052-langraph-ui.json in pt directory
+- **[HIGH]** missing page_translation: Create 02052-langraph-ui.json in es directory
+- **[HIGH]** missing page_translation: Create 02052-langraph-ui.json in fr directory
+- **[HIGH]** missing page_translation: Create 02052-langraph-ui.json in zu directory
+- **[HIGH]** missing page_translation: Create 02052-langraph-ui.json in xh directory
+- **[HIGH]** missing page_translation: Create 02052-langraph-ui.json in sw directory
+- **[HIGH]** missing page_translation: Create 02052-langraph-ui.json in de directory
+- **[HIGH]** missing page_translation: Create 02075-inspection.json in en directory
+- **[HIGH]** missing page_translation: Create 02075-inspection.json in ar directory
+- **[HIGH]** missing page_translation: Create 02075-inspection.json in pt directory
+- **[HIGH]** missing page_translation: Create 02075-inspection.json in es directory
+- **[HIGH]** missing page_translation: Create 02075-inspection.json in fr directory
+- **[HIGH]** missing page_translation: Create 02075-inspection.json in zu directory
+- **[HIGH]** missing page_translation: Create 02075-inspection.json in xh directory
+- **[HIGH]** missing page_translation: Create 02075-inspection.json in sw directory
+- **[HIGH]** missing page_translation: Create 02075-inspection.json in de directory
+- **[HIGH]** missing page_translation: Create 02100-public-relations.json in en directory
+- **[HIGH]** missing page_translation: Create 02100-public-relations.json in ar directory
+- **[HIGH]** missing page_translation: Create 02100-public-relations.json in pt directory
+- **[HIGH]** missing page_translation: Create 02100-public-relations.json in es directory
+- **[HIGH]** missing page_translation: Create 02100-public-relations.json in fr directory
+- **[HIGH]** missing page_translation: Create 02100-public-relations.json in zu directory
+- **[HIGH]** missing page_translation: Create 02100-public-relations.json in xh directory
+- **[HIGH]** missing page_translation: Create 02100-public-relations.json in sw directory
+- **[HIGH]** missing page_translation: Create 02100-public-relations.json in de directory
+- **[HIGH]** missing page_translation: Create 02200-agent-monitoring.json in en directory
+- **[HIGH]** missing page_translation: Create 02200-agent-monitoring.json in ar directory
+- **[HIGH]** missing page_translation: Create 02200-agent-monitoring.json in pt directory
+- **[HIGH]** missing page_translation: Create 02200-agent-monitoring.json in es directory
+- **[HIGH]** missing page_translation: Create 02200-agent-monitoring.json in fr directory
+- **[HIGH]** missing page_translation: Create 02200-agent-monitoring.json in zu directory
+- **[HIGH]** missing page_translation: Create 02200-agent-monitoring.json in xh directory
+- **[HIGH]** missing page_translation: Create 02200-agent-monitoring.json in sw directory
+- **[HIGH]** missing page_translation: Create 02200-agent-monitoring.json in de directory
+- **[HIGH]** missing page_translation: Create 02200-quality-assurance.json in en directory
+- **[HIGH]** missing page_translation: Create 02200-quality-assurance.json in ar directory
+- **[HIGH]** missing page_translation: Create 02200-quality-assurance.json in pt directory
+- **[HIGH]** missing page_translation: Create 02200-quality-assurance.json in es directory
+- **[HIGH]** missing page_translation: Create 02200-quality-assurance.json in fr directory
+- **[HIGH]** missing page_translation: Create 02200-quality-assurance.json in zu directory
+- **[HIGH]** missing page_translation: Create 02200-quality-assurance.json in xh directory
+- **[HIGH]** missing page_translation: Create 02200-quality-assurance.json in sw directory
+- **[HIGH]** missing page_translation: Create 02200-quality-assurance.json in de directory
+- **[HIGH]** missing page_translation: Create 02250-quality-control.json in en directory
+- **[HIGH]** missing page_translation: Create 02250-quality-control.json in ar directory
+- **[HIGH]** missing page_translation: Create 02250-quality-control.json in pt directory
+- **[HIGH]** missing page_translation: Create 02250-quality-control.json in es directory
+- **[HIGH]** missing page_translation: Create 02250-quality-control.json in fr directory
+- **[HIGH]** missing page_translation: Create 02250-quality-control.json in zu directory
+- **[HIGH]** missing page_translation: Create 02250-quality-control.json in xh directory
+- **[HIGH]** missing page_translation: Create 02250-quality-control.json in sw directory
+- **[HIGH]** missing page_translation: Create 02250-quality-control.json in de directory
+- **[HIGH]** missing page_translation: Create 02400-safety.json in en directory
+- **[HIGH]** missing page_translation: Create 02400-safety.json in ar directory
+- **[HIGH]** missing page_translation: Create 02400-safety.json in pt directory
+- **[HIGH]** missing page_translation: Create 02400-safety.json in es directory
+- **[HIGH]** missing page_translation: Create 02400-safety.json in fr directory
+- **[HIGH]** missing page_translation: Create 02400-safety.json in zu directory
+- **[HIGH]** missing page_translation: Create 02400-safety.json in xh directory
+- **[HIGH]** missing page_translation: Create 02400-safety.json in sw directory
+- **[HIGH]** missing page_translation: Create 02400-safety.json in de directory
+- **[HIGH]** missing page_translation: Create 02400-safety-performance.json in en directory
+- **[HIGH]** missing page_translation: Create 02400-safety-performance.json in ar directory
+- **[HIGH]** missing page_translation: Create 02400-safety-performance.json in pt directory
+- **[HIGH]** missing page_translation: Create 02400-safety-performance.json in es directory
+- **[HIGH]** missing page_translation: Create 02400-safety-performance.json in fr directory
+- **[HIGH]** missing page_translation: Create 02400-safety-performance.json in zu directory
+- **[HIGH]** missing page_translation: Create 02400-safety-performance.json in xh directory
+- **[HIGH]** missing page_translation: Create 02400-safety-performance.json in sw directory
+- **[HIGH]** missing page_translation: Create 02400-safety-performance.json in de directory
+- **[HIGH]** missing page_translation: Create 02500-security.json in en directory
+- **[HIGH]** missing page_translation: Create 02500-security.json in ar directory
+- **[HIGH]** missing page_translation: Create 02500-security.json in pt directory
+- **[HIGH]** missing page_translation: Create 02500-security.json in es directory
+- **[HIGH]** missing page_translation: Create 02500-security.json in fr directory
+- **[HIGH]** missing page_translation: Create 02500-security.json in zu directory
+- **[HIGH]** missing page_translation: Create 02500-security.json in xh directory
+- **[HIGH]** missing page_translation: Create 02500-security.json in sw directory
+- **[HIGH]** missing page_translation: Create 02500-security.json in de directory
+- **[HIGH]** missing page_translation: Create 03000-landscaping.json in en directory
+- **[HIGH]** missing page_translation: Create 03000-landscaping.json in ar directory
+- **[HIGH]** missing page_translation: Create 03000-landscaping.json in pt directory
+- **[HIGH]** missing page_translation: Create 03000-landscaping.json in es directory
+- **[HIGH]** missing page_translation: Create 03000-landscaping.json in fr directory
+- **[HIGH]** missing page_translation: Create 03000-landscaping.json in zu directory
+- **[HIGH]** missing page_translation: Create 03000-landscaping.json in xh directory
+- **[HIGH]** missing page_translation: Create 03000-landscaping.json in sw directory
+- **[HIGH]** missing page_translation: Create 03000-landscaping.json in de directory
+- **[HIGH]** missing page_translation: Create 03010-email-management.json in en directory
+- **[HIGH]** missing page_translation: Create 03010-email-management.json in ar directory
+- **[HIGH]** missing page_translation: Create 03010-email-management.json in pt directory
+- **[HIGH]** missing page_translation: Create 03010-email-management.json in es directory
+- **[HIGH]** missing page_translation: Create 03010-email-management.json in fr directory
+- **[HIGH]** missing page_translation: Create 03010-email-management.json in zu directory
+- **[HIGH]** missing page_translation: Create 03010-email-management.json in xh directory
+- **[HIGH]** missing page_translation: Create 03010-email-management.json in sw directory
+- **[HIGH]** missing page_translation: Create 03010-email-management.json in de directory
+- **[HIGH]** missing page_translation: Create 20000-accounting-finance.json in en directory
+- **[HIGH]** missing page_translation: Create 20000-accounting-finance.json in ar directory
+- **[HIGH]** missing page_translation: Create 20000-accounting-finance.json in pt directory
+- **[HIGH]** missing page_translation: Create 20000-accounting-finance.json in es directory
+- **[HIGH]** missing page_translation: Create 20000-accounting-finance.json in fr directory
+- **[HIGH]** missing page_translation: Create 20000-accounting-finance.json in zu directory
+- **[HIGH]** missing page_translation: Create 20000-accounting-finance.json in xh directory
+- **[HIGH]** missing page_translation: Create 20000-accounting-finance.json in sw directory
+- **[HIGH]** missing page_translation: Create 20000-accounting-finance.json in de directory
+- **[HIGH]** missing page_translation: Create 20000-construction.json in en directory
+- **[HIGH]** missing page_translation: Create 20000-construction.json in ar directory
+- **[HIGH]** missing page_translation: Create 20000-construction.json in pt directory
+- **[HIGH]** missing page_translation: Create 20000-construction.json in es directory
+- **[HIGH]** missing page_translation: Create 20000-construction.json in fr directory
+- **[HIGH]** missing page_translation: Create 20000-construction.json in zu directory
+- **[HIGH]** missing page_translation: Create 20000-construction.json in xh directory
+- **[HIGH]** missing page_translation: Create 20000-construction.json in sw directory
+- **[HIGH]** missing page_translation: Create 20000-construction.json in de directory
+- **[HIGH]** missing page_translation: Create 20005-construction.json in en directory
+- **[HIGH]** missing page_translation: Create 20005-construction.json in ar directory
+- **[HIGH]** missing page_translation: Create 20005-construction.json in pt directory
+- **[HIGH]** missing page_translation: Create 20005-construction.json in es directory
+- **[HIGH]** missing page_translation: Create 20005-construction.json in fr directory
+- **[HIGH]** missing page_translation: Create 20005-construction.json in zu directory
+- **[HIGH]** missing page_translation: Create 20005-construction.json in xh directory
+- **[HIGH]** missing page_translation: Create 20005-construction.json in sw directory
+- **[HIGH]** missing page_translation: Create 20005-construction.json in de directory
+- **[HIGH]** missing page_translation: Create 20005-finance.json in en directory
+- **[HIGH]** missing page_translation: Create 20005-finance.json in ar directory
+- **[HIGH]** missing page_translation: Create 20005-finance.json in pt directory
+- **[HIGH]** missing page_translation: Create 20005-finance.json in es directory
+- **[HIGH]** missing page_translation: Create 20005-finance.json in fr directory
+- **[HIGH]** missing page_translation: Create 20005-finance.json in zu directory
+- **[HIGH]** missing page_translation: Create 20005-finance.json in xh directory
+- **[HIGH]** missing page_translation: Create 20005-finance.json in sw directory
+- **[HIGH]** missing page_translation: Create 20005-finance.json in de directory
+- **[HIGH]** missing page_translation: Create 20010-contracts-subcontracts.json in en directory
+- **[HIGH]** missing page_translation: Create 20010-contracts-subcontracts.json in ar directory
+- **[HIGH]** missing page_translation: Create 20010-contracts-subcontracts.json in pt directory
+- **[HIGH]** missing page_translation: Create 20010-contracts-subcontracts.json in es directory
+- **[HIGH]** missing page_translation: Create 20010-contracts-subcontracts.json in fr directory
+- **[HIGH]** missing page_translation: Create 20010-contracts-subcontracts.json in zu directory
+- **[HIGH]** missing page_translation: Create 20010-contracts-subcontracts.json in xh directory
+- **[HIGH]** missing page_translation: Create 20010-contracts-subcontracts.json in sw directory
+- **[HIGH]** missing page_translation: Create 20010-contracts-subcontracts.json in de directory
+- **[HIGH]** missing page_translation: Create 20010-hse.json in en directory
+- **[HIGH]** missing page_translation: Create 20010-hse.json in ar directory
+- **[HIGH]** missing page_translation: Create 20010-hse.json in pt directory
+- **[HIGH]** missing page_translation: Create 20010-hse.json in es directory
+- **[HIGH]** missing page_translation: Create 20010-hse.json in fr directory
+- **[HIGH]** missing page_translation: Create 20010-hse.json in zu directory
+- **[HIGH]** missing page_translation: Create 20010-hse.json in xh directory
+- **[HIGH]** missing page_translation: Create 20010-hse.json in sw directory
+- **[HIGH]** missing page_translation: Create 20010-hse.json in de directory
+- **[HIGH]** missing page_translation: Create 20015-contracts.json in en directory
+- **[HIGH]** missing page_translation: Create 20015-contracts.json in ar directory
+- **[HIGH]** missing page_translation: Create 20015-contracts.json in pt directory
+- **[HIGH]** missing page_translation: Create 20015-contracts.json in es directory
+- **[HIGH]** missing page_translation: Create 20015-contracts.json in fr directory
+- **[HIGH]** missing page_translation: Create 20015-contracts.json in zu directory
+- **[HIGH]** missing page_translation: Create 20015-contracts.json in xh directory
+- **[HIGH]** missing page_translation: Create 20015-contracts.json in sw directory
+- **[HIGH]** missing page_translation: Create 20015-contracts.json in de directory
+- **[HIGH]** missing page_translation: Create 20015-environmental.json in en directory
+- **[HIGH]** missing page_translation: Create 20015-environmental.json in ar directory
+- **[HIGH]** missing page_translation: Create 20015-environmental.json in pt directory
+- **[HIGH]** missing page_translation: Create 20015-environmental.json in es directory
+- **[HIGH]** missing page_translation: Create 20015-environmental.json in fr directory
+- **[HIGH]** missing page_translation: Create 20015-environmental.json in zu directory
+- **[HIGH]** missing page_translation: Create 20015-environmental.json in xh directory
+- **[HIGH]** missing page_translation: Create 20015-environmental.json in sw directory
+- **[HIGH]** missing page_translation: Create 20015-environmental.json in de directory
+- **[HIGH]** missing page_translation: Create 20020-health.json in en directory
+- **[HIGH]** missing page_translation: Create 20020-health.json in ar directory
+- **[HIGH]** missing page_translation: Create 20020-health.json in pt directory
+- **[HIGH]** missing page_translation: Create 20020-health.json in es directory
+- **[HIGH]** missing page_translation: Create 20020-health.json in fr directory
+- **[HIGH]** missing page_translation: Create 20020-health.json in zu directory
+- **[HIGH]** missing page_translation: Create 20020-health.json in xh directory
+- **[HIGH]** missing page_translation: Create 20020-health.json in sw directory
+- **[HIGH]** missing page_translation: Create 20020-health.json in de directory
+- **[HIGH]** missing page_translation: Create 20020-subcontracts.json in en directory
+- **[HIGH]** missing page_translation: Create 20020-subcontracts.json in ar directory
+- **[HIGH]** missing page_translation: Create 20020-subcontracts.json in pt directory
+- **[HIGH]** missing page_translation: Create 20020-subcontracts.json in es directory
+- **[HIGH]** missing page_translation: Create 20020-subcontracts.json in fr directory
+- **[HIGH]** missing page_translation: Create 20020-subcontracts.json in zu directory
+- **[HIGH]** missing page_translation: Create 20020-subcontracts.json in xh directory
+- **[HIGH]** missing page_translation: Create 20020-subcontracts.json in sw directory
+- **[HIGH]** missing page_translation: Create 20020-subcontracts.json in de directory
+- **[HIGH]** missing page_translation: Create 20025-engineering.json in en directory
+- **[HIGH]** missing page_translation: Create 20025-engineering.json in ar directory
+- **[HIGH]** missing page_translation: Create 20025-engineering.json in pt directory
+- **[HIGH]** missing page_translation: Create 20025-engineering.json in es directory
+- **[HIGH]** missing page_translation: Create 20025-engineering.json in fr directory
+- **[HIGH]** missing page_translation: Create 20025-engineering.json in zu directory
+- **[HIGH]** missing page_translation: Create 20025-engineering.json in xh directory
+- **[HIGH]** missing page_translation: Create 20025-engineering.json in sw directory
+- **[HIGH]** missing page_translation: Create 20025-engineering.json in de directory
+- **[HIGH]** missing page_translation: Create 20025-safety.json in en directory
+- **[HIGH]** missing page_translation: Create 20025-safety.json in ar directory
+- **[HIGH]** missing page_translation: Create 20025-safety.json in pt directory
+- **[HIGH]** missing page_translation: Create 20025-safety.json in es directory
+- **[HIGH]** missing page_translation: Create 20025-safety.json in fr directory
+- **[HIGH]** missing page_translation: Create 20025-safety.json in zu directory
+- **[HIGH]** missing page_translation: Create 20025-safety.json in xh directory
+- **[HIGH]** missing page_translation: Create 20025-safety.json in sw directory
+- **[HIGH]** missing page_translation: Create 20025-safety.json in de directory
+- **[HIGH]** missing page_translation: Create 20030-field-engineering.json in en directory
+- **[HIGH]** missing page_translation: Create 20030-field-engineering.json in ar directory
+- **[HIGH]** missing page_translation: Create 20030-field-engineering.json in pt directory
+- **[HIGH]** missing page_translation: Create 20030-field-engineering.json in es directory
+- **[HIGH]** missing page_translation: Create 20030-field-engineering.json in fr directory
+- **[HIGH]** missing page_translation: Create 20030-field-engineering.json in zu directory
+- **[HIGH]** missing page_translation: Create 20030-field-engineering.json in xh directory
+- **[HIGH]** missing page_translation: Create 20030-field-engineering.json in sw directory
+- **[HIGH]** missing page_translation: Create 20030-field-engineering.json in de directory
+- **[HIGH]** missing page_translation: Create 20030-human-resources.json in en directory
+- **[HIGH]** missing page_translation: Create 20030-human-resources.json in ar directory
+- **[HIGH]** missing page_translation: Create 20030-human-resources.json in pt directory
+- **[HIGH]** missing page_translation: Create 20030-human-resources.json in es directory
+- **[HIGH]** missing page_translation: Create 20030-human-resources.json in fr directory
+- **[HIGH]** missing page_translation: Create 20030-human-resources.json in zu directory
+- **[HIGH]** missing page_translation: Create 20030-human-resources.json in xh directory
+- **[HIGH]** missing page_translation: Create 20030-human-resources.json in sw directory
+- **[HIGH]** missing page_translation: Create 20030-human-resources.json in de directory
+- **[HIGH]** missing page_translation: Create 20035-hse.json in en directory
+- **[HIGH]** missing page_translation: Create 20035-hse.json in ar directory
+- **[HIGH]** missing page_translation: Create 20035-hse.json in pt directory
+- **[HIGH]** missing page_translation: Create 20035-hse.json in es directory
+- **[HIGH]** missing page_translation: Create 20035-hse.json in fr directory
+- **[HIGH]** missing page_translation: Create 20035-hse.json in zu directory
+- **[HIGH]** missing page_translation: Create 20035-hse.json in xh directory
+- **[HIGH]** missing page_translation: Create 20035-hse.json in sw directory
+- **[HIGH]** missing page_translation: Create 20035-hse.json in de directory
+- **[HIGH]** missing page_translation: Create 20035-logistics.json in en directory
+- **[HIGH]** missing page_translation: Create 20035-logistics.json in ar directory
+- **[HIGH]** missing page_translation: Create 20035-logistics.json in pt directory
+- **[HIGH]** missing page_translation: Create 20035-logistics.json in es directory
+- **[HIGH]** missing page_translation: Create 20035-logistics.json in fr directory
+- **[HIGH]** missing page_translation: Create 20035-logistics.json in zu directory
+- **[HIGH]** missing page_translation: Create 20035-logistics.json in xh directory
+- **[HIGH]** missing page_translation: Create 20035-logistics.json in sw directory
+- **[HIGH]** missing page_translation: Create 20035-logistics.json in de directory
+- **[HIGH]** missing page_translation: Create 20040-environmental.json in en directory
+- **[HIGH]** missing page_translation: Create 20040-environmental.json in ar directory
+- **[HIGH]** missing page_translation: Create 20040-environmental.json in pt directory
+- **[HIGH]** missing page_translation: Create 20040-environmental.json in es directory
+- **[HIGH]** missing page_translation: Create 20040-environmental.json in fr directory
+- **[HIGH]** missing page_translation: Create 20040-environmental.json in zu directory
+- **[HIGH]** missing page_translation: Create 20040-environmental.json in xh directory
+- **[HIGH]** missing page_translation: Create 20040-environmental.json in sw directory
+- **[HIGH]** missing page_translation: Create 20040-environmental.json in de directory
+- **[HIGH]** missing page_translation: Create 20040-mining.json in en directory
+- **[HIGH]** missing page_translation: Create 20040-mining.json in ar directory
+- **[HIGH]** missing page_translation: Create 20040-mining.json in pt directory
+- **[HIGH]** missing page_translation: Create 20040-mining.json in es directory
+- **[HIGH]** missing page_translation: Create 20040-mining.json in fr directory
+- **[HIGH]** missing page_translation: Create 20040-mining.json in zu directory
+- **[HIGH]** missing page_translation: Create 20040-mining.json in xh directory
+- **[HIGH]** missing page_translation: Create 20040-mining.json in sw directory
+- **[HIGH]** missing page_translation: Create 20040-mining.json in de directory
+- **[HIGH]** missing page_translation: Create 20045-health.json in en directory
+- **[HIGH]** missing page_translation: Create 20045-health.json in ar directory
+- **[HIGH]** missing page_translation: Create 20045-health.json in pt directory
+- **[HIGH]** missing page_translation: Create 20045-health.json in es directory
+- **[HIGH]** missing page_translation: Create 20045-health.json in fr directory
+- **[HIGH]** missing page_translation: Create 20045-health.json in zu directory
+- **[HIGH]** missing page_translation: Create 20045-health.json in xh directory
+- **[HIGH]** missing page_translation: Create 20045-health.json in sw directory
+- **[HIGH]** missing page_translation: Create 20045-health.json in de directory
+- **[HIGH]** missing page_translation: Create 20045-operations.json in en directory
+- **[HIGH]** missing page_translation: Create 20045-operations.json in ar directory
+- **[HIGH]** missing page_translation: Create 20045-operations.json in pt directory
+- **[HIGH]** missing page_translation: Create 20045-operations.json in es directory
+- **[HIGH]** missing page_translation: Create 20045-operations.json in fr directory
+- **[HIGH]** missing page_translation: Create 20045-operations.json in zu directory
+- **[HIGH]** missing page_translation: Create 20045-operations.json in xh directory
+- **[HIGH]** missing page_translation: Create 20045-operations.json in sw directory
+- **[HIGH]** missing page_translation: Create 20045-operations.json in de directory
+- **[HIGH]** missing page_translation: Create 20050-maintenance.json in en directory
+- **[HIGH]** missing page_translation: Create 20050-maintenance.json in ar directory
+- **[HIGH]** missing page_translation: Create 20050-maintenance.json in pt directory
+- **[HIGH]** missing page_translation: Create 20050-maintenance.json in es directory
+- **[HIGH]** missing page_translation: Create 20050-maintenance.json in fr directory
+- **[HIGH]** missing page_translation: Create 20050-maintenance.json in zu directory
+- **[HIGH]** missing page_translation: Create 20050-maintenance.json in xh directory
+- **[HIGH]** missing page_translation: Create 20050-maintenance.json in sw directory
+- **[HIGH]** missing page_translation: Create 20050-maintenance.json in de directory
+- **[HIGH]** missing page_translation: Create 20050-safety.json in en directory
+- **[HIGH]** missing page_translation: Create 20050-safety.json in ar directory
+- **[HIGH]** missing page_translation: Create 20050-safety.json in pt directory
+- **[HIGH]** missing page_translation: Create 20050-safety.json in es directory
+- **[HIGH]** missing page_translation: Create 20050-safety.json in fr directory
+- **[HIGH]** missing page_translation: Create 20050-safety.json in zu directory
+- **[HIGH]** missing page_translation: Create 20050-safety.json in xh directory
+- **[HIGH]** missing page_translation: Create 20050-safety.json in sw directory
+- **[HIGH]** missing page_translation: Create 20050-safety.json in de directory
+- **[HIGH]** missing page_translation: Create 20055-human-resources.json in en directory
+- **[HIGH]** missing page_translation: Create 20055-human-resources.json in ar directory
+- **[HIGH]** missing page_translation: Create 20055-human-resources.json in pt directory
+- **[HIGH]** missing page_translation: Create 20055-human-resources.json in es directory
+- **[HIGH]** missing page_translation: Create 20055-human-resources.json in fr directory
+- **[HIGH]** missing page_translation: Create 20055-human-resources.json in zu directory
+- **[HIGH]** missing page_translation: Create 20055-human-resources.json in xh directory
+- **[HIGH]** missing page_translation: Create 20055-human-resources.json in sw directory
+- **[HIGH]** missing page_translation: Create 20055-human-resources.json in de directory
+- **[HIGH]** missing page_translation: Create 20055-procurement-and-supply.json in en directory
+- **[HIGH]** missing page_translation: Create 20055-procurement-and-supply.json in ar directory
+- **[HIGH]** missing page_translation: Create 20055-procurement-and-supply.json in pt directory
+- **[HIGH]** missing page_translation: Create 20055-procurement-and-supply.json in es directory
+- **[HIGH]** missing page_translation: Create 20055-procurement-and-supply.json in fr directory
+- **[HIGH]** missing page_translation: Create 20055-procurement-and-supply.json in zu directory
+- **[HIGH]** missing page_translation: Create 20055-procurement-and-supply.json in xh directory
+- **[HIGH]** missing page_translation: Create 20055-procurement-and-supply.json in sw directory
+- **[HIGH]** missing page_translation: Create 20055-procurement-and-supply.json in de directory
+- **[HIGH]** missing page_translation: Create 20060-legal.json in en directory
+- **[HIGH]** missing page_translation: Create 20060-legal.json in ar directory
+- **[HIGH]** missing page_translation: Create 20060-legal.json in pt directory
+- **[HIGH]** missing page_translation: Create 20060-legal.json in es directory
+- **[HIGH]** missing page_translation: Create 20060-legal.json in fr directory
+- **[HIGH]** missing page_translation: Create 20060-legal.json in zu directory
+- **[HIGH]** missing page_translation: Create 20060-legal.json in xh directory
+- **[HIGH]** missing page_translation: Create 20060-legal.json in sw directory
+- **[HIGH]** missing page_translation: Create 20060-legal.json in de directory
+- **[HIGH]** missing page_translation: Create 20060-purchasing.json in en directory
+- **[HIGH]** missing page_translation: Create 20060-purchasing.json in ar directory
+- **[HIGH]** missing page_translation: Create 20060-purchasing.json in pt directory
+- **[HIGH]** missing page_translation: Create 20060-purchasing.json in es directory
+- **[HIGH]** missing page_translation: Create 20060-purchasing.json in fr directory
+- **[HIGH]** missing page_translation: Create 20060-purchasing.json in zu directory
+- **[HIGH]** missing page_translation: Create 20060-purchasing.json in xh directory
+- **[HIGH]** missing page_translation: Create 20060-purchasing.json in sw directory
+- **[HIGH]** missing page_translation: Create 20060-purchasing.json in de directory
+- **[HIGH]** missing page_translation: Create 20065-marketing-and-business-development.json in en directory
+- **[HIGH]** missing page_translation: Create 20065-marketing-and-business-development.json in ar directory
+- **[HIGH]** missing page_translation: Create 20065-marketing-and-business-development.json in pt directory
+- **[HIGH]** missing page_translation: Create 20065-marketing-and-business-development.json in es directory
+- **[HIGH]** missing page_translation: Create 20065-marketing-and-business-development.json in fr directory
+- **[HIGH]** missing page_translation: Create 20065-marketing-and-business-development.json in zu directory
+- **[HIGH]** missing page_translation: Create 20065-marketing-and-business-development.json in xh directory
+- **[HIGH]** missing page_translation: Create 20065-marketing-and-business-development.json in sw directory
+- **[HIGH]** missing page_translation: Create 20065-marketing-and-business-development.json in de directory
+- **[HIGH]** missing page_translation: Create 20065-materials-management.json in en directory
+- **[HIGH]** missing page_translation: Create 20065-materials-management.json in ar directory
+- **[HIGH]** missing page_translation: Create 20065-materials-management.json in pt directory
+- **[HIGH]** missing page_translation: Create 20065-materials-management.json in es directory
+- **[HIGH]** missing page_translation: Create 20065-materials-management.json in fr directory
+- **[HIGH]** missing page_translation: Create 20065-materials-management.json in zu directory
+- **[HIGH]** missing page_translation: Create 20065-materials-management.json in xh directory
+- **[HIGH]** missing page_translation: Create 20065-materials-management.json in sw directory
+- **[HIGH]** missing page_translation: Create 20065-materials-management.json in de directory
+- **[HIGH]** missing page_translation: Create 20070-operations-and-maintenance.json in en directory
+- **[HIGH]** missing page_translation: Create 20070-operations-and-maintenance.json in ar directory
+- **[HIGH]** missing page_translation: Create 20070-operations-and-maintenance.json in pt directory
+- **[HIGH]** missing page_translation: Create 20070-operations-and-maintenance.json in es directory
+- **[HIGH]** missing page_translation: Create 20070-operations-and-maintenance.json in fr directory
+- **[HIGH]** missing page_translation: Create 20070-operations-and-maintenance.json in zu directory
+- **[HIGH]** missing page_translation: Create 20070-operations-and-maintenance.json in xh directory
+- **[HIGH]** missing page_translation: Create 20070-operations-and-maintenance.json in sw directory
+- **[HIGH]** missing page_translation: Create 20070-operations-and-maintenance.json in de directory
+- **[HIGH]** missing page_translation: Create 20070-qaqc.json in en directory
+- **[HIGH]** missing page_translation: Create 20070-qaqc.json in ar directory
+- **[HIGH]** missing page_translation: Create 20070-qaqc.json in pt directory
+- **[HIGH]** missing page_translation: Create 20070-qaqc.json in es directory
+- **[HIGH]** missing page_translation: Create 20070-qaqc.json in fr directory
+- **[HIGH]** missing page_translation: Create 20070-qaqc.json in zu directory
+- **[HIGH]** missing page_translation: Create 20070-qaqc.json in xh directory
+- **[HIGH]** missing page_translation: Create 20070-qaqc.json in sw directory
+- **[HIGH]** missing page_translation: Create 20070-qaqc.json in de directory
+- **[HIGH]** missing page_translation: Create 20075-procurement.json in en directory
+- **[HIGH]** missing page_translation: Create 20075-procurement.json in ar directory
+- **[HIGH]** missing page_translation: Create 20075-procurement.json in pt directory
+- **[HIGH]** missing page_translation: Create 20075-procurement.json in es directory
+- **[HIGH]** missing page_translation: Create 20075-procurement.json in fr directory
+- **[HIGH]** missing page_translation: Create 20075-procurement.json in zu directory
+- **[HIGH]** missing page_translation: Create 20075-procurement.json in xh directory
+- **[HIGH]** missing page_translation: Create 20075-procurement.json in sw directory
+- **[HIGH]** missing page_translation: Create 20075-procurement.json in de directory
+- **[HIGH]** missing page_translation: Create 20075-strategy.json in en directory
+- **[HIGH]** missing page_translation: Create 20075-strategy.json in ar directory
+- **[HIGH]** missing page_translation: Create 20075-strategy.json in pt directory
+- **[HIGH]** missing page_translation: Create 20075-strategy.json in es directory
+- **[HIGH]** missing page_translation: Create 20075-strategy.json in fr directory
+- **[HIGH]** missing page_translation: Create 20075-strategy.json in zu directory
+- **[HIGH]** missing page_translation: Create 20075-strategy.json in xh directory
+- **[HIGH]** missing page_translation: Create 20075-strategy.json in sw directory
+- **[HIGH]** missing page_translation: Create 20075-strategy.json in de directory
+- **[HIGH]** missing page_translation: Create 20080-purchasing.json in en directory
+- **[HIGH]** missing page_translation: Create 20080-purchasing.json in ar directory
+- **[HIGH]** missing page_translation: Create 20080-purchasing.json in pt directory
+- **[HIGH]** missing page_translation: Create 20080-purchasing.json in es directory
+- **[HIGH]** missing page_translation: Create 20080-purchasing.json in fr directory
+- **[HIGH]** missing page_translation: Create 20080-purchasing.json in zu directory
+- **[HIGH]** missing page_translation: Create 20080-purchasing.json in xh directory
+- **[HIGH]** missing page_translation: Create 20080-purchasing.json in sw directory
+- **[HIGH]** missing page_translation: Create 20080-purchasing.json in de directory
+- **[HIGH]** missing page_translation: Create 20085-logistics.json in en directory
+- **[HIGH]** missing page_translation: Create 20085-logistics.json in ar directory
+- **[HIGH]** missing page_translation: Create 20085-logistics.json in pt directory
+- **[HIGH]** missing page_translation: Create 20085-logistics.json in es directory
+- **[HIGH]** missing page_translation: Create 20085-logistics.json in fr directory
+- **[HIGH]** missing page_translation: Create 20085-logistics.json in zu directory
+- **[HIGH]** missing page_translation: Create 20085-logistics.json in xh directory
+- **[HIGH]** missing page_translation: Create 20085-logistics.json in sw directory
+- **[HIGH]** missing page_translation: Create 20085-logistics.json in de directory
+- **[HIGH]** missing page_translation: Create 20090-materials-management.json in en directory
+- **[HIGH]** missing page_translation: Create 20090-materials-management.json in ar directory
+- **[HIGH]** missing page_translation: Create 20090-materials-management.json in pt directory
+- **[HIGH]** missing page_translation: Create 20090-materials-management.json in es directory
+- **[HIGH]** missing page_translation: Create 20090-materials-management.json in fr directory
+- **[HIGH]** missing page_translation: Create 20090-materials-management.json in zu directory
+- **[HIGH]** missing page_translation: Create 20090-materials-management.json in xh directory
+- **[HIGH]** missing page_translation: Create 20090-materials-management.json in sw directory
+- **[HIGH]** missing page_translation: Create 20090-materials-management.json in de directory
+- **[HIGH]** missing page_translation: Create 20095-project-controls.json in en directory
+- **[HIGH]** missing page_translation: Create 20095-project-controls.json in ar directory
+- **[HIGH]** missing page_translation: Create 20095-project-controls.json in pt directory
+- **[HIGH]** missing page_translation: Create 20095-project-controls.json in es directory
+- **[HIGH]** missing page_translation: Create 20095-project-controls.json in fr directory
+- **[HIGH]** missing page_translation: Create 20095-project-controls.json in zu directory
+- **[HIGH]** missing page_translation: Create 20095-project-controls.json in xh directory
+- **[HIGH]** missing page_translation: Create 20095-project-controls.json in sw directory
+- **[HIGH]** missing page_translation: Create 20095-project-controls.json in de directory
+- **[HIGH]** missing page_translation: Create 20100-estimating.json in en directory
+- **[HIGH]** missing page_translation: Create 20100-estimating.json in ar directory
+- **[HIGH]** missing page_translation: Create 20100-estimating.json in pt directory
+- **[HIGH]** missing page_translation: Create 20100-estimating.json in es directory
+- **[HIGH]** missing page_translation: Create 20100-estimating.json in fr directory
+- **[HIGH]** missing page_translation: Create 20100-estimating.json in zu directory
+- **[HIGH]** missing page_translation: Create 20100-estimating.json in xh directory
+- **[HIGH]** missing page_translation: Create 20100-estimating.json in sw directory
+- **[HIGH]** missing page_translation: Create 20100-estimating.json in de directory
+- **[HIGH]** missing page_translation: Create 20105-scheduling-and-planning.json in en directory
+- **[HIGH]** missing page_translation: Create 20105-scheduling-and-planning.json in ar directory
+- **[HIGH]** missing page_translation: Create 20105-scheduling-and-planning.json in pt directory
+- **[HIGH]** missing page_translation: Create 20105-scheduling-and-planning.json in es directory
+- **[HIGH]** missing page_translation: Create 20105-scheduling-and-planning.json in fr directory
+- **[HIGH]** missing page_translation: Create 20105-scheduling-and-planning.json in zu directory
+- **[HIGH]** missing page_translation: Create 20105-scheduling-and-planning.json in xh directory
+- **[HIGH]** missing page_translation: Create 20105-scheduling-and-planning.json in sw directory
+- **[HIGH]** missing page_translation: Create 20105-scheduling-and-planning.json in de directory
+- **[HIGH]** missing page_translation: Create 20110-project-management.json in en directory
+- **[HIGH]** missing page_translation: Create 20110-project-management.json in ar directory
+- **[HIGH]** missing page_translation: Create 20110-project-management.json in pt directory
+- **[HIGH]** missing page_translation: Create 20110-project-management.json in es directory
+- **[HIGH]** missing page_translation: Create 20110-project-management.json in fr directory
+- **[HIGH]** missing page_translation: Create 20110-project-management.json in zu directory
+- **[HIGH]** missing page_translation: Create 20110-project-management.json in xh directory
+- **[HIGH]** missing page_translation: Create 20110-project-management.json in sw directory
+- **[HIGH]** missing page_translation: Create 20110-project-management.json in de directory
+- **[HIGH]** missing page_translation: Create 20115-quality-assurance.json in en directory
+- **[HIGH]** missing page_translation: Create 20115-quality-assurance.json in ar directory
+- **[HIGH]** missing page_translation: Create 20115-quality-assurance.json in pt directory
+- **[HIGH]** missing page_translation: Create 20115-quality-assurance.json in es directory
+- **[HIGH]** missing page_translation: Create 20115-quality-assurance.json in fr directory
+- **[HIGH]** missing page_translation: Create 20115-quality-assurance.json in zu directory
+- **[HIGH]** missing page_translation: Create 20115-quality-assurance.json in xh directory
+- **[HIGH]** missing page_translation: Create 20115-quality-assurance.json in sw directory
+- **[HIGH]** missing page_translation: Create 20115-quality-assurance.json in de directory
+- **[HIGH]** missing page_translation: Create 20120-quality-control.json in en directory
+- **[HIGH]** missing page_translation: Create 20120-quality-control.json in ar directory
+- **[HIGH]** missing page_translation: Create 20120-quality-control.json in pt directory
+- **[HIGH]** missing page_translation: Create 20120-quality-control.json in es directory
+- **[HIGH]** missing page_translation: Create 20120-quality-control.json in fr directory
+- **[HIGH]** missing page_translation: Create 20120-quality-control.json in zu directory
+- **[HIGH]** missing page_translation: Create 20120-quality-control.json in xh directory
+- **[HIGH]** missing page_translation: Create 20120-quality-control.json in sw directory
+- **[HIGH]** missing page_translation: Create 20120-quality-control.json in de directory
+- **[HIGH]** missing page_translation: Create 20125-risk-management.json in en directory
+- **[HIGH]** missing page_translation: Create 20125-risk-management.json in ar directory
+- **[HIGH]** missing page_translation: Create 20125-risk-management.json in pt directory
+- **[HIGH]** missing page_translation: Create 20125-risk-management.json in es directory
+- **[HIGH]** missing page_translation: Create 20125-risk-management.json in fr directory
+- **[HIGH]** missing page_translation: Create 20125-risk-management.json in zu directory
+- **[HIGH]** missing page_translation: Create 20125-risk-management.json in xh directory
+- **[HIGH]** missing page_translation: Create 20125-risk-management.json in sw directory
+- **[HIGH]** missing page_translation: Create 20125-risk-management.json in de directory
+- **[HIGH]** missing page_translation: Create 30000-board-of-directors.json in en directory
+- **[HIGH]** missing page_translation: Create 30000-board-of-directors.json in ar directory
+- **[HIGH]** missing page_translation: Create 30000-board-of-directors.json in pt directory
+- **[HIGH]** missing page_translation: Create 30000-board-of-directors.json in es directory
+- **[HIGH]** missing page_translation: Create 30000-board-of-directors.json in fr directory
+- **[HIGH]** missing page_translation: Create 30000-board-of-directors.json in zu directory
+- **[HIGH]** missing page_translation: Create 30000-board-of-directors.json in xh directory
+- **[HIGH]** missing page_translation: Create 30000-board-of-directors.json in sw directory
+- **[HIGH]** missing page_translation: Create 30000-board-of-directors.json in de directory
+- **[HIGH]** missing page_translation: Create 30005-client-and-project-management.json in en directory
+- **[HIGH]** missing page_translation: Create 30005-client-and-project-management.json in ar directory
+- **[HIGH]** missing page_translation: Create 30005-client-and-project-management.json in pt directory
+- **[HIGH]** missing page_translation: Create 30005-client-and-project-management.json in es directory
+- **[HIGH]** missing page_translation: Create 30005-client-and-project-management.json in fr directory
+- **[HIGH]** missing page_translation: Create 30005-client-and-project-management.json in zu directory
+- **[HIGH]** missing page_translation: Create 30005-client-and-project-management.json in xh directory
+- **[HIGH]** missing page_translation: Create 30005-client-and-project-management.json in sw directory
+- **[HIGH]** missing page_translation: Create 30005-client-and-project-management.json in de directory
+- **[HIGH]** missing page_translation: Create 30010-company-secretarial-services.json in en directory
+- **[HIGH]** missing page_translation: Create 30010-company-secretarial-services.json in ar directory
+- **[HIGH]** missing page_translation: Create 30010-company-secretarial-services.json in pt directory
+- **[HIGH]** missing page_translation: Create 30010-company-secretarial-services.json in es directory
+- **[HIGH]** missing page_translation: Create 30010-company-secretarial-services.json in fr directory
+- **[HIGH]** missing page_translation: Create 30010-company-secretarial-services.json in zu directory
+- **[HIGH]** missing page_translation: Create 30010-company-secretarial-services.json in xh directory
+- **[HIGH]** missing page_translation: Create 30010-company-secretarial-services.json in sw directory
+- **[HIGH]** missing page_translation: Create 30010-company-secretarial-services.json in de directory
+- **[HIGH]** missing page_translation: Create 30015-corporate-commercial.json in en directory
+- **[HIGH]** missing page_translation: Create 30015-corporate-commercial.json in ar directory
+- **[HIGH]** missing page_translation: Create 30015-corporate-commercial.json in pt directory
+- **[HIGH]** missing page_translation: Create 30015-corporate-commercial.json in es directory
+- **[HIGH]** missing page_translation: Create 30015-corporate-commercial.json in fr directory
+- **[HIGH]** missing page_translation: Create 30015-corporate-commercial.json in zu directory
+- **[HIGH]** missing page_translation: Create 30015-corporate-commercial.json in xh directory
+- **[HIGH]** missing page_translation: Create 30015-corporate-commercial.json in sw directory
+- **[HIGH]** missing page_translation: Create 30015-corporate-commercial.json in de directory
+- **[HIGH]** missing page_translation: Create 30020-corporate-and-ma-support.json in en directory
+- **[HIGH]** missing page_translation: Create 30020-corporate-and-ma-support.json in ar directory
+- **[HIGH]** missing page_translation: Create 30020-corporate-and-ma-support.json in pt directory
+- **[HIGH]** missing page_translation: Create 30020-corporate-and-ma-support.json in es directory
+- **[HIGH]** missing page_translation: Create 30020-corporate-and-ma-support.json in fr directory
+- **[HIGH]** missing page_translation: Create 30020-corporate-and-ma-support.json in zu directory
+- **[HIGH]** missing page_translation: Create 30020-corporate-and-ma-support.json in xh directory
+- **[HIGH]** missing page_translation: Create 30020-corporate-and-ma-support.json in sw directory
+- **[HIGH]** missing page_translation: Create 30020-corporate-and-ma-support.json in de directory
+- **[HIGH]** missing page_translation: Create 30030-privacy-and-protection.json in en directory
+- **[HIGH]** missing page_translation: Create 30030-privacy-and-protection.json in ar directory
+- **[HIGH]** missing page_translation: Create 30030-privacy-and-protection.json in pt directory
+- **[HIGH]** missing page_translation: Create 30030-privacy-and-protection.json in es directory
+- **[HIGH]** missing page_translation: Create 30030-privacy-and-protection.json in fr directory
+- **[HIGH]** missing page_translation: Create 30030-privacy-and-protection.json in zu directory
+- **[HIGH]** missing page_translation: Create 30030-privacy-and-protection.json in xh directory
+- **[HIGH]** missing page_translation: Create 30030-privacy-and-protection.json in sw directory
+- **[HIGH]** missing page_translation: Create 30030-privacy-and-protection.json in de directory
+- **[HIGH]** missing page_translation: Create 30035-employment-law.json in en directory
+- **[HIGH]** missing page_translation: Create 30035-employment-law.json in ar directory
+- **[HIGH]** missing page_translation: Create 30035-employment-law.json in pt directory
+- **[HIGH]** missing page_translation: Create 30035-employment-law.json in es directory
+- **[HIGH]** missing page_translation: Create 30035-employment-law.json in fr directory
+- **[HIGH]** missing page_translation: Create 30035-employment-law.json in zu directory
+- **[HIGH]** missing page_translation: Create 30035-employment-law.json in xh directory
+- **[HIGH]** missing page_translation: Create 30035-employment-law.json in sw directory
+- **[HIGH]** missing page_translation: Create 30035-employment-law.json in de directory
+- **[HIGH]** missing page_translation: Create 30040-environmental-sustainable-dev.json in en directory
+- **[HIGH]** missing page_translation: Create 30040-environmental-sustainable-dev.json in ar directory
+- **[HIGH]** missing page_translation: Create 30040-environmental-sustainable-dev.json in pt directory
+- **[HIGH]** missing page_translation: Create 30040-environmental-sustainable-dev.json in es directory
+- **[HIGH]** missing page_translation: Create 30040-environmental-sustainable-dev.json in fr directory
+- **[HIGH]** missing page_translation: Create 30040-environmental-sustainable-dev.json in zu directory
+- **[HIGH]** missing page_translation: Create 30040-environmental-sustainable-dev.json in xh directory
+- **[HIGH]** missing page_translation: Create 30040-environmental-sustainable-dev.json in sw directory
+- **[HIGH]** missing page_translation: Create 30040-environmental-sustainable-dev.json in de directory
+- **[HIGH]** missing page_translation: Create 30045-estate-planning-trusts.json in en directory
+- **[HIGH]** missing page_translation: Create 30045-estate-planning-trusts.json in ar directory
+- **[HIGH]** missing page_translation: Create 30045-estate-planning-trusts.json in pt directory
+- **[HIGH]** missing page_translation: Create 30045-estate-planning-trusts.json in es directory
+- **[HIGH]** missing page_translation: Create 30045-estate-planning-trusts.json in fr directory
+- **[HIGH]** missing page_translation: Create 30045-estate-planning-trusts.json in zu directory
+- **[HIGH]** missing page_translation: Create 30045-estate-planning-trusts.json in xh directory
+- **[HIGH]** missing page_translation: Create 30045-estate-planning-trusts.json in sw directory
+- **[HIGH]** missing page_translation: Create 30045-estate-planning-trusts.json in de directory
+- **[HIGH]** missing page_translation: Create 30050-ethics.json in en directory
+- **[HIGH]** missing page_translation: Create 30050-ethics.json in ar directory
+- **[HIGH]** missing page_translation: Create 30050-ethics.json in pt directory
+- **[HIGH]** missing page_translation: Create 30050-ethics.json in es directory
+- **[HIGH]** missing page_translation: Create 30050-ethics.json in fr directory
+- **[HIGH]** missing page_translation: Create 30050-ethics.json in zu directory
+- **[HIGH]** missing page_translation: Create 30050-ethics.json in xh directory
+- **[HIGH]** missing page_translation: Create 30050-ethics.json in sw directory
+- **[HIGH]** missing page_translation: Create 30050-ethics.json in de directory
+- **[HIGH]** missing page_translation: Create 30055-finance.json in en directory
+- **[HIGH]** missing page_translation: Create 30055-finance.json in ar directory
+- **[HIGH]** missing page_translation: Create 30055-finance.json in pt directory
+- **[HIGH]** missing page_translation: Create 30055-finance.json in es directory
+- **[HIGH]** missing page_translation: Create 30055-finance.json in fr directory
+- **[HIGH]** missing page_translation: Create 30055-finance.json in zu directory
+- **[HIGH]** missing page_translation: Create 30055-finance.json in xh directory
+- **[HIGH]** missing page_translation: Create 30055-finance.json in sw directory
+- **[HIGH]** missing page_translation: Create 30055-finance.json in de directory
+- **[HIGH]** missing page_translation: Create 30060-governance.json in en directory
+- **[HIGH]** missing page_translation: Create 30060-governance.json in ar directory
+- **[HIGH]** missing page_translation: Create 30060-governance.json in pt directory
+- **[HIGH]** missing page_translation: Create 30060-governance.json in es directory
+- **[HIGH]** missing page_translation: Create 30060-governance.json in fr directory
+- **[HIGH]** missing page_translation: Create 30060-governance.json in zu directory
+- **[HIGH]** missing page_translation: Create 30060-governance.json in xh directory
+- **[HIGH]** missing page_translation: Create 30060-governance.json in sw directory
+- **[HIGH]** missing page_translation: Create 30060-governance.json in de directory
+- **[HIGH]** missing page_translation: Create 30065-information-technology.json in en directory
+- **[HIGH]** missing page_translation: Create 30065-information-technology.json in ar directory
+- **[HIGH]** missing page_translation: Create 30065-information-technology.json in pt directory
+- **[HIGH]** missing page_translation: Create 30065-information-technology.json in es directory
+- **[HIGH]** missing page_translation: Create 30065-information-technology.json in fr directory
+- **[HIGH]** missing page_translation: Create 30065-information-technology.json in zu directory
+- **[HIGH]** missing page_translation: Create 30065-information-technology.json in xh directory
+- **[HIGH]** missing page_translation: Create 30065-information-technology.json in sw directory
+- **[HIGH]** missing page_translation: Create 30065-information-technology.json in de directory
+- **[HIGH]** missing page_translation: Create 30070-intellectual-property.json in en directory
+- **[HIGH]** missing page_translation: Create 30070-intellectual-property.json in ar directory
+- **[HIGH]** missing page_translation: Create 30070-intellectual-property.json in pt directory
+- **[HIGH]** missing page_translation: Create 30070-intellectual-property.json in es directory
+- **[HIGH]** missing page_translation: Create 30070-intellectual-property.json in fr directory
+- **[HIGH]** missing page_translation: Create 30070-intellectual-property.json in zu directory
+- **[HIGH]** missing page_translation: Create 30070-intellectual-property.json in xh directory
+- **[HIGH]** missing page_translation: Create 30070-intellectual-property.json in sw directory
+- **[HIGH]** missing page_translation: Create 30070-intellectual-property.json in de directory
+- **[HIGH]** missing page_translation: Create 30075-leasing-eviction.json in en directory
+- **[HIGH]** missing page_translation: Create 30075-leasing-eviction.json in ar directory
+- **[HIGH]** missing page_translation: Create 30075-leasing-eviction.json in pt directory
+- **[HIGH]** missing page_translation: Create 30075-leasing-eviction.json in es directory
+- **[HIGH]** missing page_translation: Create 30075-leasing-eviction.json in fr directory
+- **[HIGH]** missing page_translation: Create 30075-leasing-eviction.json in zu directory
+- **[HIGH]** missing page_translation: Create 30075-leasing-eviction.json in xh directory
+- **[HIGH]** missing page_translation: Create 30075-leasing-eviction.json in sw directory
+- **[HIGH]** missing page_translation: Create 30075-leasing-eviction.json in de directory
+- **[HIGH]** missing page_translation: Create 30080-litigation-alternative-dispute-mgmt.json in en directory
+- **[HIGH]** missing page_translation: Create 30080-litigation-alternative-dispute-mgmt.json in ar directory
+- **[HIGH]** missing page_translation: Create 30080-litigation-alternative-dispute-mgmt.json in pt directory
+- **[HIGH]** missing page_translation: Create 30080-litigation-alternative-dispute-mgmt.json in es directory
+- **[HIGH]** missing page_translation: Create 30080-litigation-alternative-dispute-mgmt.json in fr directory
+- **[HIGH]** missing page_translation: Create 30080-litigation-alternative-dispute-mgmt.json in zu directory
+- **[HIGH]** missing page_translation: Create 30080-litigation-alternative-dispute-mgmt.json in xh directory
+- **[HIGH]** missing page_translation: Create 30080-litigation-alternative-dispute-mgmt.json in sw directory
+- **[HIGH]** missing page_translation: Create 30080-litigation-alternative-dispute-mgmt.json in de directory
+- **[HIGH]** missing page_translation: Create 30085-mining-infrastructure.json in en directory
+- **[HIGH]** missing page_translation: Create 30085-mining-infrastructure.json in ar directory
+- **[HIGH]** missing page_translation: Create 30085-mining-infrastructure.json in pt directory
+- **[HIGH]** missing page_translation: Create 30085-mining-infrastructure.json in es directory
+- **[HIGH]** missing page_translation: Create 30085-mining-infrastructure.json in fr directory
+- **[HIGH]** missing page_translation: Create 30085-mining-infrastructure.json in zu directory
+- **[HIGH]** missing page_translation: Create 30085-mining-infrastructure.json in xh directory
+- **[HIGH]** missing page_translation: Create 30085-mining-infrastructure.json in sw directory
+- **[HIGH]** missing page_translation: Create 30085-mining-infrastructure.json in de directory
+- **[HIGH]** missing page_translation: Create 30090-notary-public.json in en directory
+- **[HIGH]** missing page_translation: Create 30090-notary-public.json in ar directory
+- **[HIGH]** missing page_translation: Create 30090-notary-public.json in pt directory
+- **[HIGH]** missing page_translation: Create 30090-notary-public.json in es directory
+- **[HIGH]** missing page_translation: Create 30090-notary-public.json in fr directory
+- **[HIGH]** missing page_translation: Create 30090-notary-public.json in zu directory
+- **[HIGH]** missing page_translation: Create 30090-notary-public.json in xh directory
+- **[HIGH]** missing page_translation: Create 30090-notary-public.json in sw directory
+- **[HIGH]** missing page_translation: Create 30090-notary-public.json in de directory
+- **[HIGH]** missing page_translation: Create 30095-oversight-africa-group.json in en directory
+- **[HIGH]** missing page_translation: Create 30095-oversight-africa-group.json in ar directory
+- **[HIGH]** missing page_translation: Create 30095-oversight-africa-group.json in pt directory
+- **[HIGH]** missing page_translation: Create 30095-oversight-africa-group.json in es directory
+- **[HIGH]** missing page_translation: Create 30095-oversight-africa-group.json in fr directory
+- **[HIGH]** missing page_translation: Create 30095-oversight-africa-group.json in zu directory
+- **[HIGH]** missing page_translation: Create 30095-oversight-africa-group.json in xh directory
+- **[HIGH]** missing page_translation: Create 30095-oversight-africa-group.json in sw directory
+- **[HIGH]** missing page_translation: Create 30095-oversight-africa-group.json in de directory
+- **[HIGH]** missing page_translation: Create 30100-partners-key.json in en directory
+- **[HIGH]** missing page_translation: Create 30100-partners-key.json in ar directory
+- **[HIGH]** missing page_translation: Create 30100-partners-key.json in pt directory
+- **[HIGH]** missing page_translation: Create 30100-partners-key.json in es directory
+- **[HIGH]** missing page_translation: Create 30100-partners-key.json in fr directory
+- **[HIGH]** missing page_translation: Create 30100-partners-key.json in zu directory
+- **[HIGH]** missing page_translation: Create 30100-partners-key.json in xh directory
+- **[HIGH]** missing page_translation: Create 30100-partners-key.json in sw directory
+- **[HIGH]** missing page_translation: Create 30100-partners-key.json in de directory
+- **[HIGH]** missing page_translation: Create 30105-partner-commercial.json in en directory
+- **[HIGH]** missing page_translation: Create 30105-partner-commercial.json in ar directory
+- **[HIGH]** missing page_translation: Create 30105-partner-commercial.json in pt directory
+- **[HIGH]** missing page_translation: Create 30105-partner-commercial.json in es directory
+- **[HIGH]** missing page_translation: Create 30105-partner-commercial.json in fr directory
+- **[HIGH]** missing page_translation: Create 30105-partner-commercial.json in zu directory
+- **[HIGH]** missing page_translation: Create 30105-partner-commercial.json in xh directory
+- **[HIGH]** missing page_translation: Create 30105-partner-commercial.json in sw directory
+- **[HIGH]** missing page_translation: Create 30105-partner-commercial.json in de directory
+- **[HIGH]** missing page_translation: Create 30110-partner-corporate.json in en directory
+- **[HIGH]** missing page_translation: Create 30110-partner-corporate.json in ar directory
+- **[HIGH]** missing page_translation: Create 30110-partner-corporate.json in pt directory
+- **[HIGH]** missing page_translation: Create 30110-partner-corporate.json in es directory
+- **[HIGH]** missing page_translation: Create 30110-partner-corporate.json in fr directory
+- **[HIGH]** missing page_translation: Create 30110-partner-corporate.json in zu directory
+- **[HIGH]** missing page_translation: Create 30110-partner-corporate.json in xh directory
+- **[HIGH]** missing page_translation: Create 30110-partner-corporate.json in sw directory
+- **[HIGH]** missing page_translation: Create 30110-partner-corporate.json in de directory
+- **[HIGH]** missing page_translation: Create 30115-partner-corporate-commercial.json in en directory
+- **[HIGH]** missing page_translation: Create 30115-partner-corporate-commercial.json in ar directory
+- **[HIGH]** missing page_translation: Create 30115-partner-corporate-commercial.json in pt directory
+- **[HIGH]** missing page_translation: Create 30115-partner-corporate-commercial.json in es directory
+- **[HIGH]** missing page_translation: Create 30115-partner-corporate-commercial.json in fr directory
+- **[HIGH]** missing page_translation: Create 30115-partner-corporate-commercial.json in zu directory
+- **[HIGH]** missing page_translation: Create 30115-partner-corporate-commercial.json in xh directory
+- **[HIGH]** missing page_translation: Create 30115-partner-corporate-commercial.json in sw directory
+- **[HIGH]** missing page_translation: Create 30115-partner-corporate-commercial.json in de directory
+- **[HIGH]** missing page_translation: Create 30120-partner-disputes.json in en directory
+- **[HIGH]** missing page_translation: Create 30120-partner-disputes.json in ar directory
+- **[HIGH]** missing page_translation: Create 30120-partner-disputes.json in pt directory
+- **[HIGH]** missing page_translation: Create 30120-partner-disputes.json in es directory
+- **[HIGH]** missing page_translation: Create 30120-partner-disputes.json in fr directory
+- **[HIGH]** missing page_translation: Create 30120-partner-disputes.json in zu directory
+- **[HIGH]** missing page_translation: Create 30120-partner-disputes.json in xh directory
+- **[HIGH]** missing page_translation: Create 30120-partner-disputes.json in sw directory
+- **[HIGH]** missing page_translation: Create 30120-partner-disputes.json in de directory
+- **[HIGH]** missing page_translation: Create 30125-partner-employment-law.json in en directory
+- **[HIGH]** missing page_translation: Create 30125-partner-employment-law.json in ar directory
+- **[HIGH]** missing page_translation: Create 30125-partner-employment-law.json in pt directory
+- **[HIGH]** missing page_translation: Create 30125-partner-employment-law.json in es directory
+- **[HIGH]** missing page_translation: Create 30125-partner-employment-law.json in fr directory
+- **[HIGH]** missing page_translation: Create 30125-partner-employment-law.json in zu directory
+- **[HIGH]** missing page_translation: Create 30125-partner-employment-law.json in xh directory
+- **[HIGH]** missing page_translation: Create 30125-partner-employment-law.json in sw directory
+- **[HIGH]** missing page_translation: Create 30125-partner-employment-law.json in de directory
+- **[HIGH]** missing page_translation: Create 30130-partner-international-arbitration.json in en directory
+- **[HIGH]** missing page_translation: Create 30130-partner-international-arbitration.json in ar directory
+- **[HIGH]** missing page_translation: Create 30130-partner-international-arbitration.json in pt directory
+- **[HIGH]** missing page_translation: Create 30130-partner-international-arbitration.json in es directory
+- **[HIGH]** missing page_translation: Create 30130-partner-international-arbitration.json in fr directory
+- **[HIGH]** missing page_translation: Create 30130-partner-international-arbitration.json in zu directory
+- **[HIGH]** missing page_translation: Create 30130-partner-international-arbitration.json in xh directory
+- **[HIGH]** missing page_translation: Create 30130-partner-international-arbitration.json in sw directory
+- **[HIGH]** missing page_translation: Create 30130-partner-international-arbitration.json in de directory
+- **[HIGH]** missing page_translation: Create 30135-partner-mining-infrastructure.json in en directory
+- **[HIGH]** missing page_translation: Create 30135-partner-mining-infrastructure.json in ar directory
+- **[HIGH]** missing page_translation: Create 30135-partner-mining-infrastructure.json in pt directory
+- **[HIGH]** missing page_translation: Create 30135-partner-mining-infrastructure.json in es directory
+- **[HIGH]** missing page_translation: Create 30135-partner-mining-infrastructure.json in fr directory
+- **[HIGH]** missing page_translation: Create 30135-partner-mining-infrastructure.json in zu directory
+- **[HIGH]** missing page_translation: Create 30135-partner-mining-infrastructure.json in xh directory
+- **[HIGH]** missing page_translation: Create 30135-partner-mining-infrastructure.json in sw directory
+- **[HIGH]** missing page_translation: Create 30135-partner-mining-infrastructure.json in de directory
+- **[HIGH]** missing page_translation: Create 30140-partners-managing.json in en directory
+- **[HIGH]** missing page_translation: Create 30140-partners-managing.json in ar directory
+- **[HIGH]** missing page_translation: Create 30140-partners-managing.json in pt directory
+- **[HIGH]** missing page_translation: Create 30140-partners-managing.json in es directory
+- **[HIGH]** missing page_translation: Create 30140-partners-managing.json in fr directory
+- **[HIGH]** missing page_translation: Create 30140-partners-managing.json in zu directory
+- **[HIGH]** missing page_translation: Create 30140-partners-managing.json in xh directory
+- **[HIGH]** missing page_translation: Create 30140-partners-managing.json in sw directory
+- **[HIGH]** missing page_translation: Create 30140-partners-managing.json in de directory
+- **[HIGH]** missing page_translation: Create 30145-durban.json in en directory
+- **[HIGH]** missing page_translation: Create 30145-durban.json in ar directory
+- **[HIGH]** missing page_translation: Create 30145-durban.json in pt directory
+- **[HIGH]** missing page_translation: Create 30145-durban.json in es directory
+- **[HIGH]** missing page_translation: Create 30145-durban.json in fr directory
+- **[HIGH]** missing page_translation: Create 30145-durban.json in zu directory
+- **[HIGH]** missing page_translation: Create 30145-durban.json in xh directory
+- **[HIGH]** missing page_translation: Create 30145-durban.json in sw directory
+- **[HIGH]** missing page_translation: Create 30145-durban.json in de directory
+- **[HIGH]** missing page_translation: Create 30150-johannesburg.json in en directory
+- **[HIGH]** missing page_translation: Create 30150-johannesburg.json in ar directory
+- **[HIGH]** missing page_translation: Create 30150-johannesburg.json in pt directory
+- **[HIGH]** missing page_translation: Create 30150-johannesburg.json in es directory
+- **[HIGH]** missing page_translation: Create 30150-johannesburg.json in fr directory
+- **[HIGH]** missing page_translation: Create 30150-johannesburg.json in zu directory
+- **[HIGH]** missing page_translation: Create 30150-johannesburg.json in xh directory
+- **[HIGH]** missing page_translation: Create 30150-johannesburg.json in sw directory
+- **[HIGH]** missing page_translation: Create 30150-johannesburg.json in de directory
+- **[HIGH]** missing page_translation: Create 30155-pro-bono.json in en directory
+- **[HIGH]** missing page_translation: Create 30155-pro-bono.json in ar directory
+- **[HIGH]** missing page_translation: Create 30155-pro-bono.json in pt directory
+- **[HIGH]** missing page_translation: Create 30155-pro-bono.json in es directory
+- **[HIGH]** missing page_translation: Create 30155-pro-bono.json in fr directory
+- **[HIGH]** missing page_translation: Create 30155-pro-bono.json in zu directory
+- **[HIGH]** missing page_translation: Create 30155-pro-bono.json in xh directory
+- **[HIGH]** missing page_translation: Create 30155-pro-bono.json in sw directory
+- **[HIGH]** missing page_translation: Create 30155-pro-bono.json in de directory
+- **[HIGH]** missing page_translation: Create 30160-real-estate.json in en directory
+- **[HIGH]** missing page_translation: Create 30160-real-estate.json in ar directory
+- **[HIGH]** missing page_translation: Create 30160-real-estate.json in pt directory
+- **[HIGH]** missing page_translation: Create 30160-real-estate.json in es directory
+- **[HIGH]** missing page_translation: Create 30160-real-estate.json in fr directory
+- **[HIGH]** missing page_translation: Create 30160-real-estate.json in zu directory
+- **[HIGH]** missing page_translation: Create 30160-real-estate.json in xh directory
+- **[HIGH]** missing page_translation: Create 30160-real-estate.json in sw directory
+- **[HIGH]** missing page_translation: Create 30160-real-estate.json in de directory
+- **[HIGH]** missing page_translation: Create 30165-tax.json in en directory
+- **[HIGH]** missing page_translation: Create 30165-tax.json in ar directory
+- **[HIGH]** missing page_translation: Create 30165-tax.json in pt directory
+- **[HIGH]** missing page_translation: Create 30165-tax.json in es directory
+- **[HIGH]** missing page_translation: Create 30165-tax.json in fr directory
+- **[HIGH]** missing page_translation: Create 30165-tax.json in zu directory
+- **[HIGH]** missing page_translation: Create 30165-tax.json in xh directory
+- **[HIGH]** missing page_translation: Create 30165-tax.json in sw directory
+- **[HIGH]** missing page_translation: Create 30165-tax.json in de directory
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00200-all-documents
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00200-all-documents
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00200-all-documents
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00200-all-documents
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00200-all-documents
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00200-all-documents
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00200-all-documents
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00200-all-documents
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00200-all-documents
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00300-construction
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00300-construction
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00300-construction
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00300-construction
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00300-construction
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00300-construction
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00300-construction
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00300-construction
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00300-construction
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00435-contracts-post-award
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00435-contracts-post-award
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00435-contracts-post-award
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00435-contracts-post-award
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00435-contracts-post-award
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00435-contracts-post-award
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00435-contracts-post-award
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00435-contracts-post-award
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00435-contracts-post-award
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00875-sales
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00875-sales
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00875-sales
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00875-sales
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00875-sales
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00875-sales
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00875-sales
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00875-sales
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00875-sales
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00900-document-control
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00900-document-control
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00900-document-control
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00900-document-control
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00900-document-control
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00900-document-control
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00900-document-control
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00900-document-control
+- **[MEDIUM]** missing modal_translation: Create modal translations for 00900-document-control
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01200-finance
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01200-finance
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01200-finance
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01200-finance
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01200-finance
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01200-finance
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01200-finance
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01200-finance
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01200-finance
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01300-governance
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01300-governance
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01300-governance
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01300-governance
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01300-governance
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01300-governance
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01300-governance
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01300-governance
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01300-governance
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01500-human-resources
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01500-human-resources
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01500-human-resources
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01500-human-resources
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01500-human-resources
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01500-human-resources
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01500-human-resources
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01500-human-resources
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01500-human-resources
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01700-logistics
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01700-logistics
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01700-logistics
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01700-logistics
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01700-logistics
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01700-logistics
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01700-logistics
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01700-logistics
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01700-logistics
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01800-operations
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01800-operations
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01800-operations
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01800-operations
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01800-operations
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01800-operations
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01800-operations
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01800-operations
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01800-operations
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01900-procurement
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01900-procurement
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01900-procurement
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01900-procurement
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01900-procurement
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01900-procurement
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01900-procurement
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01900-procurement
+- **[MEDIUM]** missing modal_translation: Create modal translations for 01900-procurement
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02025-quantity-surveying
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02025-quantity-surveying
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02025-quantity-surveying
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02025-quantity-surveying
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02025-quantity-surveying
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02025-quantity-surveying
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02025-quantity-surveying
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02025-quantity-surveying
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02025-quantity-surveying
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02075-inspection
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02075-inspection
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02075-inspection
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02075-inspection
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02075-inspection
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02075-inspection
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02075-inspection
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02075-inspection
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02075-inspection
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02400-safety
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02400-safety
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02400-safety
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02400-safety
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02400-safety
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02400-safety
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02400-safety
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02400-safety
+- **[MEDIUM]** missing modal_translation: Create modal translations for 02400-safety
+- **[MEDIUM]** missing modal_translation: Create modal translations for 03010-email-management
+- **[MEDIUM]** missing modal_translation: Create modal translations for 03010-email-management
+- **[MEDIUM]** missing modal_translation: Create modal translations for 03010-email-management
+- **[MEDIUM]** missing modal_translation: Create modal translations for 03010-email-management
+- **[MEDIUM]** missing modal_translation: Create modal translations for 03010-email-management
+- **[MEDIUM]** missing modal_translation: Create modal translations for 03010-email-management
+- **[MEDIUM]** missing modal_translation: Create modal translations for 03010-email-management
+- **[MEDIUM]** missing modal_translation: Create modal translations for 03010-email-management
+- **[MEDIUM]** missing modal_translation: Create modal translations for 03010-email-management

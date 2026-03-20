@@ -1,0 +1,178 @@
+{
+  "catalog_version": "1.0",
+  "last_updated": "2026-03-16",
+  "categories": {
+    "structural_materials": {
+      "description": "Materials for structural construction",
+      "subcategories": {
+        "steel": {
+          "description": "Steel beams, plates, and structural elements",
+          "skus": [
+            "STEEL-BEAM-10M",
+            "STEEL-PLATE-5MM",
+            "STEEL-REBAR-12MM"
+          ],
+          "typical_applications": [
+            "Building frames",
+            "Bridge construction",
+            "Industrial structures"
+          ]
+        },
+        "concrete": {
+          "description": "Concrete and reinforcement materials",
+          "skus": [
+            "CONCRETE-READY-MIX-C30",
+            "CONCRETE-REINFORCEMENT-BARS"
+          ],
+          "typical_applications": [
+            "Foundations",
+            "Slabs",
+            "Walls"
+          ]
+        }
+      }
+    },
+    "electrical_systems": {
+      "description": "Electrical components and systems",
+      "subcategories": {
+        "power_distribution": {
+          "description": "Power distribution equipment",
+          "skus": [
+            "ELECTRICAL-PANEL-400V",
+            "ELECTRICAL-CABLE-10MM"
+          ],
+          "typical_applications": [
+            "Building electrical systems",
+            "Industrial power distribution"
+          ]
+        },
+        "renewable_energy": {
+          "description": "Solar and renewable energy components",
+          "skus": [
+            "SOLAR-INVERTER-10KW",
+            "SOLAR-PANEL-400W"
+          ],
+          "typical_applications": [
+            "Solar installations",
+            "Renewable energy projects"
+          ]
+        }
+      }
+    },
+    "logistics_services": {
+      "description": "Transportation and logistics services",
+      "subcategories": {
+        "freight_transport": {
+          "description": "Freight transportation services",
+          "skus": [
+            "LOGISTICS-FREIGHT-ROAD",
+            "LOGISTICS-FREIGHT-RAIL"
+          ],
+          "typical_applications": [
+            "Material delivery",
+            "Equipment transport"
+          ]
+        },
+        "warehousing": {
+          "description": "Storage and warehousing services",
+          "skus": [
+            "LOGISTICS-WAREHOUSING",
+            "LOGISTICS-COLD-STORAGE"
+          ],
+          "typical_applications": [
+            "Material storage",
+            "Inventory management"
+          ]
+        }
+      }
+    }
+  },
+  "sku_details": {
+    "STEEL-BEAM-10M": {
+      "category": "structural_materials/steel",
+      "unit_of_measure": "each",
+      "typical_quantity_range": "10-500",
+      "lead_time_expectation": "7-21 days",
+      "quality_requirements": [
+        "SANS 1024 certification",
+        "Mill test certificates",
+        "Traceability documentation"
+      ]
+    },
+    "CONCRETE-READY-MIX-C30": {
+      "category": "structural_materials/concrete",
+      "unit_of_measure": "cubic_meter",
+      "typical_quantity_range": "20-1000",
+      "lead_time_expectation": "same_day",
+      "quality_requirements": [
+        "SANS 5861 compliance",
+        "Slump test results",
+        "Compressive strength testing"
+      ]
+    },
+    "ELECTRICAL-PANEL-400V": {
+      "category": "electrical_systems/power_distribution",
+      "unit_of_measure": "each",
+      "typical_quantity_range": "1-50",
+      "lead_time_expectation": "14-28 days",
+      "quality_requirements": [
+        "SANS 10142 compliance",
+        "Type test certificates",
+        "IP rating verification"
+      ]
+    },
+    "LOGISTICS-FREIGHT-ROAD": {
+      "category": "logistics_services/freight_transport",
+      "unit_of_measure": "ton_km",
+      "typical_quantity_range": "variable",
+      "lead_time_expectation": "same_day",
+      "quality_requirements": [
+        "Licensed carrier certification",
+        "Vehicle roadworthy certificates",
+        "Cargo insurance coverage"
+      ]
+    }
+  },
+  "procurement_guidelines": {
+    "bulk_discount_thresholds": {
+      "steel_products": {
+        "100_units": "5%_discount",
+        "500_units": "10%_discount",
+        "1000_units": "15%_discount"
+      },
+      "concrete_products": {
+        "200_cubic_meters": "3%_discount",
+        "500_cubic_meters": "7%_discount",
+        "1000_cubic_meters": "12%_discount"
+      }
+    },
+    "seasonal_considerations": {
+      "peak_season": "October-March",
+      "lead_time_increase": "20-30%",
+      "price_premium": "5-15%"
+    },
+    "supplier_preference_criteria": {
+      "primary": [
+        "cidb_grading",
+        "bbee_level",
+        "delivery_performance"
+      ],
+      "secondary": [
+        "price_competitiveness",
+        "local_content",
+        "innovation_capability"
+      ]
+    }
+  },
+  "metadata": {
+    "created_by": "Procurement Systems Team",
+    "approved_by": "Chief Procurement Officer",
+    "effective_date": "2026-04-01",
+    "review_cycle": "quarterly",
+    "data_sources": [
+      "ERP system integration",
+      "Supplier master data",
+      "Historical procurement records"
+    ]
+  }
+}

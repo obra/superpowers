@@ -1,0 +1,184 @@
+version: "1.0"
+plan_id: "PROC_PLAN_TEMPLATE_001"
+name: "Standard Procurement Plan Template"
+description: "Template for procurement planning with jurisdiction-aware timelines and compliance checkpoints"
+
+metadata:
+  created_by: "Procurement Planning Team"
+  approved_by: "Chief Procurement Officer"
+  effective_date: "2026-04-01"
+  review_cycle: "biannual"
+  applicable_jurisdictions: ["ZA", "FI", "UK", "EU"]
+
+phases:
+  - name: "Planning & Requirements"
+    phase_id: "PHASE_01"
+    duration_days: 14
+    activities:
+      - id: "ACT_01_01"
+        name: "Requirements Gathering"
+        description: "Collect technical, quality, and compliance requirements"
+        responsible_party: "Procurement Agent"
+        deliverables:
+          - "Requirements specification document"
+          - "Preliminary budget estimate"
+        compliance_checkpoints:
+          - jurisdiction: "ZA"
+            requirements: ["CIDB grading determination", "B-BBEE preferences"]
+          - jurisdiction: "FI"
+            requirements: ["EU AI Act assessment", "NIS2 applicability"]
+    dependencies: []
+    risk_factors:
+      - "Incomplete requirements"
+      - "Unrealistic timelines"
+
+  - name: "Market Research & Supplier Identification"
+    phase_id: "PHASE_02"
+    duration_days: 21
+    activities:
+      - id: "ACT_02_01"
+        name: "Supplier Market Analysis"
+        description: "Research available suppliers and market conditions"
+        responsible_party: "Procurement Agent"
+        deliverables:
+          - "Supplier shortlist"
+          - "Market analysis report"
+        compliance_checkpoints:
+          - jurisdiction: "ZA"
+            requirements: ["SARS vendor verification", "B-BBEE scoring"]
+          - jurisdiction: "FI"
+            requirements: ["EU supplier qualification", "GDPR compliance check"]
+    dependencies: ["PHASE_01"]
+    risk_factors:
+      - "Limited supplier availability"
+      - "Market volatility"
+
+  - name: "RFQ Preparation & Issuance"
+    phase_id: "PHASE_03"
+    duration_days: 10
+    activities:
+      - id: "ACT_03_01"
+        name: "RFQ Document Preparation"
+        description: "Create and issue Request for Quotation documents"
+        responsible_party: "Procurement Agent"
+        deliverables:
+          - "RFQ package"
+          - "Supplier communication log"
+        compliance_checkpoints:
+          - jurisdiction: "ZA"
+            requirements: ["CIDB compliant documentation", "PPPFA compliance"]
+          - jurisdiction: "FI"
+            requirements: ["EU procurement directives", "Transparency requirements"]
+    dependencies: ["PHASE_02"]
+    risk_factors:
+      - "Supplier response delays"
+      - "Clarification requests"
+
+  - name: "Evaluation & Award"
+    phase_id: "PHASE_04"
+    duration_days: 14
+    activities:
+      - id: "ACT_04_01"
+        name: "Proposal Evaluation"
+        description: "Technical and commercial evaluation of supplier proposals"
+        responsible_party: "Evaluation Committee"
+        deliverables:
+          - "Evaluation scorecard"
+          - "Award recommendation"
+        compliance_checkpoints:
+          - jurisdiction: "ZA"
+            requirements: ["B-BBEE points calculation", "Preferential procurement scoring"]
+          - jurisdiction: "FI"
+            requirements: ["Best value assessment", "EU competition law compliance"]
+    dependencies: ["PHASE_03"]
+    risk_factors:
+      - "Disputed evaluation results"
+      - "Supplier negotiations"
+
+  - name: "Contract Finalization"
+    phase_id: "PHASE_05"
+    duration_days: 7
+    activities:
+      - id: "ACT_05_01"
+        name: "Contract Negotiation & Signing"
+        description: "Finalize contract terms and obtain signatures"
+        responsible_party: "Legal & Procurement"
+        deliverables:
+          - "Signed contract"
+          - "Contract register entry"
+        compliance_checkpoints:
+          - jurisdiction: "ZA"
+            requirements: ["SARS contract registration", "CIDB contract notification"]
+          - jurisdiction: "FI"
+            requirements: ["EU contract transparency", "Public procurement reporting"]
+    dependencies: ["PHASE_04"]
+    risk_factors:
+      - "Contract negotiation delays"
+      - "Legal review bottlenecks"
+
+jurisdiction_specific_adjustments:
+  ZA:
+    additional_phases: []
+    timeline_multipliers:
+      planning: 1.0
+      evaluation: 1.2  # B-BBEE verification adds time
+      approval: 1.5    # Additional governance layers
+    required_approvals:
+      - "CIDB Approval"
+      - "Treasury Deviation (if applicable)"
+      - "B-BBEE Compliance Sign-off"
+
+  FI:
+    additional_phases:
+      - name: "EU Compliance Review"
+        duration_days: 5
+        activities: ["AI Act assessment", "NIS2 evaluation"]
+    timeline_multipliers:
+      planning: 1.1
+      evaluation: 1.0
+      approval: 1.0
+    required_approvals:
+      - "Data Protection Impact Assessment"
+      - "AI Ethics Review"
+      - "NIS2 Security Assessment"
+
+  UK:
+    additional_phases: []
+    timeline_multipliers:
+      planning: 1.0
+      evaluation: 1.0
+      approval: 1.1
+    required_approvals:
+      - "Modern Slavery Statement Review"
+      - "UK GDPR Compliance Check"
+
+risk_mitigation_strategies:
+  - risk: "Supplier non-response"
+    mitigation: "Maintain approved supplier database, use framework agreements"
+  - risk: "Budget overruns"
+    mitigation: "Implement budget controls, regular financial monitoring"
+  - risk: "Compliance violations"
+    mitigation: "Automated compliance checking, legal review gates"
+  - risk: "Timeline delays"
+    mitigation: "Parallel processing where possible, contingency buffers"
+
+success_metrics:
+  - metric: "On-time delivery"
+    target: ">95%"
+    measurement: "Phase completion vs planned dates"
+  - metric: "Compliance rate"
+    target: "100%"
+    measurement: "Audit findings and regulatory compliance"
+  - metric: "Cost variance"
+    target: "<5%"
+    measurement: "Actual vs budgeted costs"
+  - metric: "Supplier satisfaction"
+    target: ">4.5/5"
+    measurement: "Post-award supplier surveys"
+
+templates_required:
+  - "requirements_specification.docx"
+  - "rfq_template.docx"
+  - "evaluation_scorecard.xlsx"
+  - "contract_template.docx"
+  - "compliance_checklist.pdf"

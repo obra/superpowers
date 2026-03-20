@@ -1,0 +1,141 @@
+{
+  "jurisdiction": "ZA",
+  "compliance_frameworks": {
+    "ZA": {
+      "cidb_requirements": {
+        "structural_steel": "GR8",
+        "concrete_work": "GR7",
+        "electrical": "GR6",
+        "mechanical": "GR6",
+        "civil_engineering": "GR7"
+      },
+      "sars_vat_rules": {
+        "vat_threshold_zar": 15000,
+        "import_vat_rate": 0.15,
+        "export_vat_refund": true,
+        "vat_registration_required": true
+      },
+      "iso_standards": {
+        "iso_9001_required": true,
+        "iso_14001_required": false,
+        "iso_27001_required": false,
+        "iso_42001_ai_risk": true
+      },
+      "bbee_requirements": {
+        "minimum_level": "Level 4",
+        "preferred_level": "Level 1",
+        "points_system": {
+          "ownership": 25,
+          "management": 19,
+          "skills_development": 20,
+          "enterprise_supplier_development": 40,
+          "socio_economic_development": 5
+        }
+      },
+      "ohs_act_requirements": {
+        "section_37_2_agreement": true,
+        "health_and_safety_plan": true,
+        "competent_person_appointment": true
+      }
+    },
+    "FI": {
+      "eu_ai_act": {
+        "high_risk_systems": true,
+        "transparency_requirements": true,
+        "data_governance": true,
+        "human_oversight": true,
+        "accuracy_robustness_security": true
+      },
+      "nis2_directive": {
+        "critical_infrastructure": true,
+        "incident_reporting": "24_hours",
+        "supply_chain_security": true,
+        "risk_management": true,
+        "business_continuity": true
+      },
+      "gdpr_compliance": {
+        "data_protection_officer": true,
+        "privacy_by_design": true,
+        "data_processing_register": true,
+        "breach_notification": "72_hours"
+      },
+      "iso_standards": {
+        "iso_27001_required": true,
+        "iso_42001_ai_risk": true,
+        "iso_9001_required": true
+      }
+    },
+    "UK": {
+      "uk_gdpr": {
+        "data_protection_officer": true,
+        "privacy_impact_assessment": true,
+        "breach_reporting": "72_hours"
+      },
+      "modern_slavery_act": {
+        "supply_chain_transparency": true,
+        "annual_statements": true,
+        "risk_assessment": true
+      },
+      "iso_standards": {
+        "iso_9001_required": true,
+        "iso_14001_required": false,
+        "iso_45001_required": true
+      }
+    },
+    "EU": {
+      "eu_ai_act": {
+        "high_risk_systems": true,
+        "transparency_requirements": true,
+        "data_governance": true,
+        "human_oversight": true
+      },
+      "eu_gdpr": {
+        "data_protection_officer": true,
+        "privacy_by_design": true,
+        "data_processing_register": true
+      },
+      "reach_regulation": {
+        "chemical_substances_registration": true,
+        "safety_data_sheets": true,
+        "supply_chain_communication": true
+      }
+    }
+  },
+  "validation_rules": {
+    "supplier_qualification": {
+      "minimum_requirements": [
+        "valid_tax_registration",
+        "business_licenses",
+        "insurance_coverage"
+      ],
+      "preferred_certifications": [
+        "iso_9001",
+        "iso_14001",
+        "ohsas_18001"
+      ]
+    },
+    "contract_compliance": {
+      "payment_terms": {
+        "maximum_days": 60,
+        "preferred_days": 30
+      },
+      "penalty_clauses": {
+        "late_delivery_penalty": 0.01,
+        "quality_defect_penalty": 0.05
+      }
+    }
+  },
+  "metadata": {
+    "version": "1.2",
+    "last_updated": "2026-03-16",
+    "approved_by": "Compliance Director",
+    "next_review_date": "2026-09-16",
+    "source_documents": [
+      "CIDB Regulations 2024",
+      "SARS VAT Act",
+      "EU AI Act 2024",
+      "NIS2 Directive",
+      "B-BBEE Codes 2022"
+    ]
+  }
+}

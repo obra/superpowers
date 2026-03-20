@@ -1,0 +1,232 @@
+{
+  "template_id": "SO_TEMPLATE_001",
+  "template_name": "Standard Service Order Template",
+  "template_type": "service_order",
+  "version": "1.0",
+  "description": "Standard service order template for professional services procurement",
+  "jurisdiction": "ZA",
+  "last_updated": "2026-03-17",
+
+  "document_structure": {
+    "header": {
+      "company_logo": "{{company_logo}}",
+      "company_name": "{{company_name}}",
+      "company_address": "{{company_address}}",
+      "company_registration": "{{company_registration}}",
+      "company_vat_number": "{{company_vat_number}}",
+      "service_order_number": "{{so_number}}",
+      "order_date": "{{order_date}}",
+      "service_start_date": "{{service_start_date}}",
+      "service_completion_date": "{{service_completion_date}}",
+      "payment_terms": "{{payment_terms}}"
+    },
+
+    "service_provider_details": {
+      "provider_name": "{{provider_name}}",
+      "provider_address": "{{provider_address}}",
+      "provider_contact": "{{provider_contact_person}}",
+      "provider_email": "{{provider_email}}",
+      "provider_phone": "{{provider_phone}}",
+      "provider_vat_number": "{{provider_vat_number}}",
+      "provider_registration": "{{provider_registration}}",
+      "professional_certifications": "{{professional_certifications}}"
+    },
+
+    "client_details": {
+      "client_name": "{{client_name}}",
+      "client_department": "{{client_department}}",
+      "client_email": "{{client_email}}",
+      "client_phone": "{{client_phone}}",
+      "project_manager": "{{project_manager}}",
+      "approval_authority": "{{approval_authority}}"
+    },
+
+    "service_scope": {
+      "service_category": "{{service_category}}",
+      "service_description": "{{service_description}}",
+      "scope_of_work": "{{scope_of_work_detailed}}",
+      "deliverables": "{{deliverables_list}}",
+      "exclusions": "{{scope_exclusions}}",
+      "service_level_agreements": "{{service_level_agreements}}"
+    },
+
+    "service_schedule": {
+      "milestones": "{{milestones_array}}",
+      "reporting_frequency": "{{reporting_frequency}}",
+      "progress_reviews": "{{progress_review_schedule}}",
+      "key_dates": {
+        "kickoff_meeting": "{{kickoff_meeting_date}}",
+        "interim_reviews": "{{interim_review_dates}}",
+        "final_delivery": "{{final_delivery_date}}",
+        "project_closeout": "{{project_closeout_date}}"
+      }
+    },
+
+    "pricing_structure": {
+      "pricing_model": "{{pricing_model}}",
+      "hourly_rates": "{{hourly_rates_structure}}",
+      "fixed_price_items": "{{fixed_price_items_array}}",
+      "estimated_hours": "{{estimated_hours}}",
+      "contingency_allowance": "{{contingency_percentage}}",
+      "currency": "ZAR"
+    },
+
+    "payment_schedule": {
+      "payment_milestones": "{{payment_milestones_array}}",
+      "invoice_schedule": "{{invoice_schedule}}",
+      "payment_terms_days": "{{payment_terms_days}}",
+      "retention_percentage": "{{retention_percentage}}",
+      "retention_release": "{{retention_release_terms}}"
+    },
+
+    "resource_allocation": {
+      "key_personnel": "{{key_personnel_array}}",
+      "team_structure": "{{team_structure}}",
+      "subcontractors": "{{subcontractor_requirements}}",
+      "equipment_tools": "{{required_equipment_tools}}",
+      "training_requirements": "{{training_requirements}}"
+    },
+
+    "quality_assurance": {
+      "quality_standards": "{{quality_standards}}",
+      "acceptance_criteria": "{{acceptance_criteria}}",
+      "testing_requirements": "{{testing_requirements}}",
+      "documentation_standards": "{{documentation_standards}}",
+      "audit_rights": "{{audit_rights}}"
+    },
+
+    "compliance_requirements": {
+      "professional_certifications": "{{required_certifications}}",
+      "insurance_requirements": {
+        "professional_liability": "{{professional_liability_amount}}",
+        "public_liability": "{{public_liability_amount}}",
+        "workers_compensation": "{{workers_compensation_coverage}}"
+      },
+      "regulatory_compliance": "{{regulatory_compliance_requirements}}",
+      "data_protection": "{{data_protection_requirements}}",
+      "confidentiality_agreements": "{{confidentiality_requirements}}"
+    },
+
+    "risk_management": {
+      "identified_risks": "{{identified_risks_array}}",
+      "mitigation_strategies": "{{mitigation_strategies}}",
+      "contingency_plans": "{{contingency_plans}}",
+      "force_majeure": "{{force_majeure_provisions}}",
+      "termination_clauses": "{{termination_clauses}}"
+    },
+
+    "terms_and_conditions": {
+      "general_terms": [
+        "This Service Order constitutes the entire agreement between the parties.",
+        "Service Provider warrants professional competence and due diligence.",
+        "Client reserves the right to audit service delivery and quality.",
+        "Payment will be made within {{payment_terms_days}} days of satisfactory delivery.",
+        "Service Provider is responsible for all applicable taxes except VAT.",
+        "Intellectual property rights as specified in scope of work.",
+        "Force majeure provisions apply as per standard terms."
+      ],
+      "service_specific_terms": [
+        "Service Provider must maintain professional certifications throughout the contract.",
+        "All personnel must undergo background checks as required.",
+        "Service Provider must comply with client's information security policies.",
+        "Regular progress reporting as specified in service schedule.",
+        "Change management procedures must be followed for scope changes.",
+        "Client retains right to terminate for poor performance."
+      ],
+      "compliance_terms": [
+        "Service Provider must comply with all applicable South African legislation.",
+        "POPIA compliance required for any personal data processing.",
+        "Professional indemnity insurance must be maintained.",
+        "Workplace health and safety requirements must be adhered to.",
+        "Environmental compliance as applicable to service delivery."
+      ]
+    },
+
+    "approval_section": {
+      "prepared_by": {
+        "name": "{{prepared_by_name}}",
+        "signature": "{{prepared_by_signature}}",
+        "date": "{{prepared_date}}"
+      },
+      "approved_by": {
+        "name": "{{approved_by_name}}",
+        "signature": "{{approved_by_signature}}",
+        "date": "{{approved_date}}",
+        "authority_level": "{{approval_level}}"
+      },
+      "service_provider_acceptance": {
+        "accepted_by": "{{provider_acceptance_name}}",
+        "signature": "{{provider_acceptance_signature}}",
+        "date": "{{provider_acceptance_date}}",
+        "company_stamp": "{{provider_company_stamp}}"
+      }
+    },
+
+    "attachments_required": [
+      "Detailed scope of work document",
+      "Service Provider CVs and certifications",
+      "Insurance certificates",
+      "Quality assurance plan",
+      "Project schedule and milestones",
+      "Pricing breakdown",
+      "Compliance certificates",
+      "Reference letters from previous clients"
+    ]
+  },
+
+  "validation_rules": {
+    "required_fields": [
+      "so_number",
+      "order_date",
+      "provider_name",
+      "provider_address",
+      "client_name",
+      "service_description",
+      "scope_of_work_detailed",
+      "deliverables_list",
+      "service_start_date",
+      "service_completion_date",
+      "pricing_model",
+      "payment_schedule"
+    ],
+    "compliance_checks": [
+      {
+        "field": "professional_certifications",
+        "condition": "required",
+        "message": "Professional certifications required for service providers"
+      },
+      {
+        "field": "insurance_requirements",
+        "condition": "required",
+        "message": "Professional liability insurance required for service contracts"
+      },
+      {
+        "field": "data_protection",
+        "condition": "required_if_personal_data",
+        "message": "POPIA compliance required when handling personal data"
+      }
+    ],
+    "business_rules": [
+      {
+        "rule": "service_completion_before_payment",
+        "condition": "service_completion_date < final_payment_date",
+        "message": "Service completion must precede final payment"
+      },
+      {
+        "rule": "qualified_personnel",
+        "condition": "key_personnel_certified",
+        "message": "Key personnel must hold required professional certifications"
+      }
+    ]
+  },
+
+  "metadata": {
+    "created_by": "Procurement Template Team",
+    "approved_by": "Chief Procurement Officer",
+    "effective_date": "2026-04-01",
+    "review_cycle": "annual",
+    "applicable_categories": ["consulting", "professional_services", "maintenance", "training", "auditing"],
+    "excluded_categories": ["goods", "equipment", "construction", "manufacturing"],
+    "service_complexity_levels": ["basic", "intermediate", "complex", "strategic"]
+  }
+}

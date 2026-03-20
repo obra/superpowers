@@ -1,0 +1,177 @@
+{
+  "template_id": "PO_TEMPLATE_001",
+  "template_name": "Standard Purchase Order Template",
+  "template_type": "purchase_order",
+  "version": "1.0",
+  "description": "Standard purchase order template for goods procurement",
+  "jurisdiction": "ZA",
+  "last_updated": "2026-03-17",
+
+  "document_structure": {
+    "header": {
+      "company_logo": "{{company_logo}}",
+      "company_name": "{{company_name}}",
+      "company_address": "{{company_address}}",
+      "company_registration": "{{company_registration}}",
+      "company_vat_number": "{{company_vat_number}}",
+      "purchase_order_number": "{{po_number}}",
+      "order_date": "{{order_date}}",
+      "delivery_date": "{{delivery_date}}",
+      "payment_terms": "{{payment_terms}}"
+    },
+
+    "supplier_details": {
+      "supplier_name": "{{supplier_name}}",
+      "supplier_address": "{{supplier_address}}",
+      "supplier_contact": "{{supplier_contact_person}}",
+      "supplier_email": "{{supplier_email}}",
+      "supplier_phone": "{{supplier_phone}}",
+      "supplier_vat_number": "{{supplier_vat_number}}",
+      "supplier_registration": "{{supplier_registration}}"
+    },
+
+    "buyer_details": {
+      "buyer_name": "{{buyer_name}}",
+      "buyer_department": "{{buyer_department}}",
+      "buyer_email": "{{buyer_email}}",
+      "buyer_phone": "{{buyer_phone}}",
+      "approval_authority": "{{approval_authority}}"
+    },
+
+    "line_items": {
+      "columns": [
+        {"field": "line_number", "label": "Line #", "width": "8%"},
+        {"field": "item_description", "label": "Item Description", "width": "32%"},
+        {"field": "quantity", "label": "Qty", "width": "10%"},
+        {"field": "unit_of_measure", "label": "UOM", "width": "8%"},
+        {"field": "unit_price", "label": "Unit Price (ZAR)", "width": "15%"},
+        {"field": "line_total", "label": "Line Total (ZAR)", "width": "15%"},
+        {"field": "delivery_date", "label": "Delivery Date", "width": "12%"}
+      ],
+      "items": "{{line_items_array}}"
+    },
+
+    "totals_section": {
+      "subtotal": "{{subtotal_zar}}",
+      "vat_rate": "{{vat_rate}}",
+      "vat_amount": "{{vat_amount_zar}}",
+      "total_amount": "{{total_amount_zar}}",
+      "currency": "ZAR"
+    },
+
+    "delivery_terms": {
+      "delivery_address": "{{delivery_address}}",
+      "incoterms": "{{incoterms}}",
+      "special_instructions": "{{delivery_instructions}}",
+      "contact_person": "{{delivery_contact}}",
+      "contact_phone": "{{delivery_phone}}"
+    },
+
+    "payment_terms": {
+      "payment_method": "{{payment_method}}",
+      "payment_schedule": "{{payment_schedule}}",
+      "bank_details": {
+        "bank_name": "{{bank_name}}",
+        "account_number": "{{account_number}}",
+        "branch_code": "{{branch_code}}",
+        "swift_code": "{{swift_code}}"
+      }
+    },
+
+    "compliance_certifications": {
+      "iso_9001_compliant": "{{iso_9001_certified}}",
+      "bbee_level": "{{bbee_level}}",
+      "cidb_grade": "{{cidb_grade}}",
+      "environmental_certification": "{{iso_14001_certified}}",
+      "safety_certification": "{{ohsas_certified}}"
+    },
+
+    "terms_and_conditions": {
+      "general_terms": [
+        "This Purchase Order constitutes the entire agreement between the parties.",
+        "Supplier warrants that all goods delivered conform to specifications.",
+        "Buyer reserves the right to inspect and reject non-conforming goods.",
+        "Payment will be made within {{payment_terms_days}} days of satisfactory delivery.",
+        "Supplier is responsible for all applicable taxes except VAT.",
+        "Intellectual property rights remain with the Buyer.",
+        "Force majeure provisions apply as per standard terms."
+      ],
+      "compliance_terms": [
+        "Supplier must comply with all applicable South African legislation.",
+        "CIDB grading requirements must be maintained throughout the contract period.",
+        "B-BBEE scorecard requirements must be met as specified.",
+        "Environmental compliance as per ISO 14001 standards required.",
+        "Health and safety requirements as per OHS Act must be adhered to."
+      ]
+    },
+
+    "approval_section": {
+      "prepared_by": {
+        "name": "{{prepared_by_name}}",
+        "signature": "{{prepared_by_signature}}",
+        "date": "{{prepared_date}}"
+      },
+      "approved_by": {
+        "name": "{{approved_by_name}}",
+        "signature": "{{approved_by_signature}}",
+        "date": "{{approved_date}}",
+        "authority_level": "{{approval_level}}"
+      },
+      "supplier_acceptance": {
+        "accepted_by": "{{supplier_acceptance_name}}",
+        "signature": "{{supplier_acceptance_signature}}",
+        "date": "{{supplier_acceptance_date}}",
+        "company_stamp": "{{supplier_company_stamp}}"
+      }
+    },
+
+    "attachments_required": [
+      "Supplier quotation reference",
+      "Technical specifications",
+      "Quality assurance plan",
+      "Delivery schedule",
+      "Compliance certificates",
+      "Insurance certificates"
+    ]
+  },
+
+  "validation_rules": {
+    "required_fields": [
+      "po_number",
+      "order_date",
+      "supplier_name",
+      "supplier_address",
+      "buyer_name",
+      "line_items_array",
+      "total_amount_zar",
+      "delivery_address",
+      "payment_terms"
+    ],
+    "compliance_checks": [
+      {
+        "field": "cidb_grade",
+        "condition": "required_if_construction",
+        "message": "CIDB grading required for construction-related purchases"
+      },
+      {
+        "field": "bbee_level",
+        "condition": "recommended",
+        "message": "B-BBEE level verification recommended for preferential procurement"
+      },
+      {
+        "field": "iso_9001_certified",
+        "condition": "required_if_value_over_100k",
+        "message": "ISO 9001 certification required for orders over ZAR 100,000"
+      }
+    ]
+  },
+
+  "metadata": {
+    "created_by": "Procurement Template Team",
+    "approved_by": "Chief Procurement Officer",
+    "effective_date": "2026-04-01",
+    "review_cycle": "annual",
+    "applicable_categories": ["goods", "equipment", "materials", "consumables"],
+    "excluded_categories": ["services", "consulting", "software_licenses"]
+  }
+}

@@ -1,0 +1,16 @@
+# 📋 Modals Breakdown - Construct AI
+
+**Detailed analysis of all modal dialogs in the system.**
+
+## 📋 Overview
+
+This document contains detailed information about each modal dialog found in the Construct AI system.
+
+## 📊 Statistics
+
+- **Total Modals**: 0
+- **Types**: 0
+- **Generated**: 2026-01-28T11:06:46.573Z
+
+## 📋 Modal Details
+

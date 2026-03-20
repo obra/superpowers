@@ -1,0 +1,26 @@
+# Working Directory
+
+This directory serves as the agent workspace for modifications and intermediate processing during procurement workflows.
+
+## Contents
+
+- `selected_vendors.json` - User-selected vendors for RFQ
+- `compliance_report.json` - Validation results
+- `risk_assessment.yaml` - Dynamic risk analysis
+- `rfq_draft.docx` - Working draft of RFQ
+- `agent_checkpoints/` - Agent workflow checkpoints
+
+## Usage
+
+This directory is used as a temporary workspace during procurement workflow execution:
+1. Agents read templates and references
+2. Agents process and modify documents in this workspace
+3. Final outputs are written to the outputs directory
+4. Working files are cleaned up after order completion
+
+## Status
+
+**Phase 1**: Core Infrastructure - ✅ COMPLETE
+**Phase 2**: Agent Integration - 🔄 IN PROGRESS
+
+This directory will be populated dynamically during workflow execution.

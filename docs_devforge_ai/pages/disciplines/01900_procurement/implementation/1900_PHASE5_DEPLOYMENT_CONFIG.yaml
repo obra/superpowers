@@ -1,0 +1,1137 @@
+# 01900 Procurement Phase 5: Deployment Configuration
+# Version: 1.2
+# Date: 2026-03-17
+# Status: Phase 5 - Deployment & Monitoring
+
+# Deployment Environment Configuration
+deployment:
+  environment: "production"
+  region: "af-south-1"  # AWS Cape Town region for ZA compliance
+  availability_zones:
+    - "af-south-1a"
+    - "af-south-1b"
+    - "af-south-1c"
+  
+  # Application Configuration
+  application:
+    name: "procurement-system"
+    version: "1.2.0"
+    replicas: 3
+    resources:
+      requests:
+        memory: "2Gi"
+        cpu: "1000m"
+      limits:
+        memory: "4Gi"
+        cpu: "2000m"
+    
+    # Health Checks
+    health_checks:
+      liveness:
+        path: "/health"
+        port: 8080
+        initial_delay_seconds: 30
+        period_seconds: 10
+        timeout_seconds: 5
+        failure_threshold: 3
+      readiness:
+        path: "/ready"
+        port: 8080
+        initial_delay_seconds: 5
+        period_seconds: 5
+        timeout_seconds: 3
+        failure_threshold: 3
+  
+  # Database Configuration
+  database:
+    host: "procurement-db.cluster-xyz.af-south-1.rds.amazonaws.com"
+    port: 5432
+    name: "procurement_production"
+    user: "procurement_admin"
+    password: "${DATABASE_PASSWORD}"  # From environment variable
+    ssl_mode: "require"
+    pool:
+      min_connections: 5
+      max_connections: 20
+      max_idle_time: 300
+  
+  # Supabase Configuration
+  supabase:
+    url: "${SUPABASE_URL}"
+    key: "${SUPABASE_KEY}"
+    storage_bucket: "procurement-files"
+    auth:
+      jwt_secret: "${SUPABASE_JWT_SECRET}"
+  
+  # Agent Deployment Configuration
+  agent_deployment:
+    instances:
+      - name: "procurement-agent-1"
+        host: "agent1.prod.local"
+        port: 8001
+        workers: 4
+        memory_limit: "2GB"
+        cpu_limit: "2"
+        auto_scaling:
+          enabled: true
+          min_replicas: 1
+          max_replicas: 5
+          target_cpu_utilization: 70
+      
+      - name: "procurement-agent-2"
+        host: "agent2.prod.local"
+        port: 8002
+        workers: 4
+        memory_limit: "2GB"
+        cpu_limit: "2"
+        auto_scaling:
+          enabled: true
+          min_replicas: 1
+          max_replicas: 5
+          target_cpu_utilization: 70
+      
+      - name: "procurement-agent-3"
+        host: "agent3.prod.local"
+        port: 8003
+        workers: 4
+        memory_limit: "2GB"
+        cpu_limit: "2"
+        auto_scaling:
+          enabled: true
+          min_replicas: 1
+          max_replicas: 5
+          target_cpu_utilization: 70
+    
+    load_balancer:
+      algorithm: "round_robin"
+      health_check_interval: 30
+      max_failures: 3
+      sticky_sessions: false
+    
+    auto_scaling:
+      enabled: true
+      min_instances: 2
+      max_instances: 10
+      scale_up_threshold: 80
+      scale_down_threshold: 20
+      cooldown_period: 300
+  
+  # Frontend Configuration
+  frontend:
+    cdn:
+      provider: "cloudfront"
+      distribution_id: "${CDN_DISTRIBUTION_ID}"
+      domain: "procurement.construct-ai.co.za"
+      cache_ttl: 3600
+      purge_on_deploy: true
+    
+    ssl:
+      provider: "letsencrypt"
+      auto_renewal: true
+      certificate_arn: "${SSL_CERTIFICATE_ARN}"
+    
+    performance:
+      gzip_compression: true
+      image_optimization: true
+      lazy_loading: true
+      minification: true
+      source_maps: false
+  
+  # Load Balancer Configuration
+  load_balancer:
+    type: "application"
+    scheme: "internet-facing"
+    subnets:
+      - "subnet-12345678"
+      - "subnet-87654321"
+      - "subnet-11223344"
+    security_groups:
+      - "sg-12345678"
+    
+    listeners:
+      - port: 443
+        protocol: "HTTPS"
+        ssl_policy: "ELBSecurityPolicy-TLS-1-2-2017-01"
+        certificate_arn: "${SSL_CERTIFICATE_ARN}"
+      
+      - port: 80
+        protocol: "HTTP"
+        redirect_to: "HTTPS"
+    
+    health_check:
+      path: "/health"
+      port: 8080
+      protocol: "HTTP"
+      interval: 30
+      timeout: 5
+      healthy_threshold: 2
+      unhealthy_threshold: 2
+  
+  # Storage Configuration
+  storage:
+    s3:
+      bucket: "procurement-storage-prod"
+      region: "af-south-1"
+      versioning: true
+      encryption: "AES256"
+      lifecycle:
+        - id: "archive-old-files"
+          status: "Enabled"
+          transitions:
+            - days: 90
+              storage_class: "GLACIER"
+          expiration:
+            days: 365
+    
+    efs:
+      file_system_id: "fs-12345678"
+      mount_targets:
+        - subnet_id: "subnet-12345678"
+          security_groups: ["sg-12345678"]
+        - subnet_id: "subnet-87654321"
+          security_groups: ["sg-12345678"]
+  
+  # Security Configuration
+  security:
+    waf:
+      enabled: true
+      rules:
+        - name: "AWSManagedRulesCommonRuleSet"
+          priority: 1
+          override_action: "none"
+        - name: "AWSManagedRulesSQLiRuleSet"
+          priority: 2
+          override_action: "none"
+        - name: "AWSManagedRulesKnownBadInputsRuleSet"
+          priority: 3
+          override_action: "none"
+    
+    vpc:
+      vpc_id: "vpc-12345678"
+      cidr_block: "10.0.0.0/16"
+      subnets:
+        public:
+          - "subnet-12345678"
+          - "subnet-87654321"
+        private:
+          - "subnet-11223344"
+          - "subnet-44332211"
+    
+    security_groups:
+      - name: "procurement-app-sg"
+        description: "Security group for procurement application"
+        rules:
+          - type: "ingress"
+            from_port: 443
+            to_port: 443
+            protocol: "tcp"
+            cidr_blocks: ["0.0.0.0/0"]
+          - type: "ingress"
+            from_port: 80
+            to_port: 80
+            protocol: "tcp"
+            cidr_blocks: ["0.0.0.0/0"]
+          - type: "egress"
+            from_port: 0
+            to_port: 0
+            protocol: "-1"
+            cidr_blocks: ["0.0.0.0/0"]
+      
+      - name: "procurement-db-sg"
+        description: "Security group for procurement database"
+        rules:
+          - type: "ingress"
+            from_port: 5432
+            to_port: 5432
+            protocol: "tcp"
+            security_groups: ["sg-12345678"]  # App security group
+  
+  # Monitoring Configuration
+  monitoring:
+    prometheus:
+      enabled: true
+      retention: "30d"
+      storage: "100Gi"
+      resources:
+        requests:
+          memory: "2Gi"
+          cpu: "1000m"
+        limits:
+          memory: "4Gi"
+          cpu: "2000m"
+      
+      # Scrape configurations
+      scrape_configs:
+        - job_name: "procurement-app"
+          kubernetes_sd_configs:
+            - role: "pod"
+          relabel_configs:
+            - source_labels: [__meta_kubernetes_pod_label_app]
+              action: keep
+              regex: "procurement-app"
+            - source_labels: [__meta_kubernetes_pod_container_port_number]
+              action: keep
+              regex: "8080"
+        
+        - job_name: "procurement-agents"
+          kubernetes_sd_configs:
+            - role: "pod"
+          relabel_configs:
+            - source_labels: [__meta_kubernetes_pod_label_app]
+              action: keep
+              regex: "procurement-agents"
+            - source_labels: [__meta_kubernetes_pod_container_port_number]
+              action: keep
+              regex: "8001|8002|8003"
+        
+        - job_name: "node-exporter"
+          kubernetes_sd_configs:
+            - role: "node"
+          relabel_configs:
+            - source_labels: [__meta_kubernetes_node_label_kubernetes_io_hostname]
+              action: replace
+              target_label: "instance"
+        
+        - job_name: "postgres-exporter"
+          static_configs:
+            - targets: ["postgres-exporter:9187"]
+    
+    grafana:
+      enabled: true
+      admin_password: "${GRAFANA_ADMIN_PASSWORD}"
+      persistence:
+        enabled: true
+        size: "10Gi"
+      
+      # Dashboard configurations
+      dashboards:
+        - name: "01900-procurement-system-overview"
+          path: "/var/lib/grafana/dashboards/system-overview.json"
+        - name: "01900-procurement-application-metrics"
+          path: "/var/lib/grafana/dashboards/application-metrics.json"
+        - name: "01900-procurement-business-metrics"
+          path: "/var/lib/grafana/dashboards/business-metrics.json"
+        - name: "01900-procurement-agent-metrics"
+          path: "/var/lib/grafana/dashboards/agent-metrics.json"
+        - name: "01900-procurement-vfs-metrics"
+          path: "/var/lib/grafana/dashboards/vfs-metrics.json"
+      
+      # Data sources
+      data_sources:
+        - name: "Prometheus"
+          type: "prometheus"
+          url: "http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090"
+          access: "proxy"
+          is_default: true
+        
+        - name: "Loki"
+          type: "loki"
+          url: "http://loki.monitoring.svc.cluster.local:3100"
+          access: "proxy"
+    
+    alertmanager:
+      enabled: true
+      config:
+        global:
+          smtp_smarthost: "smtp.gmail.com:587"
+          smtp_from: "alerts@procurement-system.com"
+          smtp_auth_username: "alerts@procurement-system.com"
+          smtp_auth_password: "${SMTP_PASSWORD}"
+        
+        route:
+          group_by: ["alertname", "severity"]
+          group_wait: "10s"
+          group_interval: "10s"
+          repeat_interval: "1h"
+          receiver: "default-receiver"
+          
+          routes:
+            - match:
+                severity: "critical"
+              receiver: "critical-alerts"
+              group_wait: "5s"
+              repeat_interval: "15m"
+            
+            - match:
+                severity: "warning"
+              receiver: "warning-alerts"
+              group_wait: "30s"
+              repeat_interval: "1h"
+        
+        receivers:
+          - name: "default-receiver"
+            email_configs:
+              - to: "ops-team@company.com"
+                subject: "Procurement System Alert"
+                body: |
+                  Alert: {{ .CommonAnnotations.summary }}
+                  Description: {{ .CommonAnnotations.description }}
+                  Severity: {{ .CommonLabels.severity }}
+          
+          - name: "critical-alerts"
+            email_configs:
+              - to: "ops-team@company.com"
+                subject: "CRITICAL: Procurement System Alert"
+                body: |
+                  CRITICAL ALERT: {{ .CommonAnnotations.summary }}
+                  Description: {{ .CommonAnnotations.description }}
+                  Severity: {{ .CommonLabels.severity }}
+                  Time: {{ .CommonAnnotations.timestamp }}
+            slack_configs:
+              - api_url: "${SLACK_WEBHOOK_URL}"
+                channel: "#procurement-critical-alerts"
+                title: "CRITICAL: Procurement System Alert"
+                text: |
+                  Alert: {{ .CommonAnnotations.summary }}
+                  Description: {{ .CommonAnnotations.description }}
+                  Severity: {{ .CommonLabels.severity }}
+            pagerduty_configs:
+              - service_key: "${PAGERDUTY_SERVICE_KEY}"
+                description: "Procurement System Critical Alert"
+                details:
+                  alert: "{{ .CommonAnnotations.summary }}"
+                  description: "{{ .CommonAnnotations.description }}"
+                  severity: "{{ .CommonLabels.severity }}"
+          
+          - name: "warning-alerts"
+            email_configs:
+              - to: "ops-team@company.com"
+                subject: "WARNING: Procurement System Alert"
+                body: |
+                  WARNING: {{ .CommonAnnotations.summary }}
+                  Description: {{ .CommonAnnotations.description }}
+                  Severity: {{ .CommonLabels.severity }}
+            slack_configs:
+              - api_url: "${SLACK_WEBHOOK_URL}"
+                channel: "#procurement-alerts"
+                title: "WARNING: Procurement System Alert"
+                text: |
+                  Alert: {{ .CommonAnnotations.summary }}
+                  Description: {{ .CommonAnnotations.description }}
+                  Severity: {{ .CommonLabels.severity }}
+    
+    # Alert Rules
+    alert_rules:
+      system_alerts:
+        - alert: "HighCPUUsage"
+          expr: "100 - (avg by (instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100) > 80"
+          for: "5m"
+          labels:
+            severity: "warning"
+          annotations:
+            summary: "High CPU usage detected"
+            description: "CPU usage is above 80% for more than 5 minutes"
+        
+        - alert: "HighMemoryUsage"
+          expr: "(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 85"
+          for: "5m"
+          labels:
+            severity: "warning"
+          annotations:
+            summary: "High memory usage detected"
+            description: "Memory usage is above 85% for more than 5 minutes"
+        
+        - alert: "DiskSpaceLow"
+          expr: "(node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"}) * 100 < 10"
+          for: "5m"
+          labels:
+            severity: "critical"
+          annotations:
+            summary: "Low disk space"
+            description: "Disk space is below 10% on root partition"
+        
+        - alert: "DatabaseConnectionsHigh"
+          expr: "pg_stat_activity_count > 100"
+          for: "2m"
+          labels:
+            severity: "warning"
+          annotations:
+            summary: "High database connections"
+            description: "Database connections are above 100"
+      
+      application_alerts:
+        - alert: "HighErrorRate"
+          expr: "rate(http_requests_total{status=~\"5..\"}[5m]) / rate(http_requests_total[5m]) * 100 > 5"
+          for: "2m"
+          labels:
+            severity: "critical"
+          annotations:
+            summary: "High error rate detected"
+            description: "Error rate is above 5% for more than 2 minutes"
+        
+        - alert: "SlowResponseTime"
+          expr: "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2"
+          for: "5m"
+          labels:
+            severity: "warning"
+          annotations:
+            summary: "Slow response time detected"
+            description: "95th percentile response time is above 2 seconds"
+        
+        - alert: "ProcurementOrdersStalled"
+          expr: "increase(procurement_orders_created[1h]) == 0"
+          for: "30m"
+          labels:
+            severity: "warning"
+          annotations:
+            summary: "No procurement orders created"
+            description: "No procurement orders have been created in the last hour"
+      
+      agent_alerts:
+        - alert: "AgentProcessingSlow"
+          expr: "histogram_quantile(0.95, rate(agent_processing_duration_bucket[5m])) > 30"
+          for: "5m"
+          labels:
+            severity: "warning"
+          annotations:
+            summary: "Agent processing is slow"
+            description: "95th percentile agent processing time is above 30 seconds"
+        
+        - alert: "AgentErrorRateHigh"
+          expr: "rate(agent_error_rate[5m]) > 0.1"
+          for: "2m"
+          labels:
+            severity: "critical"
+          annotations:
+            summary: "High agent error rate"
+            description: "Agent error rate is above 10%"
+        
+        - alert: "VFSOperationsSlow"
+          expr: "histogram_quantile(0.95, rate(vfs_file_operation_duration_bucket[5m])) > 1"
+          for: "5m"
+          labels:
+            severity: "warning"
+          annotations:
+            summary: "VFS operations are slow"
+            description: "95th percentile VFS operation time is above 1 second"
+      
+      business_alerts:
+        - alert: "ProcurementCycleTimeHigh"
+          expr: "procurement_cycle_time > 7200"
+          for: "30m"
+          labels:
+            severity: "warning"
+          annotations:
+            summary: "Procurement cycle time is high"
+            description: "Average procurement cycle time is above 2 hours"
+        
+        - alert: "ComplianceValidationFailureRateHigh"
+          expr: "(1 - compliance_validation_success_rate) * 100 > 10"
+          for: "15m"
+          labels:
+            severity: "critical"
+          annotations:
+            summary: "High compliance validation failure rate"
+            description: "Compliance validation failure rate is above 10%"
+        
+        - alert: "RFQGenerationSlow"
+          expr: "rfq_generation_time > 300"
+          for: "10m"
+          labels:
+            severity: "warning"
+          annotations:
+            summary: "RFQ generation is slow"
+            description: "RFQ generation time is above 5 minutes"
+  
+  # Logging Configuration
+  logging:
+    level: "info"
+    format: "json"
+    output: "stdout"
+    
+    # Log aggregation
+    loki:
+      enabled: true
+      url: "http://loki.monitoring.svc.cluster.local:3100"
+      labels:
+        - "app"
+        - "environment"
+        - "severity"
+    
+    # Log retention
+    retention:
+      application_logs: "30d"
+      access_logs: "90d"
+      audit_logs: "365d"
+  
+  # Backup Configuration
+  backup:
+    database:
+      enabled: true
+      schedule: "0 2 * * *"  # Daily at 2 AM
+      retention: "30d"
+      type: "full"
+      compression: true
+      encryption: true
+      storage: "s3://procurement-backups-prod/database/"
+    
+    application:
+      enabled: true
+      schedule: "0 3 * * 0"  # Weekly on Sunday at 3 AM
+      retention: "90d"
+      type: "incremental"
+      compression: true
+      storage: "s3://procurement-backups-prod/application/"
+    
+    vfs:
+      enabled: true
+      schedule: "0 * * * *"  # Hourly
+      retention: "7d"
+      type: "incremental"
+      compression: true
+      storage: "s3://procurement-backups-prod/vfs/"
+    
+    configuration:
+      enabled: true
+      schedule: "0 4 * * *"  # Daily at 4 AM
+      retention: "365d"
+      type: "full"
+      version_control: true
+      storage: "s3://procurement-backups-prod/configuration/"
+  
+  # Disaster Recovery Configuration
+  disaster_recovery:
+    rto: "4h"  # Recovery Time Objective
+    rpo: "1h"  # Recovery Point Objective
+    
+    # Multi-region setup
+    regions:
+      primary: "af-south-1"
+      secondary: "eu-west-1"  # Ireland as backup region
+    
+    # Failover configuration
+    failover:
+      automatic: true
+      health_check_interval: 30
+      failure_threshold: 3
+      dns_ttl: 60
+    
+    # Data replication
+    replication:
+      database:
+        enabled: true
+        type: "synchronous"
+        lag_threshold: "10s"
+      
+      storage:
+        enabled: true
+        type: "cross-region"
+        frequency: "real-time"
+  
+  # Performance Configuration
+  performance:
+    # Caching
+    redis:
+      enabled: true
+      cluster_mode: true
+      nodes: 3
+      memory: "2GB"
+      eviction_policy: "allkeys-lru"
+    
+    # CDN
+    cdn:
+      enabled: true
+      provider: "cloudfront"
+      cache_behaviors:
+        - path_pattern: "/static/*"
+          ttl: 86400  # 24 hours
+        - path_pattern: "/api/*"
+          ttl: 0  # No cache for API
+        - path_pattern: "/*"
+          ttl: 3600  # 1 hour
+    
+    # Database optimization
+    database:
+      connection_pooling: true
+      query_cache: true
+      index_optimization: true
+      vacuum_schedule: "0 1 * * *"  # Daily at 1 AM
+  
+  # Security Configuration
+  security:
+    # Authentication
+    authentication:
+      provider: "supabase"
+      jwt_expiry: "24h"
+      refresh_token_expiry: "7d"
+      mfa_enabled: true
+    
+    # Authorization
+    authorization:
+      rbac_enabled: true
+      default_role: "user"
+      roles:
+        - name: "admin"
+          permissions: ["*"]
+        - name: "procurement_manager"
+          permissions: ["procurement:*", "supplier:*", "compliance:*"]
+        - name: "procurement_officer"
+          permissions: ["procurement:read", "procurement:create", "supplier:read"]
+        - name: "user"
+          permissions: ["procurement:read"]
+    
+    # Data protection
+    data_protection:
+      encryption_at_rest: true
+      encryption_in_transit: true
+      key_rotation: true
+      key_rotation_interval: "90d"
+    
+    # Compliance
+    compliance:
+      gdpr_enabled: true
+      popia_enabled: true
+      data_retention:
+        personal_data: "365d"
+        procurement_data: "2555d"  # 7 years
+        audit_logs: "3655d"  # 10 years
+  
+  # Maintenance Configuration
+  maintenance:
+    # Scheduled maintenance
+    schedule:
+      daily:
+        - time: "02:00"
+          tasks: ["log_rotation", "backup_verification", "performance_check"]
+      
+      weekly:
+        - day: "sunday"
+          time: "03:00"
+          tasks: ["database_maintenance", "index_optimization", "cache_cleanup"]
+      
+      monthly:
+        - day: 1
+          time: "04:00"
+          tasks: ["security_updates", "performance_optimization", "capacity_review"]
+    
+    # Maintenance windows
+    windows:
+      - name: "daily_maintenance"
+        start: "02:00"
+        end: "04:00"
+        timezone: "Africa/Johannesburg"
+        allowed_operations: ["log_rotation", "backup", "performance_check"]
+      
+      - name: "weekly_maintenance"
+        start: "03:00"
+        end: "05:00"
+        timezone: "Africa/Johannesburg"
+        allowed_operations: ["database_maintenance", "index_optimization", "cache_cleanup"]
+      
+      - name: "monthly_maintenance"
+        start: "04:00"
+        end: "06:00"
+        timezone: "Africa/Johannesburg"
+        allowed_operations: ["security_updates", "performance_optimization", "capacity_review"]
+  
+  # Support Configuration
+  support:
+    # Escalation matrix
+    escalation:
+      level_1:
+        response_time: "15m"
+        resolution_time: "2h"
+        contacts: ["support-team@company.com"]
+      
+      level_2:
+        response_time: "30m"
+        resolution_time: "4h"
+        contacts: ["engineering-team@company.com"]
+      
+      level_3:
+        response_time: "1h"
+        resolution_time: "8h"
+        contacts: ["devops-team@company.com", "security-team@company.com"]
+    
+    # On-call schedule
+    on_call:
+      schedule: "follow-the-sun"
+      primary: "devops-team@company.com"
+      secondary: "engineering-team@company.com"
+      escalation_timeout: "30m"
+    
+    # Communication channels
+    channels:
+      slack:
+        workspace: "company-workspace"
+        channels:
+          - "#procurement-alerts"
+          - "#procurement-support"
+          - "#procurement-critical"
+      
+      email:
+        distribution_lists:
+          - "ops-team@company.com"
+          - "engineering-team@company.com"
+          - "devops-team@company.com"
+      
+      pagerduty:
+        service_key: "${PAGERDUTY_SERVICE_KEY}"
+        escalation_policy: "procurement-escalation"
+  
+  # Compliance Configuration
+  compliance:
+    # Regulatory compliance
+    regulations:
+      gdpr:
+        enabled: true
+        data_protection_officer: "dpo@company.com"
+        privacy_policy_url: "https://procurement.construct-ai.co.za/privacy"
+      
+      popia:
+        enabled: true
+        information_officer: "io@company.com"
+        privacy_policy_url: "https://procurement.construct-ai.co.za/privacy"
+      
+      cidb:
+        enabled: true
+        compliance_officer: "compliance@company.com"
+        certification_required: true
+    
+    # Audit configuration
+    audit:
+      enabled: true
+      retention_period: "3655d"  # 10 years
+      log_all_operations: true
+      sensitive_data_masking: true
+      
+      # Audit events
+      events:
+        - "user_login"
+        - "user_logout"
+        - "procurement_order_created"
+        - "procurement_order_updated"
+        - "procurement_order_deleted"
+        - "supplier_created"
+        - "supplier_updated"
+        - "compliance_validation_performed"
+        - "document_generated"
+        - "approval_workflow_completed"
+    
+    # Data classification
+    data_classification:
+      levels:
+        - name: "public"
+          description: "Publicly available data"
+          protection: "none"
+        
+        - name: "internal"
+          description: "Internal company data"
+          protection: "encryption_at_rest"
+        
+        - name: "confidential"
+          description: "Confidential business data"
+          protection: "encryption_at_rest_and_transit"
+        
+        - name: "restricted"
+          description: "Highly sensitive data"
+          protection: "encryption_at_rest_and_transit, access_control, audit_logging"
+  
+  # Integration Configuration
+  integrations:
+    # ERP Integration
+    erp:
+      enabled: true
+      provider: "sap"
+      endpoint: "${ERP_ENDPOINT}"
+      authentication: "oauth2"
+      sync_frequency: "real-time"
+    
+    # Email Integration
+    email:
+      enabled: true
+      provider: "sendgrid"
+      api_key: "${SENDGRID_API_KEY}"
+      from_email: "procurement@construct-ai.co.za"
+      templates:
+        - name: "rfq_notification"
+          subject: "Request for Quotation - {{order_id}}"
+        - name: "approval_request"
+          subject: "Approval Required - {{order_id}}"
+        - name: "order_confirmation"
+          subject: "Order Confirmation - {{order_id}}"
+    
+    # SMS Integration
+    sms:
+      enabled: true
+      provider: "twilio"
+      account_sid: "${TWILIO_ACCOUNT_SID}"
+      auth_token: "${TWILIO_AUTH_TOKEN}"
+      from_number: "+27123456789"
+    
+    # Document Generation
+    document_generation:
+      enabled: true
+      provider: "puppeteer"
+      templates_path: "/app/templates"
+      output_path: "/app/outputs"
+      
+      # Document types
+      document_types:
+        - name: "rfq"
+          template: "rfq_template.html"
+          format: "pdf"
+        
+        - name: "purchase_order"
+          template: "purchase_order_template.html"
+          format: "pdf"
+        
+        - name: "compliance_report"
+          template: "compliance_report_template.html"
+          format: "pdf"
+  
+  # Testing Configuration
+  testing:
+    # Test environment
+    test_environment:
+      enabled: true
+      database_url: "${TEST_DATABASE_URL}"
+      supabase_url: "${TEST_SUPABASE_URL}"
+      supabase_key: "${TEST_SUPABASE_KEY}"
+    
+    # Test data
+    test_data:
+      suppliers: 50
+      orders: 100
+      users: 20
+    
+    # Performance testing
+    performance_testing:
+      enabled: true
+      tools:
+        - "k6"
+        - "locust"
+      
+      scenarios:
+        - name: "load_test"
+          users: 100
+          duration: "10m"
+          ramp_up: "2m"
+        
+        - name: "stress_test"
+          users: 500
+          duration: "5m"
+          ramp_up: "1m"
+        
+        - name: "spike_test"
+          users: 1000
+          duration: "2m"
+          ramp_up: "30s"
+    
+    # Security testing
+    security_testing:
+      enabled: true
+      tools:
+        - "owasp_zap"
+        - "bandit"
+        - "safety"
+      
+      scans:
+        - name: "dependency_scan"
+          schedule: "daily"
+        
+        - name: "code_scan"
+          schedule: "weekly"
+        
+        - name: "penetration_test"
+          schedule: "quarterly"
+  
+  # Documentation Configuration
+  documentation:
+    # API documentation
+    api_docs:
+      enabled: true
+      format: "openapi"
+      version: "3.0.0"
+      url: "/api/docs"
+    
+    # User documentation
+    user_docs:
+      enabled: true
+      format: "markdown"
+      url: "/docs"
+      
+      # Documentation sections
+      sections:
+        - name: "getting_started"
+          title: "Getting Started"
+          content: "User guide for getting started with the procurement system"
+        
+        - name: "user_guide"
+          title: "User Guide"
+          content: "Comprehensive user guide for all features"
+        
+        - name: "api_reference"
+          title: "API Reference"
+          content: "Complete API reference documentation"
+        
+        - name: "troubleshooting"
+          title: "Troubleshooting"
+          content: "Common issues and solutions"
+    
+    # System documentation
+    system_docs:
+      enabled: true
+      format: "markdown"
+      url: "/system-docs"
+      
+      # Documentation sections
+      sections:
+        - name: "architecture"
+          title: "System Architecture"
+          content: "System architecture and design documentation"
+        
+        - name: "deployment"
+          title: "Deployment Guide"
+          content: "Deployment procedures and configuration"
+        
+        - name: "monitoring"
+          title: "Monitoring Guide"
+          content: "Monitoring and alerting configuration"
+        
+        - name: "maintenance"
+          title: "Maintenance Guide"
+          content: "System maintenance procedures"
+  
+  # Version Control Configuration
+  version_control:
+    # Git configuration
+    git:
+      repository: "git@github.com:Construct-AI-primary/construct_ai.git"
+      branch: "main"
+      auto_deploy: true
+      
+      # Branch protection
+      branch_protection:
+        main:
+          required_reviews: 2
+          required_status_checks: true
+          enforce_admins: true
+        
+        develop:
+          required_reviews: 1
+          required_status_checks: true
+          enforce_admins: false
+    
+    # Release management
+    releases:
+      strategy: "semantic_versioning"
+      auto_release: true
+      release_notes: true
+      
+      # Release channels
+      channels:
+        - name: "stable"
+          branch: "main"
+          auto_deploy: true
+        
+        - name: "beta"
+          branch: "develop"
+          auto_deploy: false
+        
+        - name: "alpha"
+          branch: "feature/*"
+          auto_deploy: false
+  
+  # Cost Optimization Configuration
+  cost_optimization:
+    # Resource optimization
+    resources:
+      auto_scaling: true
+      right_sizing: true
+      spot_instances: true
+      
+      # Reserved instances
+      reserved_instances:
+        enabled: true
+        term: "1_year"
+        payment_option: "partial_upfront"
+    
+    # Storage optimization
+    storage:
+      lifecycle_policies: true
+      intelligent_tiering: true
+      compression: true
+      
+      # Data archiving
+      archiving:
+        enabled: true
+        archive_after: "90d"
+        delete_after: "365d"
+    
+    # Monitoring costs
+    monitoring:
+      cost_alerts: true
+      budget_threshold: 10000  # ZAR
+      alert_threshold: 80  # Percentage
+  
+  # Environment Variables
+  environment_variables:
+    # Database
+    DATABASE_HOST: "procurement-db.cluster-xyz.af-south-1.rds.amazonaws.com"
+    DATABASE_PORT: "5432"
+    DATABASE_NAME: "procurement_production"
+    DATABASE_USER: "procurement_admin"
+    DATABASE_PASSWORD: "${DATABASE_PASSWORD}"
+    
+    # Supabase
+    SUPABASE_URL: "${SUPABASE_URL}"
+    SUPABASE_KEY: "${SUPABASE_KEY}"
+    SUPABASE_JWT_SECRET: "${SUPABASE_JWT_SECRET}"
+    
+    # AWS
+    AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
+    AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
+    AWS_REGION: "af-south-1"
+    
+    # CDN
+    CDN_DISTRIBUTION_ID: "${CDN_DISTRIBUTION_ID}"
+    
+    # Monitoring
+    GRAFANA_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD}"
+    SLACK_WEBHOOK_URL: "${SLACK_WEBHOOK_URL}"
+    PAGERDUTY_SERVICE_KEY: "${PAGERDUTY_SERVICE_KEY}"
+    SMTP_PASSWORD: "${SMTP_PASSWORD}"
+    
+    # Email
+    SENDGRID_API_KEY: "${SENDGRID_API_KEY}"
+    
+    # SMS
+    TWILIO_ACCOUNT_SID: "${TWILIO_ACCOUNT_SID}"
+    TWILIO_AUTH_TOKEN: "${TWILIO_AUTH_TOKEN}"
+    
+    # Application
+    NODE_ENV: "production"
+    LOG_LEVEL: "info"
+    PORT: "8080"
+    
+    # Security
+    JWT_SECRET: "${JWT_SECRET}"
+    ENCRYPTION_KEY: "${ENCRYPTION_KEY}"
+    
+    # Performance
+    REDIS_URL: "redis://redis-cluster.procurement.svc.cluster.local:6379"
+    CACHE_TTL: "3600"
+    
+    # Compliance
+    GDPR_ENABLED: "true"
+    POPIA_ENABLED: "true"
+    AUDIT_LOGGING: "true"
+    
+    # Testing
+    TEST_DATABASE_URL: "${TEST_DATABASE_URL}"
+    TEST_SUPABASE_URL: "${TEST_SUPABASE_URL}"
+    TEST_SUPABASE_KEY: "${TEST_SUPABASE_KEY}"
+  
+  # Tags
+  tags:
+    Environment: "production"
+    Project: "01900-procurement"
+    Owner: "deep-agents-team"
+    CostCenter: "procurement-operations"
+    DataClassification: "confidential"
+    Compliance: "gdpr,popia,cidb"
+    Backup: "daily"
+    Monitoring: "enabled"
+    AutoScaling: "enabled"
+    DisasterRecovery: "enabled"

@@ -1,0 +1,24 @@
+# References Directory
+
+This directory contains order-specific supplier references and cached data.
+
+## Planned Contents
+
+- `selected_suppliers.json` - Cached supplier cards for current order
+- `supplier_search_cache.json` - Cached search results
+- `vendor_master.csv` - Supplier qualification criteria
+- `supplier_*.json` - Individual supplier cards (generated from database)
+
+## Usage
+
+This directory is populated dynamically during procurement workflow execution:
+1. When an order is created, supplier cards are generated from the database
+2. Cards are cached here for fast access by agents
+3. Search results are cached to avoid redundant database queries
+
+## Status
+
+**Phase 1**: Core Infrastructure - ✅ COMPLETE
+**Phase 2**: Agent Integration - 🔄 IN PROGRESS
+
+Supplier cards will be generated from existing database tables during order initialization.

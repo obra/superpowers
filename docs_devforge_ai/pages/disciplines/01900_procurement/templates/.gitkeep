@@ -1,0 +1,25 @@
+# Templates Directory
+
+This directory contains reusable templates and compliance rules for procurement workflows.
+
+## Planned Contents
+
+- `procurement_plan.yaml` - Standard timelines and workflows
+- `compliance_rules.json` - Jurisdiction-specific compliance requirements (ZA/FI/UK/EU)
+- `inventory_catalog.json` - SKU data with ERP integration
+- `delivery_terms.docx` - Incoterms and logistics templates
+- `shipping_schedule.csv` - Carrier and routing data
+- `appendix_a_product_specs_template.md` - Product specification template
+- `sow_document.md` - Scope of Work template
+- `appendix_a_specifications.md` through `appendix_f_packing.md` - Appendix templates
+- `order_templates_procurement.md` - PO/SO/WO templates
+- `purchase_order_template.pdf` - Purchase order template
+- `service_order_template.pdf` - Service order template
+- `work_order_template.docx` - Work order template
+
+## Status
+
+**Phase 1**: Core Infrastructure - ✅ COMPLETE
+**Phase 2**: Agent Integration - 🔄 IN PROGRESS
+
+Templates will be migrated from existing documentation during Phase 2 implementation.

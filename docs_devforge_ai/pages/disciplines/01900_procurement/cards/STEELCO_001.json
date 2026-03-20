@@ -1,0 +1,61 @@
+{
+  "supplier_id": "STEELCO_001",
+  "company_name": "SteelCo ZA",
+  "contact_info": {
+    "email": "procurement@steelco.co.za",
+    "phone": "+27-21-555-0123",
+    "address": "15 Steel Road, Johannesburg, ZA"
+  },
+  "certifications": {
+    "cidb_grade": "GR8",
+    "iso_9001": true,
+    "iso_14001": true,
+    "bbee_level": "Level 2",
+    "sars_vat_registered": true
+  },
+  "products_services": [
+    {
+      "sku": "STEEL-BEAM-10M",
+      "description": "Structural steel beams, 10m length",
+      "unit_price_zar": 12500.00,
+      "lead_time_days": 14,
+      "moq": 10,
+      "stock_level": 500,
+      "last_updated": "2026-03-15"
+    },
+    {
+      "sku": "STEEL-PLATE-5MM",
+      "description": "Steel plates, 5mm thickness",
+      "unit_price_zar": 8500.00,
+      "lead_time_days": 7,
+      "moq": 50,
+      "stock_level": 1200,
+      "last_updated": "2026-03-15"
+    }
+  ],
+  "logistics": {
+    "incoterms_supported": ["DAP", "DDP", "FOB"],
+    "preferred_carriers": ["Transnet", "Spoornet"],
+    "delivery_zones": ["Gauteng", "Western Cape", "KwaZulu-Natal"],
+    "customs_clearance": true
+  },
+  "performance_history": {
+    "on_time_delivery_rate": 0.96,
+    "quality_complaints": 2,
+    "total_orders": 450,
+    "average_order_value_zar": 250000.00,
+    "last_order_date": "2026-02-28"
+  },
+  "risk_profile": {
+    "financial_stability": "A",
+    "supply_chain_risk": "Low",
+    "geopolitical_exposure": "None",
+    "currency_risk": "Medium"
+  },
+  "metadata": {
+    "created_date": "2025-01-15",
+    "last_audit_date": "2026-01-30",
+    "approved_by": "Procurement Director",
+    "next_review_date": "2026-07-15"
+  }
+}

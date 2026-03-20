@@ -1,0 +1,278 @@
+{
+  "template_id": "WO_TEMPLATE_001",
+  "template_name": "Standard Work Order Template",
+  "template_type": "work_order",
+  "version": "1.0",
+  "description": "Standard work order template for construction, maintenance, and installation work",
+  "jurisdiction": "ZA",
+  "last_updated": "2026-03-17",
+
+  "document_structure": {
+    "header": {
+      "company_logo": "{{company_logo}}",
+      "company_name": "{{company_name}}",
+      "company_address": "{{company_address}}",
+      "company_registration": "{{company_registration}}",
+      "company_vat_number": "{{company_vat_number}}",
+      "work_order_number": "{{wo_number}}",
+      "order_date": "{{order_date}}",
+      "work_start_date": "{{work_start_date}}",
+      "work_completion_date": "{{work_completion_date}}",
+      "contract_period": "{{contract_period_days}} days"
+    },
+
+    "contractor_details": {
+      "contractor_name": "{{contractor_name}}",
+      "contractor_address": "{{contractor_address}}",
+      "contractor_contact": "{{contractor_contact_person}}",
+      "contractor_email": "{{contractor_email}}",
+      "contractor_phone": "{{contractor_phone}}",
+      "contractor_vat_number": "{{contractor_vat_number}}",
+      "contractor_registration": "{{contractor_registration}}",
+      "cidb_grading": "{{cidb_grading}}",
+      "nhbrc_registration": "{{nhbrc_registration}}"
+    },
+
+    "site_details": {
+      "site_name": "{{site_name}}",
+      "site_address": "{{site_address}}",
+      "site_contact": "{{site_contact_person}}",
+      "site_phone": "{{site_phone}}",
+      "access_requirements": "{{site_access_requirements}}",
+      "working_hours": "{{working_hours}}",
+      "environmental_conditions": "{{environmental_conditions}}"
+    },
+
+    "project_details": {
+      "project_manager": "{{project_manager}}",
+      "project_manager_email": "{{project_manager_email}}",
+      "project_manager_phone": "{{project_manager_phone}}",
+      "client_representative": "{{client_representative}}",
+      "approval_authority": "{{approval_authority}}",
+      "health_and_safety_officer": "{{health_and_safety_officer}}"
+    },
+
+    "scope_of_work": {
+      "work_category": "{{work_category}}",
+      "work_description": "{{work_description}}",
+      "detailed_scope": "{{detailed_scope_of_work}}",
+      "specifications": "{{technical_specifications}}",
+      "quality_standards": "{{quality_standards_required}}",
+      "drawings_references": "{{drawings_and_references}}",
+      "exclusions": "{{work_exclusions}}",
+      "variations_procedure": "{{variations_procedure}}"
+    },
+
+    "work_schedule": {
+      "critical_path": "{{critical_path_milestones}}",
+      "work_phases": "{{work_phases_array}}",
+      "weather_dependent_work": "{{weather_dependent_activities}}",
+      "inspection_points": "{{inspection_and_testing_points}}",
+      "completion_criteria": "{{work_completion_criteria}}",
+      "snag_list_procedure": "{{snag_list_and_defects_procedure}}"
+    },
+
+    "materials_and_equipment": {
+      "materials_provided_by_client": "{{client_supplied_materials}}",
+      "materials_provided_by_contractor": "{{contractor_supplied_materials}}",
+      "equipment_requirements": "{{equipment_and_plant_requirements}}",
+      "temporary_utilities": "{{temporary_utilities_required}}",
+      "waste_disposal": "{{waste_disposal_requirements}}",
+      "environmental_protection": "{{environmental_protection_measures}}"
+    },
+
+    "labor_and_resources": {
+      "labor_categories": "{{labor_categories_and_rates}}",
+      "supervisory_staff": "{{supervisory_and_management_staff}}",
+      "subcontractors": "{{approved_subcontractors}}",
+      "training_requirements": "{{workforce_training_requirements}}",
+      "certifications_required": "{{required_certifications_and_licenses}}"
+    },
+
+    "health_and_safety": {
+      "safety_plan": "{{health_and_safety_plan}}",
+      "personal_protective_equipment": "{{ppe_requirements}}",
+      "risk_assessments": "{{risk_assessments_required}}",
+      "emergency_procedures": "{{emergency_response_procedures}}",
+      "incident_reporting": "{{incident_reporting_procedures}}",
+      "safety_training": "{{safety_training_and_induction}}"
+    },
+
+    "quality_control": {
+      "quality_assurance_plan": "{{quality_assurance_plan}}",
+      "inspection_and_testing": "{{inspection_and_testing_procedures}}",
+      "non_conformance_procedure": "{{non_conformance_and_corrective_actions}}",
+      "documentation_requirements": "{{documentation_and_record_keeping}}",
+      "client_approval_process": "{{client_inspection_and_approval}}"
+    },
+
+    "pricing_and_payment": {
+      "contract_price": "{{total_contract_price_zar}}",
+      "payment_schedule": "{{payment_schedule_array}}",
+      "variation_pricing": "{{variation_order_pricing}}",
+      "retention_percentage": "{{retention_percentage}}",
+      "retention_release": "{{retention_release_schedule}}",
+      "penalty_clauses": "{{penalty_for_delay_clauses}}",
+      "bonus_incentives": "{{early_completion_bonuses}}",
+      "currency": "ZAR"
+    },
+
+    "insurance_and_security": {
+      "contractor_all_risk": "{{contractor_all_risk_insurance}}",
+      "public_liability": "{{public_liability_insurance}}",
+      "workers_compensation": "{{workers_compensation_insurance}}",
+      "professional_indemnity": "{{professional_indemnity_insurance}}",
+      "guarantee_bond": "{{guarantee_or_performance_bond}}",
+      "site_security": "{{site_security_requirements}}"
+    },
+
+    "compliance_and_regulatory": {
+      "cidb_compliance": "{{cidb_registration_and_compliance}}",
+      "nhbrc_compliance": "{{nhbrc_registration_and_compliance}}",
+      "environmental_compliance": "{{environmental_impact_and_permits}}",
+      "building_regulations": "{{local_building_regulations}}",
+      "occupational_health": "{{occupational_health_and_safety_act}}",
+      "compensation_for_occupational_injuries": "{{compensation_for_occupational_injuries_act}}",
+      "unemployment_insurance": "{{unemployment_insurance_fund}}"
+    },
+
+    "terms_and_conditions": {
+      "general_terms": [
+        "This Work Order constitutes the entire agreement between the parties.",
+        "Contractor warrants workmanship and materials conform to specifications.",
+        "Client reserves the right to inspect work and reject non-conforming work.",
+        "Payment will be made within {{payment_terms_days}} days of satisfactory completion.",
+        "Contractor is responsible for all applicable taxes except VAT.",
+        "Intellectual property rights remain with the Client.",
+        "Force majeure provisions apply as per standard terms."
+      ],
+      "construction_terms": [
+        "Contractor must maintain CIDB grading throughout the contract period.",
+        "All work must comply with National Building Regulations and Standards.",
+        "Contractor responsible for obtaining all necessary permits and approvals.",
+        "Site must be left clean and safe at end of each working day.",
+        "Contractor must provide method statements for critical activities.",
+        "Weather protection measures must be implemented as required.",
+        "Access to site must be coordinated with site management."
+      ],
+      "compliance_terms": [
+        "Contractor must comply with all applicable South African legislation.",
+        "OHS Act compliance mandatory with proper safety plans.",
+        "Environmental compliance as per relevant environmental legislation.",
+        "COIDA compliance with proper registration and reporting.",
+        "UIF compliance for all workers on site.",
+        "B-BBEE scorecard requirements must be maintained.",
+        "Skills development levies must be paid as required."
+      ]
+    },
+
+    "approval_section": {
+      "prepared_by": {
+        "name": "{{prepared_by_name}}",
+        "signature": "{{prepared_by_signature}}",
+        "date": "{{prepared_date}}"
+      },
+      "approved_by": {
+        "name": "{{approved_by_name}}",
+        "signature": "{{approved_by_signature}}",
+        "date": "{{approved_date}}",
+        "authority_level": "{{approval_level}}"
+      },
+      "contractor_acceptance": {
+        "accepted_by": "{{contractor_acceptance_name}}",
+        "signature": "{{contractor_acceptance_signature}}",
+        "date": "{{contractor_acceptance_date}}",
+        "company_stamp": "{{contractor_company_stamp}}",
+        "cidb_stamp": "{{cidb_registration_stamp}}"
+      }
+    },
+
+    "attachments_required": [
+      "Detailed scope of work and specifications",
+      "Technical drawings and plans",
+      "Contractor CVs and certifications",
+      "CIDB certificate and grading",
+      "Insurance certificates",
+      "Health and safety plan",
+      "Quality assurance plan",
+      "Method statements for critical activities",
+      "Environmental management plan",
+      "Program of works and schedule",
+      "Pricing breakdown and rates",
+      "Material specifications and samples",
+      "Reference projects and testimonials"
+    ]
+  },
+
+  "validation_rules": {
+    "required_fields": [
+      "wo_number",
+      "order_date",
+      "contractor_name",
+      "contractor_address",
+      "site_name",
+      "site_address",
+      "work_description",
+      "detailed_scope_of_work",
+      "work_start_date",
+      "work_completion_date",
+      "total_contract_price_zar",
+      "payment_schedule_array"
+    ],
+    "compliance_checks": [
+      {
+        "field": "cidb_grading",
+        "condition": "required",
+        "message": "CIDB grading certificate required for construction work"
+      },
+      {
+        "field": "health_and_safety_plan",
+        "condition": "required",
+        "message": "Health and safety plan required for construction work"
+      },
+      {
+        "field": "insurance_requirements",
+        "condition": "required",
+        "message": "Comprehensive insurance coverage required for construction work"
+      },
+      {
+        "field": "quality_assurance_plan",
+        "condition": "required",
+        "message": "Quality assurance plan required for construction work"
+      }
+    ],
+    "business_rules": [
+      {
+        "rule": "cidb_grading_sufficient",
+        "condition": "cidb_grading >= required_grading",
+        "message": "Contractor CIDB grading must meet project requirements"
+      },
+      {
+        "rule": "work_completion_before_payment",
+        "condition": "work_completion_date < final_payment_date",
+        "message": "Work completion must precede final payment"
+      },
+      {
+        "rule": "retention_held",
+        "condition": "retention_percentage <= 10",
+        "message": "Retention cannot exceed 10% of contract value"
+      }
+    ]
+  },
+
+  "metadata": {
+    "created_by": "Procurement Template Team",
+    "approved_by": "Chief Procurement Officer",
+    "effective_date": "2026-04-01",
+    "review_cycle": "annual",
+    "applicable_categories": ["construction", "maintenance", "installation", "renovation", "civil_engineering"],
+    "excluded_categories": ["goods", "professional_services", "consulting", "software"],
+    "work_complexity_levels": ["minor", "standard", "major", "critical_infrastructure"],
+    "required_cidb_grading": {
+      "minor": "GR1-GR3",
+      "standard": "GR4-GR6",
+      "major": "GR7-GR8",
+      "critical_infrastructure": "GR9"
+    }
+  }
+}

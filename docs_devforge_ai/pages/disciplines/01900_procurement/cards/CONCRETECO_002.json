@@ -1,0 +1,61 @@
+{
+  "supplier_id": "CONCRETECO_002",
+  "company_name": "ConcreteCo South Africa",
+  "contact_info": {
+    "email": "orders@concreteco.co.za",
+    "phone": "+27-11-555-0456",
+    "address": "45 Concrete Avenue, Pretoria, ZA"
+  },
+  "certifications": {
+    "cidb_grade": "GR7",
+    "iso_9001": true,
+    "iso_14001": false,
+    "bbee_level": "Level 3",
+    "sars_vat_registered": true
+  },
+  "products_services": [
+    {
+      "sku": "CONCRETE-READY-MIX",
+      "description": "Ready-mix concrete, Grade 30MPa",
+      "unit_price_zar": 3200.00,
+      "lead_time_days": 2,
+      "moq": 20,
+      "stock_level": 800,
+      "last_updated": "2026-03-15"
+    },
+    {
+      "sku": "CEMENT-BULK-50KG",
+      "description": "Portland cement, 50kg bags",
+      "unit_price_zar": 180.00,
+      "lead_time_days": 1,
+      "moq": 100,
+      "stock_level": 5000,
+      "last_updated": "2026-03-15"
+    }
+  ],
+  "logistics": {
+    "incoterms_supported": ["DAP", "FOB"],
+    "preferred_carriers": ["Transnet", "Putco Logistics"],
+    "delivery_zones": ["Gauteng", "Limpopo", "North West"],
+    "customs_clearance": false
+  },
+  "performance_history": {
+    "on_time_delivery_rate": 0.92,
+    "quality_complaints": 5,
+    "total_orders": 320,
+    "average_order_value_zar": 85000.00,
+    "last_order_date": "2026-03-10"
+  },
+  "risk_profile": {
+    "financial_stability": "B",
+    "supply_chain_risk": "Medium",
+    "geopolitical_exposure": "Low",
+    "currency_risk": "Low"
+  },
+  "metadata": {
+    "created_date": "2025-02-20",
+    "last_audit_date": "2026-02-15",
+    "approved_by": "Procurement Manager",
+    "next_review_date": "2026-08-20"
+  }
+}
