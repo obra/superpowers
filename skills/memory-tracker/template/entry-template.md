@@ -13,7 +13,7 @@ YYYY-MM-DD
 [Context, trigger, constraints]
 
 ## Change Unit
-[What this related commit set collectively accomplished]
+[What these related commits collectively accomplished]
 
 ## Commit Range
 [Optional base/head or range summary]
@@ -31,4 +31,4 @@ YYYY-MM-DD
 - def456g type(scope): summary
 
 ## Integration Summary
-[How these commits together form one independently reviewable change unit]
+[How these commits together form one independently reviewable memory unit]

@@ -114,7 +114,7 @@ Start a new session in your chosen platform and ask for something that should tr
 
 7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
 
-8. **progress-bootstrap** and **progress-tracker** - Initializes canonical `docs/superpowers/progress/` project memory by category, then records closed reviewable change units with outcomes, lessons, and commit traceability. The legacy `.progress/` layout is no longer used as a runtime compatibility layer.
+8. **memory-bootstrap** and **memory-tracker** - Initializes canonical `docs/superpowers/memory/` project memory by category, then records closed reviewable change units with outcomes, lessons, and commit traceability. The legacy pre-memory layout is no longer used as a runtime compatibility layer.
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
@@ -141,8 +141,8 @@ Start a new session in your chosen platform and ask for something that should tr
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
 
 **Project Memory**
-- **progress-bootstrap** - Initializes canonical `docs/superpowers/progress/` layout (`docs/superpowers/progress/<category>/PROGRESS.md` + monthly entry folders; each `PROGRESS.md` combines category declaration with that category's global index)
-- **progress-tracker** - Logs closed reviewable change units with outcomes, lessons, and commit linkage
+- **memory-bootstrap** - Initializes canonical `docs/superpowers/memory/` layout (`docs/superpowers/memory/<category>/MEMORY.md` + monthly entry folders; each `MEMORY.md` combines category declaration with that category's global index)
+- **memory-tracker** - Logs closed reviewable change units with outcomes, lessons, and commit linkage
 
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)

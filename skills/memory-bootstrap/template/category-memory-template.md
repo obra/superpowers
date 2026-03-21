@@ -4,10 +4,10 @@
 [category-name]
 
 ## Admission Rule
-[what qualifies for this category]
+[what qualifies for this memory category]
 
 ## Notes
-[optional notes]
+[optional memory notes]
 
 ## Global TOC
 
