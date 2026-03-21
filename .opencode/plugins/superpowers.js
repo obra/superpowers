@@ -68,6 +68,11 @@ When skills reference tools you don't have, substitute OpenCode equivalents:
 - \`Skill\` tool → OpenCode's native \`skill\` tool
 - \`Read\`, \`Write\`, \`Edit\`, \`Bash\` → Your native tools
 
+**Skill Name Compatibility (OpenCode):**
+- For superpowers skills, prefer \`superpowers/<skill-name>\` with the \`skill\` tool (example: \`superpowers/brainstorming\`).
+- If OpenCode says \`Skill "<skill-name>" not found\` for a bare name, retry with \`superpowers/<skill-name>\`.
+- Slash-command form \`/superpowers:<skill-name>\` is also acceptable when supported.
+
 **Skills location:**
 Superpowers skills are in \`${configDir}/skills/superpowers/\`
 Use OpenCode's native \`skill\` tool to list and load skills.`;

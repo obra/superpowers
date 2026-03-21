@@ -68,5 +68,25 @@ else
     exit 1
 fi
 
+echo "Test 7: Checking bootstrap skill-name guidance..."
+bootstrap_output=$(PLUGIN_FILE="$plugin_file" node --input-type=module <<'EOF'
+const { SuperpowersPlugin } = await import(process.env.PLUGIN_FILE);
+
+const plugin = await SuperpowersPlugin({ client: {}, directory: process.cwd() });
+const output = { system: [] };
+
+await plugin['experimental.chat.system.transform']({}, output);
+console.log((output.system || []).join('\n'));
+EOF
+)
+
+if echo "$bootstrap_output" | grep -q "If OpenCode says \`Skill .* not found\` for a bare name" \
+   && echo "$bootstrap_output" | grep -q "retry with \`superpowers/<skill-name>\`"; then
+    echo "  [PASS] Bootstrap contains namespaced fallback guidance"
+else
+    echo "  [FAIL] Bootstrap missing namespaced fallback guidance"
+    exit 1
+fi
+
 echo ""
 echo "=== All plugin loading tests passed ==="
