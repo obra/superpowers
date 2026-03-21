@@ -3,11 +3,14 @@
 ## Category
 [category-name]
 
-## Admission Rule
-[what qualifies for this memory category]
+## Use When
+[when this category should be used]
 
-## Notes
-[optional memory notes]
+## Avoid When
+[when this category should not be used]
+
+## Entry Template
+`[entry-template-path]`
 
 ## Global TOC
 

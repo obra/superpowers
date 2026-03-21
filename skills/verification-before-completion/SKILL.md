@@ -124,6 +124,8 @@ From 24 failure memories:
 - Moving to next task
 - Delegating to agents
 
+After verification confirms a closed change unit, check whether the repository expects a memory decision. If memory tracking is part of the repository workflow, invoke `memory-tracker` to decide whether this completed unit should be recorded before closing the task.
+
 **Rule applies to:**
 - Exact phrases
 - Paraphrases and synonyms
