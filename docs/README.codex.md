@@ -88,7 +88,7 @@ Unix-like: ~/.codex/agents/code-reviewer.toml → ~/.superpowers/install/.codex/
 Windows: copy ~/.superpowers/install/.codex/agents/code-reviewer.toml to ~/.codex/agents/code-reviewer.toml
 ```
 
-The `using-superpowers` skill is discovered automatically and enforces skill usage discipline — no additional configuration needed.
+The `using-superpowers` skill is discovered automatically and acts as the entry router, including a session-scoped bypass gate before the normal Superpowers stack takes over — no additional configuration needed.
 
 The `code-reviewer` custom agent is available after installation.
 
@@ -113,7 +113,7 @@ Use `[agents]` in your Codex config for global subagent controls such as `max_th
 Skills are discovered automatically. Codex activates them when:
 - You mention a skill by name (e.g., "use brainstorming")
 - The task matches a skill's description
-- The `using-superpowers` skill directs Codex to use one
+- The `using-superpowers` skill asks whether to use or bypass Superpowers for the session, then directs Codex to use one when the stack stays enabled
 
 ## Default Workflow
 

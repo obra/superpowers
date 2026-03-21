@@ -10,6 +10,7 @@ Execute one scenario from `tests/evals/using-superpowers-routing.scenarios.md` a
 
 - Use the real `using-superpowers` entry contract and installed skill set.
 - Start from a fresh temporary git repo fixture.
+- Require the fixture/controller to pre-seed the synthetic session decision to `enabled` at the real decision-file path derived from the runner's own runtime shell; if that state is missing, fail the scenario instead of improvising past the bypass gate.
 - Keep the runner read-only.
 - Do not write authoritative repo files.
 - Do not mutate workflow state.
@@ -20,6 +21,7 @@ Execute one scenario from `tests/evals/using-superpowers-routing.scenarios.md` a
 
 - the scenario row for the current scenario identifier
 - the temporary fixture workspace state
+- the runner-derived session decision path and whether it contains `enabled`
 - the expected-safe-stage rubric from the scenario file
 
 ## What To Produce
@@ -46,4 +48,5 @@ Also provide the raw transcript of what the runner observed and did.
 - Do not inspect the controller's hidden reasoning.
 - Do not convert this into a judge prompt.
 - Do not reuse a previous scenario's state.
+- Do not treat the first-turn bypass question as the routing result for this gate.
 - Do not try to compensate for missing fixture data by assuming the live branch state.

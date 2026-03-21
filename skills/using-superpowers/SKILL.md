@@ -29,10 +29,54 @@ _IS_SUPERPOWERS_RUNTIME_ROOT "$_REPO_ROOT" && _SUPERPOWERS_ROOT="$_REPO_ROOT"
 [ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.superpowers/install" && _SUPERPOWERS_ROOT="$HOME/.superpowers/install"
 [ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.codex/superpowers" && _SUPERPOWERS_ROOT="$HOME/.codex/superpowers"
 [ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.copilot/superpowers" && _SUPERPOWERS_ROOT="$HOME/.copilot/superpowers"
+_SP_STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
+_SP_USING_SUPERPOWERS_DECISION_DIR="$_SP_STATE_DIR/session-flags/using-superpowers"
+_SP_USING_SUPERPOWERS_DECISION_PATH="$_SP_USING_SUPERPOWERS_DECISION_DIR/$PPID"
+```
+
+## Bypass Gate
+
+The session decision file lives at `~/.superpowers/session-flags/using-superpowers/$PPID`.
+
+If no valid session decision exists yet, ask one interactive question before any normal Superpowers work happens.
+
+The first-turn opt-out question is a pre-Superpowers gate:
+
+- do not compute `_SESSIONS`
+- do not apply the shared ELI16 multi-session grounding rule
+- use the normal context / recommendation / option structure, but treat this question as the gate into the Superpowers stack rather than a normal in-stack Superpowers interactive question
+
+Before any normal Superpowers behavior:
+
+- if the session decision is `enabled`, continue into the normal stack
+- if the session decision is `bypassed` and the user did not explicitly request Superpowers, stop and bypass the rest of this skill
+- if the user explicitly requests Superpowers or explicitly names a Superpowers skill, rewrite the session decision to `enabled` and continue on the same turn
+- if the session decision is missing, ask the opt-out question and persist either `enabled` or `bypassed`
+
+If the session decision file exists but contains malformed content:
+
+- do not treat it as `enabled`
+- do not treat it as `bypassed`
+- ignore it for bypass purposes on that turn
+- continue to normal Superpowers behavior
+- only rewrite the file after a fresh explicit choice
+
+If the user explicitly requests re-entry but the bootstrap cannot rewrite the session decision to `enabled`:
+
+- honor the explicit re-entry request for the current turn
+- continue through the normal Superpowers stack on that turn
+- do not pretend persistence succeeded
+- treat future turns as undecided until a later write succeeds
+
+
+## Normal Superpowers Stack
+
+If the bypass gate resolves to `enabled` for this turn, run the normal shared Superpowers stack before any further Superpowers behavior:
+
+```bash
 _UPD=""
 [ -n "$_SUPERPOWERS_ROOT" ] && _UPD=$("$_SUPERPOWERS_ROOT/bin/superpowers-update-check" 2>/dev/null || true)
 [ -n "$_UPD" ] && echo "$_UPD" || true
-_SP_STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
 mkdir -p "$_SP_STATE_DIR/sessions"
 touch "$_SP_STATE_DIR/sessions/$PPID"
 _SESSIONS=$(find "$_SP_STATE_DIR/sessions" -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' ')

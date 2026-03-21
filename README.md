@@ -14,7 +14,7 @@ Superpowers is not just a collection of prompts. It is a small runtime plus a sk
 
 Three layers matter:
 
-- `using-superpowers` is the entry router. It runs before the agent responds, checks whether another skill applies, and decides which workflow owns the turn.
+- `using-superpowers` is the entry router. It runs before the agent responds, can ask once whether to use or bypass Superpowers for the session, and otherwise decides which workflow owns the turn.
 - `superpowers-workflow-status` owns product-work routing up to `implementation_ready`.
 - `superpowers-plan-execution` owns execution state after an approved plan is handed off.
 
@@ -263,7 +263,7 @@ All 18 checked-in `skills/*/SKILL.md` files are generated from adjacent `SKILL.m
 
 The shipped reviewer agent artifacts are generated from `agents/code-reviewer.instructions.md`. Regenerate them with `node scripts/gen-agent-docs.mjs` and validate freshness with `node scripts/gen-agent-docs.mjs --check`.
 
-When changing the generated skill runtime, run `node scripts/gen-skill-docs.mjs --check` before `bash tests/codex-runtime/test-runtime-instructions.sh`, `bash tests/codex-runtime/test-workflow-enhancements.sh`, and `bash tests/codex-runtime/test-workflow-sequencing.sh`.
+When changing the generated skill runtime, run `node scripts/gen-skill-docs.mjs --check` before `bash tests/codex-runtime/test-using-superpowers-bypass.sh`, `bash tests/codex-runtime/test-runtime-instructions.sh`, `bash tests/codex-runtime/test-workflow-enhancements.sh`, and `bash tests/codex-runtime/test-workflow-sequencing.sh`.
 
 To enable contributor mode for the installed runtime, run `~/.superpowers/install/bin/superpowers-config set superpowers_contributor true`.
 
@@ -275,8 +275,8 @@ Windows (PowerShell): `& "$env:USERPROFILE\.superpowers\install\bin\superpowers-
 
 ## What Actually Runs
 
-- `skills/` contains the 18 public Superpowers skills. `using-superpowers` is the entry skill; `brainstorming`, `plan-ceo-review`, `writing-plans`, and `plan-eng-review` form the default planning chain.
-- `scripts/gen-skill-docs.mjs` renders every checked-in `SKILL.md` from its template and injects the shared runtime preamble used across the skill library.
+- `skills/` contains the 18 public Superpowers skills. `using-superpowers` is the entry skill and session bypass gate; `brainstorming`, `plan-ceo-review`, `writing-plans`, and `plan-eng-review` form the default planning chain.
+- `scripts/gen-skill-docs.mjs` renders every checked-in `SKILL.md` from its template and injects the shared runtime preamble contracts, including the dedicated `using-superpowers` bootstrap plus its post-gate normal-stack handoff.
 - `bin/superpowers-migrate-install` consolidates legacy platform-specific installs into the single shared checkout and recreates compatibility links when needed.
 - `bin/superpowers-config` and `bin/superpowers-update-check` manage local runtime state, contributor mode, and per-session upgrade notices under `~/.superpowers/`.
 - `bin/superpowers-workflow` and `bin/superpowers-workflow.ps1` are the supported public read-only workflow inspection surfaces for humans.

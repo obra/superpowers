@@ -5,6 +5,9 @@ import {
   renderTemplateContent,
   buildBaseShellLines,
   buildReviewShellLines,
+  buildUsingSuperpowersShellLines,
+  buildUsingSuperpowersBypassGateSection,
+  buildUsingSuperpowersNormalStackSection,
 } from '../../scripts/gen-skill-docs.mjs';
 
 test('insertGeneratedHeader inserts the generated header after YAML frontmatter', () => {
@@ -49,4 +52,15 @@ test('base and review shell builders include their expected contract lines', () 
   assert.equal(buildBaseShellLines().some((line) => line.includes('_SESSIONS=')), true);
   assert.equal(buildBaseShellLines().some((line) => line.includes('_BRANCH=')), true);
   assert.equal(buildReviewShellLines().some((line) => line.includes('_TODOS_FORMAT=')), true);
+});
+
+test('using-superpowers bypass helpers render the decision-state contract', () => {
+  assert.equal(buildUsingSuperpowersShellLines().some((line) => line.includes('session-flags/using-superpowers')), true);
+  const bypassGate = buildUsingSuperpowersBypassGateSection();
+  assert.match(bypassGate, /enabled/);
+  assert.match(bypassGate, /bypassed/);
+  const normalStack = buildUsingSuperpowersNormalStackSection();
+  assert.match(normalStack, /superpowers-update-check/);
+  assert.match(normalStack, /_SESSIONS=/);
+  assert.match(normalStack, /_CONTRIB=/);
 });

@@ -11,7 +11,7 @@ This directory holds prompt-quality evals for high-risk workflow instructions wh
 
 Current evals cover:
 
-- `using-superpowers` fail-closed routing behavior via the markdown orchestrator and runner/judge instruction set
+- `using-superpowers` fail-closed post-bypass routing behavior via the markdown orchestrator and runner/judge instruction set
 - the shared interactive-question format contract
 - `review-accelerator-contract`, which checks explicit user-only activation, ambiguous-wording rejection, per-section human approval, no automatic approval-state changes, main-agent-only write authority, and persisted-packet stale/regenerate language against the generated CEO/ENG `SKILL.md` files plus README excerpts from the current branch
 
@@ -64,6 +64,8 @@ Use these files as the authoritative contract:
 - `tests/evals/using-superpowers-routing.judge.md`
 
 The orchestrator doc tells the controller how to run fresh runner/judge subagents, persist per-scenario evidence under `~/.superpowers/projects/<slug>/...`, and fail closed on ambiguous or malformed outputs.
+
+The routing gate intentionally starts after the first-turn bypass decision has already been resolved to `enabled` for the synthetic scenario session. Seed that state through the runner's real derived decision-file path for its own session identity; do not guess a `$PPID` from outside the runner. The bypass prompt and session-decision contract are covered separately by `bash tests/codex-runtime/test-using-superpowers-bypass.sh`.
 
 The retired `tests/evals/using-superpowers-routing.eval.mjs` file has been removed.
 

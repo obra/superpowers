@@ -38,6 +38,7 @@ test('templates declare exactly one base or review preamble placeholder', () => 
 
 test('generated preamble bash block includes shared runtime-root, session, and contributor state', () => {
   for (const skill of listGeneratedSkills()) {
+    if (skill === 'using-superpowers') continue;
     const content = readUtf8(getSkillPath(skill));
     const bashBlock = extractBashBlockUnderHeading(content, 'Preamble (run first)');
     assert.ok(bashBlock, `${skill} should include a preamble bash block`);
@@ -45,6 +46,25 @@ test('generated preamble bash block includes shared runtime-root, session, and c
     assert.match(bashBlock, /_SESSIONS=/, `${skill} should track session count`);
     assert.match(bashBlock, /_CONTRIB=/, `${skill} should load contributor state`);
   }
+});
+
+test('using-superpowers gets a dedicated bootstrap preamble contract', () => {
+  const content = readUtf8(getSkillPath('using-superpowers'));
+  const bootstrapBlock = extractBashBlockUnderHeading(content, 'Preamble (run first)');
+  const normalStackBlock = extractBashBlockUnderHeading(content, 'Normal Superpowers Stack');
+  assert.match(bootstrapBlock, /session-flags\/using-superpowers/, 'using-superpowers should derive the decision-file path');
+  assert.doesNotMatch(bootstrapBlock, /touch "\$_SP_STATE_DIR\/sessions\/\$PPID"/, 'using-superpowers should not write session markers before the bypass decision');
+  assert.doesNotMatch(bootstrapBlock, /_CONTRIB=/, 'using-superpowers should not load contributor mode before the bypass decision');
+  assert.ok(normalStackBlock, 'using-superpowers should define the post-gate normal stack');
+  assert.match(normalStackBlock, /superpowers-update-check/, 'using-superpowers should restore update checks after the bypass gate');
+  assert.match(normalStackBlock, /touch "\$_SP_STATE_DIR\/sessions\/\$PPID"/, 'using-superpowers should restore session markers after the bypass gate');
+  assert.match(normalStackBlock, /_CONTRIB=/, 'using-superpowers should restore contributor mode after the bypass gate');
+  assert.match(content, /ask one interactive question before any normal Superpowers work happens/, 'using-superpowers should ask before the normal stack');
+  assert.match(content, /do not compute `_SESSIONS`/, 'using-superpowers should exempt the opt-out gate from _SESSIONS handling');
+  assert.match(content, /If the bypass gate resolves to `enabled` for this turn, run the normal shared Superpowers stack before any further Superpowers behavior:/, 'using-superpowers should explicitly restore the normal stack after an enabled decision');
+  assert.match(content, /If the session decision file exists but contains malformed content:/, 'using-superpowers should document malformed-state handling');
+  assert.match(content, /if the user explicitly requests Superpowers or explicitly names a Superpowers skill, rewrite the session decision to `enabled` and continue on the same turn/, 'using-superpowers should treat explicit skill naming as re-entry');
+  assert.match(content, /If the user explicitly requests re-entry but the bootstrap cannot rewrite the session decision to `enabled`:/, 'using-superpowers should document re-entry write-failure handling');
 });
 
 test('generated preambles capture _BRANCH exactly once and keep helper BRANCH out of grounding', () => {

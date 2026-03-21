@@ -97,7 +97,7 @@ On Windows, the Copilot agent is copied from the shared checkout and must be ref
 Skills are discovered automatically when:
 - you mention a skill by name
 - the task matches a skill's description
-- `using-superpowers` directs the agent to use one
+- `using-superpowers` asks whether to use or bypass Superpowers for the session, then directs the agent to use one when the stack stays enabled
 
 The `code-reviewer` agent is available through Copilot's local custom-agent support after installation.
 

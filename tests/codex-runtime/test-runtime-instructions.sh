@@ -387,6 +387,17 @@ required_patterns=(
   "skills/using-superpowers/SKILL.md:## Preamble (run first)"
   "skills/using-superpowers/SKILL.md:_IS_SUPERPOWERS_RUNTIME_ROOT()"
   "skills/using-superpowers/SKILL.md:\$HOME/.superpowers/install"
+  "skills/using-superpowers/SKILL.md:ask one interactive question before any normal Superpowers work happens"
+  "skills/using-superpowers/SKILL.md:~/.superpowers/session-flags/using-superpowers/\$PPID"
+  'skills/using-superpowers/SKILL.md:do not compute `_SESSIONS`'
+  "skills/using-superpowers/SKILL.md:If the session decision file exists but contains malformed content:"
+  "skills/using-superpowers/SKILL.md:if the user explicitly requests Superpowers or explicitly names a Superpowers skill, rewrite the session decision to \`enabled\` and continue on the same turn"
+  "skills/using-superpowers/SKILL.md:If the user explicitly requests re-entry but the bootstrap cannot rewrite the session decision to \`enabled\`:"
+  'skills/using-superpowers/SKILL.md:## Normal Superpowers Stack'
+  'skills/using-superpowers/SKILL.md:If the bypass gate resolves to `enabled` for this turn, run the normal shared Superpowers stack before any further Superpowers behavior:'
+  'skills/using-superpowers/SKILL.md:_UPD=""'
+  'skills/using-superpowers/SKILL.md:_SESSIONS=$(find "$_SP_STATE_DIR/sessions" -mmin -120 -type f 2>/dev/null | wc -l | tr -d '\'' '\'')'
+  'skills/using-superpowers/SKILL.md:_CONTRIB=""'
   "skills/using-superpowers/SKILL.md:then follow the artifact-state workflow: plan-ceo-review -> writing-plans -> plan-eng-review -> execution."
   "skills/using-superpowers/SKILL.md:## Superpowers Workflow Router"
   "skills/using-superpowers/SKILL.md:Do NOT jump from brainstorming straight to implementation. For workflow-routed work, every stage owns the handoff into the next one."
@@ -791,6 +802,11 @@ if ! rg -n -F 'bash tests/codex-runtime/test-superpowers-slug.sh' docs/testing.m
   exit 1
 fi
 
+if ! rg -n -F 'bash tests/codex-runtime/test-using-superpowers-bypass.sh' docs/testing.md >/dev/null; then
+  echo "docs/testing.md should include the using-superpowers bypass regression in the recommended validation order."
+  exit 1
+fi
+
 if ! rg -n -F 'node --test tests/brainstorm-server/server.test.js tests/brainstorm-server/ws-protocol.test.js' docs/testing.md >/dev/null; then
   echo "docs/testing.md should document the full brainstorm-server node test command, not only npm test."
   exit 1
@@ -828,6 +844,36 @@ fi
 
 if ! rg -n -F 'the routing gate does not use `tests/evals/helpers/openai-judge.mjs`' tests/evals/README.md >/dev/null; then
   echo "tests/evals/README.md should state that the routing gate is not driven by the Node OpenAI judge helper."
+  exit 1
+fi
+
+if ! rg -n -F 'The routing gate intentionally starts after the first-turn bypass decision has already been resolved to `enabled` for the synthetic scenario session.' tests/evals/README.md >/dev/null; then
+  echo "tests/evals/README.md should explain that the routing gate validates post-bypass routing rather than the first-turn opt-out question."
+  exit 1
+fi
+
+if ! rg -n -F "The routing gate intentionally starts after the first-turn bypass decision has already been resolved to \`enabled\` for the synthetic scenario session. Seed that state through the runner's real derived decision-file path for its own session identity; do not guess a \`\$PPID\` from outside the runner." tests/evals/README.md >/dev/null; then
+  echo "tests/evals/README.md should explain that the routing gate seeds enabled through the runner-derived decision path."
+  exit 1
+fi
+
+if ! rg -n -F "Each fixture workspace pre-seeds the synthetic session decision to \`enabled\` through the runner's own derived decision-file path so the scenario exercises post-bypass routing rather than the first-turn opt-out question." tests/evals/using-superpowers-routing.scenarios.md >/dev/null; then
+  echo "The routing scenarios should explicitly pre-seed enabled through the runner-derived decision path."
+  exit 1
+fi
+
+if ! rg -n -F -- '- the runner-derived session decision path used for the pre-seeded `enabled` state' tests/evals/using-superpowers-routing.scenarios.md >/dev/null; then
+  echo "The routing scenarios should require the runner-derived decision path in each evidence bundle."
+  exit 1
+fi
+
+if ! rg -n -F 'Pre-seed the runner'"'"'s real session decision path to `enabled` before the runner acts so the scenario exercises post-bypass routing instead of the first-turn opt-out prompt.' tests/evals/using-superpowers-routing.orchestrator.md >/dev/null; then
+  echo "The routing orchestrator should require pre-seeding the runner-derived session decision path to enabled."
+  exit 1
+fi
+
+if ! rg -n -F 'Derive that path from the same `using-superpowers` runtime shell the runner will use; do not guess or hardcode a `$PPID` from outside the runner session.' tests/evals/using-superpowers-routing.orchestrator.md >/dev/null; then
+  echo "The routing orchestrator should forbid guessing PPIDs instead of deriving the runner's decision path."
   exit 1
 fi
 

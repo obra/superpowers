@@ -15,6 +15,7 @@ node scripts/gen-agent-docs.mjs --check
 node scripts/gen-skill-docs.mjs --check
 node --test tests/codex-runtime/*.test.mjs
 bash tests/codex-runtime/test-runtime-instructions.sh
+bash tests/codex-runtime/test-using-superpowers-bypass.sh
 bash tests/codex-runtime/test-workflow-enhancements.sh
 bash tests/codex-runtime/test-workflow-sequencing.sh
 bash tests/codex-runtime/test-powershell-wrapper-bash-resolution.sh
@@ -42,6 +43,7 @@ node --test tests/brainstorm-server/server.test.js tests/brainstorm-server/ws-pr
 ### `tests/codex-runtime/`
 
 - Generated `skills/*/SKILL.md` freshness plus runtime-facing install and workflow contract checks
+- `using-superpowers` bypass-gate wording, decision-file contract, malformed-state handling, and explicit re-entry semantics
 - Generated reviewer-agent artifact freshness for Codex and GitHub Copilot
 - Runtime helper contracts for config, plan execution, update checks, migration, and upgrade flow
 - Supported public workflow CLI contracts for read-only status, next-step, artifact, explain, and failure output
@@ -60,6 +62,7 @@ node --test tests/brainstorm-server/server.test.js tests/brainstorm-server/ws-pr
 ## When To Run What
 
 - Editing any `SKILL.md.tmpl`, runtime helper, or install/readme doc: run `node --test tests/codex-runtime/*.test.mjs` plus the full `tests/codex-runtime/` shell suite
+- Editing `skills/using-superpowers/*`, `scripts/gen-skill-docs.mjs`, or entry-routing docs: include `bash tests/codex-runtime/test-using-superpowers-bypass.sh` and review the routing-gate notes below
 - Editing brainstorming server files under `skills/brainstorming/scripts/`: run `bash tests/brainstorm-server/test-launch-wrappers.sh` and `node --test tests/brainstorm-server/server.test.js tests/brainstorm-server/ws-protocol.test.js`
 - Editing both runtime and brainstorming-server files: run both suites
 
@@ -68,11 +71,13 @@ node --test tests/brainstorm-server/server.test.js tests/brainstorm-server/ws-pr
 - `tests/evals/*.eval.mjs` remains an opt-in quality tier for the Node-driven prompt-behavior checks that still use `.eval.mjs`
 - `tests/evals/using-superpowers-routing.orchestrator.md` is the authoritative Item 1 routing gate and drives the repo-versioned scenario, runner, and judge markdown artifacts plus local per-scenario evidence bundles under `~/.superpowers/projects/<slug>/...`
   This gate is agent-executed and does not run through `node --test` or the Node OpenAI-judge helper path. It is not part of the default deterministic validation order, but it is a required change-specific gate for Item 1 routing-safety work.
+- `bash tests/codex-runtime/test-using-superpowers-bypass.sh` is the deterministic gate for the pre-routing session bypass contract. The routing gate above assumes the scenario turn starts after that decision has already been resolved to `enabled` using the runner's own derived session-decision path.
 - See `tests/evals/README.md` for the Node-based eval environment variables and for routing-eval logging behavior
 
 ## Notes
 
 - `test-runtime-instructions.sh` is the contract gate for supported install and runtime documentation
+- `test-using-superpowers-bypass.sh` covers the pre-routing `using-superpowers` bypass gate, including the session decision path, malformed-state wording, and explicit re-entry semantics
 - `test-workflow-enhancements.sh` covers the imported review, QA, and document-release workflow contracts
 - `test-workflow-sequencing.sh` covers artifact-state routing, stage gates, and the optional worktree policy using checked-in workflow fixtures in `tests/codex-runtime/fixtures/workflow-artifacts/`
 - `tests/codex-runtime/*.test.mjs` covers the deterministic generated-skill and fixture assertions that do not need shell execution
