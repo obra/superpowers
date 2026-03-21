@@ -13,7 +13,7 @@ This fork extends the core superpowers workflow with a full Ruby on Rails skills
 - **Official Rails guides** indexed for quick reference
 - **37signals/Basecamp patterns** derived from Fizzy codebase analysis
 - **Hotwire** (Turbo + Stimulus) skills from Hotwire Club
-- **Commit messages** following Conventional Commits with Rails-specific body guidance
+- **Commit messages** following Conventional Commits with Ruby-specific body guidance
 
 All examples, test commands, and file references use Ruby/Rails conventions throughout.
 
