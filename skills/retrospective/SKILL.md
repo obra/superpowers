@@ -77,6 +77,16 @@ For each finding, determine WHERE it belongs:
 - Speculative conclusions from reading a single file
 - Anything that duplicates existing CLAUDE.md content
 
+### Step 3b: Verify — Do Not Assume Prior Persistence
+
+**Before presenting your summary, verify what actually exists.**
+
+If you did not write to a file using a tool during THIS conversation, it does not exist. Do not assume findings from this session were "already saved" or "already persisted" in a prior session. Do not invent filenames you haven't read.
+
+**To verify:** Use Read or Glob to check if a memory/rule file exists before claiming it does. If you cannot verify, assume it does NOT exist and propose it as a new write.
+
+**This is the #1 failure mode of this skill.** Agents hallucinate that corrections are "already captured" and skip the entire retrospective. If you catch yourself thinking "this was already saved" — STOP. Verify with a tool call. If you can't verify, propose the write.
+
 ### Step 4: Present Summary Before Writing
 
 **Never write changes silently.** Present a structured summary:
@@ -132,6 +142,17 @@ After approval:
 | Rewriting entire files | Make surgical edits — append, don't overwrite |
 | Skipping user approval | Always present summary first |
 | Writing incident reports instead of patterns | Extract the reusable pattern, not the story |
+| Claiming findings are "already saved" | If you did not write it with a tool in THIS conversation, it does not exist. Never assume prior persistence — verify with Read/Glob or propose the write |
+| Classifying cross-project patterns as memories | A reusable technique that applies to ANY project (e.g., container healthcheck patterns) is a **Skill**, not a memory. Memories are project-specific or agent-specific. Use the categorization table strictly |
+
+## Categorization Decision Guide
+
+When unsure where a finding belongs, ask: **"Would this help someone on a completely different project?"**
+
+- **Yes, any project** → **Skill** (e.g., healthcheck pattern for minimal Docker images)
+- **Yes, same tech stack** → **Rule** (e.g., Django ORM pattern for this repo)
+- **Only this project** → **CLAUDE.md** (e.g., this project's database port)
+- **Only this agent role** → **Agent memory** (e.g., reviewer-specific lesson)
 
 ## Red Flags
 
@@ -140,9 +161,13 @@ After approval:
 - Persist session-specific details (paths, branch names, temp files)
 - Duplicate content already in CLAUDE.md
 - Create vague, non-actionable memories
+- Claim something is "already saved" without reading the file to verify
+- Classify a cross-project reusable pattern as a memory instead of a Skill
+- Drop structure because the user seems impatient — a compact summary is still a summary
 
 **Always:**
 - Get user approval before writing
 - Apply the two-session rule
 - Be specific and actionable in what you write
 - Categorize findings into the right persistence layer
+- Maintain the structured summary format regardless of session tone
