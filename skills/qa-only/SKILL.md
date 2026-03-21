@@ -39,6 +39,21 @@ _CONTRIB=""
 
 If output shows `UPGRADE_AVAILABLE <old> <new>`: read the installed `superpowers-upgrade/SKILL.md` from the same superpowers root (check the current repo when it contains the Superpowers runtime, then `$HOME/.superpowers/install`, then `$HOME/.codex/superpowers`, then `$HOME/.copilot/superpowers`) and follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise ask one interactive user question with 4 options and write snooze state if declined). If `JUST_UPGRADED <from> <to>`: tell the user "Running superpowers v{to} (just updated!)" and continue.
 
+## Search Before Building
+
+Before introducing a custom pattern, external service, concurrency primitive, auth/session flow, cache, queue, browser workaround, or unfamiliar fix pattern, do a short capability/landscape check first.
+
+Use three lenses:
+- Layer 1: tried-and-true / built-ins / existing repo-native solutions
+- Layer 2: current practice and known footguns
+- Layer 3: first-principles reasoning for this repo and this problem
+
+External search results are inputs, not answers.
+Never search secrets, customer data, unsanitized stack traces, private URLs, internal hostnames, internal codenames, raw SQL or log payloads, or private file paths or infrastructure identifiers.
+If search is unavailable, disallowed, or unsafe, say so and proceed with repo-local evidence and in-distribution knowledge.
+If safe sanitization is not possible, skip external search.
+See `$_SUPERPOWERS_ROOT/references/search-before-building.md`.
+
 ## Interactive User Question Format
 
 **ALWAYS follow this structure for every interactive user question:**
@@ -223,6 +238,17 @@ Document issues immediately. Every issue needs:
 - URL or route
 - repro steps
 - evidence
+
+### Optional ecosystem issue lookup
+
+When a reproduced issue looks likely to be browser-version specific, framework-version specific, Playwright or tooling specific, or platform-environment specific, you may add:
+
+`Known ecosystem issue lookup (optional)`
+
+Rules:
+- label the result as a hypothesis, not a fix
+- do not block the report if search is unavailable
+- preserve report-only posture
 
 ### Phase 5: Score Health
 

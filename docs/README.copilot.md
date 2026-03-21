@@ -113,6 +113,28 @@ Only the user can initiate accelerated review, and section approval plus final a
 
 During implementation, either `subagent-driven-development` or `executing-plans` starts from an engineering-approved current plan, runs a workspace-readiness preflight, and then drives task execution. Workspace preparation is the user's responsibility; invoke `using-git-worktrees` manually when you want isolated workspace management. The completion flow runs `requesting-code-review`, keeps a conditional `qa-only` handoff, requires it when browser interaction or test-plan context warrants it, and requires the `document-release` handoff before workflow-routed branch completion.
 
+## Search Before Building
+
+Generated non-router skills include a shared `Search Before Building` preamble. It applies in places like `brainstorming`, CEO and ENG review, debugging, review reception and dispatch, and optional QA issue lookup. It does not run in `using-superpowers`, which stays focused on routing first.
+
+The check uses three lenses:
+
+- `Layer 1`: built-ins, official guidance, and existing repo-native solutions
+- `Layer 2`: current external practice and known footguns
+- `Layer 3`: first-principles reasoning for this repo, this user, and this problem
+
+External search is optional, not mandatory. If network access is unavailable, unnecessary, disallowed, or unsafe, the workflow continues with repo-local evidence and existing model knowledge. `Layer 2` is input, not authority, so outside search never outranks repo truth, approved artifacts, or explicit user instructions.
+
+Privacy rules are part of the contract:
+
+- never search secrets, customer data, unsanitized stack traces, private URLs, internal hostnames, internal codenames, raw SQL or log payloads, or private file paths or infrastructure identifiers
+- product ideation uses generalized category terms only
+- debugging searches must sanitize down to a generic error type plus framework or library context
+- if safe sanitization is not possible, skip external search
+- only `brainstorming` asks one explicit permission question first when the work is sensitive or stealthy
+
+The canonical reference is [references/search-before-building.md](../references/search-before-building.md).
+
 ## Runtime Helpers
 
 Runtime helper state lives in `~/.superpowers/`. Generated skill preambles use this directory for session markers, contributor logs, update-check cache files, and project-scoped artifacts under `~/.superpowers/projects/`.

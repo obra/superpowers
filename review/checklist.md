@@ -55,6 +55,11 @@ When the diff introduces a new enum value, status, tier, type, or constant famil
 - Numbering or formatting patterns likely to produce unstable LLM output
 - Prompt or eval changes that do not state which evaluation coverage must move with them
 
+#### Built-in Before Bespoke / Known Pattern Footguns
+- custom auth or session handling that bypasses framework protections
+- custom retry, debounce, cache, queue, or state logic where the platform already offers a stable primitive
+- a newly introduced pattern with well-known failure modes in the current ecosystem
+
 #### Test Gaps
 - Missing negative-path tests
 - Assertions that only check presence, not correctness of outputs or side effects

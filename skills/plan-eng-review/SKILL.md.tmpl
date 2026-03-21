@@ -105,6 +105,37 @@ Before reviewing anything, answer these questions:
 3. **Complexity check:** If the plan touches more than 8 files or introduces more than 2 new classes or services, treat that as a smell and challenge whether the same goal can be achieved with fewer moving parts.
 4. **TODOS cross-reference:** Read `TODOS.md` if it exists. Are any deferred items blocking this plan? Can any deferred items be bundled into this PR without expanding scope? Does this plan create new work that should be captured as a TODO?
 
+### Step 0.4: Search Check
+
+Run this check when the plan introduces a new or custom:
+
+- auth, session, or token flow
+- cache layer
+- queue, scheduler, or background job mechanism
+- concurrency primitive
+- search or indexing subsystem
+- browser or platform API workaround
+- wrapper around a framework capability
+- infrastructure dependency
+- unfamiliar integration pattern
+
+For each triggered area, ask:
+
+1. Does the framework, runtime, or platform already provide a built-in?
+2. Is the chosen pattern still considered current best practice?
+3. What are the known footguns or failure modes?
+
+If a robust built-in exists, treat that as a scope reduction or simplification opportunity.
+
+Annotate relevant review points with provenance tags:
+
+- `[Layer 1]`
+- `[Layer 2]`
+- `[Layer 3]`
+- `[EUREKA]`
+
+These tags belong in review prose and recommendation language, not in plan headers.
+
 Then ask whether the user wants one of three options:
 
 1. **SCOPE REDUCTION:** The plan is overbuilt. Propose a minimal version that achieves the core goal, then review that.

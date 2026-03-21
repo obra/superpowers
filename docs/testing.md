@@ -31,6 +31,8 @@ bash tests/brainstorm-server/test-launch-wrappers.sh
 node --test tests/brainstorm-server/server.test.js tests/brainstorm-server/ws-protocol.test.js
 ```
 
+For prompt-surface or workflow-doc changes, keep validation deterministic-first: regenerate outputs, run the checked deterministic suites, and only then run any higher-order eval gates that exercise agent judgment.
+
 ## What Each Suite Covers
 
 ### `tests/codex-runtime/*.test.mjs`
@@ -71,8 +73,19 @@ node --test tests/brainstorm-server/server.test.js tests/brainstorm-server/ws-pr
 - `tests/evals/*.eval.mjs` remains an opt-in quality tier for the Node-driven prompt-behavior checks that still use `.eval.mjs`
 - `tests/evals/using-superpowers-routing.orchestrator.md` is the authoritative Item 1 routing gate and drives the repo-versioned scenario, runner, and judge markdown artifacts plus local per-scenario evidence bundles under `~/.superpowers/projects/<slug>/...`
   This gate is agent-executed and does not run through `node --test` or the Node OpenAI-judge helper path. It is not part of the default deterministic validation order, but it is a required change-specific gate for Item 1 routing-safety work.
+- `tests/evals/search-before-building-contract.orchestrator.md` is the doc-driven contract gate for the shared Search-Before-Building preamble plus both reviewer prompt surfaces. It uses repo-versioned scenarios plus fresh runner and judge subagents, stays representative instead of exhaustive, and does not require the Node OpenAI-judge helper path.
 - `bash tests/codex-runtime/test-using-superpowers-bypass.sh` is the deterministic gate for the pre-routing session bypass wording and decision-path contract. The routing gate above assumes the scenario turn starts after that decision has already been resolved to `enabled` using the runner's own derived session-decision path.
-- See `tests/evals/README.md` for the Node-based eval environment variables and for routing-eval logging behavior
+- See `tests/evals/README.md` for the Node-based eval environment variables and for routing-eval logging behavior.
+- The same README also documents the doc-driven Search-Before-Building runner/judge gate instructions.
+
+Search-Before-Building changes should normally validate in this order:
+
+1. `node scripts/gen-skill-docs.mjs` and `node scripts/gen-skill-docs.mjs --check`
+2. `node scripts/gen-agent-docs.mjs` and `node scripts/gen-agent-docs.mjs --check`
+3. deterministic codex-runtime coverage such as `gen-skill-docs.unit.test.mjs`, `skill-doc-contracts.test.mjs`, `test-runtime-instructions.sh`, `test-workflow-enhancements.sh`, and `test-workflow-sequencing.sh`
+4. the doc-driven `tests/evals/search-before-building-contract.orchestrator.md` gate when you need the higher-order prompt check
+
+That gate uses fresh runner and judge subagents against the checked-in scenario matrix and does not require `OPENAI_API_KEY`. If isolated subagent execution is unavailable in the current environment, skip the gate intentionally and record that limitation.
 
 ## Notes
 

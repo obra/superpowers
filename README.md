@@ -167,6 +167,26 @@ A few important consequences fall out of that state machine:
 
 That is the reason Superpowers feels opinionated in practice: the agent is not merely told to follow a workflow; the runtime keeps re-deriving the safest next state from the repo, the local branch-scoped manifest, and the exact approval headers written by the prior skill.
 
+## Search Before Building
+
+Search Before Building is a lightweight operating rule for generated non-router skills. Before introducing a bespoke auth/session flow, cache or queue wrapper, concurrency primitive, browser workaround, external service, or unfamiliar framework pattern, the agent does a short capability or landscape check through three lenses:
+
+- `Layer 1`: built-ins, official guidance, and existing repo-native solutions
+- `Layer 2`: current external practice and known footguns
+- `Layer 3`: first-principles reasoning for this repo, this user, and this problem
+
+`Layer 2` is input, not authority. Repo truth, approved artifact headers, official docs, and explicit user instructions still outrank outside search results.
+
+Internet access remains optional. If search is unavailable, unnecessary, disallowed, or unsafe, the agent says so plainly and proceeds with repo-local evidence plus in-distribution knowledge. The durable reference for this behavior is [references/search-before-building.md](references/search-before-building.md).
+
+Privacy and sanitization are part of the v1 contract:
+
+- never search secrets, customer data, unsanitized stack traces, private URLs, internal hostnames, internal codenames, raw SQL or log payloads, or private file paths or infrastructure identifiers
+- product ideation uses generalized category terms only
+- debugging must sanitize to the generic error type plus component, framework, or library context first
+- if safe sanitization is not possible, skip external search
+- only `brainstorming` asks one explicit permission question before external search when the work is sensitive or stealthy
+
 
 ## Installation
 

@@ -5,6 +5,7 @@ import {
   renderTemplateContent,
   buildBaseShellLines,
   buildReviewShellLines,
+  generatePreamble,
   buildUsingSuperpowersShellLines,
   buildUsingSuperpowersBypassGateSection,
   buildUsingSuperpowersNormalStackSection,
@@ -63,4 +64,21 @@ test('using-superpowers bypass helpers render the decision-state contract', () =
   assert.match(normalStack, /superpowers-update-check/);
   assert.match(normalStack, /_SESSIONS=/);
   assert.match(normalStack, /_CONTRIB=/);
+});
+
+test('generated preambles include the shared Search Before Building section for non-router skills only', () => {
+  const basePreamble = generatePreamble({ review: false });
+  const reviewPreamble = generatePreamble({ review: true });
+
+  for (const preamble of [basePreamble, reviewPreamble]) {
+    assert.match(preamble, /## Search Before Building/);
+    assert.match(preamble, /Layer 1: tried-and-true \/ built-ins \/ existing repo-native solutions/);
+    assert.match(preamble, /Layer 2: current practice and known footguns/);
+    assert.match(preamble, /Layer 3: first-principles reasoning for this repo and this problem/);
+    assert.match(preamble, /External search results are inputs, not answers\./);
+    assert.match(preamble, /Never search secrets, customer data, unsanitized stack traces, private URLs, internal hostnames, internal codenames, raw SQL or log payloads, or private file paths or infrastructure identifiers\./);
+    assert.match(preamble, /If search is unavailable, disallowed, or unsafe, say so and proceed with repo-local evidence and in-distribution knowledge\./);
+    assert.match(preamble, /If safe sanitization is not possible, skip external search\./);
+    assert.match(preamble, /See `\$_SUPERPOWERS_ROOT\/references\/search-before-building\.md`\./);
+  }
 });

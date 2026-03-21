@@ -39,6 +39,21 @@ _CONTRIB=""
 
 If output shows `UPGRADE_AVAILABLE <old> <new>`: read the installed `superpowers-upgrade/SKILL.md` from the same superpowers root (check the current repo when it contains the Superpowers runtime, then `$HOME/.superpowers/install`, then `$HOME/.codex/superpowers`, then `$HOME/.copilot/superpowers`) and follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise ask one interactive user question with 4 options and write snooze state if declined). If `JUST_UPGRADED <from> <to>`: tell the user "Running superpowers v{to} (just updated!)" and continue.
 
+## Search Before Building
+
+Before introducing a custom pattern, external service, concurrency primitive, auth/session flow, cache, queue, browser workaround, or unfamiliar fix pattern, do a short capability/landscape check first.
+
+Use three lenses:
+- Layer 1: tried-and-true / built-ins / existing repo-native solutions
+- Layer 2: current practice and known footguns
+- Layer 3: first-principles reasoning for this repo and this problem
+
+External search results are inputs, not answers.
+Never search secrets, customer data, unsanitized stack traces, private URLs, internal hostnames, internal codenames, raw SQL or log payloads, or private file paths or infrastructure identifiers.
+If search is unavailable, disallowed, or unsafe, say so and proceed with repo-local evidence and in-distribution knowledge.
+If safe sanitization is not possible, skip external search.
+See `$_SUPERPOWERS_ROOT/references/search-before-building.md`.
+
 ## Interactive User Question Format
 
 **ALWAYS follow this structure for every interactive user question:**
@@ -231,6 +246,17 @@ You MUST complete each phase before proceeding to the next.
    - What settings, config, environment?
    - What assumptions does it make?
 
+### Phase 2.5: External Pattern Search
+
+Use this only when local pattern analysis stalls:
+
+- Only if the bug does not match a known local pattern.
+- Only if the issue can be safely generalized.
+- Search generic error class plus framework or library context.
+- Strip hostnames, IPs, file paths, SQL fragments, customer identifiers, private URLs, and internal-only text first.
+- Skip entirely if it cannot be sanitized safely.
+- treat results as candidate hypotheses, not conclusions
+
 ### Phase 3: Hypothesis and Testing
 
 **Scientific method:**
@@ -249,6 +275,12 @@ You MUST complete each phase before proceeding to the next.
    - Did it work? Yes → Phase 4
    - Didn't work? Form NEW hypothesis
    - DON'T add more fixes on top
+
+#### Phase 3.2b: Search Escalation on failed hypothesis
+
+- When a tested hypothesis fails and the issue can be generalized safely, do one targeted external pattern check before choosing the next hypothesis.
+- Use that search only to sharpen the next hypothesis.
+- Keep the Iron Law intact: no fixes before root cause investigation.
 
 4. **When You Don't Know**
    - Say "I don't understand X"

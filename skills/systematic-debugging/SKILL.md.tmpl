@@ -145,6 +145,17 @@ You MUST complete each phase before proceeding to the next.
    - What settings, config, environment?
    - What assumptions does it make?
 
+### Phase 2.5: External Pattern Search
+
+Use this only when local pattern analysis stalls:
+
+- Only if the bug does not match a known local pattern.
+- Only if the issue can be safely generalized.
+- Search generic error class plus framework or library context.
+- Strip hostnames, IPs, file paths, SQL fragments, customer identifiers, private URLs, and internal-only text first.
+- Skip entirely if it cannot be sanitized safely.
+- treat results as candidate hypotheses, not conclusions
+
 ### Phase 3: Hypothesis and Testing
 
 **Scientific method:**
@@ -163,6 +174,12 @@ You MUST complete each phase before proceeding to the next.
    - Did it work? Yes → Phase 4
    - Didn't work? Form NEW hypothesis
    - DON'T add more fixes on top
+
+#### Phase 3.2b: Search Escalation on failed hypothesis
+
+- When a tested hypothesis fails and the issue can be generalized safely, do one targeted external pattern check before choosing the next hypothesis.
+- Use that search only to sharpen the next hypothesis.
+- Keep the Iron Law intact: no fixes before root cause investigation.
 
 4. **When You Don't Know**
    - Say "I don't understand X"

@@ -56,6 +56,23 @@ Before breaking work into tasks, make sure the plan explicitly covers:
 - rollback plan
 - risks and mitigations
 
+## Search-Before-Building Carry-Through
+
+Do not make fresh search the default here.
+
+- pull from the approved spec's `Landscape Snapshot` when present
+- if Layer 2 materially affected reuse guidance, simplification advice, or footgun warnings, carry that forward in the written plan instead of leaving it in transient session context
+- if the spec says to prefer built-in `X` over custom `Y`, reflect that explicitly in task structure, file paths, and implementation steps
+- if the approved spec is silent but the plan introduces an unfamiliar runtime or framework capability, a targeted capability check is allowed only to close a concrete implementation gap
+- if the planner materially changes the approved design choice, do not silently drift; either align the plan to the approved spec or surface the mismatch for review
+
+When Layer 2 materially affects reuse or warnings, capture it in plan-body sections such as:
+
+```markdown
+## Existing Capabilities / Built-ins to Reuse
+## Known Footguns / Constraints
+```
+
 ## File Structure
 
 Before defining tasks, map out which files will be created or modified and what each one is responsible for. This is where decomposition decisions get locked in.

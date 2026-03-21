@@ -42,17 +42,32 @@ require_pattern review/checklist.md "SQL & Data Safety"
 require_pattern review/checklist.md "Enum & Value Completeness"
 require_pattern review/checklist.md "Documentation Staleness"
 require_pattern review/checklist.md "TODO Cross-Reference"
+require_pattern review/checklist.md "Built-in Before Bespoke / Known Pattern Footguns"
+require_pattern review/checklist.md "custom auth or session handling that bypasses framework protections"
+require_pattern review/checklist.md "custom retry, debounce, cache, queue, or state logic where the platform already offers a stable primitive"
+require_pattern review/checklist.md "well-known failure modes in the current ecosystem"
 
 for file in agents/code-reviewer.instructions.md agents/code-reviewer.md .codex/agents/code-reviewer.toml; do
   require_pattern "$file" "review/checklist.md"
   require_pattern "$file" "base branch"
   require_pattern "$file" "TODO cross-reference"
   require_pattern "$file" "Documentation staleness"
+  require_pattern "$file" "Never search secrets, customer data, unsanitized stack traces, private URLs, or internal codenames"
+  require_pattern "$file" "If search is unavailable, disallowed, or unsafe, say so and continue the review with the diff, checklist, plan, and repo-local evidence only"
 done
 
 require_pattern skills/requesting-code-review/SKILL.md "review checklist"
 require_pattern skills/requesting-code-review/SKILL.md "{BASE_BRANCH}"
 require_pattern skills/requesting-code-review/code-reviewer.md "{BASE_BRANCH}"
+require_pattern skills/requesting-code-review/code-reviewer.md "built-in-before-bespoke"
+require_pattern skills/requesting-code-review/code-reviewer.md "known pattern footguns"
+require_pattern skills/requesting-code-review/code-reviewer.md "official documentation"
+require_pattern skills/requesting-code-review/code-reviewer.md "issue trackers or maintainer guidance"
+require_pattern skills/requesting-code-review/code-reviewer.md "primary-source technical references"
+require_pattern skills/requesting-code-review/code-reviewer.md "Only fall back to secondary technical references when primary sources are absent or clearly insufficient for the specific review question"
+require_pattern skills/requesting-code-review/code-reviewer.md "file:line"
+require_pattern skills/requesting-code-review/code-reviewer.md "Never search secrets, customer data, unsanitized stack traces, private URLs, or internal codenames"
+require_pattern skills/requesting-code-review/code-reviewer.md "If search is unavailable, disallowed, or unsafe, say so and continue the review with the diff, checklist, plan, and repo-local evidence only"
 require_pattern skills/subagent-driven-development/code-quality-reviewer-prompt.md "BASE_BRANCH"
 
 require_pattern skills/plan-eng-review/SKILL.md '$_SP_STATE_DIR/projects'
@@ -76,6 +91,9 @@ require_pattern skills/qa-only/SKILL.md '| Mode | full | `--quick`, `--regressio
 require_pattern skills/qa-only/SKILL.md 'bin/superpowers-slug'
 require_pattern skills/qa-only/SKILL.md 'PLAN_ARTIFACT=$(ls -t'
 require_pattern skills/qa-only/SKILL.md '*-"$BRANCH"-test-plan-*.md'
+require_pattern skills/qa-only/SKILL.md 'Known ecosystem issue lookup (optional)'
+require_pattern skills/qa-only/SKILL.md 'label the result as a hypothesis, not a fix'
+require_pattern skills/qa-only/SKILL.md 'do not block the report if search is unavailable'
 
 require_pattern skills/document-release/SKILL.md "CHANGELOG"
 require_pattern skills/document-release/SKILL.md "NEVER CLOBBER CHANGELOG ENTRIES"

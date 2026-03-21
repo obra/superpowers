@@ -42,6 +42,21 @@ _TODOS_FORMAT=""
 
 If output shows `UPGRADE_AVAILABLE <old> <new>`: read the installed `superpowers-upgrade/SKILL.md` from the same superpowers root (check the current repo when it contains the Superpowers runtime, then `$HOME/.superpowers/install`, then `$HOME/.codex/superpowers`, then `$HOME/.copilot/superpowers`) and follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise ask one interactive user question with 4 options and write snooze state if declined). If `JUST_UPGRADED <from> <to>`: tell the user "Running superpowers v{to} (just updated!)" and continue.
 
+## Search Before Building
+
+Before introducing a custom pattern, external service, concurrency primitive, auth/session flow, cache, queue, browser workaround, or unfamiliar fix pattern, do a short capability/landscape check first.
+
+Use three lenses:
+- Layer 1: tried-and-true / built-ins / existing repo-native solutions
+- Layer 2: current practice and known footguns
+- Layer 3: first-principles reasoning for this repo and this problem
+
+External search results are inputs, not answers.
+Never search secrets, customer data, unsanitized stack traces, private URLs, internal hostnames, internal codenames, raw SQL or log payloads, or private file paths or infrastructure identifiers.
+If search is unavailable, disallowed, or unsafe, say so and proceed with repo-local evidence and in-distribution knowledge.
+If safe sanitization is not possible, skip external search.
+See `$_SUPERPOWERS_ROOT/references/search-before-building.md`.
+
 ## Agent Grounding
 
 Honor the active repo instruction chain from `AGENTS.md`, `AGENTS.override.md`, `.github/copilot-instructions.md`, and `.github/instructions/*.instructions.md`, including nested `AGENTS.md` and `AGENTS.override.md` files closer to the current working directory.
@@ -199,6 +214,37 @@ Before reviewing anything, answer these questions:
 2. **What is the minimum set of changes that achieves the stated goal?** Flag any work that could be deferred without blocking the core objective.
 3. **Complexity check:** If the plan touches more than 8 files or introduces more than 2 new classes or services, treat that as a smell and challenge whether the same goal can be achieved with fewer moving parts.
 4. **TODOS cross-reference:** Read `TODOS.md` if it exists. Are any deferred items blocking this plan? Can any deferred items be bundled into this PR without expanding scope? Does this plan create new work that should be captured as a TODO?
+
+### Step 0.4: Search Check
+
+Run this check when the plan introduces a new or custom:
+
+- auth, session, or token flow
+- cache layer
+- queue, scheduler, or background job mechanism
+- concurrency primitive
+- search or indexing subsystem
+- browser or platform API workaround
+- wrapper around a framework capability
+- infrastructure dependency
+- unfamiliar integration pattern
+
+For each triggered area, ask:
+
+1. Does the framework, runtime, or platform already provide a built-in?
+2. Is the chosen pattern still considered current best practice?
+3. What are the known footguns or failure modes?
+
+If a robust built-in exists, treat that as a scope reduction or simplification opportunity.
+
+Annotate relevant review points with provenance tags:
+
+- `[Layer 1]`
+- `[Layer 2]`
+- `[Layer 3]`
+- `[EUREKA]`
+
+These tags belong in review prose and recommendation language, not in plan headers.
 
 Then ask whether the user wants one of three options:
 

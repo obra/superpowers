@@ -51,14 +51,23 @@ cat "$CHECKLIST_PATH"
    - Documentation staleness requires checking root docs such as `README.md`, `ARCHITECTURE.md`, or install docs if they exist
    - TODO cross-reference requires checking `TODOS.md` if it exists
 
-3. Compare implementation against the plan:
+3. When the diff introduces a new or unfamiliar framework, API, dependency, or pattern and external search is available:
+   - Do 1-2 targeted checks only
+   - Prefer official documentation, issue trackers or maintainer guidance, and release notes, standards, or other primary-source technical references
+   - Only fall back to secondary technical references when primary sources are absent or clearly insufficient for the specific review question
+   - Use this pass to strengthen built-in-before-bespoke and known pattern footguns findings
+   - Keep every finding anchored in the actual diff and concrete file:line evidence
+   - Never search secrets, customer data, unsanitized stack traces, private URLs, or internal codenames; sanitize or generalize before any external lookup
+   - If search is unavailable, disallowed, or unsafe, say so and continue the review with the diff, checklist, plan, and repo-local evidence only
+
+4. Compare implementation against the plan:
    - All required behavior present?
    - Any unjustified deviations?
    - Any missing verification, edge cases, or release hygiene?
 
-4. When approved plan and execution evidence paths are provided, read both artifacts and verify that checked-off plan steps are semantically satisfied by the implementation and explicitly evidenced.
+5. When approved plan and execution evidence paths are provided, read both artifacts and verify that checked-off plan steps are semantically satisfied by the implementation and explicitly evidenced.
 
-5. Keep the review terse and evidence-based. Do not invent issues outside the reviewed range.
+6. Keep the review terse and evidence-based. Do not invent issues outside the reviewed range.
 
 ## Output Format
 

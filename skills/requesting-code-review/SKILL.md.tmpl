@@ -50,6 +50,10 @@ The reviewer should use the shared review checklist from `review/checklist.md` i
 
 Use the `code-reviewer` agent and fill the template at `code-reviewer.md`
 
+When the implementation introduces unfamiliar patterns, framework APIs, dependencies, or bespoke wrappers around platform behavior, make sure the review considers built-in-before-bespoke and known ecosystem footguns.
+
+If the approved plan already called out a likely external-pattern target, you may pass that context into the reviewer briefing, but this is optional in v1.
+
 **Placeholders:**
 - `{WHAT_WAS_IMPLEMENTED}` - What you just built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do

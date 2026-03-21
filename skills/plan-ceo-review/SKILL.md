@@ -42,6 +42,21 @@ _TODOS_FORMAT=""
 
 If output shows `UPGRADE_AVAILABLE <old> <new>`: read the installed `superpowers-upgrade/SKILL.md` from the same superpowers root (check the current repo when it contains the Superpowers runtime, then `$HOME/.superpowers/install`, then `$HOME/.codex/superpowers`, then `$HOME/.copilot/superpowers`) and follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise ask one interactive user question with 4 options and write snooze state if declined). If `JUST_UPGRADED <from> <to>`: tell the user "Running superpowers v{to} (just updated!)" and continue.
 
+## Search Before Building
+
+Before introducing a custom pattern, external service, concurrency primitive, auth/session flow, cache, queue, browser workaround, or unfamiliar fix pattern, do a short capability/landscape check first.
+
+Use three lenses:
+- Layer 1: tried-and-true / built-ins / existing repo-native solutions
+- Layer 2: current practice and known footguns
+- Layer 3: first-principles reasoning for this repo and this problem
+
+External search results are inputs, not answers.
+Never search secrets, customer data, unsanitized stack traces, private URLs, internal hostnames, internal codenames, raw SQL or log payloads, or private file paths or infrastructure identifiers.
+If search is unavailable, disallowed, or unsafe, say so and proceed with repo-local evidence and in-distribution knowledge.
+If safe sanitization is not possible, skip external search.
+See `$_SUPERPOWERS_ROOT/references/search-before-building.md`.
+
 ## Agent Grounding
 
 Honor the active repo instruction chain from `AGENTS.md`, `AGENTS.override.md`, `.github/copilot-instructions.md`, and `.github/instructions/*.instructions.md`, including nested `AGENTS.md` and `AGENTS.override.md` files closer to the current working directory.
@@ -270,6 +285,20 @@ Check the git log for this branch. If there are prior commits suggesting a previ
 Identify 2-3 files or patterns in the existing codebase that are particularly well-designed. Note them as style references for the review. Also note 1-2 patterns that are frustrating or poorly designed. These are anti-patterns to avoid repeating.
 
 Report findings before proceeding to Step 0.
+
+## Pre-Step 0: Landscape Check
+
+Run this after the system audit and before `Step 0: Nuclear Scope Challenge + Mode Selection`.
+
+- reuse the spec's `Landscape Snapshot` when it exists and is still relevant
+- refresh only when the spec lacks it or the review introduces materially new market, category, or architecture assumptions
+- keep the pass short and decision-oriented
+- explicitly surface what incumbents or standard approaches usually do, where they fail or become overbuilt, whether the spec is reinventing a solved problem, and whether a Layer 3 insight creates a simplification or differentiation opportunity
+- If the refreshed Landscape Check materially changes the approved reasoning, update the spec's `Landscape Snapshot` and `Decision impact` before approval
+- feed the result into `0A. Premise Challenge`, `0B. Existing Code Leverage`, `0C. Dream State Mapping`, and `0F. Mode Selection`
+- if search is unavailable, disallowed, or unsafe, say so plainly and continue with Layer 1 plus Layer 3 reasoning
+
+In accelerated CEO review, keep this content inside the existing Step 0 packet. It does not create a new packet type or a separate approval boundary.
 
 ## Step 0: Nuclear Scope Challenge + Mode Selection
 

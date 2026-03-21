@@ -27,10 +27,11 @@ You MUST create a task for each of these items and complete them in order:
 1. **Explore project context** — check files, docs, recent commits
 2. **Offer visual companion** (if topic will involve visual questions) — this is its own message, not combined with a clarifying question. See the Visual Companion section below.
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-4. **Propose 2-3 approaches** — with trade-offs and your recommendation
-5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
-7. **Automatic spec review handoff** — invoke `superpowers:plan-ceo-review` after writing the spec
+4. **Landscape Awareness** — when triggered, run a short three-layer capability or landscape pass before proposing approaches
+5. **Propose 2-3 approaches** — with trade-offs and your recommendation
+6. **Present design** — in sections scaled to their complexity, get user approval after each section
+7. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
+8. **Automatic spec review handoff** — invoke `superpowers:plan-ceo-review` after writing the spec
 
 ## Process Flow
 
@@ -40,6 +41,8 @@ digraph brainstorming {
     "Visual questions ahead?" [shape=diamond];
     "Offer Visual Companion\n(own message, no other content)" [shape=box];
     "Ask clarifying questions" [shape=box];
+    "Landscape Awareness needed?" [shape=diamond];
+    "Landscape Awareness" [shape=box];
     "Propose 2-3 approaches" [shape=box];
     "Present design sections" [shape=box];
     "User approves design?" [shape=diamond];
@@ -50,7 +53,10 @@ digraph brainstorming {
     "Visual questions ahead?" -> "Offer Visual Companion\n(own message, no other content)" [label="yes"];
     "Visual questions ahead?" -> "Ask clarifying questions" [label="no"];
     "Offer Visual Companion\n(own message, no other content)" -> "Ask clarifying questions";
-    "Ask clarifying questions" -> "Propose 2-3 approaches";
+    "Ask clarifying questions" -> "Landscape Awareness needed?";
+    "Landscape Awareness needed?" -> "Landscape Awareness" [label="yes"];
+    "Landscape Awareness needed?" -> "Propose 2-3 approaches" [label="no"];
+    "Landscape Awareness" -> "Propose 2-3 approaches";
     "Propose 2-3 approaches" -> "Present design sections";
     "Present design sections" -> "User approves design?";
     "User approves design?" -> "Present design sections" [label="no, revise"];
@@ -72,6 +78,16 @@ digraph brainstorming {
 - Prefer multiple choice questions when possible, but open-ended is fine too
 - Only one question per message - if a topic needs more exploration, break it into multiple questions
 - Focus on understanding: purpose, constraints, success criteria
+
+**Landscape Awareness:**
+
+- Run Landscape Awareness only when the work involves a product or category choice, a new architectural direction, an unfamiliar runtime, framework, or platform capability, or when current conventional approaches or known failure modes could materially change the design.
+- If the work is sensitive or stealthy, ask one explicit permission question before any external search.
+- Search with safely generalized category language only.
+- Do not search product codenames, customer names, private feature names, or internal URLs.
+- Cap the pass to 2-3 high-signal sources.
+- Synthesize the result through Layer 1, Layer 2, and Layer 3 before proposing approaches.
+- If search is unavailable, disallowed, or unsafe, say so plainly and continue with Layer 1 plus Layer 3 reasoning.
 
 **Exploring approaches:**
 
@@ -133,6 +149,18 @@ digraph brainstorming {
 ```
 
 - Use exact-match header lines. Later workflow stages parse them with regexes and treat missing or malformed fields as not approved.
+- When Layer 2 materially influences the selected approach, simplification, warning, or rejection of an alternative, include this optional body section in the spec:
+
+```markdown
+## Landscape Snapshot
+### Layer 1
+### Layer 2
+### Layer 3
+### Eureka (optional)
+### Decision impact
+```
+
+- If Layer 2 does not materially affect the chosen design, `Landscape Snapshot` remains optional.
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 - After the spec is written or updated, runs `sync --artifact spec`:

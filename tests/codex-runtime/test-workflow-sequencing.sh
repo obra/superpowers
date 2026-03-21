@@ -54,9 +54,16 @@ require_pattern skills/brainstorming/SKILL.md "failure and edge-case behavior"
 require_pattern skills/brainstorming/SKILL.md "observability expectations"
 require_pattern skills/brainstorming/SKILL.md "rollout and rollback expectations"
 require_pattern skills/brainstorming/SKILL.md "testable acceptance criteria"
+require_pattern skills/brainstorming/SKILL.md "Landscape Awareness"
+require_pattern skills/brainstorming/SKILL.md "If the work is sensitive or stealthy, ask one explicit permission question before any external search"
+require_pattern skills/brainstorming/SKILL.md "## Landscape Snapshot"
+require_pattern skills/brainstorming/SKILL.md "### Decision impact"
 
 require_description_pattern skills/using-superpowers/SKILL.md "deciding which skill or workflow stage applies"
 require_description_pattern skills/systematic-debugging/SKILL.md "investigating a bug, regression, test failure, or unexpected behavior"
+require_pattern skills/systematic-debugging/SKILL.md "Phase 2.5: External Pattern Search"
+require_pattern skills/systematic-debugging/SKILL.md "Phase 3.2b: Search Escalation on failed hypothesis"
+require_pattern skills/systematic-debugging/SKILL.md "treat results as candidate hypotheses, not conclusions"
 require_description_pattern skills/document-release/SKILL.md "release notes, changelog, TODO, or handoff documentation"
 require_description_pattern skills/qa-only/SKILL.md "browser-based QA, repro steps, screenshots, evidence, and reports"
 
@@ -86,6 +93,9 @@ require_pattern skills/plan-ceo-review/SKILL.md 'Resume accelerated CEO review o
 require_pattern skills/plan-ceo-review/SKILL.md 'If the source artifact fingerprint changes, treat saved accelerated CEO packets as stale and regenerate them before reuse.'
 require_pattern skills/plan-ceo-review/SKILL.md 'Accelerated CEO review must preserve required review outputs, including individual TODO and delight questions when they must remain human-owned.'
 require_pattern skills/plan-ceo-review/SKILL.md 'Accelerator artifacts must use bounded retention rather than accumulate indefinitely.'
+require_pattern skills/plan-ceo-review/SKILL.md 'Pre-Step 0: Landscape Check'
+require_pattern skills/plan-ceo-review/SKILL.md "reuse the spec's \`Landscape Snapshot\` when it exists and is still relevant"
+require_pattern skills/plan-ceo-review/SKILL.md 'If the refreshed Landscape Check materially changes the approved reasoning, update the spec'"'"'s `Landscape Snapshot` and `Decision impact` before approval'
 
 require_pattern skills/writing-plans/SKILL.md 'If the spec is missing these lines, or if `**Workflow State:**` is not `CEO Approved`, stop and direct the agent to `superpowers:plan-ceo-review`.'
 require_pattern skills/writing-plans/SKILL.md "**Workflow State:** Draft"
@@ -105,6 +115,10 @@ require_pattern skills/writing-plans/SKILL.md "evidence expectations"
 require_pattern skills/writing-plans/SKILL.md "rollout plan"
 require_pattern skills/writing-plans/SKILL.md "rollback plan"
 require_pattern skills/writing-plans/SKILL.md "risks and mitigations"
+require_pattern skills/writing-plans/SKILL.md "## Existing Capabilities / Built-ins to Reuse"
+require_pattern skills/writing-plans/SKILL.md "## Known Footguns / Constraints"
+require_pattern skills/writing-plans/SKILL.md 'pull from the approved spec'"'"'s `Landscape Snapshot` when present'
+require_pattern skills/writing-plans/SKILL.md "Do not make fresh search the default here."
 
 require_pattern skills/plan-eng-review/SKILL.md "**Workflow State:** Draft | Engineering Approved"
 require_pattern skills/plan-eng-review/SKILL.md "**Source Spec Revision:** <integer>"
@@ -119,6 +133,14 @@ require_pattern skills/plan-eng-review/SKILL.md 'If isolated-agent workflows are
 require_pattern skills/plan-eng-review/SKILL.md 'if `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status` is available, call `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status status --refresh`'
 require_pattern skills/plan-eng-review/SKILL.md 'If the helper returns a non-empty `next_skill`, use that route instead of re-deriving state manually.'
 require_pattern skills/plan-eng-review/SKILL.md 'If the helper returns `status` `implementation_ready`, present the normal execution handoff below.'
+require_pattern skills/plan-eng-review/SKILL.md "Step 0.4: Search Check"
+require_pattern skills/plan-eng-review/SKILL.md "Does the framework, runtime, or platform already provide a built-in?"
+require_pattern skills/plan-eng-review/SKILL.md "Is the chosen pattern still considered current best practice?"
+require_pattern skills/plan-eng-review/SKILL.md "What are the known footguns or failure modes?"
+require_pattern skills/plan-eng-review/SKILL.md "[Layer 1]"
+require_pattern skills/plan-eng-review/SKILL.md "[Layer 2]"
+require_pattern skills/plan-eng-review/SKILL.md "[Layer 3]"
+require_pattern skills/plan-eng-review/SKILL.md "[EUREKA]"
 require_pattern skills/plan-eng-review/SKILL.md "ordered implementation steps"
 require_pattern skills/plan-eng-review/SKILL.md "documentation update expectations"
 require_pattern skills/plan-eng-review/SKILL.md "evidence expectations"
@@ -184,7 +206,11 @@ require_pattern skills/requesting-code-review/SKILL.md 'For plan-routed final re
 require_pattern skills/requesting-code-review/SKILL.md 'Run `superpowers-plan-execution status --plan <approved-plan-path>` before dispatching the reviewer.'
 require_pattern skills/requesting-code-review/SKILL.md 'If helper status fails, stop and return to the current execution flow; do not dispatch review against guessed plan state.'
 require_pattern skills/requesting-code-review/SKILL.md 'Pass the exact approved plan path and helper-reported execution evidence path into the reviewer context.'
+require_pattern skills/requesting-code-review/SKILL.md 'built-in-before-bespoke'
+require_pattern skills/requesting-code-review/SKILL.md 'known ecosystem footguns'
 require_description_absent_pattern skills/requesting-code-review/SKILL.md 'implementing major features'
+require_pattern skills/receiving-code-review/SKILL.md 'novel rewrite, unfamiliar framework pattern, or a "best practice" that does not match repo reality'
+require_pattern skills/receiving-code-review/SKILL.md 'do a quick capability or landscape check before implementing it'
 require_pattern skills/finishing-a-development-branch/SKILL.md 'rejects branch-completion handoff if the approved plan is execution-dirty or malformed'
 require_pattern skills/finishing-a-development-branch/SKILL.md 'must not allow branch completion while any checked-off plan step still lacks semantic implementation evidence'
 require_description_pattern skills/finishing-a-development-branch/SKILL.md 'verification passes'
