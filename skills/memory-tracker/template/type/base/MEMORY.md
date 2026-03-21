@@ -1,16 +1,16 @@
-# [category-name]
+# [type-name]
 
-## Category
-[category-name]
+## Type
+[type-name]
 
 ## Use When
-[when this category should be used]
+[when this type should be used]
 
 ## Avoid When
-[when this category should not be used]
+[when this type should not be used]
 
 ## Entry Template
-`[entry-template-path]`
+`docs/superpowers/memory/[type-name]/entry.md`
 
 ## Global TOC
 

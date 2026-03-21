@@ -1,6 +1,6 @@
 # Memory Categories
 
-## Category
+## Type
 milestone
 
 ### Use When
@@ -11,7 +11,7 @@ milestone
 - The main value is debugging evidence or root-cause closure.
 - The main value is structural cleanup without a new product or workflow direction.
 
-## Category
+## Type
 debug
 
 ### Use When
@@ -22,7 +22,7 @@ debug
 - The work is mainly about delivering a new capability or workflow.
 - The work is mainly about maintainability or architectural cleanup.
 
-## Category
+## Type
 refactor
 
 ### Use When

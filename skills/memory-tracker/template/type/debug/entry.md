@@ -3,7 +3,7 @@
 ## Date
 YYYY-MM-DD
 
-## Category
+## Type
 debug
 
 ## Title

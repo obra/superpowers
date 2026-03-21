@@ -1,6 +1,6 @@
 # refactor
 
-## Category
+## Type
 refactor
 
 ## Use When
@@ -12,7 +12,7 @@ refactor
 - The main value is fixing a concrete failure mode.
 
 ## Entry Template
-`skills/memory-bootstrap/template/category/refactor/entry.md`
+`docs/superpowers/memory/refactor/entry.md`
 
 ## Global TOC
 

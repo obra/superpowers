@@ -1,6 +1,6 @@
 # debug
 
-## Category
+## Type
 debug
 
 ## Use When
@@ -12,7 +12,7 @@ debug
 - The work is mainly about maintainability or architectural cleanup.
 
 ## Entry Template
-`skills/memory-bootstrap/template/category/debug/entry.md`
+`docs/superpowers/memory/debug/entry.md`
 
 ## Global TOC
 

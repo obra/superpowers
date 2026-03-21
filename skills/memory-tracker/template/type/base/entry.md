@@ -3,8 +3,8 @@
 ## Date
 YYYY-MM-DD
 
-## Category
-[category-name]
+## Type
+[type-name]
 
 ## Title
 [Short memory title]

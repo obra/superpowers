@@ -1,6 +1,6 @@
 # milestone
 
-## Category
+## Type
 milestone
 
 ## Use When
@@ -12,7 +12,7 @@ milestone
 - The main value is structural cleanup without a new product or workflow direction.
 
 ## Entry Template
-`skills/memory-bootstrap/template/category/milestone/entry.md`
+`docs/superpowers/memory/milestone/entry.md`
 
 ## Global TOC
 

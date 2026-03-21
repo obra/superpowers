@@ -114,7 +114,7 @@ Start a new session in your chosen platform and ask for something that should tr
 
 7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
 
-8. **memory-bootstrap** and **memory-tracker** - Initializes canonical `docs/superpowers/memory/` project memory with a repository-defined category router, then records closed reviewable change units as short durable memory linked to commits.
+8. **memory-tracker** - Records closed reviewable change units in `docs/superpowers/memory/`, discovering repository-defined categories and progressively introducing missing structure only when needed.
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
@@ -141,8 +141,7 @@ Start a new session in your chosen platform and ask for something that should tr
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
 
 **Project Memory**
-- **memory-bootstrap** - Initializes canonical `docs/superpowers/memory/` layout (`CATEGORY.md`, category `MEMORY.md` files, and monthly entry folders)
-- **memory-tracker** - Discovers repository-defined categories, routes to the right memory template, and records closed reviewable change units with commit linkage
+- **memory-tracker** - Records closed reviewable change units in `docs/superpowers/memory/`, discovering repository-defined categories and progressively introducing missing structure only when needed
 
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
