@@ -9,6 +9,7 @@ import path from 'path';
 import fs from 'fs';
 import os from 'os';
 import { fileURLToPath } from 'url';
+import { rewriteBareSkillName } from '../skill-alias.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -51,6 +52,8 @@ export const SuperpowersPlugin = async ({ client, directory }) => {
   const superpowersSkillsDir = path.resolve(__dirname, '../../skills');
   const envConfigDir = normalizePath(process.env.OPENCODE_CONFIG_DIR, homeDir);
   const configDir = envConfigDir || path.join(homeDir, '.config/opencode');
+  const userSkillsDir = path.join(configDir, 'skills');
+  const projectSkillsDir = path.join(directory, '.opencode/skills');
 
   // Helper to generate bootstrap content
   const getBootstrapContent = () => {
@@ -102,6 +105,18 @@ ${toolMapping}
       if (bootstrap) {
         (output.system ||= []).push(bootstrap);
       }
+    },
+
+    'tool.execute.before': async (input, output) => {
+      if (input.tool !== 'skill') return;
+      if (!output.args || typeof output.args !== 'object') return;
+      if (typeof output.args.name !== 'string') return;
+
+      output.args.name = rewriteBareSkillName(output.args.name, {
+        projectSkillsDir,
+        userSkillsDir,
+        superpowersSkillsDir
+      });
     }
   };
 };
