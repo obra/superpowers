@@ -1,6 +1,6 @@
 {
   "name": "superpowers-ruby",
   "description": "Ruby/Rails skills library: TDD with Minitest, Rails patterns, Hotwire, Brakeman, Sandi Metz rules, 37signals style, and proven development workflows",
-  "version": "5.0.0",
+  "version": "5.0.3",
   "contextFileName": "GEMINI.md"
 }
