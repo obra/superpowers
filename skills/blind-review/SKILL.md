@@ -112,11 +112,21 @@ Task tool (general-purpose):
        - Token expiry, network failure, partial writes?
        - Retry and recovery mechanisms?
 
+    **IMPORTANT: Even if you cannot find the implementation files, you MUST
+    still produce a full report.** Enumerate every spec requirement, flag
+    every security concern derivable from the spec, and list what you would
+    verify in code. "Code not found" is a Critical finding, not a reason
+    to stop. The spec alone contains enough information to identify risks
+    (e.g., "JWT auth" implies token expiry handling, secret management,
+    refresh token rotation).
+
     **Report format:**
     - Critical: Must fix before merge (security, data loss, spec violations)
     - Important: Should fix before merge (missing error handling, race conditions)
     - Minor: Nice to fix (style, naming, minor improvements)
     - Spec compliance: ✅ Met / ❌ Not met — with line-by-line breakdown
+    - Spec-derived risks: Concerns derivable from the spec that MUST be
+      verified in code (even if you haven't seen the code yet)
 ```
 
 ### Step 3: Act on Findings
@@ -158,6 +168,8 @@ The blind review is the final quality gate before branch completion. Per-task re
 | Trusting "zero issues" result | Verify reviewer actually read the code (check for file references) |
 | Only running on happy path features | Run on security-sensitive and data-handling code especially |
 | Treating it as optional | It's the final gate — mandatory before merge for major implementations |
+| Short-circuiting on "code not found" | "Code not found" is a Critical finding, not a stop signal. Still enumerate every spec requirement and flag spec-derived security risks |
+| Cutting corners under time pressure | "We need to merge today" is not a reason to do a "quick review." Blind review is the final gate — rushing it defeats its purpose |
 
 ## Red Flags
 
@@ -166,9 +178,12 @@ The blind review is the final quality gate before branch completion. Per-task re
 - Skip blind review because "standard reviews already passed"
 - Merge with unresolved Critical findings
 - Trust a review that doesn't reference specific files and lines
+- Do a "quick" or "abbreviated" blind review under time pressure
+- Stop the review because implementation files weren't found — enumerate spec-derived risks regardless
 
 **Always:**
 - Provide only the spec/requirements
 - Let the reviewer find and read code independently
+- Enumerate spec-derived risks even before reading code (e.g., "JWT auth" → token expiry, secret rotation, refresh token security)
 - Fix Critical and Important findings before merge
 - Re-review if significant changes were made to fix findings
