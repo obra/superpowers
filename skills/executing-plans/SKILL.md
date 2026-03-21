@@ -111,10 +111,10 @@ Load plan, review critically, execute all tasks in a separate session, request f
    - `**Workflow State:** Engineering Approved`
    - `**Source Spec:** <path>`
    - `**Source Spec Revision:** <integer>`
-4. Read the source spec named in the plan and confirm it is still `CEO Approved` at the same revision.
+4. Read the source spec named in the plan and confirm it is still `CEO Approved`, and that the latest approved spec still matches that exact source-spec path and revision.
 5. Stop immediately and redirect:
    - to `superpowers:plan-eng-review` if the plan is draft or malformed
-   - to `superpowers:writing-plans` if the source spec revision is stale
+   - to `superpowers:writing-plans` if the source spec path or revision is stale
 6. Verify workspace readiness before starting:
    - stop on `main` or `master` unless the user explicitly approves in-place execution
    - stop on detached HEAD
@@ -152,7 +152,7 @@ After all tasks complete and verified:
 After the final review is resolved:
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
 - **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
-- Follow that skill to verify tests, offer optional `superpowers:qa-only` when appropriate, present options, and execute the chosen completion path
+- Follow that skill to verify tests, require `qa-only` when browser QA is warranted, require `document-release` for workflow-routed work, present options, and execute the chosen completion path
 
 ## When to Stop and Ask for Help
 

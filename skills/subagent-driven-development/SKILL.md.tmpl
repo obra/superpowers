@@ -98,10 +98,10 @@ Before dispatching any implementation subagent:
    - `**Workflow State:** Engineering Approved`
    - `**Source Spec:** <path>`
    - `**Source Spec Revision:** <integer>`
-3. Read the source spec named in the plan and confirm it is still `CEO Approved` at the same revision.
+3. Read the source spec named in the plan and confirm it is still `CEO Approved`, and that the latest approved spec still matches that exact source-spec path and revision.
 4. Stop immediately and redirect:
    - to `superpowers:plan-eng-review` if the plan is draft or malformed
-   - to `superpowers:writing-plans` if the source spec revision is stale
+   - to `superpowers:writing-plans` if the source spec path or revision is stale
 5. Verify workspace readiness before dispatching subagents:
    - stop on `main` or `master` unless the user explicitly approves in-place execution
    - stop on detached HEAD
@@ -239,7 +239,7 @@ Code reviewer: ✅ Approved
 
 [Announce: I'm using the finishing-a-development-branch skill to complete this work.]
 [Invoke superpowers:finishing-a-development-branch]
-[Let that skill offer optional qa-only when appropriate, then present merge/PR/keep/discard options and follow the chosen path]
+[Let that skill require qa-only when browser QA is warranted, require document-release for workflow-routed work, then present merge/PR/keep/discard options and follow the chosen path]
 ```
 
 ## Advantages
@@ -313,8 +313,9 @@ Code reviewer: ✅ Approved
 - **superpowers:requesting-code-review** - REQUIRED: Final review gate after execution completes
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
 
-**Optional completion gate:**
-- **superpowers:qa-only** - Report-only browser QA offered from the branch-finishing flow when the branch has UI or route changes
+**Conditional completion gate:**
+- **superpowers:qa-only** - Required when browser QA is warranted by the branch change surface or test-plan artifact; optional otherwise
+- **superpowers:document-release** - Required release-readiness pass for workflow-routed work before completion
 
 **Subagents should use:**
 - **superpowers:test-driven-development** - Subagents follow TDD for each task

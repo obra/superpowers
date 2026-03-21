@@ -284,19 +284,19 @@ run_stale_approved_plan() {
   init_repo "$repo"
 
   write_file "$spec_path" <<'EOF'
-# Approved Spec, Stale Revision
+# Approved Spec, Newer Path
 
 **Workflow State:** CEO Approved
-**Spec Revision:** 2
+**Spec Revision:** 1
 **Last Reviewed By:** plan-ceo-review
 
 ## Notes
 EOF
   write_file "$plan_path" <<'EOF'
-# Approved Plan, Stale Source Revision
+# Approved Plan, Stale Source Path
 
 **Workflow State:** Engineering Approved
-**Source Spec:** `docs/superpowers/specs/2026-01-22-document-review-system-design-v2.md`
+**Source Spec:** `docs/superpowers/specs/2026-01-22-document-review-system-design.md`
 **Source Spec Revision:** 1
 **Last Reviewed By:** plan-eng-review
 EOF

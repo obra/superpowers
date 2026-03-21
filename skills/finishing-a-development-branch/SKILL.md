@@ -98,7 +98,7 @@ Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Ski
 
 Guide completion of development work by presenting clear options and handling chosen workflow.
 
-**Core principle:** Verify tests → Present options → Execute choice → Clean up.
+**Core principle:** Verify tests → Run required pre-completion gates → Present options → Execute choice → Clean up.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
@@ -124,7 +124,7 @@ Cannot proceed with merge/PR until tests pass.
 
 Stop. Don't proceed to Step 2.
 
-**If tests pass:** Continue to Step 2.
+**If tests pass:** Continue to Step 1.5.
 
 ### Step 1.5: Optional Pre-Landing Review Gate
 
@@ -147,7 +147,7 @@ Before presenting completion options:
 - consumes the same execution evidence artifact used by final review
 - must fail closed when it detects a missed reopen or stale evidence, but must not call `reopen` itself
 
-### Step 1.75: Optional Pre-Landing QA Gate
+### Step 1.75: Conditional Pre-Landing QA Gate
 
 Before presenting completion options, look for a branch-specific QA handoff artifact:
 
@@ -163,18 +163,41 @@ printf '%s\n' "$PLAN_ARTIFACT"
 
 If `PLAN_ARTIFACT` exists, read it before deciding whether browser QA applies.
 
-If a branch-specific test-plan artifact exists and it names pages, routes, or browser interactions, or the current change is clearly browser-facing, offer an optional handoff to `superpowers:qa-only` before completion options.
+If a branch-specific test-plan artifact names pages, routes, or browser interactions, or the current change is clearly browser-facing, require the existing QA handoff before completion options.
 
 Recommendation logic:
 - Recommend `A)` when a branch-specific test-plan artifact exists and it points at pages, routes, or browser interactions
 - Recommend `A)` when user-visible routes, forms, or browser flows changed
 - Skip the handoff when the branch is clearly non-browser work, even if a generic test-plan artifact exists
 
-Possible options:
+When browser QA is clearly warranted, do not present a skip option.
+
+Possible options when browser QA is required:
+- `A)` Run `superpowers:qa-only` now and return here after the report is written
+
+Possible options when browser QA is optional:
 - `A)` Run `superpowers:qa-only` now and return here after the report is written
 - `B)` Skip QA handoff this time
 
 If a fresh `qa-only` report already happened in the current workflow, continue silently.
+
+When browser QA is warranted by the change type or test-plan artifact, require the existing QA handoff before presenting completion options. Keep QA optional only for clearly non-browser work.
+
+### Step 1.9: Required Document Release Gate
+
+For workflow-routed work, require the `document-release` pass before presenting completion options.
+
+For workflow-routed work, if the repo has release-facing docs or metadata such as `CHANGELOG.md`, `RELEASE-NOTES.md`, `VERSION`, `TODOS.md`, `README.md`, or platform workflow docs, do not treat documentation as optional cleanup. Route through `superpowers:document-release` first unless a fresh pass already happened in the current workflow.
+
+For ad-hoc or non-workflow-routed work, keep `document-release` available as an optional cleanup pass when the diff clearly changes release-facing docs or handoff material, but do not turn it into a universal pre-completion gate.
+
+Before moving on, perform a short Gate F-style confirmation:
+
+- documentation has been refreshed
+- release notes or equivalent release-history updates are ready
+- rollout and rollback are addressed
+- known risks are documented
+- monitoring or verification expectations are addressed when relevant
 
 ### Step 2: Determine Base Branch
 
@@ -317,17 +340,9 @@ If found:
 
 **For Option C:** Keep worktree.
 
-### Step 6: Optional Document Release Handoff
+### Step 6: Document Release Follow-Through
 
-For Options A, B, or C only: if the repo contains `CHANGELOG.md`, `RELEASE-NOTES.md`, `VERSION`, or `TODOS.md`, offer an optional handoff to `superpowers:document-release`.
-
-Recommendation logic:
-- Recommend running `superpowers:document-release` when user-visible behavior changed or release metadata exists
-- Skip the handoff when there are no docs or release surfaces to reconcile
-
-Possible options:
-- `A)` Run `superpowers:document-release` now
-- `B)` Skip documentation handoff this time
+If Step 1.9 already routed through `superpowers:document-release`, summarize the release-readiness result and continue. Do not offer a skip path here for workflow-routed work.
 
 ## Quick Reference
 
@@ -377,5 +392,6 @@ Possible options:
 - **executing-plans** - After the final review is resolved and all tasks are complete
 
 **Pairs with:**
-- **qa-only** - Optional pre-landing browser QA before merge or PR decisions
+- **qa-only** - Conditional pre-landing browser QA when the branch change surface or test-plan artifact warrants it
+- **document-release** - Required release-readiness pass for workflow-routed work before completion
 - **using-git-worktrees** - Optional cleanup for a worktree created by that skill

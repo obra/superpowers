@@ -74,6 +74,52 @@ normalize_plan_scope_path() {
   normalize_repo_relative_path "$stripped"
 }
 
+spec_state=""
+spec_revision=""
+spec_reviewer=""
+
+parse_spec_headers() {
+  local path="$1"
+  spec_state=""
+  spec_revision=""
+  spec_reviewer=""
+  [ -f "$path" ] || return 1
+
+  spec_state="$(sed -nE 's/^\*\*Workflow State:\*\* (Draft|CEO Approved)$/\1/p' "$path" | head -n1)"
+  spec_revision="$(sed -nE 's/^\*\*Spec Revision:\*\* ([0-9]+)$/\1/p' "$path" | head -n1)"
+  spec_reviewer="$(sed -nE 's/^\*\*Last Reviewed By:\*\* (brainstorming|plan-ceo-review)$/\1/p' "$path" | head -n1)"
+
+  [ -n "$spec_state" ] && [ -n "$spec_revision" ] && [ -n "$spec_reviewer" ]
+}
+
+rel_from_root() {
+  local abs="$1"
+  case "$abs" in
+    "$REPO_ROOT"/*) printf '%s\n' "${abs#"$REPO_ROOT"/}" ;;
+    *) return 1 ;;
+  esac
+}
+
+find_latest_approved_spec() {
+  local candidate rel
+
+  LATEST_APPROVED_SPEC_PATH=""
+  LATEST_APPROVED_SPEC_REVISION=""
+
+  # shellcheck disable=SC2012
+  while IFS= read -r candidate; do
+    [[ -n "$candidate" ]] || continue
+    parse_spec_headers "$candidate" || continue
+    [[ "$spec_state" == "CEO Approved" ]] || continue
+    rel="$(rel_from_root "$candidate")" || continue
+    LATEST_APPROVED_SPEC_PATH="$rel"
+    LATEST_APPROVED_SPEC_REVISION="$spec_revision"
+    return 0
+  done < <(ls -1t "$REPO_ROOT"/docs/superpowers/specs/*.md 2>/dev/null || true)
+
+  return 1
+}
+
 derive_tasks_independent_from_plan() {
   local plan_abs="$1"
   local line
@@ -414,7 +460,7 @@ parse_plan_file() {
 validate_source_spec() {
   local source_rel="$1"
   local expected_revision="$2"
-  local normalized source_abs spec_state spec_revision spec_reviewer
+  local normalized source_abs
 
   normalized="$(normalize_repo_relative_path "$source_rel")" || {
     set_failure "PlanNotExecutionReady" "Approved plan source spec path is malformed."
@@ -426,17 +472,24 @@ validate_source_spec() {
     return 1
   fi
 
-  spec_state="$(sed -nE 's/^\*\*Workflow State:\*\* (.+)$/\1/p' "$source_abs" | head -n1)"
-  spec_revision="$(sed -nE 's/^\*\*Spec Revision:\*\* ([0-9]+)$/\1/p' "$source_abs" | head -n1)"
-  spec_reviewer="$(sed -nE 's/^\*\*Last Reviewed By:\*\* (.+)$/\1/p' "$source_abs" | head -n1)"
+  parse_spec_headers "$source_abs" || {
+    set_failure "PlanNotExecutionReady" "Approved plan source spec headers are missing or malformed."
+    return 1
+  }
 
   if [[ "$spec_state" != "CEO Approved" ]]; then
     set_failure "PlanNotExecutionReady" "Approved plan source spec is not CEO Approved."
     return 1
   fi
   if [[ "$spec_revision" != "$expected_revision" ]]; then
-    set_failure "PlanNotExecutionReady" "Approved plan source spec revision is stale."
+    set_failure "PlanNotExecutionReady" "Approved plan source spec path or revision is stale."
     return 1
+  fi
+  if find_latest_approved_spec; then
+    if [[ "$normalized" != "$LATEST_APPROVED_SPEC_PATH" || "$expected_revision" != "$LATEST_APPROVED_SPEC_REVISION" ]]; then
+      set_failure "PlanNotExecutionReady" "Approved plan source spec path or revision is stale."
+      return 1
+    fi
   fi
   spec_reviewer="$(normalize_whitespace "$spec_reviewer")"
   case "$spec_reviewer" in

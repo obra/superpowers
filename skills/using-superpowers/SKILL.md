@@ -282,8 +282,8 @@ Routing rules:
 2. Spec exists but is `Draft` or malformed: invoke `superpowers:plan-ceo-review`.
 3. Spec is `CEO Approved` and no relevant plan exists: invoke `superpowers:writing-plans`.
 4. Plan exists but is `Draft` or malformed: invoke `superpowers:plan-eng-review`.
-5. Plan is `Engineering Approved` but its `Source Spec Revision` does not match the latest approved spec revision: invoke `superpowers:writing-plans`.
-6. Plan is `Engineering Approved` and matches the latest approved spec revision: proceed to implementation through the normal execution handoff for that approved plan path.
+5. Plan is `Engineering Approved` but its `Source Spec:` path or `Source Spec Revision:` does not match the latest approved spec: invoke `superpowers:writing-plans`.
+6. Plan is `Engineering Approved` and its `Source Spec:` path plus `Source Spec Revision:` match the latest approved spec: proceed to implementation through the normal execution handoff for that approved plan path.
 7. If artifacts are ambiguous or incomplete, route to the earlier safe stage instead of skipping ahead.
 
 ## User Instructions

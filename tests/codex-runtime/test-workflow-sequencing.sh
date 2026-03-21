@@ -49,6 +49,11 @@ require_pattern skills/brainstorming/SKILL.md "record the intended spec path wit
 require_pattern skills/brainstorming/SKILL.md '"$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status" expect --artifact spec --path'
 require_pattern skills/brainstorming/SKILL.md "runs `sync --artifact spec`"
 require_pattern skills/brainstorming/SKILL.md '"$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status" sync --artifact spec --path'
+require_pattern skills/brainstorming/SKILL.md "problem statement"
+require_pattern skills/brainstorming/SKILL.md "failure and edge-case behavior"
+require_pattern skills/brainstorming/SKILL.md "observability expectations"
+require_pattern skills/brainstorming/SKILL.md "rollout and rollback expectations"
+require_pattern skills/brainstorming/SKILL.md "testable acceptance criteria"
 
 require_description_pattern skills/using-superpowers/SKILL.md "deciding which skill or workflow stage applies"
 require_description_pattern skills/systematic-debugging/SKILL.md "investigating a bug, regression, test failure, or unexpected behavior"
@@ -64,6 +69,10 @@ require_pattern skills/plan-ceo-review/SKILL.md '**The terminal state is invokin
 require_pattern skills/plan-ceo-review/SKILL.md 'Do not draft a plan or offer implementation options from `plan-ceo-review`.'
 require_pattern skills/plan-ceo-review/SKILL.md "runs `sync --artifact spec`"
 require_pattern skills/plan-ceo-review/SKILL.md '"$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status" sync --artifact spec --path'
+require_pattern skills/plan-ceo-review/SKILL.md "Gate A checklist"
+require_pattern skills/plan-ceo-review/SKILL.md "explicit failure-mode thinking"
+require_pattern skills/plan-ceo-review/SKILL.md "rollout and rollback expectations"
+require_pattern skills/plan-ceo-review/SKILL.md "testable acceptance criteria"
 require_pattern skills/plan-ceo-review/SKILL.md 'Accelerated review is available only when the user explicitly requests `accelerated` or `accelerator` mode for the current CEO review.'
 require_pattern skills/plan-ceo-review/SKILL.md 'Do not activate accelerated review from heuristics, vague wording like "make this fast", saved preferences, or agent-only judgment.'
 require_pattern skills/plan-ceo-review/SKILL.md 'Accelerated CEO review must process one canonical CEO section at a time through a section packet and explicit human section approval.'
@@ -90,10 +99,18 @@ require_pattern skills/writing-plans/SKILL.md "runs `sync --artifact plan`"
 require_pattern skills/writing-plans/SKILL.md '"$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status" sync --artifact plan --path'
 require_pattern skills/writing-plans/SKILL.md "**Plan Revision:** 1"
 require_pattern skills/writing-plans/SKILL.md "**Execution Mode:** none"
+require_pattern skills/writing-plans/SKILL.md "preconditions"
+require_pattern skills/writing-plans/SKILL.md "validation strategy"
+require_pattern skills/writing-plans/SKILL.md "evidence expectations"
+require_pattern skills/writing-plans/SKILL.md "rollout plan"
+require_pattern skills/writing-plans/SKILL.md "rollback plan"
+require_pattern skills/writing-plans/SKILL.md "risks and mitigations"
 
 require_pattern skills/plan-eng-review/SKILL.md "**Workflow State:** Draft | Engineering Approved"
 require_pattern skills/plan-eng-review/SKILL.md "**Source Spec Revision:** <integer>"
-require_pattern skills/plan-eng-review/SKILL.md 'If the plan'"'"'s `**Source Spec Revision:**` does not match the latest approved spec revision, stop and direct the agent back to `superpowers:writing-plans`.'
+require_pattern skills/plan-eng-review/SKILL.md 'Read the source spec named in `**Source Spec:**` and confirm both the path and revision match the latest approved spec before approving execution.'
+require_pattern skills/plan-eng-review/SKILL.md 'Keep the plan in `Draft` while review issues remain open or while the source spec path or revision is stale.'
+require_pattern skills/plan-eng-review/SKILL.md 'If the plan'"'"'s `**Source Spec:**` path or `**Source Spec Revision:**` does not match the latest approved spec, stop and direct the agent back to `superpowers:writing-plans`.'
 require_pattern skills/plan-eng-review/SKILL.md 'Only write `**Workflow State:** Engineering Approved` as the last step of a successful review'
 require_pattern skills/plan-eng-review/SKILL.md "The handoff must include the exact approved plan path"
 require_pattern skills/plan-eng-review/SKILL.md 'superpowers-plan-execution recommend --plan <approved-plan-path>'
@@ -102,6 +119,15 @@ require_pattern skills/plan-eng-review/SKILL.md 'If isolated-agent workflows are
 require_pattern skills/plan-eng-review/SKILL.md 'if `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status` is available, call `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status status --refresh`'
 require_pattern skills/plan-eng-review/SKILL.md 'If the helper returns a non-empty `next_skill`, use that route instead of re-deriving state manually.'
 require_pattern skills/plan-eng-review/SKILL.md 'If the helper returns `status` `implementation_ready`, present the normal execution handoff below.'
+require_pattern skills/plan-eng-review/SKILL.md "ordered implementation steps"
+require_pattern skills/plan-eng-review/SKILL.md "documentation update expectations"
+require_pattern skills/plan-eng-review/SKILL.md "evidence expectations"
+require_pattern skills/plan-eng-review/SKILL.md "explicit risks"
+require_pattern skills/plan-eng-review/SKILL.md "web/UI: user flow, navigation impact"
+require_pattern skills/plan-eng-review/SKILL.md "API/service/backend: request/response contracts"
+require_pattern skills/plan-eng-review/SKILL.md "data/ETL: schema evolution"
+require_pattern skills/plan-eng-review/SKILL.md "infrastructure/IaC: blast radius"
+require_pattern skills/plan-eng-review/SKILL.md "library/SDK: public API changes"
 require_pattern skills/plan-eng-review/SKILL.md 'Accelerated review is available only when the user explicitly requests `accelerated` or `accelerator` mode for the current engineering review.'
 require_pattern skills/plan-eng-review/SKILL.md 'Do not activate accelerated review from heuristics, vague wording like "make this fast", saved preferences, or agent-only judgment.'
 require_pattern skills/plan-eng-review/SKILL.md 'Use `skills/plan-eng-review/accelerated-reviewer-prompt.md` when briefing the accelerated engineering reviewer subagent.'
@@ -132,7 +158,8 @@ require_pattern skills/using-superpowers/SKILL.md "Do NOT jump from brainstormin
 require_pattern skills/using-superpowers/SKILL.md 'Spec state: `^\*\*Workflow State:\*\* (Draft|CEO Approved)$`'
 require_pattern skills/using-superpowers/SKILL.md 'Plan source revision: `^\*\*Source Spec Revision:\*\* ([0-9]+)$`'
 require_pattern skills/using-superpowers/SKILL.md "If artifacts are ambiguous or incomplete, route to the earlier safe stage instead of skipping ahead."
-require_pattern skills/using-superpowers/SKILL.md 'Plan is `Engineering Approved` and matches the latest approved spec revision: proceed to implementation through the normal execution handoff for that approved plan path.'
+require_pattern skills/using-superpowers/SKILL.md 'Plan is `Engineering Approved` but its `Source Spec:` path or `Source Spec Revision:` does not match the latest approved spec: invoke `superpowers:writing-plans`.'
+require_pattern skills/using-superpowers/SKILL.md 'Plan is `Engineering Approved` and its `Source Spec:` path plus `Source Spec Revision:` match the latest approved spec: proceed to implementation through the normal execution handoff for that approved plan path.'
 
 require_pattern skills/executing-plans/SKILL.md "Require the exact approved plan path as input."
 require_pattern skills/executing-plans/SKILL.md "Do not auto-clean the workspace and do not auto-create a worktree."
@@ -219,6 +246,7 @@ WORKFLOW_FIXTURE_DIR="tests/codex-runtime/fixtures/workflow-artifacts"
 
 for file in \
   "$WORKFLOW_FIXTURE_DIR/specs/2026-01-22-document-review-system-design.md" \
+  "$WORKFLOW_FIXTURE_DIR/specs/2026-01-22-document-review-system-design-v2.md" \
   "$WORKFLOW_FIXTURE_DIR/specs/2026-02-19-visual-brainstorming-refactor-design.md" \
   "$WORKFLOW_FIXTURE_DIR/specs/2026-03-11-zero-dep-brainstorm-server-design.md"; do
   require_pattern "$file" "**Workflow State:** CEO Approved"
@@ -235,6 +263,12 @@ for file in \
   require_pattern "$file" "**Source Spec Revision:** 1"
   require_pattern "$file" "**Last Reviewed By:** plan-eng-review"
 done
+
+STALE_PATH_PLAN="$WORKFLOW_FIXTURE_DIR/plans/2026-01-22-document-review-system-stale-path.md"
+require_pattern "$STALE_PATH_PLAN" "**Workflow State:** Engineering Approved"
+require_pattern "$STALE_PATH_PLAN" '**Source Spec:** `tests/codex-runtime/fixtures/workflow-artifacts/specs/2026-01-22-document-review-system-design.md`'
+require_pattern "$STALE_PATH_PLAN" "**Source Spec Revision:** 1"
+require_pattern "$STALE_PATH_PLAN" "**Last Reviewed By:** plan-eng-review"
 
 if rg -n -F "created by brainstorming skill" skills/writing-plans/SKILL.md skills/writing-plans/SKILL.md.tmpl >/dev/null; then
   echo "writing-plans should not attribute worktree creation to brainstorming."

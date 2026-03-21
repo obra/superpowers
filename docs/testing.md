@@ -51,7 +51,7 @@ node --test tests/brainstorm-server/server.test.js tests/brainstorm-server/ws-pr
 - PowerShell wrapper behavior, including Git Bash selection and Windows path handling
 - Install documentation and supported runtime references
 - Required support files such as `VERSION`, `review/TODOS-format.md`, `review/checklist.md`, the shared QA assets, and `superpowers-upgrade/SKILL.md`
-- Dedicated workflow-artifact fixtures under `tests/codex-runtime/fixtures/workflow-artifacts/` for sequencing-contract coverage without coupling tests to repository-root docs
+- Dedicated workflow-artifact fixtures under `tests/codex-runtime/fixtures/workflow-artifacts/` cover most sequencing-contract cases, while a small number of assertions still intentionally pin checked-in repo docs
 
 ### `tests/brainstorm-server/`
 
@@ -71,20 +71,20 @@ node --test tests/brainstorm-server/server.test.js tests/brainstorm-server/ws-pr
 - `tests/evals/*.eval.mjs` remains an opt-in quality tier for the Node-driven prompt-behavior checks that still use `.eval.mjs`
 - `tests/evals/using-superpowers-routing.orchestrator.md` is the authoritative Item 1 routing gate and drives the repo-versioned scenario, runner, and judge markdown artifacts plus local per-scenario evidence bundles under `~/.superpowers/projects/<slug>/...`
   This gate is agent-executed and does not run through `node --test` or the Node OpenAI-judge helper path. It is not part of the default deterministic validation order, but it is a required change-specific gate for Item 1 routing-safety work.
-- `bash tests/codex-runtime/test-using-superpowers-bypass.sh` is the deterministic gate for the pre-routing session bypass contract. The routing gate above assumes the scenario turn starts after that decision has already been resolved to `enabled` using the runner's own derived session-decision path.
+- `bash tests/codex-runtime/test-using-superpowers-bypass.sh` is the deterministic gate for the pre-routing session bypass wording and decision-path contract. The routing gate above assumes the scenario turn starts after that decision has already been resolved to `enabled` using the runner's own derived session-decision path.
 - See `tests/evals/README.md` for the Node-based eval environment variables and for routing-eval logging behavior
 
 ## Notes
 
-- `test-runtime-instructions.sh` is the contract gate for supported install and runtime documentation
-- `test-using-superpowers-bypass.sh` covers the pre-routing `using-superpowers` bypass gate, including the session decision path, malformed-state wording, and explicit re-entry semantics
-- `test-workflow-enhancements.sh` covers the imported review, QA, and document-release workflow contracts
-- `test-workflow-sequencing.sh` covers artifact-state routing, stage gates, and the optional worktree policy using checked-in workflow fixtures in `tests/codex-runtime/fixtures/workflow-artifacts/`
+- `test-runtime-instructions.sh` is the contract gate for supported install and runtime documentation, including repo-root workflow diagrams and platform workflow summaries
+- `test-using-superpowers-bypass.sh` covers the pre-routing `using-superpowers` bypass wording, including the session decision path, malformed-state wording, and explicit re-entry semantics
+- `test-workflow-enhancements.sh` covers the imported review, QA, document-release, and branch-completion workflow contracts
+- `test-workflow-sequencing.sh` covers artifact-state routing, fixture-backed stage gates, and the optional worktree policy using checked-in workflow fixtures in `tests/codex-runtime/fixtures/workflow-artifacts/`
 - `tests/codex-runtime/*.test.mjs` covers the deterministic generated-skill and fixture assertions that do not need shell execution
 - `test-powershell-wrapper-bash-resolution.sh` covers shared PowerShell wrapper bash selection and override behavior
-- `test-superpowers-plan-execution.sh` covers the execution helper state machine, evidence canonicalization, rollback behavior, and malformed evidence rejection
+- `test-superpowers-plan-execution.sh` covers the execution helper state machine, same-revision stale source-spec path rejection, evidence canonicalization, rollback behavior, and malformed evidence rejection
 - `test-superpowers-workflow.sh` covers the supported public workflow inspection CLI, including read-only state rendering, missing-expected-path handling, manifest diagnostics, and non-mutation guarantees
-- `test-superpowers-workflow-status.sh` covers the internal workflow-state helper, including bootstrap, summary-mode parity, repo-identity recovery, malformed-artifact diagnostics, branch isolation, fallback refresh behavior, and conservative write-conflict handling
+- `test-superpowers-workflow-status.sh` covers the internal workflow-state helper, including bootstrap, same-revision stale source-spec path detection, summary-mode parity, repo-identity recovery, malformed-artifact diagnostics, branch isolation, fallback refresh behavior, and conservative write-conflict handling
 - `test-superpowers-update-check.sh` covers semver comparison, snooze handling, and just-upgraded markers
 - `test-superpowers-upgrade-skill.sh` covers install-root resolution and direct upgrade-flow version resolution
 - `test-superpowers-slug.sh` covers the shared slug helper, including missing-remote fallback, detached HEAD handling, and shell-safe escaped output

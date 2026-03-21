@@ -29,9 +29,11 @@ The full control flow looks like this:
 
 ```mermaid
 flowchart TD
-    MSG["User message"] --> PREAMBLE["Generated skill preamble<br/>detect install root, check upgrade state,<br/>mark session, enable contributor-mode hooks"]
+    MSG["User message"] --> BYPASS_GATE["using-superpowers bypass bootstrap<br/>read or write the session decision before normal stack entry"]
+    BYPASS_GATE -->|bypassed without explicit re-entry| NORMAL["Respond normally"]
+    BYPASS_GATE -->|enabled| PREAMBLE["Generated skill preamble<br/>detect install root, check upgrade state,<br/>mark session, enable contributor-mode hooks"]
     PREAMBLE --> SKILL_CHECK{"Does any skill apply?"}
-    SKILL_CHECK -->|No| NORMAL["Respond normally"]
+    SKILL_CHECK -->|No| NORMAL
     SKILL_CHECK -->|Yes| ROUTER_KIND{"What kind of work is this?"}
 
     ROUTER_KIND -->|Bug / failing test / unexpected behavior| DEBUG_SKILL["superpowers:systematic-debugging"]
@@ -66,7 +68,7 @@ flowchart TD
         PLAN_GATE -->|Plan headers malformed| STATE_PLAN_BAD["status=plan_draft<br/>reason=malformed_plan_headers<br/>next_skill=superpowers:plan-eng-review"]
         PLAN_GATE -->|Plan Workflow State = Draft| STATE_PLAN_DRAFT["status=plan_draft<br/>next_skill=superpowers:plan-eng-review"]
         PLAN_GATE -->|Plan Engineering Approved but source spec path/revision is stale| STATE_STALE_PLAN["status=stale_plan<br/>next_skill=superpowers:writing-plans"]
-        PLAN_GATE -->|Plan Engineering Approved and source spec matches latest approved spec revision| STATE_READY["status=implementation_ready<br/>next_skill is intentionally empty"]
+        PLAN_GATE -->|Plan Engineering Approved and source spec path plus revision match latest approved spec| STATE_READY["status=implementation_ready<br/>next_skill is intentionally empty"]
     end
 
     subgraph ARTIFACT_LIFECYCLE["Artifact lifecycle: skills move the workflow by writing exact headers and syncing the helper"]
@@ -144,7 +146,9 @@ flowchart TD
         FINAL_REVIEW -->|Dirty execution state, stale evidence,<br/>missed reopen, or missing semantic proof| FAIL_CLOSED["Fail closed and return to execution<br/>or back to plan-eng-review"]
         FINAL_REVIEW -->|Review resolved| FINISH_BRANCH["superpowers:finishing-a-development-branch<br/>must read status --plan and evidence_path"]
         FINISH_BRANCH -->|Execution dirty or malformed| FAIL_CLOSED
-        FINISH_BRANCH --> QA_OR_COMPLETE["Optional qa-only for browser-facing work,<br/>then PR / merge / keep-branch completion flow"]
+        FINISH_BRANCH --> QA_GATE["conditional qa-only for browser-facing work<br/>required when browser interaction or test-plan context warrants it"]
+        QA_GATE --> DOC_RELEASE["workflow-routed work: required document-release<br/>ad-hoc work: optional release/doc cleanup"]
+        DOC_RELEASE --> COMPLETE_FLOW["PR / merge / keep-branch completion flow"]
     end
 ```
 
@@ -158,6 +162,8 @@ A few important consequences fall out of that state machine:
 - `superpowers-plan-execution recommend` is only valid before execution has started for that exact plan revision. After that, the plan's persisted `**Execution Mode:**` and the helper's `status --plan` output are the source of truth.
 - Execution is deliberately serial at the plan-step level. The execution helper allows subagents, but not multiple simultaneously active plan steps.
 - Final review and branch completion both fail closed if the approved plan and execution evidence disagree with reality.
+- Workflow-routed implementation now expects a required `document-release` handoff before branch completion, while keeping release truth in repo docs and review rather than helper state.
+- Browser-facing work keeps a conditional `qa-only` handoff instead of turning browser QA into a universal gate.
 
 That is the reason Superpowers feels opinionated in practice: the agent is not merely told to follow a workflow; the runtime keeps re-deriving the safest next state from the repo, the local branch-scoped manifest, and the exact approval headers written by the prior skill.
 
@@ -304,7 +310,7 @@ Only the user can initiate accelerated review, and section approval plus final a
 
 4. **plan-eng-review** - Activates after the plan is written. Reviews the full written plan before implementation starts.
 
-5. **implementation** - `subagent-driven-development` or `executing-plans` start from an engineering-approved current plan, run workspace-readiness checks, and execute the plan. The completion flow then runs `requesting-code-review`, may offer `qa-only` before landing, and may offer `document-release` before final branch cleanup or PR handoff. If the user wants an isolated workspace, invoke `using-git-worktrees` manually before execution.
+5. **implementation** - `subagent-driven-development` or `executing-plans` start from an engineering-approved current plan, run workspace-readiness checks, and execute the plan. The completion flow then runs `requesting-code-review`, requires `qa-only` when browser QA is warranted, requires `document-release` for workflow-routed work, and then proceeds to final branch cleanup or PR handoff. If the user wants an isolated workspace, invoke `using-git-worktrees` manually before execution.
 
 Implementation starts from an engineering-approved current plan and the exact approved plan path. `plan-eng-review` presents that handoff, and `superpowers-plan-execution recommend --plan <approved-plan-path>` chooses between *subagent-driven-development* and *executing-plans*. In both cases, execution runs a workspace-readiness preflight, executes the plan task by task, reviews before completion, and hands off through the normal branch-finishing flow.
 

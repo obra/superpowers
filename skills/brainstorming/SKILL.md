@@ -171,6 +171,16 @@ digraph brainstorming {
 - Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
 - Ask after each section whether it looks right so far
 - Cover: architecture, components, data flow, error handling, testing
+- Make sure the written spec surfaces the delivery-critical content, including:
+  - problem statement, desired outcome, and why it matters
+  - scope and out-of-scope
+  - affected users, systems, interfaces, and dependencies
+  - impacted data or contracts when relevant
+  - failure and edge-case behavior
+  - observability expectations
+  - rollout and rollback expectations
+  - risks and mitigations
+  - testable acceptance criteria
 - Be ready to go back and clarify if something doesn't make sense
 
 **Design for isolation and clarity:**

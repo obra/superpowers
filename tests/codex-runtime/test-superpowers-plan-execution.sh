@@ -216,6 +216,22 @@ Fixture spec for plan execution helper regression coverage.
 EOF
 }
 
+write_newer_approved_spec_same_revision_different_path() {
+  local repo_dir="$1"
+  local alt_spec_rel="docs/superpowers/specs/2026-03-17-example-execution-plan-design-v2.md"
+  write_file "$repo_dir/$alt_spec_rel" <<EOF
+# Example Execution Plan Design V2
+
+**Workflow State:** CEO Approved
+**Spec Revision:** 1
+**Last Reviewed By:** plan-ceo-review
+
+Fixture spec representing a newer approved spec path with the same revision.
+EOF
+  touch -t 202603171421 "$repo_dir/$SPEC_REL"
+  touch -t 202603171422 "$repo_dir/$alt_spec_rel"
+}
+
 write_plan() {
   local repo_dir="$1"
   local execution_mode="$2"
@@ -918,6 +934,19 @@ run_status_rejects_missing_last_reviewed_by_on_ceo_approved_spec() {
   run_command_fails "$repo_dir" PlanNotExecutionReady status --plan "$PLAN_REL" >/dev/null
 }
 
+run_status_rejects_stale_source_spec_path_even_when_revision_matches() {
+  local repo_dir="$REPO_DIR/stale-source-spec-path-same-revision"
+  local failure
+
+  init_repo "$repo_dir"
+  write_approved_spec "$repo_dir"
+  write_newer_approved_spec_same_revision_different_path "$repo_dir"
+  write_plan "$repo_dir" "none"
+
+  failure="$(run_command_fails "$repo_dir" PlanNotExecutionReady status --plan "$PLAN_REL")"
+  assert_contains "$failure" "Approved plan source spec path or revision is stale." "stale source-spec path"
+}
+
 run_status_rejects_malformed_last_reviewed_by_on_ceo_approved_spec() {
   local repo_dir="$REPO_DIR/malformed-last-reviewed-by-ceo-approved-spec"
 
@@ -1589,6 +1618,7 @@ run_status_rejects_missing_last_reviewed_by_on_approved_plan
 run_status_rejects_malformed_last_reviewed_by_on_approved_plan
 run_status_rejects_out_of_range_last_reviewed_by_on_approved_plan
 run_status_rejects_missing_last_reviewed_by_on_ceo_approved_spec
+run_status_rejects_stale_source_spec_path_even_when_revision_matches
 run_status_rejects_malformed_last_reviewed_by_on_ceo_approved_spec
 run_status_rejects_out_of_range_last_reviewed_by_on_ceo_approved_spec
 run_status_rejects_noncontiguous_attempt_numbering

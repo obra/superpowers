@@ -239,8 +239,22 @@ require_pattern skills/plan-eng-review/accelerated-reviewer-prompt.md "Do not wr
 require_pattern skills/plan-eng-review/accelerated-reviewer-prompt.md "Escalate any high-judgment issue individually."
 require_pattern docs/README.codex.md 'Accelerated review is an opt-in branch inside `plan-ceo-review` and `plan-eng-review`, not a separate workflow stage.'
 require_pattern docs/README.codex.md "Only the user can initiate accelerated review, and section approval plus final approval remain human-owned even when the review uses reviewer subagents and persisted section packets."
+require_pattern docs/README.codex.md 'requires the `document-release` handoff before workflow-routed branch completion'
+require_pattern docs/README.codex.md 'conditional `qa-only` handoff, requires it when browser interaction or test-plan context warrants it'
 require_pattern docs/README.copilot.md 'Accelerated review is an opt-in branch inside `plan-ceo-review` and `plan-eng-review`, not a separate workflow stage.'
 require_pattern docs/README.copilot.md "Only the user can initiate accelerated review, and section approval plus final approval remain human-owned even when the review uses reviewer subagents and persisted section packets."
+require_pattern docs/README.copilot.md 'requires the `document-release` handoff before workflow-routed branch completion'
+require_pattern docs/README.copilot.md 'conditional `qa-only` handoff, requires it when browser interaction or test-plan context warrants it'
+
+if rg -n -F 'requires a required `document-release` handoff' docs/README.codex.md docs/README.copilot.md >/dev/null; then
+  echo "Platform workflow docs should not duplicate the document-release requirement wording."
+  exit 1
+fi
+
+if rg -n -F 'conditional `qa-only` handoff for browser-facing work' docs/README.codex.md docs/README.copilot.md >/dev/null; then
+  echo "Platform workflow docs should describe the broader conditional QA gate, not only browser-facing work."
+  exit 1
+fi
 
 if rg -n -F '[ "$(basename "$_REPO_ROOT")" = "superpowers" ]' skills/*/SKILL.md >/dev/null; then
   echo "Generated skills should detect the current Superpowers checkout by runtime markers, not repo basename."
@@ -807,6 +821,41 @@ if ! rg -n -F 'bash tests/codex-runtime/test-using-superpowers-bypass.sh' docs/t
   exit 1
 fi
 
+if ! rg -n -F 'pre-routing session bypass wording and decision-path contract' docs/testing.md >/dev/null; then
+  echo "docs/testing.md should describe test-using-superpowers-bypass.sh as a wording and decision-path contract, not a full behavior harness."
+  exit 1
+fi
+
+if ! rg -n -F 'cover most sequencing-contract cases, while a small number of assertions still intentionally pin checked-in repo docs' docs/testing.md >/dev/null; then
+  echo "docs/testing.md should be explicit that sequencing coverage still includes a small number of checked-in repo-doc assertions."
+  exit 1
+fi
+
+if ! rg -n -F 'including repo-root workflow diagrams and platform workflow summaries' docs/testing.md >/dev/null; then
+  echo "docs/testing.md should describe test-runtime-instructions.sh as covering repo-root workflow diagrams and platform workflow summaries too."
+  exit 1
+fi
+
+if ! rg -n -F 'imported review, QA, document-release, and branch-completion workflow contracts' docs/testing.md >/dev/null; then
+  echo "docs/testing.md should describe test-workflow-enhancements.sh as covering the broader branch-completion workflow contracts."
+  exit 1
+fi
+
+if ! rg -n -F 'same-revision stale source-spec path rejection' docs/testing.md >/dev/null; then
+  echo "docs/testing.md should describe test-superpowers-plan-execution.sh as covering same-revision stale source-spec path rejection."
+  exit 1
+fi
+
+if ! rg -n -F 'same-revision stale source-spec path detection' docs/testing.md >/dev/null; then
+  echo "docs/testing.md should describe test-superpowers-workflow-status.sh as covering same-revision stale source-spec path detection."
+  exit 1
+fi
+
+if ! rg -n -F 'fixture-backed stage gates' docs/testing.md >/dev/null; then
+  echo "docs/testing.md should describe test-workflow-sequencing.sh as fixture-backed stage-gate coverage, not behavioral stale-path detection."
+  exit 1
+fi
+
 if ! rg -n -F 'node --test tests/brainstorm-server/server.test.js tests/brainstorm-server/ws-protocol.test.js' docs/testing.md >/dev/null; then
   echo "docs/testing.md should document the full brainstorm-server node test command, not only npm test."
   exit 1
@@ -829,6 +878,16 @@ fi
 
 if ! rg -n -F 'the `using-superpowers` routing gate, which remains a required change-specific gate for Item 1 routing-safety work' tests/evals/README.md >/dev/null; then
   echo "tests/evals/README.md should distinguish the required routing gate from the opt-in Node-based evals."
+  exit 1
+fi
+
+if ! rg -n -F 'BYPASS_GATE["using-superpowers bypass bootstrap' README.md >/dev/null; then
+  echo "README.md should show the using-superpowers bypass bootstrap before the normal Superpowers stack."
+  exit 1
+fi
+
+if ! rg -n -F 'BYPASS_GATE -->|enabled| PREAMBLE["Generated skill preamble' README.md >/dev/null; then
+  echo "README.md should route into the generated preamble only after the bypass gate resolves to enabled."
   exit 1
 fi
 

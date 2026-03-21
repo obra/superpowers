@@ -10,6 +10,8 @@ description: Use when implementation is complete and release notes, changelog, T
 
 Audit and update project documentation after implementation work is complete. This skill is mostly automatic for factual corrections and conservative everywhere else.
 
+For workflow-routed implementation work, this is the required `document-release` handoff before branch completion. Treat it as the repo-facing release-readiness pass, not as an optional polish step.
+
 ## Step 0: Detect base branch
 
 Determine which branch this work targets:
@@ -123,6 +125,19 @@ After auditing files individually, do one discoverability pass:
 3. Are important docs discoverable from README or the main contributor docs?
 
 If a doc exists but nothing links to it, flag it as a discoverability issue and make the smallest safe fix.
+
+## Step 6.5: Release-readiness pass
+
+Run an explicit release-readiness pass before finishing:
+
+1. Are refreshed docs present anywhere behavior or contributor workflows changed?
+2. Are release notes or equivalent release-history updates present when the diff changes user-visible or operator-visible behavior?
+3. Are rollout notes documented when the change meaningfully affects release or operations?
+4. Are rollback notes documented when rollback is non-trivial?
+5. Are known risks or operator-facing caveats documented when they matter?
+6. Are monitoring or verification expectations documented when the change introduces operational risk?
+
+If any of these are materially missing, stop and fix them or ask the user before calling the branch ready to finish.
 
 ## Step 7: TODOS.md cleanup
 

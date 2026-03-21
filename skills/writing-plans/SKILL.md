@@ -127,6 +127,21 @@ Before writing the plan, inspect the selected spec and validate these exact head
 
 If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
 
+## Minimum Plan Content
+
+Before breaking work into tasks, make sure the plan explicitly covers:
+
+- change surface
+- preconditions
+- execution strategy
+- ordered implementation steps
+- evidence expectations
+- validation strategy
+- documentation update expectations
+- rollout plan
+- rollback plan
+- risks and mitigations
+
 ## File Structure
 
 Before defining tasks, map out which files will be created or modified and what each one is responsible for. This is where decomposition decisions get locked in.

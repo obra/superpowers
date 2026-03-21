@@ -302,7 +302,7 @@ test('workflow handoff skills make terminal ownership explicit', () => {
   );
   assert.match(
     usingSuperpowers,
-    /Plan is `Engineering Approved` and matches the latest approved spec revision: proceed to implementation through the normal execution handoff for that approved plan path\./,
+    /Plan is `Engineering Approved` and its `Source Spec:` path plus `Source Spec Revision:` match the latest approved spec: proceed to implementation through the normal execution handoff for that approved plan path\./,
   );
 
   const ceoReview = readUtf8(getSkillPath('plan-ceo-review'));

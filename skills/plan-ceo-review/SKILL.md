@@ -214,6 +214,21 @@ Step 0 > system audit > error/rescue map > test diagram > failure modes > opinio
 
 Never skip Step 0, the system audit, the error/rescue map, or the failure modes section. These are the highest-leverage outputs.
 
+## Gate A checklist
+
+CEO approval is blocked when the written spec materially lacks any of these delivery-floor items:
+
+* clear problem statement and desired outcome
+* clear scope boundaries
+* key interfaces, constraints, or dependencies when they matter
+* explicit failure-mode thinking
+* observability expectations when new behavior or operations are introduced
+* rollout and rollback expectations
+* credible risks
+* testable acceptance criteria
+
+Treat this Gate A checklist as the approval floor while keeping the exact header contract unchanged and the prose shape flexible.
+
 ## PRE-REVIEW SYSTEM AUDIT
 
 Before doing anything else, run a system audit. This is not the spec review. It is the context you need to review the spec intelligently.

@@ -81,6 +81,16 @@ When the diff introduces a new enum value, status, tier, type, or constant famil
 - Root docs such as `README.md`, `ARCHITECTURE.md`, `CONTRIBUTING.md`, or platform install docs that describe code touched by this diff but were not updated
 - If found, flag the issue and suggest `superpowers:document-release`
 
+#### Spec / Plan Delivery Content
+- Draft specs that still dodge core delivery content such as problem statement, failure behavior, observability, rollout/rollback, risks, or acceptance criteria
+- Draft plans that skip preconditions, validation strategy, documentation update expectations, evidence expectations, rollout/rollback thinking, or explicit risks
+- Review changes that quietly lower these workflow quality bars without updating the corresponding review skills and tests
+
+#### Release Readiness
+- Workflow-routed changes that should have a required `document-release` handoff before completion but still treat release docs as optional cleanup
+- Missing release notes, rollout notes, rollback notes, or operator-facing caveats when the diff changes public or operational behavior
+- Completion flows that skip monitoring or verification expectations for changes with operational risk
+
 #### TODO Cross-Reference
 - Open TODOs that this diff should clearly close or reference
 - New follow-up work revealed by the diff that should not be silently forgotten

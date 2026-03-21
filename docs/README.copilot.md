@@ -111,7 +111,7 @@ Accelerated review is an opt-in branch inside `plan-ceo-review` and `plan-eng-re
 
 Only the user can initiate accelerated review, and section approval plus final approval remain human-owned even when the review uses reviewer subagents and persisted section packets.
 
-During implementation, either `subagent-driven-development` or `executing-plans` starts from an engineering-approved current plan, runs a workspace-readiness preflight, and then drives task execution. Workspace preparation is the user's responsibility; invoke `using-git-worktrees` manually when you want isolated workspace management. The completion flow runs `requesting-code-review`, may offer `qa-only` before landing, and may offer `document-release` before final cleanup or PR handoff.
+During implementation, either `subagent-driven-development` or `executing-plans` starts from an engineering-approved current plan, runs a workspace-readiness preflight, and then drives task execution. Workspace preparation is the user's responsibility; invoke `using-git-worktrees` manually when you want isolated workspace management. The completion flow runs `requesting-code-review`, keeps a conditional `qa-only` handoff, requires it when browser interaction or test-plan context warrants it, and requires the `document-release` handoff before workflow-routed branch completion.
 
 ## Runtime Helpers
 
