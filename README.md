@@ -185,3 +185,5 @@ For community support, questions, and sharing what you're building with Superpow
 - **Discord**: [Join us on Discord](https://discord.gg/Jd8Vphy9jq)
 - **Issues**: https://github.com/obra/superpowers/issues
 - **Marketplace**: https://github.com/obra/superpowers-marketplace
+- ## Course Assignment Fix
+Fixed hardcoded `/Users/jesse` sample paths with generic placeholders as requested in issue #858.
