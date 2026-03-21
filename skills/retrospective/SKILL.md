@@ -54,7 +54,9 @@ For each finding, determine where it belongs:
 | Reusable technique across ANY project | **Skill** |
 | Cross-project personal preference | **Global memory** |
 
-**Categorization test:** "Would this help someone on a completely different project?" Yes → Skill. Same tech stack only → Rule. Only this project → CLAUDE.md.
+**Categorization test:** "Would this help someone on a completely different project?" Yes → **Skill**. Same tech stack only → Rule. Only this project → CLAUDE.md.
+
+**STOP before writing a memory or rule for a reusable technique.** If the pattern works across any project (e.g., container healthcheck without curl, retry backoff strategy), it belongs under `### Suggested Skills`, not as a memory or rule.
 
 **Two-session rule — only persist if:**
 - Your human partner explicitly corrected you (always persist)
