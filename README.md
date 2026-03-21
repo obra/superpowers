@@ -55,7 +55,7 @@ Then install the plugin from this marketplace:
 ### Cursor (via Plugin Marketplace)
 
 In Cursor Agent chat, install from marketplace:
-
+* **Cursor/VS Code Extension**: [Superpowers on VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=dwaintr.superpowers-vscode)
 ```text
 /add-plugin superpowers
 ```
