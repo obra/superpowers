@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & Help
+    url: https://discord.gg/Jd8Vphy9jq
+    about: For usage questions, troubleshooting help, and general discussion, please visit our Discord instead of opening an issue.

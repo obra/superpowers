@@ -48,11 +48,20 @@ Save `screen_dir` from the response. Tell user to open the URL.
 
 **Launching the server by platform:**
 
-**Claude Code:**
+**Claude Code (macOS / Linux):**
 ```bash
 # Default mode works — the script backgrounds the server itself
 scripts/start-server.sh --project-dir /path/to/project
 ```
+
+**Claude Code (Windows):**
+```bash
+# Windows auto-detects and uses foreground mode, which blocks the tool call.
+# Use run_in_background: true on the Bash tool call so the server survives
+# across conversation turns.
+scripts/start-server.sh --project-dir /path/to/project
+```
+When calling this via the Bash tool, set `run_in_background: true`. Then read `$SCREEN_DIR/.server-info` on the next turn to get the URL and port.
 
 **Codex:**
 ```bash
