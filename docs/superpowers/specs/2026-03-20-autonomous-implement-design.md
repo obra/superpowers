@@ -13,15 +13,17 @@ A fully autonomous end-to-end implementation skill that takes a task description
 2. **Subagent-everything** — all real work happens in subagents with independent context windows; main thread is a lightweight orchestrator
 3. **Expert panel replaces user** — when a decision point would normally require user input, dispatch parallel expert subagents to debate and recommend
 4. **Research-driven** — every subagent actively uses context7, web search, and available expert skills to confirm assumptions
-5. **No infrastructure concerns** — no worktree management, no git operations. The caller controls where and when this runs
+5. **No infrastructure concerns** — no worktree management, no branch management, no push. The orchestrator commits artifacts at defined points but caller controls all remote operations.
 6. **Skill-aware** — discovers and engages available expert skills (e.g., `expert:engage`, `expert:research`, domain-specific skills)
 
 ## Non-Goals
 
-- Git operations (commit, branch, merge, PR) — caller's responsibility
+- Git push, branch creation, merge, or PR — caller's responsibility
 - Worktree management — caller decides execution context
 - External state machine or persistence layer — native Claude Code only
 - Interactive user confirmation at any phase — everything autonomous
+
+Note: The orchestrator commits at defined points (see Git Policy in SKILL.md) but never pushes, creates branches, or creates PRs.
 
 ## Entry Point
 
@@ -112,11 +114,11 @@ Files to create [inferred]:
 | File | Purpose |
 |------|---------|
 | `SKILL.md` | Orchestrator entry point for `/superpowers:implement` |
-| `prompts/expert-panel-prompt.md` | Panel Dispatch Template for domain expert, devil's advocate, and pragmatist roles |
-| `prompts/expert-moderator-prompt.md` | Moderator prompt for synthesizing 3-way split decisions |
-| `prompts/context-scout-prompt.md` | Phase 0 context gathering instructions |
-| `prompts/autonomous-brainstormer-prompt.md` | Phase 1 brainstorming with two-pass decision collection |
-| `prompts/expert-synthesizer-prompt.md` | Lightweight subagent for determining panel agreement (see Decision Protocol) |
+| `expert-panel-prompt.md` | Panel Dispatch Template for domain expert, devil's advocate, and pragmatist roles |
+| `expert-moderator-prompt.md` | Moderator prompt for synthesizing 3-way split decisions |
+| `context-scout-prompt.md` | Phase 0 context gathering instructions |
+| `autonomous-brainstormer-prompt.md` | Phase 1 brainstorming with two-pass decision collection |
+| `expert-synthesizer-prompt.md` | Lightweight subagent for determining panel agreement (see Decision Protocol) |
 
 Existing templates to reuse (not created by this skill) [inferred]:
 
@@ -128,7 +130,14 @@ Existing templates to reuse (not created by this skill) [inferred]:
 | `plan-fixer-prompt.md` | Phase 4: Plan Refinement |
 | `spec-reviewer-prompt.md` | Phase 5: Per-task spec review |
 | `code-quality-reviewer-prompt.md` | Phase 5: Per-task code quality review |
-| `plan-document-reviewer-prompt.md` | Phase 3: Plan document review [inferred] |
+| `plan-document-reviewer-prompt.md` | Phase 3: Plan review |
+| `implementer-prompt.md` | Phase 5: Per-task implementation |
+| `scenario-generator-prompt.md` | Phase 6: Scenario extraction |
+| `server-runner-prompt.md` | Phase 6: Start application |
+| `navigator-prompt.md` | Phase 6: Execute scenarios |
+| `planner-prompt.md` | Phase 6: Plan fixes |
+| `coder-prompt.md` | Phase 6: Implement fixes |
+| `test-writer-prompt.md` | Phase 7: Write e2e tests |
 
 ## Phase Details
 
@@ -241,6 +250,8 @@ digraph decision_flow {
    - **ESCALATE** (same concern persists round 2+) → dispatch expert panel to resolve, then re-simulate
 4. Max 5 iterations. If not converged after 5: dispatch expert panel for final resolution, apply their recommendations, proceed.
 
+**ESCALATE detection:** The orchestrator detects ESCALATE when the same critical finding (matching by category or description) appears in consecutive simulation rounds after fixes were applied.
+
 **Key difference from interactive refining-specs:** Instead of escalating to user, escalate to expert panel.
 
 **Exit criteria:** Spec converged or max iterations reached with expert panel resolution.
@@ -255,6 +266,8 @@ digraph decision_flow {
 - Actively use context7 to confirm framework APIs and patterns
 - Engage expert skills for domain-specific planning
 - Output: plan file written to `docs/superpowers/plans/YYYY-MM-DD-<slug>.md` where `<slug>` is the canonical slug derived by the orchestrator at startup (see Resume Detection) [inferred]
+
+The orchestrator constructs the plan-writer prompt inline by combining the refined spec, Phase 0 context, and writing-plans conventions. No separate prompt template is needed.
 
 **Exit criteria:** Plan written and passes plan-document-reviewer (max 5 review rounds).
 
@@ -465,7 +478,8 @@ When all phases complete, the orchestrator outputs a summary:
 - Skip spec refinement or plan refinement phases
 - Execute without verification (Phase 6)
 - Ship without e2e tests (Phase 7)
-- Make git operations (commit, push, branch, merge)
+- Push, create branches, create PRs, or merge
+- Let subagents make git operations
 - Manage worktrees
 
 **Always:**

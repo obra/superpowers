@@ -40,11 +40,7 @@ Agent tool (general-purpose):
 
     ## Your Mandate
 
-    {ROLE_SPECIFIC_MANDATE}
-
-    ## Role-Specific Mandates
-
-    Use the mandate matching your role:
+    Follow the mandate that matches your role ({ROLE}):
 
     **Domain Expert:** You have deep knowledge of the technology and domain at hand.
     Ground every recommendation in current documentation and best practices.
@@ -95,4 +91,3 @@ For each QUESTION:
 | `{TASK_CONTEXT}` | Original task description + relevant spec/plan excerpt |
 | `{CODEBASE_CONTEXT}` | Context summary from Phase 0 |
 | `{AVAILABLE_SKILLS}` | List of expert skills detected in Phase 0 |
-| `{ROLE_SPECIFIC_MANDATE}` | The mandate paragraph matching the role |

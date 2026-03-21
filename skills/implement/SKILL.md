@@ -1,6 +1,6 @@
 ---
 name: implement
-description: Use when you have a task description and want fully autonomous end-to-end implementation without user intervention. Chains brainstorm, spec, refine, plan, execute, verify, and e2e tests as a single pipeline.
+description: Use when you have a task description, GitHub issue, story, or file path and want fully autonomous end-to-end implementation without user intervention, clarifying questions, or interactive prompts
 ---
 
 # Autonomous Implementation
@@ -11,7 +11,24 @@ Fully autonomous end-to-end implementation pipeline. Takes a task description an
 
 **Announce at start:** "I'm using the implement skill to autonomously build this end-to-end."
 
+**Autonomy contract:** This skill replaces every user decision point with an expert panel. If you want human-in-the-loop at design, use brainstorming + writing-plans instead.
+
 ## When to Use
+
+```dot
+digraph when_to_use {
+    "Have a task description?" [shape=diamond];
+    "Want fully autonomous?" [shape=diamond];
+    "implement" [shape=box];
+    "brainstorming + writing-plans" [shape=box];
+    "Clarify task first" [shape=box];
+
+    "Have a task description?" -> "Want fully autonomous?" [label="yes"];
+    "Have a task description?" -> "Clarify task first" [label="no"];
+    "Want fully autonomous?" -> "implement" [label="yes"];
+    "Want fully autonomous?" -> "brainstorming + writing-plans" [label="no - want HITL"];
+}
+```
 
 - Have a task description (natural language, issue URL, story, or file path)
 - Want fully autonomous implementation with no interactive prompts
@@ -21,21 +38,19 @@ Fully autonomous end-to-end implementation pipeline. Takes a task description an
 
 - Need human-in-the-loop for design decisions — use brainstorming + writing-plans instead
 - Task is too vague to brainstorm even with expert panels — clarify first
-- Need git push, branch, or PR — caller's responsibility
+- Need git push, branch, or PR — caller's responsibility after this skill completes
+- Need worktree management — caller decides execution context before invoking
+- Need interactive user confirmation at any phase — everything here is autonomous
 
-## Non-Goals
+## Prerequisites
 
-- Git push, branch creation, merge, or PR — caller controls these
-- Worktree management — caller decides execution context
-- Interactive user confirmation at any phase — everything autonomous
+**Required:** Task description (natural language, issue URL, story definition, or file path)
 
-## Entry Point
-
-Accepts:
-- **Required:** Task description (natural language, issue URL, story definition, or file path)
-- **Optional:** PRD reference, existing spec, design-principles.md, specific constraints
+**Optional:** PRD reference, existing spec, design-principles.md, specific constraints
 
 If input is ambiguous or too vague, dispatch an expert panel to clarify intent rather than asking the user.
+
+**Harness requirement:** This skill dispatches subagents at every phase (10+ distinct subagent roles). It requires a platform with subagent support (such as Claude Code or Codex). If subagents are not available, notify the user and stop — implement cannot run in single-agent mode.
 
 ## Git Policy
 
@@ -84,7 +99,52 @@ If artifacts exist:
 - Plan exists + refined → resume at Phase 5
 - All tasks in plan completed → resume at Phase 6
 
-## Architecture
+## The Process
+
+You MUST create a task for each phase step and complete in order.
+
+```dot
+digraph process {
+    rankdir=TB;
+
+    "Phase 0: Context Scout" [shape=box];
+    "Phase 1: Brainstorm" [shape=box];
+    "NEEDS_DECISION tags?" [shape=diamond];
+    "Expert panels (parallel)" [shape=box];
+    "Phase 2: Spec Refinement" [shape=box];
+    "Spec converged?" [shape=diamond];
+    "Phase 3: Plan Writing" [shape=box];
+    "Phase 4: Plan Refinement" [shape=box];
+    "Plan converged?" [shape=diamond];
+    "Phase 5: Execute tasks" [shape=box];
+    "Per task: implement → spec-review → quality-review" [shape=box];
+    "Phase 6: Spec Verification" [shape=box];
+    "Phase 7: E2E Tests" [shape=box];
+    "Completion Report" [shape=box];
+    "finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
+
+    "Phase 0: Context Scout" -> "Phase 1: Brainstorm";
+    "Phase 1: Brainstorm" -> "NEEDS_DECISION tags?";
+    "NEEDS_DECISION tags?" -> "Expert panels (parallel)" [label="yes"];
+    "NEEDS_DECISION tags?" -> "Phase 2: Spec Refinement" [label="no"];
+    "Expert panels (parallel)" -> "Phase 1: Brainstorm" [label="pass 2"];
+    "Phase 2: Spec Refinement" -> "Spec converged?";
+    "Spec converged?" -> "Phase 3: Plan Writing" [label="CONVERGED"];
+    "Spec converged?" -> "Phase 2: Spec Refinement" [label="CONTINUE"];
+    "Phase 3: Plan Writing" -> "Phase 4: Plan Refinement";
+    "Phase 4: Plan Refinement" -> "Plan converged?";
+    "Plan converged?" -> "Phase 5: Execute tasks" [label="CONVERGED"];
+    "Plan converged?" -> "Phase 4: Plan Refinement" [label="CONTINUE"];
+    "Phase 5: Execute tasks" -> "Per task: implement → spec-review → quality-review";
+    "Per task: implement → spec-review → quality-review" -> "Phase 5: Execute tasks" [label="next task"];
+    "Per task: implement → spec-review → quality-review" -> "Phase 6: Spec Verification" [label="all done"];
+    "Phase 6: Spec Verification" -> "Phase 7: E2E Tests";
+    "Phase 7: E2E Tests" -> "Completion Report";
+    "Completion Report" -> "finishing-a-development-branch";
+}
+```
+
+### Subagent Hierarchy
 
 ```
 Main Thread (Orchestrator)
@@ -106,30 +166,32 @@ The orchestrator's only jobs:
 3. Check phase exit criteria
 4. Move to next phase or re-dispatch on failure
 
-## Prompt Templates
+## Subagents
 
-### New (created by this skill)
-- `./context-scout-prompt.md` — Phase 0 context gathering
-- `./expert-panel-prompt.md` — Expert panel dispatch (domain expert, devil's advocate, pragmatist)
-- `./expert-synthesizer-prompt.md` — Panel agreement detection
-- `./expert-moderator-prompt.md` — 3-way split resolution
-- `./autonomous-brainstormer-prompt.md` — Phase 1 two-pass brainstorming
+| Agent | Phase | Model | Prompt Template | Purpose |
+|-------|-------|-------|-----------------|---------|
+| Context Scout | 0 | sonnet | `./context-scout-prompt.md` | Gather project context |
+| Autonomous Brainstormer | 1 | sonnet | `./autonomous-brainstormer-prompt.md` | Two-pass spec generation |
+| Expert Panelist (x3) | any | sonnet | `./expert-panel-prompt.md` | Domain Expert, Devil's Advocate, Pragmatist |
+| Expert Synthesizer | any | haiku | `./expert-synthesizer-prompt.md` | Detect panel agreement |
+| Expert Moderator | any | opus | `./expert-moderator-prompt.md` | Resolve 3-way splits |
+| Spec Simulator | 2 | sonnet | `skills/refining-specs/spec-simulator-prompt.md` | Pressure-test spec |
+| Spec Fixer | 2 | sonnet | `skills/refining-specs/spec-fixer-prompt.md` | Patch spec gaps |
+| Plan Writer | 3 | sonnet | *(inline prompt)* | Generate implementation plan |
+| Plan Document Reviewer | 3 | sonnet | `skills/writing-plans/plan-document-reviewer-prompt.md` | Review plan quality |
+| Plan Simulator | 4 | sonnet | `skills/refining-plans/plan-simulator-prompt.md` | Pressure-test plan |
+| Plan Fixer | 4 | sonnet | `skills/refining-plans/plan-fixer-prompt.md` | Patch plan gaps |
+| Implementer | 5 | sonnet | `skills/subagent-driven-development/implementer-prompt.md` | Implement task (fresh per task) |
+| Spec Reviewer | 5 | sonnet | `skills/subagent-driven-development/spec-reviewer-prompt.md` | Verify task matches spec |
+| Code Quality Reviewer | 5 | sonnet | `skills/subagent-driven-development/code-quality-reviewer-prompt.md` | Review code quality |
+| Scenario Generator | 6 | opus | `skills/verify-spec/scenario-generator-prompt.md` | Extract verifiable scenarios |
+| Server Runner | 6 | haiku | `skills/verify-spec/server-runner-prompt.md` | Start application |
+| Navigator | 6 | sonnet | `skills/verify-spec/navigator-prompt.md` | Execute scenarios |
+| Planner | 6 | opus | `skills/verify-spec/planner-prompt.md` | Plan fixes |
+| Coder | 6 | sonnet | `skills/verify-spec/coder-prompt.md` | Implement fixes |
+| Test Writer | 7 | sonnet | `skills/verify-spec/test-writer-prompt.md` | Write e2e tests |
 
-### Reused from sibling skills
-- `skills/refining-specs/spec-simulator-prompt.md` (Phase 2)
-- `skills/refining-specs/spec-fixer-prompt.md` (Phase 2)
-- `skills/refining-plans/plan-simulator-prompt.md` (Phase 4)
-- `skills/refining-plans/plan-fixer-prompt.md` (Phase 4)
-- `skills/writing-plans/plan-document-reviewer-prompt.md` (Phase 3)
-- `skills/subagent-driven-development/implementer-prompt.md` (Phase 5)
-- `skills/subagent-driven-development/spec-reviewer-prompt.md` (Phase 5)
-- `skills/subagent-driven-development/code-quality-reviewer-prompt.md` (Phase 5)
-- `skills/verify-spec/scenario-generator-prompt.md` (Phase 6)
-- `skills/verify-spec/server-runner-prompt.md` (Phase 6)
-- `skills/verify-spec/navigator-prompt.md` (Phase 6)
-- `skills/verify-spec/planner-prompt.md` (Phase 6)
-- `skills/verify-spec/coder-prompt.md` (Phase 6)
-- `skills/verify-spec/test-writer-prompt.md` (Phase 7)
+All subagents use `subagent_type: "general-purpose"` for MCP tool access.
 
 ## Subagent Boilerplate
 
@@ -222,8 +284,6 @@ Gathers all available project context: codebase structure, frameworks, test setu
 
 ### Phase 2: Spec Refinement
 
-**Reuses:** `skills/refining-specs/spec-simulator-prompt.md` and `skills/refining-specs/spec-fixer-prompt.md`
-
 1. Dispatch spec-simulator subagent
 2. If critical/important findings → dispatch spec-fixer
 3. Check convergence:
@@ -240,8 +300,6 @@ Write `Refinement: CONVERGED round {N}` to `## Refinement Status` section of spe
 
 ### Phase 3: Plan Writing
 
-**Reuses:** `skills/writing-plans/plan-document-reviewer-prompt.md`
-
 The orchestrator constructs the plan-writer prompt inline by providing:
 - Refined spec content (full text)
 - Phase 0 context summary
@@ -253,13 +311,11 @@ The plan-writer subagent is dispatched as `general-purpose` with these materials
 
 Output: plan at `docs/superpowers/plans/YYYY-MM-DD-<slug>.md`
 
-After writing, dispatch plan-document-reviewer (uses `skills/writing-plans/plan-document-reviewer-prompt.md`). Iterate until approved (max 5 review rounds).
+After writing, dispatch plan-document-reviewer. Iterate until approved (max 5 review rounds).
 
 **Exit criteria:** Plan written and passes plan-document-reviewer.
 
 ### Phase 4: Plan Refinement
-
-**Reuses:** `skills/refining-plans/plan-simulator-prompt.md` and `skills/refining-plans/plan-fixer-prompt.md`
 
 Same pattern as Phase 2:
 1. Dispatch plan-simulator
@@ -273,18 +329,7 @@ Write `Refinement: CONVERGED round {N}` to `## Refinement Status` section of pla
 
 ### Phase 5: Execution
 
-**Reuses:** `skills/subagent-driven-development/implementer-prompt.md`, `skills/subagent-driven-development/spec-reviewer-prompt.md`, `skills/subagent-driven-development/code-quality-reviewer-prompt.md`
-
 **Git:** Subagents do not commit (see Git Policy). The orchestrator commits after each task passes both reviews.
-
-**Model selection:**
-
-| Role | Model |
-|------|-------|
-| Implementer | sonnet |
-| Spec reviewer | sonnet |
-| Code quality reviewer | sonnet |
-| Expert panel (when blocked) | sonnet (panelists), opus (moderator) |
 
 **Per-task flow:**
 1. Dispatch fresh implementer subagent with: full task text, spec excerpt, Phase 0 context, git override (see Git Policy)
@@ -300,11 +345,9 @@ Write `Refinement: CONVERGED round {N}` to `## Refinement Status` section of pla
 
 ### Phase 6: Spec Verification
 
-**Reuses:** `skills/verify-spec/scenario-generator-prompt.md`, `skills/verify-spec/server-runner-prompt.md`, `skills/verify-spec/navigator-prompt.md`, `skills/verify-spec/planner-prompt.md`, `skills/verify-spec/coder-prompt.md`
-
 **For runnable projects (web app / API / CLI):**
 1. Dispatch scenario-generator (extract verifiable scenarios from spec)
-2. Dispatch server-runner subagent (uses `skills/verify-spec/server-runner-prompt.md`) to auto-detect and start the application
+2. Dispatch server-runner subagent to auto-detect and start the application
 3. Dispatch navigator to execute scenarios
 4. Failures → dispatch planner + coder to fix → re-navigate (max 10 iterations)
 
@@ -321,8 +364,6 @@ Write `Refinement: CONVERGED round {N}` to `## Refinement Status` section of pla
 **Exit criteria:** All scenarios pass or max iterations with report.
 
 ### Phase 7: E2E Test Writer
-
-**Reuses:** `skills/verify-spec/test-writer-prompt.md`
 
 - Use existing test framework from Phase 0
 - Follow existing test conventions
@@ -390,6 +431,22 @@ When all phases complete, output:
 [any unresolved items from verification]
 ```
 
+**The terminal state is outputting the Implementation Complete report and then invoking finishing-a-development-branch** to present merge/PR/cleanup options to the caller.
+
+**REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch after the completion report.
+
+## Remember
+
+- Expert panel replaces user at every decision point — never ask the user
+- Subagents never touch git — orchestrator owns all commits
+- Commit specs (after producing and refining), commit per task, commit tests — never commit plans
+- Prepend research boilerplate to every subagent dispatch
+- Override git instructions in implementer prompts (subagents skip commit steps)
+- Run to completion — every phase, no shortcuts
+- Use opus for moderator decisions, sonnet for panelists and implementation, haiku for synthesizer
+- Tag every autonomous decision with appropriate markers
+- If converged, stop iterating. If ESCALATE, dispatch expert panel
+
 ## Red Flags
 
 **Never:**
@@ -414,3 +471,34 @@ When all phases complete, output:
 - Commit specs after producing and after refining
 - Commit after each completed task in Phase 5
 - Ensure `docs/superpowers/plans/` is gitignored before writing plans
+
+**If expert panel produces no agreement:**
+- Dispatch moderator (opus) — never skip this step
+- If moderator also can't resolve, take the pragmatist's position
+
+**If subagent reports BLOCKED:**
+- Dispatch expert panel to unblock
+- Never force the same model to retry without new context
+- If panel can't unblock, escalate to next phase's failure handling
+
+**If phase exceeds max iterations:**
+- Expert panel makes final call
+- Proceed with their recommendation
+- Log the unresolved concern in the completion report
+
+## Integration
+
+**Required workflow skills (prompt templates reused):**
+- **superpowers:refining-specs** — spec-simulator and spec-fixer templates (Phase 2)
+- **superpowers:refining-plans** — plan-simulator and plan-fixer templates (Phase 4)
+- **superpowers:writing-plans** — plan-document-reviewer template (Phase 3)
+- **superpowers:subagent-driven-development** — implementer, spec-reviewer, code-quality-reviewer templates (Phase 5)
+- **superpowers:verify-spec** — scenario-generator, server-runner, navigator, planner, coder, test-writer templates (Phases 6-7)
+
+**Terminal skill:**
+- **superpowers:finishing-a-development-branch** — invoked after completion report
+
+**Related skills:**
+- **superpowers:brainstorming** — interactive alternative to Phase 1
+- **superpowers:writing-plans** — interactive alternative to Phase 3
+- **superpowers:executing-plans** — interactive alternative to Phase 5
