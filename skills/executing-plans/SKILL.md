@@ -27,7 +27,8 @@ For each task:
 1. Mark as in_progress
 2. Follow each step exactly (plan has bite-sized steps)
 3. Run verifications as specified
-4. Mark as completed
+4. Mark as completed in TodoWrite
+5. Update the plan file: use your file editing tool to change `- [ ]` to `- [x]` for this task
 
 ### Step 3: Complete Development
 
