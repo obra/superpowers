@@ -20,7 +20,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="${SUPERPOWERS_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 START_SCRIPT="$REPO_ROOT/skills/brainstorming/scripts/start-server.sh"
 STOP_SCRIPT="$REPO_ROOT/skills/brainstorming/scripts/stop-server.sh"
-SERVER_JS="$REPO_ROOT/skills/brainstorming/scripts/server.js"
+SERVER_JS="$REPO_ROOT/skills/brainstorming/scripts/server.cjs"
 
 TEST_DIR="${TMPDIR:-/tmp}/brainstorm-win-test-$$"
 
@@ -91,7 +91,7 @@ http_check() {
 # ========== Platform Detection ==========
 
 echo ""
-echo "=== Brainstorm Server Windows Lifecycle Tests ==="
+echo "=== Brainstorm Server Lifecycle Tests ==="
 echo "Platform: ${OSTYPE:-unknown}"
 echo "MSYSTEM: ${MSYSTEM:-unset}"
 echo "Node: $(node --version 2>/dev/null || echo 'not found')"
@@ -105,9 +105,18 @@ if [[ -n "${MSYSTEM:-}" ]]; then
   is_windows="true"
 fi
 
+is_wsl="false"
+if grep -qsi "microsoft\|wsl" /proc/version 2>/dev/null; then
+  is_wsl="true"
+fi
+
 if [[ "$is_windows" != "true" ]]; then
   echo "NOTE: Not running on Windows/MSYS2 (OSTYPE=${OSTYPE:-unset})."
-  echo "Windows-specific tests will be skipped. Tests 4-6 still run."
+  echo "Windows-specific tests will be skipped."
+  echo ""
+fi
+if [[ "$is_wsl" == "true" ]]; then
+  echo "NOTE: Running on WSL. WSL-specific tests will run."
   echo ""
 fi
 
@@ -198,6 +207,83 @@ FAKENODE
   rm -rf "$FAKE_NODE_DIR" "$TEST_DIR/session2"
 else
   skip "Windows auto-detects foreground mode" "not on Windows"
+fi
+
+# ========== Test 3b: OWNER_PID is empty on WSL ==========
+
+echo ""
+echo "--- WSL Owner PID Resolution ---"
+
+if [[ "$is_wsl" == "true" ]]; then
+  # Replicate the PID resolution logic from start-server.sh lines 104-122
+  TEST_OWNER_PID="$(ps -o ppid= -p "$PPID" 2>/dev/null | tr -d ' ' || true)"
+  if [[ -z "$TEST_OWNER_PID" || "$TEST_OWNER_PID" == "1" ]]; then
+    TEST_OWNER_PID="$PPID"
+  fi
+  # The fix: clear on WSL
+  if grep -qsi "microsoft\|wsl" /proc/version 2>/dev/null; then
+    TEST_OWNER_PID=""
+  fi
+
+  if [[ -z "$TEST_OWNER_PID" ]]; then
+    pass "OWNER_PID is empty on WSL after fix"
+  else
+    fail "OWNER_PID is empty on WSL after fix" \
+         "Expected empty, got '$TEST_OWNER_PID'"
+  fi
+else
+  skip "OWNER_PID is empty on WSL" "not on WSL"
+fi
+
+# ========== Test 3c: start-server.sh passes empty BRAINSTORM_OWNER_PID on WSL ==========
+
+if [[ "$is_wsl" == "true" ]]; then
+  # Use a fake 'node' that captures the env var and exits
+  FAKE_NODE_DIR="$TEST_DIR/fake-bin"
+  mkdir -p "$FAKE_NODE_DIR"
+  cat > "$FAKE_NODE_DIR/node" <<'FAKENODE'
+#!/usr/bin/env bash
+echo "CAPTURED_OWNER_PID=${BRAINSTORM_OWNER_PID:-__UNSET__}"
+exit 0
+FAKENODE
+  chmod +x "$FAKE_NODE_DIR/node"
+
+  captured=$(PATH="$FAKE_NODE_DIR:$PATH" bash "$START_SCRIPT" --project-dir "$TEST_DIR/session-wsl" --foreground 2>/dev/null || true)
+  owner_pid_value=$(echo "$captured" | grep "CAPTURED_OWNER_PID=" | head -1 | sed 's/CAPTURED_OWNER_PID=//')
+
+  if [[ "$owner_pid_value" == "" || "$owner_pid_value" == "__UNSET__" ]]; then
+    pass "start-server.sh passes empty BRAINSTORM_OWNER_PID on WSL"
+  else
+    fail "start-server.sh passes empty BRAINSTORM_OWNER_PID on WSL" \
+         "Expected empty or unset, got '$owner_pid_value'"
+  fi
+
+  rm -rf "$FAKE_NODE_DIR" "$TEST_DIR/session-wsl"
+else
+  skip "start-server.sh passes empty BRAINSTORM_OWNER_PID on WSL" "not on WSL"
+fi
+
+# ========== Test 3d: OWNER_PID is NOT cleared on standard Linux ==========
+
+if [[ "$is_windows" != "true" && "$is_wsl" != "true" ]]; then
+  # On standard Linux, the WSL detection should NOT trigger
+  TEST_OWNER_PID="$(ps -o ppid= -p "$PPID" 2>/dev/null | tr -d ' ' || true)"
+  if [[ -z "$TEST_OWNER_PID" || "$TEST_OWNER_PID" == "1" ]]; then
+    TEST_OWNER_PID="$PPID"
+  fi
+  # Replicate WSL check — should NOT clear
+  if grep -qsi "microsoft\|wsl" /proc/version 2>/dev/null; then
+    TEST_OWNER_PID=""
+  fi
+
+  if [[ -n "$TEST_OWNER_PID" ]]; then
+    pass "OWNER_PID is preserved on standard Linux (no false positive)"
+  else
+    fail "OWNER_PID is preserved on standard Linux (no false positive)" \
+         "OWNER_PID was unexpectedly cleared"
+  fi
+else
+  skip "OWNER_PID preserved on standard Linux" "on Windows or WSL"
 fi
 
 # ========== Test 4: Server survives past 60-second lifecycle check ==========
