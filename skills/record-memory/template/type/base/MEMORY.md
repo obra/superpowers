@@ -14,4 +14,4 @@
 [what kind of completed work should not be written as this type, even if related]
 
 ## Entry Template
-`docs/superpowers/memory/[type-name]/entry.md`
+`docs/superpowers/memory/[type-name]/ENTRY.md`

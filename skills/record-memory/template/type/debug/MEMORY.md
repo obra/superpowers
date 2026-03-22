@@ -18,4 +18,4 @@ debug
 - The work is mainly about maintainability or architectural cleanup.
 
 ## Entry Template
-`docs/superpowers/memory/debug/entry.md`
+`docs/superpowers/memory/debug/ENTRY.md`

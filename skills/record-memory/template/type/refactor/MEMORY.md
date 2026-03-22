@@ -18,4 +18,4 @@ refactor
 - The main value is fixing a concrete failure mode.
 
 ## Entry Template
-`docs/superpowers/memory/refactor/entry.md`
+`docs/superpowers/memory/refactor/ENTRY.md`

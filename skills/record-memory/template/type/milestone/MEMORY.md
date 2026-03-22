@@ -18,4 +18,4 @@ milestone
 - The main value is structural cleanup, boundary improvement, or internal reorganization, even if it supported a larger milestone.
 
 ## Entry Template
-`docs/superpowers/memory/milestone/entry.md`
+`docs/superpowers/memory/milestone/ENTRY.md`

@@ -30,7 +30,7 @@ Discover the target type in this order:
 1. Scan `docs/superpowers/memory/*/MEMORY.md`.
 2. Read each candidate header's `Type`, `Record When`, `Avoid Recording When`, and `Entry Template`.
 3. Choose the best-matching type for the completed change unit.
-4. After selecting the type, read only that type's `entry.md` before writing.
+4. After selecting the type, read only that type's `ENTRY.md` before writing.
 5. Write the entry under `docs/superpowers/memory/<type>/entries/<YYYY-MM>/`.
 6. Update only that type's `INDEX.md` at `docs/superpowers/memory/<type>/INDEX.md`.
 
@@ -53,6 +53,6 @@ Read `bootstrap.md`, restore only the minimum missing structure, then restart di
 - `docs/superpowers/memory/` is missing
 - scanning finds no usable `docs/superpowers/memory/*/MEMORY.md`
 - a scanned `MEMORY.md` is missing required record-facing fields, or cannot be parsed; treat that type as structurally damaged
-- the selected type is missing `entry.md`
+- the selected type is missing `ENTRY.md`
 - the selected type is missing `INDEX.md`
 - the selected type is missing its target month bucket under `entries/<YYYY-MM>/`
