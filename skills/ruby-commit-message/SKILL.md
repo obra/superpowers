@@ -1,6 +1,6 @@
 ---
 name: ruby-commit-message
-description: Use when committing code changes in Ruby on Rails projects — guides commit message structure, type selection, and body content following Conventional Commits format
+description: Use when committing code changes in Ruby or Ruby on Rails projects — guides commit message structure, type selection, and body content following Conventional Commits format
 ---
 
 # Ruby Commit Message
@@ -47,13 +47,14 @@ Write structured commit messages following Conventional Commits. The body should
 
 ## Body Guidelines
 
-Couple of sentences, wrapped at 72 chars, blank line after subject. Write for a junior Rails developer — simple language they can understand during debugging.
+Couple of sentences, wrapped at 72 chars, blank line after subject. Write for a junior Ruby developer: simple language they can understand during debugging.
+Add any useful information that would help a junior Ruby developer understand the impact of the change, why the change was done.
 
-- **WHY** — motivation, problem, or user impact
-- **WHAT changed** — brief; the diff already shows the HOW
-- **HOW** — only when naming the Rails mechanism helps debugging (e.g., `current_user.reports`, `RecordNotFound`)
+- **WHY** — motivation, problem, or user impact. Use context if it exists for this.
+- **WHAT changed** — make this brief; the diff already shows the HOW
+- **HOW** — only when there are details about the how that are not reflected by the code or the naming in the code
 
-Call out tradeoffs when supported by context — do not invent details.
+Call out tradeoffs when supported by context. Do not invent details. 
 
 ## Footer & AI Attribution
 
