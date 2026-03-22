@@ -22,20 +22,22 @@ Every project goes through this process. A todo list, a single-function utility,
 You MUST create a task for each of these items and complete them in order:
 
 1. **Explore project context** — check files, docs, recent commits
-2. **Offer visual companion** (if topic will involve visual questions) — this is its own message, not combined with a clarifying question. See the Visual Companion section below.
-3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-4. **Propose 2-3 approaches** — with trade-offs and your recommendation
-5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
-7. **Spec review loop** — dispatch spec-document-reviewer subagent with precisely crafted review context (never your session history); fix issues and re-dispatch until approved (max 3 iterations, then surface to human)
-8. **User reviews written spec** — ask user to review the spec file before proceeding
-9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+2. **Option Zero check** — before generating options, verify whether the problem requires code changes at all. See the Option Zero section below.
+3. **Offer visual companion** (if topic will involve visual questions) — this is its own message, not combined with a clarifying question. See the Visual Companion section below.
+4. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
+5. **Propose 2-3 approaches** — with trade-offs and your recommendation
+6. **Present design** — in sections scaled to their complexity, get user approval after each section
+7. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
+8. **Spec review loop** — dispatch spec-document-reviewer subagent with precisely crafted review context (never your session history); fix issues and re-dispatch until approved (max 3 iterations, then surface to human)
+9. **User reviews written spec** — ask user to review the spec file before proceeding
+10. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
 
 ```dot
 digraph brainstorming {
     "Explore project context" [shape=box];
+    "Option Zero check" [shape=diamond];
     "Visual questions ahead?" [shape=diamond];
     "Offer Visual Companion\n(own message, no other content)" [shape=box];
     "Ask clarifying questions" [shape=box];
@@ -47,8 +49,11 @@ digraph brainstorming {
     "Spec review passed?" [shape=diamond];
     "User reviews spec?" [shape=diamond];
     "Invoke writing-plans skill" [shape=doublecircle];
+    "Recommend Option Zero" [shape=box];
 
-    "Explore project context" -> "Visual questions ahead?";
+    "Explore project context" -> "Option Zero check";
+    "Option Zero check" -> "Recommend Option Zero" [label="resolved\nwithout code"];
+    "Option Zero check" -> "Visual questions ahead?" [label="code change\nneeded"];
     "Visual questions ahead?" -> "Offer Visual Companion\n(own message, no other content)" [label="yes"];
     "Visual questions ahead?" -> "Ask clarifying questions" [label="no"];
     "Offer Visual Companion\n(own message, no other content)" -> "Ask clarifying questions";
@@ -79,6 +84,23 @@ digraph brainstorming {
 - Prefer multiple choice questions when possible, but open-ended is fine too
 - Only one question per message - if a topic needs more exploration, break it into multiple questions
 - Focus on understanding: purpose, constraints, success criteria
+
+**Option Zero check:**
+
+Before exploring implementation options, ask whether the problem can be resolved without application code changes. This is a gate — not a ranking of solutions. If Option Zero exists, recommend it and skip brainstorming.
+
+- Is this a config or environment variable issue? (Trace the config path to verify.)
+- Is this a dependency version issue? (Check changelogs, release notes, or docs.)
+- Can this be resolved without touching application code at all? (e.g., a lint rule, a URL change, a header update)
+
+If any of these is confirmed with evidence, recommend that path directly. Complex solutions should only be proposed when Option Zero has been ruled out.
+
+This check is especially important when investigating:
+- Third-party SDK or integration issues (often config, not code)
+- Infrastructure or deployment problems (often env vars, not application logic)
+- Version deprecations (often a URL or header change, not a migration)
+
+If all Option Zero paths are ruled out, proceed to clarifying questions and brainstorming as usual.
 
 **Exploring approaches:**
 
