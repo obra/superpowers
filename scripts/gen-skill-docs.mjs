@@ -102,6 +102,14 @@ Per-skill instructions may add additional formatting rules on top of this baseli
 export function buildUsingSuperpowersBypassGateSection() {
   return `## Bypass Gate
 
+The first-turn session-entry bootstrap is owned by the runtime helper \`$_SUPERPOWERS_ROOT/bin/superpowers-session-entry\` (or \`bin/superpowers-session-entry.ps1\` on Windows), not by \`using-superpowers\` prose alone.
+
+This skill documents the supported-entry contract:
+
+- session-entry bootstrap ownership is runtime-owned
+- missing or malformed decision state fails closed
+- supported entry paths must ask the bypass question on \`needs_user_choice\` before the normal stack starts
+
 The session decision file lives at \`~/.superpowers/session-flags/using-superpowers/$PPID\`.
 
 If no valid session decision exists yet, ask one interactive question before any normal Superpowers work happens.
@@ -112,20 +120,27 @@ The first-turn opt-out question is a pre-Superpowers gate:
 - do not apply the shared ELI16 multi-session grounding rule
 - use the normal context / recommendation / option structure, but treat this question as the gate into the Superpowers stack rather than a normal in-stack Superpowers interactive question
 
-Before any normal Superpowers behavior:
+Supported entry paths must resolve \`superpowers-session-entry resolve --message-file <path>\` before any normal Superpowers behavior:
 
 - if the session decision is \`enabled\`, continue into the normal stack
 - if the session decision is \`bypassed\` and the user did not explicitly request Superpowers, stop and bypass the rest of this skill
 - if the user explicitly requests Superpowers or explicitly names a Superpowers skill, rewrite the session decision to \`enabled\` and continue on the same turn
-- if the session decision is missing, ask the opt-out question and persist either \`enabled\` or \`bypassed\`
+- if the helper returns \`needs_user_choice\`, ask the opt-out question and persist either \`enabled\` or \`bypassed\`
+- if the helper returns \`runtime_failure\`, surface that failure instead of pretending the gate was resolved
 
 If the session decision file exists but contains malformed content:
 
 - do not treat it as \`enabled\`
 - do not treat it as \`bypassed\`
-- ignore it for bypass purposes on that turn
-- continue to normal Superpowers behavior
+- ask the opt-out question again before any normal Superpowers work happens
 - only rewrite the file after a fresh explicit choice
+- \`superpowers-session-entry resolve\` should surface \`outcome\` \`needs_user_choice\` with \`failure_class\` \`MalformedDecisionState\`
+
+If the session decision is missing:
+
+- ask the opt-out question before any normal Superpowers work happens
+- persist the user's explicit \`enabled\` or \`bypassed\` choice for later turns
+- \`superpowers-session-entry resolve\` should surface \`outcome\` \`needs_user_choice\` with \`decision_source\` \`missing\`
 
 If the user explicitly requests re-entry but the bootstrap cannot rewrite the session decision to \`enabled\`:
 
@@ -133,6 +148,7 @@ If the user explicitly requests re-entry but the bootstrap cannot rewrite the se
 - continue through the normal Superpowers stack on that turn
 - do not pretend persistence succeeded
 - treat future turns as undecided until a later write succeeds
+- \`superpowers-session-entry resolve\` should surface \`decision_source\` \`explicit_reentry_unpersisted\`
 `;
 }
 

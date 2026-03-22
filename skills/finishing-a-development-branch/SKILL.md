@@ -214,6 +214,28 @@ Before moving on, perform a short Gate F-style confirmation:
 - known risks are documented
 - monitoring or verification expectations are addressed when relevant
 
+### Step 1.95: Protected-Branch Repo-Write Gate
+
+Before executing any completion option that mutates repo state, run the shared repo-safety preflight for the chosen branch-finishing scope:
+
+```bash
+superpowers-repo-safety check --intent write --stage superpowers:finishing-a-development-branch --task-id <current-branch-finish> --write-target branch-finish
+```
+
+- If the helper returns `allowed`, continue with the selected completion path.
+- If it returns `blocked`, name the branch, the stage, and the blocking `failure_class`, then route to either a feature branch / `superpowers:using-git-worktrees` or explicit user approval for this exact completion scope.
+- If the user explicitly approves the protected-branch completion write, approve the full completion scope you intend to use on that branch, including any follow-on git targets that are part of the same branch-finish task:
+
+```bash
+superpowers-repo-safety approve --stage superpowers:finishing-a-development-branch --task-id <current-branch-finish> --reason "<explicit user approval>" --write-target branch-finish [--write-target git-merge] [--write-target git-push] [--write-target git-worktree-cleanup]
+superpowers-repo-safety check --intent write --stage superpowers:finishing-a-development-branch --task-id <current-branch-finish> --write-target branch-finish [--write-target git-merge] [--write-target git-push] [--write-target git-worktree-cleanup]
+```
+
+- Continue only if the re-check returns `allowed`.
+- Before a follow-on `git merge`, `git push`, or worktree cleanup on the same protected-branch task, re-run the gate with the same task id and the same approved write-target set.
+- If the protected-branch task scope changes, run a new `approve` plus full-scope `check` before continuing.
+- Do not treat a worktree on `main`, `master`, `dev`, or `develop` as safe by itself; the branch must be non-protected or explicitly approved.
+
 ### Step 2: Determine Base Branch
 
 Try platform-aware detection first:

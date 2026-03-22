@@ -28,6 +28,10 @@
 
 ## Completed
 
+### Harden Session-Entry Bootstrap And Branch-Safety Guarantees
+
+Completed in the runtime and workflow layers. Superpowers now ships runtime-owned `superpowers-session-entry` and `superpowers-repo-safety` helpers, blocks repo-writing workflow stages on protected branches by default unless task-scoped approval survives helper re-check, and carries deterministic plus doc-driven coverage for the first-turn bootstrap and protected-branch guarantees that were missing when this item was opened.
+
 ### Supported User-Facing Workflow CLI
 
 Completed in the workflow runtime. Superpowers now ships `bin/superpowers-workflow` and `bin/superpowers-workflow.ps1` as the supported public read-only inspection CLI for `status`, `next`, `artifacts`, `explain`, and `help`, backed by the side-effect-free internal `resolve` path in `bin/superpowers-workflow-status`.

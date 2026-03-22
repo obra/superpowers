@@ -7,6 +7,8 @@ HELPER="$REPO_ROOT/bin/superpowers-pwsh-common.ps1"
 PUBLIC_WORKFLOW_WRAPPER="$REPO_ROOT/bin/superpowers-workflow.ps1"
 WORKFLOW_WRAPPER="$REPO_ROOT/bin/superpowers-workflow-status.ps1"
 PLAN_EXEC_WRAPPER="$REPO_ROOT/bin/superpowers-plan-execution.ps1"
+SESSION_ENTRY_WRAPPER="$REPO_ROOT/bin/superpowers-session-entry.ps1"
+REPO_SAFETY_WRAPPER="$REPO_ROOT/bin/superpowers-repo-safety.ps1"
 UPDATE_CHECK_WRAPPER="$REPO_ROOT/bin/superpowers-update-check.ps1"
 
 pwsh_bin="$(command -v pwsh || command -v powershell || true)"
@@ -293,9 +295,159 @@ SH
   fi
 }
 
+assert_session_entry_wrapper_behavior() {
+  local wrapper_path="$1"
+  local bash_log="$tmp_root/session-entry-wrapper-bash.log"
+  local wrapper_output
+  local first_arg
+  local second_arg
+  local third_arg
+  local wrapper_exit
+
+  if [[ ! -f "$wrapper_path" ]]; then
+    echo "Expected session-entry PowerShell wrapper to exist: $wrapper_path"
+    exit 1
+  fi
+
+  cat > "$git_bin_dir/bash.exe" <<'SH'
+#!/bin/bash
+set -euo pipefail
+
+log_file="${SUPERPOWERS_TEST_BASH_LOG:?}"
+: > "$log_file"
+for arg in "$@"; do
+  printf '%s\n' "$arg" >> "$log_file"
+done
+
+printf '{"outcome":"needs_user_choice","decision_path":"/c/tmp/state/session-flags/using-superpowers/session-123"}\n'
+SH
+  chmod +x "$git_bin_dir/bash.exe"
+
+  wrapper_output="$(
+    PATH="$generic_dir:$git_cmd_dir:$PATH" \
+      SUPERPOWERS_TEST_BASH_LOG="$bash_log" \
+      "$pwsh_bin" -NoLogo -NoProfile -Command "& '$wrapper_path' resolve --message-file transcript.md"
+  )"
+  if [[ "$wrapper_output" != *'"decision_path":"C:\\tmp\\state\\session-flags\\using-superpowers\\session-123"'* ]]; then
+    echo "Expected session-entry wrapper to convert decision_path field to Windows path"
+    echo "Actual output: $wrapper_output"
+    exit 1
+  fi
+
+  first_arg="$(sed -n '1p' "$bash_log")"
+  second_arg="$(sed -n '2p' "$bash_log")"
+  third_arg="$(sed -n '3p' "$bash_log")"
+  if [[ "$first_arg" != *"/bin/superpowers-session-entry" ]]; then
+    echo "Expected session-entry wrapper to invoke Git Bash with the session-entry bash script"
+    echo "Actual first arg: $first_arg"
+    exit 1
+  fi
+  if [[ "$second_arg" != "resolve" || "$third_arg" != "--message-file" ]]; then
+    echo "Expected session-entry wrapper to forward CLI arguments to bash script"
+    echo "Actual args:"
+    cat "$bash_log"
+    exit 1
+  fi
+
+  cat > "$git_bin_dir/bash.exe" <<'SH'
+#!/bin/bash
+exit 6
+SH
+  chmod +x "$git_bin_dir/bash.exe"
+
+  set +e
+  PATH="$generic_dir:$git_cmd_dir:$PATH" \
+    "$pwsh_bin" -NoLogo -NoProfile -Command "& '$wrapper_path' resolve --message-file transcript.md"
+  wrapper_exit=$?
+  set -e
+
+  if [[ $wrapper_exit -ne 6 ]]; then
+    echo "Expected session-entry wrapper to preserve nonzero bash exit code"
+    echo "Expected: 6"
+    echo "Actual:   $wrapper_exit"
+    exit 1
+  fi
+}
+
+assert_repo_safety_wrapper_behavior() {
+  local wrapper_path="$1"
+  local bash_log="$tmp_root/repo-safety-wrapper-bash.log"
+  local wrapper_output
+  local first_arg
+  local second_arg
+  local third_arg
+  local wrapper_exit
+
+  if [[ ! -f "$wrapper_path" ]]; then
+    echo "Expected repo-safety PowerShell wrapper to exist: $wrapper_path"
+    exit 1
+  fi
+
+  cat > "$git_bin_dir/bash.exe" <<'SH'
+#!/bin/bash
+set -euo pipefail
+
+log_file="${SUPERPOWERS_TEST_BASH_LOG:?}"
+: > "$log_file"
+for arg in "$@"; do
+  printf '%s\n' "$arg" >> "$log_file"
+done
+
+printf '{"outcome":"blocked","approval_path":"/c/tmp/state/projects/repo-safety/approval.json"}\n'
+SH
+  chmod +x "$git_bin_dir/bash.exe"
+
+  wrapper_output="$(
+    PATH="$generic_dir:$git_cmd_dir:$PATH" \
+      SUPERPOWERS_TEST_BASH_LOG="$bash_log" \
+      "$pwsh_bin" -NoLogo -NoProfile -Command "& '$wrapper_path' check --intent write --stage superpowers:brainstorming --task-id spec-task --path docs/spec.md --write-target spec-artifact-write"
+  )"
+  if [[ "$wrapper_output" != *'"approval_path":"C:\\tmp\\state\\projects\\repo-safety\\approval.json"'* ]]; then
+    echo "Expected repo-safety wrapper to convert approval_path field to Windows path"
+    echo "Actual output: $wrapper_output"
+    exit 1
+  fi
+
+  first_arg="$(sed -n '1p' "$bash_log")"
+  second_arg="$(sed -n '2p' "$bash_log")"
+  third_arg="$(sed -n '3p' "$bash_log")"
+  if [[ "$first_arg" != *"/bin/superpowers-repo-safety" ]]; then
+    echo "Expected repo-safety wrapper to invoke Git Bash with the repo-safety bash script"
+    echo "Actual first arg: $first_arg"
+    exit 1
+  fi
+  if [[ "$second_arg" != "check" || "$third_arg" != "--intent" ]]; then
+    echo "Expected repo-safety wrapper to forward CLI arguments to bash script"
+    echo "Actual args:"
+    cat "$bash_log"
+    exit 1
+  fi
+
+  cat > "$git_bin_dir/bash.exe" <<'SH'
+#!/bin/bash
+exit 7
+SH
+  chmod +x "$git_bin_dir/bash.exe"
+
+  set +e
+  PATH="$generic_dir:$git_cmd_dir:$PATH" \
+    "$pwsh_bin" -NoLogo -NoProfile -Command "& '$wrapper_path' check --intent write --stage superpowers:brainstorming --task-id spec-task --path docs/spec.md --write-target spec-artifact-write"
+  wrapper_exit=$?
+  set -e
+
+  if [[ $wrapper_exit -ne 7 ]]; then
+    echo "Expected repo-safety wrapper to preserve nonzero bash exit code"
+    echo "Expected: 7"
+    echo "Actual:   $wrapper_exit"
+    exit 1
+  fi
+}
+
 assert_public_workflow_wrapper_behavior "$PUBLIC_WORKFLOW_WRAPPER"
 assert_wrapper_behavior "$WORKFLOW_WRAPPER" "superpowers-workflow-status" "workflow-status"
 assert_wrapper_behavior "$PLAN_EXEC_WRAPPER" "superpowers-plan-execution" "plan-execution"
+assert_session_entry_wrapper_behavior "$SESSION_ENTRY_WRAPPER"
+assert_repo_safety_wrapper_behavior "$REPO_SAFETY_WRAPPER"
 assert_update_check_wrapper_behavior "$UPDATE_CHECK_WRAPPER"
 
 echo "PowerShell wrapper bash-resolution regression test passed."

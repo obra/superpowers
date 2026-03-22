@@ -12,10 +12,12 @@ This fork keeps that core workflow and extends it with additional skill structur
 
 Superpowers is not just a collection of prompts. It is a small runtime plus a skill library that turns the agent into a conservative workflow state machine.
 
-Three layers matter:
+Five layers matter:
 
-- `using-superpowers` is the entry router. It runs before the agent responds, can ask once whether to use or bypass Superpowers for the session, and otherwise decides which workflow owns the turn.
+- `superpowers-session-entry` owns first-turn session entry. Missing or malformed decision state fails closed to `needs_user_choice` before the normal stack starts.
+- `using-superpowers` is the human-readable entry router after session entry resolves to `enabled`, and it bypasses the rest of the stack when session entry resolves to `bypassed` without explicit re-entry.
 - `superpowers-workflow-status` owns product-work routing up to `implementation_ready`.
+- `superpowers-repo-safety` owns protected-branch repo-write guarantees. Repo-writing stages fail closed on protected branches unless the current task scope is on a non-protected branch or has explicit task-scoped approval.
 - `superpowers-plan-execution` owns execution state after an approved plan is handed off.
 
 The key design choice is that repo-visible artifacts remain authoritative, while local runtime state is only a rebuildable index:
@@ -29,7 +31,7 @@ The full control flow looks like this:
 
 ```mermaid
 flowchart TD
-    MSG["User message"] --> BYPASS_GATE["using-superpowers bypass bootstrap<br/>read or write the session decision before normal stack entry"]
+    MSG["User message"] --> BYPASS_GATE["superpowers-session-entry runtime bootstrap<br/>resolve the session decision before normal using-superpowers stack entry"]
     BYPASS_GATE -->|bypassed without explicit re-entry| NORMAL["Respond normally"]
     BYPASS_GATE -->|enabled| PREAMBLE["Generated skill preamble<br/>detect install root, check upgrade state,<br/>mark session, enable contributor-mode hooks"]
     PREAMBLE --> SKILL_CHECK{"Does any skill apply?"}
@@ -278,6 +280,8 @@ Runtime state lives in `~/.superpowers/`.
 
 Generated workflow skills call `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status` (and `bin/superpowers-workflow-status.ps1` on Windows) as an internal runtime helper to resolve the next workflow stage, including bootstrap states before docs exist. Default `status` output is JSON for machine consumers; `status --summary` is a human-oriented one-line view. `reason` is the canonical diagnostic field, and any `note` field is only a compatibility alias. The helper's local manifest is rebuildable; repo docs remain authoritative for spec/plan approval state.
 
+Generated repo-writing workflow skills call `$_SUPERPOWERS_ROOT/bin/superpowers-repo-safety` (and `bin/superpowers-repo-safety.ps1` on Windows) before spec writes, plan writes, approval-header edits, release-doc updates, execution task slices, and branch-finishing commands. It blocks repo writes on protected branches unless the scope is already on a non-protected branch or the user has explicitly approved the exact task scope and the helper's re-check passes.
+
 Superpowers also ships a supported public workflow inspection CLI:
 
 - `bin/superpowers-workflow` (Bash)
@@ -289,7 +293,7 @@ All 18 checked-in `skills/*/SKILL.md` files are generated from adjacent `SKILL.m
 
 The shipped reviewer agent artifacts are generated from `agents/code-reviewer.instructions.md`. Regenerate them with `node scripts/gen-agent-docs.mjs` and validate freshness with `node scripts/gen-agent-docs.mjs --check`.
 
-When changing the generated skill runtime, run `node scripts/gen-skill-docs.mjs --check` before `bash tests/codex-runtime/test-using-superpowers-bypass.sh`, `bash tests/codex-runtime/test-runtime-instructions.sh`, `bash tests/codex-runtime/test-workflow-enhancements.sh`, and `bash tests/codex-runtime/test-workflow-sequencing.sh`.
+When changing the generated skill runtime, run `node scripts/gen-skill-docs.mjs --check` before `bash tests/codex-runtime/test-using-superpowers-bypass.sh`, `bash tests/codex-runtime/test-superpowers-session-entry.sh`, `bash tests/codex-runtime/test-superpowers-session-entry-gate.sh`, `bash tests/codex-runtime/test-superpowers-repo-safety.sh`, `bash tests/codex-runtime/test-runtime-instructions.sh`, `bash tests/codex-runtime/test-workflow-enhancements.sh`, and `bash tests/codex-runtime/test-workflow-sequencing.sh`.
 
 To enable contributor mode for the installed runtime, run `~/.superpowers/install/bin/superpowers-config set superpowers_contributor true`.
 
@@ -301,12 +305,13 @@ Windows (PowerShell): `& "$env:USERPROFILE\.superpowers\install\bin\superpowers-
 
 ## What Actually Runs
 
-- `skills/` contains the 18 public Superpowers skills. `using-superpowers` is the entry skill and session bypass gate; `brainstorming`, `plan-ceo-review`, `writing-plans`, and `plan-eng-review` form the default planning chain.
-- `scripts/gen-skill-docs.mjs` renders every checked-in `SKILL.md` from its template and injects the shared runtime preamble contracts, including the dedicated `using-superpowers` bootstrap plus its post-gate normal-stack handoff.
+- `skills/` contains the 18 public Superpowers skills. `using-superpowers` is the entry skill after the runtime-owned `superpowers-session-entry` gate resolves the turn; `brainstorming`, `plan-ceo-review`, `writing-plans`, and `plan-eng-review` form the default planning chain.
+- `scripts/gen-skill-docs.mjs` renders every checked-in `SKILL.md` from its template and injects the shared runtime preamble contracts, including the runtime-owned `using-superpowers` session-entry wording plus its post-gate normal-stack handoff.
 - `bin/superpowers-migrate-install` consolidates legacy platform-specific installs into the single shared checkout and recreates compatibility links when needed.
 - `bin/superpowers-config` and `bin/superpowers-update-check` manage local runtime state, contributor mode, and per-session upgrade notices under `~/.superpowers/`.
 - `bin/superpowers-workflow` and `bin/superpowers-workflow.ps1` are the supported public read-only workflow inspection surfaces for humans.
 - `bin/superpowers-workflow-status` and `bin/superpowers-workflow-status.ps1` maintain branch-scoped local workflow state and route skills conservatively when docs are missing or stale.
+- `bin/superpowers-repo-safety` and `bin/superpowers-repo-safety.ps1` enforce protected-branch repo-write guarantees for repo-writing workflow stages.
 - `superpowers-upgrade/SKILL.md` is the inline upgrade workflow the generated preambles hand off to when a newer runtime version is available.
 - `review/TODOS-format.md` and `review/checklist.md` are the shared review references used by the planning and code-review workflows.
 - `qa/references/issue-taxonomy.md` and `qa/templates/qa-report-template.md` are the shared QA references used by `qa-only`.

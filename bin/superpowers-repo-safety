@@ -1,0 +1,613 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=bin/superpowers-runtime-common.sh
+. "$SCRIPT_DIR/superpowers-runtime-common.sh"
+
+STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
+USER_NAME="$(whoami 2>/dev/null || echo user)"
+MAX_REASON_LENGTH=240
+INTENT=""
+STAGE=""
+RAW_TASK_ID=""
+TASK_ID=""
+APPROVAL_PATH=""
+APPROVAL_FINGERPRINT=""
+BRANCH_NAME=""
+PROTECTED="false"
+PROTECTED_BY="default"
+RAW_PATHS=()
+RAW_WRITE_TARGETS=()
+NORMALIZED_PATHS=()
+NORMALIZED_WRITE_TARGETS=()
+INSTRUCTION_PROTECTED_BRANCHES=()
+
+DEFAULT_PROTECTED_BRANCHES=(main master dev develop)
+WRITE_TARGET_ALLOWLIST=(
+  spec-artifact-write
+  plan-artifact-write
+  approval-header-write
+  execution-task-slice
+  release-doc-write
+  repo-file-write
+  git-commit
+  git-merge
+  git-push
+  git-worktree-cleanup
+  branch-finish
+)
+
+json_escape() {
+  local value="${1:-}"
+  value="${value//\\/\\\\}"
+  value="${value//\"/\\\"}"
+  value="${value//$'\n'/\\n}"
+  value="${value//$'\r'/\\r}"
+  printf '%s' "$value"
+}
+
+hash_stream() {
+  if command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 | awk '{print $1}'
+    return
+  fi
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum | awk '{print $1}'
+    return
+  fi
+  cksum | awk '{print $1}'
+}
+
+emit_result() {
+  local outcome="$1"
+  local intent="$2"
+  local branch="$3"
+  local protected="$4"
+  local protected_by="$5"
+  local task_id="$6"
+  local approval_fingerprint="$7"
+  local approval_path="$8"
+  local failure_class="${9:-}"
+  local reason="${10:-}"
+  local suggested_next_skill="${11:-}"
+
+  printf '{'
+  printf '"outcome":"%s",' "$(json_escape "$outcome")"
+  printf '"intent":"%s",' "$(json_escape "$intent")"
+  printf '"branch":"%s",' "$(json_escape "$branch")"
+  printf '"protected":%s,' "$protected"
+  printf '"protected_by":"%s",' "$(json_escape "$protected_by")"
+  printf '"task_id":"%s",' "$(json_escape "$task_id")"
+  printf '"approval_fingerprint":"%s",' "$(json_escape "$approval_fingerprint")"
+  printf '"approval_path":"%s",' "$(json_escape "$approval_path")"
+  printf '"failure_class":"%s",' "$(json_escape "$failure_class")"
+  printf '"reason":"%s",' "$(json_escape "$reason")"
+  printf '"suggested_next_skill":"%s"' "$(json_escape "$suggested_next_skill")"
+  printf '}\n'
+}
+
+emit_failure() {
+  local failure_class="$1"
+  local reason="$2"
+  local intent="${3:-}"
+  local branch="${4:-}"
+  local protected="${5:-false}"
+  local protected_by="${6:-default}"
+  local task_id="${7:-}"
+  local approval_fingerprint="${8:-}"
+  local approval_path="${9:-}"
+
+  emit_result "runtime_failure" "$intent" "$branch" "$protected" "$protected_by" "$task_id" "$approval_fingerprint" "$approval_path" "$failure_class" "$reason" ""
+}
+
+join_lines() {
+  local first=1
+  local item
+  for item in "$@"; do
+    if [[ "$first" -eq 1 ]]; then
+      printf '%s' "$item"
+      first=0
+    else
+      printf '\n%s' "$item"
+    fi
+  done
+}
+
+emit_normalized_paths() {
+  if [[ ${#NORMALIZED_PATHS[@]} -gt 0 ]]; then
+    join_lines "${NORMALIZED_PATHS[@]}"
+  fi
+}
+
+emit_normalized_write_targets() {
+  if [[ ${#NORMALIZED_WRITE_TARGETS[@]} -gt 0 ]]; then
+    join_lines "${NORMALIZED_WRITE_TARGETS[@]}"
+  fi
+}
+
+sort_unique_lines() {
+  if [[ $# -eq 0 ]]; then
+    return 0
+  fi
+  printf '%s\n' "$@" | LC_ALL=C sort -u
+}
+
+load_repo_identity_or_fail() {
+  if [[ -z "$(git rev-parse --show-toplevel 2>/dev/null || true)" ]]; then
+    emit_failure "BranchDetectionFailed" "Repo safety requires a git repository."
+    return 1
+  fi
+
+  REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+  RAW_BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+  if [[ -z "$RAW_BRANCH" || "$RAW_BRANCH" == "HEAD" ]]; then
+    emit_failure "BranchDetectionFailed" "Could not determine the current branch."
+    return 1
+  fi
+
+  local identity_output=""
+  local SLUG=""
+  local BRANCH=""
+  identity_output="$("$SCRIPT_DIR/superpowers-slug" 2>/dev/null || true)"
+  if [[ -z "$identity_output" ]]; then
+    emit_failure "BranchDetectionFailed" "Could not derive repo identity."
+    return 1
+  fi
+  eval "$identity_output"
+  if [[ -z "${SLUG:-}" || -z "${BRANCH:-}" ]]; then
+    emit_failure "BranchDetectionFailed" "Could not derive repo slug and branch identity."
+    return 1
+  fi
+
+  REPO_SLUG="$SLUG"
+  SAFE_BRANCH="$BRANCH"
+  BRANCH_NAME="$RAW_BRANCH"
+  NORMALIZED_BRANCH="$(normalize_identifier_token "$BRANCH_NAME")"
+  return 0
+}
+
+load_instruction_branches_or_fail() {
+  local instruction_files=()
+  local file line raw_list raw_branch_name normalized_branch_name
+  local raw_items=()
+  PROTECTED_BY="default"
+  INSTRUCTION_PROTECTED_BRANCHES=()
+
+  if [[ "${SUPERPOWERS_REPO_SAFETY_TEST_FAILPOINT:-}" == "instruction_parse_failure" ]]; then
+    emit_failure "InstructionParseFailed" "Injected instruction parse failure." "$INTENT" "$BRANCH_NAME" "$PROTECTED" "$PROTECTED_BY" "$TASK_ID" "$APPROVAL_FINGERPRINT" "$APPROVAL_PATH"
+    return 1
+  fi
+
+  collect_active_instruction_files "$REPO_ROOT" "$PWD" || {
+    emit_failure "InstructionParseFailed" "Could not resolve the active instruction chain." "$INTENT" "$BRANCH_NAME" "$PROTECTED" "$PROTECTED_BY" "$TASK_ID" "$APPROVAL_FINGERPRINT" "$APPROVAL_PATH"
+    return 1
+  }
+  while IFS= read -r file; do
+    [[ -n "$file" ]] || continue
+    instruction_files+=("$file")
+  done < <(printf '%s\n' "${ACTIVE_INSTRUCTION_FILES[@]:-}")
+
+  if [[ ${#instruction_files[@]} -gt 0 ]]; then
+    for file in "${instruction_files[@]}"; do
+      while IFS= read -r line || [[ -n "$line" ]]; do
+        [[ "$line" =~ ^[[:space:]]*Superpowers\ protected\ branches:[[:space:]]*(.+)[[:space:]]*$ ]] || continue
+        raw_list="${BASH_REMATCH[1]}"
+        IFS=',' read -r -a raw_items <<< "$raw_list"
+        for raw_branch_name in "${raw_items[@]}"; do
+          raw_branch_name="$(normalize_whitespace "$raw_branch_name")"
+          if [[ -z "$raw_branch_name" ]]; then
+            emit_failure "InstructionParseFailed" "Protected-branch instruction entries may not be blank." "$INTENT" "$BRANCH_NAME" "$PROTECTED" "$PROTECTED_BY" "$TASK_ID" "$APPROVAL_FINGERPRINT" "$APPROVAL_PATH"
+            return 1
+          fi
+          normalized_branch_name="$(normalize_identifier_token "$raw_branch_name")"
+          if [[ -z "$normalized_branch_name" ]]; then
+            emit_failure "InstructionParseFailed" "Protected-branch instruction entries may not be blank after normalization." "$INTENT" "$BRANCH_NAME" "$PROTECTED" "$PROTECTED_BY" "$TASK_ID" "$APPROVAL_FINGERPRINT" "$APPROVAL_PATH"
+            return 1
+          fi
+          if [[ "$raw_branch_name" != "$normalized_branch_name" ]]; then
+            emit_failure "InstructionParseFailed" "Protected-branch instruction entries must already use normalized exact branch names." "$INTENT" "$BRANCH_NAME" "$PROTECTED" "$PROTECTED_BY" "$TASK_ID" "$APPROVAL_FINGERPRINT" "$APPROVAL_PATH"
+            return 1
+          fi
+          INSTRUCTION_PROTECTED_BRANCHES+=("$normalized_branch_name")
+        done
+      done < "$file"
+    done
+  fi
+
+  return 0
+}
+
+branch_is_protected() {
+  local branch_name="$1"
+  local candidate
+  PROTECTED="false"
+  PROTECTED_BY="default"
+
+  for candidate in "${DEFAULT_PROTECTED_BRANCHES[@]}"; do
+    if [[ "$branch_name" == "$candidate" ]]; then
+      PROTECTED="true"
+      PROTECTED_BY="default"
+      return 0
+    fi
+  done
+  if [[ ${#INSTRUCTION_PROTECTED_BRANCHES[@]} -gt 0 ]]; then
+    for candidate in "${INSTRUCTION_PROTECTED_BRANCHES[@]}"; do
+      if [[ "$branch_name" == "$candidate" ]]; then
+        PROTECTED="true"
+        PROTECTED_BY="instructions"
+        return 0
+      fi
+    done
+  fi
+  return 0
+}
+
+validate_write_target_or_fail() {
+  local write_target="$1"
+  local allowed
+  for allowed in "${WRITE_TARGET_ALLOWLIST[@]}"; do
+    if [[ "$write_target" == "$allowed" ]]; then
+      return 0
+    fi
+  done
+  emit_failure "InvalidWriteTarget" "Unsupported write target: $write_target" "$INTENT" "$BRANCH_NAME" "$PROTECTED" "$PROTECTED_BY" "$TASK_ID" "$APPROVAL_FINGERPRINT" "$APPROVAL_PATH"
+  return 1
+}
+
+normalize_paths_or_fail() {
+  local raw_path normalized_path
+  NORMALIZED_PATHS=()
+  if [[ ${#RAW_PATHS[@]} -eq 0 ]]; then
+    return 0
+  fi
+  for raw_path in "${RAW_PATHS[@]}"; do
+    normalized_path="$(normalize_repo_relative_path "$raw_path" 2>/dev/null || true)"
+    if [[ -z "$normalized_path" ]]; then
+      emit_failure "InvalidCommandInput" "Paths must be normalized repo-relative paths inside the repo root." "$INTENT" "$BRANCH_NAME" "$PROTECTED" "$PROTECTED_BY" "$TASK_ID" "$APPROVAL_FINGERPRINT" "$APPROVAL_PATH"
+      return 1
+    fi
+    NORMALIZED_PATHS+=("$normalized_path")
+  done
+  if [[ ${#NORMALIZED_PATHS[@]} -gt 0 ]]; then
+    local sorted_paths=()
+    while IFS= read -r normalized_path; do
+      [[ -n "$normalized_path" ]] || continue
+      sorted_paths+=("$normalized_path")
+    done < <(sort_unique_lines "${NORMALIZED_PATHS[@]}")
+    NORMALIZED_PATHS=("${sorted_paths[@]}")
+  fi
+  return 0
+}
+
+normalize_targets_or_fail() {
+  local raw_target
+  NORMALIZED_WRITE_TARGETS=()
+  if [[ ${#RAW_WRITE_TARGETS[@]} -eq 0 ]]; then
+    return 0
+  fi
+  for raw_target in "${RAW_WRITE_TARGETS[@]}"; do
+    validate_write_target_or_fail "$raw_target" || return 1
+    NORMALIZED_WRITE_TARGETS+=("$raw_target")
+  done
+  if [[ ${#NORMALIZED_WRITE_TARGETS[@]} -gt 0 ]]; then
+    local sorted_targets=()
+    while IFS= read -r raw_target; do
+      [[ -n "$raw_target" ]] || continue
+      sorted_targets+=("$raw_target")
+    done < <(sort_unique_lines "${NORMALIZED_WRITE_TARGETS[@]}")
+    NORMALIZED_WRITE_TARGETS=("${sorted_targets[@]}")
+  fi
+  return 0
+}
+
+derive_task_id_or_fail() {
+  local raw_task_id="$1"
+  local normalized_task_id=""
+  local normalized_stage=""
+  local scope_hash=""
+
+  if [[ -n "$raw_task_id" ]]; then
+    normalized_task_id="$(normalize_identifier_token "$raw_task_id")"
+    if [[ -z "$normalized_task_id" ]]; then
+      emit_failure "InvalidCommandInput" "Task id may not be blank after normalization." "$INTENT" "$BRANCH_NAME" "$PROTECTED" "$PROTECTED_BY" "$TASK_ID" "$APPROVAL_FINGERPRINT" "$APPROVAL_PATH"
+      return 1
+    fi
+    TASK_ID="$normalized_task_id"
+    return 0
+  fi
+
+  normalized_stage="$(normalize_identifier_token "$STAGE")"
+  if [[ -z "$normalized_stage" ]]; then
+    emit_failure "InvalidCommandInput" "Stage may not be blank after normalization." "$INTENT" "$BRANCH_NAME" "$PROTECTED" "$PROTECTED_BY" "$TASK_ID" "$APPROVAL_FINGERPRINT" "$APPROVAL_PATH"
+    return 1
+  fi
+
+  scope_hash="$(
+    {
+      printf '%s\n' "$STAGE"
+      emit_normalized_paths
+      printf '\n--targets--\n'
+      emit_normalized_write_targets
+    } | hash_stream | cut -c1-16
+  )"
+  TASK_ID="${normalized_stage}-${scope_hash}"
+  return 0
+}
+
+compute_fingerprint() {
+  {
+    printf '%s\n' "$REPO_ROOT"
+    printf '%s\n' "$NORMALIZED_BRANCH"
+    printf '%s\n' "$STAGE"
+    printf '%s\n' "$TASK_ID"
+    printf '%s\n' "--paths--"
+    emit_normalized_paths
+    printf '\n%s\n' "--targets--"
+    emit_normalized_write_targets
+  } | hash_stream
+}
+
+approval_path_for_current_scope() {
+  local task_hash
+  task_hash="$(printf '%s\n%s' "$STAGE" "$TASK_ID" | hash_stream | cut -c1-16)"
+  printf '%s\n' "$STATE_DIR/projects/$REPO_SLUG/${USER_NAME}-${SAFE_BRANCH}-repo-safety/${task_hash}.json"
+}
+
+normalize_reason_or_fail() {
+  local raw_reason="$1"
+  local normalized_reason=""
+
+  normalized_reason="$(normalize_whitespace_bounded "$raw_reason" "$MAX_REASON_LENGTH" 2>/dev/null || true)"
+  if [[ -z "$normalized_reason" ]]; then
+    emit_failure "InvalidCommandInput" "Approval reasons may not be blank after whitespace normalization and must stay within the length limit." "$INTENT" "$BRANCH_NAME" "$PROTECTED" "$PROTECTED_BY" "$TASK_ID" "$APPROVAL_FINGERPRINT" "$APPROVAL_PATH"
+    return 1
+  fi
+  APPROVAL_REASON="$normalized_reason"
+  return 0
+}
+
+read_approval_record() {
+  local approval_path="$1"
+  if [[ ! -e "$approval_path" ]]; then
+    return 2
+  fi
+  if [[ ! -f "$approval_path" || ! -r "$approval_path" ]]; then
+    return 1
+  fi
+  if [[ "${SUPERPOWERS_REPO_SAFETY_TEST_FAILPOINT:-}" == "approval_read_failure" ]]; then
+    return 1
+  fi
+
+  RECORD_JSON="$(cat "$approval_path" 2>/dev/null || true)"
+  if [[ -z "$RECORD_JSON" ]]; then
+    return 1
+  fi
+  if ! node -e 'JSON.parse(require("fs").readFileSync(0, "utf8"));' <<<"$RECORD_JSON" >/dev/null 2>&1; then
+    return 1
+  fi
+  return 0
+}
+
+record_field() {
+  local path="$1"
+  printf '%s' "$RECORD_JSON" | node -e '
+    const fs = require("fs");
+    const path = process.argv[1];
+    const value = JSON.parse(fs.readFileSync(0, "utf8"))[path];
+    if (value === undefined || value === null) {
+      process.exit(0);
+    }
+    if (Array.isArray(value)) {
+      process.stdout.write(value.join("\n"));
+      process.exit(0);
+    }
+    if (typeof value === "object") {
+      process.stdout.write(JSON.stringify(value));
+      process.exit(0);
+    }
+    process.stdout.write(String(value));
+  ' "$path"
+}
+
+record_matches_scope() {
+  local record_repo_root record_branch record_stage record_task_id
+  record_repo_root="$(record_field repo_root)"
+  record_branch="$(record_field branch)"
+  record_stage="$(record_field stage)"
+  record_task_id="$(record_field task_id)"
+
+  [[ "$record_repo_root" == "$REPO_ROOT" ]] || return 1
+  [[ "$record_branch" == "$NORMALIZED_BRANCH" ]] || return 1
+  [[ "$record_stage" == "$STAGE" ]] || return 1
+  [[ "$record_task_id" == "$TASK_ID" ]] || return 1
+  return 0
+}
+
+record_matches_fingerprint() {
+  local record_fingerprint
+  record_fingerprint="$(record_field approval_fingerprint)"
+  [[ -n "$record_fingerprint" && "$record_fingerprint" == "$APPROVAL_FINGERPRINT" ]]
+}
+
+write_approval_record() {
+  local approval_path="$1"
+  local tmp now payload
+
+  case "${SUPERPOWERS_REPO_SAFETY_TEST_FAILPOINT:-}" in
+    approval_write_failure)
+      return 1
+      ;;
+  esac
+
+  now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  payload="{\"repo_root\":\"$(json_escape "$REPO_ROOT")\",\"branch\":\"$(json_escape "$NORMALIZED_BRANCH")\",\"stage\":\"$(json_escape "$STAGE")\",\"task_id\":\"$(json_escape "$TASK_ID")\",\"paths\":["
+  local first=1 path target
+  if [[ ${#NORMALIZED_PATHS[@]} -gt 0 ]]; then
+    for path in "${NORMALIZED_PATHS[@]}"; do
+      if [[ "$first" -eq 1 ]]; then
+        payload+="\"$(json_escape "$path")\""
+        first=0
+      else
+        payload+=",\"$(json_escape "$path")\""
+      fi
+    done
+  fi
+  payload+="],\"write_targets\":["
+  first=1
+  if [[ ${#NORMALIZED_WRITE_TARGETS[@]} -gt 0 ]]; then
+    for target in "${NORMALIZED_WRITE_TARGETS[@]}"; do
+      if [[ "$first" -eq 1 ]]; then
+        payload+="\"$(json_escape "$target")\""
+        first=0
+      else
+        payload+=",\"$(json_escape "$target")\""
+      fi
+    done
+  fi
+  payload+="],\"approval_fingerprint\":\"$(json_escape "$APPROVAL_FINGERPRINT")\",\"approval_reason\":\"$(json_escape "$APPROVAL_REASON")\",\"protected_by\":\"$(json_escape "$PROTECTED_BY")\",\"approved_at\":\"$(json_escape "$now")\"}"
+
+  mkdir -p "$(dirname "$approval_path")" || return 1
+  tmp="$(mktemp "${approval_path}.tmp.XXXXXX")" || return 1
+  if ! printf '%s\n' "$payload" > "$tmp"; then
+    rm -f "$tmp"
+    return 1
+  fi
+  if ! mv "$tmp" "$approval_path"; then
+    rm -f "$tmp"
+    return 1
+  fi
+  return 0
+}
+
+parse_common_scope_args() {
+  INTENT="${INTENT:-}"
+  STAGE=""
+  RAW_TASK_ID=""
+  RAW_PATHS=()
+  RAW_WRITE_TARGETS=()
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --intent) INTENT="${2:-}"; shift 2 ;;
+      --stage) STAGE="${2:-}"; shift 2 ;;
+      --task-id) RAW_TASK_ID="${2:-}"; shift 2 ;;
+      --path) RAW_PATHS+=("${2:-}"); shift 2 ;;
+      --write-target) RAW_WRITE_TARGETS+=("${2:-}"); shift 2 ;;
+      *) return 1 ;;
+    esac
+  done
+  return 0
+}
+
+prepare_scope_or_fail() {
+  load_repo_identity_or_fail || return 1
+  load_instruction_branches_or_fail || return 1
+  branch_is_protected "$NORMALIZED_BRANCH"
+
+  if [[ -z "$STAGE" ]]; then
+    emit_failure "InvalidCommandInput" "Repo safety requires --stage." "$INTENT" "$BRANCH_NAME" "$PROTECTED" "$PROTECTED_BY"
+    return 1
+  fi
+
+  normalize_paths_or_fail || return 1
+  normalize_targets_or_fail || return 1
+  derive_task_id_or_fail "$RAW_TASK_ID" || return 1
+  APPROVAL_FINGERPRINT="$(compute_fingerprint)"
+  APPROVAL_PATH="$(approval_path_for_current_scope)"
+  return 0
+}
+
+cmd_check() {
+  INTENT=""
+  if ! parse_common_scope_args "$@"; then
+    emit_failure "InvalidCommandInput" "Unknown check argument." "$INTENT"
+    return 1
+  fi
+  case "$INTENT" in
+    read|write) ;;
+    *)
+      emit_failure "InvalidCommandInput" "check requires --intent read|write." "$INTENT"
+      return 1
+      ;;
+  esac
+
+  prepare_scope_or_fail || return 1
+
+  if [[ "$INTENT" == "read" ]]; then
+    emit_result "allowed" "$INTENT" "$BRANCH_NAME" "$PROTECTED" "$PROTECTED_BY" "$TASK_ID" "$APPROVAL_FINGERPRINT" "$APPROVAL_PATH" "" "read_allowed" ""
+    return 0
+  fi
+
+  if [[ "$PROTECTED" != "true" ]]; then
+    emit_result "allowed" "$INTENT" "$BRANCH_NAME" "false" "$PROTECTED_BY" "$TASK_ID" "$APPROVAL_FINGERPRINT" "$APPROVAL_PATH" "" "branch_not_protected" ""
+    return 0
+  fi
+
+  local read_status=0
+  if read_approval_record "$APPROVAL_PATH"; then
+    :
+  else
+    read_status=$?
+    case "$read_status" in
+      2)
+        emit_result "blocked" "$INTENT" "$BRANCH_NAME" "true" "$PROTECTED_BY" "$TASK_ID" "$APPROVAL_FINGERPRINT" "$APPROVAL_PATH" "ProtectedBranchDetected" "protected_branch_requires_approval" "superpowers:using-git-worktrees"
+        return 0
+        ;;
+      *)
+        emit_result "blocked" "$INTENT" "$BRANCH_NAME" "true" "$PROTECTED_BY" "$TASK_ID" "$APPROVAL_FINGERPRINT" "$APPROVAL_PATH" "MalformedApprovalRecord" "malformed_approval_record" "superpowers:using-git-worktrees"
+        return 0
+        ;;
+    esac
+  fi
+
+  if ! record_matches_scope; then
+    emit_result "blocked" "$INTENT" "$BRANCH_NAME" "true" "$PROTECTED_BY" "$TASK_ID" "$APPROVAL_FINGERPRINT" "$APPROVAL_PATH" "ApprovalScopeMismatch" "approval_scope_mismatch" "superpowers:using-git-worktrees"
+    return 0
+  fi
+
+  if ! record_matches_fingerprint; then
+    emit_result "blocked" "$INTENT" "$BRANCH_NAME" "true" "$PROTECTED_BY" "$TASK_ID" "$APPROVAL_FINGERPRINT" "$APPROVAL_PATH" "ApprovalFingerprintMismatch" "approval_fingerprint_mismatch" "superpowers:using-git-worktrees"
+    return 0
+  fi
+
+  emit_result "allowed" "$INTENT" "$BRANCH_NAME" "true" "$PROTECTED_BY" "$TASK_ID" "$APPROVAL_FINGERPRINT" "$APPROVAL_PATH" "" "approval_matched" ""
+}
+
+cmd_approve() {
+  local reason=""
+  INTENT="write"
+  STAGE=""
+  RAW_TASK_ID=""
+  RAW_PATHS=()
+  RAW_WRITE_TARGETS=()
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --stage) STAGE="${2:-}"; shift 2 ;;
+      --task-id) RAW_TASK_ID="${2:-}"; shift 2 ;;
+      --reason) reason="${2:-}"; shift 2 ;;
+      --path) RAW_PATHS+=("${2:-}"); shift 2 ;;
+      --write-target) RAW_WRITE_TARGETS+=("${2:-}"); shift 2 ;;
+      *) emit_failure "InvalidCommandInput" "Unknown approve argument '$1'." "$INTENT"; return 1 ;;
+    esac
+  done
+
+  prepare_scope_or_fail || return 1
+  normalize_reason_or_fail "$reason" || return 1
+
+  if ! write_approval_record "$APPROVAL_PATH"; then
+    emit_failure "ApprovalWriteFailed" "Could not persist the protected-branch approval." "$INTENT" "$BRANCH_NAME" "$PROTECTED" "$PROTECTED_BY" "$TASK_ID" "$APPROVAL_FINGERPRINT" "$APPROVAL_PATH"
+    return 1
+  fi
+
+  emit_result "allowed" "$INTENT" "$BRANCH_NAME" "$PROTECTED" "$PROTECTED_BY" "$TASK_ID" "$APPROVAL_FINGERPRINT" "$APPROVAL_PATH" "" "approval_recorded" ""
+}
+
+case "${1:-}" in
+  check) shift; cmd_check "$@" ;;
+  approve) shift; cmd_approve "$@" ;;
+  *)
+    emit_failure "InvalidCommandInput" "Expected check or approve command."
+    exit 1
+    ;;
+esac

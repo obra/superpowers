@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=bin/superpowers-runtime-common.sh
+. "$SCRIPT_DIR/superpowers-runtime-common.sh"
+
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 remote_url="$(git remote get-url origin 2>/dev/null || true)"
 
@@ -35,7 +39,7 @@ derive_repo_slug() {
 branch_raw="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo current)"
 [ -n "$branch_raw" ] || branch_raw="current"
 [ "$branch_raw" != "HEAD" ] || branch_raw="current"
-branch="$(printf '%s\n' "$branch_raw" | sed 's/[^[:alnum:]._-]/-/g')"
+branch="$(normalize_identifier_token "$branch_raw")"
 slug="$(derive_repo_slug "$remote_url")"
 
 printf 'SLUG=%q\nBRANCH=%q\n' "$slug" "$branch"

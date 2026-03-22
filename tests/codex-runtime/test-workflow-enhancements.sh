@@ -145,6 +145,7 @@ require_absent_pattern skills/executing-plans/SKILL.md 'offer optional `superpow
 require_absent_pattern skills/subagent-driven-development/SKILL.md 'Report-only browser QA offered from the branch-finishing flow when the branch has UI or route changes'
 require_absent_pattern skills/subagent-driven-development/SKILL.md 'offer optional qa-only when appropriate'
 require_pattern skills/finishing-a-development-branch/SKILL.md 'Conditional pre-landing browser QA when the branch change surface or test-plan artifact warrants it'
+require_pattern skills/finishing-a-development-branch/SKILL.md 'superpowers-repo-safety check --intent write'
 
 require_pattern review/checklist.md "Spec / Plan Delivery Content"
 require_pattern review/checklist.md "Release Readiness"

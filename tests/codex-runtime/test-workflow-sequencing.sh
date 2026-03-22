@@ -58,6 +58,8 @@ require_pattern skills/brainstorming/SKILL.md "Landscape Awareness"
 require_pattern skills/brainstorming/SKILL.md "If the work is sensitive or stealthy, ask one explicit permission question before any external search"
 require_pattern skills/brainstorming/SKILL.md "## Landscape Snapshot"
 require_pattern skills/brainstorming/SKILL.md "### Decision impact"
+require_pattern skills/brainstorming/SKILL.md 'superpowers-repo-safety check --intent write'
+require_pattern skills/brainstorming/SKILL.md 'superpowers-repo-safety approve --stage'
 
 require_description_pattern skills/using-superpowers/SKILL.md "deciding which skill or workflow stage applies"
 require_description_pattern skills/systematic-debugging/SKILL.md "investigating a bug, regression, test failure, or unexpected behavior"
@@ -96,6 +98,7 @@ require_pattern skills/plan-ceo-review/SKILL.md 'Accelerator artifacts must use 
 require_pattern skills/plan-ceo-review/SKILL.md 'Pre-Step 0: Landscape Check'
 require_pattern skills/plan-ceo-review/SKILL.md "reuse the spec's \`Landscape Snapshot\` when it exists and is still relevant"
 require_pattern skills/plan-ceo-review/SKILL.md 'If the refreshed Landscape Check materially changes the approved reasoning, update the spec'"'"'s `Landscape Snapshot` and `Decision impact` before approval'
+require_pattern skills/plan-ceo-review/SKILL.md 'superpowers-repo-safety check --intent write'
 
 require_pattern skills/writing-plans/SKILL.md 'If the spec is missing these lines, or if `**Workflow State:**` is not `CEO Approved`, stop and direct the agent to `superpowers:plan-ceo-review`.'
 require_pattern skills/writing-plans/SKILL.md "**Workflow State:** Draft"
@@ -184,7 +187,9 @@ require_pattern skills/using-superpowers/SKILL.md 'Plan is `Engineering Approved
 require_pattern skills/using-superpowers/SKILL.md 'Plan is `Engineering Approved` and its `Source Spec:` path plus `Source Spec Revision:` match the latest approved spec: proceed to implementation through the normal execution handoff for that approved plan path.'
 
 require_pattern skills/executing-plans/SKILL.md "Require the exact approved plan path as input."
+require_pattern skills/executing-plans/SKILL.md 'default protected branch (`main`, `master`, `dev`, or `develop`)'
 require_pattern skills/executing-plans/SKILL.md "Do not auto-clean the workspace and do not auto-create a worktree."
+require_pattern skills/executing-plans/SKILL.md "The later repo-safety checks still govern any additional protected branches declared through repo or user instructions."
 require_pattern skills/executing-plans/SKILL.md 'Workspace preparation is the user'"'"'s responsibility; `superpowers:using-git-worktrees` is optional, not automatic'
 require_pattern skills/subagent-driven-development/SKILL.md 'calls `status --plan ...` during preflight'
 require_pattern skills/subagent-driven-development/SKILL.md 'calls `begin` before starting work on a plan step'
@@ -222,6 +227,8 @@ require_pattern skills/plan-eng-review/SKILL.md 'Do not start implementation ins
 require_pattern skills/subagent-driven-development/SKILL.md "## Implementation Preflight"
 require_pattern skills/subagent-driven-development/SKILL.md "Have engineering-approved implementation plan?"
 require_pattern skills/subagent-driven-development/SKILL.md "Return to using-superpowers artifact-state routing"
+require_pattern skills/subagent-driven-development/SKILL.md 'default protected branch (`main`, `master`, `dev`, or `develop`)'
+require_pattern skills/subagent-driven-development/SKILL.md "The later repo-safety checks still govern any additional protected branches declared through repo or user instructions."
 require_pattern skills/subagent-driven-development/SKILL.md 'Tasks mostly independent?" -> "executing-plans" [label="no - tightly coupled or better handled in one coordinator session"]'
 require_pattern skills/subagent-driven-development/SKILL.md "Do not auto-clean the workspace and do not auto-create a worktree."
 require_pattern skills/subagent-driven-development/SKILL.md '"More tasks remain?" -> "Use superpowers:requesting-code-review for final review gate" [label="no"];'

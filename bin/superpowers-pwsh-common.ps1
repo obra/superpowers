@@ -198,3 +198,92 @@ function Convert-SuperpowersJsonFieldPathsToWindows {
 
   return ($payload | ConvertTo-Json -Compress)
 }
+
+function Normalize-SuperpowersRepoRelativePath {
+  param(
+    [string]$Path
+  )
+
+  if ([string]::IsNullOrEmpty($Path)) {
+    return $null
+  }
+
+  if ($Path -match '^[A-Za-z]:[\\/]' -or
+      $Path -match '^[\\/]' -or
+      $Path -match '^//') {
+    return $null
+  }
+
+  $normalized = $Path -replace '\\', '/'
+  $parts = New-Object System.Collections.Generic.List[string]
+
+  foreach ($part in ($normalized -split '/')) {
+    if ([string]::IsNullOrEmpty($part) -or $part -eq '.') {
+      continue
+    }
+    if ($part -eq '..') {
+      return $null
+    }
+    $parts.Add($part)
+  }
+
+  if ($parts.Count -eq 0) {
+    return $null
+  }
+
+  return ($parts -join '/')
+}
+
+function Normalize-SuperpowersWhitespace {
+  param(
+    [string]$Text
+  )
+
+  if ($null -eq $Text) {
+    return ''
+  }
+
+  return (($Text -replace "[`r`n`t]", ' ' -replace '\s+', ' ').Trim())
+}
+
+function Normalize-SuperpowersWhitespaceBounded {
+  param(
+    [string]$Text,
+    [int]$MaxLength = 0
+  )
+
+  $normalized = Normalize-SuperpowersWhitespace -Text $Text
+  if ([string]::IsNullOrEmpty($normalized)) {
+    return [pscustomobject]@{
+      Success = $false
+      Failure = 'empty'
+      Value = $null
+    }
+  }
+
+  if ($MaxLength -gt 0 -and $normalized.Length -gt $MaxLength) {
+    return [pscustomobject]@{
+      Success = $false
+      Failure = 'overlong'
+      Value = $normalized
+    }
+  }
+
+  return [pscustomobject]@{
+    Success = $true
+    Failure = ''
+    Value = $normalized
+  }
+}
+
+function Normalize-SuperpowersIdentifierToken {
+  param(
+    [string]$Text
+  )
+
+  if ($null -eq $Text) {
+    return ''
+  }
+
+  return ($Text -replace '[^0-9A-Za-z._-]', '-')
+}

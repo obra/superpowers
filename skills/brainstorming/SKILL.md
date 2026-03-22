@@ -270,6 +270,27 @@ digraph brainstorming {
 "$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status" sync --artifact spec --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md
 ```
 
+**Protected-Branch Repo-Write Gate:**
+
+Before writing or updating the spec file on disk, run the shared repo-safety preflight for the exact spec-writing scope:
+
+```bash
+superpowers-repo-safety check --intent write --stage superpowers:brainstorming --task-id <current-spec-write> --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target spec-artifact-write
+```
+
+- If the helper returns `allowed`, continue with the spec write.
+- If it returns `blocked`, name the branch, the stage, and the blocking `failure_class`, then route to either a feature branch / `superpowers:using-git-worktrees` or explicit user approval for this exact spec-writing scope.
+- If the user explicitly approves writing this spec on the current protected branch, approve the full protected-branch task scope you intend to use, including the spec path and any follow-on git targets that are part of the same task slice:
+
+```bash
+superpowers-repo-safety approve --stage superpowers:brainstorming --task-id <current-spec-write> --reason "<explicit user approval>" --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target spec-artifact-write [--write-target git-commit]
+superpowers-repo-safety check --intent write --stage superpowers:brainstorming --task-id <current-spec-write> --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target spec-artifact-write [--write-target git-commit]
+```
+
+- Continue only if the re-check returns `allowed`.
+- Before `git commit` on the same protected branch, re-run the gate with the same task id, the same repo-relative path, and the same approved write-target set.
+- If the protected-branch task scope changes, run a new `approve` plus full-scope `check` before continuing.
+
 **CEO Review Handoff:**
 After writing the spec document:
 

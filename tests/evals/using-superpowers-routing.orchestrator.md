@@ -9,7 +9,7 @@ Dispatch a fresh runner subagent against the repo-versioned scenario matrix, cap
 
 This gate validates post-bypass workflow-stage routing. It does not treat the first-turn opt-out question as the scenario outcome.
 
-Use the scenario-set identifier `using-superpowers-routing-r3` for evidence naming and retention.
+Use the scenario-set identifier `using-superpowers-routing-r4` for evidence naming and retention.
 
 ## Required Inputs
 
@@ -29,7 +29,7 @@ Use the scenario-set identifier `using-superpowers-routing-r3` for evidence nami
 7. Capture raw runner output and a structured outcome block for each scenario.
 8. Start a fresh isolated judge subagent after the runner finishes.
 9. Feed the judge the raw runner evidence plus the scenario file and the expected-safe-stage rubric.
-10. Record a per-scenario evidence bundle under `~/.superpowers/projects/<slug>/routing-evals/using-superpowers-routing-r3/...`.
+10. Record a per-scenario evidence bundle under `~/.superpowers/projects/<slug>/routing-evals/using-superpowers-routing-r4/...`.
 11. Pass only when every required scenario passes and no scenario is ambiguous.
 
 ## Evidence Bundle

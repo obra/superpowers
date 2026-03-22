@@ -136,6 +136,23 @@ Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Ski
 - If any header line is missing or malformed, normalize the plan to this contract before continuing and treat it as `Draft`.
 - Read the source spec named in `**Source Spec:**` and confirm both the path and revision match the latest approved spec before approving execution.
 - When review decisions change the written plan, update the plan document before continuing.
+- **Protected-Branch Repo-Write Gate:**
+- Before editing the plan body or changing approval headers on disk, run the shared repo-safety preflight for the exact review-write scope:
+
+```bash
+superpowers-repo-safety check --intent write --stage superpowers:plan-eng-review --task-id <current-plan-review> --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target repo-file-write
+```
+
+- When the mutation is specifically an approval-header edit, use the same command shape with `--write-target approval-header-write`.
+- If the helper returns `blocked`, name the branch, the stage, and the blocking `failure_class`, then route to either a feature branch / `superpowers:using-git-worktrees` or explicit user approval for this exact review scope.
+- If the user explicitly approves the protected-branch review write, run:
+
+```bash
+superpowers-repo-safety approve --stage superpowers:plan-eng-review --task-id <current-plan-review> --reason "<explicit user approval>" --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target repo-file-write
+superpowers-repo-safety check --intent write --stage superpowers:plan-eng-review --task-id <current-plan-review> --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target repo-file-write
+```
+
+- Repeat the same approve -> re-check pattern for `approval-header-write` before flipping `**Workflow State:**` or any other approval header on a protected branch.
 - Keep the plan in `Draft` while review issues remain open or while the source spec path or revision is stale.
 - Only write `**Workflow State:** Engineering Approved` as the last step of a successful review, and set `**Last Reviewed By:** plan-eng-review` at the same time.
 - When the review is resolved and the written plan is approved, present the normal execution handoff.

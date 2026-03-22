@@ -2,6 +2,20 @@
 
 For release history before `v5.1.0 (2026-03-16)`, see the upstream README: https://github.com/obra/superpowers/blob/main/README.md
 
+## v5.6.0 (2026-03-21)
+
+### Session Entry And Repo Safety
+
+- Added runtime-owned `bin/superpowers-session-entry` plus `bin/superpowers-session-entry.ps1` so first-turn Superpowers bootstrap resolves through a helper-backed session-entry contract before the normal `using-superpowers` stack can start
+- Added runtime-owned `bin/superpowers-repo-safety` plus `bin/superpowers-repo-safety.ps1` so repo-writing workflow stages fail closed on protected branches unless the current task runs on a non-protected branch or carries explicit task-scoped approval
+- Shared repo-relative path, whitespace, identifier, and active-instruction-chain normalization now lives in `bin/superpowers-runtime-common.sh` and `bin/superpowers-pwsh-common.ps1`
+- Generated repo-writing workflow skills now call the shared repo-safety preflight before spec writes, plan writes, approval-header edits, execution task slices, release-doc updates, and branch-finishing commands
+
+### Testing
+
+- Added deterministic session-entry helper, supported-entry harness, repo-safety helper, PowerShell wrapper, workflow sequencing, and workflow-adoption regressions for the new bootstrap and protected-branch guarantees
+- Added doc-driven Search-Before-Building and using-superpowers routing verification alongside the final execution evidence for the hardening package
+
 ## v5.5.0 (2026-03-19)
 
 ### Borrowed Layer Alignment

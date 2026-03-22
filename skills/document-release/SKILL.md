@@ -139,6 +139,27 @@ Use the detected branch as "the base branch" in the steps below.
 - Fixing stale cross-references
 - Minor discoverability improvements
 
+## Protected-Branch Repo-Write Gate
+
+Before editing release-facing docs or metadata on disk, run the shared repo-safety preflight for the exact release-write scope:
+
+```bash
+superpowers-repo-safety check --intent write --stage superpowers:document-release --task-id <current-release-doc-pass> --path <release-doc-path> --write-target release-doc-write
+```
+
+- If the helper returns `allowed`, continue with the doc or metadata write.
+- If it returns `blocked`, name the branch, the stage, and the blocking `failure_class`, then route to either a feature branch / `superpowers:using-git-worktrees` or explicit user approval for this exact release-doc scope.
+- If the user explicitly approves the protected-branch release write, approve the full release-doc scope you intend to use on that branch, including the release-doc path and any follow-on git targets that are part of the same pass:
+
+```bash
+superpowers-repo-safety approve --stage superpowers:document-release --task-id <current-release-doc-pass> --reason "<explicit user approval>" --path <release-doc-path> --write-target release-doc-write [--write-target git-commit]
+superpowers-repo-safety check --intent write --stage superpowers:document-release --task-id <current-release-doc-pass> --path <release-doc-path> --write-target release-doc-write [--write-target git-commit]
+```
+
+- Continue only if the re-check returns `allowed`.
+- Before `git commit` on the same protected branch, re-run the gate with the same task id, the same repo-relative path, and the same approved write-target set.
+- If the protected-branch task scope changes, run a new `approve` plus full-scope `check` before continuing.
+
 ## Step 1: Pre-flight and diff analysis
 
 Run repo-appropriate commands such as:

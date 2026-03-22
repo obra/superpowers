@@ -88,7 +88,7 @@ Unix-like: ~/.codex/agents/code-reviewer.toml → ~/.superpowers/install/.codex/
 Windows: copy ~/.superpowers/install/.codex/agents/code-reviewer.toml to ~/.codex/agents/code-reviewer.toml
 ```
 
-The `using-superpowers` skill is discovered automatically and acts as the entry router, including a session-scoped bypass gate before the normal Superpowers stack takes over — no additional configuration needed.
+The runtime-owned `superpowers-session-entry` helper resolves the first-turn session decision before `using-superpowers` takes over as the human-readable entry router — no additional configuration needed.
 
 The `code-reviewer` custom agent is available after installation.
 
@@ -113,7 +113,7 @@ Use `[agents]` in your Codex config for global subagent controls such as `max_th
 Skills are discovered automatically. Codex activates them when:
 - You mention a skill by name (e.g., "use brainstorming")
 - The task matches a skill's description
-- The `using-superpowers` skill asks whether to use or bypass Superpowers for the session, then directs Codex to use one when the stack stays enabled
+- The runtime-owned `superpowers-session-entry` gate resolves the first-turn session decision, then `using-superpowers` routes the enabled turn by workflow state
 
 ## Default Workflow
 
@@ -152,6 +152,18 @@ The canonical reference is [references/search-before-building.md](../references/
 ## Runtime Helpers
 
 Runtime helper state lives in `~/.superpowers/`. Generated skill preambles use this directory for session markers, contributor logs, update-check cache files, and project-scoped artifacts under `~/.superpowers/projects/`.
+
+Superpowers ships session-entry runtime helpers:
+- `bin/superpowers-session-entry` (Bash)
+- `bin/superpowers-session-entry.ps1` (PowerShell wrapper)
+
+Supported entry paths use this helper to resolve `enabled`, `bypassed`, or `needs_user_choice` before the normal `using-superpowers` stack starts. Missing or malformed decision state fails closed to `needs_user_choice`; `using-superpowers` documents that contract but does not own it by itself.
+
+Superpowers ships protected-branch repo-safety helpers:
+- `bin/superpowers-repo-safety` (Bash)
+- `bin/superpowers-repo-safety.ps1` (PowerShell wrapper)
+
+Generated repo-writing workflow skills use this helper to block repo writes on protected branches by default. Spec writes, plan writes, approval-header edits, release-doc updates, execution task slices, and branch-finishing commands must either run on a non-protected branch or carry an explicit task-scoped approval that passes the helper's re-check.
 
 Superpowers ships a supported public workflow inspection surface:
 - `bin/superpowers-workflow` (Bash)

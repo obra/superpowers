@@ -84,6 +84,8 @@ test('using-superpowers gets a dedicated bootstrap preamble contract', () => {
   assert.match(normalStackBlock, /_CONTRIB=/, 'using-superpowers should restore contributor mode after the bypass gate');
   assert.match(content, /ask one interactive question before any normal Superpowers work happens/, 'using-superpowers should ask before the normal stack');
   assert.match(content, /do not compute `_SESSIONS`/, 'using-superpowers should exempt the opt-out gate from _SESSIONS handling');
+  assert.match(content, /session-entry bootstrap ownership is runtime-owned/, 'using-superpowers should name runtime ownership for the bootstrap boundary');
+  assert.match(content, /missing or malformed decision state fails closed/, 'using-superpowers should document fail-closed missing or malformed state');
   assert.match(content, /If the bypass gate resolves to `enabled` for this turn, run the normal shared Superpowers stack before any further Superpowers behavior:/, 'using-superpowers should explicitly restore the normal stack after an enabled decision');
   assert.match(content, /If the session decision file exists but contains malformed content:/, 'using-superpowers should document malformed-state handling');
   assert.match(content, /if the user explicitly requests Superpowers or explicitly names a Superpowers skill, rewrite the session decision to `enabled` and continue on the same turn/, 'using-superpowers should treat explicit skill naming as re-entry');
@@ -282,6 +284,29 @@ test('execution workflow skills reference the plan-execution helper contract', (
   const subagentReviewPrompt = readUtf8(path.join(REPO_ROOT, 'skills/subagent-driven-development/code-quality-reviewer-prompt.md'));
   assert.match(subagentReviewPrompt, /APPROVED_PLAN_PATH: \[exact approved plan path for plan-routed final review, otherwise blank\]/);
   assert.match(subagentReviewPrompt, /EXECUTION_EVIDENCE_PATH: \[helper-reported evidence path for plan-routed final review, otherwise blank\]/);
+});
+
+test('repo-writing workflow skills document the protected-branch repo-safety gate consistently', () => {
+  const expectedTargets = {
+    brainstorming: /spec-artifact-write/,
+    'plan-ceo-review': /approval-header-write/,
+    'writing-plans': /plan-artifact-write/,
+    'plan-eng-review': /approval-header-write/,
+    'executing-plans': /execution-task-slice/,
+    'subagent-driven-development': /execution-task-slice/,
+    'document-release': /release-doc-write/,
+    'finishing-a-development-branch': /branch-finish/,
+  };
+
+  for (const [skill, targetPattern] of Object.entries(expectedTargets)) {
+    const content = readUtf8(getSkillPath(skill));
+    assert.match(content, /Protected-Branch Repo-Write Gate/, `${skill} should document the protected-branch gate`);
+    assert.match(content, /superpowers-repo-safety check --intent write/, `${skill} should run the repo-safety check`);
+    assert.match(content, /superpowers-repo-safety approve --stage/, `${skill} should document the approval rescue flow`);
+    assert.match(content, /superpowers:using-git-worktrees/, `${skill} should route blocked writes to using-git-worktrees`);
+    assert.match(content, /branch, the stage, and the blocking `failure_class`/, `${skill} should surface blocked-write diagnostics`);
+    assert.match(content, targetPattern, `${skill} should use the correct write target family`);
+  }
 });
 
 test('workflow handoff skills make terminal ownership explicit', () => {

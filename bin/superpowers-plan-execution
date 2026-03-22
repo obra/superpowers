@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=bin/superpowers-runtime-common.sh
+. "$SCRIPT_DIR/superpowers-runtime-common.sh"
+
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 
 usage() {
@@ -43,23 +47,6 @@ hash_stream() {
     return
   fi
   cksum | awk '{print $1}'
-}
-
-normalize_repo_relative_path() {
-  local input="$1" part normalized=""
-  case "$input" in
-    ''|/*) return 1 ;;
-  esac
-  input="${input//\\//}"
-  while IFS= read -r part; do
-    case "$part" in
-      ''|'.') continue ;;
-      '..') return 1 ;;
-      *) normalized="${normalized:+$normalized/}$part" ;;
-    esac
-  done < <(printf '%s\n' "$input" | tr '/' '\n')
-  [ -n "$normalized" ] || return 1
-  printf '%s\n' "$normalized"
 }
 
 strip_plan_file_reference_suffix() {
@@ -222,14 +209,17 @@ validate_persisted_normalized_text() {
   local overlong_message="${3:-}"
   local max_len="${4:-}"
   local normalized
+  local status
 
-  normalized="$(normalize_whitespace "$raw_value")"
-  if [[ -z "$normalized" ]]; then
-    set_failure "MalformedExecutionState" "$message"
-    return 1
-  fi
-  if [[ -n "$max_len" ]] && (( ${#normalized} > max_len )); then
-    set_failure "MalformedExecutionState" "$overlong_message"
+  if normalized="$(normalize_whitespace_bounded "$raw_value" "$max_len")"; then
+    :
+  else
+    status=$?
+    if [[ "$status" == "2" ]]; then
+      set_failure "MalformedExecutionState" "${overlong_message:-$message}"
+    else
+      set_failure "MalformedExecutionState" "$message"
+    fi
     return 1
   fi
 
@@ -579,10 +569,6 @@ compute_execution_fingerprint() {
   } | hash_stream
 }
 
-normalize_whitespace() {
-  printf '%s' "$1" | tr '\r\n\t' '   ' | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//'
-}
-
 truncate_with_ellipsis() {
   local text="$1"
   local max_len="$2"
@@ -615,14 +601,17 @@ validate_required_normalized_text() {
   local overlong_message="${3:-}"
   local max_len="${4:-}"
   local normalized
+  local status
 
-  normalized="$(normalize_whitespace "$raw_value")"
-  if [[ -z "$normalized" ]]; then
-    set_failure "InvalidCommandInput" "$empty_message"
-    return 1
-  fi
-  if [[ -n "$max_len" ]] && (( ${#normalized} > max_len )); then
-    set_failure "InvalidCommandInput" "$overlong_message"
+  if normalized="$(normalize_whitespace_bounded "$raw_value" "$max_len")"; then
+    :
+  else
+    status=$?
+    if [[ "$status" == "2" ]]; then
+      set_failure "InvalidCommandInput" "${overlong_message:-$empty_message}"
+    else
+      set_failure "InvalidCommandInput" "$empty_message"
+    fi
     return 1
   fi
   REQUIRED_TEXT_NORMALIZED="$normalized"

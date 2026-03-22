@@ -27,9 +27,12 @@ trap 'rm -rf "$STATE_DIR"' EXIT
 export SUPERPOWERS_STATE_DIR="$STATE_DIR"
 
 require_pattern '~/.superpowers/session-flags/using-superpowers/$PPID'
+require_pattern 'superpowers-session-entry resolve --message-file <path>'
 require_pattern 'if the session decision is `enabled`, continue into the normal stack'
 require_pattern 'if the session decision is `bypassed` and the user did not explicitly request Superpowers, stop and bypass the rest of this skill'
 require_pattern 'if the user explicitly requests Superpowers or explicitly names a Superpowers skill, rewrite the session decision to `enabled` and continue on the same turn'
+require_pattern 'session-entry bootstrap ownership is runtime-owned'
+require_pattern 'missing or malformed decision state fails closed'
 require_pattern 'If the session decision file exists but contains malformed content:'
 require_pattern 'do not compute `_SESSIONS`'
 require_pattern 'If the user explicitly requests re-entry but the bootstrap cannot rewrite the session decision to `enabled`:'
@@ -66,7 +69,8 @@ printf 'bypassed\n' > "$decision_path"
 require_pattern 'if the session decision is `bypassed` and the user did not explicitly request Superpowers, stop and bypass the rest of this skill'
 
 printf 'corrupt\nextra\n' > "$decision_path"
-require_pattern 'ignore it for bypass purposes on that turn'
+require_pattern 'ask the opt-out question again before any normal Superpowers work happens'
+require_pattern '`superpowers-session-entry resolve` should surface `outcome` `needs_user_choice` with `failure_class` `MalformedDecisionState`'
 require_pattern 'treat future turns as undecided until a later write succeeds'
 
 echo "using-superpowers bypass regression passed."

@@ -2,6 +2,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=bin/superpowers-runtime-common.sh
+. "$SCRIPT_DIR/superpowers-runtime-common.sh"
 STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
 GIT_REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 REPO_CONTEXT_AVAILABLE=1
@@ -51,7 +53,7 @@ if [ -x "$SCRIPT_DIR/superpowers-slug" ]; then
   fi
 fi
 [ -n "$SLUG" ] || SLUG="$(derive_repo_slug "$REMOTE_URL")"
-[ -n "$SAFE_BRANCH" ] || SAFE_BRANCH="$(printf '%s\n' "$RAW_BRANCH" | sed 's/[^[:alnum:]._-]/-/g')"
+[ -n "$SAFE_BRANCH" ] || SAFE_BRANCH="$(normalize_identifier_token "$RAW_BRANCH")"
 BRANCH="$RAW_BRANCH"
 USER_NAME="$(whoami 2>/dev/null || echo user)"
 MANIFEST_PATH="$STATE_DIR/projects/$SLUG/${USER_NAME}-${SAFE_BRANCH}-workflow-state.json"
@@ -172,23 +174,6 @@ emit_summary() {
     "$spec_path" \
     "$plan_path" \
     "$reason"
-}
-
-normalize_repo_relative_path() {
-  local input="$1" part normalized=""
-  case "$input" in
-    ''|/*) return 1 ;;
-  esac
-  input="${input//\\//}"
-  while IFS= read -r part; do
-    case "$part" in
-      ''|'.') continue ;;
-      '..') return 1 ;;
-      *) normalized="${normalized:+$normalized/}$part" ;;
-    esac
-  done < <(printf '%s\n' "$input" | tr '/' '\n')
-  [ -n "$normalized" ] || return 1
-  printf '%s\n' "$normalized"
 }
 
 repo_path_exists() {

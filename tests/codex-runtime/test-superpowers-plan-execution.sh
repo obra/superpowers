@@ -1231,6 +1231,29 @@ run_complete_rejects_stale_fingerprint() {
   run_command_fails "$repo_dir" StaleMutation complete --plan "$PLAN_REL" --task 1 --step 1 --source superpowers:executing-plans --claim "Prepared the workspace" --manual-verify-summary "Verified by inspection" --expect-execution-fingerprint "$(json_value "$before" "execution_fingerprint")" >/dev/null
 }
 
+run_complete_applies_whitespace_normalization() {
+  local repo_dir
+  local before
+  local active
+  local evidence_rel
+  local evidence_text
+
+  repo_dir="$(create_base_repo whitespace-normalization)"
+  write_file "$repo_dir/docs/output.md" <<'EOF'
+normalized output
+EOF
+
+  before="$(run_json_command "$repo_dir" status --plan "$PLAN_REL")"
+  active="$(run_json_command "$repo_dir" begin --plan "$PLAN_REL" --task 1 --step 1 --execution-mode superpowers:executing-plans --expect-execution-fingerprint "$(json_value "$before" "execution_fingerprint")")"
+  run_json_command "$repo_dir" complete --plan "$PLAN_REL" --task 1 --step 1 --source superpowers:executing-plans --claim $'  Prepared\tworkspace \n thoroughly  ' --file docs/output.md --manual-verify-summary $'  Verified\tby \n inspection  ' --expect-execution-fingerprint "$(json_value "$active" "execution_fingerprint")" >/dev/null
+
+  evidence_rel="$(evidence_rel_path "$PLAN_REL" 1)"
+  evidence_text="$(cat "$repo_dir/$evidence_rel")"
+  assert_contains "$evidence_text" "**Claim:** Prepared workspace thoroughly" "whitespace normalization claim"
+  assert_contains "$evidence_text" $'**Verification:**\n- Manual inspection only: Verified by inspection\n' "whitespace normalization verification"
+  assert_not_contains "$evidence_text" $'\t' "whitespace normalization evidence tabs"
+}
+
 run_complete_sorts_and_deduplicates_file_entries() {
   local repo_dir
   local before
@@ -1634,6 +1657,7 @@ run_complete_rejects_blank_claim_without_mutating_state
 run_complete_rejects_blank_manual_summary_without_mutating_state
 run_complete_rejects_mixed_verification_inputs
 run_complete_rejects_stale_fingerprint
+run_complete_applies_whitespace_normalization
 run_complete_sorts_and_deduplicates_file_entries
 run_complete_accepts_deleted_paths_from_current_change_set
 run_complete_canonicalizes_rename_backed_paths

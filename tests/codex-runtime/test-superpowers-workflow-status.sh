@@ -34,6 +34,7 @@ USER_NAME="$(whoami 2>/dev/null || echo user)"
 # malformed spec/plan headers surface explicit malformed reasons
 # cross-slug recovery respects the bounded 12-candidate lookup budget
 # read-only resolve exposes side-effect-free parity for the public workflow CLI
+# normalized repo-relative paths are canonicalized before manifest persistence
 
 require_helper() {
   if [[ ! -x "$STATUS_BIN" ]]; then
@@ -561,6 +562,24 @@ run_sync_preserves_manifest_missing_expectation() {
   assert_contains "$manifest_json" "$missing_path" "manifest-backed sync manifest preserves missing path"
 }
 
+run_expect_normalizes_repo_relative_paths() {
+  local repo="$REPO_DIR/normalized-repo-relative-paths"
+  local raw_spec_path="./docs//superpowers/specs/./2026-03-17-normalized-spec.md"
+  local canonical_spec_path="docs/superpowers/specs/2026-03-17-normalized-spec.md"
+  local output
+  local manifest_path
+  local manifest_json
+
+  init_repo "$repo"
+  output="$(run_command_succeeds "$repo" "expect normalized repo-relative paths" expect --artifact spec --path "$raw_spec_path")"
+  assert_contains "$output" "\"spec_path\":\"$canonical_spec_path\"" "normalized repo-relative paths output"
+
+  manifest_path="$(manifest_path_for_branch "$repo")"
+  manifest_json="$(cat "$manifest_path")"
+  assert_contains "$manifest_json" "\"expected_spec_path\":\"$canonical_spec_path\"" "normalized repo-relative paths manifest"
+  assert_not_contains "$manifest_json" "$raw_spec_path" "normalized repo-relative paths raw manifest value"
+}
+
 run_sync_missing_plan_preserves_stage() {
   local repo_no_spec="$REPO_DIR/sync-missing-plan-no-spec"
   local repo_draft_spec="$REPO_DIR/sync-missing-plan-draft-spec"
@@ -1055,6 +1074,7 @@ run_single_retry_conflict
 run_expect_sync_retry_conflict
 run_sync_missing_artifact_behavior
 run_sync_preserves_manifest_missing_expectation
+run_expect_normalizes_repo_relative_paths
 run_sync_missing_plan_preserves_stage
 run_out_of_repo_expect
 run_branch_isolated_manifests

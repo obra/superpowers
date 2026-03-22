@@ -67,6 +67,8 @@ FILES=(
   "bin/superpowers-migrate-install"
   "bin/superpowers-migrate-install.ps1"
   "bin/superpowers-pwsh-common.ps1"
+  "bin/superpowers-session-entry"
+  "bin/superpowers-session-entry.ps1"
   "bin/superpowers-plan-execution"
   "bin/superpowers-plan-execution.ps1"
   "bin/superpowers-update-check"
@@ -84,6 +86,8 @@ FILES=(
   "skills/plan-eng-review/accelerated-reviewer-prompt.md"
   "superpowers-upgrade/SKILL.md"
   "tests/codex-runtime/test-powershell-wrapper-bash-resolution.sh"
+  "tests/codex-runtime/test-superpowers-session-entry.sh"
+  "tests/codex-runtime/test-superpowers-session-entry-gate.sh"
   "tests/codex-runtime/test-superpowers-migrate-install.sh"
   "tests/codex-runtime/test-superpowers-plan-execution.sh"
   "tests/codex-runtime/test-superpowers-workflow.sh"
@@ -238,6 +242,23 @@ require_pattern skills/plan-eng-review/accelerated-reviewer-prompt.md "Return a 
 require_pattern skills/plan-eng-review/accelerated-reviewer-prompt.md "Do not write files or approve execution."
 require_pattern skills/plan-eng-review/accelerated-reviewer-prompt.md "Escalate any high-judgment issue individually."
 require_pattern docs/README.codex.md 'Accelerated review is an opt-in branch inside `plan-ceo-review` and `plan-eng-review`, not a separate workflow stage.'
+require_pattern README.md 'superpowers-session-entry'
+require_pattern README.md 'superpowers-repo-safety'
+require_pattern README.md 'protected branches'
+require_pattern README.md 'bash tests/codex-runtime/test-superpowers-session-entry.sh'
+require_pattern docs/README.codex.md 'superpowers-session-entry'
+require_pattern docs/README.codex.md 'superpowers-repo-safety'
+require_pattern docs/README.codex.md 'protected branches'
+require_pattern docs/README.copilot.md 'superpowers-session-entry'
+require_pattern docs/README.copilot.md 'superpowers-repo-safety'
+require_pattern docs/README.copilot.md 'protected branches'
+require_pattern docs/testing.md 'bash tests/codex-runtime/test-superpowers-session-entry-gate.sh'
+require_pattern docs/testing.md 'bash tests/codex-runtime/test-superpowers-session-entry.sh'
+require_pattern docs/testing.md 'bash tests/codex-runtime/test-superpowers-repo-safety.sh'
+require_pattern docs/testing.md 'npm ci --prefix tests/brainstorm-server'
+require_pattern docs/testing.md 'protected-branch repo-write guarantees'
+require_pattern docs/testing.md 'The routing gate above is complementary coverage'
+require_pattern docs/testing.md 'decision resolution, explicit re-entry detection, clause/negation handling, deterministic decision paths, and invalid command input'
 require_pattern docs/README.codex.md "Only the user can initiate accelerated review, and section approval plus final approval remain human-owned even when the review uses reviewer subagents and persisted section packets."
 require_pattern docs/README.codex.md 'requires the `document-release` handoff before workflow-routed branch completion'
 require_pattern docs/README.codex.md 'conditional `qa-only` handoff, requires it when browser interaction or test-plan context warrants it'
@@ -845,8 +866,8 @@ if ! rg -n -F 'bash tests/codex-runtime/test-using-superpowers-bypass.sh' docs/t
   exit 1
 fi
 
-if ! rg -n -F 'pre-routing session bypass wording and decision-path contract' docs/testing.md >/dev/null; then
-  echo "docs/testing.md should describe test-using-superpowers-bypass.sh as a wording and decision-path contract, not a full behavior harness."
+if ! rg -n -F 'deterministic wording gate for the pre-routing session-entry contract and decision-path surface' docs/testing.md >/dev/null; then
+  echo "docs/testing.md should describe test-using-superpowers-bypass.sh as the deterministic wording gate for the pre-routing session-entry contract and decision-path surface."
   exit 1
 fi
 
@@ -905,8 +926,8 @@ if ! rg -n -F 'the `using-superpowers` routing gate, which remains a required ch
   exit 1
 fi
 
-if ! rg -n -F 'BYPASS_GATE["using-superpowers bypass bootstrap' README.md >/dev/null; then
-  echo "README.md should show the using-superpowers bypass bootstrap before the normal Superpowers stack."
+if ! rg -n -F 'BYPASS_GATE["superpowers-session-entry runtime bootstrap' README.md >/dev/null; then
+  echo "README.md should show the runtime-owned superpowers-session-entry bootstrap before the normal Superpowers stack."
   exit 1
 fi
 

@@ -100,4 +100,17 @@ if [[ "$detached_output" == *"SAFE_BRANCH"* ]]; then
   exit 1
 fi
 
+branch_safe_repo="$tmp_root/branch-safe-repo"
+make_repo "$branch_safe_repo"
+git -C "$branch_safe_repo" checkout -b 'release.v1_2-3/needs-cleanup@now' >/dev/null 2>&1
+branch_safe_output="$(run_helper "$branch_safe_repo")"
+unset SLUG BRANCH
+eval "$branch_safe_output"
+assert_equal "$BRANCH" "release.v1_2-3-needs-cleanup-now" "branch-safe identifier"
+if [[ "$branch_safe_output" == *"SAFE_BRANCH"* ]]; then
+  echo "Helper should not emit SAFE_BRANCH"
+  printf '%s\n' "$branch_safe_output"
+  exit 1
+fi
+
 echo "superpowers-slug helper contract passed."

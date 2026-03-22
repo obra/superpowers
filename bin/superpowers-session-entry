@@ -1,0 +1,360 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=bin/superpowers-runtime-common.sh
+. "$SCRIPT_DIR/superpowers-runtime-common.sh"
+
+STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
+MAX_MESSAGE_BYTES="${SUPERPOWERS_SESSION_ENTRY_MAX_MESSAGE_BYTES:-65536}"
+
+json_escape() {
+  local value="${1:-}"
+  value="${value//\\/\\\\}"
+  value="${value//\"/\\\"}"
+  value="${value//$'\n'/\\n}"
+  value="${value//$'\r'/\\r}"
+  printf '%s' "$value"
+}
+
+emit_result() {
+  local outcome="$1"
+  local decision_source="$2"
+  local session_key="$3"
+  local decision_path="$4"
+  local policy_source="$5"
+  local persisted="$6"
+  local failure_class="${7:-}"
+  local reason="${8:-}"
+  local prompt_json="${9:-}"
+
+  printf '{'
+  printf '"outcome":"%s",' "$(json_escape "$outcome")"
+  printf '"decision_source":"%s",' "$(json_escape "$decision_source")"
+  printf '"session_key":"%s",' "$(json_escape "$session_key")"
+  printf '"decision_path":"%s",' "$(json_escape "$decision_path")"
+  printf '"policy_source":"%s",' "$(json_escape "$policy_source")"
+  printf '"persisted":%s,' "$persisted"
+  printf '"failure_class":"%s",' "$(json_escape "$failure_class")"
+  printf '"reason":"%s"' "$(json_escape "$reason")"
+  if [[ -n "$prompt_json" ]]; then
+    printf ',%s' "$prompt_json"
+  fi
+  printf '}\n'
+}
+
+emit_failure() {
+  local failure_class="$1"
+  local reason="$2"
+  local session_key="${3:-}"
+  local decision_path="${4:-}"
+
+  emit_result \
+    "runtime_failure" \
+    "" \
+    "$session_key" \
+    "$decision_path" \
+    "default" \
+    "false" \
+    "$failure_class" \
+    "$reason"
+}
+
+normalize_session_key_or_fail() {
+  local raw_key="$1"
+  local normalized
+
+  normalized="$(normalize_identifier_token "$raw_key")"
+  if [[ -z "$normalized" ]]; then
+    emit_failure "InvalidCommandInput" "Session key may not be blank after normalization."
+    return 1
+  fi
+  printf '%s\n' "$normalized"
+}
+
+derive_session_key_or_fail() {
+  local raw_key="${1:-}"
+
+  if [[ -n "$raw_key" ]]; then
+    normalize_session_key_or_fail "$raw_key"
+    return
+  fi
+  if [[ -n "${SUPERPOWERS_SESSION_KEY:-}" ]]; then
+    normalize_session_key_or_fail "$SUPERPOWERS_SESSION_KEY"
+    return
+  fi
+
+  normalize_session_key_or_fail "${PPID:-current}"
+}
+
+decision_path_for_key() {
+  local session_key="$1"
+  printf '%s\n' "$STATE_DIR/session-flags/using-superpowers/$session_key"
+}
+
+load_message_text_or_fail() {
+  local message_file="$1"
+  local size
+
+  if [[ -z "$message_file" ]]; then
+    emit_failure "InvalidCommandInput" "resolve requires --message-file."
+    return 1
+  fi
+  if [[ ! -f "$message_file" || ! -r "$message_file" ]]; then
+    emit_failure "InvalidCommandInput" "--message-file must point to a readable regular file."
+    return 1
+  fi
+
+  size="$(wc -c < "$message_file" 2>/dev/null | tr -d ' ')"
+  if [[ -z "$size" || ! "$size" =~ ^[0-9]+$ ]]; then
+    emit_failure "InvalidCommandInput" "Could not determine message-file size."
+    return 1
+  fi
+  if (( size > MAX_MESSAGE_BYTES )); then
+    emit_failure "InvalidCommandInput" "Message file exceeds the supported maximum size."
+    return 1
+  fi
+
+  cat "$message_file"
+}
+
+build_prompt_json_or_fail() {
+  if [[ "${SUPERPOWERS_SESSION_ENTRY_TEST_FAILPOINT:-}" == "prompt_payload_failure" ]]; then
+    emit_failure "PromptPayloadBuildFailed" "Injected prompt payload failure."
+    return 1
+  fi
+
+  printf '"prompt":{"question":"%s","recommended_option":"A","options":[{"decision":"enabled","label":"Use Superpowers"},{"decision":"bypassed","label":"Bypass Superpowers"}]}' \
+    "$(json_escape "Use Superpowers for this session?")"
+}
+
+message_requests_reentry() {
+  local raw_text="$1"
+  local lowered clause normalized skill_doc skill_name token
+  local prev1="" prev2="" saw_negator=""
+
+  token_is_negator() {
+    case "${1:-}" in
+      dont|never|no|not|stop|stopping|without|avoid|avoiding|skip|skipping|except|excluding) return 0 ;;
+      *) return 1 ;;
+    esac
+  }
+
+  token_has_affirmative_context() {
+    case "${1:-}" in
+      use|using|run|running|start|starting|invoke|invoking|do|doing) return 0 ;;
+      *) return 1 ;;
+    esac
+  }
+
+  lowered="$(printf '%s' "$raw_text" | tr '[:upper:]' '[:lower:]' | tr -d "'’")"
+
+  shopt -s nullglob
+  while IFS= read -r clause; do
+    normalized="$(normalize_whitespace "$clause")"
+    [[ -n "$normalized" ]] || continue
+
+    for skill_doc in "$SCRIPT_DIR"/../skills/*/SKILL.md; do
+      skill_name="$(basename "$(dirname "$skill_doc")")"
+      if [[ "$normalized" == "$skill_name" || "$normalized" == "\$$skill_name" || "$normalized" == "superpowers:$skill_name" ]]; then
+        shopt -u nullglob
+        return 0
+      fi
+    done
+
+    prev1=""
+    prev2=""
+    saw_negator="false"
+    while IFS= read -r token; do
+      if token_is_negator "$token"; then
+        saw_negator="true"
+      elif [[ "$token" == "superpowers" ]]; then
+        if [[ "$saw_negator" != "true" ]] &&
+           ( token_has_affirmative_context "$prev1" || token_has_affirmative_context "$prev2" ); then
+          shopt -u nullglob
+          return 0
+        fi
+      else
+        for skill_doc in "$SCRIPT_DIR"/../skills/*/SKILL.md; do
+          skill_name="$(basename "$(dirname "$skill_doc")")"
+          case "$token" in
+            "$skill_name"|"\$$skill_name"|"superpowers:$skill_name")
+              if [[ "$saw_negator" != "true" ]] &&
+                 ( token_has_affirmative_context "$prev1" || token_has_affirmative_context "$prev2" ); then
+                shopt -u nullglob
+                return 0
+              fi
+              ;;
+          esac
+        done
+      fi
+
+      prev2="$prev1"
+      prev1="$token"
+    done < <(printf '%s\n' "$normalized" | tr -cs '[:alnum:]$:_-' '\n')
+  done < <(printf '%s\n' "$lowered" | tr ',.!?;\n' '\n')
+
+  shopt -u nullglob
+  return 1
+}
+
+read_decision_state() {
+  local decision_path="$1"
+  local contents
+
+  if [[ ! -e "$decision_path" ]]; then
+    printf 'missing\n'
+    return 0
+  fi
+  if [[ ! -f "$decision_path" || ! -r "$decision_path" ]]; then
+    return 2
+  fi
+  if [[ "${SUPERPOWERS_SESSION_ENTRY_TEST_FAILPOINT:-}" == "decision_read_failure" ]]; then
+    return 2
+  fi
+  if ! contents="$(cat "$decision_path" 2>/dev/null)"; then
+    return 2
+  fi
+
+  case "$contents" in
+    enabled) printf 'enabled\n' ;;
+    bypassed) printf 'bypassed\n' ;;
+    *) printf 'malformed\n' ;;
+  esac
+}
+
+write_decision_value() {
+  local decision_path="$1"
+  local decision="$2"
+  local context="$3"
+  local tmp
+
+  case "${SUPERPOWERS_SESSION_ENTRY_TEST_FAILPOINT:-}" in
+    reentry_write_failure)
+      [[ "$context" == "reentry" ]] && return 1
+      ;;
+    record_write_failure)
+      [[ "$context" == "record" ]] && return 1
+      ;;
+  esac
+
+  mkdir -p "$(dirname "$decision_path")" || return 1
+  tmp="$(mktemp "${decision_path}.tmp.XXXXXX")" || return 1
+  if ! printf '%s\n' "$decision" > "$tmp"; then
+    rm -f "$tmp"
+    return 1
+  fi
+  if ! mv "$tmp" "$decision_path"; then
+    rm -f "$tmp"
+    return 1
+  fi
+
+  return 0
+}
+
+cmd_resolve() {
+  local message_file=""
+  local raw_session_key=""
+  local session_key=""
+  local decision_path=""
+  local message_text=""
+  local decision_state=""
+  local prompt_json=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --message-file) message_file="${2:-}"; shift 2 ;;
+      --session-key) raw_session_key="${2:-}"; shift 2 ;;
+      *) emit_failure "InvalidCommandInput" "Unknown resolve argument '$1'."; return 1 ;;
+    esac
+  done
+
+  session_key="$(derive_session_key_or_fail "$raw_session_key")" || return 1
+  decision_path="$(decision_path_for_key "$session_key")"
+  message_text="$(load_message_text_or_fail "$message_file")" || return 1
+
+  if [[ "${SUPERPOWERS_SESSION_ENTRY_TEST_FAILPOINT:-}" == "instruction_parse_failure" ]]; then
+    emit_failure "InstructionParseFailed" "Injected instruction parse failure." "$session_key" "$decision_path"
+    return 1
+  fi
+
+  if ! decision_state="$(read_decision_state "$decision_path")"; then
+    emit_failure "DecisionReadFailed" "Could not read the persisted session decision." "$session_key" "$decision_path"
+    return 1
+  fi
+
+  case "$decision_state" in
+    enabled)
+      emit_result "enabled" "existing_enabled" "$session_key" "$decision_path" "default" "true" "" "existing_enabled"
+      return 0
+      ;;
+    bypassed)
+      if message_requests_reentry "$message_text"; then
+        if write_decision_value "$decision_path" "enabled" "reentry"; then
+          emit_result "enabled" "explicit_reentry" "$session_key" "$decision_path" "default" "true" "" "explicit_reentry"
+        else
+          emit_result "enabled" "explicit_reentry_unpersisted" "$session_key" "$decision_path" "default" "false" "DecisionWriteFailed" "explicit_reentry_unpersisted"
+        fi
+        return 0
+      fi
+      emit_result "bypassed" "existing_bypassed" "$session_key" "$decision_path" "default" "true" "" "existing_bypassed"
+      return 0
+      ;;
+    missing)
+      prompt_json="$(build_prompt_json_or_fail)" || return 1
+      emit_result "needs_user_choice" "missing" "$session_key" "$decision_path" "default" "false" "" "missing" "$prompt_json"
+      return 0
+      ;;
+    malformed)
+      prompt_json="$(build_prompt_json_or_fail)" || return 1
+      emit_result "needs_user_choice" "malformed" "$session_key" "$decision_path" "default" "false" "MalformedDecisionState" "malformed" "$prompt_json"
+      return 0
+      ;;
+    *)
+      emit_failure "DecisionReadFailed" "Unexpected decision state resolution." "$session_key" "$decision_path"
+      return 1
+      ;;
+  esac
+}
+
+cmd_record() {
+  local decision=""
+  local raw_session_key=""
+  local session_key=""
+  local decision_path=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --decision) decision="${2:-}"; shift 2 ;;
+      --session-key) raw_session_key="${2:-}"; shift 2 ;;
+      *) emit_failure "InvalidCommandInput" "Unknown record argument '$1'."; return 1 ;;
+    esac
+  done
+
+  case "$decision" in
+    enabled|bypassed) ;;
+    *)
+      emit_failure "InvalidCommandInput" "record requires --decision enabled|bypassed."
+      return 1
+      ;;
+  esac
+
+  session_key="$(derive_session_key_or_fail "$raw_session_key")" || return 1
+  decision_path="$(decision_path_for_key "$session_key")"
+
+  if ! write_decision_value "$decision_path" "$decision" "record"; then
+    emit_failure "DecisionWriteFailed" "Could not persist the explicit session decision." "$session_key" "$decision_path"
+    return 1
+  fi
+
+  emit_result "$decision" "existing_${decision}" "$session_key" "$decision_path" "default" "true" "" "recorded_${decision}"
+}
+
+case "${1:-}" in
+  resolve) shift; cmd_resolve "$@" ;;
+  record) shift; cmd_record "$@" ;;
+  *)
+    emit_failure "InvalidCommandInput" "Expected resolve or record command."
+    exit 1
+    ;;
+esac

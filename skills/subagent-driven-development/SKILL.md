@@ -204,11 +204,12 @@ Before dispatching any implementation subagent:
    - to `superpowers:plan-eng-review` if the plan is draft or malformed
    - to `superpowers:writing-plans` if the source spec path or revision is stale
 5. Verify workspace readiness before dispatching subagents:
-   - stop on `main` or `master` unless the user explicitly approves in-place execution
+   - stop on a default protected branch (`main`, `master`, `dev`, or `develop`) unless the user explicitly approves in-place execution
    - stop on detached HEAD
    - stop if merge conflicts, unresolved index entries, rebase, or cherry-pick state is present
    - if the working tree is dirty, stop and ask the user to confirm the workspace is intentionally prepared
 6. Do not auto-clean the workspace and do not auto-create a worktree.
+7. The later repo-safety checks still govern any additional protected branches declared through repo or user instructions.
 
 ## Helper-Owned Execution State
 
@@ -218,6 +219,31 @@ Before dispatching any implementation subagent:
 - calls `note` when work is interrupted or blocked
 - On the first `begin` for a revision whose plan still says `**Execution Mode:** none`, initialize execution with `--execution-mode superpowers:subagent-driven-development`
 - The approved plan checklist is the execution progress record; do not create or maintain a separate authoritative task tracker.
+
+## Protected-Branch Repo-Write Gate
+
+The main agent owns the protected-branch gate for every repo-writing task slice, even when an implementer subagent does the coding.
+
+Before dispatching or applying any repo-writing task slice, run the shared repo-safety preflight for that exact scope:
+
+```bash
+superpowers-repo-safety check --intent write --stage superpowers:subagent-driven-development --task-id <current-task-slice> --path <repo-relative-path> --write-target execution-task-slice
+```
+
+- Use one stable task id per repo-writing task slice and pass the concrete repo-relative paths when they are known.
+- If the helper returns `allowed`, continue with that task slice.
+- If it returns `blocked`, name the branch, the stage, and the blocking `failure_class`, then route to either a feature branch / `superpowers:using-git-worktrees` or explicit user approval for this exact task slice.
+- If the user explicitly approves the protected-branch write, approve the full task-slice scope you intend to use on that branch, including the repo-relative paths and any follow-on git targets that are part of the same slice:
+
+```bash
+superpowers-repo-safety approve --stage superpowers:subagent-driven-development --task-id <current-task-slice> --reason "<explicit user approval>" --path <repo-relative-path> --write-target execution-task-slice [--write-target git-commit] [--write-target git-merge] [--write-target git-push]
+superpowers-repo-safety check --intent write --stage superpowers:subagent-driven-development --task-id <current-task-slice> --path <repo-relative-path> --write-target execution-task-slice [--write-target git-commit] [--write-target git-merge] [--write-target git-push]
+```
+
+- Continue only if the re-check returns `allowed`.
+- Before a follow-on `git commit`, `git merge`, or `git push` on the same protected-branch task slice, re-run the gate with the same task id, the same repo-relative paths, and the same approved write-target set.
+- If the protected-branch task scope changes, run a new `approve` plus full-scope `check` before continuing.
+- Do not treat a worktree on `main`, `master`, `dev`, or `develop` as safe by itself; the branch must be non-protected or explicitly approved.
 
 ## Model Selection
 
@@ -378,7 +404,7 @@ Code reviewer: ✅ Approved
 ## Red Flags
 
 **Never:**
-- Start implementation on main/master branch without explicit user consent
+- Start implementation on a default protected branch (`main`, `master`, `dev`, or `develop`) without explicit user consent
 - Skip reviews (spec compliance OR code quality)
 - Proceed with unfixed issues
 - Dispatch multiple implementation subagents in parallel (conflicts)

@@ -27,6 +27,24 @@ description: Use when a written Superpowers design or architecture spec needs CE
 "$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status" sync --artifact spec --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md
 ```
 
+**Protected-Branch Repo-Write Gate:**
+
+- Before editing the spec body or changing approval headers on disk, run the shared repo-safety preflight for the exact review-write scope:
+
+```bash
+superpowers-repo-safety check --intent write --stage superpowers:plan-ceo-review --task-id <current-spec-review> --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target repo-file-write
+```
+
+- When the mutation is specifically an approval-header edit, use the same command shape with `--write-target approval-header-write`.
+- If the helper returns `blocked`, name the branch, the stage, and the blocking `failure_class`, then route to either a feature branch / `superpowers:using-git-worktrees` or explicit user approval for this exact review scope.
+- If the user explicitly approves the protected-branch review write, run:
+
+```bash
+superpowers-repo-safety approve --stage superpowers:plan-ceo-review --task-id <current-spec-review> --reason "<explicit user approval>" --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target repo-file-write
+superpowers-repo-safety check --intent write --stage superpowers:plan-ceo-review --task-id <current-spec-review> --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target repo-file-write
+```
+
+- Repeat the same approve -> re-check pattern for `approval-header-write` before flipping `**Workflow State:**` or any other approval header on a protected branch.
 - Keep the spec in `Draft` until the review is fully resolved.
 - When approving the written spec, set `**Workflow State:** CEO Approved` and `**Last Reviewed By:** plan-ceo-review`.
 - `**Spec Revision:**` starts at `1`. If this review materially changes a previously approved spec, increment the revision and reset the spec to `Draft` until it is re-approved.
