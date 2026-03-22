@@ -112,6 +112,15 @@ case "${OSTYPE:-}" in
   msys*|cygwin*|mingw*) OWNER_PID="" ;;
 esac
 
+# On WSL, the resolved OWNER_PID is typically the Claude Code harness process.
+# When the harness spawns a bash tool call, the grandparent PID may refer to a
+# short-lived process that exits before the 60s lifecycle check runs, causing
+# the server to self-terminate with "owner process exited". The 30-minute idle
+# timeout is sufficient to prevent orphans.
+if grep -qsi "microsoft\|wsl" /proc/version 2>/dev/null; then
+  OWNER_PID=""
+fi
+
 # Foreground mode for environments that reap detached/background processes.
 if [[ "$FOREGROUND" == "true" ]]; then
   echo "$$" > "$PID_FILE"
