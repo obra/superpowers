@@ -18,6 +18,7 @@ bash tests/codex-runtime/test-runtime-instructions.sh
 bash tests/codex-runtime/test-using-superpowers-bypass.sh
 bash tests/codex-runtime/test-superpowers-session-entry.sh
 bash tests/codex-runtime/test-superpowers-session-entry-gate.sh
+bash tests/codex-runtime/test-superpowers-plan-contract.sh
 bash tests/codex-runtime/test-superpowers-repo-safety.sh
 bash tests/codex-runtime/test-workflow-enhancements.sh
 bash tests/codex-runtime/test-workflow-sequencing.sh
@@ -51,6 +52,7 @@ For prompt-surface or workflow-doc changes, keep validation deterministic-first:
 - Generated `skills/*/SKILL.md` freshness plus runtime-facing install and workflow contract checks
 - `using-superpowers` runtime-owned session-entry wording, decision-file contract, malformed-state fail-closed handling, explicit re-entry semantics, and the deterministic first-turn supported-entry harness gate
 - the dedicated `superpowers-session-entry` helper contract for decision resolution, re-entry, deterministic decision paths, and command-input failure handling
+- the dedicated `superpowers-plan-contract` helper contract for Requirement Index parsing, coverage-matrix linting, fail-closed ambiguity detection, task-packet generation, and bounded packet-cache behavior
 - Protected-branch repo-write guarantees for the repo-safety helper, plus the shared workflow-stage adoption of that gate
 - Generated reviewer-agent artifact freshness for Codex and GitHub Copilot
 - Runtime helper contracts for config, plan execution, update checks, migration, and upgrade flow
@@ -70,6 +72,7 @@ For prompt-surface or workflow-doc changes, keep validation deterministic-first:
 ## When To Run What
 
 - Editing any `SKILL.md.tmpl`, runtime helper, or install/readme doc: run `node --test tests/codex-runtime/*.test.mjs` plus the full `tests/codex-runtime/` shell suite
+- Editing task-fidelity helpers, packet-backed execution/review prompts, or plan traceability docs: include `bash tests/codex-runtime/test-superpowers-plan-contract.sh`, `bash tests/codex-runtime/test-superpowers-plan-execution.sh`, `bash tests/codex-runtime/test-workflow-sequencing.sh`, and `bash tests/codex-runtime/test-workflow-enhancements.sh`
 - Editing `skills/using-superpowers/*`, `scripts/gen-skill-docs.mjs`, or entry-routing docs: include `bash tests/codex-runtime/test-using-superpowers-bypass.sh`, `bash tests/codex-runtime/test-superpowers-session-entry.sh`, `bash tests/codex-runtime/test-superpowers-session-entry-gate.sh`, and review the routing-gate notes below
 - Editing protected-branch repo-write guarantees, repo-writing workflow skill docs, or the repo-safety helper: include `bash tests/codex-runtime/test-superpowers-repo-safety.sh`, `bash tests/codex-runtime/test-workflow-enhancements.sh`, and `bash tests/codex-runtime/test-workflow-sequencing.sh`
 - Editing brainstorming server files under `skills/brainstorming/scripts/`: run `bash tests/brainstorm-server/test-launch-wrappers.sh` and `node --test tests/brainstorm-server/server.test.js tests/brainstorm-server/ws-protocol.test.js`
@@ -107,12 +110,13 @@ That gate uses fresh runner and judge subagents against the checked-in scenario 
 - `test-using-superpowers-bypass.sh` covers the pre-routing `using-superpowers` session-entry wording, including the decision path, malformed-state fail-closed wording, and explicit re-entry semantics
 - `test-superpowers-session-entry.sh` covers the helper-level session-entry contract, including decision resolution, explicit re-entry detection, clause/negation handling, deterministic decision paths, and invalid command input
 - `test-superpowers-session-entry-gate.sh` covers the deterministic first-turn supported-entry harness contract, including fresh-session and malformed-state `needs_user_choice` behavior before the harness allows normal-stack handoff
+- `test-superpowers-plan-contract.sh` covers Requirement Index and Requirement Coverage Matrix parsing, helper fail-closed lint output, task-packet generation, stale-packet regeneration, and bounded task-packet cache retention
 - `test-superpowers-repo-safety.sh` covers the protected-branch repo-write guarantees in the runtime helper, including default protected branches, task-scoped approvals, approval-fingerprint mismatches, and read-only intent behavior
-- `test-workflow-enhancements.sh` covers the imported review, QA, document-release, and branch-completion workflow contracts
-- `test-workflow-sequencing.sh` covers artifact-state routing, fixture-backed stage gates, the protected-branch repo-write guarantees at repo-writing workflow stages, and the optional worktree policy using checked-in workflow fixtures in `tests/codex-runtime/fixtures/workflow-artifacts/`
+- `test-workflow-enhancements.sh` covers the imported review, QA, document-release, and branch-completion workflow contracts, including the broader packet-backed review wording surface
+- `test-workflow-sequencing.sh` covers artifact-state routing, fixture-backed stage gates, plan traceability contract wording, the protected-branch repo-write guarantees at repo-writing workflow stages, and the optional worktree policy using checked-in workflow fixtures in `tests/codex-runtime/fixtures/workflow-artifacts/`
 - `tests/codex-runtime/*.test.mjs` covers the deterministic generated-skill and fixture assertions that do not need shell execution
 - `test-powershell-wrapper-bash-resolution.sh` covers shared PowerShell wrapper bash selection and override behavior
-- `test-superpowers-plan-execution.sh` covers the execution helper state machine, same-revision stale source-spec path rejection, evidence canonicalization, rollback behavior, and malformed evidence rejection
+- `test-superpowers-plan-execution.sh` covers the execution helper state machine, same-revision stale source-spec path rejection, canonical task-structure enforcement, evidence canonicalization, rollback behavior, and malformed evidence rejection
 - `test-superpowers-workflow.sh` covers the supported public workflow inspection CLI, including read-only state rendering, missing-expected-path handling, manifest diagnostics, and non-mutation guarantees
 - `test-superpowers-workflow-status.sh` covers the internal workflow-state helper, including bootstrap, same-revision stale source-spec path detection, summary-mode parity, repo-identity recovery, malformed-artifact diagnostics, branch isolation, fallback refresh behavior, and conservative write-conflict handling
 - `test-superpowers-update-check.sh` covers semver comparison, snooze handling, and just-upgraded markers

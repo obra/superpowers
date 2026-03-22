@@ -112,6 +112,12 @@ require_pattern skills/writing-plans/SKILL.md "runs `sync --artifact plan`"
 require_pattern skills/writing-plans/SKILL.md '"$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status" sync --artifact plan --path'
 require_pattern skills/writing-plans/SKILL.md "**Plan Revision:** 1"
 require_pattern skills/writing-plans/SKILL.md "**Execution Mode:** none"
+require_pattern skills/writing-plans/SKILL.md "Requirement Coverage Matrix"
+require_pattern skills/writing-plans/SKILL.md "**Spec Coverage:**"
+require_pattern skills/writing-plans/SKILL.md "**Task Outcome:**"
+require_pattern skills/writing-plans/SKILL.md "**Plan Constraints:**"
+require_pattern skills/writing-plans/SKILL.md "**Open Questions:** none"
+require_pattern skills/writing-plans/SKILL.md '"$_SUPERPOWERS_ROOT/bin/superpowers-plan-contract" lint \'
 require_pattern skills/writing-plans/SKILL.md "preconditions"
 require_pattern skills/writing-plans/SKILL.md "validation strategy"
 require_pattern skills/writing-plans/SKILL.md "evidence expectations"
@@ -131,6 +137,13 @@ require_pattern skills/plan-eng-review/SKILL.md 'If the plan'"'"'s `**Source Spe
 require_pattern skills/plan-eng-review/SKILL.md 'Only write `**Workflow State:** Engineering Approved` as the last step of a successful review'
 require_pattern skills/plan-eng-review/SKILL.md "The handoff must include the exact approved plan path"
 require_pattern skills/plan-eng-review/SKILL.md 'superpowers-plan-execution recommend --plan <approved-plan-path>'
+require_pattern skills/plan-eng-review/SKILL.md '"$_SUPERPOWERS_ROOT/bin/superpowers-plan-contract" lint \'
+require_pattern skills/plan-eng-review/SKILL.md "Requirement Index"
+require_pattern skills/plan-eng-review/SKILL.md "Requirement Coverage Matrix"
+require_pattern skills/plan-eng-review/SKILL.md 'tasks with `Open Questions` not equal to `none`'
+require_pattern skills/plan-eng-review/SKILL.md 'invalid `Files:` block structure'
+require_pattern skills/plan-eng-review/SKILL.md 'Does the `Requirement Coverage Matrix` cover every approved requirement without orphaned or over-broad tasks?'
+require_pattern skills/plan-eng-review/SKILL.md 'Do `Files:` blocks stay within the minimum file scope needed for the covered requirements, or do they signal file-scope drift that should be split or reapproved?'
 require_pattern skills/plan-eng-review/SKILL.md 'Present the helper-recommended execution skill as the default path with the approved plan path.'
 require_pattern skills/plan-eng-review/SKILL.md 'If isolated-agent workflows are unavailable, do not present `superpowers:subagent-driven-development` as an available override.'
 require_pattern skills/plan-eng-review/SKILL.md 'if `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status` is available, call `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status status --refresh`'
@@ -183,8 +196,10 @@ require_pattern skills/using-superpowers/SKILL.md "Do NOT jump from brainstormin
 require_pattern skills/using-superpowers/SKILL.md 'Spec state: `^\*\*Workflow State:\*\* (Draft|CEO Approved)$`'
 require_pattern skills/using-superpowers/SKILL.md 'Plan source revision: `^\*\*Source Spec Revision:\*\* ([0-9]+)$`'
 require_pattern skills/using-superpowers/SKILL.md "If artifacts are ambiguous or incomplete, route to the earlier safe stage instead of skipping ahead."
+require_pattern skills/using-superpowers/SKILL.md 'conservatively for the exact relevant artifacts'
 require_pattern skills/using-superpowers/SKILL.md 'Plan is `Engineering Approved` but its `Source Spec:` path or `Source Spec Revision:` does not match the latest approved spec: invoke `superpowers:writing-plans`.'
 require_pattern skills/using-superpowers/SKILL.md 'Plan is `Engineering Approved` and its `Source Spec:` path plus `Source Spec Revision:` match the latest approved spec: proceed to implementation through the normal execution handoff for that approved plan path.'
+require_absent_pattern skills/using-superpowers/SKILL.md "newest relevant artifacts"
 
 require_pattern skills/executing-plans/SKILL.md "Require the exact approved plan path as input."
 require_pattern skills/executing-plans/SKILL.md 'default protected branch (`main`, `master`, `dev`, or `develop`)'
@@ -195,11 +210,17 @@ require_pattern skills/subagent-driven-development/SKILL.md 'calls `status --pla
 require_pattern skills/subagent-driven-development/SKILL.md 'calls `begin` before starting work on a plan step'
 require_pattern skills/subagent-driven-development/SKILL.md 'calls `complete` after each completed step'
 require_pattern skills/subagent-driven-development/SKILL.md 'calls `note` when work is interrupted or blocked'
+require_pattern skills/subagent-driven-development/SKILL.md 'pass the packet verbatim to implementer and reviewers'
+require_pattern skills/subagent-driven-development/SKILL.md 'If the packet does not answer it, the task is ambiguous and execution must stop or route back to review.'
 require_pattern skills/subagent-driven-development/SKILL.md 'The approved plan checklist is the execution progress record; do not create or maintain a separate authoritative task tracker.'
+require_pattern skills/subagent-driven-development/SKILL.md 'The coordinator owns every `git commit`, `git merge`, and `git push` for this workflow'
+require_pattern skills/subagent-driven-development/SKILL.md 'No repeated artifact parsing per subagent (controller provides the helper-built packet)'
 require_pattern skills/executing-plans/SKILL.md 'calls `status --plan ...` during preflight'
 require_pattern skills/executing-plans/SKILL.md 'calls `begin` before starting work on a plan step'
 require_pattern skills/executing-plans/SKILL.md 'calls `complete` after each completed step'
 require_pattern skills/executing-plans/SKILL.md 'calls `note` when work is interrupted or blocked'
+require_pattern skills/executing-plans/SKILL.md 'build the canonical task packet'
+require_pattern skills/executing-plans/SKILL.md 'treat it as the exact task contract for that execution segment'
 require_pattern skills/executing-plans/SKILL.md 'The approved plan checklist is the execution progress record; do not create or maintain a separate authoritative task tracker.'
 require_absent_pattern skills/subagent-driven-development/SKILL.md "task-tracker checklist"
 require_absent_pattern skills/subagent-driven-development/SKILL.md "Mark task complete in task tracker"
@@ -210,7 +231,11 @@ require_description_pattern skills/requesting-code-review/SKILL.md 'Use after im
 require_pattern skills/requesting-code-review/SKILL.md 'For plan-routed final review, require the exact approved plan path from the current execution handoff or session context.'
 require_pattern skills/requesting-code-review/SKILL.md 'Run `superpowers-plan-execution status --plan <approved-plan-path>` before dispatching the reviewer.'
 require_pattern skills/requesting-code-review/SKILL.md 'If helper status fails, stop and return to the current execution flow; do not dispatch review against guessed plan state.'
+require_pattern skills/requesting-code-review/SKILL.md 'Parse `active_task`, `blocking_task`, and `resume_task` from the status JSON.'
+require_pattern skills/requesting-code-review/SKILL.md 'If any of `active_task`, `blocking_task`, or `resume_task` is non-null, stop and return to the current execution flow; final review is only valid when all three are `null`.'
 require_pattern skills/requesting-code-review/SKILL.md 'Pass the exact approved plan path and helper-reported execution evidence path into the reviewer context.'
+require_pattern skills/requesting-code-review/SKILL.md 'Run `superpowers-plan-contract lint --spec ... --plan ...`'
+require_pattern skills/requesting-code-review/SKILL.md 'completed task-packet context'
 require_pattern skills/requesting-code-review/SKILL.md 'built-in-before-bespoke'
 require_pattern skills/requesting-code-review/SKILL.md 'known ecosystem footguns'
 require_description_absent_pattern skills/requesting-code-review/SKILL.md 'implementing major features'
@@ -222,6 +247,8 @@ require_description_pattern skills/finishing-a-development-branch/SKILL.md 'veri
 require_pattern skills/finishing-a-development-branch/SKILL.md 'If the current work was executed from an approved Superpowers plan, require the exact approved plan path from the current execution workflow context before presenting completion options.'
 require_pattern skills/finishing-a-development-branch/SKILL.md 'Run `superpowers-plan-execution status --plan <approved-plan-path>` and read the returned `evidence_path` before presenting completion options.'
 require_pattern skills/finishing-a-development-branch/SKILL.md 'If the exact approved plan path is unavailable or helper status fails, stop and return to the current execution flow instead of guessing.'
+require_pattern skills/finishing-a-development-branch/SKILL.md 'Parse `active_task`, `blocking_task`, and `resume_task` from the status JSON.'
+require_pattern skills/finishing-a-development-branch/SKILL.md 'If any of `active_task`, `blocking_task`, or `resume_task` is non-null, stop and return to the current execution flow; branch completion is only valid when all three are `null`.'
 require_pattern skills/plan-eng-review/SKILL.md '**The terminal state is presenting the execution handoff with the approved plan path.**'
 require_pattern skills/plan-eng-review/SKILL.md 'Do not start implementation inside `plan-eng-review`.'
 require_pattern skills/subagent-driven-development/SKILL.md "## Implementation Preflight"
@@ -236,6 +263,11 @@ require_pattern skills/subagent-driven-development/SKILL.md '[Announce: I'"'"'m 
 require_pattern skills/subagent-driven-development/SKILL.md '[Invoke superpowers:requesting-code-review]'
 require_absent_pattern skills/subagent-driven-development/SKILL.md "Dispatch final code reviewer subagent for entire implementation"
 require_absent_pattern skills/subagent-driven-development/SKILL.md "[Dispatch final code-reviewer]"
+require_absent_pattern skills/subagent-driven-development/SKILL.md "provide full text instead"
+require_absent_pattern skills/subagent-driven-development/SKILL.md "controller provides full text"
+require_absent_pattern skills/subagent-driven-development/SKILL.md "Skip scene-setting context"
+require_pattern skills/subagent-driven-development/implementer-prompt.md 'Prepare the change for coordinator-owned git actions; do not create commits, merges, or pushes yourself'
+require_absent_pattern skills/subagent-driven-development/implementer-prompt.md 'Commit your work'
 
 require_pattern README.md 'Workspace preparation is the user'"'"'s responsibility; invoke `using-git-worktrees` manually when you want isolated workspace management.'
 require_pattern README.md 'Accelerated review is an opt-in branch inside `plan-ceo-review` and `plan-eng-review`, not a separate workflow stage.'

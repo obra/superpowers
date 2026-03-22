@@ -267,6 +267,8 @@ test('execution workflow skills reference the plan-execution helper contract', (
   assert.match(reviewSkill, /For plan-routed final review, require the exact approved plan path from the current execution handoff or session context\./);
   assert.match(reviewSkill, /Run `superpowers-plan-execution status --plan <approved-plan-path>` before dispatching the reviewer\./);
   assert.match(reviewSkill, /If helper status fails, stop and return to the current execution flow; do not dispatch review against guessed plan state\./);
+  assert.match(reviewSkill, /Parse `active_task`, `blocking_task`, and `resume_task` from the status JSON\./);
+  assert.match(reviewSkill, /If any of `active_task`, `blocking_task`, or `resume_task` is non-null, stop and return to the current execution flow; final review is only valid when all three are `null`\./);
   assert.match(reviewSkill, /Pass the exact approved plan path and helper-reported execution evidence path into the reviewer context\./);
 
   const finishSkill = readUtf8(getSkillPath('finishing-a-development-branch'));
@@ -275,6 +277,8 @@ test('execution workflow skills reference the plan-execution helper contract', (
   assert.match(finishSkill, /If the current work was executed from an approved Superpowers plan, require the exact approved plan path from the current execution workflow context before presenting completion options\./);
   assert.match(finishSkill, /Run `superpowers-plan-execution status --plan <approved-plan-path>` and read the returned `evidence_path` before presenting completion options\./);
   assert.match(finishSkill, /If the exact approved plan path is unavailable or helper status fails, stop and return to the current execution flow instead of guessing\./);
+  assert.match(finishSkill, /Parse `active_task`, `blocking_task`, and `resume_task` from the status JSON\./);
+  assert.match(finishSkill, /If any of `active_task`, `blocking_task`, or `resume_task` is non-null, stop and return to the current execution flow; branch completion is only valid when all three are `null`\./);
 
   const reviewPrompt = readUtf8(path.join(REPO_ROOT, 'skills/requesting-code-review/code-reviewer.md'));
   assert.match(reviewPrompt, /\*\*Approved plan path:\*\* \{APPROVED_PLAN_PATH\}/);
@@ -284,6 +288,55 @@ test('execution workflow skills reference the plan-execution helper contract', (
   const subagentReviewPrompt = readUtf8(path.join(REPO_ROOT, 'skills/subagent-driven-development/code-quality-reviewer-prompt.md'));
   assert.match(subagentReviewPrompt, /APPROVED_PLAN_PATH: \[exact approved plan path for plan-routed final review, otherwise blank\]/);
   assert.match(subagentReviewPrompt, /EXECUTION_EVIDENCE_PATH: \[helper-reported evidence path for plan-routed final review, otherwise blank\]/);
+});
+
+test('task-fidelity workflow docs and prompts require packet-backed plan contracts', () => {
+  const writingPlans = readUtf8(getSkillPath('writing-plans'));
+  assert.match(writingPlans, /Requirement Coverage Matrix/);
+  assert.match(writingPlans, /\*\*Spec Coverage:\*\*/);
+  assert.match(writingPlans, /\*\*Task Outcome:\*\*/);
+  assert.match(writingPlans, /\*\*Plan Constraints:\*\*/);
+  assert.match(writingPlans, /\*\*Open Questions:\*\* none/);
+  assert.match(writingPlans, /superpowers-plan-contract" lint/);
+
+  const planEngReview = readUtf8(getSkillPath('plan-eng-review'));
+  assert.match(planEngReview, /superpowers-plan-contract" lint/);
+  assert.match(planEngReview, /Requirement Index/);
+  assert.match(planEngReview, /Requirement Coverage Matrix/);
+  assert.match(planEngReview, /tasks with `Open Questions` not equal to `none`/);
+  assert.match(planEngReview, /invalid `Files:` block structure/);
+  assert.match(planEngReview, /Does the `Requirement Coverage Matrix` cover every approved requirement without orphaned or over-broad tasks\?/);
+  assert.match(planEngReview, /Do `Files:` blocks stay within the minimum file scope needed for the covered requirements, or do they signal file-scope drift that should be split or reapproved\?/);
+
+  const executingPlans = readUtf8(getSkillPath('executing-plans'));
+  assert.match(executingPlans, /build the canonical task packet/);
+  assert.match(executingPlans, /treat it as the exact task contract for that execution segment/);
+
+  const subagentSkill = readUtf8(getSkillPath('subagent-driven-development'));
+  assert.match(subagentSkill, /pass the packet verbatim to implementer and reviewers/);
+  assert.match(subagentSkill, /If the packet does not answer it, the task is ambiguous and execution must stop or route back to review\./);
+  assert.match(subagentSkill, /The coordinator owns every `git commit`, `git merge`, and `git push` for this workflow/);
+  assert.doesNotMatch(subagentSkill, /controller provides full text/);
+  assert.doesNotMatch(subagentSkill, /provide full text instead/);
+  assert.doesNotMatch(subagentSkill, /Skip scene-setting context/);
+
+  const implementerPrompt = readUtf8(path.join(REPO_ROOT, 'skills/subagent-driven-development/implementer-prompt.md'));
+  assert.match(implementerPrompt, /## Task Packet/);
+  assert.match(implementerPrompt, /the packet is the authoritative task contract for that execution slice/);
+  assert.match(implementerPrompt, /do not reinterpret or weaken requirement statements/);
+  assert.match(implementerPrompt, /if the packet says `Open Questions: none` and ambiguity remains, stop and escalate/);
+  assert.match(implementerPrompt, /Prepare the change for coordinator-owned git actions; do not create commits, merges, or pushes yourself/);
+  assert.doesNotMatch(implementerPrompt, /Commit your work/);
+
+  const specReviewerPrompt = readUtf8(path.join(REPO_ROOT, 'skills/subagent-driven-development/spec-reviewer-prompt.md'));
+  assert.match(specReviewerPrompt, /the exact task packet/);
+  assert.match(specReviewerPrompt, /PLAN_DEVIATION_FOUND/);
+  assert.match(specReviewerPrompt, /AMBIGUITY_ESCALATION_REQUIRED/);
+
+  const codeQualityPrompt = readUtf8(path.join(REPO_ROOT, 'skills/subagent-driven-development/code-quality-reviewer-prompt.md'));
+  assert.match(codeQualityPrompt, /TASK_PACKET/);
+  assert.match(codeQualityPrompt, /work outside planned file decomposition/);
+  assert.match(codeQualityPrompt, /new files or abstractions outside packet scope/);
 });
 
 test('repo-writing workflow skills document the protected-branch repo-safety gate consistently', () => {
@@ -447,4 +500,21 @@ test('approved workflow-state artifacts document the finalized helper contract',
     /`reason` is the canonical diagnostic field/,
     'approved plan should describe canonical reason diagnostics',
   );
+});
+
+test('workflow docs avoid stale ambiguity, commit-ownership, and review-freshness contradictions', () => {
+  const usingSuperpowers = readUtf8(getSkillPath('using-superpowers'));
+  assert.match(usingSuperpowers, /conservatively for the exact relevant artifacts/);
+  assert.doesNotMatch(usingSuperpowers, /newest relevant artifacts/);
+
+  const documentRelease = readUtf8(getSkillPath('document-release'));
+  assert.match(documentRelease, /does not own `git commit`, `git merge`, or `git push`/);
+  assert.doesNotMatch(documentRelease, /\[--write-target git-commit\]/);
+
+  const finishSkill = readUtf8(getSkillPath('finishing-a-development-branch'));
+  assert.match(finishSkill, /A review stops being fresh as soon as new repo changes land, including release-doc or metadata edits from `superpowers:document-release`/);
+  assert.match(finishSkill, /If `superpowers:document-release` writes repo files or changes release metadata, treat any earlier code review as stale and loop back through `superpowers:requesting-code-review` before presenting completion options\./);
+
+  const readme = readUtf8(path.join(REPO_ROOT, 'README.md'));
+  assert.match(readme, /Six layers matter:/);
 });

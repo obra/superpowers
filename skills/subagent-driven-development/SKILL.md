@@ -151,10 +151,10 @@ digraph process {
 
     subgraph cluster_per_task {
         label="Per Task";
-        "Dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
+        "Build task packet + dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
         "Implementer subagent asks questions?" [shape=diamond];
-        "Answer questions, provide context" [shape=box];
-        "Implementer subagent implements, tests, commits, self-reviews" [shape=box];
+        "Answer from packet or escalate ambiguity" [shape=box];
+        "Implementer subagent implements, tests, self-reviews, prepares handoff" [shape=box];
         "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [shape=box];
         "Spec reviewer subagent confirms code matches spec?" [shape=diamond];
         "Implementer subagent fixes spec gaps" [shape=box];
@@ -164,17 +164,17 @@ digraph process {
         "Confirm task's plan steps are checked off in approved plan" [shape=box];
     }
 
-    "Read plan, extract all tasks with full text and note context" [shape=box];
+    "Read plan, build a task packet per task" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Use superpowers:requesting-code-review for final review gate" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with full text and note context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
-    "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
-    "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
-    "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
-    "Implementer subagent asks questions?" -> "Implementer subagent implements, tests, commits, self-reviews" [label="no"];
-    "Implementer subagent implements, tests, commits, self-reviews" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)";
+    "Read plan, build a task packet per task" -> "Build task packet + dispatch implementer subagent (./implementer-prompt.md)";
+    "Build task packet + dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
+    "Implementer subagent asks questions?" -> "Answer from packet or escalate ambiguity" [label="yes"];
+    "Answer from packet or escalate ambiguity" -> "Build task packet + dispatch implementer subagent (./implementer-prompt.md)";
+    "Implementer subagent asks questions?" -> "Implementer subagent implements, tests, self-reviews, prepares handoff" [label="no"];
+    "Implementer subagent implements, tests, self-reviews, prepares handoff" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)";
     "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" -> "Spec reviewer subagent confirms code matches spec?";
     "Spec reviewer subagent confirms code matches spec?" -> "Implementer subagent fixes spec gaps" [label="no"];
     "Implementer subagent fixes spec gaps" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="re-review"];
@@ -184,7 +184,7 @@ digraph process {
     "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
     "Code quality reviewer subagent approves?" -> "Confirm task's plan steps are checked off in approved plan" [label="yes"];
     "Confirm task's plan steps are checked off in approved plan" -> "More tasks remain?";
-    "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
+    "More tasks remain?" -> "Build task packet + dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Use superpowers:requesting-code-review for final review gate" [label="no"];
     "Use superpowers:requesting-code-review for final review gate" -> "Use superpowers:finishing-a-development-branch";
 }
@@ -223,6 +223,7 @@ Before dispatching any implementation subagent:
 ## Protected-Branch Repo-Write Gate
 
 The main agent owns the protected-branch gate for every repo-writing task slice, even when an implementer subagent does the coding.
+The coordinator owns every `git commit`, `git merge`, and `git push` for this workflow, even when an implementer subagent does the coding.
 
 Before dispatching or applying any repo-writing task slice, run the shared repo-safety preflight for that exact scope:
 
@@ -241,7 +242,7 @@ superpowers-repo-safety check --intent write --stage superpowers:subagent-driven
 ```
 
 - Continue only if the re-check returns `allowed`.
-- Before a follow-on `git commit`, `git merge`, or `git push` on the same protected-branch task slice, re-run the gate with the same task id, the same repo-relative paths, and the same approved write-target set.
+- Before a coordinator-owned follow-on `git commit`, `git merge`, or `git push` on the same protected-branch task slice, re-run the gate with the same task id, the same repo-relative paths, and the same approved write-target set.
 - If the protected-branch task scope changes, run a new `approve` plus full-scope `check` before continuing.
 - Do not treat a worktree on `main`, `master`, `dev`, or `develop` as safe by itself; the branch must be non-protected or explicitly approved.
 
@@ -276,6 +277,8 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 **NEEDS_CONTEXT:** The implementer needs information that wasn't provided. Provide the missing context and re-dispatch.
 
+If the question is already answered by the packet, answer directly from the packet. If the packet does not answer it, the task is ambiguous and execution must stop or route back to review.
+
 **BLOCKED:** The implementer cannot complete the task. Assess the blocker:
 1. If it's a context problem, provide more context and re-dispatch with the same model
 2. If the task requires more reasoning, re-dispatch with a more capable model
@@ -290,30 +293,37 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 - `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
 - `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
 
+## Packet Contract
+
+- Build a task packet from the approved plan/spec pair before every implementation or review dispatch.
+- pass the packet verbatim to implementer and reviewers.
+- Treat packet content as the authoritative execution contract for that task slice; do not paraphrase or weaken requirement statements.
+- Controllers may add transient logistics such as branch, working directory, or base commit, but they may not add new semantic requirements.
+- If the packet does not answer it, the task is ambiguous and execution must stop or route back to review.
+
 ## Example Workflow
 
 ```
 You: I'm using Subagent-Driven Development to execute this plan.
 
 [Read plan file once: docs/superpowers/plans/feature-plan.md]
-[Extract all 5 tasks with full text and context]
+[Build the task packet for Task 1 from the approved plan/spec pair]
 [Use the approved plan as the execution-progress record]
 
 Task 1: Shared install migration docs
 
-[Get Task 1 text and context (already extracted)]
-[Dispatch implementation subagent with full task text + context]
+[Dispatch implementation subagent with the packet verbatim]
 
 Implementer: "Before I begin - should the migration docs include both Unix shell and PowerShell commands?"
 
-You: "Yes. Keep the shared install root at ~/.superpowers/install and document both shells."
+You: "The packet already requires both shells. Keep the shared install root at ~/.superpowers/install and document both shells."
 
 Implementer: "Got it. Implementing now..."
 [Later] Implementer:
   - Updated shared-root migration docs
   - Added tests, 5/5 passing
   - Self-review: Found I missed the PowerShell temp-clone cleanup, added it
-  - Committed
+  - Ready for coordinator-owned git actions
 
 [Dispatch spec compliance reviewer]
 Spec reviewer: ✅ Spec compliant - all requirements met, nothing extra
@@ -325,15 +335,15 @@ Code reviewer: Strengths: Good test coverage, clean. Issues: None. Approved.
 
 Task 2: Recovery modes
 
-[Get Task 2 text and context (already extracted)]
-[Dispatch implementation subagent with full task text + context]
+[Build the task packet for Task 2]
+[Dispatch implementation subagent with the packet verbatim]
 
 Implementer: [No questions, proceeds]
 Implementer:
   - Added verify/repair modes
   - 8/8 tests passing
   - Self-review: All good
-  - Committed
+  - Ready for coordinator-owned git actions
 
 [Dispatch spec compliance reviewer]
 Spec reviewer: ❌ Issues:
@@ -383,9 +393,9 @@ Code reviewer: ✅ Approved
 - Review checkpoints automatic
 
 **Efficiency gains:**
-- No file reading overhead (controller provides full text)
-- Controller curates exactly what context is needed
-- Subagent gets complete information upfront
+- No repeated artifact parsing per subagent (controller provides the helper-built packet)
+- Semantic context stays packet-backed instead of drifting into controller summaries
+- Subagent gets the exact approved task contract upfront
 - Questions surfaced before work begins (not after)
 
 **Quality gates:**
@@ -397,7 +407,7 @@ Code reviewer: ✅ Approved
 
 **Cost:**
 - More subagent invocations (implementer + 2 reviewers per task)
-- Controller does more prep work (extracting all tasks upfront)
+- Controller does more prep work (building packets and coordinating reviewers)
 - Review loops add iterations
 - But catches issues early (cheaper than debugging later)
 
@@ -408,8 +418,8 @@ Code reviewer: ✅ Approved
 - Skip reviews (spec compliance OR code quality)
 - Proceed with unfixed issues
 - Dispatch multiple implementation subagents in parallel (conflicts)
-- Make subagent read plan file (provide full text instead)
-- Skip scene-setting context (subagent needs to understand where task fits)
+- Make subagent re-read the plan/spec when the helper-built packet already defines the task contract
+- Replace the packet with controller-written semantic summaries or extra "scene-setting" requirements
 - Ignore subagent questions (answer before letting them proceed)
 - Accept "close enough" on spec compliance (spec reviewer found issues = not done)
 - Skip review loops (reviewer found issues = implementer fixes = review again)

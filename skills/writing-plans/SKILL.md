@@ -158,6 +158,7 @@ Before writing the plan, inspect the selected spec and validate these exact head
 
 - If the spec is missing these lines, or if `**Workflow State:**` is not `CEO Approved`, stop and direct the agent to `superpowers:plan-ceo-review`.
 - Do not write or extend an implementation plan from a draft spec.
+- Execution-bound specs must include a parseable `## Requirement Index` before planning begins. If the approved spec does not include one, stop and return to `superpowers:plan-ceo-review`.
 
 ## Scope Check
 
@@ -170,6 +171,7 @@ Before breaking work into tasks, make sure the plan explicitly covers:
 - change surface
 - preconditions
 - execution strategy
+- `Requirement Coverage Matrix`
 - ordered implementation steps
 - evidence expectations
 - validation strategy
@@ -243,11 +245,23 @@ This structure informs the task decomposition. Each task should produce self-con
 ## Task Structure
 
 ````markdown
-### Task N: [Component Name]
+## Requirement Coverage Matrix
+
+- REQ-001 -> Task 1
+- REQ-002 -> Task 1, Task 2
+
+## Task N: [Component Name]
+
+**Spec Coverage:** REQ-001, DEC-001
+**Task Outcome:** [One sentence describing what is true when this task is done]
+**Plan Constraints:**
+- [Constraint inherited from the approved spec or review]
+- [Constraint inherited from decomposition or file ownership]
+**Open Questions:** none
 
 **Files:**
 - Create: `exact/path/to/file.py`
-- Modify: `exact/path/to/existing.py:123-145`
+- Modify: `exact/path/to/existing.py`
 - Test: `tests/exact/path/to/test.py`
 
 - [ ] **Step 1: Write the failing test**
@@ -283,6 +297,11 @@ git commit -m "feat: add specific feature"
 ```
 ````
 
+- `## Task N:` is canonical. Do not use `### Task N:`.
+- Every task must include `Spec Coverage`, `Task Outcome`, `Plan Constraints`, `Open Questions`, and a parseable `Files:` block.
+- Engineering-approved plans require `**Open Questions:** none` for every task.
+- If a task touches a requirement, that id must appear in `Spec Coverage`.
+
 ## Remember
 - Exact file paths always
 - Complete code in plan (not "add validation")
@@ -297,15 +316,23 @@ git commit -m "feat: add specific feature"
 
 After saving the full plan:
 
-0. After the plan is written or updated, runs `sync --artifact plan`:
+0. Before handoff, run the plan-contract lint gate:
+
+```bash
+"$_SUPERPOWERS_ROOT/bin/superpowers-plan-contract" lint \
+  --spec docs/superpowers/specs/YYYY-MM-DD-<feature-name>-design.md \
+  --plan docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md
+```
+
+1. After the plan is written or updated, runs `sync --artifact plan`:
 
 ```bash
 "$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status" sync --artifact plan --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md
 ```
 
-1. Invoke `superpowers:plan-eng-review` after saving the full plan.
-2. Do NOT do chunk-by-chunk embedded review here.
-3. `plan-eng-review` owns the full-plan review loop and the execution handoff.
+2. Invoke `superpowers:plan-eng-review` after saving the full plan.
+3. Do NOT do chunk-by-chunk embedded review here.
+4. `plan-eng-review` owns the full-plan review loop and the execution handoff.
 
 **The terminal state is invoking plan-eng-review.**
 

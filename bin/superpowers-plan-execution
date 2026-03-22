@@ -4,6 +4,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=bin/superpowers-runtime-common.sh
 . "$SCRIPT_DIR/superpowers-runtime-common.sh"
+# shellcheck source=bin/superpowers-plan-structure-common
+. "$SCRIPT_DIR/superpowers-plan-structure-common"
 
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 
@@ -47,18 +49,6 @@ hash_stream() {
     return
   fi
   cksum | awk '{print $1}'
-}
-
-strip_plan_file_reference_suffix() {
-  printf '%s' "$1" | sed -E 's/:[0-9]+([:-][0-9]+)*$//'
-}
-
-normalize_plan_scope_path() {
-  local raw_value="$1"
-  local stripped
-
-  stripped="$(strip_plan_file_reference_suffix "$raw_value")"
-  normalize_repo_relative_path "$stripped"
 }
 
 spec_state=""
@@ -109,68 +99,18 @@ find_latest_approved_spec() {
 
 derive_tasks_independent_from_plan() {
   local plan_abs="$1"
-  local line
-  local current_task_index=-1
-  local in_files_block=0
-  local normalized_path
   local tasks_independent="unknown"
   local -a task_scopes=()
-  local -a task_write_counts=()
-  local -a task_file_blocks=()
-  local -a task_scope_parseable=()
   local task_count=0
-  local i j path compare
+  local i j write_count
+  local entries action raw_path normalized_path path compare
 
-  while IFS= read -r line || [[ -n "$line" ]]; do
-    if (( in_files_block )); then
-      if [[ "$line" =~ ^-\ (Create|Modify|Delete):\ \`(.+)\`$ ]]; then
-        task_file_blocks[$current_task_index]="yes"
-        normalized_path="$(normalize_plan_scope_path "${BASH_REMATCH[2]}")" || {
-          task_scope_parseable[$current_task_index]="no"
-          continue
-        }
-        task_write_counts[$current_task_index]=$(( ${task_write_counts[$current_task_index]:-0} + 1 ))
-        if [[ -n "${task_scopes[$current_task_index]:-}" ]]; then
-          task_scopes[$current_task_index]+=$'\n'"$normalized_path"
-        else
-          task_scopes[$current_task_index]="$normalized_path"
-        fi
-        continue
-      fi
-      if [[ "$line" =~ ^-\ Test:\ \`.+\`$ ]]; then
-        task_file_blocks[$current_task_index]="yes"
-        continue
-      fi
-      if [[ "$line" =~ ^-\ \[[[:space:]x]\]\  ]]; then
-        in_files_block=0
-      elif [[ "$line" =~ ^-\  ]]; then
-        task_file_blocks[$current_task_index]="yes"
-        task_scope_parseable[$current_task_index]="no"
-        continue
-      fi
-      if [[ -z "$line" || "$line" =~ ^[[:space:]]+$ ]]; then
-        continue
-      fi
-      in_files_block=0
-    fi
+  plan_structure_parse_for_execution "$plan_abs" || {
+    printf '%s\n' "$tasks_independent"
+    return 0
+  }
 
-    if [[ "$line" =~ ^##\ Task\ ([0-9]+): ]]; then
-      current_task_index=$task_count
-      task_scopes[$current_task_index]=""
-      task_write_counts[$current_task_index]=0
-      task_file_blocks[$current_task_index]="no"
-      task_scope_parseable[$current_task_index]="yes"
-      task_count=$((task_count + 1))
-      in_files_block=0
-      continue
-    fi
-
-    if (( current_task_index >= 0 )) && [[ "$line" == "**Files:**" ]]; then
-      task_file_blocks[$current_task_index]="yes"
-      in_files_block=1
-      continue
-    fi
-  done < "$plan_abs"
+  task_count="$PLAN_STRUCTURE_TASK_COUNT"
 
   if (( task_count < 2 )); then
     printf '%s\n' "$tasks_independent"
@@ -178,7 +118,22 @@ derive_tasks_independent_from_plan() {
   fi
 
   for ((i=0; i<task_count; i++)); do
-    if [[ "${task_file_blocks[$i]}" != "yes" || "${task_scope_parseable[$i]}" != "yes" || "${task_write_counts[$i]}" == "0" ]]; then
+    write_count=0
+    entries="${PLAN_STRUCTURE_TASK_FILE_ENTRIES[$i]:-}"
+    while IFS=$'\t' read -r action raw_path normalized_path; do
+      [[ -n "$action" ]] || continue
+      case "$action" in
+        Create|Modify|Delete)
+          write_count=$((write_count + 1))
+          if [[ -n "${task_scopes[$i]:-}" ]]; then
+            task_scopes[$i]+=$'\n'"$normalized_path"
+          else
+            task_scopes[$i]="$normalized_path"
+          fi
+          ;;
+      esac
+    done <<< "$entries"
+    if (( write_count == 0 )); then
       printf '%s\n' "$tasks_independent"
       return 0
     fi
@@ -201,6 +156,22 @@ derive_tasks_independent_from_plan() {
 
   printf 'yes\n'
   return 0
+}
+
+plan_structure_parse_for_execution() {
+  local plan_abs="$1"
+  local previous_setting="${PLAN_STRUCTURE_REQUIRE_FULL_TASK_FIELDS-__unset__}"
+  local status=0
+
+  PLAN_STRUCTURE_REQUIRE_FULL_TASK_FIELDS="no"
+  plan_structure_parse "$plan_abs" || status=$?
+  if [[ "$previous_setting" == "__unset__" ]]; then
+    unset PLAN_STRUCTURE_REQUIRE_FULL_TASK_FIELDS
+  else
+    PLAN_STRUCTURE_REQUIRE_FULL_TASK_FIELDS="$previous_setting"
+  fi
+
+  return "$status"
 }
 
 validate_persisted_normalized_text() {
@@ -352,6 +323,10 @@ parse_plan_file() {
   local active_count=0 blocked_count=0 interrupted_count=0 current_work_count=0
 
   reset_plan_parse_state
+  plan_structure_parse_for_execution "$plan_abs" || {
+    set_failure "MalformedExecutionState" "${PLAN_STRUCTURE_ERROR_MESSAGE:-Approved plan structure is malformed.}"
+    return 1
+  }
 
   while IFS= read -r line || [[ -n "$line" ]]; do
     line_no=$((line_no + 1))

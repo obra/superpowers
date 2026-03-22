@@ -152,5 +152,33 @@ assert_json_equals "$enabled_output" "helper_outcome" "enabled" "enabled entry a
 assert_json_equals "$enabled_output" "first_response_kind" "normal_stack" "enabled entry allows normal stack"
 assert_json_equals "$enabled_output" "normal_stack_started" "true" "enabled entry allows normal stack"
 assert_json_equals "$enabled_output" "decision_source" "existing_enabled" "enabled entry allows normal stack"
+assert_json_nonempty "$enabled_output" "normal_stack_session_path" "enabled entry allows normal stack"
+
+bypassed_message="$(write_message_file bypassed-entry.txt <<'EOF'
+Continue without Superpowers.
+EOF
+)"
+bypassed_path="$(decision_path_for_key "bypassed-entry")"
+mkdir -p "$(dirname "$bypassed_path")"
+printf 'bypassed\n' > "$bypassed_path"
+bypassed_output="$(run_json_command "bypassed entry skips normal stack" resolve --message-file "$bypassed_message" --session-key "bypassed-entry")"
+assert_json_equals "$bypassed_output" "helper_outcome" "bypassed" "bypassed entry skips normal stack"
+assert_json_equals "$bypassed_output" "first_response_kind" "superpowers_bypassed" "bypassed entry skips normal stack"
+assert_json_equals "$bypassed_output" "normal_stack_started" "false" "bypassed entry skips normal stack"
+assert_json_equals "$bypassed_output" "decision_source" "existing_bypassed" "bypassed entry skips normal stack"
+
+reentry_message="$(write_message_file reentry-entry.txt <<'EOF'
+superpowers please
+EOF
+)"
+reentry_path="$(decision_path_for_key "reentry-entry")"
+mkdir -p "$(dirname "$reentry_path")"
+printf 'bypassed\n' > "$reentry_path"
+reentry_output="$(run_json_command "explicit re-entry starts normal stack" resolve --message-file "$reentry_message" --session-key "reentry-entry")"
+assert_json_equals "$reentry_output" "helper_outcome" "enabled" "explicit re-entry starts normal stack"
+assert_json_equals "$reentry_output" "first_response_kind" "normal_stack" "explicit re-entry starts normal stack"
+assert_json_equals "$reentry_output" "normal_stack_started" "true" "explicit re-entry starts normal stack"
+assert_json_equals "$reentry_output" "decision_source" "explicit_reentry" "explicit re-entry starts normal stack"
+assert_json_nonempty "$reentry_output" "normal_stack_session_path" "explicit re-entry starts normal stack"
 
 echo "session-entry gate regression test passed."

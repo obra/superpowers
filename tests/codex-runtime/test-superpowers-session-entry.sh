@@ -265,6 +265,52 @@ EOF
   fi
 }
 
+run_direct_superpowers_please_triggers_reentry() {
+  local message_file
+  local decision_path
+  local output
+
+  message_file="$(write_message_file direct-superpowers-please-message.txt <<'EOF'
+superpowers please
+EOF
+)"
+  decision_path="$(decision_path_for_key "direct-superpowers-please")"
+  mkdir -p "$(dirname "$decision_path")"
+  printf 'bypassed\n' > "$decision_path"
+
+  output="$(run_json_command "direct superpowers please re-entry" resolve --message-file "$message_file" --session-key "direct-superpowers-please")"
+  assert_json_equals "$output" "outcome" "enabled" "direct superpowers please re-entry"
+  assert_json_equals "$output" "decision_source" "explicit_reentry" "direct superpowers please re-entry"
+  assert_json_equals "$output" "persisted" "true" "direct superpowers please re-entry"
+  if [[ "$(cat "$decision_path")" != "enabled" ]]; then
+    echo "Expected direct superpowers please request to persist enabled decision"
+    exit 1
+  fi
+}
+
+run_enable_superpowers_again_triggers_reentry() {
+  local message_file
+  local decision_path
+  local output
+
+  message_file="$(write_message_file enable-superpowers-again-message.txt <<'EOF'
+Enable superpowers again.
+EOF
+)"
+  decision_path="$(decision_path_for_key "enable-superpowers-again")"
+  mkdir -p "$(dirname "$decision_path")"
+  printf 'bypassed\n' > "$decision_path"
+
+  output="$(run_json_command "enable superpowers again re-entry" resolve --message-file "$message_file" --session-key "enable-superpowers-again")"
+  assert_json_equals "$output" "outcome" "enabled" "enable superpowers again re-entry"
+  assert_json_equals "$output" "decision_source" "explicit_reentry" "enable superpowers again re-entry"
+  assert_json_equals "$output" "persisted" "true" "enable superpowers again re-entry"
+  if [[ "$(cat "$decision_path")" != "enabled" ]]; then
+    echo "Expected enable superpowers again request to persist enabled decision"
+    exit 1
+  fi
+}
+
 run_negated_skill_request_does_not_trigger_reentry() {
   local message_file
   local decision_path
@@ -495,6 +541,10 @@ run_record_rejects_invalid_decision() {
   run_command_fails "record invalid decision" "InvalidCommandInput" record --decision maybe --session-key "record-invalid" >/dev/null
 }
 
+run_record_rejects_whitespace_only_session_key() {
+  run_command_fails "record whitespace-only session key" "InvalidCommandInput" record --decision enabled --session-key "   " >/dev/null
+}
+
 run_whitespace_only_session_key_fails_closed() {
   local message_file
 
@@ -532,6 +582,8 @@ run_existing_bypassed_decision
 run_malformed_decision_needs_user_choice
 run_explicit_reentry_rewrites_bypassed_decision
 run_natural_language_skill_request_triggers_reentry
+run_direct_superpowers_please_triggers_reentry
+run_enable_superpowers_again_triggers_reentry
 run_negated_skill_request_does_not_trigger_reentry
 run_use_no_skill_request_does_not_trigger_reentry
 run_use_no_superpowers_does_not_trigger_reentry
@@ -543,6 +595,7 @@ run_contrastive_skill_clause_triggers_reentry
 run_explicit_reentry_write_failure_is_unpersisted
 run_record_persists_enabled_choice
 run_record_rejects_invalid_decision
+run_record_rejects_whitespace_only_session_key
 run_whitespace_only_session_key_fails_closed
 run_hot_path_uses_derived_decision_file
 require_absent_pattern "$HELPER_BIN" 'find .*session-flags'

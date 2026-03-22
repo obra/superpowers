@@ -8,11 +8,11 @@ Use this template when dispatching a spec compliance reviewer sub-agent or custo
 Spec reviewer sub-agent / custom agent:
   description: "Review spec compliance for Task N"
   prompt: |
-    You are reviewing whether an implementation matches its specification.
+    You are reviewing whether an implementation matches the exact task packet.
 
-    ## What Was Requested
+    ## Exact Task Packet
 
-    [FULL TEXT of task requirements]
+    [PASTE THE HELPER-BUILT TASK PACKET HERE VERBATIM]
 
     ## What Implementer Claims They Built
 
@@ -39,12 +39,12 @@ Spec reviewer sub-agent / custom agent:
     Read the implementation code and verify:
 
     **Missing requirements:**
-    - Did they implement everything that was requested?
+    - Did they implement everything that was requested in the exact task packet?
     - Are there requirements they skipped or missed?
     - Did they claim something works but didn't actually implement it?
 
     **Extra/unneeded work:**
-    - Did they build things that weren't requested?
+    - Did they build things that weren't requested by the packet?
     - Did they over-engineer or add unnecessary features?
     - Did they add "nice to haves" that weren't in spec?
 
@@ -52,6 +52,11 @@ Spec reviewer sub-agent / custom agent:
     - Did they interpret requirements differently than intended?
     - Did they solve the wrong problem?
     - Did they implement the right feature but wrong way?
+
+    **Plan deviation and ambiguity:**
+    - Did they change behavior, requirements, or files outside the packet's approved scope?
+    - If yes, report `PLAN_DEVIATION_FOUND` with concrete file:line evidence.
+    - If the packet itself is insufficient to determine correctness, report `AMBIGUITY_ESCALATION_REQUIRED`.
 
     **Verify by reading code, not by trusting report.**
 

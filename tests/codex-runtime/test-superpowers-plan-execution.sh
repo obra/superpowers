@@ -247,10 +247,16 @@ write_plan() {
 
 ## Task 1: Core flow
 
+**Files:**
+- Test: \`bash tests/codex-runtime/test-superpowers-plan-execution.sh\`
+
 - [ ] **Step 1: Prepare workspace for execution**
 - [ ] **Step 2: Validate the generated output**
 
 ## Task 2: Repair flow
+
+**Files:**
+- Test: \`bash tests/codex-runtime/test-superpowers-plan-execution.sh\`
 
 - [ ] **Step 1: Repair an invalidated prior step**
 - [ ] **Step 2: Finalize the execution handoff**
@@ -446,11 +452,39 @@ run_status_rejects_malformed_note_structure() {
 
 ## Task 1: Core flow
 
+**Files:**
+- Modify: \`docs/example-output.md\`
+- Test: \`bash tests/codex-runtime/test-superpowers-plan-execution.sh\`
+
 - [ ] **Step 1: Prepare workspace for execution**
 
   **Execution Note:** Active - Running workspace prep
   **Execution Note:** Interrupted - Duplicate note should fail
 
+- [ ] **Step 2: Validate the generated output**
+EOF
+
+  run_command_fails "$repo_dir" MalformedExecutionState status --plan "$PLAN_REL" >/dev/null
+}
+
+run_status_rejects_task_without_parseable_files_block() {
+  local repo_dir="$REPO_DIR/missing-files-block"
+
+  init_repo "$repo_dir"
+  write_approved_spec "$repo_dir"
+  write_file "$repo_dir/$PLAN_REL" <<EOF
+# Example Execution Plan
+
+**Workflow State:** Engineering Approved
+**Plan Revision:** 1
+**Execution Mode:** none
+**Source Spec:** \`${SPEC_REL}\`
+**Source Spec Revision:** 1
+**Last Reviewed By:** plan-eng-review
+
+## Task 1: Core flow
+
+- [ ] **Step 1: Prepare workspace for execution**
 - [ ] **Step 2: Validate the generated output**
 EOF
 
@@ -509,6 +543,10 @@ run_status_rejects_whitespace_only_execution_note_summary() {
 
 ## Task 1: Core flow
 
+**Files:**
+- Modify: \`docs/example-output.md\`
+- Test: \`bash tests/codex-runtime/test-superpowers-plan-execution.sh\`
+
 - [ ] **Step 1: Prepare workspace for execution**
 
   **Execution Note:** Blocked - ${whitespace}
@@ -537,6 +575,10 @@ run_status_rejects_overlong_execution_note_summary() {
 **Last Reviewed By:** plan-eng-review
 
 ## Task 1: Core flow
+
+**Files:**
+- Modify: \`docs/example-output.md\`
+- Test: \`bash tests/codex-runtime/test-superpowers-plan-execution.sh\`
 
 - [ ] **Step 1: Prepare workspace for execution**
 
@@ -832,10 +874,18 @@ run_status_accepts_persisted_file_entry_with_repeated_internal_spaces() {
 
 ## Task 1: Core flow
 
+**Files:**
+- Modify: \`docs/example-output.md\`
+- Test: \`bash tests/codex-runtime/test-superpowers-plan-execution.sh\`
+
 - [x] **Step 1: Prepare workspace for execution**
 - [ ] **Step 2: Validate the generated output**
 
 ## Task 2: Repair flow
+
+**Files:**
+- Modify: \`docs/example-output.md\`
+- Test: \`bash tests/codex-runtime/test-superpowers-plan-execution.sh\`
 
 - [ ] **Step 1: Repair an invalidated prior step**
 - [ ] **Step 2: Finalize the execution handoff**
@@ -1357,6 +1407,10 @@ run_reopen_rejects_blank_reason_without_mutating_state() {
 
 ## Task 1: Core flow
 
+**Files:**
+- Modify: \`docs/example-output.md\`
+- Test: \`bash tests/codex-runtime/test-superpowers-plan-execution.sh\`
+
 - [x] **Step 1: Prepare workspace for execution**
 - [ ] **Step 2: Validate the generated output**
 EOF
@@ -1411,6 +1465,10 @@ run_transfer_rejects_blank_reason_without_mutating_state() {
 
 ## Task 1: Core flow
 
+**Files:**
+- Modify: \`docs/example-output.md\`
+- Test: \`bash tests/codex-runtime/test-superpowers-plan-execution.sh\`
+
 - [ ] **Step 1: Prepare workspace for execution**
 
   **Execution Note:** Active - Prepare workspace for execution
@@ -1418,6 +1476,10 @@ run_transfer_rejects_blank_reason_without_mutating_state() {
 - [ ] **Step 2: Validate the generated output**
 
 ## Task 2: Repair flow
+
+**Files:**
+- Modify: \`docs/example-output.md\`
+- Test: \`bash tests/codex-runtime/test-superpowers-plan-execution.sh\`
 
 - [x] **Step 1: Repair an invalidated prior step**
 - [ ] **Step 2: Finalize the execution handoff**
@@ -1465,6 +1527,10 @@ run_transfer_rejects_second_parked_step() {
 
 ## Task 1: Core flow
 
+**Files:**
+- Modify: \`docs/example-output.md\`
+- Test: \`bash tests/codex-runtime/test-superpowers-plan-execution.sh\`
+
 - [ ] **Step 1: Prepare workspace for execution**
 
   **Execution Note:** Active - Prepare workspace for execution
@@ -1474,6 +1540,10 @@ run_transfer_rejects_second_parked_step() {
   **Execution Note:** Interrupted - Parked for repair of Task 2 Step 1
 
 ## Task 2: Repair flow
+
+**Files:**
+- Modify: \`docs/example-output.md\`
+- Test: \`bash tests/codex-runtime/test-superpowers-plan-execution.sh\`
 
 - [x] **Step 1: Repair an invalidated prior step**
 - [ ] **Step 2: Finalize the execution handoff**
@@ -1528,6 +1598,10 @@ run_reopen_rolls_back_on_injected_failure() {
 
 ## Task 1: Core flow
 
+**Files:**
+- Modify: \`docs/example-output.md\`
+- Test: \`bash tests/codex-runtime/test-superpowers-plan-execution.sh\`
+
 - [x] **Step 1: Prepare workspace for execution**
 - [ ] **Step 2: Validate the generated output**
 EOF
@@ -1561,6 +1635,10 @@ run_reopen_updates_invalidation_timestamp() {
 **Last Reviewed By:** plan-eng-review
 
 ## Task 1: Core flow
+
+**Files:**
+- Modify: \`docs/example-output.md\`
+- Test: \`bash tests/codex-runtime/test-superpowers-plan-execution.sh\`
 
 - [x] **Step 1: Prepare workspace for execution**
 - [ ] **Step 2: Validate the generated output**
@@ -1596,6 +1674,10 @@ run_transfer_rolls_back_on_injected_failure() {
 
 ## Task 1: Core flow
 
+**Files:**
+- Modify: \`docs/example-output.md\`
+- Test: \`bash tests/codex-runtime/test-superpowers-plan-execution.sh\`
+
 - [ ] **Step 1: Prepare workspace for execution**
 
   **Execution Note:** Active - Prepare workspace for execution
@@ -1603,6 +1685,10 @@ run_transfer_rolls_back_on_injected_failure() {
 - [ ] **Step 2: Validate the generated output**
 
 ## Task 2: Repair flow
+
+**Files:**
+- Modify: \`docs/example-output.md\`
+- Test: \`bash tests/codex-runtime/test-superpowers-plan-execution.sh\`
 
 - [x] **Step 1: Repair an invalidated prior step**
 - [ ] **Step 2: Finalize the execution handoff**
@@ -1625,6 +1711,7 @@ run_status_treats_header_only_stub_as_same_empty_state
 run_status_rejects_missing_execution_mode
 run_status_rejects_evidence_history_with_none_mode
 run_status_rejects_malformed_note_structure
+run_status_rejects_task_without_parseable_files_block
 run_status_rejects_malformed_evidence_attempt_fields
 run_status_rejects_whitespace_only_execution_note_summary
 run_status_rejects_overlong_execution_note_summary

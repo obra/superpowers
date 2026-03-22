@@ -132,9 +132,15 @@ In Codex, Superpowers installs the `code-reviewer` custom agent alongside the sh
 **1. If this review is for plan-routed work, capture execution state first:**
 
 - For plan-routed final review, require the exact approved plan path from the current execution handoff or session context.
+- Run `superpowers-plan-contract lint --spec ... --plan ...` before dispatching the reviewer.
+- If lint fails, stop and return to the current execution flow; do not review stale or malformed approved artifacts.
 - Run `superpowers-plan-execution status --plan <approved-plan-path>` before dispatching the reviewer.
 - If helper status fails, stop and return to the current execution flow; do not dispatch review against guessed plan state.
+- Parse `active_task`, `blocking_task`, and `resume_task` from the status JSON.
+- If any of `active_task`, `blocking_task`, or `resume_task` is non-null, stop and return to the current execution flow; final review is only valid when all three are `null`.
+- If `evidence_path` is empty or unreadable, stop and return to the current execution flow instead of reviewing against missing execution evidence.
 - Pass the exact approved plan path and helper-reported execution evidence path into the reviewer context.
+- Build completed task-packet context from the approved plan and pass that completed task-packet context plus the plan's coverage matrix into the reviewer briefing.
 - If the current review is not governed by an approved Superpowers plan, skip this execution-state gate and continue with the normal diff review.
 
 **2. Detect the base branch and review range:**
@@ -157,7 +163,7 @@ If the approved plan already called out a likely external-pattern target, you ma
 
 **Placeholders:**
 - `{WHAT_WAS_IMPLEMENTED}` - What you just built
-- `{PLAN_OR_REQUIREMENTS}` - What it should do
+- `{PLAN_OR_REQUIREMENTS}` - What it should do, including completed task-packet context and coverage matrix details for plan-routed review
 - `{APPROVED_PLAN_PATH}` - Exact approved plan path for plan-routed review, otherwise leave blank
 - `{EXECUTION_EVIDENCE_PATH}` - Helper-reported evidence artifact path for plan-routed review, otherwise leave blank
 - `{BASE_BRANCH}` - The detected base branch name
@@ -180,15 +186,18 @@ If the approved plan already called out a likely external-pattern target, you ma
 You: Let me request code review before proceeding.
 
 APPROVED_PLAN_PATH=docs/superpowers/plans/deployment-plan.md
+SOURCE_SPEC_PATH=docs/superpowers/specs/deployment-plan-design.md
+"$_SUPERPOWERS_ROOT/bin/superpowers-plan-contract" lint --spec "$SOURCE_SPEC_PATH" --plan "$APPROVED_PLAN_PATH"
 STATUS_JSON=$("$_SUPERPOWERS_ROOT/bin/superpowers-plan-execution" status --plan "$APPROVED_PLAN_PATH")
 EXECUTION_EVIDENCE_PATH=$(printf '%s\n' "$STATUS_JSON" | python3 -c 'import json,sys; print(json.load(sys.stdin)["evidence_path"])')
+TASK_PACKET_CONTEXT=$("$_SUPERPOWERS_ROOT/bin/superpowers-plan-contract" build-task-packet --plan "$APPROVED_PLAN_PATH" --task 2 --format markdown --persist yes)
 BASE_BRANCH=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null || gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null || echo main)
 BASE_SHA=$(git merge-base HEAD "origin/$BASE_BRANCH" 2>/dev/null || git merge-base HEAD "$BASE_BRANCH" 2>/dev/null || git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
 HEAD_SHA=$(git rev-parse HEAD)
 
 [Dispatch code-reviewer agent]
   WHAT_WAS_IMPLEMENTED: Verification and repair functions for conversation index
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md
+  PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md plus completed task-packet context and coverage matrix excerpts
   APPROVED_PLAN_PATH: docs/superpowers/plans/deployment-plan.md
   EXECUTION_EVIDENCE_PATH: docs/superpowers/execution-evidence/deployment-plan-r1-evidence.md
   BASE_BRANCH: main
@@ -225,7 +234,9 @@ You: [Fix progress indicators]
 ## Execution-State Gate
 
 - rejects final review if the plan has invalid execution state or required unfinished work not truthfully represented
+- treats non-null `active_task`, `blocking_task`, or `resume_task` as execution-dirty and rejects final review until execution returns to a clean state
 - consumes the execution evidence artifact for checked-off steps
+- consumes completed task-packet context and the approved plan's coverage matrix for plan-routed review
 - must fail closed when it detects a missed reopen or stale evidence, but must not call `reopen` itself
 
 ## Red Flags

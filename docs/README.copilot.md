@@ -111,7 +111,7 @@ Accelerated review is an opt-in branch inside `plan-ceo-review` and `plan-eng-re
 
 Only the user can initiate accelerated review, and section approval plus final approval remain human-owned even when the review uses reviewer subagents and persisted section packets.
 
-During implementation, either `subagent-driven-development` or `executing-plans` starts from an engineering-approved current plan, runs a workspace-readiness preflight, and then drives task execution. Workspace preparation is the user's responsibility; invoke `using-git-worktrees` manually when you want isolated workspace management. The completion flow runs `requesting-code-review`, keeps a conditional `qa-only` handoff, requires it when browser interaction or test-plan context warrants it, and requires the `document-release` handoff before workflow-routed branch completion.
+During implementation, either `subagent-driven-development` or `executing-plans` starts from an engineering-approved current plan, runs a workspace-readiness preflight, and then drives task execution. Those execution and review stages now consume helper-built task packets derived from the approved markdown contract. Workspace preparation is the user's responsibility; invoke `using-git-worktrees` manually when you want isolated workspace management. The completion flow runs `requesting-code-review`, keeps a conditional `qa-only` handoff, requires it when browser interaction or test-plan context warrants it, and requires the `document-release` handoff before workflow-routed branch completion.
 
 ## Search Before Building
 
@@ -150,6 +150,12 @@ Superpowers ships protected-branch repo-safety helpers:
 - `bin/superpowers-repo-safety.ps1` (PowerShell wrapper)
 
 Generated repo-writing workflow skills use this helper to block repo writes on protected branches by default. Spec writes, plan writes, approval-header edits, release-doc updates, execution task slices, and branch-finishing commands must either run on a non-protected branch or carry an explicit task-scoped approval that passes the helper's re-check.
+
+Superpowers ships task-fidelity contract helpers:
+- `bin/superpowers-plan-contract` (Bash)
+- `bin/superpowers-plan-contract.ps1` (PowerShell wrapper)
+
+Generated planning, execution, and review skills use this helper to lint Requirement Index plus Requirement Coverage Matrix contracts and to build task-packet context. Repo markdown remains authoritative; the helper only enforces and compiles the approved markdown into exact execution and review inputs.
 
 Superpowers ships a supported public workflow inspection surface:
 - `bin/superpowers-workflow` (Bash)

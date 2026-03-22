@@ -2,6 +2,29 @@
 
 For release history before `v5.1.0 (2026-03-16)`, see the upstream README: https://github.com/obra/superpowers/blob/main/README.md
 
+## v5.7.0 (2026-03-22)
+
+### Task Fidelity Contract
+
+- Added internal `bin/superpowers-plan-contract` plus `bin/superpowers-plan-contract.ps1` so execution-bound specs and approved plans can be linted for Requirement Index and Requirement Coverage Matrix fidelity before planning, execution, or review proceeds
+- Added shared canonical task-structure parsing through `bin/superpowers-plan-structure-common` and tightened `bin/superpowers-plan-execution` so malformed `## Task N:` or `**Files:**` structure fails closed earlier
+- Updated `writing-plans` and `plan-eng-review` so new or revised execution plans must carry canonical task blocks, explicit spec coverage, resolved open questions, and a plan-contract lint gate before engineering approval
+- Updated `executing-plans`, `subagent-driven-development`, `requesting-code-review`, and the implementer/reviewer prompt surfaces so execution and review consume helper-built task packets instead of controller-written semantic summaries
+- Added the task-fidelity design spec, engineering-approved implementation plan, and execution-evidence artifact under `docs/superpowers/` so the new contract ships with repo-visible source artifacts
+
+### Review And Routing Hardening
+
+- Hardened `bin/superpowers-session-entry` so bypassed sessions recognize more explicit natural-language re-entry requests and still fail closed on invalid or whitespace-only session keys
+- Tightened `requesting-code-review` and `finishing-a-development-branch` so they treat non-null `active_task`, `blocking_task`, or `resume_task` status fields as execution-dirty and stop instead of reviewing or finishing against guessed plan state
+- Clarified `subagent-driven-development` and `document-release` ownership so task packets stay authoritative, coordinator-owned git actions stay explicit, and release-doc edits force a fresh review before branch completion
+- Updated `using-superpowers` manual fallback wording to match helper behavior when artifacts are ambiguous instead of implying “pick the newest” and continue
+
+### Testing
+
+- Added `tests/codex-runtime/test-superpowers-plan-contract.sh` plus fixture coverage for missing indexes, missing coverage, unknown IDs, ambiguity, requirement weakening, malformed task structure, malformed `Files:` blocks, path traversal rejection, stale packets, and retention pruning
+- Expanded execution, workflow sequencing, workflow enhancement, runtime-instruction, session-entry, and skill-doc contract coverage so canonical task syntax, packet-backed execution/review wording, helper-backed routing, and coordinator-owned git semantics stay aligned
+- Strengthened the supported-entry harness to verify real normal-stack side effects and added real approved-artifact packet coverage for the task-fidelity spec and plan
+
 ## v5.6.0 (2026-03-21)
 
 ### Session Entry And Repo Safety

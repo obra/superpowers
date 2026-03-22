@@ -8,13 +8,9 @@ Implementation sub-agent / custom agent:
   prompt: |
     You are implementing Task N: [task name]
 
-    ## Task Description
+    ## Task Packet
 
-    [FULL TEXT of task from plan - paste it here, don't make subagent read file]
-
-    ## Context
-
-    [Scene-setting: where this fits, dependencies, architectural context]
+    [PASTE THE HELPER-BUILT TASK PACKET HERE VERBATIM]
 
     ## Before You Begin
 
@@ -25,14 +21,17 @@ Implementation sub-agent / custom agent:
     - Anything unclear in the task description
 
     **Ask them now.** Raise any concerns before starting work.
+    the packet is the authoritative task contract for that execution slice.
+    do not reinterpret or weaken requirement statements.
+    if the packet says `Open Questions: none` and ambiguity remains, stop and escalate.
 
     ## Your Job
 
     Once you're clear on requirements:
-    1. Implement exactly what the task specifies
+    1. Implement exactly what the packet specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Commit your work
+    4. Prepare the change for coordinator-owned git actions; do not create commits, merges, or pushes yourself
     5. Self-review (see below)
     6. Report back
 
@@ -45,7 +44,7 @@ Implementation sub-agent / custom agent:
 
     You reason best about code you can hold in context at once, and your edits are more
     reliable when files are focused. Keep this in mind:
-    - Follow the file structure defined in the plan
+    - Follow the file structure and file scope defined in the packet
     - Each file should have one clear responsibility with a well-defined interface
     - If a file you're creating is growing beyond the plan's intent, stop and report
       it as DONE_WITH_CONCERNS — don't split files on your own without plan guidance
@@ -76,7 +75,7 @@ Implementation sub-agent / custom agent:
     Review your work with fresh eyes. Ask yourself:
 
     **Completeness:**
-    - Did I fully implement everything in the spec?
+    - Did I fully implement everything in the packet?
     - Did I miss any requirements?
     - Are there edge cases I didn't handle?
 
@@ -88,6 +87,7 @@ Implementation sub-agent / custom agent:
     **Discipline:**
     - Did I avoid overbuilding (YAGNI)?
     - Did I only build what was requested?
+    - Did I stay inside the packet's approved file scope and constraints?
     - Did I follow existing patterns in the codebase?
 
     **Testing:**

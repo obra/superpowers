@@ -284,7 +284,7 @@ When the helper succeeds, route using its JSON result and do not re-derive state
 
 If the helper is unavailable or fails, inspect artifacts manually using the rules below.
 
-Inspect `docs/superpowers/specs/` and `docs/superpowers/plans/` for the newest relevant artifacts, then parse these exact-match header lines:
+Inspect `docs/superpowers/specs/` and `docs/superpowers/plans/` conservatively for the exact relevant artifacts. If more than one plausible latest or approved artifact exists, treat that as ambiguity and route to the earlier safe stage rather than guessing. Then parse these exact-match header lines:
 
 - Spec state: `^\*\*Workflow State:\*\* (Draft|CEO Approved)$`
 - Spec revision: `^\*\*Spec Revision:\*\* ([0-9]+)$`

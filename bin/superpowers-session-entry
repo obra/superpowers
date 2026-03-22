@@ -7,6 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
 MAX_MESSAGE_BYTES="${SUPERPOWERS_SESSION_ENTRY_MAX_MESSAGE_BYTES:-65536}"
+DERIVED_SESSION_KEY=""
 
 json_escape() {
   local value="${1:-}"
@@ -69,11 +70,13 @@ normalize_session_key_or_fail() {
     emit_failure "InvalidCommandInput" "Session key may not be blank after normalization."
     return 1
   fi
-  printf '%s\n' "$normalized"
+  DERIVED_SESSION_KEY="$normalized"
 }
 
 derive_session_key_or_fail() {
   local raw_key="${1:-}"
+
+  DERIVED_SESSION_KEY=""
 
   if [[ -n "$raw_key" ]]; then
     normalize_session_key_or_fail "$raw_key"
@@ -132,6 +135,7 @@ message_requests_reentry() {
   local raw_text="$1"
   local lowered clause normalized skill_doc skill_name token
   local prev1="" prev2="" saw_negator=""
+  local -a tokens=()
 
   token_is_negator() {
     case "${1:-}" in
@@ -142,9 +146,50 @@ message_requests_reentry() {
 
   token_has_affirmative_context() {
     case "${1:-}" in
-      use|using|run|running|start|starting|invoke|invoking|do|doing) return 0 ;;
+      use|using|run|running|start|starting|invoke|invoking|do|doing|enable|enabled|enabling|resume|resuming|reenable|reactivate|reactivating) return 0 ;;
       *) return 1 ;;
     esac
+  }
+
+  token_is_direct_request_filler() {
+    case "${1:-}" in
+      please|pls|kindly|again|now) return 0 ;;
+      *) return 1 ;;
+    esac
+  }
+
+  clause_is_direct_reentry_target() {
+    local target="$1"
+    local token saw_target="false"
+    for token in "${tokens[@]}"; do
+      if token_is_negator "$token"; then
+        return 1
+      fi
+      if [[ "$token" == "$target" ]]; then
+        saw_target="true"
+        continue
+      fi
+      if ! token_is_direct_request_filler "$token"; then
+        return 1
+      fi
+    done
+    [[ "$saw_target" == "true" ]]
+  }
+
+  clause_is_direct_reentry_request() {
+    local token skill_doc skill_name
+    if clause_is_direct_reentry_target "superpowers"; then
+      return 0
+    fi
+    for skill_doc in "$SCRIPT_DIR"/../skills/*/SKILL.md; do
+      skill_name="$(basename "$(dirname "$skill_doc")")"
+      for token in "$skill_name" "\$$skill_name" "superpowers:$skill_name"; do
+        if clause_is_direct_reentry_target "$token"; then
+          return 0
+        fi
+      done
+    done
+    return 1
   }
 
   lowered="$(printf '%s' "$raw_text" | tr '[:upper:]' '[:lower:]' | tr -d "'’")"
@@ -154,6 +199,12 @@ message_requests_reentry() {
     normalized="$(normalize_whitespace "$clause")"
     [[ -n "$normalized" ]] || continue
 
+    tokens=()
+    while IFS= read -r token; do
+      [[ -n "$token" ]] || continue
+      tokens+=("$token")
+    done < <(printf '%s\n' "$normalized" | tr -cs '[:alnum:]$:_-' '\n')
+
     for skill_doc in "$SCRIPT_DIR"/../skills/*/SKILL.md; do
       skill_name="$(basename "$(dirname "$skill_doc")")"
       if [[ "$normalized" == "$skill_name" || "$normalized" == "\$$skill_name" || "$normalized" == "superpowers:$skill_name" ]]; then
@@ -162,10 +213,15 @@ message_requests_reentry() {
       fi
     done
 
+    if ((${#tokens[@]} > 0)) && clause_is_direct_reentry_request; then
+      shopt -u nullglob
+      return 0
+    fi
+
     prev1=""
     prev2=""
     saw_negator="false"
-    while IFS= read -r token; do
+    for token in "${tokens[@]}"; do
       if token_is_negator "$token"; then
         saw_negator="true"
       elif [[ "$token" == "superpowers" ]]; then
@@ -191,7 +247,7 @@ message_requests_reentry() {
 
       prev2="$prev1"
       prev1="$token"
-    done < <(printf '%s\n' "$normalized" | tr -cs '[:alnum:]$:_-' '\n')
+    done
   done < <(printf '%s\n' "$lowered" | tr ',.!?;\n' '\n')
 
   shopt -u nullglob
@@ -269,7 +325,8 @@ cmd_resolve() {
     esac
   done
 
-  session_key="$(derive_session_key_or_fail "$raw_session_key")" || return 1
+  derive_session_key_or_fail "$raw_session_key" || return 1
+  session_key="$DERIVED_SESSION_KEY"
   decision_path="$(decision_path_for_key "$session_key")"
   message_text="$(load_message_text_or_fail "$message_file")" || return 1
 
@@ -339,7 +396,8 @@ cmd_record() {
       ;;
   esac
 
-  session_key="$(derive_session_key_or_fail "$raw_session_key")" || return 1
+  derive_session_key_or_fail "$raw_session_key" || return 1
+  session_key="$DERIVED_SESSION_KEY"
   decision_path="$(decision_path_for_key "$session_key")"
 
   if ! write_decision_value "$decision_path" "$decision" "record"; then

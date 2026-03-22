@@ -14,6 +14,8 @@ Only the minimum content needed by the test is kept here:
 - title
 - workflow-state header lines
 - source-spec header line for plan fixtures
+- Requirement Index and Requirement Coverage Matrix structure where sequencing coverage needs it
+- canonical `## Task N:` plus parseable `**Files:**` blocks where execution-stage sequencing coverage needs it
 - a stale source-spec path case where a newer approved spec path exists at the same revision
 
 This keeps the sequencing test self-contained and avoids coupling it to

@@ -12,12 +12,13 @@ This fork keeps that core workflow and extends it with additional skill structur
 
 Superpowers is not just a collection of prompts. It is a small runtime plus a skill library that turns the agent into a conservative workflow state machine.
 
-Five layers matter:
+Six layers matter:
 
 - `superpowers-session-entry` owns first-turn session entry. Missing or malformed decision state fails closed to `needs_user_choice` before the normal stack starts.
 - `using-superpowers` is the human-readable entry router after session entry resolves to `enabled`, and it bypasses the rest of the stack when session entry resolves to `bypassed` without explicit re-entry.
 - `superpowers-workflow-status` owns product-work routing up to `implementation_ready`.
 - `superpowers-repo-safety` owns protected-branch repo-write guarantees. Repo-writing stages fail closed on protected branches unless the current task scope is on a non-protected branch or has explicit task-scoped approval.
+- `superpowers-plan-contract` owns semantic traceability between approved specs, approved plans, and derived task packets. It parses authoritative markdown, fails closed on malformed or ambiguous contracts, and builds exact task-packet context for execution and review.
 - `superpowers-plan-execution` owns execution state after an approved plan is handed off.
 
 The key design choice is that repo-visible artifacts remain authoritative, while local runtime state is only a rebuildable index:
@@ -282,6 +283,8 @@ Generated workflow skills call `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-stat
 
 Generated repo-writing workflow skills call `$_SUPERPOWERS_ROOT/bin/superpowers-repo-safety` (and `bin/superpowers-repo-safety.ps1` on Windows) before spec writes, plan writes, approval-header edits, release-doc updates, execution task slices, and branch-finishing commands. It blocks repo writes on protected branches unless the scope is already on a non-protected branch or the user has explicitly approved the exact task scope and the helper's re-check passes.
 
+Generated planning, execution, and review workflow skills call `$_SUPERPOWERS_ROOT/bin/superpowers-plan-contract` (and `bin/superpowers-plan-contract.ps1` on Windows) to lint Requirement Index plus Requirement Coverage Matrix contracts and to build task-packet context. Specs and plans stay authoritative in repo markdown; the helper only enforces and compiles that markdown into exact execution and review inputs.
+
 Superpowers also ships a supported public workflow inspection CLI:
 
 - `bin/superpowers-workflow` (Bash)
@@ -293,7 +296,7 @@ All 18 checked-in `skills/*/SKILL.md` files are generated from adjacent `SKILL.m
 
 The shipped reviewer agent artifacts are generated from `agents/code-reviewer.instructions.md`. Regenerate them with `node scripts/gen-agent-docs.mjs` and validate freshness with `node scripts/gen-agent-docs.mjs --check`.
 
-When changing the generated skill runtime, run `node scripts/gen-skill-docs.mjs --check` before `bash tests/codex-runtime/test-using-superpowers-bypass.sh`, `bash tests/codex-runtime/test-superpowers-session-entry.sh`, `bash tests/codex-runtime/test-superpowers-session-entry-gate.sh`, `bash tests/codex-runtime/test-superpowers-repo-safety.sh`, `bash tests/codex-runtime/test-runtime-instructions.sh`, `bash tests/codex-runtime/test-workflow-enhancements.sh`, and `bash tests/codex-runtime/test-workflow-sequencing.sh`.
+When changing the generated skill runtime, run `node scripts/gen-skill-docs.mjs --check` before `bash tests/codex-runtime/test-using-superpowers-bypass.sh`, `bash tests/codex-runtime/test-superpowers-session-entry.sh`, `bash tests/codex-runtime/test-superpowers-session-entry-gate.sh`, `bash tests/codex-runtime/test-superpowers-plan-contract.sh`, `bash tests/codex-runtime/test-superpowers-repo-safety.sh`, `bash tests/codex-runtime/test-runtime-instructions.sh`, `bash tests/codex-runtime/test-workflow-enhancements.sh`, and `bash tests/codex-runtime/test-workflow-sequencing.sh`.
 
 To enable contributor mode for the installed runtime, run `~/.superpowers/install/bin/superpowers-config set superpowers_contributor true`.
 
@@ -335,9 +338,9 @@ Only the user can initiate accelerated review, and section approval plus final a
 
 4. **plan-eng-review** - Activates after the plan is written. Reviews the full written plan before implementation starts.
 
-5. **implementation** - `subagent-driven-development` or `executing-plans` start from an engineering-approved current plan, run workspace-readiness checks, and execute the plan. The completion flow then runs `requesting-code-review`, requires `qa-only` when browser QA is warranted, requires `document-release` for workflow-routed work, and then proceeds to final branch cleanup or PR handoff. If the user wants an isolated workspace, invoke `using-git-worktrees` manually before execution.
+5. **implementation** - `subagent-driven-development` or `executing-plans` start from an engineering-approved current plan, run workspace-readiness checks, derive task packets from the approved markdown contract through `superpowers-plan-contract`, and execute the plan. The completion flow then runs `requesting-code-review`, requires `qa-only` when browser QA is warranted, requires `document-release` for workflow-routed work, and then proceeds to final branch cleanup or PR handoff. If the user wants an isolated workspace, invoke `using-git-worktrees` manually before execution.
 
-Implementation starts from an engineering-approved current plan and the exact approved plan path. `plan-eng-review` presents that handoff, and `superpowers-plan-execution recommend --plan <approved-plan-path>` chooses between *subagent-driven-development* and *executing-plans*. In both cases, execution runs a workspace-readiness preflight, executes the plan task by task, reviews before completion, and hands off through the normal branch-finishing flow.
+Implementation starts from an engineering-approved current plan and the exact approved plan path. `plan-eng-review` presents that handoff, and `superpowers-plan-execution recommend --plan <approved-plan-path>` chooses between *subagent-driven-development* and *executing-plans*. In both cases, execution runs a workspace-readiness preflight, executes the plan task by task, reviews before completion, and hands off through the normal branch-finishing flow. Those execution and review stages now derive task packets from the approved markdown contract through `superpowers-plan-contract` instead of relying on controller-written semantic summaries.
 
 **The agent checks for relevant skills before any task.** These are mandatory workflows, not suggestions.
 

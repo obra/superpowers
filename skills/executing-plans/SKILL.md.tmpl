@@ -73,10 +73,22 @@ superpowers-repo-safety check --intent write --stage superpowers:executing-plans
 ### Step 2: Execute Tasks
 
 For each task:
-1. Use the approved plan checklist as the visible progress record for the task's steps.
-2. Follow each step exactly (plan has bite-sized steps).
-3. Run verifications as specified.
-4. Call `complete` as soon as a step is truly satisfied so the plan checkbox flips to `- [x]`.
+1. Before starting a task, build the canonical task packet:
+
+```bash
+"$_SUPERPOWERS_ROOT/bin/superpowers-plan-contract" build-task-packet \
+  --plan <approved-plan-path> \
+  --task <task-number> \
+  --format markdown \
+  --persist yes
+```
+
+2. treat it as the exact task contract for that execution segment. Coordinator-added logistics may clarify branch, cwd, or base commit, but they may not reinterpret approved requirements.
+3. Use the approved plan checklist as the visible progress record for the task's steps.
+4. Follow each step exactly (plan has bite-sized steps).
+5. Run verifications as specified.
+6. If the packet is malformed, stale, or still leaves ambiguity unresolved, stop and route back to review instead of guessing.
+7. Call `complete` as soon as a step is truly satisfied so the plan checkbox flips to `- [x]`.
 
 ### Step 3: Request Final Review
 

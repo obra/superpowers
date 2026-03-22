@@ -148,6 +148,7 @@ If a fresh review has not already been resolved for the current diff, invoke `su
 - Resolve all Critical issues before continuing
 - Resolve Important issues unless the user explicitly accepts the risk
 - If a fresh review already happened in the current workflow, continue silently
+- A review stops being fresh as soon as new repo changes land, including release-doc or metadata edits from `superpowers:document-release`
 
 ### Step 1.6: Execution-State Gate
 
@@ -156,6 +157,9 @@ Before presenting completion options:
 - If the current work was executed from an approved Superpowers plan, require the exact approved plan path from the current execution workflow context before presenting completion options.
 - Run `superpowers-plan-execution status --plan <approved-plan-path>` and read the returned `evidence_path` before presenting completion options.
 - If the exact approved plan path is unavailable or helper status fails, stop and return to the current execution flow instead of guessing.
+- Parse `active_task`, `blocking_task`, and `resume_task` from the status JSON.
+- If any of `active_task`, `blocking_task`, or `resume_task` is non-null, stop and return to the current execution flow; branch completion is only valid when all three are `null`.
+- If `evidence_path` is empty or unreadable, stop and return to the current execution flow instead of guessing at execution evidence.
 - If the current work is not governed by an approved Superpowers plan, skip this execution-state gate and continue.
 - rejects branch-completion handoff if the approved plan is execution-dirty or malformed
 - must not allow branch completion while any checked-off plan step still lacks semantic implementation evidence
@@ -205,6 +209,8 @@ For workflow-routed work, require the `document-release` pass before presenting 
 For workflow-routed work, if the repo has release-facing docs or metadata such as `CHANGELOG.md`, `RELEASE-NOTES.md`, `VERSION`, `TODOS.md`, `README.md`, or platform workflow docs, do not treat documentation as optional cleanup. Route through `superpowers:document-release` first unless a fresh pass already happened in the current workflow.
 
 For ad-hoc or non-workflow-routed work, keep `document-release` available as an optional cleanup pass when the diff clearly changes release-facing docs or handoff material, but do not turn it into a universal pre-completion gate.
+
+If `superpowers:document-release` writes repo files or changes release metadata, treat any earlier code review as stale and loop back through `superpowers:requesting-code-review` before presenting completion options.
 
 Before moving on, perform a short Gate F-style confirmation:
 

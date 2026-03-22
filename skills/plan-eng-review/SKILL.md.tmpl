@@ -25,6 +25,7 @@ description: Use when a written Superpowers implementation plan from a CEO-appro
 
 - If any header line is missing or malformed, normalize the plan to this contract before continuing and treat it as `Draft`.
 - Read the source spec named in `**Source Spec:**` and confirm both the path and revision match the latest approved spec before approving execution.
+- Treat `Requirement Index`, `Requirement Coverage Matrix`, canonical `## Task N:` headings, `Spec Coverage`, `Task Outcome`, `Plan Constraints`, `Open Questions`, and `Files:` blocks as required plan contract surface for engineering approval.
 - When review decisions change the written plan, update the plan document before continuing.
 - **Protected-Branch Repo-Write Gate:**
 - Before editing the plan body or changing approval headers on disk, run the shared repo-safety preflight for the exact review-write scope:
@@ -172,6 +173,36 @@ Before moving into the review sections:
 3. If the spec is not `CEO Approved`, stop and direct the agent back to `superpowers:plan-ceo-review`.
 4. If the plan's `**Source Spec:**` path or `**Source Spec Revision:**` does not match the latest approved spec, stop and direct the agent back to `superpowers:writing-plans`.
 5. If you make plan edits during this review, keep `**Workflow State:** Draft` until every review issue is resolved.
+
+### Plan-Contract Gate
+
+Before `**Workflow State:** Engineering Approved`, run:
+
+```bash
+"$_SUPERPOWERS_ROOT/bin/superpowers-plan-contract" lint \
+  --spec <source-spec-path> \
+  --plan <plan-path>
+```
+
+Engineering approval must fail closed when lint reports:
+
+- missing or malformed `Requirement Index`
+- missing or malformed `Requirement Coverage Matrix`
+- unknown requirement IDs
+- uncovered requirement IDs
+- tasks without `Spec Coverage`
+- tasks with `Open Questions` not equal to `none`
+- ambiguous wording
+- requirement weakening or widening
+- invalid task heading structure
+- invalid `Files:` block structure
+
+In the review itself, answer these questions explicitly before approval:
+
+- Does the `Requirement Coverage Matrix` cover every approved requirement without orphaned or over-broad tasks?
+- Do task-level `Spec Coverage` entries preserve approved decisions and constraints rather than reopening them?
+- Do the planned tasks preserve the approved non-goals and avoid widening scope into behavior the spec explicitly excluded?
+- Do `Files:` blocks stay within the minimum file scope needed for the covered requirements, or do they signal file-scope drift that should be split or reapproved?
 
 ## Review Sections
 
