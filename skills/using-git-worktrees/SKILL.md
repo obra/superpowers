@@ -13,6 +13,30 @@ Git worktrees create isolated workspaces sharing the same repository, allowing w
 
 **Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
 
+## Step 0: Check if Already in an Isolated Workspace
+
+Before creating a worktree, check if one already exists:
+
+````bash
+GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
+GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
+BRANCH=$(git branch --show-current)
+````
+
+**If `GIT_DIR` differs from `GIT_COMMON`:** You are already inside a linked worktree (created by the Codex App, Claude Code's Agent tool, a previous skill run, or the user). Do NOT create another worktree. Instead:
+
+1. Run project setup (auto-detect package manager as in "Run Project Setup" below)
+2. Verify clean baseline (run tests as in "Verify Clean Baseline" below)
+3. Report with branch state:
+   - On a branch: "Already in an isolated workspace at `<path>` on branch `<name>`. Tests passing. Ready to implement."
+   - Detached HEAD: "Already in an isolated workspace at `<path>` (detached HEAD, externally managed). Tests passing. Note: branch creation needed at finish time. Ready to implement."
+
+After reporting, STOP. Do not continue to Directory Selection or Creation Steps.
+
+**If `GIT_DIR` equals `GIT_COMMON`:** Proceed with the full worktree creation flow below.
+
+**Sandbox fallback:** If you proceed to Creation Steps but `git worktree add -b` fails with a permission error (e.g., "Operation not permitted"), treat this as a late-detected restricted environment. Fall back to the behavior above — run setup and baseline tests in the current directory, report accordingly, and STOP.
+
 ## Directory Selection Process
 
 Follow this priority order:
