@@ -132,6 +132,38 @@ Provide for each type that applies:
 
 Store: `test_commands` (object: { linting: "", type_checking: "", unit_tests: "", ... })
 
+**Q8: Test setup validation (optional)**
+```
+Would you like to validate your test setup now?
+
+This helps catch common issues with:
+- Test command permissions
+- Docker configuration (if using Docker for tests/UAT)
+- Missing dependencies or environment variables
+- Path issues
+
+Validating now can prevent workflow blockers later.
+
+Validate test setup? (y/n)
+```
+
+If yes:
+1. Run each provided test command in a safe way (read-only, non-destructive)
+2. Capture any errors (permissions, missing files, Docker not running, etc.)
+3. For each error, offer to help troubleshoot:
+   - Permission errors: suggest chmod/chown or running with appropriate user
+   - Docker errors: check if Docker is running, suggest docker-compose setup
+   - Missing dependencies: identify what's missing and suggest install commands
+   - Path errors: help locate the correct paths
+4. Re-run commands after fixes until they work or user opts to skip
+5. If UAT type is "Docker-based UAT":
+   - Verify Docker/docker-compose is installed
+   - Check if Docker daemon is running
+   - If Dockerfile or docker-compose.yml exists, offer to validate it builds
+   - Suggest creating a test script if none exists
+
+If no, skip to project creation.
+
 ### Project Creation
 
 For each selected flow, create a GitHub Project:
@@ -566,8 +598,9 @@ Next steps:
 
 1. Review .claude/project-flows.json
 2. Fill in project-specific details in .claude/shared/*.md
-3. Test with: /loop
-4. Commit to git:
+3. [If test validation was skipped] Verify your test commands work before using /loop
+4. Test with: /loop
+5. Commit to git:
    git add .claude/
    git commit -m "chore: set up GitHub Project integration"
 

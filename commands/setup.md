@@ -100,7 +100,18 @@ Provide commands for each type (comma-separated, or "skip" if no tests):
   - Unit tests: (e.g., pytest test/, npm test)
   - Regression tests: (if any)
 (Leave blank if no tests)
+
+Would you like to validate your test setup now?
+This helps catch common issues with permissions, Docker configuration,
+missing dependencies, and path problems before they block your workflow.
+(y/n)
 ```
+
+If user chooses to validate:
+- Run each test command in a safe way
+- Capture and help troubleshoot any errors (permissions, Docker, paths, dependencies)
+- For Docker-based UAT, verify Docker is running and configuration is valid
+- Re-run after fixes until tests work or user opts to skip
 
 Collect all answers.
 
