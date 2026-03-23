@@ -24,7 +24,7 @@ You MUST create a task for each of these items and complete them in order:
 1. **Explore project context** — check files, docs, recent commits
 2. **Offer visual companion** (if topic will involve visual questions) — this is its own message, not combined with a clarifying question. See the Visual Companion section below.
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-4. **Ask workflow preferences** — after clarifying questions are done, ask all three in a single message (see Workflow Preferences section below)
+4. **Load or ask workflow preferences** — check for saved preferences in .claude/ultrapowers-preferences.json; if missing, ask and save (see Workflow Preferences section below)
 5. **Propose 2-3 approaches** — with trade-offs and your recommendation
 6. **Present design** — in sections scaled to their complexity, get user approval after each section
 7. **Write design doc** — save to `docs/ultrapowers/specs/YYYY-MM-DD-<topic>-design.md` (commit only if user opted in)
@@ -148,7 +148,13 @@ Wait for the user's response. If they request changes, make them and re-run the 
 
 ## Workflow Preferences
 
-After clarifying questions are complete (and before proposing approaches), ask the user all three questions in **a single message**:
+**Step 4 — Load or ask workflow preferences:**
+
+Read `.claude/ultrapowers-preferences.json` in the project root using the Read tool. If it exists and contains valid JSON with `autoCommit`, `autoPush`, and `commitDesignDocs` keys, load the values silently and announce:
+
+> "Using saved preferences (auto-commit: on/off, auto-push: on/off, commit docs: on/off). Say 'change preferences' to update."
+
+If the file does not exist or is invalid, ask the user all three questions in **a single message**:
 
 > "Before we move on to approaches, a few workflow preferences:
 > 1. **Auto-commit** — Should I commit autonomously as I complete tasks, or would you prefer to handle commits yourself?
@@ -160,7 +166,19 @@ After clarifying questions are complete (and before proposing approaches), ask t
 - Auto-push: **OFF** (user pushes manually)
 - Commit design docs: **OFF** (local only)
 
-Store these preferences for the session. All downstream skills (writing-plans, subagent-driven-development, writing-skills, finishing-a-development-branch) respect these settings.
+After collecting answers, write them to `.claude/ultrapowers-preferences.json`:
+
+```json
+{
+  "autoCommit": true,
+  "autoPush": false,
+  "commitDesignDocs": false
+}
+```
+
+If `.claude/` directory doesn't exist, create it. Suggest adding `.claude/ultrapowers-preferences.json` to `.gitignore` if not already ignored.
+
+All downstream skills (writing-plans, subagent-driven-development, executing-plans, finishing-a-development-branch) read this file and respect the values. If the file is missing, fall back to defaults (all OFF).
 
 ## Visual Companion
 
