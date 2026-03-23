@@ -1,66 +1,268 @@
-# Superpowers
+# Superpowered Agents
 
-Superpowers is a complete software development workflow for your coding agents, built on top of a set of composable "skills" and some initial instructions that make sure your agent uses them.
+Autonomous agent workflows for software development teams. Built on [Superpowers](https://github.com/obra/superpowers) with GitHub Project automation for bug fixes and feature development.
 
-## How it works
+## What You Get
 
-It starts from the moment you fire up your coding agent. As soon as it sees that you're building something, it *doesn't* just jump into trying to write code. Instead, it steps back and asks you what you're really trying to do. 
+### 1. Superpowers Foundation
 
-Once it's teased a spec out of the conversation, it shows it to you in chunks short enough to actually read and digest. 
+Fork of [obra/superpowers](https://github.com/obra/superpowers) - a complete agent workflow system with composable skills:
+- **brainstorming** - Design refinement before coding
+- **writing-plans** - Implementation plans for autonomous execution
+- **subagent-driven-development** - Multi-agent parallel development
+- **test-driven-development** - RED-GREEN-REFACTOR enforcement
+- **systematic-debugging** - Root cause analysis process
 
-After you've signed off on the design, your agent puts together an implementation plan that's clear enough for an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing to follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY. 
+All the battle-tested workflows from Superpowers, plus team collaboration features.
 
-Next up, once you say "go", it launches a *subagent-driven-development* process, having agents work through each engineering task, inspecting and reviewing their work, and continuing forward. It's not uncommon for Claude to be able to work autonomously for a couple hours at a time without deviating from the plan you put together.
+### 2. Bug & Feature Resolution Workflows
 
-There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Superpowers.
+Structured processes that improve first-time resolution rates:
+
+**Bug Flow (5 stages):**
+```
+Triage → Fix → Test → UserTest → Done
+```
+- Parallel hypothesis testing for root cause
+- Evidence-driven testing with RED-GREEN discipline
+- Automated CI gates
+- Optional UAT validation
+
+**Feature Flow (7 stages):**
+```
+Brainstorm → Design Review → Plan → Implement → Test → Review → Done
+```
+- Socratic design refinement
+- Spec validation before implementation
+- Subagent-driven parallel development
+- Two-stage review (spec compliance, then code quality)
+
+### 3. GitHub Projects Integration
+
+Kanban boards that map workflow stages to GitHub Projects:
+
+- **Organization-level projects** - Manage issues across repos
+- **Status field automation** - Track progress through stages
+- **Board views** - Visualize work in progress
+- **Marker-based idempotency** - Resume from interruptions
+
+Set up in minutes with `/setup` command.
+
+### 4. Loop Agents
+
+Autonomous agents that process issues through workflow stages:
+
+```bash
+/loop bug        # Process bug issues
+/loop feature    # Process feature issues
+/loop all        # Process both flows
+```
+
+**How it works:**
+- Reads issues from GitHub Projects
+- Checks Status field to determine current stage
+- Dispatches appropriate skill for that stage
+- Posts progress markers to issue comments
+- Advances to next stage on completion
+- Never blocks - communicates async via GitHub
+
+**Example:**
+```
+Issue #123 in "Triage" stage
+→ Loop dispatches bug-triage skill
+→ Investigates root cause with parallel hypotheses
+→ Posts [TRIAGE_READY] marker
+→ Moves to "Fix" stage
+
+Issue #123 in "Fix" stage
+→ Loop dispatches bug-fix skill
+→ Implements the fix
+→ Posts [FIX_COMPLETE] marker
+→ Moves to "Test" stage
+
+...continues through all stages automatically
+```
+
+## Quick Start
+
+### 1. Install Plugin
+
+Choose your platform:
+
+**Claude Code Official Marketplace:**
+```bash
+/plugin install superpowers@claude-plugins-official
+```
+
+**Cursor:**
+```bash
+/add-plugin superpowers
+```
+
+See [Installation](#installation) for all platforms.
+
+### 2. Set Up GitHub Projects
+
+From your repository:
+
+```bash
+/setup
+```
+
+Creates projects, configures workflows, generates configuration files.
+
+See [Integration Guide](docs/INTEGRATION_GUIDE.md) for detailed walkthrough.
+
+### 3. Create Issues
+
+```bash
+gh issue create --title "Login timeout" --body "Users timing out after 5s"
+gh project item-add 1 --url <issue-url>
+```
+
+### 4. Run Loop
+
+```bash
+/loop bug
+```
+
+Agents process issues automatically through all stages.
+
+## Credits
+
+This project is built on [Superpowers](https://github.com/obra/superpowers) by [Jesse Vincent](https://blog.fsck.com) and the [Prime Radiant](https://primeradiant.com) team.
+
+If Superpowers has helped you, consider [sponsoring Jesse's opensource work](https://github.com/sponsors/obra).
 
 
-## Sponsorship
+## Documentation
 
-If Superpowers has helped you do stuff that makes money and you are so inclined, I'd greatly appreciate it if you'd consider [sponsoring my opensource work](https://github.com/sponsors/obra).
+### Getting Started
+- **[Integration Guide](docs/INTEGRATION_GUIDE.md)** - Add to existing repo, configure workflows
+- **[GitHub Project Setup](docs/GITHUB_PROJECT_SETUP.md)** - Manual project configuration steps
+- **[Branch Strategy](docs/BRANCH_STRATEGY.md)** - Promotion flow (feature → dev → staging → main)
 
-Thanks! 
+### Commands
+- **[/setup](commands/setup.md)** - Bootstrap GitHub Projects integration
+- **[/loop](commands/loop.md)** - Process issues through workflow stages
 
-- Jesse
+### Workflows
+- **[Bug Triage](skills/bug-triage/SKILL.md)** - Root cause investigation with parallel hypotheses
+- **[Bug Fix](skills/bug-fix/SKILL.md)** - Evidence-driven fix implementation
+- **[Testing Gates](skills/testing-gates/SKILL.md)** - Automated CI validation
+- **[Committing](skills/committing/SKILL.md)** - Git workflow and PR creation
+- **[Loop Orchestrator](skills/loop-orchestrator/SKILL.md)** - Issue processing automation
 
+### Maintenance
+- **[Updating from Super Agents](docs/UPDATING_FROM_SUPER_AGENTS.md)** - Pull upstream changes
+- **[Contributing Lessons Learned](docs/CONTRIBUTING_LESSONS_LEARNED.md)** - When and how to contribute back
 
 ## Installation
 
-**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex and OpenCode require manual setup.
+Choose your platform:
+
+**Claude Code:**
+```bash
+/plugin install superpowers@claude-plugins-official
+```
+
+**Cursor:**
+```bash
+/add-plugin superpowers
+```
+
+**Codex:**
+```
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md
+```
+
+**OpenCode:**
+```
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
+```
+
+**Gemini:**
+```bash
+gemini extensions install https://github.com/obra/superpowers
+```
+
+See [Installation](#installation-details) below for detailed instructions.
+
+## Skills Library
+
+All skills from [Superpowers](https://github.com/obra/superpowers), plus GitHub Project workflow automation:
+
+**GitHub Project Workflows:**
+- **bug-triage** - Parallel hypothesis testing for root cause
+- **bug-fix** - Evidence-driven fix implementation
+- **testing-gates** - Automated CI validation (linting, type checking, tests)
+- **user-acceptance-testing** - UAT coordination
+- **loop-orchestrator** - Automated issue processing
+- **committing** - Git workflow and PR creation
+
+**Feature Development (from Superpowers):**
+- **brainstorming** - Socratic design refinement
+- **writing-plans** - Detailed implementation plans
+- **subagent-driven-development** - Multi-agent parallel development
+- **requesting-code-review** - Pre-review checklist
+- **finishing-a-development-branch** - Merge/PR workflow
+
+**Testing & Debugging (from Superpowers):**
+- **test-driven-development** - RED-GREEN-REFACTOR enforcement
+- **systematic-debugging** - Root cause analysis
+- **verification-before-completion** - Ensure fixes work
+
+**Supporting Skills (from Superpowers):**
+- **dispatching-parallel-agents** - Concurrent subagent workflows
+- **using-git-worktrees** - Isolated development branches
+- **evidence-driven-testing** - Scratch/promoted/permanent test commitment
+- **handler-authority** - Async authority model for loop mode
+
+Full skill list: [skills/](skills/)
+
+## Philosophy
+
+- **Evidence over claims** - Verify before declaring success
+- **Systematic over ad-hoc** - Process over guessing
+- **Test-Driven Development** - Write tests first, always
+- **Structured workflows** - Clear stages, clear progression
+- **Async coordination** - Work through GitHub, not blocking terminal
+
+Read more: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
+
+## Installation Details
 
 ### Claude Code Official Marketplace
 
-Superpowers is available via the [official Claude plugin marketplace](https://claude.com/plugins/superpowers)
-
-Install the plugin from Claude marketplace:
+Install from the official marketplace:
 
 ```bash
 /plugin install superpowers@claude-plugins-official
 ```
 
-### Claude Code (via Plugin Marketplace)
+### Claude Code (via Superpowers Marketplace)
 
-In Claude Code, register the marketplace first:
+Register the marketplace first:
 
 ```bash
 /plugin marketplace add obra/superpowers-marketplace
 ```
 
-Then install the plugin from this marketplace:
+Then install:
 
 ```bash
 /plugin install superpowers@superpowers-marketplace
 ```
 
-### Cursor (via Plugin Marketplace)
+### Cursor
 
-In Cursor Agent chat, install from marketplace:
+Install from marketplace:
 
-```text
+```bash
 /add-plugin superpowers
 ```
 
-or search for "superpowers" in the plugin marketplace.
+Or search "superpowers" in plugin marketplace UI.
 
 ### Codex
 
@@ -70,7 +272,7 @@ Tell Codex:
 Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md
 ```
 
-**Detailed docs:** [docs/README.codex.md](docs/README.codex.md)
+See [docs/README.codex.md](docs/README.codex.md) for details.
 
 ### OpenCode
 
@@ -80,15 +282,15 @@ Tell OpenCode:
 Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
 ```
 
-**Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
+See [docs/README.opencode.md](docs/README.opencode.md) for details.
 
-### Gemini CLI
+### Gemini
 
 ```bash
 gemini extensions install https://github.com/obra/superpowers
 ```
 
-To update:
+Update with:
 
 ```bash
 gemini extensions update superpowers
@@ -96,111 +298,39 @@ gemini extensions update superpowers
 
 ### Verify Installation
 
-Start a new session in your chosen platform and ask for something that should trigger a skill (for example, "help me plan this feature" or "let's debug this issue"). The agent should automatically invoke the relevant superpowers skill.
+After installation, verify skills are active:
 
-## The Basic Workflow
+```
+/brainstorm
+```
 
-1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
-
-2. **using-git-worktrees** - Activates after design approval. Creates isolated workspace on new branch, runs project setup, verifies clean test baseline.
-
-3. **writing-plans** - Activates with approved design. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
-
-4. **subagent-driven-development** or **executing-plans** - Activates with plan. Dispatches fresh subagent per task with two-stage review (spec compliance, then code quality), or executes in batches with human checkpoints.
-
-5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
-
-6. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
-
-7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
-
-**The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
-
-## What's Inside
-
-### Skills Library
-
-**Testing**
-- **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
-
-**Debugging**
-- **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
-- **verification-before-completion** - Ensure it's actually fixed
-
-**Collaboration** 
-- **brainstorming** - Socratic design refinement
-- **writing-plans** - Detailed implementation plans
-- **executing-plans** - Batch execution with checkpoints
-- **dispatching-parallel-agents** - Concurrent subagent workflows
-- **requesting-code-review** - Pre-review checklist
-- **receiving-code-review** - Responding to feedback
-- **using-git-worktrees** - Parallel development branches
-- **finishing-a-development-branch** - Merge/PR decision workflow
-- **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
-
-**Meta**
-- **writing-skills** - Create new skills following best practices (includes testing methodology)
-- **using-superpowers** - Introduction to the skills system
-
-## Philosophy
-
-- **Test-Driven Development** - Write tests first, always
-- **Systematic over ad-hoc** - Process over guessing
-- **Complexity reduction** - Simplicity as primary goal
-- **Evidence over claims** - Verify before declaring success
-
-Read more: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
-
-## GitHub Project Integration
-
-For teams managing bugs and features via GitHub Projects, super_agents provides workflow automation:
-
-- **/setup** - Bootstrap your repo with GitHub Projects integration
-- **/loop** - Process issues through workflow stages automatically
-- **Workflows** - Bug fix flow (Triage → Fix → Test → UAT → Done) and Feature flow (Brainstorm → Design → Plan → Implement → Test → Review → Done)
-
-**Getting Started:**
-- [Integration Guide](docs/INTEGRATION_GUIDE.md) - Add to your existing repo
-- [Branch Strategy](docs/BRANCH_STRATEGY.md) - Promotion flow best practices (feature → dev → staging → main)
-- [GitHub Project Setup](docs/GITHUB_PROJECT_SETUP.md) - Manual configuration steps
-
-**Maintenance:**
-- [Updating from Super Agents](docs/UPDATING_FROM_SUPER_AGENTS.md) - Pull upstream changes
-- [Contributing Lessons Learned](docs/CONTRIBUTING_LESSONS_LEARNED.md) - When and how to contribute back
+Agent should invoke the brainstorming skill.
 
 ## Contributing
 
-Skills live directly in this repository. To contribute:
+Contributions welcome! See [CONTRIBUTING_LESSONS_LEARNED.md](docs/CONTRIBUTING_LESSONS_LEARNED.md) for guidelines on:
+- What to contribute vs keep local
+- How to extract generic improvements
+- PR submission process
 
-1. Fork the repository
-2. Create a branch for your skill
-3. Follow the `writing-skills` skill for creating and testing new skills
-4. Submit a PR
+**Quick contributions:**
+- Bug fixes in skills or commands
+- Documentation improvements
+- New generic skills
 
-**Guides:**
-- Creating skills: `skills/writing-skills/SKILL.md`
-- Contributing improvements: [docs/CONTRIBUTING_LESSONS_LEARNED.md](docs/CONTRIBUTING_LESSONS_LEARNED.md)
+**Keep local:**
+- Project-specific configuration
+- Company workflows
+- Proprietary techniques
 
-## Updating
+## Community & Support
 
-Skills update automatically when you update the plugin:
+- **Discord**: [Join us](https://discord.gg/Jd8Vphy9jq)
+- **Issues**: [Report bugs](https://github.com/superpowers-agent/super-agents/issues)
+- **Superpowers**: [Original project](https://github.com/obra/superpowers)
 
-```bash
-/plugin update superpowers
-```
+Built on [Superpowers](https://github.com/obra/superpowers) by [Jesse Vincent](https://blog.fsck.com) and [Prime Radiant](https://primeradiant.com).
 
 ## License
 
 MIT License - see LICENSE file for details
-
-## Community
-
-Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of the folks at [Prime Radiant](https://primeradiant.com).
-
-For community support, questions, and sharing what you're building with Superpowers, join us on [Discord](https://discord.gg/Jd8Vphy9jq).
-
-## Support
-
-- **Discord**: [Join us on Discord](https://discord.gg/Jd8Vphy9jq)
-- **Issues**: https://github.com/obra/superpowers/issues
-- **Marketplace**: https://github.com/obra/superpowers-marketplace
