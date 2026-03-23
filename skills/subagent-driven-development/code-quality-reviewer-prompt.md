@@ -17,6 +17,8 @@ Task tool (superpowers:code-reviewer):
   DESCRIPTION: [task summary]
 ```
 
+**If the project has a CLAUDE.md (or AGENTS.md), read it — use its conventions as review criteria.**
+
 **In addition to standard code quality concerns, the reviewer should check:**
 - Does each file have one clear responsibility with a well-defined interface?
 - Are units decomposed so they can be understood and tested independently?

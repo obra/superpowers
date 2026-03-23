@@ -18,6 +18,8 @@ Task tool (general-purpose):
 
     ## Before You Begin
 
+    Read CLAUDE.md (or AGENTS.md) in the project root if it exists — its conventions are binding on your work.
+
     If you have questions about:
     - The requirements or acceptance criteria
     - The approach or implementation strategy

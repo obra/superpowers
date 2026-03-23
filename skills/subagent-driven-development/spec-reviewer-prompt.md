@@ -36,6 +36,8 @@ Task tool (general-purpose):
 
     ## Your Job
 
+    If the project has a CLAUDE.md (or AGENTS.md), read it — verify the implementation follows its conventions.
+
     Read the implementation code and verify:
 
     **Missing requirements:**
