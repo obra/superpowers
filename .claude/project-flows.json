@@ -2,8 +2,14 @@
   "version": 1,
   "repo": "superpowers-agent/super-agents",
   "github_owner": "superpowers-agent",
-  "default_base_branch": "main",
+  "default_base_branch": "dev",
   "branch_naming": "<type>/<issue#>-<short-description>",
+  "promotion_flow": {
+    "enabled": true,
+    "stages": ["dev", "main"],
+    "auto_promote": false,
+    "require_tests_pass": true
+  },
   "flows": {
     "bug": {
       "project_number": 1,
@@ -65,6 +71,12 @@
           "name": "Implement",
           "skill": "subagent-driven-development",
           "exit_marker": "[IMPL_COMPLETE]"
+        },
+        {
+          "name": "Test",
+          "skill": "testing-gates",
+          "exit_marker": "[TEST_PASS]",
+          "fail_marker": "[TEST_FAIL]"
         },
         {
           "name": "Review",
