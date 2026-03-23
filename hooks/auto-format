@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# PostToolUse hook: auto-formats files after Edit/Write.
+# Matcher: Edit|Write | Level: standard (2) | Async: true
+
+set -uo pipefail  # no -e: formatter exit codes shouldn't kill the hook
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "${SCRIPT_DIR}/profile-gate.sh"
+profile_gate 2 || exit 0
+
+# Read tool input from stdin
+INPUT=$(cat)
+
+# Extract file_path from tool_input
+FILE_PATH=$(printf '%s' "$INPUT" | grep -o '"file_path" *: *"[^"]*"' | head -1 | sed 's/.*: *"//;s/"$//')
+[ -z "$FILE_PATH" ] && exit 0
+
+# Only format if the file exists
+[ -f "$FILE_PATH" ] || exit 0
+
+# Extract the project directory from cwd in the hook input
+CWD=$(printf '%s' "$INPUT" | grep -o '"cwd" *: *"[^"]*"' | head -1 | sed 's/.*: *"//;s/"$//')
+[ -z "$CWD" ] && exit 0
+
+# Detect formatter and run on the file
+# Check for Biome
+if [ -f "${CWD}/biome.json" ] || [ -f "${CWD}/biome.jsonc" ]; then
+  npx @biomejs/biome format --write "$FILE_PATH" >/dev/null 2>&1
+  exit 0
+fi
+
+# Check for Prettier
+for cfg in .prettierrc .prettierrc.json .prettierrc.yml .prettierrc.yaml .prettierrc.js .prettierrc.ts prettier.config.js prettier.config.ts prettier.config.mjs prettier.config.cjs; do
+  if [ -f "${CWD}/${cfg}" ]; then
+    npx prettier --write "$FILE_PATH" >/dev/null 2>&1
+    exit 0
+  fi
+done
+# Also check package.json for "prettier" key
+if [ -f "${CWD}/package.json" ] && grep -q '"prettier"' "${CWD}/package.json" 2>/dev/null; then
+  npx prettier --write "$FILE_PATH" >/dev/null 2>&1
+  exit 0
+fi
+
+# Check for Ruff (Python files only)
+if printf '%s' "$FILE_PATH" | grep -qE '\.py$'; then
+  if command -v ruff >/dev/null 2>&1; then
+    ruff format "$FILE_PATH" >/dev/null 2>&1
+    exit 0
+  fi
+fi
+
+# No formatter detected — exit silently
+exit 0
