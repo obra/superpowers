@@ -1,5 +1,110 @@
 #!/usr/bin/env bash
 
+plan_structure_reset_header_state() {
+  PLAN_STRUCTURE_HEADER_ERROR_CLASS=""
+  PLAN_STRUCTURE_HEADER_ERROR_MESSAGE=""
+  PLAN_STRUCTURE_HEADER_REASON_CODE=""
+  PLAN_STRUCTURE_PLAN_WORKFLOW_STATE=""
+  PLAN_STRUCTURE_PLAN_REVISION=""
+  PLAN_STRUCTURE_PLAN_EXECUTION_MODE=""
+  PLAN_STRUCTURE_PLAN_SOURCE_SPEC=""
+  PLAN_STRUCTURE_PLAN_SOURCE_SPEC_REVISION=""
+  PLAN_STRUCTURE_PLAN_LAST_REVIEWED_BY=""
+}
+
+plan_structure_set_header_error() {
+  PLAN_STRUCTURE_HEADER_ERROR_CLASS="$1"
+  PLAN_STRUCTURE_HEADER_ERROR_MESSAGE="$2"
+  PLAN_STRUCTURE_HEADER_REASON_CODE="$3"
+  return 1
+}
+
+plan_structure_parse_plan_headers() {
+  local plan_abs="$1"
+  local line workflow_state="" plan_revision="" execution_mode="" source_spec="" source_spec_revision="" last_reviewed_by=""
+
+  plan_structure_reset_header_state
+  [[ -f "$plan_abs" ]] || {
+    plan_structure_set_header_error "MalformedPlanHeaders" "Plan file does not exist." "missing_plan_file"
+    return 1
+  }
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    if [[ "$line" =~ ^\*\*Workflow\ State:\*\*\ (.+)$ ]]; then
+      workflow_state="${BASH_REMATCH[1]}"
+    elif [[ "$line" =~ ^\*\*Plan\ Revision:\*\*\ ([0-9]+)$ ]]; then
+      plan_revision="${BASH_REMATCH[1]}"
+    elif [[ "$line" =~ ^\*\*Execution\ Mode:\*\*\ (.+)$ ]]; then
+      execution_mode="${BASH_REMATCH[1]}"
+    elif [[ "$line" =~ ^\*\*Source\ Spec:\*\*\ \`(.+)\`$ ]]; then
+      source_spec="${BASH_REMATCH[1]}"
+    elif [[ "$line" =~ ^\*\*Source\ Spec\ Revision:\*\*\ ([0-9]+)$ ]]; then
+      source_spec_revision="${BASH_REMATCH[1]}"
+    elif [[ "$line" =~ ^\*\*Last\ Reviewed\ By:\*\*\ (.+)$ ]]; then
+      last_reviewed_by="${BASH_REMATCH[1]}"
+    fi
+  done < "$plan_abs"
+
+  case "$workflow_state" in
+    Draft|Engineering\ Approved) ;;
+    "")
+      plan_structure_set_header_error "MalformedPlanHeaders" "Workflow State header is missing or malformed." "missing_workflow_state"
+      return 1
+      ;;
+    *)
+      plan_structure_set_header_error "MalformedPlanHeaders" "Workflow State header is missing or malformed." "invalid_workflow_state"
+      return 1
+      ;;
+  esac
+
+  if [[ -z "$plan_revision" ]]; then
+    plan_structure_set_header_error "MalformedPlanHeaders" "Plan Revision header is missing or malformed." "missing_plan_revision"
+    return 1
+  fi
+
+  case "$execution_mode" in
+    none|superpowers:executing-plans|superpowers:subagent-driven-development) ;;
+    "")
+      plan_structure_set_header_error "MalformedPlanHeaders" "Execution Mode header is missing or malformed." "missing_execution_mode"
+      return 1
+      ;;
+    *)
+      plan_structure_set_header_error "MalformedPlanHeaders" "Execution Mode header is missing or malformed." "invalid_execution_mode"
+      return 1
+      ;;
+  esac
+
+  if [[ -z "$source_spec" ]]; then
+    plan_structure_set_header_error "MalformedPlanHeaders" "Source Spec header is missing or malformed." "missing_source_spec"
+    return 1
+  fi
+
+  if [[ -z "$source_spec_revision" ]]; then
+    plan_structure_set_header_error "MalformedPlanHeaders" "Source Spec Revision header is missing or malformed." "missing_source_spec_revision"
+    return 1
+  fi
+
+  case "$last_reviewed_by" in
+    writing-plans|plan-eng-review) ;;
+    "")
+      plan_structure_set_header_error "MalformedPlanHeaders" "Last Reviewed By header is missing or malformed." "missing_last_reviewed_by"
+      return 1
+      ;;
+    *)
+      plan_structure_set_header_error "MalformedPlanHeaders" "Last Reviewed By header is missing or malformed." "invalid_last_reviewed_by"
+      return 1
+      ;;
+  esac
+
+  PLAN_STRUCTURE_PLAN_WORKFLOW_STATE="$workflow_state"
+  PLAN_STRUCTURE_PLAN_REVISION="$plan_revision"
+  PLAN_STRUCTURE_PLAN_EXECUTION_MODE="$execution_mode"
+  PLAN_STRUCTURE_PLAN_SOURCE_SPEC="$source_spec"
+  PLAN_STRUCTURE_PLAN_SOURCE_SPEC_REVISION="$source_spec_revision"
+  PLAN_STRUCTURE_PLAN_LAST_REVIEWED_BY="$last_reviewed_by"
+  return 0
+}
+
 plan_structure_reset() {
   PLAN_STRUCTURE_ERROR_CLASS=""
   PLAN_STRUCTURE_ERROR_MESSAGE=""
@@ -24,7 +129,14 @@ plan_structure_set_error() {
 }
 
 plan_structure_strip_file_reference_suffix() {
-  printf '%s' "$1" | sed -E 's/:[0-9]+([:-][0-9]+)*$//'
+  local value="$1"
+
+  if [[ "$value" =~ ^(.*):[0-9]+([:-][0-9]+)*$ ]]; then
+    printf '%s' "${BASH_REMATCH[1]}"
+    return 0
+  fi
+
+  printf '%s' "$value"
 }
 
 plan_structure_normalize_scope_path() {

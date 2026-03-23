@@ -170,7 +170,9 @@ test('workflow sequencing test uses local fixtures instead of historical docs pa
   const content = readUtf8(path.join(REPO_ROOT, 'tests/codex-runtime/test-workflow-sequencing.sh'));
   const stripped = content
     .replace(/^require_pattern docs\/superpowers\/specs\/2026-03-17-workflow-state-runtime-design\.md .*$/gm, '')
-    .replace(/^require_pattern docs\/superpowers\/plans\/2026-03-17-workflow-state-runtime\.md .*$/gm, '');
+    .replace(/^require_pattern docs\/superpowers\/plans\/2026-03-17-workflow-state-runtime\.md .*$/gm, '')
+    .replace(/^require_pattern docs\/superpowers\/specs\/2026-03-22-runtime-integration-hardening-design\.md .*$/gm, '')
+    .replace(/^require_pattern docs\/superpowers\/plans\/2026-03-22-runtime-integration-hardening\.md .*$/gm, '');
   assert.match(content, /WORKFLOW_FIXTURE_DIR="tests\/codex-runtime\/fixtures\/workflow-artifacts"/);
   assert.doesNotMatch(stripped, /docs\/superpowers\/specs\/2026-/);
   assert.doesNotMatch(stripped, /docs\/superpowers\/plans\/2026-/);
@@ -252,6 +254,7 @@ test('execution workflow skills reference the plan-execution helper contract', (
   for (const skill of ['subagent-driven-development', 'executing-plans']) {
     const content = readUtf8(getSkillPath(skill));
     assert.match(content, /calls `status --plan \.\.\.` during preflight/);
+    assert.match(content, /Provides the approved plan and the execution preflight handoff/);
     assert.match(content, /calls `begin` before starting work on a plan step/);
     assert.match(content, /calls `complete` after each completed step/);
     assert.match(content, /calls `note` when work is interrupted or blocked/);
@@ -264,7 +267,8 @@ test('execution workflow skills reference the plan-execution helper contract', (
   const reviewSkill = readUtf8(getSkillPath('requesting-code-review'));
   assert.match(reviewSkill, /rejects final review if the plan has invalid execution state or required unfinished work not truthfully represented/);
   assert.match(reviewSkill, /must fail closed when it detects a missed reopen or stale evidence, but must not call `reopen` itself/);
-  assert.match(reviewSkill, /For plan-routed final review, require the exact approved plan path from the current execution handoff or session context\./);
+  assert.match(reviewSkill, /For plan-routed final review, require the exact approved plan path and exact approved spec path from the current execution preflight handoff or session context\./);
+  assert.match(reviewSkill, /Run `superpowers-plan-contract analyze-plan --spec <approved-spec-path> --plan <approved-plan-path> --format json` before dispatching the reviewer\./);
   assert.match(reviewSkill, /Run `superpowers-plan-execution status --plan <approved-plan-path>` before dispatching the reviewer\./);
   assert.match(reviewSkill, /If helper status fails, stop and return to the current execution flow; do not dispatch review against guessed plan state\./);
   assert.match(reviewSkill, /Parse `active_task`, `blocking_task`, and `resume_task` from the status JSON\./);
@@ -300,7 +304,10 @@ test('task-fidelity workflow docs and prompts require packet-backed plan contrac
   assert.match(writingPlans, /superpowers-plan-contract" lint/);
 
   const planEngReview = readUtf8(getSkillPath('plan-eng-review'));
-  assert.match(planEngReview, /superpowers-plan-contract" lint/);
+  assert.match(planEngReview, /superpowers-plan-contract" analyze-plan/);
+  assert.match(planEngReview, /contract_state == valid/);
+  assert.match(planEngReview, /packet_buildable_tasks == task_count/);
+  assert.match(planEngReview, /missing, stale, or non-buildable for the approved plan revision/);
   assert.match(planEngReview, /Requirement Index/);
   assert.match(planEngReview, /Requirement Coverage Matrix/);
   assert.match(planEngReview, /tasks with `Open Questions` not equal to `none`/);
@@ -391,7 +398,7 @@ test('workflow handoff skills make terminal ownership explicit', () => {
   );
   assert.match(
     usingSuperpowers,
-    /If the JSON result reports `status` `implementation_ready`, proceed to the normal execution handoff using the exact approved plan path\./,
+    /If the JSON result reports `status` `implementation_ready`, proceed to the normal execution preflight and handoff flow using the exact approved plan path\./,
   );
   assert.match(
     usingSuperpowers,
@@ -403,7 +410,15 @@ test('workflow handoff skills make terminal ownership explicit', () => {
   );
   assert.match(
     usingSuperpowers,
-    /Plan is `Engineering Approved` and its `Source Spec:` path plus `Source Spec Revision:` match the latest approved spec: proceed to implementation through the normal execution handoff for that approved plan path\./,
+    /Plan revision:/,
+  );
+  assert.match(
+    usingSuperpowers,
+    /Plan execution mode:/,
+  );
+  assert.match(
+    usingSuperpowers,
+    /If the helper-backed execution preflight or handoff flow is unavailable, do not route directly from manual fallback into implementation\./,
   );
 
   const ceoReview = readUtf8(getSkillPath('plan-ceo-review'));
@@ -412,14 +427,14 @@ test('workflow handoff skills make terminal ownership explicit', () => {
   assert.match(ceoReview, /runs `sync --artifact spec`/);
 
   const engReview = readUtf8(getSkillPath('plan-eng-review'));
-  assert.match(engReview, /\*\*The terminal state is presenting the execution handoff with the approved plan path\.\*\*/);
+  assert.match(engReview, /\*\*The terminal state is presenting the execution preflight handoff with the approved plan path\.\*\*/);
   assert.match(engReview, /Do not start implementation inside `plan-eng-review`\./);
   assert.match(
     engReview,
     /if `\$_SUPERPOWERS_ROOT\/bin\/superpowers-workflow-status` is available, call `\$_SUPERPOWERS_ROOT\/bin\/superpowers-workflow-status status --refresh`/,
   );
   assert.match(engReview, /If the helper returns a non-empty `next_skill`, use that route instead of re-deriving state manually\./);
-  assert.match(engReview, /If the helper returns `status` `implementation_ready`, present the normal execution handoff below\./);
+  assert.match(engReview, /If the helper returns `status` `implementation_ready`, present the normal execution preflight handoff below\./);
 
   const brainstorming = readUtf8(getSkillPath('brainstorming'));
   assert.match(brainstorming, /record the intended spec path with `expect`/);
@@ -447,58 +462,38 @@ test('workflow handoff skills make terminal ownership explicit', () => {
 });
 
 test('approved workflow-state artifacts document the finalized helper contract', () => {
-  const specDoc = readUtf8(path.join(REPO_ROOT, 'docs/superpowers/specs/2026-03-17-workflow-state-runtime-design.md'));
+  const specDoc = readUtf8(path.join(REPO_ROOT, 'docs/superpowers/specs/2026-03-22-runtime-integration-hardening-design.md'));
   assert.match(
     specDoc,
-    /skills call `\$_SUPERPOWERS_ROOT\/bin\/superpowers-workflow-status`/,
-    'approved spec should describe runtime-root-aware helper invocation',
+    /`superpowers-workflow-status` must emit schema-versioned structured diagnostics including `contract_state`, `reason_codes`, `diagnostics`, `scan_truncated`, and candidate counts/,
+    'approved spec should describe structured route-time diagnostics',
   );
   assert.match(
     specDoc,
-    /`next_skill` is only used when non-empty/,
-    'approved spec should describe non-empty next_skill consumption',
+    /`phase` and `doctor` must compose session-entry state/,
+    'approved spec should describe session-entry composition in the public CLI',
   );
   assert.match(
     specDoc,
-    /`implementation_ready` is a terminal status/,
-    'approved spec should describe implementation_ready as terminal',
-  );
-  assert.match(
-    specDoc,
-    /`status --summary` is human-oriented/,
-    'approved spec should describe summary mode as human-oriented',
-  );
-  assert.match(
-    specDoc,
-    /`reason` is the canonical diagnostic field/,
-    'approved spec should describe canonical reason diagnostics',
+    /`superpowers-plan-execution` must expose read-only `preflight`, `gate-review`, and `gate-finish` commands/,
+    'approved spec should describe helper-owned execution gates',
   );
 
-  const planDoc = readUtf8(path.join(REPO_ROOT, 'docs/superpowers/plans/2026-03-17-workflow-state-runtime.md'));
+  const planDoc = readUtf8(path.join(REPO_ROOT, 'docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md'));
   assert.match(
     planDoc,
-    /`\$_SUPERPOWERS_ROOT\/bin\/superpowers-workflow-status status --refresh`/,
-    'approved plan should describe runtime-root-aware helper invocation',
+    /Route-time readiness and JSON diagnostics are driven by the same canonical approved-plan contract/,
+    'approved plan should describe route-time canonical contract hardening',
   );
   assert.match(
     planDoc,
-    /If the helper returns a non-empty `next_skill`, use that route\./,
-    'approved plan should describe non-empty next_skill consumption',
+    /The public workflow CLI can report phase, diagnostics, handoff readiness, preflight state, review gate results, and finish gate results/,
+    'approved plan should describe the expanded public workflow CLI surface',
   );
   assert.match(
     planDoc,
-    /If the helper returns `status` `implementation_ready`, present the normal execution handoff\./,
-    'approved plan should describe terminal implementation_ready handling',
-  );
-  assert.match(
-    planDoc,
-    /`status --summary` is human-oriented/,
-    'approved plan should describe summary mode as human-oriented',
-  );
-  assert.match(
-    planDoc,
-    /`reason` is the canonical diagnostic field/,
-    'approved plan should describe canonical reason diagnostics',
+    /Late-stage gate tasks must leave stale-artifact and stale-evidence proof/,
+    'approved plan should require stale-artifact and stale-evidence coverage',
   );
 });
 
@@ -517,4 +512,26 @@ test('workflow docs avoid stale ambiguity, commit-ownership, and review-freshnes
 
   const readme = readUtf8(path.join(REPO_ROOT, 'README.md'));
   assert.match(readme, /Six layers matter:/);
+});
+
+test('deprecated command docs act as compatibility shims instead of dead-end deprecations', () => {
+  const brainstorm = readUtf8(path.join(REPO_ROOT, 'commands/brainstorm.md'));
+  assert.match(brainstorm, /current phase/i);
+  assert.match(brainstorm, /superpowers-workflow phase/);
+  assert.match(brainstorm, /superpowers:brainstorming/);
+  assert.doesNotMatch(brainstorm, /will be removed in the next major release/i);
+
+  const writePlan = readUtf8(path.join(REPO_ROOT, 'commands/write-plan.md'));
+  assert.match(writePlan, /current phase/i);
+  assert.match(writePlan, /superpowers-workflow handoff/);
+  assert.match(writePlan, /superpowers:writing-plans/);
+  assert.doesNotMatch(writePlan, /will be removed in the next major release/i);
+
+  const executePlan = readUtf8(path.join(REPO_ROOT, 'commands/execute-plan.md'));
+  assert.match(executePlan, /public handoff surface/i);
+  assert.match(executePlan, /exact approved plan/i);
+  assert.match(executePlan, /recommended execution path/i);
+  assert.match(executePlan, /If the handoff reports `phase` `needs_user_choice` or `next_action` `session_entry_gate`, resolve the session-entry decision first/i);
+  assert.match(executePlan, /execution already started for that plan revision/i);
+  assert.doesNotMatch(executePlan, /will be removed in the next major release/i);
 });

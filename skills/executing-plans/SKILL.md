@@ -137,11 +137,14 @@ Load plan, review critically, execute all tasks in a separate session, request f
    - if the working tree is dirty, stop and ask the user to confirm the workspace is intentionally prepared
 7. Do not auto-clean the workspace and do not auto-create a worktree.
 8. The later repo-safety checks still govern any additional protected branches declared through repo or user instructions.
-9. If preflight passes, review the plan critically for execution concerns and use the approved plan checklist as the execution progress record.
+9. Run `superpowers-plan-execution preflight --plan <approved-plan-path>` before starting execution.
+10. If the preflight helper returns `allowed` `false`, stop and resolve the reported `failure_class`, `reason_codes`, and `diagnostics` before starting work.
+11. If preflight passes, review the plan critically for execution concerns and use the approved plan checklist as the execution progress record.
 
 ## Helper-Owned Execution State
 
 - calls `status --plan ...` during preflight
+- calls `preflight --plan ...` before execution starts
 - calls `begin` before starting work on a plan step
 - calls `complete` after each completed step
 - calls `note` when work is interrupted or blocked
@@ -237,7 +240,7 @@ After the final review is resolved:
 
 **Required workflow skills:**
 - **superpowers:writing-plans** - Creates the plan this skill executes
-- **superpowers:plan-eng-review** - Provides the approved plan and execution handoff
+- **superpowers:plan-eng-review** - Provides the approved plan and the execution preflight handoff
 - **superpowers:requesting-code-review** - REQUIRED: Final review gate after execution completes
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
 

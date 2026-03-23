@@ -17,6 +17,7 @@ Only the minimum content needed by the test is kept here:
 - Requirement Index and Requirement Coverage Matrix structure where sequencing coverage needs it
 - canonical `## Task N:` plus parseable `**Files:**` blocks where execution-stage sequencing coverage needs it
 - a stale source-spec path case where a newer approved spec path exists at the same revision
+- a full approved-plan-contract pair with `Plan Revision`, `Execution Mode`, `Requirement Coverage Matrix`, and canonical task structure for route-time hardening coverage
 
 This keeps the sequencing test self-contained and avoids coupling it to
 repository-root documentation that may be reorganized or deleted.

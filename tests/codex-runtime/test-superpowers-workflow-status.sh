@@ -75,6 +75,61 @@ assert_not_contains() {
   fi
 }
 
+json_value() {
+  local json="$1"
+  local path="$2"
+  printf '%s' "$json" | node -e '
+    const fs = require("fs");
+    const keys = process.argv[1].split(".");
+    let value = JSON.parse(fs.readFileSync(0, "utf8"));
+    for (const key of keys) {
+      if (value === null || value === undefined) break;
+      if (/^[0-9]+$/.test(key) && Array.isArray(value)) {
+        value = value[Number(key)];
+      } else {
+        value = value[key];
+      }
+    }
+    if (value === null) {
+      process.stdout.write("null");
+    } else if (value === undefined) {
+      process.stdout.write("");
+    } else if (typeof value === "object") {
+      process.stdout.write(JSON.stringify(value));
+    } else {
+      process.stdout.write(String(value));
+    }
+  ' "$path"
+}
+
+assert_json_equals() {
+  local json="$1"
+  local path="$2"
+  local expected="$3"
+  local label="$4"
+  local actual
+  actual="$(json_value "$json" "$path")"
+  if [[ "$actual" != "$expected" ]]; then
+    echo "Expected ${label} field ${path} to equal '${expected}'"
+    echo "Actual: ${actual}"
+    printf '%s\n' "$json"
+    exit 1
+  fi
+}
+
+assert_json_nonempty() {
+  local json="$1"
+  local path="$2"
+  local label="$3"
+  local actual
+  actual="$(json_value "$json" "$path")"
+  if [[ -z "$actual" || "$actual" == "null" ]]; then
+    echo "Expected ${label} field ${path} to be non-empty"
+    printf '%s\n' "$json"
+    exit 1
+  fi
+}
+
 run_status_refresh() {
   local repo_dir="$1"
   local label="$2"
@@ -87,7 +142,9 @@ run_status_refresh() {
     printf '%s\n' "$output"
     exit 1
   fi
-  assert_contains "$output" "$expected_skill" "$label"
+  assert_json_nonempty "$output" "schema_version" "$label"
+  assert_json_nonempty "$output" "status" "$label"
+  assert_json_equals "$output" "next_skill" "$expected_skill" "$label"
   printf '%s\n' "$output"
 }
 
@@ -104,8 +161,33 @@ run_status_refresh_with_env() {
     printf '%s\n' "$output"
     exit 1
   fi
-  assert_contains "$output" "$expected_skill" "$label"
+  assert_json_nonempty "$output" "schema_version" "$label"
+  assert_json_nonempty "$output" "status" "$label"
+  assert_json_equals "$output" "next_skill" "$expected_skill" "$label"
   printf '%s\n' "$output"
+}
+
+create_status_bin_with_plan_contract_stub() {
+  local contract_json="$1"
+  local tool_dir
+
+  tool_dir="$(mktemp -d "$STATE_DIR/status-bin.XXXXXX")"
+  ln -s "$STATUS_BIN" "$tool_dir/superpowers-workflow-status"
+  ln -s "$REPO_ROOT/bin/superpowers-runtime-common.sh" "$tool_dir/superpowers-runtime-common.sh"
+  ln -s "$REPO_ROOT/bin/superpowers-plan-structure-common" "$tool_dir/superpowers-plan-structure-common"
+  ln -s "$REPO_ROOT/bin/superpowers-slug" "$tool_dir/superpowers-slug"
+  cat > "$tool_dir/superpowers-plan-contract" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+if [[ "\${1:-}" == "analyze-plan" ]]; then
+  printf '%s\n' '$contract_json'
+  exit 0
+fi
+printf '{"error_class":"UnexpectedStubCommand","message":"Unexpected stubbed plan-contract command."}\n' >&2
+exit 1
+EOF
+  chmod +x "$tool_dir/superpowers-plan-contract"
+  printf '%s\n' "$tool_dir"
 }
 
 run_command_fails() {
@@ -140,6 +222,47 @@ run_command_succeeds() {
     printf '%s\n' "$output"
     exit 1
   fi
+  printf '%s\n' "$output"
+}
+
+run_command_succeeds_with_timeout() {
+  local repo_dir="$1"
+  local label="$2"
+  local timeout_seconds="$3"
+  local stdout_file
+  local stderr_file
+  local status=0
+  local output=""
+  local error_output=""
+  local timing=""
+  shift 3
+
+  stdout_file="$(mktemp "${TMPDIR:-/tmp}/superpowers-workflow-status-stdout.XXXXXX")"
+  stderr_file="$(mktemp "${TMPDIR:-/tmp}/superpowers-workflow-status-stderr.XXXXXX")"
+  TIMEFORMAT='%R'
+  timing="$({ time (cd "$repo_dir" && "$STATUS_BIN" "$@" >"$stdout_file" 2>"$stderr_file"); } 2>&1)" || status=$?
+  timing="${timing##*$'\n'}"
+
+  output="$(cat "$stdout_file")"
+  error_output="$(cat "$stderr_file")"
+  rm -f "$stdout_file" "$stderr_file"
+
+  if awk -v actual="$timing" -v limit="$timeout_seconds" 'BEGIN { exit !((actual + 0) > (limit + 0)) }'; then
+    echo "Expected command to stay under ${timeout_seconds}s for: $label"
+    echo "Command timed out: $STATUS_BIN $*"
+    echo "Elapsed: ${timing}s"
+    [[ -n "$output" ]] && printf '%s\n' "$output"
+    [[ -n "$error_output" ]] && printf '%s\n' "$error_output"
+    exit 124
+  fi
+
+  if [[ $status -ne 0 ]]; then
+    echo "Expected command to succeed for: $label"
+    [[ -n "$output" ]] && printf '%s\n' "$output"
+    [[ -n "$error_output" ]] && printf '%s\n' "$error_output"
+    exit "$status"
+  fi
+
   printf '%s\n' "$output"
 }
 
@@ -271,9 +394,28 @@ run_draft_plan() {
 # Draft Plan
 
 **Workflow State:** Draft
+**Plan Revision:** 1
+**Execution Mode:** none
 **Source Spec:** `docs/superpowers/specs/2026-01-22-document-review-system-design.md`
 **Source Spec Revision:** 1
 **Last Reviewed By:** writing-plans
+
+## Requirement Coverage Matrix
+
+- REQ-001 -> Task 1
+
+## Task 1: Prepare the draft plan for review
+
+**Spec Coverage:** REQ-001
+**Task Outcome:** The draft plan is ready for engineering review.
+**Plan Constraints:**
+- Keep the fixture minimal.
+**Open Questions:** none
+
+**Files:**
+- Test: `bash tests/codex-runtime/test-superpowers-workflow-status.sh`
+
+- [ ] **Step 1: Review the draft plan**
 EOF
   run_status_refresh "$repo" "draft plan" "superpowers:plan-eng-review"
 }
@@ -297,11 +439,71 @@ EOF
 # Approved Plan, Stale Source Path
 
 **Workflow State:** Engineering Approved
+**Plan Revision:** 1
+**Execution Mode:** none
 **Source Spec:** `docs/superpowers/specs/2026-01-22-document-review-system-design.md`
 **Source Spec Revision:** 1
 **Last Reviewed By:** plan-eng-review
+
+## Requirement Coverage Matrix
+
+- REQ-001 -> Task 1
+
+## Task 1: Preserve the stale source path case
+
+**Spec Coverage:** REQ-001
+**Task Outcome:** The plan remains structurally valid while its source-spec path goes stale.
+**Plan Constraints:**
+- Keep the fixture minimal.
+**Open Questions:** none
+
+**Files:**
+- Test: `bash tests/codex-runtime/test-superpowers-workflow-status.sh`
+
+- [ ] **Step 1: Detect the stale source path**
 EOF
-  run_status_refresh "$repo" "stale approved plan" "superpowers:writing-plans"
+  local output
+  output="$(run_status_refresh "$repo" "stale approved plan" "superpowers:writing-plans")"
+  assert_json_equals "$output" "status" "stale_plan" "stale approved plan status"
+  assert_json_equals "$output" "contract_state" "stale" "stale approved plan contract state"
+  assert_json_equals "$output" "reason_codes.0" "stale_spec_plan_linkage" "stale approved plan reason code"
+  assert_json_equals "$output" "diagnostics.0.code" "stale_spec_plan_linkage" "stale approved plan diagnostic code"
+}
+
+run_packet_buildability_failure_surfaces_structured_contract() {
+  local repo="$REPO_DIR/packet-buildability-structured"
+  local spec_path="$repo/docs/superpowers/specs/2026-03-22-packet-buildability-structured-design.md"
+  local plan_path="$repo/docs/superpowers/plans/2026-03-22-packet-buildability-structured.md"
+  local tool_dir
+  local output
+
+  init_repo "$repo"
+  copy_fixture \
+    "$WORKFLOW_FIXTURE_DIR/specs/2026-03-22-runtime-integration-hardening-design.md" \
+    "$spec_path"
+  copy_fixture \
+    "$WORKFLOW_FIXTURE_DIR/plans/2026-03-22-runtime-integration-hardening.md" \
+    "$plan_path"
+  node - "$plan_path" <<'NODE'
+const fs = require("fs");
+const file = process.argv[2];
+const source = fs.readFileSync(file, "utf8");
+fs.writeFileSync(
+  file,
+  source.replace(
+    "tests/codex-runtime/fixtures/workflow-artifacts/specs/2026-03-22-runtime-integration-hardening-design.md",
+    "docs/superpowers/specs/2026-03-22-packet-buildability-structured-design.md",
+  ),
+);
+NODE
+  tool_dir="$(create_status_bin_with_plan_contract_stub '{"contract_state":"valid","task_count":2,"packet_buildable_tasks":1,"reason_codes":[],"diagnostics":[]}')"
+
+  output="$(cd "$repo" && "$tool_dir/superpowers-workflow-status" status --refresh 2>&1)"
+  assert_json_equals "$output" "status" "plan_draft" "packet buildability structured status"
+  assert_json_equals "$output" "next_skill" "superpowers:plan-eng-review" "packet buildability structured next skill"
+  assert_json_equals "$output" "contract_state" "invalid" "packet buildability structured contract state"
+  assert_json_equals "$output" "reason_codes.0" "packet_buildability_failure" "packet buildability structured reason code"
+  assert_json_equals "$output" "diagnostics.0.code" "packet_buildability_failure" "packet buildability structured diagnostic code"
 }
 
 run_bounded_refresh() {
@@ -333,6 +535,9 @@ EOF
     "superpowers:plan-ceo-review" \
     "SUPERPOWERS_WORKFLOW_STATUS_FALLBACK_LIMIT=1")"
   assert_contains "$output" "2026-03-17-newest-draft-design.md" "bounded refresh candidate selection"
+  assert_json_equals "$output" "scan_truncated" "true" "bounded refresh scan truncation"
+  assert_json_nonempty "$output" "schema_version" "bounded refresh schema version"
+  assert_json_equals "$output" "spec_candidate_count" "2" "bounded refresh candidate count"
 }
 
 run_expected_path_survives_refresh() {
@@ -402,6 +607,9 @@ EOF
     "superpowers:plan-ceo-review" \
     "SUPERPOWERS_WORKFLOW_STATUS_FALLBACK_LIMIT=5")"
   assert_contains "$output" "ambigu" "ambiguous fallback note"
+  assert_json_equals "$output" "status" "spec_draft" "ambiguous fallback status"
+  assert_json_equals "$output" "reason_codes.0" "ambiguous_spec_candidates" "ambiguous fallback reason code"
+  assert_json_equals "$output" "diagnostics.0.code" "ambiguous_spec_candidates" "ambiguous fallback diagnostic code"
 }
 
 run_corrupted_manifest() {
@@ -631,14 +839,39 @@ run_status_summary_matches_json() {
 **Workflow State:** CEO Approved
 **Spec Revision:** 2
 **Last Reviewed By:** plan-ceo-review
+
+## Requirement Index
+
+- [REQ-001][behavior] Summary fixtures preserve implementation-ready routing when the approved plan stays contract-valid.
+- [VERIFY-001][verification] Route-time summary output stays aligned with JSON output for valid approved artifacts.
 EOF
   write_file "$plan_path" <<'EOF'
 # Summary Plan
 
 **Workflow State:** Engineering Approved
+**Plan Revision:** 1
+**Execution Mode:** none
 **Source Spec:** `docs/superpowers/specs/2026-03-17-summary-design.md`
 **Source Spec Revision:** 2
 **Last Reviewed By:** plan-eng-review
+
+## Requirement Coverage Matrix
+
+- REQ-001 -> Task 1
+- VERIFY-001 -> Task 1
+
+## Task 1: Preserve summary parity
+
+**Spec Coverage:** REQ-001, VERIFY-001
+**Task Outcome:** Summary output continues to match JSON status semantics for a valid approved plan.
+**Plan Constraints:**
+- Keep the fixture minimal.
+**Open Questions:** none
+
+**Files:**
+- Test: `bash tests/codex-runtime/test-superpowers-workflow-status.sh`
+
+- [ ] **Step 1: Emit matching summary and JSON output**
 EOF
 
   json_output="$(run_command_succeeds "$repo" "status summary JSON parity" status --refresh)"
@@ -651,7 +884,7 @@ EOF
   assert_single_line "$summary_output" "status summary"
   assert_not_contains "$summary_output" '{"status"' "status summary"
   assert_contains "$summary_output" "status=implementation_ready" "status summary status"
-  assert_contains "$summary_output" "next=execution_handoff" "status summary handoff"
+  assert_contains "$summary_output" "next=execution_preflight" "status summary handoff"
   assert_contains "$summary_output" "spec=docs/superpowers/specs/2026-03-17-summary-design.md" "status summary spec path"
   assert_contains "$summary_output" "plan=docs/superpowers/plans/2026-03-17-summary.md" "status summary plan path"
   assert_contains "$summary_output" "reason=implementation_ready" "status summary reason"
@@ -702,6 +935,256 @@ EOF
   assert_contains "$output" '"status":"plan_draft"' "malformed plan status"
   assert_contains "$output" '"next_skill":"superpowers:plan-eng-review"' "malformed plan next skill"
   assert_contains "$output" 'malformed_plan_headers' "malformed plan reason"
+}
+
+run_missing_plan_revision_routes_plan_draft() {
+  local repo="$REPO_DIR/missing-plan-revision"
+  local spec_path="$repo/docs/superpowers/specs/2026-03-22-missing-plan-revision-design.md"
+  local plan_path="$repo/docs/superpowers/plans/2026-03-22-missing-plan-revision.md"
+  local output
+
+  init_repo "$repo"
+  copy_fixture \
+    "$WORKFLOW_FIXTURE_DIR/specs/2026-03-22-runtime-integration-hardening-design.md" \
+    "$spec_path"
+  write_file "$plan_path" <<'EOF'
+# Missing Plan Revision
+
+**Workflow State:** Engineering Approved
+**Execution Mode:** none
+**Source Spec:** `docs/superpowers/specs/2026-03-22-missing-plan-revision-design.md`
+**Source Spec Revision:** 1
+**Last Reviewed By:** plan-eng-review
+
+## Requirement Coverage Matrix
+
+- REQ-001 -> Task 1
+- REQ-004 -> Task 1
+- VERIFY-001 -> Task 1
+
+## Task 1: Preserve route-time hardening
+
+**Spec Coverage:** REQ-001, REQ-004, VERIFY-001
+**Task Outcome:** The plan keeps the approved-plan contract parseable for route-time helpers.
+**Plan Constraints:**
+- Keep the fixture small.
+**Open Questions:** none
+
+**Files:**
+- Test: `bash tests/codex-runtime/test-superpowers-workflow-status.sh`
+
+- [ ] **Step 1: Validate the route-time contract**
+EOF
+
+  output="$(run_command_succeeds "$repo" "missing plan revision routes plan draft" status --refresh)"
+  assert_json_equals "$output" "status" "plan_draft" "missing plan revision status"
+  assert_json_equals "$output" "next_skill" "superpowers:plan-eng-review" "missing plan revision next skill"
+  assert_json_equals "$output" "contract_state" "invalid" "missing plan revision contract state"
+  assert_json_equals "$output" "reason_codes.0" "missing_plan_revision" "missing plan revision reason codes"
+  assert_json_equals "$output" "diagnostics.0.code" "missing_plan_revision" "missing plan revision diagnostics"
+  assert_contains "$output" '"reason":"malformed_plan_headers"' "missing plan revision compatibility reason"
+}
+
+run_invalid_execution_mode_routes_plan_draft() {
+  local repo="$REPO_DIR/invalid-execution-mode"
+  local spec_path="$repo/docs/superpowers/specs/2026-03-22-invalid-execution-mode-design.md"
+  local plan_path="$repo/docs/superpowers/plans/2026-03-22-invalid-execution-mode.md"
+  local output
+
+  init_repo "$repo"
+  copy_fixture \
+    "$WORKFLOW_FIXTURE_DIR/specs/2026-03-22-runtime-integration-hardening-design.md" \
+    "$spec_path"
+  write_file "$plan_path" <<'EOF'
+# Invalid Execution Mode
+
+**Workflow State:** Engineering Approved
+**Plan Revision:** 1
+**Execution Mode:** superpowers:teleport
+**Source Spec:** `docs/superpowers/specs/2026-03-22-invalid-execution-mode-design.md`
+**Source Spec Revision:** 1
+**Last Reviewed By:** plan-eng-review
+
+## Requirement Coverage Matrix
+
+- REQ-001 -> Task 1
+- REQ-004 -> Task 1
+- VERIFY-001 -> Task 1
+
+## Task 1: Reject invalid execution mode
+
+**Spec Coverage:** REQ-001, REQ-004, VERIFY-001
+**Task Outcome:** Route-time helpers reject plans with invalid execution-mode values.
+**Plan Constraints:**
+- Keep the fixture small.
+**Open Questions:** none
+
+**Files:**
+- Test: `bash tests/codex-runtime/test-superpowers-workflow-status.sh`
+
+- [ ] **Step 1: Reject the invalid execution mode**
+EOF
+
+  output="$(run_command_succeeds "$repo" "invalid execution mode routes plan draft" status --refresh)"
+  assert_json_equals "$output" "status" "plan_draft" "invalid execution mode status"
+  assert_json_equals "$output" "next_skill" "superpowers:plan-eng-review" "invalid execution mode next skill"
+  assert_json_equals "$output" "contract_state" "invalid" "invalid execution mode contract state"
+  assert_json_equals "$output" "reason_codes.0" "invalid_execution_mode" "invalid execution mode reason codes"
+  assert_json_equals "$output" "diagnostics.0.code" "invalid_execution_mode" "invalid execution mode diagnostics"
+}
+
+run_malformed_task_contract_routes_plan_draft() {
+  local repo="$REPO_DIR/malformed-task-contract"
+  local spec_path="$repo/docs/superpowers/specs/2026-03-22-malformed-task-contract-design.md"
+  local plan_path="$repo/docs/superpowers/plans/2026-03-22-malformed-task-contract.md"
+  local output
+
+  init_repo "$repo"
+  copy_fixture \
+    "$WORKFLOW_FIXTURE_DIR/specs/2026-03-22-runtime-integration-hardening-design.md" \
+    "$spec_path"
+  write_file "$plan_path" <<'EOF'
+# Malformed Task Contract
+
+**Workflow State:** Engineering Approved
+**Plan Revision:** 1
+**Execution Mode:** none
+**Source Spec:** `docs/superpowers/specs/2026-03-22-malformed-task-contract-design.md`
+**Source Spec Revision:** 1
+**Last Reviewed By:** plan-eng-review
+
+This deliberately omits the Requirement Coverage Matrix and canonical task structure.
+EOF
+
+  output="$(run_command_succeeds "$repo" "malformed task contract routes plan draft" status --refresh)"
+  assert_json_equals "$output" "status" "plan_draft" "malformed task contract status"
+  assert_json_equals "$output" "next_skill" "superpowers:plan-eng-review" "malformed task contract next skill"
+  assert_json_equals "$output" "contract_state" "invalid" "malformed task contract contract state"
+  assert_json_equals "$output" "reason_codes.0" "missing_requirement_coverage" "malformed task contract reason codes"
+  assert_json_equals "$output" "diagnostics.0.code" "missing_requirement_coverage" "malformed task contract diagnostics"
+}
+
+run_malformed_task_structure_routes_plan_draft() {
+  local repo="$REPO_DIR/malformed-task-structure-contract"
+  local spec_path="$repo/docs/superpowers/specs/2026-03-22-malformed-task-structure-design.md"
+  local plan_path="$repo/docs/superpowers/plans/2026-03-22-malformed-task-structure.md"
+  local output
+
+  init_repo "$repo"
+  copy_fixture \
+    "$WORKFLOW_FIXTURE_DIR/specs/2026-03-22-runtime-integration-hardening-design.md" \
+    "$spec_path"
+  write_file "$plan_path" <<'EOF'
+# Malformed Task Structure
+
+**Workflow State:** Engineering Approved
+**Plan Revision:** 1
+**Execution Mode:** none
+**Source Spec:** `docs/superpowers/specs/2026-03-22-malformed-task-structure-design.md`
+**Source Spec Revision:** 1
+**Last Reviewed By:** plan-eng-review
+
+## Requirement Coverage Matrix
+
+- REQ-001 -> Task 1
+
+### Task 1: Broken task
+
+This deliberately omits the canonical task contract fields and step checklist.
+EOF
+
+  output="$(run_command_succeeds "$repo" "malformed task structure routes plan draft" status --refresh)"
+  assert_json_equals "$output" "status" "plan_draft" "malformed task structure status"
+  assert_json_equals "$output" "next_skill" "superpowers:plan-eng-review" "malformed task structure next skill"
+  assert_json_equals "$output" "contract_state" "invalid" "malformed task structure contract state"
+  assert_json_equals "$output" "reason_codes.0" "malformed_task_structure" "malformed task structure reason codes"
+  assert_json_equals "$output" "diagnostics.0.code" "malformed_task_structure" "malformed task structure diagnostics"
+}
+
+run_contract_analysis_surfaces_multiple_diagnostics() {
+  local repo="$REPO_DIR/multi-diagnostic-contract"
+  local spec_path="$repo/docs/superpowers/specs/2026-03-22-multi-diagnostic-contract-design.md"
+  local plan_path="$repo/docs/superpowers/plans/2026-03-22-multi-diagnostic-contract.md"
+  local output
+
+  init_repo "$repo"
+  copy_fixture \
+    "$WORKFLOW_FIXTURE_DIR/specs/2026-03-22-runtime-integration-hardening-design.md" \
+    "$spec_path"
+  write_file "$plan_path" <<'EOF'
+# Multi-Diagnostic Contract
+
+**Workflow State:** Engineering Approved
+**Plan Revision:** 1
+**Execution Mode:** none
+**Source Spec:** `docs/superpowers/specs/2026-03-22-multi-diagnostic-contract-design.md`
+**Source Spec Revision:** 1
+**Last Reviewed By:** plan-eng-review
+
+## Task 1: Preserve rich contract diagnostics
+
+**Spec Coverage:** REQ-001, REQ-004, VERIFY-001
+**Task Outcome:** Route-time status preserves the authoritative multi-diagnostic contract output.
+**Plan Constraints:**
+- Keep the fixture small.
+**Open Questions:** still deciding whether to bundle this follow-up
+
+**Files:**
+- Test: `bash tests/codex-runtime/test-superpowers-workflow-status.sh`
+
+- [ ] **Step 1: Surface all contract diagnostics**
+EOF
+
+  output="$(run_command_succeeds "$repo" "multi-diagnostic contract routes plan draft" status --refresh)"
+  assert_json_equals "$output" "status" "plan_draft" "multi-diagnostic contract status"
+  assert_json_equals "$output" "next_skill" "superpowers:plan-eng-review" "multi-diagnostic contract next skill"
+  assert_json_equals "$output" "contract_state" "invalid" "multi-diagnostic contract contract state"
+  assert_json_equals "$output" "reason_codes.0" "missing_requirement_coverage" "multi-diagnostic contract first reason"
+  assert_json_equals "$output" "reason_codes.1" "task_open_questions_not_resolved" "multi-diagnostic contract second reason"
+  assert_json_equals "$output" "diagnostics.0.code" "missing_requirement_coverage" "multi-diagnostic contract first diagnostic"
+  assert_json_equals "$output" "diagnostics.1.code" "task_open_questions_not_resolved" "multi-diagnostic contract second diagnostic"
+}
+
+run_ambiguous_plan_surfaces_candidate_counts() {
+  local repo="$REPO_DIR/ambiguous-plan-structured"
+  local spec_path="$repo/docs/superpowers/specs/2026-03-22-ambiguous-plan-structured-design.md"
+  local plan_a="$repo/docs/superpowers/plans/2026-03-22-ambiguous-plan-a.md"
+  local plan_b="$repo/docs/superpowers/plans/2026-03-22-ambiguous-plan-b.md"
+  local output
+
+  init_repo "$repo"
+  copy_fixture \
+    "$WORKFLOW_FIXTURE_DIR/specs/2026-03-22-runtime-integration-hardening-design.md" \
+    "$spec_path"
+  copy_fixture \
+    "$WORKFLOW_FIXTURE_DIR/plans/2026-03-22-runtime-integration-hardening.md" \
+    "$plan_a"
+  copy_fixture \
+    "$WORKFLOW_FIXTURE_DIR/plans/2026-03-22-runtime-integration-hardening.md" \
+    "$plan_b"
+  node - "$plan_a" "$plan_b" <<'NODE'
+const fs = require("fs");
+for (const file of process.argv.slice(2)) {
+  const source = fs.readFileSync(file, "utf8");
+  fs.writeFileSync(
+    file,
+    source.replace(
+      "tests/codex-runtime/fixtures/workflow-artifacts/specs/2026-03-22-runtime-integration-hardening-design.md",
+      "docs/superpowers/specs/2026-03-22-ambiguous-plan-structured-design.md",
+    ),
+  );
+}
+NODE
+
+  output="$(run_status_refresh_with_env \
+    "$repo" \
+    "ambiguous plan exposes candidate counts" \
+    "superpowers:writing-plans" \
+    "SUPERPOWERS_WORKFLOW_STATUS_FALLBACK_LIMIT=5")"
+  assert_json_equals "$output" "status" "spec_approved_needs_plan" "ambiguous plan status"
+  assert_json_equals "$output" "plan_candidate_count" "2" "ambiguous plan candidate count"
+  assert_json_nonempty "$output" "schema_version" "ambiguous plan schema version"
+  assert_json_equals "$output" "reason_codes.0" "ambiguous_plan_candidates" "ambiguous plan reason codes"
 }
 
 run_repo_root_mismatch_recovery() {
@@ -1029,14 +1512,39 @@ run_implementation_ready() {
 **Workflow State:** CEO Approved
 **Spec Revision:** 3
 **Last Reviewed By:** plan-ceo-review
+
+## Requirement Index
+
+- [REQ-001][behavior] Fully valid approved plans still route to execution preflight.
+- [VERIFY-001][verification] Implementation-ready fixtures preserve manifest parity and route-time readiness.
 EOF
   write_file "$plan_path" <<'EOF'
 # Implementation Ready Plan
 
 **Workflow State:** Engineering Approved
+**Plan Revision:** 1
+**Execution Mode:** none
 **Source Spec:** `docs/superpowers/specs/2026-03-17-implementation-ready-design.md`
 **Source Spec Revision:** 3
 **Last Reviewed By:** plan-eng-review
+
+## Requirement Coverage Matrix
+
+- REQ-001 -> Task 1
+- VERIFY-001 -> Task 1
+
+## Task 1: Preserve implementation-ready routing
+
+**Spec Coverage:** REQ-001, VERIFY-001
+**Task Outcome:** A fully valid approved plan can still route to execution preflight.
+**Plan Constraints:**
+- Keep the fixture minimal.
+**Open Questions:** none
+
+**Files:**
+- Test: `bash tests/codex-runtime/test-superpowers-workflow-status.sh`
+
+- [ ] **Step 1: Emit implementation-ready status**
 EOF
 
   output="$(run_command_succeeds "$repo" "implementation-ready status" status --refresh)"
@@ -1058,6 +1566,94 @@ EOF
   assert_contains "$manifest_json" '"note":"implementation_ready"' "implementation-ready manifest compatibility note"
 }
 
+run_full_contract_implementation_ready_exposes_structured_diagnostics() {
+  local repo="$REPO_DIR/full-contract-implementation-ready"
+  local spec_path="$repo/docs/superpowers/specs/2026-03-22-runtime-integration-hardening-design.md"
+  local plan_path="$repo/docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md"
+  local output
+
+  init_repo "$repo"
+  copy_fixture \
+    "$WORKFLOW_FIXTURE_DIR/specs/2026-03-22-runtime-integration-hardening-design.md" \
+    "$spec_path"
+  copy_fixture \
+    "$WORKFLOW_FIXTURE_DIR/plans/2026-03-22-runtime-integration-hardening.md" \
+    "$plan_path"
+  node - "$plan_path" <<'NODE'
+const fs = require("fs");
+const file = process.argv[2];
+const source = fs.readFileSync(file, "utf8");
+fs.writeFileSync(
+  file,
+  source.replace(
+    "tests/codex-runtime/fixtures/workflow-artifacts/specs/2026-03-22-runtime-integration-hardening-design.md",
+    "docs/superpowers/specs/2026-03-22-runtime-integration-hardening-design.md",
+  ),
+);
+NODE
+
+  output="$(run_command_succeeds "$repo" "full contract implementation-ready status" status --refresh)"
+  assert_json_equals "$output" "status" "implementation_ready" "full contract implementation-ready status"
+  assert_json_equals "$output" "next_skill" "" "full contract implementation-ready next skill"
+  assert_json_equals "$output" "contract_state" "valid" "full contract implementation-ready contract state"
+  assert_json_equals "$output" "spec_path" "docs/superpowers/specs/2026-03-22-runtime-integration-hardening-design.md" "full contract implementation-ready spec path"
+  assert_json_equals "$output" "plan_path" "docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md" "full contract implementation-ready plan path"
+  assert_json_nonempty "$output" "schema_version" "full contract implementation-ready schema version"
+  assert_json_equals "$output" "scan_truncated" "false" "full contract implementation-ready scan truncation"
+  assert_json_equals "$output" "spec_candidate_count" "1" "full contract implementation-ready spec candidate count"
+  assert_json_equals "$output" "plan_candidate_count" "1" "full contract implementation-ready plan candidate count"
+  assert_json_equals "$output" "reason_codes.0" "implementation_ready" "full contract implementation-ready reason codes"
+  assert_json_equals "$output" "diagnostics" "[]" "full contract implementation-ready diagnostics"
+  assert_contains "$output" '"reason":"implementation_ready"' "full contract implementation-ready compatibility reason"
+}
+
+run_full_contract_implementation_ready_stays_fast() {
+  local repo="$REPO_DIR/full-contract-implementation-ready-fast"
+  local spec_path="$repo/docs/superpowers/specs/2026-03-22-runtime-integration-hardening-design.md"
+  local plan_path="$repo/docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md"
+  local output
+
+  init_repo "$repo"
+  copy_fixture \
+    "$WORKFLOW_FIXTURE_DIR/specs/2026-03-22-runtime-integration-hardening-design.md" \
+    "$spec_path"
+  copy_fixture \
+    "$WORKFLOW_FIXTURE_DIR/plans/2026-03-22-runtime-integration-hardening.md" \
+    "$plan_path"
+  node - "$plan_path" <<'NODE'
+const fs = require("fs");
+const file = process.argv[2];
+const source = fs.readFileSync(file, "utf8");
+fs.writeFileSync(
+  file,
+  source.replace(
+    "tests/codex-runtime/fixtures/workflow-artifacts/specs/2026-03-22-runtime-integration-hardening-design.md",
+    "docs/superpowers/specs/2026-03-22-runtime-integration-hardening-design.md",
+  ),
+);
+NODE
+
+  if ! (cd "$repo" && "$STATUS_BIN" status --refresh >/dev/null 2>&1); then
+    echo "Expected command to succeed for: full contract implementation-ready status warmup"
+    exit 1
+  fi
+  output="$(run_command_succeeds_with_timeout "$repo" "full contract implementation-ready status stays fast" 1 status --refresh)"
+  assert_json_equals "$output" "status" "implementation_ready" "full contract implementation-ready fast status"
+}
+
+run_repo_runtime_integration_status_stays_fast() {
+  local output
+
+  run_command_succeeds "$REPO_ROOT" "repo runtime expect spec" expect --artifact spec --path docs/superpowers/specs/2026-03-22-runtime-integration-hardening-design.md >/dev/null
+  run_command_succeeds "$REPO_ROOT" "repo runtime expect plan" expect --artifact plan --path docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md >/dev/null
+  if ! (cd "$REPO_ROOT" && "$STATUS_BIN" status --refresh >/dev/null 2>&1); then
+    echo "Expected command to succeed for: repo runtime integration status warmup"
+    exit 1
+  fi
+  output="$(run_command_succeeds_with_timeout "$REPO_ROOT" "repo runtime integration status stays fast" 1 status --refresh)"
+  assert_json_equals "$output" "status" "implementation_ready" "repo runtime integration fast status"
+}
+
 require_helper
 
 run_bootstrap_no_docs
@@ -1065,6 +1661,7 @@ run_draft_spec
 run_approved_spec_no_plan
 run_draft_plan
 run_stale_approved_plan
+run_packet_buildability_failure_surfaces_structured_contract
 run_bounded_refresh
 run_expected_path_survives_refresh
 run_missing_manifest_path_falls_forward
@@ -1085,6 +1682,12 @@ run_cross_slug_recovery_budget_limit
 run_runtime_bin_helper_overrides_repo_local_helper
 run_malformed_spec_headers
 run_malformed_plan_headers
+run_missing_plan_revision_routes_plan_draft
+run_invalid_execution_mode_routes_plan_draft
+run_malformed_task_contract_routes_plan_draft
+run_malformed_task_structure_routes_plan_draft
+run_contract_analysis_surfaces_multiple_diagnostics
+run_ambiguous_plan_surfaces_candidate_counts
 run_read_only_resolve_parity
 run_read_only_resolve_outside_repo
 run_read_only_resolve_invalid_command_input
@@ -1093,5 +1696,8 @@ run_read_only_resolve_runtime_failure
 run_read_only_resolve_avoids_manifest_mutation
 run_read_only_resolve_preserves_missing_expected_paths
 run_implementation_ready
+run_full_contract_implementation_ready_exposes_structured_diagnostics
+run_full_contract_implementation_ready_stays_fast
+run_repo_runtime_integration_status_stays_fast
 
 echo "superpowers-workflow-status regression scaffold passed."

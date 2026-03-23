@@ -109,10 +109,13 @@ Before dispatching any implementation subagent:
    - if the working tree is dirty, stop and ask the user to confirm the workspace is intentionally prepared
 6. Do not auto-clean the workspace and do not auto-create a worktree.
 7. The later repo-safety checks still govern any additional protected branches declared through repo or user instructions.
+8. Run `superpowers-plan-execution preflight --plan <approved-plan-path>` before dispatching implementation subagents.
+9. If the preflight helper returns `allowed` `false`, stop and resolve the reported `failure_class`, `reason_codes`, and `diagnostics` before dispatching work.
 
 ## Helper-Owned Execution State
 
 - calls `status --plan ...` during preflight
+- calls `preflight --plan ...` before dispatching implementation subagents
 - calls `begin` before starting work on a plan step
 - calls `complete` after each completed step
 - calls `note` when work is interrupted or blocked
@@ -345,7 +348,7 @@ Code reviewer: ✅ Approved
 
 **Required workflow skills:**
 - **superpowers:writing-plans** - Creates the plan this skill executes
-- **superpowers:plan-eng-review** - Provides the approved plan and execution handoff
+- **superpowers:plan-eng-review** - Provides the approved plan and the execution preflight handoff
 - **superpowers:requesting-code-review** - REQUIRED: Final review gate after execution completes
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
 

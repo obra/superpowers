@@ -1,5 +1,10 @@
 ---
-description: "Deprecated - use the superpowers:brainstorming skill instead"
+description: "Compatibility shim for legacy brainstorming command usage"
 ---
 
-Tell your human partner that this command is deprecated and will be removed in the next major release. They should ask you to use the "superpowers brainstorming" skill instead.
+This command is a compatibility shim.
+
+Use `superpowers-workflow phase` to report the current phase before routing work.
+
+- If the current phase is brainstorming, continue with `superpowers:brainstorming`.
+- If another workflow phase owns the next step, route to that supported surface instead of forcing brainstorming from a legacy command alias.

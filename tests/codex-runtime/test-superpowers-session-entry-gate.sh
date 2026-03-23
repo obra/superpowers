@@ -105,6 +105,7 @@ require_pattern 'session-entry bootstrap ownership is runtime-owned'
 require_pattern 'missing or malformed decision state fails closed'
 require_pattern 'Supported entry paths must resolve `superpowers-session-entry resolve --message-file <path>` before any normal Superpowers behavior:'
 require_pattern 'if the helper returns `needs_user_choice`, ask the opt-out question and persist either `enabled` or `bypassed`'
+require_pattern 'if the helper returns `runtime_failure`, surface that failure instead of pretending the gate was resolved'
 require_pattern '`superpowers-session-entry resolve` should surface `outcome` `needs_user_choice` with `failure_class` `MalformedDecisionState`'
 require_absent_pattern 'continue to normal Superpowers behavior'
 

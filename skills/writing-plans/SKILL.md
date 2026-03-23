@@ -332,10 +332,10 @@ After saving the full plan:
 
 2. Invoke `superpowers:plan-eng-review` after saving the full plan.
 3. Do NOT do chunk-by-chunk embedded review here.
-4. `plan-eng-review` owns the full-plan review loop and the execution handoff.
+4. `plan-eng-review` owns the full-plan review loop and the execution preflight handoff.
 
 **The terminal state is invoking plan-eng-review.**
 
 ## Execution Handoff
 
-`plan-eng-review` presents the normal execution handoff after the written plan is approved. Do NOT offer execution options directly from `writing-plans`.
+`plan-eng-review` presents the normal execution preflight handoff after the written plan is approved. Do NOT offer execution options directly from `writing-plans`.

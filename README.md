@@ -51,12 +51,12 @@ flowchart TD
         READ_STATE -.-> AUTHORITY_NOTE["Repo docs are authoritative.<br/>Manifest is a rebuildable local index of expected paths and derived status."]
         READ_STATE --> HELPER_HEALTH{"Helper + manifest healthy?"}
 
-        HELPER_HEALTH -->|Helper unavailable or runtime failure| MANUAL_FALLBACK["Manual fallback in using-superpowers:<br/>inspect newest relevant spec/plan and parse exact headers"]
+        HELPER_HEALTH -->|Helper unavailable or runtime failure| MANUAL_FALLBACK["Manual fallback in using-superpowers:<br/>inspect exact relevant spec/plan and parse required headers<br/>never infer a fresh execution handoff on helper failure"]
         HELPER_HEALTH -->|Corrupt manifest| CORRUPT_RECOVERY["Backup corrupt manifest, warn,<br/>rebuild conservatively for this invocation"]
         HELPER_HEALTH -->|Repo root or branch mismatch| IDENTITY_RECOVERY["Warn and rebuild from current repo context<br/>reason=repo_root_mismatch or branch_mismatch"]
         HELPER_HEALTH -->|Yes| SPEC_GATE{"What does the current spec resolve to?"}
 
-        MANUAL_FALLBACK --> SPEC_GATE
+        MANUAL_FALLBACK --> FALLBACK_STOP["Helper-failure fallback may only route back to brainstorming,<br/>review, or plan writing.<br/>It never promotes execution preflight or a fresh execution recommendation."]
         CORRUPT_RECOVERY --> SPEC_GATE
         IDENTITY_RECOVERY --> SPEC_GATE
 
@@ -149,9 +149,11 @@ flowchart TD
         FINAL_REVIEW -->|Dirty execution state, stale evidence,<br/>missed reopen, or missing semantic proof| FAIL_CLOSED["Fail closed and return to execution<br/>or back to plan-eng-review"]
         FINAL_REVIEW -->|Review resolved| FINISH_BRANCH["superpowers:finishing-a-development-branch<br/>must read status --plan and evidence_path"]
         FINISH_BRANCH -->|Execution dirty or malformed| FAIL_CLOSED
-        FINISH_BRANCH --> QA_GATE["conditional qa-only for browser-facing work<br/>required when browser interaction or test-plan context warrants it"]
-        QA_GATE --> DOC_RELEASE["workflow-routed work: required document-release<br/>ad-hoc work: optional release/doc cleanup"]
-        DOC_RELEASE --> COMPLETE_FLOW["PR / merge / keep-branch completion flow"]
+        FINISH_BRANCH --> DOC_RELEASE["workflow-routed work: required document-release<br/>ad-hoc work: optional release/doc cleanup"]
+        DOC_RELEASE --> QA_GATE["conditional qa-only for browser-facing work<br/>required when browser interaction or test-plan context warrants it"]
+        QA_GATE --> GATE_FINISH["superpowers-plan-execution gate-finish --plan <approved-plan-path><br/>must confirm fresh QA/release artifacts and clean execution state"]
+        GATE_FINISH -->|Blocked| FAIL_CLOSED
+        GATE_FINISH -->|Allowed| COMPLETE_FLOW["PR / merge / keep-branch completion flow"]
     end
 ```
 
@@ -163,10 +165,11 @@ A few important consequences fall out of that state machine:
 - `superpowers-workflow-status` always routes conservatively. If artifacts are ambiguous, malformed, missing, stale, or the local manifest is damaged, it falls back to the earlier safe stage instead of skipping ahead.
 - `implementation_ready` is a terminal routing state, not another skill. That is why `next_skill` is empty there and `plan-eng-review` owns the handoff into execution.
 - `superpowers-plan-execution recommend` is only valid before execution has started for that exact plan revision. After that, the plan's persisted `**Execution Mode:**` and the helper's `status --plan` output are the source of truth.
+- `superpowers-workflow handoff` must stop acting like a fresh recommender after execution starts. From that point on, it returns the current execution state for the exact approved plan instead of another fresh execution recommendation.
 - Execution is deliberately serial at the plan-step level. The execution helper allows subagents, but not multiple simultaneously active plan steps.
 - Final review and branch completion both fail closed if the approved plan and execution evidence disagree with reality.
 - Workflow-routed implementation now expects a required `document-release` handoff before branch completion, while keeping release truth in repo docs and review rather than helper state.
-- Browser-facing work keeps a conditional `qa-only` handoff instead of turning browser QA into a universal gate.
+- Browser-facing work keeps a conditional `qa-only` handoff instead of turning browser QA into a universal gate, but helper-backed finish readiness always requires the current-branch test-plan artifact and then any QA artifact that plan marks as required.
 
 That is the reason Superpowers feels opinionated in practice: the agent is not merely told to follow a workflow; the runtime keeps re-deriving the safest next state from the repo, the local branch-scoped manifest, and the exact approval headers written by the prior skill.
 
@@ -279,18 +282,18 @@ Runtime state lives in `~/.superpowers/`.
 - Branch-scoped workflow manifests live at `~/.superpowers/projects/<repo-slug>/<user>-<safe-branch>-workflow-state.json`
 - Update-check cache, snooze, and just-upgraded markers live under the same state root
 
-Generated workflow skills call `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status` (and `bin/superpowers-workflow-status.ps1` on Windows) as an internal runtime helper to resolve the next workflow stage, including bootstrap states before docs exist. Default `status` output is JSON for machine consumers; `status --summary` is a human-oriented one-line view. `reason` is the canonical diagnostic field, and any `note` field is only a compatibility alias. The helper's local manifest is rebuildable; repo docs remain authoritative for spec/plan approval state.
+Generated workflow skills call `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status` (and `bin/superpowers-workflow-status.ps1` on Windows) as an internal runtime helper to resolve the next workflow stage, including bootstrap states before docs exist. Default `status` output is JSON for machine consumers; `status --summary` is a human-oriented one-line view. `reason_codes` plus `diagnostics` are the structured diagnostic contract; legacy `reason` and `note` remain compatibility aliases for one release cycle. The helper's local manifest is rebuildable; repo docs remain authoritative for spec/plan approval state.
 
 Generated repo-writing workflow skills call `$_SUPERPOWERS_ROOT/bin/superpowers-repo-safety` (and `bin/superpowers-repo-safety.ps1` on Windows) before spec writes, plan writes, approval-header edits, release-doc updates, execution task slices, and branch-finishing commands. It blocks repo writes on protected branches unless the scope is already on a non-protected branch or the user has explicitly approved the exact task scope and the helper's re-check passes.
 
-Generated planning, execution, and review workflow skills call `$_SUPERPOWERS_ROOT/bin/superpowers-plan-contract` (and `bin/superpowers-plan-contract.ps1` on Windows) to lint Requirement Index plus Requirement Coverage Matrix contracts and to build task-packet context. Specs and plans stay authoritative in repo markdown; the helper only enforces and compiles that markdown into exact execution and review inputs.
+Generated planning, execution, and review workflow skills call `$_SUPERPOWERS_ROOT/bin/superpowers-plan-contract` (and `bin/superpowers-plan-contract.ps1` on Windows) to run authoritative `analyze-plan --format json` contract checks and to build task-packet context. Specs and plans stay authoritative in repo markdown; the helper only enforces and compiles that markdown into exact execution and review inputs.
 
 Superpowers also ships a supported public workflow inspection CLI:
 
 - `bin/superpowers-workflow` (Bash)
 - `bin/superpowers-workflow.ps1` (PowerShell wrapper)
 
-Use `status`, `next`, `artifacts`, `explain`, or `help` to inspect workflow state without mutating repo docs or repairing local manifests. At `implementation_ready`, `next` stops at the execution handoff boundary and does not call `superpowers-plan-execution recommend`.
+Use `status`, `next`, `artifacts`, `explain`, or `help` for the baseline read-only workflow inspection surfaces. The same public CLI also exposes `phase`, `doctor`, `handoff`, `preflight`, `gate review`, and `gate finish` for deeper operator inspection without mutating repo docs or repairing local manifests. `phase`, `doctor`, `handoff`, and the execution-gate commands support `--json` for operator tooling. Before execution starts, `next` still stops at the execution preflight boundary for the approved plan and does not call `superpowers-plan-execution recommend`; `handoff` is the read-only surface that reports the recommended execution skill. After execution starts for that plan revision, both surfaces return the current execution state instead of a fresh implementation recommendation.
 
 All 18 checked-in `skills/*/SKILL.md` files are generated from adjacent `SKILL.md.tmpl` sources. Regenerate them with `node scripts/gen-skill-docs.mjs` and validate freshness with `node scripts/gen-skill-docs.mjs --check`.
 
@@ -338,7 +341,7 @@ Only the user can initiate accelerated review, and section approval plus final a
 
 4. **plan-eng-review** - Activates after the plan is written. Reviews the full written plan before implementation starts.
 
-5. **implementation** - `subagent-driven-development` or `executing-plans` start from an engineering-approved current plan, run workspace-readiness checks, derive task packets from the approved markdown contract through `superpowers-plan-contract`, and execute the plan. The completion flow then runs `requesting-code-review`, requires `qa-only` when browser QA is warranted, requires `document-release` for workflow-routed work, and then proceeds to final branch cleanup or PR handoff. If the user wants an isolated workspace, invoke `using-git-worktrees` manually before execution.
+5. **implementation** - `subagent-driven-development` or `executing-plans` start from an engineering-approved current plan, run workspace-readiness checks, derive task packets from the approved markdown contract through `superpowers-plan-contract`, and execute the plan. The completion flow then runs `requesting-code-review`, uses the current-branch test-plan artifact to decide whether `qa-only` is required, requires `document-release` for workflow-routed work, and requires a passing `gate-finish` before final branch cleanup or PR handoff. If the user wants an isolated workspace, invoke `using-git-worktrees` manually before execution.
 
 Implementation starts from an engineering-approved current plan and the exact approved plan path. `plan-eng-review` presents that handoff, and `superpowers-plan-execution recommend --plan <approved-plan-path>` chooses between *subagent-driven-development* and *executing-plans*. In both cases, execution runs a workspace-readiness preflight, executes the plan task by task, reviews before completion, and hands off through the normal branch-finishing flow. Those execution and review stages now derive task packets from the approved markdown contract through `superpowers-plan-contract` instead of relying on controller-written semantic summaries.
 

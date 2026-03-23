@@ -125,7 +125,7 @@ Accelerated review is an opt-in branch inside `plan-ceo-review` and `plan-eng-re
 
 Only the user can initiate accelerated review, and section approval plus final approval remain human-owned even when the review uses reviewer subagents and persisted section packets.
 
-During implementation, either `subagent-driven-development` or `executing-plans` starts from an engineering-approved current plan, runs a workspace-readiness preflight, and then drives task execution. Those execution and review stages now consume helper-built task packets derived from the approved markdown contract. Workspace preparation is the user's responsibility; invoke `using-git-worktrees` manually when you want isolated workspace management. The completion flow runs `requesting-code-review`, keeps a conditional `qa-only` handoff, requires it when browser interaction or test-plan context warrants it, and requires the `document-release` handoff before workflow-routed branch completion.
+During implementation, either `subagent-driven-development` or `executing-plans` starts from an engineering-approved current plan, runs a workspace-readiness preflight, and then drives task execution. Those execution and review stages now consume helper-built task packets derived from the approved markdown contract. Workspace preparation is the user's responsibility; invoke `using-git-worktrees` manually when you want isolated workspace management. The completion flow runs `requesting-code-review`, uses the current-branch test-plan artifact to decide whether `qa-only` is required, requires that current-branch test-plan artifact for helper-backed finish readiness, requires the `document-release` handoff for workflow-routed branch completion, and requires a passing `gate-finish` before final branch cleanup or PR handoff.
 
 ## Search Before Building
 
@@ -169,19 +169,19 @@ Superpowers ships task-fidelity contract helpers:
 - `bin/superpowers-plan-contract` (Bash)
 - `bin/superpowers-plan-contract.ps1` (PowerShell wrapper)
 
-Generated planning, execution, and review skills use this helper to lint Requirement Index plus Requirement Coverage Matrix contracts and to build task-packet context. Repo markdown remains authoritative; the helper only enforces and compiles the approved markdown into exact execution and review inputs.
+Generated planning, execution, and review skills use this helper to run authoritative `analyze-plan --format json` contract checks and to build task-packet context. Repo markdown remains authoritative; the helper only enforces and compiles the approved markdown into exact execution and review inputs.
 
 Superpowers ships a supported public workflow inspection surface:
 - `bin/superpowers-workflow` (Bash)
 - `bin/superpowers-workflow.ps1` (PowerShell wrapper)
 
-Use `status`, `next`, `artifacts`, `explain`, or `help` when you want to inspect workflow state directly from the terminal. These commands stay read-only: they do not create, repair, or rewrite branch-scoped manifests, and `next` stops at the execution handoff boundary instead of calling `superpowers-plan-execution recommend`.
+Use `status`, `next`, `artifacts`, `explain`, or `help` for the baseline read-only workflow inspection surfaces. The same public CLI also exposes `phase`, `doctor`, `handoff`, `preflight`, `gate review`, and `gate finish` when you need deeper operator inspection directly from the terminal. These commands stay read-only: they do not create, repair, or rewrite branch-scoped manifests. `phase`, `doctor`, `handoff`, `preflight`, `gate review`, and `gate finish` support `--json` for operator tooling. Before execution starts, `next` still stops at the execution preflight boundary for the approved plan instead of calling `superpowers-plan-execution recommend`. Once execution has already started for that plan revision, both `next` and `handoff` return the current execution state instead of a fresh recommendation.
 
 Superpowers also ships workflow-status runtime helpers:
 - `bin/superpowers-workflow-status` (Bash)
 - `bin/superpowers-workflow-status.ps1` (PowerShell wrapper)
 
-Generated workflow skills call `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status status --refresh` first to resolve the conservative next stage, including before spec/plan docs exist. This helper is an internal runtime surface, not a supported public workflow CLI. Default `status` output is JSON for machine consumers; `status --summary` is a human-oriented one-line view. `reason` is the canonical diagnostic field, and any `note` field is only a compatibility alias. It keeps branch-scoped manifests at `~/.superpowers/projects/<repo-slug>/<user>-<safe-branch>-workflow-state.json`; that local manifest is rebuildable, and repo docs remain authoritative for approval state.
+Generated workflow skills call `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status status --refresh` first to resolve the conservative next stage, including before spec/plan docs exist. This helper is an internal runtime surface, not a supported public workflow CLI. Default `status` output is JSON for machine consumers; `status --summary` is a human-oriented one-line view. `reason_codes` plus `diagnostics` are the structured diagnostic contract; legacy `reason` and `note` remain compatibility aliases for one release cycle. It keeps branch-scoped manifests at `~/.superpowers/projects/<repo-slug>/<user>-<safe-branch>-workflow-state.json`; that local manifest is rebuildable, and repo docs remain authoritative for approval state.
 
 Optional: enable contributor mode for future sessions with:
 

@@ -37,6 +37,8 @@ require_pattern 'If the session decision file exists but contains malformed cont
 require_pattern 'do not compute `_SESSIONS`'
 require_pattern 'If the user explicitly requests re-entry but the bootstrap cannot rewrite the session decision to `enabled`:'
 require_pattern 'If the bypass gate resolves to `enabled` for this turn, run the normal shared Superpowers stack before any further Superpowers behavior:'
+require_pattern 'If helpers are unavailable, fallback stays minimal and conservative:'
+require_pattern 'Manual fallback must not infer readiness from the legacy thin header subset.'
 require_pattern '_UPD=""'
 require_pattern '_SESSIONS=$(find "$_SP_STATE_DIR/sessions" -mmin -120 -type f 2>/dev/null | wc -l | tr -d '\'' '\'')'
 require_pattern '_CONTRIB=""'

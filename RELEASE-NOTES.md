@@ -19,11 +19,20 @@ For release history before `v5.1.0 (2026-03-16)`, see the upstream README: https
 - Clarified `subagent-driven-development` and `document-release` ownership so task packets stay authoritative, coordinator-owned git actions stay explicit, and release-doc edits force a fresh review before branch completion
 - Updated `using-superpowers` manual fallback wording to match helper behavior when artifacts are ambiguous instead of implying “pick the newest” and continue
 
+### Runtime Integration Hardening
+
+- Expanded `bin/superpowers-workflow` and `bin/superpowers-workflow.ps1` from the original inspection subset into the full read-only operator surface for `phase`, `doctor`, `handoff`, `preflight`, `gate review`, and `gate finish`, while keeping `next` at the execution preflight boundary
+- Added helper-owned execution `preflight`, `gate-review`, and `gate-finish` checks plus evidence-v2 provenance in `bin/superpowers-plan-execution` and `bin/superpowers-plan-execution.ps1`
+- Added structured QA-result and release-readiness artifacts so `qa-only`, `document-release`, and `finishing-a-development-branch` can fail closed on stale or mismatched late-stage evidence instead of relying on prose-only assertions
+- Moved `using-superpowers` to the runtime-owned session-entry gate first and turned legacy brainstorming, plan-writing, and execute-plan command docs into compatibility shims that route through the supported workflow surfaces
+- Optimized the read-only helpers with shell-native parsing plus read-only derived-output caches keyed to authoritative artifact stamps so warm-path `status`, `lint`, `analyze-plan`, and workflow inspection calls stay subsecond without weakening fail-closed behavior
+
 ### Testing
 
 - Added `tests/codex-runtime/test-superpowers-plan-contract.sh` plus fixture coverage for missing indexes, missing coverage, unknown IDs, ambiguity, requirement weakening, malformed task structure, malformed `Files:` blocks, path traversal rejection, stale packets, and retention pruning
 - Expanded execution, workflow sequencing, workflow enhancement, runtime-instruction, session-entry, and skill-doc contract coverage so canonical task syntax, packet-backed execution/review wording, helper-backed routing, and coordinator-owned git semantics stay aligned
 - Strengthened the supported-entry harness to verify real normal-stack side effects and added real approved-artifact packet coverage for the task-fidelity spec and plan
+- Added warm-path slowdown guards and cache-invalidation regressions for `superpowers-plan-contract`, `superpowers-plan-execution`, `superpowers-workflow-status`, and `superpowers-workflow` so helper speed regressions are caught before they creep back in
 
 ## v5.6.0 (2026-03-21)
 
@@ -77,7 +86,7 @@ For release history before `v5.1.0 (2026-03-16)`, see the upstream README: https
 ### Execution Workflow Testing
 
 - Added `tests/codex-runtime/test-superpowers-plan-execution.sh` covering execution-state parsing, evidence canonicalization, recommendation routing, malformed-state rejection, and rollback behavior for failed plan/evidence writes
-- Expanded workflow sequencing and skill-doc contract coverage so the helper-backed execution handoff, final review gate, and branch-finish gate stay aligned across generated skills and reviewer artifacts
+- Expanded workflow sequencing and skill-doc contract coverage so the helper-backed execution preflight handoff, final review gate, and branch-finish gate stay aligned across generated skills and reviewer artifacts
 
 ## v5.2.0 (2026-03-16)
 

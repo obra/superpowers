@@ -4,6 +4,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=bin/superpowers-runtime-common.sh
 . "$SCRIPT_DIR/superpowers-runtime-common.sh"
+# shellcheck source=bin/superpowers-plan-structure-common
+. "$SCRIPT_DIR/superpowers-plan-structure-common"
 STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
 GIT_REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 REPO_CONTEXT_AVAILABLE=1
@@ -83,6 +85,13 @@ RESOLVED_PLAN_PATH=""
 STATUS_CODE="needs_brainstorming"
 NEXT_SKILL="superpowers:brainstorming"
 STATUS_NOTE=""
+CONTRACT_STATE="unknown"
+SCHEMA_VERSION=2
+SCAN_TRUNCATED="false"
+SPEC_CANDIDATE_COUNT=0
+PLAN_CANDIDATE_COUNT=0
+STATUS_REASON_CODES=()
+STATUS_DIAGNOSTICS=()
 
 usage() {
   echo "Usage: superpowers-workflow-status {status|resolve|expect|sync} ..."
@@ -108,10 +117,17 @@ emit_json() {
   local plan_path="$4"
   local reason="${5:-}"
   printf '{'
+  printf '"schema_version":%s,' "$SCHEMA_VERSION"
   printf '"status":"%s",' "$(json_escape "$status_code")"
   printf '"next_skill":"%s",' "$(json_escape "$next_skill")"
   printf '"spec_path":"%s",' "$(json_escape "$spec_path")"
   printf '"plan_path":"%s",' "$(json_escape "$plan_path")"
+  printf '"contract_state":"%s",' "$(json_escape "$CONTRACT_STATE")"
+  printf '"reason_codes":%s,' "$(emit_reason_codes_json "$reason")"
+  printf '"diagnostics":%s,' "$(emit_diagnostics_json)"
+  printf '"scan_truncated":%s,' "$SCAN_TRUNCATED"
+  printf '"spec_candidate_count":%s,' "$SPEC_CANDIDATE_COUNT"
+  printf '"plan_candidate_count":%s,' "$PLAN_CANDIDATE_COUNT"
   printf '"manifest_path":"%s",' "$(json_escape "$MANIFEST_PATH")"
   printf '"root":"%s"' "$(json_escape "$REPO_ROOT")"
   if [ -n "$reason" ]; then
@@ -130,10 +146,17 @@ emit_resolve_json() {
   local source_path="${6:-}"
   printf '{'
   printf '"outcome":"resolved",'
+  printf '"schema_version":%s,' "$SCHEMA_VERSION"
   printf '"status":"%s",' "$(json_escape "$status_code")"
   printf '"next_skill":"%s",' "$(json_escape "$next_skill")"
   printf '"spec_path":"%s",' "$(json_escape "$spec_path")"
   printf '"plan_path":"%s",' "$(json_escape "$plan_path")"
+  printf '"contract_state":"%s",' "$(json_escape "$CONTRACT_STATE")"
+  printf '"reason_codes":%s,' "$(emit_reason_codes_json "$reason")"
+  printf '"diagnostics":%s,' "$(emit_diagnostics_json)"
+  printf '"scan_truncated":%s,' "$SCAN_TRUNCATED"
+  printf '"spec_candidate_count":%s,' "$SPEC_CANDIDATE_COUNT"
+  printf '"plan_candidate_count":%s,' "$PLAN_CANDIDATE_COUNT"
   printf '"manifest_path":"%s",' "$(json_escape "$MANIFEST_PATH")"
   printf '"manifest_source_path":"%s",' "$(json_escape "$source_path")"
   printf '"root":"%s"' "$(json_escape "$REPO_ROOT")"
@@ -165,7 +188,7 @@ emit_summary() {
   local next_display="$next_skill"
 
   if [ "$status_code" = "implementation_ready" ] && [ -z "$next_display" ]; then
-    next_display="execution_handoff"
+    next_display="execution_preflight"
   fi
 
   printf 'status=%s next=%s spec=%s plan=%s reason=%s\n' \
@@ -186,7 +209,13 @@ manifest_get_string() {
   local json="$1"
   local key="$2"
   local value
-  value="$(printf '%s\n' "$json" | sed -nE "s/.*\"$key\"[[:space:]]*:[[:space:]]*\"([^\"]*)\".*/\\1/p" | head -n1)"
+
+  value="${json#*"\"$key\":\""}"
+  if [[ "$value" == "$json" ]]; then
+    printf '%s' ""
+    return 0
+  fi
+  value="${value%%\"*}"
   printf '%s' "$value"
 }
 
@@ -219,12 +248,18 @@ read_manifest_file() {
   fi
 
   local json
-  json="$(cat "$path" 2>/dev/null || true)"
-  if [ -z "$json" ] || ! printf '%s\n' "$json" | grep -qE '^[[:space:]]*\{.*\}[[:space:]]*$'; then
+  local trimmed
+  json="$(<"$path")"
+  if [ -z "$json" ]; then
     MANIFEST_CORRUPT=1
     return 2
   fi
-  if ! printf '%s\n' "$json" | grep -q '"version"[[:space:]]*:[[:space:]]*1'; then
+  trimmed="$(trim_surrounding_whitespace "$json")"
+  [[ "$trimmed" == \{*\} ]] || {
+    MANIFEST_CORRUPT=1
+    return 2
+  }
+  if [[ "$json" != *'"version":1'* && "$json" != *'"version" :1'* && "$json" != *'"version": 1'* && "$json" != *'"version" : 1'* ]]; then
     MANIFEST_CORRUPT=1
     return 2
   fi
@@ -308,14 +343,23 @@ spec_reviewer=""
 
 parse_spec_headers() {
   local path="$1"
+  local line
   spec_state=""
   spec_revision=""
   spec_reviewer=""
   [ -f "$path" ] || return 1
 
-  spec_state="$(sed -nE 's/^\*\*Workflow State:\*\* (Draft|CEO Approved)$/\1/p' "$path" | head -n1)"
-  spec_revision="$(sed -nE 's/^\*\*Spec Revision:\*\* ([0-9]+)$/\1/p' "$path" | head -n1)"
-  spec_reviewer="$(sed -nE 's/^\*\*Last Reviewed By:\*\* (brainstorming|plan-ceo-review)$/\1/p' "$path" | head -n1)"
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    if [[ -z "$spec_state" && "$line" =~ ^\*\*Workflow\ State:\*\*\ (Draft|CEO\ Approved)$ ]]; then
+      spec_state="${BASH_REMATCH[1]}"
+    elif [[ -z "$spec_revision" && "$line" =~ ^\*\*Spec\ Revision:\*\*\ ([0-9]+)$ ]]; then
+      spec_revision="${BASH_REMATCH[1]}"
+    elif [[ -z "$spec_reviewer" && "$line" =~ ^\*\*Last\ Reviewed\ By:\*\*\ (brainstorming|plan-ceo-review)$ ]]; then
+      spec_reviewer="${BASH_REMATCH[1]}"
+    fi
+
+    [[ -n "$spec_state" && -n "$spec_revision" && -n "$spec_reviewer" ]] && break
+  done < "$path"
 
   [ -n "$spec_state" ] && [ -n "$spec_revision" ] && [ -n "$spec_reviewer" ]
 }
@@ -333,14 +377,12 @@ parse_plan_headers() {
   plan_reviewer=""
   [ -f "$path" ] || return 1
 
-  plan_state="$(sed -nE 's/^\*\*Workflow State:\*\* (Draft|Engineering Approved)$/\1/p' "$path" | head -n1)"
-  plan_source_spec="$(sed -nE 's/^\*\*Source Spec:\*\* (.+)$/\1/p' "$path" | head -n1)"
-  plan_source_spec="${plan_source_spec#\`}"
-  plan_source_spec="${plan_source_spec%\`}"
-  plan_source_revision="$(sed -nE 's/^\*\*Source Spec Revision:\*\* ([0-9]+)$/\1/p' "$path" | head -n1)"
-  plan_reviewer="$(sed -nE 's/^\*\*Last Reviewed By:\*\* (writing-plans|plan-eng-review)$/\1/p' "$path" | head -n1)"
-
-  [ -n "$plan_state" ] && [ -n "$plan_source_spec" ] && [ -n "$plan_source_revision" ] && [ -n "$plan_reviewer" ]
+  plan_structure_parse_plan_headers "$path" || return 1
+  plan_state="$PLAN_STRUCTURE_PLAN_WORKFLOW_STATE"
+  plan_source_spec="$PLAN_STRUCTURE_PLAN_SOURCE_SPEC"
+  plan_source_revision="$PLAN_STRUCTURE_PLAN_SOURCE_SPEC_REVISION"
+  plan_reviewer="$PLAN_STRUCTURE_PLAN_LAST_REVIEWED_BY"
+  return 0
 }
 
 list_newest_candidates() {
@@ -356,16 +398,6 @@ rel_from_root() {
     "$REPO_ROOT"/*) printf '%s\n' "${abs#"$REPO_ROOT"/}" ;;
     *) return 1 ;;
   esac
-}
-
-append_status_note() {
-  local note="$1"
-  [ -n "$note" ] || return 0
-  if [ -z "$STATUS_NOTE" ]; then
-    STATUS_NOTE="$note"
-  else
-    STATUS_NOTE="${STATUS_NOTE},$note"
-  fi
 }
 
 SPEC_FROM_MANIFEST=0
@@ -388,8 +420,436 @@ reset_resolution_flags() {
   PLAN_AMBIGUOUS=0
 }
 
+reset_status_diagnostics() {
+  CONTRACT_STATE="unknown"
+  SCHEMA_VERSION=2
+  SCAN_TRUNCATED="false"
+  SPEC_CANDIDATE_COUNT=0
+  PLAN_CANDIDATE_COUNT=0
+  STATUS_NOTE=""
+  STATUS_REASON_CODES=()
+  STATUS_DIAGNOSTICS=()
+}
+
+append_status_note() {
+  local note="$1"
+  [ -n "$note" ] || return 0
+  if [ -z "$STATUS_NOTE" ]; then
+    STATUS_NOTE="$note"
+  else
+    STATUS_NOTE="${STATUS_NOTE},$note"
+  fi
+}
+
+append_reason_code() {
+  local code="$1"
+  local existing
+  local has_reason_codes=0
+  [ -n "$code" ] || return 0
+  if declare -p STATUS_REASON_CODES >/dev/null 2>&1; then
+    has_reason_codes=1
+  fi
+  if [ "$has_reason_codes" -eq 1 ] && [ -n "${STATUS_REASON_CODES[*]-}" ]; then
+    for existing in "${STATUS_REASON_CODES[@]}"; do
+      [ "$existing" = "$code" ] && return 0
+    done
+  else
+    STATUS_REASON_CODES=()
+  fi
+  STATUS_REASON_CODES+=("$code")
+}
+
+emit_reason_codes_json() {
+  local fallback_reason="${1:-}"
+  local i=0
+  local split_reason
+  local -a codes=()
+  local has_reason_codes=0
+
+  if declare -p STATUS_REASON_CODES >/dev/null 2>&1; then
+    has_reason_codes=1
+  fi
+
+  if [ "$has_reason_codes" -eq 1 ] && [ -n "${STATUS_REASON_CODES[*]-}" ]; then
+    codes=("${STATUS_REASON_CODES[@]}")
+  elif [ -n "$fallback_reason" ]; then
+    OLD_IFS="$IFS"
+    IFS=','
+    for split_reason in $fallback_reason; do
+      [ -n "$split_reason" ] && codes+=("$split_reason")
+    done
+    IFS="$OLD_IFS"
+  fi
+
+  printf '['
+  for ((i=0; i<${#codes[@]}; i++)); do
+    [ "$i" -gt 0 ] && printf ','
+    printf '"%s"' "$(json_escape "${codes[$i]}")"
+  done
+  printf ']'
+}
+
+append_diagnostic() {
+  local code="$1"
+  local severity="$2"
+  local artifact="$3"
+  local message="$4"
+  local remediation="${5:-}"
+  local diagnostic
+
+  diagnostic='{"code":"'"$(json_escape "$code")"'","severity":"'"$(json_escape "$severity")"'","artifact":"'"$(json_escape "$artifact")"'","message":"'"$(json_escape "$message")"'","remediation":"'"$(json_escape "$remediation")"'"}'
+  if ! declare -p STATUS_DIAGNOSTICS >/dev/null 2>&1; then
+    STATUS_DIAGNOSTICS=()
+  fi
+  STATUS_DIAGNOSTICS+=("$diagnostic")
+}
+
+emit_diagnostics_json() {
+  local i
+  local count=0
+
+  if declare -p STATUS_DIAGNOSTICS >/dev/null 2>&1; then
+    if [ -n "${STATUS_DIAGNOSTICS[*]-}" ]; then
+      count="${#STATUS_DIAGNOSTICS[@]}"
+    fi
+  fi
+
+  printf '['
+  for ((i=0; i<count; i++)); do
+    [ "$i" -gt 0 ] && printf ','
+    printf '%s' "${STATUS_DIAGNOSTICS[$i]}"
+  done
+  printf ']'
+}
+
+count_candidates_in_dir() {
+  local dir="$1"
+  local count=0
+  local path
+
+  [ -d "$dir" ] || {
+    printf '0\n'
+    return 0
+  }
+
+  shopt -s nullglob
+  for path in "$dir"/*.md; do
+    count=$((count + 1))
+  done
+  shopt -u nullglob
+
+  printf '%s\n' "$count"
+}
+
+camel_to_snake() {
+  printf '%s' "$1" | sed -E 's/([a-z0-9])([A-Z])/\1_\2/g' | tr 'A-Z' 'a-z'
+}
+
+json_field_string() {
+  local json="$1"
+  local key="$2"
+  local value
+
+  value="${json#*"\"$key\":\""}"
+  if [[ "$value" == "$json" ]]; then
+    printf '%s' ""
+    return 0
+  fi
+  value="${value%%\"*}"
+  printf '%s' "$value"
+}
+
+record_contract_header_failure() {
+  local artifact="$1"
+  local reason_code="$2"
+  local message="$3"
+
+  CONTRACT_STATE="invalid"
+  append_status_note "malformed_plan_headers"
+  append_reason_code "$reason_code"
+  append_diagnostic "$reason_code" "error" "$artifact" "$message" "Update the plan through the planning workflow."
+}
+
+record_invalid_contract_result() {
+  local artifact="$1"
+  local error_class="$2"
+  local message="$3"
+  local reason_code
+
+  reason_code="$(camel_to_snake "$error_class")"
+  [ -n "$reason_code" ] || reason_code="invalid_plan_contract"
+  CONTRACT_STATE="invalid"
+  append_status_note "$reason_code"
+  append_reason_code "$reason_code"
+  append_diagnostic "$reason_code" "error" "$artifact" "$message" "Fix the approved plan contract before execution preflight."
+}
+
+record_valid_contract_result() {
+  CONTRACT_STATE="valid"
+}
+
+trim_leading_json_space() {
+  local value="$1"
+  while [[ -n "$value" ]]; do
+    case "${value:0:1}" in
+      ' '|$'\n'|$'\r'|$'\t') value="${value:1}" ;;
+      *) break ;;
+    esac
+  done
+  printf '%s' "$value"
+}
+
+trim_trailing_json_space() {
+  local value="$1"
+  while [[ -n "$value" ]]; do
+    case "${value: -1}" in
+      ' '|$'\n'|$'\r'|$'\t') value="${value::-1}" ;;
+      *) break ;;
+    esac
+  done
+  printf '%s' "$value"
+}
+
+json_consume_value() {
+  local text
+  local first=""
+  local open=""
+  local close=""
+  local length=0
+  local i=0
+  local ch=""
+  local value=""
+  local depth=0
+  local in_string=0
+  local escape=0
+
+  text="$(trim_leading_json_space "$1")"
+  JSON_CONSUMED_VALUE=""
+  [[ -n "$text" ]] || return 1
+
+  first="${text:0:1}"
+  case "$first" in
+    '"')
+      value='"'
+      length="${#text}"
+      i=1
+      while (( i < length )); do
+        ch="${text:i:1}"
+        value+="$ch"
+        if (( escape )); then
+          escape=0
+        else
+          case "$ch" in
+            '\\') escape=1 ;;
+            '"') JSON_CONSUMED_VALUE="$value"; return 0 ;;
+          esac
+        fi
+        i=$((i + 1))
+      done
+      return 1
+      ;;
+    '['|'{')
+      open="$first"
+      if [[ "$open" == "[" ]]; then
+        close="]"
+      else
+        close="}"
+      fi
+      value="$first"
+      depth=1
+      in_string=0
+      escape=0
+      length="${#text}"
+      i=1
+      while (( i < length )); do
+        ch="${text:i:1}"
+        value+="$ch"
+        if (( in_string )); then
+          if (( escape )); then
+            escape=0
+          else
+            case "$ch" in
+              '\\') escape=1 ;;
+              '"') in_string=0 ;;
+            esac
+          fi
+        else
+          case "$ch" in
+            '"') in_string=1 ;;
+            "$open") depth=$((depth + 1)) ;;
+            "$close")
+              depth=$((depth - 1))
+              if (( depth == 0 )); then
+                JSON_CONSUMED_VALUE="$value"
+                return 0
+              fi
+              ;;
+          esac
+        fi
+        i=$((i + 1))
+      done
+      return 1
+      ;;
+    *)
+      length="${#text}"
+      while (( i < length )); do
+        ch="${text:i:1}"
+        case "$ch" in
+          ','|'}'|']') break ;;
+          *) value+="$ch" ;;
+        esac
+        i=$((i + 1))
+      done
+      value="$(trim_trailing_json_space "$value")"
+      [[ -n "$value" ]] || return 1
+      JSON_CONSUMED_VALUE="$value"
+      return 0
+      ;;
+  esac
+}
+
+json_top_level_field_value() {
+  local json="$1"
+  local key="$2"
+  local search="\"$key\":"
+  local remainder=""
+
+  JSON_FIELD_VALUE=""
+  remainder="${json#*$search}"
+  [[ "$remainder" != "$json" ]] || return 1
+  json_consume_value "$remainder" || return 1
+  JSON_FIELD_VALUE="$JSON_CONSUMED_VALUE"
+  return 0
+}
+
+json_array_elements() {
+  local array_json="$1"
+  local remainder=""
+
+  JSON_ARRAY_COUNT=0
+  JSON_ARRAY_VALUES=()
+  [[ "${array_json:0:1}" == "[" && "${array_json: -1}" == "]" ]] || return 1
+
+  remainder="${array_json:1:${#array_json}-2}"
+  remainder="$(trim_leading_json_space "$remainder")"
+  while [[ -n "$remainder" ]]; do
+    json_consume_value "$remainder" || return 1
+    JSON_ARRAY_VALUES[$JSON_ARRAY_COUNT]="$JSON_CONSUMED_VALUE"
+    JSON_ARRAY_COUNT=$((JSON_ARRAY_COUNT + 1))
+    remainder="${remainder:${#JSON_CONSUMED_VALUE}}"
+    remainder="$(trim_leading_json_space "$remainder")"
+    if [[ "${remainder:0:1}" == "," ]]; then
+      remainder="${remainder:1}"
+      remainder="$(trim_leading_json_space "$remainder")"
+      continue
+    fi
+    break
+  done
+  return 0
+}
+
+json_unquote_simple_string() {
+  local value="$1"
+
+  [[ "${value:0:1}" == '"' && "${value: -1}" == '"' ]] || return 1
+  JSON_UNQUOTED_STRING="${value:1:${#value}-2}"
+  JSON_UNQUOTED_STRING="${JSON_UNQUOTED_STRING//\\\"/\"}"
+  JSON_UNQUOTED_STRING="${JSON_UNQUOTED_STRING//\\\\/\\}"
+  JSON_UNQUOTED_STRING="${JSON_UNQUOTED_STRING//\\n/$'\n'}"
+  JSON_UNQUOTED_STRING="${JSON_UNQUOTED_STRING//\\r/$'\r'}"
+  JSON_UNQUOTED_STRING="${JSON_UNQUOTED_STRING//\\t/$'\t'}"
+  return 0
+}
+
+record_packet_buildability_failure() {
+  CONTRACT_STATE="invalid"
+  append_status_note "packet_buildability_failure"
+  append_reason_code "packet_buildability_failure"
+  append_diagnostic \
+    "packet_buildability_failure" \
+    "error" \
+    "$1" \
+    "Execution handoff requires every task packet to be buildable for the approved plan revision." \
+    "Fix the approved plan contract until packet_buildable_tasks equals task_count."
+}
+
+import_contract_analysis_feedback() {
+  local artifact="$1"
+  local output="$2"
+  local i=""
+
+  json_top_level_field_value "$output" "contract_state" || return 1
+  json_unquote_simple_string "$JSON_FIELD_VALUE" || return 1
+  CONTRACT_STATE="$JSON_UNQUOTED_STRING"
+
+  if json_top_level_field_value "$output" "task_count"; then
+    CONTRACT_ANALYSIS_TASK_COUNT="$JSON_FIELD_VALUE"
+  fi
+  if json_top_level_field_value "$output" "packet_buildable_tasks"; then
+    CONTRACT_ANALYSIS_PACKET_BUILDABLE_TASKS="$JSON_FIELD_VALUE"
+  fi
+
+  if json_top_level_field_value "$output" "reason_codes"; then
+    json_array_elements "$JSON_FIELD_VALUE" || return 1
+    for ((i=0; i<JSON_ARRAY_COUNT; i++)); do
+      json_unquote_simple_string "${JSON_ARRAY_VALUES[$i]}" || return 1
+      append_status_note "$JSON_UNQUOTED_STRING"
+      append_reason_code "$JSON_UNQUOTED_STRING"
+    done
+  fi
+
+  if json_top_level_field_value "$output" "diagnostics"; then
+    json_array_elements "$JSON_FIELD_VALUE" || return 1
+    for ((i=0; i<JSON_ARRAY_COUNT; i++)); do
+      STATUS_DIAGNOSTICS+=("${JSON_ARRAY_VALUES[$i]}")
+    done
+  fi
+
+  if [[ "$CONTRACT_STATE" == "valid" ]] &&
+     [[ -n "$CONTRACT_ANALYSIS_TASK_COUNT" ]] &&
+     [[ "$CONTRACT_ANALYSIS_PACKET_BUILDABLE_TASKS" != "$CONTRACT_ANALYSIS_TASK_COUNT" ]]; then
+    record_packet_buildability_failure "$artifact"
+  fi
+
+  return 0
+}
+
+run_plan_contract_analysis() {
+  local spec_path="$1"
+  local plan_path="$2"
+  local output
+  local status=0
+
+  CONTRACT_ANALYSIS_JSON=""
+  CONTRACT_ANALYSIS_TASK_COUNT=""
+  CONTRACT_ANALYSIS_PACKET_BUILDABLE_TASKS=""
+  CONTRACT_ANALYSIS_ERROR_CLASS=""
+  CONTRACT_ANALYSIS_MESSAGE=""
+
+  output="$(
+    cd "$REPO_ROOT" &&
+      "$SCRIPT_DIR/superpowers-plan-contract" analyze-plan --spec "$spec_path" --plan "$plan_path" --format json
+  )" || status=$?
+
+  CONTRACT_ANALYSIS_JSON="$output"
+  CONTRACT_ANALYSIS_ERROR_CLASS="$(json_field_string "$output" "error_class")"
+  CONTRACT_ANALYSIS_MESSAGE="$(json_field_string "$output" "message")"
+
+  if [ "$status" -ne 0 ]; then
+    return 1
+  fi
+
+  import_contract_analysis_feedback "$plan_path" "$output" || return 1
+  [[ "$CONTRACT_STATE" == "valid" ]]
+}
+
 resolve_preferred_spec() {
-  local normalized abs local_rel first_valid="" valid_count=0 first_any=""
+  local normalized abs local_rel first_any="" first_any_valid=0 valid_count=0
+
+  SPEC_CANDIDATE_COUNT="$(count_candidates_in_dir "$REPO_ROOT/docs/superpowers/specs")"
+  if [ "$SPEC_CANDIDATE_COUNT" -gt "$FALLBACK_LIMIT" ]; then
+    SCAN_TRUNCATED="true"
+  fi
 
   RESOLVED_SPEC_PATH=""
 
@@ -427,40 +887,40 @@ resolve_preferred_spec() {
     fi
     if [ -z "$first_any" ]; then
       first_any="$local_rel"
+      if parse_spec_headers "$abs"; then
+        first_any_valid=1
+        valid_count=1
+      fi
+      continue
     fi
     if parse_spec_headers "$abs"; then
       valid_count=$((valid_count + 1))
-      if [ -z "$first_valid" ]; then
-        first_valid="$local_rel"
-      fi
     fi
   done < <(list_newest_candidates "$REPO_ROOT/docs/superpowers/specs")
 
-  if [ "$valid_count" -gt 1 ]; then
-    SPEC_AMBIGUOUS=1
-    return 0
-  fi
-
-  if [ "$valid_count" -eq 1 ] && [ -n "$first_valid" ]; then
-    RESOLVED_SPEC_PATH="$first_valid"
-    MANIFEST_SPEC_PATH="$first_valid"
-    if parse_spec_headers "$REPO_ROOT/$first_valid"; then
-      SPEC_VALID=1
-    fi
-    return 0
-  fi
-
   if [ -n "$first_any" ]; then
     RESOLVED_SPEC_PATH="$first_any"
-    if parse_spec_headers "$REPO_ROOT/$first_any"; then
+    MANIFEST_SPEC_PATH="$first_any"
+    if [ "$first_any_valid" -eq 1 ]; then
+      parse_spec_headers "$REPO_ROOT/$first_any" || true
       SPEC_VALID=1
+      if [ "$valid_count" -gt 1 ]; then
+        SPEC_AMBIGUOUS=1
+      fi
     fi
+    return 0
   fi
+
   return 0
 }
 
 resolve_preferred_plan() {
-  local normalized abs local_rel first_valid="" valid_count=0 first_any=""
+  local normalized abs local_rel first_any="" first_any_valid=0 valid_count=0
+
+  PLAN_CANDIDATE_COUNT="$(count_candidates_in_dir "$REPO_ROOT/docs/superpowers/plans")"
+  if [ "$PLAN_CANDIDATE_COUNT" -gt "$FALLBACK_LIMIT" ]; then
+    SCAN_TRUNCATED="true"
+  fi
 
   RESOLVED_PLAN_PATH=""
 
@@ -498,44 +958,39 @@ resolve_preferred_plan() {
     fi
     if [ -z "$first_any" ]; then
       first_any="$local_rel"
+      if parse_plan_headers "$abs"; then
+        first_any_valid=1
+        valid_count=1
+      fi
+      continue
     fi
     if parse_plan_headers "$abs"; then
       valid_count=$((valid_count + 1))
-      if [ -z "$first_valid" ]; then
-        first_valid="$local_rel"
-      fi
     fi
   done < <(list_newest_candidates "$REPO_ROOT/docs/superpowers/plans")
 
-  if [ "$valid_count" -gt 1 ]; then
-    PLAN_AMBIGUOUS=1
-    return 0
-  fi
-
-  if [ "$valid_count" -eq 1 ] && [ -n "$first_valid" ]; then
-    RESOLVED_PLAN_PATH="$first_valid"
-    MANIFEST_PLAN_PATH="$first_valid"
-    if parse_plan_headers "$REPO_ROOT/$first_valid"; then
-      PLAN_VALID=1
-    fi
-    return 0
-  fi
-
   if [ -n "$first_any" ]; then
     RESOLVED_PLAN_PATH="$first_any"
-    if parse_plan_headers "$REPO_ROOT/$first_any"; then
+    MANIFEST_PLAN_PATH="$first_any"
+    if [ "$first_any_valid" -eq 1 ]; then
+      parse_plan_headers "$REPO_ROOT/$first_any" || true
       PLAN_VALID=1
+      if [ "$valid_count" -gt 1 ]; then
+        PLAN_AMBIGUOUS=1
+      fi
     fi
+    return 0
   fi
+
   return 0
 }
 
 derive_status() {
   local spec_abs="" plan_abs="" normalized_source=""
   reset_resolution_flags
+  reset_status_diagnostics
   STATUS_CODE="needs_brainstorming"
   NEXT_SKILL="superpowers:brainstorming"
-  STATUS_NOTE=""
 
   resolve_preferred_spec
   resolve_preferred_plan
@@ -544,6 +999,8 @@ derive_status() {
     STATUS_CODE="spec_draft"
     NEXT_SKILL="superpowers:plan-ceo-review"
     append_status_note "fallback_ambiguity_spec"
+    append_reason_code "ambiguous_spec_candidates"
+    append_diagnostic "ambiguous_spec_candidates" "error" "$RESOLVED_SPEC_PATH" "More than one current spec candidate matches the fallback scan window." "Reduce spec ambiguity before proceeding."
     return 0
   fi
 
@@ -564,6 +1021,8 @@ derive_status() {
     STATUS_CODE="spec_draft"
     NEXT_SKILL="superpowers:plan-ceo-review"
     append_status_note "malformed_spec_headers"
+    append_reason_code "malformed_spec_headers"
+    append_diagnostic "malformed_spec_headers" "error" "$RESOLVED_SPEC_PATH" "The current spec headers are missing or malformed." "Update the spec through the review workflow."
     return 0
   fi
 
@@ -581,6 +1040,8 @@ derive_status() {
     STATUS_CODE="spec_approved_needs_plan"
     NEXT_SKILL="superpowers:writing-plans"
     append_status_note "fallback_ambiguity_plan"
+    append_reason_code "ambiguous_plan_candidates"
+    append_diagnostic "ambiguous_plan_candidates" "error" "$RESOLVED_PLAN_PATH" "More than one current plan candidate matches the fallback scan window." "Reduce plan ambiguity before proceeding."
     return 0
   fi
 
@@ -600,7 +1061,7 @@ derive_status() {
   if [ "$PLAN_VALID" -ne 1 ] && ! parse_plan_headers "$plan_abs"; then
     STATUS_CODE="plan_draft"
     NEXT_SKILL="superpowers:plan-eng-review"
-    append_status_note "malformed_plan_headers"
+    record_contract_header_failure "$RESOLVED_PLAN_PATH" "${PLAN_STRUCTURE_HEADER_REASON_CODE:-malformed_plan_headers}" "${PLAN_STRUCTURE_HEADER_ERROR_MESSAGE:-Plan headers are malformed.}"
     return 0
   fi
 
@@ -611,6 +1072,8 @@ derive_status() {
   if [ "$plan_state" = "Draft" ]; then
     STATUS_CODE="plan_draft"
     NEXT_SKILL="superpowers:plan-eng-review"
+    append_status_note "plan_draft"
+    append_reason_code "plan_draft"
     return 0
   fi
 
@@ -618,12 +1081,28 @@ derive_status() {
   if [ -z "$normalized_source" ] || [ "$normalized_source" != "$RESOLVED_SPEC_PATH" ] || [ "$plan_source_revision" != "$spec_revision" ]; then
     STATUS_CODE="stale_plan"
     NEXT_SKILL="superpowers:writing-plans"
+    CONTRACT_STATE="stale"
+    append_status_note "stale_plan"
+    append_reason_code "stale_spec_plan_linkage"
+    append_diagnostic "stale_spec_plan_linkage" "error" "$RESOLVED_PLAN_PATH" "The approved plan does not match the latest approved spec path and revision." "Rewrite the plan from the latest approved spec."
     return 0
   fi
+
+  if ! run_plan_contract_analysis "$RESOLVED_SPEC_PATH" "$RESOLVED_PLAN_PATH"; then
+    STATUS_CODE="plan_draft"
+    NEXT_SKILL="superpowers:plan-eng-review"
+    if [[ "$CONTRACT_STATE" != "invalid" ]]; then
+      record_invalid_contract_result "$RESOLVED_PLAN_PATH" "${CONTRACT_ANALYSIS_ERROR_CLASS:-InvalidPlanContract}" "${CONTRACT_ANALYSIS_MESSAGE:-Plan contract analysis failed.}"
+    fi
+    return 0
+  fi
+
+  record_valid_contract_result
 
   STATUS_CODE="implementation_ready"
   NEXT_SKILL=""
   append_status_note "implementation_ready"
+  append_reason_code "implementation_ready"
   return 0
 }
 
@@ -649,6 +1128,13 @@ load_manifest_or_recover() {
     MANIFEST_SPEC_PATH=""
     MANIFEST_PLAN_PATH=""
     return 2
+  fi
+
+  # Recovery across prior slug paths only applies to repos with stable remote-based
+  # identities. Throwaway local repos derive their slug from the checkout path, so
+  # scanning sibling project manifests adds cost without a viable recovery target.
+  if [ -z "$REMOTE_URL" ]; then
+    return 1
   fi
 
   shopt -s nullglob
@@ -712,6 +1198,12 @@ load_manifest_read_only() {
     current_manifest_corrupt=1
     MANIFEST_SPEC_PATH=""
     MANIFEST_PLAN_PATH=""
+  fi
+
+  if [ -z "$REMOTE_URL" ]; then
+    reset_manifest_fields
+    MANIFEST_CORRUPT="$current_manifest_corrupt"
+    return 1
   fi
 
   shopt -s nullglob
@@ -785,6 +1277,17 @@ manifest_paths_for_write() {
   printf '%s\n%s\n' "$write_spec" "$write_plan"
 }
 
+split_manifest_paths() {
+  local payload="$1"
+
+  SPLIT_MANIFEST_SPEC="${payload%%$'\n'*}"
+  if [[ "$payload" == *$'\n'* ]]; then
+    SPLIT_MANIFEST_PLAN="${payload#*$'\n'}"
+  else
+    SPLIT_MANIFEST_PLAN=""
+  fi
+}
+
 write_and_emit_result() {
   local spec_path="$1"
   local plan_path="$2"
@@ -820,24 +1323,29 @@ apply_resolution_diagnostics() {
     STATUS_CODE="needs_brainstorming"
     NEXT_SKILL="superpowers:brainstorming"
     STATUS_NOTE="corrupt_manifest_recovered"
+    append_reason_code "corrupt_manifest_recovered"
   elif [ "$mode" = "read_only" ] && [ "$MANIFEST_CORRUPT" -eq 1 ]; then
     append_status_note "corrupt_manifest_present"
+    append_reason_code "corrupt_manifest_present"
   fi
 
   if [ "$MANIFEST_IDENTITY_MISMATCH" -eq 1 ]; then
     append_status_note "$MANIFEST_IDENTITY_REASON"
+    append_reason_code "$MANIFEST_IDENTITY_REASON"
   fi
   if [ "$MANIFEST_RECOVERED" -eq 1 ]; then
     append_status_note "repo_slug_recovered"
+    append_reason_code "repo_slug_recovered"
   fi
   if [ "$MANIFEST_RECOVERY_AMBIGUOUS" -eq 1 ]; then
     append_status_note "repo_slug_recovery_ambiguous"
+    append_reason_code "repo_slug_recovery_ambiguous"
   fi
 }
 
 cmd_status() {
   local refresh=0 summary=0 arg corrupted=0
-  local persisted_paths persisted_spec persisted_plan
+  local persisted_paths persisted_spec="" persisted_plan=""
 
   while [ "$#" -gt 0 ]; do
     arg="$1"
@@ -883,8 +1391,9 @@ cmd_status() {
   apply_resolution_diagnostics mutating "$corrupted"
 
   persisted_paths="$(manifest_paths_for_write)"
-  persisted_spec="$(printf '%s\n' "$persisted_paths" | sed -n '1p')"
-  persisted_plan="$(printf '%s\n' "$persisted_paths" | sed -n '2p')"
+  split_manifest_paths "$persisted_paths"
+  persisted_spec="$SPLIT_MANIFEST_SPEC"
+  persisted_plan="$SPLIT_MANIFEST_PLAN"
 
   if [ "$summary" -eq 1 ]; then
     write_and_emit_result "$persisted_spec" "$persisted_plan" summary
@@ -942,7 +1451,7 @@ cmd_resolve() {
 
 cmd_expect() {
   local artifact="" path="" arg normalized
-  local persisted_paths persisted_spec persisted_plan
+  local persisted_paths persisted_spec="" persisted_plan=""
 
   while [ "$#" -gt 0 ]; do
     arg="$1"
@@ -991,15 +1500,16 @@ cmd_expect() {
   append_status_note "expect_set"
 
   persisted_paths="$(manifest_paths_for_write)"
-  persisted_spec="$(printf '%s\n' "$persisted_paths" | sed -n '1p')"
-  persisted_plan="$(printf '%s\n' "$persisted_paths" | sed -n '2p')"
+  split_manifest_paths "$persisted_paths"
+  persisted_spec="$SPLIT_MANIFEST_SPEC"
+  persisted_plan="$SPLIT_MANIFEST_PLAN"
 
   write_and_emit_result "$persisted_spec" "$persisted_plan"
 }
 
 cmd_sync() {
   local artifact="" path="" arg
-  local normalized target_path persisted_paths persisted_spec persisted_plan
+  local normalized target_path persisted_paths persisted_spec="" persisted_plan=""
   local missing_artifact=0
 
   while [ "$#" -gt 0 ]; do
@@ -1071,8 +1581,9 @@ cmd_sync() {
   fi
 
   persisted_paths="$(manifest_paths_for_write)"
-  persisted_spec="$(printf '%s\n' "$persisted_paths" | sed -n '1p')"
-  persisted_plan="$(printf '%s\n' "$persisted_paths" | sed -n '2p')"
+  split_manifest_paths "$persisted_paths"
+  persisted_spec="$SPLIT_MANIFEST_SPEC"
+  persisted_plan="$SPLIT_MANIFEST_PLAN"
 
   write_and_emit_result "$persisted_spec" "$persisted_plan"
 }

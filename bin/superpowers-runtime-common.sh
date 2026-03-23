@@ -13,19 +13,44 @@ normalize_repo_relative_path() {
   if [[ "$input" =~ ^[A-Za-z]:/ ]]; then
     return 1
   fi
-  while IFS= read -r part; do
+
+  while :; do
+    if [[ "$input" == */* ]]; then
+      part="${input%%/*}"
+      input="${input#*/}"
+    else
+      part="$input"
+      input=""
+    fi
     case "$part" in
-      ''|'.') continue ;;
+      ''|'.') ;;
       '..') return 1 ;;
       *) normalized="${normalized:+$normalized/}$part" ;;
     esac
-  done < <(printf '%s\n' "$input" | tr '/' '\n')
+    [[ -n "$input" ]] || break
+  done
   [ -n "$normalized" ] || return 1
   printf '%s\n' "$normalized"
 }
 
 normalize_whitespace() {
-  printf '%s' "${1:-}" | tr '\r\n\t' '   ' | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//'
+  local value="${1:-}" normalized="" token
+  local -a tokens=()
+
+  value="${value//$'\r'/ }"
+  value="${value//$'\n'/ }"
+  value="${value//$'\t'/ }"
+  value="${value//$'\v'/ }"
+  value="${value//$'\f'/ }"
+
+  read -r -a tokens <<< "$value"
+  if ((${#tokens[@]} > 0)); then
+    for token in "${tokens[@]}"; do
+      normalized="${normalized:+$normalized }$token"
+    done
+  fi
+
+  printf '%s\n' "$normalized"
 }
 
 normalize_whitespace_bounded() {
@@ -40,6 +65,19 @@ normalize_whitespace_bounded() {
   fi
 
   printf '%s\n' "$normalized"
+}
+
+trim_surrounding_whitespace() {
+  local value="${1:-}"
+
+  while [[ "$value" == [[:space:]]* ]]; do
+    value="${value#?}"
+  done
+  while [[ "$value" == *[[:space:]] ]]; do
+    value="${value%?}"
+  done
+
+  printf '%s\n' "$value"
 }
 
 normalize_identifier_token() {

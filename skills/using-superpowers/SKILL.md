@@ -275,7 +275,8 @@ Do NOT jump from brainstorming straight to implementation. For workflow-routed w
 First, if `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status` is available, call `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status status --refresh`.
 
 - If the JSON result contains a non-empty `next_skill`, use that route.
-- If the JSON result reports `status` `implementation_ready`, proceed to the normal execution handoff using the exact approved plan path. Choose between `superpowers:subagent-driven-development` and `superpowers:executing-plans` through the helper-backed execution recommendation contract, not a top-level isolated-agent shortcut.
+- If the JSON result reports `status` `implementation_ready`, proceed to the normal execution preflight and handoff flow using the exact approved plan path. Choose between `superpowers:subagent-driven-development` and `superpowers:executing-plans` through the helper-backed execution recommendation contract, not a top-level isolated-agent shortcut.
+- If that helper-backed execution preflight or handoff flow reports execution already started for the same approved plan revision, do not present a fresh implementation route. Return to the current execution flow for that exact approved plan instead.
 - Only fall back to manual artifact inspection if the helper itself is unavailable or fails.
 
 When the helper succeeds, route using its JSON result and do not re-derive state manually.
@@ -284,12 +285,20 @@ When the helper succeeds, route using its JSON result and do not re-derive state
 
 If the helper is unavailable or fails, inspect artifacts manually using the rules below.
 
+If helpers are unavailable, fallback stays minimal and conservative:
+
+- Manual fallback must not infer readiness from the legacy thin header subset.
+- Manual fallback is only a conservative backward-routing path until the helper works again.
+- If the helper failure leaves workflow state unclear, route to the earlier safe stage instead of synthesizing a parallel readiness decision.
+
 Inspect `docs/superpowers/specs/` and `docs/superpowers/plans/` conservatively for the exact relevant artifacts. If more than one plausible latest or approved artifact exists, treat that as ambiguity and route to the earlier safe stage rather than guessing. Then parse these exact-match header lines:
 
 - Spec state: `^\*\*Workflow State:\*\* (Draft|CEO Approved)$`
 - Spec revision: `^\*\*Spec Revision:\*\* ([0-9]+)$`
 - Spec reviewer: `^\*\*Last Reviewed By:\*\* (brainstorming|plan-ceo-review)$`
 - Plan state: `^\*\*Workflow State:\*\* (Draft|Engineering Approved)$`
+- Plan revision: `^\*\*Plan Revision:\*\* ([0-9]+)$`
+- Plan execution mode: `^\*\*Execution Mode:\*\* (none|superpowers:executing-plans|superpowers:subagent-driven-development)$`
 - Plan source: `^\*\*Source Spec:\*\* (.+)$`
 - Plan source revision: `^\*\*Source Spec Revision:\*\* ([0-9]+)$`
 - Plan reviewer: `^\*\*Last Reviewed By:\*\* (writing-plans|plan-eng-review)$`
@@ -301,8 +310,9 @@ Routing rules:
 3. Spec is `CEO Approved` and no relevant plan exists: invoke `superpowers:writing-plans`.
 4. Plan exists but is `Draft` or malformed: invoke `superpowers:plan-eng-review`.
 5. Plan is `Engineering Approved` but its `Source Spec:` path or `Source Spec Revision:` does not match the latest approved spec: invoke `superpowers:writing-plans`.
-6. Plan is `Engineering Approved` and its `Source Spec:` path plus `Source Spec Revision:` match the latest approved spec: proceed to implementation through the normal execution handoff for that approved plan path.
+6. Plan is `Engineering Approved` and its `Source Spec:` path plus `Source Spec Revision:` match the latest approved spec: only proceed through the normal helper-backed execution preflight and handoff flow for that approved plan path.
 7. If artifacts are ambiguous or incomplete, route to the earlier safe stage instead of skipping ahead.
+8. If the helper-backed execution preflight or handoff flow is unavailable, do not route directly from manual fallback into implementation. Stop at the approved plan path and return to the earlier safe stage or the current execution flow instead.
 
 ## User Instructions
 

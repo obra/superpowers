@@ -270,12 +270,25 @@ require_pattern docs/testing.md 'decision resolution, explicit re-entry detectio
 require_pattern tests/codex-runtime/fixtures/workflow-artifacts/README.md 'Requirement Index and Requirement Coverage Matrix structure'
 require_pattern tests/codex-runtime/fixtures/workflow-artifacts/README.md 'canonical `## Task N:` plus parseable `**Files:**` blocks'
 require_pattern docs/README.codex.md "Only the user can initiate accelerated review, and section approval plus final approval remain human-owned even when the review uses reviewer subagents and persisted section packets."
-require_pattern docs/README.codex.md 'requires the `document-release` handoff before workflow-routed branch completion'
-require_pattern docs/README.codex.md 'conditional `qa-only` handoff, requires it when browser interaction or test-plan context warrants it'
+require_pattern docs/README.codex.md 'requires the `document-release` handoff for workflow-routed branch completion'
+require_pattern docs/README.codex.md 'uses the current-branch test-plan artifact to decide whether `qa-only` is required'
+require_pattern docs/README.codex.md 'requires that current-branch test-plan artifact for helper-backed finish readiness'
+require_pattern docs/README.codex.md 'requires a passing `gate-finish` before final branch cleanup or PR handoff'
 require_pattern docs/README.copilot.md 'Accelerated review is an opt-in branch inside `plan-ceo-review` and `plan-eng-review`, not a separate workflow stage.'
 require_pattern docs/README.copilot.md "Only the user can initiate accelerated review, and section approval plus final approval remain human-owned even when the review uses reviewer subagents and persisted section packets."
-require_pattern docs/README.copilot.md 'requires the `document-release` handoff before workflow-routed branch completion'
-require_pattern docs/README.copilot.md 'conditional `qa-only` handoff, requires it when browser interaction or test-plan context warrants it'
+require_pattern docs/README.copilot.md 'requires the `document-release` handoff for workflow-routed branch completion'
+require_pattern docs/README.copilot.md 'uses the current-branch test-plan artifact to decide whether `qa-only` is required'
+require_pattern docs/README.copilot.md 'requires that current-branch test-plan artifact for helper-backed finish readiness'
+require_pattern docs/README.copilot.md 'requires a passing `gate-finish` before final branch cleanup or PR handoff'
+require_pattern README.md 'execution preflight boundary for the approved plan'
+require_pattern docs/README.codex.md 'execution preflight boundary for the approved plan'
+require_pattern docs/README.copilot.md 'execution preflight boundary for the approved plan'
+require_pattern skills/plan-eng-review/SKILL.md '**Browser QA Required:** yes'
+require_pattern skills/qa-only/SKILL.md '# QA Result'
+require_pattern skills/qa-only/SKILL.md '**Source Test Plan:** `~/.superpowers/projects/.../test-plan.md`'
+require_pattern skills/document-release/SKILL.md '# Release Readiness Result'
+require_pattern skills/finishing-a-development-branch/SKILL.md 'Run `superpowers-plan-execution gate-review --plan <approved-plan-path>` before late-stage QA or release routing.'
+require_pattern skills/finishing-a-development-branch/SKILL.md 'After `superpowers:document-release` and any required `superpowers:qa-only` handoff are current, run `superpowers-plan-execution gate-finish --plan <approved-plan-path>` before presenting completion options.'
 
 if rg -n -F 'requires a required `document-release` handoff' docs/README.codex.md docs/README.copilot.md >/dev/null; then
   echo "Platform workflow docs should not duplicate the document-release requirement wording."
@@ -284,6 +297,11 @@ fi
 
 if rg -n -F 'conditional `qa-only` handoff for browser-facing work' docs/README.codex.md docs/README.copilot.md >/dev/null; then
   echo "Platform workflow docs should describe the broader conditional QA gate, not only browser-facing work."
+  exit 1
+fi
+
+if rg -n -F 'execution handoff boundary' README.md docs/README.codex.md docs/README.copilot.md >/dev/null; then
+  echo "Platform workflow docs should describe the approved-plan execution preflight boundary instead of the stale execution handoff boundary wording."
   exit 1
 fi
 
@@ -420,11 +438,14 @@ required_patterns=(
   "skills/plan-eng-review/SKILL.md:docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md"
   "skills/plan-eng-review/SKILL.md:Use when a written Superpowers implementation plan from a CEO-approved spec needs engineering review before execution"
   'skills/plan-eng-review/SKILL.md:**Workflow State:** Draft | Engineering Approved'
+  'skills/plan-eng-review/SKILL.md:superpowers-plan-contract" analyze-plan'
+  'skills/plan-eng-review/SKILL.md:Engineering approval must fail closed unless `contract_state == valid` and `packet_buildable_tasks == task_count`.'
+  'skills/plan-eng-review/SKILL.md:If any task packet is missing, stale, or non-buildable for the approved plan revision, stop and route back to review instead of handing off execution.'
   "skills/plan-eng-review/SKILL.md:_TODOS_FORMAT"
   'skills/plan-eng-review/SKILL.md:If no current plan exists, stop and direct the agent back to `superpowers:writing-plans`.'
-  "skills/plan-eng-review/SKILL.md:When the review is resolved and the written plan is approved, present the normal execution handoff."
+  "skills/plan-eng-review/SKILL.md:When the review is resolved and the written plan is approved, present the normal execution preflight handoff."
   'skills/plan-eng-review/SKILL.md:Do not start implementation inside `plan-eng-review`.'
-  'skills/plan-eng-review/SKILL.md:**The terminal state is presenting the execution handoff with the approved plan path.**'
+  'skills/plan-eng-review/SKILL.md:**The terminal state is presenting the execution preflight handoff with the approved plan path.**'
   "skills/plan-eng-review/SKILL.md:AGENTS.override.md"
   "skills/plan-eng-review/SKILL.md:.github/copilot-instructions.md"
   "skills/plan-eng-review/SKILL.md:.github/instructions/*.instructions.md"

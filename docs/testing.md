@@ -38,6 +38,8 @@ node --test tests/brainstorm-server/server.test.js tests/brainstorm-server/ws-pr
 
 For prompt-surface or workflow-doc changes, keep validation deterministic-first: regenerate outputs, run the checked deterministic suites, and only then run any higher-order eval gates that exercise agent judgment.
 
+Run the helper timing suites sequentially. The workflow, workflow-status, plan-contract, and plan-execution shell suites now include warm-path slowdown guards and cache-invalidation checks; they are meant to catch real regressions in the helpers, not scheduler noise from launching all perf-sensitive suites in parallel.
+
 ## What Each Suite Covers
 
 ### `tests/codex-runtime/*.test.mjs`
@@ -56,8 +58,8 @@ For prompt-surface or workflow-doc changes, keep validation deterministic-first:
 - Protected-branch repo-write guarantees for the repo-safety helper, plus the shared workflow-stage adoption of that gate
 - Generated reviewer-agent artifact freshness for Codex and GitHub Copilot
 - Runtime helper contracts for config, plan execution, update checks, migration, and upgrade flow
-- Supported public workflow CLI contracts for read-only status, next-step, artifact, explain, and failure output
-- Workflow-status helper contracts for branch-scoped workflow manifests and conservative stage routing
+- Supported public workflow CLI contracts for read-only `status`, `next`, `artifacts`, `explain`, `help`, `phase`, `doctor`, `handoff`, `preflight`, `gate review`, and `gate finish` output
+- Workflow-status helper contracts for branch-scoped workflow manifests, conservative stage routing, bounded scans, and warm-path performance
 - PowerShell wrapper behavior, including Git Bash selection and Windows path handling
 - Install documentation and supported runtime references
 - Required support files such as `VERSION`, `review/TODOS-format.md`, `review/checklist.md`, the shared QA assets, and `superpowers-upgrade/SKILL.md`
@@ -110,15 +112,15 @@ That gate uses fresh runner and judge subagents against the checked-in scenario 
 - `test-using-superpowers-bypass.sh` covers the pre-routing `using-superpowers` session-entry wording, including the decision path, malformed-state fail-closed wording, and explicit re-entry semantics
 - `test-superpowers-session-entry.sh` covers the helper-level session-entry contract, including decision resolution, explicit re-entry detection, clause/negation handling, deterministic decision paths, and invalid command input
 - `test-superpowers-session-entry-gate.sh` covers the deterministic first-turn supported-entry harness contract, including fresh-session and malformed-state `needs_user_choice` behavior before the harness allows normal-stack handoff
-- `test-superpowers-plan-contract.sh` covers Requirement Index and Requirement Coverage Matrix parsing, helper fail-closed lint output, task-packet generation, stale-packet regeneration, and bounded task-packet cache retention
+- `test-superpowers-plan-contract.sh` covers Requirement Index and Requirement Coverage Matrix parsing, helper fail-closed lint output, task-packet generation, stale-packet regeneration, bounded task-packet cache retention, warm-path slowdown guards, and cache invalidation after spec or plan changes
 - `test-superpowers-repo-safety.sh` covers the protected-branch repo-write guarantees in the runtime helper, including default protected branches, task-scoped approvals, approval-fingerprint mismatches, and read-only intent behavior
 - `test-workflow-enhancements.sh` covers the imported review, QA, document-release, and branch-completion workflow contracts, including the broader packet-backed review wording surface
 - `test-workflow-sequencing.sh` covers artifact-state routing, fixture-backed stage gates, plan traceability contract wording, the protected-branch repo-write guarantees at repo-writing workflow stages, and the optional worktree policy using checked-in workflow fixtures in `tests/codex-runtime/fixtures/workflow-artifacts/`
 - `tests/codex-runtime/*.test.mjs` covers the deterministic generated-skill and fixture assertions that do not need shell execution
 - `test-powershell-wrapper-bash-resolution.sh` covers shared PowerShell wrapper bash selection and override behavior
-- `test-superpowers-plan-execution.sh` covers the execution helper state machine, same-revision stale source-spec path rejection, canonical task-structure enforcement, evidence canonicalization, rollback behavior, and malformed evidence rejection
-- `test-superpowers-workflow.sh` covers the supported public workflow inspection CLI, including read-only state rendering, missing-expected-path handling, manifest diagnostics, and non-mutation guarantees
-- `test-superpowers-workflow-status.sh` covers the internal workflow-state helper, including bootstrap, same-revision stale source-spec path detection, summary-mode parity, repo-identity recovery, malformed-artifact diagnostics, branch isolation, fallback refresh behavior, and conservative write-conflict handling
+- `test-superpowers-plan-execution.sh` covers the execution helper state machine, same-revision stale source-spec path rejection, canonical task-structure enforcement, evidence canonicalization, rollback behavior, malformed evidence rejection, warm-path slowdown guards, and status-cache invalidation after plan changes
+- `test-superpowers-workflow.sh` covers the supported public workflow inspection CLI, including read-only state rendering, missing-expected-path handling, manifest diagnostics, non-mutation guarantees, and warm-path slowdown guards for `phase --json`
+- `test-superpowers-workflow-status.sh` covers the internal workflow-state helper, including bootstrap, same-revision stale source-spec path detection, summary-mode parity, repo-identity recovery, malformed-artifact diagnostics, branch isolation, fallback refresh behavior, conservative write-conflict handling, and warm-path slowdown guards for `status --refresh`
 - `test-superpowers-update-check.sh` covers semver comparison, snooze handling, and just-upgraded markers
 - `test-superpowers-upgrade-skill.sh` covers install-root resolution and direct upgrade-flow version resolution
 - `test-superpowers-slug.sh` covers the shared slug helper, including missing-remote fallback, detached HEAD handling, and shell-safe escaped output

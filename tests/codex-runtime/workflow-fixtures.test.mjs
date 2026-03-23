@@ -13,12 +13,14 @@ const SPEC_FIXTURES = [
   'specs/2026-01-22-document-review-system-design-v2.md',
   'specs/2026-02-19-visual-brainstorming-refactor-design.md',
   'specs/2026-03-11-zero-dep-brainstorm-server-design.md',
+  'specs/2026-03-22-runtime-integration-hardening-design.md',
 ];
 
 const PLAN_FIXTURES = [
   'plans/2026-01-22-document-review-system.md',
   'plans/2026-02-19-visual-brainstorming-refactor.md',
   'plans/2026-03-11-zero-dep-brainstorm-server.md',
+  'plans/2026-03-22-runtime-integration-hardening.md',
 ];
 
 const STALE_PATH_PLAN_FIXTURE = 'plans/2026-01-22-document-review-system-stale-path.md';
@@ -50,6 +52,7 @@ test('plan fixtures carry the required workflow headers', () => {
     'specs/2026-01-22-document-review-system-design.md',
     'specs/2026-02-19-visual-brainstorming-refactor-design.md',
     'specs/2026-03-11-zero-dep-brainstorm-server-design.md',
+    'specs/2026-03-22-runtime-integration-hardening-design.md',
   ];
   for (const [index, relPath] of PLAN_FIXTURES.entries()) {
     const content = readUtf8(path.join(FIXTURE_ROOT, relPath));
@@ -75,15 +78,30 @@ test('stale-path plan fixture preserves the source-spec path mismatch case', () 
   assert.equal(getExactHeaderLine(content, 'Last Reviewed By'), '**Last Reviewed By:** plan-eng-review');
 });
 
+test('full-contract route-time fixture preserves plan revision, execution mode, and canonical task shape', () => {
+  const content = readUtf8(path.join(FIXTURE_ROOT, 'plans/2026-03-22-runtime-integration-hardening.md'));
+  assert.equal(getExactHeaderLine(content, 'Plan Revision'), '**Plan Revision:** 1');
+  assert.equal(getExactHeaderLine(content, 'Execution Mode'), '**Execution Mode:** none');
+  assert.match(content, /## Requirement Coverage Matrix/);
+  assert.match(content, /## Task 1: Harden route-time workflow validation/);
+  assert.match(content, /\*\*Files:\*\*/);
+});
+
 test('fixture README documents provenance and intent', () => {
   const content = readUtf8(path.join(FIXTURE_ROOT, 'README.md'));
   assert.match(content, /108c0e8/);
   assert.match(content, /ce106d0/);
   assert.match(content, /header contract/i);
   assert.match(content, /stale source-spec path/i);
+  assert.match(content, /full approved-plan-contract pair/i);
 });
 
 test('runtime sequencing coverage points at the fixture directory', () => {
   const content = readUtf8(path.join(REPO_ROOT, 'tests/codex-runtime/test-workflow-sequencing.sh'));
   assert.match(content, /WORKFLOW_FIXTURE_DIR="tests\/codex-runtime\/fixtures\/workflow-artifacts"/);
+});
+
+test('public workflow wrapper coverage points at the fixture directory', () => {
+  const content = readUtf8(path.join(REPO_ROOT, 'tests/codex-runtime/test-superpowers-workflow.sh'));
+  assert.match(content, /WORKFLOW_FIXTURE_DIR="\$REPO_ROOT\/tests\/codex-runtime\/fixtures\/workflow-artifacts"/);
 });

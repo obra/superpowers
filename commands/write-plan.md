@@ -1,5 +1,10 @@
 ---
-description: "Deprecated - use the superpowers:writing-plans skill instead"
+description: "Compatibility shim for legacy plan-writing command usage"
 ---
 
-Tell your human partner that this command is deprecated and will be removed in the next major release. They should ask you to use the "superpowers writing-plans" skill instead.
+This command is a compatibility shim.
+
+Use `superpowers-workflow handoff` to inspect the current phase and any current approved-plan handoff context before routing plan work.
+
+- If the current phase shows that plan writing is the next supported step, continue with `superpowers:writing-plans`.
+- If the handoff surface points to a different approved workflow stage, route there instead of treating this legacy alias as an alternate entrypoint.

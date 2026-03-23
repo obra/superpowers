@@ -5,6 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 HELPER_BIN="$REPO_ROOT/bin/superpowers-plan-contract"
 FIXTURE_DIR="$REPO_ROOT/tests/codex-runtime/fixtures/plan-contract"
+WORKFLOW_FIXTURE_DIR="$REPO_ROOT/tests/codex-runtime/fixtures/workflow-artifacts"
 STATE_DIR="$(mktemp -d)"
 REPO_DIR="$(mktemp -d)"
 trap 'rm -rf "$STATE_DIR" "$REPO_DIR"' EXIT
@@ -27,6 +28,7 @@ FIXTURE_NAMES=(
   invalid-malformed-files-plan.md
   invalid-malformed-task-structure-plan.md
   invalid-path-traversal-plan.md
+  overlapping-write-scopes-plan.md
 )
 
 require_helper() {
@@ -164,6 +166,45 @@ run_json_command_with_env() {
   printf '%s\n' "$output"
 }
 
+run_json_command_with_timeout() {
+  local repo_dir="$1"
+  local timeout_seconds="$2"
+  local stdout_file
+  local stderr_file
+  local status=0
+  local output=""
+  local error_output=""
+  local timing=""
+  shift 2
+
+  stdout_file="$(mktemp "${TMPDIR:-/tmp}/superpowers-plan-contract-stdout.XXXXXX")"
+  stderr_file="$(mktemp "${TMPDIR:-/tmp}/superpowers-plan-contract-stderr.XXXXXX")"
+  TIMEFORMAT='%R'
+  timing="$({ time (cd "$repo_dir" && "$HELPER_BIN" "$@" >"$stdout_file" 2>"$stderr_file"); } 2>&1)" || status=$?
+  timing="${timing##*$'\n'}"
+
+  output="$(cat "$stdout_file")"
+  error_output="$(cat "$stderr_file")"
+  rm -f "$stdout_file" "$stderr_file"
+
+  if awk -v actual="$timing" -v limit="$timeout_seconds" 'BEGIN { exit !((actual + 0) > (limit + 0)) }'; then
+    echo "Command timed out after ${timeout_seconds}s: $HELPER_BIN $*"
+    echo "Elapsed: ${timing}s"
+    [[ -n "$output" ]] && printf '%s\n' "$output"
+    [[ -n "$error_output" ]] && printf '%s\n' "$error_output"
+    exit 124
+  fi
+
+  if [[ $status -ne 0 ]]; then
+    echo "Expected command to succeed: $HELPER_BIN $*"
+    [[ -n "$output" ]] && printf '%s\n' "$output"
+    [[ -n "$error_output" ]] && printf '%s\n' "$error_output"
+    exit "$status"
+  fi
+
+  printf '%s\n' "$output"
+}
+
 run_command_fails() {
   local repo_dir="$1"
   local expected_class="$2"
@@ -209,6 +250,29 @@ install_fixture() {
 install_valid_artifacts() {
   install_fixture "valid-spec.md" "$SPEC_REL"
   install_fixture "valid-plan.md" "$PLAN_REL"
+}
+
+install_runtime_integration_artifacts() {
+  mkdir -p "$(dirname "$REPO_DIR/docs/superpowers/specs/2026-03-22-runtime-integration-hardening-design.md")"
+  mkdir -p "$(dirname "$REPO_DIR/docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md")"
+  cp \
+    "$WORKFLOW_FIXTURE_DIR/specs/2026-03-22-runtime-integration-hardening-design.md" \
+    "$REPO_DIR/docs/superpowers/specs/2026-03-22-runtime-integration-hardening-design.md"
+  cp \
+    "$WORKFLOW_FIXTURE_DIR/plans/2026-03-22-runtime-integration-hardening.md" \
+    "$REPO_DIR/docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md"
+  node - <<'NODE' "$REPO_DIR/docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md"
+const fs = require("fs");
+const file = process.argv[2];
+const source = fs.readFileSync(file, "utf8");
+fs.writeFileSync(
+  file,
+  source.replace(
+    "tests/codex-runtime/fixtures/workflow-artifacts/specs/2026-03-22-runtime-integration-hardening-design.md",
+    "docs/superpowers/specs/2026-03-22-runtime-integration-hardening-design.md",
+  ),
+);
+NODE
 }
 
 reset_artifacts() {
@@ -297,6 +361,203 @@ EOF
   assert_json_equals "$output" "plan_task_count" "2" "lint"
 }
 
+test_analyze_plan_reports_valid_contract_and_buildable_packets() {
+  reset_artifacts
+  install_valid_artifacts
+
+  local output
+  output="$(run_json_command "$REPO_DIR" analyze-plan --spec "$SPEC_REL" --plan "$PLAN_REL" --format json)"
+  assert_json_equals "$output" "contract_state" "valid" "analyze-plan"
+  assert_json_equals "$output" "spec_path" "$SPEC_REL" "analyze-plan"
+  assert_json_equals "$output" "spec_revision" "1" "analyze-plan"
+  assert_json_nonempty "$output" "spec_fingerprint" "analyze-plan"
+  assert_json_equals "$output" "plan_path" "$PLAN_REL" "analyze-plan"
+  assert_json_equals "$output" "plan_revision" "1" "analyze-plan"
+  assert_json_nonempty "$output" "plan_fingerprint" "analyze-plan"
+  assert_json_equals "$output" "task_count" "2" "analyze-plan"
+  assert_json_equals "$output" "packet_buildable_tasks" "2" "analyze-plan"
+  assert_json_equals "$output" "coverage_complete" "true" "analyze-plan"
+  assert_json_equals "$output" "open_questions_resolved" "true" "analyze-plan"
+  assert_json_equals "$output" "task_structure_valid" "true" "analyze-plan"
+  assert_json_equals "$output" "files_blocks_valid" "true" "analyze-plan"
+  assert_json_equals "$output" "reason_codes" "[]" "analyze-plan"
+  assert_json_equals "$output" "overlapping_write_scopes" "[]" "analyze-plan"
+  assert_json_equals "$output" "diagnostics" "[]" "analyze-plan"
+}
+
+test_analyze_plan_rejects_stale_source_spec_linkage() {
+  reset_artifacts
+  install_valid_artifacts
+
+  node - <<'NODE' "$REPO_DIR/$PLAN_REL"
+const fs = require("fs");
+const path = process.argv[2];
+const source = fs.readFileSync(path, "utf8");
+fs.writeFileSync(
+  path,
+  source.replace("**Source Spec Revision:** 1", "**Source Spec Revision:** 2"),
+);
+NODE
+
+  local output
+  output="$(run_json_command "$REPO_DIR" analyze-plan --spec "$SPEC_REL" --plan "$PLAN_REL" --format json)"
+  assert_json_equals "$output" "contract_state" "invalid" "analyze-plan stale source linkage"
+  assert_json_equals "$output" "reason_codes.0" "stale_spec_plan_linkage" "analyze-plan stale source linkage"
+  assert_json_equals "$output" "coverage_complete" "true" "analyze-plan stale source linkage"
+  assert_json_equals "$output" "open_questions_resolved" "true" "analyze-plan stale source linkage"
+}
+
+test_analyze_plan_reports_missing_coverage_as_invalid() {
+  reset_artifacts
+  install_fixture "valid-spec.md" "$SPEC_REL"
+  install_fixture "invalid-missing-coverage-plan.md" "$PLAN_REL"
+
+  local output
+  output="$(run_json_command "$REPO_DIR" analyze-plan --spec "$SPEC_REL" --plan "$PLAN_REL" --format json)"
+  assert_json_equals "$output" "contract_state" "invalid" "analyze-plan missing coverage"
+  assert_json_equals "$output" "task_count" "2" "analyze-plan missing coverage"
+  assert_json_equals "$output" "packet_buildable_tasks" "2" "analyze-plan missing coverage"
+  assert_json_equals "$output" "coverage_complete" "false" "analyze-plan missing coverage"
+  assert_json_equals "$output" "open_questions_resolved" "true" "analyze-plan missing coverage"
+  assert_json_equals "$output" "task_structure_valid" "true" "analyze-plan missing coverage"
+  assert_json_equals "$output" "files_blocks_valid" "true" "analyze-plan missing coverage"
+  assert_json_equals "$output" "reason_codes.0" "missing_requirement_coverage" "analyze-plan missing coverage"
+  assert_json_equals "$output" "diagnostics.0.code" "missing_requirement_coverage" "analyze-plan missing coverage"
+}
+
+test_analyze_plan_reports_partial_packet_buildability() {
+  reset_artifacts
+  install_fixture "valid-spec.md" "$SPEC_REL"
+  install_fixture "invalid-malformed-files-plan.md" "$PLAN_REL"
+
+  local output
+  output="$(run_json_command "$REPO_DIR" analyze-plan --spec "$SPEC_REL" --plan "$PLAN_REL" --format json)"
+  assert_json_equals "$output" "contract_state" "invalid" "analyze-plan malformed files"
+  assert_json_equals "$output" "task_count" "2" "analyze-plan malformed files"
+  assert_json_equals "$output" "packet_buildable_tasks" "1" "analyze-plan malformed files"
+  assert_json_equals "$output" "coverage_complete" "true" "analyze-plan malformed files"
+  assert_json_equals "$output" "open_questions_resolved" "true" "analyze-plan malformed files"
+  assert_json_equals "$output" "task_structure_valid" "true" "analyze-plan malformed files"
+  assert_json_equals "$output" "files_blocks_valid" "false" "analyze-plan malformed files"
+  assert_json_equals "$output" "reason_codes.0" "malformed_files_block" "analyze-plan malformed files"
+  assert_json_equals "$output" "diagnostics.0.code" "malformed_files_block" "analyze-plan malformed files"
+}
+
+test_analyze_plan_reports_missing_spec_revision() {
+  reset_artifacts
+  install_fixture "valid-spec.md" "$SPEC_REL"
+  install_fixture "valid-plan.md" "$PLAN_REL"
+  replace_in_file "$SPEC_REL" "**Spec Revision:** 1" "**Spec Revision:** one"
+
+  local output
+  output="$(run_json_command "$REPO_DIR" analyze-plan --spec "$SPEC_REL" --plan "$PLAN_REL" --format json)"
+  assert_json_equals "$output" "contract_state" "invalid" "analyze-plan missing spec revision"
+  assert_json_equals "$output" "reason_codes.0" "missing_spec_revision" "analyze-plan missing spec revision"
+  assert_json_equals "$output" "diagnostics.0.code" "missing_spec_revision" "analyze-plan missing spec revision"
+}
+
+test_analyze_plan_reports_malformed_task_structure() {
+  reset_artifacts
+  install_fixture "valid-spec.md" "$SPEC_REL"
+  install_fixture "invalid-malformed-task-structure-plan.md" "$PLAN_REL"
+
+  local output
+  output="$(run_json_command "$REPO_DIR" analyze-plan --spec "$SPEC_REL" --plan "$PLAN_REL" --format json)"
+  assert_json_equals "$output" "contract_state" "invalid" "analyze-plan malformed task structure"
+  assert_json_equals "$output" "task_structure_valid" "false" "analyze-plan malformed task structure"
+  assert_json_equals "$output" "reason_codes.0" "malformed_task_structure" "analyze-plan malformed task structure"
+  assert_json_equals "$output" "diagnostics.0.code" "malformed_task_structure" "analyze-plan malformed task structure"
+}
+
+test_analyze_plan_reports_coverage_matrix_mismatch() {
+  reset_artifacts
+  install_fixture "valid-spec.md" "$SPEC_REL"
+  install_fixture "valid-plan.md" "$PLAN_REL"
+  replace_in_file "$PLAN_REL" "- REQ-001 -> Task 1" "- REQ-001 -> Task 9"
+
+  local output
+  output="$(run_json_command "$REPO_DIR" analyze-plan --spec "$SPEC_REL" --plan "$PLAN_REL" --format json)"
+  assert_json_equals "$output" "contract_state" "invalid" "analyze-plan coverage matrix mismatch"
+  assert_json_equals "$output" "reason_codes.0" "coverage_matrix_mismatch" "analyze-plan coverage matrix mismatch"
+  assert_json_equals "$output" "diagnostics.0.code" "coverage_matrix_mismatch" "analyze-plan coverage matrix mismatch"
+}
+
+test_analyze_plan_reports_overlapping_write_scopes() {
+  reset_artifacts
+  install_fixture "valid-spec.md" "$SPEC_REL"
+  install_fixture "overlapping-write-scopes-plan.md" "$PLAN_REL"
+
+  local output
+  output="$(run_json_command "$REPO_DIR" analyze-plan --spec "$SPEC_REL" --plan "$PLAN_REL" --format json)"
+  assert_json_equals "$output" "contract_state" "valid" "analyze-plan overlapping scopes"
+  assert_json_equals "$output" "task_count" "2" "analyze-plan overlapping scopes"
+  assert_json_equals "$output" "packet_buildable_tasks" "2" "analyze-plan overlapping scopes"
+  assert_json_equals "$output" "overlapping_write_scopes" '[{"path":"skills/writing-plans/SKILL.md","tasks":[1,2]}]' "analyze-plan overlapping scopes"
+  assert_json_equals "$output" "overlapping_write_scopes.0.path" "skills/writing-plans/SKILL.md" "analyze-plan overlapping scopes"
+  assert_json_equals "$output" "overlapping_write_scopes.0.tasks.0" "1" "analyze-plan overlapping scopes"
+  assert_json_equals "$output" "overlapping_write_scopes.0.tasks.1" "2" "analyze-plan overlapping scopes"
+}
+
+test_analyze_plan_reports_missing_requirement_index() {
+  reset_artifacts
+  install_fixture "invalid-missing-index-spec.md" "$SPEC_REL"
+  install_fixture "valid-plan.md" "$PLAN_REL"
+
+  local output
+  output="$(run_json_command "$REPO_DIR" analyze-plan --spec "$SPEC_REL" --plan "$PLAN_REL" --format json)"
+  assert_json_equals "$output" "contract_state" "invalid" "analyze-plan missing requirement index"
+  assert_json_equals "$output" "reason_codes.0" "missing_requirement_index" "analyze-plan missing requirement index"
+  assert_json_equals "$output" "diagnostics.0.code" "missing_requirement_index" "analyze-plan missing requirement index"
+}
+
+test_analyze_plan_reports_malformed_requirement_index() {
+  reset_artifacts
+  install_fixture "valid-spec.md" "$SPEC_REL"
+  install_fixture "valid-plan.md" "$PLAN_REL"
+  replace_in_file "$SPEC_REL" '- [REQ-001][behavior] Execution-bound specs must include a parseable `Requirement Index`.' '- REQ-001 behavior] Execution-bound specs must include a parseable `Requirement Index`.'
+
+  local output
+  output="$(run_json_command "$REPO_DIR" analyze-plan --spec "$SPEC_REL" --plan "$PLAN_REL" --format json)"
+  assert_json_equals "$output" "contract_state" "invalid" "analyze-plan malformed requirement index"
+  assert_json_equals "$output" "reason_codes.0" "malformed_requirement_index" "analyze-plan malformed requirement index"
+  assert_json_equals "$output" "diagnostics.0.code" "malformed_requirement_index" "analyze-plan malformed requirement index"
+}
+
+test_analyze_plan_reports_task_missing_spec_coverage() {
+  reset_artifacts
+  install_fixture "valid-spec.md" "$SPEC_REL"
+  install_fixture "valid-plan.md" "$PLAN_REL"
+  replace_in_file "$PLAN_REL" "**Spec Coverage:** REQ-001, REQ-002, DEC-001" "**Spec Coverage:** "
+
+  local output
+  output="$(run_json_command "$REPO_DIR" analyze-plan --spec "$SPEC_REL" --plan "$PLAN_REL" --format json)"
+  assert_json_equals "$output" "contract_state" "invalid" "analyze-plan task missing spec coverage"
+  assert_json_equals "$output" "reason_codes.0" "task_missing_spec_coverage" "analyze-plan task missing spec coverage"
+  assert_json_equals "$output" "diagnostics.0.code" "task_missing_spec_coverage" "analyze-plan task missing spec coverage"
+}
+
+test_analyze_plan_reports_unexpected_requirement_index_failure() {
+  reset_artifacts
+  install_valid_artifacts
+
+  local output
+  output="$(run_json_command_with_env "$REPO_DIR" SUPERPOWERS_PLAN_CONTRACT_TEST_FAILPOINT=requirement_index_unexpected_failure "$HELPER_BIN" analyze-plan --spec "$SPEC_REL" --plan "$PLAN_REL" --format json)"
+  assert_json_equals "$output" "contract_state" "invalid" "analyze-plan unexpected requirement index failure"
+  assert_json_equals "$output" "reason_codes.0" "unexpected_plan_contract_failure" "analyze-plan unexpected requirement index failure"
+  assert_json_equals "$output" "diagnostics.0.code" "unexpected_plan_contract_failure" "analyze-plan unexpected requirement index failure"
+}
+
+test_analyze_plan_reports_unexpected_coverage_matrix_failure() {
+  reset_artifacts
+  install_valid_artifacts
+
+  local output
+  output="$(run_json_command_with_env "$REPO_DIR" SUPERPOWERS_PLAN_CONTRACT_TEST_FAILPOINT=coverage_matrix_unexpected_failure "$HELPER_BIN" analyze-plan --spec "$SPEC_REL" --plan "$PLAN_REL" --format json)"
+  assert_json_equals "$output" "contract_state" "invalid" "analyze-plan unexpected coverage matrix failure"
+  assert_json_equals "$output" "reason_codes.0" "unexpected_plan_contract_failure" "analyze-plan unexpected coverage matrix failure"
+  assert_json_equals "$output" "diagnostics.0.code" "unexpected_plan_contract_failure" "analyze-plan unexpected coverage matrix failure"
+}
+
 test_build_task_packet_json_preserves_exact_contract_text() {
   reset_artifacts
   install_valid_artifacts
@@ -305,13 +566,19 @@ test_build_task_packet_json_preserves_exact_contract_text() {
   output="$(run_json_command "$REPO_DIR" build-task-packet --plan "$PLAN_REL" --task 1 --format json --persist no)"
   assert_json_equals "$output" "status" "ok" "packet"
   assert_json_equals "$output" "plan_path" "$PLAN_REL" "packet"
+  assert_json_equals "$output" "plan_revision" "1" "packet"
+  assert_json_nonempty "$output" "plan_fingerprint" "packet"
   assert_json_equals "$output" "source_spec_path" "$SPEC_REL" "packet"
+  assert_json_equals "$output" "source_spec_revision" "1" "packet"
+  assert_json_nonempty "$output" "source_spec_fingerprint" "packet"
   assert_json_equals "$output" "task_number" "1" "packet"
   assert_json_equals "$output" "task_title" "Establish the plan contract" "packet"
   assert_json_equals "$output" "open_questions" "none" "packet"
   assert_json_equals "$output" "requirement_ids.0" "REQ-001" "packet"
   assert_json_equals "$output" "requirement_ids.1" "REQ-002" "packet"
   assert_json_equals "$output" "requirement_ids.2" "DEC-001" "packet"
+  assert_json_nonempty "$output" "packet_timestamp" "packet"
+  assert_json_nonempty "$output" "packet_fingerprint" "packet"
   assert_json_equals "$output" "persisted" "false" "packet"
   assert_json_equals "$output" "cache_status" "ephemeral" "packet"
   assert_contains "$output" 'Execution-bound specs must include a parseable `Requirement Index`' "packet"
@@ -326,6 +593,11 @@ test_build_task_packet_markdown_preserves_exact_contract_text() {
   output="$(run_markdown_command "$REPO_DIR" build-task-packet --plan "$PLAN_REL" --task 2 --format markdown --persist no)"
   assert_contains "$output" "## Task Packet" "markdown packet"
   assert_contains "$output" "**Plan Path:** \`$PLAN_REL\`" "markdown packet"
+  assert_contains "$output" "**Plan Revision:** 1" "markdown packet"
+  assert_contains "$output" "**Source Spec Path:** \`$SPEC_REL\`" "markdown packet"
+  assert_contains "$output" "**Source Spec Revision:** 1" "markdown packet"
+  assert_contains "$output" "**Packet Fingerprint:** \`" "markdown packet"
+  assert_contains "$output" "**Generated At:** " "markdown packet"
   assert_contains "$output" "## Task 2: Dispatch exact packet-backed execution" "markdown packet"
   assert_contains "$output" 'Superpowers must provide a derived `superpowers-plan-contract` helper that lints traceability and builds canonical task packets.' "markdown packet"
   assert_contains "$output" "**Open Questions:** none" "markdown packet"
@@ -484,6 +756,32 @@ test_real_approved_task_fidelity_packet_builds() {
   assert_contains "$output" "## Task 4: Switch Execution And Review Consumers To Task Packets" "real task-fidelity packet"
 }
 
+test_runtime_integration_repo_lint_stays_fast() {
+  local output
+
+  run_json_command "$REPO_ROOT" lint --spec docs/superpowers/specs/2026-03-22-runtime-integration-hardening-design.md --plan docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md >/dev/null
+  output="$(run_json_command_with_timeout "$REPO_ROOT" 1 lint --spec docs/superpowers/specs/2026-03-22-runtime-integration-hardening-design.md --plan docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md)"
+  assert_json_equals "$output" "status" "ok" "runtime integration repo lint"
+}
+
+test_runtime_integration_repo_analyze_plan_stays_fast() {
+  local output
+
+  run_json_command "$REPO_ROOT" analyze-plan --spec docs/superpowers/specs/2026-03-22-runtime-integration-hardening-design.md --plan docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md --format json >/dev/null
+  output="$(run_json_command_with_timeout "$REPO_ROOT" 1 analyze-plan --spec docs/superpowers/specs/2026-03-22-runtime-integration-hardening-design.md --plan docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md --format json)"
+  assert_json_equals "$output" "contract_state" "valid" "runtime integration repo analyze-plan"
+}
+
+test_lint_cache_invalidates_after_plan_change() {
+  reset_artifacts
+  install_valid_artifacts
+
+  run_json_command "$REPO_DIR" lint --spec "$SPEC_REL" --plan "$PLAN_REL" >/dev/null
+  replace_in_file "$PLAN_REL" "- REQ-003 -> Task 2" "- REQ-003 -> Task 1"
+
+  run_command_fails "$REPO_DIR" CoverageMatrixMismatch lint --spec "$SPEC_REL" --plan "$PLAN_REL" >/dev/null
+}
+
 test_persisted_packet_cache_prunes_old_entries() {
   reset_artifacts
   install_valid_artifacts
@@ -521,6 +819,19 @@ init_repo "$REPO_DIR"
 
 test_lint_succeeds_for_valid_contract
 test_lint_ignores_fenced_example_requirement_index_blocks
+test_analyze_plan_reports_valid_contract_and_buildable_packets
+test_analyze_plan_rejects_stale_source_spec_linkage
+test_analyze_plan_reports_missing_coverage_as_invalid
+test_analyze_plan_reports_partial_packet_buildability
+test_analyze_plan_reports_missing_spec_revision
+test_analyze_plan_reports_malformed_task_structure
+test_analyze_plan_reports_coverage_matrix_mismatch
+test_analyze_plan_reports_overlapping_write_scopes
+test_analyze_plan_reports_missing_requirement_index
+test_analyze_plan_reports_malformed_requirement_index
+test_analyze_plan_reports_task_missing_spec_coverage
+test_analyze_plan_reports_unexpected_requirement_index_failure
+test_analyze_plan_reports_unexpected_coverage_matrix_failure
 test_build_task_packet_json_preserves_exact_contract_text
 test_build_task_packet_markdown_preserves_exact_contract_text
 test_missing_requirement_index_fails
@@ -537,6 +848,9 @@ test_build_task_packet_detects_stale_plan_revision_and_regenerates
 test_build_task_packet_detects_tampered_cache_and_regenerates
 test_real_approved_task_fidelity_artifacts_lint_clean
 test_real_approved_task_fidelity_packet_builds
+test_runtime_integration_repo_lint_stays_fast
+test_runtime_integration_repo_analyze_plan_stays_fast
+test_lint_cache_invalidates_after_plan_change
 test_persisted_packet_cache_prunes_old_entries
 
 echo "Plan-contract helper regression test passed."

@@ -59,15 +59,37 @@ Before presenting completion options:
 - Parse `active_task`, `blocking_task`, and `resume_task` from the status JSON.
 - If any of `active_task`, `blocking_task`, or `resume_task` is non-null, stop and return to the current execution flow; branch completion is only valid when all three are `null`.
 - If `evidence_path` is empty or unreadable, stop and return to the current execution flow instead of guessing at execution evidence.
+- Run `superpowers-plan-execution gate-review --plan <approved-plan-path>` before late-stage QA or release routing.
+- If the review gate returns `allowed` `false`, stop and return to the current execution flow; do not present completion options against stale, drifted, or mismatched execution evidence.
 - If the current work is not governed by an approved Superpowers plan, skip this execution-state gate and continue.
 - rejects branch-completion handoff if the approved plan is execution-dirty or malformed
 - must not allow branch completion while any checked-off plan step still lacks semantic implementation evidence
 - consumes the same execution evidence artifact used by final review
 - must fail closed when it detects a missed reopen or stale evidence, but must not call `reopen` itself
 
-### Step 1.75: Conditional Pre-Landing QA Gate
+### Step 1.75: Required Document Release Gate
 
-Before presenting completion options, look for a branch-specific QA handoff artifact:
+For workflow-routed work, require the `document-release` pass before presenting completion options.
+
+For workflow-routed work, if the repo has release-facing docs or metadata such as `CHANGELOG.md`, `RELEASE-NOTES.md`, `VERSION`, `TODOS.md`, `README.md`, or platform workflow docs, do not treat documentation as optional cleanup. Route through `superpowers:document-release` first unless a fresh pass already happened in the current workflow.
+
+For ad-hoc or non-workflow-routed work, keep `document-release` available as an optional cleanup pass when the diff clearly changes release-facing docs or handoff material, but do not turn it into a universal pre-completion gate.
+
+If `superpowers:document-release` writes repo files or changes release metadata, treat any earlier code review as stale and loop back through `superpowers:requesting-code-review` before presenting completion options.
+
+A document-release rewrite also makes any earlier browser QA stale if browser QA is still required for the current HEAD, so do not reuse pre-document-release QA artifacts as the final finish-gate input.
+
+Before moving on, perform a short Gate F-style confirmation:
+
+- documentation has been refreshed
+- release notes or equivalent release-history updates are ready
+- rollout and rollback are addressed
+- known risks are documented
+- monitoring or verification expectations are addressed when relevant
+
+### Step 1.85: Conditional Pre-Landing QA Gate
+
+Conditional pre-landing browser QA when the branch change surface or test-plan artifact warrants it:
 
 ```bash
 _SLUG_ENV=$("$_SUPERPOWERS_ROOT/bin/superpowers-slug" 2>/dev/null || true)
@@ -81,12 +103,18 @@ printf '%s\n' "$PLAN_ARTIFACT"
 
 If `PLAN_ARTIFACT` exists, read it before deciding whether browser QA applies.
 
-If a branch-specific test-plan artifact names pages, routes, or browser interactions, or the current change is clearly browser-facing, require the existing QA handoff before completion options.
+If a current-branch test-plan artifact exists, treat its `**Browser QA Required:** yes|no` header as authoritative for workflow-routed finish gating.
+
+If that artifact names pages, routes, or browser interactions, use it to scope the required QA handoff.
+
+A project-wide or generic test-plan artifact may help scope ad-hoc QA, but it does not satisfy branch-finish freshness checks. Only the current-branch artifact counts for helper-backed finish readiness.
+
+If no current-branch test-plan artifact exists for workflow-routed work, stop and regenerate it before deciding whether QA is required or before invoking `gate-finish`.
 
 Recommendation logic:
-- Recommend `A)` when a branch-specific test-plan artifact exists and it points at pages, routes, or browser interactions
-- Recommend `A)` when user-visible routes, forms, or browser flows changed
-- Skip the handoff when the branch is clearly non-browser work, even if a generic test-plan artifact exists
+- Recommend `A)` when the current-branch test-plan artifact sets `**Browser QA Required:** yes`
+- If the current-branch test-plan artifact sets `**Browser QA Required:** no`, QA remains optional unless the user explicitly wants extra browser validation
+- For ad-hoc non-workflow work without a current-branch test-plan artifact, QA remains optional for clearly non-browser work
 
 When browser QA is clearly warranted, do not present a skip option.
 
@@ -99,25 +127,15 @@ Possible options when browser QA is optional:
 
 If a fresh `qa-only` report already happened in the current workflow, continue silently.
 
-When browser QA is warranted by the change type or test-plan artifact, require the existing QA handoff before presenting completion options. Keep QA optional only for clearly non-browser work.
+If the current-branch test-plan artifact sets `**Browser QA Required:** yes`, require the existing QA handoff before presenting completion options.
 
-### Step 1.9: Required Document Release Gate
+If no current-branch test-plan artifact exists for workflow-routed work, stop and regenerate it before presenting completion options or invoking `gate-finish`.
 
-For workflow-routed work, require the `document-release` pass before presenting completion options.
+### Step 1.9: Finish Gate
 
-For workflow-routed work, if the repo has release-facing docs or metadata such as `CHANGELOG.md`, `RELEASE-NOTES.md`, `VERSION`, `TODOS.md`, `README.md`, or platform workflow docs, do not treat documentation as optional cleanup. Route through `superpowers:document-release` first unless a fresh pass already happened in the current workflow.
+After `superpowers:document-release` and any required `superpowers:qa-only` handoff are current, run `superpowers-plan-execution gate-finish --plan <approved-plan-path>` before presenting completion options.
 
-For ad-hoc or non-workflow-routed work, keep `document-release` available as an optional cleanup pass when the diff clearly changes release-facing docs or handoff material, but do not turn it into a universal pre-completion gate.
-
-If `superpowers:document-release` writes repo files or changes release metadata, treat any earlier code review as stale and loop back through `superpowers:requesting-code-review` before presenting completion options.
-
-Before moving on, perform a short Gate F-style confirmation:
-
-- documentation has been refreshed
-- release notes or equivalent release-history updates are ready
-- rollout and rollback are addressed
-- known risks are documented
-- monitoring or verification expectations are addressed when relevant
+If the finish gate returns `allowed` `false`, stop and return to the current execution flow; do not present completion options against stale QA or release artifacts.
 
 ### Step 1.95: Protected-Branch Repo-Write Gate
 
@@ -284,7 +302,7 @@ If found:
 
 ### Step 6: Document Release Follow-Through
 
-If Step 1.9 already routed through `superpowers:document-release`, summarize the release-readiness result and continue. Do not offer a skip path here for workflow-routed work.
+If the document-release step already ran in this flow, summarize the release-readiness result and continue. Do not offer a skip path here for workflow-routed work.
 
 ## Quick Reference
 
