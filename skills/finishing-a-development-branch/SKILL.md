@@ -37,6 +37,50 @@ Stop. Don't proceed to Step 2.
 
 **If tests pass:** Continue to Step 2.
 
+### Step 1.5: Detect Environment
+
+````bash
+GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
+GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
+BRANCH=$(git branch --show-current)
+````
+
+**Path A — `GIT_DIR` differs from `GIT_COMMON` AND `BRANCH` is empty (externally managed worktree, detached HEAD):**
+
+First, ensure all work is staged and committed (`git add` + `git commit`).
+
+Then present this to the user (do NOT present the 4-option menu):
+
+```
+Implementation complete. All tests passing.
+Current HEAD: <full-commit-sha>
+
+This workspace is externally managed (detached HEAD).
+I cannot create branches, push, or open PRs from here.
+
+⚠ These commits are on a detached HEAD. If you do not create a branch,
+they may be lost when this workspace is cleaned up.
+
+If your host application provides these controls:
+- "Create branch" — to name a branch, then commit/push/PR
+- "Hand off to local" — to move changes to your local checkout
+
+Suggested branch name: <ticket-id/short-description>
+Suggested commit message: <summary-of-work>
+```
+
+Branch name: use ticket ID if available (e.g., `pri-823/codex-compat`), otherwise slugify the first 5 words of the plan title, otherwise omit. Avoid sensitive content in branch names.
+
+Skip to Step 5 (cleanup is a no-op — see guard below).
+
+**Path B — `GIT_DIR` differs from `GIT_COMMON` AND `BRANCH` exists (externally managed worktree, named branch):**
+
+Proceed to Step 2 and present the 4-option menu as normal.
+
+**Path C — `GIT_DIR` equals `GIT_COMMON` (normal environment):**
+
+Proceed to Step 2 and present the 4-option menu as normal.
+
 ### Step 2: Determine Base Branch
 
 ```bash
