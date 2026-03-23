@@ -108,6 +108,16 @@ Remove-Item "$env:USERPROFILE\.agents\skills\superpowers"
 
 Optionally delete the clone: `rm -rf ~/.codex/superpowers` (Windows: `Remove-Item -Recurse -Force "$env:USERPROFILE\.codex\superpowers"`).
 
+## Individual Skill Install
+
+To install a single skill instead of the full package, tell Codex:
+
+```
+$skill-installer install https://github.com/obra/superpowers/tree/main/skills/brainstorming
+```
+
+Replace `brainstorming` with any skill name. This is a Codex skill, not a shell command — type it in the Codex prompt.
+
 ## Troubleshooting
 
 ### Skills not showing up
