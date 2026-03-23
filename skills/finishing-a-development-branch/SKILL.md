@@ -179,7 +179,16 @@ Then: Cleanup worktree (Step 5)
 
 ### Step 5: Cleanup Worktree
 
-**For Options 1, 2, 4:**
+**First, check if worktree is externally managed:**
+
+````bash
+GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
+GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
+````
+
+If `GIT_DIR` differs from `GIT_COMMON`: skip worktree removal — the host environment owns this workspace.
+
+**Otherwise, for Options 1 and 4:**
 
 Check if in worktree:
 ```bash
