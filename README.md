@@ -174,6 +174,12 @@ Skills update automatically when you update the plugin:
 
 MIT License - see LICENSE file for details
 
+## Community Implementations
+
+- **OpenClaw Skills version** - an OpenClaw-adapted Skills edition, maintained separately at https://github.com/KarasawaYikiho/Superpower-Skills
+
+This is a downstream Skills-oriented adaptation rather than the canonical upstream repository layout.
+
 ## Community
 
 Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of the folks at [Prime Radiant](https://primeradiant.com).
