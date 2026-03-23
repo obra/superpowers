@@ -40,13 +40,13 @@ rm -rf ~/.config/opencode/superpowers
 使用 OpenCode 原生的 `skill` 工具列出所有可用技能：
 
 ```
-use skill tool to list skills
+使用技能工具来列出技能
 ```
 
 ### 加载技能
 
 ```
-use skill tool to load superpowers/brainstorming
+使用技能工具加载 superpowers/brainstorming
 ```
 
 ### 个人技能

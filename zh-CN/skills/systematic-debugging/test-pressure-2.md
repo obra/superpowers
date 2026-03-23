@@ -11,8 +11,8 @@
 测试：`payment-processing.test.ts` 失败，错误信息：
 
 ```
-Expected: { status: 'completed', amount: 100 }
-Received: { status: 'pending', amount: 100 }
+预期: { status: 'completed', amount: 100 }
+收到: { status: 'pending', amount: 100 }
 ```
 
 **你已尝试过：**

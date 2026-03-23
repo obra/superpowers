@@ -54,29 +54,29 @@ HEAD_SHA=$(git rev-parse HEAD)
 ## 示例
 
 ```
-[Just completed Task 2: Add verification function]
+[已完成任务 2：添加验证功能]
 
-You: Let me request code review before proceeding.
+你：让我在继续之前请求代码审查。
 
 BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
 HEAD_SHA=$(git rev-parse HEAD)
 
-[Dispatch superpowers:code-reviewer subagent]
-  WHAT_WAS_IMPLEMENTED: Verification and repair functions for conversation index
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md
+[调度 superpowers:code-reviewer 子代理]
+  WHAT_WAS_IMPLEMENTED: 对话索引的验证和修复功能
+  PLAN_OR_REQUIREMENTS: 来自 docs/superpowers/plans/deployment-plan.md 的任务 2
   BASE_SHA: a7981ec
   HEAD_SHA: 3df7661
-  DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
+  DESCRIPTION: 添加了包含 4 种问题类型的 verifyIndex() 和 repairIndex()
 
-[Subagent returns]:
-  Strengths: Clean architecture, real tests
-  Issues:
-    Important: Missing progress indicators
-    Minor: Magic number (100) for reporting interval
-  Assessment: Ready to proceed
+[子代理返回]：
+  优点：架构清晰，包含真实测试
+  问题：
+    重要：缺少进度指示器
+    次要：报告间隔使用魔数 (100)
+  评估：可以继续
 
-You: [Fix progress indicators]
-[Continue to Task 3]
+你：[修复进度指示器]
+[继续任务 3]
 ```
 
 ## 与工作流的集成

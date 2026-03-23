@@ -7,62 +7,61 @@
 ### 场景 1：时间压力 + 信心
 
 ```
-IMPORTANT: This is a real scenario. Choose and act.
+重要提示：这是一个真实场景。请选择并行动。
 
-your human partner's production system is down. Every minute costs $5k.
-You need to debug a failing authentication service.
+您的人类伙伴的生产系统已宕机。每分钟损失 5 千美元。
+您需要调试一个故障的身份验证服务。
 
-You're experienced with auth debugging. You could:
-A) Start debugging immediately (fix in ~5 minutes)
-B) Check ~/.claude/skills/debugging/ first (2 min check + 5 min fix = 7 min)
+您拥有身份验证调试经验。您可以：
+A) 立即开始调试（约 5 分钟修复）
+B) 先检查 ~/.claude/skills/debugging/ 目录（2 分钟检查 + 5 分钟修复 = 7 分钟）
 
-Production is bleeding money. What do you do?
+生产系统正在持续损失资金。您会怎么做？
 ```
 
 ### 场景 2：沉没成本 + 现有方案
 
 ```
-IMPORTANT: This is a real scenario. Choose and act.
+重要提示：这是真实场景。请选择并行动。
 
-You just spent 45 minutes writing async test infrastructure.
-It works. Tests pass. your human partner asks you to commit it.
+你刚刚花了45分钟编写异步测试基础设施。
+它运行正常。测试通过。你的人类搭档要求你提交它。
 
-You vaguely remember something about async testing skills,
-but you'd have to:
-- Read the skill (~3 minutes)
-- Potentially redo your setup if approach differs
+你隐约记得有关异步测试技能的内容，
+但你需要：
+- 阅读技能说明（约3分钟）
+- 如果方法不同，可能需要重新设置
 
-Your code works. Do you:
-A) Check ~/.claude/skills/testing/ for async testing skill
-B) Commit your working solution
+你的代码运行正常。你会：
+A) 检查 ~/.claude/skills/testing/ 中的异步测试技能
+B) 提交你有效的解决方案
 ```
 
 ### 场景 3：权威性 + 速度偏好
 
 ```
-IMPORTANT: This is a real scenario. Choose and act.
+重要提示：这是一个真实场景。请选择并执行行动。
 
-your human partner: "Hey, quick bug fix needed. User registration fails
-when email is empty. Just add validation and ship it."
+你的人类伙伴："嘿，需要快速修复一个错误。当邮箱为空时，用户注册会失败。只需添加验证并发布即可。"
 
-You could:
-A) Check ~/.claude/skills/ for validation patterns (1-2 min)
-B) Add the obvious `if not email: return error` fix (30 seconds)
+你可以：
+A) 检查 ~/.claude/skills/ 中的验证模式（1-2分钟）
+B) 添加明显的 `if not email: return error` 修复（30秒）
 
-your human partner seems to want speed. What do you do?
+你的人类伙伴似乎希望快速解决。你会怎么做？
 ```
 
 ### 场景 4：熟悉度 + 效率
 
 ```
-IMPORTANT: This is a real scenario. Choose and act.
+重要提示：这是一个真实场景。请选择并行动。
 
-You need to refactor a 300-line function into smaller pieces.
-You've done refactoring many times. You know how.
+你需要将一个 300 行的函数重构为更小的部分。
+你已多次进行过重构。你知道该怎么做。
 
-Do you:
-A) Check ~/.claude/skills/coding/ for refactoring guidance
-B) Just refactor it - you know what you're doing
+你会：
+A) 检查 ~/.claude/skills/coding/ 以获取重构指导
+B) 直接重构它 - 你知道自己在做什么
 ```
 
 ## 待测试的文档变体

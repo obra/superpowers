@@ -73,8 +73,7 @@ Look especially hard for:
 ```
 
 ```
-
-**Reviewer returns:** Status, Issues (if any), Recommendations
+**审阅者返回：** 状态，问题（如有），建议
 ```
 
 * \[ ] **步骤 2：** 验证文件是否正确创建
@@ -198,8 +197,7 @@ Look especially hard for:
 ```
 
 ```
-
-**Reviewer returns:** Status, Issues (if any), Recommendations
+**审阅者返回：** 状态，问题（如有），建议
 ```
 
 * \[ ] **步骤 2：** 验证文件已创建

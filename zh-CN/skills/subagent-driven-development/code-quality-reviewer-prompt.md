@@ -8,13 +8,13 @@
 
 ```
 Task tool (superpowers:code-reviewer):
-  Use template at requesting-code-review/code-reviewer.md
+  使用 requesting-code-review/code-reviewer.md 中的模板
 
-  WHAT_WAS_IMPLEMENTED: [from implementer's report]
+  WHAT_WAS_IMPLEMENTED: [来自实施者的报告]
   PLAN_OR_REQUIREMENTS: Task N from [plan-file]
-  BASE_SHA: [commit before task]
-  HEAD_SHA: [current commit]
-  DESCRIPTION: [task summary]
+  BASE_SHA: [任务前的提交]
+  HEAD_SHA: [当前提交]
+  DESCRIPTION: [任务摘要]
 ```
 
 **除了标准的代码质量问题外，审查员还应检查：**

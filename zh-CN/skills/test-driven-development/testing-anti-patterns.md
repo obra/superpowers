@@ -13,9 +13,9 @@
 ## 铁律
 
 ```
-1. NEVER test mock behavior
-2. NEVER add test-only methods to production classes
-3. NEVER mock without understanding dependencies
+1. 永远不要测试模拟行为
+2. 永远不要向生产类添加仅用于测试的方法
+3. 永远不要在不理解依赖关系的情况下进行模拟
 ```
 
 ## 反模式 1：测试模拟行为
@@ -54,13 +54,13 @@ test('renders sidebar', () => {
 ### 门控函数
 
 ```
-BEFORE asserting on any mock element:
-  Ask: "Am I testing real component behavior or just mock existence?"
+BEFORE 对任何模拟元素进行断言时：
+  先问自己："我是在测试真实组件行为，还是仅仅在验证模拟是否存在？"
 
-  IF testing mock existence:
-    STOP - Delete the assertion or unmock the component
+  如果只是验证模拟是否存在：
+    停止操作 - 删除该断言或取消对组件的模拟
 
-  Test real behavior instead
+  应该测试真实行为
 ```
 
 ## 反模式 2：生产代码中的仅供测试方法
@@ -109,16 +109,16 @@ afterEach(() => cleanupSession(session));
 
 ```
 BEFORE adding any method to production class:
-  Ask: "Is this only used by tests?"
+  提问："这仅用于测试吗？"
 
-  IF yes:
-    STOP - Don't add it
-    Put it in test utilities instead
+  如果是：
+    停止 - 不要添加它
+    将其放入测试工具中
 
-  Ask: "Does this class own this resource's lifecycle?"
+  提问："这个类是否拥有此资源的生命周期？"
 
-  IF no:
-    STOP - Wrong class for this method
+  如果否：
+    停止 - 此类不适合此方法
 ```
 
 ## 反模式 3：在不理解的情况下模拟
@@ -160,27 +160,27 @@ test('detects duplicate server', () => {
 ### 门控函数
 
 ```
-BEFORE mocking any method:
-  STOP - Don't mock yet
+在模拟任何方法之前：
+  停下——先别模拟
 
-  1. Ask: "What side effects does the real method have?"
-  2. Ask: "Does this test depend on any of those side effects?"
-  3. Ask: "Do I fully understand what this test needs?"
+  1. 问："真实方法有哪些副作用？"
+  2. 问："这个测试是否依赖其中任何副作用？"
+  3. 问："我是否完全理解这个测试需要什么？"
 
-  IF depends on side effects:
-    Mock at lower level (the actual slow/external operation)
-    OR use test doubles that preserve necessary behavior
-    NOT the high-level method the test depends on
+  如果依赖副作用：
+    在更低层级进行模拟（实际的缓慢/外部操作）
+    或者使用保留必要行为的测试替身
+    而非模拟测试所依赖的高层级方法
 
-  IF unsure what test depends on:
-    Run test with real implementation FIRST
-    Observe what actually needs to happen
-    THEN add minimal mocking at the right level
+  如果不确定测试依赖什么：
+    首先用真实实现运行测试
+    观察实际需要发生什么
+    然后在正确的层级添加最小化的模拟
 
-  Red flags:
-    - "I'll mock this to be safe"
-    - "This might be slow, better mock it"
-    - Mocking without understanding the dependency chain
+  危险信号：
+    - "我会模拟这个以防万一"
+    - "这个可能很慢，最好模拟它"
+    - 在不理解依赖链的情况下进行模拟
 ```
 
 ## 反模式 4：不完整的模拟
@@ -222,19 +222,19 @@ const mockResponse = {
 ### 门控函数
 
 ```
-BEFORE creating mock responses:
-  Check: "What fields does the real API response contain?"
+在创建模拟响应之前：
+  检查："真实的 API 响应包含哪些字段？"
 
-  Actions:
-    1. Examine actual API response from docs/examples
-    2. Include ALL fields system might consume downstream
-    3. Verify mock matches real response schema completely
+  操作：
+    1. 检查文档/示例中的实际 API 响应
+    2. 包含系统下游可能使用的所有字段
+    3. 验证模拟是否完全匹配真实响应模式
 
-  Critical:
-    If you're creating a mock, you must understand the ENTIRE structure
-    Partial mocks fail silently when code depends on omitted fields
+  关键点：
+    如果你正在创建模拟，你必须理解整个结构
+    部分模拟会在代码依赖被省略的字段时静默失败
 
-  If uncertain: Include all documented fields
+  如果不确定：包含所有已记录的字段
 ```
 
 ## 反模式 5：集成测试作为事后补救
@@ -242,9 +242,9 @@ BEFORE creating mock responses:
 **违规情况：**
 
 ```
-✅ Implementation complete
-❌ No tests written
-"Ready for testing"
+✅ 实施完成
+❌ 未编写测试
+"准备测试"
 ```
 
 **错误原因：**
@@ -256,11 +256,11 @@ BEFORE creating mock responses:
 **修复方法：**
 
 ```
-TDD cycle:
-1. Write failing test
-2. Implement to pass
-3. Refactor
-4. THEN claim complete
+TDD 循环：
+1. 编写失败测试
+2. 实现通过测试
+3. 重构
+4. 然后宣称完成
 ```
 
 ## 当模拟变得过于复杂时

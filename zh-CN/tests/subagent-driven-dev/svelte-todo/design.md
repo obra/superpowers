@@ -20,14 +20,14 @@
 ┌─────────────────────────────────────────┐
 │  Svelte Todos                           │
 ├─────────────────────────────────────────┤
-│  [________________________] [Add]       │
+│  [________________________] [添加]       │
 ├─────────────────────────────────────────┤
-│  [ ] Buy groceries                  [x] │
-│  [✓] Walk the dog                   [x] │
-│  [ ] Write code                     [x] │
+│  [ ] 购买食品杂货                  [x] │
+│  [✓] 遛狗                         [x] │
+│  [ ] 编写代码                      [x] │
 ├─────────────────────────────────────────┤
-│  2 items left                           │
-│  [All] [Active] [Completed]  [Clear ✓]  │
+│  剩余 2 项                               │
+│  [全部] [待办] [已完成]  [清除 ✓]        │
 └─────────────────────────────────────────┘
 ```
 
@@ -35,14 +35,14 @@
 
 ```
 src/
-  App.svelte           # Main app, state management
+  App.svelte           # 主应用，状态管理
   lib/
-    TodoInput.svelte   # Text input + Add button
-    TodoList.svelte    # List container
-    TodoItem.svelte    # Single todo with checkbox, text, delete
-    FilterBar.svelte   # Filter buttons + clear completed
-    store.ts           # Svelte store for todos
-    storage.ts         # localStorage persistence
+    TodoInput.svelte   # 文本输入 + 添加按钮
+    TodoList.svelte    # 列表容器
+    TodoItem.svelte    # 单个待办事项（含复选框、文本、删除）
+    FilterBar.svelte   # 筛选按钮 + 清除已完成
+    store.ts           # Svelte store 用于待办事项
+    storage.ts         # localStorage 持久化
 ```
 
 ## 数据模型

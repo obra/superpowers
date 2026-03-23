@@ -471,10 +471,9 @@ git commit -m "Delete wait-for-feedback.sh: replaced by .events file"
 如果 `.events` 不存在，则用户未与浏览器交互——仅使用其终端文本。
 
 ````
-
 - [ ] **Step 5: Update "Writing Content Fragments" description (line 65)**
 
-Remove "feedback footer" reference:
+移除 "feedback footer" 引用：
 
 ```markdown
 Write just the content that goes inside the page. The server wraps it in the frame template automatically (header, theme CSS, selection indicator, and all interactive infrastructure).

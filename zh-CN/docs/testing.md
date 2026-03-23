@@ -11,10 +11,10 @@
 ```
 tests/
 ├── claude-code/
-│   ├── test-helpers.sh                    # Shared test utilities
+│   ├── test-helpers.sh                    # 共享测试工具
 │   ├── test-subagent-driven-development-integration.sh
-│   ├── analyze-token-usage.py             # Token analysis tool
-│   └── run-skill-tests.sh                 # Test runner (if exists)
+│   ├── analyze-token-usage.py             # Token 分析工具
+│   └── run-skill-tests.sh                 # 测试运行器（如果存在）
 ```
 
 ## 运行测试
@@ -67,71 +67,71 @@ cd tests/claude-code
 
 ```
 ========================================
- Integration Test: subagent-driven-development
+ 集成测试：subagent-driven-development
 ========================================
 
-Test project: /tmp/tmp.xyz123
+测试项目：/tmp/tmp.xyz123
 
-=== Verification Tests ===
+=== 验证测试 ===
 
-Test 1: Skill tool invoked...
-  [PASS] subagent-driven-development skill was invoked
+测试 1：技能工具被调用...
+  [通过] subagent-driven-development 技能被调用
 
-Test 2: Subagents dispatched...
-  [PASS] 7 subagents dispatched
+测试 2：子代理已分派...
+  [通过] 7 个子代理已分派
 
-Test 3: Task tracking...
-  [PASS] TodoWrite used 5 time(s)
+测试 3：任务跟踪...
+  [通过] TodoWrite 被使用 5 次
 
-Test 6: Implementation verification...
-  [PASS] src/math.js created
-  [PASS] add function exists
-  [PASS] multiply function exists
-  [PASS] test/math.test.js created
-  [PASS] Tests pass
+测试 6：实现验证...
+  [通过] src/math.js 已创建
+  [通过] add 函数存在
+  [通过] multiply 函数存在
+  [通过] test/math.test.js 已创建
+  [通过] 测试通过
 
-Test 7: Git commit history...
-  [PASS] Multiple commits created (3 total)
+测试 7：Git 提交历史...
+  [通过] 创建了多次提交（总计 3 次）
 
-Test 8: No extra features added...
-  [PASS] No extra features added
+测试 8：未添加额外功能...
+  [通过] 未添加额外功能
 
 =========================================
- Token Usage Analysis
+ 令牌使用分析
 =========================================
 
-Usage Breakdown:
+使用情况明细：
 ----------------------------------------------------------------------------------------------------
-Agent           Description                          Msgs      Input     Output      Cache     Cost
+代理           描述                         消息数     输入      输出      缓存      成本
 ----------------------------------------------------------------------------------------------------
-main            Main session (coordinator)             34         27      3,996  1,213,703 $   4.09
-3380c209        implementing Task 1: Create Add Function     1          2        787     24,989 $   0.09
-34b00fde        implementing Task 2: Create Multiply Function     1          4        644     25,114 $   0.09
-3801a732        reviewing whether an implementation matches...   1          5        703     25,742 $   0.09
-4c142934        doing a final code review...                    1          6        854     25,319 $   0.09
-5f017a42        a code reviewer. Review Task 2...               1          6        504     22,949 $   0.08
-a6b7fbe4        a code reviewer. Review Task 1...               1          6        515     22,534 $   0.08
-f15837c0        reviewing whether an implementation matches...   1          6        416     22,485 $   0.07
+main           主会话（协调器）             34         27      3,996  1,213,703 $   4.09
+3380c209       实现任务 1：创建 Add 函数     1          2        787     24,989 $   0.09
+34b00fde       实现任务 2：创建 Multiply 函数 1          4        644     25,114 $   0.09
+3801a732       审查实现是否匹配...   1          5        703     25,742 $   0.09
+4c142934       进行最终代码审查...                    1          6        854     25,319 $   0.09
+5f017a42       代码审查员。审查任务 2...               1          6        504     22,949 $   0.08
+a6b7fbe4       代码审查员。审查任务 1...               1          6        515     22,534 $   0.08
+f15837c0       审查实现是否匹配...   1          6        416     22,485 $   0.07
 ----------------------------------------------------------------------------------------------------
 
-TOTALS:
-  Total messages:         41
-  Input tokens:           62
-  Output tokens:          8,419
-  Cache creation tokens:  132,742
-  Cache read tokens:      1,382,835
+总计：
+  总消息数：         41
+  输入令牌数：           62
+  输出令牌数：          8,419
+  缓存创建令牌数：  132,742
+  缓存读取令牌数：      1,382,835
 
-  Total input (incl cache): 1,515,639
-  Total tokens:             1,524,058
+  总输入（含缓存）： 1,515,639
+  总令牌数：             1,524,058
 
-  Estimated cost: $4.67
-  (at $3/$15 per M tokens for input/output)
+  估算成本： $4.67
+  （按每百万令牌输入/输出 $3/$15 计算）
 
 ========================================
- Test Summary
+ 测试摘要
 ========================================
 
-STATUS: PASSED
+状态：通过
 ```
 
 ## 令牌分析工具

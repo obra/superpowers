@@ -40,12 +40,12 @@ grep -i "worktree.*director" CLAUDE.md 2>/dev/null
 如果没有目录存在且 CLAUDE.md 中没有偏好设置：
 
 ```
-No worktree directory found. Where should I create worktrees?
+未找到工作树目录。我应该在哪里创建工作树？
 
-1. .worktrees/ (project-local, hidden)
-2. ~/.config/superpowers/worktrees/<project-name>/ (global location)
+1. .worktrees/（项目本地，隐藏）
+2. ~/.config/superpowers/worktrees/<project-name>/（全局位置）
 
-Which would you prefer?
+您倾向于哪种选择？
 ```
 
 ## 安全性验证
@@ -137,9 +137,9 @@ go test ./...
 ### 5. 报告位置
 
 ```
-Worktree ready at <full-path>
-Tests passing (<N> tests, 0 failures)
-Ready to implement <feature-name>
+Worktree 准备就绪于 <full-path>
+测试通过（<N> 项测试，0 失败）
+准备实施 <feature-name>
 ```
 
 ## 快速参考
@@ -179,17 +179,17 @@ Ready to implement <feature-name>
 ## 示例工作流
 
 ```
-You: I'm using the using-git-worktrees skill to set up an isolated workspace.
+You: 我正在使用 using-git-worktrees 技能来设置一个隔离的工作空间。
 
-[Check .worktrees/ - exists]
-[Verify ignored - git check-ignore confirms .worktrees/ is ignored]
-[Create worktree: git worktree add .worktrees/auth -b feature/auth]
-[Run npm install]
-[Run npm test - 47 passing]
+[检查 .worktrees/ - 存在]
+[验证忽略 - git check-ignore 确认 .worktrees/ 被忽略]
+[创建工作树: git worktree add .worktrees/auth -b feature/auth]
+[运行 npm install]
+[运行 npm test - 47 通过]
 
-Worktree ready at /Users/jesse/myproject/.worktrees/auth
-Tests passing (47 tests, 0 failures)
-Ready to implement auth feature
+工作树准备就绪，位于 /Users/jesse/myproject/.worktrees/auth
+测试通过 (47 个测试，0 个失败)
+准备实现 auth 功能
 ```
 
 ## 红色警报

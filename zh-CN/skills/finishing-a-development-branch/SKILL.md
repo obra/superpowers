@@ -27,11 +27,11 @@ npm test / cargo test / pytest / go test ./...
 **如果测试失败：**
 
 ```
-Tests failing (<N> failures). Must fix before completing:
+测试失败（<N> 个失败项）。完成前必须修复：
 
-[Show failures]
+[显示失败详情]
 
-Cannot proceed with merge/PR until tests pass.
+测试通过前无法进行合并/拉取请求操作。
 ```
 
 停止。不要继续到步骤 2。
@@ -52,14 +52,14 @@ git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 准确呈现这 4 个选项：
 
 ```
-Implementation complete. What would you like to do?
+实施完成。您想做什么？
 
-1. Merge back to <base-branch> locally
-2. Push and create a Pull Request
-3. Keep the branch as-is (I'll handle it later)
-4. Discard this work
+1. 在本地合并回 <base-branch>
+2. 推送并创建 Pull Request
+3. 保持分支原样（我稍后处理）
+4. 丢弃此项工作
 
-Which option?
+请选择哪个选项？
 ```
 
 **不要添加解释** - 保持选项简洁。
@@ -117,12 +117,12 @@ EOF
 **首先确认：**
 
 ```
-This will permanently delete:
-- Branch <name>
-- All commits: <commit-list>
-- Worktree at <path>
+这将永久删除：
+- 分支 <name>
+- 所有提交：<commit-list>
+- 位于 <path> 的工作树
 
-Type 'discard' to confirm.
+输入 'discard' 以确认。
 ```
 
 等待确切的确认。

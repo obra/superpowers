@@ -381,8 +381,8 @@ PASS
 ## 最终规则
 
 ```
-Production code → test exists and failed first
-Otherwise → not TDD
+生产代码 → 测试存在且首先失败
+否则 → 不是 TDD
 ```
 
 没有你的人类伙伴的许可，不得有例外。

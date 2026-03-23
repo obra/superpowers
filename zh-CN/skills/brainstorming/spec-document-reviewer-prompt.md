@@ -7,43 +7,41 @@
 **调度时机：** 规范文档已编写至 docs/superpowers/specs/
 
 ```
-Task tool (general-purpose):
-  description: "Review spec document"
-  prompt: |
-    You are a spec document reviewer. Verify this spec is complete and ready for planning.
+任务工具（通用）：
+  描述："审查规范文档"
+  提示：|
+    你是一名规范文档审查员。请验证此规范是否完整并已准备好进行规划。
 
-    **Spec to review:** [SPEC_FILE_PATH]
+    **待审查规范：** [SPEC_FILE_PATH]
 
-    ## What to Check
+    ## 检查内容
 
-    | Category | What to Look For |
+    | 类别 | 检查要点 |
     |----------|------------------|
-    | Completeness | TODOs, placeholders, "TBD", incomplete sections |
-    | Consistency | Internal contradictions, conflicting requirements |
-    | Clarity | Requirements ambiguous enough to cause someone to build the wrong thing |
-    | Scope | Focused enough for a single plan — not covering multiple independent subsystems |
-    | YAGNI | Unrequested features, over-engineering |
+    | 完整性 | TODOs、占位符、"TBD"、不完整的部分 |
+    | 一致性 | 内部矛盾、冲突的需求 |
+    | 清晰度 | 可能导致构建错误产物的模糊需求 |
+    | 范围 | 是否足够专注于单一计划——未涵盖多个独立的子系统 |
+    | YAGNI | 未请求的功能、过度设计 |
 
-    ## Calibration
+    ## 校准标准
 
-    **Only flag issues that would cause real problems during implementation planning.**
-    A missing section, a contradiction, or a requirement so ambiguous it could be
-    interpreted two different ways — those are issues. Minor wording improvements,
-    stylistic preferences, and "sections less detailed than others" are not.
+    **仅标记在实施规划过程中会导致实际问题的问题。**
+    缺失的部分、矛盾之处，或可能被两种不同方式解释的模糊需求——这些是问题。次要的措辞改进、风格偏好以及"部分细节不如其他部分详细"则不视为问题。
 
-    Approve unless there are serious gaps that would lead to a flawed plan.
+    除非存在会导致计划缺陷的严重空白，否则予以批准。
 
-    ## Output Format
+    ## 输出格式
 
-    ## Spec Review
+    ## 规范审查
 
-    **Status:** Approved | Issues Found
+    **状态：** 已批准 | 发现问题
 
-    **Issues (if any):**
-    - [Section X]: [specific issue] - [why it matters for planning]
+    **问题（如有）：**
+    - [部分 X]：[具体问题] - [为何对规划重要]
 
-    **Recommendations (advisory, do not block approval):**
-    - [suggestions for improvement]
+    **建议（咨询性质，不阻止批准）：**
+    - [改进建议]
 ```
 
 **评审员返回：** 状态、问题（如有）、建议

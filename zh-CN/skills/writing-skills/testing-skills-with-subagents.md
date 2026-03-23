@@ -209,12 +209,13 @@ C) 现在写测试（30 分钟），然后提交
 ````
 </After>
 
-### 2. Entry in Rationalization Table
+### 2. 合理化表格条目
 
 ```markdown
 | Excuse | Reality |
 |--------|---------|
 | "Keep as reference, write tests first" | You'll adapt it. That's testing after. Delete means delete. |
+
 ````
 
 ### 3. 危险信号条目

@@ -17,7 +17,7 @@
 你快速查看日志，发现：
 
 ```
-PaymentError: Connection timeout to payments.api.com
+PaymentError: 连接 payments.api.com 超时
 ```
 
 你记得上周另一个服务曾出现超时问题，添加重试机制后得以解决。那次修复耗时 2 分钟。

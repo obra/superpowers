@@ -200,16 +200,16 @@ export const SuperpowersPlugin = async ({ client, directory, $ }) => {
 ```
 superpowers/
 ├── lib/
-│   └── skills-core.js           # NEW: Shared skill logic
+│   └── skills-core.js           # 新增：共享技能逻辑
 ├── .codex/
-│   ├── superpowers-codex        # UPDATED: Use skills-core
+│   ├── superpowers-codex        # 已更新：使用 skills-core
 │   ├── superpowers-bootstrap.md
 │   └── INSTALL.md
 ├── .opencode/
 │   ├── plugin/
-│   │   └── superpowers.js       # NEW: OpenCode plugin
-│   └── INSTALL.md               # NEW: Installation guide
-└── skills/                       # Unchanged
+│   │   └── superpowers.js       # 新增：OpenCode 插件
+│   └── INSTALL.md               # 新增：安装指南
+└── skills/                       # 未更改
 ```
 
 ## 实施计划

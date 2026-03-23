@@ -151,9 +151,9 @@ Task("Fix tool-approval-race-conditions.test.ts failures")
 **调度：**
 
 ```
-Agent 1 → Fix agent-tool-abort.test.ts
-Agent 2 → Fix batch-completion-behavior.test.ts
-Agent 3 → Fix tool-approval-race-conditions.test.ts
+Agent 1 → 修复 agent-tool-abort.test.ts
+Agent 2 → 修复 batch-completion-behavior.test.ts
+Agent 3 → 修复 tool-approval-race-conditions.test.ts
 ```
 
 **结果：**

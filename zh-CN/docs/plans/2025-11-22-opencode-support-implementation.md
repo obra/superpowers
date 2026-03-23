@@ -817,7 +817,7 @@ ln -s ~/.config/opencode/superpowers/.opencode/plugin/superpowers.js .opencode/p
 重启 OpenCode 以加载插件。在下一次会话中，你应该会看到：
 
 ```
-You have superpowers.
+你有 superpowers。
 ```
 
 ## 使用方法
@@ -827,7 +827,7 @@ You have superpowers.
 使用 `find_skills` 工具列出所有可用技能：
 
 ```
-use find_skills tool
+使用 find_skills 工具
 ```
 
 ### 加载技能
@@ -835,7 +835,7 @@ use find_skills tool
 使用 `use_skill` 工具加载特定技能：
 
 ```
-use use_skill tool with skill_name: "superpowers:brainstorming"
+使用 use_skill 工具，技能名称："superpowers:brainstorming"
 ```
 
 ### 个人技能
@@ -897,17 +897,17 @@ git pull
 * 文档：https://github.com/obra/superpowers
 
 ````
+**Step 2: 验证文件已创建**
 
-**Step 2: Verify file created**
+运行: `ls -l .opencode/INSTALL.md`
+预期: 文件存在
 
-Run: `ls -l .opencode/INSTALL.md`
-Expected: File exists
-
-**Step 3: Commit**
+**Step 3: 提交**
 
 ```bash
 git add .opencode/INSTALL.md
 git commit -m "docs: add opencode installation guide"
+
 ````
 
 ***

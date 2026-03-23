@@ -65,7 +65,7 @@ Superpowers 可通过[官方 Claude 插件市场](https://claude.com/plugins/sup
 告诉 Codex：
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md
+从 https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md 获取并遵循说明。
 ```
 
 **详细文档：** [docs/README.codex.md](docs/README.codex.md)
@@ -75,7 +75,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 告诉 OpenCode：
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
+从 https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md 获取并遵循说明。
 ```
 
 **详细文档：** [docs/README.opencode.md](docs/README.opencode.md)

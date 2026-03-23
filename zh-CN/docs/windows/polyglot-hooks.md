@@ -54,9 +54,9 @@ CMDBLOCK
 
 ```
 hooks/
-├── hooks.json           # Points to the .cmd wrapper
-├── session-start.cmd    # Polyglot wrapper (cross-platform entry point)
-└── session-start.sh     # Actual hook logic (bash script)
+├── hooks.json           # 指向 .cmd 包装器
+├── session-start.cmd    # 多语言包装器（跨平台入口点）
+└── session-start.sh     # 实际钩子逻辑（bash 脚本）
 ```
 
 ### hooks.json

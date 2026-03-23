@@ -53,18 +53,18 @@ fractals sierpinski --help
 ```
 cmd/
   fractals/
-    main.go           # Entry point, CLI setup
+    main.go           # 入口点，CLI 设置
 internal/
   sierpinski/
-    sierpinski.go     # Algorithm
+    sierpinski.go     # 算法
     sierpinski_test.go
   mandelbrot/
-    mandelbrot.go     # Algorithm
+    mandelbrot.go     # 算法
     mandelbrot_test.go
   cli/
-    root.go           # Root command, help
-    sierpinski.go     # Sierpinski subcommand
-    mandelbrot.go     # Mandelbrot subcommand
+    root.go           # 根命令，帮助
+    sierpinski.go     # Sierpinski 子命令
+    mandelbrot.go     # Mandelbrot 子命令
 ```
 
 ## 依赖项

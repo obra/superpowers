@@ -79,8 +79,8 @@ API 文档、语法指南、工具文档（办公文档）
 ```
 skills/
   skill-name/
-    SKILL.md              # Main reference (required)
-    supporting-file.*     # Only if needed
+    SKILL.md              # 主要参考文件（必需）
+    supporting-file.*     # 仅在需要时添加
 ```
 
 **扁平命名空间** - 所有技能在一个可搜索的命名空间中
@@ -374,7 +374,7 @@ digraph when_flowchart {
 
 ```
 defense-in-depth/
-  SKILL.md    # Everything inline
+  SKILL.md    # 所有内容均内联
 ```
 
 何时使用：所有内容都合适，无需重型参考
@@ -383,8 +383,8 @@ defense-in-depth/
 
 ```
 condition-based-waiting/
-  SKILL.md    # Overview + patterns
-  example.ts  # Working helpers to adapt
+  SKILL.md    # 概述 + 模式
+  example.ts  # 可用的辅助函数，供调整使用
 ```
 
 何时使用：工具是可复用代码，而不仅仅是叙述
@@ -393,10 +393,10 @@ condition-based-waiting/
 
 ```
 pptx/
-  SKILL.md       # Overview + workflows
-  pptxgenjs.md   # 600 lines API reference
-  ooxml.md       # 500 lines XML structure
-  scripts/       # Executable tools
+  SKILL.md       # 概述 + 工作流程
+  pptxgenjs.md   # 600行 API 参考
+  ooxml.md       # 500行 XML 结构
+  scripts/       # 可执行工具
 ```
 
 何时使用：参考材料太大，不适合内联
@@ -404,7 +404,7 @@ pptx/
 ## 铁律（与 TDD 相同）
 
 ```
-NO SKILL WITHOUT A FAILING TEST FIRST
+没有失败的测试，就没有技能。
 ```
 
 这适用于新技能和对现有技能的编辑。
@@ -521,12 +521,13 @@ NO SKILL WITHOUT A FAILING TEST FIRST
 ````
 </Good>
 
-### Address "Spirit vs Letter" Arguments
+### 处理“精神与字面”的争论
 
-Add foundational principle early:
+尽早添加基本原则：
 
 ```markdown
-**Violating the letter of the rules is violating the spirit of the rules.**
+**违反规则的字面意思就是违反规则的精神。**
+
 ````
 
 这切断了整个“我遵循了精神”的合理化类别。

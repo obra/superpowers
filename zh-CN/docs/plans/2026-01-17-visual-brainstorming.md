@@ -494,32 +494,31 @@ node ${PLUGIN_ROOT}/lib/brainstorm-server/index.js
 ```
 
 ````
+**第二步：为头脑风暴技能添加视觉伴侣部分**
 
-**Step 2: Add visual companion section to brainstorming skill**
-
-Add after "Key Principles" in `skills/brainstorming/SKILL.md`:
+在 `skills/brainstorming/SKILL.md` 中的"核心原则"后添加：
 
 ```markdown
 
-## Visual Companion (Optional)
+## 视觉伴侣（可选）
 
-When brainstorming involves visual elements - UI mockups, wireframes, interactive prototypes - use the browser-based visual companion.
+当头脑风暴涉及视觉元素——UI 原型、线框图、交互式原型——时，使用基于浏览器的视觉伴侣。
 
-**When to use:**
-- Presenting UI/UX options that benefit from visual comparison
-- Showing wireframes or layout options
-- Gathering structured feedback (ratings, forms)
-- Prototyping click interactions
+**何时使用：**
+- 展示受益于视觉比较的 UI/UX 方案
+- 展示线框图或布局选项
+- 收集结构化反馈（评分、表单）
+- 原型点击交互
 
-**How it works:**
-1. Start the server as a background job
-2. Tell user to open http://localhost:3333
-3. Write HTML to `/tmp/brainstorm/screen.html` (auto-refreshes)
-4. Check background task output for user interactions
+**工作原理：**
+1. 将服务器作为后台作业启动
+2. 告知用户打开 http://localhost:3333
+3. 将 HTML 写入 `/tmp/brainstorm/screen.html`（自动刷新）
+4. 检查后台任务输出以获取用户交互
 
-The terminal remains the primary conversation interface. The browser is a visual aid.
+终端仍是主要的对话界面。浏览器是一个视觉辅助工具。
 
-**Reference:** See `visual-companion.md` in this skill directory for HTML patterns and API details.
+**参考：** 查看此技能目录中的 `visual-companion.md` 以获取 HTML 模式和 API 详情。
 ````
 
 **步骤 3：验证编辑**

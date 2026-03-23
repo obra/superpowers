@@ -28,15 +28,15 @@
 **输出格式：**
 
 ```
-## Spec Review
+## 规格评审
 
-**Status:** Approved | Issues Found
+**状态：** 已批准 | 发现问题
 
-**Issues (if any):**
-- [Section X]: [issue] - [why it matters]
+**问题（如有）：**
+- [章节 X]: [问题] - [原因说明]
 
-**Recommendations (advisory):**
-- [suggestions that don't block approval]
+**建议（仅供参考）：**
+- [不影响批准的建议]
 ```
 
 **评审循环：** 发现问题 -> 头脑风暴代理修复 -> 重新评审 -> 重复直至批准。

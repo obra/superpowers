@@ -71,7 +71,7 @@
 
 ## 致谢
 
-本行为准则改编自 [Contributor Covenant][homepage]，
+本行为准则改编自 \[Contributor Covenant]\[homepage]，
 版本 2.0，可在
 https://www.contributor-covenant.org/version/2/0/code\_of\_conduct.html 获取。
 

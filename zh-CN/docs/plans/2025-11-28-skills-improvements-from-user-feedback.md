@@ -82,16 +82,15 @@
 **有效的方法：**
 
 ```
-You are adding a single E2E test to packnplay's test suite.
+你正在为 packnplay 的测试套件添加一个端到端测试。
 
-**Your task:** Add `TestE2E_FeaturePrivilegedMode` to `pkg/runner/e2e_test.go`
+**你的任务：** 在 `pkg/runner/e2e_test.go` 中添加 `TestE2E_FeaturePrivilegedMode`
 
-**What to test:** A local devcontainer feature that requests `"privileged": true`
-in its metadata should result in the container running with `--privileged` flag.
+**测试内容：** 一个在其元数据中请求了 `"privileged": true` 的本地 devcontainer 功能，应该导致容器以 `--privileged` 标志运行。
 
-**Follow the exact pattern of TestE2E_FeatureOptionValidation** (at the end of the file)
+**请严格按照 TestE2E_FeatureOptionValidation 的模式编写**（位于文件末尾）
 
-**After writing, run:** `go test -v ./pkg/runner -run TestE2E_FeaturePrivilegedMode -timeout 5m`
+**编写完成后，运行：** `go test -v ./pkg/runner -run TestE2E_FeaturePrivilegedMode -timeout 5m`
 ```
 
 ***
@@ -240,7 +239,6 @@ vi.mock('web-adapter', () => ({
   * 验证无错误但不进行积极确认
 
 ````
-
 **Why this works:**
 Forces verification of INTENT, not just operation success.
 
@@ -277,9 +275,7 @@ Subagents are stateless - they don't know about processes started by previous su
 2. 验证清理：pgrep -f "<service-pattern>" || echo "Cleanup successful"
 
 ```
-
-### Example
-
+### 示例
 ```
 
 任务：运行 API 服务器的端到端测试
@@ -296,13 +292,12 @@ Subagents are stateless - they don't know about processes started by previous su
 * 验证：pgrep -f 'node.\*server.js' || echo 'Cleanup verified'”
 
 ```
+### 为何这很重要
 
-### Why This Matters
-
-- Stale processes serve requests with wrong config
-- Port conflicts cause silent failures
-- Process accumulation slows system
-- Confusing test results (hitting wrong server)
+- 过时的进程会使用错误的配置处理请求
+- 端口冲突导致静默失败
+- 进程累积拖慢系统
+- 造成混淆的测试结果（访问到错误的服务器）
 ```
 
 **权衡分析：**
@@ -320,24 +315,23 @@ Subagents are stateless - they don't know about processes started by previous su
 **之前：**
 
 ```
-Read that task carefully from [plan-file].
+仔细阅读 [plan-file] 中的任务。
 ```
 
 **之后：**
 
 ```
-## Context Approaches
+## 上下文处理方式
 
-**Full Plan (default):**
-Use when tasks are complex or have dependencies:
+**完整计划（默认）：**
+适用于任务复杂或存在依赖关系时：
 ```
 
 仔细阅读 \[plan-file] 中的任务 N。
 
 ```
-
-**Lean Context (for independent tasks):**
-Use when task is standalone and pattern-based:
+**Lean Context（适用于独立任务）：**
+当任务独立且基于模式时使用：
 ```
 
 你正在实现：\[1-2 句任务描述]
@@ -350,31 +344,30 @@ Use when task is standalone and pattern-based:
 \[请勿包含完整的计划文件]
 
 ```
+**在以下情况下使用精简上下文：**
+- 任务遵循现有模式（添加类似测试，实现类似功能）
+- 任务是自包含的（不需要其他任务的上下文）
+- 模式参考已足够（例如，"遵循 TestE2E_FeatureOptionValidation"）
 
-**Use lean context when:**
-- Task follows existing pattern (add similar test, implement similar feature)
-- Task is self-contained (doesn't need context from other tasks)
-- Pattern reference is sufficient (e.g., "follow TestE2E_FeatureOptionValidation")
-
-**Use full plan when:**
-- Task has dependencies on other tasks
-- Requires understanding of overall architecture
-- Complex logic that needs context
+**在以下情况下使用完整计划：**
+- 任务依赖于其他任务
+- 需要理解整体架构
+- 需要上下文才能理解的复杂逻辑
 ```
 
 **示例：**
 
 ```
-Lean context prompt:
+Lean 上下文提示：
 
-"You are adding a test for privileged mode in devcontainer features.
+"你正在为 devcontainer 功能添加特权模式测试。
 
-File: pkg/runner/e2e_test.go
-Pattern: Follow TestE2E_FeatureOptionValidation (at end of file)
-Test: Feature with `"privileged": true` in metadata results in `--privileged` flag
-Verify: go test -v ./pkg/runner -run TestE2E_FeaturePrivilegedMode -timeout 5m
+文件：pkg/runner/e2e_test.go
+模式：遵循 TestE2E_FeatureOptionValidation（在文件末尾）
+测试：元数据中带有 `"privileged": true` 的功能应产生 `--privileged` 标志
+验证：go test -v ./pkg/runner -run TestE2E_FeaturePrivilegedMode -timeout 5m
 
-Report: Implementation, test results, any issues."
+报告：实现情况、测试结果、任何问题。"
 ```
 
 **为什么这有效：**
@@ -389,24 +382,24 @@ Report: Implementation, test results, any issues."
 **添加到提示模板：**
 
 ```
-When done, BEFORE reporting back:
+当完成后，在汇报之前：
 
-Take a step back and review your work with fresh eyes.
+退一步，用全新的视角审视你的工作。
 
-Ask yourself:
-- Does this actually solve the task as specified?
-- Are there edge cases I didn't consider?
-- Did I follow the pattern correctly?
-- If tests are failing, what's the ROOT CAUSE (implementation bug vs test bug)?
-- What could be better about this implementation?
+问自己：
+- 这真的解决了指定的任务吗？
+- 有没有我没有考虑到的边缘情况？
+- 我是否正确遵循了模式？
+- 如果测试失败，根本原因是什么（实现错误还是测试错误）？
+- 这个实现还有哪些可以改进的地方？
 
-If you identify issues during this reflection, fix them now.
+如果在这次反思中发现了问题，现在就去修复它们。
 
-Then report:
-- What you implemented
-- Self-reflection findings (if any)
-- Test results
-- Files changed
+然后汇报：
+- 你实现了什么
+- 自我反思的发现（如果有的话）
+- 测试结果
+- 更改的文件
 ```
 
 **为什么这有效：**
@@ -497,25 +490,25 @@ const mock = {
 ### 门控函数
 
 ```
-BEFORE writing any mock:
+在编写任何模拟之前：
 
-  1. STOP - Do NOT look at the code under test yet
-  2. FIND: The interface/type definition for the dependency
-  3. READ: The interface file
-  4. LIST: Methods defined in the interface
-  5. MOCK: ONLY those methods with EXACTLY those names
-  6. DO NOT: Look at what your code calls
+  1. 停止 - 请勿查看待测代码
+  2. 查找：依赖项的接口/类型定义
+  3. 阅读：接口文件
+  4. 列出：接口中定义的方法
+  5. 模拟：仅模拟那些方法，并使用完全相同的名称
+  6. 不要：查看你的代码调用了什么
 
-  IF your test fails because code calls something not in mock:
-    ✅ GOOD - The test found a bug in your code
-    Fix the code to call the correct interface method
-    NOT the mock
+  如果你的测试因代码调用了模拟中不存在的内容而失败：
+    ✅ 很好 - 测试发现了你代码中的一个错误
+    修复代码以调用正确的接口方法
+    而不是修改模拟
 
-  Red flags:
-    - "I'll mock what the code calls"
-    - Copying method names from implementation
-    - Mock written without reading interface
-    - "The test is failing so I'll add this method to the mock"
+  危险信号：
+    - "我会模拟代码调用的内容"
+    - 从实现中复制方法名称
+    - 未阅读接口就编写模拟
+    - "测试失败了，所以我会在模拟中添加这个方法"
 ```
 
 **检测：**
@@ -527,15 +520,14 @@ BEFORE writing any mock:
 3. 寻找方法名不匹配
 
 ````
-
 **Why this works:**
-Directly addresses the failure pattern from feedback.
+直接针对反馈中的失败模式进行解决。
 
 ---
 
-### 7. subagent-driven-development: Require Skills Reading for Test Subagents
+### 7. subagent-driven-development: 要求测试子代理具备技能阅读能力
 
-**Add to prompt template when task involves testing:**
+**当任务涉及测试时，添加到提示模板中：**
 
 ```markdown
 BEFORE writing any tests:
@@ -549,6 +541,7 @@ BEFORE writing any tests:
    - Mocking dependencies
 
 This is NOT optional. Tests that violate anti-patterns will be rejected in review.
+
 ````
 
 **为什么这有效：**
@@ -566,26 +559,26 @@ This is NOT optional. Tests that violate anti-patterns will be rejected in revie
 **当前：**
 
 ```
-Subagent reports back with summary of work.
+Subagent 报告工作摘要。
 ```
 
 **提议：**
 
 ```
-Subagent performs self-reflection, then:
+Subagent 进行自我反思，然后：
 
-IF self-reflection identifies fixable issues:
-  1. Fix the issues
-  2. Re-run verification
-  3. Report: "Initial implementation + self-reflection fix"
+IF 自我反思识别出可修复的问题：
+  1. 修复问题
+  2. 重新运行验证
+  3. 报告："初始实现 + 自我反思修复"
 
-ELSE:
-  Report: "Implementation complete"
+ELSE：
+  报告："实施完成"
 
-Include in report:
-- Self-reflection findings
-- Whether fixes were applied
-- Final verification results
+报告中包含：
+- 自我反思的发现
+- 是否应用了修复
+- 最终的验证结果
 ```
 
 **为什么这有效：**

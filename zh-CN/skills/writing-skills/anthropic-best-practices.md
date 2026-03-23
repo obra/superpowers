@@ -250,14 +250,14 @@ SKILL.md 作为一个概述，根据需要将 Claude 指向详细资料，就像
 
 ```
 pdf/
-├── SKILL.md              # Main instructions (loaded when triggered)
-├── FORMS.md              # Form-filling guide (loaded as needed)
-├── reference.md          # API reference (loaded as needed)
-├── examples.md           # Usage examples (loaded as needed)
+├── SKILL.md              # 主要指令（触发时加载）
+├── FORMS.md              # 填表指南（按需加载）
+├── reference.md          # API 参考（按需加载）
+├── examples.md           # 使用示例（按需加载）
 └── scripts/
-    ├── analyze_form.py   # Utility script (executed, not loaded)
-    ├── fill_form.py      # Form filling script
-    └── validate.py       # Validation script
+    ├── analyze_form.py   # 工具脚本（执行，不加载）
+    ├── fill_form.py      # 表单填写脚本
+    └── validate.py       # 验证脚本
 ```
 
 #### 模式 1：带引用的高级指南
@@ -294,12 +294,12 @@ Claude 仅在需要时加载 FORMS.md、REFERENCE.md 或 EXAMPLES.md。
 
 ```
 bigquery-skill/
-├── SKILL.md (overview and navigation)
+├── SKILL.md (概览和导航)
 └── reference/
-    ├── finance.md (revenue, billing metrics)
-    ├── sales.md (opportunities, pipeline)
-    ├── product.md (API usage, features)
-    └── marketing.md (campaigns, attribution)
+    ├── finance.md (收入、计费指标)
+    ├── sales.md (商机、销售管道)
+    ├── product.md (API 使用情况、功能特性)
+    └── marketing.md (营销活动、归因分析)
 ```
 
 ````markdown
@@ -1033,11 +1033,11 @@ Claude的视觉能力有助于理解布局和结构。
 
 ```
 bigquery-skill/
-├── SKILL.md (overview, points to reference files)
+├── SKILL.md（概述，指向参考文件）
 └── reference/
-    ├── finance.md (revenue metrics)
-    ├── sales.md (pipeline data)
-    └── product.md (usage analytics)
+    ├── finance.md（收入指标）
+    ├── sales.md（流水线数据）
+    └── product.md（使用分析）
 ```
 
 当用户询问收入时，Claude 会读取 SKILL.md，看到对 `reference/finance.md` 的引用，并调用 bash 来读取该文件。sales.md 和 product.md 文件仍保留在文件系统中，在需要之前消耗零上下文令牌。这种基于文件系统的模型实现了渐进式披露。Claude 可以导航并选择性地加载每个任务所需的确切内容。

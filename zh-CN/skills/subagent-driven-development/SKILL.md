@@ -129,77 +129,77 @@ digraph process {
 ## 示例工作流
 
 ```
-You: I'm using Subagent-Driven Development to execute this plan.
+You: 我正在使用 Subagent-Driven Development 来执行这个计划。
 
-[Read plan file once: docs/superpowers/plans/feature-plan.md]
-[Extract all 5 tasks with full text and context]
-[Create TodoWrite with all tasks]
+[读取计划文件一次：docs/superpowers/plans/feature-plan.md]
+[提取全部 5 个任务及其完整文本和上下文]
+[使用所有任务创建 TodoWrite]
 
-Task 1: Hook installation script
+任务 1: 钩子安装脚本
 
-[Get Task 1 text and context (already extracted)]
-[Dispatch implementation subagent with full task text + context]
+[获取任务 1 的文本和上下文（已提取）]
+[派遣实现子代理，附带完整任务文本和上下文]
 
-Implementer: "Before I begin - should the hook be installed at user or system level?"
+实现者："在我开始之前 - 钩子应该安装在用户级别还是系统级别？"
 
-You: "User level (~/.config/superpowers/hooks/)"
+You: "用户级别 (~/.config/superpowers/hooks/)"
 
-Implementer: "Got it. Implementing now..."
-[Later] Implementer:
-  - Implemented install-hook command
-  - Added tests, 5/5 passing
-  - Self-review: Found I missed --force flag, added it
-  - Committed
+实现者："明白了。现在开始实现..."
+[稍后] 实现者:
+  - 实现了 install-hook 命令
+  - 添加了测试，5/5 通过
+  - 自审：发现我遗漏了 --force 标志，已添加
+  - 已提交
 
-[Dispatch spec compliance reviewer]
-Spec reviewer: ✅ Spec compliant - all requirements met, nothing extra
+[派遣规范合规审查员]
+规范审查员：✅ 符合规范 - 所有要求均已满足，无额外添加
 
-[Get git SHAs, dispatch code quality reviewer]
-Code reviewer: Strengths: Good test coverage, clean. Issues: None. Approved.
+[获取 git SHAs，派遣代码质量审查员]
+代码审查员：优点：测试覆盖良好，代码简洁。问题：无。批准。
 
-[Mark Task 1 complete]
+[标记任务 1 完成]
 
-Task 2: Recovery modes
+任务 2: 恢复模式
 
-[Get Task 2 text and context (already extracted)]
-[Dispatch implementation subagent with full task text + context]
+[获取任务 2 的文本和上下文（已提取）]
+[派遣实现子代理，附带完整任务文本和上下文]
 
-Implementer: [No questions, proceeds]
-Implementer:
-  - Added verify/repair modes
-  - 8/8 tests passing
-  - Self-review: All good
-  - Committed
+实现者：[没有问题，继续]
+实现者：
+  - 添加了 verify/repair 模式
+  - 8/8 测试通过
+  - 自审：一切良好
+  - 已提交
 
-[Dispatch spec compliance reviewer]
-Spec reviewer: ❌ Issues:
-  - Missing: Progress reporting (spec says "report every 100 items")
-  - Extra: Added --json flag (not requested)
+[派遣规范合规审查员]
+规范审查员：❌ 问题：
+  - 缺失：进度报告（规范要求"每 100 个项目报告一次"）
+  - 额外：添加了 --json 标志（未要求）
 
-[Implementer fixes issues]
-Implementer: Removed --json flag, added progress reporting
+[实现者修复问题]
+实现者：移除了 --json 标志，添加了进度报告
 
-[Spec reviewer reviews again]
-Spec reviewer: ✅ Spec compliant now
+[规范审查员再次审查]
+规范审查员：✅ 现在符合规范
 
-[Dispatch code quality reviewer]
-Code reviewer: Strengths: Solid. Issues (Important): Magic number (100)
+[派遣代码质量审查员]
+代码审查员：优点：扎实。问题（重要）：魔法数字 (100)
 
-[Implementer fixes]
-Implementer: Extracted PROGRESS_INTERVAL constant
+[实现者修复]
+实现者：提取了 PROGRESS_INTERVAL 常量
 
-[Code reviewer reviews again]
-Code reviewer: ✅ Approved
+[代码审查员再次审查]
+代码审查员：✅ 批准
 
-[Mark Task 2 complete]
+[标记任务 2 完成]
 
 ...
 
-[After all tasks]
-[Dispatch final code-reviewer]
-Final reviewer: All requirements met, ready to merge
+[所有任务完成后]
+[派遣最终代码审查员]
+最终审查员：所有要求均已满足，准备合并
 
-Done!
+完成！
 ```
 
 ## 优势
