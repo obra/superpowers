@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "repo": "turbonate/super-agents",
+  "github_owner": "turbonate",
+  "default_base_branch": "main",
+  "branch_naming": "<type>/<issue#>-<short-description>",
+  "flows": {
+    "bug": {
+      "project_number": 1,
+      "stages": [
+        {
+          "name": "Triage",
+          "skill": "bug-triage",
+          "exit_marker": "[TRIAGE_READY]",
+          "question_marker": "[TRIAGE_QUESTION]"
+        },
+        {
+          "name": "Fix",
+          "skill": "bug-fix",
+          "exit_marker": "[FIX_COMPLETE]"
+        },
+        {
+          "name": "Test",
+          "skill": "testing-gates",
+          "exit_marker": "[TEST_PASS]",
+          "fail_marker": "[TEST_FAIL]"
+        },
+        {
+          "name": "UserTest",
+          "skill": "user-acceptance-testing",
+          "exit_marker": "[UAT_ACCEPTED]",
+          "optional": true,
+          "skip_condition": "no user-facing changes"
+        },
+        {
+          "name": "Done",
+          "skill": "committing",
+          "exit_marker": "[PR_CREATED]"
+        }
+      ]
+    },
+    "feature": {
+      "project_number": 2,
+      "stages": [
+        {
+          "name": "Brainstorm",
+          "skill": "brainstorming",
+          "exit_marker": "[SPEC_APPROVED]",
+          "question_marker": "[DESIGN_QUESTION]"
+        },
+        {
+          "name": "Design Review",
+          "skill": "spec-document-reviewer",
+          "exit_marker": "[DESIGN_APPROVED]"
+        },
+        {
+          "name": "Plan",
+          "skill": "writing-plans",
+          "exit_marker": "[PLAN_READY]",
+          "question_marker": "[PLAN_QUESTION]"
+        },
+        {
+          "name": "Implement",
+          "skill": "subagent-driven-development",
+          "exit_marker": "[IMPL_COMPLETE]"
+        },
+        {
+          "name": "Review",
+          "skill": "requesting-code-review",
+          "exit_marker": "[REVIEW_APPROVED]"
+        },
+        {
+          "name": "Done",
+          "skill": "finishing-a-development-branch",
+          "exit_marker": "[PR_CREATED]"
+        }
+      ]
+    }
+  },
+  "project_specific": {
+    "languages": ["markdown", "python"],
+    "test_commands": {},
+    "uat_enabled": false,
+    "build_sync": {
+      "enabled": false,
+      "command": ""
+    }
+  }
+}
