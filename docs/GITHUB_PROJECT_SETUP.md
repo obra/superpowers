@@ -22,12 +22,14 @@ Manual configuration steps to set up the kanban board views for both projects.
 
 ### Step 2: Configure Board View
 
-1. In the project, ensure you have a "Board" view (or create one if needed)
-2. Configure the Board view settings:
+1. In the project, click the **view selector** (gear icon) on the right side of the screen
+2. Select "Board" view (or create a new Board view if needed)
+3. Click the view's dropdown menu (•••) and select "Settings"
+4. Configure the Board view settings:
    - **Group by:** Status
    - **Columns:** Should automatically show: Triage, Fix, Test, UserTest, Done
-3. Arrange columns in the workflow order (left to right):
-   - Triage → Fix → Test → UserTest → Done
+5. The columns will appear in the order of the Status field options
+6. Save the view
 
 ### Step 3: Set Default View (Optional)
 
@@ -57,12 +59,14 @@ Manual configuration steps to set up the kanban board views for both projects.
 
 ### Step 2: Configure Board View
 
-1. In the project, ensure you have a "Board" view (or create one if needed)
-2. Configure the Board view settings:
+1. In the project, click the **view selector** (gear icon) on the right side of the screen
+2. Select "Board" view (or create a new Board view if needed)
+3. Click the view's dropdown menu (•••) and select "Settings"
+4. Configure the Board view settings:
    - **Group by:** Status
    - **Columns:** Should automatically show: Brainstorm, Design Review, Plan, Implement, Review, Done
-3. Arrange columns in the workflow order (left to right):
-   - Brainstorm → Design Review → Plan → Implement → Review → Done
+5. The columns will appear in the order of the Status field options
+6. Save the view
 
 ### Step 3: Set Default View (Optional)
 

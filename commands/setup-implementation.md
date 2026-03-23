@@ -156,6 +156,7 @@ For each created project, guide the user:
 
 ⚠️  Manual setup required:
 
+Part 1: Configure Status Field
 1. Open: <url>
 2. Click on the "Status" field column header
 3. Edit the Status field options
@@ -168,7 +169,15 @@ For each created project, guide the user:
 5. Delete the default "Todo", "In Progress" options
 6. Save changes
 
-Once you've configured the Status field, type "done" to continue.
+Part 2: Configure Board View
+7. Click the view selector (gear icon) on the right side of the screen
+8. Select "Board" view (or create one if needed)
+9. Click the view dropdown (•••) → Settings
+10. Set "Group by: Status"
+11. Columns will automatically show your stages in order
+12. Save the view
+
+Once you've completed both parts, type "done" to continue.
 ```
 
 Wait for user to type "done".
@@ -179,6 +188,7 @@ Wait for user to type "done".
 
 ⚠️  Manual setup required:
 
+Part 1: Configure Status Field
 1. Open: <url>
 2. Click on the "Status" field column header
 3. Edit the Status field options
@@ -192,7 +202,15 @@ Wait for user to type "done".
 5. Delete the default "Todo", "In Progress" options
 6. Save changes
 
-Once you've configured the Status field, type "done" to continue.
+Part 2: Configure Board View
+7. Click the view selector (gear icon) on the right side of the screen
+8. Select "Board" view (or create one if needed)
+9. Click the view dropdown (•••) → Settings
+10. Set "Group by: Status"
+11. Columns will automatically show your stages in order
+12. Save the view
+
+Once you've completed both parts, type "done" to continue.
 ```
 
 Wait for user to type "done".
