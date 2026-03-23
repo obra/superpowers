@@ -8,7 +8,7 @@ set -euo pipefail
 PASS=0
 FAIL=0
 TEMP_DIR=$(mktemp -d)
-trap "rm -rf $TEMP_DIR" EXIT
+trap 'rm -rf "$TEMP_DIR"' EXIT
 
 log_pass() { echo "  PASS: $1"; PASS=$((PASS + 1)); }
 log_fail() { echo "  FAIL: $1"; FAIL=$((FAIL + 1)); }
