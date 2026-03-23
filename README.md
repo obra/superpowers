@@ -151,6 +151,23 @@ Start a new session in your chosen platform and ask for something that should tr
 
 Read more: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
 
+## GitHub Project Integration
+
+For teams managing bugs and features via GitHub Projects, super_agents provides workflow automation:
+
+- **/setup** - Bootstrap your repo with GitHub Projects integration
+- **/loop** - Process issues through workflow stages automatically
+- **Workflows** - Bug fix flow (Triage → Fix → Test → UAT → Done) and Feature flow (Brainstorm → Design → Plan → Implement → Test → Review → Done)
+
+**Getting Started:**
+- [Integration Guide](docs/INTEGRATION_GUIDE.md) - Add to your existing repo
+- [Branch Strategy](docs/BRANCH_STRATEGY.md) - Promotion flow best practices (feature → dev → staging → main)
+- [GitHub Project Setup](docs/GITHUB_PROJECT_SETUP.md) - Manual configuration steps
+
+**Maintenance:**
+- [Updating from Super Agents](docs/UPDATING_FROM_SUPER_AGENTS.md) - Pull upstream changes
+- [Contributing Lessons Learned](docs/CONTRIBUTING_LESSONS_LEARNED.md) - When and how to contribute back
+
 ## Contributing
 
 Skills live directly in this repository. To contribute:
@@ -160,7 +177,9 @@ Skills live directly in this repository. To contribute:
 3. Follow the `writing-skills` skill for creating and testing new skills
 4. Submit a PR
 
-See `skills/writing-skills/SKILL.md` for the complete guide.
+**Guides:**
+- Creating skills: `skills/writing-skills/SKILL.md`
+- Contributing improvements: [docs/CONTRIBUTING_LESSONS_LEARNED.md](docs/CONTRIBUTING_LESSONS_LEARNED.md)
 
 ## Updating
 
