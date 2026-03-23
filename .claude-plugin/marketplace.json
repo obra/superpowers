@@ -11,7 +11,7 @@
     {
       "name": "ultrapowers",
       "description": "Core workflow: research-driven development with brainstorming, deep research, skills auditing, TDD, and subagent-driven development",
-      "version": "5.1.0",
+      "version": "5.2.0",
       "source": "./",
       "author": {
         "name": "Ennio Maldonado",
