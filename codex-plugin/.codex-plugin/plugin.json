@@ -1,0 +1,14 @@
+{
+  "name": "superpowers",
+  "version": "5.0.5",
+  "description": "Core skills library: TDD, debugging, brainstorming, collaboration patterns, and proven techniques for agentic coding",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Superpowers",
+    "shortDescription": "Core skills library for agentic coding",
+    "longDescription": "TDD, systematic debugging, brainstorming, collaboration patterns, and proven techniques for AI-assisted development",
+    "developerName": "Jesse Vincent",
+    "category": "Development",
+    "websiteUrl": "https://github.com/obra/superpowers"
+  }
+}
