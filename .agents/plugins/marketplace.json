@@ -1,0 +1,13 @@
+{
+  "name": "superpowers",
+  "plugins": [
+    {
+      "name": "superpowers",
+      "source": { "source": "local", "path": "./codex-plugin" },
+      "policy": {
+        "installation": "AVAILABLE"
+      },
+      "category": "Development"
+    }
+  ]
+}
