@@ -1,6 +1,6 @@
 {
   "name": "ultrapowers",
-  "version": "5.2.0",
+  "version": "0.1.0",
   "type": "module",
   "main": ".opencode/plugins/ultrapowers.js"
 }
