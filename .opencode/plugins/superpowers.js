@@ -69,7 +69,8 @@ When skills reference tools you don't have, substitute OpenCode equivalents:
 - \`Read\`, \`Write\`, \`Edit\`, \`Bash\` → Your native tools
 
 **Skills location:**
-Superpowers skills are in \`${configDir}/skills/superpowers/\`
+Superpowers skills are bundled with the plugin package and auto-registered at startup.
+Resolved skills directory: \`${superpowersSkillsDir}\`
 Use OpenCode's native \`skill\` tool to list and load skills.`;
 
     return `<EXTREMELY_IMPORTANT>

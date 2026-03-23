@@ -7,30 +7,39 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 
 # Create temp home directory for isolation
-export TEST_HOME=$(mktemp -d)
+export TEST_HOME
+TEST_HOME=$(mktemp -d)
 export HOME="$TEST_HOME"
 export XDG_CONFIG_HOME="$TEST_HOME/.config"
 export OPENCODE_CONFIG_DIR="$TEST_HOME/.config/opencode"
 
-# Install plugin to test location
-mkdir -p "$HOME/.config/opencode/superpowers"
-cp -r "$REPO_ROOT/lib" "$HOME/.config/opencode/superpowers/"
-cp -r "$REPO_ROOT/skills" "$HOME/.config/opencode/superpowers/"
+# -----------------------------------------------------------------------------
+# Install Superpowers as if it were a bundled/package dependency
+# (runtime resolves skills dir relative to the plugin file: ../../skills)
+# -----------------------------------------------------------------------------
+mkdir -p "$OPENCODE_CONFIG_DIR"
 
-# Copy plugin directory
-mkdir -p "$HOME/.config/opencode/superpowers/.opencode/plugins"
-cp "$REPO_ROOT/.opencode/plugins/superpowers.js" "$HOME/.config/opencode/superpowers/.opencode/plugins/"
+export SUPERPOWERS_PACKAGE_DIR="$OPENCODE_CONFIG_DIR/node_modules/superpowers"
+export SUPERPOWERS_SKILLS_DIR="$SUPERPOWERS_PACKAGE_DIR/skills"
+export SUPERPOWERS_PLUGIN_FILE="$SUPERPOWERS_PACKAGE_DIR/.opencode/plugins/superpowers.js"
 
-# Register plugin via symlink
-mkdir -p "$HOME/.config/opencode/plugins"
-ln -sf "$HOME/.config/opencode/superpowers/.opencode/plugins/superpowers.js" \
-       "$HOME/.config/opencode/plugins/superpowers.js"
+mkdir -p "$SUPERPOWERS_PACKAGE_DIR"
+cp -r "$REPO_ROOT/skills" "$SUPERPOWERS_PACKAGE_DIR/"
 
+mkdir -p "$(dirname "$SUPERPOWERS_PLUGIN_FILE")"
+cp "$REPO_ROOT/.opencode/plugins/superpowers.js" "$SUPERPOWERS_PLUGIN_FILE"
+
+# Register plugin via symlink (what OpenCode actually reads)
+mkdir -p "$OPENCODE_CONFIG_DIR/plugins"
+ln -sf "$SUPERPOWERS_PLUGIN_FILE" "$OPENCODE_CONFIG_DIR/plugins/superpowers.js"
+
+# -----------------------------------------------------------------------------
 # Create test skills in different locations for testing
+# -----------------------------------------------------------------------------
 
 # Personal test skill
-mkdir -p "$HOME/.config/opencode/skills/personal-test"
-cat > "$HOME/.config/opencode/skills/personal-test/SKILL.md" <<'EOF'
+mkdir -p "$OPENCODE_CONFIG_DIR/skills/personal-test"
+cat > "$OPENCODE_CONFIG_DIR/skills/personal-test/SKILL.md" <<'EOF'
 ---
 name: personal-test
 description: Test personal skill for verification
@@ -57,9 +66,12 @@ PROJECT_SKILL_MARKER_67890
 EOF
 
 echo "Setup complete: $TEST_HOME"
-echo "Plugin installed to: $HOME/.config/opencode/superpowers/.opencode/plugins/superpowers.js"
-echo "Plugin registered at: $HOME/.config/opencode/plugins/superpowers.js"
-echo "Test project at: $TEST_HOME/test-project"
+echo "OPENCODE_CONFIG_DIR: $OPENCODE_CONFIG_DIR"
+echo "Superpowers package dir: $SUPERPOWERS_PACKAGE_DIR"
+echo "Superpowers skills dir:  $SUPERPOWERS_SKILLS_DIR"
+echo "Plugin installed to:     $SUPERPOWERS_PLUGIN_FILE"
+echo "Plugin registered at:    $OPENCODE_CONFIG_DIR/plugins/superpowers.js"
+echo "Test project at:         $TEST_HOME/test-project"
 
 # Helper function for cleanup (call from tests or trap)
 cleanup_test_env() {

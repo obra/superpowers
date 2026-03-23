@@ -13,17 +13,19 @@ source "$SCRIPT_DIR/setup.sh"
 # Trap to cleanup on exit
 trap cleanup_test_env EXIT
 
+plugin_link="$OPENCODE_CONFIG_DIR/plugins/superpowers.js"
+
 # Test 1: Verify plugin file exists and is registered
 echo "Test 1: Checking plugin registration..."
-if [ -L "$HOME/.config/opencode/plugins/superpowers.js" ]; then
+if [ -L "$plugin_link" ]; then
     echo "  [PASS] Plugin symlink exists"
 else
-    echo "  [FAIL] Plugin symlink not found at $HOME/.config/opencode/plugins/superpowers.js"
+    echo "  [FAIL] Plugin symlink not found at $plugin_link"
     exit 1
 fi
 
 # Verify symlink target exists
-if [ -f "$(readlink -f "$HOME/.config/opencode/plugins/superpowers.js")" ]; then
+if [ -f "$(readlink -f "$plugin_link")" ]; then
     echo "  [PASS] Plugin symlink target exists"
 else
     echo "  [FAIL] Plugin symlink target does not exist"
@@ -32,17 +34,17 @@ fi
 
 # Test 2: Verify skills directory is populated
 echo "Test 2: Checking skills directory..."
-skill_count=$(find "$HOME/.config/opencode/superpowers/skills" -name "SKILL.md" | wc -l)
+skill_count=$(find "$SUPERPOWERS_SKILLS_DIR" -name "SKILL.md" | wc -l)
 if [ "$skill_count" -gt 0 ]; then
-    echo "  [PASS] Found $skill_count skills installed"
+    echo "  [PASS] Found $skill_count bundled skills"
 else
-    echo "  [FAIL] No skills found in installed location"
+    echo "  [FAIL] No skills found in bundled skills directory ($SUPERPOWERS_SKILLS_DIR)"
     exit 1
 fi
 
 # Test 4: Check using-superpowers skill exists (critical for bootstrap)
 echo "Test 4: Checking using-superpowers skill (required for bootstrap)..."
-if [ -f "$HOME/.config/opencode/superpowers/skills/using-superpowers/SKILL.md" ]; then
+if [ -f "$SUPERPOWERS_SKILLS_DIR/using-superpowers/SKILL.md" ]; then
     echo "  [PASS] using-superpowers skill exists"
 else
     echo "  [FAIL] using-superpowers skill not found (required for bootstrap)"
@@ -51,7 +53,7 @@ fi
 
 # Test 5: Verify plugin JavaScript syntax (basic check)
 echo "Test 5: Checking plugin JavaScript syntax..."
-plugin_file="$HOME/.config/opencode/superpowers/.opencode/plugins/superpowers.js"
+plugin_file="$SUPERPOWERS_PLUGIN_FILE"
 if node --check "$plugin_file" 2>/dev/null; then
     echo "  [PASS] Plugin JavaScript syntax is valid"
 else
@@ -61,7 +63,7 @@ fi
 
 # Test 6: Verify personal test skill was created
 echo "Test 6: Checking test fixtures..."
-if [ -f "$HOME/.config/opencode/skills/personal-test/SKILL.md" ]; then
+if [ -f "$OPENCODE_CONFIG_DIR/skills/personal-test/SKILL.md" ]; then
     echo "  [PASS] Personal test skill fixture created"
 else
     echo "  [FAIL] Personal test skill fixture not found"
