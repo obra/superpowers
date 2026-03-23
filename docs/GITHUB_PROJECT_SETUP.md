@@ -9,14 +9,30 @@ Manual configuration steps to set up the kanban board views for both projects.
 ### Step 1: Configure Status Field Options
 
 1. Open the project
-2. Click on the **Status** column header dropdown (or go to Settings)
-3. Edit the Status field
-4. Replace the default options with these 5 stages:
-   - **Triage**
-   - **Fix**
-   - **Test**
-   - **UserTest**
-   - **Done**
+2. Select **"Settings"** from the **"..."** dropdown menu at the top right of the project
+3. Navigate to **"Status"** in the left pane under "Fields"
+4. Edit/add options to match these exact names (suggested colors and descriptions):
+
+   **Name:** Triage
+   **Color:** Red (optional)
+   **Description:** "Investigating root cause" (optional)
+
+   **Name:** Fix
+   **Color:** Blue (optional)
+   **Description:** "Implementing the fix" (optional)
+
+   **Name:** Test
+   **Color:** Purple (optional)
+   **Description:** "Running CI gates" (optional)
+
+   **Name:** UserTest
+   **Color:** Yellow (optional)
+   **Description:** "Ready for user acceptance testing" (optional)
+
+   **Name:** Done
+   **Color:** Green (optional)
+   **Description:** "Complete and merged" (optional)
+
 5. Delete the default "Todo", "In Progress" options
 6. Save changes
 
@@ -45,15 +61,34 @@ Manual configuration steps to set up the kanban board views for both projects.
 ### Step 1: Configure Status Field Options
 
 1. Open the project
-2. Click on the **Status** column header dropdown (or go to Settings)
-3. Edit the Status field
-4. Replace the default options with these 6 stages:
-   - **Brainstorm**
-   - **Design Review**
-   - **Plan**
-   - **Implement**
-   - **Review**
-   - **Done**
+2. Select **"Settings"** from the **"..."** dropdown menu at the top right of the project
+3. Navigate to **"Status"** in the left pane under "Fields"
+4. Edit/add options to match these exact names (suggested colors and descriptions):
+
+   **Name:** Brainstorm
+   **Color:** Orange (optional)
+   **Description:** "Exploring ideas and requirements" (optional)
+
+   **Name:** Design Review
+   **Color:** Yellow (optional)
+   **Description:** "Ready for design review" (optional)
+
+   **Name:** Plan
+   **Color:** Blue (optional)
+   **Description:** "Creating implementation plan" (optional)
+
+   **Name:** Implement
+   **Color:** Purple (optional)
+   **Description:** "Implementing the feature" (optional)
+
+   **Name:** Review
+   **Color:** Yellow (optional)
+   **Description:** "Ready for code review" (optional)
+
+   **Name:** Done
+   **Color:** Green (optional)
+   **Description:** "Complete and merged" (optional)
+
 5. Delete the default "Todo", "In Progress" options
 6. Save changes
 

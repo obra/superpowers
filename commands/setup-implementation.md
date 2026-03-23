@@ -158,14 +158,30 @@ For each created project, guide the user:
 
 Part 1: Configure Status Field
 1. Open: <url>
-2. Click on the "Status" field column header
-3. Edit the Status field options
-4. Replace the defaults with these exact names:
-   - Triage
-   - Fix
-   - Test
-   - UserTest
-   - Done
+2. Select "Settings" from the "..." dropdown menu at the top right of the project
+3. Navigate to "Status" in the left pane under "Fields"
+4. Edit/add options to match these exact names (delete defaults):
+
+   Name: Triage
+   Color: Red (optional)
+   Description: "Investigating root cause" (optional)
+
+   Name: Fix
+   Color: Blue (optional)
+   Description: "Implementing the fix" (optional)
+
+   Name: Test
+   Color: Purple (optional)
+   Description: "Running CI gates" (optional)
+
+   Name: UserTest
+   Color: Yellow (optional)
+   Description: "Ready for user acceptance testing" (optional)
+
+   Name: Done
+   Color: Green (optional)
+   Description: "Complete and merged" (optional)
+
 5. Delete the default "Todo", "In Progress" options
 6. Save changes
 
@@ -190,15 +206,34 @@ Wait for user to type "done".
 
 Part 1: Configure Status Field
 1. Open: <url>
-2. Click on the "Status" field column header
-3. Edit the Status field options
-4. Replace the defaults with these exact names:
-   - Brainstorm
-   - Design Review
-   - Plan
-   - Implement
-   - Review
-   - Done
+2. Select "Settings" from the "..." dropdown menu at the top right of the project
+3. Navigate to "Status" in the left pane under "Fields"
+4. Edit/add options to match these exact names (delete defaults):
+
+   Name: Brainstorm
+   Color: Orange (optional)
+   Description: "Exploring ideas and requirements" (optional)
+
+   Name: Design Review
+   Color: Yellow (optional)
+   Description: "Ready for design review" (optional)
+
+   Name: Plan
+   Color: Blue (optional)
+   Description: "Creating implementation plan" (optional)
+
+   Name: Implement
+   Color: Purple (optional)
+   Description: "Implementing the feature" (optional)
+
+   Name: Review
+   Color: Yellow (optional)
+   Description: "Ready for code review" (optional)
+
+   Name: Done
+   Color: Green (optional)
+   Description: "Complete and merged" (optional)
+
 5. Delete the default "Todo", "In Progress" options
 6. Save changes
 
