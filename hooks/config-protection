@@ -10,7 +10,9 @@ profile_gate 2 || exit 0
 # Read tool input from stdin
 INPUT=$(cat)
 
-# Extract the command field from tool_input
+# Extract the command field from tool_input.
+# Note: grep pattern truncates at first unescaped quote — commands with embedded
+# quotes may partially bypass detection. Accepted trade-off to avoid jq dependency.
 COMMAND=$(printf '%s' "$INPUT" | grep -o '"command" *: *"[^"]*"' | head -1 | sed 's/.*: *"//;s/"$//')
 
 # Nothing to check if no command
