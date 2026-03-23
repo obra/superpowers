@@ -68,8 +68,8 @@ New section between "Overview" and "Directory Selection Process":
 **Step 0: Check if Already in an Isolated Workspace**
 
 Run the detection commands. If `GIT_DIR != GIT_COMMON`, skip worktree creation entirely. Instead:
-1. Skip to Step 3 (Run Project Setup) — `npm install` etc. is idempotent, worth running for safety
-2. Then Step 4 (Verify Clean Baseline) — run tests
+1. Skip to "Run Project Setup" subsection under Creation Steps — `npm install` etc. is idempotent, worth running for safety
+2. Then "Verify Clean Baseline" — run tests
 3. Report with branch state:
    - On a branch: "Already in an isolated workspace at `<path>` on branch `<name>`. Tests passing. Ready to implement."
    - Detached HEAD: "Already in an isolated workspace at `<path>` (detached HEAD, externally managed). Tests passing. Note: branch creation needed at finish time. Ready to implement."
@@ -78,15 +78,18 @@ If `GIT_DIR == GIT_COMMON`, proceed with the full worktree creation flow (unchan
 
 Safety verification (.gitignore check) is skipped when Step 0 fires — irrelevant for externally-created worktrees.
 
-Update the Integration section description to note the skill ensures a verified workspace (creates one or verifies existing).
+Update the Integration section's "Called by" entries. Change the description on each from context-specific text to: "Ensures isolated workspace (creates one or verifies existing)". For example, the `subagent-driven-development` entry changes from "REQUIRED: Set up isolated workspace before starting" to "REQUIRED: Ensures isolated workspace (creates one or verifies existing)".
 
 **Everything else unchanged:** Directory Selection, Safety Verification, Creation Steps, Project Setup, Baseline Tests, Quick Reference, Common Mistakes, Red Flags.
 
 ### 2. `finishing-a-development-branch/SKILL.md` — Add Step 1.5 + cleanup guard (~20 lines)
 
-**Step 1.5: Detect Environment** (after "Verify Tests", before "Present Options")
+**Step 1.5: Detect Environment** (after Step 1 "Verify Tests", before Step 2 "Determine Base Branch")
 
 Run the detection commands. Three paths:
+
+- **Path A** skips Steps 2 and 3 entirely (no base branch or options needed).
+- **Paths B and C** proceed through Step 2 (Determine Base Branch) and Step 3 (Present Options) as normal.
 
 **Path A — Externally managed worktree + detached HEAD** (`GIT_DIR != GIT_COMMON` AND `BRANCH` empty):
 
@@ -118,9 +121,9 @@ Present the 4-option menu as today (unchanged).
 
 **Step 5 cleanup guard:**
 
-If `using-git-worktrees` reported "Already in an isolated workspace" (externally managed), skip `git worktree remove`. The host environment owns this workspace.
+Re-run the `GIT_DIR` vs `GIT_COMMON` detection at cleanup time (do not rely on earlier skill output — the finishing skill may run in a different session). If `GIT_DIR != GIT_COMMON`, skip `git worktree remove` — the host environment owns this workspace.
 
-Otherwise, check and remove as today.
+Otherwise, check and remove as today. Note: the existing Step 5 text says "For Options 1, 2, 4" but the Quick Reference table and Common Mistakes section say "Options 1 & 4 only." The new guard is added before this existing logic and does not change which options trigger cleanup.
 
 **Everything else unchanged:** Options 1-4 logic, Quick Reference, Common Mistakes, Red Flags.
 
@@ -141,9 +144,42 @@ To:
 
 Two new sections at the end:
 
-**Environment Detection:** Documents the `git-dir != git-common-dir` pattern and what each signal means. Skills that create worktrees or finish branches should run this detection.
+**Environment Detection:**
 
-**Codex App Finishing:** When the sandbox blocks branch/push operations, the agent commits all work and tells the user to use the App's "Create branch" or "Hand off to local" controls. The agent can still run tests, stage files, and suggest branch names, commit messages, and PR descriptions in its output.
+```markdown
+## Environment Detection
+
+Skills that create worktrees or finish branches should detect their
+environment with read-only git commands before proceeding:
+
+\```bash
+GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
+GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
+BRANCH=$(git branch --show-current)
+\```
+
+- `GIT_DIR != GIT_COMMON` → already in a linked worktree (skip creation)
+- `BRANCH` empty → detached HEAD (cannot branch/push/PR from sandbox)
+
+See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
+Step 1.5 for how each skill uses these signals.
+```
+
+**Codex App Finishing:**
+
+```markdown
+## Codex App Finishing
+
+When the sandbox blocks branch/push operations (detached HEAD in an
+externally managed worktree), the agent commits all work and informs
+the user to use the App's native controls:
+
+- **"Create branch"** — names the branch, then commit/push/PR via App UI
+- **"Hand off to local"** — transfers work to the user's local checkout
+
+The agent can still run tests, stage files, and output suggested branch
+names, commit messages, and PR descriptions for the user to copy.
+```
 
 ## What Does NOT Change
 
