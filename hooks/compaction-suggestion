@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# PostToolUse + TaskCompleted hook: suggests /compact at natural boundaries.
+# Matcher: Bash (PostToolUse), no matcher (TaskCompleted) | Level: standard (2)
+
+set -uo pipefail
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "${SCRIPT_DIR}/profile-gate.sh"
+profile_gate 2 || exit 0
+
+# Use CLAUDE_PLUGIN_DATA for persistent counter, fall back to /tmp
+DATA_DIR="${CLAUDE_PLUGIN_DATA:-/tmp/ultrapowers-hooks}"
+mkdir -p "$DATA_DIR" 2>/dev/null
+COUNTER_FILE="${DATA_DIR}/tool-count"
+
+# Read hook input from stdin
+INPUT=$(cat)
+
+# Increment counter
+COUNT=$(cat "$COUNTER_FILE" 2>/dev/null || echo 0)
+COUNT=$((COUNT + 1))
+printf '%s' "$COUNT" > "$COUNTER_FILE"
+
+# Not enough tool calls yet — threshold is 30
+[ "$COUNT" -lt 30 ] && exit 0
+
+# Detect event type
+EVENT=$(printf '%s' "$INPUT" | grep -o '"hook_event_name" *: *"[^"]*"' | head -1 | sed 's/.*: *"//;s/"$//')
+
+IS_BOUNDARY=false
+
+case "$EVENT" in
+  TaskCompleted)
+    # TaskCompleted is always a boundary
+    IS_BOUNDARY=true
+    ;;
+  PostToolUse)
+    # Check if Bash tool ran a boundary command
+    TOOL=$(printf '%s' "$INPUT" | grep -o '"tool_name" *: *"[^"]*"' | head -1 | sed 's/.*: *"//;s/"$//')
+    if [ "$TOOL" = "Bash" ]; then
+      COMMAND=$(printf '%s' "$INPUT" | grep -o '"command" *: *"[^"]*"' | head -1 | sed 's/.*: *"//;s/"$//')
+      # git commit
+      printf '%s' "$COMMAND" | grep -qE 'git commit' && IS_BOUNDARY=true
+      # test runners
+      printf '%s' "$COMMAND" | grep -qE '(npm test|npx vitest|npx jest|pytest|cargo test|go test|bundle exec rspec|mix test)' && IS_BOUNDARY=true
+    fi
+    ;;
+esac
+
+if $IS_BOUNDARY; then
+  # Reset counter
+  printf '0' > "$COUNTER_FILE"
+  # Inject context via hookSpecificOutput
+  printf '{"hookSpecificOutput":{"hookEventName":"%s","additionalContext":"Good boundary point (%d tool calls since last reset). Consider running /compact to free up context before the next task."}}\n' "$EVENT" "$COUNT"
+fi
+
+exit 0
