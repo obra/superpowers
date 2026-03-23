@@ -13,6 +13,10 @@ Load plan, review critically, execute all tasks, report when complete.
 
 **Note:** Tell your human partner that Ultrapowers works much better with access to subagents. The quality of its work will be significantly higher if run on a platform with subagent support (such as Claude Code or Codex). If subagents are available, use ultrapowers:subagent-driven-development instead of this skill.
 
+## Workflow Preferences
+
+Before executing, read `.claude/ultrapowers-preferences.json` in the project root. If it exists, use its values for `autoCommit` and `autoPush` to determine whether to commit after each task and whether to push. If the file is missing, default to all OFF (no auto-commit, no auto-push).
+
 ## The Process
 
 ### Step 1: Load and Review Plan

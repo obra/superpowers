@@ -13,6 +13,10 @@ Guide completion of development work by presenting clear options and handling ch
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
+## Workflow Preferences
+
+Before presenting options, read `.claude/ultrapowers-preferences.json` in the project root. If it exists, use its `autoPush` value to determine whether to push automatically. If the file is missing, default to OFF (no auto-push).
+
 ## The Process
 
 ### Step 1: Verify Tests

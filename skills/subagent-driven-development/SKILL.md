@@ -84,6 +84,10 @@ digraph process {
 }
 ```
 
+## Workflow Preferences
+
+Before dispatching implementer subagents, read `.claude/ultrapowers-preferences.json` in the project root. If it exists, use its values for `autoCommit` and `autoPush`. Pass these to implementer subagents so they know whether to commit after each task and whether to push. If the file is missing, default to all OFF (no auto-commit, no auto-push).
+
 ## Pre-Implementation Skills Check
 
 Before dispatching the first implementer subagent, verify that the plan includes **skill annotations** for each task. If a task references skills, confirm those skills are available (installed plugin or local `.claude/skills/` file).
