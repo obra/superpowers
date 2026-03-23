@@ -80,6 +80,10 @@ Safety verification (.gitignore check) is skipped when Step 0 fires — irreleva
 
 Update the Integration section's "Called by" entries. Change the description on each from context-specific text to: "Ensures isolated workspace (creates one or verifies existing)". For example, the `subagent-driven-development` entry changes from "REQUIRED: Set up isolated workspace before starting" to "REQUIRED: Ensures isolated workspace (creates one or verifies existing)".
 
+**Sandbox fallback:** If `GIT_DIR == GIT_COMMON` and the skill proceeds to Creation Steps, but `git worktree add -b` fails with a permission error (e.g., Seatbelt sandbox denial), treat this as a late-detected restricted environment. Fall back to the Step 0 "already in workspace" behavior — skip creation, run setup and baseline tests in the current directory, report accordingly.
+
+After reporting in Step 0, STOP. Do not continue to Directory Selection or Creation Steps.
+
 **Everything else unchanged:** Directory Selection, Safety Verification, Creation Steps, Project Setup, Baseline Tests, Quick Reference, Common Mistakes, Red Flags.
 
 ### 2. `finishing-a-development-branch/SKILL.md` — Add Step 1.5 + cleanup guard (~20 lines)
@@ -93,27 +97,35 @@ Run the detection commands. Three paths:
 
 **Path A — Externally managed worktree + detached HEAD** (`GIT_DIR != GIT_COMMON` AND `BRANCH` empty):
 
-Do NOT present the 4-option menu. Emit a handoff payload:
+First, ensure all work is staged and committed (`git add` + `git commit`). The Codex App's finishing controls operate on committed work.
+
+Then present this to the user (do NOT present the 4-option menu):
 
 ```
 Implementation complete. All tests passing.
+Current HEAD: <full-commit-sha>
 
 This workspace is externally managed (detached HEAD).
 I cannot create branches, push, or open PRs from here.
 
-Next steps — use the host application's controls:
+⚠ These commits are on a detached HEAD. If you do not create a branch,
+they may be lost when this workspace is cleaned up.
+
+If your host application provides these controls:
 - "Create branch" — to name a branch, then commit/push/PR
 - "Hand off to local" — to move changes to your local checkout
 
-Suggested branch name: <derived-from-plan-or-ticket>
+Suggested branch name: <ticket-id/short-description>
 Suggested commit message: <summary-of-work>
 ```
+
+Branch name derivation: use the ticket ID if available (e.g., `pri-823/codex-compat`), otherwise slugify the first 5 words of the plan title, otherwise omit the suggestion. Avoid including sensitive content (vulnerability descriptions, customer names) in branch names.
 
 Skip to Step 5 (cleanup is a no-op for externally managed worktrees).
 
 **Path B — Externally managed worktree + named branch** (`GIT_DIR != GIT_COMMON` AND `BRANCH` exists):
 
-Present the 4-option menu as normal. Mark worktree as externally managed for cleanup.
+Present the 4-option menu as normal. (The Step 5 cleanup guard will re-detect the externally managed state independently.)
 
 **Path C — Normal environment** (`GIT_DIR == GIT_COMMON`):
 
@@ -127,9 +139,9 @@ Otherwise, check and remove as today. Note: the existing Step 5 text says "For O
 
 **Everything else unchanged:** Options 1-4 logic, Quick Reference, Common Mistakes, Red Flags.
 
-### 3. `subagent-driven-development/SKILL.md` — 1 line edit
+### 3. `subagent-driven-development/SKILL.md` and `executing-plans/SKILL.md` — 1 line edit each
 
-Change Integration section line from:
+Both skills have an identical Integration section line. Change from:
 ```
 - superpowers:using-git-worktrees - REQUIRED: Set up isolated workspace before starting
 ```
@@ -184,7 +196,7 @@ names, commit messages, and PR descriptions for the user to copy.
 ## What Does NOT Change
 
 - `implementer-prompt.md`, `spec-reviewer-prompt.md`, `code-quality-reviewer-prompt.md` — subagent prompts untouched
-- `executing-plans/SKILL.md` — inherits behavior through `using-git-worktrees` and `finishing-a-development-branch`
+- `executing-plans/SKILL.md` — same 1-line Integration edit as `subagent-driven-development`; runtime behavior inherited through `using-git-worktrees` and `finishing-a-development-branch`
 - `dispatching-parallel-agents/SKILL.md` — no worktree or finishing operations
 - `.codex/INSTALL.md` — installation process unchanged
 - The 4-option finishing menu — preserved exactly for Claude Code and Codex CLI
@@ -198,9 +210,10 @@ names, commit messages, and PR descriptions for the user to copy.
 | `skills/using-git-worktrees/SKILL.md` | +12 lines (Step 0) |
 | `skills/finishing-a-development-branch/SKILL.md` | +20 lines (Step 1.5 + cleanup guard) |
 | `skills/subagent-driven-development/SKILL.md` | 1 line edit |
+| `skills/executing-plans/SKILL.md` | 1 line edit |
 | `skills/using-superpowers/references/codex-tools.md` | +15 lines |
 
-~48 lines added/changed across 4 files. Zero new files. Zero breaking changes.
+~50 lines added/changed across 5 files. Zero new files. Zero breaking changes.
 
 ## Future Considerations
 
