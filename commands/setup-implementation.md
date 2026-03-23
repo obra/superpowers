@@ -22,9 +22,26 @@ The `/setup` command is implemented as a Claude Code prompt that:
    ```bash
    git rev-parse --git-dir
    gh auth status
-   gh repo view --json owner,name,defaultBranchRef
+   gh repo view --json owner,name,defaultBranchRef,isInOrganization
    ```
-3. If any check fails, stop and report the error
+3. Detect repo ownership:
+   - If `isInOrganization: true` → Projects will be org-level
+   - If `isInOrganization: false` → Projects will be user-level
+4. Inform user about project level:
+   ```
+   ℹ️  GitHub Projects V2 are [org/user]-level, not repository-level.
+
+   For [org] repos: Projects are created at the organization level and can
+   contain issues from any repo in the org.
+
+   For [user] repos: Projects are created at the user level.
+
+   Projects won't appear in the repo's "Projects" tab (that's for deprecated
+   Classic Projects), but they work perfectly with the loop orchestrator.
+
+   Continue? (y/n)
+   ```
+5. If any check fails, stop and report the error
 
 ### User Questions (Sequential)
 
@@ -121,22 +138,116 @@ For each selected flow, create a GitHub Project:
 
 ```bash
 gh project create --owner <owner> \
-  --title "<repo> - Bug Fixes" \
+  --title "Bug Fixes" \
   --format json
 ```
 
-Extract `number` from the response. Store project numbers.
+Extract `number`, `url`, and `id` from the response. Store for each project.
 
-**Add Status field** (if `gh` supports it):
-```bash
-gh project field-list <number> --owner <owner> --format json
+### Manual Status Field Configuration
+
+**The GitHub API doesn't support modifying Status field options.** This must be done manually via the web UI.
+
+For each created project, guide the user:
+
+**Bug Fixes Project:**
+```
+✅ Created Bug Fixes project: <url>
+
+⚠️  Manual setup required:
+
+1. Open: <url>
+2. Click on the "Status" field column header
+3. Edit the Status field options
+4. Replace the defaults with these exact names:
+   - Triage
+   - Fix
+   - Test
+   - UserTest
+   - Done
+5. Delete the default "Todo", "In Progress" options
+6. Save changes
+
+Once you've configured the Status field, type "done" to continue.
 ```
 
-Look for Status field. If it doesn't exist, create it (or note that user must add manually).
+Wait for user to type "done".
+
+**Feature Development Project** (if selected):
+```
+✅ Created Feature Development project: <url>
+
+⚠️  Manual setup required:
+
+1. Open: <url>
+2. Click on the "Status" field column header
+3. Edit the Status field options
+4. Replace the defaults with these exact names:
+   - Brainstorm
+   - Design Review
+   - Plan
+   - Implement
+   - Review
+   - Done
+5. Delete the default "Todo", "In Progress" options
+6. Save changes
+
+Once you've configured the Status field, type "done" to continue.
+```
+
+Wait for user to type "done".
+
+### Validate Status Field Configuration
+
+After user confirms manual setup, validate that the Status field has the correct options:
+
+```bash
+gh project field-list <project_number> --owner <owner> --format json
+```
+
+Parse the Status field options and verify they match the expected stage names:
+
+**For Bug Fixes:**
+Expected: `["Triage", "Fix", "Test", "UserTest", "Done"]`
+
+**For Feature Development:**
+Expected: `["Brainstorm", "Design Review", "Plan", "Implement", "Review", "Done"]`
+
+If validation fails:
+```
+❌ Validation failed. Status field options don't match expected values.
+
+Expected: Triage, Fix, Test, UserTest, Done
+Found: <actual values>
+
+Please correct the Status field and type "retry" to validate again.
+```
+
+If validation succeeds:
+```
+✅ Status field validated successfully!
+```
 
 ### Generate `project-flows.json`
 
-Create `.claude/project-flows.json` with:
+Create `.claude/project-flows.json` using the **validated stage names** from GitHub.
+
+**Important:** The `name` field in each stage uses the validated Status field value from GitHub. The `skill` field maps to the corresponding generic skill based on stage order:
+
+**Bug Flow mapping:**
+- Stage 1 (Triage) → `bug-triage`
+- Stage 2 (Fix) → `bug-fix`
+- Stage 3 (Test) → `testing-gates`
+- Stage 4 (UserTest) → `user-acceptance-testing`
+- Stage 5 (Done) → `committing`
+
+**Feature Flow mapping:**
+- Stage 1 (Brainstorm) → `brainstorming`
+- Stage 2 (Design Review) → `spec-document-reviewer`
+- Stage 3 (Plan) → `writing-plans`
+- Stage 4 (Implement) → `subagent-driven-development`
+- Stage 5 (Review) → `requesting-code-review`
+- Stage 6 (Done) → `finishing-a-development-branch`
 
 ```json
 {
@@ -148,9 +259,10 @@ Create `.claude/project-flows.json` with:
   "flows": {
     "bug": {
       "project_number": <number>,
+      "project_url": "<url>",
       "stages": [
         {
-          "name": "Triage",
+          "name": "<validated stage 1 name>",
           "skill": "bug-triage",
           "exit_marker": "[TRIAGE_READY]",
           "question_marker": "[TRIAGE_QUESTION]"
