@@ -30,17 +30,8 @@ else
     exit 1
 fi
 
-# Test 2: Verify lib/skills-core.js is in place
-echo "Test 2: Checking skills-core.js..."
-if [ -f "$HOME/.config/opencode/superpowers/lib/skills-core.js" ]; then
-    echo "  [PASS] skills-core.js exists"
-else
-    echo "  [FAIL] skills-core.js not found"
-    exit 1
-fi
-
-# Test 3: Verify skills directory is populated
-echo "Test 3: Checking skills directory..."
+# Test 2: Verify skills directory is populated
+echo "Test 2: Checking skills directory..."
 skill_count=$(find "$HOME/.config/opencode/superpowers/skills" -name "SKILL.md" | wc -l)
 if [ "$skill_count" -gt 0 ]; then
     echo "  [PASS] Found $skill_count skills installed"

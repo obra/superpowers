@@ -34,7 +34,7 @@ The server watches a directory for HTML files and serves the newest one to the b
 
 ```bash
 # Start server with persistence (mockups saved to project)
-${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/start-server.sh --project-dir /path/to/project
+scripts/start-server.sh --project-dir /path/to/project
 
 # Returns: {"type":"server-started","port":52341,"url":"http://localhost:52341",
 #           "screen_dir":"/path/to/project/.superpowers/brainstorm/12345-1706000000"}
@@ -42,22 +42,47 @@ ${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/start-server.sh --project-dir /path/
 
 Save `screen_dir` from the response. Tell user to open the URL.
 
+**Finding connection info:** The server writes its startup JSON to `$SCREEN_DIR/.server-info`. If you launched the server in the background and didn't capture stdout, read that file to get the URL and port. When using `--project-dir`, check `<project>/.superpowers/brainstorm/` for the session directory.
+
 **Note:** Pass the project root as `--project-dir` so mockups persist in `.superpowers/brainstorm/` and survive server restarts. Without it, files go to `/tmp` and get cleaned up. Remind the user to add `.superpowers/` to `.gitignore` if it's not already there.
 
-**Codex behavior:** In Codex (`CODEX_CI=1`), `start-server.sh` auto-switches to foreground mode by default because background jobs may be reaped. Use `--background` only if your environment reliably preserves detached processes.
+**Launching the server by platform:**
 
-**If background processes are reaped in your environment:** run in foreground from a persistent terminal session:
-
+**Claude Code (macOS / Linux):**
 ```bash
-${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/start-server.sh --project-dir /path/to/project --foreground
+# Default mode works — the script backgrounds the server itself
+scripts/start-server.sh --project-dir /path/to/project
 ```
 
-In `--foreground` mode, the command stays attached and serves until interrupted.
+**Claude Code (Windows):**
+```bash
+# Windows auto-detects and uses foreground mode, which blocks the tool call.
+# Use run_in_background: true on the Bash tool call so the server survives
+# across conversation turns.
+scripts/start-server.sh --project-dir /path/to/project
+```
+When calling this via the Bash tool, set `run_in_background: true`. Then read `$SCREEN_DIR/.server-info` on the next turn to get the URL and port.
+
+**Codex:**
+```bash
+# Codex reaps background processes. The script auto-detects CODEX_CI and
+# switches to foreground mode. Run it normally — no extra flags needed.
+scripts/start-server.sh --project-dir /path/to/project
+```
+
+**Gemini CLI:**
+```bash
+# Use --foreground and set is_background: true on your shell tool call
+# so the process survives across turns
+scripts/start-server.sh --project-dir /path/to/project --foreground
+```
+
+**Other environments:** The server must keep running in the background across conversation turns. If your environment reaps detached processes, use `--foreground` and launch the command with your platform's background execution mechanism.
 
 If the URL is unreachable from your browser (common in remote/containerized setups), bind a non-loopback host:
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/start-server.sh \
+scripts/start-server.sh \
   --project-dir /path/to/project \
   --host 0.0.0.0 \
   --url-host localhost
@@ -67,7 +92,8 @@ Use `--url-host` to control what hostname is printed in the returned URL JSON.
 
 ## The Loop
 
-1. **Write HTML** to a new file in `screen_dir`:
+1. **Check server is alive**, then **write HTML** to a new file in `screen_dir`:
+   - Before each write, check that `$SCREEN_DIR/.server-info` exists. If it doesn't (or `.server-stopped` exists), the server has shut down — restart it with `start-server.sh` before continuing. The server auto-exits after 30 minutes of inactivity.
    - Use semantic filenames: `platform.html`, `visual-style.html`, `layout.html`
    - **Never reuse filenames** — each screen gets a fresh file
    - Use Write tool — **never use cat/heredoc** (dumps noise into terminal)
@@ -249,12 +275,12 @@ If `.events` doesn't exist, the user didn't interact with the browser — use on
 ## Cleaning Up
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/stop-server.sh $SCREEN_DIR
+scripts/stop-server.sh $SCREEN_DIR
 ```
 
 If the session used `--project-dir`, mockup files persist in `.superpowers/brainstorm/` for later reference. Only `/tmp` sessions get deleted on stop.
 
 ## Reference
 
-- Frame template (CSS reference): `${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/frame-template.html`
-- Helper script (client-side): `${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/helper.js`
+- Frame template (CSS reference): `scripts/frame-template.html`
+- Helper script (client-side): `scripts/helper.js`
