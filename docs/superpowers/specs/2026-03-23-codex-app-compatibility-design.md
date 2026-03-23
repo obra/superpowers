@@ -227,13 +227,15 @@ If a third skill needs the same detection pattern, extract it into a shared `ref
 2. Linked worktree detection — `git worktree add` test worktree, assert IN_LINKED_WORKTREE=true
 3. Detached HEAD detection — `git checkout --detach`, assert ON_DETACHED_HEAD=true
 4. Finishing skill handoff output — verify handoff message (not 4-option menu) in restricted environment
+5. **Step 5 cleanup guard** — create a linked worktree (`git worktree add /tmp/test-cleanup -b test-cleanup`), `cd` into it, run the Step 5 cleanup detection (`GIT_DIR` vs `GIT_COMMON`), assert it would NOT call `git worktree remove`. Then `cd` back to main repo, run the same detection, assert it WOULD call `git worktree remove`. Clean up test worktree afterward.
 
-### Manual Codex App Tests (4 tests)
+### Manual Codex App Tests (5 tests)
 
 1. Detection in Worktree thread (workspace-write) — verify GIT_DIR != GIT_COMMON, empty branch
 2. Detection in Worktree thread (Full access) — same detection, different sandbox behavior
 3. Finishing skill handoff format — verify agent emits handoff payload, not 4-option menu
 4. Full lifecycle — detection → commit → finishing detection → correct behavior → cleanup
+5. **Sandbox fallback in Local thread** — Start a Codex App **Local thread** (workspace-write sandbox). Prompt: "Use the superpowers skill `using-git-worktrees` to set up an isolated workspace for implementing a small change." Pre-check: `git checkout -b test-sandbox-check` should fail with `Operation not permitted`. Expected: the skill detects `GIT_DIR == GIT_COMMON` (normal repo), attempts `git worktree add -b`, hits Seatbelt denial, falls back to Step 0 "already in workspace" behavior — runs setup, baseline tests, reports ready from current directory. Pass: agent recovers gracefully without cryptic error messages. Fail: agent prints raw Seatbelt error, retries, or gives up with confusing output.
 
 ### Regression
 
