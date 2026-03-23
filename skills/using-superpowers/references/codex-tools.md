@@ -85,7 +85,7 @@ BRANCH=$(git branch --show-current)
 - `BRANCH` empty → detached HEAD (cannot branch/push/PR from sandbox)
 
 See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
-Step 1 for how each skill uses these signals.
+Step 1.5 for how each skill uses these signals.
 
 ## Codex App Finishing
 
