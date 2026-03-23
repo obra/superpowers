@@ -7,6 +7,7 @@
   "flows": {
     "bug": {
       "project_number": 1,
+      "project_url": "https://github.com/users/turbonate/projects/1",
       "stages": [
         {
           "name": "Triage",
@@ -41,6 +42,7 @@
     },
     "feature": {
       "project_number": 2,
+      "project_url": "https://github.com/users/turbonate/projects/2",
       "stages": [
         {
           "name": "Brainstorm",
