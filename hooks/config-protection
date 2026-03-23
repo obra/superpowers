@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# PreToolUse hook: blocks Bash commands that modify linter/formatter configs.
+# Matcher: Bash | Level: standard (2)
+
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "${SCRIPT_DIR}/profile-gate.sh"
+profile_gate 2 || exit 0
+
+# Read tool input from stdin
+INPUT=$(cat)
+
+# Extract the command field from tool_input
+COMMAND=$(printf '%s' "$INPUT" | grep -o '"command" *: *"[^"]*"' | head -1 | sed 's/.*: *"//;s/"$//')
+
+# Nothing to check if no command
+[ -z "$COMMAND" ] && exit 0
+
+# Config file patterns to protect
+CONFIG_PATTERNS='\.eslintrc|\.prettierrc|prettier\.config|biome\.json|biome\.jsonc|\.flake8|ruff\.toml|\.ruff\.toml|tsconfig\.json|\.editorconfig|stylelint|\.pylintrc'
+
+# Write operators that indicate modification
+WRITE_OPS='(>|>>|sed|awk|cat.*EOF|cat.*eof|tee|mv|cp|rm|echo.*>)'
+
+# Check if command modifies a config file
+if printf '%s' "$COMMAND" | grep -qE "${WRITE_OPS}.*($CONFIG_PATTERNS)" || \
+   printf '%s' "$COMMAND" | grep -qE "($CONFIG_PATTERNS).*(${WRITE_OPS})"; then
+  echo "Do not modify linter/formatter configs. Fix the code to comply with existing rules instead." >&2
+  exit 2
+fi
+
+exit 0
