@@ -18,15 +18,15 @@ Manual configuration steps to set up the kanban board views for both projects.
    **Description:** "Investigating root cause" (optional)
 
    **Name:** Fix
-   **Color:** Blue (optional)
+   **Color:** Orange (optional)
    **Description:** "Implementing the fix" (optional)
 
    **Name:** Test
-   **Color:** Purple (optional)
+   **Color:** Yellow (optional)
    **Description:** "Running CI gates" (optional)
 
    **Name:** UserTest
-   **Color:** Yellow (optional)
+   **Color:** Blue (optional)
    **Description:** "Ready for user acceptance testing" (optional)
 
    **Name:** Done
@@ -66,27 +66,31 @@ Manual configuration steps to set up the kanban board views for both projects.
 4. Edit/add options to match these exact names (suggested colors and descriptions):
 
    **Name:** Brainstorm
-   **Color:** Orange (optional)
+   **Color:** Blue (optional)
    **Description:** "Exploring ideas and requirements" (optional)
 
    **Name:** Design Review
-   **Color:** Yellow (optional)
+   **Color:** Green (optional)
    **Description:** "Ready for design review" (optional)
 
    **Name:** Plan
-   **Color:** Blue (optional)
+   **Color:** Yellow (optional)
    **Description:** "Creating implementation plan" (optional)
 
    **Name:** Implement
-   **Color:** Purple (optional)
+   **Color:** Orange (optional)
    **Description:** "Implementing the feature" (optional)
 
+   **Name:** Test
+   **Color:** Red (optional)
+   **Description:** "Running CI gates" (optional)
+
    **Name:** Review
-   **Color:** Yellow (optional)
+   **Color:** Pink (optional)
    **Description:** "Ready for code review" (optional)
 
    **Name:** Done
-   **Color:** Green (optional)
+   **Color:** Purple (optional)
    **Description:** "Complete and merged" (optional)
 
 5. Delete the default "Todo", "In Progress" options
