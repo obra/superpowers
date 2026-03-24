@@ -7,6 +7,7 @@ const path = require('path');
 
 const OPCODES = { TEXT: 0x01, CLOSE: 0x08, PING: 0x09, PONG: 0x0A };
 const WS_MAGIC = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
+const MAX_BUFFER_SIZE = 10 * 1024 * 1024; // 10MB limit to prevent memory exhaustion (DoS)
 
 function computeAcceptKey(clientKey) {
   if (typeof clientKey !== 'string' || !clientKey) {
@@ -115,7 +116,13 @@ function isFullDocument(html) {
 }
 
 function wrapInFrame(content) {
-  return frameTemplate.replace('<!-- CONTENT -->', () => content);
+  // Optimize: avoid String.prototype.replace() overhead on large strings
+  const target = '<!-- CONTENT -->';
+  const idx = frameTemplate.indexOf(target);
+  if (idx !== -1) {
+    return frameTemplate.slice(0, idx) + content + frameTemplate.slice(idx + target.length);
+  }
+  return frameTemplate;
 }
 
 let cachedNewestScreen = undefined;
@@ -171,8 +178,10 @@ async function handleRequest(req, res) {
         html = WAITING_PAGE;
       }
 
-      if (html.includes('</body>')) {
-        html = html.replace('</body>', () => helperInjection + '\n</body>');
+      // Optimize: avoid String.prototype.replace() on multi-megabyte HTML strings
+      const bodyIdx = html.lastIndexOf('</body>');
+      if (bodyIdx !== -1) {
+        html = html.slice(0, bodyIdx) + helperInjection + '\n' + html.slice(bodyIdx);
       } else {
         html += helperInjection;
       }
@@ -261,6 +270,17 @@ function setupSocketCommunication(socket) {
           return;
         }
       }
+    }
+
+    // Enforce max buffer size after processing valid frames to prevent DoS (memory exhaustion)
+    if (buffer.length > MAX_BUFFER_SIZE) {
+      console.error('WebSocket buffer size exceeded 10MB limit, closing connection');
+      const closeBuf = Buffer.alloc(2);
+      closeBuf.writeUInt16BE(1009); // Message Too Big
+      socket.end(encodeFrame(OPCODES.CLOSE, closeBuf));
+      socket.destroy();
+      clients.delete(socket);
+      return;
     }
   });
 
