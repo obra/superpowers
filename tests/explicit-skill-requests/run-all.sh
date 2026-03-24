@@ -58,6 +58,17 @@ else
 fi
 echo ""
 
+# Test: compound-refresh
+echo ">>> Test 5: compound-refresh"
+if "$SCRIPT_DIR/run-test.sh" "compound-refresh" "$PROMPTS_DIR/compound-refresh.txt"; then
+    PASSED=$((PASSED + 1))
+    RESULTS="$RESULTS\nPASS: compound-refresh"
+else
+    FAILED=$((FAILED + 1))
+    RESULTS="$RESULTS\nFAIL: compound-refresh"
+fi
+echo ""
+
 echo "=== Summary ==="
 echo -e "$RESULTS"
 echo ""

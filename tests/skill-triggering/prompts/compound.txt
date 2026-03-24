@@ -1,0 +1,1 @@
+I just fixed a nasty N+1 query bug in our brief generation system. The reports page was taking 30 seconds because each brief made individual DB calls. Added eager loading with includes(:reports) and it loads in under a second now. Tests are passing. Can you help me document this so the team knows about it?
