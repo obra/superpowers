@@ -78,9 +78,19 @@
         indicator.textContent = 'Click an option above, then return to the terminal';
       } else if (selected.length === 1) {
         const label = selected[0].querySelector('h3, .content h3, .card-body h3')?.textContent?.trim() || selected[0].dataset.choice;
-        indicator.innerHTML = '<span class="selected-text">' + label + ' selected</span> — return to terminal to continue';
+        indicator.textContent = '';
+        const span = document.createElement('span');
+        span.className = 'selected-text';
+        span.textContent = label + ' selected';
+        indicator.appendChild(span);
+        indicator.appendChild(document.createTextNode(' — return to terminal to continue'));
       } else {
-        indicator.innerHTML = '<span class="selected-text">' + selected.length + ' selected</span> — return to terminal to continue';
+        indicator.textContent = '';
+        const span = document.createElement('span');
+        span.className = 'selected-text';
+        span.textContent = selected.length + ' selected';
+        indicator.appendChild(span);
+        indicator.appendChild(document.createTextNode(' — return to terminal to continue'));
       }
     }, 0);
   });
