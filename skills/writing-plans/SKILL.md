@@ -124,6 +124,25 @@ After writing the complete plan:
 - If loop exceeds 3 iterations, surface to human for guidance
 - Reviewers are advisory — explain disagreements if you believe feedback is incorrect
 
+## Synchestra Integration (Optional)
+
+If Synchestra CLI is available and the project is initialized (`synchestra.yaml` exists), create persistent tasks after saving the plan:
+
+1. Create a parent task for the plan:
+   ```bash
+   synchestra task new --title "Plan: <feature-name>"
+   ```
+2. For each `### Task N:` section, create a child task:
+   ```bash
+   synchestra task new --title "Task N: <component>" --parent <plan-task-id>
+   ```
+3. Enqueue all tasks so agents can discover them:
+   ```bash
+   synchestra task enqueue <id>
+   ```
+
+This enables cross-session continuity and multi-agent coordination. If Synchestra is unavailable, skip this step — the plan file alone is sufficient.
+
 ## Execution Handoff
 
 After saving the plan, offer execution choice:

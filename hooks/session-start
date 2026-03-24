@@ -17,6 +17,21 @@ fi
 # Read using-superpowers content
 using_superpowers_content=$(cat "${PLUGIN_ROOT}/skills/using-superpowers/SKILL.md" 2>&1 || echo "Error reading using-superpowers skill")
 
+# Check for Synchestra availability and gather state context
+synchestra_context=""
+if command -v synchestra >/dev/null 2>&1; then
+    if [ -f "synchestra.yaml" ] || [ -d ".synchestra" ]; then
+        synchestra_state=$(synchestra task list 2>/dev/null || true)
+        if [ -n "$synchestra_state" ]; then
+            synchestra_context="\n\n<synchestra-state>\nSynchestra persistent task state is active in this project.\nCurrent task board:\n${synchestra_state}\n\nUse superpowers:task-board for details, superpowers:synchestra-state for task operations.\n</synchestra-state>"
+        else
+            synchestra_context="\n\n<synchestra-state>\nSynchestra is initialized in this project (no tasks yet). Use superpowers:synchestra-state for task operations.\n</synchestra-state>"
+        fi
+    else
+        synchestra_context="\n\n<synchestra-available>\nSynchestra CLI is available but not initialized in this project. The user can run superpowers:install-synchestra to enable persistent task state.\n</synchestra-available>"
+    fi
+fi
+
 # Escape string for JSON embedding using bash parameter substitution.
 # Each ${s//old/new} is a single C-level pass - orders of magnitude
 # faster than the character-by-character loop this replaces.
@@ -32,7 +47,8 @@ escape_for_json() {
 
 using_superpowers_escaped=$(escape_for_json "$using_superpowers_content")
 warning_escaped=$(escape_for_json "$warning_message")
-session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}\n</EXTREMELY_IMPORTANT>"
+synchestra_escaped=$(escape_for_json "$synchestra_context")
+session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}${synchestra_escaped}\n</EXTREMELY_IMPORTANT>"
 
 # Output context injection as JSON.
 # Cursor hooks expect additional_context.

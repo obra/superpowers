@@ -157,6 +157,29 @@ Agent 3 → Fix tool-approval-race-conditions.test.ts
 
 **Time saved:** 3 problems solved in parallel vs sequentially
 
+## Synchestra Integration (Optional)
+
+If Synchestra is available and initialized, use it for atomic task claiming:
+
+**Before dispatching agents:**
+```bash
+# Each agent's task should be a Synchestra task
+synchestra task claim <task-id>   # Atomic — prevents two agents claiming same task
+synchestra task start <task-id>
+```
+
+**After agent returns:**
+```bash
+synchestra task complete <task-id>  # or fail/block as appropriate
+```
+
+**Why this matters for parallel agents:**
+- Git-backed optimistic locking prevents two agents from working on the same task
+- If two sessions dispatch agents for the same project, Synchestra's claim protocol prevents conflicts
+- Task board shows real-time view of which agents are working on what
+
+If Synchestra is unavailable, parallel dispatch works exactly as before — you just don't get cross-session coordination.
+
 ## Key Benefits
 
 1. **Parallelization** - Multiple investigations happen simultaneously
