@@ -11,8 +11,7 @@ description: Use when executing an engineering-approved Superpowers implementati
 _IS_SUPERPOWERS_RUNTIME_ROOT() {
   local candidate="$1"
   [ -n "$candidate" ] &&
-  [ -x "$candidate/bin/superpowers-update-check" ] &&
-  [ -x "$candidate/bin/superpowers-config" ] &&
+  [ -x "$candidate/bin/superpowers" ] &&
   [ -f "$candidate/VERSION" ]
 }
 _REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
@@ -26,7 +25,7 @@ _IS_SUPERPOWERS_RUNTIME_ROOT "$_REPO_ROOT" && _SUPERPOWERS_ROOT="$_REPO_ROOT"
 [ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.codex/superpowers" && _SUPERPOWERS_ROOT="$HOME/.codex/superpowers"
 [ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.copilot/superpowers" && _SUPERPOWERS_ROOT="$HOME/.copilot/superpowers"
 _UPD=""
-[ -n "$_SUPERPOWERS_ROOT" ] && _UPD=$("$_SUPERPOWERS_ROOT/bin/superpowers-update-check" 2>/dev/null || true)
+[ -n "$_SUPERPOWERS_ROOT" ] && _UPD=$("$_SUPERPOWERS_ROOT/bin/superpowers" update-check 2>/dev/null || true)
 [ -n "$_UPD" ] && echo "$_UPD" || true
 _SP_STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
 mkdir -p "$_SP_STATE_DIR/sessions"
@@ -34,7 +33,7 @@ touch "$_SP_STATE_DIR/sessions/$PPID"
 _SESSIONS=$(find "$_SP_STATE_DIR/sessions" -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' ')
 find "$_SP_STATE_DIR/sessions" -mmin +120 -type f -delete 2>/dev/null || true
 _CONTRIB=""
-[ -n "$_SUPERPOWERS_ROOT" ] && _CONTRIB=$("$_SUPERPOWERS_ROOT/bin/superpowers-config" get superpowers_contributor 2>/dev/null || true)
+[ -n "$_SUPERPOWERS_ROOT" ] && _CONTRIB=$("$_SUPERPOWERS_ROOT/bin/superpowers" config get superpowers_contributor 2>/dev/null || true)
 ```
 
 If output shows `UPGRADE_AVAILABLE <old> <new>`: read the installed `superpowers-upgrade/SKILL.md` from the same superpowers root (check the current repo when it contains the Superpowers runtime, then `$HOME/.superpowers/install`, then `$HOME/.codex/superpowers`, then `$HOME/.copilot/superpowers`) and follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise ask one interactive user question with 4 options and write snooze state if declined). If `JUST_UPGRADED <from> <to>`: tell the user "Running superpowers v{to} (just updated!)" and continue.
@@ -210,7 +209,7 @@ Before dispatching any implementation subagent:
    - if the working tree is dirty, stop and ask the user to confirm the workspace is intentionally prepared
 6. Do not auto-clean the workspace and do not auto-create a worktree.
 7. The later repo-safety checks still govern any additional protected branches declared through repo or user instructions.
-8. Run `superpowers-plan-execution preflight --plan <approved-plan-path>` before dispatching implementation subagents.
+8. Run `superpowers plan execution preflight --plan <approved-plan-path>` before dispatching implementation subagents.
 9. If the preflight helper returns `allowed` `false`, stop and resolve the reported `failure_class`, `reason_codes`, and `diagnostics` before dispatching work.
 
 ## Helper-Owned Execution State
@@ -231,7 +230,7 @@ The coordinator owns every `git commit`, `git merge`, and `git push` for this wo
 Before dispatching or applying any repo-writing task slice, run the shared repo-safety preflight for that exact scope:
 
 ```bash
-superpowers-repo-safety check --intent write --stage superpowers:subagent-driven-development --task-id <current-task-slice> --path <repo-relative-path> --write-target execution-task-slice
+superpowers repo-safety check --intent write --stage superpowers:subagent-driven-development --task-id <current-task-slice> --path <repo-relative-path> --write-target execution-task-slice
 ```
 
 - Use one stable task id per repo-writing task slice and pass the concrete repo-relative paths when they are known.
@@ -240,8 +239,8 @@ superpowers-repo-safety check --intent write --stage superpowers:subagent-driven
 - If the user explicitly approves the protected-branch write, approve the full task-slice scope you intend to use on that branch, including the repo-relative paths and any follow-on git targets that are part of the same slice:
 
 ```bash
-superpowers-repo-safety approve --stage superpowers:subagent-driven-development --task-id <current-task-slice> --reason "<explicit user approval>" --path <repo-relative-path> --write-target execution-task-slice [--write-target git-commit] [--write-target git-merge] [--write-target git-push]
-superpowers-repo-safety check --intent write --stage superpowers:subagent-driven-development --task-id <current-task-slice> --path <repo-relative-path> --write-target execution-task-slice [--write-target git-commit] [--write-target git-merge] [--write-target git-push]
+superpowers repo-safety approve --stage superpowers:subagent-driven-development --task-id <current-task-slice> --reason "<explicit user approval>" --path <repo-relative-path> --write-target execution-task-slice [--write-target git-commit] [--write-target git-merge] [--write-target git-push]
+superpowers repo-safety check --intent write --stage superpowers:subagent-driven-development --task-id <current-task-slice> --path <repo-relative-path> --write-target execution-task-slice [--write-target git-commit] [--write-target git-merge] [--write-target git-push]
 ```
 
 - Continue only if the re-check returns `allowed`.

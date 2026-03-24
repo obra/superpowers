@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   insertGeneratedHeader,
   renderTemplateContent,
+  buildRootDetection,
   buildBaseShellLines,
   buildReviewShellLines,
   generatePreamble,
@@ -55,13 +56,32 @@ test('base and review shell builders include their expected contract lines', () 
   assert.equal(buildReviewShellLines().some((line) => line.includes('_TODOS_FORMAT=')), true);
 });
 
+test('shared shell builders detect and invoke the canonical superpowers binary', () => {
+  const rootDetection = buildRootDetection().join('\n');
+  const baseShell = buildBaseShellLines().join('\n');
+
+  assert.match(rootDetection, /candidate\/bin\/superpowers/);
+  assert.doesNotMatch(rootDetection, /superpowers-update-check/);
+  assert.doesNotMatch(rootDetection, /superpowers-config/);
+
+  assert.match(baseShell, /bin\/superpowers" update-check/);
+  assert.match(baseShell, /bin\/superpowers" config get superpowers_contributor/);
+  assert.doesNotMatch(baseShell, /superpowers-update-check/);
+  assert.doesNotMatch(baseShell, /superpowers-config/);
+});
+
 test('using-superpowers bypass helpers render the decision-state contract', () => {
-  assert.equal(buildUsingSuperpowersShellLines().some((line) => line.includes('session-flags/using-superpowers')), true);
+  assert.equal(buildUsingSuperpowersShellLines().some((line) => line.includes('session-entry/using-superpowers')), true);
   const bypassGate = buildUsingSuperpowersBypassGateSection();
+  assert.match(bypassGate, /superpowers session-entry resolve --message-file <path>/);
+  assert.doesNotMatch(bypassGate, /superpowers-session-entry/);
   assert.match(bypassGate, /enabled/);
   assert.match(bypassGate, /bypassed/);
   const normalStack = buildUsingSuperpowersNormalStackSection();
-  assert.match(normalStack, /superpowers-update-check/);
+  assert.match(normalStack, /bin\/superpowers" update-check/);
+  assert.match(normalStack, /bin\/superpowers" config get superpowers_contributor/);
+  assert.doesNotMatch(normalStack, /superpowers-update-check/);
+  assert.doesNotMatch(normalStack, /superpowers-config/);
   assert.match(normalStack, /_SESSIONS=/);
   assert.match(normalStack, /_CONTRIB=/);
 });

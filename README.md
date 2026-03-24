@@ -14,12 +14,12 @@ Superpowers is not just a collection of prompts. It is a small runtime plus a sk
 
 Six layers matter:
 
-- `superpowers-session-entry` owns first-turn session entry. Missing or malformed decision state fails closed to `needs_user_choice` before the normal stack starts.
+- `superpowers session-entry` owns first-turn session entry. Missing or malformed decision state fails closed to `needs_user_choice` before the normal stack starts.
 - `using-superpowers` is the human-readable entry router after session entry resolves to `enabled`, and it bypasses the rest of the stack when session entry resolves to `bypassed` without explicit re-entry.
-- `superpowers-workflow-status` owns product-work routing up to `implementation_ready`.
-- `superpowers-repo-safety` owns protected-branch repo-write guarantees. Repo-writing stages fail closed on protected branches unless the current task scope is on a non-protected branch or has explicit task-scoped approval.
-- `superpowers-plan-contract` owns semantic traceability between approved specs, approved plans, and derived task packets. It parses authoritative markdown, fails closed on malformed or ambiguous contracts, and builds exact task-packet context for execution and review.
-- `superpowers-plan-execution` owns execution state after an approved plan is handed off.
+- `superpowers workflow` owns product-work routing up to `implementation_ready`.
+- `superpowers repo-safety` owns protected-branch repo-write guarantees. Repo-writing stages fail closed on protected branches unless the current task scope is on a non-protected branch or has explicit task-scoped approval.
+- `superpowers plan contract` owns semantic traceability between approved specs, approved plans, and derived task packets. It parses authoritative markdown, fails closed on malformed or ambiguous contracts, and builds exact task-packet context for execution and review.
+- `superpowers plan execution` owns execution state after an approved plan is handed off.
 
 The key design choice is that repo-visible artifacts remain authoritative, while local runtime state is only a rebuildable index:
 
@@ -32,7 +32,7 @@ The full control flow looks like this:
 
 ```mermaid
 flowchart TD
-    MSG["User message"] --> BYPASS_GATE["superpowers-session-entry runtime bootstrap<br/>resolve the session decision before normal using-superpowers stack entry"]
+    MSG["User message"] --> BYPASS_GATE["superpowers session-entry runtime bootstrap<br/>resolve the session decision before normal using-superpowers stack entry"]
     BYPASS_GATE -->|bypassed without explicit re-entry| NORMAL["Respond normally"]
     BYPASS_GATE -->|enabled| PREAMBLE["Generated skill preamble<br/>detect install root, check upgrade state,<br/>mark session, enable contributor-mode hooks"]
     PREAMBLE --> SKILL_CHECK{"Does any skill apply?"}
@@ -42,7 +42,7 @@ flowchart TD
     ROUTER_KIND -->|Bug / failing test / unexpected behavior| DEBUG_SKILL["superpowers:systematic-debugging"]
     ROUTER_KIND -->|Incoming code review feedback| RECEIVE_REVIEW["superpowers:receiving-code-review"]
     ROUTER_KIND -->|Claim that work is done or passing| VERIFY_DONE["superpowers:verification-before-completion"]
-    ROUTER_KIND -->|Feature / product / workflow change| WS_REFRESH["superpowers-workflow-status status --refresh"]
+    ROUTER_KIND -->|Feature / product / workflow change| WS_REFRESH["superpowers workflow status --refresh"]
 
     subgraph PRODUCT_ROUTER["Product-work router: helper-backed artifact state machine"]
         direction TD
@@ -97,7 +97,7 @@ flowchart TD
         ENG_ACCEL -->|Yes| PLAN_ACCEL["Accelerated ENG review inside the skill:<br/>reviewer subagent drafts per-section packets<br/>human approves each section<br/>QA handoff and final approval still apply"]
         PLAN_ACCEL --> PLAN_REVIEW
         PLAN_REVIEW --> PLAN_APPROVE["Approve by writing:<br/>Workflow State: Engineering Approved<br/>Last Reviewed By: plan-eng-review"]
-        PLAN_APPROVE --> PLAN_REFRESH["superpowers-workflow-status status --refresh"]
+        PLAN_APPROVE --> PLAN_REFRESH["superpowers workflow status --refresh"]
     end
 
     STATE_NEEDS_BRAIN --> BRAIN_SKILL
@@ -119,13 +119,13 @@ flowchart TD
     subgraph EXECUTION_ROUTER["Execution handoff and helper-owned execution state"]
         direction TD
 
-        EXEC_HANDOFF --> EXEC_RECOMMEND["superpowers-plan-execution recommend --plan <approved-plan-path>"]
+        EXEC_HANDOFF --> EXEC_RECOMMEND["superpowers plan execution recommend --plan <approved-plan-path>"]
         EXEC_HANDOFF -.-> WORKTREE_NOTE["Workspace preparation is the user's responsibility;<br/>invoke using-git-worktrees manually when you want isolated workspace management."]
         EXEC_RECOMMEND --> DECISION_FLAGS["Recommendation inputs:<br/>tasks_independent<br/>isolated_agents_available<br/>session_intent<br/>workspace_prepared<br/>same_session_viable"]
         DECISION_FLAGS -->|Independent tasks + isolated agents available + same-session execution is viable| SUBAGENT_EXEC["Recommended: superpowers:subagent-driven-development"]
         DECISION_FLAGS -->|Otherwise default conservatively| SINGLE_EXEC["Recommended: superpowers:executing-plans"]
 
-        SUBAGENT_EXEC --> EXEC_STATUS["superpowers-plan-execution status --plan <approved-plan-path><br/>validate Engineering Approved plan, Plan Revision,<br/>Execution Mode, source spec linkage, evidence path,<br/>execution fingerprint, and current step state"]
+        SUBAGENT_EXEC --> EXEC_STATUS["superpowers plan execution status --plan <approved-plan-path><br/>validate Engineering Approved plan, Plan Revision,<br/>Execution Mode, source spec linkage, evidence path,<br/>execution fingerprint, and current step state"]
         SINGLE_EXEC --> EXEC_STATUS
         EXEC_STATUS -.-> EXEC_AUTHORITY["Approved plan markdown is the authoritative execution record.<br/>Execution evidence proves checked-off steps semantically."]
 
@@ -151,7 +151,7 @@ flowchart TD
         FINISH_BRANCH -->|Execution dirty or malformed| FAIL_CLOSED
         FINISH_BRANCH --> DOC_RELEASE["workflow-routed work: required document-release<br/>ad-hoc work: optional release/doc cleanup"]
         DOC_RELEASE --> QA_GATE["conditional qa-only for browser-facing work<br/>required when browser interaction or test-plan context warrants it"]
-        QA_GATE --> GATE_FINISH["superpowers-plan-execution gate-finish --plan <approved-plan-path><br/>must confirm fresh QA/release artifacts and clean execution state"]
+        QA_GATE --> GATE_FINISH["superpowers plan execution gate-finish --plan <approved-plan-path><br/>must confirm fresh QA/release artifacts and clean execution state"]
         GATE_FINISH -->|Blocked| FAIL_CLOSED
         GATE_FINISH -->|Allowed| COMPLETE_FLOW["PR / merge / keep-branch completion flow"]
     end
@@ -162,10 +162,10 @@ Workspace preparation is the user's responsibility; invoke `using-git-worktrees`
 A few important consequences fall out of that state machine:
 
 - `expect` is how a skill records the intended future artifact path before the file exists; `sync` is how it reparses the real file and updates the manifest from repo truth.
-- `superpowers-workflow-status` always routes conservatively. If artifacts are ambiguous, malformed, missing, stale, or the local manifest is damaged, it falls back to the earlier safe stage instead of skipping ahead.
+- `superpowers workflow` always routes conservatively. If artifacts are ambiguous, malformed, missing, stale, or the local manifest is damaged, it falls back to the earlier safe stage instead of skipping ahead.
 - `implementation_ready` is a terminal routing state, not another skill. That is why `next_skill` is empty there and `plan-eng-review` owns the handoff into execution.
-- `superpowers-plan-execution recommend` is only valid before execution has started for that exact plan revision. After that, the plan's persisted `**Execution Mode:**` and the helper's `status --plan` output are the source of truth.
-- `superpowers-workflow handoff` must stop acting like a fresh recommender after execution starts. From that point on, it returns the current execution state for the exact approved plan instead of another fresh execution recommendation.
+- `superpowers plan execution recommend` is only valid before execution has started for that exact plan revision. After that, the plan's persisted `**Execution Mode:**` and the helper's `status --plan` output are the source of truth.
+- `superpowers workflow handoff` must stop acting like a fresh recommender after execution starts. From that point on, it returns the current execution state for the exact approved plan instead of another fresh execution recommendation.
 - Execution is deliberately serial at the plan-step level. The execution helper allows subagents, but not multiple simultaneously active plan steps.
 - Final review and branch completion both fail closed if the approved plan and execution evidence disagree with reality.
 - Workflow-routed implementation now expects a required `document-release` handoff before branch completion, while keeping release truth in repo docs and review rather than helper state.
@@ -241,21 +241,21 @@ If you already have `~/.codex/superpowers` or `~/.copilot/superpowers`, migrate 
 ```bash
 tmpdir=$(mktemp -d)
 git clone --depth 1 https://github.com/dmulcahey/superpowers.git "$tmpdir/superpowers"
-"$tmpdir/superpowers/bin/superpowers-migrate-install"
+"$tmpdir/superpowers/bin/superpowers" install migrate
 rm -rf "$tmpdir"
 ```
 
-If `~/.superpowers/install` already exists, run `~/.superpowers/install/bin/superpowers-migrate-install` instead.
+If `~/.superpowers/install` already exists, run `~/.superpowers/install/bin/superpowers install migrate` instead.
 
 **Windows (PowerShell):**
 ```powershell
 if (Test-Path "$env:USERPROFILE\.superpowers\install") {
-  & "$env:USERPROFILE\.superpowers\install\bin\superpowers-migrate-install.ps1"
+  & "$env:USERPROFILE\.superpowers\install\bin\superpowers.exe" install migrate
 } else {
   $tmpRoot = Join-Path $env:TEMP "superpowers-migrate"
   $tmpDir = Join-Path $tmpRoot ([guid]::NewGuid().ToString())
   git clone --depth 1 https://github.com/dmulcahey/superpowers.git (Join-Path $tmpDir "superpowers")
-  & (Join-Path $tmpDir "superpowers\bin\superpowers-migrate-install.ps1")
+  & (Join-Path $tmpDir "superpowers\bin\superpowers.exe") install migrate
   Remove-Item -Recurse -Force $tmpDir
 }
 ```
@@ -275,49 +275,43 @@ Start a new session in your chosen platform and ask for something that should tr
 
 Runtime state lives in `~/.superpowers/`.
 
-- Preferences live in `~/.superpowers/config.yaml`
+- Preferences live in `~/.superpowers/config/config.yaml`
 - Session-awareness markers live in `~/.superpowers/sessions/`
 - Contributor field reports live in `~/.superpowers/contributor-logs/`
 - Project-scoped artifacts live in `~/.superpowers/projects/`
 - Branch-scoped workflow manifests live at `~/.superpowers/projects/<repo-slug>/<user>-<safe-branch>-workflow-state.json`
 - Update-check cache, snooze, and just-upgraded markers live under the same state root
 
-Generated workflow skills call `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status` (and `bin/superpowers-workflow-status.ps1` on Windows) as an internal runtime helper to resolve the next workflow stage, including bootstrap states before docs exist. Default `status` output is JSON for machine consumers; `status --summary` is a human-oriented one-line view. `reason_codes` plus `diagnostics` are the structured diagnostic contract; legacy `reason` and `note` remain compatibility aliases for one release cycle. The helper's local manifest is rebuildable; repo docs remain authoritative for spec/plan approval state.
+Generated workflow skills call `$_SUPERPOWERS_ROOT/bin/superpowers workflow status --refresh` first to resolve the conservative next stage, including bootstrap states before docs exist. Default `status` output is JSON for machine consumers; `status --summary` is a human-oriented one-line view. `reason_codes` plus `diagnostics` are the structured diagnostic contract, and the local manifest remains rebuildable while repo docs stay authoritative for spec and plan approval state.
 
-Generated repo-writing workflow skills call `$_SUPERPOWERS_ROOT/bin/superpowers-repo-safety` (and `bin/superpowers-repo-safety.ps1` on Windows) before spec writes, plan writes, approval-header edits, release-doc updates, execution task slices, and branch-finishing commands. It blocks repo writes on protected branches unless the scope is already on a non-protected branch or the user has explicitly approved the exact task scope and the helper's re-check passes.
+Generated repo-writing workflow skills call `$_SUPERPOWERS_ROOT/bin/superpowers repo-safety check ...` before spec writes, plan writes, approval-header edits, release-doc updates, execution task slices, and branch-finishing commands. The runtime blocks repo writes on protected branches unless the scope is already on a non-protected branch or the user has explicitly approved the exact task scope and the re-check passes.
 
-Generated planning, execution, and review workflow skills call `$_SUPERPOWERS_ROOT/bin/superpowers-plan-contract` (and `bin/superpowers-plan-contract.ps1` on Windows) to run authoritative `analyze-plan --format json` contract checks and to build task-packet context. Specs and plans stay authoritative in repo markdown; the helper only enforces and compiles that markdown into exact execution and review inputs.
+Generated planning, execution, and review workflow skills call `$_SUPERPOWERS_ROOT/bin/superpowers plan contract ...` to run authoritative `analyze-plan --format json` checks and to build task-packet context. Specs and plans stay authoritative in repo markdown; the runtime only enforces and compiles that markdown into exact execution and review inputs.
 
-Superpowers also ships a supported public workflow inspection CLI:
-
-- `bin/superpowers-workflow` (Bash)
-- `bin/superpowers-workflow.ps1` (PowerShell wrapper)
-
-Use `status`, `next`, `artifacts`, `explain`, or `help` for the baseline read-only workflow inspection surfaces. The same public CLI also exposes `phase`, `doctor`, `handoff`, `preflight`, `gate review`, and `gate finish` for deeper operator inspection without mutating repo docs or repairing local manifests. `phase`, `doctor`, `handoff`, and the execution-gate commands support `--json` for operator tooling. Before execution starts, `next` still stops at the execution preflight boundary for the approved plan and does not call `superpowers-plan-execution recommend`; `handoff` is the read-only surface that reports the recommended execution skill. After execution starts for that plan revision, both surfaces return the current execution state instead of a fresh implementation recommendation.
+The supported public operator surface is the canonical `superpowers workflow ...` command family. Use `status`, `next`, `artifacts`, `explain`, or `help` for the baseline read-only inspection surfaces. The same public CLI also exposes `phase`, `doctor`, `handoff`, `preflight`, `gate review`, and `gate finish` for deeper operator inspection without mutating repo docs or repairing local manifests. `phase`, `doctor`, `handoff`, and the execution-gate commands support `--json` for operator tooling. Before execution starts, `next` still stops at the execution preflight boundary for the approved plan and does not call `superpowers plan execution recommend`; `handoff` is the read-only surface that reports the recommended execution skill. After execution starts for that plan revision, both surfaces return the current execution state instead of a fresh implementation recommendation.
 
 All 18 checked-in `skills/*/SKILL.md` files are generated from adjacent `SKILL.md.tmpl` sources. Regenerate them with `node scripts/gen-skill-docs.mjs` and validate freshness with `node scripts/gen-skill-docs.mjs --check`.
 
 The shipped reviewer agent artifacts are generated from `agents/code-reviewer.instructions.md`. Regenerate them with `node scripts/gen-agent-docs.mjs` and validate freshness with `node scripts/gen-agent-docs.mjs --check`.
 
-When changing the generated skill runtime, run `node scripts/gen-skill-docs.mjs --check` before `bash tests/codex-runtime/test-using-superpowers-bypass.sh`, `bash tests/codex-runtime/test-superpowers-session-entry.sh`, `bash tests/codex-runtime/test-superpowers-session-entry-gate.sh`, `bash tests/codex-runtime/test-superpowers-plan-contract.sh`, `bash tests/codex-runtime/test-superpowers-repo-safety.sh`, `bash tests/codex-runtime/test-runtime-instructions.sh`, `bash tests/codex-runtime/test-workflow-enhancements.sh`, and `bash tests/codex-runtime/test-workflow-sequencing.sh`.
+When changing the generated skill runtime, run `node scripts/gen-skill-docs.mjs --check`, then `cargo nextest run --test workflow_runtime --test workflow_shell_smoke --test contracts_spec_plan --test runtime_instruction_contracts --test using_superpowers_skill --test session_config_slug --test repo_safety --test update_and_install --test plan_execution --test powershell_wrapper_resolution --test upgrade_skill`, then run `bash tests/differential/run_legacy_vs_rust.sh` before claiming the docs are current.
 
-To enable contributor mode for the installed runtime, run `~/.superpowers/install/bin/superpowers-config set superpowers_contributor true`.
+To enable contributor mode for the installed runtime, run `~/.superpowers/install/bin/superpowers config set superpowers_contributor true`.
 
-Windows (PowerShell): `& "$env:USERPROFILE\.superpowers\install\bin\superpowers-config.ps1" set superpowers_contributor true`
+Windows (PowerShell): `& "$env:USERPROFILE\.superpowers\install\bin\superpowers.exe" config set superpowers_contributor true`
 
-If you disable update notices, re-enable them with `~/.superpowers/install/bin/superpowers-config set update_check true`.
+If you disable update notices, re-enable them with `~/.superpowers/install/bin/superpowers config set update_check true`.
 
-Windows (PowerShell): `& "$env:USERPROFILE\.superpowers\install\bin\superpowers-config.ps1" set update_check true`
+Windows (PowerShell): `& "$env:USERPROFILE\.superpowers\install\bin\superpowers.exe" config set update_check true`
 
 ## What Actually Runs
 
-- `skills/` contains the 18 public Superpowers skills. `using-superpowers` is the entry skill after the runtime-owned `superpowers-session-entry` gate resolves the turn; `brainstorming`, `plan-ceo-review`, `writing-plans`, and `plan-eng-review` form the default planning chain.
+- `skills/` contains the 18 public Superpowers skills. `using-superpowers` is the entry skill after the runtime-owned `superpowers session-entry` gate resolves the turn; `brainstorming`, `plan-ceo-review`, `writing-plans`, and `plan-eng-review` form the default planning chain.
 - `scripts/gen-skill-docs.mjs` renders every checked-in `SKILL.md` from its template and injects the shared runtime preamble contracts, including the runtime-owned `using-superpowers` session-entry wording plus its post-gate normal-stack handoff.
-- `bin/superpowers-migrate-install` consolidates legacy platform-specific installs into the single shared checkout and recreates compatibility links when needed.
-- `bin/superpowers-config` and `bin/superpowers-update-check` manage local runtime state, contributor mode, and per-session upgrade notices under `~/.superpowers/`.
-- `bin/superpowers-workflow` and `bin/superpowers-workflow.ps1` are the supported public read-only workflow inspection surfaces for humans.
-- `bin/superpowers-workflow-status` and `bin/superpowers-workflow-status.ps1` maintain branch-scoped local workflow state and route skills conservatively when docs are missing or stale.
-- `bin/superpowers-repo-safety` and `bin/superpowers-repo-safety.ps1` enforce protected-branch repo-write guarantees for repo-writing workflow stages.
+- `bin/superpowers` is the canonical installed runtime command; every supported runtime surface is exposed as a subcommand family on that binary, while helper-named wrappers remain compatibility shims in the repo checkout.
+- `superpowers install migrate`, `superpowers config`, and `superpowers update-check` manage local runtime state, contributor mode, and per-session upgrade notices under `~/.superpowers/`.
+- `superpowers workflow` is the supported read-only workflow inspection surface for humans and the canonical routing surface used by repo-owned callers.
+- `superpowers repo-safety`, `superpowers plan contract`, `superpowers plan execution`, `superpowers session-entry`, and `superpowers repo slug` cover protected-branch gating, task fidelity, execution state, first-turn routing, and branch-aware artifact lookup.
 - `superpowers-upgrade/SKILL.md` is the inline upgrade workflow the generated preambles hand off to when a newer runtime version is available.
 - `review/TODOS-format.md` and `review/checklist.md` are the shared review references used by the planning and code-review workflows.
 - `qa/references/issue-taxonomy.md` and `qa/templates/qa-report-template.md` are the shared QA references used by `qa-only`.
@@ -341,9 +335,9 @@ Only the user can initiate accelerated review, and section approval plus final a
 
 4. **plan-eng-review** - Activates after the plan is written. Reviews the full written plan before implementation starts.
 
-5. **implementation** - `subagent-driven-development` or `executing-plans` start from an engineering-approved current plan, run workspace-readiness checks, derive task packets from the approved markdown contract through `superpowers-plan-contract`, and execute the plan. The completion flow then runs `requesting-code-review`, uses the current-branch test-plan artifact to decide whether `qa-only` is required, requires `document-release` for workflow-routed work, and requires a passing `gate-finish` before final branch cleanup or PR handoff. If the user wants an isolated workspace, invoke `using-git-worktrees` manually before execution.
+5. **implementation** - `subagent-driven-development` or `executing-plans` start from an engineering-approved current plan, run workspace-readiness checks, derive task packets from the approved markdown contract through `superpowers plan contract`, and execute the plan. The completion flow then runs `requesting-code-review`, uses the current-branch test-plan artifact to decide whether `qa-only` is required, requires `document-release` for workflow-routed work, and requires a passing `gate-finish` before final branch cleanup or PR handoff. If the user wants an isolated workspace, invoke `using-git-worktrees` manually before execution.
 
-Implementation starts from an engineering-approved current plan and the exact approved plan path. `plan-eng-review` presents that handoff, and `superpowers-plan-execution recommend --plan <approved-plan-path>` chooses between *subagent-driven-development* and *executing-plans*. In both cases, execution runs a workspace-readiness preflight, executes the plan task by task, reviews before completion, and hands off through the normal branch-finishing flow. Those execution and review stages now derive task packets from the approved markdown contract through `superpowers-plan-contract` instead of relying on controller-written semantic summaries.
+Implementation starts from an engineering-approved current plan and the exact approved plan path. `plan-eng-review` presents that handoff, and `superpowers plan execution recommend --plan <approved-plan-path>` chooses between *subagent-driven-development* and *executing-plans*. In both cases, execution runs a workspace-readiness preflight, executes the plan task by task, reviews before completion, and hands off through the normal branch-finishing flow. Those execution and review stages now derive task packets from the approved markdown contract through `superpowers plan contract` instead of relying on controller-written semantic summaries.
 
 **The agent checks for relevant skills before any task.** These are mandatory workflows, not suggestions.
 
@@ -409,9 +403,9 @@ Update the shared checkout used by both supported platforms:
 git -C ~/.superpowers/install pull
 ```
 
-If you are migrating from old per-platform clones, run `~/.superpowers/install/bin/superpowers-migrate-install` after updating so legacy paths keep resolving to the shared checkout. In PowerShell, use `& "$env:USERPROFILE\.superpowers\install\bin\superpowers-migrate-install.ps1"`.
+If you are migrating from old per-platform clones, run `~/.superpowers/install/bin/superpowers install migrate` after updating so legacy paths keep resolving to the shared checkout. In PowerShell, use `& "$env:USERPROFILE\.superpowers\install\bin\superpowers.exe" install migrate`.
 
-Every generated skill preamble runs `bin/superpowers-update-check` from the active install root. New sessions will announce `UPGRADE_AVAILABLE` or `JUST_UPGRADED` when the local runtime state says you should act.
+Every generated skill preamble runs `bin/superpowers update-check` from the active install root. New sessions announce `UPGRADE_AVAILABLE` or `JUST_UPGRADED` when the local runtime state says you should act.
 
 ## License
 

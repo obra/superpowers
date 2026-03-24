@@ -135,7 +135,7 @@ digraph brainstorming {
 - Before writing the spec, record the intended spec path with `expect`:
 
 ```bash
-"$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status" expect --artifact spec --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md
+"$_SUPERPOWERS_ROOT/bin/superpowers" workflow expect --artifact spec --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md
 ```
 
 - Every spec MUST include these header lines immediately below the title:
@@ -166,7 +166,7 @@ digraph brainstorming {
 - After the spec is written or updated, runs `sync --artifact spec`:
 
 ```bash
-"$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status" sync --artifact spec --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md
+"$_SUPERPOWERS_ROOT/bin/superpowers" workflow sync --artifact spec --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md
 ```
 
 **Protected-Branch Repo-Write Gate:**
@@ -174,7 +174,7 @@ digraph brainstorming {
 Before writing or updating the spec file on disk, run the shared repo-safety preflight for the exact spec-writing scope:
 
 ```bash
-superpowers-repo-safety check --intent write --stage superpowers:brainstorming --task-id <current-spec-write> --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target spec-artifact-write
+superpowers repo-safety check --intent write --stage superpowers:brainstorming --task-id <current-spec-write> --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target spec-artifact-write
 ```
 
 - If the helper returns `allowed`, continue with the spec write.
@@ -182,8 +182,8 @@ superpowers-repo-safety check --intent write --stage superpowers:brainstorming -
 - If the user explicitly approves writing this spec on the current protected branch, approve the full protected-branch task scope you intend to use, including the spec path and any follow-on git targets that are part of the same task slice:
 
 ```bash
-superpowers-repo-safety approve --stage superpowers:brainstorming --task-id <current-spec-write> --reason "<explicit user approval>" --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target spec-artifact-write [--write-target git-commit]
-superpowers-repo-safety check --intent write --stage superpowers:brainstorming --task-id <current-spec-write> --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target spec-artifact-write [--write-target git-commit]
+superpowers repo-safety approve --stage superpowers:brainstorming --task-id <current-spec-write> --reason "<explicit user approval>" --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target spec-artifact-write [--write-target git-commit]
+superpowers repo-safety check --intent write --stage superpowers:brainstorming --task-id <current-spec-write> --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target spec-artifact-write [--write-target git-commit]
 ```
 
 - Continue only if the re-check returns `allowed`.

@@ -1,45 +1,30 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=bin/superpowers-runtime-common.sh
-. "$SCRIPT_DIR/superpowers-runtime-common.sh"
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 
-repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-remote_url="$(git remote get-url origin 2>/dev/null || true)"
+resolve_runtime_entry() {
+  if [[ -x "$SCRIPT_DIR/../compat/bash/superpowers" ]]; then
+    printf '%s\n' "$SCRIPT_DIR/../compat/bash/superpowers"
+    return 0
+  fi
 
-hash_repo_root() {
-  if command -v shasum >/dev/null 2>&1; then
-    printf '%s' "$repo_root" | shasum -a 256 | awk '{print substr($1, 1, 12)}'
-    return
-  fi
-  if command -v sha256sum >/dev/null 2>&1; then
-    printf '%s' "$repo_root" | sha256sum | awk '{print substr($1, 1, 12)}'
-    return
-  fi
-  printf '%s' "$repo_root" | cksum | awk '{print $1}'
+  local source="$SCRIPT_PATH"
+  while [[ -L "$source" ]]; do
+    local source_dir target
+    source_dir="$(cd "$(dirname "$source")" && pwd)"
+    target="$(readlink "$source")"
+    if [[ "$target" == /* ]]; then
+      source="$target"
+    else
+      source="$source_dir/$target"
+    fi
+  done
+
+  local real_dir
+  real_dir="$(cd "$(dirname "$source")" && pwd)"
+  printf '%s\n' "$real_dir/../compat/bash/superpowers"
 }
 
-derive_repo_slug() {
-  local remote="$1"
-  local slug=""
-
-  if [ -n "$remote" ]; then
-    slug="$(printf '%s\n' "$remote" | sed 's|.*[:/]\([^/]*/[^/]*\)\.git$|\1|;s|.*[:/]\([^/]*/[^/]*\)$|\1|' | tr '/' '-')"
-  fi
-
-  if [ -n "$slug" ]; then
-    printf '%s\n' "$slug"
-    return
-  fi
-
-  printf '%s-%s\n' "$(basename "$repo_root")" "$(hash_repo_root)"
-}
-
-branch_raw="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo current)"
-[ -n "$branch_raw" ] || branch_raw="current"
-[ "$branch_raw" != "HEAD" ] || branch_raw="current"
-branch="$(normalize_identifier_token "$branch_raw")"
-slug="$(derive_repo_slug "$remote_url")"
-
-printf 'SLUG=%q\nBRANCH=%q\n' "$slug" "$branch"
+exec "$(resolve_runtime_entry)" repo slug "$@"

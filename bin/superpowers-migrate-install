@@ -1,210 +1,30 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SHARED_ROOT="${SUPERPOWERS_SHARED_ROOT:-$HOME/.superpowers/install}"
-CODEX_ROOT="${SUPERPOWERS_CODEX_ROOT:-$HOME/.codex/superpowers}"
-COPILOT_ROOT="${SUPERPOWERS_COPILOT_ROOT:-$HOME/.copilot/superpowers}"
-REPO_URL="${SUPERPOWERS_REPO_URL:-https://github.com/dmulcahey/superpowers.git}"
-STAMP_OVERRIDE="${SUPERPOWERS_MIGRATE_STAMP:-}"
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 
-timestamp() {
-  if [[ -n "$STAMP_OVERRIDE" ]]; then
-    printf '%s\n' "$STAMP_OVERRIDE"
-  else
-    date +%Y%m%d-%H%M%S
-  fi
-}
-
-is_windows_shell() {
-  case "$(uname -s)" in
-    CYGWIN*|MINGW*|MSYS*) return 0 ;;
-    *) return 1 ;;
-  esac
-}
-
-is_valid_install() {
-  local dir="$1"
-  [[ -n "$dir" ]] &&
-    [[ -x "$dir/bin/superpowers-update-check" ]] &&
-    [[ -x "$dir/bin/superpowers-config" ]] &&
-    [[ -f "$dir/agents/code-reviewer.md" ]] &&
-    [[ -f "$dir/.codex/agents/code-reviewer.toml" ]] &&
-    [[ -f "$dir/VERSION" ]] &&
-    git -C "$dir" rev-parse --git-dir >/dev/null 2>&1
-}
-
-canonical_path() {
-  local dir="$1"
-  (
-    cd "$dir" >/dev/null 2>&1
-    pwd -P
-  )
-}
-
-same_install() {
-  local left="$1"
-  local right="$2"
-  [[ -e "$left" || -L "$left" ]] &&
-    [[ -e "$right" || -L "$right" ]] &&
-    [[ "$(canonical_path "$left")" == "$(canonical_path "$right")" ]]
-}
-
-commit_timestamp() {
-  git -C "$1" log -1 --format=%ct 2>/dev/null || true
-}
-
-backup_path() {
-  local path="$1"
-  local backup="${path}.backup-$(timestamp)"
-  mv "$path" "$backup"
-  printf '%s\n' "$backup"
-}
-
-remove_path() {
-  local path="$1"
-  if [[ -L "$path" || -f "$path" ]]; then
-    rm -f "$path"
-  elif [[ -d "$path" ]]; then
-    rm -rf "$path"
-  fi
-}
-
-link_directory() {
-  local link_path="$1"
-  local target_path="$2"
-
-  mkdir -p "$(dirname "$link_path")"
-  remove_path "$link_path"
-
-  if is_windows_shell && command -v cygpath >/dev/null 2>&1; then
-    cmd //c "mklink /J \"$(cygpath -w "$link_path")\" \"$(cygpath -w "$target_path")\"" >/dev/null
-  else
-    ln -s "$target_path" "$link_path"
-  fi
-}
-
-print_next_steps() {
-  local install_root="$1"
-
-  echo "Codex next step: create or refresh ~/.agents/skills/superpowers -> $install_root/skills"
-  echo "Codex next step: create or refresh ~/.codex/agents/code-reviewer.toml from $install_root/.codex/agents/code-reviewer.toml (copy on Windows; symlink on Unix-like installs)"
-  echo "GitHub Copilot next step: create or refresh ~/.copilot/skills/superpowers -> $install_root/skills"
-  echo "GitHub Copilot next step: create or refresh ~/.copilot/agents/code-reviewer.agent.md from $install_root/agents/code-reviewer.md (copy on Windows; symlink on Unix-like installs)"
-}
-
-rewire_legacy_root() {
-  local path="$1"
-  local target="$2"
-
-  if [[ ! -e "$path" && ! -L "$path" ]]; then
+resolve_runtime_entry() {
+  if [[ -x "$SCRIPT_DIR/../compat/bash/superpowers" ]]; then
+    printf '%s\n' "$SCRIPT_DIR/../compat/bash/superpowers"
     return 0
   fi
 
-  if same_install "$path" "$target"; then
-    return 0
-  fi
-
-  local backup
-  backup="$(backup_path "$path")"
-  echo "Backed up legacy install at $path -> $backup"
-  link_directory "$path" "$target"
-  echo "Rewired $path -> $target"
-}
-
-ensure_shared_clone() {
-  mkdir -p "$(dirname "$SHARED_ROOT")"
-  git clone "$REPO_URL" "$SHARED_ROOT" >/dev/null
-  echo "Cloned shared install to $SHARED_ROOT"
-}
-
-LEGACY_ROOT_1=""
-LEGACY_ROOT_2=""
-legacy_count=0
-if [[ -e "$CODEX_ROOT" || -L "$CODEX_ROOT" ]]; then
-  LEGACY_ROOT_1="$CODEX_ROOT"
-  legacy_count=1
-fi
-if [[ -e "$COPILOT_ROOT" || -L "$COPILOT_ROOT" ]]; then
-  if [[ "$legacy_count" -eq 0 ]]; then
-    LEGACY_ROOT_1="$COPILOT_ROOT"
-  else
-    LEGACY_ROOT_2="$COPILOT_ROOT"
-  fi
-  legacy_count=$((legacy_count + 1))
-fi
-
-selected_root=""
-selected_source=""
-
-if is_valid_install "$SHARED_ROOT"; then
-  selected_root="$SHARED_ROOT"
-  selected_source="shared"
-  echo "Using existing shared install at $SHARED_ROOT"
-else
-  VALID_LEGACY_1=""
-  VALID_LEGACY_2=""
-  valid_legacy_count=0
-  for root in "$LEGACY_ROOT_1" "$LEGACY_ROOT_2"; do
-    if [[ -n "$root" ]] && is_valid_install "$root"; then
-      if [[ "$valid_legacy_count" -eq 0 ]]; then
-        VALID_LEGACY_1="$root"
-      else
-        VALID_LEGACY_2="$root"
-      fi
-      valid_legacy_count=$((valid_legacy_count + 1))
+  local source="$SCRIPT_PATH"
+  while [[ -L "$source" ]]; do
+    local source_dir target
+    source_dir="$(cd "$(dirname "$source")" && pwd)"
+    target="$(readlink "$source")"
+    if [[ "$target" == /* ]]; then
+      source="$target"
+    else
+      source="$source_dir/$target"
     fi
   done
 
-  if [[ "$valid_legacy_count" -eq 0 ]]; then
-    if [[ -e "$SHARED_ROOT" || -L "$SHARED_ROOT" ]]; then
-      backup="$(backup_path "$SHARED_ROOT")"
-      echo "Backed up invalid shared install at $SHARED_ROOT -> $backup"
-    fi
-    ensure_shared_clone
-    selected_root="$SHARED_ROOT"
-    selected_source="fresh-clone"
-  elif [[ "$valid_legacy_count" -eq 1 ]]; then
-    selected_root="$VALID_LEGACY_1"
-    selected_source="legacy"
-  else
-    left_ts="$(commit_timestamp "$VALID_LEGACY_1")"
-    right_ts="$(commit_timestamp "$VALID_LEGACY_2")"
+  local real_dir
+  real_dir="$(cd "$(dirname "$source")" && pwd)"
+  printf '%s\n' "$real_dir/../compat/bash/superpowers"
+}
 
-    if [[ -z "$left_ts" || -z "$right_ts" || "$left_ts" == "$right_ts" ]]; then
-      echo "ERROR: Found multiple legacy installs with ambiguous recency; manual reconciliation required." >&2
-      echo "Inspect $CODEX_ROOT and $COPILOT_ROOT, keep the checkout you want, then rerun this helper." >&2
-      exit 1
-    fi
-
-    if (( left_ts > right_ts )); then
-      selected_root="$VALID_LEGACY_1"
-    else
-      selected_root="$VALID_LEGACY_2"
-    fi
-    selected_source="legacy"
-  fi
-
-  if [[ "$selected_source" == "legacy" ]]; then
-    if [[ -e "$SHARED_ROOT" || -L "$SHARED_ROOT" ]]; then
-      if ! same_install "$SHARED_ROOT" "$selected_root"; then
-        backup="$(backup_path "$SHARED_ROOT")"
-        echo "Backed up existing shared path at $SHARED_ROOT -> $backup"
-      fi
-    fi
-
-    mkdir -p "$(dirname "$SHARED_ROOT")"
-    mv "$selected_root" "$SHARED_ROOT"
-    echo "Moved $selected_root -> $SHARED_ROOT"
-    link_directory "$selected_root" "$SHARED_ROOT"
-    echo "Rewired $selected_root -> $SHARED_ROOT"
-    selected_root="$SHARED_ROOT"
-  fi
-fi
-
-for legacy_root in "$LEGACY_ROOT_1" "$LEGACY_ROOT_2"; do
-  [[ -n "$legacy_root" ]] || continue
-  rewire_legacy_root "$legacy_root" "$selected_root"
-done
-
-echo "Shared install ready at $selected_root"
-print_next_steps "$selected_root"
+exec "$(resolve_runtime_entry)" install migrate "$@"

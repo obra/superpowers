@@ -1,0 +1,8 @@
+{
+  "contract_state": "unknown",
+  "next_skill": "superpowers:plan-ceo-review",
+  "reason_codes": [
+    "ambiguous_spec_candidates"
+  ],
+  "status": "spec_draft"
+}

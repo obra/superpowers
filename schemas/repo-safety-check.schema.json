@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RepoSafetyResult",
+  "type": "object",
+  "properties": {
+    "approval_fingerprint": {
+      "type": "string"
+    },
+    "approval_path": {
+      "type": "string"
+    },
+    "branch": {
+      "type": "string"
+    },
+    "failure_class": {
+      "type": "string"
+    },
+    "intent": {
+      "type": "string"
+    },
+    "outcome": {
+      "type": "string"
+    },
+    "protected": {
+      "type": "boolean"
+    },
+    "protected_by": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "suggested_next_skill": {
+      "type": "string"
+    },
+    "task_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "outcome",
+    "intent",
+    "branch",
+    "protected",
+    "protected_by",
+    "task_id",
+    "approval_fingerprint",
+    "approval_path",
+    "failure_class",
+    "reason",
+    "suggested_next_skill"
+  ]
+}

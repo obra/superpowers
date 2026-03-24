@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PlanExecutionStatus",
+  "type": "object",
+  "properties": {
+    "active_step": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "format": "uint32",
+      "minimum": 0
+    },
+    "active_task": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "format": "uint32",
+      "minimum": 0
+    },
+    "blocking_step": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "format": "uint32",
+      "minimum": 0
+    },
+    "blocking_task": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "format": "uint32",
+      "minimum": 0
+    },
+    "evidence_path": {
+      "type": "string"
+    },
+    "execution_fingerprint": {
+      "type": "string"
+    },
+    "execution_mode": {
+      "type": "string"
+    },
+    "execution_started": {
+      "type": "string"
+    },
+    "latest_base_sha": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "latest_head_sha": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "latest_packet_fingerprint": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "plan_revision": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    },
+    "resume_step": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "format": "uint32",
+      "minimum": 0
+    },
+    "resume_task": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "format": "uint32",
+      "minimum": 0
+    },
+    "warning_codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "plan_revision",
+    "execution_mode",
+    "execution_fingerprint",
+    "evidence_path",
+    "execution_started",
+    "warning_codes"
+  ]
+}

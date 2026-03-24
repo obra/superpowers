@@ -24,7 +24,7 @@ description: Use when a written Superpowers design or architecture spec needs CE
 - After each spec edit (including final approval edits), runs `sync --artifact spec` for the spec path:
 
 ```bash
-"$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status" sync --artifact spec --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md
+"$_SUPERPOWERS_ROOT/bin/superpowers" workflow sync --artifact spec --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md
 ```
 
 **Protected-Branch Repo-Write Gate:**
@@ -32,7 +32,7 @@ description: Use when a written Superpowers design or architecture spec needs CE
 - Before editing the spec body or changing approval headers on disk, run the shared repo-safety preflight for the exact review-write scope:
 
 ```bash
-superpowers-repo-safety check --intent write --stage superpowers:plan-ceo-review --task-id <current-spec-review> --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target repo-file-write
+superpowers repo-safety check --intent write --stage superpowers:plan-ceo-review --task-id <current-spec-review> --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target repo-file-write
 ```
 
 - When the mutation is specifically an approval-header edit, use the same command shape with `--write-target approval-header-write`.
@@ -40,8 +40,8 @@ superpowers-repo-safety check --intent write --stage superpowers:plan-ceo-review
 - If the user explicitly approves the protected-branch review write, run:
 
 ```bash
-superpowers-repo-safety approve --stage superpowers:plan-ceo-review --task-id <current-spec-review> --reason "<explicit user approval>" --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target repo-file-write
-superpowers-repo-safety check --intent write --stage superpowers:plan-ceo-review --task-id <current-spec-review> --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target repo-file-write
+superpowers repo-safety approve --stage superpowers:plan-ceo-review --task-id <current-spec-review> --reason "<explicit user approval>" --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target repo-file-write
+superpowers repo-safety check --intent write --stage superpowers:plan-ceo-review --task-id <current-spec-review> --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target repo-file-write
 ```
 
 - Repeat the same approve -> re-check pattern for `approval-header-write` before flipping `**Workflow State:**` or any other approval header on a protected branch.

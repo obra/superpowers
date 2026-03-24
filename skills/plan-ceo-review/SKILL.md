@@ -11,8 +11,7 @@ description: Use when a written Superpowers design or architecture spec needs CE
 _IS_SUPERPOWERS_RUNTIME_ROOT() {
   local candidate="$1"
   [ -n "$candidate" ] &&
-  [ -x "$candidate/bin/superpowers-update-check" ] &&
-  [ -x "$candidate/bin/superpowers-config" ] &&
+  [ -x "$candidate/bin/superpowers" ] &&
   [ -f "$candidate/VERSION" ]
 }
 _REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
@@ -26,7 +25,7 @@ _IS_SUPERPOWERS_RUNTIME_ROOT "$_REPO_ROOT" && _SUPERPOWERS_ROOT="$_REPO_ROOT"
 [ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.codex/superpowers" && _SUPERPOWERS_ROOT="$HOME/.codex/superpowers"
 [ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.copilot/superpowers" && _SUPERPOWERS_ROOT="$HOME/.copilot/superpowers"
 _UPD=""
-[ -n "$_SUPERPOWERS_ROOT" ] && _UPD=$("$_SUPERPOWERS_ROOT/bin/superpowers-update-check" 2>/dev/null || true)
+[ -n "$_SUPERPOWERS_ROOT" ] && _UPD=$("$_SUPERPOWERS_ROOT/bin/superpowers" update-check 2>/dev/null || true)
 [ -n "$_UPD" ] && echo "$_UPD" || true
 _SP_STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
 mkdir -p "$_SP_STATE_DIR/sessions"
@@ -34,7 +33,7 @@ touch "$_SP_STATE_DIR/sessions/$PPID"
 _SESSIONS=$(find "$_SP_STATE_DIR/sessions" -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' ')
 find "$_SP_STATE_DIR/sessions" -mmin +120 -type f -delete 2>/dev/null || true
 _CONTRIB=""
-[ -n "$_SUPERPOWERS_ROOT" ] && _CONTRIB=$("$_SUPERPOWERS_ROOT/bin/superpowers-config" get superpowers_contributor 2>/dev/null || true)
+[ -n "$_SUPERPOWERS_ROOT" ] && _CONTRIB=$("$_SUPERPOWERS_ROOT/bin/superpowers" config get superpowers_contributor 2>/dev/null || true)
 _TODOS_FORMAT=""
 [ -n "$_SUPERPOWERS_ROOT" ] && [ -f "$_SUPERPOWERS_ROOT/review/TODOS-format.md" ] && _TODOS_FORMAT="$_SUPERPOWERS_ROOT/review/TODOS-format.md"
 [ -z "$_TODOS_FORMAT" ] && [ -f "$_REPO_ROOT/review/TODOS-format.md" ] && _TODOS_FORMAT="$_REPO_ROOT/review/TODOS-format.md"
@@ -134,7 +133,7 @@ Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Ski
 - After each spec edit (including final approval edits), runs `sync --artifact spec` for the spec path:
 
 ```bash
-"$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status" sync --artifact spec --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md
+"$_SUPERPOWERS_ROOT/bin/superpowers" workflow sync --artifact spec --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md
 ```
 
 **Protected-Branch Repo-Write Gate:**
@@ -142,7 +141,7 @@ Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Ski
 - Before editing the spec body or changing approval headers on disk, run the shared repo-safety preflight for the exact review-write scope:
 
 ```bash
-superpowers-repo-safety check --intent write --stage superpowers:plan-ceo-review --task-id <current-spec-review> --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target repo-file-write
+superpowers repo-safety check --intent write --stage superpowers:plan-ceo-review --task-id <current-spec-review> --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target repo-file-write
 ```
 
 - When the mutation is specifically an approval-header edit, use the same command shape with `--write-target approval-header-write`.
@@ -150,8 +149,8 @@ superpowers-repo-safety check --intent write --stage superpowers:plan-ceo-review
 - If the user explicitly approves the protected-branch review write, run:
 
 ```bash
-superpowers-repo-safety approve --stage superpowers:plan-ceo-review --task-id <current-spec-review> --reason "<explicit user approval>" --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target repo-file-write
-superpowers-repo-safety check --intent write --stage superpowers:plan-ceo-review --task-id <current-spec-review> --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target repo-file-write
+superpowers repo-safety approve --stage superpowers:plan-ceo-review --task-id <current-spec-review> --reason "<explicit user approval>" --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target repo-file-write
+superpowers repo-safety check --intent write --stage superpowers:plan-ceo-review --task-id <current-spec-review> --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target repo-file-write
 ```
 
 - Repeat the same approve -> re-check pattern for `approval-header-write` before flipping `**Workflow State:**` or any other approval header on a protected branch.

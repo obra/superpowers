@@ -4,5 +4,6 @@
 .claude/
 .DS_Store
 node_modules/
+target/
 inspo
 triage/

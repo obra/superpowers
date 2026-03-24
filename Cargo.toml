@@ -1,0 +1,75 @@
+[package]
+name = "superpowers"
+version = "5.7.0"
+edition = "2024"
+rust-version = "1.94"
+publish = false
+description = "Rust runtime for the Superpowers workflow toolkit"
+license = "MIT"
+
+[workspace]
+resolver = "2"
+
+[workspace.dependencies]
+assert_cmd = "2.2.0"
+camino = "1.2.2"
+clap = { version = "4.6.0", features = ["derive"] }
+criterion = "0.8.2"
+fs-err = "3.3.0"
+gix = "0.81.0"
+insta = "1"
+jiff = "0.2.23"
+proptest = "1.10.0"
+reqwest = { version = "0.13.2", default-features = false, features = ["blocking", "json", "rustls"] }
+schemars = "1.2.1"
+semver = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+tempfile = "3.27.0"
+thiserror = "2.0.18"
+
+[dependencies]
+clap = { workspace = true }
+gix = { workspace = true }
+jiff = { workspace = true }
+reqwest = { workspace = true }
+schemars = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+assert_cmd = { workspace = true }
+tempfile = { workspace = true }
+
+[lints.rust]
+unsafe_code = "forbid"
+unused_qualifications = "deny"
+unused_must_use = "deny"
+
+[lints.clippy]
+all = { level = "deny", priority = -1 }
+collapsible_if = "allow"
+explicit_auto_deref = "allow"
+large_enum_variant = "allow"
+needless_lifetimes = "allow"
+needless_question_mark = "allow"
+nonminimal_bool = "allow"
+result_large_err = "allow"
+should_implement_trait = "allow"
+too_many_arguments = "allow"
+unnecessary_map_or = "allow"
+
+[[bench]]
+name = "workflow_status"
+harness = false
+
+[[bench]]
+name = "plan_contract"
+harness = false
+
+[[bench]]
+name = "execution_status"
+harness = false

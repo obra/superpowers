@@ -11,8 +11,7 @@ description: Use when implementation is complete, verification passes, and you n
 _IS_SUPERPOWERS_RUNTIME_ROOT() {
   local candidate="$1"
   [ -n "$candidate" ] &&
-  [ -x "$candidate/bin/superpowers-update-check" ] &&
-  [ -x "$candidate/bin/superpowers-config" ] &&
+  [ -x "$candidate/bin/superpowers" ] &&
   [ -f "$candidate/VERSION" ]
 }
 _REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
@@ -26,7 +25,7 @@ _IS_SUPERPOWERS_RUNTIME_ROOT "$_REPO_ROOT" && _SUPERPOWERS_ROOT="$_REPO_ROOT"
 [ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.codex/superpowers" && _SUPERPOWERS_ROOT="$HOME/.codex/superpowers"
 [ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.copilot/superpowers" && _SUPERPOWERS_ROOT="$HOME/.copilot/superpowers"
 _UPD=""
-[ -n "$_SUPERPOWERS_ROOT" ] && _UPD=$("$_SUPERPOWERS_ROOT/bin/superpowers-update-check" 2>/dev/null || true)
+[ -n "$_SUPERPOWERS_ROOT" ] && _UPD=$("$_SUPERPOWERS_ROOT/bin/superpowers" update-check 2>/dev/null || true)
 [ -n "$_UPD" ] && echo "$_UPD" || true
 _SP_STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
 mkdir -p "$_SP_STATE_DIR/sessions"
@@ -34,7 +33,7 @@ touch "$_SP_STATE_DIR/sessions/$PPID"
 _SESSIONS=$(find "$_SP_STATE_DIR/sessions" -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' ')
 find "$_SP_STATE_DIR/sessions" -mmin +120 -type f -delete 2>/dev/null || true
 _CONTRIB=""
-[ -n "$_SUPERPOWERS_ROOT" ] && _CONTRIB=$("$_SUPERPOWERS_ROOT/bin/superpowers-config" get superpowers_contributor 2>/dev/null || true)
+[ -n "$_SUPERPOWERS_ROOT" ] && _CONTRIB=$("$_SUPERPOWERS_ROOT/bin/superpowers" config get superpowers_contributor 2>/dev/null || true)
 ```
 
 If output shows `UPGRADE_AVAILABLE <old> <new>`: read the installed `superpowers-upgrade/SKILL.md` from the same superpowers root (check the current repo when it contains the Superpowers runtime, then `$HOME/.superpowers/install`, then `$HOME/.codex/superpowers`, then `$HOME/.copilot/superpowers`) and follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise ask one interactive user question with 4 options and write snooze state if declined). If `JUST_UPGRADED <from> <to>`: tell the user "Running superpowers v{to} (just updated!)" and continue.
@@ -155,12 +154,12 @@ If a fresh review has not already been resolved for the current diff, invoke `su
 Before presenting completion options:
 
 - If the current work was executed from an approved Superpowers plan, require the exact approved plan path from the current execution workflow context before presenting completion options.
-- Run `superpowers-plan-execution status --plan <approved-plan-path>` and read the returned `evidence_path` before presenting completion options.
+- Run `superpowers plan execution status --plan <approved-plan-path>` and read the returned `evidence_path` before presenting completion options.
 - If the exact approved plan path is unavailable or helper status fails, stop and return to the current execution flow instead of guessing.
 - Parse `active_task`, `blocking_task`, and `resume_task` from the status JSON.
 - If any of `active_task`, `blocking_task`, or `resume_task` is non-null, stop and return to the current execution flow; branch completion is only valid when all three are `null`.
 - If `evidence_path` is empty or unreadable, stop and return to the current execution flow instead of guessing at execution evidence.
-- Run `superpowers-plan-execution gate-review --plan <approved-plan-path>` before late-stage QA or release routing.
+- Run `superpowers plan execution gate-review --plan <approved-plan-path>` before late-stage QA or release routing.
 - If the review gate returns `allowed` `false`, stop and return to the current execution flow; do not present completion options against stale, drifted, or mismatched execution evidence.
 - If the current work is not governed by an approved Superpowers plan, skip this execution-state gate and continue.
 - rejects branch-completion handoff if the approved plan is execution-dirty or malformed
@@ -193,7 +192,7 @@ Before moving on, perform a short Gate F-style confirmation:
 Conditional pre-landing browser QA when the branch change surface or test-plan artifact warrants it:
 
 ```bash
-_SLUG_ENV=$("$_SUPERPOWERS_ROOT/bin/superpowers-slug" 2>/dev/null || true)
+_SLUG_ENV=$("$_SUPERPOWERS_ROOT/bin/superpowers" repo slug 2>/dev/null || true)
 if [ -n "$_SLUG_ENV" ]; then
   eval "$_SLUG_ENV"
 fi
@@ -234,7 +233,7 @@ If no current-branch test-plan artifact exists for workflow-routed work, stop an
 
 ### Step 1.9: Finish Gate
 
-After `superpowers:document-release` and any required `superpowers:qa-only` handoff are current, run `superpowers-plan-execution gate-finish --plan <approved-plan-path>` before presenting completion options.
+After `superpowers:document-release` and any required `superpowers:qa-only` handoff are current, run `superpowers plan execution gate-finish --plan <approved-plan-path>` before presenting completion options.
 
 If the finish gate returns `allowed` `false`, stop and return to the current execution flow; do not present completion options against stale QA or release artifacts.
 
@@ -243,7 +242,7 @@ If the finish gate returns `allowed` `false`, stop and return to the current exe
 Before executing any completion option that mutates repo state, run the shared repo-safety preflight for the chosen branch-finishing scope:
 
 ```bash
-superpowers-repo-safety check --intent write --stage superpowers:finishing-a-development-branch --task-id <current-branch-finish> --write-target branch-finish
+superpowers repo-safety check --intent write --stage superpowers:finishing-a-development-branch --task-id <current-branch-finish> --write-target branch-finish
 ```
 
 - If the helper returns `allowed`, continue with the selected completion path.
@@ -251,8 +250,8 @@ superpowers-repo-safety check --intent write --stage superpowers:finishing-a-dev
 - If the user explicitly approves the protected-branch completion write, approve the full completion scope you intend to use on that branch, including any follow-on git targets that are part of the same branch-finish task:
 
 ```bash
-superpowers-repo-safety approve --stage superpowers:finishing-a-development-branch --task-id <current-branch-finish> --reason "<explicit user approval>" --write-target branch-finish [--write-target git-merge] [--write-target git-push] [--write-target git-worktree-cleanup]
-superpowers-repo-safety check --intent write --stage superpowers:finishing-a-development-branch --task-id <current-branch-finish> --write-target branch-finish [--write-target git-merge] [--write-target git-push] [--write-target git-worktree-cleanup]
+superpowers repo-safety approve --stage superpowers:finishing-a-development-branch --task-id <current-branch-finish> --reason "<explicit user approval>" --write-target branch-finish [--write-target git-merge] [--write-target git-push] [--write-target git-worktree-cleanup]
+superpowers repo-safety check --intent write --stage superpowers:finishing-a-development-branch --task-id <current-branch-finish> --write-target branch-finish [--write-target git-merge] [--write-target git-push] [--write-target git-worktree-cleanup]
 ```
 
 - Continue only if the re-check returns `allowed`.

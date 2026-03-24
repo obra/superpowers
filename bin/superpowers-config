@@ -1,42 +1,30 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
-CONFIG_FILE="$STATE_DIR/config.yaml"
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 
-case "${1:-}" in
-  get)
-    KEY="${2:?Usage: superpowers-config get <key>}"
-    if [ -f "$CONFIG_FILE" ]; then
-      awk -F': *' -v key="$KEY" '$1 == key { print $2 }' "$CONFIG_FILE" | tail -1 | tr -d '[:space:]' || true
-    fi
-    ;;
-  set)
-    KEY="${2:?Usage: superpowers-config set <key> <value>}"
-    VALUE="${3:?Usage: superpowers-config set <key> <value>}"
-    mkdir -p "$STATE_DIR"
-    TMP_FILE="$(mktemp)"
-    if [ -f "$CONFIG_FILE" ]; then
-      awk -F': *' -v key="$KEY" -v value="$VALUE" '
-        BEGIN { updated = 0 }
-        $1 == key { print key ": " value; updated = 1; next }
-        { print }
-        END {
-          if (!updated) {
-            print key ": " value
-          }
-        }
-      ' "$CONFIG_FILE" > "$TMP_FILE"
+resolve_runtime_entry() {
+  if [[ -x "$SCRIPT_DIR/../compat/bash/superpowers" ]]; then
+    printf '%s\n' "$SCRIPT_DIR/../compat/bash/superpowers"
+    return 0
+  fi
+
+  local source="$SCRIPT_PATH"
+  while [[ -L "$source" ]]; do
+    local source_dir target
+    source_dir="$(cd "$(dirname "$source")" && pwd)"
+    target="$(readlink "$source")"
+    if [[ "$target" == /* ]]; then
+      source="$target"
     else
-      printf '%s: %s\n' "$KEY" "$VALUE" > "$TMP_FILE"
+      source="$source_dir/$target"
     fi
-    mv "$TMP_FILE" "$CONFIG_FILE"
-    ;;
-  list)
-    cat "$CONFIG_FILE" 2>/dev/null || true
-    ;;
-  *)
-    echo "Usage: superpowers-config {get|set|list} [key] [value]"
-    exit 1
-    ;;
-esac
+  done
+
+  local real_dir
+  real_dir="$(cd "$(dirname "$source")" && pwd)"
+  printf '%s\n' "$real_dir/../compat/bash/superpowers"
+}
+
+exec "$(resolve_runtime_entry)" config "$@"

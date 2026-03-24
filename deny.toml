@@ -1,0 +1,34 @@
+[graph]
+all-features = true
+
+[licenses]
+version = 2
+confidence-threshold = 0.8
+allow = [
+  "0BSD",
+  "Apache-2.0",
+  "Apache-2.0 WITH LLVM-exception",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "BSL-1.0",
+  "CC0-1.0",
+  "CDLA-Permissive-2.0",
+  "ISC",
+  "MIT",
+  "MPL-2.0",
+  "OpenSSL",
+  "Unicode-3.0",
+  "Unicode-DFS-2016",
+  "Zlib",
+]
+
+[advisories]
+version = 2
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

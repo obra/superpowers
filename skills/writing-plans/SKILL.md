@@ -11,8 +11,7 @@ description: Use when you have a CEO-approved Superpowers spec for a multi-step 
 _IS_SUPERPOWERS_RUNTIME_ROOT() {
   local candidate="$1"
   [ -n "$candidate" ] &&
-  [ -x "$candidate/bin/superpowers-update-check" ] &&
-  [ -x "$candidate/bin/superpowers-config" ] &&
+  [ -x "$candidate/bin/superpowers" ] &&
   [ -f "$candidate/VERSION" ]
 }
 _REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
@@ -26,7 +25,7 @@ _IS_SUPERPOWERS_RUNTIME_ROOT "$_REPO_ROOT" && _SUPERPOWERS_ROOT="$_REPO_ROOT"
 [ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.codex/superpowers" && _SUPERPOWERS_ROOT="$HOME/.codex/superpowers"
 [ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.copilot/superpowers" && _SUPERPOWERS_ROOT="$HOME/.copilot/superpowers"
 _UPD=""
-[ -n "$_SUPERPOWERS_ROOT" ] && _UPD=$("$_SUPERPOWERS_ROOT/bin/superpowers-update-check" 2>/dev/null || true)
+[ -n "$_SUPERPOWERS_ROOT" ] && _UPD=$("$_SUPERPOWERS_ROOT/bin/superpowers" update-check 2>/dev/null || true)
 [ -n "$_UPD" ] && echo "$_UPD" || true
 _SP_STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
 mkdir -p "$_SP_STATE_DIR/sessions"
@@ -34,7 +33,7 @@ touch "$_SP_STATE_DIR/sessions/$PPID"
 _SESSIONS=$(find "$_SP_STATE_DIR/sessions" -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' ')
 find "$_SP_STATE_DIR/sessions" -mmin +120 -type f -delete 2>/dev/null || true
 _CONTRIB=""
-[ -n "$_SUPERPOWERS_ROOT" ] && _CONTRIB=$("$_SUPERPOWERS_ROOT/bin/superpowers-config" get superpowers_contributor 2>/dev/null || true)
+[ -n "$_SUPERPOWERS_ROOT" ] && _CONTRIB=$("$_SUPERPOWERS_ROOT/bin/superpowers" config get superpowers_contributor 2>/dev/null || true)
 ```
 
 If output shows `UPGRADE_AVAILABLE <old> <new>`: read the installed `superpowers-upgrade/SKILL.md` from the same superpowers root (check the current repo when it contains the Superpowers runtime, then `$HOME/.superpowers/install`, then `$HOME/.codex/superpowers`, then `$HOME/.copilot/superpowers`) and follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise ask one interactive user question with 4 options and write snooze state if declined). If `JUST_UPGRADED <from> <to>`: tell the user "Running superpowers v{to} (just updated!)" and continue.
@@ -122,7 +121,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 - Before writing the plan, record the intended plan path with `expect`:
 
 ```bash
-"$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status" expect --artifact plan --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md
+"$_SUPERPOWERS_ROOT/bin/superpowers" workflow expect --artifact plan --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md
 ```
 
 ## Protected-Branch Repo-Write Gate
@@ -130,7 +129,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 Before writing or updating the plan file on disk, run the shared repo-safety preflight for the exact plan-writing scope:
 
 ```bash
-superpowers-repo-safety check --intent write --stage superpowers:writing-plans --task-id <current-plan-write> --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target plan-artifact-write
+superpowers repo-safety check --intent write --stage superpowers:writing-plans --task-id <current-plan-write> --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target plan-artifact-write
 ```
 
 - If the helper returns `allowed`, continue with the plan write.
@@ -138,8 +137,8 @@ superpowers-repo-safety check --intent write --stage superpowers:writing-plans -
 - If the user explicitly approves writing this plan on the current protected branch, approve the full protected-branch task scope you intend to use, including the plan path and any follow-on git targets that are part of the same task slice:
 
 ```bash
-superpowers-repo-safety approve --stage superpowers:writing-plans --task-id <current-plan-write> --reason "<explicit user approval>" --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target plan-artifact-write [--write-target git-commit]
-superpowers-repo-safety check --intent write --stage superpowers:writing-plans --task-id <current-plan-write> --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target plan-artifact-write [--write-target git-commit]
+superpowers repo-safety approve --stage superpowers:writing-plans --task-id <current-plan-write> --reason "<explicit user approval>" --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target plan-artifact-write [--write-target git-commit]
+superpowers repo-safety check --intent write --stage superpowers:writing-plans --task-id <current-plan-write> --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target plan-artifact-write [--write-target git-commit]
 ```
 
 - Continue only if the re-check returns `allowed`.
@@ -319,7 +318,7 @@ After saving the full plan:
 0. Before handoff, run the plan-contract lint gate:
 
 ```bash
-"$_SUPERPOWERS_ROOT/bin/superpowers-plan-contract" lint \
+"$_SUPERPOWERS_ROOT/bin/superpowers" plan contract lint \
   --spec docs/superpowers/specs/YYYY-MM-DD-<feature-name>-design.md \
   --plan docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md
 ```
@@ -327,7 +326,7 @@ After saving the full plan:
 1. After the plan is written or updated, runs `sync --artifact plan`:
 
 ```bash
-"$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status" sync --artifact plan --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md
+"$_SUPERPOWERS_ROOT/bin/superpowers" workflow sync --artifact plan --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md
 ```
 
 2. Invoke `superpowers:plan-eng-review` after saving the full plan.

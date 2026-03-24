@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SessionEntryResolveOutput",
+  "type": "object",
+  "properties": {
+    "decision_path": {
+      "type": "string"
+    },
+    "decision_source": {
+      "type": "string"
+    },
+    "failure_class": {
+      "type": "string"
+    },
+    "outcome": {
+      "type": "string"
+    },
+    "persisted": {
+      "type": "boolean"
+    },
+    "policy_source": {
+      "type": "string"
+    },
+    "prompt": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SessionPrompt"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "reason": {
+      "type": "string"
+    },
+    "session_key": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "outcome",
+    "decision_source",
+    "session_key",
+    "decision_path",
+    "policy_source",
+    "persisted",
+    "failure_class",
+    "reason"
+  ],
+  "$defs": {
+    "SessionPrompt": {
+      "type": "object",
+      "properties": {
+        "options": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SessionPromptOption"
+          }
+        },
+        "question": {
+          "type": "string"
+        },
+        "recommended_option": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "question",
+        "recommended_option",
+        "options"
+      ]
+    },
+    "SessionPromptOption": {
+      "type": "object",
+      "properties": {
+        "decision": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "decision",
+        "label"
+      ]
+    }
+  }
+}

@@ -1,184 +1,30 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SUPERPOWERS_DIR="${SUPERPOWERS_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
-STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
-CACHE_FILE="$STATE_DIR/last-update-check"
-MARKER_FILE="$STATE_DIR/just-upgraded-from"
-SNOOZE_FILE="$STATE_DIR/update-snoozed"
-VERSION_FILE="$SUPERPOWERS_DIR/VERSION"
-REMOTE_URL="${SUPERPOWERS_REMOTE_URL:-https://raw.githubusercontent.com/dmulcahey/superpowers/main/VERSION}"
-FORCE=0
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 
-if [ "${1:-}" = "--force" ]; then
-  FORCE=1
-  shift
-fi
-
-compare_versions() {
-  local left="$1"
-  local right="$2"
-  local IFS=.
-  local -a left_parts right_parts
-  local max_parts=0
-  local i left_value right_value
-
-  read -r -a left_parts <<< "$left"
-  read -r -a right_parts <<< "$right"
-
-  if [ "${#left_parts[@]}" -gt "${#right_parts[@]}" ]; then
-    max_parts="${#left_parts[@]}"
-  else
-    max_parts="${#right_parts[@]}"
-  fi
-
-  for ((i = 0; i < max_parts; i++)); do
-    left_value="${left_parts[i]:-0}"
-    right_value="${right_parts[i]:-0}"
-
-    case "$left_value" in
-      ''|*[!0-9]*)
-        return 1
-        ;;
-    esac
-    case "$right_value" in
-      ''|*[!0-9]*)
-        return 1
-        ;;
-    esac
-
-    if ((10#$left_value < 10#$right_value)); then
-      echo "upgrade"
-      return 0
-    fi
-
-    if ((10#$left_value > 10#$right_value)); then
-      echo "local_ahead"
-      return 0
-    fi
-  done
-
-  echo "equal"
-}
-
-_UC=$("$SUPERPOWERS_DIR/bin/superpowers-config" get update_check 2>/dev/null || true)
-if [ "$_UC" = "false" ]; then
-  exit 0
-fi
-
-check_snooze() {
-  local remote_ver="$1"
-  if [ ! -f "$SNOOZE_FILE" ]; then
-    return 1
-  fi
-
-  local snoozed_ver snoozed_level snoozed_epoch
-  snoozed_ver="$(awk '{print $1}' "$SNOOZE_FILE" 2>/dev/null || true)"
-  snoozed_level="$(awk '{print $2}' "$SNOOZE_FILE" 2>/dev/null || true)"
-  snoozed_epoch="$(awk '{print $3}' "$SNOOZE_FILE" 2>/dev/null || true)"
-
-  if [ -z "$snoozed_ver" ] || [ -z "$snoozed_level" ] || [ -z "$snoozed_epoch" ]; then
-    return 1
-  fi
-
-  case "$snoozed_level" in *[!0-9]*) return 1 ;; esac
-  case "$snoozed_epoch" in *[!0-9]*) return 1 ;; esac
-
-  if [ "$snoozed_ver" != "$remote_ver" ]; then
-    return 1
-  fi
-
-  local duration
-  case "$snoozed_level" in
-    1) duration=86400 ;;
-    2) duration=172800 ;;
-    *) duration=604800 ;;
-  esac
-
-  local now expires
-  now="$(date +%s)"
-  expires=$(( snoozed_epoch + duration ))
-  if [ "$now" -lt "$expires" ]; then
+resolve_runtime_entry() {
+  if [[ -x "$SCRIPT_DIR/../compat/bash/superpowers" ]]; then
+    printf '%s\n' "$SCRIPT_DIR/../compat/bash/superpowers"
     return 0
   fi
 
-  return 1
+  local source="$SCRIPT_PATH"
+  while [[ -L "$source" ]]; do
+    local source_dir target
+    source_dir="$(cd "$(dirname "$source")" && pwd)"
+    target="$(readlink "$source")"
+    if [[ "$target" == /* ]]; then
+      source="$target"
+    else
+      source="$source_dir/$target"
+    fi
+  done
+
+  local real_dir
+  real_dir="$(cd "$(dirname "$source")" && pwd)"
+  printf '%s\n' "$real_dir/../compat/bash/superpowers"
 }
 
-LOCAL=""
-if [ -f "$VERSION_FILE" ]; then
-  LOCAL="$(tr -d '[:space:]' < "$VERSION_FILE")"
-fi
-if [ -z "$LOCAL" ]; then
-  exit 0
-fi
-
-if [ -f "$MARKER_FILE" ]; then
-  OLD="$(tr -d '[:space:]' < "$MARKER_FILE" 2>/dev/null || true)"
-  rm -f "$MARKER_FILE" "$SNOOZE_FILE"
-  mkdir -p "$STATE_DIR"
-  echo "UP_TO_DATE $LOCAL" > "$CACHE_FILE"
-  if [ -n "$OLD" ]; then
-    echo "JUST_UPGRADED $OLD $LOCAL"
-  fi
-  exit 0
-fi
-
-if [ "$FORCE" -eq 0 ] && [ -f "$CACHE_FILE" ]; then
-  CACHED="$(cat "$CACHE_FILE" 2>/dev/null || true)"
-  case "$CACHED" in
-    UP_TO_DATE*)
-      STALE="$(find "$CACHE_FILE" -mmin +60 2>/dev/null || true)"
-      if [ -z "$STALE" ]; then
-        CACHED_VER="$(echo "$CACHED" | awk '{print $2}')"
-        if [ "$CACHED_VER" = "$LOCAL" ]; then
-          exit 0
-        fi
-      fi
-      ;;
-    UPGRADE_AVAILABLE*)
-      STALE="$(find "$CACHE_FILE" -mmin +720 2>/dev/null || true)"
-      if [ -z "$STALE" ]; then
-        CACHED_LOCAL="$(echo "$CACHED" | awk '{print $2}')"
-        CACHED_REMOTE="$(echo "$CACHED" | awk '{print $3}')"
-        if [ "$CACHED_LOCAL" = "$LOCAL" ]; then
-          if check_snooze "$CACHED_REMOTE"; then
-            exit 0
-          fi
-          echo "$CACHED"
-          exit 0
-        fi
-      fi
-      ;;
-  esac
-fi
-
-mkdir -p "$STATE_DIR"
-
-REMOTE="$(curl -sf --max-time 5 "$REMOTE_URL" 2>/dev/null || true)"
-REMOTE="$(echo "$REMOTE" | tr -d '[:space:]')"
-
-if ! echo "$LOCAL" | grep -qE '^[0-9]+(\.[0-9]+)*$'; then
-  exit 0
-fi
-
-if ! echo "$REMOTE" | grep -qE '^[0-9]+(\.[0-9]+)*$'; then
-  exit 0
-fi
-
-RELATION="$(compare_versions "$LOCAL" "$REMOTE" || true)"
-
-if [ -z "$RELATION" ]; then
-  exit 0
-fi
-
-if [ "$RELATION" != "upgrade" ]; then
-  echo "UP_TO_DATE $LOCAL" > "$CACHE_FILE"
-  exit 0
-fi
-
-echo "UPGRADE_AVAILABLE $LOCAL $REMOTE" > "$CACHE_FILE"
-if check_snooze "$REMOTE"; then
-  exit 0
-fi
-echo "UPGRADE_AVAILABLE $LOCAL $REMOTE"
+exec "$(resolve_runtime_entry)" update-check "$@"

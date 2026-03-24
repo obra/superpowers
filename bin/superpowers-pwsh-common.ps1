@@ -287,3 +287,74 @@ function Normalize-SuperpowersIdentifierToken {
 
   return ($Text -replace '[^0-9A-Za-z._-]', '-')
 }
+
+function Get-SuperpowersHostTarget {
+  $architecture = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
+
+  if ($IsMacOS -and $architecture -eq [System.Runtime.InteropServices.Architecture]::Arm64) {
+    return 'darwin-arm64'
+  }
+  if ($IsWindows -and $architecture -eq [System.Runtime.InteropServices.Architecture]::X64) {
+    return 'windows-x64'
+  }
+
+  throw 'No checked-in runtime is available for this host; the first Rust cutover supports only darwin-arm64 and windows-x64.'
+}
+
+function Get-SuperpowersManifestSha256 {
+  param(
+    [string]$ChecksumPath
+  )
+
+  if (-not (Test-Path -LiteralPath $ChecksumPath -PathType Leaf)) {
+    throw "Checked-in Superpowers checksum file not found at manifest-selected path $ChecksumPath."
+  }
+
+  $checksum = (Get-Content -LiteralPath $ChecksumPath -Raw).Split([char[]]" `t`r`n", [System.StringSplitOptions]::RemoveEmptyEntries) | Select-Object -First 1
+  if ([string]::IsNullOrWhiteSpace($checksum) -or $checksum -notmatch '^[0-9A-Fa-f]{64}$') {
+    throw "Checked-in checksum file $ChecksumPath does not contain a valid sha256 digest."
+  }
+
+  return $checksum.ToLowerInvariant()
+}
+
+function Resolve-SuperpowersRepoRuntimeBinary {
+  param(
+    [string]$RuntimeRoot,
+    [string]$TargetKey
+  )
+
+  $manifestPath = Join-Path $RuntimeRoot 'bin/prebuilt/manifest.json'
+  if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
+    throw "Missing checked-in prebuilt manifest $manifestPath."
+  }
+
+  $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+  $targetEntry = $manifest.targets.PSObject.Properties[$TargetKey]
+  if (-not $targetEntry) {
+    throw "Checked-in prebuilt manifest $manifestPath does not define a runtime for host target $TargetKey."
+  }
+
+  $binaryRel = Normalize-SuperpowersRepoRelativePath -Path $targetEntry.Value.binary_path
+  if ([string]::IsNullOrWhiteSpace($binaryRel)) {
+    throw 'Manifest binary path is invalid.'
+  }
+  $checksumRel = Normalize-SuperpowersRepoRelativePath -Path $targetEntry.Value.checksum_path
+  if ([string]::IsNullOrWhiteSpace($checksumRel)) {
+    throw 'Manifest checksum path is invalid.'
+  }
+
+  $binaryPath = Join-Path $RuntimeRoot ($binaryRel -replace '/', [IO.Path]::DirectorySeparatorChar)
+  if (-not (Test-Path -LiteralPath $binaryPath -PathType Leaf)) {
+    throw "Checked-in Superpowers runtime binary not found at manifest-selected path $binaryPath."
+  }
+  $checksumPath = Join-Path $RuntimeRoot ($checksumRel -replace '/', [IO.Path]::DirectorySeparatorChar)
+
+  $expected = Get-SuperpowersManifestSha256 -ChecksumPath $checksumPath
+  $actual = (Get-FileHash -LiteralPath $binaryPath -Algorithm SHA256).Hash.ToLowerInvariant()
+  if ($actual -ne $expected) {
+    throw "Checked-in runtime checksum mismatch for ${binaryPath}: expected $expected, got $actual."
+  }
+
+  return $binaryPath
+}

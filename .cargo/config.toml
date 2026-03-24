@@ -1,0 +1,3 @@
+[alias]
+xclippy = "clippy --workspace --all-targets --all-features -- -D warnings"
+xtest = "nextest run --workspace"

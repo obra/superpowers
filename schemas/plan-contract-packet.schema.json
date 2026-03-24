@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TaskPacket",
+  "type": "object",
+  "properties": {
+    "generated_at": {
+      "type": "string"
+    },
+    "markdown": {
+      "type": "string"
+    },
+    "open_questions": {
+      "type": "string"
+    },
+    "packet_fingerprint": {
+      "type": "string"
+    },
+    "plan_fingerprint": {
+      "type": "string"
+    },
+    "plan_path": {
+      "type": "string"
+    },
+    "plan_revision": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    },
+    "requirement_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "source_spec_fingerprint": {
+      "type": "string"
+    },
+    "source_spec_path": {
+      "type": "string"
+    },
+    "source_spec_revision": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    },
+    "task_number": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    },
+    "task_title": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "plan_path",
+    "plan_revision",
+    "plan_fingerprint",
+    "source_spec_path",
+    "source_spec_revision",
+    "source_spec_fingerprint",
+    "task_number",
+    "task_title",
+    "open_questions",
+    "requirement_ids",
+    "generated_at",
+    "packet_fingerprint",
+    "markdown"
+  ]
+}

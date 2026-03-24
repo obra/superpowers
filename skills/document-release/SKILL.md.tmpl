@@ -77,7 +77,7 @@ Use the detected branch as "the base branch" in the steps below.
 Before editing release-facing docs or metadata on disk, run the shared repo-safety preflight for the exact release-write scope:
 
 ```bash
-superpowers-repo-safety check --intent write --stage superpowers:document-release --task-id <current-release-doc-pass> --path <release-doc-path> --write-target release-doc-write
+superpowers repo-safety check --intent write --stage superpowers:document-release --task-id <current-release-doc-pass> --path <release-doc-path> --write-target release-doc-write
 ```
 
 - If the helper returns `allowed`, continue with the doc or metadata write.
@@ -85,8 +85,8 @@ superpowers-repo-safety check --intent write --stage superpowers:document-releas
 - If the user explicitly approves the protected-branch release write, approve the full release-doc scope you intend to use on that branch, including the release-doc path:
 
 ```bash
-superpowers-repo-safety approve --stage superpowers:document-release --task-id <current-release-doc-pass> --reason "<explicit user approval>" --path <release-doc-path> --write-target release-doc-write
-superpowers-repo-safety check --intent write --stage superpowers:document-release --task-id <current-release-doc-pass> --path <release-doc-path> --write-target release-doc-write
+superpowers repo-safety approve --stage superpowers:document-release --task-id <current-release-doc-pass> --reason "<explicit user approval>" --path <release-doc-path> --write-target release-doc-write
+superpowers repo-safety check --intent write --stage superpowers:document-release --task-id <current-release-doc-pass> --path <release-doc-path> --write-target release-doc-write
 ```
 
 - Continue only if the re-check returns `allowed`.
@@ -206,7 +206,7 @@ If `TODOS.md` exists:
 For workflow-routed implementation work, also write a project-scoped release-readiness artifact:
 
 ```bash
-_SLUG_ENV=$("$_SUPERPOWERS_ROOT/bin/superpowers-slug" 2>/dev/null || true)
+_SLUG_ENV=$("$_SUPERPOWERS_ROOT/bin/superpowers" repo slug 2>/dev/null || true)
 if [ -n "$_SLUG_ENV" ]; then
   eval "$_SLUG_ENV"
 fi

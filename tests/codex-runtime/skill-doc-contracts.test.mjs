@@ -27,6 +27,8 @@ function getSkillDescription(skill) {
   return frontmatter.description;
 }
 
+const HELPER_COMMAND_PATTERN = /\bsuperpowers-(plan-contract|plan-execution|workflow-status|workflow|repo-safety|session-entry|config|slug|update-check|migrate-install)\b/;
+
 test('templates declare exactly one base or review preamble placeholder', () => {
   for (const skill of listGeneratedSkills()) {
     const template = readUtf8(getTemplatePath(skill));
@@ -75,11 +77,11 @@ test('using-superpowers gets a dedicated bootstrap preamble contract', () => {
   const content = readUtf8(getSkillPath('using-superpowers'));
   const bootstrapBlock = extractBashBlockUnderHeading(content, 'Preamble (run first)');
   const normalStackBlock = extractBashBlockUnderHeading(content, 'Normal Superpowers Stack');
-  assert.match(bootstrapBlock, /session-flags\/using-superpowers/, 'using-superpowers should derive the decision-file path');
+  assert.match(bootstrapBlock, /session-entry\/using-superpowers/, 'using-superpowers should derive the decision-file path');
   assert.doesNotMatch(bootstrapBlock, /touch "\$_SP_STATE_DIR\/sessions\/\$PPID"/, 'using-superpowers should not write session markers before the bypass decision');
   assert.doesNotMatch(bootstrapBlock, /_CONTRIB=/, 'using-superpowers should not load contributor mode before the bypass decision');
   assert.ok(normalStackBlock, 'using-superpowers should define the post-gate normal stack');
-  assert.match(normalStackBlock, /superpowers-update-check/, 'using-superpowers should restore update checks after the bypass gate');
+  assert.match(normalStackBlock, /superpowers" update-check/, 'using-superpowers should restore update checks after the bypass gate');
   assert.match(normalStackBlock, /touch "\$_SP_STATE_DIR\/sessions\/\$PPID"/, 'using-superpowers should restore session markers after the bypass gate');
   assert.match(normalStackBlock, /_CONTRIB=/, 'using-superpowers should restore contributor mode after the bypass gate');
   assert.match(content, /ask one interactive question before any normal Superpowers work happens/, 'using-superpowers should ask before the normal stack');
@@ -90,6 +92,8 @@ test('using-superpowers gets a dedicated bootstrap preamble contract', () => {
   assert.match(content, /If the session decision file exists but contains malformed content:/, 'using-superpowers should document malformed-state handling');
   assert.match(content, /if the user explicitly requests Superpowers or explicitly names a Superpowers skill, rewrite the session decision to `enabled` and continue on the same turn/, 'using-superpowers should treat explicit skill naming as re-entry');
   assert.match(content, /If the user explicitly requests re-entry but the bootstrap cannot rewrite the session decision to `enabled`:/, 'using-superpowers should document re-entry write-failure handling');
+  assert.match(content, /superpowers session-entry resolve --message-file <path>/, 'using-superpowers should reference the canonical session-entry command');
+  assert.doesNotMatch(content, /superpowers-session-entry/, 'using-superpowers should not keep helper-style session-entry commands');
 });
 
 test('generated preambles capture _BRANCH exactly once and keep helper BRANCH out of grounding', () => {
@@ -109,16 +113,16 @@ test('generated preambles capture _BRANCH exactly once and keep helper BRANCH ou
 test('generated branch-aware helper loads are guarded through _SLUG_ENV and eval the captured output only', () => {
   for (const skill of ['qa-only', 'plan-eng-review', 'finishing-a-development-branch']) {
     const content = readUtf8(getSkillPath(skill));
-    assert.match(content, /_SLUG_ENV=\$\("\$_SUPERPOWERS_ROOT\/bin\/superpowers-slug" 2>\/dev\/null \|\| true\)/, `${skill} should capture helper output into _SLUG_ENV`);
+    assert.match(content, /_SLUG_ENV=\$\("\$_SUPERPOWERS_ROOT\/bin\/superpowers" repo slug 2>\/dev\/null \|\| true\)/, `${skill} should capture canonical command output into _SLUG_ENV`);
     assert.match(content, /if \[ -n "\$_SLUG_ENV" \]; then\n\s+eval "\$_SLUG_ENV"\nfi/, `${skill} should only eval guarded helper output`);
-    assert.doesNotMatch(content, /eval "\$\("\$_SUPERPOWERS_ROOT\/bin\/superpowers-slug"\)/, `${skill} should not unguardedly eval helper command substitution`);
+    assert.doesNotMatch(content, /eval "\$\("\$_SUPERPOWERS_ROOT\/bin\/superpowers" repo slug\)/, `${skill} should not unguardedly eval command substitution`);
   }
 });
 
 test('branch-aware skill docs consume the slug helper instead of inline sanitization fragments', () => {
   for (const skill of ['qa-only', 'plan-eng-review', 'finishing-a-development-branch']) {
     const content = readUtf8(getSkillPath(skill));
-    assert.match(content, /bin\/superpowers-slug/, `${skill} should use the shared slug helper`);
+    assert.match(content, /bin\/superpowers" repo slug/, `${skill} should use the canonical repo slug command`);
     assert.doesNotMatch(content, /SAFE_BRANCH=\$\(/, `${skill} should not inline branch sanitization`);
     assert.doesNotMatch(content, /(?:^|[^_])BRANCH=\$\(git rev-parse --abbrev-ref HEAD/, `${skill} should not inline raw branch capture`);
     assert.doesNotMatch(content, /SLUG=\$\(printf '%s\\n' "\$REMOTE_URL"/, `${skill} should not inline repo slug derivation`);
@@ -166,16 +170,11 @@ test('interactive question contract appears once per generated skill in normaliz
   }
 });
 
-test('workflow sequencing test uses local fixtures instead of historical docs paths', () => {
-  const content = readUtf8(path.join(REPO_ROOT, 'tests/codex-runtime/test-workflow-sequencing.sh'));
-  const stripped = content
-    .replace(/^require_pattern docs\/superpowers\/specs\/2026-03-17-workflow-state-runtime-design\.md .*$/gm, '')
-    .replace(/^require_pattern docs\/superpowers\/plans\/2026-03-17-workflow-state-runtime\.md .*$/gm, '')
-    .replace(/^require_pattern docs\/superpowers\/specs\/2026-03-22-runtime-integration-hardening-design\.md .*$/gm, '')
-    .replace(/^require_pattern docs\/superpowers\/plans\/2026-03-22-runtime-integration-hardening\.md .*$/gm, '');
-  assert.match(content, /WORKFLOW_FIXTURE_DIR="tests\/codex-runtime\/fixtures\/workflow-artifacts"/);
-  assert.doesNotMatch(stripped, /docs\/superpowers\/specs\/2026-/);
-  assert.doesNotMatch(stripped, /docs\/superpowers\/plans\/2026-/);
+test('workflow fixture coverage uses local fixtures instead of historical docs paths', () => {
+  const content = readUtf8(path.join(REPO_ROOT, 'tests/runtime_instruction_contracts.rs'));
+  assert.match(content, /tests\/codex-runtime\/fixtures\/workflow-artifacts/);
+  assert.doesNotMatch(content, /docs\/superpowers\/specs\/2026-/);
+  assert.doesNotMatch(content, /docs\/superpowers\/plans\/2026-/);
 });
 
 test('broad-safe skill descriptions expand discovery language without taking over workflow authority', () => {
@@ -243,7 +242,7 @@ test('late-stage skill descriptions reject generic skip-ahead trigger phrases', 
 
 test('execution workflow skills reference the plan-execution helper contract', () => {
   const planEngReview = readUtf8(getSkillPath('plan-eng-review'));
-  assert.match(planEngReview, /superpowers-plan-execution recommend --plan <approved-plan-path>/);
+  assert.match(planEngReview, /superpowers plan execution recommend --plan <approved-plan-path>/);
   assert.match(planEngReview, /Present the helper-recommended execution skill as the default path with the approved plan path\./);
   assert.match(planEngReview, /If isolated-agent workflows are unavailable, do not present `superpowers:subagent-driven-development` as an available override\./);
 
@@ -268,8 +267,8 @@ test('execution workflow skills reference the plan-execution helper contract', (
   assert.match(reviewSkill, /rejects final review if the plan has invalid execution state or required unfinished work not truthfully represented/);
   assert.match(reviewSkill, /must fail closed when it detects a missed reopen or stale evidence, but must not call `reopen` itself/);
   assert.match(reviewSkill, /For plan-routed final review, require the exact approved plan path and exact approved spec path from the current execution preflight handoff or session context\./);
-  assert.match(reviewSkill, /Run `superpowers-plan-contract analyze-plan --spec <approved-spec-path> --plan <approved-plan-path> --format json` before dispatching the reviewer\./);
-  assert.match(reviewSkill, /Run `superpowers-plan-execution status --plan <approved-plan-path>` before dispatching the reviewer\./);
+  assert.match(reviewSkill, /Run `superpowers plan contract analyze-plan --spec <approved-spec-path> --plan <approved-plan-path> --format json` before dispatching the reviewer\./);
+  assert.match(reviewSkill, /Run `superpowers plan execution status --plan <approved-plan-path>` before dispatching the reviewer\./);
   assert.match(reviewSkill, /If helper status fails, stop and return to the current execution flow; do not dispatch review against guessed plan state\./);
   assert.match(reviewSkill, /Parse `active_task`, `blocking_task`, and `resume_task` from the status JSON\./);
   assert.match(reviewSkill, /If any of `active_task`, `blocking_task`, or `resume_task` is non-null, stop and return to the current execution flow; final review is only valid when all three are `null`\./);
@@ -279,7 +278,7 @@ test('execution workflow skills reference the plan-execution helper contract', (
   assert.match(finishSkill, /rejects branch-completion handoff if the approved plan is execution-dirty or malformed/);
   assert.match(finishSkill, /must not allow branch completion while any checked-off plan step still lacks semantic implementation evidence/);
   assert.match(finishSkill, /If the current work was executed from an approved Superpowers plan, require the exact approved plan path from the current execution workflow context before presenting completion options\./);
-  assert.match(finishSkill, /Run `superpowers-plan-execution status --plan <approved-plan-path>` and read the returned `evidence_path` before presenting completion options\./);
+  assert.match(finishSkill, /Run `superpowers plan execution status --plan <approved-plan-path>` and read the returned `evidence_path` before presenting completion options\./);
   assert.match(finishSkill, /If the exact approved plan path is unavailable or helper status fails, stop and return to the current execution flow instead of guessing\./);
   assert.match(finishSkill, /Parse `active_task`, `blocking_task`, and `resume_task` from the status JSON\./);
   assert.match(finishSkill, /If any of `active_task`, `blocking_task`, or `resume_task` is non-null, stop and return to the current execution flow; branch completion is only valid when all three are `null`\./);
@@ -301,10 +300,10 @@ test('task-fidelity workflow docs and prompts require packet-backed plan contrac
   assert.match(writingPlans, /\*\*Task Outcome:\*\*/);
   assert.match(writingPlans, /\*\*Plan Constraints:\*\*/);
   assert.match(writingPlans, /\*\*Open Questions:\*\* none/);
-  assert.match(writingPlans, /superpowers-plan-contract" lint/);
+  assert.match(writingPlans, /superpowers" plan contract lint/);
 
   const planEngReview = readUtf8(getSkillPath('plan-eng-review'));
-  assert.match(planEngReview, /superpowers-plan-contract" analyze-plan/);
+  assert.match(planEngReview, /superpowers" plan contract analyze-plan/);
   assert.match(planEngReview, /contract_state == valid/);
   assert.match(planEngReview, /packet_buildable_tasks == task_count/);
   assert.match(planEngReview, /missing, stale, or non-buildable for the approved plan revision/);
@@ -361,11 +360,18 @@ test('repo-writing workflow skills document the protected-branch repo-safety gat
   for (const [skill, targetPattern] of Object.entries(expectedTargets)) {
     const content = readUtf8(getSkillPath(skill));
     assert.match(content, /Protected-Branch Repo-Write Gate/, `${skill} should document the protected-branch gate`);
-    assert.match(content, /superpowers-repo-safety check --intent write/, `${skill} should run the repo-safety check`);
-    assert.match(content, /superpowers-repo-safety approve --stage/, `${skill} should document the approval rescue flow`);
+    assert.match(content, /superpowers repo-safety check --intent write/, `${skill} should run the repo-safety check`);
+    assert.match(content, /superpowers repo-safety approve --stage/, `${skill} should document the approval rescue flow`);
     assert.match(content, /superpowers:using-git-worktrees/, `${skill} should route blocked writes to using-git-worktrees`);
     assert.match(content, /branch, the stage, and the blocking `failure_class`/, `${skill} should surface blocked-write diagnostics`);
     assert.match(content, targetPattern, `${skill} should use the correct write target family`);
+  }
+});
+
+test('generated skills use canonical runtime commands instead of helper executables', () => {
+  for (const skill of listGeneratedSkills()) {
+    const content = readUtf8(getSkillPath(skill));
+    assert.doesNotMatch(content, HELPER_COMMAND_PATTERN, `${skill} should not use helper-style executable names`);
   }
 });
 
@@ -390,7 +396,7 @@ test('workflow handoff skills make terminal ownership explicit', () => {
   );
   assert.match(
     usingSuperpowers,
-    /First, if `\$_SUPERPOWERS_ROOT\/bin\/superpowers-workflow-status` is available, call `\$_SUPERPOWERS_ROOT\/bin\/superpowers-workflow-status status --refresh`\./,
+    /First, if `\$_SUPERPOWERS_ROOT\/bin\/superpowers` is available, call `\$_SUPERPOWERS_ROOT\/bin\/superpowers workflow status --refresh`\./,
   );
   assert.match(
     usingSuperpowers,
@@ -431,23 +437,23 @@ test('workflow handoff skills make terminal ownership explicit', () => {
   assert.match(engReview, /Do not start implementation inside `plan-eng-review`\./);
   assert.match(
     engReview,
-    /if `\$_SUPERPOWERS_ROOT\/bin\/superpowers-workflow-status` is available, call `\$_SUPERPOWERS_ROOT\/bin\/superpowers-workflow-status status --refresh`/,
+    /if `\$_SUPERPOWERS_ROOT\/bin\/superpowers` is available, call `\$_SUPERPOWERS_ROOT\/bin\/superpowers workflow status --refresh`/,
   );
   assert.match(engReview, /If the helper returns a non-empty `next_skill`, use that route instead of re-deriving state manually\./);
   assert.match(engReview, /If the helper returns `status` `implementation_ready`, present the normal execution preflight handoff below\./);
 
   const brainstorming = readUtf8(getSkillPath('brainstorming'));
   assert.match(brainstorming, /record the intended spec path with `expect`/);
-  assert.match(brainstorming, /"\$_SUPERPOWERS_ROOT\/bin\/superpowers-workflow-status" expect --artifact spec --path/);
+  assert.match(brainstorming, /"\$_SUPERPOWERS_ROOT\/bin\/superpowers" workflow expect --artifact spec --path/);
   assert.match(brainstorming, /runs `sync --artifact spec`/);
 
   const writingPlans = readUtf8(getSkillPath('writing-plans'));
   assert.match(writingPlans, /record the intended plan path with `expect`/);
-  assert.match(writingPlans, /"\$_SUPERPOWERS_ROOT\/bin\/superpowers-workflow-status" expect --artifact plan --path/);
+  assert.match(writingPlans, /"\$_SUPERPOWERS_ROOT\/bin\/superpowers" workflow expect --artifact plan --path/);
   assert.match(writingPlans, /runs `sync --artifact plan`/);
 
   const ceoReviewWithSyncPath = readUtf8(getSkillPath('plan-ceo-review'));
-  assert.match(ceoReviewWithSyncPath, /"\$_SUPERPOWERS_ROOT\/bin\/superpowers-workflow-status" sync --artifact spec --path/);
+  assert.match(ceoReviewWithSyncPath, /"\$_SUPERPOWERS_ROOT\/bin\/superpowers" workflow sync --artifact spec --path/);
 
   const sdd = readUtf8(getSkillPath('subagent-driven-development'));
   assert.match(sdd, /"Have engineering-approved implementation plan\?" \[shape=diamond\];/);
@@ -517,13 +523,13 @@ test('workflow docs avoid stale ambiguity, commit-ownership, and review-freshnes
 test('deprecated command docs act as compatibility shims instead of dead-end deprecations', () => {
   const brainstorm = readUtf8(path.join(REPO_ROOT, 'commands/brainstorm.md'));
   assert.match(brainstorm, /current phase/i);
-  assert.match(brainstorm, /superpowers-workflow phase/);
+  assert.match(brainstorm, /superpowers workflow phase/);
   assert.match(brainstorm, /superpowers:brainstorming/);
   assert.doesNotMatch(brainstorm, /will be removed in the next major release/i);
 
   const writePlan = readUtf8(path.join(REPO_ROOT, 'commands/write-plan.md'));
   assert.match(writePlan, /current phase/i);
-  assert.match(writePlan, /superpowers-workflow handoff/);
+  assert.match(writePlan, /superpowers workflow handoff/);
   assert.match(writePlan, /superpowers:writing-plans/);
   assert.doesNotMatch(writePlan, /will be removed in the next major release/i);
 
@@ -534,4 +540,26 @@ test('deprecated command docs act as compatibility shims instead of dead-end dep
   assert.match(executePlan, /If the handoff reports `phase` `needs_user_choice` or `next_action` `session_entry_gate`, resolve the session-entry decision first/i);
   assert.match(executePlan, /execution already started for that plan revision/i);
   assert.doesNotMatch(executePlan, /will be removed in the next major release/i);
+});
+
+test('repo-owned operator docs move to canonical runtime command vocabulary', () => {
+  for (const relativePath of [
+    'README.md',
+    'docs/README.codex.md',
+    'docs/README.copilot.md',
+    'RELEASE-NOTES.md',
+    'commands/brainstorm.md',
+    'commands/write-plan.md',
+    'commands/execute-plan.md',
+  ]) {
+    const content = readUtf8(path.join(REPO_ROOT, relativePath)).replace(
+      /tests\/codex-runtime\/test-superpowers-[^\s`]+/g,
+      'tests/codex-runtime/test-runtime-contract.sh',
+    );
+    assert.doesNotMatch(
+      content,
+      HELPER_COMMAND_PATTERN,
+      `${relativePath} should not use helper-style executable names`,
+    );
+  }
 });

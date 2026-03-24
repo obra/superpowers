@@ -1,7 +1,7 @@
 # Workflow Artifact Fixtures
 
 These fixtures preserve the workflow-header contract used by
-`tests/codex-runtime/test-workflow-sequencing.sh`.
+`tests/runtime_instruction_contracts.rs`.
 
 Most fixtures were extracted from the historical workflow documents
 present at `108c0e8`, before `ce106d0` removed

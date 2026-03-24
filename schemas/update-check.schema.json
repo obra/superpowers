@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "UpdateCheckSchema",
+  "type": "object",
+  "properties": {
+    "cache_path": {
+      "type": "string"
+    },
+    "local_version": {
+      "type": "string"
+    },
+    "outcome": {
+      "type": "string"
+    },
+    "remote_version": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "schema_version": {
+      "type": "string"
+    },
+    "snooze_path": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "outcome",
+    "local_version",
+    "cache_path",
+    "snooze_path"
+  ]
+}

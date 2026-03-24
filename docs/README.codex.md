@@ -57,21 +57,21 @@ If you already have `~/.codex/superpowers` or `~/.copilot/superpowers`, migrate 
 ```bash
 tmpdir=$(mktemp -d)
 git clone --depth 1 https://github.com/dmulcahey/superpowers.git "$tmpdir/superpowers"
-"$tmpdir/superpowers/bin/superpowers-migrate-install"
+"$tmpdir/superpowers/bin/superpowers" install migrate
 rm -rf "$tmpdir"
 ```
 
-If `~/.superpowers/install` already exists, run `~/.superpowers/install/bin/superpowers-migrate-install` instead.
+If `~/.superpowers/install` already exists, run `~/.superpowers/install/bin/superpowers install migrate` instead.
 
 **Windows (PowerShell):**
 ```powershell
 if (Test-Path "$env:USERPROFILE\.superpowers\install") {
-  & "$env:USERPROFILE\.superpowers\install\bin\superpowers-migrate-install.ps1"
+  & "$env:USERPROFILE\.superpowers\install\bin\superpowers.exe" install migrate
 } else {
   $tmpRoot = Join-Path $env:TEMP "superpowers-migrate"
   $tmpDir = Join-Path $tmpRoot ([guid]::NewGuid().ToString())
   git clone --depth 1 https://github.com/dmulcahey/superpowers.git (Join-Path $tmpDir "superpowers")
-  & (Join-Path $tmpDir "superpowers\bin\superpowers-migrate-install.ps1")
+  & (Join-Path $tmpDir "superpowers\bin\superpowers.exe") install migrate
   Remove-Item -Recurse -Force $tmpDir
 }
 ```
@@ -88,7 +88,7 @@ Unix-like: ~/.codex/agents/code-reviewer.toml → ~/.superpowers/install/.codex/
 Windows: copy ~/.superpowers/install/.codex/agents/code-reviewer.toml to ~/.codex/agents/code-reviewer.toml
 ```
 
-The runtime-owned `superpowers-session-entry` helper resolves the first-turn session decision before `using-superpowers` takes over as the human-readable entry router — no additional configuration needed.
+The runtime-owned `superpowers session-entry` helper resolves the first-turn session decision before `using-superpowers` takes over as the human-readable entry router — no additional configuration needed.
 
 The `code-reviewer` custom agent is available after installation.
 
@@ -113,7 +113,7 @@ Use `[agents]` in your Codex config for global subagent controls such as `max_th
 Skills are discovered automatically. Codex activates them when:
 - You mention a skill by name (e.g., "use brainstorming")
 - The task matches a skill's description
-- The runtime-owned `superpowers-session-entry` gate resolves the first-turn session decision, then `using-superpowers` routes the enabled turn by workflow state
+- The runtime-owned `superpowers session-entry` gate resolves the first-turn session decision, then `using-superpowers` routes the enabled turn by workflow state
 
 ## Default Workflow
 
@@ -149,60 +149,52 @@ Privacy rules are part of the contract:
 
 The canonical reference is [references/search-before-building.md](../references/search-before-building.md).
 
-## Runtime Helpers
+## Runtime Commands
 
 Runtime helper state lives in `~/.superpowers/`. Generated skill preambles use this directory for session markers, contributor logs, update-check cache files, and project-scoped artifacts under `~/.superpowers/projects/`.
 
-Superpowers ships session-entry runtime helpers:
-- `bin/superpowers-session-entry` (Bash)
-- `bin/superpowers-session-entry.ps1` (PowerShell wrapper)
+Superpowers installs one runtime binary at `~/.superpowers/install/bin/superpowers` on Unix-like systems and `~/.superpowers/install/bin/superpowers.exe` on Windows. The supported command families are:
 
-Supported entry paths use this helper to resolve `enabled`, `bypassed`, or `needs_user_choice` before the normal `using-superpowers` stack starts. Missing or malformed decision state fails closed to `needs_user_choice`; `using-superpowers` documents that contract but does not own it by itself.
+- `superpowers session-entry`
+- `superpowers repo-safety`
+- `superpowers plan contract`
+- `superpowers plan execution`
+- `superpowers workflow`
+- `superpowers config`
+- `superpowers update-check`
+- `superpowers install migrate`
+- `superpowers repo slug`
 
-Superpowers ships protected-branch repo-safety helpers:
-- `bin/superpowers-repo-safety` (Bash)
-- `bin/superpowers-repo-safety.ps1` (PowerShell wrapper)
+Supported entry paths use `superpowers session-entry` to resolve `enabled`, `bypassed`, or `needs_user_choice` before the normal `using-superpowers` stack starts. Missing or malformed decision state fails closed to `needs_user_choice`; `using-superpowers` documents that contract but does not own it by itself.
 
-Generated repo-writing workflow skills use this helper to block repo writes on protected branches by default. Spec writes, plan writes, approval-header edits, release-doc updates, execution task slices, and branch-finishing commands must either run on a non-protected branch or carry an explicit task-scoped approval that passes the helper's re-check.
+Generated repo-writing workflow skills use `superpowers repo-safety` to block repo writes on protected branches by default. Spec writes, plan writes, approval-header edits, release-doc updates, execution task slices, and branch-finishing commands must either run on a non-protected branch or carry an explicit task-scoped approval that passes the re-check.
 
-Superpowers ships task-fidelity contract helpers:
-- `bin/superpowers-plan-contract` (Bash)
-- `bin/superpowers-plan-contract.ps1` (PowerShell wrapper)
+Generated planning, execution, and review skills use `superpowers plan contract` to run authoritative `analyze-plan --format json` checks and to build task-packet context. Repo markdown remains authoritative; the runtime only enforces and compiles the approved markdown into exact execution and review inputs.
 
-Generated planning, execution, and review skills use this helper to run authoritative `analyze-plan --format json` contract checks and to build task-packet context. Repo markdown remains authoritative; the helper only enforces and compiles the approved markdown into exact execution and review inputs.
+`superpowers workflow` is the supported read-only workflow inspection surface. Use `status`, `next`, `artifacts`, `explain`, or `help` for the baseline inspection surfaces. The same public CLI also exposes `phase`, `doctor`, `handoff`, `preflight`, `gate review`, and `gate finish` when you need deeper operator inspection directly from the terminal. These commands stay read-only: they do not create, repair, or rewrite branch-scoped manifests. `phase`, `doctor`, `handoff`, `preflight`, `gate review`, and `gate finish` support `--json` for operator tooling. Before execution starts, `next` still stops at the execution preflight boundary for the approved plan instead of calling `superpowers plan execution recommend`. Once execution has already started for that plan revision, both `next` and `handoff` return the current execution state instead of a fresh recommendation.
 
-Superpowers ships a supported public workflow inspection surface:
-- `bin/superpowers-workflow` (Bash)
-- `bin/superpowers-workflow.ps1` (PowerShell wrapper)
-
-Use `status`, `next`, `artifacts`, `explain`, or `help` for the baseline read-only workflow inspection surfaces. The same public CLI also exposes `phase`, `doctor`, `handoff`, `preflight`, `gate review`, and `gate finish` when you need deeper operator inspection directly from the terminal. These commands stay read-only: they do not create, repair, or rewrite branch-scoped manifests. `phase`, `doctor`, `handoff`, `preflight`, `gate review`, and `gate finish` support `--json` for operator tooling. Before execution starts, `next` still stops at the execution preflight boundary for the approved plan instead of calling `superpowers-plan-execution recommend`. Once execution has already started for that plan revision, both `next` and `handoff` return the current execution state instead of a fresh recommendation.
-
-Superpowers also ships workflow-status runtime helpers:
-- `bin/superpowers-workflow-status` (Bash)
-- `bin/superpowers-workflow-status.ps1` (PowerShell wrapper)
-
-Generated workflow skills call `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status status --refresh` first to resolve the conservative next stage, including before spec/plan docs exist. This helper is an internal runtime surface, not a supported public workflow CLI. Default `status` output is JSON for machine consumers; `status --summary` is a human-oriented one-line view. `reason_codes` plus `diagnostics` are the structured diagnostic contract; legacy `reason` and `note` remain compatibility aliases for one release cycle. It keeps branch-scoped manifests at `~/.superpowers/projects/<repo-slug>/<user>-<safe-branch>-workflow-state.json`; that local manifest is rebuildable, and repo docs remain authoritative for approval state.
+Generated workflow skills call `$_SUPERPOWERS_ROOT/bin/superpowers workflow status --refresh` first to resolve the conservative next stage, including before spec/plan docs exist. Default `status` output is JSON for machine consumers; `status --summary` is a human-oriented one-line view. `reason_codes` plus `diagnostics` are the structured diagnostic contract, the branch-scoped manifest remains rebuildable, and repo docs remain authoritative for approval state.
 
 Optional: enable contributor mode for future sessions with:
 
 ```bash
-~/.superpowers/install/bin/superpowers-config set superpowers_contributor true
+~/.superpowers/install/bin/superpowers config set superpowers_contributor true
 ```
 
 **Windows (PowerShell):**
 ```powershell
-& "$env:USERPROFILE\.superpowers\install\bin\superpowers-config.ps1" set superpowers_contributor true
+& "$env:USERPROFILE\.superpowers\install\bin\superpowers.exe" config set superpowers_contributor true
 ```
 
 If you disable update notices, re-enable them with:
 
 ```bash
-~/.superpowers/install/bin/superpowers-config set update_check true
+~/.superpowers/install/bin/superpowers config set update_check true
 ```
 
 **Windows (PowerShell):**
 ```powershell
-& "$env:USERPROFILE\.superpowers\install\bin\superpowers-config.ps1" set update_check true
+& "$env:USERPROFILE\.superpowers\install\bin\superpowers.exe" config set update_check true
 ```
 
 ### Personal Skills
@@ -238,9 +230,9 @@ Skills update instantly through the symlink.
 
 If you copied the Codex agent file on Windows, copy `~/.superpowers/install/.codex/agents/code-reviewer.toml` into `~/.codex/agents/code-reviewer.toml` again after updating.
 
-If you migrated from `~/.codex/superpowers` or `~/.copilot/superpowers`, rerun `~/.superpowers/install/bin/superpowers-migrate-install` after updating if you need to restore the compatibility links. In PowerShell, use `& "$env:USERPROFILE\.superpowers\install\bin\superpowers-migrate-install.ps1"`.
+If you migrated from `~/.codex/superpowers` or `~/.copilot/superpowers`, rerun `~/.superpowers/install/bin/superpowers install migrate` after updating if you need to restore the compatibility links. In PowerShell, use `& "$env:USERPROFILE\.superpowers\install\bin\superpowers.exe" install migrate`.
 
-Generated skill preambles run `~/.superpowers/install/bin/superpowers-update-check` automatically when that install root is active, so new sessions can surface `UPGRADE_AVAILABLE` or `JUST_UPGRADED` without extra setup.
+Generated skill preambles run `~/.superpowers/install/bin/superpowers update-check` automatically when that install root is active, so new sessions can surface `UPGRADE_AVAILABLE` or `JUST_UPGRADED` without extra setup.
 
 ## Uninstalling
 

@@ -109,7 +109,7 @@ Before dispatching any implementation subagent:
    - if the working tree is dirty, stop and ask the user to confirm the workspace is intentionally prepared
 6. Do not auto-clean the workspace and do not auto-create a worktree.
 7. The later repo-safety checks still govern any additional protected branches declared through repo or user instructions.
-8. Run `superpowers-plan-execution preflight --plan <approved-plan-path>` before dispatching implementation subagents.
+8. Run `superpowers plan execution preflight --plan <approved-plan-path>` before dispatching implementation subagents.
 9. If the preflight helper returns `allowed` `false`, stop and resolve the reported `failure_class`, `reason_codes`, and `diagnostics` before dispatching work.
 
 ## Helper-Owned Execution State
@@ -130,7 +130,7 @@ The coordinator owns every `git commit`, `git merge`, and `git push` for this wo
 Before dispatching or applying any repo-writing task slice, run the shared repo-safety preflight for that exact scope:
 
 ```bash
-superpowers-repo-safety check --intent write --stage superpowers:subagent-driven-development --task-id <current-task-slice> --path <repo-relative-path> --write-target execution-task-slice
+superpowers repo-safety check --intent write --stage superpowers:subagent-driven-development --task-id <current-task-slice> --path <repo-relative-path> --write-target execution-task-slice
 ```
 
 - Use one stable task id per repo-writing task slice and pass the concrete repo-relative paths when they are known.
@@ -139,8 +139,8 @@ superpowers-repo-safety check --intent write --stage superpowers:subagent-driven
 - If the user explicitly approves the protected-branch write, approve the full task-slice scope you intend to use on that branch, including the repo-relative paths and any follow-on git targets that are part of the same slice:
 
 ```bash
-superpowers-repo-safety approve --stage superpowers:subagent-driven-development --task-id <current-task-slice> --reason "<explicit user approval>" --path <repo-relative-path> --write-target execution-task-slice [--write-target git-commit] [--write-target git-merge] [--write-target git-push]
-superpowers-repo-safety check --intent write --stage superpowers:subagent-driven-development --task-id <current-task-slice> --path <repo-relative-path> --write-target execution-task-slice [--write-target git-commit] [--write-target git-merge] [--write-target git-push]
+superpowers repo-safety approve --stage superpowers:subagent-driven-development --task-id <current-task-slice> --reason "<explicit user approval>" --path <repo-relative-path> --write-target execution-task-slice [--write-target git-commit] [--write-target git-merge] [--write-target git-push]
+superpowers repo-safety check --intent write --stage superpowers:subagent-driven-development --task-id <current-task-slice> --path <repo-relative-path> --write-target execution-task-slice [--write-target git-commit] [--write-target git-merge] [--write-target git-push]
 ```
 
 - Continue only if the re-check returns `allowed`.

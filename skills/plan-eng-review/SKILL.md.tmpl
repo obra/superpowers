@@ -31,7 +31,7 @@ description: Use when a written Superpowers implementation plan from a CEO-appro
 - Before editing the plan body or changing approval headers on disk, run the shared repo-safety preflight for the exact review-write scope:
 
 ```bash
-superpowers-repo-safety check --intent write --stage superpowers:plan-eng-review --task-id <current-plan-review> --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target repo-file-write
+superpowers repo-safety check --intent write --stage superpowers:plan-eng-review --task-id <current-plan-review> --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target repo-file-write
 ```
 
 - When the mutation is specifically an approval-header edit, use the same command shape with `--write-target approval-header-write`.
@@ -39,8 +39,8 @@ superpowers-repo-safety check --intent write --stage superpowers:plan-eng-review
 - If the user explicitly approves the protected-branch review write, run:
 
 ```bash
-superpowers-repo-safety approve --stage superpowers:plan-eng-review --task-id <current-plan-review> --reason "<explicit user approval>" --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target repo-file-write
-superpowers-repo-safety check --intent write --stage superpowers:plan-eng-review --task-id <current-plan-review> --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target repo-file-write
+superpowers repo-safety approve --stage superpowers:plan-eng-review --task-id <current-plan-review> --reason "<explicit user approval>" --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target repo-file-write
+superpowers repo-safety check --intent write --stage superpowers:plan-eng-review --task-id <current-plan-review> --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target repo-file-write
 ```
 
 - Repeat the same approve -> re-check pattern for `approval-header-write` before flipping `**Workflow State:**` or any other approval header on a protected branch.
@@ -179,7 +179,7 @@ Before moving into the review sections:
 Before `**Workflow State:** Engineering Approved`, run:
 
 ```bash
-PLAN_ANALYSIS_JSON="$("$_SUPERPOWERS_ROOT/bin/superpowers-plan-contract" analyze-plan \
+PLAN_ANALYSIS_JSON="$("$_SUPERPOWERS_ROOT/bin/superpowers" plan contract analyze-plan \
   --spec <source-spec-path> \
   --plan <plan-path> \
   --format json)"
@@ -273,7 +273,7 @@ For LLM or prompt changes, check the repo's prompt or evaluation docs. If this p
 After producing the test diagram, write a QA handoff artifact for cross-session reuse:
 
 ```bash
-_SLUG_ENV=$("$_SUPERPOWERS_ROOT/bin/superpowers-slug" 2>/dev/null || true)
+_SLUG_ENV=$("$_SUPERPOWERS_ROOT/bin/superpowers" repo slug 2>/dev/null || true)
 if [ -n "$_SLUG_ENV" ]; then
   eval "$_SLUG_ENV"
 fi
@@ -395,7 +395,7 @@ Check the git log for this branch. If there are prior commits suggesting a previ
 
 ## Execution handoff
 
-Before presenting the final execution preflight handoff, if `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status` is available, call `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status status --refresh`.
+Before presenting the final execution preflight handoff, if `$_SUPERPOWERS_ROOT/bin/superpowers` is available, call `$_SUPERPOWERS_ROOT/bin/superpowers workflow status --refresh`.
 
 - If the helper returns a non-empty `next_skill`, use that route instead of re-deriving state manually.
 - If the helper returns `status` `implementation_ready`, present the normal execution preflight handoff below.
@@ -403,7 +403,7 @@ Before presenting the final execution preflight handoff, if `$_SUPERPOWERS_ROOT/
 
 When the review is resolved and the written plan is approved, present the normal execution preflight handoff.
 
-During that handoff, call `superpowers-plan-execution recommend --plan <approved-plan-path>` and present the helper's recommended skill first.
+During that handoff, call `superpowers plan execution recommend --plan <approved-plan-path>` and present the helper's recommended skill first.
 
 The handoff must include the exact approved plan path and must remind the execution skill to reject draft or stale plans.
 

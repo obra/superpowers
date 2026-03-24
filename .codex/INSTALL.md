@@ -43,21 +43,21 @@ If you already have `~/.codex/superpowers` or `~/.copilot/superpowers`, use the 
 ```bash
 tmpdir=$(mktemp -d)
 git clone --depth 1 https://github.com/dmulcahey/superpowers.git "$tmpdir/superpowers"
-"$tmpdir/superpowers/bin/superpowers-migrate-install"
+"$tmpdir/superpowers/bin/superpowers" install migrate
 rm -rf "$tmpdir"
 ```
 
-If `~/.superpowers/install` already exists, you can run `~/.superpowers/install/bin/superpowers-migrate-install` directly.
+If `~/.superpowers/install` already exists, you can run `~/.superpowers/install/bin/superpowers install migrate` directly.
 
 **Windows (PowerShell):**
 ```powershell
 if (Test-Path "$env:USERPROFILE\.superpowers\install") {
-  & "$env:USERPROFILE\.superpowers\install\bin\superpowers-migrate-install.ps1"
+  & "$env:USERPROFILE\.superpowers\install\bin\superpowers.exe" install migrate
 } else {
   $tmpRoot = Join-Path $env:TEMP "superpowers-migrate"
   $tmpDir = Join-Path $tmpRoot ([guid]::NewGuid().ToString())
   git clone --depth 1 https://github.com/dmulcahey/superpowers.git (Join-Path $tmpDir "superpowers")
-  & (Join-Path $tmpDir "superpowers\bin\superpowers-migrate-install.ps1")
+  & (Join-Path $tmpDir "superpowers\bin\superpowers.exe") install migrate
   Remove-Item -Recurse -Force $tmpDir
 }
 ```
@@ -116,23 +116,23 @@ Runtime helper state lives in `~/.superpowers/`. Generated skill preambles use t
 Optional: enable contributor mode for future sessions with:
 
 ```bash
-~/.superpowers/install/bin/superpowers-config set superpowers_contributor true
+~/.superpowers/install/bin/superpowers config set superpowers_contributor true
 ```
 
 **Windows (PowerShell):**
 ```powershell
-& "$env:USERPROFILE\.superpowers\install\bin\superpowers-config.ps1" set superpowers_contributor true
+& "$env:USERPROFILE\.superpowers\install\bin\superpowers.exe" config set superpowers_contributor true
 ```
 
 If you disable update notices, re-enable them with:
 
 ```bash
-~/.superpowers/install/bin/superpowers-config set update_check true
+~/.superpowers/install/bin/superpowers config set update_check true
 ```
 
 **Windows (PowerShell):**
 ```powershell
-& "$env:USERPROFILE\.superpowers\install\bin\superpowers-config.ps1" set update_check true
+& "$env:USERPROFILE\.superpowers\install\bin\superpowers.exe" config set update_check true
 ```
 
 ## Updating
@@ -145,9 +145,9 @@ Skills update instantly through the symlink.
 
 If you copied the Codex agent file on Windows, copy `~/.superpowers/install/.codex/agents/code-reviewer.toml` into `~/.codex/agents/code-reviewer.toml` again after updating.
 
-If you migrated from `~/.codex/superpowers` or `~/.copilot/superpowers`, rerun `~/.superpowers/install/bin/superpowers-migrate-install` after updating if you need to restore the compatibility links. In PowerShell, use `& "$env:USERPROFILE\.superpowers\install\bin\superpowers-migrate-install.ps1"`.
+If you migrated from `~/.codex/superpowers` or `~/.copilot/superpowers`, rerun `~/.superpowers/install/bin/superpowers install migrate` after updating if you need to restore the compatibility links. In PowerShell, use `& "$env:USERPROFILE\.superpowers\install\bin\superpowers.exe" install migrate`.
 
-Generated skill preambles run `~/.superpowers/install/bin/superpowers-update-check` automatically when that install root is active, so new sessions can surface `UPGRADE_AVAILABLE` or `JUST_UPGRADED` without extra setup.
+Generated skill preambles run `~/.superpowers/install/bin/superpowers update-check` automatically when that install root is active, so new sessions can surface `UPGRADE_AVAILABLE` or `JUST_UPGRADED` without extra setup.
 
 ## Uninstalling
 

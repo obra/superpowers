@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "WorkflowRoute",
+  "type": "object",
+  "properties": {
+    "contract_state": {
+      "type": "string"
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/WorkflowDiagnostic"
+      }
+    },
+    "manifest_path": {
+      "type": "string"
+    },
+    "next_skill": {
+      "type": "string"
+    },
+    "note": {
+      "type": "string"
+    },
+    "plan_candidate_count": {
+      "type": "integer",
+      "format": "uint",
+      "minimum": 0
+    },
+    "plan_path": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "reason_codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "root": {
+      "type": "string"
+    },
+    "scan_truncated": {
+      "type": "boolean"
+    },
+    "schema_version": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    },
+    "spec_candidate_count": {
+      "type": "integer",
+      "format": "uint",
+      "minimum": 0
+    },
+    "spec_path": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "status",
+    "next_skill",
+    "spec_path",
+    "plan_path",
+    "contract_state",
+    "reason_codes",
+    "diagnostics",
+    "scan_truncated",
+    "spec_candidate_count",
+    "plan_candidate_count",
+    "manifest_path",
+    "root",
+    "reason",
+    "note"
+  ],
+  "$defs": {
+    "WorkflowDiagnostic": {
+      "type": "object",
+      "properties": {
+        "artifact": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "remediation": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "artifact",
+        "message",
+        "remediation"
+      ]
+    }
+  }
+}

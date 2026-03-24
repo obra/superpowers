@@ -13,7 +13,7 @@ Scenario set identifier: `using-superpowers-routing-r4`
 - The runner is read-only.
 - The judge reads raw runner evidence plus this file and the expected-safe-stage rubric.
 - Fail closed on ambiguous, mixed, malformed, or missing evidence.
-- The bypass prompt itself is out of scope for this gate and is covered by `tests/codex-runtime/test-using-superpowers-bypass.sh`.
+- The bypass prompt itself is out of scope for this gate and is covered by `cargo nextest run --test using_superpowers_skill`.
 
 ## Fixed Minimum Matrix
 

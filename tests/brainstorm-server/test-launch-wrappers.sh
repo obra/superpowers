@@ -7,6 +7,8 @@ START_SH="$REPO_ROOT/skills/brainstorming/scripts/start-server.sh"
 STOP_SH="$REPO_ROOT/skills/brainstorming/scripts/stop-server.sh"
 START_PS1="$REPO_ROOT/skills/brainstorming/scripts/start-server.ps1"
 STOP_PS1="$REPO_ROOT/skills/brainstorming/scripts/stop-server.ps1"
+COMPAT_BASH="$REPO_ROOT/compat/bash/superpowers"
+COMPAT_PS1="$REPO_ROOT/compat/powershell/superpowers.ps1"
 
 tmp_root="$(mktemp -d)"
 shell_screen=""
@@ -30,6 +32,16 @@ cleanup() {
 }
 
 trap cleanup EXIT
+
+if [[ ! -f "$COMPAT_BASH" ]]; then
+  echo "Expected canonical bash compat launcher to exist at $COMPAT_BASH"
+  exit 1
+fi
+
+if [[ ! -f "$COMPAT_PS1" ]]; then
+  echo "Expected canonical PowerShell compat launcher to exist at $COMPAT_PS1"
+  exit 1
+fi
 
 json_field() {
   local json="$1"

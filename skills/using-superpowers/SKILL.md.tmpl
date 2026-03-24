@@ -130,7 +130,7 @@ Do NOT jump from brainstorming straight to implementation. For workflow-routed w
 
 ### Helper-first routing
 
-First, if `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status` is available, call `$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status status --refresh`.
+First, if `$_SUPERPOWERS_ROOT/bin/superpowers` is available, call `$_SUPERPOWERS_ROOT/bin/superpowers workflow status --refresh`.
 
 - If the JSON result contains a non-empty `next_skill`, use that route.
 - If the JSON result reports `status` `implementation_ready`, proceed to the normal execution preflight and handoff flow using the exact approved plan path. Choose between `superpowers:subagent-driven-development` and `superpowers:executing-plans` through the helper-backed execution recommendation contract, not a top-level isolated-agent shortcut.

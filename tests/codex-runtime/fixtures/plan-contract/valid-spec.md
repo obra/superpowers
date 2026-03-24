@@ -7,6 +7,7 @@
 ## Summary
 
 Fixture spec for plan-contract helper regression coverage.
+It also anchors schema-backed packet and evidence compatibility checks.
 
 ## Requirement Index
 

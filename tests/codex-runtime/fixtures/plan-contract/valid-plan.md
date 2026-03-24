@@ -36,7 +36,7 @@
 ## Task 2: Dispatch exact packet-backed execution
 
 **Spec Coverage:** REQ-003, NONGOAL-001, VERIFY-001
-**Task Outcome:** Execution and review consume exact task packets built from approved artifacts with stale packet handling.
+**Task Outcome:** Execution and review consume exact task packets built from approved artifacts with stale packet handling and schema-readable evidence.
 **Plan Constraints:**
 - Do not invent controller-authored summary context.
 - Reject malformed file scope and normalized path traversal.

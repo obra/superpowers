@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "benchmarks": {
+    "workflow_status": {
+      "iterations": 50,
+      "warmup_iterations": 5,
+      "max_mean_ms": 5.0
+    },
+    "plan_contract": {
+      "iterations": 50,
+      "warmup_iterations": 5,
+      "max_mean_ms": 1.0
+    },
+    "execution_status": {
+      "iterations": 50,
+      "warmup_iterations": 5,
+      "max_mean_ms": 5.0
+    }
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AnalyzePlanReport",
+  "type": "object",
+  "properties": {
+    "contract_state": {
+      "type": "string"
+    },
+    "coverage_complete": {
+      "type": "boolean"
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ContractDiagnostic"
+      }
+    },
+    "files_blocks_valid": {
+      "type": "boolean"
+    },
+    "open_questions_resolved": {
+      "type": "boolean"
+    },
+    "overlapping_write_scopes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/OverlappingWriteScope"
+      }
+    },
+    "packet_buildable_tasks": {
+      "type": "integer",
+      "format": "uint",
+      "minimum": 0
+    },
+    "plan_fingerprint": {
+      "type": "string"
+    },
+    "plan_path": {
+      "type": "string"
+    },
+    "plan_revision": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    },
+    "reason_codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "spec_fingerprint": {
+      "type": "string"
+    },
+    "spec_path": {
+      "type": "string"
+    },
+    "spec_revision": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    },
+    "task_count": {
+      "type": "integer",
+      "format": "uint",
+      "minimum": 0
+    },
+    "task_structure_valid": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "contract_state",
+    "spec_path",
+    "spec_revision",
+    "spec_fingerprint",
+    "plan_path",
+    "plan_revision",
+    "plan_fingerprint",
+    "task_count",
+    "packet_buildable_tasks",
+    "coverage_complete",
+    "open_questions_resolved",
+    "task_structure_valid",
+    "files_blocks_valid",
+    "reason_codes",
+    "overlapping_write_scopes",
+    "diagnostics"
+  ],
+  "$defs": {
+    "ContractDiagnostic": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "OverlappingWriteScope": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "tasks": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0
+          }
+        }
+      },
+      "required": [
+        "path",
+        "tasks"
+      ]
+    }
+  }
+}

@@ -96,12 +96,20 @@ test('fixture README documents provenance and intent', () => {
   assert.match(content, /full approved-plan-contract pair/i);
 });
 
-test('runtime sequencing coverage points at the fixture directory', () => {
-  const content = readUtf8(path.join(REPO_ROOT, 'tests/codex-runtime/test-workflow-sequencing.sh'));
-  assert.match(content, /WORKFLOW_FIXTURE_DIR="tests\/codex-runtime\/fixtures\/workflow-artifacts"/);
+test('runtime fixture coverage points at the fixture directory', () => {
+  const content = readUtf8(path.join(REPO_ROOT, 'tests/runtime_instruction_contracts.rs'));
+  assert.match(content, /tests\/codex-runtime\/fixtures\/workflow-artifacts/);
 });
 
-test('public workflow wrapper coverage points at the fixture directory', () => {
-  const content = readUtf8(path.join(REPO_ROOT, 'tests/codex-runtime/test-superpowers-workflow.sh'));
-  assert.match(content, /WORKFLOW_FIXTURE_DIR="\$REPO_ROOT\/tests\/codex-runtime\/fixtures\/workflow-artifacts"/);
+test('public workflow rust smoke coverage exercises the shipped public wrapper', () => {
+  const content = readUtf8(path.join(REPO_ROOT, 'tests/workflow_shell_smoke.rs'));
+  assert.match(content, /bin\/superpowers-workflow/);
+  assert.match(content, /public_workflow_wrapper_help_outside_repo_mentions_the_public_surfaces/);
+  assert.match(content, /public_workflow_wrapper_status_summary_matches_json_semantics_for_ready_plans/);
+});
+
+test('workflow runtime coverage retains argv0 alias and public operator parity', () => {
+  const content = readUtf8(path.join(REPO_ROOT, 'tests/workflow_runtime.rs'));
+  assert.match(content, /workflow_status_argv0_alias_dispatches_to_canonical_tree/);
+  assert.match(content, /canonical_workflow_public_json_commands_work_for_ready_plan/);
 });

@@ -21,7 +21,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 - Before writing the plan, record the intended plan path with `expect`:
 
 ```bash
-"$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status" expect --artifact plan --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md
+"$_SUPERPOWERS_ROOT/bin/superpowers" workflow expect --artifact plan --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md
 ```
 
 ## Protected-Branch Repo-Write Gate
@@ -29,7 +29,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 Before writing or updating the plan file on disk, run the shared repo-safety preflight for the exact plan-writing scope:
 
 ```bash
-superpowers-repo-safety check --intent write --stage superpowers:writing-plans --task-id <current-plan-write> --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target plan-artifact-write
+superpowers repo-safety check --intent write --stage superpowers:writing-plans --task-id <current-plan-write> --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target plan-artifact-write
 ```
 
 - If the helper returns `allowed`, continue with the plan write.
@@ -37,8 +37,8 @@ superpowers-repo-safety check --intent write --stage superpowers:writing-plans -
 - If the user explicitly approves writing this plan on the current protected branch, approve the full protected-branch task scope you intend to use, including the plan path and any follow-on git targets that are part of the same task slice:
 
 ```bash
-superpowers-repo-safety approve --stage superpowers:writing-plans --task-id <current-plan-write> --reason "<explicit user approval>" --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target plan-artifact-write [--write-target git-commit]
-superpowers-repo-safety check --intent write --stage superpowers:writing-plans --task-id <current-plan-write> --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target plan-artifact-write [--write-target git-commit]
+superpowers repo-safety approve --stage superpowers:writing-plans --task-id <current-plan-write> --reason "<explicit user approval>" --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target plan-artifact-write [--write-target git-commit]
+superpowers repo-safety check --intent write --stage superpowers:writing-plans --task-id <current-plan-write> --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target plan-artifact-write [--write-target git-commit]
 ```
 
 - Continue only if the re-check returns `allowed`.
@@ -218,7 +218,7 @@ After saving the full plan:
 0. Before handoff, run the plan-contract lint gate:
 
 ```bash
-"$_SUPERPOWERS_ROOT/bin/superpowers-plan-contract" lint \
+"$_SUPERPOWERS_ROOT/bin/superpowers" plan contract lint \
   --spec docs/superpowers/specs/YYYY-MM-DD-<feature-name>-design.md \
   --plan docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md
 ```
@@ -226,7 +226,7 @@ After saving the full plan:
 1. After the plan is written or updated, runs `sync --artifact plan`:
 
 ```bash
-"$_SUPERPOWERS_ROOT/bin/superpowers-workflow-status" sync --artifact plan --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md
+"$_SUPERPOWERS_ROOT/bin/superpowers" workflow sync --artifact plan --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md
 ```
 
 2. Invoke `superpowers:plan-eng-review` after saving the full plan.

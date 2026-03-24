@@ -11,8 +11,7 @@ description: Use after implementation work or a completed plan/task slice, and b
 _IS_SUPERPOWERS_RUNTIME_ROOT() {
   local candidate="$1"
   [ -n "$candidate" ] &&
-  [ -x "$candidate/bin/superpowers-update-check" ] &&
-  [ -x "$candidate/bin/superpowers-config" ] &&
+  [ -x "$candidate/bin/superpowers" ] &&
   [ -f "$candidate/VERSION" ]
 }
 _REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
@@ -26,7 +25,7 @@ _IS_SUPERPOWERS_RUNTIME_ROOT "$_REPO_ROOT" && _SUPERPOWERS_ROOT="$_REPO_ROOT"
 [ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.codex/superpowers" && _SUPERPOWERS_ROOT="$HOME/.codex/superpowers"
 [ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.copilot/superpowers" && _SUPERPOWERS_ROOT="$HOME/.copilot/superpowers"
 _UPD=""
-[ -n "$_SUPERPOWERS_ROOT" ] && _UPD=$("$_SUPERPOWERS_ROOT/bin/superpowers-update-check" 2>/dev/null || true)
+[ -n "$_SUPERPOWERS_ROOT" ] && _UPD=$("$_SUPERPOWERS_ROOT/bin/superpowers" update-check 2>/dev/null || true)
 [ -n "$_UPD" ] && echo "$_UPD" || true
 _SP_STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
 mkdir -p "$_SP_STATE_DIR/sessions"
@@ -34,7 +33,7 @@ touch "$_SP_STATE_DIR/sessions/$PPID"
 _SESSIONS=$(find "$_SP_STATE_DIR/sessions" -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' ')
 find "$_SP_STATE_DIR/sessions" -mmin +120 -type f -delete 2>/dev/null || true
 _CONTRIB=""
-[ -n "$_SUPERPOWERS_ROOT" ] && _CONTRIB=$("$_SUPERPOWERS_ROOT/bin/superpowers-config" get superpowers_contributor 2>/dev/null || true)
+[ -n "$_SUPERPOWERS_ROOT" ] && _CONTRIB=$("$_SUPERPOWERS_ROOT/bin/superpowers" config get superpowers_contributor 2>/dev/null || true)
 ```
 
 If output shows `UPGRADE_AVAILABLE <old> <new>`: read the installed `superpowers-upgrade/SKILL.md` from the same superpowers root (check the current repo when it contains the Superpowers runtime, then `$HOME/.superpowers/install`, then `$HOME/.codex/superpowers`, then `$HOME/.copilot/superpowers`) and follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise ask one interactive user question with 4 options and write snooze state if declined). If `JUST_UPGRADED <from> <to>`: tell the user "Running superpowers v{to} (just updated!)" and continue.
@@ -132,14 +131,14 @@ In Codex, Superpowers installs the `code-reviewer` custom agent alongside the sh
 **1. If this review is for plan-routed work, capture execution state first:**
 
 - For plan-routed final review, require the exact approved plan path and exact approved spec path from the current execution preflight handoff or session context.
-- Run `superpowers-plan-contract analyze-plan --spec <approved-spec-path> --plan <approved-plan-path> --format json` before dispatching the reviewer.
+- Run `superpowers plan contract analyze-plan --spec <approved-spec-path> --plan <approved-plan-path> --format json` before dispatching the reviewer.
 - If `contract_state != valid` or `packet_buildable_tasks != task_count`, stop and return to the current execution flow; do not review stale or malformed approved artifacts.
-- Run `superpowers-plan-execution status --plan <approved-plan-path>` before dispatching the reviewer.
+- Run `superpowers plan execution status --plan <approved-plan-path>` before dispatching the reviewer.
 - If helper status fails, stop and return to the current execution flow; do not dispatch review against guessed plan state.
 - Parse `active_task`, `blocking_task`, and `resume_task` from the status JSON.
 - If any of `active_task`, `blocking_task`, or `resume_task` is non-null, stop and return to the current execution flow; final review is only valid when all three are `null`.
 - If `evidence_path` is empty or unreadable, stop and return to the current execution flow instead of reviewing against missing execution evidence.
-- Run `superpowers-plan-execution gate-review --plan <approved-plan-path>` before dispatching the reviewer.
+- Run `superpowers plan execution gate-review --plan <approved-plan-path>` before dispatching the reviewer.
 - If the review gate returns `allowed` `false`, stop and return to the current execution flow; do not dispatch review against stale, drifted, or mismatched execution evidence.
 - If the review gate returns warning codes such as `legacy_evidence_format`, keep the warning in the review context but do not treat it as a blocker when `allowed` remains `true`.
 - Pass the exact approved plan path and helper-reported execution evidence path into the reviewer context.
@@ -190,10 +189,10 @@ You: Let me request code review before proceeding.
 
 APPROVED_PLAN_PATH=docs/superpowers/plans/deployment-plan.md
 SOURCE_SPEC_PATH=docs/superpowers/specs/deployment-plan-design.md
-"$_SUPERPOWERS_ROOT/bin/superpowers-plan-contract" lint --spec "$SOURCE_SPEC_PATH" --plan "$APPROVED_PLAN_PATH"
-STATUS_JSON=$("$_SUPERPOWERS_ROOT/bin/superpowers-plan-execution" status --plan "$APPROVED_PLAN_PATH")
+"$_SUPERPOWERS_ROOT/bin/superpowers" plan contract lint --spec "$SOURCE_SPEC_PATH" --plan "$APPROVED_PLAN_PATH"
+STATUS_JSON=$("$_SUPERPOWERS_ROOT/bin/superpowers" plan execution status --plan "$APPROVED_PLAN_PATH")
 EXECUTION_EVIDENCE_PATH=$(printf '%s\n' "$STATUS_JSON" | node -e 'const fs = require("fs"); const parsed = JSON.parse(fs.readFileSync(0, "utf8")); process.stdout.write(parsed.evidence_path || "")')
-TASK_PACKET_CONTEXT=$("$_SUPERPOWERS_ROOT/bin/superpowers-plan-contract" build-task-packet --plan "$APPROVED_PLAN_PATH" --task 2 --format markdown --persist yes)
+TASK_PACKET_CONTEXT=$("$_SUPERPOWERS_ROOT/bin/superpowers" plan contract build-task-packet --plan "$APPROVED_PLAN_PATH" --task 2 --format markdown --persist yes)
 BASE_BRANCH=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null || gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null || echo main)
 BASE_SHA=$(git merge-base HEAD "origin/$BASE_BRANCH" 2>/dev/null || git merge-base HEAD "$BASE_BRANCH" 2>/dev/null || git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
 HEAD_SHA=$(git rev-parse HEAD)

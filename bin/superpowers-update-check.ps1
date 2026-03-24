@@ -1,7 +1,4 @@
-. (Join-Path $PSScriptRoot 'superpowers-pwsh-common.ps1')
-
-$bashPath = Get-SuperpowersBashPath
-$bashScript = Convert-SuperpowersPathToBash -Path (Join-Path $PSScriptRoot 'superpowers-update-check')
-
-& $bashPath $bashScript @args
+$CompatPath = (Resolve-Path (Join-Path $PSScriptRoot '..\compat\powershell\superpowers.ps1')).Path
+$ForwardArgs = @("update-check") + $args
+& $CompatPath @ForwardArgs
 exit $LASTEXITCODE

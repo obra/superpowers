@@ -13,8 +13,7 @@ export function buildRootDetection() {
     '_IS_SUPERPOWERS_RUNTIME_ROOT() {',
     '  local candidate="$1"',
     '  [ -n "$candidate" ] &&',
-    '  [ -x "$candidate/bin/superpowers-update-check" ] &&',
-    '  [ -x "$candidate/bin/superpowers-config" ] &&',
+    '  [ -x "$candidate/bin/superpowers" ] &&',
     '  [ -f "$candidate/VERSION" ]',
     '}',
     '_REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)',
@@ -34,7 +33,7 @@ export function buildBaseShellLines() {
   return [
     ...buildRootDetection(),
     '_UPD=""',
-    '[ -n "$_SUPERPOWERS_ROOT" ] && _UPD=$("$_SUPERPOWERS_ROOT/bin/superpowers-update-check" 2>/dev/null || true)',
+    '[ -n "$_SUPERPOWERS_ROOT" ] && _UPD=$("$_SUPERPOWERS_ROOT/bin/superpowers" update-check 2>/dev/null || true)',
     '[ -n "$_UPD" ] && echo "$_UPD" || true',
     '_SP_STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"',
     'mkdir -p "$_SP_STATE_DIR/sessions"',
@@ -42,7 +41,7 @@ export function buildBaseShellLines() {
     '_SESSIONS=$(find "$_SP_STATE_DIR/sessions" -mmin -120 -type f 2>/dev/null | wc -l | tr -d \' \')',
     'find "$_SP_STATE_DIR/sessions" -mmin +120 -type f -delete 2>/dev/null || true',
     '_CONTRIB=""',
-    '[ -n "$_SUPERPOWERS_ROOT" ] && _CONTRIB=$("$_SUPERPOWERS_ROOT/bin/superpowers-config" get superpowers_contributor 2>/dev/null || true)',
+    '[ -n "$_SUPERPOWERS_ROOT" ] && _CONTRIB=$("$_SUPERPOWERS_ROOT/bin/superpowers" config get superpowers_contributor 2>/dev/null || true)',
   ];
 }
 
@@ -50,7 +49,7 @@ export function buildUsingSuperpowersShellLines() {
   return [
     ...buildRootDetection(),
     '_SP_STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"',
-    '_SP_USING_SUPERPOWERS_DECISION_DIR="$_SP_STATE_DIR/session-flags/using-superpowers"',
+    '_SP_USING_SUPERPOWERS_DECISION_DIR="$_SP_STATE_DIR/session-entry/using-superpowers"',
     '_SP_USING_SUPERPOWERS_DECISION_PATH="$_SP_USING_SUPERPOWERS_DECISION_DIR/$PPID"',
   ];
 }
@@ -102,7 +101,7 @@ Per-skill instructions may add additional formatting rules on top of this baseli
 export function buildUsingSuperpowersBypassGateSection() {
   return `## Bypass Gate
 
-The first-turn session-entry bootstrap is owned by the runtime helper \`$_SUPERPOWERS_ROOT/bin/superpowers-session-entry\` (or \`bin/superpowers-session-entry.ps1\` on Windows), not by \`using-superpowers\` prose alone.
+The first-turn session-entry bootstrap is owned by the runtime command \`$_SUPERPOWERS_ROOT/bin/superpowers session-entry\`, not by \`using-superpowers\` prose alone.
 
 This skill documents the supported-entry contract:
 
@@ -110,7 +109,7 @@ This skill documents the supported-entry contract:
 - missing or malformed decision state fails closed
 - supported entry paths must ask the bypass question on \`needs_user_choice\` before the normal stack starts
 
-The session decision file lives at \`~/.superpowers/session-flags/using-superpowers/$PPID\`.
+The session decision file lives at \`~/.superpowers/session-entry/using-superpowers/$PPID\`.
 
 If no valid session decision exists yet, ask one interactive question before any normal Superpowers work happens.
 
@@ -120,7 +119,7 @@ The first-turn opt-out question is a pre-Superpowers gate:
 - do not apply the shared ELI16 multi-session grounding rule
 - use the normal context / recommendation / option structure, but treat this question as the gate into the Superpowers stack rather than a normal in-stack Superpowers interactive question
 
-Supported entry paths must resolve \`superpowers-session-entry resolve --message-file <path>\` before any normal Superpowers behavior:
+Supported entry paths must resolve \`superpowers session-entry resolve --message-file <path>\` before any normal Superpowers behavior:
 
 - if the session decision is \`enabled\`, continue into the normal stack
 - if the session decision is \`bypassed\` and the user did not explicitly request Superpowers, stop and bypass the rest of this skill
@@ -134,13 +133,13 @@ If the session decision file exists but contains malformed content:
 - do not treat it as \`bypassed\`
 - ask the opt-out question again before any normal Superpowers work happens
 - only rewrite the file after a fresh explicit choice
-- \`superpowers-session-entry resolve\` should surface \`outcome\` \`needs_user_choice\` with \`failure_class\` \`MalformedDecisionState\`
+- \`superpowers session-entry resolve\` should surface \`outcome\` \`needs_user_choice\` with \`failure_class\` \`MalformedDecisionState\`
 
 If the session decision is missing:
 
 - ask the opt-out question before any normal Superpowers work happens
 - persist the user's explicit \`enabled\` or \`bypassed\` choice for later turns
-- \`superpowers-session-entry resolve\` should surface \`outcome\` \`needs_user_choice\` with \`decision_source\` \`missing\`
+- \`superpowers session-entry resolve\` should surface \`outcome\` \`needs_user_choice\` with \`decision_source\` \`missing\`
 
 If the user explicitly requests re-entry but the bootstrap cannot rewrite the session decision to \`enabled\`:
 
@@ -148,7 +147,7 @@ If the user explicitly requests re-entry but the bootstrap cannot rewrite the se
 - continue through the normal Superpowers stack on that turn
 - do not pretend persistence succeeded
 - treat future turns as undecided until a later write succeeds
-- \`superpowers-session-entry resolve\` should surface \`decision_source\` \`explicit_reentry_unpersisted\`
+- \`superpowers session-entry resolve\` should surface \`decision_source\` \`explicit_reentry_unpersisted\`
 `;
 }
 
@@ -159,14 +158,14 @@ If the bypass gate resolves to \`enabled\` for this turn, run the normal shared 
 
 \`\`\`bash
 _UPD=""
-[ -n "$_SUPERPOWERS_ROOT" ] && _UPD=$("$_SUPERPOWERS_ROOT/bin/superpowers-update-check" 2>/dev/null || true)
+[ -n "$_SUPERPOWERS_ROOT" ] && _UPD=$("$_SUPERPOWERS_ROOT/bin/superpowers" update-check 2>/dev/null || true)
 [ -n "$_UPD" ] && echo "$_UPD" || true
 mkdir -p "$_SP_STATE_DIR/sessions"
 touch "$_SP_STATE_DIR/sessions/$PPID"
 _SESSIONS=$(find "$_SP_STATE_DIR/sessions" -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' ')
 find "$_SP_STATE_DIR/sessions" -mmin +120 -type f -delete 2>/dev/null || true
 _CONTRIB=""
-[ -n "$_SUPERPOWERS_ROOT" ] && _CONTRIB=$("$_SUPERPOWERS_ROOT/bin/superpowers-config" get superpowers_contributor 2>/dev/null || true)
+[ -n "$_SUPERPOWERS_ROOT" ] && _CONTRIB=$("$_SUPERPOWERS_ROOT/bin/superpowers" config get superpowers_contributor 2>/dev/null || true)
 \`\`\`
 
 ${buildUpgradeNote()}

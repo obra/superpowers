@@ -75,7 +75,7 @@ Use these files as the authoritative contract:
 
 The orchestrator doc tells the controller how to run fresh runner/judge subagents, persist per-scenario evidence under `~/.superpowers/projects/<slug>/...`, and fail closed on ambiguous or malformed outputs.
 
-The routing gate intentionally starts after the first-turn bypass decision has already been resolved to `enabled` for the synthetic scenario session. Seed that state through the runner's real derived decision-file path for its own session identity; do not guess a `$PPID` from outside the runner. The bypass prompt and session-decision contract are covered separately by `bash tests/codex-runtime/test-using-superpowers-bypass.sh`.
+The routing gate intentionally starts after the first-turn bypass decision has already been resolved to `enabled` for the synthetic scenario session. Seed that state through the runner's real derived decision-file path for its own session identity; do not guess a `$PPID` from outside the runner. The bypass prompt and session-decision contract are covered separately by `cargo nextest run --test using_superpowers_skill`.
 
 The retired `tests/evals/using-superpowers-routing.eval.mjs` file has been removed.
 
