@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Test explicit skill requests (user names a skill directly)
 # Usage: ./run-test.sh <skill-name> <prompt-file>
 #
