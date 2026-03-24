@@ -313,7 +313,7 @@ function startServer() {
 
   function ownerAlive() {
     if (!OWNER_PID) return true;
-    try { process.kill(OWNER_PID, 0); return true; } catch (e) { return false; }
+    try { process.kill(OWNER_PID, 0); return true; } catch (e) { return e.code === 'EPERM'; }
   }
 
   // Check every 60s: exit if owner process died or idle for 30 minutes
