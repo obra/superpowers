@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>接金幣遊戲</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <main class="app">
+      <h1>接金幣遊戲</h1>
+
+      <section id="home-screen" class="panel">
+        <p>60 秒內接到越多金幣越好！</p>
+        <button id="start-button" class="primary">開始遊戲</button>
+      </section>
+
+      <section id="game-screen" class="panel hidden">
+        <div class="hud">
+          <span>分數：<strong id="score">0</strong></span>
+          <span>時間：<strong id="time">60</strong> 秒</span>
+        </div>
+        <div id="game-area" class="game-area">
+          <div id="player" class="player"></div>
+        </div>
+        <div class="actions">
+          <button id="abort-button" class="danger">中止遊戲</button>
+        </div>
+      </section>
+
+      <section id="result-screen" class="panel hidden">
+        <h2 id="result-title">本局結束</h2>
+        <p>分數：<strong id="final-score">0</strong></p>
+        <button id="restart-button" class="primary">再玩一次</button>
+      </section>
+
+      <section class="panel leaderboard-panel">
+        <h2>排行榜（前 10 名）</h2>
+        <ol id="leaderboard-list"></ol>
+      </section>
+    </main>
+
+    <script type="module" src="./src/game.js"></script>
+  </body>
+</html>
