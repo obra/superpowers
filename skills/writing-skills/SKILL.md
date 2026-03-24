@@ -93,18 +93,28 @@ skills/
 ## SKILL.md Structure
 
 **Frontmatter (YAML):**
-- Only two fields supported: `name` and `description`
-- Max 1024 characters total
-- `name`: Use letters, numbers, and hyphens only (no parentheses, special chars)
+- All fields are optional. Only `description` is recommended.
+- Max 1024 characters total for frontmatter
+- `name`: Display name / slash command. Lowercase letters, numbers, hyphens only (max 64 chars). Defaults to directory name.
 - `description`: Third-person, describes ONLY when to use (NOT what it does)
   - Start with "Use when..." to focus on triggering conditions
   - Include specific symptoms, situations, and contexts
   - **NEVER summarize the skill's process or workflow** (see CSO section for why)
   - Keep under 500 characters if possible
+- `disable-model-invocation`: Set to `true` to prevent Claude from auto-loading (user `/name` only)
+- `user-invocable`: Set to `false` to hide from `/` menu (background knowledge only)
+- `allowed-tools`: Tools Claude can use without permission when skill is active
+- `context`: Set to `fork` to run in a forked subagent context
+- `agent`: Subagent type when `context: fork` is set
+- `model`: Model override when skill is active
+- `effort`: Effort level override (`low`, `medium`, `high`, `max`)
+- `argument-hint`: Hint shown during autocomplete (e.g., `[issue-number]`)
+- `hooks`: Hooks scoped to this skill's lifecycle
+- See full reference: https://code.claude.com/docs/en/skills#frontmatter-reference
 
 ```markdown
 ---
-name: Skill-Name-With-Hyphens
+name: skill-name-with-hyphens
 description: Use when [specific triggering conditions and symptoms]
 ---
 
@@ -604,7 +614,7 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 
 **GREEN Phase - Write Minimal Skill:**
 - [ ] Name uses only letters, numbers, hyphens (no parentheses/special chars)
-- [ ] YAML frontmatter with only name and description (max 1024 chars)
+- [ ] YAML frontmatter with at minimum a description (max 1024 chars total)
 - [ ] Description starts with "Use when..." and includes specific triggers/symptoms
 - [ ] Description written in third person
 - [ ] Keywords throughout for search (errors, symptoms, tools)
