@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Test skill triggering with naive prompts
 # Usage: ./run-test.sh <skill-name> <prompt-file>
 #

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Test with haiku model and user's CLAUDE.md
 # This tests whether a cheaper/faster model fails more easily
 
