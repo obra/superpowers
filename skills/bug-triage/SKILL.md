@@ -48,6 +48,7 @@ digraph triage {
     "Any confirmed?" [shape=diamond];
     "5. Form new hypotheses\nfrom evidence" [shape=box];
     "6. Conclude\n(root cause + reproduction test)" [shape=box];
+    "6.5. Define test acceptance criteria" [shape=box];
     "7. Recommend next steps" [shape=box];
 
     "1. Understand the issue" -> "2. Locate the code";
@@ -60,7 +61,8 @@ digraph triage {
     "Any confirmed?" -> "6. Conclude\n(root cause + reproduction test)" [label="yes"];
     "Any confirmed?" -> "5. Form new hypotheses\nfrom evidence" [label="no"];
     "5. Form new hypotheses\nfrom evidence" -> "3. Form hypotheses (2-5)";
-    "6. Conclude\n(root cause + reproduction test)" -> "7. Recommend next steps";
+    "6. Conclude\n(root cause + reproduction test)" -> "6.5. Define test acceptance criteria";
+    "6.5. Define test acceptance criteria" -> "7. Recommend next steps";
 }
 ```
 
@@ -160,12 +162,47 @@ State the root cause with:
 
 If confidence is below Medium: state what additional investigation is needed.
 
+### Step 6.5: Define Test Acceptance Criteria
+
+Output explicit test acceptance criteria that `/fix` and `/test` will use:
+
+**Test Acceptance Criteria:**
+- **Reproduction test:** `[file path]`
+  - **Validates:** [What behavior this test confirms]
+  - **Pass condition:** [Specific expected outcome when bug is fixed]
+  - **Commitment level:** Promoted (this test will be kept permanently)
+
+- **Additional testing required:**
+  - [ ] Unit tests: [Which test suites must pass]
+  - [ ] Integration tests: [If applicable, what integrations to verify]
+  - [ ] Regression tests: [Specific scenarios that must not break]
+  - [ ] Manual verification: [If needed, what user-facing behavior to check]
+
+- **Gates to run:**
+  - [ ] Linting (if code changes)
+  - [ ] Type checking (if applicable)
+  - [ ] Full test suite in affected area
+  - [ ] [Project-specific gates from `.claude/shared/test-project.md`]
+
+This checklist becomes the definition of "done" for the fix.
+
 ### Step 7: Recommend Next Steps
 
-- For simple fixes: recommend `bug-fix` skill
-- For complex fixes: recommend `writing-plans` + `subagent-driven-development`
-- Suggest branch name: `fix/<issue#>-short-description`
-- Note if new unit tests or regression sequences are needed beyond the reproduction test
+Based on test acceptance criteria from Step 6.5:
+
+- **For simple fixes:** Recommend `/fix <issue#>`
+  - The `bug-fix` skill will use the reproduction test and acceptance criteria
+  - Expected workflow: promote test → confirm RED → fix → confirm GREEN → run gates
+
+- **For complex fixes:** Recommend `/write-plan <issue#>` then `/execute-plan`
+  - Complex = multi-file architecture changes, requires design decisions
+  - The plan should reference the test acceptance criteria
+
+- **Suggest branch name:** `fix/<issue#>-short-description`
+
+- **Reference test criteria:** Point to the checklist from Step 6.5 — this is what "done" means
+
+**Next command to run:** `/fix <issue#>` or `/write-plan <issue#>`
 
 ## Modes
 
