@@ -20,12 +20,13 @@ All examples, test commands, and file references use Ruby/Rails conventions thro
 Superpowers is a complete software development workflow for your coding agents, built on top of a set of composable "skills" and some initial instructions that make sure your agent uses them.
 
 
-Here are the sources that I used to get the skills that are embeded here: 
+Here are the sources that I used to get the skills that are embeded here:
 - https://github.com/el-feo/ai-context
 - https://github.com/nateberkopec/dotfiles
 - https://github.com/marckohlbrugge/unofficial-37signals-coding-style-guide
 - https://github.com/rails/rails/tree/main/guides
 - https://github.com/TheHotwireClub/hotwire_club-skills
+- https://github.com/EveryInc/compound-engineering-plugin/tree/main/plugins/compound-engineering/skills/ce-compound
 
 ## How it works
 
