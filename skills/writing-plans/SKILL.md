@@ -152,12 +152,19 @@ Before writing the plan, inspect the selected spec and validate these exact head
 ```markdown
 **Workflow State:** CEO Approved
 **Spec Revision:** <integer>
-**Last Reviewed By:** brainstorming | plan-ceo-review
+**Last Reviewed By:** plan-ceo-review
 ```
 
 - If the spec is missing these lines, or if `**Workflow State:**` is not `CEO Approved`, stop and direct the agent to `superpowers:plan-ceo-review`.
 - Do not write or extend an implementation plan from a draft spec.
 - Execution-bound specs must include a parseable `## Requirement Index` before planning begins. If the approved spec does not include one, stop and return to `superpowers:plan-ceo-review`.
+
+An approved spec may also include a trailing `## CEO Review Summary`. Treat that block as additive context only:
+
+- the approved spec headers and parseable `## Requirement Index` remain the prerequisite gate
+- the summary does not replace repo-visible approval truth or `superpowers plan contract` checks
+- absence of the summary must not become a prerequisite failure
+- if the summary conflicts with the approved spec body or headers, trust the approved spec body and headers
 
 ## Scope Check
 
@@ -223,7 +230,7 @@ This structure informs the task decomposition. Each task should produce self-con
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For Codex and GitHub Copilot workers:** REQUIRED: Use `superpowers:subagent-driven-development` when isolated-agent workflows are available in the current platform/session; otherwise use `superpowers:executing-plans`. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For Codex and GitHub Copilot workers:** REQUIRED: Use the execution skill recommended by `superpowers plan execution recommend --plan <approved-plan-path>` after engineering approval; do not choose solely from isolated-agent availability. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Workflow State:** Draft
 **Plan Revision:** 1

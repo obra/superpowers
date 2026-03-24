@@ -1,6 +1,6 @@
 ---
 name: requesting-code-review
-description: Use after implementation work or a completed plan/task slice, and before merging, to verify the work meets requirements
+description: Use after implementation work or an intentional review checkpoint, and before merging, to verify the work meets requirements
 ---
 
 {{BASE_PREAMBLE}}
@@ -12,12 +12,12 @@ Dispatch the `code-reviewer` sub-agent or custom agent to catch issues before th
 
 In Codex, Superpowers installs the `code-reviewer` custom agent alongside the shared skills checkout. In GitHub Copilot local installs, Superpowers installs the same reviewer through the platform's custom-agent path.
 
-**Core principle:** Review early, review often.
+**Core principle:** Review at the right checkpoints, then fail closed on the final whole-diff gate.
 
 ## When to Request Review
 
 **Mandatory:**
-- After each task in subagent-driven development
+- For the final cross-task review gate in workflow-routed work
 - After completing major feature
 - Before merge to the target base branch
 
@@ -47,11 +47,42 @@ In Codex, Superpowers installs the `code-reviewer` custom agent alongside the sh
 
 **2. Detect the base branch and review range:**
 ```bash
-BASE_BRANCH=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null || gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null || echo main)
+BASE_BRANCH=""
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)
+if [ -n "$CURRENT_BRANCH" ] && [ "$CURRENT_BRANCH" != "HEAD" ]; then
+  case "$CURRENT_BRANCH" in
+    main|master|develop|dev|trunk)
+      BASE_BRANCH="$CURRENT_BRANCH"
+      ;;
+  esac
+  [ -n "$BASE_BRANCH" ] || BASE_BRANCH=$(git config --get "branch.$CURRENT_BRANCH.gh-merge-base" 2>/dev/null || true)
+fi
+[ -n "$BASE_BRANCH" ] || BASE_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's#^refs/remotes/origin/##' || true)
+if [ -z "$BASE_BRANCH" ]; then
+  for candidate in main master develop dev trunk; do
+    if git show-ref --verify --quiet "refs/heads/$candidate"; then
+      BASE_BRANCH="$candidate"
+      break
+    fi
+  done
+fi
+if [ -z "$BASE_BRANCH" ] && [ -n "$CURRENT_BRANCH" ] && [ "$CURRENT_BRANCH" != "HEAD" ]; then
+  NON_CURRENT_BRANCHES=$(git for-each-ref --format='%(refname:short)' refs/heads 2>/dev/null | grep -vxF "$CURRENT_BRANCH" || true)
+  NON_CURRENT_BRANCH_COUNT=$(printf '%s\n' "$NON_CURRENT_BRANCHES" | sed '/^$/d' | wc -l | tr -d ' ')
+  if [ "$NON_CURRENT_BRANCH_COUNT" = "1" ]; then
+    BASE_BRANCH=$(printf '%s\n' "$NON_CURRENT_BRANCHES" | sed '/^$/d')
+  fi
+fi
+if [ -z "$BASE_BRANCH" ]; then
+  echo "Could not determine the review base branch. Stop and resolve it before dispatching final review."
+  exit 1
+fi
 git fetch origin "$BASE_BRANCH" --quiet 2>/dev/null || true
 BASE_SHA=$(git merge-base HEAD "origin/$BASE_BRANCH" 2>/dev/null || git merge-base HEAD "$BASE_BRANCH" 2>/dev/null || git rev-parse HEAD~1)
 HEAD_SHA=$(git rev-parse HEAD)
 ```
+
+Do not use PR metadata or repo default-branch APIs as a fallback; keep the review base aligned with `superpowers:document-release` and `gate-finish`.
 
 The reviewer should use the shared review checklist from `review/checklist.md` in the repo when available, otherwise fall back to the installed Superpowers copy.
 
@@ -80,32 +111,108 @@ If the approved plan already called out a likely external-pattern target, you ma
 - Capture documentation or TODO follow-ups instead of silently dropping them
 - Push back if reviewer is wrong (with reasoning)
 
+**4.5. Persist workflow-routed review resolution:**
+
+For workflow-routed final review, also write a project-scoped code-review artifact after the review is resolved and any required fixes land:
+
+- Require the exact approved plan path from the current workflow context before writing the code-review artifact.
+- Derive `Source Plan` and `Source Plan Revision` from that exact approved plan; do not leave placeholders or guess from prose.
+- Use the base branch detected in Step 2 exactly as written; do not substitute a different branch name when persisting the artifact.
+- Use the current `HEAD` exactly as written; if new repo changes land after review, treat the earlier artifact as stale and rerun `requesting-code-review`.
+
+```bash
+_SLUG_ENV=$("$_SUPERPOWERS_ROOT/bin/superpowers" repo slug 2>/dev/null || true)
+if [ -n "$_SLUG_ENV" ]; then
+  eval "$_SLUG_ENV"
+fi
+unset _SLUG_ENV
+USER=$(whoami)
+DATETIME=$(date +%Y%m%d-%H%M%S)
+HEAD_SHA=$(git rev-parse HEAD)
+mkdir -p "$_SP_STATE_DIR/projects/$SLUG"
+```
+
+Write to:
+- `$_SP_STATE_DIR/projects/$SLUG/{user}-{safe-branch}-code-review-{datetime}.md`
+
+For workflow-routed final review, this project artifact is the structured finish-gate input for final review freshness.
+
+Use this structure:
+
+```markdown
+# Code Review Result
+**Source Plan:** `docs/superpowers/plans/...`
+**Source Plan Revision:** 3
+**Branch:** feature/foo
+**Repo:** superpowers
+**Base Branch:** main
+**Head SHA:** abc1234
+**Result:** pass
+**Generated By:** superpowers:requesting-code-review
+**Generated At:** 2026-03-24T12:10:00Z
+
+## Summary
+- reviewer identity or transport
+- critical and important findings resolved or explicitly accepted
+- remaining minor follow-ups
+```
+
+Allowed `**Result:**` values:
+- `pass`
+- `needs-user-input`
+- `blocked`
+
 ## Example
 
 ```
-[Just completed Task 2: Add verification function]
+[Implementation is complete for the current branch and I want the final whole-diff review gate]
 
-You: Let me request code review before proceeding.
+You: Let me request the final code review gate before branch completion.
 
 APPROVED_PLAN_PATH=docs/superpowers/plans/deployment-plan.md
 SOURCE_SPEC_PATH=docs/superpowers/specs/deployment-plan-design.md
-"$_SUPERPOWERS_ROOT/bin/superpowers" plan contract lint --spec "$SOURCE_SPEC_PATH" --plan "$APPROVED_PLAN_PATH"
+ANALYZE_JSON=$("$_SUPERPOWERS_ROOT/bin/superpowers" plan contract analyze-plan --spec "$SOURCE_SPEC_PATH" --plan "$APPROVED_PLAN_PATH" --format json)
+CONTRACT_STATE=$(printf '%s\n' "$ANALYZE_JSON" | node -e 'const fs = require("fs"); const parsed = JSON.parse(fs.readFileSync(0, "utf8")); process.stdout.write(parsed.contract_state || "")')
+PACKET_BUILDABLE_TASKS=$(printf '%s\n' "$ANALYZE_JSON" | node -e 'const fs = require("fs"); const parsed = JSON.parse(fs.readFileSync(0, "utf8")); process.stdout.write(String(parsed.packet_buildable_tasks ?? ""))')
+TASK_COUNT=$(printf '%s\n' "$ANALYZE_JSON" | node -e 'const fs = require("fs"); const parsed = JSON.parse(fs.readFileSync(0, "utf8")); process.stdout.write(String(parsed.task_count ?? ""))')
+if [ "$CONTRACT_STATE" != "valid" ] || [ "$PACKET_BUILDABLE_TASKS" != "$TASK_COUNT" ]; then
+  echo "Stop and return to execution: approved artifacts are stale or malformed."
+  exit 1
+fi
 STATUS_JSON=$("$_SUPERPOWERS_ROOT/bin/superpowers" plan execution status --plan "$APPROVED_PLAN_PATH")
+ACTIVE_TASK=$(printf '%s\n' "$STATUS_JSON" | node -e 'const fs = require("fs"); const parsed = JSON.parse(fs.readFileSync(0, "utf8")); process.stdout.write(parsed.active_task == null ? "" : String(parsed.active_task))')
+BLOCKING_TASK=$(printf '%s\n' "$STATUS_JSON" | node -e 'const fs = require("fs"); const parsed = JSON.parse(fs.readFileSync(0, "utf8")); process.stdout.write(parsed.blocking_task == null ? "" : String(parsed.blocking_task))')
+RESUME_TASK=$(printf '%s\n' "$STATUS_JSON" | node -e 'const fs = require("fs"); const parsed = JSON.parse(fs.readFileSync(0, "utf8")); process.stdout.write(parsed.resume_task == null ? "" : String(parsed.resume_task))')
 EXECUTION_EVIDENCE_PATH=$(printf '%s\n' "$STATUS_JSON" | node -e 'const fs = require("fs"); const parsed = JSON.parse(fs.readFileSync(0, "utf8")); process.stdout.write(parsed.evidence_path || "")')
-TASK_PACKET_CONTEXT=$("$_SUPERPOWERS_ROOT/bin/superpowers" plan contract build-task-packet --plan "$APPROVED_PLAN_PATH" --task 2 --format markdown --persist yes)
-BASE_BRANCH=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null || gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null || echo main)
-BASE_SHA=$(git merge-base HEAD "origin/$BASE_BRANCH" 2>/dev/null || git merge-base HEAD "$BASE_BRANCH" 2>/dev/null || git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
+if [ -n "$ACTIVE_TASK$BLOCKING_TASK$RESUME_TASK" ]; then
+  echo "Stop and return to execution: final review is only valid when execution is clean."
+  exit 1
+fi
+if [ -z "$EXECUTION_EVIDENCE_PATH" ]; then
+  echo "Stop and return to execution: missing execution evidence path."
+  exit 1
+fi
+REVIEW_GATE_JSON=$("$_SUPERPOWERS_ROOT/bin/superpowers" plan execution gate-review --plan "$APPROVED_PLAN_PATH")
+REVIEW_ALLOWED=$(printf '%s\n' "$REVIEW_GATE_JSON" | node -e 'const fs = require("fs"); const parsed = JSON.parse(fs.readFileSync(0, "utf8")); process.stdout.write(parsed.allowed ? "true" : "false")')
+if [ "$REVIEW_ALLOWED" != "true" ]; then
+  echo "Stop and return to execution: review gate rejected the current execution evidence."
+  exit 1
+fi
+TASK_PACKET_CONTEXT_TASK_1=$("$_SUPERPOWERS_ROOT/bin/superpowers" plan contract build-task-packet --plan "$APPROVED_PLAN_PATH" --task 1 --format markdown --persist yes)
+TASK_PACKET_CONTEXT_TASK_2=$("$_SUPERPOWERS_ROOT/bin/superpowers" plan contract build-task-packet --plan "$APPROVED_PLAN_PATH" --task 2 --format markdown --persist yes)
+BASE_BRANCH=<same locally derived review base branch from Step 2>
+BASE_SHA=$(git merge-base HEAD "origin/$BASE_BRANCH" 2>/dev/null || git merge-base HEAD "$BASE_BRANCH" 2>/dev/null || git rev-parse HEAD~1)
 HEAD_SHA=$(git rev-parse HEAD)
 
 [Dispatch code-reviewer agent]
-  WHAT_WAS_IMPLEMENTED: Verification and repair functions for conversation index
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md plus completed task-packet context and coverage matrix excerpts
+  WHAT_WAS_IMPLEMENTED: Final branch diff for the deployment plan
+  PLAN_OR_REQUIREMENTS: Approved plan plus completed task-packet contexts for Tasks 1 and 2 and coverage matrix excerpts
   APPROVED_PLAN_PATH: docs/superpowers/plans/deployment-plan.md
   EXECUTION_EVIDENCE_PATH: docs/superpowers/execution-evidence/deployment-plan-r1-evidence.md
   BASE_BRANCH: main
   BASE_SHA: a7981ec
   HEAD_SHA: 3df7661
-  DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
+  DESCRIPTION: Final whole-diff review gate before branch completion
 
 [Subagent returns]:
   Strengths: Clean architecture, real tests, checklist pass covered enum consumers
@@ -115,15 +222,15 @@ HEAD_SHA=$(git rev-parse HEAD)
   Assessment: Ready to proceed
 
 You: [Fix progress indicators]
-[Continue to Task 3]
+[Continue to final verification / branch completion]
 ```
 
 ## Integration with Workflows
 
 **Subagent-Driven Development:**
-- Review after EACH task
-- Catch issues before they compound
-- Fix before moving to next task
+- Per-task spec-compliance and code-quality reviews happen inside `subagent-driven-development`
+- Use `requesting-code-review` as the final whole-diff gate after all tasks, or earlier only when you intentionally want an extra checkpoint
+- Resolve Critical and Important findings before handing off to branch completion
 
 **Executing Plans:**
 - Review after execution is complete and verified

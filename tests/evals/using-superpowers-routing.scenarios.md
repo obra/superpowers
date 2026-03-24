@@ -27,7 +27,6 @@ Scenario set identifier: `using-superpowers-routing-r4`
 | P1b | Positive | `use superpowers and review the architecture` | `spec is CEO Approved and implementation planning has not started` | `writing-plans` | none |
 | P2a | Positive | `start implementing` | `implementation plan is Engineering Approved, isolated-agent workflows are unavailable, and workspace is prepared` | `executing-plans` | none |
 | P2b | Positive | `start implementing` | `implementation plan is Engineering Approved, isolated-agent workflows are available, session intent is stay, and the plan tasks are mostly independent` | `subagent-driven-development` | none |
-| P3 | Positive | `finish this branch` | `all implementation steps are complete and final review has passed` | `finishing-a-development-branch` | none |
 
 ## Scenario Notes
 
@@ -38,7 +37,8 @@ Scenario set identifier: `using-superpowers-routing-r4`
 - `P1` is the positive-control floor for the plan-authoring family.
 - `P1b` proves that explicit “use Superpowers” language still routes by artifact state once the runtime-owned bootstrap has already resolved the turn to `enabled`.
 - `P2a` and `P2b` are the positive-control floor for the execution family.
-- `P3` is the positive-control floor for the completion/review family.
+- `N4` proves branch-completion language still routes to `requesting-code-review` when no fresh final review artifact exists for the current HEAD.
+- Once fresh code-review, QA, and release-readiness artifacts exist for the current HEAD, the in-session workflow handoff may advance to `finishing-a-development-branch`.
 
 ## Artifact-State Fixtures
 

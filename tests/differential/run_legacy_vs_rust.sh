@@ -31,12 +31,9 @@ import json
 import sys
 
 payload = json.loads(sys.argv[1])
-normalized = {
-    "status": payload.get("status", ""),
-    "next_skill": payload.get("next_skill", ""),
-    "reason_codes": payload.get("reason_codes", []),
-    "contract_state": payload.get("contract_state", ""),
-}
+normalized = dict(payload)
+normalized.pop("manifest_path", None)
+normalized.pop("root", None)
 print(json.dumps(normalized, indent=2, sort_keys=True))
 PY
 }
@@ -48,7 +45,7 @@ cp "$FIXTURE_ROOT/specs/2026-01-22-document-review-system-design.md" \
 cp "$FIXTURE_ROOT/specs/2026-01-22-document-review-system-design-v2.md" \
   "$REPO_DIR/docs/superpowers/specs/2026-01-22-document-review-system-design-v2.md"
 
-legacy_output="$(cd "$REPO_DIR" && SUPERPOWERS_STATE_DIR="$LEGACY_STATE_DIR" "$LEGACY_BIN" status --refresh)"
+legacy_output="$(cd "$REPO_DIR" && SUPERPOWERS_STATE_DIR="$LEGACY_STATE_DIR" "$LEGACY_BIN" --refresh)"
 rust_output="$(cd "$REPO_DIR" && SUPERPOWERS_STATE_DIR="$RUST_STATE_DIR" "$RUST_BIN" workflow status --refresh)"
 
 legacy_normalized="$(normalize_json "$legacy_output")"

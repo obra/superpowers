@@ -4,6 +4,10 @@ use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
+use superpowers::execution::state::{
+    ExecutionRuntime, gate_finish_from_context, load_execution_context, preflight_from_context,
+};
+use superpowers::paths::branch_storage_key;
 use tempfile::TempDir;
 
 const PLAN_REL: &str = "docs/superpowers/plans/2026-03-17-example-execution-plan.md";
@@ -176,6 +180,40 @@ fn write_plan(repo: &Path, execution_mode: &str) {
     );
 }
 
+fn write_second_approved_plan_same_spec(repo: &Path, execution_mode: &str) {
+    write_file(
+        &repo.join("docs/superpowers/plans/2026-03-18-example-execution-plan-v2.md"),
+        &format!(
+            r#"# Example Execution Plan V2
+
+**Workflow State:** Engineering Approved
+**Plan Revision:** 1
+**Execution Mode:** {execution_mode}
+**Source Spec:** `{SPEC_REL}`
+**Source Spec Revision:** 1
+**Last Reviewed By:** plan-eng-review
+
+## Requirement Coverage Matrix
+
+- REQ-001 -> Task 1
+
+## Task 1: Alternate flow
+
+**Spec Coverage:** REQ-001
+**Task Outcome:** Alternate approved plan candidate for ambiguity coverage.
+**Plan Constraints:**
+- Keep the fixture minimal.
+**Open Questions:** none
+
+**Files:**
+- Test: `tests/plan_execution.rs`
+
+- [ ] **Step 1: Preserve ambiguity coverage**
+"#,
+        ),
+    );
+}
+
 fn write_independent_plan(repo: &Path) {
     write_file(
         &repo.join(PLAN_REL),
@@ -309,6 +347,33 @@ fn mark_all_plan_steps_checked(repo: &Path) {
     let source = fs::read_to_string(&path).expect("plan should be readable");
     fs::write(path, source.replace("- [ ] **Step", "- [x] **Step"))
         .expect("plan should be writable");
+}
+
+fn add_fenced_step_details(repo: &Path) {
+    let path = repo.join(PLAN_REL);
+    let source = fs::read_to_string(&path).expect("plan should be readable");
+    let updated = source
+        .replacen(
+            "- [ ] **Step 1: Prepare workspace for execution**",
+            "- [ ] **Step 1: Prepare workspace for execution**\n```text\nstatus detail fixture\n```",
+            1,
+        )
+        .replacen(
+            "- [ ] **Step 2: Validate the generated output**",
+            "- [ ] **Step 2: Validate the generated output**\n```text\nverification detail fixture\n```",
+            1,
+        )
+        .replacen(
+            "- [ ] **Step 1: Repair an invalidated prior step**",
+            "- [ ] **Step 1: Repair an invalidated prior step**\n```text\nrepair detail fixture\n```",
+            1,
+        )
+        .replacen(
+            "- [ ] **Step 2: Finalize the execution handoff**",
+            "- [ ] **Step 2: Finalize the execution handoff**\n```text\nhandoff detail fixture\n```",
+            1,
+        );
+    fs::write(path, updated).expect("plan should be writable");
 }
 
 fn sha256_hex(contents: &[u8]) -> String {
@@ -463,28 +528,38 @@ fn branch_name(repo: &Path) -> String {
 }
 
 fn normalize_identifier(value: &str) -> String {
-    value
-        .split_whitespace()
-        .collect::<Vec<_>>()
-        .join(" ")
-        .chars()
-        .map(|ch| {
-            if ch.is_ascii_alphanumeric() || matches!(ch, '.' | '_' | '-') {
-                ch
-            } else {
-                '-'
-            }
-        })
-        .collect()
+    branch_storage_key(value)
 }
 
 fn repo_slug(repo: &Path) -> String {
-    let repo_name = repo
-        .file_name()
-        .and_then(std::ffi::OsStr::to_str)
-        .unwrap_or("repo");
-    let digest = sha256_hex(repo.display().to_string().as_bytes());
-    format!("{repo_name}-{}", &digest[..12])
+    let output = run_checked(
+        {
+            let mut command =
+                Command::cargo_bin("superpowers").expect("superpowers binary should be available");
+            command.current_dir(repo).args(["repo", "slug"]);
+            command
+        },
+        "superpowers repo slug",
+    );
+    String::from_utf8(output.stdout)
+        .expect("repo slug output should be utf-8")
+        .lines()
+        .find_map(|line| line.strip_prefix("SLUG="))
+        .unwrap_or_else(|| panic!("repo slug output should include SLUG=..., got missing slug"))
+        .to_owned()
+}
+
+fn write_unresolved_index_entries(repo: &Path) {
+    let mut command = Command::new("sh");
+    command
+        .args([
+            "-c",
+            r#"ours=$(printf 'ours\n' | git hash-object -w --stdin)
+theirs=$(printf 'theirs\n' | git hash-object -w --stdin)
+printf '100644 %s 2	conflict.txt\n100644 %s 3	conflict.txt\n' "$ours" "$theirs" | git update-index --index-info"#,
+        ])
+        .current_dir(repo);
+    run_checked(command, "git update-index unresolved entries");
 }
 
 fn project_artifact_dir(repo: &Path, state: &Path) -> PathBuf {
@@ -494,19 +569,36 @@ fn project_artifact_dir(repo: &Path, state: &Path) -> PathBuf {
 fn write_test_plan_artifact(repo: &Path, state: &Path, browser_required: &str) -> PathBuf {
     let branch = branch_name(repo);
     let safe_branch = normalize_identifier(&branch);
+    let head_sha = current_head_sha(repo);
     let artifact_path = project_artifact_dir(repo, state)
         .join(format!("tester-{safe_branch}-test-plan-20260322-170500.md"));
     write_file(
         &artifact_path,
         &format!(
-            "# Test Plan\n**Source Plan:** `{PLAN_REL}`\n**Source Plan Revision:** 1\n**Branch:** {branch}\n**Repo:** {}\n**Browser QA Required:** {browser_required}\n**Generated By:** superpowers:plan-eng-review\n**Generated At:** 2026-03-22T17:05:00Z\n\n## Affected Pages / Routes\n- /runtime-hardening - verify helper-backed finish gating\n",
+            "# Test Plan\n**Source Plan:** `{PLAN_REL}`\n**Source Plan Revision:** 1\n**Branch:** {branch}\n**Repo:** {}\n**Head SHA:** {head_sha}\n**Browser QA Required:** {browser_required}\n**Generated By:** superpowers:plan-eng-review\n**Generated At:** 2026-03-22T17:05:00Z\n\n## Affected Pages / Routes\n- /runtime-hardening - verify helper-backed finish gating\n\n## Key Interactions\n- finish-gate handoff on /runtime-hardening\n\n## Edge Cases\n- stale or missing release-readiness evidence\n\n## Critical Paths\n- approved-plan finish handoff stays blocked until QA and release artifacts are fresh\n",
             repo_slug(repo)
         ),
     );
     artifact_path
 }
 
-fn write_qa_result_artifact(repo: &Path, state: &Path, test_plan_path: &Path) {
+fn write_rich_test_plan_artifact(repo: &Path, state: &Path, browser_required: &str) -> PathBuf {
+    let branch = branch_name(repo);
+    let safe_branch = normalize_identifier(&branch);
+    let head_sha = current_head_sha(repo);
+    let artifact_path = project_artifact_dir(repo, state)
+        .join(format!("tester-{safe_branch}-test-plan-20260322-170500.md"));
+    write_file(
+        &artifact_path,
+        &format!(
+            "# Test Plan\n**Source Plan:** `{PLAN_REL}`\n**Source Plan Revision:** 1\n**Branch:** {branch}\n**Repo:** {}\n**Head SHA:** {head_sha}\n**Browser QA Required:** {browser_required}\n**Generated By:** superpowers:plan-eng-review\n**Generated At:** 2026-03-24T16:08:00Z\n\n## Affected Pages / Routes\n- none\n\n## Key Interactions\n- review-summary writeback on authoritative artifacts\n\n## Edge Cases\n- additive sections present without changing finish-gate authority\n\n## Critical Paths\n- planning-review sync stays compatible with helper-owned finish gating\n\n## Coverage Graph\n- plan-ceo-review summary write -> automated contract tests\n- plan-eng-review additive QA artifact -> manual QA not required\n\n## E2E Test Decision Matrix\n- planning review handoff -> required no (non-browser) -> contract and helper coverage\n\n## Browser Matrix\n- none\n\n## Non-Browser Contract Checks\n- cargo test --test plan_execution -> helper-owned finish-gate compatibility\n\n## Regression Risks\n- richer QA artifact sections accidentally become approval truth\n\n## Manual QA Notes\n- none\n\n## Engineering Review Summary\n- Review outcome captured separately in the source plan.\n",
+            repo_slug(repo)
+        ),
+    );
+    artifact_path
+}
+
+fn write_qa_result_artifact(repo: &Path, state: &Path, test_plan_path: &Path) -> PathBuf {
     let branch = branch_name(repo);
     let safe_branch = normalize_identifier(&branch);
     let head_sha = current_head_sha(repo);
@@ -521,9 +613,27 @@ fn write_qa_result_artifact(repo: &Path, state: &Path, test_plan_path: &Path) {
             repo_slug(repo)
         ),
     );
+    artifact_path
 }
 
-fn write_release_readiness_artifact(repo: &Path, state: &Path) {
+fn write_code_review_artifact(repo: &Path, state: &Path, base_branch: &str) -> PathBuf {
+    let branch = branch_name(repo);
+    let safe_branch = normalize_identifier(&branch);
+    let head_sha = current_head_sha(repo);
+    let artifact_path = project_artifact_dir(repo, state).join(format!(
+        "tester-{safe_branch}-code-review-20260322-171100.md"
+    ));
+    write_file(
+        &artifact_path,
+        &format!(
+            "# Code Review Result\n**Source Plan:** `{PLAN_REL}`\n**Source Plan Revision:** 1\n**Branch:** {branch}\n**Repo:** {}\n**Base Branch:** {base_branch}\n**Head SHA:** {head_sha}\n**Result:** pass\n**Generated By:** superpowers:requesting-code-review\n**Generated At:** 2026-03-22T17:11:00Z\n\n## Summary\n- Final whole-diff review artifact fixture for finish-gate coverage.\n",
+            repo_slug(repo)
+        ),
+    );
+    artifact_path
+}
+
+fn write_release_readiness_artifact(repo: &Path, state: &Path, base_branch: &str) -> PathBuf {
     let branch = branch_name(repo);
     let safe_branch = normalize_identifier(&branch);
     let head_sha = current_head_sha(repo);
@@ -533,10 +643,45 @@ fn write_release_readiness_artifact(repo: &Path, state: &Path) {
     write_file(
         &artifact_path,
         &format!(
-            "# Release Readiness Result\n**Source Plan:** `{PLAN_REL}`\n**Source Plan Revision:** 1\n**Branch:** {branch}\n**Repo:** {}\n**Base Branch:** {branch}\n**Head SHA:** {head_sha}\n**Result:** pass\n**Generated By:** superpowers:document-release\n**Generated At:** 2026-03-22T17:15:00Z\n\n## Summary\n- Release-readiness artifact fixture for finish-gate coverage.\n",
+            "# Release Readiness Result\n**Source Plan:** `{PLAN_REL}`\n**Source Plan Revision:** 1\n**Branch:** {branch}\n**Repo:** {}\n**Base Branch:** {base_branch}\n**Head SHA:** {head_sha}\n**Result:** pass\n**Generated By:** superpowers:document-release\n**Generated At:** 2026-03-22T17:15:00Z\n\n## Summary\n- Release-readiness artifact fixture for finish-gate coverage.\n",
             repo_slug(repo)
         ),
     );
+    artifact_path
+}
+
+fn replace_in_file(path: &Path, from: &str, to: &str) {
+    let source = fs::read_to_string(path).expect("fixture file should be readable for mutation");
+    let updated = source.replace(from, to);
+    assert_ne!(
+        source,
+        updated,
+        "fixture mutation should change the file contents for {}",
+        path.display()
+    );
+    fs::write(path, updated).expect("fixture file should be writable for mutation");
+}
+
+fn prepare_finished_single_step_finish_gate_fixture(
+    repo: &Path,
+    state: &Path,
+    browser_required: &str,
+    include_qa: bool,
+    base_branch: &str,
+) -> (PathBuf, Option<PathBuf>, PathBuf, PathBuf) {
+    write_approved_spec(repo);
+    write_single_step_plan(repo, "superpowers:executing-plans");
+    mark_all_plan_steps_checked(repo);
+    write_single_step_v2_completed_attempt(repo, &expected_packet_fingerprint(repo, 1, 1));
+    let test_plan = write_test_plan_artifact(repo, state, browser_required);
+    let qa_path = if include_qa {
+        Some(write_qa_result_artifact(repo, state, &test_plan))
+    } else {
+        None
+    };
+    let review_path = write_code_review_artifact(repo, state, base_branch);
+    let release_path = write_release_readiness_artifact(repo, state, base_branch);
+    (test_plan, qa_path, review_path, release_path)
 }
 
 fn run_shell(repo: &Path, state: &Path, args: &[&str], context: &str) -> Output {
@@ -560,6 +705,26 @@ fn run_rust(repo: &Path, state: &Path, args: &[&str], context: &str) -> Output {
         .env("SUPERPOWERS_STATE_DIR", state)
         .args(["plan", "execution"])
         .args(args);
+    run(command, context)
+}
+
+fn run_rust_with_env(
+    repo: &Path,
+    state: &Path,
+    args: &[&str],
+    env: &[(&str, &str)],
+    context: &str,
+) -> Output {
+    let mut command =
+        Command::cargo_bin("superpowers").expect("superpowers binary should be available");
+    command
+        .current_dir(repo)
+        .env("SUPERPOWERS_STATE_DIR", state)
+        .args(["plan", "execution"])
+        .args(args);
+    for (key, value) in env {
+        command.env(key, value);
+    }
     run(command, context)
 }
 
@@ -600,6 +765,26 @@ fn canonical_status_matches_helper_for_clean_plan() {
 }
 
 #[test]
+fn canonical_status_accepts_checked_steps_with_fenced_step_details() {
+    let (repo_dir, state_dir) = init_repo("plan-execution-checked-step-details");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    write_approved_spec(repo);
+    write_plan(repo, "superpowers:executing-plans");
+    add_fenced_step_details(repo);
+    mark_all_plan_steps_checked(repo);
+
+    let rust = run_rust(repo, state, &["status", "--plan", PLAN_REL], "rust status");
+    assert!(
+        rust.status.success(),
+        "status should accept checked steps with fenced step details, got {:?}\nstdout:\n{}\nstderr:\n{}",
+        rust.status,
+        String::from_utf8_lossy(&rust.stdout),
+        String::from_utf8_lossy(&rust.stderr)
+    );
+}
+
+#[test]
 fn canonical_status_rejects_stale_plan_when_newer_sibling_spec_exists() {
     let (repo_dir, state_dir) = init_repo("plan-execution-stale-sibling-spec");
     let repo = repo_dir.path();
@@ -628,6 +813,148 @@ fn canonical_status_rejects_stale_plan_when_newer_sibling_spec_exists() {
     };
     let json: Value =
         serde_json::from_slice(payload).expect("stale sibling spec error should be json");
+    assert_eq!(json["error_class"], "PlanNotExecutionReady");
+}
+
+#[test]
+fn canonical_status_rejects_approved_plan_with_draft_reviewer_provenance() {
+    let (repo_dir, state_dir) = init_repo("plan-execution-approved-plan-reviewer-drift");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    write_approved_spec(repo);
+    write_plan(repo, "none");
+    replace_in_file(
+        &repo.join(PLAN_REL),
+        "**Last Reviewed By:** plan-eng-review",
+        "**Last Reviewed By:** writing-plans",
+    );
+
+    let output = run_rust(
+        repo,
+        state,
+        &["status", "--plan", PLAN_REL],
+        "rust status with approved plan reviewer drift",
+    );
+    assert!(
+        !output.status.success(),
+        "status should fail closed when an Engineering Approved plan keeps draft reviewer provenance, got {:?}\nstdout:\n{}\nstderr:\n{}",
+        output.status,
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let payload = if output.stdout.is_empty() {
+        &output.stderr
+    } else {
+        &output.stdout
+    };
+    let json: Value =
+        serde_json::from_slice(payload).expect("approved plan reviewer drift error should be json");
+    assert_eq!(json["error_class"], "PlanNotExecutionReady");
+}
+
+#[test]
+fn canonical_status_rejects_approved_source_spec_with_draft_reviewer_provenance() {
+    let (repo_dir, state_dir) = init_repo("plan-execution-approved-spec-reviewer-drift");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    write_approved_spec(repo);
+    replace_in_file(
+        &repo.join(SPEC_REL),
+        "**Last Reviewed By:** plan-ceo-review",
+        "**Last Reviewed By:** brainstorming",
+    );
+    write_plan(repo, "none");
+
+    let output = run_rust(
+        repo,
+        state,
+        &["status", "--plan", PLAN_REL],
+        "rust status with approved source spec reviewer drift",
+    );
+    assert!(
+        !output.status.success(),
+        "status should fail closed when a CEO Approved source spec keeps draft reviewer provenance, got {:?}\nstdout:\n{}\nstderr:\n{}",
+        output.status,
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let payload = if output.stdout.is_empty() {
+        &output.stderr
+    } else {
+        &output.stdout
+    };
+    let json: Value = serde_json::from_slice(payload)
+        .expect("approved source spec reviewer drift error should be json");
+    assert_eq!(json["error_class"], "PlanNotExecutionReady");
+}
+
+#[test]
+fn canonical_status_rejects_ambiguous_approved_specs_even_when_plan_targets_newest_path() {
+    let (repo_dir, state_dir) = init_repo("plan-execution-ambiguous-approved-specs");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    let newer_spec_rel = "docs/superpowers/specs/2026-03-17-example-execution-plan-design-v2.md";
+    write_approved_spec(repo);
+    write_newer_approved_spec_same_revision_different_path(repo);
+    write_plan(repo, "none");
+    replace_in_file(
+        &repo.join(PLAN_REL),
+        &format!("**Source Spec:** `{SPEC_REL}`"),
+        &format!("**Source Spec:** `{newer_spec_rel}`"),
+    );
+
+    let output = run_rust(
+        repo,
+        state,
+        &["status", "--plan", PLAN_REL],
+        "rust status with ambiguous approved specs",
+    );
+    assert!(
+        !output.status.success(),
+        "status should fail closed when approved spec candidates are ambiguous, got {:?}\nstdout:\n{}\nstderr:\n{}",
+        output.status,
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let payload = if output.stdout.is_empty() {
+        &output.stderr
+    } else {
+        &output.stdout
+    };
+    let json: Value =
+        serde_json::from_slice(payload).expect("ambiguous approved specs error should be json");
+    assert_eq!(json["error_class"], "PlanNotExecutionReady");
+}
+
+#[test]
+fn canonical_status_rejects_ambiguous_approved_plans_for_same_spec() {
+    let (repo_dir, state_dir) = init_repo("plan-execution-ambiguous-approved-plans");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    write_approved_spec(repo);
+    write_plan(repo, "none");
+    write_second_approved_plan_same_spec(repo, "none");
+
+    let output = run_rust(
+        repo,
+        state,
+        &["status", "--plan", PLAN_REL],
+        "rust status with ambiguous approved plans",
+    );
+    assert!(
+        !output.status.success(),
+        "status should fail closed when approved plan candidates are ambiguous, got {:?}\nstdout:\n{}\nstderr:\n{}",
+        output.status,
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let payload = if output.stdout.is_empty() {
+        &output.stderr
+    } else {
+        &output.stdout
+    };
+    let json: Value =
+        serde_json::from_slice(payload).expect("ambiguous approved plans error should be json");
     assert_eq!(json["error_class"], "PlanNotExecutionReady");
 }
 
@@ -678,6 +1005,12 @@ fn canonical_recommend_matches_helper_for_independent_plan() {
 
     assert_eq!(rust["recommended_skill"], helper["recommended_skill"]);
     assert_eq!(rust["decision_flags"], helper["decision_flags"]);
+    assert_eq!(
+        rust["recommended_skill"],
+        Value::String(String::from("superpowers:subagent-driven-development"))
+    );
+    assert_eq!(rust["decision_flags"]["tasks_independent"], "yes");
+    assert_eq!(rust["decision_flags"]["same_session_viable"], "yes");
 }
 
 #[test]
@@ -707,6 +1040,242 @@ fn canonical_preflight_matches_helper_for_clean_plan() {
 }
 
 #[test]
+fn canonical_preflight_rejects_detached_head_workspaces() {
+    let (repo_dir, state_dir) = init_repo("plan-execution-preflight-detached-head");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    write_approved_spec(repo);
+    write_plan(repo, "none");
+
+    let current_head = current_head_sha(repo);
+    let mut git_detach = Command::new("git");
+    git_detach
+        .args(["checkout", "--detach", &current_head])
+        .current_dir(repo);
+    run_checked(git_detach, "git checkout --detach");
+
+    let preflight = run_rust_json(
+        repo,
+        state,
+        &["preflight", "--plan", PLAN_REL],
+        "rust preflight with detached HEAD",
+    );
+
+    assert_eq!(preflight["allowed"], false);
+    assert_eq!(preflight["failure_class"], "WorkspaceNotSafe");
+    assert_eq!(preflight["reason_codes"][0], "detached_head");
+}
+
+#[test]
+fn canonical_preflight_blocks_active_blocked_and_interrupted_steps() {
+    for (case_name, note_state, expected_reason) in [
+        ("active", None, "active_step_in_progress"),
+        ("blocked", Some("blocked"), "blocked_step"),
+        (
+            "interrupted",
+            Some("interrupted"),
+            "interrupted_work_unresolved",
+        ),
+    ] {
+        let (repo_dir, state_dir) =
+            init_repo(&format!("plan-execution-preflight-state-{case_name}"));
+        let repo = repo_dir.path();
+        let state = state_dir.path();
+        write_approved_spec(repo);
+        write_single_step_plan(repo, "superpowers:executing-plans");
+
+        let before = run_rust_json(
+            repo,
+            state,
+            &["status", "--plan", PLAN_REL],
+            "status before unresolved preflight state",
+        );
+        let active = run_rust_json(
+            repo,
+            state,
+            &[
+                "begin",
+                "--plan",
+                PLAN_REL,
+                "--task",
+                "1",
+                "--step",
+                "1",
+                "--execution-mode",
+                "superpowers:executing-plans",
+                "--expect-execution-fingerprint",
+                before["execution_fingerprint"]
+                    .as_str()
+                    .expect("fingerprint"),
+            ],
+            "begin before preflight unresolved-state check",
+        );
+
+        if let Some(state_name) = note_state {
+            run_rust_json(
+                repo,
+                state,
+                &[
+                    "note",
+                    "--plan",
+                    PLAN_REL,
+                    "--task",
+                    "1",
+                    "--step",
+                    "1",
+                    "--state",
+                    state_name,
+                    "--message",
+                    "Waiting on preflight coverage",
+                    "--expect-execution-fingerprint",
+                    active["execution_fingerprint"]
+                        .as_str()
+                        .expect("fingerprint"),
+                ],
+                "note before preflight unresolved-state check",
+            );
+        }
+
+        let preflight = run_rust_json(
+            repo,
+            state,
+            &["preflight", "--plan", PLAN_REL],
+            "preflight with unresolved execution state",
+        );
+
+        assert_eq!(preflight["allowed"], false, "case {case_name}");
+        assert_eq!(
+            preflight["failure_class"], "ExecutionStateNotReady",
+            "case {case_name}"
+        );
+        let reason_codes = preflight["reason_codes"]
+            .as_array()
+            .expect("reason_codes should stay an array");
+        assert!(
+            reason_codes
+                .iter()
+                .any(|value| value == &Value::String(expected_reason.to_owned())),
+            "case {case_name} should include reason code {expected_reason}, got {reason_codes:?}"
+        );
+    }
+}
+
+#[test]
+fn canonical_preflight_blocks_workspace_hazards() {
+    for (case_name, setup, expected_reason) in [
+        (
+            "dirty-tracked-worktree",
+            "write_dirty_tracked_file",
+            "tracked_worktree_dirty",
+        ),
+        ("merge", "write_merge_head", "merge_in_progress"),
+        ("rebase", "write_rebase_apply", "rebase_in_progress"),
+        (
+            "cherry-pick",
+            "write_cherry_pick_head",
+            "cherry_pick_in_progress",
+        ),
+        (
+            "unresolved-index",
+            "write_unresolved_index_entries",
+            "unresolved_index_entries",
+        ),
+        (
+            "missing-head",
+            "remove_head_reference",
+            "branch_unavailable",
+        ),
+    ] {
+        let (repo_dir, state_dir) =
+            init_repo(&format!("plan-execution-preflight-workspace-{case_name}"));
+        let repo = repo_dir.path();
+        let _state = state_dir.path();
+        write_approved_spec(repo);
+        write_plan(repo, "none");
+
+        let runtime =
+            ExecutionRuntime::discover(repo).expect("execution runtime should discover fixture");
+        let context = load_execution_context(&runtime, Path::new(PLAN_REL))
+            .expect("execution context should load for workspace-hazard preflight");
+
+        match setup {
+            "write_dirty_tracked_file" => {
+                write_file(
+                    &repo.join("README.md"),
+                    "# dirty tracked worktree\npreflight should stop here\n",
+                );
+            }
+            "write_merge_head" => write_file(&runtime.git_dir.join("MERGE_HEAD"), "deadbeef\n"),
+            "write_rebase_apply" => {
+                fs::create_dir_all(runtime.git_dir.join("rebase-apply"))
+                    .expect("rebase-apply should be creatable");
+            }
+            "write_cherry_pick_head" => {
+                write_file(&runtime.git_dir.join("CHERRY_PICK_HEAD"), "deadbeef\n")
+            }
+            "write_unresolved_index_entries" => write_unresolved_index_entries(repo),
+            "remove_head_reference" => {
+                fs::rename(
+                    runtime.git_dir.join("HEAD"),
+                    runtime.git_dir.join("HEAD.bak"),
+                )
+                .expect("HEAD should be renameable");
+            }
+            _ => unreachable!("unknown workspace-hazard setup"),
+        }
+
+        let preflight = preflight_from_context(&context);
+
+        assert!(!preflight.allowed, "case {case_name}");
+        assert_eq!(
+            preflight.failure_class, "WorkspaceNotSafe",
+            "case {case_name}"
+        );
+        assert!(
+            preflight
+                .reason_codes
+                .iter()
+                .any(|code| code == expected_reason),
+            "case {case_name} should include reason code {expected_reason}, got {:?}",
+            preflight.reason_codes
+        );
+    }
+}
+
+#[test]
+fn canonical_preflight_reports_repo_safety_discovery_failures() {
+    let (repo_dir, state_dir) = init_repo("plan-execution-preflight-repo-safety-unavailable");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    write_approved_spec(repo);
+    write_plan(repo, "none");
+
+    let preflight = parse_json(
+        &run_rust_with_env(
+            repo,
+            state,
+            &["preflight", "--plan", PLAN_REL],
+            &[(
+                "SUPERPOWERS_REPO_SAFETY_TEST_FAILPOINT",
+                "instruction_parse_failure",
+            )],
+            "rust preflight with repo-safety failpoint",
+        ),
+        "rust preflight with repo-safety failpoint",
+    );
+
+    assert_eq!(preflight["allowed"], false);
+    assert_eq!(preflight["failure_class"], "WorkspaceNotSafe");
+    assert!(
+        preflight["reason_codes"]
+            .as_array()
+            .expect("reason_codes should stay an array")
+            .iter()
+            .any(|value| value == &Value::String(String::from("repo_safety_unavailable")))
+    );
+}
+
+#[test]
 fn canonical_gate_review_and_finish_match_helper() {
     let (repo_dir, state_dir) = init_repo("plan-execution-gates");
     let repo = repo_dir.path();
@@ -717,7 +1286,9 @@ fn canonical_gate_review_and_finish_match_helper() {
     write_v2_completed_attempts_for_finished_plan(repo);
     let test_plan = write_test_plan_artifact(repo, state, "yes");
     write_qa_result_artifact(repo, state, &test_plan);
-    write_release_readiness_artifact(repo, state);
+    let base_branch = branch_name(repo);
+    write_code_review_artifact(repo, state, &base_branch);
+    write_release_readiness_artifact(repo, state, &base_branch);
 
     let helper_review = run_shell_json(
         repo,
@@ -731,8 +1302,7 @@ fn canonical_gate_review_and_finish_match_helper() {
         &["gate-review", "--plan", PLAN_REL],
         "rust gate review",
     );
-    assert_eq!(rust_review["allowed"], helper_review["allowed"]);
-    assert_eq!(rust_review["failure_class"], helper_review["failure_class"]);
+    assert_eq!(rust_review, helper_review);
 
     let helper_finish = run_shell_json(
         repo,
@@ -746,8 +1316,928 @@ fn canonical_gate_review_and_finish_match_helper() {
         &["gate-finish", "--plan", PLAN_REL],
         "rust gate finish",
     );
-    assert_eq!(rust_finish["allowed"], helper_finish["allowed"]);
-    assert_eq!(rust_finish["failure_class"], helper_finish["failure_class"]);
+    assert_eq!(rust_finish, helper_finish);
+}
+
+#[test]
+fn gate_finish_accepts_richer_additive_test_plan_sections() {
+    let (repo_dir, state_dir) = init_repo("plan-execution-rich-test-plan");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    write_approved_spec(repo);
+    write_plan(repo, "superpowers:executing-plans");
+    mark_all_plan_steps_checked(repo);
+    write_v2_completed_attempts_for_finished_plan(repo);
+    let test_plan = write_rich_test_plan_artifact(repo, state, "yes");
+    write_qa_result_artifact(repo, state, &test_plan);
+    let base_branch = branch_name(repo);
+    write_code_review_artifact(repo, state, &base_branch);
+    write_release_readiness_artifact(repo, state, &base_branch);
+    let git_dir = gix::discover(repo)
+        .expect("git repo should be discoverable")
+        .path()
+        .to_path_buf();
+    let branch = branch_name(repo);
+    let runtime = ExecutionRuntime {
+        repo_root: repo.to_path_buf(),
+        git_dir,
+        branch_name: branch.clone(),
+        repo_slug: repo_slug(repo),
+        safe_branch: normalize_identifier(&branch),
+        state_dir: state.to_path_buf(),
+    };
+    let context = load_execution_context(&runtime, Path::new(PLAN_REL))
+        .expect("execution context should load for richer additive test-plan sections");
+    let gate_finish = gate_finish_from_context(&context);
+
+    assert!(gate_finish.allowed);
+    assert!(gate_finish.failure_class.is_empty());
+    assert!(gate_finish.reason_codes.is_empty());
+}
+
+#[test]
+fn gate_review_blocks_active_blocked_and_interrupted_steps() {
+    for (case_name, note_state, expected_reason) in [
+        ("active", None, "active_step_in_progress"),
+        ("blocked", Some("blocked"), "blocked_step"),
+        (
+            "interrupted",
+            Some("interrupted"),
+            "interrupted_work_unresolved",
+        ),
+    ] {
+        let (repo_dir, state_dir) =
+            init_repo(&format!("plan-execution-gate-review-state-{case_name}"));
+        let repo = repo_dir.path();
+        let state = state_dir.path();
+        write_approved_spec(repo);
+        write_single_step_plan(repo, "superpowers:executing-plans");
+
+        let before = run_rust_json(
+            repo,
+            state,
+            &["status", "--plan", PLAN_REL],
+            "status before unresolved execution state",
+        );
+        let active = run_rust_json(
+            repo,
+            state,
+            &[
+                "begin",
+                "--plan",
+                PLAN_REL,
+                "--task",
+                "1",
+                "--step",
+                "1",
+                "--execution-mode",
+                "superpowers:executing-plans",
+                "--expect-execution-fingerprint",
+                before["execution_fingerprint"]
+                    .as_str()
+                    .expect("fingerprint"),
+            ],
+            "begin before gate-review unresolved-state check",
+        );
+
+        let current_fingerprint = if let Some(state_name) = note_state {
+            let noted = run_rust_json(
+                repo,
+                state,
+                &[
+                    "note",
+                    "--plan",
+                    PLAN_REL,
+                    "--task",
+                    "1",
+                    "--step",
+                    "1",
+                    "--state",
+                    state_name,
+                    "--message",
+                    "Waiting on workflow gate coverage",
+                    "--expect-execution-fingerprint",
+                    active["execution_fingerprint"]
+                        .as_str()
+                        .expect("fingerprint"),
+                ],
+                "note before gate-review unresolved-state check",
+            );
+            noted["execution_fingerprint"]
+                .as_str()
+                .expect("fingerprint")
+                .to_owned()
+        } else {
+            active["execution_fingerprint"]
+                .as_str()
+                .expect("fingerprint")
+                .to_owned()
+        };
+
+        let gate_review = run_rust_json(
+            repo,
+            state,
+            &["gate-review", "--plan", PLAN_REL],
+            "gate review with unresolved execution state",
+        );
+
+        assert_eq!(gate_review["allowed"], false, "case {case_name}");
+        assert_eq!(
+            gate_review["failure_class"], "ExecutionStateNotReady",
+            "case {case_name}"
+        );
+        let reason_codes = gate_review["reason_codes"]
+            .as_array()
+            .expect("reason_codes should stay an array");
+        assert!(
+            reason_codes
+                .iter()
+                .any(|value| value == &Value::String(expected_reason.to_owned())),
+            "case {case_name} should include reason code {expected_reason}, got {reason_codes:?}"
+        );
+        assert!(
+            reason_codes
+                .iter()
+                .any(|value| value == &Value::String(String::from("unfinished_steps_remaining"))),
+            "case {case_name} should also keep unfinished step blocking semantics"
+        );
+        assert!(
+            !current_fingerprint.is_empty(),
+            "case {case_name} should preserve a readable execution fingerprint"
+        );
+    }
+}
+
+#[test]
+fn gate_review_rejects_checked_step_without_execution_evidence() {
+    let (repo_dir, state_dir) = init_repo("plan-execution-gate-review-missing-evidence");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    write_approved_spec(repo);
+    write_single_step_plan(repo, "superpowers:executing-plans");
+    mark_all_plan_steps_checked(repo);
+
+    let gate_review = run_rust_json(
+        repo,
+        state,
+        &["gate-review", "--plan", PLAN_REL],
+        "gate review with checked step missing evidence",
+    );
+
+    assert_eq!(gate_review["allowed"], false);
+    assert_eq!(gate_review["failure_class"], "StaleExecutionEvidence");
+    assert_eq!(
+        gate_review["reason_codes"][0],
+        "checked_step_missing_evidence"
+    );
+    assert!(
+        gate_review["diagnostics"][0]["message"]
+            .as_str()
+            .unwrap_or_default()
+            .contains("checked but missing execution evidence")
+    );
+}
+
+#[test]
+fn gate_finish_requires_qa_result_when_browser_qa_is_required() {
+    let (repo_dir, state_dir) = init_repo("plan-execution-gate-finish-missing-qa");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    write_approved_spec(repo);
+    write_single_step_plan(repo, "superpowers:executing-plans");
+    mark_all_plan_steps_checked(repo);
+    write_single_step_v2_completed_attempt(repo, &expected_packet_fingerprint(repo, 1, 1));
+    write_test_plan_artifact(repo, state, "yes");
+    let base_branch = branch_name(repo);
+    write_code_review_artifact(repo, state, &base_branch);
+    write_release_readiness_artifact(repo, state, &base_branch);
+
+    let gate_finish = run_rust_json(
+        repo,
+        state,
+        &["gate-finish", "--plan", PLAN_REL],
+        "gate finish with missing required qa artifact",
+    );
+
+    assert_eq!(gate_finish["allowed"], false);
+    assert_eq!(gate_finish["failure_class"], "QaArtifactNotFresh");
+    assert_eq!(gate_finish["reason_codes"][0], "qa_artifact_missing");
+    assert!(
+        gate_finish["diagnostics"][0]["remediation"]
+            .as_str()
+            .unwrap_or_default()
+            .contains("Run qa-only")
+    );
+}
+
+#[test]
+fn gate_finish_requires_fresh_code_review_result_before_qa_or_release() {
+    let (repo_dir, state_dir) = init_repo("plan-execution-gate-finish-missing-review");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    write_approved_spec(repo);
+    write_single_step_plan(repo, "superpowers:executing-plans");
+    mark_all_plan_steps_checked(repo);
+    write_single_step_v2_completed_attempt(repo, &expected_packet_fingerprint(repo, 1, 1));
+    write_test_plan_artifact(repo, state, "no");
+    write_release_readiness_artifact(repo, state, &branch_name(repo));
+
+    let gate_finish = run_rust_json(
+        repo,
+        state,
+        &["gate-finish", "--plan", PLAN_REL],
+        "gate finish with missing required review artifact",
+    );
+
+    assert_eq!(gate_finish["allowed"], false);
+    assert_eq!(gate_finish["failure_class"], "ReviewArtifactNotFresh");
+    assert_eq!(gate_finish["reason_codes"][0], "review_artifact_missing");
+    assert!(
+        gate_finish["diagnostics"][0]["remediation"]
+            .as_str()
+            .unwrap_or_default()
+            .contains("requesting-code-review")
+    );
+}
+
+#[test]
+fn gate_finish_rejects_code_review_artifact_regressions() {
+    for (case_name, mutator, expected_reason_code) in [
+        (
+            "review_artifact_malformed",
+            "review_artifact_malformed",
+            "review_artifact_malformed",
+        ),
+        (
+            "review_plan_mismatch",
+            "review_plan_mismatch",
+            "review_artifact_plan_mismatch",
+        ),
+        (
+            "review_branch_mismatch",
+            "review_branch_mismatch",
+            "review_artifact_missing",
+        ),
+        (
+            "review_base_branch_unresolved",
+            "review_base_branch_unresolved",
+            "review_artifact_base_branch_unresolved",
+        ),
+        (
+            "review_base_branch_mismatch",
+            "review_base_branch_mismatch",
+            "review_artifact_base_branch_mismatch",
+        ),
+        (
+            "review_head_mismatch",
+            "review_head_mismatch",
+            "review_artifact_head_mismatch",
+        ),
+        (
+            "review_result_not_pass",
+            "review_result_not_pass",
+            "review_result_not_pass",
+        ),
+        (
+            "review_generator_mismatch",
+            "review_generator_mismatch",
+            "review_artifact_generator_mismatch",
+        ),
+        (
+            "review_repo_mismatch",
+            "review_repo_mismatch",
+            "review_artifact_repo_mismatch",
+        ),
+    ] {
+        let (repo_dir, state_dir) = init_repo(&format!("plan-execution-finish-{case_name}"));
+        let repo = repo_dir.path();
+        let state = state_dir.path();
+        let base_branch = branch_name(repo);
+        let (_test_plan_path, _qa_path, review_path, _release_path) =
+            prepare_finished_single_step_finish_gate_fixture(
+                repo,
+                state,
+                "no",
+                false,
+                &base_branch,
+            );
+
+        match mutator {
+            "review_artifact_malformed" => {
+                replace_in_file(&review_path, "# Code Review Result", "# Not Code Review");
+            }
+            "review_plan_mismatch" => {
+                replace_in_file(
+                    &review_path,
+                    &format!("**Source Plan:** `{PLAN_REL}`"),
+                    "**Source Plan:** `docs/superpowers/plans/other-plan.md`",
+                );
+            }
+            "review_branch_mismatch" => {
+                replace_in_file(
+                    &review_path,
+                    &format!("**Branch:** {}", branch_name(repo)),
+                    "**Branch:** other-branch",
+                );
+            }
+            "review_base_branch_unresolved" => {
+                replace_in_file(
+                    &review_path,
+                    &format!("**Base Branch:** {base_branch}"),
+                    "**Base Branch:** ",
+                );
+            }
+            "review_base_branch_mismatch" => {
+                replace_in_file(
+                    &review_path,
+                    &format!("**Base Branch:** {base_branch}"),
+                    "**Base Branch:** not-the-current-base",
+                );
+            }
+            "review_head_mismatch" => {
+                replace_in_file(
+                    &review_path,
+                    &format!("**Head SHA:** {}", current_head_sha(repo)),
+                    "**Head SHA:** 0000000000000000000000000000000000000000",
+                );
+            }
+            "review_result_not_pass" => {
+                replace_in_file(&review_path, "**Result:** pass", "**Result:** blocked");
+            }
+            "review_generator_mismatch" => {
+                replace_in_file(
+                    &review_path,
+                    "**Generated By:** superpowers:requesting-code-review",
+                    "**Generated By:** made-up-generator",
+                );
+            }
+            "review_repo_mismatch" => {
+                replace_in_file(
+                    &review_path,
+                    &format!("**Repo:** {}", repo_slug(repo)),
+                    "**Repo:** someone-else/other-repo",
+                );
+            }
+            _ => unreachable!("unexpected mutator"),
+        }
+
+        let gate_finish = run_rust_json(
+            repo,
+            state,
+            &["gate-finish", "--plan", PLAN_REL],
+            "gate finish with mutated code-review artifact",
+        );
+
+        assert_eq!(gate_finish["allowed"], false, "case {case_name}");
+        assert_eq!(
+            gate_finish["failure_class"], "ReviewArtifactNotFresh",
+            "case {case_name}"
+        );
+        assert_eq!(
+            gate_finish["reason_codes"][0], expected_reason_code,
+            "case {case_name}"
+        );
+    }
+}
+
+#[test]
+fn gate_finish_rejects_test_plan_and_qa_artifact_regressions() {
+    for (case_name, mutator, expected_failure_class, expected_reason_code) in [
+        (
+            "malformed_test_plan",
+            "malformed_test_plan",
+            "QaArtifactNotFresh",
+            "test_plan_artifact_malformed",
+        ),
+        (
+            "stale_test_plan",
+            "stale_test_plan",
+            "QaArtifactNotFresh",
+            "test_plan_artifact_stale",
+        ),
+        (
+            "stale_test_plan_head",
+            "stale_test_plan_head",
+            "QaArtifactNotFresh",
+            "test_plan_artifact_stale",
+        ),
+        (
+            "stale_test_plan_branch",
+            "stale_test_plan_branch",
+            "QaArtifactNotFresh",
+            "test_plan_artifact_missing",
+        ),
+        (
+            "stale_test_plan_repo",
+            "stale_test_plan_repo",
+            "QaArtifactNotFresh",
+            "test_plan_artifact_stale",
+        ),
+        (
+            "qa_artifact_malformed",
+            "qa_artifact_malformed",
+            "QaArtifactNotFresh",
+            "qa_artifact_malformed",
+        ),
+        (
+            "qa_plan_mismatch",
+            "qa_plan_mismatch",
+            "QaArtifactNotFresh",
+            "qa_artifact_plan_mismatch",
+        ),
+        (
+            "qa_branch_mismatch",
+            "qa_branch_mismatch",
+            "QaArtifactNotFresh",
+            "qa_artifact_missing",
+        ),
+        (
+            "qa_head_mismatch",
+            "qa_head_mismatch",
+            "QaArtifactNotFresh",
+            "qa_artifact_head_mismatch",
+        ),
+        (
+            "qa_repo_mismatch",
+            "qa_repo_mismatch",
+            "QaArtifactNotFresh",
+            "qa_artifact_repo_mismatch",
+        ),
+        (
+            "qa_source_test_plan_mismatch",
+            "qa_source_test_plan_mismatch",
+            "QaArtifactNotFresh",
+            "qa_artifact_source_test_plan_mismatch",
+        ),
+        (
+            "qa_result_not_pass",
+            "qa_result_not_pass",
+            "QaArtifactNotFresh",
+            "qa_result_not_pass",
+        ),
+        (
+            "test_plan_generator_mismatch",
+            "test_plan_generator_mismatch",
+            "QaArtifactNotFresh",
+            "test_plan_artifact_generator_mismatch",
+        ),
+        (
+            "qa_generator_mismatch",
+            "qa_generator_mismatch",
+            "QaArtifactNotFresh",
+            "qa_artifact_generator_mismatch",
+        ),
+    ] {
+        let (repo_dir, state_dir) = init_repo(&format!("plan-execution-finish-{case_name}"));
+        let repo = repo_dir.path();
+        let state = state_dir.path();
+        let base_branch = branch_name(repo);
+        let (test_plan_path, qa_path, _review_path, _release_path) =
+            prepare_finished_single_step_finish_gate_fixture(
+                repo,
+                state,
+                "yes",
+                true,
+                &base_branch,
+            );
+        let qa_path = qa_path.expect("qa artifact should exist for this fixture");
+
+        match mutator {
+            "malformed_test_plan" => {
+                replace_in_file(&test_plan_path, "# Test Plan", "# Not A Test Plan");
+            }
+            "stale_test_plan" => {
+                replace_in_file(
+                    &test_plan_path,
+                    &format!("**Source Plan:** `{PLAN_REL}`"),
+                    "**Source Plan:** `docs/superpowers/plans/other-plan.md`",
+                );
+            }
+            "stale_test_plan_head" => {
+                replace_in_file(
+                    &test_plan_path,
+                    &format!("**Head SHA:** {}", current_head_sha(repo)),
+                    "**Head SHA:** 0000000000000000000000000000000000000000",
+                );
+            }
+            "stale_test_plan_branch" => {
+                replace_in_file(
+                    &test_plan_path,
+                    &format!("**Branch:** {}", branch_name(repo)),
+                    "**Branch:** other-branch",
+                );
+            }
+            "stale_test_plan_repo" => {
+                replace_in_file(
+                    &test_plan_path,
+                    &format!("**Repo:** {}", repo_slug(repo)),
+                    "**Repo:** someone-else/other-repo",
+                );
+            }
+            "qa_artifact_malformed" => {
+                replace_in_file(&qa_path, "# QA Result", "# Not QA Result");
+            }
+            "qa_plan_mismatch" => {
+                replace_in_file(
+                    &qa_path,
+                    &format!("**Source Plan:** `{PLAN_REL}`"),
+                    "**Source Plan:** `docs/superpowers/plans/other-plan.md`",
+                );
+            }
+            "qa_branch_mismatch" => {
+                replace_in_file(
+                    &qa_path,
+                    &format!("**Branch:** {}", branch_name(repo)),
+                    "**Branch:** other-branch",
+                );
+            }
+            "qa_head_mismatch" => {
+                replace_in_file(
+                    &qa_path,
+                    &format!("**Head SHA:** {}", current_head_sha(repo)),
+                    "**Head SHA:** 0000000000000000000000000000000000000000",
+                );
+            }
+            "qa_repo_mismatch" => {
+                replace_in_file(
+                    &qa_path,
+                    &format!("**Repo:** {}", repo_slug(repo)),
+                    "**Repo:** someone-else/other-repo",
+                );
+            }
+            "qa_source_test_plan_mismatch" => {
+                replace_in_file(
+                    &qa_path,
+                    &format!("**Source Test Plan:** `{}`", test_plan_path.display()),
+                    "**Source Test Plan:** `/tmp/not-the-current-test-plan.md`",
+                );
+            }
+            "qa_result_not_pass" => {
+                replace_in_file(&qa_path, "**Result:** pass", "**Result:** fail");
+            }
+            "test_plan_generator_mismatch" => {
+                replace_in_file(
+                    &test_plan_path,
+                    "**Generated By:** superpowers:plan-eng-review",
+                    "**Generated By:** made-up-generator",
+                );
+            }
+            "qa_generator_mismatch" => {
+                replace_in_file(
+                    &qa_path,
+                    "**Generated By:** superpowers:qa-only",
+                    "**Generated By:** made-up-generator",
+                );
+            }
+            _ => unreachable!("unexpected mutator"),
+        }
+
+        let gate_finish = run_rust_json(
+            repo,
+            state,
+            &["gate-finish", "--plan", PLAN_REL],
+            "gate finish with mutated test-plan or qa artifact",
+        );
+
+        assert_eq!(gate_finish["allowed"], false, "case {case_name}");
+        assert_eq!(
+            gate_finish["failure_class"], expected_failure_class,
+            "case {case_name}"
+        );
+        assert_eq!(
+            gate_finish["reason_codes"][0], expected_reason_code,
+            "case {case_name}"
+        );
+    }
+}
+
+#[test]
+fn gate_finish_ignores_overlapping_branch_artifact_decoys() {
+    let (repo_dir, state_dir) = init_repo("plan-execution-overlapping-artifact-decoy");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    let base_branch = branch_name(repo);
+
+    run_checked(
+        {
+            let mut command = Command::new("git");
+            command.args(["checkout", "-b", "feature"]).current_dir(repo);
+            command
+        },
+        "git checkout feature branch",
+    );
+
+    let (test_plan_path, _qa_path, _review_path, release_path) =
+        prepare_finished_single_step_finish_gate_fixture(repo, state, "no", false, &base_branch);
+
+    let artifact_dir = project_artifact_dir(repo, state);
+    write_file(
+        &artifact_dir.join("tester-my-feature-code-review-99999999-999999.md"),
+        &format!(
+            "# Code Review Result\n**Source Plan:** `{PLAN_REL}`\n**Source Plan Revision:** 1\n**Branch:** my-feature\n**Repo:** {}\n**Base Branch:** not-the-base\n**Head SHA:** 0000000000000000000000000000000000000000\n**Result:** blocked\n**Generated By:** superpowers:requesting-code-review\n**Generated At:** 2026-03-24T23:59:59Z\n\n## Summary\n- decoy review artifact for another branch.\n",
+            repo_slug(repo)
+        ),
+    );
+
+    let gate_finish = run_rust_json(
+        repo,
+        state,
+        &["gate-finish", "--plan", PLAN_REL],
+        "gate finish with overlapping-branch decoy artifact",
+    );
+
+    assert_eq!(gate_finish["allowed"], true);
+    assert!(test_plan_path.exists());
+    assert!(release_path.exists());
+}
+
+#[test]
+fn gate_finish_rejects_release_artifact_head_mismatch() {
+    let (repo_dir, state_dir) = init_repo("plan-execution-gate-finish-stale-release-head");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    write_approved_spec(repo);
+    write_single_step_plan(repo, "superpowers:executing-plans");
+    mark_all_plan_steps_checked(repo);
+    write_single_step_v2_completed_attempt(repo, &expected_packet_fingerprint(repo, 1, 1));
+    write_test_plan_artifact(repo, state, "no");
+    let base_branch = branch_name(repo);
+    write_code_review_artifact(repo, state, &base_branch);
+    let release_path = write_release_readiness_artifact(repo, state, &base_branch);
+    let current_head = current_head_sha(repo);
+    let stale_release = fs::read_to_string(&release_path)
+        .expect("release artifact should be readable for stale-head fixture")
+        .replace(&current_head, "0000000000000000000000000000000000000000");
+    fs::write(&release_path, stale_release)
+        .expect("stale release artifact fixture should be writable");
+
+    let gate_finish = run_rust_json(
+        repo,
+        state,
+        &["gate-finish", "--plan", PLAN_REL],
+        "gate finish with stale release artifact head",
+    );
+
+    assert_eq!(gate_finish["allowed"], false);
+    assert_eq!(gate_finish["failure_class"], "ReleaseArtifactNotFresh");
+    assert_eq!(
+        gate_finish["reason_codes"][0],
+        "release_artifact_head_mismatch"
+    );
+    assert!(
+        gate_finish["diagnostics"][0]["message"]
+            .as_str()
+            .unwrap_or_default()
+            .contains("does not match the current HEAD")
+    );
+}
+
+#[test]
+fn gate_finish_rejects_release_artifact_regressions() {
+    for (case_name, mutator, expected_reason_code) in [
+        (
+            "release_plan_mismatch",
+            "release_plan_mismatch",
+            "release_artifact_plan_mismatch",
+        ),
+        (
+            "release_branch_mismatch",
+            "release_branch_mismatch",
+            "release_artifact_missing",
+        ),
+        (
+            "release_base_branch_unresolved",
+            "release_base_branch_unresolved",
+            "release_artifact_base_branch_unresolved",
+        ),
+        (
+            "release_base_branch_mismatch",
+            "release_base_branch_mismatch",
+            "release_artifact_base_branch_mismatch",
+        ),
+        (
+            "release_result_not_pass",
+            "release_result_not_pass",
+            "release_result_not_pass",
+        ),
+        (
+            "release_artifact_malformed",
+            "release_artifact_malformed",
+            "release_artifact_malformed",
+        ),
+        (
+            "release_generator_mismatch",
+            "release_generator_mismatch",
+            "release_artifact_generator_mismatch",
+        ),
+        (
+            "release_repo_mismatch",
+            "release_repo_mismatch",
+            "release_artifact_repo_mismatch",
+        ),
+    ] {
+        let (repo_dir, state_dir) = init_repo(&format!("plan-execution-finish-{case_name}"));
+        let repo = repo_dir.path();
+        let state = state_dir.path();
+        let base_branch = branch_name(repo);
+        let (_test_plan_path, _qa_path, _review_path, release_path) =
+            prepare_finished_single_step_finish_gate_fixture(
+                repo,
+                state,
+                "no",
+                false,
+                &base_branch,
+            );
+
+        match mutator {
+            "release_plan_mismatch" => {
+                replace_in_file(
+                    &release_path,
+                    &format!("**Source Plan:** `{PLAN_REL}`"),
+                    "**Source Plan:** `docs/superpowers/plans/other-plan.md`",
+                );
+            }
+            "release_branch_mismatch" => {
+                replace_in_file(
+                    &release_path,
+                    &format!("**Branch:** {}", branch_name(repo)),
+                    "**Branch:** other-branch",
+                );
+            }
+            "release_base_branch_unresolved" => {
+                replace_in_file(
+                    &release_path,
+                    &format!("**Base Branch:** {}", branch_name(repo)),
+                    "**Base Branch:** ",
+                );
+            }
+            "release_base_branch_mismatch" => {
+                replace_in_file(
+                    &release_path,
+                    &format!("**Base Branch:** {}", branch_name(repo)),
+                    "**Base Branch:** not-the-current-base",
+                );
+            }
+            "release_result_not_pass" => {
+                replace_in_file(&release_path, "**Result:** pass", "**Result:** fail");
+            }
+            "release_artifact_malformed" => {
+                replace_in_file(
+                    &release_path,
+                    "# Release Readiness Result",
+                    "# Not Release Readiness",
+                );
+            }
+            "release_generator_mismatch" => {
+                replace_in_file(
+                    &release_path,
+                    "**Generated By:** superpowers:document-release",
+                    "**Generated By:** made-up-generator",
+                );
+            }
+            "release_repo_mismatch" => {
+                replace_in_file(
+                    &release_path,
+                    &format!("**Repo:** {}", repo_slug(repo)),
+                    "**Repo:** someone-else/other-repo",
+                );
+            }
+            _ => unreachable!("unexpected mutator"),
+        }
+
+        let gate_finish = run_rust_json(
+            repo,
+            state,
+            &["gate-finish", "--plan", PLAN_REL],
+            "gate finish with mutated release artifact",
+        );
+
+        assert_eq!(gate_finish["allowed"], false, "case {case_name}");
+        assert_eq!(
+            gate_finish["failure_class"], "ReleaseArtifactNotFresh",
+            "case {case_name}"
+        );
+        assert_eq!(
+            gate_finish["reason_codes"][0], expected_reason_code,
+            "case {case_name}"
+        );
+    }
+}
+
+#[test]
+fn gate_finish_accepts_develop_as_the_expected_base_branch() {
+    let (repo_dir, state_dir) = init_repo("plan-execution-gate-finish-develop-base");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+
+    let mut git_rename = Command::new("git");
+    git_rename
+        .args(["branch", "-m", "develop"])
+        .current_dir(repo);
+    run_checked(git_rename, "git branch -m develop");
+
+    let mut git_feature = Command::new("git");
+    git_feature
+        .args(["checkout", "-b", "feature-routing"])
+        .current_dir(repo);
+    run_checked(git_feature, "git checkout -b feature-routing");
+
+    let (_test_plan_path, _qa_path, _review_path, _release_path) =
+        prepare_finished_single_step_finish_gate_fixture(repo, state, "no", false, "develop");
+
+    let gate_finish = run_rust_json(
+        repo,
+        state,
+        &["gate-finish", "--plan", PLAN_REL],
+        "gate finish with develop as the expected base branch",
+    );
+
+    assert_eq!(gate_finish["allowed"], true);
+    assert_eq!(gate_finish["failure_class"], "");
+    assert_eq!(gate_finish["reason_codes"], Value::Array(Vec::new()));
+}
+
+#[test]
+fn gate_finish_rejects_dirty_tracked_worktree_after_artifact_generation() {
+    let (repo_dir, state_dir) = init_repo("plan-execution-gate-finish-dirty-worktree");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    let base_branch = branch_name(repo);
+    let (_test_plan_path, _qa_path, _review_path, _release_path) =
+        prepare_finished_single_step_finish_gate_fixture(repo, state, "no", false, &base_branch);
+
+    write_file(
+        &repo.join("README.md"),
+        "# plan-execution-gate-finish-dirty-worktree\ntracked change after artifact generation\n",
+    );
+
+    let gate_finish = run_rust_json(
+        repo,
+        state,
+        &["gate-finish", "--plan", PLAN_REL],
+        "gate finish with dirty tracked worktree after artifacts",
+    );
+
+    assert_eq!(gate_finish["allowed"], false);
+    assert_eq!(gate_finish["failure_class"], "ReviewArtifactNotFresh");
+    assert_eq!(
+        gate_finish["reason_codes"][0],
+        "review_artifact_worktree_dirty"
+    );
+    assert!(
+        gate_finish["diagnostics"][0]["message"]
+            .as_str()
+            .unwrap_or_default()
+            .contains("tracked worktree changes")
+    );
+}
+
+#[test]
+fn status_and_gate_review_warn_on_legacy_evidence_format() {
+    let (repo_dir, state_dir) = init_repo("plan-execution-legacy-evidence-format");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    write_approved_spec(repo);
+    write_single_step_plan(repo, "superpowers:executing-plans");
+    mark_all_plan_steps_checked(repo);
+    write_file(&repo.join("docs/example-output.md"), "legacy output\n");
+    write_file(
+        &repo.join(evidence_rel_path()),
+        &format!(
+            "# Execution Evidence: 2026-03-17-example-execution-plan\n\n**Plan Path:** {PLAN_REL}\n**Plan Revision:** 1\n\n## Step Evidence\n\n### Task 1 Step 1\n#### Attempt 1\n**Status:** Completed\n**Recorded At:** 2026-03-17T14:22:31Z\n**Execution Source:** superpowers:executing-plans\n**Claim:** Prepared the workspace for execution.\n**Files:**\n- docs/example-output.md\n**Verification:**\n- Manual verification recorded in fixture setup.\n**Invalidation Reason:** N/A\n"
+        ),
+    );
+
+    let status = run_rust_json(
+        repo,
+        state,
+        &["status", "--plan", PLAN_REL],
+        "status with legacy evidence format",
+    );
+    let status_warning_codes = status["warning_codes"]
+        .as_array()
+        .expect("status warning_codes should stay an array");
+    assert!(
+        status_warning_codes
+            .iter()
+            .any(|value| value == &Value::String(String::from("legacy_evidence_format")))
+    );
+
+    let gate_review = run_rust_json(
+        repo,
+        state,
+        &["gate-review", "--plan", PLAN_REL],
+        "gate review with legacy evidence format",
+    );
+    assert_eq!(gate_review["allowed"], true);
+    let gate_warning_codes = gate_review["warning_codes"]
+        .as_array()
+        .expect("gate-review warning_codes should stay an array");
+    assert!(
+        gate_warning_codes
+            .iter()
+            .any(|value| value == &Value::String(String::from("legacy_evidence_format")))
+    );
 }
 
 #[test]

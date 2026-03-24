@@ -12,12 +12,13 @@ const { spawn } = require('child_process');
 const http = require('http');
 const WebSocket = require('ws');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const assert = require('assert');
 
 const SERVER_PATH = path.join(__dirname, '../../skills/brainstorming/scripts/server.js');
-const TEST_PORT = 3334;
-const TEST_DIR = '/tmp/brainstorm-test';
+const TEST_PORT = 30000 + Math.floor(Math.random() * 20000);
+const TEST_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'brainstorm-test-'));
 
 function cleanup() {
   if (fs.existsSync(TEST_DIR)) {
@@ -49,6 +50,13 @@ function startServer() {
   });
 }
 
+async function waitForExit(server) {
+  return new Promise((resolve, reject) => {
+    server.once('exit', (code, signal) => resolve({ code, signal }));
+    server.once('error', reject);
+  });
+}
+
 async function waitForServer(server) {
   let stdout = '';
   let stderr = '';
@@ -72,6 +80,7 @@ async function runTests() {
   fs.mkdirSync(TEST_DIR, { recursive: true });
 
   const server = startServer();
+  let serverExited = false;
   let stdoutAccum = '';
   server.stdout.on('data', (data) => { stdoutAccum += data.toString(); });
 
@@ -268,14 +277,26 @@ async function runTests() {
 
     await test('cleans up closed clients from broadcast list', async () => {
       const ws1 = new WebSocket(`ws://localhost:${TEST_PORT}`);
-      await new Promise(resolve => ws1.on('open', resolve));
+      const ws2 = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      await Promise.all([
+        new Promise(resolve => ws1.on('open', resolve)),
+        new Promise(resolve => ws2.on('open', resolve))
+      ]);
       ws1.close();
       await sleep(100);
 
-      // This should not throw even though ws1 is closed
+      let ws2Reload = false;
+      ws2.on('message', (data) => {
+        if (JSON.parse(data.toString()).type === 'reload') ws2Reload = true;
+      });
+
       fs.writeFileSync(path.join(TEST_DIR, 'after-close.html'), '<h2>After</h2>');
-      await sleep(300);
-      // If we got here without error, the test passes
+      await sleep(500);
+
+      assert(ws2Reload, 'Open clients should still receive reloads after another client closes');
+      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      assert.strictEqual(res.status, 200, 'Server should stay responsive after closed-client cleanup');
+      ws2.close();
     });
 
     await test('handles malformed JSON from client gracefully', async () => {
@@ -407,13 +428,32 @@ async function runTests() {
       return Promise.resolve();
     });
 
+    await test('cleans up liveness markers on SIGTERM shutdown', async () => {
+      const infoPath = path.join(TEST_DIR, '.server-info');
+      const stoppedPath = path.join(TEST_DIR, '.server-stopped');
+      assert(fs.existsSync(infoPath), '.server-info should exist before shutdown');
+
+      const exitPromise = waitForExit(server);
+      server.kill('SIGTERM');
+      const exit = await exitPromise;
+      serverExited = true;
+
+      assert.strictEqual(exit.signal, null, 'Server should exit cleanly through its shutdown path');
+      assert(!fs.existsSync(infoPath), '.server-info should be removed on shutdown');
+      assert(fs.existsSync(stoppedPath), '.server-stopped should be written on shutdown');
+      const stopped = JSON.parse(fs.readFileSync(stoppedPath, 'utf-8').trim());
+      assert.strictEqual(stopped.reason, 'signal SIGTERM');
+    });
+
     // ========== Summary ==========
     console.log(`\n--- Results: ${passed} passed, ${failed} failed ---`);
     if (failed > 0) process.exit(1);
 
   } finally {
-    server.kill();
-    await sleep(100);
+    if (!serverExited) {
+      server.kill();
+      await sleep(100);
+    }
     cleanup();
   }
 }

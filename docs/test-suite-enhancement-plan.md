@@ -2,6 +2,8 @@
 
 Working plan derived from the current Superpowers suite, the `gstack` comparison, and the fixture decoupling fix that moved historical workflow examples into `tests/codex-runtime/fixtures/workflow-artifacts/`.
 
+Historical note: this document is implementation-planning provenance, not the authoritative command list for current validation. The active deterministic suite and recommended commands now live in `docs/testing.md`. References below have been updated to the current Rust and Node contract gates so the plan does not point at removed shell harnesses as if they were still active.
+
 Historical note: Task 5's original `using-superpowers` routing-eval shape was later superseded by the doc-driven routing gate in `tests/evals/using-superpowers-routing.orchestrator.md`, `tests/evals/using-superpowers-routing.scenarios.md`, `tests/evals/using-superpowers-routing.runner.md`, and `tests/evals/using-superpowers-routing.judge.md`. The retired `tests/evals/using-superpowers-routing.eval.mjs` file referenced below has been removed.
 
 ## Completed Precondition
@@ -12,14 +14,14 @@ Historical note: Task 5's original `using-superpowers` routing-eval shape was la
 
 ## Goal
 
-Improve Superpowers test coverage for generated skill docs, template assertions, and broader workflow quality while keeping the existing runtime-helper shell tests as the end-to-end contract layer.
+Improve Superpowers test coverage for generated skill docs, template assertions, and broader workflow quality while keeping the active deterministic Rust and Node contract suites as the end-to-end contract layer.
 
 ## Constraints
 
 - Prefer built-in tooling already present in the repo
 - Keep deterministic tests separate from opt-in evals
 - Avoid coupling tests to mutable repo-root docs when a local fixture is enough
-- Preserve the current shell suites for helper binaries and other true CLI contracts
+- Preserve the current deterministic contract split: Rust integration suites for runtime behavior and Node tests for generated-doc and fixture contracts
 
 ## Task 1: Add Deterministic Node Tests For Generated Skill Docs
 
@@ -59,7 +61,7 @@ Cover:
 
 Run:
 - `node --test tests/codex-runtime/skill-doc-generation.test.mjs`
-- `bash tests/codex-runtime/test-runtime-instructions.sh`
+- `cargo nextest run --test runtime_instruction_contracts`
 
 Expected: PASS
 
@@ -86,8 +88,8 @@ Cover:
 - interactive-question contract exists once per generated skill in normalized form
 - fixture-backed workflow examples only validate header contracts, not full historical documents
 
-- [ ] **Step 3: Trim shell-script duplication where the Node test is a better fit**
-- [x] **Step 3: Trim shell-script duplication where the Node test is a better fit**
+- [ ] **Step 3: Trim legacy duplication where the Rust or Node tests are a better fit**
+- [x] **Step 3: Trim legacy duplication where the Rust or Node tests are a better fit**
 
 Keep shell coverage only for:
 - helper binary behavior
@@ -99,7 +101,7 @@ Keep shell coverage only for:
 
 Run:
 - `node --test tests/codex-runtime/skill-doc-contracts.test.mjs`
-- `bash tests/codex-runtime/test-workflow-sequencing.sh`
+- `cargo nextest run --test runtime_instruction_contracts`
 
 Expected: PASS
 
@@ -173,7 +175,7 @@ Add an assertion that runtime sequencing coverage reads from `tests/codex-runtim
 
 Run:
 - `node --test tests/codex-runtime/workflow-fixtures.test.mjs`
-- `bash tests/codex-runtime/test-workflow-sequencing.sh`
+- `cargo nextest run --test runtime_instruction_contracts`
 
 Expected: PASS
 

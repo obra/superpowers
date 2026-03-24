@@ -188,11 +188,7 @@ impl WorkflowRuntime {
             note: route.note.clone(),
             updated_at: String::from("1970-01-01T00:00:00Z"),
         };
-        if let Err(route) = self.persist_manifest_with_retry(
-            manifest.clone(),
-            route.spec_path.clone(),
-            route.plan_path.clone(),
-        ) {
+        if let Err(route) = self.persist_manifest_with_retry(manifest.clone(), &route) {
             return Ok(route);
         }
         self.manifest = Some(manifest);
@@ -256,15 +252,14 @@ impl WorkflowRuntime {
                 manifest.note = manifest.reason.clone();
             }
         }
-        if let Err(route) = self.persist_manifest_with_retry(
-            manifest.clone(),
-            manifest.expected_spec_path.clone(),
-            manifest.expected_plan_path.clone(),
-        ) {
+        let mut preview = self.clone();
+        preview.manifest = Some(manifest.clone());
+        let route = preview.status()?;
+        if let Err(route) = self.persist_manifest_with_retry(manifest.clone(), &route) {
             return Ok(route);
         }
         self.manifest = Some(manifest);
-        self.status()
+        Ok(route)
     }
 
     pub fn sync(
@@ -309,16 +304,9 @@ impl WorkflowRuntime {
             ArtifactKind::Spec => manifest.expected_spec_path = repo_path.clone(),
             ArtifactKind::Plan => manifest.expected_plan_path = repo_path.clone(),
         }
-        if let Err(route) = self.persist_manifest_with_retry(
-            manifest.clone(),
-            manifest.expected_spec_path.clone(),
-            manifest.expected_plan_path.clone(),
-        ) {
-            return Ok(route);
-        }
-        self.manifest = Some(manifest);
-
-        let mut route = self.status()?;
+        let mut preview = self.clone();
+        preview.manifest = Some(manifest.clone());
+        let mut route = preview.status()?;
         if !self.identity.repo_root.join(&repo_path).is_file() {
             route.spec_path = if matches!(artifact, ArtifactKind::Spec) {
                 repo_path.clone()
@@ -345,6 +333,10 @@ impl WorkflowRuntime {
             route.reason = route.reason_codes.join(",");
             route.note = route.reason.clone();
         }
+        if let Err(route) = self.persist_manifest_with_retry(manifest.clone(), &route) {
+            return Ok(route);
+        }
+        self.manifest = Some(manifest);
 
         Ok(route)
     }
@@ -425,8 +417,7 @@ impl WorkflowRuntime {
     fn persist_manifest_with_retry(
         &mut self,
         manifest: WorkflowManifest,
-        spec_path: String,
-        plan_path: String,
+        route: &WorkflowRoute,
     ) -> Result<(), WorkflowRoute> {
         if save_manifest(&self.manifest_path, &manifest).is_ok() {
             return Ok(());
@@ -434,37 +425,33 @@ impl WorkflowRuntime {
         if save_manifest(&self.manifest_path, &manifest).is_ok() {
             return Ok(());
         }
-        Err(self.manifest_write_conflict_route(spec_path, plan_path))
+        Err(self.manifest_write_conflict_route(route))
     }
 
-    fn manifest_write_conflict_route(&self, spec_path: String, plan_path: String) -> WorkflowRoute {
-        WorkflowRoute {
-            schema_version: 2,
-            status: String::from("needs_brainstorming"),
-            next_skill: String::from("superpowers:brainstorming"),
-            spec_path,
-            plan_path,
-            contract_state: String::from("unknown"),
-            reason_codes: vec![String::from("manifest_write_conflict")],
-            diagnostics: vec![WorkflowDiagnostic {
-                code: String::from("manifest_write_conflict"),
-                severity: String::from("error"),
-                artifact: self.manifest_path.display().to_string(),
-                message: String::from(
-                    "Could not persist the workflow manifest after one retry attempt.",
-                ),
-                remediation: String::from(
-                    "Restore write access to the workflow manifest directory and retry.",
-                ),
-            }],
-            scan_truncated: false,
-            spec_candidate_count: 0,
-            plan_candidate_count: 0,
-            manifest_path: self.manifest_path.display().to_string(),
-            root: self.identity.repo_root.to_string_lossy().into_owned(),
-            reason: String::from("manifest_write_conflict"),
-            note: String::from("warning: manifest_write_conflict (retrying once)"),
+    fn manifest_write_conflict_route(&self, route: &WorkflowRoute) -> WorkflowRoute {
+        let mut degraded = route.clone();
+        if !degraded
+            .reason_codes
+            .iter()
+            .any(|code| code == "manifest_write_conflict")
+        {
+            degraded
+                .reason_codes
+                .push(String::from("manifest_write_conflict"));
         }
+        degraded.diagnostics.push(WorkflowDiagnostic {
+            code: String::from("manifest_write_conflict"),
+            severity: String::from("error"),
+            artifact: self.manifest_path.display().to_string(),
+            message: String::from(
+                "Could not persist the workflow manifest after one retry attempt.",
+            ),
+            remediation: String::from(
+                "Restore write access to the workflow manifest directory and retry.",
+            ),
+        });
+        degraded.note = String::from("warning: manifest_write_conflict (retrying once)");
+        degraded
     }
 }
 
@@ -1043,12 +1030,19 @@ fn parse_workflow_spec_candidate(path: &Path) -> Result<WorkflowSpecCandidate, D
         .ok()
         .and_then(|value| value.parse::<u32>().ok())
         .is_some();
-    let last_reviewed_by_valid = parse_header_value(&source, "Last Reviewed By")
-        .map(|value| !value.trim().is_empty())
-        .unwrap_or(false);
+    let last_reviewed_by_valid = matches!(
+        (
+            workflow_state.as_str(),
+            parse_header_value(&source, "Last Reviewed By")
+                .ok()
+                .as_deref(),
+        ),
+        ("Draft", Some("brainstorming" | "plan-ceo-review"))
+            | ("CEO Approved", Some("plan-ceo-review"))
+    );
     Ok(WorkflowSpecCandidate {
         path: repo_relative_path(path),
-        workflow_state: if workflow_state_valid {
+        workflow_state: if workflow_state_valid && last_reviewed_by_valid {
             workflow_state
         } else {
             String::from("Draft")
@@ -1069,6 +1063,16 @@ fn parse_workflow_plan_candidate(path: &Path) -> Result<WorkflowPlanCandidate, D
         )
     })?;
     let workflow_state = parse_header_value(&source, "Workflow State")?;
+    let last_reviewed_by_valid = matches!(
+        (
+            workflow_state.as_str(),
+            parse_header_value(&source, "Last Reviewed By")
+                .ok()
+                .as_deref(),
+        ),
+        ("Draft", Some("writing-plans" | "plan-eng-review"))
+            | ("Engineering Approved", Some("plan-eng-review"))
+    );
     let source_spec_path = parse_header_value(&source, "Source Spec")?
         .trim_matches('`')
         .to_owned();
@@ -1077,7 +1081,11 @@ fn parse_workflow_plan_candidate(path: &Path) -> Result<WorkflowPlanCandidate, D
         .and_then(|value| value.parse::<u32>().ok());
     Ok(WorkflowPlanCandidate {
         path: repo_relative_path(path),
-        workflow_state,
+        workflow_state: if last_reviewed_by_valid {
+            workflow_state
+        } else {
+            String::from("Draft")
+        },
         source_spec_path,
         source_spec_revision,
     })

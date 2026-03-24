@@ -3,6 +3,8 @@ use std::ffi::OsString;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use sha2::{Digest, Sha256};
+
 use crate::diagnostics::{DiagnosticError, FailureClass};
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -82,6 +84,21 @@ pub fn normalize_identifier_token(value: &str) -> String {
     } else {
         output
     }
+}
+
+pub fn branch_storage_key(value: &str) -> String {
+    let normalized = normalize_identifier_token(value);
+    if normalized.is_empty() {
+        return String::from("current");
+    }
+    if normalized == value {
+        return normalized;
+    }
+
+    let mut hasher = Sha256::new();
+    hasher.update(value.as_bytes());
+    let digest = format!("{:x}", hasher.finalize());
+    format!("{normalized}-{}", &digest[..12])
 }
 
 pub fn superpowers_home_dir() -> Option<PathBuf> {

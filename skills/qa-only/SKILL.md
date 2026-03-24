@@ -153,12 +153,29 @@ if [ -n "$_SLUG_ENV" ]; then
   eval "$_SLUG_ENV"
 fi
 unset _SLUG_ENV
-PLAN_ARTIFACT=$(ls -t "$_SP_STATE_DIR/projects/$SLUG"/*-"$BRANCH"-test-plan-*.md 2>/dev/null | head -1)
+PLAN_ARTIFACT=""
+for CANDIDATE in $(ls -t "$_SP_STATE_DIR/projects/$SLUG"/*-test-plan-*.md 2>/dev/null); do
+  [ -f "$CANDIDATE" ] || continue
+  ARTIFACT_BRANCH=$(sed -n 's/^\*\*Branch:\*\* //p' "$CANDIDATE" | head -1)
+  if [ "$ARTIFACT_BRANCH" = "$BRANCH" ]; then
+    PLAN_ARTIFACT="$CANDIDATE"
+    break
+  fi
+done
 [ -n "$PLAN_ARTIFACT" ] || PLAN_ARTIFACT=$(ls -t "$_SP_STATE_DIR/projects/$SLUG"/*-test-plan-*.md 2>/dev/null | head -1)
 printf '%s\n' "$PLAN_ARTIFACT"
 ```
 
 Prefer the newest artifact for the current branch under `$_SP_STATE_DIR/projects/$SLUG` when it exists. Only fall back to the newest project-wide test-plan artifact when there is no branch-specific match and you only need extra QA scoping context. That project-wide fallback does not satisfy branch-finish freshness checks, and it must not be treated as the structured finish-gate handoff for another branch.
+
+Match current-branch artifacts by their `**Branch:**` header, not by a filename substring glob, so `my-feature` cannot masquerade as `feature`.
+
+When a test-plan artifact includes richer additive sections such as `## Coverage Graph`, `## E2E Test Decision Matrix`, `## Browser Matrix`, `## Non-Browser Contract Checks`, `## Regression Risks`, `## Manual QA Notes`, or `## Engineering Review Summary`, treat them as additive context only:
+
+- use them to prioritize routes, browsers, risks, and manual checks
+- do not require them for artifact validity
+- finish-gate freshness still depends on the current required headers and current-branch artifact freshness
+- absence of the richer sections does not invalidate the artifact
 
 If no artifact exists, use:
 1. Explicit user scope
@@ -172,11 +189,42 @@ If no artifact exists, use:
 If no URL is provided and the repo is on a feature branch, automatically enter `diff-aware` mode:
 
 ```bash
-BASE_BRANCH=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null || gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null || echo main)
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)
+BASE_BRANCH=""
+if [ -n "$CURRENT_BRANCH" ] && [ "$CURRENT_BRANCH" != "HEAD" ]; then
+  case "$CURRENT_BRANCH" in
+    main|master|develop|dev|trunk)
+      BASE_BRANCH="$CURRENT_BRANCH"
+      ;;
+  esac
+  [ -n "$BASE_BRANCH" ] || BASE_BRANCH=$(git config --get "branch.$CURRENT_BRANCH.gh-merge-base" 2>/dev/null || true)
+fi
+[ -n "$BASE_BRANCH" ] || BASE_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's#^refs/remotes/origin/##' || true)
+if [ -z "$BASE_BRANCH" ]; then
+  for candidate in main master develop dev trunk; do
+    if git show-ref --verify --quiet "refs/heads/$candidate"; then
+      BASE_BRANCH="$candidate"
+      break
+    fi
+  done
+fi
+if [ -z "$BASE_BRANCH" ] && [ -n "$CURRENT_BRANCH" ] && [ "$CURRENT_BRANCH" != "HEAD" ]; then
+  NON_CURRENT_BRANCHES=$(git for-each-ref --format='%(refname:short)' refs/heads 2>/dev/null | grep -vxF "$CURRENT_BRANCH" || true)
+  NON_CURRENT_BRANCH_COUNT=$(printf '%s\n' "$NON_CURRENT_BRANCHES" | sed '/^$/d' | wc -l | tr -d ' ')
+  if [ "$NON_CURRENT_BRANCH_COUNT" = "1" ]; then
+    BASE_BRANCH=$(printf '%s\n' "$NON_CURRENT_BRANCHES" | sed '/^$/d')
+  fi
+fi
+if [ -z "$BASE_BRANCH" ]; then
+  echo "Could not determine the base branch for diff-aware QA scoping. Stop and resolve it before continuing."
+  exit 1
+fi
 git fetch origin "$BASE_BRANCH" --quiet 2>/dev/null || true
 git diff "origin/$BASE_BRANCH...HEAD" --name-only 2>/dev/null || git diff "$BASE_BRANCH...HEAD" --name-only
 git log "origin/$BASE_BRANCH"..HEAD --oneline 2>/dev/null || git log "$BASE_BRANCH"..HEAD --oneline
 ```
+
+Do not use PR metadata or repo default-branch APIs as a fallback; keep diff-aware scoping aligned with `document-release`, `requesting-code-review`, and `gate-finish`.
 
 From the changed files, infer:
 - affected pages and routes

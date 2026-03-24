@@ -102,11 +102,16 @@ pub fn render_explain(current_dir: &Path) -> Result<String, JsonFailure> {
 
 pub fn phase(current_dir: &Path) -> Result<WorkflowPhase, JsonFailure> {
     let context = build_context(current_dir)?;
+    let next_skill = if context.phase == "bypassed" {
+        String::new()
+    } else {
+        context.route.next_skill.clone()
+    };
     Ok(WorkflowPhase {
         phase: context.phase.clone(),
         route_status: context.route.status.clone(),
-        next_skill: context.route.next_skill.clone(),
-        next_action: next_action_for_phase(&context.phase).to_owned(),
+        next_skill,
+        next_action: next_action_for_context(&context).to_owned(),
         spec_path: context.route.spec_path.clone(),
         plan_path: context.route.plan_path.clone(),
         session_entry: session_entry_state(&context.session_entry),
@@ -115,19 +120,14 @@ pub fn phase(current_dir: &Path) -> Result<WorkflowPhase, JsonFailure> {
 }
 
 pub fn render_phase(current_dir: &Path) -> Result<String, JsonFailure> {
-    let phase = phase(current_dir)?;
+    let context = build_context(current_dir)?;
     Ok(format!(
         "Workflow phase: {}\nRoute status: {}\nNext: {}\nSpec: {}\nPlan: {}\n",
-        phase.phase,
-        phase.route_status,
-        next_text_for_phase(
-            &phase.phase,
-            &phase.route_status,
-            &phase.plan_path,
-            &phase.next_skill
-        ),
-        display_or_none(&phase.spec_path),
-        display_or_none(&phase.plan_path)
+        context.phase,
+        context.route.status,
+        next_step_text(&context),
+        display_or_none(&context.route.spec_path),
+        display_or_none(&context.route.plan_path)
     ))
 }
 
@@ -142,8 +142,12 @@ pub fn doctor(current_dir: &Path) -> Result<WorkflowDoctor, JsonFailure> {
     Ok(WorkflowDoctor {
         phase: context.phase.clone(),
         route_status: context.route.status.clone(),
-        next_skill: context.route.next_skill.clone(),
-        next_action: next_action_for_phase(&context.phase).to_owned(),
+        next_skill: if context.phase == "bypassed" {
+            String::new()
+        } else {
+            context.route.next_skill.clone()
+        },
+        next_action: next_action_for_context(&context).to_owned(),
         spec_path: context.route.spec_path.clone(),
         plan_path: context.route.plan_path.clone(),
         contract_state,
@@ -184,7 +188,8 @@ pub fn handoff(current_dir: &Path) -> Result<WorkflowHandoff, JsonFailure> {
         .map(|status| status.execution_started.clone())
         .unwrap_or_else(|| String::from("no"));
     let recommendation = if context.route.status == "implementation_ready"
-        && context.session_entry.outcome != "needs_user_choice"
+        && context.session_entry.outcome == "enabled"
+        && context.phase == "execution_preflight"
         && execution_started != "yes"
         && !context.route.plan_path.is_empty()
     {
@@ -206,31 +211,74 @@ pub fn handoff(current_dir: &Path) -> Result<WorkflowHandoff, JsonFailure> {
             recommendation.recommended_skill.clone(),
             recommendation.reason.clone(),
         )
-    } else if execution_started == "yes" {
-        let skill = context
-            .execution_status
-            .as_ref()
-            .map(|status| status.execution_mode.clone())
-            .unwrap_or_default();
-        (
-            skill,
-            String::from(
-                "Execution already started for the approved plan revision; continue with the current execution flow.",
-            ),
-        )
     } else {
-        (String::new(), String::new())
+        match context.phase.as_str() {
+            "bypassed" => (
+                String::new(),
+                String::from(
+                    "Superpowers is bypassed for this session until the user explicitly re-enters.",
+                ),
+            ),
+            "executing" => {
+                let skill = context
+                    .execution_status
+                    .as_ref()
+                    .map(|status| status.execution_mode.clone())
+                    .unwrap_or_default();
+                (
+                    skill,
+                    String::from(
+                        "Execution already started for the approved plan revision; continue with the current execution flow.",
+                    ),
+                )
+            }
+            "review_blocked" => (
+                String::from("superpowers:requesting-code-review"),
+                reason_text(&context),
+            ),
+            "qa_pending" if finish_requires_test_plan_refresh(&context) => (
+                String::from("superpowers:plan-eng-review"),
+                reason_text(&context),
+            ),
+            "qa_pending" => (String::from("superpowers:qa-only"), reason_text(&context)),
+            "document_release_pending" => (
+                String::from("superpowers:document-release"),
+                reason_text(&context),
+            ),
+            "ready_for_branch_completion" => (
+                String::from("superpowers:finishing-a-development-branch"),
+                reason_text(&context),
+            ),
+            _ if execution_started == "yes" => {
+                let skill = context
+                    .execution_status
+                    .as_ref()
+                    .map(|status| status.execution_mode.clone())
+                    .unwrap_or_default();
+                (
+                    skill,
+                    String::from(
+                        "Execution already started for the approved plan revision; continue with the current execution flow.",
+                    ),
+                )
+            }
+            _ => (String::new(), String::new()),
+        }
     };
 
     Ok(WorkflowHandoff {
         phase: context.phase.clone(),
         route_status: context.route.status.clone(),
-        next_skill: context.route.next_skill.clone(),
+        next_skill: if context.phase == "bypassed" {
+            String::new()
+        } else {
+            context.route.next_skill.clone()
+        },
         contract_state,
         spec_path: context.route.spec_path.clone(),
         plan_path: context.route.plan_path.clone(),
         execution_started,
-        next_action: next_action_for_phase(&context.phase).to_owned(),
+        next_action: next_action_for_context(&context).to_owned(),
         recommended_skill,
         recommendation_reason,
         session_entry: context.session_entry,
@@ -247,6 +295,7 @@ pub fn render_handoff(current_dir: &Path) -> Result<String, JsonFailure> {
     output.push_str("Workflow handoff\n");
     output.push_str(&format!("Phase: {}\n", handoff.phase));
     output.push_str(&format!("Route status: {}\n", handoff.route_status));
+    output.push_str(&format!("Next action: {}\n", handoff.next_action));
     output.push_str(&format!("Spec: {}\n", display_or_none(&handoff.spec_path)));
     output.push_str(&format!("Plan: {}\n", display_or_none(&handoff.plan_path)));
     if !handoff.recommended_skill.is_empty() {
@@ -254,6 +303,9 @@ pub fn render_handoff(current_dir: &Path) -> Result<String, JsonFailure> {
             "Recommended skill: {}\n",
             handoff.recommended_skill
         ));
+    }
+    if !handoff.recommendation_reason.is_empty() {
+        output.push_str(&format!("Reason: {}\n", handoff.recommendation_reason));
     }
     Ok(output)
 }
@@ -292,7 +344,7 @@ fn build_context(current_dir: &Path) -> Result<OperatorContext, JsonFailure> {
     let mut gate_review = None;
     let mut gate_finish = None;
 
-    if session_entry.outcome != "needs_user_choice" && route.status == "implementation_ready" {
+    if session_entry.outcome == "enabled" && route.status == "implementation_ready" {
         if let Some(report) = analyze_plan_if_available(&route).map_err(JsonFailure::from)? {
             plan_contract = Some(report);
         }
@@ -366,6 +418,9 @@ fn derive_phase(
     if session_outcome == "needs_user_choice" {
         return String::from("needs_user_choice");
     }
+    if session_outcome == "bypassed" {
+        return String::from("bypassed");
+    }
 
     if route_status != "implementation_ready" {
         return match route_status {
@@ -397,18 +452,20 @@ fn derive_phase(
         }
     }
 
-    if let Some(gate_finish) = gate_finish {
-        if gate_finish.allowed {
-            return String::from("ready_for_branch_completion");
-        }
-        return match gate_finish.failure_class.as_str() {
-            "QaArtifactNotFresh" => String::from("qa_pending"),
-            "ReleaseArtifactNotFresh" => String::from("document_release_pending"),
-            _ => String::from("executing"),
-        };
+    let Some(gate_finish) = gate_finish else {
+        return String::from("review_blocked");
+    };
+
+    if gate_finish.allowed {
+        return String::from("ready_for_branch_completion");
     }
 
-    String::from("executing")
+    match gate_finish.failure_class.as_str() {
+        "ReviewArtifactNotFresh" => String::from("review_blocked"),
+        "QaArtifactNotFresh" => String::from("qa_pending"),
+        "ReleaseArtifactNotFresh" => String::from("document_release_pending"),
+        _ => String::from("review_blocked"),
+    }
 }
 
 fn execution_state_has_open_steps(status: &PlanExecutionStatus) -> bool {
@@ -429,6 +486,17 @@ fn session_entry_state(output: &SessionEntryResolveOutput) -> SessionEntryState 
 }
 
 fn next_step_text(context: &OperatorContext) -> String {
+    if context.phase == "qa_pending" && finish_requires_test_plan_refresh(context) {
+        if context.route.plan_path.is_empty() {
+            return String::from(
+                "Regenerate the current-branch test-plan artifact via superpowers:plan-eng-review before browser QA or branch completion.",
+            );
+        }
+        return format!(
+            "Regenerate the current-branch test-plan artifact via superpowers:plan-eng-review for the approved plan before browser QA or branch completion: {}",
+            context.route.plan_path
+        );
+    }
     next_text_for_phase(
         &context.phase,
         &context.route.status,
@@ -447,6 +515,9 @@ fn next_text_for_phase(
         "needs_user_choice" => String::from(
             "Resolve the session-entry gate before continuing into the normal Superpowers workflow.",
         ),
+        "bypassed" => String::from(
+            "Continue outside the Superpowers workflow unless the user explicitly re-enters.",
+        ),
         "execution_preflight" | "implementation_handoff" => {
             if plan_path.is_empty() {
                 String::from("Return to execution preflight for the approved plan.")
@@ -460,6 +531,24 @@ fn next_text_for_phase(
             } else {
                 format!("Return to the current execution flow for the approved plan: {plan_path}")
             }
+        }
+        "review_blocked" => {
+            if plan_path.is_empty() {
+                String::from("Use superpowers:requesting-code-review for the final review gate.")
+            } else {
+                format!(
+                    "Use superpowers:requesting-code-review for the approved plan before branch completion: {plan_path}"
+                )
+            }
+        }
+        "qa_pending" => String::from(
+            "Run superpowers:qa-only and return with a fresh QA result artifact before branch completion.",
+        ),
+        "document_release_pending" => String::from(
+            "Run superpowers:document-release and return with a fresh release-readiness artifact before branch completion.",
+        ),
+        "ready_for_branch_completion" => {
+            String::from("Use superpowers:finishing-a-development-branch.")
         }
         _ => {
             if !next_skill.is_empty() {
@@ -484,9 +573,24 @@ fn reason_text(context: &OperatorContext) -> String {
         "executing" => String::from(
             "Execution already started for the approved plan and should continue through the current execution flow.",
         ),
+        "review_blocked" => gate_first_diagnostic_message(context.gate_review.as_ref())
+            .or_else(|| gate_first_diagnostic_message(context.gate_finish.as_ref()))
+            .unwrap_or_else(|| {
+                String::from("Execution is blocked on the final review gate for the approved plan.")
+            }),
+        "qa_pending" | "document_release_pending" => {
+            gate_first_diagnostic_message(context.gate_finish.as_ref())
+                .unwrap_or_else(|| context.route.reason.clone())
+        }
+        "ready_for_branch_completion" => {
+            String::from("All required late-stage artifacts are fresh for the current HEAD.")
+        }
         "needs_user_choice" => {
             String::from("The session-entry decision is still unresolved for this session.")
         }
+        "bypassed" => String::from(
+            "Superpowers is bypassed for this session until the user explicitly re-enters.",
+        ),
         _ => context.route.reason.clone(),
     }
 }
@@ -498,6 +602,7 @@ fn display_or_none(value: &str) -> &str {
 fn next_action_for_phase(phase: &str) -> &'static str {
     match phase {
         "needs_user_choice" => "session_entry_gate",
+        "bypassed" => "continue_outside_superpowers",
         "needs_brainstorming"
         | "brainstorming"
         | "spec_review"
@@ -513,6 +618,41 @@ fn next_action_for_phase(phase: &str) -> &'static str {
         "ready_for_branch_completion" => "finish_branch",
         _ => "inspect_workflow",
     }
+}
+
+fn next_action_for_context(context: &OperatorContext) -> &'static str {
+    if context.phase == "qa_pending" && finish_requires_test_plan_refresh(context) {
+        "refresh_test_plan"
+    } else {
+        next_action_for_phase(&context.phase)
+    }
+}
+
+fn finish_requires_test_plan_refresh(context: &OperatorContext) -> bool {
+    gate_has_any_reason(
+        context.gate_finish.as_ref(),
+        &[
+            "test_plan_artifact_missing",
+            "test_plan_artifact_malformed",
+            "test_plan_artifact_stale",
+        ],
+    )
+}
+
+fn gate_has_any_reason(gate: Option<&GateResult>, expected_codes: &[&str]) -> bool {
+    gate.is_some_and(|gate| {
+        gate.reason_codes
+            .iter()
+            .any(|code| expected_codes.contains(&code.as_str()))
+    })
+}
+
+fn gate_first_diagnostic_message(gate: Option<&GateResult>) -> Option<String> {
+    gate.and_then(|gate| {
+        gate.diagnostics
+            .first()
+            .map(|diagnostic| diagnostic.message.clone())
+    })
 }
 
 fn execution_status_args(args: &PlanArgs) -> ExecutionStatusArgs {

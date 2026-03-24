@@ -75,9 +75,13 @@ fi
 
 PID_FILE="${SCREEN_DIR}/.server.pid"
 LOG_FILE="${SCREEN_DIR}/.server.log"
+EPHEMERAL_MARKER="${SCREEN_DIR}/.ephemeral"
 
 # Create fresh session directory
 mkdir -p "$SCREEN_DIR"
+if [[ -z "$PROJECT_DIR" ]]; then
+  : > "$EPHEMERAL_MARKER"
+fi
 
 # Kill any existing server
 if [[ -f "$PID_FILE" ]]; then
@@ -88,24 +92,30 @@ fi
 
 cd "$SCRIPT_DIR"
 
-# Resolve the harness PID (grandparent of this script).
-# $PPID is the ephemeral shell the harness spawned to run us — it dies
-# when this script exits. The harness itself is $PPID's parent.
-OWNER_PID="$(ps -o ppid= -p "$PPID" 2>/dev/null | tr -d ' ')"
-if [[ -z "$OWNER_PID" || "$OWNER_PID" == "1" ]]; then
-  OWNER_PID="$PPID"
-fi
+# In direct shell usage, tie server ownership to the caller shell itself.
+# In launcher-shell usage (`bash -lc`, `zsh -c`, etc.), promote ownership to the
+# grandparent so the server survives the transient wrapper shell and stays tied
+# to the long-lived session that launched it.
+OWNER_PID="$PPID"
+PARENT_COMMAND="$(ps -o command= -p "$PPID" 2>/dev/null || true)"
+case "$PARENT_COMMAND" in
+  *" -c "*|*" -lc "*|*" -ic "*|*" -xc "*)
+    GRANDPARENT_PID="$(ps -o ppid= -p "$PPID" 2>/dev/null | tr -d ' ')"
+    if [[ -n "$GRANDPARENT_PID" && "$GRANDPARENT_PID" != "1" ]]; then
+      OWNER_PID="$GRANDPARENT_PID"
+    fi
+    ;;
+esac
 
 # Foreground mode for environments that reap detached/background processes.
 if [[ "$FOREGROUND" == "true" ]]; then
   echo "$$" > "$PID_FILE"
-  env BRAINSTORM_DIR="$SCREEN_DIR" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" BRAINSTORM_OWNER_PID="$OWNER_PID" node server.js
-  exit $?
+  exec env BRAINSTORM_DIR="$SCREEN_DIR" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" BRAINSTORM_OWNER_PID="$OWNER_PID" node server.js --screen-dir "$SCREEN_DIR"
 fi
 
 # Start server, capturing output to log file
 # Use nohup to survive shell exit; disown to remove from job table
-nohup env BRAINSTORM_DIR="$SCREEN_DIR" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" BRAINSTORM_OWNER_PID="$OWNER_PID" node server.js > "$LOG_FILE" 2>&1 &
+nohup env BRAINSTORM_DIR="$SCREEN_DIR" BRAINSTORM_HOST="$BIND_HOST" BRAINSTORM_URL_HOST="$URL_HOST" BRAINSTORM_OWNER_PID="$OWNER_PID" node server.js --screen-dir "$SCREEN_DIR" > "$LOG_FILE" 2>&1 &
 SERVER_PID=$!
 disown "$SERVER_PID" 2>/dev/null
 echo "$SERVER_PID" > "$PID_FILE"

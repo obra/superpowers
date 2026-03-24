@@ -13,7 +13,7 @@ use crate::contracts::plan::{PlanDocument, PlanTask, parse_plan_file};
 use crate::diagnostics::{FailureClass, JsonFailure};
 use crate::git::discover_repo_identity;
 use crate::paths::{
-    RepoPath, normalize_identifier_token, normalize_repo_relative_path, normalize_whitespace,
+    RepoPath, branch_storage_key, normalize_repo_relative_path, normalize_whitespace,
     superpowers_state_dir,
 };
 use crate::repo_safety::RepoSafetyRuntime;
@@ -231,7 +231,7 @@ impl ExecutionRuntime {
             git_dir: repo.path().to_path_buf(),
             branch_name: identity.branch_name.clone(),
             repo_slug: derive_repo_slug(&identity.repo_root, identity.remote_url.as_deref()),
-            safe_branch: normalize_identifier_token(&identity.branch_name),
+            safe_branch: branch_storage_key(&identity.branch_name),
             state_dir: state_dir(),
         })
     }
@@ -414,9 +414,7 @@ pub fn load_execution_context(
             ));
         }
     }
-    if plan_document.last_reviewed_by != "writing-plans"
-        && plan_document.last_reviewed_by != "plan-eng-review"
-    {
+    if plan_document.last_reviewed_by != "plan-eng-review" {
         return Err(JsonFailure::new(
             FailureClass::PlanNotExecutionReady,
             "Approved plan Last Reviewed By header is missing or malformed.",
@@ -449,6 +447,12 @@ pub fn load_execution_context(
     })?;
     validate_source_spec(
         &source_spec_source,
+        &plan_document.source_spec_path,
+        plan_document.source_spec_revision,
+        &runtime.repo_root,
+    )?;
+    validate_unique_approved_plan(
+        &plan_rel,
         &plan_document.source_spec_path,
         plan_document.source_spec_revision,
         &runtime.repo_root,
@@ -633,6 +637,21 @@ pub fn preflight_from_context(context: &ExecutionContext) -> GateResult {
             "Restore repo-safety availability before continuing execution.",
         );
     }
+    match repo_has_tracked_worktree_changes(&context.runtime.repo_root) {
+        Ok(true) => gate.fail(
+            FailureClass::WorkspaceNotSafe,
+            "tracked_worktree_dirty",
+            "Execution preflight does not allow tracked worktree changes.",
+            "Commit or discard tracked worktree changes before continuing execution.",
+        ),
+        Ok(false) => {}
+        Err(error) => gate.fail(
+            FailureClass::WorkspaceNotSafe,
+            "worktree_state_unavailable",
+            error.message,
+            "Restore repository status inspection before continuing execution.",
+        ),
+    }
 
     if context.runtime.git_dir.join("MERGE_HEAD").exists() {
         gate.fail(
@@ -773,6 +792,30 @@ pub fn gate_finish_from_context(context: &ExecutionContext) -> GateResult {
 
     let branch = &context.runtime.branch_name;
     let current_head = current_head_sha(&context.runtime.repo_root).unwrap_or_default();
+    match repo_has_tracked_worktree_changes(&context.runtime.repo_root) {
+        Ok(true) => {
+            gate.fail(
+                FailureClass::ReviewArtifactNotFresh,
+                "review_artifact_worktree_dirty",
+                "Finish readiness is blocked by tracked worktree changes that landed after the last review artifacts were generated.",
+                "Commit or discard tracked worktree changes, then rerun requesting-code-review and downstream finish artifacts.",
+            );
+            return gate.finish();
+        }
+        Ok(false) => {}
+        Err(error) => {
+            gate.fail(
+                FailureClass::ReviewArtifactNotFresh,
+                "review_artifact_worktree_state_unavailable",
+                format!(
+                    "Finish readiness could not determine whether tracked worktree changes are present: {}",
+                    error.message
+                ),
+                "Restore repository status inspection, then rerun requesting-code-review and downstream finish artifacts.",
+            );
+            return gate.finish();
+        }
+    }
     let Some(current_base_branch) =
         resolve_release_base_branch(&context.runtime.git_dir, &context.runtime.branch_name)
     else {
@@ -790,8 +833,111 @@ pub fn gate_finish_from_context(context: &ExecutionContext) -> GateResult {
         .join("projects")
         .join(&context.runtime.repo_slug);
 
+    let Some(review_path) =
+        latest_branch_artifact_path(&artifact_dir, branch, "code-review")
+    else {
+        gate.fail(
+            FailureClass::ReviewArtifactNotFresh,
+            "review_artifact_missing",
+            "Finish readiness requires a final code-review artifact.",
+            "Run requesting-code-review and return with a fresh code-review artifact.",
+        );
+        return gate.finish();
+    };
+    let review = parse_artifact_document(&review_path);
+    if review.title.as_deref() != Some("# Code Review Result") {
+        gate.fail(
+            FailureClass::ReviewArtifactNotFresh,
+            "review_artifact_malformed",
+            "The latest code-review artifact is malformed.",
+            "Run requesting-code-review and return with a fresh code-review artifact.",
+        );
+        return gate.finish();
+    }
+    if review.headers.get("Source Plan") != Some(&format!("`{}`", context.plan_rel))
+        || review.headers.get("Source Plan Revision")
+            != Some(&context.plan_document.plan_revision.to_string())
+    {
+        gate.fail(
+            FailureClass::ReviewArtifactNotFresh,
+            "review_artifact_plan_mismatch",
+            "The latest code-review artifact does not match the current approved plan revision.",
+            "Run requesting-code-review and return with a fresh code-review artifact.",
+        );
+        return gate.finish();
+    }
+    if review.headers.get("Branch") != Some(branch) {
+        gate.fail(
+            FailureClass::ReviewArtifactNotFresh,
+            "review_artifact_branch_mismatch",
+            "The latest code-review artifact does not match the current branch.",
+            "Run requesting-code-review and return with a fresh code-review artifact.",
+        );
+        return gate.finish();
+    }
+    if review.headers.get("Head SHA") != Some(&current_head) {
+        gate.fail(
+            FailureClass::ReviewArtifactNotFresh,
+            "review_artifact_head_mismatch",
+            "The latest code-review artifact does not match the current HEAD.",
+            "Run requesting-code-review and return with a fresh code-review artifact.",
+        );
+        return gate.finish();
+    }
+    if review
+        .headers
+        .get("Base Branch")
+        .is_none_or(|value| value.trim().is_empty())
+    {
+        gate.fail(
+            FailureClass::ReviewArtifactNotFresh,
+            "review_artifact_base_branch_unresolved",
+            "The latest code-review artifact is missing its base branch declaration.",
+            "Run requesting-code-review and return with a fresh code-review artifact.",
+        );
+        return gate.finish();
+    }
+    if review.headers.get("Base Branch") != Some(&current_base_branch) {
+        gate.fail(
+            FailureClass::ReviewArtifactNotFresh,
+            "review_artifact_base_branch_mismatch",
+            "The latest code-review artifact does not match the expected base branch.",
+            "Run requesting-code-review and return with a fresh code-review artifact.",
+        );
+        return gate.finish();
+    }
+    if review.headers.get("Result") != Some(&String::from("pass")) {
+        gate.fail(
+            FailureClass::ReviewArtifactNotFresh,
+            "review_result_not_pass",
+            "The latest code-review artifact is not marked pass.",
+            "Run requesting-code-review and return with a fresh code-review artifact.",
+        );
+        return gate.finish();
+    }
+    if review.headers.get("Generated By")
+        != Some(&String::from("superpowers:requesting-code-review"))
+    {
+        gate.fail(
+            FailureClass::ReviewArtifactNotFresh,
+            "review_artifact_generator_mismatch",
+            "The latest code-review artifact was not generated by requesting-code-review.",
+            "Run requesting-code-review and return with a fresh code-review artifact.",
+        );
+        return gate.finish();
+    }
+    if review.headers.get("Repo") != Some(&context.runtime.repo_slug) {
+        gate.fail(
+            FailureClass::ReviewArtifactNotFresh,
+            "review_artifact_repo_mismatch",
+            "The latest code-review artifact does not match the current repo.",
+            "Run requesting-code-review and return with a fresh code-review artifact.",
+        );
+        return gate.finish();
+    }
+
     let Some(test_plan_path) =
-        latest_branch_artifact_path(&artifact_dir, &context.runtime.safe_branch, "test-plan")
+        latest_branch_artifact_path(&artifact_dir, branch, "test-plan")
     else {
         gate.fail(
             FailureClass::QaArtifactNotFresh,
@@ -826,17 +972,33 @@ pub fn gate_finish_from_context(context: &ExecutionContext) -> GateResult {
         );
         return gate.finish();
     }
+    if test_plan.headers.get("Head SHA") != Some(&current_head) {
+        gate.fail(
+            FailureClass::QaArtifactNotFresh,
+            "test_plan_artifact_stale",
+            "The latest test-plan artifact does not match the current HEAD.",
+            "Regenerate the test-plan artifact for the current approved plan revision.",
+        );
+        return gate.finish();
+    }
+    if test_plan.headers.get("Generated By") != Some(&String::from("superpowers:plan-eng-review")) {
+        gate.fail(
+            FailureClass::QaArtifactNotFresh,
+            "test_plan_artifact_generator_mismatch",
+            "The latest test-plan artifact was not generated by plan-eng-review.",
+            "Regenerate the test-plan artifact for the current approved plan revision.",
+        );
+        return gate.finish();
+    }
 
     if test_plan
         .headers
         .get("Browser QA Required")
         .is_some_and(|value| value == "yes")
     {
-        let Some(qa_path) = latest_branch_artifact_path(
-            &artifact_dir,
-            &context.runtime.safe_branch,
-            "test-outcome",
-        ) else {
+        let Some(qa_path) =
+            latest_branch_artifact_path(&artifact_dir, branch, "test-outcome")
+        else {
             gate.fail(
                 FailureClass::QaArtifactNotFresh,
                 "qa_artifact_missing",
@@ -909,10 +1071,19 @@ pub fn gate_finish_from_context(context: &ExecutionContext) -> GateResult {
             );
             return gate.finish();
         }
+        if qa.headers.get("Generated By") != Some(&String::from("superpowers:qa-only")) {
+            gate.fail(
+                FailureClass::QaArtifactNotFresh,
+                "qa_artifact_generator_mismatch",
+                "The latest QA result artifact was not generated by qa-only.",
+                "Re-run qa-only using the latest test-plan handoff.",
+            );
+            return gate.finish();
+        }
         if qa.headers.get("Repo") != Some(&context.runtime.repo_slug) {
             gate.fail(
                 FailureClass::QaArtifactNotFresh,
-                "qa_artifact_plan_mismatch",
+                "qa_artifact_repo_mismatch",
                 "The latest QA result artifact does not match the current repo.",
                 "Re-run qa-only using the latest test-plan handoff.",
             );
@@ -920,11 +1091,9 @@ pub fn gate_finish_from_context(context: &ExecutionContext) -> GateResult {
         }
     }
 
-    let Some(release_path) = latest_branch_artifact_path(
-        &artifact_dir,
-        &context.runtime.safe_branch,
-        "release-readiness",
-    ) else {
+    let Some(release_path) =
+        latest_branch_artifact_path(&artifact_dir, branch, "release-readiness")
+    else {
         gate.fail(
             FailureClass::ReleaseArtifactNotFresh,
             "release_artifact_missing",
@@ -1004,10 +1173,19 @@ pub fn gate_finish_from_context(context: &ExecutionContext) -> GateResult {
         );
         return gate.finish();
     }
+    if release.headers.get("Generated By") != Some(&String::from("superpowers:document-release")) {
+        gate.fail(
+            FailureClass::ReleaseArtifactNotFresh,
+            "release_artifact_generator_mismatch",
+            "The latest release-readiness artifact was not generated by document-release.",
+            "Re-run document-release for the current approved plan revision.",
+        );
+        return gate.finish();
+    }
     if release.headers.get("Repo") != Some(&context.runtime.repo_slug) {
         gate.fail(
             FailureClass::ReleaseArtifactNotFresh,
-            "release_artifact_plan_mismatch",
+            "release_artifact_repo_mismatch",
             "The latest release-readiness artifact does not match the current repo.",
             "Re-run document-release for the current approved plan revision.",
         );
@@ -1308,6 +1486,23 @@ pub fn current_head_sha(repo_root: &Path) -> Result<String, JsonFailure> {
     Ok(head.detach().to_string())
 }
 
+fn repo_has_tracked_worktree_changes(repo_root: &Path) -> Result<bool, JsonFailure> {
+    let repo = gix::discover(repo_root).map_err(|error| {
+        JsonFailure::new(
+            FailureClass::WorkspaceNotSafe,
+            format!("Could not discover the current repository: {error}"),
+        )
+    })?;
+    repo.is_dirty().map_err(|error| {
+        JsonFailure::new(
+            FailureClass::WorkspaceNotSafe,
+            format!(
+                "Could not determine whether the repository has tracked worktree changes: {error}"
+            ),
+        )
+    })
+}
+
 pub fn state_dir() -> PathBuf {
     superpowers_state_dir()
 }
@@ -1474,7 +1669,7 @@ fn validate_source_spec(
         ));
     }
     match headers.get("Last Reviewed By").map(String::as_str) {
-        Some("brainstorming" | "plan-ceo-review") => {}
+        Some("plan-ceo-review") => {}
         _ => {
             return Err(JsonFailure::new(
                 FailureClass::PlanNotExecutionReady,
@@ -1482,10 +1677,40 @@ fn validate_source_spec(
             ));
         }
     }
-    if current_approved_spec_path(repo_root).as_deref() != Some(expected_path) {
+    let approved_spec_candidates = approved_spec_candidate_paths(repo_root);
+    if approved_spec_candidates.len() > 1 {
+        return Err(JsonFailure::new(
+            FailureClass::PlanNotExecutionReady,
+            "Approved spec candidates are ambiguous.",
+        ));
+    }
+    if approved_spec_candidates.first().map(String::as_str) != Some(expected_path) {
         return Err(JsonFailure::new(
             FailureClass::PlanNotExecutionReady,
             "Approved plan source spec path or revision is stale.",
+        ));
+    }
+    Ok(())
+}
+
+fn validate_unique_approved_plan(
+    expected_plan_path: &str,
+    source_spec_path: &str,
+    source_spec_revision: u32,
+    repo_root: &Path,
+) -> Result<(), JsonFailure> {
+    let approved_plan_candidates =
+        approved_plan_candidate_paths(repo_root, source_spec_path, source_spec_revision);
+    if approved_plan_candidates.len() > 1 {
+        return Err(JsonFailure::new(
+            FailureClass::PlanNotExecutionReady,
+            "Approved plan candidates are ambiguous.",
+        ));
+    }
+    if approved_plan_candidates.first().map(String::as_str) != Some(expected_plan_path) {
+        return Err(JsonFailure::new(
+            FailureClass::PlanNotExecutionReady,
+            "Approved plan is not the unique current approved plan for its source spec.",
         ));
     }
     Ok(())
@@ -1550,18 +1775,77 @@ fn parse_artifact_document(path: &Path) -> ArtifactDocument {
 }
 
 fn resolve_release_base_branch(git_dir: &Path, current_branch: &str) -> Option<String> {
-    if matches!(current_branch, "main" | "master") {
+    const COMMON_BASE_BRANCHES: &[&str] = &["main", "master", "develop", "dev", "trunk"];
+
+    if COMMON_BASE_BRANCHES.contains(&current_branch) {
         return Some(current_branch.to_owned());
     }
 
-    let branches = local_head_branches(&git_dir.join("refs/heads"));
-    if branches.iter().any(|branch| branch == "main") {
-        return Some(String::from("main"));
+    if let Some(branch) = branch_merge_base_from_config(git_dir, current_branch) {
+        return Some(branch);
     }
-    if branches.iter().any(|branch| branch == "master") {
-        return Some(String::from("master"));
+    if let Some(branch) = origin_head_branch(git_dir) {
+        return Some(branch);
+    }
+
+    let branches = local_head_branches(&git_dir.join("refs/heads"));
+    for candidate in COMMON_BASE_BRANCHES {
+        if branches.iter().any(|branch| branch == candidate) {
+            return Some((*candidate).to_owned());
+        }
+    }
+
+    let mut non_current = branches
+        .into_iter()
+        .filter(|branch| branch != current_branch)
+        .collect::<Vec<_>>();
+    non_current.sort();
+    non_current.dedup();
+    if non_current.len() == 1 {
+        return non_current.pop();
     }
     None
+}
+
+fn branch_merge_base_from_config(git_dir: &Path, current_branch: &str) -> Option<String> {
+    let source = fs::read_to_string(git_dir.join("config")).ok()?;
+    let target_section = format!(r#"[branch "{current_branch}"]"#);
+    let mut in_target_section = false;
+
+    for line in source.lines() {
+        let trimmed = line.trim();
+        if trimmed.starts_with('[') && trimmed.ends_with(']') {
+            in_target_section = trimmed == target_section;
+            continue;
+        }
+        if !in_target_section
+            || trimmed.is_empty()
+            || trimmed.starts_with('#')
+            || trimmed.starts_with(';')
+        {
+            continue;
+        }
+        let (key, value) = trimmed.split_once('=')?;
+        if key.trim() == "gh-merge-base" {
+            let normalized = value.trim();
+            if !normalized.is_empty() {
+                return Some(normalized.to_owned());
+            }
+        }
+    }
+
+    None
+}
+
+fn origin_head_branch(git_dir: &Path) -> Option<String> {
+    let source = fs::read_to_string(git_dir.join("refs/remotes/origin/HEAD")).ok()?;
+    let reference = source.trim().strip_prefix("ref: ")?;
+    let branch = reference.strip_prefix("refs/remotes/origin/")?.trim();
+    if branch.is_empty() {
+        None
+    } else {
+        Some(branch.to_owned())
+    }
 }
 
 fn local_head_branches(heads_dir: &Path) -> Vec<String> {
@@ -1586,7 +1870,7 @@ fn local_head_branches(heads_dir: &Path) -> Vec<String> {
     branches
 }
 
-fn current_approved_spec_path(repo_root: &Path) -> Option<String> {
+fn approved_spec_candidate_paths(repo_root: &Path) -> Vec<String> {
     let mut candidates = markdown_files_under(&repo_root.join("docs/superpowers/specs"))
         .into_iter()
         .filter_map(|path| {
@@ -1598,24 +1882,65 @@ fn current_approved_spec_path(repo_root: &Path) -> Option<String> {
                 .get("Spec Revision")
                 .and_then(|value| value.parse::<u32>().ok())
                 .is_some();
-            let reviewed_by_valid = headers
-                .get("Last Reviewed By")
-                .map(|value| !value.trim().is_empty())
-                .unwrap_or(false);
+            let reviewed_by_valid =
+                headers.get("Last Reviewed By").map(String::as_str) == Some("plan-ceo-review");
             if !revision_valid || !reviewed_by_valid {
                 return None;
             }
-            let modified = path
-                .metadata()
-                .ok()
-                .and_then(|metadata| metadata.modified().ok());
             path.strip_prefix(repo_root)
                 .ok()
-                .map(|relative| (modified, relative.to_string_lossy().replace('\\', "/")))
+                .map(|relative| relative.to_string_lossy().replace('\\', "/"))
         })
         .collect::<Vec<_>>();
-    candidates.sort_by(|left, right| left.0.cmp(&right.0).then(left.1.cmp(&right.1)));
-    candidates.pop().map(|(_, path)| path)
+    candidates.sort();
+    candidates
+}
+
+fn approved_plan_candidate_paths(
+    repo_root: &Path,
+    source_spec_path: &str,
+    source_spec_revision: u32,
+) -> Vec<String> {
+    let mut candidates = markdown_files_under(&repo_root.join("docs/superpowers/plans"))
+        .into_iter()
+        .filter_map(|path| {
+            let headers = parse_headers_file(&path);
+            if headers.get("Workflow State").map(String::as_str) != Some("Engineering Approved") {
+                return None;
+            }
+            let execution_mode_valid = matches!(
+                headers.get("Execution Mode").map(String::as_str),
+                Some("none")
+                    | Some("superpowers:executing-plans")
+                    | Some("superpowers:subagent-driven-development")
+            );
+            let reviewed_by_valid =
+                headers.get("Last Reviewed By").map(String::as_str) == Some("plan-eng-review");
+            let source_path_matches =
+                headers.get("Source Spec") == Some(&format!("`{source_spec_path}`"));
+            let source_revision_matches = headers
+                .get("Source Spec Revision")
+                .and_then(|value| value.parse::<u32>().ok())
+                == Some(source_spec_revision);
+            let plan_revision_valid = headers
+                .get("Plan Revision")
+                .and_then(|value| value.parse::<u32>().ok())
+                .is_some();
+            if !execution_mode_valid
+                || !reviewed_by_valid
+                || !source_path_matches
+                || !source_revision_matches
+                || !plan_revision_valid
+            {
+                return None;
+            }
+            path.strip_prefix(repo_root)
+                .ok()
+                .map(|relative| relative.to_string_lossy().replace('\\', "/"))
+        })
+        .collect::<Vec<_>>();
+    candidates.sort();
+    candidates
 }
 
 fn markdown_files_under(root: &Path) -> Vec<PathBuf> {
@@ -2226,7 +2551,7 @@ fn active_step(context: &ExecutionContext, note_state: NoteState) -> Option<&Pla
 
 fn latest_branch_artifact_path(
     artifact_dir: &Path,
-    safe_branch: &str,
+    branch_name: &str,
     kind: &str,
 ) -> Option<PathBuf> {
     let entries = fs::read_dir(artifact_dir).ok()?;
@@ -2237,7 +2562,16 @@ fn latest_branch_artifact_path(
         .filter(|path| {
             path.file_name()
                 .and_then(std::ffi::OsStr::to_str)
-                .is_some_and(|name| name.contains(&format!("-{safe_branch}-{kind}-")))
+                .is_some_and(|name| {
+                    name.strip_suffix(".md")
+                        .and_then(|stem| stem.rsplit_once(&format!("-{kind}-")))
+                        .is_some_and(|(_, timestamp)| !timestamp.is_empty())
+                })
+        })
+        .filter(|path| {
+            parse_headers_file(path)
+                .get("Branch")
+                .is_some_and(|value| value == branch_name)
         })
         .collect::<Vec<_>>();
     candidates.sort();

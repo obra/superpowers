@@ -14,15 +14,10 @@ for ($i = 0; $i -lt $args.Count; $i++) {
   }
 }
 
-$output = @(& $bashPath $bashScript @($forwardArgs.ToArray()))
-$exitCode = $LASTEXITCODE
-
-if ($exitCode -eq 0 -and $output.Count -eq 1) {
-  $line = [string]$output[0]
-  $converted = Convert-SuperpowersJsonFieldPathsToWindows -JsonText $line -Fields @('screen_dir')
-  Write-Output $converted
-} else {
-  $output | Write-Output
+& $bashPath $bashScript @($forwardArgs.ToArray()) | ForEach-Object {
+  $line = [string]$_
+  Write-Output (Convert-SuperpowersJsonFieldPathsToWindows -JsonText $line -Fields @('screen_dir'))
 }
+$exitCode = $LASTEXITCODE
 
 exit $exitCode

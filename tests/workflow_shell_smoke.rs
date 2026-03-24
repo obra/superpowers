@@ -23,6 +23,10 @@ fn public_workflow_wrapper_path() -> PathBuf {
     repo_root().join("bin/superpowers-workflow")
 }
 
+fn public_workflow_status_wrapper_path() -> PathBuf {
+    repo_root().join("bin/superpowers-workflow-status")
+}
+
 fn copy_fixture(repo: &Path, fixture_rel: &str, dest_rel: &str) {
     let fixture_root = workflow_fixture_root();
     let dest = repo.join(dest_rel);
@@ -98,6 +102,21 @@ fn run_public_workflow_wrapper(
     run(command, context)
 }
 
+fn run_public_workflow_status_wrapper(
+    repo: &Path,
+    state_dir: &Path,
+    args: &[&str],
+    context: &str,
+) -> Output {
+    let mut command = Command::new(public_workflow_status_wrapper_path());
+    command
+        .current_dir(repo)
+        .env("SUPERPOWERS_COMPAT_BIN", compiled_superpowers_path())
+        .env("SUPERPOWERS_STATE_DIR", state_dir)
+        .args(args);
+    run(command, context)
+}
+
 fn run_public_workflow_wrapper_with_env(
     repo: &Path,
     state_dir: &Path,
@@ -147,6 +166,34 @@ fn public_workflow_wrapper_help_outside_repo_mentions_the_public_surfaces() {
     assert!(stdout.contains("Commands:"));
     assert!(stdout.contains("status"));
     assert!(stdout.contains("help"));
+}
+
+#[test]
+fn public_workflow_wrapper_dedupes_duplicate_workflow_prefix() {
+    let outside_repo = TempDir::new().expect("outside repo tempdir should exist");
+    let output = run_public_workflow_wrapper(
+        outside_repo.path(),
+        outside_repo.path(),
+        &["workflow", "help"],
+        "public workflow wrapper duplicate workflow prefix",
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("Usage: superpowers workflow <COMMAND>"));
+    assert!(stdout.contains("Commands:"));
+}
+
+#[test]
+fn public_workflow_status_wrapper_dedupes_duplicate_status_prefix() {
+    let outside_repo = TempDir::new().expect("outside repo tempdir should exist");
+    let output = run_public_workflow_status_wrapper(
+        outside_repo.path(),
+        outside_repo.path(),
+        &["status", "--help"],
+        "public workflow-status wrapper duplicate status prefix",
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("Usage: superpowers workflow status"));
+    assert!(stdout.contains("--refresh"));
 }
 
 #[test]

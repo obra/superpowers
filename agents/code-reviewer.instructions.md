@@ -15,7 +15,7 @@ You are a Senior Code Reviewer. Your job is to review completed work against the
 
 2. Ground the review in the base branch and review range:
    - Prefer a caller-provided base branch when available
-   - Otherwise detect it with `gh pr view --json baseRefName -q .baseRefName`, then `gh repo view --json defaultBranchRef -q .defaultBranchRef.name`, then fall back to `main`
+   - Otherwise use the same locally derivable base-branch contract as `document-release` and `gate-finish` (current branch if it is `main`/`master`/`develop`/`dev`/`trunk`, then `branch.<current>.gh-merge-base`, then `origin/HEAD`, then common local base branches, then a single non-current local branch; otherwise stop)
    - Review the exact requested range, not just the last commit
 
 3. Apply the checklist in two passes:

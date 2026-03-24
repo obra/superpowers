@@ -8,7 +8,11 @@ Execute one scenario from `tests/evals/using-superpowers-routing.scenarios.md` a
 
 ## Runner Contract
 
-- Use the real `using-superpowers` entry contract and installed skill set.
+- Use the real repo-versioned `using-superpowers` entry contract and skill/runtime surfaces from the branch under test, not a stale home-install copy.
+- The controller must pass `BRANCH_UNDER_TEST_ROOT` as an absolute path.
+- Read `BRANCH_UNDER_TEST_ROOT/skills/using-superpowers/SKILL.md` directly from that checkout.
+- Invoke `BRANCH_UNDER_TEST_ROOT/bin/superpowers` explicitly when runtime behavior matters.
+- Do not rely on temp-fixture runtime-root autodetection or any home-install fallback.
 - Start from a fresh temporary git repo fixture.
 - Require the fixture/controller to pre-seed the synthetic session decision to `enabled` at the real decision-file path derived from the runner's own runtime shell; if that state is missing, fail the scenario instead of improvising past the bypass gate.
 - Keep the runner read-only.

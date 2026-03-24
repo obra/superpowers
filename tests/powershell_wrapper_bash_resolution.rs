@@ -53,6 +53,7 @@ fn make_script(path: &Path, contents: &str) {
 fn run_pwsh(pwsh: &str, script: &str, envs: &[(&str, &str)], context: &str) -> Output {
     let mut command = Command::new(pwsh);
     command.args(["-NoLogo", "-NoProfile", "-Command", script]);
+    command.env("SUPERPOWERS_PWSH_FORCE_BASH_COMPAT", "1");
     for (key, value) in envs {
         command.env(key, value);
     }
@@ -260,10 +261,7 @@ fn powershell_wrapper_bash_resolution_matches_shell_fixture_semantics() {
     install_logged_bash(&git_bin_dir.join("bash.exe"));
     let workflow_status_output = run_pwsh(
         &pwsh,
-        &powershell_wrapper_script(
-            &workflow_status,
-            "status --plan docs/superpowers/plans/example.md",
-        ),
+        &powershell_wrapper_script(&workflow_status, "--plan docs/superpowers/plans/example.md"),
         &[
             ("PATH", path_env.as_str()),
             (
@@ -308,10 +306,7 @@ fn powershell_wrapper_bash_resolution_matches_shell_fixture_semantics() {
     install_exit_bash(&git_bin_dir.join("bash.exe"), 7);
     let workflow_status_exit = run_pwsh(
         &pwsh,
-        &powershell_wrapper_script(
-            &workflow_status,
-            "status --plan docs/superpowers/plans/example.md",
-        ),
+        &powershell_wrapper_script(&workflow_status, "--plan docs/superpowers/plans/example.md"),
         &[("PATH", path_env.as_str())],
         "workflow-status wrapper should preserve bash exit code",
     );

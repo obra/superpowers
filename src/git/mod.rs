@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use sha2::{Digest, Sha256};
 
 use crate::diagnostics::{DiagnosticError, FailureClass};
-use crate::paths::normalize_identifier_token;
+use crate::paths::branch_storage_key;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RepositoryIdentity {
@@ -62,7 +62,7 @@ pub fn discover_repo_identity(start_dir: &Path) -> Result<RepositoryIdentity, Di
 pub fn discover_slug_identity(start_dir: &Path) -> SlugIdentity {
     match discover_repo_identity(start_dir) {
         Ok(identity) => {
-            let safe_branch = normalize_identifier_token(&identity.branch_name);
+            let safe_branch = branch_storage_key(&identity.branch_name);
             SlugIdentity {
                 repo_slug: derive_repo_slug(&identity.repo_root, identity.remote_url.as_deref()),
                 safe_branch,

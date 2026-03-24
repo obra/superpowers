@@ -109,6 +109,10 @@ Superpowers' default planning pipeline is:
 
 Accelerated review is an opt-in branch inside `plan-ceo-review` and `plan-eng-review`, not a separate workflow stage.
 
+`plan-ceo-review` now carries the upstream founder-review shape more closely: it supports four scope modes including `Selective Expansion`, can run a UI design-intent pass for UI-bearing specs, and writes an additive trailing `CEO Review Summary` into the authoritative spec. That summary is context for downstream work, not a replacement for the approved spec headers or `Requirement Index`.
+
+`plan-eng-review` now writes an additive trailing `Engineering Review Summary`, expands the branch-scoped QA handoff around a coverage graph and browser matrix, and can run an optional outside-voice challenge. `qa-only` may consume those richer sections as context, but current required artifact headers and branch freshness still govern finish readiness.
+
 Only the user can initiate accelerated review, and section approval plus final approval remain human-owned even when the review uses reviewer subagents and persisted section packets.
 
 During implementation, either `subagent-driven-development` or `executing-plans` starts from an engineering-approved current plan, runs a workspace-readiness preflight, and then drives task execution. Those execution and review stages now consume helper-built task packets derived from the approved markdown contract. Workspace preparation is the user's responsibility; invoke `using-git-worktrees` manually when you want isolated workspace management. The completion flow runs `requesting-code-review`, uses the current-branch test-plan artifact to decide whether `qa-only` is required, requires that current-branch test-plan artifact for helper-backed finish readiness, requires the `document-release` handoff for workflow-routed branch completion, and requires a passing `gate-finish` before final branch cleanup or PR handoff.

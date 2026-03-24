@@ -20,6 +20,7 @@ use failure_json_support::parse_failure_json;
 use files_support::write_file;
 use json_support::parse_json;
 use process_support::{repo_root, run, run_checked};
+use superpowers::paths::branch_storage_key;
 
 fn repo_safety_helper_path() -> PathBuf {
     repo_root().join("bin/superpowers-repo-safety")
@@ -126,7 +127,11 @@ fn legacy_approval_path(
     state_dir
         .join("projects")
         .join(repo_slug_from_remote(remote_url))
-        .join(format!("{}-{}-repo-safety", current_user_name(), branch))
+        .join(format!(
+            "{}-{}-repo-safety",
+            current_user_name(),
+            branch_storage_key(branch)
+        ))
         .join(format!("{}.json", task_hash(stage, task_id)))
 }
 
@@ -141,8 +146,14 @@ fn canonical_approval_path(
         .join("repo-safety")
         .join("approvals")
         .join(repo_slug_from_remote(remote_url))
-        .join(format!("{}-{}", current_user_name(), branch))
+        .join(format!("{}-{}", current_user_name(), branch_storage_key(branch)))
         .join(format!("{}.json", task_hash(stage, task_id)))
+}
+
+fn checkout_branch(repo: &Path, branch: &str) {
+    let mut git_checkout = Command::new("git");
+    git_checkout.args(["checkout", "-B", branch]).current_dir(repo);
+    run_checked(git_checkout, "git checkout branch");
 }
 
 #[test]
@@ -869,6 +880,73 @@ fn canonical_repo_safety_matching_approvals_and_scope_rules_are_precise() {
 }
 
 #[test]
+fn canonical_repo_safety_distinguishes_exact_branch_names_in_scope_identity() {
+    let remote_url = "https://example.com/acme/repo-safety.git";
+    let (repo_dir, state_dir) = init_repo("repo-safety-branch-identity", "feature/x", remote_url);
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+
+    let slash_branch = parse_json(
+        &run_rust_superpowers(
+            repo,
+            state,
+            &[
+                "repo-safety",
+                "check",
+                "--intent",
+                "write",
+                "--stage",
+                "superpowers:brainstorming",
+                "--task-id",
+                "branch-identity-task",
+                "--path",
+                "docs/superpowers/specs/new-spec.md",
+                "--write-target",
+                "spec-artifact-write",
+            ],
+            "repo-safety exact branch identity on feature/x",
+        ),
+        "repo-safety exact branch identity on feature/x",
+    );
+
+    checkout_branch(repo, "feature-x");
+
+    let dash_branch = parse_json(
+        &run_rust_superpowers(
+            repo,
+            state,
+            &[
+                "repo-safety",
+                "check",
+                "--intent",
+                "write",
+                "--stage",
+                "superpowers:brainstorming",
+                "--task-id",
+                "branch-identity-task",
+                "--path",
+                "docs/superpowers/specs/new-spec.md",
+                "--write-target",
+                "spec-artifact-write",
+            ],
+            "repo-safety exact branch identity on feature-x",
+        ),
+        "repo-safety exact branch identity on feature-x",
+    );
+
+    assert_ne!(
+        slash_branch["approval_path"],
+        dash_branch["approval_path"],
+        "approval storage paths should stay exact-branch scoped",
+    );
+    assert_ne!(
+        slash_branch["approval_fingerprint"],
+        dash_branch["approval_fingerprint"],
+        "approval fingerprints should stay exact-branch scoped",
+    );
+}
+
+#[test]
 fn canonical_repo_safety_rejects_invalid_inputs_and_keeps_deterministic_hot_paths() {
     let remote_url = "https://example.com/acme/repo-safety.git";
     let (repo_dir, state_dir) = init_repo("repo-safety-invalid-inputs", "main", remote_url);
@@ -1010,7 +1088,8 @@ fn repo_safety_helper_script_stays_find_free() {
         "repo-safety helper script should not regress to find-based repo scanning"
     );
     assert!(
-        contents.contains("exec \"$(resolve_runtime_entry)\" repo-safety \"$@\""),
+        contents.contains("FORWARDED_ARGS=(\"$@\")")
+            && contents.contains("exec \"$(resolve_runtime_entry)\" repo-safety \"${FORWARDED_ARGS[@]}\""),
         "repo-safety helper script should still exec the compat launcher"
     );
 }

@@ -341,7 +341,7 @@ fn parse_file_entries(lines: &[&str]) -> Result<Vec<TaskFileEntry>, DiagnosticEr
             collecting = true;
             continue;
         }
-        if collecting && line.starts_with("- [ ] **Step ") {
+        if collecting && is_plan_step_prefix(line.trim()) {
             break;
         }
         if !collecting {
@@ -378,24 +378,55 @@ fn parse_file_entries(lines: &[&str]) -> Result<Vec<TaskFileEntry>, DiagnosticEr
 fn parse_steps(lines: &[&str]) -> Result<Vec<PlanStep>, DiagnosticError> {
     let mut steps = Vec::new();
     for line in lines {
-        let trimmed = line.trim();
-        let Some(rest) = trimmed.strip_prefix("- [ ] **Step ") else {
+        let Some((number, text)) = parse_plan_step_line(line.trim())? else {
             continue;
         };
-        let (number, text) = rest.split_once(": ").ok_or_else(|| {
-            DiagnosticError::new(
-                FailureClass::InstructionParseFailed,
-                format!("Malformed step entry: {trimmed}"),
-            )
-        })?;
-        steps.push(PlanStep {
-            number: number
-                .parse::<u32>()
-                .map_err(|_| missing_header("Step number"))?,
-            text: text.trim_end_matches("**").to_owned(),
-        });
+        steps.push(PlanStep { number, text });
     }
     Ok(steps)
+}
+
+fn is_plan_step_prefix(line: &str) -> bool {
+    let Some(rest) = line.strip_prefix("- [") else {
+        return false;
+    };
+    let Some(mark) = rest.chars().next() else {
+        return false;
+    };
+    if mark != 'x' && mark != ' ' {
+        return false;
+    }
+    let rest = &rest[mark.len_utf8()..];
+    rest.starts_with("] **Step ")
+}
+
+fn parse_plan_step_line(line: &str) -> Result<Option<(u32, String)>, DiagnosticError> {
+    if !is_plan_step_prefix(line) {
+        return Ok(None);
+    }
+    let rest = line
+        .strip_prefix("- [")
+        .expect("step prefix should be present after is_plan_step_prefix");
+    let mark = rest
+        .chars()
+        .next()
+        .expect("step mark should be present after is_plan_step_prefix");
+    let rest = &rest[mark.len_utf8()..];
+    let rest = rest
+        .strip_prefix("] **Step ")
+        .expect("step body should be present after is_plan_step_prefix");
+    let (number, text) = rest.split_once(": ").ok_or_else(|| {
+        DiagnosticError::new(
+            FailureClass::InstructionParseFailed,
+            format!("Malformed step entry: {line}"),
+        )
+    })?;
+    Ok(Some((
+        number
+            .parse::<u32>()
+            .map_err(|_| missing_header("Step number"))?,
+        text.trim_end_matches("**").to_owned(),
+    )))
 }
 
 fn detect_overlapping_write_scopes(tasks: &[PlanTask]) -> Vec<OverlappingWriteScope> {

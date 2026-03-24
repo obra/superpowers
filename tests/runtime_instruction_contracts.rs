@@ -426,6 +426,61 @@ fn repo_checkout_powershell_launcher_rejects_stale_prebuilt_checksum() {
 }
 
 #[test]
+fn repo_checkout_powershell_launcher_preserves_native_exit_code_with_psnative_preference() {
+    let Some(pwsh) = pwsh_bin() else {
+        eprintln!(
+            "Skipping PowerShell launcher exit-code test: no pwsh or powershell binary found."
+        );
+        return;
+    };
+
+    let temp_root = TempDir::new().expect("temp runtime root should exist");
+    let binary_rel = "bin/prebuilt/darwin-arm64/superpowers";
+    let checksum_rel = "bin/prebuilt/darwin-arm64/superpowers.sha256";
+    let binary_contents = "#!/usr/bin/env bash\nexit 42\n";
+    let launcher = copy_repo_powershell_launcher(temp_root.path());
+    write_prebuilt_artifact(
+        temp_root.path(),
+        binary_rel,
+        checksum_rel,
+        binary_contents,
+        &sha256_checksum_line("superpowers", binary_contents),
+    );
+    write_prebuilt_manifest(
+        temp_root.path(),
+        env!("CARGO_PKG_VERSION"),
+        &[PrebuiltManifestEntry {
+            target: "darwin-arm64",
+            binary_path: binary_rel,
+            checksum_path: checksum_rel,
+        }],
+    );
+
+    let launcher_escaped = launcher.to_string_lossy().replace('\'', "''");
+    let script = format!(
+        "$PSNativeCommandUseErrorActionPreference = $true; & '{launcher_escaped}' --version; exit $LASTEXITCODE"
+    );
+    let output = run(
+        {
+            let mut command = Command::new(pwsh);
+            command
+                .args(["-NoLogo", "-NoProfile", "-Command"])
+                .arg(script)
+                .current_dir(temp_root.path());
+            command
+        },
+        "powershell launcher should preserve native exit codes when PSNativeCommandUseErrorActionPreference is enabled",
+    );
+    assert_eq!(
+        output.status.code(),
+        Some(42),
+        "PowerShell launcher should preserve native runtime exit codes even when PSNativeCommandUseErrorActionPreference is enabled\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+#[test]
 fn runtime_instruction_docs_point_at_rust_as_the_primary_oracle() {
     let readme = repo_root().join("README.md");
     let docs_testing = repo_root().join("docs/testing.md");
@@ -739,6 +794,8 @@ fn workflow_enhancement_contracts_are_documented_consistently() {
                 "rollback notes",
                 "known risks or operator-facing caveats",
                 "# Release Readiness Result",
+                "Require the exact approved plan path from the current workflow context before writing the release-readiness artifact.",
+                "Derive `Source Plan` and `Source Plan Revision` from that exact approved plan",
             ],
         ),
         (
@@ -751,7 +808,8 @@ fn workflow_enhancement_contracts_are_documented_consistently() {
                 "Required release-readiness pass for workflow-routed work before completion",
                 "superpowers repo-safety check --intent write",
                 "Run `superpowers plan execution gate-review --plan <approved-plan-path>` before late-stage QA or release routing.",
-                "After `superpowers:document-release` and any required `superpowers:qa-only` handoff are current, run `superpowers plan execution gate-finish --plan <approved-plan-path>` before presenting completion options.",
+                "If the current work is governed by an approved Superpowers plan, after `superpowers:document-release` and any required `superpowers:qa-only` handoff are current, run `superpowers plan execution gate-finish --plan <approved-plan-path>` before presenting completion options.",
+                "If the current work is not governed by an approved Superpowers plan, skip this helper-owned finish gate and continue with the normal completion flow.",
             ],
         ),
     ] {
@@ -764,9 +822,50 @@ fn workflow_enhancement_contracts_are_documented_consistently() {
         root.join("skills/document-release/SKILL.md"),
         "|| echo main",
     );
+    assert_file_contains(
+        root.join("skills/document-release/SKILL.md"),
+        "Do not use PR metadata or repo default-branch APIs as a fallback",
+    );
+    assert_file_not_contains(root.join("skills/document-release/SKILL.md"), "gh pr view");
+    assert_file_not_contains(
+        root.join("skills/document-release/SKILL.md"),
+        "defaultBranchRef",
+    );
     assert_file_not_contains(
         root.join("skills/finishing-a-development-branch/SKILL.md"),
         "If Step 1.9 already routed through `superpowers:document-release`",
+    );
+    assert_file_contains(
+        root.join("tests/evals/using-superpowers-routing.scenarios.md"),
+        "branch-completion language still routes to `requesting-code-review` when no fresh final review artifact exists",
+    );
+    assert_file_contains(
+        root.join("tests/evals/using-superpowers-routing.orchestrator.md"),
+        "Use the real repo-versioned `using-superpowers` entry contract and skill/runtime surfaces from the branch under test",
+    );
+    assert_file_contains(
+        root.join("tests/evals/using-superpowers-routing.orchestrator.md"),
+        "Pass the absolute branch-under-test repo root into both runner and judge prompts.",
+    );
+    assert_file_contains(
+        root.join("tests/evals/using-superpowers-routing.orchestrator.md"),
+        "invoke `<BRANCH_UNDER_TEST_ROOT>/bin/superpowers` explicitly",
+    );
+    assert_file_contains(
+        root.join("tests/evals/using-superpowers-routing.runner.md"),
+        "Use the real repo-versioned `using-superpowers` entry contract and skill/runtime surfaces from the branch under test",
+    );
+    assert_file_contains(
+        root.join("tests/evals/using-superpowers-routing.runner.md"),
+        "The controller must pass `BRANCH_UNDER_TEST_ROOT` as an absolute path.",
+    );
+    assert_file_contains(
+        root.join("tests/evals/using-superpowers-routing.runner.md"),
+        "Do not rely on temp-fixture runtime-root autodetection or any home-install fallback.",
+    );
+    assert_file_not_contains(
+        root.join("tests/evals/using-superpowers-routing.scenarios.md"),
+        "| P3 |",
     );
 }
 
@@ -794,6 +893,18 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
         root.join("skills/brainstorming/SKILL.md"),
         "superpowers repo-safety check --intent write",
     );
+    assert_file_contains(
+        root.join("skills/brainstorming/visual-companion.md"),
+        "may stay attached to the terminal instead of returning immediately",
+    );
+    assert_file_contains(
+        root.join("skills/brainstorming/visual-companion.md"),
+        "capture the first `server-started` JSON line for `screen_dir`",
+    );
+    assert_file_contains(
+        root.join("skills/brainstorming/visual-companion.md"),
+        "install Git Bash or point `SUPERPOWERS_BASH_PATH` at a compatible `bash`",
+    );
 
     assert_description_contains(
         root.join("skills/using-superpowers/SKILL.md"),
@@ -805,7 +916,31 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
     );
     assert_file_contains(
         root.join("skills/using-superpowers/SKILL.md"),
+        "treat `execution_started` as an executor-resume signal only when the reported `phase` is `executing`",
+    );
+    assert_file_contains(
+        root.join("skills/using-superpowers/SKILL.md"),
+        "If the handoff reports a later phase such as `review_blocked`, `qa_pending`, `document_release_pending`, or `ready_for_branch_completion`, follow that reported phase and `next_action` instead of resuming `superpowers:subagent-driven-development` or `superpowers:executing-plans` just because `execution_started` is `yes`.",
+    );
+    assert_file_contains(
+        root.join("skills/using-superpowers/SKILL.md"),
+        "Treat the public handoff recommendation as a conservative default.",
+    );
+    assert_file_contains(
+        root.join("skills/using-superpowers/SKILL.md"),
+        "superpowers plan execution recommend --plan <approved-plan-path> --isolated-agents <available|unavailable> --session-intent <stay|separate|unknown> --workspace-prepared <yes|no|unknown>",
+    );
+    assert_file_contains(
+        root.join("skills/using-superpowers/SKILL.md"),
         "then follow the artifact-state workflow: plan-ceo-review -> writing-plans -> plan-eng-review -> execution.",
+    );
+    assert_file_contains(
+        root.join("skills/using-superpowers/SKILL.md"),
+        "Approved spec reviewer: `^\\*\\*Last Reviewed By:\\*\\* plan-ceo-review$`",
+    );
+    assert_file_contains(
+        root.join("skills/using-superpowers/SKILL.md"),
+        "Approved plan reviewer: `^\\*\\*Last Reviewed By:\\*\\* plan-eng-review$`",
     );
     assert_file_not_contains(
         root.join("skills/using-superpowers/SKILL.md"),
@@ -820,6 +955,74 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
         root.join("skills/writing-plans/SKILL.md"),
         "\"$_SUPERPOWERS_ROOT/bin/superpowers\" plan contract lint \\",
     );
+    assert_file_contains(
+        root.join("skills/writing-plans/SKILL.md"),
+        "## CEO Review Summary",
+    );
+    assert_file_contains(
+        root.join("skills/writing-plans/SKILL.md"),
+        "additive context only",
+    );
+    assert_file_contains(
+        root.join("skills/writing-plans/SKILL.md"),
+        "Use the execution skill recommended by `superpowers plan execution recommend --plan <approved-plan-path>`",
+    );
+    assert_file_contains(
+        root.join("skills/writing-plans/SKILL.md"),
+        "**Last Reviewed By:** plan-ceo-review",
+    );
+    assert_file_contains(
+        root.join("skills/requesting-code-review/SKILL.md"),
+        "For the final cross-task review gate in workflow-routed work",
+    );
+    assert_file_not_contains(
+        root.join("skills/requesting-code-review/SKILL.md"),
+        "After each task in subagent-driven development",
+    );
+    assert_file_contains(
+        root.join("skills/subagent-driven-development/SKILL.md"),
+        "Those per-task review loops satisfy the \"review early\" rule during execution",
+    );
+    assert_file_contains(
+        root.join("skills/finishing-a-development-branch/SKILL.md"),
+        "If the current work is not governed by an approved Superpowers plan, skip this helper-owned finish gate and continue with the normal completion flow.",
+    );
+    assert_file_contains(
+        root.join("skills/finishing-a-development-branch/SKILL.md"),
+        "For plan-routed completion, use the exact `Base Branch` from the fresh release-readiness artifact instead of redetecting the target branch.",
+    );
+    assert_file_contains(
+        root.join("skills/finishing-a-development-branch/SKILL.md"),
+        "The Step 2 `<base-branch>` value stays authoritative for Options A, B, and D. Do not redetect it later in the branch-finishing flow.",
+    );
+    assert_file_contains(
+        root.join("skills/finishing-a-development-branch/SKILL.md"),
+        "Use the exact `<base-branch>` resolved in Step 2. Do not redetect it during PR creation.",
+    );
+    assert_file_contains(
+        root.join("skills/finishing-a-development-branch/SKILL.md"),
+        "If `gate-finish` fails with `test_plan_artifact_missing` or `test_plan_artifact_stale`, hand control back to `superpowers:plan-eng-review` to regenerate the current-branch test-plan artifact before QA or branch completion.",
+    );
+    assert_file_contains(
+        root.join("skills/finishing-a-development-branch/SKILL.md"),
+        "Treat the current-branch test-plan artifact as authoritative only when its `Source Plan`, `Source Plan Revision`, and `Head SHA` match the exact approved plan path, revision, and current branch HEAD from the workflow context.",
+    );
+    assert_file_contains(
+        root.join("skills/finishing-a-development-branch/SKILL.md"),
+        "Match current-branch artifacts by their `**Branch:**` header, not by a filename substring glob, so `my-feature` cannot masquerade as `feature`.",
+    );
+    assert_file_not_contains(
+        root.join("skills/finishing-a-development-branch/SKILL.md"),
+        "*-\"$BRANCH\"-test-plan-*",
+    );
+    assert_file_contains(
+        root.join("skills/finishing-a-development-branch/SKILL.md"),
+        "gh pr create --base \"<base-branch>\"",
+    );
+    assert_file_not_contains(
+        root.join("skills/finishing-a-development-branch/SKILL.md"),
+        "gh pr view --json baseRefName",
+    );
 
     assert_file_contains(
         root.join("skills/plan-eng-review/SKILL.md"),
@@ -833,7 +1036,243 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
         root.join("skills/plan-eng-review/SKILL.md"),
         "**The terminal state is presenting the execution preflight handoff with the approved plan path.**",
     );
+    assert_file_contains(
+        root.join("skills/plan-eng-review/SKILL.md"),
+        "plan-eng-review also owns the late refresh-test-plan lane when finish readiness reports `test_plan_artifact_missing` or `test_plan_artifact_stale` for the current approved plan revision.",
+    );
+    assert_file_contains(
+        root.join("skills/plan-eng-review/SKILL.md"),
+        "**Head SHA:** {current-head}",
+    );
+    assert_file_contains(
+        root.join("skills/plan-eng-review/SKILL.md"),
+        "Set `**Head SHA:**` to the current `git rev-parse HEAD` for the branch state that this test-plan artifact covers.",
+    );
+    assert_file_contains(
+        root.join("skills/plan-eng-review/SKILL.md"),
+        "In that late-stage lane, the terminal state is returning to the finish-gate flow with a regenerated current-branch test-plan artifact, not reopening execution preflight.",
+    );
+    assert_file_contains(
+        root.join("skills/plan-eng-review/SKILL.md"),
+        "If the helper returns `status` `implementation_ready`, immediately call `$_SUPERPOWERS_ROOT/bin/superpowers workflow handoff` before presenting any handoff text.",
+    );
+    assert_file_contains(
+        root.join("skills/plan-eng-review/SKILL.md"),
+        "If that handoff returns `phase` `execution_preflight`, present the normal execution preflight handoff below.",
+    );
+    assert_file_contains(
+        root.join("skills/plan-eng-review/SKILL.md"),
+        "If that handoff returns a later phase such as `review_blocked`, `qa_pending`, `document_release_pending`, or `ready_for_branch_completion`, follow that reported phase and `next_action` instead of reopening execution preflight.",
+    );
+    assert_file_contains(
+        root.join("skills/plan-ceo-review/SKILL.md"),
+        "SELECTIVE EXPANSION",
+    );
+    assert_file_contains(
+        root.join("skills/plan-ceo-review/SKILL.md"),
+        "Section 11: Design & UX Review",
+    );
+    assert_file_contains(
+        root.join("skills/plan-ceo-review/SKILL.md"),
+        "## CEO Review Summary",
+    );
+    assert_file_contains(
+        root.join("skills/plan-ceo-review/SKILL.md"),
+        "Label the source as `cross-model` only when the outside voice definitely uses a different model/provider than the main reviewer.",
+    );
+    assert_file_contains(
+        root.join("skills/plan-ceo-review/SKILL.md"),
+        "If model provenance is the same, unknown, or only a fresh-context rerun of the same reviewer family, label the source as `fresh-context-subagent`.",
+    );
+    assert_file_contains(
+        root.join("skills/plan-ceo-review/SKILL.md"),
+        "A `CEO Approved` spec must end with `**Last Reviewed By:** plan-ceo-review`.",
+    );
+    assert_file_contains(
+        root.join("skills/plan-ceo-review/SKILL.md"),
+        "If the transport truncates or summarizes the outside-voice output, disclose that limitation plainly in review prose instead of overstating independence.",
+    );
+    assert_file_contains(
+        root.join("skills/plan-ceo-review/SKILL.md"),
+        "note `UI_SCOPE` for Section 11",
+    );
+    assert_file_contains(
+        root.join("skills/plan-ceo-review/SKILL.md"),
+        "Present each expansion opportunity as its own individual interactive user question.",
+    );
+    assert_file_contains(
+        root.join("skills/plan-ceo-review/SKILL.md"),
+        "Do not use PR metadata or repo default-branch APIs as a fallback; keep the system audit aligned with `document-release`, `requesting-code-review`, and `gate-finish`.",
+    );
+    assert_file_not_contains(
+        root.join("skills/plan-ceo-review/SKILL.md"),
+        "gh pr view --json baseRefName",
+    );
+    assert_file_contains(
+        root.join("skills/plan-eng-review/SKILL.md"),
+        "coverage graph",
+    );
+    assert_file_contains(
+        root.join("skills/plan-eng-review/SKILL.md"),
+        "An `Engineering Approved` plan must end with `**Last Reviewed By:** plan-eng-review`.",
+    );
+    assert_file_contains(
+        root.join("skills/plan-eng-review/SKILL.md"),
+        "## Key Interactions",
+    );
+    assert_file_contains(
+        root.join("skills/plan-eng-review/SKILL.md"),
+        "## Edge Cases",
+    );
+    assert_file_contains(
+        root.join("skills/plan-eng-review/SKILL.md"),
+        "## Critical Paths",
+    );
+    assert_file_contains(
+        root.join("skills/plan-eng-review/SKILL.md"),
+        "## E2E Test Decision Matrix",
+    );
+    assert_file_contains(
+        root.join("skills/plan-eng-review/SKILL.md"),
+        "REGRESSION RULE",
+    );
+    assert_file_contains(
+        root.join("skills/plan-eng-review/SKILL.md"),
+        "loading, empty, error, success, partial, navigation, responsive, and accessibility-critical states",
+    );
+    assert_file_contains(
+        root.join("skills/plan-eng-review/SKILL.md"),
+        "compatibility, retry/timeout semantics, replay or backfill behavior, and rollback or migration verification",
+    );
+    assert_file_contains(
+        root.join("skills/plan-eng-review/SKILL.md"),
+        "Label the source as `cross-model` only when the outside voice definitely uses a different model/provider than the main reviewer.",
+    );
+    assert_file_contains(
+        root.join("skills/plan-eng-review/SKILL.md"),
+        "If model provenance is the same, unknown, or only a fresh-context rerun of the same reviewer family, label the source as `fresh-context-subagent`.",
+    );
+    assert_file_contains(
+        root.join("skills/plan-eng-review/SKILL.md"),
+        "If the transport truncates or summarizes the outside-voice output, disclose that limitation plainly in review prose instead of overstating independence.",
+    );
+    assert_file_contains(
+        root.join("skills/plan-eng-review/SKILL.md"),
+        "## Engineering Review Summary",
+    );
+    assert_file_contains(
+        root.join("skills/qa-only/SKILL.md"),
+        "## Engineering Review Summary",
+    );
+    assert_file_contains(
+        root.join("skills/qa-only/SKILL.md"),
+        "additive context only",
+    );
+    assert_file_contains(
+        root.join("skills/qa-only/SKILL.md"),
+        "## E2E Test Decision Matrix",
+    );
+    assert_file_contains(
+        root.join("skills/qa-only/SKILL.md"),
+        "Do not use PR metadata or repo default-branch APIs as a fallback; keep diff-aware scoping aligned with `document-release`, `requesting-code-review`, and `gate-finish`.",
+    );
+    assert_file_contains(
+        root.join("skills/qa-only/SKILL.md"),
+        "Match current-branch artifacts by their `**Branch:**` header, not by a filename substring glob, so `my-feature` cannot masquerade as `feature`.",
+    );
+    assert_file_not_contains(
+        root.join("skills/qa-only/SKILL.md"),
+        "*-\"$BRANCH\"-test-plan-*",
+    );
+    assert_file_not_contains(
+        root.join("skills/qa-only/SKILL.md"),
+        "gh pr view --json baseRefName",
+    );
+    assert_file_contains(
+        root.join("skills/requesting-code-review/SKILL.md"),
+        "Review at the right checkpoints, then fail closed on the final whole-diff gate.",
+    );
+    assert_file_contains(
+        root.join("skills/requesting-code-review/SKILL.md"),
+        "plan contract analyze-plan --spec \"$SOURCE_SPEC_PATH\" --plan \"$APPROVED_PLAN_PATH\" --format json",
+    );
+    assert_file_contains(
+        root.join("skills/requesting-code-review/SKILL.md"),
+        "Do not use PR metadata or repo default-branch APIs as a fallback; keep the review base aligned with `superpowers:document-release` and `gate-finish`.",
+    );
+    assert_file_contains(
+        root.join("skills/requesting-code-review/SKILL.md"),
+        "project-scoped code-review artifact",
+    );
+    assert_file_contains(
+        root.join("skills/requesting-code-review/SKILL.md"),
+        "{user}-{safe-branch}-code-review-{datetime}.md",
+    );
+    assert_file_contains(
+        root.join("skills/requesting-code-review/SKILL.md"),
+        "**Generated By:** superpowers:requesting-code-review",
+    );
+    assert_file_contains(
+        root.join("skills/requesting-code-review/SKILL.md"),
+        "structured finish-gate input for final review freshness",
+    );
+    assert_file_not_contains(
+        root.join("skills/requesting-code-review/SKILL.md"),
+        "gh pr view --json baseRefName",
+    );
+    assert_file_not_contains(
+        root.join("skills/requesting-code-review/SKILL.md"),
+        "git log --oneline | grep \"Task 1\"",
+    );
+    assert_file_contains(
+        root.join("skills/requesting-code-review/SKILL.md"),
+        "git rev-parse HEAD~1",
+    );
+    assert_file_contains(
+        root.join("skills/requesting-code-review/SKILL.md"),
+        "CONTRACT_STATE=$(printf '%s\\n' \"$ANALYZE_JSON\" | node -e 'const fs = require(\"fs\"); const parsed = JSON.parse(fs.readFileSync(0, \"utf8\")); process.stdout.write(parsed.contract_state || \"\")')",
+    );
+    assert_file_contains(
+        root.join("skills/requesting-code-review/SKILL.md"),
+        "if [ \"$CONTRACT_STATE\" != \"valid\" ] || [ \"$PACKET_BUILDABLE_TASKS\" != \"$TASK_COUNT\" ]; then",
+    );
+    assert_file_contains(
+        root.join("skills/requesting-code-review/SKILL.md"),
+        "if [ -n \"$ACTIVE_TASK$BLOCKING_TASK$RESUME_TASK\" ]; then",
+    );
+    assert_file_contains(
+        root.join("skills/requesting-code-review/SKILL.md"),
+        "REVIEW_GATE_JSON=$(\"$_SUPERPOWERS_ROOT/bin/superpowers\" plan execution gate-review --plan \"$APPROVED_PLAN_PATH\")",
+    );
+    assert_file_contains(
+        root.join("skills/requesting-code-review/SKILL.md"),
+        "if [ \"$REVIEW_ALLOWED\" != \"true\" ]; then",
+    );
+    assert_file_contains(
+        root.join("skills/using-superpowers/SKILL.md"),
+        "treat `execution_started` as an executor-resume signal only when the reported `phase` is `executing`",
+    );
+    assert_file_contains(
+        root.join("skills/using-superpowers/SKILL.md"),
+        "If the handoff reports a later phase such as `review_blocked`, `qa_pending`, `document_release_pending`, or `ready_for_branch_completion`, follow that reported phase and `next_action` instead of resuming `superpowers:subagent-driven-development` or `superpowers:executing-plans` just because `execution_started` is `yes`.",
+    );
+    assert_file_contains(
+        root.join("commands/execute-plan.md"),
+        "If the handoff reports `phase` `executing`, use the approved plan path from handoff plus `superpowers plan execution status --plan <approved-plan-path>` to resume the current execution flow.",
+    );
+    assert_file_contains(
+        root.join("commands/execute-plan.md"),
+        "If the handoff reports any later phase such as `review_blocked`, `qa_pending`, `document_release_pending`, or `ready_for_branch_completion`, follow the reported `phase` and `next_action`, or use `superpowers workflow next`, instead of resuming an executor merely because `execution_started` is `yes`.",
+    );
 
+    assert_file_contains(
+        root.join("skills/requesting-code-review/code-reviewer.md"),
+        "# Code Review Briefing Template",
+    );
+    assert_file_contains(
+        root.join("skills/requesting-code-review/code-reviewer.md"),
+        "This file is the skill-local reviewer briefing template, not the generated agent system prompt.",
+    );
     assert_file_contains(
         root.join("skills/requesting-code-review/code-reviewer.md"),
         "**Approved plan path:** {APPROVED_PLAN_PATH}",
@@ -841,6 +1280,14 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
     assert_file_contains(
         root.join("skills/requesting-code-review/code-reviewer.md"),
         "**Execution evidence path:** {EXECUTION_EVIDENCE_PATH}",
+    );
+    assert_file_contains(
+        root.join("skills/requesting-code-review/code-reviewer.md"),
+        "same locally derivable base-branch contract as `document-release` and `gate-finish`",
+    );
+    assert_file_not_contains(
+        root.join("skills/requesting-code-review/code-reviewer.md"),
+        "gh pr view --json baseRefName",
     );
 
     assert_file_contains(
@@ -850,6 +1297,22 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
     assert_file_contains(
         root.join("README.md"),
         "execution preflight boundary for the approved plan",
+    );
+    assert_file_contains(
+        root.join("docs/test-suite-enhancement-plan.md"),
+        "The active deterministic suite and recommended commands now live in `docs/testing.md`.",
+    );
+    assert_file_contains(
+        root.join("docs/test-suite-enhancement-plan.md"),
+        "cargo nextest run --test runtime_instruction_contracts",
+    );
+    assert_file_not_contains(
+        root.join("docs/test-suite-enhancement-plan.md"),
+        "bash tests/codex-runtime/test-runtime-instructions.sh",
+    );
+    assert_file_not_contains(
+        root.join("docs/test-suite-enhancement-plan.md"),
+        "bash tests/codex-runtime/test-workflow-sequencing.sh",
     );
 
     let fixture_root = root.join("tests/codex-runtime/fixtures/workflow-artifacts");

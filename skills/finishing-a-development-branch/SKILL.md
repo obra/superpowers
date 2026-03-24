@@ -197,13 +197,25 @@ if [ -n "$_SLUG_ENV" ]; then
   eval "$_SLUG_ENV"
 fi
 unset _SLUG_ENV
-PLAN_ARTIFACT=$(ls -t "$_SP_STATE_DIR/projects/$SLUG"/*-"$BRANCH"-test-plan-*.md 2>/dev/null | head -1)
+PLAN_ARTIFACT=""
+for CANDIDATE in $(ls -t "$_SP_STATE_DIR/projects/$SLUG"/*-test-plan-*.md 2>/dev/null); do
+  [ -f "$CANDIDATE" ] || continue
+  ARTIFACT_BRANCH=$(sed -n 's/^\*\*Branch:\*\* //p' "$CANDIDATE" | head -1)
+  if [ "$ARTIFACT_BRANCH" = "$BRANCH" ]; then
+    PLAN_ARTIFACT="$CANDIDATE"
+    break
+  fi
+done
 printf '%s\n' "$PLAN_ARTIFACT"
 ```
 
 If `PLAN_ARTIFACT` exists, read it before deciding whether browser QA applies.
 
 If a current-branch test-plan artifact exists, treat its `**Browser QA Required:** yes|no` header as authoritative for workflow-routed finish gating.
+
+Match current-branch artifacts by their `**Branch:**` header, not by a filename substring glob, so `my-feature` cannot masquerade as `feature`.
+
+Treat the current-branch test-plan artifact as authoritative only when its `Source Plan`, `Source Plan Revision`, and `Head SHA` match the exact approved plan path, revision, and current branch HEAD from the workflow context.
 
 If that artifact names pages, routes, or browser interactions, use it to scope the required QA handoff.
 
@@ -233,9 +245,13 @@ If no current-branch test-plan artifact exists for workflow-routed work, stop an
 
 ### Step 1.9: Finish Gate
 
-After `superpowers:document-release` and any required `superpowers:qa-only` handoff are current, run `superpowers plan execution gate-finish --plan <approved-plan-path>` before presenting completion options.
+If the current work is governed by an approved Superpowers plan, after `superpowers:document-release` and any required `superpowers:qa-only` handoff are current, run `superpowers plan execution gate-finish --plan <approved-plan-path>` before presenting completion options.
 
-If the finish gate returns `allowed` `false`, stop and return to the current execution flow; do not present completion options against stale QA or release artifacts.
+If the current work is governed by an approved Superpowers plan and the finish gate returns `allowed` `false`, stop and return to the current execution flow; do not present completion options against stale QA or release artifacts.
+
+If `gate-finish` fails with `test_plan_artifact_missing` or `test_plan_artifact_stale`, hand control back to `superpowers:plan-eng-review` to regenerate the current-branch test-plan artifact before QA or branch completion.
+
+If the current work is not governed by an approved Superpowers plan, skip this helper-owned finish gate and continue with the normal completion flow.
 
 ### Step 1.95: Protected-Branch Repo-Write Gate
 
@@ -261,27 +277,48 @@ superpowers repo-safety check --intent write --stage superpowers:finishing-a-dev
 
 ### Step 2: Determine Base Branch
 
-Try platform-aware detection first:
+If the current work is governed by an approved Superpowers plan:
+
+- For plan-routed completion, use the exact `Base Branch` from the fresh release-readiness artifact instead of redetecting the target branch.
+- If the fresh release-readiness artifact is missing or its `**Base Branch:**` header is blank, stop and return to `superpowers:document-release`.
+
+If the current work is not governed by an approved Superpowers plan, derive `<base-branch>` using the same locally derivable contract as `superpowers:document-release` and `gate-finish`:
 
 ```bash
-gh pr view --json baseRefName -q .baseRefName
-gh repo view --json defaultBranchRef -q .defaultBranchRef.name
+BASE_BRANCH=""
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)
+if [ -n "$CURRENT_BRANCH" ] && [ "$CURRENT_BRANCH" != "HEAD" ]; then
+  case "$CURRENT_BRANCH" in
+    main|master|develop|dev|trunk)
+      BASE_BRANCH="$CURRENT_BRANCH"
+      ;;
+  esac
+  [ -n "$BASE_BRANCH" ] || BASE_BRANCH=$(git config --get "branch.$CURRENT_BRANCH.gh-merge-base" 2>/dev/null || true)
+fi
+[ -n "$BASE_BRANCH" ] || BASE_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's#^refs/remotes/origin/##' || true)
+if [ -z "$BASE_BRANCH" ]; then
+  for candidate in main master develop dev trunk; do
+    if git show-ref --verify --quiet "refs/heads/$candidate"; then
+      BASE_BRANCH="$candidate"
+      break
+    fi
+  done
+fi
+if [ -z "$BASE_BRANCH" ] && [ -n "$CURRENT_BRANCH" ] && [ "$CURRENT_BRANCH" != "HEAD" ]; then
+  NON_CURRENT_BRANCHES=$(git for-each-ref --format='%(refname:short)' refs/heads 2>/dev/null | grep -vxF "$CURRENT_BRANCH" || true)
+  NON_CURRENT_BRANCH_COUNT=$(printf '%s\n' "$NON_CURRENT_BRANCHES" | sed '/^$/d' | wc -l | tr -d ' ')
+  if [ "$NON_CURRENT_BRANCH_COUNT" = "1" ]; then
+    BASE_BRANCH=$(printf '%s\n' "$NON_CURRENT_BRANCHES" | sed '/^$/d')
+  fi
+fi
+if [ -z "$BASE_BRANCH" ]; then
+  echo "Could not determine the base branch target. Stop and resolve it before finishing the branch."
+  exit 1
+fi
 ```
 
-If those commands fail or disagree with local history, use merge-base as a hint:
-
-```bash
-# Try common base branches
-git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
-```
-
-If the merge-base result is ambiguous, ask one interactive user question using the required format:
-- Context: branch name and what is being completed
-- Recommendation: the most likely base branch from local git history
-- Options:
-  - `A)` Use `main`
-  - `B)` Use `master`
-  - `C)` Keep current branch and let the user specify a different base branch
+Do not use PR metadata or repo default-branch APIs as a fallback.
+The Step 2 `<base-branch>` value stays authoritative for Options A, B, and D. Do not redetect it later in the branch-finishing flow.
 
 ### Step 3: Present Options
 
@@ -336,12 +373,14 @@ Then: Cleanup worktree (Step 5)
 
 #### Option B: Push and Create PR
 
+Use the exact `<base-branch>` resolved in Step 2. Do not redetect it during PR creation.
+
 ```bash
 # Push branch
 git push -u origin <feature-branch>
 
 # Create PR
-gh pr create --title "<title>" --body "$(cat <<'EOF'
+gh pr create --base "<base-branch>" --title "<title>" --body "$(cat <<'EOF'
 ## Summary
 <2-3 bullets of what changed>
 

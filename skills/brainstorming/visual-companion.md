@@ -69,6 +69,10 @@ scripts/start-server.sh --project-dir /path/to/project
 scripts/start-server.ps1 --project-dir C:\path\to\project
 ```
 
+The PowerShell wrappers require a bash-compatible shell underneath. On Windows, install Git Bash or point `SUPERPOWERS_BASH_PATH` at a compatible `bash` before using `start-server.ps1` or `stop-server.ps1`.
+
+In Codex, that auto-foreground path prints the startup JSON but may stay attached to the terminal instead of returning immediately. Launch it in a separate PTY/session when you need the terminal back, capture the first `server-started` JSON line for `screen_dir`, and if stdout is no longer available read `$SCREEN_DIR/.server-info`.
+
 If the URL is unreachable from your browser (common in remote/containerized setups), bind a non-loopback host:
 
 ```bash

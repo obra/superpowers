@@ -306,6 +306,7 @@ Code reviewer: ✅ Approved
 - Review loops ensure fixes actually work
 - Spec compliance prevents over/under-building
 - Code quality ensures implementation is well-built
+- Those per-task review loops satisfy the "review early" rule during execution; `superpowers:requesting-code-review` remains the final whole-diff gate unless you intentionally want an extra interim checkpoint
 
 **Cost:**
 - More subagent invocations (implementer + 2 reviewers per task)

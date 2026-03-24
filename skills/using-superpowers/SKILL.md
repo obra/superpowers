@@ -274,8 +274,9 @@ Do NOT jump from brainstorming straight to implementation. For workflow-routed w
 First, if `$_SUPERPOWERS_ROOT/bin/superpowers` is available, call `$_SUPERPOWERS_ROOT/bin/superpowers workflow status --refresh`.
 
 - If the JSON result contains a non-empty `next_skill`, use that route.
-- If the JSON result reports `status` `implementation_ready`, proceed to the normal execution preflight and handoff flow using the exact approved plan path. Choose between `superpowers:subagent-driven-development` and `superpowers:executing-plans` through the helper-backed execution recommendation contract, not a top-level isolated-agent shortcut.
-- If that helper-backed execution preflight or handoff flow reports execution already started for the same approved plan revision, do not present a fresh implementation route. Return to the current execution flow for that exact approved plan instead.
+- If the JSON result reports `status` `implementation_ready`, proceed to the normal execution preflight and handoff flow using the exact approved plan path. Treat the public handoff recommendation as a conservative default. When you know isolated-agent availability, session intent, and workspace readiness, call `superpowers plan execution recommend --plan <approved-plan-path> --isolated-agents <available|unavailable> --session-intent <stay|separate|unknown> --workspace-prepared <yes|no|unknown>` before choosing between `superpowers:subagent-driven-development` and `superpowers:executing-plans`.
+- In that helper-backed handoff flow, treat `execution_started` as an executor-resume signal only when the reported `phase` is `executing`.
+- If the handoff reports a later phase such as `review_blocked`, `qa_pending`, `document_release_pending`, or `ready_for_branch_completion`, follow that reported phase and `next_action` instead of resuming `superpowers:subagent-driven-development` or `superpowers:executing-plans` just because `execution_started` is `yes`.
 - Only fall back to manual artifact inspection if the helper itself is unavailable or fails.
 
 When the helper succeeds, route using its JSON result and do not re-derive state manually.
@@ -294,20 +295,22 @@ Inspect `docs/superpowers/specs/` and `docs/superpowers/plans/` conservatively f
 
 - Spec state: `^\*\*Workflow State:\*\* (Draft|CEO Approved)$`
 - Spec revision: `^\*\*Spec Revision:\*\* ([0-9]+)$`
-- Spec reviewer: `^\*\*Last Reviewed By:\*\* (brainstorming|plan-ceo-review)$`
+- Draft spec reviewer: `^\*\*Last Reviewed By:\*\* (brainstorming|plan-ceo-review)$`
+- Approved spec reviewer: `^\*\*Last Reviewed By:\*\* plan-ceo-review$`
 - Plan state: `^\*\*Workflow State:\*\* (Draft|Engineering Approved)$`
 - Plan revision: `^\*\*Plan Revision:\*\* ([0-9]+)$`
 - Plan execution mode: `^\*\*Execution Mode:\*\* (none|superpowers:executing-plans|superpowers:subagent-driven-development)$`
 - Plan source: `^\*\*Source Spec:\*\* (.+)$`
 - Plan source revision: `^\*\*Source Spec Revision:\*\* ([0-9]+)$`
-- Plan reviewer: `^\*\*Last Reviewed By:\*\* (writing-plans|plan-eng-review)$`
+- Draft plan reviewer: `^\*\*Last Reviewed By:\*\* (writing-plans|plan-eng-review)$`
+- Approved plan reviewer: `^\*\*Last Reviewed By:\*\* plan-eng-review$`
 
 Routing rules:
 
 1. No relevant spec artifact: invoke `superpowers:brainstorming`.
-2. Spec exists but is `Draft` or malformed: invoke `superpowers:plan-ceo-review`.
+2. Spec exists but is `Draft`, has malformed approval headers, or has `CEO Approved` without `**Last Reviewed By:** plan-ceo-review`: invoke `superpowers:plan-ceo-review`.
 3. Spec is `CEO Approved` and no relevant plan exists: invoke `superpowers:writing-plans`.
-4. Plan exists but is `Draft` or malformed: invoke `superpowers:plan-eng-review`.
+4. Plan exists but is `Draft`, has malformed approval headers, or has `Engineering Approved` without `**Last Reviewed By:** plan-eng-review`: invoke `superpowers:plan-eng-review`.
 5. Plan is `Engineering Approved` but its `Source Spec:` path or `Source Spec Revision:` does not match the latest approved spec: invoke `superpowers:writing-plans`.
 6. Plan is `Engineering Approved` and its `Source Spec:` path plus `Source Spec Revision:` match the latest approved spec: only proceed through the normal helper-backed execution preflight and handoff flow for that approved plan path.
 7. If artifacts are ambiguous or incomplete, route to the earlier safe stage instead of skipping ahead.

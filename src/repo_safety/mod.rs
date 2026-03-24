@@ -12,7 +12,8 @@ use crate::diagnostics::{DiagnosticError, FailureClass};
 use crate::git::{discover_repo_identity, discover_slug_identity};
 use crate::instructions::{collect_active_instruction_files, parse_protected_branches};
 use crate::paths::{
-    RepoPath, normalize_identifier_token, normalize_whitespace, superpowers_state_dir,
+    RepoPath, branch_storage_key, normalize_identifier_token, normalize_whitespace,
+    superpowers_state_dir,
     write_atomic as write_atomic_file,
 };
 
@@ -82,7 +83,6 @@ struct Scope {
 pub struct RepoSafetyRuntime {
     repo_root: PathBuf,
     branch_name: String,
-    normalized_branch: String,
     repo_slug: String,
     safe_branch: String,
     state_dir: PathBuf,
@@ -103,15 +103,15 @@ impl RepoSafetyRuntime {
         let identity = discover_repo_identity(current_dir)?;
         let slug_identity = discover_slug_identity(current_dir);
         let normalized_branch = normalize_identifier_token(&identity.branch_name);
+        let safe_branch = branch_storage_key(&identity.branch_name);
         let (protected, protected_by) =
             branch_protection(current_dir, &identity.repo_root, &normalized_branch)?;
 
         Ok(Self {
             repo_root: identity.repo_root,
             branch_name: identity.branch_name,
-            normalized_branch,
             repo_slug: slug_identity.repo_slug,
-            safe_branch: slug_identity.safe_branch,
+            safe_branch,
             state_dir: state_dir(),
             protected,
             protected_by,
@@ -163,7 +163,7 @@ impl RepoSafetyRuntime {
                 "superpowers:using-git-worktrees",
             )),
             ApprovalLookup::Found(record) => {
-                if !record_matches_scope(&record, &self.repo_root, &self.normalized_branch, &scope)
+                if !record_matches_scope(&record, &self.repo_root, &self.branch_name, &scope)
                 {
                     return Ok(self.result(
                         "blocked",
@@ -209,7 +209,7 @@ impl RepoSafetyRuntime {
         let approval_reason = normalize_reason(&args.reason)?;
         let record = ApprovalRecord {
             repo_root: self.repo_root.to_string_lossy().into_owned(),
-            branch: self.normalized_branch.clone(),
+            branch: self.branch_name.clone(),
             stage: scope.stage.clone(),
             task_id: scope.task_id.clone(),
             paths: scope.paths.clone(),
@@ -242,7 +242,7 @@ impl RepoSafetyRuntime {
         let task_id = derive_task_id(stage, raw_task_id, &paths, &write_targets)?;
         let approval_fingerprint = compute_fingerprint(
             &self.repo_root,
-            &self.normalized_branch,
+            &self.branch_name,
             stage,
             &task_id,
             &paths,
@@ -528,7 +528,7 @@ fn derive_task_id(
 
 fn compute_fingerprint(
     repo_root: &Path,
-    normalized_branch: &str,
+    branch_name: &str,
     stage: &str,
     task_id: &str,
     paths: &[String],
@@ -536,7 +536,7 @@ fn compute_fingerprint(
 ) -> String {
     let mut hasher = Sha256::new();
     hasher.update(format!("{}\n", repo_root.to_string_lossy()).as_bytes());
-    hasher.update(format!("{normalized_branch}\n").as_bytes());
+    hasher.update(format!("{branch_name}\n").as_bytes());
     hasher.update(format!("{stage}\n").as_bytes());
     hasher.update(format!("{task_id}\n").as_bytes());
     hasher.update(b"--paths--\n");
@@ -553,11 +553,11 @@ fn compute_fingerprint(
 fn record_matches_scope(
     record: &ApprovalRecord,
     repo_root: &Path,
-    normalized_branch: &str,
+    branch_name: &str,
     scope: &Scope,
 ) -> bool {
     record.repo_root == repo_root.to_string_lossy()
-        && record.branch == normalized_branch
+        && record.branch == branch_name
         && record.stage == scope.stage
         && record.task_id == scope.task_id
 }

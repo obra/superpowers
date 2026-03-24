@@ -1,6 +1,6 @@
 ---
 name: plan-eng-review
-description: Use when a written Superpowers implementation plan from a CEO-approved spec needs engineering review before execution
+description: Use when a written Superpowers implementation plan from a CEO-approved spec needs engineering review before execution or needs a late refresh-test-plan regeneration before finish gating
 ---
 <!-- AUTO-GENERATED from SKILL.md.tmpl — do not edit directly -->
 <!-- Regenerate: node scripts/gen-skill-docs.mjs -->
@@ -133,6 +133,7 @@ Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Ski
 ```
 
 - If any header line is missing or malformed, normalize the plan to this contract before continuing and treat it as `Draft`.
+- `writing-plans` is only valid while the plan remains `Draft`. An `Engineering Approved` plan must end with `**Last Reviewed By:** plan-eng-review`.
 - Read the source spec named in `**Source Spec:**` and confirm both the path and revision match the latest approved spec before approving execution.
 - Treat `Requirement Index`, `Requirement Coverage Matrix`, canonical `## Task N:` headings, `Spec Coverage`, `Task Outcome`, `Plan Constraints`, `Open Questions`, and `Files:` blocks as required plan contract surface for engineering approval.
 - When review decisions change the written plan, update the plan document before continuing.
@@ -159,6 +160,10 @@ superpowers repo-safety check --intent write --stage superpowers:plan-eng-review
 - `superpowers:subagent-driven-development` and `superpowers:executing-plans` own implementation. Do not start implementation inside `plan-eng-review`.
 
 **The terminal state is presenting the execution preflight handoff with the approved plan path.**
+
+plan-eng-review also owns the late refresh-test-plan lane when finish readiness reports `test_plan_artifact_missing` or `test_plan_artifact_stale` for the current approved plan revision.
+
+In that late-stage lane, the terminal state is returning to the finish-gate flow with a regenerated current-branch test-plan artifact, not reopening execution preflight.
 
 # Plan Review Mode
 
@@ -336,7 +341,7 @@ Evaluate:
 * rollout and rollback thinking where the change affects delivery or operations
 * explicit risks where the planned change introduces operational, architectural, or delivery risk
 
-**STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Present options, state your recommendation, explain WHY. Do NOT batch escalated issues into one interactive user question. Only proceed to the next section after the current section is resolved.
+**STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Present options, state your recommendation, explain WHY. Do NOT batch escalated issues into one interactive user question. Exception: in normal non-accelerated `SMALL CHANGE` mode, collect one issue per section and use the bundled end-of-review round instead of pausing here. Only proceed to the next section after the current section is resolved.
 
 ### 2. Code quality review
 
@@ -360,26 +365,40 @@ Apply domain overlays when relevant so review questions stay concrete rather tha
 * infrastructure/IaC: blast radius, environment impact, security or policy impact, drift implications, rollback practicality, preview or post-change verification
 * library/SDK: public API changes, semantic-versioning impact, consumer migration impact, breaking changes, compatibility and packaging validation
 
-**STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Present options, state your recommendation, explain WHY. Do NOT batch escalated issues into one interactive user question. Only proceed to the next section after the current section is resolved.
+**STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Present options, state your recommendation, explain WHY. Do NOT batch escalated issues into one interactive user question. Exception: in normal non-accelerated `SMALL CHANGE` mode, collect one issue per section and use the bundled end-of-review round instead of pausing here. Only proceed to the next section after the current section is resolved.
 
 ### 3. Test review
 
-Make a diagram of all new UX, new data flow, new codepaths, and new branching if statements or outcomes. For each, note what is new about the features discussed in this branch and plan. Then, for each new item in the diagram, make sure there is a project-native automated test.
+Make a coverage graph of all new UX, new data flow, new codepaths, and new branching if statements or outcomes. For each meaningful path, classify it as:
+
+* automated
+* manual QA
+* explicitly not required, with written justification
 
 Before approving the plan, also verify:
 
 * preconditions are explicit where setup, environment, or migration state matters
 * validation strategy covers the planned change surface
+* browser-visible flows include explicit browser-edge checks for loading, empty, error, success, partial, navigation, responsive, and accessibility-critical states where relevant
+* non-browser paths include explicit contract checks for compatibility, retry/timeout semantics, replay or backfill behavior, and rollback or migration verification where relevant
 * require `qa-only` when the approved plan, branch-specific test-plan artifact, or change surface clearly indicates browser-facing behavior or browser interaction
 * do not turn `qa-only` into a universal workflow gate for all change types
 
+Also produce an `E2E Test Decision Matrix` for browser-visible or multi-step interaction flows:
+
+```text
+FLOW | REQUIRED? | WHY | COVERAGE
+```
+
+**REGRESSION RULE:** every new meaningful path or branch outcome must land in exactly one of `automated`, `manual QA`, or `not required` with written justification before approval.
+
 For LLM or prompt changes, check the repo's prompt or evaluation docs. If this plan touches those patterns, state which eval suites must be run, which cases should be added, and what baselines to compare against. Then use one interactive user question to confirm the eval scope with the user.
 
-**STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Present options, state your recommendation, explain WHY. Do NOT batch escalated issues into one interactive user question. Only proceed to the next section after the current section is resolved.
+**STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Present options, state your recommendation, explain WHY. Do NOT batch escalated issues into one interactive user question. Exception: in normal non-accelerated `SMALL CHANGE` mode, collect one issue per section and use the bundled end-of-review round instead of pausing here. Only proceed to the next section after the current section is resolved.
 
 ### Test Plan Artifact
 
-After producing the test diagram, write a QA handoff artifact for cross-session reuse:
+After producing the coverage graph, write a QA handoff artifact for cross-session reuse:
 
 ```bash
 _SLUG_ENV=$("$_SUPERPOWERS_ROOT/bin/superpowers" repo slug 2>/dev/null || true)
@@ -400,6 +419,7 @@ Write to `$_SP_STATE_DIR/projects/$SLUG/{user}-{safe-branch}-test-plan-{datetime
 **Source Plan Revision:** 3
 **Branch:** {branch}
 **Repo:** {slug}
+**Head SHA:** {current-head}
 **Browser QA Required:** yes
 **Generated By:** superpowers:plan-eng-review
 **Generated At:** 2026-03-22T14:30:00Z
@@ -408,18 +428,40 @@ Write to `$_SP_STATE_DIR/projects/$SLUG/{user}-{safe-branch}-test-plan-{datetime
 - {route} — {what to verify and why}
 
 ## Key Interactions
-- {interaction} on {page}
+- {interaction} on {page or route}
 
 ## Edge Cases
-- {edge case} on {page}
+- {edge case} on {page or route}
 
 ## Critical Paths
 - {end-to-end flow}
+
+## Coverage Graph
+- {path or flow} -> automated | manual QA | not required ({why})
+
+## E2E Test Decision Matrix
+- {flow} -> required yes|no ({why}) -> {coverage}
+
+## Browser Matrix
+- {browser/device} — {flow or route}
+
+## Non-Browser Contract Checks
+- {suite or command} — {what it proves}
+
+## Regression Risks
+- {risk} — {why it matters}
+
+## Manual QA Notes
+- {tester-facing note}
+
+## Engineering Review Summary
+- Review outcome captured separately in the source plan.
 ```
 
-This file is consumed by `superpowers:qa-only` as the primary QA handoff. Include only tester-facing guidance: what to test, where to test it, and why it matters.
+This file is consumed by `superpowers:qa-only` as the primary QA handoff. Include only tester-facing guidance: what to test, where to test it, and why it matters. Preserve the current core sections (`Affected Pages / Routes`, `Key Interactions`, `Edge Cases`, `Critical Paths`) and treat the richer sections as additive context; finish-gate freshness still depends on the existing required headers.
 
 Set `**Browser QA Required:** yes` when the approved plan, branch-specific routes, or interaction surface make browser QA part of the normal finish gate. Otherwise write `no`.
+Set `**Head SHA:**` to the current `git rev-parse HEAD` for the branch state that this test-plan artifact covers.
 
 ### 4. Performance review
 
@@ -430,7 +472,56 @@ Evaluate:
 * Caching opportunities
 * Slow or high-complexity code paths
 
-**STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Present options, state your recommendation, explain WHY. Do NOT batch escalated issues into one interactive user question. Only proceed to the next section after the current section is resolved.
+**STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Present options, state your recommendation, explain WHY. Do NOT batch escalated issues into one interactive user question. Exception: in normal non-accelerated `SMALL CHANGE` mode, collect one issue per section and use the bundled end-of-review round instead of pausing here. Only proceed to the next section after the current section is resolved.
+
+## Outside Voice — Independent Plan Challenge (optional, recommended)
+
+After all review sections are complete, optionally get an outside voice. This is informative by default. It becomes actionable only if the main reviewer explicitly adopts a finding and patches the authoritative plan body.
+
+Use `skills/plan-eng-review/outside-voice-prompt.md` when briefing the outside voice.
+
+Tool order:
+
+1. Prefer `codex exec` when available.
+2. Label the source as `cross-model` only when the outside voice definitely uses a different model/provider than the main reviewer.
+3. If model provenance is the same, unknown, or only a fresh-context rerun of the same reviewer family, label the source as `fresh-context-subagent`.
+4. If the transport truncates or summarizes the outside-voice output, disclose that limitation plainly in review prose instead of overstating independence.
+5. If `codex exec` is unavailable, use a fresh-context reviewer path and label the source as `fresh-context-subagent`.
+6. If neither path is available, record `Outside Voice: unavailable`.
+
+Outside voice rules:
+
+* Review only the supplied plan and QA-handoff context.
+* Do not mutate plan or artifacts directly.
+* Report disagreements as candidate findings for the main reviewer to adopt or reject.
+* Present findings truthfully labeled by source.
+* If the outside voice is skipped, record `Outside Voice: skipped`.
+
+## Engineering Review Summary Writeback
+
+After review decisions are applied to the authoritative plan body, write or replace a single trailing summary block at the end of the plan:
+
+```markdown
+## Engineering Review Summary
+
+**Review Status:** clear | issues_open
+**Reviewed At:** <ISO-8601 UTC>
+**Review Mode:** big_change | small_change | scope_reduction
+**Reviewed Plan Revision:** <integer>
+**Critical Gaps:** <integer>
+**Browser QA Required:** yes | no
+**Test Plan Artifact:** `<artifact path>`
+**Outside Voice:** skipped | unavailable | cross-model | fresh-context-subagent
+```
+
+Summary write rules:
+
+* Accepted review findings must patch the authoritative plan body before approval. The summary is descriptive only.
+* Run the repo-file-write gate before editing the summary body.
+* Run the approval-header-write gate separately before flipping approval headers.
+* If an `## Engineering Review Summary` section already exists, replace from that heading through the next `## ` heading or EOF, whichever comes first.
+* Always move the summary to the end of the file. Do not leave an older copy in the middle.
+* If the write fails because the plan changed concurrently, re-read the file and retry once. If freshness cannot be re-established, leave the plan in `Draft`.
 
 ## CRITICAL RULE — How to ask questions
 
@@ -491,12 +582,15 @@ At the end of the review, fill in and display this summary:
 * Step 0: Scope Challenge (user chose: ___)
 * Architecture Review: ___ issues found
 * Code Quality Review: ___ issues found
-* Test Review: diagram produced, ___ gaps identified
+* Test Review: coverage graph produced, ___ automated gaps identified, browser QA required: yes/no
 * Performance Review: ___ issues found
 * NOT in scope: written
 * What already exists: written
 * TODOS.md updates: ___ items proposed to user
 * Failure modes: ___ critical gaps flagged
+* Test Plan Artifact: `<artifact path>`
+* Outside Voice: skipped / unavailable / cross-model / fresh-context-subagent
+* Engineering Review Summary: written
 
 ## Retrospective learning
 
@@ -507,7 +601,9 @@ Check the git log for this branch. If there are prior commits suggesting a previ
 Before presenting the final execution preflight handoff, if `$_SUPERPOWERS_ROOT/bin/superpowers` is available, call `$_SUPERPOWERS_ROOT/bin/superpowers workflow status --refresh`.
 
 - If the helper returns a non-empty `next_skill`, use that route instead of re-deriving state manually.
-- If the helper returns `status` `implementation_ready`, present the normal execution preflight handoff below.
+- If the helper returns `status` `implementation_ready`, immediately call `$_SUPERPOWERS_ROOT/bin/superpowers workflow handoff` before presenting any handoff text.
+- If that handoff returns `phase` `execution_preflight`, present the normal execution preflight handoff below.
+- If that handoff returns a later phase such as `review_blocked`, `qa_pending`, `document_release_pending`, or `ready_for_branch_completion`, follow that reported phase and `next_action` instead of reopening execution preflight.
 - Only fall back to manual artifact inspection if the helper is unavailable or fails.
 
 When the review is resolved and the written plan is approved, present the normal execution preflight handoff.
@@ -531,7 +627,7 @@ Do not start implementation before the review is satisfied.
 * NUMBER issues and LETTER options.
 * Label with NUMBER + LETTER, for example `3A`.
 * One sentence max per option.
-* After each review section, pause and ask for feedback before moving on.
+* After each review section, pause and ask for feedback before moving on unless normal non-accelerated `SMALL CHANGE` mode is using the bundled end-of-review round.
 
 ## Unresolved decisions
 

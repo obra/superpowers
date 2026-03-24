@@ -325,15 +325,19 @@ That is the default path for new feature and product work. Other task types take
 
 Accelerated review is an opt-in branch inside `plan-ceo-review` and `plan-eng-review`, not a separate workflow stage.
 
+`plan-ceo-review` now carries the upstream founder-review shape more closely: it supports four scope modes including `Selective Expansion`, can run a UI design-intent pass for UI-bearing specs, and writes an additive trailing `CEO Review Summary` into the authoritative spec. That summary is context for downstream work, not a replacement for the approved spec headers or `Requirement Index`.
+
+`plan-eng-review` now writes an additive trailing `Engineering Review Summary`, expands the branch-scoped QA handoff around a coverage graph and browser matrix, and can run an optional outside-voice challenge. `qa-only` may consume those richer sections as context, but current required artifact headers and branch freshness still govern finish readiness.
+
 Only the user can initiate accelerated review, and section approval plus final approval remain human-owned even when the review uses reviewer subagents and persisted section packets.
 
 1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves the written spec.
 
-2. **plan-ceo-review** - Activates after the spec is written. Runs a founder-mode review of the written spec before implementation planning.
+2. **plan-ceo-review** - Activates after the spec is written. Runs a founder-mode review of the written spec before implementation planning, including selective expansion, an optional UI design-intent pass, and additive spec-summary writeback.
 
 3. **writing-plans** - Activates with an approved spec. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
 
-4. **plan-eng-review** - Activates after the plan is written. Reviews the full written plan before implementation starts.
+4. **plan-eng-review** - Activates after the plan is written. Reviews the full written plan before implementation starts, including coverage-graph QA planning, additive plan-summary writeback, richer QA handoff, and optional outside voice.
 
 5. **implementation** - `subagent-driven-development` or `executing-plans` start from an engineering-approved current plan, run workspace-readiness checks, derive task packets from the approved markdown contract through `superpowers plan contract`, and execute the plan. The completion flow then runs `requesting-code-review`, uses the current-branch test-plan artifact to decide whether `qa-only` is required, requires `document-release` for workflow-routed work, and requires a passing `gate-finish` before final branch cleanup or PR handoff. If the user wants an isolated workspace, invoke `using-git-worktrees` manually before execution.
 
@@ -356,10 +360,10 @@ The public runtime currently exposes 18 skills.
 
 **Collaboration** 
 - **brainstorming** - Socratic design refinement
-- **plan-ceo-review** - CEO/founder-mode spec review before implementation planning
+- **plan-ceo-review** - CEO/founder-mode spec review with selective expansion, UI design-intent review, and additive spec summaries
 - **writing-plans** - Detailed implementation plans
-- **plan-eng-review** - Engineering review of the written plan before implementation
-- **qa-only** - Report-only browser QA with shared health scoring and artifacts
+- **plan-eng-review** - Engineering review of the written plan with coverage-graph QA planning, additive summaries, and optional outside voice
+- **qa-only** - Report-only browser QA with shared health scoring, artifacts, and additive rich-handoff consumption
 - **executing-plans** - Separate-session plan execution
 - **dispatching-parallel-agents** - Concurrent subagent workflows
 - **requesting-code-review** - Code-review dispatch and triage

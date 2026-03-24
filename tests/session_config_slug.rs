@@ -1,5 +1,7 @@
 #[path = "support/failure_json.rs"]
 mod failure_json_support;
+#[path = "support/bin.rs"]
+mod bin_support;
 #[path = "support/files.rs"]
 mod files_support;
 #[path = "support/json.rs"]
@@ -11,11 +13,14 @@ mod superpowers_support;
 
 use serde_json::Value;
 use std::fs;
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use tempfile::TempDir;
 
 use failure_json_support::parse_failure_json;
+use bin_support::compiled_superpowers_path;
 use files_support::write_file;
 use json_support::parse_json;
 use process_support::{repo_root, run, run_checked};
@@ -117,19 +122,27 @@ fn init_repo_at(path: &Path, name: &str) {
 
 fn run_shell_session_entry(state_dir: &Path, args: &[&str], context: &str) -> Output {
     let mut command = Command::new(session_entry_helper_path());
-    command.env("SUPERPOWERS_STATE_DIR", state_dir).args(args);
+    command
+        .env("SUPERPOWERS_STATE_DIR", state_dir)
+        .env("SUPERPOWERS_COMPAT_BIN", compiled_superpowers_path())
+        .args(args);
     run(command, context)
 }
 
 fn run_shell_config(state_dir: &Path, args: &[&str], context: &str) -> Output {
     let mut command = Command::new(config_helper_path());
-    command.env("SUPERPOWERS_STATE_DIR", state_dir).args(args);
+    command
+        .env("SUPERPOWERS_STATE_DIR", state_dir)
+        .env("SUPERPOWERS_COMPAT_BIN", compiled_superpowers_path())
+        .args(args);
     run(command, context)
 }
 
 fn run_shell_slug(repo: &Path, context: &str) -> Output {
     let mut command = Command::new(slug_helper_path());
-    command.current_dir(repo);
+    command
+        .current_dir(repo)
+        .env("SUPERPOWERS_COMPAT_BIN", compiled_superpowers_path());
     run(command, context)
 }
 
@@ -421,6 +434,18 @@ fn canonical_session_entry_bypassed_and_clause_reentry_matrix_matches_contract()
             "explicit_reentry",
         ),
         (
+            "canonical-skill-id-reentry",
+            "superpowers:writing-plans\n",
+            "enabled",
+            "explicit_reentry",
+        ),
+        (
+            "legacy-command-alias-reentry",
+            "/write-plan\n",
+            "enabled",
+            "explicit_reentry",
+        ),
+        (
             "negated-skill-request",
             "Do not use brainstorming for this task.\n",
             "bypassed",
@@ -453,6 +478,12 @@ fn canonical_session_entry_bypassed_and_clause_reentry_matrix_matches_contract()
         (
             "long-negated-superpowers-request",
             "Please do not under any circumstances use superpowers for this task.\n",
+            "bypassed",
+            "existing_bypassed",
+        ),
+        (
+            "apostrophe-negated-superpowers-request",
+            "Don't use superpowers for this task.\n",
             "bypassed",
             "existing_bypassed",
         ),
@@ -564,6 +595,67 @@ fn canonical_session_entry_malformed_decision_fails_closed_with_prompt_and_failu
     assert_eq!(
         rust_json["prompt"]["recommended_option"],
         Value::String(String::from("A"))
+    );
+}
+
+#[test]
+#[cfg(unix)]
+fn canonical_session_entry_real_explicit_reentry_write_failure_remains_unpersisted() {
+    let (_repo_dir, state_dir) = init_repo("session-entry-real-write-failure");
+    let state = state_dir.path();
+    let message_file = state.join("explicit-reentry-real-write-failure.txt");
+    let decision_path = canonical_session_entry_path(state, "explicit-reentry-real-write-failure");
+    let decision_dir = decision_path
+        .parent()
+        .expect("decision path should have a parent")
+        .to_path_buf();
+
+    write_file(&message_file, "Use superpowers right now.\n");
+    write_file(&decision_path, "bypassed\n");
+
+    let original_permissions = fs::metadata(&decision_dir)
+        .expect("decision dir metadata should be readable")
+        .permissions();
+    let mut read_only_permissions = original_permissions.clone();
+    read_only_permissions.set_mode(0o555);
+    fs::set_permissions(&decision_dir, read_only_permissions)
+        .expect("decision dir should become read-only");
+
+    let rust_output = run_rust_superpowers(
+        None,
+        state,
+        &[
+            "session-entry",
+            "resolve",
+            "--message-file",
+            message_file.to_str().expect("message file should be utf8"),
+            "--session-key",
+            "explicit-reentry-real-write-failure",
+        ],
+        "canonical session-entry real explicit reentry write failure",
+    );
+
+    fs::set_permissions(&decision_dir, original_permissions)
+        .expect("decision dir permissions should be restorable");
+
+    let rust_json = parse_json(
+        &rust_output,
+        "canonical session-entry real explicit reentry write failure",
+    );
+
+    assert_eq!(rust_json["outcome"], Value::String(String::from("enabled")));
+    assert_eq!(
+        rust_json["decision_source"],
+        Value::String(String::from("explicit_reentry_unpersisted"))
+    );
+    assert_eq!(rust_json["persisted"], Value::Bool(false));
+    assert_eq!(
+        rust_json["failure_class"],
+        Value::String(String::from("DecisionWriteFailed"))
+    );
+    assert_eq!(
+        fs::read_to_string(&decision_path).expect("decision path should remain readable"),
+        "bypassed\n"
     );
 }
 

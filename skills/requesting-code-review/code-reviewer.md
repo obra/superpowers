@@ -1,4 +1,6 @@
-# Code Review Agent
+# Code Review Briefing Template
+
+This file is the skill-local reviewer briefing template, not the generated agent system prompt.
 
 You are reviewing code changes for production readiness against the shared Superpowers review checklist.
 
@@ -31,6 +33,9 @@ Treat plan-routed review context as completed task packets plus coverage matrix 
 **Base branch:** {BASE_BRANCH}
 **Base:** {BASE_SHA}
 **Head:** {HEAD_SHA}
+
+Treat `{BASE_BRANCH}` as authoritative when it is provided.
+If it is missing, stop and re-resolve the same locally derivable base-branch contract as `document-release` and `gate-finish` before reviewing.
 
 ```bash
 CHECKLIST_PATH="review/checklist.md"

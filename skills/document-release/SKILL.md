@@ -118,35 +118,30 @@ Determine which branch this work targets:
 
 ```bash
 BASE_BRANCH=""
-if command -v gh >/dev/null 2>&1; then
-  BASE_BRANCH=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null || true)
-  [ -n "$BASE_BRANCH" ] || BASE_BRANCH=$(gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null || true)
-fi
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)
 if [ -n "$CURRENT_BRANCH" ] && [ "$CURRENT_BRANCH" != "HEAD" ]; then
+  case "$CURRENT_BRANCH" in
+    main|master|develop|dev|trunk)
+      BASE_BRANCH="$CURRENT_BRANCH"
+      ;;
+  esac
   [ -n "$BASE_BRANCH" ] || BASE_BRANCH=$(git config --get "branch.$CURRENT_BRANCH.gh-merge-base" 2>/dev/null || true)
 fi
 [ -n "$BASE_BRANCH" ] || BASE_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's#^refs/remotes/origin/##' || true)
 if [ -z "$BASE_BRANCH" ]; then
   for candidate in main master develop dev trunk; do
-    if git show-ref --verify --quiet "refs/heads/$candidate" || git show-ref --verify --quiet "refs/remotes/origin/$candidate"; then
+    if git show-ref --verify --quiet "refs/heads/$candidate"; then
       BASE_BRANCH="$candidate"
       break
     fi
   done
 fi
-if [ -z "$BASE_BRANCH" ]; then
-  LOCAL_BRANCH_COUNT=0
-  while IFS= read -r candidate; do
-    [ -n "$candidate" ] || continue
-    candidate="${candidate#refs/heads/}"
-    BASE_BRANCH="$candidate"
-    LOCAL_BRANCH_COUNT=$((LOCAL_BRANCH_COUNT + 1))
-    if [ "$LOCAL_BRANCH_COUNT" -gt 1 ]; then
-      BASE_BRANCH=""
-      break
-    fi
-  done < <(git for-each-ref --format='%(refname)' refs/heads 2>/dev/null || true)
+if [ -z "$BASE_BRANCH" ] && [ -n "$CURRENT_BRANCH" ] && [ "$CURRENT_BRANCH" != "HEAD" ]; then
+  NON_CURRENT_BRANCHES=$(git for-each-ref --format='%(refname:short)' refs/heads 2>/dev/null | grep -vxF "$CURRENT_BRANCH" || true)
+  NON_CURRENT_BRANCH_COUNT=$(printf '%s\n' "$NON_CURRENT_BRANCHES" | sed '/^$/d' | wc -l | tr -d ' ')
+  if [ "$NON_CURRENT_BRANCH_COUNT" = "1" ]; then
+    BASE_BRANCH=$(printf '%s\n' "$NON_CURRENT_BRANCHES" | sed '/^$/d')
+  fi
 fi
 if [ -z "$BASE_BRANCH" ]; then
   echo "Could not determine the base branch target. Stop and resolve it before writing release-readiness artifacts."
@@ -156,6 +151,8 @@ git fetch origin "$BASE_BRANCH" --quiet 2>/dev/null || true
 ```
 
 Use the detected branch as "the base branch" in the steps below.
+Do not use PR metadata or repo default-branch APIs as a fallback; `gate-finish` only accepts locally derivable base-branch evidence.
+Do not fall back to the current branch when it is the only local branch; stop instead of guessing.
 
 ## Core rules
 
@@ -304,6 +301,11 @@ If `TODOS.md` exists:
 ## Step 7.5: Structured Release-Readiness Artifact
 
 For workflow-routed implementation work, also write a project-scoped release-readiness artifact:
+
+- Require the exact approved plan path from the current workflow context before writing the release-readiness artifact.
+- Derive `Source Plan` and `Source Plan Revision` from that exact approved plan; do not leave placeholders or guess from prose.
+- If the approved plan path or revision is unavailable, stop and return to the current workflow instead of writing a partial artifact.
+- Use the base branch detected in Step 0 exactly as written; do not substitute a different branch name when persisting the artifact.
 
 ```bash
 _SLUG_ENV=$("$_SUPERPOWERS_ROOT/bin/superpowers" repo slug 2>/dev/null || true)

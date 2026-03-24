@@ -2,6 +2,15 @@
 
 For release history before `v5.1.0 (2026-03-16)`, see the upstream README: https://github.com/obra/superpowers/blob/main/README.md
 
+## v5.8.0 (2026-03-24)
+
+### Planning Review Sync
+
+- Synced `plan-ceo-review` more closely with the pinned `gstack` founder-review flow by adding `SELECTIVE EXPANSION`, a UI design-intent pass for UI-bearing specs, additive `CEO Review Summary` writeback, and optional outside-voice challenge guidance
+- Synced `plan-eng-review` with richer coverage-graph QA planning, additive `Engineering Review Summary` writeback, optional outside-voice challenge guidance, and a more structured branch-scoped QA handoff artifact
+- Updated `writing-plans` and `qa-only` to treat the new review summaries and richer QA-handoff sections as additive context only so approval truth and finish-gate freshness stay anchored to the existing repo-visible headers and artifact contract
+- Hardened the plan parser so checked execution steps with fenced detail blocks still parse while malformed checked-step entries fail closed with the expected diagnostics
+
 ## v5.7.0 (2026-03-22)
 
 ### Rust Runtime Cutover

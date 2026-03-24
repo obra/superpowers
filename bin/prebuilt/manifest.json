@@ -1,5 +1,5 @@
 {
-  "runtime_revision": "5.7.0",
+  "runtime_revision": "5.8.0",
   "targets": {
     "darwin-arm64": {
       "binary_path": "bin/prebuilt/darwin-arm64/superpowers",

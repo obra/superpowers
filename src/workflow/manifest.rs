@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use crate::git::RepositoryIdentity;
-use crate::paths::{normalize_identifier_token, write_atomic as write_atomic_file};
+use crate::paths::{branch_storage_key, write_atomic as write_atomic_file};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct WorkflowManifest {
@@ -33,7 +33,7 @@ const CROSS_SLUG_RECOVERY_LIMIT: usize = 12;
 
 pub fn manifest_path(identity: &RepositoryIdentity, state_dir: &Path) -> PathBuf {
     let slug = derive_repo_slug(identity);
-    let safe_branch = normalize_identifier_token(&identity.branch_name);
+    let safe_branch = branch_storage_key(&identity.branch_name);
     let user_name = env::var("USER").unwrap_or_else(|_| String::from("user"));
     state_dir
         .join("projects")

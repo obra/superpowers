@@ -1,8 +1,25 @@
 {
+  "diagnostics": [
+    {
+      "artifact": "docs/superpowers/specs/2026-01-22-document-review-system-design.md",
+      "code": "ambiguous_spec_candidates",
+      "message": "More than one current spec candidate matches the fallback scan window.",
+      "remediation": "Reduce spec ambiguity before proceeding.",
+      "severity": "error"
+    }
+  ],
   "contract_state": "unknown",
   "next_skill": "superpowers:plan-ceo-review",
+  "note": "fallback_ambiguity_spec",
+  "plan_candidate_count": 0,
+  "plan_path": "",
+  "reason": "fallback_ambiguity_spec",
   "reason_codes": [
     "ambiguous_spec_candidates"
   ],
+  "scan_truncated": false,
+  "schema_version": 2,
+  "spec_candidate_count": 2,
+  "spec_path": "docs/superpowers/specs/2026-01-22-document-review-system-design.md",
   "status": "spec_draft"
 }

@@ -32,6 +32,7 @@ const SUPERPOWERS_SKILLS: &[&str] = &[
     "writing-plans",
     "writing-skills",
 ];
+const SUPERPOWERS_COMMAND_ALIASES: &[&str] = &["brainstorm", "write-plan", "execute-plan"];
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct SessionPromptOption {
@@ -107,15 +108,27 @@ pub fn resolve(
                     None,
                 ));
             }
-            runtime.write_decision("enabled")?;
-            Ok(runtime.result(
-                "enabled",
-                "explicit_reentry",
-                true,
-                "",
-                "explicit_reentry",
-                None,
-            ))
+            match runtime.write_decision("enabled") {
+                Ok(()) => Ok(runtime.result(
+                    "enabled",
+                    "explicit_reentry",
+                    true,
+                    "",
+                    "explicit_reentry",
+                    None,
+                )),
+                Err(error) if error.failure_class_enum() == FailureClass::DecisionWriteFailed => {
+                    Ok(runtime.result(
+                        "enabled",
+                        "explicit_reentry_unpersisted",
+                        false,
+                        "DecisionWriteFailed",
+                        "explicit_reentry_unpersisted",
+                        None,
+                    ))
+                }
+                Err(error) => Err(error),
+            }
         }
         DecisionState::Bypassed => Ok(runtime.result(
             "bypassed",
@@ -436,19 +449,28 @@ fn clause_requests_skill_reentry(clause: &str) -> bool {
     SUPERPOWERS_SKILLS.iter().any(|skill| {
         clause_requests_phrase(clause, &format!("use {skill}"))
             || clause_requests_phrase(clause, &format!("use superpowers:{skill}"))
+            || clause_requests_phrase(clause, &format!("superpowers:{skill}"))
             || clause_requests_phrase(clause, &format!("/{skill}"))
             || clause_requests_phrase(clause, &format!("${skill}"))
-    })
+    }) || SUPERPOWERS_COMMAND_ALIASES
+        .iter()
+        .any(|alias| clause_requests_phrase(clause, &format!("/{alias}")))
 }
 
 fn clause_requests_phrase(clause: &str, phrase: &str) -> bool {
     clause.match_indices(phrase).any(|(index, _)| {
         let prefix = &clause[..index];
-        !prefix.contains("do not")
-            && !prefix.contains("never")
-            && !prefix.contains("use no ")
-            && !prefix.contains("no ")
+        !prefix_contains_negation(prefix)
     })
+}
+
+fn prefix_contains_negation(prefix: &str) -> bool {
+    prefix.contains("do not")
+        || prefix.contains("don't")
+        || prefix.contains("dont")
+        || prefix.contains("never")
+        || prefix.contains("use no ")
+        || prefix.contains("no ")
 }
 
 fn state_dir() -> PathBuf {

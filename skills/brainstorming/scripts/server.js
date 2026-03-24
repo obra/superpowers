@@ -78,6 +78,8 @@ const HOST = process.env.BRAINSTORM_HOST || '127.0.0.1';
 const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'localhost' : HOST);
 const SCREEN_DIR = process.env.BRAINSTORM_DIR || '/tmp/brainstorm';
 const OWNER_PID = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_OWNER_PID) : null;
+const LIFECYCLE_POLL_MS = Number(process.env.BRAINSTORM_LIFECYCLE_POLL_MS || 60 * 1000);
+const EPHEMERAL_MARKER = path.join(SCREEN_DIR, '.ephemeral');
 
 const MIME_TYPES = {
   '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript',
@@ -259,6 +261,8 @@ const debounceTimers = new Map();
 
 function startServer() {
   if (!fs.existsSync(SCREEN_DIR)) fs.mkdirSync(SCREEN_DIR, { recursive: true });
+  const stoppedFile = path.join(SCREEN_DIR, '.server-stopped');
+  if (fs.existsSync(stoppedFile)) fs.unlinkSync(stoppedFile);
 
   // Track known files to distinguish new screens from updates.
   // macOS fs.watch reports 'rename' for both new files and overwrites,
@@ -295,17 +299,44 @@ function startServer() {
   });
   watcher.on('error', (err) => console.error('fs.watch error:', err.message));
 
+  let shuttingDown = false;
+  let finalized = false;
+
+  function finalizeShutdown() {
+    if (finalized) return;
+    finalized = true;
+    if (fs.existsSync(EPHEMERAL_MARKER)) {
+      fs.rmSync(SCREEN_DIR, { recursive: true, force: true });
+    }
+    process.exit(0);
+  }
+
   function shutdown(reason) {
+    if (shuttingDown) return;
+    shuttingDown = true;
     console.log(JSON.stringify({ type: 'server-stopped', reason }));
     const infoFile = path.join(SCREEN_DIR, '.server-info');
     if (fs.existsSync(infoFile)) fs.unlinkSync(infoFile);
+    const pidFile = path.join(SCREEN_DIR, '.server.pid');
+    if (fs.existsSync(pidFile)) fs.unlinkSync(pidFile);
     fs.writeFileSync(
-      path.join(SCREEN_DIR, '.server-stopped'),
+      stoppedFile,
       JSON.stringify({ reason, timestamp: Date.now() }) + '\n'
     );
+    for (const timer of debounceTimers.values()) clearTimeout(timer);
+    debounceTimers.clear();
+    for (const socket of clients) {
+      try {
+        socket.end(encodeFrame(OPCODES.CLOSE, Buffer.alloc(0)));
+      } catch (e) {
+        clients.delete(socket);
+      }
+    }
+    clients.clear();
     watcher.close();
     clearInterval(lifecycleCheck);
-    server.close(() => process.exit(0));
+    server.close(finalizeShutdown);
+    setTimeout(finalizeShutdown, 1000).unref();
   }
 
   function ownerAlive() {
@@ -313,12 +344,18 @@ function startServer() {
     try { process.kill(OWNER_PID, 0); return true; } catch (e) { return false; }
   }
 
-  // Check every 60s: exit if owner process died or idle for 30 minutes
+  // Check on a bounded interval: exit if owner process died or idle for 30 minutes
   const lifecycleCheck = setInterval(() => {
     if (!ownerAlive()) shutdown('owner process exited');
     else if (Date.now() - lastActivity > IDLE_TIMEOUT_MS) shutdown('idle timeout');
-  }, 60 * 1000);
+  }, LIFECYCLE_POLL_MS);
   lifecycleCheck.unref();
+
+  process.once('SIGTERM', () => shutdown('signal SIGTERM'));
+  process.once('SIGINT', () => shutdown('signal SIGINT'));
+  if (process.platform === 'win32') {
+    process.once('SIGBREAK', () => shutdown('signal SIGBREAK'));
+  }
 
   server.listen(PORT, HOST, () => {
     const info = JSON.stringify({
@@ -326,8 +363,8 @@ function startServer() {
       url_host: URL_HOST, url: 'http://' + URL_HOST + ':' + PORT,
       screen_dir: SCREEN_DIR
     });
-    console.log(info);
     fs.writeFileSync(path.join(SCREEN_DIR, '.server-info'), info + '\n');
+    console.log(info);
   });
 }
 

@@ -107,7 +107,8 @@ npm ci --prefix tests/brainstorm-server
 - `tests/evals/using-superpowers-routing.orchestrator.md` is the authoritative Item 1 routing gate and drives the repo-versioned scenario, runner, and judge markdown artifacts plus local per-scenario evidence bundles under `~/.superpowers/projects/<slug>/...`
   This gate is agent-executed and does not run through `node --test` or the Node OpenAI-judge helper path. It is not part of the default deterministic validation order, but it is a required change-specific gate for Item 1 routing-safety work.
 - `tests/evals/search-before-building-contract.orchestrator.md` is the doc-driven contract gate for the shared Search-Before-Building preamble plus both reviewer prompt surfaces. It uses repo-versioned scenarios plus fresh runner and judge subagents, stays representative instead of exhaustive, and does not require the Node OpenAI-judge helper path.
-- `cargo nextest run --test using_superpowers_skill` is the deterministic Rust gate for the pre-routing session-entry contract, canonical decision-path surface, and the documented first-turn gate flow. The higher-order controller/routing check remains the markdown orchestrator gate below.
+- `cargo nextest run --test using_superpowers_skill` is the deterministic Rust gate for the session-entry contract, canonical decision-path surface, and the documented first-turn gate flow.
+- `cargo nextest run --test workflow_runtime` is the deterministic Rust gate for workflow-phase routing once session-entry is enabled, including the canonical `execution_preflight` and `plan_writing` phase mappings for representative ready and stale-plan fixtures.
 - See `tests/evals/README.md` for the Node-based eval environment variables and for routing-eval logging behavior.
 - The same README also documents the doc-driven Search-Before-Building runner/judge gate instructions.
 

@@ -1,6 +1,6 @@
 ---
 name: plan-ceo-review
-description: Use when a written Superpowers design or architecture spec needs CEO or founder review before implementation planning
+description: Use when a written Superpowers design or architecture spec needs CEO or founder review before implementation planning, including scope expansion, selective expansion, hold-scope rigor, or scope reduction
 ---
 <!-- AUTO-GENERATED from SKILL.md.tmpl — do not edit directly -->
 <!-- Regenerate: node scripts/gen-skill-docs.mjs -->
@@ -129,6 +129,7 @@ Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Ski
 ```
 
 - If any header line is missing or malformed, normalize the spec to this contract before continuing and treat it as `Draft`.
+- `brainstorming` is only valid while the spec remains `Draft`. A `CEO Approved` spec must end with `**Last Reviewed By:** plan-ceo-review`.
 - When review decisions change the written spec, update the spec document before continuing.
 - After each spec edit (including final approval edits), runs `sync --artifact spec` for the spec path:
 
@@ -204,11 +205,12 @@ You are not here to rubber-stamp this spec. You are here to make it extraordinar
 
 But your posture depends on what the user needs:
 
-* SCOPE EXPANSION: You are building a cathedral. Envision the platonic ideal. Push scope UP. Ask "what would make this 10x better for 2x the effort?" The answer to "should we also build X?" is "yes, if it serves the vision." You have permission to dream.
+* SCOPE EXPANSION: You are building a cathedral. Envision the platonic ideal. Push scope UP. Ask "what would make this 10x better for 2x the effort?" You have permission to dream, and to recommend enthusiastically. But every expansion is the user's decision. Present each scope-expanding idea as its own interactive user question.
+* SELECTIVE EXPANSION: You are a rigorous reviewer who also has taste. Hold the current scope as your baseline and make it bulletproof. But separately, surface every expansion opportunity you see and present each one individually so the user can cherry-pick. Neutral recommendation posture: present the opportunity, state effort and risk, and let the user decide. Accepted expansions become part of the scope for the remaining sections. Rejected ones go to "NOT in scope."
 * HOLD SCOPE: You are a rigorous reviewer. The spec's scope is accepted. Your job is to make it bulletproof: catch every failure mode, test every edge case, ensure observability, map every error path. Do not silently reduce OR expand.
 * SCOPE REDUCTION: You are a surgeon. Find the minimum viable version that achieves the core outcome. Cut everything else. Be ruthless.
 
-Critical rule: Once the user selects a mode, COMMIT to it. Do not silently drift toward a different mode. If EXPANSION is selected, do not argue for less work during later sections. If REDUCTION is selected, do not sneak scope back in. Raise concerns once in Step 0. After that, execute the chosen mode faithfully.
+Critical rule: In ALL modes, the user is 100% in control. Every scope change is an explicit opt-in via an interactive user question. Never silently add or remove scope. Once the user selects a mode, COMMIT to it. Do not silently drift toward a different mode. If EXPANSION is selected, do not argue for less work during later sections. If SELECTIVE EXPANSION is selected, surface expansions as individual decisions and do not silently include or exclude them. If REDUCTION is selected, do not sneak scope back in. Raise concerns once in Step 0. After that, execute the chosen mode faithfully.
 
 Do NOT make any code changes. Do NOT start implementation. Your only job right now is to review the written spec with maximum rigor and the appropriate level of ambition.
 
@@ -268,7 +270,36 @@ Before doing anything else, run a system audit. This is not the spec review. It 
 Run repo-appropriate commands such as:
 
 ```bash
-BASE_BRANCH=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null || gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null || echo main)
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)
+BASE_BRANCH=""
+if [ -n "$CURRENT_BRANCH" ] && [ "$CURRENT_BRANCH" != "HEAD" ]; then
+  case "$CURRENT_BRANCH" in
+    main|master|develop|dev|trunk)
+      BASE_BRANCH="$CURRENT_BRANCH"
+      ;;
+  esac
+  [ -n "$BASE_BRANCH" ] || BASE_BRANCH=$(git config --get "branch.$CURRENT_BRANCH.gh-merge-base" 2>/dev/null || true)
+fi
+[ -n "$BASE_BRANCH" ] || BASE_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's#^refs/remotes/origin/##' || true)
+if [ -z "$BASE_BRANCH" ]; then
+  for candidate in main master develop dev trunk; do
+    if git show-ref --verify --quiet "refs/heads/$candidate"; then
+      BASE_BRANCH="$candidate"
+      break
+    fi
+  done
+fi
+if [ -z "$BASE_BRANCH" ] && [ -n "$CURRENT_BRANCH" ] && [ "$CURRENT_BRANCH" != "HEAD" ]; then
+  NON_CURRENT_BRANCHES=$(git for-each-ref --format='%(refname:short)' refs/heads 2>/dev/null | grep -vxF "$CURRENT_BRANCH" || true)
+  NON_CURRENT_BRANCH_COUNT=$(printf '%s\n' "$NON_CURRENT_BRANCHES" | sed '/^$/d' | wc -l | tr -d ' ')
+  if [ "$NON_CURRENT_BRANCH_COUNT" = "1" ]; then
+    BASE_BRANCH=$(printf '%s\n' "$NON_CURRENT_BRANCHES" | sed '/^$/d')
+  fi
+fi
+if [ -z "$BASE_BRANCH" ]; then
+  echo "Could not determine the base branch for the review audit. Stop and resolve it before continuing."
+  exit 1
+fi
 git fetch origin "$BASE_BRANCH" --quiet 2>/dev/null || true
 git log --oneline -30
 git diff --stat "origin/$BASE_BRANCH...HEAD" 2>/dev/null || git diff --stat "$BASE_BRANCH...HEAD" 2>/dev/null || git diff --stat
@@ -276,6 +307,8 @@ git stash list
 rg -l "TODO|FIXME|HACK|XXX"
 find . -type f -not -path "*/.git/*" | head -20
 ```
+
+Do not use PR metadata or repo default-branch APIs as a fallback; keep the system audit aligned with `document-release`, `requesting-code-review`, and `gate-finish`.
 
 Then read `AGENTS.md`, `AGENTS.override.md`, `.github/copilot-instructions.md`, `.github/instructions/*.instructions.md`, `TODOS.md`, and any existing architecture docs. If this repo stores prompt, eval, or workflow conventions in project docs, read those too.
 
@@ -297,9 +330,15 @@ Map:
 
 Check the git log for this branch. If there are prior commits suggesting a previous review cycle, note what changed and whether the current spec re-touches those areas. Be more aggressive reviewing areas that were previously problematic. Recurring problem areas are architectural smells. Surface them.
 
-### Taste Calibration (EXPANSION mode only)
+### Taste Calibration (EXPANSION and SELECTIVE EXPANSION modes)
 
 Identify 2-3 files or patterns in the existing codebase that are particularly well-designed. Note them as style references for the review. Also note 1-2 patterns that are frustrating or poorly designed. These are anti-patterns to avoid repeating.
+
+### UI Scope Detection
+
+Analyze the spec. If it involves ANY of: new UI screens or pages, changes to existing UI components, user-facing interaction flows, frontend framework changes, user-visible state changes, mobile or responsive behavior, or design-system changes, note `UI_SCOPE` for Section 11.
+
+If no UI scope is detected, say so explicitly and skip Section 11 later.
 
 Report findings before proceeding to Step 0.
 
@@ -345,7 +384,17 @@ CURRENT STATE                  THIS SPEC                   12-MONTH IDEAL
 
 1. 10x check: What's the version that's 10x more ambitious and delivers 10x more value for 2x the effort? Describe it concretely.
 2. Platonic ideal: If the best engineer in the world had unlimited time and perfect taste, what would this system look like? What would the user feel when using it? Start from experience, not architecture.
-3. Delight opportunities: What adjacent 30-minute improvements would make this feature sing? Things where a user would think "oh nice, they thought of that." List at least 3.
+3. Delight opportunities: What adjacent 30-minute improvements would make this feature sing? Things where a user would think "oh nice, they thought of that." List at least 5.
+
+**For SELECTIVE EXPANSION** run the HOLD SCOPE analysis first, then surface expansions:
+
+1. Complexity check: If the spec touches more than 8 files or introduces more than 2 new classes or services, treat that as a smell and challenge whether the same goal can be achieved with fewer moving parts.
+2. What is the minimum set of changes that achieves the stated goal? Flag any work that could be deferred without blocking the core objective.
+3. Then run the expansion scan, but do NOT add anything to scope yet. Surface:
+   - 10x check: What's the version that's 10x more ambitious? Describe it concretely.
+   - Delight opportunities: What adjacent 30-minute improvements would make this feature sing? List at least 5.
+   - Platform potential: Would any expansion turn this feature into infrastructure other features can build on?
+4. Cherry-pick ceremony: Present each expansion opportunity as its own individual interactive user question. Neutral recommendation posture: present the opportunity, state effort and risk, and let the user decide. Options: **A)** Add to this spec's scope **B)** Defer to `TODOS.md` **C)** Skip. Accepted items become spec scope for all remaining review sections. Rejected items go to "NOT in scope."
 
 **For HOLD SCOPE** run this:
 
@@ -359,7 +408,7 @@ CURRENT STATE                  THIS SPEC                   12-MONTH IDEAL
 
 ### 0E. Temporal Interrogation
 
-For EXPANSION and HOLD modes, think ahead to implementation. What decisions will need to be made during implementation that should be resolved NOW in the spec?
+For EXPANSION, SELECTIVE EXPANSION, and HOLD modes, think ahead to implementation. What decisions will need to be made during implementation that should be resolved NOW in the spec?
 
 ```text
 HOUR 1 (foundations):     What does the implementer need to know?
@@ -372,19 +421,22 @@ Surface these as questions for the user NOW, not as "figure it out later."
 
 ### 0F. Mode Selection
 
-Present three options:
+Present four options:
 
 1. **SCOPE EXPANSION:** The spec is good but could be great. Propose the ambitious version, then review that. Push scope up. Build the cathedral.
-2. **HOLD SCOPE:** The spec's scope is right. Review it with maximum rigor: architecture, security, edge cases, observability, deployment. Make it bulletproof.
-3. **SCOPE REDUCTION:** The spec is overbuilt or wrong-headed. Propose a minimal version that achieves the core goal, then review that.
+2. **SELECTIVE EXPANSION:** The current scope is the baseline, but you want to see what else is possible. Every expansion opportunity is presented individually so the user can cherry-pick the ones worth doing.
+3. **HOLD SCOPE:** The spec's scope is right. Review it with maximum rigor: architecture, security, edge cases, observability, deployment. Make it bulletproof.
+4. **SCOPE REDUCTION:** The spec is overbuilt or wrong-headed. Propose a minimal version that achieves the core goal, then review that.
 
 Context-dependent defaults:
 
 * Greenfield feature -> default EXPANSION
+* Feature enhancement or iteration on an existing system -> default SELECTIVE EXPANSION
 * Bug fix or hotfix -> default HOLD SCOPE
 * Refactor -> default HOLD SCOPE
 * Spec touching more than 15 files -> suggest REDUCTION unless the user pushes back
 * User says "go big", "ambitious", or "cathedral" -> EXPANSION without asking
+* User says "hold scope but tempt me", "show me options", or "cherry-pick" -> SELECTIVE EXPANSION without asking
 
 Once selected, commit fully. Do not silently drift.
 
@@ -406,10 +458,12 @@ Evaluate and diagram:
 * Production failure scenarios. For each new integration point, describe one realistic production failure and whether the spec accounts for it.
 * Rollback posture. If this ships and immediately breaks, what's the rollback procedure?
 
-**EXPANSION mode additions:**
+**EXPANSION and SELECTIVE EXPANSION additions:**
 
 * What would make this architecture beautiful, not just correct?
 * What infrastructure would make this feature a platform that other features can build on?
+
+**SELECTIVE EXPANSION:** If any accepted cherry-picks from Step 0D affect the architecture, evaluate their architectural fit here. Flag any that create coupling concerns or do not integrate cleanly.
 
 Required ASCII diagram: full system architecture showing new components and their relationships to existing ones.
 
@@ -603,7 +657,7 @@ Evaluate:
 * Admin tooling
 * Runbooks
 
-**EXPANSION mode addition:** What observability would make this feature a joy to operate?
+**EXPANSION and SELECTIVE EXPANSION addition:** What observability would make this feature a joy to operate? For SELECTIVE EXPANSION, include observability for any accepted cherry-picks.
 
 **STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Do NOT batch escalated issues. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the current section is resolved.
 
@@ -620,7 +674,7 @@ Evaluate:
 * Post-deploy verification checklist
 * Smoke tests
 
-**EXPANSION mode addition:** What deploy infrastructure would make shipping this feature routine?
+**EXPANSION and SELECTIVE EXPANSION addition:** What deploy infrastructure would make shipping this feature routine? For SELECTIVE EXPANSION, assess whether accepted cherry-picks change the deployment risk profile.
 
 **STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Do NOT batch escalated issues. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the current section is resolved.
 
@@ -635,16 +689,92 @@ Evaluate:
 * Ecosystem fit with the repo's primary language and tooling direction
 * The 1-year question: read this spec as a new engineer in 12 months. Is it obvious?
 
-**EXPANSION mode additions:**
+**EXPANSION and SELECTIVE EXPANSION additions:**
 
 * What comes after this ships? Phase 2? Phase 3? Does the architecture support that trajectory?
 * Platform potential. Does this create capabilities other features can leverage?
+* SELECTIVE EXPANSION only: Were the right cherry-picks accepted? Did any rejected expansions turn out to be load-bearing for the accepted ones?
 
 **STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Do NOT batch escalated issues. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the current section is resolved.
 
+### Section 11: Design & UX Review (skip if no UI scope detected)
+
+This is the embedded design-intent pass. It is not a separate workflow stage.
+
+Evaluate:
+
+* Information architecture: what does the user see first, second, and third?
+* Interaction state coverage map:
+
+```text
+FEATURE | LOADING | EMPTY | ERROR | SUCCESS | PARTIAL
+```
+
+* User journey coherence
+* Responsive intent: is mobile or responsive behavior described explicitly?
+* Accessibility basics: keyboard navigation, screen readers, contrast, and touch targets
+* AI slop risk: does the spec describe generic UI patterns instead of intentional product decisions?
+
+Required ASCII diagram: user flow showing screens, states, and transitions.
+
+**EXPANSION and SELECTIVE EXPANSION additions:**
+
+* What would make this UI feel inevitable?
+* What 30-minute UI touches would make users think "oh nice, they thought of that"?
+
+**STOP.** In normal review, use one interactive user question per issue. In accelerated review, keep routine issues in the section packet and break out only escalated high-judgment issues as direct human questions. Do NOT batch escalated issues. Recommend + WHY. If no issues or the fix is obvious, state what you'll do and move on. Do NOT proceed until the current section is resolved.
+
+## Outside Voice — Independent Spec Challenge (optional, recommended)
+
+After all review sections are complete, optionally get an outside voice. This is informative by default. It becomes actionable only if the main reviewer explicitly adopts a finding and patches the authoritative spec body.
+
+Use `skills/plan-ceo-review/outside-voice-prompt.md` when briefing the outside voice.
+
+Tool order:
+
+1. Prefer `codex exec` when available.
+2. Label the source as `cross-model` only when the outside voice definitely uses a different model/provider than the main reviewer.
+3. If model provenance is the same, unknown, or only a fresh-context rerun of the same reviewer family, label the source as `fresh-context-subagent`.
+4. If the transport truncates or summarizes the outside-voice output, disclose that limitation plainly in review prose instead of overstating independence.
+5. If `codex exec` is unavailable, use a fresh-context reviewer path and label the source as `fresh-context-subagent`.
+6. If neither path is available, record `Outside Voice: unavailable`.
+
+Outside voice rules:
+
+* Review only the supplied spec content.
+* Do not mutate files directly.
+* Surface blind spots, tensions, feasibility risks, or strategic miscalibration.
+* Present findings truthfully labeled by source.
+* If the outside voice is skipped, record `Outside Voice: skipped`.
+
+## CEO Review Summary Writeback
+
+After review decisions are applied to the authoritative spec body, write or replace a single trailing summary block at the end of the spec:
+
+```markdown
+## CEO Review Summary
+
+**Review Status:** clear | issues_open
+**Reviewed At:** <ISO-8601 UTC>
+**Review Mode:** hold_scope | selective_expansion | expansion | scope_reduction
+**Reviewed Spec Revision:** <integer>
+**Critical Gaps:** <integer>
+**UI Design Intent Required:** yes | no
+**Outside Voice:** skipped | unavailable | cross-model | fresh-context-subagent
+```
+
+Summary write rules:
+
+* Accepted selective-expansion candidates must patch the authoritative spec body before approval. The summary is descriptive only.
+* Run the repo-file-write gate before editing the summary body.
+* Run the approval-header-write gate separately before flipping approval headers.
+* If a `## CEO Review Summary` section already exists, replace from that heading through the next `## ` heading or EOF, whichever comes first.
+* Always move the summary to the end of the file. Do not leave an older copy in the middle.
+* If the write fails because the spec changed concurrently, re-read the file and retry once. If freshness cannot be re-established, leave the spec in `Draft`.
+
 ## CRITICAL RULE — How to ask questions
 
-Follow the Interactive User Question format above. Additional rules for plan reviews:
+Follow the Interactive User Question format above. Additional rules for spec reviews:
 
 * **Normal review:** one issue = one interactive user question. In accelerated review, this rule applies only to escalated high-judgment issues; routine issues may stay in the section packet.
 * Describe the problem concretely, with file and line references when relevant.
@@ -698,9 +828,9 @@ For each TODO, describe:
 
 Then present options: **A)** Add to `TODOS.md` **B)** Skip **C)** Build it now in this PR instead of deferring.
 
-### Delight Opportunities (EXPANSION mode only)
+### Delight Opportunities (EXPANSION and SELECTIVE EXPANSION modes)
 
-Identify at least 5 bonus-chunk opportunities under 30 minutes each that would make users think "oh nice, they thought of that." Present each delight opportunity as its own interactive user question. Never batch them.
+Identify at least 5 bonus-chunk opportunities under 30 minutes each that would make users think "oh nice, they thought of that." In SELECTIVE EXPANSION mode, present each one as a cherry-pick candidate. Never batch them.
 
 ### Diagrams
 
@@ -723,7 +853,7 @@ List every ASCII diagram in files this spec touches. Are they still accurate?
 +====================================================================+
 |            MEGA PLAN REVIEW — COMPLETION SUMMARY                   |
 +====================================================================+
-| Mode selected        | EXPANSION / HOLD / REDUCTION                |
+| Mode selected        | EXPANSION / SELECTIVE / HOLD / REDUCTION    |
 | System Audit         | [key findings]                              |
 | Step 0               | [mode + key decisions]                      |
 | Section 1  (Arch)    | ___ issues found                            |
@@ -736,6 +866,7 @@ List every ASCII diagram in files this spec touches. Are they still accurate?
 | Section 8  (Observ)  | ___ gaps found                              |
 | Section 9  (Deploy)  | ___ risks flagged                           |
 | Section 10 (Future)  | Reversibility: _/5, debt items: ___         |
+| Section 11 (Design)  | ___ issues / SKIPPED (no UI scope)          |
 +--------------------------------------------------------------------+
 | NOT in scope         | written (___ items)                         |
 | What already exists  | written                                     |
@@ -743,7 +874,10 @@ List every ASCII diagram in files this spec touches. Are they still accurate?
 | Error/rescue registry| ___ methods, ___ CRITICAL GAPS              |
 | Failure modes        | ___ total, ___ CRITICAL GAPS                |
 | TODOS.md updates     | ___ items proposed                          |
-| Delight opportunities| ___ identified (EXPANSION only)             |
+| Scope proposals      | ___ proposed, ___ accepted, ___ deferred    |
+| Delight opportunities| ___ identified                              |
+| Outside voice        | skipped / unavailable / cross-model / fresh-context-subagent |
+| CEO review summary   | written                                     |
 | Diagrams produced    | ___ (list types)                            |
 | Stale diagrams found | ___                                         |
 | Unresolved decisions | ___ (listed below)                          |
@@ -765,30 +899,35 @@ If any interactive user question goes unanswered, note it here. Never silently d
 ## Mode Quick Reference
 
 ```text
-┌─────────────────────────────────────────────────────────────────┐
-│                     MODE COMPARISON                             │
-├─────────────┬──────────────┬──────────────┬────────────────────┤
-│             │  EXPANSION   │  HOLD SCOPE  │  REDUCTION         │
-├─────────────┼──────────────┼──────────────┼────────────────────┤
-│ Scope       │ Push UP      │ Maintain     │ Push DOWN          │
-│ 10x check   │ Mandatory    │ Optional     │ Skip               │
-│ Platonic    │ Yes          │ No           │ No                 │
-│ ideal       │              │              │                    │
-│ Delight     │ 5+ items     │ Note if seen │ Skip               │
-│ opps        │              │              │                    │
-│ Complexity  │ "Is it big   │ "Is it too   │ "Is it the bare    │
-│ question    │  enough?"    │  complex?"   │  minimum?"         │
-│ Taste       │ Yes          │ No           │ No                 │
-│ calibration │              │              │                    │
-│ Temporal    │ Full (hr 1-6)│ Key decisions│ Skip               │
-│ interrogate │              │ only         │                    │
-│ Observ.     │ "Joy to      │ "Can we      │ "Can we see if     │
-│ standard    │  operate"    │  debug it?"  │  it's broken?"     │
-│ Deploy      │ Infra as     │ Safe deploy  │ Simplest possible  │
-│ standard    │ feature scope│ + rollback   │ deploy             │
-│ Error map   │ Full + chaos │ Full         │ Critical paths     │
-│             │ scenarios    │              │ only               │
-│ Phase 2/3   │ Map it       │ Note it      │ Skip               │
-│ planning    │              │              │                    │
-└─────────────┴──────────────┴──────────────┴────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────┐
+│                            MODE COMPARISON                                     │
+├─────────────┬──────────────┬──────────────┬──────────────┬────────────────────┤
+│             │  EXPANSION   │  SELECTIVE   │  HOLD SCOPE  │  REDUCTION         │
+├─────────────┼──────────────┼──────────────┼──────────────┼────────────────────┤
+│ Scope       │ Push UP      │ Hold + offer │ Maintain     │ Push DOWN          │
+│ Recommend   │ Enthusiastic │ Neutral      │ N/A          │ N/A                │
+│ posture     │              │              │              │                    │
+│ 10x check   │ Mandatory    │ Cherry-pick  │ Optional     │ Skip               │
+│ Platonic    │ Yes          │ No           │ No           │ No                 │
+│ ideal       │              │              │              │                    │
+│ Delight     │ Opt-in       │ Cherry-pick  │ Note if seen │ Skip               │
+│ opps        │ ceremony     │ ceremony     │              │                    │
+│ Complexity  │ "Is it big   │ "Is it right │ "Is it too   │ "Is it the bare    │
+│ question    │  enough?"    │  + what else │  complex?"   │  minimum?"         │
+│             │              │  is tempting"│              │                    │
+│ Taste       │ Yes          │ Yes          │ No           │ No                 │
+│ calibration │              │              │              │                    │
+│ Temporal    │ Full (hr 1-6)│ Full (hr 1-6)│ Key decisions│ Skip               │
+│ interrogate │              │              │ only         │                    │
+│ Observ.     │ "Joy to      │ "Joy to      │ "Can we      │ "Can we see if     │
+│ standard    │  operate"    │  operate"    │  debug it?"  │  it's broken?"     │
+│ Deploy      │ Infra as     │ Safe deploy  │ Safe deploy  │ Simplest possible  │
+│ standard    │ feature scope│ + cherry-pick│ + rollback   │ deploy             │
+│ Error map   │ Full + chaos │ Full + chaos │ Full         │ Critical paths     │
+│             │ scenarios    │ for accepted │              │ only               │
+│ Phase 2/3   │ Map it       │ Map accepted │ Note it      │ Skip               │
+│ planning    │              │ cherry-picks │              │                    │
+│ Design      │ "Inevitable" │ If UI scope  │ If UI scope  │ Skip               │
+│ (Sec 11)    │ UI review    │ detected     │ detected     │                    │
+└─────────────┴──────────────┴──────────────┴──────────────┴────────────────────┘
 ```

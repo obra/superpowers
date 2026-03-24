@@ -1,6 +1,6 @@
 [package]
 name = "superpowers"
-version = "5.7.0"
+version = "5.8.0"
 edition = "2024"
 rust-version = "1.94"
 publish = false

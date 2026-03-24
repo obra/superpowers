@@ -180,6 +180,29 @@ fn parse_spec_headers_and_index_exactly() {
 }
 
 #[test]
+fn parse_spec_headers_and_index_with_trailing_ceo_review_summary() {
+    let repo_root = unique_temp_dir("contract-parse-trailing-ceo-summary");
+    install_valid_artifacts(&repo_root);
+
+    let spec_path = repo_root.join(SPEC_REL);
+    let source = fs::read_to_string(&spec_path).expect("valid spec fixture should read");
+    fs::write(
+        &spec_path,
+        format!(
+            "{source}\n\n## CEO Review Summary\n\n**Review Status:** clear\n**Reviewed At:** 2026-03-24T13:42:28Z\n**Review Mode:** hold_scope\n**Reviewed Spec Revision:** 1\n**Critical Gaps:** 0\n**UI Design Intent Required:** no\n**Outside Voice:** skipped\n"
+        ),
+    )
+    .expect("spec fixture with trailing summary should write");
+
+    let spec = parse_spec_file(&spec_path).expect("spec with trailing summary should parse");
+    assert_eq!(spec.workflow_state, "CEO Approved");
+    assert_eq!(spec.spec_revision, 1);
+    assert_eq!(spec.last_reviewed_by, "plan-ceo-review");
+    assert_eq!(spec.requirements.len(), 6);
+    assert_eq!(spec.requirements[0].id, "REQ-001");
+}
+
+#[test]
 fn analyze_valid_contract_fixture_reports_clean_coverage() {
     let repo_root = unique_temp_dir("contract-analyze-valid");
     install_valid_artifacts(&repo_root);
@@ -204,6 +227,43 @@ fn analyze_valid_contract_fixture_reports_clean_coverage() {
 }
 
 #[test]
+fn analyze_valid_contract_fixture_with_trailing_engineering_review_summary() {
+    let repo_root = unique_temp_dir("contract-analyze-trailing-eng-summary");
+    let state_dir = unique_temp_dir("contract-analyze-trailing-eng-summary-state");
+    install_valid_artifacts(&repo_root);
+
+    let plan_path = repo_root.join(PLAN_REL);
+    let source = fs::read_to_string(&plan_path).expect("valid plan fixture should read");
+    fs::write(
+        &plan_path,
+        format!(
+            "{source}\n\n## Engineering Review Summary\n\n**Review Status:** clear\n**Reviewed At:** 2026-03-24T16:02:11Z\n**Review Mode:** big_change\n**Reviewed Plan Revision:** 1\n**Critical Gaps:** 0\n**Browser QA Required:** yes\n**Test Plan Artifact:** `~/.superpowers/projects/example/example-branch-test-plan-20260324T160211Z.md`\n**Outside Voice:** fresh-context-subagent\n"
+        ),
+    )
+    .expect("plan fixture with trailing summary should write");
+
+    let report = analyze_plan(repo_root.join(SPEC_REL), plan_path.clone())
+        .expect("analysis should tolerate trailing engineering summary");
+    assert_eq!(report.contract_state, "valid");
+    assert_eq!(report.task_count, 2);
+    assert_eq!(report.packet_buildable_tasks, 2);
+    assert!(report.coverage_complete);
+
+    let lint = parse_success_json(
+        &run_rust(
+            &repo_root,
+            &state_dir,
+            &["lint", "--spec", SPEC_REL, "--plan", PLAN_REL],
+            "rust lint with trailing engineering summary",
+        ),
+        "rust lint with trailing engineering summary",
+    );
+    assert_eq!(lint["status"], "ok");
+    assert_eq!(lint["plan_task_count"], 2);
+    assert_eq!(lint["coverage"]["REQ-001"][0], 1);
+}
+
+#[test]
 fn analyze_plan_detects_stale_source_spec_linkage() {
     let repo_root = unique_temp_dir("contract-analyze-stale");
     install_valid_artifacts(&repo_root);
@@ -224,6 +284,66 @@ fn analyze_plan_detects_stale_source_spec_linkage() {
         vec![String::from("stale_spec_plan_linkage")]
     );
     assert!(report.coverage_complete);
+}
+
+#[test]
+fn analyze_valid_contract_fixture_with_checked_steps_and_fenced_details() {
+    let repo_root = unique_temp_dir("contract-analyze-checked-steps");
+    install_valid_artifacts(&repo_root);
+
+    let plan_path = repo_root.join(PLAN_REL);
+    let source = fs::read_to_string(&plan_path).expect("valid plan fixture should read");
+    let source = source
+        .replace(
+            "- [ ] **Step 1: Parse the source requirement index**",
+            "- [x] **Step 1: Parse the source requirement index**\n```text\nchecked step detail fixture\n```",
+        )
+        .replace(
+            "- [ ] **Step 2: Validate the coverage matrix against the indexed requirements**",
+            "- [x] **Step 2: Validate the coverage matrix against the indexed requirements**\n```text\ncoverage detail fixture\n```",
+        )
+        .replace(
+            "- [ ] **Step 1: Build canonical task packets**",
+            "- [x] **Step 1: Build canonical task packets**\n```text\npacket detail fixture\n```",
+        )
+        .replace(
+            "- [ ] **Step 2: Rebuild stale packets from the current approved artifacts**",
+            "- [x] **Step 2: Rebuild stale packets from the current approved artifacts**\n```text\nrebuild detail fixture\n```",
+        );
+    fs::write(&plan_path, source).expect("plan fixture with checked step details should write");
+
+    let report = analyze_plan(repo_root.join(SPEC_REL), &plan_path)
+        .expect("checked steps with fenced details should analyze");
+
+    assert_eq!(report.contract_state, "valid");
+    assert_eq!(report.task_count, 2);
+    assert_eq!(report.packet_buildable_tasks, 2);
+    assert!(report.coverage_complete);
+}
+
+#[test]
+fn analyze_plan_rejects_malformed_checked_step_entries() {
+    let repo_root = unique_temp_dir("contract-analyze-malformed-checked-step");
+    install_valid_artifacts(&repo_root);
+
+    let plan_path = repo_root.join(PLAN_REL);
+    replace_in_file(
+        &plan_path,
+        "- [ ] **Step 1: Parse the source requirement index**",
+        "- [x] **Step 1 Parse the source requirement index**",
+    );
+
+    let error = analyze_plan(repo_root.join(SPEC_REL), plan_path)
+        .expect_err("malformed checked step entry should fail closed");
+
+    assert_eq!(error.failure_class(), "InstructionParseFailed");
+    assert!(
+        error
+            .message()
+            .contains("Malformed step entry: - [x] **Step 1 Parse the source requirement index**"),
+        "unexpected diagnostic: {}",
+        error.message()
+    );
 }
 
 #[test]
