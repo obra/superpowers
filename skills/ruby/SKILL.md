@@ -1,15 +1,13 @@
 ---
 name: ruby
-description: >-
-  Ruby language conventions, idioms, and modern features (3.x+) for writing
-  idiomatic Ruby code. Covers error handling patterns, performance optimization,
-  and Ruby-specific idioms. Use when writing or reviewing pure Ruby code, using
-  modern Ruby features (pattern matching, ractors, RBS), optimizing Ruby
-  performance, or establishing Ruby conventions. For Rails-specific guidance use
-  the rails skill. For testing use minitest. For code style use sandi-metz-rules.
+description: Use when writing, reviewing, or debugging pure Ruby code — idiomatic patterns, modern 3.x+ features (pattern matching, Data.define, endless methods), error handling conventions (raise vs fail, result objects), memoization, and performance idioms. For Rails use rails-guides. For testing use minitest. For code style use sandi-metz-rules.
 ---
 
 # Ruby Language Skill
+
+## Overview
+
+Opinionated Ruby conventions and idioms for writing idiomatic Ruby 3.x+ code. Focuses on patterns agents miss by default — the Weirich raise/fail distinction, safe nil-aware memoization, result objects over exceptions for expected failures, and performance-conscious enumeration.
 
 ## Error Handling Conventions
 
@@ -219,6 +217,17 @@ user&.profile&.avatar_url  # returns nil if any link is nil
 - `?` suffix: returns boolean (`empty?`, `valid?`, `admin?`)
 - `!` suffix: dangerous version - mutates receiver or raises on failure (`save!`, `sort!`)
 - Always provide a non-bang alternative when defining bang methods
+
+## Common Mistakes
+
+| Mistake | Fix |
+|---------|-----|
+| `raise` for new exceptions | Use `fail`; reserve `raise` for re-raising (Weirich convention) |
+| `@var \|\|= compute` when result can be `nil`/`false` | Use `defined?(@var)` check instead |
+| String concatenation with `+=` in loops | Use `<<` or `.join` — `+=` is O(n²) |
+| `rescue Exception` | Rescue `StandardError` — `Exception` catches `SignalException`, `NoMemoryError` |
+| Deep `&.` chains (3+ links) | Extract to a method or use explicit nil check |
+| Missing `# frozen_string_literal: true` | Add to top of every file |
 
 ## References
 

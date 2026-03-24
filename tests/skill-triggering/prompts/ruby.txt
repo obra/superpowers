@@ -1,0 +1,1 @@
+I'm writing a Ruby method that validates an order. When the order is nil I want to throw an exception. Should I use raise or fail? What's the idiomatic Ruby convention?
