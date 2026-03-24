@@ -1,0 +1,104 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: linear-gradient(180deg, #98ddff 0%, #d7f3ff 60%, #fef6e7 100%);
+  color: #20324d;
+}
+
+.app {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 20px 16px 30px;
+}
+
+h1,
+h2 {
+  margin: 0 0 12px;
+}
+
+.panel {
+  background: #ffffffcc;
+  backdrop-filter: blur(2px);
+  border: 2px solid #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px #4d9dc733;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.hidden {
+  display: none;
+}
+
+.hud {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.game-area {
+  position: relative;
+  width: 100%;
+  height: 420px;
+  border-radius: 16px;
+  border: 2px solid #9bcff4;
+  background: linear-gradient(180deg, #b5ecff 0%, #eafcff 65%, #e2f4d8 100%);
+  overflow: hidden;
+}
+
+.player {
+  position: absolute;
+  bottom: 12px;
+  width: 70px;
+  height: 38px;
+  border-radius: 20px;
+  background: #ff8f70;
+  box-shadow: inset 0 -6px 0 #d86a4f;
+}
+
+.coin {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #fff8b8 0%, #ffd84d 45%, #f3b312 100%);
+  border: 2px solid #e6a401;
+}
+
+.actions {
+  margin-top: 12px;
+}
+
+button {
+  border: 0;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+button.primary {
+  color: #fff;
+  background: linear-gradient(180deg, #6fbbff 0%, #4c97e8 100%);
+}
+
+button.danger {
+  color: #fff;
+  background: linear-gradient(180deg, #f16f7e 0%, #dc4f65 100%);
+}
+
+.leaderboard-panel ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.leaderboard-panel li {
+  line-height: 1.7;
+}
