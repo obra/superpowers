@@ -13,7 +13,8 @@ if [[ -z "$SCREEN_DIR" ]]; then
   exit 1
 fi
 
-PID_FILE="${SCREEN_DIR}/.server.pid"
+META_DIR="${SCREEN_DIR}/.meta"
+PID_FILE="${META_DIR}/.server.pid"
 
 if [[ -f "$PID_FILE" ]]; then
   pid=$(cat "$PID_FILE")
@@ -42,7 +43,7 @@ if [[ -f "$PID_FILE" ]]; then
     exit 1
   fi
 
-  rm -f "$PID_FILE" "${SCREEN_DIR}/.server.log"
+  rm -f "$PID_FILE" "${META_DIR}/.server.log"
 
   # Only delete ephemeral /tmp directories
   if [[ "$SCREEN_DIR" == /tmp/* ]]; then
