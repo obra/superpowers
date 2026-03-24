@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Scaffold the Svelte Todo test project
 # Usage: ./scaffold.sh /path/to/target/directory
 
