@@ -83,12 +83,11 @@ else
   SCREEN_DIR="/tmp/brainstorm-${SESSION_ID}"
 fi
 
-META_DIR="${SCREEN_DIR}/.meta"
-PID_FILE="${META_DIR}/.server.pid"
-LOG_FILE="${META_DIR}/.server.log"
+PID_FILE="${SCREEN_DIR}/.server.pid"
+LOG_FILE="${SCREEN_DIR}/.server.log"
 
-# Create fresh session directory and metadata subdirectory
-mkdir -p "$SCREEN_DIR" "$META_DIR"
+# Create fresh session directory
+mkdir -p "$SCREEN_DIR"
 
 # Kill any existing server
 if [[ -f "$PID_FILE" ]]; then

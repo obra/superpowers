@@ -103,9 +103,9 @@ async function runTests() {
       return Promise.resolve();
     });
 
-    await test('writes .server-info file to .meta/', () => {
-      const infoPath = path.join(TEST_DIR, '.meta', '.server-info');
-      assert(fs.existsSync(infoPath), '.meta/.server-info should exist');
+    await test('writes .server-info file', () => {
+      const infoPath = path.join(TEST_DIR, '.server-info');
+      assert(fs.existsSync(infoPath), '.server-info should exist');
       const info = JSON.parse(fs.readFileSync(infoPath, 'utf-8').trim());
       assert.strictEqual(info.type, 'server-started');
       assert.strictEqual(info.port, TEST_PORT);
@@ -118,7 +118,7 @@ async function runTests() {
     await test('serves waiting page when no screens exist', async () => {
       const res = await fetch(`http://localhost:${TEST_PORT}/`);
       assert.strictEqual(res.status, 200);
-      assert(res.body.includes('Waiting for the agent'), 'Should show waiting message');
+      assert(res.body.includes('Waiting for Claude'), 'Should show waiting message');
     });
 
     await test('injects helper.js into waiting page', async () => {
@@ -206,9 +206,9 @@ async function runTests() {
       ws.close();
     });
 
-    await test('writes choice events to .meta/.events file', async () => {
+    await test('writes choice events to .events file', async () => {
       // Clean up events from prior tests
-      const eventsFile = path.join(TEST_DIR, '.meta', '.events');
+      const eventsFile = path.join(TEST_DIR, '.events');
       if (fs.existsSync(eventsFile)) fs.unlinkSync(eventsFile);
 
       const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
@@ -225,8 +225,8 @@ async function runTests() {
       ws.close();
     });
 
-    await test('does NOT write non-choice events to .meta/.events file', async () => {
-      const eventsFile = path.join(TEST_DIR, '.meta', '.events');
+    await test('does NOT write non-choice events to .events file', async () => {
+      const eventsFile = path.join(TEST_DIR, '.events');
       if (fs.existsSync(eventsFile)) fs.unlinkSync(eventsFile);
 
       const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
@@ -347,9 +347,9 @@ async function runTests() {
       ws.close();
     });
 
-    await test('clears .meta/.events on new screen', async () => {
+    await test('clears .events on new screen', async () => {
       // Create an .events file
-      const eventsFile = path.join(TEST_DIR, '.meta', '.events');
+      const eventsFile = path.join(TEST_DIR, '.events');
       fs.writeFileSync(eventsFile, '{"choice":"a"}\n');
       assert(fs.existsSync(eventsFile));
 

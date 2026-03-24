@@ -13,7 +13,6 @@ The subagent review loop (dispatching a fresh agent to review plans/specs) doubl
 
 ### Bug Fixes
 
-- **Brainstorm server metadata isolation** — metadata files (`.server-info`, `.events`, `.server.pid`, `.server.log`, `.server-stopped`) are now written to a `.meta/` subdirectory within the session directory, so they are not accessible over the web server's `/files/` route. (Reported by 吉田仁)
 - **writing-skills** — corrected false claim that SKILL.md frontmatter supports "only two fields"; now says "two required fields" and links to the agentskills.io specification for all supported fields (PR #882 by @arittr)
 
 ### Codex App Compatibility

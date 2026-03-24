@@ -77,7 +77,6 @@ const PORT = process.env.BRAINSTORM_PORT || (49152 + Math.floor(Math.random() * 
 const HOST = process.env.BRAINSTORM_HOST || '127.0.0.1';
 const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'localhost' : HOST);
 const SCREEN_DIR = process.env.BRAINSTORM_DIR || '/tmp/brainstorm';
-const META_DIR = path.join(SCREEN_DIR, '.meta');
 const OWNER_PID = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_OWNER_PID) : null;
 
 const MIME_TYPES = {
@@ -231,7 +230,7 @@ function handleMessage(text) {
   touchActivity();
   console.log(JSON.stringify({ source: 'user-event', ...event }));
   if (event.choice) {
-    const eventsFile = path.join(META_DIR, '.events');
+    const eventsFile = path.join(SCREEN_DIR, '.events');
     fs.appendFileSync(eventsFile, JSON.stringify(event) + '\n');
   }
 }
@@ -260,7 +259,6 @@ const debounceTimers = new Map();
 
 function startServer() {
   if (!fs.existsSync(SCREEN_DIR)) fs.mkdirSync(SCREEN_DIR, { recursive: true });
-  if (!fs.existsSync(META_DIR)) fs.mkdirSync(META_DIR, { recursive: true });
 
   // Track known files to distinguish new screens from updates.
   // macOS fs.watch reports 'rename' for both new files and overwrites,
@@ -285,7 +283,7 @@ function startServer() {
 
       if (!knownFiles.has(filename)) {
         knownFiles.add(filename);
-        const eventsFile = path.join(META_DIR, '.events');
+        const eventsFile = path.join(SCREEN_DIR, '.events');
         if (fs.existsSync(eventsFile)) fs.unlinkSync(eventsFile);
         console.log(JSON.stringify({ type: 'screen-added', file: filePath }));
       } else {
@@ -299,10 +297,10 @@ function startServer() {
 
   function shutdown(reason) {
     console.log(JSON.stringify({ type: 'server-stopped', reason }));
-    const infoFile = path.join(META_DIR, '.server-info');
+    const infoFile = path.join(SCREEN_DIR, '.server-info');
     if (fs.existsSync(infoFile)) fs.unlinkSync(infoFile);
     fs.writeFileSync(
-      path.join(META_DIR, '.server-stopped'),
+      path.join(SCREEN_DIR, '.server-stopped'),
       JSON.stringify({ reason, timestamp: Date.now() }) + '\n'
     );
     watcher.close();
@@ -329,7 +327,7 @@ function startServer() {
       screen_dir: SCREEN_DIR
     });
     console.log(info);
-    fs.writeFileSync(path.join(META_DIR, '.server-info'), info + '\n');
+    fs.writeFileSync(path.join(SCREEN_DIR, '.server-info'), info + '\n');
   });
 }
 
