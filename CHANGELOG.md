@@ -1,5 +1,25 @@
 # Changelog
 
+## [5.0.6] - 2026-03-24
+
+### Added
+
+- **ruby-commit-message skill**: New skill for writing idiomatic Ruby-style git commit messages. Covers tense, length limits, subject/body separation, and Ruby/Rails-specific conventions for referencing classes, methods, and modules. ([PR #1](https://github.com/lucianghinda/superpowers-ruby/pull/1))
+- **superpowers:compound skill**: Captures freshly solved problems into structured `docs/solutions/` learning docs using parallel subagents. Ported from [EveryInc/compound-engineering-plugin](https://github.com/EveryInc/compound-engineering-plugin), adapted to superpowers-ruby conventions: `name`/`description`-only frontmatter, CSO-compliant trigger-first description, compressed from 1901 to 690 words. ([PR #2](https://github.com/lucianghinda/superpowers-ruby/pull/2))
+- **superpowers:compound-refresh skill**: Maintains `docs/solutions/` accuracy over time. Supports interactive and autonomous (`mode:autonomous`) modes. Four maintenance outcomes: Keep, Update, Replace, Archive. Includes Common Mistakes section covering Update/Replace confusion, Archive vs Replace with active problem domains, and autonomous report completeness. ([PR #2](https://github.com/lucianghinda/superpowers-ruby/pull/2))
+
+### Improved
+
+- **ruby skill — CSO description**: Rewrote description to be trigger-first (`Use when...`) instead of leading with a content summary. Added `raise vs fail` and `memoization` as keywords so the skill surfaces for the exact questions it uniquely answers. ([PR #3](https://github.com/lucianghinda/superpowers-ruby/pull/3))
+- **ruby skill — Overview section**: Added 2-sentence overview clarifying the skill covers patterns agents miss by default — the Weirich raise/fail distinction, nil-safe memoization, result objects, and performance-conscious enumeration. ([PR #3](https://github.com/lucianghinda/superpowers-ruby/pull/3))
+- **ruby skill — Common Mistakes table**: Added 6-entry table covering `raise` vs `fail`, `||=` nil caveat, `+=` vs `<<`, `rescue Exception`, deep `&.` chains, and missing `frozen_string_literal`. ([PR #3](https://github.com/lucianghinda/superpowers-ruby/pull/3))
+
+### Tests
+
+- Added skill-triggering test for `compound`: naive N+1 query scenario confirms the skill triggers from a natural prompt.
+- Added explicit-skill-request test for `compound-refresh`: user-named invocation test (`disable-model-invocation: true` makes auto-triggering intentionally unavailable).
+- Added skill-triggering test for `ruby`: `raise` vs `fail` question — confirmed by subagent testing to discriminate skill-loaded vs memory-only answers.
+
 ## [5.0.5] - 2026-03-17
 
 ### Fixed
