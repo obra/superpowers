@@ -17,6 +17,7 @@ The subagent review loop (dispatching a fresh agent to review plans/specs) doubl
 
 ### Bug Fixes
 
+- **Owner-PID false positives** — the brainstorm server's `ownerAlive()` check treated EPERM (permission denied) the same as ESRCH (process not found), causing the server to self-terminate within 60 seconds whenever the owner process ran as a different user. This affected WSL (owner is a Windows process), Tailscale SSH, and any cross-user scenario. Fixed by treating EPERM as "alive". (#879)
 - **writing-skills** — corrected false claim that SKILL.md frontmatter supports "only two fields"; now says "two required fields" and links to the agentskills.io specification for all supported fields (PR #882 by @arittr)
 
 ### Codex App Compatibility
