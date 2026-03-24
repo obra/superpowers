@@ -13,6 +13,17 @@ Start by understanding the current project context, then ask questions one at a 
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
 </HARD-GATE>
 
+## Channel Awareness (Telegram, Discord, etc.)
+
+When a session is initiated from a channel (Telegram, Discord, etc.), the user's messages arrive wrapped in `<channel source="..." chat_id="..." ...>` tags. **Detect this on the very first message.** If channel tags are present:
+
+1. **Route ALL responses through the channel's reply tool.** Plain terminal text is invisible to channel users. Every clarifying question, proposal, design section, and status update MUST be sent via the appropriate reply tool (e.g., `telegram:reply` with the `chat_id` from the inbound message). Terminal output alone is NOT sufficient — the user will see silence.
+2. **Skip the visual companion offer.** Remote channel users cannot open a local browser URL. Proceed with text-only brainstorming unconditionally.
+3. **Keep messages channel-friendly.** Prefer shorter messages. Telegram has a 4096-character limit per message — split longer design sections into multiple reply calls if needed. Use Markdown formatting supported by the channel (Telegram supports bold, italic, code, and pre blocks).
+4. **Wait for channel responses.** After sending a question via the reply tool, wait for the user's next channel message before proceeding. The back-and-forth works the same as terminal — one question at a time — but routed through the channel.
+
+**Detection rule:** If any message in the conversation contains a `<channel source="...">` tag, you are in a channel session. This applies for the entire session, not just the first message.
+
 ## Anti-Pattern: "This Is Too Simple To Need A Design"
 
 Every project goes through this process. A todo list, a single-function utility, a config change — all of them. "Simple" projects are where unexamined assumptions cause the most wasted work. The design can be short (a few sentences for truly simple projects), but you MUST present it and get approval.
@@ -22,20 +33,23 @@ Every project goes through this process. A todo list, a single-function utility,
 You MUST create a task for each of these items and complete them in order:
 
 1. **Explore project context** — check files, docs, recent commits
-2. **Offer visual companion** (if topic will involve visual questions) — this is its own message, not combined with a clarifying question. See the Visual Companion section below.
-3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-4. **Propose 2-3 approaches** — with trade-offs and your recommendation
-5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
-7. **Spec review loop** — dispatch spec-document-reviewer subagent with precisely crafted review context (never your session history); fix issues and re-dispatch until approved (max 3 iterations, then surface to human)
-8. **User reviews written spec** — ask user to review the spec file before proceeding
-9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+2. **Detect channel context** — if inbound message has `<channel source="...">` tags, note the `chat_id` and route all responses through the channel's reply tool for the rest of the session
+3. **Offer visual companion** (if topic will involve visual questions AND not in a channel session) — this is its own message, not combined with a clarifying question. See the Visual Companion section below.
+4. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
+5. **Propose 2-3 approaches** — with trade-offs and your recommendation
+6. **Present design** — in sections scaled to their complexity, get user approval after each section
+7. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
+8. **Spec review loop** — dispatch spec-document-reviewer subagent with precisely crafted review context (never your session history); fix issues and re-dispatch until approved (max 3 iterations, then surface to human)
+9. **User reviews written spec** — ask user to review the spec file before proceeding
+10. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
 
 ```dot
 digraph brainstorming {
     "Explore project context" [shape=box];
+    "Channel session?" [shape=diamond];
+    "Route via channel reply tool\n(all subsequent output)" [shape=box];
     "Visual questions ahead?" [shape=diamond];
     "Offer Visual Companion\n(own message, no other content)" [shape=box];
     "Ask clarifying questions" [shape=box];
@@ -48,7 +62,10 @@ digraph brainstorming {
     "User reviews spec?" [shape=diamond];
     "Invoke writing-plans skill" [shape=doublecircle];
 
-    "Explore project context" -> "Visual questions ahead?";
+    "Explore project context" -> "Channel session?";
+    "Channel session?" -> "Route via channel reply tool\n(all subsequent output)" [label="yes"];
+    "Channel session?" -> "Visual questions ahead?" [label="no"];
+    "Route via channel reply tool\n(all subsequent output)" -> "Ask clarifying questions";
     "Visual questions ahead?" -> "Offer Visual Companion\n(own message, no other content)" [label="yes"];
     "Visual questions ahead?" -> "Ask clarifying questions" [label="no"];
     "Offer Visual Companion\n(own message, no other content)" -> "Ask clarifying questions";
@@ -147,6 +164,8 @@ Wait for the user's response. If they request changes, make them and re-run the 
 ## Visual Companion
 
 A browser-based companion for showing mockups, diagrams, and visual options during brainstorming. Available as a tool — not a mode. Accepting the companion means it's available for questions that benefit from visual treatment; it does NOT mean every question goes through the browser.
+
+**Channel sessions:** Do NOT offer the visual companion when the session is from a channel (Telegram, Discord, etc.) — the user cannot open local URLs. Skip this section entirely and use text-only brainstorming.
 
 **Offering the companion:** When you anticipate that upcoming questions will involve visual content (mockups, layouts, diagrams), offer it once for consent:
 > "Some of what we're working on might be easier to explain if I can show it to you in a web browser. I can put together mockups, diagrams, comparisons, and other visuals as we go. This feature is still new and can be token-intensive. Want to try it? (Requires opening a local URL)"
