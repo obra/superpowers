@@ -68,8 +68,6 @@ When skills reference tools you don't have, substitute OpenCode equivalents:
 - \`Skill\` tool → OpenCode's native \`skill\` tool
 - \`Read\`, \`Write\`, \`Edit\`, \`Bash\` → Your native tools
 
-**Skills location:**
-Ultrapowers skills are in \`${configDir}/skills/ultrapowers/\`
 Use OpenCode's native \`skill\` tool to list and load skills.`;
 
     return `<EXTREMELY_IMPORTANT>
