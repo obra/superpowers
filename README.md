@@ -82,6 +82,13 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
 
+### GitHub Copilot CLI
+
+```bash
+copilot plugin marketplace add obra/superpowers-marketplace
+copilot plugin install superpowers@superpowers-marketplace
+```
+
 ### Gemini CLI
 
 ```bash

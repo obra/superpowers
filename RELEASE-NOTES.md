@@ -1,5 +1,13 @@
 # Superpowers Release Notes
 
+## Unreleased
+
+### GitHub Copilot CLI Support
+
+- **SessionStart context injection** — Copilot CLI v1.0.11 added support for `additionalContext` in sessionStart hook output. The session-start hook now detects the `COPILOT_CLI` environment variable and emits the SDK-standard `{ "additionalContext": "..." }` format, giving Copilot CLI users the full superpowers bootstrap at session start. (Original fix by @culinablaz in PR #910)
+- **Tool mapping** — added `references/copilot-tools.md` with the full Claude Code to Copilot CLI tool equivalence table
+- **Skill and README updates** — added Copilot CLI to the `using-superpowers` skill's platform instructions and README installation section
+
 ## v5.0.6 (2026-03-24)
 
 ### Inline Self-Review Replaces Subagent Review Loops
