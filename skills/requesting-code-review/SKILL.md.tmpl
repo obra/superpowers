@@ -121,7 +121,7 @@ For workflow-routed final review, also write a project-scoped code-review artifa
 - Use the current `HEAD` exactly as written; if new repo changes land after review, treat the earlier artifact as stale and rerun `requesting-code-review`.
 
 ```bash
-_SLUG_ENV=$("$_FEATUREFORGE_ROOT/bin/featureforge" repo slug 2>/dev/null || true)
+_SLUG_ENV=$("$_FEATUREFORGE_BIN" repo slug 2>/dev/null || true)
 if [ -n "$_SLUG_ENV" ]; then
   eval "$_SLUG_ENV"
 fi
@@ -171,7 +171,7 @@ You: Let me request the final code review gate before branch completion.
 
 APPROVED_PLAN_PATH=docs/featureforge/plans/deployment-plan.md
 SOURCE_SPEC_PATH=docs/featureforge/specs/deployment-plan-design.md
-ANALYZE_JSON=$("$_FEATUREFORGE_ROOT/bin/featureforge" plan contract analyze-plan --spec "$SOURCE_SPEC_PATH" --plan "$APPROVED_PLAN_PATH" --format json)
+ANALYZE_JSON=$("$_FEATUREFORGE_BIN" plan contract analyze-plan --spec "$SOURCE_SPEC_PATH" --plan "$APPROVED_PLAN_PATH" --format json)
 CONTRACT_STATE=$(printf '%s\n' "$ANALYZE_JSON" | node -e 'const fs = require("fs"); const parsed = JSON.parse(fs.readFileSync(0, "utf8")); process.stdout.write(parsed.contract_state || "")')
 PACKET_BUILDABLE_TASKS=$(printf '%s\n' "$ANALYZE_JSON" | node -e 'const fs = require("fs"); const parsed = JSON.parse(fs.readFileSync(0, "utf8")); process.stdout.write(String(parsed.packet_buildable_tasks ?? ""))')
 TASK_COUNT=$(printf '%s\n' "$ANALYZE_JSON" | node -e 'const fs = require("fs"); const parsed = JSON.parse(fs.readFileSync(0, "utf8")); process.stdout.write(String(parsed.task_count ?? ""))')
@@ -179,7 +179,7 @@ if [ "$CONTRACT_STATE" != "valid" ] || [ "$PACKET_BUILDABLE_TASKS" != "$TASK_COU
   echo "Stop and return to execution: approved artifacts are stale or malformed."
   exit 1
 fi
-STATUS_JSON=$("$_FEATUREFORGE_ROOT/bin/featureforge" plan execution status --plan "$APPROVED_PLAN_PATH")
+STATUS_JSON=$("$_FEATUREFORGE_BIN" plan execution status --plan "$APPROVED_PLAN_PATH")
 ACTIVE_TASK=$(printf '%s\n' "$STATUS_JSON" | node -e 'const fs = require("fs"); const parsed = JSON.parse(fs.readFileSync(0, "utf8")); process.stdout.write(parsed.active_task == null ? "" : String(parsed.active_task))')
 BLOCKING_TASK=$(printf '%s\n' "$STATUS_JSON" | node -e 'const fs = require("fs"); const parsed = JSON.parse(fs.readFileSync(0, "utf8")); process.stdout.write(parsed.blocking_task == null ? "" : String(parsed.blocking_task))')
 RESUME_TASK=$(printf '%s\n' "$STATUS_JSON" | node -e 'const fs = require("fs"); const parsed = JSON.parse(fs.readFileSync(0, "utf8")); process.stdout.write(parsed.resume_task == null ? "" : String(parsed.resume_task))')
@@ -192,14 +192,14 @@ if [ -z "$EXECUTION_EVIDENCE_PATH" ]; then
   echo "Stop and return to execution: missing execution evidence path."
   exit 1
 fi
-REVIEW_GATE_JSON=$("$_FEATUREFORGE_ROOT/bin/featureforge" plan execution gate-review --plan "$APPROVED_PLAN_PATH")
+REVIEW_GATE_JSON=$("$_FEATUREFORGE_BIN" plan execution gate-review --plan "$APPROVED_PLAN_PATH")
 REVIEW_ALLOWED=$(printf '%s\n' "$REVIEW_GATE_JSON" | node -e 'const fs = require("fs"); const parsed = JSON.parse(fs.readFileSync(0, "utf8")); process.stdout.write(parsed.allowed ? "true" : "false")')
 if [ "$REVIEW_ALLOWED" != "true" ]; then
   echo "Stop and return to execution: review gate rejected the current execution evidence."
   exit 1
 fi
-TASK_PACKET_CONTEXT_TASK_1=$("$_FEATUREFORGE_ROOT/bin/featureforge" plan contract build-task-packet --plan "$APPROVED_PLAN_PATH" --task 1 --format markdown --persist yes)
-TASK_PACKET_CONTEXT_TASK_2=$("$_FEATUREFORGE_ROOT/bin/featureforge" plan contract build-task-packet --plan "$APPROVED_PLAN_PATH" --task 2 --format markdown --persist yes)
+TASK_PACKET_CONTEXT_TASK_1=$("$_FEATUREFORGE_BIN" plan contract build-task-packet --plan "$APPROVED_PLAN_PATH" --task 1 --format markdown --persist yes)
+TASK_PACKET_CONTEXT_TASK_2=$("$_FEATUREFORGE_BIN" plan contract build-task-packet --plan "$APPROVED_PLAN_PATH" --task 2 --format markdown --persist yes)
 BASE_BRANCH=<same locally derived review base branch from Step 2>
 BASE_SHA=$(git merge-base HEAD "origin/$BASE_BRANCH" 2>/dev/null || git merge-base HEAD "$BASE_BRANCH" 2>/dev/null || git rev-parse HEAD~1)
 HEAD_SHA=$(git rev-parse HEAD)

@@ -1,3 +1,4 @@
+use std::fs;
 use std::path::{Path, PathBuf};
 
 use sha2::{Digest, Sha256};
@@ -21,6 +22,28 @@ pub struct SlugIdentity {
     pub safe_branch: String,
 }
 
+pub fn canonicalize_repo_root_path(path: &Path) -> PathBuf {
+    fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
+}
+
+pub fn canonicalize_repo_root_string(path: &Path) -> String {
+    canonicalize_repo_root_path(path)
+        .to_string_lossy()
+        .into_owned()
+}
+
+pub fn stored_repo_root_matches_current(stored_repo_root: &str, current_repo_root: &Path) -> bool {
+    if stored_repo_root.is_empty() {
+        return false;
+    }
+    let current = canonicalize_repo_root_string(current_repo_root);
+    if stored_repo_root == current {
+        return true;
+    }
+    let stored_path = Path::new(stored_repo_root);
+    stored_path.is_absolute() && canonicalize_repo_root_string(stored_path) == current
+}
+
 pub fn discover_repo_identity(start_dir: &Path) -> Result<RepositoryIdentity, DiagnosticError> {
     let repo = gix::discover(start_dir).map_err(|err| {
         DiagnosticError::new(
@@ -38,6 +61,7 @@ pub fn discover_repo_identity(start_dir: &Path) -> Result<RepositoryIdentity, Di
     let repo_root = repo
         .workdir()
         .map_or_else(|| repo.path().to_path_buf(), Path::to_path_buf);
+    let repo_root = canonicalize_repo_root_path(&repo_root);
     let branch_name = if head.is_detached() {
         String::from("current")
     } else {
@@ -72,8 +96,7 @@ pub fn discover_slug_identity(start_dir: &Path) -> SlugIdentity {
             }
         }
         Err(_) => {
-            let repo_root =
-                std::fs::canonicalize(start_dir).unwrap_or_else(|_| start_dir.to_path_buf());
+            let repo_root = canonicalize_repo_root_path(start_dir);
             let branch_name = String::from("current");
             SlugIdentity {
                 repo_slug: derive_repo_slug(&repo_root, None),
@@ -114,8 +137,15 @@ fn slug_from_remote(remote_url: &str) -> Option<String> {
     Some(format!("{owner}-{repo}"))
 }
 
+pub fn sha256_hex(bytes: &[u8]) -> String {
+    let digest = Sha256::digest(bytes);
+    format!("{digest:x}")
+}
+
+pub fn short_sha256_hex(bytes: &[u8], width: usize) -> String {
+    sha256_hex(bytes)[..width].to_owned()
+}
+
 fn hash_repo_root(repo_root: &Path) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(repo_root.to_string_lossy().as_bytes());
-    format!("{:x}", hasher.finalize())[..12].to_owned()
+    short_sha256_hex(repo_root.to_string_lossy().as_bytes(), 12)
 }

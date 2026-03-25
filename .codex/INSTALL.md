@@ -75,6 +75,10 @@ Use `[agents]` in your Codex config to tune global limits such as `max_threads`,
 
 Runtime helper state lives in `~/.featureforge/`. Generated skill preambles use this directory for session markers, contributor logs, update-check cache files, and project-scoped artifacts under `~/.featureforge/projects/`.
 
+Generated skill preambles always invoke the packaged install binary under `~/.featureforge/install/bin/` (`featureforge` on Unix, `featureforge.exe` on Windows). That packaged install binary resolves the active runtime root through `featureforge repo runtime-root --path`, so repo checkouts and `~/.featureforge/install` use the same runtime-owned contract without swapping executables.
+
+Supported first-turn entry goes through `featureforge session-entry resolve --message-file <path>`. Spawned subagents pass `--spawned-subagent` and bypass the first-turn prompt by default unless they explicitly opt back in.
+
 Optional: enable contributor mode for future sessions with:
 
 ```bash
@@ -107,7 +111,9 @@ Skills update instantly through the symlink.
 
 If you copied the Codex agent file on Windows, copy `~/.featureforge/install/.codex/agents/code-reviewer.toml` into `~/.codex/agents/code-reviewer.toml` again after updating.
 
-Generated skill preambles run `~/.featureforge/install/bin/featureforge update-check` automatically when that install root is active, so new sessions can surface `UPGRADE_AVAILABLE` or `JUST_UPGRADED` without extra setup.
+When `~/.featureforge/install` is the active runtime root, generated skill preambles run the packaged install binary from `~/.featureforge/install/bin/` (`featureforge` on Unix, `featureforge.exe` on Windows) for `update-check` automatically so new sessions can surface `UPGRADE_AVAILABLE` or `JUST_UPGRADED` without extra setup.
+
+For the canonical deterministic validation matrix after install or update, see `docs/testing.md` in this repository.
 
 ## Uninstalling
 

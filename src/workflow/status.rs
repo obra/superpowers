@@ -10,13 +10,14 @@ use crate::cli::workflow::ArtifactKind;
 use crate::contracts::plan::AnalyzePlanReport;
 use crate::contracts::runtime::analyze_contract_report;
 use crate::diagnostics::{DiagnosticError, FailureClass};
-use crate::git::{RepositoryIdentity, discover_repo_identity};
+use crate::git::{RepositoryIdentity, discover_repo_identity, stored_repo_root_matches_current};
 use crate::paths::{RepoPath, featureforge_state_dir};
 use crate::session_entry;
 use crate::workflow::manifest::{
     ManifestLoadResult, WorkflowManifest, load_manifest, load_manifest_read_only, manifest_path,
     recover_slug_changed_manifest, recover_slug_changed_manifest_read_only, save_manifest,
 };
+use crate::workflow::markdown_scan::markdown_files_under;
 
 const ACTIVE_SPEC_ROOT: &str = "docs/featureforge/specs";
 const ACTIVE_PLAN_ROOT: &str = "docs/featureforge/plans";
@@ -139,7 +140,7 @@ impl WorkflowRuntime {
             }
             ManifestLoadResult::Loaded(manifest) => {
                 let mut reasons = Vec::new();
-                if manifest.repo_root != identity.repo_root.to_string_lossy() {
+                if !stored_repo_root_matches_current(&manifest.repo_root, &identity.repo_root) {
                     reasons.push(String::from("repo_root_mismatch"));
                 }
                 if manifest.branch != identity.branch_name {
@@ -377,7 +378,7 @@ impl WorkflowRuntime {
 impl WorkflowRuntime {
     fn matching_manifest(&self) -> Option<&WorkflowManifest> {
         self.manifest.as_ref().filter(|manifest| {
-            manifest.repo_root == self.identity.repo_root.to_string_lossy()
+            stored_repo_root_matches_current(&manifest.repo_root, &self.identity.repo_root)
                 && manifest.branch == self.identity.branch_name
         })
     }
@@ -891,12 +892,6 @@ fn scan_plans(repo_root: &Path) -> Vec<WorkflowPlanCandidate> {
     candidates
 }
 
-fn markdown_files_under(root: &Path) -> Vec<PathBuf> {
-    let mut files = Vec::new();
-    visit_markdown_files(root, &mut files);
-    files
-}
-
 fn apply_fallback_limit<T>(mut candidates: Vec<T>) -> (Vec<T>, bool) {
     let Some(limit) = fallback_limit() else {
         return (candidates, false);
@@ -913,21 +908,6 @@ fn fallback_limit() -> Option<usize> {
         .ok()
         .and_then(|value| value.parse::<usize>().ok())
         .filter(|limit| *limit > 0)
-}
-
-fn visit_markdown_files(root: &Path, files: &mut Vec<PathBuf>) {
-    let Ok(entries) = fs::read_dir(root) else {
-        return;
-    };
-
-    for entry in entries.flatten() {
-        let path = entry.path();
-        if path.is_dir() {
-            visit_markdown_files(&path, files);
-        } else if path.extension().and_then(std::ffi::OsStr::to_str) == Some("md") {
-            files.push(path);
-        }
-    }
 }
 
 fn read_session_entry(state_dir: &Path) -> SessionEntryState {

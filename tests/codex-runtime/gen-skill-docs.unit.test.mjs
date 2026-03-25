@@ -56,16 +56,41 @@ test('base and review shell builders include their expected contract lines', () 
   assert.equal(buildReviewShellLines().some((line) => line.includes('_TODOS_FORMAT=')), true);
 });
 
-test('shared shell builders detect and invoke the canonical featureforge binary', () => {
+test('shared shell builders delegate runtime-root discovery to the helper contract', () => {
   const rootDetection = buildRootDetection().join('\n');
   const baseShell = buildBaseShellLines().join('\n');
 
-  assert.match(rootDetection, /candidate\/bin\/featureforge/);
-  assert.doesNotMatch(rootDetection, /featureforge-update-check/);
-  assert.doesNotMatch(rootDetection, /featureforge-config/);
+  assert.match(rootDetection, /repo runtime-root --path/);
+  assert.match(rootDetection, /\$HOME\/\.featureforge\/install/);
+  assert.match(rootDetection, /_FEATUREFORGE_INSTALL_ROOT/);
+  assert.match(rootDetection, /_FEATUREFORGE_BIN="\$_FEATUREFORGE_INSTALL_ROOT\/bin\/featureforge"/);
+  assert.match(rootDetection, /featureforge\.exe/);
+  assert.match(rootDetection, /_FEATUREFORGE_BIN="\$_FEATUREFORGE_INSTALL_ROOT\/bin\/featureforge\.exe"/);
+  assert.doesNotMatch(rootDetection, /_REPO_ROOT\/bin\/featureforge/);
+  assert.doesNotMatch(rootDetection, /_FEATUREFORGE_ROOT\/bin\/featureforge/);
+  assert.doesNotMatch(rootDetection, /\$INSTALL_DIR\/bin\/featureforge/);
+  assert.doesNotMatch(rootDetection, /command -v featureforge/);
+  assert.doesNotMatch(rootDetection, /_IS_FEATUREFORGE_RUNTIME_ROOT/);
+  assert.doesNotMatch(rootDetection, /\.codex\/featureforge/);
+  assert.doesNotMatch(rootDetection, /\.copilot\/featureforge/);
+  assert.doesNotMatch(rootDetection, /sed -n/);
 
-  assert.match(baseShell, /bin\/featureforge" update-check/);
-  assert.match(baseShell, /bin\/featureforge" config get featureforge_contributor/);
+  // Intentional invariant: generated skill runtime commands must stay on the
+  // packaged install binary at ~/.featureforge/install/bin/featureforge.
+  // Runtime-root resolution only selects companion files from the install. It
+  // must NEVER switch runtime execution back to a root-selected binary or a
+  // PATH-selected fallback.
+  assert.match(baseShell, /repo runtime-root --path/);
+  assert.match(baseShell, /"\$_FEATUREFORGE_BIN" update-check/);
+  assert.match(baseShell, /"\$_FEATUREFORGE_BIN" config get featureforge_contributor/);
+  assert.doesNotMatch(baseShell, /repo runtime-root --path.*\|\| true/);
+  assert.doesNotMatch(baseShell, /\$_REPO_ROOT\/bin\/featureforge/);
+  assert.doesNotMatch(baseShell, /\$_FEATUREFORGE_ROOT\/bin\/featureforge/);
+  assert.doesNotMatch(baseShell, /\$_FEATUREFORGE_ROOT\/bin\/featureforge\.exe/);
+  assert.doesNotMatch(baseShell, /\$INSTALL_DIR\/bin\/featureforge/);
+  assert.doesNotMatch(baseShell, /\$INSTALL_DIR\/bin\/featureforge\.exe/);
+  assert.doesNotMatch(baseShell, /\$\{_FEATUREFORGE_BIN:-featureforge\}/);
+  assert.doesNotMatch(baseShell, /command -v featureforge/);
   assert.doesNotMatch(baseShell, /featureforge-update-check/);
   assert.doesNotMatch(baseShell, /featureforge-config/);
 });
@@ -78,8 +103,9 @@ test('using-featureforge bypass helpers render the decision-state contract', () 
   assert.match(bypassGate, /enabled/);
   assert.match(bypassGate, /bypassed/);
   const normalStack = buildUsingFeatureForgeNormalStackSection();
-  assert.match(normalStack, /bin\/featureforge" update-check/);
-  assert.match(normalStack, /bin\/featureforge" config get featureforge_contributor/);
+  assert.match(normalStack, /"\$_FEATUREFORGE_BIN" update-check/);
+  assert.match(normalStack, /"\$_FEATUREFORGE_BIN" config get featureforge_contributor/);
+  assert.doesNotMatch(normalStack, /\$_FEATUREFORGE_ROOT\/bin\/featureforge/);
   assert.doesNotMatch(normalStack, /featureforge-update-check/);
   assert.doesNotMatch(normalStack, /featureforge-config/);
   assert.match(normalStack, /_SESSIONS=/);

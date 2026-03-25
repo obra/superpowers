@@ -4,8 +4,20 @@ $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = Split-Path -Parent $ScriptDir
 $TargetKey = if ($env:FEATUREFORGE_PREBUILT_TARGET) { $env:FEATUREFORGE_PREBUILT_TARGET } else { "windows-x64" }
-$RustTarget = if ($env:FEATUREFORGE_PREBUILT_RUST_TARGET) { $env:FEATUREFORGE_PREBUILT_RUST_TARGET } else { "x86_64-pc-windows-msvc" }
-$BinaryName = if ($env:FEATUREFORGE_PREBUILT_BINARY) { $env:FEATUREFORGE_PREBUILT_BINARY } else { "featureforge.exe" }
+switch ($TargetKey) {
+  "darwin-arm64" {
+    $DefaultRustTarget = "aarch64-apple-darwin"
+    $BinaryName = "featureforge"
+  }
+  "windows-x64" {
+    $DefaultRustTarget = "x86_64-pc-windows-msvc"
+    $BinaryName = "featureforge.exe"
+  }
+  default {
+    throw "unsupported FEATUREFORGE_PREBUILT_TARGET: $TargetKey"
+  }
+}
+$RustTarget = if ($env:FEATUREFORGE_PREBUILT_RUST_TARGET) { $env:FEATUREFORGE_PREBUILT_RUST_TARGET } else { $DefaultRustTarget }
 $Version = (Get-Content (Join-Path $RepoRoot "VERSION") -Raw).Trim()
 $OutputDir = Join-Path $RepoRoot "bin/prebuilt/$TargetKey"
 $OutputPath = Join-Path $OutputDir $BinaryName

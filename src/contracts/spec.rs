@@ -4,6 +4,7 @@ use std::path::Path;
 use schemars::JsonSchema;
 use serde::Serialize;
 
+use crate::contracts::headers;
 use crate::diagnostics::{DiagnosticError, FailureClass};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
@@ -54,12 +55,7 @@ pub fn parse_spec_source(path: &Path, source: String) -> Result<SpecDocument, Di
 }
 
 fn parse_required_header(source: &str, header: &str) -> Result<String, DiagnosticError> {
-    let prefix = format!("**{header}:** ");
-    source
-        .lines()
-        .find_map(|line| line.strip_prefix(&prefix))
-        .map(ToOwned::to_owned)
-        .ok_or_else(|| missing_header(header))
+    headers::parse_required_header(source, header).ok_or_else(|| missing_header(header))
 }
 
 fn parse_requirement_index(source: &str) -> Result<Vec<Requirement>, DiagnosticError> {

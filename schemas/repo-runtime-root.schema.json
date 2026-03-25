@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RuntimeRootOutput",
+  "type": "object",
+  "properties": {
+    "resolved": {
+      "type": "boolean"
+    },
+    "root": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "source": {
+      "$ref": "#/$defs/RuntimeRootSourceSchemaDoc"
+    },
+    "validation": {
+      "$ref": "#/$defs/RuntimeRootValidation"
+    }
+  },
+  "required": [
+    "resolved",
+    "source",
+    "validation"
+  ],
+  "$defs": {
+    "RuntimeRootSourceSchemaDoc": {
+      "type": "string",
+      "enum": [
+        "unresolved",
+        "featureforge_dir_env",
+        "repo_local",
+        "binary_adjacent",
+        "canonical_install"
+      ]
+    },
+    "RuntimeRootValidation": {
+      "type": "object",
+      "properties": {
+        "has_binary": {
+          "type": "boolean"
+        },
+        "has_version": {
+          "type": "boolean"
+        },
+        "upgrade_eligible": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "has_version",
+        "has_binary",
+        "upgrade_eligible"
+      ]
+    }
+  }
+}

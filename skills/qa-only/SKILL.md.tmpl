@@ -48,7 +48,7 @@ mkdir -p "$REPORT_DIR/screenshots"
 Before falling back to git-diff heuristics, look for richer QA input:
 
 ```bash
-_SLUG_ENV=$("$_FEATUREFORGE_ROOT/bin/featureforge" repo slug 2>/dev/null || true)
+_SLUG_ENV=$("$_FEATUREFORGE_BIN" repo slug 2>/dev/null || true)
 if [ -n "$_SLUG_ENV" ]; then
   eval "$_SLUG_ENV"
 fi
@@ -218,7 +218,7 @@ Write the local report to:
 When a current-branch test-plan artifact exists, also write a project-scoped outcome artifact:
 
 ```bash
-_SLUG_ENV=$("$_FEATUREFORGE_ROOT/bin/featureforge" repo slug 2>/dev/null || true)
+_SLUG_ENV=$("$_FEATUREFORGE_BIN" repo slug 2>/dev/null || true)
 if [ -n "$_SLUG_ENV" ]; then
   eval "$_SLUG_ENV"
 fi

@@ -208,7 +208,7 @@ For workflow-routed implementation work, also write a project-scoped release-rea
 - Use the base branch detected in Step 0 exactly as written; do not substitute a different branch name when persisting the artifact.
 
 ```bash
-_SLUG_ENV=$("$_FEATUREFORGE_ROOT/bin/featureforge" repo slug 2>/dev/null || true)
+_SLUG_ENV=$("$_FEATUREFORGE_BIN" repo slug 2>/dev/null || true)
 if [ -n "$_SLUG_ENV" ]; then
   eval "$_SLUG_ENV"
 fi

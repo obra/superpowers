@@ -6,6 +6,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
+use crate::contracts::headers;
 use crate::contracts::spec::{SpecDocument, parse_spec_file, repo_relative_string};
 use crate::diagnostics::{DiagnosticError, FailureClass};
 use crate::paths::RepoPath;
@@ -194,12 +195,7 @@ pub fn parse_plan_source(path: &Path, source: String) -> Result<PlanDocument, Di
 }
 
 fn parse_required_header(source: &str, header: &str) -> Result<String, DiagnosticError> {
-    let prefix = format!("**{header}:** ");
-    source
-        .lines()
-        .find_map(|line| line.strip_prefix(&prefix))
-        .map(ToOwned::to_owned)
-        .ok_or_else(|| missing_header(header))
+    headers::parse_required_header(source, header).ok_or_else(|| missing_header(header))
 }
 
 fn parse_coverage_matrix(source: &str) -> Result<BTreeMap<String, Vec<u32>>, DiagnosticError> {

@@ -16,6 +16,7 @@ Six layers matter:
 
 - `featureforge session-entry` owns first-turn session entry.
 - `using-featureforge` is the human-readable entry router after session entry resolves to `enabled`.
+- generated skill preambles always invoke the packaged install binary under `~/.featureforge/install/bin/` (`featureforge` on Unix, `featureforge.exe` on Windows), and that runtime resolves the active root through `featureforge repo runtime-root --path` before update checks or contributor-mode lookups.
 - `featureforge workflow` owns product-work routing up to `implementation_ready`.
 - `featureforge repo-safety` owns protected branches and repo-write guarantees.
 - `featureforge plan contract` owns semantic traceability between approved specs, approved plans, and derived task packets.
@@ -99,10 +100,13 @@ node scripts/gen-skill-docs.mjs
 node scripts/gen-agent-docs.mjs
 ```
 
+The canonical deterministic validation matrix and change-scoped commands live in [docs/testing.md](docs/testing.md).
+
 Core validation:
 
 ```bash
 node scripts/gen-skill-docs.mjs --check
+node scripts/gen-agent-docs.mjs --check
 node --test tests/codex-runtime/*.test.mjs
 cargo nextest run --test workflow_runtime --test workflow_shell_smoke --test contracts_spec_plan --test runtime_instruction_contracts --test using_featureforge_skill --test session_config_slug --test repo_safety --test update_and_install --test plan_execution --test powershell_wrapper_resolution --test upgrade_skill
 ```
@@ -119,4 +123,4 @@ If your platform copies the reviewer artifact instead of symlinking it, refresh 
 
 ## Support
 
-Open an issue in the repository that hosts this checkout, or start with the checked-in install and testing docs linked above.
+Open an issue in the repository that hosts this checkout, or start with the checked-in install docs and [docs/testing.md](docs/testing.md).

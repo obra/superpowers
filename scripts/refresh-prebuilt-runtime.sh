@@ -4,8 +4,21 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 TARGET_KEY="${FEATUREFORGE_PREBUILT_TARGET:-darwin-arm64}"
-RUST_TARGET="${FEATUREFORGE_PREBUILT_RUST_TARGET:-aarch64-apple-darwin}"
-BINARY_NAME="${FEATUREFORGE_PREBUILT_BINARY:-featureforge}"
+case "$TARGET_KEY" in
+  darwin-arm64)
+    DEFAULT_RUST_TARGET="aarch64-apple-darwin"
+    BINARY_NAME="featureforge"
+    ;;
+  windows-x64)
+    DEFAULT_RUST_TARGET="x86_64-pc-windows-msvc"
+    BINARY_NAME="featureforge.exe"
+    ;;
+  *)
+    echo "unsupported FEATUREFORGE_PREBUILT_TARGET: $TARGET_KEY" >&2
+    exit 1
+    ;;
+esac
+RUST_TARGET="${FEATUREFORGE_PREBUILT_RUST_TARGET:-$DEFAULT_RUST_TARGET}"
 VERSION="$(tr -d '[:space:]' < "$REPO_ROOT/VERSION")"
 OUTPUT_DIR="$REPO_ROOT/bin/prebuilt/$TARGET_KEY"
 OUTPUT_PATH="$OUTPUT_DIR/$BINARY_NAME"

@@ -92,7 +92,7 @@ Before moving on, perform a short Gate F-style confirmation:
 Conditional pre-landing browser QA when the branch change surface or test-plan artifact warrants it:
 
 ```bash
-_SLUG_ENV=$("$_FEATUREFORGE_ROOT/bin/featureforge" repo slug 2>/dev/null || true)
+_SLUG_ENV=$("$_FEATUREFORGE_BIN" repo slug 2>/dev/null || true)
 if [ -n "$_SLUG_ENV" ]; then
   eval "$_SLUG_ENV"
 fi

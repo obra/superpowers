@@ -8,24 +8,24 @@ description: Use when you need browser-based QA, repro steps, screenshots, evide
 ## Preamble (run first)
 
 ```bash
-_IS_FEATUREFORGE_RUNTIME_ROOT() {
-  local candidate="$1"
-  [ -n "$candidate" ] &&
-  [ -x "$candidate/bin/featureforge" ] &&
-  [ -f "$candidate/VERSION" ]
-}
 _REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 _BRANCH_RAW=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo current)
 [ -n "$_BRANCH_RAW" ] || _BRANCH_RAW="current"
 [ "$_BRANCH_RAW" != "HEAD" ] || _BRANCH_RAW="current"
 _BRANCH="$_BRANCH_RAW"
+_FEATUREFORGE_INSTALL_ROOT="$HOME/.featureforge/install"
 _FEATUREFORGE_ROOT=""
-_IS_FEATUREFORGE_RUNTIME_ROOT "$_REPO_ROOT" && _FEATUREFORGE_ROOT="$_REPO_ROOT"
-[ -z "$_FEATUREFORGE_ROOT" ] && _IS_FEATUREFORGE_RUNTIME_ROOT "$HOME/.featureforge/install" && _FEATUREFORGE_ROOT="$HOME/.featureforge/install"
-[ -z "$_FEATUREFORGE_ROOT" ] && _IS_FEATUREFORGE_RUNTIME_ROOT "$HOME/.codex/featureforge" && _FEATUREFORGE_ROOT="$HOME/.codex/featureforge"
-[ -z "$_FEATUREFORGE_ROOT" ] && _IS_FEATUREFORGE_RUNTIME_ROOT "$HOME/.copilot/featureforge" && _FEATUREFORGE_ROOT="$HOME/.copilot/featureforge"
+_FEATUREFORGE_BIN="$_FEATUREFORGE_INSTALL_ROOT/bin/featureforge"
+if [ ! -x "$_FEATUREFORGE_BIN" ] && [ -f "$_FEATUREFORGE_INSTALL_ROOT/bin/featureforge.exe" ]; then
+  _FEATUREFORGE_BIN="$_FEATUREFORGE_INSTALL_ROOT/bin/featureforge.exe"
+fi
+[ -x "$_FEATUREFORGE_BIN" ] || [ -f "$_FEATUREFORGE_BIN" ] || _FEATUREFORGE_BIN=""
+_FEATUREFORGE_RUNTIME_ROOT_PATH=""
+if [ -n "$_FEATUREFORGE_BIN" ] && _FEATUREFORGE_RUNTIME_ROOT_PATH=$("$_FEATUREFORGE_BIN" repo runtime-root --path 2>/dev/null); then
+  [ -n "$_FEATUREFORGE_RUNTIME_ROOT_PATH" ] && _FEATUREFORGE_ROOT="$_FEATUREFORGE_RUNTIME_ROOT_PATH"
+fi
 _UPD=""
-[ -n "$_FEATUREFORGE_ROOT" ] && _UPD=$("$_FEATUREFORGE_ROOT/bin/featureforge" update-check 2>/dev/null || true)
+[ -n "$_FEATUREFORGE_BIN" ] && _UPD=$("$_FEATUREFORGE_BIN" update-check 2>/dev/null || true)
 [ -n "$_UPD" ] && echo "$_UPD" || true
 _SP_STATE_DIR="${FEATUREFORGE_STATE_DIR:-$HOME/.featureforge}"
 mkdir -p "$_SP_STATE_DIR/sessions"
@@ -33,10 +33,10 @@ touch "$_SP_STATE_DIR/sessions/$PPID"
 _SESSIONS=$(find "$_SP_STATE_DIR/sessions" -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' ')
 find "$_SP_STATE_DIR/sessions" -mmin +120 -type f -delete 2>/dev/null || true
 _CONTRIB=""
-[ -n "$_FEATUREFORGE_ROOT" ] && _CONTRIB=$("$_FEATUREFORGE_ROOT/bin/featureforge" config get featureforge_contributor 2>/dev/null || true)
+[ -n "$_FEATUREFORGE_BIN" ] && _CONTRIB=$("$_FEATUREFORGE_BIN" config get featureforge_contributor 2>/dev/null || true)
 ```
 
-If output shows `UPGRADE_AVAILABLE <old> <new>`: read the installed `featureforge-upgrade/SKILL.md` from the same featureforge root (check the current repo when it contains the FeatureForge runtime, then `$HOME/.featureforge/install`, then `$HOME/.codex/featureforge`, then `$HOME/.copilot/featureforge`) and follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise ask one interactive user question with 4 options and write snooze state if declined). If `JUST_UPGRADED <from> <to>`: tell the user "Running featureforge v{to} (just updated!)" and continue.
+If output shows `UPGRADE_AVAILABLE <old> <new>`: read `featureforge-upgrade/SKILL.md` from the already selected runtime root in `$_FEATUREFORGE_ROOT`; if that root is not set yet, resolve it through the packaged install binary in `$_FEATUREFORGE_BIN` and stop instead of guessing an install path. Then follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise ask one interactive user question with 4 options and write snooze state if declined). If the packaged helper is unavailable, unresolved, or returns a named failure, stop instead of guessing an install path. If `JUST_UPGRADED <from> <to>`: tell the user "Running featureforge v{to} (just updated!)" and continue.
 
 ## Search Before Building
 
@@ -148,7 +148,7 @@ mkdir -p "$REPORT_DIR/screenshots"
 Before falling back to git-diff heuristics, look for richer QA input:
 
 ```bash
-_SLUG_ENV=$("$_FEATUREFORGE_ROOT/bin/featureforge" repo slug 2>/dev/null || true)
+_SLUG_ENV=$("$_FEATUREFORGE_BIN" repo slug 2>/dev/null || true)
 if [ -n "$_SLUG_ENV" ]; then
   eval "$_SLUG_ENV"
 fi
@@ -318,7 +318,7 @@ Write the local report to:
 When a current-branch test-plan artifact exists, also write a project-scoped outcome artifact:
 
 ```bash
-_SLUG_ENV=$("$_FEATUREFORGE_ROOT/bin/featureforge" repo slug 2>/dev/null || true)
+_SLUG_ENV=$("$_FEATUREFORGE_BIN" repo slug 2>/dev/null || true)
 if [ -n "$_SLUG_ENV" ]; then
   eval "$_SLUG_ENV"
 fi

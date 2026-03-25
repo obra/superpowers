@@ -1,3 +1,6 @@
+#[path = "../src/contracts/headers.rs"]
+mod headers_support;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
@@ -196,6 +199,36 @@ fn parse_spec_headers_and_index_with_trailing_ceo_review_summary() {
     assert_eq!(spec.last_reviewed_by, "plan-ceo-review");
     assert_eq!(spec.requirements.len(), 6);
     assert_eq!(spec.requirements[0].id, "REQ-001");
+}
+
+#[test]
+fn shared_header_helper_returns_exact_required_header_values() {
+    let source = "\
+# Example Artifact
+\n\
+**Workflow State:** CEO Approved
+\n\
+**Spec Revision:** 7
+\n\
+**Source Spec:** `docs/featureforge/specs/example.md`
+";
+
+    assert_eq!(
+        headers_support::parse_required_header(source, "Workflow State"),
+        Some(String::from("CEO Approved"))
+    );
+    assert_eq!(
+        headers_support::parse_required_header(source, "Spec Revision"),
+        Some(String::from("7"))
+    );
+    assert_eq!(
+        headers_support::parse_required_header(source, "Source Spec"),
+        Some(String::from("`docs/featureforge/specs/example.md`"))
+    );
+    assert_eq!(
+        headers_support::parse_required_header(source, "Missing Header"),
+        None
+    );
 }
 
 #[test]

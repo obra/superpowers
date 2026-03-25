@@ -13,37 +13,71 @@ This section is referenced by all skill preambles when they detect `UPGRADE_AVAI
 
 ### Step 1: Resolve install root
 
-Resolve the active install once and reuse it for the rest of the flow:
+Reuse the already selected runtime root when it is available. Otherwise resolve the active install once through the packaged install binary and reuse it for the rest of the flow:
 
 ```bash
-_IS_FEATUREFORGE_RUNTIME_ROOT() {
-  local candidate="$1"
-  [ -n "$candidate" ] &&
-  [ -x "$candidate/bin/featureforge" ] &&
-  [ -f "$candidate/VERSION" ] &&
-  { [ -d "$candidate/.git" ] || [ -f "$candidate/.git" ]; }
+_FEATUREFORGE_INSTALL_ROOT="$HOME/.featureforge/install"
+FEATUREFORGE_RUNTIME_BIN="${_FEATUREFORGE_BIN:-}"
+INSTALL_DIR="${_FEATUREFORGE_ROOT:-}"
+UPGRADE_ELIGIBLE=""
+INSTALL_RUNTIME_BIN=""
+
+_FEATUREFORGE_INSTALL_RUNTIME_BIN() {
+  if [ -x "$INSTALL_DIR/bin/featureforge" ]; then
+    printf '%s\n' "$INSTALL_DIR/bin/featureforge"
+    return 0
+  fi
+  if [ -f "$INSTALL_DIR/bin/featureforge.exe" ]; then
+    printf '%s\n' "$INSTALL_DIR/bin/featureforge.exe"
+    return 0
+  fi
+  return 1
 }
 
-INSTALL_DIR=""
-if [ -n "${_FEATUREFORGE_ROOT:-}" ] && _IS_FEATUREFORGE_RUNTIME_ROOT "$_FEATUREFORGE_ROOT"; then
-  INSTALL_DIR="$_FEATUREFORGE_ROOT"
-else
-  _ROOT=$(git rev-parse --show-toplevel 2>/dev/null || true)
-  if [ -n "$_ROOT" ] && _IS_FEATUREFORGE_RUNTIME_ROOT "$_ROOT"; then
-    INSTALL_DIR="$_ROOT"
-  elif _IS_FEATUREFORGE_RUNTIME_ROOT "$HOME/.featureforge/install"; then
-    INSTALL_DIR="$HOME/.featureforge/install"
-  elif _IS_FEATUREFORGE_RUNTIME_ROOT "$HOME/.codex/featureforge"; then
-    INSTALL_DIR="$HOME/.codex/featureforge"
-  elif _IS_FEATUREFORGE_RUNTIME_ROOT "$HOME/.copilot/featureforge"; then
-    INSTALL_DIR="$HOME/.copilot/featureforge"
-  else
-    echo "ERROR: featureforge install not found"
+if [ -z "$FEATUREFORGE_RUNTIME_BIN" ]; then
+  if [ -x "$_FEATUREFORGE_INSTALL_ROOT/bin/featureforge" ]; then
+    FEATUREFORGE_RUNTIME_BIN="$_FEATUREFORGE_INSTALL_ROOT/bin/featureforge"
+  elif [ -f "$_FEATUREFORGE_INSTALL_ROOT/bin/featureforge.exe" ]; then
+    FEATUREFORGE_RUNTIME_BIN="$_FEATUREFORGE_INSTALL_ROOT/bin/featureforge.exe"
+  fi
+fi
+
+if [ -z "$FEATUREFORGE_RUNTIME_BIN" ] || { [ ! -x "$FEATUREFORGE_RUNTIME_BIN" ] && [ ! -f "$FEATUREFORGE_RUNTIME_BIN" ]; }; then
+  echo "ERROR: featureforge runtime-root helper unavailable"
+  exit 1
+fi
+
+if [ -z "$INSTALL_DIR" ]; then
+  if ! INSTALL_DIR=$("$FEATUREFORGE_RUNTIME_BIN" repo runtime-root --path 2>/dev/null); then
+    echo "ERROR: featureforge runtime-root helper unavailable"
     exit 1
   fi
 fi
-FEATUREFORGE_BIN="$INSTALL_DIR/bin/featureforge"
+
+if [ -z "$INSTALL_DIR" ]; then
+  echo "ERROR: featureforge runtime root unavailable"
+  exit 1
+fi
+
+if ! INSTALL_RUNTIME_BIN=$(_FEATUREFORGE_INSTALL_RUNTIME_BIN); then
+  echo "ERROR: featureforge runtime root returned no executable featureforge binary"
+  exit 1
+fi
+
+if ! UPGRADE_ELIGIBLE=$(FEATUREFORGE_DIR="$INSTALL_DIR" "$FEATUREFORGE_RUNTIME_BIN" repo runtime-root --field upgrade-eligible 2>/dev/null); then
+  echo "ERROR: featureforge runtime-root helper unavailable"
+  exit 1
+fi
+
+if [ "$UPGRADE_ELIGIBLE" != "true" ]; then
+  echo "ERROR: featureforge runtime root is not upgrade-eligible"
+  exit 1
+fi
+
 echo "INSTALL_DIR=$INSTALL_DIR"
+echo "FEATUREFORGE_RUNTIME_BIN=$FEATUREFORGE_RUNTIME_BIN"
+echo "INSTALL_RUNTIME_BIN=$INSTALL_RUNTIME_BIN"
+echo "UPGRADE_ELIGIBLE=$UPGRADE_ELIGIBLE"
 ```
 
 ### Step 2: Resolve versions and auto-upgrade preference
@@ -132,7 +166,7 @@ First, check if auto-upgrade is enabled:
 ```bash
 _AUTO=""
 [ "${FEATUREFORGE_AUTO_UPGRADE:-}" = "1" ] && _AUTO="true"
-[ -z "$_AUTO" ] && _AUTO=$("$FEATUREFORGE_BIN" config get auto_upgrade 2>/dev/null || true)
+[ -z "$_AUTO" ] && _AUTO=$("$FEATUREFORGE_RUNTIME_BIN" config get auto_upgrade 2>/dev/null || true)
 echo "AUTO_UPGRADE=$_AUTO"
 ```
 
@@ -150,7 +184,7 @@ Direct manual `/featureforge-upgrade` runs are explicit user intent, so they ign
 **If "Always keep me up to date":**
 
 ```bash
-"$FEATUREFORGE_BIN" config set auto_upgrade true
+"$FEATUREFORGE_RUNTIME_BIN" config set auto_upgrade true
 ```
 
 Tell the user: `Auto-upgrade enabled. Future updates will install automatically.` Then continue to Step 3.
@@ -159,7 +193,8 @@ Tell the user: `Auto-upgrade enabled. Future updates will install automatically.
 
 ```bash
 _SP_STATE_DIR="${FEATUREFORGE_STATE_DIR:-$HOME/.featureforge}"
-_SNOOZE_FILE="$_SP_STATE_DIR/update-snoozed"
+_UPDATE_CHECK_DIR="$_SP_STATE_DIR/update-check"
+_SNOOZE_FILE="$_UPDATE_CHECK_DIR/update-snoozed"
 _REMOTE_VER="{new}"
 _CUR_LEVEL=0
 if [ -f "$_SNOOZE_FILE" ]; then
@@ -171,7 +206,7 @@ if [ -f "$_SNOOZE_FILE" ]; then
 fi
 _NEW_LEVEL=$((_CUR_LEVEL + 1))
 [ "$_NEW_LEVEL" -gt 3 ] && _NEW_LEVEL=3
-mkdir -p "$_SP_STATE_DIR"
+mkdir -p "$_UPDATE_CHECK_DIR"
 echo "$_REMOTE_VER $_NEW_LEVEL $(date +%s)" > "$_SNOOZE_FILE"
 ```
 
@@ -180,10 +215,10 @@ Tell the user the snooze duration and continue with the current skill.
 **If "Never ask again":**
 
 ```bash
-"$FEATUREFORGE_BIN" config set update_check false
+"$FEATUREFORGE_RUNTIME_BIN" config set update_check false
 ```
 
-Tell the user: `Update checks disabled. Run $FEATUREFORGE_BIN config set update_check true to re-enable.` Continue with the current skill.
+Tell the user: `Update checks disabled. Run $FEATUREFORGE_RUNTIME_BIN config set update_check true to re-enable.` Continue with the current skill.
 
 ### Step 3: Save old version
 
@@ -210,10 +245,11 @@ If `$STASH_OUTPUT` contains `Saved working directory`, warn the user that local 
 
 ```bash
 _SP_STATE_DIR="${FEATUREFORGE_STATE_DIR:-$HOME/.featureforge}"
-mkdir -p "$_SP_STATE_DIR"
-rm -f "$_SP_STATE_DIR/last-update-check" "$_SP_STATE_DIR/update-snoozed"
+_UPDATE_CHECK_DIR="$_SP_STATE_DIR/update-check"
+mkdir -p "$_UPDATE_CHECK_DIR"
+rm -f "$_UPDATE_CHECK_DIR/last-update-check" "$_UPDATE_CHECK_DIR/update-snoozed"
 if [ "$NEW_VERSION" != "$OLD_VERSION" ] && [ "$NEW_VERSION" != "unknown" ]; then
-  echo "$OLD_VERSION" > "$_SP_STATE_DIR/just-upgraded-from"
+  echo "$OLD_VERSION" > "$_UPDATE_CHECK_DIR/just-upgraded-from"
 fi
 ```
 

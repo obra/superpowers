@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use clap::{Args, Subcommand};
+use clap::{Args, Subcommand, ValueEnum};
 
 #[derive(Debug, Args)]
 pub struct PlanExecutionCli {
@@ -35,11 +35,11 @@ pub struct RecommendArgs {
     #[arg(long)]
     pub plan: PathBuf,
     #[arg(long = "isolated-agents")]
-    pub isolated_agents: Option<String>,
+    pub isolated_agents: Option<IsolatedAgentsArg>,
     #[arg(long = "session-intent")]
-    pub session_intent: Option<String>,
+    pub session_intent: Option<SessionIntentArg>,
     #[arg(long = "workspace-prepared")]
-    pub workspace_prepared: Option<String>,
+    pub workspace_prepared: Option<WorkspacePreparedArg>,
 }
 
 #[derive(Debug, Clone, Args)]
@@ -51,7 +51,7 @@ pub struct BeginArgs {
     #[arg(long)]
     pub step: u32,
     #[arg(long = "execution-mode")]
-    pub execution_mode: Option<String>,
+    pub execution_mode: Option<ExecutionModeArg>,
     #[arg(long = "expect-execution-fingerprint")]
     pub expect_execution_fingerprint: String,
 }
@@ -65,7 +65,7 @@ pub struct NoteArgs {
     #[arg(long)]
     pub step: u32,
     #[arg(long)]
-    pub state: String,
+    pub state: NoteStateArg,
     #[arg(long)]
     pub message: String,
     #[arg(long = "expect-execution-fingerprint")]
@@ -81,7 +81,7 @@ pub struct CompleteArgs {
     #[arg(long)]
     pub step: u32,
     #[arg(long)]
-    pub source: String,
+    pub source: ExecutionModeArg,
     #[arg(long)]
     pub claim: String,
     #[arg(long = "file")]
@@ -105,7 +105,7 @@ pub struct ReopenArgs {
     #[arg(long)]
     pub step: u32,
     #[arg(long)]
-    pub source: String,
+    pub source: ExecutionModeArg,
     #[arg(long)]
     pub reason: String,
     #[arg(long = "expect-execution-fingerprint")]
@@ -121,9 +121,90 @@ pub struct TransferArgs {
     #[arg(long = "repair-step")]
     pub repair_step: u32,
     #[arg(long)]
-    pub source: String,
+    pub source: ExecutionModeArg,
     #[arg(long)]
     pub reason: String,
     #[arg(long = "expect-execution-fingerprint")]
     pub expect_execution_fingerprint: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum IsolatedAgentsArg {
+    Available,
+    Unavailable,
+}
+
+impl IsolatedAgentsArg {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Available => "available",
+            Self::Unavailable => "unavailable",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum SessionIntentArg {
+    Stay,
+    Separate,
+    Unknown,
+}
+
+impl SessionIntentArg {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Stay => "stay",
+            Self::Separate => "separate",
+            Self::Unknown => "unknown",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum WorkspacePreparedArg {
+    Yes,
+    No,
+    Unknown,
+}
+
+impl WorkspacePreparedArg {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Yes => "yes",
+            Self::No => "no",
+            Self::Unknown => "unknown",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum ExecutionModeArg {
+    #[value(name = "featureforge:executing-plans")]
+    ExecutingPlans,
+    #[value(name = "featureforge:subagent-driven-development")]
+    SubagentDrivenDevelopment,
+}
+
+impl ExecutionModeArg {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::ExecutingPlans => "featureforge:executing-plans",
+            Self::SubagentDrivenDevelopment => "featureforge:subagent-driven-development",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum NoteStateArg {
+    Blocked,
+    Interrupted,
+}
+
+impl NoteStateArg {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Blocked => "blocked",
+            Self::Interrupted => "interrupted",
+        }
+    }
 }

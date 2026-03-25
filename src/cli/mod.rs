@@ -4,6 +4,7 @@ pub mod config;
 pub mod plan_contract;
 pub mod plan_execution;
 pub mod repo_safety;
+pub mod runtime_root;
 pub mod session_entry;
 pub mod slug;
 pub mod update_check;
@@ -56,4 +57,6 @@ pub struct RepoCli {
 #[derive(Debug, Subcommand)]
 pub enum RepoCommand {
     Slug(slug::SlugCli),
+    #[command(name = "runtime-root")]
+    RuntimeRoot(runtime_root::RuntimeRootCli),
 }

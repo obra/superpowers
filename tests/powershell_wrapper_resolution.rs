@@ -1,5 +1,13 @@
+#[path = "support/prebuilt.rs"]
+mod prebuilt_support;
+
 use std::fs;
 use std::path::{Path, PathBuf};
+
+use prebuilt_support::{
+    DARWIN_ARM64_BINARY_REL, DARWIN_ARM64_CHECKSUM_REL, DARWIN_ARM64_TARGET,
+    WINDOWS_X64_BINARY_REL, WINDOWS_X64_CHECKSUM_REL, WINDOWS_X64_TARGET,
+};
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -40,10 +48,10 @@ fn canonical_prebuilt_manifest_and_assets_use_featureforge_names() {
     let root = repo_root();
     let manifest = read_utf8(root.join("bin/prebuilt/manifest.json"));
     for needle in [
-        "bin/prebuilt/darwin-arm64/featureforge",
-        "bin/prebuilt/darwin-arm64/featureforge.sha256",
-        "bin/prebuilt/windows-x64/featureforge.exe",
-        "bin/prebuilt/windows-x64/featureforge.exe.sha256",
+        DARWIN_ARM64_BINARY_REL,
+        DARWIN_ARM64_CHECKSUM_REL,
+        WINDOWS_X64_BINARY_REL,
+        WINDOWS_X64_CHECKSUM_REL,
     ] {
         assert!(
             manifest.contains(needle),
@@ -55,6 +63,12 @@ fn canonical_prebuilt_manifest_and_assets_use_featureforge_names() {
     let targets = manifest_json["targets"]
         .as_object()
         .expect("manifest targets should be an object");
+    let target_keys = targets.keys().map(String::as_str).collect::<Vec<_>>();
+    assert_eq!(
+        target_keys,
+        vec![DARWIN_ARM64_TARGET, WINDOWS_X64_TARGET],
+        "checked-in prebuilt manifest should pin the supported target set"
+    );
     for entry in targets.values() {
         let runtime_path = entry["binary_path"]
             .as_str()
@@ -72,14 +86,34 @@ fn canonical_prebuilt_manifest_and_assets_use_featureforge_names() {
         );
     }
     for relative in [
-        "bin/prebuilt/darwin-arm64/featureforge",
-        "bin/prebuilt/darwin-arm64/featureforge.sha256",
-        "bin/prebuilt/windows-x64/featureforge.exe",
-        "bin/prebuilt/windows-x64/featureforge.exe.sha256",
+        DARWIN_ARM64_BINARY_REL,
+        DARWIN_ARM64_CHECKSUM_REL,
+        WINDOWS_X64_BINARY_REL,
+        WINDOWS_X64_CHECKSUM_REL,
     ] {
         assert!(
             root.join(relative).is_file(),
             "renamed prebuilt runtime asset should exist: {relative}"
         );
     }
+}
+
+#[test]
+fn refresh_prebuilt_scripts_pin_canonical_target_binary_names() {
+    let root = repo_root();
+    let shell_script = read_utf8(root.join("scripts/refresh-prebuilt-runtime.sh"));
+    let powershell_script = read_utf8(root.join("scripts/refresh-prebuilt-runtime.ps1"));
+
+    assert!(
+        !shell_script.contains("FEATUREFORGE_PREBUILT_BINARY"),
+        "shell refresh script should derive canonical binary names from the target contract"
+    );
+    assert!(
+        !powershell_script.contains("FEATUREFORGE_PREBUILT_BINARY"),
+        "powershell refresh script should derive canonical binary names from the target contract"
+    );
+    assert!(shell_script.contains(DARWIN_ARM64_TARGET));
+    assert!(shell_script.contains("featureforge.exe"));
+    assert!(powershell_script.contains(WINDOWS_X64_TARGET));
+    assert!(powershell_script.contains("featureforge.exe"));
 }

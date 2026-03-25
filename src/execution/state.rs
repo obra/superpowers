@@ -5,21 +5,24 @@ use std::path::{Path, PathBuf};
 
 use schemars::{JsonSchema, schema_for};
 use serde::Serialize;
-use sha2::{Digest, Sha256};
 
 use crate::cli::plan_execution::{
-    BeginArgs, CompleteArgs, NoteArgs, RecommendArgs, ReopenArgs, StatusArgs, TransferArgs,
+    BeginArgs, CompleteArgs, IsolatedAgentsArg, NoteArgs, NoteStateArg, RecommendArgs, ReopenArgs,
+    StatusArgs, TransferArgs,
 };
-use crate::cli::repo_safety::RepoSafetyCheckArgs;
+use crate::cli::repo_safety::{RepoSafetyCheckArgs, RepoSafetyIntentArg, RepoSafetyWriteTargetArg};
 use crate::contracts::plan::{PlanDocument, PlanTask, parse_plan_file};
 use crate::diagnostics::{FailureClass, JsonFailure};
-use crate::git::discover_repo_identity;
+use crate::git::{
+    derive_repo_slug, discover_repo_identity, sha256_hex, stored_repo_root_matches_current,
+};
 use crate::paths::{
     RepoPath, branch_storage_key, featureforge_state_dir, normalize_repo_relative_path,
     normalize_whitespace,
 };
 use crate::repo_safety::RepoSafetyRuntime;
 use crate::workflow::manifest::{ManifestLoadResult, WorkflowManifest, load_manifest_read_only};
+use crate::workflow::markdown_scan::markdown_files_under;
 
 pub const NO_REPO_FILES_MARKER: &str = "__featureforge__/no-repo-files";
 const ACTIVE_SPEC_ROOT: &str = "docs/featureforge/specs";
@@ -261,37 +264,19 @@ impl ExecutionRuntime {
         } else {
             "no"
         };
-        let isolated_agents_available = match args.isolated_agents.as_deref() {
-            Some("available") => "yes",
-            Some("unavailable") => "no",
-            Some(_) => {
-                return Err(JsonFailure::new(
-                    FailureClass::InvalidCommandInput,
-                    "isolated-agents must be available or unavailable.",
-                ));
-            }
+        let isolated_agents_available = match args.isolated_agents {
+            Some(IsolatedAgentsArg::Available) => "yes",
+            Some(IsolatedAgentsArg::Unavailable) => "no",
             None => "unknown",
         };
-        let session_intent = match args.session_intent.as_deref() {
-            Some("stay" | "separate" | "unknown") => args.session_intent.as_deref().unwrap(),
-            Some(_) => {
-                return Err(JsonFailure::new(
-                    FailureClass::InvalidCommandInput,
-                    "session-intent must be stay, separate, or unknown.",
-                ));
-            }
-            None => "unknown",
-        };
-        let workspace_prepared = match args.workspace_prepared.as_deref() {
-            Some("yes" | "no" | "unknown") => args.workspace_prepared.as_deref().unwrap(),
-            Some(_) => {
-                return Err(JsonFailure::new(
-                    FailureClass::InvalidCommandInput,
-                    "workspace-prepared must be yes, no, or unknown.",
-                ));
-            }
-            None => "unknown",
-        };
+        let session_intent = args
+            .session_intent
+            .map(|value| value.as_str())
+            .unwrap_or("unknown");
+        let workspace_prepared = args
+            .workspace_prepared
+            .map(|value| value.as_str())
+            .unwrap_or("unknown");
         let same_session_viable = if session_intent == "stay" && workspace_prepared == "yes" {
             "yes"
         } else if session_intent == "separate" || workspace_prepared == "no" {
@@ -641,11 +626,11 @@ pub fn preflight_from_context(context: &ExecutionContext) -> GateResult {
     match RepoSafetyRuntime::discover(&context.runtime.repo_root) {
         Ok(runtime) => {
             let args = RepoSafetyCheckArgs {
-                intent: String::from("write"),
+                intent: RepoSafetyIntentArg::Write,
                 stage: repo_safety_stage(context),
                 task_id: Some(context.plan_rel.clone()),
                 paths: vec![context.plan_rel.clone()],
-                write_targets: vec![String::from("execution-task-slice")],
+                write_targets: vec![RepoSafetyWriteTargetArg::ExecutionTaskSlice],
             };
             match runtime.check(&args) {
                 Ok(result) if result.outcome == "blocked" => gate.fail(
@@ -1230,7 +1215,7 @@ pub fn normalize_begin_request(args: &BeginArgs) -> BeginRequest {
     BeginRequest {
         task: args.task,
         step: args.step,
-        execution_mode: args.execution_mode.clone(),
+        execution_mode: args.execution_mode.map(|value| value.as_str().to_owned()),
         expect_execution_fingerprint: args.expect_execution_fingerprint.clone(),
     }
 }
@@ -1247,15 +1232,9 @@ pub fn normalize_note_request(args: &NoteArgs) -> Result<NoteRequest, JsonFailur
             "Execution note summaries may not exceed 120 characters.",
         ));
     }
-    let state = match args.state.as_str() {
-        "blocked" => NoteState::Blocked,
-        "interrupted" => NoteState::Interrupted,
-        _ => {
-            return Err(JsonFailure::new(
-                FailureClass::InvalidCommandInput,
-                "Execution note state must be one of: blocked, interrupted.",
-            ));
-        }
+    let state = match args.state {
+        NoteStateArg::Blocked => NoteState::Blocked,
+        NoteStateArg::Interrupted => NoteState::Interrupted,
     };
 
     Ok(NoteRequest {
@@ -1316,7 +1295,7 @@ pub fn normalize_complete_request(args: &CompleteArgs) -> Result<CompleteRequest
     Ok(CompleteRequest {
         task: args.task,
         step: args.step,
-        source: args.source.clone(),
+        source: args.source.as_str().to_owned(),
         claim,
         files: args.files.clone(),
         verification_summary,
@@ -1328,7 +1307,7 @@ pub fn normalize_reopen_request(args: &ReopenArgs) -> Result<ReopenRequest, Json
     Ok(ReopenRequest {
         task: args.task,
         step: args.step,
-        source: args.source.clone(),
+        source: args.source.as_str().to_owned(),
         reason: require_normalized_text(
             &args.reason,
             FailureClass::InvalidCommandInput,
@@ -1342,7 +1321,7 @@ pub fn normalize_transfer_request(args: &TransferArgs) -> Result<TransferRequest
     Ok(TransferRequest {
         repair_task: args.repair_task,
         repair_step: args.repair_step,
-        source: args.source.clone(),
+        source: args.source.as_str().to_owned(),
         reason: require_normalized_text(
             &args.reason,
             FailureClass::InvalidCommandInput,
@@ -1773,7 +1752,7 @@ fn matching_workflow_manifest(runtime: &ExecutionRuntime) -> Option<WorkflowMani
     let ManifestLoadResult::Loaded(manifest) = load_manifest_read_only(&manifest_path) else {
         return None;
     };
-    if manifest.repo_root == runtime.repo_root.to_string_lossy()
+    if stored_repo_root_matches_current(&manifest.repo_root, &runtime.repo_root)
         && manifest.branch == runtime.branch_name
     {
         Some(manifest)
@@ -2043,26 +2022,6 @@ fn approved_plan_candidate_paths(
         .collect::<Vec<_>>();
     candidates.sort();
     candidates
-}
-
-fn markdown_files_under(root: &Path) -> Vec<PathBuf> {
-    let mut files = Vec::new();
-    visit_markdown_files(root, &mut files);
-    files
-}
-
-fn visit_markdown_files(root: &Path, files: &mut Vec<PathBuf>) {
-    let Ok(entries) = fs::read_dir(root) else {
-        return;
-    };
-    for entry in entries.flatten() {
-        let path = entry.path();
-        if path.is_dir() {
-            visit_markdown_files(&path, files);
-        } else if path.extension().and_then(std::ffi::OsStr::to_str) == Some("md") {
-            files.push(path);
-        }
-    }
 }
 
 fn parse_step_state(
@@ -2553,26 +2512,6 @@ fn parse_contract_render(source: &str) -> String {
     format!("{}\n", rendered.join("\n"))
 }
 
-fn derive_repo_slug(repo_root: &Path, remote_url: Option<&str>) -> String {
-    if let Some(remote_url) = remote_url {
-        let normalized = remote_url.trim_end_matches(".git").replace(':', "/");
-        let parts = normalized
-            .split('/')
-            .filter(|part| !part.is_empty())
-            .collect::<Vec<_>>();
-        if let [.., owner, repo] = parts.as_slice() {
-            return format!("{owner}-{repo}");
-        }
-    }
-
-    let repo_name = repo_root
-        .file_name()
-        .and_then(std::ffi::OsStr::to_str)
-        .unwrap_or("repo");
-    let digest = sha256_hex(repo_root.to_string_lossy().as_bytes());
-    format!("{repo_name}-{}", &digest[..12])
-}
-
 fn tasks_are_independent(plan_document: &PlanDocument) -> bool {
     if plan_document.tasks.len() <= 1 {
         return false;
@@ -2592,8 +2531,15 @@ fn latest_completed_attempt<'a>(evidence: &'a ExecutionEvidence) -> Option<&'a E
     evidence
         .attempts
         .iter()
-        .rev()
-        .find(|attempt| attempt.status == "Completed")
+        .enumerate()
+        .filter(|(_, attempt)| attempt.status == "Completed")
+        .max_by(|(left_index, left_attempt), (right_index, right_attempt)| {
+            left_attempt
+                .recorded_at
+                .cmp(&right_attempt.recorded_at)
+                .then_with(|| left_index.cmp(right_index))
+        })
+        .map(|(_, attempt)| attempt)
 }
 
 fn latest_attempt_for_step<'a>(
@@ -2682,9 +2628,4 @@ fn latest_branch_artifact_path(
 
 fn strip_backticks(value: &str) -> String {
     value.trim_matches('`').to_owned()
-}
-
-fn sha256_hex(bytes: &[u8]) -> String {
-    let digest = Sha256::digest(bytes);
-    format!("{digest:x}")
 }

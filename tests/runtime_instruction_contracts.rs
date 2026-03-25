@@ -1,13 +1,16 @@
+#[path = "support/install.rs"]
+mod install_support;
 #[path = "support/process.rs"]
 mod process_support;
 
 use assert_cmd::Command as AssertCommand;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::Duration;
 use tempfile::TempDir;
 
+use install_support::canonical_install_bin;
 use process_support::{repo_root, run, run_checked};
 
 fn read_utf8(path: impl AsRef<Path>) -> String {
@@ -31,6 +34,57 @@ fn assert_not_contains(content: &str, needle: &str, label: &str) {
     );
 }
 
+fn assert_no_runtime_fallback_execution(content: &str, label: &str) {
+    // Intentional invariant: skill installs package the runtime binary on
+    // purpose. Runtime-root resolution is for locating adjacent files from the
+    // same install, not for switching command execution to another launcher.
+    // NEVER relax these checks without an explicit product decision.
+    for needle in [
+        "$_REPO_ROOT/bin/featureforge",
+        "$_REPO_ROOT/bin/featureforge.exe",
+        "${_FEATUREFORGE_BIN:-featureforge}",
+        "command -v featureforge",
+    ] {
+        assert_not_contains(content, needle, label);
+    }
+    for line in content.lines().map(str::trim_start) {
+        assert!(
+            !line.starts_with("\"$_FEATUREFORGE_ROOT/bin/featureforge\""),
+            "{label} should not execute runtime commands through $_FEATUREFORGE_ROOT/bin/featureforge"
+        );
+        assert!(
+            !line.starts_with("\"$INSTALL_DIR/bin/featureforge\""),
+            "{label} should not execute runtime commands through $INSTALL_DIR/bin/featureforge"
+        );
+        assert!(
+            !line.starts_with("\"$_FEATUREFORGE_ROOT/bin/featureforge.exe\""),
+            "{label} should not execute runtime commands through $_FEATUREFORGE_ROOT/bin/featureforge.exe"
+        );
+        assert!(
+            !line.starts_with("\"$INSTALL_DIR/bin/featureforge.exe\""),
+            "{label} should not execute runtime commands through $INSTALL_DIR/bin/featureforge.exe"
+        );
+        assert!(
+            !line.starts_with("FEATUREFORGE_RUNTIME_BIN=\"$_FEATUREFORGE_ROOT/bin/featureforge\""),
+            "{label} should not assign FEATUREFORGE_RUNTIME_BIN from $_FEATUREFORGE_ROOT"
+        );
+        assert!(
+            !line.starts_with("FEATUREFORGE_RUNTIME_BIN=\"$INSTALL_DIR/bin/featureforge\""),
+            "{label} should not assign FEATUREFORGE_RUNTIME_BIN from INSTALL_DIR"
+        );
+        assert!(
+            !line.starts_with(
+                "FEATUREFORGE_RUNTIME_BIN=\"$_FEATUREFORGE_ROOT/bin/featureforge.exe\""
+            ),
+            "{label} should not assign FEATUREFORGE_RUNTIME_BIN from $_FEATUREFORGE_ROOT/bin/featureforge.exe"
+        );
+        assert!(
+            !line.starts_with("FEATUREFORGE_RUNTIME_BIN=\"$INSTALL_DIR/bin/featureforge.exe\""),
+            "{label} should not assign FEATUREFORGE_RUNTIME_BIN from INSTALL_DIR/bin/featureforge.exe"
+        );
+    }
+}
+
 fn assert_file_contains(path: impl AsRef<Path>, needle: &str) {
     let path_ref = path.as_ref();
     let content = read_utf8(path_ref);
@@ -48,6 +102,16 @@ fn assert_description_contains(path: impl AsRef<Path>, needle: &str) {
     let content = read_utf8(path_ref);
     let first_lines = content.lines().take(6).collect::<Vec<_>>().join("\n");
     assert_contains(&first_lines, needle, &path_ref.display().to_string());
+}
+
+fn generated_skill_doc_paths() -> Vec<PathBuf> {
+    fs::read_dir(repo_root().join("skills"))
+        .expect("skills dir should be readable")
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| path.join("SKILL.md").is_file() && path.join("SKILL.md.tmpl").is_file())
+        .map(|path| path.join("SKILL.md"))
+        .collect()
 }
 
 fn extract_bash_block(content: &str, heading: &str) -> String {
@@ -81,11 +145,53 @@ fn extract_bash_block(content: &str, heading: &str) -> String {
     lines.join("\n")
 }
 
+fn write_executable(path: &Path, body: &str) {
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).expect("executable parent dir should exist");
+    }
+    fs::write(path, body).expect("executable should be writable");
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(path, fs::Permissions::from_mode(0o755))
+            .expect("executable should stay executable");
+    }
+}
+
+fn write_poison_runtime_launcher(root: &Path, marker: &str) {
+    let poison_body = format!(
+        "#!/usr/bin/env bash\nprintf '%s\\n' '{marker}' >> \"$FEATUREFORGE_TEST_LOG\"\nexit 86\n"
+    );
+    for relative in ["bin/featureforge", "bin/featureforge.exe"] {
+        write_executable(&root.join(relative), &poison_body);
+    }
+}
+
+fn write_logging_packaged_runtime(
+    packaged_bin: &Path,
+    resolved_runtime_root: &Path,
+    log_path: &Path,
+) {
+    let resolved_runtime_root = resolved_runtime_root
+        .canonicalize()
+        .unwrap_or_else(|_| resolved_runtime_root.to_path_buf());
+    if let Some(parent) = log_path.parent() {
+        fs::create_dir_all(parent).expect("log parent dir should exist");
+    }
+    write_executable(
+        packaged_bin,
+        &format!(
+            "#!/usr/bin/env bash\n: \"${{FEATUREFORGE_TEST_LOG:?}}\"\ncase \"${{1:-}}:${{2:-}}:${{3:-}}:${{4:-}}\" in\n  repo:runtime-root:--path:*)\n    printf '%s\\n' 'PACKAGED:repo-runtime-root' >> \"$FEATUREFORGE_TEST_LOG\"\n    printf '%s\\n' '{}'\n    exit 0\n    ;;\n  update-check:::)\n    printf '%s\\n' 'PACKAGED:update-check' >> \"$FEATUREFORGE_TEST_LOG\"\n    printf 'UPGRADE_AVAILABLE 1.0.0 1.1.0\\n'\n    exit 0\n    ;;\n  config:get:featureforge_contributor:*)\n    printf '%s\\n' 'PACKAGED:config-get' >> \"$FEATUREFORGE_TEST_LOG\"\n    printf 'false\\n'\n    exit 0\n    ;;\n  *)\n    printf '%s\\n' \"PACKAGED:UNEXPECTED:${{1:-}}:${{2:-}}:${{3:-}}:${{4:-}}\" >> \"$FEATUREFORGE_TEST_LOG\"\n    exit 0\n    ;;\nesac\n",
+            resolved_runtime_root.display()
+        ),
+    );
+}
+
 fn make_runtime_root(dir: &Path) {
     fs::create_dir_all(dir.join("bin")).expect("runtime bin dir should exist");
     fs::write(
         dir.join("bin/featureforge"),
-        "#!/usr/bin/env bash\ncase \"${1:-}\" in\n  update-check)\n    exit 0\n    ;;\n  config)\n    exit 0\n    ;;\n  *)\n    exit 0\n    ;;\nesac\n",
+        "#!/usr/bin/env bash\ncase \"${1:-}\" in\n  repo)\n    if [ \"${2:-}\" = \"runtime-root\" ] && [ \"${3:-}\" = \"--json\" ]; then\n      printf '{\"resolved\":true,\"root\":\"%s\",\"source\":\"featureforge_dir_env\",\"validation\":{\"has_version\":true,\"has_binary\":true,\"upgrade_eligible\":true}}\\n' \"$(pwd -P)\"\n      exit 0\n    fi\n    if [ \"${2:-}\" = \"runtime-root\" ] && [ \"${3:-}\" = \"--path\" ]; then\n      printf '%s\\n' \"$(pwd -P)\"\n      exit 0\n    fi\n    exit 0\n    ;;\n  update-check)\n    exit 0\n    ;;\n  config)\n    exit 0\n    ;;\n  *)\n    exit 0\n    ;;\nesac\n",
     )
     .expect("runtime launcher should be writable");
     #[cfg(unix)]
@@ -160,6 +266,68 @@ fn repo_checkout_canonical_launcher_runs_without_recursive_fallback() {
 }
 
 #[test]
+fn repo_checkout_canonical_launcher_supports_runtime_root_helper_contract() {
+    let launcher = if cfg!(windows) {
+        repo_root().join("bin/featureforge.exe")
+    } else {
+        repo_root().join("bin/featureforge")
+    };
+    let output = AssertCommand::new(launcher)
+        .current_dir(repo_root())
+        .timeout(Duration::from_secs(2))
+        .args(["repo", "runtime-root", "--json"])
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "repo-local launcher should support repo runtime-root --json\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stdout = String::from_utf8(output.stdout).expect("runtime-root stdout should be utf-8");
+    assert_contains(
+        &stdout,
+        "\"resolved\":true",
+        "bin/featureforge repo runtime-root --json",
+    );
+    assert_contains(
+        &stdout,
+        &format!("\"root\":\"{}\"", repo_root().display()),
+        "bin/featureforge repo runtime-root --json",
+    );
+}
+
+#[test]
+fn repo_checkout_canonical_launcher_supports_runtime_root_path_contract() {
+    let launcher = if cfg!(windows) {
+        repo_root().join("bin/featureforge.exe")
+    } else {
+        repo_root().join("bin/featureforge")
+    };
+    let output = AssertCommand::new(launcher)
+        .current_dir(repo_root())
+        .timeout(Duration::from_secs(2))
+        .args(["repo", "runtime-root", "--path"])
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "repo-local launcher should support repo runtime-root --path\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stdout =
+        String::from_utf8(output.stdout).expect("runtime-root --path stdout should be utf-8");
+    assert_eq!(
+        stdout.trim_end(),
+        repo_root().to_string_lossy(),
+        "bin/featureforge repo runtime-root --path should print the resolved root directly"
+    );
+}
+
+#[test]
 fn repo_checkout_canonical_launcher_avoids_non_binary_repo_fallbacks() {
     let root = repo_root();
     let top_level_bin_files = fs::read_dir(root.join("bin"))
@@ -230,6 +398,19 @@ fn repo_checkout_canonical_launcher_uses_manifest_selected_binary_path() {
             "renamed prebuilt runtime asset should exist: {relative}"
         );
     }
+}
+
+#[test]
+fn shipped_runtime_docs_never_reintroduce_runtime_binary_fallbacks() {
+    for path in generated_skill_doc_paths() {
+        let label = path.display().to_string();
+        let content = read_utf8(&path);
+        assert_no_runtime_fallback_execution(&content, &label);
+    }
+
+    let upgrade_skill = repo_root().join("featureforge-upgrade/SKILL.md");
+    let upgrade_content = read_utf8(&upgrade_skill);
+    assert_no_runtime_fallback_execution(&upgrade_content, &upgrade_skill.display().to_string());
 }
 
 #[test]
@@ -369,6 +550,16 @@ fn runtime_instruction_docs_point_at_rust_as_the_primary_oracle() {
     );
     assert_contains(
         &docs_testing_content,
+        "node scripts/gen-agent-docs.mjs --check",
+        "docs/testing.md",
+    );
+    assert_not_contains(
+        &docs_testing_content,
+        "cargo nextest run --test contracts_spec_plan --test runtime_instruction_contracts --test using_featureforge_skill --test session_config_slug --test repo_safety --test update_and_install --test workflow_runtime --test workflow_shell_smoke --test plan_execution --test powershell_wrapper_resolution --test upgrade_skill",
+        "docs/testing.md",
+    );
+    assert_contains(
+        &docs_testing_content,
         "workflow-status snapshot coverage for the ambiguous-spec route lives in `tests/workflow_runtime.rs`",
         "docs/testing.md",
     );
@@ -396,7 +587,9 @@ fn runtime_docs_and_fixtures_do_not_depend_on_the_removed_differential_shell_har
     let root = repo_root();
 
     assert!(
-        !root.join("tests/differential/run_legacy_vs_rust.sh").exists(),
+        !root
+            .join("tests/differential/run_legacy_vs_rust.sh")
+            .exists(),
         "tests/differential/run_legacy_vs_rust.sh should be removed once the snapshot lives in workflow_runtime.rs"
     );
     assert!(
@@ -406,7 +599,10 @@ fn runtime_docs_and_fixtures_do_not_depend_on_the_removed_differential_shell_har
 
     assert_file_not_contains(root.join("README.md"), "run_legacy_vs_rust.sh");
     assert_file_not_contains(root.join("docs/testing.md"), "run_legacy_vs_rust.sh");
-    assert_file_not_contains(root.join("docs/test-suite-enhancement-plan.md"), "tests/differential/");
+    assert_file_not_contains(
+        root.join("docs/test-suite-enhancement-plan.md"),
+        "tests/differential/",
+    );
     assert_file_contains(
         root.join("docs/testing.md"),
         "workflow-status snapshot coverage for the ambiguous-spec route lives in `tests/workflow_runtime.rs`",
@@ -525,7 +721,8 @@ fn runtime_instruction_surface_contracts_and_generation_checks_hold() {
             [
                 "~/.featureforge/install/bin/featureforge config set featureforge_contributor true",
                 "~/.featureforge/install/bin/featureforge config set update_check true",
-                "~/.featureforge/install/bin/featureforge update-check",
+                "featureforge.exe",
+                "for `update-check` automatically",
             ],
             [
                 "~/.featureforge/install/bin/featureforge install migrate",
@@ -540,7 +737,8 @@ fn runtime_instruction_surface_contracts_and_generation_checks_hold() {
             [
                 "~/.featureforge/install/bin/featureforge config set featureforge_contributor true",
                 "~/.featureforge/install/bin/featureforge config set update_check true",
-                "~/.featureforge/install/bin/featureforge update-check",
+                "featureforge.exe",
+                "for `update-check` automatically",
             ],
             [
                 "~/.featureforge/install/bin/featureforge install migrate",
@@ -590,9 +788,18 @@ fn runtime_instruction_surface_contracts_and_generation_checks_hold() {
         "Accelerated review is an opt-in branch inside `plan-ceo-review` and `plan-eng-review`, not a separate workflow stage.",
     );
     assert_file_contains(
+        root.join("docs/README.codex.md"),
+        "run the packaged install binary under `~/.featureforge/install/bin/` (`featureforge` on Unix, `featureforge.exe` on Windows)",
+    );
+    assert_file_contains(
         root.join("docs/README.copilot.md"),
         "Accelerated review is an opt-in branch inside `plan-ceo-review` and `plan-eng-review`, not a separate workflow stage.",
     );
+    assert_file_contains(
+        root.join("docs/README.copilot.md"),
+        "run the packaged install binary under `~/.featureforge/install/bin/` (`featureforge` on Unix, `featureforge.exe` on Windows)",
+    );
+    assert_file_contains(root.join("README.md"), "node scripts/gen-agent-docs.mjs --check");
     assert_file_contains(
         root.join("review/review-accelerator-packet-contract.md"),
         "required packet fields",
@@ -604,6 +811,30 @@ fn runtime_instruction_surface_contracts_and_generation_checks_hold() {
     assert_file_contains(
         root.join("review/review-accelerator-packet-contract.md"),
         "main-agent-only write authority",
+    );
+}
+
+#[test]
+fn cutover_script_keeps_the_legacy_root_content_scan_repo_bounded_and_single_pass() {
+    let script = read_utf8(repo_root().join("scripts/check-featureforge-cutover.sh"));
+
+    // Intentional performance and plan-delivery contract: the cutover gate
+    // must classify active versus archived content from one repo-wide scan, not
+    // drift back into one `rg` subprocess per tracked file as the repo grows.
+    assert_contains(
+        &script,
+        "while IFS= read -r hit; do",
+        "scripts/check-featureforge-cutover.sh",
+    );
+    assert_contains(
+        &script,
+        "done < <(grep -nH -E \"$LEGACY_ROOT_REGEX\" -- \"${surface_files[@]}\" || true)",
+        "scripts/check-featureforge-cutover.sh",
+    );
+    assert_not_contains(
+        &script,
+        "done < <(rg -n -H -I \"$LEGACY_ROOT_REGEX\" \"$file\" || true)",
+        "scripts/check-featureforge-cutover.sh",
     );
 }
 
@@ -804,7 +1035,7 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
     );
     assert_file_contains(
         root.join("skills/brainstorming/SKILL.md"),
-        "\"$_FEATUREFORGE_ROOT/bin/featureforge\" workflow expect --artifact spec --path",
+        "\"$_FEATUREFORGE_BIN\" workflow expect --artifact spec --path",
     );
     assert_file_contains(
         root.join("skills/brainstorming/SKILL.md"),
@@ -837,7 +1068,7 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
     );
     assert_file_contains(
         root.join("skills/using-featureforge/SKILL.md"),
-        "First, if `$_FEATUREFORGE_ROOT/bin/featureforge` is available, call `$_FEATUREFORGE_ROOT/bin/featureforge workflow status --refresh`.",
+        "First, if `$_FEATUREFORGE_BIN` is available, call `$_FEATUREFORGE_BIN workflow status --refresh`.",
     );
     assert_file_contains(
         root.join("skills/using-featureforge/SKILL.md"),
@@ -874,11 +1105,11 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
 
     assert_file_contains(
         root.join("skills/writing-plans/SKILL.md"),
-        "\"$_FEATUREFORGE_ROOT/bin/featureforge\" workflow expect --artifact plan --path",
+        "\"$_FEATUREFORGE_BIN\" workflow expect --artifact plan --path",
     );
     assert_file_contains(
         root.join("skills/writing-plans/SKILL.md"),
-        "\"$_FEATUREFORGE_ROOT/bin/featureforge\" plan contract lint \\",
+        "\"$_FEATUREFORGE_BIN\" plan contract lint \\",
     );
     assert_file_contains(
         root.join("skills/writing-plans/SKILL.md"),
@@ -979,7 +1210,7 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
     );
     assert_file_contains(
         root.join("skills/plan-eng-review/SKILL.md"),
-        "If the helper returns `status` `implementation_ready`, immediately call `$_FEATUREFORGE_ROOT/bin/featureforge workflow handoff` before presenting any handoff text.",
+        "If the helper returns `status` `implementation_ready`, immediately call `$_FEATUREFORGE_BIN workflow handoff` before presenting any handoff text.",
     );
     assert_file_contains(
         root.join("skills/plan-eng-review/SKILL.md"),
@@ -1167,7 +1398,7 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
     );
     assert_file_contains(
         root.join("skills/requesting-code-review/SKILL.md"),
-        "REVIEW_GATE_JSON=$(\"$_FEATUREFORGE_ROOT/bin/featureforge\" plan execution gate-review --plan \"$APPROVED_PLAN_PATH\")",
+        "REVIEW_GATE_JSON=$(\"$_FEATUREFORGE_BIN\" plan execution gate-review --plan \"$APPROVED_PLAN_PATH\")",
     );
     assert_file_contains(
         root.join("skills/requesting-code-review/SKILL.md"),
@@ -1272,62 +1503,179 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
 }
 
 #[test]
-fn using_featureforge_preamble_prefers_valid_repo_roots_over_fallback_installs() {
+fn spawned_subagent_marker_contracts_are_documented_consistently() {
+    let root = repo_root();
+
+    assert_file_contains(
+        root.join("skills/using-featureforge/SKILL.md"),
+        "featureforge session-entry resolve --message-file <path> --spawned-subagent",
+    );
+    assert_file_contains(
+        root.join("skills/using-featureforge/SKILL.md"),
+        "--spawned-subagent-opt-in",
+    );
+    assert_file_contains(
+        root.join("skills/using-featureforge/SKILL.md"),
+        "default spawned-subagent bypass is ephemeral and non-persisted",
+    );
+    assert_file_contains(
+        root.join("skills/dispatching-parallel-agents/SKILL.md"),
+        "FEATUREFORGE_SPAWNED_SUBAGENT=1",
+    );
+    assert_file_contains(
+        root.join("skills/subagent-driven-development/SKILL.md"),
+        "FEATUREFORGE_SPAWNED_SUBAGENT=1",
+    );
+}
+
+#[test]
+fn using_featureforge_preamble_uses_only_the_packaged_runtime_binary() {
     let content = read_utf8(repo_root().join("skills/using-featureforge/SKILL.md"));
     let preamble = extract_bash_block(&content, "## Preamble (run first)");
     let tmp_root = TempDir::new().expect("temp root should exist");
 
+    assert_no_runtime_fallback_execution(&preamble, "using-featureforge preamble");
+
     let shared_home = tmp_root.path().join("shared-home");
-    fs::create_dir_all(shared_home.join(".featureforge")).expect("shared home should exist");
-    make_runtime_root(&shared_home.join(".featureforge/install"));
-    let renamed_repo = tmp_root.path().join("runtime-dev-checkout");
-    fs::create_dir_all(&renamed_repo).expect("renamed repo should exist");
-    make_runtime_repo(&renamed_repo);
-    let expected_repo_root =
-        fs::canonicalize(&renamed_repo).expect("repo root should canonicalize");
+    fs::create_dir_all(&shared_home).expect("shared home should exist");
+    let packaged_runtime = tmp_root.path().join("packaged-runtime");
+    fs::create_dir_all(&packaged_runtime).expect("packaged runtime should exist");
+    make_runtime_repo(&packaged_runtime);
+    let packaged_bin = canonical_install_bin(&shared_home);
+    fs::create_dir_all(
+        packaged_bin
+            .parent()
+            .expect("packaged install binary should have a parent"),
+    )
+    .expect("packaged install parent should exist");
+    let expected_runtime_root =
+        fs::canonicalize(&packaged_runtime).expect("packaged runtime should canonicalize");
+    fs::write(
+        &packaged_bin,
+        format!(
+            "#!/usr/bin/env bash\nif [ \"${{1:-}}\" = \"repo\" ] && [ \"${{2:-}}\" = \"runtime-root\" ] && [ \"${{3:-}}\" = \"--path\" ]; then\n  printf '%s\\n' '{}'\n  exit 0\nfi\nexit 0\n",
+            expected_runtime_root.display()
+        ),
+    )
+    .expect("packaged runtime binary should be writable");
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(&packaged_bin, fs::Permissions::from_mode(0o755))
+            .expect("packaged runtime binary should stay executable");
+    }
+
+    let repo_candidate = tmp_root.path().join("repo-candidate");
+    fs::create_dir_all(&repo_candidate).expect("repo candidate should exist");
+    make_runtime_repo(&repo_candidate);
+
+    let mut packaged_command = Command::new("bash");
+    packaged_command
+        .arg("-lc")
+        .arg(format!(
+            "{preamble}\nprintf \"FEATUREFORGE_ROOT=%s\\n\" \"$_FEATUREFORGE_ROOT\"\n"
+        ))
+        .current_dir(&repo_candidate)
+        .env("HOME", &shared_home);
+    let packaged = run_checked(packaged_command, "run packaged using-featureforge preamble");
+    let packaged_stdout =
+        String::from_utf8(packaged.stdout).expect("preamble output should be utf8");
+    assert_contains(
+        &packaged_stdout,
+        &format!("FEATUREFORGE_ROOT={}", expected_runtime_root.display()),
+        "using-featureforge packaged output",
+    );
+
+    let non_runtime_repo = tmp_root.path().join("non-runtime-repo");
+    fs::create_dir_all(&non_runtime_repo).expect("non-runtime repo should exist");
+    let mut git_init = Command::new("git");
+    git_init.arg("init").current_dir(&non_runtime_repo);
+    run_checked(git_init, "git init non-runtime repo");
+    let missing_packaged_home = tmp_root.path().join("missing-packaged-home");
+    fs::create_dir_all(&missing_packaged_home).expect("missing packaged home should exist");
+
+    let mut no_fallback_command = Command::new("bash");
+    no_fallback_command
+        .arg("-lc")
+        .arg(format!(
+            "{preamble}\nprintf \"FEATUREFORGE_ROOT=%s\\n\" \"$_FEATUREFORGE_ROOT\"\n"
+        ))
+        .current_dir(&non_runtime_repo)
+        .env("HOME", &missing_packaged_home);
+    let no_fallback = run_checked(
+        no_fallback_command,
+        "run using-featureforge preamble without packaged binary",
+    );
+    let no_fallback_stdout =
+        String::from_utf8(no_fallback.stdout).expect("no-fallback output should be utf8");
+    assert_contains(
+        &no_fallback_stdout,
+        "FEATUREFORGE_ROOT=",
+        "using-featureforge no-fallback output",
+    );
+    assert_not_contains(
+        &no_fallback_stdout,
+        &expected_runtime_root.display().to_string(),
+        "using-featureforge no-fallback output",
+    );
+    assert_not_contains(
+        &no_fallback_stdout,
+        &non_runtime_repo.display().to_string(),
+        "using-featureforge no-fallback output",
+    );
+}
+
+#[test]
+fn generated_skill_preamble_never_executes_repo_or_root_selected_launchers() {
+    let content = read_utf8(repo_root().join("skills/brainstorming/SKILL.md"));
+    let preamble = extract_bash_block(&content, "## Preamble (run first)");
+    let tmp_root = TempDir::new().expect("temp root should exist");
+    let home_dir = tmp_root.path().join("home");
+    let state_dir = tmp_root.path().join("state");
+    let repo_candidate = tmp_root.path().join("repo-candidate");
+    let resolved_runtime_root = tmp_root.path().join("resolved-runtime-root");
+    let packaged_log = tmp_root.path().join("packaged.log");
+
+    fs::create_dir_all(&home_dir).expect("home dir should exist");
+    fs::create_dir_all(&state_dir).expect("state dir should exist");
+    fs::create_dir_all(&repo_candidate).expect("repo candidate should exist");
+    fs::create_dir_all(&resolved_runtime_root).expect("resolved runtime root should exist");
+
+    let mut git_init = Command::new("git");
+    git_init.arg("init").current_dir(&repo_candidate);
+    run_checked(git_init, "git init repo candidate");
+
+    write_logging_packaged_runtime(&canonical_install_bin(&home_dir), &resolved_runtime_root, &packaged_log);
+    write_poison_runtime_launcher(&repo_candidate, "POISON_REPO");
+    write_poison_runtime_launcher(&resolved_runtime_root, "POISON_ROOT");
 
     let mut command = Command::new("bash");
     command
         .arg("-lc")
-        .arg(format!(
-            "{preamble}\nprintf \"FEATUREFORGE_ROOT=%s\\n\" \"$_FEATUREFORGE_ROOT\"\n"
-        ))
-        .current_dir(&renamed_repo)
-        .env("HOME", &shared_home);
-    let output = run_checked(command, "run generated using-featureforge preamble");
-    let stdout = String::from_utf8(output.stdout).expect("preamble output should be utf8");
+        .arg(preamble)
+        .current_dir(&repo_candidate)
+        .env("HOME", &home_dir)
+        .env("FEATUREFORGE_STATE_DIR", &state_dir)
+        .env("FEATUREFORGE_TEST_LOG", &packaged_log);
+    let output = run_checked(
+        command,
+        "run generated skill preamble with poisoned fallback launchers",
+    );
+    let stdout = String::from_utf8(output.stdout).expect("preamble stdout should be utf8");
+    let log = read_utf8(&packaged_log);
+
+    // Intentional invariant: skill installs package the runtime binary on
+    // purpose. Repo-local binaries and binaries discovered from the resolved
+    // runtime root are companion-file locations only. They must NEVER become
+    // command execution fallbacks unless product direction changes explicitly.
     assert_contains(
         &stdout,
-        &format!("FEATUREFORGE_ROOT={}", expected_repo_root.display()),
-        "using-featureforge preamble output",
+        "UPGRADE_AVAILABLE 1.0.0 1.1.0",
+        "generated skill preamble stdout",
     );
-
-    let invalid_home = tmp_root.path().join("invalid-home");
-    fs::create_dir_all(invalid_home.join(".featureforge")).expect("invalid home should exist");
-    make_runtime_root(&invalid_home.join(".featureforge/install"));
-    let invalid_repo = tmp_root.path().join("not-a-runtime");
-    fs::create_dir_all(&invalid_repo).expect("invalid repo should exist");
-    let mut git_init = Command::new("git");
-    git_init.arg("init").current_dir(&invalid_repo);
-    run_checked(git_init, "git init invalid repo");
-
-    let mut fallback_command = Command::new("bash");
-    fallback_command
-        .arg("-lc")
-        .arg(format!(
-            "{preamble}\nprintf \"FEATUREFORGE_ROOT=%s\\n\" \"$_FEATUREFORGE_ROOT\"\n"
-        ))
-        .current_dir(&invalid_repo)
-        .env("HOME", &invalid_home);
-    let fallback = run_checked(fallback_command, "run fallback using-featureforge preamble");
-    let fallback_stdout =
-        String::from_utf8(fallback.stdout).expect("fallback output should be utf8");
-    assert_contains(
-        &fallback_stdout,
-        &format!(
-            "FEATUREFORGE_ROOT={}",
-            invalid_home.join(".featureforge/install").display()
-        ),
-        "using-featureforge fallback output",
-    );
+    assert_contains(&log, "PACKAGED:repo-runtime-root", "packaged runtime command log");
+    assert_contains(&log, "PACKAGED:update-check", "packaged runtime command log");
+    assert_contains(&log, "PACKAGED:config-get", "packaged runtime command log");
+    assert_not_contains(&log, "POISON_REPO", "packaged runtime command log");
+    assert_not_contains(&log, "POISON_ROOT", "packaged runtime command log");
 }

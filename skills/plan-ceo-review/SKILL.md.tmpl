@@ -25,7 +25,7 @@ description: Use when a written FeatureForge design or architecture spec needs C
 - After each spec edit (including final approval edits), runs `sync --artifact spec` for the spec path:
 
 ```bash
-"$_FEATUREFORGE_ROOT/bin/featureforge" workflow sync --artifact spec --path docs/featureforge/specs/YYYY-MM-DD-<topic>-design.md
+"$_FEATUREFORGE_BIN" workflow sync --artifact spec --path docs/featureforge/specs/YYYY-MM-DD-<topic>-design.md
 ```
 
 **Protected-Branch Repo-Write Gate:**

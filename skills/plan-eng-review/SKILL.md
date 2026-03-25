@@ -8,24 +8,24 @@ description: Use when a written FeatureForge implementation plan from a CEO-appr
 ## Preamble (run first)
 
 ```bash
-_IS_FEATUREFORGE_RUNTIME_ROOT() {
-  local candidate="$1"
-  [ -n "$candidate" ] &&
-  [ -x "$candidate/bin/featureforge" ] &&
-  [ -f "$candidate/VERSION" ]
-}
 _REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 _BRANCH_RAW=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo current)
 [ -n "$_BRANCH_RAW" ] || _BRANCH_RAW="current"
 [ "$_BRANCH_RAW" != "HEAD" ] || _BRANCH_RAW="current"
 _BRANCH="$_BRANCH_RAW"
+_FEATUREFORGE_INSTALL_ROOT="$HOME/.featureforge/install"
 _FEATUREFORGE_ROOT=""
-_IS_FEATUREFORGE_RUNTIME_ROOT "$_REPO_ROOT" && _FEATUREFORGE_ROOT="$_REPO_ROOT"
-[ -z "$_FEATUREFORGE_ROOT" ] && _IS_FEATUREFORGE_RUNTIME_ROOT "$HOME/.featureforge/install" && _FEATUREFORGE_ROOT="$HOME/.featureforge/install"
-[ -z "$_FEATUREFORGE_ROOT" ] && _IS_FEATUREFORGE_RUNTIME_ROOT "$HOME/.codex/featureforge" && _FEATUREFORGE_ROOT="$HOME/.codex/featureforge"
-[ -z "$_FEATUREFORGE_ROOT" ] && _IS_FEATUREFORGE_RUNTIME_ROOT "$HOME/.copilot/featureforge" && _FEATUREFORGE_ROOT="$HOME/.copilot/featureforge"
+_FEATUREFORGE_BIN="$_FEATUREFORGE_INSTALL_ROOT/bin/featureforge"
+if [ ! -x "$_FEATUREFORGE_BIN" ] && [ -f "$_FEATUREFORGE_INSTALL_ROOT/bin/featureforge.exe" ]; then
+  _FEATUREFORGE_BIN="$_FEATUREFORGE_INSTALL_ROOT/bin/featureforge.exe"
+fi
+[ -x "$_FEATUREFORGE_BIN" ] || [ -f "$_FEATUREFORGE_BIN" ] || _FEATUREFORGE_BIN=""
+_FEATUREFORGE_RUNTIME_ROOT_PATH=""
+if [ -n "$_FEATUREFORGE_BIN" ] && _FEATUREFORGE_RUNTIME_ROOT_PATH=$("$_FEATUREFORGE_BIN" repo runtime-root --path 2>/dev/null); then
+  [ -n "$_FEATUREFORGE_RUNTIME_ROOT_PATH" ] && _FEATUREFORGE_ROOT="$_FEATUREFORGE_RUNTIME_ROOT_PATH"
+fi
 _UPD=""
-[ -n "$_FEATUREFORGE_ROOT" ] && _UPD=$("$_FEATUREFORGE_ROOT/bin/featureforge" update-check 2>/dev/null || true)
+[ -n "$_FEATUREFORGE_BIN" ] && _UPD=$("$_FEATUREFORGE_BIN" update-check 2>/dev/null || true)
 [ -n "$_UPD" ] && echo "$_UPD" || true
 _SP_STATE_DIR="${FEATUREFORGE_STATE_DIR:-$HOME/.featureforge}"
 mkdir -p "$_SP_STATE_DIR/sessions"
@@ -33,13 +33,13 @@ touch "$_SP_STATE_DIR/sessions/$PPID"
 _SESSIONS=$(find "$_SP_STATE_DIR/sessions" -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' ')
 find "$_SP_STATE_DIR/sessions" -mmin +120 -type f -delete 2>/dev/null || true
 _CONTRIB=""
-[ -n "$_FEATUREFORGE_ROOT" ] && _CONTRIB=$("$_FEATUREFORGE_ROOT/bin/featureforge" config get featureforge_contributor 2>/dev/null || true)
+[ -n "$_FEATUREFORGE_BIN" ] && _CONTRIB=$("$_FEATUREFORGE_BIN" config get featureforge_contributor 2>/dev/null || true)
 _TODOS_FORMAT=""
 [ -n "$_FEATUREFORGE_ROOT" ] && [ -f "$_FEATUREFORGE_ROOT/review/TODOS-format.md" ] && _TODOS_FORMAT="$_FEATUREFORGE_ROOT/review/TODOS-format.md"
 [ -z "$_TODOS_FORMAT" ] && [ -f "$_REPO_ROOT/review/TODOS-format.md" ] && _TODOS_FORMAT="$_REPO_ROOT/review/TODOS-format.md"
 ```
 
-If output shows `UPGRADE_AVAILABLE <old> <new>`: read the installed `featureforge-upgrade/SKILL.md` from the same featureforge root (check the current repo when it contains the FeatureForge runtime, then `$HOME/.featureforge/install`, then `$HOME/.codex/featureforge`, then `$HOME/.copilot/featureforge`) and follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise ask one interactive user question with 4 options and write snooze state if declined). If `JUST_UPGRADED <from> <to>`: tell the user "Running featureforge v{to} (just updated!)" and continue.
+If output shows `UPGRADE_AVAILABLE <old> <new>`: read `featureforge-upgrade/SKILL.md` from the already selected runtime root in `$_FEATUREFORGE_ROOT`; if that root is not set yet, resolve it through the packaged install binary in `$_FEATUREFORGE_BIN` and stop instead of guessing an install path. Then follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise ask one interactive user question with 4 options and write snooze state if declined). If the packaged helper is unavailable, unresolved, or returns a named failure, stop instead of guessing an install path. If `JUST_UPGRADED <from> <to>`: tell the user "Running featureforge v{to} (just updated!)" and continue.
 
 ## Search Before Building
 
@@ -293,7 +293,7 @@ Before moving into the review sections:
 Before `**Workflow State:** Engineering Approved`, run:
 
 ```bash
-PLAN_ANALYSIS_JSON="$("$_FEATUREFORGE_ROOT/bin/featureforge" plan contract analyze-plan \
+PLAN_ANALYSIS_JSON="$("$_FEATUREFORGE_BIN" plan contract analyze-plan \
   --spec <source-spec-path> \
   --plan <plan-path> \
   --format json)"
@@ -401,7 +401,7 @@ For LLM or prompt changes, check the repo's prompt or evaluation docs. If this p
 After producing the coverage graph, write a QA handoff artifact for cross-session reuse:
 
 ```bash
-_SLUG_ENV=$("$_FEATUREFORGE_ROOT/bin/featureforge" repo slug 2>/dev/null || true)
+_SLUG_ENV=$("$_FEATUREFORGE_BIN" repo slug 2>/dev/null || true)
 if [ -n "$_SLUG_ENV" ]; then
   eval "$_SLUG_ENV"
 fi
@@ -598,10 +598,10 @@ Check the git log for this branch. If there are prior commits suggesting a previ
 
 ## Execution handoff
 
-Before presenting the final execution preflight handoff, if `$_FEATUREFORGE_ROOT/bin/featureforge` is available, call `$_FEATUREFORGE_ROOT/bin/featureforge workflow status --refresh`.
+Before presenting the final execution preflight handoff, if `$_FEATUREFORGE_BIN` is available, call `$_FEATUREFORGE_BIN workflow status --refresh`.
 
 - If the helper returns a non-empty `next_skill`, use that route instead of re-deriving state manually.
-- If the helper returns `status` `implementation_ready`, immediately call `$_FEATUREFORGE_ROOT/bin/featureforge workflow handoff` before presenting any handoff text.
+- If the helper returns `status` `implementation_ready`, immediately call `$_FEATUREFORGE_BIN workflow handoff` before presenting any handoff text.
 - If that handoff returns `phase` `execution_preflight`, present the normal execution preflight handoff below.
 - If that handoff returns a later phase such as `review_blocked`, `qa_pending`, `document_release_pending`, or `ready_for_branch_completion`, follow that reported phase and `next_action` instead of reopening execution preflight.
 - Only fall back to manual artifact inspection if the helper is unavailable or fails.

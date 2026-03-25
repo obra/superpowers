@@ -9,7 +9,10 @@ use sha2::{Digest, Sha256};
 
 use crate::cli::repo_safety::{RepoSafetyApproveArgs, RepoSafetyCheckArgs};
 use crate::diagnostics::{DiagnosticError, FailureClass};
-use crate::git::{discover_repo_identity, discover_slug_identity};
+use crate::git::{
+    discover_repo_identity, discover_slug_identity, short_sha256_hex,
+    stored_repo_root_matches_current,
+};
 use crate::instructions::{collect_active_instruction_files, parse_protected_branches};
 use crate::paths::{
     RepoPath, branch_storage_key, featureforge_state_dir, normalize_identifier_token,
@@ -117,20 +120,17 @@ impl RepoSafetyRuntime {
     }
 
     pub fn check(&self, args: &RepoSafetyCheckArgs) -> Result<RepoSafetyResult, DiagnosticError> {
-        let intent = match args.intent.as_str() {
-            "read" | "write" => args.intent.as_str(),
-            _ => {
-                return Err(DiagnosticError::new(
-                    FailureClass::InvalidCommandInput,
-                    "check requires --intent read|write.",
-                ));
-            }
-        };
+        let intent = args.intent.as_str();
+        let write_targets = args
+            .write_targets
+            .iter()
+            .map(|target| target.as_str().to_owned())
+            .collect::<Vec<_>>();
         let scope = self.prepare_scope(
             &args.stage,
             args.task_id.as_deref(),
             &args.paths,
-            &args.write_targets,
+            &write_targets,
         )?;
 
         if intent == "read" {
@@ -160,7 +160,7 @@ impl RepoSafetyRuntime {
                         "featureforge:using-git-worktrees",
                     ));
                 }
-                if record.approval_fingerprint != scope.approval_fingerprint {
+                if !record_fingerprint_matches_scope(&record, &self.branch_name, &scope) {
                     return Ok(self.result(
                         "blocked",
                         intent,
@@ -179,11 +179,16 @@ impl RepoSafetyRuntime {
         &self,
         args: &RepoSafetyApproveArgs,
     ) -> Result<RepoSafetyResult, DiagnosticError> {
+        let write_targets = args
+            .write_targets
+            .iter()
+            .map(|target| target.as_str().to_owned())
+            .collect::<Vec<_>>();
         let scope = self.prepare_scope(
             &args.stage,
             args.task_id.as_deref(),
             &args.paths,
-            &args.write_targets,
+            &write_targets,
         )?;
         let approval_reason = normalize_reason(&args.reason)?;
         let record = ApprovalRecord {
@@ -249,7 +254,46 @@ impl RepoSafetyRuntime {
         if let Some(record) = read_approval_record(&scope.canonical_approval_path)? {
             return Ok(ApprovalLookup::Found(record));
         }
+        if let Some(record) = self.read_legacy_approval(scope)? {
+            return Ok(ApprovalLookup::Found(record));
+        }
         Ok(ApprovalLookup::Missing)
+    }
+
+    fn read_legacy_approval(
+        &self,
+        scope: &Scope,
+    ) -> Result<Option<ApprovalRecord>, DiagnosticError> {
+        let approvals_root = self.state_dir.join("repo-safety").join("approvals");
+        let branch_dir_name = format!("{}-{}", current_user_name(), self.safe_branch);
+        let Some(file_name) = scope.canonical_approval_path.file_name() else {
+            return Ok(None);
+        };
+        let current_slug_dir = approvals_root.join(&self.repo_slug);
+        let mut slug_dirs = match fs::read_dir(&approvals_root) {
+            Ok(entries) => entries
+                .flatten()
+                .map(|entry| entry.path())
+                .filter(|path| path.is_dir())
+                .filter(|path| path != &current_slug_dir)
+                .collect::<Vec<_>>(),
+            Err(_) => return Ok(None),
+        };
+        slug_dirs.sort();
+
+        for slug_dir in slug_dirs {
+            let candidate_path = slug_dir.join(&branch_dir_name).join(file_name);
+            let Some(record) = read_approval_record(&candidate_path)? else {
+                continue;
+            };
+            if record_matches_scope(&record, &self.repo_root, &self.branch_name, scope)
+                && record_fingerprint_matches_scope(&record, &self.branch_name, scope)
+            {
+                return Ok(Some(record));
+            }
+        }
+
+        Ok(None)
     }
 
     fn write_approval_record(
@@ -496,8 +540,26 @@ fn compute_fingerprint(
     paths: &[String],
     write_targets: &[String],
 ) -> String {
+    compute_fingerprint_for_repo_root(
+        &repo_root.to_string_lossy(),
+        branch_name,
+        stage,
+        task_id,
+        paths,
+        write_targets,
+    )
+}
+
+fn compute_fingerprint_for_repo_root(
+    repo_root: &str,
+    branch_name: &str,
+    stage: &str,
+    task_id: &str,
+    paths: &[String],
+    write_targets: &[String],
+) -> String {
     let mut hasher = Sha256::new();
-    hasher.update(format!("{}\n", repo_root.to_string_lossy()).as_bytes());
+    hasher.update(format!("{repo_root}\n").as_bytes());
     hasher.update(format!("{branch_name}\n").as_bytes());
     hasher.update(format!("{stage}\n").as_bytes());
     hasher.update(format!("{task_id}\n").as_bytes());
@@ -518,10 +580,27 @@ fn record_matches_scope(
     branch_name: &str,
     scope: &Scope,
 ) -> bool {
-    record.repo_root == repo_root.to_string_lossy()
+    stored_repo_root_matches_current(&record.repo_root, repo_root)
         && record.branch == branch_name
         && record.stage == scope.stage
         && record.task_id == scope.task_id
+}
+
+fn record_fingerprint_matches_scope(
+    record: &ApprovalRecord,
+    branch_name: &str,
+    scope: &Scope,
+) -> bool {
+    record.approval_fingerprint == scope.approval_fingerprint
+        || record.approval_fingerprint
+            == compute_fingerprint_for_repo_root(
+                &record.repo_root,
+                branch_name,
+                &scope.stage,
+                &scope.task_id,
+                &scope.paths,
+                &scope.write_targets,
+            )
 }
 
 fn read_approval_record(path: &Path) -> Result<Option<ApprovalRecord>, DiagnosticError> {
@@ -712,7 +791,5 @@ fn state_dir() -> PathBuf {
 }
 
 fn short_hash(value: &str, width: usize) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(value.as_bytes());
-    format!("{:x}", hasher.finalize())[..width].to_owned()
+    short_sha256_hex(value.as_bytes(), width)
 }

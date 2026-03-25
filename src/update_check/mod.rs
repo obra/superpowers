@@ -9,7 +9,8 @@ use serde::Serialize;
 use crate::cli::update_check::UpdateCheckCli;
 use crate::config;
 use crate::diagnostics::{DiagnosticError, FailureClass};
-use crate::paths::{featureforge_home_dir, write_atomic as write_atomic_file};
+use crate::paths::write_atomic as write_atomic_file;
+use crate::runtime_root;
 
 const UP_TO_DATE_TTL: Duration = Duration::from_secs(60 * 60);
 const UPGRADE_AVAILABLE_TTL: Duration = Duration::from_secs(60 * 60 * 12);
@@ -46,7 +47,9 @@ enum CacheRelation {
 }
 
 pub fn check(args: &UpdateCheckCli) -> Result<String, DiagnosticError> {
-    let paths = discover_paths()?;
+    let Some(paths) = discover_paths()? else {
+        return Ok(String::new());
+    };
     if matches!(
         config::read_update_check_preference(&paths.state_dir)?,
         Some(false)
@@ -188,33 +191,29 @@ pub fn write_update_check_schema(output_dir: &Path) -> Result<(), DiagnosticErro
     Ok(())
 }
 
-fn discover_paths() -> Result<UpdateCheckPaths, DiagnosticError> {
+fn discover_paths() -> Result<Option<UpdateCheckPaths>, DiagnosticError> {
     let state_dir = config::state_dir();
-    let install_dir = env::var_os("FEATUREFORGE_DIR")
-        .map(PathBuf::from)
-        .or_else(default_install_dir)
-        .ok_or_else(|| {
-            DiagnosticError::new(
-                FailureClass::UpdateCheckStateFailed,
-                "Could not determine the FeatureForge install root for update-check.",
-            )
-        })?;
+    let install_dir = match runtime_root::resolve_current_root() {
+        Ok(Some(resolved)) => resolved.root,
+        Ok(None) => return Ok(None),
+        Err(error)
+            if matches!(
+                error.failure_class_enum(),
+                FailureClass::ResolverContractViolation | FailureClass::ResolverRuntimeFailure
+            ) =>
+        {
+            return Ok(None);
+        }
+        Err(error) => return Err(error),
+    };
     let remote_url = env::var("FEATUREFORGE_REMOTE_URL").unwrap_or_else(|_| {
         String::from("https://raw.githubusercontent.com/dmulcahey/featureforge/main/VERSION")
     });
-    Ok(UpdateCheckPaths {
+    Ok(Some(UpdateCheckPaths {
         state_dir,
         install_dir,
         remote_url,
-    })
-}
-
-fn default_install_dir() -> Option<PathBuf> {
-    let current_dir = env::current_dir().ok()?;
-    if current_dir.join("VERSION").is_file() {
-        return Some(current_dir);
-    }
-    featureforge_home_dir().map(|home| home.join(".featureforge").join("install"))
+    }))
 }
 
 fn read_local_version(install_dir: &Path) -> Result<String, DiagnosticError> {

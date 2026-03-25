@@ -135,7 +135,7 @@ digraph brainstorming {
 - Before writing the spec, record the intended spec path with `expect`:
 
 ```bash
-"$_FEATUREFORGE_ROOT/bin/featureforge" workflow expect --artifact spec --path docs/featureforge/specs/YYYY-MM-DD-<topic>-design.md
+"$_FEATUREFORGE_BIN" workflow expect --artifact spec --path docs/featureforge/specs/YYYY-MM-DD-<topic>-design.md
 ```
 
 - Every spec MUST include these header lines immediately below the title:
@@ -166,7 +166,7 @@ digraph brainstorming {
 - After the spec is written or updated, runs `sync --artifact spec`:
 
 ```bash
-"$_FEATUREFORGE_ROOT/bin/featureforge" workflow sync --artifact spec --path docs/featureforge/specs/YYYY-MM-DD-<topic>-design.md
+"$_FEATUREFORGE_BIN" workflow sync --artifact spec --path docs/featureforge/specs/YYYY-MM-DD-<topic>-design.md
 ```
 
 **Protected-Branch Repo-Write Gate:**

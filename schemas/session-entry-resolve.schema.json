@@ -7,13 +7,13 @@
       "type": "string"
     },
     "decision_source": {
-      "type": "string"
+      "$ref": "#/$defs/SessionDecisionSourceSchemaDoc"
     },
     "failure_class": {
       "type": "string"
     },
     "outcome": {
-      "type": "string"
+      "$ref": "#/$defs/SessionOutcomeSchemaDoc"
     },
     "persisted": {
       "type": "boolean"
@@ -49,6 +49,28 @@
     "reason"
   ],
   "$defs": {
+    "SessionDecisionSourceSchemaDoc": {
+      "type": "string",
+      "enum": [
+        "existing_enabled",
+        "existing_bypassed",
+        "missing",
+        "malformed",
+        "explicit_reentry",
+        "explicit_reentry_unpersisted",
+        "spawned_subagent_default",
+        "spawned_subagent_opt_in",
+        "spawned_subagent_opt_in_unpersisted"
+      ]
+    },
+    "SessionOutcomeSchemaDoc": {
+      "type": "string",
+      "enum": [
+        "enabled",
+        "bypassed",
+        "needs_user_choice"
+      ]
+    },
     "SessionPrompt": {
       "type": "object",
       "properties": {

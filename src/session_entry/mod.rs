@@ -13,6 +13,8 @@ use crate::paths::{
 
 const MAX_MESSAGE_BYTES: u64 = 65_536;
 const ACTIVE_SESSION_ENTRY_SKILL: &str = "using-featureforge";
+const SPAWNED_SUBAGENT_ENV: &str = "FEATUREFORGE_SPAWNED_SUBAGENT";
+const SPAWNED_SUBAGENT_OPT_IN_ENV: &str = "FEATUREFORGE_SPAWNED_SUBAGENT_OPT_IN";
 const FEATUREFORGE_REENTRY_PHRASES: &[&str] = &[
     "use featureforge",
     "enable featureforge",
@@ -57,7 +59,9 @@ pub struct SessionPrompt {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct SessionEntryResolveOutput {
+    #[schemars(with = "SessionOutcomeSchemaDoc")]
     pub outcome: String,
+    #[schemars(with = "SessionDecisionSourceSchemaDoc")]
     pub decision_source: String,
     pub session_key: String,
     pub decision_path: String,
@@ -69,12 +73,42 @@ pub struct SessionEntryResolveOutput {
     pub prompt: Option<SessionPrompt>,
 }
 
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+enum SessionOutcomeSchemaDoc {
+    Enabled,
+    Bypassed,
+    NeedsUserChoice,
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+enum SessionDecisionSourceSchemaDoc {
+    ExistingEnabled,
+    ExistingBypassed,
+    Missing,
+    Malformed,
+    ExplicitReentry,
+    ExplicitReentryUnpersisted,
+    SpawnedSubagentDefault,
+    SpawnedSubagentOptIn,
+    SpawnedSubagentOptInUnpersisted,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum DecisionState {
     Enabled,
     Bypassed,
     Missing,
     Malformed,
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+struct SessionEntryContext {
+    spawned_subagent: bool,
+    spawned_subagent_opt_in: bool,
 }
 
 pub fn resolve(
@@ -90,6 +124,10 @@ pub fn resolve(
         ));
     }
     let runtime = SessionEntryRuntime::discover(args.session_key.as_deref())?;
+    let context = SessionEntryContext::from_resolve_args(args);
+    if context.spawned_subagent {
+        return runtime.resolve_spawned_subagent(context);
+    }
     let message_text = runtime.load_message_text(&args.message_file)?;
     let decision_state = runtime.read_decision_state()?;
 
@@ -176,6 +214,10 @@ pub fn inspect(session_key: Option<&str>) -> Result<SessionEntryResolveOutput, D
         ));
     }
     let runtime = SessionEntryRuntime::discover(session_key)?;
+    let context = SessionEntryContext::from_env();
+    if context.spawned_subagent {
+        return Ok(runtime.inspect_spawned_subagent_result(context));
+    }
     let decision_state = runtime.read_decision_state_read_only()?;
 
     match decision_state {
@@ -216,15 +258,7 @@ pub fn inspect(session_key: Option<&str>) -> Result<SessionEntryResolveOutput, D
 
 pub fn record(args: &SessionEntryRecordArgs) -> Result<SessionEntryResolveOutput, DiagnosticError> {
     let runtime = SessionEntryRuntime::discover(args.session_key.as_deref())?;
-    let decision = match args.decision.as_str() {
-        "enabled" | "bypassed" => args.decision.as_str(),
-        _ => {
-            return Err(DiagnosticError::new(
-                FailureClass::InvalidCommandInput,
-                "record requires --decision enabled|bypassed.",
-            ));
-        }
-    };
+    let decision = args.decision.as_str();
     runtime.write_decision(decision)?;
     Ok(runtime.result(
         decision,
@@ -355,6 +389,108 @@ impl SessionEntryRuntime {
             prompt,
         }
     }
+
+    fn resolve_spawned_subagent(
+        &self,
+        context: SessionEntryContext,
+    ) -> Result<SessionEntryResolveOutput, DiagnosticError> {
+        if !context.spawned_subagent {
+            return Err(DiagnosticError::new(
+                FailureClass::ResolverContractViolation,
+                "spawned-subagent resolution requires the spawned-subagent marker.",
+            ));
+        }
+        if !context.spawned_subagent_opt_in {
+            return Ok(self.spawned_subagent_result());
+        }
+        if matches!(
+            env::var("FEATUREFORGE_SESSION_ENTRY_TEST_FAILPOINT").as_deref(),
+            Ok("reentry_write_failure")
+        ) {
+            return Ok(self.result(
+                "enabled",
+                "spawned_subagent_opt_in_unpersisted",
+                false,
+                "DecisionWriteFailed",
+                "spawned_subagent_opt_in_unpersisted",
+                None,
+            ));
+        }
+        match self.write_decision("enabled") {
+            Ok(()) => Ok(self.result(
+                "enabled",
+                "spawned_subagent_opt_in",
+                true,
+                "",
+                "spawned_subagent_opt_in",
+                None,
+            )),
+            Err(error) if error.failure_class_enum() == FailureClass::DecisionWriteFailed => {
+                Ok(self.result(
+                    "enabled",
+                    "spawned_subagent_opt_in_unpersisted",
+                    false,
+                    "DecisionWriteFailed",
+                    "spawned_subagent_opt_in_unpersisted",
+                    None,
+                ))
+            }
+            Err(error) => Err(error),
+        }
+    }
+
+    fn spawned_subagent_result(&self) -> SessionEntryResolveOutput {
+        self.result(
+            "bypassed",
+            "spawned_subagent_default",
+            false,
+            "",
+            "spawned_subagent_default",
+            None,
+        )
+    }
+
+    fn inspect_spawned_subagent_result(
+        &self,
+        context: SessionEntryContext,
+    ) -> SessionEntryResolveOutput {
+        if context.spawned_subagent_opt_in {
+            return self.result(
+                "enabled",
+                "spawned_subagent_opt_in",
+                false,
+                "",
+                "spawned_subagent_opt_in",
+                None,
+            );
+        }
+        self.spawned_subagent_result()
+    }
+}
+
+impl SessionEntryContext {
+    fn from_resolve_args(args: &SessionEntryResolveArgs) -> Self {
+        let env_context = Self::from_env();
+        let spawned_subagent = args.spawned_subagent
+            || args.spawned_subagent_opt_in
+            || env_context.spawned_subagent
+            || env_context.spawned_subagent_opt_in;
+        let spawned_subagent_opt_in =
+            args.spawned_subagent_opt_in || env_context.spawned_subagent_opt_in;
+        Self {
+            spawned_subagent,
+            spawned_subagent_opt_in,
+        }
+    }
+
+    fn from_env() -> Self {
+        let spawned_subagent = env_flag(SPAWNED_SUBAGENT_ENV);
+        let spawned_subagent_opt_in = env_flag(SPAWNED_SUBAGENT_OPT_IN_ENV);
+        Self {
+            spawned_subagent: spawned_subagent || spawned_subagent_opt_in,
+            spawned_subagent_opt_in,
+        }
+    }
 }
 
 fn derive_session_key(raw_session_key: Option<&str>) -> Result<String, DiagnosticError> {
@@ -469,4 +605,14 @@ fn max_message_bytes() -> u64 {
         .ok()
         .and_then(|value| value.parse::<u64>().ok())
         .unwrap_or(MAX_MESSAGE_BYTES)
+}
+
+fn env_flag(name: &str) -> bool {
+    env::var(name)
+        .ok()
+        .map(|value| {
+            let normalized = value.trim().to_ascii_lowercase();
+            matches!(normalized.as_str(), "1" | "true" | "yes" | "on")
+        })
+        .unwrap_or(false)
 }

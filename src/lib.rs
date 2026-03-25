@@ -1,7 +1,8 @@
 use std::ffi::OsString;
 use std::path::PathBuf;
 
-use clap::Parser;
+use clap::{CommandFactory, Parser};
+use cli::runtime_root::RuntimeRootFieldCli;
 use cli::{Command, PlanCommand, RepoCommand};
 use diagnostics::{DiagnosticError, FailureClass, JsonFailure};
 use serde_json::{Value, json};
@@ -17,6 +18,7 @@ pub mod instructions;
 pub mod output;
 pub mod paths;
 pub mod repo_safety;
+pub mod runtime_root;
 pub mod session_entry;
 pub mod update_check;
 pub mod workflow;
@@ -101,6 +103,25 @@ pub fn run() -> std::process::ExitCode {
             RepoCommand::Slug(_) => emit_text(render_slug_output(
                 &std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")),
             )),
+            RepoCommand::RuntimeRoot(args) => {
+                if args.json {
+                    emit_json(runtime_root::resolve_current_output())
+                } else if args.path {
+                    emit_text(runtime_root::resolve_current_path_output())
+                } else if let Some(field) = args.field {
+                    let field = match field {
+                        RuntimeRootFieldCli::UpgradeEligible => {
+                            runtime_root::RuntimeRootField::UpgradeEligible
+                        }
+                    };
+                    emit_text(runtime_root::resolve_current_field_output(field))
+                } else {
+                    emit_json::<Value, JsonFailure>(Err(JsonFailure::new(
+                        FailureClass::InvalidCommandInput,
+                        "repo runtime-root requires either --json, --path, or --field.",
+                    )))
+                }
+            }
         },
         Some(Command::RepoSafety(repo_safety_cli)) => {
             match repo_safety::RepoSafetyRuntime::discover(
@@ -257,7 +278,12 @@ pub fn run() -> std::process::ExitCode {
                 }
             }
         }
-        None => std::process::ExitCode::SUCCESS,
+        None => {
+            let mut command = cli::Cli::command();
+            print!("{}", command.render_help());
+            println!();
+            std::process::ExitCode::SUCCESS
+        }
     }
 }
 

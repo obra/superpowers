@@ -21,7 +21,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 - Before writing the plan, record the intended plan path with `expect`:
 
 ```bash
-"$_FEATUREFORGE_ROOT/bin/featureforge" workflow expect --artifact plan --path docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md
+"$_FEATUREFORGE_BIN" workflow expect --artifact plan --path docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md
 ```
 
 ## Protected-Branch Repo-Write Gate
@@ -225,7 +225,7 @@ After saving the full plan:
 0. Before handoff, run the plan-contract lint gate:
 
 ```bash
-"$_FEATUREFORGE_ROOT/bin/featureforge" plan contract lint \
+"$_FEATUREFORGE_BIN" plan contract lint \
   --spec docs/featureforge/specs/YYYY-MM-DD-<feature-name>-design.md \
   --plan docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md
 ```
@@ -233,7 +233,7 @@ After saving the full plan:
 1. After the plan is written or updated, runs `sync --artifact plan`:
 
 ```bash
-"$_FEATUREFORGE_ROOT/bin/featureforge" workflow sync --artifact plan --path docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md
+"$_FEATUREFORGE_BIN" workflow sync --artifact plan --path docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md
 ```
 
 2. Invoke `featureforge:plan-eng-review` after saving the full plan.

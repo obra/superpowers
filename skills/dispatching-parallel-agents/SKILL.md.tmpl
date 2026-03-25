@@ -18,6 +18,10 @@ When you have multiple unrelated failures (different test files, different subsy
 
 **Platform note:** Current Codex releases enable subagent workflows by default. In Codex, start with the built-in `explorer` agent for read-heavy investigation, switch to the built-in `worker` agent for execution-heavy fixes, and define `.codex/agents/*.toml` custom agents only when the built-ins do not fit. In GitHub Copilot local installs, use the platform's native custom-agent or sub-agent features.
 
+## Nested Session Marker
+
+When a dispatched child will start a fresh FeatureForge conversation, set `FEATUREFORGE_SPAWNED_SUBAGENT=1` in the child environment so the runtime suppresses first-turn session-entry noise by default. Add `FEATUREFORGE_SPAWNED_SUBAGENT_OPT_IN=1` only when you intentionally want the nested child to re-enter FeatureForge and permit enabled-state persistence.
+
 ## When to Use
 
 ```dot

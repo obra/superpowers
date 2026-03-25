@@ -8,6 +8,7 @@ use sha2::{Digest, Sha256};
 use crate::contracts::plan::{AnalyzePlanReport, PlanDocument, PlanTask};
 use crate::contracts::spec::{Requirement, SpecDocument};
 use crate::diagnostics::{DiagnosticError, FailureClass};
+use crate::runtime_root::write_runtime_root_schema;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct TaskPacket {
@@ -107,6 +108,7 @@ pub fn write_contract_schemas(output_dir: impl AsRef<Path>) -> Result<(), Diagno
             format!("Could not write packet schema: {err}"),
         )
     })?;
+    write_runtime_root_schema(output_dir)?;
     Ok(())
 }
 

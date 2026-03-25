@@ -12,6 +12,8 @@ For a fresh Copilot session, the minimal instruction is:
 Follow the checked-in instructions in .copilot/INSTALL.md from this repository.
 ```
 
+For the canonical validation matrix after install or update, see [docs/testing.md](testing.md).
+
 ## Discovery Layout
 
 FeatureForge installs through one shared checkout:
@@ -46,6 +48,7 @@ The supported command families are:
 - `featureforge plan execution`
 - `featureforge config`
 - `featureforge update-check`
+- `featureforge repo runtime-root`
 - `featureforge repo slug`
 
 ## Workflow Summary
@@ -55,6 +58,7 @@ FeatureForge routes product work conservatively from repo-visible artifacts.
 Accelerated review is an opt-in branch inside `plan-ceo-review` and `plan-eng-review`, not a separate workflow stage.
 
 - `using-featureforge` is the human-readable entry router after `featureforge session-entry`
+- generated skill preambles always invoke the packaged install binary under `~/.featureforge/install/bin/` (`featureforge` on Unix, `featureforge.exe` on Windows), and that runtime resolves the active root through `featureforge repo runtime-root --path` before update checks or contributor-mode reads
 - `featureforge workflow status --refresh` re-derives the safe next stage from active specs and plans
 - `featureforge plan contract` compiles approved markdown into exact execution and review inputs
 - `featureforge plan execution recommend --plan <approved-plan-path>` selects the execution mode before work starts
@@ -77,5 +81,5 @@ Then refresh any copied reviewer artifact if your platform does not use symlinks
 
 1. Verify the skills link exists: `ls -la ~/.copilot/skills`
 2. Verify the reviewer artifact exists: `ls -la ~/.copilot/agents/code-reviewer.agent.md`
-3. Verify the runtime responds: `~/.featureforge/install/bin/featureforge workflow help`
+3. Verify the runtime responds: run the packaged install binary under `~/.featureforge/install/bin/` (`featureforge` on Unix, `featureforge.exe` on Windows) with `workflow help`
 4. Re-run the checked-in install instructions if any link or copied artifact is missing

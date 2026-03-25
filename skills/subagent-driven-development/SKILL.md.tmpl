@@ -16,6 +16,10 @@ Execute plan by dispatching a fresh sub-agent or custom agent per task, with two
 
 **Platform note:** Current Codex releases enable subagent workflows by default, so this skill does not require a separate `multi_agent` feature flag. In Codex, prefer the built-in `worker` agent for implementation and fix tasks, the built-in `explorer` agent for read-heavy review and codebase analysis, and project or personal `.codex/agents/*.toml` custom agents only when the built-ins do not fit. FeatureForge installs a `code-reviewer` custom agent for Codex review passes. In GitHub Copilot local installs, use the platform's native custom-agent or sub-agent support.
 
+## Nested Session Marker
+
+When you dispatch a child that will start a fresh FeatureForge conversation, set `FEATUREFORGE_SPAWNED_SUBAGENT=1` in the child environment so the runtime bypasses first-turn bootstrap by default for that nested context. Add `FEATUREFORGE_SPAWNED_SUBAGENT_OPT_IN=1` only when you intentionally want the nested child to re-enter FeatureForge and allow the runtime to persist an enabled decision.
+
 ## When to Use
 
 ```dot

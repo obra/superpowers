@@ -1,7 +1,7 @@
-#[path = "support/bin.rs"]
-mod bin_support;
 #[path = "support/files.rs"]
 mod files_support;
+#[path = "support/install.rs"]
+mod install_support;
 #[path = "support/json.rs"]
 mod json_support;
 #[path = "support/process.rs"]
@@ -14,6 +14,7 @@ use std::process::{Command, Output};
 use tempfile::TempDir;
 
 use files_support::write_file;
+use install_support::install_compiled_featureforge;
 use json_support::parse_json;
 use process_support::{repo_root, run, run_checked};
 
@@ -64,17 +65,14 @@ fn canonical_decision_path(state_dir: &Path, session_key: &str) -> PathBuf {
 }
 
 fn run_bash_block(state_dir: &Path, home_dir: &Path, script: &str, context: &str) -> Output {
+    install_compiled_featureforge(home_dir);
     let mut command = Command::new("bash");
     command
         .arg("-lc")
         .arg(script)
         .current_dir(repo_root())
         .env("FEATUREFORGE_STATE_DIR", state_dir)
-        .env("HOME", home_dir)
-        .env(
-            "FEATUREFORGE_COMPAT_BIN",
-            bin_support::compiled_featureforge_path(),
-        );
+        .env("HOME", home_dir);
     run(command, context)
 }
 
@@ -119,7 +117,7 @@ fn simulate_supported_entry(
         r#"
 set -euo pipefail
 {preamble}
-_resolve_json="$("$FEATUREFORGE_COMPAT_BIN" session-entry resolve --message-file "$SP_TEST_MESSAGE_FILE" --session-key "$SP_TEST_SESSION_KEY")"
+_resolve_json="$("$_FEATUREFORGE_BIN" session-entry resolve --message-file "$SP_TEST_MESSAGE_FILE" --session-key "$SP_TEST_SESSION_KEY")"
 eval "$(
   RESOLVE_JSON="$_resolve_json" python3 - <<'PY'
 import json
@@ -181,6 +179,7 @@ PY
 "#
     );
 
+    install_compiled_featureforge(home_dir);
     let output = run_checked(
         {
             let mut command = Command::new("bash");
@@ -190,10 +189,6 @@ PY
                 .current_dir(repo_root())
                 .env("FEATUREFORGE_STATE_DIR", state_dir)
                 .env("HOME", home_dir)
-                .env(
-                    "FEATUREFORGE_COMPAT_BIN",
-                    bin_support::compiled_featureforge_path(),
-                )
                 .env("SP_TEST_MESSAGE_FILE", &message_file)
                 .env("SP_TEST_SESSION_KEY", session_key);
             command
@@ -210,9 +205,13 @@ fn using_featureforge_skill_documents_and_derives_the_canonical_bypass_gate() {
     let required_patterns = [
         "~/.featureforge/session-entry/using-featureforge/$PPID",
         "featureforge session-entry resolve --message-file <path>",
+        "featureforge session-entry resolve --message-file <path> --spawned-subagent",
+        "featureforge session-entry resolve --message-file <path> --spawned-subagent --spawned-subagent-opt-in",
         "if the session decision is `enabled`, continue into the normal stack",
         "if the session decision is `bypassed` and the user did not explicitly request FeatureForge, stop and bypass the rest of this skill",
         "if the user explicitly requests FeatureForge or explicitly names a FeatureForge skill, rewrite the session decision to `enabled` and continue on the same turn",
+        "default spawned-subagent bypass is ephemeral and non-persisted",
+        "supported spawned-subagent entry paths must pass the runtime marker instead of inventing prose-only bypass behavior",
         "session-entry bootstrap ownership is runtime-owned",
         "missing or malformed decision state fails closed",
         "If the session decision file exists but contains malformed content:",
@@ -261,7 +260,7 @@ fn using_featureforge_skill_documents_and_derives_the_canonical_bypass_gate() {
 }
 
 #[test]
-fn using_featureforge_preamble_recognizes_the_repo_checkout_as_a_runtime_root() {
+fn using_featureforge_preamble_requires_the_packaged_runtime_binary() {
     let content = read_skill_doc();
     let preamble = extract_bash_block(&content, "## Preamble (run first)");
     let temp_home = TempDir::new().expect("home tempdir should exist");
@@ -270,16 +269,14 @@ fn using_featureforge_preamble_recognizes_the_repo_checkout_as_a_runtime_root() 
         state_dir.path(),
         temp_home.path(),
         &format!("{preamble}\nprintf \"%s\\n\" \"$_FEATUREFORGE_ROOT\"\n"),
-        "derive using-featureforge runtime root without compat override",
+        "derive using-featureforge runtime root without packaged binary",
     );
-    let derived_root = extract_last_nonempty_line(
-        &output.stdout,
-        "derive using-featureforge runtime root without compat override",
-    );
+    let stdout = String::from_utf8(output.stdout)
+        .expect("runtime root without packaged binary should emit utf8");
     assert_eq!(
-        PathBuf::from(&derived_root),
-        repo_root(),
-        "using-featureforge preamble should recognize the repo checkout as the runtime root without test-only launcher overrides"
+        stdout.trim_end(),
+        "",
+        "using-featureforge preamble should not guess a runtime root without the packaged install binary"
     );
 }
 
