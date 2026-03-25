@@ -15,7 +15,55 @@ Guide completion of development work by presenting clear options and handling ch
 
 ## The Process
 
-### Step 1: Verify Tests
+### Step 1: Detect Environment
+
+Run this FIRST, before test verification:
+
+````bash
+GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
+GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
+BRANCH=$(git branch --show-current)
+````
+
+**Path A — `GIT_DIR` differs from `GIT_COMMON` AND `BRANCH` is empty (externally managed worktree, detached HEAD):**
+
+This is a restricted sandbox environment (e.g., Codex App worktree thread). The test toolchain may not be available. Do NOT attempt test verification — skip directly to the handoff.
+
+First, ensure all work is staged and committed (`git add` + `git commit`). If staging/committing fails due to sandbox restrictions, note the uncommitted files in the handoff message.
+
+Then present this to the user (do NOT present the 4-option menu):
+
+```
+Implementation complete.
+Current HEAD: <full-commit-sha>
+
+This workspace is externally managed (detached HEAD).
+I cannot create branches, push, or open PRs from here.
+
+⚠ These commits are on a detached HEAD. If you do not create a branch,
+they may be lost when this workspace is cleaned up.
+
+If your host application provides these controls:
+- "Create branch" — to name a branch, then commit/push/PR
+- "Hand off to local" — to move changes to your local checkout
+
+Suggested branch name: <ticket-id/short-description>
+Suggested commit message: <summary-of-work>
+```
+
+Branch name: use ticket ID if available (e.g., `pri-823/codex-compat`), otherwise slugify the first 5 words of the plan title, otherwise omit. Avoid sensitive content in branch names.
+
+Skip to Step 6 (cleanup is a no-op — see guard below).
+
+**Path B — `GIT_DIR` differs from `GIT_COMMON` AND `BRANCH` exists (externally managed worktree, named branch):**
+
+Proceed to Step 2 (verify tests, then 4-option menu).
+
+**Path C — `GIT_DIR` equals `GIT_COMMON` (normal environment):**
+
+Proceed to Step 2 (verify tests, then 4-option menu).
+
+### Step 2: Verify Tests
 
 **Before presenting options, verify tests pass:**
 
@@ -33,11 +81,11 @@ Tests failing (<N> failures). Must fix before completing:
 Cannot proceed with merge/PR until tests pass.
 ```
 
-Stop. Don't proceed to Step 2.
+Stop. Don't proceed to Step 3.
 
-**If tests pass:** Continue to Step 2.
+**If tests pass:** Continue to Step 3.
 
-### Step 2: Determine Base Branch
+### Step 3: Determine Base Branch
 
 ```bash
 # Try common base branches
@@ -46,7 +94,7 @@ git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 
 Or ask: "This branch split from main - is that correct?"
 
-### Step 3: Present Options
+### Step 4: Present Options
 
 Present exactly these 4 options:
 
@@ -63,7 +111,7 @@ Which option?
 
 **Don't add explanation** - keep options concise.
 
-### Step 4: Execute Choice
+### Step 5: Execute Choice
 
 #### Option 1: Merge Locally
 
@@ -84,7 +132,7 @@ git merge <feature-branch>
 git branch -d <feature-branch>
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Cleanup worktree (Step 6)
 
 #### Option 2: Push and Create PR
 
@@ -103,7 +151,7 @@ EOF
 )"
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Cleanup worktree (Step 6)
 
 #### Option 3: Keep As-Is
 
@@ -131,11 +179,20 @@ git checkout <base-branch>
 git branch -D <feature-branch>
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Cleanup worktree (Step 6)
 
-### Step 5: Cleanup Worktree
+### Step 6: Cleanup Worktree
 
-**For Options 1, 2, 4:**
+**First, check if worktree is externally managed:**
+
+````bash
+GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
+GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
+````
+
+If `GIT_DIR` differs from `GIT_COMMON`: skip worktree removal — the host environment owns this workspace.
+
+**Otherwise, for Options 1 and 4:**
 
 Check if in worktree:
 ```bash

@@ -237,6 +237,18 @@ If a third skill needs the same detection pattern, extract it into a shared `ref
 4. Full lifecycle — detection → commit → finishing detection → correct behavior → cleanup
 5. **Sandbox fallback in Local thread** — Start a Codex App **Local thread** (workspace-write sandbox). Prompt: "Use the superpowers skill `using-git-worktrees` to set up an isolated workspace for implementing a small change." Pre-check: `git checkout -b test-sandbox-check` should fail with `Operation not permitted`. Expected: the skill detects `GIT_DIR == GIT_COMMON` (normal repo), attempts `git worktree add -b`, hits Seatbelt denial, falls back to Step 0 "already in workspace" behavior — runs setup, baseline tests, reports ready from current directory. Pass: agent recovers gracefully without cryptic error messages. Fail: agent prints raw Seatbelt error, retries, or gives up with confusing output.
 
+### Manual Test Results (2026-03-23)
+
+| Test | Result | Notes |
+|------|--------|-------|
+| 1. Detection in Worktree thread (workspace-write) | PASS | GIT_DIR != GIT_COMMON, BRANCH empty |
+| 2. Detection in Worktree thread (Full access) | PASS | Same detection; Full access allows `git checkout -b` |
+| 3. Finishing skill handoff format | PASS (after fix) | Initially FAILED — Step 1.5 was unreachable because Step 1 (test verification) halted first. Fixed by reordering: environment detection is now Step 1, test verification is Step 2. Path A skips tests entirely. |
+| 4. Full lifecycle | PASS | Detection → commit → handoff payload → no cleanup attempt |
+| 5. Sandbox fallback in Local thread | N/A | Local thread workspace-write sandbox does not block `git checkout -b`; Seatbelt restriction not triggered in current Codex App version |
+
+**Fix applied:** `c5d93ac` — moved environment detection before test verification in `finishing-a-development-branch/SKILL.md`. Step numbering changed: old Step 1.5 → new Step 1, old Step 1 → new Step 2, all downstream steps renumbered.
+
 ### Regression
 
 - Existing Claude Code skill-triggering tests still pass
