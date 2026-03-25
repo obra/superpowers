@@ -26,7 +26,7 @@ Thanks!
 
 ## Installation
 
-**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex and OpenCode require manual setup.
+**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex, OpenCode, and Trae IDE require manual setup.
 
 ### Claude Code Official Marketplace
 
@@ -82,6 +82,15 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
 
+### Trae IDE
+
+Tell Trae's AI agent:
+
+```text
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.trae/INSTALL.md
+```
+
+**Detailed docs:** [docs/README.trae.md](docs/README.trae.md)
 ### Gemini CLI
 
 ```bash
