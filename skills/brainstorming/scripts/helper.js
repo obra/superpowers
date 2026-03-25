@@ -9,6 +9,11 @@
     ws.onopen = () => {
       eventQueue.forEach(e => ws.send(JSON.stringify(e)));
       eventQueue = [];
+      const statusEl = document.querySelector('.header .status');
+      if (statusEl) {
+        statusEl.classList.remove('disconnected');
+        statusEl.textContent = 'Connected';
+      }
     };
 
     ws.onmessage = (msg) => {
@@ -19,6 +24,11 @@
     };
 
     ws.onclose = () => {
+      const statusEl = document.querySelector('.header .status');
+      if (statusEl) {
+        statusEl.classList.add('disconnected');
+        statusEl.textContent = 'Disconnected';
+      }
       setTimeout(connect, 1000);
     };
   }

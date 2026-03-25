@@ -73,8 +73,10 @@
       flex-shrink: 0;
     }
     .header h1 { font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); }
-    .header .status { font-size: 0.7rem; color: var(--success); display: flex; align-items: center; gap: 0.4rem; }
-    .header .status::before { content: ''; width: 6px; height: 6px; background: var(--success); border-radius: 50%; }
+    .header .status { font-size: 0.7rem; color: var(--success); display: flex; align-items: center; gap: 0.4rem; transition: color 0.3s ease; }
+    .header .status::before { content: ''; width: 6px; height: 6px; background: var(--success); border-radius: 50%; transition: background-color 0.3s ease; }
+    .header .status.disconnected { color: var(--text-tertiary); }
+    .header .status.disconnected::before { background: var(--error); }
 
     .main { flex: 1; overflow-y: auto; }
     #claude-content { padding: 2rem; min-height: 100%; }
@@ -202,7 +204,7 @@
 <body>
   <div class="header">
     <h1><a href="https://github.com/obra/superpowers" style="color: inherit; text-decoration: none;" target="_blank" rel="noopener noreferrer" aria-label="Open Superpowers GitHub repository in a new tab">Superpowers Brainstorming</a></h1>
-    <div class="status">Connected</div>
+    <div class="status disconnected" aria-live="polite">Connecting...</div>
   </div>
 
   <div class="main">

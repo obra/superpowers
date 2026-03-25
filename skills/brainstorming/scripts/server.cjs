@@ -97,11 +97,25 @@ const MIME_TYPES = {
 const WAITING_PAGE = `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><title>Brainstorm Companion</title>
-<style>body { font-family: system-ui, sans-serif; padding: 2rem; max-width: 800px; margin: 0 auto; }
-h1 { color: #333; } p { color: #666; }</style>
+<style>
+  :root { --bg: #f5f5f7; --text: #1d1d1f; --text-sec: #86868b; --accent: #0071e3; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #1d1d1f; --text: #f5f5f7; --text-sec: #86868b; --accent: #0a84ff; } }
+  body { font-family: system-ui, sans-serif; padding: 4rem 2rem; max-width: 600px; margin: 0 auto; background: var(--bg); color: var(--text); text-align: center; }
+  h1 { font-size: 1.5rem; font-weight: 500; margin-bottom: 1rem; }
+  p { color: var(--text-sec); font-size: 1.1rem; }
+  .spinner { display: inline-block; width: 2rem; height: 2rem; border: 3px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: var(--accent); animation: spin 1s ease-in-out infinite; margin-bottom: 1.5rem; }
+  @media (prefers-color-scheme: dark) { .spinner { border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--accent); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
 </head>
-<body><h1>Brainstorm Companion</h1>
-<p>Waiting for the agent to push a screen...</p></body></html>`;
+<body>
+  <div aria-live="polite">
+    <div class="spinner" aria-hidden="true"></div>
+    <h1>Brainstorm Companion</h1>
+    <p>Waiting for the agent to push a screen...</p>
+  </div>
+</body>
+</html>`;
 
 const frameTemplate = fs.readFileSync(path.join(__dirname, 'frame-template.html'), 'utf-8');
 const helperScript = fs.readFileSync(path.join(__dirname, 'helper.js'), 'utf-8');
