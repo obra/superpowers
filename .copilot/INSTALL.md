@@ -1,71 +1,80 @@
-# Installing Superpowers for GitHub Copilot (VS Code)
+Installing Superpowers for GitHub Copilot (VS Code)
+Enable Superpowers in Copilot with full local access to the Superpowers repository and skills.
 
-Enable Superpowers workflow in Copilot through project instructions.
+Prerequisites
+Visual Studio Code
+GitHub Copilot and Copilot Chat enabled
+Git installed
+Any repository opened as a workspace
+Installation
+Clone Superpowers once in a shared local path
 
-## Prerequisites
+mkdir -p ~/.copilot
+git clone https://github.com/obra/superpowers.git ~/.copilot/superpowers
 
-- Visual Studio Code
-- GitHub Copilot + Copilot Chat enabled
-- A repository workspace
+Link Superpowers skills into your project
 
-## Installation
+mkdir -p .github/skills
+ln -sfn ~/.copilot/superpowers/skills .github/skills/superpowers
 
-1. **Create or open project instructions file:**
-   - `.github/copilot-instructions.md`
+Add or update project instructions
 
-2. **Add this Superpowers workflow block** (append; do not delete existing project rules):
+Create or open: copilot-instructions.md
+Append your Superpowers workflow block there without removing existing project rules.
 
-```md
-## Superpowers Workflow (Copilot)
+Start a new Copilot Chat session
 
-When handling development tasks, follow this sequence unless the user explicitly asks otherwise:
+This reloads workspace instructions and skills context.
 
-1. **Brainstorming / Spec**
-   - Ask concise clarifying questions when requirements are ambiguous.
-   - Produce a short spec with goals, constraints, non-goals, and acceptance criteria.
-   - Get confirmation before large changes.
-
-2. **Planning**
-   - Create a concrete implementation plan with small steps.
-   - For each step, include exact file paths and verification commands.
-   - Prefer YAGNI and DRY; avoid speculative abstractions.
-
-3. **Execution**
-   - Execute one small step at a time.
-   - Keep diffs minimal and scoped to the approved plan.
-   - Do not silently broaden scope.
-
-4. **Test-Driven Development**
-   - RED: add/adjust a failing test for behavior change.
-   - GREEN: implement the smallest code change to pass.
-   - REFACTOR: improve structure while keeping tests green.
-
-5. **Code Review Mindset**
-   - When asked to review, report findings first, ordered by severity.
-   - Include file references and concrete risk descriptions.
-   - Keep summary brief and secondary to findings.
-
-6. **Verification Before Completion**
-   - Run relevant build/typecheck/tests.
-   - If anything is not run, state it explicitly.
-   - Do not claim completion without evidence.
-```
-
-3. **Start a new Copilot Chat session** to ensure updated instructions are applied.
-
-## Verify
-
+Verify
 Ask Copilot:
 
-- "Help me plan this feature using Superpowers workflow."
-- "Use RED-GREEN-REFACTOR for this bugfix."
+Tell me which skills are available in this workspace
+Help me plan this feature using Superpowers workflow
+Use RED GREEN REFACTOR for this bugfix
+Expected result:
 
-You should see: clarification -> spec -> plan -> test-first execution -> verification.
+Copilot follows the Superpowers workflow
+Skill-driven behavior appears when your prompt matches a skill purpose
+Updating
+Update Superpowers globally:
 
-## Updating
+git -C ~/.copilot/superpowers pull
 
-Update this repository and refresh your local instruction block when needed.
+Then start a new Copilot chat session.
 
-## Uninstalling
+Pinning a Version
+To pin a specific version:
 
-Remove the Superpowers block from `.github/copilot-instructions.md`.
+git -C ~/.copilot/superpowers fetch --tags
+git -C ~/.copilot/superpowers checkout v5.0.3
+
+Migrating Old Setup
+If you used older custom symlinks or copied skill folders, remove those old paths and keep only:
+
+Shared repo: ~/.copilot/superpowers
+Workspace link: .github/skills/superpowers
+Then start a new Copilot chat session.
+
+Troubleshooting
+Plugin or skills not detected:
+
+Check the skills link:
+ls -la .github/skills
+
+Confirm SKILL files are visible:
+find .github/skills/superpowers -name SKILL.md
+
+Confirm instructions file exists and contains your workflow:
+copilot-instructions.md
+
+Start a new Copilot chat session after any change.
+
+Uninstalling
+From project root:
+
+rm -f .github/skills/superpowers
+
+Optional full removal:
+
+rm -rf ~/.copilot/superpowers
