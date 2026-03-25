@@ -110,6 +110,33 @@ When multiple skills could apply, use this order:
 
 The skill itself tells you which.
 
+## Skill Discovery (Handling Scale)
+
+When dealing with a large library of skills (e.g., automated SaaS skills), do not load all skills into context at once. Instead:
+
+1. **Read `skills/SKILLS_INDEX.md`** - This provides a lightweight summary of all available skills.
+2. **Search for keywords** - Identify 2-3 specific skills that match your current task.
+3. **Invoke specific skills** - Use the Skill tool (or Read tool in other environments) only on those highly relevant skills.
+
+---
+
+## Windows & Cross-Platform Adaptability
+
+When executing commands, adapt to the user's OS. Do not assume a POSIX environment.
+
+| POSIX / Linux | Windows (CMD/PowerShell) | Purpose |
+|---------------|--------------------------|---------|
+| `ls -la` | `dir` | List files |
+| `rm -rf <dir>` | `rmdir /s /q <dir>` | Delete directory |
+| `cp -r` | `xcopy /e /i /y` | Copy directory |
+| `grep "text"` | `findstr "text"` | Search in files |
+| `cat file` | `type file` | View file content |
+| `touch file` | `type nul > file` | Create empty file (CMD) |
+
+**Pro Tip:** Use the `run_command` tool to check environment before assuming command syntax.
+
+---
+
 ## User Instructions
 
 Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
