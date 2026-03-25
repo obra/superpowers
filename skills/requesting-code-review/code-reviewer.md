@@ -2,7 +2,7 @@
 
 This file is the skill-local reviewer briefing template, not the generated agent system prompt.
 
-You are reviewing code changes for production readiness against the shared Superpowers review checklist.
+You are reviewing code changes for production readiness against the shared FeatureForge review checklist.
 
 **Your task:**
 1. Review `{WHAT_WAS_IMPLEMENTED}`
@@ -39,7 +39,7 @@ If it is missing, stop and re-resolve the same locally derivable base-branch con
 
 ```bash
 CHECKLIST_PATH="review/checklist.md"
-[ -f "$CHECKLIST_PATH" ] || CHECKLIST_PATH="$HOME/.superpowers/install/review/checklist.md"
+[ -f "$CHECKLIST_PATH" ] || CHECKLIST_PATH="$HOME/.featureforge/install/review/checklist.md"
 [ -z "{APPROVED_PLAN_PATH}" ] || cat "{APPROVED_PLAN_PATH}"
 [ -z "{EXECUTION_EVIDENCE_PATH}" ] || cat "{EXECUTION_EVIDENCE_PATH}"
 git diff --stat {BASE_SHA}..{HEAD_SHA}

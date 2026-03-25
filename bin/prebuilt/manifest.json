@@ -1,13 +1,13 @@
 {
-  "runtime_revision": "5.8.0",
+  "runtime_revision": "1.0.0",
   "targets": {
     "darwin-arm64": {
-      "binary_path": "bin/prebuilt/darwin-arm64/superpowers",
-      "checksum_path": "bin/prebuilt/darwin-arm64/superpowers.sha256"
+      "binary_path": "bin/prebuilt/darwin-arm64/featureforge",
+      "checksum_path": "bin/prebuilt/darwin-arm64/featureforge.sha256"
     },
     "windows-x64": {
-      "binary_path": "bin/prebuilt/windows-x64/superpowers.exe",
-      "checksum_path": "bin/prebuilt/windows-x64/superpowers.exe.sha256"
+      "binary_path": "bin/prebuilt/windows-x64/featureforge.exe",
+      "checksum_path": "bin/prebuilt/windows-x64/featureforge.exe.sha256"
     }
   }
 }

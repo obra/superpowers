@@ -1,16 +1,16 @@
 ---
 name: plan-ceo-review
-description: Use when a written Superpowers design or architecture spec needs CEO or founder review before implementation planning, including scope expansion, selective expansion, hold-scope rigor, or scope reduction
+description: Use when a written FeatureForge design or architecture spec needs CEO or founder review before implementation planning, including scope expansion, selective expansion, hold-scope rigor, or scope reduction
 ---
 
 {{REVIEW_PREAMBLE}}
 
 
-# Superpowers Artifact Contract
+# FeatureForge Artifact Contract
 
-- Review the written spec artifact in `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`.
-- If the user names a specific spec path, use that path. Otherwise, inspect `docs/superpowers/specs/` and review the newest matching design doc.
-- If no current spec exists, stop and direct the agent back to `superpowers:brainstorming`.
+- Review the written spec artifact in `docs/featureforge/specs/YYYY-MM-DD-<topic>-design.md`.
+- If the user names a specific spec path, use that path. Otherwise, inspect `docs/featureforge/specs/` and review the newest matching design doc.
+- If no current spec exists, stop and direct the agent back to `featureforge:brainstorming`.
 - The spec must include these exact header lines immediately below the title:
 
 ```markdown
@@ -25,7 +25,7 @@ description: Use when a written Superpowers design or architecture spec needs CE
 - After each spec edit (including final approval edits), runs `sync --artifact spec` for the spec path:
 
 ```bash
-"$_SUPERPOWERS_ROOT/bin/superpowers" workflow sync --artifact spec --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md
+"$_FEATUREFORGE_ROOT/bin/featureforge" workflow sync --artifact spec --path docs/featureforge/specs/YYYY-MM-DD-<topic>-design.md
 ```
 
 **Protected-Branch Repo-Write Gate:**
@@ -33,24 +33,24 @@ description: Use when a written Superpowers design or architecture spec needs CE
 - Before editing the spec body or changing approval headers on disk, run the shared repo-safety preflight for the exact review-write scope:
 
 ```bash
-superpowers repo-safety check --intent write --stage superpowers:plan-ceo-review --task-id <current-spec-review> --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target repo-file-write
+featureforge repo-safety check --intent write --stage featureforge:plan-ceo-review --task-id <current-spec-review> --path docs/featureforge/specs/YYYY-MM-DD-<topic>-design.md --write-target repo-file-write
 ```
 
 - When the mutation is specifically an approval-header edit, use the same command shape with `--write-target approval-header-write`.
-- If the helper returns `blocked`, name the branch, the stage, and the blocking `failure_class`, then route to either a feature branch / `superpowers:using-git-worktrees` or explicit user approval for this exact review scope.
+- If the helper returns `blocked`, name the branch, the stage, and the blocking `failure_class`, then route to either a feature branch / `featureforge:using-git-worktrees` or explicit user approval for this exact review scope.
 - If the user explicitly approves the protected-branch review write, run:
 
 ```bash
-superpowers repo-safety approve --stage superpowers:plan-ceo-review --task-id <current-spec-review> --reason "<explicit user approval>" --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target repo-file-write
-superpowers repo-safety check --intent write --stage superpowers:plan-ceo-review --task-id <current-spec-review> --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target repo-file-write
+featureforge repo-safety approve --stage featureforge:plan-ceo-review --task-id <current-spec-review> --reason "<explicit user approval>" --path docs/featureforge/specs/YYYY-MM-DD-<topic>-design.md --write-target repo-file-write
+featureforge repo-safety check --intent write --stage featureforge:plan-ceo-review --task-id <current-spec-review> --path docs/featureforge/specs/YYYY-MM-DD-<topic>-design.md --write-target repo-file-write
 ```
 
 - Repeat the same approve -> re-check pattern for `approval-header-write` before flipping `**Workflow State:**` or any other approval header on a protected branch.
 - Keep the spec in `Draft` until the review is fully resolved.
 - When approving the written spec, set `**Workflow State:** CEO Approved` and `**Last Reviewed By:** plan-ceo-review`.
 - `**Spec Revision:**` starts at `1`. If this review materially changes a previously approved spec, increment the revision and reset the spec to `Draft` until it is re-approved.
-- When the review is resolved and the written spec is approved, invoke `superpowers:writing-plans`.
-- `superpowers:writing-plans` owns plan creation after approval. Do not draft a plan or offer implementation options from `plan-ceo-review`.
+- When the review is resolved and the written spec is approved, invoke `featureforge:writing-plans`.
+- `featureforge:writing-plans` owns plan creation after approval. Do not draft a plan or offer implementation options from `plan-ceo-review`.
 
 **The terminal state is invoking writing-plans.**
 
@@ -76,7 +76,7 @@ That reviewer prompt, together with `review/review-accelerator-packet-contract.m
 
 In accelerated review, keep routine issues bundled inside the section packet. Break out only escalated high-judgment issues into direct human questions before section approval.
 
-Persist accelerated CEO section packets under `~/.superpowers/projects/<slug>/...`.
+Persist accelerated CEO section packets under `~/.featureforge/projects/<slug>/...`.
 
 Resume accelerated CEO review only from the last approved-and-applied section boundary.
 

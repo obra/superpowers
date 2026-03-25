@@ -10,7 +10,7 @@ description: Use after implementation work or an intentional review checkpoint, 
 
 Dispatch the `code-reviewer` sub-agent or custom agent to catch issues before they cascade. The reviewer gets precisely crafted context for evaluation — never your session's history. This keeps the reviewer focused on the work product, not your thought process, and preserves your own context for continued work.
 
-In Codex, Superpowers installs the `code-reviewer` custom agent alongside the shared skills checkout. In GitHub Copilot local installs, Superpowers installs the same reviewer through the platform's custom-agent path.
+In Codex, FeatureForge installs the `code-reviewer` custom agent alongside the shared skills checkout. In GitHub Copilot local installs, FeatureForge installs the same reviewer through the platform's custom-agent path.
 
 **Core principle:** Review at the right checkpoints, then fail closed on the final whole-diff gate.
 
@@ -31,19 +31,19 @@ In Codex, Superpowers installs the `code-reviewer` custom agent alongside the sh
 **1. If this review is for plan-routed work, capture execution state first:**
 
 - For plan-routed final review, require the exact approved plan path and exact approved spec path from the current execution preflight handoff or session context.
-- Run `superpowers plan contract analyze-plan --spec <approved-spec-path> --plan <approved-plan-path> --format json` before dispatching the reviewer.
+- Run `featureforge plan contract analyze-plan --spec <approved-spec-path> --plan <approved-plan-path> --format json` before dispatching the reviewer.
 - If `contract_state != valid` or `packet_buildable_tasks != task_count`, stop and return to the current execution flow; do not review stale or malformed approved artifacts.
-- Run `superpowers plan execution status --plan <approved-plan-path>` before dispatching the reviewer.
+- Run `featureforge plan execution status --plan <approved-plan-path>` before dispatching the reviewer.
 - If helper status fails, stop and return to the current execution flow; do not dispatch review against guessed plan state.
 - Parse `active_task`, `blocking_task`, and `resume_task` from the status JSON.
 - If any of `active_task`, `blocking_task`, or `resume_task` is non-null, stop and return to the current execution flow; final review is only valid when all three are `null`.
 - If `evidence_path` is empty or unreadable, stop and return to the current execution flow instead of reviewing against missing execution evidence.
-- Run `superpowers plan execution gate-review --plan <approved-plan-path>` before dispatching the reviewer.
+- Run `featureforge plan execution gate-review --plan <approved-plan-path>` before dispatching the reviewer.
 - If the review gate returns `allowed` `false`, stop and return to the current execution flow; do not dispatch review against stale, drifted, or mismatched execution evidence.
 - If the review gate returns warning codes such as `legacy_evidence_format`, keep the warning in the review context but do not treat it as a blocker when `allowed` remains `true`.
 - Pass the exact approved plan path and helper-reported execution evidence path into the reviewer context.
 - Build completed task-packet context from the approved plan and pass that completed task-packet context plus the plan's coverage matrix into the reviewer briefing.
-- If the current review is not governed by an approved Superpowers plan, skip this execution-state gate and continue with the normal diff review.
+- If the current review is not governed by an approved FeatureForge plan, skip this execution-state gate and continue with the normal diff review.
 
 **2. Detect the base branch and review range:**
 ```bash
@@ -82,9 +82,9 @@ BASE_SHA=$(git merge-base HEAD "origin/$BASE_BRANCH" 2>/dev/null || git merge-ba
 HEAD_SHA=$(git rev-parse HEAD)
 ```
 
-Do not use PR metadata or repo default-branch APIs as a fallback; keep the review base aligned with `superpowers:document-release` and `gate-finish`.
+Do not use PR metadata or repo default-branch APIs as a fallback; keep the review base aligned with `featureforge:document-release` and `gate-finish`.
 
-The reviewer should use the shared review checklist from `review/checklist.md` in the repo when available, otherwise fall back to the installed Superpowers copy.
+The reviewer should use the shared review checklist from `review/checklist.md` in the repo when available, otherwise fall back to the installed FeatureForge copy.
 
 **3. Dispatch the code-reviewer agent:**
 
@@ -121,7 +121,7 @@ For workflow-routed final review, also write a project-scoped code-review artifa
 - Use the current `HEAD` exactly as written; if new repo changes land after review, treat the earlier artifact as stale and rerun `requesting-code-review`.
 
 ```bash
-_SLUG_ENV=$("$_SUPERPOWERS_ROOT/bin/superpowers" repo slug 2>/dev/null || true)
+_SLUG_ENV=$("$_FEATUREFORGE_ROOT/bin/featureforge" repo slug 2>/dev/null || true)
 if [ -n "$_SLUG_ENV" ]; then
   eval "$_SLUG_ENV"
 fi
@@ -141,14 +141,14 @@ Use this structure:
 
 ```markdown
 # Code Review Result
-**Source Plan:** `docs/superpowers/plans/...`
+**Source Plan:** `docs/featureforge/plans/...`
 **Source Plan Revision:** 3
 **Branch:** feature/foo
-**Repo:** superpowers
+**Repo:** featureforge
 **Base Branch:** main
 **Head SHA:** abc1234
 **Result:** pass
-**Generated By:** superpowers:requesting-code-review
+**Generated By:** featureforge:requesting-code-review
 **Generated At:** 2026-03-24T12:10:00Z
 
 ## Summary
@@ -169,9 +169,9 @@ Allowed `**Result:**` values:
 
 You: Let me request the final code review gate before branch completion.
 
-APPROVED_PLAN_PATH=docs/superpowers/plans/deployment-plan.md
-SOURCE_SPEC_PATH=docs/superpowers/specs/deployment-plan-design.md
-ANALYZE_JSON=$("$_SUPERPOWERS_ROOT/bin/superpowers" plan contract analyze-plan --spec "$SOURCE_SPEC_PATH" --plan "$APPROVED_PLAN_PATH" --format json)
+APPROVED_PLAN_PATH=docs/featureforge/plans/deployment-plan.md
+SOURCE_SPEC_PATH=docs/featureforge/specs/deployment-plan-design.md
+ANALYZE_JSON=$("$_FEATUREFORGE_ROOT/bin/featureforge" plan contract analyze-plan --spec "$SOURCE_SPEC_PATH" --plan "$APPROVED_PLAN_PATH" --format json)
 CONTRACT_STATE=$(printf '%s\n' "$ANALYZE_JSON" | node -e 'const fs = require("fs"); const parsed = JSON.parse(fs.readFileSync(0, "utf8")); process.stdout.write(parsed.contract_state || "")')
 PACKET_BUILDABLE_TASKS=$(printf '%s\n' "$ANALYZE_JSON" | node -e 'const fs = require("fs"); const parsed = JSON.parse(fs.readFileSync(0, "utf8")); process.stdout.write(String(parsed.packet_buildable_tasks ?? ""))')
 TASK_COUNT=$(printf '%s\n' "$ANALYZE_JSON" | node -e 'const fs = require("fs"); const parsed = JSON.parse(fs.readFileSync(0, "utf8")); process.stdout.write(String(parsed.task_count ?? ""))')
@@ -179,7 +179,7 @@ if [ "$CONTRACT_STATE" != "valid" ] || [ "$PACKET_BUILDABLE_TASKS" != "$TASK_COU
   echo "Stop and return to execution: approved artifacts are stale or malformed."
   exit 1
 fi
-STATUS_JSON=$("$_SUPERPOWERS_ROOT/bin/superpowers" plan execution status --plan "$APPROVED_PLAN_PATH")
+STATUS_JSON=$("$_FEATUREFORGE_ROOT/bin/featureforge" plan execution status --plan "$APPROVED_PLAN_PATH")
 ACTIVE_TASK=$(printf '%s\n' "$STATUS_JSON" | node -e 'const fs = require("fs"); const parsed = JSON.parse(fs.readFileSync(0, "utf8")); process.stdout.write(parsed.active_task == null ? "" : String(parsed.active_task))')
 BLOCKING_TASK=$(printf '%s\n' "$STATUS_JSON" | node -e 'const fs = require("fs"); const parsed = JSON.parse(fs.readFileSync(0, "utf8")); process.stdout.write(parsed.blocking_task == null ? "" : String(parsed.blocking_task))')
 RESUME_TASK=$(printf '%s\n' "$STATUS_JSON" | node -e 'const fs = require("fs"); const parsed = JSON.parse(fs.readFileSync(0, "utf8")); process.stdout.write(parsed.resume_task == null ? "" : String(parsed.resume_task))')
@@ -192,14 +192,14 @@ if [ -z "$EXECUTION_EVIDENCE_PATH" ]; then
   echo "Stop and return to execution: missing execution evidence path."
   exit 1
 fi
-REVIEW_GATE_JSON=$("$_SUPERPOWERS_ROOT/bin/superpowers" plan execution gate-review --plan "$APPROVED_PLAN_PATH")
+REVIEW_GATE_JSON=$("$_FEATUREFORGE_ROOT/bin/featureforge" plan execution gate-review --plan "$APPROVED_PLAN_PATH")
 REVIEW_ALLOWED=$(printf '%s\n' "$REVIEW_GATE_JSON" | node -e 'const fs = require("fs"); const parsed = JSON.parse(fs.readFileSync(0, "utf8")); process.stdout.write(parsed.allowed ? "true" : "false")')
 if [ "$REVIEW_ALLOWED" != "true" ]; then
   echo "Stop and return to execution: review gate rejected the current execution evidence."
   exit 1
 fi
-TASK_PACKET_CONTEXT_TASK_1=$("$_SUPERPOWERS_ROOT/bin/superpowers" plan contract build-task-packet --plan "$APPROVED_PLAN_PATH" --task 1 --format markdown --persist yes)
-TASK_PACKET_CONTEXT_TASK_2=$("$_SUPERPOWERS_ROOT/bin/superpowers" plan contract build-task-packet --plan "$APPROVED_PLAN_PATH" --task 2 --format markdown --persist yes)
+TASK_PACKET_CONTEXT_TASK_1=$("$_FEATUREFORGE_ROOT/bin/featureforge" plan contract build-task-packet --plan "$APPROVED_PLAN_PATH" --task 1 --format markdown --persist yes)
+TASK_PACKET_CONTEXT_TASK_2=$("$_FEATUREFORGE_ROOT/bin/featureforge" plan contract build-task-packet --plan "$APPROVED_PLAN_PATH" --task 2 --format markdown --persist yes)
 BASE_BRANCH=<same locally derived review base branch from Step 2>
 BASE_SHA=$(git merge-base HEAD "origin/$BASE_BRANCH" 2>/dev/null || git merge-base HEAD "$BASE_BRANCH" 2>/dev/null || git rev-parse HEAD~1)
 HEAD_SHA=$(git rev-parse HEAD)
@@ -207,8 +207,8 @@ HEAD_SHA=$(git rev-parse HEAD)
 [Dispatch code-reviewer agent]
   WHAT_WAS_IMPLEMENTED: Final branch diff for the deployment plan
   PLAN_OR_REQUIREMENTS: Approved plan plus completed task-packet contexts for Tasks 1 and 2 and coverage matrix excerpts
-  APPROVED_PLAN_PATH: docs/superpowers/plans/deployment-plan.md
-  EXECUTION_EVIDENCE_PATH: docs/superpowers/execution-evidence/deployment-plan-r1-evidence.md
+  APPROVED_PLAN_PATH: docs/featureforge/plans/deployment-plan.md
+  EXECUTION_EVIDENCE_PATH: docs/featureforge/execution-evidence/deployment-plan-r1-evidence.md
   BASE_BRANCH: main
   BASE_SHA: a7981ec
   HEAD_SHA: 3df7661

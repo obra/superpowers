@@ -1,8 +1,8 @@
 mod common;
 
-use superpowers::git::discover_repo_identity;
-use superpowers::workflow::manifest::{ManifestLoadResult, load_manifest, manifest_path};
-use superpowers::workflow::status::WorkflowRuntime;
+use featureforge::git::discover_repo_identity;
+use featureforge::workflow::manifest::{ManifestLoadResult, load_manifest, manifest_path};
+use featureforge::workflow::status::WorkflowRuntime;
 
 fn main() {
     let config = common::parse_args("workflow_status");

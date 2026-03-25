@@ -16,11 +16,11 @@ use files_support::write_file;
 use process_support::{repo_root, run, run_checked};
 
 fn skill_doc_path() -> PathBuf {
-    repo_root().join("superpowers-upgrade/SKILL.md")
+    repo_root().join("featureforge-upgrade/SKILL.md")
 }
 
 fn read_skill_doc() -> String {
-    fs::read_to_string(skill_doc_path()).expect("superpowers-upgrade skill doc should be readable")
+    fs::read_to_string(skill_doc_path()).expect("featureforge-upgrade skill doc should be readable")
 }
 
 fn assert_contains(content: &str, needle: &str, label: &str) {
@@ -88,10 +88,8 @@ fn run_bash_block(
 
 fn make_valid_install(dir: &Path, git_mode: &str) {
     fs::create_dir_all(dir.join("bin")).expect("install bin dir should exist");
-    write_file(&dir.join("bin/superpowers-update-check"), "");
-    write_file(&dir.join("bin/superpowers-config"), "");
-    make_executable(&dir.join("bin/superpowers-update-check"));
-    make_executable(&dir.join("bin/superpowers-config"));
+    write_file(&dir.join("bin/featureforge"), "");
+    make_executable(&dir.join("bin/featureforge"));
     write_file(&dir.join("VERSION"), "1.0.0\n");
     match git_mode {
         "dir" => {
@@ -106,7 +104,7 @@ fn make_valid_install(dir: &Path, git_mode: &str) {
 
 fn make_valid_worktree_install(base_dir: &Path) -> PathBuf {
     let main_repo = base_dir.join("main-repo");
-    let worktree_root = base_dir.join("worktree/superpowers");
+    let worktree_root = base_dir.join("worktree/featureforge");
     fs::create_dir_all(&main_repo).expect("main repo dir should exist");
 
     let mut git_init = Command::new("git");
@@ -115,25 +113,20 @@ fn make_valid_worktree_install(base_dir: &Path) -> PathBuf {
 
     let mut git_config_name = Command::new("git");
     git_config_name
-        .args(["config", "user.name", "Superpowers Test"])
+        .args(["config", "user.name", "FeatureForge Test"])
         .current_dir(&main_repo);
     run_checked(git_config_name, "git config user.name");
 
     let mut git_config_email = Command::new("git");
     git_config_email
-        .args(["config", "user.email", "superpowers-tests@example.com"])
+        .args(["config", "user.email", "featureforge-tests@example.com"])
         .current_dir(&main_repo);
     run_checked(git_config_email, "git config user.email");
 
     make_valid_install(&main_repo, "dir");
     let mut git_add = Command::new("git");
     git_add
-        .args([
-            "add",
-            "VERSION",
-            "bin/superpowers-update-check",
-            "bin/superpowers-config",
-        ])
+        .args(["add", "VERSION", "bin/featureforge"])
         .current_dir(&main_repo);
     run_checked(git_add, "git add runtime repo");
 
@@ -164,30 +157,38 @@ fn make_valid_worktree_install(base_dir: &Path) -> PathBuf {
 fn upgrade_skill_contract_tracks_doc_patterns_and_install_root_resolution() {
     let skill_doc = read_skill_doc();
     for pattern in [
-        "_SUPERPOWERS_ROOT",
-        "_IS_SUPERPOWERS_RUNTIME_ROOT()",
-        "bin/superpowers-update-check",
-        "bin/superpowers-config",
+        "_FEATUREFORGE_ROOT",
+        "_IS_FEATUREFORGE_RUNTIME_ROOT()",
+        "bin/featureforge",
+        "FEATUREFORGE_BIN=\"$INSTALL_DIR/bin/featureforge\"",
         "VERSION",
         "[ -d \"$candidate/.git\" ] || [ -f \"$candidate/.git\" ]",
-        "\"$HOME/.superpowers/install\"",
+        "\"$HOME/.featureforge/install\"",
         "Read `$INSTALL_DIR/RELEASE-NOTES.md`.",
         "git stash push --include-untracked",
         "git stash pop",
-        "ERROR: superpowers upgrade failed during git pull",
-        "Run $CONFIG_BIN set update_check true to re-enable.",
-        "REMOTE_URL=\"${SUPERPOWERS_REMOTE_URL:-https://raw.githubusercontent.com/dmulcahey/superpowers/main/VERSION}\"",
+        "ERROR: featureforge upgrade failed during git pull",
+        "Run $FEATUREFORGE_BIN config set update_check true to re-enable.",
+        "REMOTE_URL=\"${FEATUREFORGE_REMOTE_URL:-https://raw.githubusercontent.com/dmulcahey/featureforge/main/VERSION}\"",
         "REMOTE_STATUS=",
         "VERSION_RELATION=",
         "If `REMOTE_STATUS=unavailable` and this skill was invoked directly, stop before Step 3.",
-        "Superpowers couldn't verify the latest version right now.",
+        "FeatureForge couldn't verify the latest version right now.",
         "If `VERSION_RELATION=equal`, tell the user: `You're already on the latest known version (v$LOCAL_VERSION).`",
-        "If `VERSION_RELATION=local_ahead`, tell the user: `Your local Superpowers install (v$LOCAL_VERSION) is newer than the fetched remote version (v$REMOTE_VERSION).`",
+        "If `VERSION_RELATION=local_ahead`, tell the user: `Your local FeatureForge install (v$LOCAL_VERSION) is newer than the fetched remote version (v$REMOTE_VERSION).`",
         "If this skill was invoked from an `UPGRADE_AVAILABLE` handoff",
         "You're already on the latest known version (v$LOCAL_VERSION).",
     ] {
-        assert_contains(&skill_doc, pattern, "superpowers-upgrade/SKILL.md");
+        assert_contains(&skill_doc, pattern, "featureforge-upgrade/SKILL.md");
     }
+    assert!(
+        !skill_doc.contains("featureforge-update-check"),
+        "featureforge-upgrade/SKILL.md should not reference removed helper binaries"
+    );
+    assert!(
+        !skill_doc.contains("featureforge-config"),
+        "featureforge-upgrade/SKILL.md should not reference removed helper binaries"
+    );
 
     let step_one = extract_bash_block(&skill_doc, "### Step 1: Resolve install root");
 
@@ -198,9 +199,9 @@ fn upgrade_skill_contract_tracks_doc_patterns_and_install_root_resolution() {
     let current_root = tmp_root.path().join("current-project");
     fs::create_dir_all(&current_root).expect("project root should exist");
 
-    let copilot_install = home_dir.join(".copilot/superpowers");
-    let shared_install = home_dir.join(".superpowers/install");
-    let codex_install = home_dir.join(".codex/superpowers");
+    let copilot_install = home_dir.join(".copilot/featureforge");
+    let shared_install = home_dir.join(".featureforge/install");
+    let codex_install = home_dir.join(".codex/featureforge");
     make_valid_install(&shared_install, "dir");
     make_valid_install(&codex_install, "dir");
     make_valid_install(&copilot_install, "dir");
@@ -210,7 +211,7 @@ fn upgrade_skill_contract_tracks_doc_patterns_and_install_root_resolution() {
         &home_dir,
         &step_one,
         &[(
-            "_SUPERPOWERS_ROOT",
+            "_FEATUREFORGE_ROOT",
             copilot_install.to_string_lossy().as_ref(),
         )],
         "upgrade skill step 1 active root",
@@ -226,7 +227,7 @@ fn upgrade_skill_contract_tracks_doc_patterns_and_install_root_resolution() {
         &current_root,
         &home_dir,
         &step_one,
-        &[("_SUPERPOWERS_ROOT", "")],
+        &[("_FEATUREFORGE_ROOT", "")],
         "upgrade skill step 1 shared fallback",
     );
     let fallback_stdout = String::from_utf8_lossy(&fallback_output.stdout);
@@ -248,7 +249,7 @@ fn upgrade_skill_contract_tracks_doc_patterns_and_install_root_resolution() {
         &renamed_root,
         &renamed_home,
         &step_one,
-        &[("_SUPERPOWERS_ROOT", "")],
+        &[("_FEATUREFORGE_ROOT", "")],
         "upgrade skill step 1 renamed root",
     );
     let renamed_stdout = String::from_utf8_lossy(&renamed_output.stdout);
@@ -266,14 +267,14 @@ fn upgrade_skill_contract_tracks_doc_patterns_and_install_root_resolution() {
 
     let invalid_home = tmp_root.path().join("home-invalid");
     fs::create_dir_all(&invalid_home).expect("invalid home should exist");
-    let invalid_root = tmp_root.path().join("invalid-current/superpowers");
+    let invalid_root = tmp_root.path().join("invalid-current/featureforge");
     fs::create_dir_all(&invalid_root).expect("invalid root should exist");
     write_file(&invalid_root.join(".git"), "");
     let invalid_output = run_bash_block(
         &invalid_root,
         &invalid_home,
         &step_one,
-        &[("_SUPERPOWERS_ROOT", "")],
+        &[("_FEATUREFORGE_ROOT", "")],
         "upgrade skill step 1 invalid current repo",
     );
     assert!(
@@ -282,7 +283,7 @@ fn upgrade_skill_contract_tracks_doc_patterns_and_install_root_resolution() {
     );
     assert_contains(
         &combined_output(&invalid_output),
-        "ERROR: superpowers install not found",
+        "ERROR: featureforge install not found",
         "upgrade skill step 1 invalid current repo",
     );
 
@@ -293,7 +294,7 @@ fn upgrade_skill_contract_tracks_doc_patterns_and_install_root_resolution() {
         &worktree_root,
         &worktree_home,
         &step_one,
-        &[("_SUPERPOWERS_ROOT", "")],
+        &[("_FEATUREFORGE_ROOT", "")],
         "upgrade skill step 1 worktree",
     );
     let worktree_stdout = String::from_utf8_lossy(&worktree_output.stdout);
@@ -332,7 +333,7 @@ fn upgrade_skill_version_resolution_matches_shell_contract() {
         &step_two,
         &[
             ("INSTALL_DIR", behind_install.to_string_lossy().as_ref()),
-            ("SUPERPOWERS_REMOTE_URL", behind_remote_url.as_str()),
+            ("FEATUREFORGE_REMOTE_URL", behind_remote_url.as_str()),
         ],
         "upgrade skill step 2 upgrade relation",
     );
@@ -357,7 +358,7 @@ fn upgrade_skill_version_resolution_matches_shell_contract() {
         &step_two,
         &[
             ("INSTALL_DIR", equal_install.to_string_lossy().as_ref()),
-            ("SUPERPOWERS_REMOTE_URL", equal_remote_url.as_str()),
+            ("FEATUREFORGE_REMOTE_URL", equal_remote_url.as_str()),
         ],
         "upgrade skill step 2 equal relation",
     );
@@ -378,7 +379,7 @@ fn upgrade_skill_version_resolution_matches_shell_contract() {
         &step_two,
         &[
             ("INSTALL_DIR", ahead_install.to_string_lossy().as_ref()),
-            ("SUPERPOWERS_REMOTE_URL", ahead_remote_url.as_str()),
+            ("FEATUREFORGE_REMOTE_URL", ahead_remote_url.as_str()),
         ],
         "upgrade skill step 2 local ahead relation",
     );
@@ -411,7 +412,7 @@ fn upgrade_skill_version_resolution_matches_shell_contract() {
                 "INSTALL_DIR",
                 unavailable_install.to_string_lossy().as_ref(),
             ),
-            ("SUPERPOWERS_REMOTE_URL", unavailable_remote_url.as_str()),
+            ("FEATUREFORGE_REMOTE_URL", unavailable_remote_url.as_str()),
         ],
         "upgrade skill step 2 unavailable relation",
     );

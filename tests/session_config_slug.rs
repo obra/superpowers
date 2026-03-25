@@ -1,15 +1,15 @@
-#[path = "support/failure_json.rs"]
-mod failure_json_support;
 #[path = "support/bin.rs"]
 mod bin_support;
+#[path = "support/failure_json.rs"]
+mod failure_json_support;
+#[path = "support/featureforge.rs"]
+mod featureforge_support;
 #[path = "support/files.rs"]
 mod files_support;
 #[path = "support/json.rs"]
 mod json_support;
 #[path = "support/process.rs"]
 mod process_support;
-#[path = "support/superpowers.rs"]
-mod superpowers_support;
 
 use serde_json::Value;
 use std::fs;
@@ -19,23 +19,11 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use tempfile::TempDir;
 
+use bin_support::compiled_featureforge_path;
 use failure_json_support::parse_failure_json;
-use bin_support::compiled_superpowers_path;
 use files_support::write_file;
 use json_support::parse_json;
-use process_support::{repo_root, run, run_checked};
-
-fn session_entry_helper_path() -> PathBuf {
-    repo_root().join("bin/superpowers-session-entry")
-}
-
-fn config_helper_path() -> PathBuf {
-    repo_root().join("bin/superpowers-config")
-}
-
-fn slug_helper_path() -> PathBuf {
-    repo_root().join("bin/superpowers-slug")
-}
+use process_support::{run, run_checked};
 
 fn parse_slug_output(output: &[u8], context: &str) -> (String, String) {
     let mut command = Command::new("bash");
@@ -68,13 +56,13 @@ fn init_repo(name: &str) -> (TempDir, TempDir) {
 
     let mut git_config_name = Command::new("git");
     git_config_name
-        .args(["config", "user.name", "Superpowers Test"])
+        .args(["config", "user.name", "FeatureForge Test"])
         .current_dir(repo);
     run_checked(git_config_name, "git config user.name");
 
     let mut git_config_email = Command::new("git");
     git_config_email
-        .args(["config", "user.email", "superpowers-tests@example.com"])
+        .args(["config", "user.email", "featureforge-tests@example.com"])
         .current_dir(repo);
     run_checked(git_config_email, "git config user.email");
 
@@ -99,13 +87,13 @@ fn init_repo_at(path: &Path, name: &str) {
 
     let mut git_config_name = Command::new("git");
     git_config_name
-        .args(["config", "user.name", "Superpowers Test"])
+        .args(["config", "user.name", "FeatureForge Test"])
         .current_dir(path);
     run_checked(git_config_name, "git config user.name");
 
     let mut git_config_email = Command::new("git");
     git_config_email
-        .args(["config", "user.email", "superpowers-tests@example.com"])
+        .args(["config", "user.email", "featureforge-tests@example.com"])
         .current_dir(path);
     run_checked(git_config_email, "git config user.email");
 
@@ -121,58 +109,47 @@ fn init_repo_at(path: &Path, name: &str) {
 }
 
 fn run_shell_session_entry(state_dir: &Path, args: &[&str], context: &str) -> Output {
-    let mut command = Command::new(session_entry_helper_path());
+    let mut command = Command::new(compiled_featureforge_path());
     command
-        .env("SUPERPOWERS_STATE_DIR", state_dir)
-        .env("SUPERPOWERS_COMPAT_BIN", compiled_superpowers_path())
-        .args(args);
-    run(command, context)
-}
-
-fn run_shell_config(state_dir: &Path, args: &[&str], context: &str) -> Output {
-    let mut command = Command::new(config_helper_path());
-    command
-        .env("SUPERPOWERS_STATE_DIR", state_dir)
-        .env("SUPERPOWERS_COMPAT_BIN", compiled_superpowers_path())
+        .env("FEATUREFORGE_STATE_DIR", state_dir)
+        .args(["session-entry"])
         .args(args);
     run(command, context)
 }
 
 fn run_shell_slug(repo: &Path, context: &str) -> Output {
-    let mut command = Command::new(slug_helper_path());
-    command
-        .current_dir(repo)
-        .env("SUPERPOWERS_COMPAT_BIN", compiled_superpowers_path());
+    let mut command = Command::new(compiled_featureforge_path());
+    command.current_dir(repo).args(["repo", "slug"]);
     run(command, context)
 }
 
-fn run_rust_superpowers(
+fn run_rust_featureforge(
     repo: Option<&Path>,
     state_dir: &Path,
     args: &[&str],
     context: &str,
 ) -> Output {
-    superpowers_support::run_rust_superpowers(repo, Some(state_dir), None, &[], args, context)
+    featureforge_support::run_rust_featureforge(repo, Some(state_dir), None, &[], args, context)
 }
 
-fn run_rust_superpowers_with_env(
+fn run_rust_featureforge_with_env(
     repo: Option<&Path>,
     state_dir: &Path,
     envs: &[(&str, &str)],
     args: &[&str],
     context: &str,
 ) -> Output {
-    superpowers_support::run_rust_superpowers(repo, Some(state_dir), None, envs, args, context)
+    featureforge_support::run_rust_featureforge(repo, Some(state_dir), None, envs, args, context)
 }
 
-fn run_rust_superpowers_with_env_control(
+fn run_rust_featureforge_with_env_control(
     repo: Option<&Path>,
     env_remove: &[&str],
     envs: &[(&str, &str)],
     args: &[&str],
     context: &str,
 ) -> Output {
-    superpowers_support::run_rust_superpowers_with_env_control(
+    featureforge_support::run_rust_featureforge_with_env_control(
         repo, None, None, env_remove, envs, args, context,
     )
 }
@@ -180,7 +157,7 @@ fn run_rust_superpowers_with_env_control(
 fn canonical_session_entry_path(state_dir: &Path, session_key: &str) -> PathBuf {
     state_dir
         .join("session-entry")
-        .join("using-superpowers")
+        .join("using-featureforge")
         .join(session_key)
 }
 
@@ -204,7 +181,7 @@ fn canonical_session_entry_missing_decision_matches_helper_semantics() {
     );
     let helper_json = parse_json(&helper_output, "helper session-entry missing decision");
 
-    let rust_output = run_rust_superpowers(
+    let rust_output = run_rust_featureforge(
         None,
         state,
         &[
@@ -242,9 +219,9 @@ fn canonical_config_uses_userprofile_when_home_is_missing() {
     let userprofile_dir = TempDir::new().expect("userprofile tempdir should exist");
     init_repo_at(repo_dir.path(), "config-userprofile-home-fallback");
 
-    let output = run_rust_superpowers_with_env_control(
+    let output = run_rust_featureforge_with_env_control(
         Some(repo_dir.path()),
-        &["HOME", "SUPERPOWERS_STATE_DIR"],
+        &["HOME", "FEATUREFORGE_STATE_DIR"],
         &[(
             "USERPROFILE",
             userprofile_dir
@@ -265,7 +242,7 @@ fn canonical_config_uses_userprofile_when_home_is_missing() {
 
     let canonical_path = userprofile_dir
         .path()
-        .join(".superpowers")
+        .join(".featureforge")
         .join("config")
         .join("config.yaml");
     assert!(
@@ -281,18 +258,15 @@ fn canonical_config_uses_userprofile_when_home_is_missing() {
 }
 
 #[test]
-fn canonical_session_entry_explicit_reentry_migrates_legacy_state_to_canonical_path() {
+fn canonical_session_entry_explicit_reentry_enables_featureforge_from_canonical_state() {
     let (_repo_dir, state_dir) = init_repo("session-entry-reentry");
     let state = state_dir.path();
-    let legacy_path = state
-        .join("session-flags")
-        .join("using-superpowers")
-        .join("explicit-reentry");
-    write_file(&legacy_path, "bypassed\n");
+    let decision_path = canonical_session_entry_path(state, "explicit-reentry");
+    write_file(&decision_path, "bypassed\n");
     let message_file = state.join("reentry-message.txt");
-    write_file(&message_file, "Please use superpowers for this task.\n");
+    write_file(&message_file, "Please use featureforge for this task.\n");
 
-    let rust_output = run_rust_superpowers(
+    let rust_output = run_rust_featureforge(
         None,
         state,
         &[
@@ -333,7 +307,7 @@ fn canonical_session_entry_existing_enabled_decision_returns_enabled_without_pro
     write_file(&message_file, "Continue normally.\n");
     write_file(&decision_path, "enabled\n");
 
-    let rust_output = run_rust_superpowers(
+    let rust_output = run_rust_featureforge(
         None,
         state,
         &[
@@ -362,18 +336,15 @@ fn canonical_session_entry_existing_enabled_decision_returns_enabled_without_pro
 }
 
 #[test]
-fn canonical_session_entry_skill_name_reentry_enables_superpowers_again() {
+fn canonical_session_entry_skill_name_reentry_enables_featureforge_again() {
     let (_repo_dir, state_dir) = init_repo("session-entry-skill-reentry");
     let state = state_dir.path();
-    let legacy_path = state
-        .join("session-flags")
-        .join("using-superpowers")
-        .join("skill-reentry");
-    write_file(&legacy_path, "bypassed\n");
+    let decision_path = canonical_session_entry_path(state, "skill-reentry");
+    write_file(&decision_path, "bypassed\n");
     let message_file = state.join("skill-reentry-message.txt");
     write_file(&message_file, "Please use brainstorming for this task.\n");
 
-    let rust_output = run_rust_superpowers(
+    let rust_output = run_rust_featureforge(
         None,
         state,
         &[
@@ -422,25 +393,37 @@ fn canonical_session_entry_bypassed_and_clause_reentry_matrix_matches_contract()
             "explicit_reentry",
         ),
         (
-            "direct-superpowers-please",
-            "superpowers please\n",
+            "direct-featureforge-please",
+            "featureforge please\n",
             "enabled",
             "explicit_reentry",
         ),
         (
-            "enable-superpowers-again",
-            "Enable superpowers again.\n",
+            "enable-featureforge-again",
+            "Enable featureforge again.\n",
+            "enabled",
+            "explicit_reentry",
+        ),
+        (
+            "route-through-featureforge",
+            "Please route this through FeatureForge.\n",
+            "enabled",
+            "explicit_reentry",
+        ),
+        (
+            "run-in-featureforge",
+            "Run this in FeatureForge.\n",
             "enabled",
             "explicit_reentry",
         ),
         (
             "canonical-skill-id-reentry",
-            "superpowers:writing-plans\n",
+            "featureforge:writing-plans\n",
             "enabled",
             "explicit_reentry",
         ),
         (
-            "legacy-command-alias-reentry",
+            "slash-command-alias-reentry",
             "/write-plan\n",
             "enabled",
             "explicit_reentry",
@@ -458,8 +441,8 @@ fn canonical_session_entry_bypassed_and_clause_reentry_matrix_matches_contract()
             "existing_bypassed",
         ),
         (
-            "use-no-superpowers",
-            "Please use no superpowers here.\n",
+            "use-no-featureforge",
+            "Please use no featureforge here.\n",
             "bypassed",
             "existing_bypassed",
         ),
@@ -476,20 +459,20 @@ fn canonical_session_entry_bypassed_and_clause_reentry_matrix_matches_contract()
             "existing_bypassed",
         ),
         (
-            "long-negated-superpowers-request",
-            "Please do not under any circumstances use superpowers for this task.\n",
+            "long-negated-featureforge-request",
+            "Please do not under any circumstances use featureforge for this task.\n",
             "bypassed",
             "existing_bypassed",
         ),
         (
-            "apostrophe-negated-superpowers-request",
-            "Don't use superpowers for this task.\n",
+            "apostrophe-negated-featureforge-request",
+            "Don't use featureforge for this task.\n",
             "bypassed",
             "existing_bypassed",
         ),
         (
-            "contrastive-superpowers",
-            "Do not use brainstorming, but use superpowers for this task.\n",
+            "contrastive-featureforge",
+            "Do not use brainstorming, but use featureforge for this task.\n",
             "enabled",
             "explicit_reentry",
         ),
@@ -507,7 +490,7 @@ fn canonical_session_entry_bypassed_and_clause_reentry_matrix_matches_contract()
         write_file(&message_file, message);
         write_file(&decision_path, "bypassed\n");
 
-        let rust_output = run_rust_superpowers(
+        let rust_output = run_rust_featureforge(
             None,
             state,
             &[
@@ -560,7 +543,7 @@ fn canonical_session_entry_malformed_decision_fails_closed_with_prompt_and_failu
     write_file(&message_file, "Please route this correctly.\n");
     write_file(&decision_path, "corrupt\nextra\n");
 
-    let rust_output = run_rust_superpowers(
+    let rust_output = run_rust_featureforge(
         None,
         state,
         &[
@@ -610,7 +593,7 @@ fn canonical_session_entry_real_explicit_reentry_write_failure_remains_unpersist
         .expect("decision path should have a parent")
         .to_path_buf();
 
-    write_file(&message_file, "Use superpowers right now.\n");
+    write_file(&message_file, "Use featureforge right now.\n");
     write_file(&decision_path, "bypassed\n");
 
     let original_permissions = fs::metadata(&decision_dir)
@@ -621,7 +604,7 @@ fn canonical_session_entry_real_explicit_reentry_write_failure_remains_unpersist
     fs::set_permissions(&decision_dir, read_only_permissions)
         .expect("decision dir should become read-only");
 
-    let rust_output = run_rust_superpowers(
+    let rust_output = run_rust_featureforge(
         None,
         state,
         &[
@@ -666,14 +649,14 @@ fn canonical_session_entry_explicit_reentry_write_failure_remains_unpersisted() 
     let message_file = state.join("explicit-reentry-write-failure.txt");
     let decision_path = canonical_session_entry_path(state, "explicit-reentry-write-failure");
 
-    write_file(&message_file, "Use superpowers right now.\n");
+    write_file(&message_file, "Use featureforge right now.\n");
     write_file(&decision_path, "bypassed\n");
 
-    let rust_output = run_rust_superpowers_with_env(
+    let rust_output = run_rust_featureforge_with_env(
         None,
         state,
         &[(
-            "SUPERPOWERS_SESSION_ENTRY_TEST_FAILPOINT",
+            "FEATUREFORGE_SESSION_ENTRY_TEST_FAILPOINT",
             "reentry_write_failure",
         )],
         &[
@@ -713,7 +696,7 @@ fn canonical_session_entry_record_and_validation_errors_match_contract() {
     let state = state_dir.path();
     let decision_path = canonical_session_entry_path(state, "record-enabled");
 
-    let record_output = run_rust_superpowers(
+    let record_output = run_rust_featureforge(
         None,
         state,
         &[
@@ -741,7 +724,7 @@ fn canonical_session_entry_record_and_validation_errors_match_contract() {
         "enabled\n"
     );
 
-    let invalid_record = run_rust_superpowers(
+    let invalid_record = run_rust_featureforge(
         None,
         state,
         &[
@@ -761,7 +744,7 @@ fn canonical_session_entry_record_and_validation_errors_match_contract() {
         Value::String(String::from("InvalidCommandInput"))
     );
 
-    let blank_record = run_rust_superpowers(
+    let blank_record = run_rust_featureforge(
         None,
         state,
         &[
@@ -783,7 +766,7 @@ fn canonical_session_entry_record_and_validation_errors_match_contract() {
 
     let message_file = state.join("blank-session-key.txt");
     write_file(&message_file, "Please keep the gate deterministic.\n");
-    let blank_resolve = run_rust_superpowers(
+    let blank_resolve = run_rust_featureforge(
         None,
         state,
         &[
@@ -809,7 +792,7 @@ fn canonical_session_entry_uses_requested_decision_file_even_with_many_decoys() 
     let (_repo_dir, state_dir) = init_repo("session-entry-hot-path");
     let state = state_dir.path();
     let message_file = state.join("hot-path-message.txt");
-    let decision_root = state.join("session-entry").join("using-superpowers");
+    let decision_root = state.join("session-entry").join("using-featureforge");
     let decision_path = canonical_session_entry_path(state, "derived-session");
 
     write_file(
@@ -825,7 +808,7 @@ fn canonical_session_entry_uses_requested_decision_file_even_with_many_decoys() 
     }
     write_file(&decision_path, "enabled\n");
 
-    let rust_output = run_rust_superpowers(
+    let rust_output = run_rust_featureforge(
         None,
         state,
         &[
@@ -848,61 +831,12 @@ fn canonical_session_entry_uses_requested_decision_file_even_with_many_decoys() 
 }
 
 #[test]
-fn canonical_config_reads_legacy_yaml_in_read_only_mode_until_install_migrate_runs() {
-    let (_repo_dir, state_dir) = init_repo("config-migration");
-    let state = state_dir.path();
-    let legacy_config = state.join("config.yaml");
-    let canonical_config = state.join("config").join("config.yaml");
-
-    write_file(
-        &legacy_config,
-        "update_check: false\nsuperpowers_contributor: true\n",
-    );
-
-    let shell_value = run_shell_config(state, &["get", "update_check"], "helper config get");
-    assert_eq!(String::from_utf8_lossy(&shell_value.stdout).trim(), "false");
-
-    let rust_get = run_rust_superpowers(
-        None,
-        state,
-        &["config", "get", "update_check"],
-        "canonical config get after migration",
-    );
-    assert!(
-        rust_get.status.success(),
-        "canonical config get should succeed"
-    );
-    assert_eq!(String::from_utf8_lossy(&rust_get.stdout).trim(), "false");
-    assert!(
-        String::from_utf8_lossy(&rust_get.stderr).contains("PendingMigration"),
-        "canonical config get should warn when explicit migration is still pending"
-    );
-    assert!(
-        !canonical_config.exists(),
-        "read-only config access should not silently rewrite legacy config state"
-    );
-
-    let rust_list = run_rust_superpowers(None, state, &["config", "list"], "canonical config list");
-    assert!(
-        rust_list.status.success(),
-        "canonical config list should succeed"
-    );
-    let listing = String::from_utf8_lossy(&rust_list.stdout);
-    assert!(listing.contains("update_check: false"));
-    assert!(listing.contains("superpowers_contributor: true"));
-    assert!(
-        String::from_utf8_lossy(&rust_list.stderr).contains("PendingMigration"),
-        "canonical config list should warn when explicit migration is still pending"
-    );
-}
-
-#[test]
 fn canonical_config_set_get_and_list_use_canonical_path() {
     let (_repo_dir, state_dir) = init_repo("config-canonical");
     let state = state_dir.path();
     let canonical_config = state.join("config").join("config.yaml");
 
-    let missing = run_rust_superpowers(
+    let missing = run_rust_featureforge(
         None,
         state,
         &["config", "get", "update_check"],
@@ -915,7 +849,7 @@ fn canonical_config_set_get_and_list_use_canonical_path() {
     assert_eq!(String::from_utf8_lossy(&missing.stdout).trim(), "");
     assert_eq!(String::from_utf8_lossy(&missing.stderr).trim(), "");
 
-    let set_false = run_rust_superpowers(
+    let set_false = run_rust_featureforge(
         None,
         state,
         &["config", "set", "update_check", "false"],
@@ -926,7 +860,7 @@ fn canonical_config_set_get_and_list_use_canonical_path() {
         "canonical config set should succeed"
     );
 
-    let get_false = run_rust_superpowers(
+    let get_false = run_rust_featureforge(
         None,
         state,
         &["config", "get", "update_check"],
@@ -934,7 +868,7 @@ fn canonical_config_set_get_and_list_use_canonical_path() {
     );
     assert_eq!(String::from_utf8_lossy(&get_false.stdout).trim(), "false");
 
-    let set_true = run_rust_superpowers(
+    let set_true = run_rust_featureforge(
         None,
         state,
         &["config", "set", "update_check", "true"],
@@ -945,7 +879,7 @@ fn canonical_config_set_get_and_list_use_canonical_path() {
         "canonical config overwrite should succeed"
     );
 
-    let get_true = run_rust_superpowers(
+    let get_true = run_rust_featureforge(
         None,
         state,
         &["config", "get", "update_check"],
@@ -953,10 +887,10 @@ fn canonical_config_set_get_and_list_use_canonical_path() {
     );
     assert_eq!(String::from_utf8_lossy(&get_true.stdout).trim(), "true");
 
-    let set_contributor = run_rust_superpowers(
+    let set_contributor = run_rust_featureforge(
         None,
         state,
-        &["config", "set", "superpowers_contributor", "true"],
+        &["config", "set", "featureforge_contributor", "true"],
         "canonical config set contributor",
     );
     assert!(
@@ -964,29 +898,29 @@ fn canonical_config_set_get_and_list_use_canonical_path() {
         "canonical config second key set should succeed"
     );
 
-    let listing = run_rust_superpowers(None, state, &["config", "list"], "canonical config list");
+    let listing = run_rust_featureforge(None, state, &["config", "list"], "canonical config list");
     assert!(
         listing.status.success(),
         "canonical config list should succeed"
     );
     let listing_text = String::from_utf8_lossy(&listing.stdout);
     assert!(listing_text.contains("update_check: true"));
-    assert!(listing_text.contains("superpowers_contributor: true"));
+    assert!(listing_text.contains("featureforge_contributor: true"));
     assert_eq!(String::from_utf8_lossy(&listing.stderr).trim(), "");
     assert_eq!(
         fs::read_to_string(&canonical_config).expect("canonical config should be written"),
-        "update_check: true\nsuperpowers_contributor: true\n"
+        "update_check: true\nfeatureforge_contributor: true\n"
     );
 }
 
 #[test]
-fn canonical_config_rejects_invalid_yaml_during_migration() {
+fn canonical_config_rejects_invalid_yaml_in_canonical_path() {
     let (_repo_dir, state_dir) = init_repo("config-invalid-yaml");
     let state = state_dir.path();
-    let legacy_config = state.join("config.yaml");
-    write_file(&legacy_config, "update_check:\n  nested: true\n");
+    let canonical_config = state.join("config").join("config.yaml");
+    write_file(&canonical_config, "update_check:\n  nested: true\n");
 
-    let rust_list = run_rust_superpowers(
+    let rust_list = run_rust_featureforge(
         None,
         state,
         &["config", "list"],
@@ -994,7 +928,7 @@ fn canonical_config_rejects_invalid_yaml_during_migration() {
     );
     assert!(
         !rust_list.status.success(),
-        "canonical config command should fail closed on invalid legacy YAML"
+        "canonical config command should fail closed on invalid canonical YAML"
     );
     let combined = format!(
         "{}{}",
@@ -1031,7 +965,7 @@ fn canonical_slug_matches_helper_for_remote_and_detached_head() {
     run_checked(git_checkout, "git checkout feature branch");
 
     let helper_remote = run_shell_slug(repo, "helper remote slug");
-    let rust_remote = run_rust_superpowers(
+    let rust_remote = run_rust_featureforge(
         Some(repo),
         state,
         &["repo", "slug"],
@@ -1053,7 +987,7 @@ fn canonical_slug_matches_helper_for_remote_and_detached_head() {
     run_checked(git_detach, "git checkout detached");
 
     let helper_detached = run_shell_slug(repo, "helper detached slug");
-    let rust_detached = run_rust_superpowers(
+    let rust_detached = run_rust_featureforge(
         Some(repo),
         state,
         &["repo", "slug"],
@@ -1086,7 +1020,7 @@ fn canonical_slug_matches_helper_for_fallback_path_hashing_and_branch_cleanup() 
     run_checked(git_checkout, "git checkout fallback branch");
 
     let helper_fallback = run_shell_slug(&fallback_repo, "helper fallback slug");
-    let rust_fallback = run_rust_superpowers(
+    let rust_fallback = run_rust_featureforge(
         Some(&fallback_repo),
         state_dir.path(),
         &["repo", "slug"],
@@ -1111,7 +1045,7 @@ fn canonical_slug_matches_helper_for_fallback_path_hashing_and_branch_cleanup() 
     run_checked(git_checkout_branch_safe, "git checkout branch-safe branch");
 
     let helper_branch_safe = run_shell_slug(&branch_safe_repo, "helper branch-safe slug");
-    let rust_branch_safe = run_rust_superpowers(
+    let rust_branch_safe = run_rust_featureforge(
         Some(&branch_safe_repo),
         state_dir.path(),
         &["repo", "slug"],

@@ -1,23 +1,23 @@
 ---
 name: plan-eng-review
-description: Use when a written Superpowers implementation plan from a CEO-approved spec needs engineering review before execution or needs a late refresh-test-plan regeneration before finish gating
+description: Use when a written FeatureForge implementation plan from a CEO-approved spec needs engineering review before execution or needs a late refresh-test-plan regeneration before finish gating
 ---
 
 {{REVIEW_PREAMBLE}}
 
 
-# Superpowers Artifact Contract
+# FeatureForge Artifact Contract
 
-- Review the written plan artifact in `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`.
-- If the user names a specific plan path, use that path. Otherwise, inspect `docs/superpowers/plans/` and review the newest matching plan doc.
+- Review the written plan artifact in `docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md`.
+- If the user names a specific plan path, use that path. Otherwise, inspect `docs/featureforge/plans/` and review the newest matching plan doc.
 - Review the full written plan after completion. Do not do chunk-by-chunk embedded review here.
-- If no current plan exists, stop and direct the agent back to `superpowers:writing-plans`.
+- If no current plan exists, stop and direct the agent back to `featureforge:writing-plans`.
 - The plan must include these exact header lines immediately below the title:
 
 ```markdown
 **Workflow State:** Draft | Engineering Approved
 **Plan Revision:** <integer>
-**Execution Mode:** none | superpowers:executing-plans | superpowers:subagent-driven-development
+**Execution Mode:** none | featureforge:executing-plans | featureforge:subagent-driven-development
 **Source Spec:** <path>
 **Source Spec Revision:** <integer>
 **Last Reviewed By:** writing-plans | plan-eng-review
@@ -32,23 +32,23 @@ description: Use when a written Superpowers implementation plan from a CEO-appro
 - Before editing the plan body or changing approval headers on disk, run the shared repo-safety preflight for the exact review-write scope:
 
 ```bash
-superpowers repo-safety check --intent write --stage superpowers:plan-eng-review --task-id <current-plan-review> --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target repo-file-write
+featureforge repo-safety check --intent write --stage featureforge:plan-eng-review --task-id <current-plan-review> --path docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md --write-target repo-file-write
 ```
 
 - When the mutation is specifically an approval-header edit, use the same command shape with `--write-target approval-header-write`.
-- If the helper returns `blocked`, name the branch, the stage, and the blocking `failure_class`, then route to either a feature branch / `superpowers:using-git-worktrees` or explicit user approval for this exact review scope.
+- If the helper returns `blocked`, name the branch, the stage, and the blocking `failure_class`, then route to either a feature branch / `featureforge:using-git-worktrees` or explicit user approval for this exact review scope.
 - If the user explicitly approves the protected-branch review write, run:
 
 ```bash
-superpowers repo-safety approve --stage superpowers:plan-eng-review --task-id <current-plan-review> --reason "<explicit user approval>" --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target repo-file-write
-superpowers repo-safety check --intent write --stage superpowers:plan-eng-review --task-id <current-plan-review> --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target repo-file-write
+featureforge repo-safety approve --stage featureforge:plan-eng-review --task-id <current-plan-review> --reason "<explicit user approval>" --path docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md --write-target repo-file-write
+featureforge repo-safety check --intent write --stage featureforge:plan-eng-review --task-id <current-plan-review> --path docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md --write-target repo-file-write
 ```
 
 - Repeat the same approve -> re-check pattern for `approval-header-write` before flipping `**Workflow State:**` or any other approval header on a protected branch.
 - Keep the plan in `Draft` while review issues remain open or while the source spec path or revision is stale.
 - Only write `**Workflow State:** Engineering Approved` as the last step of a successful review, and set `**Last Reviewed By:** plan-eng-review` at the same time.
 - When the review is resolved and the written plan is approved, present the normal execution preflight handoff.
-- `superpowers:subagent-driven-development` and `superpowers:executing-plans` own implementation. Do not start implementation inside `plan-eng-review`.
+- `featureforge:subagent-driven-development` and `featureforge:executing-plans` own implementation. Do not start implementation inside `plan-eng-review`.
 
 **The terminal state is presenting the execution preflight handoff with the approved plan path.**
 
@@ -82,7 +82,7 @@ Accelerated ENG `SMALL CHANGE` review must still limit the reviewer to one prima
 
 In accelerated review, keep routine issues bundled inside the section packet. Break out only escalated high-judgment issues into direct human questions before section approval.
 
-Persist accelerated engineering section packets under `~/.superpowers/projects/<slug>/...`.
+Persist accelerated engineering section packets under `~/.featureforge/projects/<slug>/...`.
 
 Resume accelerated engineering review only from the last approved-and-applied section boundary.
 
@@ -175,8 +175,8 @@ Before moving into the review sections:
 
 1. Read `**Source Spec:**` and confirm the file exists.
 2. Read that spec's `**Workflow State:**` and `**Spec Revision:**`.
-3. If the spec is not `CEO Approved`, stop and direct the agent back to `superpowers:plan-ceo-review`.
-4. If the plan's `**Source Spec:**` path or `**Source Spec Revision:**` does not match the latest approved spec, stop and direct the agent back to `superpowers:writing-plans`.
+3. If the spec is not `CEO Approved`, stop and direct the agent back to `featureforge:plan-ceo-review`.
+4. If the plan's `**Source Spec:**` path or `**Source Spec Revision:**` does not match the latest approved spec, stop and direct the agent back to `featureforge:writing-plans`.
 5. If you make plan edits during this review, keep `**Workflow State:** Draft` until every review issue is resolved.
 
 ### Plan-Contract Gate
@@ -184,7 +184,7 @@ Before moving into the review sections:
 Before `**Workflow State:** Engineering Approved`, run:
 
 ```bash
-PLAN_ANALYSIS_JSON="$("$_SUPERPOWERS_ROOT/bin/superpowers" plan contract analyze-plan \
+PLAN_ANALYSIS_JSON="$("$_FEATUREFORGE_ROOT/bin/featureforge" plan contract analyze-plan \
   --spec <source-spec-path> \
   --plan <plan-path> \
   --format json)"
@@ -207,7 +207,7 @@ Engineering approval must fail closed when `analyze-plan` reports:
 - invalid task heading structure
 - invalid `Files:` block structure
 
-If `coverage_complete`, `open_questions_resolved`, `task_structure_valid`, or `files_blocks_valid` is not `true`, keep the plan in `Draft` and continue review or route back to `superpowers:writing-plans`.
+If `coverage_complete`, `open_questions_resolved`, `task_structure_valid`, or `files_blocks_valid` is not `true`, keep the plan in `Draft` and continue review or route back to `featureforge:writing-plans`.
 
 In the review itself, answer these questions explicitly before approval:
 
@@ -292,7 +292,7 @@ For LLM or prompt changes, check the repo's prompt or evaluation docs. If this p
 After producing the coverage graph, write a QA handoff artifact for cross-session reuse:
 
 ```bash
-_SLUG_ENV=$("$_SUPERPOWERS_ROOT/bin/superpowers" repo slug 2>/dev/null || true)
+_SLUG_ENV=$("$_FEATUREFORGE_ROOT/bin/featureforge" repo slug 2>/dev/null || true)
 if [ -n "$_SLUG_ENV" ]; then
   eval "$_SLUG_ENV"
 fi
@@ -306,13 +306,13 @@ Write to `$_SP_STATE_DIR/projects/$SLUG/{user}-{safe-branch}-test-plan-{datetime
 
 ```markdown
 # Test Plan
-**Source Plan:** `docs/superpowers/plans/...`
+**Source Plan:** `docs/featureforge/plans/...`
 **Source Plan Revision:** 3
 **Branch:** {branch}
 **Repo:** {slug}
 **Head SHA:** {current-head}
 **Browser QA Required:** yes
-**Generated By:** superpowers:plan-eng-review
+**Generated By:** featureforge:plan-eng-review
 **Generated At:** 2026-03-22T14:30:00Z
 
 ## Affected Pages / Routes
@@ -349,7 +349,7 @@ Write to `$_SP_STATE_DIR/projects/$SLUG/{user}-{safe-branch}-test-plan-{datetime
 - Review outcome captured separately in the source plan.
 ```
 
-This file is consumed by `superpowers:qa-only` as the primary QA handoff. Include only tester-facing guidance: what to test, where to test it, and why it matters. Preserve the current core sections (`Affected Pages / Routes`, `Key Interactions`, `Edge Cases`, `Critical Paths`) and treat the richer sections as additive context; finish-gate freshness still depends on the existing required headers.
+This file is consumed by `featureforge:qa-only` as the primary QA handoff. Include only tester-facing guidance: what to test, where to test it, and why it matters. Preserve the current core sections (`Affected Pages / Routes`, `Key Interactions`, `Edge Cases`, `Critical Paths`) and treat the richer sections as additive context; finish-gate freshness still depends on the existing required headers.
 
 Set `**Browser QA Required:** yes` when the approved plan, branch-specific routes, or interaction surface make browser QA part of the normal finish gate. Otherwise write `no`.
 Set `**Head SHA:**` to the current `git rev-parse HEAD` for the branch state that this test-plan artifact covers.
@@ -489,17 +489,17 @@ Check the git log for this branch. If there are prior commits suggesting a previ
 
 ## Execution handoff
 
-Before presenting the final execution preflight handoff, if `$_SUPERPOWERS_ROOT/bin/superpowers` is available, call `$_SUPERPOWERS_ROOT/bin/superpowers workflow status --refresh`.
+Before presenting the final execution preflight handoff, if `$_FEATUREFORGE_ROOT/bin/featureforge` is available, call `$_FEATUREFORGE_ROOT/bin/featureforge workflow status --refresh`.
 
 - If the helper returns a non-empty `next_skill`, use that route instead of re-deriving state manually.
-- If the helper returns `status` `implementation_ready`, immediately call `$_SUPERPOWERS_ROOT/bin/superpowers workflow handoff` before presenting any handoff text.
+- If the helper returns `status` `implementation_ready`, immediately call `$_FEATUREFORGE_ROOT/bin/featureforge workflow handoff` before presenting any handoff text.
 - If that handoff returns `phase` `execution_preflight`, present the normal execution preflight handoff below.
 - If that handoff returns a later phase such as `review_blocked`, `qa_pending`, `document_release_pending`, or `ready_for_branch_completion`, follow that reported phase and `next_action` instead of reopening execution preflight.
 - Only fall back to manual artifact inspection if the helper is unavailable or fails.
 
 When the review is resolved and the written plan is approved, present the normal execution preflight handoff.
 
-During that handoff, call `superpowers plan execution recommend --plan <approved-plan-path>` and present the helper's recommended skill first.
+During that handoff, call `featureforge plan execution recommend --plan <approved-plan-path>` and present the helper's recommended skill first.
 
 The handoff must include the exact approved plan path and must remind the execution skill to reject draft or stale plans.
 
@@ -509,7 +509,7 @@ If any task packet is missing, stale, or non-buildable for the approved plan rev
 
 * Present the helper-recommended execution skill as the default path with the approved plan path.
 * If isolated-agent workflows are available in the current platform/session, show the other valid execution skill as an explicit override.
-* If isolated-agent workflows are unavailable, do not present `superpowers:subagent-driven-development` as an available override.
+* If isolated-agent workflows are unavailable, do not present `featureforge:subagent-driven-development` as an available override.
 
 Do not start implementation before the review is satisfied.
 

@@ -11,12 +11,16 @@ use crate::contracts::plan::AnalyzePlanReport;
 use crate::contracts::runtime::analyze_contract_report;
 use crate::diagnostics::{DiagnosticError, FailureClass};
 use crate::git::{RepositoryIdentity, discover_repo_identity};
-use crate::paths::{RepoPath, superpowers_state_dir};
+use crate::paths::{RepoPath, featureforge_state_dir};
 use crate::session_entry;
 use crate::workflow::manifest::{
     ManifestLoadResult, WorkflowManifest, load_manifest, load_manifest_read_only, manifest_path,
     recover_slug_changed_manifest, recover_slug_changed_manifest_read_only, save_manifest,
 };
+
+const ACTIVE_SPEC_ROOT: &str = "docs/featureforge/specs";
+const ACTIVE_PLAN_ROOT: &str = "docs/featureforge/plans";
+const ACTIVE_SESSION_ENTRY_SKILL: &str = "using-featureforge";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct WorkflowRoute {
@@ -109,7 +113,7 @@ impl WorkflowRuntime {
 
     fn discover_with_loader(current_dir: &Path, read_only: bool) -> Result<Self, DiagnosticError> {
         let identity = discover_repo_identity(current_dir)?;
-        let state_dir = superpowers_state_dir();
+        let state_dir = featureforge_state_dir();
         let manifest_path = manifest_path(&identity, &state_dir);
         let load = if read_only {
             load_manifest_read_only
@@ -198,7 +202,7 @@ impl WorkflowRuntime {
     }
 
     pub fn resolve(&self) -> Result<WorkflowRoute, DiagnosticError> {
-        match env::var("SUPERPOWERS_WORKFLOW_RESOLVE_TEST_FAILPOINT").as_deref() {
+        match env::var("FEATUREFORGE_WORKFLOW_RESOLVE_TEST_FAILPOINT").as_deref() {
             Ok("invalid_contract") => {
                 return Err(DiagnosticError::new(
                     FailureClass::ResolverContractViolation,
@@ -230,7 +234,7 @@ impl WorkflowRuntime {
             expected_spec_path: String::new(),
             expected_plan_path: String::new(),
             status: String::from("needs_brainstorming"),
-            next_skill: String::from("superpowers:brainstorming"),
+            next_skill: String::from("featureforge:brainstorming"),
             reason: String::new(),
             note: String::new(),
             updated_at: String::from("1970-01-01T00:00:00Z"),
@@ -240,14 +244,14 @@ impl WorkflowRuntime {
                 manifest.expected_spec_path = repo_path.clone();
                 manifest.expected_plan_path.clear();
                 manifest.status = String::from("needs_brainstorming");
-                manifest.next_skill = String::from("superpowers:brainstorming");
+                manifest.next_skill = String::from("featureforge:brainstorming");
                 manifest.reason = String::from("missing_expected_spec,expect_set");
                 manifest.note = manifest.reason.clone();
             }
             ArtifactKind::Plan => {
                 manifest.expected_plan_path = repo_path.clone();
                 manifest.status = String::from("plan_draft");
-                manifest.next_skill = String::from("superpowers:plan-eng-review");
+                manifest.next_skill = String::from("featureforge:plan-eng-review");
                 manifest.reason = String::from("missing_expected_plan,expect_set");
                 manifest.note = manifest.reason.clone();
             }
@@ -483,7 +487,7 @@ fn resolve_route(
             return Ok(WorkflowRoute {
                 schema_version: 2,
                 status: String::from("needs_brainstorming"),
-                next_skill: String::from("superpowers:brainstorming"),
+                next_skill: String::from("featureforge:brainstorming"),
                 spec_path: manifest.expected_spec_path.clone(),
                 plan_path: String::new(),
                 contract_state: String::from("unknown"),
@@ -507,7 +511,7 @@ fn resolve_route(
         return Ok(WorkflowRoute {
             schema_version: 2,
             status: String::from("spec_draft"),
-            next_skill: String::from("superpowers:plan-ceo-review"),
+            next_skill: String::from("featureforge:plan-ceo-review"),
             spec_path: selected_spec.path.clone(),
             plan_path: String::new(),
             contract_state: String::from("unknown"),
@@ -537,7 +541,7 @@ fn resolve_route(
         return Ok(WorkflowRoute {
             schema_version: 2,
             status: String::from("needs_brainstorming"),
-            next_skill: String::from("superpowers:brainstorming"),
+            next_skill: String::from("featureforge:brainstorming"),
             spec_path: String::new(),
             plan_path: String::new(),
             contract_state: String::from("unknown"),
@@ -578,7 +582,7 @@ fn resolve_route(
         return Ok(WorkflowRoute {
             schema_version: 2,
             status: String::from("spec_draft"),
-            next_skill: String::from("superpowers:plan-ceo-review"),
+            next_skill: String::from("featureforge:plan-ceo-review"),
             spec_path: selected_spec.path.clone(),
             plan_path: String::new(),
             contract_state: String::from("unknown"),
@@ -606,7 +610,7 @@ fn resolve_route(
         return Ok(WorkflowRoute {
             schema_version: 2,
             status: String::from("spec_draft"),
-            next_skill: String::from("superpowers:plan-ceo-review"),
+            next_skill: String::from("featureforge:plan-ceo-review"),
             spec_path: selected_spec.path.clone(),
             plan_path: String::new(),
             contract_state: String::from("unknown"),
@@ -661,7 +665,7 @@ fn resolve_route(
         return Ok(WorkflowRoute {
             schema_version: 2,
             status: String::from("spec_approved_needs_plan"),
-            next_skill: String::from("superpowers:writing-plans"),
+            next_skill: String::from("featureforge:writing-plans"),
             spec_path: approved_spec.path.clone(),
             plan_path: String::new(),
             contract_state: String::from("unknown"),
@@ -737,7 +741,7 @@ fn resolve_route(
             return Ok(WorkflowRoute {
                 schema_version: 2,
                 status: String::from("plan_draft"),
-                next_skill: String::from("superpowers:plan-eng-review"),
+                next_skill: String::from("featureforge:plan-eng-review"),
                 spec_path: approved_spec.path.clone(),
                 plan_path: plan.path.clone(),
                 contract_state,
@@ -786,7 +790,7 @@ fn resolve_route(
             return Ok(WorkflowRoute {
                 schema_version: 2,
                 status: String::from("stale_plan"),
-                next_skill: String::from("superpowers:writing-plans"),
+                next_skill: String::from("featureforge:writing-plans"),
                 spec_path: approved_spec.path.clone(),
                 plan_path: plan.path.clone(),
                 contract_state,
@@ -805,7 +809,7 @@ fn resolve_route(
         return Ok(WorkflowRoute {
             schema_version: 2,
             status: String::from("plan_draft"),
-            next_skill: String::from("superpowers:plan-eng-review"),
+            next_skill: String::from("featureforge:plan-eng-review"),
             spec_path: approved_spec.path.clone(),
             plan_path: plan.path.clone(),
             contract_state,
@@ -824,7 +828,7 @@ fn resolve_route(
     Ok(WorkflowRoute {
         schema_version: 2,
         status: String::from("spec_approved_needs_plan"),
-        next_skill: String::from("superpowers:writing-plans"),
+        next_skill: String::from("featureforge:writing-plans"),
         spec_path: approved_spec.path.clone(),
         plan_path: preserved_plan_path.unwrap_or_default(),
         contract_state: String::from("unknown"),
@@ -865,7 +869,7 @@ fn normalize_repo_path(path: &Path) -> Result<String, DiagnosticError> {
 fn scan_specs(repo_root: &Path) -> (Vec<WorkflowSpecCandidate>, Vec<WorkflowSpecCandidate>) {
     let mut candidates = Vec::new();
     let mut malformed = Vec::new();
-    for path in markdown_files_under(&repo_root.join("docs/superpowers/specs")) {
+    for path in markdown_files_under(&repo_root.join(ACTIVE_SPEC_ROOT)) {
         if let Ok(document) = parse_workflow_spec_candidate(&path) {
             if document.malformed_headers {
                 malformed.push(document);
@@ -879,7 +883,7 @@ fn scan_specs(repo_root: &Path) -> (Vec<WorkflowSpecCandidate>, Vec<WorkflowSpec
 
 fn scan_plans(repo_root: &Path) -> Vec<WorkflowPlanCandidate> {
     let mut candidates = Vec::new();
-    for path in markdown_files_under(&repo_root.join("docs/superpowers/plans")) {
+    for path in markdown_files_under(&repo_root.join(ACTIVE_PLAN_ROOT)) {
         if let Ok(document) = parse_workflow_plan_candidate(&path) {
             candidates.push(document);
         }
@@ -905,7 +909,7 @@ fn apply_fallback_limit<T>(mut candidates: Vec<T>) -> (Vec<T>, bool) {
 }
 
 fn fallback_limit() -> Option<usize> {
-    env::var("SUPERPOWERS_WORKFLOW_STATUS_FALLBACK_LIMIT")
+    env::var("FEATUREFORGE_WORKFLOW_STATUS_FALLBACK_LIMIT")
         .ok()
         .and_then(|value| value.parse::<usize>().ok())
         .filter(|limit| *limit > 0)
@@ -927,7 +931,7 @@ fn visit_markdown_files(root: &Path, files: &mut Vec<PathBuf>) {
 }
 
 fn read_session_entry(state_dir: &Path) -> SessionEntryState {
-    let session_key = env::var("SUPERPOWERS_SESSION_KEY")
+    let session_key = env::var("FEATUREFORGE_SESSION_KEY")
         .or_else(|_| env::var("PPID"))
         .unwrap_or_else(|_| String::from("current"));
     match session_entry::inspect(Some(&session_key)) {
@@ -947,7 +951,7 @@ fn read_session_entry(state_dir: &Path) -> SessionEntryState {
             session_key,
             decision_path: state_dir
                 .join("session-entry")
-                .join("using-superpowers")
+                .join(ACTIVE_SESSION_ENTRY_SKILL)
                 .to_string_lossy()
                 .into_owned(),
             policy_source: String::from("default"),
@@ -1096,7 +1100,7 @@ fn analyze_full_contract(
     spec: &WorkflowSpecCandidate,
     plan: &WorkflowPlanCandidate,
 ) -> Option<AnalyzePlanReport> {
-    if let Ok(json) = env::var("SUPERPOWERS_WORKFLOW_STATUS_TEST_ANALYZE_REPORT_JSON") {
+    if let Ok(json) = env::var("FEATUREFORGE_WORKFLOW_STATUS_TEST_ANALYZE_REPORT_JSON") {
         if let Ok(report) = serde_json::from_str::<AnalyzePlanReport>(&json) {
             return Some(report);
         }

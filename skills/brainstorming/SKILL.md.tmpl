@@ -30,8 +30,8 @@ You MUST create a task for each of these items and complete them in order:
 4. **Landscape Awareness** — when triggered, run a short three-layer capability or landscape pass before proposing approaches
 5. **Propose 2-3 approaches** — with trade-offs and your recommendation
 6. **Present design** — in sections scaled to their complexity, get user approval after each section
-7. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
-8. **Automatic spec review handoff** — invoke `superpowers:plan-ceo-review` after writing the spec
+7. **Write design doc** — save to `docs/featureforge/specs/YYYY-MM-DD-<topic>-design.md` and commit
+8. **Automatic spec review handoff** — invoke `featureforge:plan-ceo-review` after writing the spec
 
 ## Process Flow
 
@@ -130,12 +130,12 @@ digraph brainstorming {
 
 **Documentation:**
 
-- Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
+- Write the validated design (spec) to `docs/featureforge/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
 - Before writing the spec, record the intended spec path with `expect`:
 
 ```bash
-"$_SUPERPOWERS_ROOT/bin/superpowers" workflow expect --artifact spec --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md
+"$_FEATUREFORGE_ROOT/bin/featureforge" workflow expect --artifact spec --path docs/featureforge/specs/YYYY-MM-DD-<topic>-design.md
 ```
 
 - Every spec MUST include these header lines immediately below the title:
@@ -166,7 +166,7 @@ digraph brainstorming {
 - After the spec is written or updated, runs `sync --artifact spec`:
 
 ```bash
-"$_SUPERPOWERS_ROOT/bin/superpowers" workflow sync --artifact spec --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md
+"$_FEATUREFORGE_ROOT/bin/featureforge" workflow sync --artifact spec --path docs/featureforge/specs/YYYY-MM-DD-<topic>-design.md
 ```
 
 **Protected-Branch Repo-Write Gate:**
@@ -174,16 +174,16 @@ digraph brainstorming {
 Before writing or updating the spec file on disk, run the shared repo-safety preflight for the exact spec-writing scope:
 
 ```bash
-superpowers repo-safety check --intent write --stage superpowers:brainstorming --task-id <current-spec-write> --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target spec-artifact-write
+featureforge repo-safety check --intent write --stage featureforge:brainstorming --task-id <current-spec-write> --path docs/featureforge/specs/YYYY-MM-DD-<topic>-design.md --write-target spec-artifact-write
 ```
 
 - If the helper returns `allowed`, continue with the spec write.
-- If it returns `blocked`, name the branch, the stage, and the blocking `failure_class`, then route to either a feature branch / `superpowers:using-git-worktrees` or explicit user approval for this exact spec-writing scope.
+- If it returns `blocked`, name the branch, the stage, and the blocking `failure_class`, then route to either a feature branch / `featureforge:using-git-worktrees` or explicit user approval for this exact spec-writing scope.
 - If the user explicitly approves writing this spec on the current protected branch, approve the full protected-branch task scope you intend to use, including the spec path and any follow-on git targets that are part of the same task slice:
 
 ```bash
-superpowers repo-safety approve --stage superpowers:brainstorming --task-id <current-spec-write> --reason "<explicit user approval>" --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target spec-artifact-write [--write-target git-commit]
-superpowers repo-safety check --intent write --stage superpowers:brainstorming --task-id <current-spec-write> --path docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md --write-target spec-artifact-write [--write-target git-commit]
+featureforge repo-safety approve --stage featureforge:brainstorming --task-id <current-spec-write> --reason "<explicit user approval>" --path docs/featureforge/specs/YYYY-MM-DD-<topic>-design.md --write-target spec-artifact-write [--write-target git-commit]
+featureforge repo-safety check --intent write --stage featureforge:brainstorming --task-id <current-spec-write> --path docs/featureforge/specs/YYYY-MM-DD-<topic>-design.md --write-target spec-artifact-write [--write-target git-commit]
 ```
 
 - Continue only if the re-check returns `allowed`.
@@ -193,7 +193,7 @@ superpowers repo-safety check --intent write --stage superpowers:brainstorming -
 **CEO Review Handoff:**
 After writing the spec document:
 
-1. Invoke `superpowers:plan-ceo-review` after writing the spec
+1. Invoke `featureforge:plan-ceo-review` after writing the spec
 2. Do NOT ask for a separate final spec approval here; `plan-ceo-review` owns the interactive review and approval loop
 3. If `plan-ceo-review` requests changes, update the spec and continue through that skill until the written spec is approved
 

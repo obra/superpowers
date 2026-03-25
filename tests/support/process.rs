@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[allow(dead_code)]
 pub fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
 }
@@ -11,6 +12,7 @@ pub fn run(mut command: Command, context: &str) -> Output {
         .unwrap_or_else(|error| panic!("{context} should run: {error}"))
 }
 
+#[allow(dead_code)]
 pub fn run_checked(command: Command, context: &str) -> Output {
     let output = run(command, context);
     assert!(

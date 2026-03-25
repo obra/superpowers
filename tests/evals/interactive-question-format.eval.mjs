@@ -13,7 +13,7 @@ const gate = requireEvalEnv();
 const testFn = evalsEnabled() && gate.enabled ? test : test.skip;
 
 testFn('interactive question format preserves context, recommendation, and options', async () => {
-  const content = fs.readFileSync(path.join(REPO_ROOT, 'skills/using-superpowers/SKILL.md'), 'utf8');
+  const content = fs.readFileSync(path.join(REPO_ROOT, 'skills/using-featureforge/SKILL.md'), 'utf8');
   const start = content.indexOf('## Interactive User Question Format');
   const end = content.indexOf('## Contributor Mode');
   const section = content.slice(start, end);

@@ -2,8 +2,8 @@ mod common;
 
 use std::path::PathBuf;
 
-use superpowers::cli::plan_execution::StatusArgs;
-use superpowers::execution::state::ExecutionRuntime;
+use featureforge::cli::plan_execution::StatusArgs;
+use featureforge::execution::state::ExecutionRuntime;
 
 fn main() {
     let config = common::parse_args("execution_status");

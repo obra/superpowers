@@ -2,24 +2,24 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use superpowers::contracts::evidence::read_execution_evidence;
-use superpowers::contracts::packet::{build_task_packet_with_timestamp, write_contract_schemas};
-use superpowers::contracts::plan::parse_plan_file;
-use superpowers::contracts::spec::parse_spec_file;
-use superpowers::execution::state::write_plan_execution_schema;
-use superpowers::repo_safety::write_repo_safety_schema;
-use superpowers::session_entry::write_session_entry_schema;
-use superpowers::update_check::write_update_check_schema;
+use featureforge::contracts::evidence::read_execution_evidence;
+use featureforge::contracts::packet::{build_task_packet_with_timestamp, write_contract_schemas};
+use featureforge::contracts::plan::parse_plan_file;
+use featureforge::contracts::spec::parse_spec_file;
+use featureforge::execution::state::write_plan_execution_schema;
+use featureforge::repo_safety::write_repo_safety_schema;
+use featureforge::session_entry::write_session_entry_schema;
+use featureforge::update_check::write_update_check_schema;
 
-const SPEC_REL: &str = "docs/superpowers/specs/2026-03-22-plan-contract-fixture-design.md";
-const PLAN_REL: &str = "docs/superpowers/plans/2026-03-22-plan-contract-fixture.md";
+const SPEC_REL: &str = "docs/featureforge/specs/2026-03-22-plan-contract-fixture-design.md";
+const PLAN_REL: &str = "docs/featureforge/plans/2026-03-22-plan-contract-fixture.md";
 
 fn unique_temp_dir(label: &str) -> PathBuf {
     let nanos = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("system clock should be after unix epoch")
         .as_nanos();
-    let dir = std::env::temp_dir().join(format!("superpowers-{label}-{nanos}"));
+    let dir = std::env::temp_dir().join(format!("featureforge-{label}-{nanos}"));
     fs::create_dir_all(&dir).expect("temp dir should be created");
     dir
 }
@@ -143,15 +143,26 @@ fn checked_in_update_check_schema_matches_generated_output() {
 }
 
 #[test]
-fn legacy_execution_evidence_remains_readable() {
-    let evidence = read_execution_evidence(repo_fixture_path(
-        "docs/superpowers/execution-evidence/2026-03-22-runtime-integration-hardening-r1-evidence.md",
-    ))
-    .expect("legacy execution evidence should parse");
+fn execution_evidence_markdown_remains_readable() {
+    let repo_root = unique_temp_dir("execution-evidence");
+    let evidence_path = repo_root.join(
+        "docs/featureforge/execution-evidence/2026-03-22-runtime-integration-hardening-r1-evidence.md",
+    );
+    if let Some(parent) = evidence_path.parent() {
+        fs::create_dir_all(parent).expect("execution evidence parent should exist");
+    }
+    fs::write(
+        &evidence_path,
+        "# Execution Evidence: 2026-03-22-runtime-integration-hardening\n\n**Plan Path:** docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md\n**Plan Revision:** 1\n**Source Spec Path:** docs/featureforge/specs/2026-03-22-runtime-integration-hardening-design.md\n**Source Spec Revision:** 1\n\n## Step Evidence\n\n### Task 1 Step 1\n#### Attempt 1\n**Status:** Completed\n**Recorded At:** 2026-03-22T12:00:00Z\n**Execution Source:** featureforge:executing-plans\n**Claim:** Added route-time red fixtures.\n**Files:**\n- tests/workflow_runtime.rs\n**Verification:**\n- cargo test --test workflow_runtime\n**Invalidation Reason:** N/A\n",
+    )
+    .expect("execution evidence fixture should write");
+
+    let evidence =
+        read_execution_evidence(&evidence_path).expect("execution evidence should parse");
 
     assert_eq!(
         evidence.plan_path,
-        "docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md"
+        "docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md"
     );
     assert_eq!(evidence.plan_revision, 1);
     assert!(!evidence.steps.is_empty());

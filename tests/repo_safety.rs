@@ -9,8 +9,6 @@ mod process_support;
 
 use assert_cmd::cargo::CommandCargoExt;
 use serde_json::Value;
-use sha2::{Digest, Sha256};
-use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
@@ -19,12 +17,7 @@ use tempfile::TempDir;
 use failure_json_support::parse_failure_json;
 use files_support::write_file;
 use json_support::parse_json;
-use process_support::{repo_root, run, run_checked};
-use superpowers::paths::branch_storage_key;
-
-fn repo_safety_helper_path() -> PathBuf {
-    repo_root().join("bin/superpowers-repo-safety")
-}
+use process_support::{run, run_checked};
 
 fn init_repo(name: &str, branch: &str, remote_url: &str) -> (TempDir, TempDir) {
     let repo_dir = TempDir::new().expect("repo tempdir should exist");
@@ -37,13 +30,13 @@ fn init_repo(name: &str, branch: &str, remote_url: &str) -> (TempDir, TempDir) {
 
     let mut git_config_name = Command::new("git");
     git_config_name
-        .args(["config", "user.name", "Superpowers Test"])
+        .args(["config", "user.name", "FeatureForge Test"])
         .current_dir(repo);
     run_checked(git_config_name, "git config user.name");
 
     let mut git_config_email = Command::new("git");
     git_config_email
-        .args(["config", "user.email", "superpowers-tests@example.com"])
+        .args(["config", "user.email", "featureforge-tests@example.com"])
         .current_dir(repo);
     run_checked(git_config_email, "git config user.email");
 
@@ -73,86 +66,31 @@ fn init_repo(name: &str, branch: &str, remote_url: &str) -> (TempDir, TempDir) {
 }
 
 fn run_shell_repo_safety(repo: &Path, state_dir: &Path, args: &[&str], context: &str) -> Output {
-    let mut command = Command::new(repo_safety_helper_path());
-    command
-        .current_dir(repo)
-        .env("SUPERPOWERS_STATE_DIR", state_dir)
-        .args(args);
-    run(command, context)
-}
-
-fn run_rust_superpowers(repo: &Path, state_dir: &Path, args: &[&str], context: &str) -> Output {
     let mut command =
-        Command::cargo_bin("superpowers").expect("superpowers cargo binary should be available");
+        Command::cargo_bin("featureforge").expect("featureforge cargo binary should be available");
     command
         .current_dir(repo)
-        .env("SUPERPOWERS_STATE_DIR", state_dir)
+        .env("FEATUREFORGE_STATE_DIR", state_dir)
+        .args(["repo-safety"])
         .args(args);
     run(command, context)
 }
 
-fn current_user_name() -> String {
-    env::var("USER")
-        .or_else(|_| env::var("USERNAME"))
-        .unwrap_or_else(|_| String::from("user"))
-}
-
-fn repo_slug_from_remote(remote_url: &str) -> String {
-    remote_url
-        .trim_end_matches(".git")
-        .rsplit('/')
-        .take(2)
-        .collect::<Vec<_>>()
-        .into_iter()
-        .rev()
-        .collect::<Vec<_>>()
-        .join("-")
-}
-
-fn task_hash(stage: &str, task_id: &str) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(stage.as_bytes());
-    hasher.update(b"\n");
-    hasher.update(task_id.as_bytes());
-    format!("{:x}", hasher.finalize())[..16].to_owned()
-}
-
-fn legacy_approval_path(
-    state_dir: &Path,
-    remote_url: &str,
-    branch: &str,
-    stage: &str,
-    task_id: &str,
-) -> PathBuf {
-    state_dir
-        .join("projects")
-        .join(repo_slug_from_remote(remote_url))
-        .join(format!(
-            "{}-{}-repo-safety",
-            current_user_name(),
-            branch_storage_key(branch)
-        ))
-        .join(format!("{}.json", task_hash(stage, task_id)))
-}
-
-fn canonical_approval_path(
-    state_dir: &Path,
-    remote_url: &str,
-    branch: &str,
-    stage: &str,
-    task_id: &str,
-) -> PathBuf {
-    state_dir
-        .join("repo-safety")
-        .join("approvals")
-        .join(repo_slug_from_remote(remote_url))
-        .join(format!("{}-{}", current_user_name(), branch_storage_key(branch)))
-        .join(format!("{}.json", task_hash(stage, task_id)))
+fn run_rust_featureforge(repo: &Path, state_dir: &Path, args: &[&str], context: &str) -> Output {
+    let mut command =
+        Command::cargo_bin("featureforge").expect("featureforge cargo binary should be available");
+    command
+        .current_dir(repo)
+        .env("FEATUREFORGE_STATE_DIR", state_dir)
+        .args(args);
+    run(command, context)
 }
 
 fn checkout_branch(repo: &Path, branch: &str) {
     let mut git_checkout = Command::new("git");
-    git_checkout.args(["checkout", "-B", branch]).current_dir(repo);
+    git_checkout
+        .args(["checkout", "-B", branch])
+        .current_dir(repo);
     run_checked(git_checkout, "git checkout branch");
 }
 
@@ -171,11 +109,11 @@ fn canonical_repo_safety_check_matches_helper_for_protected_branch_block() {
             "--intent",
             "write",
             "--stage",
-            "superpowers:brainstorming",
+            "featureforge:brainstorming",
             "--task-id",
             "spec-task",
             "--path",
-            "docs/superpowers/specs/new-spec.md",
+            "docs/featureforge/specs/new-spec.md",
             "--write-target",
             "spec-artifact-write",
         ],
@@ -183,7 +121,7 @@ fn canonical_repo_safety_check_matches_helper_for_protected_branch_block() {
     );
     let helper_json = parse_json(&helper_output, "helper protected branch block");
 
-    let rust_output = run_rust_superpowers(
+    let rust_output = run_rust_featureforge(
         repo,
         state,
         &[
@@ -192,11 +130,11 @@ fn canonical_repo_safety_check_matches_helper_for_protected_branch_block() {
             "--intent",
             "write",
             "--stage",
-            "superpowers:brainstorming",
+            "featureforge:brainstorming",
             "--task-id",
             "spec-task",
             "--path",
-            "docs/superpowers/specs/new-spec.md",
+            "docs/featureforge/specs/new-spec.md",
             "--write-target",
             "spec-artifact-write",
         ],
@@ -214,99 +152,6 @@ fn canonical_repo_safety_check_matches_helper_for_protected_branch_block() {
 }
 
 #[test]
-fn canonical_repo_safety_reads_legacy_approval_with_warning_until_install_migrate_runs() {
-    let remote_url = "https://example.com/acme/repo-safety.git";
-    let (repo_dir, state_dir) = init_repo("repo-safety-migration", "main", remote_url);
-    let repo = repo_dir.path();
-    let state = state_dir.path();
-
-    let helper_approve = run_shell_repo_safety(
-        repo,
-        state,
-        &[
-            "approve",
-            "--stage",
-            "superpowers:brainstorming",
-            "--task-id",
-            "spec-task",
-            "--reason",
-            "User explicitly approved writing the spec on main.",
-            "--path",
-            "docs/superpowers/specs/new-spec.md",
-            "--write-target",
-            "spec-artifact-write",
-        ],
-        "helper approve legacy approval",
-    );
-    let helper_json = parse_json(&helper_approve, "helper approve legacy approval");
-    let legacy_path = legacy_approval_path(
-        state,
-        remote_url,
-        "main",
-        "superpowers:brainstorming",
-        "spec-task",
-    );
-    let canonical_path = canonical_approval_path(
-        state,
-        remote_url,
-        "main",
-        "superpowers:brainstorming",
-        "spec-task",
-    );
-    assert_eq!(
-        helper_json["approval_path"].as_str(),
-        Some(canonical_path.to_string_lossy().as_ref())
-    );
-    assert!(
-        canonical_path.is_file(),
-        "helper should write the canonical approval record"
-    );
-    if let Some(parent) = legacy_path.parent() {
-        fs::create_dir_all(parent).expect("legacy approval directory should exist");
-    }
-    fs::copy(&canonical_path, &legacy_path).expect("legacy approval record should copy");
-    fs::remove_file(&canonical_path)
-        .expect("canonical approval should be removed to force legacy read");
-
-    let rust_output = run_rust_superpowers(
-        repo,
-        state,
-        &[
-            "repo-safety",
-            "check",
-            "--intent",
-            "write",
-            "--stage",
-            "superpowers:brainstorming",
-            "--task-id",
-            "spec-task",
-            "--path",
-            "docs/superpowers/specs/new-spec.md",
-            "--write-target",
-            "spec-artifact-write",
-        ],
-        "canonical repo-safety migrated approval check",
-    );
-    let rust_json = parse_json(
-        &rust_output,
-        "canonical repo-safety migrated approval check",
-    );
-    assert_eq!(rust_json["outcome"], Value::String(String::from("allowed")));
-    assert_eq!(
-        rust_json["approval_path"].as_str(),
-        Some(canonical_path.to_string_lossy().as_ref())
-    );
-    assert!(
-        !canonical_path.exists(),
-        "repo-safety check should not silently rewrite legacy approvals"
-    );
-    assert!(
-        String::from_utf8_lossy(&rust_output.stderr).contains("PendingMigration"),
-        "repo-safety check should warn when legacy approvals still need explicit migration"
-    );
-}
-
-#[test]
 fn canonical_repo_safety_matches_helper_for_instruction_protected_branch_rule() {
     let remote_url = "https://example.com/acme/repo-safety.git";
     let (repo_dir, state_dir) = init_repo("repo-safety-instructions", "release", remote_url);
@@ -315,7 +160,7 @@ fn canonical_repo_safety_matches_helper_for_instruction_protected_branch_rule() 
 
     write_file(
         &repo.join("AGENTS.override.md"),
-        "Superpowers protected branches: release\n",
+        "FeatureForge protected branches: release\n",
     );
 
     let helper_output = run_shell_repo_safety(
@@ -326,11 +171,11 @@ fn canonical_repo_safety_matches_helper_for_instruction_protected_branch_rule() 
             "--intent",
             "write",
             "--stage",
-            "superpowers:brainstorming",
+            "featureforge:brainstorming",
             "--task-id",
             "release-task",
             "--path",
-            "docs/superpowers/specs/release-spec.md",
+            "docs/featureforge/specs/release-spec.md",
             "--write-target",
             "spec-artifact-write",
         ],
@@ -338,7 +183,7 @@ fn canonical_repo_safety_matches_helper_for_instruction_protected_branch_rule() 
     );
     let helper_json = parse_json(&helper_output, "helper instruction protected branch");
 
-    let rust_output = run_rust_superpowers(
+    let rust_output = run_rust_featureforge(
         repo,
         state,
         &[
@@ -347,11 +192,11 @@ fn canonical_repo_safety_matches_helper_for_instruction_protected_branch_rule() 
             "--intent",
             "write",
             "--stage",
-            "superpowers:brainstorming",
+            "featureforge:brainstorming",
             "--task-id",
             "release-task",
             "--path",
-            "docs/superpowers/specs/release-spec.md",
+            "docs/featureforge/specs/release-spec.md",
             "--write-target",
             "spec-artifact-write",
         ],
@@ -372,7 +217,7 @@ fn canonical_repo_safety_handles_read_intent_feature_branches_and_instruction_ov
     let remote_url = "https://example.com/acme/repo-safety.git";
 
     let (read_repo_dir, read_state_dir) = init_repo("repo-safety-read", "main", remote_url);
-    let read_output = run_rust_superpowers(
+    let read_output = run_rust_featureforge(
         read_repo_dir.path(),
         read_state_dir.path(),
         &[
@@ -381,7 +226,7 @@ fn canonical_repo_safety_handles_read_intent_feature_branches_and_instruction_ov
             "--intent",
             "read",
             "--stage",
-            "superpowers:brainstorming",
+            "featureforge:brainstorming",
             "--task-id",
             "read-task",
             "--path",
@@ -406,7 +251,7 @@ fn canonical_repo_safety_handles_read_intent_feature_branches_and_instruction_ov
 
     let (feature_repo_dir, feature_state_dir) =
         init_repo("repo-safety-feature", "feature/repo-safety", remote_url);
-    let feature_output = run_rust_superpowers(
+    let feature_output = run_rust_featureforge(
         feature_repo_dir.path(),
         feature_state_dir.path(),
         &[
@@ -415,11 +260,11 @@ fn canonical_repo_safety_handles_read_intent_feature_branches_and_instruction_ov
             "--intent",
             "write",
             "--stage",
-            "superpowers:brainstorming",
+            "featureforge:brainstorming",
             "--task-id",
             "feature-task",
             "--path",
-            "docs/superpowers/specs/new-spec.md",
+            "docs/featureforge/specs/new-spec.md",
             "--write-target",
             "spec-artifact-write",
         ],
@@ -443,9 +288,9 @@ fn canonical_repo_safety_handles_read_intent_feature_branches_and_instruction_ov
         init_repo("repo-safety-override", "release", remote_url);
     write_file(
         &override_repo_dir.path().join("AGENTS.override.md"),
-        "Superpowers protected branches: release\n",
+        "FeatureForge protected branches: release\n",
     );
-    let root_override_output = run_rust_superpowers(
+    let root_override_output = run_rust_featureforge(
         override_repo_dir.path(),
         override_state_dir.path(),
         &[
@@ -454,11 +299,11 @@ fn canonical_repo_safety_handles_read_intent_feature_branches_and_instruction_ov
             "--intent",
             "write",
             "--stage",
-            "superpowers:brainstorming",
+            "featureforge:brainstorming",
             "--task-id",
             "release-task",
             "--path",
-            "docs/superpowers/specs/release-spec.md",
+            "docs/featureforge/specs/release-spec.md",
             "--write-target",
             "spec-artifact-write",
         ],
@@ -485,9 +330,9 @@ fn canonical_repo_safety_handles_read_intent_feature_branches_and_instruction_ov
         .expect("nested override parent should exist");
     write_file(
         &override_repo_dir.path().join("apps/AGENTS.override.md"),
-        "Superpowers protected branches: release\n",
+        "FeatureForge protected branches: release\n",
     );
-    let nested_override_output = run_rust_superpowers(
+    let nested_override_output = run_rust_featureforge(
         &override_repo_dir.path().join("apps/cli"),
         override_state_dir.path(),
         &[
@@ -496,11 +341,11 @@ fn canonical_repo_safety_handles_read_intent_feature_branches_and_instruction_ov
             "--intent",
             "write",
             "--stage",
-            "superpowers:brainstorming",
+            "featureforge:brainstorming",
             "--task-id",
             "nested-release-task",
             "--path",
-            "docs/superpowers/specs/release-spec.md",
+            "docs/featureforge/specs/release-spec.md",
             "--write-target",
             "spec-artifact-write",
         ],
@@ -527,9 +372,9 @@ fn canonical_repo_safety_handles_read_intent_feature_branches_and_instruction_ov
         init_repo("repo-safety-invalid-instruction", "release", remote_url);
     write_file(
         &invalid_repo_dir.path().join("AGENTS.override.md"),
-        "Superpowers protected branches: release/*\n",
+        "FeatureForge protected branches: release/*\n",
     );
-    let invalid_instruction_output = run_rust_superpowers(
+    let invalid_instruction_output = run_rust_featureforge(
         invalid_repo_dir.path(),
         invalid_state_dir.path(),
         &[
@@ -538,11 +383,11 @@ fn canonical_repo_safety_handles_read_intent_feature_branches_and_instruction_ov
             "--intent",
             "write",
             "--stage",
-            "superpowers:brainstorming",
+            "featureforge:brainstorming",
             "--task-id",
             "release-task",
             "--path",
-            "docs/superpowers/specs/release-spec.md",
+            "docs/featureforge/specs/release-spec.md",
             "--write-target",
             "spec-artifact-write",
         ],
@@ -566,20 +411,20 @@ fn canonical_repo_safety_matching_approvals_and_scope_rules_are_precise() {
     let repo = repo_dir.path();
     let state = state_dir.path();
 
-    let matching_approval = run_rust_superpowers(
+    let matching_approval = run_rust_featureforge(
         repo,
         state,
         &[
             "repo-safety",
             "approve",
             "--stage",
-            "superpowers:brainstorming",
+            "featureforge:brainstorming",
             "--task-id",
             "spec-task",
             "--reason",
             "User explicitly approved writing the spec on main.",
             "--path",
-            "docs/superpowers/specs/new-spec.md",
+            "docs/featureforge/specs/new-spec.md",
             "--write-target",
             "spec-artifact-write",
         ],
@@ -589,7 +434,7 @@ fn canonical_repo_safety_matching_approvals_and_scope_rules_are_precise() {
         &matching_approval,
         "canonical repo-safety matching approval",
     );
-    let matching_check = run_rust_superpowers(
+    let matching_check = run_rust_featureforge(
         repo,
         state,
         &[
@@ -598,11 +443,11 @@ fn canonical_repo_safety_matching_approvals_and_scope_rules_are_precise() {
             "--intent",
             "write",
             "--stage",
-            "superpowers:brainstorming",
+            "featureforge:brainstorming",
             "--task-id",
             "spec-task",
             "--path",
-            "docs/superpowers/specs/new-spec.md",
+            "docs/featureforge/specs/new-spec.md",
             "--write-target",
             "spec-artifact-write",
         ],
@@ -630,20 +475,20 @@ fn canonical_repo_safety_matching_approvals_and_scope_rules_are_precise() {
         Value::String(String::from(""))
     );
 
-    let full_scope_approval = run_rust_superpowers(
+    let full_scope_approval = run_rust_featureforge(
         repo,
         state,
         &[
             "repo-safety",
             "approve",
             "--stage",
-            "superpowers:brainstorming",
+            "featureforge:brainstorming",
             "--task-id",
             "spec-full-scope-task",
             "--reason",
             "User explicitly approved the spec write and same-slice commit on main.",
             "--path",
-            "docs/superpowers/specs/new-spec.md",
+            "docs/featureforge/specs/new-spec.md",
             "--write-target",
             "spec-artifact-write",
             "--write-target",
@@ -655,7 +500,7 @@ fn canonical_repo_safety_matching_approvals_and_scope_rules_are_precise() {
         &full_scope_approval,
         "canonical repo-safety full-scope approval",
     );
-    let full_scope_check = run_rust_superpowers(
+    let full_scope_check = run_rust_featureforge(
         repo,
         state,
         &[
@@ -664,11 +509,11 @@ fn canonical_repo_safety_matching_approvals_and_scope_rules_are_precise() {
             "--intent",
             "write",
             "--stage",
-            "superpowers:brainstorming",
+            "featureforge:brainstorming",
             "--task-id",
             "spec-full-scope-task",
             "--path",
-            "docs/superpowers/specs/new-spec.md",
+            "docs/featureforge/specs/new-spec.md",
             "--write-target",
             "spec-artifact-write",
             "--write-target",
@@ -690,20 +535,20 @@ fn canonical_repo_safety_matching_approvals_and_scope_rules_are_precise() {
         full_scope_check_json["approval_path"]
     );
 
-    let mismatched_path_approval = run_rust_superpowers(
+    let mismatched_path_approval = run_rust_featureforge(
         repo,
         state,
         &[
             "repo-safety",
             "approve",
             "--stage",
-            "superpowers:brainstorming",
+            "featureforge:brainstorming",
             "--task-id",
             "spec-mismatch-path",
             "--reason",
             "User explicitly approved the original spec path.",
             "--path",
-            "docs/superpowers/specs/original.md",
+            "docs/featureforge/specs/original.md",
             "--write-target",
             "spec-artifact-write",
         ],
@@ -713,7 +558,7 @@ fn canonical_repo_safety_matching_approvals_and_scope_rules_are_precise() {
         &mismatched_path_approval,
         "canonical repo-safety mismatched path approval",
     );
-    let mismatched_path_check = run_rust_superpowers(
+    let mismatched_path_check = run_rust_featureforge(
         repo,
         state,
         &[
@@ -722,11 +567,11 @@ fn canonical_repo_safety_matching_approvals_and_scope_rules_are_precise() {
             "--intent",
             "write",
             "--stage",
-            "superpowers:brainstorming",
+            "featureforge:brainstorming",
             "--task-id",
             "spec-mismatch-path",
             "--path",
-            "docs/superpowers/specs/other.md",
+            "docs/featureforge/specs/other.md",
             "--write-target",
             "spec-artifact-write",
         ],
@@ -749,14 +594,14 @@ fn canonical_repo_safety_matching_approvals_and_scope_rules_are_precise() {
         mismatched_path_check_json["approval_path"]
     );
 
-    let mismatched_target_approval = run_rust_superpowers(
+    let mismatched_target_approval = run_rust_featureforge(
         repo,
         state,
         &[
             "repo-safety",
             "approve",
             "--stage",
-            "superpowers:finishing-a-development-branch",
+            "featureforge:finishing-a-development-branch",
             "--task-id",
             "finish-task",
             "--reason",
@@ -770,7 +615,7 @@ fn canonical_repo_safety_matching_approvals_and_scope_rules_are_precise() {
         &mismatched_target_approval,
         "canonical repo-safety mismatched target approval",
     );
-    let mismatched_target_check = run_rust_superpowers(
+    let mismatched_target_check = run_rust_featureforge(
         repo,
         state,
         &[
@@ -779,7 +624,7 @@ fn canonical_repo_safety_matching_approvals_and_scope_rules_are_precise() {
             "--intent",
             "write",
             "--stage",
-            "superpowers:finishing-a-development-branch",
+            "featureforge:finishing-a-development-branch",
             "--task-id",
             "finish-task",
             "--write-target",
@@ -813,13 +658,13 @@ fn canonical_repo_safety_matching_approvals_and_scope_rules_are_precise() {
         let mut record: Value =
             serde_json::from_slice(&fs::read(&approval_path).expect("approval record should read"))
                 .expect("approval record should parse");
-        record["stage"] = Value::String(String::from("superpowers:writing-plans"));
+        record["stage"] = Value::String(String::from("featureforge:writing-plans"));
         fs::write(
             &approval_path,
             serde_json::to_vec(&record).expect("approval record should serialize"),
         )
         .expect("approval record should rewrite");
-        run_rust_superpowers(
+        run_rust_featureforge(
             repo,
             state,
             &[
@@ -828,11 +673,11 @@ fn canonical_repo_safety_matching_approvals_and_scope_rules_are_precise() {
                 "--intent",
                 "write",
                 "--stage",
-                "superpowers:brainstorming",
+                "featureforge:brainstorming",
                 "--task-id",
                 "spec-mismatch-path",
                 "--path",
-                "docs/superpowers/specs/original.md",
+                "docs/featureforge/specs/original.md",
                 "--write-target",
                 "spec-artifact-write",
             ],
@@ -852,7 +697,7 @@ fn canonical_repo_safety_matching_approvals_and_scope_rules_are_precise() {
         Value::String(String::from("ApprovalScopeMismatch"))
     );
 
-    let invalid_write_target = run_rust_superpowers(
+    let invalid_write_target = run_rust_featureforge(
         repo,
         state,
         &[
@@ -861,7 +706,7 @@ fn canonical_repo_safety_matching_approvals_and_scope_rules_are_precise() {
             "--intent",
             "write",
             "--stage",
-            "superpowers:brainstorming",
+            "featureforge:brainstorming",
             "--task-id",
             "spec-task",
             "--write-target",
@@ -887,7 +732,7 @@ fn canonical_repo_safety_distinguishes_exact_branch_names_in_scope_identity() {
     let state = state_dir.path();
 
     let slash_branch = parse_json(
-        &run_rust_superpowers(
+        &run_rust_featureforge(
             repo,
             state,
             &[
@@ -896,11 +741,11 @@ fn canonical_repo_safety_distinguishes_exact_branch_names_in_scope_identity() {
                 "--intent",
                 "write",
                 "--stage",
-                "superpowers:brainstorming",
+                "featureforge:brainstorming",
                 "--task-id",
                 "branch-identity-task",
                 "--path",
-                "docs/superpowers/specs/new-spec.md",
+                "docs/featureforge/specs/new-spec.md",
                 "--write-target",
                 "spec-artifact-write",
             ],
@@ -912,7 +757,7 @@ fn canonical_repo_safety_distinguishes_exact_branch_names_in_scope_identity() {
     checkout_branch(repo, "feature-x");
 
     let dash_branch = parse_json(
-        &run_rust_superpowers(
+        &run_rust_featureforge(
             repo,
             state,
             &[
@@ -921,11 +766,11 @@ fn canonical_repo_safety_distinguishes_exact_branch_names_in_scope_identity() {
                 "--intent",
                 "write",
                 "--stage",
-                "superpowers:brainstorming",
+                "featureforge:brainstorming",
                 "--task-id",
                 "branch-identity-task",
                 "--path",
-                "docs/superpowers/specs/new-spec.md",
+                "docs/featureforge/specs/new-spec.md",
                 "--write-target",
                 "spec-artifact-write",
             ],
@@ -935,13 +780,11 @@ fn canonical_repo_safety_distinguishes_exact_branch_names_in_scope_identity() {
     );
 
     assert_ne!(
-        slash_branch["approval_path"],
-        dash_branch["approval_path"],
+        slash_branch["approval_path"], dash_branch["approval_path"],
         "approval storage paths should stay exact-branch scoped",
     );
     assert_ne!(
-        slash_branch["approval_fingerprint"],
-        dash_branch["approval_fingerprint"],
+        slash_branch["approval_fingerprint"], dash_branch["approval_fingerprint"],
         "approval fingerprints should stay exact-branch scoped",
     );
 }
@@ -953,7 +796,7 @@ fn canonical_repo_safety_rejects_invalid_inputs_and_keeps_deterministic_hot_path
     let repo = repo_dir.path();
     let state = state_dir.path();
 
-    let whitespace_task = run_rust_superpowers(
+    let whitespace_task = run_rust_featureforge(
         repo,
         state,
         &[
@@ -962,11 +805,11 @@ fn canonical_repo_safety_rejects_invalid_inputs_and_keeps_deterministic_hot_path
             "--intent",
             "write",
             "--stage",
-            "superpowers:brainstorming",
+            "featureforge:brainstorming",
             "--task-id",
             "   ",
             "--path",
-            "docs/superpowers/specs/new-spec.md",
+            "docs/featureforge/specs/new-spec.md",
             "--write-target",
             "spec-artifact-write",
         ],
@@ -979,7 +822,7 @@ fn canonical_repo_safety_rejects_invalid_inputs_and_keeps_deterministic_hot_path
         Value::String(String::from("InvalidCommandInput"))
     );
 
-    let windows_path = run_rust_superpowers(
+    let windows_path = run_rust_featureforge(
         repo,
         state,
         &[
@@ -988,11 +831,11 @@ fn canonical_repo_safety_rejects_invalid_inputs_and_keeps_deterministic_hot_path
             "--intent",
             "write",
             "--stage",
-            "superpowers:brainstorming",
+            "featureforge:brainstorming",
             "--task-id",
             "spec-task",
             "--path",
-            "C:\\repo\\docs\\superpowers\\specs\\new-spec.md",
+            "C:\\repo\\docs\\featureforge\\specs\\new-spec.md",
             "--write-target",
             "spec-artifact-write",
         ],
@@ -1005,20 +848,20 @@ fn canonical_repo_safety_rejects_invalid_inputs_and_keeps_deterministic_hot_path
         Value::String(String::from("InvalidCommandInput"))
     );
 
-    let approval = run_rust_superpowers(
+    let approval = run_rust_featureforge(
         repo,
         state,
         &[
             "repo-safety",
             "approve",
             "--stage",
-            "superpowers:brainstorming",
+            "featureforge:brainstorming",
             "--task-id",
             "spec-task",
             "--reason",
             "User explicitly approved this scope.",
             "--path",
-            "docs/superpowers/specs/new-spec.md",
+            "docs/featureforge/specs/new-spec.md",
             "--write-target",
             "spec-artifact-write",
         ],
@@ -1040,13 +883,13 @@ fn canonical_repo_safety_rejects_invalid_inputs_and_keeps_deterministic_hot_path
         fs::write(
             decoy_dir.join(format!("decoy-{i}.json")),
             format!(
-                r#"{{"repo_root":"/tmp/decoy-{i}","branch":"main","stage":"superpowers:brainstorming","task_id":"decoy-{i}","paths":[],"write_targets":["spec-artifact-write"],"approval_fingerprint":"decoy-{i}","approval_reason":"decoy","protected_by":"default","approved_at":"2026-03-21T00:00:00Z"}}"#
+                r#"{{"repo_root":"/tmp/decoy-{i}","branch":"main","stage":"featureforge:brainstorming","task_id":"decoy-{i}","paths":[],"write_targets":["spec-artifact-write"],"approval_fingerprint":"decoy-{i}","approval_reason":"decoy","protected_by":"default","approved_at":"2026-03-21T00:00:00Z"}}"#
             ),
         )
         .expect("decoy approval file should be writable");
     }
 
-    let hot_path_check = run_rust_superpowers(
+    let hot_path_check = run_rust_featureforge(
         repo,
         state,
         &[
@@ -1055,11 +898,11 @@ fn canonical_repo_safety_rejects_invalid_inputs_and_keeps_deterministic_hot_path
             "--intent",
             "write",
             "--stage",
-            "superpowers:brainstorming",
+            "featureforge:brainstorming",
             "--task-id",
             "spec-task",
             "--path",
-            "docs/superpowers/specs/new-spec.md",
+            "docs/featureforge/specs/new-spec.md",
             "--write-target",
             "spec-artifact-write",
         ],
@@ -1076,20 +919,5 @@ fn canonical_repo_safety_rejects_invalid_inputs_and_keeps_deterministic_hot_path
     assert_eq!(
         hot_path_json["approval_path"],
         Value::String(expected_path.to_string_lossy().into_owned())
-    );
-}
-
-#[test]
-fn repo_safety_helper_script_stays_find_free() {
-    let contents = fs::read_to_string(repo_safety_helper_path())
-        .expect("repo-safety helper script should be readable");
-    assert!(
-        !contents.contains("find "),
-        "repo-safety helper script should not regress to find-based repo scanning"
-    );
-    assert!(
-        contents.contains("FORWARDED_ARGS=(\"$@\")")
-            && contents.contains("exec \"$(resolve_runtime_entry)\" repo-safety \"${FORWARDED_ARGS[@]}\""),
-        "repo-safety helper script should still exec the compat launcher"
     );
 }

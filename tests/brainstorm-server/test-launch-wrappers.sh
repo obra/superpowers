@@ -7,8 +7,6 @@ START_SH="$REPO_ROOT/skills/brainstorming/scripts/start-server.sh"
 STOP_SH="$REPO_ROOT/skills/brainstorming/scripts/stop-server.sh"
 START_PS1="$REPO_ROOT/skills/brainstorming/scripts/start-server.ps1"
 STOP_PS1="$REPO_ROOT/skills/brainstorming/scripts/stop-server.ps1"
-COMPAT_BASH="$REPO_ROOT/compat/bash/superpowers"
-COMPAT_PS1="$REPO_ROOT/compat/powershell/superpowers.ps1"
 
 tmp_root="$(mktemp -d)"
 shell_screen=""
@@ -48,13 +46,13 @@ cleanup() {
 
 trap cleanup EXIT
 
-if [[ ! -f "$COMPAT_BASH" ]]; then
-  echo "Expected canonical bash compat launcher to exist at $COMPAT_BASH"
+if [[ -d "$REPO_ROOT/compat/bash" ]] && find "$REPO_ROOT/compat/bash" -type f | grep -q .; then
+  echo "Expected no bash compatibility launchers in $REPO_ROOT/compat/bash"
   exit 1
 fi
 
-if [[ ! -f "$COMPAT_PS1" ]]; then
-  echo "Expected canonical PowerShell compat launcher to exist at $COMPAT_PS1"
+if [[ -d "$REPO_ROOT/compat/powershell" ]] && find "$REPO_ROOT/compat/powershell" -type f | grep -q .; then
+  echo "Expected no PowerShell compatibility launchers in $REPO_ROOT/compat/powershell"
   exit 1
 fi
 
@@ -260,14 +258,14 @@ if [[ -n "$pwsh_bin" ]]; then
   fake_bash="$tmp_root/fake-bash"
   cat > "$fake_bash" <<'SH'
 #!/usr/bin/env bash
-printf '%s\n' "$@" > "$SUPERPOWERS_CAPTURED_ARGS"
-printf '{"type":"server-started","port":52341,"url":"http://localhost:52341","screen_dir":"/c/repo with spaces/proj/.superpowers/brainstorm/session-1"}\n'
+printf '%s\n' "$@" > "$FEATUREFORGE_CAPTURED_ARGS"
+printf '{"type":"server-started","port":52341,"url":"http://localhost:52341","screen_dir":"/c/repo with spaces/proj/.featureforge/brainstorm/session-1"}\n'
 SH
   chmod +x "$fake_bash"
 
   pwsh_windows_project='C:\repo with spaces\proj'
-  pwsh_windows_output="$(SUPERPOWERS_BASH_PATH="$fake_bash" SUPERPOWERS_CAPTURED_ARGS="$captured_args_file" "$pwsh_bin" -NoLogo -NoProfile -File "$START_PS1" --project-dir "$pwsh_windows_project" --background)"
-  if [[ "$pwsh_windows_output" != *'"screen_dir":"C:\\repo with spaces\\proj\\.superpowers\\brainstorm\\session-1"'* ]]; then
+  pwsh_windows_output="$(FEATUREFORGE_BASH_PATH="$fake_bash" FEATUREFORGE_CAPTURED_ARGS="$captured_args_file" "$pwsh_bin" -NoLogo -NoProfile -File "$START_PS1" --project-dir "$pwsh_windows_project" --background)"
+  if [[ "$pwsh_windows_output" != *'"screen_dir":"C:\\repo with spaces\\proj\\.featureforge\\brainstorm\\session-1"'* ]]; then
     echo "Expected PowerShell wrapper to convert brainstorm screen_dir back to a Windows-native path"
     printf '%s\n' "$pwsh_windows_output"
     exit 1
@@ -278,13 +276,13 @@ SH
     exit 1
   fi
 
-  pwsh_stop_output="$(SUPERPOWERS_BASH_PATH="$fake_bash" SUPERPOWERS_CAPTURED_ARGS="$captured_args_file" "$pwsh_bin" -NoLogo -NoProfile -File "$STOP_PS1" 'C:\repo with spaces\proj\.superpowers\brainstorm\session-1')"
+  pwsh_stop_output="$(FEATUREFORGE_BASH_PATH="$fake_bash" FEATUREFORGE_CAPTURED_ARGS="$captured_args_file" "$pwsh_bin" -NoLogo -NoProfile -File "$STOP_PS1" 'C:\repo with spaces\proj\.featureforge\brainstorm\session-1')"
   if [[ "$pwsh_stop_output" != *'"type":"server-started"'* ]]; then
     echo "Expected fake PowerShell stop-wrapper invocation to preserve bash stdout"
     printf '%s\n' "$pwsh_stop_output"
     exit 1
   fi
-  if ! rg -n -F '/c/repo with spaces/proj/.superpowers/brainstorm/session-1' "$captured_args_file" >/dev/null; then
+  if ! rg -n -F '/c/repo with spaces/proj/.featureforge/brainstorm/session-1' "$captured_args_file" >/dev/null; then
     echo "Expected PowerShell stop wrapper to normalize Windows screen_dir paths before invoking bash"
     cat "$captured_args_file"
     exit 1
@@ -293,17 +291,17 @@ SH
   streaming_bash="$tmp_root/fake-streaming-bash"
   cat > "$streaming_bash" <<'SH'
 #!/usr/bin/env bash
-printf '{"type":"server-started","port":52341,"url":"http://localhost:52341","screen_dir":"/c/repo with spaces/proj/.superpowers/brainstorm/session-stream"}\n'
+printf '{"type":"server-started","port":52341,"url":"http://localhost:52341","screen_dir":"/c/repo with spaces/proj/.featureforge/brainstorm/session-stream"}\n'
 sleep 30
 SH
   chmod +x "$streaming_bash"
 
   streaming_output="$tmp_root/pwsh-streaming.out"
-  SUPERPOWERS_BASH_PATH="$streaming_bash" CODEX_CI=1 "$pwsh_bin" -NoLogo -NoProfile -File "$START_PS1" --project-dir "$pwsh_windows_project" >"$streaming_output" 2>&1 &
+  FEATUREFORGE_BASH_PATH="$streaming_bash" CODEX_CI=1 "$pwsh_bin" -NoLogo -NoProfile -File "$START_PS1" --project-dir "$pwsh_windows_project" >"$streaming_output" 2>&1 &
   streaming_pid=$!
   streaming_seen=0
   for _ in $(seq 1 20); do
-    if rg -n -F '"screen_dir":"C:\\repo with spaces\\proj\\.superpowers\\brainstorm\\session-stream"' "$streaming_output" >/dev/null; then
+    if rg -n -F '"screen_dir":"C:\\repo with spaces\\proj\\.featureforge\\brainstorm\\session-stream"' "$streaming_output" >/dev/null; then
       streaming_seen=1
       break
     fi

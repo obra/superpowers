@@ -2,7 +2,7 @@
 
 Review the diff against the detected base branch, not just the last commit. Read the full diff before commenting, then read outside the diff when a checklist item requires broader context.
 
-Use the Superpowers severity taxonomy:
+Use the FeatureForge severity taxonomy:
 
 - `Critical` for must-fix issues that can break correctness, safety, trust boundaries, or data integrity
 - `Important` for issues that should be fixed before landing because they weaken maintainability, testability, or expected behavior
@@ -84,7 +84,7 @@ When the diff introduces a new enum value, status, tier, type, or constant famil
 
 #### Documentation Staleness
 - Root docs such as `README.md`, `ARCHITECTURE.md`, `CONTRIBUTING.md`, or platform install docs that describe code touched by this diff but were not updated
-- If found, flag the issue and suggest `superpowers:document-release`
+- If found, flag the issue and suggest `featureforge:document-release`
 
 #### Spec / Plan Delivery Content
 - Draft specs that still dodge core delivery content such as problem statement, failure behavior, observability, rollout/rollback, risks, or acceptance criteria

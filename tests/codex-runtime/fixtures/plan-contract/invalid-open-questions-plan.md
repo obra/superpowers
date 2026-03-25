@@ -3,7 +3,7 @@
 **Workflow State:** Engineering Approved
 **Plan Revision:** 1
 **Execution Mode:** none
-**Source Spec:** `docs/superpowers/specs/2026-03-22-plan-contract-fixture-design.md`
+**Source Spec:** `docs/featureforge/specs/2026-03-22-plan-contract-fixture-design.md`
 **Source Spec Revision:** 1
 **Last Reviewed By:** plan-eng-review
 
@@ -26,9 +26,9 @@
 **Open Questions:** none
 
 **Files:**
-- Create: `bin/superpowers-plan-contract`
+- Create: `bin/featureforge`
 - Modify: `skills/writing-plans/SKILL.md`
-- Test: `tests/codex-runtime/test-superpowers-plan-contract.sh`
+- Test: `cargo test --test contracts_spec_plan`
 
 - [ ] **Step 1: Parse the source requirement index**
 - [ ] **Step 2: Validate the coverage matrix against the indexed requirements**
@@ -43,7 +43,7 @@
 **Open Questions:** Should workflow-owned packet persistence remain optional?
 
 **Files:**
-- Create: `bin/superpowers-plan-contract.ps1`
+- Create: `bin/prebuilt/windows-x64/featureforge.exe`
 - Modify: `skills/subagent-driven-development/implementer-prompt.md`
 - Test: `tests/codex-runtime/test-powershell-wrapper-bash-resolution.sh`
 

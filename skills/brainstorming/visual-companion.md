@@ -39,7 +39,7 @@ Unix-like shells:
 scripts/start-server.sh --project-dir /path/to/project
 
 # Returns: {"type":"server-started","port":52341,"url":"http://localhost:52341",
-#           "screen_dir":"/path/to/project/.superpowers/brainstorm/12345-1706000000"}
+#           "screen_dir":"/path/to/project/.featureforge/brainstorm/12345-1706000000"}
 ```
 
 PowerShell:
@@ -51,9 +51,9 @@ scripts/start-server.ps1 --project-dir C:\path\to\project
 
 Save `screen_dir` from the response. Tell user to open the URL.
 
-**Finding connection info:** The server writes its startup JSON to `$SCREEN_DIR/.server-info`. If you launched the server in the background and didn't capture stdout, read that file to get the URL and port. When using `--project-dir`, check `<project>/.superpowers/brainstorm/` for the session directory.
+**Finding connection info:** The server writes its startup JSON to `$SCREEN_DIR/.server-info`. If you launched the server in the background and didn't capture stdout, read that file to get the URL and port. When using `--project-dir`, check `<project>/.featureforge/brainstorm/` for the session directory.
 
-**Note:** Pass the project root as `--project-dir` so mockups persist in `.superpowers/brainstorm/` and survive server restarts. Without it, files go to `/tmp` and get cleaned up. Remind the user to add `.superpowers/` to `.gitignore` if it's not already there.
+**Note:** Pass the project root as `--project-dir` so mockups persist in `.featureforge/brainstorm/` and survive server restarts. Without it, files go to `/tmp` and get cleaned up. Remind the user to add `.featureforge/` to `.gitignore` if it's not already there.
 
 **Launching the server in Codex or GitHub Copilot CLI:**
 
@@ -69,7 +69,7 @@ scripts/start-server.sh --project-dir /path/to/project
 scripts/start-server.ps1 --project-dir C:\path\to\project
 ```
 
-The PowerShell wrappers require a bash-compatible shell underneath. On Windows, install Git Bash or point `SUPERPOWERS_BASH_PATH` at a compatible `bash` before using `start-server.ps1` or `stop-server.ps1`.
+The PowerShell wrappers require a bash-compatible shell underneath. On Windows, install Git Bash or point `FEATUREFORGE_BASH_PATH` at a compatible `bash` before using `start-server.ps1` or `stop-server.ps1`.
 
 In Codex, that auto-foreground path prints the startup JSON but may stay attached to the terminal instead of returning immediately. Launch it in a separate PTY/session when you need the terminal back, capture the first `server-started` JSON line for `screen_dir`, and if stdout is no longer available read `$SCREEN_DIR/.server-info`.
 
@@ -287,7 +287,7 @@ PowerShell:
 scripts/stop-server.ps1 $SCREEN_DIR
 ```
 
-If the session used `--project-dir`, mockup files persist in `.superpowers/brainstorm/` for later reference. Only `/tmp` sessions get deleted on stop.
+If the session used `--project-dir`, mockup files persist in `.featureforge/brainstorm/` for later reference. Only `/tmp` sessions get deleted on stop.
 
 ## Reference
 

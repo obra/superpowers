@@ -1,11 +1,14 @@
 [package]
-name = "superpowers"
-version = "5.8.0"
+name = "featureforge"
+version = "1.0.0"
 edition = "2024"
 rust-version = "1.94"
 publish = false
-description = "Rust runtime for the Superpowers workflow toolkit"
+description = "Rust runtime for the FeatureForge workflow toolkit"
 license = "MIT"
+
+[lib]
+name = "featureforge"
 
 [workspace]
 resolver = "2"

@@ -72,11 +72,11 @@ test('differential harness scaffold exists for legacy-vs-canonical workflow stat
   const script = readUtf8(path.join(REPO_ROOT, 'tests/differential/run_legacy_vs_rust.sh'));
   const fixture = JSON.parse(readUtf8(path.join(REPO_ROOT, 'tests/fixtures/differential/workflow-status.json')));
 
-  assert.match(readme, /legacy `bin\/superpowers-workflow-status` output/i);
-  assert.match(readme, /canonical `superpowers workflow status --refresh`/i);
+  assert.match(readme, /checked-in workflow-status snapshot/i);
+  assert.match(readme, /canonical `featureforge workflow status --refresh`/i);
   assert.match(readme, /mismatch is a triage event/i);
 
-  assert.match(script, /bin\/superpowers-workflow-status/);
+  assert.match(script, /target\/debug\/featureforge/);
   assert.match(script, /workflow status --refresh/);
   assert.match(script, /tests\/fixtures\/differential\/workflow-status\.json/);
   assert.match(script, /Mismatch triage:/);

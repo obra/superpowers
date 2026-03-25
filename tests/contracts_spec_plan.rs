@@ -4,21 +4,19 @@ use std::process::{Command, Output};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use assert_cmd::cargo::CommandCargoExt;
+use featureforge::contracts::plan::analyze_plan;
+use featureforge::contracts::spec::parse_spec_file;
 use serde_json::Value;
-use superpowers::contracts::plan::analyze_plan;
-use superpowers::contracts::spec::parse_spec_file;
 
-const SPEC_REL: &str = "docs/superpowers/specs/2026-03-22-plan-contract-fixture-design.md";
-const PLAN_REL: &str = "docs/superpowers/plans/2026-03-22-plan-contract-fixture.md";
-const REAL_SPEC_REL: &str = "docs/superpowers/specs/2026-03-21-task-fidelity-improvement-design.md";
-const REAL_PLAN_REL: &str = "docs/superpowers/plans/2026-03-21-task-fidelity-improvement.md";
+const SPEC_REL: &str = "docs/featureforge/specs/2026-03-22-plan-contract-fixture-design.md";
+const PLAN_REL: &str = "docs/featureforge/plans/2026-03-22-plan-contract-fixture.md";
 
 fn unique_temp_dir(label: &str) -> PathBuf {
     let nanos = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("system clock should be after unix epoch")
         .as_nanos();
-    let dir = std::env::temp_dir().join(format!("superpowers-{label}-{nanos}"));
+    let dir = std::env::temp_dir().join(format!("featureforge-{label}-{nanos}"));
     fs::create_dir_all(&dir).expect("temp dir should be created");
     dir
 }
@@ -44,10 +42,6 @@ fn install_fixture(repo_root: &Path, fixture_name: &str, destination_rel: &str) 
 fn install_valid_artifacts(repo_root: &Path) {
     install_fixture(repo_root, "valid-spec.md", SPEC_REL);
     install_fixture(repo_root, "valid-plan.md", PLAN_REL);
-}
-
-fn helper_bin_path() -> PathBuf {
-    repo_fixture_path("bin/superpowers-plan-contract")
 }
 
 fn run(mut command: Command, context: &str) -> Output {
@@ -96,20 +90,22 @@ fn packet_has_requirement_statement(packet: &Value, expected: &str) -> bool {
 }
 
 fn run_helper(repo_root: &Path, state_dir: &Path, args: &[&str], context: &str) -> Output {
-    let mut command = Command::new(helper_bin_path());
+    let mut command =
+        Command::cargo_bin("featureforge").expect("featureforge cargo binary should exist");
     command
         .current_dir(repo_root)
-        .env("SUPERPOWERS_STATE_DIR", state_dir)
+        .env("FEATUREFORGE_STATE_DIR", state_dir)
+        .args(["plan", "contract"])
         .args(args);
     run(command, context)
 }
 
 fn run_rust(repo_root: &Path, state_dir: &Path, args: &[&str], context: &str) -> Output {
     let mut command =
-        Command::cargo_bin("superpowers").expect("superpowers cargo binary should exist");
+        Command::cargo_bin("featureforge").expect("featureforge cargo binary should exist");
     command
         .current_dir(repo_root)
-        .env("SUPERPOWERS_STATE_DIR", state_dir)
+        .env("FEATUREFORGE_STATE_DIR", state_dir)
         .args(["plan", "contract"])
         .args(args);
     run(command, context)
@@ -155,7 +151,7 @@ Example:
 
 - [REQ-001][behavior] Execution-bound specs must include a parseable `Requirement Index`.
 - [REQ-002][behavior] Implementation plans must include a parseable `Requirement Coverage Matrix` mapping every indexed requirement to one or more tasks.
-- [REQ-003][behavior] Superpowers must provide a derived `superpowers-plan-contract` helper that lints traceability and builds canonical task packets.
+- [REQ-003][behavior] FeatureForge must expose `featureforge plan contract` to lint traceability and build canonical task packets.
 - [DEC-001][decision] Markdown artifacts remain authoritative and helper output must preserve exact approved statements rather than paraphrase them.
 - [NONGOAL-001][non-goal] Do not introduce hidden workflow authority outside repo-visible markdown artifacts.
 - [VERIFY-001][verification] Regression coverage must cover missing indexes, missing coverage, unknown IDs, unresolved open questions, malformed task structure, malformed `Files:` blocks, path traversal rejection, and stale packet handling.
@@ -237,7 +233,7 @@ fn analyze_valid_contract_fixture_with_trailing_engineering_review_summary() {
     fs::write(
         &plan_path,
         format!(
-            "{source}\n\n## Engineering Review Summary\n\n**Review Status:** clear\n**Reviewed At:** 2026-03-24T16:02:11Z\n**Review Mode:** big_change\n**Reviewed Plan Revision:** 1\n**Critical Gaps:** 0\n**Browser QA Required:** yes\n**Test Plan Artifact:** `~/.superpowers/projects/example/example-branch-test-plan-20260324T160211Z.md`\n**Outside Voice:** fresh-context-subagent\n"
+            "{source}\n\n## Engineering Review Summary\n\n**Review Status:** clear\n**Reviewed At:** 2026-03-24T16:02:11Z\n**Review Mode:** big_change\n**Reviewed Plan Revision:** 1\n**Critical Gaps:** 0\n**Browser QA Required:** yes\n**Test Plan Artifact:** `~/.featureforge/projects/example/example-branch-test-plan-20260324T160211Z.md`\n**Outside Voice:** fresh-context-subagent\n"
         ),
     )
     .expect("plan fixture with trailing summary should write");
@@ -716,11 +712,11 @@ fn analyze_plan_cli_failpoints_surface_unexpected_contract_failures() {
         "coverage_matrix_unexpected_failure",
     ] {
         let mut command =
-            Command::cargo_bin("superpowers").expect("superpowers cargo binary should exist");
+            Command::cargo_bin("featureforge").expect("featureforge cargo binary should exist");
         command
             .current_dir(&repo_root)
-            .env("SUPERPOWERS_STATE_DIR", &state_dir)
-            .env("SUPERPOWERS_PLAN_CONTRACT_TEST_FAILPOINT", failpoint)
+            .env("FEATUREFORGE_STATE_DIR", &state_dir)
+            .env("FEATUREFORGE_PLAN_CONTRACT_TEST_FAILPOINT", failpoint)
             .args([
                 "plan",
                 "contract",
@@ -1011,11 +1007,11 @@ fn lint_invalid_contract_failures_and_packet_cache_retention_match_cli_contract(
     fs::write(packet_dir.join("stale-three.packet.md"), "stale three\n")
         .expect("stale three packet");
 
-    let mut retained = Command::cargo_bin("superpowers").expect("superpowers cargo binary");
+    let mut retained = Command::cargo_bin("featureforge").expect("featureforge cargo binary");
     retained
         .current_dir(&repo_root)
-        .env("SUPERPOWERS_STATE_DIR", &state_dir)
-        .env("SUPERPOWERS_PLAN_PACKET_RETENTION", "2")
+        .env("FEATUREFORGE_STATE_DIR", &state_dir)
+        .env("FEATUREFORGE_PLAN_PACKET_RETENTION", "2")
         .args([
             "plan",
             "contract",
@@ -1078,60 +1074,6 @@ fn lint_cache_invalidates_after_plan_change() {
         "lint after cached plan change",
     );
     assert_eq!(failure["error_class"], "CoverageMatrixMismatch");
-}
-
-#[test]
-fn real_approved_task_fidelity_contract_lints_and_task_packet_builds() {
-    let repo_root = repo_fixture_path("");
-    let state_dir = unique_temp_dir("contract-real-approved-state");
-
-    let lint = parse_success_json(
-        &run_rust(
-            &repo_root,
-            &state_dir,
-            &["lint", "--spec", REAL_SPEC_REL, "--plan", REAL_PLAN_REL],
-            "lint real approved task-fidelity artifacts",
-        ),
-        "lint real approved task-fidelity artifacts",
-    );
-    assert_eq!(lint["status"], "ok");
-    assert_eq!(lint["spec_requirement_count"], 18);
-    assert_eq!(lint["plan_task_count"], 5);
-    assert_eq!(lint["coverage"]["REQ-006"][0], 4);
-    assert_eq!(lint["coverage"]["VERIFY-001"][1], 5);
-
-    let packet = parse_success_json(
-        &run_rust(
-            &repo_root,
-            &state_dir,
-            &[
-                "build-task-packet",
-                "--plan",
-                REAL_PLAN_REL,
-                "--task",
-                "4",
-                "--format",
-                "json",
-                "--persist",
-                "no",
-            ],
-            "build real approved task-fidelity packet",
-        ),
-        "build real approved task-fidelity packet",
-    );
-    assert_eq!(packet["status"], "ok");
-    assert_eq!(packet["task_number"], 4);
-    assert_eq!(packet["persisted"], false);
-    assert!(packet_has_requirement_statement(
-        &packet,
-        "Execution modes must build and consume canonical task packets instead of relying on controller-written task context."
-    ));
-    assert!(packet["packet_markdown"].as_str().is_some_and(|block| {
-        block.contains("Execution modes must build and consume canonical task packets")
-    }));
-    assert!(packet["packet_markdown"].as_str().is_some_and(|block| {
-        block.contains("## Task 4: Switch Execution And Review Consumers To Task Packets")
-    }));
 }
 
 #[test]

@@ -1,18 +1,13 @@
-#[path = "support/prebuilt.rs"]
-mod prebuilt_support;
 #[path = "support/process.rs"]
 mod process_support;
 
 use assert_cmd::Command as AssertCommand;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::Command;
 use std::time::Duration;
 use tempfile::TempDir;
 
-use prebuilt_support::{
-    PrebuiltManifestEntry, sha256_checksum_line, write_prebuilt_artifact, write_prebuilt_manifest,
-};
 use process_support::{repo_root, run, run_checked};
 
 fn read_utf8(path: impl AsRef<Path>) -> String {
@@ -89,7 +84,7 @@ fn extract_bash_block(content: &str, heading: &str) -> String {
 fn make_runtime_root(dir: &Path) {
     fs::create_dir_all(dir.join("bin")).expect("runtime bin dir should exist");
     fs::write(
-        dir.join("bin/superpowers"),
+        dir.join("bin/featureforge"),
         "#!/usr/bin/env bash\ncase \"${1:-}\" in\n  update-check)\n    exit 0\n    ;;\n  config)\n    exit 0\n    ;;\n  *)\n    exit 0\n    ;;\nesac\n",
     )
     .expect("runtime launcher should be writable");
@@ -97,25 +92,12 @@ fn make_runtime_root(dir: &Path) {
     {
         use std::os::unix::fs::PermissionsExt;
         fs::set_permissions(
-            dir.join("bin/superpowers"),
+            dir.join("bin/featureforge"),
             fs::Permissions::from_mode(0o755),
         )
         .expect("runtime launcher should be executable");
     }
-    fs::write(dir.join("VERSION"), "5.1.0\n").expect("VERSION should be writable");
-}
-
-fn make_executable(path: &Path) {
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        fs::set_permissions(path, fs::Permissions::from_mode(0o755))
-            .expect("path should be executable");
-    }
-    #[cfg(not(unix))]
-    {
-        let _ = path;
-    }
+    fs::write(dir.join("VERSION"), "1.0.0\n").expect("VERSION should be writable");
 }
 
 fn make_runtime_repo(dir: &Path) {
@@ -125,77 +107,16 @@ fn make_runtime_repo(dir: &Path) {
     make_runtime_root(dir);
 }
 
-fn copy_repo_launcher(temp_root: &Path) -> PathBuf {
-    let launcher = temp_root.join("bin").join("superpowers");
-    let common = temp_root.join("bin").join("superpowers-runtime-common.sh");
-    fs::create_dir_all(launcher.parent().expect("launcher parent should exist"))
-        .expect("launcher parent should be creatable");
-    fs::copy(repo_root().join("bin/superpowers"), &launcher).expect("launcher should copy");
-    fs::copy(
-        repo_root().join("bin/superpowers-runtime-common.sh"),
-        &common,
-    )
-    .expect("launcher common should copy");
-    make_executable(&launcher);
-    make_executable(&common);
-    launcher
-}
-
-fn copy_repo_powershell_launcher(temp_root: &Path) -> PathBuf {
-    let launcher = temp_root.join("bin").join("superpowers.ps1");
-    let common = temp_root.join("bin").join("superpowers-pwsh-common.ps1");
-    fs::create_dir_all(launcher.parent().expect("launcher parent should exist"))
-        .expect("launcher parent should be creatable");
-    fs::copy(repo_root().join("bin/superpowers.ps1"), &launcher)
-        .expect("powershell launcher should copy");
-    fs::copy(repo_root().join("bin/superpowers-pwsh-common.ps1"), &common)
-        .expect("powershell common should copy");
-    launcher
-}
-
-fn pwsh_bin() -> Option<&'static str> {
-    ["pwsh", "powershell"].into_iter().find(|candidate| {
-        Command::new(candidate)
-            .args([
-                "-NoLogo",
-                "-NoProfile",
-                "-Command",
-                "$PSVersionTable.PSVersion.ToString()",
-            ])
-            .output()
-            .map(|output| output.status.success())
-            .unwrap_or(false)
-    })
-}
-
-fn run_pwsh_launcher(
-    pwsh: &str,
-    launcher: &Path,
-    cwd: &Path,
-    args: &[&str],
-    context: &str,
-) -> std::process::Output {
-    let mut command = Command::new(pwsh);
-    command
-        .args([
-            "-NoLogo",
-            "-NoProfile",
-            "-ExecutionPolicy",
-            "Bypass",
-            "-File",
-        ])
-        .arg(launcher)
-        .current_dir(cwd)
-        .args(args);
-    run(command, context)
-}
-
 #[test]
 fn repo_checkout_ships_the_canonical_runtime_launcher() {
-    let launcher = repo_root().join("bin/superpowers");
+    let launcher = if cfg!(windows) {
+        repo_root().join("bin/featureforge.exe")
+    } else {
+        repo_root().join("bin/featureforge")
+    };
     assert!(
         launcher.is_file(),
-        "repo checkout should expose bin/superpowers because install docs and generated skill preambles use it as the canonical repo-local launcher"
+        "repo checkout should expose the real featureforge binary as the canonical repo-local launcher"
     );
     #[cfg(unix)]
     {
@@ -213,7 +134,12 @@ fn repo_checkout_ships_the_canonical_runtime_launcher() {
 
 #[test]
 fn repo_checkout_canonical_launcher_runs_without_recursive_fallback() {
-    let output = AssertCommand::new(repo_root().join("bin/superpowers"))
+    let launcher = if cfg!(windows) {
+        repo_root().join("bin/featureforge.exe")
+    } else {
+        repo_root().join("bin/featureforge")
+    };
+    let output = AssertCommand::new(launcher)
         .current_dir(repo_root())
         .timeout(Duration::from_secs(2))
         .arg("--version")
@@ -228,255 +154,162 @@ fn repo_checkout_canonical_launcher_runs_without_recursive_fallback() {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
-        stdout.contains(env!("CARGO_PKG_VERSION")),
-        "repo-local launcher should print the current runtime version, got:\n{stdout}"
+        stdout.contains("featureforge") && stdout.contains(env!("CARGO_PKG_VERSION")),
+        "repo-local featureforge binary should print the current runtime version, got:\n{stdout}"
     );
 }
 
 #[test]
 fn repo_checkout_canonical_launcher_avoids_non_binary_repo_fallbacks() {
-    let bash_launcher = repo_root().join("bin/superpowers");
-    let powershell_launcher = repo_root().join("bin/superpowers.ps1");
-
-    for path in [&bash_launcher, &powershell_launcher] {
-        assert_file_not_contains(path, "cargo run");
-        assert_file_not_contains(path, "SUPERPOWERS_COMPAT_BIN");
-        assert_file_not_contains(path, ".superpowers/install");
-        assert_file_not_contains(path, "target/debug");
-        assert_file_not_contains(path, "target/release");
+    let root = repo_root();
+    let top_level_bin_files = fs::read_dir(root.join("bin"))
+        .expect("bin dir should be readable")
+        .filter_map(Result::ok)
+        .filter_map(|entry| {
+            let path = entry.path();
+            path.is_file()
+                .then(|| entry.file_name().to_string_lossy().into_owned())
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        top_level_bin_files,
+        vec![String::from("featureforge")],
+        "repo checkout should expose only the standalone featureforge binary at bin/"
+    );
+    for relative in ["commands", "compat/bash", "compat/powershell"] {
+        let dir = root.join(relative);
+        if !dir.exists() {
+            continue;
+        }
+        assert!(
+            fs::read_dir(&dir)
+                .expect("compat/commands dir should be readable")
+                .next()
+                .is_none(),
+            "{relative} should be empty in the standalone runtime"
+        );
     }
 }
 
 #[test]
 fn repo_checkout_canonical_launcher_uses_manifest_selected_binary_path() {
-    let temp_root = TempDir::new().expect("temp runtime root should exist");
-    let binary_rel = "bin/prebuilt/darwin-arm64/nested/runtime/superpowers";
-    let checksum_rel = "bin/prebuilt/darwin-arm64/nested/runtime/superpowers.sha256";
-    let binary_contents = "#!/usr/bin/env bash\necho 'superpowers manifest-selected'\n";
-    copy_repo_launcher(temp_root.path());
-    write_prebuilt_artifact(
-        temp_root.path(),
-        binary_rel,
-        checksum_rel,
-        binary_contents,
-        &sha256_checksum_line("superpowers", binary_contents),
-    );
-    write_prebuilt_manifest(
-        temp_root.path(),
-        env!("CARGO_PKG_VERSION"),
-        &[PrebuiltManifestEntry {
-            target: "darwin-arm64",
-            binary_path: binary_rel,
-            checksum_path: checksum_rel,
-        }],
-    );
-
-    let output = AssertCommand::new(temp_root.path().join("bin/superpowers"))
-        .current_dir(temp_root.path())
-        .timeout(Duration::from_secs(2))
-        .arg("--version")
-        .unwrap();
-
-    assert!(
-        output.status.success(),
-        "manifest-selected launcher path should run successfully\nstdout:\n{}\nstderr:\n{}",
-        String::from_utf8_lossy(&output.stdout),
-        String::from_utf8_lossy(&output.stderr)
-    );
-    assert_eq!(
-        String::from_utf8_lossy(&output.stdout),
-        "superpowers manifest-selected\n"
-    );
+    let root = repo_root();
+    let manifest = read_utf8(root.join("bin/prebuilt/manifest.json"));
+    for needle in [
+        &format!("\"runtime_revision\": \"{}\"", env!("CARGO_PKG_VERSION")),
+        "bin/prebuilt/darwin-arm64/featureforge",
+        "bin/prebuilt/darwin-arm64/featureforge.sha256",
+        "bin/prebuilt/windows-x64/featureforge.exe",
+        "bin/prebuilt/windows-x64/featureforge.exe.sha256",
+    ] {
+        assert_contains(&manifest, needle, "bin/prebuilt/manifest.json");
+    }
+    let manifest_json: serde_json::Value =
+        serde_json::from_str(&manifest).expect("manifest json should parse");
+    let targets = manifest_json["targets"]
+        .as_object()
+        .expect("manifest targets should be an object");
+    for entry in targets.values() {
+        let runtime_path = entry["binary_path"]
+            .as_str()
+            .expect("manifest binary path should be a string");
+        let checksum_path = entry["checksum_path"]
+            .as_str()
+            .expect("manifest checksum path should be a string");
+        assert_contains(runtime_path, "featureforge", "bin/prebuilt/manifest.json");
+        assert_contains(checksum_path, "featureforge", "bin/prebuilt/manifest.json");
+    }
+    for relative in [
+        "bin/prebuilt/darwin-arm64/featureforge",
+        "bin/prebuilt/darwin-arm64/featureforge.sha256",
+        "bin/prebuilt/windows-x64/featureforge.exe",
+        "bin/prebuilt/windows-x64/featureforge.exe.sha256",
+    ] {
+        assert!(
+            root.join(relative).is_file(),
+            "renamed prebuilt runtime asset should exist: {relative}"
+        );
+    }
 }
 
 #[test]
 fn repo_checkout_canonical_launcher_rejects_stale_prebuilt_checksum() {
-    let temp_root = TempDir::new().expect("temp runtime root should exist");
-    let binary_rel = "bin/prebuilt/darwin-arm64/superpowers";
-    let checksum_rel = "bin/prebuilt/darwin-arm64/superpowers.sha256";
-    copy_repo_launcher(temp_root.path());
-    write_prebuilt_artifact(
-        temp_root.path(),
-        binary_rel,
-        checksum_rel,
-        "#!/usr/bin/env bash\necho 'superpowers stale checksum'\n",
-        "0000000000000000000000000000000000000000000000000000000000000000  superpowers\n",
+    let root = repo_root();
+    let darwin_checksum = read_utf8(root.join("bin/prebuilt/darwin-arm64/featureforge.sha256"));
+    let windows_checksum = read_utf8(root.join("bin/prebuilt/windows-x64/featureforge.exe.sha256"));
+    assert_contains(
+        &darwin_checksum,
+        "  featureforge",
+        "bin/prebuilt/darwin-arm64/featureforge.sha256",
     );
-    write_prebuilt_manifest(
-        temp_root.path(),
-        env!("CARGO_PKG_VERSION"),
-        &[PrebuiltManifestEntry {
-            target: "darwin-arm64",
-            binary_path: binary_rel,
-            checksum_path: checksum_rel,
-        }],
-    );
-
-    let output = AssertCommand::new(temp_root.path().join("bin/superpowers"))
-        .current_dir(temp_root.path())
-        .timeout(Duration::from_secs(2))
-        .arg("--version")
-        .unwrap_err();
-
-    let rendered = output.to_string();
-    assert!(
-        rendered.contains("checksum") || rendered.contains("sha256"),
-        "stale prebuilt checksum failure should mention checksum verification, got:\n{rendered}"
+    assert_contains(
+        &windows_checksum,
+        "  featureforge.exe",
+        "bin/prebuilt/windows-x64/featureforge.exe.sha256",
     );
 }
 
 #[test]
 fn repo_checkout_powershell_launcher_uses_manifest_selected_binary_path() {
-    let Some(pwsh) = pwsh_bin() else {
-        eprintln!(
-            "Skipping PowerShell launcher manifest test: no pwsh or powershell binary found."
-        );
-        return;
-    };
-
-    let temp_root = TempDir::new().expect("temp runtime root should exist");
-    let binary_rel = "bin/prebuilt/darwin-arm64/nested/runtime/superpowers";
-    let checksum_rel = "bin/prebuilt/darwin-arm64/nested/runtime/superpowers.sha256";
-    let binary_contents = "#!/usr/bin/env bash\necho 'superpowers powershell manifest-selected'\n";
-    let launcher = copy_repo_powershell_launcher(temp_root.path());
-    write_prebuilt_artifact(
-        temp_root.path(),
-        binary_rel,
-        checksum_rel,
-        binary_contents,
-        &sha256_checksum_line("superpowers", binary_contents),
-    );
-    write_prebuilt_manifest(
-        temp_root.path(),
-        env!("CARGO_PKG_VERSION"),
-        &[PrebuiltManifestEntry {
-            target: "darwin-arm64",
-            binary_path: binary_rel,
-            checksum_path: checksum_rel,
-        }],
-    );
-
-    let output = run_pwsh_launcher(
-        pwsh,
-        &launcher,
-        temp_root.path(),
-        &["--version"],
-        "powershell manifest-selected launcher",
-    );
+    let root = repo_root();
+    let powershell_files = fs::read_dir(root.join("bin"))
+        .expect("bin dir should be readable")
+        .filter_map(Result::ok)
+        .filter_map(|entry| {
+            let name = entry.file_name().to_string_lossy().into_owned();
+            name.ends_with(".ps1").then_some(name)
+        })
+        .collect::<Vec<_>>();
     assert!(
-        output.status.success(),
-        "manifest-selected PowerShell launcher path should run successfully\nstdout:\n{}\nstderr:\n{}",
-        String::from_utf8_lossy(&output.stdout),
-        String::from_utf8_lossy(&output.stderr)
+        powershell_files.is_empty(),
+        "standalone runtime should not ship PowerShell wrapper surfaces: {powershell_files:?}"
     );
-    assert_eq!(
-        String::from_utf8_lossy(&output.stdout),
-        "superpowers powershell manifest-selected\n"
-    );
+    let compat_powershell = root.join("compat/powershell");
+    if compat_powershell.exists() {
+        assert!(
+            fs::read_dir(&compat_powershell)
+                .expect("compat/powershell should be readable")
+                .next()
+                .is_none(),
+            "compat/powershell should be empty in the standalone runtime"
+        );
+    }
 }
 
 #[test]
 fn repo_checkout_powershell_launcher_rejects_stale_prebuilt_checksum() {
-    let Some(pwsh) = pwsh_bin() else {
-        eprintln!(
-            "Skipping PowerShell launcher checksum test: no pwsh or powershell binary found."
-        );
-        return;
-    };
-
-    let temp_root = TempDir::new().expect("temp runtime root should exist");
-    let binary_rel = "bin/prebuilt/darwin-arm64/superpowers";
-    let checksum_rel = "bin/prebuilt/darwin-arm64/superpowers.sha256";
-    let launcher = copy_repo_powershell_launcher(temp_root.path());
-    write_prebuilt_artifact(
-        temp_root.path(),
-        binary_rel,
-        checksum_rel,
-        "#!/usr/bin/env bash\necho 'superpowers powershell stale checksum'\n",
-        "0000000000000000000000000000000000000000000000000000000000000000  superpowers\n",
-    );
-    write_prebuilt_manifest(
-        temp_root.path(),
-        env!("CARGO_PKG_VERSION"),
-        &[PrebuiltManifestEntry {
-            target: "darwin-arm64",
-            binary_path: binary_rel,
-            checksum_path: checksum_rel,
-        }],
-    );
-
-    let output = run_pwsh_launcher(
-        pwsh,
-        &launcher,
-        temp_root.path(),
-        &["--version"],
-        "powershell stale checksum launcher",
-    );
-    let stderr = String::from_utf8_lossy(&output.stderr);
+    let root = repo_root();
+    let shell_helper_files = fs::read_dir(root.join("bin"))
+        .expect("bin dir should be readable")
+        .filter_map(Result::ok)
+        .filter_map(|entry| {
+            let name = entry.file_name().to_string_lossy().into_owned();
+            (name.ends_with("runtime-common.sh") || name.ends_with("pwsh-common.ps1"))
+                .then_some(name)
+        })
+        .collect::<Vec<_>>();
     assert!(
-        !output.status.success(),
-        "stale checksum should fail closed for PowerShell launcher\nstdout:\n{}\nstderr:\n{}",
-        String::from_utf8_lossy(&output.stdout),
-        stderr
-    );
-    assert!(
-        stderr.contains("checksum") || stderr.contains("sha256"),
-        "stale prebuilt checksum failure should mention checksum verification, got:\n{stderr}"
+        shell_helper_files.is_empty(),
+        "standalone runtime should not ship shell helper files: {shell_helper_files:?}"
     );
 }
 
 #[test]
 fn repo_checkout_powershell_launcher_preserves_native_exit_code_with_psnative_preference() {
-    let Some(pwsh) = pwsh_bin() else {
-        eprintln!(
-            "Skipping PowerShell launcher exit-code test: no pwsh or powershell binary found."
-        );
-        return;
-    };
-
-    let temp_root = TempDir::new().expect("temp runtime root should exist");
-    let binary_rel = "bin/prebuilt/darwin-arm64/superpowers";
-    let checksum_rel = "bin/prebuilt/darwin-arm64/superpowers.sha256";
-    let binary_contents = "#!/usr/bin/env bash\nexit 42\n";
-    let launcher = copy_repo_powershell_launcher(temp_root.path());
-    write_prebuilt_artifact(
-        temp_root.path(),
-        binary_rel,
-        checksum_rel,
-        binary_contents,
-        &sha256_checksum_line("superpowers", binary_contents),
-    );
-    write_prebuilt_manifest(
-        temp_root.path(),
-        env!("CARGO_PKG_VERSION"),
-        &[PrebuiltManifestEntry {
-            target: "darwin-arm64",
-            binary_path: binary_rel,
-            checksum_path: checksum_rel,
-        }],
-    );
-
-    let launcher_escaped = launcher.to_string_lossy().replace('\'', "''");
-    let script = format!(
-        "$PSNativeCommandUseErrorActionPreference = $true; & '{launcher_escaped}' --version; exit $LASTEXITCODE"
-    );
-    let output = run(
-        {
-            let mut command = Command::new(pwsh);
-            command
-                .args(["-NoLogo", "-NoProfile", "-Command"])
-                .arg(script)
-                .current_dir(temp_root.path());
-            command
-        },
-        "powershell launcher should preserve native exit codes when PSNativeCommandUseErrorActionPreference is enabled",
-    );
+    let root = repo_root();
+    let top_level_bin_files = fs::read_dir(root.join("bin"))
+        .expect("bin dir should be readable")
+        .filter_map(Result::ok)
+        .filter_map(|entry| {
+            let path = entry.path();
+            path.is_file()
+                .then(|| entry.file_name().to_string_lossy().into_owned())
+        })
+        .collect::<Vec<_>>();
     assert_eq!(
-        output.status.code(),
-        Some(42),
-        "PowerShell launcher should preserve native runtime exit codes even when PSNativeCommandUseErrorActionPreference is enabled\nstdout:\n{}\nstderr:\n{}",
-        String::from_utf8_lossy(&output.stdout),
-        String::from_utf8_lossy(&output.stderr)
+        top_level_bin_files,
+        vec![String::from("featureforge")],
+        "native exit-code handling should rely on the standalone featureforge binary only"
     );
 }
 
@@ -495,7 +328,7 @@ fn runtime_instruction_docs_point_at_rust_as_the_primary_oracle() {
     );
     assert_contains(
         &readme_content,
-        "--test runtime_instruction_contracts --test using_superpowers_skill",
+        "--test runtime_instruction_contracts --test using_featureforge_skill",
         "README.md",
     );
     assert_contains(
@@ -520,23 +353,23 @@ fn runtime_instruction_docs_point_at_rust_as_the_primary_oracle() {
     );
     assert_not_contains(
         &readme_content,
-        "bash tests/codex-runtime/test-superpowers-upgrade-skill.sh",
+        "bash tests/codex-runtime/test-upgrade-skill.sh",
         "README.md",
     );
 
     assert_contains(
         &docs_testing_content,
-        "cargo nextest run --test runtime_instruction_contracts --test using_superpowers_skill",
+        "cargo nextest run --test runtime_instruction_contracts --test using_featureforge_skill",
         "docs/testing.md",
     );
     for legacy_command in [
         "bash tests/codex-runtime/test-runtime-instructions.sh",
         "bash tests/codex-runtime/test-workflow-enhancements.sh",
         "bash tests/codex-runtime/test-workflow-sequencing.sh",
-        "bash tests/codex-runtime/test-using-superpowers-bypass.sh",
-        "bash tests/codex-runtime/test-superpowers-session-entry-gate.sh",
+        "bash tests/codex-runtime/test-using-featureforge-bypass.sh",
+        "bash tests/codex-runtime/test-session-entry-gate.sh",
         "bash tests/codex-runtime/test-powershell-wrapper-bash-resolution.sh",
-        "bash tests/codex-runtime/test-superpowers-upgrade-skill.sh",
+        "bash tests/codex-runtime/test-upgrade-skill.sh",
     ] {
         assert_not_contains(&docs_testing_content, legacy_command, "docs/testing.md");
     }
@@ -561,7 +394,7 @@ fn runtime_instruction_surface_contracts_and_generation_checks_hold() {
         "qa/references/issue-taxonomy.md",
         "qa/templates/qa-report-template.md",
         "tests/runtime_instruction_contracts.rs",
-        "tests/using_superpowers_skill.rs",
+        "tests/using_featureforge_skill.rs",
         "tests/powershell_wrapper_resolution.rs",
         "tests/upgrade_skill.rs",
     ] {
@@ -600,11 +433,11 @@ fn runtime_instruction_surface_contracts_and_generation_checks_hold() {
         "docs/README.copilot.md",
         "skills/plan-ceo-review/SKILL.md",
         "skills/plan-eng-review/SKILL.md",
-        "skills/using-superpowers/SKILL.md",
+        "skills/using-featureforge/SKILL.md",
         "skills/using-git-worktrees/SKILL.md",
         "skills/subagent-driven-development/SKILL.md",
         "skills/dispatching-parallel-agents/SKILL.md",
-        "skills/using-superpowers/references/codex-tools.md",
+        "skills/using-featureforge/references/codex-tools.md",
     ];
     let banned_terms = [
         "cursor",
@@ -632,7 +465,7 @@ fn runtime_instruction_surface_contracts_and_generation_checks_hold() {
     windows_docs_check
         .args([
             "-nP",
-            r"bin\\superpowers-(migrate-install|config|update-check)(?!\.ps1)",
+            r"bin\\featureforge-(migrate-install|config|update-check)(?!\.ps1)",
             "README.md",
             ".codex/INSTALL.md",
             ".copilot/INSTALL.md",
@@ -652,29 +485,31 @@ fn runtime_instruction_surface_contracts_and_generation_checks_hold() {
         (
             ".codex/INSTALL.md",
             [
-                "~/.superpowers/install/bin/superpowers install migrate",
-                "~/.superpowers/install/bin/superpowers config set superpowers_contributor true",
-                "~/.superpowers/install/bin/superpowers config set update_check true",
-                "~/.superpowers/install/bin/superpowers update-check",
+                "~/.featureforge/install/bin/featureforge config set featureforge_contributor true",
+                "~/.featureforge/install/bin/featureforge config set update_check true",
+                "~/.featureforge/install/bin/featureforge update-check",
             ],
             [
-                "~/.superpowers/install/bin/superpowers-migrate-install",
-                "~/.superpowers/install/bin/superpowers-config",
-                "~/.superpowers/install/bin/superpowers-update-check",
+                "~/.featureforge/install/bin/featureforge install migrate",
+                "~/.featureforge/install/bin/featureforge-migrate-install",
+                "~/.featureforge/install/bin/featureforge-config",
+                "~/.featureforge/install/bin/featureforge-update-check",
+                "PendingMigration",
             ],
         ),
         (
             ".copilot/INSTALL.md",
             [
-                "~/.superpowers/install/bin/superpowers install migrate",
-                "~/.superpowers/install/bin/superpowers config set superpowers_contributor true",
-                "~/.superpowers/install/bin/superpowers config set update_check true",
-                "~/.superpowers/install/bin/superpowers update-check",
+                "~/.featureforge/install/bin/featureforge config set featureforge_contributor true",
+                "~/.featureforge/install/bin/featureforge config set update_check true",
+                "~/.featureforge/install/bin/featureforge update-check",
             ],
             [
-                "~/.superpowers/install/bin/superpowers-migrate-install",
-                "~/.superpowers/install/bin/superpowers-config",
-                "~/.superpowers/install/bin/superpowers-update-check",
+                "~/.featureforge/install/bin/featureforge install migrate",
+                "~/.featureforge/install/bin/featureforge-migrate-install",
+                "~/.featureforge/install/bin/featureforge-config",
+                "~/.featureforge/install/bin/featureforge-update-check",
+                "PendingMigration",
             ],
         ),
     ] {
@@ -687,16 +522,13 @@ fn runtime_instruction_surface_contracts_and_generation_checks_hold() {
         }
     }
 
-    let release_notes = read_utf8(root.join("RELEASE-NOTES.md"));
-    let latest_release_version = release_notes
-        .lines()
-        .find_map(|line| {
-            line.strip_prefix("## v")
-                .and_then(|rest| rest.split_once(" (").map(|(version, _)| version.to_owned()))
-        })
-        .expect("release notes should contain a version heading");
     let runtime_version = read_utf8(root.join("VERSION")).trim().to_owned();
-    assert_eq!(runtime_version, latest_release_version);
+    let manifest = read_utf8(root.join("bin/prebuilt/manifest.json"));
+    assert_contains(
+        &manifest,
+        &format!("\"runtime_revision\": \"{runtime_version}\""),
+        "bin/prebuilt/manifest.json",
+    );
 
     let mut gen_skills = Command::new("node");
     gen_skills
@@ -710,9 +542,9 @@ fn runtime_instruction_surface_contracts_and_generation_checks_hold() {
         .current_dir(&root);
     run_checked(gen_agents, "gen-agent-docs --check");
 
-    assert_file_contains(root.join("README.md"), "superpowers session-entry");
-    assert_file_contains(root.join("README.md"), "superpowers repo-safety");
-    assert_file_contains(root.join("README.md"), "superpowers plan contract");
+    assert_file_contains(root.join("README.md"), "featureforge session-entry");
+    assert_file_contains(root.join("README.md"), "featureforge repo-safety");
+    assert_file_contains(root.join("README.md"), "featureforge plan contract");
     assert_file_contains(root.join("README.md"), "protected branches");
     assert_file_contains(root.join("README.md"), "Six layers matter:");
     assert_file_contains(
@@ -801,15 +633,15 @@ fn workflow_enhancement_contracts_are_documented_consistently() {
         (
             "skills/finishing-a-development-branch/SKILL.md",
             vec![
-                "superpowers:requesting-code-review",
-                "superpowers:qa-only",
-                "superpowers:document-release",
+                "featureforge:requesting-code-review",
+                "featureforge:qa-only",
+                "featureforge:document-release",
                 "Conditional Pre-Landing QA Gate",
                 "Required release-readiness pass for workflow-routed work before completion",
-                "superpowers repo-safety check --intent write",
-                "Run `superpowers plan execution gate-review --plan <approved-plan-path>` before late-stage QA or release routing.",
-                "If the current work is governed by an approved Superpowers plan, after `superpowers:document-release` and any required `superpowers:qa-only` handoff are current, run `superpowers plan execution gate-finish --plan <approved-plan-path>` before presenting completion options.",
-                "If the current work is not governed by an approved Superpowers plan, skip this helper-owned finish gate and continue with the normal completion flow.",
+                "featureforge repo-safety check --intent write",
+                "Run `featureforge plan execution gate-review --plan <approved-plan-path>` before late-stage QA or release routing.",
+                "If the current work is governed by an approved FeatureForge plan, after `featureforge:document-release` and any required `featureforge:qa-only` handoff are current, run `featureforge plan execution gate-finish --plan <approved-plan-path>` before presenting completion options.",
+                "If the current work is not governed by an approved FeatureForge plan, skip this helper-owned finish gate and continue with the normal completion flow.",
             ],
         ),
     ] {
@@ -833,38 +665,38 @@ fn workflow_enhancement_contracts_are_documented_consistently() {
     );
     assert_file_not_contains(
         root.join("skills/finishing-a-development-branch/SKILL.md"),
-        "If Step 1.9 already routed through `superpowers:document-release`",
+        "If Step 1.9 already routed through `featureforge:document-release`",
     );
     assert_file_contains(
-        root.join("tests/evals/using-superpowers-routing.scenarios.md"),
+        root.join("tests/evals/using-featureforge-routing.scenarios.md"),
         "branch-completion language still routes to `requesting-code-review` when no fresh final review artifact exists",
     );
     assert_file_contains(
-        root.join("tests/evals/using-superpowers-routing.orchestrator.md"),
-        "Use the real repo-versioned `using-superpowers` entry contract and skill/runtime surfaces from the branch under test",
+        root.join("tests/evals/using-featureforge-routing.orchestrator.md"),
+        "Use the real repo-versioned `using-featureforge` entry contract and skill/runtime surfaces from the branch under test",
     );
     assert_file_contains(
-        root.join("tests/evals/using-superpowers-routing.orchestrator.md"),
+        root.join("tests/evals/using-featureforge-routing.orchestrator.md"),
         "Pass the absolute branch-under-test repo root into both runner and judge prompts.",
     );
     assert_file_contains(
-        root.join("tests/evals/using-superpowers-routing.orchestrator.md"),
-        "invoke `<BRANCH_UNDER_TEST_ROOT>/bin/superpowers` explicitly",
+        root.join("tests/evals/using-featureforge-routing.orchestrator.md"),
+        "invoke `<BRANCH_UNDER_TEST_ROOT>/bin/featureforge` explicitly",
     );
     assert_file_contains(
-        root.join("tests/evals/using-superpowers-routing.runner.md"),
-        "Use the real repo-versioned `using-superpowers` entry contract and skill/runtime surfaces from the branch under test",
+        root.join("tests/evals/using-featureforge-routing.runner.md"),
+        "Use the real repo-versioned `using-featureforge` entry contract and skill/runtime surfaces from the branch under test",
     );
     assert_file_contains(
-        root.join("tests/evals/using-superpowers-routing.runner.md"),
+        root.join("tests/evals/using-featureforge-routing.runner.md"),
         "The controller must pass `BRANCH_UNDER_TEST_ROOT` as an absolute path.",
     );
     assert_file_contains(
-        root.join("tests/evals/using-superpowers-routing.runner.md"),
+        root.join("tests/evals/using-featureforge-routing.runner.md"),
         "Do not rely on temp-fixture runtime-root autodetection or any home-install fallback.",
     );
     assert_file_not_contains(
-        root.join("tests/evals/using-superpowers-routing.scenarios.md"),
+        root.join("tests/evals/using-featureforge-routing.scenarios.md"),
         "| P3 |",
     );
 }
@@ -879,7 +711,7 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
     );
     assert_file_contains(
         root.join("skills/brainstorming/SKILL.md"),
-        "\"$_SUPERPOWERS_ROOT/bin/superpowers\" workflow expect --artifact spec --path",
+        "\"$_FEATUREFORGE_ROOT/bin/featureforge\" workflow expect --artifact spec --path",
     );
     assert_file_contains(
         root.join("skills/brainstorming/SKILL.md"),
@@ -891,7 +723,7 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
     );
     assert_file_contains(
         root.join("skills/brainstorming/SKILL.md"),
-        "superpowers repo-safety check --intent write",
+        "featureforge repo-safety check --intent write",
     );
     assert_file_contains(
         root.join("skills/brainstorming/visual-companion.md"),
@@ -903,57 +735,57 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
     );
     assert_file_contains(
         root.join("skills/brainstorming/visual-companion.md"),
-        "install Git Bash or point `SUPERPOWERS_BASH_PATH` at a compatible `bash`",
+        "install Git Bash or point `FEATUREFORGE_BASH_PATH` at a compatible `bash`",
     );
 
     assert_description_contains(
-        root.join("skills/using-superpowers/SKILL.md"),
+        root.join("skills/using-featureforge/SKILL.md"),
         "deciding which skill or workflow stage applies",
     );
     assert_file_contains(
-        root.join("skills/using-superpowers/SKILL.md"),
-        "First, if `$_SUPERPOWERS_ROOT/bin/superpowers` is available, call `$_SUPERPOWERS_ROOT/bin/superpowers workflow status --refresh`.",
+        root.join("skills/using-featureforge/SKILL.md"),
+        "First, if `$_FEATUREFORGE_ROOT/bin/featureforge` is available, call `$_FEATUREFORGE_ROOT/bin/featureforge workflow status --refresh`.",
     );
     assert_file_contains(
-        root.join("skills/using-superpowers/SKILL.md"),
+        root.join("skills/using-featureforge/SKILL.md"),
         "treat `execution_started` as an executor-resume signal only when the reported `phase` is `executing`",
     );
     assert_file_contains(
-        root.join("skills/using-superpowers/SKILL.md"),
-        "If the handoff reports a later phase such as `review_blocked`, `qa_pending`, `document_release_pending`, or `ready_for_branch_completion`, follow that reported phase and `next_action` instead of resuming `superpowers:subagent-driven-development` or `superpowers:executing-plans` just because `execution_started` is `yes`.",
+        root.join("skills/using-featureforge/SKILL.md"),
+        "If the handoff reports a later phase such as `review_blocked`, `qa_pending`, `document_release_pending`, or `ready_for_branch_completion`, follow that reported phase and `next_action` instead of resuming `featureforge:subagent-driven-development` or `featureforge:executing-plans` just because `execution_started` is `yes`.",
     );
     assert_file_contains(
-        root.join("skills/using-superpowers/SKILL.md"),
+        root.join("skills/using-featureforge/SKILL.md"),
         "Treat the public handoff recommendation as a conservative default.",
     );
     assert_file_contains(
-        root.join("skills/using-superpowers/SKILL.md"),
-        "superpowers plan execution recommend --plan <approved-plan-path> --isolated-agents <available|unavailable> --session-intent <stay|separate|unknown> --workspace-prepared <yes|no|unknown>",
+        root.join("skills/using-featureforge/SKILL.md"),
+        "featureforge plan execution recommend --plan <approved-plan-path> --isolated-agents <available|unavailable> --session-intent <stay|separate|unknown> --workspace-prepared <yes|no|unknown>",
     );
     assert_file_contains(
-        root.join("skills/using-superpowers/SKILL.md"),
+        root.join("skills/using-featureforge/SKILL.md"),
         "then follow the artifact-state workflow: plan-ceo-review -> writing-plans -> plan-eng-review -> execution.",
     );
     assert_file_contains(
-        root.join("skills/using-superpowers/SKILL.md"),
+        root.join("skills/using-featureforge/SKILL.md"),
         "Approved spec reviewer: `^\\*\\*Last Reviewed By:\\*\\* plan-ceo-review$`",
     );
     assert_file_contains(
-        root.join("skills/using-superpowers/SKILL.md"),
+        root.join("skills/using-featureforge/SKILL.md"),
         "Approved plan reviewer: `^\\*\\*Last Reviewed By:\\*\\* plan-eng-review$`",
     );
     assert_file_not_contains(
-        root.join("skills/using-superpowers/SKILL.md"),
+        root.join("skills/using-featureforge/SKILL.md"),
         "newest relevant artifacts",
     );
 
     assert_file_contains(
         root.join("skills/writing-plans/SKILL.md"),
-        "\"$_SUPERPOWERS_ROOT/bin/superpowers\" workflow expect --artifact plan --path",
+        "\"$_FEATUREFORGE_ROOT/bin/featureforge\" workflow expect --artifact plan --path",
     );
     assert_file_contains(
         root.join("skills/writing-plans/SKILL.md"),
-        "\"$_SUPERPOWERS_ROOT/bin/superpowers\" plan contract lint \\",
+        "\"$_FEATUREFORGE_ROOT/bin/featureforge\" plan contract lint \\",
     );
     assert_file_contains(
         root.join("skills/writing-plans/SKILL.md"),
@@ -965,7 +797,7 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
     );
     assert_file_contains(
         root.join("skills/writing-plans/SKILL.md"),
-        "Use the execution skill recommended by `superpowers plan execution recommend --plan <approved-plan-path>`",
+        "Use the execution skill recommended by `featureforge plan execution recommend --plan <approved-plan-path>`",
     );
     assert_file_contains(
         root.join("skills/writing-plans/SKILL.md"),
@@ -985,7 +817,7 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
     );
     assert_file_contains(
         root.join("skills/finishing-a-development-branch/SKILL.md"),
-        "If the current work is not governed by an approved Superpowers plan, skip this helper-owned finish gate and continue with the normal completion flow.",
+        "If the current work is not governed by an approved FeatureForge plan, skip this helper-owned finish gate and continue with the normal completion flow.",
     );
     assert_file_contains(
         root.join("skills/finishing-a-development-branch/SKILL.md"),
@@ -1001,7 +833,7 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
     );
     assert_file_contains(
         root.join("skills/finishing-a-development-branch/SKILL.md"),
-        "If `gate-finish` fails with `test_plan_artifact_missing` or `test_plan_artifact_stale`, hand control back to `superpowers:plan-eng-review` to regenerate the current-branch test-plan artifact before QA or branch completion.",
+        "If `gate-finish` fails with `test_plan_artifact_missing` or `test_plan_artifact_stale`, hand control back to `featureforge:plan-eng-review` to regenerate the current-branch test-plan artifact before QA or branch completion.",
     );
     assert_file_contains(
         root.join("skills/finishing-a-development-branch/SKILL.md"),
@@ -1026,7 +858,7 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
 
     assert_file_contains(
         root.join("skills/plan-eng-review/SKILL.md"),
-        "superpowers plan execution recommend --plan <approved-plan-path>",
+        "featureforge plan execution recommend --plan <approved-plan-path>",
     );
     assert_file_contains(
         root.join("skills/plan-eng-review/SKILL.md"),
@@ -1054,7 +886,7 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
     );
     assert_file_contains(
         root.join("skills/plan-eng-review/SKILL.md"),
-        "If the helper returns `status` `implementation_ready`, immediately call `$_SUPERPOWERS_ROOT/bin/superpowers workflow handoff` before presenting any handoff text.",
+        "If the helper returns `status` `implementation_ready`, immediately call `$_FEATUREFORGE_ROOT/bin/featureforge workflow handoff` before presenting any handoff text.",
     );
     assert_file_contains(
         root.join("skills/plan-eng-review/SKILL.md"),
@@ -1198,7 +1030,7 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
     );
     assert_file_contains(
         root.join("skills/requesting-code-review/SKILL.md"),
-        "Do not use PR metadata or repo default-branch APIs as a fallback; keep the review base aligned with `superpowers:document-release` and `gate-finish`.",
+        "Do not use PR metadata or repo default-branch APIs as a fallback; keep the review base aligned with `featureforge:document-release` and `gate-finish`.",
     );
     assert_file_contains(
         root.join("skills/requesting-code-review/SKILL.md"),
@@ -1210,7 +1042,7 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
     );
     assert_file_contains(
         root.join("skills/requesting-code-review/SKILL.md"),
-        "**Generated By:** superpowers:requesting-code-review",
+        "**Generated By:** featureforge:requesting-code-review",
     );
     assert_file_contains(
         root.join("skills/requesting-code-review/SKILL.md"),
@@ -1242,29 +1074,20 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
     );
     assert_file_contains(
         root.join("skills/requesting-code-review/SKILL.md"),
-        "REVIEW_GATE_JSON=$(\"$_SUPERPOWERS_ROOT/bin/superpowers\" plan execution gate-review --plan \"$APPROVED_PLAN_PATH\")",
+        "REVIEW_GATE_JSON=$(\"$_FEATUREFORGE_ROOT/bin/featureforge\" plan execution gate-review --plan \"$APPROVED_PLAN_PATH\")",
     );
     assert_file_contains(
         root.join("skills/requesting-code-review/SKILL.md"),
         "if [ \"$REVIEW_ALLOWED\" != \"true\" ]; then",
     );
     assert_file_contains(
-        root.join("skills/using-superpowers/SKILL.md"),
+        root.join("skills/using-featureforge/SKILL.md"),
         "treat `execution_started` as an executor-resume signal only when the reported `phase` is `executing`",
     );
     assert_file_contains(
-        root.join("skills/using-superpowers/SKILL.md"),
-        "If the handoff reports a later phase such as `review_blocked`, `qa_pending`, `document_release_pending`, or `ready_for_branch_completion`, follow that reported phase and `next_action` instead of resuming `superpowers:subagent-driven-development` or `superpowers:executing-plans` just because `execution_started` is `yes`.",
+        root.join("skills/using-featureforge/SKILL.md"),
+        "If the handoff reports a later phase such as `review_blocked`, `qa_pending`, `document_release_pending`, or `ready_for_branch_completion`, follow that reported phase and `next_action` instead of resuming `featureforge:subagent-driven-development` or `featureforge:executing-plans` just because `execution_started` is `yes`.",
     );
-    assert_file_contains(
-        root.join("commands/execute-plan.md"),
-        "If the handoff reports `phase` `executing`, use the approved plan path from handoff plus `superpowers plan execution status --plan <approved-plan-path>` to resume the current execution flow.",
-    );
-    assert_file_contains(
-        root.join("commands/execute-plan.md"),
-        "If the handoff reports any later phase such as `review_blocked`, `qa_pending`, `document_release_pending`, or `ready_for_branch_completion`, follow the reported `phase` and `next_action`, or use `superpowers workflow next`, instead of resuming an executor merely because `execution_started` is `yes`.",
-    );
-
     assert_file_contains(
         root.join("skills/requesting-code-review/code-reviewer.md"),
         "# Code Review Briefing Template",
@@ -1356,14 +1179,14 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
 }
 
 #[test]
-fn using_superpowers_preamble_prefers_valid_repo_roots_over_fallback_installs() {
-    let content = read_utf8(repo_root().join("skills/using-superpowers/SKILL.md"));
+fn using_featureforge_preamble_prefers_valid_repo_roots_over_fallback_installs() {
+    let content = read_utf8(repo_root().join("skills/using-featureforge/SKILL.md"));
     let preamble = extract_bash_block(&content, "## Preamble (run first)");
     let tmp_root = TempDir::new().expect("temp root should exist");
 
     let shared_home = tmp_root.path().join("shared-home");
-    fs::create_dir_all(shared_home.join(".superpowers")).expect("shared home should exist");
-    make_runtime_root(&shared_home.join(".superpowers/install"));
+    fs::create_dir_all(shared_home.join(".featureforge")).expect("shared home should exist");
+    make_runtime_root(&shared_home.join(".featureforge/install"));
     let renamed_repo = tmp_root.path().join("runtime-dev-checkout");
     fs::create_dir_all(&renamed_repo).expect("renamed repo should exist");
     make_runtime_repo(&renamed_repo);
@@ -1374,21 +1197,21 @@ fn using_superpowers_preamble_prefers_valid_repo_roots_over_fallback_installs() 
     command
         .arg("-lc")
         .arg(format!(
-            "{preamble}\nprintf \"SUPERPOWERS_ROOT=%s\\n\" \"$_SUPERPOWERS_ROOT\"\n"
+            "{preamble}\nprintf \"FEATUREFORGE_ROOT=%s\\n\" \"$_FEATUREFORGE_ROOT\"\n"
         ))
         .current_dir(&renamed_repo)
         .env("HOME", &shared_home);
-    let output = run_checked(command, "run generated using-superpowers preamble");
+    let output = run_checked(command, "run generated using-featureforge preamble");
     let stdout = String::from_utf8(output.stdout).expect("preamble output should be utf8");
     assert_contains(
         &stdout,
-        &format!("SUPERPOWERS_ROOT={}", expected_repo_root.display()),
-        "using-superpowers preamble output",
+        &format!("FEATUREFORGE_ROOT={}", expected_repo_root.display()),
+        "using-featureforge preamble output",
     );
 
     let invalid_home = tmp_root.path().join("invalid-home");
-    fs::create_dir_all(invalid_home.join(".superpowers")).expect("invalid home should exist");
-    make_runtime_root(&invalid_home.join(".superpowers/install"));
+    fs::create_dir_all(invalid_home.join(".featureforge")).expect("invalid home should exist");
+    make_runtime_root(&invalid_home.join(".featureforge/install"));
     let invalid_repo = tmp_root.path().join("not-a-runtime");
     fs::create_dir_all(&invalid_repo).expect("invalid repo should exist");
     let mut git_init = Command::new("git");
@@ -1399,19 +1222,19 @@ fn using_superpowers_preamble_prefers_valid_repo_roots_over_fallback_installs() 
     fallback_command
         .arg("-lc")
         .arg(format!(
-            "{preamble}\nprintf \"SUPERPOWERS_ROOT=%s\\n\" \"$_SUPERPOWERS_ROOT\"\n"
+            "{preamble}\nprintf \"FEATUREFORGE_ROOT=%s\\n\" \"$_FEATUREFORGE_ROOT\"\n"
         ))
         .current_dir(&invalid_repo)
         .env("HOME", &invalid_home);
-    let fallback = run_checked(fallback_command, "run fallback using-superpowers preamble");
+    let fallback = run_checked(fallback_command, "run fallback using-featureforge preamble");
     let fallback_stdout =
         String::from_utf8(fallback.stdout).expect("fallback output should be utf8");
     assert_contains(
         &fallback_stdout,
         &format!(
-            "SUPERPOWERS_ROOT={}",
-            invalid_home.join(".superpowers/install").display()
+            "FEATUREFORGE_ROOT={}",
+            invalid_home.join(".featureforge/install").display()
         ),
-        "using-superpowers fallback output",
+        "using-featureforge fallback output",
     );
 }

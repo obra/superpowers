@@ -10,34 +10,26 @@ mod process_support;
 mod workflow_support;
 
 use assert_cmd::cargo::cargo_bin;
-use bin_support::compiled_superpowers_path;
+use bin_support::compiled_featureforge_path;
+use featureforge::git::discover_repo_identity;
+use featureforge::paths::branch_storage_key;
+use featureforge::workflow::manifest::{
+    WorkflowManifest, manifest_path, recover_slug_changed_manifest,
+};
+use featureforge::workflow::status::WorkflowRuntime;
 use files_support::write_file;
 use json_support::parse_json;
-use process_support::{repo_root, run, run_checked};
+use process_support::{run, run_checked};
 use serde_json::Value;
 use std::fs;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
-use superpowers::git::discover_repo_identity;
-use superpowers::paths::branch_storage_key;
-use superpowers::workflow::manifest::{
-    WorkflowManifest, manifest_path, recover_slug_changed_manifest,
-};
-use superpowers::workflow::status::WorkflowRuntime;
 use tempfile::TempDir;
 use workflow_support::{
     init_repo as init_workflow_repo, install_full_contract_ready_artifacts, workflow_fixture_root,
 };
-
-fn workflow_status_helper_path() -> PathBuf {
-    repo_root().join("bin/superpowers-workflow-status")
-}
-
-fn workflow_helper_path() -> PathBuf {
-    repo_root().join("bin/superpowers-workflow")
-}
 
 fn write_manifest(path: &Path, manifest: &WorkflowManifest) {
     if let Some(parent) = path.parent() {
@@ -66,17 +58,12 @@ fn init_repo(test_name: &str) -> (TempDir, TempDir) {
 }
 
 fn run_shell_status_helper(repo: &Path, state_dir: &Path, args: &[&str], context: &str) -> Output {
-    let (helper_path, forwarded_args) = if args.first().copied() == Some("status") {
-        (workflow_status_helper_path(), &args[1..])
-    } else {
-        (workflow_helper_path(), args)
-    };
-    let mut command = Command::new(helper_path);
+    let mut command = Command::new(compiled_featureforge_path());
     command
         .current_dir(repo)
-        .env("SUPERPOWERS_STATE_DIR", state_dir)
-        .env("SUPERPOWERS_COMPAT_BIN", compiled_superpowers_path())
-        .args(forwarded_args);
+        .env("FEATUREFORGE_STATE_DIR", state_dir)
+        .args(["workflow"])
+        .args(args);
     run(command, context)
 }
 
@@ -85,26 +72,26 @@ fn run_shell_status_json(repo: &Path, state_dir: &Path, args: &[&str], context: 
     parse_json(&output, context)
 }
 
-fn run_rust_superpowers(repo: &Path, state_dir: &Path, args: &[&str], context: &str) -> Output {
-    let mut command = Command::new(compiled_superpowers_path());
+fn run_rust_featureforge(repo: &Path, state_dir: &Path, args: &[&str], context: &str) -> Output {
+    let mut command = Command::new(compiled_featureforge_path());
     command
         .current_dir(repo)
-        .env("SUPERPOWERS_STATE_DIR", state_dir)
+        .env("FEATUREFORGE_STATE_DIR", state_dir)
         .args(args);
     run(command, context)
 }
 
-fn run_rust_superpowers_with_env(
+fn run_rust_featureforge_with_env(
     repo: &Path,
     state_dir: &Path,
     args: &[&str],
     extra_env: &[(&str, &str)],
     context: &str,
 ) -> Output {
-    let mut command = Command::new(compiled_superpowers_path());
+    let mut command = Command::new(compiled_featureforge_path());
     command
         .current_dir(repo)
-        .env("SUPERPOWERS_STATE_DIR", state_dir)
+        .env("FEATUREFORGE_STATE_DIR", state_dir)
         .args(args);
     for (key, value) in extra_env {
         command.env(key, value);
@@ -120,17 +107,11 @@ fn set_remote_url(repo: &Path, url: &str) {
     run_checked(git_remote_set, "git remote set-url origin");
 }
 
-fn checkout_branch(repo: &Path, branch: &str) {
-    let mut git_checkout = Command::new("git");
-    git_checkout.args(["checkout", "-B", branch]).current_dir(repo);
-    run_checked(git_checkout, "git checkout branch");
-}
-
 fn run_plan_execution_json(repo: &Path, state_dir: &Path, args: &[&str], context: &str) -> Value {
-    let mut command = Command::new(compiled_superpowers_path());
+    let mut command = Command::new(compiled_featureforge_path());
     command
         .current_dir(repo)
-        .env("SUPERPOWERS_STATE_DIR", state_dir)
+        .env("FEATUREFORGE_STATE_DIR", state_dir)
         .args(["plan", "execution"])
         .args(args);
     parse_json(&run(command, context), context)
@@ -161,11 +142,11 @@ fn current_head_sha(repo: &Path) -> String {
 fn repo_slug(repo: &Path) -> String {
     let output = run_checked(
         {
-            let mut command = Command::new(compiled_superpowers_path());
+            let mut command = Command::new(compiled_featureforge_path());
             command.current_dir(repo).args(["repo", "slug"]);
             command
         },
-        "superpowers repo slug",
+        "featureforge repo slug",
     );
     String::from_utf8(output.stdout)
         .expect("repo slug output should be utf-8")
@@ -193,7 +174,7 @@ fn write_branch_test_plan_artifact(
     write_file(
         &artifact_path,
         &format!(
-            "# Test Plan\n**Source Plan:** `{plan_rel}`\n**Source Plan Revision:** 1\n**Branch:** {branch}\n**Repo:** {}\n**Head SHA:** {head_sha}\n**Browser QA Required:** {browser_required}\n**Generated By:** superpowers:plan-eng-review\n**Generated At:** 2026-03-24T12:00:00Z\n\n## Affected Pages / Routes\n- none\n\n## Key Interactions\n- late-stage workflow routing uses this artifact for QA scoping\n\n## Edge Cases\n- current-branch artifact freshness must stay aligned with the approved plan revision\n\n## Critical Paths\n- branch completion stays blocked until review, QA, and release-readiness artifacts are fresh when required\n",
+            "# Test Plan\n**Source Plan:** `{plan_rel}`\n**Source Plan Revision:** 1\n**Branch:** {branch}\n**Repo:** {}\n**Head SHA:** {head_sha}\n**Browser QA Required:** {browser_required}\n**Generated By:** featureforge:plan-eng-review\n**Generated At:** 2026-03-24T12:00:00Z\n\n## Affected Pages / Routes\n- none\n\n## Key Interactions\n- late-stage workflow routing uses this artifact for QA scoping\n\n## Edge Cases\n- current-branch artifact freshness must stay aligned with the approved plan revision\n\n## Critical Paths\n- branch completion stays blocked until review, QA, and release-readiness artifacts are fresh when required\n",
             repo_slug(repo)
         ),
     );
@@ -214,7 +195,7 @@ fn write_branch_review_artifact(
     write_file(
         &artifact_path,
         &format!(
-            "# Code Review Result\n**Source Plan:** `{plan_rel}`\n**Source Plan Revision:** 1\n**Branch:** {branch}\n**Repo:** {}\n**Base Branch:** {base_branch}\n**Head SHA:** {}\n**Result:** pass\n**Generated By:** superpowers:requesting-code-review\n**Generated At:** 2026-03-24T12:10:00Z\n\n## Summary\n- synthetic code-review fixture for workflow phase coverage.\n",
+            "# Code Review Result\n**Source Plan:** `{plan_rel}`\n**Source Plan Revision:** 1\n**Branch:** {branch}\n**Repo:** {}\n**Base Branch:** {base_branch}\n**Head SHA:** {}\n**Result:** pass\n**Generated By:** featureforge:requesting-code-review\n**Generated At:** 2026-03-24T12:10:00Z\n\n## Summary\n- synthetic code-review fixture for workflow phase coverage.\n",
             repo_slug(repo),
             current_head_sha(repo)
         ),
@@ -236,7 +217,7 @@ fn write_branch_release_artifact(
     write_file(
         &artifact_path,
         &format!(
-            "# Release Readiness Result\n**Source Plan:** `{plan_rel}`\n**Source Plan Revision:** 1\n**Branch:** {branch}\n**Repo:** {}\n**Base Branch:** {base_branch}\n**Head SHA:** {}\n**Result:** pass\n**Generated By:** superpowers:document-release\n**Generated At:** 2026-03-24T12:15:00Z\n\n## Summary\n- synthetic release-readiness fixture for workflow phase coverage.\n",
+            "# Release Readiness Result\n**Source Plan:** `{plan_rel}`\n**Source Plan Revision:** 1\n**Branch:** {branch}\n**Repo:** {}\n**Base Branch:** {base_branch}\n**Head SHA:** {}\n**Result:** pass\n**Generated By:** featureforge:document-release\n**Generated At:** 2026-03-24T12:15:00Z\n\n## Summary\n- synthetic release-readiness fixture for workflow phase coverage.\n",
             repo_slug(repo),
             current_head_sha(repo)
         ),
@@ -281,7 +262,7 @@ fn complete_workflow_fixture_execution(repo: &Path, state: &Path, plan_rel: &str
             "--step",
             "1",
             "--execution-mode",
-            "superpowers:executing-plans",
+            "featureforge:executing-plans",
             "--expect-execution-fingerprint",
             status_json["execution_fingerprint"]
                 .as_str()
@@ -301,7 +282,7 @@ fn complete_workflow_fixture_execution(repo: &Path, state: &Path, plan_rel: &str
             "--step",
             "1",
             "--source",
-            "superpowers:executing-plans",
+            "featureforge:executing-plans",
             "--claim",
             "Completed the routing fixture task.",
             "--manual-verify-summary",
@@ -320,7 +301,7 @@ fn complete_workflow_fixture_execution(repo: &Path, state: &Path, plan_rel: &str
 fn enable_session_decision(state: &Path, session_key: &str) {
     let decision_path = state
         .join("session-entry")
-        .join("using-superpowers")
+        .join("using-featureforge")
         .join(session_key);
     write_file(&decision_path, "enabled\n");
 }
@@ -382,7 +363,7 @@ fn canonical_workflow_status_matches_helper_for_manifest_backed_missing_spec() {
     let (repo_dir, state_dir) = init_repo("workflow-runtime-manifest-backed");
     let repo = repo_dir.path();
     let state = state_dir.path();
-    let missing_spec = "docs/superpowers/specs/2026-03-24-rust-missing-spec-design.md";
+    let missing_spec = "docs/featureforge/specs/2026-03-24-rust-missing-spec-design.md";
 
     let helper_expect = run_shell_status_helper(
         repo,
@@ -402,7 +383,7 @@ fn canonical_workflow_status_matches_helper_for_manifest_backed_missing_spec() {
         &["status", "--refresh"],
         "shell helper status refresh for missing spec",
     );
-    let rust_output = run_rust_superpowers(
+    let rust_output = run_rust_featureforge(
         repo,
         state,
         &["workflow", "status", "--refresh"],
@@ -428,16 +409,16 @@ fn canonical_workflow_status_matches_helper_for_ambiguous_specs() {
     let state = state_dir.path();
     let fixture_root = workflow_fixture_root();
 
-    fs::create_dir_all(repo.join("docs/superpowers/specs"))
+    fs::create_dir_all(repo.join("docs/featureforge/specs"))
         .expect("specs directory should be creatable");
     fs::copy(
         fixture_root.join("specs/2026-01-22-document-review-system-design.md"),
-        repo.join("docs/superpowers/specs/2026-01-22-document-review-system-design.md"),
+        repo.join("docs/featureforge/specs/2026-01-22-document-review-system-design.md"),
     )
     .expect("first fixture spec should copy");
     fs::copy(
         fixture_root.join("specs/2026-02-19-visual-brainstorming-refactor-design.md"),
-        repo.join("docs/superpowers/specs/2026-02-19-visual-brainstorming-refactor-design.md"),
+        repo.join("docs/featureforge/specs/2026-02-19-visual-brainstorming-refactor-design.md"),
     )
     .expect("second fixture spec should copy");
 
@@ -453,7 +434,7 @@ fn canonical_workflow_status_matches_helper_for_ambiguous_specs() {
         &["status", "--refresh"],
         "shell helper status refresh for ambiguous specs after manifest warmup",
     );
-    let rust_output = run_rust_superpowers(
+    let rust_output = run_rust_featureforge(
         repo,
         state,
         &["workflow", "status", "--refresh"],
@@ -479,10 +460,10 @@ fn canonical_workflow_expect_and_sync_preserve_missing_spec_semantics() {
     let (repo_dir, state_dir) = init_repo("workflow-runtime-expect-sync");
     let repo = repo_dir.path();
     let state = state_dir.path();
-    let missing_spec = "docs/superpowers/specs/2026-03-24-rust-sync-missing-spec.md";
+    let missing_spec = "docs/featureforge/specs/2026-03-24-rust-sync-missing-spec.md";
     let session_key = "workflow-runtime-expect-sync";
 
-    let expect_output = run_rust_superpowers(
+    let expect_output = run_rust_featureforge(
         repo,
         state,
         &[
@@ -503,7 +484,7 @@ fn canonical_workflow_expect_and_sync_preserve_missing_spec_semantics() {
         String::from_utf8_lossy(&expect_output.stderr)
     );
 
-    let sync_output = run_rust_superpowers(
+    let sync_output = run_rust_featureforge(
         repo,
         state,
         &["workflow", "sync", "--artifact", "spec"],
@@ -520,10 +501,10 @@ fn canonical_workflow_expect_and_sync_preserve_missing_spec_semantics() {
         String::from_utf8(sync_output.stdout).expect("sync output should be valid utf-8");
     assert!(sync_stdout.contains("missing_artifact"));
     assert!(sync_stdout.contains(missing_spec));
-    assert!(sync_stdout.contains("superpowers:brainstorming"));
+    assert!(sync_stdout.contains("featureforge:brainstorming"));
 
     let status_json = parse_json(
-        &run_rust_superpowers(
+        &run_rust_featureforge(
             repo,
             state,
             &["workflow", "status", "--refresh"],
@@ -539,23 +520,23 @@ fn canonical_workflow_expect_and_sync_preserve_missing_spec_semantics() {
     write_file(
         &state
             .join("session-entry")
-            .join("using-superpowers")
+            .join("using-featureforge")
             .join(session_key),
         "enabled\n",
     );
 
     let phase_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "phase", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "rust canonical workflow phase after missing-spec sync",
         ),
         "rust canonical workflow phase after missing-spec sync",
     );
     assert_eq!(phase_json["phase"], "needs_brainstorming");
-    assert_eq!(phase_json["next_skill"], "superpowers:brainstorming");
+    assert_eq!(phase_json["next_skill"], "featureforge:brainstorming");
     assert_eq!(phase_json["next_action"], "use_next_skill");
 }
 
@@ -566,19 +547,19 @@ fn canonical_workflow_status_routes_draft_plan_for_single_matching_plan() {
     let state = state_dir.path();
     let fixture_root = workflow_fixture_root();
 
-    fs::create_dir_all(repo.join("docs/superpowers/specs")).expect("spec directory should exist");
+    fs::create_dir_all(repo.join("docs/featureforge/specs")).expect("spec directory should exist");
     fs::copy(
         fixture_root.join("specs/2026-01-22-document-review-system-design.md"),
-        repo.join("docs/superpowers/specs/2026-01-22-document-review-system-design.md"),
+        repo.join("docs/featureforge/specs/2026-01-22-document-review-system-design.md"),
     )
     .expect("fixture spec should copy");
     write_file(
-        &repo.join("docs/superpowers/plans/2026-01-22-document-review-system.md"),
-        "# Draft Plan\n\n**Workflow State:** Draft\n**Plan Revision:** 1\n**Execution Mode:** none\n**Source Spec:** `docs/superpowers/specs/2026-01-22-document-review-system-design.md`\n**Source Spec Revision:** 1\n**Last Reviewed By:** writing-plans\n\n## Requirement Coverage Matrix\n\n- REQ-001 -> Task 1\n\n## Task 1: Prepare the draft plan for review\n\n**Spec Coverage:** REQ-001\n**Task Outcome:** The draft plan is ready for engineering review.\n**Plan Constraints:**\n- Keep the fixture minimal.\n**Open Questions:** none\n\n**Files:**\n- Test: `tests/workflow_runtime.rs`\n\n- [ ] **Step 1: Review the draft plan**\n",
+        &repo.join("docs/featureforge/plans/2026-01-22-document-review-system.md"),
+        "# Draft Plan\n\n**Workflow State:** Draft\n**Plan Revision:** 1\n**Execution Mode:** none\n**Source Spec:** `docs/featureforge/specs/2026-01-22-document-review-system-design.md`\n**Source Spec Revision:** 1\n**Last Reviewed By:** writing-plans\n\n## Requirement Coverage Matrix\n\n- REQ-001 -> Task 1\n\n## Task 1: Prepare the draft plan for review\n\n**Spec Coverage:** REQ-001\n**Task Outcome:** The draft plan is ready for engineering review.\n**Plan Constraints:**\n- Keep the fixture minimal.\n**Open Questions:** none\n\n**Files:**\n- Test: `tests/workflow_runtime.rs`\n\n- [ ] **Step 1: Review the draft plan**\n",
     );
 
     let status_json = parse_json(
-        &run_rust_superpowers(
+        &run_rust_featureforge(
             repo,
             state,
             &["workflow", "status", "--refresh"],
@@ -588,10 +569,10 @@ fn canonical_workflow_status_routes_draft_plan_for_single_matching_plan() {
     );
 
     assert_eq!(status_json["status"], "plan_draft");
-    assert_eq!(status_json["next_skill"], "superpowers:plan-eng-review");
+    assert_eq!(status_json["next_skill"], "featureforge:plan-eng-review");
     assert_eq!(
         status_json["plan_path"],
-        "docs/superpowers/plans/2026-01-22-document-review-system.md"
+        "docs/featureforge/plans/2026-01-22-document-review-system.md"
     );
 }
 
@@ -611,7 +592,7 @@ fn canonical_workflow_status_refresh_preserves_route_when_manifest_write_fails()
     read_only_permissions.set_mode(0o555);
     fs::set_permissions(state, read_only_permissions).expect("state dir should become read-only");
 
-    let output = run_rust_superpowers(
+    let output = run_rust_featureforge(
         repo,
         state,
         &["workflow", "status", "--refresh"],
@@ -633,7 +614,7 @@ fn canonical_workflow_status_refresh_preserves_route_when_manifest_write_fails()
         "workflow status refresh with non-writable state dir",
     );
     assert_eq!(status_json["status"], "implementation_ready");
-    assert_ne!(status_json["next_skill"], "superpowers:brainstorming");
+    assert_ne!(status_json["next_skill"], "featureforge:brainstorming");
     assert!(
         status_json["reason_codes"]
             .as_array()
@@ -654,16 +635,16 @@ fn canonical_workflow_status_routes_lone_stale_approved_plan_as_stale() {
     let state = state_dir.path();
 
     write_file(
-        &repo.join("docs/superpowers/specs/2026-01-22-document-review-system-design-v2.md"),
+        &repo.join("docs/featureforge/specs/2026-01-22-document-review-system-design-v2.md"),
         "# Approved Spec, Newer Path\n\n**Workflow State:** CEO Approved\n**Spec Revision:** 1\n**Last Reviewed By:** plan-ceo-review\n\n## Notes\n",
     );
     write_file(
-        &repo.join("docs/superpowers/plans/2026-01-22-document-review-system.md"),
-        "# Approved Plan, Stale Source Path\n\n**Workflow State:** Engineering Approved\n**Plan Revision:** 1\n**Execution Mode:** none\n**Source Spec:** `docs/superpowers/specs/2026-01-22-document-review-system-design.md`\n**Source Spec Revision:** 1\n**Last Reviewed By:** plan-eng-review\n\n## Requirement Coverage Matrix\n\n- REQ-001 -> Task 1\n\n## Task 1: Preserve the stale source path case\n\n**Spec Coverage:** REQ-001\n**Task Outcome:** The plan remains structurally valid while its source-spec path goes stale.\n**Plan Constraints:**\n- Keep the fixture minimal.\n**Open Questions:** none\n\n**Files:**\n- Test: `tests/workflow_runtime.rs`\n\n- [ ] **Step 1: Detect the stale source path**\n",
+        &repo.join("docs/featureforge/plans/2026-01-22-document-review-system.md"),
+        "# Approved Plan, Stale Source Path\n\n**Workflow State:** Engineering Approved\n**Plan Revision:** 1\n**Execution Mode:** none\n**Source Spec:** `docs/featureforge/specs/2026-01-22-document-review-system-design.md`\n**Source Spec Revision:** 1\n**Last Reviewed By:** plan-eng-review\n\n## Requirement Coverage Matrix\n\n- REQ-001 -> Task 1\n\n## Task 1: Preserve the stale source path case\n\n**Spec Coverage:** REQ-001\n**Task Outcome:** The plan remains structurally valid while its source-spec path goes stale.\n**Plan Constraints:**\n- Keep the fixture minimal.\n**Open Questions:** none\n\n**Files:**\n- Test: `tests/workflow_runtime.rs`\n\n- [ ] **Step 1: Detect the stale source path**\n",
     );
 
     let status_json = parse_json(
-        &run_rust_superpowers(
+        &run_rust_featureforge(
             repo,
             state,
             &["workflow", "status", "--refresh"],
@@ -673,7 +654,7 @@ fn canonical_workflow_status_routes_lone_stale_approved_plan_as_stale() {
     );
 
     assert_eq!(status_json["status"], "stale_plan");
-    assert_eq!(status_json["next_skill"], "superpowers:writing-plans");
+    assert_eq!(status_json["next_skill"], "featureforge:writing-plans");
     assert_eq!(status_json["contract_state"], "stale");
     assert_eq!(status_json["reason_codes"][0], "stale_spec_plan_linkage");
     assert_eq!(
@@ -689,16 +670,16 @@ fn canonical_workflow_status_routes_stale_source_revision_as_stale() {
     let state = state_dir.path();
 
     write_file(
-        &repo.join("docs/superpowers/specs/2026-01-22-document-review-system-design.md"),
+        &repo.join("docs/featureforge/specs/2026-01-22-document-review-system-design.md"),
         "# Approved Spec\n\n**Workflow State:** CEO Approved\n**Spec Revision:** 2\n**Last Reviewed By:** plan-ceo-review\n\n## Requirement Index\n\n- [REQ-001][behavior] The route should expose stale approved plans when the source-spec revision drifts.\n",
     );
     write_file(
-        &repo.join("docs/superpowers/plans/2026-01-22-document-review-system.md"),
-        "# Approved Plan, Stale Source Revision\n\n**Workflow State:** Engineering Approved\n**Plan Revision:** 1\n**Execution Mode:** none\n**Source Spec:** `docs/superpowers/specs/2026-01-22-document-review-system-design.md`\n**Source Spec Revision:** 1\n**Last Reviewed By:** plan-eng-review\n\n## Requirement Coverage Matrix\n\n- REQ-001 -> Task 1\n\n## Task 1: Preserve the stale source revision case\n\n**Spec Coverage:** REQ-001\n**Task Outcome:** The plan remains structurally valid while its source-spec revision goes stale.\n**Plan Constraints:**\n- Keep the fixture minimal.\n**Open Questions:** none\n\n**Files:**\n- Test: `tests/workflow_runtime.rs`\n\n- [ ] **Step 1: Detect the stale source revision**\n",
+        &repo.join("docs/featureforge/plans/2026-01-22-document-review-system.md"),
+        "# Approved Plan, Stale Source Revision\n\n**Workflow State:** Engineering Approved\n**Plan Revision:** 1\n**Execution Mode:** none\n**Source Spec:** `docs/featureforge/specs/2026-01-22-document-review-system-design.md`\n**Source Spec Revision:** 1\n**Last Reviewed By:** plan-eng-review\n\n## Requirement Coverage Matrix\n\n- REQ-001 -> Task 1\n\n## Task 1: Preserve the stale source revision case\n\n**Spec Coverage:** REQ-001\n**Task Outcome:** The plan remains structurally valid while its source-spec revision goes stale.\n**Plan Constraints:**\n- Keep the fixture minimal.\n**Open Questions:** none\n\n**Files:**\n- Test: `tests/workflow_runtime.rs`\n\n- [ ] **Step 1: Detect the stale source revision**\n",
     );
 
     let status_json = parse_json(
-        &run_rust_superpowers(
+        &run_rust_featureforge(
             repo,
             state,
             &["workflow", "status", "--refresh"],
@@ -708,7 +689,7 @@ fn canonical_workflow_status_routes_stale_source_revision_as_stale() {
     );
 
     assert_eq!(status_json["status"], "stale_plan");
-    assert_eq!(status_json["next_skill"], "superpowers:writing-plans");
+    assert_eq!(status_json["next_skill"], "featureforge:writing-plans");
     assert_eq!(status_json["contract_state"], "stale");
     assert_eq!(status_json["reason_codes"][0], "stale_spec_plan_linkage");
     assert_eq!(
@@ -727,7 +708,7 @@ fn workflow_status_argv0_alias_dispatches_to_canonical_tree() {
     let state = state_dir.path();
 
     write_file(
-        &repo.join("docs/superpowers/specs/2026-03-24-draft-spec-design.md"),
+        &repo.join("docs/featureforge/specs/2026-03-24-draft-spec-design.md"),
         "# Draft Spec\n\n**Workflow State:** Draft\n**Spec Revision:** 1\n**Last Reviewed By:** brainstorming\n",
     );
 
@@ -739,8 +720,8 @@ fn workflow_status_argv0_alias_dispatches_to_canonical_tree() {
     );
 
     let alias_dir = TempDir::new().expect("alias tempdir should be available");
-    let alias_path = alias_dir.path().join("superpowers-workflow-status");
-    symlink(cargo_bin("superpowers"), &alias_path)
+    let alias_path = alias_dir.path().join("featureforge-workflow-status");
+    symlink(cargo_bin("featureforge"), &alias_path)
         .expect("argv0 alias symlink should be creatable");
 
     let alias_output = run(
@@ -748,8 +729,8 @@ fn workflow_status_argv0_alias_dispatches_to_canonical_tree() {
             let mut command = Command::new(&alias_path);
             command
                 .current_dir(repo)
-                .env("SUPERPOWERS_STATE_DIR", state)
-                .args(["status", "--refresh"]);
+                .env("FEATUREFORGE_STATE_DIR", state)
+                .args(["--refresh"]);
             command
         },
         "rust argv0 workflow-status alias",
@@ -764,8 +745,8 @@ fn canonical_workflow_status_refresh_recovers_old_manifest_after_slug_change() {
     let (repo_dir, state_dir) = init_repo("workflow-runtime-cross-slug-old");
     let repo = repo_dir.path();
     let state = state_dir.path();
-    let spec_path = "docs/superpowers/specs/2026-03-24-cross-slug-design.md";
-    let expected_plan = "docs/superpowers/plans/2026-03-24-cross-slug-plan.md";
+    let spec_path = "docs/featureforge/specs/2026-03-24-cross-slug-design.md";
+    let expected_plan = "docs/featureforge/plans/2026-03-24-cross-slug-plan.md";
 
     write_file(
         &repo.join(spec_path),
@@ -783,7 +764,7 @@ fn canonical_workflow_status_refresh_recovers_old_manifest_after_slug_change() {
             expected_spec_path: spec_path.to_owned(),
             expected_plan_path: expected_plan.to_owned(),
             status: String::from("spec_approved_needs_plan"),
-            next_skill: String::from("superpowers:writing-plans"),
+            next_skill: String::from("featureforge:writing-plans"),
             reason: String::from("missing_expected_plan,expect_set"),
             note: String::from("missing_expected_plan,expect_set"),
             updated_at: String::from("2026-03-24T00:00:00Z"),
@@ -848,11 +829,19 @@ fn canonical_manifest_path_distinguishes_exact_branch_names() {
     let repo = repo_dir.path();
     let state = state_dir.path();
 
-    checkout_branch(repo, "feature/x");
+    let mut git_checkout = Command::new("git");
+    git_checkout
+        .args(["checkout", "-B", "feature/x"])
+        .current_dir(repo);
+    run_checked(git_checkout, "git checkout feature/x");
     let slash_identity = discover_repo_identity(repo).expect("feature/x identity should resolve");
     let slash_manifest_path = manifest_path(&slash_identity, state);
 
-    checkout_branch(repo, "feature-x");
+    let mut git_checkout = Command::new("git");
+    git_checkout
+        .args(["checkout", "-B", "feature-x"])
+        .current_dir(repo);
+    run_checked(git_checkout, "git checkout feature-x");
     let dash_identity = discover_repo_identity(repo).expect("feature-x identity should resolve");
     let dash_manifest_path = manifest_path(&dash_identity, state);
 
@@ -867,8 +856,8 @@ fn canonical_workflow_status_refresh_limits_cross_slug_manifest_recovery_scan() 
     let (repo_dir, state_dir) = init_repo("workflow-runtime-cross-slug-budget");
     let repo = repo_dir.path();
     let state = state_dir.path();
-    let spec_path = "docs/superpowers/specs/2026-03-24-budget-limit-design.md";
-    let expected_plan = "docs/superpowers/plans/2026-03-24-budget-limit-plan.md";
+    let spec_path = "docs/featureforge/specs/2026-03-24-budget-limit-design.md";
+    let expected_plan = "docs/featureforge/plans/2026-03-24-budget-limit-plan.md";
 
     write_file(
         &repo.join(spec_path),
@@ -894,7 +883,7 @@ fn canonical_workflow_status_refresh_limits_cross_slug_manifest_recovery_scan() 
                 expected_spec_path: String::new(),
                 expected_plan_path: String::new(),
                 status: String::from("needs_brainstorming"),
-                next_skill: String::from("superpowers:brainstorming"),
+                next_skill: String::from("featureforge:brainstorming"),
                 reason: String::from("decoy"),
                 note: String::from("decoy"),
                 updated_at: String::from("2026-03-24T00:00:00Z"),
@@ -911,7 +900,7 @@ fn canonical_workflow_status_refresh_limits_cross_slug_manifest_recovery_scan() 
             expected_spec_path: spec_path.to_owned(),
             expected_plan_path: expected_plan.to_owned(),
             status: String::from("spec_approved_needs_plan"),
-            next_skill: String::from("superpowers:writing-plans"),
+            next_skill: String::from("featureforge:writing-plans"),
             reason: String::from("repo_slug_recovered"),
             note: String::from("repo_slug_recovered"),
             updated_at: String::from("2026-03-24T00:00:00Z"),
@@ -919,7 +908,7 @@ fn canonical_workflow_status_refresh_limits_cross_slug_manifest_recovery_scan() 
     );
 
     let status_json = parse_json(
-        &run_rust_superpowers(
+        &run_rust_featureforge(
             repo,
             state,
             &["workflow", "status", "--refresh"],
@@ -947,8 +936,8 @@ fn canonical_workflow_status_ignores_manifest_selected_spec_when_branch_mismatch
     let (repo_dir, state_dir) = init_repo("workflow-status-manifest-branch-mismatch");
     let repo = repo_dir.path();
     let state = state_dir.path();
-    let spec_a = "docs/superpowers/specs/2026-03-24-branch-mismatch-a.md";
-    let spec_b = "docs/superpowers/specs/2026-03-24-branch-mismatch-b.md";
+    let spec_a = "docs/featureforge/specs/2026-03-24-branch-mismatch-a.md";
+    let spec_b = "docs/featureforge/specs/2026-03-24-branch-mismatch-b.md";
 
     for spec_path in [spec_a, spec_b] {
         write_file(
@@ -967,7 +956,7 @@ fn canonical_workflow_status_ignores_manifest_selected_spec_when_branch_mismatch
             expected_spec_path: spec_a.to_owned(),
             expected_plan_path: String::new(),
             status: String::from("spec_approved_needs_plan"),
-            next_skill: String::from("superpowers:writing-plans"),
+            next_skill: String::from("featureforge:writing-plans"),
             reason: String::from("stale-branch-manifest"),
             note: String::from("stale-branch-manifest"),
             updated_at: String::from("2026-03-24T00:00:00Z"),
@@ -975,7 +964,7 @@ fn canonical_workflow_status_ignores_manifest_selected_spec_when_branch_mismatch
     );
 
     let status_json = parse_json(
-        &run_rust_superpowers(
+        &run_rust_featureforge(
             repo,
             state,
             &["workflow", "status"],
@@ -1001,9 +990,9 @@ fn canonical_workflow_status_ignores_manifest_selected_plan_when_repo_root_misma
     let (repo_dir, state_dir) = init_repo("workflow-status-manifest-root-mismatch");
     let repo = repo_dir.path();
     let state = state_dir.path();
-    let spec_path = "docs/superpowers/specs/2026-03-24-root-mismatch-spec.md";
-    let plan_a = "docs/superpowers/plans/2026-03-24-root-mismatch-a.md";
-    let plan_b = "docs/superpowers/plans/2026-03-24-root-mismatch-b.md";
+    let spec_path = "docs/featureforge/specs/2026-03-24-root-mismatch-spec.md";
+    let plan_a = "docs/featureforge/plans/2026-03-24-root-mismatch-a.md";
+    let plan_b = "docs/featureforge/plans/2026-03-24-root-mismatch-b.md";
 
     write_file(
         &repo.join(spec_path),
@@ -1028,7 +1017,7 @@ fn canonical_workflow_status_ignores_manifest_selected_plan_when_repo_root_misma
             expected_spec_path: spec_path.to_owned(),
             expected_plan_path: plan_a.to_owned(),
             status: String::from("plan_draft"),
-            next_skill: String::from("superpowers:plan-eng-review"),
+            next_skill: String::from("featureforge:plan-eng-review"),
             reason: String::from("stale-root-manifest"),
             note: String::from("stale-root-manifest"),
             updated_at: String::from("2026-03-24T00:00:00Z"),
@@ -1036,7 +1025,7 @@ fn canonical_workflow_status_ignores_manifest_selected_plan_when_repo_root_misma
     );
 
     let status_json = parse_json(
-        &run_rust_superpowers(
+        &run_rust_featureforge(
             repo,
             state,
             &["workflow", "status"],
@@ -1058,18 +1047,111 @@ fn canonical_workflow_status_ignores_manifest_selected_plan_when_repo_root_misma
 }
 
 #[test]
+fn canonical_workflow_operator_accepts_manifest_selected_ready_route_with_extra_approved_candidates()
+ {
+    let (repo_dir, state_dir) = init_repo("workflow-manifest-selected-ready-route");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    let session_key = "workflow-manifest-selected-ready-route";
+    let spec_path = "docs/featureforge/specs/2026-03-22-runtime-integration-hardening-design.md";
+    let plan_path = "docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md";
+    let extra_spec_path = "docs/featureforge/specs/2026-03-24-extra-approved-spec.md";
+    let extra_plan_path = "docs/featureforge/plans/2026-03-24-extra-approved-plan.md";
+
+    let mut git_checkout = Command::new("git");
+    git_checkout
+        .args(["checkout", "-B", "workflow-manifest-ready"])
+        .current_dir(repo);
+    run_checked(git_checkout, "git checkout workflow-manifest-ready");
+
+    install_full_contract_ready_artifacts(repo);
+    enable_session_decision(state, session_key);
+    write_file(
+        &repo.join(extra_spec_path),
+        "# Extra Approved Spec\n\n**Workflow State:** CEO Approved\n**Spec Revision:** 1\n**Last Reviewed By:** plan-ceo-review\n",
+    );
+    write_file(
+        &repo.join(extra_plan_path),
+        &format!(
+            "# Extra Approved Plan\n\n**Workflow State:** Engineering Approved\n**Plan Revision:** 1\n**Execution Mode:** none\n**Source Spec:** `{spec_path}`\n**Source Spec Revision:** 1\n**Last Reviewed By:** plan-eng-review\n"
+        ),
+    );
+
+    let identity = discover_repo_identity(repo).expect("repo identity should resolve");
+    write_manifest(
+        &manifest_path(&identity, state),
+        &WorkflowManifest {
+            version: 1,
+            repo_root: fs::canonicalize(repo)
+                .expect("repo root should canonicalize")
+                .to_string_lossy()
+                .into_owned(),
+            branch: identity.branch_name.clone(),
+            expected_spec_path: String::from(spec_path),
+            expected_plan_path: String::from(plan_path),
+            status: String::from("implementation_ready"),
+            next_skill: String::new(),
+            reason: String::from("implementation_ready"),
+            note: String::from("implementation_ready"),
+            updated_at: String::from("2026-03-24T00:00:00Z"),
+        },
+    );
+
+    let status_json = parse_json(
+        &run_rust_featureforge(
+            repo,
+            state,
+            &["workflow", "status"],
+            "workflow status for manifest-selected ready route",
+        ),
+        "workflow status for manifest-selected ready route",
+    );
+    assert_eq!(status_json["status"], "implementation_ready");
+    assert_eq!(status_json["spec_path"], spec_path);
+    assert_eq!(status_json["plan_path"], plan_path);
+
+    let phase_json = parse_json(
+        &run_rust_featureforge_with_env(
+            repo,
+            state,
+            &["workflow", "phase", "--json"],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
+            "workflow phase for manifest-selected ready route",
+        ),
+        "workflow phase for manifest-selected ready route",
+    );
+    assert_eq!(phase_json["phase"], "execution_preflight");
+    assert_eq!(phase_json["route_status"], "implementation_ready");
+    assert_eq!(phase_json["plan_path"], plan_path);
+
+    let handoff_json = parse_json(
+        &run_rust_featureforge_with_env(
+            repo,
+            state,
+            &["workflow", "handoff", "--json"],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
+            "workflow handoff for manifest-selected ready route",
+        ),
+        "workflow handoff for manifest-selected ready route",
+    );
+    assert_eq!(handoff_json["phase"], "execution_preflight");
+    assert_eq!(handoff_json["route_status"], "implementation_ready");
+    assert_eq!(handoff_json["plan_path"], plan_path);
+}
+
+#[test]
 fn canonical_workflow_status_treats_ceo_approved_specs_without_ceo_review_as_draft() {
     let (repo_dir, state_dir) = init_repo("workflow-status-approved-spec-reviewer-mismatch");
     let repo = repo_dir.path();
     let state = state_dir.path();
 
     write_file(
-        &repo.join("docs/superpowers/specs/2026-03-24-reviewer-mismatch-design.md"),
+        &repo.join("docs/featureforge/specs/2026-03-24-reviewer-mismatch-design.md"),
         "# Approved Spec\n\n**Workflow State:** CEO Approved\n**Spec Revision:** 1\n**Last Reviewed By:** brainstorming\n\n## Requirement Index\n\n- [REQ-001][behavior] Routing should reject approval-owner drift.\n",
     );
 
     let status_json = parse_json(
-        &run_rust_superpowers(
+        &run_rust_featureforge(
             repo,
             state,
             &["workflow", "status", "--refresh"],
@@ -1079,7 +1161,7 @@ fn canonical_workflow_status_treats_ceo_approved_specs_without_ceo_review_as_dra
     );
 
     assert_eq!(status_json["status"], "spec_draft");
-    assert_eq!(status_json["next_skill"], "superpowers:plan-ceo-review");
+    assert_eq!(status_json["next_skill"], "featureforge:plan-ceo-review");
 }
 
 #[test]
@@ -1089,7 +1171,8 @@ fn canonical_workflow_status_treats_eng_approved_plans_without_eng_review_as_dra
     let state = state_dir.path();
 
     install_full_contract_ready_artifacts(repo);
-    let plan_path = repo.join("docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md");
+    let plan_path =
+        repo.join("docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md");
     let source = fs::read_to_string(&plan_path).expect("plan fixture should be readable");
     fs::write(
         &plan_path,
@@ -1101,7 +1184,7 @@ fn canonical_workflow_status_treats_eng_approved_plans_without_eng_review_as_dra
     .expect("plan fixture should be writable");
 
     let status_json = parse_json(
-        &run_rust_superpowers(
+        &run_rust_featureforge(
             repo,
             state,
             &["workflow", "status", "--refresh"],
@@ -1111,7 +1194,7 @@ fn canonical_workflow_status_treats_eng_approved_plans_without_eng_review_as_dra
     );
 
     assert_eq!(status_json["status"], "plan_draft");
-    assert_eq!(status_json["next_skill"], "superpowers:plan-eng-review");
+    assert_eq!(status_json["next_skill"], "featureforge:plan-eng-review");
 }
 
 #[test]
@@ -1122,17 +1205,17 @@ fn canonical_workflow_phase_reads_canonical_session_entry_state() {
     let session_key = "phase-canonical-session-entry";
     let decision_path = state
         .join("session-entry")
-        .join("using-superpowers")
+        .join("using-featureforge")
         .join(session_key);
 
     write_file(&decision_path, "enabled\n");
 
     let phase_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "phase", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "rust canonical workflow phase should read canonical session-entry state",
         ),
         "rust canonical workflow phase should read canonical session-entry state",
@@ -1146,6 +1229,56 @@ fn canonical_workflow_phase_reads_canonical_session_entry_state() {
 }
 
 #[test]
+fn canonical_workflow_operator_hides_next_skill_until_session_entry_is_resolved() {
+    let (repo_dir, state_dir) = init_repo("workflow-needs-user-choice");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    let session_key = "workflow-needs-user-choice";
+
+    let phase_json = parse_json(
+        &run_rust_featureforge_with_env(
+            repo,
+            state,
+            &["workflow", "phase", "--json"],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
+            "workflow phase should hide next_skill while session-entry is unresolved",
+        ),
+        "workflow phase should hide next_skill while session-entry is unresolved",
+    );
+    assert_eq!(phase_json["phase"], "needs_user_choice");
+    assert_eq!(phase_json["next_action"], "session_entry_gate");
+    assert_eq!(phase_json["next_skill"], "");
+
+    let doctor_json = parse_json(
+        &run_rust_featureforge_with_env(
+            repo,
+            state,
+            &["workflow", "doctor", "--json"],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
+            "workflow doctor should hide next_skill while session-entry is unresolved",
+        ),
+        "workflow doctor should hide next_skill while session-entry is unresolved",
+    );
+    assert_eq!(doctor_json["phase"], "needs_user_choice");
+    assert_eq!(doctor_json["next_action"], "session_entry_gate");
+    assert_eq!(doctor_json["next_skill"], "");
+
+    let handoff_json = parse_json(
+        &run_rust_featureforge_with_env(
+            repo,
+            state,
+            &["workflow", "handoff", "--json"],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
+            "workflow handoff should hide next_skill while session-entry is unresolved",
+        ),
+        "workflow handoff should hide next_skill while session-entry is unresolved",
+    );
+    assert_eq!(handoff_json["phase"], "needs_user_choice");
+    assert_eq!(handoff_json["next_action"], "session_entry_gate");
+    assert_eq!(handoff_json["next_skill"], "");
+}
+
+#[test]
 fn canonical_workflow_phase_routes_enabled_ready_plan_to_execution_preflight() {
     let (repo_dir, state_dir) = init_repo("workflow-phase-ready-plan");
     let repo = repo_dir.path();
@@ -1153,18 +1286,24 @@ fn canonical_workflow_phase_routes_enabled_ready_plan_to_execution_preflight() {
     let session_key = "workflow-phase-ready-plan";
     let decision_path = state
         .join("session-entry")
-        .join("using-superpowers")
+        .join("using-featureforge")
         .join(session_key);
+
+    let mut git_checkout = Command::new("git");
+    git_checkout
+        .args(["checkout", "-B", "workflow-phase-ready"])
+        .current_dir(repo);
+    run_checked(git_checkout, "git checkout workflow-phase-ready");
 
     install_full_contract_ready_artifacts(repo);
     write_file(&decision_path, "enabled\n");
 
     let phase_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "phase", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "rust canonical workflow phase should route ready plans to execution preflight",
         ),
         "rust canonical workflow phase should route ready plans to execution preflight",
@@ -1184,60 +1323,60 @@ fn canonical_workflow_operator_surfaces_fail_closed_when_session_entry_is_bypass
     let session_key = "workflow-phase-bypassed-session";
     let decision_path = state
         .join("session-entry")
-        .join("using-superpowers")
+        .join("using-featureforge")
         .join(session_key);
 
     install_full_contract_ready_artifacts(repo);
     write_file(&decision_path, "bypassed\n");
 
     let phase_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "phase", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow phase should fail closed when session-entry is bypassed",
         ),
         "workflow phase should fail closed when session-entry is bypassed",
     );
     let handoff_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "handoff", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow handoff should fail closed when session-entry is bypassed",
         ),
         "workflow handoff should fail closed when session-entry is bypassed",
     );
-    let next_output = run_rust_superpowers_with_env(
+    let next_output = run_rust_featureforge_with_env(
         repo,
         state,
         &["workflow", "next"],
-        &[("SUPERPOWERS_SESSION_KEY", session_key)],
+        &[("FEATUREFORGE_SESSION_KEY", session_key)],
         "workflow next should fail closed when session-entry is bypassed",
     );
 
     assert_eq!(phase_json["session_entry"]["outcome"], "bypassed");
     assert_eq!(phase_json["phase"], "bypassed");
-    assert_eq!(phase_json["next_action"], "continue_outside_superpowers");
+    assert_eq!(phase_json["next_action"], "continue_outside_featureforge");
     assert_eq!(phase_json["next_skill"], "");
 
     assert_eq!(handoff_json["session_entry"]["outcome"], "bypassed");
     assert_eq!(handoff_json["phase"], "bypassed");
-    assert_eq!(handoff_json["next_action"], "continue_outside_superpowers");
+    assert_eq!(handoff_json["next_action"], "continue_outside_featureforge");
     assert_eq!(handoff_json["recommended_skill"], "");
     assert_eq!(handoff_json["recommendation"], Value::Null);
     assert_eq!(
         handoff_json["recommendation_reason"],
-        "Superpowers is bypassed for this session until the user explicitly re-enters."
+        "FeatureForge is bypassed for this session until the user explicitly re-enters."
     );
 
     assert!(next_output.status.success());
     let next_stdout = String::from_utf8_lossy(&next_output.stdout);
     assert!(
         next_stdout.contains(
-            "Continue outside the Superpowers workflow unless the user explicitly re-enters."
+            "Continue outside the FeatureForge workflow unless the user explicitly re-enters."
         ),
         "workflow next should fail closed when session-entry is bypassed:\n{}",
         next_stdout
@@ -1252,25 +1391,25 @@ fn canonical_workflow_phase_routes_enabled_stale_plan_to_plan_writing() {
     let session_key = "workflow-phase-stale-plan";
     let decision_path = state
         .join("session-entry")
-        .join("using-superpowers")
+        .join("using-featureforge")
         .join(session_key);
 
     write_file(
-        &repo.join("docs/superpowers/specs/2026-01-22-document-review-system-design-v2.md"),
+        &repo.join("docs/featureforge/specs/2026-01-22-document-review-system-design-v2.md"),
         "# Approved Spec, Newer Path\n\n**Workflow State:** CEO Approved\n**Spec Revision:** 1\n**Last Reviewed By:** plan-ceo-review\n\n## Notes\n",
     );
     write_file(
-        &repo.join("docs/superpowers/plans/2026-01-22-document-review-system.md"),
-        "# Approved Plan, Stale Source Path\n\n**Workflow State:** Engineering Approved\n**Plan Revision:** 1\n**Execution Mode:** none\n**Source Spec:** `docs/superpowers/specs/2026-01-22-document-review-system-design.md`\n**Source Spec Revision:** 1\n**Last Reviewed By:** plan-eng-review\n\n## Requirement Coverage Matrix\n\n- REQ-001 -> Task 1\n\n## Task 1: Preserve the stale source path case\n\n**Spec Coverage:** REQ-001\n**Task Outcome:** The plan remains structurally valid while its source-spec path goes stale.\n**Plan Constraints:**\n- Keep the fixture minimal.\n**Open Questions:** none\n\n**Files:**\n- Test: `tests/workflow_runtime.rs`\n\n- [ ] **Step 1: Detect the stale source path**\n",
+        &repo.join("docs/featureforge/plans/2026-01-22-document-review-system.md"),
+        "# Approved Plan, Stale Source Path\n\n**Workflow State:** Engineering Approved\n**Plan Revision:** 1\n**Execution Mode:** none\n**Source Spec:** `docs/featureforge/specs/2026-01-22-document-review-system-design.md`\n**Source Spec Revision:** 1\n**Last Reviewed By:** plan-eng-review\n\n## Requirement Coverage Matrix\n\n- REQ-001 -> Task 1\n\n## Task 1: Preserve the stale source path case\n\n**Spec Coverage:** REQ-001\n**Task Outcome:** The plan remains structurally valid while its source-spec path goes stale.\n**Plan Constraints:**\n- Keep the fixture minimal.\n**Open Questions:** none\n\n**Files:**\n- Test: `tests/workflow_runtime.rs`\n\n- [ ] **Step 1: Detect the stale source path**\n",
     );
     write_file(&decision_path, "enabled\n");
 
     let phase_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "phase", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "rust canonical workflow phase should route stale plans to plan writing",
         ),
         "rust canonical workflow phase should route stale plans to plan writing",
@@ -1280,7 +1419,7 @@ fn canonical_workflow_phase_routes_enabled_stale_plan_to_plan_writing() {
     assert_eq!(phase_json["route_status"], "stale_plan");
     assert_eq!(phase_json["phase"], "plan_writing");
     assert_eq!(phase_json["next_action"], "use_next_skill");
-    assert_eq!(phase_json["next_skill"], "superpowers:writing-plans");
+    assert_eq!(phase_json["next_skill"], "featureforge:writing-plans");
 }
 
 #[test]
@@ -1288,14 +1427,14 @@ fn canonical_workflow_phase_keeps_corrupt_manifest_read_only() {
     let (repo_dir, state_dir) = init_repo("workflow-phase-corrupt-manifest");
     let repo = repo_dir.path();
     let state = state_dir.path();
-    let spec_path = repo.join("docs/superpowers/specs/2026-03-24-corrupt-phase-spec.md");
+    let spec_path = repo.join("docs/featureforge/specs/2026-03-24-corrupt-phase-spec.md");
 
     write_file(
         &spec_path,
         "# Phase Corrupt Manifest Spec\n\n**Workflow State:** Draft\n**Spec Revision:** 1\n**Last Reviewed By:** brainstorming\n",
     );
 
-    let refresh_output = run_rust_superpowers(
+    let refresh_output = run_rust_featureforge(
         repo,
         state,
         &["workflow", "status", "--refresh"],
@@ -1316,7 +1455,7 @@ fn canonical_workflow_phase_keeps_corrupt_manifest_read_only() {
     let before_bytes = fs::read(&manifest_path).expect("corrupt manifest fixture should exist");
 
     let phase_json = parse_json(
-        &run_rust_superpowers(
+        &run_rust_featureforge(
             repo,
             state,
             &["workflow", "phase", "--json"],
@@ -1363,17 +1502,23 @@ fn canonical_workflow_public_text_commands_work_for_ready_plan() {
     let session_key = "workflow-public-text-commands";
     let decision_path = state
         .join("session-entry")
-        .join("using-superpowers")
+        .join("using-featureforge")
         .join(session_key);
+
+    let mut git_checkout = Command::new("git");
+    git_checkout
+        .args(["checkout", "-B", "workflow-public-text"])
+        .current_dir(repo);
+    run_checked(git_checkout, "git checkout workflow-public-text");
 
     install_full_contract_ready_artifacts(repo);
     write_file(&decision_path, "enabled\n");
 
-    let next_output = run_rust_superpowers_with_env(
+    let next_output = run_rust_featureforge_with_env(
         repo,
         state,
         &["workflow", "next"],
-        &[("SUPERPOWERS_SESSION_KEY", session_key)],
+        &[("FEATUREFORGE_SESSION_KEY", session_key)],
         "rust canonical workflow next should be available on ready plans",
     );
     assert!(
@@ -1386,14 +1531,14 @@ fn canonical_workflow_public_text_commands_work_for_ready_plan() {
     let next_stdout = String::from_utf8_lossy(&next_output.stdout);
     assert!(next_stdout.contains("Next safe step:"));
     assert!(next_stdout.contains("Reason:"));
-    assert!(next_stdout.contains("Return to execution preflight for the approved plan: docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md"));
+    assert!(next_stdout.contains("Return to execution preflight for the approved plan: docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md"));
     assert!(next_stdout.contains("The approved plan matches the latest approved spec and preflight is the next safe boundary."));
 
-    let artifacts_output = run_rust_superpowers_with_env(
+    let artifacts_output = run_rust_featureforge_with_env(
         repo,
         state,
         &["workflow", "artifacts"],
-        &[("SUPERPOWERS_SESSION_KEY", session_key)],
+        &[("FEATUREFORGE_SESSION_KEY", session_key)],
         "rust canonical workflow artifacts should be available on ready plans",
     );
     assert!(
@@ -1406,18 +1551,18 @@ fn canonical_workflow_public_text_commands_work_for_ready_plan() {
     let artifacts_stdout = String::from_utf8_lossy(&artifacts_output.stdout);
     assert!(artifacts_stdout.contains("Workflow artifacts"));
     assert!(artifacts_stdout.contains(
-        "Spec: docs/superpowers/specs/2026-03-22-runtime-integration-hardening-design.md"
+        "Spec: docs/featureforge/specs/2026-03-22-runtime-integration-hardening-design.md"
     ));
     assert!(
         artifacts_stdout
-            .contains("Plan: docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md")
+            .contains("Plan: docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md")
     );
 
-    let explain_output = run_rust_superpowers_with_env(
+    let explain_output = run_rust_featureforge_with_env(
         repo,
         state,
         &["workflow", "explain"],
-        &[("SUPERPOWERS_SESSION_KEY", session_key)],
+        &[("FEATUREFORGE_SESSION_KEY", session_key)],
         "rust canonical workflow explain should be available on ready plans",
     );
     assert!(
@@ -1428,16 +1573,17 @@ fn canonical_workflow_public_text_commands_work_for_ready_plan() {
         String::from_utf8_lossy(&explain_output.stderr)
     );
     let explain_stdout = String::from_utf8_lossy(&explain_output.stdout);
-    assert!(explain_stdout.contains("Why Superpowers chose this state"));
+    assert!(explain_stdout.contains("Why FeatureForge chose this state"));
     assert!(explain_stdout.contains("- State: implementation_ready"));
     assert!(explain_stdout.contains(
-        "- Spec: docs/superpowers/specs/2026-03-22-runtime-integration-hardening-design.md"
+        "- Spec: docs/featureforge/specs/2026-03-22-runtime-integration-hardening-design.md"
     ));
     assert!(
-        explain_stdout
-            .contains("- Plan: docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md")
+        explain_stdout.contains(
+            "- Plan: docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md"
+        )
     );
-    assert!(explain_stdout.contains("1. Return to execution preflight for the approved plan: docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md"));
+    assert!(explain_stdout.contains("1. Return to execution preflight for the approved plan: docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md"));
 }
 
 #[test]
@@ -1448,19 +1594,25 @@ fn canonical_workflow_public_json_commands_work_for_ready_plan() {
     let session_key = "workflow-public-json-commands";
     let decision_path = state
         .join("session-entry")
-        .join("using-superpowers")
+        .join("using-featureforge")
         .join(session_key);
-    let plan_rel = "docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md";
+    let plan_rel = "docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md";
+
+    let mut git_checkout = Command::new("git");
+    git_checkout
+        .args(["checkout", "-B", "workflow-public-json"])
+        .current_dir(repo);
+    run_checked(git_checkout, "git checkout workflow-public-json");
 
     install_full_contract_ready_artifacts(repo);
     write_file(&decision_path, "enabled\n");
 
     let doctor_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "doctor", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "rust canonical workflow doctor should be available on ready plans",
         ),
         "rust canonical workflow doctor should be available on ready plans",
@@ -1470,7 +1622,7 @@ fn canonical_workflow_public_json_commands_work_for_ready_plan() {
     assert_eq!(doctor_json["next_action"], "execution_preflight");
     assert_eq!(
         doctor_json["spec_path"],
-        "docs/superpowers/specs/2026-03-22-runtime-integration-hardening-design.md"
+        "docs/featureforge/specs/2026-03-22-runtime-integration-hardening-design.md"
     );
     assert_eq!(doctor_json["plan_path"], plan_rel);
     assert_eq!(doctor_json["contract_state"], "valid");
@@ -1481,11 +1633,11 @@ fn canonical_workflow_public_json_commands_work_for_ready_plan() {
     assert_eq!(doctor_json["gate_finish"], Value::Null);
 
     let handoff_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "handoff", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "rust canonical workflow handoff should be available on ready plans",
         ),
         "rust canonical workflow handoff should be available on ready plans",
@@ -1496,16 +1648,16 @@ fn canonical_workflow_public_json_commands_work_for_ready_plan() {
     assert_eq!(handoff_json["next_action"], "execution_preflight");
     assert_eq!(
         handoff_json["spec_path"],
-        "docs/superpowers/specs/2026-03-22-runtime-integration-hardening-design.md"
+        "docs/featureforge/specs/2026-03-22-runtime-integration-hardening-design.md"
     );
     assert_eq!(handoff_json["plan_path"], plan_rel);
     assert_eq!(
         handoff_json["recommended_skill"],
-        "superpowers:executing-plans"
+        "featureforge:executing-plans"
     );
     assert_eq!(
         handoff_json["recommendation"]["recommended_skill"],
-        "superpowers:executing-plans"
+        "featureforge:executing-plans"
     );
     assert!(
         handoff_json["recommendation_reason"]
@@ -1514,11 +1666,11 @@ fn canonical_workflow_public_json_commands_work_for_ready_plan() {
     );
 
     let preflight_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "preflight", "--plan", plan_rel, "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "rust canonical workflow preflight should be available on ready plans",
         ),
         "rust canonical workflow preflight should be available on ready plans",
@@ -1526,11 +1678,11 @@ fn canonical_workflow_public_json_commands_work_for_ready_plan() {
     assert_eq!(preflight_json["allowed"], true);
 
     let gate_review_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "gate", "review", "--plan", plan_rel, "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "rust canonical workflow gate review should be available on ready plans",
         ),
         "rust canonical workflow gate review should be available on ready plans",
@@ -1543,11 +1695,11 @@ fn canonical_workflow_public_json_commands_work_for_ready_plan() {
     );
 
     let gate_finish_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "gate", "finish", "--plan", plan_rel, "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "rust canonical workflow gate finish should be available on ready plans",
         ),
         "rust canonical workflow gate finish should be available on ready plans",
@@ -1568,9 +1720,9 @@ fn canonical_workflow_routes_started_execution_back_to_the_current_execution_flo
     let session_key = "workflow-phase-started-execution";
     let decision_path = state
         .join("session-entry")
-        .join("using-superpowers")
+        .join("using-featureforge")
         .join(session_key);
-    let plan_rel = "docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md";
+    let plan_rel = "docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md";
 
     install_full_contract_ready_artifacts(repo);
     write_file(&decision_path, "enabled\n");
@@ -1593,7 +1745,7 @@ fn canonical_workflow_routes_started_execution_back_to_the_current_execution_flo
             "--step",
             "1",
             "--execution-mode",
-            "superpowers:executing-plans",
+            "featureforge:executing-plans",
             "--expect-execution-fingerprint",
             status_json["execution_fingerprint"]
                 .as_str()
@@ -1603,11 +1755,11 @@ fn canonical_workflow_routes_started_execution_back_to_the_current_execution_flo
     );
 
     let phase_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "phase", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow phase for started-execution routing fixture",
         ),
         "workflow phase for started-execution routing fixture",
@@ -1616,11 +1768,11 @@ fn canonical_workflow_routes_started_execution_back_to_the_current_execution_flo
     assert_eq!(phase_json["next_action"], "return_to_execution");
 
     let doctor_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "doctor", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow doctor for started-execution routing fixture",
         ),
         "workflow doctor for started-execution routing fixture",
@@ -1634,11 +1786,11 @@ fn canonical_workflow_routes_started_execution_back_to_the_current_execution_flo
     assert_eq!(doctor_json["gate_finish"], Value::Null);
 
     let handoff_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "handoff", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow handoff for started-execution routing fixture",
         ),
         "workflow handoff for started-execution routing fixture",
@@ -1648,7 +1800,7 @@ fn canonical_workflow_routes_started_execution_back_to_the_current_execution_flo
     assert_eq!(handoff_json["next_action"], "return_to_execution");
     assert_eq!(
         handoff_json["recommended_skill"],
-        "superpowers:executing-plans"
+        "featureforge:executing-plans"
     );
     assert_eq!(handoff_json["recommendation"], Value::Null);
     assert_eq!(
@@ -1656,16 +1808,16 @@ fn canonical_workflow_routes_started_execution_back_to_the_current_execution_flo
         "Execution already started for the approved plan revision; continue with the current execution flow."
     );
 
-    let next_output = run_rust_superpowers_with_env(
+    let next_output = run_rust_featureforge_with_env(
         repo,
         state,
         &["workflow", "next"],
-        &[("SUPERPOWERS_SESSION_KEY", session_key)],
+        &[("FEATUREFORGE_SESSION_KEY", session_key)],
         "workflow next for started-execution routing fixture",
     );
     assert!(next_output.status.success());
     let next_stdout = String::from_utf8_lossy(&next_output.stdout);
-    assert!(next_stdout.contains("Return to the current execution flow for the approved plan: docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md"));
+    assert!(next_stdout.contains("Return to the current execution flow for the approved plan: docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md"));
     assert!(next_stdout.contains("Execution already started for the approved plan and should continue through the current execution flow."));
 }
 
@@ -1677,7 +1829,7 @@ fn canonical_workflow_routes_blocked_preflight_back_to_execution_handoff() {
     let session_key = "workflow-phase-blocked-preflight";
     let decision_path = state
         .join("session-entry")
-        .join("using-superpowers")
+        .join("using-featureforge")
         .join(session_key);
 
     install_full_contract_ready_artifacts(repo);
@@ -1685,11 +1837,11 @@ fn canonical_workflow_routes_blocked_preflight_back_to_execution_handoff() {
     write_file(&repo.join(".git/MERGE_HEAD"), "deadbeef\n");
 
     let phase_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "phase", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow phase for blocked-preflight routing fixture",
         ),
         "workflow phase for blocked-preflight routing fixture",
@@ -1698,11 +1850,11 @@ fn canonical_workflow_routes_blocked_preflight_back_to_execution_handoff() {
     assert_eq!(phase_json["next_action"], "execution_preflight");
 
     let doctor_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "doctor", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow doctor for blocked-preflight routing fixture",
         ),
         "workflow doctor for blocked-preflight routing fixture",
@@ -1725,11 +1877,11 @@ fn canonical_workflow_routes_blocked_preflight_back_to_execution_handoff() {
     assert_eq!(doctor_json["gate_finish"], Value::Null);
 
     let handoff_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "handoff", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow handoff for blocked-preflight routing fixture",
         ),
         "workflow handoff for blocked-preflight routing fixture",
@@ -1739,17 +1891,21 @@ fn canonical_workflow_routes_blocked_preflight_back_to_execution_handoff() {
     assert_eq!(handoff_json["next_action"], "execution_preflight");
     assert_eq!(handoff_json["recommended_skill"], "");
     assert_eq!(handoff_json["recommendation"], Value::Null);
+    assert_eq!(
+        handoff_json["recommendation_reason"],
+        "The approved plan is ready, but execution preflight is still blocked by the current workspace state."
+    );
 
-    let next_output = run_rust_superpowers_with_env(
+    let next_output = run_rust_featureforge_with_env(
         repo,
         state,
         &["workflow", "next"],
-        &[("SUPERPOWERS_SESSION_KEY", session_key)],
+        &[("FEATUREFORGE_SESSION_KEY", session_key)],
         "workflow next for blocked-preflight routing fixture",
     );
     assert!(next_output.status.success());
     let next_stdout = String::from_utf8_lossy(&next_output.stdout);
-    assert!(next_stdout.contains("Return to execution preflight for the approved plan: docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md"));
+    assert!(next_stdout.contains("Return to execution preflight for the approved plan: docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md"));
     assert!(next_stdout.contains("The approved plan is ready, but execution preflight is still blocked by the current workspace state."));
 }
 
@@ -1761,7 +1917,7 @@ fn canonical_workflow_routes_dirty_worktree_back_to_execution_handoff() {
     let session_key = "workflow-phase-dirty-preflight";
     let decision_path = state
         .join("session-entry")
-        .join("using-superpowers")
+        .join("using-featureforge")
         .join(session_key);
 
     install_full_contract_ready_artifacts(repo);
@@ -1772,11 +1928,11 @@ fn canonical_workflow_routes_dirty_worktree_back_to_execution_handoff() {
     );
 
     let phase_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "phase", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow phase for dirty-worktree preflight routing fixture",
         ),
         "workflow phase for dirty-worktree preflight routing fixture",
@@ -1785,11 +1941,11 @@ fn canonical_workflow_routes_dirty_worktree_back_to_execution_handoff() {
     assert_eq!(phase_json["next_action"], "execution_preflight");
 
     let doctor_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "doctor", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow doctor for dirty-worktree preflight routing fixture",
         ),
         "workflow doctor for dirty-worktree preflight routing fixture",
@@ -1818,7 +1974,7 @@ fn canonical_workflow_phase_requires_final_review_before_branch_completion() {
     let repo = repo_dir.path();
     let state = state_dir.path();
     let session_key = "workflow-phase-final-review-pending";
-    let plan_rel = "docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md";
+    let plan_rel = "docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md";
 
     complete_workflow_fixture_execution(repo, state, plan_rel);
     write_branch_test_plan_artifact(repo, state, plan_rel, "no");
@@ -1826,51 +1982,51 @@ fn canonical_workflow_phase_requires_final_review_before_branch_completion() {
     enable_session_decision(state, session_key);
 
     let doctor_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "doctor", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow doctor for final-review routing fixture",
         ),
         "workflow doctor for final-review routing fixture",
     );
     let phase_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "phase", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow phase for final-review routing fixture",
         ),
         "workflow phase for final-review routing fixture",
     );
     let handoff_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "handoff", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow handoff for final-review routing fixture",
         ),
         "workflow handoff for final-review routing fixture",
     );
     let gate_review_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "gate", "review", "--plan", plan_rel, "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow gate review for final-review routing fixture",
         ),
         "workflow gate review for final-review routing fixture",
     );
     let gate_finish_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "gate", "finish", "--plan", plan_rel, "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow gate finish for final-review routing fixture",
         ),
         "workflow gate finish for final-review routing fixture",
@@ -1891,7 +2047,7 @@ fn canonical_workflow_phase_requires_final_review_before_branch_completion() {
     assert_eq!(handoff_json["next_action"], "request_code_review");
     assert_eq!(
         handoff_json["recommended_skill"],
-        "superpowers:requesting-code-review"
+        "featureforge:requesting-code-review"
     );
     assert_eq!(handoff_json["recommendation"], Value::Null);
     assert_eq!(
@@ -1906,24 +2062,24 @@ fn canonical_workflow_phase_requires_final_review_before_branch_completion() {
         "review_artifact_missing"
     );
 
-    let phase_output = run_rust_superpowers_with_env(
+    let phase_output = run_rust_featureforge_with_env(
         repo,
         state,
         &["workflow", "phase"],
-        &[("SUPERPOWERS_SESSION_KEY", session_key)],
+        &[("FEATUREFORGE_SESSION_KEY", session_key)],
         "workflow phase text for final-review routing fixture",
     );
     assert!(phase_output.status.success());
     let phase_stdout = String::from_utf8_lossy(&phase_output.stdout);
     assert!(phase_stdout.contains("Workflow phase: review_blocked"));
     assert!(phase_stdout.contains("Route status: implementation_ready"));
-    assert!(phase_stdout.contains("Next: Use superpowers:requesting-code-review for the approved plan before branch completion: docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md"));
+    assert!(phase_stdout.contains("Next: Use featureforge:requesting-code-review for the approved plan before branch completion: docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md"));
 
-    let doctor_output = run_rust_superpowers_with_env(
+    let doctor_output = run_rust_featureforge_with_env(
         repo,
         state,
         &["workflow", "doctor"],
-        &[("SUPERPOWERS_SESSION_KEY", session_key)],
+        &[("FEATUREFORGE_SESSION_KEY", session_key)],
         "workflow doctor text for final-review routing fixture",
     );
     assert!(doctor_output.status.success());
@@ -1932,11 +2088,11 @@ fn canonical_workflow_phase_requires_final_review_before_branch_completion() {
     assert!(doctor_stdout.contains("Phase: review_blocked"));
     assert!(doctor_stdout.contains("Route status: implementation_ready"));
 
-    let handoff_output = run_rust_superpowers_with_env(
+    let handoff_output = run_rust_featureforge_with_env(
         repo,
         state,
         &["workflow", "handoff"],
-        &[("SUPERPOWERS_SESSION_KEY", session_key)],
+        &[("FEATUREFORGE_SESSION_KEY", session_key)],
         "workflow handoff text for final-review routing fixture",
     );
     assert!(handoff_output.status.success());
@@ -1944,28 +2100,28 @@ fn canonical_workflow_phase_requires_final_review_before_branch_completion() {
     assert!(handoff_stdout.contains("Workflow handoff"));
     assert!(handoff_stdout.contains("Phase: review_blocked"));
     assert!(handoff_stdout.contains("Next action: request_code_review"));
-    assert!(handoff_stdout.contains("Recommended skill: superpowers:requesting-code-review"));
+    assert!(handoff_stdout.contains("Recommended skill: featureforge:requesting-code-review"));
     assert!(
         handoff_stdout.contains("Reason: Finish readiness requires a final code-review artifact.")
     );
 
-    let next_output = run_rust_superpowers_with_env(
+    let next_output = run_rust_featureforge_with_env(
         repo,
         state,
         &["workflow", "next"],
-        &[("SUPERPOWERS_SESSION_KEY", session_key)],
+        &[("FEATUREFORGE_SESSION_KEY", session_key)],
         "workflow next for final-review routing fixture",
     );
     assert!(next_output.status.success());
     let next_stdout = String::from_utf8_lossy(&next_output.stdout);
-    assert!(next_stdout.contains("Use superpowers:requesting-code-review for the approved plan before branch completion: docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md"));
+    assert!(next_stdout.contains("Use featureforge:requesting-code-review for the approved plan before branch completion: docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md"));
     assert!(next_stdout.contains("Finish readiness requires a final code-review artifact."));
 
-    let gate_review_output = run_rust_superpowers_with_env(
+    let gate_review_output = run_rust_featureforge_with_env(
         repo,
         state,
         &["workflow", "gate", "review", "--plan", plan_rel],
-        &[("SUPERPOWERS_SESSION_KEY", session_key)],
+        &[("FEATUREFORGE_SESSION_KEY", session_key)],
         "workflow gate review text for final-review routing fixture",
     );
     assert!(gate_review_output.status.success());
@@ -1973,11 +2129,11 @@ fn canonical_workflow_phase_requires_final_review_before_branch_completion() {
         String::from_utf8_lossy(&gate_review_output.stdout).contains("Review gate\nAllowed: true")
     );
 
-    let gate_finish_output = run_rust_superpowers_with_env(
+    let gate_finish_output = run_rust_featureforge_with_env(
         repo,
         state,
         &["workflow", "gate", "finish", "--plan", plan_rel],
-        &[("SUPERPOWERS_SESSION_KEY", session_key)],
+        &[("FEATUREFORGE_SESSION_KEY", session_key)],
         "workflow gate finish text for final-review routing fixture",
     );
     assert!(gate_finish_output.status.success());
@@ -1987,12 +2143,87 @@ fn canonical_workflow_phase_requires_final_review_before_branch_completion() {
 }
 
 #[test]
+fn canonical_workflow_routes_gate_review_evidence_failures_back_to_execution() {
+    let (repo_dir, state_dir) = init_repo("workflow-phase-gate-review-evidence-failure");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    let session_key = "workflow-phase-gate-review-evidence-failure";
+    let plan_rel = "docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md";
+
+    complete_workflow_fixture_execution(repo, state, plan_rel);
+    enable_session_decision(state, session_key);
+
+    let execution_status = run_plan_execution_json(
+        repo,
+        state,
+        &["status", "--plan", plan_rel],
+        "plan execution status for workflow gate-review evidence failure fixture",
+    );
+    let evidence_path = repo.join(
+        execution_status["evidence_path"]
+            .as_str()
+            .expect("execution status should expose evidence_path"),
+    );
+    replace_in_file(
+        &evidence_path,
+        "**Plan Fingerprint:** ",
+        "**Plan Fingerprint:** stale-",
+    );
+
+    let phase_json = parse_json(
+        &run_rust_featureforge_with_env(
+            repo,
+            state,
+            &["workflow", "phase", "--json"],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
+            "workflow phase for gate-review evidence failure fixture",
+        ),
+        "workflow phase for gate-review evidence failure fixture",
+    );
+    let handoff_json = parse_json(
+        &run_rust_featureforge_with_env(
+            repo,
+            state,
+            &["workflow", "handoff", "--json"],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
+            "workflow handoff for gate-review evidence failure fixture",
+        ),
+        "workflow handoff for gate-review evidence failure fixture",
+    );
+    let doctor_json = parse_json(
+        &run_rust_featureforge_with_env(
+            repo,
+            state,
+            &["workflow", "doctor", "--json"],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
+            "workflow doctor for gate-review evidence failure fixture",
+        ),
+        "workflow doctor for gate-review evidence failure fixture",
+    );
+
+    assert_eq!(doctor_json["gate_review"]["allowed"], false);
+    assert_eq!(
+        doctor_json["gate_review"]["failure_class"],
+        "StaleExecutionEvidence"
+    );
+    assert_eq!(phase_json["phase"], "review_blocked");
+    assert_eq!(phase_json["next_action"], "return_to_execution");
+    assert_eq!(handoff_json["phase"], "review_blocked");
+    assert_eq!(handoff_json["next_action"], "return_to_execution");
+    assert_eq!(
+        handoff_json["recommended_skill"],
+        "featureforge:executing-plans"
+    );
+    assert_eq!(handoff_json["recommendation"], Value::Null);
+}
+
+#[test]
 fn canonical_workflow_phase_routes_missing_test_plan_back_to_plan_eng_review() {
     let (repo_dir, state_dir) = init_repo("workflow-phase-test-plan-missing");
     let repo = repo_dir.path();
     let state = state_dir.path();
     let session_key = "workflow-phase-test-plan-missing";
-    let plan_rel = "docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md";
+    let plan_rel = "docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md";
     let base_branch = current_branch_name(repo);
 
     complete_workflow_fixture_execution(repo, state, plan_rel);
@@ -2000,31 +2231,31 @@ fn canonical_workflow_phase_routes_missing_test_plan_back_to_plan_eng_review() {
     enable_session_decision(state, session_key);
 
     let phase_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "phase", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow phase for missing-test-plan routing fixture",
         ),
         "workflow phase for missing-test-plan routing fixture",
     );
     let handoff_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "handoff", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow handoff for missing-test-plan routing fixture",
         ),
         "workflow handoff for missing-test-plan routing fixture",
     );
     let gate_finish_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "gate", "finish", "--plan", plan_rel, "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow gate finish for missing-test-plan routing fixture",
         ),
         "workflow gate finish for missing-test-plan routing fixture",
@@ -2034,7 +2265,7 @@ fn canonical_workflow_phase_routes_missing_test_plan_back_to_plan_eng_review() {
     assert_eq!(phase_json["next_action"], "refresh_test_plan");
     assert_eq!(
         handoff_json["recommended_skill"],
-        "superpowers:plan-eng-review"
+        "featureforge:plan-eng-review"
     );
     assert_eq!(
         handoff_json["recommendation_reason"],
@@ -2054,7 +2285,7 @@ fn canonical_workflow_phase_routes_malformed_test_plan_back_to_plan_eng_review()
     let repo = repo_dir.path();
     let state = state_dir.path();
     let session_key = "workflow-phase-test-plan-malformed";
-    let plan_rel = "docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md";
+    let plan_rel = "docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md";
     let base_branch = current_branch_name(repo);
 
     complete_workflow_fixture_execution(repo, state, plan_rel);
@@ -2064,31 +2295,31 @@ fn canonical_workflow_phase_routes_malformed_test_plan_back_to_plan_eng_review()
     replace_in_file(&test_plan_path, "# Test Plan", "# Not A Test Plan");
 
     let phase_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "phase", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow phase for malformed-test-plan routing fixture",
         ),
         "workflow phase for malformed-test-plan routing fixture",
     );
     let handoff_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "handoff", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow handoff for malformed-test-plan routing fixture",
         ),
         "workflow handoff for malformed-test-plan routing fixture",
     );
     let gate_finish_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "gate", "finish", "--plan", plan_rel, "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow gate finish for malformed-test-plan routing fixture",
         ),
         "workflow gate finish for malformed-test-plan routing fixture",
@@ -2098,7 +2329,7 @@ fn canonical_workflow_phase_routes_malformed_test_plan_back_to_plan_eng_review()
     assert_eq!(phase_json["next_action"], "refresh_test_plan");
     assert_eq!(
         handoff_json["recommended_skill"],
-        "superpowers:plan-eng-review"
+        "featureforge:plan-eng-review"
     );
     assert_eq!(
         handoff_json["recommendation_reason"],
@@ -2118,7 +2349,7 @@ fn canonical_workflow_phase_routes_stale_test_plan_back_to_plan_eng_review() {
     let repo = repo_dir.path();
     let state = state_dir.path();
     let session_key = "workflow-phase-test-plan-stale";
-    let plan_rel = "docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md";
+    let plan_rel = "docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md";
     let base_branch = current_branch_name(repo);
 
     complete_workflow_fixture_execution(repo, state, plan_rel);
@@ -2132,31 +2363,31 @@ fn canonical_workflow_phase_routes_stale_test_plan_back_to_plan_eng_review() {
     );
 
     let phase_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "phase", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow phase for stale-test-plan routing fixture",
         ),
         "workflow phase for stale-test-plan routing fixture",
     );
     let handoff_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "handoff", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow handoff for stale-test-plan routing fixture",
         ),
         "workflow handoff for stale-test-plan routing fixture",
     );
     let gate_finish_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "gate", "finish", "--plan", plan_rel, "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow gate finish for stale-test-plan routing fixture",
         ),
         "workflow gate finish for stale-test-plan routing fixture",
@@ -2166,7 +2397,7 @@ fn canonical_workflow_phase_routes_stale_test_plan_back_to_plan_eng_review() {
     assert_eq!(phase_json["next_action"], "refresh_test_plan");
     assert_eq!(
         handoff_json["recommended_skill"],
-        "superpowers:plan-eng-review"
+        "featureforge:plan-eng-review"
     );
     assert_eq!(
         handoff_json["recommendation_reason"],
@@ -2186,7 +2417,7 @@ fn canonical_workflow_phase_routes_stale_review_back_to_requesting_code_review()
     let repo = repo_dir.path();
     let state = state_dir.path();
     let session_key = "workflow-phase-review-head-mismatch";
-    let plan_rel = "docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md";
+    let plan_rel = "docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md";
     let base_branch = current_branch_name(repo);
 
     complete_workflow_fixture_execution(repo, state, plan_rel);
@@ -2201,31 +2432,31 @@ fn canonical_workflow_phase_routes_stale_review_back_to_requesting_code_review()
     );
 
     let phase_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "phase", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow phase for stale-review routing fixture",
         ),
         "workflow phase for stale-review routing fixture",
     );
     let handoff_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "handoff", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow handoff for stale-review routing fixture",
         ),
         "workflow handoff for stale-review routing fixture",
     );
     let gate_finish_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "gate", "finish", "--plan", plan_rel, "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow gate finish for stale-review routing fixture",
         ),
         "workflow gate finish for stale-review routing fixture",
@@ -2235,17 +2466,14 @@ fn canonical_workflow_phase_routes_stale_review_back_to_requesting_code_review()
     assert_eq!(phase_json["next_action"], "request_code_review");
     assert_eq!(
         handoff_json["recommended_skill"],
-        "superpowers:requesting-code-review"
+        "featureforge:requesting-code-review"
     );
     assert_eq!(
         handoff_json["recommendation_reason"],
         "The latest code-review artifact does not match the current HEAD."
     );
     assert_eq!(gate_finish_json["allowed"], false);
-    assert_eq!(
-        gate_finish_json["failure_class"],
-        "ReviewArtifactNotFresh"
-    );
+    assert_eq!(gate_finish_json["failure_class"], "ReviewArtifactNotFresh");
     assert_eq!(
         gate_finish_json["reason_codes"][0],
         "review_artifact_head_mismatch"
@@ -2258,7 +2486,7 @@ fn canonical_workflow_phase_routes_review_resolved_browser_qa_to_qa_only() {
     let repo = repo_dir.path();
     let state = state_dir.path();
     let session_key = "workflow-phase-qa-pending";
-    let plan_rel = "docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md";
+    let plan_rel = "docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md";
     let base_branch = current_branch_name(repo);
 
     complete_workflow_fixture_execution(repo, state, plan_rel);
@@ -2267,21 +2495,21 @@ fn canonical_workflow_phase_routes_review_resolved_browser_qa_to_qa_only() {
     enable_session_decision(state, session_key);
 
     let phase_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "phase", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow phase for qa-pending routing fixture",
         ),
         "workflow phase for qa-pending routing fixture",
     );
     let handoff_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "handoff", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow handoff for qa-pending routing fixture",
         ),
         "workflow handoff for qa-pending routing fixture",
@@ -2289,7 +2517,7 @@ fn canonical_workflow_phase_routes_review_resolved_browser_qa_to_qa_only() {
 
     assert_eq!(phase_json["phase"], "qa_pending");
     assert_eq!(phase_json["next_action"], "run_qa_only");
-    assert_eq!(handoff_json["recommended_skill"], "superpowers:qa-only");
+    assert_eq!(handoff_json["recommended_skill"], "featureforge:qa-only");
     assert_eq!(
         handoff_json["recommendation_reason"],
         "Finish readiness requires a QA result artifact."
@@ -2302,7 +2530,7 @@ fn canonical_workflow_phase_routes_review_resolved_to_document_release_pending()
     let repo = repo_dir.path();
     let state = state_dir.path();
     let session_key = "workflow-phase-release-pending";
-    let plan_rel = "docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md";
+    let plan_rel = "docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md";
     let base_branch = current_branch_name(repo);
 
     complete_workflow_fixture_execution(repo, state, plan_rel);
@@ -2311,21 +2539,21 @@ fn canonical_workflow_phase_routes_review_resolved_to_document_release_pending()
     enable_session_decision(state, session_key);
 
     let phase_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "phase", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow phase for release-pending routing fixture",
         ),
         "workflow phase for release-pending routing fixture",
     );
     let handoff_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "handoff", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow handoff for release-pending routing fixture",
         ),
         "workflow handoff for release-pending routing fixture",
@@ -2335,7 +2563,7 @@ fn canonical_workflow_phase_routes_review_resolved_to_document_release_pending()
     assert_eq!(phase_json["next_action"], "run_document_release");
     assert_eq!(
         handoff_json["recommended_skill"],
-        "superpowers:document-release"
+        "featureforge:document-release"
     );
     assert_eq!(
         handoff_json["recommendation_reason"],
@@ -2349,7 +2577,7 @@ fn canonical_workflow_phase_routes_fully_ready_branch_to_finish() {
     let repo = repo_dir.path();
     let state = state_dir.path();
     let session_key = "workflow-phase-ready-for-finish";
-    let plan_rel = "docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md";
+    let plan_rel = "docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md";
     let base_branch = current_branch_name(repo);
 
     complete_workflow_fixture_execution(repo, state, plan_rel);
@@ -2359,31 +2587,31 @@ fn canonical_workflow_phase_routes_fully_ready_branch_to_finish() {
     enable_session_decision(state, session_key);
 
     let doctor_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "doctor", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow doctor for ready-for-finish routing fixture",
         ),
         "workflow doctor for ready-for-finish routing fixture",
     );
     let phase_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "phase", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow phase for ready-for-finish routing fixture",
         ),
         "workflow phase for ready-for-finish routing fixture",
     );
     let handoff_json = parse_json(
-        &run_rust_superpowers_with_env(
+        &run_rust_featureforge_with_env(
             repo,
             state,
             &["workflow", "handoff", "--json"],
-            &[("SUPERPOWERS_SESSION_KEY", session_key)],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "workflow handoff for ready-for-finish routing fixture",
         ),
         "workflow handoff for ready-for-finish routing fixture",
@@ -2394,7 +2622,7 @@ fn canonical_workflow_phase_routes_fully_ready_branch_to_finish() {
     assert_eq!(phase_json["next_action"], "finish_branch");
     assert_eq!(
         handoff_json["recommended_skill"],
-        "superpowers:finishing-a-development-branch"
+        "featureforge:finishing-a-development-branch"
     );
     assert_eq!(
         handoff_json["recommendation_reason"],

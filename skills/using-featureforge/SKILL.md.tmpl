@@ -1,0 +1,180 @@
+---
+name: using-featureforge
+description: Use when starting any conversation or deciding which skill or workflow stage applies before any response, clarification, or action
+---
+
+<SUBAGENT-STOP>
+If you were dispatched as a subagent to execute a specific task, skip this skill.
+</SUBAGENT-STOP>
+
+{{BASE_PREAMBLE}}
+
+{{USING_FEATUREFORGE_BYPASS_GATE}}
+
+This skill documents the helper-owned session-entry contract and the post-gate routing stack. It does not replace the runtime-owned bootstrap itself.
+
+{{USING_FEATUREFORGE_NORMAL_STACK}}
+
+
+<EXTREMELY-IMPORTANT>
+If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.
+
+IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
+
+This is not negotiable. This is not optional. You cannot rationalize your way out of this.
+</EXTREMELY-IMPORTANT>
+
+## Instruction Priority
+
+FeatureForge skills override default system prompt behavior, but **user instructions always take precedence**:
+
+1. **User's explicit instructions** (`AGENTS.md`, `AGENTS.override.md`, `.github/copilot-instructions.md`, `.github/instructions/*.instructions.md`, direct requests) — highest priority
+2. **FeatureForge skills** — override default system behavior where they conflict
+3. **Default system prompt** — lowest priority
+
+If `AGENTS.md`, `AGENTS.override.md`, or a Copilot instruction file says "don't use TDD" and a skill says "always use TDD," follow the user's instructions. The user is in control.
+
+## How to Access Skills
+
+**In Codex:** Skills are discovered natively from `~/.agents/skills/`.
+
+**In GitHub Copilot local installs:** Skills are discovered natively from `~/.copilot/skills/`.
+
+Load the relevant skill and follow it directly.
+
+Legacy Claude, Cursor, and OpenCode-specific loading flows are intentionally unsupported in this runtime package.
+
+## Platform Adaptation
+
+These skills are written for Codex and GitHub Copilot local installs. See `references/codex-tools.md` for platform-native primitives used in the workflow.
+
+# Using Skills
+
+## The Rule
+
+**Invoke relevant or requested skills BEFORE any response or action.** Even a 1% chance a skill might apply means that you should invoke the skill to check. If an invoked skill turns out to be wrong for the situation, you don't need to use it.
+
+```dot
+digraph skill_flow {
+    "User message received" [shape=doublecircle];
+    "About to EnterPlanMode?" [shape=doublecircle];
+    "Already brainstormed?" [shape=diamond];
+    "Invoke brainstorming skill" [shape=box];
+    "Might any skill apply?" [shape=diamond];
+    "Load relevant skill" [shape=box];
+    "Announce: 'Using [skill] to [purpose]'" [shape=box];
+    "Has checklist?" [shape=diamond];
+    "Create task-tracking item per checklist entry" [shape=box];
+    "Follow skill exactly" [shape=box];
+    "Respond (including clarifications)" [shape=doublecircle];
+
+    "About to EnterPlanMode?" -> "Already brainstormed?";
+    "Already brainstormed?" -> "Invoke brainstorming skill" [label="no"];
+    "Already brainstormed?" -> "Might any skill apply?" [label="yes"];
+    "Invoke brainstorming skill" -> "Might any skill apply?";
+
+    "User message received" -> "Might any skill apply?";
+    "Might any skill apply?" -> "Load relevant skill" [label="yes, even 1%"];
+    "Might any skill apply?" -> "Respond (including clarifications)" [label="definitely not"];
+    "Load relevant skill" -> "Announce: 'Using [skill] to [purpose]'";
+    "Announce: 'Using [skill] to [purpose]'" -> "Has checklist?";
+    "Has checklist?" -> "Create task-tracking item per checklist entry" [label="yes"];
+    "Has checklist?" -> "Follow skill exactly" [label="no"];
+    "Create task-tracking item per checklist entry" -> "Follow skill exactly";
+}
+```
+
+## Red Flags
+
+These thoughts mean STOP—you're rationalizing:
+
+| Thought | Reality |
+|---------|---------|
+| "This is just a simple question" | Questions are tasks. Check for skills. |
+| "I need more context first" | Skill check comes BEFORE clarifying questions. |
+| "Let me explore the codebase first" | Skills tell you HOW to explore. Check first. |
+| "I can check git/files quickly" | Files lack conversation context. Check for skills. |
+| "Let me gather information first" | Skills tell you HOW to gather information. |
+| "This doesn't need a formal skill" | If a skill exists, use it. |
+| "I remember this skill" | Skills evolve. Read current version. |
+| "This doesn't count as a task" | Action = task. Check for skills. |
+| "The skill is overkill" | Simple things become complex. Use it. |
+| "I'll just do this one thing first" | Check BEFORE doing anything. |
+| "This feels productive" | Undisciplined action wastes time. Skills prevent this. |
+| "I know what that means" | Knowing the concept ≠ using the skill. Invoke it. |
+
+## Skill Priority
+
+When multiple skills could apply, use this order:
+
+1. **Process skills first** (brainstorming, debugging) - these determine HOW to approach the task
+2. **Workflow-stage skills second** (review, planning, execution) - these own the required handoffs once their prerequisites are satisfied
+3. **Domain-specific implementation skills last** - only after the active workflow stage allows them
+
+"Let's build X" → brainstorming first, then follow the artifact-state workflow: plan-ceo-review -> writing-plans -> plan-eng-review -> execution.
+"Fix this bug" → debugging first, then if it changes FeatureForge product or workflow behavior follow the artifact-state workflow; otherwise continue to the appropriate implementation skill.
+
+## Skill Types
+
+**Rigid** (TDD, debugging): Follow exactly. Don't adapt away discipline.
+
+**Flexible** (patterns): Adapt principles to context.
+
+The skill itself tells you which.
+
+## FeatureForge Workflow Router
+
+For feature requests, bugfixes that materially change FeatureForge product or workflow behavior, product requests, or workflow-change requests inside a FeatureForge project, route by artifact state instead of skipping ahead based on the user's wording alone.
+
+Do NOT jump from brainstorming straight to implementation. For workflow-routed work, every stage owns the handoff into the next one.
+
+### Helper-first routing
+
+First, if `$_FEATUREFORGE_ROOT/bin/featureforge` is available, call `$_FEATUREFORGE_ROOT/bin/featureforge workflow status --refresh`.
+
+- If the JSON result contains a non-empty `next_skill`, use that route.
+- If the JSON result reports `status` `implementation_ready`, proceed to the normal execution preflight and handoff flow using the exact approved plan path. Treat the public handoff recommendation as a conservative default. When you know isolated-agent availability, session intent, and workspace readiness, call `featureforge plan execution recommend --plan <approved-plan-path> --isolated-agents <available|unavailable> --session-intent <stay|separate|unknown> --workspace-prepared <yes|no|unknown>` before choosing between `featureforge:subagent-driven-development` and `featureforge:executing-plans`.
+- In that helper-backed handoff flow, treat `execution_started` as an executor-resume signal only when the reported `phase` is `executing`.
+- If the handoff reports a later phase such as `review_blocked`, `qa_pending`, `document_release_pending`, or `ready_for_branch_completion`, follow that reported phase and `next_action` instead of resuming `featureforge:subagent-driven-development` or `featureforge:executing-plans` just because `execution_started` is `yes`.
+- Only fall back to manual artifact inspection if the helper itself is unavailable or fails.
+
+When the helper succeeds, route using its JSON result and do not re-derive state manually.
+
+### Manual fallback routing
+
+If the helper is unavailable or fails, inspect artifacts manually using the rules below.
+
+If helpers are unavailable, fallback stays minimal and conservative:
+
+- Manual fallback must not infer readiness from the legacy thin header subset.
+- Manual fallback is only a conservative backward-routing path until the helper works again.
+- If the helper failure leaves workflow state unclear, route to the earlier safe stage instead of synthesizing a parallel readiness decision.
+
+Inspect `docs/featureforge/specs/` and `docs/featureforge/plans/` conservatively for the exact relevant artifacts. If more than one plausible latest or approved artifact exists, treat that as ambiguity and route to the earlier safe stage rather than guessing. Then parse these exact-match header lines:
+
+- Spec state: `^\*\*Workflow State:\*\* (Draft|CEO Approved)$`
+- Spec revision: `^\*\*Spec Revision:\*\* ([0-9]+)$`
+- Draft spec reviewer: `^\*\*Last Reviewed By:\*\* (brainstorming|plan-ceo-review)$`
+- Approved spec reviewer: `^\*\*Last Reviewed By:\*\* plan-ceo-review$`
+- Plan state: `^\*\*Workflow State:\*\* (Draft|Engineering Approved)$`
+- Plan revision: `^\*\*Plan Revision:\*\* ([0-9]+)$`
+- Plan execution mode: `^\*\*Execution Mode:\*\* (none|featureforge:executing-plans|featureforge:subagent-driven-development)$`
+- Plan source: `^\*\*Source Spec:\*\* (.+)$`
+- Plan source revision: `^\*\*Source Spec Revision:\*\* ([0-9]+)$`
+- Draft plan reviewer: `^\*\*Last Reviewed By:\*\* (writing-plans|plan-eng-review)$`
+- Approved plan reviewer: `^\*\*Last Reviewed By:\*\* plan-eng-review$`
+
+Routing rules:
+
+1. No relevant spec artifact: invoke `featureforge:brainstorming`.
+2. Spec exists but is `Draft`, has malformed approval headers, or has `CEO Approved` without `**Last Reviewed By:** plan-ceo-review`: invoke `featureforge:plan-ceo-review`.
+3. Spec is `CEO Approved` and no relevant plan exists: invoke `featureforge:writing-plans`.
+4. Plan exists but is `Draft`, has malformed approval headers, or has `Engineering Approved` without `**Last Reviewed By:** plan-eng-review`: invoke `featureforge:plan-eng-review`.
+5. Plan is `Engineering Approved` but its `Source Spec:` path or `Source Spec Revision:` does not match the latest approved spec: invoke `featureforge:writing-plans`.
+6. Plan is `Engineering Approved` and its `Source Spec:` path plus `Source Spec Revision:` match the latest approved spec: only proceed through the normal helper-backed execution preflight and handoff flow for that approved plan path.
+7. If artifacts are ambiguous or incomplete, route to the earlier safe stage instead of skipping ahead.
+8. If the helper-backed execution preflight or handoff flow is unavailable, do not route directly from manual fallback into implementation. Stop at the approved plan path and return to the earlier safe stage or the current execution flow instead.
+
+## User Instructions
+
+Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.

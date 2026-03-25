@@ -3,9 +3,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-TARGET_KEY="${SUPERPOWERS_PREBUILT_TARGET:-darwin-arm64}"
-RUST_TARGET="${SUPERPOWERS_PREBUILT_RUST_TARGET:-aarch64-apple-darwin}"
-BINARY_NAME="${SUPERPOWERS_PREBUILT_BINARY:-superpowers}"
+TARGET_KEY="${FEATUREFORGE_PREBUILT_TARGET:-darwin-arm64}"
+RUST_TARGET="${FEATUREFORGE_PREBUILT_RUST_TARGET:-aarch64-apple-darwin}"
+BINARY_NAME="${FEATUREFORGE_PREBUILT_BINARY:-featureforge}"
 VERSION="$(tr -d '[:space:]' < "$REPO_ROOT/VERSION")"
 OUTPUT_DIR="$REPO_ROOT/bin/prebuilt/$TARGET_KEY"
 OUTPUT_PATH="$OUTPUT_DIR/$BINARY_NAME"
@@ -23,7 +23,7 @@ command -v python3 >/dev/null 2>&1 || {
 }
 
 cd "$REPO_ROOT"
-cargo build --release --target "$RUST_TARGET" --bin superpowers
+cargo build --release --target "$RUST_TARGET" --bin featureforge
 
 mkdir -p "$OUTPUT_DIR"
 cp "$BUILD_PATH" "$OUTPUT_PATH"

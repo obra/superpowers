@@ -7,9 +7,9 @@ import {
   buildBaseShellLines,
   buildReviewShellLines,
   generatePreamble,
-  buildUsingSuperpowersShellLines,
-  buildUsingSuperpowersBypassGateSection,
-  buildUsingSuperpowersNormalStackSection,
+  buildUsingFeatureForgeShellLines,
+  buildUsingFeatureForgeBypassGateSection,
+  buildUsingFeatureForgeNormalStackSection,
 } from '../../scripts/gen-skill-docs.mjs';
 
 test('insertGeneratedHeader inserts the generated header after YAML frontmatter', () => {
@@ -56,32 +56,32 @@ test('base and review shell builders include their expected contract lines', () 
   assert.equal(buildReviewShellLines().some((line) => line.includes('_TODOS_FORMAT=')), true);
 });
 
-test('shared shell builders detect and invoke the canonical superpowers binary', () => {
+test('shared shell builders detect and invoke the canonical featureforge binary', () => {
   const rootDetection = buildRootDetection().join('\n');
   const baseShell = buildBaseShellLines().join('\n');
 
-  assert.match(rootDetection, /candidate\/bin\/superpowers/);
-  assert.doesNotMatch(rootDetection, /superpowers-update-check/);
-  assert.doesNotMatch(rootDetection, /superpowers-config/);
+  assert.match(rootDetection, /candidate\/bin\/featureforge/);
+  assert.doesNotMatch(rootDetection, /featureforge-update-check/);
+  assert.doesNotMatch(rootDetection, /featureforge-config/);
 
-  assert.match(baseShell, /bin\/superpowers" update-check/);
-  assert.match(baseShell, /bin\/superpowers" config get superpowers_contributor/);
-  assert.doesNotMatch(baseShell, /superpowers-update-check/);
-  assert.doesNotMatch(baseShell, /superpowers-config/);
+  assert.match(baseShell, /bin\/featureforge" update-check/);
+  assert.match(baseShell, /bin\/featureforge" config get featureforge_contributor/);
+  assert.doesNotMatch(baseShell, /featureforge-update-check/);
+  assert.doesNotMatch(baseShell, /featureforge-config/);
 });
 
-test('using-superpowers bypass helpers render the decision-state contract', () => {
-  assert.equal(buildUsingSuperpowersShellLines().some((line) => line.includes('session-entry/using-superpowers')), true);
-  const bypassGate = buildUsingSuperpowersBypassGateSection();
-  assert.match(bypassGate, /superpowers session-entry resolve --message-file <path>/);
-  assert.doesNotMatch(bypassGate, /superpowers-session-entry/);
+test('using-featureforge bypass helpers render the decision-state contract', () => {
+  assert.equal(buildUsingFeatureForgeShellLines().some((line) => line.includes('session-entry/using-featureforge')), true);
+  const bypassGate = buildUsingFeatureForgeBypassGateSection();
+  assert.match(bypassGate, /featureforge session-entry resolve --message-file <path>/);
+  assert.doesNotMatch(bypassGate, /featureforge-session-entry/);
   assert.match(bypassGate, /enabled/);
   assert.match(bypassGate, /bypassed/);
-  const normalStack = buildUsingSuperpowersNormalStackSection();
-  assert.match(normalStack, /bin\/superpowers" update-check/);
-  assert.match(normalStack, /bin\/superpowers" config get superpowers_contributor/);
-  assert.doesNotMatch(normalStack, /superpowers-update-check/);
-  assert.doesNotMatch(normalStack, /superpowers-config/);
+  const normalStack = buildUsingFeatureForgeNormalStackSection();
+  assert.match(normalStack, /bin\/featureforge" update-check/);
+  assert.match(normalStack, /bin\/featureforge" config get featureforge_contributor/);
+  assert.doesNotMatch(normalStack, /featureforge-update-check/);
+  assert.doesNotMatch(normalStack, /featureforge-config/);
   assert.match(normalStack, /_SESSIONS=/);
   assert.match(normalStack, /_CONTRIB=/);
 });
@@ -99,6 +99,6 @@ test('generated preambles include the shared Search Before Building section for 
     assert.match(preamble, /Never search secrets, customer data, unsanitized stack traces, private URLs, internal hostnames, internal codenames, raw SQL or log payloads, or private file paths or infrastructure identifiers\./);
     assert.match(preamble, /If search is unavailable, disallowed, or unsafe, say so and proceed with repo-local evidence and in-distribution knowledge\./);
     assert.match(preamble, /If safe sanitization is not possible, skip external search\./);
-    assert.match(preamble, /See `\$_SUPERPOWERS_ROOT\/references\/search-before-building\.md`\./);
+    assert.match(preamble, /See `\$_FEATUREFORGE_ROOT\/references\/search-before-building\.md`\./);
   }
 });

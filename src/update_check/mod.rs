@@ -9,7 +9,7 @@ use serde::Serialize;
 use crate::cli::update_check::UpdateCheckCli;
 use crate::config;
 use crate::diagnostics::{DiagnosticError, FailureClass};
-use crate::paths::{superpowers_home_dir, write_atomic as write_atomic_file};
+use crate::paths::{featureforge_home_dir, write_atomic as write_atomic_file};
 
 const UP_TO_DATE_TTL: Duration = Duration::from_secs(60 * 60);
 const UPGRADE_AVAILABLE_TTL: Duration = Duration::from_secs(60 * 60 * 12);
@@ -190,17 +190,17 @@ pub fn write_update_check_schema(output_dir: &Path) -> Result<(), DiagnosticErro
 
 fn discover_paths() -> Result<UpdateCheckPaths, DiagnosticError> {
     let state_dir = config::state_dir();
-    let install_dir = env::var_os("SUPERPOWERS_DIR")
+    let install_dir = env::var_os("FEATUREFORGE_DIR")
         .map(PathBuf::from)
         .or_else(default_install_dir)
         .ok_or_else(|| {
             DiagnosticError::new(
                 FailureClass::UpdateCheckStateFailed,
-                "Could not determine the Superpowers install root for update-check.",
+                "Could not determine the FeatureForge install root for update-check.",
             )
         })?;
-    let remote_url = env::var("SUPERPOWERS_REMOTE_URL").unwrap_or_else(|_| {
-        String::from("https://raw.githubusercontent.com/dmulcahey/superpowers/main/VERSION")
+    let remote_url = env::var("FEATUREFORGE_REMOTE_URL").unwrap_or_else(|_| {
+        String::from("https://raw.githubusercontent.com/dmulcahey/featureforge/main/VERSION")
     });
     Ok(UpdateCheckPaths {
         state_dir,
@@ -214,7 +214,7 @@ fn default_install_dir() -> Option<PathBuf> {
     if current_dir.join("VERSION").is_file() {
         return Some(current_dir);
     }
-    superpowers_home_dir().map(|home| home.join(".superpowers").join("install"))
+    featureforge_home_dir().map(|home| home.join(".featureforge").join("install"))
 }
 
 fn read_local_version(install_dir: &Path) -> Result<String, DiagnosticError> {

@@ -67,7 +67,7 @@ Each persisted section packet must record the source artifact fingerprint for th
 
 ## persisted packet location
 
-Persist accelerator section packets under `~/.superpowers/projects/<slug>/...`.
+Persist accelerator section packets under `~/.featureforge/projects/<slug>/...`.
 
 ## approved-and-applied section-boundary resume rule
 

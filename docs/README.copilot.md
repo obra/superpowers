@@ -1,234 +1,81 @@
-# Superpowers for GitHub Copilot Local Installs
+# FeatureForge for GitHub Copilot Local Installs
 
-Guide for using Superpowers with GitHub Copilot local installs via native skill and custom-agent discovery backed by the shared Superpowers runtime checkout.
+This document is the GitHub Copilot-specific overview for the FeatureForge runtime.
 
-## Quick Install
+## Install
 
-Tell GitHub Copilot:
+Use the checked-in installer instructions in [.copilot/INSTALL.md](../.copilot/INSTALL.md). That file is the source of truth for symlink, copy, and platform-specific setup details.
 
-```
-Fetch and follow instructions from https://raw.githubusercontent.com/dmulcahey/superpowers/refs/heads/main/.copilot/INSTALL.md
-```
+For a fresh Copilot session, the minimal instruction is:
 
-## Manual Installation
-
-### Prerequisites
-
-- GitHub Copilot CLI or another local GitHub Copilot install that supports local skills and custom agents
-- Git
-
-### Steps
-
-1. Clone the repo into the shared runtime location:
-   ```bash
-   git clone https://github.com/dmulcahey/superpowers.git ~/.superpowers/install
-   ```
-
-2. Create the skills symlink:
-   ```bash
-   mkdir -p ~/.copilot/skills
-   ln -s ~/.superpowers/install/skills ~/.copilot/skills/superpowers
-   ```
-
-3. Install the code-reviewer custom agent from the canonical agents directory:
-   ```bash
-   mkdir -p ~/.copilot/agents
-   ln -s ~/.superpowers/install/agents/code-reviewer.md ~/.copilot/agents/code-reviewer.agent.md
-   ```
-
-4. Restart GitHub Copilot so it discovers the new skills and agent.
-
-### Windows
-
-Use a junction for skills and copy the agent file:
-
-```powershell
-New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.copilot\skills"
-cmd /c mklink /J "$env:USERPROFILE\.copilot\skills\superpowers" "$env:USERPROFILE\.superpowers\install\skills"
-
-New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.copilot\agents"
-Copy-Item "$env:USERPROFILE\.superpowers\install\agents\code-reviewer.md" "$env:USERPROFILE\.copilot\agents\code-reviewer.agent.md" -Force
+```text
+Follow the checked-in instructions in .copilot/INSTALL.md from this repository.
 ```
 
-## Migrating Existing Installs
+## Discovery Layout
 
-If you already have `~/.codex/superpowers` or `~/.copilot/superpowers`, migrate them into the shared checkout with:
+FeatureForge installs through one shared checkout:
 
-```bash
-tmpdir=$(mktemp -d)
-git clone --depth 1 https://github.com/dmulcahey/superpowers.git "$tmpdir/superpowers"
-"$tmpdir/superpowers/bin/superpowers" install migrate
-rm -rf "$tmpdir"
-```
+- `~/.featureforge/install/skills`
+- `~/.featureforge/install/agents/code-reviewer.md`
 
-If `~/.superpowers/install` already exists, run `~/.superpowers/install/bin/superpowers install migrate` instead.
+GitHub Copilot discovers those artifacts through:
 
-**Windows (PowerShell):**
-```powershell
-if (Test-Path "$env:USERPROFILE\.superpowers\install") {
-  & "$env:USERPROFILE\.superpowers\install\bin\superpowers.exe" install migrate
-} else {
-  $tmpRoot = Join-Path $env:TEMP "superpowers-migrate"
-  $tmpDir = Join-Path $tmpRoot ([guid]::NewGuid().ToString())
-  git clone --depth 1 https://github.com/dmulcahey/superpowers.git (Join-Path $tmpDir "superpowers")
-  & (Join-Path $tmpDir "superpowers\bin\superpowers.exe") install migrate
-  Remove-Item -Recurse -Force $tmpDir
-}
-```
+- `~/.copilot/skills/featureforge -> ~/.featureforge/install/skills`
+- `~/.copilot/agents/code-reviewer.agent.md -> ~/.featureforge/install/agents/code-reviewer.md`
 
-Migration only consolidates the checkout. After migrating, continue with steps 2 and 3 to create or refresh `~/.copilot/skills/superpowers` and `~/.copilot/agents/code-reviewer.agent.md`, then restart GitHub Copilot.
+On Windows, the reviewer artifact is typically copied instead of symlinked. Refresh that copy after updates.
 
-## How It Works
+## Runtime State
 
-GitHub Copilot local installs discover skills from `~/.copilot/skills/` and custom agents from `~/.copilot/agents/`. Superpowers keeps `skills/` and `agents/` canonical in the repo and installs them into those discovery locations.
+Runtime state lives under `~/.featureforge/`.
 
-```
-~/.copilot/skills/superpowers/ → ~/.superpowers/install/skills/
-Unix-like: ~/.copilot/agents/code-reviewer.agent.md → ~/.superpowers/install/agents/code-reviewer.md
-Windows: copy ~/.superpowers/install/agents/code-reviewer.md to ~/.copilot/agents/code-reviewer.agent.md
-```
+- config: `~/.featureforge/config/config.yaml`
+- sessions: `~/.featureforge/sessions/`
+- project artifacts and workflow manifests: `~/.featureforge/projects/`
+- contributor logs: `~/.featureforge/contributor-logs/`
 
-On Unix-like installs, the Copilot agent is symlinked to the shared checkout.
+## Command Families
 
-On Windows, the Copilot agent is copied from the shared checkout and must be refreshed after updates.
+The supported command families are:
 
-## Usage
+- `featureforge session-entry`
+- `featureforge workflow`
+- `featureforge repo-safety`
+- `featureforge plan contract`
+- `featureforge plan execution`
+- `featureforge config`
+- `featureforge update-check`
+- `featureforge repo slug`
 
-Skills are discovered automatically when:
-- you mention a skill by name
-- the task matches a skill's description
-- the runtime-owned `superpowers session-entry` gate resolves the first-turn session decision, then `using-superpowers` routes the enabled turn by workflow state
+## Workflow Summary
 
-The `code-reviewer` agent is available through Copilot's local custom-agent support after installation.
-
-## Default Workflow
-
-Superpowers' default planning pipeline is:
-
-`brainstorming -> plan-ceo-review -> writing-plans -> plan-eng-review -> implementation`
+FeatureForge routes product work conservatively from repo-visible artifacts.
 
 Accelerated review is an opt-in branch inside `plan-ceo-review` and `plan-eng-review`, not a separate workflow stage.
 
-`plan-ceo-review` now carries the upstream founder-review shape more closely: it supports four scope modes including `Selective Expansion`, can run a UI design-intent pass for UI-bearing specs, and writes an additive trailing `CEO Review Summary` into the authoritative spec. That summary is context for downstream work, not a replacement for the approved spec headers or `Requirement Index`.
+- `using-featureforge` is the human-readable entry router after `featureforge session-entry`
+- `featureforge workflow status --refresh` re-derives the safe next stage from active specs and plans
+- `featureforge plan contract` compiles approved markdown into exact execution and review inputs
+- `featureforge plan execution recommend --plan <approved-plan-path>` selects the execution mode before work starts
 
-`plan-eng-review` now writes an additive trailing `Engineering Review Summary`, expands the branch-scoped QA handoff around a coverage graph and browser matrix, and can run an optional outside-voice challenge. `qa-only` may consume those richer sections as context, but current required artifact headers and branch freshness still govern finish readiness.
+Default planning pipeline:
 
-Only the user can initiate accelerated review, and section approval plus final approval remain human-owned even when the review uses reviewer subagents and persisted section packets.
-
-During implementation, either `subagent-driven-development` or `executing-plans` starts from an engineering-approved current plan, runs a workspace-readiness preflight, and then drives task execution. Those execution and review stages now consume helper-built task packets derived from the approved markdown contract. Workspace preparation is the user's responsibility; invoke `using-git-worktrees` manually when you want isolated workspace management. The completion flow runs `requesting-code-review`, uses the current-branch test-plan artifact to decide whether `qa-only` is required, requires that current-branch test-plan artifact for helper-backed finish readiness, requires the `document-release` handoff for workflow-routed branch completion, and requires a passing `gate-finish` before final branch cleanup or PR handoff.
-
-## Search Before Building
-
-Generated non-router skills include a shared `Search Before Building` preamble. It applies in places like `brainstorming`, CEO and ENG review, debugging, review reception and dispatch, and optional QA issue lookup. It does not run in `using-superpowers`, which stays focused on routing first.
-
-The check uses three lenses:
-
-- `Layer 1`: built-ins, official guidance, and existing repo-native solutions
-- `Layer 2`: current external practice and known footguns
-- `Layer 3`: first-principles reasoning for this repo, this user, and this problem
-
-External search is optional, not mandatory. If network access is unavailable, unnecessary, disallowed, or unsafe, the workflow continues with repo-local evidence and existing model knowledge. `Layer 2` is input, not authority, so outside search never outranks repo truth, approved artifacts, or explicit user instructions.
-
-Privacy rules are part of the contract:
-
-- never search secrets, customer data, unsanitized stack traces, private URLs, internal hostnames, internal codenames, raw SQL or log payloads, or private file paths or infrastructure identifiers
-- product ideation uses generalized category terms only
-- debugging searches must sanitize down to a generic error type plus framework or library context
-- if safe sanitization is not possible, skip external search
-- only `brainstorming` asks one explicit permission question first when the work is sensitive or stealthy
-
-The canonical reference is [references/search-before-building.md](../references/search-before-building.md).
-
-## Runtime Commands
-
-Runtime helper state lives in `~/.superpowers/`. Generated skill preambles use this directory for session markers, contributor logs, update-check cache files, and project-scoped artifacts under `~/.superpowers/projects/`.
-
-Superpowers installs one runtime binary at `~/.superpowers/install/bin/superpowers` on Unix-like systems and `~/.superpowers/install/bin/superpowers.exe` on Windows. The supported command families are:
-
-- `superpowers session-entry`
-- `superpowers repo-safety`
-- `superpowers plan contract`
-- `superpowers plan execution`
-- `superpowers workflow`
-- `superpowers config`
-- `superpowers update-check`
-- `superpowers install migrate`
-- `superpowers repo slug`
-
-Supported entry paths use `superpowers session-entry` to resolve `enabled`, `bypassed`, or `needs_user_choice` before the normal `using-superpowers` stack starts. Missing or malformed decision state fails closed to `needs_user_choice`; `using-superpowers` documents that contract but does not own it by itself.
-
-Generated repo-writing workflow skills use `superpowers repo-safety` to block repo writes on protected branches by default. Spec writes, plan writes, approval-header edits, release-doc updates, execution task slices, and branch-finishing commands must either run on a non-protected branch or carry an explicit task-scoped approval that passes the re-check.
-
-Generated planning, execution, and review skills use `superpowers plan contract` to run authoritative `analyze-plan --format json` checks and to build task-packet context. Repo markdown remains authoritative; the runtime only enforces and compiles the approved markdown into exact execution and review inputs.
-
-`superpowers workflow` is the supported read-only workflow inspection surface. Use `status`, `next`, `artifacts`, `explain`, or `help` for the baseline inspection surfaces. The same public CLI also exposes `phase`, `doctor`, `handoff`, `preflight`, `gate review`, and `gate finish` when you need deeper operator inspection directly from the terminal. These commands stay read-only: they do not create, repair, or rewrite branch-scoped manifests. `phase`, `doctor`, `handoff`, `preflight`, `gate review`, and `gate finish` support `--json` for operator tooling. Before execution starts, `next` still stops at the execution preflight boundary for the approved plan instead of calling `superpowers plan execution recommend`. Once execution has already started for that plan revision, both `next` and `handoff` return the current execution state instead of a fresh recommendation.
-
-Generated workflow skills call `$_SUPERPOWERS_ROOT/bin/superpowers workflow status --refresh` first to resolve the conservative next stage, including before spec/plan docs exist. Default `status` output is JSON for machine consumers; `status --summary` is a human-oriented one-line view. `reason_codes` plus `diagnostics` are the structured diagnostic contract, the branch-scoped manifest remains rebuildable, and repo docs remain authoritative for approval state.
-
-Optional: enable contributor mode for future sessions with:
-
-```bash
-~/.superpowers/install/bin/superpowers config set superpowers_contributor true
-```
-
-**Windows (PowerShell):**
-```powershell
-& "$env:USERPROFILE\.superpowers\install\bin\superpowers.exe" config set superpowers_contributor true
-```
-
-If you disable update notices, re-enable them with:
-
-```bash
-~/.superpowers/install/bin/superpowers config set update_check true
-```
-
-**Windows (PowerShell):**
-```powershell
-& "$env:USERPROFILE\.superpowers\install\bin\superpowers.exe" config set update_check true
-```
-
-## Personal Skills and Agents
-
-Create your own skills in `~/.copilot/skills/` and your own agents in `~/.copilot/agents/`.
+`featureforge:brainstorming -> featureforge:plan-ceo-review -> featureforge:writing-plans -> featureforge:plan-eng-review`
 
 ## Updating
 
+Update the shared checkout with:
+
 ```bash
-cd ~/.superpowers/install && git pull
+git -C ~/.featureforge/install pull
 ```
 
-If you copied the agent file on Windows, copy ~/.superpowers/install/agents/code-reviewer.md into ~/.copilot/agents/code-reviewer.agent.md again after updating.
-
-If you migrated from `~/.codex/superpowers` or `~/.copilot/superpowers`, rerun `~/.superpowers/install/bin/superpowers install migrate` after updating if you need to restore the compatibility links. In PowerShell, use `& "$env:USERPROFILE\.superpowers\install\bin\superpowers.exe" install migrate`.
-
-Generated skill preambles run `~/.superpowers/install/bin/superpowers update-check` automatically when that install root is active, so new sessions can surface `UPGRADE_AVAILABLE` or `JUST_UPGRADED` without extra setup.
+Then refresh any copied reviewer artifact if your platform does not use symlinks.
 
 ## Troubleshooting
 
-### Skills not showing up
-
-1. Verify the symlink: `ls -la ~/.copilot/skills/superpowers`
-2. Check skills exist: `ls ~/.superpowers/install/skills`
-3. Restart GitHub Copilot
-
-**Windows (PowerShell):**
-1. Verify the junction: `Get-Item "$env:USERPROFILE\.copilot\skills\superpowers"`
-2. Check skills exist: `Get-ChildItem "$env:USERPROFILE\.superpowers\install\skills"`
-3. Restart GitHub Copilot
-
-### Agent not showing up
-
-1. Verify the agent file: `ls -la ~/.copilot/agents/code-reviewer.agent.md`
-2. Check the source exists: `ls ~/.superpowers/install/agents/code-reviewer.md`
-3. Restart GitHub Copilot
-
-**Windows (PowerShell):**
-1. Verify the copied agent file: `Get-Item "$env:USERPROFILE\.copilot\agents\code-reviewer.agent.md"`
-2. Check the source exists: `Get-Item "$env:USERPROFILE\.superpowers\install\agents\code-reviewer.md"`
-3. If you updated Superpowers, rerun the Windows install step that copies `code-reviewer.md` into Copilot's agent directory
-4. Restart GitHub Copilot
-
-## Getting Help
-
-- Report issues: https://github.com/dmulcahey/superpowers/issues
-- Main documentation: https://github.com/dmulcahey/superpowers
+1. Verify the skills link exists: `ls -la ~/.copilot/skills/featureforge`
+2. Verify the reviewer artifact exists: `ls -la ~/.copilot/agents/code-reviewer.agent.md`
+3. Verify the runtime responds: `~/.featureforge/install/bin/featureforge workflow help`
+4. Re-run the checked-in install instructions if any link or copied artifact is missing

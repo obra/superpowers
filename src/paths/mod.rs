@@ -101,15 +101,15 @@ pub fn branch_storage_key(value: &str) -> String {
     format!("{normalized}-{}", &digest[..12])
 }
 
-pub fn superpowers_home_dir() -> Option<PathBuf> {
+pub fn featureforge_home_dir() -> Option<PathBuf> {
     resolve_home_dir(|key| env::var_os(key))
 }
 
-pub fn superpowers_state_dir() -> PathBuf {
-    env::var_os("SUPERPOWERS_STATE_DIR")
+pub fn featureforge_state_dir() -> PathBuf {
+    env::var_os("FEATUREFORGE_STATE_DIR")
         .map(PathBuf::from)
-        .or_else(|| superpowers_home_dir().map(|home| home.join(".superpowers")))
-        .unwrap_or_else(|| PathBuf::from(".superpowers"))
+        .or_else(|| featureforge_home_dir().map(|home| home.join(".featureforge")))
+        .unwrap_or_else(|| PathBuf::from(".featureforge"))
 }
 
 pub fn write_atomic(path: &Path, contents: impl AsRef<[u8]>) -> std::io::Result<()> {

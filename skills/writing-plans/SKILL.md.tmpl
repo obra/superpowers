@@ -1,6 +1,6 @@
 ---
 name: writing-plans
-description: Use when you have a CEO-approved Superpowers spec for a multi-step task and need to write the implementation plan before touching code
+description: Use when you have a CEO-approved FeatureForge spec for a multi-step task and need to write the implementation plan before touching code
 ---
 
 {{BASE_PREAMBLE}}
@@ -16,12 +16,12 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
+**Save plans to:** `docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
 - Before writing the plan, record the intended plan path with `expect`:
 
 ```bash
-"$_SUPERPOWERS_ROOT/bin/superpowers" workflow expect --artifact plan --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md
+"$_FEATUREFORGE_ROOT/bin/featureforge" workflow expect --artifact plan --path docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md
 ```
 
 ## Protected-Branch Repo-Write Gate
@@ -29,16 +29,16 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 Before writing or updating the plan file on disk, run the shared repo-safety preflight for the exact plan-writing scope:
 
 ```bash
-superpowers repo-safety check --intent write --stage superpowers:writing-plans --task-id <current-plan-write> --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target plan-artifact-write
+featureforge repo-safety check --intent write --stage featureforge:writing-plans --task-id <current-plan-write> --path docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md --write-target plan-artifact-write
 ```
 
 - If the helper returns `allowed`, continue with the plan write.
-- If it returns `blocked`, name the branch, the stage, and the blocking `failure_class`, then route to either a feature branch / `superpowers:using-git-worktrees` or explicit user approval for this exact plan-writing scope.
+- If it returns `blocked`, name the branch, the stage, and the blocking `failure_class`, then route to either a feature branch / `featureforge:using-git-worktrees` or explicit user approval for this exact plan-writing scope.
 - If the user explicitly approves writing this plan on the current protected branch, approve the full protected-branch task scope you intend to use, including the plan path and any follow-on git targets that are part of the same task slice:
 
 ```bash
-superpowers repo-safety approve --stage superpowers:writing-plans --task-id <current-plan-write> --reason "<explicit user approval>" --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target plan-artifact-write [--write-target git-commit]
-superpowers repo-safety check --intent write --stage superpowers:writing-plans --task-id <current-plan-write> --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target plan-artifact-write [--write-target git-commit]
+featureforge repo-safety approve --stage featureforge:writing-plans --task-id <current-plan-write> --reason "<explicit user approval>" --path docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md --write-target plan-artifact-write [--write-target git-commit]
+featureforge repo-safety check --intent write --stage featureforge:writing-plans --task-id <current-plan-write> --path docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md --write-target plan-artifact-write [--write-target git-commit]
 ```
 
 - Continue only if the re-check returns `allowed`.
@@ -55,14 +55,14 @@ Before writing the plan, inspect the selected spec and validate these exact head
 **Last Reviewed By:** plan-ceo-review
 ```
 
-- If the spec is missing these lines, or if `**Workflow State:**` is not `CEO Approved`, stop and direct the agent to `superpowers:plan-ceo-review`.
+- If the spec is missing these lines, or if `**Workflow State:**` is not `CEO Approved`, stop and direct the agent to `featureforge:plan-ceo-review`.
 - Do not write or extend an implementation plan from a draft spec.
-- Execution-bound specs must include a parseable `## Requirement Index` before planning begins. If the approved spec does not include one, stop and return to `superpowers:plan-ceo-review`.
+- Execution-bound specs must include a parseable `## Requirement Index` before planning begins. If the approved spec does not include one, stop and return to `featureforge:plan-ceo-review`.
 
 An approved spec may also include a trailing `## CEO Review Summary`. Treat that block as additive context only:
 
 - the approved spec headers and parseable `## Requirement Index` remain the prerequisite gate
-- the summary does not replace repo-visible approval truth or `superpowers plan contract` checks
+- the summary does not replace repo-visible approval truth or `featureforge plan contract` checks
 - absence of the summary must not become a prerequisite failure
 - if the summary conflicts with the approved spec body or headers, trust the approved spec body and headers
 
@@ -130,7 +130,7 @@ This structure informs the task decomposition. Each task should produce self-con
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For Codex and GitHub Copilot workers:** REQUIRED: Use the execution skill recommended by `superpowers plan execution recommend --plan <approved-plan-path>` after engineering approval; do not choose solely from isolated-agent availability. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For Codex and GitHub Copilot workers:** REQUIRED: Use the execution skill recommended by `featureforge plan execution recommend --plan <approved-plan-path>` after engineering approval; do not choose solely from isolated-agent availability. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Workflow State:** Draft
 **Plan Revision:** 1
@@ -212,7 +212,7 @@ git commit -m "feat: add specific feature"
 - Exact file paths always
 - Complete code in plan (not "add validation")
 - Exact commands with expected output
-- Reference relevant skills by name (for example `superpowers:test-driven-development`)
+- Reference relevant skills by name (for example `featureforge:test-driven-development`)
 - Copy the exact approved spec path and current `Spec Revision` into the plan header
 - New execution plans start at `**Plan Revision:** 1`
 - New execution plans start with `**Execution Mode:** none`
@@ -225,18 +225,18 @@ After saving the full plan:
 0. Before handoff, run the plan-contract lint gate:
 
 ```bash
-"$_SUPERPOWERS_ROOT/bin/superpowers" plan contract lint \
-  --spec docs/superpowers/specs/YYYY-MM-DD-<feature-name>-design.md \
-  --plan docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md
+"$_FEATUREFORGE_ROOT/bin/featureforge" plan contract lint \
+  --spec docs/featureforge/specs/YYYY-MM-DD-<feature-name>-design.md \
+  --plan docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md
 ```
 
 1. After the plan is written or updated, runs `sync --artifact plan`:
 
 ```bash
-"$_SUPERPOWERS_ROOT/bin/superpowers" workflow sync --artifact plan --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md
+"$_FEATUREFORGE_ROOT/bin/featureforge" workflow sync --artifact plan --path docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md
 ```
 
-2. Invoke `superpowers:plan-eng-review` after saving the full plan.
+2. Invoke `featureforge:plan-eng-review` after saving the full plan.
 3. Do NOT do chunk-by-chunk embedded review here.
 4. `plan-eng-review` owns the full-plan review loop and the execution preflight handoff.
 

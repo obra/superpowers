@@ -3,15 +3,15 @@ use std::path::Path;
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use superpowers::git::discover_repo_identity;
-use superpowers::instructions::{collect_active_instruction_files, parse_protected_branches};
+use featureforge::git::discover_repo_identity;
+use featureforge::instructions::{collect_active_instruction_files, parse_protected_branches};
 
 fn unique_temp_dir(label: &str) -> std::path::PathBuf {
     let nanos = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("system clock should be after unix epoch")
         .as_nanos();
-    let dir = std::env::temp_dir().join(format!("superpowers-{label}-{nanos}"));
+    let dir = std::env::temp_dir().join(format!("featureforge-{label}-{nanos}"));
     fs::create_dir_all(&dir).expect("temp dir should be created");
     dir
 }
@@ -92,7 +92,7 @@ fn invalid_protected_branch_instruction_fails_closed() {
     let repo_root = unique_temp_dir("instruction-invalid");
     write_file(
         repo_root.join("AGENTS.override.md"),
-        "Superpowers protected branches: release/*\n",
+        "FeatureForge protected branches: release/*\n",
     );
 
     let files = collect_active_instruction_files(repo_root.as_path(), repo_root.as_path()).unwrap();
@@ -106,10 +106,10 @@ fn detached_head_uses_current_branch_name() {
     write_file(repo_root.join("README.md"), "# detached head fixture\n");
 
     run_git(&repo_root, &["init"]);
-    run_git(&repo_root, &["config", "user.name", "Superpowers Tests"]);
+    run_git(&repo_root, &["config", "user.name", "FeatureForge Tests"]);
     run_git(
         &repo_root,
-        &["config", "user.email", "superpowers-tests@example.com"],
+        &["config", "user.email", "featureforge-tests@example.com"],
     );
     run_git(&repo_root, &["add", "README.md"]);
     run_git(&repo_root, &["commit", "-m", "init"]);

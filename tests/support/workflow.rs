@@ -21,13 +21,13 @@ pub fn init_repo(name: &str) -> (TempDir, TempDir) {
 
     let mut git_config_name = Command::new("git");
     git_config_name
-        .args(["config", "user.name", "Superpowers Test"])
+        .args(["config", "user.name", "FeatureForge Test"])
         .current_dir(repo);
     run_checked(git_config_name, "git config user.name");
 
     let mut git_config_email = Command::new("git");
     git_config_email
-        .args(["config", "user.email", "superpowers-tests@example.com"])
+        .args(["config", "user.email", "featureforge-tests@example.com"])
         .current_dir(repo);
     run_checked(git_config_email, "git config user.email");
 
@@ -46,8 +46,8 @@ pub fn init_repo(name: &str) -> (TempDir, TempDir) {
 
 pub fn install_full_contract_ready_artifacts(repo: &Path) {
     let fixture_root = workflow_fixture_root();
-    let spec_rel = "docs/superpowers/specs/2026-03-22-runtime-integration-hardening-design.md";
-    let plan_rel = "docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md";
+    let spec_rel = "docs/featureforge/specs/2026-03-22-runtime-integration-hardening-design.md";
+    let plan_rel = "docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md";
     let spec_path = repo.join(spec_rel);
     let plan_path = repo.join(plan_rel);
 

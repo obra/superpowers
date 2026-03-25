@@ -22,6 +22,6 @@
 **Open Questions:** none
 
 **Files:**
-- Test: `bash tests/codex-runtime/test-superpowers-workflow-status.sh`
+- Test: `bash cargo test --test workflow_runtime`
 
 - [ ] **Step 1: Validate full approved-plan readiness**

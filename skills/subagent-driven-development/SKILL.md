@@ -1,6 +1,6 @@
 ---
 name: subagent-driven-development
-description: Use when executing an engineering-approved Superpowers implementation plan with mostly independent tasks in the current session
+description: Use when executing an engineering-approved FeatureForge implementation plan with mostly independent tasks in the current session
 ---
 <!-- AUTO-GENERATED from SKILL.md.tmpl — do not edit directly -->
 <!-- Regenerate: node scripts/gen-skill-docs.mjs -->
@@ -8,10 +8,10 @@ description: Use when executing an engineering-approved Superpowers implementati
 ## Preamble (run first)
 
 ```bash
-_IS_SUPERPOWERS_RUNTIME_ROOT() {
+_IS_FEATUREFORGE_RUNTIME_ROOT() {
   local candidate="$1"
   [ -n "$candidate" ] &&
-  [ -x "$candidate/bin/superpowers" ] &&
+  [ -x "$candidate/bin/featureforge" ] &&
   [ -f "$candidate/VERSION" ]
 }
 _REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
@@ -19,24 +19,24 @@ _BRANCH_RAW=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo current)
 [ -n "$_BRANCH_RAW" ] || _BRANCH_RAW="current"
 [ "$_BRANCH_RAW" != "HEAD" ] || _BRANCH_RAW="current"
 _BRANCH="$_BRANCH_RAW"
-_SUPERPOWERS_ROOT=""
-_IS_SUPERPOWERS_RUNTIME_ROOT "$_REPO_ROOT" && _SUPERPOWERS_ROOT="$_REPO_ROOT"
-[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.superpowers/install" && _SUPERPOWERS_ROOT="$HOME/.superpowers/install"
-[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.codex/superpowers" && _SUPERPOWERS_ROOT="$HOME/.codex/superpowers"
-[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.copilot/superpowers" && _SUPERPOWERS_ROOT="$HOME/.copilot/superpowers"
+_FEATUREFORGE_ROOT=""
+_IS_FEATUREFORGE_RUNTIME_ROOT "$_REPO_ROOT" && _FEATUREFORGE_ROOT="$_REPO_ROOT"
+[ -z "$_FEATUREFORGE_ROOT" ] && _IS_FEATUREFORGE_RUNTIME_ROOT "$HOME/.featureforge/install" && _FEATUREFORGE_ROOT="$HOME/.featureforge/install"
+[ -z "$_FEATUREFORGE_ROOT" ] && _IS_FEATUREFORGE_RUNTIME_ROOT "$HOME/.codex/featureforge" && _FEATUREFORGE_ROOT="$HOME/.codex/featureforge"
+[ -z "$_FEATUREFORGE_ROOT" ] && _IS_FEATUREFORGE_RUNTIME_ROOT "$HOME/.copilot/featureforge" && _FEATUREFORGE_ROOT="$HOME/.copilot/featureforge"
 _UPD=""
-[ -n "$_SUPERPOWERS_ROOT" ] && _UPD=$("$_SUPERPOWERS_ROOT/bin/superpowers" update-check 2>/dev/null || true)
+[ -n "$_FEATUREFORGE_ROOT" ] && _UPD=$("$_FEATUREFORGE_ROOT/bin/featureforge" update-check 2>/dev/null || true)
 [ -n "$_UPD" ] && echo "$_UPD" || true
-_SP_STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
+_SP_STATE_DIR="${FEATUREFORGE_STATE_DIR:-$HOME/.featureforge}"
 mkdir -p "$_SP_STATE_DIR/sessions"
 touch "$_SP_STATE_DIR/sessions/$PPID"
 _SESSIONS=$(find "$_SP_STATE_DIR/sessions" -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' ')
 find "$_SP_STATE_DIR/sessions" -mmin +120 -type f -delete 2>/dev/null || true
 _CONTRIB=""
-[ -n "$_SUPERPOWERS_ROOT" ] && _CONTRIB=$("$_SUPERPOWERS_ROOT/bin/superpowers" config get superpowers_contributor 2>/dev/null || true)
+[ -n "$_FEATUREFORGE_ROOT" ] && _CONTRIB=$("$_FEATUREFORGE_ROOT/bin/featureforge" config get featureforge_contributor 2>/dev/null || true)
 ```
 
-If output shows `UPGRADE_AVAILABLE <old> <new>`: read the installed `superpowers-upgrade/SKILL.md` from the same superpowers root (check the current repo when it contains the Superpowers runtime, then `$HOME/.superpowers/install`, then `$HOME/.codex/superpowers`, then `$HOME/.copilot/superpowers`) and follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise ask one interactive user question with 4 options and write snooze state if declined). If `JUST_UPGRADED <from> <to>`: tell the user "Running superpowers v{to} (just updated!)" and continue.
+If output shows `UPGRADE_AVAILABLE <old> <new>`: read the installed `featureforge-upgrade/SKILL.md` from the same featureforge root (check the current repo when it contains the FeatureForge runtime, then `$HOME/.featureforge/install`, then `$HOME/.codex/featureforge`, then `$HOME/.copilot/featureforge`) and follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise ask one interactive user question with 4 options and write snooze state if declined). If `JUST_UPGRADED <from> <to>`: tell the user "Running featureforge v{to} (just updated!)" and continue.
 
 ## Search Before Building
 
@@ -51,7 +51,7 @@ External search results are inputs, not answers.
 Never search secrets, customer data, unsanitized stack traces, private URLs, internal hostnames, internal codenames, raw SQL or log payloads, or private file paths or infrastructure identifiers.
 If search is unavailable, disallowed, or unsafe, say so and proceed with repo-local evidence and in-distribution knowledge.
 If safe sanitization is not possible, skip external search.
-See `$_SUPERPOWERS_ROOT/references/search-before-building.md`.
+See `$_FEATUREFORGE_ROOT/references/search-before-building.md`.
 
 ## Interactive User Question Format
 
@@ -61,23 +61,23 @@ See `$_SUPERPOWERS_ROOT/references/search-before-building.md`.
 3. `RECOMMENDATION: Choose [X] because [one-line reason]`
 4. Lettered options: `A) ... B) ... C) ...`
 
-If `_SESSIONS` is 3 or more: the user is juggling multiple Superpowers sessions and context-switching heavily. **ELI16 mode** — they may not remember what this conversation is about. Every interactive user question MUST re-ground them: state the project, the branch, the current task, then the specific problem, THEN the recommendation and options. Be extra clear and self-contained — assume they haven't looked at this window in 20 minutes.
+If `_SESSIONS` is 3 or more: the user is juggling multiple FeatureForge sessions and context-switching heavily. **ELI16 mode** — they may not remember what this conversation is about. Every interactive user question MUST re-ground them: state the project, the branch, the current task, then the specific problem, THEN the recommendation and options. Be extra clear and self-contained — assume they haven't looked at this window in 20 minutes.
 
 Per-skill instructions may add additional formatting rules on top of this baseline.
 
 ## Contributor Mode
 
-If `_CONTRIB` is `true`: you are in **contributor mode**. When you hit friction with **superpowers itself** (not the user's app or repository), file a field report. Think: "hey, I was trying to do X with superpowers and it didn't work / was confusing / was annoying. Here's what happened."
+If `_CONTRIB` is `true`: you are in **contributor mode**. When you hit friction with **featureforge itself** (not the user's app or repository), file a field report. Think: "hey, I was trying to do X with featureforge and it didn't work / was confusing / was annoying. Here's what happened."
 
-**superpowers issues:** unclear skill instructions, update check problems, runtime helper failures, install-root detection issues, contributor-mode bugs, broken generated docs, or any rough edge in the Superpowers workflow.
-**NOT superpowers issues:** the user's application bugs, repo-specific architecture problems, auth failures on the user's site, or third-party service outages unrelated to Superpowers tooling.
+**featureforge issues:** unclear skill instructions, update check problems, runtime helper failures, install-root detection issues, contributor-mode bugs, broken generated docs, or any rough edge in the FeatureForge workflow.
+**NOT featureforge issues:** the user's application bugs, repo-specific architecture problems, auth failures on the user's site, or third-party service outages unrelated to FeatureForge tooling.
 
-**To file:** write `~/.superpowers/contributor-logs/{slug}.md` with this structure:
+**To file:** write `~/.featureforge/contributor-logs/{slug}.md` with this structure:
 
 ```
 # {Title}
 
-Hey superpowers team — ran into this while using /{skill-name}:
+Hey featureforge team — ran into this while using /{skill-name}:
 
 **What I was trying to do:** {what the user/agent was attempting}
 **What happened instead:** {what actually happened}
@@ -89,21 +89,21 @@ Hey superpowers team — ran into this while using /{skill-name}:
 ## Raw output
 (wrap any error messages or unexpected output in a markdown code block)
 
-**Date:** {YYYY-MM-DD} | **Version:** {superpowers version} | **Skill:** /{skill}
+**Date:** {YYYY-MM-DD} | **Version:** {featureforge version} | **Skill:** /{skill}
 ```
 
 Then run:
 
 ```bash
-mkdir -p ~/.superpowers/contributor-logs
+mkdir -p ~/.featureforge/contributor-logs
 if command -v open >/dev/null 2>&1; then
-  open ~/.superpowers/contributor-logs/{slug}.md
+  open ~/.featureforge/contributor-logs/{slug}.md
 elif command -v xdg-open >/dev/null 2>&1; then
-  xdg-open ~/.superpowers/contributor-logs/{slug}.md >/dev/null 2>&1 || true
+  xdg-open ~/.featureforge/contributor-logs/{slug}.md >/dev/null 2>&1 || true
 fi
 ```
 
-Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Skip if the file already exists. Max 3 reports per session. File inline and continue — don't stop the workflow. Tell the user: "Filed superpowers field report: {title}"
+Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Skip if the file already exists. Max 3 reports per session. File inline and continue — don't stop the workflow. Tell the user: "Filed featureforge field report: {title}"
 
 
 # Subagent-Driven Development
@@ -114,7 +114,7 @@ Execute plan by dispatching a fresh sub-agent or custom agent per task, with two
 
 **Core principle:** Fresh isolated agent per task + two-stage review (spec then quality) = high quality, fast iteration
 
-**Platform note:** Current Codex releases enable subagent workflows by default, so this skill does not require a separate `multi_agent` feature flag. In Codex, prefer the built-in `worker` agent for implementation and fix tasks, the built-in `explorer` agent for read-heavy review and codebase analysis, and project or personal `.codex/agents/*.toml` custom agents only when the built-ins do not fit. Superpowers installs a `code-reviewer` custom agent for Codex review passes. In GitHub Copilot local installs, use the platform's native custom-agent or sub-agent support.
+**Platform note:** Current Codex releases enable subagent workflows by default, so this skill does not require a separate `multi_agent` feature flag. In Codex, prefer the built-in `worker` agent for implementation and fix tasks, the built-in `explorer` agent for read-heavy review and codebase analysis, and project or personal `.codex/agents/*.toml` custom agents only when the built-ins do not fit. FeatureForge installs a `code-reviewer` custom agent for Codex review passes. In GitHub Copilot local installs, use the platform's native custom-agent or sub-agent support.
 
 ## When to Use
 
@@ -125,10 +125,10 @@ digraph when_to_use {
     "Stay in this session?" [shape=diamond];
     "subagent-driven-development" [shape=box];
     "executing-plans" [shape=box];
-    "Return to using-superpowers artifact-state routing" [shape=box];
+    "Return to using-featureforge artifact-state routing" [shape=box];
 
     "Have engineering-approved implementation plan?" -> "Tasks mostly independent?" [label="yes"];
-    "Have engineering-approved implementation plan?" -> "Return to using-superpowers artifact-state routing" [label="no"];
+    "Have engineering-approved implementation plan?" -> "Return to using-featureforge artifact-state routing" [label="no"];
     "Tasks mostly independent?" -> "Stay in this session?" [label="yes"];
     "Tasks mostly independent?" -> "executing-plans" [label="no - tightly coupled or better handled in one coordinator session"];
     "Stay in this session?" -> "subagent-driven-development" [label="yes"];
@@ -165,8 +165,8 @@ digraph process {
 
     "Read plan, build a task packet per task" [shape=box];
     "More tasks remain?" [shape=diamond];
-    "Use superpowers:requesting-code-review for final review gate" [shape=box];
-    "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
+    "Use featureforge:requesting-code-review for final review gate" [shape=box];
+    "Use featureforge:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Read plan, build a task packet per task" -> "Build task packet + dispatch implementer subagent (./implementer-prompt.md)";
     "Build task packet + dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
@@ -184,8 +184,8 @@ digraph process {
     "Code quality reviewer subagent approves?" -> "Confirm task's plan steps are checked off in approved plan" [label="yes"];
     "Confirm task's plan steps are checked off in approved plan" -> "More tasks remain?";
     "More tasks remain?" -> "Build task packet + dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
-    "More tasks remain?" -> "Use superpowers:requesting-code-review for final review gate" [label="no"];
-    "Use superpowers:requesting-code-review for final review gate" -> "Use superpowers:finishing-a-development-branch";
+    "More tasks remain?" -> "Use featureforge:requesting-code-review for final review gate" [label="no"];
+    "Use featureforge:requesting-code-review for final review gate" -> "Use featureforge:finishing-a-development-branch";
 }
 ```
 
@@ -193,15 +193,15 @@ digraph process {
 
 Before dispatching any implementation subagent:
 
-1. Require the exact approved plan path as input. If you are not given one, stop and ask for it or route back to `superpowers:plan-eng-review`.
+1. Require the exact approved plan path as input. If you are not given one, stop and ask for it or route back to `featureforge:plan-eng-review`.
 2. Read that plan first and confirm these exact header lines:
    - `**Workflow State:** Engineering Approved`
    - `**Source Spec:** <path>`
    - `**Source Spec Revision:** <integer>`
 3. Read the source spec named in the plan and confirm it is still `CEO Approved`, and that the latest approved spec still matches that exact source-spec path and revision.
 4. Stop immediately and redirect:
-   - to `superpowers:plan-eng-review` if the plan is draft or malformed
-   - to `superpowers:writing-plans` if the source spec path or revision is stale
+   - to `featureforge:plan-eng-review` if the plan is draft or malformed
+   - to `featureforge:writing-plans` if the source spec path or revision is stale
 5. Verify workspace readiness before dispatching subagents:
    - stop on a default protected branch (`main`, `master`, `dev`, or `develop`) unless the user explicitly approves in-place execution
    - stop on detached HEAD
@@ -209,7 +209,7 @@ Before dispatching any implementation subagent:
    - if the working tree is dirty, stop and ask the user to confirm the workspace is intentionally prepared
 6. Do not auto-clean the workspace and do not auto-create a worktree.
 7. The later repo-safety checks still govern any additional protected branches declared through repo or user instructions.
-8. Run `superpowers plan execution preflight --plan <approved-plan-path>` before dispatching implementation subagents.
+8. Run `featureforge plan execution preflight --plan <approved-plan-path>` before dispatching implementation subagents.
 9. If the preflight helper returns `allowed` `false`, stop and resolve the reported `failure_class`, `reason_codes`, and `diagnostics` before dispatching work.
 
 ## Helper-Owned Execution State
@@ -219,7 +219,7 @@ Before dispatching any implementation subagent:
 - calls `begin` before starting work on a plan step
 - calls `complete` after each completed step
 - calls `note` when work is interrupted or blocked
-- On the first `begin` for a revision whose plan still says `**Execution Mode:** none`, initialize execution with `--execution-mode superpowers:subagent-driven-development`
+- On the first `begin` for a revision whose plan still says `**Execution Mode:** none`, initialize execution with `--execution-mode featureforge:subagent-driven-development`
 - The approved plan checklist is the execution progress record; do not create or maintain a separate authoritative task tracker.
 
 ## Protected-Branch Repo-Write Gate
@@ -230,17 +230,17 @@ The coordinator owns every `git commit`, `git merge`, and `git push` for this wo
 Before dispatching or applying any repo-writing task slice, run the shared repo-safety preflight for that exact scope:
 
 ```bash
-superpowers repo-safety check --intent write --stage superpowers:subagent-driven-development --task-id <current-task-slice> --path <repo-relative-path> --write-target execution-task-slice
+featureforge repo-safety check --intent write --stage featureforge:subagent-driven-development --task-id <current-task-slice> --path <repo-relative-path> --write-target execution-task-slice
 ```
 
 - Use one stable task id per repo-writing task slice and pass the concrete repo-relative paths when they are known.
 - If the helper returns `allowed`, continue with that task slice.
-- If it returns `blocked`, name the branch, the stage, and the blocking `failure_class`, then route to either a feature branch / `superpowers:using-git-worktrees` or explicit user approval for this exact task slice.
+- If it returns `blocked`, name the branch, the stage, and the blocking `failure_class`, then route to either a feature branch / `featureforge:using-git-worktrees` or explicit user approval for this exact task slice.
 - If the user explicitly approves the protected-branch write, approve the full task-slice scope you intend to use on that branch, including the repo-relative paths and any follow-on git targets that are part of the same slice:
 
 ```bash
-superpowers repo-safety approve --stage superpowers:subagent-driven-development --task-id <current-task-slice> --reason "<explicit user approval>" --path <repo-relative-path> --write-target execution-task-slice [--write-target git-commit] [--write-target git-merge] [--write-target git-push]
-superpowers repo-safety check --intent write --stage superpowers:subagent-driven-development --task-id <current-task-slice> --path <repo-relative-path> --write-target execution-task-slice [--write-target git-commit] [--write-target git-merge] [--write-target git-push]
+featureforge repo-safety approve --stage featureforge:subagent-driven-development --task-id <current-task-slice> --reason "<explicit user approval>" --path <repo-relative-path> --write-target execution-task-slice [--write-target git-commit] [--write-target git-merge] [--write-target git-push]
+featureforge repo-safety check --intent write --stage featureforge:subagent-driven-development --task-id <current-task-slice> --path <repo-relative-path> --write-target execution-task-slice [--write-target git-commit] [--write-target git-merge] [--write-target git-push]
 ```
 
 - Continue only if the re-check returns `allowed`.
@@ -266,7 +266,7 @@ Use the least powerful model that can handle each role to conserve cost and incr
 **Codex role mapping:**
 - Implementer → built-in `worker`
 - Spec reviewer → built-in `explorer` for read-heavy passes, or `default` when the review needs broader judgment
-- Code-quality reviewer → installed `code-reviewer` custom agent for the standard Superpowers review flow
+- Code-quality reviewer → installed `code-reviewer` custom agent for the standard FeatureForge review flow
 - Custom agent → only when you need task-specific instructions that the built-ins do not cover
 
 ## Handling Implementer Status
@@ -308,7 +308,7 @@ If the question is already answered by the packet, answer directly from the pack
 ```
 You: I'm using Subagent-Driven Development to execute this plan.
 
-[Read plan file once: docs/superpowers/plans/feature-plan.md]
+[Read plan file once: docs/featureforge/plans/feature-plan.md]
 [Build the task packet for Task 1 from the approved plan/spec pair]
 [Use the approved plan as the execution-progress record]
 
@@ -318,7 +318,7 @@ Task 1: Shared install migration docs
 
 Implementer: "Before I begin - should the migration docs include both Unix shell and PowerShell commands?"
 
-You: "The packet already requires both shells. Keep the shared install root at ~/.superpowers/install and document both shells."
+You: "The packet already requires both shells. Keep the shared install root at ~/.featureforge/install and document both shells."
 
 Implementer: "Got it. Implementing now..."
 [Later] Implementer:
@@ -373,11 +373,11 @@ Code reviewer: ✅ Approved
 
 [After all tasks]
 [Announce: I'm using the requesting-code-review skill for the final review pass.]
-[Invoke superpowers:requesting-code-review]
+[Invoke featureforge:requesting-code-review]
 [Resolve any Critical or Important findings]
 
 [Announce: I'm using the finishing-a-development-branch skill to complete this work.]
-[Invoke superpowers:finishing-a-development-branch]
+[Invoke featureforge:finishing-a-development-branch]
 [Let that skill require qa-only when browser QA is warranted, require document-release for workflow-routed work, then present merge/PR/keep/discard options and follow the chosen path]
 ```
 
@@ -406,7 +406,7 @@ Code reviewer: ✅ Approved
 - Review loops ensure fixes actually work
 - Spec compliance prevents over/under-building
 - Code quality ensures implementation is well-built
-- Those per-task review loops satisfy the "review early" rule during execution; `superpowers:requesting-code-review` remains the final whole-diff gate unless you intentionally want an extra interim checkpoint
+- Those per-task review loops satisfy the "review early" rule during execution; `featureforge:requesting-code-review` remains the final whole-diff gate unless you intentionally want an extra interim checkpoint
 
 **Cost:**
 - More subagent invocations (implementer + 2 reviewers per task)
@@ -448,20 +448,20 @@ Code reviewer: ✅ Approved
 ## Integration
 
 **Required workflow skills:**
-- **superpowers:writing-plans** - Creates the plan this skill executes
-- **superpowers:plan-eng-review** - Provides the approved plan and the execution preflight handoff
-- **superpowers:requesting-code-review** - REQUIRED: Final review gate after execution completes
-- **superpowers:finishing-a-development-branch** - Complete development after all tasks
+- **featureforge:writing-plans** - Creates the plan this skill executes
+- **featureforge:plan-eng-review** - Provides the approved plan and the execution preflight handoff
+- **featureforge:requesting-code-review** - REQUIRED: Final review gate after execution completes
+- **featureforge:finishing-a-development-branch** - Complete development after all tasks
 
 **Conditional completion gate:**
-- **superpowers:qa-only** - Required when browser QA is warranted by the branch change surface or test-plan artifact; optional otherwise
-- **superpowers:document-release** - Required release-readiness pass for workflow-routed work before completion
+- **featureforge:qa-only** - Required when browser QA is warranted by the branch change surface or test-plan artifact; optional otherwise
+- **featureforge:document-release** - Required release-readiness pass for workflow-routed work before completion
 
 **Subagents should use:**
-- **superpowers:test-driven-development** - Subagents follow TDD for each task
+- **featureforge:test-driven-development** - Subagents follow TDD for each task
 
 **Optional manual prep:**
-- **superpowers:using-git-worktrees** - Use when the user wants isolated workspace management before execution
+- **featureforge:using-git-worktrees** - Use when the user wants isolated workspace management before execution
 
 **Alternative workflow:**
-- **superpowers:executing-plans** - Use for parallel session instead of same-session execution
+- **featureforge:executing-plans** - Use for parallel session instead of same-session execution

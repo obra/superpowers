@@ -42,26 +42,26 @@ Stop. Don't proceed to Step 2.
 
 ### Step 1.5: Optional Pre-Landing Review Gate
 
-If a fresh review has not already been resolved for the current diff, invoke `superpowers:requesting-code-review` before presenting completion options.
+If a fresh review has not already been resolved for the current diff, invoke `featureforge:requesting-code-review` before presenting completion options.
 
 - Resolve all Critical issues before continuing
 - Resolve Important issues unless the user explicitly accepts the risk
 - If a fresh review already happened in the current workflow, continue silently
-- A review stops being fresh as soon as new repo changes land, including release-doc or metadata edits from `superpowers:document-release`
+- A review stops being fresh as soon as new repo changes land, including release-doc or metadata edits from `featureforge:document-release`
 
 ### Step 1.6: Execution-State Gate
 
 Before presenting completion options:
 
-- If the current work was executed from an approved Superpowers plan, require the exact approved plan path from the current execution workflow context before presenting completion options.
-- Run `superpowers plan execution status --plan <approved-plan-path>` and read the returned `evidence_path` before presenting completion options.
+- If the current work was executed from an approved FeatureForge plan, require the exact approved plan path from the current execution workflow context before presenting completion options.
+- Run `featureforge plan execution status --plan <approved-plan-path>` and read the returned `evidence_path` before presenting completion options.
 - If the exact approved plan path is unavailable or helper status fails, stop and return to the current execution flow instead of guessing.
 - Parse `active_task`, `blocking_task`, and `resume_task` from the status JSON.
 - If any of `active_task`, `blocking_task`, or `resume_task` is non-null, stop and return to the current execution flow; branch completion is only valid when all three are `null`.
 - If `evidence_path` is empty or unreadable, stop and return to the current execution flow instead of guessing at execution evidence.
-- Run `superpowers plan execution gate-review --plan <approved-plan-path>` before late-stage QA or release routing.
+- Run `featureforge plan execution gate-review --plan <approved-plan-path>` before late-stage QA or release routing.
 - If the review gate returns `allowed` `false`, stop and return to the current execution flow; do not present completion options against stale, drifted, or mismatched execution evidence.
-- If the current work is not governed by an approved Superpowers plan, skip this execution-state gate and continue.
+- If the current work is not governed by an approved FeatureForge plan, skip this execution-state gate and continue.
 - rejects branch-completion handoff if the approved plan is execution-dirty or malformed
 - must not allow branch completion while any checked-off plan step still lacks semantic implementation evidence
 - consumes the same execution evidence artifact used by final review
@@ -71,11 +71,11 @@ Before presenting completion options:
 
 For workflow-routed work, require the `document-release` pass before presenting completion options.
 
-For workflow-routed work, if the repo has release-facing docs or metadata such as `CHANGELOG.md`, `RELEASE-NOTES.md`, `VERSION`, `TODOS.md`, `README.md`, or platform workflow docs, do not treat documentation as optional cleanup. Route through `superpowers:document-release` first unless a fresh pass already happened in the current workflow.
+For workflow-routed work, if the repo has release-facing docs or metadata such as `CHANGELOG.md`, `RELEASE-NOTES.md`, `VERSION`, `TODOS.md`, `README.md`, or platform workflow docs, do not treat documentation as optional cleanup. Route through `featureforge:document-release` first unless a fresh pass already happened in the current workflow.
 
 For ad-hoc or non-workflow-routed work, keep `document-release` available as an optional cleanup pass when the diff clearly changes release-facing docs or handoff material, but do not turn it into a universal pre-completion gate.
 
-If `superpowers:document-release` writes repo files or changes release metadata, treat any earlier code review as stale and loop back through `superpowers:requesting-code-review` before presenting completion options.
+If `featureforge:document-release` writes repo files or changes release metadata, treat any earlier code review as stale and loop back through `featureforge:requesting-code-review` before presenting completion options.
 
 A document-release rewrite also makes any earlier browser QA stale if browser QA is still required for the current HEAD, so do not reuse pre-document-release QA artifacts as the final finish-gate input.
 
@@ -92,7 +92,7 @@ Before moving on, perform a short Gate F-style confirmation:
 Conditional pre-landing browser QA when the branch change surface or test-plan artifact warrants it:
 
 ```bash
-_SLUG_ENV=$("$_SUPERPOWERS_ROOT/bin/superpowers" repo slug 2>/dev/null || true)
+_SLUG_ENV=$("$_FEATUREFORGE_ROOT/bin/featureforge" repo slug 2>/dev/null || true)
 if [ -n "$_SLUG_ENV" ]; then
   eval "$_SLUG_ENV"
 fi
@@ -131,10 +131,10 @@ Recommendation logic:
 When browser QA is clearly warranted, do not present a skip option.
 
 Possible options when browser QA is required:
-- `A)` Run `superpowers:qa-only` now and return here after the report is written
+- `A)` Run `featureforge:qa-only` now and return here after the report is written
 
 Possible options when browser QA is optional:
-- `A)` Run `superpowers:qa-only` now and return here after the report is written
+- `A)` Run `featureforge:qa-only` now and return here after the report is written
 - `B)` Skip QA handoff this time
 
 If a fresh `qa-only` report already happened in the current workflow, continue silently.
@@ -145,29 +145,29 @@ If no current-branch test-plan artifact exists for workflow-routed work, stop an
 
 ### Step 1.9: Finish Gate
 
-If the current work is governed by an approved Superpowers plan, after `superpowers:document-release` and any required `superpowers:qa-only` handoff are current, run `superpowers plan execution gate-finish --plan <approved-plan-path>` before presenting completion options.
+If the current work is governed by an approved FeatureForge plan, after `featureforge:document-release` and any required `featureforge:qa-only` handoff are current, run `featureforge plan execution gate-finish --plan <approved-plan-path>` before presenting completion options.
 
-If the current work is governed by an approved Superpowers plan and the finish gate returns `allowed` `false`, stop and return to the current execution flow; do not present completion options against stale QA or release artifacts.
+If the current work is governed by an approved FeatureForge plan and the finish gate returns `allowed` `false`, stop and return to the current execution flow; do not present completion options against stale QA or release artifacts.
 
-If `gate-finish` fails with `test_plan_artifact_missing` or `test_plan_artifact_stale`, hand control back to `superpowers:plan-eng-review` to regenerate the current-branch test-plan artifact before QA or branch completion.
+If `gate-finish` fails with `test_plan_artifact_missing` or `test_plan_artifact_stale`, hand control back to `featureforge:plan-eng-review` to regenerate the current-branch test-plan artifact before QA or branch completion.
 
-If the current work is not governed by an approved Superpowers plan, skip this helper-owned finish gate and continue with the normal completion flow.
+If the current work is not governed by an approved FeatureForge plan, skip this helper-owned finish gate and continue with the normal completion flow.
 
 ### Step 1.95: Protected-Branch Repo-Write Gate
 
 Before executing any completion option that mutates repo state, run the shared repo-safety preflight for the chosen branch-finishing scope:
 
 ```bash
-superpowers repo-safety check --intent write --stage superpowers:finishing-a-development-branch --task-id <current-branch-finish> --write-target branch-finish
+featureforge repo-safety check --intent write --stage featureforge:finishing-a-development-branch --task-id <current-branch-finish> --write-target branch-finish
 ```
 
 - If the helper returns `allowed`, continue with the selected completion path.
-- If it returns `blocked`, name the branch, the stage, and the blocking `failure_class`, then route to either a feature branch / `superpowers:using-git-worktrees` or explicit user approval for this exact completion scope.
+- If it returns `blocked`, name the branch, the stage, and the blocking `failure_class`, then route to either a feature branch / `featureforge:using-git-worktrees` or explicit user approval for this exact completion scope.
 - If the user explicitly approves the protected-branch completion write, approve the full completion scope you intend to use on that branch, including any follow-on git targets that are part of the same branch-finish task:
 
 ```bash
-superpowers repo-safety approve --stage superpowers:finishing-a-development-branch --task-id <current-branch-finish> --reason "<explicit user approval>" --write-target branch-finish [--write-target git-merge] [--write-target git-push] [--write-target git-worktree-cleanup]
-superpowers repo-safety check --intent write --stage superpowers:finishing-a-development-branch --task-id <current-branch-finish> --write-target branch-finish [--write-target git-merge] [--write-target git-push] [--write-target git-worktree-cleanup]
+featureforge repo-safety approve --stage featureforge:finishing-a-development-branch --task-id <current-branch-finish> --reason "<explicit user approval>" --write-target branch-finish [--write-target git-merge] [--write-target git-push] [--write-target git-worktree-cleanup]
+featureforge repo-safety check --intent write --stage featureforge:finishing-a-development-branch --task-id <current-branch-finish> --write-target branch-finish [--write-target git-merge] [--write-target git-push] [--write-target git-worktree-cleanup]
 ```
 
 - Continue only if the re-check returns `allowed`.
@@ -177,12 +177,12 @@ superpowers repo-safety check --intent write --stage superpowers:finishing-a-dev
 
 ### Step 2: Determine Base Branch
 
-If the current work is governed by an approved Superpowers plan:
+If the current work is governed by an approved FeatureForge plan:
 
 - For plan-routed completion, use the exact `Base Branch` from the fresh release-readiness artifact instead of redetecting the target branch.
-- If the fresh release-readiness artifact is missing or its `**Base Branch:**` header is blank, stop and return to `superpowers:document-release`.
+- If the fresh release-readiness artifact is missing or its `**Base Branch:**` header is blank, stop and return to `featureforge:document-release`.
 
-If the current work is not governed by an approved Superpowers plan, derive `<base-branch>` using the same locally derivable contract as `superpowers:document-release` and `gate-finish`:
+If the current work is not governed by an approved FeatureForge plan, derive `<base-branch>` using the same locally derivable contract as `featureforge:document-release` and `gate-finish`:
 
 ```bash
 BASE_BRANCH=""

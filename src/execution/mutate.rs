@@ -40,7 +40,7 @@ pub fn begin(
 
     match context.plan_document.execution_mode.as_str() {
         "none" => match request.execution_mode.as_deref() {
-            Some("superpowers:executing-plans" | "superpowers:subagent-driven-development") => {
+            Some("featureforge:executing-plans" | "featureforge:subagent-driven-development") => {
                 context.plan_document.execution_mode = request.execution_mode.unwrap();
             }
             _ => {
@@ -796,7 +796,7 @@ fn restore_plan_and_evidence(
 }
 
 fn maybe_trigger_failpoint(name: &str) -> Result<(), JsonFailure> {
-    if std::env::var("SUPERPOWERS_PLAN_EXECUTION_TEST_FAILPOINT")
+    if std::env::var("FEATUREFORGE_PLAN_EXECUTION_TEST_FAILPOINT")
         .ok()
         .as_deref()
         == Some(name)

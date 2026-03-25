@@ -8,13 +8,13 @@ use std::time::Instant;
 use serde::Serialize;
 use tempfile::TempDir;
 
-pub const EXECUTION_PLAN_REL: &str = "docs/superpowers/plans/2026-03-17-example-execution-plan.md";
+pub const EXECUTION_PLAN_REL: &str = "docs/featureforge/plans/2026-03-17-example-execution-plan.md";
 pub const EXECUTION_SPEC_REL: &str =
-    "docs/superpowers/specs/2026-03-17-example-execution-plan-design.md";
+    "docs/featureforge/specs/2026-03-17-example-execution-plan-design.md";
 pub const PLAN_CONTRACT_PLAN_REL: &str =
-    "docs/superpowers/plans/2026-03-22-plan-contract-fixture.md";
+    "docs/featureforge/plans/2026-03-22-plan-contract-fixture.md";
 pub const PLAN_CONTRACT_SPEC_REL: &str =
-    "docs/superpowers/specs/2026-03-22-plan-contract-fixture-design.md";
+    "docs/featureforge/specs/2026-03-22-plan-contract-fixture-design.md";
 
 pub struct BenchConfig {
     pub benchmark: &'static str,
@@ -133,11 +133,11 @@ pub fn create_workflow_fixture_repo() -> (TempDir, TempDir) {
 
     copy_fixture(
         &fixture_root.join("specs/2026-03-22-runtime-integration-hardening-design.md"),
-        &repo.join("docs/superpowers/specs/2026-03-22-runtime-integration-hardening-design.md"),
+        &repo.join("docs/featureforge/specs/2026-03-22-runtime-integration-hardening-design.md"),
     );
     copy_fixture(
         &fixture_root.join("plans/2026-03-22-runtime-integration-hardening.md"),
-        &repo.join("docs/superpowers/plans/2026-03-22-runtime-integration-hardening.md"),
+        &repo.join("docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md"),
     );
 
     (repo_dir, state_dir)
@@ -193,7 +193,7 @@ Fixture spec for execution-status benchmark coverage.
 
 **Files:**
 - Modify: `docs/example-output.md`
-- Test: `tests/codex-runtime/test-superpowers-plan-execution.sh`
+- Test: `tests/codex-runtime/test-featureforge-plan-execution.sh`
 
 - [ ] **Step 1: Prepare the benchmark fixture**
 - [ ] **Step 2: Read execution status**
@@ -232,13 +232,13 @@ fn init_git_repo(name: &str, remote_url: &str) -> (TempDir, TempDir) {
     );
     run_checked(
         Command::new("git")
-            .args(["config", "user.name", "Superpowers Test"])
+            .args(["config", "user.name", "FeatureForge Test"])
             .current_dir(repo),
         "git config user.name",
     );
     run_checked(
         Command::new("git")
-            .args(["config", "user.email", "superpowers-tests@example.com"])
+            .args(["config", "user.email", "featureforge-tests@example.com"])
             .current_dir(repo),
         "git config user.email",
     );

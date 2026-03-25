@@ -5,7 +5,7 @@ These fixtures preserve the workflow-header contract used by
 
 Most fixtures were extracted from the historical workflow documents
 present at `108c0e8`, before `ce106d0` removed
-`docs/superpowers/specs/` and `docs/superpowers/plans/`.
+`docs/featureforge/specs/` and `docs/featureforge/plans/`.
 The stale source-spec path case is a small synthetic addition that
 models the newer governance edge case.
 

@@ -1,6 +1,6 @@
 # TODOS.md Format Reference
 
-Shared reference for the canonical `TODOS.md` format used by `superpowers:plan-ceo-review` and `superpowers:plan-eng-review`.
+Shared reference for the canonical `TODOS.md` format used by `featureforge:plan-ceo-review` and `featureforge:plan-eng-review`.
 
 ---
 

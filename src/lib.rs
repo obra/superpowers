@@ -2,7 +2,7 @@ use std::ffi::OsString;
 use std::path::PathBuf;
 
 use clap::Parser;
-use cli::{Command, InstallCommand, PlanCommand, RepoCommand};
+use cli::{Command, PlanCommand, RepoCommand};
 use diagnostics::{DiagnosticError, FailureClass, JsonFailure};
 use serde_json::{Value, json};
 
@@ -13,7 +13,6 @@ pub mod contracts;
 pub mod diagnostics;
 pub mod execution;
 pub mod git;
-pub mod install;
 pub mod instructions;
 pub mod output;
 pub mod paths;
@@ -45,9 +44,6 @@ pub fn run() -> std::process::ExitCode {
             cli::config::ConfigCommand::Get(args) => emit_text(config::get(&args)),
             cli::config::ConfigCommand::Set(args) => emit_text(config::set(&args)),
             cli::config::ConfigCommand::List => emit_text(config::list()),
-        },
-        Some(Command::Install(install_cli)) => match install_cli.command {
-            InstallCommand::Migrate(args) => emit_text(install::migrate(&args)),
         },
         Some(Command::Plan(plan_cli)) => match plan_cli.command {
             PlanCommand::Contract(plan_contract_cli) => match plan_contract_cli.command {
@@ -267,7 +263,9 @@ pub fn run() -> std::process::ExitCode {
 
 fn canonicalized_args() -> Vec<OsString> {
     let mut args = std::env::args_os();
-    let argv0 = args.next().unwrap_or_else(|| OsString::from("superpowers"));
+    let argv0 = args
+        .next()
+        .unwrap_or_else(|| OsString::from("featureforge"));
     let user_args = args.collect::<Vec<_>>();
     let injected = compat::argv0::canonical_command_from_argv0(&argv0.to_string_lossy());
     let mut canonicalized = vec![argv0.clone()];

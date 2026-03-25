@@ -1,4 +1,5 @@
 use std::collections::{BTreeMap, BTreeSet};
+use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -9,16 +10,21 @@ use sha2::{Digest, Sha256};
 use crate::cli::plan_execution::{
     BeginArgs, CompleteArgs, NoteArgs, RecommendArgs, ReopenArgs, StatusArgs, TransferArgs,
 };
+use crate::cli::repo_safety::RepoSafetyCheckArgs;
 use crate::contracts::plan::{PlanDocument, PlanTask, parse_plan_file};
 use crate::diagnostics::{FailureClass, JsonFailure};
 use crate::git::discover_repo_identity;
 use crate::paths::{
-    RepoPath, branch_storage_key, normalize_repo_relative_path, normalize_whitespace,
-    superpowers_state_dir,
+    RepoPath, branch_storage_key, featureforge_state_dir, normalize_repo_relative_path,
+    normalize_whitespace,
 };
 use crate::repo_safety::RepoSafetyRuntime;
+use crate::workflow::manifest::{ManifestLoadResult, WorkflowManifest, load_manifest_read_only};
 
-pub const NO_REPO_FILES_MARKER: &str = "__superpowers__/no-repo-files";
+pub const NO_REPO_FILES_MARKER: &str = "__featureforge__/no-repo-files";
+const ACTIVE_SPEC_ROOT: &str = "docs/featureforge/specs";
+const ACTIVE_PLAN_ROOT: &str = "docs/featureforge/plans";
+const ACTIVE_EVIDENCE_ROOT: &str = "docs/featureforge/execution-evidence";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct PlanExecutionStatus {
@@ -299,12 +305,12 @@ impl ExecutionRuntime {
             && same_session_viable == "yes"
         {
             (
-                "superpowers:subagent-driven-development",
+                "featureforge:subagent-driven-development",
                 "Independent tasks and same-session isolated execution are viable.",
             )
         } else {
             (
-                "superpowers:executing-plans",
+                "featureforge:executing-plans",
                 "Defaulting conservatively because the available signals do not positively justify isolated same-session execution.",
             )
         };
@@ -406,7 +412,7 @@ pub fn load_execution_context(
         ));
     }
     match plan_document.execution_mode.as_str() {
-        "none" | "superpowers:executing-plans" | "superpowers:subagent-driven-development" => {}
+        "none" | "featureforge:executing-plans" | "featureforge:subagent-driven-development" => {}
         _ => {
             return Err(JsonFailure::new(
                 FailureClass::PlanNotExecutionReady,
@@ -445,17 +451,20 @@ pub fn load_execution_context(
             "Approved plan source spec does not exist.",
         )
     })?;
+    let matching_manifest = matching_workflow_manifest(&runtime);
     validate_source_spec(
         &source_spec_source,
         &plan_document.source_spec_path,
         plan_document.source_spec_revision,
-        &runtime.repo_root,
+        &runtime,
+        matching_manifest.as_ref(),
     )?;
     validate_unique_approved_plan(
         &plan_rel,
         &plan_document.source_spec_path,
         plan_document.source_spec_revision,
-        &runtime.repo_root,
+        &runtime,
+        matching_manifest.as_ref(),
     )?;
 
     let evidence_rel = derive_evidence_rel_path(&plan_rel, plan_document.plan_revision);
@@ -629,13 +638,37 @@ pub fn preflight_from_context(context: &ExecutionContext) -> GateResult {
             "Restore repository availability before continuing execution.",
         ),
     }
-    if let Err(error) = RepoSafetyRuntime::discover(&context.runtime.repo_root) {
-        gate.fail(
+    match RepoSafetyRuntime::discover(&context.runtime.repo_root) {
+        Ok(runtime) => {
+            let args = RepoSafetyCheckArgs {
+                intent: String::from("write"),
+                stage: repo_safety_stage(context),
+                task_id: Some(context.plan_rel.clone()),
+                paths: vec![context.plan_rel.clone()],
+                write_targets: vec![String::from("execution-task-slice")],
+            };
+            match runtime.check(&args) {
+                Ok(result) if result.outcome == "blocked" => gate.fail(
+                    FailureClass::WorkspaceNotSafe,
+                    &result.reason,
+                    repo_safety_preflight_message(&result),
+                    repo_safety_preflight_remediation(&result),
+                ),
+                Ok(_) => {}
+                Err(error) => gate.fail(
+                    FailureClass::WorkspaceNotSafe,
+                    "repo_safety_unavailable",
+                    error.message(),
+                    "Restore repo-safety availability before continuing execution.",
+                ),
+            }
+        }
+        Err(error) => gate.fail(
             FailureClass::WorkspaceNotSafe,
             "repo_safety_unavailable",
             error.message(),
             "Restore repo-safety availability before continuing execution.",
-        );
+        ),
     }
     match repo_has_tracked_worktree_changes(&context.runtime.repo_root) {
         Ok(true) => gate.fail(
@@ -833,8 +866,7 @@ pub fn gate_finish_from_context(context: &ExecutionContext) -> GateResult {
         .join("projects")
         .join(&context.runtime.repo_slug);
 
-    let Some(review_path) =
-        latest_branch_artifact_path(&artifact_dir, branch, "code-review")
+    let Some(review_path) = latest_branch_artifact_path(&artifact_dir, branch, "code-review")
     else {
         gate.fail(
             FailureClass::ReviewArtifactNotFresh,
@@ -916,7 +948,7 @@ pub fn gate_finish_from_context(context: &ExecutionContext) -> GateResult {
         return gate.finish();
     }
     if review.headers.get("Generated By")
-        != Some(&String::from("superpowers:requesting-code-review"))
+        != Some(&String::from("featureforge:requesting-code-review"))
     {
         gate.fail(
             FailureClass::ReviewArtifactNotFresh,
@@ -936,8 +968,7 @@ pub fn gate_finish_from_context(context: &ExecutionContext) -> GateResult {
         return gate.finish();
     }
 
-    let Some(test_plan_path) =
-        latest_branch_artifact_path(&artifact_dir, branch, "test-plan")
+    let Some(test_plan_path) = latest_branch_artifact_path(&artifact_dir, branch, "test-plan")
     else {
         gate.fail(
             FailureClass::QaArtifactNotFresh,
@@ -981,7 +1012,8 @@ pub fn gate_finish_from_context(context: &ExecutionContext) -> GateResult {
         );
         return gate.finish();
     }
-    if test_plan.headers.get("Generated By") != Some(&String::from("superpowers:plan-eng-review")) {
+    if test_plan.headers.get("Generated By") != Some(&String::from("featureforge:plan-eng-review"))
+    {
         gate.fail(
             FailureClass::QaArtifactNotFresh,
             "test_plan_artifact_generator_mismatch",
@@ -996,8 +1028,7 @@ pub fn gate_finish_from_context(context: &ExecutionContext) -> GateResult {
         .get("Browser QA Required")
         .is_some_and(|value| value == "yes")
     {
-        let Some(qa_path) =
-            latest_branch_artifact_path(&artifact_dir, branch, "test-outcome")
+        let Some(qa_path) = latest_branch_artifact_path(&artifact_dir, branch, "test-outcome")
         else {
             gate.fail(
                 FailureClass::QaArtifactNotFresh,
@@ -1071,7 +1102,7 @@ pub fn gate_finish_from_context(context: &ExecutionContext) -> GateResult {
             );
             return gate.finish();
         }
-        if qa.headers.get("Generated By") != Some(&String::from("superpowers:qa-only")) {
+        if qa.headers.get("Generated By") != Some(&String::from("featureforge:qa-only")) {
             gate.fail(
                 FailureClass::QaArtifactNotFresh,
                 "qa_artifact_generator_mismatch",
@@ -1173,7 +1204,7 @@ pub fn gate_finish_from_context(context: &ExecutionContext) -> GateResult {
         );
         return gate.finish();
     }
-    if release.headers.get("Generated By") != Some(&String::from("superpowers:document-release")) {
+    if release.headers.get("Generated By") != Some(&String::from("featureforge:document-release")) {
         gate.fail(
             FailureClass::ReleaseArtifactNotFresh,
             "release_artifact_generator_mismatch",
@@ -1323,7 +1354,7 @@ pub fn normalize_transfer_request(args: &TransferArgs) -> Result<TransferRequest
 
 pub fn normalize_source(source: &str, execution_mode: &str) -> Result<(), JsonFailure> {
     match source {
-        "superpowers:executing-plans" | "superpowers:subagent-driven-development" => {}
+        "featureforge:executing-plans" | "featureforge:subagent-driven-development" => {}
         _ => {
             return Err(JsonFailure::new(
                 FailureClass::InvalidExecutionMode,
@@ -1442,7 +1473,7 @@ pub fn derive_evidence_rel_path(plan_rel: &str, revision: u32) -> String {
         .file_stem()
         .and_then(std::ffi::OsStr::to_str)
         .unwrap_or("plan");
-    format!("docs/superpowers/execution-evidence/{base}-r{revision}-evidence.md")
+    format!("{ACTIVE_EVIDENCE_ROOT}/{base}-r{revision}-evidence.md")
 }
 
 pub fn hash_contract_plan(source: &str) -> String {
@@ -1504,7 +1535,7 @@ fn repo_has_tracked_worktree_changes(repo_root: &Path) -> Result<bool, JsonFailu
 }
 
 pub fn state_dir() -> PathBuf {
-    superpowers_state_dir()
+    featureforge_state_dir()
 }
 
 pub fn current_file_proof(repo_root: &Path, path: &str) -> String {
@@ -1636,10 +1667,11 @@ fn normalize_plan_path(plan_path: &Path) -> Result<String, JsonFailure> {
             "Plan path must be a normalized repo-relative path.",
         )
     })?;
-    if !normalized.as_str().starts_with("docs/superpowers/plans/") {
+    let required_prefix = format!("{ACTIVE_PLAN_ROOT}/");
+    if !normalized.as_str().starts_with(&required_prefix) {
         return Err(JsonFailure::new(
             FailureClass::InvalidCommandInput,
-            "Plan path must live under docs/superpowers/plans/.",
+            "Plan path must live under docs/featureforge/plans/.",
         ));
     }
     Ok(normalized.as_str().to_owned())
@@ -1649,7 +1681,8 @@ fn validate_source_spec(
     source: &str,
     expected_path: &str,
     expected_revision: u32,
-    repo_root: &Path,
+    runtime: &ExecutionRuntime,
+    matching_manifest: Option<&WorkflowManifest>,
 ) -> Result<(), JsonFailure> {
     let headers = parse_headers(source);
     if headers.get("Workflow State") != Some(&String::from("CEO Approved")) {
@@ -1677,14 +1710,19 @@ fn validate_source_spec(
             ));
         }
     }
-    let approved_spec_candidates = approved_spec_candidate_paths(repo_root);
-    if approved_spec_candidates.len() > 1 {
+    let approved_spec_candidates = approved_spec_candidate_paths(&runtime.repo_root);
+    let manifest_selected_spec =
+        matching_manifest.is_some_and(|manifest| manifest.expected_spec_path == expected_path);
+    if approved_spec_candidates.len() > 1 && !manifest_selected_spec {
         return Err(JsonFailure::new(
             FailureClass::PlanNotExecutionReady,
             "Approved spec candidates are ambiguous.",
         ));
     }
-    if approved_spec_candidates.first().map(String::as_str) != Some(expected_path) {
+    if !approved_spec_candidates
+        .iter()
+        .any(|candidate| candidate == expected_path)
+    {
         return Err(JsonFailure::new(
             FailureClass::PlanNotExecutionReady,
             "Approved plan source spec path or revision is stale.",
@@ -1697,23 +1735,87 @@ fn validate_unique_approved_plan(
     expected_plan_path: &str,
     source_spec_path: &str,
     source_spec_revision: u32,
-    repo_root: &Path,
+    runtime: &ExecutionRuntime,
+    matching_manifest: Option<&WorkflowManifest>,
 ) -> Result<(), JsonFailure> {
     let approved_plan_candidates =
-        approved_plan_candidate_paths(repo_root, source_spec_path, source_spec_revision);
-    if approved_plan_candidates.len() > 1 {
+        approved_plan_candidate_paths(&runtime.repo_root, source_spec_path, source_spec_revision);
+    let manifest_selected_plan =
+        matching_manifest.is_some_and(|manifest| manifest.expected_plan_path == expected_plan_path);
+    if approved_plan_candidates.len() > 1 && !manifest_selected_plan {
         return Err(JsonFailure::new(
             FailureClass::PlanNotExecutionReady,
             "Approved plan candidates are ambiguous.",
         ));
     }
-    if approved_plan_candidates.first().map(String::as_str) != Some(expected_plan_path) {
+    if !approved_plan_candidates
+        .iter()
+        .any(|candidate| candidate == expected_plan_path)
+    {
         return Err(JsonFailure::new(
             FailureClass::PlanNotExecutionReady,
             "Approved plan is not the unique current approved plan for its source spec.",
         ));
     }
     Ok(())
+}
+
+fn matching_workflow_manifest(runtime: &ExecutionRuntime) -> Option<WorkflowManifest> {
+    let user_name = env::var("USER").unwrap_or_else(|_| String::from("user"));
+    let manifest_path = runtime
+        .state_dir
+        .join("projects")
+        .join(&runtime.repo_slug)
+        .join(format!(
+            "{user_name}-{}-workflow-state.json",
+            runtime.safe_branch
+        ));
+    let ManifestLoadResult::Loaded(manifest) = load_manifest_read_only(&manifest_path) else {
+        return None;
+    };
+    if manifest.repo_root == runtime.repo_root.to_string_lossy()
+        && manifest.branch == runtime.branch_name
+    {
+        Some(manifest)
+    } else {
+        None
+    }
+}
+
+fn repo_safety_stage(context: &ExecutionContext) -> String {
+    match context.plan_document.execution_mode.as_str() {
+        "featureforge:executing-plans" | "featureforge:subagent-driven-development" => {
+            context.plan_document.execution_mode.clone()
+        }
+        _ => String::from("featureforge:execution-preflight"),
+    }
+}
+
+fn repo_safety_preflight_message(result: &crate::repo_safety::RepoSafetyResult) -> String {
+    match result.failure_class.as_str() {
+        "ProtectedBranchDetected" => format!(
+            "Execution preflight cannot continue on protected branch {} without explicit approval.",
+            result.branch
+        ),
+        "ApprovalScopeMismatch" => String::from(
+            "Execution preflight repo-safety approval does not match the current scope.",
+        ),
+        "ApprovalFingerprintMismatch" => String::from(
+            "Execution preflight repo-safety approval does not match the current branch or write scope.",
+        ),
+        _ => String::from("Execution preflight is blocked by repo-safety policy."),
+    }
+}
+
+fn repo_safety_preflight_remediation(result: &crate::repo_safety::RepoSafetyResult) -> String {
+    if !result.suggested_next_skill.is_empty() {
+        format!(
+            "Use {} or explicitly approve the protected-branch execution scope before continuing.",
+            result.suggested_next_skill
+        )
+    } else {
+        String::from("Resolve the repo-safety blocker before continuing execution.")
+    }
 }
 
 fn repo_has_unresolved_index_entries(repo_root: &Path) -> Result<bool, JsonFailure> {
@@ -1871,7 +1973,7 @@ fn local_head_branches(heads_dir: &Path) -> Vec<String> {
 }
 
 fn approved_spec_candidate_paths(repo_root: &Path) -> Vec<String> {
-    let mut candidates = markdown_files_under(&repo_root.join("docs/superpowers/specs"))
+    let mut candidates = markdown_files_under(&repo_root.join(ACTIVE_SPEC_ROOT))
         .into_iter()
         .filter_map(|path| {
             let headers = parse_headers_file(&path);
@@ -1901,7 +2003,7 @@ fn approved_plan_candidate_paths(
     source_spec_path: &str,
     source_spec_revision: u32,
 ) -> Vec<String> {
-    let mut candidates = markdown_files_under(&repo_root.join("docs/superpowers/plans"))
+    let mut candidates = markdown_files_under(&repo_root.join(ACTIVE_PLAN_ROOT))
         .into_iter()
         .filter_map(|path| {
             let headers = parse_headers_file(&path);
@@ -1911,8 +2013,8 @@ fn approved_plan_candidate_paths(
             let execution_mode_valid = matches!(
                 headers.get("Execution Mode").map(String::as_str),
                 Some("none")
-                    | Some("superpowers:executing-plans")
-                    | Some("superpowers:subagent-driven-development")
+                    | Some("featureforge:executing-plans")
+                    | Some("featureforge:subagent-driven-development")
             );
             let reviewed_by_valid =
                 headers.get("Last Reviewed By").map(String::as_str) == Some("plan-eng-review");
@@ -2340,7 +2442,7 @@ fn parse_evidence_attempts(
             }
             if !matches!(
                 execution_source.as_str(),
-                "superpowers:executing-plans" | "superpowers:subagent-driven-development"
+                "featureforge:executing-plans" | "featureforge:subagent-driven-development"
             ) {
                 return Err(JsonFailure::new(
                     FailureClass::MalformedExecutionState,

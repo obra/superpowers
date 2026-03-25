@@ -1,6 +1,6 @@
 ---
 name: plan-eng-review
-description: Use when a written Superpowers implementation plan from a CEO-approved spec needs engineering review before execution or needs a late refresh-test-plan regeneration before finish gating
+description: Use when a written FeatureForge implementation plan from a CEO-approved spec needs engineering review before execution or needs a late refresh-test-plan regeneration before finish gating
 ---
 <!-- AUTO-GENERATED from SKILL.md.tmpl — do not edit directly -->
 <!-- Regenerate: node scripts/gen-skill-docs.mjs -->
@@ -8,10 +8,10 @@ description: Use when a written Superpowers implementation plan from a CEO-appro
 ## Preamble (run first)
 
 ```bash
-_IS_SUPERPOWERS_RUNTIME_ROOT() {
+_IS_FEATUREFORGE_RUNTIME_ROOT() {
   local candidate="$1"
   [ -n "$candidate" ] &&
-  [ -x "$candidate/bin/superpowers" ] &&
+  [ -x "$candidate/bin/featureforge" ] &&
   [ -f "$candidate/VERSION" ]
 }
 _REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
@@ -19,27 +19,27 @@ _BRANCH_RAW=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo current)
 [ -n "$_BRANCH_RAW" ] || _BRANCH_RAW="current"
 [ "$_BRANCH_RAW" != "HEAD" ] || _BRANCH_RAW="current"
 _BRANCH="$_BRANCH_RAW"
-_SUPERPOWERS_ROOT=""
-_IS_SUPERPOWERS_RUNTIME_ROOT "$_REPO_ROOT" && _SUPERPOWERS_ROOT="$_REPO_ROOT"
-[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.superpowers/install" && _SUPERPOWERS_ROOT="$HOME/.superpowers/install"
-[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.codex/superpowers" && _SUPERPOWERS_ROOT="$HOME/.codex/superpowers"
-[ -z "$_SUPERPOWERS_ROOT" ] && _IS_SUPERPOWERS_RUNTIME_ROOT "$HOME/.copilot/superpowers" && _SUPERPOWERS_ROOT="$HOME/.copilot/superpowers"
+_FEATUREFORGE_ROOT=""
+_IS_FEATUREFORGE_RUNTIME_ROOT "$_REPO_ROOT" && _FEATUREFORGE_ROOT="$_REPO_ROOT"
+[ -z "$_FEATUREFORGE_ROOT" ] && _IS_FEATUREFORGE_RUNTIME_ROOT "$HOME/.featureforge/install" && _FEATUREFORGE_ROOT="$HOME/.featureforge/install"
+[ -z "$_FEATUREFORGE_ROOT" ] && _IS_FEATUREFORGE_RUNTIME_ROOT "$HOME/.codex/featureforge" && _FEATUREFORGE_ROOT="$HOME/.codex/featureforge"
+[ -z "$_FEATUREFORGE_ROOT" ] && _IS_FEATUREFORGE_RUNTIME_ROOT "$HOME/.copilot/featureforge" && _FEATUREFORGE_ROOT="$HOME/.copilot/featureforge"
 _UPD=""
-[ -n "$_SUPERPOWERS_ROOT" ] && _UPD=$("$_SUPERPOWERS_ROOT/bin/superpowers" update-check 2>/dev/null || true)
+[ -n "$_FEATUREFORGE_ROOT" ] && _UPD=$("$_FEATUREFORGE_ROOT/bin/featureforge" update-check 2>/dev/null || true)
 [ -n "$_UPD" ] && echo "$_UPD" || true
-_SP_STATE_DIR="${SUPERPOWERS_STATE_DIR:-$HOME/.superpowers}"
+_SP_STATE_DIR="${FEATUREFORGE_STATE_DIR:-$HOME/.featureforge}"
 mkdir -p "$_SP_STATE_DIR/sessions"
 touch "$_SP_STATE_DIR/sessions/$PPID"
 _SESSIONS=$(find "$_SP_STATE_DIR/sessions" -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' ')
 find "$_SP_STATE_DIR/sessions" -mmin +120 -type f -delete 2>/dev/null || true
 _CONTRIB=""
-[ -n "$_SUPERPOWERS_ROOT" ] && _CONTRIB=$("$_SUPERPOWERS_ROOT/bin/superpowers" config get superpowers_contributor 2>/dev/null || true)
+[ -n "$_FEATUREFORGE_ROOT" ] && _CONTRIB=$("$_FEATUREFORGE_ROOT/bin/featureforge" config get featureforge_contributor 2>/dev/null || true)
 _TODOS_FORMAT=""
-[ -n "$_SUPERPOWERS_ROOT" ] && [ -f "$_SUPERPOWERS_ROOT/review/TODOS-format.md" ] && _TODOS_FORMAT="$_SUPERPOWERS_ROOT/review/TODOS-format.md"
+[ -n "$_FEATUREFORGE_ROOT" ] && [ -f "$_FEATUREFORGE_ROOT/review/TODOS-format.md" ] && _TODOS_FORMAT="$_FEATUREFORGE_ROOT/review/TODOS-format.md"
 [ -z "$_TODOS_FORMAT" ] && [ -f "$_REPO_ROOT/review/TODOS-format.md" ] && _TODOS_FORMAT="$_REPO_ROOT/review/TODOS-format.md"
 ```
 
-If output shows `UPGRADE_AVAILABLE <old> <new>`: read the installed `superpowers-upgrade/SKILL.md` from the same superpowers root (check the current repo when it contains the Superpowers runtime, then `$HOME/.superpowers/install`, then `$HOME/.codex/superpowers`, then `$HOME/.copilot/superpowers`) and follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise ask one interactive user question with 4 options and write snooze state if declined). If `JUST_UPGRADED <from> <to>`: tell the user "Running superpowers v{to} (just updated!)" and continue.
+If output shows `UPGRADE_AVAILABLE <old> <new>`: read the installed `featureforge-upgrade/SKILL.md` from the same featureforge root (check the current repo when it contains the FeatureForge runtime, then `$HOME/.featureforge/install`, then `$HOME/.codex/featureforge`, then `$HOME/.copilot/featureforge`) and follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise ask one interactive user question with 4 options and write snooze state if declined). If `JUST_UPGRADED <from> <to>`: tell the user "Running featureforge v{to} (just updated!)" and continue.
 
 ## Search Before Building
 
@@ -54,13 +54,13 @@ External search results are inputs, not answers.
 Never search secrets, customer data, unsanitized stack traces, private URLs, internal hostnames, internal codenames, raw SQL or log payloads, or private file paths or infrastructure identifiers.
 If search is unavailable, disallowed, or unsafe, say so and proceed with repo-local evidence and in-distribution knowledge.
 If safe sanitization is not possible, skip external search.
-See `$_SUPERPOWERS_ROOT/references/search-before-building.md`.
+See `$_FEATUREFORGE_ROOT/references/search-before-building.md`.
 
 ## Agent Grounding
 
 Honor the active repo instruction chain from `AGENTS.md`, `AGENTS.override.md`, `.github/copilot-instructions.md`, and `.github/instructions/*.instructions.md`, including nested `AGENTS.md` and `AGENTS.override.md` files closer to the current working directory.
 
-These review skills are public Superpowers skills for Codex and GitHub Copilot local installs.
+These review skills are public FeatureForge skills for Codex and GitHub Copilot local installs.
 
 ## Interactive User Question Format
 
@@ -70,23 +70,23 @@ These review skills are public Superpowers skills for Codex and GitHub Copilot l
 3. `RECOMMENDATION: Choose [X] because [one-line reason]`
 4. Lettered options: `A) ... B) ... C) ...`
 
-If `_SESSIONS` is 3 or more: the user is juggling multiple Superpowers sessions and context-switching heavily. **ELI16 mode** — they may not remember what this conversation is about. Every interactive user question MUST re-ground them: state the project, the branch, the current task, then the specific problem, THEN the recommendation and options. Be extra clear and self-contained — assume they haven't looked at this window in 20 minutes.
+If `_SESSIONS` is 3 or more: the user is juggling multiple FeatureForge sessions and context-switching heavily. **ELI16 mode** — they may not remember what this conversation is about. Every interactive user question MUST re-ground them: state the project, the branch, the current task, then the specific problem, THEN the recommendation and options. Be extra clear and self-contained — assume they haven't looked at this window in 20 minutes.
 
 Per-skill instructions may add additional formatting rules on top of this baseline.
 
 ## Contributor Mode
 
-If `_CONTRIB` is `true`: you are in **contributor mode**. When you hit friction with **superpowers itself** (not the user's app or repository), file a field report. Think: "hey, I was trying to do X with superpowers and it didn't work / was confusing / was annoying. Here's what happened."
+If `_CONTRIB` is `true`: you are in **contributor mode**. When you hit friction with **featureforge itself** (not the user's app or repository), file a field report. Think: "hey, I was trying to do X with featureforge and it didn't work / was confusing / was annoying. Here's what happened."
 
-**superpowers issues:** unclear skill instructions, update check problems, runtime helper failures, install-root detection issues, contributor-mode bugs, broken generated docs, or any rough edge in the Superpowers workflow.
-**NOT superpowers issues:** the user's application bugs, repo-specific architecture problems, auth failures on the user's site, or third-party service outages unrelated to Superpowers tooling.
+**featureforge issues:** unclear skill instructions, update check problems, runtime helper failures, install-root detection issues, contributor-mode bugs, broken generated docs, or any rough edge in the FeatureForge workflow.
+**NOT featureforge issues:** the user's application bugs, repo-specific architecture problems, auth failures on the user's site, or third-party service outages unrelated to FeatureForge tooling.
 
-**To file:** write `~/.superpowers/contributor-logs/{slug}.md` with this structure:
+**To file:** write `~/.featureforge/contributor-logs/{slug}.md` with this structure:
 
 ```
 # {Title}
 
-Hey superpowers team — ran into this while using /{skill-name}:
+Hey featureforge team — ran into this while using /{skill-name}:
 
 **What I was trying to do:** {what the user/agent was attempting}
 **What happened instead:** {what actually happened}
@@ -98,35 +98,35 @@ Hey superpowers team — ran into this while using /{skill-name}:
 ## Raw output
 (wrap any error messages or unexpected output in a markdown code block)
 
-**Date:** {YYYY-MM-DD} | **Version:** {superpowers version} | **Skill:** /{skill}
+**Date:** {YYYY-MM-DD} | **Version:** {featureforge version} | **Skill:** /{skill}
 ```
 
 Then run:
 
 ```bash
-mkdir -p ~/.superpowers/contributor-logs
+mkdir -p ~/.featureforge/contributor-logs
 if command -v open >/dev/null 2>&1; then
-  open ~/.superpowers/contributor-logs/{slug}.md
+  open ~/.featureforge/contributor-logs/{slug}.md
 elif command -v xdg-open >/dev/null 2>&1; then
-  xdg-open ~/.superpowers/contributor-logs/{slug}.md >/dev/null 2>&1 || true
+  xdg-open ~/.featureforge/contributor-logs/{slug}.md >/dev/null 2>&1 || true
 fi
 ```
 
-Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Skip if the file already exists. Max 3 reports per session. File inline and continue — don't stop the workflow. Tell the user: "Filed superpowers field report: {title}"
+Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Skip if the file already exists. Max 3 reports per session. File inline and continue — don't stop the workflow. Tell the user: "Filed featureforge field report: {title}"
 
 
-# Superpowers Artifact Contract
+# FeatureForge Artifact Contract
 
-- Review the written plan artifact in `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`.
-- If the user names a specific plan path, use that path. Otherwise, inspect `docs/superpowers/plans/` and review the newest matching plan doc.
+- Review the written plan artifact in `docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md`.
+- If the user names a specific plan path, use that path. Otherwise, inspect `docs/featureforge/plans/` and review the newest matching plan doc.
 - Review the full written plan after completion. Do not do chunk-by-chunk embedded review here.
-- If no current plan exists, stop and direct the agent back to `superpowers:writing-plans`.
+- If no current plan exists, stop and direct the agent back to `featureforge:writing-plans`.
 - The plan must include these exact header lines immediately below the title:
 
 ```markdown
 **Workflow State:** Draft | Engineering Approved
 **Plan Revision:** <integer>
-**Execution Mode:** none | superpowers:executing-plans | superpowers:subagent-driven-development
+**Execution Mode:** none | featureforge:executing-plans | featureforge:subagent-driven-development
 **Source Spec:** <path>
 **Source Spec Revision:** <integer>
 **Last Reviewed By:** writing-plans | plan-eng-review
@@ -141,23 +141,23 @@ Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Ski
 - Before editing the plan body or changing approval headers on disk, run the shared repo-safety preflight for the exact review-write scope:
 
 ```bash
-superpowers repo-safety check --intent write --stage superpowers:plan-eng-review --task-id <current-plan-review> --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target repo-file-write
+featureforge repo-safety check --intent write --stage featureforge:plan-eng-review --task-id <current-plan-review> --path docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md --write-target repo-file-write
 ```
 
 - When the mutation is specifically an approval-header edit, use the same command shape with `--write-target approval-header-write`.
-- If the helper returns `blocked`, name the branch, the stage, and the blocking `failure_class`, then route to either a feature branch / `superpowers:using-git-worktrees` or explicit user approval for this exact review scope.
+- If the helper returns `blocked`, name the branch, the stage, and the blocking `failure_class`, then route to either a feature branch / `featureforge:using-git-worktrees` or explicit user approval for this exact review scope.
 - If the user explicitly approves the protected-branch review write, run:
 
 ```bash
-superpowers repo-safety approve --stage superpowers:plan-eng-review --task-id <current-plan-review> --reason "<explicit user approval>" --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target repo-file-write
-superpowers repo-safety check --intent write --stage superpowers:plan-eng-review --task-id <current-plan-review> --path docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md --write-target repo-file-write
+featureforge repo-safety approve --stage featureforge:plan-eng-review --task-id <current-plan-review> --reason "<explicit user approval>" --path docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md --write-target repo-file-write
+featureforge repo-safety check --intent write --stage featureforge:plan-eng-review --task-id <current-plan-review> --path docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md --write-target repo-file-write
 ```
 
 - Repeat the same approve -> re-check pattern for `approval-header-write` before flipping `**Workflow State:**` or any other approval header on a protected branch.
 - Keep the plan in `Draft` while review issues remain open or while the source spec path or revision is stale.
 - Only write `**Workflow State:** Engineering Approved` as the last step of a successful review, and set `**Last Reviewed By:** plan-eng-review` at the same time.
 - When the review is resolved and the written plan is approved, present the normal execution preflight handoff.
-- `superpowers:subagent-driven-development` and `superpowers:executing-plans` own implementation. Do not start implementation inside `plan-eng-review`.
+- `featureforge:subagent-driven-development` and `featureforge:executing-plans` own implementation. Do not start implementation inside `plan-eng-review`.
 
 **The terminal state is presenting the execution preflight handoff with the approved plan path.**
 
@@ -191,7 +191,7 @@ Accelerated ENG `SMALL CHANGE` review must still limit the reviewer to one prima
 
 In accelerated review, keep routine issues bundled inside the section packet. Break out only escalated high-judgment issues into direct human questions before section approval.
 
-Persist accelerated engineering section packets under `~/.superpowers/projects/<slug>/...`.
+Persist accelerated engineering section packets under `~/.featureforge/projects/<slug>/...`.
 
 Resume accelerated engineering review only from the last approved-and-applied section boundary.
 
@@ -284,8 +284,8 @@ Before moving into the review sections:
 
 1. Read `**Source Spec:**` and confirm the file exists.
 2. Read that spec's `**Workflow State:**` and `**Spec Revision:**`.
-3. If the spec is not `CEO Approved`, stop and direct the agent back to `superpowers:plan-ceo-review`.
-4. If the plan's `**Source Spec:**` path or `**Source Spec Revision:**` does not match the latest approved spec, stop and direct the agent back to `superpowers:writing-plans`.
+3. If the spec is not `CEO Approved`, stop and direct the agent back to `featureforge:plan-ceo-review`.
+4. If the plan's `**Source Spec:**` path or `**Source Spec Revision:**` does not match the latest approved spec, stop and direct the agent back to `featureforge:writing-plans`.
 5. If you make plan edits during this review, keep `**Workflow State:** Draft` until every review issue is resolved.
 
 ### Plan-Contract Gate
@@ -293,7 +293,7 @@ Before moving into the review sections:
 Before `**Workflow State:** Engineering Approved`, run:
 
 ```bash
-PLAN_ANALYSIS_JSON="$("$_SUPERPOWERS_ROOT/bin/superpowers" plan contract analyze-plan \
+PLAN_ANALYSIS_JSON="$("$_FEATUREFORGE_ROOT/bin/featureforge" plan contract analyze-plan \
   --spec <source-spec-path> \
   --plan <plan-path> \
   --format json)"
@@ -316,7 +316,7 @@ Engineering approval must fail closed when `analyze-plan` reports:
 - invalid task heading structure
 - invalid `Files:` block structure
 
-If `coverage_complete`, `open_questions_resolved`, `task_structure_valid`, or `files_blocks_valid` is not `true`, keep the plan in `Draft` and continue review or route back to `superpowers:writing-plans`.
+If `coverage_complete`, `open_questions_resolved`, `task_structure_valid`, or `files_blocks_valid` is not `true`, keep the plan in `Draft` and continue review or route back to `featureforge:writing-plans`.
 
 In the review itself, answer these questions explicitly before approval:
 
@@ -401,7 +401,7 @@ For LLM or prompt changes, check the repo's prompt or evaluation docs. If this p
 After producing the coverage graph, write a QA handoff artifact for cross-session reuse:
 
 ```bash
-_SLUG_ENV=$("$_SUPERPOWERS_ROOT/bin/superpowers" repo slug 2>/dev/null || true)
+_SLUG_ENV=$("$_FEATUREFORGE_ROOT/bin/featureforge" repo slug 2>/dev/null || true)
 if [ -n "$_SLUG_ENV" ]; then
   eval "$_SLUG_ENV"
 fi
@@ -415,13 +415,13 @@ Write to `$_SP_STATE_DIR/projects/$SLUG/{user}-{safe-branch}-test-plan-{datetime
 
 ```markdown
 # Test Plan
-**Source Plan:** `docs/superpowers/plans/...`
+**Source Plan:** `docs/featureforge/plans/...`
 **Source Plan Revision:** 3
 **Branch:** {branch}
 **Repo:** {slug}
 **Head SHA:** {current-head}
 **Browser QA Required:** yes
-**Generated By:** superpowers:plan-eng-review
+**Generated By:** featureforge:plan-eng-review
 **Generated At:** 2026-03-22T14:30:00Z
 
 ## Affected Pages / Routes
@@ -458,7 +458,7 @@ Write to `$_SP_STATE_DIR/projects/$SLUG/{user}-{safe-branch}-test-plan-{datetime
 - Review outcome captured separately in the source plan.
 ```
 
-This file is consumed by `superpowers:qa-only` as the primary QA handoff. Include only tester-facing guidance: what to test, where to test it, and why it matters. Preserve the current core sections (`Affected Pages / Routes`, `Key Interactions`, `Edge Cases`, `Critical Paths`) and treat the richer sections as additive context; finish-gate freshness still depends on the existing required headers.
+This file is consumed by `featureforge:qa-only` as the primary QA handoff. Include only tester-facing guidance: what to test, where to test it, and why it matters. Preserve the current core sections (`Affected Pages / Routes`, `Key Interactions`, `Edge Cases`, `Critical Paths`) and treat the richer sections as additive context; finish-gate freshness still depends on the existing required headers.
 
 Set `**Browser QA Required:** yes` when the approved plan, branch-specific routes, or interaction surface make browser QA part of the normal finish gate. Otherwise write `no`.
 Set `**Head SHA:**` to the current `git rev-parse HEAD` for the branch state that this test-plan artifact covers.
@@ -598,17 +598,17 @@ Check the git log for this branch. If there are prior commits suggesting a previ
 
 ## Execution handoff
 
-Before presenting the final execution preflight handoff, if `$_SUPERPOWERS_ROOT/bin/superpowers` is available, call `$_SUPERPOWERS_ROOT/bin/superpowers workflow status --refresh`.
+Before presenting the final execution preflight handoff, if `$_FEATUREFORGE_ROOT/bin/featureforge` is available, call `$_FEATUREFORGE_ROOT/bin/featureforge workflow status --refresh`.
 
 - If the helper returns a non-empty `next_skill`, use that route instead of re-deriving state manually.
-- If the helper returns `status` `implementation_ready`, immediately call `$_SUPERPOWERS_ROOT/bin/superpowers workflow handoff` before presenting any handoff text.
+- If the helper returns `status` `implementation_ready`, immediately call `$_FEATUREFORGE_ROOT/bin/featureforge workflow handoff` before presenting any handoff text.
 - If that handoff returns `phase` `execution_preflight`, present the normal execution preflight handoff below.
 - If that handoff returns a later phase such as `review_blocked`, `qa_pending`, `document_release_pending`, or `ready_for_branch_completion`, follow that reported phase and `next_action` instead of reopening execution preflight.
 - Only fall back to manual artifact inspection if the helper is unavailable or fails.
 
 When the review is resolved and the written plan is approved, present the normal execution preflight handoff.
 
-During that handoff, call `superpowers plan execution recommend --plan <approved-plan-path>` and present the helper's recommended skill first.
+During that handoff, call `featureforge plan execution recommend --plan <approved-plan-path>` and present the helper's recommended skill first.
 
 The handoff must include the exact approved plan path and must remind the execution skill to reject draft or stale plans.
 
@@ -618,7 +618,7 @@ If any task packet is missing, stale, or non-buildable for the approved plan rev
 
 * Present the helper-recommended execution skill as the default path with the approved plan path.
 * If isolated-agent workflows are available in the current platform/session, show the other valid execution skill as an explicit override.
-* If isolated-agent workflows are unavailable, do not present `superpowers:subagent-driven-development` as an available override.
+* If isolated-agent workflows are unavailable, do not present `featureforge:subagent-driven-development` as an available override.
 
 Do not start implementation before the review is satisfied.
 

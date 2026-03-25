@@ -1,6 +1,6 @@
 mod common;
 
-use superpowers::contracts::plan::analyze_plan;
+use featureforge::contracts::plan::analyze_plan;
 
 fn main() {
     let config = common::parse_args("plan_contract");

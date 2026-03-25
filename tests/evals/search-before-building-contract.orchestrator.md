@@ -27,7 +27,7 @@ Use the scenario-set identifier `search-before-building-contract-r2` for evidenc
 4. Capture raw runner output and a small structured outcome block for each scenario.
 5. Start a fresh isolated judge subagent after each runner finishes.
 6. Feed each judge the raw runner evidence, the scenario file, and the canonical contract.
-7. Record a per-scenario evidence bundle under `~/.superpowers/projects/<slug>/search-before-building-contract-r2/...`.
+7. Record a per-scenario evidence bundle under `~/.featureforge/projects/<slug>/search-before-building-contract-r2/...`.
 8. Pass only when every required scenario in the checked-in matrix passes and no scenario is ambiguous.
 
 ## Evidence Bundle

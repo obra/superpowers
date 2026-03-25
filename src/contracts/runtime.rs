@@ -15,8 +15,8 @@ use crate::contracts::plan::{AnalyzePlanReport, ContractDiagnostic, OverlappingW
 use crate::diagnostics::{DiagnosticError, FailureClass, JsonFailure};
 use crate::git::discover_slug_identity;
 use crate::paths::{
-    normalize_identifier_token, normalize_repo_relative_path, normalize_whitespace,
-    superpowers_state_dir,
+    featureforge_state_dir, normalize_identifier_token, normalize_repo_relative_path,
+    normalize_whitespace,
 };
 
 const AMBIGUOUS_PHRASES: &[&str] = &[
@@ -774,7 +774,7 @@ fn analyze_contract(
         }
     }
 
-    let spec_result = match std::env::var("SUPERPOWERS_PLAN_CONTRACT_TEST_FAILPOINT") {
+    let spec_result = match std::env::var("FEATUREFORGE_PLAN_CONTRACT_TEST_FAILPOINT") {
         Ok(value) if value == "requirement_index_unexpected_failure" => {
             Err(RequirementIndexState::Unexpected)
         }
@@ -811,7 +811,7 @@ fn analyze_contract(
         }
     };
 
-    let matrix_result = match std::env::var("SUPERPOWERS_PLAN_CONTRACT_TEST_FAILPOINT") {
+    let matrix_result = match std::env::var("FEATUREFORGE_PLAN_CONTRACT_TEST_FAILPOINT") {
         Ok(value) if value == "coverage_matrix_unexpected_failure" => {
             Err(CoverageMatrixState::Unexpected)
         }
@@ -1119,7 +1119,7 @@ fn parse_plan_headers(source: &str) -> Result<PlanHeaders, HeaderError> {
             message: String::from("Execution Mode header is missing or malformed."),
         })?;
     match execution_mode {
-        "none" | "superpowers:executing-plans" | "superpowers:subagent-driven-development" => {}
+        "none" | "featureforge:executing-plans" | "featureforge:subagent-driven-development" => {}
         _ => {
             return Err(HeaderError {
                 reason_code: String::from("invalid_execution_mode"),
@@ -1776,7 +1776,7 @@ fn write_packet_cache(
 }
 
 fn prune_packet_cache(packet_dir: &Path, current_packet: &Path) {
-    let mut limit = std::env::var("SUPERPOWERS_PLAN_PACKET_RETENTION")
+    let mut limit = std::env::var("FEATUREFORGE_PLAN_PACKET_RETENTION")
         .ok()
         .and_then(|value| value.parse::<usize>().ok())
         .unwrap_or(20);
@@ -1975,7 +1975,7 @@ fn repo_root() -> PathBuf {
 }
 
 fn state_dir() -> PathBuf {
-    superpowers_state_dir()
+    featureforge_state_dir()
 }
 
 fn current_username() -> String {

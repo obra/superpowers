@@ -3,9 +3,9 @@ $ErrorActionPreference = "Stop"
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = Split-Path -Parent $ScriptDir
-$TargetKey = if ($env:SUPERPOWERS_PREBUILT_TARGET) { $env:SUPERPOWERS_PREBUILT_TARGET } else { "windows-x64" }
-$RustTarget = if ($env:SUPERPOWERS_PREBUILT_RUST_TARGET) { $env:SUPERPOWERS_PREBUILT_RUST_TARGET } else { "x86_64-pc-windows-msvc" }
-$BinaryName = if ($env:SUPERPOWERS_PREBUILT_BINARY) { $env:SUPERPOWERS_PREBUILT_BINARY } else { "superpowers.exe" }
+$TargetKey = if ($env:FEATUREFORGE_PREBUILT_TARGET) { $env:FEATUREFORGE_PREBUILT_TARGET } else { "windows-x64" }
+$RustTarget = if ($env:FEATUREFORGE_PREBUILT_RUST_TARGET) { $env:FEATUREFORGE_PREBUILT_RUST_TARGET } else { "x86_64-pc-windows-msvc" }
+$BinaryName = if ($env:FEATUREFORGE_PREBUILT_BINARY) { $env:FEATUREFORGE_PREBUILT_BINARY } else { "featureforge.exe" }
 $Version = (Get-Content (Join-Path $RepoRoot "VERSION") -Raw).Trim()
 $OutputDir = Join-Path $RepoRoot "bin/prebuilt/$TargetKey"
 $OutputPath = Join-Path $OutputDir $BinaryName
@@ -15,7 +15,7 @@ $BuildPath = Join-Path $RepoRoot "target/$RustTarget/release/$BinaryName"
 
 Push-Location $RepoRoot
 try {
-  cargo build --release --target $RustTarget --bin superpowers | Out-Host
+  cargo build --release --target $RustTarget --bin featureforge | Out-Host
 } finally {
   Pop-Location
 }

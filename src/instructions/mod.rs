@@ -85,7 +85,7 @@ pub fn parse_protected_branches(files: &[PathBuf]) -> Result<Vec<String>, Diagno
         })?;
         for line in contents.lines() {
             let trimmed = line.trim_start();
-            let Some(raw_list) = trimmed.strip_prefix("Superpowers protected branches:") else {
+            let Some(raw_list) = trimmed.strip_prefix("FeatureForge protected branches:") else {
                 continue;
             };
             for raw_branch_name in raw_list.split(',') {

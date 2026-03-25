@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import path from 'node:path';
 import {
   REPO_ROOT,
@@ -24,6 +25,33 @@ const PLAN_FIXTURES = [
 ];
 
 const STALE_PATH_PLAN_FIXTURE = 'plans/2026-01-22-document-review-system-stale-path.md';
+const ACTIVE_DOC_PATHS = [
+  'RELEASE-NOTES.md',
+  'TODOS.md',
+  'docs/README.codex.md',
+  'docs/README.copilot.md',
+  'docs/testing.md',
+  'docs/test-suite-enhancement-plan.md',
+  'tests/differential/README.md',
+  'tests/evals/README.md',
+];
+
+function retiredProductName() {
+  const readme = readUtf8(path.join(REPO_ROOT, 'README.md'));
+  const provenanceLine = readme
+    .split('\n')
+    .find((line) => line.startsWith('FeatureForge began from upstream '));
+  assert.ok(provenanceLine, 'README.md should keep the provenance attribution line');
+  const match = provenanceLine.match(/upstream ([A-Za-z]+):/);
+  assert.ok(match, 'README.md provenance line should expose the retired product name');
+  return match[1].toLowerCase();
+}
+
+const RETIRED_PRODUCT = retiredProductName();
+const LEGACY_ACTIVE_DOC_PATTERN = new RegExp(
+  `${RETIRED_PRODUCT}|using_${RETIRED_PRODUCT}_skill|using-${RETIRED_PRODUCT}|\\.${RETIRED_PRODUCT}|${RETIRED_PRODUCT.toUpperCase()}_`,
+  'i',
+);
 
 function getExactHeaderLine(content, label) {
   const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -101,15 +129,44 @@ test('runtime fixture coverage points at the fixture directory', () => {
   assert.match(content, /tests\/codex-runtime\/fixtures\/workflow-artifacts/);
 });
 
-test('public workflow rust smoke coverage exercises the shipped public wrapper', () => {
+test('public workflow rust smoke coverage exercises the canonical featureforge CLI', () => {
   const content = readUtf8(path.join(REPO_ROOT, 'tests/workflow_shell_smoke.rs'));
-  assert.match(content, /bin\/superpowers-workflow/);
-  assert.match(content, /public_workflow_wrapper_help_outside_repo_mentions_the_public_surfaces/);
-  assert.match(content, /public_workflow_wrapper_status_summary_matches_json_semantics_for_ready_plans/);
+  assert.match(content, /standalone_binary_has_no_separate_workflow_wrapper_files/);
+  assert.match(content, /workflow_help_outside_repo_mentions_the_public_surfaces/);
+  assert.match(content, /workflow_status_summary_matches_json_semantics_for_ready_plans/);
 });
 
 test('workflow runtime coverage retains argv0 alias and public operator parity', () => {
   const content = readUtf8(path.join(REPO_ROOT, 'tests/workflow_runtime.rs'));
   assert.match(content, /workflow_status_argv0_alias_dispatches_to_canonical_tree/);
   assert.match(content, /canonical_workflow_public_json_commands_work_for_ready_plan/);
+});
+
+test('active docs reserve legacy attribution to the README provenance section only', () => {
+  const readme = readUtf8(path.join(REPO_ROOT, 'README.md'));
+  const provenanceStart = readme.indexOf('## Provenance');
+  const nextSectionStart = readme.indexOf('## How It Works');
+
+  assert.notEqual(provenanceStart, -1, 'README.md should define a Provenance section');
+  assert.notEqual(nextSectionStart, -1, 'README.md should define the next section after Provenance');
+  assert.ok(nextSectionStart > provenanceStart, 'README.md should keep Provenance before How It Works');
+
+  const readmeOutsideProvenance = `${readme.slice(0, provenanceStart)}${readme.slice(nextSectionStart)}`;
+  assert.doesNotMatch(readmeOutsideProvenance, LEGACY_ACTIVE_DOC_PATTERN, 'README.md should keep legacy naming inside the Provenance section only');
+
+  for (const relativePath of ACTIVE_DOC_PATHS) {
+    const content = readUtf8(path.join(REPO_ROOT, relativePath));
+    assert.doesNotMatch(content, LEGACY_ACTIVE_DOC_PATTERN, `${relativePath} should not mention the legacy product in active docs`);
+  }
+});
+
+test('repo-local config and historical docs use the featureforge archive layout', () => {
+  assert.equal(fs.existsSync(path.join(REPO_ROOT, '.featureforge/config.yaml')), true, '.featureforge/config.yaml should exist');
+  assert.equal(fs.existsSync(path.join(REPO_ROOT, `.${RETIRED_PRODUCT}/config.yaml`)), false, `.${RETIRED_PRODUCT}/config.yaml should be removed from the active repo`);
+
+  const archiveRoot = path.join(REPO_ROOT, 'docs/archive', RETIRED_PRODUCT);
+  assert.equal(fs.existsSync(path.join(archiveRoot, 'specs/2026-03-22-runtime-integration-hardening-design.md')), true, `archived historical specs should move under docs/archive/${RETIRED_PRODUCT}/specs`);
+  assert.equal(fs.existsSync(path.join(archiveRoot, 'plans/2026-03-22-runtime-integration-hardening.md')), true, `archived historical plans should move under docs/archive/${RETIRED_PRODUCT}/plans`);
+  assert.equal(fs.existsSync(path.join(archiveRoot, 'execution-evidence/2026-03-22-runtime-integration-hardening-r1-evidence.md')), true, `archived historical execution evidence should move under docs/archive/${RETIRED_PRODUCT}/execution-evidence`);
+  assert.equal(fs.existsSync(path.join(REPO_ROOT, 'docs', RETIRED_PRODUCT)), false, `docs/${RETIRED_PRODUCT} should be removed after the archive move`);
 });

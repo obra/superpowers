@@ -8,17 +8,16 @@ pub fn canonical_command_from_argv0(argv0: &str) -> &'static [&'static str] {
     let normalized = file_name.strip_suffix(".exe").unwrap_or(file_name);
 
     match normalized {
-        "superpowers" => &[],
-        "superpowers-workflow" => &["workflow"],
-        "superpowers-workflow-status" => &["workflow", "status"],
-        "superpowers-plan-contract" => &["plan", "contract"],
-        "superpowers-plan-execution" => &["plan", "execution"],
-        "superpowers-repo-safety" => &["repo-safety"],
-        "superpowers-session-entry" => &["session-entry"],
-        "superpowers-slug" => &["repo", "slug"],
-        "superpowers-config" => &["config"],
-        "superpowers-update-check" => &["update-check"],
-        "superpowers-migrate-install" => &["install", "migrate"],
+        "featureforge" => &[],
+        "featureforge-workflow" => &["workflow"],
+        "featureforge-workflow-status" => &["workflow", "status"],
+        "featureforge-plan-contract" => &["plan", "contract"],
+        "featureforge-plan-execution" => &["plan", "execution"],
+        "featureforge-repo-safety" => &["repo-safety"],
+        "featureforge-session-entry" => &["session-entry"],
+        "featureforge-slug" => &["repo", "slug"],
+        "featureforge-config" => &["config"],
+        "featureforge-update-check" => &["update-check"],
         _ => &[],
     }
 }

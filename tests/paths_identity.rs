@@ -1,10 +1,10 @@
-use superpowers::compat::argv0::canonical_command_from_argv0;
-use superpowers::paths::RepoPath;
+use featureforge::compat::argv0::canonical_command_from_argv0;
+use featureforge::paths::RepoPath;
 
 #[test]
 fn repo_paths_normalize_backslashes_and_dot_segments() {
-    let path = RepoPath::parse(r"docs\superpowers//specs/./new-spec.md").unwrap();
-    assert_eq!(path.as_str(), "docs/superpowers/specs/new-spec.md");
+    let path = RepoPath::parse(r"docs\featureforge//specs/./new-spec.md").unwrap();
+    assert_eq!(path.as_str(), "docs/featureforge/specs/new-spec.md");
 }
 
 #[test]
@@ -26,17 +26,17 @@ fn repo_paths_reject_absolute_and_traversing_inputs() {
 
 #[test]
 fn argv0_dispatch_preserves_canonical_command_tree() {
-    assert_eq!(canonical_command_from_argv0("superpowers"), &[] as &[&str]);
+    assert_eq!(canonical_command_from_argv0("featureforge"), &[] as &[&str]);
     assert_eq!(
-        canonical_command_from_argv0("superpowers-workflow-status"),
+        canonical_command_from_argv0("featureforge-workflow-status"),
         &["workflow", "status"]
     );
     assert_eq!(
-        canonical_command_from_argv0("superpowers-plan-contract"),
+        canonical_command_from_argv0("featureforge-plan-contract"),
         &["plan", "contract"]
     );
     assert_eq!(
-        canonical_command_from_argv0("superpowers-repo-safety"),
+        canonical_command_from_argv0("featureforge-repo-safety"),
         &["repo-safety"]
     );
 }

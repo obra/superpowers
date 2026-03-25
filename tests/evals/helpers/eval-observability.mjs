@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 export function getEvalDir() {
-  const stateDir = process.env.SUPERPOWERS_STATE_DIR || path.join(os.homedir(), '.superpowers');
+  const stateDir = process.env.FEATUREFORGE_STATE_DIR || path.join(os.homedir(), '.featureforge');
   return path.join(stateDir, 'evals');
 }
 

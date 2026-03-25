@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 BASELINE_PATH="$REPO_ROOT/perf-baselines/runtime-hot-paths.json"
-OUTPUT_DIR="$(mktemp -d "${TMPDIR:-/tmp}/superpowers-benchmarks.XXXXXX")"
+OUTPUT_DIR="$(mktemp -d "${TMPDIR:-/tmp}/featureforge-benchmarks.XXXXXX")"
 trap 'rm -rf "$OUTPUT_DIR"' EXIT
 
 command -v cargo >/dev/null 2>&1 || {

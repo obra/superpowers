@@ -1,6 +1,6 @@
 # GitHub Copilot Skill Authoring Notes
 
-This file summarizes the GitHub Copilot guidance that matters most when writing Superpowers skills for local installs.
+This file summarizes the GitHub Copilot guidance that matters most when writing FeatureForge skills for local installs.
 
 ## Official References
 
@@ -16,7 +16,7 @@ For local installs:
 - skills live in `~/.copilot/skills/`
 - custom agents live in `~/.copilot/agents/`
 
-Superpowers should keep `skills/` and `agents/` canonical in the repo and install them into those discovery locations.
+FeatureForge should keep `skills/` and `agents/` canonical in the repo and install them into those discovery locations.
 
 ### 2. Repo instructions still matter
 

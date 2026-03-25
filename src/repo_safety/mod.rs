@@ -12,9 +12,8 @@ use crate::diagnostics::{DiagnosticError, FailureClass};
 use crate::git::{discover_repo_identity, discover_slug_identity};
 use crate::instructions::{collect_active_instruction_files, parse_protected_branches};
 use crate::paths::{
-    RepoPath, branch_storage_key, normalize_identifier_token, normalize_whitespace,
-    superpowers_state_dir,
-    write_atomic as write_atomic_file,
+    RepoPath, branch_storage_key, featureforge_state_dir, normalize_identifier_token,
+    normalize_whitespace, write_atomic as write_atomic_file,
 };
 
 const DEFAULT_PROTECTED_BRANCHES: &[&str] = &["main", "master", "dev", "develop"];
@@ -75,7 +74,6 @@ struct Scope {
     paths: Vec<String>,
     write_targets: Vec<String>,
     approval_fingerprint: String,
-    legacy_approval_path: PathBuf,
     canonical_approval_path: PathBuf,
 }
 
@@ -92,7 +90,7 @@ pub struct RepoSafetyRuntime {
 
 impl RepoSafetyRuntime {
     pub fn discover(current_dir: &Path) -> Result<Self, DiagnosticError> {
-        if env::var("SUPERPOWERS_REPO_SAFETY_TEST_FAILPOINT").as_deref()
+        if env::var("FEATUREFORGE_REPO_SAFETY_TEST_FAILPOINT").as_deref()
             == Ok("instruction_parse_failure")
         {
             return Err(DiagnosticError::new(
@@ -119,7 +117,6 @@ impl RepoSafetyRuntime {
     }
 
     pub fn check(&self, args: &RepoSafetyCheckArgs) -> Result<RepoSafetyResult, DiagnosticError> {
-        let pending_migration = pending_explicit_migration(&self.state_dir);
         let intent = match args.intent.as_str() {
             "read" | "write" => args.intent.as_str(),
             _ => {
@@ -137,11 +134,9 @@ impl RepoSafetyRuntime {
         )?;
 
         if intent == "read" {
-            warn_if_pending(pending_migration);
             return Ok(self.result("allowed", intent, &scope, "", "read_allowed", ""));
         }
         if !self.protected {
-            warn_if_pending(pending_migration);
             return Ok(self.result("allowed", intent, &scope, "", "branch_not_protected", ""));
         }
 
@@ -152,26 +147,17 @@ impl RepoSafetyRuntime {
                 &scope,
                 "ProtectedBranchDetected",
                 "protected_branch_requires_approval",
-                "superpowers:using-git-worktrees",
-            )),
-            ApprovalLookup::Malformed => Ok(self.result(
-                "blocked",
-                intent,
-                &scope,
-                "MalformedApprovalRecord",
-                "malformed_approval_record",
-                "superpowers:using-git-worktrees",
+                "featureforge:using-git-worktrees",
             )),
             ApprovalLookup::Found(record) => {
-                if !record_matches_scope(&record, &self.repo_root, &self.branch_name, &scope)
-                {
+                if !record_matches_scope(&record, &self.repo_root, &self.branch_name, &scope) {
                     return Ok(self.result(
                         "blocked",
                         intent,
                         &scope,
                         "ApprovalScopeMismatch",
                         "approval_scope_mismatch",
-                        "superpowers:using-git-worktrees",
+                        "featureforge:using-git-worktrees",
                     ));
                 }
                 if record.approval_fingerprint != scope.approval_fingerprint {
@@ -181,10 +167,9 @@ impl RepoSafetyRuntime {
                         &scope,
                         "ApprovalFingerprintMismatch",
                         "approval_fingerprint_mismatch",
-                        "superpowers:using-git-worktrees",
+                        "featureforge:using-git-worktrees",
                     ));
                 }
-                warn_if_pending(pending_migration);
                 Ok(self.result("allowed", intent, &scope, "", "approval_matched", ""))
             }
         }
@@ -194,12 +179,6 @@ impl RepoSafetyRuntime {
         &self,
         args: &RepoSafetyApproveArgs,
     ) -> Result<RepoSafetyResult, DiagnosticError> {
-        if pending_explicit_migration(&self.state_dir) {
-            return Err(DiagnosticError::new(
-                FailureClass::PendingMigration,
-                "Legacy repo-safety approvals must be migrated before recording new approvals. Run `superpowers install migrate`.",
-            ));
-        }
         let scope = self.prepare_scope(
             &args.stage,
             args.task_id.as_deref(),
@@ -256,16 +235,6 @@ impl RepoSafetyRuntime {
             paths,
             write_targets,
             approval_fingerprint,
-            legacy_approval_path: self
-                .state_dir
-                .join("projects")
-                .join(&self.repo_slug)
-                .join(format!(
-                    "{}-{}-repo-safety",
-                    current_user_name(),
-                    self.safe_branch
-                ))
-                .join(format!("{task_hash}.json")),
             canonical_approval_path: self
                 .state_dir
                 .join("repo-safety")
@@ -279,12 +248,6 @@ impl RepoSafetyRuntime {
     fn read_approval(&self, scope: &Scope) -> Result<ApprovalLookup, DiagnosticError> {
         if let Some(record) = read_approval_record(&scope.canonical_approval_path)? {
             return Ok(ApprovalLookup::Found(record));
-        }
-        if scope.legacy_approval_path.exists() {
-            return match read_approval_record(&scope.legacy_approval_path)? {
-                Some(record) => Ok(ApprovalLookup::Found(record)),
-                None => Ok(ApprovalLookup::Malformed),
-            };
         }
         Ok(ApprovalLookup::Missing)
     }
@@ -426,7 +389,6 @@ pub fn migrate_legacy_approvals(
 
 enum ApprovalLookup {
     Missing,
-    Malformed,
     Found(ApprovalRecord),
 }
 
@@ -745,16 +707,8 @@ fn current_user_name() -> String {
         .unwrap_or_else(|_| String::from("user"))
 }
 
-fn warn_if_pending(pending: bool) {
-    if pending {
-        eprintln!(
-            "PendingMigration: Using legacy repo-safety approvals in read-only mode. Run `superpowers install migrate` to rewrite non-rebuildable runtime state."
-        );
-    }
-}
-
 fn state_dir() -> PathBuf {
-    superpowers_state_dir()
+    featureforge_state_dir()
 }
 
 fn short_hash(value: &str, width: usize) -> String {

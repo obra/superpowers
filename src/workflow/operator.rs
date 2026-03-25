@@ -92,7 +92,7 @@ pub fn render_artifacts(current_dir: &Path) -> Result<String, JsonFailure> {
 pub fn render_explain(current_dir: &Path) -> Result<String, JsonFailure> {
     let context = build_context(current_dir)?;
     Ok(format!(
-        "Why Superpowers chose this state\n- State: {}\n- Spec: {}\n- Plan: {}\nWhat to do:\n1. {}\n",
+        "Why FeatureForge chose this state\n- State: {}\n- Spec: {}\n- Plan: {}\nWhat to do:\n1. {}\n",
         context.route.status,
         display_or_none(&context.route.spec_path),
         display_or_none(&context.route.plan_path),
@@ -102,15 +102,10 @@ pub fn render_explain(current_dir: &Path) -> Result<String, JsonFailure> {
 
 pub fn phase(current_dir: &Path) -> Result<WorkflowPhase, JsonFailure> {
     let context = build_context(current_dir)?;
-    let next_skill = if context.phase == "bypassed" {
-        String::new()
-    } else {
-        context.route.next_skill.clone()
-    };
     Ok(WorkflowPhase {
         phase: context.phase.clone(),
         route_status: context.route.status.clone(),
-        next_skill,
+        next_skill: public_next_skill(&context),
         next_action: next_action_for_context(&context).to_owned(),
         spec_path: context.route.spec_path.clone(),
         plan_path: context.route.plan_path.clone(),
@@ -142,11 +137,7 @@ pub fn doctor(current_dir: &Path) -> Result<WorkflowDoctor, JsonFailure> {
     Ok(WorkflowDoctor {
         phase: context.phase.clone(),
         route_status: context.route.status.clone(),
-        next_skill: if context.phase == "bypassed" {
-            String::new()
-        } else {
-            context.route.next_skill.clone()
-        },
+        next_skill: public_next_skill(&context),
         next_action: next_action_for_context(&context).to_owned(),
         spec_path: context.route.spec_path.clone(),
         plan_path: context.route.plan_path.clone(),
@@ -216,7 +207,7 @@ pub fn handoff(current_dir: &Path) -> Result<WorkflowHandoff, JsonFailure> {
             "bypassed" => (
                 String::new(),
                 String::from(
-                    "Superpowers is bypassed for this session until the user explicitly re-enters.",
+                    "FeatureForge is bypassed for this session until the user explicitly re-enters.",
                 ),
             ),
             "executing" => {
@@ -232,21 +223,30 @@ pub fn handoff(current_dir: &Path) -> Result<WorkflowHandoff, JsonFailure> {
                     ),
                 )
             }
+            "implementation_handoff" => (String::new(), reason_text(&context)),
+            "review_blocked" if review_requires_execution_reentry(&context) => {
+                let skill = context
+                    .execution_status
+                    .as_ref()
+                    .map(|status| status.execution_mode.clone())
+                    .unwrap_or_default();
+                (skill, reason_text(&context))
+            }
             "review_blocked" => (
-                String::from("superpowers:requesting-code-review"),
+                String::from("featureforge:requesting-code-review"),
                 reason_text(&context),
             ),
             "qa_pending" if finish_requires_test_plan_refresh(&context) => (
-                String::from("superpowers:plan-eng-review"),
+                String::from("featureforge:plan-eng-review"),
                 reason_text(&context),
             ),
-            "qa_pending" => (String::from("superpowers:qa-only"), reason_text(&context)),
+            "qa_pending" => (String::from("featureforge:qa-only"), reason_text(&context)),
             "document_release_pending" => (
-                String::from("superpowers:document-release"),
+                String::from("featureforge:document-release"),
                 reason_text(&context),
             ),
             "ready_for_branch_completion" => (
-                String::from("superpowers:finishing-a-development-branch"),
+                String::from("featureforge:finishing-a-development-branch"),
                 reason_text(&context),
             ),
             _ if execution_started == "yes" => {
@@ -269,11 +269,7 @@ pub fn handoff(current_dir: &Path) -> Result<WorkflowHandoff, JsonFailure> {
     Ok(WorkflowHandoff {
         phase: context.phase.clone(),
         route_status: context.route.status.clone(),
-        next_skill: if context.phase == "bypassed" {
-            String::new()
-        } else {
-            context.route.next_skill.clone()
-        },
+        next_skill: public_next_skill(&context),
         contract_state,
         spec_path: context.route.spec_path.clone(),
         plan_path: context.route.plan_path.clone(),
@@ -489,11 +485,20 @@ fn next_step_text(context: &OperatorContext) -> String {
     if context.phase == "qa_pending" && finish_requires_test_plan_refresh(context) {
         if context.route.plan_path.is_empty() {
             return String::from(
-                "Regenerate the current-branch test-plan artifact via superpowers:plan-eng-review before browser QA or branch completion.",
+                "Regenerate the current-branch test-plan artifact via featureforge:plan-eng-review before browser QA or branch completion.",
             );
         }
         return format!(
-            "Regenerate the current-branch test-plan artifact via superpowers:plan-eng-review for the approved plan before browser QA or branch completion: {}",
+            "Regenerate the current-branch test-plan artifact via featureforge:plan-eng-review for the approved plan before browser QA or branch completion: {}",
+            context.route.plan_path
+        );
+    }
+    if review_requires_execution_reentry(context) {
+        if context.route.plan_path.is_empty() {
+            return String::from("Return to the current execution flow for the approved plan.");
+        }
+        return format!(
+            "Return to the current execution flow for the approved plan: {}",
             context.route.plan_path
         );
     }
@@ -513,10 +518,10 @@ fn next_text_for_phase(
 ) -> String {
     match phase {
         "needs_user_choice" => String::from(
-            "Resolve the session-entry gate before continuing into the normal Superpowers workflow.",
+            "Resolve the session-entry gate before continuing into the normal FeatureForge workflow.",
         ),
         "bypassed" => String::from(
-            "Continue outside the Superpowers workflow unless the user explicitly re-enters.",
+            "Continue outside the FeatureForge workflow unless the user explicitly re-enters.",
         ),
         "execution_preflight" | "implementation_handoff" => {
             if plan_path.is_empty() {
@@ -534,27 +539,27 @@ fn next_text_for_phase(
         }
         "review_blocked" => {
             if plan_path.is_empty() {
-                String::from("Use superpowers:requesting-code-review for the final review gate.")
+                String::from("Use featureforge:requesting-code-review for the final review gate.")
             } else {
                 format!(
-                    "Use superpowers:requesting-code-review for the approved plan before branch completion: {plan_path}"
+                    "Use featureforge:requesting-code-review for the approved plan before branch completion: {plan_path}"
                 )
             }
         }
         "qa_pending" => String::from(
-            "Run superpowers:qa-only and return with a fresh QA result artifact before branch completion.",
+            "Run featureforge:qa-only and return with a fresh QA result artifact before branch completion.",
         ),
         "document_release_pending" => String::from(
-            "Run superpowers:document-release and return with a fresh release-readiness artifact before branch completion.",
+            "Run featureforge:document-release and return with a fresh release-readiness artifact before branch completion.",
         ),
         "ready_for_branch_completion" => {
-            String::from("Use superpowers:finishing-a-development-branch.")
+            String::from("Use featureforge:finishing-a-development-branch.")
         }
         _ => {
             if !next_skill.is_empty() {
                 format!("Use {next_skill}")
             } else if route_status == "needs_brainstorming" {
-                String::from("Use superpowers:brainstorming")
+                String::from("Use featureforge:brainstorming")
             } else {
                 String::from("Inspect the workflow state again after resolving the current issue.")
             }
@@ -589,7 +594,7 @@ fn reason_text(context: &OperatorContext) -> String {
             String::from("The session-entry decision is still unresolved for this session.")
         }
         "bypassed" => String::from(
-            "Superpowers is bypassed for this session until the user explicitly re-enters.",
+            "FeatureForge is bypassed for this session until the user explicitly re-enters.",
         ),
         _ => context.route.reason.clone(),
     }
@@ -599,10 +604,18 @@ fn display_or_none(value: &str) -> &str {
     if value.is_empty() { "none" } else { value }
 }
 
+fn public_next_skill(context: &OperatorContext) -> String {
+    if matches!(context.phase.as_str(), "needs_user_choice" | "bypassed") {
+        String::new()
+    } else {
+        context.route.next_skill.clone()
+    }
+}
+
 fn next_action_for_phase(phase: &str) -> &'static str {
     match phase {
         "needs_user_choice" => "session_entry_gate",
-        "bypassed" => "continue_outside_superpowers",
+        "bypassed" => "continue_outside_featureforge",
         "needs_brainstorming"
         | "brainstorming"
         | "spec_review"
@@ -621,7 +634,9 @@ fn next_action_for_phase(phase: &str) -> &'static str {
 }
 
 fn next_action_for_context(context: &OperatorContext) -> &'static str {
-    if context.phase == "qa_pending" && finish_requires_test_plan_refresh(context) {
+    if review_requires_execution_reentry(context) {
+        "return_to_execution"
+    } else if context.phase == "qa_pending" && finish_requires_test_plan_refresh(context) {
         "refresh_test_plan"
     } else {
         next_action_for_phase(&context.phase)
@@ -637,6 +652,14 @@ fn finish_requires_test_plan_refresh(context: &OperatorContext) -> bool {
             "test_plan_artifact_stale",
         ],
     )
+}
+
+fn review_requires_execution_reentry(context: &OperatorContext) -> bool {
+    context.phase == "review_blocked"
+        && context
+            .gate_review
+            .as_ref()
+            .is_some_and(|gate| !gate.allowed)
 }
 
 fn gate_has_any_reason(gate: Option<&GateResult>, expected_codes: &[&str]) -> bool {
@@ -662,7 +685,7 @@ fn execution_status_args(args: &PlanArgs) -> ExecutionStatusArgs {
 }
 
 fn session_key() -> Option<String> {
-    env::var("SUPERPOWERS_SESSION_KEY")
+    env::var("FEATUREFORGE_SESSION_KEY")
         .ok()
         .or_else(|| env::var("PPID").ok())
         .filter(|value| !value.trim().is_empty())
