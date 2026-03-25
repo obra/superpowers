@@ -59,27 +59,36 @@ Add to the Resume Detection section, after the existing artifact checks:
 
 ### Completion Report Gate
 
-Wrap the existing Completion Report section with:
+Prepend the following bold instruction as a new paragraph immediately before the existing trigger line ("When all phases complete, output:") in the Completion Report section: [inferred]
 
 > **Do NOT output this report until Task 9's blockedBy chain is fully satisfied** — meaning Tasks 7 (Phase 6) and 8 (Phase 7) are marked complete. If they are not complete, go back and complete them.
 
 ### Resume Detection Update
 
+The new task-based resume logic **replaces** the existing artifact-to-phase mapping table (lines 95-100 of current SKILL.md). The old table is deleted, not supplemented. [inferred]
+
 When resuming from existing artifacts, the orchestrator:
 1. Creates all 9 tasks as normal
-2. Checks which completion criteria are already satisfied by existing artifacts on disk
-3. Marks those tasks as complete (preserving the blockedBy chain)
-4. Begins work at the first incomplete task
+2. Runs the plan-without-spec guard: if a plan file exists but no spec file exists, do NOT mark Task 4 (Write Plan) as complete — this forces resume at Task 2 (Brainstorm), even if a plan file is present on disk [inferred]
+3. Checks which completion criteria are already satisfied by existing artifacts on disk
+4. Marks those tasks as complete (preserving the blockedBy chain)
+5. Begins work at the first incomplete task
 
 This means resume detection works naturally through the task system rather than as a separate code path.
 
 ## Changes Summary
 
-| Location in SKILL.md | Change |
-|----------------------|--------|
-| Line 104 (task creation instruction) | Replace with `## Task Scaffold` section containing the task table, startup instruction, and anti-skip HARD-GATE |
-| Resume Detection section (~line 86-100) | Add "Plan without spec" guard |
-| Completion Report section (~line 405) | Add completion gate referencing task dependencies |
+Edit order: apply changes in this sequence to avoid line-number drift. [inferred]
+
+| Order | Target (by content, not line number) | Change |
+|-------|--------------------------------------|--------|
+| 1 | Resume Detection section: after the "All tasks in plan completed → resume at Phase 6" line | Add "Plan without spec" guard. Delete the old artifact-to-phase mapping table and replace with the task-based resume logic. |
+| 2 | The line `You MUST create a task for each phase step and complete in order.` | Replace with `## Task Scaffold` section containing the task table, startup instruction, and anti-skip HARD-GATE. Preserve the `## The Process` heading and the flow diagram that follows. [inferred] |
+| 3 | Completion Report section: the line `When all phases complete, output:` | Prepend the completion gate as a new bold paragraph before that line |
+
+## Refinement Status
+
+Refinement: CONVERGED round 2
 
 ## Out of Scope
 
