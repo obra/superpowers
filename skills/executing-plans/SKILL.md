@@ -7,11 +7,35 @@ description: Use when you have a written implementation plan to execute in a sep
 
 ## Overview
 
-Load plan, review critically, execute all tasks, report when complete.
+Load plan, review critically, execute all tasks with optional quality gates, report when complete.
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
 **Note:** Tell your human partner that Superpowers works much better with access to subagents. The quality of its work will be significantly higher if run on a platform with subagent support (such as Claude Code or Codex). If subagents are available, use superpowers:subagent-driven-development instead of this skill.
+
+## Step 0: Opt-In Gates (Ask User BEFORE Starting)
+
+Before starting execution, ask the user which quality gates to activate:
+
+```
+Before we begin, this plan has [N] tasks. I can activate optional quality gates:
+
+1. **TDD Enforcement** — After each task, I'll review my own git history to verify
+   I followed Red-Green-Refactor (wrote tests before production code).
+   Cost: ~2 min extra per task. Recommended for all tasks.
+
+2. **Self-Adversarial Review** — After each task passes quality checks, I'll do a
+   structured adversarial pass checking security, edge cases, and architecture.
+   Cost: ~5 min extra per task. Recommended for tasks touching auth/data/APIs.
+
+Which gates do you want active?
+  (a) Both TDD + Adversarial [maximum quality]
+  (b) TDD only [balanced]
+  (c) Adversarial only [security focus]
+  (d) Neither [fast mode]
+```
+
+Store the choice and apply consistently. Don't re-ask per task.
 
 ## The Process
 
@@ -27,7 +51,17 @@ For each task:
 1. Mark as in_progress
 2. Follow each step exactly (plan has bite-sized steps)
 3. Run verifications as specified
-4. Mark as completed
+4. **If TDD gate active:** Before marking complete, review your own git log:
+   - Were test files created/modified BEFORE production code?
+   - Did you follow Red-Green-Refactor?
+   - If NOT: undo production code, write failing test first, then re-implement
+5. **If Adversarial gate active:** After implementation passes, run the adversarial checklist:
+   - **Security:** Can user input reach dangerous sinks? Auth bypasses? Data leaks?
+   - **Edge cases:** Empty/null inputs? Boundary values? Network failures? Concurrency?
+   - **Architecture:** SOLID violations? DRY issues? Coupling problems?
+   - If findings with CRITICAL/HIGH severity: fix them before marking complete
+   - Max 3 fix attempts per task — if still failing, stop and ask user
+6. Mark as completed
 
 ### Step 3: Complete Development
 
@@ -43,6 +77,7 @@ After all tasks complete and verified:
 - Plan has critical gaps preventing starting
 - You don't understand an instruction
 - Verification fails repeatedly
+- Adversarial self-review finds issues you can't fix in 3 attempts
 
 **Ask for clarification rather than guessing.**
 
@@ -55,6 +90,7 @@ After all tasks complete and verified:
 **Don't force through blockers** - stop and ask.
 
 ## Remember
+- Ask about quality gates before starting
 - Review plan critically first
 - Follow plan steps exactly
 - Don't skip verifications
