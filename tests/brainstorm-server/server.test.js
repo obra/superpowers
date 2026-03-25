@@ -14,6 +14,7 @@ const WebSocket = require('ws');
 const fs = require('fs');
 const path = require('path');
 const assert = require('assert');
+const { createSuite } = require('./test-utils');
 
 const SERVER_PATH = path.join(__dirname, '../../skills/brainstorming/scripts/server.cjs');
 const TEST_PORT = 3334;
@@ -76,19 +77,7 @@ async function runTests() {
   server.stdout.on('data', (data) => { stdoutAccum += data.toString(); });
 
   const { stdout: initialStdout } = await waitForServer(server);
-  let passed = 0;
-  let failed = 0;
-
-  function test(name, fn) {
-    return fn().then(() => {
-      console.log(`  PASS: ${name}`);
-      passed++;
-    }).catch(e => {
-      console.log(`  FAIL: ${name}`);
-      console.log(`    ${e.message}`);
-      failed++;
-    });
-  }
+  const { test, summary } = createSuite();
 
   try {
     // ========== Server Startup ==========
@@ -438,8 +427,7 @@ async function runTests() {
     });
 
     // ========== Summary ==========
-    console.log(`\n--- Results: ${passed} passed, ${failed} failed ---`);
-    if (failed > 0) process.exit(1);
+    summary();
 
   } finally {
     server.kill();

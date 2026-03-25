@@ -14,6 +14,7 @@
 const assert = require('assert');
 const crypto = require('crypto');
 const path = require('path');
+const { createSuite } = require('./test-utils');
 
 // The module under test — will be the new zero-dep server file
 const SERVER_PATH = path.join(__dirname, '../../skills/brainstorming/scripts/server.cjs');
@@ -29,20 +30,7 @@ try {
 }
 
 function runTests() {
-  let passed = 0;
-  let failed = 0;
-
-  function test(name, fn) {
-    try {
-      fn();
-      console.log(`  PASS: ${name}`);
-      passed++;
-    } catch (e) {
-      console.log(`  FAIL: ${name}`);
-      console.log(`    ${e.message}`);
-      failed++;
-    }
-  }
+  const { test, summary } = createSuite();
 
   // ========== Handshake ==========
   console.log('\n--- WebSocket Handshake ---');
@@ -393,8 +381,7 @@ function runTests() {
   });
 
   // ========== Summary ==========
-  console.log(`\n--- Results: ${passed} passed, ${failed} failed ---`);
-  if (failed > 0) process.exit(1);
+  summary();
 }
 
 runTests();

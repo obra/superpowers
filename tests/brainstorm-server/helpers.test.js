@@ -4,22 +4,10 @@ const fs = require('fs');
 
 const SERVER_PATH = path.join(__dirname, '../../skills/brainstorming/scripts/server.cjs');
 const { wrapInFrame, isFullDocument } = require(SERVER_PATH);
+const { createSuite } = require('./test-utils');
 
 function runTests() {
-  let passed = 0;
-  let failed = 0;
-
-  function test(name, fn) {
-    try {
-      fn();
-      console.log(`  PASS: ${name}`);
-      passed++;
-    } catch (e) {
-      console.log(`  FAIL: ${name}`);
-      console.log(`    ${e.message}`);
-      failed++;
-    }
-  }
+  const { test, summary } = createSuite();
 
   console.log('\n--- Helper Functions: isFullDocument ---');
 
@@ -74,8 +62,7 @@ function runTests() {
     assert(wrapped.includes(content), `Should contain "${content}" exactly`);
   });
 
-  console.log(`\n--- Results: ${passed} passed, ${failed} failed ---`);
-  if (failed > 0) process.exit(1);
+  summary();
 }
 
 runTests();
