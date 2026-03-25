@@ -13,7 +13,6 @@ node scripts/gen-skill-docs.mjs --check
 node --test tests/codex-runtime/*.test.mjs
 cargo nextest run --test runtime_instruction_contracts --test using_featureforge_skill --test contracts_spec_plan --test session_config_slug --test repo_safety --test update_and_install --test workflow_runtime --test workflow_shell_smoke --test plan_execution --test powershell_wrapper_resolution --test upgrade_skill
 cargo nextest run --test contracts_spec_plan --test runtime_instruction_contracts --test using_featureforge_skill --test session_config_slug --test repo_safety --test update_and_install --test workflow_runtime --test workflow_shell_smoke --test plan_execution --test powershell_wrapper_resolution --test upgrade_skill
-bash tests/differential/run_legacy_vs_rust.sh
 ```
 
 ## What Each Layer Covers
@@ -38,9 +37,9 @@ The main Rust suites cover:
 - public workflow CLI behavior
 - execution state transitions and plan linkage
 
-### Differential Harness
+### Workflow Status Snapshot
 
-`tests/differential/run_legacy_vs_rust.sh` compares the checked-in legacy snapshot against current canonical workflow-status behavior. Treat any mismatch as a triage event.
+workflow-status snapshot coverage for the ambiguous-spec route lives in `tests/workflow_runtime.rs` and is backed by `tests/fixtures/differential/workflow-status.json`. Treat any mismatch as a contract change that requires explicit fixture review.
 
 ### Eval Docs
 
@@ -74,8 +73,7 @@ cargo nextest run --test session_config_slug --test update_and_install --test up
 Editing packaging or prebuilt artifact refresh flows:
 
 ```bash
-cargo nextest run --test powershell_wrapper_resolution --test workflow_shell_smoke
-bash tests/differential/run_legacy_vs_rust.sh
+cargo nextest run --test powershell_wrapper_resolution --test workflow_shell_smoke --test workflow_runtime
 ```
 
 ## Repo Fixtures

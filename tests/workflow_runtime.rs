@@ -19,7 +19,7 @@ use featureforge::workflow::manifest::{
 use featureforge::workflow::status::WorkflowRuntime;
 use files_support::write_file;
 use json_support::parse_json;
-use process_support::{run, run_checked};
+use process_support::{repo_root, run, run_checked};
 use serde_json::Value;
 use std::fs;
 #[cfg(unix)]
@@ -30,6 +30,15 @@ use tempfile::TempDir;
 use workflow_support::{
     init_repo as init_workflow_repo, install_full_contract_ready_artifacts, workflow_fixture_root,
 };
+
+fn normalize_workflow_status_snapshot(mut value: Value) -> Value {
+    let object = value
+        .as_object_mut()
+        .expect("workflow status payload should stay a JSON object");
+    object.remove("manifest_path");
+    object.remove("root");
+    value
+}
 
 fn write_manifest(path: &Path, manifest: &WorkflowManifest) {
     if let Some(parent) = path.parent() {
@@ -453,6 +462,44 @@ fn canonical_workflow_status_matches_helper_for_ambiguous_specs() {
         rust_json["spec_candidate_count"],
         helper_json["spec_candidate_count"]
     );
+}
+
+#[test]
+fn canonical_workflow_status_ambiguous_specs_matches_checked_in_snapshot() {
+    let (repo_dir, state_dir) = init_repo("workflow-runtime-ambiguity-snapshot");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    let fixture_root = workflow_fixture_root();
+
+    fs::create_dir_all(repo.join("docs/featureforge/specs"))
+        .expect("specs directory should be creatable");
+    fs::copy(
+        fixture_root.join("specs/2026-01-22-document-review-system-design.md"),
+        repo.join("docs/featureforge/specs/2026-01-22-document-review-system-design.md"),
+    )
+    .expect("first fixture spec should copy");
+    fs::copy(
+        fixture_root.join("specs/2026-01-22-document-review-system-design-v2.md"),
+        repo.join("docs/featureforge/specs/2026-01-22-document-review-system-design-v2.md"),
+    )
+    .expect("second fixture spec should copy");
+
+    let actual = normalize_workflow_status_snapshot(parse_json(
+        &run_rust_featureforge(
+            repo,
+            state,
+            &["workflow", "status", "--refresh"],
+            "rust canonical workflow status refresh for ambiguous-spec snapshot",
+        ),
+        "rust canonical workflow status refresh for ambiguous-spec snapshot",
+    ));
+    let expected: Value = serde_json::from_str(
+        &fs::read_to_string(repo_root().join("tests/fixtures/differential/workflow-status.json"))
+            .expect("checked-in workflow-status snapshot should be readable"),
+    )
+    .expect("checked-in workflow-status snapshot should parse");
+
+    assert_eq!(actual, expected);
 }
 
 #[test]

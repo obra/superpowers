@@ -9,7 +9,7 @@ The active contract surface already includes:
 - Node contract tests under `tests/codex-runtime/`
 - Rust runtime and workflow suites under `tests/`
 - doc-driven eval gates under `tests/evals/`
-- a differential workflow-status harness under `tests/differential/`
+- a checked-in workflow-status snapshot fixture under `tests/fixtures/differential/` exercised by `tests/workflow_runtime.rs`
 
 The active deterministic suite and recommended commands now live in `docs/testing.md`.
 
@@ -19,7 +19,7 @@ Use `cargo nextest run --test runtime_instruction_contracts` as part of the dete
 
 1. Add a single cutover gate that rejects new forbidden legacy names in active file contents and active path names while explicitly ignoring archived history.
 2. Add stronger install smoke coverage for checked-in prebuilt artifacts on macOS arm64 and `windows-x64`.
-3. Add a release-ready validation command that runs the full Node, Rust, shell, and differential matrix in one place.
+3. Add a release-ready validation command that runs the full Node and Rust deterministic matrix in one place.
 
 ## Keep Stable
 

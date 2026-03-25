@@ -338,6 +338,11 @@ fn runtime_instruction_docs_point_at_rust_as_the_primary_oracle() {
     );
     assert_not_contains(
         &readme_content,
+        "bash tests/differential/run_legacy_vs_rust.sh",
+        "README.md",
+    );
+    assert_not_contains(
+        &readme_content,
         "bash tests/codex-runtime/test-runtime-instructions.sh",
         "README.md",
     );
@@ -362,7 +367,13 @@ fn runtime_instruction_docs_point_at_rust_as_the_primary_oracle() {
         "cargo nextest run --test runtime_instruction_contracts --test using_featureforge_skill",
         "docs/testing.md",
     );
+    assert_contains(
+        &docs_testing_content,
+        "workflow-status snapshot coverage for the ambiguous-spec route lives in `tests/workflow_runtime.rs`",
+        "docs/testing.md",
+    );
     for legacy_command in [
+        "bash tests/differential/run_legacy_vs_rust.sh",
         "bash tests/codex-runtime/test-runtime-instructions.sh",
         "bash tests/codex-runtime/test-workflow-enhancements.sh",
         "bash tests/codex-runtime/test-workflow-sequencing.sh",
@@ -377,6 +388,33 @@ fn runtime_instruction_docs_point_at_rust_as_the_primary_oracle() {
         &docs_testing_content,
         "Legacy `tests/codex-runtime/*.sh` harnesses have been removed",
         "docs/testing.md",
+    );
+}
+
+#[test]
+fn runtime_docs_and_fixtures_do_not_depend_on_the_removed_differential_shell_harness() {
+    let root = repo_root();
+
+    assert!(
+        !root.join("tests/differential/run_legacy_vs_rust.sh").exists(),
+        "tests/differential/run_legacy_vs_rust.sh should be removed once the snapshot lives in workflow_runtime.rs"
+    );
+    assert!(
+        !root.join("tests/differential/README.md").exists(),
+        "tests/differential/README.md should be removed once the shell harness is gone"
+    );
+
+    assert_file_not_contains(root.join("README.md"), "run_legacy_vs_rust.sh");
+    assert_file_not_contains(root.join("docs/testing.md"), "run_legacy_vs_rust.sh");
+    assert_file_not_contains(root.join("docs/test-suite-enhancement-plan.md"), "tests/differential/");
+    assert_file_contains(
+        root.join("docs/testing.md"),
+        "workflow-status snapshot coverage for the ambiguous-spec route lives in `tests/workflow_runtime.rs`",
+    );
+    assert!(
+        root.join("tests/fixtures/differential/workflow-status.json")
+            .is_file(),
+        "the checked-in workflow-status snapshot fixture should remain available"
     );
 }
 
@@ -567,6 +605,61 @@ fn runtime_instruction_surface_contracts_and_generation_checks_hold() {
         root.join("review/review-accelerator-packet-contract.md"),
         "main-agent-only write authority",
     );
+}
+
+#[test]
+fn copilot_install_docs_use_the_skills_root_as_the_discovery_link() {
+    let root = repo_root();
+
+    let readme = read_utf8(root.join("README.md"));
+    assert_contains(
+        &readme,
+        "`~/.copilot/skills -> ~/.featureforge/install/skills`",
+        "README.md",
+    );
+    assert_not_contains(
+        &readme,
+        "`~/.copilot/skills/featureforge -> ~/.featureforge/install/skills`",
+        "README.md",
+    );
+
+    let copilot_overview = read_utf8(root.join("docs/README.copilot.md"));
+    assert_contains(
+        &copilot_overview,
+        "`~/.copilot/skills -> ~/.featureforge/install/skills`",
+        "docs/README.copilot.md",
+    );
+    assert_contains(
+        &copilot_overview,
+        "`ls -la ~/.copilot/skills`",
+        "docs/README.copilot.md",
+    );
+    assert_not_contains(
+        &copilot_overview,
+        "~/.copilot/skills/featureforge",
+        "docs/README.copilot.md",
+    );
+
+    let install_doc = read_utf8(root.join(".copilot/INSTALL.md"));
+    for expected in [
+        "mkdir -p ~/.copilot",
+        "ln -s ~/.featureforge/install/skills ~/.copilot/skills",
+        "ls -la ~/.copilot/skills",
+        "rm ~/.copilot/skills",
+        "Get-Item \"$env:USERPROFILE\\.copilot\\skills\"",
+        "Remove-Item \"$env:USERPROFILE\\.copilot\\skills\"",
+        "cmd /c mklink /J \"$env:USERPROFILE\\.copilot\\skills\" \"$env:USERPROFILE\\.featureforge\\install\\skills\"",
+    ] {
+        assert_contains(&install_doc, expected, ".copilot/INSTALL.md");
+    }
+    for retired in [
+        "~/.copilot/skills/featureforge",
+        "$env:USERPROFILE\\.copilot\\skills\\featureforge",
+        "mkdir -p ~/.copilot/skills",
+        "New-Item -ItemType Directory -Force -Path \"$env:USERPROFILE\\.copilot\\skills\"",
+    ] {
+        assert_not_contains(&install_doc, retired, ".copilot/INSTALL.md");
+    }
 }
 
 #[test]

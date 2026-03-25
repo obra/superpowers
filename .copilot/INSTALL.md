@@ -15,8 +15,8 @@ Enable FeatureForge skills and agents in GitHub Copilot local installs by linkin
 
 2. **Create the skills symlink:**
    ```bash
-   mkdir -p ~/.copilot/skills
-   ln -s ~/.featureforge/install/skills ~/.copilot/skills/featureforge
+   mkdir -p ~/.copilot
+   ln -s ~/.featureforge/install/skills ~/.copilot/skills
    ```
 
 3. **Install the code-reviewer custom agent from the canonical agents directory:**
@@ -32,8 +32,8 @@ Enable FeatureForge skills and agents in GitHub Copilot local installs by linkin
 Use a junction for the skills directory and copy the agent file into Copilot's agent directory:
 
 ```powershell
-New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.copilot\skills"
-cmd /c mklink /J "$env:USERPROFILE\.copilot\skills\featureforge" "$env:USERPROFILE\.featureforge\install\skills"
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.copilot"
+cmd /c mklink /J "$env:USERPROFILE\.copilot\skills" "$env:USERPROFILE\.featureforge\install\skills"
 
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.copilot\agents"
 Copy-Item "$env:USERPROFILE\.featureforge\install\agents\code-reviewer.md" "$env:USERPROFILE\.copilot\agents\code-reviewer.agent.md" -Force
@@ -42,7 +42,7 @@ Copy-Item "$env:USERPROFILE\.featureforge\install\agents\code-reviewer.md" "$env
 ## Verify
 
 ```bash
-ls -la ~/.copilot/skills/featureforge
+ls -la ~/.copilot/skills
 ls -la ~/.copilot/agents/code-reviewer.agent.md
 ls -la ~/.featureforge/install/skills
 ls -la ~/.featureforge/install/agents/code-reviewer.md
@@ -50,7 +50,7 @@ ls -la ~/.featureforge/install/agents/code-reviewer.md
 
 **Windows (PowerShell):**
 ```powershell
-Get-Item "$env:USERPROFILE\.copilot\skills\featureforge"
+Get-Item "$env:USERPROFILE\.copilot\skills"
 Get-Item "$env:USERPROFILE\.copilot\agents\code-reviewer.agent.md"
 Get-ChildItem "$env:USERPROFILE\.featureforge\install\skills"
 Get-Item "$env:USERPROFILE\.featureforge\install\agents\code-reviewer.md"
@@ -97,13 +97,13 @@ Generated skill preambles run `~/.featureforge/install/bin/featureforge update-c
 ## Uninstalling
 
 ```bash
-rm ~/.copilot/skills/featureforge
+rm ~/.copilot/skills
 rm ~/.copilot/agents/code-reviewer.agent.md
 ```
 
 **Windows (PowerShell):**
 ```powershell
-Remove-Item "$env:USERPROFILE\.copilot\skills\featureforge"
+Remove-Item "$env:USERPROFILE\.copilot\skills"
 Remove-Item "$env:USERPROFILE\.copilot\agents\code-reviewer.agent.md"
 ```
 

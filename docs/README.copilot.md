@@ -21,7 +21,7 @@ FeatureForge installs through one shared checkout:
 
 GitHub Copilot discovers those artifacts through:
 
-- `~/.copilot/skills/featureforge -> ~/.featureforge/install/skills`
+- `~/.copilot/skills -> ~/.featureforge/install/skills`
 - `~/.copilot/agents/code-reviewer.agent.md -> ~/.featureforge/install/agents/code-reviewer.md`
 
 On Windows, the reviewer artifact is typically copied instead of symlinked. Refresh that copy after updates.
@@ -75,7 +75,7 @@ Then refresh any copied reviewer artifact if your platform does not use symlinks
 
 ## Troubleshooting
 
-1. Verify the skills link exists: `ls -la ~/.copilot/skills/featureforge`
+1. Verify the skills link exists: `ls -la ~/.copilot/skills`
 2. Verify the reviewer artifact exists: `ls -la ~/.copilot/agents/code-reviewer.agent.md`
 3. Verify the runtime responds: `~/.featureforge/install/bin/featureforge workflow help`
 4. Re-run the checked-in install instructions if any link or copied artifact is missing

@@ -32,7 +32,6 @@ const ACTIVE_DOC_PATHS = [
   'docs/README.copilot.md',
   'docs/testing.md',
   'docs/test-suite-enhancement-plan.md',
-  'tests/differential/README.md',
   'tests/evals/README.md',
 ];
 

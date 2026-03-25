@@ -67,20 +67,16 @@ test('gen-skill-docs --check exits successfully', () => {
   assert.match(result.stdout, /Generated skill docs are up to date\./);
 });
 
-test('differential harness scaffold exists for legacy-vs-canonical workflow status triage', () => {
-  const readme = readUtf8(path.join(REPO_ROOT, 'tests/differential/README.md'));
-  const script = readUtf8(path.join(REPO_ROOT, 'tests/differential/run_legacy_vs_rust.sh'));
+test('workflow-status ambiguity snapshot stays checked in and is covered by workflow_runtime', () => {
+  const workflowRuntime = readUtf8(path.join(REPO_ROOT, 'tests/workflow_runtime.rs'));
   const fixture = JSON.parse(readUtf8(path.join(REPO_ROOT, 'tests/fixtures/differential/workflow-status.json')));
 
-  assert.match(readme, /checked-in workflow-status snapshot/i);
-  assert.match(readme, /canonical `featureforge workflow status --refresh`/i);
-  assert.match(readme, /mismatch is a triage event/i);
-
-  assert.match(script, /target\/debug\/featureforge/);
-  assert.match(script, /workflow status --refresh/);
-  assert.match(script, /tests\/fixtures\/differential\/workflow-status\.json/);
-  assert.match(script, /Mismatch triage:/);
+  assert.match(workflowRuntime, /canonical_workflow_status_ambiguous_specs_matches_checked_in_snapshot/);
+  assert.match(workflowRuntime, /tests\/fixtures\/differential\/workflow-status\.json/);
+  assert.match(workflowRuntime, /"workflow", "status", "--refresh"/);
+  assert.doesNotMatch(workflowRuntime, /run_legacy_vs_rust/);
 
   assert.equal(typeof fixture.status, 'string');
   assert.equal(Array.isArray(fixture.reason_codes), true);
+  assert.equal(fixture.reason_codes.includes('ambiguous_spec_candidates'), true);
 });

@@ -28,7 +28,7 @@ ACTIVE_SURFACES=(
   scripts
   docs
   tests/evals
-  tests/differential/README.md
+  tests/fixtures/differential
 )
 
 fail() {
