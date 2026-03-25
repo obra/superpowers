@@ -9,7 +9,7 @@ description: Use when creating new skills, editing existing skills, or verifying
 
 **Writing skills IS Test-Driven Development applied to process documentation.**
 
-**Personal skills live in agent-specific directories (`~/.claude/skills` for Claude Code, `~/.agents/skills/` for Codex)** 
+**Personal skills live in agent-specific directories (`~/.claude/skills` for Claude Code, `~/.agents/skills/` for Codex)**
 
 You write test cases (pressure scenarios with subagents), watch them fail (baseline behavior), write the skill (documentation), watch tests pass (agents comply), and refactor (close loopholes).
 
@@ -71,6 +71,28 @@ API docs, syntax guides, tool documentation (office docs)
 
 ## Directory Structure
 
+### Where skills live
+
+Where you store a skill determines who can use it:
+
+| Location | Path | Applies to |
+|---|---|---|
+| Enterprise | See managed settings | All users in your organization |
+| Personal | `~/.claude/skills/<skill-name>/SKILL.md` | All your projects |
+| Project | `.claude/skills/<skill-name>/SKILL.md` (at project root) | This project only |
+| Plugin | `<plugin>/skills/<skill-name>/SKILL.md` | Where plugin is enabled |
+
+**Default to personal** (`~/.claude/skills/`) for standalone skills. Personal skills are durable, discoverable across all projects, and survive plugin updates.
+
+**Project skills** (`.claude/skills/`) live at the project root (same level as `./CLAUDE.md`) and are for team conventions committed to version control. In monorepos, Claude Code also discovers skills from nested `.claude/skills/` directories (e.g., `packages/frontend/.claude/skills/`).
+
+Higher-priority locations win when names conflict: enterprise > personal > project.
+
+### Naming
+
+The `name` field is optional — if omitted, Claude Code uses the directory name. If set, keep it consistent with the directory name to avoid confusion (Claude Code does not enforce a match).
+
+### Skill directory layout
 
 ```
 skills/
@@ -93,14 +115,25 @@ skills/
 ## SKILL.md Structure
 
 **Frontmatter (YAML):**
-- Only two fields supported: `name` and `description`
-- Max 1024 characters total
-- `name`: Use letters, numbers, and hyphens only (no parentheses, special chars)
-- `description`: Third-person, describes ONLY when to use (NOT what it does)
+
+Required fields:
+- `name`: Lowercase letters, numbers, and hyphens only. Max 64 characters. Defaults to directory name if omitted.
+- `description`: Max 1024 characters. Third-person, describes ONLY when to use (NOT what it does).
   - Start with "Use when..." to focus on triggering conditions
   - Include specific symptoms, situations, and contexts
   - **NEVER summarize the skill's process or workflow** (see CSO section for why)
   - Keep under 500 characters if possible
+
+Optional fields (Claude Code):
+- `argument-hint`: Autocomplete hint, e.g., `[issue-number]`
+- `disable-model-invocation`: `true` to prevent auto-triggering (manual `/name` only)
+- `user-invocable`: `false` to hide from `/` menu (background knowledge only)
+- `allowed-tools`: Tools permitted without approval when skill is active
+- `model`: Model override when skill is active
+- `effort`: Effort level override (`low`, `medium`, `high`, `max`; `max` is Opus 4.6 only)
+- `context`: `fork` to run in an isolated subagent
+- `agent`: Subagent type when `context: fork` is set (`Explore`, `Plan`, etc.)
+- `hooks`: Hooks scoped to this skill's lifecycle
 
 ```markdown
 ---
@@ -604,7 +637,7 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 
 **GREEN Phase - Write Minimal Skill:**
 - [ ] Name uses only letters, numbers, hyphens (no parentheses/special chars)
-- [ ] YAML frontmatter with only name and description (max 1024 chars)
+- [ ] YAML frontmatter has `name` and `description`; add optional fields only if needed (see Frontmatter section)
 - [ ] Description starts with "Use when..." and includes specific triggers/symptoms
 - [ ] Description written in third person
 - [ ] Keywords throughout for search (errors, symptoms, tools)
@@ -629,6 +662,9 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 - [ ] Supporting files only for tools or heavy reference
 
 **Deployment:**
+- [ ] Copy skill directory to a discovery path (see "Where skills live" table in Directory Structure)
+- [ ] Test that the skill triggers on expected user queries
+- [ ] Clean up any workspace/test directories from skill discovery paths
 - [ ] Commit skill to git and push to your fork (if configured)
 - [ ] Consider contributing back via PR (if broadly useful)
 
