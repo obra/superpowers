@@ -92,16 +92,36 @@ Check for existing artifacts:
 
 **Refinement completion markers:** `Refinement: CONVERGED round {N}` in `## Refinement Status` section.
 
-If artifacts exist:
-- Spec exists + not refined → resume at Phase 2
-- Spec exists + refined → resume at Phase 3
-- Plan exists + not refined → resume at Phase 4
-- Plan exists + refined → resume at Phase 5
-- All tasks in plan completed → resume at Phase 6
+**Plan without spec:** If a plan file exists but no spec file exists, do NOT resume at Phase 3 or later. Resume at Phase 1. A plan is not a spec — the spec is the source of truth for verification phases.
+
+If artifacts exist, resume using the task scaffold (see Task Scaffold below):
+1. Create all 9 tasks as normal.
+2. Run the plan-without-spec guard: if a plan file exists but no spec file exists, do NOT mark Task 4 (Write Plan) as complete — this forces resume at Task 2 (Brainstorm), even if a plan file is present on disk.
+3. Check which completion criteria are already satisfied by existing artifacts on disk.
+4. Mark those tasks as complete (preserving the blockedBy chain).
+5. Begin work at the first incomplete task.
 
 ## The Process
 
-You MUST create a task for each phase step and complete in order.
+### Task Scaffold
+
+Create ALL 9 tasks at startup using `TaskCreate`, with `blockedBy` dependencies as shown below. Do NOT begin Phase 0 work until all 9 tasks exist.
+
+| # | Subject | Description (completion criteria) | Blocked By |
+|---|---------|----------------------------------|------------|
+| 1 | Phase 0: Context Scout | Dispatch context-scout subagent. **Done when:** context summary is returned and stored in orchestrator state. | — |
+| 2 | Phase 1: Brainstorm and Produce Spec | Dispatch autonomous-brainstormer. Resolve any `NEEDS_DECISION` tags via expert panels. **Done when:** spec file exists at `docs/superpowers/specs/YYYY-MM-DD-<slug>-design.md` with no remaining `NEEDS_DECISION` tags. Spec is committed to git. | 1 |
+| 3 | Phase 2: Refine Spec | Run spec-simulator/spec-fixer loop. **Done when:** spec contains `Refinement: CONVERGED round {N}` in its `## Refinement Status` section. Refined spec is committed. | 2 |
+| 4 | Phase 3: Write Plan | Construct plan-writer prompt, dispatch subagent, run plan-document-reviewer. **Done when:** plan file exists at `docs/superpowers/plans/YYYY-MM-DD-<slug>.md` and passes plan-document-reviewer. | 3 |
+| 5 | Phase 4: Refine Plan | Run plan-simulator/plan-fixer loop. **Done when:** plan contains `Refinement: CONVERGED round {N}` in its `## Refinement Status` section. | 4 |
+| 6 | Phase 5: Execute All Plan Tasks | Dispatch fresh implementer per task, run spec-reviewer and code-quality-reviewer per task. Commit after each task. **Done when:** every task in the plan is implemented, reviewed, and committed. | 5 |
+| 7 | Phase 6: Spec Verification | Dispatch scenario-generator, run application (or test suite for libraries), execute scenarios. Fix failures. **Done when:** all scenarios executed, fixes committed, verification report produced. | 6 |
+| 8 | Phase 7: E2E Tests | Write e2e tests for confirmed scenarios, run them. **Done when:** tests written, passing, and committed. | 7 |
+| 9 | Output Completion Report | Compile and output the Implementation Complete report, then invoke finishing-a-development-branch. **Done when:** Phases 6 and 7 tasks are marked complete AND the report is output. | 8 |
+
+<HARD-GATE>
+A task can only be marked complete when its completion criteria are met. "Having enough context" is not a completion criterion. Every phase runs. No exceptions.
+</HARD-GATE>
 
 ```dot
 digraph process {
@@ -401,6 +421,8 @@ decisions_log: Array<{phase, question, panel_votes, decision, rationale}>
 | E2E tests fail | Re-dispatch test-writer with failures (max 3) |
 
 ## Completion Report
+
+**Do NOT output this report until Task 9's blockedBy chain is fully satisfied** — meaning Tasks 7 (Phase 6) and 8 (Phase 7) are marked complete. If they are not complete, go back and complete them.
 
 When all phases complete, output:
 
