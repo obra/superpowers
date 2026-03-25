@@ -9,3 +9,7 @@
 ## 2026-03-25 - Avoid String.prototype.trimStart() on multi-megabyte strings
 **Learning:** Calling `trimStart()` on a multi-megabyte string (e.g., large HTML screens in brainstorm-server) before applying prefix substring operations forces an expensive, complete copy of the string in memory. This blocks the event loop significantly (e.g., ~5-18ms for 5MB) compared to direct regex prefix tests (~0.28ms).
 **Action:** Always prefer a bounded regex check like `/^\s*(?:<!doctype|<html)/i.test(html)` over unbounded full-string trim operations when checking prefixes of large payloads.
+
+## 2026-03-25 - Async directory read in server startup
+**Learning:** `fs.promises.readdir` has slightly higher overhead than `fs.readdirSync` for small directories, but async startup is preferred in server contexts to avoid blocking the event loop during initialization.
+**Action:** Use `fs.promises.mkdir` and `fs.promises.readdir` in `startServer` (now async), even for one-time startup I/O, to keep startup non-blocking and consistent with other async I/O in the codebase.

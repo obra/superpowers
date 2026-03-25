@@ -371,14 +371,14 @@ const debounceTimers = new Map();
 
 // ========== Server Startup ==========
 
-function startServer() {
-  if (!fs.existsSync(SCREEN_DIR)) fs.mkdirSync(SCREEN_DIR, { recursive: true });
+async function startServer() {
+  await fs.promises.mkdir(SCREEN_DIR, { recursive: true });
 
   // Track known files to distinguish new screens from updates.
   // macOS fs.watch reports 'rename' for both new files and overwrites,
   // so we can't rely on eventType alone.
   const knownFiles = new Set(
-    fs.readdirSync(SCREEN_DIR).filter(f => f.endsWith('.html'))
+    (await fs.promises.readdir(SCREEN_DIR)).filter(f => f.endsWith('.html'))
   );
 
   const server = http.createServer(handleRequest);
@@ -447,7 +447,10 @@ function startServer() {
 }
 
 if (require.main === module) {
-  startServer();
+  startServer().catch(err => {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  });
 }
 
 module.exports = { computeAcceptKey, encodeFrame, decodeFrame, OPCODES, wrapInFrame, isFullDocument };
