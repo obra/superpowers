@@ -2,7 +2,7 @@ const assert = require('assert');
 const path = require('path');
 const fs = require('fs');
 
-const SERVER_PATH = path.join(__dirname, '../../skills/brainstorming/scripts/server.js');
+const SERVER_PATH = path.join(__dirname, '../../skills/brainstorming/scripts/server.cjs');
 const { wrapInFrame, isFullDocument } = require(SERVER_PATH);
 
 function runTests() {

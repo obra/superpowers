@@ -109,10 +109,9 @@ const helperInjection = '<script>\n' + helperScript + '\n</script>';
 // ========== Helper Functions ==========
 
 function isFullDocument(html) {
-  // Optimize: only check the start of the document to avoid
-  // allocating a full lowercase copy of potentially large HTML files
-  const trimmed = html.trimStart().substring(0, 20).toLowerCase();
-  return trimmed.startsWith('<!doctype') || trimmed.startsWith('<html');
+  // Optimize: avoid full-string allocation from trimStart() on large files
+  // by using a bounded regex check for the prefix.
+  return /^\s*(?:<!doctype|<html)/i.test(html);
 }
 
 function wrapInFrame(content) {
