@@ -1,6 +1,6 @@
 ---
 name: using-git-worktrees
-description: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - creates isolated git worktrees with smart directory selection and safety verification
+description: Use when starting feature work that needs isolation from the current workspace or before executing implementation plans, especially when deciding between Codex App worktrees and manual git worktrees
 ---
 
 # Using Git Worktrees
@@ -9,46 +9,82 @@ description: Use when starting feature work that needs isolation from current wo
 
 Git worktrees create isolated workspaces sharing the same repository, allowing work on multiple branches simultaneously without switching.
 
-**Core principle:** Systematic directory selection + safety verification = reliable isolation.
+**Core principle:** Codex App compatibility first. If the user is working in Codex App, prefer App-managed worktrees. Use manual `git worktree` only when App-managed flow is unavailable or explicitly not desired.
 
 **Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
 
-## Directory Selection Process
+## Workspace Mode Selection
 
 Follow this priority order:
 
-### 1. Check Existing Directories
+### 1. Prefer Codex App-managed worktrees
+
+If the task is happening in Codex App, or the user mentions Codex App compatibility, do not create a manual git worktree by default.
+
+Instead:
+1. Tell the user to use Codex App's built-in "Fork into new worktree" flow.
+2. Continue implementation inside that App-managed worktree.
+
+Why:
+- Codex App currently appears to manage its own worktree lifecycle.
+- Manual worktrees may work fine with Git and Codex CLI, but may not be attachable or switchable from Codex App's built-in worktree UI.
+
+### 2. Reuse the current worktree if already inside one
+
+If the current cwd is already inside a git worktree, use it. Do not create a nested or parallel worktree unless the user explicitly asks.
+
+### 3. Use manual git worktree only as fallback
+
+Create a manual worktree only if one of these is true:
+- the user explicitly asks for `git worktree`
+- Codex App worktree flow is unavailable
+- the task is CLI-only and App compatibility is not required
+
+### 4. Select manual worktree location
+
+When manual mode is required, follow this priority order:
+
+1. Check existing directories:
 
 ```bash
-# Check in priority order
-ls -d .worktrees 2>/dev/null     # Preferred (hidden)
-ls -d worktrees 2>/dev/null      # Alternative
+ls -d ~/.config/superpowers/worktrees/"$(basename "$(git rev-parse --show-toplevel)")" 2>/dev/null
+ls -d .worktrees 2>/dev/null
+ls -d worktrees 2>/dev/null
 ```
 
-**If found:** Use that directory. If both exist, `.worktrees` wins.
+If found, use the first match in this order:
+- `$HOME/.config/superpowers/worktrees/<project-name>/`
+- `.worktrees/`
+- `worktrees/`
 
-### 2. Check CLAUDE.md
+2. Check `CLAUDE.md`:
 
 ```bash
-grep -i "worktree.*director" CLAUDE.md 2>/dev/null
+grep -i "worktree.*directory" CLAUDE.md 2>/dev/null
 ```
 
-**If preference specified:** Use it without asking.
+If preference specified, use it without asking.
 
-### 3. Ask User
+3. Ask the user:
 
-If no directory exists and no CLAUDE.md preference:
+```text
+No worktree directory found. Where should I create manual worktrees?
 
-```
-No worktree directory found. Where should I create worktrees?
-
-1. .worktrees/ (project-local, hidden)
-2. ~/.config/superpowers/worktrees/<project-name>/ (global location)
+1. ~/.config/superpowers/worktrees/<project-name>/ (preferred for Codex App coexistence)
+2. .worktrees/ (project-local)
+3. worktrees/ (project-local, visible)
 
 Which would you prefer?
 ```
 
-## Safety Verification
+**Preferred default:** `$HOME/.config/superpowers/worktrees/<project-name>/`
+
+Why:
+- keeps manual worktrees clearly separate from Codex App-managed worktrees
+- avoids implying Codex App can manage manually created worktrees
+- reduces repository pollution
+
+## Safety Verification For Manual Mode
 
 ### For Project-Local Directories (.worktrees or worktrees)
 
@@ -80,20 +116,32 @@ No .gitignore verification needed - outside project entirely.
 project=$(basename "$(git rev-parse --show-toplevel)")
 ```
 
-### 2. Create Worktree
+### 2. Choose creation path
+
+#### App-managed mode
+
+- Do not run `git worktree add` yourself by default.
+- Tell the user to create the worktree from Codex App.
+- Once the App-managed worktree is active, run setup and baseline verification in that directory.
+
+#### Manual git-worktree mode
+
+Determine full path:
 
 ```bash
-# Determine full path
 case $LOCATION in
+  "$HOME"/.config/superpowers/worktrees/*)
+    path="$HOME/.config/superpowers/worktrees/$project/$BRANCH_NAME"
+    ;;
   .worktrees|worktrees)
     path="$LOCATION/$BRANCH_NAME"
     ;;
-  ~/.config/superpowers/worktrees/*)
-    path="~/.config/superpowers/worktrees/$project/$BRANCH_NAME"
+  *)
+    echo "Unsupported worktree location: $LOCATION" >&2
+    exit 1
     ;;
 esac
 
-# Create worktree with new branch
 git worktree add "$path" -b "$BRANCH_NAME"
 cd "$path"
 ```
@@ -110,8 +158,9 @@ if [ -f package.json ]; then npm install; fi
 if [ -f Cargo.toml ]; then cargo build; fi
 
 # Python
-if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-if [ -f pyproject.toml ]; then poetry install; fi
+if [ -f uv.lock ]; then uv sync --dev; fi
+if [ -f requirements.txt ] && [ ! -f uv.lock ]; then python -m pip install -r requirements.txt; fi
+if [ -f pyproject.toml ] && [ ! -f uv.lock ] && [ ! -f requirements.txt ]; then python -m pip install -e .; fi
 
 # Go
 if [ -f go.mod ]; then go mod download; fi
@@ -145,25 +194,32 @@ Ready to implement <feature-name>
 
 | Situation | Action |
 |-----------|--------|
-| `.worktrees/` exists | Use it (verify ignored) |
-| `worktrees/` exists | Use it (verify ignored) |
-| Both exist | Use `.worktrees/` |
-| Neither exists | Check CLAUDE.md → Ask user |
+| User cares about Codex App compatibility | Prefer App-managed worktree |
+| Already inside a worktree | Reuse it |
+| Need manual worktree | Prefer `$HOME/.config/superpowers/worktrees/<project-name>/` |
+| `.worktrees/` exists | Use it only in manual mode and verify ignored |
+| `worktrees/` exists | Use it only in manual mode and verify ignored |
+| Neither exists | Check `CLAUDE.md` → Ask user |
 | Directory not ignored | Add to .gitignore + commit |
 | Tests fail during baseline | Report failures + ask |
-| No package.json/Cargo.toml | Skip dependency install |
+| Python project with `uv.lock` | Run `uv sync --dev` |
 
 ## Common Mistakes
+
+### Treating Codex App and manual worktrees as interchangeable
+
+- **Problem:** Manual `git worktree` directories may not be manageable from Codex App's built-in worktree UI
+- **Fix:** If Codex App compatibility matters, use App-managed worktrees first
 
 ### Skipping ignore verification
 
 - **Problem:** Worktree contents get tracked, pollute git status
 - **Fix:** Always use `git check-ignore` before creating project-local worktree
 
-### Assuming directory location
+### Assuming project-local directories should be the default
 
-- **Problem:** Creates inconsistency, violates project conventions
-- **Fix:** Follow priority: existing > CLAUDE.md > ask
+- **Problem:** Creates confusion with Codex App-managed worktrees and increases repo clutter
+- **Fix:** In manual mode, prefer `$HOME/.config/superpowers/worktrees/<project-name>/` unless the project already standardizes on a local directory
 
 ### Proceeding with failing tests
 
@@ -180,13 +236,13 @@ Ready to implement <feature-name>
 ```
 You: I'm using the using-git-worktrees skill to set up an isolated workspace.
 
-[Check .worktrees/ - exists]
-[Verify ignored - git check-ignore confirms .worktrees/ is ignored]
-[Create worktree: git worktree add .worktrees/auth -b feature/auth]
-[Run npm install]
-[Run npm test - 47 passing]
+[User is working in Codex App]
+[Prefer App-managed worktree]
+[User creates worktree via "Fork into new worktree"]
+[Run project setup inside the new worktree]
+[Run baseline tests]
 
-Worktree ready at /Users/jesse/myproject/.worktrees/auth
+Worktree ready at <app-managed-worktree-path>
 Tests passing (47 tests, 0 failures)
 Ready to implement auth feature
 ```
@@ -194,6 +250,7 @@ Ready to implement auth feature
 ## Red Flags
 
 **Never:**
+- Create a manual git worktree first when Codex App compatibility is required
 - Create worktree without verifying it's ignored (project-local)
 - Skip baseline test verification
 - Proceed with failing tests without asking
@@ -201,7 +258,9 @@ Ready to implement auth feature
 - Skip CLAUDE.md check
 
 **Always:**
-- Follow directory priority: existing > CLAUDE.md > ask
+- Prefer App-managed worktrees when the user is using Codex App
+- Reuse an existing worktree instead of creating another one unnecessarily
+- In manual mode, prefer global worktree storage before project-local directories
 - Verify directory is ignored for project-local
 - Auto-detect and run project setup
 - Verify clean test baseline
