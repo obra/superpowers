@@ -12,3 +12,8 @@
 **Vulnerability:** The brainstorm helper script used `innerHTML` to render user-controlled option labels into the status indicator, allowing XSS if a brainstorm option contained HTML.
 **Learning:** Never use `innerHTML` to render any data that originates from user input or LLM-generated content. Use `textContent` or explicit DOM node creation instead.
 **Prevention:** Replace `element.innerHTML = '<span>' + label + '</span>'` with `document.createElement` + `textContent` assignment.
+
+## 2026-03-25 - [Insecure Random Port Selection]
+**Vulnerability:** The brainstorm server used `Math.random()` to dynamically select a port for binding. Because `Math.random()` is predictable, an attacker running malicious JavaScript in a background tab or another application could guess the assigned port and attempt cross-site attacks before the owner interacts.
+**Learning:** Avoid `Math.random()` for any security-sensitive logic like local port assignment, token generation, or IDs.
+**Prevention:** Always use `crypto.randomInt(min, max)` for cryptographically secure integer generation.

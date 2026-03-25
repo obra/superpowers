@@ -79,7 +79,8 @@ function decodeFrame(buffer) {
 
 // ========== Configuration ==========
 
-const PORT = process.env.BRAINSTORM_PORT || (49152 + Math.floor(Math.random() * 16383));
+// Use crypto.randomInt for cryptographically secure random port selection
+const PORT = process.env.BRAINSTORM_PORT || crypto.randomInt(49152, 65536);
 const HOST = process.env.BRAINSTORM_HOST || '127.0.0.1';
 const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'localhost' : HOST);
 const SCREEN_DIR = process.env.BRAINSTORM_DIR || '/tmp/brainstorm';
