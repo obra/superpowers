@@ -26,7 +26,7 @@ Thanks!
 
 ## Installation
 
-**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex and OpenCode require manual setup.
+**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex, OpenCode, and Windsurf use a fetch-and-follow installation approach.
 
 ### Claude Code Official Marketplace
 
@@ -81,6 +81,16 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 ```
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
+
+### Windsurf
+
+Tell Windsurf Cascade:
+
+```
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.windsurf/INSTALL.md
+```
+
+**Detailed docs:** [docs/README.windsurf.md](docs/README.windsurf.md)
 
 ### Gemini CLI
 
