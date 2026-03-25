@@ -13,7 +13,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Simple frontmatter extraction (avoid dependency on skills-core for bootstrap)
-const extractAndStripFrontmatter = (content) => {
+export const extractAndStripFrontmatter = (content) => {
   const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
   if (!match) return { frontmatter: {}, content };
 
@@ -34,7 +34,7 @@ const extractAndStripFrontmatter = (content) => {
 };
 
 // Normalize a path: trim whitespace, expand ~, resolve to absolute
-const normalizePath = (p, homeDir) => {
+export const normalizePath = (p, homeDir) => {
   if (!p || typeof p !== 'string') return null;
   let normalized = p.trim();
   if (!normalized) return null;
