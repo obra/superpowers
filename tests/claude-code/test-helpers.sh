@@ -114,6 +114,21 @@ assert_order() {
     if [ "$line_a" -lt "$line_b" ]; then
         echo "  [PASS] $test_name (A at line $line_a, B at line $line_b)"
         return 0
+    elif [ "$line_a" -eq "$line_b" ]; then
+        # Same line - check column positions
+        local the_line=$(echo "$output" | sed -n "${line_a}p")
+        local col_a=$(echo "$the_line" | grep -bo "$pattern_a" | head -1 | cut -d: -f1)
+        local col_b=$(echo "$the_line" | grep -bo "$pattern_b" | head -1 | cut -d: -f1)
+
+        if [ "$col_a" -lt "$col_b" ]; then
+            echo "  [PASS] $test_name (both at line $line_a, A at col $col_a, B at col $col_b)"
+            return 0
+        else
+            echo "  [FAIL] $test_name"
+            echo "  Expected '$pattern_a' before '$pattern_b' on line $line_a"
+            echo "  But found A at col $col_a, B at col $col_b"
+            return 1
+        fi
     else
         echo "  [FAIL] $test_name"
         echo "  Expected '$pattern_a' before '$pattern_b'"
