@@ -19,6 +19,14 @@ tests/
 
 ## Running Tests
 
+### Skill Smoke Checks
+
+Run from the **repository root**:
+
+```bash
+bash tests/skills/test-harness-engineering-skill.sh
+```
+
 ### Integration Tests
 
 Integration tests execute real Claude Code sessions with actual skills:
