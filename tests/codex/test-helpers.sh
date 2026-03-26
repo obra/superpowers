@@ -46,16 +46,45 @@ run_codex() {
     local project_dir="$2"
     local timeout_seconds="${3:-60}"
     local output_file
+    local final_message
     output_file=$(mktemp)
 
+    if ! command -v jq >/dev/null 2>&1; then
+        echo "jq is required to parse codex exec --json output" >&2
+        rm -f "$output_file"
+        return 1
+    fi
+
     if timeout "$timeout_seconds" env HOME="$HOME" CODEX_HOME="$CODEX_HOME" codex exec \
+        --json \
         --skip-git-repo-check \
         -C "$project_dir" \
         -s workspace-write \
         "$prompt" > "$output_file" 2>&1; then
-        cat "$output_file"
+        final_message=$(
+            grep '^{' "$output_file" | jq -rs '
+                map(
+                    select(
+                        .type == "item.completed"
+                        and .item.type == "agent_message"
+                        and (.item.text? != null)
+                    )
+                    | .item.text
+                )
+                | last // empty
+            '
+        )
+
+        if [ -n "$final_message" ]; then
+            printf '%s\n' "$final_message"
+            rm -f "$output_file"
+            return 0
+        fi
+
+        echo "Failed to extract final Codex agent message from JSON output" >&2
+        cat "$output_file" >&2
         rm -f "$output_file"
-        return 0
+        return 1
     else
         local exit_code=$?
         cat "$output_file" >&2
@@ -87,7 +116,7 @@ assert_contains() {
     local pattern="$2"
     local test_name="${3:-test}"
 
-    if echo "$output" | grep -Eq "$pattern"; then
+    if echo "$output" | grep -Eiq "$pattern"; then
         echo "  [PASS] $test_name"
         return 0
     else
@@ -104,7 +133,7 @@ assert_not_contains() {
     local pattern="$2"
     local test_name="${3:-test}"
 
-    if echo "$output" | grep -Eq "$pattern"; then
+    if echo "$output" | grep -Eiq "$pattern"; then
         echo "  [FAIL] $test_name"
         echo "  Did not expect to find: $pattern"
         echo "  In output:"
@@ -122,28 +151,44 @@ assert_order() {
     local pattern_b="$3"
     local test_name="${4:-test}"
 
-    local line_a
-    local line_b
-    line_a=$(echo "$output" | grep -En "$pattern_a" | head -1 | cut -d: -f1 || true)
-    line_b=$(echo "$output" | grep -En "$pattern_b" | head -1 | cut -d: -f1 || true)
+    local offset_a
+    local offset_b
+    offset_a=$(
+        printf '%s' "$output" | PATTERN="$pattern_a" perl -0e '
+            my $pattern = $ENV{PATTERN};
+            my $text = do { local $/; <STDIN> };
+            if ($text =~ /$pattern/m) {
+                print $-[0];
+            }
+        '
+    )
+    offset_b=$(
+        printf '%s' "$output" | PATTERN="$pattern_b" perl -0e '
+            my $pattern = $ENV{PATTERN};
+            my $text = do { local $/; <STDIN> };
+            if ($text =~ /$pattern/m) {
+                print $-[0];
+            }
+        '
+    )
 
-    if [ -z "$line_a" ]; then
+    if [ -z "$offset_a" ]; then
         echo "  [FAIL] $test_name: pattern A not found: $pattern_a"
         return 1
     fi
 
-    if [ -z "$line_b" ]; then
+    if [ -z "$offset_b" ]; then
         echo "  [FAIL] $test_name: pattern B not found: $pattern_b"
         return 1
     fi
 
-    if [ "$line_a" -lt "$line_b" ]; then
-        echo "  [PASS] $test_name (A at line $line_a, B at line $line_b)"
+    if [ "$offset_a" -lt "$offset_b" ]; then
+        echo "  [PASS] $test_name (A at offset $offset_a, B at offset $offset_b)"
         return 0
     else
         echo "  [FAIL] $test_name"
         echo "  Expected '$pattern_a' before '$pattern_b'"
-        echo "  But found A at line $line_a, B at line $line_b"
+        echo "  But found A at offset $offset_a, B at offset $offset_b"
         return 1
     fi
 }
