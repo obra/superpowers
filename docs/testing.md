@@ -1,30 +1,59 @@
 # Testing Superpowers Skills
 
-This document describes how to test Superpowers skills, particularly the integration tests for complex skills like `subagent-driven-development`.
+This document describes how to test Superpowers skills with the real agent CLIs that the repository currently supports in automated form: Claude Code and Codex.
 
 ## Overview
 
-Testing skills that involve subagents, workflows, and complex interactions requires running actual Claude Code sessions in headless mode and verifying their behavior through session transcripts.
+Testing skills that involve subagents, workflows, and complex interactions requires running actual headless agent sessions and verifying their behavior from machine-readable evidence.
+
+- Claude Code tests use Claude session transcripts under `~/.claude/projects/`
+- Codex tests use `codex exec --json` output plus isolated session rollouts under temporary `$CODEX_HOME/sessions`
 
 ## Test Structure
 
 ```
 tests/
+├── codex/
+│   ├── README.md                           # Codex-specific usage notes
+│   ├── test-helpers.sh                    # Shared Codex test utilities
+│   ├── test-subagent-driven-development.sh
+│   ├── test-subagent-driven-development-integration.sh
+│   ├── test-document-review-system.sh
+│   └── run-skill-tests.sh
 ├── claude-code/
 │   ├── test-helpers.sh                    # Shared test utilities
 │   ├── test-subagent-driven-development-integration.sh
 │   ├── analyze-token-usage.py             # Token analysis tool
-│   └── run-skill-tests.sh                 # Test runner (if exists)
+│   └── run-skill-tests.sh
 ```
 
 ## Running Tests
 
-### Integration Tests
+### Codex
+
+Run the fast Codex suite:
+
+```bash
+./tests/codex/run-skill-tests.sh
+```
+
+Run the full Codex suite, including slow real integrations:
+
+```bash
+./tests/codex/run-skill-tests.sh --integration --timeout 1800
+```
+
+Run a single Codex test:
+
+```bash
+./tests/codex/run-skill-tests.sh --test test-document-review-system.sh --integration
+```
+
+### Claude Code
 
 Integration tests execute real Claude Code sessions with actual skills:
 
 ```bash
-# Run the subagent-driven-development integration test
 cd tests/claude-code
 ./test-subagent-driven-development-integration.sh
 ```
@@ -33,9 +62,9 @@ cd tests/claude-code
 
 ### Requirements
 
-- Must run from the **superpowers plugin directory** (not from temp directories)
-- Claude Code must be installed and available as `claude` command
-- Local dev marketplace must be enabled: `"superpowers@superpowers-dev": true` in `~/.claude/settings.json`
+- Run from the repository root or a test subdirectory, not from a disposable temp checkout of the tests alone
+- Claude Code tests require `claude` plus the local dev marketplace plugin enabled
+- Codex tests require `codex`, valid `auth.json`, and Node.js for the fixture projects
 
 ## Integration Test: subagent-driven-development
 
@@ -62,6 +91,42 @@ The integration test verifies the `subagent-driven-development` skill correctly:
    - Tests pass
    - Git commits show proper workflow
 4. **Token Analysis**: Shows token usage breakdown by subagent
+
+## Codex Integration Tests
+
+### What They Test
+
+The Codex suite currently has:
+
+1. `test-subagent-driven-development.sh`
+   Fast semantic checks that the `subagent-driven-development` skill is loaded and described correctly.
+2. `test-subagent-driven-development-integration.sh`
+   A real end-to-end implementation run against a disposable Node fixture project.
+3. `test-document-review-system.sh`
+   A real spec review run against a deliberately flawed spec document.
+
+### How Codex Evidence Works
+
+Codex tests prefer structured evidence over transcript scraping:
+
+1. `codex exec --json` captures top-level events such as:
+   - `item.started` / `item.updated` / `item.completed`
+   - `todo_list`
+   - `collab_tool_call`
+   - `turn.completed`
+2. Each test also uses an isolated temporary `CODEX_HOME`, then verifies that a session rollout file was written under `$CODEX_HOME/sessions`
+3. Fast semantic tests extract only the final agent message from the JSON stream so assertions are not polluted by intermediate tool traces
+
+### Codex Environment Notes
+
+- The Codex helpers copy the original `auth.json` into the temporary `CODEX_HOME` when present
+- Skills are installed into the isolated home at `$HOME/.agents/skills/superpowers`
+- The Codex sandbox may block writes inside `.git`, even in disposable fixture repositories
+- The real subagent integration test therefore accepts either:
+  - actual additional commits in the fixture repo, or
+  - explicit evidence that Codex attempted to commit but `.git` writes were blocked by sandbox policy
+
+This behavior is intentional: the test should distinguish workflow regressions from environment-imposed git restrictions.
 
 ### Test Output
 
@@ -176,6 +241,36 @@ ls -lt "$SESSION_DIR"/*.jsonl | head -5
 - **Cost per task**: Typical range is $0.05-$0.15 per subagent depending on task
 
 ## Troubleshooting
+
+### Codex Authentication Issues
+
+**Problem**: `codex exec` fails in tests even though Codex works normally
+
+**Solutions**:
+1. Verify `~/.codex/auth.json` (or your current `CODEX_HOME/auth.json`) is present and valid
+2. Run a quick real command outside the suite: `codex exec --skip-git-repo-check -C /tmp "Reply with exactly OK."`
+3. Remember the test helper uses a temporary `CODEX_HOME`; authentication is copied in, not shared live
+
+### Codex Session File Not Found
+
+**Problem**: The test cannot find a persisted rollout in `sessions/`
+
+**Solutions**:
+1. Check whether the Codex invocation actually completed successfully
+2. Look under the temporary test `CODEX_HOME`, not your real `~/.codex`
+3. Inspect `tests/codex/test-helpers.sh` and `tests/codex/README.md` for the current session discovery logic
+
+### Codex Git Writes Blocked
+
+**Problem**: Integration test output shows `.git/index.lock` or other `.git` writes failing
+
+**Explanation**:
+Codex can run inside a sandbox that treats `.git` metadata as read-only even when the working tree itself is writable.
+
+**What to do**:
+1. Treat it as environment evidence first, not an immediate test bug
+2. Confirm the workflow still attempted commits and reported the blocker explicitly
+3. If real repo commits are a hard requirement for a future scenario, revisit the fixture or Codex sandbox policy assumptions
 
 ### Skills Not Loading
 
