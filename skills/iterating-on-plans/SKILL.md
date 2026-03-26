@@ -91,7 +91,17 @@ I've classified this as a [PATCH / PLAN UPDATE / DESIGN UPDATE].
 Shall I proceed?
 ```
 
-Wait for the user's confirmation. If they push back on the classification, re-classify with their input or adjust the approach manually.
+Wait for the user's confirmation.
+
+**If the user disagrees with the classification level** (e.g., insists a PLAN_UPDATE is "just a patch"):
+- Do NOT silently accept the downgrade
+- Make the risk explicit: explain specifically which completed tasks will be wrong after the change and why
+- Give the user enough information to make an informed decision
+- Defer to the user once they confirm they understand the risk — but document their override in the plan as an `## Iteration Note`
+- Never pretend the risk doesn't exist to avoid friction
+
+Example response when user overrides:
+> "I hear you — the edit itself is one line. The reason I flagged PLAN_UPDATE is that Task 5 calls `User.save()` and compares against the stored value directly. After this change that comparison will break silently. If you've already accounted for that, treat this as a patch and I'll proceed immediately. If not, Tasks 5 and 7 need re-running. Which do you prefer?"
 
 ---
 
@@ -247,6 +257,8 @@ digraph iterating_on_plans {
 | Starting a design update without summarizing what's preserved | Brainstorming skill may re-question settled decisions |
 | Injecting all discoveries without filtering | Stale discoveries from prior architecture can mislead subagents |
 | Accepting user's classification without running the classifier | User's framing is often incorrect; the classifier reads the actual code |
+| Silently accepting user's override of classifier level | Make the risk explicit first — "just do what they say" leaves silent breakage |
+| Discarding in-scope completed work when out-of-scope files are found | Commit the valid in-scope work, then report NEEDS_CONTEXT for the rest |
 
 ---
 

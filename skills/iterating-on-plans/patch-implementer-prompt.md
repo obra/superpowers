@@ -47,8 +47,11 @@ Task tool (general-purpose):
 
     1. Read the listed files to understand the current state
     2. Implement exactly the described fix — stay within the listed files unless unavoidable
-    3. If you discover the fix requires touching files outside scope, **stop and report NEEDS_CONTEXT**
-       (do not expand scope on your own — the classifier may have missed blast radius)
+    3. If you discover the fix requires touching files outside scope:
+       - **Commit any in-scope work you have already completed** (don't discard valid work)
+       - **Report NEEDS_CONTEXT** — describe exactly which out-of-scope files are affected and why
+       - Do not expand scope on your own — the classifier may have missed blast radius, or
+         those files may have other owners, callers, or tests that need separate consideration
     4. Write or update tests that verify the fix works and doesn't regress
     5. Run the test suite to confirm
     6. Commit your work:
