@@ -99,45 +99,12 @@ fi
 
 cd "$SCRIPT_DIR"
 
-# Resolve the Claude Code harness PID by walking up the process tree
-# and looking for a process named "claude" (Linux/macOS) or "claude.exe"
-# (Windows). This is robust against arbitrary wrapper layers (timeout,
-# env, nice, etc.) that insert extra processes between the harness and
-# this script.
-OWNER_PID=""
-_walk_pid="$$"
-while [[ -n "$_walk_pid" && "$_walk_pid" != "1" ]]; do
-  _parent="$(ps -o ppid= -p "$_walk_pid" 2>/dev/null | tr -d ' ')"
-  [[ -z "$_parent" || "$_parent" == "1" ]] && break
-  _comm="$(ps -o comm= -p "$_parent" 2>/dev/null | tr -d ' ')"
-  if [[ "$_comm" == "claude" ]]; then
-    OWNER_PID="$_parent"
-    break
-  fi
-  _walk_pid="$_parent"
-done
-
-# Windows/MSYS2: ps can't see Windows process names. Use PowerShell to
-# walk the Windows PID tree looking for claude.exe. Node.js process.kill()
-# works with Windows PIDs, so the server can monitor it directly.
-if [[ -z "$OWNER_PID" ]]; then
-  case "${OSTYPE:-}" in
-    msys*|cygwin*|mingw*)
-      # Map this script's MSYS2 PID to a Windows PID, then walk up.
-      _winpid="$(ps -p $$ | tail -1 | awk '{print $4}')"
-      if [[ -n "$_winpid" ]]; then
-        OWNER_PID="$(powershell.exe -Command "
-          [Console]::OutputEncoding = [Text.Encoding]::UTF8
-          \$id = $_winpid
-          while (\$id -and \$id -ne 0) {
-            \$p = Get-CimInstance Win32_Process -Filter \"ProcessId=\$id\" -EA SilentlyContinue
-            if (-not \$p) { break }
-            if (\$p.Name -eq 'claude.exe') { Write-Output \$p.ProcessId; break }
-            \$id = \$p.ParentProcessId
-          }" 2>/dev/null | tr -d '\r\n ')" || true
-      fi
-      ;;
-  esac
+# Resolve the harness PID (grandparent of this script).
+# $PPID is the ephemeral shell the harness spawned to run us — it dies
+# when this script exits. The harness itself is $PPID's parent.
+OWNER_PID="$(ps -o ppid= -p "$PPID" 2>/dev/null | tr -d ' ')"
+if [[ -z "$OWNER_PID" || "$OWNER_PID" == "1" ]]; then
+  OWNER_PID="$PPID"
 fi
 
 # Foreground mode for environments that reap detached/background processes.

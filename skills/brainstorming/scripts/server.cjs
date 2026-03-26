@@ -323,11 +323,9 @@ function startServer() {
   }, 60 * 1000);
   lifecycleCheck.unref();
 
-  // Validate owner PID at startup. The shell script walks the process tree
-  // to find the claude/claude.exe process, but if it couldn't find one
-  // (running outside Claude Code, or platform detection failed), ownerPid
-  // will be empty. If a PID was passed but is already dead, disable
-  // monitoring and rely on the idle timeout instead.
+  // Validate owner PID at startup. If it's already dead, the PID resolution
+  // was wrong (common on WSL, Tailscale SSH, and cross-user scenarios).
+  // Disable monitoring and rely on the idle timeout instead.
   if (ownerPid) {
     try { process.kill(ownerPid, 0); }
     catch (e) {
@@ -336,6 +334,24 @@ function startServer() {
         ownerPid = null;
       }
     }
+  }
+
+  // Delayed re-validation: if the owner dies within 10 seconds of startup,
+  // it was an ephemeral wrapper (timeout, env, tool-spawned shell) rather
+  // than the real harness. Null it out and fall back to idle timeout.
+  // This catches the gap the startup validation misses: PIDs that are alive
+  // during startup but die as soon as the launching shell exits.
+  if (ownerPid) {
+    const revalidateTimer = setTimeout(() => {
+      try { process.kill(ownerPid, 0); }
+      catch (e) {
+        if (e.code !== 'EPERM') {
+          console.log(JSON.stringify({ type: 'owner-pid-invalid', pid: ownerPid, reason: 'died shortly after startup (ephemeral wrapper)' }));
+          ownerPid = null;
+        }
+      }
+    }, 10000);
+    revalidateTimer.unref();
   }
 
   server.listen(PORT, HOST, () => {
