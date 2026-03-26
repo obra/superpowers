@@ -29,9 +29,9 @@ BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
 HEAD_SHA=$(git rev-parse HEAD)
 ```
 
-**2. Dispatch code-reviewer subagent:**
+**2. Spawn code-reviewer as Agent Team member:**
 
-Use Task tool with superpowers:code-reviewer type, fill template at `code-reviewer.md`
+Use `Agent(team_name="<team>", name="code-reviewer", model="opus")` with the template at `code-reviewer.md`. Pass any relevant project skills matching the code domain.
 
 **Placeholders:**
 - `{WHAT_WAS_IMPLEMENTED}` - What you just built

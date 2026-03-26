@@ -84,20 +84,34 @@ digraph process {
 }
 ```
 
-## Model Selection
+## Agent Dispatch Protocol
 
-Use the least powerful model that can handle each role to conserve cost and increase speed.
+**All agent dispatch uses Agent Teams (TeamCreate workflow). NEVER use the Task tool for fire-and-forget subagent dispatch.** Task tool is only acceptable for single, isolated lookups (e.g., Explore agent to search for a file).
 
-**Mechanical implementation tasks** (isolated functions, clear specs, 1-2 files): use a fast, cheap model. Most implementation tasks are mechanical when the plan is well-specified.
+### Team Setup
 
-**Integration and judgment tasks** (multi-file coordination, pattern matching, debugging): use a standard model.
+1. **Create team** with `TeamCreate` for the implementation session
+2. **Create tasks** with `TaskCreate` for each plan task (for tracking and coordination)
+3. **Spawn each agent** with the `Agent` tool using:
+   - `team_name`: the team name from step 1
+   - `name`: descriptive name (e.g., `"implementer-task-1"`, `"spec-reviewer-task-1"`)
+   - `model`: `"opus"` (always Opus — max effort, 1M context)
+4. **Coordinate** via `SendMessage` and `TaskUpdate`
 
-**Architecture, design, and review tasks**: use the most capable available model.
+### Skill-Passing Protocol
 
-**Task complexity signals:**
-- Touches 1-2 files with a complete spec → cheap model
-- Touches multiple files with integration concerns → standard model
-- Requires design judgment or broad codebase understanding → most capable model
+Before spawning any agent team member, identify and pass relevant skills in their prompt:
+
+1. **Check global skills** (`~/.claude/skills/`) for skills matching the agent's task domain
+2. **Check project skills** (project-level `.claude/skills/` or `.claude/agents/`) for domain-specific skills
+3. **Include relevant Superpowers skills** (e.g., `superpowers:test-driven-development` for implementers)
+4. **Read each skill file** and include its content in the agent's prompt
+
+**Example skill-passing:**
+- Agent implementing Zustand state management gets: `superpowers:test-driven-development` + project's `zustand` skill (if exists)
+- Agent implementing Supabase integration gets: `superpowers:test-driven-development` + project's `supabase` skill (if exists)
+- Agent debugging a test failure gets: `superpowers:systematic-debugging` + any relevant project domain skill
+- Spec/quality reviewers get: the spec/plan document content + any relevant project conventions
 
 ## Handling Implementer Status
 
@@ -119,9 +133,11 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 ## Prompt Templates
 
-- `./implementer-prompt.md` - Dispatch implementer subagent
-- `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
-- `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
+- `./implementer-prompt.md` - Spawn implementer as Agent Team member
+- `./spec-reviewer-prompt.md` - Spawn spec compliance reviewer as Agent Team member
+- `./code-quality-reviewer-prompt.md` - Spawn code quality reviewer as Agent Team member
+
+**When spawning from these templates**, always use the Agent Dispatch Protocol above (TeamCreate, model="opus", skill-passing).
 
 ## Example Workflow
 
@@ -130,70 +146,79 @@ You: I'm using Subagent-Driven Development to execute this plan.
 
 [Read plan file once: docs/superpowers/plans/feature-plan.md]
 [Extract all 5 tasks with full text and context]
-[Create TodoWrite with all tasks]
 
-Task 1: Hook installation script
+── Setup ──
+[TeamCreate("feature-impl")]
+[TaskCreate for each of the 5 plan tasks — for tracking]
 
-[Get Task 1 text and context (already extracted)]
-[Dispatch implementation subagent with full task text + context]
+── Identify Skills ──
+[Check ~/.claude/skills/ and project .claude/skills/ for relevant domain skills]
+[Task 1 involves hooks → found project's "hooks" skill]
+[Task 2 involves recovery → found project's "error-handling" skill]
+[All implementers get superpowers:test-driven-development]
+
+── Task 1: Hook installation script ──
+
+[Spawn implementer via Agent(team_name="feature-impl", name="impl-task-1",
+  model="opus", prompt="<task text + context + TDD skill + hooks skill>")]
 
 Implementer: "Before I begin - should the hook be installed at user or system level?"
 
-You: "User level (~/.config/superpowers/hooks/)"
+[SendMessage(to="impl-task-1", message="User level (~/.config/superpowers/hooks/)")]
 
-Implementer: "Got it. Implementing now..."
-[Later] Implementer:
+Implementer:
   - Implemented install-hook command
   - Added tests, 5/5 passing
   - Self-review: Found I missed --force flag, added it
   - Committed
 
-[Dispatch spec compliance reviewer]
+[Spawn spec reviewer via Agent(team_name="feature-impl", name="spec-rev-task-1",
+  model="opus", prompt="<spec + implementer report>")]
 Spec reviewer: ✅ Spec compliant - all requirements met, nothing extra
 
-[Get git SHAs, dispatch code quality reviewer]
+[Spawn quality reviewer via Agent(team_name="feature-impl", name="quality-rev-task-1",
+  model="opus", prompt="<git SHAs + code context>")]
 Code reviewer: Strengths: Good test coverage, clean. Issues: None. Approved.
 
-[Mark Task 1 complete]
+[TaskUpdate: Task 1 complete]
 
-Task 2: Recovery modes
+── Task 2: Recovery modes ──
 
-[Get Task 2 text and context (already extracted)]
-[Dispatch implementation subagent with full task text + context]
+[Spawn implementer via Agent(team_name="feature-impl", name="impl-task-2",
+  model="opus", prompt="<task text + context + TDD skill + error-handling skill>")]
 
-Implementer: [No questions, proceeds]
 Implementer:
   - Added verify/repair modes
   - 8/8 tests passing
   - Self-review: All good
   - Committed
 
-[Dispatch spec compliance reviewer]
+[Spawn spec reviewer]
 Spec reviewer: ❌ Issues:
   - Missing: Progress reporting (spec says "report every 100 items")
   - Extra: Added --json flag (not requested)
 
-[Implementer fixes issues]
+[SendMessage to impl-task-2 with fix instructions]
 Implementer: Removed --json flag, added progress reporting
 
-[Spec reviewer reviews again]
+[Spawn spec reviewer again]
 Spec reviewer: ✅ Spec compliant now
 
-[Dispatch code quality reviewer]
-Code reviewer: Strengths: Solid. Issues (Important): Magic number (100)
+[Spawn quality reviewer]
+Code reviewer: Issues (Important): Magic number (100)
 
-[Implementer fixes]
+[SendMessage to impl-task-2 with fix instructions]
 Implementer: Extracted PROGRESS_INTERVAL constant
 
-[Code reviewer reviews again]
+[Spawn quality reviewer again]
 Code reviewer: ✅ Approved
 
-[Mark Task 2 complete]
+[TaskUpdate: Task 2 complete]
 
 ...
 
 [After all tasks]
-[Dispatch final code-reviewer]
+[Spawn final code-reviewer as team member]
 Final reviewer: All requirements met, ready to merge
 
 Done!
@@ -238,6 +263,8 @@ Done!
 - Skip reviews (spec compliance OR code quality)
 - Proceed with unfixed issues
 - Dispatch multiple implementation subagents in parallel (conflicts)
+- **Use the Task tool for fire-and-forget agent dispatch** — always use Agent Teams (TeamCreate + Agent with team_name + model="opus")
+- **Forget to pass relevant skills** — check global (~/.claude/skills/) and project (.claude/skills/, .claude/agents/) skill dirs before spawning
 - Make subagent read plan file (provide full text instead)
 - Skip scene-setting context (subagent needs to understand where task fits)
 - Ignore subagent questions (answer before letting them proceed)

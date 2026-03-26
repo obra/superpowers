@@ -63,15 +63,42 @@ Each agent gets:
 - **Constraints:** Don't change other code
 - **Expected output:** Summary of what you found and fixed
 
-### 3. Dispatch in Parallel
+### 3. Dispatch via Agent Teams
 
-```typescript
-// In Claude Code / AI environment
-Task("Fix agent-tool-abort.test.ts failures")
-Task("Fix batch-completion-behavior.test.ts failures")
-Task("Fix tool-approval-race-conditions.test.ts failures")
-// All three run concurrently
+**NEVER use the Task tool for parallel dispatch. Always use Agent Teams:**
+
 ```
+// Create team for this parallel session
+TeamCreate("debug-session")
+
+// Create tasks for tracking
+TaskCreate("Fix agent-tool-abort.test.ts failures")
+TaskCreate("Fix batch-completion-behavior.test.ts failures")
+TaskCreate("Fix tool-approval-race-conditions.test.ts failures")
+
+// Identify relevant skills before spawning
+// Check ~/.claude/skills/ and project .claude/skills/ for domain-specific skills
+// All debuggers get superpowers:systematic-debugging
+
+// Spawn agents as team members — all Opus, all with relevant skills
+Agent(team_name="debug-session", name="abort-fixer", model="opus",
+  prompt="<task details + systematic-debugging skill + relevant project skills>")
+Agent(team_name="debug-session", name="batch-fixer", model="opus",
+  prompt="<task details + systematic-debugging skill + relevant project skills>")
+Agent(team_name="debug-session", name="race-fixer", model="opus",
+  prompt="<task details + systematic-debugging skill + relevant project skills>")
+// All three run concurrently as team members
+```
+
+### Skill-Passing for Parallel Agents
+
+Before spawning each agent, check for relevant skills to pass:
+
+1. **Global skills** (`~/.claude/skills/`) matching the agent's problem domain
+2. **Project skills** (`.claude/skills/`, `.claude/agents/`) for technology/framework-specific guidance
+3. **Superpowers skills** — `systematic-debugging` for debugging, `test-driven-development` for fixing
+
+Include skill file content directly in the agent's prompt.
 
 ### 4. Review and Integrate
 
@@ -141,11 +168,15 @@ Return: Summary of what you found and what you fixed.
 
 **Decision:** Independent domains - abort logic separate from batch completion separate from race conditions
 
-**Dispatch:**
+**Dispatch via Agent Teams:**
 ```
-Agent 1 → Fix agent-tool-abort.test.ts
-Agent 2 → Fix batch-completion-behavior.test.ts
-Agent 3 → Fix tool-approval-race-conditions.test.ts
+TeamCreate("debug-6-failures")
+Agent(team_name="debug-6-failures", name="abort-fixer", model="opus",
+  prompt="Fix agent-tool-abort.test.ts + systematic-debugging skill + project skills")
+Agent(team_name="debug-6-failures", name="batch-fixer", model="opus",
+  prompt="Fix batch-completion-behavior.test.ts + systematic-debugging skill + project skills")
+Agent(team_name="debug-6-failures", name="race-fixer", model="opus",
+  prompt="Fix tool-approval-race-conditions.test.ts + systematic-debugging skill + project skills")
 ```
 
 **Results:**

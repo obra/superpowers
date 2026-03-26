@@ -1,13 +1,15 @@
 # Code Quality Reviewer Prompt Template
 
-Use this template when dispatching a code quality reviewer subagent.
+Use this template when spawning a code quality reviewer as an Agent Team member.
+
+**Dispatch method:** `Agent(team_name="<team>", name="quality-rev-task-N", model="opus", prompt="<below>")`
 
 **Purpose:** Verify implementation is well-built (clean, tested, maintainable)
 
-**Only dispatch after spec compliance review passes.**
+**Only spawn after spec compliance review passes.**
 
 ```
-Task tool (superpowers:code-reviewer):
+Agent(team_name="<team>", name="quality-rev-task-N", model="opus"):
   Use template at requesting-code-review/code-reviewer.md
 
   WHAT_WAS_IMPLEMENTED: [from implementer's report]
