@@ -1,0 +1,316 @@
+#!/usr/bin/env bash
+# Worktree Registry Manager
+# Manages worktree lifecycle and garbage collection
+
+set -euo pipefail
+
+REGISTRY_DIR="${HOME}/.config/superpowers"
+REGISTRY_FILE="${REGISTRY_DIR}/worktree-registry.json"
+LOCK_FILE="${REGISTRY_FILE}.lock"
+PROJECT_ROOT="${PROJECT_ROOT:-$(pwd)}"
+
+# ==============================================================================
+# Locking for concurrent access
+# ==============================================================================
+
+with_registry_lock() {
+    (
+        flock -x 200
+        "$@"
+    ) 200>"$LOCK_FILE"
+}
+
+# Ensure registry exists
+init_registry() {
+    mkdir -p "$REGISTRY_DIR"
+    if [ ! -f "$REGISTRY_FILE" ]; then
+        cat > "$REGISTRY_FILE" <<EOF
+{
+  "version": 1,
+  "worktrees": [],
+  "metadata": {
+    "last_updated": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+    "gc_policy": {
+      "enabled": true,
+      "interval_hours": 1,
+      "cleanup_delay_hours": 24,
+      "max_age_days": 30
+    }
+  }
+}
+EOF
+    fi
+}
+
+# Register a new worktree
+register_worktree() {
+    local worktree_path="$1"
+    local branch="$2"
+    local project_root="$3"
+    local metadata="${4:-{}}"
+    
+    local worktree_id="wt_$(date +%s)_$(echo "$branch" | tr -c '[:alnum:]' '_')"
+    local created_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    
+    # Add to registry with locking for concurrent access
+    if command -v jq >/dev/null 2>&1; then
+        (
+            flock -x 200
+            jq --arg id "$worktree_id" \
+               --arg path "$worktree_path" \
+               --arg branch "$branch" \
+               --arg project_root "$project_root" \
+               --arg created_at "$created_at" \
+               --argjson metadata "$metadata" \
+               '.worktrees += [{id: $id, path: $path, branch: $branch, project_root: $project_root, created_at: $created_at, status: "active", metadata: $metadata}]' \
+               "$REGISTRY_FILE" > "${REGISTRY_FILE}.tmp" && \
+            mv "${REGISTRY_FILE}.tmp" "$REGISTRY_FILE"
+        ) 200>"$LOCK_FILE"
+        echo "$worktree_id"
+    else
+        echo "Error: jq required for worktree registry" >&2
+        return 1
+    fi
+}
+
+# Update worktree status
+update_status() {
+    local worktree_id="$1"
+    local new_status="$2"
+    
+    # Validate status
+    case "$new_status" in
+        active|pr_opened|merged|abandoned|cleanup_pending) ;;
+        *)
+            echo "Error: Invalid status '$new_status'. Must be: active, pr_opened, merged, abandoned, or cleanup_pending" >&2
+            return 1
+            ;;
+    esac
+    
+    if command -v jq >/dev/null 2>&1; then
+        (
+            flock -x 200
+            jq --arg id "$worktree_id" --arg status "$new_status" \
+                '(.worktrees[] | select(.id == $id)).status = $status' \
+                "$REGISTRY_FILE" > "${REGISTRY_FILE}.tmp" && \
+            mv "${REGISTRY_FILE}.tmp" "$REGISTRY_FILE"
+        ) 200>"$LOCK_FILE"
+    fi
+}
+
+# List worktrees for a project
+list_project_worktrees() {
+    local project_root="$1"
+    
+    if command -v jq >/dev/null 2>&1; then
+        jq -r --arg root "$project_root" \
+            '.worktrees[] | select(.project_root == $root) | "\(.id)\t\(.branch)\t\(.status)\t\(.path)"' \
+            "$REGISTRY_FILE"
+    fi
+}
+
+# Find worktree by branch
+find_by_branch() {
+    local branch="$1"
+    
+    if command -v jq >/dev/null 2>&1; then
+        jq -r --arg branch "$branch" \
+            '.worktrees[] | select(.branch == $branch)' \
+            "$REGISTRY_FILE"
+    fi
+}
+
+# Remove worktree from registry
+unregister_worktree() {
+    local worktree_id="$1"
+    
+    if command -v jq >/dev/null 2>&1; then
+        (
+            flock -x 200
+            jq --arg id "$worktree_id" \
+                '.worktrees = [.worktrees[] | select(.id != $id)]' \
+                "$REGISTRY_FILE" > "${REGISTRY_FILE}.tmp" && \
+            mv "${REGISTRY_FILE}.tmp" "$REGISTRY_FILE"
+        ) 200>"$LOCK_FILE"
+    fi
+}
+
+# ==============================================================================
+# Utility Functions  
+# ==============================================================================
+
+# Portable base64 decode (works on both GNU and BSD/macOS)
+base64_decode() {
+    local input="$1"
+    if echo "$input" | base64 --decode >/dev/null 2>&1; then
+        echo "$input" | base64 --decode
+    elif echo "$input" | base64 -D >/dev/null 2>&1; then
+        echo "$input" | base64 -D  
+    else
+        echo "$input" | base64 -d
+    fi
+}
+
+# Garbage collection
+run_gc() {
+    echo "[$(date)] Running worktree garbage collection..."
+    
+    # Find worktrees pending cleanup
+    local cleanup_pending
+    if command -v jq >/dev/null 2>&1; then
+        cleanup_pending=$(jq -r '.worktrees[] | select(.status == "cleanup_pending") | @base64' "$REGISTRY_FILE" 2>/dev/null || true)
+    else
+        echo "Error: jq required for GC" >&2
+        return 1
+    fi
+    
+    for wt_b64 in $cleanup_pending; do
+        local wt_json=$(base64_decode "$wt_b64")
+        local wt_path=$(echo "$wt_json" | jq -r '.path')
+        local wt_id=$(echo "$wt_json" | jq -r '.id')
+        
+        if [ -d "$wt_path" ]; then
+            # Verify no changes (including untracked files)
+            if (cd "$wt_path" && [ -z "$(git status --porcelain --untracked-files=all 2>/dev/null)" ]); then
+                # Safe to clean - use git worktree remove for consistency
+                echo "[$(date)] Cleaning worktree: $wt_path"
+                
+                # Get main repo path
+                local main_repo
+                main_repo=$(cd "$wt_path" && git rev-parse --git-common-dir 2>/dev/null | sed 's|/\.git$||')
+                
+                if [ -n "$main_repo" ] && [ -d "$main_repo" ]; then
+                    # Try git worktree remove first
+                    if (cd "$main_repo" && git worktree remove "$wt_path" --force 2>/dev/null); then
+                        :  # Success
+                    else
+                        # Git worktree remove failed - log error and keep entry pending
+                        echo "[$(date)] ERROR: git worktree remove failed for $wt_path" >&2
+                        echo "[$(date)] Keeping registry entry pending manual cleanup" >&2
+                        continue  # Skip unregister_worktree
+                    fi
+                else
+                    # No main repo found, safe to remove directory
+                    rm -rf "$wt_path"
+                fi
+                
+                unregister_worktree "$wt_id"
+            else
+                echo "[$(date)] Skipping worktree with uncommitted changes: $wt_path"
+            fi
+        else
+            # Path doesn't exist, just remove from registry
+            unregister_worktree "$wt_id"
+        fi
+    done
+    
+    # Update last GC time with locking and proper jq --arg usage
+    local ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    (
+        flock -x 200
+        jq --arg ts "$ts" '.metadata.last_gc = $ts' "$REGISTRY_FILE" > "${REGISTRY_FILE}.tmp" && \
+        mv "${REGISTRY_FILE}.tmp" "$REGISTRY_FILE"
+    ) 200>"$LOCK_FILE"
+}
+
+# Detect branch status changes
+detect_status_changes() {
+    if ! command -v jq >/dev/null 2>&1; then
+        return 0
+    fi
+    
+    # Check each active worktree
+    local active_worktrees
+    active_worktrees=$(jq -r '.worktrees[] | select(.status == "active" or .status == "pr_opened") | @base64' "$REGISTRY_FILE" 2>/dev/null || true)
+    
+    for wt_b64 in $active_worktrees; do
+        local wt_json=$(base64_decode "$wt_b64")
+        local wt_branch=$(echo "$wt_json" | jq -r '.branch')
+        local wt_id=$(echo "$wt_json" | jq -r '.id')
+        local wt_project=$(echo "$wt_json" | jq -r '.project_root')
+        
+        # Check PR status first (works even if local branch is deleted)
+        local pr_status="none"
+        if command -v gh >/dev/null 2>&1; then
+            pr_status=$(cd "$wt_project" 2>/dev/null && gh pr view "$wt_branch" --json state -q '.state' 2>/dev/null || echo "none")
+        fi
+        
+        if [ "$pr_status" = "MERGED" ]; then
+            update_status "$wt_id" "merged"
+            # Daemon will handle transition to cleanup_pending after grace period
+        elif [ "$pr_status" = "OPEN" ]; then
+            update_status "$wt_id" "pr_opened"
+        elif ! (cd "$wt_project" 2>/dev/null && git show-ref --verify --quiet "refs/heads/$wt_branch"); then
+            # No PR found and branch doesn't exist - truly abandoned
+            update_status "$wt_id" "cleanup_pending"
+        fi
+    done
+}
+
+# Main CLI
+case "${1:-}" in
+    init)
+        init_registry
+        echo "Registry initialized: $REGISTRY_FILE"
+        ;;
+    register)
+        init_registry
+        if [ -z "${2:-}" ] || [ -z "${3:-}" ]; then
+            echo "Error: register requires <path> and <branch> arguments" >&2
+            echo "Usage: $0 register <path> <branch> [project_root] [metadata]" >&2
+            exit 1
+        fi
+        register_worktree "$2" "$3" "${4:-$(pwd)}" "${5:-{}}"
+        ;;
+    update)
+        if [ -z "${2:-}" ] || [ -z "${3:-}" ]; then
+            echo "Error: update requires <id> and <status> arguments" >&2
+            exit 1
+        fi
+        update_status "$2" "$3"
+        ;;
+    list)
+        list_project_worktrees "${2:-$(pwd)}"
+        ;;
+    find)
+        if [ -z "${2:-}" ]; then
+            echo "Error: find requires <branch> argument" >&2
+            exit 1
+        fi
+        find_by_branch "$2"
+        ;;
+    unregister)
+        if [ -z "${2:-}" ]; then
+            echo "Error: unregister requires <id> argument" >&2
+            exit 1
+        fi
+        unregister_worktree "$2"
+        ;;
+    gc)
+        init_registry
+        detect_status_changes
+        run_gc
+        ;;
+    detect)
+        init_registry
+        detect_status_changes
+        ;;
+    *)
+        cat <<EOF
+Usage: $0 <command> [args]
+
+Commands:
+  init                          Initialize worktree registry
+  register <path> <branch> [project] [metadata]
+                                Register a new worktree
+  update <id> <status>          Update worktree status
+  list [project]                List worktrees for a project
+  find <branch>                 Find worktree by branch
+  unregister <id>               Remove worktree from registry
+  gc                            Run garbage collection
+  detect                        Detect status changes
+
+Status values: active | pr_opened | merged | abandoned | cleanup_pending
+EOF
+        ;;
+esac
