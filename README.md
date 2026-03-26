@@ -140,6 +140,7 @@ Start a new session in your chosen platform and ask for something that should tr
 - **executing-plans** - Batch execution with checkpoints
 - **dispatching-parallel-agents** - Concurrent subagent workflows
 - **requesting-code-review** - Pre-review checklist
+- **blind-review** - Spec-only final review to catch drift, security gaps, and deployment issues
 - **receiving-code-review** - Responding to feedback
 - **using-git-worktrees** - Parallel development branches
 - **finishing-a-development-branch** - Merge/PR decision workflow
