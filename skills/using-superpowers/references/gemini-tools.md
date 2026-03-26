@@ -14,11 +14,17 @@ Skills use Claude Code tool names. When you encounter these in a skill, use your
 | `Skill` tool (invoke a skill) | `activate_skill` |
 | `WebSearch` | `google_web_search` |
 | `WebFetch` | `web_fetch` |
-| `Task` tool (dispatch subagent) | No equivalent — Gemini CLI does not support subagents |
+| `Task` tool (dispatch subagent) | `generalist`, `codebase_investigator`, `code-reviewer`, `cli_help` |
 
-## No subagent support
+## Native subagent support
 
-Gemini CLI has no equivalent to Claude Code's `Task` tool. Skills that rely on subagent dispatch (`subagent-driven-development`, `dispatching-parallel-agents`) will fall back to single-session execution via `executing-plans`.
+Gemini CLI supports specialized subagents natively. While Claude Code uses a single `Task` tool, Gemini CLI exposes each subagent as its own dedicated tool.
+
+When a skill refers to the `Task` tool, you should delegate to the most appropriate subagent:
+- **`codebase_investigator`**: Architecture mapping, deep analysis, and bug root-cause analysis.
+- **`generalist`**: Multi-file refactoring, research, and high-volume tasks.
+- **`code-reviewer`**: Validating work against standards and plans.
+- **`cli_help`**: Information about Gemini CLI itself.
 
 ## Additional Gemini CLI tools
 
