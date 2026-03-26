@@ -104,8 +104,8 @@ for test in "${tests[@]}"; do
     test_path="$SCRIPT_DIR/$test"
 
     if [ ! -f "$test_path" ]; then
-        echo "  [SKIP] Test file not found: $test"
-        skipped=$((skipped + 1))
+        echo "  [FAIL] Test file not found: $test"
+        failed=$((failed + 1))
         continue
     fi
 
