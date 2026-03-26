@@ -12,57 +12,86 @@ setup_codex_test_env
 TEST_PROJECT=$(create_test_project)
 trap 'cleanup_test_project "$TEST_PROJECT"; cleanup_codex_test_env' EXIT
 
-echo "Test 1: Skill loading..."
-output=$(run_codex "What is the subagent-driven-development skill? Describe its key steps briefly." "$TEST_PROJECT" 60)
+SKILL_SOURCE=$(cat "$REPO_ROOT/skills/subagent-driven-development/SKILL.md")
+IMPLEMENTER_SOURCE=$(cat "$REPO_ROOT/skills/subagent-driven-development/implementer-prompt.md")
+SPEC_REVIEWER_SOURCE=$(cat "$REPO_ROOT/skills/subagent-driven-development/spec-reviewer-prompt.md")
 
-assert_contains "$output" "subagent-driven-development|Subagent-Driven Development|Subagent Driven" "Skill is recognized" || exit 1
-assert_contains "$output" "Load Plan|read.*plan|extract.*task" "Mentions loading plan" || exit 1
-
-echo ""
-echo "Test 2: Workflow ordering..."
-output=$(run_codex "In the subagent-driven-development skill, what comes first: spec compliance review or code quality review? Be specific about the order." "$TEST_PROJECT" 60)
-assert_contains "$output" "spec compliance review.? comes first|spec compliance review first|spec reviewer.*before.*code quality|two-stage review.*spec compliance.*first.*code quality" "Spec compliance before code quality" || exit 1
-assert_contains "$output" "only after spec compliance.*code quality|only after spec review.*code quality|only after spec approval.*code quality|only if spec compliance is approved.*code quality|do not start code quality review before spec compliance" "Code quality waits for spec approval" || exit 1
-
-echo ""
-echo "Test 3: Self-review requirement..."
-output=$(run_codex "Does the subagent-driven-development skill require implementers to do self-review? What should they check?" "$TEST_PROJECT" 60)
-assert_contains "$output" "self-review|self review" "Mentions self-review" || exit 1
-assert_contains "$output" "completeness|Completeness|match.*task|miss.*requirements|requested behavior|edge cases|complete|completely|nothing extra|missing requirement|omissions" "Checks completeness" || exit 1
-
-echo ""
-echo "Test 4: Plan reading efficiency..."
-output=$(run_codex "In subagent-driven-development, how many times should the controller read the plan file? When does this happen?" "$TEST_PROJECT" 60)
-assert_contains "$output" "once|one time|single" "Read plan once" || exit 1
-assert_contains "$output" "beginning|start|Load Plan|Step 1" "Read at beginning" || exit 1
+echo "Test 1: Workflow semantics..."
+workflow_answer=$(run_codex "Summarize the subagent-driven-development workflow in no more than 6 bullets. Explicitly cover: 1) when the controller reads the plan, 2) how task text/context and todo tracking are prepared before the first task, 3) the per-task review order, and 4) what happens when reviewers find issues." "$TEST_PROJECT" 90)
+assert_semantic_judgment \
+    "$SKILL_SOURCE" \
+    "What does the subagent-driven-development workflow require from start through task completion?" \
+    "$workflow_answer" \
+    "- Describes the skill as executing an implementation plan with a fresh subagent per task.
+- Says the controller reads the plan once at the start, extracts full task text and context, and creates or maintains a todo list.
+- Says spec compliance review happens before code quality review.
+- Says reviewer feedback sends work back for fixes and the review repeats until approval." \
+    "$TEST_PROJECT" \
+    "Workflow matches skill documentation" \
+    120 || exit 1
 
 echo ""
-echo "Test 5: Spec compliance reviewer mindset..."
-output=$(run_codex "What is the spec compliance reviewer's attitude toward the implementer's report in subagent-driven-development?" "$TEST_PROJECT" 60)
-assert_contains "$output" "not trust|don't trust|skeptical|verify.*independently|suspiciously" "Reviewer is skeptical" || exit 1
-assert_contains "$output" "read.*code|inspect.*code|verify.*code" "Reviewer reads code" || exit 1
+echo "Test 2: Implementer execution semantics..."
+implementer_answer=$(run_codex "In the implementer prompt for subagent-driven-development, once the implementer is clear on requirements, what exact sequence of work must happen before reporting back, and what status values can the implementer report? Answer in no more than 7 bullets." "$TEST_PROJECT" 90)
+assert_semantic_judgment \
+    "$IMPLEMENTER_SOURCE" \
+    "What must the implementer do before reporting back, and what statuses can they use?" \
+    "$implementer_answer" \
+    "- Says the implementer is expected to implement exactly what the task specifies.
+- Says the implementer writes tests and verifies the implementation works before reporting back.
+- Says the implementer commits the work before reporting back.
+- Says the implementer self-reviews before reporting back.
+- Mentions the report statuses DONE, DONE_WITH_CONCERNS, BLOCKED, and NEEDS_CONTEXT." \
+    "$TEST_PROJECT" \
+    "Implementer workflow reflects prompt" \
+    120 || exit 1
 
 echo ""
-echo "Test 6: Review loop requirements..."
-output=$(run_codex "In subagent-driven-development, what happens if a reviewer finds issues? Is it a one-time review or a loop?" "$TEST_PROJECT" 60)
-assert_contains "$output" "loop|again|repeat|until.*approved|until.*compliant" "Review loops mentioned" || exit 1
-assert_contains "$output" "implementer.*fix|fix.*issues" "Implementer fixes issues" || exit 1
+echo "Test 3: Controller handoff semantics..."
+handoff_answer=$(run_codex "Before implementation starts or resumes in subagent-driven-development, how should the controller set up the implementer subagent? Focus on the task text, context, and question-handling expectations. Answer in no more than 6 bullets." "$TEST_PROJECT" 90)
+assert_semantic_judgment \
+    "$SKILL_SOURCE
+
+$IMPLEMENTER_SOURCE" \
+    "How should the controller hand work to the implementer before implementation begins or resumes?" \
+    "$handoff_answer" \
+    "- Says the controller provides the full task text directly instead of making the implementer read the plan file.
+- Says the controller provides scene-setting context about where the task fits.
+- Says the implementer should ask questions before starting and while working if something is unclear.
+- Says the controller answers questions clearly and provides additional context before implementation continues." \
+    "$TEST_PROJECT" \
+    "Controller handoff reflects prompt and red flags" \
+    120 || exit 1
 
 echo ""
-echo "Test 7: Task context provision..."
-output=$(run_codex "In subagent-driven-development, how does the controller provide task information to the implementer subagent? Does it make them read a file or provide it directly?" "$TEST_PROJECT" 60)
-assert_contains "$output" "provide.*directly|full.*text|paste|include.*prompt" "Provides text directly" || exit 1
-assert_contains "$output" "rather than making.*read.*file|do not tell.*read.*file|don't.*read.*file|never.*read.*file|not:.*read this file yourself|provide full text instead" "Doesn't make subagent read file" || exit 1
+echo "Test 4: Spec reviewer semantics..."
+spec_reviewer_answer=$(run_codex "What is the spec compliance reviewer's job and attitude toward the implementer's report in subagent-driven-development? Answer in no more than 6 bullets, and explicitly cover: 1) whether the report is trusted, 2) what the reviewer reads directly, 3) which categories of issues they check for, and 4) how they should report noncompliance." "$TEST_PROJECT" 90)
+assert_semantic_judgment \
+    "$SPEC_REVIEWER_SOURCE" \
+    "How should the spec compliance reviewer behave, and what do they verify?" \
+    "$spec_reviewer_answer" \
+    "- Says the reviewer must not trust the implementer's report and should verify independently.
+- Says the reviewer reads the actual implementation code.
+- Says the reviewer checks for missing requirements, extra or unrequested work, and misunderstandings or wrong interpretations.
+- Says findings should be reported specifically when the implementation is not spec compliant." \
+    "$TEST_PROJECT" \
+    "Spec reviewer mindset is preserved" \
+    120 || exit 1
 
 echo ""
-echo "Test 8: Worktree requirement..."
-output=$(run_codex "What workflow skills are required before using subagent-driven-development? List any prerequisites or required skills." "$TEST_PROJECT" 60)
-assert_contains "$output" "using-git-worktrees|worktree" "Mentions worktree requirement" || exit 1
-
-echo ""
-echo "Test 9: Main branch red flag..."
-output=$(run_codex "In subagent-driven-development, is it okay to start implementation directly on the main branch?" "$TEST_PROJECT" 60)
-assert_contains "$output" "worktree|feature.*branch|not.*main|never.*main|avoid.*main|don't.*main|consent|permission" "Warns against main branch" || exit 1
+echo "Test 5: Prerequisites and red flags..."
+red_flags_answer=$(run_codex "List the prerequisites and red flags that matter before or during subagent-driven-development. Explicitly include the required workflow skill or isolated-workspace step for setup, plus branch safety, review-order mistakes, and when it is unsafe to move to the next task. Answer in no more than 6 bullets." "$TEST_PROJECT" 90)
+assert_semantic_judgment \
+    "$SKILL_SOURCE" \
+    "What prerequisites and workflow mistakes does the skill explicitly call out?" \
+    "$red_flags_answer" \
+    "- Mentions using-git-worktrees as a required workflow skill or isolated-workspace prerequisite before starting.
+- Says not to start implementation on main or master without explicit user consent.
+- Says not to start code quality review before spec compliance is approved.
+- Says not to move to the next task while review issues are still open." \
+    "$TEST_PROJECT" \
+    "Prerequisites and red flags stay intact" \
+    120 || exit 1
 
 echo ""
 echo "=== All subagent-driven-development skill tests passed ==="

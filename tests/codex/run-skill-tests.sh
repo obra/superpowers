@@ -23,6 +23,7 @@ fi
 VERBOSE=false
 SPECIFIC_TEST=""
 TIMEOUT=300
+TIMEOUT_EXPLICIT=false
 RUN_INTEGRATION=false
 
 while [[ $# -gt 0 ]]; do
@@ -37,6 +38,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         --timeout)
             TIMEOUT="$2"
+            TIMEOUT_EXPLICIT=true
             shift 2
             ;;
         --integration|-i)
@@ -49,7 +51,7 @@ while [[ $# -gt 0 ]]; do
             echo "Options:"
             echo "  --verbose, -v        Show verbose output"
             echo "  --test, -t NAME      Run only the specified test"
-            echo "  --timeout SECONDS    Set timeout per test (default: 300)"
+            echo "  --timeout SECONDS    Set timeout per test (default: 300, or 1800 with --integration)"
             echo "  --integration, -i    Run integration tests (slow, 10-30 min)"
             echo "  --help, -h           Show this help"
             echo ""
@@ -68,6 +70,10 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+if [ "$RUN_INTEGRATION" = true ] && [ "$TIMEOUT_EXPLICIT" = false ]; then
+    TIMEOUT=1800
+fi
 
 tests=(
     "test-subagent-driven-development.sh"

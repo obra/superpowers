@@ -132,7 +132,19 @@ if ! run_codex_json_to_file "$PROMPT" "$TEST_PROJECT" "$OUTPUT_FILE" 1800; then
     exit 1
 fi
 
-grep '^{' "$OUTPUT_FILE" > "$JSON_OUTPUT_FILE"
+grep '^{' "$OUTPUT_FILE" > "$JSON_OUTPUT_FILE" || true
+
+if [ ! -s "$JSON_OUTPUT_FILE" ]; then
+    echo "ERROR: No JSON lines found in Codex output. Raw output:"
+    sed 's/^/  /' "$OUTPUT_FILE"
+    exit 1
+fi
+
+if ! jq empty "$JSON_OUTPUT_FILE" >/dev/null 2>&1; then
+    echo "ERROR: Invalid JSON events produced by Codex. Raw output:"
+    sed 's/^/  /' "$OUTPUT_FILE"
+    exit 1
+fi
 
 SESSION_FILE=$(latest_codex_session_file)
 if [ -z "$SESSION_FILE" ] || [ ! -f "$SESSION_FILE" ]; then
@@ -148,7 +160,28 @@ echo ""
 FAILED=0
 
 json_query() {
-    jq -rs "$1" "$JSON_OUTPUT_FILE"
+    local query="$1"
+    local result
+    local status
+
+    set +e
+    result=$(jq -rs "$query" "$JSON_OUTPUT_FILE" 2>&1)
+    status=$?
+    set -e
+
+    if [ "$status" -ne 0 ]; then
+        echo "ERROR: jq failed in json_query" >&2
+        echo "  Query: $query" >&2
+        echo "  JSON events file: $JSON_OUTPUT_FILE" >&2
+        echo "  Raw Codex output: $OUTPUT_FILE" >&2
+        echo "  jq error/output:" >&2
+        echo "$result" >&2
+        FAILED=$((FAILED + 1))
+        printf '0\n'
+        return 0
+    fi
+
+    printf '%s\n' "$result"
 }
 
 echo "=== Verification Tests ==="

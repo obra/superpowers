@@ -46,12 +46,16 @@ run_codex() {
     local project_dir="$2"
     local timeout_seconds="${3:-60}"
     local output_file
+    local json_output_file
+    local parse_errors_file
     local final_message
     output_file=$(mktemp)
+    json_output_file=$(mktemp)
+    parse_errors_file=$(mktemp)
 
     if ! command -v jq >/dev/null 2>&1; then
         echo "jq is required to parse codex exec --json output" >&2
-        rm -f "$output_file"
+        rm -f "$output_file" "$json_output_file" "$parse_errors_file"
         return 1
     fi
 
@@ -61,8 +65,17 @@ run_codex() {
         -C "$project_dir" \
         -s workspace-write \
         "$prompt" > "$output_file" 2>&1; then
-        final_message=$(
-            grep '^{' "$output_file" | jq -rs '
+        grep '^{' "$output_file" > "$json_output_file" || true
+
+        if [ ! -s "$json_output_file" ]; then
+            echo "Failed to extract JSON lines from Codex output" >&2
+            cat "$output_file" >&2
+            rm -f "$output_file" "$json_output_file" "$parse_errors_file"
+            return 1
+        fi
+
+        set +e
+        final_message=$(jq -rs '
                 map(
                     select(
                         .type == "item.completed"
@@ -72,23 +85,32 @@ run_codex() {
                     | .item.text
                 )
                 | last // empty
-            '
-        )
+            ' "$json_output_file" 2>"$parse_errors_file")
+        local jq_status=$?
+        set -e
+
+        if [ "$jq_status" -ne 0 ]; then
+            echo "Failed to parse Codex JSON output with jq" >&2
+            cat "$parse_errors_file" >&2
+            cat "$output_file" >&2
+            rm -f "$output_file" "$json_output_file" "$parse_errors_file"
+            return 1
+        fi
 
         if [ -n "$final_message" ]; then
             printf '%s\n' "$final_message"
-            rm -f "$output_file"
+            rm -f "$output_file" "$json_output_file" "$parse_errors_file"
             return 0
         fi
 
         echo "Failed to extract final Codex agent message from JSON output" >&2
         cat "$output_file" >&2
-        rm -f "$output_file"
+        rm -f "$output_file" "$json_output_file" "$parse_errors_file"
         return 1
     else
         local exit_code=$?
         cat "$output_file" >&2
-        rm -f "$output_file"
+        rm -f "$output_file" "$json_output_file" "$parse_errors_file"
         return "$exit_code"
     fi
 }
@@ -109,6 +131,104 @@ run_codex_json_to_file() {
 
 latest_codex_session_file() {
     find "$CODEX_HOME/sessions" -name "*.jsonl" -type f 2>/dev/null | sort -r | head -1
+}
+
+assert_semantic_judgment() {
+    local source_text="$1"
+    local question="$2"
+    local answer="$3"
+    local rubric="$4"
+    local project_dir="$5"
+    local test_name="${6:-semantic judgment}"
+    local timeout_seconds="${7:-120}"
+    local evaluator_output
+    local parse_errors_file
+    local failed_criteria
+    local reason
+    local prompt
+
+    if ! command -v jq >/dev/null 2>&1; then
+        echo "  [FAIL] $test_name: jq is required for semantic evaluation"
+        return 1
+    fi
+
+    parse_errors_file=$(mktemp)
+    prompt=$(cat <<EOF_PROMPT
+You are grading whether an answer correctly reflects source material.
+
+Use only the provided source text and rubric. Do not rely on outside knowledge.
+Judge based on meaning, not wording. If the answer is materially correct but phrased differently, it should pass.
+
+Return exactly one JSON object with this shape:
+{"pass":true,"reason":"short explanation","failed_criteria":[]}
+
+Rules:
+- "pass" must be true only if every rubric item is satisfied.
+- "failed_criteria" must list the unmet rubric items verbatim when pass is false.
+- Do not include markdown fences or any text outside the JSON object.
+
+## Source Text
+$source_text
+
+## Question
+$question
+
+## Answer Under Review
+$answer
+
+## Rubric
+$rubric
+EOF_PROMPT
+)
+
+    if ! evaluator_output=$(run_codex "$prompt" "$project_dir" "$timeout_seconds"); then
+        echo "  [FAIL] $test_name"
+        echo "  Semantic evaluator failed to run"
+        rm -f "$parse_errors_file"
+        return 1
+    fi
+
+    if ! printf '%s' "$evaluator_output" | jq empty >/dev/null 2>"$parse_errors_file"; then
+        echo "  [FAIL] $test_name"
+        echo "  Semantic evaluator did not return valid JSON"
+        cat "$parse_errors_file" | sed 's/^/    /'
+        printf '%s\n' "$evaluator_output" | sed 's/^/    /'
+        rm -f "$parse_errors_file"
+        return 1
+    fi
+
+    if ! printf '%s' "$evaluator_output" | jq -e '
+        type == "object"
+        and (.pass | type == "boolean")
+        and (.reason | type == "string")
+        and (.failed_criteria | type == "array")
+    ' >/dev/null 2>"$parse_errors_file"; then
+        echo "  [FAIL] $test_name"
+        echo "  Semantic evaluator returned an unexpected JSON shape"
+        cat "$parse_errors_file" | sed 's/^/    /'
+        printf '%s\n' "$evaluator_output" | sed 's/^/    /'
+        rm -f "$parse_errors_file"
+        return 1
+    fi
+
+    if printf '%s' "$evaluator_output" | jq -e '.pass == true' >/dev/null 2>"$parse_errors_file"; then
+        echo "  [PASS] $test_name"
+        rm -f "$parse_errors_file"
+        return 0
+    fi
+
+    reason=$(printf '%s' "$evaluator_output" | jq -r '.reason // "No reason provided"' 2>/dev/null || true)
+    failed_criteria=$(printf '%s' "$evaluator_output" | jq -r '(.failed_criteria // []) | join("; ")' 2>/dev/null || true)
+
+    echo "  [FAIL] $test_name"
+    if [ -n "$reason" ]; then
+        echo "  Reason: $reason"
+    fi
+    if [ -n "$failed_criteria" ]; then
+        echo "  Failed criteria: $failed_criteria"
+    fi
+    rm -f "$parse_errors_file"
+    return 1
 }
 
 assert_contains() {
@@ -145,54 +265,6 @@ assert_not_contains() {
     fi
 }
 
-assert_order() {
-    local output="$1"
-    local pattern_a="$2"
-    local pattern_b="$3"
-    local test_name="${4:-test}"
-
-    local offset_a
-    local offset_b
-    offset_a=$(
-        printf '%s' "$output" | PATTERN="$pattern_a" perl -0e '
-            my $pattern = $ENV{PATTERN};
-            my $text = do { local $/; <STDIN> };
-            if ($text =~ /$pattern/m) {
-                print $-[0];
-            }
-        '
-    )
-    offset_b=$(
-        printf '%s' "$output" | PATTERN="$pattern_b" perl -0e '
-            my $pattern = $ENV{PATTERN};
-            my $text = do { local $/; <STDIN> };
-            if ($text =~ /$pattern/m) {
-                print $-[0];
-            }
-        '
-    )
-
-    if [ -z "$offset_a" ]; then
-        echo "  [FAIL] $test_name: pattern A not found: $pattern_a"
-        return 1
-    fi
-
-    if [ -z "$offset_b" ]; then
-        echo "  [FAIL] $test_name: pattern B not found: $pattern_b"
-        return 1
-    fi
-
-    if [ "$offset_a" -lt "$offset_b" ]; then
-        echo "  [PASS] $test_name (A at offset $offset_a, B at offset $offset_b)"
-        return 0
-    else
-        echo "  [FAIL] $test_name"
-        echo "  Expected '$pattern_a' before '$pattern_b'"
-        echo "  But found A at offset $offset_a, B at offset $offset_b"
-        return 1
-    fi
-}
-
 export -f setup_codex_test_env
 export -f cleanup_codex_test_env
 export -f create_test_project
@@ -200,7 +272,7 @@ export -f cleanup_test_project
 export -f run_codex
 export -f run_codex_json_to_file
 export -f latest_codex_session_file
+export -f assert_semantic_judgment
 export -f assert_contains
 export -f assert_not_contains
-export -f assert_order
 export REPO_ROOT

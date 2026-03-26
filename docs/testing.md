@@ -40,7 +40,7 @@ Run the fast Codex suite:
 Run the full Codex suite, including slow real integrations:
 
 ```bash
-./tests/codex/run-skill-tests.sh --integration --timeout 1800
+./tests/codex/run-skill-tests.sh --integration
 ```
 
 Run a single Codex test:
@@ -64,7 +64,7 @@ cd tests/claude-code
 
 - Run from the repository root or a test subdirectory, not from a disposable temp checkout of the tests alone
 - Claude Code tests require `claude` plus the local dev marketplace plugin enabled
-- Codex tests require `codex`, valid `auth.json`, and Node.js for the fixture projects
+- Codex tests require `codex`, `jq`, valid `auth.json`, and Node.js for the fixture projects
 
 ## Integration Test: subagent-driven-development
 
@@ -99,7 +99,7 @@ The integration test verifies the `subagent-driven-development` skill correctly:
 The Codex suite currently has:
 
 1. `test-subagent-driven-development.sh`
-   Fast semantic checks that the `subagent-driven-development` skill is loaded and described correctly.
+   Fast rubric-based semantic checks that the `subagent-driven-development` skill is described correctly without depending on exact phrasing.
 2. `test-subagent-driven-development-integration.sh`
    A real end-to-end implementation run against a disposable Node fixture project.
 3. `test-document-review-system.sh`
@@ -116,6 +116,13 @@ Codex tests prefer structured evidence over transcript scraping:
    - `turn.completed`
 2. Each test also uses an isolated temporary `CODEX_HOME`, then verifies that a session rollout file was written under `$CODEX_HOME/sessions`
 3. Fast semantic tests extract only the final agent message from the JSON stream so assertions are not polluted by intermediate tool traces
+4. The fast `subagent-driven-development` test then runs a second Codex evaluation pass using:
+   - the relevant checked-in skill source text
+   - the question asked
+   - the answer under review
+   - a rubric of required meanings
+
+This lets the suite judge semantic correctness while staying grounded in repository source documents rather than loose regex matches.
 
 ### Codex Environment Notes
 

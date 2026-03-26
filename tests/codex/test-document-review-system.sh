@@ -67,7 +67,7 @@ echo ""
 
 OUTPUT=$(run_codex "You are testing the spec document reviewer.
 
-Read the review template at $REPO_ROOT/skills/brainstorming/spec-document-reviewer-prompt.md.
+Read the review template at $HOME/.agents/skills/superpowers/brainstorming/spec-document-reviewer-prompt.md.
 
 Then review the spec at docs/superpowers/specs/test-feature-design.md using the criteria and output format from that template.
 
@@ -106,7 +106,10 @@ fi
 echo ""
 
 echo "Test 3: Review output format..."
-if assert_contains "$OUTPUT" "Spec Review|Status:|Issues|Recommendations" "Review includes expected structure"; then
+if assert_contains "$OUTPUT" "Spec Review" "Review includes title" \
+    && assert_contains "$OUTPUT" "Status:" "Review includes status" \
+    && assert_contains "$OUTPUT" "Issues" "Review includes issues section" \
+    && assert_contains "$OUTPUT" "Recommendations" "Review includes recommendations section"; then
     :
 else
     FAILED=$((FAILED + 1))

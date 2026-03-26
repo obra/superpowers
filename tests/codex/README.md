@@ -8,6 +8,7 @@ This suite mirrors the Claude Code testing strategy:
 
 - fast tests run by default
 - slow, real integration tests run only with `--integration`
+- fast skill assertions use rubric-based semantic evaluation against the skill source text instead of brittle wording regexes
 
 The tests run Codex in an isolated environment with temporary `HOME` and
 `CODEX_HOME`, copy `auth.json` from the original Codex home when present, then
@@ -17,7 +18,9 @@ install the repository's `skills/` directory into
 ## Requirements
 
 - Codex CLI installed and authenticated
+- `jq` installed for JSON event parsing
 - Node.js available for the integration fixture project
+- `timeout` command available
 - Run from the repository root or from `tests/codex/`
 
 ## Running Tests
@@ -31,7 +34,7 @@ install the repository's `skills/` directory into
 ### Run integration tests
 
 ```bash
-./tests/codex/run-skill-tests.sh --integration --timeout 1800
+./tests/codex/run-skill-tests.sh --integration
 ```
 
 ### Run one test
@@ -52,6 +55,15 @@ Structured JSON events are preferred for workflow assertions:
 - `todo_list` indicates `update_plan`
 - `collab_tool_call` indicates subagent activity
 - `turn.completed` indicates a real completed agent turn
+
+Fast semantic tests use a second Codex run as an evaluator. The evaluator receives:
+
+1. the relevant skill source text
+2. the question asked
+3. the answer under review
+4. a rubric of required meanings
+
+This keeps the fast suite anchored to the checked-in skill docs while allowing equivalent wording.
 
 ## Using Failures as Signals
 
