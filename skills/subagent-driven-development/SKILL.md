@@ -99,6 +99,45 @@ Use the least powerful model that can handle each role to conserve cost and incr
 - Touches multiple files with integration concerns → standard model
 - Requires design judgment or broad codebase understanding → most capable model
 
+## External Delegate (Optional)
+
+When configured in AGENTS.md (`external-delegate: <cli-name>`), mechanical implementation tasks can be delegated to an external CLI tool instead of a same-provider subagent. This extends the "least powerful model" principle across providers - when a cheaper, faster tool can handle the task, use it.
+
+**When to delegate externally:**
+- Task is cheap-model tier (1-2 files, complete spec, isolated function)
+- External CLI is available and responding
+- The delegate hasn't failed 3+ times this session
+
+**When NOT to delegate externally:**
+- Integration tasks touching multiple files with coordination concerns
+- Architecture or design decisions
+- Review tasks - spec compliance and code quality reviews always use same-provider subagents
+- The external CLI has hit the circuit breaker (3 consecutive failures)
+
+**How it works:**
+
+The controller's responsibilities stay the same. Only the implementer dispatch changes:
+
+1. Check delegate availability: `which <cli-name> >/dev/null 2>&1`
+2. Build the implementation prompt using `./external-delegate-prompt.md` (a streamlined implementer prompt without self-review or escalation sections - the controller handles those)
+3. Write the prompt to a temp file and pipe it to the delegate: `cat /tmp/sp-delegate-prompt.md | <cli-name> <flags>`
+4. Review the diff: verify it's non-empty, in-scope, and contains no rogue operations
+5. If the diff looks good, proceed to spec compliance review (same as the normal flow)
+6. If the diff is empty or out-of-scope, fall back to a same-provider subagent for this task
+7. The controller always commits - the delegate should not touch git
+
+**Circuit breaker:** If the external delegate fails 3 consecutive times in one session, disable it for the remainder and use same-provider subagents for all remaining tasks. Reset the counter on any successful delegation.
+
+**Configuration example in AGENTS.md:**
+
+```markdown
+## External Delegate
+
+external-delegate: codex
+```
+
+The controller reads this at session start. If the key is absent or empty, all tasks use same-provider subagents (the default behavior, unchanged).
+
 ## Handling Implementer Status
 
 Implementer subagents report one of four statuses. Handle each appropriately:
@@ -120,6 +159,7 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 ## Prompt Templates
 
 - `./implementer-prompt.md` - Dispatch implementer subagent
+- `./external-delegate-prompt.md` - Dispatch external delegate (streamlined implementer prompt)
 - `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
 - `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
 
@@ -230,6 +270,7 @@ Done!
 - Controller does more prep work (extracting all tasks upfront)
 - Review loops add iterations
 - But catches issues early (cheaper than debugging later)
+- With external delegate: mechanical tasks use the delegate's token budget instead of the controller's, reducing same-provider token consumption on sessions with many implementation tasks
 
 ## Red Flags
 
@@ -246,6 +287,9 @@ Done!
 - Let implementer self-review replace actual review (both are needed)
 - **Start code quality review before spec compliance is ✅** (wrong order)
 - Move to next task while either review has open issues
+- Delegate review tasks to an external CLI (reviews must use same-provider subagents)
+- Skip the diff review after external delegation (verify before proceeding)
+- Ignore the circuit breaker (3 consecutive delegate failures = disable for session)
 
 **If subagent asks questions:**
 - Answer clearly and completely
