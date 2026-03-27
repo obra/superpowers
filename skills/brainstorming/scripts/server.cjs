@@ -181,6 +181,34 @@ async function getNewestScreen() {
 
 async function handleRequest(req, res) {
   touchActivity();
+
+  // Prevent DNS rebinding by validating the Host header
+  const hostHeader = req.headers.host;
+  if (hostHeader) {
+    try {
+      const parsedUrl = new URL(`http://${hostHeader}`);
+      const hostName = parsedUrl.hostname;
+      // Allow localhost, loopback (IPv4/IPv6), and the configured HOST.
+      // If HOST is '0.0.0.0', we bypass the strict check to allow LAN access.
+      if (
+        hostName !== 'localhost' &&
+        hostName !== '127.0.0.1' &&
+        hostName !== '[::1]' &&
+        hostName !== '::1' &&
+        hostName !== HOST &&
+        HOST !== '0.0.0.0'
+      ) {
+        res.writeHead(403, { 'Connection': 'close' });
+        res.end('Forbidden');
+        return;
+      }
+    } catch (err) {
+      res.writeHead(400, { 'Connection': 'close' });
+      res.end('Bad Request');
+      return;
+    }
+  }
+
   try {
     if (req.method === 'GET' && req.url === '/') {
       const screenFile = await getNewestScreen();
