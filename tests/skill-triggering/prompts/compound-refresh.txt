@@ -1,0 +1,1 @@
+We just finished a big Rails 7 to Rails 8 migration. Some of the documented solutions in our docs/solutions/ folder are probably outdated now. Can you review them and update anything that no longer reflects how our code works?

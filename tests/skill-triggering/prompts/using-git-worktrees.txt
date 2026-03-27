@@ -1,0 +1,1 @@
+I need to start working on a new feature for user authentication but I don't want to mess up my current in-progress work on the billing system. Can you set up an isolated workspace so I can work on both branches simultaneously?

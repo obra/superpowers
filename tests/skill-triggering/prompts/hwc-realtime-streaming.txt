@@ -1,0 +1,1 @@
+I want to add real-time updates to my Rails app using ActionCable. When a new message is created, all connected users should see it appear in their feed instantly without refreshing. Can you help me implement this with Turbo Streams?

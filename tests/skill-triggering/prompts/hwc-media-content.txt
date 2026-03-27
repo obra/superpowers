@@ -1,0 +1,1 @@
+I need to add image upload previews to a form in my Rails/Hotwire app. When a user selects an image file, I want to show a preview using Stimulus before they submit the form. Can you help me implement this with Active Storage?

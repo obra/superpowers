@@ -1,0 +1,1 @@
+My Rails/Hotwire app feels sluggish because users don't see any visual feedback while Turbo requests are loading. I need to add a progress bar and loading state indicators. Can you help me implement this?
