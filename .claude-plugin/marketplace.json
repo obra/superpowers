@@ -9,7 +9,7 @@
     {
       "name": "superpowers-ruby",
       "description": "Ruby/Rails skills library for Claude Code: TDD with Minitest, Rails patterns, Hotwire, Brakeman, Sandi Metz rules, 37signals style, and proven development workflows",
-      "version": "5.0.5",
+      "version": "6.0.0",
       "source": "./",
       "author": {
         "name": "Lucian Ghinda",

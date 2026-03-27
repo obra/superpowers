@@ -1,5 +1,17 @@
 # Changelog
 
+## [6.0.0] - 2026-03-27
+
+### Changed
+
+- **Skill namespace rename**: All skill names now use `superpowers-ruby:` prefix instead of `superpowers:` to match the plugin name
+- **Skill directory rename**: `skills/superpowers-compound/` → `skills/compound/`, `skills/superpowers-compound-refresh/` → `skills/compound-refresh/`
+- **Session-start hook**: Updated context message to reference "superpowers for Ruby and Rails" and the `superpowers-ruby:using-superpowers` skill name
+
+### Added
+
+- **Skills Catalog**: Added a complete skills catalog table to the `using-superpowers` skill, organized by category (Process & Workflow, Ruby & Rails, Hotwire & Stimulus, Security, Code Review, Meta) so Claude always has the full skill index in context
+
 ## [5.0.6] - 2026-03-24
 
 ### Added

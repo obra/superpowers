@@ -1,5 +1,5 @@
 ---
-name: superpowers:compound-refresh
+name: superpowers-ruby:compound-refresh
 description: Use when docs/solutions/ learnings may be stale — after refactors, migrations, or dependency upgrades, when a retrieved learning feels outdated or contradicts a recently solved problem, when pattern docs no longer reflect current code, or when reviewing docs/solutions/ for accuracy.
 argument-hint: "[mode:autonomous] [optional: scope hint]"
 disable-model-invocation: true

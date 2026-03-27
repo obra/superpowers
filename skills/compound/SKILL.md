@@ -1,5 +1,5 @@
 ---
-name: superpowers:compound
+name: superpowers-ruby:compound
 description: Use when a problem has just been solved and verified working — the fix is fresh, the investigation is in recent history, and the solution is non-trivial enough to capture for future reference
 ---
 
