@@ -17,7 +17,7 @@ Guide completion of development work by presenting clear options and handling ch
 
 ### Step 1: Verify Tests
 
-**Before presenting options, verify tests pass:**
+**Run automated tests:**
 
 ```bash
 # Run project's test suite
@@ -33,9 +33,23 @@ Tests failing (<N> failures). Must fix before completing:
 Cannot proceed with merge/PR until tests pass.
 ```
 
-Stop. Don't proceed to Step 2.
+Stop. Don't proceed until fixed.
 
-**If tests pass:** Continue to Step 2.
+**For runnable apps and services — REQUIRED smoke check:**
+
+If the project produces a runnable artifact (web app, CLI tool, server, etc.), you MUST verify it actually works end-to-end. Automated tests passing does not mean the app works.
+
+1. Start the service: `npm run dev` / `npm start` / `cargo run` / etc.
+2. Confirm it starts without errors
+3. Walk the primary user flow — at minimum, the feature you just built
+4. If a Playwright or E2E suite exists: run it (`npx playwright test`)
+5. If no E2E suite: use the browser or `curl` to confirm the core flow responds correctly
+
+Report what you verified before proceeding.
+
+**Do NOT proceed to Step 2 until both automated tests AND smoke check pass.**
+
+**Skip smoke check only for:** documentation-only or config-only changes with zero runtime behavior impact.
 
 ### Step 2: Determine Base Branch
 
@@ -164,6 +178,11 @@ git worktree remove <worktree-path>
 - **Problem:** Merge broken code, create failing PR
 - **Fix:** Always verify tests before offering options
 
+**Treating smoke check as optional**
+- **Problem:** All unit tests pass, agent marks work complete, but app fails at runtime (env config missing, integration broken, UI never loads)
+- **Real incident:** Subagent-driven-development completed 12 tasks with passing code reviews; app had broken Tailwind CSS, missing API keys, and non-functional input — none caught until human ran it manually
+- **Fix:** For any runnable artifact, starting the app and walking the primary flow is REQUIRED, not a suggestion
+
 **Open-ended questions**
 - **Problem:** "What should I do next?" → ambiguous
 - **Fix:** Present exactly 4 structured options
@@ -183,9 +202,11 @@ git worktree remove <worktree-path>
 - Merge without verifying tests on result
 - Delete work without confirmation
 - Force-push without explicit request
+- Skip smoke check because "all tests pass" — unit tests ≠ working app
 
 **Always:**
 - Verify tests before offering options
+- For runnable apps: start the service and walk the primary flow
 - Present exactly 4 options
 - Get typed confirmation for Option 4
 - Clean up worktree for Options 1 & 4 only
