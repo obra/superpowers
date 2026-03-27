@@ -1,28 +1,76 @@
+# Superpowers (Vidably Fork)
+
+> **This is [Vidably's](https://vidably.com) fork of [obra/superpowers](https://github.com/obra/superpowers).** We add custom skills on top of the excellent upstream workflow. Everything in the upstream 14-skill library works as-is — our additions are prefixed with `vidably-*` to avoid conflicts.
+
+## What Vidably Adds
+
+We build AI video evidence for e-commerce. Our engineering philosophy: **exhaustive research before decisions, multi-agent review for every plan and PR, and metrics to prove the process works.** These skills encode that philosophy.
+
+### Custom Skills
+
+| Skill                             | Status  | What It Does                                                                                                                                                                                                                                                                                                  |
+| --------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vidably-exhaustive-research`     | Planned | Before any consequential decision (architecture, vendor choice, schema, services), search official docs and trusted sources, generate 4+ options with tradeoffs, rate on maintainability/complexity/extensibility/UX, present for approval. Type 1/Type 2 triage prevents over-triggering on trivial choices. |
+| `vidably-multi-agent-plan-review` | Planned | After writing a plan, dispatch it to multiple AI models (Claude, Codex, Gemini) in parallel. Collect findings, apply consensus scoring (unanimous = fix, majority = likely fix, split = judgment call). Prevents architectural gaps before any code is written.                                               |
+| `vidably-multi-agent-code-review` | Planned | Before opening a PR, dispatch the diff to multiple models. Same consensus scoring. Catches bugs across model blind spots (research shows 53% → 80% bug detection with multi-model debate).                                                                                                                    |
+
+### Supporting Infrastructure
+
+| Component            | Location   | What It Does                                                                                                                                                                         |
+| -------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Agent definitions    | `agents/`  | Shared prompt templates for plan review, code review, and consensus scoring. Reusable across local skills and CI.                                                                    |
+| Multi-model dispatch | `scripts/` | CLI runner that probes Codex/Gemini availability, handles input transport, timeouts, and output normalization. Gracefully degrades to Claude-only if external CLIs aren't available. |
+
+### How We Use This
+
+The fork is added to our app repo as a **git submodule** at `tools/superpowers/`. Custom skills are symlinked into `.claude/skills/` so Claude Code auto-discovers them with zero plugin installation. Edits to skills flow directly to this repo via git push.
+
+```
+our-app/
+  tools/superpowers/                    ← this repo (submodule)
+  .claude/skills/
+    vidably-exhaustive-research/        ← symlink → tools/superpowers/skills/vidably-exhaustive-research/
+    vidably-multi-agent-plan-review/    ← symlink → tools/superpowers/skills/vidably-multi-agent-plan-review/
+    vidably-multi-agent-code-review/    ← symlink → tools/superpowers/skills/vidably-multi-agent-code-review/
+```
+
+### Upstream Sync
+
+We sync with `obra/superpowers` monthly. Custom skills use the `vidably-*` prefix so merges are conflict-free:
+
+```bash
+git fetch upstream && git merge upstream/main
+```
+
+---
+
+## Original Superpowers README
+
+> Everything below is from the upstream [obra/superpowers](https://github.com/obra/superpowers) project by Jesse Vincent.
+
 # Superpowers
 
 Superpowers is a complete software development workflow for your coding agents, built on top of a set of composable "skills" and some initial instructions that make sure your agent uses them.
 
 ## How it works
 
-It starts from the moment you fire up your coding agent. As soon as it sees that you're building something, it *doesn't* just jump into trying to write code. Instead, it steps back and asks you what you're really trying to do. 
+It starts from the moment you fire up your coding agent. As soon as it sees that you're building something, it _doesn't_ just jump into trying to write code. Instead, it steps back and asks you what you're really trying to do.
 
-Once it's teased a spec out of the conversation, it shows it to you in chunks short enough to actually read and digest. 
+Once it's teased a spec out of the conversation, it shows it to you in chunks short enough to actually read and digest.
 
-After you've signed off on the design, your agent puts together an implementation plan that's clear enough for an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing to follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY. 
+After you've signed off on the design, your agent puts together an implementation plan that's clear enough for an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing to follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY.
 
-Next up, once you say "go", it launches a *subagent-driven-development* process, having agents work through each engineering task, inspecting and reviewing their work, and continuing forward. It's not uncommon for Claude to be able to work autonomously for a couple hours at a time without deviating from the plan you put together.
+Next up, once you say "go", it launches a _subagent-driven-development_ process, having agents work through each engineering task, inspecting and reviewing their work, and continuing forward. It's not uncommon for Claude to be able to work autonomously for a couple hours at a time without deviating from the plan you put together.
 
 There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Superpowers.
-
 
 ## Sponsorship
 
 If Superpowers has helped you do stuff that makes money and you are so inclined, I'd greatly appreciate it if you'd consider [sponsoring my opensource work](https://github.com/sponsors/obra).
 
-Thanks! 
+Thanks!
 
 - Jesse
-
 
 ## Installation
 
@@ -121,13 +169,16 @@ Start a new session in your chosen platform and ask for something that should tr
 ### Skills Library
 
 **Testing**
+
 - **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
 
 **Debugging**
+
 - **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
 - **verification-before-completion** - Ensure it's actually fixed
 
-**Collaboration** 
+**Collaboration**
+
 - **brainstorming** - Socratic design refinement
 - **writing-plans** - Detailed implementation plans
 - **executing-plans** - Batch execution with checkpoints
@@ -139,6 +190,7 @@ Start a new session in your chosen platform and ask for something that should tr
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
 
 **Meta**
+
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
 - **using-superpowers** - Introduction to the skills system
 
