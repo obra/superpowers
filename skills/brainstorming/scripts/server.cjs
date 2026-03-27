@@ -109,11 +109,11 @@ const WAITING_PAGE = `<!DOCTYPE html>
 </style>
 </head>
 <body>
-  <div aria-live="polite">
+  <main aria-live="polite" aria-busy="true">
     <div class="spinner" aria-hidden="true"></div>
     <h1>Brainstorm Companion</h1>
     <p>Waiting for the agent to push a screen...</p>
-  </div>
+  </main>
 </body>
 </html>`;
 

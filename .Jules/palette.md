@@ -5,3 +5,7 @@
 ## 2026-03-14 - Accessible Realtime Connection States
 **Learning:** When building persistent background WebSocket connections (like the brainstorming server), connection drops create a confusing "frozen" state for users and screen reader users aren't notified when the connection restores.
 **Action:** Use CSS transitions with explicit `aria-live="polite"` regions on connection status indicators, and explicitly default to a "Connecting..." state in the raw HTML before JavaScript initializes the WebSocket.
+
+## 2026-03-26 - Semantic Landmarks in LLM Template UIs
+**Learning:** LLM agents often output UI fragments using generic `div` containers and rarely generate full pages with complete semantic landmarks (`header`, `main`, `footer`). This makes navigation difficult for screen reader users as they can't jump efficiently between content sections.
+**Action:** When creating container templates or wrappers for LLM-generated UI (such as `frame-template.html`), ensure the wrapper explicitly establishes the core semantic landmarks (e.g., `<main>`, `<header>`). Additionally, for async loading states, combine `<main>` with `aria-live="polite"` and `aria-busy="true"` so screen readers correctly identify the loading state of the primary content area.
