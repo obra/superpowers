@@ -35,21 +35,26 @@ Cannot proceed with merge/PR until tests pass.
 
 Stop. Don't proceed until fixed.
 
+**If tests pass:** Proceed to smoke check below (if project has a runnable process) or Step 2 (if pure library or documentation).
+
 **For runnable apps and services — REQUIRED smoke check:**
 
-If the project produces a runnable artifact (web app, CLI tool, server, etc.), you MUST verify it actually works end-to-end. Automated tests passing does not mean the app works.
+If the project starts a process (web app, server, CLI tool), you MUST verify it works end-to-end. Automated tests passing does not mean the app works.
+
+**Skip smoke check only when the project has no runnable process** (e.g. a pure library, a standalone config file, documentation with no server). If the project starts a process, the smoke check is always required regardless of how small the change appears — CSS, env config, and wiring changes all affect runtime.
 
 1. Start the service: `npm run dev` / `npm start` / `cargo run` / etc.
-2. Confirm it starts without errors
-3. Walk the primary user flow — at minimum, the feature you just built
+2. Confirm it starts with no errors or warnings that indicate misconfiguration
+3. State the primary user flow for the feature you built, then walk it
 4. If a Playwright or E2E suite exists: run it (`npx playwright test`)
-5. If no E2E suite: use the browser or `curl` to confirm the core flow responds correctly
+5. If no E2E suite, confirm via browser or `curl`:
+   - Service responds (HTTP 200 on main route)
+   - Expected content is present, not an error page
+   - The feature built in this branch is exercisable
 
 Report what you verified before proceeding.
 
 **Do NOT proceed to Step 2 until both automated tests AND smoke check pass.**
-
-**Skip smoke check only for:** documentation-only or config-only changes with zero runtime behavior impact.
 
 ### Step 2: Determine Base Branch
 
@@ -206,7 +211,7 @@ git worktree remove <worktree-path>
 
 **Always:**
 - Verify tests before offering options
-- For runnable apps: start the service and walk the primary flow
+- For runnable apps/services: start the service, state the flow, walk it
 - Present exactly 4 options
 - Get typed confirmation for Option 4
 - Clean up worktree for Options 1 & 4 only
