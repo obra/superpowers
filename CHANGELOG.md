@@ -12,6 +12,20 @@
 
 - **Skills Catalog**: Added a complete skills catalog table to the `using-superpowers` skill, organized by category (Process & Workflow, Ruby & Rails, Hotwire & Stimulus, Security, Code Review, Meta) so Claude always has the full skill index in context
 
+### Migration Guide
+
+**Uninstall and reinstall the plugin** to pick up the renamed skill directories and namespace changes:
+
+```bash
+# Claude Code
+claude mcp remove superpowers-ruby
+claude mcp add superpowers-ruby
+
+# Or re-run the installer
+```
+
+If you were using `superpowers:compound` or `superpowers:compound-refresh` by name anywhere (custom hooks, CLAUDE.md, scripts), update those references to `superpowers-ruby:compound` and `superpowers-ruby:compound-refresh`.
+
 ## [5.0.6] - 2026-03-24
 
 ### Added
