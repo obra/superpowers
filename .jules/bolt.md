@@ -13,3 +13,7 @@
 ## 2026-03-25 - Async directory read in server startup
 **Learning:** `fs.promises.readdir` has slightly higher overhead than `fs.readdirSync` for small directories, but async startup is preferred in server contexts to avoid blocking the event loop during initialization.
 **Action:** Use `fs.promises.mkdir` and `fs.promises.readdir` in `startServer` (now async), even for one-time startup I/O, to keep startup non-blocking and consistent with other async I/O in the codebase.
+
+## 2026-04-12 - Precalculate string slices for template injection
+**Learning:** Dynamically calling `indexOf` and `slice` on a large static template string (like `frame-template.html`) for every incoming request introduces unnecessary overhead (e.g. ~0.7ms vs ~0.17ms for wrapping 5MB content), even when bypassing `replace()`.
+**Action:** If the template and target insertion marker are static, precalculate and store the `start` and `end` slices at startup. Then, simply concatenate the precalculated chunks around the dynamic payload during requests.

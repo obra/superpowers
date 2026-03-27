@@ -129,12 +129,26 @@ function isFullDocument(html) {
   return /^\s*(?:<!doctype|<html)/i.test(html);
 }
 
+// Optimize: Precalculate frame template splits to avoid searching on every request
+const target = '<!-- CONTENT -->';
+let targetIdx = -1;
+let frameTemplateStart = null;
+let frameTemplateEnd = null;
+
 function wrapInFrame(content) {
-  // Optimize: avoid String.prototype.replace() overhead on large strings
-  const target = '<!-- CONTENT -->';
-  const idx = frameTemplate.indexOf(target);
-  if (idx !== -1) {
-    return frameTemplate.slice(0, idx) + content + frameTemplate.slice(idx + target.length);
+  if (frameTemplateStart === null) {
+    targetIdx = frameTemplate.indexOf(target);
+    if (targetIdx !== -1) {
+      frameTemplateStart = frameTemplate.slice(0, targetIdx);
+      frameTemplateEnd = frameTemplate.slice(targetIdx + target.length);
+    } else {
+      frameTemplateStart = frameTemplate;
+      frameTemplateEnd = '';
+    }
+  }
+
+  if (targetIdx !== -1) {
+    return frameTemplateStart + content + frameTemplateEnd;
   }
   return frameTemplate;
 }
