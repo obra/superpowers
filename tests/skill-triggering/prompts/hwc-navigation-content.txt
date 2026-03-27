@@ -1,0 +1,1 @@
+I need to add pagination to my Rails app using Turbo Frames so the page doesn't fully reload when users navigate between pages. Can you show me how to implement this with Hotwire?

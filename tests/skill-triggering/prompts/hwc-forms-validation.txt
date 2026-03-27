@@ -1,0 +1,1 @@
+I'm building a Rails app with Hotwire and need inline form validation. When a user submits a form with errors, I want the validation messages to appear in place without a full page reload. Can you help me implement this?

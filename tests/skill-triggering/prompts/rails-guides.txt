@@ -1,0 +1,1 @@
+I'm confused about when to use includes vs joins vs preload in ActiveRecord. Can you explain how eager loading works with associations and when to choose each approach?

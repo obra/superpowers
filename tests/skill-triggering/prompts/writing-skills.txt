@@ -1,0 +1,1 @@
+I want to create a new skill for my Claude Code setup that helps with writing database migrations in Rails. It should guide me through the right patterns and safety checks. Can you help me create this skill?

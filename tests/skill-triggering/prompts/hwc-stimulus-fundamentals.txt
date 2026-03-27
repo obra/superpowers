@@ -1,0 +1,1 @@
+I'm building a Stimulus controller that needs to track a counter value and automatically update several parts of the UI whenever it changes. What's the right way to manage reactive state using the Stimulus Values API?

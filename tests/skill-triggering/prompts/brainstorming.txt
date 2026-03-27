@@ -1,0 +1,1 @@
+I want to add a notifications feature to my Rails app where users get alerts when someone comments on their posts. Can you help me design and build this?

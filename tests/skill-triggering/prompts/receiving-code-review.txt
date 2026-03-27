@@ -1,0 +1,5 @@
+My code reviewer left this feedback on my PR:
+
+"The `process_payment` method in PaymentService is doing too much — it's handling validation, API calls, and persistence all in one place. Extract these into separate private methods or objects. Also, the error handling swallows exceptions silently which will make debugging hard in production."
+
+How should I address this feedback?

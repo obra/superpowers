@@ -1,0 +1,1 @@
+I just refactored the User model to extract email validation into a reusable concern and also fixed a bug where blank emails were slipping through validation. Can you help me write a commit message for this change?

@@ -1,0 +1,1 @@
+Before we deploy to production, can you run a security audit on our Rails app? We want to make sure there are no SQL injection, XSS, or other vulnerabilities in the codebase.

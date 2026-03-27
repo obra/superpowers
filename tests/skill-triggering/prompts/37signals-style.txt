@@ -1,0 +1,1 @@
+I'm building a new Rails app for our team and we want to follow the Basecamp/37signals approach to Rails development. Can you write a controller for managing projects, following the way 37signals would structure it?

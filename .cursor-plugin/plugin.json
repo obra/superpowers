@@ -2,7 +2,7 @@
   "name": "superpowers-ruby",
   "displayName": "Superpowers (Ruby)",
   "description": "Ruby/Rails skills library: TDD with Minitest, Rails patterns, Hotwire, Brakeman, Sandi Metz rules, 37signals style, and proven development workflows based on Jesse Vincent's superpowers",
-  "version": "5.0.5",
+  "version": "6.0.0",
   "author": {
     "name": "Lucian Ghinda",
     "email": "lucian.ghinda@gmail.com"

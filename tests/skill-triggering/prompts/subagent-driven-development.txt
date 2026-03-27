@@ -1,0 +1,8 @@
+I have an implementation plan with 5 independent tasks that need to be executed in the current session:
+1. Add User model with email/password
+2. Create sessions controller
+3. Add password reset mailer
+4. Write authentication middleware
+5. Add integration tests
+
+Can you execute all of these in parallel using subagents?
