@@ -34,8 +34,9 @@ fn featureforge_help_and_version_exist() {
     let version_stdout =
         String::from_utf8(version_output.stdout).expect("version stdout should be utf-8");
     assert!(
-        version_stdout.starts_with("featureforge 1.0.0"),
-        "expected version output to start with 'featureforge 1.0.0', got:\n{version_stdout}"
+        version_stdout.starts_with(&format!("featureforge {}", env!("CARGO_PKG_VERSION"))),
+        "expected version output to start with 'featureforge {}', got:\n{version_stdout}",
+        env!("CARGO_PKG_VERSION")
     );
 }
 

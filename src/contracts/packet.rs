@@ -27,6 +27,67 @@ pub struct TaskPacket {
     pub markdown: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
+pub struct HarnessContractProvenance {
+    pub source_plan_path: String,
+    pub source_plan_revision: u32,
+    pub source_plan_fingerprint: String,
+    pub source_spec_path: String,
+    pub source_spec_revision: u32,
+    pub source_spec_fingerprint: String,
+    pub source_task_packet_fingerprints: Vec<String>,
+}
+
+pub fn build_harness_contract_provenance(
+    task_packets: &[TaskPacket],
+) -> Result<HarnessContractProvenance, DiagnosticError> {
+    let Some(first) = task_packets.first() else {
+        return Err(DiagnosticError::new(
+            FailureClass::InstructionParseFailed,
+            String::from(
+                "Harness contract task packet provenance requires at least one task packet.",
+            ),
+        ));
+    };
+
+    let expected_plan_path = first.plan_path.clone();
+    let expected_plan_revision = first.plan_revision;
+    let expected_plan_fingerprint = first.plan_fingerprint.clone();
+    let expected_spec_path = first.source_spec_path.clone();
+    let expected_spec_revision = first.source_spec_revision;
+    let expected_spec_fingerprint = first.source_spec_fingerprint.clone();
+
+    for (index, packet) in task_packets.iter().enumerate().skip(1) {
+        let matches_baseline = packet.plan_path == expected_plan_path
+            && packet.plan_revision == expected_plan_revision
+            && packet.plan_fingerprint == expected_plan_fingerprint
+            && packet.source_spec_path == expected_spec_path
+            && packet.source_spec_revision == expected_spec_revision
+            && packet.source_spec_fingerprint == expected_spec_fingerprint;
+        if !matches_baseline {
+            return Err(DiagnosticError::new(
+                FailureClass::InstructionParseFailed,
+                format!(
+                    "Harness contract task packet provenance mismatch at index {index}; all packets must share source plan/spec provenance."
+                ),
+            ));
+        }
+    }
+
+    Ok(HarnessContractProvenance {
+        source_plan_path: expected_plan_path,
+        source_plan_revision: expected_plan_revision,
+        source_plan_fingerprint: expected_plan_fingerprint,
+        source_spec_path: expected_spec_path,
+        source_spec_revision: expected_spec_revision,
+        source_spec_fingerprint: expected_spec_fingerprint,
+        source_task_packet_fingerprints: task_packets
+            .iter()
+            .map(|packet| packet.packet_fingerprint.clone())
+            .collect(),
+    })
+}
+
 pub fn build_task_packet_with_timestamp(
     spec: &SpecDocument,
     plan: &PlanDocument,

@@ -13,6 +13,14 @@ pub struct EvidenceStep {
     pub step_number: u32,
     pub status: String,
     pub claim: String,
+    pub source_contract_path: Option<String>,
+    pub source_contract_fingerprint: Option<String>,
+    pub source_evaluation_report_fingerprint: Option<String>,
+    pub evaluator_verdict: Option<String>,
+    pub failing_criterion_ids: Vec<String>,
+    pub source_handoff_fingerprint: Option<String>,
+    pub repo_state_baseline_head_sha: Option<String>,
+    pub repo_state_baseline_worktree_fingerprint: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
@@ -100,6 +108,29 @@ fn parse_step_chunk(chunk: &str) -> Result<EvidenceStep, DiagnosticError> {
             .map_err(|_| missing_header("Evidence step number"))?,
         status: parse_scalar_field(&block, "Status")?,
         claim: parse_scalar_field(&block, "Claim")?,
+        source_contract_path: parse_optional_scalar_field(&block, "Source Contract Path"),
+        source_contract_fingerprint: parse_optional_scalar_field(
+            &block,
+            "Source Contract Fingerprint",
+        ),
+        source_evaluation_report_fingerprint: parse_optional_scalar_field(
+            &block,
+            "Source Evaluation Report Fingerprint",
+        ),
+        evaluator_verdict: parse_optional_scalar_field(&block, "Evaluator Verdict"),
+        failing_criterion_ids: parse_optional_list_field(&block, "Failing Criterion IDs"),
+        source_handoff_fingerprint: parse_optional_scalar_field(
+            &block,
+            "Source Handoff Fingerprint",
+        ),
+        repo_state_baseline_head_sha: parse_optional_scalar_field(
+            &block,
+            "Repo State Baseline Head SHA",
+        ),
+        repo_state_baseline_worktree_fingerprint: parse_optional_scalar_field(
+            &block,
+            "Repo State Baseline Worktree Fingerprint",
+        ),
     })
 }
 
@@ -110,6 +141,51 @@ fn parse_scalar_field(lines: &[&str], field: &str) -> Result<String, DiagnosticE
         .find_map(|line| line.strip_prefix(&prefix))
         .map(ToOwned::to_owned)
         .ok_or_else(|| missing_header(field))
+}
+
+fn parse_optional_scalar_field(lines: &[&str], field: &str) -> Option<String> {
+    let prefix = format!("**{field}:** ");
+    lines
+        .iter()
+        .find_map(|line| line.strip_prefix(&prefix))
+        .map(str::trim)
+        .map(|value| value.trim_matches('`'))
+        .filter(|value| !value.is_empty())
+        .map(ToOwned::to_owned)
+}
+
+fn parse_optional_list_field(lines: &[&str], field: &str) -> Vec<String> {
+    let marker = format!("**{field}:**");
+    let Some(start_idx) = lines.iter().position(|line| line.trim() == marker) else {
+        return Vec::new();
+    };
+
+    let mut values = Vec::new();
+    let mut cursor = start_idx + 1;
+    while cursor < lines.len() {
+        let line = lines[cursor].trim();
+        if line.is_empty() {
+            cursor += 1;
+            continue;
+        }
+        if line == "[]" {
+            return Vec::new();
+        }
+        if line.starts_with("**") || line.starts_with("### ") || line.starts_with("#### ") {
+            break;
+        }
+        if let Some(value) = line.strip_prefix("- ") {
+            let value = value.trim_matches('`');
+            if !value.is_empty() {
+                values.push(value.to_owned());
+            }
+            cursor += 1;
+            continue;
+        }
+        break;
+    }
+
+    values
 }
 
 fn missing_header(header: &str) -> DiagnosticError {

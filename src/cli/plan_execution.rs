@@ -13,6 +13,18 @@ pub enum PlanExecutionCommand {
     Status(StatusArgs),
     Recommend(RecommendArgs),
     Preflight(StatusArgs),
+    #[command(name = "gate-contract")]
+    GateContract(GateContractArgs),
+    #[command(name = "record-contract")]
+    RecordContract(RecordContractArgs),
+    #[command(name = "gate-evaluator")]
+    GateEvaluator(GateEvaluatorArgs),
+    #[command(name = "record-evaluation")]
+    RecordEvaluation(RecordEvaluationArgs),
+    #[command(name = "gate-handoff")]
+    GateHandoff(GateHandoffArgs),
+    #[command(name = "record-handoff")]
+    RecordHandoff(RecordHandoffArgs),
     #[command(name = "gate-review")]
     GateReview(StatusArgs),
     #[command(name = "gate-finish")]
@@ -28,6 +40,54 @@ pub enum PlanExecutionCommand {
 pub struct StatusArgs {
     #[arg(long)]
     pub plan: PathBuf,
+}
+
+#[derive(Debug, Clone, Args)]
+pub struct GateContractArgs {
+    #[arg(long)]
+    pub plan: PathBuf,
+    #[arg(long)]
+    pub contract: PathBuf,
+}
+
+#[derive(Debug, Clone, Args)]
+pub struct RecordContractArgs {
+    #[arg(long)]
+    pub plan: PathBuf,
+    #[arg(long)]
+    pub contract: PathBuf,
+}
+
+#[derive(Debug, Clone, Args)]
+pub struct GateEvaluatorArgs {
+    #[arg(long)]
+    pub plan: PathBuf,
+    #[arg(long = "evaluation")]
+    pub evaluation: PathBuf,
+}
+
+#[derive(Debug, Clone, Args)]
+pub struct RecordEvaluationArgs {
+    #[arg(long)]
+    pub plan: PathBuf,
+    #[arg(long = "evaluation")]
+    pub evaluation: PathBuf,
+}
+
+#[derive(Debug, Clone, Args)]
+pub struct GateHandoffArgs {
+    #[arg(long)]
+    pub plan: PathBuf,
+    #[arg(long)]
+    pub handoff: PathBuf,
+}
+
+#[derive(Debug, Clone, Args)]
+pub struct RecordHandoffArgs {
+    #[arg(long)]
+    pub plan: PathBuf,
+    #[arg(long)]
+    pub handoff: PathBuf,
 }
 
 #[derive(Debug, Clone, Args)]

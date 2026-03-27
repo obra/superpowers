@@ -8,12 +8,16 @@ use sha2::{Digest, Sha256};
 use crate::cli::plan_execution::{BeginArgs, CompleteArgs, NoteArgs, ReopenArgs, TransferArgs};
 use crate::diagnostics::{FailureClass, JsonFailure};
 use crate::execution::state::{
-    EvidenceAttempt, ExecutionContext, ExecutionEvidence, ExecutionRuntime, FileProof,
-    NO_REPO_FILES_MARKER, PlanExecutionStatus, PlanStepState, compute_packet_fingerprint,
-    current_file_proof, current_head_sha, hash_contract_plan, load_execution_context,
-    normalize_begin_request, normalize_complete_request, normalize_note_request,
-    normalize_reopen_request, normalize_source, normalize_transfer_request,
-    require_normalized_text, status_from_context, validate_expected_fingerprint,
+    compute_packet_fingerprint, current_file_proof, current_head_sha, hash_contract_plan,
+    load_execution_context, normalize_begin_request, normalize_complete_request,
+    normalize_note_request, normalize_reopen_request, normalize_source, normalize_transfer_request,
+    require_normalized_text, require_preflight_acceptance, status_from_context,
+    validate_expected_fingerprint, EvidenceAttempt, ExecutionContext, ExecutionEvidence,
+    ExecutionRuntime, FileProof, PlanExecutionStatus, PlanStepState, NO_REPO_FILES_MARKER,
+};
+use crate::execution::transitions::{
+    claim_step_write_authority, enforce_active_contract_scope, enforce_authoritative_phase,
+    load_authoritative_transition_state, AuthoritativeTransitionState, StepCommand,
 };
 use crate::paths::{normalize_repo_relative_path, write_atomic as write_atomic_file};
 
@@ -22,8 +26,18 @@ pub fn begin(
     args: &BeginArgs,
 ) -> Result<PlanExecutionStatus, JsonFailure> {
     let request = normalize_begin_request(args);
+    let _write_authority = claim_step_write_authority(runtime)?;
     let mut context = load_execution_context(runtime, &args.plan)?;
     validate_expected_fingerprint(&context, &request.expect_execution_fingerprint)?;
+    require_preflight_acceptance(&context)?;
+    let authoritative_state = load_authoritative_transition_state(&context)?;
+    enforce_authoritative_phase(authoritative_state.as_ref(), StepCommand::Begin)?;
+    enforce_active_contract_scope(
+        authoritative_state.as_ref(),
+        StepCommand::Begin,
+        request.task,
+        request.step,
+    )?;
 
     let step_index = step_index(&context, request.task, request.step).ok_or_else(|| {
         JsonFailure::new(
@@ -70,7 +84,7 @@ pub fn begin(
         .find(|step| step.note_state == Some(crate::execution::state::NoteState::Active))
     {
         if active.task_number == request.task && active.step_number == request.step {
-            return Ok(status_from_context(&context));
+            return status_from_context(&context);
         }
         return Err(JsonFailure::new(
             FailureClass::InvalidStepTransition,
@@ -114,7 +128,7 @@ pub fn begin(
     );
     write_atomic(&context.plan_abs, &rendered_plan)?;
     let reloaded = load_execution_context(runtime, &args.plan)?;
-    Ok(status_from_context(&reloaded))
+    status_from_context(&reloaded)
 }
 
 pub fn complete(
@@ -122,9 +136,22 @@ pub fn complete(
     args: &CompleteArgs,
 ) -> Result<PlanExecutionStatus, JsonFailure> {
     let request = normalize_complete_request(args)?;
+    let _write_authority = claim_step_write_authority(runtime)?;
     let mut context = load_execution_context(runtime, &args.plan)?;
     validate_expected_fingerprint(&context, &request.expect_execution_fingerprint)?;
     normalize_source(&request.source, &context.plan_document.execution_mode)?;
+    let authoritative_state = load_authoritative_transition_state(&context)?;
+    enforce_authoritative_phase(authoritative_state.as_ref(), StepCommand::Complete)?;
+    enforce_active_contract_scope(
+        authoritative_state.as_ref(),
+        StepCommand::Complete,
+        request.task,
+        request.step,
+    )?;
+    let provenance = authoritative_state
+        .as_ref()
+        .map(|state| state.evidence_provenance())
+        .unwrap_or_default();
 
     let step_index = step_index(&context, request.task, request.step).ok_or_else(|| {
         JsonFailure::new(
@@ -192,6 +219,15 @@ pub fn complete(
         packet_fingerprint: Some(packet_fingerprint),
         head_sha: Some(head_sha.clone()),
         base_sha: Some(head_sha),
+        source_contract_path: provenance.source_contract_path,
+        source_contract_fingerprint: provenance.source_contract_fingerprint,
+        source_evaluation_report_fingerprint: provenance.source_evaluation_report_fingerprint,
+        evaluator_verdict: provenance.evaluator_verdict,
+        failing_criterion_ids: provenance.failing_criterion_ids,
+        source_handoff_fingerprint: provenance.source_handoff_fingerprint,
+        repo_state_baseline_head_sha: provenance.repo_state_baseline_head_sha,
+        repo_state_baseline_worktree_fingerprint: provenance
+            .repo_state_baseline_worktree_fingerprint,
     };
 
     context.evidence.attempts.push(new_attempt);
@@ -216,7 +252,7 @@ pub fn complete(
         "complete_after_plan_write",
     )?;
     let reloaded = load_execution_context(runtime, &args.plan)?;
-    Ok(status_from_context(&reloaded))
+    status_from_context(&reloaded)
 }
 
 pub fn note(
@@ -224,8 +260,17 @@ pub fn note(
     args: &NoteArgs,
 ) -> Result<PlanExecutionStatus, JsonFailure> {
     let request = normalize_note_request(args)?;
+    let _write_authority = claim_step_write_authority(runtime)?;
     let mut context = load_execution_context(runtime, &args.plan)?;
     validate_expected_fingerprint(&context, &request.expect_execution_fingerprint)?;
+    let mut authoritative_state = load_authoritative_transition_state(&context)?;
+    enforce_authoritative_phase(authoritative_state.as_ref(), StepCommand::Note)?;
+    enforce_active_contract_scope(
+        authoritative_state.as_ref(),
+        StepCommand::Note,
+        request.task,
+        request.step,
+    )?;
 
     let step_index = step_index(&context, request.task, request.step).ok_or_else(|| {
         JsonFailure::new(
@@ -248,6 +293,9 @@ pub fn note(
 
     context.steps[step_index].note_state = Some(request.state);
     context.steps[step_index].note_summary = request.message;
+    if let Some(authoritative_state) = authoritative_state.as_mut() {
+        authoritative_state.apply_note_reset_policy(request.state)?;
+    }
 
     let rendered_plan = render_plan_source(
         &context.plan_source,
@@ -255,8 +303,18 @@ pub fn note(
         &context.steps,
     );
     write_atomic(&context.plan_abs, &rendered_plan)?;
+    if let Some(authoritative_state) = authoritative_state.as_ref() {
+        persist_authoritative_state_with_rollback(
+            authoritative_state,
+            &context.plan_abs,
+            &context.plan_source,
+            &context.evidence_abs,
+            context.evidence.source.as_deref(),
+            "note_after_plan_write_before_authoritative_state_publish",
+        )?;
+    }
     let reloaded = load_execution_context(runtime, &args.plan)?;
-    Ok(status_from_context(&reloaded))
+    status_from_context(&reloaded)
 }
 
 pub fn reopen(
@@ -264,9 +322,18 @@ pub fn reopen(
     args: &ReopenArgs,
 ) -> Result<PlanExecutionStatus, JsonFailure> {
     let request = normalize_reopen_request(args)?;
+    let _write_authority = claim_step_write_authority(runtime)?;
     let mut context = load_execution_context(runtime, &args.plan)?;
     validate_expected_fingerprint(&context, &request.expect_execution_fingerprint)?;
     normalize_source(&request.source, &context.plan_document.execution_mode)?;
+    let mut authoritative_state = load_authoritative_transition_state(&context)?;
+    enforce_authoritative_phase(authoritative_state.as_ref(), StepCommand::Reopen)?;
+    enforce_active_contract_scope(
+        authoritative_state.as_ref(),
+        StepCommand::Reopen,
+        request.task,
+        request.step,
+    )?;
 
     let step_index = step_index(&context, request.task, request.step).ok_or_else(|| {
         JsonFailure::new(
@@ -296,6 +363,9 @@ pub fn reopen(
     context.steps[step_index].note_state = Some(crate::execution::state::NoteState::Interrupted);
     context.steps[step_index].note_summary = truncate_summary(&request.reason);
     context.evidence.format = crate::execution::state::EvidenceFormat::V2;
+    if let Some(authoritative_state) = authoritative_state.as_mut() {
+        authoritative_state.stale_reopen_provenance()?;
+    }
 
     let rendered_plan = render_plan_source(
         &context.plan_source,
@@ -315,9 +385,19 @@ pub fn reopen(
         &rendered_evidence,
         "reopen_after_plan_write",
     )?;
+    if let Some(authoritative_state) = authoritative_state.as_ref() {
+        persist_authoritative_state_with_rollback(
+            authoritative_state,
+            &context.plan_abs,
+            &context.plan_source,
+            &context.evidence_abs,
+            context.evidence.source.as_deref(),
+            "reopen_after_plan_and_evidence_write_before_authoritative_state_publish",
+        )?;
+    }
 
     let reloaded = load_execution_context(runtime, &args.plan)?;
-    Ok(status_from_context(&reloaded))
+    status_from_context(&reloaded)
 }
 
 pub fn transfer(
@@ -325,9 +405,18 @@ pub fn transfer(
     args: &TransferArgs,
 ) -> Result<PlanExecutionStatus, JsonFailure> {
     let request = normalize_transfer_request(args)?;
+    let _write_authority = claim_step_write_authority(runtime)?;
     let mut context = load_execution_context(runtime, &args.plan)?;
     validate_expected_fingerprint(&context, &request.expect_execution_fingerprint)?;
     normalize_source(&request.source, &context.plan_document.execution_mode)?;
+    let authoritative_state = load_authoritative_transition_state(&context)?;
+    enforce_authoritative_phase(authoritative_state.as_ref(), StepCommand::Transfer)?;
+    enforce_active_contract_scope(
+        authoritative_state.as_ref(),
+        StepCommand::Transfer,
+        request.repair_task,
+        request.repair_step,
+    )?;
 
     let active_index = context
         .steps
@@ -400,7 +489,7 @@ pub fn transfer(
     )?;
 
     let reloaded = load_execution_context(runtime, &args.plan)?;
-    Ok(status_from_context(&reloaded))
+    status_from_context(&reloaded)
 }
 
 fn step_index(context: &ExecutionContext, task: u32, step: u32) -> Option<usize> {
@@ -700,6 +789,47 @@ fn render_evidence_source(
                 output.push(format!("**Base SHA:** {base_sha}"));
             }
             output.push(format!("**Claim:** {}", attempt.claim));
+            if let Some(source_contract_path) = &attempt.source_contract_path {
+                output.push(format!("**Source Contract Path:** {source_contract_path}"));
+            }
+            if let Some(source_contract_fingerprint) = &attempt.source_contract_fingerprint {
+                output.push(format!(
+                    "**Source Contract Fingerprint:** `{source_contract_fingerprint}`"
+                ));
+            }
+            if let Some(source_evaluation_report_fingerprint) =
+                &attempt.source_evaluation_report_fingerprint
+            {
+                output.push(format!(
+                    "**Source Evaluation Report Fingerprint:** `{source_evaluation_report_fingerprint}`"
+                ));
+            }
+            if let Some(evaluator_verdict) = &attempt.evaluator_verdict {
+                output.push(format!("**Evaluator Verdict:** {evaluator_verdict}"));
+            }
+            if !attempt.failing_criterion_ids.is_empty() {
+                output.push(String::from("**Failing Criterion IDs:**"));
+                for criterion_id in &attempt.failing_criterion_ids {
+                    output.push(format!("- `{criterion_id}`"));
+                }
+            }
+            if let Some(source_handoff_fingerprint) = &attempt.source_handoff_fingerprint {
+                output.push(format!(
+                    "**Source Handoff Fingerprint:** `{source_handoff_fingerprint}`"
+                ));
+            }
+            if let Some(repo_state_baseline_head_sha) = &attempt.repo_state_baseline_head_sha {
+                output.push(format!(
+                    "**Repo State Baseline Head SHA:** {repo_state_baseline_head_sha}"
+                ));
+            }
+            if let Some(repo_state_baseline_worktree_fingerprint) =
+                &attempt.repo_state_baseline_worktree_fingerprint
+            {
+                output.push(format!(
+                    "**Repo State Baseline Worktree Fingerprint:** {repo_state_baseline_worktree_fingerprint}"
+                ));
+            }
             output.push(String::from("**Files Proven:**"));
             for proof in &attempt.file_proofs {
                 output.push(format!("- {} | {}", proof.path, proof.proof));
@@ -772,6 +902,21 @@ fn write_plan_and_evidence_with_rollback(
         return Err(error);
     }
     if let Err(error) = write_atomic(evidence_path, rendered_evidence) {
+        restore_plan_and_evidence(plan_path, original_plan, evidence_path, original_evidence);
+        return Err(error);
+    }
+    Ok(())
+}
+
+fn persist_authoritative_state_with_rollback(
+    authoritative_state: &AuthoritativeTransitionState,
+    plan_path: &Path,
+    original_plan: &str,
+    evidence_path: &Path,
+    original_evidence: Option<&str>,
+    failpoint: &str,
+) -> Result<(), JsonFailure> {
+    if let Err(error) = authoritative_state.persist_if_dirty_with_failpoint(Some(failpoint)) {
         restore_plan_and_evidence(plan_path, original_plan, evidence_path, original_evidence);
         return Err(error);
     }

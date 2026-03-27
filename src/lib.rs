@@ -73,6 +73,24 @@ pub fn run() -> std::process::ExitCode {
                         cli::plan_execution::PlanExecutionCommand::Preflight(args) => {
                             emit_json(runtime.preflight(&args))
                         }
+                        cli::plan_execution::PlanExecutionCommand::GateContract(args) => {
+                            emit_json(runtime.gate_contract(&args))
+                        }
+                        cli::plan_execution::PlanExecutionCommand::RecordContract(args) => {
+                            emit_json(runtime.record_contract(&args))
+                        }
+                        cli::plan_execution::PlanExecutionCommand::GateEvaluator(args) => {
+                            emit_json(runtime.gate_evaluator(&args))
+                        }
+                        cli::plan_execution::PlanExecutionCommand::RecordEvaluation(args) => {
+                            emit_json(runtime.record_evaluation(&args))
+                        }
+                        cli::plan_execution::PlanExecutionCommand::GateHandoff(args) => {
+                            emit_json(runtime.gate_handoff(&args))
+                        }
+                        cli::plan_execution::PlanExecutionCommand::RecordHandoff(args) => {
+                            emit_json(runtime.record_handoff(&args))
+                        }
                         cli::plan_execution::PlanExecutionCommand::GateReview(args) => {
                             emit_json(runtime.gate_review(&args))
                         }

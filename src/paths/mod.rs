@@ -7,6 +7,15 @@ use sha2::{Digest, Sha256};
 
 use crate::diagnostics::{DiagnosticError, FailureClass};
 
+const PROJECTS_DIR: &str = "projects";
+const BRANCHES_DIR: &str = "branches";
+const EXECUTION_HARNESS_DIR: &str = "execution-harness";
+const HARNESS_STATE_FILE: &str = "state.json";
+const HARNESS_DEPENDENCY_INDEX_FILE: &str = "dependency-index.json";
+const HARNESS_AUTHORITATIVE_ARTIFACTS_DIR: &str = "authoritative-artifacts";
+const HARNESS_OBSERVABILITY_EVENTS_FILE: &str = "observability-events.jsonl";
+const HARNESS_TELEMETRY_COUNTERS_FILE: &str = "telemetry-counters.json";
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct RepoPath(String);
 
@@ -112,11 +121,86 @@ pub fn featureforge_state_dir() -> PathBuf {
         .unwrap_or_else(|| PathBuf::from(".featureforge"))
 }
 
+pub fn harness_branch_root(state_dir: &Path, repo_slug: &str, branch_name: &str) -> PathBuf {
+    let safe_branch = branch_storage_key(branch_name);
+    state_dir
+        .join(PROJECTS_DIR)
+        .join(repo_slug)
+        .join(BRANCHES_DIR)
+        .join(safe_branch)
+        .join(EXECUTION_HARNESS_DIR)
+}
+
+pub fn harness_state_path(state_dir: &Path, repo_slug: &str, branch_name: &str) -> PathBuf {
+    harness_branch_root(state_dir, repo_slug, branch_name).join(HARNESS_STATE_FILE)
+}
+
+pub fn harness_dependency_index_path(
+    state_dir: &Path,
+    repo_slug: &str,
+    branch_name: &str,
+) -> PathBuf {
+    harness_branch_root(state_dir, repo_slug, branch_name).join(HARNESS_DEPENDENCY_INDEX_FILE)
+}
+
+pub fn harness_observability_events_path(
+    state_dir: &Path,
+    repo_slug: &str,
+    branch_name: &str,
+) -> PathBuf {
+    harness_branch_root(state_dir, repo_slug, branch_name).join(HARNESS_OBSERVABILITY_EVENTS_FILE)
+}
+
+pub fn harness_telemetry_counters_path(
+    state_dir: &Path,
+    repo_slug: &str,
+    branch_name: &str,
+) -> PathBuf {
+    harness_branch_root(state_dir, repo_slug, branch_name).join(HARNESS_TELEMETRY_COUNTERS_FILE)
+}
+
+pub fn harness_authoritative_artifacts_dir(
+    state_dir: &Path,
+    repo_slug: &str,
+    branch_name: &str,
+) -> PathBuf {
+    harness_branch_root(state_dir, repo_slug, branch_name).join(HARNESS_AUTHORITATIVE_ARTIFACTS_DIR)
+}
+
+pub fn harness_authoritative_artifact_path(
+    state_dir: &Path,
+    repo_slug: &str,
+    branch_name: &str,
+    artifact_file_name: &str,
+) -> PathBuf {
+    harness_authoritative_artifacts_dir(state_dir, repo_slug, branch_name).join(artifact_file_name)
+}
+
+pub fn harness_state_publish_temp_path(
+    state_dir: &Path,
+    repo_slug: &str,
+    branch_name: &str,
+) -> PathBuf {
+    let state_path = harness_state_path(state_dir, repo_slug, branch_name);
+    atomic_publish_temp_path(&state_path)
+}
+
+pub fn harness_authoritative_artifact_publish_temp_path(
+    state_dir: &Path,
+    repo_slug: &str,
+    branch_name: &str,
+    artifact_file_name: &str,
+) -> PathBuf {
+    let artifact_path =
+        harness_authoritative_artifact_path(state_dir, repo_slug, branch_name, artifact_file_name);
+    atomic_publish_temp_path(&artifact_path)
+}
+
 pub fn write_atomic(path: &Path, contents: impl AsRef<[u8]>) -> std::io::Result<()> {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)?;
     }
-    let temp_path = atomic_temp_path(path);
+    let temp_path = atomic_publish_temp_path(path);
     fs::write(&temp_path, contents)?;
     match fs::rename(&temp_path, path) {
         Ok(()) => Ok(()),
@@ -140,7 +224,7 @@ fn looks_like_windows_absolute(input: &str) -> bool {
         || input.starts_with("\\\\")
 }
 
-fn atomic_temp_path(path: &Path) -> PathBuf {
+pub fn atomic_publish_temp_path(path: &Path) -> PathBuf {
     let stamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|duration| duration.as_nanos())

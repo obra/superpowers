@@ -1,0 +1,9 @@
+{
+  "harness_phase": "executing",
+  "status": "blocked",
+  "reason_codes": [
+    "repo_state_drift"
+  ],
+  "observed_event_kind": "repo_state_drift_detected",
+  "next_action": "reconcile_repo_state"
+}

@@ -50,3 +50,11 @@ For each page or route visited during QA:
 6. Console and failed requests after interaction
 7. Mobile or tablet pass if relevant
 8. Auth or role boundary behavior when relevant
+
+## Workflow-Routed QA Contract
+
+This taxonomy is a workflow-routed downstream review gate aid, not an authoritative gate-review or finish-gate mutation surface.
+
+For harness-driven handoffs, keep each QA artifact tied to its source plan, source test plan, task-packet context, coverage matrix, and execution evidence path provenance.
+
+Do not use this taxonomy to aggregate chunk-level verifier state or mutate execution state directly; those authoritative operations stay helper-owned and fail closed outside the runtime gate flow.

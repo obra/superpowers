@@ -434,8 +434,7 @@ fn canonical_session_entry_spawned_subagent_opt_in_ignores_oversized_message_fil
     let (_repo_dir, state_dir) = init_repo("session-entry-spawned-subagent-opt-in-oversized");
     let state = state_dir.path();
     let message_file = state.join("spawned-subagent-opt-in-oversized.txt");
-    let decision_path =
-        canonical_session_entry_path(state, "spawned-subagent-opt-in-oversized");
+    let decision_path = canonical_session_entry_path(state, "spawned-subagent-opt-in-oversized");
 
     write_file(&message_file, &"x".repeat(70_000));
     write_file(&decision_path, "bypassed\n");

@@ -1,0 +1,9 @@
+{
+  "harness_phase": "executing",
+  "status": "recovering",
+  "reason_codes": [
+    "partial_authoritative_mutation_recovery"
+  ],
+  "observed_event_kind": "partial_mutation_recovered",
+  "next_action": "record_authoritative_mutation"
+}

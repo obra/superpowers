@@ -1,0 +1,64 @@
+{
+  "observability_event_examples": [
+    {
+      "event_kind": "authoritative_mutation_recorded",
+      "harness_phase": "execution_preflight",
+      "reason_codes": []
+    },
+    {
+      "event_kind": "blocked_state_cleared",
+      "harness_phase": "executing",
+      "reason_codes": []
+    },
+    {
+      "event_kind": "blocked_state_entered",
+      "harness_phase": "executing",
+      "reason_codes": ["waiting_on_required_evaluator"]
+    },
+    {
+      "event_kind": "integrity_mismatch_detected",
+      "harness_phase": "executing",
+      "reason_codes": ["invalid_evidence_satisfaction_rule"]
+    },
+    {
+      "event_kind": "ordering_gap_detected",
+      "harness_phase": "executing",
+      "reason_codes": []
+    },
+    {
+      "event_kind": "partial_mutation_recovered",
+      "harness_phase": "executing",
+      "reason_codes": ["recovering_incomplete_authoritative_mutation"]
+    },
+    {
+      "event_kind": "replay_accepted",
+      "harness_phase": "executing",
+      "reason_codes": []
+    },
+    {
+      "event_kind": "replay_conflict",
+      "harness_phase": "executing",
+      "reason_codes": ["write_authority_conflict"]
+    },
+    {
+      "event_kind": "repo_state_drift_detected",
+      "harness_phase": "executing",
+      "reason_codes": ["repo_state_drift"]
+    },
+    {
+      "event_kind": "repo_state_reconciled",
+      "harness_phase": "executing",
+      "reason_codes": []
+    },
+    {
+      "event_kind": "write_authority_conflict",
+      "harness_phase": "executing",
+      "reason_codes": ["write_authority_conflict"]
+    },
+    {
+      "event_kind": "write_authority_reclaimed",
+      "harness_phase": "executing",
+      "reason_codes": []
+    }
+  ]
+}

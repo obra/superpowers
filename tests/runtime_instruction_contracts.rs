@@ -34,6 +34,148 @@ fn assert_not_contains(content: &str, needle: &str, label: &str) {
     );
 }
 
+fn assert_forbids_direct_helper_command_mutation(content: &str, command: &str, label: &str) {
+    let quoted = format!("`{command}`");
+    let lines = content.lines().collect::<Vec<_>>();
+    let mut windows = Vec::new();
+    for (index, line) in lines.iter().enumerate() {
+        if !line.contains(&quoted) {
+            continue;
+        }
+        let start = index.saturating_sub(3);
+        let end = (index + 3).min(lines.len().saturating_sub(1));
+        windows.push(lines[start..=end].join(" "));
+    }
+    assert!(
+        !windows.is_empty(),
+        "{label} should explicitly mention {quoted} in helper-boundary guidance"
+    );
+    let has_boundary = windows.iter().any(|window| {
+        let normalized = window.to_ascii_lowercase();
+        let has_prohibition = [
+            "must not",
+            "do not",
+            "never",
+            "should not",
+            "cannot",
+            "can't",
+        ]
+        .iter()
+        .any(|needle| normalized.contains(needle));
+        let has_direct_action = ["invoke", "call", "run", "execute", "direct"]
+            .iter()
+            .any(|needle| normalized.contains(needle));
+        let has_owner_actor = [
+            "coordinator",
+            "controller",
+            "helper",
+            "runtime",
+            "harness",
+            "gate",
+        ]
+        .iter()
+        .any(|needle| normalized.contains(needle));
+        let has_owner_verb = [
+            "owns",
+            "owned",
+            "authoritative",
+            "handles",
+            "applies",
+            "executes",
+            "invokes",
+            "calls",
+            "runs",
+            "governs",
+        ]
+        .iter()
+        .any(|needle| normalized.contains(needle));
+        (has_prohibition && has_direct_action) || (has_owner_actor && has_owner_verb)
+    });
+    assert!(
+        has_boundary,
+        "{label} should keep {quoted} in coordinator/helper-owned authoritative mutation boundaries"
+    );
+}
+
+fn contains_any_casefold(content: &str, needles: &[&str]) -> bool {
+    let normalized = content.to_ascii_lowercase();
+    needles.iter().any(|needle| normalized.contains(needle))
+}
+
+fn assert_separates_candidate_artifacts_from_authoritative_mutations(content: &str, label: &str) {
+    let has_candidate_surface = contains_any_casefold(
+        content,
+        &[
+            "candidate",
+            "task packet",
+            "task-packet",
+            "packet context",
+            "handoff",
+            "coverage matrix",
+        ],
+    );
+    let has_authoritative_surface = contains_any_casefold(
+        content,
+        &[
+            "authoritative",
+            "helper-owned",
+            "coordinator-owned",
+            "execution state",
+            "execution evidence",
+            "review gate",
+            "finish-gate",
+            "gate-review",
+        ],
+    );
+    let has_boundary_language = contains_any_casefold(
+        content,
+        &[
+            "must not",
+            "do not",
+            "never",
+            "may not",
+            "only",
+            "owns",
+            "owned",
+            "instead of",
+            "fail closed",
+        ],
+    );
+    assert!(
+        has_candidate_surface && has_authoritative_surface && has_boundary_language,
+        "{label} should distinguish candidate/planning artifacts from authoritative runtime state mutation boundaries"
+    );
+}
+
+fn assert_downstream_material_stays_gate_and_harness_aware(content: &str, label: &str) {
+    let has_gate_awareness = contains_any_casefold(
+        content,
+        &[
+            "gate-review",
+            "review gate",
+            "finish-gate",
+            "gate-finish",
+            "fail closed",
+        ],
+    );
+    let has_harness_awareness = contains_any_casefold(
+        content,
+        &[
+            "execution evidence",
+            "task-packet",
+            "coverage matrix",
+            "source plan",
+            "source test plan",
+            "workflow-routed",
+            "artifact",
+        ],
+    );
+    assert!(
+        has_gate_awareness && has_harness_awareness,
+        "{label} should stay downstream-gate-aware and harness-aware for review/QA handoffs"
+    );
+}
+
 fn assert_no_runtime_fallback_execution(content: &str, label: &str) {
     // Intentional invariant: skill installs package the runtime binary on
     // purpose. Runtime-root resolution is for locating adjacent files from the
@@ -624,7 +766,6 @@ fn runtime_instruction_surface_contracts_and_generation_checks_hold() {
         ".copilot/INSTALL.md",
         "docs/testing.md",
         "review/checklist.md",
-        "review/review-accelerator-packet-contract.md",
         "qa/references/issue-taxonomy.md",
         "qa/templates/qa-report-template.md",
         "tests/runtime_instruction_contracts.rs",
@@ -799,18 +940,9 @@ fn runtime_instruction_surface_contracts_and_generation_checks_hold() {
         root.join("docs/README.copilot.md"),
         "run the packaged install binary under `~/.featureforge/install/bin/` (`featureforge` on Unix, `featureforge.exe` on Windows)",
     );
-    assert_file_contains(root.join("README.md"), "node scripts/gen-agent-docs.mjs --check");
     assert_file_contains(
-        root.join("review/review-accelerator-packet-contract.md"),
-        "required packet fields",
-    );
-    assert_file_contains(
-        root.join("review/review-accelerator-packet-contract.md"),
-        "fail-closed validation rule",
-    );
-    assert_file_contains(
-        root.join("review/review-accelerator-packet-contract.md"),
-        "main-agent-only write authority",
+        root.join("README.md"),
+        "node scripts/gen-agent-docs.mjs --check",
     );
 }
 
@@ -1645,7 +1777,11 @@ fn generated_skill_preamble_never_executes_repo_or_root_selected_launchers() {
     git_init.arg("init").current_dir(&repo_candidate);
     run_checked(git_init, "git init repo candidate");
 
-    write_logging_packaged_runtime(&canonical_install_bin(&home_dir), &resolved_runtime_root, &packaged_log);
+    write_logging_packaged_runtime(
+        &canonical_install_bin(&home_dir),
+        &resolved_runtime_root,
+        &packaged_log,
+    );
     write_poison_runtime_launcher(&repo_candidate, "POISON_REPO");
     write_poison_runtime_launcher(&resolved_runtime_root, "POISON_ROOT");
 
@@ -1673,9 +1809,70 @@ fn generated_skill_preamble_never_executes_repo_or_root_selected_launchers() {
         "UPGRADE_AVAILABLE 1.0.0 1.1.0",
         "generated skill preamble stdout",
     );
-    assert_contains(&log, "PACKAGED:repo-runtime-root", "packaged runtime command log");
-    assert_contains(&log, "PACKAGED:update-check", "packaged runtime command log");
+    assert_contains(
+        &log,
+        "PACKAGED:repo-runtime-root",
+        "packaged runtime command log",
+    );
+    assert_contains(
+        &log,
+        "PACKAGED:update-check",
+        "packaged runtime command log",
+    );
     assert_contains(&log, "PACKAGED:config-get", "packaged runtime command log");
     assert_not_contains(&log, "POISON_REPO", "packaged runtime command log");
     assert_not_contains(&log, "POISON_ROOT", "packaged runtime command log");
+}
+
+#[test]
+fn execution_skill_docs_keep_candidate_artifacts_and_authoritative_mutations_separated() {
+    let executing_plans = read_utf8(repo_root().join("skills/executing-plans/SKILL.md"));
+    let subagent_skill = read_utf8(repo_root().join("skills/subagent-driven-development/SKILL.md"));
+    let implementer_prompt =
+        read_utf8(repo_root().join("skills/subagent-driven-development/implementer-prompt.md"));
+    let review_skill = read_utf8(repo_root().join("skills/requesting-code-review/SKILL.md"));
+    let qa_skill = read_utf8(repo_root().join("skills/qa-only/SKILL.md"));
+
+    for (content, label) in [
+        (&executing_plans, "skills/executing-plans/SKILL.md"),
+        (
+            &subagent_skill,
+            "skills/subagent-driven-development/SKILL.md",
+        ),
+        (
+            &implementer_prompt,
+            "skills/subagent-driven-development/implementer-prompt.md",
+        ),
+    ] {
+        for forbidden_direct_command in [
+            "record-contract",
+            "record-evaluation",
+            "record-handoff",
+            "begin",
+            "note",
+            "complete",
+            "reopen",
+            "transfer",
+        ] {
+            assert_forbids_direct_helper_command_mutation(content, forbidden_direct_command, label);
+        }
+    }
+
+    assert_separates_candidate_artifacts_from_authoritative_mutations(
+        &executing_plans,
+        "skills/executing-plans/SKILL.md",
+    );
+    assert_separates_candidate_artifacts_from_authoritative_mutations(
+        &subagent_skill,
+        "skills/subagent-driven-development/SKILL.md",
+    );
+    assert_separates_candidate_artifacts_from_authoritative_mutations(
+        &implementer_prompt,
+        "skills/subagent-driven-development/implementer-prompt.md",
+    );
+    assert_downstream_material_stays_gate_and_harness_aware(
+        &review_skill,
+        "skills/requesting-code-review/SKILL.md",
+    );
+    assert_downstream_material_stays_gate_and_harness_aware(&qa_skill, "skills/qa-only/SKILL.md");
 }

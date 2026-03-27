@@ -15,6 +15,15 @@ import {
   countOccurrences,
 } from './helpers/markdown-test-helpers.mjs';
 
+function assertHarnessAndGateAware(content, label) {
+  const hasHarnessAwareness = /(harness|provenance|execution evidence(?: path)?|approved plan path|task packets?|coverage matrix|source plan|source test plan)/i.test(content);
+  const hasGateAwareness = /(downstream .*gate|review gate|gate-review|finish-gate|gate-finish|workflow-routed)/i.test(content);
+  assert.ok(
+    hasHarnessAwareness && hasGateAwareness,
+    `${label} should keep QA/review handoffs harness-aware and downstream-gate-aware`,
+  );
+}
+
 test('every generated skill has a template and SKILL.md artifact', () => {
   const skills = listGeneratedSkills();
   assert.ok(skills.length > 0);
@@ -152,6 +161,14 @@ test('active public and generated surfaces do not advertise retired legacy insta
       `${skill} generated skill doc should not mention retired legacy install roots`,
     );
   }
+});
+
+test('checked-in downstream review and QA references stay harness-aware', () => {
+  const reviewPrompt = readUtf8(path.join(REPO_ROOT, 'skills/requesting-code-review/code-reviewer.md'));
+  const qaTaxonomy = readUtf8(path.join(REPO_ROOT, 'qa/references/issue-taxonomy.md'));
+
+  assertHarnessAndGateAware(reviewPrompt, 'skills/requesting-code-review/code-reviewer.md');
+  assertHarnessAndGateAware(qaTaxonomy, 'qa/references/issue-taxonomy.md');
 });
 
 test('workflow-status ambiguity snapshot stays checked in and is covered by workflow_runtime', () => {

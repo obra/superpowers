@@ -299,12 +299,18 @@ fn runtime_root_helper_reports_featureforge_dir_env_as_a_bounded_source() {
         &["USERPROFILE"],
         &[(
             "FEATUREFORGE_DIR",
-            explicit_root.path().to_str().expect("explicit root should be utf8"),
+            explicit_root
+                .path()
+                .to_str()
+                .expect("explicit root should be utf8"),
         )],
         &["repo", "runtime-root", "--json"],
         "repo runtime-root explicit featureforge_dir env success",
     );
-    let json = parse_json(&output, "repo runtime-root explicit featureforge_dir env success");
+    let json = parse_json(
+        &output,
+        "repo runtime-root explicit featureforge_dir env success",
+    );
 
     assert_eq!(json["resolved"], Value::Bool(true));
     assert_eq!(

@@ -3,6 +3,18 @@
   "title": "PlanExecutionStatus",
   "type": "object",
   "properties": {
+    "active_contract_fingerprint": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "active_contract_path": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "active_step": {
       "type": [
         "integer",
@@ -18,6 +30,9 @@
       ],
       "format": "uint32",
       "minimum": 0
+    },
+    "aggregate_evaluation_state": {
+      "$ref": "#/$defs/AggregateEvaluationState"
     },
     "blocking_step": {
       "type": [
@@ -35,6 +50,56 @@
       "format": "uint32",
       "minimum": 0
     },
+    "browser_qa_state": {
+      "$ref": "#/$defs/DownstreamFreshnessState"
+    },
+    "chunk_id": {
+      "$ref": "#/$defs/ChunkId"
+    },
+    "chunking_strategy": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ChunkingStrategy"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "completed_evaluator_kinds": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/EvaluatorKind"
+      }
+    },
+    "current_chunk_pivot_threshold": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    },
+    "current_chunk_retry_budget": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    },
+    "current_chunk_retry_count": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    },
+    "dependency_index_state": {
+      "type": "string"
+    },
+    "evaluator_policy": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/EvaluatorPolicyName"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "evidence_path": {
       "type": "string"
     },
@@ -44,8 +109,82 @@
     "execution_mode": {
       "type": "string"
     },
+    "execution_run_id": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ExecutionRunId"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "execution_started": {
       "type": "string"
+    },
+    "final_review_state": {
+      "$ref": "#/$defs/DownstreamFreshnessState"
+    },
+    "handoff_required": {
+      "type": "boolean"
+    },
+    "harness_phase": {
+      "$ref": "#/$defs/HarnessPhase"
+    },
+    "last_browser_qa_artifact_fingerprint": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "last_evaluation_evaluator_kind": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/EvaluatorKind"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "last_evaluation_report_fingerprint": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "last_evaluation_report_path": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "last_evaluation_verdict": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/EvaluationVerdict"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "last_final_review_artifact_fingerprint": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "last_release_docs_artifact_fingerprint": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "latest_authoritative_sequence": {
+      "type": "integer",
+      "format": "uint64",
+      "minimum": 0
     },
     "latest_base_sha": {
       "type": [
@@ -65,10 +204,68 @@
         "null"
       ]
     },
+    "non_passing_evaluator_kinds": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/EvaluatorKind"
+      }
+    },
+    "open_failed_criteria": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "pending_evaluator_kinds": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/EvaluatorKind"
+      }
+    },
     "plan_revision": {
       "type": "integer",
       "format": "uint32",
       "minimum": 0
+    },
+    "reason_codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "release_docs_state": {
+      "$ref": "#/$defs/DownstreamFreshnessState"
+    },
+    "repo_state_baseline_head_sha": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "repo_state_baseline_worktree_fingerprint": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "repo_state_drift_state": {
+      "type": "string"
+    },
+    "required_evaluator_kinds": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/EvaluatorKind"
+      }
+    },
+    "reset_policy": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ResetPolicy"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "resume_step": {
       "type": [
@@ -86,19 +283,142 @@
       "format": "uint32",
       "minimum": 0
     },
+    "review_stack": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string"
+      }
+    },
     "warning_codes": {
       "type": "array",
       "items": {
         "type": "string"
       }
+    },
+    "write_authority_holder": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "write_authority_state": {
+      "type": "string"
+    },
+    "write_authority_worktree": {
+      "type": [
+        "string",
+        "null"
+      ]
     }
   },
   "required": [
     "plan_revision",
+    "latest_authoritative_sequence",
+    "harness_phase",
+    "chunk_id",
+    "required_evaluator_kinds",
+    "completed_evaluator_kinds",
+    "pending_evaluator_kinds",
+    "non_passing_evaluator_kinds",
+    "aggregate_evaluation_state",
+    "current_chunk_retry_count",
+    "current_chunk_retry_budget",
+    "current_chunk_pivot_threshold",
+    "handoff_required",
+    "open_failed_criteria",
+    "write_authority_state",
+    "repo_state_drift_state",
+    "dependency_index_state",
+    "final_review_state",
+    "browser_qa_state",
+    "release_docs_state",
+    "reason_codes",
     "execution_mode",
     "execution_fingerprint",
     "evidence_path",
     "execution_started",
     "warning_codes"
-  ]
+  ],
+  "$defs": {
+    "AggregateEvaluationState": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "pending",
+        "fail",
+        "blocked"
+      ]
+    },
+    "ChunkId": {
+      "type": "string"
+    },
+    "ChunkingStrategy": {
+      "type": "string",
+      "enum": [
+        "task",
+        "task-group",
+        "whole-run"
+      ]
+    },
+    "DownstreamFreshnessState": {
+      "type": "string",
+      "enum": [
+        "not_required",
+        "missing",
+        "fresh",
+        "stale"
+      ]
+    },
+    "EvaluationVerdict": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "fail",
+        "blocked"
+      ]
+    },
+    "EvaluatorKind": {
+      "type": "string",
+      "enum": [
+        "spec_compliance",
+        "code_quality"
+      ]
+    },
+    "EvaluatorPolicyName": {
+      "type": "string"
+    },
+    "ExecutionRunId": {
+      "type": "string"
+    },
+    "HarnessPhase": {
+      "type": "string",
+      "enum": [
+        "implementation_handoff",
+        "execution_preflight",
+        "contract_drafting",
+        "contract_pending_approval",
+        "contract_approved",
+        "executing",
+        "evaluating",
+        "repairing",
+        "pivot_required",
+        "handoff_required",
+        "final_review_pending",
+        "qa_pending",
+        "document_release_pending",
+        "ready_for_branch_completion"
+      ]
+    },
+    "ResetPolicy": {
+      "type": "string",
+      "enum": [
+        "none",
+        "chunk-boundary",
+        "adaptive"
+      ]
+    }
+  }
 }

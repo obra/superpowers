@@ -1,0 +1,9 @@
+{
+  "dependency_index_state": "malformed",
+  "harness_phase": "executing",
+  "status": "blocked",
+  "reason_codes": [
+    "dependency_index_parse_error"
+  ],
+  "next_action": "repair_dependency_index"
+}

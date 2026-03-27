@@ -1,0 +1,8 @@
+{
+  "harness_phase": "execution_preflight",
+  "status": "pivot_required",
+  "reason_codes": [
+    "retry_budget_exhausted"
+  ],
+  "next_action": "pivot_plan"
+}

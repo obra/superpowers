@@ -1,0 +1,7 @@
+{
+  "dependency_index_state": "healthy",
+  "harness_phase": "executing",
+  "status": "clear",
+  "reason_codes": [],
+  "next_action": "continue_execution"
+}

@@ -68,6 +68,49 @@ function assertNoRuntimeFallbackExecution(content, label) {
   }
 }
 
+function assertForbidsDirectHelperCommandMutation(content, command, label) {
+  const quoted = `\`${command}\``;
+  const lines = content.split('\n');
+  const windows = [];
+  for (let i = 0; i < lines.length; i += 1) {
+    if (!lines[i].includes(quoted)) continue;
+    const start = Math.max(0, i - 3);
+    const end = Math.min(lines.length - 1, i + 3);
+    windows.push(lines.slice(start, end + 1).join(' '));
+  }
+  assert.ok(windows.length > 0, `${label} should explicitly mention ${quoted} in helper-boundary guidance`);
+  const hasBoundary = windows.some((window) => {
+    const hasProhibition = /(must not|do not|never|should not|cannot|can't)/i.test(window);
+    const hasDirectAction = /(invoke|call|run|execute|direct(?:ly)?)/i.test(window);
+    const hasOwnerActor = /(coordinator|controller|helper|runtime|harness|gate)/i.test(window);
+    const hasOwnerVerb = /(owns?|owned|authoritative|handles?|appl(?:y|ies)|executes?|invokes?|calls?|runs?|governs?)/i.test(window);
+    return (hasProhibition && hasDirectAction) || (hasOwnerActor && hasOwnerVerb);
+  });
+  assert.ok(
+    hasBoundary,
+    `${label} should keep ${quoted} inside coordinator/helper-owned authoritative mutation boundaries`,
+  );
+}
+
+function assertSeparatesCandidateArtifactsFromAuthoritativeMutations(content, label) {
+  const hasCandidateSurface = /(candidate|task packet|task-packet|packet context|handoff|coverage matrix)/i.test(content);
+  const hasAuthoritativeSurface = /(authoritative|helper-owned|coordinator-owned|execution state|execution evidence|review gate|finish-gate|gate-review)/i.test(content);
+  const hasBoundaryLanguage = /(must not|do not|never|may not|only|owns?|owned|instead of|fail closed)/i.test(content);
+  assert.ok(
+    hasCandidateSurface && hasAuthoritativeSurface && hasBoundaryLanguage,
+    `${label} should distinguish candidate/planning artifacts from authoritative runtime mutations`,
+  );
+}
+
+function assertDownstreamMaterialStaysGateAndHarnessAware(content, label) {
+  const hasGateAwareness = /(gate-review|review gate|finish-gate|gate-finish|fail closed)/i.test(content);
+  const hasHarnessAwareness = /(execution evidence|task-packet|coverage matrix|source plan|source test plan|workflow-routed|artifact)/i.test(content);
+  assert.ok(
+    hasGateAwareness && hasHarnessAwareness,
+    `${label} should stay downstream-gate-aware and harness-aware for review/QA handoffs`,
+  );
+}
+
 test('templates declare exactly one base or review preamble placeholder', () => {
   for (const skill of listGeneratedSkills()) {
     const template = readUtf8(getTemplatePath(skill));
@@ -304,6 +347,30 @@ test('workflow-critical skill descriptions encode approval-stage prerequisites',
       assert.match(description, pattern, `${skill} description should encode the required workflow gate`);
     }
   }
+});
+
+test('execution and review skill docs keep candidate artifacts and downstream gates explicit', () => {
+  const executingPlans = readUtf8(getSkillPath('executing-plans'));
+  const subagentSkill = readUtf8(getSkillPath('subagent-driven-development'));
+  const implementerPrompt = readUtf8(path.join(REPO_ROOT, 'skills/subagent-driven-development/implementer-prompt.md'));
+  const reviewSkill = readUtf8(getSkillPath('requesting-code-review'));
+  const qaSkill = readUtf8(getSkillPath('qa-only'));
+
+  for (const [content, label] of [
+    [executingPlans, 'skills/executing-plans/SKILL.md'],
+    [subagentSkill, 'skills/subagent-driven-development/SKILL.md'],
+    [implementerPrompt, 'skills/subagent-driven-development/implementer-prompt.md'],
+  ]) {
+    for (const command of ['record-contract', 'record-evaluation', 'record-handoff', 'begin', 'note', 'complete', 'reopen', 'transfer']) {
+      assertForbidsDirectHelperCommandMutation(content, command, label);
+    }
+  }
+
+  assertSeparatesCandidateArtifactsFromAuthoritativeMutations(executingPlans, 'skills/executing-plans/SKILL.md');
+  assertSeparatesCandidateArtifactsFromAuthoritativeMutations(subagentSkill, 'skills/subagent-driven-development/SKILL.md');
+  assertSeparatesCandidateArtifactsFromAuthoritativeMutations(implementerPrompt, 'skills/subagent-driven-development/implementer-prompt.md');
+  assertDownstreamMaterialStaysGateAndHarnessAware(reviewSkill, 'skills/requesting-code-review/SKILL.md');
+  assertDownstreamMaterialStaysGateAndHarnessAware(qaSkill, 'skills/qa-only/SKILL.md');
 });
 
 test('late-stage skill descriptions reject generic skip-ahead trigger phrases', () => {

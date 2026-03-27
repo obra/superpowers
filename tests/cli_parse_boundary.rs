@@ -289,6 +289,49 @@ fn plan_execution_recommend_rejects_unknown_strategy_flags_at_parse_boundary() {
 }
 
 #[test]
+fn plan_execution_task3_commands_require_their_artifact_flags_at_parse_boundary() {
+    let (repo_dir, state_dir) = init_repo("cli-boundary-task3-commands");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+
+    for (command_name, required_flag) in [
+        ("gate-contract", "--contract"),
+        ("record-contract", "--contract"),
+        ("gate-evaluator", "--evaluation"),
+        ("record-evaluation", "--evaluation"),
+        ("gate-handoff", "--handoff"),
+        ("record-handoff", "--handoff"),
+    ] {
+        let output = run_featureforge(
+            repo,
+            state,
+            &["plan", "execution", command_name, "--plan", PLAN_REL],
+            "plan execution task3 command missing required artifact flag",
+        );
+        let json = parse_failure_json(
+            &output,
+            "plan execution task3 command missing required artifact flag",
+        );
+
+        assert_eq!(
+            json["error_class"],
+            Value::String(String::from("InvalidCommandInput"))
+        );
+        let message = json["message"]
+            .as_str()
+            .expect("failure message should stay a string");
+        assert!(
+            message.contains("required arguments were not provided"),
+            "command {command_name} should be parsed and fail because a required argument is missing, got: {message}"
+        );
+        assert!(
+            message.contains(required_flag),
+            "command {command_name} should require {required_flag}, got: {message}"
+        );
+    }
+}
+
+#[test]
 fn repo_safety_check_rejects_unknown_bounded_values_at_parse_boundary() {
     let (repo_dir, state_dir) = init_repo("cli-boundary-repo-safety");
     let repo = repo_dir.path();

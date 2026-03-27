@@ -25,6 +25,21 @@ Implementation sub-agent / custom agent:
     do not reinterpret or weaken requirement statements.
     if the packet says `Open Questions: none` and ambiguity remains, stop and escalate.
 
+    ## Authoritative Mutation Boundary
+
+    Treat packet content, candidate edits, and handoff notes as candidate artifacts only.
+    They do not authorize direct runtime state mutation by implementer helpers/subagents.
+
+    Implementer helpers/subagents must not directly invoke `record-contract`; the coordinator/runtime/harness owns this authoritative mutation command.
+    Implementer helpers/subagents must not directly invoke `record-evaluation`; the coordinator/runtime/harness owns this authoritative mutation command.
+    Implementer helpers/subagents must not directly invoke `record-handoff`; the coordinator/runtime/harness owns this authoritative mutation command.
+    Implementer helpers/subagents must not directly invoke `begin`; the coordinator/runtime helper owns this authoritative execution-state mutation.
+    Implementer helpers/subagents must not directly invoke `note`; the coordinator/runtime helper owns this authoritative execution-state mutation.
+    Implementer helpers/subagents must not directly invoke `complete`; the coordinator/runtime helper owns this authoritative execution-state mutation.
+    Implementer helpers/subagents must not directly invoke `reopen`; the coordinator/runtime helper owns this authoritative execution-state mutation.
+    Implementer helpers/subagents must not directly invoke `transfer`; the coordinator/runtime helper owns this authoritative execution-state mutation.
+    If packet context and helper-reported execution state conflict, fail closed and escalate instead of mutating state directly.
+
     ## Your Job
 
     Once you're clear on requirements:

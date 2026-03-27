@@ -496,7 +496,9 @@ fn upgrade_skill_contract_tracks_doc_patterns_and_install_root_resolution() {
         &direct_windows_stdout,
         &format!(
             "FEATUREFORGE_RUNTIME_BIN={}",
-            direct_windows_install.join("bin/featureforge.exe").display()
+            direct_windows_install
+                .join("bin/featureforge.exe")
+                .display()
         ),
         "upgrade skill step 1 direct windows install",
     );
@@ -504,7 +506,9 @@ fn upgrade_skill_contract_tracks_doc_patterns_and_install_root_resolution() {
         &direct_windows_stdout,
         &format!(
             "INSTALL_RUNTIME_BIN={}",
-            direct_windows_install.join("bin/featureforge.exe").display()
+            direct_windows_install
+                .join("bin/featureforge.exe")
+                .display()
         ),
         "upgrade skill step 1 direct windows install",
     );

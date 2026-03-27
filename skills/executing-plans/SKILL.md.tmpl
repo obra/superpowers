@@ -47,6 +47,8 @@ Load plan, review critically, execute all tasks in a separate session, request f
 - calls `begin` before starting work on a plan step
 - calls `complete` after each completed step
 - calls `note` when work is interrupted or blocked
+- `record-contract`, `record-evaluation`, `record-handoff`, `begin`, `note`, `complete`, `reopen`, and `transfer` are authoritative helper mutation commands.
+- Coordinators and subagents may prepare candidate artifacts (for example task packets, coverage matrix context, and handoff drafts), but they must not directly invoke these commands; the runtime helper owns and executes execution-state mutations.
 - On the first `begin` for a revision whose plan still says `**Execution Mode:** none`, initialize execution with `--execution-mode featureforge:executing-plans`
 - The approved plan checklist is the execution progress record; do not create or maintain a separate authoritative task tracker.
 

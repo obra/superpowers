@@ -1,0 +1,8 @@
+{
+  "harness_phase": "handoff_required",
+  "status": "waiting_for_downstream_gates",
+  "reason_codes": [
+    "handoff_submission_pending"
+  ],
+  "next_action": "submit_handoff"
+}

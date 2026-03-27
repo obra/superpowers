@@ -1,0 +1,9 @@
+{
+  "dependency_index_state": "missing",
+  "harness_phase": "executing",
+  "status": "recovering",
+  "reason_codes": [
+    "dependency_index_stale"
+  ],
+  "next_action": "refresh_dependency_index"
+}

@@ -226,6 +226,19 @@ Before dispatching any implementation subagent:
 - On the first `begin` for a revision whose plan still says `**Execution Mode:** none`, initialize execution with `--execution-mode featureforge:subagent-driven-development`
 - The approved plan checklist is the execution progress record; do not create or maintain a separate authoritative task tracker.
 
+## Authoritative Mutation Boundary (Coordinator/Runtime/Harness Owned)
+
+- Task packets, candidate edits, and handoff notes are candidate artifacts. They are input context, not authoritative runtime mutation state.
+- Implementer helpers/subagents must not directly invoke `record-contract`; the coordinator/runtime/harness owns this authoritative mutation command.
+- Implementer helpers/subagents must not directly invoke `record-evaluation`; the coordinator/runtime/harness owns this authoritative mutation command.
+- Implementer helpers/subagents must not directly invoke `record-handoff`; the coordinator/runtime/harness owns this authoritative mutation command.
+- Implementer helpers/subagents must not directly invoke `begin`; the coordinator/runtime helper owns this authoritative execution-state mutation.
+- Implementer helpers/subagents must not directly invoke `note`; the coordinator/runtime helper owns this authoritative execution-state mutation.
+- Implementer helpers/subagents must not directly invoke `complete`; the coordinator/runtime helper owns this authoritative execution-state mutation.
+- Implementer helpers/subagents must not directly invoke `reopen`; the coordinator/runtime helper owns this authoritative execution-state mutation.
+- Implementer helpers/subagents must not directly invoke `transfer`; the coordinator/runtime helper owns this authoritative execution-state mutation.
+- If packet context conflicts with helper-reported execution state, fail closed and defer to coordinator-owned runtime checks instead of mutating state directly.
+
 ## Protected-Branch Repo-Write Gate
 
 The main agent owns the protected-branch gate for every repo-writing task slice, even when an implementer subagent does the coding.

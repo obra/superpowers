@@ -25,6 +25,27 @@ const PLAN_FIXTURES = [
 ];
 
 const STALE_PATH_PLAN_FIXTURE = 'plans/2026-01-22-document-review-system-stale-path.md';
+const REQUIRED_HARNESS_AWARE_DOWNSTREAM_PHASES = [
+  'final_review_pending',
+  'qa_pending',
+  'document_release_pending',
+  'ready_for_branch_completion',
+];
+const REQUIRED_DOWNSTREAM_FRESHNESS_FIELDS = [
+  'final_review_state',
+  'browser_qa_state',
+  'release_docs_state',
+  'last_final_review_artifact_fingerprint',
+  'last_browser_qa_artifact_fingerprint',
+  'last_release_docs_artifact_fingerprint',
+];
+const REQUIRED_EVALUATOR_VISIBILITY_FIELDS = [
+  'last_evaluation_evaluator_kind',
+  'required_evaluator_kinds',
+  'completed_evaluator_kinds',
+  'pending_evaluator_kinds',
+  'non_passing_evaluator_kinds',
+];
 const ACTIVE_DOC_PATHS = [
   'RELEASE-NOTES.md',
   'TODOS.md',
@@ -33,6 +54,55 @@ const ACTIVE_DOC_PATHS = [
   'docs/testing.md',
   'docs/test-suite-enhancement-plan.md',
   'tests/evals/README.md',
+];
+const TASK8_HARNESS_MATRIX_FIXTURES = [
+  'harness/pivot-required-status.json',
+  'harness/handoff-required-status.json',
+  'harness/candidate-execution-contract.md',
+  'harness/candidate-evaluation-report.md',
+  'harness/candidate-execution-handoff.md',
+  'harness/stale-execution-contract.md',
+  'harness/stale-evaluation-report.md',
+  'harness/repo-state-drift-status.json',
+  'harness/partial-authoritative-mutation-status.json',
+  'harness/dependency-index-mismatch-status.json',
+  'harness/dependency-index-clean.json',
+  'harness/dependency-index-stale.json',
+  'harness/dependency-index-malformed.json',
+  'harness/non-harness-review-artifact.md',
+  'harness/indexed-final-review-artifact.md',
+  'harness/indexed-browser-qa-artifact.md',
+  'harness/indexed-release-doc-artifact.md',
+  'harness/retention-prunable-stale-artifact.md',
+  'harness/retention-active-authoritative-artifact.md',
+];
+const DEPENDENCY_INDEX_STATUS_FIXTURES = [
+  'harness/dependency-index-mismatch-status.json',
+  'harness/dependency-index-clean.json',
+  'harness/dependency-index-stale.json',
+  'harness/dependency-index-malformed.json',
+];
+const REQUIRED_DEPENDENCY_INDEX_STATES = new Set([
+  'healthy',
+  'missing',
+  'malformed',
+  'inconsistent',
+  'recovering',
+]);
+const OBSERVABILITY_SEAM_EVENT_KINDS_FIXTURE = 'harness/observability-seam-event-kinds.json';
+const REQUIRED_ADVANCED_RUNTIME_EVENT_KINDS = [
+  'authoritative_mutation_recorded',
+  'blocked_state_cleared',
+  'blocked_state_entered',
+  'integrity_mismatch_detected',
+  'ordering_gap_detected',
+  'partial_mutation_recovered',
+  'replay_accepted',
+  'replay_conflict',
+  'repo_state_drift_detected',
+  'repo_state_reconciled',
+  'write_authority_conflict',
+  'write_authority_reclaimed',
 ];
 
 function retiredProductName() {
@@ -63,6 +133,53 @@ test('all workflow fixture files exist', () => {
     const filePath = path.join(FIXTURE_ROOT, relPath);
     assert.equal(true, readUtf8(filePath).length > 0, `${relPath} should exist`);
   }
+});
+
+test('task 8 harness fixture matrix files exist by exact filename before runtime assertions run', () => {
+  for (const relPath of TASK8_HARNESS_MATRIX_FIXTURES) {
+    const filePath = path.join(FIXTURE_ROOT, relPath);
+    assert.equal(true, fs.existsSync(filePath), `${relPath} should exist`);
+  }
+});
+
+test('task 8 dependency-index fixtures pin minimum status key and canonical state vocabulary', () => {
+  for (const relPath of DEPENDENCY_INDEX_STATUS_FIXTURES) {
+    const filePath = path.join(FIXTURE_ROOT, relPath);
+    assert.equal(true, fs.existsSync(filePath), `${relPath} should exist`);
+
+    const payload = JSON.parse(readUtf8(filePath));
+    assert.equal(typeof payload, 'object', `${relPath} should contain a JSON object`);
+    assert.notEqual(payload, null, `${relPath} should not be null`);
+    assert.equal(
+      typeof payload.dependency_index_state,
+      'string',
+      `${relPath} should include dependency_index_state`,
+    );
+    assert.equal(
+      REQUIRED_DEPENDENCY_INDEX_STATES.has(payload.dependency_index_state),
+      true,
+      `${relPath} should use canonical dependency_index_state vocabulary`,
+    );
+  }
+});
+
+test('observability seam fixture pins advanced runtime event_kind vocabulary', () => {
+  const fixturePath = path.join(FIXTURE_ROOT, OBSERVABILITY_SEAM_EVENT_KINDS_FIXTURE);
+  const payload = JSON.parse(readUtf8(fixturePath));
+  assert.equal(Array.isArray(payload.observability_event_examples), true);
+
+  const observedEventKinds = payload.observability_event_examples
+    .map((entry) => entry?.event_kind)
+    .filter((eventKind) => typeof eventKind === 'string' && eventKind.length > 0);
+  const missingEventKinds = REQUIRED_ADVANCED_RUNTIME_EVENT_KINDS.filter(
+    (eventKind) => !observedEventKinds.includes(eventKind),
+  );
+
+  assert.deepEqual(
+    missingEventKinds,
+    [],
+    'observability seam fixture should include advanced runtime-stable event_kind literals',
+  );
 });
 
 test('spec fixtures carry the required workflow headers', () => {
@@ -139,6 +256,69 @@ test('workflow runtime coverage retains argv0 alias and public operator parity',
   const content = readUtf8(path.join(REPO_ROOT, 'tests/workflow_runtime.rs'));
   assert.match(content, /workflow_status_argv0_alias_dispatches_to_canonical_tree/);
   assert.match(content, /canonical_workflow_public_json_commands_work_for_ready_plan/);
+});
+
+test('workflow fixture coverage pins harness-aware downstream phase/freshness/operator surfaces', () => {
+  const runtime = readUtf8(path.join(REPO_ROOT, 'tests/workflow_runtime.rs'));
+  const shellSmoke = readUtf8(path.join(REPO_ROOT, 'tests/workflow_shell_smoke.rs'));
+
+  for (const phase of REQUIRED_HARNESS_AWARE_DOWNSTREAM_PHASES) {
+    assert.match(
+      runtime,
+      new RegExp(`"${phase}"`),
+      `workflow runtime coverage should exercise harness-aware downstream phase ${phase}`,
+    );
+  }
+  assert.doesNotMatch(
+    runtime,
+    /"review_blocked"/,
+    'workflow runtime coverage should stop using the legacy review_blocked public phase label',
+  );
+
+  for (const field of REQUIRED_DOWNSTREAM_FRESHNESS_FIELDS) {
+    assert.match(
+      runtime,
+      new RegExp(`"${field}"`),
+      `workflow runtime coverage should expose downstream freshness/status field ${field}`,
+    );
+  }
+
+  for (const field of REQUIRED_EVALUATOR_VISIBILITY_FIELDS) {
+    assert.match(
+      runtime,
+      new RegExp(`"${field}"`),
+      `workflow runtime coverage should expose evaluator-kind surface ${field}`,
+    );
+  }
+
+  assert.match(runtime, /"next_action"/, 'workflow runtime coverage should keep next_action visible');
+  assert.match(runtime, /"reason_codes"/, 'workflow runtime coverage should keep reason_codes visible');
+  assert.match(
+    runtime,
+    /write_authority_holder/,
+    'workflow runtime coverage should keep write-authority metadata visible',
+  );
+  assert.match(
+    runtime,
+    /write_authority_conflict/,
+    'workflow runtime coverage should keep writer conflict visible through metadata and reason codes',
+  );
+  assert.doesNotMatch(
+    runtime,
+    /writer_conflict_pending|writer_conflict_phase|phase.*writer_conflict/,
+    'workflow runtime coverage should not introduce a dedicated writer-conflict public phase',
+  );
+
+  assert.match(
+    shellSmoke,
+    /workflow_phase_text_and_json_surfaces_match_harness_downstream_freshness/,
+    'workflow shell smoke coverage should pin phase text/JSON parity for harness downstream freshness',
+  );
+  assert.match(
+    shellSmoke,
+    /workflow_handoff_and_doctor_text_and_json_surfaces_match_harness_evaluator_and_reason_metadata/,
+    'workflow shell smoke coverage should pin handoff/doctor text/JSON parity for evaluator and reason metadata',
+  );
 });
 
 test('active docs reserve legacy attribution to the README provenance section only', () => {
