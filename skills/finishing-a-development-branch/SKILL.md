@@ -103,8 +103,6 @@ EOF
 )"
 ```
 
-Then: Cleanup worktree (Step 5)
-
 #### Option 3: Keep As-Is
 
 Report: "Keeping branch <name>. Worktree preserved at <path>."
@@ -135,7 +133,7 @@ Then: Cleanup worktree (Step 5)
 
 ### Step 5: Cleanup Worktree
 
-**For Options 1, 2, 4:**
+**For Options 1, 4:**
 
 Check if in worktree:
 ```bash
