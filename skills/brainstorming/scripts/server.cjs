@@ -155,15 +155,19 @@ function wrapInFrame(content) {
   return frameTemplate;
 }
 
-function getNewestScreen() {
-  const files = fs.readdirSync(CONTENT_DIR)
-    .filter(f => f.endsWith('.html'))
-    .map(f => {
-      const fp = path.join(CONTENT_DIR, f);
-      return { path: fp, mtime: fs.statSync(fp).mtime.getTime() };
-    })
-    .sort((a, b) => b.mtime - a.mtime);
-  return files.length > 0 ? files[0].path : null;
+async function getNewestScreen() {
+  const fileNames = await fs.promises.readdir(CONTENT_DIR);
+  const htmlFiles = fileNames.filter(f => f.endsWith('.html'));
+  const fileStats = [];
+
+  for (const f of htmlFiles) {
+    const fp = path.join(CONTENT_DIR, f);
+    const stat = await fs.promises.stat(fp);
+    fileStats.push({ path: fp, mtime: stat.mtime.getTime() });
+  }
+
+  fileStats.sort((a, b) => b.mtime - a.mtime);
+  return fileStats.length > 0 ? fileStats[0].path : null;
 }
 
 // ========== HTTP Request Handler ==========
@@ -388,15 +392,16 @@ const debounceTimers = new Map();
 
 // ========== Server Startup ==========
 
-function startServer() {
-  if (!fs.existsSync(CONTENT_DIR)) fs.mkdirSync(CONTENT_DIR, { recursive: true });
-  if (!fs.existsSync(STATE_DIR)) fs.mkdirSync(STATE_DIR, { recursive: true });
+async function startServer() {
+  await fs.promises.mkdir(CONTENT_DIR, { recursive: true });
+  await fs.promises.mkdir(STATE_DIR, { recursive: true });
 
   // Track known files to distinguish new screens from updates.
   // macOS fs.watch reports 'rename' for both new files and overwrites,
   // so we can't rely on eventType alone.
+  const contentFiles = await fs.promises.readdir(CONTENT_DIR);
   const knownFiles = new Set(
-    fs.readdirSync(CONTENT_DIR).filter(f => f.endsWith('.html'))
+    contentFiles.filter(f => f.endsWith('.html'))
   );
 
   const server = http.createServer(handleRequest);

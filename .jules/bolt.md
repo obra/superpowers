@@ -21,3 +21,7 @@
 ## 2026-03-26 - Avoid full-string regex matches in large files
 **Learning:** Using a regular expression like `/^---\n([\s\S]*?)\n---\n([\s\S]*)$/` to extract frontmatter from potentially large markdown files causes massive string allocation and high regex engine execution overhead because it captures the entire file body.
 **Action:** When extracting short chunks from the beginning of large files, use string primitives like `indexOf` and `slice` instead of regular expressions that match the entire remaining content.
+
+## 2026-03-27 - Async file stat reads
+**Learning:** `fs.statSync` and `fs.readdirSync` inside `getNewestScreen` block the event loop for every incoming request. Also, executing `Promise.all` on `fs.promises.stat` across a large directory can trigger `EMFILE` errors.
+**Action:** Process async file operations sequentially with a `for...of` loop and `fs.promises.stat` to maintain an unblocked event loop and prevent hitting open file limits.
