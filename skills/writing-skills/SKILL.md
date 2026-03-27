@@ -19,6 +19,8 @@ You write test cases (pressure scenarios with subagents), watch them fail (basel
 
 **Official guidance:** For Anthropic's official skill authoring best practices, see anthropic-best-practices.md. This document provides additional patterns and guidelines that complement the TDD-focused approach in this skill.
 
+**Codex note:** When working on Codex-specific skill scaffolding, packaging, or metadata files, use the platform-specific skill for folder layout and tooling. This skill remains authoritative for trigger wording, behavioral validation, and loophole-closing.
+
 ## What is a Skill?
 
 A **skill** is a reference guide for proven techniques, patterns, or tools. Skills help future Claude instances find and apply effective approaches.
@@ -96,9 +98,10 @@ skills/
 - Two required fields: `name` and `description` (see [agentskills.io/specification](https://agentskills.io/specification) for all supported fields)
 - Max 1024 characters total
 - `name`: Use letters, numbers, and hyphens only (no parentheses, special chars)
-- `description`: Third-person, describes ONLY when to use (NOT what it does)
+- `description`: Third-person, primarily describes when to use
   - Start with "Use when..." to focus on triggering conditions
   - Include specific symptoms, situations, and contexts
+  - A brief capability phrase is acceptable if it improves discovery
   - **NEVER summarize the skill's process or workflow** (see CSO section for why)
   - Keep under 500 characters if possible
 
@@ -147,9 +150,9 @@ Concrete results
 
 **Format:** Start with "Use when..." to focus on triggering conditions
 
-**CRITICAL: Description = When to Use, NOT What the Skill Does**
+**CRITICAL: Description should optimize for discovery and triggering, not summarize workflow**
 
-The description should ONLY describe triggering conditions. Do NOT summarize the skill's process or workflow in the description.
+The description should primarily describe triggering conditions. A brief capability phrase is acceptable when it improves discovery, but do NOT summarize the skill's process or workflow in the description.
 
 **Why this matters:** Testing revealed that when a description summarizes the skill's workflow, Claude may follow the description instead of reading the full skill content. A description saying "code review between tasks" caused Claude to do ONE review, even though the skill's flowchart clearly showed TWO reviews (spec compliance then code quality).
 
@@ -391,6 +394,8 @@ Edit skill without testing? Same violation.
 - Delete means delete
 
 **REQUIRED BACKGROUND:** The superpowers:test-driven-development skill explains why this matters. Same principles apply to documentation.
+
+**Validation note:** Structural checks such as naming, frontmatter shape, required files, or packaging validation do NOT prove that a skill teaches the intended behavior. Treat those checks as structural validation only. Behavioral validation still requires baseline testing and re-testing with realistic scenarios.
 
 ## Testing All Skill Types
 
