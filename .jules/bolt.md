@@ -17,3 +17,7 @@
 ## 2026-04-12 - Precalculate string slices for template injection
 **Learning:** Dynamically calling `indexOf` and `slice` on a large static template string (like `frame-template.html`) for every incoming request introduces unnecessary overhead (e.g. ~0.7ms vs ~0.17ms for wrapping 5MB content), even when bypassing `replace()`.
 **Action:** If the template and target insertion marker are static, precalculate and store the `start` and `end` slices at startup. Then, simply concatenate the precalculated chunks around the dynamic payload during requests.
+
+## 2026-03-26 - Avoid full-string regex matches in large files
+**Learning:** Using a regular expression like `/^---\n([\s\S]*?)\n---\n([\s\S]*)$/` to extract frontmatter from potentially large markdown files causes massive string allocation and high regex engine execution overhead because it captures the entire file body.
+**Action:** When extracting short chunks from the beginning of large files, use string primitives like `indexOf` and `slice` instead of regular expressions that match the entire remaining content.
