@@ -37,7 +37,15 @@ The Vidably custom skills are designed based on empirical research on multi-agen
 | Drift risk          | High — models optimize for agreement | Low — new code = fresh analysis                   |
 | Diminishing returns | After ~1.4 rounds                    | After 2-3 rounds (synthesis stops finding issues) |
 
-This is why local skills use 1 round (debate pattern) but the GH Action uses up to 3 rounds (re-review pattern). Round 2 catches issues introduced BY round 1 fixes. Round 3 uses a conservative policy ("only critical findings") to prevent diminishing returns.
+**Our decision:** We use up to 3 rounds everywhere — both local skills and GH Action — because both are re-review patterns (fresh content each round). We initially designed local skills with 1 round to be "fast," but realized that's optimizing for speed over quality with no research basis. A bad plan wastes more time than an extra review round.
+
+**Why not 1 round locally?** There's no quality argument for a different bar between local and CI. Both patterns review fresh content after fixes. The arXiv drift warning doesn't apply to re-review. If 3 rounds is the right number for CI quality, it's the right number for local quality.
+
+**Why not unlimited rounds?** Diminishing returns. Our data from PR #10 shows: round 1 found 5 issues, round 2 found 6 issues (in the fixed code), round 3 found 0 critical issues. The convergence signal is "zero accepted findings" — that's when we stop, regardless of round count. The 3-round cap prevents pathological cases.
+
+**Why the escalating policy (all → new-only → critical-only)?** Prevents the synthesis from endlessly polishing. Round 1 is the broad sweep. Round 2 catches issues introduced by round 1 fixes. Round 3 is a safety net for anything truly dangerous. This graduated approach matches our observed data: most value comes in rounds 1-2, round 3 is clean-up.
+
+**Why not the debate pattern (same content, multiple rounds)?** The arXiv paper is clear: debate performance degrades after ~1.4 rounds. Models start optimizing for agreement. We explicitly avoid this by ensuring each round reviews different content (the updated plan or diff after fixes). The skill instructions say "dispatch the UPDATED plan/diff" — never the same content twice.
 
 ### 4. Multi-model review catches 3-5x more bugs
 
@@ -92,13 +100,85 @@ This is why local skills use 1 round (debate pattern) but the GH Action uses up 
 
 **Implication:** Our exhaustive-research skill enforces research before decisions, but the Type 1/Type 2 triage ensures developers retain agency over when to apply the full process. The skill enhances human decision-making, not replaces it.
 
+## Design Decisions and Rejected Alternatives
+
+### Consensus scoring vs majority voting
+
+**Chosen:** Consensus scoring (Unanimous/Majority/Split/Solo tiers with severity × agreement weighting)
+
+**Rejected:** Simple majority voting (≥50% of models agree → accept)
+
+**Why:** The arXiv paper (2502.19130) shows consensus outperforms voting by +2.8% on knowledge tasks like code review. Voting treats all findings as equal; consensus allows a solo critical security finding to outrank a unanimous minor style issue. The calimero-network production system validates this — their `severity × agreement` formula dramatically reduced false positives vs flat lists.
+
+**Why not voting:** Voting is better for reasoning tasks (+13.2%), but code review is a knowledge task. Voting also creates a "tyranny of the majority" where a genuine insight from one model gets dismissed because the others missed it.
+
+### Independent dispatch vs shared context
+
+**Chosen:** Each model reviews independently with no access to other models' findings.
+
+**Rejected:** Sequential review where each model sees prior models' findings (debate/chain pattern).
+
+**Why:** The arXiv paper found independent initial drafts boost accuracy by +3.3%. Shared context causes premature convergence — models anchor on the first model's opinion rather than forming their own. The duh project specifically designed forced disagreement to counter this.
+
+**Why not shared context:** Sharing findings sounds efficient (avoid duplicates), but it introduces sycophantic agreement. Models seeing Claude's findings tend to agree with Claude rather than find new issues. The uncorrelated blind spots (Zylos) only work if models review independently.
+
+### Re-review pattern vs debate pattern
+
+**Chosen:** Up to 3 rounds of re-review (each round reviews UPDATED content after fixes)
+
+**Rejected:** Iterative debate (models discuss the same content back and forth)
+
+**Why:** The arXiv paper is unambiguous — debate performance degrades after ~1.4 rounds due to problem drift. But re-review doesn't suffer this because the content changes between rounds. Our PR #10 data confirms: round 1 found 5 issues, round 2 found 6 new issues in the fixed code. Round 2 was productive because it reviewed different code.
+
+**Why not debate:** Models optimizing for agreement is exactly the failure mode we want to avoid. Re-review avoids it structurally — there's nothing to "agree" on because the code changed.
+
+### Type 1/Type 2 triage vs always-on research
+
+**Chosen:** Triage gate — only Type 1 (consequential) decisions get the full exhaustive research treatment.
+
+**Rejected:** Apply exhaustive research to every decision regardless of impact.
+
+**Why:** The UCSD/Cornell study found professional developers "deploy explicit control strategies" — they need agency over when process is applied. Multiple review rounds (Gemini, Codex, our own experience) flagged that forcing 4+ options on trivial choices causes "skill fatigue" where developers learn to bypass the skill entirely. The triage gate channels the rigor where it matters.
+
+**Why not always-on:** A Type 2 decision (variable naming, UI spacing) has a reversal cost of minutes. Spending 5 minutes researching 4 options for it is a net time loss. The skill should amplify good judgment, not replace it with process.
+
+### Persona diversity fallback vs single-model review
+
+**Chosen:** When external CLIs aren't available, dispatch two Claude Code subagents with different system prompts (security-focused, maintainability-focused).
+
+**Rejected:** Just use one Claude Code review and accept the coverage gap.
+
+**Why:** The Zylos research shows different perspectives find different bugs. While two Claude subagents don't have truly uncorrelated architectures (same underlying model), persona prompting shifts attention and produces measurably different findings. The BryanHoo/superpowers-ccg project routes by domain (backend → Codex, frontend → Gemini) for the same reason.
+
+**Why not just one review:** The whole value proposition of multi-agent review is perspective diversity. Gracefully degrading to "one review" abandons the methodology entirely. Persona diversity is an imperfect substitute, but it's better than nothing.
+
+### File-based synthesis output vs PR comment posting
+
+**Chosen:** Synthesis agent writes `synthesis-summary.md`, workflow validates and posts it.
+
+**Rejected:** Synthesis agent posts PR comments directly via `gh pr comment`.
+
+**Why:** We discovered (the hard way, PR #10) that `claude-code-action` in agent mode silently denies write tool permissions — the agent tried 116 times to write/post and was denied every time. File-based output decouples creation from posting, allows the workflow to validate required sections exist, and posts a visible warning if the agent fails to produce the summary. The agent's job is analysis; the workflow's job is delivery.
+
+**Why not direct posting:** It worked conceptually but failed operationally. The action's permission model is designed for read-only review, not write operations. Even with `--allowedTools`, the file-based approach is more robust because it's verifiable before posting.
+
+### Anti-rationalization tables vs trust-the-model
+
+**Chosen:** Every skill includes an explicit table of "thoughts vs reality" for known failure modes.
+
+**Rejected:** Trust the model to follow instructions without listing escape hatches.
+
+**Why:** The obra/superpowers framework battle-tested this approach extensively. Their TDD skill has 12+ entries. In our own usage, the synthesis agent skipped writing the summary file twice — exactly the failure mode the anti-rationalization table was designed to prevent. These tables work because LLMs are excellent at rationalizing shortcuts; the tables pre-empt the specific rationalizations we've observed.
+
+**Why not trust the model:** We literally watched it happen. Two synthesis runs with "CRITICAL: you MUST write synthesis-summary.md" in the prompt, and the agent still didn't write it (partly due to permissions, partly due to rationalization). Anti-rationalization tables aren't paranoia — they're learned from real failure modes.
+
 ## How This Shaped Each Skill
 
-| Skill                               | Key Research Inputs                                                                                                                                |
-| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **vidably-exhaustive-research**     | Research-first (Osmani), Type 1/Type 2 triage (UCSD/Cornell), multi-model perspective gathering (arXiv independent drafts)                         |
-| **vidably-multi-agent-plan-review** | Independent dispatch (arXiv +3.3%), consensus scoring (arXiv +2.8%), severity × agreement (calimero-network), 1-round limit (arXiv, problem drift) |
-| **vidably-multi-agent-code-review** | Uncorrelated blind spots (Zylos), 3-5x bug detection (Zylos), anti-sycophancy (duh), graceful degradation to persona diversity                     |
+| Skill                               | Key Research Inputs                                                                                                                                                            |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **vidably-exhaustive-research**     | Research-first (Osmani), Type 1/Type 2 triage (UCSD/Cornell), multi-model perspective gathering (arXiv independent drafts)                                                     |
+| **vidably-multi-agent-plan-review** | Independent dispatch (arXiv +3.3%), consensus scoring (arXiv +2.8%), severity × agreement (calimero-network), up to 3 re-review rounds (arXiv re-review vs debate distinction) |
+| **vidably-multi-agent-code-review** | Uncorrelated blind spots (Zylos), 3-5x bug detection (Zylos), anti-sycophancy (duh), graceful degradation to persona diversity, file-based synthesis output (PR #10 failure)   |
 
 ## Further Reading
 
