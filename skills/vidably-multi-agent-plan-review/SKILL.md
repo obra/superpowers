@@ -7,13 +7,16 @@ description: "Use after writing or updating an implementation plan, before begin
 
 After writing a plan and before implementing it, dispatch the plan to multiple AI models for independent review. Each model reviews independently (no shared context — this prevents premature convergence). Then synthesize findings using consensus scoring.
 
-Research shows: multi-model debate catches 80% of bugs vs 53% for single model, and consensus-based approaches outperform voting for knowledge tasks like review (+2.8% accuracy). Independent initial drafts are critical — they boost accuracy by +3.3%.
+Research shows: multi-model consensus catches 80% of bugs vs 53% for single model (+2.8% accuracy). Independent initial drafts boost accuracy by +3.3%. Each round should review fresh content (re-review pattern), not debate the same content (which causes problem drift).
+
+**Round policy:** Up to 3 rounds. Each round reviews the UPDATED plan after fixes are applied. Round 3 is conservative (only critical findings). Stop early if a round produces zero changes. This is the same re-review pattern used in the GH Action — the quality bar should be the same locally and in CI.
 
 <HARD-GATE>
 Do NOT begin implementation until:
 1. At least 2 independent model reviews have been collected
 2. Consensus scoring has been applied to all findings
-3. The user has reviewed and approved the consensus map
+3. Accepted findings have been fixed and the plan re-reviewed (if fixes were made)
+4. The user has reviewed and approved the final consensus map
 </HARD-GATE>
 
 ## Step 1: Prepare the Plan for Review
@@ -115,13 +118,28 @@ Present findings to the user in this format:
 
 Then STOP and wait for user approval.
 
-## Step 5: Apply Approved Changes
+## Step 5: Apply Approved Changes and Re-Review
 
 After user reviews the consensus map:
 
-- Apply approved changes to the plan file
-- Note rejected findings and reasons
-- Re-read the updated plan to verify consistency
+1. Apply approved changes to the plan file
+2. Note rejected findings and reasons
+3. Re-read the updated plan to verify consistency
+
+**If changes were made, re-review (up to 3 rounds total):**
+
+4. Dispatch the UPDATED plan to all available models (Steps 2-4 again)
+5. This catches issues introduced by the fixes and gaps the first round missed
+6. Present the new consensus map to the user
+
+**Round policy:**
+
+- **Round 1:** Address all findings
+- **Round 2:** Address findings from round 2 reviews only (issues introduced by round 1 fixes, or issues missed in round 1)
+- **Round 3:** Only critical findings. Everything else is deferred.
+- **Stop early:** If a round produces zero accepted findings, the plan is ready. Don't force more rounds.
+
+This is the same re-review pattern the GH Action uses — each round reviews fresh content, not the same content debated again.
 
 ## Anti-Rationalization Table
 

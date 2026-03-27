@@ -7,7 +7,9 @@ description: "Use after implementation is complete and tests pass, before openin
 
 After implementation is complete and local tests pass, dispatch the diff to multiple AI models for independent review before opening a PR. This catches bugs across model blind spots BEFORE they reach CI — faster and cheaper than waiting for the GH Action review.
 
-Research shows: different model architectures have uncorrelated blind spots, and multi-model consensus catches 3-5x more bugs than single-pass review. Extended debate rounds hurt (problem drift), so we use exactly 1 round of independent review + synthesis.
+Research shows: different model architectures have uncorrelated blind spots, and multi-model consensus catches 3-5x more bugs than single-pass review. Each round should review fresh code after fixes are applied (re-review pattern), not debate the same code (which causes problem drift).
+
+**Round policy:** Up to 3 rounds. Each round reviews the UPDATED diff after fixes are applied. Round 3 is conservative (only critical). Stop early if a round produces zero changes. Same re-review pattern as the GH Action — the quality bar is the same locally and in CI.
 
 <HARD-GATE>
 Do NOT open a PR or invoke finishing-a-development-branch until:
@@ -15,7 +17,8 @@ Do NOT open a PR or invoke finishing-a-development-branch until:
 2. At least 2 independent model reviews have been collected
 3. Consensus scoring has been applied
 4. Critical/unanimous findings have been addressed
-5. The user has reviewed and approved the consensus map
+5. If fixes were applied, re-review has been run on the updated diff
+6. The user has reviewed and approved the final consensus map
 </HARD-GATE>
 
 ## Step 1: Prepare the Diff
@@ -149,7 +152,7 @@ Deduplicate findings across models. Apply consensus scoring:
 
 Then STOP and wait for user approval on which findings to fix.
 
-## Step 6: Apply Fixes and Re-Verify
+## Step 6: Apply Fixes, Re-Verify, and Re-Review
 
 For each approved finding:
 
@@ -157,14 +160,29 @@ For each approved finding:
 2. Re-run `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
 3. If any check fails, fix before continuing
 
-After all fixes are applied and verified, record skill usage for metrics:
+**If fixes were made, re-review (up to 3 rounds total):**
+
+4. Compute the UPDATED diff: `git diff main...HEAD`
+5. Dispatch to all available models again (Steps 3-5)
+6. Present the new consensus map to the user
+
+**Round policy:**
+
+- **Round 1:** Address all findings
+- **Round 2:** Address findings from round 2 reviews only (issues introduced by round 1 fixes, or issues missed in round 1)
+- **Round 3:** Only critical findings. Everything else is deferred.
+- **Stop early:** If a round produces zero accepted findings, the code is ready. Don't force more rounds.
+
+This is the same re-review pattern the GH Action uses — each round reviews fresh code, not the same code debated again.
+
+After all rounds complete and verification passes, record skill usage for metrics:
 
 - Append `vidably-multi-agent-code-review` to `.claude-skills-used` (gitignored)
 - The finishing-a-development-branch skill will include this in the PR body
 
 ## Step 7: Proceed to PR
 
-After review is complete and verified, invoke `finishing-a-development-branch` to open the PR. The PR will then receive a lighter-weight GH Action review (Claude + Security + Codex as a safety net), but most issues should already be caught by this local review.
+After review is complete and verified, invoke `finishing-a-development-branch` to open the PR. The PR will then receive the GH Action review (Claude + Security + Codex) as a safety net, but most issues should already be caught by this local review.
 
 ## Anti-Rationalization Table
 
