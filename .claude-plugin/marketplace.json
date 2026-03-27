@@ -12,23 +12,15 @@
       "name": "ultrapowers",
       "description": "Core workflow: research-driven development with brainstorming, deep research, skills auditing, TDD, and subagent-driven development",
       "version": "5.2.0",
-      "source": "./",
-      "author": {
-        "name": "Ennio Maldonado",
-        "url": "https://www.enniomaldonado.com"
-      }
+      "source": "./"
     },
     {
       "name": "ultrapowers-dev",
       "description": "53 development skills: language best practices for 13 languages, 12 framework patterns, 7 agentic patterns, plugin development, and architecture fundamentals",
       "version": "1.2.0",
       "source": {
-        "source": "github",
-        "repo": "ennio-datatide/ultrapowers-dev"
-      },
-      "author": {
-        "name": "Ennio Maldonado",
-        "url": "https://www.enniomaldonado.com"
+        "source": "url",
+        "url": "https://github.com/ennio-datatide/ultrapowers-dev.git"
       }
     },
     {
@@ -36,12 +28,8 @@
       "description": "38 business skills: marketing, SEO, copywriting, conversion optimization, compliance, finance, and sales enablement",
       "version": "1.0.0",
       "source": {
-        "source": "github",
-        "repo": "ennio-datatide/ultrapowers-business"
-      },
-      "author": {
-        "name": "Ennio Maldonado",
-        "url": "https://www.enniomaldonado.com"
+        "source": "url",
+        "url": "https://github.com/ennio-datatide/ultrapowers-business.git"
       }
     }
   ]
