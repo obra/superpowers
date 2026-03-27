@@ -26,7 +26,18 @@ The Vidably custom skills are designed based on empirical research on multi-agen
 
 **Finding:** Adding more discussion rounds **reduces** performance due to "problem drift" — models start optimizing for agreement rather than accuracy. Consensus converges naturally in 1.42 rounds on average.
 
-**Implication:** Our skills use exactly 1 round of independent review + synthesis. No iterative debate. The GH Action uses max 3 rounds, but only because synthesis may push code changes that introduce new issues — each round reviews a new diff, not the same one repeatedly.
+**Implication:** Our local skills use exactly 1 round of independent review + synthesis. No iterative debate.
+
+**Important distinction: debate vs re-review.** The arXiv finding applies to _debate_ (same models discussing the same content repeatedly). Our GH Action uses _re-review_ (each round reviews a NEW diff after synthesis pushes fixes). These are different patterns:
+
+|                     | Debate (what research tested)        | Re-review (what our GH Action does)               |
+| ------------------- | ------------------------------------ | ------------------------------------------------- |
+| Context             | Same content, shared findings        | New diff each round                               |
+| Goal                | Converge on opinion                  | Catch new/remaining bugs                          |
+| Drift risk          | High — models optimize for agreement | Low — new code = fresh analysis                   |
+| Diminishing returns | After ~1.4 rounds                    | After 2-3 rounds (synthesis stops finding issues) |
+
+This is why local skills use 1 round (debate pattern) but the GH Action uses up to 3 rounds (re-review pattern). Round 2 catches issues introduced BY round 1 fixes. Round 3 uses a conservative policy ("only critical findings") to prevent diminishing returns.
 
 ### 4. Multi-model review catches 3-5x more bugs
 
