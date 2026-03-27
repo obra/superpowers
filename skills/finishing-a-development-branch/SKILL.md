@@ -17,7 +17,7 @@ Guide completion of development work by presenting clear options and handling ch
 
 ### Step 1: Verify Tests
 
-**Run automated tests:**
+**Before presenting options, verify tests pass:**
 
 ```bash
 # Run project's test suite
@@ -33,7 +33,7 @@ Tests failing (<N> failures). Must fix before completing:
 Cannot proceed with merge/PR until tests pass.
 ```
 
-Stop. Don't proceed until fixed.
+Stop. Don't proceed to Step 2.
 
 **If tests pass:** Proceed to smoke check below (if project has a runnable process) or Step 2 (if pure library or documentation).
 
