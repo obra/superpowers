@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 # Start the brainstorm server and output connection info
-# Usage: start-server.sh [--project-dir <path>] [--host <bind-host>] [--url-host <display-host>] [--foreground] [--background]
+# Usage: start-server.sh [--state-dir <path>] [--project-dir <path>] [--host <bind-host>] [--url-host <display-host>] [--foreground] [--background]
 #
 # Starts server on a random high port, outputs JSON with URL.
 # Each session gets its own directory to avoid conflicts.
 #
 # Options:
-#   --project-dir <path>  Store session files under <path>/.superpowers/brainstorm/
-#                         instead of /tmp. Files persist after server stops.
+#   --state-dir <path>    Store session files under <path>/<session-id>/
+#                         (preferred). Can also be set via SUPERPOWERS_STATE_DIR.
+#   --project-dir <path>  Legacy compatibility option. Stores session files under
+#                         <path>/.superpowers/brainstorm/<session-id>/.
 #   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
 #                         Use 0.0.0.0 in remote/containerized environments.
 #   --url-host <host>     Hostname shown in returned URL JSON.
@@ -18,12 +20,17 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Parse arguments
 PROJECT_DIR=""
+STATE_BASE_DIR=""
 FOREGROUND="false"
 FORCE_BACKGROUND="false"
 BIND_HOST="127.0.0.1"
 URL_HOST=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --state-dir)
+      STATE_BASE_DIR="$2"
+      shift 2
+      ;;
     --project-dir)
       PROJECT_DIR="$2"
       shift 2
@@ -77,10 +84,21 @@ fi
 # Generate unique session directory
 SESSION_ID="$$-$(date +%s)"
 
-if [[ -n "$PROJECT_DIR" ]]; then
+# Base storage location priority:
+# 1) --state-dir
+# 2) --project-dir (legacy path shape)
+# 3) SUPERPOWERS_STATE_DIR
+# 4) XDG_DATA_HOME/superpowers/brainstorm
+# 5) ~/.local/share/superpowers/brainstorm
+if [[ -n "$STATE_BASE_DIR" ]]; then
+  SESSION_DIR="${STATE_BASE_DIR}/${SESSION_ID}"
+elif [[ -n "$PROJECT_DIR" ]]; then
   SESSION_DIR="${PROJECT_DIR}/.superpowers/brainstorm/${SESSION_ID}"
+elif [[ -n "${SUPERPOWERS_STATE_DIR:-}" ]]; then
+  SESSION_DIR="${SUPERPOWERS_STATE_DIR}/${SESSION_ID}"
 else
-  SESSION_DIR="/tmp/brainstorm-${SESSION_ID}"
+  USER_STATE_ROOT="${XDG_DATA_HOME:-$HOME/.local/share}"
+  SESSION_DIR="${USER_STATE_ROOT}/superpowers/brainstorm/${SESSION_ID}"
 fi
 
 STATE_DIR="${SESSION_DIR}/state"
@@ -134,7 +152,13 @@ for i in {1..50}; do
       sleep 0.1
     done
     if [[ "$alive" != "true" ]]; then
-      echo "{\"error\": \"Server started but was killed. Retry in a persistent terminal with: $SCRIPT_DIR/start-server.sh${PROJECT_DIR:+ --project-dir $PROJECT_DIR} --host $BIND_HOST --url-host $URL_HOST --foreground\"}"
+      retry_arg=""
+      if [[ -n "$STATE_BASE_DIR" ]]; then
+        retry_arg=" --state-dir $STATE_BASE_DIR"
+      elif [[ -n "$PROJECT_DIR" ]]; then
+        retry_arg=" --project-dir $PROJECT_DIR"
+      fi
+      echo "{\"error\": \"Server started but was killed. Retry in a persistent terminal with: $SCRIPT_DIR/start-server.sh${retry_arg} --host $BIND_HOST --url-host $URL_HOST --foreground\"}"
       exit 1
     fi
     grep "server-started" "$LOG_FILE" | head -1
