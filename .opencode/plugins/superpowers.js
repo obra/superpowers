@@ -68,9 +68,15 @@ When skills reference tools you don't have, substitute OpenCode equivalents:
 - \`Skill\` tool → OpenCode's native \`skill\` tool
 - \`Read\`, \`Write\`, \`Edit\`, \`Bash\` → Your native tools
 
+**Skill Naming Convention for OpenCode:**
+In OpenCode, superpowers skills MUST be loaded with the \`superpowers:\` prefix:
+- Use \`skill(name="superpowers:systematic-debugging")\` — NOT \`skill(name="systematic-debugging")\`
+- Use \`skill(name="superpowers:brainstorming")\` — NOT \`skill(name="brainstorming")\`
+- This applies to ALL superpowers skills. The bare skill names shown in using-superpowers (e.g., "systematic-debugging", "test-driven-development") are Claude Code conventions and will produce "Did you mean?" warnings in OpenCode.
+
 **Skills location:**
-Superpowers skills are in \`${configDir}/skills/superpowers/\`
-Use OpenCode's native \`skill\` tool to list and load skills.`;
+Superpowers skills are registered by this plugin automatically.
+Use OpenCode's native \`skill\` tool with the \`superpowers:\` prefix to load them.`;
 
     return `<EXTREMELY_IMPORTANT>
 You have superpowers.
