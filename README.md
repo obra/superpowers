@@ -1,5 +1,7 @@
 # Superpowers
 
+[![gitcgr](https://gitcgr.com/badge/obra/superpowers.svg)](https://gitcgr.com/obra/superpowers)
+
 Superpowers is a complete software development workflow for your coding agents, built on top of a set of composable "skills" and some initial instructions that make sure your agent uses them.
 
 ## How it works
