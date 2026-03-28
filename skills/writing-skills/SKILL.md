@@ -97,6 +97,8 @@ skills/
 - Max 1024 characters total
 - `name`: Use letters, numbers, and hyphens only (no parentheses, special chars)
 - `description`: Third-person, describes ONLY when to use (NOT what it does)
+  - Always wrap `description` values in double quotes for YAML safety
+  - Unquoted values containing `: ` (colon + space) can break parsing and make skills invisible to tooling
   - Start with "Use when..." to focus on triggering conditions
   - Include specific symptoms, situations, and contexts
   - **NEVER summarize the skill's process or workflow** (see CSO section for why)
@@ -105,7 +107,7 @@ skills/
 ```markdown
 ---
 name: Skill-Name-With-Hyphens
-description: Use when [specific triggering conditions and symptoms]
+description: "Use when [specific triggering conditions and symptoms]"
 ---
 
 # Skill Name
@@ -164,11 +166,17 @@ description: Use when executing plans - dispatches subagent per task with code r
 # ❌ BAD: Too much process detail
 description: Use for TDD - write test first, watch it fail, write minimal code, refactor
 
+# ❌ BAD: Unquoted string with `: ` can break YAML parsing
+description: Use when configuring X for production applications: tuning and sizing
+
 # ✅ GOOD: Just triggering conditions, no workflow summary
-description: Use when executing implementation plans with independent tasks in the current session
+description: "Use when executing implementation plans with independent tasks in the current session"
 
 # ✅ GOOD: Triggering conditions only
-description: Use when implementing any feature or bugfix, before writing implementation code
+description: "Use when implementing any feature or bugfix, before writing implementation code"
+
+# ✅ GOOD: Quote description values (safe convention)
+description: "Use when configuring X for production applications: tuning and sizing"
 ```
 
 **Content:**
@@ -190,10 +198,10 @@ description: I can help you with async tests when they're flaky
 description: Use when tests use setTimeout/sleep and are flaky
 
 # ✅ GOOD: Starts with "Use when", describes problem, no workflow
-description: Use when tests have race conditions, timing dependencies, or pass/fail inconsistently
+description: "Use when tests have race conditions, timing dependencies, or pass/fail inconsistently"
 
 # ✅ GOOD: Technology-specific skill with explicit trigger
-description: Use when using React Router and handling authentication redirects
+description: "Use when using React Router and handling authentication redirects"
 ```
 
 ### 2. Keyword Coverage
