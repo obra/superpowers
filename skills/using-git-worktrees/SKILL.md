@@ -98,7 +98,19 @@ git worktree add "$path" -b "$BRANCH_NAME"
 cd "$path"
 ```
 
-### 3. Run Project Setup
+### 3. Share Hooks with Worktree
+
+Git doesn't share hooks across worktrees — each worktree has its own hooks directory that starts empty. Symlink it to the main repo's hooks so pre-commit checks, commit-msg hooks, etc. all work:
+
+```bash
+git_dir="$(git rev-parse --git-dir)"
+common_dir="$(git rev-parse --git-common-dir)"
+if [ ! -d "$git_dir/hooks" ]; then
+  ln -s "$common_dir/hooks" "$git_dir/hooks"
+fi
+```
+
+### 4. Run Project Setup
 
 Auto-detect and run appropriate setup:
 
@@ -117,7 +129,7 @@ if [ -f pyproject.toml ]; then poetry install; fi
 if [ -f go.mod ]; then go mod download; fi
 ```
 
-### 4. Verify Clean Baseline
+### 5. Verify Clean Baseline
 
 Run tests to ensure worktree starts clean:
 
@@ -133,7 +145,7 @@ go test ./...
 
 **If tests pass:** Report ready.
 
-### 5. Report Location
+### 6. Report Location
 
 ```
 Worktree ready at <full-path>
