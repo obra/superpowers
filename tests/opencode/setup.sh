@@ -6,6 +6,22 @@ set -euo pipefail
 # Get the repository root (two levels up from tests/opencode/)
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 
+# Validate required repository paths early so failures are actionable.
+required_dir="$REPO_ROOT/skills"
+required_plugin="$REPO_ROOT/.opencode/plugins/superpowers.js"
+
+if [ ! -d "$required_dir" ]; then
+    echo "ERROR: Expected skills directory not found at $required_dir" >&2
+    echo "Hint: run tests from a full superpowers checkout." >&2
+    exit 1
+fi
+
+if [ ! -f "$required_plugin" ]; then
+    echo "ERROR: Expected OpenCode plugin not found at $required_plugin" >&2
+    echo "Hint: ensure .opencode/plugins/superpowers.js exists." >&2
+    exit 1
+fi
+
 # Create temp home directory for isolation
 export TEST_HOME=$(mktemp -d)
 export HOME="$TEST_HOME"
@@ -14,12 +30,11 @@ export OPENCODE_CONFIG_DIR="$TEST_HOME/.config/opencode"
 
 # Install plugin to test location
 mkdir -p "$HOME/.config/opencode/superpowers"
-cp -r "$REPO_ROOT/lib" "$HOME/.config/opencode/superpowers/"
-cp -r "$REPO_ROOT/skills" "$HOME/.config/opencode/superpowers/"
+cp -r "$required_dir" "$HOME/.config/opencode/superpowers/"
 
 # Copy plugin directory
 mkdir -p "$HOME/.config/opencode/superpowers/.opencode/plugins"
-cp "$REPO_ROOT/.opencode/plugins/superpowers.js" "$HOME/.config/opencode/superpowers/.opencode/plugins/"
+cp "$required_plugin" "$HOME/.config/opencode/superpowers/.opencode/plugins/"
 
 # Register plugin via symlink
 mkdir -p "$HOME/.config/opencode/plugins"
