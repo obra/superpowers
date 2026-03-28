@@ -37,6 +37,17 @@ digraph when_to_use {
 - Two-stage review after each task: spec compliance first, then code quality
 - Faster iteration (no human-in-loop between tasks)
 
+## Precondition: Scenario Spec
+
+Before starting implementation, check if a scenario spec exists for this feature:
+
+> Look for a file matching `docs/superpowers/specs/*-test-scenarios.md` related to this feature.
+>
+> - **If found:** Proceed. The scenario spec defines the acceptance criteria — tests should cover these scenarios.
+> - **If not found:** Ask the user: "No scenario spec found for this feature. Would you like to author one first with `superpowers:writing-test-scenario-specs`, or proceed without one?"
+>
+> This is a soft gate — the user can proceed without a spec for existing features or quick fixes.
+
 ## The Process
 
 ```dot
