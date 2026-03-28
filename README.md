@@ -72,6 +72,9 @@ Execution starts from an engineering-approved plan and the exact approved plan p
 
 - `featureforge:subagent-driven-development` when the approved tasks are independent and isolated-agent execution is viable
 - `featureforge:executing-plans` when the work should stay serial in the current session
+- recommendation output is topology-backed (`selected_topology`, stable `reason_codes`, and learned-downgrade reuse status), not heuristic-only skill selection
+
+`featureforge plan execution gate-finish --plan <approved-plan-path>` now derives execution-deviation review requirements from authoritative runtime-owned topology downgrade artifacts. Reason-code-only deviation hints are treated as corroborating metadata, not primary truth.
 
 `featureforge plan execution` is the execution preflight boundary for the approved plan.
 
@@ -81,6 +84,27 @@ Completion then flows through:
 - `featureforge:document-release`
 - optional `featureforge:qa-only` when browser-facing work or a test plan requires it
 - `featureforge:finishing-a-development-branch`
+
+### Runtime Strategy Checkpoints
+
+Execution strategy checkpoints are runtime-owned execution state, not planning-stage transitions.
+
+- `initial_dispatch` is required before repo-writing execution dispatch
+- `review_remediation` is recorded automatically for reviewable `gate-review` dispatches and remediation reopen events
+- `cycle_break` is recorded automatically when the same task reaches three reviewable dispatch/remediation cycles
+
+The approved plan path/revision remains fixed during execution. Runtime strategy may adjust topology, lane/worktree allocation, and remediation order without sending the workflow back to planning stages.
+
+The runtime records checkpoint history in authoritative harness state (`strategy_checkpoints`) and surfaces checkpoint status in `plan execution status`. Authoritative unit-review receipts are validated against the active `last_strategy_checkpoint_fingerprint`.
+
+Use `featureforge plan execution status --plan <approved-plan-path>` to inspect:
+
+- `strategy_state`
+- `strategy_checkpoint_kind`
+- `last_strategy_checkpoint_fingerprint`
+- `strategy_reset_required`
+
+Reviewers should treat this strategy-checkpoint layer as intentional runtime contract hardening. Do not remove it as "out of plan" cleanup when the implementation and tests prove runtime-owned enforcement behavior.
 
 ## Repository Layout
 
@@ -109,6 +133,15 @@ node scripts/gen-skill-docs.mjs --check
 node scripts/gen-agent-docs.mjs --check
 node --test tests/codex-runtime/*.test.mjs
 cargo nextest run --test workflow_runtime --test workflow_shell_smoke --test contracts_spec_plan --test runtime_instruction_contracts --test using_featureforge_skill --test session_config_slug --test repo_safety --test update_and_install --test plan_execution --test powershell_wrapper_resolution --test upgrade_skill
+```
+
+Refresh checked-in prebuilt binaries (release-facing artifacts) when runtime packaging or binary surfaces change:
+
+```bash
+FEATUREFORGE_PREBUILT_TARGET=darwin-arm64 scripts/refresh-prebuilt-runtime.sh
+FEATUREFORGE_PREBUILT_TARGET=windows-x64 FEATUREFORGE_PREBUILT_RUST_TARGET=x86_64-pc-windows-gnu scripts/refresh-prebuilt-runtime.sh
+cp target/aarch64-apple-darwin/release/featureforge bin/featureforge
+chmod +x bin/featureforge
 ```
 
 ## Updating

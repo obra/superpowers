@@ -200,31 +200,27 @@ fn resolve_with_context(
     let repo_local = git::discover_repo_identity(current_dir)
         .map(|identity| identity.repo_root)
         .unwrap_or_else(|_| current_dir.to_path_buf());
-    if seen.insert(repo_local.clone()) {
-        if let Some(resolved) =
+    if seen.insert(repo_local.clone())
+        && let Some(resolved) =
             validate_optional_candidate(&repo_local, CandidateSource::RepoLocal)?
-        {
-            return Ok(Some(resolved));
-        }
+    {
+        return Ok(Some(resolved));
     }
 
     let binary_adjacent = binary_adjacent_candidate(current_exe)?;
-    if seen.insert(binary_adjacent.clone()) {
-        if let Some(resolved) =
+    if seen.insert(binary_adjacent.clone())
+        && let Some(resolved) =
             validate_optional_candidate(&binary_adjacent, CandidateSource::BinaryAdjacent)?
-        {
-            return Ok(Some(resolved));
-        }
+    {
+        return Ok(Some(resolved));
     }
 
-    if let Some(canonical_install) = canonical_install_candidate() {
-        if seen.insert(canonical_install.clone()) {
-            if let Some(resolved) =
-                validate_optional_candidate(&canonical_install, CandidateSource::CanonicalInstall)?
-            {
-                return Ok(Some(resolved));
-            }
-        }
+    if let Some(canonical_install) = canonical_install_candidate()
+        && seen.insert(canonical_install.clone())
+        && let Some(resolved) =
+            validate_optional_candidate(&canonical_install, CandidateSource::CanonicalInstall)?
+    {
+        return Ok(Some(resolved));
     }
 
     Ok(None)

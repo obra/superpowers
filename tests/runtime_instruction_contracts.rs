@@ -1220,7 +1220,11 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
     );
     assert_file_contains(
         root.join("skills/using-featureforge/SKILL.md"),
-        "then follow the artifact-state workflow: plan-ceo-review -> writing-plans -> plan-eng-review -> execution.",
+        "Fresh-session spec review, plan review, and execution-preflight intents must still surface the bypass prompt first through `featureforge session-entry resolve --message-file <path>`.",
+    );
+    assert_file_contains(
+        root.join("skills/using-featureforge/SKILL.md"),
+        "plan-ceo-review -> writing-plans -> plan-fidelity review -> plan-eng-review -> execution.",
     );
     assert_file_contains(
         root.join("skills/using-featureforge/SKILL.md"),
@@ -1253,7 +1257,7 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
     );
     assert_file_contains(
         root.join("skills/writing-plans/SKILL.md"),
-        "Use the execution skill recommended by `featureforge plan execution recommend --plan <approved-plan-path>`",
+        "dispatch or resume a dedicated independent plan-fidelity reviewer before `plan-eng-review` becomes reachable.",
     );
     assert_file_contains(
         root.join("skills/writing-plans/SKILL.md"),
@@ -1315,6 +1319,10 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
     assert_file_contains(
         root.join("skills/plan-eng-review/SKILL.md"),
         "featureforge plan execution recommend --plan <approved-plan-path>",
+    );
+    assert_file_contains(
+        root.join("skills/plan-eng-review/SKILL.md"),
+        "Do not look for a markdown `## Plan Fidelity Review Receipt` block in the plan. The authoritative evidence is the runtime-owned receipt surfaced by workflow routing and `plan contract analyze-plan`.",
     );
     assert_file_contains(
         root.join("skills/plan-eng-review/SKILL.md"),

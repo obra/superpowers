@@ -8,7 +8,7 @@ description: Use when executing an engineering-approved FeatureForge implementat
 
 # Subagent-Driven Development
 
-Execute plan by dispatching a fresh sub-agent or custom agent per task, with two-stage review after each: spec compliance review first, then code quality review.
+Execute plan by dispatching a fresh sub-agent or custom agent per task, with two-stage review after each: spec compliance review first, then code quality review. The runtime-selected topology still wins: when it chooses worktree-backed parallel execution, follow the worktree-first orchestration model and keep each task in its isolated workspace.
 
 **Why isolated agents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
 
@@ -110,8 +110,8 @@ Before dispatching any implementation subagent:
    - stop on a default protected branch (`main`, `master`, `dev`, or `develop`) unless the user explicitly approves in-place execution
    - stop on detached HEAD
    - stop if merge conflicts, unresolved index entries, rebase, or cherry-pick state is present
-   - if the working tree is dirty, stop and ask the user to confirm the workspace is intentionally prepared
-6. Do not auto-clean the workspace and do not auto-create a worktree.
+   - if the working tree is dirty, stop unless the helper-selected topology and workspace-prepared context explicitly support isolated worktree-backed execution for this run
+6. Do not auto-clean the workspace. If the helper-selected topology or protected-branch gate requires isolated execution, provision or route through a worktree-backed workspace before dispatching repo-writing subagents.
 7. The later repo-safety checks still govern any additional protected branches declared through repo or user instructions.
 8. Run `featureforge plan execution preflight --plan <approved-plan-path>` before dispatching implementation subagents.
 9. If the preflight helper returns `allowed` `false`, stop and resolve the reported `failure_class`, `reason_codes`, and `diagnostics` before dispatching work.
@@ -125,6 +125,22 @@ Before dispatching any implementation subagent:
 - calls `note` when work is interrupted or blocked
 - On the first `begin` for a revision whose plan still says `**Execution Mode:** none`, initialize execution with `--execution-mode featureforge:subagent-driven-development`
 - The approved plan checklist is the execution progress record; do not create or maintain a separate authoritative task tracker.
+
+## Runtime Strategy Checkpoints (Automatic, Runtime-Owned)
+
+- Runtime strategy checkpoints are execution-owned state, not workflow-stage transitions. Keep public workflow phase in execution (`executing` or `repairing`) while strategy checkpoints change.
+- The approved plan/spec scope is fixed during execution. Runtime strategy checkpoints may change topology, lane/worktree allocation, subagent assignment, and remediation order, but must not change approved scope, source plan revision, or required coverage.
+- Required checkpoint kinds:
+  - `initial_dispatch`: required before repo-writing implementation starts. Runtime records it automatically on first dispatch/begin when missing.
+  - `review_remediation`: required after actionable independent-review findings and before remediation starts. Runtime records it automatically for each `gate-review` dispatch that targets reviewable execution work and when remediation reopens execution work.
+  - `cycle_break`: required when churn is detected. Runtime records it automatically when the same task hits three review-dispatch/reopen cycles in one run.
+- Cycle-break trigger: cap remediation churn at 3 cycles per task. On the third cycle, transition to `cycle_break` strategy automatically (no human replanning loopback).
+- Unit-review receipts and downstream final-review evidence must reference the checkpoint fingerprint from the runtime status for traceability.
+- Surface and respect runtime strategy status from `featureforge plan execution status --plan ...`:
+  - `strategy_state`
+  - `strategy_checkpoint_kind`
+  - `last_strategy_checkpoint_fingerprint`
+  - `strategy_reset_required`
 
 ## Authoritative Mutation Boundary (Coordinator/Runtime/Harness Owned)
 
@@ -337,7 +353,7 @@ Code reviewer: ✅ Approved
 - Start implementation on a default protected branch (`main`, `master`, `dev`, or `develop`) without explicit user consent
 - Skip reviews (spec compliance OR code quality)
 - Proceed with unfixed issues
-- Dispatch multiple implementation subagents in parallel (conflicts)
+- Dispatch multiple implementation subagents in parallel without helper-selected topology, isolated worktrees, and disjoint lane ownership
 - Make subagent re-read the plan/spec when the helper-built packet already defines the task contract
 - Replace the packet with controller-written semantic summaries or extra "scene-setting" requirements
 - Ignore subagent questions (answer before letting them proceed)
@@ -377,8 +393,8 @@ Code reviewer: ✅ Approved
 **Subagents should use:**
 - **featureforge:test-driven-development** - Subagents follow TDD for each task
 
-**Optional manual prep:**
-- **featureforge:using-git-worktrees** - Use when the user wants isolated workspace management before execution
+**Optional direct invocation:**
+- **featureforge:using-git-worktrees** - Use when the user explicitly wants isolated workspace management before execution, or when runtime-directed remediation says to prepare the workspace first
 
 **Alternative workflow:**
 - **featureforge:executing-plans** - Use for parallel session instead of same-session execution

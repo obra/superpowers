@@ -6,11 +6,24 @@ use schemars::JsonSchema;
 use schemars::schema_for;
 use serde::Serialize;
 
-use crate::cli::workflow::ArtifactKind;
-use crate::contracts::plan::AnalyzePlanReport;
-use crate::contracts::runtime::analyze_contract_report;
+use crate::cli::workflow::{ArtifactKind, PlanFidelityRecordArgs};
+use crate::contracts::plan::{
+    AnalyzePlanReport, evaluate_plan_fidelity_receipt_at_path, parse_plan_file,
+};
+use crate::contracts::runtime::{
+    analyze_contract_report, build_plan_fidelity_receipt, persist_plan_fidelity_receipt,
+    plan_fidelity_receipt_path,
+};
+use crate::contracts::spec::{SpecDocument, parse_spec_file, repo_relative_string};
 use crate::diagnostics::{DiagnosticError, FailureClass};
-use crate::git::{RepositoryIdentity, discover_repo_identity, stored_repo_root_matches_current};
+use crate::execution::topology::{
+    ensure_plan_fidelity_source_spec_is_approved, parse_plan_fidelity_review_artifact,
+    validate_plan_fidelity_review_artifact,
+};
+use crate::git::{
+    RepositoryIdentity, discover_repo_identity, discover_slug_identity,
+    stored_repo_root_matches_current,
+};
 use crate::paths::{RepoPath, featureforge_state_dir};
 use crate::session_entry;
 use crate::workflow::manifest::{
@@ -75,6 +88,17 @@ pub struct SessionEntryState {
     pub persisted: bool,
     pub failure_class: String,
     pub reason: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
+pub struct PlanFidelityRecord {
+    pub status: String,
+    pub receipt_path: String,
+    pub review_artifact_path: String,
+    pub review_stage: String,
+    pub reviewer_source: String,
+    pub reviewer_id: String,
+    pub verified_surfaces: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -194,7 +218,7 @@ impl WorkflowRuntime {
             updated_at: String::from("1970-01-01T00:00:00Z"),
         };
         if let Err(route) = self.persist_manifest_with_retry(manifest.clone(), &route) {
-            return Ok(route);
+            return Ok(*route);
         }
         self.manifest = Some(manifest);
         self.manifest_warning = None;
@@ -252,7 +276,7 @@ impl WorkflowRuntime {
             ArtifactKind::Plan => {
                 manifest.expected_plan_path = repo_path.clone();
                 manifest.status = String::from("plan_draft");
-                manifest.next_skill = String::from("featureforge:plan-eng-review");
+                manifest.next_skill = String::from("featureforge:writing-plans");
                 manifest.reason = String::from("missing_expected_plan,expect_set");
                 manifest.note = manifest.reason.clone();
             }
@@ -261,7 +285,7 @@ impl WorkflowRuntime {
         preview.manifest = Some(manifest.clone());
         let route = preview.status()?;
         if let Err(route) = self.persist_manifest_with_retry(manifest.clone(), &route) {
-            return Ok(route);
+            return Ok(*route);
         }
         self.manifest = Some(manifest);
         Ok(route)
@@ -339,7 +363,7 @@ impl WorkflowRuntime {
             route.note = route.reason.clone();
         }
         if let Err(route) = self.persist_manifest_with_retry(manifest.clone(), &route) {
-            return Ok(route);
+            return Ok(*route);
         }
         self.manifest = Some(manifest);
 
@@ -423,14 +447,14 @@ impl WorkflowRuntime {
         &mut self,
         manifest: WorkflowManifest,
         route: &WorkflowRoute,
-    ) -> Result<(), WorkflowRoute> {
+    ) -> Result<(), Box<WorkflowRoute>> {
         if save_manifest(&self.manifest_path, &manifest).is_ok() {
             return Ok(());
         }
         if save_manifest(&self.manifest_path, &manifest).is_ok() {
             return Ok(());
         }
-        Err(self.manifest_write_conflict_route(route))
+        Err(Box::new(self.manifest_write_conflict_route(route)))
     }
 
     fn manifest_write_conflict_route(&self, route: &WorkflowRoute) -> WorkflowRoute {
@@ -476,33 +500,32 @@ fn resolve_route(
     let manifest_path = runtime.manifest_path.display().to_string();
     let root = runtime.identity.repo_root.to_string_lossy().into_owned();
 
-    if let Some(manifest) = runtime.matching_manifest() {
-        if !manifest.expected_spec_path.is_empty()
-            && !runtime
-                .identity
-                .repo_root
-                .join(&manifest.expected_spec_path)
-                .is_file()
-            && !(refresh && spec_candidates.len() == 1)
-        {
-            return Ok(WorkflowRoute {
-                schema_version: 2,
-                status: String::from("needs_brainstorming"),
-                next_skill: String::from("featureforge:brainstorming"),
-                spec_path: manifest.expected_spec_path.clone(),
-                plan_path: String::new(),
-                contract_state: String::from("unknown"),
-                reason_codes: vec![String::from("missing_expected_spec")],
-                diagnostics: Vec::new(),
-                scan_truncated,
-                spec_candidate_count: 0,
-                plan_candidate_count: 0,
-                manifest_path,
-                root,
-                reason: String::from("missing_expected_spec"),
-                note: String::from("missing_expected_spec"),
-            });
-        }
+    if let Some(manifest) = runtime.matching_manifest()
+        && !manifest.expected_spec_path.is_empty()
+        && !runtime
+            .identity
+            .repo_root
+            .join(&manifest.expected_spec_path)
+            .is_file()
+        && !(refresh && spec_candidates.len() == 1)
+    {
+        return Ok(WorkflowRoute {
+            schema_version: 2,
+            status: String::from("needs_brainstorming"),
+            next_skill: String::from("featureforge:brainstorming"),
+            spec_path: manifest.expected_spec_path.clone(),
+            plan_path: String::new(),
+            contract_state: String::from("unknown"),
+            reason_codes: vec![String::from("missing_expected_spec")],
+            diagnostics: Vec::new(),
+            scan_truncated,
+            spec_candidate_count: 0,
+            plan_candidate_count: 0,
+            manifest_path,
+            root,
+            reason: String::from("missing_expected_spec"),
+            note: String::from("missing_expected_spec"),
+        });
     }
 
     if spec_candidates.is_empty() && !malformed_spec_candidates.is_empty() {
@@ -644,10 +667,10 @@ fn resolve_route(
             parse_workflow_plan_candidate(&path).ok()
         })
         .filter(|plan| {
-            plan.path
-                == runtime
-                    .matching_manifest()
-                    .map_or("", |manifest| manifest.expected_plan_path.as_str())
+            runtime
+                .matching_manifest()
+                .as_ref()
+                .is_some_and(|manifest| plan.path == manifest.expected_plan_path)
         });
     let exact_matching_plans = plan_candidates
         .iter()
@@ -739,6 +762,48 @@ fn resolve_route(
         let reason = compatibility_reason(&reason_codes);
 
         if plan.workflow_state == "Draft" {
+            let plan_fidelity_gate =
+                evaluate_plan_fidelity_gate(runtime, &approved_spec.path, &plan.path);
+            if plan_fidelity_gate.state != "pass" {
+                let mut combined_reason_codes = plan_fidelity_gate.reason_codes.clone();
+                for code in &reason_codes {
+                    if !combined_reason_codes
+                        .iter()
+                        .any(|existing| existing == code)
+                    {
+                        combined_reason_codes.push(code.clone());
+                    }
+                }
+                let mut combined_diagnostics =
+                    plan_fidelity_gate_diagnostics(&plan, &plan_fidelity_gate);
+                for diagnostic in &diagnostics {
+                    if combined_diagnostics
+                        .iter()
+                        .any(|existing| existing.code == diagnostic.code)
+                    {
+                        continue;
+                    }
+                    combined_diagnostics.push(diagnostic.clone());
+                }
+                let reason = compatibility_reason(&combined_reason_codes);
+                return Ok(WorkflowRoute {
+                    schema_version: 2,
+                    status: String::from("plan_draft"),
+                    next_skill: String::from("featureforge:writing-plans"),
+                    spec_path: approved_spec.path.clone(),
+                    plan_path: plan.path.clone(),
+                    contract_state,
+                    reason_codes: combined_reason_codes,
+                    diagnostics: combined_diagnostics,
+                    scan_truncated,
+                    spec_candidate_count,
+                    plan_candidate_count: 1,
+                    manifest_path,
+                    root,
+                    reason: reason.clone(),
+                    note: reason,
+                });
+            }
             return Ok(WorkflowRoute {
                 schema_version: 2,
                 status: String::from("plan_draft"),
@@ -763,10 +828,10 @@ fn resolve_route(
             && plan.workflow_state == "Engineering Approved"
             && report
                 .as_ref()
-                .map_or(false, |report| report.contract_state == "valid")
+                .is_some_and(|report| report.contract_state == "valid")
         {
             if read_only {
-                return Ok(resolve_route(runtime, false, false)?);
+                return resolve_route(runtime, false, false);
             }
             return Ok(WorkflowRoute {
                 schema_version: 2,
@@ -950,6 +1015,69 @@ pub fn report_contract_state(report: &AnalyzePlanReport) -> &str {
     &report.contract_state
 }
 
+pub fn record_plan_fidelity_receipt(
+    current_dir: &Path,
+    args: &PlanFidelityRecordArgs,
+) -> Result<PlanFidelityRecord, DiagnosticError> {
+    let repo_root = discover_slug_identity(current_dir).repo_root;
+    let state_dir = featureforge_state_dir();
+    let slug_identity = discover_slug_identity(repo_root.as_path());
+    let plan_path = normalize_repo_path(&args.plan)?;
+    let plan_abs = repo_root.join(&plan_path);
+    let plan = parse_plan_file(&plan_abs)?;
+    let spec_abs = repo_root.join(&plan.source_spec_path);
+    let spec = load_plan_fidelity_spec_document(&spec_abs)?;
+    ensure_plan_fidelity_source_spec_is_approved(&spec)?;
+    let review_artifact_path = normalize_repo_path(&args.review_artifact)?;
+    let review_artifact_abs = repo_root.join(&review_artifact_path);
+    let review_artifact =
+        parse_plan_fidelity_review_artifact(&review_artifact_abs, &review_artifact_path)?;
+    validate_plan_fidelity_review_artifact(&review_artifact, &plan, &spec)?;
+
+    let receipt =
+        build_plan_fidelity_receipt(crate::contracts::runtime::PlanFidelityReceiptInput {
+            spec: &spec,
+            plan: &plan,
+            verdict: &review_artifact.review_verdict,
+            review_artifact_path: &review_artifact.path,
+            review_artifact_fingerprint: &review_artifact.fingerprint,
+            reviewer_stage: &review_artifact.review_stage,
+            reviewer_source: &review_artifact.reviewer_source,
+            reviewer_id: &review_artifact.reviewer_id,
+            distinct_from_stages: &review_artifact.distinct_from_stages,
+            checked_surfaces: &review_artifact.verified_surfaces,
+            verified_requirement_ids: &review_artifact.verified_requirement_ids,
+        });
+    let receipt_path = plan_fidelity_receipt_path(
+        &state_dir,
+        &slug_identity.repo_slug,
+        &slug_identity.branch_name,
+    );
+    persist_plan_fidelity_receipt(&receipt_path, &receipt)?;
+
+    Ok(PlanFidelityRecord {
+        status: String::from("ok"),
+        receipt_path: receipt_path.display().to_string(),
+        review_artifact_path: review_artifact.path,
+        review_stage: receipt.reviewer_provenance.review_stage,
+        reviewer_source: receipt.reviewer_provenance.reviewer_source,
+        reviewer_id: receipt.reviewer_provenance.reviewer_id,
+        verified_surfaces: receipt.verification.checked_surfaces,
+    })
+}
+
+pub fn render_plan_fidelity_record(record: PlanFidelityRecord) -> String {
+    format!(
+        "Recorded plan-fidelity receipt at {}\nReview artifact: {}\nReview stage: {}\nReviewer source: {}\nReviewer id: {}\nVerified surfaces: {}",
+        record.receipt_path,
+        record.review_artifact_path,
+        record.review_stage,
+        record.reviewer_source,
+        record.reviewer_id,
+        record.verified_surfaces.join(", "),
+    )
+}
+
 pub fn write_workflow_schemas(output_dir: impl AsRef<Path>) -> Result<(), DiagnosticError> {
     let output_dir = output_dir.as_ref();
     fs::create_dir_all(output_dir).map_err(|err| {
@@ -1057,9 +1185,9 @@ fn parse_workflow_plan_candidate(path: &Path) -> Result<WorkflowPlanCandidate, D
         ("Draft", Some("writing-plans" | "plan-eng-review"))
             | ("Engineering Approved", Some("plan-eng-review"))
     );
-    let source_spec_path = parse_header_value(&source, "Source Spec")?
-        .trim_matches('`')
-        .to_owned();
+    let source_spec_path = normalize_repo_path(Path::new(
+        parse_header_value(&source, "Source Spec")?.trim_matches('`'),
+    ))?;
     let source_spec_revision = parse_header_value(&source, "Source Spec Revision")
         .ok()
         .and_then(|value| value.parse::<u32>().ok());
@@ -1080,10 +1208,10 @@ fn analyze_full_contract(
     spec: &WorkflowSpecCandidate,
     plan: &WorkflowPlanCandidate,
 ) -> Option<AnalyzePlanReport> {
-    if let Ok(json) = env::var("FEATUREFORGE_WORKFLOW_STATUS_TEST_ANALYZE_REPORT_JSON") {
-        if let Ok(report) = serde_json::from_str::<AnalyzePlanReport>(&json) {
-            return Some(report);
-        }
+    if let Ok(json) = env::var("FEATUREFORGE_WORKFLOW_STATUS_TEST_ANALYZE_REPORT_JSON")
+        && let Ok(report) = serde_json::from_str::<AnalyzePlanReport>(&json)
+    {
+        return Some(report);
     }
 
     let spec_path = repo_root.join(&spec.path);
@@ -1091,6 +1219,7 @@ fn analyze_full_contract(
     let spec_source = fs::read_to_string(spec_path).ok()?;
     let plan_source = fs::read_to_string(plan_path).ok()?;
     Some(analyze_contract_report(
+        repo_root,
         &spec.path,
         &plan.path,
         &spec_source,
@@ -1215,6 +1344,90 @@ fn workflow_diagnostics(
     diagnostics
 }
 
+fn evaluate_plan_fidelity_gate(
+    runtime: &WorkflowRuntime,
+    spec_path: &str,
+    plan_path: &str,
+) -> crate::contracts::plan::PlanFidelityGateReport {
+    let spec_abs = runtime.identity.repo_root.join(spec_path);
+    let plan_abs = runtime.identity.repo_root.join(plan_path);
+    let receipt_path = plan_fidelity_receipt_path(
+        &runtime.state_dir,
+        &discover_slug_identity(runtime.identity.repo_root.as_path()).repo_slug,
+        &runtime.identity.branch_name,
+    );
+
+    let plan = match parse_plan_file(&plan_abs) {
+        Ok(plan) => plan,
+        Err(_) => {
+            return crate::contracts::plan::PlanFidelityGateReport {
+                state: String::from("invalid"),
+                receipt_path: receipt_path.display().to_string(),
+                reviewer_stage: String::new(),
+                provenance_source: String::new(),
+                verified_requirement_index: false,
+                verified_execution_topology: false,
+                reason_codes: vec![String::from("plan_fidelity_verification_incomplete")],
+                diagnostics: vec![crate::contracts::plan::ContractDiagnostic {
+                    code: String::from("plan_fidelity_verification_incomplete"),
+                    message: String::from(
+                        "Plan-fidelity review cannot be validated until the draft plan parses cleanly.",
+                    ),
+                }],
+            };
+        }
+    };
+    let spec = match load_plan_fidelity_spec_document(&spec_abs) {
+        Ok(spec) => spec,
+        Err(_) => {
+            return crate::contracts::plan::PlanFidelityGateReport {
+                state: String::from("invalid"),
+                receipt_path: receipt_path.display().to_string(),
+                reviewer_stage: String::new(),
+                provenance_source: String::new(),
+                verified_requirement_index: false,
+                verified_execution_topology: false,
+                reason_codes: vec![String::from("plan_fidelity_verification_incomplete")],
+                diagnostics: vec![crate::contracts::plan::ContractDiagnostic {
+                    code: String::from("plan_fidelity_verification_incomplete"),
+                    message: String::from(
+                        "Plan-fidelity review cannot be validated until the source spec parses cleanly, including a parseable Requirement Index.",
+                    ),
+                }],
+            };
+        }
+    };
+
+    evaluate_plan_fidelity_receipt_at_path(
+        &spec,
+        &plan,
+        runtime.identity.repo_root.as_path(),
+        receipt_path,
+    )
+}
+
+fn load_plan_fidelity_spec_document(spec_abs: &Path) -> Result<SpecDocument, DiagnosticError> {
+    parse_spec_file(spec_abs)
+}
+
+fn plan_fidelity_gate_diagnostics(
+    plan: &WorkflowPlanCandidate,
+    gate: &crate::contracts::plan::PlanFidelityGateReport,
+) -> Vec<WorkflowDiagnostic> {
+    gate.diagnostics
+        .iter()
+        .map(|diagnostic| WorkflowDiagnostic {
+            code: diagnostic.code.clone(),
+            severity: String::from("error"),
+            artifact: plan.path.clone(),
+            message: diagnostic.message.clone(),
+            remediation: String::from(
+                "Return to featureforge:writing-plans, rerun the dedicated plan-fidelity reviewer, and record a fresh matching pass receipt.",
+            ),
+        })
+        .collect()
+}
+
 fn parse_header_value(source: &str, header: &str) -> Result<String, DiagnosticError> {
     let prefix = format!("**{header}:** ");
     source
@@ -1258,12 +1471,5 @@ fn is_plan_header_reason_code(code: &str) -> bool {
 }
 
 fn repo_relative_path(path: &Path) -> String {
-    let normalized = path.display().to_string().replace('\\', "/");
-    if let Some((_, suffix)) = normalized.split_once("/docs/") {
-        return format!("docs/{suffix}");
-    }
-    path.file_name()
-        .and_then(std::ffi::OsStr::to_str)
-        .unwrap_or_default()
-        .to_owned()
+    repo_relative_string(path)
 }

@@ -3,13 +3,15 @@ use std::fs::{self, OpenOptions};
 use std::io::{ErrorKind, Write};
 use std::path::PathBuf;
 
+use jiff::Timestamp;
 use serde_json::Value;
 
 use crate::diagnostics::{FailureClass, JsonFailure};
 use crate::execution::gates::{
-    require_active_contract_state, ActiveContractState, GateAuthorityState,
+    ActiveContractState, GateAuthorityState, require_active_contract_state,
 };
 use crate::execution::state::{ExecutionContext, ExecutionRuntime, GateState, NoteState};
+use crate::git::sha256_hex;
 use crate::paths::{harness_branch_root, harness_state_path, write_atomic as write_atomic_file};
 
 #[derive(Debug, Clone, Copy)]
@@ -188,6 +190,438 @@ impl AuthoritativeTransitionState {
         Ok(())
     }
 
+    pub(crate) fn ensure_initial_dispatch_strategy_checkpoint(
+        &mut self,
+        context: &ExecutionContext,
+        execution_mode: &str,
+    ) -> Result<(), JsonFailure> {
+        let has_checkpoint = self
+            .state_payload
+            .get("last_strategy_checkpoint_fingerprint")
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .is_some_and(|value| !value.is_empty());
+        if has_checkpoint {
+            return Ok(());
+        }
+        self.record_strategy_checkpoint(
+            context,
+            "initial_dispatch",
+            execution_mode,
+            &[],
+            "Runtime recorded the initial dispatch strategy checkpoint before repo-writing execution.",
+            false,
+        )?;
+        Ok(())
+    }
+
+    pub(crate) fn record_reopen_strategy_checkpoint(
+        &mut self,
+        context: &ExecutionContext,
+        execution_mode: &str,
+        task: u32,
+        step: u32,
+        reason: &str,
+    ) -> Result<(), JsonFailure> {
+        self.ensure_initial_dispatch_strategy_checkpoint(context, execution_mode)?;
+        if self.consume_task_dispatch_credit(task)? {
+            let cycle_count = self.current_task_cycle_count(task)?;
+            let cycle_breaking = self
+                .state_payload
+                .get("strategy_checkpoint_kind")
+                .and_then(Value::as_str)
+                .is_some_and(|value| value == "cycle_break")
+                || self
+                    .state_payload
+                    .get("strategy_state")
+                    .and_then(Value::as_str)
+                    .is_some_and(|value| value == "cycle_breaking");
+            let trigger_cycle = if cycle_count == 0 { 1 } else { cycle_count };
+            let trigger = vec![format!(
+                "task-{task}:step-{step}:cycle-{trigger_cycle}:reopen-after-review-dispatch"
+            )];
+            if cycle_breaking || cycle_count >= 3 {
+                self.record_strategy_checkpoint(
+                    context,
+                    "cycle_break",
+                    execution_mode,
+                    &trigger,
+                    "Runtime preserved cycle-break strategy while reopening remediation after a bound review dispatch.",
+                    true,
+                )?;
+                self.set_task_cycle_count(task, 0)?;
+            } else {
+                self.record_strategy_checkpoint(
+                    context,
+                    "review_remediation",
+                    execution_mode,
+                    &trigger,
+                    reason,
+                    false,
+                )?;
+            }
+            return Ok(());
+        }
+        let stale_bound_dispatch_tasks = self.clear_task_dispatch_credits()?;
+        for stale_task in stale_bound_dispatch_tasks {
+            self.decrement_task_cycle_count(stale_task)?;
+        }
+        let bound_unbound_dispatch = self.consume_unbound_dispatch_credit()?;
+        let cycle_count = self.increment_task_cycle_count(task)?;
+        let trigger = if bound_unbound_dispatch {
+            vec![format!(
+                "task-{task}:step-{step}:cycle-{cycle_count}:bound-from-unbound-review-dispatch"
+            )]
+        } else {
+            vec![format!("task-{task}:step-{step}:cycle-{cycle_count}")]
+        };
+        if cycle_count >= 3 {
+            self.record_strategy_checkpoint(
+                context,
+                "cycle_break",
+                execution_mode,
+                &trigger,
+                "Runtime detected churn after three reviewable dispatch/remediation cycles for the same task and auto-entered cycle-break strategy.",
+                true,
+            )?;
+            self.set_task_cycle_count(task, 0)?;
+        } else {
+            self.record_strategy_checkpoint(
+                context,
+                "review_remediation",
+                execution_mode,
+                &trigger,
+                reason,
+                false,
+            )?;
+        }
+        Ok(())
+    }
+
+    pub(crate) fn record_review_dispatch_strategy_checkpoint(
+        &mut self,
+        context: &ExecutionContext,
+        execution_mode: &str,
+        cycle_target: Option<(u32, u32)>,
+    ) -> Result<(), JsonFailure> {
+        self.ensure_initial_dispatch_strategy_checkpoint(context, execution_mode)?;
+        self.clear_dispatch_credits()?;
+        let (trigger, rationale, cycle_count, task_binding) = match cycle_target {
+            Some((task, step)) => {
+                let cycle_count = self.increment_task_cycle_count(task)?;
+                self.increment_task_dispatch_credit(task)?;
+                (
+                    vec![format!(
+                        "task-{task}:step-{step}:cycle-{cycle_count}:review-dispatch"
+                    )],
+                    format!(
+                        "Runtime recorded reviewer dispatch cycle tracking for task {task} step {step}."
+                    ),
+                    cycle_count,
+                    Some(task),
+                )
+            }
+            None => {
+                let pending = self.increment_unbound_dispatch_credit()?;
+                (
+                    vec![format!(
+                        "task-unbound:step-unbound:pending-review-dispatch-{pending}"
+                    )],
+                    String::from(
+                        "Runtime recorded reviewer dispatch cycle tracking for completed-plan review pending reopen task binding.",
+                    ),
+                    0,
+                    None,
+                )
+            }
+        };
+        if cycle_count >= 3 {
+            self.record_strategy_checkpoint(
+                context,
+                "cycle_break",
+                execution_mode,
+                &trigger,
+                "Runtime detected churn after three reviewable dispatch/remediation cycles for the same task and auto-entered cycle-break strategy.",
+                true,
+            )?;
+            if let Some(task) = task_binding {
+                self.set_task_cycle_count(task, 0)?;
+            }
+        } else {
+            self.record_strategy_checkpoint(
+                context,
+                "review_remediation",
+                execution_mode,
+                &trigger,
+                &rationale,
+                false,
+            )?;
+        }
+        Ok(())
+    }
+
+    fn record_strategy_checkpoint(
+        &mut self,
+        context: &ExecutionContext,
+        checkpoint_kind: &str,
+        execution_mode: &str,
+        trigger_fingerprints: &[String],
+        rationale: &str,
+        cycle_breaking: bool,
+    ) -> Result<String, JsonFailure> {
+        let execution_run_id = self
+            .state_payload
+            .get("run_identity")
+            .and_then(Value::as_object)
+            .and_then(|run_identity| run_identity.get("execution_run_id"))
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .unwrap_or("unknown-run")
+            .to_owned();
+        let selected_topology = selected_topology_from_execution_mode(execution_mode);
+        let lane_decomposition = context
+            .plan_document
+            .tasks
+            .iter()
+            .map(|task| format!("task-{}", task.number))
+            .collect::<Vec<_>>();
+        let lane_owner_map = lane_decomposition
+            .iter()
+            .map(|lane| format!("{lane}=runtime"))
+            .collect::<Vec<_>>();
+        let worktree_plan = if selected_topology == "worktree-backed-parallel" {
+            "worktree-backed-isolated-lanes"
+        } else {
+            "single-worktree-serialized"
+        };
+        let subagent_dispatch_plan = if selected_topology == "worktree-backed-parallel" {
+            "parallel-lane-owned-subagents"
+        } else {
+            "serial-single-lane-subagent"
+        };
+        let acceptance_requirements = vec![
+            String::from("preflight_accepted"),
+            String::from("approved_plan_revision_bound"),
+        ];
+        let review_requirements = vec![
+            String::from("dedicated_final_review"),
+            String::from("gate_finish"),
+        ];
+        let generated_at = Timestamp::now().to_string();
+        let trigger_text = if trigger_fingerprints.is_empty() {
+            String::from("none")
+        } else {
+            trigger_fingerprints.join("|")
+        };
+        let fingerprint = sha256_hex(
+            format!(
+                "plan={}\nplan_revision={}\nrun={execution_run_id}\ncheckpoint_kind={checkpoint_kind}\nselected_topology={selected_topology}\ntriggers={trigger_text}\nlane_decomposition={}\nlane_owner_map={}\nworktree_plan={worktree_plan}\nsubagent_dispatch_plan={subagent_dispatch_plan}\nacceptance={}\nreview={}\nrationale={}\n",
+                context.plan_rel,
+                context.plan_document.plan_revision,
+                lane_decomposition.join(","),
+                lane_owner_map.join(","),
+                acceptance_requirements.join(","),
+                review_requirements.join(","),
+                rationale.trim()
+            )
+            .as_bytes(),
+        );
+
+        let checkpoint = serde_json::json!({
+            "source_plan_path": context.plan_rel,
+            "source_plan_revision": context.plan_document.plan_revision,
+            "execution_run_id": execution_run_id,
+            "trigger_fingerprints": trigger_fingerprints,
+            "checkpoint_kind": checkpoint_kind,
+            "selected_topology": selected_topology,
+            "lane_decomposition": lane_decomposition,
+            "lane_owner_map": lane_owner_map,
+            "worktree_plan": worktree_plan,
+            "subagent_dispatch_plan": subagent_dispatch_plan,
+            "acceptance_requirements": acceptance_requirements,
+            "review_requirements": review_requirements,
+            "rationale": rationale.trim(),
+            "generated_at": generated_at,
+            "fingerprint": fingerprint,
+        });
+
+        let root = self.root_object_mut()?;
+        let checkpoints = root
+            .entry(String::from("strategy_checkpoints"))
+            .or_insert_with(|| Value::Array(Vec::new()));
+        let Some(checkpoints) = checkpoints.as_array_mut() else {
+            return Err(JsonFailure::new(
+                FailureClass::MalformedExecutionState,
+                "Authoritative harness strategy_checkpoints must be a JSON array.",
+            ));
+        };
+        checkpoints.push(checkpoint);
+        root.insert(
+            String::from("strategy_state"),
+            Value::String(if cycle_breaking {
+                String::from("cycle_breaking")
+            } else {
+                String::from("ready")
+            }),
+        );
+        root.insert(
+            String::from("strategy_checkpoint_kind"),
+            Value::String(checkpoint_kind.to_owned()),
+        );
+        root.insert(
+            String::from("last_strategy_checkpoint_fingerprint"),
+            Value::String(fingerprint.clone()),
+        );
+        root.insert(String::from("strategy_reset_required"), Value::Bool(false));
+        self.dirty = true;
+        Ok(fingerprint)
+    }
+
+    fn increment_task_cycle_count(&mut self, task: u32) -> Result<u64, JsonFailure> {
+        let root = self.root_object_mut()?;
+        let cycle_counts = root
+            .entry(String::from("strategy_cycle_counts"))
+            .or_insert_with(|| Value::Object(serde_json::Map::new()));
+        let Some(cycle_counts) = cycle_counts.as_object_mut() else {
+            return Err(JsonFailure::new(
+                FailureClass::MalformedExecutionState,
+                "Authoritative harness strategy_cycle_counts must be a JSON object.",
+            ));
+        };
+        let key = format!("task-{task}");
+        let current = cycle_counts.get(&key).and_then(Value::as_u64).unwrap_or(0);
+        let next = current.saturating_add(1);
+        cycle_counts.insert(key, Value::Number(next.into()));
+        self.dirty = true;
+        Ok(next)
+    }
+
+    fn current_task_cycle_count(&mut self, task: u32) -> Result<u64, JsonFailure> {
+        let root = self.root_object_mut()?;
+        let cycle_counts = root
+            .entry(String::from("strategy_cycle_counts"))
+            .or_insert_with(|| Value::Object(serde_json::Map::new()));
+        let Some(cycle_counts) = cycle_counts.as_object_mut() else {
+            return Err(JsonFailure::new(
+                FailureClass::MalformedExecutionState,
+                "Authoritative harness strategy_cycle_counts must be a JSON object.",
+            ));
+        };
+        Ok(cycle_counts
+            .get(&format!("task-{task}"))
+            .and_then(Value::as_u64)
+            .unwrap_or(0))
+    }
+
+    fn decrement_task_cycle_count(&mut self, task: u32) -> Result<(), JsonFailure> {
+        let current = self.current_task_cycle_count(task)?;
+        if current == 0 {
+            return Ok(());
+        }
+        self.set_task_cycle_count(task, current.saturating_sub(1))
+    }
+
+    fn set_task_cycle_count(&mut self, task: u32, value: u64) -> Result<(), JsonFailure> {
+        let root = self.root_object_mut()?;
+        let cycle_counts = root
+            .entry(String::from("strategy_cycle_counts"))
+            .or_insert_with(|| Value::Object(serde_json::Map::new()));
+        let Some(cycle_counts) = cycle_counts.as_object_mut() else {
+            return Err(JsonFailure::new(
+                FailureClass::MalformedExecutionState,
+                "Authoritative harness strategy_cycle_counts must be a JSON object.",
+            ));
+        };
+        cycle_counts.insert(format!("task-{task}"), Value::Number(value.into()));
+        self.dirty = true;
+        Ok(())
+    }
+
+    fn dispatch_credit_counts_mut(
+        &mut self,
+    ) -> Result<&mut serde_json::Map<String, Value>, JsonFailure> {
+        let root = self.root_object_mut()?;
+        let credits = root
+            .entry(String::from("strategy_review_dispatch_credits"))
+            .or_insert_with(|| Value::Object(serde_json::Map::new()));
+        credits.as_object_mut().ok_or_else(|| {
+            JsonFailure::new(
+                FailureClass::MalformedExecutionState,
+                "Authoritative harness strategy_review_dispatch_credits must be a JSON object.",
+            )
+        })
+    }
+
+    fn increment_task_dispatch_credit(&mut self, task: u32) -> Result<u64, JsonFailure> {
+        let key = format!("task-{task}");
+        let credits = self.dispatch_credit_counts_mut()?;
+        credits.insert(key, Value::Number(1_u64.into()));
+        self.dirty = true;
+        Ok(1)
+    }
+
+    fn consume_task_dispatch_credit(&mut self, task: u32) -> Result<bool, JsonFailure> {
+        let key = format!("task-{task}");
+        let credits = self.dispatch_credit_counts_mut()?;
+        if !credits.contains_key(&key) {
+            return Ok(false);
+        }
+        credits.remove(&key);
+        self.dirty = true;
+        Ok(true)
+    }
+
+    fn increment_unbound_dispatch_credit(&mut self) -> Result<u64, JsonFailure> {
+        let credits = self.dispatch_credit_counts_mut()?;
+        credits.insert(String::from("unbound"), Value::Number(1_u64.into()));
+        self.dirty = true;
+        Ok(1)
+    }
+
+    fn consume_unbound_dispatch_credit(&mut self) -> Result<bool, JsonFailure> {
+        let credits = self.dispatch_credit_counts_mut()?;
+        let key = String::from("unbound");
+        if !credits.contains_key(&key) {
+            return Ok(false);
+        }
+        credits.remove(&key);
+        self.dirty = true;
+        Ok(true)
+    }
+
+    fn clear_dispatch_credits(&mut self) -> Result<(), JsonFailure> {
+        let credits = self.dispatch_credit_counts_mut()?;
+        if credits.is_empty() {
+            return Ok(());
+        }
+        credits.clear();
+        self.dirty = true;
+        Ok(())
+    }
+
+    fn clear_task_dispatch_credits(&mut self) -> Result<Vec<u32>, JsonFailure> {
+        let credits = self.dispatch_credit_counts_mut()?;
+        let keys = credits
+            .keys()
+            .filter(|key| key.starts_with("task-"))
+            .cloned()
+            .collect::<Vec<_>>();
+        if keys.is_empty() {
+            return Ok(Vec::new());
+        }
+        let tasks = keys
+            .iter()
+            .filter_map(|key| key.strip_prefix("task-"))
+            .filter_map(|value| value.parse::<u32>().ok())
+            .collect::<Vec<_>>();
+        for key in keys {
+            credits.remove(&key);
+        }
+        self.dirty = true;
+        Ok(tasks)
+    }
+
     pub(crate) fn evidence_provenance(&self) -> StepEvidenceProvenance {
         StepEvidenceProvenance {
             source_contract_path: json_string(&self.state_payload, "active_contract_path"),
@@ -336,6 +770,15 @@ pub(crate) fn enforce_authoritative_phase(
     let Some(authority) = authority else {
         return Ok(());
     };
+    if json_bool(&authority.state_payload, "strategy_reset_required") {
+        return Err(JsonFailure::new(
+            FailureClass::BlockedOnPlanPivot,
+            format!(
+                "{} is blocked while runtime strategy reset is required.",
+                command.as_str()
+            ),
+        ));
+    }
     let phase = authority
         .phase
         .as_deref()
@@ -481,6 +924,10 @@ fn json_u64(payload: &Value, key: &str) -> u64 {
     payload.get(key).and_then(Value::as_u64).unwrap_or(0)
 }
 
+fn json_bool(payload: &Value, key: &str) -> bool {
+    payload.get(key).and_then(Value::as_bool).unwrap_or(false)
+}
+
 fn json_string_array(payload: &Value, key: &str) -> Vec<String> {
     payload
         .get(key)
@@ -495,4 +942,11 @@ fn json_string_array(payload: &Value, key: &str) -> Vec<String> {
                 .collect::<Vec<_>>()
         })
         .unwrap_or_default()
+}
+
+fn selected_topology_from_execution_mode(execution_mode: &str) -> &'static str {
+    match execution_mode.trim() {
+        "featureforge:subagent-driven-development" => "worktree-backed-parallel",
+        _ => "conservative-fallback",
+    }
 }

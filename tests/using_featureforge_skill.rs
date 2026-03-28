@@ -408,6 +408,44 @@ fn using_featureforge_skill_supported_entry_routing_matches_runtime_contract() {
         Value::String(String::from("existing_bypassed"))
     );
 
+    for (session_key, message) in [
+        (
+            "fresh-spec-review-intent",
+            "Please review this draft spec from a fresh session.\n",
+        ),
+        (
+            "fresh-plan-review-intent",
+            "Please review this draft plan from a fresh session.\n",
+        ),
+        (
+            "fresh-execution-preflight-intent",
+            "Please start implementation from the approved plan in this fresh session.\n",
+        ),
+    ] {
+        let fresh_output =
+            simulate_supported_entry(state, home, &preamble, &normal_stack, session_key, message);
+        assert_eq!(
+            fresh_output["helper_outcome"],
+            Value::String(String::from("needs_user_choice")),
+            "{session_key} should surface the bypass prompt before any later routing"
+        );
+        assert_eq!(
+            fresh_output["first_response_kind"],
+            Value::String(String::from("bypass_prompt")),
+            "{session_key} should surface the bypass prompt first"
+        );
+        assert_eq!(
+            fresh_output["normal_stack_started"],
+            Value::Bool(false),
+            "{session_key} should not enter the normal stack before the bypass decision"
+        );
+        assert_eq!(
+            fresh_output["decision_source"],
+            Value::String(String::from("missing")),
+            "{session_key} should stay a missing-decision fresh entry"
+        );
+    }
+
     let reentry_path = canonical_decision_path(state, "reentry-entry");
     write_file(&reentry_path, "bypassed\n");
     let reentry_output = simulate_supported_entry(

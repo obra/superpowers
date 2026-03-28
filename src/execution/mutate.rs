@@ -8,16 +8,18 @@ use sha2::{Digest, Sha256};
 use crate::cli::plan_execution::{BeginArgs, CompleteArgs, NoteArgs, ReopenArgs, TransferArgs};
 use crate::diagnostics::{FailureClass, JsonFailure};
 use crate::execution::state::{
+    EvidenceAttempt, ExecutionContext, ExecutionEvidence, ExecutionRuntime, FileProof,
+    NO_REPO_FILES_MARKER, PacketFingerprintInput, PlanExecutionStatus, PlanStepState,
     compute_packet_fingerprint, current_file_proof, current_head_sha, hash_contract_plan,
     load_execution_context, normalize_begin_request, normalize_complete_request,
     normalize_note_request, normalize_reopen_request, normalize_source, normalize_transfer_request,
     require_normalized_text, require_preflight_acceptance, status_from_context,
-    validate_expected_fingerprint, EvidenceAttempt, ExecutionContext, ExecutionEvidence,
-    ExecutionRuntime, FileProof, PlanExecutionStatus, PlanStepState, NO_REPO_FILES_MARKER,
+    validate_expected_fingerprint,
 };
 use crate::execution::transitions::{
-    claim_step_write_authority, enforce_active_contract_scope, enforce_authoritative_phase,
-    load_authoritative_transition_state, AuthoritativeTransitionState, StepCommand,
+    AuthoritativeTransitionState, StepCommand, claim_step_write_authority,
+    enforce_active_contract_scope, enforce_authoritative_phase,
+    load_authoritative_transition_state,
 };
 use crate::paths::{normalize_repo_relative_path, write_atomic as write_atomic_file};
 
@@ -30,7 +32,7 @@ pub fn begin(
     let mut context = load_execution_context(runtime, &args.plan)?;
     validate_expected_fingerprint(&context, &request.expect_execution_fingerprint)?;
     require_preflight_acceptance(&context)?;
-    let authoritative_state = load_authoritative_transition_state(&context)?;
+    let mut authoritative_state = load_authoritative_transition_state(&context)?;
     enforce_authoritative_phase(authoritative_state.as_ref(), StepCommand::Begin)?;
     enforce_active_contract_scope(
         authoritative_state.as_ref(),
@@ -105,13 +107,12 @@ pub fn begin(
         .steps
         .iter()
         .find(|step| step.note_state == Some(crate::execution::state::NoteState::Interrupted))
+        && (interrupted.task_number != request.task || interrupted.step_number != request.step)
     {
-        if interrupted.task_number != request.task || interrupted.step_number != request.step {
-            return Err(JsonFailure::new(
-                FailureClass::InvalidStepTransition,
-                "Interrupted work must resume on the same step.",
-            ));
-        }
+        return Err(JsonFailure::new(
+            FailureClass::InvalidStepTransition,
+            "Interrupted work must resume on the same step.",
+        ));
     }
 
     context.steps[step_index].note_state = Some(crate::execution::state::NoteState::Active);
@@ -120,6 +121,12 @@ pub fn begin(
         FailureClass::InvalidCommandInput,
         "Execution note summaries may not be blank after whitespace normalization.",
     )?);
+    if let Some(authoritative_state) = authoritative_state.as_mut() {
+        authoritative_state.ensure_initial_dispatch_strategy_checkpoint(
+            &context,
+            &context.plan_document.execution_mode,
+        )?;
+    }
 
     let rendered_plan = render_plan_source(
         &context.plan_source,
@@ -127,6 +134,16 @@ pub fn begin(
         &context.steps,
     );
     write_atomic(&context.plan_abs, &rendered_plan)?;
+    if let Some(authoritative_state) = authoritative_state.as_ref() {
+        persist_authoritative_state_with_rollback(
+            authoritative_state,
+            &context.plan_abs,
+            &context.plan_source,
+            &context.evidence_abs,
+            context.evidence.source.as_deref(),
+            "begin_after_plan_write_before_authoritative_state_publish",
+        )?;
+    }
     let reloaded = load_execution_context(runtime, &args.plan)?;
     status_from_context(&reloaded)
 }
@@ -192,16 +209,16 @@ pub fn complete(
 
     let contract_plan_fingerprint = hash_contract_plan(&context.plan_source);
     let source_spec_fingerprint = sha256_hex(context.source_spec_source.as_bytes());
-    let packet_fingerprint = compute_packet_fingerprint(
-        &context.plan_rel,
-        context.plan_document.plan_revision,
-        &contract_plan_fingerprint,
-        &context.plan_document.source_spec_path,
-        context.plan_document.source_spec_revision,
-        &source_spec_fingerprint,
-        request.task,
-        request.step,
-    );
+    let packet_fingerprint = compute_packet_fingerprint(PacketFingerprintInput {
+        plan_path: &context.plan_rel,
+        plan_revision: context.plan_document.plan_revision,
+        plan_fingerprint: &contract_plan_fingerprint,
+        source_spec_path: &context.plan_document.source_spec_path,
+        source_spec_revision: context.plan_document.source_spec_revision,
+        source_spec_fingerprint: &source_spec_fingerprint,
+        task: request.task,
+        step: request.step,
+    });
     let recorded_at = Timestamp::now().to_string();
     let head_sha = current_head_sha(&context.runtime.repo_root)?;
     let new_attempt = EvidenceAttempt {
@@ -365,6 +382,13 @@ pub fn reopen(
     context.evidence.format = crate::execution::state::EvidenceFormat::V2;
     if let Some(authoritative_state) = authoritative_state.as_mut() {
         authoritative_state.stale_reopen_provenance()?;
+        authoritative_state.record_reopen_strategy_checkpoint(
+            &context,
+            &context.plan_document.execution_mode,
+            request.task,
+            request.step,
+            &request.reason,
+        )?;
     }
 
     let rendered_plan = render_plan_source(
@@ -589,7 +613,7 @@ fn rename_backed_paths(
     let mut paths = BTreeMap::new();
     repo.tree_index_status(
         head_tree.detach().as_ref(),
-        &*index,
+        &index,
         None,
         gix::status::tree_index::TrackRenames::AsConfigured,
         |change, _, _| {
@@ -599,16 +623,14 @@ fn rename_backed_paths(
                 copy,
                 ..
             } = change
+                && !copy
             {
-                if !copy {
-                    let source = String::from_utf8_lossy(source_location.as_ref()).into_owned();
-                    if missing.contains(&source) {
-                        let destination =
-                            String::from_utf8_lossy(location.as_ref()).into_owned();
-                        paths.insert(source, destination);
-                        if paths.len() == missing.len() {
-                            return Ok::<_, std::convert::Infallible>(std::ops::ControlFlow::Break(()));
-                        }
+                let source = String::from_utf8_lossy(source_location.as_ref()).into_owned();
+                if missing.contains(&source) {
+                    let destination = String::from_utf8_lossy(location.as_ref()).into_owned();
+                    paths.insert(source, destination);
+                    if paths.len() == missing.len() {
+                        return Ok::<_, std::convert::Infallible>(std::ops::ControlFlow::Break(()));
                     }
                 }
             }
@@ -681,26 +703,25 @@ fn render_plan_source(
             continue;
         }
 
-        if let Some((_, step_number, _)) = crate::execution::state::parse_step_line(line) {
-            if let Some(task_number) = current_task {
-                if let Some(step) = step_map.get(&(task_number, step_number)) {
-                    let mark = if step.checked { 'x' } else { ' ' };
-                    rendered.push(format!(
-                        "- [{mark}] **Step {}: {}**",
-                        step.step_number, step.title
-                    ));
-                    if let Some(note_state) = step.note_state {
-                        rendered.push(String::new());
-                        rendered.push(format!(
-                            "  **Execution Note:** {} - {}",
-                            note_state.as_str(),
-                            step.note_summary
-                        ));
-                    }
-                    suppress_note = true;
-                    continue;
-                }
+        if let Some((_, step_number, _)) = crate::execution::state::parse_step_line(line)
+            && let Some(task_number) = current_task
+            && let Some(step) = step_map.get(&(task_number, step_number))
+        {
+            let mark = if step.checked { 'x' } else { ' ' };
+            rendered.push(format!(
+                "- [{mark}] **Step {}: {}**",
+                step.step_number, step.title
+            ));
+            if let Some(note_state) = step.note_state {
+                rendered.push(String::new());
+                rendered.push(format!(
+                    "  **Execution Note:** {} - {}",
+                    note_state.as_str(),
+                    step.note_summary
+                ));
             }
+            suppress_note = true;
+            continue;
         }
 
         rendered.push(line.to_owned());

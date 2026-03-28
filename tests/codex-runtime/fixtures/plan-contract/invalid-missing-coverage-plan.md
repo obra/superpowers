@@ -15,6 +15,19 @@
 - NONGOAL-001 -> Task 2
 - VERIFY-001 -> Task 2
 
+## Execution Strategy
+
+- Execute Tasks 1 and 2 serially. Both tasks stay in one shared branch lane so the fixture exercises its intended contract failure without fake parallelism.
+
+## Dependency Diagram
+
+```text
+Task 1
+  |
+  v
+Task 2
+```
+
 ## Task 1: Establish the plan contract
 
 **Spec Coverage:** REQ-001, REQ-002, DEC-001

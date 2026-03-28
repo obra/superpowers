@@ -110,11 +110,11 @@ Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Ski
 
 ## Overview
 
-Load plan, review critically, execute all tasks in a separate session, request final review, then report when complete.
+Load the approved plan, follow the runtime-selected topology, execute all tasks, request final review, then report when complete. When the runtime-selected topology is worktree-backed parallel, create isolated worktrees first and dispatch the parallel lanes; when it is conservative fallback, stay serial.
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
-**Note:** Prefer `featureforge:subagent-driven-development` whenever isolated-agent support is available and you want same-session isolated-agent execution. Use this skill when implementation should happen in a separate session.
+**Note:** Use this skill when the runtime-selected topology calls for a separate-session coordinator or conservative fallback. Prefer `featureforge:subagent-driven-development` when the runtime-selected topology keeps execution in one session and the worktree-first orchestration model is already in place.
 
 ## The Process
 
@@ -133,8 +133,8 @@ Load plan, review critically, execute all tasks in a separate session, request f
    - stop on a default protected branch (`main`, `master`, `dev`, or `develop`) unless the user explicitly approves in-place execution
    - stop on detached HEAD
    - stop if merge conflicts, unresolved index entries, rebase, or cherry-pick state is present
-   - if the working tree is dirty, stop and ask the user to confirm the workspace is intentionally prepared
-7. Do not auto-clean the workspace and do not auto-create a worktree.
+   - if the working tree is dirty, stop unless the helper-selected topology and workspace-prepared context explicitly support isolated worktree-backed execution for this run
+7. Do not bulk-clean the workspace ad hoc. If the helper-selected topology or protected-branch gate requires isolated execution, provision or route through a worktree-backed workspace before mutating repo state, and let the runtime-owned barrier flow reconcile reviewed work back onto the active branch and clean temporary worktrees at safe intervals.
 8. The later repo-safety checks still govern any additional protected branches declared through repo or user instructions.
 9. Run `featureforge plan execution preflight --plan <approved-plan-path>` before starting execution.
 10. If the preflight helper returns `allowed` `false`, stop and resolve the reported `failure_class`, `reason_codes`, and `diagnostics` before starting work.
@@ -151,6 +151,22 @@ Load plan, review critically, execute all tasks in a separate session, request f
 - Coordinators and subagents may prepare candidate artifacts (for example task packets, coverage matrix context, and handoff drafts), but they must not directly invoke these commands; the runtime helper owns and executes execution-state mutations.
 - On the first `begin` for a revision whose plan still says `**Execution Mode:** none`, initialize execution with `--execution-mode featureforge:executing-plans`
 - The approved plan checklist is the execution progress record; do not create or maintain a separate authoritative task tracker.
+
+## Runtime Strategy Checkpoints (Automatic, Runtime-Owned)
+
+- Runtime strategy checkpoints are execution-owned state, not workflow-stage transitions. Keep public workflow phase in execution (`executing` or `repairing`) while strategy checkpoints change.
+- The approved plan/spec scope is fixed during execution. Runtime strategy checkpoints may change topology, lane/worktree allocation, subagent assignment, and remediation order, but must not change approved scope, source plan revision, or required coverage.
+- Required checkpoint kinds:
+  - `initial_dispatch`: required before repo-writing implementation starts. Runtime records it automatically on first dispatch/begin when missing.
+  - `review_remediation`: required after actionable independent-review findings and before remediation starts. Runtime records it automatically for each `gate-review` dispatch that targets reviewable execution work and when remediation reopens execution work.
+  - `cycle_break`: required when churn is detected. Runtime records it automatically when the same task hits three review-dispatch/reopen cycles in one run.
+- Cycle-break trigger: cap remediation churn at 3 cycles per task. On the third cycle, transition to `cycle_break` strategy automatically (no human replanning loopback).
+- Unit-review receipts and downstream final-review evidence must reference the checkpoint fingerprint from the runtime status for traceability.
+- Surface and respect runtime strategy status from `featureforge plan execution status --plan ...`:
+  - `strategy_state`
+  - `strategy_checkpoint_kind`
+  - `last_strategy_checkpoint_fingerprint`
+  - `strategy_reset_required`
 
 ## Protected-Branch Repo-Write Gate
 
@@ -221,11 +237,7 @@ After the final review is resolved:
 
 ## When to Revisit Earlier Steps
 
-**Return to Review (Step 1) when:**
-- Partner updates the plan based on your feedback
-- Fundamental approach needs rethinking
-
-**Don't force through blockers** - stop and ask.
+Do not reopen planning or review just because execution surfaced a runtime problem. Once implementation has started, keep the approved plan fixed, record runtime deviations in authoritative state, and either continue under the runtime-selected topology or stop and ask for clarification when blocked.
 
 ## Remember
 - Review plan critically first
@@ -235,7 +247,7 @@ After the final review is resolved:
 - Reference skills when plan says to
 - Stop when blocked, don't guess
 - Never start implementation on a default protected branch (`main`, `master`, `dev`, or `develop`) without explicit user consent
-- Workspace preparation is the user's responsibility; `featureforge:using-git-worktrees` is optional, not automatic
+- When isolated execution is required, `featureforge:using-git-worktrees` is runtime-selected workspace preparation rather than optional prose guidance.
 
 ## Integration
 
@@ -245,5 +257,5 @@ After the final review is resolved:
 - **featureforge:requesting-code-review** - REQUIRED: Final review gate after execution completes
 - **featureforge:finishing-a-development-branch** - Complete development after all tasks
 
-**Optional manual prep:**
-- **featureforge:using-git-worktrees** - Use when the user wants isolated workspace management before execution
+**Optional direct invocation:**
+- **featureforge:using-git-worktrees** - Use when the user explicitly wants isolated workspace management before execution, or when runtime-directed remediation says to prepare the workspace first

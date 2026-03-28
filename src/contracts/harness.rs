@@ -1,9 +1,10 @@
 use std::collections::BTreeSet;
+use std::convert::TryFrom;
 use std::fs;
 use std::path::Path;
 
 use schemars::JsonSchema;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use crate::diagnostics::{DiagnosticError, FailureClass};
@@ -15,6 +16,369 @@ const EVIDENCE_ARTIFACT_VERSION: u32 = 1;
 
 const SUPPORTED_SATISFACTION_RULES: [&str; 3] = ["all_of", "any_of", "per_step"];
 const SUPPORTED_EVALUATOR_KINDS: [&str; 2] = ["spec_compliance", "code_quality"];
+pub const WORKTREE_LEASE_VERSION: u32 = 1;
+pub const EXECUTION_TOPOLOGY_DOWNGRADE_RECORD_VERSION: u32 = 1;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum WorktreeLeaseState {
+    Open,
+    ReviewPassedPendingReconcile,
+    Reconciled,
+    Cleaned,
+}
+
+impl WorktreeLeaseState {
+    pub const ALL: [Self; 4] = [
+        Self::Open,
+        Self::ReviewPassedPendingReconcile,
+        Self::Reconciled,
+        Self::Cleaned,
+    ];
+
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Open => "open",
+            Self::ReviewPassedPendingReconcile => "review_passed_pending_reconcile",
+            Self::Reconciled => "reconciled",
+            Self::Cleaned => "cleaned",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum DowngradeReasonClass {
+    WriteScopeOverlap,
+    DependencyMismatch,
+    WorkspaceUnavailable,
+    ReconcileConflict,
+    BaselineDrift,
+    PolicySafetyBlock,
+}
+
+impl DowngradeReasonClass {
+    pub const ALL: [Self; 6] = [
+        Self::WriteScopeOverlap,
+        Self::DependencyMismatch,
+        Self::WorkspaceUnavailable,
+        Self::ReconcileConflict,
+        Self::BaselineDrift,
+        Self::PolicySafetyBlock,
+    ];
+
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::WriteScopeOverlap => "write_scope_overlap",
+            Self::DependencyMismatch => "dependency_mismatch",
+            Self::WorkspaceUnavailable => "workspace_unavailable",
+            Self::ReconcileConflict => "reconcile_conflict",
+            Self::BaselineDrift => "baseline_drift",
+            Self::PolicySafetyBlock => "policy_safety_block",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum DowngradeOperatorImpactSeverity {
+    Info,
+    Warning,
+    Blocking,
+}
+
+impl DowngradeOperatorImpactSeverity {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Info => "info",
+            Self::Warning => "warning",
+            Self::Blocking => "blocking",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(try_from = "String", into = "String")]
+pub struct BlockingEvidenceReference(String);
+
+impl BlockingEvidenceReference {
+    pub fn try_new(value: impl Into<String>) -> Result<Self, String> {
+        Self::try_from(value.into())
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl TryFrom<String> for BlockingEvidenceReference {
+    type Error = String;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        let trimmed = value.trim();
+        if trimmed.is_empty()
+            || trimmed != value
+            || trimmed.chars().any(char::is_whitespace)
+            || trimmed.split_once(':').is_none()
+        {
+            return Err(String::from(
+                "BlockingEvidenceReference must be a whitespace-free scheme:payload locator.",
+            ));
+        }
+
+        let Some((scheme, payload)) = trimmed.split_once(':') else {
+            return Err(String::from(
+                "BlockingEvidenceReference must be a whitespace-free scheme:payload locator.",
+            ));
+        };
+        if scheme.trim().is_empty() || payload.trim().is_empty() {
+            return Err(String::from(
+                "BlockingEvidenceReference must be a whitespace-free scheme:payload locator.",
+            ));
+        }
+
+        Ok(Self(value))
+    }
+}
+
+impl From<BlockingEvidenceReference> for String {
+    fn from(reference: BlockingEvidenceReference) -> Self {
+        reference.0
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct DowngradeBlockingEvidence {
+    pub summary: String,
+    pub references: Vec<BlockingEvidenceReference>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct DowngradeOperatorImpact {
+    pub severity: DowngradeOperatorImpactSeverity,
+    pub changed_or_blocked_stage: String,
+    pub expected_response: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct ExecutionTopologyDowngradeDetail {
+    pub trigger_summary: String,
+    pub affected_units: Vec<String>,
+    pub blocking_evidence: DowngradeBlockingEvidence,
+    pub operator_impact: DowngradeOperatorImpact,
+    #[serde(default)]
+    pub notes: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct ExecutionTopologyDowngradeRecord {
+    pub record_version: u32,
+    pub authoritative_sequence: u64,
+    pub source_plan_path: String,
+    pub source_plan_revision: u32,
+    pub execution_context_key: String,
+    pub primary_reason_class: DowngradeReasonClass,
+    pub detail: ExecutionTopologyDowngradeDetail,
+    pub rerun_guidance_superseded: bool,
+    pub generated_by: String,
+    pub generated_at: String,
+    pub record_fingerprint: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(try_from = "WorktreeLeaseSerde", into = "WorktreeLeaseSerde")]
+pub struct WorktreeLease {
+    pub lease_version: u32,
+    pub authoritative_sequence: u64,
+    pub execution_run_id: String,
+    pub execution_context_key: String,
+    pub source_plan_path: String,
+    pub source_plan_revision: u32,
+    pub execution_unit_id: String,
+    pub source_branch: String,
+    pub authoritative_integration_branch: String,
+    pub worktree_path: String,
+    pub repo_state_baseline_head_sha: String,
+    pub repo_state_baseline_worktree_fingerprint: String,
+    pub lease_state: WorktreeLeaseState,
+    pub cleanup_state: String,
+    pub reviewed_checkpoint_commit_sha: Option<String>,
+    pub reconcile_result_commit_sha: Option<String>,
+    pub reconcile_result_proof_fingerprint: Option<String>,
+    pub reconcile_mode: String,
+    pub generated_by: String,
+    pub generated_at: String,
+    pub lease_fingerprint: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+struct WorktreeLeaseSerde {
+    pub lease_version: u32,
+    pub authoritative_sequence: u64,
+    pub execution_run_id: String,
+    pub execution_context_key: String,
+    pub source_plan_path: String,
+    pub source_plan_revision: u32,
+    pub execution_unit_id: String,
+    pub source_branch: String,
+    pub authoritative_integration_branch: String,
+    pub worktree_path: String,
+    pub repo_state_baseline_head_sha: String,
+    pub repo_state_baseline_worktree_fingerprint: String,
+    pub lease_state: WorktreeLeaseState,
+    pub cleanup_state: String,
+    pub reviewed_checkpoint_commit_sha: Option<String>,
+    pub reconcile_result_commit_sha: Option<String>,
+    pub reconcile_result_proof_fingerprint: Option<String>,
+    pub reconcile_mode: String,
+    pub generated_by: String,
+    pub generated_at: String,
+    pub lease_fingerprint: String,
+}
+
+impl TryFrom<WorktreeLeaseSerde> for WorktreeLease {
+    type Error = String;
+
+    fn try_from(raw: WorktreeLeaseSerde) -> Result<Self, Self::Error> {
+        validate_worktree_lease_reviewed_checkpoint(
+            raw.lease_state,
+            raw.reviewed_checkpoint_commit_sha.as_deref(),
+        )?;
+        validate_worktree_lease_reconcile_result(
+            raw.lease_state,
+            raw.reconcile_result_commit_sha.as_deref(),
+        )?;
+        validate_worktree_lease_reconcile_result_proof(
+            raw.lease_state,
+            raw.reconcile_result_proof_fingerprint.as_deref(),
+        )?;
+
+        Ok(Self {
+            lease_version: raw.lease_version,
+            authoritative_sequence: raw.authoritative_sequence,
+            execution_run_id: raw.execution_run_id,
+            execution_context_key: raw.execution_context_key,
+            source_plan_path: raw.source_plan_path,
+            source_plan_revision: raw.source_plan_revision,
+            execution_unit_id: raw.execution_unit_id,
+            source_branch: raw.source_branch,
+            authoritative_integration_branch: raw.authoritative_integration_branch,
+            worktree_path: raw.worktree_path,
+            repo_state_baseline_head_sha: raw.repo_state_baseline_head_sha,
+            repo_state_baseline_worktree_fingerprint: raw.repo_state_baseline_worktree_fingerprint,
+            lease_state: raw.lease_state,
+            cleanup_state: raw.cleanup_state,
+            reviewed_checkpoint_commit_sha: raw.reviewed_checkpoint_commit_sha,
+            reconcile_result_commit_sha: raw.reconcile_result_commit_sha,
+            reconcile_result_proof_fingerprint: raw.reconcile_result_proof_fingerprint,
+            reconcile_mode: raw.reconcile_mode,
+            generated_by: raw.generated_by,
+            generated_at: raw.generated_at,
+            lease_fingerprint: raw.lease_fingerprint,
+        })
+    }
+}
+
+impl From<WorktreeLease> for WorktreeLeaseSerde {
+    fn from(lease: WorktreeLease) -> Self {
+        Self {
+            lease_version: lease.lease_version,
+            authoritative_sequence: lease.authoritative_sequence,
+            execution_run_id: lease.execution_run_id,
+            execution_context_key: lease.execution_context_key,
+            source_plan_path: lease.source_plan_path,
+            source_plan_revision: lease.source_plan_revision,
+            execution_unit_id: lease.execution_unit_id,
+            source_branch: lease.source_branch,
+            authoritative_integration_branch: lease.authoritative_integration_branch,
+            worktree_path: lease.worktree_path,
+            repo_state_baseline_head_sha: lease.repo_state_baseline_head_sha,
+            repo_state_baseline_worktree_fingerprint: lease
+                .repo_state_baseline_worktree_fingerprint,
+            lease_state: lease.lease_state,
+            cleanup_state: lease.cleanup_state,
+            reviewed_checkpoint_commit_sha: lease.reviewed_checkpoint_commit_sha,
+            reconcile_result_commit_sha: lease.reconcile_result_commit_sha,
+            reconcile_result_proof_fingerprint: lease.reconcile_result_proof_fingerprint,
+            reconcile_mode: lease.reconcile_mode,
+            generated_by: lease.generated_by,
+            generated_at: lease.generated_at,
+            lease_fingerprint: lease.lease_fingerprint,
+        }
+    }
+}
+
+fn validate_worktree_lease_reviewed_checkpoint(
+    lease_state: WorktreeLeaseState,
+    reviewed_checkpoint_commit_sha: Option<&str>,
+) -> Result<(), String> {
+    if let Some(reviewed_checkpoint_commit_sha) = reviewed_checkpoint_commit_sha {
+        if reviewed_checkpoint_commit_sha.trim().is_empty() {
+            return Err(String::from(
+                "WorktreeLease is missing non-empty reviewed_checkpoint_commit_sha.",
+            ));
+        }
+        return Ok(());
+    }
+
+    if matches!(lease_state, WorktreeLeaseState::Open) {
+        return Ok(());
+    }
+
+    Err(String::from(
+        "WorktreeLease must include reviewed_checkpoint_commit_sha while lease_state is not open.",
+    ))
+}
+
+fn validate_worktree_lease_reconcile_result(
+    lease_state: WorktreeLeaseState,
+    reconcile_result_commit_sha: Option<&str>,
+) -> Result<(), String> {
+    if let Some(reconcile_result_commit_sha) = reconcile_result_commit_sha {
+        if reconcile_result_commit_sha.trim().is_empty() {
+            return Err(String::from(
+                "WorktreeLease is missing non-empty reconcile_result_commit_sha.",
+            ));
+        }
+        return Ok(());
+    }
+
+    if matches!(
+        lease_state,
+        WorktreeLeaseState::Open | WorktreeLeaseState::ReviewPassedPendingReconcile
+    ) {
+        return Ok(());
+    }
+
+    Err(String::from(
+        "WorktreeLease must include reconcile_result_commit_sha while lease_state is not open.",
+    ))
+}
+
+fn validate_worktree_lease_reconcile_result_proof(
+    lease_state: WorktreeLeaseState,
+    reconcile_result_proof_fingerprint: Option<&str>,
+) -> Result<(), String> {
+    if let Some(reconcile_result_proof_fingerprint) = reconcile_result_proof_fingerprint {
+        if reconcile_result_proof_fingerprint.trim().is_empty() {
+            return Err(String::from(
+                "WorktreeLease is missing non-empty reconcile_result_proof_fingerprint.",
+            ));
+        }
+        return Ok(());
+    }
+
+    if matches!(
+        lease_state,
+        WorktreeLeaseState::Open | WorktreeLeaseState::ReviewPassedPendingReconcile
+    ) {
+        return Ok(());
+    }
+
+    Err(String::from(
+        "WorktreeLease must include reconcile_result_proof_fingerprint while lease_state is not open.",
+    ))
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct ExecutionContract {
@@ -704,9 +1068,7 @@ fn validate_contract_evaluator_kinds(
 }
 
 fn is_supported_evaluator_kind(value: &str) -> bool {
-    SUPPORTED_EVALUATOR_KINDS
-        .iter()
-        .any(|supported| *supported == value)
+    SUPPORTED_EVALUATOR_KINDS.contains(&value)
 }
 
 fn parse_blocks(
@@ -719,11 +1081,9 @@ fn parse_blocks(
 
     for line in section.lines() {
         let trimmed_start = line.trim_start();
-        if trimmed_start.starts_with(block_prefix) {
-            if !current.is_empty() {
-                blocks.push(current.join("\n"));
-                current.clear();
-            }
+        if trimmed_start.starts_with(block_prefix) && !current.is_empty() {
+            blocks.push(current.join("\n"));
+            current.clear();
         }
         if !current.is_empty() || trimmed_start.starts_with(block_prefix) {
             current.push(line.to_owned());

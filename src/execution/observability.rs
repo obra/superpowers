@@ -3,6 +3,12 @@ use std::collections::BTreeMap;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::contracts::harness::{
+    DowngradeBlockingEvidence, DowngradeOperatorImpact, DowngradeOperatorImpactSeverity,
+    DowngradeReasonClass, EXECUTION_TOPOLOGY_DOWNGRADE_RECORD_VERSION,
+    ExecutionTopologyDowngradeDetail, ExecutionTopologyDowngradeRecord,
+};
+use crate::diagnostics::{FailureClass, JsonFailure};
 use crate::execution::harness::{ChunkId, EvaluatorKind, ExecutionRunId, HarnessPhase};
 
 pub const REASON_CODE_WAITING_ON_REQUIRED_EVALUATOR: &str = "waiting_on_required_evaluator";
@@ -74,6 +80,8 @@ pub const STABLE_EVENT_KINDS: [&str; 17] = [
     EVENT_KIND_AUTHORITATIVE_MUTATION_RECORDED,
     EVENT_KIND_ORDERING_GAP_DETECTED,
 ];
+
+pub const STABLE_DOWNGRADE_REASON_CLASSES: [DowngradeReasonClass; 6] = DowngradeReasonClass::ALL;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -177,6 +185,157 @@ pub fn is_stable_reason_code(code: &str) -> bool {
 
 pub fn is_stable_event_kind(kind: &str) -> bool {
     STABLE_EVENT_KINDS.contains(&kind)
+}
+
+pub fn downgrade_reason_classes() -> &'static [DowngradeReasonClass] {
+    &STABLE_DOWNGRADE_REASON_CLASSES
+}
+
+pub fn downgrade_records_share_rerun_guidance(
+    left: &ExecutionTopologyDowngradeRecord,
+    right: &ExecutionTopologyDowngradeRecord,
+) -> bool {
+    downgrade_record_is_active_guidance(left)
+        && downgrade_record_is_active_guidance(right)
+        && left.primary_reason_class == right.primary_reason_class
+}
+
+pub fn downgrade_rerun_guidance_key(
+    record: &ExecutionTopologyDowngradeRecord,
+) -> DowngradeReasonClass {
+    record.primary_reason_class
+}
+
+pub fn downgrade_record_is_active_guidance(record: &ExecutionTopologyDowngradeRecord) -> bool {
+    !record.rerun_guidance_superseded
+}
+
+pub fn downgrade_record_is_superseded_guidance(record: &ExecutionTopologyDowngradeRecord) -> bool {
+    record.rerun_guidance_superseded
+}
+
+pub fn validate_execution_topology_downgrade_record(
+    record: &ExecutionTopologyDowngradeRecord,
+) -> Result<(), JsonFailure> {
+    if record.record_version != EXECUTION_TOPOLOGY_DOWNGRADE_RECORD_VERSION {
+        return Err(JsonFailure::new(
+            FailureClass::MalformedExecutionState,
+            format!(
+                "ExecutionTopologyDowngradeRecord has unsupported record_version {}.",
+                record.record_version
+            ),
+        ));
+    }
+
+    require_non_empty(&record.source_plan_path, "source_plan_path")?;
+    require_non_empty(&record.execution_context_key, "execution_context_key")?;
+    require_non_empty(&record.generated_by, "generated_by")?;
+    require_non_empty(&record.generated_at, "generated_at")?;
+    require_non_empty(&record.record_fingerprint, "record_fingerprint")?;
+
+    validate_execution_topology_downgrade_detail(&record.detail)?;
+
+    Ok(())
+}
+
+pub fn validate_execution_topology_downgrade_detail(
+    detail: &ExecutionTopologyDowngradeDetail,
+) -> Result<(), JsonFailure> {
+    require_non_empty(&detail.trigger_summary, "trigger_summary")?;
+    if detail.affected_units.is_empty() {
+        return Err(JsonFailure::new(
+            FailureClass::MalformedExecutionState,
+            "ExecutionTopologyDowngradeDetail must include at least one affected_units entry.",
+        ));
+    }
+    for (index, unit) in detail.affected_units.iter().enumerate() {
+        require_non_empty(unit, &format!("affected_units[{index}]"))?;
+    }
+
+    validate_blocking_evidence(&detail.blocking_evidence)?;
+    validate_operator_impact(&detail.operator_impact)?;
+
+    for (index, note) in detail.notes.iter().enumerate() {
+        require_non_empty(note, &format!("notes[{index}]"))?;
+    }
+
+    Ok(())
+}
+
+fn validate_blocking_evidence(evidence: &DowngradeBlockingEvidence) -> Result<(), JsonFailure> {
+    require_non_empty(&evidence.summary, "blocking_evidence.summary")?;
+    for (index, reference) in evidence.references.iter().enumerate() {
+        validate_blocking_evidence_reference(reference.as_str(), index)?;
+    }
+    Ok(())
+}
+
+fn validate_blocking_evidence_reference(reference: &str, index: usize) -> Result<(), JsonFailure> {
+    let trimmed = reference.trim();
+    if trimmed.is_empty()
+        || trimmed != reference
+        || trimmed.chars().any(char::is_whitespace)
+        || trimmed.split_once(':').is_none()
+    {
+        return Err(JsonFailure::new(
+            FailureClass::MalformedExecutionState,
+            format!(
+                "ExecutionTopologyDowngradeRecord has malformed blocking_evidence.references[{index}] locator."
+            ),
+        ));
+    }
+
+    let Some((scheme, payload)) = trimmed.split_once(':') else {
+        return Err(JsonFailure::new(
+            FailureClass::MalformedExecutionState,
+            format!(
+                "ExecutionTopologyDowngradeRecord has malformed blocking_evidence.references[{index}] locator."
+            ),
+        ));
+    };
+    if scheme.trim().is_empty() || payload.trim().is_empty() {
+        return Err(JsonFailure::new(
+            FailureClass::MalformedExecutionState,
+            format!(
+                "ExecutionTopologyDowngradeRecord has malformed blocking_evidence.references[{index}] locator."
+            ),
+        ));
+    }
+
+    Ok(())
+}
+
+fn validate_operator_impact(impact: &DowngradeOperatorImpact) -> Result<(), JsonFailure> {
+    if !matches!(
+        impact.severity,
+        DowngradeOperatorImpactSeverity::Info
+            | DowngradeOperatorImpactSeverity::Warning
+            | DowngradeOperatorImpactSeverity::Blocking
+    ) {
+        return Err(JsonFailure::new(
+            FailureClass::MalformedExecutionState,
+            "ExecutionTopologyDowngradeRecord has an unsupported operator_impact.severity value.",
+        ));
+    }
+    require_non_empty(
+        &impact.changed_or_blocked_stage,
+        "operator_impact.changed_or_blocked_stage",
+    )?;
+    require_non_empty(
+        &impact.expected_response,
+        "operator_impact.expected_response",
+    )?;
+    Ok(())
+}
+
+fn require_non_empty(value: &str, field_name: &str) -> Result<(), JsonFailure> {
+    if value.trim().is_empty() {
+        return Err(JsonFailure::new(
+            FailureClass::MalformedExecutionState,
+            format!("ExecutionTopologyDowngradeRecord is missing non-empty {field_name}."),
+        ));
+    }
+    Ok(())
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Default)]

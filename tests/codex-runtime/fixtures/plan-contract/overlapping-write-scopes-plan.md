@@ -16,6 +16,19 @@
 - NONGOAL-001 -> Task 2
 - VERIFY-001 -> Task 2
 
+## Execution Strategy
+
+- Execute Tasks 1 and 2 serially. Both tasks intentionally touch the same hotspot file, so the plan keeps that work in one serialized lane instead of pretending it is safe to parallelize.
+
+## Dependency Diagram
+
+```text
+Task 1
+  |
+  v
+Task 2
+```
+
 ## Task 1: Establish the plan contract
 
 **Spec Coverage:** REQ-001, REQ-002, DEC-001

@@ -13,7 +13,7 @@ use featureforge::execution::observability::{
     HarnessEventKind, HarnessObservabilityEvent, STABLE_EVENT_KINDS,
 };
 use featureforge::execution::state::{
-    ExecutionRuntime, compute_packet_fingerprint, hash_contract_plan,
+    ExecutionRuntime, PacketFingerprintInput, compute_packet_fingerprint, hash_contract_plan,
 };
 use featureforge::paths::{
     harness_authoritative_artifact_path, harness_dependency_index_path, harness_state_path,
@@ -283,16 +283,16 @@ fn write_authoritative_contract_fixture(repo: &Path, state: &Path) -> (String, S
         fs::read_to_string(repo.join(SPEC_REL)).expect("spec should be readable for contract");
     let plan_fingerprint = hash_contract_plan(&plan_source);
     let source_spec_fingerprint = sha256_hex(source_spec_source.as_bytes());
-    let packet_fingerprint = compute_packet_fingerprint(
-        PLAN_REL,
-        1,
-        &plan_fingerprint,
-        SPEC_REL,
-        2,
-        &source_spec_fingerprint,
-        1,
-        1,
-    );
+    let packet_fingerprint = compute_packet_fingerprint(PacketFingerprintInput {
+        plan_path: PLAN_REL,
+        plan_revision: 1,
+        plan_fingerprint: &plan_fingerprint,
+        source_spec_path: SPEC_REL,
+        source_spec_revision: 2,
+        source_spec_fingerprint: &source_spec_fingerprint,
+        task: 1,
+        step: 1,
+    });
 
     let template = format!(
         r#"# Execution Contract
@@ -344,10 +344,16 @@ fn write_authoritative_contract_fixture(repo: &Path, state: &Path) -> (String, S
 **Contract Fingerprint:** __CONTRACT_FINGERPRINT__
 "#
     );
-    let contract_fingerprint = sha256_hex(template.replace("__CONTRACT_FINGERPRINT__", "").as_bytes());
+    let contract_fingerprint =
+        sha256_hex(template.replace("__CONTRACT_FINGERPRINT__", "").as_bytes());
     let contract_file = format!("contract-{contract_fingerprint}.md");
     write_file(
-        &harness_authoritative_artifact_path(state, &repo_slug(repo), &branch_name(repo), &contract_file),
+        &harness_authoritative_artifact_path(
+            state,
+            &repo_slug(repo),
+            &branch_name(repo),
+            &contract_file,
+        ),
         &template.replace("__CONTRACT_FINGERPRINT__", &contract_fingerprint),
     );
     (contract_file, contract_fingerprint)
@@ -360,16 +366,16 @@ fn write_candidate_contract_fixture(repo: &Path, artifact_rel: &str) -> String {
         fs::read_to_string(repo.join(SPEC_REL)).expect("spec should be readable for contract");
     let plan_fingerprint = hash_contract_plan(&plan_source);
     let source_spec_fingerprint = sha256_hex(source_spec_source.as_bytes());
-    let packet_fingerprint = compute_packet_fingerprint(
-        PLAN_REL,
-        1,
-        &plan_fingerprint,
-        SPEC_REL,
-        2,
-        &source_spec_fingerprint,
-        1,
-        1,
-    );
+    let packet_fingerprint = compute_packet_fingerprint(PacketFingerprintInput {
+        plan_path: PLAN_REL,
+        plan_revision: 1,
+        plan_fingerprint: &plan_fingerprint,
+        source_spec_path: SPEC_REL,
+        source_spec_revision: 2,
+        source_spec_fingerprint: &source_spec_fingerprint,
+        task: 1,
+        step: 1,
+    });
 
     let template = format!(
         r#"# Execution Contract
@@ -731,7 +737,8 @@ fn observability_runtime_surface_matches_literal_event_kind_and_field_corpora() 
 
     let mut nullable_fields: Vec<String> = event_object
         .iter()
-        .filter_map(|(field, value)| value.is_null().then(|| field.to_owned()))
+        .filter(|(_, value)| value.is_null())
+        .map(|(field, _)| field.to_owned())
         .collect();
     nullable_fields.sort_unstable();
     let mut expected_nullable_fields: Vec<String> = EXPECTED_OBSERVABILITY_EVENT_FIELDS
@@ -795,6 +802,7 @@ fn status_exposes_run_identity_policy_snapshot_and_authority_diagnostics_before_
             "last_final_review_artifact_fingerprint",
             "last_browser_qa_artifact_fingerprint",
             "last_release_docs_artifact_fingerprint",
+            "last_strategy_checkpoint_fingerprint",
             "write_authority_holder",
             "write_authority_worktree",
             "repo_state_baseline_head_sha",
@@ -822,6 +830,8 @@ fn status_exposes_run_identity_policy_snapshot_and_authority_diagnostics_before_
             "final_review_state",
             "browser_qa_state",
             "release_docs_state",
+            "strategy_state",
+            "strategy_checkpoint_kind",
         ],
     );
     assert!(
@@ -890,7 +900,8 @@ fn status_exposes_run_identity_policy_snapshot_and_authority_diagnostics_before_
         "status should expose the run-scoped counters, missing: {missing_number_fields:?}"
     );
 
-    let missing_bool_fields = missing_bool_fields(&status, &["handoff_required"]);
+    let missing_bool_fields =
+        missing_bool_fields(&status, &["handoff_required", "strategy_reset_required"]);
     assert!(
         missing_bool_fields.is_empty(),
         "status should expose the run-scoped booleans, missing: {missing_bool_fields:?}"
@@ -985,7 +996,8 @@ fn status_projects_authoritative_state_for_write_repo_dependency_downstream_and_
 
 #[test]
 fn record_contract_persists_dependency_index_with_authoritative_contract_node() {
-    let (repo_dir, state_dir) = init_repo("execution-harness-state-dependency-index-record-contract");
+    let (repo_dir, state_dir) =
+        init_repo("execution-harness-state-dependency-index-record-contract");
     let repo = repo_dir.path();
     let state = state_dir.path();
     write_approved_spec(repo);
@@ -1012,7 +1024,13 @@ fn record_contract_persists_dependency_index_with_authoritative_contract_node() 
     let record_json = run_plan_execution_json(
         repo,
         state,
-        &["record-contract", "--plan", PLAN_REL, "--contract", contract_rel],
+        &[
+            "record-contract",
+            "--plan",
+            PLAN_REL,
+            "--contract",
+            contract_rel,
+        ],
         "record-contract dependency-index persistence fixture",
     );
     assert_eq!(record_json["allowed"], Value::Bool(true));
@@ -1073,7 +1091,13 @@ fn record_contract_persists_observability_event_and_authoritative_mutation_count
     let record_json = run_plan_execution_json(
         repo,
         state,
-        &["record-contract", "--plan", PLAN_REL, "--contract", contract_rel],
+        &[
+            "record-contract",
+            "--plan",
+            PLAN_REL,
+            "--contract",
+            contract_rel,
+        ],
         "record-contract observability persistence fixture",
     );
     assert_eq!(record_json["allowed"], Value::Bool(true));

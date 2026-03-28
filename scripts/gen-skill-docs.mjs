@@ -127,6 +127,8 @@ Supported entry paths must resolve \`featureforge session-entry resolve --messag
 - if the helper returns \`needs_user_choice\`, ask the opt-out question and persist either \`enabled\` or \`bypassed\`
 - if the helper returns \`runtime_failure\`, surface that failure instead of pretending the gate was resolved
 
+Fresh-session spec review, plan review, and execution-preflight intents must still surface the bypass prompt first through \`featureforge session-entry resolve --message-file <path>\`.
+
 supported spawned-subagent entry paths must pass the runtime marker instead of inventing prose-only bypass behavior.
 
 - default spawned-subagent bypass is ephemeral and non-persisted

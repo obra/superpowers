@@ -1,6 +1,6 @@
 [package]
 name = "featureforge"
-version = "1.1.0"
+version = "1.2.0"
 edition = "2024"
 rust-version = "1.94"
 publish = false
@@ -54,16 +54,6 @@ unused_must_use = "deny"
 
 [lints.clippy]
 all = { level = "deny", priority = -1 }
-collapsible_if = "allow"
-explicit_auto_deref = "allow"
-large_enum_variant = "allow"
-needless_lifetimes = "allow"
-needless_question_mark = "allow"
-nonminimal_bool = "allow"
-result_large_err = "allow"
-should_implement_trait = "allow"
-too_many_arguments = "allow"
-unnecessary_map_or = "allow"
 
 [[bench]]
 name = "workflow_status"

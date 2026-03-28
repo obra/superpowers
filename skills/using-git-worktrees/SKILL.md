@@ -110,7 +110,7 @@ Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Ski
 
 ## Overview
 
-Git worktrees create isolated workspaces sharing the same repository, allowing work on multiple branches simultaneously without switching.
+Git worktrees create isolated workspaces sharing the same repository, allowing work on multiple branches simultaneously without switching. They are the worktree-backed parallel primitive the runtime-selected topology uses when it wants isolated branch-backed lanes.
 
 **Core principle:** Systematic directory selection + safety verification = reliable isolation.
 

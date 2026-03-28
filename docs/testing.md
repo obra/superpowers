@@ -71,6 +71,12 @@ Editing workflow routing, runtime docs, or execution contracts:
 cargo nextest run --test contracts_spec_plan --test runtime_instruction_contracts --test using_featureforge_skill --test workflow_runtime --test workflow_shell_smoke --test plan_execution
 ```
 
+Editing runtime strategy-checkpoint, topology recommendation, or final-review deviation contracts:
+
+```bash
+cargo nextest run --test plan_execution_topology --test plan_execution_final_review --test workflow_runtime_final_review --test contracts_execution_leases --test execution_harness_state
+```
+
 Editing install or update surfaces:
 
 ```bash
@@ -78,6 +84,21 @@ cargo nextest run --test session_config_slug --test update_and_install --test up
 ```
 
 Editing packaging or prebuilt artifact refresh flows:
+
+```bash
+cargo nextest run --test powershell_wrapper_resolution --test workflow_shell_smoke --test workflow_runtime
+```
+
+When checked-in prebuilt artifacts are part of the change, refresh and verify them explicitly:
+
+```bash
+FEATUREFORGE_PREBUILT_TARGET=darwin-arm64 scripts/refresh-prebuilt-runtime.sh
+FEATUREFORGE_PREBUILT_TARGET=windows-x64 FEATUREFORGE_PREBUILT_RUST_TARGET=x86_64-pc-windows-gnu scripts/refresh-prebuilt-runtime.sh
+cp target/aarch64-apple-darwin/release/featureforge bin/featureforge
+chmod +x bin/featureforge
+```
+
+Then rerun:
 
 ```bash
 cargo nextest run --test powershell_wrapper_resolution --test workflow_shell_smoke --test workflow_runtime

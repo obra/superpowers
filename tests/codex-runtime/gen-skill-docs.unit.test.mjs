@@ -99,6 +99,7 @@ test('using-featureforge bypass helpers render the decision-state contract', () 
   assert.equal(buildUsingFeatureForgeShellLines().some((line) => line.includes('session-entry/using-featureforge')), true);
   const bypassGate = buildUsingFeatureForgeBypassGateSection();
   assert.match(bypassGate, /featureforge session-entry resolve --message-file <path>/);
+  assert.match(bypassGate, /Fresh-session spec review, plan review, and execution-preflight intents must still surface the bypass prompt first/);
   assert.doesNotMatch(bypassGate, /featureforge-session-entry/);
   assert.match(bypassGate, /enabled/);
   assert.match(bypassGate, /bypassed/);

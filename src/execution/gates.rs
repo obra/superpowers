@@ -12,8 +12,8 @@ use crate::contracts::harness::{
 };
 use crate::diagnostics::{FailureClass, JsonFailure};
 use crate::execution::state::{
-    ExecutionContext, ExecutionRuntime, GateResult, GateState, compute_packet_fingerprint,
-    hash_contract_plan, load_execution_context,
+    ExecutionContext, ExecutionRuntime, GateResult, GateState, PacketFingerprintInput,
+    compute_packet_fingerprint, hash_contract_plan, load_execution_context,
 };
 use crate::git::sha256_hex;
 use crate::paths::{
@@ -457,16 +457,16 @@ fn validate_contract_scope_against_approved_plan(
     let expected_packet_fingerprints: BTreeSet<String> = contract_scope
         .iter()
         .map(|(task, step)| {
-            compute_packet_fingerprint(
-                &context.plan_rel,
-                context.plan_document.plan_revision,
-                expected_plan_fingerprint,
-                &context.plan_document.source_spec_path,
-                context.plan_document.source_spec_revision,
-                expected_spec_fingerprint,
-                *task,
-                *step,
-            )
+            compute_packet_fingerprint(PacketFingerprintInput {
+                plan_path: &context.plan_rel,
+                plan_revision: context.plan_document.plan_revision,
+                plan_fingerprint: expected_plan_fingerprint,
+                source_spec_path: &context.plan_document.source_spec_path,
+                source_spec_revision: context.plan_document.source_spec_revision,
+                source_spec_fingerprint: expected_spec_fingerprint,
+                task: *task,
+                step: *step,
+            })
         })
         .collect();
     let declared_packet_fingerprints: BTreeSet<String> = contract
@@ -536,10 +536,7 @@ pub(crate) fn validate_harness_provenance(
     gate: &mut GateState,
 ) {
     let generated_by = generated_by.trim();
-    if !HARNESS_OWNED_PRODUCERS
-        .iter()
-        .any(|producer| *producer == generated_by)
-    {
+    if !HARNESS_OWNED_PRODUCERS.contains(&generated_by) {
         gate.fail(
             failure_class,
             reason_code,
@@ -847,7 +844,7 @@ pub(crate) fn require_active_contract_state(
         }
     };
 
-    let Some(canonical_contract_fingerprint) = verify_declared_fingerprint(
+    let canonical_contract_fingerprint = verify_declared_fingerprint(
         &contract_source,
         "Contract Fingerprint",
         &contract.contract_fingerprint,
@@ -855,9 +852,7 @@ pub(crate) fn require_active_contract_state(
         "active_contract_fingerprint_mismatch",
         "active contract",
         gate,
-    ) else {
-        return None;
-    };
+    )?;
 
     if contract_fingerprint != canonical_contract_fingerprint {
         gate.fail(
@@ -1366,20 +1361,19 @@ fn validate_repo_source(
             "Regenerate repo evidence sources with normalized repo-relative paths.",
         );
     }
-    if let Some(line) = line_part {
-        if line
+    if let Some(line) = line_part
+        && line
             .parse::<u64>()
             .ok()
             .filter(|value| *value > 0)
             .is_none()
-        {
-            gate.fail(
-                FailureClass::EvaluationMismatch,
-                "evaluation_evidence_source_invalid",
-                "Evaluation repo evidence source line suffix must be #L<positive-integer>.",
-                "Regenerate repo evidence sources with valid #L line suffixes.",
-            );
-        }
+    {
+        gate.fail(
+            FailureClass::EvaluationMismatch,
+            "evaluation_evidence_source_invalid",
+            "Evaluation repo evidence source line suffix must be #L<positive-integer>.",
+            "Regenerate repo evidence sources with valid #L line suffixes.",
+        );
     }
 }
 
@@ -1718,20 +1712,18 @@ fn canonical_fingerprint_without_header_value(source: &str, header_label: &str) 
             None => (segment, ""),
         };
 
-        if !replaced {
-            if let Some(marker_index) = line.find(&marker) {
-                let after_marker = &line[marker_index + marker.len()..];
-                let leading_whitespace_len = after_marker
-                    .chars()
-                    .take_while(|ch| matches!(ch, ' ' | '\t'))
-                    .map(char::len_utf8)
-                    .sum::<usize>();
-                canonical_source
-                    .push_str(&line[..marker_index + marker.len() + leading_whitespace_len]);
-                canonical_source.push_str(newline);
-                replaced = true;
-                continue;
-            }
+        if !replaced && let Some(marker_index) = line.find(&marker) {
+            let after_marker = &line[marker_index + marker.len()..];
+            let leading_whitespace_len = after_marker
+                .chars()
+                .take_while(|ch| matches!(ch, ' ' | '\t'))
+                .map(char::len_utf8)
+                .sum::<usize>();
+            canonical_source
+                .push_str(&line[..marker_index + marker.len() + leading_whitespace_len]);
+            canonical_source.push_str(newline);
+            replaced = true;
+            continue;
         }
 
         canonical_source.push_str(segment);

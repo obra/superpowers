@@ -540,6 +540,14 @@ fn plan_execution_status_schema_issues(schema_json: &str) -> Vec<String> {
         ["string", "null"],
         optional
     );
+    check_types!("strategy_state", ["string"], required);
+    check_types!(
+        "last_strategy_checkpoint_fingerprint",
+        ["string", "null"],
+        optional
+    );
+    check_types!("strategy_checkpoint_kind", ["string"], required);
+    check_types!("strategy_reset_required", ["boolean"], required);
     check_types!("execution_mode", ["string"], required);
     check_types!("execution_fingerprint", ["string"], required);
     check_types!("evidence_path", ["string"], required);

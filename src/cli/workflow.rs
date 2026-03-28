@@ -14,6 +14,7 @@ pub enum WorkflowCommand {
     Resolve,
     Expect(ExpectArgs),
     Sync(SyncArgs),
+    PlanFidelity(WorkflowPlanFidelityCli),
     Next,
     Artifacts,
     Explain,
@@ -78,6 +79,27 @@ pub struct PlanArgs {
 pub struct WorkflowGateCli {
     #[command(subcommand)]
     pub command: WorkflowGateCommand,
+}
+
+#[derive(Debug, Args)]
+pub struct WorkflowPlanFidelityCli {
+    #[command(subcommand)]
+    pub command: WorkflowPlanFidelityCommand,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum WorkflowPlanFidelityCommand {
+    Record(PlanFidelityRecordArgs),
+}
+
+#[derive(Debug, Args)]
+pub struct PlanFidelityRecordArgs {
+    #[arg(long)]
+    pub plan: PathBuf,
+    #[arg(long)]
+    pub review_artifact: PathBuf,
+    #[arg(long, default_value_t = false)]
+    pub json: bool,
 }
 
 #[derive(Debug, Subcommand)]

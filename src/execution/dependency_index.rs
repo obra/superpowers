@@ -6,10 +6,11 @@ use crate::execution::harness::{ChunkId, ExecutionRunId};
 pub const DEPENDENCY_INDEX_VERSION: u32 = 1;
 pub const DEFAULT_RETENTION_WINDOW_DAYS: u32 = 30;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum DependencyIndexState {
     Healthy,
+    #[default]
     Missing,
     Malformed,
     Inconsistent,
@@ -25,12 +26,6 @@ impl DependencyIndexState {
             Self::Inconsistent => "inconsistent",
             Self::Recovering => "recovering",
         }
-    }
-}
-
-impl Default for DependencyIndexState {
-    fn default() -> Self {
-        Self::Missing
     }
 }
 

@@ -1,6 +1,8 @@
 use std::path::PathBuf;
 
 use clap::{Args, Subcommand, ValueEnum};
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Args)]
 pub struct PlanExecutionCli {
@@ -100,6 +102,24 @@ pub struct RecommendArgs {
     pub session_intent: Option<SessionIntentArg>,
     #[arg(long = "workspace-prepared")]
     pub workspace_prepared: Option<WorkspacePreparedArg>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema, ValueEnum)]
+#[serde(rename_all = "kebab-case")]
+pub enum ExecutionTopologyArg {
+    #[value(name = "worktree-backed-parallel")]
+    WorktreeBackedParallel,
+    #[value(name = "conservative-fallback")]
+    ConservativeFallback,
+}
+
+impl ExecutionTopologyArg {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::WorktreeBackedParallel => "worktree-backed-parallel",
+            Self::ConservativeFallback => "conservative-fallback",
+        }
+    }
 }
 
 #[derive(Debug, Clone, Args)]

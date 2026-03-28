@@ -10,6 +10,7 @@ The active contract surface already includes:
 - Rust runtime and workflow suites under `tests/`
 - doc-driven eval gates under `tests/evals/`
 - a checked-in workflow-status snapshot fixture under `tests/fixtures/differential/` exercised by `tests/workflow_runtime.rs`
+- runtime strategy-checkpoint and deviation-truthing coverage in `tests/plan_execution_topology.rs`, `tests/plan_execution_final_review.rs`, and `tests/workflow_runtime_final_review.rs`
 
 The active deterministic suite and recommended commands now live in `docs/testing.md`.
 

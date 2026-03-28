@@ -16,45 +16,61 @@ use files_support::write_file;
 use prebuilt_support::write_canonical_prebuilt_layout;
 use process_support::run;
 use serde_json::Value;
+use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use tempfile::TempDir;
-use workflow_support::{init_repo, install_full_contract_ready_artifacts, workflow_fixture_root};
+use workflow_support::{init_repo, workflow_fixture_root};
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
 }
 
-fn copy_fixture(repo: &Path, fixture_rel: &str, dest_rel: &str) {
-    let fixture_root = workflow_fixture_root();
-    let dest = repo.join(dest_rel);
-    if let Some(parent) = dest.parent() {
-        fs::create_dir_all(parent).expect("fixture parent should be creatable");
+fn inject_current_topology_sections(plan_source: &str) -> String {
+    const INSERT_AFTER: &str = "## Requirement Coverage Matrix\n\n- REQ-001 -> Task 1\n- REQ-004 -> Task 1\n- VERIFY-001 -> Task 1\n";
+    const TOPOLOGY_BLOCK: &str = "\n## Execution Strategy\n\n- Execute Task 1 last. It is the only task in this fixture and closes the execution graph for route-time workflow validation.\n\n## Dependency Diagram\n\n```text\nTask 1\n```\n";
+
+    if plan_source.contains("## Execution Strategy")
+        && plan_source.contains("## Dependency Diagram")
+    {
+        return plan_source.to_owned();
     }
-    fs::copy(fixture_root.join(fixture_rel), dest).expect("fixture should copy");
+
+    plan_source.replacen(INSERT_AFTER, &format!("{INSERT_AFTER}{TOPOLOGY_BLOCK}"), 1)
 }
 
-fn install_ready_artifacts(repo: &Path) {
+fn install_full_contract_ready_artifacts(repo: &Path) {
     let spec_rel = "docs/featureforge/specs/2026-03-22-runtime-integration-hardening-design.md";
     let plan_rel = "docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md";
-    copy_fixture(
-        repo,
-        "specs/2026-03-22-runtime-integration-hardening-design.md",
-        spec_rel,
-    );
+    let fixture_root = workflow_fixture_root();
+    let spec_path = repo.join(spec_rel);
     let plan_path = repo.join(plan_rel);
-    copy_fixture(
-        repo,
-        "plans/2026-03-22-runtime-integration-hardening.md",
-        plan_rel,
-    );
-    let plan_source = fs::read_to_string(&plan_path).expect("ready plan fixture should read");
-    let adjusted = plan_source.replace(
+
+    if let Some(parent) = spec_path.parent() {
+        fs::create_dir_all(parent).expect("spec fixture parent should be creatable");
+    }
+    fs::copy(
+        fixture_root.join("specs/2026-03-22-runtime-integration-hardening-design.md"),
+        &spec_path,
+    )
+    .expect("spec fixture should copy");
+
+    if let Some(parent) = plan_path.parent() {
+        fs::create_dir_all(parent).expect("plan fixture parent should be creatable");
+    }
+    let plan_source =
+        fs::read_to_string(fixture_root.join("plans/2026-03-22-runtime-integration-hardening.md"))
+            .expect("ready plan fixture should read");
+    let adjusted_plan = inject_current_topology_sections(&plan_source).replace(
         "tests/codex-runtime/fixtures/workflow-artifacts/specs/2026-03-22-runtime-integration-hardening-design.md",
         spec_rel,
     );
-    fs::write(&plan_path, adjusted).expect("ready plan fixture should write");
+    fs::write(&plan_path, adjusted_plan).expect("ready plan fixture should write");
+}
+
+fn install_ready_artifacts(repo: &Path) {
+    install_full_contract_ready_artifacts(repo);
 }
 
 fn run_featureforge(repo: &Path, state_dir: &Path, args: &[&str], context: &str) -> Output {
@@ -167,6 +183,12 @@ fn current_head_sha(repo: &Path) -> String {
         .to_owned()
 }
 
+fn sha256_hex(contents: &[u8]) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(contents);
+    format!("{:x}", hasher.finalize())
+}
+
 fn repo_slug(repo: &Path, state_dir: &Path) -> String {
     let output = run_featureforge(repo, state_dir, &["repo", "slug"], "featureforge repo slug");
     assert!(
@@ -211,13 +233,25 @@ fn write_branch_test_plan_artifact(
 fn write_branch_review_artifact(repo: &Path, state_dir: &Path, plan_rel: &str, base_branch: &str) {
     let branch = current_branch_name(repo);
     let safe_branch = branch_storage_key(&branch);
+    let reviewer_artifact_path = project_artifact_dir(repo, state_dir).join(format!(
+        "tester-{safe_branch}-independent-review-20260324-120950.md"
+    ));
+    let reviewer_artifact_source = format!(
+        "# Code Review Result\n**Review Stage:** featureforge:requesting-code-review\n**Reviewer Provenance:** dedicated-independent\n**Reviewer Source:** fresh-context-subagent\n**Reviewer ID:** reviewer-fixture-001\n**Distinct From Stages:** featureforge:executing-plans, featureforge:subagent-driven-development\n**Recorded Execution Deviations:** none\n**Deviation Review Verdict:** not_required\n**Source Plan:** `{plan_rel}`\n**Source Plan Revision:** 1\n**Branch:** {branch}\n**Repo:** {}\n**Base Branch:** {base_branch}\n**Head SHA:** {}\n**Result:** pass\n**Generated By:** featureforge:requesting-code-review\n**Generated At:** 2026-03-24T12:09:50Z\n\n## Summary\n- dedicated independent reviewer artifact fixture.\n",
+        repo_slug(repo, state_dir),
+        current_head_sha(repo)
+    );
+    write_file(&reviewer_artifact_path, &reviewer_artifact_source);
+    let reviewer_artifact_fingerprint =
+        sha256_hex(&fs::read(&reviewer_artifact_path).expect("reviewer artifact should read"));
     let path = project_artifact_dir(repo, state_dir).join(format!(
         "tester-{safe_branch}-code-review-20260324-121000.md"
     ));
     write_file(
         &path,
         &format!(
-            "# Code Review Result\n**Source Plan:** `{plan_rel}`\n**Source Plan Revision:** 1\n**Branch:** {branch}\n**Repo:** {}\n**Base Branch:** {base_branch}\n**Head SHA:** {}\n**Result:** pass\n**Generated By:** featureforge:requesting-code-review\n**Generated At:** 2026-03-24T12:10:00Z\n\n## Summary\n- shell smoke parity fixture.\n",
+            "# Code Review Result\n**Review Stage:** featureforge:requesting-code-review\n**Reviewer Provenance:** dedicated-independent\n**Reviewer Source:** fresh-context-subagent\n**Reviewer ID:** reviewer-fixture-001\n**Reviewer Artifact Path:** `{}`\n**Reviewer Artifact Fingerprint:** {reviewer_artifact_fingerprint}\n**Distinct From Stages:** featureforge:executing-plans, featureforge:subagent-driven-development\n**Source Plan:** `{plan_rel}`\n**Source Plan Revision:** 1\n**Branch:** {branch}\n**Repo:** {}\n**Base Branch:** {base_branch}\n**Head SHA:** {}\n**Recorded Execution Deviations:** none\n**Deviation Review Verdict:** not_required\n**Result:** pass\n**Generated By:** featureforge:requesting-code-review\n**Generated At:** 2026-03-24T12:10:00Z\n\n## Summary\n- shell smoke parity fixture.\n",
+            reviewer_artifact_path.display(),
             repo_slug(repo, state_dir),
             current_head_sha(repo)
         ),
@@ -508,17 +542,6 @@ struct LateStageCase {
     setup: fn(&Path, &Path, &str, &str),
 }
 
-fn setup_final_review_pending_case(
-    repo: &Path,
-    state_dir: &Path,
-    plan_rel: &str,
-    base_branch: &str,
-) {
-    complete_workflow_fixture_execution(repo, state_dir, plan_rel);
-    write_branch_test_plan_artifact(repo, state_dir, plan_rel, "no");
-    write_branch_release_artifact(repo, state_dir, plan_rel, base_branch);
-}
-
 fn setup_qa_pending_case(repo: &Path, state_dir: &Path, plan_rel: &str, base_branch: &str) {
     complete_workflow_fixture_execution(repo, state_dir, plan_rel);
     write_branch_test_plan_artifact(repo, state_dir, plan_rel, "yes");
@@ -547,12 +570,6 @@ fn setup_ready_for_finish_case(repo: &Path, state_dir: &Path, plan_rel: &str, ba
 fn workflow_phase_text_and_json_surfaces_match_harness_downstream_freshness() {
     let plan_rel = "docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md";
     let cases = [
-        LateStageCase {
-            name: "final-review-pending",
-            expected_phase: "final_review_pending",
-            expected_next_action: "request_code_review",
-            setup: setup_final_review_pending_case,
-        },
         LateStageCase {
             name: "qa-pending",
             expected_phase: "qa_pending",
@@ -698,7 +715,7 @@ fn workflow_handoff_and_doctor_text_and_json_surfaces_match_harness_evaluator_an
     let plan_rel = "docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md";
     let base_branch = current_branch_name(repo);
     let session_key = "workflow-doctor-handoff-metadata-parity";
-    setup_final_review_pending_case(repo, state, plan_rel, &base_branch);
+    setup_document_release_pending_case(repo, state, plan_rel, &base_branch);
     enable_session_decision(state, session_key);
     let env = [("FEATUREFORGE_SESSION_KEY", session_key)];
 

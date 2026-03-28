@@ -181,6 +181,12 @@
         "null"
       ]
     },
+    "last_strategy_checkpoint_fingerprint": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "latest_authoritative_sequence": {
       "type": "integer",
       "format": "uint64",
@@ -292,6 +298,15 @@
         "type": "string"
       }
     },
+    "strategy_checkpoint_kind": {
+      "type": "string"
+    },
+    "strategy_reset_required": {
+      "type": "boolean"
+    },
+    "strategy_state": {
+      "type": "string"
+    },
     "warning_codes": {
       "type": "array",
       "items": {
@@ -335,6 +350,9 @@
     "final_review_state",
     "browser_qa_state",
     "release_docs_state",
+    "strategy_state",
+    "strategy_checkpoint_kind",
+    "strategy_reset_required",
     "reason_codes",
     "execution_mode",
     "execution_fingerprint",

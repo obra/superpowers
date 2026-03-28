@@ -61,7 +61,21 @@ Accelerated review is an opt-in branch inside `plan-ceo-review` and `plan-eng-re
 - generated skill preambles always invoke the packaged install binary under `~/.featureforge/install/bin/` (`featureforge` on Unix, `featureforge.exe` on Windows), and that runtime resolves the active root through `featureforge repo runtime-root --path` before update checks or contributor-mode reads
 - `featureforge workflow status --refresh` re-derives the safe next stage from active specs and plans
 - `featureforge plan contract` compiles approved markdown into exact execution and review inputs
-- `featureforge plan execution recommend --plan <approved-plan-path>` selects the execution mode before work starts
+- `featureforge plan execution recommend --plan <approved-plan-path>` selects execution topology and mode before work starts
+- `featureforge plan execution gate-finish --plan <approved-plan-path>` requires deviation disposition from authoritative runtime topology-downgrade artifacts, not reason-code hints alone
+- `featureforge plan execution status --plan <approved-plan-path>` surfaces runtime strategy checkpoint state (`strategy_state`, `strategy_checkpoint_kind`, `last_strategy_checkpoint_fingerprint`, `strategy_reset_required`)
+
+Runtime strategy checkpointing is execution-owned, not planning-owned. The runtime records:
+
+- `initial_dispatch` before repo-writing execution starts
+- `review_remediation` for reviewable `gate-review` dispatches and remediation reopen events
+- `cycle_break` automatically when the same task reaches three reviewable dispatch/remediation cycles
+
+This does not send the workflow back to planning stages; it keeps remediation in execution while preserving approved plan scope.
+
+Checkpoint history is runtime-owned authoritative state (`strategy_checkpoints`). Authoritative unit-review receipts must carry the active strategy checkpoint fingerprint.
+
+Review note: this runtime strategy checkpoint layer is intentional contract hardening and should not be removed as "out-of-plan" cleanup when branch tests and runtime contracts require it.
 
 Default planning pipeline:
 

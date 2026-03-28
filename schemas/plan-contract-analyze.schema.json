@@ -9,11 +9,20 @@
     "coverage_complete": {
       "type": "boolean"
     },
+    "dependency_diagram_present": {
+      "type": "boolean"
+    },
     "diagnostics": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/ContractDiagnostic"
       }
+    },
+    "execution_strategy_present": {
+      "type": "boolean"
+    },
+    "execution_topology_valid": {
+      "type": "boolean"
     },
     "files_blocks_valid": {
       "type": "boolean"
@@ -32,6 +41,32 @@
       "format": "uint",
       "minimum": 0
     },
+    "parallel_lane_ownership_valid": {
+      "type": "boolean"
+    },
+    "parallel_workspace_isolation_valid": {
+      "type": "boolean"
+    },
+    "parallel_worktree_groups": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      }
+    },
+    "parallel_worktree_requirements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ParallelWorktreeRequirement"
+      }
+    },
+    "plan_fidelity_receipt": {
+      "$ref": "#/$defs/PlanFidelityGateReport"
+    },
     "plan_fingerprint": {
       "type": "string"
     },
@@ -48,6 +83,9 @@
       "items": {
         "type": "string"
       }
+    },
+    "serial_hazards_resolved": {
+      "type": "boolean"
     },
     "spec_fingerprint": {
       "type": "string"
@@ -83,8 +121,17 @@
     "open_questions_resolved",
     "task_structure_valid",
     "files_blocks_valid",
+    "execution_strategy_present",
+    "dependency_diagram_present",
+    "execution_topology_valid",
+    "serial_hazards_resolved",
+    "parallel_lane_ownership_valid",
+    "parallel_workspace_isolation_valid",
+    "parallel_worktree_groups",
+    "parallel_worktree_requirements",
     "reason_codes",
     "overlapping_write_scopes",
+    "plan_fidelity_receipt",
     "diagnostics"
   ],
   "$defs": {
@@ -121,6 +168,79 @@
       "required": [
         "path",
         "tasks"
+      ]
+    },
+    "ParallelWorktreeRequirement": {
+      "type": "object",
+      "properties": {
+        "declared_worktrees": {
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0
+        },
+        "required_worktrees": {
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0
+        },
+        "tasks": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0
+          }
+        }
+      },
+      "required": [
+        "tasks",
+        "declared_worktrees",
+        "required_worktrees"
+      ]
+    },
+    "PlanFidelityGateReport": {
+      "type": "object",
+      "properties": {
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContractDiagnostic"
+          }
+        },
+        "provenance_source": {
+          "type": "string"
+        },
+        "reason_codes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "receipt_path": {
+          "type": "string"
+        },
+        "reviewer_stage": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "verified_execution_topology": {
+          "type": "boolean"
+        },
+        "verified_requirement_index": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "state",
+        "receipt_path",
+        "reviewer_stage",
+        "provenance_source",
+        "verified_requirement_index",
+        "verified_execution_topology",
+        "reason_codes",
+        "diagnostics"
       ]
     }
   }

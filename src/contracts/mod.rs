@@ -5,3 +5,9 @@ pub mod packet;
 pub mod plan;
 pub mod runtime;
 pub mod spec;
+
+pub use harness::{
+    BlockingEvidenceReference, DowngradeBlockingEvidence, DowngradeOperatorImpact,
+    DowngradeOperatorImpactSeverity, DowngradeReasonClass, ExecutionTopologyDowngradeDetail,
+    ExecutionTopologyDowngradeRecord, WorktreeLease, WorktreeLeaseState,
+};

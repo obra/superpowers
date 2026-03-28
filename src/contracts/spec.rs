@@ -124,10 +124,16 @@ fn missing_header(header: &str) -> DiagnosticError {
 }
 
 pub(crate) fn repo_relative_string(path: &Path) -> String {
-    let normalized = path.display().to_string().replace('\\', "/");
-    for marker in ["/docs/", "/tests/", "/schemas/", "/src/"] {
-        if let Some((_, suffix)) = normalized.split_once(marker) {
-            return format!("{}{}", &marker[1..], suffix);
+    let start = if path.is_dir() {
+        path
+    } else {
+        path.parent().unwrap_or(path)
+    };
+    for ancestor in start.ancestors() {
+        if (ancestor.join(".git").is_dir() || ancestor.join("docs/featureforge").is_dir())
+            && let Ok(relative) = path.strip_prefix(ancestor)
+        {
+            return relative.display().to_string().replace('\\', "/");
         }
     }
     path.file_name()

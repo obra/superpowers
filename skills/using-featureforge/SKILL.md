@@ -61,6 +61,8 @@ Supported entry paths must resolve `featureforge session-entry resolve --message
 - if the helper returns `needs_user_choice`, ask the opt-out question and persist either `enabled` or `bypassed`
 - if the helper returns `runtime_failure`, surface that failure instead of pretending the gate was resolved
 
+Fresh-session spec review, plan review, and execution-preflight intents must still surface the bypass prompt first through `featureforge session-entry resolve --message-file <path>`.
+
 supported spawned-subagent entry paths must pass the runtime marker instead of inventing prose-only bypass behavior.
 
 - default spawned-subagent bypass is ephemeral and non-persisted
@@ -258,7 +260,7 @@ When multiple skills could apply, use this order:
 2. **Workflow-stage skills second** (review, planning, execution) - these own the required handoffs once their prerequisites are satisfied
 3. **Domain-specific implementation skills last** - only after the active workflow stage allows them
 
-"Let's build X" → brainstorming first, then follow the artifact-state workflow: plan-ceo-review -> writing-plans -> plan-eng-review -> execution.
+"Let's build X" → brainstorming first, then follow the artifact-state workflow: plan-ceo-review -> writing-plans -> plan-fidelity review -> plan-eng-review -> execution.
 "Fix this bug" → debugging first, then if it changes FeatureForge product or workflow behavior follow the artifact-state workflow; otherwise continue to the appropriate implementation skill.
 
 ## Skill Types
@@ -316,11 +318,12 @@ Routing rules:
 1. No relevant spec artifact: invoke `featureforge:brainstorming`.
 2. Spec exists but is `Draft`, has malformed approval headers, or has `CEO Approved` without `**Last Reviewed By:** plan-ceo-review`: invoke `featureforge:plan-ceo-review`.
 3. Spec is `CEO Approved` and no relevant plan exists: invoke `featureforge:writing-plans`.
-4. Plan exists but is `Draft`, has malformed approval headers, or has `Engineering Approved` without `**Last Reviewed By:** plan-eng-review`: invoke `featureforge:plan-eng-review`.
-5. Plan is `Engineering Approved` but its `Source Spec:` path or `Source Spec Revision:` does not match the latest approved spec: invoke `featureforge:writing-plans`.
-6. Plan is `Engineering Approved` and its `Source Spec:` path plus `Source Spec Revision:` match the latest approved spec: only proceed through the normal helper-backed execution preflight and handoff flow for that approved plan path.
-7. If artifacts are ambiguous or incomplete, route to the earlier safe stage instead of skipping ahead.
-8. If the helper-backed execution preflight or handoff flow is unavailable, do not route directly from manual fallback into implementation. Stop at the approved plan path and return to the earlier safe stage or the current execution flow instead.
+4. Plan exists, is `Draft`, and is missing, stale, malformed, non-pass, or non-independent plan-fidelity receipt evidence: invoke `featureforge:writing-plans`.
+5. Plan exists, is `Draft`, and has a matching pass dedicated plan-fidelity receipt: invoke `featureforge:plan-eng-review`.
+6. Plan is `Engineering Approved` but its `Source Spec:` path or `Source Spec Revision:` does not match the latest approved spec: invoke `featureforge:writing-plans`.
+7. Plan is `Engineering Approved` and its `Source Spec:` path plus `Source Spec Revision:` match the latest approved spec: only proceed through the normal helper-backed execution preflight and handoff flow for that approved plan path.
+8. If artifacts are ambiguous or incomplete, route to the earlier safe stage instead of skipping ahead.
+9. If the helper-backed execution preflight or handoff flow is unavailable, do not route directly from manual fallback into implementation. Stop at the approved plan path and return to the earlier safe stage or the current execution flow instead.
 
 ## User Instructions
 

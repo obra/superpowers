@@ -90,6 +90,7 @@ When the diff introduces a new enum value, status, tier, type, or constant famil
 - Draft specs that still dodge core delivery content such as problem statement, failure behavior, observability, rollout/rollback, risks, or acceptance criteria
 - Draft plans that skip preconditions, validation strategy, documentation update expectations, evidence expectations, rollout/rollback thinking, or explicit risks
 - Review changes that quietly lower these workflow quality bars without updating the corresponding review skills and tests
+- Runtime-owned contract hardening added during execution/remediation (for example strategy checkpoints or authoritative deviation truthing) that is fully implemented and tested should not be rejected only because it was not spelled out in the original approved plan
 
 #### Release Readiness
 - Workflow-routed changes that should have a required `document-release` handoff before completion but still treat release docs as optional cleanup

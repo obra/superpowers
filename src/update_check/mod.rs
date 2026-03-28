@@ -79,33 +79,33 @@ pub fn check(args: &UpdateCheckCli) -> Result<String, DiagnosticError> {
         return Ok(format!("JUST_UPGRADED {old_version} {local_version}"));
     }
 
-    if !args.force {
-        if let Some(cache) = read_cache(&paths)? {
-            if cache.relation == CacheRelation::UpToDate
-                && cache.local_version == local_version
-                && cache_is_fresh(
-                    &canonical_or_legacy_path(&paths, "last-update-check"),
-                    UP_TO_DATE_TTL,
-                )?
+    if !args.force
+        && let Some(cache) = read_cache(&paths)?
+    {
+        if cache.relation == CacheRelation::UpToDate
+            && cache.local_version == local_version
+            && cache_is_fresh(
+                &canonical_or_legacy_path(&paths, "last-update-check"),
+                UP_TO_DATE_TTL,
+            )?
+        {
+            promote_cache_if_needed(&paths, &cache)?;
+            return Ok(String::new());
+        }
+        if cache.relation == CacheRelation::UpgradeAvailable
+            && cache.local_version == local_version
+            && cache_is_fresh(
+                &canonical_or_legacy_path(&paths, "last-update-check"),
+                UPGRADE_AVAILABLE_TTL,
+            )?
+        {
+            promote_cache_if_needed(&paths, &cache)?;
+            if let Some(remote_version) = cache.remote_version.as_deref()
+                && snoozed(&paths, remote_version)?
             {
-                promote_cache_if_needed(&paths, &cache)?;
                 return Ok(String::new());
             }
-            if cache.relation == CacheRelation::UpgradeAvailable
-                && cache.local_version == local_version
-                && cache_is_fresh(
-                    &canonical_or_legacy_path(&paths, "last-update-check"),
-                    UPGRADE_AVAILABLE_TTL,
-                )?
-            {
-                promote_cache_if_needed(&paths, &cache)?;
-                if let Some(remote_version) = cache.remote_version.as_deref() {
-                    if snoozed(&paths, remote_version)? {
-                        return Ok(String::new());
-                    }
-                }
-                return Ok(cache.raw);
-            }
+            return Ok(cache.raw);
         }
     }
 

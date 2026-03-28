@@ -110,10 +110,10 @@ pub fn discover_slug_identity(start_dir: &Path) -> SlugIdentity {
 }
 
 pub fn derive_repo_slug(repo_root: &Path, remote_url: Option<&str>) -> String {
-    if let Some(remote_url) = remote_url {
-        if let Some(slug) = slug_from_remote(remote_url) {
-            return slug;
-        }
+    if let Some(remote_url) = remote_url
+        && let Some(slug) = slug_from_remote(remote_url)
+    {
+        return slug;
     }
 
     let repo_name = repo_root

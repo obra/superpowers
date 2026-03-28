@@ -1,38 +1,43 @@
 use std::collections::BTreeMap;
 use std::fs::{self, OpenOptions};
 use std::io::{ErrorKind, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 use crate::cli::plan_execution::{RecordContractArgs, RecordEvaluationArgs, RecordHandoffArgs};
 use crate::contracts::harness::{
-    read_evaluation_report, read_execution_contract, read_execution_handoff, EvaluationReport,
-    ExecutionContract, ExecutionHandoff,
+    EvaluationReport, ExecutionContract, ExecutionHandoff, WorktreeLease, read_evaluation_report,
+    read_execution_contract, read_execution_handoff,
 };
 use crate::diagnostics::{FailureClass, JsonFailure};
 use crate::execution::dependency_index::{
-    DependencyIndex, DependencyIndexHealth, DependencyIndexState, DependencyNode, DependencyNodeId,
-    IndexedArtifactKind, DEPENDENCY_INDEX_VERSION,
+    DEPENDENCY_INDEX_VERSION, DependencyIndex, DependencyIndexHealth, DependencyIndexState,
+    DependencyNode, DependencyNodeId, IndexedArtifactKind,
 };
 use crate::execution::gates::{
-    normalize_artifact_repo_path, require_active_contract_state, validate_contract_provenance,
-    validate_evaluator_semantics, validate_handoff_provenance, validate_handoff_semantics,
-    validate_harness_provenance, validate_report_provenance, GateAuthorityState,
+    GateAuthorityState, normalize_artifact_repo_path, require_active_contract_state,
+    validate_contract_provenance, validate_evaluator_semantics, validate_handoff_provenance,
+    validate_handoff_semantics, validate_harness_provenance, validate_report_provenance,
 };
-use crate::execution::harness::{HarnessPhase, INITIAL_AUTHORITATIVE_SEQUENCE};
+use crate::execution::harness::{
+    ChunkId, HarnessPhase, INITIAL_AUTHORITATIVE_SEQUENCE, RunIdentitySnapshot,
+    WorktreeLeaseBindingSnapshot,
+};
+use crate::execution::leases::validate_worktree_lease;
 use crate::execution::observability::{
     HarnessEventKind, HarnessObservabilityEvent, HarnessTelemetryCounters,
 };
 use crate::execution::state::{
-    load_execution_context, ExecutionContext, ExecutionRuntime, GateResult, GateState,
+    ExecutionContext, ExecutionRuntime, GateResult, GateState, load_execution_context,
 };
 use crate::git::sha256_hex;
 use crate::paths::{
     harness_authoritative_artifact_path, harness_authoritative_artifacts_dir, harness_branch_root,
     harness_dependency_index_path, harness_observability_events_path, harness_state_path,
-    harness_telemetry_counters_path, write_atomic as write_atomic_file,
+    harness_telemetry_counters_path, normalize_identifier_token, write_atomic as write_atomic_file,
 };
 
 pub fn record_contract(
@@ -253,9 +258,17 @@ struct MutableHarnessState {
     #[serde(default)]
     authoritative_sequence: Option<u64>,
     #[serde(default)]
+    run_identity: Option<RunIdentitySnapshot>,
+    #[serde(default)]
+    chunk_id: Option<String>,
+    #[serde(default)]
     active_contract_path: Option<String>,
     #[serde(default)]
     active_contract_fingerprint: Option<String>,
+    #[serde(default)]
+    active_worktree_lease_fingerprints: Option<Vec<String>>,
+    #[serde(default)]
+    active_worktree_lease_bindings: Option<Vec<WorktreeLeaseBindingSnapshot>>,
     #[serde(default)]
     required_evaluator_kinds: Vec<String>,
     #[serde(default)]
@@ -288,8 +301,16 @@ struct MutableHarnessState {
     handoff_required: bool,
     #[serde(default)]
     open_failed_criteria: Vec<String>,
+    #[serde(default)]
+    strategy_state: Option<String>,
+    #[serde(default)]
+    last_strategy_checkpoint_fingerprint: Option<String>,
+    #[serde(default)]
+    strategy_checkpoint_kind: Option<String>,
+    #[serde(default)]
+    strategy_reset_required: bool,
     #[serde(flatten)]
-    extra: BTreeMap<String, serde_json::Value>,
+    extra: BTreeMap<String, Value>,
 }
 
 impl MutableHarnessState {
@@ -313,6 +334,12 @@ impl MutableHarnessState {
         }
         if self.aggregate_evaluation_state.is_none() {
             self.aggregate_evaluation_state = Some(String::from("pending"));
+        }
+        if self.strategy_state.is_none() {
+            self.strategy_state = Some(String::from("checkpoint_missing"));
+        }
+        if self.strategy_checkpoint_kind.is_none() {
+            self.strategy_checkpoint_kind = Some(String::from("none"));
         }
     }
 }
@@ -752,32 +779,30 @@ where
         let mut expected_replay_state = state.clone();
         apply_transition(&mut expected_replay_state);
         if state == expected_replay_state {
-            if !target_exists {
-                if let Err(error) = write_atomic_file(&target_path, &source) {
-                    gate.fail(
-                        FailureClass::PartialAuthoritativeMutation,
-                        "authoritative_publish_failed",
-                        format!(
-                            "Could not publish authoritative artifact {}: {error}",
-                            target_path.display()
-                        ),
-                        "Restore authoritative artifact write access and retry.",
-                    );
-                }
+            if !target_exists && let Err(error) = write_atomic_file(&target_path, &source) {
+                gate.fail(
+                    FailureClass::PartialAuthoritativeMutation,
+                    "authoritative_publish_failed",
+                    format!(
+                        "Could not publish authoritative artifact {}: {error}",
+                        target_path.display()
+                    ),
+                    "Restore authoritative artifact write access and retry.",
+                );
             }
-            if gate.allowed {
-                if let Err(error) = persist_dependency_index_after_authoritative_record(
+            if gate.allowed
+                && let Err(error) = persist_dependency_index_after_authoritative_record(
                     runtime,
                     artifact_file_name,
                     authoritative_sequence,
-                ) {
-                    gate.fail(
-                        FailureClass::PartialAuthoritativeMutation,
-                        "dependency_index_publish_failed",
-                        error,
-                        "Restore dependency-index write access and retry.",
-                    );
-                }
+                )
+            {
+                gate.fail(
+                    FailureClass::PartialAuthoritativeMutation,
+                    "dependency_index_publish_failed",
+                    error,
+                    "Restore dependency-index write access and retry.",
+                );
             }
             return Ok(gate.finish());
         }
@@ -872,10 +897,330 @@ where
     Ok(gate.finish())
 }
 
+pub fn write_authoritative_worktree_lease_artifact(
+    runtime: &ExecutionRuntime,
+    lease: &WorktreeLease,
+) -> Result<PathBuf, JsonFailure> {
+    let (_lock, state, _state_path) = load_mutable_harness_state_for_authoritative_write(runtime)?;
+    validate_worktree_lease(lease)?;
+    validate_safe_identifier_token(&lease.execution_run_id, "execution_run_id")?;
+    validate_safe_identifier_token(&lease.execution_context_key, "execution_context_key")?;
+    validate_safe_identifier_token(&lease.execution_unit_id, "execution_unit_id")?;
+    if let Some(run_identity) = state.run_identity.as_ref()
+        && run_identity.execution_run_id.as_str() != lease.execution_run_id
+    {
+        return Err(JsonFailure::new(
+            FailureClass::ArtifactIntegrityMismatch,
+            "Authoritative worktree lease execution_run_id does not match active run identity.",
+        ));
+    }
+    if lease.authoritative_sequence < state.latest_sequence() {
+        return Err(JsonFailure::new(
+            FailureClass::AuthoritativeOrderingMismatch,
+            format!(
+                "Authoritative worktree lease sequence {} is older than latest authoritative sequence {}.",
+                lease.authoritative_sequence,
+                state.latest_sequence()
+            ),
+        ));
+    }
+    let source = serde_json::to_string_pretty(lease).map_err(|error| {
+        JsonFailure::new(
+            FailureClass::MalformedExecutionState,
+            format!("Could not serialize authoritative worktree lease: {error}"),
+        )
+    })?;
+    let Some(canonical_fingerprint) = canonical_worktree_lease_fingerprint(&source) else {
+        return Err(JsonFailure::new(
+            FailureClass::MalformedExecutionState,
+            "Could not derive canonical authoritative worktree lease fingerprint.",
+        ));
+    };
+    if canonical_fingerprint != lease.lease_fingerprint {
+        return Err(JsonFailure::new(
+            FailureClass::ArtifactIntegrityMismatch,
+            "Authoritative worktree lease fingerprint does not match canonical content.",
+        ));
+    }
+
+    let file_name = format!(
+        "worktree-lease-{}-{}-{}.json",
+        runtime.safe_branch, lease.execution_run_id, lease.execution_context_key
+    );
+    let artifact_path = harness_authoritative_artifact_path(
+        &runtime.state_dir,
+        &runtime.repo_slug,
+        &runtime.branch_name,
+        &file_name,
+    );
+    write_atomic_file(&artifact_path, source).map_err(|error| {
+        JsonFailure::new(
+            FailureClass::PartialAuthoritativeMutation,
+            format!(
+                "Could not publish authoritative worktree lease {}: {error}",
+                artifact_path.display()
+            ),
+        )
+    })?;
+    Ok(artifact_path)
+}
+
+pub fn write_authoritative_unit_review_receipt_artifact(
+    runtime: &ExecutionRuntime,
+    execution_run_id: &str,
+    execution_unit_id: &str,
+    source: &str,
+) -> Result<PathBuf, JsonFailure> {
+    let (_lock, state, _state_path) = load_mutable_harness_state_for_authoritative_write(runtime)?;
+    validate_safe_identifier_token(execution_run_id, "execution_run_id")?;
+    validate_safe_identifier_token(
+        execution_unit_id.trim_start_matches("unit-"),
+        "execution_unit_id",
+    )?;
+    if let Some(run_identity) = state.run_identity.as_ref()
+        && run_identity.execution_run_id.as_str() != execution_run_id
+    {
+        return Err(JsonFailure::new(
+            FailureClass::ArtifactIntegrityMismatch,
+            "Authoritative unit-review receipt execution_run_id does not match active run identity.",
+        ));
+    }
+    let expected_strategy_checkpoint_fingerprint = state
+        .last_strategy_checkpoint_fingerprint
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty());
+    validate_receipt_identity_headers(
+        source,
+        execution_run_id,
+        execution_unit_id,
+        expected_strategy_checkpoint_fingerprint,
+    )?;
+    let Some(canonical_fingerprint) = canonical_unit_review_receipt_fingerprint(source) else {
+        return Err(JsonFailure::new(
+            FailureClass::MalformedExecutionState,
+            "Could not derive canonical authoritative unit-review receipt fingerprint.",
+        ));
+    };
+    if unit_review_receipt_declared_fingerprint(source).as_deref() != Some(&canonical_fingerprint) {
+        return Err(JsonFailure::new(
+            FailureClass::ArtifactIntegrityMismatch,
+            "Authoritative unit-review receipt fingerprint does not match canonical content.",
+        ));
+    }
+
+    let receipt_file_name = format!(
+        "unit-review-{}-{}.md",
+        execution_run_id,
+        execution_unit_id.trim_start_matches("unit-")
+    );
+    let artifact_path = harness_authoritative_artifact_path(
+        &runtime.state_dir,
+        &runtime.repo_slug,
+        &runtime.branch_name,
+        &receipt_file_name,
+    );
+    write_atomic_file(&artifact_path, source).map_err(|error| {
+        JsonFailure::new(
+            FailureClass::PartialAuthoritativeMutation,
+            format!(
+                "Could not publish authoritative unit-review receipt {}: {error}",
+                artifact_path.display()
+            ),
+        )
+    })?;
+    Ok(artifact_path)
+}
+
+pub fn persist_active_worktree_lease_index(
+    runtime: &ExecutionRuntime,
+    run_identity: RunIdentitySnapshot,
+    chunk_id: ChunkId,
+    active_worktree_lease_fingerprints: Vec<String>,
+    active_worktree_lease_bindings: Vec<WorktreeLeaseBindingSnapshot>,
+) -> Result<(), JsonFailure> {
+    let (_lock, mut state, state_path) =
+        load_mutable_harness_state_for_authoritative_write(runtime)?;
+    validate_safe_identifier_token(run_identity.execution_run_id.as_str(), "execution_run_id")?;
+    validate_safe_identifier_token(chunk_id.as_str(), "chunk_id")?;
+    for binding in &active_worktree_lease_bindings {
+        if binding.execution_run_id != run_identity.execution_run_id.as_str() {
+            return Err(JsonFailure::new(
+                FailureClass::ArtifactIntegrityMismatch,
+                "Authoritative worktree lease binding execution_run_id does not match active run identity.",
+            ));
+        }
+        validate_safe_identifier_token(&binding.lease_fingerprint, "lease_fingerprint")?;
+        validate_artifact_file_name(&binding.lease_artifact_path, "lease_artifact_path")?;
+        if let Some(review_receipt_artifact_path) = binding.review_receipt_artifact_path.as_deref()
+        {
+            validate_artifact_file_name(
+                review_receipt_artifact_path,
+                "review_receipt_artifact_path",
+            )?;
+        }
+    }
+    state.run_identity = Some(run_identity);
+    state.chunk_id = Some(chunk_id.as_str().to_owned());
+    state.active_worktree_lease_fingerprints = Some(active_worktree_lease_fingerprints);
+    state.active_worktree_lease_bindings = Some(active_worktree_lease_bindings);
+
+    let serialized = serde_json::to_string_pretty(&state).map_err(|error| {
+        JsonFailure::new(
+            FailureClass::PartialAuthoritativeMutation,
+            format!(
+                "Could not serialize authoritative harness state mutation {}: {error}",
+                state_path.display()
+            ),
+        )
+    })?;
+    write_atomic_file(&state_path, serialized).map_err(|error| {
+        JsonFailure::new(
+            FailureClass::PartialAuthoritativeMutation,
+            format!(
+                "Could not publish authoritative harness state {}: {error}",
+                state_path.display()
+            ),
+        )
+    })
+}
+
+fn load_mutable_harness_state_for_authoritative_write(
+    runtime: &ExecutionRuntime,
+) -> Result<(WriteAuthorityLock, MutableHarnessState, PathBuf), JsonFailure> {
+    let lock = match WriteAuthorityLock::acquire(runtime) {
+        Ok(lock) => lock,
+        Err(AuthorityLockAcquireError::Conflict) => {
+            return Err(JsonFailure::new(
+                FailureClass::ConcurrentWriterConflict,
+                "Another runtime writer currently holds authoritative mutation authority.",
+            ));
+        }
+        Err(AuthorityLockAcquireError::Io(message)) => {
+            return Err(JsonFailure::new(
+                FailureClass::PartialAuthoritativeMutation,
+                message,
+            ));
+        }
+    };
+
+    let state_path =
+        harness_state_path(&runtime.state_dir, &runtime.repo_slug, &runtime.branch_name);
+    let mut state = match load_mutable_harness_state(&state_path) {
+        Ok(state) => state,
+        Err(MutableStateLoadError::MissingState) => {
+            return Err(JsonFailure::new(
+                FailureClass::NonAuthoritativeArtifact,
+                format!(
+                    "No authoritative harness state was found at {}.",
+                    state_path.display()
+                ),
+            ));
+        }
+        Err(MutableStateLoadError::Unreadable(message))
+        | Err(MutableStateLoadError::Malformed(message)) => {
+            return Err(JsonFailure::new(
+                FailureClass::MalformedExecutionState,
+                message,
+            ));
+        }
+    };
+    state.normalize_defaults();
+    Ok((lock, state, state_path))
+}
+
+fn validate_safe_identifier_token(value: &str, field_name: &str) -> Result<(), JsonFailure> {
+    let normalized = normalize_identifier_token(value);
+    if normalized.is_empty() || normalized != value {
+        return Err(JsonFailure::new(
+            FailureClass::MalformedExecutionState,
+            format!("Authoritative {field_name} must be a safe identifier token."),
+        ));
+    }
+    Ok(())
+}
+
+fn validate_artifact_file_name(value: &str, field_name: &str) -> Result<(), JsonFailure> {
+    if value.trim().is_empty()
+        || value.contains('/')
+        || value.contains('\\')
+        || Path::new(value).file_name().and_then(|name| name.to_str()) != Some(value)
+    {
+        return Err(JsonFailure::new(
+            FailureClass::MalformedExecutionState,
+            format!("Authoritative {field_name} must stay within authoritative-artifacts."),
+        ));
+    }
+    Ok(())
+}
+
+fn validate_receipt_identity_headers(
+    source: &str,
+    execution_run_id: &str,
+    execution_unit_id: &str,
+    expected_strategy_checkpoint_fingerprint: Option<&str>,
+) -> Result<(), JsonFailure> {
+    let Some(receipt_execution_run_id) = parse_markdown_header_value(source, "Execution Run ID")
+    else {
+        return Err(JsonFailure::new(
+            FailureClass::MalformedExecutionState,
+            "Authoritative unit-review receipt is missing Execution Run ID.",
+        ));
+    };
+    if receipt_execution_run_id != execution_run_id {
+        return Err(JsonFailure::new(
+            FailureClass::ArtifactIntegrityMismatch,
+            "Authoritative unit-review receipt Execution Run ID does not match the requested run.",
+        ));
+    }
+
+    let Some(receipt_execution_unit_id) = parse_markdown_header_value(source, "Execution Unit ID")
+    else {
+        return Err(JsonFailure::new(
+            FailureClass::MalformedExecutionState,
+            "Authoritative unit-review receipt is missing Execution Unit ID.",
+        ));
+    };
+    if receipt_execution_unit_id != execution_unit_id {
+        return Err(JsonFailure::new(
+            FailureClass::ArtifactIntegrityMismatch,
+            "Authoritative unit-review receipt Execution Unit ID does not match the requested unit.",
+        ));
+    }
+    if let Some(expected_strategy_checkpoint_fingerprint) = expected_strategy_checkpoint_fingerprint
+    {
+        let Some(strategy_checkpoint_fingerprint) =
+            parse_markdown_header_value(source, "Strategy Checkpoint Fingerprint")
+        else {
+            return Err(JsonFailure::new(
+                FailureClass::MalformedExecutionState,
+                "Authoritative unit-review receipt is missing Strategy Checkpoint Fingerprint.",
+            ));
+        };
+        if strategy_checkpoint_fingerprint != expected_strategy_checkpoint_fingerprint {
+            return Err(JsonFailure::new(
+                FailureClass::ArtifactIntegrityMismatch,
+                "Authoritative unit-review receipt Strategy Checkpoint Fingerprint does not match the active runtime strategy checkpoint.",
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn parse_markdown_header_value(source: &str, header: &str) -> Option<String> {
+    let prefix = format!("**{header}:**");
+    source
+        .lines()
+        .find_map(|line| line.trim().strip_prefix(&prefix))
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(ToOwned::to_owned)
+}
+
 fn set_dependency_index_state_healthy(state: &mut MutableHarnessState) {
     state.extra.insert(
         String::from("dependency_index_state"),
-        serde_json::Value::String(String::from("healthy")),
+        Value::String(String::from("healthy")),
     );
 }
 
@@ -911,12 +1256,12 @@ fn persist_observability_after_authoritative_record(
     event.source_plan_path = state
         .extra
         .get("source_plan_path")
-        .and_then(serde_json::Value::as_str)
+        .and_then(Value::as_str)
         .map(ToOwned::to_owned);
     event.source_plan_revision = state
         .extra
         .get("source_plan_revision")
-        .and_then(serde_json::Value::as_u64)
+        .and_then(Value::as_u64)
         .and_then(|value| u32::try_from(value).ok());
     event.harness_phase = state
         .harness_phase
@@ -946,7 +1291,7 @@ fn persist_observability_after_authoritative_record(
 }
 
 fn append_observability_event(
-    events_path: &std::path::Path,
+    events_path: &Path,
     event: &HarnessObservabilityEvent,
 ) -> Result<(), String> {
     if let Some(parent) = events_path.parent() {
@@ -989,7 +1334,7 @@ fn append_observability_event(
 }
 
 fn load_or_default_telemetry_counters(
-    telemetry_path: &std::path::Path,
+    telemetry_path: &Path,
 ) -> Result<HarnessTelemetryCounters, String> {
     let source = match fs::read_to_string(telemetry_path) {
         Ok(source) => source,
@@ -1060,7 +1405,7 @@ fn persist_dependency_index_after_authoritative_record(
 }
 
 fn load_dependency_index_for_authoritative_write(
-    dependency_index_path: &std::path::Path,
+    dependency_index_path: &Path,
 ) -> Result<DependencyIndex, String> {
     let source = match fs::read_to_string(dependency_index_path) {
         Ok(source) => source,
@@ -1151,7 +1496,7 @@ fn parse_authoritative_fingerprint(artifact_file_name: &str, prefix: &str) -> Op
 }
 
 fn is_lower_hex_ascii(byte: u8) -> bool {
-    byte.is_ascii_digit() || (byte >= b'a' && byte <= b'f')
+    byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)
 }
 
 enum MutableStateLoadError {
@@ -1160,9 +1505,7 @@ enum MutableStateLoadError {
     Malformed(String),
 }
 
-fn load_mutable_harness_state(
-    path: &std::path::Path,
-) -> Result<MutableHarnessState, MutableStateLoadError> {
+fn load_mutable_harness_state(path: &Path) -> Result<MutableHarnessState, MutableStateLoadError> {
     let source = fs::read_to_string(path).map_err(|error| {
         if error.kind() == ErrorKind::NotFound {
             MutableStateLoadError::MissingState
@@ -1178,6 +1521,33 @@ fn load_mutable_harness_state(
             "Authoritative harness state is malformed in {}: {error}",
             path.display()
         ))
+    })
+}
+
+fn canonical_worktree_lease_fingerprint(source: &str) -> Option<String> {
+    let mut value: Value = serde_json::from_str(source).ok()?;
+    let object = value.as_object_mut()?;
+    object.remove("lease_fingerprint");
+    serde_json::to_vec(&value)
+        .ok()
+        .map(|bytes| sha256_hex(&bytes))
+}
+
+fn canonical_unit_review_receipt_fingerprint(source: &str) -> Option<String> {
+    let filtered = source
+        .lines()
+        .filter(|line| !line.trim().starts_with("**Receipt Fingerprint:**"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    Some(sha256_hex(filtered.as_bytes()))
+}
+
+fn unit_review_receipt_declared_fingerprint(source: &str) -> Option<String> {
+    source.lines().find_map(|line| {
+        line.trim()
+            .strip_prefix("**Receipt Fingerprint:**")
+            .map(|value| value.trim().to_owned())
+            .filter(|value| !value.is_empty())
     })
 }
 
@@ -1342,7 +1712,7 @@ fn evaluation_fingerprint_from_authoritative_name(file_name: &str) -> Option<&st
     if fingerprint.is_empty()
         || !fingerprint
             .bytes()
-            .all(|byte| byte.is_ascii_digit() || (byte >= b'a' && byte <= b'f'))
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
     {
         return None;
     }
@@ -1466,20 +1836,18 @@ fn canonical_fingerprint_without_header_value(source: &str, header_label: &str) 
             None => (segment, ""),
         };
 
-        if !replaced {
-            if let Some(marker_index) = line.find(&marker) {
-                let after_marker = &line[marker_index + marker.len()..];
-                let leading_whitespace_len = after_marker
-                    .chars()
-                    .take_while(|ch| matches!(ch, ' ' | '\t'))
-                    .map(char::len_utf8)
-                    .sum::<usize>();
-                canonical_source
-                    .push_str(&line[..marker_index + marker.len() + leading_whitespace_len]);
-                canonical_source.push_str(newline);
-                replaced = true;
-                continue;
-            }
+        if !replaced && let Some(marker_index) = line.find(&marker) {
+            let after_marker = &line[marker_index + marker.len()..];
+            let leading_whitespace_len = after_marker
+                .chars()
+                .take_while(|ch| matches!(ch, ' ' | '\t'))
+                .map(char::len_utf8)
+                .sum::<usize>();
+            canonical_source
+                .push_str(&line[..marker_index + marker.len() + leading_whitespace_len]);
+            canonical_source.push_str(newline);
+            replaced = true;
+            continue;
         }
 
         canonical_source.push_str(segment);

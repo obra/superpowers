@@ -252,10 +252,10 @@ impl RepoSafetyRuntime {
 
     fn read_approval(&self, scope: &Scope) -> Result<ApprovalLookup, DiagnosticError> {
         if let Some(record) = read_approval_record(&scope.canonical_approval_path)? {
-            return Ok(ApprovalLookup::Found(record));
+            return Ok(ApprovalLookup::Found(Box::new(record)));
         }
         if let Some(record) = self.read_legacy_approval(scope)? {
-            return Ok(ApprovalLookup::Found(record));
+            return Ok(ApprovalLookup::Found(Box::new(record)));
         }
         Ok(ApprovalLookup::Missing)
     }
@@ -433,7 +433,7 @@ pub fn migrate_legacy_approvals(
 
 enum ApprovalLookup {
     Missing,
-    Found(ApprovalRecord),
+    Found(Box<ApprovalRecord>),
 }
 
 fn branch_protection(

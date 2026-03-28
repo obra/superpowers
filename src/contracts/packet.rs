@@ -231,7 +231,7 @@ fn render_packet_markdown(
     markdown
 }
 
-fn requirement_subset<'a>(spec: &'a SpecDocument, ids: &[String]) -> Vec<Requirement> {
+fn requirement_subset(spec: &SpecDocument, ids: &[String]) -> Vec<Requirement> {
     spec.requirements
         .iter()
         .filter(|requirement| ids.contains(&requirement.id))

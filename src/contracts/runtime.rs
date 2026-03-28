@@ -11,12 +11,18 @@ use sha2::{Digest, Sha256};
 use crate::cli::plan_contract::{
     AnalyzePlanArgs, BuildTaskPacketArgs, LintArgs, PacketOutputFormat, PersistMode,
 };
-use crate::contracts::plan::{AnalyzePlanReport, ContractDiagnostic, OverlappingWriteScope};
+use crate::contracts::plan::{
+    AnalyzePlanReport, ContractDiagnostic, OverlappingWriteScope, PLAN_FIDELITY_RECEIPT_KIND,
+    PLAN_FIDELITY_RECEIPT_SCHEMA_VERSION, PlanDocument, PlanFidelityReceipt,
+    PlanFidelityReviewerProvenance, PlanFidelityVerification, analyze_execution_topology,
+    evaluate_plan_fidelity_receipt_at_path, parse_plan_file, plan_fidelity_receipt_path_for_repo,
+};
+use crate::contracts::spec::{SpecDocument, parse_spec_file};
 use crate::diagnostics::{DiagnosticError, FailureClass, JsonFailure};
 use crate::git::discover_slug_identity;
 use crate::paths::{
-    featureforge_state_dir, normalize_identifier_token, normalize_repo_relative_path,
-    normalize_whitespace,
+    featureforge_state_dir, harness_branch_root, normalize_identifier_token,
+    normalize_repo_relative_path, normalize_whitespace, write_atomic,
 };
 
 const AMBIGUOUS_PHRASES: &[&str] = &[
@@ -340,12 +346,17 @@ pub fn run_analyze_plan(args: &AnalyzePlanArgs) -> std::process::ExitCode {
         }
     };
 
-    emit_json_value(&analyze_contract(
+    let mut report = analyze_contract(&spec_path, &plan_path, &spec_source, &plan_source);
+    apply_plan_fidelity_gate_to_report(
+        repo_root.as_path(),
         &spec_path,
         &plan_path,
         &spec_source,
         &plan_source,
-    ))
+        &mut report,
+    );
+
+    emit_json_value(&report)
 }
 
 pub fn run_build_task_packet(args: &BuildTaskPacketArgs) -> std::process::ExitCode {
@@ -443,18 +454,18 @@ pub fn run_build_task_packet(args: &BuildTaskPacketArgs) -> std::process::ExitCo
             statement: requirement.statement.clone(),
         })
         .collect::<Vec<_>>();
-    let packet_markdown = render_packet_markdown(
-        &plan_path,
-        headers.plan_revision,
-        &plan_fingerprint,
-        &headers.source_spec_path,
-        headers.source_spec_revision,
-        &source_spec_fingerprint,
+    let packet_markdown = render_packet_markdown(&PacketMarkdownInput {
+        plan_path: &plan_path,
+        plan_revision: headers.plan_revision,
+        plan_fingerprint: &plan_fingerprint,
+        source_spec_path: &headers.source_spec_path,
+        source_spec_revision: headers.source_spec_revision,
+        source_spec_fingerprint: &source_spec_fingerprint,
         task,
-        &requirement_statements,
-        &generated_at,
-        &packet_fingerprint,
-    );
+        requirement_statements: &requirement_statements,
+        generated_at: &generated_at,
+        packet_fingerprint: &packet_fingerprint,
+    });
 
     let persisted = args.persist == PersistMode::Yes;
     let mut cache_status = String::from("ephemeral");
@@ -716,8 +727,26 @@ fn analyze_contract(
         open_questions_resolved: true,
         task_structure_valid: true,
         files_blocks_valid: true,
+        execution_strategy_present: false,
+        dependency_diagram_present: false,
+        execution_topology_valid: false,
+        serial_hazards_resolved: false,
+        parallel_lane_ownership_valid: false,
+        parallel_workspace_isolation_valid: false,
+        parallel_worktree_groups: Vec::new(),
+        parallel_worktree_requirements: Vec::new(),
         reason_codes: Vec::new(),
         overlapping_write_scopes: Vec::new(),
+        plan_fidelity_receipt: crate::contracts::plan::PlanFidelityGateReport {
+            state: String::from("not_applicable"),
+            receipt_path: String::new(),
+            reviewer_stage: String::new(),
+            provenance_source: String::new(),
+            verified_requirement_index: false,
+            verified_execution_topology: false,
+            reason_codes: Vec::new(),
+            diagnostics: Vec::new(),
+        },
         diagnostics: Vec::new(),
     };
 
@@ -994,8 +1023,29 @@ fn analyze_contract(
         task_scopes = plan
             .tasks
             .iter()
-            .map(|task| (task.number, task.file_scope.clone()))
+            .map(|task| {
+                (
+                    task.number,
+                    task.file_entries
+                        .iter()
+                        .filter(|entry| entry.action != "Test")
+                        .map(|entry| entry.normalized_path.clone())
+                        .collect::<Vec<_>>(),
+                )
+            })
             .collect();
+    }
+    let topology = analyze_execution_topology(plan_source, &task_scopes);
+    report.execution_strategy_present = topology.execution_strategy_present;
+    report.dependency_diagram_present = topology.dependency_diagram_present;
+    report.execution_topology_valid = topology.execution_topology_valid;
+    report.serial_hazards_resolved = topology.serial_hazards_resolved;
+    report.parallel_lane_ownership_valid = topology.parallel_lane_ownership_valid;
+    report.parallel_workspace_isolation_valid = topology.parallel_workspace_isolation_valid;
+    report.parallel_worktree_groups = topology.parallel_worktree_groups;
+    report.parallel_worktree_requirements = topology.parallel_worktree_requirements;
+    for diagnostic in topology.diagnostics {
+        push_reason(&mut report, &diagnostic.code, &diagnostic.message);
     }
     report.overlapping_write_scopes = overlapping_scopes(&task_scopes);
     if report.reason_codes.is_empty() {
@@ -1008,12 +1058,80 @@ fn analyze_contract(
 }
 
 pub fn analyze_contract_report(
+    repo_root: &Path,
     spec_path: &str,
     plan_path: &str,
     spec_source: &str,
     plan_source: &str,
 ) -> AnalyzePlanReport {
-    analyze_contract(spec_path, plan_path, spec_source, plan_source)
+    let mut report = analyze_contract(spec_path, plan_path, spec_source, plan_source);
+    apply_plan_fidelity_gate_to_report(
+        repo_root,
+        spec_path,
+        plan_path,
+        spec_source,
+        plan_source,
+        &mut report,
+    );
+    report
+}
+
+fn apply_plan_fidelity_gate_to_report(
+    repo_root: &Path,
+    spec_path: &str,
+    plan_path: &str,
+    _spec_source: &str,
+    plan_source: &str,
+    report: &mut AnalyzePlanReport,
+) {
+    if find_header_value(plan_source, "Workflow State") != Some("Draft") {
+        return;
+    }
+
+    let spec_abs = repo_root.join(spec_path);
+    let plan_abs = repo_root.join(plan_path);
+    let receipt_path = plan_fidelity_receipt_path_for_repo(repo_root);
+    let gate = match (parse_spec_file(&spec_abs), parse_plan_file(&plan_abs)) {
+        (Ok(spec), Ok(plan)) => {
+            evaluate_plan_fidelity_receipt_at_path(&spec, &plan, repo_root, receipt_path)
+        }
+        (spec_result, plan_result) => {
+            let mut diagnostics = Vec::new();
+            if spec_result.is_err() {
+                diagnostics.push(ContractDiagnostic {
+                    code: String::from("plan_fidelity_verification_incomplete"),
+                    message: String::from(
+                        "Plan-fidelity review cannot be validated until the source spec parses cleanly, including a parseable Requirement Index.",
+                    ),
+                });
+            }
+            if plan_result.is_err() {
+                diagnostics.push(ContractDiagnostic {
+                    code: String::from("plan_fidelity_verification_incomplete"),
+                    message: String::from(
+                        "Plan-fidelity review cannot be validated until the draft plan parses cleanly.",
+                    ),
+                });
+            }
+            crate::contracts::plan::PlanFidelityGateReport {
+                state: String::from("invalid"),
+                receipt_path: receipt_path.display().to_string(),
+                reviewer_stage: String::new(),
+                provenance_source: String::new(),
+                verified_requirement_index: false,
+                verified_execution_topology: false,
+                reason_codes: vec![String::from("plan_fidelity_verification_incomplete")],
+                diagnostics,
+            }
+        }
+    };
+    if gate.state != "pass" {
+        report.contract_state = String::from("invalid");
+        for diagnostic in &gate.diagnostics {
+            push_reason(report, &diagnostic.code, &diagnostic.message);
+        }
+    }
+    report.plan_fidelity_receipt = gate;
 }
 
 fn parse_spec_revision(source: &str) -> Result<u32, ()> {
@@ -1138,7 +1256,11 @@ fn parse_plan_headers(source: &str) -> Result<PlanHeaders, HeaderError> {
             message: String::from("Source Spec header is missing or malformed."),
         });
     }
-    let source_spec_path = source_spec_path.trim_matches('`').to_owned();
+    let source_spec_path = normalize_repo_relative_path(source_spec_path.trim_matches('`'))
+        .map_err(|_| HeaderError {
+            reason_code: String::from("missing_source_spec"),
+            message: String::from("Source Spec header is missing or malformed."),
+        })?;
 
     let source_spec_revision =
         find_header_value(source, "Source Spec Revision").ok_or_else(|| HeaderError {
@@ -1654,48 +1776,64 @@ fn build_packet_fingerprint(
     sha256_hex(body.as_bytes())
 }
 
-fn render_packet_markdown(
-    plan_path: &str,
+struct PacketMarkdownInput<'a> {
+    plan_path: &'a str,
     plan_revision: u32,
-    plan_fingerprint: &str,
-    source_spec_path: &str,
+    plan_fingerprint: &'a str,
+    source_spec_path: &'a str,
     source_spec_revision: u32,
-    source_spec_fingerprint: &str,
-    task: &ParsedTask,
-    requirement_statements: &[RequirementStatement],
-    generated_at: &str,
-    packet_fingerprint: &str,
-) -> String {
+    source_spec_fingerprint: &'a str,
+    task: &'a ParsedTask,
+    requirement_statements: &'a [RequirementStatement],
+    generated_at: &'a str,
+    packet_fingerprint: &'a str,
+}
+
+fn render_packet_markdown(input: &PacketMarkdownInput<'_>) -> String {
     let mut markdown = String::new();
     markdown.push_str("## Task Packet\n\n");
-    markdown.push_str(&format!("**Plan Path:** `{plan_path}`\n"));
-    markdown.push_str(&format!("**Plan Revision:** {plan_revision}\n"));
-    markdown.push_str(&format!("**Plan Fingerprint:** `{plan_fingerprint}`\n"));
-    markdown.push_str(&format!("**Source Spec Path:** `{source_spec_path}`\n"));
+    markdown.push_str(&format!("**Plan Path:** `{}`\n", input.plan_path));
+    markdown.push_str(&format!("**Plan Revision:** {}\n", input.plan_revision));
     markdown.push_str(&format!(
-        "**Source Spec Revision:** {source_spec_revision}\n"
+        "**Plan Fingerprint:** `{}`\n",
+        input.plan_fingerprint
     ));
     markdown.push_str(&format!(
-        "**Source Spec Fingerprint:** `{source_spec_fingerprint}`\n"
+        "**Source Spec Path:** `{}`\n",
+        input.source_spec_path
     ));
-    markdown.push_str(&format!("**Task Number:** {}\n", task.number));
-    markdown.push_str(&format!("**Task Title:** {}\n", task.title));
-    markdown.push_str(&format!("**Open Questions:** {}\n", task.open_questions));
-    markdown.push_str(&format!("**Packet Fingerprint:** `{packet_fingerprint}`\n"));
-    markdown.push_str(&format!("**Generated At:** {generated_at}\n\n"));
+    markdown.push_str(&format!(
+        "**Source Spec Revision:** {}\n",
+        input.source_spec_revision
+    ));
+    markdown.push_str(&format!(
+        "**Source Spec Fingerprint:** `{}`\n",
+        input.source_spec_fingerprint
+    ));
+    markdown.push_str(&format!("**Task Number:** {}\n", input.task.number));
+    markdown.push_str(&format!("**Task Title:** {}\n", input.task.title));
+    markdown.push_str(&format!(
+        "**Open Questions:** {}\n",
+        input.task.open_questions
+    ));
+    markdown.push_str(&format!(
+        "**Packet Fingerprint:** `{}`\n",
+        input.packet_fingerprint
+    ));
+    markdown.push_str(&format!("**Generated At:** {}\n\n", input.generated_at));
     markdown.push_str("## Covered Requirements\n\n");
-    for requirement in requirement_statements {
+    for requirement in input.requirement_statements {
         markdown.push_str(&format!(
             "- [{}][{}] {}\n",
             requirement.id, requirement.kind, requirement.statement
         ));
     }
     markdown.push_str("\n## Plan Constraints\n\n");
-    for constraint in &task.plan_constraints {
+    for constraint in &input.task.plan_constraints {
         markdown.push_str(&format!("- {constraint}\n"));
     }
     markdown.push_str("\n## Task Block\n\n");
-    markdown.push_str(&task.block);
+    markdown.push_str(&input.task.block);
     markdown.push('\n');
     markdown
 }
@@ -1970,8 +2108,85 @@ fn sha256_hex(bytes: &[u8]) -> String {
     format!("{:x}", hasher.finalize())
 }
 
+pub fn plan_fidelity_receipt_path(state_dir: &Path, repo_slug: &str, branch_name: &str) -> PathBuf {
+    let branch_root = harness_branch_root(state_dir, repo_slug, branch_name)
+        .parent()
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| harness_branch_root(state_dir, repo_slug, branch_name));
+    branch_root
+        .join("workflow")
+        .join("plan-fidelity-receipt.json")
+}
+
+pub struct PlanFidelityReceiptInput<'a> {
+    pub spec: &'a SpecDocument,
+    pub plan: &'a PlanDocument,
+    pub verdict: &'a str,
+    pub review_artifact_path: &'a str,
+    pub review_artifact_fingerprint: &'a str,
+    pub reviewer_stage: &'a str,
+    pub reviewer_source: &'a str,
+    pub reviewer_id: &'a str,
+    pub distinct_from_stages: &'a [String],
+    pub checked_surfaces: &'a [String],
+    pub verified_requirement_ids: &'a [String],
+}
+
+pub fn build_plan_fidelity_receipt(input: PlanFidelityReceiptInput<'_>) -> PlanFidelityReceipt {
+    PlanFidelityReceipt {
+        schema_version: PLAN_FIDELITY_RECEIPT_SCHEMA_VERSION,
+        receipt_kind: String::from(PLAN_FIDELITY_RECEIPT_KIND),
+        verdict: input.verdict.to_owned(),
+        spec_path: input.spec.path.clone(),
+        spec_revision: input.spec.spec_revision,
+        spec_fingerprint: sha256_hex(input.spec.source.as_bytes()),
+        plan_path: input.plan.path.clone(),
+        plan_revision: input.plan.plan_revision,
+        plan_fingerprint: sha256_hex(input.plan.source.as_bytes()),
+        review_artifact_path: input.review_artifact_path.to_owned(),
+        review_artifact_fingerprint: input.review_artifact_fingerprint.to_owned(),
+        reviewer_provenance: PlanFidelityReviewerProvenance {
+            review_stage: input.reviewer_stage.to_owned(),
+            reviewer_source: input.reviewer_source.to_owned(),
+            reviewer_id: input.reviewer_id.to_owned(),
+            distinct_from_stages: input.distinct_from_stages.to_vec(),
+        },
+        verification: PlanFidelityVerification {
+            checked_surfaces: input.checked_surfaces.to_vec(),
+            verified_requirement_ids: input.verified_requirement_ids.to_vec(),
+        },
+    }
+}
+
+pub fn persist_plan_fidelity_receipt(
+    receipt_path: &Path,
+    receipt: &PlanFidelityReceipt,
+) -> Result<(), DiagnosticError> {
+    let body = serde_json::to_vec_pretty(receipt).map_err(|error| {
+        DiagnosticError::new(
+            FailureClass::InstructionParseFailed,
+            format!("Could not serialize plan-fidelity receipt: {error}"),
+        )
+    })?;
+    write_atomic(receipt_path, body).map_err(|error| {
+        DiagnosticError::new(
+            FailureClass::DecisionWriteFailed,
+            format!(
+                "Could not write plan-fidelity receipt {}: {error}",
+                receipt_path.display()
+            ),
+        )
+    })
+}
+
 fn repo_root() -> PathBuf {
-    std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."))
+    let start_dir = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    for ancestor in start_dir.ancestors() {
+        if ancestor.join(".git").is_dir() || ancestor.join("docs/featureforge").is_dir() {
+            return ancestor.to_path_buf();
+        }
+    }
+    discover_slug_identity(&start_dir).repo_root
 }
 
 fn state_dir() -> PathBuf {

@@ -283,10 +283,14 @@ Critical: If the user does not select SCOPE REDUCTION, respect that decision ful
 Before moving into the review sections:
 
 1. Read `**Source Spec:**` and confirm the file exists.
-2. Read that spec's `**Workflow State:**` and `**Spec Revision:**`.
-3. If the spec is not `CEO Approved`, stop and direct the agent back to `featureforge:plan-ceo-review`.
+2. Read that spec's `**Workflow State:**`, `**Spec Revision:**`, and `**Last Reviewed By:**`.
+3. If the spec is not workflow-valid `CEO Approved` with `**Last Reviewed By:** plan-ceo-review`, stop and direct the agent back to `featureforge:plan-ceo-review`.
 4. If the plan's `**Source Spec:**` path or `**Source Spec Revision:**` does not match the latest approved spec, stop and direct the agent back to `featureforge:writing-plans`.
-5. If you make plan edits during this review, keep `**Workflow State:** Draft` until every review issue is resolved.
+5. Before starting engineering review, require a matching runtime-owned plan-fidelity receipt in pass state for the current plan revision and approved spec revision.
+6. Do not start engineering review until workflow routing returns the current draft plan to `featureforge:plan-eng-review` with a matching pass plan-fidelity receipt.
+7. If the matching plan-fidelity receipt is missing, stale, malformed, or not pass, stop and hand control back to `featureforge:writing-plans`.
+8. Do not look for a markdown `## Plan Fidelity Review Receipt` block in the plan. The authoritative evidence is the runtime-owned receipt surfaced by workflow routing and `plan contract analyze-plan`.
+9. If you make plan edits during this review, keep `**Workflow State:** Draft` until every review issue is resolved.
 
 ### Plan-Contract Gate
 
@@ -301,12 +305,18 @@ PLAN_ANALYSIS_JSON="$("$_FEATUREFORGE_BIN" plan contract analyze-plan \
 
 Engineering approval must fail closed unless `contract_state == valid` and `packet_buildable_tasks == task_count`.
 
+Engineering approval must also fail closed unless `plan_fidelity_receipt.state == pass`.
+
+Engineering approval must also fail closed unless `execution_strategy_present`, `dependency_diagram_present`, `execution_topology_valid`, `serial_hazards_resolved`, `parallel_lane_ownership_valid`, and `parallel_workspace_isolation_valid` are all `true`.
+
 Treat `reason_codes` and `diagnostics` from `analyze-plan` as the authoritative contract feedback for approval law.
 
 Engineering approval must fail closed when `analyze-plan` reports:
 
 - missing or malformed `Requirement Index`
 - missing or malformed `Requirement Coverage Matrix`
+- missing or malformed `Execution Strategy`
+- missing or malformed `Dependency Diagram`
 - unknown requirement IDs
 - uncovered requirement IDs
 - tasks without `Spec Coverage`
@@ -315,8 +325,12 @@ Engineering approval must fail closed when `analyze-plan` reports:
 - requirement weakening or widening
 - invalid task heading structure
 - invalid `Files:` block structure
+- serial execution without an explicit hazard or reintegration reason
+- parallel lanes that do not declare owned task responsibility
+- parallel lanes that do not declare exact isolated workspace truth for the whole batch
+- fake-parallel hotspot files or unordered overlapping write scopes
 
-If `coverage_complete`, `open_questions_resolved`, `task_structure_valid`, or `files_blocks_valid` is not `true`, keep the plan in `Draft` and continue review or route back to `featureforge:writing-plans`.
+If `coverage_complete`, `open_questions_resolved`, `task_structure_valid`, `files_blocks_valid`, `execution_strategy_present`, `dependency_diagram_present`, `execution_topology_valid`, `serial_hazards_resolved`, `parallel_lane_ownership_valid`, or `parallel_workspace_isolation_valid` is not `true`, keep the plan in `Draft` and continue review or route back to `featureforge:writing-plans`.
 
 In the review itself, answer these questions explicitly before approval:
 
@@ -324,6 +338,10 @@ In the review itself, answer these questions explicitly before approval:
 - Do task-level `Spec Coverage` entries preserve approved decisions and constraints rather than reopening them?
 - Do the planned tasks preserve the approved non-goals and avoid widening scope into behavior the spec explicitly excluded?
 - Do `Files:` blocks stay within the minimum file scope needed for the covered requirements, or do they signal file-scope drift that should be split or reapproved?
+- Does `Execution Strategy` assign every task exactly once with explicit serial reasoning or explicit parallel worktree ownership?
+- Do parallel worktree batches declare exact isolation, either through one isolated worktree per task or an explicit matching worktree count, with no shared-worktree ambiguity?
+- Does `Dependency Diagram` match the claimed task ordering, merge-back seams, and reintegration points?
+- Are any parallel lanes only parallel on paper because they still share hotspot files without an explicit later serial seam?
 
 ## Review Sections
 
