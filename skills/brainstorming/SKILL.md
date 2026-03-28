@@ -76,6 +76,7 @@ digraph brainstorming {
 - Prefer multiple choice questions when possible, but open-ended is fine too
 - Only one question per message - if a topic needs more exploration, break it into multiple questions
 - Focus on understanding: purpose, constraints, success criteria
+- **Always ask about scale** - Expected volume (transactions/sec, records, users, messages, requests) is a critical architectural driver. The answer fundamentally shapes storage, architecture, queueing, and cost decisions. Ask early.
 
 **Exploring approaches:**
 
