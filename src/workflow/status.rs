@@ -35,6 +35,7 @@ use crate::workflow::markdown_scan::markdown_files_under;
 const ACTIVE_SPEC_ROOT: &str = "docs/featureforge/specs";
 const ACTIVE_PLAN_ROOT: &str = "docs/featureforge/plans";
 const ACTIVE_SESSION_ENTRY_SKILL: &str = "using-featureforge";
+const STRICT_SESSION_ENTRY_GATE_ENV: &str = "FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct WorkflowRoute {
@@ -204,13 +205,21 @@ impl WorkflowRuntime {
 
     pub fn status_refresh(&mut self) -> Result<WorkflowRoute, DiagnosticError> {
         let route = self.decorate_route_with_manifest_context(resolve_route(self, false, true)?);
+        let mut expected_spec_path = route.spec_path.clone();
+        let mut expected_plan_path = route.plan_path.clone();
+        if should_preserve_manifest_expected_paths(&route)
+            && let Some(existing_manifest) = self.matching_manifest()
+        {
+            expected_spec_path = existing_manifest.expected_spec_path.clone();
+            expected_plan_path = existing_manifest.expected_plan_path.clone();
+        }
 
         let manifest = WorkflowManifest {
             version: 1,
             repo_root: self.identity.repo_root.to_string_lossy().into_owned(),
             branch: self.identity.branch_name.clone(),
-            expected_spec_path: route.spec_path.clone(),
-            expected_plan_path: route.plan_path.clone(),
+            expected_spec_path,
+            expected_plan_path,
             status: route.status.clone(),
             next_skill: route.next_skill.clone(),
             reason: route.reason.clone(),
@@ -489,6 +498,21 @@ fn resolve_route(
     read_only: bool,
     refresh: bool,
 ) -> Result<WorkflowRoute, DiagnosticError> {
+    let manifest_path = runtime.manifest_path.display().to_string();
+    let root = runtime.identity.repo_root.to_string_lossy().into_owned();
+
+    if !read_only && strict_session_entry_gate_enabled() {
+        let session_key = workflow_session_key();
+        let session_entry = session_entry::inspect(Some(&session_key))?;
+        if session_entry.outcome != "enabled" {
+            return Ok(strict_session_entry_route(
+                &session_entry,
+                manifest_path,
+                root,
+            ));
+        }
+    }
+
     let (mut spec_candidates, mut malformed_spec_candidates) =
         scan_specs(&runtime.identity.repo_root);
     spec_candidates.sort_by(|left, right| left.path.cmp(&right.path));
@@ -497,8 +521,6 @@ fn resolve_route(
     let (spec_candidates, scan_truncated) = apply_fallback_limit(spec_candidates);
 
     let plan_candidates = scan_plans(&runtime.identity.repo_root);
-    let manifest_path = runtime.manifest_path.display().to_string();
-    let root = runtime.identity.repo_root.to_string_lossy().into_owned();
 
     if let Some(manifest) = runtime.matching_manifest()
         && !manifest.expected_spec_path.is_empty()
@@ -976,9 +998,7 @@ fn fallback_limit() -> Option<usize> {
 }
 
 fn read_session_entry(state_dir: &Path) -> SessionEntryState {
-    let session_key = env::var("FEATUREFORGE_SESSION_KEY")
-        .or_else(|_| env::var("PPID"))
-        .unwrap_or_else(|_| String::from("current"));
+    let session_key = workflow_session_key();
     match session_entry::inspect(Some(&session_key)) {
         Ok(output) => SessionEntryState {
             outcome: output.outcome,
@@ -1005,6 +1025,93 @@ fn read_session_entry(state_dir: &Path) -> SessionEntryState {
             reason: error.message().to_owned(),
         },
     }
+}
+
+fn strict_session_entry_route(
+    session_entry: &session_entry::SessionEntryResolveOutput,
+    manifest_path: String,
+    root: String,
+) -> WorkflowRoute {
+    let is_bypassed = session_entry.outcome == "bypassed";
+    let reason_code = if is_bypassed {
+        String::from("session_entry_bypassed")
+    } else {
+        String::from("session_entry_unresolved")
+    };
+    let message = if is_bypassed {
+        String::from(
+            "FeatureForge is bypassed for this session until the user explicitly re-enters.",
+        )
+    } else {
+        String::from(
+            "Resolve session-entry through `featureforge session-entry resolve --message-file <path>` before workflow routing.",
+        )
+    };
+
+    WorkflowRoute {
+        schema_version: 2,
+        status: session_entry.outcome.clone(),
+        next_skill: String::new(),
+        spec_path: String::new(),
+        plan_path: String::new(),
+        contract_state: String::from("unknown"),
+        reason_codes: vec![reason_code.clone()],
+        diagnostics: vec![WorkflowDiagnostic {
+            code: reason_code.clone(),
+            severity: if is_bypassed {
+                String::from("warning")
+            } else {
+                String::from("error")
+            },
+            artifact: session_entry.decision_path.clone(),
+            message,
+            remediation: if is_bypassed {
+                String::from(
+                    "Keep routing outside FeatureForge or request explicit FeatureForge re-entry.",
+                )
+            } else {
+                String::from(
+                    "Run `featureforge session-entry resolve --message-file <path>` and surface the bypass prompt first.",
+                )
+            },
+        }],
+        scan_truncated: false,
+        spec_candidate_count: 0,
+        plan_candidate_count: 0,
+        manifest_path,
+        root,
+        reason: reason_code.clone(),
+        note: reason_code,
+    }
+}
+
+fn strict_session_entry_gate_enabled() -> bool {
+    env_flag(STRICT_SESSION_ENTRY_GATE_ENV)
+}
+
+fn should_preserve_manifest_expected_paths(route: &WorkflowRoute) -> bool {
+    route.spec_path.is_empty()
+        && route.plan_path.is_empty()
+        && route
+            .reason_codes
+            .iter()
+            .any(|code| code == "session_entry_unresolved" || code == "session_entry_bypassed")
+}
+
+fn workflow_session_key() -> String {
+    env::var("FEATUREFORGE_SESSION_KEY")
+        .or_else(|_| env::var("PPID"))
+        .unwrap_or_else(|_| String::from("current"))
+}
+
+fn env_flag(name: &str) -> bool {
+    env::var(name)
+        .ok()
+        .map(|value| {
+            let normalized = value.trim().to_ascii_lowercase();
+            matches!(normalized.as_str(), "1" | "true" | "yes" | "on")
+        })
+        .unwrap_or(false)
 }
 
 pub fn sync_reason_codes(route: &WorkflowRoute) -> Vec<String> {

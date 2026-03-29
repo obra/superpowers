@@ -2728,6 +2728,152 @@ fn canonical_workflow_operator_hides_next_skill_until_session_entry_is_resolved(
 }
 
 #[test]
+fn canonical_workflow_status_fail_closes_when_strict_session_entry_gate_is_unresolved() {
+    let (repo_dir, state_dir) = init_repo("workflow-status-strict-session-entry-gate");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    let session_key = "workflow-status-strict-session-entry-gate";
+
+    install_full_contract_ready_artifacts(repo);
+    let identity = discover_repo_identity(repo).expect("repo identity should resolve");
+    let workflow_manifest_path = manifest_path(&identity, state);
+
+    let status_json = parse_json(
+        &run_rust_featureforge_with_env(
+            repo,
+            state,
+            &["workflow", "status", "--refresh"],
+            &[
+                ("FEATUREFORGE_SESSION_KEY", session_key),
+                ("FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY", "1"),
+            ],
+            "workflow status should fail closed when strict session-entry gating is enabled and unresolved",
+        ),
+        "workflow status should fail closed when strict session-entry gating is enabled and unresolved",
+    );
+    assert_eq!(status_json["status"], "needs_user_choice");
+    assert_eq!(status_json["next_skill"], "");
+    assert!(
+        status_json["reason_codes"]
+            .as_array()
+            .is_some_and(|codes| codes.iter().any(|code| code == "session_entry_unresolved")),
+        "strict workflow status should explain unresolved session-entry gating"
+    );
+
+    let decision_path = state
+        .join("session-entry")
+        .join("using-featureforge")
+        .join(session_key);
+    write_file(&decision_path, "enabled\n");
+    let enabled_status_json = parse_json(
+        &run_rust_featureforge_with_env(
+            repo,
+            state,
+            &["workflow", "status", "--refresh"],
+            &[
+                ("FEATUREFORGE_SESSION_KEY", session_key),
+                ("FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY", "1"),
+            ],
+            "workflow status should route normally once strict session-entry gate is enabled",
+        ),
+        "workflow status should route normally once strict session-entry gate is enabled",
+    );
+    assert_eq!(enabled_status_json["status"], "implementation_ready");
+    let enabled_manifest: WorkflowManifest = serde_json::from_str(
+        &fs::read_to_string(&workflow_manifest_path)
+            .expect("workflow manifest should be written after enabled strict refresh"),
+    )
+    .expect("workflow manifest json should parse after enabled strict refresh");
+    assert_eq!(
+        enabled_manifest.expected_spec_path,
+        enabled_status_json["spec_path"].as_str().unwrap_or(""),
+        "enabled strict refresh should persist the selected expected spec path"
+    );
+    assert_eq!(
+        enabled_manifest.expected_plan_path,
+        enabled_status_json["plan_path"].as_str().unwrap_or(""),
+        "enabled strict refresh should persist the selected expected plan path"
+    );
+
+    let other_session_status_json = parse_json(
+        &run_rust_featureforge_with_env(
+            repo,
+            state,
+            &["workflow", "status", "--refresh"],
+            &[
+                (
+                    "FEATUREFORGE_SESSION_KEY",
+                    "workflow-status-strict-session-entry-gate-other-thread",
+                ),
+                ("FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY", "1"),
+            ],
+            "workflow status should keep strict session-entry state isolated per session key",
+        ),
+        "workflow status should keep strict session-entry state isolated per session key",
+    );
+    assert_eq!(
+        other_session_status_json["status"], "needs_user_choice",
+        "strict session-entry gating should remain per-thread/per-session-key"
+    );
+    let manifest_after_other_session: WorkflowManifest = serde_json::from_str(
+        &fs::read_to_string(&workflow_manifest_path)
+            .expect("workflow manifest should remain readable after other-session strict refresh"),
+    )
+    .expect("workflow manifest should parse after other-session strict refresh");
+    assert_eq!(
+        manifest_after_other_session.expected_spec_path, enabled_manifest.expected_spec_path,
+        "other-session strict unresolved refresh should not clear existing expected spec path"
+    );
+    assert_eq!(
+        manifest_after_other_session.expected_plan_path, enabled_manifest.expected_plan_path,
+        "other-session strict unresolved refresh should not clear existing expected plan path"
+    );
+
+    let bypassed_decision_path = state
+        .join("session-entry")
+        .join("using-featureforge")
+        .join("workflow-status-strict-session-entry-gate-bypassed");
+    write_file(&bypassed_decision_path, "bypassed\n");
+    let bypassed_status_json = parse_json(
+        &run_rust_featureforge_with_env(
+            repo,
+            state,
+            &["workflow", "status", "--refresh"],
+            &[
+                (
+                    "FEATUREFORGE_SESSION_KEY",
+                    "workflow-status-strict-session-entry-gate-bypassed",
+                ),
+                ("FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY", "1"),
+            ],
+            "workflow status should fail closed to bypassed when strict session-entry gating is enabled",
+        ),
+        "workflow status should fail closed to bypassed when strict session-entry gating is enabled",
+    );
+    assert_eq!(bypassed_status_json["status"], "bypassed");
+    assert_eq!(bypassed_status_json["next_skill"], "");
+    assert!(
+        bypassed_status_json["reason_codes"]
+            .as_array()
+            .is_some_and(|codes| codes.iter().any(|code| code == "session_entry_bypassed")),
+        "strict workflow status should expose bypassed session-entry reason code"
+    );
+    let manifest_after_bypassed_session: WorkflowManifest = serde_json::from_str(
+        &fs::read_to_string(&workflow_manifest_path)
+            .expect("workflow manifest should remain readable after bypassed strict refresh"),
+    )
+    .expect("workflow manifest should parse after bypassed strict refresh");
+    assert_eq!(
+        manifest_after_bypassed_session.expected_spec_path, enabled_manifest.expected_spec_path,
+        "other-session strict bypassed refresh should not clear existing expected spec path"
+    );
+    assert_eq!(
+        manifest_after_bypassed_session.expected_plan_path, enabled_manifest.expected_plan_path,
+        "other-session strict bypassed refresh should not clear existing expected plan path"
+    );
+}
+
+#[test]
 fn canonical_workflow_operator_suppresses_session_entry_gate_for_spawned_subagent_context() {
     let (repo_dir, state_dir) = init_repo("workflow-spawned-subagent");
     let repo = repo_dir.path();

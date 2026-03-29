@@ -613,7 +613,7 @@ test('workflow handoff skills make terminal ownership explicit', () => {
   );
   assert.match(
     usingFeatureForge,
-    /First, if `\$_FEATUREFORGE_BIN` is available, call `\$_FEATUREFORGE_BIN workflow status --refresh`\./,
+    /Only after the bypass gate resolves to `enabled` for the current session key, if `\$_FEATUREFORGE_BIN` is available call `\$_FEATUREFORGE_BIN workflow status --refresh`\./,
   );
   assert.match(
     usingFeatureForge,

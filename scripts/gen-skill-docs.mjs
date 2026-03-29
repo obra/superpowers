@@ -2,9 +2,10 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
-export const ROOT = path.resolve(import.meta.dirname, '..');
+const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
+export const ROOT = path.resolve(MODULE_DIR, '..');
 export const SKILLS_DIR = path.join(ROOT, 'skills');
 export const GENERATOR_CMD = 'node scripts/gen-skill-docs.mjs';
 
@@ -49,6 +50,7 @@ export function buildUsingFeatureForgeShellLines() {
   return [
     ...buildRootDetection(),
     '_SP_STATE_DIR="${FEATUREFORGE_STATE_DIR:-$HOME/.featureforge}"',
+    'export FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY=1',
     '_SP_USING_FEATUREFORGE_DECISION_DIR="$_SP_STATE_DIR/session-entry/using-featureforge"',
     '_SP_USING_FEATUREFORGE_DECISION_PATH="$_SP_USING_FEATUREFORGE_DECISION_DIR/$PPID"',
   ];
@@ -126,6 +128,7 @@ Supported entry paths must resolve \`featureforge session-entry resolve --messag
 - if the user explicitly requests FeatureForge or explicitly names a FeatureForge skill, rewrite the session decision to \`enabled\` and continue on the same turn
 - if the helper returns \`needs_user_choice\`, ask the opt-out question and persist either \`enabled\` or \`bypassed\`
 - if the helper returns \`runtime_failure\`, surface that failure instead of pretending the gate was resolved
+- keep \`FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY=1\` while this skill is active so \`workflow status --refresh\` cannot outrun an unresolved gate
 
 Fresh-session spec review, plan review, and execution-preflight intents must still surface the bypass prompt first through \`featureforge session-entry resolve --message-file <path>\`.
 

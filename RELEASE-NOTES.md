@@ -1,5 +1,16 @@
 # FeatureForge Release Notes
 
+## v1.3.0 - 2026-03-29
+
+Session-entry gating release focused on strict consent-first routing and thread-scoped entry decisions.
+
+- enforce an optional strict first-entry session gate in workflow status resolution via `FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY=1`
+- fail closed before normal workflow routing whenever session entry is unresolved, including explicit `bypassed` handling
+- keep session-entry decisions per thread/session key (`FEATUREFORGE_SESSION_KEY`/parent process fallback), not global
+- update generated `using-featureforge` helper instructions to export strict gate env and resolve bypass choice before `workflow status --refresh`
+- expand workflow/runtime contract tests for strict unresolved, enabled, bypassed, and per-session isolation scenarios
+- refresh checked-in repo runtime binaries and darwin/windows prebuilt artifacts for `1.3.0`
+
 ## v1.2.0 - 2026-03-28
 
 Execution-runtime hardening release focused on authoritative strategy checkpoints, review-cycle control, and stricter finish-gate provenance contracts.

@@ -2,8 +2,10 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(import.meta.dirname, '..');
+const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(MODULE_DIR, '..');
 const SOURCE_PATH = path.join(ROOT, 'agents', 'code-reviewer.instructions.md');
 const COPILOT_AGENT_PATH = path.join(ROOT, 'agents', 'code-reviewer.md');
 const CODEX_AGENT_PATH = path.join(ROOT, '.codex', 'agents', 'code-reviewer.toml');

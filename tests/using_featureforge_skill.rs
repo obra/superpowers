@@ -221,9 +221,11 @@ fn using_featureforge_skill_documents_and_derives_the_canonical_bypass_gate() {
         "If helpers are unavailable, fallback stays minimal and conservative:",
         "Manual fallback must not infer readiness from the legacy thin header subset.",
         "_UPD=\"\"",
+        "export FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY=1",
         "_SESSIONS=$(find \"$_SP_STATE_DIR/sessions\" -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' ')",
         "_CONTRIB=\"\"",
         "supported entry paths must ask the bypass question on `needs_user_choice` before the normal stack starts",
+        "Only after the bypass gate resolves to `enabled` for the current session key, if `$_FEATUREFORGE_BIN` is available call `$_FEATUREFORGE_BIN workflow status --refresh`.",
     ];
     for pattern in required_patterns {
         assert!(
