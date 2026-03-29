@@ -103,7 +103,7 @@ EOF
 )"
 ```
 
-Then: Cleanup worktree (Step 5)
+**Don't cleanup worktree** - PR is open; you may need to make follow-up changes.
 
 #### Option 3: Keep As-Is
 
@@ -135,7 +135,7 @@ Then: Cleanup worktree (Step 5)
 
 ### Step 5: Cleanup Worktree
 
-**For Options 1, 2, 4:**
+**For Options 1, 4:**
 
 Check if in worktree:
 ```bash
