@@ -11,10 +11,10 @@ use crate::execution::state::{
     EvidenceAttempt, ExecutionContext, ExecutionEvidence, ExecutionRuntime, FileProof,
     NO_REPO_FILES_MARKER, PacketFingerprintInput, PlanExecutionStatus, PlanStepState,
     compute_packet_fingerprint, current_file_proof, current_head_sha, hash_contract_plan,
-    load_execution_context, normalize_begin_request, normalize_complete_request,
-    normalize_note_request, normalize_reopen_request, normalize_source, normalize_transfer_request,
-    require_normalized_text, require_preflight_acceptance, status_from_context,
-    validate_expected_fingerprint,
+    load_execution_context_for_mutation, normalize_begin_request,
+    normalize_complete_request, normalize_note_request, normalize_reopen_request, normalize_source,
+    normalize_transfer_request, require_normalized_text, require_preflight_acceptance,
+    require_prior_task_closure_for_begin, status_from_context, validate_expected_fingerprint,
 };
 use crate::execution::transitions::{
     AuthoritativeTransitionState, StepCommand, claim_step_write_authority,
@@ -29,7 +29,7 @@ pub fn begin(
 ) -> Result<PlanExecutionStatus, JsonFailure> {
     let request = normalize_begin_request(args);
     let _write_authority = claim_step_write_authority(runtime)?;
-    let mut context = load_execution_context(runtime, &args.plan)?;
+    let mut context = load_execution_context_for_mutation(runtime, &args.plan)?;
     validate_expected_fingerprint(&context, &request.expect_execution_fingerprint)?;
     require_preflight_acceptance(&context)?;
     let mut authoritative_state = load_authoritative_transition_state(&context)?;
@@ -103,17 +103,21 @@ pub fn begin(
             "begin may not bypass existing blocked work.",
         ));
     }
-    if let Some(interrupted) = context
+    let interrupted_step = context
         .steps
         .iter()
-        .find(|step| step.note_state == Some(crate::execution::state::NoteState::Interrupted))
-        && (interrupted.task_number != request.task || interrupted.step_number != request.step)
-    {
+        .find(|step| step.note_state == Some(crate::execution::state::NoteState::Interrupted));
+    let resuming_interrupted_same_step = interrupted_step.is_some_and(|interrupted| {
+        interrupted.task_number == request.task && interrupted.step_number == request.step
+    });
+    if interrupted_step.is_some() && !resuming_interrupted_same_step {
         return Err(JsonFailure::new(
             FailureClass::InvalidStepTransition,
             "Interrupted work must resume on the same step.",
         ));
     }
+
+    require_prior_task_closure_for_begin(&context, request.task)?;
 
     context.steps[step_index].note_state = Some(crate::execution::state::NoteState::Active);
     context.steps[step_index].note_summary = truncate_summary(&require_normalized_text(
@@ -144,7 +148,7 @@ pub fn begin(
             "begin_after_plan_write_before_authoritative_state_publish",
         )?;
     }
-    let reloaded = load_execution_context(runtime, &args.plan)?;
+    let reloaded = load_execution_context_for_mutation(runtime, &args.plan)?;
     status_from_context(&reloaded)
 }
 
@@ -154,7 +158,7 @@ pub fn complete(
 ) -> Result<PlanExecutionStatus, JsonFailure> {
     let request = normalize_complete_request(args)?;
     let _write_authority = claim_step_write_authority(runtime)?;
-    let mut context = load_execution_context(runtime, &args.plan)?;
+    let mut context = load_execution_context_for_mutation(runtime, &args.plan)?;
     validate_expected_fingerprint(&context, &request.expect_execution_fingerprint)?;
     normalize_source(&request.source, &context.plan_document.execution_mode)?;
     let authoritative_state = load_authoritative_transition_state(&context)?;
@@ -268,7 +272,7 @@ pub fn complete(
         &rendered_evidence,
         "complete_after_plan_write",
     )?;
-    let reloaded = load_execution_context(runtime, &args.plan)?;
+    let reloaded = load_execution_context_for_mutation(runtime, &args.plan)?;
     status_from_context(&reloaded)
 }
 
@@ -278,7 +282,7 @@ pub fn note(
 ) -> Result<PlanExecutionStatus, JsonFailure> {
     let request = normalize_note_request(args)?;
     let _write_authority = claim_step_write_authority(runtime)?;
-    let mut context = load_execution_context(runtime, &args.plan)?;
+    let mut context = load_execution_context_for_mutation(runtime, &args.plan)?;
     validate_expected_fingerprint(&context, &request.expect_execution_fingerprint)?;
     let mut authoritative_state = load_authoritative_transition_state(&context)?;
     enforce_authoritative_phase(authoritative_state.as_ref(), StepCommand::Note)?;
@@ -330,7 +334,7 @@ pub fn note(
             "note_after_plan_write_before_authoritative_state_publish",
         )?;
     }
-    let reloaded = load_execution_context(runtime, &args.plan)?;
+    let reloaded = load_execution_context_for_mutation(runtime, &args.plan)?;
     status_from_context(&reloaded)
 }
 
@@ -340,7 +344,7 @@ pub fn reopen(
 ) -> Result<PlanExecutionStatus, JsonFailure> {
     let request = normalize_reopen_request(args)?;
     let _write_authority = claim_step_write_authority(runtime)?;
-    let mut context = load_execution_context(runtime, &args.plan)?;
+    let mut context = load_execution_context_for_mutation(runtime, &args.plan)?;
     validate_expected_fingerprint(&context, &request.expect_execution_fingerprint)?;
     normalize_source(&request.source, &context.plan_document.execution_mode)?;
     let mut authoritative_state = load_authoritative_transition_state(&context)?;
@@ -420,7 +424,7 @@ pub fn reopen(
         )?;
     }
 
-    let reloaded = load_execution_context(runtime, &args.plan)?;
+    let reloaded = load_execution_context_for_mutation(runtime, &args.plan)?;
     status_from_context(&reloaded)
 }
 
@@ -430,7 +434,7 @@ pub fn transfer(
 ) -> Result<PlanExecutionStatus, JsonFailure> {
     let request = normalize_transfer_request(args)?;
     let _write_authority = claim_step_write_authority(runtime)?;
-    let mut context = load_execution_context(runtime, &args.plan)?;
+    let mut context = load_execution_context_for_mutation(runtime, &args.plan)?;
     validate_expected_fingerprint(&context, &request.expect_execution_fingerprint)?;
     normalize_source(&request.source, &context.plan_document.execution_mode)?;
     let authoritative_state = load_authoritative_transition_state(&context)?;
@@ -512,7 +516,7 @@ pub fn transfer(
         "transfer_after_plan_write",
     )?;
 
-    let reloaded = load_execution_context(runtime, &args.plan)?;
+    let reloaded = load_execution_context_for_mutation(runtime, &args.plan)?;
     status_from_context(&reloaded)
 }
 

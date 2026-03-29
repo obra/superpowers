@@ -286,6 +286,14 @@ pub fn handoff(current_dir: &Path) -> Result<WorkflowHandoff, JsonFailure> {
                 String::from("featureforge:writing-plans"),
                 reason_text(&context),
             ),
+            "repairing" => {
+                let skill = context
+                    .execution_status
+                    .as_ref()
+                    .map(|status| status.execution_mode.clone())
+                    .unwrap_or_default();
+                (skill, reason_text(&context))
+            }
             _ if execution_started == "yes" => {
                 let skill = context
                     .execution_status
@@ -626,6 +634,10 @@ fn derive_phase(
         return String::from("implementation_handoff");
     }
 
+    if task_boundary_block_reason_code(execution_status).is_some() {
+        return String::from("repairing");
+    }
+
     if execution_state_has_open_steps(execution_status) {
         return String::from("executing");
     }
@@ -712,6 +724,9 @@ fn next_step_text(context: &OperatorContext) -> String {
             "Regenerate the current-branch test-plan artifact via featureforge:plan-eng-review for the approved plan before browser QA or branch completion: {}",
             context.route.plan_path
         );
+    }
+    if let Some(task_boundary_next_step) = task_boundary_next_step_text(context) {
+        return task_boundary_next_step;
     }
     if review_requires_execution_reentry(context) {
         if context.route.plan_path.is_empty() {
@@ -825,11 +840,19 @@ fn reason_text(context: &OperatorContext) -> String {
         "pivot_required" => {
             String::from("Execution is blocked pending an approved plan revision.")
         }
+        "repairing" => context
+            .execution_status
+            .as_ref()
+            .and_then(task_boundary_reason_text)
+            .unwrap_or_else(|| {
+                String::from(
+                    "Execution already started for the approved plan and should continue through the current execution flow.",
+                )
+            }),
         "contract_drafting"
         | "contract_pending_approval"
         | "contract_approved"
         | "evaluating"
-        | "repairing"
         | "handoff_required" => String::from(
             "Execution already started for the approved plan and should continue through the current execution flow.",
         ),
@@ -923,6 +946,63 @@ fn review_requires_execution_reentry(context: &OperatorContext) -> bool {
             .gate_review
             .as_ref()
             .is_some_and(|gate| !gate.allowed)
+}
+
+fn task_boundary_block_reason_code(status: &PlanExecutionStatus) -> Option<&str> {
+    if status.blocking_task.is_none() || status.blocking_step.is_some() {
+        return None;
+    }
+    status.reason_codes.iter().map(String::as_str).find(|code| {
+        matches!(
+            *code,
+            "prior_task_review_not_green"
+                | "task_review_not_independent"
+                | "task_review_receipt_malformed"
+                | "prior_task_verification_missing"
+                | "prior_task_verification_missing_legacy"
+                | "task_verification_receipt_malformed"
+                | "task_cycle_break_active"
+        )
+    })
+}
+
+fn task_boundary_reason_text(status: &PlanExecutionStatus) -> Option<String> {
+    let blocking_task = status.blocking_task?;
+    let reason_code = task_boundary_block_reason_code(status)?;
+    let message = match reason_code {
+        "prior_task_review_not_green"
+        | "task_review_not_independent"
+        | "task_review_receipt_malformed" => format!(
+            "Task-boundary gate ({reason_code}) is blocking advancement past Task {blocking_task}. Complete dedicated-independent review for Task {blocking_task} until it is green."
+        ),
+        "prior_task_verification_missing" | "task_verification_receipt_malformed" => format!(
+            "Task-boundary gate ({reason_code}) is blocking advancement past Task {blocking_task}. Run verification-before-completion for Task {blocking_task} and record a passing task verification receipt."
+        ),
+        "prior_task_verification_missing_legacy" => format!(
+            "Task-boundary gate ({reason_code}) is blocking advancement past Task {blocking_task}. Backfill Task {blocking_task} verification evidence or record an approved migration marker before starting the next task."
+        ),
+        "task_cycle_break_active" => format!(
+            "Task-boundary gate ({reason_code}) is blocking advancement past Task {blocking_task}. Resolve cycle-break remediation for Task {blocking_task} before retrying."
+        ),
+        _ => return None,
+    };
+    Some(message)
+}
+
+fn task_boundary_next_step_text(context: &OperatorContext) -> Option<String> {
+    if context.phase != "repairing" {
+        return None;
+    }
+    let status = context.execution_status.as_ref()?;
+    let reason = task_boundary_reason_text(status)?;
+    if context.route.plan_path.is_empty() {
+        Some(format!("{reason} Continue in the active execution flow."))
+    } else {
+        Some(format!(
+            "{reason} Continue in the active execution flow for {}.",
+            context.route.plan_path
+        ))
+    }
 }
 
 fn gate_has_any_reason(gate: Option<&GateResult>, expected_codes: &[&str]) -> bool {

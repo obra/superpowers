@@ -566,6 +566,179 @@ fn setup_ready_for_finish_case(repo: &Path, state_dir: &Path, plan_rel: &str, ba
     write_branch_release_artifact(repo, state_dir, plan_rel, base_branch);
 }
 
+fn setup_task_boundary_blocked_case(
+    repo: &Path,
+    state_dir: &Path,
+    plan_rel: &str,
+    _base_branch: &str,
+) {
+    install_full_contract_ready_artifacts(repo);
+    write_file(
+        &repo.join(plan_rel),
+        r#"# Runtime Integration Hardening Implementation Plan
+
+**Workflow State:** Engineering Approved
+**Plan Revision:** 1
+**Execution Mode:** none
+**Source Spec:** `docs/featureforge/specs/2026-03-22-runtime-integration-hardening-design.md`
+**Source Spec Revision:** 1
+**Last Reviewed By:** plan-eng-review
+
+## Requirement Coverage Matrix
+
+- REQ-001 -> Task 1
+- REQ-004 -> Task 1
+- VERIFY-001 -> Task 2
+
+## Execution Strategy
+
+- Execute Task 1 serially. It establishes boundary gating before follow-on work begins.
+- Execute Task 2 serially after Task 1. It validates task-boundary workflow routing.
+
+## Dependency Diagram
+
+```text
+Task 1 -> Task 2
+```
+
+## Task 1: Core flow
+
+**Spec Coverage:** REQ-001, REQ-004
+**Task Outcome:** Task 1 execution reaches a boundary gate before Task 2 starts.
+**Plan Constraints:**
+- Keep fixture inputs deterministic.
+**Open Questions:** none
+
+**Files:**
+- Modify: `tests/workflow_shell_smoke.rs`
+
+- [ ] **Step 1: Prepare workflow fixture output**
+- [ ] **Step 2: Validate workflow fixture output**
+
+## Task 2: Follow-on flow
+
+**Spec Coverage:** VERIFY-001
+**Task Outcome:** Task 2 should remain blocked until Task 1 closure requirements are met.
+**Plan Constraints:**
+- Preserve deterministic task-boundary diagnostics.
+**Open Questions:** none
+
+**Files:**
+- Modify: `tests/workflow_shell_smoke.rs`
+
+- [ ] **Step 1: Start the follow-on task**
+"#,
+    );
+    prepare_preflight_acceptance_workspace(repo, "workflow-shell-smoke-task-boundary-blocked");
+
+    let status_before_begin = run_plan_execution_json(
+        repo,
+        state_dir,
+        &["status", "--plan", plan_rel],
+        "status before task-boundary blocked shell-smoke fixture execution",
+    );
+    let preflight = run_plan_execution_json(
+        repo,
+        state_dir,
+        &["preflight", "--plan", plan_rel],
+        "preflight for task-boundary blocked shell-smoke fixture execution",
+    );
+    assert_eq!(preflight["allowed"], true);
+
+    let begin_task1_step1 = run_plan_execution_json(
+        repo,
+        state_dir,
+        &[
+            "begin",
+            "--plan",
+            plan_rel,
+            "--task",
+            "1",
+            "--step",
+            "1",
+            "--execution-mode",
+            "featureforge:executing-plans",
+            "--expect-execution-fingerprint",
+            status_before_begin["execution_fingerprint"]
+                .as_str()
+                .expect("status should expose execution fingerprint before begin"),
+        ],
+        "begin task 1 step 1 for task-boundary blocked shell-smoke fixture",
+    );
+    let complete_task1_step1 = run_plan_execution_json(
+        repo,
+        state_dir,
+        &[
+            "complete",
+            "--plan",
+            plan_rel,
+            "--task",
+            "1",
+            "--step",
+            "1",
+            "--source",
+            "featureforge:executing-plans",
+            "--claim",
+            "Completed task 1 step 1 for task-boundary blocked shell-smoke fixture.",
+            "--manual-verify-summary",
+            "Verified by shell-smoke task-boundary fixture setup.",
+            "--file",
+            "tests/workflow_shell_smoke.rs",
+            "--expect-execution-fingerprint",
+            begin_task1_step1["execution_fingerprint"]
+                .as_str()
+                .expect("begin should expose execution fingerprint for complete"),
+        ],
+        "complete task 1 step 1 for task-boundary blocked shell-smoke fixture",
+    );
+    let begin_task1_step2 = run_plan_execution_json(
+        repo,
+        state_dir,
+        &[
+            "begin",
+            "--plan",
+            plan_rel,
+            "--task",
+            "1",
+            "--step",
+            "2",
+            "--execution-mode",
+            "featureforge:executing-plans",
+            "--expect-execution-fingerprint",
+            complete_task1_step1["execution_fingerprint"]
+                .as_str()
+                .expect("complete should expose execution fingerprint for next begin"),
+        ],
+        "begin task 1 step 2 for task-boundary blocked shell-smoke fixture",
+    );
+    run_plan_execution_json(
+        repo,
+        state_dir,
+        &[
+            "complete",
+            "--plan",
+            plan_rel,
+            "--task",
+            "1",
+            "--step",
+            "2",
+            "--source",
+            "featureforge:executing-plans",
+            "--claim",
+            "Completed task 1 step 2 for task-boundary blocked shell-smoke fixture.",
+            "--manual-verify-summary",
+            "Verified by shell-smoke task-boundary fixture setup.",
+            "--file",
+            "tests/workflow_shell_smoke.rs",
+            "--expect-execution-fingerprint",
+            begin_task1_step2["execution_fingerprint"]
+                .as_str()
+                .expect("begin should expose execution fingerprint for complete"),
+        ],
+        "complete task 1 step 2 for task-boundary blocked shell-smoke fixture",
+    );
+}
+
 #[test]
 fn workflow_phase_text_and_json_surfaces_match_harness_downstream_freshness() {
     let plan_rel = "docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md";
@@ -587,6 +760,12 @@ fn workflow_phase_text_and_json_surfaces_match_harness_downstream_freshness() {
             expected_phase: "ready_for_branch_completion",
             expected_next_action: "finish_branch",
             setup: setup_ready_for_finish_case,
+        },
+        LateStageCase {
+            name: "task-boundary-blocked",
+            expected_phase: "repairing",
+            expected_next_action: "return_to_execution",
+            setup: setup_task_boundary_blocked_case,
         },
     ];
 

@@ -680,6 +680,27 @@ pub fn load_execution_context(
     runtime: &ExecutionRuntime,
     plan_path: &Path,
 ) -> Result<ExecutionContext, JsonFailure> {
+    load_execution_context_with_legacy_policy(runtime, plan_path, LegacyEvidencePolicy::Reject)
+}
+
+pub(crate) fn load_execution_context_for_mutation(
+    runtime: &ExecutionRuntime,
+    plan_path: &Path,
+) -> Result<ExecutionContext, JsonFailure> {
+    load_execution_context_with_legacy_policy(runtime, plan_path, LegacyEvidencePolicy::Allow)
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum LegacyEvidencePolicy {
+    Reject,
+    Allow,
+}
+
+fn load_execution_context_with_legacy_policy(
+    runtime: &ExecutionRuntime,
+    plan_path: &Path,
+    legacy_evidence_policy: LegacyEvidencePolicy,
+) -> Result<ExecutionContext, JsonFailure> {
     let plan_rel = normalize_plan_path(plan_path)?;
     let plan_abs = runtime.repo_root.join(&plan_rel);
     if !plan_abs.is_file() {
@@ -767,7 +788,10 @@ pub fn load_execution_context(
         plan_document.source_spec_revision,
     )?;
 
-    if evidence.format == EvidenceFormat::Legacy && !evidence.attempts.is_empty() {
+    if legacy_evidence_policy == LegacyEvidencePolicy::Reject
+        && evidence.format == EvidenceFormat::Legacy
+        && !evidence.attempts.is_empty()
+    {
         return Err(JsonFailure::new(
             FailureClass::MalformedExecutionState,
             "Legacy pre-harness execution evidence is no longer accepted; regenerate execution evidence using the harness v2 format.",
@@ -946,6 +970,7 @@ pub fn status_from_context(context: &ExecutionContext) -> Result<PlanExecutionSt
     };
 
     apply_authoritative_status_overlay(context, &mut status)?;
+    apply_task_boundary_status_overlay(context, &mut status);
     Ok(status)
 }
 
@@ -1133,6 +1158,36 @@ fn apply_authoritative_status_overlay(
 
 fn normalize_optional_overlay_value(value: Option<&str>) -> Option<&str> {
     value.map(str::trim).filter(|value| !value.is_empty())
+}
+
+fn apply_task_boundary_status_overlay(context: &ExecutionContext, status: &mut PlanExecutionStatus) {
+    if status.active_task.is_some() || status.blocking_task.is_some() || status.resume_task.is_some()
+    {
+        return;
+    }
+    let Some(next_unchecked_task) = context
+        .steps
+        .iter()
+        .find(|step| !step.checked)
+        .map(|step| step.task_number)
+    else {
+        return;
+    };
+    let Some(prior_task) = prior_task_number_for_begin(context, next_unchecked_task) else {
+        return;
+    };
+    let Err(error) = require_prior_task_closure_for_begin(context, next_unchecked_task) else {
+        return;
+    };
+    if let Some(reason_code) = task_boundary_reason_code_from_message(&error.message)
+        && !status
+            .reason_codes
+            .iter()
+            .any(|existing| existing == reason_code)
+    {
+        status.reason_codes.push(reason_code.to_owned());
+    }
+    status.blocking_task = Some(prior_task);
 }
 
 fn parse_harness_phase(value: &str) -> Option<HarnessPhase> {
@@ -5466,6 +5521,451 @@ fn latest_completed_attempt(evidence: &ExecutionEvidence) -> Option<&EvidenceAtt
                 .then_with(|| left_index.cmp(right_index))
         })
         .map(|(_, attempt)| attempt)
+}
+
+pub(crate) fn prior_task_number_for_begin(
+    context: &ExecutionContext,
+    target_task: u32,
+) -> Option<u32> {
+    context
+        .tasks_by_number
+        .keys()
+        .copied()
+        .filter(|task_number| *task_number < target_task)
+        .max()
+}
+
+pub(crate) fn require_prior_task_closure_for_begin(
+    context: &ExecutionContext,
+    target_task: u32,
+) -> Result<(), JsonFailure> {
+    let Some(prior_task) = prior_task_number_for_begin(context, target_task) else {
+        return Ok(());
+    };
+
+    if prior_task_cycle_break_active(context, prior_task)? {
+        return Err(task_boundary_error(
+            FailureClass::ExecutionStateNotReady,
+            "task_cycle_break_active",
+            format!(
+                "Task {prior_task} is in cycle-break remediation; Task {target_task} may not begin until remediation closes."
+            ),
+        ));
+    }
+
+    ensure_prior_task_review_closed(context, prior_task, target_task)?;
+    ensure_prior_task_verification_closed(context, prior_task, target_task)?;
+    Ok(())
+}
+
+fn ensure_prior_task_review_closed(
+    context: &ExecutionContext,
+    prior_task: u32,
+    target_task: u32,
+) -> Result<(), JsonFailure> {
+    let execution_run_id = current_execution_run_id(context)?.ok_or_else(|| {
+        task_boundary_error(
+            FailureClass::ExecutionStateNotReady,
+            "prior_task_review_not_green",
+            format!(
+                "Task {target_task} may not begin because Task {prior_task} review provenance is missing execution run identity."
+            ),
+        )
+    })?;
+
+    let task_steps = context
+        .steps
+        .iter()
+        .filter(|step| step.task_number == prior_task)
+        .collect::<Vec<_>>();
+    if task_steps.is_empty() {
+        return Err(task_boundary_error(
+            FailureClass::MalformedExecutionState,
+            "prior_task_review_not_green",
+            format!("Task {prior_task} has no parsed steps in the approved plan state."),
+        ));
+    }
+
+    for step in task_steps {
+        if !step.checked {
+            return Err(task_boundary_error(
+                FailureClass::ExecutionStateNotReady,
+                "prior_task_review_not_green",
+                format!(
+                    "Task {target_task} may not begin because Task {prior_task} Step {} remains unchecked.",
+                    step.step_number
+                ),
+            ));
+        }
+        let Some(attempt) = latest_attempt_for_step(&context.evidence, prior_task, step.step_number)
+        else {
+            return Err(task_boundary_error(
+                FailureClass::ExecutionStateNotReady,
+                "prior_task_review_not_green",
+                format!(
+                    "Task {target_task} may not begin because Task {prior_task} Step {} is missing execution evidence.",
+                    step.step_number
+                ),
+            ));
+        };
+        if attempt.status != "Completed" {
+            return Err(task_boundary_error(
+                FailureClass::ExecutionStateNotReady,
+                "prior_task_review_not_green",
+                format!(
+                    "Task {target_task} may not begin because Task {prior_task} Step {} has no completed evidence attempt.",
+                    step.step_number
+                ),
+            ));
+        }
+
+        let expected_packet_fingerprint = attempt
+            .packet_fingerprint
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .ok_or_else(|| {
+                task_boundary_error(
+                    FailureClass::MalformedExecutionState,
+                    "task_review_receipt_malformed",
+                    format!(
+                        "Task {prior_task} Step {} is missing packet fingerprint provenance required for review closure.",
+                        step.step_number
+                    ),
+                )
+            })?;
+        let expected_checkpoint_sha = attempt
+            .head_sha
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .ok_or_else(|| {
+                task_boundary_error(
+                    FailureClass::MalformedExecutionState,
+                    "task_review_receipt_malformed",
+                    format!(
+                        "Task {prior_task} Step {} is missing reviewed checkpoint provenance required for review closure.",
+                        step.step_number
+                    ),
+                )
+            })?;
+
+        let receipt_path = authoritative_unit_review_receipt_path(
+            context,
+            &execution_run_id,
+            prior_task,
+            step.step_number,
+        );
+        let receipt_document = parse_required_artifact_document(
+            &receipt_path,
+            FailureClass::ExecutionStateNotReady,
+            "prior_task_review_not_green",
+            format!(
+                "Task {target_task} may not begin because Task {prior_task} Step {} is missing a dedicated-independent unit-review receipt.",
+                step.step_number
+            ),
+        )?;
+        if receipt_document.title.as_deref() != Some("# Unit Review Result")
+            || receipt_document.headers.get("Review Stage").map(String::as_str)
+                != Some("featureforge:unit-review")
+        {
+            return Err(task_boundary_error(
+                FailureClass::MalformedExecutionState,
+                "task_review_receipt_malformed",
+                format!(
+                    "Task {prior_task} Step {} unit-review receipt is malformed.",
+                    step.step_number
+                ),
+            ));
+        }
+        if receipt_document
+            .headers
+            .get("Reviewer Provenance")
+            .map(String::as_str)
+            != Some("dedicated-independent")
+        {
+            return Err(task_boundary_error(
+                FailureClass::StaleProvenance,
+                "task_review_not_independent",
+                format!(
+                    "Task {prior_task} Step {} unit-review receipt is not dedicated-independent.",
+                    step.step_number
+                ),
+            ));
+        }
+        let reviewer_source = receipt_document
+            .headers
+            .get("Reviewer Source")
+            .map(String::as_str)
+            .unwrap_or_default();
+        if !matches!(reviewer_source, "fresh-context-subagent" | "cross-model") {
+            return Err(task_boundary_error(
+                FailureClass::StaleProvenance,
+                "task_review_not_independent",
+                format!(
+                    "Task {prior_task} Step {} unit-review reviewer source is not independent.",
+                    step.step_number
+                ),
+            ));
+        }
+        if header_value_without_backticks(receipt_document.headers.get("Source Plan"))
+            != Some(context.plan_rel.as_str())
+            || receipt_document
+                .headers
+                .get("Source Plan Revision")
+                .and_then(|value| value.parse::<u32>().ok())
+                != Some(context.plan_document.plan_revision)
+            || receipt_document
+                .headers
+                .get("Execution Run ID")
+                .map(String::as_str)
+                != Some(execution_run_id.as_str())
+            || receipt_document
+                .headers
+                .get("Execution Unit ID")
+                .map(String::as_str)
+                != Some(format!("task-{prior_task}-step-{}", step.step_number).as_str())
+            || receipt_document
+                .headers
+                .get("Reviewed Checkpoint SHA")
+                .map(String::as_str)
+                != Some(expected_checkpoint_sha)
+            || receipt_document
+                .headers
+                .get("Approved Task Packet Fingerprint")
+                .map(String::as_str)
+                != Some(expected_packet_fingerprint)
+            || receipt_document.headers.get("Result").map(String::as_str) != Some("pass")
+            || receipt_document.headers.get("Generated By").map(String::as_str)
+                != Some("featureforge:unit-review")
+        {
+            return Err(task_boundary_error(
+                FailureClass::StaleProvenance,
+                "prior_task_review_not_green",
+                format!(
+                    "Task {target_task} may not begin because Task {prior_task} Step {} review receipt does not match the active task checkpoint provenance.",
+                    step.step_number
+                ),
+            ));
+        }
+    }
+
+    Ok(())
+}
+
+fn ensure_prior_task_verification_closed(
+    context: &ExecutionContext,
+    prior_task: u32,
+    target_task: u32,
+) -> Result<(), JsonFailure> {
+    let execution_run_id = current_execution_run_id(context)?.ok_or_else(|| {
+        task_boundary_error(
+            FailureClass::ExecutionStateNotReady,
+            "prior_task_verification_missing",
+            format!(
+                "Task {target_task} may not begin because Task {prior_task} verification provenance is missing execution run identity."
+            ),
+        )
+    })?;
+    let strategy_checkpoint_fingerprint = authoritative_strategy_checkpoint_fingerprint_checked(context)
+        .map_err(|error| {
+            task_boundary_error(
+                FailureClass::MalformedExecutionState,
+                "task_verification_receipt_malformed",
+                format!(
+                    "Task {prior_task} verification receipt cannot be validated without authoritative strategy checkpoint provenance: {}",
+                    error.message
+                ),
+            )
+        })?
+        .ok_or_else(|| {
+            task_boundary_error(
+                FailureClass::MalformedExecutionState,
+                "task_verification_receipt_malformed",
+                format!(
+                    "Task {prior_task} verification receipt cannot be validated because authoritative strategy checkpoint provenance is missing."
+                ),
+            )
+        })?;
+
+    let verification_reason_code = if context.evidence.format == EvidenceFormat::Legacy {
+        "prior_task_verification_missing_legacy"
+    } else {
+        "prior_task_verification_missing"
+    };
+    let receipt_path =
+        authoritative_task_verification_receipt_path(context, &execution_run_id, prior_task);
+    let receipt_document = parse_required_artifact_document(
+        &receipt_path,
+        FailureClass::ExecutionStateNotReady,
+        verification_reason_code,
+        format!(
+            "Task {target_task} may not begin because Task {prior_task} is missing a task-level verification receipt.",
+        ),
+    )?;
+
+    if receipt_document.title.as_deref() != Some("# Task Verification Result")
+        || header_value_without_backticks(receipt_document.headers.get("Source Plan"))
+            != Some(context.plan_rel.as_str())
+        || receipt_document
+            .headers
+            .get("Source Plan Revision")
+            .and_then(|value| value.parse::<u32>().ok())
+            != Some(context.plan_document.plan_revision)
+        || receipt_document
+            .headers
+            .get("Execution Run ID")
+            .map(String::as_str)
+            != Some(execution_run_id.as_str())
+        || receipt_document
+            .headers
+            .get("Task Number")
+            .and_then(|value| value.parse::<u32>().ok())
+            != Some(prior_task)
+        || receipt_document
+            .headers
+            .get("Strategy Checkpoint Fingerprint")
+            .map(String::as_str)
+            != Some(strategy_checkpoint_fingerprint.as_str())
+        || receipt_document
+            .headers
+            .get("Verification Commands")
+            .is_none_or(|value| value.trim().is_empty())
+        || receipt_document
+            .headers
+            .get("Verification Results")
+            .is_none_or(|value| value.trim().is_empty())
+        || receipt_document.headers.get("Result").map(String::as_str) != Some("pass")
+        || receipt_document.headers.get("Generated By").map(String::as_str)
+            != Some("featureforge:verification-before-completion")
+    {
+        return Err(task_boundary_error(
+            FailureClass::MalformedExecutionState,
+            "task_verification_receipt_malformed",
+            format!(
+                "Task {prior_task} verification receipt is malformed or stale against current task/strategy provenance."
+            ),
+        ));
+    }
+
+    Ok(())
+}
+
+fn prior_task_cycle_break_active(
+    context: &ExecutionContext,
+    prior_task: u32,
+) -> Result<bool, JsonFailure> {
+    let Some(overlay) = load_status_authoritative_overlay_checked(context)? else {
+        return Ok(false);
+    };
+    let strategy_state = overlay
+        .strategy_state
+        .as_deref()
+        .map(str::trim)
+        .unwrap_or_default();
+    let strategy_checkpoint_kind = overlay
+        .strategy_checkpoint_kind
+        .as_deref()
+        .map(str::trim)
+        .unwrap_or_default();
+    if strategy_state != "cycle_breaking" && strategy_checkpoint_kind != "cycle_break" {
+        return Ok(false);
+    }
+    let prior_task_has_unresolved_work = context.steps.iter().any(|step| {
+        step.task_number == prior_task && (!step.checked || step.note_state.is_some())
+    });
+    Ok(prior_task_has_unresolved_work)
+}
+
+fn current_execution_run_id(context: &ExecutionContext) -> Result<Option<String>, JsonFailure> {
+    Ok(preflight_acceptance_for_context(context)?
+        .map(|acceptance| acceptance.execution_run_id.0))
+}
+
+fn parse_required_artifact_document(
+    path: &Path,
+    failure_class: FailureClass,
+    reason_code: &str,
+    missing_message: String,
+) -> Result<crate::execution::final_review::ArtifactDocument, JsonFailure> {
+    let metadata = fs::symlink_metadata(path).map_err(|error| {
+        task_boundary_error(
+            failure_class,
+            reason_code,
+            format!("{missing_message} ({error})"),
+        )
+    })?;
+    if metadata.file_type().is_symlink() || !metadata.is_file() {
+        return Err(task_boundary_error(
+            FailureClass::MalformedExecutionState,
+            reason_code,
+            format!(
+                "{missing_message} Artifact path must be a regular file: {}.",
+                path.display()
+            ),
+        ));
+    }
+    Ok(parse_artifact_document(path))
+}
+
+fn authoritative_unit_review_receipt_path(
+    context: &ExecutionContext,
+    execution_run_id: &str,
+    task_number: u32,
+    step_number: u32,
+) -> PathBuf {
+    crate::paths::harness_authoritative_artifact_path(
+        &context.runtime.state_dir,
+        &context.runtime.repo_slug,
+        &context.runtime.branch_name,
+        &format!("unit-review-{execution_run_id}-task-{task_number}-step-{step_number}.md"),
+    )
+}
+
+fn authoritative_task_verification_receipt_path(
+    context: &ExecutionContext,
+    execution_run_id: &str,
+    task_number: u32,
+) -> PathBuf {
+    crate::paths::harness_authoritative_artifact_path(
+        &context.runtime.state_dir,
+        &context.runtime.repo_slug,
+        &context.runtime.branch_name,
+        &format!("task-verification-{execution_run_id}-task-{task_number}.md"),
+    )
+}
+
+fn header_value_without_backticks(value: Option<&String>) -> Option<&str> {
+    value.map(String::as_str).map(strip_backticks)
+}
+
+fn strip_backticks(value: &str) -> &str {
+    value.trim().trim_start_matches('`').trim_end_matches('`')
+}
+
+fn task_boundary_error(
+    failure_class: FailureClass,
+    reason_code: &str,
+    message: impl Into<String>,
+) -> JsonFailure {
+    JsonFailure::new(failure_class, format!("{reason_code}: {}", message.into()))
+}
+
+fn task_boundary_reason_code_from_message(message: &str) -> Option<&str> {
+    let (candidate, _) = message.split_once(':')?;
+    let candidate = candidate.trim();
+    if candidate.is_empty() {
+        return None;
+    }
+    if candidate
+        .as_bytes()
+        .iter()
+        .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || *byte == b'_')
+    {
+        Some(candidate)
+    } else {
+        None
+    }
 }
 
 fn latest_attempt_for_step(

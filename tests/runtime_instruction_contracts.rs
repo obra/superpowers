@@ -1271,6 +1271,18 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
         root.join("skills/requesting-code-review/SKILL.md"),
         "For the final cross-task review gate in workflow-routed work",
     );
+    assert_file_contains(
+        root.join("skills/executing-plans/SKILL.md"),
+        "After the implementation steps for a task are complete, enforce the mandatory task-boundary closure loop before beginning the next task:",
+    );
+    assert_file_contains(
+        root.join("skills/executing-plans/SKILL.md"),
+        "only then begin Task `N+1`",
+    );
+    assert_file_contains(
+        root.join("skills/executing-plans/SKILL.md"),
+        "does not require per-dispatch user-consent prompts.",
+    );
     assert_file_not_contains(
         root.join("skills/requesting-code-review/SKILL.md"),
         "After each task in subagent-driven development",
@@ -1278,6 +1290,14 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
     assert_file_contains(
         root.join("skills/subagent-driven-development/SKILL.md"),
         "Those per-task review loops satisfy the \"review early\" rule during execution",
+    );
+    assert_file_contains(
+        root.join("skills/subagent-driven-development/SKILL.md"),
+        "After review is green, run `verification-before-completion` and persist the task verification receipt.",
+    );
+    assert_file_contains(
+        root.join("skills/subagent-driven-development/SKILL.md"),
+        "does not require per-dispatch user-consent prompts.",
     );
     assert_file_contains(
         root.join("skills/finishing-a-development-branch/SKILL.md"),

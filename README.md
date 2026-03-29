@@ -81,6 +81,13 @@ Execution starts from an engineering-approved plan and the exact approved plan p
 
 `featureforge plan execution` is the execution preflight boundary for the approved plan.
 
+Task closure is enforced at task boundaries, not only at the end of the full plan:
+
+- each task runs a fresh-context independent review loop until `gate-review` is green
+- task-boundary remediation churn is capped with runtime-owned `cycle_break` handling on repeated loops
+- after review passes, task verification is required before the task can close and before next-task advancement
+- once approved-plan execution has started, execution-phase implementation/review subagent dispatch is authorized without per-dispatch user-consent prompts
+
 Completion then flows through:
 
 - `featureforge:requesting-code-review`

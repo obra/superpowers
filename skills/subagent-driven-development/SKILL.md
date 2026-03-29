@@ -108,7 +108,7 @@ Slug: lowercase, hyphens, max 60 chars (for example `skill-trigger-missed`). Ski
 
 # Subagent-Driven Development
 
-Execute plan by dispatching a fresh sub-agent or custom agent per task, with two-stage review after each: spec compliance review first, then code quality review. The runtime-selected topology still wins: when it chooses worktree-backed parallel execution, follow the worktree-first orchestration model and keep each task in its isolated workspace.
+Execute plan by dispatching a fresh sub-agent or custom agent per task, with two-stage review after each (spec compliance first, then code quality), then task-scoped verification-before-completion before any next-task advancement. The runtime-selected topology still wins: when it chooses worktree-backed parallel execution, follow the worktree-first orchestration model and keep each task in its isolated workspace.
 
 **Why isolated agents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
 
@@ -148,6 +148,16 @@ digraph when_to_use {
 
 ## The Process
 
+### Task-Boundary Closure Loop (Mandatory)
+
+For each task, enforce this exact order before dispatching the next task:
+1. Complete the task's implementation steps.
+2. Run dedicated-independent fresh-context task review loops (spec compliance, then code quality).
+3. If review fails, reopen/remediate/re-review until green.
+4. When remediation churn reaches 3 cycles for the same task, follow runtime cycle-break handling before retry.
+5. After review is green, run `verification-before-completion` and persist the task verification receipt.
+6. Only then dispatch implementation for Task `N+1`.
+
 ```dot
 digraph process {
     rankdir=TB;
@@ -164,7 +174,7 @@ digraph process {
         "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
         "Code quality reviewer subagent approves?" [shape=diamond];
         "Implementer subagent fixes quality issues" [shape=box];
-        "Confirm task's plan steps are checked off in approved plan" [shape=box];
+        "Run verification-before-completion, record task verification receipt, and confirm task plan steps are checked off" [shape=box];
     }
 
     "Read plan, build a task packet per task" [shape=box];
@@ -185,8 +195,8 @@ digraph process {
     "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
     "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
     "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
-    "Code quality reviewer subagent approves?" -> "Confirm task's plan steps are checked off in approved plan" [label="yes"];
-    "Confirm task's plan steps are checked off in approved plan" -> "More tasks remain?";
+    "Code quality reviewer subagent approves?" -> "Run verification-before-completion, record task verification receipt, and confirm task plan steps are checked off" [label="yes"];
+    "Run verification-before-completion, record task verification receipt, and confirm task plan steps are checked off" -> "More tasks remain?";
     "More tasks remain?" -> "Build task packet + dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Use featureforge:requesting-code-review for final review gate" [label="no"];
     "Use featureforge:requesting-code-review for final review gate" -> "Use featureforge:finishing-a-development-branch";
@@ -241,6 +251,12 @@ Before dispatching any implementation subagent:
   - `strategy_checkpoint_kind`
   - `last_strategy_checkpoint_fingerprint`
   - `strategy_reset_required`
+
+## Execution-Phase Subagent Dispatch Policy
+
+- Once execution is active for an approved plan (`execution_started` is `yes`), runtime-selected implementation and review subagent dispatch is authorized and does not require per-dispatch user-consent prompts.
+- This authorization is limited to execution-phase dispatch performed by workflow-owned execution skills (`featureforge:executing-plans` and `featureforge:subagent-driven-development`).
+- Non-execution ad-hoc delegation still follows normal user-consent policy.
 
 ## Authoritative Mutation Boundary (Coordinator/Runtime/Harness Owned)
 

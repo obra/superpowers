@@ -1,5 +1,17 @@
 # FeatureForge Release Notes
 
+## v1.4.0 - 2026-03-29
+
+Task-boundary review-gating release focused on mandatory per-task independent review loops, task verification, and execution-phase delegation ergonomics.
+
+- enforce task-boundary `gate-review` checks before each task can close, with fresh-context independent reviewer provenance validation
+- block next-task advancement until the current task has a green review result and a recorded task verification receipt
+- add runtime-validated review/verification receipt shape checks and status reason-codes for malformed or non-independent task-boundary artifacts
+- enforce cycle tracking at task boundaries and fail closed with `task_cycle_break_active` semantics when remediation churn exceeds configured limits
+- authorize execution-phase implementation and review subagent dispatch without per-dispatch user-consent prompts once execution has started
+- expand workflow/runtime and shell-smoke regressions for task-boundary review gates, stale binding rejection, and final-review coexistence guarantees
+- refresh checked-in repo runtime binaries and darwin/windows prebuilt artifacts for `1.4.0`
+
 ## v1.3.0 - 2026-03-29
 
 Session-entry gating release focused on strict consent-first routing and thread-scoped entry decisions.

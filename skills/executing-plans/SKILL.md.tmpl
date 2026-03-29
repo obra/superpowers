@@ -68,6 +68,12 @@ Load the approved plan, follow the runtime-selected topology, execute all tasks,
   - `last_strategy_checkpoint_fingerprint`
   - `strategy_reset_required`
 
+## Execution-Phase Subagent Dispatch Policy
+
+- Once execution is active for an approved plan (`execution_started` is `yes`), runtime-selected implementation and review subagent dispatch is authorized and does not require per-dispatch user-consent prompts.
+- This authorization is limited to execution-phase dispatch performed by workflow-owned execution skills (`featureforge:executing-plans` and `featureforge:subagent-driven-development`).
+- Non-execution ad-hoc delegation still follows normal user-consent policy.
+
 ## Protected-Branch Repo-Write Gate
 
 Before starting any plan step that mutates repo state, run the shared repo-safety preflight for that exact task slice:
@@ -108,8 +114,14 @@ For each task:
 3. Use the approved plan checklist as the visible progress record for the task's steps.
 4. Follow each step exactly (plan has bite-sized steps).
 5. Run verifications as specified.
-6. If the packet is malformed, stale, or still leaves ambiguity unresolved, stop and route back to review instead of guessing.
-7. Call `complete` as soon as a step is truly satisfied so the plan checkbox flips to `- [x]`.
+6. After the implementation steps for a task are complete, enforce the mandatory task-boundary closure loop before beginning the next task:
+   - run dedicated-independent task review in a fresh-context subagent
+   - if review fails, reopen/remediate/re-review until green
+   - when remediation churn reaches 3 cycles for the same task, follow runtime cycle-break handling before retry
+   - after review is green, run `verification-before-completion` and persist the task verification receipt
+   - only then begin Task `N+1`
+7. If the packet is malformed, stale, or still leaves ambiguity unresolved, stop and route back to review instead of guessing.
+8. Call `complete` as soon as a step is truly satisfied so the plan checkbox flips to `- [x]`.
 
 ### Step 3: Request Final Review
 

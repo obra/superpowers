@@ -63,6 +63,8 @@ Accelerated review is an opt-in branch inside `plan-ceo-review` and `plan-eng-re
 - `featureforge workflow status --refresh` re-derives the safe next stage from active specs and plans
 - `featureforge plan contract` compiles approved markdown into exact execution and review inputs
 - `featureforge plan execution recommend --plan <approved-plan-path>` selects execution topology and mode before work starts
+- task closure is task-boundary gated: each completed task must pass dedicated-independent fresh-context review loops and a task verification receipt before next-task advancement
+- once approved-plan execution has started, execution-phase implementation/review subagent dispatch is pre-authorized and does not require per-dispatch user-consent prompts
 - `featureforge plan execution gate-finish --plan <approved-plan-path>` requires deviation disposition from authoritative runtime topology-downgrade artifacts, not reason-code hints alone
 - `featureforge plan execution status --plan <approved-plan-path>` surfaces runtime strategy checkpoint state (`strategy_state`, `strategy_checkpoint_kind`, `last_strategy_checkpoint_fingerprint`, `strategy_reset_required`)
 
