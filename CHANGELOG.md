@@ -18,8 +18,8 @@
 
 ```bash
 # Claude Code
-claude mcp remove superpowers-ruby
-claude mcp add superpowers-ruby
+claude plugin uninstall superpowers-ruby@superpowers-ruby
+claude plugin install superpowers-ruby@superpowers-ruby
 
 # Or re-run the installer
 ```
