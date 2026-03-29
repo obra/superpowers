@@ -41,6 +41,11 @@ function retiredProductName() {
 
 const RETIRED_PRODUCT = retiredProductName();
 
+function repoSafetyCliWriteTargets() {
+  const cliSurface = readUtf8(path.join(REPO_ROOT, 'src/cli/repo_safety.rs'));
+  return new Set(Array.from(cliSurface.matchAll(/#\[value\(name = "([^"]+)"\)\]/g), ([, target]) => target));
+}
+
 const HELPER_COMMAND_PATTERN = /\bfeatureforge-(plan-contract|plan-execution|workflow-status|workflow|repo-safety|session-entry|config|slug|update-check|migrate-install)\b/;
 
 // Intentional invariant: skill installs package the runtime binary on purpose.
@@ -582,6 +587,40 @@ test('repo-writing workflow skills document the protected-branch repo-safety gat
     assert.match(content, /featureforge:using-git-worktrees/, `${skill} should route blocked writes to using-git-worktrees`);
     assert.match(content, /branch, the stage, and the blocking `failure_class`/, `${skill} should surface blocked-write diagnostics`);
     assert.match(content, targetPattern, `${skill} should use the correct write target family`);
+  }
+});
+
+test('plan-eng-review plan-write targets stay aligned with repo-safety runtime values', () => {
+  const runtimeWriteTargets = repoSafetyCliWriteTargets();
+  assert.ok(
+    runtimeWriteTargets.has('plan-artifact-write'),
+    'repo-safety CLI should expose plan-artifact-write for plan-body mutations',
+  );
+  assert.ok(
+    runtimeWriteTargets.has('approval-header-write'),
+    'repo-safety CLI should expose approval-header-write for approval flips',
+  );
+
+  for (const [label, docPath] of [
+    ['template', getTemplatePath('plan-eng-review')],
+    ['generated skill', getSkillPath('plan-eng-review')],
+  ]) {
+    const content = readUtf8(docPath);
+    assert.match(
+      content,
+      /featureforge repo-safety check --intent write --stage featureforge:plan-eng-review --task-id <current-plan-review> --path docs\/featureforge\/plans\/YYYY-MM-DD-<feature-name>\.md --write-target plan-artifact-write/,
+      `${label} should gate plan-body writes with plan-artifact-write`,
+    );
+    assert.match(
+      content,
+      /--write-target approval-header-write/,
+      `${label} should gate approval-header writes with approval-header-write`,
+    );
+    assert.doesNotMatch(
+      content,
+      /--write-target repo-file-write/,
+      `${label} should not instruct the retired repo-file-write target for plan-eng-review`,
+    );
   }
 });
 

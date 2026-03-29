@@ -32,7 +32,7 @@ description: Use when a written FeatureForge implementation plan from a CEO-appr
 - Before editing the plan body or changing approval headers on disk, run the shared repo-safety preflight for the exact review-write scope:
 
 ```bash
-featureforge repo-safety check --intent write --stage featureforge:plan-eng-review --task-id <current-plan-review> --path docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md --write-target repo-file-write
+featureforge repo-safety check --intent write --stage featureforge:plan-eng-review --task-id <current-plan-review> --path docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md --write-target plan-artifact-write
 ```
 
 - When the mutation is specifically an approval-header edit, use the same command shape with `--write-target approval-header-write`.
@@ -40,8 +40,8 @@ featureforge repo-safety check --intent write --stage featureforge:plan-eng-revi
 - If the user explicitly approves the protected-branch review write, run:
 
 ```bash
-featureforge repo-safety approve --stage featureforge:plan-eng-review --task-id <current-plan-review> --reason "<explicit user approval>" --path docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md --write-target repo-file-write
-featureforge repo-safety check --intent write --stage featureforge:plan-eng-review --task-id <current-plan-review> --path docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md --write-target repo-file-write
+featureforge repo-safety approve --stage featureforge:plan-eng-review --task-id <current-plan-review> --reason "<explicit user approval>" --path docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md --write-target plan-artifact-write
+featureforge repo-safety check --intent write --stage featureforge:plan-eng-review --task-id <current-plan-review> --path docs/featureforge/plans/YYYY-MM-DD-<feature-name>.md --write-target plan-artifact-write
 ```
 
 - Repeat the same approve -> re-check pattern for `approval-header-write` before flipping `**Workflow State:**` or any other approval header on a protected branch.
@@ -426,7 +426,7 @@ After review decisions are applied to the authoritative plan body, write or repl
 Summary write rules:
 
 * Accepted review findings must patch the authoritative plan body before approval. The summary is descriptive only.
-* Run the repo-file-write gate before editing the summary body.
+* Run the plan-artifact-write gate before editing the summary body.
 * Run the approval-header-write gate separately before flipping approval headers.
 * If an `## Engineering Review Summary` section already exists, replace from that heading through the next `## ` heading or EOF, whichever comes first.
 * Always move the summary to the end of the file. Do not leave an older copy in the middle.
