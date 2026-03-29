@@ -119,6 +119,35 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - Exact commands with expected output
 - DRY, YAGNI, TDD, frequent commits
 
+## System-Level Operations
+
+When a task modifies system-level state (environment variables, system configs, registry, global packages), **each such step MUST include backup and rollback commands.**
+
+**Format:**
+
+````markdown
+- [ ] **Step N: Modify environment variable**
+
+> ⚠️ **System-Level Operation**: This step modifies environment variables.
+> Backup: `reg export "HKCU\Environment" "%TEMP%\env_backup.reg" /y`
+> Rollback: `reg import "%TEMP%\env_backup.reg"`
+
+```bash
+# Backup first
+reg export "HKCU\Environment" "%TEMP%\env_backup.reg" /y
+
+# Make the change
+setx MY_VAR "new_value"
+
+# Verify
+echo %MY_VAR%
+```
+````
+
+**Required sub-skill:** Use superpowers:system-safety for the full snapshot/restore protocol.
+
+**Self-check:** If any step uses `setx`, `export >> .bashrc`, `reg add`, `[Environment]::SetEnvironmentVariable`, `npm install -g`, `apt install`, or similar system-modifying commands, it MUST have a backup command.
+
 ## Self-Review
 
 After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself — not a subagent dispatch.

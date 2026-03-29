@@ -61,6 +61,7 @@ After all tasks complete and verified:
 - Reference skills when plan says to
 - Stop when blocked, don't guess
 - Never start implementation on main/master branch without explicit user consent
+- Never modify system-level state (environment variables, registry, configs) without a snapshot — use superpowers:system-safety
 
 ## Integration
 

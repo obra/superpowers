@@ -246,6 +246,8 @@ Done!
 - Let implementer self-review replace actual review (both are needed)
 - **Start code quality review before spec compliance is ✅** (wrong order)
 - Move to next task while either review has open issues
+- Modify system-level state (environment variables, registry, system configs, global packages) without creating a snapshot first — use superpowers:system-safety
+- Restore system state from memory instead of diffing against a snapshot file
 
 **If subagent asks questions:**
 - Answer clearly and completely

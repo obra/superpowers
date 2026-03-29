@@ -126,6 +126,7 @@ Start a new session in your chosen platform and ask for something that should tr
 **Debugging**
 - **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
 - **verification-before-completion** - Ensure it's actually fixed
+- **system-safety** - Snapshot-before-modify protocols for irreversible system and destructive changes
 
 **Collaboration** 
 - **brainstorming** - Socratic design refinement

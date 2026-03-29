@@ -48,6 +48,9 @@ Skip any step = lying, not verifying
 | Regression test works | Red-green cycle verified | Test passes once |
 | Agent completed | VCS diff shows changes | Agent reports "success" |
 | Requirements met | Line-by-line checklist | Tests passing |
+| Env restored | Diff snapshot vs current: 0 differences | "I restored the variables" |
+| System config restored | Diff of backup vs current: identical | "I put it back" |
+| Cleanup complete | All temp files/processes/ports verified clean | "I cleaned up" |
 
 ## Red Flags - STOP
 

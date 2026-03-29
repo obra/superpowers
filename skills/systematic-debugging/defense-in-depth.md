@@ -17,7 +17,7 @@ Different layers catch different cases:
 - Environment guards prevent context-specific dangers
 - Debug logging helps when other layers fail
 
-## The Four Layers
+## The Five Layers
 
 ### Layer 1: Entry Point Validation
 **Purpose:** Reject obviously invalid input at API boundary
@@ -84,6 +84,27 @@ async function gitInit(directory: string) {
 }
 ```
 
+### Layer 5: System State Guards
+**Purpose:** Prevent unrecoverable system modifications without backup
+
+```typescript
+function modifyEnvironmentVariable(name: string, value: string) {
+  // Before writing to env/registry/config → snapshot must exist
+  const snapshotPath = `${tmpdir()}/env_snapshot_${Date.now()}.txt`;
+  if (!existsSync(snapshotPath)) {
+    // Take snapshot before proceeding
+    execSync(`env | sort > ${snapshotPath}`);
+    logger.info('Environment snapshot saved', { snapshotPath });
+  }
+
+  // Before removing packages → dependency check done?
+  // Before modifying config files → backup exists?
+  // ... proceed with modification
+}
+```
+
+**When to apply:** Any code that writes to environment variables, system configuration files, registry keys, or manages global packages. See `superpowers:system-safety` for the full protocol.
+
 ## Applying the Pattern
 
 When you find a bug:
@@ -113,10 +134,11 @@ Bug: Empty `projectDir` caused `git init` in source code
 
 ## Key Insight
 
-All four layers were necessary. During testing, each layer caught bugs the others missed:
+All five layers were necessary. During testing, each layer caught bugs the others missed:
 - Different code paths bypassed entry validation
 - Mocks bypassed business logic checks
 - Edge cases on different platforms needed environment guards
 - Debug logging identified structural misuse
+- Missing snapshots caused unrecoverable system state loss
 
 **Don't stop at one validation point.** Add checks at every layer.
