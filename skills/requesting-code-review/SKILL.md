@@ -33,6 +33,8 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 Use Task tool with superpowers:code-reviewer type, fill template at `code-reviewer.md`
 
+GitHub Copilot CLI note: use the personal `code-reviewer` agent from `~/.copilot/agents/code-reviewer.agent.md`.
+
 **Placeholders:**
 - `{WHAT_WAS_IMPLEMENTED}` - What you just built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
