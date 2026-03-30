@@ -11714,6 +11714,15 @@ fn gate_review_accepts_latest_proof_for_shared_file() {
         ],
         "complete step 2",
     );
+    write_harness_state_payload(
+        repo,
+        state,
+        &json!({
+            "final_review_state": "fresh",
+            "browser_qa_state": "fresh",
+            "release_docs_state": "fresh"
+        }),
+    );
 
     let gate_review = run_rust_json(
         repo,
@@ -14542,6 +14551,211 @@ fn rebuild_executor_no_output_summary() {
         .expect("evidence should exist after no-output rebuild replay");
     assert!(evidence.contains("**Verification Summary:** `printf rebuilt` -> passed"));
     assert!(!evidence.contains("**Verification Summary:** `printf rebuilt` -> passed: rebuilt"));
+}
+
+#[test]
+fn rebuild_evidence_does_not_publish_contract_bound_receipts_without_active_contract() {
+    let (repo_dir, state_dir) = init_repo("plan-execution-rebuild-evidence-no-active-contract");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    write_approved_spec(repo);
+    write_single_step_plan(repo, "featureforge:executing-plans");
+    mark_all_plan_steps_checked(repo);
+    write_single_step_v2_completed_attempt(repo, &expected_packet_fingerprint(repo, 1, 1));
+    replace_manual_verification_with_command(
+        repo,
+        "printf rebuilt",
+        "`printf rebuilt` -> passed in fixture setup.",
+    );
+    accept_execution_preflight(repo, state, PLAN_REL);
+
+    let mut harness_state: Value = serde_json::from_str(
+        &fs::read_to_string(harness_state_file_path(repo, state))
+            .expect("harness state should exist after preflight"),
+    )
+    .expect("harness state should stay valid json after preflight");
+    let state_object = harness_state
+        .as_object_mut()
+        .expect("harness state should be a json object");
+    state_object.insert(
+        String::from("last_strategy_checkpoint_fingerprint"),
+        Value::from(FIXTURE_STRATEGY_CHECKPOINT_FINGERPRINT),
+    );
+    state_object.insert(String::from("strategy_state"), Value::from("ready"));
+    state_object.insert(
+        String::from("strategy_checkpoint_kind"),
+        Value::from("review_remediation"),
+    );
+    write_harness_state_payload(repo, state, &harness_state);
+
+    let status_after_preflight = run_rust_json(
+        repo,
+        state,
+        &["status", "--plan", PLAN_REL],
+        "status after preflight for contractless rebuild",
+    );
+    let execution_run_id = status_after_preflight["execution_run_id"]
+        .as_str()
+        .expect("status should expose execution run id")
+        .to_owned();
+
+    write_file(&repo.join("docs/example-output.md"), "drifted output after review\n");
+
+    let rebuilt = run_rust_json(
+        repo,
+        state,
+        &["rebuild-evidence", "--plan", PLAN_REL, "--json"],
+        "rebuild-evidence without active contract state",
+    );
+    assert_eq!(rebuilt["counts"]["rebuilt"], Value::from(1), "json: {rebuilt}");
+
+    let current_run_receipt_path = harness_authoritative_artifact_path(
+        state,
+        &repo_slug(repo),
+        &branch_name(repo),
+        &format!("unit-review-{execution_run_id}-task-1-step-1.md"),
+    );
+    let current_run_receipt = fs::read_to_string(&current_run_receipt_path)
+        .expect("rebuild-evidence should keep plain task-boundary unit-review receipts even without an active contract");
+    assert!(
+        !current_run_receipt.contains("**Approved Unit Contract Fingerprint:**"),
+        "rebuild-evidence must not publish contract-bound serial unit-review fields when no active authoritative contract exists: {current_run_receipt}"
+    );
+
+    let gate_review = run_rust_json(
+        repo,
+        state,
+        &["gate-review", "--plan", PLAN_REL],
+        "gate-review after contractless rebuild",
+    );
+    let reason_codes = gate_review["reason_codes"]
+        .as_array()
+        .expect("gate-review should expose reason codes");
+    assert!(
+        !reason_codes.iter().any(|code| code.as_str()
+            == Some("worktree_lease_authoritative_contract_missing")),
+        "gate-review should not require an active contract when rebuild did not publish any current-run contract-bound receipts, got {gate_review}"
+    );
+}
+
+#[test]
+fn rebuild_evidence_reuses_active_contract_for_serial_unit_review_receipts() {
+    let (repo_dir, state_dir) = init_repo("plan-execution-rebuild-evidence-active-contract-receipts");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    write_approved_spec(repo);
+    write_single_step_plan(repo, "featureforge:executing-plans");
+    mark_all_plan_steps_checked(repo);
+    write_single_step_v2_completed_attempt(repo, &expected_packet_fingerprint(repo, 1, 1));
+    replace_manual_verification_with_command(
+        repo,
+        "printf rebuilt",
+        "`printf rebuilt` -> passed in fixture setup.",
+    );
+    accept_execution_preflight(repo, state, PLAN_REL);
+
+    let status_after_preflight = run_rust_json(
+        repo,
+        state,
+        &["status", "--plan", PLAN_REL],
+        "status after preflight for active-contract rebuild",
+    );
+    let execution_run_id = status_after_preflight["execution_run_id"]
+        .as_str()
+        .expect("status should expose execution run id")
+        .to_owned();
+
+    let active_contract_rel = "docs/featureforge/execution-evidence/active-execution-contract.md";
+    let active_contract_fingerprint =
+        write_execution_contract_artifact(repo, active_contract_rel, None);
+    let active_contract_source = fs::read_to_string(repo.join(active_contract_rel))
+        .expect("active contract fixture should be readable");
+    write_file(
+        &harness_authoritative_artifact_path(
+            state,
+            &repo_slug(repo),
+            &branch_name(repo),
+            &format!("contract-{active_contract_fingerprint}.md"),
+        ),
+        &active_contract_source,
+    );
+
+    let mut harness_state: Value = serde_json::from_str(
+        &fs::read_to_string(harness_state_file_path(repo, state))
+            .expect("harness state should exist after preflight"),
+    )
+    .expect("harness state should stay valid json after preflight");
+    let state_object = harness_state
+        .as_object_mut()
+        .expect("harness state should be a json object");
+    state_object.insert(
+        String::from("last_strategy_checkpoint_fingerprint"),
+        Value::from(FIXTURE_STRATEGY_CHECKPOINT_FINGERPRINT),
+    );
+    state_object.insert(String::from("strategy_state"), Value::from("ready"));
+    state_object.insert(
+        String::from("strategy_checkpoint_kind"),
+        Value::from("review_remediation"),
+    );
+    state_object.insert(
+        String::from("active_contract_path"),
+        Value::from(format!("contract-{active_contract_fingerprint}.md")),
+    );
+    state_object.insert(
+        String::from("active_contract_fingerprint"),
+        Value::from(active_contract_fingerprint.clone()),
+    );
+    write_harness_state_payload(repo, state, &harness_state);
+
+    write_file(&repo.join("docs/example-output.md"), "drifted output after review\n");
+
+    let rebuilt = run_rust_json(
+        repo,
+        state,
+        &["rebuild-evidence", "--plan", PLAN_REL, "--json"],
+        "rebuild-evidence with active contract state",
+    );
+    assert_eq!(rebuilt["counts"]["rebuilt"], Value::from(1), "json: {rebuilt}");
+
+    let current_run_receipt_path = harness_authoritative_artifact_path(
+        state,
+        &repo_slug(repo),
+        &branch_name(repo),
+        &format!("unit-review-{execution_run_id}-task-1-step-1.md"),
+    );
+    let current_run_receipt = fs::read_to_string(&current_run_receipt_path)
+        .expect("rebuild-evidence should publish a current-run serial unit-review receipt when an active contract exists");
+    let expected_unit_contract_fingerprint = approved_unit_contract_fingerprint_for_review(
+        &active_contract_fingerprint,
+        &expected_packet_fingerprint(repo, 1, 1),
+        "task-1-step-1",
+    );
+    assert!(
+        current_run_receipt.contains(&format!(
+            "**Approved Unit Contract Fingerprint:** {expected_unit_contract_fingerprint}"
+        )),
+        "serial unit-review receipt should bind the approved unit contract fingerprint from the active contract: {current_run_receipt}"
+    );
+
+    let gate_review = run_rust_json(
+        repo,
+        state,
+        &["gate-review", "--plan", PLAN_REL],
+        "gate-review after active-contract rebuild",
+    );
+    let reason_codes = gate_review["reason_codes"]
+        .as_array()
+        .expect("gate-review should expose reason codes");
+    assert!(
+        !reason_codes.iter().any(|code| code.as_str()
+            == Some("worktree_lease_authoritative_contract_missing")),
+        "gate-review should not report missing active contract after rebuild reused the authoritative contract, got {gate_review}"
+    );
+    assert!(
+        !reason_codes.iter().any(|code| code.as_str()
+            == Some("worktree_lease_review_receipt_unit_contract_mismatch")),
+        "gate-review should accept contract-bound serial unit-review receipts after rebuild, got {gate_review}"
+    );
 }
 
 #[test]

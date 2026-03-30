@@ -584,8 +584,8 @@
 **Invalidation Reason:** Evidence rebuild: files_proven_drifted
 
 #### Attempt 3
-**Status:** Completed
-**Recorded At:** 2026-03-30T20:09:37.577178Z
+**Status:** Invalidated
+**Recorded At:** 2026-03-30T21:57:32.262668Z
 **Execution Source:** featureforge:executing-plans
 **Task Number:** 3
 **Step Number:** 5
@@ -598,6 +598,23 @@
 - tests/plan_execution.rs | sha256:c665e38721a4d0a23bbd1ea089837183e32fa1b126582b9eab792652ebf5b0f6
 **Verify Command:** cargo test --test plan_execution -- rebuild_target_state_transition_blocked --exact && cargo test --test plan_execution -- rebuild_target_race_detected --exact
 **Verification Summary:** `cargo test --test plan_execution -- rebuild_target_state_transition_blocked --exact && cargo test --test plan_execution -- rebuild_target_race_detected --exact` -> passed: running 1 test test rebuild_target_state_transition_blocked ... ok test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 197 filtered out; finished in 0.92s running 1 test test rebuild_target_race_detected ... ok test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 197 filtered out; finished in 0.97s
+**Invalidation Reason:** Evidence rebuild: files_proven_drifted
+
+#### Attempt 4
+**Status:** Completed
+**Recorded At:** 2026-03-30T21:57:35.056088Z
+**Execution Source:** featureforge:executing-plans
+**Task Number:** 3
+**Step Number:** 5
+**Packet Fingerprint:** e27f1ae04ada80ac71538a587ddf23b33e800743cb3063021fcfca9dc6153587
+**Head SHA:** 1f93d03d042759e81f9a22b95edc26a6b8d40bdc
+**Base SHA:** 1f93d03d042759e81f9a22b95edc26a6b8d40bdc
+**Claim:** Added deterministic replay conflict coverage for state_transition_blocked and target_race outcomes under the rebuild executor.
+**Files Proven:**
+- src/execution/mutate.rs | sha256:f605424f9780df78dcabb26405aa7040592e41603298119ee8671049d05ee6c3
+- tests/plan_execution.rs | sha256:61a62e274acb4404534c434fe25936e0cc9f813839631bf0de795fe3aec10d74
+**Verify Command:** cargo test --test plan_execution -- rebuild_target_state_transition_blocked --exact && cargo test --test plan_execution -- rebuild_target_race_detected --exact
+**Verification Summary:** `cargo test --test plan_execution -- rebuild_target_state_transition_blocked --exact && cargo test --test plan_execution -- rebuild_target_race_detected --exact` -> passed: running 1 test test rebuild_target_state_transition_blocked ... ok test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 201 filtered out; finished in 0.92s running 1 test test rebuild_target_race_detected ... ok test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 201 filtered out; finished in 0.96s
 **Invalidation Reason:** N/A
 
 ### Task 4 Step 1
@@ -653,8 +670,8 @@
 **Invalidation Reason:** Evidence rebuild: packet_fingerprint_mismatch
 
 #### Attempt 2
-**Status:** Completed
-**Recorded At:** 2026-03-30T20:09:50.797238Z
+**Status:** Invalidated
+**Recorded At:** 2026-03-30T21:03:07.249741Z
 **Execution Source:** featureforge:executing-plans
 **Task Number:** 4
 **Step Number:** 2
@@ -668,6 +685,42 @@
 - tests/plan_execution.rs | sha256:c665e38721a4d0a23bbd1ea089837183e32fa1b126582b9eab792652ebf5b0f6
 **Verify Command:** cargo test --test plan_execution -- rebuild_evidence_text_output_summary --exact && cargo test --test plan_execution rebuild_
 **Verification Summary:** `cargo test --test plan_execution -- rebuild_evidence_text_output_summary --exact && cargo test --test plan_execution rebuild_` -> passed: running 1 test test rebuild_evidence_text_output_summary ... ok test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 197 filtered out; finished in 1.03s running 31 tests test rebuild_evidence_invalid_scope ... ok test rebuild_candidate_discovery_source_spec_fingerprint_drift ... ok test rebuild_candidate_discovery_unreadable_artifact ... ok test rebuild_candidate_discovery_stale_targets ... ok test rebuild_evidence_command_shape ... ok test rebuild_candidate_filtering ... ok test rebuild_candidate_discovery_plan_fingerprint_drift ... ok test rebuild_evidence_json_output_fields ... ok test rebuild_evidence_dry_run_is_noop ... ok test rebuild_evidence_rejects_parallel_max_jobs ... ok test rebuild_evidence_manual_required_default ... ok test rebuild_evidence_json_schema ... ok test rebuild_evidence_legacy_summary_command_replays ... ok test rebuild_evidence_rejects_zero_max_jobs ... ok test rebuild_evidence_manual_required_rerun_resumes_open_step ... ok test rebuild_evidence_session_not_found ... ok test rebuild_evidence_scope_empty ... ok test rebuild_evidence_refreshes_prior_task_closure_receipts_across_tasks ... ok test rebuild_evidence_text_output_summary ... ok test rebuild_evidence_verify_command_failed_rerun_resumes_open_step ... ok test rebuild_evidence_state_transition_blocked_rerun_resumes_open_step ... ok test rebuild_executor_no_output_summary ... ok test rebuild_executor_reopens_and_recompletes ... ok test rebuild_evidence_text_failure_output ... ok test rebuild_state_transition_retry_rehydrates_verify_command ... ok test rebuild_target_race_detected ... ok test rebuild_target_race_retries_and_rehydrates_verify_command ... ok test rebuild_target_state_transition_blocked ... ok test rebuild_evidence_partial_failure_resume ... ok test rebuild_evidence_exit_statuses ... ok test rebuild_evidence_noop_and_partial_failures ... ok test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 167 filtered out; finished in 3.49s
+**Invalidation Reason:** Evidence rebuild: files_proven_drifted
+
+#### Attempt 3
+**Status:** Invalidated
+**Recorded At:** 2026-03-30T21:57:35.167763Z
+**Execution Source:** featureforge:executing-plans
+**Task Number:** 4
+**Step Number:** 2
+**Packet Fingerprint:** 9b272c957cdc521d32b7bdf99a92813fcb09a439ff2f86577174775e29ab116f
+**Head SHA:** 1f93d03d042759e81f9a22b95edc26a6b8d40bdc
+**Base SHA:** 1f93d03d042759e81f9a22b95edc26a6b8d40bdc
+**Claim:** Implemented deterministic text-mode rebuild output with a stable summary line and per-target records while preserving the existing JSON path.
+**Files Proven:**
+- src/execution/state.rs | sha256:43e2ee0438ad9f003c5d4e7704121804bb651ed4f59b6999e73d27a52b4de022
+- src/lib.rs | sha256:b19fa24d1ec5ef880a8d30ad4f807296b04b6d71889443607014fb213f9cb567
+- tests/plan_execution.rs | sha256:349a9525649bb6107203aaa542dd82d54a2f69a7e0ae66dbdbbdce3ae05fa70f
+**Verify Command:** cargo test --test plan_execution -- rebuild_evidence_text_output_summary --exact && cargo test --test plan_execution rebuild_
+**Verification Summary:** `cargo test --test plan_execution -- rebuild_evidence_text_output_summary --exact && cargo test --test plan_execution rebuild_` -> passed: running 1 test test rebuild_evidence_text_output_summary ... ok test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 199 filtered out; finished in 0.90s running 31 tests test rebuild_evidence_command_shape ... ok test rebuild_candidate_discovery_stale_targets ... ok test rebuild_evidence_invalid_scope ... ok test rebuild_candidate_discovery_unreadable_artifact ... ok test rebuild_candidate_filtering ... ok test rebuild_candidate_discovery_plan_fingerprint_drift ... ok test rebuild_candidate_discovery_source_spec_fingerprint_drift ... ok test rebuild_evidence_json_output_fields ... ok test rebuild_evidence_dry_run_is_noop ... ok test rebuild_evidence_rejects_parallel_max_jobs ... ok test rebuild_evidence_manual_required_default ... ok test rebuild_evidence_legacy_summary_command_replays ... ok test rebuild_evidence_manual_required_rerun_resumes_open_step ... ok test rebuild_evidence_json_schema ... ok test rebuild_evidence_rejects_zero_max_jobs ... ok test rebuild_evidence_session_not_found ... ok test rebuild_evidence_scope_empty ... ok test rebuild_evidence_refreshes_prior_task_closure_receipts_across_tasks ... ok test rebuild_evidence_text_output_summary ... ok test rebuild_evidence_verify_command_failed_rerun_resumes_open_step ... ok test rebuild_evidence_state_transition_blocked_rerun_resumes_open_step ... ok test rebuild_executor_no_output_summary ... ok test rebuild_executor_reopens_and_recompletes ... ok test rebuild_evidence_text_failure_output ... ok test rebuild_state_transition_retry_rehydrates_verify_command ... ok test rebuild_target_race_detected ... ok test rebuild_target_race_retries_and_rehydrates_verify_command ... ok test rebuild_target_state_transition_blocked ... ok test rebuild_evidence_partial_failure_resume ... ok test rebuild_evidence_exit_statuses ... ok test rebuild_evidence_noop_and_partial_failures ... ok test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 169 filtered out; finished in 3.76s
+**Invalidation Reason:** Evidence rebuild: files_proven_drifted
+
+#### Attempt 4
+**Status:** Completed
+**Recorded At:** 2026-03-30T21:57:40.789312Z
+**Execution Source:** featureforge:executing-plans
+**Task Number:** 4
+**Step Number:** 2
+**Packet Fingerprint:** 9b272c957cdc521d32b7bdf99a92813fcb09a439ff2f86577174775e29ab116f
+**Head SHA:** 1f93d03d042759e81f9a22b95edc26a6b8d40bdc
+**Base SHA:** 1f93d03d042759e81f9a22b95edc26a6b8d40bdc
+**Claim:** Implemented deterministic text-mode rebuild output with a stable summary line and per-target records while preserving the existing JSON path.
+**Files Proven:**
+- src/execution/state.rs | sha256:4c979e518e4fda9becc133a05b1be7ce15b38216c078c8c713380756f57c85db
+- src/lib.rs | sha256:b19fa24d1ec5ef880a8d30ad4f807296b04b6d71889443607014fb213f9cb567
+- tests/plan_execution.rs | sha256:61a62e274acb4404534c434fe25936e0cc9f813839631bf0de795fe3aec10d74
+**Verify Command:** cargo test --test plan_execution -- rebuild_evidence_text_output_summary --exact && cargo test --test plan_execution rebuild_
+**Verification Summary:** `cargo test --test plan_execution -- rebuild_evidence_text_output_summary --exact && cargo test --test plan_execution rebuild_` -> passed: running 1 test test rebuild_evidence_text_output_summary ... ok test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 201 filtered out; finished in 0.89s running 33 tests test rebuild_evidence_invalid_scope ... ok test rebuild_candidate_discovery_unreadable_artifact ... ok test rebuild_candidate_discovery_stale_targets ... ok test rebuild_candidate_discovery_source_spec_fingerprint_drift ... ok test rebuild_candidate_discovery_plan_fingerprint_drift ... ok test rebuild_candidate_filtering ... ok test rebuild_evidence_command_shape ... ok test rebuild_evidence_dry_run_is_noop ... ok test rebuild_evidence_does_not_publish_contract_bound_receipts_without_active_contract ... ok test rebuild_evidence_manual_required_default ... ok test rebuild_evidence_json_output_fields ... ok test rebuild_evidence_manual_required_rerun_resumes_open_step ... ok test rebuild_evidence_legacy_summary_command_replays ... ok test rebuild_evidence_json_schema ... ok test rebuild_evidence_rejects_parallel_max_jobs ... ok test rebuild_evidence_rejects_zero_max_jobs ... ok test rebuild_evidence_session_not_found ... ok test rebuild_evidence_scope_empty ... ok test rebuild_evidence_refreshes_prior_task_closure_receipts_across_tasks ... ok test rebuild_evidence_state_transition_blocked_rerun_resumes_open_step ... ok test rebuild_evidence_text_output_summary ... ok test rebuild_executor_no_output_summary ... ok test rebuild_evidence_verify_command_failed_rerun_resumes_open_step ... ok test rebuild_evidence_reuses_active_contract_for_serial_unit_review_receipts ... ok test rebuild_evidence_text_failure_output ... ok test rebuild_executor_reopens_and_recompletes ... ok test rebuild_state_transition_retry_rehydrates_verify_command ... ok test rebuild_evidence_partial_failure_resume ... ok test rebuild_target_race_detected ... ok test rebuild_target_state_transition_blocked ... ok test rebuild_target_race_retries_and_rehydrates_verify_command ... ok test rebuild_evidence_exit_statuses ... ok test rebuild_evidence_noop_and_partial_failures ... ok test result: ok. 33 passed; 0 failed; 0 ignored; 0 measured; 169 filtered out; finished in 3.76s
 **Invalidation Reason:** N/A
 
 ### Task 4 Step 3
@@ -853,8 +906,8 @@
 **Invalidation Reason:** Evidence rebuild: packet_fingerprint_mismatch
 
 #### Attempt 2
-**Status:** Completed
-**Recorded At:** 2026-03-30T20:10:26.202802Z
+**Status:** Invalidated
+**Recorded At:** 2026-03-30T21:03:12.883456Z
 **Execution Source:** featureforge:executing-plans
 **Task Number:** 5
 **Step Number:** 4
@@ -866,6 +919,38 @@
 - tests/plan_execution.rs | sha256:c665e38721a4d0a23bbd1ea089837183e32fa1b126582b9eab792652ebf5b0f6
 **Verify Command:** cargo test --test plan_execution -- rebuild_evidence_json_schema --exact && cargo test --test plan_execution rebuild_
 **Verification Summary:** `cargo test --test plan_execution -- rebuild_evidence_json_schema --exact && cargo test --test plan_execution rebuild_` -> passed: running 1 test test rebuild_evidence_json_schema ... ok test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 197 filtered out; finished in 1.00s running 31 tests test rebuild_candidate_filtering ... ok test rebuild_candidate_discovery_source_spec_fingerprint_drift ... ok test rebuild_candidate_discovery_unreadable_artifact ... ok test rebuild_evidence_invalid_scope ... ok test rebuild_candidate_discovery_stale_targets ... ok test rebuild_candidate_discovery_plan_fingerprint_drift ... ok test rebuild_evidence_command_shape ... ok test rebuild_evidence_json_output_fields ... ok test rebuild_evidence_dry_run_is_noop ... ok test rebuild_evidence_rejects_parallel_max_jobs ... ok test rebuild_evidence_manual_required_default ... ok test rebuild_evidence_legacy_summary_command_replays ... ok test rebuild_evidence_json_schema ... ok test rebuild_evidence_manual_required_rerun_resumes_open_step ... ok test rebuild_evidence_rejects_zero_max_jobs ... ok test rebuild_evidence_session_not_found ... ok test rebuild_evidence_scope_empty ... ok test rebuild_evidence_refreshes_prior_task_closure_receipts_across_tasks ... ok test rebuild_evidence_text_output_summary ... ok test rebuild_evidence_verify_command_failed_rerun_resumes_open_step ... ok test rebuild_evidence_state_transition_blocked_rerun_resumes_open_step ... ok test rebuild_executor_no_output_summary ... ok test rebuild_executor_reopens_and_recompletes ... ok test rebuild_evidence_text_failure_output ... ok test rebuild_state_transition_retry_rehydrates_verify_command ... ok test rebuild_target_race_detected ... ok test rebuild_target_race_retries_and_rehydrates_verify_command ... ok test rebuild_target_state_transition_blocked ... ok test rebuild_evidence_partial_failure_resume ... ok test rebuild_evidence_exit_statuses ... ok test rebuild_evidence_noop_and_partial_failures ... ok test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 167 filtered out; finished in 3.44s
+**Invalidation Reason:** Evidence rebuild: files_proven_drifted
+
+#### Attempt 3
+**Status:** Invalidated
+**Recorded At:** 2026-03-30T21:57:40.901775Z
+**Execution Source:** featureforge:executing-plans
+**Task Number:** 5
+**Step Number:** 4
+**Packet Fingerprint:** 31ceabb9f2729c0e6c9c5b8173881a64a91057d2d9823269e86620059a9e571d
+**Head SHA:** 1f93d03d042759e81f9a22b95edc26a6b8d40bdc
+**Base SHA:** 1f93d03d042759e81f9a22b95edc26a6b8d40bdc
+**Claim:** Added exact JSON schema coverage for rebuild-evidence output, including stable top-level and nested key order for structured parsing consumers.
+**Files Proven:**
+- tests/plan_execution.rs | sha256:349a9525649bb6107203aaa542dd82d54a2f69a7e0ae66dbdbbdce3ae05fa70f
+**Verify Command:** cargo test --test plan_execution -- rebuild_evidence_json_schema --exact && cargo test --test plan_execution rebuild_
+**Verification Summary:** `cargo test --test plan_execution -- rebuild_evidence_json_schema --exact && cargo test --test plan_execution rebuild_` -> passed: running 1 test test rebuild_evidence_json_schema ... ok test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 199 filtered out; finished in 1.09s running 31 tests test rebuild_candidate_discovery_source_spec_fingerprint_drift ... ok test rebuild_candidate_filtering ... ok test rebuild_evidence_command_shape ... ok test rebuild_candidate_discovery_stale_targets ... ok test rebuild_candidate_discovery_plan_fingerprint_drift ... ok test rebuild_candidate_discovery_unreadable_artifact ... ok test rebuild_evidence_invalid_scope ... ok test rebuild_evidence_json_output_fields ... ok test rebuild_evidence_dry_run_is_noop ... ok test rebuild_evidence_rejects_parallel_max_jobs ... ok test rebuild_evidence_manual_required_default ... ok test rebuild_evidence_json_schema ... ok test rebuild_evidence_manual_required_rerun_resumes_open_step ... ok test rebuild_evidence_rejects_zero_max_jobs ... ok test rebuild_evidence_legacy_summary_command_replays ... ok test rebuild_evidence_session_not_found ... ok test rebuild_evidence_scope_empty ... ok test rebuild_evidence_refreshes_prior_task_closure_receipts_across_tasks ... ok test rebuild_evidence_text_output_summary ... ok test rebuild_evidence_verify_command_failed_rerun_resumes_open_step ... ok test rebuild_evidence_state_transition_blocked_rerun_resumes_open_step ... ok test rebuild_executor_no_output_summary ... ok test rebuild_executor_reopens_and_recompletes ... ok test rebuild_evidence_text_failure_output ... ok test rebuild_state_transition_retry_rehydrates_verify_command ... ok test rebuild_target_race_detected ... ok test rebuild_target_race_retries_and_rehydrates_verify_command ... ok test rebuild_target_state_transition_blocked ... ok test rebuild_evidence_partial_failure_resume ... ok test rebuild_evidence_exit_statuses ... ok test rebuild_evidence_noop_and_partial_failures ... ok test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 169 filtered out; finished in 3.60s
+**Invalidation Reason:** Evidence rebuild: files_proven_drifted
+
+#### Attempt 4
+**Status:** Completed
+**Recorded At:** 2026-03-30T21:57:46.558212Z
+**Execution Source:** featureforge:executing-plans
+**Task Number:** 5
+**Step Number:** 4
+**Packet Fingerprint:** 31ceabb9f2729c0e6c9c5b8173881a64a91057d2d9823269e86620059a9e571d
+**Head SHA:** 1f93d03d042759e81f9a22b95edc26a6b8d40bdc
+**Base SHA:** 1f93d03d042759e81f9a22b95edc26a6b8d40bdc
+**Claim:** Added exact JSON schema coverage for rebuild-evidence output, including stable top-level and nested key order for structured parsing consumers.
+**Files Proven:**
+- tests/plan_execution.rs | sha256:61a62e274acb4404534c434fe25936e0cc9f813839631bf0de795fe3aec10d74
+**Verify Command:** cargo test --test plan_execution -- rebuild_evidence_json_schema --exact && cargo test --test plan_execution rebuild_
+**Verification Summary:** `cargo test --test plan_execution -- rebuild_evidence_json_schema --exact && cargo test --test plan_execution rebuild_` -> passed: running 1 test test rebuild_evidence_json_schema ... ok test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 201 filtered out; finished in 0.91s running 33 tests test rebuild_evidence_command_shape ... ok test rebuild_evidence_invalid_scope ... ok test rebuild_candidate_discovery_stale_targets ... ok test rebuild_candidate_discovery_unreadable_artifact ... ok test rebuild_candidate_discovery_plan_fingerprint_drift ... ok test rebuild_candidate_discovery_source_spec_fingerprint_drift ... ok test rebuild_candidate_filtering ... ok test rebuild_evidence_dry_run_is_noop ... ok test rebuild_evidence_does_not_publish_contract_bound_receipts_without_active_contract ... ok test rebuild_evidence_manual_required_default ... ok test rebuild_evidence_json_output_fields ... ok test rebuild_evidence_legacy_summary_command_replays ... ok test rebuild_evidence_manual_required_rerun_resumes_open_step ... ok test rebuild_evidence_json_schema ... ok test rebuild_evidence_rejects_parallel_max_jobs ... ok test rebuild_evidence_rejects_zero_max_jobs ... ok test rebuild_evidence_session_not_found ... ok test rebuild_evidence_scope_empty ... ok test rebuild_evidence_refreshes_prior_task_closure_receipts_across_tasks ... ok test rebuild_evidence_state_transition_blocked_rerun_resumes_open_step ... ok test rebuild_evidence_text_output_summary ... ok test rebuild_evidence_verify_command_failed_rerun_resumes_open_step ... ok test rebuild_executor_no_output_summary ... ok test rebuild_evidence_reuses_active_contract_for_serial_unit_review_receipts ... ok test rebuild_evidence_text_failure_output ... ok test rebuild_executor_reopens_and_recompletes ... ok test rebuild_state_transition_retry_rehydrates_verify_command ... ok test rebuild_evidence_partial_failure_resume ... ok test rebuild_target_race_detected ... ok test rebuild_target_state_transition_blocked ... ok test rebuild_target_race_retries_and_rehydrates_verify_command ... ok test rebuild_evidence_exit_statuses ... ok test rebuild_evidence_noop_and_partial_failures ... ok test result: ok. 33 passed; 0 failed; 0 ignored; 0 measured; 169 filtered out; finished in 3.81s
 **Invalidation Reason:** N/A
 
 ### Task 6 Step 1

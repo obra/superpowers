@@ -2006,6 +2006,32 @@ fn enforce_worktree_lease_binding_truth(context: &ExecutionContext, gate: &mut G
         if !context.steps.iter().any(|step| step.checked) {
             return;
         }
+        let active_contract_overlay = match load_status_authoritative_overlay_checked(context) {
+            Ok(Some(overlay)) => overlay,
+            Ok(None) => return,
+            Err(error) => {
+                gate.fail(
+                    FailureClass::MalformedExecutionState,
+                    "worktree_lease_authoritative_state_unavailable",
+                    error.message,
+                    "Restore authoritative harness state readability and retry gate-review or gate-finish.",
+                );
+                return;
+            }
+        };
+        let active_contract_path = active_contract_overlay
+            .active_contract_path
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty());
+        let active_contract_fingerprint = active_contract_overlay
+            .active_contract_fingerprint
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty());
+        if active_contract_path.is_none() && active_contract_fingerprint.is_none() {
+            return;
+        }
         let Some((_active_contract_path, active_contract_fingerprint)) =
             load_authoritative_active_contract(context, gate)
         else {
