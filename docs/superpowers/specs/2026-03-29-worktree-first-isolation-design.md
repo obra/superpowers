@@ -193,7 +193,7 @@ The model analyzes the diff against our work and classifies into one of three le
 
 **Level 2 — Spec drift:** The spec's assumptions are partially invalidated, but the original problem statement still holds. Examples: new instances of something the spec enumerates, a module boundary the spec assumes was reorganized, a dependency the spec relies on was replaced.
 
-→ **Action:** Route to brainstorming's "present design" phase to update the spec (not full brainstorming — no need to re-ask clarifying questions since the original intent is clear). Then re-plan, re-execute, return to finishing.
+→ **Action:** Review the spec against the current state of the base branch. Where the drift creates ambiguity about what to build, ask the user clarifying questions (one at a time, prefer multiple choice, focus on purpose/constraints/success criteria). Update the spec to reflect the answers, then create a delta plan for implementation changes, re-execute, return to finishing.
 
 **Level 3 — Fundamental drift:** The changes undermine the original problem statement or approach. Examples: another session already implemented what we were building, the architecture was fundamentally restructured, the feature we're extending was removed.
 

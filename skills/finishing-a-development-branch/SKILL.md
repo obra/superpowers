@@ -124,8 +124,13 @@ Classify the drift into one of three levels. **When in doubt, escalate to the hi
 
 **Level 2 — Spec drift:** The spec's assumptions are partially invalidated, but the original problem statement still holds. Examples: new instances of something the spec enumerates, a module boundary the spec assumes was reorganized, a dependency the spec relies on was replaced.
 
-→ Present to user: "The base branch has changed since this session started. The changes partially invalidate the spec. I recommend updating the spec to account for the new state, then re-planning and re-executing."
-→ If user confirms: Route to the brainstorming skill's "present design" phase to update the spec, then re-plan via `superpowers:writing-plans`, then re-execute, then return to this step.
+→ Present to user: "The base branch has changed since this session started. The changes partially invalidate the spec. I need to ask some clarifying questions about how to update the spec, then re-plan and re-execute."
+→ If user confirms: Review the spec against the current state of the base branch. Where the drift creates ambiguity about what to build, ask the user clarifying questions to resolve it. When asking questions:
+  - Ask questions one at a time
+  - Prefer multiple choice questions when possible, but open-ended is fine too
+  - Only one question per message
+  - Focus on understanding: purpose, constraints, success criteria
+→ Update the spec to reflect the answers, then create a delta plan via `superpowers:writing-plans` for any implementation changes needed, then re-execute, then return to this step.
 
 **Level 3 — Fundamental drift:** The changes undermine the original problem statement or approach. Examples: another session already implemented what we were building, the architecture was fundamentally restructured, the feature we're extending was removed.
 
