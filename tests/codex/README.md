@@ -17,6 +17,12 @@ install:
 - the repository's `skills/` directory into `$HOME/.agents/skills/superpowers`
 - the repository's `.codex/agents/*.toml` files into `$CODEX_HOME/agents/`
 
+The fast suite also includes a direct hook contract check:
+
+- `test-using-superpowers-bootstrap.sh` verifies `hooks/session-start`
+  emits the Codex-compatible `hookSpecificOutput` shape when
+  `SUPERPOWERS_HOOK_TARGET=codex` is set, while preserving Cursor behavior
+
 ## Requirements
 
 - Codex CLI installed and authenticated
@@ -43,6 +49,12 @@ install:
 
 ```bash
 ./tests/codex/run-skill-tests.sh --test test-document-review-system.sh --integration
+```
+
+Run the Codex bootstrap contract test directly:
+
+```bash
+./tests/codex/run-skill-tests.sh --test test-using-superpowers-bootstrap.sh
 ```
 
 ## Evidence Sources

@@ -38,6 +38,35 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 4. Restart Codex.
 
+### Optional SessionStart hook
+
+If you want the full `using-superpowers` skill injected into every new Codex
+session, add this to `~/.codex/hooks.json`:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "^(startup|resume)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SUPERPOWERS_HOOK_TARGET=codex bash ~/.codex/superpowers/hooks/session-start",
+            "statusMessage": "loading superpowers",
+            "timeout": 600
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+This is intentionally Codex-specific. The hook script resolves its own plugin
+root, so Codex does not need `CLAUDE_PLUGIN_ROOT` to produce the correct
+`hookSpecificOutput.additionalContext` payload.
+
 ### Windows
 
 Use a junction for the skills directory and copy the agent TOMLs directly:
@@ -129,6 +158,12 @@ Optionally delete the clone: `rm -rf ~/.codex/superpowers` (Windows: `Remove-Ite
 1. Check TOMLs exist: `find ~/.codex/agents -maxdepth 1 -name 'superpowers_*.toml' | sort`
 2. Re-run the copy command from installation step 3
 3. Restart Codex - agent roles are loaded at startup
+
+### SessionStart hook not injecting context
+
+1. Check `~/.codex/hooks.json` uses `SUPERPOWERS_HOOK_TARGET=codex`
+2. Make sure the command points to `~/.codex/superpowers/hooks/session-start`
+3. Restart Codex and verify with a fresh `codex exec --json` session
 
 ### Windows junction issues
 
