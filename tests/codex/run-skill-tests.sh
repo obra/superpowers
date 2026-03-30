@@ -57,6 +57,7 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Tests:"
             echo "  test-subagent-driven-development.sh  Test skill loading and requirements"
+            echo "  test-using-superpowers-bootstrap.sh  Verify SessionStart Codex bootstrap shape"
             echo ""
             echo "Integration Tests (use --integration):"
             echo "  test-subagent-driven-development-integration.sh  Full workflow execution"
@@ -77,6 +78,7 @@ fi
 
 tests=(
     "test-subagent-driven-development.sh"
+    "test-using-superpowers-bootstrap.sh"
 )
 
 integration_tests=(

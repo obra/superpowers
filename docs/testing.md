@@ -79,6 +79,13 @@ hook path:
   injects the current `using-superpowers` content and chooses the correct JSON
   field for Claude Code, Cursor, and fallback environments
 
+The Codex fast suite includes the matching contract check for Codex bootstrap:
+
+- `tests/codex/test-using-superpowers-bootstrap.sh` verifies
+  `hooks/session-start` emits the Codex-compatible `hookSpecificOutput` shape
+  when `SUPERPOWERS_HOOK_TARGET=codex` is set, without depending on
+  `CLAUDE_PLUGIN_ROOT`
+
 Integration tests execute real Claude Code sessions with actual skills:
 
 ```bash

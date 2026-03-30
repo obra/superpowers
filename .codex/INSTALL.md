@@ -35,6 +35,36 @@ Enable Superpowers skills through a symlink and install native Codex subagents a
 
 4. **Restart Codex** (quit and relaunch the CLI) to discover both the skills and the native agent roles.
 
+## Optional SessionStart bootstrap
+
+Codex can discover the `using-superpowers` skill natively from the skills
+symlink. If you also want the full skill text injected at session start, add a
+`SessionStart` hook:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "^(startup|resume)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SUPERPOWERS_HOOK_TARGET=codex bash ~/.codex/superpowers/hooks/session-start",
+            "statusMessage": "loading superpowers",
+            "timeout": 600
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Use `SUPERPOWERS_HOOK_TARGET=codex` rather than `CLAUDE_PLUGIN_ROOT`. The hook
+script already discovers its own repository root, and the explicit Codex target
+keeps the output schema aligned with Codex's `hookSpecificOutput` format.
+
 ## Migrating from old bootstrap
 
 If you installed superpowers before native skill discovery, you need to:
@@ -48,9 +78,13 @@ If you installed superpowers before native skill discovery, you need to:
 
 3. **Copy the agent TOMLs** (step 3 above).
 
-4. **Remove the old bootstrap block** from `~/.codex/AGENTS.md` - any block referencing `superpowers-codex bootstrap` is no longer needed.
+4. **Update any old hook command** in `~/.codex/hooks.json`:
+   - replace `CLAUDE_PLUGIN_ROOT=... bash ~/.codex/superpowers/hooks/session-start`
+   - with `SUPERPOWERS_HOOK_TARGET=codex bash ~/.codex/superpowers/hooks/session-start`
 
-5. **Restart Codex.**
+5. **Remove the old bootstrap block** from `~/.codex/AGENTS.md` - any block referencing `superpowers-codex bootstrap` is no longer needed.
+
+6. **Restart Codex.**
 
 ## Verify
 
