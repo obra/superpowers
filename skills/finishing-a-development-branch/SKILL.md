@@ -115,6 +115,8 @@ Classify the drift into one of three levels. **When in doubt, escalate to the hi
 
 **Level 0 — No meaningful drift:** The base branch changes don't affect our work at all (e.g., changes to unrelated files, documentation updates). Proceed to Step 3.
 
+**⚠ Important: This step must loop until clean.** After any escalation fix completes (Level 1-3), return to the top of Step 2.5 and run a fresh fetch + rebase + delta analysis. Do not proceed to Step 3 until delta analysis returns Level 0 on a fresh rebase. This is necessary because more changes may land on the base branch while the user confirms the escalation, or while the delta fix is being planned and executed.
+
 **Level 1 — Implementation drift:** The spec is still correct, but the base branch changes affect how our work should be implemented. Examples: a file we extend was refactored, an interface we use changed its signature, a utility we depend on was moved.
 
 → Present to user: "The base branch has changed since this session started. The changes affect implementation details but not the spec. I recommend creating a delta implementation plan to address the gaps."

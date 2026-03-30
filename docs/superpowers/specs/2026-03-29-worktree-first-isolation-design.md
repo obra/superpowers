@@ -211,9 +211,15 @@ Recommend Opus (highest-capacity model) for delta analysis but don't enforce it 
 
 The model proposes an escalation level with its reasoning. The user confirms or overrides before the system routes to the appropriate skill.
 
-### Clean result
+### Loop until clean
 
-If the delta analysis finds no meaningful conflicts between the base branch changes and our work, proceed directly to the merge options.
+The delta analysis must loop until clean. After any escalation fix completes (delta plan executed, spec updated, or full restart), the finishing skill returns to Step 2.5 and runs rebase + delta analysis again. This is critical because:
+
+- The user may take time to confirm the escalation level — more changes could land on the base branch during that delay
+- The delta fix itself takes time — more changes could land while re-planning and re-executing
+- A delta fix might introduce new conflicts with yet more changes
+
+**Only proceed to merge options when delta analysis returns Level 0 on a fresh rebase.** There is no shortcut — every return to Step 2.5 does a full fetch + rebase + diff + analysis.
 
 ## 6. No-Worktree Mode (Platform Fallback)
 
