@@ -4,6 +4,18 @@ Ultrapowers is a research-driven software development workflow for your coding a
 
 **[Documentation](https://www.datatide.com/ultrapowers)** · **[GitHub](https://github.com/ennio-datatide/ultrapowers)** · **[Issues](https://github.com/ennio-datatide/ultrapowers/issues)**
 
+## Learn to Build with Ultrapowers
+
+**New to AI-powered building?** The [Ultrapowers Course](https://ultrapowers.dev) teaches non-technical professionals to build real software using this system in 5 weeks. No coding experience required.
+
+**Need custom consulting?** [DataTide](https://datatide.io) is the AI consulting practice behind Ultrapowers. For enterprise projects, custom solutions, and hands-on help.
+
+| Resource            | For                                   | Link                                       |
+| ------------------- | ------------------------------------- | ------------------------------------------ |
+| Ultrapowers Course  | Learn to build with AI yourself       | [ultrapowers.dev](https://ultrapowers.dev) |
+| DataTide Consulting | Custom AI solutions for your business | [datatide.io](https://datatide.io)         |
+| This Repository     | The open source skill system          | You're here                                |
+
 ## How it works
 
 It starts the same way Superpowers does — your agent doesn't just jump into code. It steps back and asks what you're really trying to do.
