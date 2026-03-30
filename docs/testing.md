@@ -98,6 +98,8 @@ cp target/aarch64-apple-darwin/release/featureforge bin/featureforge
 chmod +x bin/featureforge
 ```
 
+If Homebrew `cargo`/`rustc` shadow rustup-managed toolchains on `PATH`, put the rustup toolchain shims first before running the Windows GNU refresh command so the installed `x86_64-pc-windows-gnu` standard library can be found.
+
 Then rerun:
 
 ```bash

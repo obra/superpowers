@@ -58,6 +58,7 @@ FeatureForge routes product work conservatively from repo-visible artifacts.
 Accelerated review is an opt-in branch inside `plan-ceo-review` and `plan-eng-review`, not a separate workflow stage.
 
 - `using-featureforge` is the human-readable entry router after `featureforge session-entry`
+- `featureforge:project-memory` is an opt-in supportive memory skill for `docs/project_notes/*`; use it only for explicit memory-oriented requests or later follow-up updates, not as a default workflow stage or gate
 - generated skill preambles always invoke the packaged install binary under `~/.featureforge/install/bin/` (`featureforge` on Unix, `featureforge.exe` on Windows), and that runtime resolves the active root through `featureforge repo runtime-root --path` before update checks or contributor-mode reads
 - generated `using-featureforge` preambles export `FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY=1`, so workflow routing fail-closes until the current session key has an `enabled` or `bypassed` entry decision
 - `featureforge workflow status --refresh` re-derives the safe next stage from active specs and plans

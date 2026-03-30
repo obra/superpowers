@@ -116,6 +116,80 @@ function assertDownstreamMaterialStaysGateAndHarnessAware(content, label) {
   );
 }
 
+function buildTimedHookPatterns(timings, targetPattern, gapPattern = '[^.\\n]{0,160}') {
+  const obligationPattern = '(?:must|always|required|requires|should|need(?:s)? to|have(?:s)? to|ought to)';
+  const imperativeActionPattern = '(?:consult|search|update|use|record)';
+  const timingPattern = `(?:${timings.join('|')})`;
+
+  return [
+    new RegExp(`${timingPattern}${gapPattern}${obligationPattern}${gapPattern}${targetPattern}`, 'i'),
+    new RegExp(`${obligationPattern}${gapPattern}${targetPattern}${gapPattern}${timingPattern}`, 'i'),
+    new RegExp(`${targetPattern}${gapPattern}${obligationPattern}${gapPattern}${timingPattern}`, 'i'),
+    new RegExp(`${timingPattern}${gapPattern}${targetPattern}${gapPattern}${obligationPattern}`, 'i'),
+    new RegExp(`${timingPattern}${gapPattern}${imperativeActionPattern}${gapPattern}${targetPattern}`, 'i'),
+    new RegExp(`${imperativeActionPattern}${gapPattern}${targetPattern}${gapPattern}${timingPattern}`, 'i'),
+    new RegExp(`${obligationPattern}${gapPattern}featureforge:project-memory${gapPattern}${timingPattern}`, 'i'),
+    new RegExp(`featureforge:project-memory${gapPattern}${obligationPattern}${gapPattern}${timingPattern}`, 'i'),
+    new RegExp(`featureforge:project-memory${gapPattern}${timingPattern}${gapPattern}${obligationPattern}`, 'i'),
+    new RegExp(`${imperativeActionPattern}${gapPattern}featureforge:project-memory${gapPattern}${timingPattern}`, 'i'),
+    new RegExp(`featureforge:project-memory${gapPattern}${imperativeActionPattern}${gapPattern}${timingPattern}`, 'i'),
+    new RegExp(`featureforge:project-memory${gapPattern}${timingPattern}${gapPattern}${imperativeActionPattern}`, 'i'),
+    new RegExp(`featureforge:project-memory${gapPattern}${timingPattern}`, 'i'),
+    new RegExp(`${timingPattern}${gapPattern}featureforge:project-memory`, 'i'),
+    new RegExp(`featureforge:project-memory${gapPattern}${obligationPattern}${gapPattern}${targetPattern}${gapPattern}${timingPattern}`, 'i'),
+    new RegExp(`featureforge:project-memory${gapPattern}${timingPattern}${gapPattern}${obligationPattern}${gapPattern}${targetPattern}`, 'i'),
+    new RegExp(`featureforge:project-memory${gapPattern}${timingPattern}${gapPattern}${imperativeActionPattern}${gapPattern}${targetPattern}`, 'i'),
+    new RegExp(`${imperativeActionPattern}${gapPattern}featureforge:project-memory${gapPattern}${timingPattern}${gapPattern}${targetPattern}`, 'i'),
+    new RegExp(`${imperativeActionPattern}${gapPattern}featureforge:project-memory${gapPattern}${targetPattern}${gapPattern}${timingPattern}`, 'i'),
+    new RegExp(`featureforge:project-memory${gapPattern}${timingPattern}${gapPattern}${targetPattern}`, 'i'),
+    new RegExp(`featureforge:project-memory${gapPattern}${targetPattern}${gapPattern}${timingPattern}`, 'i'),
+  ];
+}
+
+function assertForbidsTimedObligationHook(content, label, description, timings, targetPattern) {
+  const patterns = buildTimedHookPatterns(timings, targetPattern);
+  for (const pattern of patterns) {
+    assert.doesNotMatch(content, pattern, `${label} should not turn ${description} into a timed obligation`);
+  }
+}
+
+function assertDetectsTimedHookSamples(samples, label, description, timings, targetPattern) {
+  const patterns = buildTimedHookPatterns(timings, targetPattern, '[^\\n]{0,160}');
+  for (const sample of samples) {
+    assert.ok(
+      patterns.some((pattern) => pattern.test(sample)),
+      `${label} should detect timed regressions for ${description}: ${sample}`,
+    );
+  }
+}
+
+function buildGateLikeHookPatterns(targetPattern, gapPattern = '[^.\\n]{0,160}') {
+  const subjectPattern = `(?:featureforge:project-memory|${targetPattern})`;
+  const gatePattern = '(?:prerequisite|required|required for|gate|gates?|blocks?|blocked|blocking|mandatory|depends on|blocked on)';
+
+  return [
+    new RegExp(`${subjectPattern}${gapPattern}(?:is|are|be|being|to be)?${gapPattern}${gatePattern}`, 'i'),
+    new RegExp(`${gatePattern}${gapPattern}${subjectPattern}`, 'i'),
+  ];
+}
+
+function assertForbidsGateLikeHookLanguage(content, label, description, targetPattern) {
+  const patterns = buildGateLikeHookPatterns(targetPattern);
+  for (const pattern of patterns) {
+    assert.doesNotMatch(content, pattern, `${label} should not turn ${description} into gate-like language`);
+  }
+}
+
+function assertDetectsGateLikeHookSamples(samples, label, description, targetPattern) {
+  const patterns = buildGateLikeHookPatterns(targetPattern, '[^\\n]{0,160}');
+  for (const sample of samples) {
+    assert.ok(
+      patterns.some((pattern) => pattern.test(sample)),
+      `${label} should detect gate-like regressions for ${description}: ${sample}`,
+    );
+  }
+}
+
 test('templates declare exactly one base or review preamble placeholder', () => {
   for (const skill of listGeneratedSkills()) {
     const template = readUtf8(getTemplatePath(skill));
@@ -577,9 +651,10 @@ test('task-fidelity workflow docs and prompts require packet-backed plan contrac
 test('repo-writing workflow skills document the protected-branch repo-safety gate consistently', () => {
   const expectedTargets = {
     brainstorming: /spec-artifact-write/,
+    'project-memory': /repo-file-write/,
     'plan-ceo-review': /approval-header-write/,
     'writing-plans': /plan-artifact-write/,
-    'plan-eng-review': /approval-header-write/,
+    'plan-eng-review': /plan-artifact-write/,
     'executing-plans': /execution-task-slice/,
     'subagent-driven-development': /execution-task-slice/,
     'document-release': /release-doc-write/,
@@ -595,39 +670,258 @@ test('repo-writing workflow skills document the protected-branch repo-safety gat
     assert.match(content, /branch, the stage, and the blocking `failure_class`/, `${skill} should surface blocked-write diagnostics`);
     assert.match(content, targetPattern, `${skill} should use the correct write target family`);
   }
+
+  const planEngReview = readUtf8(getSkillPath('plan-eng-review'));
+  assert.match(planEngReview, /plan-artifact-write/, 'plan-eng-review should gate plan-body writes');
+  assert.match(planEngReview, /approval-header-write/, 'plan-eng-review should gate approval-header writes separately');
+  assert.doesNotMatch(planEngReview, /repo-file-write/, 'plan-eng-review should not regress to repo-file-write');
 });
 
-test('plan-eng-review plan-write targets stay aligned with repo-safety runtime values', () => {
-  const runtimeWriteTargets = repoSafetyCliWriteTargets();
-  assert.ok(
-    runtimeWriteTargets.has('plan-artifact-write'),
-    'repo-safety CLI should expose plan-artifact-write for plan-body mutations',
+test('project-memory workflow hooks stay consult-only and non-gating', () => {
+  const writingPlans = readUtf8(getSkillPath('writing-plans'));
+  assert.match(writingPlans, /## Optional Project Memory Consult/);
+  assert.match(writingPlans, /consult `docs\/project_notes\/decisions\.md`/);
+  assert.match(writingPlans, /consult `docs\/project_notes\/key_facts\.md`/);
+  assert.match(
+    writingPlans,
+    /later `featureforge:project-memory` summary update to `docs\/project_notes\/decisions\.md` may be appropriate after approval\./,
   );
-  assert.ok(
-    runtimeWriteTargets.has('approval-header-write'),
-    'repo-safety CLI should expose approval-header-write for approval flips',
+  assert.match(writingPlans, /supportive context only/i);
+  assert.match(writingPlans, /Missing or stale notes do not block planning\./);
+  assertForbidsGateLikeHookLanguage(
+    writingPlans,
+    'writing-plans',
+    'the project-memory consult into a planning prerequisite or gate',
+    'docs\\/project_notes\\/(?:decisions|key_facts)\\.md',
+  );
+  assertForbidsTimedObligationHook(
+    writingPlans,
+    'writing-plans',
+    'the project-memory consult into a mandatory-before-planning hook',
+    [
+      'before planning',
+      'before defining tasks',
+      'before decomposing tasks',
+      'during planning',
+      'during task breakdown',
+      'during decomposition',
+      'while planning',
+      'while decomposing tasks',
+      'to plan',
+      'to start planning',
+      'to continue planning',
+      'task breakdown',
+      'planning start',
+    ],
+    'docs\\/project_notes\\/(?:decisions|key_facts)\\.md',
+  );
+  assertDetectsTimedHookSamples(
+    [
+      'Consult `docs/project_notes/decisions.md` before defining tasks.',
+      'Consult `docs/project_notes/key_facts.md` during task breakdown.',
+      'You should consult `docs/project_notes/decisions.md` before planning.',
+      'Consult `docs/project_notes/decisions.md` during planning.',
+      'featureforge:project-memory during planning needs to be used.',
+      'Consult featureforge:project-memory during planning.',
+      'Consult featureforge:project-memory before planning by reviewing `docs/project_notes/decisions.md`.',
+    ],
+    'writing-plans',
+    'timed planning consult regressions',
+    [
+      'before planning',
+      'before defining tasks',
+      'before decomposing tasks',
+      'during planning',
+      'during task breakdown',
+      'during decomposition',
+      'while planning',
+      'while decomposing tasks',
+      'to plan',
+      'to start planning',
+      'to continue planning',
+      'task breakdown',
+      'planning start',
+    ],
+    'docs\\/project_notes\\/(?:decisions|key_facts)\\.md',
+  );
+  assertDetectsGateLikeHookSamples(
+    [
+      'featureforge:project-memory is a prerequisite for planning.',
+      '`docs/project_notes/decisions.md` is required for planning.',
+    ],
+    'writing-plans',
+    'planning gate regressions',
+    'docs\\/project_notes\\/(?:decisions|key_facts)\\.md',
   );
 
-  for (const [label, docPath] of [
-    ['template', getTemplatePath('plan-eng-review')],
-    ['generated skill', getSkillPath('plan-eng-review')],
+  const systematicDebugging = readUtf8(getSkillPath('systematic-debugging'));
+  assert.match(systematicDebugging, /Check Recurring Bug Memory When It Exists/);
+  assert.match(systematicDebugging, /search `docs\/project_notes\/bugs\.md`/);
+  assert.match(systematicDebugging, /update `docs\/project_notes\/bugs\.md`/);
+  assert.match(systematicDebugging, /recurring or historically familiar/i);
+  assert.match(systematicDebugging, /durable recurring bug pattern/i);
+  assertForbidsGateLikeHookLanguage(
+    systematicDebugging,
+    'systematic-debugging',
+    'the bug-memory hook into a debugging prerequisite or gate',
+    'docs\\/project_notes\\/bugs\\.md',
+  );
+  assertForbidsTimedObligationHook(
+    systematicDebugging,
+    'systematic-debugging',
+    'the bugs.md update into an always-after-fix requirement',
+    [
+      'after (?:every|each) fix',
+      'after fixes',
+      'after resolving the bug',
+      'once the fix lands',
+      'after the fix lands',
+      'after debugging',
+      'during debugging',
+      'during the debugging work',
+      'while debugging',
+      'before fixing',
+      'after the repair',
+    ],
+    'docs\\/project_notes\\/bugs\\.md',
+  );
+  assertDetectsTimedHookSamples(
+    [
+      'Update `docs/project_notes/bugs.md` after the fix lands.',
+      'Update `docs/project_notes/bugs.md` after resolving the bug.',
+      'You should update `docs/project_notes/bugs.md` after debugging.',
+      'Update `docs/project_notes/bugs.md` during debugging.',
+      'Update `docs/project_notes/bugs.md` while debugging.',
+      'Search `docs/project_notes/bugs.md` during debugging.',
+      'featureforge:project-memory during debugging should be used.',
+      'Update featureforge:project-memory during debugging.',
+      'Update featureforge:project-memory after the fix lands with the new `docs/project_notes/bugs.md` entry.',
+    ],
+    'systematic-debugging',
+    'timed bug-memory update regressions',
+    [
+      'after (?:every|each) fix',
+      'after fixes',
+      'after resolving the bug',
+      'once the fix lands',
+      'after the fix lands',
+      'after debugging',
+      'during debugging',
+      'during the debugging work',
+      'while debugging',
+      'before fixing',
+      'after the repair',
+    ],
+    'docs\\/project_notes\\/bugs\\.md',
+  );
+  assertDetectsGateLikeHookSamples(
+    [
+      'featureforge:project-memory is required during debugging.',
+      'Updating `docs/project_notes/bugs.md` blocks debugging progress.',
+    ],
+    'systematic-debugging',
+    'debugging gate regressions',
+    'docs\\/project_notes\\/bugs\\.md',
+  );
+  const recurringBugMemoryIndex = systematicDebugging.indexOf('5. **Check Recurring Bug Memory When It Exists**');
+  const traceDataFlowIndex = systematicDebugging.indexOf('6. **Trace Data Flow**');
+  assert.ok(
+    recurringBugMemoryIndex !== -1 && traceDataFlowIndex !== -1 && recurringBugMemoryIndex < traceDataFlowIndex,
+    'systematic-debugging should keep the recurring-bug memory step before Trace Data Flow as ordered steps 5 then 6',
+  );
+
+  const documentRelease = readUtf8(getSkillPath('document-release'));
+  assert.match(documentRelease, /## Optional Project Memory Follow-Up/);
+  assert.match(documentRelease, /release pass surfaces durable knowledge worth preserving/i);
+  assert.match(documentRelease, /featureforge:project-memory/);
+  assert.match(documentRelease, /docs\/project_notes\//);
+  assert.match(documentRelease, /docs\/project_notes\/bugs\.md/);
+  assert.match(documentRelease, /docs\/project_notes\/decisions\.md/);
+  assert.match(documentRelease, /docs\/project_notes\/key_facts\.md/);
+  assert.match(documentRelease, /docs\/project_notes\/issues\.md/);
+  assert.match(documentRelease, /release pass surfaces durable knowledge worth preserving/i);
+  assertForbidsGateLikeHookLanguage(
+    documentRelease,
+    'document-release',
+    'the project-memory follow-up into a release prerequisite or blocker',
+    'docs\\/project_notes\\/',
+  );
+  assertForbidsTimedObligationHook(
+    documentRelease,
+    'document-release',
+    'the project-memory follow-up into a required release-pass gate',
+    [
+      'before branch completion',
+      'before presenting completion options',
+      'to complete the branch',
+      'required document-release handoff',
+      'finish the release pass',
+      'complete the release pass',
+      'release-readiness pass',
+      'during the release-readiness pass',
+      'during release-readiness',
+    ],
+    'docs\\/project_notes\\/',
+  );
+  assertDetectsTimedHookSamples(
+    [
+      'Use featureforge:project-memory to update `docs/project_notes/issues.md` before branch completion.',
+      'Use featureforge:project-memory to update `docs/project_notes/decisions.md` to finish the release pass.',
+      'Use featureforge:project-memory before branch completion to update `docs/project_notes/issues.md`.',
+      'Use featureforge:project-memory before branch completion.',
+      'featureforge:project-memory before branch completion.',
+      'featureforge:project-memory before branch completion should be used.',
+      'featureforge:project-memory should update `docs/project_notes/issues.md` before branch completion.',
+      'Record durable bugs in `docs/project_notes/bugs.md` before branch completion.',
+      'Agents need to update `docs/project_notes/issues.md` to complete the branch.',
+      'Update `docs/project_notes/issues.md` during the release-readiness pass.',
+    ],
+    'document-release',
+    'timed release-pass hook regressions',
+    [
+      'before branch completion',
+      'before presenting completion options',
+      'to complete the branch',
+      'required document-release handoff',
+      'finish the release pass',
+      'complete the release pass',
+      'release-readiness pass',
+      'during the release-readiness pass',
+      'during release-readiness',
+    ],
+    'docs\\/project_notes\\/',
+  );
+  assertDetectsGateLikeHookSamples(
+    [
+      'featureforge:project-memory is a prerequisite for branch completion.',
+      'Updating `docs/project_notes/issues.md` blocks branch completion.',
+    ],
+    'document-release',
+    'release gate regressions',
+    'docs\\/project_notes\\/',
+  );
+});
+
+test('project-memory skill contract stays narrow, deterministic, and repo-safety-bound', () => {
+  const projectMemory = readUtf8(getSkillPath('project-memory'));
+
+  assert.match(projectMemory, /Treat `docs\/project_notes\/\*` as supportive context only;/);
+  assert.match(projectMemory, /Default write set is limited to `docs\/project_notes\/\*` and the narrow project-memory section this repo owns in `AGENTS\.md`\./);
+  assert.match(projectMemory, /If existing memory content is partially valid, preserve the valid content and create or normalize only the missing boundary pieces unless the user explicitly asks for a rewrite\./);
+  assert.match(projectMemory, /Read `authority-boundaries\.md` before broad setup or repair work\./);
+  assert.match(projectMemory, /Read `examples\.md` before writing new entries\./);
+  assert.match(projectMemory, /Reuse the seed layouts in `references\/` when creating missing files\./);
+  assert.match(projectMemory, /repo-safety check --intent write --stage featureforge:project-memory --task-id <current-memory-update> --path <repo-relative-path> --write-target repo-file-write/);
+  assert.match(projectMemory, /repo-safety approve --stage featureforge:project-memory --task-id <current-memory-update> --reason "<explicit user approval>" --path <repo-relative-path> --write-target repo-file-write/);
+  for (const rejectClass of [
+    'SecretLikeContent',
+    'AuthorityConflict',
+    'TrackerDrift',
+    'MissingProvenance',
+    'OversizedDuplication',
+    'InstructionAuthorityDrift',
   ]) {
-    const content = readUtf8(docPath);
-    assert.match(
-      content,
-      /featureforge repo-safety check --intent write --stage featureforge:plan-eng-review --task-id <current-plan-review> --path docs\/featureforge\/plans\/YYYY-MM-DD-<feature-name>\.md --write-target plan-artifact-write/,
-      `${label} should gate plan-body writes with plan-artifact-write`,
-    );
-    assert.match(
-      content,
-      /--write-target approval-header-write/,
-      `${label} should gate approval-header writes with approval-header-write`,
-    );
-    assert.doesNotMatch(
-      content,
-      /--write-target repo-file-write/,
-      `${label} should not instruct the retired repo-file-write target for plan-eng-review`,
-    );
+    assert.match(projectMemory, new RegExp(String.raw`- \`${rejectClass}\``), `project-memory should list ${rejectClass} in the update flow`);
   }
 });
 

@@ -48,6 +48,74 @@ test('every generated SKILL.md preserves expected frontmatter semantics', () => 
   }
 });
 
+test('project-memory skill foundation is discoverable with generated output and companion refs', () => {
+  const skillDir = path.join(SKILLS_DIR, 'project-memory');
+
+  assert.equal(fs.existsSync(skillDir), true, 'project-memory skill directory should exist');
+  assert.equal(fs.existsSync(path.join(skillDir, 'SKILL.md.tmpl')), true, 'project-memory should define a skill template');
+  assert.equal(fs.existsSync(path.join(skillDir, 'SKILL.md')), true, 'project-memory should ship a generated SKILL.md');
+  assert.equal(fs.existsSync(path.join(skillDir, 'authority-boundaries.md')), true, 'project-memory should ship authority-boundaries.md');
+  assert.equal(fs.existsSync(path.join(skillDir, 'examples.md')), true, 'project-memory should ship examples.md');
+  assert.equal(fs.existsSync(path.join(skillDir, 'references/bugs_template.md')), true, 'project-memory should ship bugs_template.md');
+  assert.equal(fs.existsSync(path.join(skillDir, 'references/decisions_template.md')), true, 'project-memory should ship decisions_template.md');
+  assert.equal(fs.existsSync(path.join(skillDir, 'references/key_facts_template.md')), true, 'project-memory should ship key_facts_template.md');
+  assert.equal(fs.existsSync(path.join(skillDir, 'references/issues_template.md')), true, 'project-memory should ship issues_template.md');
+  assert.ok(listGeneratedSkills().includes('project-memory'), 'project-memory should be discoverable as a generated skill');
+});
+
+test('project-memory foundation preserves the approved authority and safety boundaries', () => {
+  const skillDir = path.join(SKILLS_DIR, 'project-memory');
+  const generatedSkill = readUtf8(path.join(skillDir, 'SKILL.md'));
+  const authorityBoundaries = readUtf8(path.join(skillDir, 'authority-boundaries.md'));
+  const examples = readUtf8(path.join(skillDir, 'examples.md'));
+
+  assert.match(generatedSkill, /Treat `docs\/project_notes\/\*` as supportive context only;/);
+  assert.match(generatedSkill, /Never store secrets, tokens, passwords, private keys, or credential-shaped values in project memory\./);
+  assert.match(generatedSkill, /Default write set is limited to `docs\/project_notes\/\*` and the narrow project-memory section this repo owns in `AGENTS\.md`\./);
+  assert.match(generatedSkill, /If existing memory content is partially valid, preserve the valid content and create or normalize only the missing boundary pieces unless the user explicitly asks for a rewrite\./);
+
+  const authorityOrder = [
+    '1. Approved specs under `docs/featureforge/specs/`',
+    '2. Approved plans under `docs/featureforge/plans/`',
+    '3. Execution evidence and review artifacts tied to approved work',
+    '4. Runtime-owned local state under `~/.featureforge/projects/`',
+    '5. `docs/project_notes/*`',
+  ];
+  let previousIndex = -1;
+  for (const entry of authorityOrder) {
+    const currentIndex = authorityBoundaries.indexOf(entry);
+    assert.notEqual(currentIndex, -1, `authority-boundaries.md should include "${entry}"`);
+    assert.ok(currentIndex > previousIndex, `authority-boundaries.md should preserve the approved authority order for "${entry}"`);
+    previousIndex = currentIndex;
+  }
+
+  for (const rejectClass of [
+    'SecretLikeContent',
+    'AuthorityConflict',
+    'TrackerDrift',
+    'MissingProvenance',
+    'OversizedDuplication',
+    'InstructionAuthorityDrift',
+  ]) {
+    assert.match(authorityBoundaries, new RegExp(`- \`${rejectClass}\``), `authority-boundaries.md should list ${rejectClass}`);
+  }
+
+  assert.match(examples, /Root cause: `reopen` refuses a second interrupted step while `begin` refuses to bypass a different interrupted step\./);
+  assert.match(examples, /Prevention \/ verification: keep the per-step review-gate TODO active and add contract coverage for review-before-advance execution\./);
+  assert.doesNotMatch(examples, /ghp_[A-Za-z0-9]+/, 'examples.md should not contain token-shaped literals');
+});
+
+test('project-memory generated skill doc stays discoverable with checked-in companion refs and repo-safety guidance', () => {
+  const skillDir = path.join(SKILLS_DIR, 'project-memory');
+  const generatedSkill = readUtf8(path.join(skillDir, 'SKILL.md'));
+
+  assert.match(generatedSkill, /Read `authority-boundaries\.md` before broad setup or repair work\./);
+  assert.match(generatedSkill, /Read `examples\.md` before writing new entries\./);
+  assert.match(generatedSkill, /Reuse the seed layouts in `references\/` when creating missing files\./);
+  assert.match(generatedSkill, /repo-safety check --intent write --stage featureforge:project-memory --task-id <current-memory-update> --path <repo-relative-path> --write-target repo-file-write/);
+  assert.match(generatedSkill, /repo-safety approve --stage featureforge:project-memory --task-id <current-memory-update> --reason "<explicit user approval>" --path <repo-relative-path> --write-target repo-file-write/);
+});
+
 test('every generated SKILL.md has exactly one generated header and regenerate command', () => {
   for (const skill of listGeneratedSkills()) {
     const content = readUtf8(path.join(SKILLS_DIR, skill, 'SKILL.md'));

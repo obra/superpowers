@@ -69,6 +69,11 @@ Do not fall back to the current branch when it is the only local branch; stop in
 - Fixing stale cross-references
 - Minor discoverability improvements
 
+## Optional Project Memory Follow-Up
+
+- When the release pass surfaces durable knowledge worth preserving, use `featureforge:project-memory` to update the relevant `docs/project_notes/` file.
+- Keep this follow-up narrow: record durable bugs in `docs/project_notes/bugs.md`, durable decisions in `docs/project_notes/decisions.md`, stable key facts in `docs/project_notes/key_facts.md`, or breadcrumb issues in `docs/project_notes/issues.md` only when the implementation or release pass surfaced knowledge worth reusing later.
+
 ## Protected-Branch Repo-Write Gate
 
 Before editing release-facing docs or metadata on disk, run the shared repo-safety preflight for the exact release-write scope:

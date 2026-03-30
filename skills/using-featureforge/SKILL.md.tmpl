@@ -132,13 +132,27 @@ Do NOT jump from brainstorming straight to implementation. For workflow-routed w
 
 Only after the bypass gate resolves to `enabled` for the current session key, if `$_FEATUREFORGE_BIN` is available call `$_FEATUREFORGE_BIN workflow status --refresh`.
 
+- If the user is explicitly asking to set up or repair project memory under `docs/project_notes/`, or to log a bug fix in project memory, record a decision in project memory, update key facts in project memory, or otherwise record durable bugs, decisions, key facts, or issue breadcrumbs in repo-visible project memory, short-circuit helper-derived workflow routes and execution handoff paths and route to `featureforge:project-memory`.
 - If the JSON result contains a non-empty `next_skill`, use that route.
 - If the JSON result reports `status` `implementation_ready`, proceed to the normal execution preflight and handoff flow using the exact approved plan path. Treat the public handoff recommendation as a conservative default. When you know isolated-agent availability, session intent, and workspace readiness, call `featureforge plan execution recommend --plan <approved-plan-path> --isolated-agents <available|unavailable> --session-intent <stay|separate|unknown> --workspace-prepared <yes|no|unknown>` before choosing between `featureforge:subagent-driven-development` and `featureforge:executing-plans`.
 - In that helper-backed handoff flow, treat `execution_started` as an executor-resume signal only when the reported `phase` is `executing`.
 - If the handoff reports a later phase such as `review_blocked`, `qa_pending`, `document_release_pending`, or `ready_for_branch_completion`, follow that reported phase and `next_action` instead of resuming `featureforge:subagent-driven-development` or `featureforge:executing-plans` just because `execution_started` is `yes`.
 - Only fall back to manual artifact inspection if the helper itself is unavailable or fails.
 
-When the helper succeeds, route using its JSON result and do not re-derive state manually.
+When the helper succeeds, route using its JSON result plus the explicit project-memory carveout above, and do not re-derive state manually.
+
+#### Explicit Project-Memory Route Signals
+
+Treat the request as explicit project-memory intent when it clearly asks to:
+
+- set up or repair project memory under `docs/project_notes/`
+- log a bug fix in project memory, record a decision in project memory, update key facts in project memory, or record durable issue breadcrumbs in project memory
+- invoke `featureforge:project-memory` or work on project memory itself
+- write to, create, append to, or otherwise edit a concrete `docs/project_notes/README.md`, `bugs.md`, `decisions.md`, `key_facts.md`, or `issues.md` path
+
+Read-only questions about `docs/project_notes/*`, or explicit negation of `featureforge:project-memory`, project-memory setup, durable-memory recording, or concrete path mutations, are not enough by themselves.
+
+If those signals are absent, keep the helper-derived workflow route.
 
 ### Manual fallback routing
 
@@ -175,6 +189,13 @@ Routing rules:
 7. Plan is `Engineering Approved` and its `Source Spec:` path plus `Source Spec Revision:` match the latest approved spec: only proceed through the normal helper-backed execution preflight and handoff flow for that approved plan path.
 8. If artifacts are ambiguous or incomplete, route to the earlier safe stage instead of skipping ahead.
 9. If the helper-backed execution preflight or handoff flow is unavailable, do not route directly from manual fallback into implementation. Stop at the approved plan path and return to the earlier safe stage or the current execution flow instead.
+
+### Explicit Project-Memory Routing
+
+- Explicit memory-oriented requests such as setting up `docs/project_notes/` or recording durable bugs, decisions, key facts, or issue breadcrumbs should route to `featureforge:project-memory`.
+- Do not add `featureforge:project-memory` to the default mandatory workflow stack.
+- When product-work artifact state already points at another active workflow stage, follow that workflow owner first and treat project memory as optional follow-up support unless the user is explicitly asking to work on project memory itself, in which case the explicit project-memory route above takes precedence over helper-derived workflow routes and execution handoff paths.
+- In manual fallback, choose this route only for explicit memory-oriented requests; vague mentions of notes or docs are not enough.
 
 ## User Instructions
 

@@ -925,6 +925,34 @@ fn runtime_instruction_surface_contracts_and_generation_checks_hold() {
     assert_file_contains(root.join("README.md"), "protected branches");
     assert_file_contains(root.join("README.md"), "Six layers matter:");
     assert_file_contains(
+        root.join("AGENTS.md"),
+        "`docs/project_notes/` is supportive memory only; approved specs, plans, execution evidence, review artifacts, runtime state, and active repo instructions remain authoritative.",
+    );
+    assert_file_contains(
+        root.join("AGENTS.md"),
+        "Before inventing a new cross-cutting approach, check `docs/project_notes/decisions.md` for prior decisions and follow the authoritative source it links.",
+    );
+    assert_file_contains(
+        root.join("AGENTS.md"),
+        "When debugging recurring failures, check `docs/project_notes/bugs.md` for previously recorded root causes, fixes, and prevention notes.",
+    );
+    assert_file_contains(
+        root.join("AGENTS.md"),
+        "Never store credentials, secrets, or secret-shaped values in `docs/project_notes/`.",
+    );
+    assert_file_contains(
+        root.join("AGENTS.md"),
+        "Use `featureforge:project-memory` when setting up or making structured updates to repo-visible project memory.",
+    );
+    assert_file_contains(
+        root.join("README.md"),
+        "`featureforge:project-memory` is an optional support skill for maintaining `docs/project_notes/*`.",
+    );
+    assert_file_contains(
+        root.join("README.md"),
+        "It is not a workflow stage, approval gate, or mandatory part of the default planning/execution stack.",
+    );
+    assert_file_contains(
         root.join("docs/README.codex.md"),
         "Accelerated review is an opt-in branch inside `plan-ceo-review` and `plan-eng-review`, not a separate workflow stage.",
     );
@@ -939,6 +967,14 @@ fn runtime_instruction_surface_contracts_and_generation_checks_hold() {
     assert_file_contains(
         root.join("docs/README.copilot.md"),
         "run the packaged install binary under `~/.featureforge/install/bin/` (`featureforge` on Unix, `featureforge.exe` on Windows)",
+    );
+    assert_file_contains(
+        root.join("docs/README.codex.md"),
+        "`featureforge:project-memory` is an opt-in supportive memory skill for `docs/project_notes/*`; use it only for explicit memory-oriented requests or later follow-up updates, not as a default workflow stage or gate",
+    );
+    assert_file_contains(
+        root.join("docs/README.copilot.md"),
+        "`featureforge:project-memory` is an opt-in supportive memory skill for `docs/project_notes/*`; use it only for explicit memory-oriented requests or later follow-up updates, not as a default workflow stage or gate",
     );
     assert_file_contains(
         root.join("README.md"),

@@ -1,5 +1,16 @@
 # FeatureForge Release Notes
 
+## v1.5.0 - 2026-03-29
+
+Project-memory release focused on adding an optional supportive-memory skill and tightening explicit memory routing so workflow authority stays intact.
+
+- add `featureforge:project-memory` with checked-in authority-boundary guidance, examples, and reference templates for `docs/project_notes/*`
+- seed `docs/project_notes/` with concise repo-visible memory files and a maintenance README that keeps memory supportive, inspectable, and non-authoritative
+- route explicit memory-oriented requests through `using-featureforge` without letting project-memory outrank active workflow owners or approved artifacts
+- add narrow project-memory consult hooks to `writing-plans`, `document-release`, and `systematic-debugging` so supportive repo notes can be consulted without turning into a protocol block
+- expand Node and Rust contract coverage for project-memory discovery, repo-safety wording, route precedence, provenance, and fail-closed negative cases
+- refresh checked-in repo runtime binaries and darwin/windows prebuilt artifacts for `1.5.0`
+
 ## v1.4.0 - 2026-03-29
 
 Task-boundary review-gating release focused on mandatory per-task independent review loops, task verification, and execution-phase delegation ergonomics.

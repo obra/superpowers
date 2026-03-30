@@ -1,0 +1,78 @@
+---
+name: project-memory
+description: Use when setting up or updating repo-visible project memory under docs/project_notes, or when recording durable bugs, decisions, key facts, or issue breadcrumbs without changing FeatureForge workflow authority
+---
+
+{{BASE_PREAMBLE}}
+
+
+# Project Memory
+
+Create or maintain supportive project memory under `docs/project_notes/` without turning it into a second workflow system.
+
+Use upstream ProjectMemory as source material only. In FeatureForge, project memory is narrowed to repo-visible markdown, stable reject vocabulary, and strict authority boundaries.
+
+## What This Skill Owns
+
+- set up or repair `docs/project_notes/README.md`, `bugs.md`, `decisions.md`, `key_facts.md`, and `issues.md`
+- distill durable memory from approved specs, approved plans, execution evidence, review artifacts, or stable repo docs
+- keep entries concise, dated when useful, and linked back to authoritative sources
+
+## Hard Boundaries
+
+- Treat `docs/project_notes/*` as supportive context only; approved specs, plans, execution evidence, review artifacts, runtime state, and active instructions remain authoritative.
+- Never store secrets, tokens, passwords, private keys, or credential-shaped values in project memory.
+- Default write set is limited to `docs/project_notes/*` and the narrow project-memory section this repo owns in `AGENTS.md`.
+- Do not turn `issues.md` into a live tracker, daily status log, or execution checklist.
+- If existing memory content is partially valid, preserve the valid content and create or normalize only the missing boundary pieces unless the user explicitly asks for a rewrite.
+
+Read `authority-boundaries.md` before broad setup or repair work.
+Read `examples.md` before writing new entries.
+Reuse the seed layouts in `references/` when creating missing files.
+
+## Protected-Branch Repo-Write Gate
+
+Before editing repo-visible memory files, run the shared repo-safety preflight for the exact paths you will touch:
+
+```bash
+featureforge repo-safety check --intent write --stage featureforge:project-memory --task-id <current-memory-update> --path <repo-relative-path> --write-target repo-file-write
+```
+
+- If the helper returns `allowed`, continue with the memory write.
+- If it returns `blocked`, name the branch, the stage, and the blocking `failure_class`, then route to either a feature branch / `featureforge:using-git-worktrees` or explicit user approval for this exact memory-update scope.
+- If the user explicitly approves the protected-branch memory write, approve the full memory scope you intend to use on that branch, including each repo-relative path you will edit:
+
+```bash
+featureforge repo-safety approve --stage featureforge:project-memory --task-id <current-memory-update> --reason "<explicit user approval>" --path <repo-relative-path> --write-target repo-file-write
+featureforge repo-safety check --intent write --stage featureforge:project-memory --task-id <current-memory-update> --path <repo-relative-path> --write-target repo-file-write
+```
+
+- Continue only if the re-check returns `allowed`.
+- If the protected-branch task scope changes, run a new `approve` plus full-scope `check` before continuing.
+
+## Update Flow
+
+1. Read `docs/project_notes/README.md` if it exists. If it does not exist, treat setup as boundary creation first.
+2. Identify the authoritative source for the memory you want to add or repair.
+3. Distill only the durable takeaway. Prefer short bullets plus backlinks over copied prose.
+4. Apply the reject vocabulary from `authority-boundaries.md` when content drifts:
+   - `SecretLikeContent`
+   - `AuthorityConflict`
+   - `TrackerDrift`
+   - `MissingProvenance`
+   - `OversizedDuplication`
+   - `InstructionAuthorityDrift`
+5. Keep file-specific maintenance rules:
+   - `bugs.md`: recurring failures and expensive fixes only
+   - `decisions.md`: compact decision index with backlinks
+   - `key_facts.md`: non-sensitive facts with `Last Verified` or source
+   - `issues.md`: breadcrumb log, not active task management
+
+## When To Stop
+
+- The user is really asking to change workflow truth, not supportive memory
+- The only available source is unverified or conflicts with approved artifacts
+- The requested content would broaden writes outside the default memory surface
+- The material is secret-like, authority-blurring, or instruction-like
+
+In those cases, refuse the memory update, explain the reject class, and redirect to the authoritative surface that should be edited instead.

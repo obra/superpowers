@@ -95,6 +95,14 @@ Completion then flows through:
 - optional `featureforge:qa-only` when browser-facing work or a test plan requires it
 - `featureforge:finishing-a-development-branch`
 
+## Project Memory
+
+`featureforge:project-memory` is an optional support skill for maintaining `docs/project_notes/*`.
+
+- It records supportive memory only and never outranks approved specs, approved plans, execution evidence, review artifacts, or runtime state.
+- It is not a workflow stage, approval gate, or mandatory part of the default planning/execution stack.
+- Use it for explicit memory-oriented requests or later follow-up memory updates, not as a substitute for the active workflow owner.
+
 ### Runtime Strategy Checkpoints
 
 Execution strategy checkpoints are runtime-owned execution state, not planning-stage transitions.
@@ -153,6 +161,8 @@ FEATUREFORGE_PREBUILT_TARGET=windows-x64 FEATUREFORGE_PREBUILT_RUST_TARGET=x86_6
 cp target/aarch64-apple-darwin/release/featureforge bin/featureforge
 chmod +x bin/featureforge
 ```
+
+If Homebrew `cargo`/`rustc` shadow rustup-managed toolchains on your `PATH`, make sure the rustup toolchain shims are ahead of Homebrew Rust before running the Windows GNU refresh command so the installed `x86_64-pc-windows-gnu` standard library is visible.
 
 ## Updating
 
