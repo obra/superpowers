@@ -2,7 +2,7 @@
 
 Ultrapowers is a research-driven software development workflow for your coding agents. It extends [Superpowers](https://github.com/obra/superpowers) by Jesse Vincent with a **research-first pipeline** that ensures agents always work with current, verified knowledge before writing code.
 
-**[Documentation](https://www.datatide.com/ultrapowers)** · **[GitHub](https://github.com/ennio-datatide/ultrapowers)** · **[Issues](https://github.com/ennio-datatide/ultrapowers/issues)**
+**[Documentation](https://datatide.io/ultrapowers)** · **[GitHub](https://github.com/ennio-datatide/ultrapowers)** · **[Issues](https://github.com/ennio-datatide/ultrapowers/issues)**
 
 ## Learn to Build with Ultrapowers
 
@@ -165,8 +165,8 @@ MIT License — see LICENSE file for details.
 
 ## Community
 
-Ultrapowers is built by [Ennio Maldonado](https://www.enniomaldonado.com) at [Datatide](https://www.datatide.com), extending the work of [Jesse Vincent](https://blog.fsck.com) and [Prime Radiant](https://primeradiant.com).
+Ultrapowers is built by [Ennio Maldonado](https://www.enniomaldonado.com) at [Datatide](https://datatide.io), extending the work of [Jesse Vincent](https://blog.fsck.com) and [Prime Radiant](https://primeradiant.com).
 
-- **Docs**: https://www.datatide.com/ultrapowers
+- **Docs**: https://datatide.io/ultrapowers
 - **Issues**: https://github.com/ennio-datatide/ultrapowers/issues
 - **Superpowers Discord**: [Join the community](https://discord.gg/Jd8Vphy9jq)
