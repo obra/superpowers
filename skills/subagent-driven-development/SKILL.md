@@ -123,6 +123,17 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 - `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
 - `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
 
+## Codex Native Role Mapping
+
+When this workflow runs on Codex and the native Superpowers roles are installed:
+
+- implementer -> built-in `worker`
+- spec compliance reviewer -> `superpowers_spec_reviewer`
+- code quality reviewer -> `superpowers_reviewer`
+- final code reviewer -> `superpowers_reviewer`
+
+If a native Superpowers reviewer role is unavailable, fall back to the existing prompt-driven dispatch using `worker` or `default`.
+
 ## Example Workflow
 
 ```

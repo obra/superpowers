@@ -5,7 +5,9 @@ description: Use when completing tasks, implementing major features, or before m
 
 # Requesting Code Review
 
-Dispatch superpowers:code-reviewer subagent to catch issues before they cascade. The reviewer gets precisely crafted context for evaluation — never your session's history. This keeps the reviewer focused on the work product, not your thought process, and preserves your own context for continued work.
+Dispatch superpowers:code-reviewer subagent to catch issues before they cascade. The reviewer gets precisely crafted context for evaluation - never your session's history. This keeps the reviewer focused on the work product, not your thought process, and preserves your own context for continued work.
+
+On Codex, prefer the native `superpowers_reviewer` role when it is installed. Fall back to `worker` plus the filled reviewer prompt only when the native role is unavailable.
 
 **Core principle:** Review early, review often.
 
@@ -31,7 +33,11 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 **2. Dispatch code-reviewer subagent:**
 
-Use Task tool with superpowers:code-reviewer type, fill template at `code-reviewer.md`
+Use Task tool with superpowers:code-reviewer type, fill template at `code-reviewer.md`.
+
+On Codex:
+- preferred: `spawn_agent(agent_type="superpowers_reviewer", message=...)`
+- fallback: `spawn_agent(agent_type="worker", message=...)` with the same filled review instructions
 
 **Placeholders:**
 - `{WHAT_WAS_IMPLEMENTED}` - What you just built
@@ -57,6 +63,7 @@ BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
 HEAD_SHA=$(git rev-parse HEAD)
 
 [Dispatch superpowers:code-reviewer subagent]
+  Codex preferred mapping: `spawn_agent(agent_type="superpowers_reviewer", ...)`
   WHAT_WAS_IMPLEMENTED: Verification and repair functions for conversation index
   PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md
   BASE_SHA: a7981ec
