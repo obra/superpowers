@@ -1,6 +1,6 @@
 ---
 name: team-driven-development
-description: Use when executing implementation plans with 3+ independent parallel tracks that benefit from inter-agent communication and coordination
+description: Use when executing implementation plans with 3+ independent parallel tracks that benefit from inter-agent communication and coordination. Claude Code only — requires experimental agent teams.
 ---
 
 # Team-Driven Development

@@ -1,0 +1,9 @@
+I have an implementation plan with 15 tasks organized into 4 independent tracks:
+- Database models and migrations (4 tasks)
+- REST API endpoints (4 tasks)
+- Frontend React components (4 tasks)
+- Test infrastructure and integration tests (3 tasks)
+
+These tracks are mostly independent - each touches different files. I'd like to execute this plan as fast as possible with multiple agents working in parallel and communicating with each other when they need to coordinate on shared interfaces.
+
+Can you help me execute this plan?
