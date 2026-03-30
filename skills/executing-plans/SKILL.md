@@ -13,6 +13,24 @@ Load plan, review critically, execute all tasks, report when complete.
 
 **Note:** Tell your human partner that Superpowers works much better with access to subagents. The quality of its work will be significantly higher if run on a platform with subagent support (such as Claude Code or Codex). If subagents are available, use superpowers:subagent-driven-development instead of this skill.
 
+## Session Entry
+
+Before starting, check for an existing superpowers session:
+
+1. **Check for `.superpowers-session.json` in the current directory:**
+   - **Found + in a git worktree** (i.e., `git rev-parse --git-dir` differs from `git rev-parse --git-common-dir`): Session already active in a worktree. Update `stage` to `"executing"` and proceed.
+   - **Found + not in a worktree**: Session is running in fallback mode (no isolation). Update `stage` to `"executing"` and proceed.
+   - **Not found**: This is a standalone invocation. Create a worktree via `using-git-worktrees`, then write `.superpowers-session.json`:
+     ```json
+     {
+       "base_branch": "<current branch>",
+       "base_commit": "<current HEAD>",
+       "created_at": "<ISO 8601 timestamp>",
+       "stage": "executing"
+     }
+     ```
+     If worktree creation fails, write the metadata file to the current directory and proceed in fallback mode.
+
 ## The Process
 
 ### Step 1: Load and Review Plan
@@ -65,6 +83,6 @@ After all tasks complete and verified:
 ## Integration
 
 **Required workflow skills:**
-- **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
+- **superpowers:using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing via session entry logic)
 - **superpowers:writing-plans** - Creates the plan this skill executes
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
