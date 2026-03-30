@@ -66,6 +66,12 @@ Or ask: "This branch split from main - is that correct?"
 
 **Skip this step if no `.superpowers-session.json` was found** (no baseline to compare against).
 
+**Fallback mode (no worktree):** If `.superpowers-session.json` exists but we are NOT in a git worktree (i.e., `git rev-parse --git-dir` equals `git rev-parse --git-common-dir`), we're in fallback mode:
+- Skip the rebase (we're on the same branch, our changes are already interleaved with others')
+- Delta analysis still runs: compare `git diff <base_commit>..HEAD` to understand all changes since session start, then evaluate whether changes NOT made by this session conflict with our spec and implementation
+- This provides weaker guarantees but still catches major drift
+- Proceed to the escalation levels as normal
+
 #### A. Rebase onto base branch
 
 ```bash
