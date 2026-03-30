@@ -3,6 +3,11 @@
 
 set -euo pipefail
 
+# Allow users to skip session context injection via env var
+if [ "${SUPERPOWERS_SKIP_SESSION_CONTEXT:-}" = "true" ]; then
+    exit 0
+fi
+
 # Determine plugin root directory
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
