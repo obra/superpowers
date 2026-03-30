@@ -67,6 +67,29 @@ Which option?
 
 #### Option 1: Merge Locally
 
+**If in a worktree** (i.e., `git rev-parse --git-dir` differs from `git rev-parse --git-common-dir`):
+
+The base branch is already checked out in the original repo — you cannot `git checkout` it from the worktree. Instead, find the original repo and merge from there:
+
+```bash
+# Find the main worktree (original repo)
+main_worktree=$(git worktree list --porcelain | awk '/^worktree / {print $2; exit}')
+
+# Pull latest in the original repo
+git -C "$main_worktree" pull
+
+# Merge feature branch from the original repo
+git -C "$main_worktree" merge <feature-branch>
+
+# Verify tests on merged result (must run from original repo for deps/config)
+cd "$main_worktree"
+<test command>
+```
+
+Then: Cleanup worktree (Step 5), which will also delete the branch.
+
+**If NOT in a worktree** (normal branch):
+
 ```bash
 # Switch to base branch
 git checkout <base-branch>
@@ -79,12 +102,9 @@ git merge <feature-branch>
 
 # Verify tests on merged result
 <test command>
-
-# If tests pass
-git branch -d <feature-branch>
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Cleanup worktree (Step 5), which will also delete the branch.
 
 #### Option 2: Push and Create PR
 
@@ -125,15 +145,11 @@ Type 'discard' to confirm.
 
 Wait for exact confirmation.
 
-If confirmed:
-```bash
-git checkout <base-branch>
-git branch -D <feature-branch>
-```
+If confirmed: Cleanup worktree (Step 5), which will also delete the branch.
 
-Then: Cleanup worktree (Step 5)
+### Step 5: Cleanup Worktree and Branch
 
-### Step 5: Cleanup Worktree
+**For Option 3:** Keep worktree. Skip this step.
 
 **For Options 1, 2, 4:**
 
@@ -142,21 +158,39 @@ Check if in worktree:
 git worktree list | grep $(git branch --show-current)
 ```
 
-If yes:
+If in a worktree, **remove the worktree first, then delete the branch** (this order is required — git won't delete a branch that's checked out in a worktree):
+
 ```bash
-git worktree remove <worktree-path>
+# Record branch name and worktree path before removing
+feature_branch=$(git branch --show-current)
+worktree_path=$(pwd)
+
+# Find the main worktree to return to
+main_worktree=$(git worktree list --porcelain | awk '/^worktree / {print $2; exit}')
+cd "$main_worktree"
+
+# Remove the worktree
+git worktree remove "$worktree_path"
+
+# Delete the branch (skip for Option 2 — branch needs to stay for the PR)
+# For Options 1 and 4:
+git branch -d "$feature_branch"   # -d for Option 1 (merged), -D for Option 4 (force)
 ```
 
-**For Option 3:** Keep worktree.
+**Safety check before worktree removal:** If the worktree has commits ahead of the base branch, check whether they've already been merged:
+```bash
+git merge-base --is-ancestor <feature-branch> <base-branch>
+```
+If true, the commits are already merged — removal is safe. If false, warn the user that unmerged commits will become orphaned (though the branch still preserves them until deleted).
 
 ## Quick Reference
 
-| Option | Merge | Push | Keep Worktree | Cleanup Branch |
-|--------|-------|------|---------------|----------------|
-| 1. Merge locally | ✓ | - | - | ✓ |
-| 2. Create PR | - | ✓ | ✓ | - |
-| 3. Keep as-is | - | - | ✓ | - |
-| 4. Discard | - | - | - | ✓ (force) |
+| Option | Merge | Push | Remove Worktree | Delete Branch |
+|--------|-------|------|-----------------|---------------|
+| 1. Merge locally | ✓ | - | ✓ (Step 5) | ✓ (Step 5, after worktree) |
+| 2. Create PR | - | ✓ | ✓ (Step 5) | - (keep for PR) |
+| 3. Keep as-is | - | - | - | - |
+| 4. Discard | - | - | ✓ (Step 5) | ✓ force (Step 5, after worktree) |
 
 ## Common Mistakes
 
