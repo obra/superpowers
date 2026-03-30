@@ -1,5 +1,11 @@
 # Changelog
 
+## [6.0.1] - 2026-03-30
+
+### Changed
+
+- **writing-skills**: Document all agentskills.io frontmatter fields (`license`, `compatibility`, `metadata`, `allowed-tools`) — previously only `name` and `description` were documented
+
 ## [6.0.0] - 2026-03-27
 
 ### Changed
