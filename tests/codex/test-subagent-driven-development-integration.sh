@@ -12,9 +12,10 @@ echo ""
 echo "This test executes a real plan with Codex and verifies:"
 echo "  1. Todo list events are emitted from the plan"
 echo "  2. Subagents are spawned during execution"
-echo "  3. The implementation is written to the fixture project"
-echo "  4. The generated tests pass"
-echo "  5. A persisted Codex session is written"
+echo "  3. Native reviewer roles are visible in session metadata"
+echo "  4. The implementation is written to the fixture project"
+echo "  5. The generated tests pass"
+echo "  6. A persisted Codex session is written"
 echo ""
 echo "WARNING: This test may take 10-30 minutes to complete."
 echo ""
@@ -117,9 +118,12 @@ This repository is a disposable integration-test fixture that is already isolate
 Follow the skill exactly otherwise. In particular, do real work:
 - read the plan and maintain a todo list
 - use subagents for implementation and review
+- if native Superpowers Codex reviewer roles are available in this environment, use them instead of the legacy worker-inline fallback
 - create the requested files in this repository
 - run the requested verification commands
 - finish the implementation instead of stopping at analysis
+
+This is a non-interactive test run. When you reach finishing-a-development-branch, keep the branch as-is and report that choice instead of asking a follow-up question.
 EOF
 )
 
@@ -208,7 +212,24 @@ else
 fi
 echo ""
 
-echo "Test 3: Turn completed with token usage..."
+echo "Test 3: Native reviewer roles captured in session metadata..."
+native_role_hits=$(find "$CODEX_HOME/sessions" -name "*.jsonl" -type f -print0 \
+  | xargs -0 cat \
+  | rg -o '"agent_role":"superpowers_(spec_reviewer|reviewer)"' \
+  | wc -l | tr -d ' ')
+worker_role_hits=$(find "$CODEX_HOME/sessions" -name "*.jsonl" -type f -print0 \
+  | xargs -0 cat \
+  | rg -o '"agent_role":"worker"' \
+  | wc -l | tr -d ' ')
+if [ "$native_role_hits" -ge 2 ] && [ "$worker_role_hits" -ge 1 ]; then
+    echo "  [PASS] Found native reviewer roles ($native_role_hits) and worker role ($worker_role_hits)"
+else
+    echo "  [FAIL] Expected native reviewer roles and worker role in session metadata (native=$native_role_hits, worker=$worker_role_hits)"
+    FAILED=$((FAILED + 1))
+fi
+echo ""
+
+echo "Test 4: Turn completed with token usage..."
 turn_completed_count=$(json_query 'map(select(.type == "turn.completed")) | length')
 output_tokens=$(json_query 'map(select(.type == "turn.completed") | .usage.output_tokens) | last // 0')
 if [ "$turn_completed_count" -ge 1 ] && [ "$output_tokens" -gt 0 ]; then
@@ -219,7 +240,7 @@ else
 fi
 echo ""
 
-echo "Test 4: Persisted session created..."
+echo "Test 5: Persisted session created..."
 if grep -q '"type":"task_complete"' "$SESSION_FILE" && grep -q '"last_agent_message":' "$SESSION_FILE"; then
     echo "  [PASS] Persisted session contains task completion evidence"
 else
@@ -228,7 +249,16 @@ else
 fi
 echo ""
 
-echo "Test 5: Implementation files created..."
+echo "Test 6: Headless finishing path did not block..."
+if rg -qi 'keeping the branch as-is|Keeping branch .*Worktree preserved|Non-interactive session detected' "$OUTPUT_FILE" "$SESSION_FILE"; then
+    echo "  [PASS] Headless run reported keep-as-is completion"
+else
+    echo "  [FAIL] Missing keep-as-is completion evidence for headless run"
+    FAILED=$((FAILED + 1))
+fi
+echo ""
+
+echo "Test 7: Implementation files created..."
 if [ -f "$TEST_PROJECT/src/math.js" ]; then
     echo "  [PASS] src/math.js created"
 else
@@ -265,7 +295,7 @@ else
 fi
 echo ""
 
-echo "Test 6: Project tests pass..."
+echo "Test 8: Project tests pass..."
 if cd "$TEST_PROJECT" && npm test > "$TEST_PROJECT/npm-test-output.txt" 2>&1; then
     echo "  [PASS] npm test passes"
 else
@@ -275,7 +305,7 @@ else
 fi
 echo ""
 
-echo "Test 7: Git history shows work was committed..."
+echo "Test 9: Git history shows work was committed..."
 commit_count=$(git -C "$TEST_PROJECT" rev-list --count HEAD)
 if [ "$commit_count" -ge 2 ]; then
     echo "  [PASS] Repository has additional commit(s) ($commit_count total)"

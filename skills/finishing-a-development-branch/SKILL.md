@@ -9,7 +9,7 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 Guide completion of development work by presenting clear options and handling chosen workflow.
 
-**Core principle:** Verify tests → Present options → Execute choice → Clean up.
+**Core principle:** Verify tests → Present or auto-select options → Execute choice → Clean up.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
@@ -62,6 +62,23 @@ Which option?
 ```
 
 **Don't add explanation** - keep options concise.
+
+### Step 3.5: Headless Sessions
+
+If the session cannot receive a follow-up answer and the user did not already choose an option, do not stop at "Which option?"
+
+This applies to one-shot or headless runs such as `codex exec --json`, `claude -p`, and automated test harnesses.
+
+Instead, choose **Option 3: Keep As-Is** and report:
+
+```
+Implementation complete. Tests passing.
+Non-interactive session detected, so keeping the branch as-is by default.
+Branch: <name>
+Worktree preserved at <path>
+```
+
+Then stop. Do not ask a blocking follow-up question.
 
 ### Step 4: Execute Choice
 
@@ -168,6 +185,10 @@ git worktree remove <worktree-path>
 - **Problem:** "What should I do next?" → ambiguous
 - **Fix:** Present exactly 4 structured options
 
+**Blocking headless runs**
+- **Problem:** A one-shot session reaches "Which option?" and hangs forever waiting for input
+- **Fix:** In non-interactive runs with no user choice, default to Option 3 and report the preserved branch/worktree
+
 **Automatic worktree cleanup**
 - **Problem:** Remove worktree when might need it (Option 2, 3)
 - **Fix:** Only cleanup for Options 1 and 4
@@ -187,6 +208,7 @@ git worktree remove <worktree-path>
 **Always:**
 - Verify tests before offering options
 - Present exactly 4 options
+- Default to Option 3 in headless runs with no user choice
 - Get typed confirmation for Option 4
 - Clean up worktree for Options 1 & 4 only
 

@@ -103,6 +103,8 @@ Use the least powerful model that can handle each role to conserve cost and incr
 
 Implementer subagents report one of four statuses. Handle each appropriately:
 
+Question handling is part of the controller's job. When the implementer asks questions before starting or while working, answer them clearly, provide any additional missing context, and only then let implementation resume.
+
 **DONE:** Proceed to spec compliance review.
 
 **DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.

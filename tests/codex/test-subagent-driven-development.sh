@@ -17,7 +17,7 @@ IMPLEMENTER_SOURCE=$(cat "$REPO_ROOT/skills/subagent-driven-development/implemen
 SPEC_REVIEWER_SOURCE=$(cat "$REPO_ROOT/skills/subagent-driven-development/spec-reviewer-prompt.md")
 
 echo "Test 1: Workflow semantics..."
-workflow_answer=$(run_codex "Summarize the subagent-driven-development workflow in no more than 6 bullets. Explicitly cover: 1) when the controller reads the plan, 2) how task text/context and todo tracking are prepared before the first task, 3) the per-task review order, and 4) what happens when reviewers find issues." "$TEST_PROJECT" 90)
+workflow_answer=$(run_codex "Summarize the subagent-driven-development workflow in no more than 6 bullets. Explicitly cover: 1) that it uses a fresh subagent per task, 2) when the controller reads the plan, 3) how task text/context and todo tracking are prepared before the first task, 4) the per-task review order, and 5) what happens when reviewers find issues." "$TEST_PROJECT" 90)
 assert_semantic_judgment \
     "$SKILL_SOURCE" \
     "What does the subagent-driven-development workflow require from start through task completion?" \
@@ -91,6 +91,26 @@ assert_semantic_judgment \
 - Says not to move to the next task while review issues are still open." \
     "$TEST_PROJECT" \
     "Prerequisites and red flags stay intact" \
+    120 || exit 1
+
+echo ""
+echo "Test 6: Codex native reviewer mapping..."
+CODEX_TOOLS_SOURCE=$(cat "$REPO_ROOT/skills/using-superpowers/references/codex-tools.md")
+REQUEST_REVIEW_SOURCE=$(cat "$REPO_ROOT/skills/requesting-code-review/SKILL.md")
+native_roles_answer=$(run_codex "On Codex, when Superpowers needs reviewer-style subagents, what should it do when native Superpowers roles are installed, and what is the fallback when they are not? Answer in no more than 6 bullets." "$TEST_PROJECT" 90)
+assert_semantic_judgment \
+    "$CODEX_TOOLS_SOURCE
+
+$REQUEST_REVIEW_SOURCE
+
+$SKILL_SOURCE" \
+    "How should Superpowers dispatch reviewer-style subagents on Codex?" \
+    "$native_roles_answer" \
+    "- Says Codex should prefer native Superpowers roles such as superpowers_reviewer or superpowers_spec_reviewer when they are available.
+- Says implementation work still uses the built-in worker role.
+- Says the fallback is worker or default with inline reviewer instructions when the native role is unavailable." \
+    "$TEST_PROJECT" \
+    "Codex native role mapping is preserved" \
     120 || exit 1
 
 echo ""
