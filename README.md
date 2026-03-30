@@ -28,28 +28,12 @@ Thanks!
 
 **Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex and OpenCode require manual setup.
 
-### Claude Code Official Marketplace
+### Claude Code
 
-Superpowers is available via the [official Claude plugin marketplace](https://claude.com/plugins/superpowers)
-
-Install the plugin from Claude marketplace:
+The previous Claude Code installation flow is deprecated. Install `using-superpowers` with:
 
 ```bash
-/plugin install superpowers@claude-plugins-official
-```
-
-### Claude Code (via Plugin Marketplace)
-
-In Claude Code, register the marketplace first:
-
-```bash
-/plugin marketplace add obra/superpowers-marketplace
-```
-
-Then install the plugin from this marketplace:
-
-```bash
-/plugin install superpowers@superpowers-marketplace
+npx skills add https://github.com/obra/superpowers --skill using-superpowers
 ```
 
 ### Cursor (via Plugin Marketplace)
