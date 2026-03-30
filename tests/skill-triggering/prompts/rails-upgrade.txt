@@ -1,0 +1,1 @@
+I need to upgrade my Rails app from version 7.1 to 8.0. What breaking changes should I be aware of, and what's the best approach to plan this migration?

@@ -1,0 +1,300 @@
+#!/usr/bin/env bash
+# fetch-changelogs.sh
+#
+# Fetches Rails CHANGELOG entries from GitHub for a specific version.
+#
+# Usage:
+#   ./fetch-changelogs.sh <version> [output_dir]
+#   ./fetch-changelogs.sh --list-versions
+#
+# Examples:
+#   ./fetch-changelogs.sh 8.1.0
+#   ./fetch-changelogs.sh 8.1.0 ./changelogs
+#   ./fetch-changelogs.sh --list-versions
+#
+# Requirements: curl
+
+set -euo pipefail
+
+# Configuration
+VERSION="${1:-}"
+OUTPUT_DIR="${2:-.}"
+RAILS_REPO="rails/rails"
+GITHUB_RAW="https://raw.githubusercontent.com/${RAILS_REPO}"
+GITHUB_API="https://api.github.com/repos/${RAILS_REPO}"
+
+COMPONENTS=(
+  "actioncable"
+  "actionmailbox"
+  "actionmailer"
+  "actionpack"
+  "actiontext"
+  "actionview"
+  "activejob"
+  "activemodel"
+  "activerecord"
+  "activestorage"
+  "activesupport"
+  "railties"
+)
+
+
+# ──────────────────────────────────────────────
+# Helpers
+# ──────────────────────────────────────────────
+
+check_curl() {
+  if ! command -v curl > /dev/null 2>&1; then
+    echo "Error: curl is required but not found. Please install curl and try again." >&2
+    exit 1
+  fi
+}
+
+show_help() {
+  cat <<EOF
+fetch-changelogs.sh — Fetch Rails CHANGELOG entries from GitHub
+
+Usage:
+  ./fetch-changelogs.sh <version> [output_dir]
+  ./fetch-changelogs.sh --list-versions
+  ./fetch-changelogs.sh --help
+
+Arguments:
+  version     Rails version to fetch (e.g. 8.1.0, 7.2.1)
+  output_dir  Directory to write output files (default: current directory)
+
+Flags:
+  --list-versions   List the 20 most recent Rails release tags on GitHub
+  --help            Show this help message
+
+Examples:
+  ./fetch-changelogs.sh 8.1.0
+  ./fetch-changelogs.sh 8.1.0 ./changelogs
+  ./fetch-changelogs.sh --list-versions
+
+Output files:
+  {output_dir}/{component}-{version}.md   Per-component changelog section
+  {output_dir}/rails-{version}-changelog.md  Consolidated changelog
+
+Requirements: curl
+EOF
+}
+
+list_versions() {
+  echo "Fetching available Rails versions..."
+  local result
+  result=$(curl --silent --fail "${GITHUB_API}/tags?per_page=30" 2>/dev/null) || {
+    echo "Error: Failed to fetch tags from GitHub API. Check your network connection." >&2
+    exit 1
+  }
+  echo ""
+  echo "Most recent Rails release tags:"
+  echo ""
+  echo "$result" \
+    | grep '"name"' \
+    | sed 's/.*"name": *"v\([^"]*\)".*/\1/' \
+    | grep '^[0-9]' \
+    | head -20
+}
+
+check_version_exists() {
+  local version="$1"
+  local url="${GITHUB_RAW}/v${version}/railties/CHANGELOG.md"
+  curl --silent --head --fail "$url" > /dev/null 2>&1
+}
+
+# Extract only the section for the target version from a CHANGELOG file.
+# Rails CHANGELOGs use headers like:
+#   ## Rails 8.1.0 (January 22, 2025) ##
+#
+# We capture text from the matching header line up to (but not including)
+# the next "## Rails X.Y.Z" header.
+extract_version_section() {
+  local content="$1"
+  local version="$2"
+
+  echo "$content" | awk -v ver="$version" '
+    # Start capturing when we hit the exact version header
+    /^## Rails [[:space:]]*/ && $0 ~ ("Rails " ver) {
+      found = 1
+      print
+      next
+    }
+    # Stop (without printing) when we hit the next version header
+    found && /^## Rails [0-9]/ {
+      exit
+    }
+    found {
+      print
+    }
+  '
+}
+
+# Pretty-print a component name (falls back to the raw key if somehow missing)
+component_display_name() {
+  local component="$1"
+  case "$component" in
+    actioncable)   echo "Action Cable" ;;
+    actionmailbox) echo "Action Mailbox" ;;
+    actionmailer)  echo "Action Mailer" ;;
+    actionpack)    echo "Action Pack" ;;
+    actiontext)    echo "Action Text" ;;
+    actionview)    echo "Action View" ;;
+    activejob)     echo "Active Job" ;;
+    activemodel)   echo "Active Model" ;;
+    activerecord)  echo "Active Record" ;;
+    activestorage) echo "Active Storage" ;;
+    activesupport) echo "Active Support" ;;
+    railties)      echo "Railties" ;;
+    *)             echo "$component" ;;
+  esac
+}
+
+# ──────────────────────────────────────────────
+# Main fetch logic
+# ──────────────────────────────────────────────
+
+fetch_changelogs() {
+  local version="$1"
+  local output_dir="$2"
+
+  # Create output directory if needed
+  if [[ ! -d "$output_dir" ]]; then
+    echo "Creating output directory: $output_dir"
+    mkdir -p "$output_dir"
+  fi
+
+  echo "Checking that Rails v${version} exists on GitHub..."
+  if ! check_version_exists "$version"; then
+    echo ""
+    echo "Warning: Could not find Rails v${version} on GitHub." >&2
+    echo "         The tag 'v${version}' may not exist or the network is unreachable." >&2
+    echo ""
+    echo "Run './fetch-changelogs.sh --list-versions' to see available versions." >&2
+    exit 1
+  fi
+
+  echo "Found v${version}. Fetching changelogs..."
+  echo ""
+
+  local consolidated_file="${output_dir}/rails-${version}-changelog.md"
+  local generated_date
+  generated_date=$(date +"%Y-%m-%d")
+
+  # Write consolidated file header
+  cat > "$consolidated_file" <<EOF
+# Rails ${version} CHANGELOG
+
+Generated by fetch-changelogs.sh on ${generated_date}
+Source: https://github.com/rails/rails/blob/v${version}/*/CHANGELOG.md
+
+---
+
+EOF
+
+  local fetched_count=0
+  local skipped_count=0
+
+  for component in "${COMPONENTS[@]}"; do
+    local url="${GITHUB_RAW}/v${version}/${component}/CHANGELOG.md"
+    local per_component_file="${output_dir}/${component}-${version}.md"
+    local display_name
+    display_name=$(component_display_name "$component")
+
+    printf "  Fetching %-20s CHANGELOG for v%s... " "$component" "$version"
+
+    # Fetch with error suppressed; detect failure via exit code
+    local raw_content
+    if ! raw_content=$(curl --silent --fail "$url" 2>/dev/null); then
+      printf "SKIP (not found)\n"
+      skipped_count=$((skipped_count + 1))
+      continue
+    fi
+
+    # Extract only the section relevant to this version
+    local section
+    section=$(extract_version_section "$raw_content" "$version")
+
+    if [[ -z "$section" ]]; then
+      # File exists but no section found for this version; could be a point
+      # release that only touches some components.
+      printf "SKIP (no section for v%s in CHANGELOG)\n" "$version"
+      skipped_count=$((skipped_count + 1))
+      continue
+    fi
+
+    local line_count
+    line_count=$(echo "$section" | wc -l | tr -d ' ')
+
+    # Write per-component file
+    {
+      echo "# ${display_name} — Rails ${version} CHANGELOG"
+      echo ""
+      echo "$section"
+    } > "$per_component_file"
+
+    # Append to consolidated file
+    {
+      echo "## ${display_name}"
+      echo ""
+      echo "$section"
+      echo ""
+      echo "---"
+      echo ""
+    } >> "$consolidated_file"
+
+    printf "OK (%s lines)\n" "$line_count"
+    fetched_count=$((fetched_count + 1))
+  done
+
+  echo ""
+  echo "Done."
+  echo "  Fetched : ${fetched_count} component(s)"
+  echo "  Skipped : ${skipped_count} component(s)"
+  echo ""
+  echo "Output written to: ${output_dir}/"
+  echo "  Consolidated : rails-${version}-changelog.md"
+  if [[ $fetched_count -gt 0 ]]; then
+    echo "  Per-component: {component}-${version}.md (${fetched_count} file(s))"
+  fi
+}
+
+# ──────────────────────────────────────────────
+# Entry point
+# ──────────────────────────────────────────────
+
+main() {
+  check_curl
+
+  if [[ -z "$VERSION" ]]; then
+    show_help
+    exit 0
+  fi
+
+  case "$VERSION" in
+    --help|-h)
+      show_help
+      exit 0
+      ;;
+    --list-versions)
+      list_versions
+      exit 0
+      ;;
+    -*)
+      echo "Error: Unknown flag: $VERSION" >&2
+      echo ""
+      show_help
+      exit 1
+      ;;
+    *)
+      # Validate that it looks like a version number
+      if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+(\.[0-9]+)?$'; then
+        echo "Error: '$VERSION' does not look like a valid version number (e.g. 8.1.0)." >&2
+        exit 1
+      fi
+      fetch_changelogs "$VERSION" "$OUTPUT_DIR"
+      ;;
+  esac
+}
+
+main "$@"

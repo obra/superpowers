@@ -28,6 +28,7 @@ SKILLS=(
     "hwc-stimulus-fundamentals"
     "hwc-ux-feedback"
     "rails-guides"
+    "rails-upgrade"
     "receiving-code-review"
     "ruby-commit-message"
     "sandi-metz-rules"
