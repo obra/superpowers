@@ -13,7 +13,23 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** This should be run in a dedicated worktree (created by brainstorming skill).
+## Session Entry
+
+Before starting, check for an existing superpowers session:
+
+1. **Check for `.superpowers-session.json` in the current directory:**
+   - **Found + in a git worktree** (i.e., `git rev-parse --git-dir` differs from `git rev-parse --git-common-dir`): Session already active in a worktree. Update `stage` to `"planning"` and proceed.
+   - **Found + not in a worktree**: Session is running in fallback mode (no isolation). Update `stage` to `"planning"` and proceed.
+   - **Not found**: This is a standalone invocation (no brainstorming session preceded this). Create a worktree via `using-git-worktrees`, then write `.superpowers-session.json`:
+     ```json
+     {
+       "base_branch": "<current branch>",
+       "base_commit": "<current HEAD>",
+       "created_at": "<ISO 8601 timestamp>",
+       "stage": "planning"
+     }
+     ```
+     If worktree creation fails, write the metadata file to the current directory and proceed in fallback mode.
 
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
