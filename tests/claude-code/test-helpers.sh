@@ -11,7 +11,12 @@ run_claude() {
     local timeout="${2:-60}"
     local allowed_tools="${3:-}"
     local output_file=$(mktemp)
-    local -a cmd=("claude" "-p" "$prompt" "--add-dir" "$REPO_ROOT")
+    local -a cmd=(
+        "claude"
+        "-p" "$prompt"
+        "--add-dir" "$REPO_ROOT"
+        "--plugin-dir" "$REPO_ROOT/.claude-plugin"
+    )
 
     if [ -n "$allowed_tools" ]; then
         cmd+=("--allowed-tools=$allowed_tools")
@@ -141,6 +146,62 @@ cleanup_test_project() {
     if [ -d "$test_dir" ]; then
         rm -rf "$test_dir"
     fi
+}
+
+# Find the newest Claude transcript for this repo that mentions a specific needle.
+# Usage: session_file=$(find_claude_session_by_content "$needle" [lookback_minutes])
+find_claude_session_by_content() {
+    local needle="$1"
+    local lookback_minutes="${2:-60}"
+    local sessions_root
+
+    sessions_root="$HOME/.claude/projects"
+
+    python3 - "$sessions_root" "$REPO_ROOT" "$needle" "$lookback_minutes" <<'PY'
+import os
+import sys
+import time
+
+sessions_root, repo_root, needle, lookback_minutes = (
+    sys.argv[1],
+    sys.argv[2],
+    sys.argv[3],
+    int(sys.argv[4]),
+)
+
+if not os.path.isdir(sessions_root):
+    sys.exit(0)
+
+cutoff = time.time() - (lookback_minutes * 60)
+matches = []
+
+for root, _, files in os.walk(sessions_root):
+    for name in files:
+        if not name.endswith(".jsonl"):
+            continue
+
+        path = os.path.join(root, name)
+        try:
+            stat = os.stat(path)
+        except FileNotFoundError:
+            continue
+
+        if stat.st_mtime < cutoff:
+            continue
+
+        try:
+            with open(path, "r", encoding="utf-8", errors="ignore") as handle:
+                content = handle.read()
+        except OSError:
+            continue
+
+        if needle in content and repo_root in content:
+            matches.append((stat.st_mtime, path))
+
+if matches:
+    matches.sort(reverse=True)
+    print(matches[0][1])
+PY
 }
 
 assert_semantic_judgment() {

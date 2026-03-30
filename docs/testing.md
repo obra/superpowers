@@ -314,8 +314,9 @@ Codex can run inside a sandbox that treats `.git` metadata as read-only even whe
 
 **Solutions**:
 1. Ensure you're running FROM the superpowers directory: `cd /path/to/superpowers && tests/...`
-2. Check `~/.claude/settings.json` has `"superpowers@superpowers-dev": true` in `enabledPlugins`
+2. Verify the test command includes `--plugin-dir /path/to/superpowers/.claude-plugin`
 3. Verify skill exists in `skills/` directory
+4. If you want a persistent local install outside the harness, check `~/.claude/settings.json` has `"superpowers@superpowers-dev": true` in `enabledPlugins`
 
 ### Permission Errors
 

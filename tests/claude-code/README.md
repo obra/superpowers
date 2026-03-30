@@ -9,7 +9,9 @@ This test suite verifies that skills are loaded correctly and Claude follows the
 ## Requirements
 
 - Claude Code CLI installed and in PATH (`claude --version` should work)
-- Local superpowers plugin installed (see main README for installation)
+
+The test harness loads the local plugin from this checkout with `--plugin-dir`,
+so a user-level Superpowers install is not required just to run the tests.
 
 ## Running Tests
 
