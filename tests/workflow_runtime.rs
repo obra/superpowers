@@ -29,7 +29,7 @@ use featureforge::workflow::status::WorkflowRuntime;
 use files_support::write_file;
 use json_support::parse_json;
 use process_support::{repo_root, run, run_checked};
-use serde_json::{Value, to_value};
+use serde_json::{Value, json, to_value};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeSet;
 use std::fs;
@@ -4517,6 +4517,14 @@ Task 1 -> Task 2
         ],
         "complete task 1 step 2 for task-boundary blocked workflow fixture",
     );
+    let branch = current_branch_name(repo);
+    update_authoritative_harness_state(repo, state, &branch, plan_rel, 1, &[]);
+    run_plan_execution_json(
+        repo,
+        state,
+        &["gate-review", "--plan", plan_rel],
+        "record task-boundary review dispatch for blocked workflow fixture",
+    );
 
     let execution_status = run_plan_execution_json(
         repo,
@@ -4611,6 +4619,265 @@ Task 1 -> Task 2
     let next_stdout = String::from_utf8_lossy(&next_output.stdout);
     assert!(next_stdout.contains("prior_task_review_not_green"));
     assert!(next_stdout.contains("Task-boundary gate"));
+}
+
+#[test]
+fn workflow_next_surfaces_gate_review_command_for_dispatch_block_reason() {
+    let (repo_dir, state_dir) = init_repo("workflow-phase-task-boundary-dispatch-blocked");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    let session_key = "workflow-phase-task-boundary-dispatch-blocked";
+    let plan_rel = "docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md";
+    let spec_rel = "docs/featureforge/specs/2026-03-22-runtime-integration-hardening-design.md";
+
+    install_full_contract_ready_artifacts(repo);
+    write_file(
+        &repo.join(plan_rel),
+        &format!(
+            r#"# Runtime Integration Hardening Implementation Plan
+
+**Workflow State:** Engineering Approved
+**Plan Revision:** 1
+**Execution Mode:** none
+**Source Spec:** `{spec_rel}`
+**Source Spec Revision:** 1
+**Last Reviewed By:** plan-eng-review
+
+## Requirement Coverage Matrix
+
+- REQ-001 -> Task 1
+- REQ-004 -> Task 1
+- VERIFY-001 -> Task 2
+
+## Execution Strategy
+
+- Execute Task 1 serially. It establishes boundary gating before follow-on work begins.
+- Execute Task 2 serially after Task 1. It validates task-boundary workflow routing.
+
+## Dependency Diagram
+
+```text
+Task 1 -> Task 2
+```
+
+## Task 1: Core flow
+
+**Spec Coverage:** REQ-001, REQ-004
+**Task Outcome:** Task 1 reaches task-boundary closure gate before Task 2 starts.
+**Plan Constraints:**
+- Keep fixture input deterministic.
+**Open Questions:** none
+
+**Files:**
+- Modify: `tests/workflow_runtime.rs`
+
+- [ ] **Step 1: Prepare workflow fixture output**
+
+## Task 2: Follow-on flow
+
+**Spec Coverage:** VERIFY-001
+**Task Outcome:** Task 2 remains blocked until task-boundary closure is satisfied.
+**Plan Constraints:**
+- Preserve task-boundary diagnostics.
+**Open Questions:** none
+
+**Files:**
+- Modify: `tests/workflow_runtime.rs`
+
+- [ ] **Step 1: Start the follow-on task**
+"#
+        ),
+    );
+
+    enable_session_decision(state, session_key);
+    prepare_preflight_acceptance_workspace(repo, "workflow-phase-task-boundary-dispatch-blocked");
+
+    let status_before_begin = run_plan_execution_json(
+        repo,
+        state,
+        &["status", "--plan", plan_rel],
+        "status before begin for workflow dispatch-blocked fixture",
+    );
+    let preflight = run_plan_execution_json(
+        repo,
+        state,
+        &["preflight", "--plan", plan_rel],
+        "preflight for workflow dispatch-blocked fixture",
+    );
+    assert_eq!(preflight["allowed"], true);
+
+    let begin_task1_step1 = run_plan_execution_json(
+        repo,
+        state,
+        &[
+            "begin",
+            "--plan",
+            plan_rel,
+            "--task",
+            "1",
+            "--step",
+            "1",
+            "--execution-mode",
+            "featureforge:executing-plans",
+            "--expect-execution-fingerprint",
+            status_before_begin["execution_fingerprint"]
+                .as_str()
+                .expect("status should expose execution fingerprint before begin"),
+        ],
+        "begin task 1 step 1 for workflow dispatch-blocked fixture",
+    );
+    run_plan_execution_json(
+        repo,
+        state,
+        &[
+            "complete",
+            "--plan",
+            plan_rel,
+            "--task",
+            "1",
+            "--step",
+            "1",
+            "--source",
+            "featureforge:executing-plans",
+            "--claim",
+            "Completed task 1 step 1 for workflow dispatch-blocked fixture.",
+            "--manual-verify-summary",
+            "Verified by workflow dispatch-blocked fixture setup.",
+            "--file",
+            "tests/workflow_runtime.rs",
+            "--expect-execution-fingerprint",
+            begin_task1_step1["execution_fingerprint"]
+                .as_str()
+                .expect("begin should expose execution fingerprint for complete"),
+        ],
+        "complete task 1 step 1 for workflow dispatch-blocked fixture",
+    );
+
+    let branch = current_branch_name(repo);
+    update_authoritative_harness_state(
+        repo,
+        state,
+        &branch,
+        plan_rel,
+        1,
+        &[(
+            "reason_codes",
+            json!(["prior_task_review_dispatch_missing"]),
+        )],
+    );
+
+    let doctor_json = parse_json(
+        &run_rust_featureforge_with_env(
+            repo,
+            state,
+            &["workflow", "doctor", "--json"],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
+            "workflow doctor for task-boundary dispatch-blocked fixture",
+        ),
+        "workflow doctor for task-boundary dispatch-blocked fixture",
+    );
+    let phase_json = parse_json(
+        &run_rust_featureforge_with_env(
+            repo,
+            state,
+            &["workflow", "phase", "--json"],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
+            "workflow phase for task-boundary dispatch-blocked fixture",
+        ),
+        "workflow phase for task-boundary dispatch-blocked fixture",
+    );
+    assert!(
+        phase_json["next_step"]
+            .as_str()
+            .is_some_and(|next_step| next_step.contains("featureforge plan execution gate-review --plan")),
+        "workflow phase json should expose gate-review command guidance for dispatch-blocked repair flow, got {phase_json:?}"
+    );
+    assert!(
+        phase_json["next_step"]
+            .as_str()
+            .is_some_and(|next_step| next_step.contains(plan_rel)),
+        "workflow phase json should include the approved plan path in dispatch-blocked next-step guidance, got {phase_json:?}"
+    );
+    assert!(
+        doctor_json["next_step"]
+            .as_str()
+            .is_some_and(|next_step| next_step.contains("featureforge plan execution gate-review --plan")),
+        "workflow doctor should expose gate-review command guidance for dispatch-blocked repair flow, got {doctor_json:?}"
+    );
+    assert!(
+        doctor_json["next_step"]
+            .as_str()
+            .is_some_and(|next_step| next_step.contains(plan_rel)),
+        "workflow doctor should include the approved plan path in dispatch-blocked next-step guidance, got {doctor_json:?}"
+    );
+
+    let doctor_output = run_rust_featureforge_with_env(
+        repo,
+        state,
+        &["workflow", "doctor"],
+        &[("FEATUREFORGE_SESSION_KEY", session_key)],
+        "workflow doctor text for task-boundary dispatch-blocked fixture",
+    );
+    assert!(doctor_output.status.success());
+    let doctor_stdout = String::from_utf8_lossy(&doctor_output.stdout);
+    assert!(
+        doctor_stdout.contains("featureforge plan execution gate-review --plan"),
+        "workflow doctor text should include gate-review command guidance, got:\n{doctor_stdout}"
+    );
+    assert!(doctor_stdout.contains(plan_rel), "doctor stdout:\n{doctor_stdout}");
+
+    let handoff_json = parse_json(
+        &run_rust_featureforge_with_env(
+            repo,
+            state,
+            &["workflow", "handoff", "--json"],
+            &[("FEATUREFORGE_SESSION_KEY", session_key)],
+            "workflow handoff for task-boundary dispatch-blocked fixture",
+        ),
+        "workflow handoff for task-boundary dispatch-blocked fixture",
+    );
+    assert!(
+        handoff_json["recommendation_reason"]
+            .as_str()
+            .is_some_and(|reason| reason.contains("featureforge plan execution gate-review --plan")),
+        "workflow handoff should include gate-review command guidance for dispatch-blocked repair flow, got {handoff_json:?}"
+    );
+    assert!(
+        handoff_json["recommendation_reason"]
+            .as_str()
+            .is_some_and(|reason| reason.contains(plan_rel)),
+        "workflow handoff should include the approved plan path in dispatch-blocked guidance, got {handoff_json:?}"
+    );
+
+    let handoff_output = run_rust_featureforge_with_env(
+        repo,
+        state,
+        &["workflow", "handoff"],
+        &[("FEATUREFORGE_SESSION_KEY", session_key)],
+        "workflow handoff text for task-boundary dispatch-blocked fixture",
+    );
+    assert!(handoff_output.status.success());
+    let handoff_stdout = String::from_utf8_lossy(&handoff_output.stdout);
+    assert!(
+        handoff_stdout.contains("featureforge plan execution gate-review --plan"),
+        "workflow handoff text should include gate-review command guidance, got:\n{handoff_stdout}"
+    );
+    assert!(handoff_stdout.contains(plan_rel), "handoff stdout:\n{handoff_stdout}");
+
+    let next_output = run_rust_featureforge_with_env(
+        repo,
+        state,
+        &["workflow", "next"],
+        &[("FEATUREFORGE_SESSION_KEY", session_key)],
+        "workflow next for task-boundary dispatch-blocked fixture",
+    );
+    assert!(next_output.status.success());
+    let next_stdout = String::from_utf8_lossy(&next_output.stdout);
+    assert!(
+        next_stdout.contains("featureforge plan execution gate-review --plan"),
+        "workflow next output should include gate-review command guidance, got:\n{next_stdout}"
+    );
+    assert!(next_stdout.contains(plan_rel), "next stdout:\n{next_stdout}");
 }
 
 #[test]

@@ -22,6 +22,7 @@ pub struct WorkflowDoctor {
     pub route_status: String,
     pub next_skill: String,
     pub next_action: String,
+    pub next_step: String,
     pub spec_path: String,
     pub plan_path: String,
     pub contract_state: String,
@@ -114,6 +115,7 @@ pub fn phase(current_dir: &Path) -> Result<WorkflowPhase, JsonFailure> {
         phase: context.phase.clone(),
         route_status: context.route.status.clone(),
         next_skill: public_next_skill(&context),
+        next_step: next_step_text(&context),
         next_action: next_action_for_context(&context).to_owned(),
         spec_path: context.route.spec_path.clone(),
         plan_path: context.route.plan_path.clone(),
@@ -149,6 +151,7 @@ pub fn doctor(current_dir: &Path) -> Result<WorkflowDoctor, JsonFailure> {
         route_status: context.route.status.clone(),
         next_skill: public_next_skill(&context),
         next_action: next_action_for_context(&context).to_owned(),
+        next_step: next_step_text(&context),
         spec_path: context.route.spec_path.clone(),
         plan_path: context.route.plan_path.clone(),
         contract_state,
@@ -165,11 +168,12 @@ pub fn doctor(current_dir: &Path) -> Result<WorkflowDoctor, JsonFailure> {
 pub fn render_doctor(current_dir: &Path) -> Result<String, JsonFailure> {
     let doctor = doctor(current_dir)?;
     let mut output = format!(
-        "Workflow doctor\nPhase: {}\nSession entry: {}\nRoute status: {}\nNext action: {}\nContract state: {}\nSpec: {}\nPlan: {}\n",
+        "Workflow doctor\nPhase: {}\nSession entry: {}\nRoute status: {}\nNext action: {}\nNext: {}\nContract state: {}\nSpec: {}\nPlan: {}\n",
         doctor.phase,
         doctor.session_entry.outcome,
         doctor.route_status,
         doctor.next_action,
+        doctor.next_step,
         doctor.contract_state,
         display_or_none(&doctor.spec_path),
         display_or_none(&doctor.plan_path)
@@ -840,15 +844,34 @@ fn reason_text(context: &OperatorContext) -> String {
         "pivot_required" => {
             String::from("Execution is blocked pending an approved plan revision.")
         }
-        "repairing" => context
-            .execution_status
-            .as_ref()
-            .and_then(task_boundary_reason_text)
-            .unwrap_or_else(|| {
-                String::from(
-                    "Execution already started for the approved plan and should continue through the current execution flow.",
-                )
-            }),
+        "repairing" => {
+            let dispatch_block_reason = context.execution_status.as_ref().and_then(|status| {
+                task_boundary_block_reason_code(status).filter(|reason_code| {
+                    matches!(
+                        *reason_code,
+                        "prior_task_review_dispatch_missing"
+                            | "prior_task_review_dispatch_stale"
+                    )
+                })
+            });
+            if dispatch_block_reason.is_some() {
+                task_boundary_next_step_text(context).unwrap_or_else(|| {
+                    String::from(
+                        "Execution already started for the approved plan and should continue through the current execution flow.",
+                    )
+                })
+            } else {
+                context
+                    .execution_status
+                    .as_ref()
+                    .and_then(task_boundary_reason_text)
+                    .unwrap_or_else(|| {
+                        String::from(
+                            "Execution already started for the approved plan and should continue through the current execution flow.",
+                        )
+                    })
+            }
+        }
         "contract_drafting"
         | "contract_pending_approval"
         | "contract_approved"
@@ -961,6 +984,8 @@ fn task_boundary_block_reason_code(status: &PlanExecutionStatus) -> Option<&str>
                 | "prior_task_verification_missing"
                 | "prior_task_verification_missing_legacy"
                 | "task_verification_receipt_malformed"
+                | "prior_task_review_dispatch_missing"
+                | "prior_task_review_dispatch_stale"
                 | "task_cycle_break_active"
         )
     })
@@ -981,6 +1006,9 @@ fn task_boundary_reason_text(status: &PlanExecutionStatus) -> Option<String> {
         "prior_task_verification_missing_legacy" => format!(
             "Task-boundary gate ({reason_code}) is blocking advancement past Task {blocking_task}. Backfill Task {blocking_task} verification evidence or record an approved migration marker before starting the next task."
         ),
+        "prior_task_review_dispatch_missing" | "prior_task_review_dispatch_stale" => format!(
+            "Task-boundary gate ({reason_code}) is blocking advancement past Task {blocking_task}. STOP and dispatch fresh-context dedicated-independent review before any next-task begin."
+        ),
         "task_cycle_break_active" => format!(
             "Task-boundary gate ({reason_code}) is blocking advancement past Task {blocking_task}. Resolve cycle-break remediation for Task {blocking_task} before retrying."
         ),
@@ -995,6 +1023,21 @@ fn task_boundary_next_step_text(context: &OperatorContext) -> Option<String> {
     }
     let status = context.execution_status.as_ref()?;
     let reason = task_boundary_reason_text(status)?;
+    let reason_code = task_boundary_block_reason_code(status)?;
+    if matches!(
+        reason_code,
+        "prior_task_review_dispatch_missing" | "prior_task_review_dispatch_stale"
+    ) {
+        if context.route.plan_path.is_empty() {
+            return Some(format!(
+                "{reason} Run `featureforge plan execution gate-review --plan <approved-plan-path>` before any next-task begin."
+            ));
+        }
+        return Some(format!(
+            "{reason} Run `featureforge plan execution gate-review --plan {}` before any next-task begin.",
+            context.route.plan_path
+        ));
+    }
     if context.route.plan_path.is_empty() {
         Some(format!("{reason} Continue in the active execution flow."))
     } else {

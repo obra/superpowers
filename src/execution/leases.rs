@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::fs;
 use std::io::ErrorKind;
 use std::path::PathBuf;
@@ -12,6 +13,20 @@ use crate::execution::harness::INITIAL_AUTHORITATIVE_SEQUENCE;
 use crate::execution::observability::validate_execution_topology_downgrade_record;
 use crate::execution::state::ExecutionContext;
 use crate::paths::{harness_authoritative_artifacts_dir, harness_branch_root, harness_state_path};
+
+#[derive(Debug, Clone, Deserialize)]
+pub(crate) struct StrategyReviewDispatchLineageRecord {
+    #[serde(default)]
+    pub(crate) execution_run_id: Option<String>,
+    #[serde(default)]
+    pub(crate) source_task: Option<u32>,
+    #[serde(default)]
+    pub(crate) source_step: Option<u32>,
+    #[serde(default)]
+    pub(crate) strategy_checkpoint_fingerprint: Option<String>,
+    #[serde(default)]
+    pub(crate) task_completion_lineage_fingerprint: Option<String>,
+}
 
 #[derive(Debug, Clone, Deserialize)]
 pub(crate) struct StatusAuthoritativeOverlay {
@@ -89,6 +104,9 @@ pub(crate) struct StatusAuthoritativeOverlay {
     pub(crate) strategy_checkpoint_kind: Option<String>,
     #[serde(default)]
     pub(crate) strategy_reset_required: Option<bool>,
+    #[serde(default)]
+    pub(crate) strategy_review_dispatch_lineage:
+        BTreeMap<String, StrategyReviewDispatchLineageRecord>,
     #[serde(default)]
     pub(crate) reason_codes: Vec<String>,
 }

@@ -894,6 +894,24 @@ fn set_harness_state_string_field(repo: &Path, state: &Path, field: &str, value:
     write_harness_state_payload(repo, state, &json!({ field: value }));
 }
 
+fn write_initial_dispatch_harness_state(repo: &Path, state: &Path, execution_run_id: &str) {
+    write_harness_state_payload(
+        repo,
+        state,
+        &json!({
+            "schema_version": 1,
+            "run_identity": {
+                "execution_run_id": execution_run_id,
+                "source_plan_path": PLAN_REL,
+                "source_plan_revision": 1
+            },
+            "last_strategy_checkpoint_fingerprint": FIXTURE_STRATEGY_CHECKPOINT_FINGERPRINT,
+            "strategy_state": "executing",
+            "strategy_checkpoint_kind": "initial_dispatch"
+        }),
+    );
+}
+
 fn republish_authoritative_artifact(
     repo: &Path,
     state: &Path,
@@ -2638,16 +2656,33 @@ fn setup_task_boundary_prior_task_fixture(
         2,
         &checkpoint_sha,
     );
-    write_harness_state_payload(
+    write_initial_dispatch_harness_state(repo, state, &execution_run_id);
+    run_rust_json(
         repo,
         state,
-        &json!({
-            "schema_version": 1,
-            "last_strategy_checkpoint_fingerprint": FIXTURE_STRATEGY_CHECKPOINT_FINGERPRINT,
-            "strategy_state": "executing",
-            "strategy_checkpoint_kind": "initial_dispatch"
-        }),
+        &["gate-review", "--plan", PLAN_REL],
+        "record task-boundary review dispatch lineage for fixture setup",
     );
+    let status_after_review_dispatch = run_rust_json(
+        repo,
+        state,
+        &["status", "--plan", PLAN_REL],
+        "status after task-boundary review dispatch for fixture setup",
+    );
+    let strategy_checkpoint_fingerprint = status_after_review_dispatch
+        .get("last_strategy_checkpoint_fingerprint")
+        .and_then(Value::as_str)
+        .expect("status should expose strategy checkpoint fingerprint after review dispatch");
+    write_minimal_task_verification_receipt_for_task(
+        repo,
+        state,
+        &execution_run_id,
+        1,
+        strategy_checkpoint_fingerprint,
+        "cargo test --test plan_execution -- task_boundary_ --nocapture",
+        "pass",
+    );
+
     let status_before_task2 = run_rust_json(
         repo,
         state,
@@ -3729,6 +3764,10 @@ fn assert_begin_blocks_cross_task_without_prior_task_closure() {
         ],
         "complete task 1 step 2",
     );
+    let execution_run_id = complete_task1_step2["execution_run_id"]
+        .as_str()
+        .expect("execution run id should be present after task 1 completion");
+    write_initial_dispatch_harness_state(repo, state, execution_run_id);
 
     let begin_task2_step1 = run_rust(
         repo,
@@ -3755,8 +3794,8 @@ fn assert_begin_blocks_cross_task_without_prior_task_closure() {
     assert!(
         failure["message"]
             .as_str()
-            .is_some_and(|message| message.contains("prior_task_review_not_green")),
-        "task-boundary begin should expose prior_task_review_not_green diagnostics, got {failure}"
+            .is_some_and(|message| message.contains("prior_task_review_dispatch_missing")),
+        "task-boundary begin should expose prior_task_review_dispatch_missing diagnostics when no closure state exists, got {failure}"
     );
 }
 
@@ -3852,7 +3891,7 @@ fn begin_blocks_interrupted_same_step_resume_without_prior_task_closure() {
         ],
         "begin task 1 step 2 for interrupted resume test",
     );
-    run_rust_json(
+    let complete_task1_step2 = run_rust_json(
         repo,
         state,
         &[
@@ -3878,6 +3917,11 @@ fn begin_blocks_interrupted_same_step_resume_without_prior_task_closure() {
         ],
         "complete task 1 step 2 for interrupted resume test",
     );
+    let execution_run_id = complete_task1_step2["execution_run_id"]
+        .as_str()
+        .expect("execution run id should be present after task 1 completion")
+        .to_owned();
+    write_initial_dispatch_harness_state(repo, state, &execution_run_id);
 
     replace_in_file(
         &repo.join(PLAN_REL),
@@ -3921,8 +3965,8 @@ fn begin_blocks_interrupted_same_step_resume_without_prior_task_closure() {
     assert!(
         failure["message"]
             .as_str()
-            .is_some_and(|message| message.contains("prior_task_review_not_green")),
-        "interrupted same-step resume should surface prior_task_review_not_green diagnostics, got {failure}"
+            .is_some_and(|message| message.contains("prior_task_review_dispatch_missing")),
+        "interrupted same-step resume should surface prior_task_review_dispatch_missing before later closure gates, got {failure}"
     );
 
     let status_after_failed_resume = run_rust_json(
@@ -4019,7 +4063,7 @@ fn task_boundary_status_reports_prior_task_review_not_green_before_task2() {
         ],
         "begin task 1 step 2 for task-boundary status review gate test",
     );
-    run_rust_json(
+    let complete_task1_step2 = run_rust_json(
         repo,
         state,
         &[
@@ -4044,6 +4088,17 @@ fn task_boundary_status_reports_prior_task_review_not_green_before_task2() {
                 .expect("execution fingerprint should be present after begin"),
         ],
         "complete task 1 step 2 for task-boundary status review gate test",
+    );
+    let execution_run_id = complete_task1_step2["execution_run_id"]
+        .as_str()
+        .expect("execution run id should be present after completes")
+        .to_owned();
+    write_initial_dispatch_harness_state(repo, state, &execution_run_id);
+    run_rust_json(
+        repo,
+        state,
+        &["gate-review", "--plan", PLAN_REL],
+        "record task-boundary review dispatch before review-not-green status test",
     );
 
     let status_before_task2 = run_rust_json(
@@ -4198,15 +4253,12 @@ fn task_boundary_begin_reports_prior_task_verification_missing_after_review_clos
         2,
         &checkpoint_sha,
     );
-    write_harness_state_payload(
+    write_initial_dispatch_harness_state(repo, state, &execution_run_id);
+    run_rust_json(
         repo,
         state,
-        &json!({
-            "schema_version": 1,
-            "last_strategy_checkpoint_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-            "strategy_state": "executing",
-            "strategy_checkpoint_kind": "initial_dispatch"
-        }),
+        &["gate-review", "--plan", PLAN_REL],
+        "record task-boundary review dispatch before verification-missing begin test",
     );
 
     let status_before_task2 = run_rust_json(
@@ -4245,6 +4297,198 @@ fn task_boundary_begin_reports_prior_task_verification_missing_after_review_clos
             .as_str()
             .is_some_and(|message| message.contains("prior_task_verification_missing")),
         "task-boundary begin should expose prior_task_verification_missing diagnostics, got {failure}"
+    );
+}
+
+#[test]
+fn task_boundary_prefers_prior_task_review_dispatch_missing_before_verification_missing() {
+    let (repo_dir, state_dir) =
+        init_repo("plan-execution-task-boundary-dispatch-before-verification");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    write_approved_spec(repo);
+    write_plan(repo, "none");
+    accept_execution_preflight(repo, state, PLAN_REL);
+
+    let status_before_task1 = run_rust_json(
+        repo,
+        state,
+        &["status", "--plan", PLAN_REL],
+        "status before task 1 begin for dispatch-before-verification ordering test",
+    );
+    let begin_task1_step1 = run_rust_json(
+        repo,
+        state,
+        &[
+            "begin",
+            "--plan",
+            PLAN_REL,
+            "--task",
+            "1",
+            "--step",
+            "1",
+            "--execution-mode",
+            "featureforge:executing-plans",
+            "--expect-execution-fingerprint",
+            status_before_task1["execution_fingerprint"]
+                .as_str()
+                .expect("status fingerprint should be present"),
+        ],
+        "begin task 1 step 1 for dispatch-before-verification ordering test",
+    );
+    let complete_task1_step1 = run_rust_json(
+        repo,
+        state,
+        &[
+            "complete",
+            "--plan",
+            PLAN_REL,
+            "--task",
+            "1",
+            "--step",
+            "1",
+            "--source",
+            "featureforge:executing-plans",
+            "--claim",
+            "Completed task 1 step 1 for dispatch-before-verification ordering test.",
+            "--file",
+            "README.md",
+            "--manual-verify-summary",
+            "Fixture verification for task 1 step 1.",
+            "--expect-execution-fingerprint",
+            begin_task1_step1["execution_fingerprint"]
+                .as_str()
+                .expect("execution fingerprint should be present after begin"),
+        ],
+        "complete task 1 step 1 for dispatch-before-verification ordering test",
+    );
+    let begin_task1_step2 = run_rust_json(
+        repo,
+        state,
+        &[
+            "begin",
+            "--plan",
+            PLAN_REL,
+            "--task",
+            "1",
+            "--step",
+            "2",
+            "--execution-mode",
+            "featureforge:executing-plans",
+            "--expect-execution-fingerprint",
+            complete_task1_step1["execution_fingerprint"]
+                .as_str()
+                .expect("execution fingerprint should be present after complete"),
+        ],
+        "begin task 1 step 2 for dispatch-before-verification ordering test",
+    );
+    let complete_task1_step2 = run_rust_json(
+        repo,
+        state,
+        &[
+            "complete",
+            "--plan",
+            PLAN_REL,
+            "--task",
+            "1",
+            "--step",
+            "2",
+            "--source",
+            "featureforge:executing-plans",
+            "--claim",
+            "Completed task 1 step 2 for dispatch-before-verification ordering test.",
+            "--file",
+            "README.md",
+            "--manual-verify-summary",
+            "Fixture verification for task 1 step 2.",
+            "--expect-execution-fingerprint",
+            begin_task1_step2["execution_fingerprint"]
+                .as_str()
+                .expect("execution fingerprint should be present after begin"),
+        ],
+        "complete task 1 step 2 for dispatch-before-verification ordering test",
+    );
+
+    let execution_run_id = complete_task1_step2["execution_run_id"]
+        .as_str()
+        .expect("execution run id should be present after completes")
+        .to_owned();
+    let checkpoint_sha = current_head_sha(repo);
+    write_minimal_unit_review_receipt_for_step(
+        repo,
+        state,
+        &execution_run_id,
+        1,
+        1,
+        &checkpoint_sha,
+    );
+    write_minimal_unit_review_receipt_for_step(
+        repo,
+        state,
+        &execution_run_id,
+        1,
+        2,
+        &checkpoint_sha,
+    );
+    write_initial_dispatch_harness_state(repo, state, &execution_run_id);
+
+    let status_before_task2 = run_rust_json(
+        repo,
+        state,
+        &["status", "--plan", PLAN_REL],
+        "status before task 2 begin for dispatch-before-verification ordering test",
+    );
+    assert!(
+        status_before_task2["reason_codes"]
+            .as_array()
+            .is_some_and(|codes| {
+                codes
+                    .iter()
+                    .any(|code| code.as_str() == Some("prior_task_review_dispatch_missing"))
+            }),
+        "status should prefer prior_task_review_dispatch_missing before verification-missing when both are absent, got {status_before_task2}"
+    );
+    assert!(
+        status_before_task2["reason_codes"]
+            .as_array()
+            .is_none_or(|codes| {
+                !codes
+                    .iter()
+                    .any(|code| code.as_str() == Some("prior_task_verification_missing"))
+            }),
+        "status should not surface prior_task_verification_missing before dispatch proof exists, got {status_before_task2}"
+    );
+
+    let begin_task2_step1 = run_rust(
+        repo,
+        state,
+        &[
+            "begin",
+            "--plan",
+            PLAN_REL,
+            "--task",
+            "2",
+            "--step",
+            "1",
+            "--execution-mode",
+            "featureforge:executing-plans",
+            "--expect-execution-fingerprint",
+            status_before_task2["execution_fingerprint"]
+                .as_str()
+                .expect("execution fingerprint should be present before task 2 begin"),
+        ],
+        "begin task 2 step 1 should prefer dispatch-missing before verification-missing",
+    );
+    let failure = parse_failure_json(
+        &begin_task2_step1,
+        "task-boundary begin dispatch-before-verification ordering gate",
+    );
+    assert_eq!(failure["error_class"], "ExecutionStateNotReady");
+    assert!(
+        failure["message"]
+            .as_str()
+            .is_some_and(|message| message.contains("prior_task_review_dispatch_missing")),
+        "task-boundary begin should prefer prior_task_review_dispatch_missing before verification-missing when both are absent, got {failure}"
     );
 }
 
@@ -4378,15 +4622,12 @@ fn begin_blocks_cross_task_when_legacy_run_is_missing_task_verification_receipt(
         2,
         &checkpoint_sha,
     );
-    write_harness_state_payload(
+    write_initial_dispatch_harness_state(repo, state, &execution_run_id);
+    run_rust_json(
         repo,
         state,
-        &json!({
-            "schema_version": 1,
-            "last_strategy_checkpoint_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-            "strategy_state": "executing",
-            "strategy_checkpoint_kind": "initial_dispatch"
-        }),
+        &["gate-review", "--plan", PLAN_REL],
+        "record task-boundary review dispatch before legacy verification-missing begin test",
     );
 
     let evidence_path = repo.join(evidence_rel_path());
@@ -4445,16 +4686,7 @@ fn complete_allows_cross_task_legacy_backfill_after_begin() {
     let repo = repo_dir.path();
     let state = state_dir.path();
 
-    let (execution_run_id, _, _, _) = setup_task_boundary_prior_task_fixture(repo, state);
-    write_minimal_task_verification_receipt_for_task(
-        repo,
-        state,
-        &execution_run_id,
-        1,
-        FIXTURE_STRATEGY_CHECKPOINT_FINGERPRINT,
-        "cargo test --all-targets --all-features",
-        "pass",
-    );
+    setup_task_boundary_prior_task_fixture(repo, state);
 
     let evidence_path = repo.join(evidence_rel_path());
     let evidence_source =
@@ -4656,15 +4888,12 @@ fn task_boundary_status_reports_prior_task_verification_missing_after_review_clo
         2,
         &checkpoint_sha,
     );
-    write_harness_state_payload(
+    write_initial_dispatch_harness_state(repo, state, &execution_run_id);
+    run_rust_json(
         repo,
         state,
-        &json!({
-            "schema_version": 1,
-            "last_strategy_checkpoint_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-            "strategy_state": "executing",
-            "strategy_checkpoint_kind": "initial_dispatch"
-        }),
+        &["gate-review", "--plan", PLAN_REL],
+        "record task-boundary review dispatch before verification-missing status test",
     );
 
     let status_before_task2 = run_rust_json(
@@ -4686,6 +4915,328 @@ fn task_boundary_status_reports_prior_task_verification_missing_after_review_clo
                     .any(|code| code.as_str() == Some("prior_task_verification_missing"))
             }),
         "status should surface prior_task_verification_missing for task-boundary block, got {status_before_task2}"
+    );
+}
+
+#[test]
+fn task_boundary_begin_reports_prior_task_review_dispatch_missing() {
+    let (repo_dir, state_dir) =
+        init_repo("plan-execution-task-boundary-review-dispatch-missing");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    let (_execution_run_id, execution_fingerprint, _task1_step1_receipt, _task1_step2_receipt) =
+        setup_task_boundary_prior_task_fixture(repo, state);
+
+    write_harness_state_payload(
+        repo,
+        state,
+        &json!({
+            "strategy_review_dispatch_lineage": {}
+        }),
+    );
+
+    let begin_task2_step1 = run_rust(
+        repo,
+        state,
+        &[
+            "begin",
+            "--plan",
+            PLAN_REL,
+            "--task",
+            "2",
+            "--step",
+            "1",
+            "--execution-mode",
+            "featureforge:executing-plans",
+            "--expect-execution-fingerprint",
+            &execution_fingerprint,
+        ],
+        "begin task 2 step 1 should fail on missing task-boundary review dispatch evidence",
+    );
+    let failure = parse_failure_json(
+        &begin_task2_step1,
+        "task-boundary begin missing review dispatch evidence gate",
+    );
+    assert_eq!(failure["error_class"], "ExecutionStateNotReady");
+    assert!(
+        failure["message"]
+            .as_str()
+            .is_some_and(|message| message.contains("prior_task_review_dispatch_missing")),
+        "task-boundary begin should expose prior_task_review_dispatch_missing diagnostics, got {failure}"
+    );
+}
+
+#[test]
+fn task_boundary_status_reports_prior_task_review_dispatch_missing() {
+    let (repo_dir, state_dir) =
+        init_repo("plan-execution-task-boundary-status-review-dispatch-missing");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    setup_task_boundary_prior_task_fixture(repo, state);
+
+    write_harness_state_payload(
+        repo,
+        state,
+        &json!({
+            "strategy_review_dispatch_lineage": {}
+        }),
+    );
+
+    let status_before_task2 = run_rust_json(
+        repo,
+        state,
+        &["status", "--plan", PLAN_REL],
+        "status before task 2 begin with missing review dispatch evidence",
+    );
+    assert_eq!(status_before_task2["blocking_task"], Value::from(1));
+    assert!(
+        status_before_task2["reason_codes"]
+            .as_array()
+            .is_some_and(|codes| {
+                codes
+                    .iter()
+                    .any(|code| code.as_str() == Some("prior_task_review_dispatch_missing"))
+            }),
+        "status should surface prior_task_review_dispatch_missing for task-boundary block, got {status_before_task2}"
+    );
+}
+
+#[test]
+fn task_boundary_begin_reports_prior_task_review_dispatch_stale() {
+    let (repo_dir, state_dir) = init_repo("plan-execution-task-boundary-review-dispatch-stale");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    let (execution_run_id, execution_fingerprint, _task1_step1_receipt, _task1_step2_receipt) =
+        setup_task_boundary_prior_task_fixture(repo, state);
+    let status_before_task2 = run_rust_json(
+        repo,
+        state,
+        &["status", "--plan", PLAN_REL],
+        "status before task 2 begin for stale review dispatch evidence test",
+    );
+    let strategy_checkpoint_fingerprint = status_before_task2
+        .get("last_strategy_checkpoint_fingerprint")
+        .and_then(Value::as_str)
+        .expect("status should expose strategy checkpoint fingerprint");
+
+    write_harness_state_payload(
+        repo,
+        state,
+        &json!({
+            "strategy_review_dispatch_lineage": {
+                "task-1": {
+                    "execution_run_id": execution_run_id,
+                    "source_task": 1,
+                    "source_step": 2,
+                    "strategy_checkpoint_fingerprint": strategy_checkpoint_fingerprint,
+                    "task_completion_lineage_fingerprint": "0000000000000000000000000000000000000000000000000000000000000000"
+                }
+            }
+        }),
+    );
+
+    let begin_task2_step1 = run_rust(
+        repo,
+        state,
+        &[
+            "begin",
+            "--plan",
+            PLAN_REL,
+            "--task",
+            "2",
+            "--step",
+            "1",
+            "--execution-mode",
+            "featureforge:executing-plans",
+            "--expect-execution-fingerprint",
+            &execution_fingerprint,
+        ],
+        "begin task 2 step 1 should fail on stale task-boundary review dispatch evidence",
+    );
+    let failure = parse_failure_json(
+        &begin_task2_step1,
+        "task-boundary begin stale review dispatch evidence gate",
+    );
+    assert_eq!(failure["error_class"], "ExecutionStateNotReady");
+    assert!(
+        failure["message"]
+            .as_str()
+            .is_some_and(|message| message.contains("prior_task_review_dispatch_stale")),
+        "task-boundary begin should expose prior_task_review_dispatch_stale diagnostics, got {failure}"
+    );
+}
+
+#[test]
+fn task_boundary_begin_reports_prior_task_review_dispatch_stale_when_source_step_is_invalid() {
+    let (repo_dir, state_dir) =
+        init_repo("plan-execution-task-boundary-review-dispatch-invalid-step");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    let (_execution_run_id, execution_fingerprint, _task1_step1_receipt, _task1_step2_receipt) =
+        setup_task_boundary_prior_task_fixture(repo, state);
+
+    let harness_state_path = harness_state_file_path(repo, state);
+    let mut harness_state_json: Value = serde_json::from_str(
+        &fs::read_to_string(&harness_state_path)
+            .expect("harness state should be readable before corrupting dispatch source step"),
+    )
+    .expect("harness state should remain valid json before corrupting dispatch source step");
+    harness_state_json["strategy_review_dispatch_lineage"]["task-1"]["source_step"] =
+        Value::from(99);
+    fs::write(
+        &harness_state_path,
+        serde_json::to_string_pretty(&harness_state_json)
+            .expect("harness state should serialize after corrupting dispatch source step"),
+    )
+    .expect("harness state should be writable after corrupting dispatch source step");
+
+    let begin_task2_step1 = run_rust(
+        repo,
+        state,
+        &[
+            "begin",
+            "--plan",
+            PLAN_REL,
+            "--task",
+            "2",
+            "--step",
+            "1",
+            "--execution-mode",
+            "featureforge:executing-plans",
+            "--expect-execution-fingerprint",
+            &execution_fingerprint,
+        ],
+        "begin task 2 step 1 should fail on invalid task-boundary review dispatch source step",
+    );
+    let failure = parse_failure_json(
+        &begin_task2_step1,
+        "task-boundary begin invalid review dispatch source step gate",
+    );
+    assert_eq!(failure["error_class"], "ExecutionStateNotReady");
+    assert!(
+        failure["message"]
+            .as_str()
+            .is_some_and(|message| message.contains("prior_task_review_dispatch_stale")),
+        "task-boundary begin should expose prior_task_review_dispatch_stale diagnostics for invalid source step, got {failure}"
+    );
+}
+
+#[test]
+fn task_boundary_begin_reports_prior_task_review_dispatch_stale_when_execution_run_id_mismatches()
+{
+    let (repo_dir, state_dir) =
+        init_repo("plan-execution-task-boundary-review-dispatch-invalid-run-id");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    let (_execution_run_id, execution_fingerprint, _task1_step1_receipt, _task1_step2_receipt) =
+        setup_task_boundary_prior_task_fixture(repo, state);
+
+    let harness_state_path = harness_state_file_path(repo, state);
+    let mut harness_state_json: Value = serde_json::from_str(
+        &fs::read_to_string(&harness_state_path)
+            .expect("harness state should be readable before corrupting dispatch run identity"),
+    )
+    .expect("harness state should remain valid json before corrupting dispatch run identity");
+    harness_state_json["strategy_review_dispatch_lineage"]["task-1"]["execution_run_id"] =
+        Value::from("run-mismatched-dispatch");
+    fs::write(
+        &harness_state_path,
+        serde_json::to_string_pretty(&harness_state_json)
+            .expect("harness state should serialize after corrupting dispatch run identity"),
+    )
+    .expect("harness state should be writable after corrupting dispatch run identity");
+
+    let begin_task2_step1 = run_rust(
+        repo,
+        state,
+        &[
+            "begin",
+            "--plan",
+            PLAN_REL,
+            "--task",
+            "2",
+            "--step",
+            "1",
+            "--execution-mode",
+            "featureforge:executing-plans",
+            "--expect-execution-fingerprint",
+            &execution_fingerprint,
+        ],
+        "begin task 2 step 1 should fail on mismatched task-boundary review dispatch run identity",
+    );
+    let failure = parse_failure_json(
+        &begin_task2_step1,
+        "task-boundary begin invalid review dispatch run identity gate",
+    );
+    assert_eq!(failure["error_class"], "ExecutionStateNotReady");
+    assert!(
+        failure["message"]
+            .as_str()
+            .is_some_and(|message| message.contains("prior_task_review_dispatch_stale")),
+        "task-boundary begin should expose prior_task_review_dispatch_stale diagnostics for mismatched run identity, got {failure}"
+    );
+}
+
+#[test]
+fn task_boundary_begin_reports_prior_task_review_dispatch_stale_when_strategy_checkpoint_fingerprint_mismatches()
+{
+    let (repo_dir, state_dir) = init_repo(
+        "plan-execution-task-boundary-review-dispatch-invalid-checkpoint-fingerprint",
+    );
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    let (_execution_run_id, execution_fingerprint, _task1_step1_receipt, _task1_step2_receipt) =
+        setup_task_boundary_prior_task_fixture(repo, state);
+
+    let harness_state_path = harness_state_file_path(repo, state);
+    let mut harness_state_json: Value = serde_json::from_str(
+        &fs::read_to_string(&harness_state_path).expect(
+            "harness state should be readable before corrupting dispatch checkpoint fingerprint",
+        ),
+    )
+    .expect(
+        "harness state should remain valid json before corrupting dispatch checkpoint fingerprint",
+    );
+    harness_state_json["strategy_review_dispatch_lineage"]["task-1"]
+        ["strategy_checkpoint_fingerprint"] = Value::from(
+        "0000000000000000000000000000000000000000000000000000000000000000",
+    );
+    fs::write(
+        &harness_state_path,
+        serde_json::to_string_pretty(&harness_state_json).expect(
+            "harness state should serialize after corrupting dispatch checkpoint fingerprint",
+        ),
+    )
+    .expect("harness state should be writable after corrupting dispatch checkpoint fingerprint");
+
+    let begin_task2_step1 = run_rust(
+        repo,
+        state,
+        &[
+            "begin",
+            "--plan",
+            PLAN_REL,
+            "--task",
+            "2",
+            "--step",
+            "1",
+            "--execution-mode",
+            "featureforge:executing-plans",
+            "--expect-execution-fingerprint",
+            &execution_fingerprint,
+        ],
+        "begin task 2 step 1 should fail on mismatched task-boundary review dispatch checkpoint fingerprint",
+    );
+    let failure = parse_failure_json(
+        &begin_task2_step1,
+        "task-boundary begin invalid review dispatch checkpoint fingerprint gate",
+    );
+    assert_eq!(failure["error_class"], "ExecutionStateNotReady");
+    assert!(
+        failure["message"]
+            .as_str()
+            .is_some_and(|message| message.contains("prior_task_review_dispatch_stale")),
+        "task-boundary begin should expose prior_task_review_dispatch_stale diagnostics for mismatched checkpoint fingerprint, got {failure}"
     );
 }
 

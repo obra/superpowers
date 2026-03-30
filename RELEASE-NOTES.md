@@ -1,5 +1,16 @@
 # FeatureForge Release Notes
 
+## v1.6.0 - 2026-03-30
+
+Independent-review dispatch hard-gate release focused on explicit task-boundary review dispatch proof, exact operator guidance, and release ratification for the new execution contract.
+
+- enforce explicit `featureforge plan execution gate-review --plan <approved-plan-path>` dispatch proof at task boundaries before next-task begin can proceed
+- keep task-boundary fail-closed behavior for stale or missing dispatch lineage, non-independent review receipts, and missing task verification receipts
+- align workflow operator surfaces and execution skill docs on the exact runnable `gate-review` command text for blocked task-boundary remediation
+- harden execution guidance so repo-writing work records runtime begin before mutation and treats backfill as recovery-only workflow repair
+- expand runtime, workflow, final-review, and instruction-contract coverage for dispatch hard-gate semantics and preserved final-review behavior
+- refresh checked-in repo runtime binaries and darwin/windows prebuilt artifacts for `1.6.0`
+
 ## v1.5.0 - 2026-03-29
 
 Project-memory release focused on adding an optional supportive-memory skill and tightening explicit memory routing so workflow authority stays intact.

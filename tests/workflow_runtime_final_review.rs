@@ -629,7 +629,11 @@ fn write_authoritative_strategy_checkpoint_state(repo: &Path, state: &Path) {
     );
 }
 
-fn write_task_boundary_strategy_checkpoint_state(repo: &Path, state: &Path, execution_run_id: &str) {
+fn write_task_boundary_strategy_checkpoint_state(
+    repo: &Path,
+    state: &Path,
+    execution_run_id: &str,
+) -> String {
     let branch = branch_name(repo);
     let state_path = harness_state_path(state, &repo_slug(repo), &branch);
     let mut payload: Value = match fs::read_to_string(&state_path) {
@@ -656,6 +660,22 @@ fn write_task_boundary_strategy_checkpoint_state(repo: &Path, state: &Path, exec
         &state_path,
         &serde_json::to_string(&payload).expect("harness state payload should serialize"),
     );
+
+    run_plan_execution(
+        repo,
+        state,
+        &["gate-review", "--plan", PLAN_REL],
+        "record task-boundary review dispatch lineage for final-review fixture",
+    );
+    run_plan_execution(
+        repo,
+        state,
+        &["status", "--plan", PLAN_REL],
+        "status after task-boundary review dispatch for final-review fixture",
+    )["last_strategy_checkpoint_fingerprint"]
+        .as_str()
+        .expect("status should expose strategy checkpoint fingerprint after review dispatch")
+        .to_owned()
 }
 
 fn replace_in_file(path: &Path, from: &str, to: &str) {
@@ -1040,13 +1060,14 @@ fn task_boundary_final_review_remains_required_after_task_closure_gates() {
         .to_owned();
     let checkpoint_sha = current_head_sha(repo);
     write_task_boundary_unit_review_receipt(repo, state, &execution_run_id, 1, 1, &checkpoint_sha);
-    write_task_boundary_strategy_checkpoint_state(repo, state, &execution_run_id);
+    let strategy_checkpoint_fingerprint =
+        write_task_boundary_strategy_checkpoint_state(repo, state, &execution_run_id);
     write_task_boundary_verification_receipt(
         repo,
         state,
         &execution_run_id,
         1,
-        FIXTURE_STRATEGY_CHECKPOINT_FINGERPRINT,
+        &strategy_checkpoint_fingerprint,
     );
 
     let status_before_task2 = run_plan_execution(

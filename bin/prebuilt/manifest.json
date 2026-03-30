@@ -1,5 +1,5 @@
 {
-  "runtime_revision": "1.5.0",
+  "runtime_revision": "1.6.0",
   "targets": {
     "darwin-arm64": {
       "binary_path": "bin/prebuilt/darwin-arm64/featureforge",

@@ -153,10 +153,11 @@ digraph when_to_use {
 For each task, enforce this exact order before dispatching the next task:
 1. Complete the task's implementation steps.
 2. MUST dispatch dedicated-independent fresh-context task review loops (spec compliance, then code quality); implementer or coordinator self-review never satisfies this gate.
-3. If review fails, reopen/remediate/re-review until green.
-4. When remediation churn reaches 3 cycles for the same task, follow runtime cycle-break handling before retry.
-5. After review is green, run `verification-before-completion` and persist the task verification receipt.
-6. Only then dispatch implementation for Task `N+1`.
+3. STOP and run `featureforge plan execution gate-review --plan <approved-plan-path>` immediately after task completion so authoritative review-dispatch proof exists before any next-task begin.
+4. If review fails, reopen/remediate/re-review until green.
+5. When remediation churn reaches 3 cycles for the same task, follow runtime cycle-break handling before retry.
+6. After review is green, run `verification-before-completion` and persist the task verification receipt.
+7. No exceptions: only after dispatch proof, green review closure, and task verification receipt may you dispatch Task `N+1`.
 
 ```dot
 digraph process {

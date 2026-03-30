@@ -83,6 +83,7 @@ Execution starts from an engineering-approved plan and the exact approved plan p
 
 Task closure is enforced at task boundaries, not only at the end of the full plan:
 
+- after implementation steps complete, STOP and run `featureforge plan execution gate-review --plan <approved-plan-path>` to mint task-boundary review-dispatch proof
 - each task runs a fresh-context independent review loop until `gate-review` is green
 - task-boundary remediation churn is capped with runtime-owned `cycle_break` handling on repeated loops
 - after review passes, task verification is required before the task can close and before next-task advancement
@@ -157,12 +158,12 @@ Refresh checked-in prebuilt binaries (release-facing artifacts) when runtime pac
 
 ```bash
 FEATUREFORGE_PREBUILT_TARGET=darwin-arm64 scripts/refresh-prebuilt-runtime.sh
-FEATUREFORGE_PREBUILT_TARGET=windows-x64 FEATUREFORGE_PREBUILT_RUST_TARGET=x86_64-pc-windows-gnu scripts/refresh-prebuilt-runtime.sh
+PATH="$HOME/.cargo/bin:$PATH" CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=x86_64-w64-mingw32-gcc FEATUREFORGE_PREBUILT_TARGET=windows-x64 FEATUREFORGE_PREBUILT_RUST_TARGET=x86_64-pc-windows-gnu scripts/refresh-prebuilt-runtime.sh
 cp target/aarch64-apple-darwin/release/featureforge bin/featureforge
 chmod +x bin/featureforge
 ```
 
-If Homebrew `cargo`/`rustc` shadow rustup-managed toolchains on your `PATH`, make sure the rustup toolchain shims are ahead of Homebrew Rust before running the Windows GNU refresh command so the installed `x86_64-pc-windows-gnu` standard library is visible.
+If Homebrew `cargo`/`rustc` shadow rustup-managed toolchains on your `PATH`, make sure the rustup toolchain shims are ahead of Homebrew Rust before running the Windows GNU refresh command so the installed `x86_64-pc-windows-gnu` standard library is visible. The GNU cross-build also expects `x86_64-w64-mingw32-gcc` to be available on `PATH`.
 
 ## Updating
 

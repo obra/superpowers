@@ -238,7 +238,7 @@ fn canonical_update_check_uses_a_binary_adjacent_runtime_root() {
     let remote_dir = TempDir::new().expect("remote tempdir should exist");
 
     make_runtime_root(runtime_dir.path(), "1.0.0");
-    write_file(&remote_dir.path().join("VERSION"), "1.5.0\n");
+    write_file(&remote_dir.path().join("VERSION"), "1.6.0\n");
 
     let mut command = Command::new(runtime_dir.path().join("bin/featureforge"));
     command
@@ -265,7 +265,7 @@ fn canonical_update_check_uses_a_binary_adjacent_runtime_root() {
     );
     assert_eq!(
         String::from_utf8_lossy(&output.stdout).trim(),
-        "UPGRADE_AVAILABLE 1.0.0 1.5.0"
+        "UPGRADE_AVAILABLE 1.0.0 1.6.0"
     );
 }
 
@@ -278,7 +278,7 @@ fn canonical_update_check_rejects_invalid_featureforge_dir_overrides() {
 
     make_runtime_root(repo_dir.path(), "9.9.9");
     write_file(&invalid_override.path().join("VERSION"), "1.0.0\n");
-    write_file(&remote_dir.path().join("VERSION"), "1.5.0\n");
+    write_file(&remote_dir.path().join("VERSION"), "1.6.0\n");
 
     let output = run_rust_featureforge_with_env_control(
         Some(repo_dir.path()),

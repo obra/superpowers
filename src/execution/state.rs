@@ -36,7 +36,7 @@ use crate::execution::harness::{
     INITIAL_AUTHORITATIVE_SEQUENCE, LearnedTopologyGuidance, ResetPolicy, TopologySelectionContext,
 };
 use crate::execution::leases::{
-    PreflightWriteAuthorityState,
+    PreflightWriteAuthorityState, StrategyReviewDispatchLineageRecord,
     authoritative_matching_execution_topology_downgrade_records_checked, authoritative_state_path,
     load_status_authoritative_overlay_checked, preflight_requires_authoritative_handoff,
     preflight_requires_authoritative_mutation_recovery, preflight_write_authority_state,
@@ -5553,6 +5553,7 @@ pub(crate) fn require_prior_task_closure_for_begin(
         ));
     }
 
+    ensure_prior_task_review_dispatch_closed(context, prior_task, target_task)?;
     ensure_prior_task_review_closed(context, prior_task, target_task)?;
     ensure_prior_task_verification_closed(context, prior_task, target_task)?;
     Ok(())
@@ -5851,6 +5852,194 @@ fn ensure_prior_task_verification_closed(
     Ok(())
 }
 
+fn ensure_prior_task_review_dispatch_closed(
+    context: &ExecutionContext,
+    prior_task: u32,
+    target_task: u32,
+) -> Result<(), JsonFailure> {
+    let execution_run_id = current_execution_run_id(context)?.ok_or_else(|| {
+        task_boundary_error(
+            FailureClass::ExecutionStateNotReady,
+            "prior_task_review_dispatch_missing",
+            format!(
+                "Task {target_task} may not begin because Task {prior_task} review-dispatch provenance is missing execution run identity."
+            ),
+        )
+    })?;
+    let strategy_checkpoint_fingerprint = authoritative_strategy_checkpoint_fingerprint_checked(context)
+        .map_err(|error| {
+            task_boundary_error(
+                FailureClass::MalformedExecutionState,
+                "prior_task_review_dispatch_stale",
+                format!(
+                    "Task {target_task} may not begin because Task {prior_task} review dispatch cannot be validated without authoritative strategy checkpoint provenance: {}",
+                    error.message
+                ),
+            )
+        })?
+        .ok_or_else(|| {
+            task_boundary_error(
+                FailureClass::MalformedExecutionState,
+                "prior_task_review_dispatch_stale",
+                format!(
+                    "Task {target_task} may not begin because Task {prior_task} review dispatch cannot be validated because authoritative strategy checkpoint provenance is missing."
+                ),
+            )
+        })?;
+    let expected_task_completion_lineage =
+        task_completion_lineage_fingerprint(context, prior_task).ok_or_else(|| {
+            task_boundary_error(
+                FailureClass::ExecutionStateNotReady,
+                "prior_task_review_dispatch_stale",
+                format!(
+                    "Task {target_task} may not begin because Task {prior_task} review dispatch lineage cannot be computed from the latest completed task evidence."
+                ),
+            )
+        })?;
+    let expected_source_step = latest_attempted_step_for_task(context, prior_task).ok_or_else(|| {
+        task_boundary_error(
+            FailureClass::ExecutionStateNotReady,
+            "prior_task_review_dispatch_stale",
+            format!(
+                "Task {target_task} may not begin because Task {prior_task} review dispatch lineage cannot be validated against the latest completed task step evidence."
+            ),
+        )
+    })?;
+    let Some(overlay) = load_status_authoritative_overlay_checked(context)? else {
+        return Err(task_boundary_error(
+            FailureClass::ExecutionStateNotReady,
+            "prior_task_review_dispatch_missing",
+            format!(
+                "Task {target_task} may not begin because Task {prior_task} is missing required post-completion review-dispatch evidence. Run `featureforge plan execution gate-review --plan {}` after Task {prior_task} closes.",
+                context.plan_rel
+            ),
+        ));
+    };
+    let lineage_key = format!("task-{prior_task}");
+    let Some(lineage) = overlay.strategy_review_dispatch_lineage.get(&lineage_key) else {
+        return Err(task_boundary_error(
+            FailureClass::ExecutionStateNotReady,
+            "prior_task_review_dispatch_missing",
+            format!(
+                "Task {target_task} may not begin because Task {prior_task} is missing required post-completion review-dispatch evidence. Run `featureforge plan execution gate-review --plan {}` after Task {prior_task} closes.",
+                context.plan_rel
+            ),
+        ));
+    };
+    let expected = TaskReviewDispatchExpectation {
+        execution_run_id: &execution_run_id,
+        task_completion_lineage: &expected_task_completion_lineage,
+        source_step: expected_source_step,
+        strategy_checkpoint_fingerprint: &strategy_checkpoint_fingerprint,
+    };
+    validate_task_review_dispatch_lineage(
+        context,
+        lineage,
+        prior_task,
+        target_task,
+        expected,
+    )
+}
+
+struct TaskReviewDispatchExpectation<'a> {
+    execution_run_id: &'a str,
+    task_completion_lineage: &'a str,
+    source_step: u32,
+    strategy_checkpoint_fingerprint: &'a str,
+}
+
+fn validate_task_review_dispatch_lineage(
+    context: &ExecutionContext,
+    lineage: &StrategyReviewDispatchLineageRecord,
+    prior_task: u32,
+    target_task: u32,
+    expected: TaskReviewDispatchExpectation<'_>,
+) -> Result<(), JsonFailure> {
+    let observed_execution_run_id = lineage
+        .execution_run_id
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| {
+            task_boundary_error(
+                FailureClass::ExecutionStateNotReady,
+                "prior_task_review_dispatch_stale",
+                format!(
+                    "Task {target_task} may not begin because Task {prior_task} review-dispatch lineage is malformed. Re-run `featureforge plan execution gate-review --plan {}` for Task {prior_task}.",
+                    context.plan_rel
+                ),
+            )
+        })?;
+    let observed_source_task = lineage.source_task.ok_or_else(|| {
+        task_boundary_error(
+            FailureClass::ExecutionStateNotReady,
+            "prior_task_review_dispatch_stale",
+            format!(
+                "Task {target_task} may not begin because Task {prior_task} review-dispatch lineage is malformed. Re-run `featureforge plan execution gate-review --plan {}` for Task {prior_task}.",
+                context.plan_rel
+            ),
+        )
+    })?;
+    let observed_source_step = lineage.source_step.ok_or_else(|| {
+        task_boundary_error(
+            FailureClass::ExecutionStateNotReady,
+            "prior_task_review_dispatch_stale",
+            format!(
+                "Task {target_task} may not begin because Task {prior_task} review-dispatch lineage is malformed. Re-run `featureforge plan execution gate-review --plan {}` for Task {prior_task}.",
+                context.plan_rel
+            ),
+        )
+    })?;
+    let observed_strategy_checkpoint_fingerprint = lineage
+        .strategy_checkpoint_fingerprint
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| {
+            task_boundary_error(
+                FailureClass::ExecutionStateNotReady,
+                "prior_task_review_dispatch_stale",
+                format!(
+                    "Task {target_task} may not begin because Task {prior_task} review-dispatch lineage is malformed. Re-run `featureforge plan execution gate-review --plan {}` for Task {prior_task}.",
+                    context.plan_rel
+                ),
+            )
+        })?;
+    let observed_task_completion_lineage = lineage
+        .task_completion_lineage_fingerprint
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| {
+            task_boundary_error(
+                FailureClass::ExecutionStateNotReady,
+                "prior_task_review_dispatch_stale",
+                format!(
+                    "Task {target_task} may not begin because Task {prior_task} review-dispatch lineage is malformed. Re-run `featureforge plan execution gate-review --plan {}` for Task {prior_task}.",
+                    context.plan_rel
+                ),
+            )
+        })?;
+
+    if observed_execution_run_id != expected.execution_run_id
+        || observed_source_task != prior_task
+        || observed_source_step != expected.source_step
+        || observed_strategy_checkpoint_fingerprint != expected.strategy_checkpoint_fingerprint
+        || observed_task_completion_lineage != expected.task_completion_lineage
+    {
+        return Err(task_boundary_error(
+            FailureClass::ExecutionStateNotReady,
+            "prior_task_review_dispatch_stale",
+            format!(
+                "Task {target_task} may not begin because Task {prior_task} review-dispatch evidence is stale against current task/strategy lineage. Re-run `featureforge plan execution gate-review --plan {}` after Task {prior_task} closure.",
+                context.plan_rel
+            ),
+        ));
+    }
+
+    Ok(())
+}
+
 fn prior_task_cycle_break_active(
     context: &ExecutionContext,
     prior_task: u32,
@@ -5978,6 +6167,64 @@ fn latest_attempt_for_step(
         .iter()
         .rev()
         .find(|attempt| attempt.task_number == task_number && attempt.step_number == step_number)
+}
+
+fn latest_attempted_step_for_task(context: &ExecutionContext, task_number: u32) -> Option<u32> {
+    context.evidence.attempts.iter().rev().find_map(|attempt| {
+        (attempt.task_number == task_number
+            && context
+                .steps
+                .iter()
+                .any(|step| step.task_number == task_number && step.step_number == attempt.step_number))
+        .then_some(attempt.step_number)
+    })
+}
+
+pub(crate) fn task_completion_lineage_fingerprint(
+    context: &ExecutionContext,
+    task_number: u32,
+) -> Option<String> {
+    let task_steps = context
+        .steps
+        .iter()
+        .filter(|step| step.task_number == task_number)
+        .collect::<Vec<_>>();
+    if task_steps.is_empty() {
+        return None;
+    }
+
+    let mut payload = format!(
+        "plan={}\nplan_revision={}\ntask={task_number}\n",
+        context.plan_rel, context.plan_document.plan_revision
+    );
+    for step in task_steps {
+        if !step.checked {
+            return None;
+        }
+        let attempt = latest_attempt_for_step(&context.evidence, task_number, step.step_number)?;
+        if attempt.status != "Completed" {
+            return None;
+        }
+        let packet_fingerprint = attempt
+            .packet_fingerprint
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())?;
+        let checkpoint_sha = attempt
+            .head_sha
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())?;
+        let recorded_at = attempt.recorded_at.trim();
+        if recorded_at.is_empty() {
+            return None;
+        }
+        payload.push_str(&format!(
+            "step={}:attempt={}:recorded_at={recorded_at}:packet={packet_fingerprint}:checkpoint={checkpoint_sha}\n",
+            step.step_number, attempt.attempt_number
+        ));
+    }
+    Some(sha256_hex(payload.as_bytes()))
 }
 
 fn latest_completed_attempts_by_step(evidence: &ExecutionEvidence) -> BTreeMap<(u32, u32), usize> {

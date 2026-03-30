@@ -842,6 +842,12 @@ fn workflow_phase_text_and_json_surfaces_match_harness_downstream_freshness() {
             "workflow next text should mirror the same Next step from workflow phase text for case {}",
             case.name
         );
+        assert_eq!(
+            phase_json["next_step"],
+            Value::from(next_step),
+            "workflow phase json should mirror the same Next step from workflow phase text for case {}",
+            case.name
+        );
 
         for field in [
             "final_review_state",

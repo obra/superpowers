@@ -10,7 +10,9 @@ use crate::diagnostics::{FailureClass, JsonFailure};
 use crate::execution::gates::{
     ActiveContractState, GateAuthorityState, require_active_contract_state,
 };
-use crate::execution::state::{ExecutionContext, ExecutionRuntime, GateState, NoteState};
+use crate::execution::state::{
+    ExecutionContext, ExecutionRuntime, GateState, NoteState, task_completion_lineage_fingerprint,
+};
 use crate::git::sha256_hex;
 use crate::paths::{harness_branch_root, harness_state_path, write_atomic as write_atomic_file};
 
@@ -335,7 +337,7 @@ impl AuthoritativeTransitionState {
                 )
             }
         };
-        if cycle_count >= 3 {
+        let checkpoint_fingerprint = if cycle_count >= 3 {
             self.record_strategy_checkpoint(
                 context,
                 "cycle_break",
@@ -347,6 +349,7 @@ impl AuthoritativeTransitionState {
             if let Some(task) = task_binding {
                 self.set_task_cycle_count(task, 0)?;
             }
+            self.last_strategy_checkpoint_fingerprint()
         } else {
             self.record_strategy_checkpoint(
                 context,
@@ -355,6 +358,21 @@ impl AuthoritativeTransitionState {
                 &trigger,
                 &rationale,
                 false,
+            )?;
+            self.last_strategy_checkpoint_fingerprint()
+        };
+
+        if let (Some((task, step)), Some(strategy_checkpoint_fingerprint)) =
+            (cycle_target, checkpoint_fingerprint)
+            && let Some(task_completion_lineage) = task_completion_lineage_fingerprint(context, task)
+        {
+            let execution_run_id = self.current_execution_run_id();
+            self.upsert_task_dispatch_lineage(
+                task,
+                &execution_run_id,
+                step,
+                &strategy_checkpoint_fingerprint,
+                &task_completion_lineage,
             )?;
         }
         Ok(())
@@ -369,16 +387,7 @@ impl AuthoritativeTransitionState {
         rationale: &str,
         cycle_breaking: bool,
     ) -> Result<String, JsonFailure> {
-        let execution_run_id = self
-            .state_payload
-            .get("run_identity")
-            .and_then(Value::as_object)
-            .and_then(|run_identity| run_identity.get("execution_run_id"))
-            .and_then(Value::as_str)
-            .map(str::trim)
-            .filter(|value| !value.is_empty())
-            .unwrap_or("unknown-run")
-            .to_owned();
+        let execution_run_id = self.current_execution_run_id();
         let selected_topology = selected_topology_from_execution_mode(execution_mode);
         let lane_decomposition = context
             .plan_document
@@ -551,6 +560,65 @@ impl AuthoritativeTransitionState {
                 "Authoritative harness strategy_review_dispatch_credits must be a JSON object.",
             )
         })
+    }
+
+    fn dispatch_lineage_records_mut(
+        &mut self,
+    ) -> Result<&mut serde_json::Map<String, Value>, JsonFailure> {
+        let root = self.root_object_mut()?;
+        let lineage = root
+            .entry(String::from("strategy_review_dispatch_lineage"))
+            .or_insert_with(|| Value::Object(serde_json::Map::new()));
+        lineage.as_object_mut().ok_or_else(|| {
+            JsonFailure::new(
+                FailureClass::MalformedExecutionState,
+                "Authoritative harness strategy_review_dispatch_lineage must be a JSON object.",
+            )
+        })
+    }
+
+    fn upsert_task_dispatch_lineage(
+        &mut self,
+        task: u32,
+        execution_run_id: &str,
+        source_step: u32,
+        strategy_checkpoint_fingerprint: &str,
+        task_completion_lineage_fingerprint: &str,
+    ) -> Result<(), JsonFailure> {
+        let lineage = self.dispatch_lineage_records_mut()?;
+        lineage.insert(
+            format!("task-{task}"),
+            serde_json::json!({
+                "execution_run_id": execution_run_id,
+                "source_task": task,
+                "source_step": source_step,
+                "strategy_checkpoint_fingerprint": strategy_checkpoint_fingerprint,
+                "task_completion_lineage_fingerprint": task_completion_lineage_fingerprint,
+            }),
+        );
+        self.dirty = true;
+        Ok(())
+    }
+
+    fn current_execution_run_id(&self) -> String {
+        self.state_payload
+            .get("run_identity")
+            .and_then(Value::as_object)
+            .and_then(|run_identity| run_identity.get("execution_run_id"))
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .unwrap_or("unknown-run")
+            .to_owned()
+    }
+
+    fn last_strategy_checkpoint_fingerprint(&self) -> Option<String> {
+        self.state_payload
+            .get("last_strategy_checkpoint_fingerprint")
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .map(str::to_owned)
     }
 
     fn increment_task_dispatch_credit(&mut self, task: u32) -> Result<u64, JsonFailure> {

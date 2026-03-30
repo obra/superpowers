@@ -228,10 +228,11 @@ For each task:
 5. Run verifications as specified.
 6. After the implementation steps for a task are complete, enforce the mandatory task-boundary closure loop before beginning the next task:
    - MUST dispatch dedicated-independent task review in a fresh-context subagent; coordinator or implementer self-review never satisfies this gate
+   - STOP and run `featureforge plan execution gate-review --plan <approved-plan-path>` immediately after task completion to record authoritative review-dispatch proof before any next-task begin
    - if review fails, reopen/remediate/re-review until green
    - when remediation churn reaches 3 cycles for the same task, follow runtime cycle-break handling before retry
    - after review is green, run `verification-before-completion` and persist the task verification receipt
-   - only then begin Task `N+1`
+   - no exceptions: only after dispatch proof, green review closure, and task verification receipt may Task `N+1` begin
 7. If the packet is malformed, stale, or still leaves ambiguity unresolved, stop and route back to review instead of guessing.
 8. Call `complete` as soon as a step is truly satisfied so the plan checkbox flips to `- [x]`.
 
