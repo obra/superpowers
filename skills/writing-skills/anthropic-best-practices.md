@@ -144,10 +144,17 @@ What works perfectly for Opus might need more detail for Haiku. If you plan to u
 ## Skill structure
 
 <Note>
-  **YAML Frontmatter**: The SKILL.md frontmatter supports two fields:
+  **YAML Frontmatter**: The SKILL.md frontmatter supports these fields:
 
-  * `name` - Human-readable name of the Skill (64 characters maximum)
-  * `description` - One-line description of what the Skill does and when to use it (1024 characters maximum)
+  **Required:**
+  * `name` - Lowercase letters, numbers, hyphens (64 characters max). Must match parent directory name.
+  * `description` - What the Skill does and when to use it (1024 characters max)
+
+  **Optional:**
+  * `license` - License name or reference to a bundled license file
+  * `compatibility` - Environment requirements: target product, system packages, network access (500 characters max)
+  * `metadata` - Arbitrary key-value mapping (string keys to string values)
+  * `allowed-tools` - Space-delimited list of pre-approved tools (experimental)
 
   For complete Skill structure details, see the [Skills overview](/en/docs/agents-and-tools/agent-skills/overview#skill-structure).
 </Note>
@@ -1092,7 +1099,7 @@ reader = PdfReader("file.pdf")
 
 ### YAML frontmatter requirements
 
-The SKILL.md frontmatter includes only `name` (64 characters max) and `description` (1024 characters max) fields. See the [Skills overview](/en/docs/agents-and-tools/agent-skills/overview#skill-structure) for complete structure details.
+The SKILL.md frontmatter requires `name` (64 characters max, lowercase with hyphens, must match directory name) and `description` (1024 characters max). Optional fields: `license`, `compatibility` (500 characters max), `metadata` (string key-value pairs), and `allowed-tools` (space-delimited tool list, experimental). See the [Skills overview](/en/docs/agents-and-tools/agent-skills/overview#skill-structure) for complete structure details.
 
 ### Token budgets
 

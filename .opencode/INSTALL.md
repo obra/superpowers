@@ -52,7 +52,7 @@ To pin a specific version:
 
 ```json
 {
-  "plugin": ["superpowers-ruby@git+https://github.com/lucianghinda/superpowers-ruby.git#v6.0.0"]
+  "plugin": ["superpowers-ruby@git+https://github.com/lucianghinda/superpowers-ruby.git#v6.0.1"]
 }
 ```
 
