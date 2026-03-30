@@ -68,6 +68,8 @@ Per Jesse's rule "Fix broken things immediately":
 
 **Why critical:** Prevents accidentally committing worktree contents to repository.
 
+**Session metadata:** When writing `.superpowers-session.json`, verify it is gitignored. If not, add it to `.gitignore` alongside the worktree directory entry. This file is session-local and should never be committed.
+
 ### For Global Directory (~/.config/superpowers/worktrees)
 
 No .gitignore verification needed - outside project entirely.
