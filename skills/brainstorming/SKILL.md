@@ -21,8 +21,10 @@ Every project goes through this process. A todo list, a single-function utility,
 
 You MUST create a task for each of these items and complete them in order:
 
+**⚠ CRITICAL: Step 1 MUST be completed before step 2.** Do NOT read files, check git history, or explore the codebase in any way before creating the worktree. Exploring the project context before creating the worktree means your analysis is based on code that may change at any moment — this leads to nasty and hard to debug inconsistencies later when the spec, plan, and implementation are based on a codebase state that no longer exists.
+
 1. **Create worktree** — isolate the codebase before any analysis. See the Worktree Isolation section below.
-2. **Explore project context** — check files, docs, recent commits (inside worktree)
+2. **Explore project context** — check files, docs, recent commits **(inside the worktree, not before)**
 3. **Offer visual companion** (if topic will involve visual questions) — this is its own message, not combined with a clarifying question. See the Visual Companion section below.
 4. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 5. **Propose 2-3 approaches** — with trade-offs and your recommendation
