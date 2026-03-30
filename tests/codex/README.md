@@ -12,8 +12,10 @@ This suite mirrors the Claude Code testing strategy:
 
 The tests run Codex in an isolated environment with temporary `HOME` and
 `CODEX_HOME`, copy `auth.json` from the original Codex home when present, then
-install the repository's `skills/` directory into
-`$HOME/.agents/skills/superpowers`.
+install:
+
+- the repository's `skills/` directory into `$HOME/.agents/skills/superpowers`
+- the repository's `.codex/agents/` directory into `$CODEX_HOME/agents/superpowers`
 
 ## Requirements
 
@@ -54,6 +56,7 @@ Structured JSON events are preferred for workflow assertions:
 
 - `todo_list` indicates `update_plan`
 - `collab_tool_call` indicates subagent activity
+- subagent session files can expose `agent_role` values such as `superpowers_spec_reviewer`
 - `turn.completed` indicates a real completed agent turn
 
 Fast semantic tests use a second Codex run as an evaluator. The evaluator receives:
@@ -102,3 +105,13 @@ Because each test uses an isolated `CODEX_HOME`, look under the temporary
 `$CODEX_HOME/sessions` created during that test run rather than your real
 `~/.codex/sessions`. Authentication still works because the helper copies the
 original `auth.json` into the temporary Codex home when available.
+
+### Agents not loaded in tests
+
+Verify:
+
+```bash
+find "$CODEX_HOME/agents/superpowers" -maxdepth 1 -name '*.toml' | sort
+```
+
+The isolated test environment should include the native Superpowers Codex role catalog.

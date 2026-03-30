@@ -7,7 +7,7 @@ This document describes how to test Superpowers skills with the real agent CLIs 
 Testing skills that involve subagents, workflows, and complex interactions requires running actual headless agent sessions and verifying their behavior from machine-readable evidence.
 
 - Claude Code tests use Claude session transcripts under `~/.claude/projects/`
-- Codex tests use `codex exec --json` output plus isolated session rollouts under temporary `$CODEX_HOME/sessions`
+- Codex tests use `codex exec --json` output plus isolated session rollouts under temporary `$CODEX_HOME/sessions`, with both skills and native agent TOMLs installed into the isolated environment
 
 ## Test Structure
 
@@ -128,6 +128,8 @@ This lets the suite judge semantic correctness while staying grounded in reposit
 
 - The Codex helpers copy the original `auth.json` into the temporary `CODEX_HOME` when present
 - Skills are installed into the isolated home at `$HOME/.agents/skills/superpowers`
+- Native Superpowers Codex role TOMLs are installed into `$CODEX_HOME/agents/superpowers`
+- Current Codex releases already expose subagents by default in normal setups; the test harness no longer forces `features.multi_agent = true` as its default assumption
 - The Codex sandbox may block writes inside `.git`, even in disposable fixture repositories
 - The real subagent integration test therefore accepts either:
   - actual additional commits in the fixture repo, or
