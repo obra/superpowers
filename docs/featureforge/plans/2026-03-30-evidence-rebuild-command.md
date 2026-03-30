@@ -4,7 +4,7 @@
 
 **Workflow State:** Engineering Approved
 **Plan Revision:** 1
-**Execution Mode:** none
+**Execution Mode:** featureforge:executing-plans
 **Source Spec:** `docs/featureforge/specs/2026-03-30-evidence-rebuild-command-spec.md`
 **Source Spec Revision:** 1
 **Last Reviewed By:** plan-eng-review
@@ -43,8 +43,8 @@
 ## Known Footguns / Constraints
 - Do not add any command bypass that marks steps as passing without explicit `complete` semantics.
 - Do not mutate state in dry-run mode.
-- Keep deterministic ordering despite concurrent job execution.
-- `--max-jobs` may execute in parallel, but discovery and output order must remain deterministic.
+- Keep deterministic ordering while the slice remains serial-only.
+- `--max-jobs` must currently fail closed for values above `1`; parallel replay is explicitly deferred.
 - Preserve existing error handling semantics for commandless evidence paths.
 - `--no-output` must suppress command stream capture while still preserving summary verification hash behavior.
 - Keep explicit failure-class mapping for `session_not_found`, `scope_empty`, `artifact_read_error`, `verify_command_failed`, `target_race`, `state_transition_blocked`, and `serialization_error`.
@@ -105,27 +105,27 @@ Task 5 -> Task 6
 - Modify: `src/lib.rs`
 - Test: `tests/plan_execution.rs`
 
-- [ ] **Step 1: Add failing test for new subcommand registration and flag parsing**
+- [x] **Step 1: Add failing test for new subcommand registration and flag parsing**
 Run: `cargo test --test plan_execution -- rebuild_evidence_command_shape --exact`
 Expected: FAIL because subcommand/flags are not recognized.
 
-- [ ] **Step 2: Add parser options for supported flags and scope resolution**
+- [x] **Step 2: Add parser options for supported flags and scope resolution**
 Implement `--all`, `--task`, `--step`, `--include-open`, `--skip-manual-fallback`, `--continue-on-error`, `--dry-run`, `--max-jobs`, `--no-output`, `--json`.
 - Validate `--max-jobs` is a positive integer and defaults to `1`.
 - Fail fast on invalid scope/session resolution before any mutation.
 - Add parser-level help for `--no-output` behavior.
 - Add `PlanExecutionCommand` and dispatch wiring in `src/lib.rs` to route `rebuild-evidence` into execution path.
 
-- [ ] **Step 3: Add no-mutation dry-run path**
+- [x] **Step 3: Add no-mutation dry-run path**
 In dry-run mode resolve candidates and render plan only without filesystem writes.
 
-- [ ] **Step 4: Add command-level usage and invalid-scope guard tests**
+- [x] **Step 4: Add command-level usage and invalid-scope guard tests**
 Run: `cargo test --test plan_execution -- rebuild_evidence_invalid_scope --exact`
 Expected: usage-grade failure path.
 - Add assertions for `session_not_found` and `scope_empty`/`scope_no_matches` mapped to non-mutating exit `1`.
 - Include matched IDs when returning scope-empty diagnostics to satisfy recoverable scope guidance.
 
-- [ ] **Step 5: Run command-shape tests**
+- [x] **Step 5: Run command-shape tests**
 Run: `cargo test --test plan_execution -- rebuild_evidence_command_shape rebuild_evidence_invalid_scope --exact`
 Expected: PASS.
 - Add `--no-output` help and parser acceptance assertions.
@@ -145,15 +145,15 @@ Expected: PASS.
 - Modify: `src/diagnostics/mod.rs`
 - Test: `tests/plan_execution.rs`
 
-- [ ] **Step 1: Add planner unit test with invalidation reasons and stale proofs**
+- [x] **Step 1: Add planner unit test with invalidation reasons and stale proofs**
 Run: `cargo test --test plan_execution -- rebuild_candidate_discovery_stale_targets --exact`
 Expected: FAIL with empty candidate list and no planner.
 
-- [ ] **Step 2: Add deterministic candidate model struct**
+- [x] **Step 2: Add deterministic candidate model struct**
 Add internal type for target identity, reason, source step/task, verification command presence, and candidate ordering key.
  - Candidate order key must be stable, deterministic, and independent of thread scheduling.
 
-- [ ] **Step 3: Implement selection rules**
+- [x] **Step 3: Implement selection rules**
 - include latest attempts with meaningful invalidation reasons,
 - include attempts failing provenance validation,
 - include drifted proof targets,
@@ -162,10 +162,10 @@ Add internal type for target identity, reason, source step/task, verification co
 - Map new command-spec failure classes (`scope_no_matches`, `verify_command_failed`, `manual_required`, `target_race`, `state_transition_blocked`, `serialization_error`, `artifact_read_error`) to diagnosable outputs for reporting and exit mapping.
 - Track `artifact_epoch` or attempt metadata to detect stale candidate rows when executed later in parallel.
 
-- [ ] **Step 4: Add scoped filtering for task/step selectors**
+- [x] **Step 4: Add scoped filtering for task/step selectors**
 Support multiple `--task`/`--step` entries and validate exact match semantics.
 
-- [ ] **Step 5: Add boundary test for scope-only planning results**
+- [x] **Step 5: Add boundary test for scope-only planning results**
 Run: `cargo test --test plan_execution -- rebuild_candidate_filtering --exact`
 Expected: target subset output matches scope input exactly.
 
@@ -186,29 +186,29 @@ Expected: target subset output matches scope input exactly.
 - Modify: `src/cli/plan_execution.rs`
 - Test: `tests/plan_execution.rs`
 
-- [ ] **Step 1: Add failing test for one-command candidate replay**
+- [x] **Step 1: Add failing test for one-command candidate replay**
 Run: `cargo test --test plan_execution -- rebuild_executor_reopens_and_recompletes --exact`
 Expected: FAIL because executor path missing.
 
-- [ ] **Step 2: Implement target-level execution loop with `--continue-on-error` support**
+- [x] **Step 2: Implement target-level execution loop with `--continue-on-error` support**
 Each target transition independently captures status and can continue when allowed.
 - Execute targets in stable order and capture target results by the same order key regardless of `--max-jobs`.
 - Add target-level race simulation and recovery handling for `target_race` and `state_transition_blocked` classes.
 - Use per-target execution CAS by attempt id and attempt-level re-read before each `reopen` call.
 - On conflict (`target_race`, `state_transition_blocked`) re-read candidate row, retry once with bounded backoff, then mark recoverable failure if still conflicting.
-- Add a dedicated concurrency test for `--max-jobs > 1` where state changes between run and completion.
+- Add dedicated serial replay conflict coverage and explicit `--max-jobs > 1` rejection tests while bounded parallel replay remains deferred.
 
-- [ ] **Step 3: Implement verify-command path and command output capture**
+- [x] **Step 3: Implement verify-command path and command output capture**
 Run and hash command summary when command exists.
 - `--no-output` executes commands without stream capture while still producing deterministic verification summaries.
 - Add explicit `verify_command_failed` outcome with failure class and deterministic summary status transitions.
 
-- [ ] **Step 4: Implement strict-mode manual fallback behavior**
+- [x] **Step 4: Implement strict-mode manual fallback behavior**
 - default: record manual-required and continue,
 - strict: fail target with `manual_required` and respect continue-on-error policy.
 - Add strict-mode mapping check where a batch blocked entirely by manual-required targets exits `3`.
 
-- [ ] **Step 5: Add state-transition conflict simulation test**
+- [x] **Step 5: Add state-transition conflict simulation test**
 Run: `cargo test --test plan_execution -- rebuild_target_state_transition_blocked --exact`
 Expected: Failure recorded with recoverable status.
 
@@ -227,7 +227,7 @@ Expected: Failure recorded with recoverable status.
 - Modify: `src/workflow/status.rs`
 - Test: `tests/plan_execution.rs`
 
-- [ ] **Step 1: Add failing exit-code matrix test**
+- [x] **Step 1: Add failing exit-code matrix test**
 Run: `cargo test --test plan_execution -- rebuild_evidence_exit_statuses --exact`
 Expected: Mapping verified for statuses 0..3:
 - `0`: full success/no-op
@@ -239,19 +239,19 @@ Expected: Mapping verified for statuses 0..3:
   - If any target fails with non-precondition failure class => `2`.
   - If precondition classes only => `1`.
 
-- [ ] **Step 2: Implement text output summary schema**
+- [x] **Step 2: Implement text output summary schema**
 Include planned/rebuilt/manual/failed/noop counts.
 - Keep output key ordering deterministic and include explicit failure classes for recoverable errors.
 
-- [ ] **Step 3: Implement JSON output schema**
+- [x] **Step 3: Implement JSON output schema**
 Emit top-level and per-target fields exactly as spec.
 - Ensure per-target `error` and `failure_class` are present where applicable.
 - Treat serialization failure as `serialization_error` and map to exit status `1`.
 
-- [ ] **Step 4: Add no-op run test and partial-failure aggregation tests**
+- [x] **Step 4: Add no-op run test and partial-failure aggregation tests**
 Run: `cargo test --test plan_execution -- rebuild_evidence_noop_and_partial_failures --exact`
 Expected: PASS with explicit no-op and partial summary behavior.
-- Include explicit `target_race` case, `verify_command_failed` partial case, strict/manual-only finalization status `3`, and parallel (`--max-jobs > 1`) deterministic output ordering check.
+- Include explicit `target_race` case, `verify_command_failed` partial case, strict/manual-only finalization status `3`, and unsupported parallel (`--max-jobs > 1`) rejection coverage.
 
 ## Task 5: Add runtime regression and contract tests for discover/replay/repair flow
 
@@ -267,21 +267,21 @@ Expected: PASS with explicit no-op and partial summary behavior.
 - Modify: `tests/plan_execution.rs`
 - Modify: `tests/workflow_runtime.rs`
 
-- [ ] **Step 1: Create regression fixture for stale command-backed targets**
+- [x] **Step 1: Create regression fixture for stale command-backed targets**
 Use deterministic session inputs with mixed drift and commandless scenarios.
 - Include at least one `rebuild_evidence_*` test entrypoint per command path in new/updated `tests/plan_execution.rs`.
 
-- [ ] **Step 2: Add dry-run parity test**
+- [x] **Step 2: Add dry-run parity test**
 Run: `cargo test --test plan_execution -- rebuild_evidence_dry_run_is_noop --exact`
 Expected: zero mutation and full candidate parity.
 - Add `--no-output` no-op mode to prove no mutation plus parity of output schema.
 
-- [ ] **Step 3: Add partial failure and resume test**
+- [x] **Step 3: Add partial failure and resume test**
 Run: `cargo test --test plan_execution -- rebuild_evidence_partial_failure_resume --exact`
 Expected: failures isolated and successful targets committed.
 - Add recovery coverage for `artifact_read_error`, `verify_command_failed`, `state_transition_blocked`, and `target_race` under continue-on-error.
 
-- [ ] **Step 4: Add command output schema test for structured parsing**
+- [x] **Step 4: Add command output schema test for structured parsing**
 Run: `cargo test --test plan_execution -- rebuild_evidence_json_schema --exact`
 Expected: exact shape and stable keys.
 
@@ -296,19 +296,20 @@ Expected: exact shape and stable keys.
 **Open Questions:** none
 
 **Files:**
-- Modify: `skills/plan-execution/SKILL.md.tmpl`
+
 - Test: `tests/codex-runtime/skill-doc-generation.test.mjs`
+- Modify: `docs/featureforge/specs/2026-03-30-evidence-rebuild-command-spec.md`
 - Modify: `docs/featureforge/plans/2026-03-30-evidence-rebuild-command.md`
 
-- [ ] **Step 1: Align any docs generated from templates after implementation changes**
+- [x] **Step 1: Align any docs generated from templates after implementation changes**
 Run: `node scripts/gen-skill-docs.mjs`
 Expected: docs updated and consistent.
 
-- [ ] **Step 2: Run plan-spec contract lint against spec and plan**
+- [x] **Step 2: Run plan-spec contract lint against spec and plan**
 Run: `~/.featureforge/install/bin/featureforge plan contract lint --spec docs/featureforge/specs/2026-03-30-evidence-rebuild-command-spec.md --plan docs/featureforge/plans/2026-03-30-evidence-rebuild-command.md`
 Expected: pass.
 
-- [ ] **Step 3: Sync plan artifact for workflow routing**
+- [x] **Step 3: Sync plan artifact for workflow routing**
 Run: `~/.featureforge/install/bin/featureforge workflow sync --artifact plan --path docs/featureforge/plans/2026-03-30-evidence-rebuild-command.md`
 Expected: status advances to plan-aware routing state.
 

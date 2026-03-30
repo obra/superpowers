@@ -10,8 +10,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::cli::plan_execution::{
     BeginArgs, CompleteArgs, GateContractArgs, GateEvaluatorArgs, GateHandoffArgs,
-    IsolatedAgentsArg, NoteArgs, NoteStateArg, RecommendArgs, RecordContractArgs,
-    RecordEvaluationArgs, RecordHandoffArgs, ReopenArgs, StatusArgs, TransferArgs,
+    IsolatedAgentsArg, NoteArgs, NoteStateArg, RebuildEvidenceArgs, RecommendArgs,
+    RecordContractArgs, RecordEvaluationArgs, RecordHandoffArgs, ReopenArgs, StatusArgs,
+    TransferArgs,
 };
 use crate::cli::repo_safety::{RepoSafetyCheckArgs, RepoSafetyIntentArg, RepoSafetyWriteTargetArg};
 use crate::contracts::harness::{
@@ -21,6 +22,7 @@ use crate::contracts::harness::{
 use crate::contracts::plan::{PlanDocument, PlanTask, analyze_documents, parse_plan_file};
 use crate::contracts::spec::parse_spec_file;
 use crate::diagnostics::{FailureClass, JsonFailure};
+use crate::execution::authority::ensure_preflight_authoritative_bootstrap;
 use crate::execution::final_review::{
     FinalReviewReceiptExpectations, authoritative_browser_qa_artifact_path_checked,
     authoritative_final_review_artifact_path_checked,
@@ -34,6 +36,7 @@ use crate::execution::harness::{
     AggregateEvaluationState, ChunkId, ChunkingStrategy, DownstreamFreshnessState,
     EvaluationVerdict, EvaluatorKind, EvaluatorPolicyName, ExecutionRunId, HarnessPhase,
     INITIAL_AUTHORITATIVE_SEQUENCE, LearnedTopologyGuidance, ResetPolicy, TopologySelectionContext,
+    RunIdentitySnapshot,
 };
 use crate::execution::leases::{
     PreflightWriteAuthorityState, StrategyReviewDispatchLineageRecord,
@@ -126,6 +129,105 @@ pub struct PlanExecutionStatus {
     pub blocking_step: Option<u32>,
     pub resume_task: Option<u32>,
     pub resume_step: Option<u32>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
+pub struct RebuildEvidenceCounts {
+    pub planned: u32,
+    pub rebuilt: u32,
+    pub manual: u32,
+    pub failed: u32,
+    pub noop: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
+pub struct RebuildEvidenceFilter {
+    pub all: bool,
+    pub tasks: Vec<u32>,
+    pub steps: Vec<String>,
+    pub include_open: bool,
+    pub skip_manual_fallback: bool,
+    pub continue_on_error: bool,
+    pub max_jobs: u32,
+    pub no_output: bool,
+    pub json: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
+pub struct RebuildEvidenceTarget {
+    pub task_id: u32,
+    pub step_id: u32,
+    pub target_kind: String,
+    pub pre_invalidation_reason: String,
+    pub status: String,
+    pub verify_mode: String,
+    pub verify_command: Option<String>,
+    pub attempt_id_before: Option<String>,
+    pub attempt_id_after: Option<String>,
+    pub verification_hash: Option<String>,
+    pub error: Option<String>,
+    pub failure_class: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
+pub struct RebuildEvidenceOutput {
+    pub session_root: String,
+    pub dry_run: bool,
+    pub filter: RebuildEvidenceFilter,
+    pub scope: String,
+    pub counts: RebuildEvidenceCounts,
+    pub duration_ms: u64,
+    pub targets: Vec<RebuildEvidenceTarget>,
+    #[serde(skip_serializing)]
+    pub exit_code: u8,
+}
+
+impl RebuildEvidenceOutput {
+    pub fn exit_code(&self) -> u8 {
+        self.exit_code
+    }
+
+    pub fn render_text(&self) -> String {
+        let mut lines = Vec::with_capacity(self.targets.len() + 1);
+        lines.push(format!(
+            "summary scope={} dry_run={} planned={} rebuilt={} manual={} failed={} noop={}",
+            render_text_value(&self.scope),
+            self.dry_run,
+            self.counts.planned,
+            self.counts.rebuilt,
+            self.counts.manual,
+            self.counts.failed,
+            self.counts.noop,
+        ));
+        for target in &self.targets {
+            lines.push(format!(
+                "target task_id={} step_id={} status={} target_kind={} pre_invalidation_reason={} verify_mode={} verify_command={} attempt_id_before={} attempt_id_after={} verification_hash={} error={} failure_class={}",
+                target.task_id,
+                target.step_id,
+                render_text_value(&target.status),
+                render_text_value(&target.target_kind),
+                render_text_value(&target.pre_invalidation_reason),
+                render_text_value(&target.verify_mode),
+                render_optional_text_value(target.verify_command.as_deref()),
+                render_optional_text_value(target.attempt_id_before.as_deref()),
+                render_optional_text_value(target.attempt_id_after.as_deref()),
+                render_optional_text_value(target.verification_hash.as_deref()),
+                render_optional_text_value(target.error.as_deref()),
+                render_optional_text_value(target.failure_class.as_deref()),
+            ));
+        }
+        lines.join("\n") + "\n"
+    }
+}
+
+fn render_text_value(value: &str) -> String {
+    serde_json::to_string(value).unwrap_or_else(|_| String::from("\"<serialization-error>\""))
+}
+
+fn render_optional_text_value(value: Option<&str>) -> String {
+    value
+        .map(render_text_value)
+        .unwrap_or_else(|| String::from("null"))
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
@@ -250,6 +352,7 @@ pub struct EvidenceAttempt {
     pub claim: String,
     pub files: Vec<String>,
     pub file_proofs: Vec<FileProof>,
+    pub verify_command: Option<String>,
     pub verification_summary: String,
     pub invalidation_reason: String,
     pub packet_fingerprint: Option<String>,
@@ -295,6 +398,38 @@ pub struct ExecutionContext {
     pub execution_fingerprint: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RebuildEvidenceRequest {
+    pub plan: PathBuf,
+    pub all: bool,
+    pub tasks: Vec<u32>,
+    pub steps: Vec<(u32, u32)>,
+    pub raw_steps: Vec<String>,
+    pub include_open: bool,
+    pub skip_manual_fallback: bool,
+    pub continue_on_error: bool,
+    pub dry_run: bool,
+    pub max_jobs: u32,
+    pub no_output: bool,
+    pub json: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RebuildEvidenceCandidate {
+    pub task: u32,
+    pub step: u32,
+    pub order_key: (u32, u32),
+    pub target_kind: String,
+    pub pre_invalidation_reason: String,
+    pub verify_command: Option<String>,
+    pub verify_mode: String,
+    pub claim: String,
+    pub files: Vec<String>,
+    pub attempt_number: Option<u32>,
+    pub artifact_epoch: Option<String>,
+    pub needs_reopen: bool,
+}
+
 #[derive(Debug, Clone)]
 pub struct CompleteRequest {
     pub task: u32,
@@ -302,6 +437,7 @@ pub struct CompleteRequest {
     pub source: String,
     pub claim: String,
     pub files: Vec<String>,
+    pub verify_command: Option<String>,
     pub verification_summary: String,
     pub expect_execution_fingerprint: String,
 }
@@ -506,7 +642,16 @@ impl ExecutionRuntime {
         let context = load_execution_context(self, &args.plan)?;
         let gate = preflight_from_context(&context);
         if persist_acceptance && gate.allowed {
-            persist_preflight_acceptance(&context)?;
+            let acceptance = persist_preflight_acceptance(&context)?;
+            ensure_preflight_authoritative_bootstrap(
+                &context.runtime,
+                RunIdentitySnapshot {
+                    execution_run_id: acceptance.execution_run_id.clone(),
+                    source_plan_path: context.plan_rel.clone(),
+                    source_plan_revision: context.plan_document.plan_revision,
+                },
+                acceptance.chunk_id,
+            )?;
         }
         Ok(gate)
     }
@@ -4337,6 +4482,11 @@ pub fn normalize_complete_request(args: &CompleteArgs) -> Result<CompleteRequest
         source: args.source.as_str().to_owned(),
         claim,
         files: args.files.clone(),
+        verify_command: args
+            .verify_command
+            .as_deref()
+            .map(normalize_whitespace)
+            .filter(|value| !value.is_empty()),
         verification_summary,
         expect_execution_fingerprint: args.expect_execution_fingerprint.clone(),
     })
@@ -4368,6 +4518,235 @@ pub fn normalize_transfer_request(args: &TransferArgs) -> Result<TransferRequest
         )?,
         expect_execution_fingerprint: args.expect_execution_fingerprint.clone(),
     })
+}
+
+pub fn normalize_rebuild_evidence_request(
+    args: &RebuildEvidenceArgs,
+) -> Result<RebuildEvidenceRequest, JsonFailure> {
+    let mut parsed_steps = Vec::with_capacity(args.steps.len());
+    for raw in &args.steps {
+        let (task, step) = raw.split_once(':').ok_or_else(|| {
+            JsonFailure::new(
+                FailureClass::InvalidCommandInput,
+                "--step must use task:step selectors such as 1:2.",
+            )
+        })?;
+        let task = task.parse::<u32>().map_err(|_| {
+            JsonFailure::new(
+                FailureClass::InvalidCommandInput,
+                "--step must use numeric task:step selectors such as 1:2.",
+            )
+        })?;
+        let step = step.parse::<u32>().map_err(|_| {
+            JsonFailure::new(
+                FailureClass::InvalidCommandInput,
+                "--step must use numeric task:step selectors such as 1:2.",
+            )
+        })?;
+        parsed_steps.push((task, step));
+    }
+
+    Ok(RebuildEvidenceRequest {
+        plan: args.plan.clone(),
+        all: args.all || (args.tasks.is_empty() && args.steps.is_empty()),
+        tasks: args.tasks.clone(),
+        steps: parsed_steps,
+        raw_steps: args.steps.clone(),
+        include_open: args.include_open,
+        skip_manual_fallback: args.skip_manual_fallback,
+        continue_on_error: args.continue_on_error,
+        dry_run: args.dry_run,
+        max_jobs: args.max_jobs,
+        no_output: args.no_output,
+        json: args.json,
+    })
+}
+
+pub fn parse_command_verification_summary(summary: &str) -> Option<String> {
+    let trimmed = normalize_whitespace(summary);
+    let suffix = trimmed.strip_prefix('`')?;
+    let (command, _) = suffix.split_once("` -> ")?;
+    let command = normalize_whitespace(command);
+    (!command.is_empty()).then_some(command)
+}
+
+pub fn discover_rebuild_candidates(
+    context: &ExecutionContext,
+    request: &RebuildEvidenceRequest,
+) -> Result<Vec<RebuildEvidenceCandidate>, JsonFailure> {
+    let task_filter = request.tasks.iter().copied().collect::<BTreeSet<_>>();
+    let step_filter = request.steps.iter().copied().collect::<BTreeSet<_>>();
+
+    let matching_steps = context
+        .steps
+        .iter()
+        .filter(|step| {
+            (task_filter.is_empty() || task_filter.contains(&step.task_number))
+                && (step_filter.is_empty()
+                    || step_filter.contains(&(step.task_number, step.step_number)))
+        })
+        .collect::<Vec<_>>();
+    if (!request.tasks.is_empty() || !request.steps.is_empty()) && matching_steps.is_empty() {
+        return Err(JsonFailure::new(
+            FailureClass::InvalidCommandInput,
+            "scope_no_matches: no approved plan steps matched the requested filters.",
+        ));
+    }
+
+    let legacy_plan_fingerprint = sha256_hex(context.plan_source.as_bytes());
+    let source_spec_fingerprint = sha256_hex(context.source_spec_source.as_bytes());
+    let session_provenance_reason = if context.evidence.plan_fingerprint.as_deref()
+        != Some(legacy_plan_fingerprint.as_str())
+    {
+        Some(String::from("plan_fingerprint_mismatch"))
+    } else if context.evidence.source_spec_fingerprint.as_deref()
+        != Some(source_spec_fingerprint.as_str())
+    {
+        Some(String::from("source_spec_fingerprint_mismatch"))
+    } else {
+        None
+    };
+
+    let contract_plan_fingerprint = hash_contract_plan(&context.plan_source);
+    let latest_attempts = latest_attempt_indices_by_step(&context.evidence);
+    let latest_completed = latest_completed_attempts_by_step(&context.evidence);
+    let latest_file_proofs = latest_completed_attempts_by_file(&context.evidence, &latest_completed);
+    let mut candidates = Vec::new();
+
+    for step in matching_steps {
+        let step_key = (step.task_number, step.step_number);
+        let latest_attempt = latest_attempts
+            .get(&step_key)
+            .map(|index| &context.evidence.attempts[*index]);
+        let latest_completed_attempt = latest_completed
+            .get(&step_key)
+            .map(|index| &context.evidence.attempts[*index]);
+
+        let mut pre_invalidation_reason = None;
+        let mut target_kind = String::new();
+        let mut needs_reopen = false;
+
+        if step.checked
+            && let Some(reason) = session_provenance_reason.as_ref()
+            && latest_completed_attempt.is_some()
+        {
+            pre_invalidation_reason = Some(reason.clone());
+            target_kind = String::from("stale_completed_attempt");
+            needs_reopen = true;
+        }
+
+        if let Some(attempt) = latest_attempt {
+            if attempt.status == "Invalidated" && attempt.invalidation_reason != "N/A" {
+                pre_invalidation_reason = Some(attempt.invalidation_reason.clone());
+                target_kind = String::from("invalidated_attempt");
+                needs_reopen = step.checked;
+            }
+        }
+
+        if pre_invalidation_reason.is_none() && step.checked {
+            if let Some(attempt) = latest_completed_attempt {
+                let expected_packet = compute_packet_fingerprint(PacketFingerprintInput {
+                    plan_path: &context.plan_rel,
+                    plan_revision: context.plan_document.plan_revision,
+                    plan_fingerprint: &contract_plan_fingerprint,
+                    source_spec_path: &context.plan_document.source_spec_path,
+                    source_spec_revision: context.plan_document.source_spec_revision,
+                    source_spec_fingerprint: &source_spec_fingerprint,
+                    task: step.task_number,
+                    step: step.step_number,
+                });
+                if attempt.packet_fingerprint.as_deref() != Some(expected_packet.as_str()) {
+                    pre_invalidation_reason = Some(String::from("packet_fingerprint_mismatch"));
+                    target_kind = String::from("stale_completed_attempt");
+                    needs_reopen = true;
+                } else {
+                    for proof in &attempt.file_proofs {
+                        if proof.path == NO_REPO_FILES_MARKER
+                            || proof.path == context.plan_rel
+                            || proof.path == context.evidence_rel
+                        {
+                            continue;
+                        }
+                        if latest_file_proofs
+                            .get(&proof.path)
+                            .is_some_and(|latest_index| {
+                                latest_completed
+                                    .get(&step_key)
+                                    .is_some_and(|attempt_index| latest_index != attempt_index)
+                            })
+                        {
+                            continue;
+                        }
+                        match current_file_proof_checked(&context.runtime.repo_root, &proof.path) {
+                            Ok(current_proof) => {
+                                if current_proof != proof.proof {
+                                    pre_invalidation_reason =
+                                        Some(String::from("files_proven_drifted"));
+                                    target_kind = String::from("stale_completed_attempt");
+                                    needs_reopen = true;
+                                    break;
+                                }
+                            }
+                            Err(error) => {
+                                pre_invalidation_reason = Some(format!(
+                                    "artifact_read_error: could not read {} ({error})",
+                                    proof.path
+                                ));
+                                target_kind = String::from("artifact_read_error");
+                                needs_reopen = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if pre_invalidation_reason.is_none() && request.include_open && !step.checked {
+            if step.note_state.is_some() || latest_attempt.is_some() {
+                pre_invalidation_reason = Some(String::from("open_step_requested"));
+                target_kind = String::from("open_step");
+            }
+        }
+
+        let Some(pre_invalidation_reason) = pre_invalidation_reason else {
+            continue;
+        };
+        let attempt = latest_attempt.or(latest_completed_attempt);
+        let verify_command = attempt.and_then(|candidate| candidate.verify_command.clone());
+        let verify_mode = if verify_command.is_some() {
+            String::from("command")
+        } else {
+            String::from("manual")
+        };
+        let claim = attempt
+            .map(|candidate| candidate.claim.clone())
+            .unwrap_or_else(|| format!("Rebuilt evidence for Task {} Step {}.", step.task_number, step.step_number));
+        let files = attempt
+            .map(|candidate| candidate.files.clone())
+            .unwrap_or_default();
+        let attempt_number = attempt.map(|candidate| candidate.attempt_number);
+        let artifact_epoch = attempt.map(|candidate| candidate.recorded_at.clone());
+
+        candidates.push(RebuildEvidenceCandidate {
+            task: step.task_number,
+            step: step.step_number,
+            order_key: (step.task_number, step.step_number),
+            target_kind,
+            pre_invalidation_reason,
+            verify_command,
+            verify_mode,
+            claim,
+            files,
+            attempt_number,
+            artifact_epoch,
+            needs_reopen,
+        });
+    }
+
+    candidates.sort_by_key(|candidate| candidate.order_key);
+
+    Ok(candidates)
 }
 
 pub fn normalize_source(source: &str, execution_mode: &str) -> Result<(), JsonFailure> {
@@ -4560,6 +4939,18 @@ pub fn current_file_proof(repo_root: &Path, path: &str) -> String {
     match fs::read(&abs) {
         Ok(contents) => format!("sha256:{}", sha256_hex(&contents)),
         Err(_) => String::from("sha256:missing"),
+    }
+}
+
+pub fn current_file_proof_checked(repo_root: &Path, path: &str) -> Result<String, String> {
+    if path == NO_REPO_FILES_MARKER {
+        return Ok(String::from("sha256:none"));
+    }
+    let abs = repo_root.join(path);
+    match fs::read(&abs) {
+        Ok(contents) => Ok(format!("sha256:{}", sha256_hex(&contents))),
+        Err(error) if error.kind() == ErrorKind::NotFound => Ok(String::from("sha256:missing")),
+        Err(error) => Err(error.to_string()),
     }
 }
 
@@ -5208,6 +5599,7 @@ fn parse_evidence_attempts(
             let mut claim = String::new();
             let mut files = Vec::new();
             let mut file_proofs = Vec::new();
+            let mut verify_command = None;
             let mut verification_summary = String::new();
             let mut invalidation_reason = String::new();
             let mut packet_fingerprint = None;
@@ -5343,6 +5735,9 @@ fn parse_evidence_attempts(
                         line_index = line_index.saturating_sub(1);
                         break;
                     }
+                } else if let Some(value) = line.strip_prefix("**Verify Command:** ") {
+                    verify_command = parse_optional_evidence_scalar(value)
+                        .or_else(|| Some(normalize_whitespace(value)).filter(|candidate| !candidate.is_empty()));
                 } else if let Some(value) = line.strip_prefix("**Verification Summary:** ") {
                     verification_summary = normalize_whitespace(value);
                 } else if line == "**Verification:**" {
@@ -5417,6 +5812,9 @@ fn parse_evidence_attempts(
                 ));
             }
 
+            let verify_command = verify_command
+                .or_else(|| parse_command_verification_summary(&verification_summary));
+
             attempts.push(EvidenceAttempt {
                 task_number,
                 step_number,
@@ -5427,6 +5825,7 @@ fn parse_evidence_attempts(
                 claim,
                 files,
                 file_proofs,
+                verify_command,
                 verification_summary,
                 invalidation_reason,
                 packet_fingerprint,
@@ -6225,6 +6624,14 @@ pub(crate) fn task_completion_lineage_fingerprint(
         ));
     }
     Some(sha256_hex(payload.as_bytes()))
+}
+
+fn latest_attempt_indices_by_step(evidence: &ExecutionEvidence) -> BTreeMap<(u32, u32), usize> {
+    let mut indices = BTreeMap::new();
+    for (index, attempt) in evidence.attempts.iter().enumerate() {
+        indices.insert((attempt.task_number, attempt.step_number), index);
+    }
+    indices
 }
 
 fn latest_completed_attempts_by_step(evidence: &ExecutionEvidence) -> BTreeMap<(u32, u32), usize> {

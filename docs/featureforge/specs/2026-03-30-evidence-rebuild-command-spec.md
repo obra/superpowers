@@ -106,7 +106,7 @@ Scope controls:
 - `--include-open` adds active non-completed items to repair list.
 - `--skip-manual-fallback` causes strict failure when commandless rebuild is required.
 - `--continue-on-error` processes remaining targets after one target-level failure.
-- `--max-jobs` controls concurrency; default is `1`.
+- `--max-jobs` is currently serial-only; `1` is supported and higher values fail closed until parallel replay lands.
 - `--no-output` suppresses command stream capture.
 - `--dry-run` never mutates state.
 - `--json` switches reporting format.
@@ -213,7 +213,7 @@ Each target record must include:
 ## Risks
 
 - Rebuild of command-backed targets may fail if environment dependencies changed after rebase.
-- Parallel execution could reorder outputs even if final ordering is stable.
+- If bounded parallel replay is added later, output ordering and conflict handling will need another contract pass.
 - Manual-required targets remain process debt unless captured outside command path.
 
 ## Rollout Plan

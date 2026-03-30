@@ -247,7 +247,7 @@ pub fn record_handoff(
     record_authoritative_handoff(runtime, context, handoff, source, handoff_fingerprint)
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 struct MutableHarnessState {
     #[serde(default)]
     schema_version: u64,
@@ -311,6 +311,87 @@ struct MutableHarnessState {
     strategy_reset_required: bool,
     #[serde(flatten)]
     extra: BTreeMap<String, Value>,
+}
+
+pub fn ensure_preflight_authoritative_bootstrap(
+    runtime: &ExecutionRuntime,
+    run_identity: RunIdentitySnapshot,
+    chunk_id: ChunkId,
+) -> Result<(), JsonFailure> {
+    validate_safe_identifier_token(run_identity.execution_run_id.as_str(), "execution_run_id")?;
+    validate_safe_identifier_token(chunk_id.as_str(), "chunk_id")?;
+
+    let _lock = match WriteAuthorityLock::acquire(runtime) {
+        Ok(lock) => lock,
+        Err(AuthorityLockAcquireError::Conflict) => {
+            return Err(JsonFailure::new(
+                FailureClass::ConcurrentWriterConflict,
+                "Another runtime writer currently holds authoritative mutation authority.",
+            ));
+        }
+        Err(AuthorityLockAcquireError::Io(message)) => {
+            return Err(JsonFailure::new(
+                FailureClass::PartialAuthoritativeMutation,
+                message,
+            ));
+        }
+    };
+
+    let state_path =
+        harness_state_path(&runtime.state_dir, &runtime.repo_slug, &runtime.branch_name);
+    let mut state = match load_mutable_harness_state(&state_path) {
+        Ok(state) => state,
+        Err(MutableStateLoadError::MissingState) => MutableHarnessState::default(),
+        Err(MutableStateLoadError::Unreadable(message))
+        | Err(MutableStateLoadError::Malformed(message)) => {
+            return Err(JsonFailure::new(
+                FailureClass::MalformedExecutionState,
+                message,
+            ));
+        }
+    };
+    state.normalize_defaults();
+    if matches!(
+        state.harness_phase.as_deref(),
+        None | Some("implementation_handoff")
+    ) {
+        state.harness_phase = Some(String::from("execution_preflight"));
+    }
+    state.run_identity = Some(run_identity);
+    state.chunk_id = Some(chunk_id.as_str().to_owned());
+    if state.active_worktree_lease_fingerprints.is_none() {
+        state.active_worktree_lease_fingerprints = Some(Vec::new());
+    }
+    if state.active_worktree_lease_bindings.is_none() {
+        state.active_worktree_lease_bindings = Some(Vec::new());
+    }
+    if dependency_index_truth_needs_bootstrap(&state) {
+        state.extra.insert(
+            String::from("dependency_index_state"),
+            Value::String(String::from("fresh")),
+        );
+    }
+
+    let serialized = serde_json::to_string_pretty(&state).map_err(|error| {
+        JsonFailure::new(
+            FailureClass::PartialAuthoritativeMutation,
+            format!(
+                "Could not serialize authoritative harness state bootstrap {}: {error}",
+                state_path.display()
+            ),
+        )
+    })?;
+    write_atomic_file(&state_path, serialized).map_err(|error| {
+        JsonFailure::new(
+            FailureClass::PartialAuthoritativeMutation,
+            format!(
+                "Could not publish authoritative harness state bootstrap {}: {error}",
+                state_path.display()
+            ),
+        )
+    })?;
+
+    ensure_dependency_index_artifact_exists(runtime)
 }
 
 impl MutableHarnessState {
@@ -1222,6 +1303,65 @@ fn set_dependency_index_state_healthy(state: &mut MutableHarnessState) {
         String::from("dependency_index_state"),
         Value::String(String::from("healthy")),
     );
+}
+
+fn dependency_index_truth_needs_bootstrap(state: &MutableHarnessState) -> bool {
+    state
+        .extra
+        .get("dependency_index_state")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .is_none_or(|value| value.is_empty() || value == "missing")
+}
+
+fn ensure_dependency_index_artifact_exists(runtime: &ExecutionRuntime) -> Result<(), JsonFailure> {
+    let dependency_index_path =
+        harness_dependency_index_path(&runtime.state_dir, &runtime.repo_slug, &runtime.branch_name);
+    match fs::symlink_metadata(&dependency_index_path) {
+        Ok(metadata) => {
+            if metadata.file_type().is_symlink() || !metadata.is_file() {
+                return Err(JsonFailure::new(
+                    FailureClass::MalformedExecutionState,
+                    format!(
+                        "Authoritative dependency index must be a regular file in {}.",
+                        dependency_index_path.display()
+                    ),
+                ));
+            }
+            load_dependency_index_for_authoritative_write(&dependency_index_path).map_err(
+                |message| JsonFailure::new(FailureClass::MalformedExecutionState, message),
+            )?;
+            Ok(())
+        }
+        Err(error) if error.kind() == ErrorKind::NotFound => {
+            let dependency_index = DependencyIndex::healthy_empty();
+            let serialized = serde_json::to_string_pretty(&dependency_index).map_err(|error| {
+                JsonFailure::new(
+                    FailureClass::PartialAuthoritativeMutation,
+                    format!(
+                        "Could not serialize dependency index bootstrap {}: {error}",
+                        dependency_index_path.display()
+                    ),
+                )
+            })?;
+            write_atomic_file(&dependency_index_path, serialized).map_err(|error| {
+                JsonFailure::new(
+                    FailureClass::PartialAuthoritativeMutation,
+                    format!(
+                        "Could not publish dependency index bootstrap {}: {error}",
+                        dependency_index_path.display()
+                    ),
+                )
+            })
+        }
+        Err(error) => Err(JsonFailure::new(
+            FailureClass::MalformedExecutionState,
+            format!(
+                "Could not inspect dependency index {}: {error}",
+                dependency_index_path.display()
+            ),
+        )),
+    }
 }
 
 #[derive(Debug, Clone)]

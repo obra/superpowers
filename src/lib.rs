@@ -22,6 +22,16 @@ pub mod runtime_root;
 pub mod update_check;
 pub mod workflow;
 
+trait ExitCodeJson {
+    fn exit_code(&self) -> u8;
+}
+
+impl ExitCodeJson for execution::state::RebuildEvidenceOutput {
+    fn exit_code(&self) -> u8 {
+        self.exit_code()
+    }
+}
+
 pub fn run() -> std::process::ExitCode {
     let args = canonicalized_args();
     let cli = match cli::Cli::try_parse_from(args) {
@@ -71,6 +81,30 @@ pub fn run() -> std::process::ExitCode {
                         }
                         cli::plan_execution::PlanExecutionCommand::Preflight(args) => {
                             emit_json(runtime.preflight(&args))
+                        }
+                        cli::plan_execution::PlanExecutionCommand::RebuildEvidence(args) => {
+                            let result = execution::mutate::rebuild_evidence(&runtime, &args);
+                            if args.json {
+                                emit_json_with_exit(result)
+                            } else {
+                                match result {
+                                    Ok(output) => {
+                                        print!("{}", output.render_text());
+                                        std::process::ExitCode::from(output.exit_code())
+                                    }
+                                    Err(error) => {
+                                        let failure: JsonFailure = error.into();
+                                        eprintln!(
+                                            "error error_class={} message={}",
+                                            serde_json::to_string(&failure.error_class)
+                                                .unwrap_or_else(|_| String::from("\"<serialization-error>\"")),
+                                            serde_json::to_string(&failure.message)
+                                                .unwrap_or_else(|_| String::from("\"<serialization-error>\"")),
+                                        );
+                                        std::process::ExitCode::from(1)
+                                    }
+                                }
+                            }
                         }
                         cli::plan_execution::PlanExecutionCommand::GateContract(args) => {
                             emit_json(runtime.gate_contract(&args))
@@ -343,6 +377,35 @@ where
             Ok(json) => {
                 println!("{json}");
                 std::process::ExitCode::SUCCESS
+            }
+            Err(error) => {
+                eprintln!("Could not serialize workflow output: {error}");
+                std::process::ExitCode::from(1)
+            }
+        },
+        Err(error) => match serde_json::to_string(&error.into()) {
+            Ok(json) => {
+                eprintln!("{json}");
+                std::process::ExitCode::from(1)
+            }
+            Err(serialize_error) => {
+                eprintln!("Could not serialize error output: {serialize_error}");
+                std::process::ExitCode::from(1)
+            }
+        },
+    }
+}
+
+fn emit_json_with_exit<T, E>(result: Result<T, E>) -> std::process::ExitCode
+where
+    T: serde::Serialize + ExitCodeJson,
+    E: Into<JsonFailure>,
+{
+    match result {
+        Ok(value) => match serde_json::to_string(&value) {
+            Ok(json) => {
+                println!("{json}");
+                std::process::ExitCode::from(value.exit_code())
             }
             Err(error) => {
                 eprintln!("Could not serialize workflow output: {error}");

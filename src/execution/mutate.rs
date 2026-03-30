@@ -1,27 +1,42 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::Path;
+use std::process::Command;
+use std::thread::sleep;
+use std::time::Duration;
+use std::time::Instant;
 
 use jiff::Timestamp;
 use sha2::{Digest, Sha256};
 
-use crate::cli::plan_execution::{BeginArgs, CompleteArgs, NoteArgs, ReopenArgs, TransferArgs};
+use crate::cli::plan_execution::{
+    BeginArgs, CompleteArgs, ExecutionModeArg, NoteArgs, RebuildEvidenceArgs, ReopenArgs,
+    TransferArgs,
+};
 use crate::diagnostics::{FailureClass, JsonFailure};
+use crate::execution::authority::write_authoritative_unit_review_receipt_artifact;
+use crate::execution::final_review::authoritative_strategy_checkpoint_fingerprint_checked;
 use crate::execution::state::{
     EvidenceAttempt, ExecutionContext, ExecutionEvidence, ExecutionRuntime, FileProof,
     NO_REPO_FILES_MARKER, PacketFingerprintInput, PlanExecutionStatus, PlanStepState,
-    compute_packet_fingerprint, current_file_proof, current_head_sha, hash_contract_plan,
-    load_execution_context_for_mutation, normalize_begin_request,
-    normalize_complete_request, normalize_note_request, normalize_reopen_request, normalize_source,
-    normalize_transfer_request, require_normalized_text, require_preflight_acceptance,
-    require_prior_task_closure_for_begin, status_from_context, validate_expected_fingerprint,
+    RebuildEvidenceCounts, RebuildEvidenceFilter, RebuildEvidenceOutput,
+    RebuildEvidenceTarget, RebuildEvidenceCandidate, compute_packet_fingerprint,
+    current_file_proof, current_head_sha, discover_rebuild_candidates, hash_contract_plan,
+    load_execution_context, load_execution_context_for_mutation, normalize_begin_request,
+    normalize_complete_request, normalize_note_request, normalize_rebuild_evidence_request,
+    normalize_reopen_request, normalize_source, normalize_transfer_request,
+    require_normalized_text, require_preflight_acceptance, require_prior_task_closure_for_begin,
+    status_from_context, validate_expected_fingerprint,
 };
 use crate::execution::transitions::{
     AuthoritativeTransitionState, StepCommand, claim_step_write_authority,
     enforce_active_contract_scope, enforce_authoritative_phase,
     load_authoritative_transition_state,
 };
-use crate::paths::{normalize_repo_relative_path, write_atomic as write_atomic_file};
+use crate::paths::{
+    harness_authoritative_artifact_path, normalize_repo_relative_path, normalize_whitespace,
+    write_atomic as write_atomic_file,
+};
 
 pub fn begin(
     runtime: &ExecutionRuntime,
@@ -235,6 +250,7 @@ pub fn complete(
         claim: request.claim,
         files: files.clone(),
         file_proofs,
+        verify_command: request.verify_command,
         verification_summary: request.verification_summary,
         invalidation_reason: String::from("N/A"),
         packet_fingerprint: Some(packet_fingerprint),
@@ -518,6 +534,893 @@ pub fn transfer(
 
     let reloaded = load_execution_context_for_mutation(runtime, &args.plan)?;
     status_from_context(&reloaded)
+}
+
+pub fn rebuild_evidence(
+    runtime: &ExecutionRuntime,
+    args: &RebuildEvidenceArgs,
+) -> Result<RebuildEvidenceOutput, JsonFailure> {
+    let request = normalize_rebuild_evidence_request(args)?;
+    if request.max_jobs > 1 {
+        return Err(JsonFailure::new(
+            FailureClass::InvalidCommandInput,
+            "max_jobs_parallel_unsupported: rebuild-evidence currently supports only --max-jobs 1.",
+        ));
+    }
+    let started_at = Instant::now();
+    let context = load_execution_context(runtime, &request.plan)?;
+    if !context.evidence_abs.is_file() {
+        return Err(JsonFailure::new(
+            FailureClass::InvalidCommandInput,
+            "session_not_found: no execution evidence session exists for the approved plan revision.",
+        ));
+    }
+    let matched_scope_ids = matched_rebuild_scope_ids(&context, &request);
+    let candidates = discover_rebuild_candidates(&context, &request)?;
+    if (!request.tasks.is_empty() || !request.steps.is_empty()) && candidates.is_empty() {
+        return Err(JsonFailure::new(
+            FailureClass::InvalidCommandInput,
+            format!(
+                "scope_empty: requested scope matched approved plan steps [{}] but none currently require rebuild.",
+                matched_scope_ids.join(", ")
+            ),
+        ));
+    }
+    let filter = RebuildEvidenceFilter {
+        all: request.all,
+        tasks: request.tasks.clone(),
+        steps: request.raw_steps.clone(),
+        include_open: request.include_open,
+        skip_manual_fallback: request.skip_manual_fallback,
+        continue_on_error: request.continue_on_error,
+        max_jobs: request.max_jobs,
+        no_output: request.no_output,
+        json: request.json,
+    };
+    let scope = rebuild_scope_label(&request);
+
+    if request.dry_run {
+        let targets = candidates
+            .iter()
+            .map(|candidate| planned_rebuild_target(candidate))
+            .collect::<Vec<_>>();
+        return Ok(RebuildEvidenceOutput {
+            session_root: context.runtime.repo_root.to_string_lossy().into_owned(),
+            dry_run: true,
+            filter,
+            scope,
+            counts: RebuildEvidenceCounts {
+                planned: targets.len() as u32,
+                rebuilt: 0,
+                manual: 0,
+                failed: 0,
+                noop: u32::from(targets.is_empty()),
+            },
+            duration_ms: started_at.elapsed().as_millis() as u64,
+            targets,
+            exit_code: 0,
+        });
+    }
+
+    if candidates.is_empty() {
+        return Ok(RebuildEvidenceOutput {
+            session_root: context.runtime.repo_root.to_string_lossy().into_owned(),
+            dry_run: false,
+            filter,
+            scope,
+            counts: RebuildEvidenceCounts {
+                planned: 0,
+                rebuilt: 0,
+                manual: 0,
+                failed: 0,
+                noop: 1,
+            },
+            duration_ms: started_at.elapsed().as_millis() as u64,
+            targets: Vec::new(),
+            exit_code: 0,
+        });
+    }
+
+    let execution_mode = match context.plan_document.execution_mode.as_str() {
+        "featureforge:executing-plans" => ExecutionModeArg::ExecutingPlans,
+        "featureforge:subagent-driven-development" => {
+            ExecutionModeArg::SubagentDrivenDevelopment
+        }
+        _ => {
+            return Err(JsonFailure::new(
+                FailureClass::ExecutionStateNotReady,
+                "rebuild-evidence requires an approved plan revision with an execution mode.",
+            ));
+        }
+    };
+
+    let mut status = status_from_context(&context)?;
+    let mut targets = Vec::with_capacity(candidates.len());
+    let mut counts = RebuildEvidenceCounts {
+        planned: candidates.len() as u32,
+        rebuilt: 0,
+        manual: 0,
+        failed: 0,
+        noop: 0,
+    };
+    let candidate_batch_is_manual_only = request.skip_manual_fallback
+        && !candidates.is_empty()
+        && candidates.iter().all(|candidate| candidate.verify_command.is_none());
+    let mut saw_strict_manual_failure = false;
+    let mut saw_precondition_failure = false;
+    let mut saw_non_precondition_failure = false;
+
+    for candidate in candidates {
+        let (next_status, target) = execute_rebuild_candidate(
+            runtime,
+            &request,
+            &args.plan,
+            execution_mode,
+            status,
+            &candidate,
+        )?;
+        status = next_status;
+        match target.status.as_str() {
+            "rebuilt" => counts.rebuilt += 1,
+            "manual_required" => counts.manual += 1,
+            "failed" => {
+                counts.failed += 1;
+                match target.failure_class.as_deref() {
+                    Some("manual_required") => {
+                        saw_strict_manual_failure = true;
+                    }
+                    Some(failure_class) if is_rebuild_precondition_failure(failure_class) => {
+                        saw_precondition_failure = true;
+                    }
+                    _ => {
+                        saw_non_precondition_failure = true;
+                    }
+                }
+            }
+            _ => {}
+        }
+        let should_stop = target.status == "failed"
+            && target.failure_class.as_deref() != Some("artifact_read_error")
+            && !request.continue_on_error;
+        targets.push(target);
+        if should_stop {
+            break;
+        }
+    }
+
+    let strict_manual_only = candidate_batch_is_manual_only
+        && saw_strict_manual_failure
+        && !saw_precondition_failure
+        && !saw_non_precondition_failure;
+    let exit_code = if strict_manual_only {
+        3
+    } else if saw_non_precondition_failure || saw_strict_manual_failure {
+        2
+    } else if saw_precondition_failure {
+        1
+    } else {
+        0
+    };
+
+    Ok(RebuildEvidenceOutput {
+        session_root: context.runtime.repo_root.to_string_lossy().into_owned(),
+        dry_run: false,
+        filter,
+        scope,
+        counts,
+        duration_ms: started_at.elapsed().as_millis() as u64,
+        targets,
+        exit_code,
+    })
+}
+
+fn is_rebuild_precondition_failure(failure_class: &str) -> bool {
+    matches!(
+        failure_class,
+        "artifact_read_error" | "state_transition_blocked" | "target_race"
+    )
+}
+
+fn execute_rebuild_candidate(
+    runtime: &ExecutionRuntime,
+    request: &crate::execution::state::RebuildEvidenceRequest,
+    plan: &Path,
+    execution_mode: ExecutionModeArg,
+    mut status: PlanExecutionStatus,
+    candidate: &RebuildEvidenceCandidate,
+) -> Result<(PlanExecutionStatus, RebuildEvidenceTarget), JsonFailure> {
+    let mut current_candidate = candidate.clone();
+    let mut expected_attempt_number = current_candidate.attempt_number;
+    let mut expected_artifact_epoch = current_candidate.artifact_epoch.clone();
+    let attempt_id_before = current_candidate
+        .attempt_number
+        .map(|attempt| format!("{}:{}:{}", current_candidate.task, current_candidate.step, attempt));
+    let mut target = RebuildEvidenceTarget {
+        task_id: current_candidate.task,
+        step_id: current_candidate.step,
+        target_kind: current_candidate.target_kind.clone(),
+        pre_invalidation_reason: current_candidate.pre_invalidation_reason.clone(),
+        status: String::from("planned"),
+        verify_mode: current_candidate.verify_mode.clone(),
+        verify_command: current_candidate.verify_command.clone(),
+        attempt_id_before,
+        attempt_id_after: None,
+        verification_hash: None,
+        error: None,
+        failure_class: None,
+    };
+
+    if current_candidate.target_kind == "artifact_read_error" {
+        target.status = String::from("failed");
+        target.failure_class = Some(String::from("artifact_read_error"));
+        target.error = Some(current_candidate.pre_invalidation_reason.clone());
+        return Ok((status, target));
+    }
+
+    for replay_attempt in 0..=1 {
+        if candidate_row_changed(
+            runtime,
+            plan,
+            current_candidate.task,
+            current_candidate.step,
+            expected_attempt_number,
+            expected_artifact_epoch.as_deref(),
+        )? {
+            if replay_attempt == 0 {
+                sleep(Duration::from_millis(10));
+                status = refresh_rebuild_status(runtime, plan)?;
+                if let Some(refreshed_candidate) = refresh_rebuild_candidate(
+                    runtime,
+                    request,
+                    plan,
+                    current_candidate.task,
+                    current_candidate.step,
+                )? {
+                    current_candidate = refreshed_candidate;
+                    expected_attempt_number = current_candidate.attempt_number;
+                    expected_artifact_epoch = current_candidate.artifact_epoch.clone();
+                    target = planned_rebuild_target(&current_candidate);
+                }
+                continue;
+            }
+            target.status = String::from("failed");
+            target.failure_class = Some(String::from("target_race"));
+            target.error = Some(String::from(
+                "target_race: the selected target changed during replay; rerun with --max-jobs 1.",
+            ));
+            return Ok((status, target));
+        }
+
+        let result = execute_rebuild_candidate_once(
+            runtime,
+            request,
+            plan,
+            execution_mode,
+            status,
+            &current_candidate,
+            target,
+            expected_attempt_number,
+            expected_artifact_epoch.clone(),
+        )?;
+        match result.1.failure_class.as_deref() {
+            Some("state_transition_blocked" | "target_race") if replay_attempt == 0 => {
+                sleep(Duration::from_millis(10));
+                status = refresh_rebuild_status(runtime, plan)?;
+                if let Some(refreshed_candidate) = refresh_rebuild_candidate(
+                    runtime,
+                    request,
+                    plan,
+                    current_candidate.task,
+                    current_candidate.step,
+                )? {
+                    current_candidate = refreshed_candidate;
+                    expected_attempt_number = current_candidate.attempt_number;
+                    expected_artifact_epoch = current_candidate.artifact_epoch.clone();
+                    target = planned_rebuild_target(&current_candidate);
+                } else {
+                    target = result.1;
+                    expected_attempt_number = result.2;
+                    expected_artifact_epoch = result.3;
+                }
+                continue;
+            }
+            _ => return Ok((result.0, result.1)),
+        }
+    }
+
+    Ok((status, target))
+}
+
+fn execute_rebuild_candidate_once(
+    runtime: &ExecutionRuntime,
+    request: &crate::execution::state::RebuildEvidenceRequest,
+    plan: &Path,
+    execution_mode: ExecutionModeArg,
+    mut status: PlanExecutionStatus,
+    candidate: &RebuildEvidenceCandidate,
+    mut target: RebuildEvidenceTarget,
+    mut expected_attempt_number: Option<u32>,
+    mut expected_artifact_epoch: Option<String>,
+) -> Result<(
+    PlanExecutionStatus,
+    RebuildEvidenceTarget,
+    Option<u32>,
+    Option<String>,
+), JsonFailure> {
+    if candidate.needs_reopen {
+        let reopened = reopen(
+            runtime,
+            &ReopenArgs {
+                plan: plan.to_path_buf(),
+                task: candidate.task,
+                step: candidate.step,
+                source: execution_mode,
+                reason: format!(
+                    "Evidence rebuild: {}",
+                    candidate.pre_invalidation_reason
+                ),
+                expect_execution_fingerprint: status.execution_fingerprint.clone(),
+            },
+        );
+        match reopened {
+            Ok(next_status) => {
+                status = next_status;
+                let current_identity = current_attempt_identity(runtime, plan, candidate.task, candidate.step)?;
+                expected_attempt_number = current_identity.as_ref().map(|(attempt, _)| *attempt);
+                expected_artifact_epoch = current_identity.map(|(_, recorded_at)| recorded_at);
+            }
+            Err(error) => {
+                target.status = String::from("failed");
+                target.failure_class = Some(String::from("state_transition_blocked"));
+                target.error = Some(error.message.clone());
+                return Ok((status, target, expected_attempt_number, expected_artifact_epoch));
+            }
+        }
+    }
+
+    let Some(verify_command) = candidate.verify_command.clone() else {
+        if request.skip_manual_fallback {
+            target.status = String::from("failed");
+            target.failure_class = Some(String::from("manual_required"));
+            target.error = Some(String::from(
+                "manual_required: no stored verify command is available for this target.",
+            ));
+        } else {
+            target.status = String::from("manual_required");
+            target.failure_class = Some(String::from("manual_required"));
+            target.error = Some(String::from(
+                "No stored verify command is available for this target.",
+            ));
+        }
+        return Ok((status, target, expected_attempt_number, expected_artifact_epoch));
+    };
+
+    let command_output = Command::new("sh")
+        .arg("-lc")
+        .arg(&verify_command)
+        .current_dir(&runtime.repo_root)
+        .output();
+    let command_output = match command_output {
+        Ok(output) => output,
+        Err(error) => {
+            target.status = String::from("failed");
+            target.failure_class = Some(String::from("verify_command_failed"));
+            target.error = Some(format!("Could not execute verify command: {error}"));
+            return Ok((status, target, expected_attempt_number, expected_artifact_epoch));
+        }
+    };
+    let verify_result = summarize_verify_result(&command_output, request.no_output);
+    target.verification_hash = Some(crate::git::sha256_hex(verify_result.as_bytes()));
+    if !command_output.status.success() {
+        target.status = String::from("failed");
+        target.failure_class = Some(String::from("verify_command_failed"));
+        target.error = Some(verify_result);
+        return Ok((status, target, expected_attempt_number, expected_artifact_epoch));
+    }
+    if candidate_row_changed(
+        runtime,
+        plan,
+        candidate.task,
+        candidate.step,
+        expected_attempt_number,
+        expected_artifact_epoch.as_deref(),
+    )? {
+        target.status = String::from("failed");
+        target.failure_class = Some(String::from("target_race"));
+        target.error = Some(String::from(
+            "target_race: the selected target changed during replay; rerun with --max-jobs 1.",
+        ));
+        return Ok((status, target, expected_attempt_number, expected_artifact_epoch));
+    }
+
+    if status.active_task != Some(candidate.task) || status.active_step != Some(candidate.step) {
+        let begin_result = begin(
+            runtime,
+            &BeginArgs {
+                plan: plan.to_path_buf(),
+                task: candidate.task,
+                step: candidate.step,
+                execution_mode: None,
+                expect_execution_fingerprint: status.execution_fingerprint.clone(),
+            },
+        );
+        match begin_result {
+            Ok(next_status) => status = next_status,
+            Err(error) => {
+                if candidate.task > 1 && is_rebuild_task_boundary_receipt_failure(&error.message) {
+                    let refreshed_status = refresh_rebuild_status(runtime, plan)?;
+                    match refresh_rebuild_task_closure_receipts(
+                        runtime,
+                        plan,
+                        &refreshed_status,
+                        candidate.task - 1,
+                    ) {
+                        Ok(()) => {
+                            let retried_status = refresh_rebuild_status(runtime, plan)?;
+                            let retry_begin = begin(
+                                runtime,
+                                &BeginArgs {
+                                    plan: plan.to_path_buf(),
+                                    task: candidate.task,
+                                    step: candidate.step,
+                                    execution_mode: None,
+                                    expect_execution_fingerprint: retried_status
+                                        .execution_fingerprint
+                                        .clone(),
+                                },
+                            );
+                            match retry_begin {
+                                Ok(next_status) => status = next_status,
+                                Err(error) => {
+                                    target.status = String::from("failed");
+                                    target.failure_class = Some(String::from("state_transition_blocked"));
+                                    target.error = Some(error.message.clone());
+                                    return Ok((status, target, expected_attempt_number, expected_artifact_epoch));
+                                }
+                            }
+                        }
+                        Err(refresh_error) => {
+                            target.status = String::from("failed");
+                            target.failure_class = Some(String::from("state_transition_blocked"));
+                            target.error = Some(refresh_error.message.clone());
+                            return Ok((status, target, expected_attempt_number, expected_artifact_epoch));
+                        }
+                    }
+                } else {
+                    target.status = String::from("failed");
+                    target.failure_class = Some(String::from("state_transition_blocked"));
+                    target.error = Some(error.message.clone());
+                    return Ok((status, target, expected_attempt_number, expected_artifact_epoch));
+                }
+            }
+        }
+    }
+
+    let completed = complete(
+        runtime,
+        &CompleteArgs {
+            plan: plan.to_path_buf(),
+            task: candidate.task,
+            step: candidate.step,
+            source: execution_mode,
+            claim: candidate.claim.clone(),
+            files: candidate.files.clone(),
+            verify_command: Some(verify_command),
+            verify_result: Some(verify_result.clone()),
+            manual_verify_summary: None,
+            expect_execution_fingerprint: status.execution_fingerprint.clone(),
+        },
+    );
+    match completed {
+        Ok(next_status) => {
+            let refreshed_status = match refresh_rebuild_closure_receipts(
+                runtime,
+                plan,
+                &next_status,
+                candidate.task,
+                candidate.step,
+            ) {
+                Ok(()) => next_status,
+                Err(error) => {
+                    target.status = String::from("failed");
+                    target.failure_class = Some(String::from("state_transition_blocked"));
+                    target.error = Some(error.message.clone());
+                    return Ok((status, target, expected_attempt_number, expected_artifact_epoch));
+                }
+            };
+            target.status = String::from("rebuilt");
+            target.error = None;
+            target.failure_class = None;
+            target.attempt_id_after = Some(format!(
+                "{}:{}:{}",
+                candidate.task,
+                candidate.step,
+                candidate.attempt_number.unwrap_or(0) + 1
+            ));
+            Ok((
+                refreshed_status,
+                target,
+                expected_attempt_number,
+                expected_artifact_epoch,
+            ))
+        }
+        Err(error) => {
+            target.status = String::from("failed");
+            target.failure_class = Some(String::from("state_transition_blocked"));
+            target.error = Some(error.message.clone());
+            Ok((status, target, expected_attempt_number, expected_artifact_epoch))
+        }
+    }
+}
+
+fn refresh_rebuild_status(
+    runtime: &ExecutionRuntime,
+    plan: &Path,
+) -> Result<PlanExecutionStatus, JsonFailure> {
+    let context = load_execution_context(runtime, plan)?;
+    status_from_context(&context)
+}
+
+fn refresh_rebuild_candidate(
+    runtime: &ExecutionRuntime,
+    request: &crate::execution::state::RebuildEvidenceRequest,
+    plan: &Path,
+    task: u32,
+    step: u32,
+) -> Result<Option<RebuildEvidenceCandidate>, JsonFailure> {
+    let context = load_execution_context(runtime, plan)?;
+    let candidates = discover_rebuild_candidates(&context, request)?;
+    Ok(candidates
+        .into_iter()
+        .find(|candidate| candidate.task == task && candidate.step == step))
+}
+
+fn candidate_row_changed(
+    runtime: &ExecutionRuntime,
+    plan: &Path,
+    task: u32,
+    step: u32,
+    expected_attempt_number: Option<u32>,
+    expected_artifact_epoch: Option<&str>,
+) -> Result<bool, JsonFailure> {
+    if expected_attempt_number.is_none() && expected_artifact_epoch.is_none() {
+        return Ok(false);
+    }
+
+    let current_identity = current_attempt_identity(runtime, plan, task, step)?;
+    let Some((current_attempt_number, current_recorded_at)) = current_identity else {
+        return Ok(true);
+    };
+
+    Ok(expected_attempt_number != Some(current_attempt_number)
+        || expected_artifact_epoch != Some(current_recorded_at.as_str()))
+}
+
+fn current_attempt_identity(
+    runtime: &ExecutionRuntime,
+    plan: &Path,
+    task: u32,
+    step: u32,
+) -> Result<Option<(u32, String)>, JsonFailure> {
+    let context = load_execution_context(runtime, plan)?;
+    let latest_attempt = context
+        .evidence
+        .attempts
+        .iter()
+        .rev()
+        .find(|attempt| {
+            attempt.task_number == task && attempt.step_number == step
+        });
+
+    let Some(latest_attempt) = latest_attempt else {
+        return Ok(None);
+    };
+
+    Ok(Some((
+        latest_attempt.attempt_number,
+        latest_attempt.recorded_at.clone(),
+    )))
+}
+
+fn refresh_rebuild_closure_receipts(
+    runtime: &ExecutionRuntime,
+    plan: &Path,
+    status: &PlanExecutionStatus,
+    task: u32,
+    _step: u32,
+) -> Result<(), JsonFailure> {
+    refresh_rebuild_task_closure_receipts(runtime, plan, status, task)
+}
+
+fn refresh_rebuild_task_closure_receipts(
+    runtime: &ExecutionRuntime,
+    plan: &Path,
+    status: &PlanExecutionStatus,
+    task: u32,
+) -> Result<(), JsonFailure> {
+    let Some(execution_run_id) = status.execution_run_id.as_ref().map(|value| value.as_str()) else {
+        return Ok(());
+    };
+    let context = load_execution_context(runtime, plan)?;
+    let strategy_checkpoint = authoritative_strategy_checkpoint_fingerprint_checked(&context)?;
+    let Some(strategy_checkpoint_fingerprint) = strategy_checkpoint
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+    else {
+        return Ok(());
+    };
+    let task_steps = context
+        .steps
+        .iter()
+        .filter(|step_state| step_state.task_number == task)
+        .map(|step_state| step_state.step_number)
+        .collect::<Vec<_>>();
+    for step in task_steps {
+        refresh_unit_review_receipt_for_step(
+            runtime,
+            &context,
+            execution_run_id,
+            strategy_checkpoint_fingerprint,
+            task,
+            step,
+        )?;
+    }
+    refresh_task_verification_receipt_for_task(
+        runtime,
+        &context,
+        execution_run_id,
+        strategy_checkpoint_fingerprint,
+        task,
+    )?;
+    Ok(())
+}
+
+fn refresh_unit_review_receipt_for_step(
+    runtime: &ExecutionRuntime,
+    context: &ExecutionContext,
+    execution_run_id: &str,
+    strategy_checkpoint_fingerprint: &str,
+    task: u32,
+    step: u32,
+) -> Result<(), JsonFailure> {
+    let Some(attempt) = latest_attempt_for_step(&context.evidence, task, step) else {
+        return Ok(());
+    };
+    if attempt.status != "Completed" {
+        return Ok(());
+    }
+    let Some(packet_fingerprint) = attempt
+        .packet_fingerprint
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+    else {
+        return Ok(());
+    };
+    let Some(reviewed_checkpoint_sha) = attempt
+        .head_sha
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+    else {
+        return Ok(());
+    };
+
+    let execution_unit_id = format!("task-{task}-step-{step}");
+    let reviewer_source = existing_unit_review_reviewer_source(
+        runtime,
+        execution_run_id,
+        &execution_unit_id,
+    )
+    .unwrap_or_else(|| String::from("fresh-context-subagent"));
+    let generated_at = Timestamp::now().to_string();
+    let unsigned_source = format!(
+        "# Unit Review Result\n**Review Stage:** featureforge:unit-review\n**Reviewer Provenance:** dedicated-independent\n**Reviewer Source:** {reviewer_source}\n**Strategy Checkpoint Fingerprint:** {strategy_checkpoint_fingerprint}\n**Source Plan:** {}\n**Source Plan Revision:** {}\n**Execution Run ID:** {execution_run_id}\n**Execution Unit ID:** {execution_unit_id}\n**Reviewed Checkpoint SHA:** {reviewed_checkpoint_sha}\n**Approved Task Packet Fingerprint:** {packet_fingerprint}\n**Result:** pass\n**Generated By:** featureforge:unit-review\n**Generated At:** {generated_at}\n",
+        context.plan_rel,
+        context.plan_document.plan_revision,
+    );
+    let receipt_fingerprint = canonical_unit_review_receipt_fingerprint(&unsigned_source);
+    let source = format!(
+        "# Unit Review Result\n**Receipt Fingerprint:** {receipt_fingerprint}\n{}",
+        unsigned_source.trim_start_matches("# Unit Review Result\n")
+    );
+
+    write_authoritative_unit_review_receipt_artifact(
+        runtime,
+        execution_run_id,
+        &execution_unit_id,
+        &source,
+    )?;
+    Ok(())
+}
+
+fn existing_unit_review_reviewer_source(
+    runtime: &ExecutionRuntime,
+    execution_run_id: &str,
+    execution_unit_id: &str,
+) -> Option<String> {
+    let receipt_path = harness_authoritative_artifact_path(
+        &runtime.state_dir,
+        &runtime.repo_slug,
+        &runtime.branch_name,
+        &format!("unit-review-{execution_run_id}-{execution_unit_id}.md"),
+    );
+    let source = fs::read_to_string(receipt_path).ok()?;
+    source.lines().find_map(|line| {
+        line.trim()
+            .strip_prefix("**Reviewer Source:**")
+            .map(str::trim)
+            .filter(|value| matches!(*value, "fresh-context-subagent" | "cross-model"))
+            .map(ToOwned::to_owned)
+    })
+}
+
+fn refresh_task_verification_receipt_for_task(
+    runtime: &ExecutionRuntime,
+    context: &ExecutionContext,
+    execution_run_id: &str,
+    strategy_checkpoint_fingerprint: &str,
+    task: u32,
+) -> Result<(), JsonFailure> {
+    let task_steps = context
+        .steps
+        .iter()
+        .filter(|step_state| step_state.task_number == task)
+        .collect::<Vec<_>>();
+    if task_steps.is_empty() {
+        return Ok(());
+    }
+
+    let mut verification_commands = Vec::new();
+    let mut verification_results = Vec::new();
+    for step_state in task_steps {
+        if !step_state.checked {
+            return Ok(());
+        }
+        let Some(attempt) = latest_attempt_for_step(&context.evidence, task, step_state.step_number)
+        else {
+            return Ok(());
+        };
+        if attempt.status != "Completed" {
+            return Ok(());
+        }
+        if let Some(verify_command) = attempt
+            .verify_command
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+        {
+            verification_commands.push(verify_command.to_owned());
+        }
+        let verification_summary = attempt.verification_summary.trim();
+        if !verification_summary.is_empty() {
+            verification_results.push(verification_summary.to_owned());
+        }
+    }
+
+    if verification_results.is_empty() {
+        return Ok(());
+    }
+    if verification_commands.is_empty() {
+        verification_commands.push(String::from("manual verification recorded"));
+    }
+
+    let receipt_path = harness_authoritative_artifact_path(
+        &runtime.state_dir,
+        &runtime.repo_slug,
+        &runtime.branch_name,
+        &format!("task-verification-{execution_run_id}-task-{task}.md"),
+    );
+    let generated_at = Timestamp::now().to_string();
+    let source = format!(
+        "# Task Verification Result\n**Source Plan:** {}\n**Source Plan Revision:** {}\n**Execution Run ID:** {execution_run_id}\n**Task Number:** {task}\n**Strategy Checkpoint Fingerprint:** {strategy_checkpoint_fingerprint}\n**Verification Commands:** {}\n**Verification Results:** {}\n**Result:** pass\n**Generated By:** featureforge:verification-before-completion\n**Generated At:** {generated_at}\n",
+        context.plan_rel,
+        context.plan_document.plan_revision,
+        verification_commands.join(" && "),
+        verification_results.join(" | "),
+    );
+    write_atomic(&receipt_path, &source)
+}
+
+fn latest_attempt_for_step<'a>(
+    evidence: &'a ExecutionEvidence,
+    task: u32,
+    step: u32,
+) -> Option<&'a EvidenceAttempt> {
+    evidence
+        .attempts
+        .iter()
+        .filter(|attempt| attempt.task_number == task && attempt.step_number == step)
+        .max_by_key(|attempt| attempt.attempt_number)
+}
+
+fn canonical_unit_review_receipt_fingerprint(source: &str) -> String {
+    let filtered = source
+        .lines()
+        .filter(|line| !line.trim().starts_with("**Receipt Fingerprint:**"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    sha256_hex(filtered.as_bytes())
+}
+
+fn is_rebuild_task_boundary_receipt_failure(message: &str) -> bool {
+    matches!(
+        message.split_once(':').map(|(reason_code, _)| reason_code.trim()),
+        Some(
+            "prior_task_review_not_green"
+                | "prior_task_verification_missing"
+                | "task_verification_receipt_malformed"
+        )
+    )
+}
+
+fn planned_rebuild_target(candidate: &RebuildEvidenceCandidate) -> RebuildEvidenceTarget {
+    RebuildEvidenceTarget {
+        task_id: candidate.task,
+        step_id: candidate.step,
+        target_kind: candidate.target_kind.clone(),
+        pre_invalidation_reason: candidate.pre_invalidation_reason.clone(),
+        status: String::from("planned"),
+        verify_mode: candidate.verify_mode.clone(),
+        verify_command: candidate.verify_command.clone(),
+        attempt_id_before: candidate
+            .attempt_number
+            .map(|attempt| format!("{}:{}:{}", candidate.task, candidate.step, attempt)),
+        attempt_id_after: None,
+        verification_hash: None,
+        error: None,
+        failure_class: None,
+    }
+}
+
+fn rebuild_scope_label(request: &crate::execution::state::RebuildEvidenceRequest) -> String {
+    if !request.raw_steps.is_empty() {
+        String::from("step")
+    } else if !request.tasks.is_empty() {
+        String::from("task")
+    } else {
+        String::from("all")
+    }
+}
+
+fn matched_rebuild_scope_ids(
+    context: &ExecutionContext,
+    request: &crate::execution::state::RebuildEvidenceRequest,
+) -> Vec<String> {
+    let task_filter = request.tasks.iter().copied().collect::<BTreeSet<_>>();
+    let step_filter = request.steps.iter().copied().collect::<BTreeSet<_>>();
+    context
+        .steps
+        .iter()
+        .filter(|step| {
+            (task_filter.is_empty() || task_filter.contains(&step.task_number))
+                && (step_filter.is_empty()
+                    || step_filter.contains(&(step.task_number, step.step_number)))
+        })
+        .map(|step| format!("{}:{}", step.task_number, step.step_number))
+        .collect()
+}
+
+fn summarize_verify_result(output: &std::process::Output, no_output: bool) -> String {
+    let exit_code = output.status.code().unwrap_or(1);
+    let stdout = normalize_whitespace(&String::from_utf8_lossy(&output.stdout));
+    let stderr = normalize_whitespace(&String::from_utf8_lossy(&output.stderr));
+    let detail = if no_output {
+        String::new()
+    } else {
+        let text = if !stdout.is_empty() { stdout } else { stderr };
+        if text.is_empty() {
+            String::new()
+        } else {
+            format!(": {text}")
+        }
+    };
+    if output.status.success() {
+        format!("passed{detail}")
+    } else {
+        format!("failed (exit {exit_code}){detail}")
+    }
 }
 
 fn step_index(context: &ExecutionContext, task: u32, step: u32) -> Option<usize> {
@@ -858,6 +1761,9 @@ fn render_evidence_source(
             output.push(String::from("**Files Proven:**"));
             for proof in &attempt.file_proofs {
                 output.push(format!("- {} | {}", proof.path, proof.proof));
+            }
+            if let Some(verify_command) = &attempt.verify_command {
+                output.push(format!("**Verify Command:** {verify_command}"));
             }
             output.push(format!(
                 "**Verification Summary:** {}",

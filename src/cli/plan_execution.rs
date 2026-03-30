@@ -4,6 +4,16 @@ use clap::{Args, Subcommand, ValueEnum};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+fn parse_positive_u32(raw: &str) -> Result<u32, String> {
+    let value = raw
+        .parse::<u32>()
+        .map_err(|_| String::from("--max-jobs must be a positive integer."))?;
+    if value == 0 {
+        return Err(String::from("--max-jobs must be a positive integer."));
+    }
+    Ok(value)
+}
+
 #[derive(Debug, Args)]
 pub struct PlanExecutionCli {
     #[command(subcommand)]
@@ -15,6 +25,8 @@ pub enum PlanExecutionCommand {
     Status(StatusArgs),
     Recommend(RecommendArgs),
     Preflight(StatusArgs),
+    #[command(name = "rebuild-evidence")]
+    RebuildEvidence(RebuildEvidenceArgs),
     #[command(name = "gate-contract")]
     GateContract(GateContractArgs),
     #[command(name = "record-contract")]
@@ -102,6 +114,35 @@ pub struct RecommendArgs {
     pub session_intent: Option<SessionIntentArg>,
     #[arg(long = "workspace-prepared")]
     pub workspace_prepared: Option<WorkspacePreparedArg>,
+}
+
+#[derive(Debug, Clone, Args)]
+pub struct RebuildEvidenceArgs {
+    #[arg(long)]
+    pub plan: PathBuf,
+    #[arg(long)]
+    pub all: bool,
+    #[arg(long = "task")]
+    pub tasks: Vec<u32>,
+    #[arg(long = "step")]
+    pub steps: Vec<String>,
+    #[arg(long = "include-open")]
+    pub include_open: bool,
+    #[arg(long = "skip-manual-fallback")]
+    pub skip_manual_fallback: bool,
+    #[arg(long = "continue-on-error")]
+    pub continue_on_error: bool,
+    #[arg(long = "dry-run")]
+    pub dry_run: bool,
+    #[arg(long = "max-jobs", default_value_t = 1, value_parser = parse_positive_u32)]
+    pub max_jobs: u32,
+    #[arg(
+        long = "no-output",
+        help = "Suppress command stream capture while preserving deterministic verification summaries."
+    )]
+    pub no_output: bool,
+    #[arg(long)]
+    pub json: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema, ValueEnum)]
