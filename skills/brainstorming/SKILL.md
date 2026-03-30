@@ -149,7 +149,7 @@ Step 1 of the checklist. Creates an isolated workspace so all analysis, spec wri
    BRANCH=$(git branch --show-current || git rev-parse --abbrev-ref HEAD)
    COMMIT=$(git rev-parse HEAD)
    ```
-2. Derive a branch name from the user's initial request: `superpowers/<topic>-<short-hash>` where `<topic>` is a slugified summary of the request (e.g., "add auth middleware" → `add-auth-middleware`) and `<short-hash>` is the first 6 characters of the commit hash. If the request is too vague to derive a topic, use `session-<short-hash>`.
+2. Derive a branch name from the user's initial request: `superpowers/<topic>-<short-hash>-<random>` where `<topic>` is a slugified summary of the request (e.g., "add auth middleware" → `add-auth-middleware`), `<short-hash>` is the first 6 characters of the commit hash, and `<random>` is 4 random hex characters (e.g., `openssl rand -hex 2` or equivalent) to ensure uniqueness across sessions. If the request is too vague to derive a topic, use `session-<short-hash>-<random>`.
 3. Invoke `using-git-worktrees` to create the worktree with the derived branch name.
 4. Write `.superpowers-session.json` in the worktree root:
    ```json
