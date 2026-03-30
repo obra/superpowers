@@ -4,49 +4,63 @@ Skills use Claude Code tool names. When you encounter these in a skill, use your
 
 | Skill references | Codex equivalent |
 |-----------------|------------------|
-| `Task` tool (dispatch subagent) | `spawn_agent` (see [Named agent dispatch](#named-agent-dispatch)) |
+| `Task` tool (dispatch subagent) | `spawn_agent` |
 | Multiple `Task` calls (parallel) | Multiple `spawn_agent` calls |
-| Task returns result | `wait` |
+| Task returns result | `wait_agent` |
 | Task completes automatically | `close_agent` to free slot |
 | `TodoWrite` (task tracking) | `update_plan` |
-| `Skill` tool (invoke a skill) | Skills load natively — just follow the instructions |
+| `Skill` tool (invoke a skill) | Skills load natively - just follow the instructions |
 | `Read`, `Write`, `Edit` (files) | Use your native file tools |
 | `Bash` (run commands) | Use your native shell tools |
 
-## Subagent dispatch requires multi-agent support
+## Native Superpowers Codex Roles
 
-Add to your Codex config (`~/.codex/config.toml`):
+Superpowers for Codex installs native reviewer roles under:
 
-```toml
-[features]
-multi_agent = true
-```
+- `~/.codex/agents/`
 
-This enables `spawn_agent`, `wait`, and `close_agent` for skills like `dispatching-parallel-agents` and `subagent-driven-development`.
+Codex currently discovers agent role files by walking the `agents/` directory and does not recurse into symlinked subdirectories. Superpowers therefore installs direct TOML files such as:
 
-## Named agent dispatch
+- `~/.codex/agents/superpowers_reviewer.toml`
+- `~/.codex/agents/superpowers_spec_reviewer.toml`
 
-Claude Code skills reference named agent types like `superpowers:code-reviewer`.
-Codex does not have a named agent registry — `spawn_agent` creates generic agents
-from built-in roles (`default`, `explorer`, `worker`).
+Current native roles:
 
-When a skill says to dispatch a named agent type:
+- `superpowers_reviewer`
+- `superpowers_spec_reviewer`
+- `superpowers_plan_reviewer`
+- `superpowers_doc_reviewer`
 
-1. Find the agent's prompt file (e.g., `agents/code-reviewer.md` or the skill's
-   local prompt template like `code-quality-reviewer-prompt.md`)
-2. Read the prompt content
-3. Fill any template placeholders (`{BASE_SHA}`, `{WHAT_WAS_IMPLEMENTED}`, etc.)
-4. Spawn a `worker` agent with the filled content as the `message`
+These are standard Codex custom roles, not a separate plugin-only mechanism.
 
-| Skill instruction | Codex equivalent |
-|-------------------|------------------|
-| `Task tool (superpowers:code-reviewer)` | `spawn_agent(agent_type="worker", message=...)` with `code-reviewer.md` content |
-| `Task tool (general-purpose)` with inline prompt | `spawn_agent(message=...)` with the same prompt |
+## Preferred Dispatch Model
 
-### Message framing
+When a skill references a specialized Superpowers reviewer on Codex:
 
-The `message` parameter is user-level input, not a system prompt. Structure it
-for maximum instruction adherence:
+- use the matching native `superpowers_*` role if it appears in the `spawn_agent` role list
+- keep implementation work on the built-in `worker` role
+- keep read-heavy codebase exploration on the built-in `explorer` role
+
+| Skill instruction | Preferred Codex mapping |
+|-------------------|-------------------------|
+| `Task tool (superpowers:code-reviewer)` | `spawn_agent(agent_type="superpowers_reviewer", message=...)` |
+| Spec-compliance reviewer in `subagent-driven-development` | `spawn_agent(agent_type="superpowers_spec_reviewer", message=...)` |
+| Plan document reviewer | `spawn_agent(agent_type="superpowers_plan_reviewer", message=...)` |
+| Spec/design document reviewer | `spawn_agent(agent_type="superpowers_doc_reviewer", message=...)` |
+
+## Compatibility Fallback
+
+If the native Superpowers role is not available in the current Codex installation:
+
+1. find the prompt source (`agents/code-reviewer.md` or the skill-local reviewer prompt)
+2. fill any placeholders
+3. dispatch `worker` or `default` with the filled instructions in `message`
+
+Fallback is compatibility behavior, not the primary design.
+
+## Message Framing for Fallback
+
+The `message` parameter is user-level input, not a system prompt. Structure fallback dispatches like this:
 
 ```
 Your task is to perform the following. Follow the instructions below exactly.
@@ -55,25 +69,16 @@ Your task is to perform the following. Follow the instructions below exactly.
 [filled prompt content from the agent's .md file]
 </agent-instructions>
 
-Execute this now. Output ONLY the structured response following the format
-specified in the instructions above.
+Execute this now. Output ONLY the structured response following the format specified in the instructions above.
 ```
 
-- Use task-delegation framing ("Your task is...") rather than persona framing ("You are...")
-- Wrap instructions in XML tags — the model treats tagged blocks as authoritative
-- End with an explicit execution directive to prevent summarization of the instructions
+## Role Naming Guidance
 
-### When this workaround can be removed
-
-This approach compensates for Codex's plugin system not yet supporting an `agents`
-field in `plugin.json`. When `RawPluginManifest` gains an `agents` field, the
-plugin can symlink to `agents/` (mirroring the existing `skills/` symlink) and
-skills can dispatch named agent types directly.
+Do not redefine built-ins such as `worker` or `explorer` for Superpowers. Codex lets custom roles override built-ins with the same name, so Superpowers uses namespaced `superpowers_*` role names to avoid collisions.
 
 ## Environment Detection
 
-Skills that create worktrees or finish branches should detect their
-environment with read-only git commands before proceeding:
+Skills that create worktrees or finish branches should detect their environment with read-only git commands before proceeding:
 
 ```bash
 GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
@@ -81,20 +86,11 @@ GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
 BRANCH=$(git branch --show-current)
 ```
 
-- `GIT_DIR != GIT_COMMON` → already in a linked worktree (skip creation)
-- `BRANCH` empty → detached HEAD (cannot branch/push/PR from sandbox)
+- `GIT_DIR != GIT_COMMON` -> already in a linked worktree
+- `BRANCH` empty -> detached HEAD
 
-See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
-Step 1 for how each skill uses these signals.
+See `using-git-worktrees` and `finishing-a-development-branch` for how Superpowers uses these signals.
 
 ## Codex App Finishing
 
-When the sandbox blocks branch/push operations (detached HEAD in an
-externally managed worktree), the agent commits all work and informs
-the user to use the App's native controls:
-
-- **"Create branch"** — names the branch, then commit/push/PR via App UI
-- **"Hand off to local"** — transfers work to the user's local checkout
-
-The agent can still run tests, stage files, and output suggested branch
-names, commit messages, and PR descriptions for the user to copy.
+When the sandbox blocks branch or push operations in an externally managed worktree, the agent can still run tests, stage files, and prepare suggested branch names, commit messages, and PR descriptions for the user to apply with the host application's own controls.

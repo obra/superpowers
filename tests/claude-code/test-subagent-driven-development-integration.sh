@@ -149,7 +149,7 @@ Begin now. Execute the plan."
 
 echo "Running Claude (output will be shown below and saved to $OUTPUT_FILE)..."
 echo "================================================================================"
-cd "$SCRIPT_DIR/../.." && timeout 1800 claude -p "$PROMPT" --allowed-tools=all --add-dir "$TEST_PROJECT" --permission-mode bypassPermissions 2>&1 | tee "$OUTPUT_FILE" || {
+cd "$SCRIPT_DIR/../.." && timeout 1800 claude -p "$PROMPT" --allowed-tools=all --add-dir "$TEST_PROJECT" --plugin-dir "$SCRIPT_DIR/../../.claude-plugin" --permission-mode bypassPermissions 2>&1 | tee "$OUTPUT_FILE" || {
     echo ""
     echo "================================================================================"
     echo "EXECUTION FAILED (exit code: $?)"
@@ -161,17 +161,13 @@ echo ""
 echo "Execution complete. Analyzing results..."
 echo ""
 
-# Find the session transcript
-# Session files are in ~/.claude/projects/-<working-dir>/<session-id>.jsonl
-WORKING_DIR_ESCAPED=$(echo "$SCRIPT_DIR/../.." | sed 's/\//-/g' | sed 's/^-//')
-SESSION_DIR="$HOME/.claude/projects/$WORKING_DIR_ESCAPED"
-
-# Find the most recent session file (created during this test run)
-SESSION_FILE=$(find "$SESSION_DIR" -name "*.jsonl" -type f -mmin -60 2>/dev/null | sort -r | head -1)
+# Find the session transcript for this specific test run. Sorting UUID filenames is
+# unreliable, so match on the unique test project path embedded in the prompt.
+SESSION_FILE=$(find_claude_session_by_content "$TEST_PROJECT" 60)
 
 if [ -z "$SESSION_FILE" ]; then
     echo "ERROR: Could not find session transcript file"
-    echo "Looked in: $SESSION_DIR"
+    echo "Looked for recent Claude sessions mentioning: $TEST_PROJECT"
     exit 1
 fi
 
@@ -194,9 +190,9 @@ else
 fi
 echo ""
 
-# Test 2: Subagents were used (Task tool)
+# Test 2: Subagents were used (Agent/Task tool)
 echo "Test 2: Subagents dispatched..."
-task_count=$(grep -c '"name":"Task"' "$SESSION_FILE" || echo "0")
+task_count=$(grep -Ec '"name":"(Task|Agent)"' "$SESSION_FILE" || echo "0")
 if [ "$task_count" -ge 2 ]; then
     echo "  [PASS] $task_count subagents dispatched"
 else

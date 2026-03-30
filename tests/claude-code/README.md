@@ -9,7 +9,9 @@ This test suite verifies that skills are loaded correctly and Claude follows the
 ## Requirements
 
 - Claude Code CLI installed and in PATH (`claude --version` should work)
-- Local superpowers plugin installed (see main README for installation)
+
+The test harness loads the local plugin from this checkout with `--plugin-dir`,
+so a user-level Superpowers install is not required just to run the tests.
 
 ## Running Tests
 
@@ -82,6 +84,14 @@ echo "=== All tests passed ==="
 
 ### Fast Tests (run by default)
 
+#### test-using-superpowers-bootstrap.sh
+Tests the Claude/Cursor bootstrap path without requiring model behavior:
+- `hooks/session-start` emits the Claude-specific `hookSpecificOutput` shape
+- Cursor takes precedence and uses `additional_context`
+- Fallback output still injects bootstrap context when no platform env vars are set
+- The current checked-in `using-superpowers` content is embedded
+- Legacy custom-skill warning is injected when `~/.config/superpowers/skills` exists
+
 #### test-subagent-driven-development.sh
 Tests skill content and requirements (~2 minutes):
 - Skill loading and accessibility
@@ -114,6 +124,12 @@ Full workflow execution test (~10-30 minutes):
 - Our improvements are actually applied
 - Subagents follow the skill correctly
 - Final code is functional and tested
+
+#### test-document-review-system.sh
+Runs the spec document reviewer against a deliberately flawed spec:
+- Creates a temporary repo with TODOs and deferred sections
+- Invokes the review prompt in a real Claude Code session
+- Verifies the reviewer reports issues instead of approving the spec
 
 ## Adding New Tests
 

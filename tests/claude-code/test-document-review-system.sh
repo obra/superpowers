@@ -90,7 +90,7 @@ Look for:
 Output your review in the format specified in the template."
 
 echo "================================================================================"
-cd "$SCRIPT_DIR/../.." && timeout 120 claude -p "$PROMPT" --permission-mode bypassPermissions 2>&1 | tee "$OUTPUT_FILE" || {
+cd "$SCRIPT_DIR/../.." && timeout 120 claude -p "$PROMPT" --plugin-dir "$SCRIPT_DIR/../../.claude-plugin" --permission-mode bypassPermissions 2>&1 | tee "$OUTPUT_FILE" || {
     echo ""
     echo "================================================================================"
     echo "EXECUTION FAILED (exit code: $?)"

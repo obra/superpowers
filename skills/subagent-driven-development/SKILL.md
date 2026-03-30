@@ -103,6 +103,8 @@ Use the least powerful model that can handle each role to conserve cost and incr
 
 Implementer subagents report one of four statuses. Handle each appropriately:
 
+Question handling is part of the controller's job. When the implementer asks questions before starting or while working, answer them clearly, provide any additional missing context, and only then let implementation resume.
+
 **DONE:** Proceed to spec compliance review.
 
 **DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
@@ -122,6 +124,17 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 - `./implementer-prompt.md` - Dispatch implementer subagent
 - `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
 - `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
+
+## Codex Native Role Mapping
+
+When this workflow runs on Codex and the native Superpowers roles are installed:
+
+- implementer -> built-in `worker`
+- spec compliance reviewer -> `superpowers_spec_reviewer`
+- code quality reviewer -> `superpowers_reviewer`
+- final code reviewer -> `superpowers_reviewer`
+
+If a native Superpowers reviewer role is unavailable, fall back to the existing prompt-driven dispatch using `worker` or `default`.
 
 ## Example Workflow
 

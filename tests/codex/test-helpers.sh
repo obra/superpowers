@@ -11,17 +11,13 @@ setup_codex_test_env() {
     export HOME="$TEST_ROOT/home"
     export CODEX_HOME="$TEST_ROOT/codex-home"
 
-    mkdir -p "$HOME/.agents/skills" "$CODEX_HOME"
+    mkdir -p "$HOME/.agents/skills" "$CODEX_HOME/agents"
     ln -s "$REPO_ROOT/skills" "$HOME/.agents/skills/superpowers"
+    cp "$REPO_ROOT/.codex/agents/"*.toml "$CODEX_HOME/agents/"
 
     if [ -f "$ORIGINAL_CODEX_HOME/auth.json" ]; then
         cp "$ORIGINAL_CODEX_HOME/auth.json" "$CODEX_HOME/auth.json"
     fi
-
-    cat > "$CODEX_HOME/config.toml" <<'EOF'
-[features]
-multi_agent = true
-EOF
 }
 
 cleanup_codex_test_env() {
