@@ -7,7 +7,7 @@ This document describes how to test Superpowers skills with the real agent CLIs 
 Testing skills that involve subagents, workflows, and complex interactions requires running actual headless agent sessions and verifying their behavior from machine-readable evidence.
 
 - Claude Code tests use Claude session transcripts under `~/.claude/projects/`
-- Codex tests use `codex exec --json` output plus isolated session rollouts under temporary `$CODEX_HOME/sessions`, with both skills and native agent TOMLs installed into the isolated environment
+- Codex tests use `codex exec --json` output plus isolated session rollouts under temporary `$CODEX_HOME/sessions`, with both skills and copied native agent TOMLs installed into the isolated environment
 
 ## Test Structure
 
@@ -22,7 +22,10 @@ tests/
 │   └── run-skill-tests.sh
 ├── claude-code/
 │   ├── test-helpers.sh                    # Shared test utilities
+│   ├── test-using-superpowers-bootstrap.sh
+│   ├── test-subagent-driven-development.sh
 │   ├── test-subagent-driven-development-integration.sh
+│   ├── test-document-review-system.sh
 │   ├── analyze-token-usage.py             # Token analysis tool
 │   └── run-skill-tests.sh
 ```
@@ -51,11 +54,35 @@ Run a single Codex test:
 
 ### Claude Code
 
+Run the fast Claude Code suite:
+
+```bash
+./tests/claude-code/run-skill-tests.sh
+```
+
+Run the full Claude Code suite, including real integrations:
+
+```bash
+./tests/claude-code/run-skill-tests.sh --integration
+```
+
+Run a single Claude Code test:
+
+```bash
+./tests/claude-code/run-skill-tests.sh --test test-using-superpowers-bootstrap.sh
+```
+
+The fast suite now includes a direct bootstrap check for the `using-superpowers`
+hook path:
+
+- `test-using-superpowers-bootstrap.sh` verifies `hooks/session-start`
+  injects the current `using-superpowers` content and chooses the correct JSON
+  field for Claude Code, Cursor, and fallback environments
+
 Integration tests execute real Claude Code sessions with actual skills:
 
 ```bash
-cd tests/claude-code
-./test-subagent-driven-development-integration.sh
+./tests/claude-code/run-skill-tests.sh --integration
 ```
 
 **Note:** Integration tests can take 10-30 minutes as they execute real implementation plans with multiple subagents.
@@ -128,7 +155,7 @@ This lets the suite judge semantic correctness while staying grounded in reposit
 
 - The Codex helpers copy the original `auth.json` into the temporary `CODEX_HOME` when present
 - Skills are installed into the isolated home at `$HOME/.agents/skills/superpowers`
-- Native Superpowers Codex role TOMLs are installed into `$CODEX_HOME/agents/superpowers`
+- Native Superpowers Codex role TOMLs are installed directly into `$CODEX_HOME/agents/`
 - Current Codex releases already expose subagents by default in normal setups; the test harness no longer forces `features.multi_agent = true` as its default assumption
 - The Codex sandbox may block writes inside `.git`, even in disposable fixture repositories
 - The real subagent integration test therefore accepts either:

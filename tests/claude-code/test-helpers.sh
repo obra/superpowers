@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Helper functions for Claude Code skill tests
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
 # Run Claude Code with a prompt and capture output
 # Usage: run_claude "prompt text" [timeout_seconds] [allowed_tools]
 run_claude() {
@@ -8,15 +11,17 @@ run_claude() {
     local timeout="${2:-60}"
     local allowed_tools="${3:-}"
     local output_file=$(mktemp)
+    local -a cmd=("claude" "-p" "$prompt" "--add-dir" "$REPO_ROOT")
 
-    # Build command
-    local cmd="claude -p \"$prompt\""
     if [ -n "$allowed_tools" ]; then
-        cmd="$cmd --allowed-tools=$allowed_tools"
+        cmd+=("--allowed-tools=$allowed_tools")
     fi
 
     # Run Claude in headless mode with timeout
-    if timeout "$timeout" bash -c "$cmd" > "$output_file" 2>&1; then
+    if (
+        cd "$REPO_ROOT"
+        timeout "$timeout" "${cmd[@]}"
+    ) > "$output_file" 2>&1; then
         cat "$output_file"
         rm -f "$output_file"
         return 0
@@ -138,6 +143,103 @@ cleanup_test_project() {
     fi
 }
 
+assert_semantic_judgment() {
+    local source_text="$1"
+    local question="$2"
+    local answer="$3"
+    local rubric="$4"
+    local test_name="${5:-semantic judgment}"
+    local timeout_seconds="${6:-90}"
+    local evaluator_output
+    local parse_errors_file
+    local failed_criteria
+    local reason
+    local prompt
+
+    if ! command -v jq >/dev/null 2>&1; then
+        echo "  [FAIL] $test_name: jq is required for semantic evaluation"
+        return 1
+    fi
+
+    parse_errors_file=$(mktemp)
+    prompt=$(cat <<EOF_PROMPT
+You are grading whether an answer correctly reflects source material.
+
+Use only the provided source text and rubric. Do not rely on outside knowledge.
+Judge based on meaning, not wording. If the answer is materially correct but phrased differently, it should pass.
+
+Return exactly one JSON object with this shape:
+{"pass":true,"reason":"short explanation","failed_criteria":[]}
+
+Rules:
+- "pass" must be true only if every rubric item is satisfied.
+- "failed_criteria" must list the unmet rubric items verbatim when pass is false.
+- Do not include markdown fences or any text outside the JSON object.
+
+## Source Text
+$source_text
+
+## Question
+$question
+
+## Answer Under Review
+$answer
+
+## Rubric
+$rubric
+EOF_PROMPT
+)
+
+    if ! evaluator_output=$(run_claude "$prompt" "$timeout_seconds"); then
+        echo "  [FAIL] $test_name"
+        echo "  Semantic evaluator failed to run"
+        rm -f "$parse_errors_file"
+        return 1
+    fi
+
+    if ! printf '%s' "$evaluator_output" | jq empty >/dev/null 2>"$parse_errors_file"; then
+        echo "  [FAIL] $test_name"
+        echo "  Semantic evaluator did not return valid JSON"
+        cat "$parse_errors_file" | sed 's/^/    /'
+        printf '%s\n' "$evaluator_output" | sed 's/^/    /'
+        rm -f "$parse_errors_file"
+        return 1
+    fi
+
+    if ! printf '%s' "$evaluator_output" | jq -e '
+        type == "object"
+        and (.pass | type == "boolean")
+        and (.reason | type == "string")
+        and (.failed_criteria | type == "array")
+    ' >/dev/null 2>"$parse_errors_file"; then
+        echo "  [FAIL] $test_name"
+        echo "  Semantic evaluator returned an unexpected JSON shape"
+        cat "$parse_errors_file" | sed 's/^/    /'
+        printf '%s\n' "$evaluator_output" | sed 's/^/    /'
+        rm -f "$parse_errors_file"
+        return 1
+    fi
+
+    if printf '%s' "$evaluator_output" | jq -e '.pass == true' >/dev/null 2>"$parse_errors_file"; then
+        echo "  [PASS] $test_name"
+        rm -f "$parse_errors_file"
+        return 0
+    fi
+
+    reason=$(printf '%s' "$evaluator_output" | jq -r '.reason // "No reason provided"' 2>/dev/null || true)
+    failed_criteria=$(printf '%s' "$evaluator_output" | jq -r '(.failed_criteria // []) | join("; ")' 2>/dev/null || true)
+
+    echo "  [FAIL] $test_name"
+    if [ -n "$reason" ]; then
+        echo "  Reason: $reason"
+    fi
+    if [ -n "$failed_criteria" ]; then
+        echo "  Failed criteria: $failed_criteria"
+    fi
+    rm -f "$parse_errors_file"
+    return 1
+}
+
 # Create a simple plan file for testing
 # Usage: create_test_plan "$project_dir" "$plan_name"
 create_test_plan() {
@@ -197,6 +299,7 @@ export -f assert_contains
 export -f assert_not_contains
 export -f assert_count
 export -f assert_order
+export -f assert_semantic_judgment
 export -f create_test_project
 export -f cleanup_test_project
 export -f create_test_plan

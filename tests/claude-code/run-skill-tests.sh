@@ -57,10 +57,12 @@ while [[ $# -gt 0 ]]; do
             echo "  --help, -h           Show this help"
             echo ""
             echo "Tests:"
+            echo "  test-using-superpowers-bootstrap.sh    Verify SessionStart bootstrap injection"
             echo "  test-subagent-driven-development.sh  Test skill loading and requirements"
             echo ""
             echo "Integration Tests (use --integration):"
             echo "  test-subagent-driven-development-integration.sh  Full workflow execution"
+            echo "  test-document-review-system.sh                  Spec review execution"
             exit 0
             ;;
         *)
@@ -73,12 +75,14 @@ done
 
 # List of skill tests to run (fast unit tests)
 tests=(
+    "test-using-superpowers-bootstrap.sh"
     "test-subagent-driven-development.sh"
 )
 
 # Integration tests (slow, full execution)
 integration_tests=(
     "test-subagent-driven-development-integration.sh"
+    "test-document-review-system.sh"
 )
 
 # Add integration tests if requested
