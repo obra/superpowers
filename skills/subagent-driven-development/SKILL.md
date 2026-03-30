@@ -11,6 +11,24 @@ Execute plan by dispatching fresh subagent per task, with two-stage review after
 
 **Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
 
+## Session Entry
+
+Before starting, check for an existing superpowers session:
+
+1. **Check for `.superpowers-session.json` in the current directory:**
+   - **Found + in a git worktree** (i.e., `git rev-parse --git-dir` differs from `git rev-parse --git-common-dir`): Session already active in a worktree. Update `stage` to `"executing"` and proceed.
+   - **Found + not in a worktree**: Session is running in fallback mode (no isolation). Update `stage` to `"executing"` and proceed.
+   - **Not found**: This is a standalone invocation. Create a worktree via `using-git-worktrees`, then write `.superpowers-session.json`:
+     ```json
+     {
+       "base_branch": "<current branch>",
+       "base_commit": "<current HEAD>",
+       "created_at": "<ISO 8601 timestamp>",
+       "stage": "executing"
+     }
+     ```
+     If worktree creation fails, write the metadata file to the current directory and proceed in fallback mode.
+
 ## When to Use
 
 ```dot
@@ -265,7 +283,7 @@ Done!
 ## Integration
 
 **Required workflow skills:**
-- **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
+- **superpowers:using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing via session entry logic)
 - **superpowers:writing-plans** - Creates the plan this skill executes
 - **superpowers:requesting-code-review** - Code review template for reviewer subagents
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
