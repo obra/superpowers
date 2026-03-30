@@ -629,6 +629,33 @@ test('task-fidelity workflow docs and prompts require packet-backed plan contrac
   assert.doesNotMatch(subagentSkill, /provide full text instead/);
   assert.doesNotMatch(subagentSkill, /Skip scene-setting context/);
 
+  for (const [content, label] of [
+    [executingPlans, 'skills/executing-plans/SKILL.md'],
+    [subagentSkill, 'skills/subagent-driven-development/SKILL.md'],
+  ]) {
+    const normalized = normalizeWhitespace(content);
+    assert.match(
+      normalized,
+      /no (?:code|test) edits?[\s\S]*successful preflight[\s\S]*first `begin`/i,
+      `${label} should prohibit code/test edits between successful preflight and first begin`,
+    );
+    assert.match(
+      normalized,
+      /workspace[\s\S]*dirty[\s\S]*first `begin`[\s\S]*tracked_worktree_dirty/i,
+      `${label} should warn that dirty-before-begin can trigger tracked_worktree_dirty fail-closed checks`,
+    );
+    assert.match(
+      normalized,
+      /retroactive (?:execution )?tracking[\s\S]*recovery-only/i,
+      `${label} should keep retroactive tracking as recovery-only`,
+    );
+    assert.match(
+      normalized,
+      /five-step recovery runbook[\s\S]*status[\s\S]*factual-only[\s\S]*task-boundary review/i,
+      `${label} should keep the five-step recovery runbook with status anchoring and factual-only backfill before task-boundary review`,
+    );
+  }
+
   const implementerPrompt = readUtf8(path.join(REPO_ROOT, 'skills/subagent-driven-development/implementer-prompt.md'));
   assert.match(implementerPrompt, /## Task Packet/);
   assert.match(implementerPrompt, /the packet is the authoritative task contract for that execution slice/);

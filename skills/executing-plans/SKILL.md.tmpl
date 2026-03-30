@@ -39,6 +39,18 @@ Load the approved plan, follow the runtime-selected topology, execute all tasks,
 9. Run `featureforge plan execution preflight --plan <approved-plan-path>` before starting execution.
 10. If the preflight helper returns `allowed` `false`, stop and resolve the reported `failure_class`, `reason_codes`, and `diagnostics` before starting work.
 11. If preflight passes, review the plan critically for execution concerns and use the approved plan checklist as the execution progress record.
+12. Treat execution start as a hard gate, not a reminder:
+   - no code edits and no test edits are allowed after successful preflight and before the first `begin` for the active step
+   - no repo mutation is allowed until that first `begin` is recorded
+   - the first `begin` is the mandatory execution-tracking boundary; preflight acceptance alone is not permission to start implementation
+   - if the workspace becomes dirty before the first `begin`, expect later preflight retries to fail closed (for example `tracked_worktree_dirty`) until the workspace is reconciled or isolated
+   - retroactive execution tracking is recovery-only and must never be treated as the normal execution path
+   - five-step recovery runbook for dirty-before-begin failures:
+     1. reconcile or isolate the workspace
+     2. rerun preflight and confirm fresh acceptance for the current approved plan revision
+     3. read helper-backed `status` before any recovery mutation
+     4. backfill only factual-only completed steps using authoritative helper mutations; never infer completion from dirty diffs
+     5. resume from the task-boundary review and verification gate before any next-task `begin`
 
 ## Helper-Owned Execution State
 
@@ -115,7 +127,7 @@ For each task:
 4. Follow each step exactly (plan has bite-sized steps).
 5. Run verifications as specified.
 6. After the implementation steps for a task are complete, enforce the mandatory task-boundary closure loop before beginning the next task:
-   - run dedicated-independent task review in a fresh-context subagent
+   - MUST dispatch dedicated-independent task review in a fresh-context subagent; coordinator or implementer self-review never satisfies this gate
    - if review fails, reopen/remediate/re-review until green
    - when remediation churn reaches 3 cycles for the same task, follow runtime cycle-break handling before retry
    - after review is green, run `verification-before-completion` and persist the task verification receipt
