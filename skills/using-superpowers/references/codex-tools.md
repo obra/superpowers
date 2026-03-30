@@ -17,7 +17,12 @@ Skills use Claude Code tool names. When you encounter these in a skill, use your
 
 Superpowers for Codex installs native reviewer roles under:
 
-- `~/.codex/agents/superpowers`
+- `~/.codex/agents/`
+
+Codex currently discovers agent role files by walking the `agents/` directory and does not recurse into symlinked subdirectories. Superpowers therefore installs direct TOML files such as:
+
+- `~/.codex/agents/superpowers_reviewer.toml`
+- `~/.codex/agents/superpowers_spec_reviewer.toml`
 
 Current native roles:
 

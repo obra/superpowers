@@ -30,23 +30,23 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
    ln -s ~/.codex/superpowers/skills ~/.agents/skills/superpowers
    ```
 
-3. Create the agents symlink:
+3. Install the agent TOMLs:
    ```bash
    mkdir -p ~/.codex/agents
-   ln -s ~/.codex/superpowers/.codex/agents ~/.codex/agents/superpowers
+   cp ~/.codex/superpowers/.codex/agents/*.toml ~/.codex/agents/
    ```
 
 4. Restart Codex.
 
 ### Windows
 
-Use junctions instead of symlinks (works without Developer Mode):
+Use a junction for the skills directory and copy the agent TOMLs directly:
 
 ```powershell
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.agents\skills"
 cmd /c mklink /J "$env:USERPROFILE\.agents\skills\superpowers" "$env:USERPROFILE\.codex\superpowers\skills"
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.codex\agents"
-cmd /c mklink /J "$env:USERPROFILE\.codex\agents\superpowers" "$env:USERPROFILE\.codex\superpowers\.codex\agents"
+Copy-Item "$env:USERPROFILE\.codex\superpowers\.codex\agents\*.toml" "$env:USERPROFILE\.codex\agents\"
 ```
 
 ## How It Works
@@ -55,13 +55,13 @@ Codex loads two Superpowers integration surfaces at startup:
 
 ```
 ~/.agents/skills/superpowers/ -> ~/.codex/superpowers/skills/
-~/.codex/agents/superpowers/ -> ~/.codex/superpowers/.codex/agents/
+~/.codex/agents/superpowers_*.toml <- ~/.codex/superpowers/.codex/agents/*.toml
 ```
 
 - the skills directory exposes SKILL.md files for native skill discovery
-- the agents directory exposes native Codex reviewer roles such as `superpowers_reviewer` and `superpowers_spec_reviewer`
+- the agents directory exposes native Codex reviewer roles through copied TOML files such as `superpowers_reviewer.toml` and `superpowers_spec_reviewer.toml`
 
-The `using-superpowers` skill is discovered automatically and enforces skill usage discipline. When subagent workflows need specialized reviewers on Codex, Superpowers can now use native `superpowers_*` roles instead of treating `worker` plus inline prompts as the primary design.
+The `using-superpowers` skill is discovered automatically and enforces skill usage discipline. When subagent workflows need specialized reviewers on Codex, Superpowers can now use native `superpowers_*` roles instead of treating `worker` plus inline prompts as the primary design. Direct TOML copies are used because current Codex role discovery does not recurse into symlinked subdirectories under `agents/`.
 
 ## Usage
 
@@ -99,19 +99,19 @@ The `description` field is how Codex decides when to activate a skill automatica
 cd ~/.codex/superpowers && git pull
 ```
 
-Skills and agents update through the symlinks after you restart Codex.
+Skills update through the skills symlink after you restart Codex. Agent role updates require rerunning the copy command from step 3, then restarting Codex.
 
 ## Uninstalling
 
 ```bash
 rm ~/.agents/skills/superpowers
-rm ~/.codex/agents/superpowers
+rm ~/.codex/agents/superpowers_*.toml
 ```
 
 **Windows (PowerShell):**
 ```powershell
 Remove-Item "$env:USERPROFILE\.agents\skills\superpowers"
-Remove-Item "$env:USERPROFILE\.codex\agents\superpowers"
+Remove-Item "$env:USERPROFILE\.codex\agents\superpowers_*.toml"
 ```
 
 Optionally delete the clone: `rm -rf ~/.codex/superpowers` (Windows: `Remove-Item -Recurse -Force "$env:USERPROFILE\.codex\superpowers"`).
@@ -126,8 +126,8 @@ Optionally delete the clone: `rm -rf ~/.codex/superpowers` (Windows: `Remove-Ite
 
 ### Agents not showing up
 
-1. Verify the symlink: `ls -la ~/.codex/agents/superpowers`
-2. Check TOMLs exist: `find ~/.codex/agents/superpowers -maxdepth 1 -name '*.toml' | sort`
+1. Check TOMLs exist: `find ~/.codex/agents -maxdepth 1 -name 'superpowers_*.toml' | sort`
+2. Re-run the copy command from installation step 3
 3. Restart Codex - agent roles are loaded at startup
 
 ### Windows junction issues

@@ -15,7 +15,7 @@ The tests run Codex in an isolated environment with temporary `HOME` and
 install:
 
 - the repository's `skills/` directory into `$HOME/.agents/skills/superpowers`
-- the repository's `.codex/agents/` directory into `$CODEX_HOME/agents/superpowers`
+- the repository's `.codex/agents/*.toml` files into `$CODEX_HOME/agents/`
 
 ## Requirements
 
@@ -111,7 +111,7 @@ original `auth.json` into the temporary Codex home when available.
 Verify:
 
 ```bash
-find "$CODEX_HOME/agents/superpowers" -maxdepth 1 -name '*.toml' | sort
+find "$CODEX_HOME/agents" -maxdepth 1 -name 'superpowers_*.toml' | sort
 ```
 
-The isolated test environment should include the native Superpowers Codex role catalog.
+The isolated test environment should include the native Superpowers Codex role catalog as direct TOML files.

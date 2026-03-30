@@ -97,9 +97,9 @@ Superpowers should add a native Codex agent catalog under:
 
 - `.codex/agents/`
 
-These files should be installed into the user's Codex config as:
+Real Codex verification on March 30, 2026 found an important loader constraint: current role discovery walks `agents/` but does not recurse into symlinked subdirectories. Because of that, these files should be installed into the user's Codex config as direct TOML files under:
 
-- `~/.codex/agents/superpowers -> ~/.codex/superpowers/.codex/agents`
+- `~/.codex/agents/`
 
 This mirrors the current skill installation model:
 
@@ -202,7 +202,7 @@ This fallback remains important because:
 
 - some users may update the repo before re-running installation
 - some tests or ephemeral environments may intentionally install only skills
-- older or constrained environments may not yet have the agents symlink
+- older or constrained environments may not yet have the copied agent TOMLs
 
 ### Preferred detection model
 
@@ -218,13 +218,13 @@ The Codex install doc should change from a skills-only installation to a combine
 
 1. clone `~/.codex/superpowers`
 2. symlink `skills/` into `~/.agents/skills/superpowers`
-3. symlink `.codex/agents/` into `~/.codex/agents/superpowers`
+3. copy `.codex/agents/*.toml` into `~/.codex/agents/`
 4. restart Codex
 
 The verify section should include both checks:
 
 - `ls -la ~/.agents/skills/superpowers`
-- `find ~/.codex/agents/superpowers -name '*.toml'`
+- `find ~/.codex/agents -maxdepth 1 -name 'superpowers_*.toml'`
 
 ### `docs/README.codex.md`
 
@@ -321,7 +321,7 @@ The Codex test harness currently installs only skills into the isolated environm
 Update the isolated test environment so it also installs agents:
 
 - create `$CODEX_HOME/agents`
-- symlink the repository's `.codex/agents` directory into `$CODEX_HOME/agents/superpowers`
+- copy the repository's `.codex/agents/*.toml` files into `$CODEX_HOME/agents/`
 
 The helper should also stop writing a default test config whose only purpose is forcing:
 
@@ -448,7 +448,7 @@ Mitigation:
 
 ## Success Criteria
 
-- a standard Superpowers Codex install creates both the skills symlink and the agents symlink
+- a standard Superpowers Codex install creates the skills symlink and copies the agent TOMLs directly into `~/.codex/agents/`
 - Codex exposes `superpowers_*` roles in the `spawn_agent` role list
 - Superpowers' Codex guidance treats those native roles as the primary dispatch path
 - Codex tests install and validate the native role path

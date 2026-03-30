@@ -13,7 +13,7 @@ setup_codex_test_env() {
 
     mkdir -p "$HOME/.agents/skills" "$CODEX_HOME/agents"
     ln -s "$REPO_ROOT/skills" "$HOME/.agents/skills/superpowers"
-    ln -s "$REPO_ROOT/.codex/agents" "$CODEX_HOME/agents/superpowers"
+    cp "$REPO_ROOT/.codex/agents/"*.toml "$CODEX_HOME/agents/"
 
     if [ -f "$ORIGINAL_CODEX_HOME/auth.json" ]; then
         cp "$ORIGINAL_CODEX_HOME/auth.json" "$CODEX_HOME/auth.json"
