@@ -209,9 +209,10 @@ Ready to implement auth feature
 ## Integration
 
 **Called by:**
-- **brainstorming** (Phase 4) - REQUIRED when design is approved and implementation follows
-- **subagent-driven-development** - REQUIRED before executing any tasks
-- **executing-plans** - REQUIRED before executing any tasks
+- **brainstorming** (Step 1) - Creates isolated workspace before any code analysis
+- **writing-plans** - Creates workspace for standalone invocations (when no brainstorming session preceded)
+- **subagent-driven-development** - Creates workspace for standalone invocations (when no brainstorming session preceded)
+- **executing-plans** - Creates workspace for standalone invocations (when no brainstorming session preceded)
 - Any skill needing isolated workspace
 
 **Pairs with:**
