@@ -93,19 +93,33 @@ skills/
 ## SKILL.md Structure
 
 **Frontmatter (YAML):**
-- Only two fields supported: `name` and `description`
-- Max 1024 characters total
-- `name`: Use letters, numbers, and hyphens only (no parentheses, special chars)
-- `description`: Third-person, describes ONLY when to use (NOT what it does)
-  - Start with "Use when..." to focus on triggering conditions
-  - Include specific symptoms, situations, and contexts
-  - **NEVER summarize the skill's process or workflow** (see CSO section for why)
-  - Keep under 500 characters if possible
+
+| Field | Required | Constraints |
+|-------|----------|-------------|
+| `name` | Yes | Max 64 chars. Lowercase letters, numbers, hyphens. No start/end hyphen, no consecutive hyphens. Must match parent directory name. |
+| `description` | Yes | Max 1024 chars. See CSO section for writing effective descriptions. |
+| `license` | No | License name or reference to a bundled license file. |
+| `compatibility` | No | Max 500 chars. Environment requirements (target product, system packages, network access). |
+| `metadata` | No | Arbitrary key-value mapping (string keys to string values). |
+| `allowed-tools` | No | Space-delimited list of pre-approved tools. **Experimental — support may vary.** |
+
+**`description` guidance:**
+- Third-person, describes ONLY when to use (NOT what it does)
+- Start with "Use when..." to focus on triggering conditions
+- Include specific symptoms, situations, and contexts
+- **NEVER summarize the skill's process or workflow** (see CSO section for why)
+- Keep under 500 characters if possible
 
 ```markdown
 ---
-name: Skill-Name-With-Hyphens
+name: skill-name-with-hyphens
 description: Use when [specific triggering conditions and symptoms]
+# Optional:
+# license: MIT
+# compatibility: Requires network access
+# metadata:
+#   author: your-name
+# allowed-tools: Bash(git:*) Read
 ---
 
 # Skill Name
@@ -604,7 +618,8 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 
 **GREEN Phase - Write Minimal Skill:**
 - [ ] Name uses only letters, numbers, hyphens (no parentheses/special chars)
-- [ ] YAML frontmatter with only name and description (max 1024 chars)
+- [ ] YAML frontmatter: required `name` (max 64 chars, lowercase + hyphens) and `description` (max 1024 chars)
+- [ ] Optional frontmatter fields added if applicable: `license`, `compatibility`, `metadata`, `allowed-tools`
 - [ ] Description starts with "Use when..." and includes specific triggers/symptoms
 - [ ] Description written in third person
 - [ ] Keywords throughout for search (errors, symptoms, tools)
