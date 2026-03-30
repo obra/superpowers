@@ -123,7 +123,7 @@ If worktree creation fails (no git, permission denied, platform limitation), log
 
 ### Branch naming
 
-`superpowers/<topic>-<short-hash>` where `<topic>` is derived from the user's initial request (slugified, first few words) and `<short-hash>` is 6 chars of the base commit. Example: `superpowers/add-auth-middleware-a1b2c3`. The user's first message typically contains enough context to generate a meaningful slug (e.g., "add auth middleware" → `add-auth-middleware`). If the initial message is too vague to derive a topic (e.g., "let's brainstorm"), use `session-<short-hash>` as a fallback and let the branch name be generic.
+`superpowers/<topic>-<short-hash>-<random>` where `<topic>` is derived from the user's initial request (slugified, first few words), `<short-hash>` is 6 chars of the base commit, and `<random>` is 4 random hex chars to ensure uniqueness across sessions. Example: `superpowers/add-auth-middleware-a1b2c3-f7e2`. The user's first message typically contains enough context to generate a meaningful slug (e.g., "add auth middleware" → `add-auth-middleware`). If the initial message is too vague to derive a topic (e.g., "let's brainstorm"), use `session-<short-hash>-<random>` as a fallback and let the branch name be generic.
 
 ## 3. Changes to Writing-Plans, Executing-Plans, and Subagent-Driven-Development
 
