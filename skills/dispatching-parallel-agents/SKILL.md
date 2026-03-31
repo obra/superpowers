@@ -5,7 +5,7 @@ description: Use when facing 2+ independent tasks that can be worked on without 
 
 # Dispatching Parallel Agents
 
-**Windsurf Users:** This skill uses **Simultaneous Cascades** (optionally with **Worktrees**). When the skill tells you to "dispatch a subagent", open a new Cascade tab and paste the instructions. Use Worktree mode (bottom right of input box) if tasks might edit the same files. See `skills/using-superpowers/references/windsurf-tools.md` for details.
+**Windsurf:** Windsurf does not have a `Task` tool for dispatching subagents. When this skill says "dispatch an agent", execute each task sequentially within the current session instead. See `skills/using-superpowers/references/windsurf-tools.md` for tool mapping.
 
 ## Overview
 

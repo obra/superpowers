@@ -29,15 +29,18 @@ If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "alw
 
 **In Claude Code:** Use the `Skill` tool. When you invoke a skill, its content is loaded and presented to you—follow it directly. Never use the Read tool on skill files.
 
+**In Copilot CLI:** Use the `skill` tool. Skills are auto-discovered from installed plugins. The `skill` tool works the same as Claude Code's `Skill` tool.
+
 **In Gemini CLI:** Skills activate via the `activate_skill` tool. Gemini loads skill metadata at session start and activates the full content on demand.
 
-**In Windsurf:** Skills are invoked via `@skill-name` (e.g., `@brainstorming`). Windsurf discovers skills from `.windsurf/skills/` and `~/.codeium/windsurf/skills/`.
+**In Windsurf:** Use the `skill` tool (same as Claude Code's `Skill` tool). When you invoke a skill, its content is loaded and presented to you—follow it directly. Windsurf discovers skills from `.windsurf/skills/` and `~/.codeium/windsurf/skills/`.
 
 **In other environments:** Check your platform's documentation for how skills are loaded.
 
 ## Platform Adaptation
 
 Skills use Claude Code tool names. Non-CC platforms: see tool mapping references:
+- **Copilot CLI**: `references/copilot-tools.md`
 - **Codex**: `references/codex-tools.md`
 - **Gemini CLI**: Tool mapping loaded automatically via GEMINI.md
 - **Windsurf**: `references/windsurf-tools.md`

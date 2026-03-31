@@ -5,7 +5,7 @@ description: Use when executing implementation plans with independent tasks in t
 
 # Subagent-Driven Development
 
-**Windsurf Users:** This skill uses **Simultaneous Cascades** (optionally with **Worktrees**). When the skill tells you to "dispatch a subagent", open a new Cascade tab and paste the task instructions. Use Worktree mode (bottom right of input box) if tasks might edit the same files. See `skills/using-superpowers/references/windsurf-tools.md` for details.
+**Windsurf:** No `Task` tool available. When this skill says "dispatch a subagent", execute each task sequentially in the current session yourself. Follow the same process (implement → spec review → code quality review) for each task. See `skills/using-superpowers/references/windsurf-tools.md` for tool mapping.
 
 Execute plan by dispatching fresh subagent per task, with two-stage review after each: spec compliance review first, then code quality review.
 

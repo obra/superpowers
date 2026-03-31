@@ -10,34 +10,15 @@ Skills use Claude Code tool names. When you encounter these in a skill, use your
 | `Bash` (run commands) | `run_command` |
 | `Grep` (search file content) | `grep_search` |
 | `Glob` (search files by name) | `find_by_name` |
-| `TodoWrite` (task tracking) | `update_plan` |
-| `Skill` tool (invoke a skill) | Skills load natively via `@skill-name` — just follow the instructions |
+| `TodoWrite` (task tracking) | `todo_list` |
+| `Skill` tool (invoke a skill) | `skill` tool — works the same as Claude Code's `Skill` tool |
 | `WebSearch` | `search_web` |
 | `WebFetch` | `read_url_content` |
-| `Task` tool (dispatch subagent) | Use **Worktrees** and **Simultaneous Cascades** (see below) |
+| `Task` tool (dispatch subagent) | No equivalent — execute tasks sequentially in current session |
 
-## Subagent Equivalents in Windsurf
+## Subagent Handling in Windsurf
 
-Windsurf Cascade does not have a `Task` tool for spawning subagents from within a conversation. Instead, Windsurf uses **Simultaneous Cascades** (optionally with **Worktrees**) to achieve parallel execution and context isolation.
-
-### When a skill tells you to "dispatch a subagent":
-
-**Option 1: Simultaneous Cascades (Basic Parallel)**
-- Use when tasks operate on **completely different files/directories** (e.g., different repos in multi-repo workspace, or frontend vs backend)
-- Simply tell the user to open a new Cascade tab and provide the exact prompt
-- No file isolation needed if tasks won't conflict
-
-**Option 2: Simultaneous Cascades + Worktrees (Isolated Parallel)** — **RECOMMENDED DEFAULT**
-- Use when tasks might edit the same files or run conflicting global commands
-- Tell the user to:
-  1. Open a new Cascade tab
-  2. Switch to **Worktree mode** (bottom right of input box)
-  3. Paste the exact prompt (this acts as the "subagent instructions")
-- Each Worktree operates in an isolated Git environment (`~/.windsurf/worktrees/<repo_name>`)
-- Multiple Cascades can edit files, run tests, and execute commands concurrently without race conditions
-- When work is done, user clicks "Merge" to bring changes back to main workspace
-
-**Default to Worktrees for safety** unless you're certain the tasks are completely disjoint. If tasks might touch the same files or run global commands (like `npm run format`, `cargo build`), Worktrees are required to prevent conflicts.
+Windsurf does not have a `Task` tool for spawning subagents. When a skill instructs you to "dispatch a subagent", execute each task sequentially within the current session instead. Follow the same logical process (implementation, review, etc.) but perform each step yourself.
 
 ## Additional Windsurf tools
 
