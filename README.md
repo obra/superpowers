@@ -10,6 +10,7 @@ Give Claude Code superpowers with a comprehensive skills library of proven techn
 - **Meta Skills** - Creating, testing, and contributing skills
 
 Plus:
+
 - **Slash Commands** - `/brainstorm`, `/write-plan`, `/execute-plan`
 - **Skills Search** - Grep-powered discovery of relevant skills
 - **Gap Tracking** - Failed searches logged for skill creation
@@ -29,6 +30,7 @@ Read the introduction: [Superpowers for Claude Code](https://blog.fsck.com/2025/
 ```
 
 That's it! On first session, the plugin automatically:
+
 - Sets up `~/.config/superpowers/` as your personal skills repository
 - Initializes git repo for version control
 - Makes core skills searchable alongside your personal skills
@@ -52,6 +54,7 @@ That's it! On first session, the plugin automatically:
 ### Your Personal Skills
 
 Write your own skills to `~/.config/superpowers/skills/`:
+
 - All personal skills automatically discovered by search tools
 - Personal skills shadow core skills when names match
 - Version controlled with git
@@ -73,17 +76,20 @@ ${CLAUDE_PLUGIN_ROOT}/scripts/find-skills 'TDD|debug'  # Regex pattern
 ### Using Slash Commands
 
 **Brainstorm a design:**
-```
+
+```bash
 /brainstorm
 ```
 
 **Create an implementation plan:**
-```
+
+```bash
 /write-plan
 ```
 
 **Execute the plan:**
-```
+
+```bash
 /execute-plan
 ```
 
@@ -92,17 +98,20 @@ ${CLAUDE_PLUGIN_ROOT}/scripts/find-skills 'TDD|debug'  # Regex pattern
 ### Skills Library
 
 **Testing** (`skills/testing/`)
+
 - test-driven-development - RED-GREEN-REFACTOR cycle
 - condition-based-waiting - Async test patterns
 - testing-anti-patterns - Common pitfalls to avoid
 
 **Debugging** (`skills/debugging/`)
+
 - systematic-debugging - 4-phase root cause process
 - root-cause-tracing - Find the real problem
 - verification-before-completion - Ensure it's actually fixed
 - defense-in-depth - Multiple validation layers
 
 **Collaboration** (`skills/collaboration/`)
+
 - brainstorming - Socratic design refinement
 - writing-plans - Detailed implementation plans
 - executing-plans - Batch execution with checkpoints
@@ -113,6 +122,7 @@ ${CLAUDE_PLUGIN_ROOT}/scripts/find-skills 'TDD|debug'  # Regex pattern
 - receiving-code-review - Responding to feedback
 
 **Meta** (`skills/meta/`)
+
 - setting-up-personal-superpowers - Personal skills repository setup
 - writing-skills - TDD for documentation, create new skills
 - sharing-skills - Contribute skills back to core
@@ -128,13 +138,16 @@ ${CLAUDE_PLUGIN_ROOT}/scripts/find-skills 'TDD|debug'  # Regex pattern
 ### Tools
 
 **In `scripts/` directory:**
+
 - **find-skills** - Unified skill discovery with descriptions (replaces list-skills + skills-search)
 - **skill-run** - Generic runner for any skill script (searches personal then core)
 
 **Skill-specific tools:**
+
 - **search-conversations** - Semantic search of past Claude sessions (in remembering-conversations skill)
 
 **Using scripts:**
+
 ```bash
 ${CLAUDE_PLUGIN_ROOT}/scripts/find-skills                 # Show all skills
 ${CLAUDE_PLUGIN_ROOT}/scripts/find-skills pattern         # Search skills
@@ -165,16 +178,18 @@ The plugin auto-creates your personal superpowers directory on first session.
 **Default location:** `~/.config/superpowers/`
 
 **Customize via environment variables:**
-```bash
-# Option 1: Set exact location
-export PERSONAL_SUPERPOWERS_DIR="$HOME/my-superpowers"
 
-# Option 2: Use XDG standard
-export XDG_CONFIG_HOME="$HOME/.local/config"  # Uses $HOME/.local/config/superpowers
+**Set exact location:**
+
+```bash
+export PERSONAL_SUPERPOWERS_DIR="$HOME/my-superpowers"
 ```
+
+*Note: `XDG_CONFIG_HOME` is also honored as a fallback if `PERSONAL_SUPERPOWERS_DIR` is unset.*
 
 **Structure:**
-```
+
+```text
 ~/.config/superpowers/        # (or your custom location)
 ├── .git/                     # Git repository
 ├── .gitignore                # Ignores logs and indexes
@@ -191,11 +206,13 @@ export XDG_CONFIG_HOME="$HOME/.local/config"  # Uses $HOME/.local/config/superpo
 ## Contributing
 
 **Write personal skills:**
+
 1. Create in `~/.config/superpowers/skills/your-skill/`
 2. Follow TDD process in `skills/meta/writing-skills`
 3. Commit to your personal repo
 
 **Share with everyone:**
+
 1. Follow workflow in `skills/meta/sharing-skills`
 2. Fork → Branch → Copy → PR to core
 3. Keep personal version or delete after merge
@@ -208,5 +225,5 @@ MIT License - see LICENSE file for details
 
 ## Support
 
-- **Issues**: https://github.com/obra/superpowers/issues
-- **Marketplace**: https://github.com/obra/superpowers-marketplace
+- **Issues**: <https://github.com/obra/superpowers/issues>
+- **Marketplace**: <https://github.com/obra/superpowers-marketplace>
