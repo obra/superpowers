@@ -100,15 +100,42 @@ cd "$path"
 
 ### 3. Share Hooks with Worktree
 
-Git doesn't share hooks across worktrees — each worktree has its own hooks directory that starts empty. Symlink it to the main repo's hooks so pre-commit checks, commit-msg hooks, etc. all work:
+Git doesn't share hooks across worktrees — each worktree has its own hooks
+directory that starts empty. Symlink it to the main repo's hooks so pre-commit
+checks, commit-msg hooks, etc. all work:
 
 ```bash
 git_dir="$(git rev-parse --git-dir)"
 common_dir="$(git rev-parse --git-common-dir)"
-if [ ! -d "$git_dir/hooks" ]; then
+
+if [ -L "$git_dir/hooks" ]; then
+  # Already a symlink — nothing to do
+  :
+elif [ ! -d "$git_dir/hooks" ]; then
+  # No hooks dir at all — create symlink
+  ln -s "$common_dir/hooks" "$git_dir/hooks"
+else
+  # Real directory exists (git or tooling placed hooks here on checkout).
+  # Migrate any hooks not already present in the common dir, then replace
+  # the directory with a symlink so all common hooks are available.
+  for hook in "$git_dir/hooks/"*; do
+    name="$(basename "$hook")"
+    if [ ! -f "$common_dir/hooks/$name" ]; then
+      echo "Migrating worktree hook '$name' to common hooks dir"
+      cp "$hook" "$common_dir/hooks/$name"
+      chmod +x "$common_dir/hooks/$name"
+    else
+      echo "Skipping '$name' — already present in common hooks dir"
+    fi
+  done
+  rm -rf "$git_dir/hooks"
   ln -s "$common_dir/hooks" "$git_dir/hooks"
 fi
 ```
+
+**Note:** When migrating hooks, any hook whose name collides with one already
+in the common hooks dir is discarded — the common (main repo) version wins.
+If the worktree-specific hook is important, inspect it first and merge manually.
 
 ### 4. Run Project Setup
 
