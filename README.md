@@ -123,6 +123,22 @@ Start a new session in your chosen platform and ask for something that should tr
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
+## Output Path Overrides
+
+By default, skills write specs and plans to `docs/superpowers/specs/` and `docs/superpowers/plans/`. If your project defines custom locations in `CLAUDE.md`, those paths take precedence.
+
+Example:
+
+```markdown
+## Output Paths
+| Artifact | Location |
+|---|---|
+| Design specs | `docs/design-docs/` |
+| Implementation plans | `docs/implementation-plans/` |
+```
+
+When this table is present, skills should write to the configured locations above rather than the default `docs/superpowers/...` paths.
+
 ## What's Inside
 
 ### Skills Library
