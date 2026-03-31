@@ -1,5 +1,9 @@
 # FeatureForge Release Notes
 
+## Unreleased
+
+- add `featureforge plan execution rebuild-evidence` operator notes covering replayed evidence targets, refreshed helper-owned closure receipts, and the contract-bound versus plain task-boundary unit-review receipt behavior
+
 ## v1.6.0 - 2026-03-30
 
 Independent-review dispatch hard-gate release focused on explicit task-boundary review dispatch proof, exact operator guidance, and release ratification for the new execution contract.

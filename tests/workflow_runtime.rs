@@ -813,27 +813,6 @@ fn update_authoritative_harness_state(
     );
 }
 
-fn mark_authoritative_review_gate_truth_fresh_without_artifact(
-    repo: &Path,
-    state: &Path,
-    plan_rel: &str,
-) {
-    let branch = current_branch_name(repo);
-    update_authoritative_harness_state(
-        repo,
-        state,
-        &branch,
-        plan_rel,
-        1,
-        &[
-            ("dependency_index_state", Value::from("fresh")),
-            ("final_review_state", Value::from("fresh")),
-            ("browser_qa_state", Value::from("not_required")),
-            ("release_docs_state", Value::from("not_required")),
-        ],
-    );
-}
-
 fn publish_authoritative_final_review_truth(
     repo: &Path,
     state: &Path,
@@ -878,7 +857,8 @@ fn write_dispatched_branch_review_artifact(
     plan_rel: &str,
     base_branch: &str,
 ) -> PathBuf {
-    mark_authoritative_review_gate_truth_fresh_without_artifact(repo, state, plan_rel);
+    let initial_review_path = write_branch_review_artifact(repo, state, plan_rel, base_branch);
+    publish_authoritative_final_review_truth(repo, state, plan_rel, &initial_review_path);
     let gate_review = run_plan_execution_json(
         repo,
         state,

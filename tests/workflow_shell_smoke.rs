@@ -423,22 +423,6 @@ fn update_authoritative_harness_state(
     );
 }
 
-fn mark_authoritative_review_gate_truth_fresh_without_artifact(
-    repo: &Path,
-    state_dir: &Path,
-) {
-    update_authoritative_harness_state(
-        repo,
-        state_dir,
-        &[
-            ("dependency_index_state", Value::from("fresh")),
-            ("final_review_state", Value::from("fresh")),
-            ("browser_qa_state", Value::from("not_required")),
-            ("release_docs_state", Value::from("not_required")),
-        ],
-    );
-}
-
 fn publish_authoritative_final_review_truth(repo: &Path, state_dir: &Path, review_path: &Path) {
     let branch = current_branch_name(repo);
     let review_source = fs::read_to_string(review_path)
@@ -475,7 +459,12 @@ fn write_dispatched_branch_review_artifact(
     plan_rel: &str,
     base_branch: &str,
 ) {
-    mark_authoritative_review_gate_truth_fresh_without_artifact(repo, state_dir);
+    write_branch_review_artifact(repo, state_dir, plan_rel, base_branch);
+    let branch = current_branch_name(repo);
+    let safe_branch = branch_storage_key(&branch);
+    let initial_review_path = project_artifact_dir(repo, state_dir)
+        .join(format!("tester-{safe_branch}-code-review-20260324-121000.md"));
+    publish_authoritative_final_review_truth(repo, state_dir, &initial_review_path);
     let gate_review = run_plan_execution_json(
         repo,
         state_dir,
@@ -488,8 +477,6 @@ fn write_dispatched_branch_review_artifact(
         "shell-smoke review fixture should prime a passing gate-review dispatch before minting a final-review artifact: {gate_review:?}"
     );
     write_branch_review_artifact(repo, state_dir, plan_rel, base_branch);
-    let branch = current_branch_name(repo);
-    let safe_branch = branch_storage_key(&branch);
     let review_path = project_artifact_dir(repo, state_dir)
         .join(format!("tester-{safe_branch}-code-review-20260324-121000.md"));
     publish_authoritative_final_review_truth(repo, state_dir, &review_path);

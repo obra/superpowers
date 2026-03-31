@@ -6,9 +6,9 @@ The active runtime package in this repository targets Codex and GitHub Copilot l
 
 ## Provenance
 
-FeatureForge began from upstream Superpowers: https://github.com/obra/superpowers
+FeatureForge began from upstream Superpowers: <https://github.com/obra/superpowers>
 
-This repository keeps the workflow-first core and extends it with additional review, execution, and runtime patterns adapted from gstack: https://github.com/garrytan/gstack
+This repository keeps the workflow-first core and extends it with additional review, execution, and runtime patterns adapted from gstack: <https://github.com/garrytan/gstack>
 
 ## How It Works
 
@@ -76,6 +76,8 @@ Execution starts from an engineering-approved plan and the exact approved plan p
 - recommendation output is topology-backed (`selected_topology`, stable `reason_codes`, and learned-downgrade reuse status), not heuristic-only skill selection
 
 `featureforge plan execution gate-finish --plan <approved-plan-path>` now derives execution-deviation review requirements from authoritative runtime-owned topology downgrade artifacts. Reason-code-only deviation hints are treated as corroborating metadata, not primary truth.
+
+`featureforge plan execution rebuild-evidence --plan <approved-plan-path>` replays rebuildable execution-evidence targets from the current approved plan and refreshes helper-owned closure receipts against the current runtime state. When an authoritative active contract exists, rebuild refresh also republishes contract-bound serial unit-review receipts for the current run; without an active contract it keeps plain task-boundary unit-review receipts and validates them as non-contract task-boundary provenance instead of silently treating them as finish-gate bindings.
 
 `featureforge plan execution` is the execution preflight boundary for the approved plan.
 

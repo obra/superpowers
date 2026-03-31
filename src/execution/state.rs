@@ -2030,6 +2030,11 @@ fn enforce_worktree_lease_binding_truth(context: &ExecutionContext, gate: &mut G
             .map(str::trim)
             .filter(|value| !value.is_empty());
         if active_contract_path.is_none() && active_contract_fingerprint.is_none() {
+            enforce_plain_unit_review_truth(
+                context,
+                run_identity.execution_run_id.as_str(),
+                gate,
+            );
             return;
         }
         let Some((_active_contract_path, active_contract_fingerprint)) =
@@ -2993,6 +2998,223 @@ fn current_run_worktree_lease_artifacts_exist(
     Ok(false)
 }
 
+fn current_run_plain_unit_review_receipt_paths(
+    context: &ExecutionContext,
+    execution_run_id: &str,
+) -> Result<Vec<PathBuf>, String> {
+    let artifacts_dir = crate::paths::harness_authoritative_artifacts_dir(
+        &context.runtime.state_dir,
+        &context.runtime.repo_slug,
+        &context.runtime.branch_name,
+    );
+    let entries = match fs::read_dir(&artifacts_dir) {
+        Ok(entries) => entries,
+        Err(error) if error.kind() == ErrorKind::NotFound => return Ok(Vec::new()),
+        Err(error) => {
+            return Err(format!(
+                "Could not inspect authoritative unit-review receipts in {}: {error}",
+                artifacts_dir.display()
+            ));
+        }
+    };
+    let canonical_prefix = format!("unit-review-{execution_run_id}-task-");
+    let mut receipt_paths = Vec::new();
+    for entry in entries {
+        let entry = entry.map_err(|error| {
+            format!(
+                "Could not inspect authoritative unit-review receipts in {}: {error}",
+                artifacts_dir.display()
+            )
+        })?;
+        let file_path = entry.path();
+        let Some(file_name) = file_path.file_name().and_then(|value| value.to_str()) else {
+            continue;
+        };
+        if file_name.starts_with(&canonical_prefix) && file_name.ends_with(".md") {
+            receipt_paths.push(file_path);
+        }
+    }
+    receipt_paths.sort();
+    Ok(receipt_paths)
+}
+
+fn enforce_plain_unit_review_truth(
+    context: &ExecutionContext,
+    execution_run_id: &str,
+    gate: &mut GateState,
+) {
+    let current_run_receipts = match current_run_plain_unit_review_receipt_paths(
+        context,
+        execution_run_id,
+    ) {
+        Ok(paths) => paths,
+        Err(error) => {
+            gate.fail(
+                FailureClass::MalformedExecutionState,
+                "plain_unit_review_receipts_unreadable",
+                error,
+                "Restore authoritative unit-review receipt readability and retry gate-review or gate-finish.",
+            );
+            return;
+        }
+    };
+    if current_run_receipts.is_empty() {
+        return;
+    }
+
+    let expected_strategy_checkpoint_fingerprint =
+        match authoritative_strategy_checkpoint_fingerprint_checked(context) {
+            Ok(Some(fingerprint)) if !fingerprint.trim().is_empty() => fingerprint,
+            Ok(_) => {
+                gate.fail(
+                    FailureClass::MalformedExecutionState,
+                    "plain_unit_review_receipt_strategy_checkpoint_missing",
+                    "Authoritative strategy checkpoint provenance is missing for current-run unit-review receipt validation.",
+                    "Restore authoritative strategy checkpoint provenance and retry gate-review or gate-finish.",
+                );
+                return;
+            }
+            Err(error) => {
+                gate.fail(
+                    FailureClass::MalformedExecutionState,
+                    "plain_unit_review_receipt_strategy_checkpoint_missing",
+                    error.message,
+                    "Restore authoritative strategy checkpoint provenance and retry gate-review or gate-finish.",
+                );
+                return;
+            }
+        };
+
+    let latest_attempts = latest_completed_attempts_by_step(&context.evidence);
+    let expected_receipt_paths = context
+        .steps
+        .iter()
+        .filter(|step| step.checked)
+        .map(|step| {
+            (
+                authoritative_unit_review_receipt_path(
+                    context,
+                    execution_run_id,
+                    step.task_number,
+                    step.step_number,
+                )
+                .file_name()
+                .and_then(|value| value.to_str())
+                .unwrap_or_default()
+                .to_owned(),
+                (step.task_number, step.step_number),
+            )
+        })
+        .collect::<BTreeMap<_, _>>();
+
+    for receipt_path in current_run_receipts {
+        let Some(receipt_file_name) = receipt_path
+            .file_name()
+            .and_then(|value| value.to_str())
+            .map(str::to_owned)
+        else {
+            gate.fail(
+                FailureClass::MalformedExecutionState,
+                "plain_unit_review_receipt_malformed",
+                "A current-run unit-review receipt has an unreadable filename.",
+                "Repair the authoritative unit-review receipt and retry gate-review or gate-finish.",
+            );
+            return;
+        };
+        let Some((task_number, step_number)) = expected_receipt_paths.get(&receipt_file_name).copied()
+        else {
+            gate.fail(
+                FailureClass::MalformedExecutionState,
+                "plain_unit_review_receipt_malformed",
+                format!(
+                    "Current-run unit-review receipt {} does not match any checked plan step.",
+                    receipt_path.display()
+                ),
+                "Remove or repair the authoritative unit-review receipt and retry gate-review or gate-finish.",
+            );
+            return;
+        };
+        let Some(attempt_index) = latest_attempts.get(&(task_number, step_number)).copied() else {
+            gate.fail(
+                FailureClass::StaleExecutionEvidence,
+                "plain_unit_review_receipt_provenance_mismatch",
+                format!(
+                    "Current-run unit-review receipt {} has no completed evidence attempt to validate against.",
+                    receipt_path.display()
+                ),
+                "Rebuild the execution evidence for the affected step and retry gate-review or gate-finish.",
+            );
+            return;
+        };
+        let attempt = &context.evidence.attempts[attempt_index];
+        let Some(expected_task_packet_fingerprint) = attempt
+            .packet_fingerprint
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+        else {
+            gate.fail(
+                FailureClass::MalformedExecutionState,
+                "plain_unit_review_receipt_malformed",
+                format!(
+                    "Task {} Step {} is missing packet fingerprint provenance required to validate plain unit-review receipts.",
+                    task_number, step_number
+                ),
+                "Repair the execution evidence for the affected step and retry gate-review or gate-finish.",
+            );
+            return;
+        };
+        let Some(expected_reviewed_checkpoint_sha) = attempt
+            .head_sha
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+        else {
+            gate.fail(
+                FailureClass::MalformedExecutionState,
+                "plain_unit_review_receipt_malformed",
+                format!(
+                    "Task {} Step {} is missing reviewed checkpoint provenance required to validate plain unit-review receipts.",
+                    task_number, step_number
+                ),
+                "Repair the execution evidence for the affected step and retry gate-review or gate-finish.",
+            );
+            return;
+        };
+        let review_source = match fs::read_to_string(&receipt_path) {
+            Ok(source) => source,
+            Err(error) => {
+                gate.fail(
+                    FailureClass::ExecutionStateNotReady,
+                    "plain_unit_review_receipt_unreadable",
+                    format!(
+                        "Could not read current-run unit-review receipt {}: {error}",
+                        receipt_path.display()
+                    ),
+                    "Restore the authoritative unit-review receipt and retry gate-review or gate-finish.",
+                );
+                return;
+            }
+        };
+        if !validate_plain_unit_review_receipt(
+            context,
+            execution_run_id,
+            &review_source,
+            &receipt_path,
+            PlainUnitReviewReceiptExpectations {
+                expected_strategy_checkpoint_fingerprint: expected_strategy_checkpoint_fingerprint
+                    .as_str(),
+                expected_task_packet_fingerprint,
+                expected_reviewed_checkpoint_sha,
+                expected_execution_unit_id: serial_execution_unit_id(task_number, step_number),
+            },
+            gate,
+        ) {
+            return;
+        }
+    }
+}
+
 fn validate_authoritative_worktree_lease_fingerprint(
     source: &str,
     lease: &WorktreeLease,
@@ -3449,6 +3671,13 @@ struct UnitReviewReceiptExpectations<'a> {
     expected_reconcile_result_commit_sha: &'a str,
 }
 
+struct PlainUnitReviewReceiptExpectations<'a> {
+    expected_strategy_checkpoint_fingerprint: &'a str,
+    expected_task_packet_fingerprint: &'a str,
+    expected_reviewed_checkpoint_sha: &'a str,
+    expected_execution_unit_id: String,
+}
+
 fn validate_authoritative_unit_review_receipt(
     context: &ExecutionContext,
     execution_run_id: &str,
@@ -3788,6 +4017,173 @@ fn validate_authoritative_unit_review_receipt(
         receipt_checkpoint_commit_sha,
         expectations.expected_reconcile_result_commit_sha.to_owned(),
     ))
+}
+
+fn validate_plain_unit_review_receipt(
+    context: &ExecutionContext,
+    execution_run_id: &str,
+    source: &str,
+    receipt_path: &Path,
+    expectations: PlainUnitReviewReceiptExpectations<'_>,
+    gate: &mut GateState,
+) -> bool {
+    let review_document = parse_artifact_document(receipt_path);
+    if review_document.title.as_deref() != Some("# Unit Review Result")
+        || review_document
+            .headers
+            .get("Review Stage")
+            .map(String::as_str)
+            != Some("featureforge:unit-review")
+        || review_document
+            .headers
+            .get("Reviewer Provenance")
+            .map(String::as_str)
+            != Some("dedicated-independent")
+        || !matches!(
+            review_document
+                .headers
+                .get("Reviewer Source")
+                .map(String::as_str)
+                .unwrap_or_default(),
+            "fresh-context-subagent" | "cross-model"
+        )
+        || review_document.headers.get("Result").map(String::as_str) != Some("pass")
+        || review_document
+            .headers
+            .get("Generated By")
+            .map(String::as_str)
+            != Some("featureforge:unit-review")
+    {
+        gate.fail(
+            FailureClass::MalformedExecutionState,
+            "plain_unit_review_receipt_malformed",
+            format!(
+                "Current-run unit-review receipt {} is malformed.",
+                receipt_path.display()
+            ),
+            "Repair the authoritative unit-review receipt and retry gate-review or gate-finish.",
+        );
+        return false;
+    }
+
+    for forbidden_header in [
+        "Lease Fingerprint",
+        "Execution Context Key",
+        "Approved Unit Contract Fingerprint",
+        "Reconciled Result SHA",
+        "Reconcile Result Proof Fingerprint",
+        "Reconcile Mode",
+        "Reviewed Worktree",
+    ] {
+        if review_document.headers.contains_key(forbidden_header) {
+            gate.fail(
+                FailureClass::MalformedExecutionState,
+                "plain_unit_review_receipt_malformed",
+                format!(
+                    "Current-run unit-review receipt {} unexpectedly includes {} without an active authoritative contract.",
+                    receipt_path.display(),
+                    forbidden_header
+                ),
+                "Repair the authoritative unit-review receipt and retry gate-review or gate-finish.",
+            );
+            return false;
+        }
+    }
+
+    let expected_file_name = format!(
+        "unit-review-{}-{}.md",
+        execution_run_id,
+        expectations.expected_execution_unit_id
+    );
+    if receipt_path.file_name().and_then(|value| value.to_str()) != Some(expected_file_name.as_str()) {
+        gate.fail(
+            FailureClass::MalformedExecutionState,
+            "plain_unit_review_receipt_malformed",
+            format!(
+                "Current-run unit-review receipt path {} does not match the reviewed execution unit provenance.",
+                receipt_path.display()
+            ),
+            "Repair the authoritative unit-review receipt and retry gate-review or gate-finish.",
+        );
+        return false;
+    }
+
+    let Some(canonical_fingerprint) = canonical_unit_review_receipt_fingerprint(source) else {
+        gate.fail(
+            FailureClass::MalformedExecutionState,
+            "plain_unit_review_receipt_fingerprint_unverifiable",
+            format!(
+                "Current-run unit-review receipt fingerprint is unverifiable in {}.",
+                receipt_path.display()
+            ),
+            "Repair the authoritative unit-review receipt and retry gate-review or gate-finish.",
+        );
+        return false;
+    };
+    if review_document
+        .headers
+        .get("Receipt Fingerprint")
+        .map(String::as_str)
+        != Some(canonical_fingerprint.as_str())
+    {
+        gate.fail(
+            FailureClass::ArtifactIntegrityMismatch,
+            "plain_unit_review_receipt_fingerprint_mismatch",
+            format!(
+                "Current-run unit-review receipt fingerprint header does not match canonical content in {}.",
+                receipt_path.display()
+            ),
+            "Regenerate the authoritative unit-review receipt from canonical content and retry gate-review or gate-finish.",
+        );
+        return false;
+    }
+
+    if review_document.headers.get("Source Plan").map(String::as_str)
+            != Some(context.plan_rel.as_str())
+        || review_document
+            .headers
+            .get("Source Plan Revision")
+            .and_then(|value| value.parse::<u32>().ok())
+            != Some(context.plan_document.plan_revision)
+        || review_document
+            .headers
+            .get("Execution Run ID")
+            .map(String::as_str)
+            != Some(execution_run_id)
+        || review_document
+            .headers
+            .get("Execution Unit ID")
+            .map(String::as_str)
+            != Some(expectations.expected_execution_unit_id.as_str())
+        || review_document
+            .headers
+            .get("Strategy Checkpoint Fingerprint")
+            .map(String::as_str)
+            != Some(expectations.expected_strategy_checkpoint_fingerprint)
+        || review_document
+            .headers
+            .get("Approved Task Packet Fingerprint")
+            .map(String::as_str)
+            != Some(expectations.expected_task_packet_fingerprint)
+        || review_document
+            .headers
+            .get("Reviewed Checkpoint SHA")
+            .map(String::as_str)
+            != Some(expectations.expected_reviewed_checkpoint_sha)
+    {
+        gate.fail(
+            FailureClass::StaleProvenance,
+            "plain_unit_review_receipt_provenance_mismatch",
+            format!(
+                "Current-run unit-review receipt {} does not match the active task checkpoint provenance.",
+                receipt_path.display()
+            ),
+            "Regenerate the authoritative unit-review receipt for the completed step and retry gate-review or gate-finish.",
+        );
+        return false;
+    }
+
+    true
 }
 
 fn canonical_unit_review_receipt_fingerprint(source: &str) -> Option<String> {

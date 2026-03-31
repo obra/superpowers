@@ -14639,6 +14639,112 @@ fn rebuild_evidence_does_not_publish_contract_bound_receipts_without_active_cont
 }
 
 #[test]
+fn gate_review_rejects_contractless_current_run_unit_review_receipt_with_stale_provenance() {
+    let (repo_dir, state_dir) = init_repo("plan-execution-contractless-unit-review-provenance");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    write_approved_spec(repo);
+    write_single_step_plan(repo, "featureforge:executing-plans");
+    mark_all_plan_steps_checked(repo);
+    write_single_step_v2_completed_attempt(repo, &expected_packet_fingerprint(repo, 1, 1));
+    replace_manual_verification_with_command(
+        repo,
+        "printf rebuilt",
+        "`printf rebuilt` -> passed in fixture setup.",
+    );
+    accept_execution_preflight(repo, state, PLAN_REL);
+
+    let mut harness_state: Value = serde_json::from_str(
+        &fs::read_to_string(harness_state_file_path(repo, state))
+            .expect("harness state should exist after preflight"),
+    )
+    .expect("harness state should stay valid json after preflight");
+    let state_object = harness_state
+        .as_object_mut()
+        .expect("harness state should be a json object");
+    state_object.insert(
+        String::from("last_strategy_checkpoint_fingerprint"),
+        Value::from(FIXTURE_STRATEGY_CHECKPOINT_FINGERPRINT),
+    );
+    state_object.insert(String::from("strategy_state"), Value::from("ready"));
+    state_object.insert(
+        String::from("strategy_checkpoint_kind"),
+        Value::from("review_remediation"),
+    );
+    write_harness_state_payload(repo, state, &harness_state);
+
+    let status_after_preflight = run_rust_json(
+        repo,
+        state,
+        &["status", "--plan", PLAN_REL],
+        "status after preflight for contractless unit-review provenance fixture",
+    );
+    let execution_run_id = status_after_preflight["execution_run_id"]
+        .as_str()
+        .expect("status should expose execution run id")
+        .to_owned();
+
+    write_file(&repo.join("docs/example-output.md"), "drifted output after review\n");
+
+    let rebuilt = run_rust_json(
+        repo,
+        state,
+        &["rebuild-evidence", "--plan", PLAN_REL, "--json"],
+        "rebuild-evidence without active contract state for provenance validation",
+    );
+    assert_eq!(rebuilt["counts"]["rebuilt"], Value::from(1), "json: {rebuilt}");
+
+    let current_run_receipt_path = harness_authoritative_artifact_path(
+        state,
+        &repo_slug(repo),
+        &branch_name(repo),
+        &format!("unit-review-{execution_run_id}-task-1-step-1.md"),
+    );
+    let receipt_source = fs::read_to_string(&current_run_receipt_path)
+        .expect("current-run unit-review receipt should be readable before corruption");
+    let rewritten_receipt_source = receipt_source.replace(
+        &format!(
+            "**Approved Task Packet Fingerprint:** {}",
+            expected_packet_fingerprint(repo, 1, 1)
+        ),
+        "**Approved Task Packet Fingerprint:** stale-packet-fingerprint",
+    );
+    assert_ne!(
+        receipt_source, rewritten_receipt_source,
+        "current-run unit-review receipt corruption should change the source"
+    );
+    let original_receipt_fingerprint = receipt_source
+        .lines()
+        .find_map(|line| line.strip_prefix("**Receipt Fingerprint:** "))
+        .expect("current-run unit-review receipt should expose a receipt fingerprint header");
+    let rewritten_receipt_fingerprint =
+        canonical_unit_review_receipt_fingerprint(&rewritten_receipt_source);
+    write_file(
+        &current_run_receipt_path,
+        &rewritten_receipt_source.replace(
+            &format!("**Receipt Fingerprint:** {original_receipt_fingerprint}"),
+            &format!("**Receipt Fingerprint:** {rewritten_receipt_fingerprint}"),
+        ),
+    );
+
+    let gate_review = run_rust_json(
+        repo,
+        state,
+        &["gate-review", "--plan", PLAN_REL],
+        "gate-review after corrupting contractless current-run unit-review receipt provenance",
+    );
+    let reason_codes = gate_review["reason_codes"]
+        .as_array()
+        .expect("gate-review should expose reason codes");
+    assert!(
+        reason_codes
+            .iter()
+            .any(|code| code.as_str() == Some("plain_unit_review_receipt_provenance_mismatch")),
+        "gate-review should surface stale provenance for contractless current-run unit-review receipts instead of ignoring them, got {gate_review}"
+    );
+}
+
+#[test]
 fn rebuild_evidence_reuses_active_contract_for_serial_unit_review_receipts() {
     let (repo_dir, state_dir) = init_repo("plan-execution-rebuild-evidence-active-contract-receipts");
     let repo = repo_dir.path();
