@@ -82,7 +82,7 @@ You: [Fix progress indicators]
 - Fix before moving to next task
 
 **Executing Plans:**
-- Review after each batch (3 tasks)
+- Review after each task or at natural checkpoints
 - Get feedback, apply, continue
 
 **Ad-Hoc Development:**
