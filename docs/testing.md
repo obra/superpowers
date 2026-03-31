@@ -32,7 +32,7 @@ cargo nextest run --test runtime_instruction_contracts --test using_featureforge
 The main Rust suites cover:
 
 - workflow artifact resolution and failure contracts
-- session-entry and `using-featureforge` routing behavior, including strict consent-first workflow gating and per-session isolation
+- `using-featureforge` and direct workflow routing without session-entry prerequisites, including regression coverage for inert legacy gate files and env inputs
 - repo-safety and protected-branch write guarantees
 - install, state, and update-check runtime behavior
 - public workflow CLI behavior

@@ -4,6 +4,16 @@
 
 Independent-review dispatch hard-gate release focused on explicit task-boundary review dispatch proof, exact operator guidance, and release ratification for the new execution contract.
 
+- breaking contract delta: remove `featureforge session-entry`, strict gate env exports, and active session-entry schema or CLI surfaces from the supported runtime/docs contract
+- workflow routing now ignores legacy session-entry decision files and gate env inputs; `using-featureforge` and `featureforge workflow` route directly from repo-visible artifacts
+
+### Breaking Output Contract Changes
+
+- `workflow phase --json`: remove top-level `session_entry`; remove `phase` values `needs_user_choice` and `bypassed`; remove `next_action` values `session_entry_gate` and `continue_outside_featureforge`; new `schema_version` is `2`
+- `workflow doctor --json`: remove top-level `session_entry`; remove `phase` values `needs_user_choice` and `bypassed`; remove `next_action` values `session_entry_gate` and `continue_outside_featureforge`; new `schema_version` is `2`
+- `workflow handoff --json`: remove top-level `session_entry`; remove `phase` values `needs_user_choice` and `bypassed`; remove `next_action` values `session_entry_gate` and `continue_outside_featureforge`; new `schema_version` is `2`
+- `workflow status --refresh` JSON: remove strict-gate `status` outcomes `needs_user_choice` and `bypassed`; remove strict-gate `reason_codes` `session_entry_unresolved` and `session_entry_bypassed`; retained route `schema_version` is `3`
+
 - enforce explicit `featureforge plan execution gate-review --plan <approved-plan-path>` dispatch proof at task boundaries before next-task begin can proceed
 - keep task-boundary fail-closed behavior for stale or missing dispatch lineage, non-independent review receipts, and missing task verification receipts
 - align workflow operator surfaces and execution skill docs on the exact runnable `gate-review` command text for blocked task-boundary remediation

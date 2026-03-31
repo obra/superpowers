@@ -34,7 +34,6 @@ fn read_route_contract_fixture() -> String {
 
 struct RouteSelectionHarness<'a> {
     preamble: &'a str,
-    normal_stack: &'a str,
     route_block: &'a str,
     session_key: &'a str,
     workflow_next_skill: &'a str,
@@ -70,13 +69,6 @@ fn extract_bash_block(content: &str, heading: &str) -> String {
         "expected bash block under heading {heading}"
     );
     lines.join("\n")
-}
-
-fn canonical_decision_path(state_dir: &Path, session_key: &str) -> PathBuf {
-    state_dir
-        .join("session-entry")
-        .join("using-featureforge")
-        .join(session_key)
 }
 
 fn run_bash_block(state_dir: &Path, home_dir: &Path, script: &str, context: &str) -> Output {
@@ -117,7 +109,7 @@ fn extract_last_nonempty_line(output: &[u8], context: &str) -> String {
         .to_owned()
 }
 
-fn parse_supported_entry_stdout(output: &[u8], context: &str) -> Value {
+fn parse_json_stdout(output: &[u8], context: &str) -> Value {
     let stdout = String::from_utf8(output.to_vec())
         .unwrap_or_else(|error| panic!("{context} should emit utf8: {error}"));
     let lines = stdout
@@ -137,103 +129,6 @@ fn parse_supported_entry_stdout(output: &[u8], context: &str) -> Value {
         .unwrap_or_else(|error| panic!("{context} should emit valid json on the last line: {error}"))
 }
 
-fn simulate_supported_entry(
-    state_dir: &Path,
-    home_dir: &Path,
-    preamble: &str,
-    normal_stack: &str,
-    session_key: &str,
-    message: &str,
-) -> Value {
-    let message_file = state_dir.join(format!("{session_key}.txt"));
-    write_file(&message_file, message);
-
-    let script = format!(
-        r#"
-set -euo pipefail
-{preamble}
-_resolve_json="$("$_FEATUREFORGE_BIN" session-entry resolve --message-file "$SP_TEST_MESSAGE_FILE" --session-key "$SP_TEST_SESSION_KEY")"
-eval "$(
-  RESOLVE_JSON="$_resolve_json" python3 - <<'PY'
-import json
-import os
-import shlex
-
-data = json.loads(os.environ["RESOLVE_JSON"])
-prompt = data.get("prompt") or {{}}
-fields = {{
-    "SP_TEST_OUTCOME": data.get("outcome", ""),
-    "SP_TEST_DECISION_SOURCE": data.get("decision_source", ""),
-    "SP_TEST_DECISION_PATH": data.get("decision_path", ""),
-    "SP_TEST_PROMPT_QUESTION": prompt.get("question", ""),
-}}
-for key, value in fields.items():
-    print(f"{{key}}={{shlex.quote(str(value))}}")
-PY
-)"
-_first_response_kind=""
-_normal_stack_session_path=""
-case "$SP_TEST_OUTCOME" in
-  needs_user_choice)
-    _first_response_kind="bypass_prompt"
-    ;;
-  enabled)
-{normal_stack}
-    _first_response_kind="normal_stack"
-    _normal_stack_session_path="$_SP_STATE_DIR/sessions/$PPID"
-    ;;
-  bypassed)
-    _first_response_kind="featureforge_bypassed"
-    ;;
-  *)
-    _first_response_kind="runtime_failure"
-    ;;
-esac
-SP_TEST_OUTCOME="$SP_TEST_OUTCOME" \
-SP_TEST_DECISION_SOURCE="$SP_TEST_DECISION_SOURCE" \
-SP_TEST_DECISION_PATH="$SP_TEST_DECISION_PATH" \
-SP_TEST_PROMPT_QUESTION="$SP_TEST_PROMPT_QUESTION" \
-SP_TEST_FIRST_RESPONSE_KIND="$_first_response_kind" \
-SP_TEST_NORMAL_STACK_SESSION_PATH="$_normal_stack_session_path" \
-python3 - <<'PY'
-import json
-import os
-from pathlib import Path
-
-normal_stack_session_path = os.environ["SP_TEST_NORMAL_STACK_SESSION_PATH"]
-print(json.dumps({{
-    "first_response_kind": os.environ["SP_TEST_FIRST_RESPONSE_KIND"],
-    "normal_stack_started": bool(normal_stack_session_path) and Path(normal_stack_session_path).is_file(),
-    "helper_outcome": os.environ["SP_TEST_OUTCOME"],
-    "decision_source": os.environ["SP_TEST_DECISION_SOURCE"],
-    "decision_path": os.environ["SP_TEST_DECISION_PATH"],
-    "normal_stack_session_path": normal_stack_session_path,
-    "prompt_question": os.environ["SP_TEST_PROMPT_QUESTION"],
-}}))
-PY
-"#
-    );
-
-    install_compiled_featureforge(home_dir);
-    let output = run_checked(
-        {
-            let mut command = Command::new("bash");
-            command
-                .arg("-lc")
-                .arg(script)
-                .current_dir(repo_root())
-                .env("FEATUREFORGE_STATE_DIR", state_dir)
-                .env("HOME", home_dir)
-                .env("SP_TEST_MESSAGE_FILE", &message_file)
-                .env("SP_TEST_SESSION_KEY", session_key);
-            command
-        },
-        session_key,
-    );
-
-    parse_supported_entry_stdout(&output.stdout, session_key)
-}
-
 fn simulate_supported_route_selection(
     state_dir: &Path,
     home_dir: &Path,
@@ -247,77 +142,28 @@ fn simulate_supported_route_selection(
         r#"
 set -euo pipefail
 {preamble}
-_resolve_json="$("$_FEATUREFORGE_BIN" session-entry resolve --message-file "$SP_TEST_MESSAGE_FILE" --session-key "$SP_TEST_SESSION_KEY")"
-eval "$(
-  RESOLVE_JSON="$_resolve_json" python3 - <<'PY'
-import json
-import os
-import shlex
-
-data = json.loads(os.environ["RESOLVE_JSON"])
-prompt = data.get("prompt") or {{}}
-fields = {{
-    "SP_TEST_OUTCOME": data.get("outcome", ""),
-    "SP_TEST_DECISION_SOURCE": data.get("decision_source", ""),
-    "SP_TEST_DECISION_PATH": data.get("decision_path", ""),
-    "SP_TEST_PROMPT_QUESTION": prompt.get("question", ""),
-}}
-for key, value in fields.items():
-    print(f"{{key}}={{shlex.quote(str(value))}}")
-PY
-)"
-_first_response_kind=""
-_normal_stack_session_path=""
 _selected_route=""
-case "$SP_TEST_OUTCOME" in
-  needs_user_choice)
-    _first_response_kind="bypass_prompt"
-    ;;
-  enabled)
-{normal_stack}
-    _first_response_kind="normal_stack"
-    _normal_stack_session_path="$_SP_STATE_DIR/sessions/$PPID"
-    _selected_route="$(
+_selected_route="$(
 {route_block}
 )"
-    if [ -z "$_selected_route" ] && [ -n "${{SP_TEST_IMPLEMENTATION_READY_ROUTE:-}}" ]; then
-      _selected_route="$SP_TEST_IMPLEMENTATION_READY_ROUTE"
-    fi
-    ;;
-  bypassed)
-    _first_response_kind="featureforge_bypassed"
-    ;;
-  *)
-    _first_response_kind="runtime_failure"
-    ;;
-esac
-SP_TEST_OUTCOME="$SP_TEST_OUTCOME" \
-SP_TEST_DECISION_SOURCE="$SP_TEST_DECISION_SOURCE" \
-SP_TEST_DECISION_PATH="$SP_TEST_DECISION_PATH" \
-SP_TEST_PROMPT_QUESTION="$SP_TEST_PROMPT_QUESTION" \
-SP_TEST_FIRST_RESPONSE_KIND="$_first_response_kind" \
-SP_TEST_NORMAL_STACK_SESSION_PATH="$_normal_stack_session_path" \
+if [ -z "$_selected_route" ] && [ -n "${{SP_TEST_IMPLEMENTATION_READY_ROUTE:-}}" ]; then
+    _selected_route="$SP_TEST_IMPLEMENTATION_READY_ROUTE"
+fi
+SP_TEST_SESSION_MARKER_PATH="$_SP_STATE_DIR/sessions/$PPID" \
 SP_TEST_SELECTED_ROUTE="$_selected_route" \
 python3 - <<'PY'
 import json
 import os
 from pathlib import Path
 
-normal_stack_session_path = os.environ["SP_TEST_NORMAL_STACK_SESSION_PATH"]
+session_marker_path = os.environ["SP_TEST_SESSION_MARKER_PATH"]
 print(json.dumps({{
-    "first_response_kind": os.environ["SP_TEST_FIRST_RESPONSE_KIND"],
-    "normal_stack_started": bool(normal_stack_session_path) and Path(normal_stack_session_path).is_file(),
-    "helper_outcome": os.environ["SP_TEST_OUTCOME"],
-    "decision_source": os.environ["SP_TEST_DECISION_SOURCE"],
-    "decision_path": os.environ["SP_TEST_DECISION_PATH"],
-    "normal_stack_session_path": normal_stack_session_path,
-    "prompt_question": os.environ["SP_TEST_PROMPT_QUESTION"],
+        "preamble_session_started": bool(session_marker_path) and Path(session_marker_path).is_file(),
     "selected_route": os.environ["SP_TEST_SELECTED_ROUTE"],
 }}))
 PY
 "#,
         preamble = harness.preamble,
-        normal_stack = harness.normal_stack,
         route_block = harness.route_block,
     );
 
@@ -332,7 +178,6 @@ PY
                 .env("FEATUREFORGE_STATE_DIR", state_dir)
                 .env("HOME", home_dir)
                 .env("SP_TEST_MESSAGE_FILE", &message_file)
-                .env("SP_TEST_SESSION_KEY", harness.session_key)
                 .env("SP_TEST_WORKFLOW_NEXT_SKILL", harness.workflow_next_skill)
                 .env(
                     "SP_TEST_IMPLEMENTATION_READY_ROUTE",
@@ -343,29 +188,13 @@ PY
         harness.session_key,
     );
 
-    parse_supported_entry_stdout(&output.stdout, harness.session_key)
+    parse_json_stdout(&output.stdout, harness.session_key)
 }
 
 #[test]
-fn using_featureforge_skill_documents_and_derives_the_canonical_bypass_gate() {
+fn using_featureforge_skill_uses_shared_preamble_without_session_entry_gate() {
     let content = read_skill_doc();
-    let normal_stack = extract_bash_block(&content, "## Normal FeatureForge Stack");
-    let required_patterns = [
-        "~/.featureforge/session-entry/using-featureforge/$PPID",
-        "featureforge session-entry resolve --message-file <path>",
-        "featureforge session-entry resolve --message-file <path> --spawned-subagent",
-        "featureforge session-entry resolve --message-file <path> --spawned-subagent --spawned-subagent-opt-in",
-        "if the session decision is `enabled`, continue into the normal stack",
-        "if the session decision is `bypassed` and the user did not explicitly request FeatureForge, stop and bypass the rest of this skill",
-        "if the user explicitly requests FeatureForge or explicitly names a FeatureForge skill, rewrite the session decision to `enabled` and continue on the same turn",
-        "default spawned-subagent bypass is ephemeral and non-persisted",
-        "supported spawned-subagent entry paths must pass the runtime marker instead of inventing prose-only bypass behavior",
-        "session-entry bootstrap ownership is runtime-owned",
-        "missing or malformed decision state fails closed",
-        "If the session decision file exists but contains malformed content:",
-        "do not compute `_SESSIONS`",
-        "If the user explicitly requests re-entry but the bootstrap cannot rewrite the session decision to `enabled`:",
-        "If the bypass gate resolves to `enabled` for this turn, run the normal shared FeatureForge stack before any further FeatureForge behavior:",
+    for pattern in [
         "If helpers are unavailable, fallback stays minimal and conservative:",
         "Manual fallback must not infer readiness from the legacy thin header subset.",
         "If the user is explicitly asking to set up or repair project memory under `docs/project_notes/`, or to log a bug fix in project memory, record a decision in project memory, update key facts in project memory, or otherwise record durable bugs, decisions, key facts, or issue breadcrumbs in repo-visible project memory, short-circuit helper-derived workflow routes and execution handoff paths and route to `featureforge:project-memory`.",
@@ -374,16 +203,28 @@ fn using_featureforge_skill_documents_and_derives_the_canonical_bypass_gate() {
         "When product-work artifact state already points at another active workflow stage, follow that workflow owner first and treat project memory as optional follow-up support unless the user is explicitly asking to work on project memory itself, in which case the explicit project-memory route above takes precedence over helper-derived workflow routes and execution handoff paths.",
         "In manual fallback, choose this route only for explicit memory-oriented requests; vague mentions of notes or docs are not enough.",
         "_UPD=\"\"",
-        "export FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY=1",
         "_SESSIONS=$(find \"$_SP_STATE_DIR/sessions\" -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' ')",
         "_CONTRIB=\"\"",
-        "supported entry paths must ask the bypass question on `needs_user_choice` before the normal stack starts",
-        "Only after the bypass gate resolves to `enabled` for the current session key, if `$_FEATUREFORGE_BIN` is available call `$_FEATUREFORGE_BIN workflow status --refresh`.",
-    ];
-    for pattern in required_patterns {
+    ] {
         assert!(
             content.contains(pattern),
             "using-featureforge skill should contain pattern: {pattern}"
+        );
+    }
+    for removed_pattern in [
+        "## Bypass Gate",
+        "## Normal FeatureForge Stack",
+        "session-entry/using-featureforge/$PPID",
+        "featureforge session-entry resolve --message-file <path>",
+        "FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY",
+        "FEATUREFORGE_SPAWNED_SUBAGENT",
+        "FEATUREFORGE_SPAWNED_SUBAGENT_OPT_IN",
+        "ask one interactive question before any normal FeatureForge work happens",
+        "Only after the bypass gate resolves to `enabled` for the current session key",
+    ] {
+        assert!(
+            !content.contains(removed_pattern),
+            "using-featureforge skill should omit removed session-entry gate pattern: {removed_pattern}"
         );
     }
     assert!(
@@ -415,10 +256,6 @@ fn using_featureforge_skill_documents_and_derives_the_canonical_bypass_gate() {
         explicit_memory_route_index < implementation_ready_index,
         "explicit project-memory routing should be documented before the implementation-ready handoff rule"
     );
-    assert!(
-        !normal_stack.contains("featureforge:project-memory"),
-        "normal featureforge stack should not route through project-memory by default"
-    );
 
     let preamble = extract_bash_block(&content, "## Preamble (run first)");
     let temp_home = TempDir::new().expect("home tempdir should exist");
@@ -426,20 +263,21 @@ fn using_featureforge_skill_documents_and_derives_the_canonical_bypass_gate() {
     let output = run_bash_block(
         state_dir.path(),
         temp_home.path(),
-        &format!("{preamble}\nprintf \"%s\\n\" \"$_SP_USING_FEATUREFORGE_DECISION_PATH\"\n"),
-        "derive using-featureforge decision path",
+        &format!("{preamble}\nprintf \"%s\\n\" \"$_SP_STATE_DIR/sessions/$PPID\"\n"),
+        "derive using-featureforge shared session marker path",
     );
-    let decision_path =
-        extract_last_nonempty_line(&output.stdout, "derive using-featureforge decision path");
+    let session_marker_path = extract_last_nonempty_line(
+        &output.stdout,
+        "derive using-featureforge shared session marker path",
+    );
     let expected_prefix = state_dir
         .path()
-        .join("session-entry")
-        .join("using-featureforge");
+        .join("sessions");
     assert!(
-        Path::new(&decision_path).starts_with(&expected_prefix),
-        "decision path should live under {:?}, got {}",
+        Path::new(&session_marker_path).starts_with(&expected_prefix),
+        "shared session marker path should live under {:?}, got {}",
         expected_prefix,
-        decision_path
+        session_marker_path
     );
 }
 
@@ -465,213 +303,14 @@ fn using_featureforge_preamble_requires_the_packaged_runtime_binary() {
 }
 
 #[test]
-fn using_featureforge_skill_supported_entry_routing_matches_runtime_contract() {
-    let content = read_skill_doc();
-    let preamble = extract_bash_block(&content, "## Preamble (run first)");
-    let normal_stack = extract_bash_block(&content, "## Normal FeatureForge Stack");
-    let temp_home = TempDir::new().expect("home tempdir should exist");
-    let state_dir = TempDir::new().expect("state tempdir should exist");
-    let state = state_dir.path();
-    let home = temp_home.path();
-
-    let missing_output = simulate_supported_entry(
-        state,
-        home,
-        &preamble,
-        &normal_stack,
-        "fresh-entry",
-        "Please route this from a fresh entry path.\n",
-    );
-    assert_eq!(
-        missing_output["helper_outcome"],
-        Value::String(String::from("needs_user_choice"))
-    );
-    assert_eq!(
-        missing_output["first_response_kind"],
-        Value::String(String::from("bypass_prompt"))
-    );
-    assert_eq!(missing_output["normal_stack_started"], Value::Bool(false));
-    assert_eq!(
-        missing_output["decision_source"],
-        Value::String(String::from("missing"))
-    );
-    assert_eq!(
-        missing_output["decision_path"],
-        Value::String(
-            canonical_decision_path(state, "fresh-entry")
-                .to_string_lossy()
-                .into_owned()
-        )
-    );
-    assert!(
-        !missing_output["prompt_question"]
-            .as_str()
-            .unwrap_or_default()
-            .is_empty()
-    );
-
-    let malformed_path = canonical_decision_path(state, "malformed-entry");
-    write_file(&malformed_path, "corrupt\nextra\n");
-    let malformed_output = simulate_supported_entry(
-        state,
-        home,
-        &preamble,
-        &normal_stack,
-        "malformed-entry",
-        "Please route this from malformed state.\n",
-    );
-    assert_eq!(
-        malformed_output["helper_outcome"],
-        Value::String(String::from("needs_user_choice"))
-    );
-    assert_eq!(
-        malformed_output["first_response_kind"],
-        Value::String(String::from("bypass_prompt"))
-    );
-    assert_eq!(malformed_output["normal_stack_started"], Value::Bool(false));
-    assert_eq!(
-        malformed_output["decision_source"],
-        Value::String(String::from("malformed"))
-    );
-    assert_eq!(
-        malformed_output["decision_path"],
-        Value::String(malformed_path.to_string_lossy().into_owned())
-    );
-
-    let enabled_path = canonical_decision_path(state, "enabled-entry");
-    write_file(&enabled_path, "enabled\n");
-    let enabled_output = simulate_supported_entry(
-        state,
-        home,
-        &preamble,
-        &normal_stack,
-        "enabled-entry",
-        "Please route this from enabled state.\n",
-    );
-    assert_eq!(
-        enabled_output["helper_outcome"],
-        Value::String(String::from("enabled"))
-    );
-    assert_eq!(
-        enabled_output["first_response_kind"],
-        Value::String(String::from("normal_stack"))
-    );
-    assert_eq!(enabled_output["normal_stack_started"], Value::Bool(true));
-    assert_eq!(
-        enabled_output["decision_source"],
-        Value::String(String::from("existing_enabled"))
-    );
-    assert!(
-        !enabled_output["normal_stack_session_path"]
-            .as_str()
-            .unwrap_or_default()
-            .is_empty()
-    );
-
-    let bypassed_path = canonical_decision_path(state, "bypassed-entry");
-    write_file(&bypassed_path, "bypassed\n");
-    let bypassed_output = simulate_supported_entry(
-        state,
-        home,
-        &preamble,
-        &normal_stack,
-        "bypassed-entry",
-        "Continue without FeatureForge.\n",
-    );
-    assert_eq!(
-        bypassed_output["helper_outcome"],
-        Value::String(String::from("bypassed"))
-    );
-    assert_eq!(
-        bypassed_output["first_response_kind"],
-        Value::String(String::from("featureforge_bypassed"))
-    );
-    assert_eq!(bypassed_output["normal_stack_started"], Value::Bool(false));
-    assert_eq!(
-        bypassed_output["decision_source"],
-        Value::String(String::from("existing_bypassed"))
-    );
-
-    for (session_key, message) in [
-        (
-            "fresh-spec-review-intent",
-            "Please review this draft spec from a fresh session.\n",
-        ),
-        (
-            "fresh-plan-review-intent",
-            "Please review this draft plan from a fresh session.\n",
-        ),
-        (
-            "fresh-execution-preflight-intent",
-            "Please start implementation from the approved plan in this fresh session.\n",
-        ),
-    ] {
-        let fresh_output =
-            simulate_supported_entry(state, home, &preamble, &normal_stack, session_key, message);
-        assert_eq!(
-            fresh_output["helper_outcome"],
-            Value::String(String::from("needs_user_choice")),
-            "{session_key} should surface the bypass prompt before any later routing"
-        );
-        assert_eq!(
-            fresh_output["first_response_kind"],
-            Value::String(String::from("bypass_prompt")),
-            "{session_key} should surface the bypass prompt first"
-        );
-        assert_eq!(
-            fresh_output["normal_stack_started"],
-            Value::Bool(false),
-            "{session_key} should not enter the normal stack before the bypass decision"
-        );
-        assert_eq!(
-            fresh_output["decision_source"],
-            Value::String(String::from("missing")),
-            "{session_key} should stay a missing-decision fresh entry"
-        );
-    }
-
-    let reentry_path = canonical_decision_path(state, "reentry-entry");
-    write_file(&reentry_path, "bypassed\n");
-    let reentry_output = simulate_supported_entry(
-        state,
-        home,
-        &preamble,
-        &normal_stack,
-        "reentry-entry",
-        "featureforge please\n",
-    );
-    assert_eq!(
-        reentry_output["helper_outcome"],
-        Value::String(String::from("enabled"))
-    );
-    assert_eq!(
-        reentry_output["first_response_kind"],
-        Value::String(String::from("normal_stack"))
-    );
-    assert_eq!(reentry_output["normal_stack_started"], Value::Bool(true));
-    assert_eq!(
-        reentry_output["decision_source"],
-        Value::String(String::from("explicit_reentry"))
-    );
-    assert_eq!(
-        fs::read_to_string(&reentry_path).expect("reentry path should be readable"),
-        "enabled\n"
-    );
-}
-
-#[test]
 fn using_featureforge_project_memory_carveout_stays_explicit_and_workflow_bound() {
     let content = read_skill_doc();
     let preamble = extract_bash_block(&content, "## Preamble (run first)");
-    let normal_stack = extract_bash_block(&content, "## Normal FeatureForge Stack");
     let route_block = read_route_contract_fixture();
     let temp_home = TempDir::new().expect("home tempdir should exist");
     let state_dir = TempDir::new().expect("state tempdir should exist");
     let state = state_dir.path();
     let home = temp_home.path();
-
-    let enabled_path = canonical_decision_path(state, "project-memory-route-enabled");
-    write_file(&enabled_path, "enabled\n");
 
     let vague_message = "Please add some notes to the docs after plan review.\n";
     let direct_skill_message =
@@ -720,23 +359,13 @@ fn using_featureforge_project_memory_carveout_stays_explicit_and_workflow_bound(
     ] {
         let harness = RouteSelectionHarness {
             preamble: &preamble,
-            normal_stack: &normal_stack,
             route_block: &route_block,
-            session_key: "project-memory-route-enabled",
+            session_key: "project-memory-route-selection",
             workflow_next_skill: active_owner,
             implementation_ready_route: "",
         };
         let vague_entry = simulate_supported_route_selection(state, home, &harness, vague_message);
-        assert_eq!(
-            vague_entry["helper_outcome"],
-            Value::String(String::from("enabled")),
-            "active-workflow precedence coverage should run through the real enabled entry path",
-        );
-        assert_eq!(
-            vague_entry["first_response_kind"],
-            Value::String(String::from("normal_stack")),
-            "enabled entry should continue through the normal stack before route selection",
-        );
+        assert_eq!(vague_entry["preamble_session_started"], Value::Bool(true));
         assert_eq!(
             vague_entry["selected_route"],
             Value::String(String::from(active_owner)),
@@ -746,11 +375,7 @@ fn using_featureforge_project_memory_carveout_stays_explicit_and_workflow_bound(
         for explicit_message in explicit_messages {
             let explicit_entry =
                 simulate_supported_route_selection(state, home, &harness, explicit_message);
-            assert_eq!(
-                explicit_entry["helper_outcome"],
-                Value::String(String::from("enabled")),
-                "explicit project-memory routing should still use the real enabled entry path",
-            );
+            assert_eq!(explicit_entry["preamble_session_started"], Value::Bool(true));
             assert_eq!(
                 explicit_entry["selected_route"],
                 Value::String(String::from("featureforge:project-memory")),
@@ -761,11 +386,7 @@ fn using_featureforge_project_memory_carveout_stays_explicit_and_workflow_bound(
         for negative_message in negative_messages {
             let negative_entry =
                 simulate_supported_route_selection(state, home, &harness, negative_message);
-            assert_eq!(
-                negative_entry["helper_outcome"],
-                Value::String(String::from("enabled")),
-                "negative route coverage should still use the real enabled entry path",
-            );
+            assert_eq!(negative_entry["preamble_session_started"], Value::Bool(true));
             assert_eq!(
                 negative_entry["selected_route"],
                 Value::String(String::from(active_owner)),
@@ -775,11 +396,7 @@ fn using_featureforge_project_memory_carveout_stays_explicit_and_workflow_bound(
 
         let direct_skill_entry =
             simulate_supported_route_selection(state, home, &harness, direct_skill_message);
-        assert_eq!(
-            direct_skill_entry["helper_outcome"],
-            Value::String(String::from("enabled")),
-            "direct project-memory skill requests should still use the real enabled entry path",
-        );
+        assert_eq!(direct_skill_entry["preamble_session_started"], Value::Bool(true));
         assert_eq!(
             direct_skill_entry["selected_route"],
             Value::String(String::from("featureforge:project-memory")),
@@ -789,9 +406,8 @@ fn using_featureforge_project_memory_carveout_stays_explicit_and_workflow_bound(
 
     let handoff_harness = RouteSelectionHarness {
         preamble: &preamble,
-        normal_stack: &normal_stack,
         route_block: &route_block,
-        session_key: "project-memory-route-enabled",
+        session_key: "project-memory-route-handoff",
         workflow_next_skill: "",
         implementation_ready_route: "featureforge:executing-plans",
     };

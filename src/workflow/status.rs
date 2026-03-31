@@ -25,7 +25,6 @@ use crate::git::{
     stored_repo_root_matches_current,
 };
 use crate::paths::{RepoPath, featureforge_state_dir};
-use crate::session_entry;
 use crate::workflow::manifest::{
     ManifestLoadResult, WorkflowManifest, load_manifest, load_manifest_read_only, manifest_path,
     recover_slug_changed_manifest, recover_slug_changed_manifest_read_only, save_manifest,
@@ -34,8 +33,8 @@ use crate::workflow::markdown_scan::markdown_files_under;
 
 const ACTIVE_SPEC_ROOT: &str = "docs/featureforge/specs";
 const ACTIVE_PLAN_ROOT: &str = "docs/featureforge/plans";
-const ACTIVE_SESSION_ENTRY_SKILL: &str = "using-featureforge";
-const STRICT_SESSION_ENTRY_GATE_ENV: &str = "FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY";
+const WORKFLOW_ROUTE_SCHEMA_VERSION: u32 = 3;
+const WORKFLOW_PHASE_SCHEMA_VERSION: u32 = 2;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct WorkflowRoute {
@@ -69,6 +68,7 @@ pub struct WorkflowDiagnostic {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct WorkflowPhase {
+    pub schema_version: u32,
     pub phase: String,
     pub route_status: String,
     pub next_skill: String,
@@ -76,20 +76,7 @@ pub struct WorkflowPhase {
     pub next_action: String,
     pub spec_path: String,
     pub plan_path: String,
-    pub session_entry: SessionEntryState,
     pub route: WorkflowRoute,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
-pub struct SessionEntryState {
-    pub outcome: String,
-    pub decision_source: String,
-    pub session_key: String,
-    pub decision_path: String,
-    pub policy_source: String,
-    pub persisted: bool,
-    pub failure_class: String,
-    pub reason: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
@@ -201,19 +188,14 @@ impl WorkflowRuntime {
 
     pub fn status(&self) -> Result<WorkflowRoute, DiagnosticError> {
         resolve_route(self, false, false)
-            .map(|route| self.decorate_route_with_manifest_context(route))
+            .map(|route| normalize_workflow_route(self.decorate_route_with_manifest_context(route)))
     }
 
     pub fn status_refresh(&mut self) -> Result<WorkflowRoute, DiagnosticError> {
-        let route = self.decorate_route_with_manifest_context(resolve_route(self, false, true)?);
-        let mut expected_spec_path = route.spec_path.clone();
-        let mut expected_plan_path = route.plan_path.clone();
-        if should_preserve_manifest_expected_paths(&route)
-            && let Some(existing_manifest) = self.matching_manifest()
-        {
-            expected_spec_path = existing_manifest.expected_spec_path.clone();
-            expected_plan_path = existing_manifest.expected_plan_path.clone();
-        }
+        let route =
+            normalize_workflow_route(self.decorate_route_with_manifest_context(resolve_route(self, false, true)?));
+        let expected_spec_path = route.spec_path.clone();
+        let expected_plan_path = route.plan_path.clone();
 
         let manifest = WorkflowManifest {
             version: 1,
@@ -253,7 +235,7 @@ impl WorkflowRuntime {
             _ => {}
         }
         resolve_route(self, true, false)
-            .map(|route| self.decorate_route_with_manifest_context(route))
+            .map(|route| normalize_workflow_route(self.decorate_route_with_manifest_context(route)))
     }
 
     pub fn expect(
@@ -382,7 +364,6 @@ impl WorkflowRuntime {
 
     pub fn phase(&self) -> Result<WorkflowPhase, DiagnosticError> {
         let route = self.resolve()?;
-        let session_entry = read_session_entry(&self.state_dir);
         let phase = if route.status == "implementation_ready" {
             String::from("execution_preflight")
         } else if route.status == "stale_plan" {
@@ -395,19 +376,38 @@ impl WorkflowRuntime {
         } else {
             String::from("use_next_skill")
         };
+        let next_step = if route.status == "implementation_ready" {
+            if route.plan_path.is_empty() {
+                String::from("Return to execution preflight for the approved plan.")
+            } else {
+                format!(
+                    "Return to execution preflight for the approved plan: {}",
+                    route.plan_path
+                )
+            }
+        } else if !route.next_skill.is_empty() {
+            format!("Use {}", route.next_skill)
+        } else {
+            String::from("Inspect the workflow state again after resolving the current issue.")
+        };
 
         Ok(WorkflowPhase {
+            schema_version: WORKFLOW_PHASE_SCHEMA_VERSION,
             phase,
             route_status: route.status.clone(),
             next_skill: route.next_skill.clone(),
-            next_step: route.next_skill.clone(),
+            next_step,
             next_action,
             spec_path: route.spec_path.clone(),
             plan_path: route.plan_path.clone(),
-            session_entry,
             route,
         })
     }
+}
+
+fn normalize_workflow_route(mut route: WorkflowRoute) -> WorkflowRoute {
+    route.schema_version = WORKFLOW_ROUTE_SCHEMA_VERSION;
+    route
 }
 
 impl WorkflowRuntime {
@@ -502,18 +502,6 @@ fn resolve_route(
 ) -> Result<WorkflowRoute, DiagnosticError> {
     let manifest_path = runtime.manifest_path.display().to_string();
     let root = runtime.identity.repo_root.to_string_lossy().into_owned();
-
-    if !read_only && strict_session_entry_gate_enabled() {
-        let session_key = workflow_session_key();
-        let session_entry = session_entry::inspect(Some(&session_key))?;
-        if session_entry.outcome != "enabled" {
-            return Ok(strict_session_entry_route(
-                &session_entry,
-                manifest_path,
-                root,
-            ));
-        }
-    }
 
     let (mut spec_candidates, mut malformed_spec_candidates) =
         scan_specs(&runtime.identity.repo_root);
@@ -999,123 +987,6 @@ fn fallback_limit() -> Option<usize> {
         .filter(|limit| *limit > 0)
 }
 
-fn read_session_entry(state_dir: &Path) -> SessionEntryState {
-    let session_key = workflow_session_key();
-    match session_entry::inspect(Some(&session_key)) {
-        Ok(output) => SessionEntryState {
-            outcome: output.outcome,
-            decision_source: output.decision_source,
-            session_key: output.session_key,
-            decision_path: output.decision_path,
-            policy_source: output.policy_source,
-            persisted: output.persisted,
-            failure_class: output.failure_class,
-            reason: output.reason,
-        },
-        Err(error) => SessionEntryState {
-            outcome: String::from("needs_user_choice"),
-            decision_source: String::from("runtime_failure"),
-            session_key,
-            decision_path: state_dir
-                .join("session-entry")
-                .join(ACTIVE_SESSION_ENTRY_SKILL)
-                .to_string_lossy()
-                .into_owned(),
-            policy_source: String::from("default"),
-            persisted: false,
-            failure_class: error.failure_class().to_owned(),
-            reason: error.message().to_owned(),
-        },
-    }
-}
-
-fn strict_session_entry_route(
-    session_entry: &session_entry::SessionEntryResolveOutput,
-    manifest_path: String,
-    root: String,
-) -> WorkflowRoute {
-    let is_bypassed = session_entry.outcome == "bypassed";
-    let reason_code = if is_bypassed {
-        String::from("session_entry_bypassed")
-    } else {
-        String::from("session_entry_unresolved")
-    };
-    let message = if is_bypassed {
-        String::from(
-            "FeatureForge is bypassed for this session until the user explicitly re-enters.",
-        )
-    } else {
-        String::from(
-            "Resolve session-entry through `featureforge session-entry resolve --message-file <path>` before workflow routing.",
-        )
-    };
-
-    WorkflowRoute {
-        schema_version: 2,
-        status: session_entry.outcome.clone(),
-        next_skill: String::new(),
-        spec_path: String::new(),
-        plan_path: String::new(),
-        contract_state: String::from("unknown"),
-        reason_codes: vec![reason_code.clone()],
-        diagnostics: vec![WorkflowDiagnostic {
-            code: reason_code.clone(),
-            severity: if is_bypassed {
-                String::from("warning")
-            } else {
-                String::from("error")
-            },
-            artifact: session_entry.decision_path.clone(),
-            message,
-            remediation: if is_bypassed {
-                String::from(
-                    "Keep routing outside FeatureForge or request explicit FeatureForge re-entry.",
-                )
-            } else {
-                String::from(
-                    "Run `featureforge session-entry resolve --message-file <path>` and surface the bypass prompt first.",
-                )
-            },
-        }],
-        scan_truncated: false,
-        spec_candidate_count: 0,
-        plan_candidate_count: 0,
-        manifest_path,
-        root,
-        reason: reason_code.clone(),
-        note: reason_code,
-    }
-}
-
-fn strict_session_entry_gate_enabled() -> bool {
-    env_flag(STRICT_SESSION_ENTRY_GATE_ENV)
-}
-
-fn should_preserve_manifest_expected_paths(route: &WorkflowRoute) -> bool {
-    route.spec_path.is_empty()
-        && route.plan_path.is_empty()
-        && route
-            .reason_codes
-            .iter()
-            .any(|code| code == "session_entry_unresolved" || code == "session_entry_bypassed")
-}
-
-fn workflow_session_key() -> String {
-    env::var("FEATUREFORGE_SESSION_KEY")
-        .or_else(|_| env::var("PPID"))
-        .unwrap_or_else(|_| String::from("current"))
-}
-
-fn env_flag(name: &str) -> bool {
-    env::var(name)
-        .ok()
-        .map(|value| {
-            let normalized = value.trim().to_ascii_lowercase();
-            matches!(normalized.as_str(), "1" | "true" | "yes" | "on")
-        })
-        .unwrap_or(false)
-}
-
 pub fn sync_reason_codes(route: &WorkflowRoute) -> Vec<String> {
     route.reason_codes.clone()
 }
@@ -1199,20 +1070,8 @@ pub fn write_workflow_schemas(output_dir: impl AsRef<Path>) -> Result<(), Diagno
         )
     })?;
 
-    let status_schema =
-        serde_json::to_string_pretty(&schema_for!(WorkflowRoute)).map_err(|err| {
-            DiagnosticError::new(
-                FailureClass::InstructionParseFailed,
-                format!("Could not serialize workflow status schema: {err}"),
-            )
-        })?;
-    let resolve_schema =
-        serde_json::to_string_pretty(&schema_for!(WorkflowRoute)).map_err(|err| {
-            DiagnosticError::new(
-                FailureClass::InstructionParseFailed,
-                format!("Could not serialize workflow resolve schema: {err}"),
-            )
-        })?;
+    let status_schema = workflow_route_schema_json("workflow status")?;
+    let resolve_schema = workflow_route_schema_json("workflow resolve")?;
 
     fs::write(
         output_dir.join("workflow-status.schema.json"),
@@ -1235,6 +1094,41 @@ pub fn write_workflow_schemas(output_dir: impl AsRef<Path>) -> Result<(), Diagno
         )
     })?;
 
+    Ok(())
+}
+
+fn workflow_route_schema_json(schema_label: &str) -> Result<String, DiagnosticError> {
+    let mut schema = serde_json::to_value(schema_for!(WorkflowRoute)).map_err(|err| {
+        DiagnosticError::new(
+            FailureClass::InstructionParseFailed,
+            format!("Could not serialize {schema_label} schema: {err}"),
+        )
+    })?;
+    lock_workflow_route_schema_version(&mut schema)?;
+    serde_json::to_string_pretty(&schema).map_err(|err| {
+        DiagnosticError::new(
+            FailureClass::InstructionParseFailed,
+            format!("Could not serialize {schema_label} schema: {err}"),
+        )
+    })
+}
+
+fn lock_workflow_route_schema_version(schema: &mut serde_json::Value) -> Result<(), DiagnosticError> {
+    let schema_version = schema
+        .get_mut("properties")
+        .and_then(serde_json::Value::as_object_mut)
+        .and_then(|properties| properties.get_mut("schema_version"))
+        .and_then(serde_json::Value::as_object_mut)
+        .ok_or_else(|| {
+            DiagnosticError::new(
+                FailureClass::InstructionParseFailed,
+                "WorkflowRoute schema is missing the schema_version property.",
+            )
+        })?;
+    schema_version.insert(
+        String::from("const"),
+        serde_json::Value::from(WORKFLOW_ROUTE_SCHEMA_VERSION),
+    );
     Ok(())
 }
 

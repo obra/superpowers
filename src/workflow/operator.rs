@@ -1,4 +1,3 @@
-use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -13,11 +12,15 @@ use crate::diagnostics::{DiagnosticError, JsonFailure};
 use crate::execution::harness::{EvaluatorKind, HarnessPhase, INITIAL_AUTHORITATIVE_SEQUENCE};
 use crate::execution::state::{ExecutionRuntime, GateResult, PlanExecutionStatus};
 use crate::execution::topology::RecommendOutput;
-use crate::session_entry::{self, SessionEntryResolveOutput};
-use crate::workflow::status::{SessionEntryState, WorkflowPhase, WorkflowRoute, WorkflowRuntime};
+use crate::workflow::status::{WorkflowPhase, WorkflowRoute, WorkflowRuntime};
+
+const WORKFLOW_PHASE_SCHEMA_VERSION: u32 = 2;
+const WORKFLOW_DOCTOR_SCHEMA_VERSION: u32 = 2;
+const WORKFLOW_HANDOFF_SCHEMA_VERSION: u32 = 2;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct WorkflowDoctor {
+    pub schema_version: u32,
     pub phase: String,
     pub route_status: String,
     pub next_skill: String,
@@ -26,7 +29,6 @@ pub struct WorkflowDoctor {
     pub spec_path: String,
     pub plan_path: String,
     pub contract_state: String,
-    pub session_entry: SessionEntryResolveOutput,
     pub route: WorkflowRoute,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub execution_status: Option<PlanExecutionStatus>,
@@ -42,6 +44,7 @@ pub struct WorkflowDoctor {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct WorkflowHandoff {
+    pub schema_version: u32,
     pub phase: String,
     pub route_status: String,
     pub next_skill: String,
@@ -52,7 +55,6 @@ pub struct WorkflowHandoff {
     pub next_action: String,
     pub recommended_skill: String,
     pub recommendation_reason: String,
-    pub session_entry: SessionEntryResolveOutput,
     pub route: WorkflowRoute,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub execution_status: Option<PlanExecutionStatus>,
@@ -64,7 +66,6 @@ pub struct WorkflowHandoff {
 
 struct OperatorContext {
     route: WorkflowRoute,
-    session_entry: SessionEntryResolveOutput,
     execution_status: Option<PlanExecutionStatus>,
     plan_contract: Option<AnalyzePlanReport>,
     preflight: Option<GateResult>,
@@ -112,6 +113,7 @@ pub fn render_explain(current_dir: &Path) -> Result<String, JsonFailure> {
 pub fn phase(current_dir: &Path) -> Result<WorkflowPhase, JsonFailure> {
     let context = build_context(current_dir)?;
     Ok(WorkflowPhase {
+        schema_version: WORKFLOW_PHASE_SCHEMA_VERSION,
         phase: context.phase.clone(),
         route_status: context.route.status.clone(),
         next_skill: public_next_skill(&context),
@@ -119,7 +121,6 @@ pub fn phase(current_dir: &Path) -> Result<WorkflowPhase, JsonFailure> {
         next_action: next_action_for_context(&context).to_owned(),
         spec_path: context.route.spec_path.clone(),
         plan_path: context.route.plan_path.clone(),
-        session_entry: session_entry_state(&context.session_entry),
         route: context.route,
     })
 }
@@ -147,6 +148,7 @@ pub fn doctor(current_dir: &Path) -> Result<WorkflowDoctor, JsonFailure> {
         .unwrap_or_else(|| context.route.contract_state.clone());
 
     Ok(WorkflowDoctor {
+        schema_version: WORKFLOW_DOCTOR_SCHEMA_VERSION,
         phase: doctor_phase,
         route_status: context.route.status.clone(),
         next_skill: public_next_skill(&context),
@@ -155,7 +157,6 @@ pub fn doctor(current_dir: &Path) -> Result<WorkflowDoctor, JsonFailure> {
         spec_path: context.route.spec_path.clone(),
         plan_path: context.route.plan_path.clone(),
         contract_state,
-        session_entry: context.session_entry,
         route: context.route,
         execution_status: context.execution_status,
         plan_contract: context.plan_contract,
@@ -168,9 +169,8 @@ pub fn doctor(current_dir: &Path) -> Result<WorkflowDoctor, JsonFailure> {
 pub fn render_doctor(current_dir: &Path) -> Result<String, JsonFailure> {
     let doctor = doctor(current_dir)?;
     let mut output = format!(
-        "Workflow doctor\nPhase: {}\nSession entry: {}\nRoute status: {}\nNext action: {}\nNext: {}\nContract state: {}\nSpec: {}\nPlan: {}\n",
+        "Workflow doctor\nPhase: {}\nRoute status: {}\nNext action: {}\nNext: {}\nContract state: {}\nSpec: {}\nPlan: {}\n",
         doctor.phase,
-        doctor.session_entry.outcome,
         doctor.route_status,
         doctor.next_action,
         doctor.next_step,
@@ -216,7 +216,6 @@ pub fn handoff(current_dir: &Path) -> Result<WorkflowHandoff, JsonFailure> {
         .map(|status| status.execution_started.clone())
         .unwrap_or_else(|| String::from("no"));
     let recommendation = if context.route.status == "implementation_ready"
-        && context.session_entry.outcome == "enabled"
         && context.phase == "execution_preflight"
         && execution_started != "yes"
         && !context.route.plan_path.is_empty()
@@ -241,12 +240,6 @@ pub fn handoff(current_dir: &Path) -> Result<WorkflowHandoff, JsonFailure> {
         )
     } else {
         match context.phase.as_str() {
-            "bypassed" => (
-                String::new(),
-                String::from(
-                    "FeatureForge is bypassed for this session until the user explicitly re-enters.",
-                ),
-            ),
             "executing" => {
                 let skill = context
                     .execution_status
@@ -316,6 +309,7 @@ pub fn handoff(current_dir: &Path) -> Result<WorkflowHandoff, JsonFailure> {
     };
 
     Ok(WorkflowHandoff {
+        schema_version: WORKFLOW_HANDOFF_SCHEMA_VERSION,
         phase: context.phase.clone(),
         route_status: context.route.status.clone(),
         next_skill: public_next_skill(&context),
@@ -326,7 +320,6 @@ pub fn handoff(current_dir: &Path) -> Result<WorkflowHandoff, JsonFailure> {
         next_action: next_action_for_context(&context).to_owned(),
         recommended_skill,
         recommendation_reason,
-        session_entry: context.session_entry,
         route: context.route,
         execution_status: context.execution_status,
         plan_contract: context.plan_contract,
@@ -384,8 +377,6 @@ pub fn render_gate(title: &str, gate: &GateResult) -> String {
 fn build_context(current_dir: &Path) -> Result<OperatorContext, JsonFailure> {
     let workflow = WorkflowRuntime::discover_read_only(current_dir).map_err(JsonFailure::from)?;
     let route = workflow.resolve().map_err(JsonFailure::from)?;
-    let session_entry =
-        session_entry::inspect(session_key().as_deref()).map_err(JsonFailure::from)?;
     let mut execution_status = None;
     let mut plan_contract = None;
     let mut preflight = None;
@@ -393,7 +384,7 @@ fn build_context(current_dir: &Path) -> Result<OperatorContext, JsonFailure> {
     let mut gate_finish = None;
     let execution_preflight_block_reason = None;
 
-    if session_entry.outcome == "enabled" && route.status == "implementation_ready" {
+    if route.status == "implementation_ready" {
         if let Some(report) = analyze_plan_if_available(&route).map_err(JsonFailure::from)? {
             plan_contract = Some(report);
         }
@@ -431,7 +422,6 @@ fn build_context(current_dir: &Path) -> Result<OperatorContext, JsonFailure> {
 
     let phase = derive_phase(
         &route.status,
-        &session_entry.outcome,
         execution_status.as_ref(),
         preflight.as_ref(),
         gate_review.as_ref(),
@@ -440,7 +430,6 @@ fn build_context(current_dir: &Path) -> Result<OperatorContext, JsonFailure> {
 
     Ok(OperatorContext {
         route,
-        session_entry,
         execution_status,
         plan_contract,
         preflight,
@@ -453,7 +442,6 @@ fn build_context(current_dir: &Path) -> Result<OperatorContext, JsonFailure> {
 
 fn doctor_phase_for_context(context: &OperatorContext) -> String {
     if context.route.status == "implementation_ready"
-        && context.session_entry.outcome == "enabled"
         && context
             .execution_status
             .as_ref()
@@ -599,19 +587,11 @@ fn analyze_plan_if_available(
 
 fn derive_phase(
     route_status: &str,
-    session_outcome: &str,
     execution_status: Option<&PlanExecutionStatus>,
     preflight: Option<&GateResult>,
     gate_review: Option<&GateResult>,
     gate_finish: Option<&GateResult>,
 ) -> String {
-    if session_outcome == "needs_user_choice" {
-        return String::from("needs_user_choice");
-    }
-    if session_outcome == "bypassed" {
-        return String::from("bypassed");
-    }
-
     if route_status != "implementation_ready" {
         return match route_status {
             "spec_draft" => String::from("spec_review"),
@@ -704,19 +684,6 @@ fn execution_state_has_open_steps(status: &PlanExecutionStatus) -> bool {
     status.active_task.is_some() || status.blocking_task.is_some() || status.resume_task.is_some()
 }
 
-fn session_entry_state(output: &SessionEntryResolveOutput) -> SessionEntryState {
-    SessionEntryState {
-        outcome: output.outcome.clone(),
-        decision_source: output.decision_source.clone(),
-        session_key: output.session_key.clone(),
-        decision_path: output.decision_path.clone(),
-        policy_source: output.policy_source.clone(),
-        persisted: output.persisted,
-        failure_class: output.failure_class.clone(),
-        reason: output.reason.clone(),
-    }
-}
-
 fn next_step_text(context: &OperatorContext) -> String {
     if context.phase == "qa_pending" && finish_requires_test_plan_refresh(context) {
         if context.route.plan_path.is_empty() {
@@ -756,12 +723,6 @@ fn next_text_for_phase(
     next_skill: &str,
 ) -> String {
     match phase {
-        "needs_user_choice" => String::from(
-            "Resolve the session-entry gate before continuing into the normal FeatureForge workflow.",
-        ),
-        "bypassed" => String::from(
-            "Continue outside the FeatureForge workflow unless the user explicitly re-enters.",
-        ),
         "execution_preflight" | "implementation_handoff" => {
             if plan_path.is_empty() {
                 String::from("Return to execution preflight for the approved plan.")
@@ -891,12 +852,6 @@ fn reason_text(context: &OperatorContext) -> String {
         "ready_for_branch_completion" => {
             String::from("All required late-stage artifacts are fresh for the current HEAD.")
         }
-        "needs_user_choice" => {
-            String::from("The session-entry decision is still unresolved for this session.")
-        }
-        "bypassed" => String::from(
-            "FeatureForge is bypassed for this session until the user explicitly re-enters.",
-        ),
         _ => context.route.reason.clone(),
     }
 }
@@ -906,17 +861,11 @@ fn display_or_none(value: &str) -> &str {
 }
 
 fn public_next_skill(context: &OperatorContext) -> String {
-    if matches!(context.phase.as_str(), "needs_user_choice" | "bypassed") {
-        String::new()
-    } else {
-        context.route.next_skill.clone()
-    }
+    context.route.next_skill.clone()
 }
 
 fn next_action_for_phase(phase: &str) -> &'static str {
     match phase {
-        "needs_user_choice" => "session_entry_gate",
-        "bypassed" => "continue_outside_featureforge",
         "needs_brainstorming"
         | "brainstorming"
         | "spec_review"
@@ -1164,11 +1113,4 @@ fn execution_status_args(args: &PlanArgs) -> ExecutionStatusArgs {
     ExecutionStatusArgs {
         plan: args.plan.clone(),
     }
-}
-
-fn session_key() -> Option<String> {
-    env::var("FEATUREFORGE_SESSION_KEY")
-        .ok()
-        .or_else(|| env::var("PPID").ok())
-        .filter(|value| !value.trim().is_empty())
 }

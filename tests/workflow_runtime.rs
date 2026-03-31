@@ -116,7 +116,7 @@ fn write_minimal_plan_fidelity_spec(repo: &Path, spec_path: &str) {
 
 fn public_harness_phases_from_spec() -> Vec<String> {
     let spec = include_str!(
-        "../docs/featureforge/specs/2026-03-25-featureforge-execution-harness-spec.md"
+        "../docs/archive/featureforge/specs/2026-03-25-featureforge-execution-harness-spec.md"
     );
     spec.lines()
         .scan(false, |in_phase_section, line| {
@@ -2470,6 +2470,40 @@ fn canonical_workflow_status_refresh_recovers_legacy_symlinked_local_repo_manife
         },
     );
 
+    let phase_json = parse_json(
+        &run_rust_featureforge(
+            &alias_root,
+            state,
+            &["workflow", "phase", "--json"],
+            "workflow phase should preserve legacy local symlink manifest recovery reasons",
+        ),
+        "workflow phase should preserve legacy local symlink manifest recovery reasons",
+    );
+    assert!(
+        phase_json["route"]["reason_codes"]
+            .as_array()
+            .is_some_and(|codes| codes.iter().any(|value| value == "repo_slug_recovered")),
+        "workflow phase should preserve recovered manifest reason codes in the route payload"
+    );
+    assert_eq!(phase_json["plan_path"], plan_a);
+
+    let handoff_json = parse_json(
+        &run_rust_featureforge(
+            &alias_root,
+            state,
+            &["workflow", "handoff", "--json"],
+            "workflow handoff should preserve legacy local symlink manifest recovery reasons",
+        ),
+        "workflow handoff should preserve legacy local symlink manifest recovery reasons",
+    );
+    assert!(
+        handoff_json["route"]["reason_codes"]
+            .as_array()
+            .is_some_and(|codes| codes.iter().any(|value| value == "repo_slug_recovered")),
+        "workflow handoff should preserve recovered manifest reason codes in the route payload"
+    );
+    assert_eq!(handoff_json["plan_path"], plan_a);
+
     let status_json = parse_json(
         &run_rust_featureforge(
             &alias_root,
@@ -2647,88 +2681,89 @@ fn canonical_workflow_status_treats_eng_approved_plans_without_eng_review_as_dra
 }
 
 #[test]
-fn canonical_workflow_phase_reads_canonical_session_entry_state() {
+fn canonical_workflow_phase_omits_session_entry_from_public_json() {
     let (repo_dir, state_dir) = init_repo("workflow-phase-canonical-session-entry");
     let repo = repo_dir.path();
     let state = state_dir.path();
-    let session_key = "phase-canonical-session-entry";
-    let decision_path = state
-        .join("session-entry")
-        .join("using-featureforge")
-        .join(session_key);
-
-    write_file(&decision_path, "enabled\n");
 
     let phase_json = parse_json(
-        &run_rust_featureforge_with_env(
+        &run_rust_featureforge(
             repo,
             state,
             &["workflow", "phase", "--json"],
-            &[("FEATUREFORGE_SESSION_KEY", session_key)],
             "rust canonical workflow phase should read canonical session-entry state",
         ),
         "rust canonical workflow phase should read canonical session-entry state",
     );
 
-    assert_eq!(phase_json["session_entry"]["outcome"], "enabled");
-    assert_eq!(
-        phase_json["session_entry"]["decision_path"],
-        decision_path.to_string_lossy().as_ref()
-    );
+    assert!(phase_json.get("session_entry").is_none());
+    assert_eq!(phase_json["route"]["schema_version"], 3);
 }
 
 #[test]
-fn canonical_workflow_operator_hides_next_skill_until_session_entry_is_resolved() {
-    let (repo_dir, state_dir) = init_repo("workflow-needs-user-choice");
+fn canonical_workflow_operator_routes_ready_plan_without_session_entry_gate() {
+    let (repo_dir, state_dir) = init_repo("workflow-no-session-entry-gate");
     let repo = repo_dir.path();
     let state = state_dir.path();
-    let session_key = "workflow-needs-user-choice";
+
+    let mut git_checkout = Command::new("git");
+    git_checkout
+        .args(["checkout", "-B", "workflow-no-session-entry-gate"])
+        .current_dir(repo);
+    run_checked(git_checkout, "git checkout workflow-no-session-entry-gate");
+
+    install_full_contract_ready_artifacts(repo);
+    let execution_preflight_phase = public_harness_phase_from_spec("execution_preflight");
 
     let phase_json = parse_json(
-        &run_rust_featureforge_with_env(
+        &run_rust_featureforge(
             repo,
             state,
             &["workflow", "phase", "--json"],
-            &[("FEATUREFORGE_SESSION_KEY", session_key)],
-            "workflow phase should hide next_skill while session-entry is unresolved",
+            "workflow phase should route directly without a session-entry gate",
         ),
-        "workflow phase should hide next_skill while session-entry is unresolved",
+        "workflow phase should route directly without a session-entry gate",
     );
-    assert_eq!(phase_json["phase"], "needs_user_choice");
-    assert_eq!(phase_json["next_action"], "session_entry_gate");
-    assert_eq!(phase_json["next_skill"], "");
+    assert_eq!(phase_json["phase"], Value::String(execution_preflight_phase.clone()));
+    assert_eq!(phase_json["next_action"], "execution_preflight");
+    assert!(phase_json.get("session_entry").is_none());
+    assert_eq!(phase_json["schema_version"], 2);
+    assert_eq!(phase_json["route"]["schema_version"], 3);
 
     let doctor_json = parse_json(
-        &run_rust_featureforge_with_env(
+        &run_rust_featureforge(
             repo,
             state,
             &["workflow", "doctor", "--json"],
-            &[("FEATUREFORGE_SESSION_KEY", session_key)],
-            "workflow doctor should hide next_skill while session-entry is unresolved",
+            "workflow doctor should route directly without a session-entry gate",
         ),
-        "workflow doctor should hide next_skill while session-entry is unresolved",
+        "workflow doctor should route directly without a session-entry gate",
     );
-    assert_eq!(doctor_json["phase"], "needs_user_choice");
-    assert_eq!(doctor_json["next_action"], "session_entry_gate");
-    assert_eq!(doctor_json["next_skill"], "");
+    assert_eq!(doctor_json["phase"], Value::String(execution_preflight_phase.clone()));
+    assert_eq!(doctor_json["next_action"], "execution_preflight");
+    assert!(doctor_json.get("session_entry").is_none());
+    assert_eq!(doctor_json["schema_version"], 2);
+    assert_eq!(doctor_json["route"]["schema_version"], 3);
 
     let handoff_json = parse_json(
-        &run_rust_featureforge_with_env(
+        &run_rust_featureforge(
             repo,
             state,
             &["workflow", "handoff", "--json"],
-            &[("FEATUREFORGE_SESSION_KEY", session_key)],
-            "workflow handoff should hide next_skill while session-entry is unresolved",
+            "workflow handoff should route directly without a session-entry gate",
         ),
-        "workflow handoff should hide next_skill while session-entry is unresolved",
+        "workflow handoff should route directly without a session-entry gate",
     );
-    assert_eq!(handoff_json["phase"], "needs_user_choice");
-    assert_eq!(handoff_json["next_action"], "session_entry_gate");
-    assert_eq!(handoff_json["next_skill"], "");
+    assert_eq!(handoff_json["phase"], Value::String(execution_preflight_phase));
+    assert_eq!(handoff_json["next_action"], "execution_preflight");
+    assert_eq!(handoff_json["recommended_skill"], "featureforge:executing-plans");
+    assert!(handoff_json.get("session_entry").is_none());
+    assert_eq!(handoff_json["schema_version"], 2);
+    assert_eq!(handoff_json["route"]["schema_version"], 3);
 }
 
 #[test]
-fn canonical_workflow_status_fail_closes_when_strict_session_entry_gate_is_unresolved() {
+fn canonical_workflow_status_ignores_strict_session_entry_gate_env() {
     let (repo_dir, state_dir) = init_repo("workflow-status-strict-session-entry-gate");
     let repo = repo_dir.path();
     let state = state_dir.path();
@@ -2747,86 +2782,33 @@ fn canonical_workflow_status_fail_closes_when_strict_session_entry_gate_is_unres
                 ("FEATUREFORGE_SESSION_KEY", session_key),
                 ("FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY", "1"),
             ],
-            "workflow status should fail closed when strict session-entry gating is enabled and unresolved",
+            "workflow status should ignore the removed strict session-entry gate env",
         ),
-        "workflow status should fail closed when strict session-entry gating is enabled and unresolved",
+        "workflow status should ignore the removed strict session-entry gate env",
     );
-    assert_eq!(status_json["status"], "needs_user_choice");
-    assert_eq!(status_json["next_skill"], "");
+    assert_eq!(status_json["schema_version"], 3);
+    assert_eq!(status_json["status"], "implementation_ready");
     assert!(
-        status_json["reason_codes"]
-            .as_array()
-            .is_some_and(|codes| codes.iter().any(|code| code == "session_entry_unresolved")),
-        "strict workflow status should explain unresolved session-entry gating"
+        !status_json["reason_codes"].as_array().is_some_and(|codes| codes.iter().any(|code| {
+            code == "session_entry_unresolved" || code == "session_entry_bypassed"
+        })),
+        "workflow status should not expose removed strict session-entry reason codes"
     );
 
-    let decision_path = state
-        .join("session-entry")
-        .join("using-featureforge")
-        .join(session_key);
-    write_file(&decision_path, "enabled\n");
-    let enabled_status_json = parse_json(
-        &run_rust_featureforge_with_env(
-            repo,
-            state,
-            &["workflow", "status", "--refresh"],
-            &[
-                ("FEATUREFORGE_SESSION_KEY", session_key),
-                ("FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY", "1"),
-            ],
-            "workflow status should route normally once strict session-entry gate is enabled",
-        ),
-        "workflow status should route normally once strict session-entry gate is enabled",
-    );
-    assert_eq!(enabled_status_json["status"], "implementation_ready");
     let enabled_manifest: WorkflowManifest = serde_json::from_str(
         &fs::read_to_string(&workflow_manifest_path)
-            .expect("workflow manifest should be written after enabled strict refresh"),
+            .expect("workflow manifest should be written after strict refresh"),
     )
-    .expect("workflow manifest json should parse after enabled strict refresh");
+    .expect("workflow manifest json should parse after strict refresh");
     assert_eq!(
         enabled_manifest.expected_spec_path,
-        enabled_status_json["spec_path"].as_str().unwrap_or(""),
-        "enabled strict refresh should persist the selected expected spec path"
+        status_json["spec_path"].as_str().unwrap_or(""),
+        "strict refresh should persist the selected expected spec path"
     );
     assert_eq!(
         enabled_manifest.expected_plan_path,
-        enabled_status_json["plan_path"].as_str().unwrap_or(""),
-        "enabled strict refresh should persist the selected expected plan path"
-    );
-
-    let other_session_status_json = parse_json(
-        &run_rust_featureforge_with_env(
-            repo,
-            state,
-            &["workflow", "status", "--refresh"],
-            &[
-                (
-                    "FEATUREFORGE_SESSION_KEY",
-                    "workflow-status-strict-session-entry-gate-other-thread",
-                ),
-                ("FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY", "1"),
-            ],
-            "workflow status should keep strict session-entry state isolated per session key",
-        ),
-        "workflow status should keep strict session-entry state isolated per session key",
-    );
-    assert_eq!(
-        other_session_status_json["status"], "needs_user_choice",
-        "strict session-entry gating should remain per-thread/per-session-key"
-    );
-    let manifest_after_other_session: WorkflowManifest = serde_json::from_str(
-        &fs::read_to_string(&workflow_manifest_path)
-            .expect("workflow manifest should remain readable after other-session strict refresh"),
-    )
-    .expect("workflow manifest should parse after other-session strict refresh");
-    assert_eq!(
-        manifest_after_other_session.expected_spec_path, enabled_manifest.expected_spec_path,
-        "other-session strict unresolved refresh should not clear existing expected spec path"
-    );
-    assert_eq!(
-        manifest_after_other_session.expected_plan_path, enabled_manifest.expected_plan_path,
-        "other-session strict unresolved refresh should not clear existing expected plan path"
+        status_json["plan_path"].as_str().unwrap_or(""),
+        "strict refresh should persist the selected expected plan path"
     );
 
     let bypassed_decision_path = state
@@ -2846,17 +2828,17 @@ fn canonical_workflow_status_fail_closes_when_strict_session_entry_gate_is_unres
                 ),
                 ("FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY", "1"),
             ],
-            "workflow status should fail closed to bypassed when strict session-entry gating is enabled",
+            "workflow status should ignore bypassed session-entry files after gate removal",
         ),
-        "workflow status should fail closed to bypassed when strict session-entry gating is enabled",
+        "workflow status should ignore bypassed session-entry files after gate removal",
     );
-    assert_eq!(bypassed_status_json["status"], "bypassed");
-    assert_eq!(bypassed_status_json["next_skill"], "");
+    assert_eq!(bypassed_status_json["schema_version"], 3);
+    assert_eq!(bypassed_status_json["status"], "implementation_ready");
     assert!(
-        bypassed_status_json["reason_codes"]
-            .as_array()
-            .is_some_and(|codes| codes.iter().any(|code| code == "session_entry_bypassed")),
-        "strict workflow status should expose bypassed session-entry reason code"
+        !bypassed_status_json["reason_codes"].as_array().is_some_and(|codes| codes.iter().any(|code| {
+            code == "session_entry_unresolved" || code == "session_entry_bypassed"
+        })),
+        "workflow status should not expose removed strict session-entry reason codes"
     );
     let manifest_after_bypassed_session: WorkflowManifest = serde_json::from_str(
         &fs::read_to_string(&workflow_manifest_path)
@@ -2865,22 +2847,29 @@ fn canonical_workflow_status_fail_closes_when_strict_session_entry_gate_is_unres
     .expect("workflow manifest should parse after bypassed strict refresh");
     assert_eq!(
         manifest_after_bypassed_session.expected_spec_path, enabled_manifest.expected_spec_path,
-        "other-session strict bypassed refresh should not clear existing expected spec path"
+        "bypassed session-entry files should not clear the selected expected spec path"
     );
     assert_eq!(
         manifest_after_bypassed_session.expected_plan_path, enabled_manifest.expected_plan_path,
-        "other-session strict bypassed refresh should not clear existing expected plan path"
+        "bypassed session-entry files should not clear the selected expected plan path"
     );
 }
 
 #[test]
-fn canonical_workflow_operator_suppresses_session_entry_gate_for_spawned_subagent_context() {
+fn canonical_workflow_operator_ignores_spawned_subagent_context_markers() {
     let (repo_dir, state_dir) = init_repo("workflow-spawned-subagent");
     let repo = repo_dir.path();
     let state = state_dir.path();
     let session_key = "workflow-spawned-subagent";
 
+    let mut git_checkout = Command::new("git");
+    git_checkout
+        .args(["checkout", "-B", "workflow-spawned-subagent"])
+        .current_dir(repo);
+    run_checked(git_checkout, "git checkout workflow-spawned-subagent");
+
     install_full_contract_ready_artifacts(repo);
+    let execution_preflight_phase = public_harness_phase_from_spec("execution_preflight");
 
     let spawned_subagent_env = [
         ("FEATUREFORGE_SESSION_KEY", session_key),
@@ -2918,34 +2907,35 @@ fn canonical_workflow_operator_suppresses_session_entry_gate_for_spawned_subagen
         "workflow handoff should bypass session-entry gate for spawned subagents",
     );
 
-    assert_eq!(phase_json["session_entry"]["outcome"], "bypassed");
-    assert_eq!(
-        phase_json["session_entry"]["decision_source"],
-        "spawned_subagent_default"
-    );
-    assert_eq!(phase_json["session_entry"]["persisted"], false);
-    assert_eq!(phase_json["phase"], "bypassed");
-    assert_eq!(phase_json["next_action"], "continue_outside_featureforge");
-    assert_eq!(phase_json["next_skill"], "");
+    assert_eq!(phase_json["phase"], Value::String(execution_preflight_phase.clone()));
+    assert_eq!(phase_json["next_action"], "execution_preflight");
+    assert!(phase_json.get("session_entry").is_none());
 
-    assert_eq!(doctor_json["phase"], "bypassed");
-    assert_eq!(doctor_json["next_action"], "continue_outside_featureforge");
-    assert_eq!(doctor_json["next_skill"], "");
+    assert_eq!(doctor_json["phase"], Value::String(execution_preflight_phase.clone()));
+    assert_eq!(doctor_json["next_action"], "execution_preflight");
+    assert!(doctor_json.get("session_entry").is_none());
 
-    assert_eq!(handoff_json["phase"], "bypassed");
-    assert_eq!(handoff_json["next_action"], "continue_outside_featureforge");
-    assert_eq!(handoff_json["recommended_skill"], "");
-    assert_eq!(handoff_json["recommendation"], Value::Null);
+    assert_eq!(handoff_json["phase"], Value::String(execution_preflight_phase));
+    assert_eq!(handoff_json["next_action"], "execution_preflight");
+    assert_eq!(handoff_json["recommended_skill"], "featureforge:executing-plans");
+    assert!(handoff_json.get("session_entry").is_none());
 }
 
 #[test]
-fn canonical_workflow_operator_honors_spawned_subagent_opt_in_context() {
+fn canonical_workflow_operator_ignores_spawned_subagent_opt_in_markers() {
     let (repo_dir, state_dir) = init_repo("workflow-spawned-subagent-opt-in");
     let repo = repo_dir.path();
     let state = state_dir.path();
     let session_key = "workflow-spawned-subagent-opt-in";
 
+    let mut git_checkout = Command::new("git");
+    git_checkout
+        .args(["checkout", "-B", "workflow-spawned-subagent-opt-in"])
+        .current_dir(repo);
+    run_checked(git_checkout, "git checkout workflow-spawned-subagent-opt-in");
+
     install_full_contract_ready_artifacts(repo);
+    let execution_preflight_phase = public_harness_phase_from_spec("execution_preflight");
 
     let spawned_subagent_env = [
         ("FEATUREFORGE_SESSION_KEY", session_key),
@@ -2964,15 +2954,10 @@ fn canonical_workflow_operator_honors_spawned_subagent_opt_in_context() {
         "workflow phase should honor spawned-subagent opt-in",
     );
 
-    assert_eq!(phase_json["session_entry"]["outcome"], "enabled");
-    assert_eq!(
-        phase_json["session_entry"]["decision_source"],
-        "spawned_subagent_opt_in"
-    );
-    assert_eq!(phase_json["session_entry"]["persisted"], false);
+    assert_eq!(phase_json["phase"], Value::String(execution_preflight_phase));
     assert_eq!(phase_json["route_status"], "implementation_ready");
-    assert_ne!(phase_json["phase"], "bypassed");
-    assert_ne!(phase_json["next_action"], "continue_outside_featureforge");
+    assert_eq!(phase_json["next_action"], "execution_preflight");
+    assert!(phase_json.get("session_entry").is_none());
 }
 
 #[test]
@@ -2981,10 +2966,6 @@ fn canonical_workflow_phase_routes_enabled_ready_plan_to_execution_preflight() {
     let repo = repo_dir.path();
     let state = state_dir.path();
     let session_key = "workflow-phase-ready-plan";
-    let decision_path = state
-        .join("session-entry")
-        .join("using-featureforge")
-        .join(session_key);
 
     let mut git_checkout = Command::new("git");
     git_checkout
@@ -2993,8 +2974,6 @@ fn canonical_workflow_phase_routes_enabled_ready_plan_to_execution_preflight() {
     run_checked(git_checkout, "git checkout workflow-phase-ready");
 
     install_full_contract_ready_artifacts(repo);
-    write_file(&decision_path, "enabled\n");
-
     let phase_json = parse_json(
         &run_rust_featureforge_with_env(
             repo,
@@ -3006,10 +2985,12 @@ fn canonical_workflow_phase_routes_enabled_ready_plan_to_execution_preflight() {
         "rust canonical workflow phase should route ready plans to execution preflight",
     );
 
-    assert_eq!(phase_json["session_entry"]["outcome"], "enabled");
     assert_eq!(phase_json["route_status"], "implementation_ready");
     assert_eq!(phase_json["phase"], "execution_preflight");
     assert_eq!(phase_json["next_action"], "execution_preflight");
+    assert!(phase_json.get("session_entry").is_none());
+    assert_eq!(phase_json["schema_version"], 2);
+    assert_eq!(phase_json["route"]["schema_version"], 3);
 }
 
 #[test]
@@ -3377,6 +3358,12 @@ fn canonical_workflow_operator_surfaces_fail_closed_when_session_entry_is_bypass
         .join("using-featureforge")
         .join(session_key);
 
+    let mut git_checkout = Command::new("git");
+    git_checkout
+        .args(["checkout", "-B", "workflow-phase-bypassed"])
+        .current_dir(repo);
+    run_checked(git_checkout, "git checkout workflow-phase-bypassed");
+
     install_full_contract_ready_artifacts(repo);
     write_file(&decision_path, "bypassed\n");
 
@@ -3408,30 +3395,26 @@ fn canonical_workflow_operator_surfaces_fail_closed_when_session_entry_is_bypass
         "workflow next should fail closed when session-entry is bypassed",
     );
 
-    assert_eq!(phase_json["session_entry"]["outcome"], "bypassed");
-    assert_eq!(phase_json["phase"], "bypassed");
-    assert_eq!(phase_json["next_action"], "continue_outside_featureforge");
-    assert_eq!(phase_json["next_skill"], "");
+    let execution_preflight_phase = public_harness_phase_from_spec("execution_preflight");
+    assert_eq!(phase_json["phase"], Value::String(execution_preflight_phase.clone()));
+    assert_eq!(phase_json["next_action"], "execution_preflight");
+    assert!(phase_json.get("session_entry").is_none());
 
-    assert_eq!(handoff_json["session_entry"]["outcome"], "bypassed");
-    assert_eq!(handoff_json["phase"], "bypassed");
-    assert_eq!(handoff_json["next_action"], "continue_outside_featureforge");
-    assert_eq!(handoff_json["recommended_skill"], "");
-    assert_eq!(handoff_json["recommendation"], Value::Null);
-    assert_eq!(
-        handoff_json["recommendation_reason"],
-        "FeatureForge is bypassed for this session until the user explicitly re-enters."
-    );
+    assert_eq!(handoff_json["phase"], Value::String(execution_preflight_phase));
+    assert_eq!(handoff_json["next_action"], "execution_preflight");
+    assert_eq!(handoff_json["recommended_skill"], "featureforge:executing-plans");
+    assert!(handoff_json.get("session_entry").is_none());
 
     assert!(next_output.status.success());
     let next_stdout = String::from_utf8_lossy(&next_output.stdout);
     assert!(
         next_stdout.contains(
-            "Continue outside the FeatureForge workflow unless the user explicitly re-enters."
+            "Return to execution preflight for the approved plan: docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md"
         ),
-        "workflow next should fail closed when session-entry is bypassed:\n{}",
+        "workflow next should route directly even when a bypassed session decision exists:\n{}",
         next_stdout
     );
+    assert!(!next_stdout.contains("Continue outside the FeatureForge workflow"));
 }
 
 #[test]
@@ -3440,10 +3423,6 @@ fn canonical_workflow_phase_routes_enabled_stale_plan_to_plan_writing() {
     let repo = repo_dir.path();
     let state = state_dir.path();
     let session_key = "workflow-phase-stale-plan";
-    let decision_path = state
-        .join("session-entry")
-        .join("using-featureforge")
-        .join(session_key);
 
     write_file(
         &repo.join("docs/featureforge/specs/2026-01-22-document-review-system-design-v2.md"),
@@ -3453,8 +3432,6 @@ fn canonical_workflow_phase_routes_enabled_stale_plan_to_plan_writing() {
         &repo.join("docs/featureforge/plans/2026-01-22-document-review-system.md"),
         "# Approved Plan, Stale Source Path\n\n**Workflow State:** Engineering Approved\n**Plan Revision:** 1\n**Execution Mode:** none\n**Source Spec:** `docs/featureforge/specs/2026-01-22-document-review-system-design.md`\n**Source Spec Revision:** 1\n**Last Reviewed By:** plan-eng-review\n\n## Requirement Coverage Matrix\n\n- REQ-001 -> Task 1\n\n## Task 1: Preserve the stale source path case\n\n**Spec Coverage:** REQ-001\n**Task Outcome:** The plan remains structurally valid while its source-spec path goes stale.\n**Plan Constraints:**\n- Keep the fixture minimal.\n**Open Questions:** none\n\n**Files:**\n- Test: `tests/workflow_runtime.rs`\n\n- [ ] **Step 1: Detect the stale source path**\n",
     );
-    write_file(&decision_path, "enabled\n");
-
     let phase_json = parse_json(
         &run_rust_featureforge_with_env(
             repo,
@@ -3466,11 +3443,11 @@ fn canonical_workflow_phase_routes_enabled_stale_plan_to_plan_writing() {
         "rust canonical workflow phase should route stale plans to plan writing",
     );
 
-    assert_eq!(phase_json["session_entry"]["outcome"], "enabled");
     assert_eq!(phase_json["route_status"], "stale_plan");
     assert_eq!(phase_json["phase"], "plan_writing");
     assert_eq!(phase_json["next_action"], "use_next_skill");
     assert_eq!(phase_json["next_skill"], "featureforge:writing-plans");
+    assert!(phase_json.get("session_entry").is_none());
 }
 
 #[test]
@@ -3551,10 +3528,6 @@ fn canonical_workflow_public_text_commands_work_for_ready_plan() {
     let repo = repo_dir.path();
     let state = state_dir.path();
     let session_key = "workflow-public-text-commands";
-    let decision_path = state
-        .join("session-entry")
-        .join("using-featureforge")
-        .join(session_key);
 
     let mut git_checkout = Command::new("git");
     git_checkout
@@ -3563,8 +3536,6 @@ fn canonical_workflow_public_text_commands_work_for_ready_plan() {
     run_checked(git_checkout, "git checkout workflow-public-text");
 
     install_full_contract_ready_artifacts(repo);
-    write_file(&decision_path, "enabled\n");
-
     let next_output = run_rust_featureforge_with_env(
         repo,
         state,
@@ -3584,6 +3555,7 @@ fn canonical_workflow_public_text_commands_work_for_ready_plan() {
     assert!(next_stdout.contains("Reason:"));
     assert!(next_stdout.contains("Return to execution preflight for the approved plan: docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md"));
     assert!(next_stdout.contains("The approved plan matches the latest approved spec and preflight is the next safe boundary."));
+    assert!(!next_stdout.contains("session-entry"));
 
     let artifacts_output = run_rust_featureforge_with_env(
         repo,
@@ -3635,6 +3607,7 @@ fn canonical_workflow_public_text_commands_work_for_ready_plan() {
         )
     );
     assert!(explain_stdout.contains("1. Return to execution preflight for the approved plan: docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md"));
+    assert!(!explain_stdout.contains("session-entry"));
 }
 
 #[test]
@@ -3643,10 +3616,6 @@ fn canonical_workflow_public_json_commands_work_for_ready_plan() {
     let repo = repo_dir.path();
     let state = state_dir.path();
     let session_key = "workflow-public-json-commands";
-    let decision_path = state
-        .join("session-entry")
-        .join("using-featureforge")
-        .join(session_key);
     let plan_rel = "docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md";
 
     let mut git_checkout = Command::new("git");
@@ -3656,8 +3625,6 @@ fn canonical_workflow_public_json_commands_work_for_ready_plan() {
     run_checked(git_checkout, "git checkout workflow-public-json");
 
     install_full_contract_ready_artifacts(repo);
-    write_file(&decision_path, "enabled\n");
-
     let execution_preflight_phase = public_harness_phase_from_spec("execution_preflight");
 
     let doctor_json = parse_json(
@@ -3682,7 +3649,9 @@ fn canonical_workflow_public_json_commands_work_for_ready_plan() {
     );
     assert_eq!(doctor_json["plan_path"], plan_rel);
     assert_eq!(doctor_json["contract_state"], "valid");
-    assert_eq!(doctor_json["session_entry"]["outcome"], "enabled");
+    assert!(doctor_json.get("session_entry").is_none());
+    assert_eq!(doctor_json["schema_version"], 2);
+    assert_eq!(doctor_json["route"]["schema_version"], 3);
     assert_eq!(doctor_json["execution_status"]["execution_started"], "no");
     assert_eq!(doctor_json["preflight"]["allowed"], true);
     assert_eq!(doctor_json["gate_review"], Value::Null);
@@ -3727,6 +3696,9 @@ fn canonical_workflow_public_json_commands_work_for_ready_plan() {
             .as_str()
             .is_some_and(|value| !value.is_empty())
     );
+    assert!(handoff_json.get("session_entry").is_none());
+    assert_eq!(handoff_json["schema_version"], 2);
+    assert_eq!(handoff_json["route"]["schema_version"], 3);
 
     let preflight_json = parse_json(
         &run_rust_featureforge_with_env(

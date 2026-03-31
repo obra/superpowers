@@ -7,7 +7,7 @@ mod json_support;
 #[path = "support/process.rs"]
 mod process_support;
 
-use assert_cmd::cargo::CommandCargoExt;
+use assert_cmd::cargo::{CommandCargoExt, cargo_bin};
 use serde_json::Value;
 use std::path::Path;
 use std::process::{Command, Output};
@@ -393,17 +393,17 @@ fn repo_safety_check_rejects_unknown_bounded_values_at_parse_boundary() {
 }
 
 #[test]
-fn session_entry_record_rejects_unknown_decisions_at_parse_boundary() {
+fn session_entry_command_is_removed_from_active_cli_surface() {
     let output = run(
         {
             let mut command =
                 Command::cargo_bin("featureforge").expect("featureforge cargo binary should exist");
-            command.args(["session-entry", "record", "--decision", "later"]);
+            command.args(["session-entry", "record", "--decision", "enabled"]);
             command
         },
-        "session-entry record invalid decision",
+        "session-entry command removed",
     );
-    let json = parse_failure_json(&output, "session-entry record invalid decision");
+    let json = parse_failure_json(&output, "session-entry command removed");
 
     assert_eq!(
         json["error_class"],
@@ -412,7 +412,35 @@ fn session_entry_record_rejects_unknown_decisions_at_parse_boundary() {
     let message = json["message"]
         .as_str()
         .expect("failure message should stay a string");
-    assert!(message.contains("possible values"));
-    assert!(message.contains("enabled"));
-    assert!(message.contains("bypassed"));
+    assert!(message.contains("unrecognized subcommand"));
+    assert!(message.contains("session-entry"));
+}
+
+#[cfg(unix)]
+#[test]
+fn session_entry_argv0_alias_is_removed_from_active_cli_surface() {
+    use std::os::unix::fs::symlink;
+
+    let alias_dir = TempDir::new().expect("alias tempdir should be available");
+    let alias_path = alias_dir.path().join("featureforge-session-entry");
+    symlink(cargo_bin("featureforge"), &alias_path)
+        .expect("session-entry argv0 alias symlink should be creatable");
+
+    let output = run(
+        {
+            Command::new(&alias_path)
+        },
+        "session-entry argv0 alias removed",
+    );
+
+    assert!(
+        output.status.success(),
+        "removed argv0 alias should fall back to bare help, got {:?}\nstdout:\n{}\nstderr:\n{}",
+        output.status,
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8(output.stdout).expect("help stdout should be utf-8");
+    assert!(stdout.contains("Usage:"));
+    assert!(stdout.contains("featureforge"));
 }

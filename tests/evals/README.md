@@ -13,7 +13,7 @@ This directory holds prompt-quality evals for high-risk workflow instructions wh
 
 Current evals cover:
 
-- `using-featureforge` fail-closed post-bypass routing behavior via the markdown orchestrator and runner/judge instruction set
+- `using-featureforge` direct artifact-state routing behavior via the markdown orchestrator and runner/judge instruction set
 - the shared interactive-question format contract
 - `review-accelerator-contract`, which checks explicit user-only activation, ambiguous-wording rejection, per-section human approval, no automatic approval-state changes, main-agent-only write authority, and persisted-packet stale/regenerate language against the generated CEO/ENG `SKILL.md` files plus README excerpts from the current branch
 - `search-before-building-contract`, a doc-driven runner/judge gate that checks a small representative set of generated non-router skills and both reviewer prompt surfaces for Layer 2 as input-not-authority, privacy/sanitization boundaries, fallback language when search is unavailable or unsafe, and built-in-before-bespoke / known-footgun review behavior
@@ -75,7 +75,7 @@ Use these files as the authoritative contract:
 
 The orchestrator doc tells the controller how to run fresh runner/judge subagents, persist per-scenario evidence under `~/.featureforge/projects/<slug>/...`, and fail closed on ambiguous or malformed outputs.
 
-The routing gate intentionally starts after the first-turn bypass decision has already been resolved to `enabled` for the synthetic scenario session. Seed that state through the runner's real derived decision-file path for its own session identity; do not guess a `$PPID` from outside the runner. The bypass prompt and session-decision contract are covered separately by `cargo nextest run --test using_featureforge_skill`.
+The routing gate intentionally starts from a fresh synthetic scenario workspace with no session-entry prerequisites or seeded decision files. Route directly from the checked-in artifact state and fail closed on ambiguous evidence.
 
 The retired `tests/evals/using-featureforge-routing.eval.mjs` file has been removed.
 

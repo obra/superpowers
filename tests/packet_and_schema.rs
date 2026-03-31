@@ -9,8 +9,8 @@ use featureforge::contracts::plan::parse_plan_file;
 use featureforge::contracts::spec::parse_spec_file;
 use featureforge::execution::state::write_plan_execution_schema;
 use featureforge::repo_safety::write_repo_safety_schema;
-use featureforge::session_entry::write_session_entry_schema;
 use featureforge::update_check::write_update_check_schema;
+use featureforge::workflow::status::write_workflow_schemas;
 use serde_json::Value;
 
 const SPEC_REL: &str = "docs/featureforge/specs/2026-03-22-plan-contract-fixture-design.md";
@@ -635,10 +635,9 @@ fn checked_in_plan_execution_schema_matches_generated_output() {
 }
 
 #[test]
-fn checked_in_repo_safety_and_session_entry_schemas_match_generated_output() {
+fn checked_in_repo_safety_schema_matches_generated_output_and_session_entry_schema_is_absent() {
     let schemas_dir = unique_temp_dir("policy-schemas");
     write_repo_safety_schema(&schemas_dir).expect("repo-safety schema should write");
-    write_session_entry_schema(&schemas_dir).expect("session-entry schema should write");
 
     let generated_repo_safety =
         fs::read_to_string(schemas_dir.join("repo-safety-check.schema.json"))
@@ -651,16 +650,14 @@ fn checked_in_repo_safety_and_session_entry_schemas_match_generated_output() {
         checked_in_repo_safety.trim_end()
     );
 
-    let generated_session_entry =
-        fs::read_to_string(schemas_dir.join("session-entry-resolve.schema.json"))
-            .expect("generated session-entry schema should read");
-    let checked_in_session_entry = fs::read_to_string(repo_fixture_path(
-        "schemas/session-entry-resolve.schema.json",
-    ))
-    .expect("checked-in session-entry schema should read");
-    assert_eq!(
-        generated_session_entry.trim_end(),
-        checked_in_session_entry.trim_end()
+    assert!(
+        !schemas_dir.join("session-entry-resolve.schema.json").exists(),
+        "active schema writers should not emit a session-entry schema artifact"
+    );
+
+    assert!(
+        !repo_fixture_path("schemas/session-entry-resolve.schema.json").exists(),
+        "session-entry schema should not remain an active checked-in schema artifact"
     );
 }
 
@@ -688,6 +685,36 @@ fn checked_in_runtime_root_schema_matches_generated_output() {
         .expect("checked-in runtime-root schema should read");
 
     assert_eq!(generated.trim_end(), checked_in.trim_end());
+}
+
+#[test]
+fn checked_in_workflow_schemas_match_generated_output() {
+    let schemas_dir = unique_temp_dir("workflow-schemas");
+    write_workflow_schemas(&schemas_dir).expect("workflow schemas should write");
+
+    let generated_status =
+        fs::read_to_string(schemas_dir.join("workflow-status.schema.json"))
+            .expect("generated workflow-status schema should read");
+    let checked_in_status =
+        fs::read_to_string(repo_fixture_path("schemas/workflow-status.schema.json"))
+            .expect("checked-in workflow-status schema should read");
+    let generated_status_json: Value =
+        serde_json::from_str(&generated_status).expect("generated workflow-status schema should parse");
+    let checked_in_status_json: Value =
+        serde_json::from_str(&checked_in_status).expect("checked-in workflow-status schema should parse");
+    assert_eq!(generated_status_json, checked_in_status_json);
+
+    let generated_resolve =
+        fs::read_to_string(schemas_dir.join("workflow-resolve.schema.json"))
+            .expect("generated workflow-resolve schema should read");
+    let checked_in_resolve =
+        fs::read_to_string(repo_fixture_path("schemas/workflow-resolve.schema.json"))
+            .expect("checked-in workflow-resolve schema should read");
+    let generated_resolve_json: Value = serde_json::from_str(&generated_resolve)
+        .expect("generated workflow-resolve schema should parse");
+    let checked_in_resolve_json: Value = serde_json::from_str(&checked_in_resolve)
+        .expect("checked-in workflow-resolve schema should parse");
+    assert_eq!(generated_resolve_json, checked_in_resolve_json);
 }
 
 #[test]

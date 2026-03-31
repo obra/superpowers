@@ -14,7 +14,6 @@ pub fn canonical_command_from_argv0(argv0: &str) -> &'static [&'static str] {
         "featureforge-plan-contract" => &["plan", "contract"],
         "featureforge-plan-execution" => &["plan", "execution"],
         "featureforge-repo-safety" => &["repo-safety"],
-        "featureforge-session-entry" => &["session-entry"],
         "featureforge-slug" => &["repo", "slug"],
         "featureforge-config" => &["config"],
         "featureforge-update-check" => &["update-check"],

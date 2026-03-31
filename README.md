@@ -14,9 +14,7 @@ This repository keeps the workflow-first core and extends it with additional rev
 
 Six layers matter:
 
-- `featureforge session-entry` owns first-turn session entry.
-- `using-featureforge` is the human-readable entry router after session entry resolves to `enabled`.
-- strict mode (`FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY=1`) fail-closes workflow routing until the current thread/session key has a recorded `enabled` or `bypassed` session-entry decision.
+- `using-featureforge` is the human-readable entry router that consults `featureforge workflow` directly from repo-visible artifacts.
 - generated skill preambles always invoke the packaged install binary under `~/.featureforge/install/bin/` (`featureforge` on Unix, `featureforge.exe` on Windows), and that runtime resolves the active root through `featureforge repo runtime-root --path` before update checks or contributor-mode lookups.
 - `featureforge workflow` owns product-work routing up to `implementation_ready`.
 - `featureforge repo-safety` owns protected branches and repo-write guarantees.
@@ -69,7 +67,7 @@ Planning chain in plain language:
 
 `brainstorming -> plan-ceo-review -> writing-plans -> plan-eng-review -> implementation`
 
-Generated `using-featureforge` preambles export `FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY=1`, so the consent choice is resolved before normal planning/spec/plan status work begins.
+Generated `using-featureforge` preambles call `featureforge workflow status --refresh` before normal planning/spec/plan status work begins.
 
 Execution starts from an engineering-approved plan and the exact approved plan path. `featureforge plan execution recommend --plan <approved-plan-path>` selects between:
 

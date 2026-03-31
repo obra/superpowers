@@ -95,22 +95,18 @@ test('shared shell builders delegate runtime-root discovery to the helper contra
   assert.doesNotMatch(baseShell, /featureforge-config/);
 });
 
-test('using-featureforge bypass helpers render the decision-state contract', () => {
-  assert.equal(buildUsingFeatureForgeShellLines().some((line) => line.includes('session-entry/using-featureforge')), true);
+test('using-featureforge helpers omit the removed bypass gate contract', () => {
+  const shellLines = buildUsingFeatureForgeShellLines();
+  assert.equal(shellLines.some((line) => line.includes('session-entry/using-featureforge')), false);
+  assert.equal(shellLines.some((line) => line.includes('FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY')), false);
+  assert.equal(shellLines.some((line) => line.includes('FEATUREFORGE_SPAWNED_SUBAGENT')), false);
+  assert.equal(shellLines.some((line) => line.includes('FEATUREFORGE_SPAWNED_SUBAGENT_OPT_IN')), false);
+
   const bypassGate = buildUsingFeatureForgeBypassGateSection();
-  assert.match(bypassGate, /featureforge session-entry resolve --message-file <path>/);
-  assert.match(bypassGate, /Fresh-session spec review, plan review, and execution-preflight intents must still surface the bypass prompt first/);
-  assert.doesNotMatch(bypassGate, /featureforge-session-entry/);
-  assert.match(bypassGate, /enabled/);
-  assert.match(bypassGate, /bypassed/);
+  assert.equal(bypassGate.trim(), '');
+
   const normalStack = buildUsingFeatureForgeNormalStackSection();
-  assert.match(normalStack, /"\$_FEATUREFORGE_BIN" update-check/);
-  assert.match(normalStack, /"\$_FEATUREFORGE_BIN" config get featureforge_contributor/);
-  assert.doesNotMatch(normalStack, /\$_FEATUREFORGE_ROOT\/bin\/featureforge/);
-  assert.doesNotMatch(normalStack, /featureforge-update-check/);
-  assert.doesNotMatch(normalStack, /featureforge-config/);
-  assert.match(normalStack, /_SESSIONS=/);
-  assert.match(normalStack, /_CONTRIB=/);
+  assert.equal(normalStack.trim(), '');
 });
 
 test('generated preambles include the shared Search Before Building section for non-router skills only', () => {

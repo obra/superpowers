@@ -608,14 +608,6 @@ fn run_plan_execution(repo: &Path, state_dir: &Path, args: &[&str], context: &st
     run_featureforge_with_env(repo, state_dir, command_args.as_slice(), &[], context)
 }
 
-fn enable_session_decision(state: &Path, session_key: &str) {
-    let decision_path = state
-        .join("session-entry")
-        .join("using-featureforge")
-        .join(session_key);
-    write_file(&decision_path, "enabled\n");
-}
-
 fn write_authoritative_strategy_checkpoint_state(repo: &Path, state: &Path) {
     let branch = branch_name(repo);
     let (execution_run_id, active_contract_path, active_contract_fingerprint) =
@@ -928,7 +920,6 @@ fn workflow_phase_routes_missing_final_review_back_to_requesting_code_review() {
     let (repo_dir, state_dir) = init_repo("workflow-runtime-final-review");
     let repo = repo_dir.path();
     let state = state_dir.path();
-    let session_key = "workflow-runtime-final-review";
 
     write_approved_spec(repo);
     write_single_step_plan(repo, "featureforge:executing-plans");
@@ -936,27 +927,26 @@ fn workflow_phase_routes_missing_final_review_back_to_requesting_code_review() {
     write_single_step_v2_completed_attempt(repo, &expected_packet_fingerprint(repo, 1, 1));
     write_test_plan_artifact(repo, state, "no");
     write_release_readiness_artifact(repo, state, &expected_base_branch(repo));
-    enable_session_decision(state, session_key);
 
     let phase_json = run_featureforge_with_env(
         repo,
         state,
         &["workflow", "phase", "--json"],
-        &[("FEATUREFORGE_SESSION_KEY", session_key)],
+        &[],
         "workflow phase for final-review-focused shard",
     );
     let handoff_json = run_featureforge_with_env(
         repo,
         state,
         &["workflow", "handoff", "--json"],
-        &[("FEATUREFORGE_SESSION_KEY", session_key)],
+        &[],
         "workflow handoff for final-review-focused shard",
     );
     let gate_finish_json = run_featureforge_with_env(
         repo,
         state,
         &["workflow", "gate", "finish", "--plan", PLAN_REL, "--json"],
-        &[("FEATUREFORGE_SESSION_KEY", session_key)],
+        &[],
         "workflow finish gate for final-review-focused shard",
     );
 
@@ -987,11 +977,9 @@ fn task_boundary_final_review_remains_required_after_task_closure_gates() {
     let (repo_dir, state_dir) = init_repo("workflow-runtime-task-boundary-final-review-required");
     let repo = repo_dir.path();
     let state = state_dir.path();
-    let session_key = "workflow-runtime-task-boundary-final-review-required";
 
     write_approved_spec(repo);
     write_two_task_single_step_plan(repo, "featureforge:executing-plans");
-    enable_session_decision(state, session_key);
 
     let status_before_begin = run_plan_execution(
         repo,
@@ -1131,14 +1119,14 @@ fn task_boundary_final_review_remains_required_after_task_closure_gates() {
         repo,
         state,
         &["workflow", "phase", "--json"],
-        &[("FEATUREFORGE_SESSION_KEY", session_key)],
+        &[],
         "workflow phase for task-boundary final-review-required shard",
     );
     let handoff_json = run_featureforge_with_env(
         repo,
         state,
         &["workflow", "handoff", "--json"],
-        &[("FEATUREFORGE_SESSION_KEY", session_key)],
+        &[],
         "workflow handoff for task-boundary final-review-required shard",
     );
     assert_eq!(
@@ -1153,7 +1141,6 @@ fn workflow_phase_routes_stale_review_back_to_requesting_code_review() {
     let (repo_dir, state_dir) = init_repo("workflow-runtime-stale-final-review");
     let repo = repo_dir.path();
     let state = state_dir.path();
-    let session_key = "workflow-runtime-stale-final-review";
 
     write_approved_spec(repo);
     write_single_step_plan(repo, "featureforge:executing-plans");
@@ -1163,7 +1150,6 @@ fn workflow_phase_routes_stale_review_back_to_requesting_code_review() {
     let base_branch = expected_base_branch(repo);
     let review_path = write_code_review_artifact(repo, state, &base_branch);
     write_release_readiness_artifact(repo, state, &base_branch);
-    enable_session_decision(state, session_key);
     replace_in_file(
         &review_path,
         &format!("**Head SHA:** {}", current_head_sha(repo)),
@@ -1174,21 +1160,21 @@ fn workflow_phase_routes_stale_review_back_to_requesting_code_review() {
         repo,
         state,
         &["workflow", "phase", "--json"],
-        &[("FEATUREFORGE_SESSION_KEY", session_key)],
+        &[],
         "workflow phase for stale-review-focused shard",
     );
     let handoff_json = run_featureforge_with_env(
         repo,
         state,
         &["workflow", "handoff", "--json"],
-        &[("FEATUREFORGE_SESSION_KEY", session_key)],
+        &[],
         "workflow handoff for stale-review-focused shard",
     );
     let gate_finish_json = run_featureforge_with_env(
         repo,
         state,
         &["workflow", "gate", "finish", "--plan", PLAN_REL, "--json"],
-        &[("FEATUREFORGE_SESSION_KEY", session_key)],
+        &[],
         "workflow finish gate for stale-review-focused shard",
     );
 
@@ -1215,7 +1201,6 @@ fn workflow_phase_routes_non_independent_reviewer_source_back_to_requesting_code
     let (repo_dir, state_dir) = init_repo("workflow-runtime-non-independent-reviewer-source");
     let repo = repo_dir.path();
     let state = state_dir.path();
-    let session_key = "workflow-runtime-non-independent-reviewer-source";
 
     write_approved_spec(repo);
     write_single_step_plan(repo, "featureforge:executing-plans");
@@ -1225,7 +1210,6 @@ fn workflow_phase_routes_non_independent_reviewer_source_back_to_requesting_code
     let base_branch = expected_base_branch(repo);
     let review_path = write_code_review_artifact(repo, state, &base_branch);
     write_release_readiness_artifact(repo, state, &base_branch);
-    enable_session_decision(state, session_key);
     replace_in_file(
         &review_path,
         "**Reviewer Source:** fresh-context-subagent",
@@ -1236,21 +1220,21 @@ fn workflow_phase_routes_non_independent_reviewer_source_back_to_requesting_code
         repo,
         state,
         &["workflow", "phase", "--json"],
-        &[("FEATUREFORGE_SESSION_KEY", session_key)],
+        &[],
         "workflow phase for non-independent-reviewer-source shard",
     );
     let handoff_json = run_featureforge_with_env(
         repo,
         state,
         &["workflow", "handoff", "--json"],
-        &[("FEATUREFORGE_SESSION_KEY", session_key)],
+        &[],
         "workflow handoff for non-independent-reviewer-source shard",
     );
     let gate_finish_json = run_featureforge_with_env(
         repo,
         state,
         &["workflow", "gate", "finish", "--plan", PLAN_REL, "--json"],
-        &[("FEATUREFORGE_SESSION_KEY", session_key)],
+        &[],
         "workflow finish gate for non-independent-reviewer-source shard",
     );
 
@@ -1273,7 +1257,6 @@ fn workflow_phase_routes_unreadable_reviewer_artifact_back_to_requesting_code_re
     let (repo_dir, state_dir) = init_repo("workflow-runtime-unreadable-reviewer-artifact");
     let repo = repo_dir.path();
     let state = state_dir.path();
-    let session_key = "workflow-runtime-unreadable-reviewer-artifact";
 
     write_approved_spec(repo);
     write_single_step_plan(repo, "featureforge:executing-plans");
@@ -1283,7 +1266,6 @@ fn workflow_phase_routes_unreadable_reviewer_artifact_back_to_requesting_code_re
     let base_branch = expected_base_branch(repo);
     let review_path = write_code_review_artifact(repo, state, &base_branch);
     write_release_readiness_artifact(repo, state, &base_branch);
-    enable_session_decision(state, session_key);
     let reviewer_artifact_path = reviewer_artifact_path_from_review(&review_path);
     fs::remove_file(&reviewer_artifact_path).expect("reviewer artifact should remove");
 
@@ -1291,21 +1273,21 @@ fn workflow_phase_routes_unreadable_reviewer_artifact_back_to_requesting_code_re
         repo,
         state,
         &["workflow", "phase", "--json"],
-        &[("FEATUREFORGE_SESSION_KEY", session_key)],
+        &[],
         "workflow phase for unreadable-reviewer-artifact shard",
     );
     let handoff_json = run_featureforge_with_env(
         repo,
         state,
         &["workflow", "handoff", "--json"],
-        &[("FEATUREFORGE_SESSION_KEY", session_key)],
+        &[],
         "workflow handoff for unreadable-reviewer-artifact shard",
     );
     let gate_finish_json = run_featureforge_with_env(
         repo,
         state,
         &["workflow", "gate", "finish", "--plan", PLAN_REL, "--json"],
-        &[("FEATUREFORGE_SESSION_KEY", session_key)],
+        &[],
         "workflow finish gate for unreadable-reviewer-artifact shard",
     );
 
@@ -1394,7 +1376,6 @@ fn workflow_phase_routes_all_reviewer_failure_families_back_to_requesting_code_r
         let (repo_dir, state_dir) = init_repo(&fixture_name);
         let repo = repo_dir.path();
         let state = state_dir.path();
-        let session_key = format!("session-{}", case.name);
 
         write_approved_spec(repo);
         write_single_step_plan(repo, "featureforge:executing-plans");
@@ -1404,28 +1385,27 @@ fn workflow_phase_routes_all_reviewer_failure_families_back_to_requesting_code_r
         let base_branch = expected_base_branch(repo);
         let review_path = write_code_review_artifact(repo, state, &base_branch);
         write_release_readiness_artifact(repo, state, &base_branch);
-        enable_session_decision(state, &session_key);
         (case.mutate)(repo, state, &review_path, &base_branch);
 
         let phase_json = run_featureforge_with_env(
             repo,
             state,
             &["workflow", "phase", "--json"],
-            &[("FEATUREFORGE_SESSION_KEY", session_key.as_str())],
+            &[],
             &format!("workflow phase for {}", case.name),
         );
         let handoff_json = run_featureforge_with_env(
             repo,
             state,
             &["workflow", "handoff", "--json"],
-            &[("FEATUREFORGE_SESSION_KEY", session_key.as_str())],
+            &[],
             &format!("workflow handoff for {}", case.name),
         );
         let gate_finish_json = run_featureforge_with_env(
             repo,
             state,
             &["workflow", "gate", "finish", "--plan", PLAN_REL, "--json"],
-            &[("FEATUREFORGE_SESSION_KEY", session_key.as_str())],
+            &[],
             &format!("workflow finish gate for {}", case.name),
         );
 

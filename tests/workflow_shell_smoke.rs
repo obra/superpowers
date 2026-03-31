@@ -274,16 +274,6 @@ fn write_branch_release_artifact(repo: &Path, state_dir: &Path, plan_rel: &str, 
     );
 }
 
-fn enable_session_decision(state_dir: &Path, session_key: &str) {
-    write_file(
-        &state_dir
-            .join("session-entry")
-            .join("using-featureforge")
-            .join(session_key),
-        "enabled\n",
-    );
-}
-
 fn prepare_preflight_acceptance_workspace(repo: &Path, branch_name: &str) {
     let mut checkout = Command::new("git");
     checkout
@@ -442,12 +432,6 @@ fn workflow_status_summary_matches_json_semantics_for_ready_plans() {
     let (repo_dir, state_dir) = init_repo("workflow-summary");
     let repo = repo_dir.path();
     let state = state_dir.path();
-    let session_key = "workflow-summary";
-    let decision_path = state
-        .join("session-entry")
-        .join("using-featureforge")
-        .join(session_key);
-    write_file(&decision_path, "enabled\n");
     install_ready_artifacts(repo);
 
     let json_output = run_featureforge(
@@ -457,6 +441,7 @@ fn workflow_status_summary_matches_json_semantics_for_ready_plans() {
         "workflow status json",
     );
     let json_stdout = String::from_utf8_lossy(&json_output.stdout);
+    assert!(json_stdout.contains("\"schema_version\":3"));
     assert!(json_stdout.contains("\"status\":\"implementation_ready\""));
     assert!(json_stdout.contains("\"next_skill\":\"\""));
 
@@ -484,19 +469,12 @@ fn workflow_operator_commands_work_for_ready_plan() {
     let (repo_dir, state_dir) = init_repo("workflow-operator-commands");
     let repo = repo_dir.path();
     let state = state_dir.path();
-    let session_key = "workflow-operator-commands";
-    let decision_path = state
-        .join("session-entry")
-        .join("using-featureforge")
-        .join(session_key);
-    write_file(&decision_path, "enabled\n");
     install_full_contract_ready_artifacts(repo);
 
-    let next_output = run_featureforge_with_env(
+    let next_output = run_featureforge(
         repo,
         state,
         &["workflow", "next"],
-        &[("FEATUREFORGE_SESSION_KEY", session_key)],
         "workflow next",
     );
     let next_stdout = String::from_utf8_lossy(&next_output.stdout);
@@ -504,12 +482,12 @@ fn workflow_operator_commands_work_for_ready_plan() {
     assert!(next_stdout.contains(
         "Return to execution preflight for the approved plan: docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md"
     ));
+    assert!(!next_stdout.contains("session-entry"));
 
-    let artifacts_output = run_featureforge_with_env(
+    let artifacts_output = run_featureforge(
         repo,
         state,
         &["workflow", "artifacts"],
-        &[("FEATUREFORGE_SESSION_KEY", session_key)],
         "workflow artifacts",
     );
     let artifacts_stdout = String::from_utf8_lossy(&artifacts_output.stdout);
@@ -522,16 +500,16 @@ fn workflow_operator_commands_work_for_ready_plan() {
             .contains("Plan: docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md")
     );
 
-    let explain_output = run_featureforge_with_env(
+    let explain_output = run_featureforge(
         repo,
         state,
         &["workflow", "explain"],
-        &[("FEATUREFORGE_SESSION_KEY", session_key)],
         "workflow explain",
     );
     let explain_stdout = String::from_utf8_lossy(&explain_output.stdout);
     assert!(explain_stdout.contains("Why FeatureForge chose this state"));
     assert!(explain_stdout.contains("What to do:"));
+    assert!(!explain_stdout.contains("session-entry"));
 }
 
 #[derive(Clone, Copy)]
@@ -774,30 +752,27 @@ fn workflow_phase_text_and_json_surfaces_match_harness_downstream_freshness() {
         let repo = repo_dir.path();
         let state = state_dir.path();
         let base_branch = current_branch_name(repo);
-        let session_key = format!("workflow-phase-next-parity-{}", case.name);
         (case.setup)(repo, state, plan_rel, &base_branch);
-        enable_session_decision(state, &session_key);
-        let env = [("FEATUREFORGE_SESSION_KEY", session_key.as_str())];
 
         let phase_json = run_featureforge_with_env_json(
             repo,
             state,
             &["workflow", "phase", "--json"],
-            &env,
+            &[],
             "workflow phase json for shell-smoke late-stage parity",
         );
         let doctor_json = run_featureforge_with_env_json(
             repo,
             state,
             &["workflow", "doctor", "--json"],
-            &env,
+            &[],
             "workflow doctor json for shell-smoke late-stage parity",
         );
         let phase_text_output = run_featureforge_with_env(
             repo,
             state,
             &["workflow", "phase"],
-            &env,
+            &[],
             "workflow phase text for shell-smoke late-stage parity",
         );
         assert!(
@@ -811,7 +786,7 @@ fn workflow_phase_text_and_json_surfaces_match_harness_downstream_freshness() {
             repo,
             state,
             &["workflow", "next"],
-            &env,
+            &[],
             "workflow next text for shell-smoke late-stage parity",
         );
         assert!(
@@ -899,30 +874,27 @@ fn workflow_handoff_and_doctor_text_and_json_surfaces_match_harness_evaluator_an
     let state = state_dir.path();
     let plan_rel = "docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md";
     let base_branch = current_branch_name(repo);
-    let session_key = "workflow-doctor-handoff-metadata-parity";
     setup_document_release_pending_case(repo, state, plan_rel, &base_branch);
-    enable_session_decision(state, session_key);
-    let env = [("FEATUREFORGE_SESSION_KEY", session_key)];
 
     let doctor_json = run_featureforge_with_env_json(
         repo,
         state,
         &["workflow", "doctor", "--json"],
-        &env,
+        &[],
         "workflow doctor json for shell-smoke metadata parity",
     );
     let handoff_json = run_featureforge_with_env_json(
         repo,
         state,
         &["workflow", "handoff", "--json"],
-        &env,
+        &[],
         "workflow handoff json for shell-smoke metadata parity",
     );
     let doctor_text_output = run_featureforge_with_env(
         repo,
         state,
         &["workflow", "doctor"],
-        &env,
+        &[],
         "workflow doctor text for shell-smoke metadata parity",
     );
     assert!(doctor_text_output.status.success());
@@ -931,7 +903,7 @@ fn workflow_handoff_and_doctor_text_and_json_surfaces_match_harness_evaluator_an
         repo,
         state,
         &["workflow", "handoff"],
-        &env,
+        &[],
         "workflow handoff text for shell-smoke metadata parity",
     );
     assert!(handoff_text_output.status.success());
@@ -1043,10 +1015,8 @@ fn workflow_phase_doctor_handoff_json_parity_for_pivot_required_plan_revision_bl
     let repo = repo_dir.path();
     let state = state_dir.path();
     let plan_rel = "docs/featureforge/plans/2026-03-22-runtime-integration-hardening.md";
-    let session_key = "workflow-shell-smoke-pivot-plan-block";
 
     complete_workflow_fixture_execution(repo, state, plan_rel);
-    enable_session_decision(state, session_key);
 
     let authoritative_state_path =
         harness_state_path(state, &repo_slug(repo, state), &current_branch_name(repo));
@@ -1055,26 +1025,25 @@ fn workflow_phase_doctor_handoff_json_parity_for_pivot_required_plan_revision_bl
         r#"{"harness_phase":"pivot_required","latest_authoritative_sequence":23,"reason_codes":["blocked_on_plan_revision"]}"#,
     );
 
-    let env = [("FEATUREFORGE_SESSION_KEY", session_key)];
     let phase_json = run_featureforge_with_env_json(
         repo,
         state,
         &["workflow", "phase", "--json"],
-        &env,
+        &[],
         "workflow phase json for shell-smoke pivot plan-block parity",
     );
     let doctor_json = run_featureforge_with_env_json(
         repo,
         state,
         &["workflow", "doctor", "--json"],
-        &env,
+        &[],
         "workflow doctor json for shell-smoke pivot plan-block parity",
     );
     let handoff_json = run_featureforge_with_env_json(
         repo,
         state,
         &["workflow", "handoff", "--json"],
-        &env,
+        &[],
         "workflow handoff json for shell-smoke pivot plan-block parity",
     );
 

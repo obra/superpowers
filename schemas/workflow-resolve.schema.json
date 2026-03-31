@@ -45,6 +45,7 @@
       "type": "boolean"
     },
     "schema_version": {
+      "const": 3,
       "type": "integer",
       "format": "uint32",
       "minimum": 0

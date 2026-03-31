@@ -18,7 +18,7 @@
     "ambiguous_spec_candidates"
   ],
   "scan_truncated": false,
-  "schema_version": 2,
+  "schema_version": 3,
   "spec_candidate_count": 2,
   "spec_path": "docs/featureforge/specs/2026-01-22-document-review-system-design.md",
   "status": "spec_draft"

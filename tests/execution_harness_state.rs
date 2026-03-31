@@ -590,7 +590,7 @@ fn missing_null_fields(object: &Value, fields: &[&str]) -> Vec<String> {
 
 fn assert_exact_public_harness_phase_set() {
     let spec = include_str!(
-        "../docs/featureforge/specs/2026-03-25-featureforge-execution-harness-spec.md"
+        "../docs/archive/featureforge/specs/2026-03-25-featureforge-execution-harness-spec.md"
     );
     let public_harness_phases: Vec<String> = spec
         .lines()
@@ -629,7 +629,7 @@ fn assert_exact_public_harness_phase_set() {
 
 fn assert_reason_code_minimum_vocabulary() {
     let spec = include_str!(
-        "../docs/featureforge/specs/2026-03-25-featureforge-execution-harness-spec.md"
+        "../docs/archive/featureforge/specs/2026-03-25-featureforge-execution-harness-spec.md"
     );
     let req_040_line = spec
         .lines()

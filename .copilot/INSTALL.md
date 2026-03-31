@@ -64,7 +64,7 @@ Runtime helper state lives in `~/.featureforge/`. Generated skill preambles use 
 
 Generated skill preambles always invoke the packaged install binary under `~/.featureforge/install/bin/` (`featureforge` on Unix, `featureforge.exe` on Windows). That packaged install binary resolves the active runtime root through `featureforge repo runtime-root --path`, so repo checkouts and `~/.featureforge/install` use the same runtime-owned contract without swapping executables.
 
-Supported first-turn entry goes through `featureforge session-entry resolve --message-file <path>`. Spawned subagents pass `--spawned-subagent` and bypass the first-turn prompt by default unless they explicitly opt back in.
+Supported first-turn entry goes through the human-readable `using-featureforge` router, which consults `featureforge workflow` directly from repo-visible artifacts. Spawned subagents do not require session-entry flags or opt-in markers because active routing no longer passes through the removed session-entry gate.
 
 Optional: enable contributor mode for future sessions with:
 

@@ -919,7 +919,15 @@ fn runtime_instruction_surface_contracts_and_generation_checks_hold() {
         .current_dir(&root);
     run_checked(gen_agents, "gen-agent-docs --check");
 
-    assert_file_contains(root.join("README.md"), "featureforge session-entry");
+    assert_file_contains(
+        root.join("README.md"),
+        "`using-featureforge` is the human-readable entry router that consults `featureforge workflow` directly from repo-visible artifacts.",
+    );
+    assert_file_not_contains(root.join("README.md"), "featureforge session-entry");
+    assert_file_not_contains(
+        root.join("README.md"),
+        "FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY",
+    );
     assert_file_contains(root.join("README.md"), "featureforge repo-safety");
     assert_file_contains(root.join("README.md"), "featureforge plan contract");
     assert_file_contains(root.join("README.md"), "protected branches");
@@ -958,11 +966,29 @@ fn runtime_instruction_surface_contracts_and_generation_checks_hold() {
     );
     assert_file_contains(
         root.join("docs/README.codex.md"),
+        "`using-featureforge` is the human-readable entry router that consults `featureforge workflow` directly from repo-visible artifacts.",
+    );
+    assert_file_not_contains(root.join("docs/README.codex.md"), "featureforge session-entry");
+    assert_file_not_contains(
+        root.join("docs/README.codex.md"),
+        "FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY",
+    );
+    assert_file_contains(
+        root.join("docs/README.codex.md"),
         "run the packaged install binary under `~/.featureforge/install/bin/` (`featureforge` on Unix, `featureforge.exe` on Windows)",
     );
     assert_file_contains(
         root.join("docs/README.copilot.md"),
         "Accelerated review is an opt-in branch inside `plan-ceo-review` and `plan-eng-review`, not a separate workflow stage.",
+    );
+    assert_file_contains(
+        root.join("docs/README.copilot.md"),
+        "`using-featureforge` is the human-readable entry router that consults `featureforge workflow` directly from repo-visible artifacts.",
+    );
+    assert_file_not_contains(root.join("docs/README.copilot.md"), "featureforge session-entry");
+    assert_file_not_contains(
+        root.join("docs/README.copilot.md"),
+        "FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY",
     );
     assert_file_contains(
         root.join("docs/README.copilot.md"),
@@ -979,6 +1005,10 @@ fn runtime_instruction_surface_contracts_and_generation_checks_hold() {
     assert_file_contains(
         root.join("README.md"),
         "node scripts/gen-agent-docs.mjs --check",
+    );
+    assert_file_contains(
+        root.join("docs/testing.md"),
+        "direct workflow routing without session-entry prerequisites",
     );
 }
 
@@ -1236,11 +1266,15 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
     );
     assert_file_contains(
         root.join("skills/using-featureforge/SKILL.md"),
-        "Only after the bypass gate resolves to `enabled` for the current session key, if `$_FEATUREFORGE_BIN` is available call `$_FEATUREFORGE_BIN workflow status --refresh`.",
+        "If `$_FEATUREFORGE_BIN` is available call `$_FEATUREFORGE_BIN workflow status --refresh`.",
     );
-    assert_file_contains(
+    assert_file_not_contains(
         root.join("skills/using-featureforge/SKILL.md"),
-        "export FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY=1",
+        "Only after the bypass gate resolves to `enabled` for the current session key",
+    );
+    assert_file_not_contains(
+        root.join("skills/using-featureforge/SKILL.md"),
+        "FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY",
     );
     assert_file_contains(
         root.join("skills/using-featureforge/SKILL.md"),
@@ -1258,9 +1292,9 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
         root.join("skills/using-featureforge/SKILL.md"),
         "featureforge plan execution recommend --plan <approved-plan-path> --isolated-agents <available|unavailable> --session-intent <stay|separate|unknown> --workspace-prepared <yes|no|unknown>",
     );
-    assert_file_contains(
+    assert_file_not_contains(
         root.join("skills/using-featureforge/SKILL.md"),
-        "Fresh-session spec review, plan review, and execution-preflight intents must still surface the bypass prompt first through `featureforge session-entry resolve --message-file <path>`.",
+        "featureforge session-entry resolve --message-file <path>",
     );
     assert_file_contains(
         root.join("skills/using-featureforge/SKILL.md"),
@@ -1707,28 +1741,61 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
 }
 
 #[test]
-fn spawned_subagent_marker_contracts_are_documented_consistently() {
+fn removed_session_entry_gate_contracts_stay_absent_from_active_runtime_and_eval_surfaces() {
     let root = repo_root();
 
-    assert_file_contains(
-        root.join("skills/using-featureforge/SKILL.md"),
-        "featureforge session-entry resolve --message-file <path> --spawned-subagent",
+    for relative in [
+        "skills/using-featureforge/SKILL.md",
+        "skills/dispatching-parallel-agents/SKILL.md",
+        "skills/subagent-driven-development/SKILL.md",
+        "tests/evals/README.md",
+        "tests/evals/using-featureforge-routing.orchestrator.md",
+        "tests/evals/using-featureforge-routing.runner.md",
+        "tests/evals/using-featureforge-routing.judge.md",
+        "tests/evals/using-featureforge-routing.scenarios.md",
+        "tests/workflow_entry_shell_smoke.rs",
+        "tests/workflow_shell_smoke.rs",
+        "src/lib.rs",
+    ] {
+        let path = root.join(relative);
+        assert_file_not_contains(path.clone(), "FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY");
+        assert_file_not_contains(path.clone(), "FEATUREFORGE_SPAWNED_SUBAGENT");
+        assert_file_not_contains(path.clone(), "FEATUREFORGE_SPAWNED_SUBAGENT_OPT_IN");
+        assert_file_not_contains(path.clone(), "featureforge session-entry resolve");
+        assert_file_not_contains(path, "featureforge-session-entry");
+    }
+
+    assert_file_not_contains(
+        root.join("tests/evals/README.md"),
+        "starts after the first-turn bypass decision has already been resolved to `enabled`",
     );
-    assert_file_contains(
-        root.join("skills/using-featureforge/SKILL.md"),
-        "--spawned-subagent-opt-in",
+    assert_file_not_contains(
+        root.join("tests/evals/using-featureforge-routing.runner.md"),
+        "pre-seed the synthetic session decision to `enabled`",
     );
-    assert_file_contains(
-        root.join("skills/using-featureforge/SKILL.md"),
-        "default spawned-subagent bypass is ephemeral and non-persisted",
+    assert_file_not_contains(
+        root.join("tests/evals/using-featureforge-routing.scenarios.md"),
+        "pre-seeds the synthetic session decision to `enabled`",
     );
-    assert_file_contains(
-        root.join("skills/dispatching-parallel-agents/SKILL.md"),
-        "FEATUREFORGE_SPAWNED_SUBAGENT=1",
+    assert_file_not_contains(
+        root.join("tests/evals/using-featureforge-routing.orchestrator.md"),
+        "Pre-seed the runner's real session decision path to `enabled`",
     );
-    assert_file_contains(
-        root.join("skills/subagent-driven-development/SKILL.md"),
-        "FEATUREFORGE_SPAWNED_SUBAGENT=1",
+    assert_file_not_contains(
+        root.join("tests/evals/using-featureforge-routing.orchestrator.md"),
+        "the runner-derived session decision path used for the pre-seeded `enabled` state",
+    );
+    assert_file_not_contains(
+        root.join("tests/evals/using-featureforge-routing.judge.md"),
+        "whether the fixture pre-seeded the synthetic session decision to `enabled`",
+    );
+    assert_file_not_contains(
+        root.join("tests/evals/using-featureforge-routing.judge.md"),
+        "whether that pre-seeded state used the runner-derived decision path rather than a guessed `$PPID`",
+    );
+    assert!(
+        !root.join("src/cli/session_entry.rs").exists(),
+        "src/cli/session_entry.rs should stay absent from the active source tree"
     );
 }
 

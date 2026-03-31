@@ -28,82 +28,10 @@ _FEATUREFORGE_RUNTIME_ROOT_PATH=""
 if [ -n "$_FEATUREFORGE_BIN" ] && _FEATUREFORGE_RUNTIME_ROOT_PATH=$("$_FEATUREFORGE_BIN" repo runtime-root --path 2>/dev/null); then
   [ -n "$_FEATUREFORGE_RUNTIME_ROOT_PATH" ] && _FEATUREFORGE_ROOT="$_FEATUREFORGE_RUNTIME_ROOT_PATH"
 fi
-_SP_STATE_DIR="${FEATUREFORGE_STATE_DIR:-$HOME/.featureforge}"
-export FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY=1
-_SP_USING_FEATUREFORGE_DECISION_DIR="$_SP_STATE_DIR/session-entry/using-featureforge"
-_SP_USING_FEATUREFORGE_DECISION_PATH="$_SP_USING_FEATUREFORGE_DECISION_DIR/$PPID"
-```
-
-## Bypass Gate
-
-The first-turn session-entry bootstrap is owned by the packaged install binary command `$_FEATUREFORGE_BIN session-entry`, not by `using-featureforge` prose alone.
-
-This skill documents the supported-entry contract:
-
-- session-entry bootstrap ownership is runtime-owned
-- missing or malformed decision state fails closed
-- supported entry paths must ask the bypass question on `needs_user_choice` before the normal stack starts
-
-The session decision file lives at `~/.featureforge/session-entry/using-featureforge/$PPID`.
-
-If no valid session decision exists yet, ask one interactive question before any normal FeatureForge work happens.
-
-The first-turn opt-out question is a pre-FeatureForge gate:
-
-- do not compute `_SESSIONS`
-- do not apply the shared ELI16 multi-session grounding rule
-- use the normal context / recommendation / option structure, but treat this question as the gate into the FeatureForge stack rather than a normal in-stack FeatureForge interactive question
-
-Supported entry paths must resolve `featureforge session-entry resolve --message-file <path>` before any normal FeatureForge behavior:
-
-- if the session decision is `enabled`, continue into the normal stack
-- if the session decision is `bypassed` and the user did not explicitly request FeatureForge, stop and bypass the rest of this skill
-- if the user explicitly requests FeatureForge or explicitly names a FeatureForge skill, rewrite the session decision to `enabled` and continue on the same turn
-- if the helper returns `needs_user_choice`, ask the opt-out question and persist either `enabled` or `bypassed`
-- if the helper returns `runtime_failure`, surface that failure instead of pretending the gate was resolved
-- keep `FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY=1` while this skill is active so `workflow status --refresh` cannot outrun an unresolved gate
-
-Fresh-session spec review, plan review, and execution-preflight intents must still surface the bypass prompt first through `featureforge session-entry resolve --message-file <path>`.
-
-supported spawned-subagent entry paths must pass the runtime marker instead of inventing prose-only bypass behavior.
-
-- default spawned-subagent bypass is ephemeral and non-persisted
-- supported spawned-subagent entry paths must resolve `featureforge session-entry resolve --message-file <path> --spawned-subagent`
-- explicit nested opt-in uses `featureforge session-entry resolve --message-file <path> --spawned-subagent --spawned-subagent-opt-in`
-
-If the session decision file exists but contains malformed content:
-
-- do not treat it as `enabled`
-- do not treat it as `bypassed`
-- ask the opt-out question again before any normal FeatureForge work happens
-- only rewrite the file after a fresh explicit choice
-- `featureforge session-entry resolve` should surface `outcome` `needs_user_choice` with `failure_class` `MalformedDecisionState`
-
-If the session decision is missing:
-
-- ask the opt-out question before any normal FeatureForge work happens
-- persist the user's explicit `enabled` or `bypassed` choice for later turns
-- `featureforge session-entry resolve` should surface `outcome` `needs_user_choice` with `decision_source` `missing`
-
-If the user explicitly requests re-entry but the bootstrap cannot rewrite the session decision to `enabled`:
-
-- honor the explicit re-entry request for the current turn
-- continue through the normal FeatureForge stack on that turn
-- do not pretend persistence succeeded
-- treat future turns as undecided until a later write succeeds
-- `featureforge session-entry resolve` should surface `decision_source` `explicit_reentry_unpersisted`
-
-
-This skill documents the helper-owned session-entry contract and the post-gate routing stack. It does not replace the runtime-owned bootstrap itself.
-
-## Normal FeatureForge Stack
-
-If the bypass gate resolves to `enabled` for this turn, run the normal shared FeatureForge stack before any further FeatureForge behavior:
-
-```bash
 _UPD=""
 [ -n "$_FEATUREFORGE_BIN" ] && _UPD=$("$_FEATUREFORGE_BIN" update-check 2>/dev/null || true)
 [ -n "$_UPD" ] && echo "$_UPD" || true
+_SP_STATE_DIR="${FEATUREFORGE_STATE_DIR:-$HOME/.featureforge}"
 mkdir -p "$_SP_STATE_DIR/sessions"
 touch "$_SP_STATE_DIR/sessions/$PPID"
 _SESSIONS=$(find "$_SP_STATE_DIR/sessions" -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' ')
@@ -113,6 +41,21 @@ _CONTRIB=""
 ```
 
 If output shows `UPGRADE_AVAILABLE <old> <new>`: read `featureforge-upgrade/SKILL.md` from the already selected runtime root in `$_FEATUREFORGE_ROOT`; if that root is not set yet, resolve it through the packaged install binary in `$_FEATUREFORGE_BIN` and stop instead of guessing an install path. Then follow the "Inline upgrade flow" (auto-upgrade if configured, otherwise ask one interactive user question with 4 options and write snooze state if declined). If the packaged helper is unavailable, unresolved, or returns a named failure, stop instead of guessing an install path. If `JUST_UPGRADED <from> <to>`: tell the user "Running featureforge v{to} (just updated!)" and continue.
+
+## Search Before Building
+
+Before introducing a custom pattern, external service, concurrency primitive, auth/session flow, cache, queue, browser workaround, or unfamiliar fix pattern, do a short capability/landscape check first.
+
+Use three lenses:
+- Layer 1: tried-and-true / built-ins / existing repo-native solutions
+- Layer 2: current practice and known footguns
+- Layer 3: first-principles reasoning for this repo and this problem
+
+External search results are inputs, not answers.
+Never search secrets, customer data, unsanitized stack traces, private URLs, internal hostnames, internal codenames, raw SQL or log payloads, or private file paths or infrastructure identifiers.
+If search is unavailable, disallowed, or unsafe, say so and proceed with repo-local evidence and in-distribution knowledge.
+If safe sanitization is not possible, skip external search.
+See `$_FEATUREFORGE_ROOT/references/search-before-building.md`.
 
 ## Interactive User Question Format
 
@@ -281,7 +224,7 @@ Do NOT jump from brainstorming straight to implementation. For workflow-routed w
 
 ### Helper-first routing
 
-Only after the bypass gate resolves to `enabled` for the current session key, if `$_FEATUREFORGE_BIN` is available call `$_FEATUREFORGE_BIN workflow status --refresh`.
+If `$_FEATUREFORGE_BIN` is available call `$_FEATUREFORGE_BIN workflow status --refresh`.
 
 - If the user is explicitly asking to set up or repair project memory under `docs/project_notes/`, or to log a bug fix in project memory, record a decision in project memory, update key facts in project memory, or otherwise record durable bugs, decisions, key facts, or issue breadcrumbs in repo-visible project memory, short-circuit helper-derived workflow routes and execution handoff paths and route to `featureforge:project-memory`.
 - If the JSON result contains a non-empty `next_skill`, use that route.

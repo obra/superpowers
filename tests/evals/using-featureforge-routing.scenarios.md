@@ -9,11 +9,11 @@ Scenario set identifier: `using-featureforge-routing-r4`
 
 - Each scenario starts from a fresh synthetic temporary fixture workspace.
 - Each fixture workspace is a real initialized git repo with explicit branch, remote, and artifact-state files.
-- Each fixture workspace pre-seeds the synthetic session decision to `enabled` through the runner's own derived decision-file path so the scenario exercises post-bypass routing rather than the first-turn opt-out question.
+- Each fixture workspace routes directly from its explicit artifact state with no pre-seeded session decision files or gate bootstrap requirements.
 - The runner is read-only.
 - The judge reads raw runner evidence plus this file and the expected-safe-stage rubric.
 - Fail closed on ambiguous, mixed, malformed, or missing evidence.
-- The bypass prompt itself is out of scope for this gate and is covered by `cargo nextest run --test using_featureforge_skill`.
+- The gate focuses on direct workflow routing from artifact state, not on any removed session-entry bootstrap behavior.
 
 ## Fixed Minimum Matrix
 
@@ -35,7 +35,7 @@ Scenario set identifier: `using-featureforge-routing-r4`
 - `N3` proves implementation language does not skip engineering review.
 - `N4` proves branch-completion language does not skip the final review gate.
 - `P1` is the positive-control floor for the plan-authoring family.
-- `P1b` proves that explicit “use FeatureForge” language still routes by artifact state once the runtime-owned bootstrap has already resolved the turn to `enabled`.
+- `P1b` proves that explicit “use FeatureForge” language still routes by artifact state alone.
 - `P2a` and `P2b` are the positive-control floor for the execution family.
 - `N4` proves branch-completion language still routes to `requesting-code-review` when no fresh final review artifact exists for the current HEAD.
 - Once fresh code-review, QA, and release-readiness artifacts exist for the current HEAD, the in-session workflow handoff may advance to `finishing-a-development-branch`.
@@ -58,7 +58,7 @@ Each scenario evidence bundle must record:
 - the scenario-set identifier
 - the scenario identifier
 - the scenario/rubric artifact revision or fingerprint
-- the runner-derived session decision path used for the pre-seeded `enabled` state
+- the exact fixture files and artifact-state inputs the runner used for the decision
 - the chosen runner and judge models
 - the raw runner transcript/output
 - the raw judge transcript/output or structured judge rationale

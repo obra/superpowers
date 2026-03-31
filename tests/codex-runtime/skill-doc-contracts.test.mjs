@@ -232,11 +232,6 @@ test('generated non-router skill docs include the shared Search Before Building 
   for (const skill of listGeneratedSkills()) {
     const content = readUtf8(getSkillPath(skill));
 
-    if (skill === 'using-featureforge') {
-      assert.doesNotMatch(content, /## Search Before Building/, 'using-featureforge should stay exempt from the shared section');
-      continue;
-    }
-
     const section = extractSection(content, 'Search Before Building');
     assert.ok(section, `${skill} should include the Search Before Building section`);
     const normalized = normalizeWhitespace(section);
@@ -251,28 +246,30 @@ test('generated non-router skill docs include the shared Search Before Building 
   }
 });
 
-test('using-featureforge gets a dedicated bootstrap preamble contract', () => {
+test('using-featureforge omits the removed bypass-gate contract', () => {
   const content = readUtf8(getSkillPath('using-featureforge'));
   const bootstrapBlock = extractBashBlockUnderHeading(content, 'Preamble (run first)');
-  const normalStackBlock = extractBashBlockUnderHeading(content, 'Normal FeatureForge Stack');
-  assert.match(bootstrapBlock, /session-entry\/using-featureforge/, 'using-featureforge should derive the decision-file path');
-  assert.doesNotMatch(bootstrapBlock, /touch "\$_SP_STATE_DIR\/sessions\/\$PPID"/, 'using-featureforge should not write session markers before the bypass decision');
-  assert.doesNotMatch(bootstrapBlock, /_CONTRIB=/, 'using-featureforge should not load contributor mode before the bypass decision');
-  assert.ok(normalStackBlock, 'using-featureforge should define the post-gate normal stack');
-  assert.match(normalStackBlock, /"\$_FEATUREFORGE_BIN" update-check/, 'using-featureforge should restore update checks after the bypass gate through the packaged install binary');
-  assert.match(normalStackBlock, /touch "\$_SP_STATE_DIR\/sessions\/\$PPID"/, 'using-featureforge should restore session markers after the bypass gate');
-  assert.match(normalStackBlock, /_CONTRIB=/, 'using-featureforge should restore contributor mode after the bypass gate');
-  assertNoRuntimeFallbackExecution(normalStackBlock, 'using-featureforge normal stack');
-  assert.match(content, /ask one interactive question before any normal FeatureForge work happens/, 'using-featureforge should ask before the normal stack');
-  assert.match(content, /do not compute `_SESSIONS`/, 'using-featureforge should exempt the opt-out gate from _SESSIONS handling');
-  assert.match(content, /session-entry bootstrap ownership is runtime-owned/, 'using-featureforge should name runtime ownership for the bootstrap boundary');
-  assert.match(content, /missing or malformed decision state fails closed/, 'using-featureforge should document fail-closed missing or malformed state');
-  assert.match(content, /If the bypass gate resolves to `enabled` for this turn, run the normal shared FeatureForge stack before any further FeatureForge behavior:/, 'using-featureforge should explicitly restore the normal stack after an enabled decision');
-  assert.match(content, /If the session decision file exists but contains malformed content:/, 'using-featureforge should document malformed-state handling');
-  assert.match(content, /if the user explicitly requests FeatureForge or explicitly names a FeatureForge skill, rewrite the session decision to `enabled` and continue on the same turn/, 'using-featureforge should treat explicit skill naming as re-entry');
-  assert.match(content, /If the user explicitly requests re-entry but the bootstrap cannot rewrite the session decision to `enabled`:/, 'using-featureforge should document re-entry write-failure handling');
-  assert.match(content, /featureforge session-entry resolve --message-file <path>/, 'using-featureforge should reference the canonical session-entry command');
+  assert.match(bootstrapBlock, /touch "\$_SP_STATE_DIR\/sessions\/\$PPID"/, 'using-featureforge should use the shared preamble session markers directly');
+  assert.match(bootstrapBlock, /_CONTRIB=/, 'using-featureforge should use the shared contributor-mode setup directly');
+  assertNoRuntimeFallbackExecution(bootstrapBlock, 'using-featureforge preamble');
+  assert.doesNotMatch(content, /## Bypass Gate/, 'using-featureforge should not keep the removed bypass-gate section');
+  assert.doesNotMatch(content, /## Normal FeatureForge Stack/, 'using-featureforge should not keep the removed post-gate normal-stack section');
+  assert.doesNotMatch(content, /session-entry\/using-featureforge/, 'using-featureforge should not derive the removed decision-file path');
+  assert.doesNotMatch(content, /featureforge session-entry resolve --message-file <path>/, 'using-featureforge should not reference the removed session-entry helper flow');
+  assert.doesNotMatch(content, /ask one interactive question before any normal FeatureForge work happens/, 'using-featureforge should not keep bypass-gate prompt prose');
+  assert.doesNotMatch(content, /FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY/, 'using-featureforge should not export the removed strict gate env key');
+  assert.doesNotMatch(content, /FEATUREFORGE_SPAWNED_SUBAGENT/, 'using-featureforge should not mention the removed spawned-subagent gate env key');
+  assert.doesNotMatch(content, /FEATUREFORGE_SPAWNED_SUBAGENT_OPT_IN/, 'using-featureforge should not mention the removed spawned-subagent opt-in env key');
   assert.doesNotMatch(content, /featureforge-session-entry/, 'using-featureforge should not keep helper-style session-entry commands');
+});
+
+test('generated skill docs omit removed session-entry env markers across active surfaces', () => {
+  for (const skill of listGeneratedSkills()) {
+    const content = readUtf8(getSkillPath(skill));
+    assert.doesNotMatch(content, /FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY/, `${skill} should not mention the removed strict gate env key`);
+    assert.doesNotMatch(content, /FEATUREFORGE_SPAWNED_SUBAGENT/, `${skill} should not mention the removed spawned-subagent env key`);
+    assert.doesNotMatch(content, /FEATUREFORGE_SPAWNED_SUBAGENT_OPT_IN/, `${skill} should not mention the removed spawned-subagent opt-in env key`);
+  }
 });
 
 test('generated skill docs never execute runtime commands through root-selected launchers', () => {
@@ -981,7 +978,7 @@ test('workflow handoff skills make terminal ownership explicit', () => {
   );
   assert.match(
     usingFeatureForge,
-    /Only after the bypass gate resolves to `enabled` for the current session key, if `\$_FEATUREFORGE_BIN` is available call `\$_FEATUREFORGE_BIN workflow status --refresh`\./,
+    /If `\$_FEATUREFORGE_BIN` is available call `\$_FEATUREFORGE_BIN workflow status --refresh`\./,
   );
   assert.match(
     usingFeatureForge,
@@ -1242,4 +1239,87 @@ test('release-facing docs point at docs/testing.md as the canonical validation e
       `${relativePath} should point readers at docs/testing.md for the canonical validation matrix`,
     );
   }
+});
+
+test('active docs describe the post-session-entry routing contract', () => {
+  for (const relativePath of [
+    'README.md',
+    'docs/README.codex.md',
+    'docs/README.copilot.md',
+  ]) {
+    const content = readUtf8(path.join(REPO_ROOT, relativePath));
+    assert.match(
+      content,
+      /`using-featureforge` is the human-readable entry router that consults `featureforge workflow` directly from repo-visible artifacts\./,
+      `${relativePath} should describe direct workflow routing from repo-visible artifacts`,
+    );
+    assert.doesNotMatch(content, /featureforge session-entry/, `${relativePath} should not mention the removed session-entry command family`);
+    assert.doesNotMatch(content, /FEATUREFORGE_WORKFLOW_REQUIRE_SESSION_ENTRY/, `${relativePath} should not mention the removed strict gate env key`);
+  }
+
+  const testingDoc = readUtf8(path.join(REPO_ROOT, 'docs/testing.md'));
+  assert.match(
+    testingDoc,
+    /direct workflow routing without session-entry prerequisites/i,
+    'docs/testing.md should describe the no-session-entry routing contract',
+  );
+
+  for (const relativePath of [
+    '.codex/INSTALL.md',
+    '.copilot/INSTALL.md',
+  ]) {
+    const content = readUtf8(path.join(REPO_ROOT, relativePath));
+    assert.match(
+      content,
+      /packaged install binary.*featureforge repo runtime-root --path/is,
+      `${relativePath} should describe runtime-root-based packaged binary routing`,
+    );
+    assert.doesNotMatch(
+      content,
+      /featureforge session-entry resolve/i,
+      `${relativePath} should not mention the removed session-entry entry contract`,
+    );
+    assert.doesNotMatch(
+      content,
+      /--spawned-subagent(?:-opt-in)?/i,
+      `${relativePath} should not advertise removed spawned-subagent session-entry flags`,
+    );
+  }
+
+  const releaseNotes = readUtf8(path.join(REPO_ROOT, 'RELEASE-NOTES.md'));
+  assert.match(
+    releaseNotes,
+    /breaking contract delta: remove `featureforge session-entry`/i,
+    'RELEASE-NOTES.md should call out the removed session-entry command surface',
+  );
+  assert.match(
+    releaseNotes,
+    /workflow routing now ignores legacy session-entry decision files and gate env inputs/i,
+    'RELEASE-NOTES.md should describe the direct-routing breaking delta',
+  );
+  assert.match(
+    releaseNotes,
+    /breaking output contract changes/i,
+    'RELEASE-NOTES.md should include a dedicated breaking output contract changes section',
+  );
+  assert.match(
+    releaseNotes,
+    /workflow phase --json.*session_entry.*needs_user_choice.*bypassed.*session_entry_gate.*continue_outside_featureforge.*schema_version.*2/is,
+    'RELEASE-NOTES.md should enumerate the workflow phase output removals and new schema version',
+  );
+  assert.match(
+    releaseNotes,
+    /workflow doctor --json.*session_entry.*needs_user_choice.*bypassed.*session_entry_gate.*continue_outside_featureforge.*schema_version.*2/is,
+    'RELEASE-NOTES.md should enumerate the workflow doctor output removals and new schema version',
+  );
+  assert.match(
+    releaseNotes,
+    /workflow handoff --json.*session_entry.*needs_user_choice.*bypassed.*session_entry_gate.*continue_outside_featureforge.*schema_version.*2/is,
+    'RELEASE-NOTES.md should enumerate the workflow handoff output removals and new schema version',
+  );
+  assert.match(
+    releaseNotes,
+    /workflow status --refresh.*needs_user_choice.*bypassed.*session_entry_unresolved.*session_entry_bypassed.*schema_version.*3/is,
+    'RELEASE-NOTES.md should enumerate the workflow status output removals and retained route schema version',
+  );
 });

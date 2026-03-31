@@ -19,7 +19,6 @@ pub mod output;
 pub mod paths;
 pub mod repo_safety;
 pub mod runtime_root;
-pub mod session_entry;
 pub mod update_check;
 pub mod workflow;
 
@@ -156,14 +155,6 @@ pub fn run() -> std::process::ExitCode {
                 Err(error) => emit_json::<Value, JsonFailure>(Err(error.into())),
             }
         }
-        Some(Command::SessionEntry(session_entry_cli)) => match session_entry_cli.command {
-            cli::session_entry::SessionEntryCommand::Resolve(args) => {
-                emit_session_entry_json(session_entry::resolve(&args))
-            }
-            cli::session_entry::SessionEntryCommand::Record(args) => {
-                emit_session_entry_json(session_entry::record(&args))
-            }
-        },
         Some(Command::UpdateCheck(args)) => emit_text(update_check::check(&args)),
         Some(Command::Workflow(workflow_cli)) => {
             let current_dir = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
@@ -438,37 +429,6 @@ fn emit_workflow_resolve_json(
             }
             Err(error) => {
                 eprintln!("Could not serialize workflow resolve failure: {error}");
-                std::process::ExitCode::from(1)
-            }
-        },
-    }
-}
-
-fn emit_session_entry_json(
-    result: Result<session_entry::SessionEntryResolveOutput, DiagnosticError>,
-) -> std::process::ExitCode {
-    match result {
-        Ok(output) => match serde_json::to_string(&output) {
-            Ok(json) => {
-                println!("{json}");
-                std::process::ExitCode::SUCCESS
-            }
-            Err(error) => {
-                eprintln!("Could not serialize session-entry output: {error}");
-                std::process::ExitCode::from(1)
-            }
-        },
-        Err(error) => match serde_json::to_string(&json!({
-            "outcome": "runtime_failure",
-            "failure_class": error.failure_class(),
-            "message": error.message(),
-        })) {
-            Ok(json) => {
-                eprintln!("{json}");
-                std::process::ExitCode::from(1)
-            }
-            Err(serialize_error) => {
-                eprintln!("Could not serialize session-entry failure: {serialize_error}");
                 std::process::ExitCode::from(1)
             }
         },
