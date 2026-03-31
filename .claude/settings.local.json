@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:localhost)",
+      "Read(/c/Users/dimad/.agents/skills/playwright/**)",
+      "Bash(npm run:*)"
+    ]
+  }
+}
