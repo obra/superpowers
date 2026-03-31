@@ -1,6 +1,6 @@
 # Superpowers Release Notes
 
-## Unreleased
+## v5.0.7 (2026-03-31)
 
 ### GitHub Copilot CLI Support
 
