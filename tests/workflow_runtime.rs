@@ -862,7 +862,7 @@ fn write_dispatched_branch_review_artifact(
     let gate_review = run_plan_execution_json(
         repo,
         state,
-        &["gate-review", "--plan", plan_rel],
+        &["gate-review-dispatch", "--plan", plan_rel],
         "plan execution gate-review dispatch for workflow review fixture",
     );
     assert_eq!(

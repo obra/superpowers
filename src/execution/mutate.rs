@@ -14,8 +14,11 @@ use crate::cli::plan_execution::{
     TransferArgs,
 };
 use crate::diagnostics::{FailureClass, JsonFailure};
-use crate::execution::authority::write_authoritative_unit_review_receipt_artifact;
+use crate::execution::authority::{
+    ensure_preflight_authoritative_bootstrap, write_authoritative_unit_review_receipt_artifact,
+};
 use crate::execution::final_review::authoritative_strategy_checkpoint_fingerprint_checked;
+use crate::execution::harness::RunIdentitySnapshot;
 use crate::execution::state::{
     EvidenceAttempt, ExecutionContext, ExecutionEvidence, ExecutionRuntime, FileProof,
     NO_REPO_FILES_MARKER, PacketFingerprintInput, PlanExecutionStatus, PlanStepState,
@@ -28,6 +31,7 @@ use crate::execution::state::{
     require_normalized_text, require_preflight_acceptance, require_prior_task_closure_for_begin,
     status_from_context, validate_expected_fingerprint,
 };
+use crate::execution::topology::persist_preflight_acceptance;
 use crate::execution::transitions::{
     AuthoritativeTransitionState, StepCommand, claim_step_write_authority,
     enforce_active_contract_scope, enforce_authoritative_phase,
@@ -603,6 +607,13 @@ pub fn rebuild_evidence(
     }
 
     if candidates.is_empty() {
+        ensure_rebuild_preflight_acceptance(&context)?;
+        let refreshed_status = status_from_context(&load_execution_context(runtime, &args.plan)?)?;
+        refresh_rebuild_all_task_closure_receipts_if_available(
+            runtime,
+            &args.plan,
+            &refreshed_status,
+        )?;
         return Ok(RebuildEvidenceOutput {
             session_root: context.runtime.repo_root.to_string_lossy().into_owned(),
             dry_run: false,
@@ -634,6 +645,8 @@ pub fn rebuild_evidence(
         }
     };
 
+    ensure_rebuild_preflight_acceptance(&context)?;
+
     let mut status = status_from_context(&context)?;
     let mut targets = Vec::with_capacity(candidates.len());
     let mut counts = RebuildEvidenceCounts {
@@ -650,14 +663,15 @@ pub fn rebuild_evidence(
     let mut saw_precondition_failure = false;
     let mut saw_non_precondition_failure = false;
 
-    for candidate in candidates {
+    for (index, candidate) in candidates.iter().enumerate() {
         let (next_status, target) = execute_rebuild_candidate(
             runtime,
             &request,
             &args.plan,
             execution_mode,
             status,
-            &candidate,
+            candidate,
+            index + 1 == candidates.len(),
         )?;
         status = next_status;
         match target.status.as_str() {
@@ -714,6 +728,19 @@ pub fn rebuild_evidence(
     })
 }
 
+fn ensure_rebuild_preflight_acceptance(context: &ExecutionContext) -> Result<(), JsonFailure> {
+    let acceptance = persist_preflight_acceptance(context)?;
+    ensure_preflight_authoritative_bootstrap(
+        &context.runtime,
+        RunIdentitySnapshot {
+            execution_run_id: acceptance.execution_run_id.clone(),
+            source_plan_path: context.plan_rel.clone(),
+            source_plan_revision: context.plan_document.plan_revision,
+        },
+        acceptance.chunk_id,
+    )
+}
+
 fn is_rebuild_precondition_failure(failure_class: &str) -> bool {
     matches!(
         failure_class,
@@ -728,6 +755,7 @@ fn execute_rebuild_candidate(
     execution_mode: ExecutionModeArg,
     mut status: PlanExecutionStatus,
     candidate: &RebuildEvidenceCandidate,
+    allow_manual_open_step: bool,
 ) -> Result<(PlanExecutionStatus, RebuildEvidenceTarget), JsonFailure> {
     let mut current_candidate = candidate.clone();
     let mut expected_attempt_number = current_candidate.attempt_number;
@@ -798,6 +826,7 @@ fn execute_rebuild_candidate(
             execution_mode,
             status,
             &current_candidate,
+            allow_manual_open_step,
             target,
             expected_attempt_number,
             expected_artifact_epoch.clone(),
@@ -838,6 +867,7 @@ fn execute_rebuild_candidate_once(
     execution_mode: ExecutionModeArg,
     mut status: PlanExecutionStatus,
     candidate: &RebuildEvidenceCandidate,
+    allow_manual_open_step: bool,
     mut target: RebuildEvidenceTarget,
     mut expected_attempt_number: Option<u32>,
     mut expected_artifact_epoch: Option<String>,
@@ -847,7 +877,24 @@ fn execute_rebuild_candidate_once(
     Option<u32>,
     Option<String>,
 ), JsonFailure> {
+    let verify_command = candidate.verify_command.clone();
+    if verify_command.is_none() && !request.skip_manual_fallback && !allow_manual_open_step {
+        target.status = String::from("manual_required");
+        target.failure_class = Some(String::from("manual_required"));
+        target.error = Some(String::from(
+            "No stored verify command is available for this target.",
+        ));
+        return Ok((status, target, expected_attempt_number, expected_artifact_epoch));
+    }
+
     if candidate.needs_reopen {
+        status = clear_superseded_interrupted_rebuild_step(
+            runtime,
+            request,
+            plan,
+            status,
+            candidate,
+        )?;
         let reopened = reopen(
             runtime,
             &ReopenArgs {
@@ -878,7 +925,7 @@ fn execute_rebuild_candidate_once(
         }
     }
 
-    let Some(verify_command) = candidate.verify_command.clone() else {
+    let Some(verify_command) = verify_command else {
         if request.skip_manual_fallback {
             target.status = String::from("failed");
             target.failure_class = Some(String::from("manual_required"));
@@ -1053,6 +1100,55 @@ fn execute_rebuild_candidate_once(
     }
 }
 
+fn clear_superseded_interrupted_rebuild_step(
+    runtime: &ExecutionRuntime,
+    request: &crate::execution::state::RebuildEvidenceRequest,
+    plan: &Path,
+    status: PlanExecutionStatus,
+    candidate: &RebuildEvidenceCandidate,
+) -> Result<PlanExecutionStatus, JsonFailure> {
+    let Some((resume_task, resume_step)) = status
+        .resume_task
+        .zip(status.resume_step)
+    else {
+        return Ok(status);
+    };
+    if (resume_task, resume_step) <= (candidate.task, candidate.step) {
+        return Ok(status);
+    }
+
+    let context = load_execution_context(runtime, plan)?;
+    let interrupted_is_targeted = discover_rebuild_candidates(&context, request)?
+        .iter()
+        .any(|target| target.task == resume_task && target.step == resume_step);
+    if !interrupted_is_targeted {
+        return Ok(status);
+    }
+
+    let _write_authority = claim_step_write_authority(runtime)?;
+    let mut context = load_execution_context_for_mutation(runtime, plan)?;
+    let Some(interrupted_index) = context.steps.iter().position(|step| {
+        step.task_number == resume_task
+            && step.step_number == resume_step
+            && step.note_state == Some(crate::execution::state::NoteState::Interrupted)
+    }) else {
+        return Ok(status);
+    };
+
+    context.steps[interrupted_index].note_state = None;
+    context.steps[interrupted_index].note_summary.clear();
+
+    let rendered_plan = render_plan_source(
+        &context.plan_source,
+        &context.plan_document.execution_mode,
+        &context.steps,
+    );
+    write_atomic(&context.plan_abs, &rendered_plan)?;
+
+    let reloaded = load_execution_context_for_mutation(runtime, plan)?;
+    status_from_context(&reloaded)
+}
+
 fn refresh_rebuild_status(
     runtime: &ExecutionRuntime,
     plan: &Path,
@@ -1126,10 +1222,10 @@ fn refresh_rebuild_closure_receipts(
     runtime: &ExecutionRuntime,
     plan: &Path,
     status: &PlanExecutionStatus,
-    task: u32,
+    _task: u32,
     _step: u32,
 ) -> Result<(), JsonFailure> {
-    refresh_rebuild_task_closure_receipts(runtime, plan, status, task)
+    refresh_rebuild_all_task_closure_receipts(runtime, plan, status)
 }
 
 fn refresh_rebuild_task_closure_receipts(
@@ -1153,6 +1249,82 @@ fn refresh_rebuild_task_closure_receipts(
     let active_contract_fingerprint = load_authoritative_transition_state(&context)?
         .as_ref()
         .and_then(|authority| authority.evidence_provenance().source_contract_fingerprint);
+    refresh_rebuild_task_closure_receipts_with_context(
+        runtime,
+        &context,
+        execution_run_id,
+        strategy_checkpoint_fingerprint,
+        active_contract_fingerprint.as_deref(),
+        task,
+    )
+}
+
+fn refresh_rebuild_all_task_closure_receipts(
+    runtime: &ExecutionRuntime,
+    plan: &Path,
+    status: &PlanExecutionStatus,
+) -> Result<(), JsonFailure> {
+    let Some(execution_run_id) = status.execution_run_id.as_ref().map(|value| value.as_str()) else {
+        return Ok(());
+    };
+    let context = load_execution_context(runtime, plan)?;
+    let strategy_checkpoint = authoritative_strategy_checkpoint_fingerprint_checked(&context)?;
+    let Some(strategy_checkpoint_fingerprint) = strategy_checkpoint
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+    else {
+        return Ok(());
+    };
+    let active_contract_fingerprint = load_authoritative_transition_state(&context)?
+        .as_ref()
+        .and_then(|authority| authority.evidence_provenance().source_contract_fingerprint);
+    let checked_tasks = context
+        .steps
+        .iter()
+        .filter(|step_state| step_state.checked)
+        .map(|step_state| step_state.task_number)
+        .collect::<BTreeSet<_>>();
+    for task in checked_tasks {
+        refresh_rebuild_task_closure_receipts_with_context(
+            runtime,
+            &context,
+            execution_run_id,
+            strategy_checkpoint_fingerprint,
+            active_contract_fingerprint.as_deref(),
+            task,
+        )?;
+    }
+    Ok(())
+}
+
+fn refresh_rebuild_all_task_closure_receipts_if_available(
+    runtime: &ExecutionRuntime,
+    plan: &Path,
+    status: &PlanExecutionStatus,
+) -> Result<(), JsonFailure> {
+    match refresh_rebuild_all_task_closure_receipts(runtime, plan, status) {
+        Ok(()) => Ok(()),
+        Err(error)
+            if error.error_class == "MalformedExecutionState"
+                && error
+                    .message
+                    .contains("last_strategy_checkpoint_fingerprint") =>
+        {
+            Ok(())
+        }
+        Err(error) => Err(error),
+    }
+}
+
+fn refresh_rebuild_task_closure_receipts_with_context(
+    runtime: &ExecutionRuntime,
+    context: &ExecutionContext,
+    execution_run_id: &str,
+    strategy_checkpoint_fingerprint: &str,
+    active_contract_fingerprint: Option<&str>,
+    task: u32,
+) -> Result<(), JsonFailure> {
     let task_steps = context
         .steps
         .iter()
@@ -1162,17 +1334,17 @@ fn refresh_rebuild_task_closure_receipts(
     for step in task_steps {
         refresh_unit_review_receipt_for_step(
             runtime,
-            &context,
+            context,
             execution_run_id,
             strategy_checkpoint_fingerprint,
-            active_contract_fingerprint.as_deref(),
+            active_contract_fingerprint,
             task,
             step,
         )?;
     }
     refresh_task_verification_receipt_for_task(
         runtime,
-        &context,
+        context,
         execution_run_id,
         strategy_checkpoint_fingerprint,
         task,
@@ -1453,6 +1625,8 @@ fn is_rebuild_task_boundary_receipt_failure(message: &str) -> bool {
         message.split_once(':').map(|(reason_code, _)| reason_code.trim()),
         Some(
             "prior_task_review_not_green"
+                | "task_review_not_independent"
+                | "task_review_receipt_malformed"
                 | "prior_task_verification_missing"
                 | "task_verification_receipt_malformed"
         )

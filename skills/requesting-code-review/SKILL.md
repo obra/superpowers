@@ -138,7 +138,7 @@ In Codex, FeatureForge installs the `code-reviewer` custom agent alongside the s
 - Parse `active_task`, `blocking_task`, and `resume_task` from the status JSON.
 - If any of `active_task`, `blocking_task`, or `resume_task` is non-null, stop and return to the current execution flow; final review is only valid when all three are `null`.
 - If `evidence_path` is empty or unreadable, stop and return to the current execution flow instead of reviewing against missing execution evidence.
-- Run `featureforge plan execution gate-review --plan <approved-plan-path>` before dispatching the reviewer.
+- Run `featureforge plan execution gate-review-dispatch --plan <approved-plan-path>` before dispatching the reviewer.
 - If the review gate returns `allowed` `false`, stop and return to the current execution flow; do not dispatch review against stale, drifted, or mismatched execution evidence.
 - If the review gate returns warning codes such as `legacy_evidence_format`, keep the warning in the review context but do not treat it as a blocker when `allowed` remains `true`.
 - Pass the exact approved plan path and helper-reported execution evidence path into the reviewer context.
@@ -349,7 +349,7 @@ if [ -z "$EXECUTION_EVIDENCE_PATH" ]; then
   echo "Stop and return to execution: missing execution evidence path."
   exit 1
 fi
-REVIEW_GATE_JSON=$("$_FEATUREFORGE_BIN" plan execution gate-review --plan "$APPROVED_PLAN_PATH")
+REVIEW_GATE_JSON=$("$_FEATUREFORGE_BIN" plan execution gate-review-dispatch --plan "$APPROVED_PLAN_PATH")
 REVIEW_ALLOWED=$(printf '%s\n' "$REVIEW_GATE_JSON" | node -e 'const fs = require("fs"); const parsed = JSON.parse(fs.readFileSync(0, "utf8")); process.stdout.write(parsed.allowed ? "true" : "false")')
 if [ "$REVIEW_ALLOWED" != "true" ]; then
   echo "Stop and return to execution: review gate rejected the current execution evidence."
@@ -401,7 +401,7 @@ You: [Fix progress indicators]
 
 - rejects final review if the plan has invalid execution state or required unfinished work not truthfully represented
 - treats non-null `active_task`, `blocking_task`, or `resume_task` as execution-dirty and rejects final review until execution returns to a clean state
-- runs `gate-review --plan ...` as the helper-owned fail-closed provenance gate before dispatching final review
+- runs `gate-review-dispatch --plan ...` as the helper-owned fail-closed provenance gate before dispatching final review
 - consumes the execution evidence artifact for checked-off steps
 - consumes completed task-packet context and the approved plan's coverage matrix for plan-routed review
 - requires the persisted final-review artifact to prove dedicated independent reviewer provenance and, when present, explicit deviation disposition

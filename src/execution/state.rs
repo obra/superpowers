@@ -4138,45 +4138,133 @@ fn validate_plain_unit_review_receipt(
         return false;
     }
 
+    let mut mismatched_fields = Vec::new();
+    let mut mismatch_details = Vec::new();
     if review_document.headers.get("Source Plan").map(String::as_str)
-            != Some(context.plan_rel.as_str())
-        || review_document
-            .headers
-            .get("Source Plan Revision")
-            .and_then(|value| value.parse::<u32>().ok())
-            != Some(context.plan_document.plan_revision)
-        || review_document
-            .headers
-            .get("Execution Run ID")
-            .map(String::as_str)
-            != Some(execution_run_id)
-        || review_document
-            .headers
-            .get("Execution Unit ID")
-            .map(String::as_str)
-            != Some(expectations.expected_execution_unit_id.as_str())
-        || review_document
-            .headers
-            .get("Strategy Checkpoint Fingerprint")
-            .map(String::as_str)
-            != Some(expectations.expected_strategy_checkpoint_fingerprint)
-        || review_document
-            .headers
-            .get("Approved Task Packet Fingerprint")
-            .map(String::as_str)
-            != Some(expectations.expected_task_packet_fingerprint)
-        || review_document
-            .headers
-            .get("Reviewed Checkpoint SHA")
-            .map(String::as_str)
-            != Some(expectations.expected_reviewed_checkpoint_sha)
+        != Some(context.plan_rel.as_str())
     {
+        mismatched_fields.push("Source Plan");
+        mismatch_details.push(format!(
+            "Source Plan expected={} actual={}",
+            context.plan_rel,
+            review_document
+                .headers
+                .get("Source Plan")
+                .map(String::as_str)
+                .unwrap_or("<missing>")
+        ));
+    }
+    if review_document
+        .headers
+        .get("Source Plan Revision")
+        .and_then(|value| value.parse::<u32>().ok())
+        != Some(context.plan_document.plan_revision)
+    {
+        mismatched_fields.push("Source Plan Revision");
+        mismatch_details.push(format!(
+            "Source Plan Revision expected={} actual={}",
+            context.plan_document.plan_revision,
+            review_document
+                .headers
+                .get("Source Plan Revision")
+                .map(String::as_str)
+                .unwrap_or("<missing>")
+        ));
+    }
+    if review_document
+        .headers
+        .get("Execution Run ID")
+        .map(String::as_str)
+        != Some(execution_run_id)
+    {
+        mismatched_fields.push("Execution Run ID");
+        mismatch_details.push(format!(
+            "Execution Run ID expected={} actual={}",
+            execution_run_id,
+            review_document
+                .headers
+                .get("Execution Run ID")
+                .map(String::as_str)
+                .unwrap_or("<missing>")
+        ));
+    }
+    if review_document
+        .headers
+        .get("Execution Unit ID")
+        .map(String::as_str)
+        != Some(expectations.expected_execution_unit_id.as_str())
+    {
+        mismatched_fields.push("Execution Unit ID");
+        mismatch_details.push(format!(
+            "Execution Unit ID expected={} actual={}",
+            expectations.expected_execution_unit_id,
+            review_document
+                .headers
+                .get("Execution Unit ID")
+                .map(String::as_str)
+                .unwrap_or("<missing>")
+        ));
+    }
+    if review_document
+        .headers
+        .get("Strategy Checkpoint Fingerprint")
+        .map(String::as_str)
+        != Some(expectations.expected_strategy_checkpoint_fingerprint)
+    {
+        mismatched_fields.push("Strategy Checkpoint Fingerprint");
+        mismatch_details.push(format!(
+            "Strategy Checkpoint Fingerprint expected={} actual={}",
+            expectations.expected_strategy_checkpoint_fingerprint,
+            review_document
+                .headers
+                .get("Strategy Checkpoint Fingerprint")
+                .map(String::as_str)
+                .unwrap_or("<missing>")
+        ));
+    }
+    if review_document
+        .headers
+        .get("Approved Task Packet Fingerprint")
+        .map(String::as_str)
+        != Some(expectations.expected_task_packet_fingerprint)
+    {
+        mismatched_fields.push("Approved Task Packet Fingerprint");
+        mismatch_details.push(format!(
+            "Approved Task Packet Fingerprint expected={} actual={}",
+            expectations.expected_task_packet_fingerprint,
+            review_document
+                .headers
+                .get("Approved Task Packet Fingerprint")
+                .map(String::as_str)
+                .unwrap_or("<missing>")
+        ));
+    }
+    if review_document
+        .headers
+        .get("Reviewed Checkpoint SHA")
+        .map(String::as_str)
+        != Some(expectations.expected_reviewed_checkpoint_sha)
+    {
+        mismatched_fields.push("Reviewed Checkpoint SHA");
+        mismatch_details.push(format!(
+            "Reviewed Checkpoint SHA expected={} actual={}",
+            expectations.expected_reviewed_checkpoint_sha,
+            review_document
+                .headers
+                .get("Reviewed Checkpoint SHA")
+                .map(String::as_str)
+                .unwrap_or("<missing>")
+        ));
+    }
+    if !mismatched_fields.is_empty() {
         gate.fail(
             FailureClass::StaleProvenance,
             "plain_unit_review_receipt_provenance_mismatch",
             format!(
-                "Current-run unit-review receipt {} does not match the active task checkpoint provenance.",
-                receipt_path.display()
+                "Current-run unit-review receipt {} does not match the active task checkpoint provenance (mismatched fields: {}; details: {}).",
+                receipt_path.display(),
+                mismatched_fields.join(", ")
+                , mismatch_details.join("; ")
             ),
             "Regenerate the authoritative unit-review receipt for the completed step and retry gate-review or gate-finish.",
         );

@@ -1636,7 +1636,7 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
     );
     assert_file_contains(
         root.join("skills/requesting-code-review/SKILL.md"),
-        "REVIEW_GATE_JSON=$(\"$_FEATUREFORGE_BIN\" plan execution gate-review --plan \"$APPROVED_PLAN_PATH\")",
+        "REVIEW_GATE_JSON=$(\"$_FEATUREFORGE_BIN\" plan execution gate-review-dispatch --plan \"$APPROVED_PLAN_PATH\")",
     );
     assert_file_contains(
         root.join("skills/requesting-code-review/SKILL.md"),

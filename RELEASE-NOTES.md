@@ -3,6 +3,7 @@
 ## Unreleased
 
 - add `featureforge plan execution rebuild-evidence` operator notes covering replayed evidence targets, refreshed helper-owned closure receipts, and the contract-bound versus plain task-boundary unit-review receipt behavior
+- split public `featureforge plan execution gate-review` into a read-only gate check and an explicit dispatch-only mutation path for workflow/runtime review-cycle bookkeeping
 
 ## v1.6.0 - 2026-03-30
 

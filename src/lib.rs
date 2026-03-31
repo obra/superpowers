@@ -125,6 +125,9 @@ pub fn run() -> std::process::ExitCode {
                             emit_json(runtime.record_handoff(&args))
                         }
                         cli::plan_execution::PlanExecutionCommand::GateReview(args) => {
+                            emit_json(runtime.gate_review(&args))
+                        }
+                        cli::plan_execution::PlanExecutionCommand::GateReviewDispatch(args) => {
                             emit_json(runtime.gate_review_dispatch(&args))
                         }
                         cli::plan_execution::PlanExecutionCommand::GateFinish(args) => {

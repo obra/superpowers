@@ -41,6 +41,8 @@ pub enum PlanExecutionCommand {
     RecordHandoff(RecordHandoffArgs),
     #[command(name = "gate-review")]
     GateReview(StatusArgs),
+    #[command(name = "gate-review-dispatch", hide = true)]
+    GateReviewDispatch(StatusArgs),
     #[command(name = "gate-finish")]
     GateFinish(StatusArgs),
     Begin(BeginArgs),

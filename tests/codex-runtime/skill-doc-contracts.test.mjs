@@ -532,7 +532,7 @@ test('execution workflow skills reference the plan-execution helper contract', (
   assert.match(reviewSkill, /CONTRACT_STATE=\$\(printf '%s\\n' "\$ANALYZE_JSON" \| node -e 'const fs = require\("fs"\); const parsed = JSON\.parse\(fs\.readFileSync\(0, "utf8"\)\); process\.stdout\.write\(parsed\.contract_state \|\| ""\)'/);
   assert.match(reviewSkill, /if \[ "\$CONTRACT_STATE" != "valid" \] \|\| \[ "\$PACKET_BUILDABLE_TASKS" != "\$TASK_COUNT" \]; then/);
   assert.match(reviewSkill, /if \[ -n "\$ACTIVE_TASK\$BLOCKING_TASK\$RESUME_TASK" \]; then/);
-  assert.match(reviewSkill, /REVIEW_GATE_JSON=\$\("\$_FEATUREFORGE_BIN" plan execution gate-review --plan "\$APPROVED_PLAN_PATH"\)/);
+  assert.match(reviewSkill, /REVIEW_GATE_JSON=\$\("\$_FEATUREFORGE_BIN" plan execution gate-review-dispatch --plan "\$APPROVED_PLAN_PATH"\)/);
   assert.match(reviewSkill, /if \[ "\$REVIEW_ALLOWED" != "true" \]; then/);
 
   const finishSkill = readUtf8(getSkillPath('finishing-a-development-branch'));
