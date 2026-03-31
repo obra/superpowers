@@ -36,64 +36,20 @@ Enable superpowers skills in Windsurf via native skill discovery. Just clone and
    }
    ```
 
-3. **Set up the global rule:**
-   ```bash
-   mkdir -p ~/.codeium/windsurf/memories
-   
-   GLOBAL_RULES="$HOME/.codeium/windsurf/memories/global_rules.md"
-   INSTRUCTION_FILE="$HOME/.codeium/windsurf/superpowers/.windsurf/rules/superpowers-global-instruction.md"
-   MARKER="superpowers/.windsurf/rules/superpowers.md"
-   
-   # Only append if not already present
-   if [ -f "$GLOBAL_RULES" ] && grep -q "$MARKER" "$GLOBAL_RULES"; then
-     echo "Superpowers rule reference already exists in global rules, skipping"
-   else
-     if [ -f "$GLOBAL_RULES" ]; then
-       echo "" >> "$GLOBAL_RULES"
-       echo "---" >> "$GLOBAL_RULES"
-       echo "" >> "$GLOBAL_RULES"
-     fi
-     cat "$INSTRUCTION_FILE" >> "$GLOBAL_RULES"
-     echo "Superpowers rule reference added to global rules"
-   fi
-   ```
-
-   **Windows (PowerShell):**
-   ```powershell
-   New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.codeium\windsurf\memories"
-   
-   $globalRulesPath = "$env:USERPROFILE\.codeium\windsurf\memories\global_rules.md"
-   $instructionFile = "$env:USERPROFILE\.codeium\windsurf\superpowers\.windsurf\rules\superpowers-global-instruction.md"
-   $marker = "superpowers/.windsurf/rules/superpowers.md"
-   
-   # Only append if not already present
-   if ((Test-Path $globalRulesPath) -and (Select-String -Path $globalRulesPath -Pattern $marker -Quiet)) {
-     Write-Host "Superpowers rule reference already exists in global rules, skipping" -ForegroundColor Yellow
-   } else {
-     if (Test-Path $globalRulesPath) {
-       Add-Content -Path $globalRulesPath -Value "`n---`n"
-     }
-     Get-Content $instructionFile | Add-Content -Path $globalRulesPath
-     Write-Host "Superpowers rule reference added to global rules" -ForegroundColor Green
-   }
-   ```
-
-4. **Restart Windsurf** to discover the skills and load the rule.
+3. **Restart Windsurf** to discover the skills.
 
 ## Verify
 
 ```bash
 ls ~/.codeium/windsurf/skills/
-grep -l "superpowers/.windsurf/rules/superpowers.md" ~/.codeium/windsurf/memories/global_rules.md
 ```
 
 **Windows (PowerShell):**
 ```powershell
 Get-ChildItem "$env:USERPROFILE\.codeium\windsurf\skills"
-Select-String -Path "$env:USERPROFILE\.codeium\windsurf\memories\global_rules.md" -Pattern "superpowers/.windsurf/rules/superpowers.md"
 ```
 
-You should see multiple skill directories (brainstorming, test-driven-development, etc.) and a match confirming the Superpowers instruction is in your global rules.
+You should see multiple skill directories (brainstorming, test-driven-development, etc.).
 
 ## Updating
 
@@ -141,7 +97,5 @@ Get-ChildItem "$env:USERPROFILE\.codeium\windsurf\superpowers\skills" -Directory
   if (Test-Path $skillPath) { Remove-Item $skillPath -Recurse -Force }
 }
 ```
-
-**Note:** The Superpowers instruction was appended to your global rules file (`~/.codeium/windsurf/memories/global_rules.md`). To remove it, manually edit that file and delete the section that starts with "# Superpowers Skill Discipline".
 
 Optionally delete the clone: `rm -rf ~/.codeium/windsurf/superpowers` (Windows: `Remove-Item -Recurse -Force "$env:USERPROFILE\.codeium\windsurf\superpowers"`).

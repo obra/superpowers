@@ -35,13 +35,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
    done
    ```
 
-3. Set up the global rule (see [.windsurf/INSTALL.md](../.windsurf/INSTALL.md#installation) for detailed steps)
-
-4. Restart Windsurf.
-
-### Windows
-
-For Windows installation steps, see [.windsurf/INSTALL.md](../.windsurf/INSTALL.md).
+3. Restart Windsurf.
 
 ## How It Works
 
@@ -54,12 +48,6 @@ Windsurf has native skill discovery — it scans `~/.codeium/windsurf/skills/` a
 ...
 ```
 
-The global rule at `~/.codeium/windsurf/memories/global_rules.md` enforces skill usage discipline — ensuring Cascade checks for and uses relevant skills before taking action.
-
-### How the Global Rule Works
-
-The installation adds a small instruction to your `global_rules.md` that points Cascade to the full Superpowers discipline rules. This avoids the 6,000 character limit and keeps rules up-to-date when you `git pull`.
-
 ### Cross-Platform Compatibility
 
 Windsurf also discovers skills in `.agents/skills/` and `~/.agents/skills/` for cross-agent compatibility with Codex and OpenCode.
@@ -69,7 +57,7 @@ Windsurf also discovers skills in `.agents/skills/` and `~/.agents/skills/` for 
 Skills are discovered automatically. Cascade activates them when:
 - You mention a skill by name (e.g., "use brainstorming")
 - The task matches a skill's description
-- The superpowers discipline rule directs Cascade to use one
+- The skill's description matches the current task
 
 ### Manual Invocation
 
@@ -181,8 +169,6 @@ for skill in *; do
 done
 ```
 
-**Note:** To fully remove Superpowers, also delete the global rule reference. See [.windsurf/INSTALL.md](../.windsurf/INSTALL.md#uninstalling) for details.
-
 ## Troubleshooting
 
 ### Skills not showing up
@@ -191,11 +177,11 @@ done
 2. Check skills exist: `ls ~/.codeium/windsurf/superpowers/skills`
 3. Restart Windsurf — skills are discovered at startup
 
-### Rule not being applied
+### Skills not being applied
 
-1. Check rule file exists: `ls ~/.codeium/windsurf/memories/global_rules.md`
-2. Verify the global rule file is properly formatted
-3. Restart Windsurf to reload rules
+1. Check skills exist: `ls ~/.codeium/windsurf/skills/`
+2. Verify the skill directories were copied correctly
+3. Restart Windsurf to reload skills
 
 ## Getting Help
 
