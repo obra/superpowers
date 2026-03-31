@@ -11,6 +11,21 @@ Execute plan by dispatching fresh subagent per task, with two-stage review after
 
 **Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
 
+## Accumulated Discoveries
+
+The controller maintains a running list of project discoveries reported by implementer subagents. After each completed task, extract any **Project Discoveries** from the implementer's report and append them to the list.
+
+When dispatching subsequent subagents (Task 2+), include the accumulated discoveries in the prompt:
+
+```
+    ## Accumulated Discoveries
+
+    Previous tasks surfaced these codebase patterns and gotchas:
+    [paste accumulated discoveries here]
+```
+
+This prevents later subagents from re-discovering issues that earlier subagents already found. The controller curates this list - remove duplicates and keep it concise.
+
 ## When to Use
 
 ```dot
