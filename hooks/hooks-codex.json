@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME/.codex/superpowers/hooks/session-start-codex\""
+          }
+        ]
+      }
+    ]
+  }
+}
