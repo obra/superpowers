@@ -942,11 +942,7 @@ fn execute_rebuild_candidate_once(
         return Ok((status, target, expected_attempt_number, expected_artifact_epoch));
     };
 
-    let command_output = Command::new("sh")
-        .arg("-lc")
-        .arg(&verify_command)
-        .current_dir(&runtime.repo_root)
-        .output();
+    let command_output = verify_command_process(&runtime.repo_root, &verify_command).output();
     let command_output = match command_output {
         Ok(output) => output,
         Err(error) => {
@@ -1604,6 +1600,21 @@ fn approved_unit_contract_fingerprint_for_review(
     )
 }
 
+fn verify_command_process(repo_root: &Path, verify_command: &str) -> Command {
+    let (program, args) = verify_command_launcher(verify_command);
+    let mut command = Command::new(program);
+    command.args(args).current_dir(repo_root);
+    command
+}
+
+fn verify_command_launcher(verify_command: &str) -> (&'static str, Vec<String>) {
+    if cfg!(windows) {
+        ("cmd", vec![String::from("/C"), verify_command.to_owned()])
+    } else {
+        ("sh", vec![String::from("-lc"), verify_command.to_owned()])
+    }
+}
+
 fn reconcile_result_proof_fingerprint_for_review(
     repo_root: &Path,
     reconcile_result_commit_sha: &str,
@@ -1631,6 +1642,23 @@ fn is_rebuild_task_boundary_receipt_failure(message: &str) -> bool {
                 | "task_verification_receipt_malformed"
         )
     )
+}
+
+#[cfg(test)]
+mod unit_tests {
+    use super::verify_command_launcher;
+
+    #[test]
+    fn verify_command_launcher_matches_platform_contract() {
+        let (program, args) = verify_command_launcher("printf rebuilt");
+        if cfg!(windows) {
+            assert_eq!(program, "cmd");
+            assert_eq!(args, vec![String::from("/C"), String::from("printf rebuilt")]);
+        } else {
+            assert_eq!(program, "sh");
+            assert_eq!(args, vec![String::from("-lc"), String::from("printf rebuilt")]);
+        }
+    }
 }
 
 fn planned_rebuild_target(candidate: &RebuildEvidenceCandidate) -> RebuildEvidenceTarget {

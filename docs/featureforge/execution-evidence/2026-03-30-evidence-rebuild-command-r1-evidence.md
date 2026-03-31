@@ -721,8 +721,8 @@
 **Invalidation Reason:** Evidence rebuild: files_proven_drifted
 
 #### Attempt 9
-**Status:** Completed
-**Recorded At:** 2026-03-31T03:30:47.421055Z
+**Status:** Invalidated
+**Recorded At:** 2026-03-31T04:03:13.908676Z
 **Execution Source:** featureforge:executing-plans
 **Task Number:** 3
 **Step Number:** 5
@@ -735,6 +735,23 @@
 - tests/plan_execution.rs | sha256:ee07e11ff22b072a892162470aadcc88b925459e3daab7ad4e7aaee38679fe36
 **Verify Command:** cargo test --test plan_execution -- rebuild_target_state_transition_blocked --exact && cargo test --test plan_execution -- rebuild_target_race_detected --exact
 **Verification Summary:** `cargo test --test plan_execution -- rebuild_target_state_transition_blocked --exact && cargo test --test plan_execution -- rebuild_target_race_detected --exact` -> passed: running 1 test test rebuild_target_state_transition_blocked ... ok test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 209 filtered out; finished in 1.03s running 1 test test rebuild_target_race_detected ... ok test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 209 filtered out; finished in 0.97s
+**Invalidation Reason:** Evidence rebuild: files_proven_drifted
+
+#### Attempt 10
+**Status:** Completed
+**Recorded At:** 2026-03-31T04:03:16.736567Z
+**Execution Source:** featureforge:executing-plans
+**Task Number:** 3
+**Step Number:** 5
+**Packet Fingerprint:** e27f1ae04ada80ac71538a587ddf23b33e800743cb3063021fcfca9dc6153587
+**Head SHA:** a037d0d42dcdc22779c0d9e903fe0865d4813b86
+**Base SHA:** a037d0d42dcdc22779c0d9e903fe0865d4813b86
+**Claim:** Added deterministic replay conflict coverage for state_transition_blocked and target_race outcomes under the rebuild executor.
+**Files Proven:**
+- src/execution/mutate.rs | sha256:77ebd4b0bf64be807799671be6ba4c006625ff0adbfb9b4c55e4cb5ce07ec4a8
+- tests/plan_execution.rs | sha256:ee07e11ff22b072a892162470aadcc88b925459e3daab7ad4e7aaee38679fe36
+**Verify Command:** cargo test --test plan_execution -- rebuild_target_state_transition_blocked --exact && cargo test --test plan_execution -- rebuild_target_race_detected --exact
+**Verification Summary:** `cargo test --test plan_execution -- rebuild_target_state_transition_blocked --exact && cargo test --test plan_execution -- rebuild_target_race_detected --exact` -> passed: running 1 test test rebuild_target_state_transition_blocked ... ok test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 209 filtered out; finished in 0.94s running 1 test test rebuild_target_race_detected ... ok test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 209 filtered out; finished in 0.93s
 **Invalidation Reason:** N/A
 
 ### Task 4 Step 1
