@@ -197,7 +197,6 @@ Each target transition independently captures status and can continue when allow
 - Use per-target execution CAS by attempt id and attempt-level re-read before each `reopen` call.
 - On conflict (`target_race`, `state_transition_blocked`) re-read candidate row, retry once with bounded backoff, then mark recoverable failure if still conflicting.
 - Add dedicated serial replay conflict coverage and explicit `--max-jobs > 1` rejection tests while bounded parallel replay remains deferred.
-
 - [x] **Step 3: Implement verify-command path and command output capture**
 Run and hash command summary when command exists.
 - `--no-output` executes commands without stream capture while still producing deterministic verification summaries.
@@ -296,7 +295,6 @@ Expected: exact shape and stable keys.
 **Open Questions:** none
 
 **Files:**
-
 - Test: `tests/codex-runtime/skill-doc-generation.test.mjs`
 - Modify: `docs/featureforge/specs/2026-03-30-evidence-rebuild-command-spec.md`
 - Modify: `docs/featureforge/plans/2026-03-30-evidence-rebuild-command.md`
