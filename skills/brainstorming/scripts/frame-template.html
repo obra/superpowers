@@ -73,8 +73,8 @@
       flex-shrink: 0;
     }
     .header h1 { font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); }
-    .header .status { font-size: 0.7rem; color: var(--success); display: flex; align-items: center; gap: 0.4rem; }
-    .header .status::before { content: ''; width: 6px; height: 6px; background: var(--success); border-radius: 50%; }
+    .header .status { font-size: 0.7rem; color: var(--success); display: flex; align-items: center; gap: 0.4rem; --status-color: var(--success); }
+    .header .status::before { content: ''; width: 6px; height: 6px; background: var(--status-color); border-radius: 50%; }
 
     .main { flex: 1; overflow-y: auto; }
     #claude-content { padding: 2rem; min-height: 100%; }
