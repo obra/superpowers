@@ -9,6 +9,8 @@ use serde_json::Value;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
+use std::thread::sleep;
+use std::time::Duration;
 use tempfile::TempDir;
 
 use files_support::write_file;
@@ -109,62 +111,79 @@ fn extract_last_nonempty_line(output: &[u8], context: &str) -> String {
         .to_owned()
 }
 
-fn parse_json_stdout(output: &[u8], context: &str) -> Value {
+fn parse_json_stdout_lines(output: &[u8], context: &str) -> Vec<Value> {
     let stdout = String::from_utf8(output.to_vec())
         .unwrap_or_else(|error| panic!("{context} should emit utf8: {error}"));
     let lines = stdout
         .lines()
         .filter(|line| !line.trim().is_empty())
         .collect::<Vec<_>>();
-    let Some(json_line) = lines.last() else {
-        panic!("{context} should emit a final json line");
-    };
-    for line in &lines[..lines.len().saturating_sub(1)] {
+    let first_json_index = lines
+        .iter()
+        .position(|line| line.trim_start().starts_with('{'))
+        .unwrap_or_else(|| panic!("{context} should emit at least one json line"));
+    for line in &lines[..first_json_index] {
         assert!(
             line.starts_with("UPGRADE_AVAILABLE ") || line.starts_with("JUST_UPGRADED "),
-            "{context} should not emit unexpected stdout before the final json line: {line:?}"
+            "{context} should not emit unexpected stdout before json lines: {line:?}"
         );
     }
-    serde_json::from_str(json_line)
-        .unwrap_or_else(|error| panic!("{context} should emit valid json on the last line: {error}"))
+    lines[first_json_index..]
+        .iter()
+        .map(|line| {
+            serde_json::from_str(line).unwrap_or_else(|error| {
+                panic!("{context} should emit valid json lines after the preamble output: {error}")
+            })
+        })
+        .collect()
 }
 
-fn simulate_supported_route_selection(
+fn simulate_supported_route_selection_batch(
     state_dir: &Path,
     home_dir: &Path,
     harness: &RouteSelectionHarness<'_>,
-    message: &str,
-) -> Value {
-    let message_file = state_dir.join(format!("{}.txt", harness.session_key));
-    write_file(&message_file, message);
+    messages: &[&str],
+) -> Vec<Value> {
+    let message_dir = state_dir.join(format!("{}-messages", harness.session_key));
+    fs::create_dir_all(&message_dir)
+        .unwrap_or_else(|error| panic!("{} should create message dir: {error}", harness.session_key));
+    let message_paths = messages
+        .iter()
+        .enumerate()
+        .map(|(index, message)| {
+            let path = message_dir.join(format!("message-{index}.txt"));
+            write_file(&path, message);
+            path
+        })
+        .collect::<Vec<_>>();
 
+    let simulate_calls = message_paths
+        .iter()
+        .map(|path| format!("simulate_one '{}'", path.display()))
+        .collect::<Vec<_>>()
+        .join("\n");
     let script = format!(
         r#"
 set -euo pipefail
 {preamble}
-_selected_route=""
-_selected_route="$(
-{route_block}
-)"
-if [ -z "$_selected_route" ] && [ -n "${{SP_TEST_IMPLEMENTATION_READY_ROUTE:-}}" ]; then
-    _selected_route="$SP_TEST_IMPLEMENTATION_READY_ROUTE"
-fi
-SP_TEST_SESSION_MARKER_PATH="$_SP_STATE_DIR/sessions/$PPID" \
-SP_TEST_SELECTED_ROUTE="$_selected_route" \
-python3 - <<'PY'
-import json
-import os
-from pathlib import Path
-
-session_marker_path = os.environ["SP_TEST_SESSION_MARKER_PATH"]
-print(json.dumps({{
-        "preamble_session_started": bool(session_marker_path) and Path(session_marker_path).is_file(),
-    "selected_route": os.environ["SP_TEST_SELECTED_ROUTE"],
-}}))
-PY
+simulate_one() {{
+    export SP_TEST_MESSAGE_FILE="$1"
+    local _selected_route=""
+    _selected_route="$({route_block})"
+    if [ -z "$_selected_route" ] && [ -n "${{SP_TEST_IMPLEMENTATION_READY_ROUTE:-}}" ]; then
+        _selected_route="$SP_TEST_IMPLEMENTATION_READY_ROUTE"
+    fi
+    if [ -f "$_SP_STATE_DIR/sessions/$PPID" ]; then
+        printf '{{"preamble_session_started":true,"selected_route":"%s"}}\n' "$_selected_route"
+    else
+        printf '{{"preamble_session_started":false,"selected_route":"%s"}}\n' "$_selected_route"
+    fi
+}}
+{simulate_calls}
 "#,
         preamble = harness.preamble,
         route_block = harness.route_block,
+        simulate_calls = simulate_calls,
     );
 
     install_compiled_featureforge(home_dir);
@@ -177,7 +196,6 @@ PY
                 .current_dir(repo_root())
                 .env("FEATUREFORGE_STATE_DIR", state_dir)
                 .env("HOME", home_dir)
-                .env("SP_TEST_MESSAGE_FILE", &message_file)
                 .env("SP_TEST_WORKFLOW_NEXT_SKILL", harness.workflow_next_skill)
                 .env(
                     "SP_TEST_IMPLEMENTATION_READY_ROUTE",
@@ -188,7 +206,7 @@ PY
         harness.session_key,
     );
 
-    parse_json_stdout(&output.stdout, harness.session_key)
+    parse_json_stdout_lines(&output.stdout, harness.session_key)
 }
 
 #[test]
@@ -303,6 +321,30 @@ fn using_featureforge_preamble_requires_the_packaged_runtime_binary() {
 }
 
 #[test]
+fn install_compiled_featureforge_skips_redundant_recopy_for_same_home() {
+    let temp_home = TempDir::new().expect("home tempdir should exist");
+    let first_target = install_compiled_featureforge(temp_home.path());
+    let first_modified = fs::metadata(&first_target)
+        .expect("installed binary should exist after first install")
+        .modified()
+        .expect("installed binary should expose modified time after first install");
+
+    sleep(Duration::from_millis(1200));
+
+    let second_target = install_compiled_featureforge(temp_home.path());
+    let second_modified = fs::metadata(&second_target)
+        .expect("installed binary should exist after second install")
+        .modified()
+        .expect("installed binary should expose modified time after second install");
+
+    assert_eq!(first_target, second_target);
+    assert_eq!(
+        first_modified, second_modified,
+        "reinstalling the packaged binary into the same home should skip redundant copies"
+    );
+}
+
+#[test]
 fn using_featureforge_project_memory_carveout_stays_explicit_and_workflow_bound() {
     let content = read_skill_doc();
     let preamble = extract_bash_block(&content, "## Preamble (run first)");
@@ -364,7 +406,14 @@ fn using_featureforge_project_memory_carveout_stays_explicit_and_workflow_bound(
             workflow_next_skill: active_owner,
             implementation_ready_route: "",
         };
-        let vague_entry = simulate_supported_route_selection(state, home, &harness, vague_message);
+        let mut messages = Vec::with_capacity(1 + explicit_messages.len() + negative_messages.len() + 1);
+        messages.push(vague_message);
+        messages.extend(explicit_messages.iter().copied());
+        messages.extend(negative_messages.iter().copied());
+        messages.push(direct_skill_message);
+        let entries = simulate_supported_route_selection_batch(state, home, &harness, &messages);
+
+        let vague_entry = &entries[0];
         assert_eq!(vague_entry["preamble_session_started"], Value::Bool(true));
         assert_eq!(
             vague_entry["selected_route"],
@@ -372,9 +421,12 @@ fn using_featureforge_project_memory_carveout_stays_explicit_and_workflow_bound(
             "vague notes or docs requests should keep the active workflow owner",
         );
 
-        for explicit_message in explicit_messages {
-            let explicit_entry =
-                simulate_supported_route_selection(state, home, &harness, explicit_message);
+        let explicit_start = 1;
+        let negative_start = explicit_start + explicit_messages.len();
+        let direct_index = negative_start + negative_messages.len();
+
+        for (index, _explicit_message) in explicit_messages.iter().enumerate() {
+            let explicit_entry = &entries[explicit_start + index];
             assert_eq!(explicit_entry["preamble_session_started"], Value::Bool(true));
             assert_eq!(
                 explicit_entry["selected_route"],
@@ -383,9 +435,8 @@ fn using_featureforge_project_memory_carveout_stays_explicit_and_workflow_bound(
             );
         }
 
-        for negative_message in negative_messages {
-            let negative_entry =
-                simulate_supported_route_selection(state, home, &harness, negative_message);
+        for (index, _negative_message) in negative_messages.iter().enumerate() {
+            let negative_entry = &entries[negative_start + index];
             assert_eq!(negative_entry["preamble_session_started"], Value::Bool(true));
             assert_eq!(
                 negative_entry["selected_route"],
@@ -394,8 +445,7 @@ fn using_featureforge_project_memory_carveout_stays_explicit_and_workflow_bound(
             );
         }
 
-        let direct_skill_entry =
-            simulate_supported_route_selection(state, home, &harness, direct_skill_message);
+        let direct_skill_entry = &entries[direct_index];
         assert_eq!(direct_skill_entry["preamble_session_started"], Value::Bool(true));
         assert_eq!(
             direct_skill_entry["selected_route"],
@@ -411,23 +461,22 @@ fn using_featureforge_project_memory_carveout_stays_explicit_and_workflow_bound(
         workflow_next_skill: "",
         implementation_ready_route: "featureforge:executing-plans",
     };
-    let handoff_explicit_entry = simulate_supported_route_selection(
+    let handoff_entries = simulate_supported_route_selection_batch(
         state,
         home,
         &handoff_harness,
-        "Please record a decision in project memory before execution preflight continues.\n",
+        &[
+            "Please record a decision in project memory before execution preflight continues.\n",
+            vague_message,
+        ],
     );
+    let handoff_explicit_entry = &handoff_entries[0];
     assert_eq!(
         handoff_explicit_entry["selected_route"],
         Value::String(String::from("featureforge:project-memory")),
         "explicit project-memory requests should override implementation-ready handoff routes",
     );
-    let handoff_vague_entry = simulate_supported_route_selection(
-        state,
-        home,
-        &handoff_harness,
-        vague_message,
-    );
+    let handoff_vague_entry = &handoff_entries[1];
     assert_eq!(
         handoff_vague_entry["selected_route"],
         Value::String(String::from("featureforge:executing-plans")),

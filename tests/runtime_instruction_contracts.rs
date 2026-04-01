@@ -1347,7 +1347,7 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
     );
     assert_file_contains(
         root.join("skills/executing-plans/SKILL.md"),
-        "STOP and run `featureforge plan execution gate-review --plan <approved-plan-path>` immediately after task completion to record authoritative review-dispatch proof before any next-task begin",
+        "STOP and run `featureforge plan execution gate-review-dispatch --plan <approved-plan-path>` immediately after task completion to record authoritative review-dispatch proof before any next-task begin",
     );
     assert_file_contains(
         root.join("skills/executing-plans/SKILL.md"),
@@ -1367,7 +1367,7 @@ fn workflow_sequencing_contracts_and_fixtures_are_documented_consistently() {
     );
     assert_file_contains(
         root.join("skills/subagent-driven-development/SKILL.md"),
-        "STOP and run `featureforge plan execution gate-review --plan <approved-plan-path>` immediately after task completion so authoritative review-dispatch proof exists before any next-task begin.",
+        "STOP and run `featureforge plan execution gate-review-dispatch --plan <approved-plan-path>` immediately after task completion so authoritative review-dispatch proof exists before any next-task begin.",
     );
     assert_file_contains(
         root.join("skills/subagent-driven-development/SKILL.md"),

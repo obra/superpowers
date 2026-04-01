@@ -118,7 +118,7 @@ If the approved plan already called out a likely external-pattern target, you ma
 - Do not jump directly into patching after actionable findings. In plan-routed execution, route through helper-owned reopen/remediation commands so runtime can record strategy checkpoints first.
 - Runtime strategy checkpoints are execution-owned state, not planning-stage transitions. Do not route back to `writing-plans` or `plan-eng-review` just because remediation is needed.
 - Required checkpoint behavior:
-  - `review_remediation`: runtime records this automatically whenever `gate-review` dispatch is requested for reviewable execution work and when remediation work is reopened after non-pass findings.
+  - `review_remediation`: runtime records this automatically whenever `gate-review-dispatch` is requested for reviewable execution work and when remediation work is reopened after non-pass findings.
   - `cycle_break`: runtime records this automatically when the same task hits three review-dispatch/reopen cycles in one run.
 - Cycle-break trigger: cap review churn at 3 cycles per task. On the third cycle, runtime enters `cycle_break` strategy automatically (no human replanning loopback required).
 - Keep plan/scope fixed during remediation. Runtime strategy may change topology, lane ownership, worktree allocation, subagent assignment, and remediation order, but must not change approved scope or source plan revision.

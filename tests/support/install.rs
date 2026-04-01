@@ -15,6 +15,9 @@ pub fn canonical_install_bin(home_dir: &Path) -> PathBuf {
 pub fn install_compiled_featureforge(home_dir: &Path) -> PathBuf {
     let source = PathBuf::from(env!("CARGO_BIN_EXE_featureforge"));
     let target = canonical_install_bin(home_dir);
+    if target.is_file() {
+        return target;
+    }
     if let Some(parent) = target.parent() {
         fs::create_dir_all(parent).expect("canonical install bin directory should exist");
     }

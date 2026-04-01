@@ -4,6 +4,8 @@
 
 - add `featureforge plan execution rebuild-evidence` operator notes covering replayed evidence targets, refreshed helper-owned closure receipts, and the contract-bound versus plain task-boundary unit-review receipt behavior
 - split public `featureforge plan execution gate-review` into a read-only gate check and an explicit dispatch-only mutation path for workflow/runtime review-cycle bookkeeping
+- let `rebuild-evidence` restore authoritative final-review, test-plan, QA, and release-readiness truth after successful replay, including safe no-op rebinding after rebases when execution evidence is already current
+- teach finish readiness to ignore tracked execution-evidence-only writeback so rebuilt evidence does not by itself stale downstream finish gates
 
 ## v1.6.0 - 2026-03-30
 
@@ -19,9 +21,9 @@ Independent-review dispatch hard-gate release focused on explicit task-boundary 
 - `workflow handoff --json`: remove top-level `session_entry`; remove `phase` values `needs_user_choice` and `bypassed`; remove `next_action` values `session_entry_gate` and `continue_outside_featureforge`; new `schema_version` is `2`
 - `workflow status --refresh` JSON: remove strict-gate `status` outcomes `needs_user_choice` and `bypassed`; remove strict-gate `reason_codes` `session_entry_unresolved` and `session_entry_bypassed`; retained route `schema_version` is `3`
 
-- enforce explicit `featureforge plan execution gate-review --plan <approved-plan-path>` dispatch proof at task boundaries before next-task begin can proceed
+- enforce explicit `featureforge plan execution gate-review-dispatch --plan <approved-plan-path>` dispatch proof at task boundaries before next-task begin can proceed
 - keep task-boundary fail-closed behavior for stale or missing dispatch lineage, non-independent review receipts, and missing task verification receipts
-- align workflow operator surfaces and execution skill docs on the exact runnable `gate-review` command text for blocked task-boundary remediation
+- align workflow operator surfaces and execution skill docs on the exact runnable `gate-review-dispatch` command text for blocked task-boundary remediation
 - harden execution guidance so repo-writing work records runtime begin before mutation and treats backfill as recovery-only workflow repair
 - expand runtime, workflow, final-review, and instruction-contract coverage for dispatch hard-gate semantics and preserved final-review behavior
 - refresh checked-in repo runtime binaries and darwin/windows prebuilt artifacts for `1.6.0`

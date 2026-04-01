@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::thread::sleep;
 use std::time::Duration;
@@ -17,7 +17,11 @@ use crate::diagnostics::{FailureClass, JsonFailure};
 use crate::execution::authority::{
     ensure_preflight_authoritative_bootstrap, write_authoritative_unit_review_receipt_artifact,
 };
-use crate::execution::final_review::authoritative_strategy_checkpoint_fingerprint_checked;
+use crate::execution::final_review::{
+    FinalReviewReceiptExpectations, authoritative_strategy_checkpoint_fingerprint_checked,
+    latest_branch_artifact_path, parse_artifact_document, parse_final_review_receipt,
+    resolve_release_base_branch, validate_final_review_receipt,
+};
 use crate::execution::harness::RunIdentitySnapshot;
 use crate::execution::state::{
     EvidenceAttempt, ExecutionContext, ExecutionEvidence, ExecutionRuntime, FileProof,
@@ -586,7 +590,7 @@ pub fn rebuild_evidence(
     if request.dry_run {
         let targets = candidates
             .iter()
-            .map(|candidate| planned_rebuild_target(candidate))
+            .map(planned_rebuild_target)
             .collect::<Vec<_>>();
         return Ok(RebuildEvidenceOutput {
             session_root: context.runtime.repo_root.to_string_lossy().into_owned(),
@@ -614,6 +618,7 @@ pub fn rebuild_evidence(
             &args.plan,
             &refreshed_status,
         )?;
+        refresh_rebuild_downstream_truth(runtime, &args.plan)?;
         return Ok(RebuildEvidenceOutput {
             session_root: context.runtime.repo_root.to_string_lossy().into_owned(),
             dry_run: false,
@@ -706,6 +711,7 @@ pub fn rebuild_evidence(
         && saw_strict_manual_failure
         && !saw_precondition_failure
         && !saw_non_precondition_failure;
+    let manual_repairs_still_pending = counts.manual > 0;
     let exit_code = if strict_manual_only {
         3
     } else if saw_non_precondition_failure || saw_strict_manual_failure {
@@ -713,6 +719,9 @@ pub fn rebuild_evidence(
     } else if saw_precondition_failure {
         1
     } else {
+        if !manual_repairs_still_pending {
+            refresh_rebuild_downstream_truth(runtime, &args.plan)?;
+        }
         0
     };
 
@@ -746,6 +755,13 @@ fn is_rebuild_precondition_failure(failure_class: &str) -> bool {
         failure_class,
         "artifact_read_error" | "state_transition_blocked" | "target_race"
     )
+}
+
+struct RebuildCandidateExecutionState {
+    status: PlanExecutionStatus,
+    target: RebuildEvidenceTarget,
+    expected_attempt_number: Option<u32>,
+    expected_artifact_epoch: Option<String>,
 }
 
 fn execute_rebuild_candidate(
@@ -824,14 +840,16 @@ fn execute_rebuild_candidate(
             request,
             plan,
             execution_mode,
-            status,
             &current_candidate,
             allow_manual_open_step,
-            target,
-            expected_attempt_number,
-            expected_artifact_epoch.clone(),
+            RebuildCandidateExecutionState {
+                status,
+                target,
+                expected_attempt_number,
+                expected_artifact_epoch: expected_artifact_epoch.clone(),
+            },
         )?;
-        match result.1.failure_class.as_deref() {
+        match result.target.failure_class.as_deref() {
             Some("state_transition_blocked" | "target_race") if replay_attempt == 0 => {
                 sleep(Duration::from_millis(10));
                 status = refresh_rebuild_status(runtime, plan)?;
@@ -847,13 +865,13 @@ fn execute_rebuild_candidate(
                     expected_artifact_epoch = current_candidate.artifact_epoch.clone();
                     target = planned_rebuild_target(&current_candidate);
                 } else {
-                    target = result.1;
-                    expected_attempt_number = result.2;
-                    expected_artifact_epoch = result.3;
+                    target = result.target;
+                    expected_attempt_number = result.expected_attempt_number;
+                    expected_artifact_epoch = result.expected_artifact_epoch;
                 }
                 continue;
             }
-            _ => return Ok((result.0, result.1)),
+            _ => return Ok((result.status, result.target)),
         }
     }
 
@@ -865,18 +883,16 @@ fn execute_rebuild_candidate_once(
     request: &crate::execution::state::RebuildEvidenceRequest,
     plan: &Path,
     execution_mode: ExecutionModeArg,
-    mut status: PlanExecutionStatus,
     candidate: &RebuildEvidenceCandidate,
     allow_manual_open_step: bool,
-    mut target: RebuildEvidenceTarget,
-    mut expected_attempt_number: Option<u32>,
-    mut expected_artifact_epoch: Option<String>,
-) -> Result<(
-    PlanExecutionStatus,
-    RebuildEvidenceTarget,
-    Option<u32>,
-    Option<String>,
-), JsonFailure> {
+    replay_state: RebuildCandidateExecutionState,
+) -> Result<RebuildCandidateExecutionState, JsonFailure> {
+    let RebuildCandidateExecutionState {
+        mut status,
+        mut target,
+        mut expected_attempt_number,
+        mut expected_artifact_epoch,
+    } = replay_state;
     let verify_command = candidate.verify_command.clone();
     if verify_command.is_none() && !request.skip_manual_fallback && !allow_manual_open_step {
         target.status = String::from("manual_required");
@@ -884,7 +900,12 @@ fn execute_rebuild_candidate_once(
         target.error = Some(String::from(
             "No stored verify command is available for this target.",
         ));
-        return Ok((status, target, expected_attempt_number, expected_artifact_epoch));
+        return Ok(RebuildCandidateExecutionState {
+            status,
+            target,
+            expected_attempt_number,
+            expected_artifact_epoch,
+        });
     }
 
     if candidate.needs_reopen {
@@ -920,7 +941,12 @@ fn execute_rebuild_candidate_once(
                 target.status = String::from("failed");
                 target.failure_class = Some(String::from("state_transition_blocked"));
                 target.error = Some(error.message.clone());
-                return Ok((status, target, expected_attempt_number, expected_artifact_epoch));
+                return Ok(RebuildCandidateExecutionState {
+                    status,
+                    target,
+                    expected_attempt_number,
+                    expected_artifact_epoch,
+                });
             }
         }
     }
@@ -939,7 +965,12 @@ fn execute_rebuild_candidate_once(
                 "No stored verify command is available for this target.",
             ));
         }
-        return Ok((status, target, expected_attempt_number, expected_artifact_epoch));
+        return Ok(RebuildCandidateExecutionState {
+            status,
+            target,
+            expected_attempt_number,
+            expected_artifact_epoch,
+        });
     };
 
     let command_output = verify_command_process(&runtime.repo_root, &verify_command).output();
@@ -949,7 +980,12 @@ fn execute_rebuild_candidate_once(
             target.status = String::from("failed");
             target.failure_class = Some(String::from("verify_command_failed"));
             target.error = Some(format!("Could not execute verify command: {error}"));
-            return Ok((status, target, expected_attempt_number, expected_artifact_epoch));
+            return Ok(RebuildCandidateExecutionState {
+                status,
+                target,
+                expected_attempt_number,
+                expected_artifact_epoch,
+            });
         }
     };
     let verify_result = summarize_verify_result(&command_output, request.no_output);
@@ -958,7 +994,12 @@ fn execute_rebuild_candidate_once(
         target.status = String::from("failed");
         target.failure_class = Some(String::from("verify_command_failed"));
         target.error = Some(verify_result);
-        return Ok((status, target, expected_attempt_number, expected_artifact_epoch));
+        return Ok(RebuildCandidateExecutionState {
+            status,
+            target,
+            expected_attempt_number,
+            expected_artifact_epoch,
+        });
     }
     if candidate_row_changed(
         runtime,
@@ -973,7 +1014,12 @@ fn execute_rebuild_candidate_once(
         target.error = Some(String::from(
             "target_race: the selected target changed during replay; rerun with --max-jobs 1.",
         ));
-        return Ok((status, target, expected_attempt_number, expected_artifact_epoch));
+        return Ok(RebuildCandidateExecutionState {
+            status,
+            target,
+            expected_attempt_number,
+            expected_artifact_epoch,
+        });
     }
 
     if status.active_task != Some(candidate.task) || status.active_step != Some(candidate.step) {
@@ -1018,7 +1064,12 @@ fn execute_rebuild_candidate_once(
                                     target.status = String::from("failed");
                                     target.failure_class = Some(String::from("state_transition_blocked"));
                                     target.error = Some(error.message.clone());
-                                    return Ok((status, target, expected_attempt_number, expected_artifact_epoch));
+                                    return Ok(RebuildCandidateExecutionState {
+                                        status,
+                                        target,
+                                        expected_attempt_number,
+                                        expected_artifact_epoch,
+                                    });
                                 }
                             }
                         }
@@ -1026,14 +1077,24 @@ fn execute_rebuild_candidate_once(
                             target.status = String::from("failed");
                             target.failure_class = Some(String::from("state_transition_blocked"));
                             target.error = Some(refresh_error.message.clone());
-                            return Ok((status, target, expected_attempt_number, expected_artifact_epoch));
+                            return Ok(RebuildCandidateExecutionState {
+                                status,
+                                target,
+                                expected_attempt_number,
+                                expected_artifact_epoch,
+                            });
                         }
                     }
                 } else {
                     target.status = String::from("failed");
                     target.failure_class = Some(String::from("state_transition_blocked"));
                     target.error = Some(error.message.clone());
-                    return Ok((status, target, expected_attempt_number, expected_artifact_epoch));
+                    return Ok(RebuildCandidateExecutionState {
+                        status,
+                        target,
+                        expected_attempt_number,
+                        expected_artifact_epoch,
+                    });
                 }
             }
         }
@@ -1068,7 +1129,12 @@ fn execute_rebuild_candidate_once(
                     target.status = String::from("failed");
                     target.failure_class = Some(String::from("state_transition_blocked"));
                     target.error = Some(error.message.clone());
-                    return Ok((status, target, expected_attempt_number, expected_artifact_epoch));
+                    return Ok(RebuildCandidateExecutionState {
+                        status,
+                        target,
+                        expected_attempt_number,
+                        expected_artifact_epoch,
+                    });
                 }
             };
             target.status = String::from("rebuilt");
@@ -1080,18 +1146,23 @@ fn execute_rebuild_candidate_once(
                 candidate.step,
                 candidate.attempt_number.unwrap_or(0) + 1
             ));
-            Ok((
-                refreshed_status,
+            Ok(RebuildCandidateExecutionState {
+                status: refreshed_status,
                 target,
                 expected_attempt_number,
                 expected_artifact_epoch,
-            ))
+            })
         }
         Err(error) => {
             target.status = String::from("failed");
             target.failure_class = Some(String::from("state_transition_blocked"));
             target.error = Some(error.message.clone());
-            Ok((status, target, expected_attempt_number, expected_artifact_epoch))
+            Ok(RebuildCandidateExecutionState {
+                status,
+                target,
+                expected_attempt_number,
+                expected_artifact_epoch,
+            })
         }
     }
 }
@@ -1109,7 +1180,7 @@ fn clear_superseded_interrupted_rebuild_step(
     else {
         return Ok(status);
     };
-    if (resume_task, resume_step) <= (candidate.task, candidate.step) {
+    if (resume_task, resume_step) == (candidate.task, candidate.step) {
         return Ok(status);
     }
 
@@ -1218,10 +1289,42 @@ fn refresh_rebuild_closure_receipts(
     runtime: &ExecutionRuntime,
     plan: &Path,
     status: &PlanExecutionStatus,
-    _task: u32,
+    task: u32,
     _step: u32,
 ) -> Result<(), JsonFailure> {
-    refresh_rebuild_all_task_closure_receipts(runtime, plan, status)
+    let Some(execution_run_id) = status.execution_run_id.as_ref().map(|value| value.as_str()) else {
+        return Ok(());
+    };
+    let context = load_execution_context(runtime, plan)?;
+    let strategy_checkpoint = authoritative_strategy_checkpoint_fingerprint_checked(&context)?;
+    let Some(strategy_checkpoint_fingerprint) = strategy_checkpoint
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+    else {
+        return Ok(());
+    };
+    let active_contract_fingerprint = load_authoritative_transition_state(&context)?
+        .as_ref()
+        .and_then(|authority| authority.evidence_provenance().source_contract_fingerprint);
+    let checked_tasks = context
+        .steps
+        .iter()
+        .filter(|step_state| step_state.checked)
+        .map(|step_state| step_state.task_number)
+        .collect::<BTreeSet<_>>();
+    for checked_task in checked_tasks {
+        refresh_rebuild_task_closure_receipts_with_context(
+            runtime,
+            &context,
+            execution_run_id,
+            strategy_checkpoint_fingerprint,
+            active_contract_fingerprint.as_deref(),
+            checked_task,
+            checked_task == task,
+        )?;
+    }
+    Ok(())
 }
 
 fn refresh_rebuild_task_closure_receipts(
@@ -1252,6 +1355,7 @@ fn refresh_rebuild_task_closure_receipts(
         strategy_checkpoint_fingerprint,
         active_contract_fingerprint.as_deref(),
         task,
+        true,
     )
 }
 
@@ -1289,6 +1393,7 @@ fn refresh_rebuild_all_task_closure_receipts(
             strategy_checkpoint_fingerprint,
             active_contract_fingerprint.as_deref(),
             task,
+            false,
         )?;
     }
     Ok(())
@@ -1313,6 +1418,461 @@ fn refresh_rebuild_all_task_closure_receipts_if_available(
     }
 }
 
+fn refresh_rebuild_downstream_truth(
+    runtime: &ExecutionRuntime,
+    plan: &Path,
+) -> Result<(), JsonFailure> {
+    let context = load_execution_context(runtime, plan)?;
+    let branch = &context.runtime.branch_name;
+    let current_head = current_head_sha(&context.runtime.repo_root).unwrap_or_default();
+    let artifact_dir = context
+        .runtime
+        .state_dir
+        .join("projects")
+        .join(&context.runtime.repo_slug);
+    let final_review_candidate = latest_branch_artifact_path(&artifact_dir, branch, "code-review");
+    let test_plan_candidate = latest_branch_artifact_path(&artifact_dir, branch, "test-plan");
+    let release_candidate =
+        latest_branch_artifact_path(&artifact_dir, branch, "release-readiness");
+    if final_review_candidate.is_none() && release_candidate.is_none() {
+        return Ok(());
+    }
+    let Some(base_branch) = resolve_release_base_branch(&context.runtime.git_dir, branch) else {
+        return Err(rebuild_downstream_truth_stale(
+            "post_rebuild_late_gate_truth_stale: rebuild completed, but the release base branch could not be resolved for downstream artifact validation.",
+        ));
+    };
+
+    let Some(final_review_path) = final_review_candidate else {
+        return Err(rebuild_downstream_truth_stale(
+            "post_rebuild_late_gate_truth_stale: rebuild completed, but the current branch is missing a final review artifact to rebind authoritative downstream truth.",
+        ));
+    };
+    let initial_review = parse_artifact_document(&final_review_path);
+    if initial_review.title.as_deref() != Some("# Code Review Result") {
+        return Err(rebuild_downstream_truth_stale(format!(
+            "post_rebuild_late_gate_truth_stale: rebuild completed, but final review artifact {} is malformed.",
+            final_review_path.display()
+        )));
+    }
+    let initial_review_receipt = parse_final_review_receipt(&final_review_path);
+
+    let Some(reviewer_artifact_path) = resolve_rebuild_reviewer_artifact_path(
+        &final_review_path,
+        initial_review_receipt.reviewer_artifact_path.as_deref(),
+    ) else {
+        return Err(rebuild_downstream_truth_stale(format!(
+            "post_rebuild_late_gate_truth_stale: rebuild completed, but final review artifact {} is missing a dedicated reviewer artifact binding.",
+            final_review_path.display()
+        )));
+    };
+
+    let Some(test_plan_path) = test_plan_candidate else {
+        return Err(rebuild_downstream_truth_stale(
+            "post_rebuild_late_gate_truth_stale: rebuild completed, but the current branch is missing a test-plan artifact to rebind downstream truth.",
+        ));
+    };
+    let initial_test_plan = parse_artifact_document(&test_plan_path);
+    if initial_test_plan.title.as_deref() != Some("# Test Plan") {
+        return Err(rebuild_downstream_truth_stale(format!(
+            "post_rebuild_late_gate_truth_stale: rebuild completed, but test-plan artifact {} is malformed.",
+            test_plan_path.display()
+        )));
+    }
+
+    let browser_qa_required = initial_test_plan
+        .headers
+        .get("Browser QA Required")
+        .is_some_and(|value| value == "yes");
+
+    let initial_qa_path = if browser_qa_required {
+        let qa_path = latest_branch_artifact_path(&artifact_dir, branch, "test-outcome");
+        if let Some(qa_path) = qa_path {
+            let initial_qa = parse_artifact_document(&qa_path);
+            if initial_qa.title.as_deref() != Some("# QA Result") {
+                return Err(rebuild_downstream_truth_stale(format!(
+                    "post_rebuild_late_gate_truth_stale: rebuild completed, but QA artifact {} is malformed.",
+                    qa_path.display()
+                )));
+            }
+            Some(qa_path)
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
+    let initial_release_path = if let Some(release_path) = release_candidate {
+        let initial_release = parse_artifact_document(&release_path);
+        if initial_release.title.as_deref() != Some("# Release Readiness Result") {
+            return Err(rebuild_downstream_truth_stale(format!(
+                "post_rebuild_late_gate_truth_stale: rebuild completed, but release-readiness artifact {} is malformed.",
+                release_path.display()
+            )));
+        }
+        Some(release_path)
+    } else {
+        None
+    };
+
+    let Some(strategy_checkpoint_fingerprint) = authoritative_strategy_checkpoint_fingerprint_checked(&context)? else {
+        return Ok(());
+    };
+    rewrite_branch_final_review_artifacts(
+        &final_review_path,
+        &reviewer_artifact_path,
+        &current_head,
+        &strategy_checkpoint_fingerprint,
+    )?;
+    rewrite_branch_head_bound_artifact(&test_plan_path, &current_head)?;
+    if let Some(qa_path) = initial_qa_path.as_ref() {
+        rewrite_branch_qa_artifact(qa_path, &current_head, &test_plan_path)?;
+    }
+    if let Some(release_path) = initial_release_path.as_ref() {
+        rewrite_branch_head_bound_artifact(release_path, &current_head)?;
+    }
+
+    let review = parse_artifact_document(&final_review_path);
+    if review.headers.get("Branch") != Some(branch)
+        || review.headers.get("Repo") != Some(&context.runtime.repo_slug)
+        || review.headers.get("Base Branch") != Some(&base_branch)
+        || review.headers.get("Head SHA") != Some(&current_head)
+        || review.headers.get("Result") != Some(&String::from("pass"))
+        || review.headers.get("Generated By")
+            != Some(&String::from("featureforge:requesting-code-review"))
+    {
+        return Err(rebuild_downstream_truth_stale(format!(
+            "post_rebuild_late_gate_truth_stale: rebuild completed, but final review artifact {} does not match the current branch, repo, base branch, or HEAD.",
+            final_review_path.display()
+        )));
+    }
+    let review_source = fs::read_to_string(&final_review_path).map_err(|error| {
+        JsonFailure::new(
+            FailureClass::EvidenceWriteFailed,
+            format!(
+                "Could not read rebuild final-review artifact {}: {error}",
+                final_review_path.display()
+            ),
+        )
+    })?;
+    let authoritative_review_fingerprint = sha256_hex(review_source.as_bytes());
+    let authoritative_review_path = publish_authoritative_rebuild_artifact(
+        runtime,
+        &format!("final-review-{authoritative_review_fingerprint}.md"),
+        &review_source,
+    )?;
+    let review_expectations = FinalReviewReceiptExpectations {
+        expected_plan_path: &context.plan_rel,
+        expected_plan_revision: context.plan_document.plan_revision,
+        expected_strategy_checkpoint_fingerprint: Some(&strategy_checkpoint_fingerprint),
+        expected_head_sha: &current_head,
+        expected_base_branch: &base_branch,
+        deviations_required: false,
+    };
+    let rebound_review_receipt = parse_final_review_receipt(&authoritative_review_path);
+    if validate_final_review_receipt(
+        &rebound_review_receipt,
+        &authoritative_review_path,
+        &review_expectations,
+    )
+    .is_err()
+    {
+        return Err(rebuild_downstream_truth_stale(format!(
+            "post_rebuild_late_gate_truth_stale: rebuild completed, but the rebound authoritative final review artifact {} did not validate against the rebuilt state.",
+            authoritative_review_path.display()
+        )));
+    }
+
+    let test_plan = parse_artifact_document(&test_plan_path);
+    if test_plan.headers.get("Source Plan") != Some(&format!("`{}`", context.plan_rel))
+        || test_plan.headers.get("Source Plan Revision")
+            != Some(&context.plan_document.plan_revision.to_string())
+        || test_plan.headers.get("Branch") != Some(branch)
+        || test_plan.headers.get("Repo") != Some(&context.runtime.repo_slug)
+        || test_plan.headers.get("Head SHA") != Some(&current_head)
+        || test_plan.headers.get("Generated By")
+            != Some(&String::from("featureforge:plan-eng-review"))
+    {
+        return Err(rebuild_downstream_truth_stale(format!(
+            "post_rebuild_late_gate_truth_stale: rebuild completed, but test-plan artifact {} does not match the current approved plan or HEAD.",
+            test_plan_path.display()
+        )));
+    }
+    let authoritative_test_plan_source = fs::read_to_string(&test_plan_path).map_err(|error| {
+        JsonFailure::new(
+            FailureClass::EvidenceWriteFailed,
+            format!(
+                "Could not read rebuild test-plan artifact {}: {error}",
+                test_plan_path.display()
+            ),
+        )
+    })?;
+    let authoritative_test_plan_fingerprint =
+        sha256_hex(authoritative_test_plan_source.as_bytes());
+    let authoritative_test_plan_path = publish_authoritative_rebuild_artifact(
+        runtime,
+        &format!("test-plan-{authoritative_test_plan_fingerprint}.md"),
+        &authoritative_test_plan_source,
+    )?;
+
+    let authoritative_browser_qa_fingerprint = if let Some(qa_path) = initial_qa_path.as_ref() {
+        let qa = parse_artifact_document(qa_path);
+        let qa_source_test_plan_matches = qa
+            .headers
+            .get("Source Test Plan")
+            .map(|value| value.trim_matches('`').trim().to_owned())
+            .filter(|value| !value.is_empty())
+            .and_then(|raw| {
+                let source_path = PathBuf::from(raw);
+                let resolved = if source_path.is_absolute() {
+                    source_path
+                } else {
+                    qa_path
+                        .parent()
+                        .unwrap_or_else(|| Path::new("."))
+                        .join(source_path)
+                };
+                fs::canonicalize(resolved).ok()
+            })
+            .and_then(|source| fs::canonicalize(&test_plan_path).ok().map(|target| source == target))
+            .unwrap_or(false);
+        if qa.headers.get("Source Plan") != Some(&format!("`{}`", context.plan_rel))
+            || qa.headers.get("Source Plan Revision")
+                != Some(&context.plan_document.plan_revision.to_string())
+            || qa.headers.get("Branch") != Some(branch)
+            || qa.headers.get("Repo") != Some(&context.runtime.repo_slug)
+            || qa.headers.get("Head SHA") != Some(&current_head)
+            || qa.headers.get("Result") != Some(&String::from("pass"))
+            || qa.headers.get("Generated By") != Some(&String::from("featureforge:qa-only"))
+            || !qa_source_test_plan_matches
+        {
+            return Err(rebuild_downstream_truth_stale(format!(
+                "post_rebuild_late_gate_truth_stale: rebuild completed, but QA artifact {} does not match the rebuilt branch state.",
+                qa_path.display()
+            )));
+        }
+        let qa_source = fs::read_to_string(qa_path).map_err(|error| {
+            JsonFailure::new(
+                FailureClass::EvidenceWriteFailed,
+                format!("Could not read rebuild QA artifact {}: {error}", qa_path.display()),
+            )
+        })?;
+        let authoritative_qa_source = rewrite_rebuild_source_test_plan_header(
+            &qa_source,
+            &authoritative_test_plan_path,
+        );
+        let authoritative_qa_fingerprint = sha256_hex(authoritative_qa_source.as_bytes());
+        publish_authoritative_rebuild_artifact(
+            runtime,
+            &format!("browser-qa-{authoritative_qa_fingerprint}.md"),
+            &authoritative_qa_source,
+        )?;
+        Some(authoritative_qa_fingerprint)
+    } else {
+        None
+    };
+
+    let authoritative_release_fingerprint = if let Some(release_path) = initial_release_path.as_ref()
+    {
+        let release = parse_artifact_document(release_path);
+        if release.headers.get("Source Plan") != Some(&format!("`{}`", context.plan_rel))
+            || release.headers.get("Source Plan Revision")
+                != Some(&context.plan_document.plan_revision.to_string())
+            || release.headers.get("Branch") != Some(branch)
+            || release.headers.get("Repo") != Some(&context.runtime.repo_slug)
+            || release.headers.get("Base Branch") != Some(&base_branch)
+            || release.headers.get("Head SHA") != Some(&current_head)
+            || release.headers.get("Result") != Some(&String::from("pass"))
+            || release.headers.get("Generated By")
+                != Some(&String::from("featureforge:document-release"))
+        {
+            return Err(rebuild_downstream_truth_stale(format!(
+                "post_rebuild_late_gate_truth_stale: rebuild completed, but release-readiness artifact {} does not match the current approved plan or HEAD.",
+                release_path.display()
+            )));
+        }
+        let authoritative_release_source = fs::read_to_string(release_path).map_err(|error| {
+            JsonFailure::new(
+                FailureClass::EvidenceWriteFailed,
+                format!(
+                    "Could not read rebuild release artifact {}: {error}",
+                    release_path.display()
+                ),
+            )
+        })?;
+        let authoritative_release_fingerprint =
+            sha256_hex(authoritative_release_source.as_bytes());
+        publish_authoritative_rebuild_artifact(
+            runtime,
+            &format!("release-docs-{authoritative_release_fingerprint}.md"),
+            &authoritative_release_source,
+        )?;
+        Some(authoritative_release_fingerprint)
+    } else {
+        None
+    };
+
+    let context = load_execution_context(runtime, plan)?;
+    let mut authoritative_state = load_authoritative_transition_state(&context)?;
+    if let Some(authoritative_state) = authoritative_state.as_mut() {
+        authoritative_state.restore_downstream_truth(
+            &authoritative_review_fingerprint,
+            browser_qa_required,
+            authoritative_browser_qa_fingerprint.as_deref(),
+            authoritative_release_fingerprint.as_deref(),
+        )?;
+        authoritative_state.persist_if_dirty_with_failpoint(None)?;
+    }
+    Ok(())
+}
+
+fn publish_authoritative_rebuild_artifact(
+    runtime: &ExecutionRuntime,
+    artifact_file_name: &str,
+    source: &str,
+) -> Result<PathBuf, JsonFailure> {
+    let path = harness_authoritative_artifact_path(
+        &runtime.state_dir,
+        &runtime.repo_slug,
+        &runtime.branch_name,
+        artifact_file_name,
+    );
+    write_atomic(&path, source)?;
+    Ok(path)
+}
+
+fn rebuild_downstream_truth_stale(message: impl Into<String>) -> JsonFailure {
+    JsonFailure::new(FailureClass::StaleProvenance, message.into())
+}
+
+fn rewrite_branch_final_review_artifacts(
+    review_path: &Path,
+    reviewer_artifact_path: &Path,
+    current_head: &str,
+    strategy_checkpoint_fingerprint: &str,
+) -> Result<(), JsonFailure> {
+    let reviewer_source = fs::read_to_string(reviewer_artifact_path).map_err(|error| {
+        JsonFailure::new(
+            FailureClass::EvidenceWriteFailed,
+            format!(
+                "Could not read rebuild reviewer artifact {}: {error}",
+                reviewer_artifact_path.display()
+            ),
+        )
+    })?;
+    let rebound_reviewer_source = rewrite_markdown_header(
+        &rewrite_markdown_header(
+            &reviewer_source,
+            "Strategy Checkpoint Fingerprint",
+            strategy_checkpoint_fingerprint,
+        ),
+        "Head SHA",
+        current_head,
+    );
+    write_atomic(reviewer_artifact_path, &rebound_reviewer_source)?;
+    let reviewer_fingerprint = sha256_hex(rebound_reviewer_source.as_bytes());
+
+    let review_source = fs::read_to_string(review_path).map_err(|error| {
+        JsonFailure::new(
+            FailureClass::EvidenceWriteFailed,
+            format!(
+                "Could not read rebuild final-review artifact {}: {error}",
+                review_path.display()
+            ),
+        )
+    })?;
+    let rebound_review_source = rewrite_markdown_header(
+        &rewrite_markdown_header(
+            &rewrite_markdown_header(
+                &rewrite_markdown_header(
+                    &review_source,
+                    "Strategy Checkpoint Fingerprint",
+                    strategy_checkpoint_fingerprint,
+                ),
+                "Reviewer Artifact Path",
+                &format!("`{}`", reviewer_artifact_path.display()),
+            ),
+            "Reviewer Artifact Fingerprint",
+            &reviewer_fingerprint,
+        ),
+        "Head SHA",
+        current_head,
+    );
+    write_atomic(review_path, &rebound_review_source)
+}
+
+fn rewrite_branch_head_bound_artifact(path: &Path, current_head: &str) -> Result<(), JsonFailure> {
+    let source = fs::read_to_string(path).map_err(|error| {
+        JsonFailure::new(
+            FailureClass::EvidenceWriteFailed,
+            format!("Could not read rebuild artifact {}: {error}", path.display()),
+        )
+    })?;
+    let rebound_source = rewrite_markdown_header(&source, "Head SHA", current_head);
+    write_atomic(path, &rebound_source)
+}
+
+fn rewrite_branch_qa_artifact(
+    qa_path: &Path,
+    current_head: &str,
+    test_plan_path: &Path,
+) -> Result<(), JsonFailure> {
+    let source = fs::read_to_string(qa_path).map_err(|error| {
+        JsonFailure::new(
+            FailureClass::EvidenceWriteFailed,
+            format!("Could not read rebuild QA artifact {}: {error}", qa_path.display()),
+        )
+    })?;
+    let rebound_source = rewrite_rebuild_source_test_plan_header(
+        &rewrite_markdown_header(&source, "Head SHA", current_head),
+        test_plan_path,
+    );
+    write_atomic(qa_path, &rebound_source)
+}
+
+fn rewrite_rebuild_source_test_plan_header(source: &str, test_plan_path: &Path) -> String {
+    rewrite_markdown_header(
+        source,
+        "Source Test Plan",
+        &format!("`{}`", test_plan_path.display()),
+    )
+}
+
+fn rewrite_markdown_header(source: &str, header: &str, value: &str) -> String {
+    let prefix = format!("**{header}:**");
+    let rewritten = source
+        .lines()
+        .map(|line| {
+            if line.trim().starts_with(&prefix) {
+                format!("**{header}:** {value}")
+            } else {
+                line.to_owned()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    format!("{rewritten}\n")
+}
+
+fn resolve_rebuild_reviewer_artifact_path(
+    review_receipt_path: &Path,
+    raw_reviewer_artifact_path: Option<&str>,
+) -> Option<PathBuf> {
+    let raw_reviewer_artifact_path = raw_reviewer_artifact_path
+        .map(str::trim)
+        .filter(|value| !value.is_empty())?;
+    let reviewer_artifact_path = PathBuf::from(raw_reviewer_artifact_path.trim_matches('`'));
+    Some(if reviewer_artifact_path.is_absolute() {
+        reviewer_artifact_path
+    } else {
+        review_receipt_path
+            .parent()
+            .unwrap_or_else(|| Path::new("."))
+            .join(reviewer_artifact_path)
+    })
+}
+
 fn refresh_rebuild_task_closure_receipts_with_context(
     runtime: &ExecutionRuntime,
     context: &ExecutionContext,
@@ -1320,7 +1880,9 @@ fn refresh_rebuild_task_closure_receipts_with_context(
     strategy_checkpoint_fingerprint: &str,
     active_contract_fingerprint: Option<&str>,
     task: u32,
+    restore_missing_dispatch_lineage: bool,
 ) -> Result<(), JsonFailure> {
+    let mut authoritative_state = load_authoritative_transition_state(context)?;
     let task_steps = context
         .steps
         .iter()
@@ -1345,6 +1907,14 @@ fn refresh_rebuild_task_closure_receipts_with_context(
         strategy_checkpoint_fingerprint,
         task,
     )?;
+    if let Some(authoritative_state) = authoritative_state.as_mut() {
+        if restore_missing_dispatch_lineage {
+            authoritative_state.ensure_task_review_dispatch_lineage(context, task)?;
+        } else {
+            authoritative_state.refresh_task_review_dispatch_lineage(context, task)?;
+        }
+        authoritative_state.persist_if_dirty_with_failpoint(None)?;
+    }
     Ok(())
 }
 
@@ -1534,11 +2104,11 @@ fn refresh_task_verification_receipt_for_task(
     write_atomic(&receipt_path, &source)
 }
 
-fn latest_attempt_for_step<'a>(
-    evidence: &'a ExecutionEvidence,
+fn latest_attempt_for_step(
+    evidence: &ExecutionEvidence,
     task: u32,
     step: u32,
-) -> Option<&'a EvidenceAttempt> {
+) -> Option<&EvidenceAttempt> {
     evidence
         .attempts
         .iter()
@@ -1635,30 +2205,16 @@ fn is_rebuild_task_boundary_receipt_failure(message: &str) -> bool {
     matches!(
         message.split_once(':').map(|(reason_code, _)| reason_code.trim()),
         Some(
-            "prior_task_review_not_green"
+            "prior_task_review_dispatch_missing"
+                | "prior_task_review_dispatch_stale"
+                | "prior_task_review_not_green"
                 | "task_review_not_independent"
                 | "task_review_receipt_malformed"
                 | "prior_task_verification_missing"
+                | "prior_task_verification_missing_legacy"
                 | "task_verification_receipt_malformed"
         )
     )
-}
-
-#[cfg(test)]
-mod unit_tests {
-    use super::verify_command_launcher;
-
-    #[test]
-    fn verify_command_launcher_matches_platform_contract() {
-        let (program, args) = verify_command_launcher("printf rebuilt");
-        if cfg!(windows) {
-            assert_eq!(program, "cmd");
-            assert_eq!(args, vec![String::from("/C"), String::from("printf rebuilt")]);
-        } else {
-            assert_eq!(program, "sh");
-            assert_eq!(args, vec![String::from("-lc"), String::from("printf rebuilt")]);
-        }
-    }
 }
 
 fn planned_rebuild_target(candidate: &RebuildEvidenceCandidate) -> RebuildEvidenceTarget {
@@ -2203,4 +2759,21 @@ fn write_atomic(path: &Path, contents: &str) -> Result<(), JsonFailure> {
 fn sha256_hex(bytes: &[u8]) -> String {
     let digest = Sha256::digest(bytes);
     format!("{digest:x}")
+}
+
+#[cfg(test)]
+mod unit_tests {
+    use super::verify_command_launcher;
+
+    #[test]
+    fn verify_command_launcher_matches_platform_contract() {
+        let (program, args) = verify_command_launcher("printf rebuilt");
+        if cfg!(windows) {
+            assert_eq!(program, "cmd");
+            assert_eq!(args, vec![String::from("/C"), String::from("printf rebuilt")]);
+        } else {
+            assert_eq!(program, "sh");
+            assert_eq!(args, vec![String::from("-lc"), String::from("printf rebuilt")]);
+        }
+    }
 }

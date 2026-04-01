@@ -3066,7 +3066,7 @@ fn canonical_workflow_phase_routes_enabled_ready_plan_to_execution_preflight() {
 }
 
 #[test]
-fn canonical_workflow_gate_review_dispatch_tracks_active_reviewable_work_cycles() {
+fn canonical_workflow_gate_review_is_read_only_before_dispatch() {
     let (repo_dir, state_dir) = init_repo("workflow-gate-review-dispatch-cycle-tracking");
     let repo = repo_dir.path();
     let state = state_dir.path();
@@ -3123,6 +3123,12 @@ fn canonical_workflow_gate_review_dispatch_tracks_active_reviewable_work_cycles(
     assert_eq!(begin_json["active_step"], 1);
     let branch = current_branch_name(repo);
     update_authoritative_harness_state(repo, state, &branch, plan_rel, 1, &[]);
+    let status_before_gate_review = run_plan_execution_json(
+        repo,
+        state,
+        &["status", "--plan", plan_rel],
+        "status before workflow gate-review read-only check",
+    );
 
     let gate_review_json = parse_json(
         &run_rust_featureforge_with_env(
@@ -3130,9 +3136,9 @@ fn canonical_workflow_gate_review_dispatch_tracks_active_reviewable_work_cycles(
             state,
             &["workflow", "gate", "review", "--plan", plan_rel, "--json"],
             &[("FEATUREFORGE_SESSION_KEY", session_key)],
-            "workflow gate review dispatch should track active reviewable work",
+            "workflow gate review should stay read-only while active work is still in progress",
         ),
-        "workflow gate review dispatch should track active reviewable work",
+        "workflow gate review should stay read-only while active work is still in progress",
     );
     assert_eq!(gate_review_json["allowed"], false);
     assert_eq!(gate_review_json["failure_class"], "ExecutionStateNotReady");
@@ -3140,25 +3146,28 @@ fn canonical_workflow_gate_review_dispatch_tracks_active_reviewable_work_cycles(
         gate_review_json["reason_codes"]
             .as_array()
             .is_some_and(|codes| codes.iter().any(|code| code == "active_step_in_progress")),
-        "workflow gate review dispatch should fail while active work is still in progress"
+        "workflow gate review should fail while active work is still in progress"
     );
 
     let status_after_gate_review = run_plan_execution_json(
         repo,
         state,
         &["status", "--plan", plan_rel],
-        "status after workflow gate-review dispatch cycle tracking",
+        "status after workflow gate-review read-only check",
     );
     assert_eq!(
         status_after_gate_review["strategy_checkpoint_kind"],
-        "review_remediation"
+        status_before_gate_review["strategy_checkpoint_kind"],
+        "workflow gate-review should not mutate strategy checkpoint kind"
+    );
+    assert_eq!(
+        status_after_gate_review["last_strategy_checkpoint_fingerprint"],
+        status_before_gate_review["last_strategy_checkpoint_fingerprint"],
+        "workflow gate-review should not mutate strategy checkpoint fingerprint"
     );
     assert!(
-        status_after_gate_review["last_strategy_checkpoint_fingerprint"]
-            .as_str()
-            .map(str::trim)
-            .is_some_and(|value| !value.is_empty()),
-        "workflow gate review dispatch should persist strategy checkpoint fingerprint when reviewable work is dispatched"
+        status_after_gate_review["strategy_state"] == status_before_gate_review["strategy_state"],
+        "workflow gate-review should not mutate strategy state"
     );
 }
 
@@ -4566,7 +4575,7 @@ Task 1 -> Task 2
     run_plan_execution_json(
         repo,
         state,
-        &["gate-review", "--plan", plan_rel],
+        &["gate-review-dispatch", "--plan", plan_rel],
         "record task-boundary review dispatch for blocked workflow fixture",
     );
 
@@ -4833,7 +4842,7 @@ Task 1 -> Task 2
     assert!(
         phase_json["next_step"]
             .as_str()
-            .is_some_and(|next_step| next_step.contains("featureforge plan execution gate-review --plan")),
+            .is_some_and(|next_step| next_step.contains("featureforge plan execution gate-review-dispatch --plan")),
         "workflow phase json should expose gate-review command guidance for dispatch-blocked repair flow, got {phase_json:?}"
     );
     assert!(
@@ -4845,7 +4854,7 @@ Task 1 -> Task 2
     assert!(
         doctor_json["next_step"]
             .as_str()
-            .is_some_and(|next_step| next_step.contains("featureforge plan execution gate-review --plan")),
+            .is_some_and(|next_step| next_step.contains("featureforge plan execution gate-review-dispatch --plan")),
         "workflow doctor should expose gate-review command guidance for dispatch-blocked repair flow, got {doctor_json:?}"
     );
     assert!(
@@ -4865,7 +4874,7 @@ Task 1 -> Task 2
     assert!(doctor_output.status.success());
     let doctor_stdout = String::from_utf8_lossy(&doctor_output.stdout);
     assert!(
-        doctor_stdout.contains("featureforge plan execution gate-review --plan"),
+        doctor_stdout.contains("featureforge plan execution gate-review-dispatch --plan"),
         "workflow doctor text should include gate-review command guidance, got:\n{doctor_stdout}"
     );
     assert!(doctor_stdout.contains(plan_rel), "doctor stdout:\n{doctor_stdout}");
@@ -4883,7 +4892,7 @@ Task 1 -> Task 2
     assert!(
         handoff_json["recommendation_reason"]
             .as_str()
-            .is_some_and(|reason| reason.contains("featureforge plan execution gate-review --plan")),
+            .is_some_and(|reason| reason.contains("featureforge plan execution gate-review-dispatch --plan")),
         "workflow handoff should include gate-review command guidance for dispatch-blocked repair flow, got {handoff_json:?}"
     );
     assert!(
@@ -4903,7 +4912,7 @@ Task 1 -> Task 2
     assert!(handoff_output.status.success());
     let handoff_stdout = String::from_utf8_lossy(&handoff_output.stdout);
     assert!(
-        handoff_stdout.contains("featureforge plan execution gate-review --plan"),
+        handoff_stdout.contains("featureforge plan execution gate-review-dispatch --plan"),
         "workflow handoff text should include gate-review command guidance, got:\n{handoff_stdout}"
     );
     assert!(handoff_stdout.contains(plan_rel), "handoff stdout:\n{handoff_stdout}");
@@ -4918,7 +4927,7 @@ Task 1 -> Task 2
     assert!(next_output.status.success());
     let next_stdout = String::from_utf8_lossy(&next_output.stdout);
     assert!(
-        next_stdout.contains("featureforge plan execution gate-review --plan"),
+        next_stdout.contains("featureforge plan execution gate-review-dispatch --plan"),
         "workflow next output should include gate-review command guidance, got:\n{next_stdout}"
     );
     assert!(next_stdout.contains(plan_rel), "next stdout:\n{next_stdout}");

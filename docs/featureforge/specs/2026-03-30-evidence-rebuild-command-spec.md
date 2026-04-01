@@ -188,7 +188,7 @@ Each target record must include:
 - `step_id`
 - `target_kind`
 - `pre_invalidation_reason`
-- `status` (`rebuilt|manual_required|failed|noop`)
+- `status` (`planned|rebuilt|manual_required|failed|noop`)
 - `verify_mode` (`command|manual`)
 - `verify_command`
 - `attempt_id_before`

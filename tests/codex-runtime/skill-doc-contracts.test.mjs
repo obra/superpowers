@@ -611,7 +611,7 @@ test('task-fidelity workflow docs and prompts require packet-backed plan contrac
   assert.match(executingPlans, /build the canonical task packet/);
   assert.match(executingPlans, /treat it as the exact task contract for that execution segment/);
   assert.match(executingPlans, /mandatory task-boundary closure loop/i);
-  assert.match(executingPlans, /STOP and run `featureforge plan execution gate-review --plan <approved-plan-path>` immediately after task completion/i);
+  assert.match(executingPlans, /STOP and run `featureforge plan execution gate-review-dispatch --plan <approved-plan-path>` immediately after task completion/i);
   assert.match(executingPlans, /does not require per-dispatch user-consent prompts/);
   assert.match(executingPlans, /Non-execution ad-hoc delegation still follows normal user-consent policy/);
 
@@ -619,7 +619,7 @@ test('task-fidelity workflow docs and prompts require packet-backed plan contrac
   assert.match(subagentSkill, /pass the packet verbatim to implementer and reviewers/);
   assert.match(subagentSkill, /If the packet does not answer it, the task is ambiguous and execution must stop or route back to review\./);
   assert.match(subagentSkill, /The coordinator owns every `git commit`, `git merge`, and `git push` for this workflow/);
-  assert.match(subagentSkill, /STOP and run `featureforge plan execution gate-review --plan <approved-plan-path>` immediately after task completion/i);
+  assert.match(subagentSkill, /STOP and run `featureforge plan execution gate-review-dispatch --plan <approved-plan-path>` immediately after task completion/i);
   assert.match(subagentSkill, /run `verification-before-completion` and persist the task verification receipt/i);
   assert.match(subagentSkill, /does not require per-dispatch user-consent prompts/);
   assert.match(subagentSkill, /Non-execution ad-hoc delegation still follows normal user-consent policy/);

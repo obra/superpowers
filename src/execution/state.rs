@@ -676,8 +676,10 @@ impl ExecutionRuntime {
     pub fn gate_review_dispatch(&self, args: &StatusArgs) -> Result<GateResult, JsonFailure> {
         match load_execution_context(self, &args.plan) {
             Ok(context) => {
+                ensure_review_dispatch_authoritative_bootstrap(&context)?;
                 record_review_dispatch_strategy_checkpoint(&context)?;
-                Ok(gate_review_from_context(&context))
+                let reloaded = load_execution_context(self, &args.plan)?;
+                Ok(gate_review_from_context(&reloaded))
             }
             Err(error) if error.error_class == FailureClass::PlanNotExecutionReady.as_str() => {
                 let mut gate = GateState::default();
@@ -685,7 +687,7 @@ impl ExecutionRuntime {
                     FailureClass::PlanNotExecutionReady,
                     "plan_not_execution_ready",
                     error.message,
-                    "Refresh the approved plan/spec pair before running gate-review.",
+                    "Refresh the approved plan/spec pair before running gate-review-dispatch.",
                 );
                 Ok(gate.finish())
             }
@@ -712,7 +714,10 @@ fn record_review_dispatch_strategy_checkpoint(
     let _write_authority = claim_step_write_authority(&context.runtime)?;
     let mut authoritative_state = load_authoritative_transition_state(context)?;
     let Some(authoritative_state) = authoritative_state.as_mut() else {
-        return Ok(());
+        return Err(JsonFailure::new(
+            FailureClass::ExecutionStateNotReady,
+            "Authoritative harness state is required before gate-review-dispatch can record review-dispatch proof.",
+        ));
     };
     let cycle_target = match review_dispatch_cycle_target(context) {
         ReviewDispatchCycleTarget::Bound(task, step) => Some((task, step)),
@@ -725,6 +730,21 @@ fn record_review_dispatch_strategy_checkpoint(
         cycle_target,
     )?;
     authoritative_state.persist_if_dirty_with_failpoint(None)
+}
+
+fn ensure_review_dispatch_authoritative_bootstrap(
+    context: &ExecutionContext,
+) -> Result<(), JsonFailure> {
+    let acceptance = persist_preflight_acceptance(context)?;
+    ensure_preflight_authoritative_bootstrap(
+        &context.runtime,
+        RunIdentitySnapshot {
+            execution_run_id: acceptance.execution_run_id.clone(),
+            source_plan_path: context.plan_rel.clone(),
+            source_plan_revision: context.plan_document.plan_revision,
+        },
+        acceptance.chunk_id,
+    )
 }
 
 enum ReviewDispatchCycleTarget {
@@ -4308,7 +4328,9 @@ pub fn gate_finish_from_context(context: &ExecutionContext) -> GateResult {
 
     let branch = &context.runtime.branch_name;
     let current_head = current_head_sha(&context.runtime.repo_root).unwrap_or_default();
-    match repo_has_tracked_worktree_changes(&context.runtime.repo_root) {
+    match repo_has_tracked_worktree_changes_excluding_execution_evidence(
+        &context.runtime.repo_root,
+    ) {
         Ok(true) => {
             gate.fail(
                 FailureClass::ReviewArtifactNotFresh,
@@ -5145,78 +5167,78 @@ pub fn discover_rebuild_candidates(
             needs_reopen = true;
         }
 
-        if let Some(attempt) = latest_attempt {
-            if attempt.status == "Invalidated" && attempt.invalidation_reason != "N/A" {
-                pre_invalidation_reason = Some(attempt.invalidation_reason.clone());
-                target_kind = String::from("invalidated_attempt");
-                needs_reopen = step.checked;
-            }
+        if let Some(attempt) = latest_attempt
+            && attempt.status == "Invalidated" && attempt.invalidation_reason != "N/A"
+        {
+            pre_invalidation_reason = Some(attempt.invalidation_reason.clone());
+            target_kind = String::from("invalidated_attempt");
+            needs_reopen = step.checked;
         }
 
-        if pre_invalidation_reason.is_none() && step.checked {
-            if let Some(attempt) = latest_completed_attempt {
-                let expected_packet = compute_packet_fingerprint(PacketFingerprintInput {
-                    plan_path: &context.plan_rel,
-                    plan_revision: context.plan_document.plan_revision,
-                    plan_fingerprint: &contract_plan_fingerprint,
-                    source_spec_path: &context.plan_document.source_spec_path,
-                    source_spec_revision: context.plan_document.source_spec_revision,
-                    source_spec_fingerprint: &source_spec_fingerprint,
-                    task: step.task_number,
-                    step: step.step_number,
-                });
-                if attempt.packet_fingerprint.as_deref() != Some(expected_packet.as_str()) {
-                    pre_invalidation_reason = Some(String::from("packet_fingerprint_mismatch"));
-                    target_kind = String::from("stale_completed_attempt");
-                    needs_reopen = true;
-                } else {
-                    for proof in &attempt.file_proofs {
-                        if proof.path == NO_REPO_FILES_MARKER
-                            || proof.path == context.plan_rel
-                            || proof.path == context.evidence_rel
-                        {
-                            continue;
-                        }
-                        if latest_file_proofs
-                            .get(&proof.path)
-                            .is_some_and(|latest_index| {
-                                latest_completed
-                                    .get(&step_key)
-                                    .is_some_and(|attempt_index| latest_index != attempt_index)
-                            })
-                        {
-                            continue;
-                        }
-                        match current_file_proof_checked(&context.runtime.repo_root, &proof.path) {
-                            Ok(current_proof) => {
-                                if current_proof != proof.proof {
-                                    pre_invalidation_reason =
-                                        Some(String::from("files_proven_drifted"));
-                                    target_kind = String::from("stale_completed_attempt");
-                                    needs_reopen = true;
-                                    break;
-                                }
-                            }
-                            Err(error) => {
-                                pre_invalidation_reason = Some(format!(
-                                    "artifact_read_error: could not read {} ({error})",
-                                    proof.path
-                                ));
-                                target_kind = String::from("artifact_read_error");
-                                needs_reopen = false;
+        if pre_invalidation_reason.is_none() && step.checked
+            && let Some(attempt) = latest_completed_attempt
+        {
+            let expected_packet = compute_packet_fingerprint(PacketFingerprintInput {
+                plan_path: &context.plan_rel,
+                plan_revision: context.plan_document.plan_revision,
+                plan_fingerprint: &contract_plan_fingerprint,
+                source_spec_path: &context.plan_document.source_spec_path,
+                source_spec_revision: context.plan_document.source_spec_revision,
+                source_spec_fingerprint: &source_spec_fingerprint,
+                task: step.task_number,
+                step: step.step_number,
+            });
+            if attempt.packet_fingerprint.as_deref() != Some(expected_packet.as_str()) {
+                pre_invalidation_reason = Some(String::from("packet_fingerprint_mismatch"));
+                target_kind = String::from("stale_completed_attempt");
+                needs_reopen = true;
+            } else {
+                for proof in &attempt.file_proofs {
+                    if proof.path == NO_REPO_FILES_MARKER
+                        || proof.path == context.plan_rel
+                        || proof.path == context.evidence_rel
+                    {
+                        continue;
+                    }
+                    if latest_file_proofs
+                        .get(&proof.path)
+                        .is_some_and(|latest_index| {
+                            latest_completed
+                                .get(&step_key)
+                                .is_some_and(|attempt_index| latest_index != attempt_index)
+                        })
+                    {
+                        continue;
+                    }
+                    match current_file_proof_checked(&context.runtime.repo_root, &proof.path) {
+                        Ok(current_proof) => {
+                            if current_proof != proof.proof {
+                                pre_invalidation_reason =
+                                    Some(String::from("files_proven_drifted"));
+                                target_kind = String::from("stale_completed_attempt");
+                                needs_reopen = true;
                                 break;
                             }
+                        }
+                        Err(error) => {
+                            pre_invalidation_reason = Some(format!(
+                                "artifact_read_error: could not read {} ({error})",
+                                proof.path
+                            ));
+                            target_kind = String::from("artifact_read_error");
+                            needs_reopen = false;
+                            break;
                         }
                     }
                 }
             }
         }
 
-        if pre_invalidation_reason.is_none() && request.include_open && !step.checked {
-            if step.note_state.is_some() || latest_attempt.is_some() {
-                pre_invalidation_reason = Some(String::from("open_step_requested"));
-                target_kind = String::from("open_step");
-            }
+        if pre_invalidation_reason.is_none() && request.include_open && !step.checked
+            && (step.note_state.is_some() || latest_attempt.is_some())
+        {
+            pre_invalidation_reason = Some(String::from("open_step_requested"));
+            target_kind = String::from("open_step");
         }
 
         let Some(pre_invalidation_reason) = pre_invalidation_reason else {
@@ -5435,6 +5457,37 @@ fn repo_has_tracked_worktree_changes(repo_root: &Path) -> Result<bool, JsonFailu
             ),
         )
     })
+}
+
+fn repo_has_tracked_worktree_changes_excluding_execution_evidence(
+    repo_root: &Path,
+) -> Result<bool, JsonFailure> {
+    let output = Command::new("git")
+        .current_dir(repo_root)
+        .args([
+            "status",
+            "--porcelain",
+            "--untracked-files=no",
+            "--",
+            ".",
+            ":(exclude)docs/featureforge/execution-evidence/**",
+        ])
+        .output()
+        .map_err(|error| {
+            JsonFailure::new(
+                FailureClass::WorkspaceNotSafe,
+                format!(
+                    "Could not determine whether tracked worktree changes remain outside execution evidence: {error}"
+                ),
+            )
+        })?;
+    if !output.status.success() {
+        return Err(JsonFailure::new(
+            FailureClass::WorkspaceNotSafe,
+            "Could not determine whether tracked worktree changes remain outside execution evidence.",
+        ));
+    }
+    Ok(!String::from_utf8_lossy(&output.stdout).trim().is_empty())
 }
 
 pub fn state_dir() -> PathBuf {
@@ -6819,7 +6872,7 @@ fn ensure_prior_task_review_dispatch_closed(
             FailureClass::ExecutionStateNotReady,
             "prior_task_review_dispatch_missing",
             format!(
-                "Task {target_task} may not begin because Task {prior_task} is missing required post-completion review-dispatch evidence. Run `featureforge plan execution gate-review --plan {}` after Task {prior_task} closes.",
+                "Task {target_task} may not begin because Task {prior_task} is missing required post-completion review-dispatch evidence. Run `featureforge plan execution gate-review-dispatch --plan {}` after Task {prior_task} closes.",
                 context.plan_rel
             ),
         ));
@@ -6830,7 +6883,7 @@ fn ensure_prior_task_review_dispatch_closed(
             FailureClass::ExecutionStateNotReady,
             "prior_task_review_dispatch_missing",
             format!(
-                "Task {target_task} may not begin because Task {prior_task} is missing required post-completion review-dispatch evidence. Run `featureforge plan execution gate-review --plan {}` after Task {prior_task} closes.",
+                "Task {target_task} may not begin because Task {prior_task} is missing required post-completion review-dispatch evidence. Run `featureforge plan execution gate-review-dispatch --plan {}` after Task {prior_task} closes.",
                 context.plan_rel
             ),
         ));
@@ -6874,7 +6927,7 @@ fn validate_task_review_dispatch_lineage(
                 FailureClass::ExecutionStateNotReady,
                 "prior_task_review_dispatch_stale",
                 format!(
-                    "Task {target_task} may not begin because Task {prior_task} review-dispatch lineage is malformed. Re-run `featureforge plan execution gate-review --plan {}` for Task {prior_task}.",
+                    "Task {target_task} may not begin because Task {prior_task} review-dispatch lineage is malformed. Re-run `featureforge plan execution gate-review-dispatch --plan {}` for Task {prior_task}.",
                     context.plan_rel
                 ),
             )
@@ -6884,7 +6937,7 @@ fn validate_task_review_dispatch_lineage(
             FailureClass::ExecutionStateNotReady,
             "prior_task_review_dispatch_stale",
             format!(
-                "Task {target_task} may not begin because Task {prior_task} review-dispatch lineage is malformed. Re-run `featureforge plan execution gate-review --plan {}` for Task {prior_task}.",
+                "Task {target_task} may not begin because Task {prior_task} review-dispatch lineage is malformed. Re-run `featureforge plan execution gate-review-dispatch --plan {}` for Task {prior_task}.",
                 context.plan_rel
             ),
         )
@@ -6894,7 +6947,7 @@ fn validate_task_review_dispatch_lineage(
             FailureClass::ExecutionStateNotReady,
             "prior_task_review_dispatch_stale",
             format!(
-                "Task {target_task} may not begin because Task {prior_task} review-dispatch lineage is malformed. Re-run `featureforge plan execution gate-review --plan {}` for Task {prior_task}.",
+                "Task {target_task} may not begin because Task {prior_task} review-dispatch lineage is malformed. Re-run `featureforge plan execution gate-review-dispatch --plan {}` for Task {prior_task}.",
                 context.plan_rel
             ),
         )
@@ -6909,7 +6962,7 @@ fn validate_task_review_dispatch_lineage(
                 FailureClass::ExecutionStateNotReady,
                 "prior_task_review_dispatch_stale",
                 format!(
-                    "Task {target_task} may not begin because Task {prior_task} review-dispatch lineage is malformed. Re-run `featureforge plan execution gate-review --plan {}` for Task {prior_task}.",
+                    "Task {target_task} may not begin because Task {prior_task} review-dispatch lineage is malformed. Re-run `featureforge plan execution gate-review-dispatch --plan {}` for Task {prior_task}.",
                     context.plan_rel
                 ),
             )
@@ -6924,7 +6977,7 @@ fn validate_task_review_dispatch_lineage(
                 FailureClass::ExecutionStateNotReady,
                 "prior_task_review_dispatch_stale",
                 format!(
-                    "Task {target_task} may not begin because Task {prior_task} review-dispatch lineage is malformed. Re-run `featureforge plan execution gate-review --plan {}` for Task {prior_task}.",
+                    "Task {target_task} may not begin because Task {prior_task} review-dispatch lineage is malformed. Re-run `featureforge plan execution gate-review-dispatch --plan {}` for Task {prior_task}.",
                     context.plan_rel
                 ),
             )
@@ -6940,7 +6993,7 @@ fn validate_task_review_dispatch_lineage(
             FailureClass::ExecutionStateNotReady,
             "prior_task_review_dispatch_stale",
             format!(
-                "Task {target_task} may not begin because Task {prior_task} review-dispatch evidence is stale against current task/strategy lineage. Re-run `featureforge plan execution gate-review --plan {}` after Task {prior_task} closure.",
+                "Task {target_task} may not begin because Task {prior_task} review-dispatch evidence is stale against current task/strategy lineage. Re-run `featureforge plan execution gate-review-dispatch --plan {}` after Task {prior_task} closure.",
                 context.plan_rel
             ),
         ));
@@ -7078,7 +7131,10 @@ fn latest_attempt_for_step(
         .find(|attempt| attempt.task_number == task_number && attempt.step_number == step_number)
 }
 
-fn latest_attempted_step_for_task(context: &ExecutionContext, task_number: u32) -> Option<u32> {
+pub(crate) fn latest_attempted_step_for_task(
+    context: &ExecutionContext,
+    task_number: u32,
+) -> Option<u32> {
     context.evidence.attempts.iter().rev().find_map(|attempt| {
         (attempt.task_number == task_number
             && context

@@ -93,7 +93,7 @@ pub fn run() -> std::process::ExitCode {
                                         std::process::ExitCode::from(output.exit_code())
                                     }
                                     Err(error) => {
-                                        let failure: JsonFailure = error.into();
+                                        let failure: JsonFailure = error;
                                         eprintln!(
                                             "error error_class={} message={}",
                                             serde_json::to_string(&failure.error_class)

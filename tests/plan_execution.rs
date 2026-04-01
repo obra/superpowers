@@ -2649,6 +2649,19 @@ fn write_minimal_task_verification_receipt_for_task(
     path
 }
 
+fn task_completion_lineage_fingerprint_for_fixture(
+    task_number: u32,
+    steps: &[(u32, u32, &str, &str, &str)],
+) -> String {
+    let mut payload = format!("plan={PLAN_REL}\nplan_revision=1\ntask={task_number}\n");
+    for (step_number, attempt_number, recorded_at, packet_fingerprint, checkpoint_sha) in steps {
+        payload.push_str(&format!(
+            "step={step_number}:attempt={attempt_number}:recorded_at={recorded_at}:packet={packet_fingerprint}:checkpoint={checkpoint_sha}\n"
+        ));
+    }
+    sha256_hex(payload.as_bytes())
+}
+
 fn setup_task_boundary_prior_task_fixture(
     repo: &Path,
     state: &Path,
@@ -2781,7 +2794,7 @@ fn setup_task_boundary_prior_task_fixture(
     run_rust_json(
         repo,
         state,
-        &["gate-review", "--plan", PLAN_REL],
+        &["gate-review-dispatch", "--plan", PLAN_REL],
         "record task-boundary review dispatch lineage for fixture setup",
     );
     let status_after_review_dispatch = run_rust_json(
@@ -2829,12 +2842,22 @@ fn setup_rebuild_task_boundary_receipt_recovery_fixture(
 ) -> PathBuf {
     let (execution_run_id, execution_fingerprint, task1_step1_receipt, _task1_step2_receipt) =
         setup_task_boundary_prior_task_fixture(repo, state);
+    let status_after_task_boundary_setup = run_rust_json(
+        repo,
+        state,
+        &["status", "--plan", PLAN_REL],
+        "status after task-boundary fixture setup for rebuild receipt recovery",
+    );
+    let strategy_checkpoint_fingerprint = status_after_task_boundary_setup
+        ["last_strategy_checkpoint_fingerprint"]
+        .as_str()
+        .expect("task-boundary rebuild receipt recovery fixture should expose a strategy checkpoint fingerprint");
     write_minimal_task_verification_receipt_for_task(
         repo,
         state,
         &execution_run_id,
         1,
-        FIXTURE_STRATEGY_CHECKPOINT_FINGERPRINT,
+        strategy_checkpoint_fingerprint,
         "printf task1",
         "task1 verification passed",
     );
@@ -3015,6 +3038,24 @@ fn advance_repo_head(repo: &Path, file_name: &str, contents: &str, message: &str
     let mut git_commit = Command::new("git");
     git_commit.args(["commit", "-m", message]).current_dir(repo);
     run_checked(git_commit, "git commit advance head");
+}
+
+fn advance_repo_head_empty_commit(repo: &Path, message: &str) {
+    let mut git_commit = Command::new("git");
+    git_commit
+        .args(["commit", "--allow-empty", "-m", message])
+        .current_dir(repo);
+    run_checked(git_commit, "git commit advance head empty");
+}
+
+fn commit_repo_changes(repo: &Path, message: &str) {
+    let mut git_add = Command::new("git");
+    git_add.args(["add", "-A"]).current_dir(repo);
+    run_checked(git_add, "git add repo changes");
+
+    let mut git_commit = Command::new("git");
+    git_commit.args(["commit", "-m", message]).current_dir(repo);
+    run_checked(git_commit, "git commit repo changes");
 }
 
 fn canonical_worktree_lease_fingerprint(lease: &Value) -> String {
@@ -3734,6 +3775,40 @@ fn canonical_gate_review_returns_blocking_result_for_newer_sibling_spec() {
 }
 
 #[test]
+fn canonical_gate_review_dispatch_returns_dispatch_specific_plan_not_ready_remediation() {
+    let (repo_dir, state_dir) = init_repo("plan-execution-gate-review-dispatch-stale-sibling-spec");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    write_approved_spec(repo);
+    write_single_step_plan(repo, "featureforge:executing-plans");
+    accept_execution_preflight(repo, state, PLAN_REL);
+    mark_all_plan_steps_checked(repo);
+    write_single_step_v2_completed_attempt(repo, &expected_packet_fingerprint(repo, 1, 1));
+    write_newer_approved_spec_same_revision_different_path(repo);
+
+    let gate_review_dispatch = run_rust_json(
+        repo,
+        state,
+        &["gate-review-dispatch", "--plan", PLAN_REL],
+        "gate review dispatch with newer sibling approved spec",
+    );
+
+    assert_eq!(gate_review_dispatch["allowed"], false);
+    assert_eq!(gate_review_dispatch["failure_class"], "PlanNotExecutionReady");
+    assert_eq!(gate_review_dispatch["reason_codes"][0], "plan_not_execution_ready");
+    assert!(
+        gate_review_dispatch["diagnostics"]
+            .as_array()
+            .is_some_and(|diagnostics| diagnostics.iter().any(|diagnostic| {
+                diagnostic["remediation"]
+                    .as_str()
+                    .is_some_and(|remediation| remediation.contains("gate-review-dispatch"))
+            })),
+        "gate-review-dispatch should surface dispatch-specific remediation text when the approved plan/spec pair is stale: {gate_review_dispatch}"
+    );
+}
+
+#[test]
 fn gate_review_does_not_report_missing_bootstrap_truth_after_preflight_acceptance() {
     let (repo_dir, state_dir) = init_repo("plan-execution-gate-review-preflight-bootstrap-truth");
     let repo = repo_dir.path();
@@ -4321,7 +4396,7 @@ fn task_boundary_status_reports_prior_task_review_not_green_before_task2() {
     run_rust_json(
         repo,
         state,
-        &["gate-review", "--plan", PLAN_REL],
+        &["gate-review-dispatch", "--plan", PLAN_REL],
         "record task-boundary review dispatch before review-not-green status test",
     );
 
@@ -4481,7 +4556,7 @@ fn task_boundary_begin_reports_prior_task_verification_missing_after_review_clos
     run_rust_json(
         repo,
         state,
-        &["gate-review", "--plan", PLAN_REL],
+        &["gate-review-dispatch", "--plan", PLAN_REL],
         "record task-boundary review dispatch before verification-missing begin test",
     );
 
@@ -4850,7 +4925,7 @@ fn begin_blocks_cross_task_when_legacy_run_is_missing_task_verification_receipt(
     run_rust_json(
         repo,
         state,
-        &["gate-review", "--plan", PLAN_REL],
+        &["gate-review-dispatch", "--plan", PLAN_REL],
         "record task-boundary review dispatch before legacy verification-missing begin test",
     );
 
@@ -5116,7 +5191,7 @@ fn task_boundary_status_reports_prior_task_verification_missing_after_review_clo
     run_rust_json(
         repo,
         state,
-        &["gate-review", "--plan", PLAN_REL],
+        &["gate-review-dispatch", "--plan", PLAN_REL],
         "record task-boundary review dispatch before verification-missing status test",
     );
 
@@ -11500,6 +11575,37 @@ fn gate_finish_rejects_dirty_tracked_worktree_after_artifact_generation() {
 }
 
 #[test]
+fn gate_finish_ignores_tracked_execution_evidence_writeback_after_artifact_generation() {
+    let (repo_dir, state_dir) = init_repo("plan-execution-gate-finish-ignores-evidence-writeback");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    let base_branch = branch_name(repo);
+    let (_test_plan_path, _qa_path, _review_path, _release_path) =
+        prepare_finished_single_step_finish_gate_fixture(repo, state, "no", false, &base_branch);
+
+    let evidence_path = repo.join(evidence_rel_path());
+    let mut git_add = Command::new("git");
+    git_add
+        .args(["add", evidence_rel_path().as_str()])
+        .current_dir(repo);
+    run_checked(git_add, "git add tracked execution evidence for finish gate test");
+    let existing_evidence = fs::read_to_string(&evidence_path)
+        .expect("fixture evidence should be readable before tracked writeback test");
+    write_file(&evidence_path, &format!("{existing_evidence}\n"));
+
+    let gate_finish = run_rust_json(
+        repo,
+        state,
+        &["gate-finish", "--plan", PLAN_REL],
+        "gate finish should ignore tracked execution evidence writeback after artifacts",
+    );
+
+    assert_eq!(gate_finish["allowed"], true, "json: {gate_finish}");
+    assert_eq!(gate_finish["failure_class"], "", "json: {gate_finish}");
+    assert_eq!(gate_finish["reason_codes"], Value::Array(Vec::new()), "json: {gate_finish}");
+}
+
+#[test]
 fn status_and_gate_review_fail_closed_on_legacy_evidence_format() {
     let (repo_dir, state_dir) = init_repo("plan-execution-legacy-evidence-format");
     let repo = repo_dir.path();
@@ -12607,6 +12713,80 @@ fn gate_review_dispatch_backfills_initial_dispatch_before_review_remediation() {
         .expect("last checkpoint kind should be present");
     assert_eq!(first, "initial_dispatch");
     assert_eq!(second, "review_remediation");
+}
+
+#[test]
+fn gate_review_dispatch_bootstraps_missing_authoritative_state_before_recording() {
+    let (repo_dir, state_dir) =
+        init_repo("plan-execution-gate-review-dispatch-missing-state-bootstrap");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    write_approved_spec(repo);
+    write_single_step_plan(repo, "featureforge:executing-plans");
+    accept_execution_preflight(repo, state, PLAN_REL);
+    fs::remove_file(harness_state_file_path(repo, state))
+        .expect("fixture should be able to remove authoritative harness state");
+
+    let status_before_begin = run_rust_json(
+        repo,
+        state,
+        &["status", "--plan", PLAN_REL],
+        "status before begin for missing-state gate-review-dispatch bootstrap test",
+    );
+    run_rust_json(
+        repo,
+        state,
+        &[
+            "begin",
+            "--plan",
+            PLAN_REL,
+            "--task",
+            "1",
+            "--step",
+            "1",
+            "--execution-mode",
+            "featureforge:executing-plans",
+            "--expect-execution-fingerprint",
+            status_before_begin["execution_fingerprint"]
+                .as_str()
+                .expect("status should include execution fingerprint before begin"),
+        ],
+        "begin active work before missing-state gate-review-dispatch bootstrap",
+    );
+
+    let gate_review_dispatch = run_rust_json(
+        repo,
+        state,
+        &["gate-review-dispatch", "--plan", PLAN_REL],
+        "gate-review-dispatch should bootstrap missing authoritative state before recording",
+    );
+    let harness_state: Value = serde_json::from_str(
+        &fs::read_to_string(harness_state_file_path(repo, state))
+            .expect("gate-review-dispatch should recreate authoritative harness state"),
+    )
+    .expect("recreated authoritative harness state should remain valid json");
+    let checkpoints = harness_state["strategy_checkpoints"]
+        .as_array()
+        .expect("strategy checkpoints should be a json array after bootstrap");
+
+    assert!(
+        checkpoints.len() >= 2,
+        "gate-review-dispatch should record initial_dispatch and review_remediation after bootstrapping missing state: {harness_state}"
+    );
+    assert_eq!(
+        checkpoints[checkpoints.len() - 2]["checkpoint_kind"],
+        Value::from("initial_dispatch"),
+        "harness_state: {harness_state}"
+    );
+    assert_eq!(
+        checkpoints[checkpoints.len() - 1]["checkpoint_kind"],
+        Value::from("review_remediation"),
+        "harness_state: {harness_state}"
+    );
+    assert!(
+        gate_review_dispatch["failure_class"].as_str().is_some(),
+        "gate-review-dispatch should still return a gate payload after bootstrapping: {gate_review_dispatch}"
+    );
 }
 
 #[test]
@@ -15279,6 +15459,58 @@ fn rebuild_evidence_manual_required_default() {
 }
 
 #[test]
+fn rebuild_evidence_manual_required_keeps_downstream_truth_stale_until_repaired() {
+    let (repo_dir, state_dir) =
+        init_repo("plan-execution-rebuild-evidence-manual-keeps-late-gates-stale");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    let base_branch = branch_name(repo);
+    let (_test_plan_path, _qa_path, _review_path, _release_path) =
+        prepare_finished_single_step_finish_gate_fixture(repo, state, "no", false, &base_branch);
+    write_file(&repo.join("docs/example-output.md"), "drifted output after review\n");
+
+    let output = run_rust(
+        repo,
+        state,
+        &["rebuild-evidence", "--plan", PLAN_REL, "--json"],
+        "rebuild-evidence manual-required run should not re-fresh downstream late-gate truth",
+    );
+    let json: Value = serde_json::from_slice(&output.stdout)
+        .expect("manual-required late-gate rebuild output should be json");
+
+    assert_eq!(output.status.code(), Some(0), "json: {json}");
+    assert_eq!(json["counts"]["manual"], Value::from(1), "json: {json}");
+    assert_eq!(json["targets"][0]["status"], Value::from("manual_required"), "json: {json}");
+
+    let status_after = run_rust_json(
+        repo,
+        state,
+        &["status", "--plan", PLAN_REL],
+        "status after manual-required rebuild should keep downstream truth stale",
+    );
+    assert_eq!(status_after["resume_task"], Value::from(1), "json: {status_after}");
+    assert_eq!(status_after["resume_step"], Value::from(1), "json: {status_after}");
+    assert_eq!(status_after["final_review_state"], Value::from("stale"), "json: {status_after}");
+    assert_eq!(status_after["release_docs_state"], Value::from("stale"), "json: {status_after}");
+
+    let gate_review_after = run_rust_json(
+        repo,
+        state,
+        &["gate-review", "--plan", PLAN_REL],
+        "gate-review after manual-required rebuild should still require downstream reruns",
+    );
+    assert_eq!(gate_review_after["allowed"], Value::Bool(false), "json: {gate_review_after}");
+    for expected in ["final_review_state_stale", "release_docs_state_stale"] {
+        assert!(
+            gate_review_after["reason_codes"].as_array().is_some_and(|codes| {
+                codes.iter().any(|code| code.as_str() == Some(expected))
+            }),
+            "gate-review should keep {expected} after a manual-required rebuild, got {gate_review_after}"
+        );
+    }
+}
+
+#[test]
 fn rebuild_evidence_manual_required_rerun_resumes_open_step() {
     let (repo_dir, state_dir) = init_repo("plan-execution-rebuild-evidence-manual-rerun");
     let repo = repo_dir.path();
@@ -16103,6 +16335,332 @@ fn rebuild_evidence_partial_failure_resume() {
 }
 
 #[test]
+fn rebuild_evidence_continue_on_error_clears_failed_earlier_interrupted_target() {
+    let (repo_dir, state_dir) = init_repo(
+        "plan-execution-rebuild-evidence-continue-on-error-clears-earlier-interrupted",
+    );
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    write_approved_spec(repo);
+    write_two_step_dual_output_plan(repo, "featureforge:executing-plans");
+    mark_all_plan_steps_checked(repo);
+    write_two_step_dual_output_evidence(
+        repo,
+        "exit 7",
+        "`exit 7` -> failed in fixture setup.",
+        "printf sibling",
+        "`printf sibling` -> passed in fixture setup.",
+    );
+    write_file(&repo.join("docs/example-output.md"), "drifted primary output\n");
+    write_file(&repo.join("docs/secondary-output.md"), "drifted secondary output\n");
+    accept_execution_preflight(repo, state, PLAN_REL);
+
+    let output = run_rust(
+        repo,
+        state,
+        &[
+            "rebuild-evidence",
+            "--plan",
+            PLAN_REL,
+            "--task",
+            "1",
+            "--continue-on-error",
+            "--json",
+        ],
+        "continue-on-error rebuild should clear a failed earlier interrupted target before a later replay",
+    );
+    let json: Value = serde_json::from_slice(&output.stdout)
+        .expect("continue-on-error interrupted-target rebuild output should be json");
+
+    assert_eq!(output.status.code(), Some(2), "json: {json}");
+    assert_eq!(json["counts"]["planned"], Value::from(2), "json: {json}");
+    assert_eq!(json["counts"]["rebuilt"], Value::from(1), "json: {json}");
+    assert_eq!(json["counts"]["failed"], Value::from(1), "json: {json}");
+    assert_eq!(json["targets"][0]["step_id"], Value::from(1), "json: {json}");
+    assert_eq!(json["targets"][0]["failure_class"], Value::from("verify_command_failed"), "json: {json}");
+    assert_eq!(json["targets"][1]["step_id"], Value::from(2), "json: {json}");
+    assert_eq!(json["targets"][1]["status"], Value::from("rebuilt"), "json: {json}");
+
+    let status_after = run_rust_json(
+        repo,
+        state,
+        &["status", "--plan", PLAN_REL],
+        "status after continue-on-error clears failed earlier interrupted target",
+    );
+    assert!(status_after["resume_task"].is_null(), "json: {status_after}");
+    assert!(status_after["resume_step"].is_null(), "json: {status_after}");
+}
+
+#[test]
+fn rebuild_evidence_restores_post_execution_state_when_prior_task_review_dispatch_missing() {
+    let (repo_dir, state_dir) =
+        init_repo("plan-execution-rebuild-evidence-missing-prior-task-review-dispatch");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+
+    write_approved_spec(repo);
+    write_file(
+        &repo.join(PLAN_REL),
+        &format!(
+            r#"# Example Execution Plan
+
+**Workflow State:** Engineering Approved
+**Plan Revision:** 1
+**Execution Mode:** featureforge:executing-plans
+**Source Spec:** `{SPEC_REL}`
+**Source Spec Revision:** 1
+**Last Reviewed By:** plan-eng-review
+
+## Requirement Coverage Matrix
+
+- REQ-001 -> Task 1
+- REQ-002 -> Task 2
+- VERIFY-001 -> Task 1, Task 2
+
+## Task 1: Parser slice
+
+**Spec Coverage:** REQ-001, VERIFY-001
+**Task Outcome:** Task 1 rebuild should publish the dispatch proof needed for the next task boundary.
+**Plan Constraints:**
+- Keep the parser slice on its own repo-visible file.
+**Open Questions:** none
+
+**Files:**
+- Modify: `docs/parser-output.md`
+- Test: `tests/plan_execution.rs`
+
+- [x] **Step 1: Rebuild the parser output**
+
+## Task 2: Formatter slice
+
+**Spec Coverage:** REQ-002, VERIFY-001
+**Task Outcome:** Task 2 rebuild should resume cleanly once Task 1 is reclosed.
+**Plan Constraints:**
+- Keep the formatter slice on its own repo-visible file.
+**Open Questions:** none
+
+**Files:**
+- Modify: `docs/formatter-output.md`
+- Test: `tests/plan_execution.rs`
+
+- [x] **Step 1: Rebuild the formatter output**
+"#
+        ),
+    );
+    write_file(&repo.join("docs/parser-output.md"), "parser output v1\n");
+    write_file(&repo.join("docs/formatter-output.md"), "formatter output v1\n");
+
+    let plan_fingerprint = sha256_hex(
+        &fs::read(repo.join(PLAN_REL)).expect("plan should be readable for evidence"),
+    );
+    let spec_fingerprint = sha256_hex(
+        &fs::read(repo.join(SPEC_REL)).expect("spec should be readable for evidence"),
+    );
+    let parser_digest = sha256_hex(
+        &fs::read(repo.join("docs/parser-output.md"))
+            .expect("parser output should be readable for evidence"),
+    );
+    let formatter_digest = sha256_hex(
+        &fs::read(repo.join("docs/formatter-output.md"))
+            .expect("formatter output should be readable for evidence"),
+    );
+    let head_sha = current_head_sha(repo);
+    write_file(
+        &repo.join(evidence_rel_path()),
+        &format!(
+            "# Execution Evidence: 2026-03-17-example-execution-plan\n\n**Plan Path:** {PLAN_REL}\n**Plan Revision:** 1\n**Plan Fingerprint:** {plan_fingerprint}\n**Source Spec Path:** {SPEC_REL}\n**Source Spec Revision:** 1\n**Source Spec Fingerprint:** {spec_fingerprint}\n\n## Step Evidence\n\n### Task 1 Step 1\n#### Attempt 1\n**Status:** Completed\n**Recorded At:** 2026-03-17T14:22:31Z\n**Execution Source:** featureforge:executing-plans\n**Task Number:** 1\n**Step Number:** 1\n**Packet Fingerprint:** {}\n**Head SHA:** {head_sha}\n**Base SHA:** {head_sha}\n**Claim:** Completed parser replay fixture.\n**Files Proven:**\n- docs/parser-output.md | sha256:{parser_digest}\n**Verify Command:** printf parser\n**Verification Summary:** `printf parser` -> passed in fixture setup.\n**Invalidation Reason:** N/A\n\n### Task 2 Step 1\n#### Attempt 1\n**Status:** Completed\n**Recorded At:** 2026-03-17T14:22:32Z\n**Execution Source:** featureforge:executing-plans\n**Task Number:** 2\n**Step Number:** 1\n**Packet Fingerprint:** {}\n**Head SHA:** {head_sha}\n**Base SHA:** {head_sha}\n**Claim:** Completed formatter replay fixture.\n**Files Proven:**\n- docs/formatter-output.md | sha256:{formatter_digest}\n**Verify Command:** printf formatter\n**Verification Summary:** `printf formatter` -> passed in fixture setup.\n**Invalidation Reason:** N/A\n",
+            expected_packet_fingerprint(repo, 1, 1),
+            expected_packet_fingerprint(repo, 2, 1),
+        ),
+    );
+
+    accept_execution_preflight(repo, state, PLAN_REL);
+    let status_after_preflight = run_rust_json(
+        repo,
+        state,
+        &["status", "--plan", PLAN_REL],
+        "status after preflight for missing-dispatch rebuild fixture",
+    );
+    let execution_run_id = status_after_preflight["execution_run_id"]
+        .as_str()
+        .expect("status should expose execution run id after preflight");
+    write_harness_state_payload(
+        repo,
+        state,
+        &json!({
+            "last_strategy_checkpoint_fingerprint": FIXTURE_STRATEGY_CHECKPOINT_FINGERPRINT,
+            "strategy_state": "ready",
+            "strategy_checkpoint_kind": "review_remediation"
+        }),
+    );
+    write_minimal_unit_review_receipt_for_step(repo, state, execution_run_id, 1, 1, &head_sha);
+    write_minimal_task_verification_receipt_for_task(
+        repo,
+        state,
+        execution_run_id,
+        1,
+        FIXTURE_STRATEGY_CHECKPOINT_FINGERPRINT,
+        "printf parser",
+        "parser verification passed",
+    );
+
+    replace_in_file(
+        &repo.join(PLAN_REL),
+        "**Open Questions:** none\n",
+        "**Open Questions:** none\n<!-- packet drift without dispatch -->\n",
+    );
+
+    let output = run_rust(
+        repo,
+        state,
+        &["rebuild-evidence", "--plan", PLAN_REL, "--continue-on-error", "--json"],
+        "rebuild-evidence should restore a clean post-execution state when task-boundary dispatch proof is missing",
+    );
+    let json: Value = serde_json::from_slice(&output.stdout)
+        .expect("missing-dispatch rebuild output should be json");
+
+    assert_eq!(output.status.code(), Some(0), "json: {json}");
+    assert_eq!(json["counts"]["planned"], Value::from(2), "json: {json}");
+    assert_eq!(json["counts"]["rebuilt"], Value::from(2), "json: {json}");
+    assert_eq!(json["counts"]["failed"], Value::from(0), "json: {json}");
+    assert!(
+        json["targets"]
+            .as_array()
+            .is_some_and(|targets| targets.iter().all(|target| target["status"] == "rebuilt")),
+        "json: {json}"
+    );
+
+    let status_after = run_rust_json(
+        repo,
+        state,
+        &["status", "--plan", PLAN_REL],
+        "status after missing-dispatch rebuild replay",
+    );
+    assert!(status_after["active_task"].is_null(), "json: {status_after}");
+    assert!(status_after["active_step"].is_null(), "json: {status_after}");
+    assert!(status_after["blocking_task"].is_null(), "json: {status_after}");
+    assert!(status_after["blocking_step"].is_null(), "json: {status_after}");
+    assert!(status_after["resume_task"].is_null(), "json: {status_after}");
+    assert!(status_after["resume_step"].is_null(), "json: {status_after}");
+
+    let harness_state: Value = serde_json::from_str(
+        &fs::read_to_string(harness_state_file_path(repo, state))
+            .expect("harness state should be readable after missing-dispatch rebuild replay"),
+    )
+    .expect("harness state should remain valid json after missing-dispatch rebuild replay");
+    assert!(
+        harness_state["strategy_review_dispatch_lineage"]["task-1"]
+            .as_object()
+            .is_some(),
+        "harness_state: {harness_state}"
+    );
+
+    let gate_review = run_rust_json(
+        repo,
+        state,
+        &["gate-review", "--plan", PLAN_REL],
+        "gate-review after missing-dispatch rebuild replay",
+    );
+    let reason_codes = gate_review["reason_codes"]
+        .as_array()
+        .expect("gate-review should expose reason codes after missing-dispatch rebuild replay");
+    for forbidden in [
+        "prior_task_review_dispatch_missing",
+        "prior_task_review_dispatch_stale",
+        "unfinished_steps_remaining",
+        "interrupted_work_unresolved",
+        "packet_fingerprint_mismatch",
+        "files_proven_drifted",
+    ] {
+        assert!(
+            !reason_codes
+                .iter()
+                .any(|code| code.as_str() == Some(forbidden)),
+            "gate-review should be back in a post-execution state without {forbidden}, got {gate_review}"
+        );
+    }
+}
+
+#[test]
+fn rebuild_evidence_restores_authoritative_late_gate_truth_after_successful_rebuild() {
+    let (repo_dir, state_dir) =
+        init_repo("plan-execution-rebuild-evidence-restores-late-gate-truth");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    let base_branch = branch_name(repo);
+
+    let (_test_plan_path, qa_path, _review_path, _release_path) =
+        prepare_finished_single_step_finish_gate_fixture(repo, state, "yes", true, &base_branch);
+    assert!(qa_path.is_some(), "fixture should include QA artifacts");
+    replace_manual_verification_with_command(
+        repo,
+        "printf rebuilt",
+        "`printf rebuilt` -> passed in fixture setup.",
+    );
+
+    let gate_review_before = run_rust_json(
+        repo,
+        state,
+        &["gate-review", "--plan", PLAN_REL],
+        "gate-review before rebuild should see fresh authoritative downstream truth",
+    );
+    assert_eq!(gate_review_before["allowed"], Value::Bool(true), "json: {gate_review_before}");
+
+    write_file(&repo.join("docs/example-output.md"), "drifted output after review\n");
+
+    let output = run_rust(
+        repo,
+        state,
+        &["rebuild-evidence", "--plan", PLAN_REL, "--json"],
+        "rebuild-evidence should restore authoritative downstream truth after reopening a finished step",
+    );
+    let json: Value = serde_json::from_slice(&output.stdout)
+        .expect("late-gate rebuild output should be json");
+
+    assert_eq!(output.status.code(), Some(0), "json: {json}");
+    assert_eq!(json["counts"]["planned"], Value::from(1), "json: {json}");
+    assert_eq!(json["counts"]["rebuilt"], Value::from(1), "json: {json}");
+    assert_eq!(json["counts"]["failed"], Value::from(0), "json: {json}");
+    assert_eq!(json["targets"][0]["status"], Value::from("rebuilt"), "json: {json}");
+
+    let status_after = run_rust_json(
+        repo,
+        state,
+        &["status", "--plan", PLAN_REL],
+        "status after rebuild should republish authoritative downstream truth",
+    );
+    assert_eq!(status_after["final_review_state"], Value::from("fresh"), "json: {status_after}");
+    assert_eq!(status_after["browser_qa_state"], Value::from("fresh"), "json: {status_after}");
+    assert_eq!(status_after["release_docs_state"], Value::from("fresh"), "json: {status_after}");
+    assert!(
+        status_after["last_final_review_artifact_fingerprint"]
+            .as_str()
+            .is_some_and(|value| !value.is_empty()),
+        "json: {status_after}"
+    );
+    assert!(
+        status_after["last_browser_qa_artifact_fingerprint"]
+            .as_str()
+            .is_some_and(|value| !value.is_empty()),
+        "json: {status_after}"
+    );
+    assert!(
+        status_after["last_release_docs_artifact_fingerprint"]
+            .as_str()
+            .is_some_and(|value| !value.is_empty()),
+        "json: {status_after}"
+    );
+
+    let gate_review_after = run_rust_json(
+        repo,
+        state,
+        &["gate-review", "--plan", PLAN_REL],
+        "gate-review after rebuild should stay fresh once authoritative downstream truth is rebound",
+    );
+    assert_eq!(gate_review_after["allowed"], Value::Bool(true), "json: {gate_review_after}");
+}
+
+#[test]
 fn rebuild_evidence_refreshes_prior_task_closure_receipts_across_tasks() {
     let (repo_dir, state_dir) = init_repo("plan-execution-rebuild-evidence-task-boundary-receipts");
     let repo = repo_dir.path();
@@ -16194,13 +16752,32 @@ fn rebuild_evidence_refreshes_prior_task_closure_receipts_across_tasks() {
     let execution_run_id = status_after_preflight["execution_run_id"]
         .as_str()
         .expect("status should expose execution run id after preflight");
+    let task1_completion_lineage_fingerprint = task_completion_lineage_fingerprint_for_fixture(
+        1,
+        &[(
+            1,
+            1,
+            "2026-03-17T14:22:31Z",
+            &expected_packet_fingerprint(repo, 1, 1),
+            &head_sha,
+        )],
+    );
     write_harness_state_payload(
         repo,
         state,
         &json!({
             "last_strategy_checkpoint_fingerprint": FIXTURE_STRATEGY_CHECKPOINT_FINGERPRINT,
             "strategy_state": "ready",
-            "strategy_checkpoint_kind": "review_remediation"
+            "strategy_checkpoint_kind": "review_remediation",
+            "strategy_review_dispatch_lineage": {
+                "task-1": {
+                    "execution_run_id": execution_run_id,
+                    "source_task": 1,
+                    "source_step": 1,
+                    "strategy_checkpoint_fingerprint": FIXTURE_STRATEGY_CHECKPOINT_FINGERPRINT,
+                    "task_completion_lineage_fingerprint": task1_completion_lineage_fingerprint
+                }
+            }
         }),
     );
     write_minimal_unit_review_receipt_for_step(repo, state, execution_run_id, 1, 1, &head_sha);
@@ -16243,7 +16820,7 @@ fn rebuild_evidence_refreshes_prior_task_closure_receipts_across_tasks() {
     assert!(
         json["targets"]
             .as_array()
-            .is_some_and(|targets| targets.iter().all(|target| target["status"] == Value::from("rebuilt"))),
+            .is_some_and(|targets| targets.iter().all(|target| target["status"] == "rebuilt")),
         "json: {json}\nreceipt:\n{task1_verification_receipt}"
     );
     assert!(
@@ -16345,13 +16922,32 @@ fn rebuild_evidence_refreshes_preflight_acceptance_before_task_boundary_receipt_
         .as_str()
         .expect("status should expose execution run id after preflight")
         .to_owned();
+    let task1_completion_lineage_fingerprint = task_completion_lineage_fingerprint_for_fixture(
+        1,
+        &[(
+            1,
+            1,
+            "2026-03-17T14:22:31Z",
+            &expected_packet_fingerprint(repo, 1, 1),
+            &head_sha,
+        )],
+    );
     write_harness_state_payload(
         repo,
         state,
         &json!({
             "last_strategy_checkpoint_fingerprint": FIXTURE_STRATEGY_CHECKPOINT_FINGERPRINT,
             "strategy_state": "ready",
-            "strategy_checkpoint_kind": "review_remediation"
+            "strategy_checkpoint_kind": "review_remediation",
+            "strategy_review_dispatch_lineage": {
+                "task-1": {
+                    "execution_run_id": original_execution_run_id,
+                    "source_task": 1,
+                    "source_step": 1,
+                    "strategy_checkpoint_fingerprint": FIXTURE_STRATEGY_CHECKPOINT_FINGERPRINT,
+                    "task_completion_lineage_fingerprint": task1_completion_lineage_fingerprint
+                }
+            }
         }),
     );
     write_minimal_unit_review_receipt_for_step(repo, state, &original_execution_run_id, 1, 1, &head_sha);
@@ -16540,13 +17136,32 @@ fn rebuild_evidence_clears_later_interrupted_step_before_reopening_earlier_targe
         .as_str()
         .expect("status should expose execution run id after preflight")
         .to_owned();
+    let task1_completion_lineage_fingerprint = task_completion_lineage_fingerprint_for_fixture(
+        1,
+        &[(
+            1,
+            1,
+            "2026-03-17T14:22:31Z",
+            &expected_packet_fingerprint(repo, 1, 1),
+            &head_sha,
+        )],
+    );
     write_harness_state_payload(
         repo,
         state,
         &json!({
             "last_strategy_checkpoint_fingerprint": FIXTURE_STRATEGY_CHECKPOINT_FINGERPRINT,
             "strategy_state": "ready",
-            "strategy_checkpoint_kind": "review_remediation"
+            "strategy_checkpoint_kind": "review_remediation",
+            "strategy_review_dispatch_lineage": {
+                "task-1": {
+                    "execution_run_id": execution_run_id,
+                    "source_task": 1,
+                    "source_step": 1,
+                    "strategy_checkpoint_fingerprint": FIXTURE_STRATEGY_CHECKPOINT_FINGERPRINT,
+                    "task_completion_lineage_fingerprint": task1_completion_lineage_fingerprint
+                }
+            }
         }),
     );
     write_minimal_unit_review_receipt_for_step(repo, state, &execution_run_id, 1, 1, &head_sha);
@@ -17152,6 +17767,281 @@ fn rebuild_evidence_noop_refreshes_receipt_only_strategy_checkpoint_drift() {
                 .all(|code| code.as_str() != Some("plain_unit_review_receipt_provenance_mismatch"))
         }),
         "rebuild-evidence noop refresh should repair receipt-only strategy drift, got {gate_after_rebuild}"
+    );
+}
+
+#[test]
+fn rebuild_evidence_noop_restores_authoritative_late_gate_truth() {
+    let (repo_dir, state_dir) = init_repo("plan-execution-rebuild-evidence-noop-late-gate-refresh");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    let base_branch = branch_name(repo);
+
+    let (_test_plan_path, qa_path, _review_path, _release_path) =
+        prepare_finished_single_step_finish_gate_fixture(repo, state, "yes", true, &base_branch);
+    assert!(qa_path.is_some(), "fixture should include QA artifacts");
+
+    write_harness_state_payload(
+        repo,
+        state,
+        &json!({
+            "final_review_state": "stale",
+            "browser_qa_state": "stale",
+            "release_docs_state": "stale",
+            "last_final_review_artifact_fingerprint": Value::Null,
+            "last_browser_qa_artifact_fingerprint": Value::Null,
+            "last_release_docs_artifact_fingerprint": Value::Null,
+        }),
+    );
+
+    let gate_before = run_rust_json(
+        repo,
+        state,
+        &["gate-review", "--plan", PLAN_REL],
+        "gate-review before noop late-gate refresh",
+    );
+    for expected in [
+        "final_review_state_stale",
+        "browser_qa_state_stale",
+        "release_docs_state_stale",
+    ] {
+        assert!(
+            gate_before["reason_codes"].as_array().is_some_and(|codes| {
+                codes.iter().any(|code| code.as_str() == Some(expected))
+            }),
+            "gate-review should expose {expected} before noop late-gate refresh, got {gate_before}"
+        );
+    }
+
+    let rebuild = run_rust_json(
+        repo,
+        state,
+        &["rebuild-evidence", "--plan", PLAN_REL, "--json"],
+        "rebuild-evidence noop should restore authoritative late-gate truth from valid branch artifacts",
+    );
+    assert_eq!(rebuild["counts"]["planned"], Value::from(0), "json: {rebuild}");
+    assert_eq!(rebuild["counts"]["noop"], Value::from(1), "json: {rebuild}");
+
+    let status_after = run_rust_json(
+        repo,
+        state,
+        &["status", "--plan", PLAN_REL],
+        "status after noop late-gate refresh",
+    );
+    assert_eq!(status_after["final_review_state"], Value::from("fresh"), "json: {status_after}");
+    assert_eq!(status_after["browser_qa_state"], Value::from("fresh"), "json: {status_after}");
+    assert_eq!(status_after["release_docs_state"], Value::from("fresh"), "json: {status_after}");
+
+    let gate_after = run_rust_json(
+        repo,
+        state,
+        &["gate-review", "--plan", PLAN_REL],
+        "gate-review after noop late-gate refresh",
+    );
+    assert_eq!(gate_after["allowed"], Value::Bool(true), "json: {gate_after}");
+}
+
+#[test]
+fn rebuild_evidence_noop_allows_intermediate_test_plan_only_state() {
+    let (repo_dir, state_dir) = init_repo("plan-execution-rebuild-evidence-noop-test-plan-only");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    write_approved_spec(repo);
+    write_single_step_plan(repo, "featureforge:executing-plans");
+    mark_all_plan_steps_checked(repo);
+    write_single_step_v2_completed_attempt(repo, &expected_packet_fingerprint(repo, 1, 1));
+    accept_execution_preflight(repo, state, PLAN_REL);
+    write_test_plan_artifact(repo, state, "no");
+
+    let rebuild = run_rust_json(
+        repo,
+        state,
+        &["rebuild-evidence", "--plan", PLAN_REL, "--json"],
+        "rebuild-evidence noop should not require late-gate artifacts before final review is in play",
+    );
+
+    assert_eq!(rebuild["counts"]["planned"], Value::from(0), "json: {rebuild}");
+    assert_eq!(rebuild["counts"]["noop"], Value::from(1), "json: {rebuild}");
+}
+
+#[test]
+fn rebuild_evidence_noop_refreshes_final_review_without_requiring_release_readiness() {
+    let (repo_dir, state_dir) =
+        init_repo("plan-execution-rebuild-evidence-noop-review-without-release");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    let base_branch = branch_name(repo);
+    write_approved_spec(repo);
+    write_single_step_plan(repo, "featureforge:executing-plans");
+    mark_all_plan_steps_checked(repo);
+    write_single_step_v2_completed_attempt(repo, &expected_packet_fingerprint(repo, 1, 1));
+    accept_execution_preflight(repo, state, PLAN_REL);
+    write_test_plan_artifact(repo, state, "no");
+    write_code_review_artifact(repo, state, &base_branch);
+    write_harness_state_payload(
+        repo,
+        state,
+        &json!({
+            "final_review_state": "stale",
+            "release_docs_state": "stale",
+            "last_final_review_artifact_fingerprint": Value::Null,
+            "last_release_docs_artifact_fingerprint": Value::Null,
+            "strategy_state": "ready",
+            "strategy_checkpoint_kind": "review_remediation",
+            "last_strategy_checkpoint_fingerprint": FIXTURE_STRATEGY_CHECKPOINT_FINGERPRINT,
+        }),
+    );
+
+    let rebuild = run_rust_json(
+        repo,
+        state,
+        &["rebuild-evidence", "--plan", PLAN_REL, "--json"],
+        "rebuild-evidence noop should refresh final review without requiring release-readiness artifacts",
+    );
+
+    assert_eq!(rebuild["counts"]["planned"], Value::from(0), "json: {rebuild}");
+    assert_eq!(rebuild["counts"]["noop"], Value::from(1), "json: {rebuild}");
+
+    let status_after = run_rust_json(
+        repo,
+        state,
+        &["status", "--plan", PLAN_REL],
+        "status after noop refresh with final review but no release-readiness artifact",
+    );
+    assert_eq!(status_after["final_review_state"], Value::from("fresh"), "json: {status_after}");
+    assert_eq!(status_after["release_docs_state"], Value::from("stale"), "json: {status_after}");
+    assert!(
+        status_after["last_final_review_artifact_fingerprint"]
+            .as_str()
+            .is_some_and(|value| !value.is_empty()),
+        "json: {status_after}"
+    );
+    assert!(status_after["last_release_docs_artifact_fingerprint"].is_null(), "json: {status_after}");
+}
+
+#[test]
+fn rebuild_evidence_noop_rebinds_late_gate_artifacts_after_rebase_only_head_drift() {
+    let (repo_dir, state_dir) =
+        init_repo("plan-execution-rebuild-evidence-noop-rebase-only-late-gate-repair");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    let base_branch = branch_name(repo);
+
+    let (_authoritative_test_plan_path, _qa_path, _authoritative_review_path, _authoritative_release_path) =
+        prepare_finished_single_step_finish_gate_fixture(repo, state, "no", false, &base_branch);
+    let safe_branch = normalize_identifier(&branch_name(repo));
+    let review_path = project_artifact_dir(repo, state)
+        .join(format!("tester-{safe_branch}-code-review-20260322-171100.md"));
+    let test_plan_path = project_artifact_dir(repo, state)
+        .join(format!("tester-{safe_branch}-test-plan-20260322-170500.md"));
+    let release_path = project_artifact_dir(repo, state)
+        .join(format!("tester-{safe_branch}-release-readiness-20260322-171500.md"));
+    let stale_head = current_head_sha(repo);
+    advance_repo_head_empty_commit(repo, "rebase-only head drift");
+    let current_head = current_head_sha(repo);
+    assert_ne!(stale_head, current_head, "fixture should advance HEAD without changing proven files");
+
+    let gate_finish_before = run_rust_json(
+        repo,
+        state,
+        &["gate-finish", "--plan", PLAN_REL],
+        "gate-finish before noop rebase-only late-gate repair",
+    );
+    assert_eq!(gate_finish_before["allowed"], Value::Bool(false), "json: {gate_finish_before}");
+
+    let rebuild = run_rust_json(
+        repo,
+        state,
+        &["rebuild-evidence", "--plan", PLAN_REL, "--json"],
+        "rebuild-evidence noop should rebind late-gate artifacts after rebase-only head drift",
+    );
+    assert_eq!(rebuild["counts"]["planned"], Value::from(0), "json: {rebuild}");
+    assert_eq!(rebuild["counts"]["noop"], Value::from(1), "json: {rebuild}");
+
+    let gate_finish_after = run_rust_json(
+        repo,
+        state,
+        &["gate-finish", "--plan", PLAN_REL],
+        "gate-finish after noop rebase-only late-gate repair",
+    );
+    assert_eq!(gate_finish_after["allowed"], Value::Bool(true), "json: {gate_finish_after}");
+
+    let review_source = fs::read_to_string(&review_path)
+        .expect("branch review artifact should be readable after late-gate repair");
+    assert!(review_source.contains(&format!("**Head SHA:** {current_head}")), "review:\n{review_source}");
+    let test_plan_source = fs::read_to_string(&test_plan_path)
+        .expect("branch test-plan artifact should be readable after late-gate repair");
+    assert!(
+        test_plan_source.contains(&format!("**Head SHA:** {current_head}")),
+        "test-plan:\n{test_plan_source}"
+    );
+    let release_source = fs::read_to_string(&release_path)
+        .expect("branch release artifact should be readable after late-gate repair");
+    assert!(
+        release_source.contains(&format!("**Head SHA:** {current_head}")),
+        "release:\n{release_source}"
+    );
+}
+
+#[test]
+fn rebuild_evidence_noop_rebinds_late_gate_artifacts_after_replayed_rebase_changes() {
+    let (repo_dir, state_dir) =
+        init_repo("plan-execution-rebuild-evidence-noop-replayed-rebase-change-repair");
+    let repo = repo_dir.path();
+    let state = state_dir.path();
+    let base_branch = branch_name(repo);
+
+    let (_authoritative_test_plan_path, _qa_path, _authoritative_review_path, _authoritative_release_path) =
+        prepare_finished_single_step_finish_gate_fixture(repo, state, "no", false, &base_branch);
+    let safe_branch = normalize_identifier(&branch_name(repo));
+    let review_path = project_artifact_dir(repo, state)
+        .join(format!("tester-{safe_branch}-code-review-20260322-171100.md"));
+    let release_path = project_artifact_dir(repo, state)
+        .join(format!("tester-{safe_branch}-release-readiness-20260322-171500.md"));
+
+    advance_repo_head(
+        repo,
+        "docs/example-output.md",
+        "rebased output after conflict resolution\n",
+        "rebase changed proven output",
+    );
+    write_single_step_v2_completed_attempt(repo, &expected_packet_fingerprint(repo, 1, 1));
+    commit_repo_changes(repo, "record replayed evidence after rebase change");
+
+    let current_head = current_head_sha(repo);
+    let gate_finish_before = run_rust_json(
+        repo,
+        state,
+        &["gate-finish", "--plan", PLAN_REL],
+        "gate-finish before noop late-gate repair after replayed rebase changes",
+    );
+    assert_eq!(gate_finish_before["allowed"], Value::Bool(false), "json: {gate_finish_before}");
+
+    let rebuild = run_rust_json(
+        repo,
+        state,
+        &["rebuild-evidence", "--plan", PLAN_REL, "--json"],
+        "rebuild-evidence noop should rebind late-gate artifacts after replayed rebase changes",
+    );
+    assert_eq!(rebuild["counts"]["planned"], Value::from(0), "json: {rebuild}");
+    assert_eq!(rebuild["counts"]["noop"], Value::from(1), "json: {rebuild}");
+
+    let gate_finish_after = run_rust_json(
+        repo,
+        state,
+        &["gate-finish", "--plan", PLAN_REL],
+        "gate-finish after noop late-gate repair following replayed rebase changes",
+    );
+    assert_eq!(gate_finish_after["allowed"], Value::Bool(true), "json: {gate_finish_after}");
+
+    let review_source = fs::read_to_string(&review_path)
+        .expect("branch review artifact should be readable after replayed rebase repair");
+    assert!(review_source.contains(&format!("**Head SHA:** {current_head}")), "review:\n{review_source}");
+    let release_source = fs::read_to_string(&release_path)
+        .expect("branch release artifact should be readable after replayed rebase repair");
+    assert!(
+        release_source.contains(&format!("**Head SHA:** {current_head}")),
+        "release:\n{release_source}"
     );
 }
 

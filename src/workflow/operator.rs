@@ -358,7 +358,7 @@ pub fn preflight(current_dir: &Path, args: &PlanArgs) -> Result<GateResult, Json
 
 pub fn gate_review(current_dir: &Path, args: &PlanArgs) -> Result<GateResult, JsonFailure> {
     let runtime = ExecutionRuntime::discover(current_dir)?;
-    runtime.gate_review_dispatch(&execution_status_args(args))
+    runtime.gate_review(&execution_status_args(args))
 }
 
 pub fn gate_finish(current_dir: &Path, args: &PlanArgs) -> Result<GateResult, JsonFailure> {
@@ -979,11 +979,11 @@ fn task_boundary_next_step_text(context: &OperatorContext) -> Option<String> {
     ) {
         if context.route.plan_path.is_empty() {
             return Some(format!(
-                "{reason} Run `featureforge plan execution gate-review --plan <approved-plan-path>` before any next-task begin."
+                "{reason} Run `featureforge plan execution gate-review-dispatch --plan <approved-plan-path>` before any next-task begin."
             ));
         }
         return Some(format!(
-            "{reason} Run `featureforge plan execution gate-review --plan {}` before any next-task begin.",
+            "{reason} Run `featureforge plan execution gate-review-dispatch --plan {}` before any next-task begin.",
             context.route.plan_path
         ));
     }

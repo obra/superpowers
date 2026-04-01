@@ -11,7 +11,8 @@ use crate::execution::gates::{
     ActiveContractState, GateAuthorityState, require_active_contract_state,
 };
 use crate::execution::state::{
-    ExecutionContext, ExecutionRuntime, GateState, NoteState, task_completion_lineage_fingerprint,
+    ExecutionContext, ExecutionRuntime, GateState, NoteState, latest_attempted_step_for_task,
+    task_completion_lineage_fingerprint,
 };
 use crate::git::sha256_hex;
 use crate::paths::{harness_branch_root, harness_state_path, write_atomic as write_atomic_file};
@@ -596,6 +597,125 @@ impl AuthoritativeTransitionState {
                 "task_completion_lineage_fingerprint": task_completion_lineage_fingerprint,
             }),
         );
+        self.dirty = true;
+        Ok(())
+    }
+
+    pub(crate) fn refresh_task_review_dispatch_lineage(
+        &mut self,
+        context: &ExecutionContext,
+        task: u32,
+    ) -> Result<(), JsonFailure> {
+        let lineage_key = format!("task-{task}");
+        let has_existing_lineage = self
+            .state_payload
+            .get("strategy_review_dispatch_lineage")
+            .and_then(Value::as_object)
+            .is_some_and(|lineage| lineage.contains_key(&lineage_key));
+        if !has_existing_lineage {
+            return Ok(());
+        }
+        self.ensure_task_review_dispatch_lineage(context, task)
+    }
+
+    pub(crate) fn ensure_task_review_dispatch_lineage(
+        &mut self,
+        context: &ExecutionContext,
+        task: u32,
+    ) -> Result<(), JsonFailure> {
+        let Some(strategy_checkpoint_fingerprint) = self.last_strategy_checkpoint_fingerprint() else {
+            return Ok(());
+        };
+        let Some(task_completion_lineage_fingerprint) =
+            task_completion_lineage_fingerprint(context, task)
+        else {
+            return Ok(());
+        };
+        let Some(source_step) = latest_attempted_step_for_task(context, task) else {
+            return Ok(());
+        };
+        let execution_run_id = self.current_execution_run_id();
+        self.upsert_task_dispatch_lineage(
+            task,
+            &execution_run_id,
+            source_step,
+            &strategy_checkpoint_fingerprint,
+            &task_completion_lineage_fingerprint,
+        )
+    }
+
+    pub(crate) fn restore_downstream_truth(
+        &mut self,
+        final_review_fingerprint: &str,
+        browser_qa_required: bool,
+        browser_qa_fingerprint: Option<&str>,
+        release_docs_fingerprint: Option<&str>,
+    ) -> Result<(), JsonFailure> {
+        let root = self.root_object_mut()?;
+        root.insert(
+            String::from("final_review_state"),
+            Value::String(String::from("fresh")),
+        );
+        root.insert(
+            String::from("last_final_review_artifact_fingerprint"),
+            Value::String(final_review_fingerprint.to_owned()),
+        );
+
+        match (browser_qa_required, browser_qa_fingerprint) {
+            (true, Some(fingerprint)) => {
+                root.insert(
+                    String::from("browser_qa_state"),
+                    Value::String(String::from("fresh")),
+                );
+                root.insert(
+                    String::from("last_browser_qa_artifact_fingerprint"),
+                    Value::String(fingerprint.to_owned()),
+                );
+            }
+            (true, None) => {
+                root.insert(
+                    String::from("browser_qa_state"),
+                    Value::String(String::from("stale")),
+                );
+                root.insert(
+                    String::from("last_browser_qa_artifact_fingerprint"),
+                    Value::Null,
+                );
+            }
+            (false, _) => {
+                root.insert(
+                    String::from("browser_qa_state"),
+                    Value::String(String::from("not_required")),
+                );
+                root.insert(
+                    String::from("last_browser_qa_artifact_fingerprint"),
+                    Value::Null,
+                );
+            }
+        }
+
+        match release_docs_fingerprint {
+            Some(fingerprint) => {
+                root.insert(
+                    String::from("release_docs_state"),
+                    Value::String(String::from("fresh")),
+                );
+                root.insert(
+                    String::from("last_release_docs_artifact_fingerprint"),
+                    Value::String(fingerprint.to_owned()),
+                );
+            }
+            None => {
+                root.insert(
+                    String::from("release_docs_state"),
+                    Value::String(String::from("stale")),
+                );
+                root.insert(
+                    String::from("last_release_docs_artifact_fingerprint"),
+                    Value::Null,
+                );
+            }
+        }
         self.dirty = true;
         Ok(())
     }

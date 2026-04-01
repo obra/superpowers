@@ -85,7 +85,7 @@ Execution starts from an engineering-approved plan and the exact approved plan p
 
 Task closure is enforced at task boundaries, not only at the end of the full plan:
 
-- after implementation steps complete, STOP and run `featureforge plan execution gate-review --plan <approved-plan-path>` to mint task-boundary review-dispatch proof
+- after implementation steps complete, STOP and run `featureforge plan execution gate-review-dispatch --plan <approved-plan-path>` to mint task-boundary review-dispatch proof
 - each task runs a fresh-context independent review loop until `gate-review` is green
 - public `plan execution gate-review` checks that loop without mutating runtime strategy state; workflow/operator dispatch records review-remediation checkpoints explicitly when needed
 - task-boundary remediation churn is capped with runtime-owned `cycle_break` handling on repeated loops
@@ -112,7 +112,7 @@ Completion then flows through:
 Execution strategy checkpoints are runtime-owned execution state, not planning-stage transitions.
 
 - `initial_dispatch` is required before repo-writing execution dispatch
-- `review_remediation` is recorded automatically for reviewable `gate-review` dispatches and remediation reopen events
+- `review_remediation` is recorded automatically for reviewable `gate-review-dispatch` calls and remediation reopen events
 - `cycle_break` is recorded automatically when the same task reaches three reviewable dispatch/remediation cycles
 
 The approved plan path/revision remains fixed during execution. Runtime strategy may adjust topology, lane/worktree allocation, and remediation order without sending the workflow back to planning stages.
