@@ -9,11 +9,11 @@
   "repository": "https://github.com/Treichs/pp-superpowers",
   "license": "MIT",
   "keywords": [
-    "skills",
-    "tdd",
-    "debugging",
-    "collaboration",
-    "best-practices",
-    "workflows"
+    "power-platform",
+    "power-apps",
+    "dataverse",
+    "solution-architecture",
+    "requirements",
+    "skills"
   ]
 }

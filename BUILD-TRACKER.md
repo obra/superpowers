@@ -1,6 +1,6 @@
 # BUILD-TRACKER.md — pp-superpowers Central Build Plan
 
-**Last updated:** April 2, 2026 (CREATE mode end-to-end test passed — all §1 and §2 items verified)  
+**Last updated:** April 2, 2026 (Fork cleanup pass §5 complete — all Superpowers artifacts removed)  
 **Purpose:** Single source of truth for build progress. Read this file at the start of every Claude Code session.
 
 ---
@@ -8,7 +8,7 @@
 ## Current Position
 
 **Phase 1 — Foundation**  
-**Active task:** Fork cleanup pass (§5)  
+**Active task:** Design and build solution-strategy (§6)  
 **Branch:** `main` (solution-discovery merged, feature branch deleted)
 
 ---
@@ -77,19 +77,29 @@ Before starting Phase 1b (solution-strategy), clean up the remaining Superpowers
 
 **Remaining items (from fork-modification-checklist.md):**
 
-- [ ] Remove `.cursor-plugin/` — not in scope (note: plugin.json already updated to pp-superpowers identity)
-- [ ] Remove `hooks-cursor.json` — not in scope
-- [ ] Remove `gemini-extension.json`, `GEMINI.md` — not in scope
-- [ ] Remove `package.json` — OpenCode npm support, not in scope
-- [ ] Remove `docs/README.opencode.md`, `docs/README.codex.md` — not in scope
-- [ ] Remove `RELEASE-NOTES.md` — Superpowers-specific
-- [ ] Remove `agents/code-reviewer.md` — replaced by domain-specific agents later
-- [ ] Remove remaining Superpowers skills: `writing-plans/`, `executing-plans/`, `subagent-driven-development/`, `test-driven-development/`, `systematic-debugging/`, `verification-before-completion/`, `requesting-code-review/`, `receiving-code-review/`, `dispatching-parallel-agents/`, `writing-skills/`
-- [ ] Remove `docs/testing.md`, `docs/plans/`, `docs/superpowers/`
-- [ ] Remove `tests/explicit-skill-requests/`, `tests/claude-code/`, `tests/brainstorm-server/`
-- [ ] Keep (evaluate later): `using-git-worktrees/`, `finishing-a-development-branch/` — revisit during alm-workflow
-- [ ] Update `.gitignore` — add `.pp-context/`, `.foundation/`, `.discovery-state.json`
-- [ ] Rewrite `README.md` — pp-superpowers identity, skill inventory, Power Platform context
+- [x] Remove `.cursor-plugin/` — not in scope (April 2)
+- [x] Remove `hooks-cursor.json` — not in scope (April 2)
+- [x] Remove `gemini-extension.json`, `GEMINI.md` — not in scope (April 2)
+- [x] Remove `package.json` — OpenCode npm support, not in scope (April 2)
+- [x] Remove `docs/README.opencode.md`, `docs/README.codex.md` — not in scope (April 2)
+- [x] Remove `RELEASE-NOTES.md` — Superpowers-specific (April 2)
+- [x] Remove `agents/code-reviewer.md` — replaced by domain-specific agents later (April 2)
+- [x] Remove remaining Superpowers skills: `writing-plans/`, `executing-plans/`, `subagent-driven-development/`, `test-driven-development/`, `systematic-debugging/`, `verification-before-completion/`, `requesting-code-review/`, `receiving-code-review/`, `dispatching-parallel-agents/`, `writing-skills/` (April 2)
+- [x] Remove `docs/testing.md`, `docs/plans/`, `docs/superpowers/` (April 2)
+- [x] Remove `tests/explicit-skill-requests/`, `tests/claude-code/`, `tests/brainstorm-server/` (April 2)
+- [x] Keep (evaluate later): `using-git-worktrees/`, `finishing-a-development-branch/` — revisit during alm-workflow (confirmed April 2)
+- [x] Update `.gitignore` — added `.discovery-state.json` (`.pp-context/`, `.foundation/` already present) (April 2)
+- [x] Rewrite `README.md` — pp-superpowers identity, minimal scope (April 2)
+
+**Additional items discovered and completed (April 2):**
+
+- [x] Remove `.codex/` — Codex platform support, not in scope per D2
+- [x] Remove `.opencode/` — OpenCode platform support, not in scope per D2
+- [x] Remove `CHANGELOG.md` — Superpowers-specific, same category as RELEASE-NOTES.md
+- [x] Remove `tests/skill-triggering/` — all prompts reference removed Superpowers skills
+- [x] Remove `tests/subagent-driven-dev/` — tests removed subagent-driven-development skill
+- [x] Remove `tests/opencode/` — tests for out-of-scope platform
+- [x] Update `.claude-plugin/plugin.json` keywords — replaced Superpowers terms (tdd, debugging, collaboration) with Power Platform terms
 
 Merge to main after cleanup is validated.
 
