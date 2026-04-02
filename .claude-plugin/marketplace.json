@@ -6,9 +6,9 @@
   },
   "plugins": [
     {
-      "name": "pp-superpowers",
-      "description": "Power Platform skills library: solution discovery, requirements gathering, and structured project foundations",
-      "version": "0.1.0",
+      "name": "superpowers",
+      "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
+      "version": "5.0.6",
       "source": "./",
       "author": {
         "name": "Chris Treichel"

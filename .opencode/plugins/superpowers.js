@@ -68,8 +68,6 @@ When skills reference tools you don't have, substitute OpenCode equivalents:
 - \`Skill\` tool → OpenCode's native \`skill\` tool
 - \`Read\`, \`Write\`, \`Edit\`, \`Bash\` → Your native tools
 
-**Skills location:**
-Superpowers skills are in \`${configDir}/skills/superpowers/\`
 Use OpenCode's native \`skill\` tool to list and load skills.`;
 
     return `<EXTREMELY_IMPORTANT>
@@ -96,12 +94,19 @@ ${toolMapping}
       }
     },
 
-    // Use system prompt transform to inject bootstrap (fixes #226 agent reset bug)
-    'experimental.chat.system.transform': async (_input, output) => {
+    // Inject bootstrap into the first user message of each session.
+    // Using a user message instead of a system message avoids:
+    //   1. Token bloat from system messages repeated every turn (#750)
+    //   2. Multiple system messages breaking Qwen and other models (#894)
+    'experimental.chat.messages.transform': async (_input, output) => {
       const bootstrap = getBootstrapContent();
-      if (bootstrap) {
-        (output.system ||= []).push(bootstrap);
-      }
+      if (!bootstrap || !output.messages.length) return;
+      const firstUser = output.messages.find(m => m.info.role === 'user');
+      if (!firstUser || !firstUser.parts.length) return;
+      // Only inject once
+      if (firstUser.parts.some(p => p.type === 'text' && p.text.includes('EXTREMELY_IMPORTANT'))) return;
+      const ref = firstUser.parts[0];
+      firstUser.parts.unshift({ ...ref, type: 'text', text: bootstrap });
     }
   };
 };
