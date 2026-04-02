@@ -152,8 +152,35 @@ Ready to implement <feature-name>
 | Directory not ignored | Add to .gitignore + commit |
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
+| Checking out a PR          | `gh pr view` + `git fetch` + `git worktree add` (never `gh pr checkout`) |
+
+## Checking Out a PR to a Worktree
+
+To review or work on an existing PR in an isolated worktree, **never use `gh pr checkout`** — it moves HEAD in the current worktree, which can disrupt in-progress work (detached HEAD, uncommitted rebase, etc.).
+
+Instead, fetch the branch by name without touching HEAD:
+
+```bash
+# Get the branch name without checking it out
+branch="$(gh pr view <number> --json headRefName --jq .headRefName)"
+
+# Fetch the branch from the remote
+git fetch origin "$branch"
+
+# Create a worktree tracking the remote branch
+git worktree add .worktrees/"$branch" origin/"$branch"
+```
+
+This creates the worktree directly from the remote ref — the current worktree's HEAD is never moved.
+
+**Directory selection and safety verification still apply** — follow the same priority order and `git check-ignore` checks as for any other worktree.
 
 ## Common Mistakes
+
+### Using `gh pr checkout` before creating a worktree
+
+- **Problem:** Moves HEAD in the current worktree, disrupting in-progress work (detached HEAD, uncommitted rebase, etc.)
+- **Fix:** Use `gh pr view --json headRefName` to get the branch name, then `git fetch` + `git worktree add` directly
 
 ### Skipping ignore verification
 
