@@ -1,13 +1,12 @@
 {
-  "name": "superpowers",
-  "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
-  "version": "5.0.6",
+  "name": "pp-superpowers",
+  "description": "Power Platform skills library for Claude Code: solution discovery, requirements gathering, and structured project foundations",
+  "version": "0.1.0",
   "author": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com"
+    "name": "Chris Treichel"
   },
-  "homepage": "https://github.com/obra/superpowers",
-  "repository": "https://github.com/obra/superpowers",
+  "homepage": "https://github.com/Treichs/pp-superpowers",
+  "repository": "https://github.com/Treichs/pp-superpowers",
   "license": "MIT",
   "keywords": [
     "skills",
