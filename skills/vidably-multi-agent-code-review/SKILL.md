@@ -56,9 +56,36 @@ shopify app build
 
 Do NOT proceed to model review if verification fails. Fix first.
 
+## Finding Categories
+
+Tag every finding with a category. This taxonomy grows over time — add new categories in the Post-CI Retrospective (Step 9) when findings don't fit existing ones.
+
+| Category           | What it covers                                                               | Source PR |
+| ------------------ | ---------------------------------------------------------------------------- | --------- |
+| `auth/security`    | Authorization bypass, injection, OWASP, auth error handling                  | baseline  |
+| `failure-modes`    | Retry exhaustion, stuck states, partial failures, missing onFailure handlers | #61       |
+| `data-integrity`   | Case sensitivity, uniqueness edge cases, nullability, type coercion          | #61       |
+| `api-correctness`  | External API query format, field names, pagination, SDK usage                | #61       |
+| `dev-compat`       | MSW mocks, env var assumptions, zero-secret contract compliance              | #61       |
+| `react-lifecycle`  | useEffect deps, stale closures, re-render storms, ref stability              | #61       |
+| `performance`      | N+1 queries, batch vs sequential, unnecessary computation                    | baseline  |
+| `type-safety`      | any casts, missing null checks, unsafe assertions                            | baseline  |
+| `plan-conformance` | Does the code match the spec/plan?                                           | baseline  |
+
+## Model Profiles
+
+Updated after each Post-CI Retrospective (Step 9). Use these to specialize prompts — emphasize each model's **blind spots**, not strengths.
+
+| Model   | Strengths                          | Blind Spots                   | Last Updated |
+| ------- | ---------------------------------- | ----------------------------- | ------------ |
+| Claude  | `auth/security`, `react-lifecycle` | `dev-compat`, `failure-modes` | PR #61       |
+| Codex   | `dev-compat`, `data-integrity`     | `auth/security`               | PR #61       |
+| Gemini  | TBD                                | TBD                           | —            |
+| Copilot | `failure-modes`, `data-integrity`  | TBD                           | PR #61       |
+
 ## Step 3: Dispatch to Available Models
 
-Construct the review prompt:
+Construct the **base review prompt**, then append model-specific emphasis from the blind spots column above:
 
 ```
 You are a senior engineer reviewing a code diff.
@@ -71,9 +98,16 @@ Review for:
 5. Missing error handling at system boundaries
 6. Plan conformance (if a plan exists — does the code match the spec?)
 
+ALSO specifically check for (learned from past reviews):
+- Failure modes: what happens when retries exhaust? Are there stuck states? Missing onFailure handlers? (PR #61)
+- Data invariants: case-sensitive uniqueness, nullability edge cases, type coercion across DB boundaries (PR #61)
+- API correctness: verify external API query field names and pagination against official docs, not assumptions (PR #61)
+- Dev-environment contract: does every new external API call have an MSW mock? Can this code run with zero secrets? (PR #61)
+
 For each finding:
 - File and line number
 - Severity: critical | important | minor
+- Category: [from the Finding Categories table]
 - What's wrong (specific, not vague)
 - Why it matters (concrete consequence)
 - Suggested fix (complete code, not "consider adding...")
@@ -82,6 +116,14 @@ Do NOT flag: style/formatting, missing comments, import ordering, test coverage 
 
 [DIFF or FILE CONTENT]
 ```
+
+**Per-model prompt specialization:** After the base prompt, append a section for each model emphasizing its blind spots:
+
+- **Claude:** "Pay EXTRA attention to: dev-environment compatibility (MSW mocks, env var fallbacks, zero-secret contract), and failure modes (what happens when retries exhaust, partial failures, stuck states)."
+- **Codex:** "Pay EXTRA attention to: authorization and security (brand-scoping, auth bypass, OWASP), and auth error handling (401 vs 500 responses)."
+- **Gemini:** [Use base prompt until profile is established]
+
+The goal: **each model compensates for the others' weaknesses**, not duplicate their strengths.
 
 Dispatch to all available models **in parallel**, independently:
 
@@ -218,6 +260,73 @@ Then STOP and wait for user approval on each convention/skill proposal. Apply ap
 
 After review is complete and verified, invoke `finishing-a-development-branch` to open the PR. The PR will then receive the GH Action review (Claude + Security + Codex) as a safety net, but most issues should already be caught by this local review.
 
+## Step 9: Post-CI Retrospective (Self-Improvement Loop)
+
+**Trigger:** After CI review comments appear on the PR. This step is MANDATORY — it's how the system learns. Do not skip it even if CI found nothing new.
+
+**This step runs automatically.** Do not wait for the user to ask "why did CI catch that?" — the whole point is that the system reflects without being prompted.
+
+### 9a: Collect CI Findings
+
+```bash
+# Pull all CI review comments
+gh api repos/Vidably/app/pulls/<PR_NUMBER>/comments --jq '.[] | {user: .user.login, body: .body, path: .path, line: .line}'
+gh api repos/Vidably/app/pulls/<PR_NUMBER>/reviews --jq '.[] | {user: .user.login, state: .state, body: .body}'
+gh api repos/Vidably/app/issues/<PR_NUMBER>/comments --jq '.[] | select(.user.login | test("bot|copilot|codex|github-actions")) | {user: .user.login, body: .body}'
+```
+
+### 9b: Diff Against Local Findings
+
+For each CI finding, classify:
+
+| Classification                   | Meaning                                            | Action                                               |
+| -------------------------------- | -------------------------------------------------- | ---------------------------------------------------- |
+| **Already fixed**                | Local review caught this and we fixed it before PR | None — CI reviewed stale code                        |
+| **New — would have been caught** | Finding falls into an existing checklist category  | Investigate why the prompt didn't surface it         |
+| **New — blind spot**             | Finding is a category we don't check for yet       | Add to Finding Categories table + evolving checklist |
+| **New — model limitation**       | We check for this, but the model(s) missed it      | Update Model Profiles table                          |
+| **False positive**               | CI flagged something that isn't actually an issue  | Note it — track CI false positive rate too           |
+
+### 9c: Update the System
+
+For each "New — blind spot" finding:
+
+1. Add a row to the **Finding Categories** table with the source PR
+2. Add a line to the **"ALSO specifically check for"** section of the review prompt (Step 3)
+3. Add to the **per-model prompt specialization** if it maps to a model's blind spot
+
+For each "New — model limitation" finding:
+
+1. Update the **Model Profiles** table — if a model missed something in its blind spot despite the specialized prompt, escalate the emphasis
+2. If a model consistently misses a category (3+ PRs), consider whether it's worth prompting for at all vs relying on other models
+
+### 9d: Update review-effectiveness.md
+
+Add a retrospective entry:
+
+```markdown
+### Post-CI Retrospective: PR #XX
+
+| CI Finding    | Category        | Classification   | Action Taken        |
+| ------------- | --------------- | ---------------- | ------------------- |
+| [description] | `failure-modes` | New — blind spot | Added to checklist  |
+| [description] | `auth/security` | Already fixed    | None (stale review) |
+
+**CI-catches-local-missed (genuine):** X (down from Y last PR)
+**New checklist items added:** Z
+**Model profile updates:** [list]
+```
+
+### 9e: Verify Improvement Trend
+
+Check the running trend in review-effectiveness.md:
+
+- Is "CI catches local missed" trending down? If yes, the system is learning.
+- If it's flat or rising, the retrospective isn't producing effective checklist items — flag this to the user.
+- Are any categories consistently missed by ALL local models? That's a systemic gap — consider adding a 4th model or a specialized linter.
+
+**The goal: CI should catch ZERO new findings that local review missed.** Every non-zero number is a learning opportunity, not a failure.
+
 ## Anti-Rationalization Table
 
 | Thought                                                        | Reality                                                                                                                                      |
@@ -227,9 +336,12 @@ After review is complete and verified, invoke `finishing-a-development-branch` t
 | "I'll just open the PR and let the GH Action review it"        | The GH Action takes 15+ minutes and costs CI time. Local review takes 2-3 minutes and catches issues before they're visible on the PR.       |
 | "Only Codex is available, not enough for consensus"            | Two models (Claude + Codex) give you consensus/solo distinction. That's enough.                                                              |
 | "The Codex review found nothing, so there's nothing to report" | Report that. "No findings from Codex" is useful signal — it means Claude's findings are solo (lower confidence).                             |
+| "CI didn't find anything new, skip the retrospective"          | Run it anyway. Confirming zero delta IS the measurement. And "already fixed" findings need classification too.                               |
+| "I'll do the retrospective later"                              | Do it now, while CI comments are fresh. Later means never — the next task will take priority.                                                |
 
 ## Interaction With Other Skills
 
 - `TRIGGERS AFTER: verification-before-completion` — Run this after code is verified but before claiming completion.
 - `TRIGGERS BEFORE: finishing-a-development-branch` — Must complete before opening a PR.
+- `TRIGGERS AFTER: CI review comments appear on PR` — Step 9 (Post-CI Retrospective) runs automatically.
 - `COMPATIBLE WITH: requesting-code-review` — This is the multi-model version of the upstream code review skill.
