@@ -1,15 +1,15 @@
 # BUILD-TRACKER.md — pp-superpowers Central Build Plan
 
-**Last updated:** April 2, 2026 (Fork cleanup pass §5 complete — all Superpowers artifacts removed)  
+**Last updated:** April 2, 2026 (Phase 1 complete — solution-discovery and solution-strategy both built and merged)  
 **Purpose:** Single source of truth for build progress. Read this file at the start of every Claude Code session.
 
 ---
 
 ## Current Position
 
-**Phase 1 — Foundation**  
-**Active task:** Design and build solution-strategy (§6)  
-**Branch:** `main` (solution-discovery merged, feature branch deleted)
+**Phase 2 — Design Layer**  
+**Active task:** Build application-design and schema-design (can be built in parallel)  
+**Branch:** `main`
 
 ---
 
@@ -105,13 +105,25 @@ Merge to main after cleanup is validated.
 
 ### 6. Design and build solution-strategy (Phase 1b)
 
-**Design doc:** `pp-superpowers-solution-strategy.md` — not started. Must be written and approved before building the skill.
+**Design doc:** `pp-superpowers-solution-strategy.md` — written April 2 (Draft — pending approval).
 
 **What solution-strategy does:** Refines solution packaging decisions from solution-discovery's `04-solution-packaging.md`. Paired with solution-discovery in Phase 1 because it directly operates on solution-discovery's output while context is fresh.
 
-```bash
-git checkout -b feature/skill-solution-strategy
-```
+**Completed (April 2):**
+
+- [x] **Write design doc** — `docs/pp-superpowers-solution-strategy.md` v1.0 draft. 10 sections: overview, mode architecture, state machine (7 stages with fast/full paths), conversation flow, output specs, validation rules, handoff contract, decision tree, decision log, open items.
+- [x] **Create feature branch** — `feature/skill-solution-strategy`
+- [x] **Build SKILL.md** — `skills/solution-strategy/SKILL.md` with frontmatter, plan mode hard-gate, prerequisites hard-gate, mode selection, companion file loading, state machine diagram (dot), stage-gate table, fast/full path logic, red flags, integration section.
+- [x] **Build conversation-guide.md** — `skills/solution-strategy/conversation-guide.md` with all stage flows (INIT, ASSESS with decision tree, PACKAGING_DESIGN for full path, ENVIRONMENT_MAP, DEPLOYMENT_PLAN, REVIEW with cross-reference checks, COMPLETE with suggestion logic), UPDATE mode flow, enriched 04 template, state file schema.
+- [x] **Update using-pp-superpowers** — added solution-strategy to skill routing table
+
+**Remaining:**
+
+- [x] **Live test (fast path)** — used existing Project Scheduler `.foundation/` (single-solution greenfield). All passed: fast path triggered correctly, abbreviated questions for ENVIRONMENT_MAP and DEPLOYMENT_PLAN, enriched 04 written with all new sections, state file created and updated per stage, plan mode hard-gate worked, REVIEW cross-reference checks ran, suggested application-design at COMPLETE. **Issue found:** timestamps used `T00:00:00Z` placeholders instead of real UTC values — fixed by adding explicit timestamp directive to conversation-guide.md.
+- [x] **Live test (full path)** — used UPDATE mode to switch from single → multi-solution. All passed: UPDATE mode detected correctly, PACKAGING_DESIGN ran all 3 rounds (domain identification, solution definition, dependency validation), ISV round correctly skipped, ENVIRONMENT_MAP and DEPLOYMENT_PLAN ran full rounds, REVIEW cross-reference checks caught licensing advisory and no-test-environment advisory, enriched 04 written with Solution Dependencies section, timestamp fix confirmed (real UTC values), update record added to state file. **Minor observation:** state file `mode` field remained `"CREATE"` instead of `"UPDATE"` — non-blocking, update record documents the change correctly.
+- [x] **Fix issues from live tests** — no blocking issues found
+- [x] **Approve design doc** — status changed from Draft to Approved (April 2)
+- [x] **Merge to main** — merged April 2, feature branch deleted
 
 After solution-strategy is built and merged, Phase 1 is complete.
 
@@ -122,11 +134,11 @@ After solution-strategy is built and merged, Phase 1 is complete.
 From implementation plan v2.0 §4.2. Each phase depends on the one before it.
 
 ```
-Phase 1 — Foundation                          ← YOU ARE HERE
-  solution-discovery     [BUILT, fully validated — end-to-end CREATE mode passed April 2]
-  solution-strategy      [design not started]
+Phase 1 — Foundation                          ✓ COMPLETE
+  solution-discovery     [BUILT, fully validated — April 2]
+  solution-strategy      [BUILT, fully validated — April 2]
 
-Phase 2 — Design Layer (parallel after Phase 1)
+Phase 2 — Design Layer (parallel after Phase 1) ← YOU ARE HERE
   application-design     [design approved, not built]
   schema-design          [design approved, not built]
 
@@ -155,7 +167,7 @@ Phase 4 — Lifecycle (parallel after Phase 3)
 | pp-superpowers-ui-design | Approved | 1.0 | Phase 3: ui-design |
 | pp-superpowers-business-logic | Approved | 1.0 | Phase 3: business-logic |
 | pp-superpowers-implementation-plan | Approved | 2.0 | — (this tracker replaces its "what's next" role) |
-| pp-superpowers-solution-strategy | **Not started** | — | **Phase 1b: solution-strategy** |
+| pp-superpowers-solution-strategy | Approved | 1.0 | — (skill built) |
 | pp-superpowers-security | **Not started** | — | Phase 3: security |
 | pp-superpowers-integration | **Not started** | — | Phase 4: integration |
 | pp-superpowers-alm-workflow | **Not started** | — | Phase 4: alm-workflow |

@@ -32,6 +32,7 @@ Use the `Skill` tool. When you invoke a skill, its content is loaded and present
 | Skill | When to invoke |
 |-------|---------------|
 | `solution-discovery` | Starting a new Power Platform project, gathering requirements, establishing project foundations, or updating an existing `.foundation/` |
+| `solution-strategy` | Refining solution packaging, defining environment promotion paths, planning deployment strategy — when solution-discovery's packaging section needs deeper architecture |
 
 ## The Rule
 
