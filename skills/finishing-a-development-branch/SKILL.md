@@ -37,7 +37,23 @@ Stop. Don't proceed to Step 2.
 
 **If tests pass:** Continue to Step 2.
 
+### Step 1.5: Read Session Metadata
+
+Check for `.superpowers-session.json` in the current directory:
+
+```bash
+cat .superpowers-session.json 2>/dev/null
+```
+
+**If found:** Extract `base_branch` and `base_commit`. Update `stage` to `"finishing"`. Use `base_branch` as the base branch for all subsequent steps (skip Step 2's detection logic).
+
+**If not found:** Fall through to Step 2's existing detection logic. Delta analysis (Step 2.5) will be skipped since there's no baseline to compare against.
+
 ### Step 2: Determine Base Branch
+
+**If `.superpowers-session.json` was found in Step 1.5:** Use `base_branch` from the metadata. Skip this step.
+
+**Otherwise:** Detect the base branch:
 
 ```bash
 # Try common base branches
@@ -45,6 +61,83 @@ git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 ```
 
 Or ask: "This branch split from main - is that correct?"
+
+### Step 2.5: Rebase and Delta Analysis
+
+**Skip this step if no `.superpowers-session.json` was found** (no baseline to compare against).
+
+**Fallback mode (no worktree):** If `.superpowers-session.json` exists but we are NOT in a git worktree (i.e., `git rev-parse --git-dir` equals `git rev-parse --git-common-dir`), we're in fallback mode:
+- Skip the rebase (we're on the same branch, our changes are already interleaved with others')
+- Delta analysis still runs: compare `git diff <base_commit>..HEAD` to understand all changes since session start, then evaluate whether changes NOT made by this session conflict with our spec and implementation
+- This provides weaker guarantees but still catches major drift
+- Proceed to the escalation levels as normal
+
+#### A. Rebase onto base branch
+
+```bash
+# Fetch latest
+git fetch origin <base_branch>
+
+# Attempt rebase
+git rebase origin/<base_branch>
+```
+
+**If merge conflicts occur:** Escalate to at least Level 2 (spec drift). Present the conflicts to the user and let them resolve. After resolution, continue to the delta analysis below.
+
+**If the base branch is local-only** (no remote tracking): rebase onto the local branch instead:
+
+```bash
+git rebase <base_branch>
+```
+
+#### B. Delta analysis
+
+Compare what changed on the base branch since we branched:
+
+```bash
+git diff <base_commit>..<base_branch>
+```
+
+Where `<base_commit>` is from `.superpowers-session.json`.
+
+**If the diff is empty:** No changes on the base branch since we started. Proceed to Step 3 (Present Options).
+
+**If the diff is non-empty:** Analyze the changes against:
+- The spec document (find it via git log for files in `docs/superpowers/specs/`)
+- The implementation plan (find it via git log for files in `docs/superpowers/plans/`)
+- The implementation itself (all other commits on this branch)
+
+Classify the drift into one of three levels. **When in doubt, escalate to the higher level.**
+
+**Recommend using the highest-capacity model available for this analysis** (e.g., Opus). The escalation decision is safety-critical.
+
+#### C. Escalation levels
+
+**Level 0 — No meaningful drift:** The base branch changes don't affect our work at all (e.g., changes to unrelated files, documentation updates). Proceed to Step 3.
+
+**⚠ Important: This step must loop until clean.** After any escalation fix completes (Level 1-3), return to the top of Step 2.5 and run a fresh fetch + rebase + delta analysis. Do not proceed to Step 3 until delta analysis returns Level 0 on a fresh rebase. This is necessary because more changes may land on the base branch while the user confirms the escalation, or while the delta fix is being planned and executed.
+
+**Level 1 — Implementation drift:** The spec is still correct, but the base branch changes affect how our work should be implemented. Examples: a file we extend was refactored, an interface we use changed its signature, a utility we depend on was moved.
+
+→ Present to user: "The base branch has changed since this session started. The changes affect implementation details but not the spec. I recommend creating a delta implementation plan to address the gaps."
+→ If user confirms: Route to `superpowers:writing-plans` to create a delta plan, then re-execute, then return to this step.
+
+**Level 2 — Spec drift:** The spec's assumptions are partially invalidated, but the original problem statement still holds. Examples: new instances of something the spec enumerates, a module boundary the spec assumes was reorganized, a dependency the spec relies on was replaced.
+
+→ Present to user: "The base branch has changed since this session started. The changes partially invalidate the spec. I need to ask some clarifying questions about how to update the spec, then re-plan and re-execute."
+→ If user confirms: Review the spec against the current state of the base branch. Where the drift creates ambiguity about what to build, ask the user clarifying questions to resolve it. When asking questions:
+  - Ask questions one at a time
+  - Prefer multiple choice questions when possible, but open-ended is fine too
+  - Only one question per message
+  - Focus on understanding: purpose, constraints, success criteria
+→ Update the spec to reflect the answers, then create a delta plan via `superpowers:writing-plans` for any implementation changes needed, then re-execute, then return to this step.
+
+**Level 3 — Fundamental drift:** The changes undermine the original problem statement or approach. Examples: another session already implemented what we were building, the architecture was fundamentally restructured, the feature we're extending was removed.
+
+→ Present to user: "The base branch has changed significantly since this session started. The changes fundamentally affect what we were building. I recommend restarting the brainstorming process from scratch with full re-analysis of the codebase."
+→ If user confirms: Route to `superpowers:brainstorming` for a full restart (including re-analysis of the codebase, clarifying questions, approach selection, and design review). The existing worktree and branch are preserved as context.
+
+**User confirmation is required before routing.** The model proposes the level with reasoning; the user confirms or overrides.
 
 ### Step 3: Present Options
 
@@ -147,16 +240,24 @@ If yes:
 git worktree remove <worktree-path>
 ```
 
+**Also clean up session metadata:**
+
+```bash
+# Remove session metadata (if in worktree, it's removed with the worktree)
+# If in fallback mode (no worktree), remove explicitly:
+rm -f .superpowers-session.json
+```
+
 **For Option 3:** Keep worktree.
 
 ## Quick Reference
 
-| Option | Merge | Push | Keep Worktree | Cleanup Branch |
-|--------|-------|------|---------------|----------------|
-| 1. Merge locally | ✓ | - | - | ✓ |
-| 2. Create PR | - | ✓ | ✓ | - |
-| 3. Keep as-is | - | - | ✓ | - |
-| 4. Discard | - | - | - | ✓ (force) |
+| Option | Merge | Push | Keep Worktree | Cleanup Branch | Remove .superpowers-session.json |
+|--------|-------|------|---------------|----------------|----------------------------------|
+| 1. Merge locally | ✓ | - | - | ✓ | ✓ |
+| 2. Create PR | - | ✓ | ✓ | - | - |
+| 3. Keep as-is | - | - | ✓ | - | - |
+| 4. Discard | - | - | - | ✓ (force) | ✓ |
 
 ## Common Mistakes
 

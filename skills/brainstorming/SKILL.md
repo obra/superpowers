@@ -21,21 +21,25 @@ Every project goes through this process. A todo list, a single-function utility,
 
 You MUST create a task for each of these items and complete them in order:
 
-1. **Explore project context** — check files, docs, recent commits
-2. **Offer visual companion** (if topic will involve visual questions) — this is its own message, not combined with a clarifying question. See the Visual Companion section below.
-3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-4. **Propose 2-3 approaches** — with trade-offs and your recommendation
-5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
-7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
-8. **User reviews written spec** — ask user to review the spec file before proceeding
-9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+**⚠ CRITICAL: Step 1 MUST be completed before step 2.** Do NOT read files, check git history, or explore the codebase in any way before step 1 completes (either worktree created, or fallback session file written). Exploring the project context before the snapshot point means your analysis is based on code that may change at any moment — this leads to nasty and hard to debug inconsistencies later when the spec, plan, and implementation are based on a codebase state that no longer exists.
+
+1. **Create worktree** — isolate the codebase before any analysis. See the Worktree Isolation section below.
+2. **Explore project context** — check files, docs, recent commits **(inside the worktree, not before)**
+3. **Offer visual companion** (if topic will involve visual questions) — this is its own message, not combined with a clarifying question. See the Visual Companion section below.
+4. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
+5. **Propose 2-3 approaches** — with trade-offs and your recommendation
+6. **Present design** — in sections scaled to their complexity, get user approval after each section
+7. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
+8. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
+9. **User reviews written spec** — ask user to review the spec file before proceeding
+10. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
 
 ```dot
 digraph brainstorming {
-    "Explore project context" [shape=box];
+    "Create worktree\n(or fallback to current dir)" [shape=box];
+    "Explore project context\n(inside worktree)" [shape=box];
     "Visual questions ahead?" [shape=diamond];
     "Offer Visual Companion\n(own message, no other content)" [shape=box];
     "Ask clarifying questions" [shape=box];
@@ -47,7 +51,8 @@ digraph brainstorming {
     "User reviews spec?" [shape=diamond];
     "Invoke writing-plans skill" [shape=doublecircle];
 
-    "Explore project context" -> "Visual questions ahead?";
+    "Create worktree\n(or fallback to current dir)" -> "Explore project context\n(inside worktree)";
+    "Explore project context\n(inside worktree)" -> "Visual questions ahead?";
     "Visual questions ahead?" -> "Offer Visual Companion\n(own message, no other content)" [label="yes"];
     "Visual questions ahead?" -> "Ask clarifying questions" [label="no"];
     "Offer Visual Companion\n(own message, no other content)" -> "Ask clarifying questions";
@@ -134,6 +139,32 @@ Wait for the user's response. If they request changes, make them and re-run the 
 
 - Invoke the writing-plans skill to create a detailed implementation plan
 - Do NOT invoke any other skill. writing-plans is the next step.
+
+## Worktree Isolation
+
+Step 1 of the checklist. Creates an isolated workspace so all analysis, spec writing, and subsequent planning/implementation happen against a consistent code snapshot.
+
+**What to do:**
+
+1. Record the current branch name and HEAD commit hash:
+   ```bash
+   BRANCH=$(git branch --show-current || git rev-parse --abbrev-ref HEAD)
+   COMMIT=$(git rev-parse HEAD)
+   ```
+2. Derive a branch name from the user's initial request: `superpowers/<topic>-<short-hash>-<random>` where `<topic>` is a slugified summary of the request (e.g., "add auth middleware" → `add-auth-middleware`), `<short-hash>` is the first 6 characters of the commit hash, and `<random>` is 4 random hex characters (e.g., `openssl rand -hex 2` or equivalent) to ensure uniqueness across sessions. If the request is too vague to derive a topic, use `session-<short-hash>-<random>`.
+3. Invoke `using-git-worktrees` to create the worktree with the derived branch name.
+4. Write `.superpowers-session.json` in the worktree root:
+   ```json
+   {
+     "base_branch": "<recorded branch name>",
+     "base_commit": "<recorded commit hash>",
+     "created_at": "<ISO 8601 timestamp>",
+     "stage": "brainstorming"
+   }
+   ```
+5. All subsequent exploration and work happens inside the worktree.
+
+**Platform fallback:** If worktree creation fails (no git, permission denied, platform limitation), log a warning and continue in the current directory. Record the current HEAD commit hash and write `.superpowers-session.json` to the project root **immediately, before any code exploration** — this is the snapshot point. The recorded commit hash marks the exact moment your analysis begins, which enables delta analysis at finish time to detect what changed on the branch after this point. Without worktree isolation, the code may change under you during the session, but at least drift will be caught before merge.
 
 ## Key Principles
 

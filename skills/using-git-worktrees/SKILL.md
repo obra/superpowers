@@ -68,6 +68,8 @@ Per Jesse's rule "Fix broken things immediately":
 
 **Why critical:** Prevents accidentally committing worktree contents to repository.
 
+**Session metadata:** When writing `.superpowers-session.json`, verify it is gitignored. If not, add it to `.gitignore` alongside the worktree directory entry. This file is session-local and should never be committed.
+
 ### For Global Directory (~/.config/superpowers/worktrees)
 
 No .gitignore verification needed - outside project entirely.
@@ -209,9 +211,10 @@ Ready to implement auth feature
 ## Integration
 
 **Called by:**
-- **brainstorming** (Phase 4) - REQUIRED when design is approved and implementation follows
-- **subagent-driven-development** - REQUIRED before executing any tasks
-- **executing-plans** - REQUIRED before executing any tasks
+- **brainstorming** (Step 1) - Creates isolated workspace before any code analysis
+- **writing-plans** - Creates workspace for standalone invocations (when no brainstorming session preceded)
+- **subagent-driven-development** - Creates workspace for standalone invocations (when no brainstorming session preceded)
+- **executing-plans** - Creates workspace for standalone invocations (when no brainstorming session preceded)
 - Any skill needing isolated workspace
 
 **Pairs with:**
