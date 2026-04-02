@@ -44,6 +44,8 @@ The skill accepts:
 
 If the context doesn't make the question clear, the skill asks once: "What specific technical question should this prototype answer?"
 
+**Borderline scope:** If the request is decomposable into 1–3 named single-question prototypes, the skill suggests the split rather than accepting or rejecting outright: "This looks like [N] separate questions: [list]. Should I run them as separate prototypes?" [inferred] If the request cannot be decomposed into discrete single-question prototypes, it is rejected as too broad. [inferred]
+
 ## Prototype Types
 
 | Type | Example | Validation |
@@ -106,6 +108,10 @@ Workers iterate using the OODA loop:
 
 **Iteration cap:** If a worker hits 10 iterations without resolving the question, it stops and reports what it knows. The orchestrator surfaces this to the user: "After 10 iterations, here's what we know and what's still unresolved."
 
+**Worker output handoff:** In the single-subagent model, the worker returns its findings directly as the Agent tool's return value — no file needed. [inferred] In the team model, each worker sends its findings to the lead via SendMessage upon completion; the lead collects all messages before synthesizing. [inferred]
+
+**Orchestrator behavior on mixed parallel outcomes:** When parallel workers return and some resolved their question while others did not, the orchestrator proceeds with synthesis using all available findings. [inferred] Resolved workers' findings are included in the output under "What works" / "What doesn't work" as normal. [inferred] Unresolved workers' partial findings are surfaced under a "Partial findings" subsection with a note that the question was not fully answered. [inferred] The orchestrator does not re-run unresolved workers; it reports what is known and flags the gap to the user for a follow-up prototype if needed. [inferred]
+
 ## Scope Enforcement
 
 The skill rejects prototypes that are too broad. Rejection criteria:
@@ -154,7 +160,7 @@ No separate document is produced. The proven code patterns live in the context a
 
 ## Cleanup
 
-After learnings are reported, `.superpowers/prototypes/<name>/` is deleted. Nothing persists on disk.
+After learnings are reported, `.superpowers/prototypes/<name>/` is deleted. Nothing persists on disk. Cleanup is best-effort — if deletion fails, the orchestrator logs a warning but does not block routing to the next pipeline step. [inferred] On any subsequent run of the prototyping skill, the orchestrator checks for leftover directories under `.superpowers/prototypes/` from prior runs and deletes them before creating the new scratch directory. [inferred]
 
 ## Integration
 
@@ -165,24 +171,34 @@ brainstorming → write-spec → [prototyping] → writing-plans → executing-p
 
 **Called by:** User or orchestrator when spec contains technical uncertainty
 **Feeds into:** `writing-plans` (success) or `write-spec`/`brainstorming` (showstopper)
-**Uses:** `expert:engage` for domain expertise in worker prompts
+**Uses:** `expert:engage` for domain expertise in worker prompts. Workers invoke `expert:engage` themselves at the start of their session before writing any code. [inferred] The orchestrator does not invoke `expert:engage` on behalf of workers; each worker is responsible for activating it as their first action. [inferred]
 
 ## Scratch Directory Structure
 
 ```
 .superpowers/prototypes/<name>/
-├── prototype.{js,py,ts,...}    # Main prototype script(s)
+├── prototype.{js,py,ts,...}    # Main prototype script(s)  [single-worker model]
 ├── test.{js,py,ts,...}         # Validation script (if applicable)
-└── [minimal supporting files]
+├── approach-1/                 # Used only in parallel worker model [inferred]
+│   ├── prototype.{js,py,ts,...}
+│   └── [minimal supporting files]
+├── approach-2/                 # Used only in parallel worker model [inferred]
+│   ├── prototype.{js,py,ts,...}
+│   └── [minimal supporting files]
+└── [minimal supporting files]  # Shared files for single-worker model
 ```
 
-Language and structure are determined by the domain. Minimal files only — no project scaffolding.
+Language and structure are determined by the domain. Minimal files only — no project scaffolding. In the parallel worker model, each worker writes exclusively to its own subdirectory (`approach-1/`, `approach-2/`, etc.) to prevent file conflicts. [inferred] The orchestrator assigns subdirectory paths to workers at dispatch time. [inferred]
 
 ## New Files
 
 - `skills/prototyping/SKILL.md` — main skill document
-- `skills/prototyping/worker-prompt.md` — prompt template for prototype workers (parameterized by domain/role/question)
+- `skills/prototyping/worker-prompt.md` — prompt template for prototype workers (parameterized by domain/role/question). Template variables: `{expert_role}` (domain-specific role string assigned by orchestrator), `{scratch_dir}` (absolute path to the worker's working directory, including subdirectory if parallel), `{question}` (the specific technical question to answer), `{spec_context}` (relevant excerpts from the spec, or empty string if none), `{library_or_technology}` (library/framework/API name extracted from the question by the orchestrator — used as the argument to `expert:engage`; empty string if no specific technology applies, in which case the worker skips `expert:engage`). [inferred] Static sections: OODA loop instructions, iteration cap reminder, output format for findings. [inferred] Injected sections: expert role preamble, scratch dir path, question statement, spec context block, library/technology identifier. [inferred] OODA instructions are the same across all prototype types; only the expert role, question, and library/technology vary. [inferred]
 
 ## Modified Files
 
 None. This is a new skill that slots into the existing pipeline without modifying other skills.
+
+## Refinement Status
+
+Refinement: CONVERGED round 3
