@@ -131,9 +131,20 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
+## Scenario Spec Handoff
+
+After the plan is approved but before execution, recommend the user author acceptance criteria:
+
+> **Next step:** Author your test scenario spec with `superpowers:writing-test-scenario-specs`. This creates human-authored acceptance criteria that define "done" for each feature in the plan.
+>
+> **Design doc:** `[path]`
+> **Implementation plan:** `[path]`
+
+If the user chooses to skip, proceed to execution handoff as normal. The scenario spec is recommended but not mandatory at the plan stage — `subagent-driven-development` has its own precondition check.
+
 ## Execution Handoff
 
-After saving the plan, offer execution choice:
+After saving the plan (and optionally the scenario spec), offer execution choice:
 
 **"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two execution options:**
 
