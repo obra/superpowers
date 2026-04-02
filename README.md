@@ -105,6 +105,21 @@ gemini extensions update superpowers
 
 Start a new session in your chosen platform and ask for something that should trigger a skill (for example, "help me plan this feature" or "let's debug this issue"). The agent should automatically invoke the relevant superpowers skill.
 
+For Claude Code, use this quick checklist:
+
+1. Ask for a task that should trigger a skill (planning, debugging, TDD, etc.).
+2. Confirm you see an explicit skill load in the transcript, such as:
+
+   ```
+   Skill(superpowers:test-driven-development)
+     ⎿ Successfully loaded skill
+   ```
+
+3. If invocation seems flaky, run Claude Code `/debug` and look for SessionStart hook registration/execution entries from `superpowers/hooks/hooks.json`.
+4. If hooks are loading but behavior is inconsistent, add a short project-level reminder in `CLAUDE.md` that planning/brainstorming tasks must invoke superpowers skills.
+
+This makes it easy to separate plugin-loading issues from model-compliance issues.
+
 ## The Basic Workflow
 
 1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
