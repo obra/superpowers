@@ -19,7 +19,7 @@ Do NOT open a PR or invoke finishing-a-development-branch until:
 4. Critical/unanimous findings have been addressed
 5. If fixes were applied, re-review has been run on the updated diff
 6. The user has reviewed and approved the final consensus map
-7. If fixes were made: root cause analysis completed, prevention rule added
+7. Convention extraction completed, proposals presented to user
 </HARD-GATE>
 
 ## Step 1: Prepare the Diff
@@ -87,12 +87,12 @@ Dispatch to all available models **in parallel**, independently:
 
 **Always available:**
 
-- Claude Code subagent (Agent tool)
+- Claude Code subagent (Agent tool) — tell it the branch and base, let it git diff and read files itself. Do NOT send the diff content in the prompt.
 
 **Check and dispatch if present:**
 
 - Codex: `codex review --base main` (native code review mode — better than `codex exec` for diffs)
-- Gemini: `cat diff.txt | gemini --allowed-mcp-server-names="" -p "[review prompt]"`
+- Gemini: `gemini --allowed-mcp-server-names="" -p "[review prompt] The branch is $(git branch --show-current) against main. Run git diff main...HEAD yourself to see the changes. Read any files you need for full context."`
 
 **For design/plan reviews (no diff):**
 
@@ -107,7 +107,7 @@ Dispatch to all available models **in parallel**, independently:
 - Codex `exec` for non-diff reviews MUST use `-s read-only` and pipe via stdin — otherwise it spirals into repo exploration and exhausts its budget without producing output (confirmed 2026-04-02, gpt-5.4)
 - Codex: Use `--base main` to review the current branch against main
 - Gemini: ALWAYS disable MCP servers (`--allowed-mcp-server-names=""`) — they cause indefinite hangs
-- Gemini: stdin content is prepended to the `-p` prompt
+- Gemini: Do NOT pipe diffs via stdin — large diffs cause ENAMETOOLONG errors. Instead, tell Gemini the branch name and let it git diff itself.
 - Both CLIs: 5-minute timeout. Kill and continue if exceeded.
 
 **Graceful degradation:** If no external CLIs are available:
@@ -185,69 +185,36 @@ For each approved finding:
 
 This is the same re-review pattern the GH Action uses — each round reviews fresh code, not the same code debated again.
 
-After all rounds complete and verification passes, proceed to root cause analysis.
-
-## Step 7: Root Cause Analysis (automatic when fixes were made)
-
-**Skip this step if the review produced zero fixes.** Otherwise, for every critical or unanimous finding that was fixed, ask: "Why did this bug survive implementation and testing? What structural change would prevent the entire class?"
-
-This is not optional. Fixing a bug is a patch. Fixing the bug class is engineering.
-
-### Process
-
-1. **Identify the root cause pattern** — not "I made a typo" but the structural reason. Common patterns:
-   - Code and documentation changed in the same PR but say opposite things (coherence failure)
-   - Uniform treatment of non-uniform things (e.g., all env vars handled the same way when some have defaults and some don't)
-   - Multi-file change where cross-file invariants weren't verified
-   - Missing test for the specific behavior that broke
-
-2. **Research prevention options** — dispatch a subagent to research exhaustively. Require at least 4 options spanning: agent instructions (AGENTS.md rules), tests, static analysis, and architectural/type-system approaches. Each option needs: what it is, how it would have caught THIS bug, and tradeoffs (cost, maintenance, false positives).
-
-3. **Rank by bang-for-buck** for a small team using AI agents heavily.
-
-4. **Implement the cheapest high-value prevention immediately** — typically an AGENTS.md rule (zero cost, instant). Commit it as part of this PR.
-
-5. **File a GitHub issue for deeper prevention** if a medium-cost option (tests, registry, CI check) scored high. Tag it `P3` — it's improvement, not launch-blocking.
-
-### Present to User
-
-```markdown
-## Root Cause Analysis
-
-### Why this bug survived
-
-[1-2 sentences: the structural reason, not "I made a mistake"]
-
-### Prevention implemented (this PR)
-
-- [What was added to AGENTS.md / code]
-
-### Prevention recommended (future)
-
-- [Medium-cost option] — [one-line description] (filed as #N)
-
-### Prevention considered but deferred
-
-- [Options that were too costly for current maturity]
-```
-
-### Anti-Rationalization
-
-| Thought                                           | Reality                                                                         |
-| ------------------------------------------------- | ------------------------------------------------------------------------------- |
-| "The bug is fixed, let's move on"                 | The bug is fixed. The bug CLASS is not. You'll make the same mistake next week. |
-| "This was a one-off mistake"                      | If three models caught it, it's a pattern, not a fluke.                         |
-| "Adding an AGENTS.md rule is enough"              | It's a start. Rules are advisory. Tests are gates. Do both.                     |
-| "Root cause analysis is overkill for a minor fix" | This step only triggers for critical/unanimous findings. Those aren't minor.    |
-
-## Step 8: Record and Proceed to PR
-
-Record skill usage for metrics:
+After all rounds complete and verification passes, record skill usage for metrics:
 
 - Append `vidably-multi-agent-code-review` to `.claude-skills-used` (gitignored)
 - The finishing-a-development-branch skill will include this in the PR body
 
-## Step 9: Proceed to PR
+## Step 7: Convention Extraction
+
+After all review rounds are complete and verification passes, automatically extract systemic lessons. This step runs every time — it's how the system self-improves.
+
+**Read the project maturity level** from the `### Project Maturity` section of `AGENTS.md`. Use it to calibrate classifications below.
+
+For each finding from all rounds (accepted, dismissed, and false positives), classify:
+
+1. **CONVENTION GAP** — a rule in AGENTS.md would have prevented this finding from being written in the first place. Draft the exact addition: which section, what text, where it goes.
+2. **SKILL GAP** — this skill or another skill should change its behavior. Draft the exact change to the skill file.
+3. **MATURITY-GATED** — this finding is valid but appropriate for a higher maturity level than the current one. No action needed now. Note which level it belongs to.
+4. **ONE-OFF** — specific to this code, no systemic lesson. No action needed.
+
+Present each proposal:
+
+| Finding       | Classification         | Proposed Change                                     |
+| ------------- | ---------------------- | --------------------------------------------------- |
+| [description] | Convention gap         | [exact text to add to AGENTS.md, including section] |
+| [description] | Skill gap              | [exact change to skill file]                        |
+| [description] | Maturity-gated (scale) | None — revisit at `scale`                           |
+| [description] | One-off                | None                                                |
+
+Then STOP and wait for user approval on each convention/skill proposal. Apply approved changes and commit them alongside the PR.
+
+## Step 8: Proceed to PR
 
 After review is complete and verified, invoke `finishing-a-development-branch` to open the PR. The PR will then receive the GH Action review (Claude + Security + Codex) as a safety net, but most issues should already be caught by this local review.
 
@@ -260,7 +227,6 @@ After review is complete and verified, invoke `finishing-a-development-branch` t
 | "I'll just open the PR and let the GH Action review it"        | The GH Action takes 15+ minutes and costs CI time. Local review takes 2-3 minutes and catches issues before they're visible on the PR.       |
 | "Only Codex is available, not enough for consensus"            | Two models (Claude + Codex) give you consensus/solo distinction. That's enough.                                                              |
 | "The Codex review found nothing, so there's nothing to report" | Report that. "No findings from Codex" is useful signal — it means Claude's findings are solo (lower confidence).                             |
-| "The bug is fixed, no need for root cause analysis"            | Fixing the bug is a patch. Fixing the bug class is engineering. If 3 models caught it, the process that produced it is broken.               |
 
 ## Interaction With Other Skills
 
