@@ -94,9 +94,17 @@ Dispatch to all available models **in parallel**, independently:
 - Codex: `codex review --base main` (native code review mode — better than `codex exec` for diffs)
 - Gemini: `cat diff.txt | gemini --allowed-mcp-server-names="" -p "[review prompt]"`
 
+**For design/plan reviews (no diff):**
+
+- Codex: Pipe the content via stdin and use read-only sandbox: `echo "[review prompt with full design text]" | codex exec -s read-only -`
+  - Without `-s read-only`, Codex will spend its entire budget exploring the repo instead of reviewing the provided text
+  - The `-` at the end tells Codex to read the prompt from stdin
+- Gemini: `echo "[review prompt with full design text]" | gemini --allowed-mcp-server-names="" -p "Review this design for technical gaps..."`
+
 **CLI gotchas (learned from real usage):**
 
 - Codex `review` mode is purpose-built for diffs — prefer it over `exec` for code review
+- Codex `exec` for non-diff reviews MUST use `-s read-only` and pipe via stdin — otherwise it spirals into repo exploration and exhausts its budget without producing output (confirmed 2026-04-02, gpt-5.4)
 - Codex: Use `--base main` to review the current branch against main
 - Gemini: ALWAYS disable MCP servers (`--allowed-mcp-server-names=""`) — they cause indefinite hangs
 - Gemini: stdin content is prepended to the `-p` prompt
