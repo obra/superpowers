@@ -92,21 +92,21 @@ Dispatch to all available models **in parallel**, independently:
 **Check and dispatch if present:**
 
 - Codex: `codex review --base main` (native code review mode — better than `codex exec` for diffs)
-- Gemini: `gemini --allowed-mcp-server-names="" -p "[review prompt] The branch is $(git branch --show-current) against main. Run git diff main...HEAD yourself to see the changes. Read any files you need for full context."`
+- Gemini: `gemini --allowed-mcp-server-names _none -p "[review prompt] The branch is $(git branch --show-current) against main. Run git diff main...HEAD yourself to see the changes. Read any files you need for full context."`
 
 **For design/plan reviews (no diff):**
 
 - Codex: Pipe the content via stdin and use read-only sandbox: `echo "[review prompt with full design text]" | codex exec -s read-only -`
   - Without `-s read-only`, Codex will spend its entire budget exploring the repo instead of reviewing the provided text
   - The `-` at the end tells Codex to read the prompt from stdin
-- Gemini: `echo "[review prompt with full design text]" | gemini --allowed-mcp-server-names="" -p "Review this design for technical gaps..."`
+- Gemini: `echo "[review prompt with full design text]" | gemini --allowed-mcp-server-names _none -p "Review this design for technical gaps..."`
 
 **CLI gotchas (learned from real usage):**
 
 - Codex `review` mode is purpose-built for diffs — prefer it over `exec` for code review
 - Codex `exec` for non-diff reviews MUST use `-s read-only` and pipe via stdin — otherwise it spirals into repo exploration and exhausts its budget without producing output (confirmed 2026-04-02, gpt-5.4)
 - Codex: Use `--base main` to review the current branch against main
-- Gemini: ALWAYS disable MCP servers (`--allowed-mcp-server-names=""`) — they cause indefinite hangs
+- Gemini: ALWAYS disable MCP servers with `--allowed-mcp-server-names _none` (passes a dummy name so no real MCP servers connect). Do NOT use `=""` — that passes an empty string which crashes the Gemini policy engine with "mcpName is required if specified (cannot be empty)".
 - Gemini: Do NOT pipe diffs via stdin — large diffs cause ENAMETOOLONG errors. Instead, tell Gemini the branch name and let it git diff itself.
 - Both CLIs: 5-minute timeout. Kill and continue if exceeded.
 

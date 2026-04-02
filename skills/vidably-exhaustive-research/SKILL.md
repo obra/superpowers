@@ -61,7 +61,7 @@ Minimum 3 distinct sources. If you can't find 3, search with different terms or 
 Also dispatch to other models for additional perspectives if available:
 
 - `codex exec "Research the best approaches for [decision]. List every viable option with concrete pros, cons, and code examples."` (if Codex CLI is available)
-- `gemini --allowed-mcp-server-names="" -p "Research [decision]. What are the current best practices as of 2026? List every approach."` (if Gemini CLI is available)
+- `gemini --allowed-mcp-server-names _none -p "Research [decision]. What are the current best practices as of 2026? List every approach."` (if Gemini CLI is available)
 
 Collect their responses and incorporate unique suggestions you didn't find yourself.
 

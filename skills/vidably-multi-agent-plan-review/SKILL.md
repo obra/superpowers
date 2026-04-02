@@ -53,12 +53,12 @@ Dispatch the plan to all available models **in parallel** for independent review
 **Check availability and dispatch if present:**
 
 - Codex: `which codex && codex exec -C "$(pwd)" "[review prompt]"`
-- Gemini: `which gemini && gemini --allowed-mcp-server-names="" -p "[review prompt]"`
+- Gemini: `which gemini && gemini --allowed-mcp-server-names _none -p "[review prompt]"`
 
 **CLI gotchas (learned from real usage):**
 
 - Codex: No `--quiet` flag. Use `codex exec`. For large plans, use stdin: `cat plan.md | codex exec -C "$(pwd)" -`
-- Gemini: MCP servers can hang indefinitely. ALWAYS use `--allowed-mcp-server-names=""` for non-interactive mode.
+- Gemini: ALWAYS disable MCP servers with `--allowed-mcp-server-names _none` (passes a dummy name so no real MCP servers connect). Do NOT use `=""` — that passes an empty string which crashes the Gemini policy engine.
 - Gemini: `-p` flag is REQUIRED for headless mode. Without it, Gemini opens an interactive session.
 - Codex: Use `-C <dir>` to set the working directory. Without it, Codex runs from the default directory and can't find repo files.
 - Both: Set a 5-minute timeout. Kill and move on if exceeded.
