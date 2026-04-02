@@ -144,6 +144,16 @@ git worktree list | grep $(git branch --show-current)
 
 If yes:
 ```bash
+# IMPORTANT: Before removing a worktree, we must change to a directory outside it.
+# If the current working directory is inside the worktree, git worktree remove will fail with:
+#   fatal: cannot remove worktree '<path>': '<path>' is the current working directory
+# Get main repo path (first entry in worktree list is always main)
+main_repo=$(git worktree list | head -1 | awk '{print $1}')
+
+# Change to main repo before removal
+cd "$main_repo"
+
+# Now safe to remove
 git worktree remove <worktree-path>
 ```
 
