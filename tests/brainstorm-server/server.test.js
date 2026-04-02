@@ -179,6 +179,20 @@ async function runTests() {
       assert(!res.body.includes('"not"'), 'Should not serve JSON');
     });
 
+    await test('ignores macOS resource fork dotfiles (._*.html)', async () => {
+      // macOS creates ._filename resource forks containing binary metadata
+      // like "Mac OS X  2ATTR...com.apple.provenance" — these must not be served
+      fs.writeFileSync(path.join(CONTENT_DIR, '._resource-fork.html'), 'Mac OS X  2\x00ATTR\x00\x00com.apple.provenance');
+      await sleep(300);
+
+      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      assert(!res.body.includes('com.apple.provenance'), 'Should not serve resource fork content');
+      assert(!res.body.includes('ATTR'), 'Should not contain resource fork data');
+
+      const filesRes = await fetch(`http://localhost:${TEST_PORT}/files/._resource-fork.html`);
+      assert.strictEqual(filesRes.status, 404, 'Should return 404 for dotfile via /files/');
+    });
+
     await test('returns 404 for non-root paths', async () => {
       const res = await fetch(`http://localhost:${TEST_PORT}/other`);
       assert.strictEqual(res.status, 404);
