@@ -8,8 +8,8 @@
 ## Current Position
 
 **Phase 1 — Foundation**  
-**Active task:** Merge feature branch to main (§3)  
-**Branch:** `feature/pp-solution-discovery` (committed, not merged to main)
+**Active task:** Fork cleanup pass (§5)  
+**Branch:** `main` (solution-discovery merged, feature branch deleted)
 
 ---
 
