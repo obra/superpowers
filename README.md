@@ -101,6 +101,16 @@ To update:
 gemini extensions update superpowers
 ```
 
+### Pi (experimental)
+
+```bash
+pi install https://github.com/obra/superpowers
+```
+
+Pi discovers skills from the `skills/` directory automatically. No plugins or bootstrap required for skills. For subagent-based workflows, install the bundled Pi agent profile from `.pi/agents/` (see docs).
+
+**Detailed docs:** [docs/README.pi.md](docs/README.pi.md)
+
 ### Verify Installation
 
 Start a new session in your chosen platform and ask for something that should trigger a skill (for example, "help me plan this feature" or "let's debug this issue"). The agent should automatically invoke the relevant superpowers skill.
