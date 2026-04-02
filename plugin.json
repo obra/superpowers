@@ -1,0 +1,12 @@
+{
+  "name": "ace-superpowers",
+  "version": "0.1.0",
+  "description": "ACE three paradigms + superpowers skills",
+  "id": "com.hyper-instrument.ace-superpowers",
+  "skills": [
+    "ace-run-workflow",
+    "ace-device-onboarding",
+    "ace-development"
+  ],
+  "ide_support": ["claude", "opencode", "cursor", "codex"]
+}
