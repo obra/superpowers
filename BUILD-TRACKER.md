@@ -1,6 +1,6 @@
 # BUILD-TRACKER.md — pp-superpowers Central Build Plan
 
-**Last updated:** April 2, 2026 (§2 fixes applied — architecture-advisor agent + plan mode directive)  
+**Last updated:** April 2, 2026 (CREATE mode end-to-end test passed — all §1 and §2 items verified)  
 **Purpose:** Single source of truth for build progress. Read this file at the start of every Claude Code session.
 
 ---
@@ -8,7 +8,7 @@
 ## Current Position
 
 **Phase 1 — Foundation**  
-**Active task:** Re-run full end-to-end CREATE mode test (§2 item 3)  
+**Active task:** Merge feature branch to main (§3)  
 **Branch:** `feature/pp-solution-discovery` (committed, not merged to main)
 
 ---
@@ -25,11 +25,11 @@ Start a fresh Claude Code conversation in the pp-superpowers directory. The sess
 
 - [x] Mode detection — no `.foundation/` triggers CREATE mode (confirmed April 2)
 - [x] Companion file loading — Claude reads `conversation-guide.md` at CREATE entry (confirmed April 2)
-- [~] Stage progression — confirmed through Stages 1-3, not full end-to-end (April 2)
-- [ ] Skip logic — skip at least one section (05–08) and verify placeholder file is written
-- [ ] State tracking — `.discovery-state.json` written after each stage transition (blocked by plan mode in test — see Known Gaps #10)
-- [ ] REVIEW stage — summary format renders correctly, consistency checks run
-- [ ] COMPLETE stage — downstream suggestion logic fires correctly
+- [x] Stage progression — full end-to-end, all 10 stages completed (confirmed April 2, post-fix retest)
+- [x] Skip logic — deferred 05-ui-plan, 06-logic-map, 08-security-profile; placeholder files written correctly (confirmed April 2)
+- [x] State tracking — `.discovery-state.json` updated at each stage transition (confirmed April 2, post plan mode fix)
+- [x] REVIEW stage — summary rendered with per-section status, cross-section consistency checks ran clean (confirmed April 2)
+- [x] COMPLETE stage — suggested application-design as next skill, waited for confirmation (confirmed April 2)
 
 **Common failure modes to watch for:**
 
@@ -47,7 +47,7 @@ Branch stays open. Fix on the same `feature/pp-solution-discovery` branch.
 
 - [x] **Build `architecture-advisor` agent** — Created `agents/architecture-advisor.md` with full analysis process, output format, evaluation criteria, and Microsoft Learn MCP integration (nice-to-have, not blocking).
 - [x] **Resolve plan mode conflict** — Added HARD-GATE directive in SKILL.md (between Announce and Mode Selection) that tells the developer to exit plan mode via Shift+Tab before the skill proceeds.
-- [ ] **Re-run full end-to-end CREATE mode test** — after above fixes, walk through all stages including skip logic, state tracking, REVIEW, and COMPLETE.
+- [x] **Re-run full end-to-end CREATE mode test** — all stages passed including skip logic (3 deferred sections), state tracking, REVIEW with consistency checks, and COMPLETE with downstream suggestion. Architecture-advisor agent dispatched successfully and caught Dataverse for Teams licensing constraint. Plan mode directive worked — detected active plan mode, told user to exit, waited.
 
 ### 3. Merge to main
 
@@ -113,7 +113,7 @@ From implementation plan v2.0 §4.2. Each phase depends on the one before it.
 
 ```
 Phase 1 — Foundation                          ← YOU ARE HERE
-  solution-discovery     [BUILT, live-tested partial — fixing issues before full validation]
+  solution-discovery     [BUILT, fully validated — end-to-end CREATE mode passed April 2]
   solution-strategy      [design not started]
 
 Phase 2 — Design Layer (parallel after Phase 1)
