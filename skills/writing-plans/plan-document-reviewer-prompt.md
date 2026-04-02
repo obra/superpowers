@@ -22,6 +22,7 @@ Task tool (general-purpose):
     | Completeness | TODOs, placeholders, incomplete tasks, missing steps |
     | Spec Alignment | Plan covers spec requirements, no major scope creep |
     | Task Decomposition | Tasks have clear boundaries, steps are actionable |
+    | TDD Structure | Every task that introduces or changes behavior follows RED-GREEN-REFACTOR: write failing test → verify fails → implement → verify passes → refactor → commit. Refactor-only tasks may rely on existing tests. Tests must NOT be deferred to a final task. Flag any task that has implementation before tests. |
     | Buildability | Could an engineer follow this plan without getting stuck? |
 
     ## Calibration
