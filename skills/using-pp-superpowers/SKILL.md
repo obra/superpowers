@@ -41,7 +41,7 @@ Use the `Skill` tool. When you invoke a skill, its content is loaded and present
 
 When multiple skills could apply:
 
-1. **Process skills first** (solution-discovery, brainstorming, debugging) — these determine HOW to approach the task
+1. **Process skills first** (solution-discovery, debugging) — these determine HOW to approach the task
 2. **Domain skills second** (application-design, schema-design) — these guide execution
 
 ## User Instructions
