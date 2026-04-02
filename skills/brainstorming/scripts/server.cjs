@@ -7,15 +7,9 @@ const path = require('path');
 
 const OPCODES = { TEXT: 0x01, CLOSE: 0x08, PING: 0x09, PONG: 0x0A };
 const WS_MAGIC = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
-const MAX_BUFFER_SIZE = 10 * 1024 * 1024; // 10MB limit to prevent memory exhaustion (DoS)
 
 function computeAcceptKey(clientKey) {
-  if (typeof clientKey !== 'string' || !clientKey) {
-    throw new TypeError('clientKey must be a non-empty string');
-  }
-  return crypto.createHash('sha1')
-    .update(clientKey + WS_MAGIC, 'binary')
-    .digest('base64');
+  return crypto.createHash('sha1').update(clientKey + WS_MAGIC).digest('base64');
 }
 
 function encodeFrame(opcode, payload) {
@@ -79,8 +73,7 @@ function decodeFrame(buffer) {
 
 // ========== Configuration ==========
 
-// Use crypto.randomInt for cryptographically secure random port selection
-const PORT = process.env.BRAINSTORM_PORT || crypto.randomInt(49152, 65536);
+const PORT = process.env.BRAINSTORM_PORT || (49152 + Math.floor(Math.random() * 16383));
 const HOST = process.env.BRAINSTORM_HOST || '127.0.0.1';
 const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'localhost' : HOST);
 const SESSION_DIR = process.env.BRAINSTORM_DIR || '/tmp/brainstorm';
@@ -99,25 +92,11 @@ const MIME_TYPES = {
 const WAITING_PAGE = `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><title>Brainstorm Companion</title>
-<style>
-  :root { --bg: #f5f5f7; --text: #1d1d1f; --text-sec: #86868b; --accent: #0071e3; }
-  @media (prefers-color-scheme: dark) { :root { --bg: #1d1d1f; --text: #f5f5f7; --text-sec: #86868b; --accent: #0a84ff; } }
-  body { font-family: system-ui, sans-serif; padding: 4rem 2rem; max-width: 600px; margin: 0 auto; background: var(--bg); color: var(--text); text-align: center; }
-  h1 { font-size: 1.5rem; font-weight: 500; margin-bottom: 1rem; }
-  p { color: var(--text-sec); font-size: 1.1rem; }
-  .spinner { display: inline-block; width: 2rem; height: 2rem; border: 3px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: var(--accent); animation: spin 1s ease-in-out infinite; margin-bottom: 1.5rem; }
-  @media (prefers-color-scheme: dark) { .spinner { border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--accent); } }
-  @keyframes spin { to { transform: rotate(360deg); } }
-</style>
+<style>body { font-family: system-ui, sans-serif; padding: 2rem; max-width: 800px; margin: 0 auto; }
+h1 { color: #333; } p { color: #666; }</style>
 </head>
-<body>
-  <main aria-live="polite" aria-busy="true">
-    <div class="spinner" aria-hidden="true"></div>
-    <h1>Brainstorm Companion</h1>
-    <p>Waiting for the agent to push a screen...</p>
-  </main>
-</body>
-</html>`;
+<body><h1>Brainstorm Companion</h1>
+<p>Waiting for the agent to push a screen...</p></body></html>`;
 
 const frameTemplate = fs.readFileSync(path.join(__dirname, 'frame-template.html'), 'utf-8');
 const helperScript = fs.readFileSync(path.join(__dirname, 'helper.js'), 'utf-8');
@@ -126,33 +105,12 @@ const helperInjection = '<script>\n' + helperScript + '\n</script>';
 // ========== Helper Functions ==========
 
 function isFullDocument(html) {
-  // Optimize: avoid full-string allocation from trimStart() on large files
-  // by using a bounded regex check for the prefix.
-  return /^\s*(?:<!doctype|<html)/i.test(html);
+  const trimmed = html.trimStart().toLowerCase();
+  return trimmed.startsWith('<!doctype') || trimmed.startsWith('<html');
 }
 
-// Optimize: Precalculate frame template splits to avoid searching on every request
-const target = '<!-- CONTENT -->';
-let targetIdx = -1;
-let frameTemplateStart = null;
-let frameTemplateEnd = null;
-
 function wrapInFrame(content) {
-  if (frameTemplateStart === null) {
-    targetIdx = frameTemplate.indexOf(target);
-    if (targetIdx !== -1) {
-      frameTemplateStart = frameTemplate.slice(0, targetIdx);
-      frameTemplateEnd = frameTemplate.slice(targetIdx + target.length);
-    } else {
-      frameTemplateStart = frameTemplate;
-      frameTemplateEnd = '';
-    }
-  }
-
-  if (targetIdx !== -1) {
-    return frameTemplateStart + content + frameTemplateEnd;
-  }
-  return frameTemplate;
+  return frameTemplate.replace('<!-- CONTENT -->', content);
 }
 
 function getNewestScreen() {
@@ -168,93 +126,37 @@ function getNewestScreen() {
 
 // ========== HTTP Request Handler ==========
 
-async function handleRequest(req, res) {
+function handleRequest(req, res) {
   touchActivity();
+  if (req.method === 'GET' && req.url === '/') {
+    const screenFile = getNewestScreen();
+    let html = screenFile
+      ? (raw => isFullDocument(raw) ? raw : wrapInFrame(raw))(fs.readFileSync(screenFile, 'utf-8'))
+      : WAITING_PAGE;
 
-  // Prevent DNS rebinding by validating the Host header
-  const hostHeader = req.headers.host;
-  if (hostHeader) {
-    try {
-      const parsedUrl = new URL(`http://${hostHeader}`);
-      const hostName = parsedUrl.hostname;
-      // Allow localhost, loopback (IPv4/IPv6), and the configured HOST.
-      // If HOST is '0.0.0.0', we bypass the strict check to allow LAN access.
-      if (
-        hostName !== 'localhost' &&
-        hostName !== '127.0.0.1' &&
-        hostName !== '[::1]' &&
-        hostName !== '::1' &&
-        hostName !== HOST &&
-        HOST !== '0.0.0.0'
-      ) {
-        res.writeHead(403, { 'Connection': 'close' });
-        res.end('Forbidden');
-        return;
-      }
-    } catch (err) {
-      res.writeHead(400, { 'Connection': 'close' });
-      res.end('Bad Request');
-      return;
-    }
-  }
-
-  try {
-    if (req.method === 'GET' && req.url === '/') {
-      const screenFile = await getNewestScreen();
-      let html;
-      if (screenFile) {
-        const raw = await fs.promises.readFile(screenFile, 'utf-8');
-        html = isFullDocument(raw) ? raw : wrapInFrame(raw);
-      } else {
-        html = WAITING_PAGE;
-      }
-
-      // Optimize: avoid String.prototype.replace() on multi-megabyte HTML strings
-      const bodyIdx = html.lastIndexOf('</body>');
-      if (bodyIdx !== -1) {
-        html = html.slice(0, bodyIdx) + helperInjection + '\n' + html.slice(bodyIdx);
-      } else {
-        html += helperInjection;
-      }
-
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end(html);
-    } else if (req.method === 'GET' && req.url.startsWith('/files/')) {
-      const fileName = req.url.slice(7);
-      const filePath = path.join(CONTENT_DIR, path.basename(fileName));
-
-      try {
-        await fs.promises.access(filePath, fs.constants.R_OK);
-      } catch (e) {
-        res.writeHead(404);
-        res.end('Not found');
-        return;
-      }
-
-      const ext = path.extname(filePath).toLowerCase();
-      const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-      res.writeHead(200, { 'Content-Type': contentType });
-
-      const stream = fs.createReadStream(filePath);
-      stream.on('error', (err) => {
-        if (!res.headersSent) {
-          res.writeHead(500);
-          res.end('Internal Server Error');
-        } else {
-          res.end();
-        }
-      });
-      stream.pipe(res);
+    if (html.includes('</body>')) {
+      html = html.replace('</body>', helperInjection + '\n</body>');
     } else {
+      html += helperInjection;
+    }
+
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(html);
+  } else if (req.method === 'GET' && req.url.startsWith('/files/')) {
+    const fileName = req.url.slice(7);
+    const filePath = path.join(CONTENT_DIR, path.basename(fileName));
+    if (!fs.existsSync(filePath)) {
       res.writeHead(404);
       res.end('Not found');
+      return;
     }
-  } catch (err) {
-    console.error('Request handling error:', err);
-    if (!res.headersSent) {
-      res.writeHead(500);
-      res.end('Internal Server Error');
-    }
+    const ext = path.extname(filePath).toLowerCase();
+    const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+    res.writeHead(200, { 'Content-Type': contentType });
+    res.end(fs.readFileSync(filePath));
+  } else {
+    res.writeHead(404);
+    res.end('Not found');
   }
 }
 
@@ -262,7 +164,18 @@ async function handleRequest(req, res) {
 
 const clients = new Set();
 
-function setupSocketCommunication(socket) {
+function handleUpgrade(req, socket) {
+  const key = req.headers['sec-websocket-key'];
+  if (!key) { socket.destroy(); return; }
+
+  const accept = computeAcceptKey(key);
+  socket.write(
+    'HTTP/1.1 101 Switching Protocols\r\n' +
+    'Upgrade: websocket\r\n' +
+    'Connection: Upgrade\r\n' +
+    'Sec-WebSocket-Accept: ' + accept + '\r\n\r\n'
+  );
+
   let buffer = Buffer.alloc(0);
   clients.add(socket);
 
@@ -302,52 +215,10 @@ function setupSocketCommunication(socket) {
         }
       }
     }
-
-    // Enforce max buffer size after processing valid frames to prevent DoS (memory exhaustion)
-    if (buffer.length > MAX_BUFFER_SIZE) {
-      console.error('WebSocket buffer size exceeded 10MB limit, closing connection');
-      const closeBuf = Buffer.alloc(2);
-      closeBuf.writeUInt16BE(1009); // Message Too Big
-      socket.end(encodeFrame(OPCODES.CLOSE, closeBuf));
-      socket.destroy();
-      clients.delete(socket);
-      return;
-    }
   });
 
   socket.on('close', () => clients.delete(socket));
   socket.on('error', () => clients.delete(socket));
-}
-
-function handleUpgrade(req, socket) {
-  const origin = req.headers['origin'];
-  if (origin) {
-    try {
-      const originUrl = new URL(origin);
-      if (originUrl.hostname !== 'localhost' && originUrl.hostname !== '127.0.0.1' && originUrl.hostname !== HOST) {
-        socket.write('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n');
-        socket.destroy();
-        return;
-      }
-    } catch (e) {
-      socket.write('HTTP/1.1 400 Bad Request\r\nConnection: close\r\n\r\n');
-      socket.destroy();
-      return;
-    }
-  }
-
-  const key = req.headers['sec-websocket-key'];
-  if (!key) { socket.destroy(); return; }
-
-  const accept = computeAcceptKey(key);
-  socket.write(
-    'HTTP/1.1 101 Switching Protocols\r\n' +
-    'Upgrade: websocket\r\n' +
-    'Connection: Upgrade\r\n' +
-    'Sec-WebSocket-Accept: ' + accept + '\r\n\r\n'
-  );
-
-  setupSocketCommunication(socket);
 }
 
 function handleMessage(text) {
@@ -477,10 +348,7 @@ function startServer() {
 }
 
 if (require.main === module) {
-  startServer().catch(err => {
-    console.error('Failed to start server:', err);
-    process.exit(1);
-  });
+  startServer();
 }
 
-module.exports = { computeAcceptKey, encodeFrame, decodeFrame, OPCODES, wrapInFrame, isFullDocument };
+module.exports = { computeAcceptKey, encodeFrame, decodeFrame, OPCODES };

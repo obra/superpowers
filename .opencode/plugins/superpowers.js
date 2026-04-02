@@ -13,14 +13,12 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Simple frontmatter extraction (avoid dependency on skills-core for bootstrap)
-export const extractAndStripFrontmatter = (content) => {
-  if (!content.startsWith('---\n')) return { frontmatter: {}, content };
+const extractAndStripFrontmatter = (content) => {
+  const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  if (!match) return { frontmatter: {}, content };
 
-  const endIdx = content.indexOf('\n---\n', 4);
-  if (endIdx === -1) return { frontmatter: {}, content };
-
-  const frontmatterStr = content.slice(4, endIdx);
-  const body = content.slice(endIdx + 5);
+  const frontmatterStr = match[1];
+  const body = match[2];
   const frontmatter = {};
 
   for (const line of frontmatterStr.split('\n')) {
@@ -36,7 +34,7 @@ export const extractAndStripFrontmatter = (content) => {
 };
 
 // Normalize a path: trim whitespace, expand ~, resolve to absolute
-export const normalizePath = (p, homeDir) => {
+const normalizePath = (p, homeDir) => {
   if (!p || typeof p !== 'string') return null;
   let normalized = p.trim();
   if (!normalized) return null;
@@ -54,36 +52,25 @@ export const SuperpowersPlugin = async ({ client, directory }) => {
   const envConfigDir = normalizePath(process.env.OPENCODE_CONFIG_DIR, homeDir);
   const configDir = envConfigDir || path.join(homeDir, '.config/opencode');
 
-  // Cache for bootstrap content so we only read and process SKILL.md once
-  let bootstrapContentPromise = null;
-
-  // Helper to generate bootstrap content (memoized)
+  // Helper to generate bootstrap content
   const getBootstrapContent = () => {
-    if (!bootstrapContentPromise) {
-      bootstrapContentPromise = (async () => {
-        // Try to load using-superpowers skill
-        const skillPath = path.join(superpowersSkillsDir, 'using-superpowers', 'SKILL.md');
-        let fullContent;
-        try {
-          fullContent = await fs.promises.readFile(skillPath, 'utf8');
-        } catch (err) {
-          return null;
-        }
+    // Try to load using-superpowers skill
+    const skillPath = path.join(superpowersSkillsDir, 'using-superpowers', 'SKILL.md');
+    if (!fs.existsSync(skillPath)) return null;
 
-        const { content } = extractAndStripFrontmatter(fullContent);
+    const fullContent = fs.readFileSync(skillPath, 'utf8');
+    const { content } = extractAndStripFrontmatter(fullContent);
 
-        const toolMapping = `**Tool Mapping for OpenCode:**
+    const toolMapping = `**Tool Mapping for OpenCode:**
 When skills reference tools you don't have, substitute OpenCode equivalents:
 - \`TodoWrite\` → \`todowrite\`
 - \`Task\` tool with subagents → Use OpenCode's subagent system (@mention)
 - \`Skill\` tool → OpenCode's native \`skill\` tool
 - \`Read\`, \`Write\`, \`Edit\`, \`Bash\` → Your native tools
 
-**Skills location:**
-Superpowers skills are in \`${configDir}/skills/superpowers/\`
 Use OpenCode's native \`skill\` tool to list and load skills.`;
 
-        return `<EXTREMELY_IMPORTANT>
+    return `<EXTREMELY_IMPORTANT>
 You have superpowers.
 
 **IMPORTANT: The using-superpowers skill content is included below. It is ALREADY LOADED - you are currently following it. Do NOT use the skill tool to load "using-superpowers" again - that would be redundant.**
@@ -92,10 +79,6 @@ ${content}
 
 ${toolMapping}
 </EXTREMELY_IMPORTANT>`;
-      })();
-    }
-
-    return bootstrapContentPromise;
   };
 
   return {
@@ -111,12 +94,19 @@ ${toolMapping}
       }
     },
 
-    // Use system prompt transform to inject bootstrap (fixes #226 agent reset bug)
-    'experimental.chat.system.transform': async (_input, output) => {
-      const bootstrap = await getBootstrapContent();
-      if (bootstrap) {
-        (output.system ||= []).push(bootstrap);
-      }
+    // Inject bootstrap into the first user message of each session.
+    // Using a user message instead of a system message avoids:
+    //   1. Token bloat from system messages repeated every turn (#750)
+    //   2. Multiple system messages breaking Qwen and other models (#894)
+    'experimental.chat.messages.transform': async (_input, output) => {
+      const bootstrap = getBootstrapContent();
+      if (!bootstrap || !output.messages.length) return;
+      const firstUser = output.messages.find(m => m.info.role === 'user');
+      if (!firstUser || !firstUser.parts.length) return;
+      // Only inject once
+      if (firstUser.parts.some(p => p.type === 'text' && p.text.includes('EXTREMELY_IMPORTANT'))) return;
+      const ref = firstUser.parts[0];
+      firstUser.parts.unshift({ ...ref, type: 'text', text: bootstrap });
     }
   };
 };
