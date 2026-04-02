@@ -165,15 +165,16 @@ Then STOP and wait for user approval on which findings to fix.
 
 For each approved finding:
 
-1. Apply the fix
-2. Re-run `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
-3. If any check fails, fix before continuing
+1. **Test-first fix (mandatory for control flow / sentinel changes):** Before applying the fix, write a test that would FAIL if the fix is wrong. Run it to confirm it fails with the current code. Then apply the fix and confirm it passes. This prevents fixes that "look right" but have a semantic flaw — the test is a proof that the fix works, not just that it compiles. Skip only for pure deletions or cosmetic changes.
+2. Apply the fix
+3. Re-run `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
+4. If any check fails, fix before continuing
 
 **If fixes were made, re-review (up to 3 rounds total):**
 
-4. Compute the UPDATED diff: `git diff main...HEAD`
-5. Dispatch to all available models again (Steps 3-5)
-6. Present the new consensus map to the user
+5. Compute the UPDATED diff: `git diff main...HEAD`
+6. Dispatch to all available models again (Steps 3-5)
+7. Present the new consensus map to the user
 
 **Round policy:**
 
