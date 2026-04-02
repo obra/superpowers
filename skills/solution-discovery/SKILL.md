@@ -11,6 +11,14 @@ solution-discovery is the entry point for all new work in pp-superpowers. It con
 
 **Announce:** "I'm using the solution-discovery skill to [create/resume/update] your project foundation."
 
+## Plan Mode Exit
+
+<HARD-GATE>
+This skill writes files at every stage gate. If plan mode is active, tell the developer:
+"solution-discovery needs to write files as we go. Please exit plan mode (Shift+Tab) so I can proceed."
+Do NOT continue past Mode Selection while plan mode is active.
+</HARD-GATE>
+
 ---
 
 ## Mode Selection
