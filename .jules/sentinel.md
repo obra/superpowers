@@ -22,3 +22,7 @@
 **Vulnerability:** The local HTTP server in `skills/brainstorming/scripts/server.cjs` served files without validating the `Host` header. This allows a malicious website to perform a DNS rebinding attack, pointing its domain to `127.0.0.1` and reading local user screens via standard HTTP requests.
 **Learning:** Local dev tools binding HTTP servers must validate the `Host` header to prevent DNS rebinding attacks where malicious sites can query local endpoints.
 **Prevention:** Always validate `req.headers.host` against allowed hosts (`localhost`, `127.0.0.1`, `[::1]`, or a configured `HOST`). If `HOST` is `0.0.0.0`, the strict check can be bypassed to allow LAN access, but loopback and explicit domains must otherwise be enforced.
+## 2026-03-30 - [Object Property Spoofing in Brainstorm Server]
+**Vulnerability:** The brainstorm server merged untrusted WebSocket events with trusted properties using `{ source: 'user-event', ...event }`. This allowed an attacker to spoof the `source` property by including it in the `event` payload, overriding the trusted value.
+**Learning:** When merging untrusted input objects with trusted overrides, the trusted properties must be placed after the spread operator to prevent spoofing by the incoming object payload.
+**Prevention:** Always place trusted properties after the spread operator (e.g., `{ ...event, source: 'user-event' }`) when creating merged objects.

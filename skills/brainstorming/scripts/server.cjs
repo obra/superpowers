@@ -359,7 +359,7 @@ function handleMessage(text) {
     return;
   }
   touchActivity();
-  console.log(JSON.stringify({ source: 'user-event', ...event }));
+  console.log(JSON.stringify({ ...event, source: 'user-event' }));
   if (event.choice) {
     const eventsFile = path.join(STATE_DIR, 'events');
     fs.appendFileSync(eventsFile, JSON.stringify(event) + '\n');
@@ -477,10 +477,18 @@ function startServer() {
 }
 
 if (require.main === module) {
-  startServer().catch(err => {
+  try {
+    const result = startServer();
+    if (result && typeof result.catch === 'function') {
+      result.catch(err => {
+        console.error('Failed to start server:', err);
+        process.exit(1);
+      });
+    }
+  } catch (err) {
     console.error('Failed to start server:', err);
     process.exit(1);
-  });
+  }
 }
 
 module.exports = { computeAcceptKey, encodeFrame, decodeFrame, OPCODES, wrapInFrame, isFullDocument };
