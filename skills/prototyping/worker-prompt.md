@@ -12,7 +12,7 @@ Task tool (general-purpose, model: sonnet):
 
     {expert_role}
 
-    Invoke `expert:engage` for {library_or_technology} before writing any code.
+    If {library_or_technology} is specified, invoke `expert:engage` for {library_or_technology} before writing any code. If no specific technology applies, skip this step.
 
     ## Scratch Directory
 

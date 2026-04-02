@@ -130,8 +130,9 @@ digraph process {
 
 1. Restate the technical question in one sentence
 2. Confirm it is a single concern — if not, reject (see Scope Enforcement)
-3. Choose execution model (see above — do not ask the human)
-4. Name the prototype and create the scratch directory
+3. **Frame the riskiest assumption** — what is the one thing most likely to kill this approach? Target that first, not the easy parts
+4. Choose execution model (see above — do not ask the human)
+5. Name the prototype and create the scratch directory
 
 ### Phase 1: Execute
 
@@ -214,7 +215,7 @@ SHOWSTOPPER → back to spec (with evidence of why)
 rm -rf .superpowers/prototypes/<prototype-name>/
 ```
 
-Confirm deletion. Do not leave prototype code in the repo.
+Confirm deletion. Do not leave prototype code in the repo. If deletion fails, warn but do not block — move on to routing. On subsequent runs, sweep any leftover directories under `.superpowers/prototypes/` before creating a new scratch directory.
 
 ## Guard Rails
 
