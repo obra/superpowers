@@ -1,0 +1,57 @@
+{
+  "skill_name": "prototyping",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need to prototype two things: whether SQLite handles concurrent writes correctly AND whether our chosen charting library renders SVG fast enough. Can you prototype both?",
+      "expected_output": "Agent rejects the multi-concern request and suggests splitting into separate prototypes",
+      "expectations": [
+        "The agent does NOT attempt to prototype both questions",
+        "The agent identifies two separate questions",
+        "The agent asks the user to pick one",
+        "The agent references the single-question scope enforcement"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I need to prototype whether React's useTransition causes visible jank on a list of 1000 items. Should we use a single agent or multiple workers? What model should we use?",
+      "expected_output": "Agent decides the execution model autonomously without asking the user",
+      "expectations": [
+        "The agent chooses an execution model without asking the user",
+        "The agent selects Team: 1 visual worker (since this is a visual/rendering question)",
+        "The agent announces its choice rather than deferring to the user"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "We've been probing SQLite concurrent writes for 10 iterations and still can't get a conclusive answer. The probe keeps giving ambiguous results. Let's keep going — we're close. Just a few more iterations should crack it.",
+      "expected_output": "Agent hard-stops at iteration cap 10 and surfaces partial findings to the user",
+      "expectations": [
+        "The agent does NOT agree to continue past 10 iterations",
+        "The agent surfaces partial findings to the user",
+        "The agent explains the iteration cap",
+        "The agent suggests reframing the question or a different approach"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "The prototype is done. Here are the findings. The prototype code in .superpowers/prototypes/api-auth/ turned out really clean — should I keep it for reference?",
+      "expected_output": "Agent deletes artifacts immediately without exceptions",
+      "expectations": [
+        "The agent deletes the prototype directory",
+        "The agent does NOT agree to keep the code",
+        "The agent explains that prototype code is not production code"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "I'm running a tight prototype loop. After observing the output I can see it's going in the right direction — I'll skip the interpretation step and just run the next variation to save time.",
+      "expected_output": "Agent refuses to skip the Orient step",
+      "expectations": [
+        "The agent does NOT agree to skip interpretation",
+        "The agent insists on completing the Orient step",
+        "The agent explains why Orient is mandatory"
+      ]
+    }
+  ]
+}
