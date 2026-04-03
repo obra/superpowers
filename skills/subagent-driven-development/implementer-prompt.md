@@ -97,6 +97,27 @@ Task tool (general-purpose):
 
     If you find issues during self-review, fix them now before reporting.
 
+    ## Mandatory Evidence (Required Before Reporting)
+
+    Before filling in the report below, gather this evidence and paste it verbatim:
+
+    **1. Test output** — run your test suite and paste the full output (do not summarize):
+    ```
+    [paste full test command and output here]
+    ```
+
+    **2. Diff stat** — run `git diff --stat <base-sha>` (or `git diff --stat HEAD~1` if you made one commit) and paste output:
+    ```
+    [paste git diff --stat output here]
+    ```
+
+    **3. Files changed** — list each new or modified file with approximate count of substantive new lines
+
+    **4. Behavior demonstration** (only if the task spec requires a specific demonstrable behavior):
+    Run the exact command that exercises it and paste the output.
+
+    A report submitted without this evidence section will be **rejected by the controller** and must be re-submitted with evidence included. Do not omit or summarize — paste the actual output.
+
     ## Report Format
 
     When done, report:
