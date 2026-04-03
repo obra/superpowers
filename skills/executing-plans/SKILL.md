@@ -31,10 +31,24 @@ For each task:
 
 ### Step 3: Complete Development
 
-After all tasks complete and verified:
+After all tasks complete and verified, present:
+
+```
+Implementation complete. What next?
+
+1. **Finish the branch** — merge, PR, or discard (superpowers:finishing-a-development-branch)
+2. **Iterate** — refine what was built (superpowers:iterating-on-plans)
+
+Which option?
+```
+
+**If option 1 chosen:**
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
 - **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
 - Follow that skill to verify tests, present options, execute choice
+
+**If option 2 chosen:**
+- **REQUIRED SUB-SKILL:** Use superpowers:iterating-on-plans
 
 ## When to Stop and Ask for Help
 
@@ -68,3 +82,4 @@ After all tasks complete and verified:
 - **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
 - **superpowers:writing-plans** - Creates the plan this skill executes
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
+- **superpowers:iterating-on-plans** - Offered after all tasks complete, if refinement is needed

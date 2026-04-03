@@ -62,6 +62,8 @@ digraph process {
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
+    "Offer: finish branch OR iterate" [shape=diamond];
+    "Use superpowers:iterating-on-plans" [shape=box style=filled fillcolor=lightyellow];
 
     "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
@@ -80,7 +82,9 @@ digraph process {
     "Mark task complete in TodoWrite" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
-    "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
+    "Dispatch final code reviewer subagent for entire implementation" -> "Offer: finish branch OR iterate";
+    "Offer: finish branch OR iterate" -> "Use superpowers:finishing-a-development-branch" [label="finish"];
+    "Offer: finish branch OR iterate" -> "Use superpowers:iterating-on-plans" [label="iterate"];
 }
 ```
 
@@ -196,7 +200,12 @@ Code reviewer: ✅ Approved
 [Dispatch final code-reviewer]
 Final reviewer: All requirements met, ready to merge
 
-Done!
+Implementation complete. What next?
+
+1. **Finish the branch** — merge, PR, or discard (superpowers:finishing-a-development-branch)
+2. **Iterate** — refine what was built (superpowers:iterating-on-plans)
+
+[User chooses option 1 or 2]
 ```
 
 ## Advantages
@@ -269,6 +278,7 @@ Done!
 - **superpowers:writing-plans** - Creates the plan this skill executes
 - **superpowers:requesting-code-review** - Code review template for reviewer subagents
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
+- **superpowers:iterating-on-plans** - Offered after all tasks complete, if refinement is needed
 
 **Subagents should use:**
 - **superpowers:test-driven-development** - Subagents follow TDD for each task
