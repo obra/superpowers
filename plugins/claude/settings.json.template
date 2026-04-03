@@ -1,0 +1,45 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${ACE_SUPERPOWERS_PATH}/plugins/claude/hooks/session-start-context.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${ACE_SUPERPOWERS_PATH}/plugins/claude/hooks/post-tool-trace.py",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "python3 ${ACE_SUPERPOWERS_PATH}/plugins/claude/hooks/pre-execution-memory.py",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${ACE_SUPERPOWERS_PATH}/plugins/claude/hooks/stop-reflect.py",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
