@@ -10,7 +10,7 @@
 
 - Use Codex-native terminology in all docs, skills, prompts, and tests.
 - Prefer `AGENTS.md`, native skill discovery, `update_plan`, `spawn_agent`, and Codex shell/file tools over translated legacy tool concepts.
-- Do not describe Codex behavior through `Task tool`, `TodoWrite`, or `Skill tool` mappings.
+- Do not describe Codex behavior through translated legacy tool mappings.
 
 ## Workflow Priority
 

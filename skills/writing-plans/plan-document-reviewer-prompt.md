@@ -7,7 +7,7 @@ Use this template when dispatching a plan document reviewer subagent.
 **Dispatch after:** The complete plan is written.
 
 ```
-Task tool (general-purpose):
+spawn_agent reviewer request:
   description: "Review plan document"
   prompt: |
     You are a plan document reviewer. Verify this plan is complete and ready for implementation.
