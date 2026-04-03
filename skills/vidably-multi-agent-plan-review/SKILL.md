@@ -151,6 +151,29 @@ This is the same re-review pattern the GH Action uses — each round reviews fre
 | "I'll just incorporate the feedback myself without presenting it" | The consensus map IS the deliverable. The user must see which models agreed and disagreed. |
 | "This is a small plan, multi-model review is overkill"            | Small plans with wrong assumptions waste more time than large plans. Review anyway.        |
 
+## Step 6: Update Workflow State and Event Log
+
+After the user approves the final consensus map (plan review complete), update the enforcement state. **This is the gate key — once this fires, the Write/Edit implementation gate unlocks.**
+
+```bash
+# Update workflow state (this unlocks the implementation gate)
+STATE=".claude/workflow-state.json"
+if [ -f "$STATE" ]; then
+  python3 -c "
+import json, datetime
+d = json.load(open('$STATE'))
+d['planReviewed'] = True
+d['planReviewedAt'] = datetime.datetime.utcnow().isoformat() + 'Z'
+json.dump(d, open('$STATE', 'w'))
+"
+fi
+
+# Append to event log
+echo "{\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"branch\":\"$(git branch --show-current)\",\"event\":\"plan_review_complete\",\"sha\":\"$(git rev-parse --short HEAD)\",\"models\":MODELS_LIST,\"findings\":FINDINGS_COUNT,\"rounds\":ROUNDS_COUNT}" >> .claude/workflow-events.jsonl
+```
+
+Replace `MODELS_LIST` with a JSON array of model names used (e.g., `[\"codex\",\"gemini\"]`), `FINDINGS_COUNT` with total findings across all rounds, and `ROUNDS_COUNT` with the number of review rounds.
+
 ## Interaction With Other Skills
 
 - `TRIGGERS AFTER: writing-plans` — Automatically invoke this skill after a plan is written.

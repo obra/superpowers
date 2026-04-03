@@ -238,10 +238,14 @@ For each approved finding:
 
 This is the same re-review pattern the GH Action uses — each round reviews fresh code, not the same code debated again.
 
-After all rounds complete and verification passes, record skill usage for metrics:
+After all rounds complete and verification passes, update the event log:
 
-- Append `vidably-multi-agent-code-review` to `.claude-skills-used` (gitignored)
-- The finishing-a-development-branch skill will include this in the PR body
+```bash
+# Append to event log
+echo "{\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"branch\":\"$(git branch --show-current)\",\"event\":\"code_review_complete\",\"sha\":\"$(git rev-parse --short HEAD)\",\"models\":MODELS_LIST,\"findings\":FINDINGS_COUNT,\"rounds\":ROUNDS_COUNT}" >> .claude/workflow-events.jsonl
+```
+
+Replace `MODELS_LIST` with a JSON array (e.g., `[\"codex\",\"gemini\"]`), `FINDINGS_COUNT` with total findings, and `ROUNDS_COUNT` with review rounds completed.
 
 ## Step 7: Convention Extraction
 

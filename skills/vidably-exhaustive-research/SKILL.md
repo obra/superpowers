@@ -131,6 +131,29 @@ After user approves, append a decision record to the current spec or plan doc:
 | "The previous conversation already decided this" | Verify the decision is still valid. Context may have changed. Sources may have updated.                                                            |
 | "The other models didn't add anything new"       | Still document that you checked. The absence of new options is itself signal that you've covered the space.                                        |
 
+## Step 7: Update Workflow State and Event Log
+
+After the user approves an option (Step 5-6 complete), update the enforcement state:
+
+```bash
+# Update workflow state
+STATE=".claude/workflow-state.json"
+if [ -f "$STATE" ]; then
+  python3 -c "
+import json, datetime
+d = json.load(open('$STATE'))
+d['researchDone'] = True
+d['researchAt'] = datetime.datetime.utcnow().isoformat() + 'Z'
+json.dump(d, open('$STATE', 'w'))
+"
+fi
+
+# Append to event log
+echo "{\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"branch\":\"$(git branch --show-current)\",\"event\":\"skill_complete\",\"skill\":\"vidably-exhaustive-research\",\"sha\":\"$(git rev-parse --short HEAD)\",\"options\":OPTIONS_COUNT,\"sources\":SOURCES_COUNT}" >> .claude/workflow-events.jsonl
+```
+
+Replace `OPTIONS_COUNT` and `SOURCES_COUNT` with the actual numbers from this research session.
+
 ## Interaction With Other Skills
 
 - `TRIGGERS BEFORE: brainstorming` — Research feeds into brainstorming options. If a Type 1 decision arises during brainstorming, pause and run this skill first.
