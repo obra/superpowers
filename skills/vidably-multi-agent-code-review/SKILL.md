@@ -136,8 +136,8 @@ Dispatch to all available models **in parallel**, independently:
 
 **Check and dispatch if present:**
 
-- Codex: `codex review --base main` (native code review mode — better than `codex exec` for diffs)
-- Gemini: `gemini --allowed-mcp-server-names _none -p "[review prompt] The branch is $(git branch --show-current) against main. Run git diff main...HEAD yourself to see the changes. Read any files you need for full context."`
+- Codex: `./tools/run-cli-review.sh codex review --base main` (wrapper captures timing, exit code, full output)
+- Gemini: `./tools/run-cli-review.sh gemini --allowed-mcp-server-names _none -p "[review prompt] The branch is $(git branch --show-current) against main. Run git diff main...HEAD yourself to see the changes. Read any files you need for full context."`
 
 **Alternative: Gemini API with enriched context (~50s, no CLI overhead):**
 
@@ -153,7 +153,8 @@ If the Gemini CLI is unavailable or you want faster results, call the Gemini API
 **CLI gotchas (learned from real usage):**
 
 - **TIMEOUTS: Use `timeout: 1200000` (20 minutes) for all CLI review commands.** With `xhigh` reasoning, Codex reads files, runs web searches, and reasons deeply — it needs real time. The default 2-minute bash timeout will kill them mid-analysis, producing no findings. This was misdiagnosed as "hitting output limits" and "MCP init overhead" in early reviews — both were just timeout kills.
-- **TIMING: Wrap every CLI review call with timing** so we can calibrate timeouts with real data. Use: `START=$(date +%s); <command>; echo "REVIEW_TIMING: model=<model> diff_lines=<N> elapsed=$(($(date +%s) - START))s"`. Log this in the synthesis output so it gets captured in review-effectiveness.md.
+- **WRAPPER: Always use `./tools/run-cli-review.sh`** instead of calling CLI tools directly. It captures timing, exit code, signal info, and full output to `tools/review-logs/`. If a process is killed, it prints a WARNING automatically. A PostToolUse hook on Bash also detects timeout kills and injects a warning.
+- **IF A CLI TOOL APPEARS TO FAIL: Invoke the `diagnosing-failures` skill** before proposing any workaround. List at least 3 possible root causes and check evidence against each.
 - Codex `review` mode is purpose-built for diffs — prefer it over `exec` for code review
 - Codex `exec` for non-diff reviews MUST use `-s read-only` and pipe via stdin — otherwise it spirals into repo exploration and exhausts its budget without producing output (confirmed 2026-04-02, gpt-5.4)
 - Codex: Use `--base main` to review the current branch against main
