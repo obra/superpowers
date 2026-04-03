@@ -80,7 +80,7 @@ Updated after each Post-CI Retrospective (Step 9). Use these to specialize promp
 | ------- | ---------------------------------- | ----------------------------- | ------------ |
 | Claude  | `auth/security`, `react-lifecycle` | `dev-compat`, `failure-modes` | PR #61       |
 | Codex   | `dev-compat`, `data-integrity`     | `auth/security`               | PR #61       |
-| Gemini  | TBD                                | TBD                           | —            |
+| Gemini  | `plan-conformance`, `performance`  | TBD (1 PR baseline)           | PoC          |
 | Copilot | `failure-modes`, `data-integrity`  | TBD                           | PR #61       |
 
 ## Step 3: Dispatch to Available Models
@@ -134,22 +134,75 @@ Dispatch to all available models **in parallel**, independently:
 **Check and dispatch if present:**
 
 - Codex: `codex review --base main` (native code review mode — better than `codex exec` for diffs)
-- Gemini: `gemini --allowed-mcp-server-names _none -p "[review prompt] The branch is $(git branch --show-current) against main. Run git diff main...HEAD yourself to see the changes. Read any files you need for full context."`
+- Gemini: Use the **Gemini API with enriched context** (not the CLI — see below)
+
+**Gemini API Review (enriched context approach):**
+
+The Gemini CLI is too slow for reviews (~10+ min due to MCP initialization + Node.js overhead). Instead, call the Gemini API directly with enriched context that replicates what the CLI would read. This runs in ~50 seconds with equivalent or better finding quality (validated in PoC: enriched context found compliance-level bugs the diff-only approach missed).
+
+Build the enriched context by:
+
+1. Compute the diff: `git diff main...HEAD`
+2. For each file in the diff, include its **full content** (not just the hunks)
+3. For each changed file, follow `import` / `from` statements to local modules and include those too
+4. Include `packages/db/src/schema/*.ts` (the Drizzle schema — most bugs involve data)
+5. Include `AGENTS.md` (project context, conventions, maturity level, review instructions)
+
+Then call the API:
+
+```bash
+# Build the prompt with enriched context (see template below)
+# API key: read from ~/.gemini/.env or GEMINI_API_KEY env var
+
+curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=$GEMINI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{"parts": [{"text": "ENRICHED_PROMPT_HERE"}]}],
+    "generationConfig": {"temperature": 0, "maxOutputTokens": 8192}
+  }'
+```
+
+The enriched prompt template (wrap the base review prompt + per-model specialization with):
+
+````
+## Full File Contents (changed files + their imports)
+### path/to/changed-file.ts
+[full file content]
+
+### path/to/imported-module.ts
+[full file content]
+
+## Database Schema
+[all files from packages/db/src/schema/*.ts]
+
+## Project Conventions
+[AGENTS.md content]
+
+## Diff to Review
+```diff
+[git diff main...HEAD]
+```​
+````
+
+Use `jq` to JSON-escape the prompt for the API call. Extract the response text with:
+
+```bash
+jq -r '.candidates[0].content.parts[0].text' result.json
+```
 
 **For design/plan reviews (no diff):**
 
 - Codex: Pipe the content via stdin and use read-only sandbox: `echo "[review prompt with full design text]" | codex exec -s read-only -`
   - Without `-s read-only`, Codex will spend its entire budget exploring the repo instead of reviewing the provided text
   - The `-` at the end tells Codex to read the prompt from stdin
-- Gemini: `echo "[review prompt with full design text]" | gemini --allowed-mcp-server-names _none -p "Review this design for technical gaps..."`
+- Gemini: Same API approach — include the design text as context instead of the diff
 
 **CLI gotchas (learned from real usage):**
 
 - Codex `review` mode is purpose-built for diffs — prefer it over `exec` for code review
 - Codex `exec` for non-diff reviews MUST use `-s read-only` and pipe via stdin — otherwise it spirals into repo exploration and exhausts its budget without producing output (confirmed 2026-04-02, gpt-5.4)
 - Codex: Use `--base main` to review the current branch against main
-- Gemini: ALWAYS disable MCP servers with `--allowed-mcp-server-names _none` (passes a dummy name so no real MCP servers connect). Do NOT use `=""` — that passes an empty string which crashes the Gemini policy engine with "mcpName is required if specified (cannot be empty)".
-- Gemini: Do NOT pipe diffs via stdin — large diffs cause ENAMETOOLONG errors. Instead, tell Gemini the branch name and let it git diff itself.
+- Gemini: Do NOT use the CLI for reviews — it takes 10+ min due to MCP init overhead. Use the API with enriched context instead (~50s). The CLI is fine for interactive use where startup cost is amortized.
 - Both CLIs: 5-minute timeout. Kill and continue if exceeded.
 
 **Graceful degradation:** If no external CLIs are available:
