@@ -13,6 +13,10 @@ Guide completion of development work by presenting clear options and handling ch
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
+## Codex App Note
+
+If Codex App constrains background process behavior, keep the same completion flow but use the simplest supported commands and avoid adding process-management complexity just to mirror CLI behavior.
+
 ## The Process
 
 ### Step 1: Verify Tests

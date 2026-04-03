@@ -130,6 +130,8 @@ From 24 failure memories:
 - Implications of success
 - ANY communication suggesting completion/correctness
 
+**For Codex agents:** Apply the same gate before reporting a task, fix, or handoff as complete.
+
 ## The Bottom Line
 
 **No shortcuts for verification.**

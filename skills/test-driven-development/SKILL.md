@@ -369,3 +369,5 @@ Otherwise → not TDD
 ```
 
 No exceptions without your human partner's permission.
+
+**For Codex agents:** Use this cycle before adding or changing behavior in this repository.
