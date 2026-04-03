@@ -11,7 +11,7 @@ Load plan, review critically, execute all tasks, report when complete.
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
-**Note:** Tell your human partner that Superpowers works much better with access to subagents. The quality of its work will be significantly higher if run on a platform with subagent support (such as Claude Code or Codex). If subagents are available, use superpowers:subagent-driven-development instead of this skill.
+If Codex multi-agent support is available and you want same-session execution, prefer `superpowers:subagent-driven-development`. Use this skill when you intentionally want separate-session execution with checkpoints.
 
 ## The Process
 
@@ -19,7 +19,7 @@ Load plan, review critically, execute all tasks, report when complete.
 1. Read plan file
 2. Review critically - identify any questions or concerns about the plan
 3. If concerns: Raise them with your human partner before starting
-4. If no concerns: Create TodoWrite and proceed
+4. If no concerns: Create `update_plan` entries and proceed
 
 ### Step 2: Execute Tasks
 
@@ -27,7 +27,11 @@ For each task:
 1. Mark as in_progress
 2. Follow each step exactly (plan has bite-sized steps)
 3. Run verifications as specified
-4. Mark as completed
+4. Commit the completed task or batch before the review checkpoint
+5. Run the review checkpoint required by the plan or batch using `superpowers:requesting-code-review`
+6. If review finds blocking issues, fix them, commit the fixes, and rerun review with the same task or batch scope
+7. Repeat the fix-and-rereview loop until the checkpoint passes
+8. Mark as completed
 
 ### Step 3: Complete Development
 
@@ -67,4 +71,5 @@ After all tasks complete and verified:
 **Required workflow skills:**
 - **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
 - **superpowers:writing-plans** - Creates the plan this skill executes
+- **superpowers:requesting-code-review** - Review checkpoint after each batch or milestone
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
