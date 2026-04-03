@@ -1,67 +1,30 @@
 # Installing Superpowers for Codex
 
-Enable superpowers skills in Codex via native skill discovery. Just clone and symlink.
+Install the Codex-only Superpowers fork by cloning it locally and exposing the skills to Codex.
 
-## Prerequisites
-
-- Git
+These commands assume macOS, Linux, or WSL with a POSIX shell, and default `CODEX_HOME` to `~/.codex` when it is unset.
 
 ## Installation
 
-1. **Clone the superpowers repository:**
+1. Clone the repository:
+
    ```bash
-   git clone https://github.com/obra/superpowers.git ~/.codex/superpowers
+   git clone https://github.com/Jo-Atom/superpowers-codex.git "${CODEX_HOME:-$HOME/.codex}/superpowers"
    ```
 
-2. **Create the skills symlink:**
+2. Link the skills into Codex's user skill directory:
+
    ```bash
-   mkdir -p ~/.agents/skills
-   ln -s ~/.codex/superpowers/skills ~/.agents/skills/superpowers
+   mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
+   ln -s "${CODEX_HOME:-$HOME/.codex}/superpowers/skills" "${CODEX_HOME:-$HOME/.codex}/skills/superpowers"
    ```
 
-   **Windows (PowerShell):**
-   ```powershell
-   New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.agents\skills"
-   cmd /c mklink /J "$env:USERPROFILE\.agents\skills\superpowers" "$env:USERPROFILE\.codex\superpowers\skills"
-   ```
-
-3. **Restart Codex** (quit and relaunch the CLI) to discover the skills.
-
-## Migrating from old bootstrap
-
-If you installed superpowers before native skill discovery, you need to:
-
-1. **Update the repo:**
-   ```bash
-   cd ~/.codex/superpowers && git pull
-   ```
-
-2. **Create the skills symlink** (step 2 above) — this is the new discovery mechanism.
-
-3. **Remove the old bootstrap block** from `~/.codex/AGENTS.md` — any block referencing `superpowers-codex bootstrap` is no longer needed.
-
-4. **Restart Codex.**
+3. Restart Codex.
 
 ## Verify
 
 ```bash
-ls -la ~/.agents/skills/superpowers
+ls -la "${CODEX_HOME:-$HOME/.codex}/skills/superpowers"
 ```
 
-You should see a symlink (or junction on Windows) pointing to your superpowers skills directory.
-
-## Updating
-
-```bash
-cd ~/.codex/superpowers && git pull
-```
-
-Skills update instantly through the symlink.
-
-## Uninstalling
-
-```bash
-rm ~/.agents/skills/superpowers
-```
-
-Optionally delete the clone: `rm -rf ~/.codex/superpowers`.
+Expected: a symlink pointing at `${CODEX_HOME:-$HOME/.codex}/superpowers/skills`
