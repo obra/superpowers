@@ -46,9 +46,9 @@ of human involvement will be closed without review.
 
 ## Environment tested
 
-| Harness (e.g. Claude Code, Cursor) | Harness version | Model | Model version/ID |
-|-------------------------------------|-----------------|-------|------------------|
-|                                     |                 |       |                  |
+| Codex surface (`CLI` or `App`) | Codex version | Model | Model version/ID |
+|--------------------------------|---------------|-------|------------------|
+|                                |               |       |                  |
 
 ## Evaluation
 - What was the initial prompt you (or your human partner) used to start
@@ -61,7 +61,7 @@ of human involvement will be closed without review.
 
 ## Rigor
 
-- [ ] If this is a skills change: I used `superpowers:writing-skills` and
+- [ ] If this is a skills change: I used the `writing-skills` skill and
       completed adversarial pressure testing (paste results below)
 - [ ] This change was tested adversarially, not just on the happy path
 - [ ] I did not modify carefully-tuned content (Red Flags table,
