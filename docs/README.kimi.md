@@ -24,11 +24,15 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
    git clone https://github.com/obra/superpowers.git ~/.config/agents/superpowers
    ```
 
-2. Create the skills symlink:
+2. Symlink each skill into the discovery directory:
    ```bash
    mkdir -p ~/.config/agents/skills
-   ln -s ~/.config/agents/superpowers/skills ~/.config/agents/skills/superpowers
+   for skill in ~/.config/agents/superpowers/skills/*/; do
+     ln -s "$skill" ~/.config/agents/skills/"$(basename "$skill")"
+   done
    ```
+
+   Kimi CLI expects skills directly at `~/.config/agents/skills/<skill-name>/SKILL.md` — a single directory symlink adds an extra nesting level that prevents discovery.
 
 3. Restart Kimi Code CLI.
 
@@ -38,15 +42,20 @@ Use a junction instead of a symlink (works without Developer Mode):
 
 ```powershell
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.config\agents\skills"
-cmd /c mklink /J "$env:USERPROFILE\.config\agents\skills\superpowers" "$env:USERPROFILE\.config\agents\superpowers\skills"
+Get-ChildItem "$env:USERPROFILE\.config\agents\superpowers\skills" -Directory | ForEach-Object {
+  cmd /c mklink /J "$env:USERPROFILE\.config\agents\skills\$($_.Name)" $_.FullName
+}
 ```
 
 ## How It Works
 
-Kimi Code CLI has native skill discovery — it scans `~/.config/agents/skills/` at startup, parses SKILL.md frontmatter, and loads skills on demand. Superpowers skills are made visible through a single symlink:
+Kimi Code CLI has native skill discovery — it scans `~/.config/agents/skills/` for subdirectories containing `SKILL.md` files at startup. Skills must be **directly** inside the discovery directory (not nested in a subdirectory). The per-skill symlinks make each superpowers skill visible individually:
 
 ```
-~/.config/agents/skills/superpowers/ → ~/.config/agents/superpowers/skills/
+~/.config/agents/skills/brainstorming/    → ~/.config/agents/superpowers/skills/brainstorming/
+~/.config/agents/skills/writing-plans/    → ~/.config/agents/superpowers/skills/writing-plans/
+~/.config/agents/skills/using-superpowers/ → ~/.config/agents/superpowers/skills/using-superpowers/
+...
 ```
 
 The `using-superpowers` skill is discovered automatically and enforces skill usage discipline — no additional configuration needed.
@@ -122,13 +131,19 @@ Skills update instantly through the symlink.
 
 ## Uninstalling
 
+Remove all superpowers skill symlinks:
+
 ```bash
-rm ~/.config/agents/skills/superpowers
+for skill in ~/.config/agents/superpowers/skills/*/; do
+  rm -f ~/.config/agents/skills/"$(basename "$skill")"
+done
 ```
 
 **Windows (PowerShell):**
 ```powershell
-Remove-Item "$env:USERPROFILE\.config\agents\skills\superpowers"
+Get-ChildItem "$env:USERPROFILE\.config\agents\superpowers\skills" -Directory | ForEach-Object {
+  Remove-Item "$env:USERPROFILE\.config\agents\skills\$($_.Name)"
+}
 ```
 
 Optionally delete the clone: `rm -rf ~/.config/agents/superpowers`
@@ -137,8 +152,9 @@ Optionally delete the clone: `rm -rf ~/.config/agents/superpowers`
 
 ### Skills not showing up
 
-1. Verify the symlink: `ls -la ~/.config/agents/skills/superpowers`
+1. Verify symlinks exist: `ls -la ~/.config/agents/skills/ | grep superpowers`
 2. Check skills exist: `ls ~/.config/agents/superpowers/skills`
+3. Verify a skill is accessible: `ls ~/.config/agents/skills/using-superpowers/SKILL.md`
 3. Restart Kimi Code CLI — skills are discovered at startup
 4. Check Kimi CLI version: `kimi --version` (requires 1.12+)
 
