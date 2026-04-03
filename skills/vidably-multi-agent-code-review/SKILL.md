@@ -76,12 +76,13 @@ Tag every finding with a category. This taxonomy grows over time — add new cat
 
 Updated after each Post-CI Retrospective (Step 9). Use these to specialize prompts — emphasize each model's **blind spots**, not strengths.
 
-| Model   | Strengths                          | Blind Spots                   | Last Updated |
-| ------- | ---------------------------------- | ----------------------------- | ------------ |
-| Claude  | `auth/security`, `react-lifecycle` | `dev-compat`, `failure-modes` | PR #61       |
-| Codex   | `dev-compat`, `data-integrity`     | `auth/security`               | PR #61       |
-| Gemini  | `plan-conformance`, `performance`  | TBD (1 PR baseline)           | PoC          |
-| Copilot | `failure-modes`, `data-integrity`  | TBD                           | PR #61       |
+| Model      | Strengths                                            | Blind Spots                                      | Last Updated |
+| ---------- | ---------------------------------------------------- | ------------------------------------------------ | ------------ |
+| Claude     | `auth/security`, `react-lifecycle`, `performance`    | `dev-compat`, `failure-modes`, `api-correctness` | PR #62-64    |
+| Codex      | `dev-compat`, `data-integrity`                       | `auth/security`, `api-correctness`               | PR #62-64    |
+| Gemini     | `plan-conformance`, `performance`                    | `failure-modes`, `auth/security`                 | PR #62-64    |
+| Codex (CI) | `api-correctness`, `failure-modes`, `data-integrity` | —                                                | PR #62-64    |
+| Copilot    | `failure-modes`, `api-correctness`                   | `auth/security`, `dev-compat`                    | PR #62-64    |
 
 ## Step 3: Dispatch to Available Models
 
@@ -99,10 +100,12 @@ Review for:
 6. Plan conformance (if a plan exists — does the code match the spec?)
 
 ALSO specifically check for (learned from past reviews):
-- Failure modes: what happens when retries exhaust? Are there stuck states? Missing onFailure handlers? (PR #61)
-- Data invariants: case-sensitive uniqueness, nullability edge cases, type coercion across DB boundaries (PR #61)
-- API correctness: verify external API query field names and pagination against official docs, not assumptions (PR #61)
+- Failure modes: what happens when retries exhaust? Are there stuck states? Missing onFailure handlers? Do webhook error responses allow the sender to retry for compliance-critical topics? (PR #61, #62)
+- Data invariants: case-sensitive uniqueness, nullability edge cases, type coercion across DB boundaries. For deletions/redactions, verify cascade behavior — nulling columns is not the same as deleting rows with FK cascades. (PR #61, #62)
+- API correctness: verify external API query field names and pagination against official docs, not assumptions. For webhook payloads, check ALL fields in the spec (e.g., Shopify GDPR payloads include orders_to_redact, orders_requested). (PR #61, #62)
 - Dev-environment contract: does every new external API call have an MSW mock? Can this code run with zero secrets? (PR #61)
+- Compliance/PII: never log PII (email, name, order IDs) in compliance handlers — it defeats redaction by creating copies in log storage. (PR #62)
+- Contract preservation: when migrating auth or refactoring, verify return types don't change (null → throw breaks callers). When fixing a pattern bug, grep for ALL instances of the same pattern. (PR #64)
 
 For each finding:
 - File and line number
@@ -119,9 +122,9 @@ Do NOT flag: style/formatting, missing comments, import ordering, test coverage 
 
 **Per-model prompt specialization:** After the base prompt, append a section for each model emphasizing its blind spots:
 
-- **Claude:** "Pay EXTRA attention to: dev-environment compatibility (MSW mocks, env var fallbacks, zero-secret contract), and failure modes (what happens when retries exhaust, partial failures, stuck states)."
-- **Codex:** "Pay EXTRA attention to: authorization and security (brand-scoping, auth bypass, OWASP), and auth error handling (401 vs 500 responses)."
-- **Gemini:** [Use base prompt until profile is established]
+- **Claude:** "Pay EXTRA attention to: dev-environment compatibility (MSW mocks, env var fallbacks, zero-secret contract), failure modes (retry exhaustion, partial failures, stuck states, webhook retry semantics), and API correctness (verify webhook payload fields against official spec, don't assume — check)."
+- **Codex:** "Pay EXTRA attention to: authorization and security (brand-scoping, auth bypass, OWASP), auth error handling (401 vs 500 responses), and API correctness (verify all fields in external API payloads are consumed, not just the obvious ones)."
+- **Gemini:** "Pay EXTRA attention to: failure modes (what happens when handlers throw — do callers get retries?), authorization/security (PII in logs, auth bypass), and contract preservation (do return types change when refactoring?)."
 
 The goal: **each model compensates for the others' weaknesses**, not duplicate their strengths.
 
