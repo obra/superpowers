@@ -106,6 +106,8 @@ ALSO specifically check for (learned from past reviews):
 - Dev-environment contract: does every new external API call have an MSW mock? Can this code run with zero secrets? (PR #61)
 - Compliance/PII: never log PII (email, name, order IDs) in compliance handlers — it defeats redaction by creating copies in log storage. (PR #62)
 - Contract preservation: when migrating auth or refactoring, verify return types don't change (null → throw breaks callers). When fixing a pattern bug, grep for ALL instances of the same pattern. (PR #64)
+- Webhook retry safety: when changing webhook error responses from 200 to 500, verify ALL handlers are idempotent. Non-idempotent handlers (insert without unique guard) must return 200 on error to prevent retry-induced data duplication. (PR #66)
+- JSON serialization safety: when building strings for JSON output (especially script tags with JSON-LD), verify that escape sequences produce valid JSON. Backslash-bang is not a valid JSON escape — use Unicode escapes like `\u003C` instead. (PR #67)
 
 For each finding:
 - File and line number
