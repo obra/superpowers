@@ -149,7 +149,8 @@ If the Gemini CLI is unavailable or you want faster results, call the Gemini API
 
 **CLI gotchas (learned from real usage):**
 
-- **TIMEOUTS: Both Codex and Gemini CLIs need 10 minutes (600000ms) for large diffs.** With `xhigh` reasoning, Codex reads files, runs searches, and reasons deeply — a 500+ line diff legitimately takes 5-10 min. The default 2-minute bash timeout will kill them mid-analysis, producing no findings. This was misdiagnosed as "hitting output limits" and "MCP init overhead" in early reviews — both were just timeout kills. Always use `timeout: 600000` for CLI review commands.
+- **TIMEOUTS: Use `timeout: 1200000` (20 minutes) for all CLI review commands.** With `xhigh` reasoning, Codex reads files, runs web searches, and reasons deeply — it needs real time. The default 2-minute bash timeout will kill them mid-analysis, producing no findings. This was misdiagnosed as "hitting output limits" and "MCP init overhead" in early reviews — both were just timeout kills.
+- **TIMING: Wrap every CLI review call with timing** so we can calibrate timeouts with real data. Use: `START=$(date +%s); <command>; echo "REVIEW_TIMING: model=<model> diff_lines=<N> elapsed=$(($(date +%s) - START))s"`. Log this in the synthesis output so it gets captured in review-effectiveness.md.
 - Codex `review` mode is purpose-built for diffs — prefer it over `exec` for code review
 - Codex `exec` for non-diff reviews MUST use `-s read-only` and pipe via stdin — otherwise it spirals into repo exploration and exhausts its budget without producing output (confirmed 2026-04-02, gpt-5.4)
 - Codex: Use `--base main` to review the current branch against main
