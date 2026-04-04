@@ -344,11 +344,14 @@ namespace cAlgo.Robots
         [Parameter("ATR Period", DefaultValue = 14, MinValue = 5, MaxValue = 50, Group = "Indicators")]
         public int AtrPeriod { get; set; }
 
-        [Parameter("EMA Fast Period", DefaultValue = 9, MinValue = 3, MaxValue = 50, Group = "Indicators")]
+        [Parameter("EMA Fast Period", DefaultValue = 20, MinValue = 5, MaxValue = 50, Group = "Indicators")]
         public int EmaFast { get; set; }
 
-        [Parameter("EMA Slow Period", DefaultValue = 21, MinValue = 5, MaxValue = 100, Group = "Indicators")]
+        [Parameter("EMA Slow Period", DefaultValue = 50, MinValue = 10, MaxValue = 200, Group = "Indicators")]
         public int EmaSlow { get; set; }
+
+        [Parameter("EMA Trend Filter Period", DefaultValue = 200, MinValue = 50, MaxValue = 500, Group = "Indicators")]
+        public int EmaTrend { get; set; }
 
         [Parameter("FOMC Dates (yyyy-MM-dd,csv)", DefaultValue = "", Group = "News Filter")]
         public string FomcDates { get; set; }
@@ -361,8 +364,9 @@ namespace cAlgo.Robots
         //  #region Indicators
         // ═══════════════════════════════════════════════════════
         #region Indicators
-        private ExponentialMovingAverage _emaFast;
-        private ExponentialMovingAverage _emaSlow;
+        private ExponentialMovingAverage _emaFast;    // EMA20  — pullback level
+        private ExponentialMovingAverage _emaSlow;    // EMA50  — trend direction
+        private ExponentialMovingAverage _emaTrend;   // EMA200 — long-term M15 bias
         // _rsi replaced by CalcRSI() manual helper — same NaN/0 issue as BB in some cAlgo builds
         private MacdCrossOver            _macd;
         private AverageTrueRange         _atr;
@@ -411,11 +415,6 @@ namespace cAlgo.Robots
         private HashSet<DateTime> _fomcDates = new HashSet<DateTime>();
         private HashSet<DateTime> _ecbDates  = new HashSet<DateTime>();
 
-        // Crossover tracking for trend signal (extension check)
-        private double _crossoverBarPrice    = double.NaN;
-        private int    _barsSinceLongCross   = 999;
-        private int    _barsSinceShortCross  = 999;
-
         // Bars inside Bollinger Bands counter
         private int _barsInsideBands = 0;
 
@@ -438,6 +437,7 @@ namespace cAlgo.Robots
             // Primary timeframe indicators
             _emaFast     = Indicators.ExponentialMovingAverage(Bars.ClosePrices, EmaFast);
             _emaSlow     = Indicators.ExponentialMovingAverage(Bars.ClosePrices, EmaSlow);
+            _emaTrend    = Indicators.ExponentialMovingAverage(Bars.ClosePrices, EmaTrend);
             // RSI computed manually in CalcRSI() — see helpers region
             _macd        = Indicators.MacdCrossOver(26, 12, 9);
             _atr         = Indicators.AverageTrueRange(AtrPeriod, MovingAverageType.Simple);
@@ -606,26 +606,30 @@ namespace cAlgo.Robots
                 }
             }
 
-            // ── Try Trend Signal (all regimes) ───────────────────
-            // Trend strategy runs on ANY regime — EMA crossovers occur in ranging markets too
-            if (EnableTrendStrategy)
+            double adxNow = _dms.ADX[idx];
+
+            // ── Try Trend Signal (ADX ≥ 20 — trending environment) ─
+            if (EnableTrendStrategy && !double.IsNaN(adxNow) && adxNow >= 20)
             {
                 SignalDirection trendSig = GetTrendSignal(idx);
                 if (trendSig != SignalDirection.None)
                 {
+                    // H4 filter: only trade WITH H4 bias, or when H4 is flat (None)
                     if (h4Bias != SignalDirection.None && h4Bias != trendSig) return;
                     OpenTrade(trendSig, idx, "TREND", h4SizeMult);
                     return;
                 }
             }
 
-            // ── Try Mean Reversion Signal ────────────────────────
-            if (EnableMeanReversionStrategy)
+            // ── Try Mean Reversion Signal (ADX < 25 — ranging environment)
+            if (EnableMeanReversionStrategy && (double.IsNaN(adxNow) || adxNow < 25))
             {
                 SignalDirection mrSig = GetMeanReversionSignal(idx);
                 if (mrSig != SignalDirection.None)
                 {
-                    if (h4Bias != SignalDirection.None && h4Bias != mrSig) return;
+                    // H4 filter for MR: allow trades AGAINST H4 bias (that's the point of MR)
+                    // but not if H4 bias is strongly confirmed (large EMA separation)
+                    if (h4Bias != SignalDirection.None && h4SizeMult < 0.8 && h4Bias != mrSig) return;
                     OpenTrade(mrSig, idx, "MEANREV", h4SizeMult);
                 }
             }
@@ -691,80 +695,67 @@ namespace cAlgo.Robots
         // ═══════════════════════════════════════════════════════
         #region Strategy Logic
 
+        // ──────────────────────────────────────────────────────────────
+        //  TREND STRATEGY: EMA Pullback
+        //
+        //  Logic (LONG):
+        //    1. EMA20 > EMA50   → uptrend on M15
+        //    2. Close > EMA200  → long-term M15 bias bullish
+        //    3. ADX ≥ 20        → market is actually trending
+        //    4. Bar low ≤ EMA20 + 0.4×ATR AND close > EMA20
+        //         → price dipped to / through EMA20 then closed above (pullback bounce)
+        //    5. RSI 38–65       → momentum healthy, not already overbought
+        //    6. Current bar bullish close (close > open) — confirming bar
+        //    7. Previous close > EMA50 — trend still intact one bar ago
+        //  SL → EMA50 − 0.6×ATR  (below trend anchor)
+        //  TP → 2.5× SL distance (minimum; ManageOpenTrades handles trailing)
+        // ──────────────────────────────────────────────────────────────
         private SignalDirection GetTrendSignal(int idx)
         {
-            // Need at least 3 bars before idx for momentum checks
-            if (idx < 3) return SignalDirection.None;
+            if (idx < 5) return SignalDirection.None;
 
-            double emaF0 = _emaFast.Result[idx];
-            double emaS0 = _emaSlow.Result[idx];
-            double emaF1 = _emaFast.Result[idx - 1]; // one bar older (forward indexing: lower index = older)
+            double emaF  = _emaFast.Result[idx];          // EMA20
+            double emaS  = _emaSlow.Result[idx];          // EMA50
+            double emaT  = _emaTrend.Result[idx];         // EMA200
+            double emaF1 = _emaFast.Result[idx - 1];
             double emaS1 = _emaSlow.Result[idx - 1];
-            double rsi   = CalcRSI(idx, 14);
-            double hist0 = _macd.Histogram[idx];
-            double hist1 = _macd.Histogram[idx - 1];
+            double adx   = _dms.ADX[idx];
             double atr   = _atr.Result[idx];
             double close = Bars.ClosePrices[idx];
+            double open  = Bars.OpenPrices[idx];
+            double low   = Bars.LowPrices[idx];
+            double high  = Bars.HighPrices[idx];
+            double rsi   = CalcRSI(idx, 14);
 
-            if (double.IsNaN(emaF0) || double.IsNaN(emaS0)) return SignalDirection.None;
-            if (double.IsNaN(emaF1) || double.IsNaN(emaS1)) return SignalDirection.None;
+            if (double.IsNaN(emaF) || double.IsNaN(emaS)) return SignalDirection.None;
+            if (double.IsNaN(rsi))                         return SignalDirection.None;
+            if (double.IsNaN(adx) || adx < 20)            return SignalDirection.None;
+            if (atr <= 0)                                  return SignalDirection.None;
 
-            // EMA crossover detection on this bar
-            bool freshLongCross  = emaF1 <= emaS1 && emaF0 > emaS0;
-            bool freshShortCross = emaF1 >= emaS1 && emaF0 < emaS0;
+            // ── LONG ────────────────────────────────────────────────
+            bool longTrend    = emaF  > emaS;                     // EMA20 > EMA50
+            bool longBias     = double.IsNaN(emaT) || close > emaT; // price above EMA200 (skip if not warmed)
+            bool longPullback = low <= emaF + atr * 0.4 &&        // bar dipped to EMA20 zone
+                                close > emaF;                      // but closed above it
+            bool longRSI      = rsi >= 38 && rsi <= 65;
+            bool longCandle   = close > open;                      // bullish confirming bar
+            bool longIntact   = Bars.ClosePrices[idx - 1] > emaS1; // prev close above EMA50
 
-            // Track bars since last crossover (allow entry within 5 bars)
-            if (freshLongCross)  { _barsSinceLongCross  = 0; _crossoverBarPrice = close; }
-            else                 { _barsSinceLongCross++; }
-            if (freshShortCross) { _barsSinceShortCross = 0; _crossoverBarPrice = close; }
-            else                 { _barsSinceShortCross++; }
-
-            bool longCross  = _barsSinceLongCross  <= 5 && emaF0 > emaS0;
-            bool shortCross = _barsSinceShortCross <= 5 && emaF0 < emaS0;
-
-            // Condition 5: last 3 bars all close in direction (idx-1, idx-2 = older bars in forward indexing)
-            bool last3Bull = Bars.ClosePrices[idx]     > Bars.OpenPrices[idx] &&
-                             Bars.ClosePrices[idx - 1] > Bars.OpenPrices[idx - 1] &&
-                             Bars.ClosePrices[idx - 2] > Bars.OpenPrices[idx - 2];
-            bool last3Bear = Bars.ClosePrices[idx]     < Bars.OpenPrices[idx] &&
-                             Bars.ClosePrices[idx - 1] < Bars.OpenPrices[idx - 1] &&
-                             Bars.ClosePrices[idx - 2] < Bars.OpenPrices[idx - 2];
-
-            // Condition 6: not too extended from crossover
-            bool notExtendedLong  = true;
-            bool notExtendedShort = true;
-            if (!double.IsNaN(_crossoverBarPrice) && atr > 0)
-            {
-                double dist = Math.Abs(close - _crossoverBarPrice);
-                if (dist > atr * 1.5)
-                {
-                    notExtendedLong  = false;
-                    notExtendedShort = false;
-                }
-            }
-
-            // VWAP filter — skip if no volume data (tick volumes unavailable on some TFs)
-            bool vwapOkLong  = _vwapDenominator <= 0 || close >= _currentVwap;
-            bool vwapOkShort = _vwapDenominator <= 0 || close <= _currentVwap;
-
-            // LONG signal
-            if (longCross &&
-                rsi >= 45 && rsi <= 60 &&
-                hist0 > 0 && hist0 > hist1 &&
-                vwapOkLong &&
-                last3Bull &&
-                notExtendedLong)
+            if (longTrend && longBias && longPullback && longRSI && longCandle && longIntact)
             {
                 return SignalDirection.Long;
             }
 
-            // SHORT signal
-            if (shortCross &&
-                rsi >= 40 && rsi <= 55 &&
-                hist0 < 0 && hist0 < hist1 &&
-                vwapOkShort &&
-                last3Bear &&
-                notExtendedShort)
+            // ── SHORT ────────────────────────────────────────────────
+            bool shortTrend    = emaF  < emaS;
+            bool shortBias     = double.IsNaN(emaT) || close < emaT;
+            bool shortPullback = high >= emaF - atr * 0.4 &&
+                                 close < emaF;
+            bool shortRSI      = rsi >= 35 && rsi <= 62;
+            bool shortCandle   = close < open;
+            bool shortIntact   = Bars.ClosePrices[idx - 1] < emaS1;
+
+            if (shortTrend && shortBias && shortPullback && shortRSI && shortCandle && shortIntact)
             {
                 return SignalDirection.Short;
             }
@@ -772,65 +763,83 @@ namespace cAlgo.Robots
             return SignalDirection.None;
         }
 
+        // ──────────────────────────────────────────────────────────────
+        //  MEAN REVERSION STRATEGY: Bollinger Band Extreme + Confirmation
+        //
+        //  Logic (LONG):
+        //    1. ADX < 25        → ranging / low-trend environment
+        //    2. Close ≤ BB lower band (20, 2.0 std)
+        //    3. RSI < 38        → genuinely oversold
+        //    4. Stoch %K(14) < 28 → stochastic confirms oversold
+        //    5. Current bar is bullish (close > open) → reversal candle
+        //    6. At least one of the previous 5 bars was INSIDE the bands
+        //         → rules out free-falling price (falling-knife filter)
+        //    7. BB width / midprice > 0.0008 → bands not compressed (< 8 pips)
+        //         which would make fills random
+        //  SL → close − 1.2×ATR
+        //  TP → BB midline (ManageOpenTrades trails after)
+        // ──────────────────────────────────────────────────────────────
         private SignalDirection GetMeanReversionSignal(int idx)
         {
-            // Need at least 20 bars before idx for BB calculation
-            if (idx < 20) return SignalDirection.None;
+            if (idx < 21) return SignalDirection.None;
 
-            double close  = Bars.ClosePrices[idx];
+            double adx = _dms.ADX[idx];
+            if (!double.IsNaN(adx) && adx >= 25) return SignalDirection.None; // only in ranging
+
+            double close = Bars.ClosePrices[idx];
+            double open  = Bars.OpenPrices[idx];
             double bbMid, bbTop, bbBot;
             CalcBB(idx, 20, 2.0, out bbMid, out bbTop, out bbBot);
             double rsi    = CalcRSI(idx, 14);
-            double stochK = CalcStochK(idx, 5);
-            double vol    = Bars.TickVolumes[idx];
-            double volSma = _volumeSma20.Result[idx];
+            double stochK = CalcStochK(idx, 14);
+            double atr    = _atr.Result[idx];
 
             if (double.IsNaN(bbTop) || double.IsNaN(bbBot)) return SignalDirection.None;
-            if (double.IsNaN(rsi)   || double.IsNaN(stochK))  return SignalDirection.None;
+            if (double.IsNaN(rsi))                           return SignalDirection.None;
+            if (bbMid <= 0)                                  return SignalDirection.None;
 
-            // Price within inner range of last 200 bars (prevents falling-knife entries)
-            // Forward indexing: scan backward from idx toward older bars (lower index)
-            int lookback = Math.Min(200, idx);
-            double highN = double.MinValue;
-            double lowN  = double.MaxValue;
-            for (int i = idx; i > idx - lookback && i >= 0; i--)
+            // Skip if bands are too compressed (< ~8 pips on EURUSD)
+            double bbWidth = (bbTop - bbBot) / bbMid;
+            if (bbWidth < 0.0008) return SignalDirection.None;
+
+            // Falling-knife / rocket-launch filter:
+            // at least one of the 5 preceding bars must have closed inside the bands
+            bool wasInsideBands = false;
+            for (int i = idx - 1; i >= Math.Max(0, idx - 5); i--)
             {
-                if (Bars.HighPrices[i] > highN) highN = Bars.HighPrices[i];
-                if (Bars.LowPrices[i]  < lowN)  lowN  = Bars.LowPrices[i];
+                double bM, bT, bB;
+                CalcBB(i, 20, 2.0, out bM, out bT, out bB);
+                if (!double.IsNaN(bT) && Bars.ClosePrices[i] >= bB && Bars.ClosePrices[i] <= bT)
+                {
+                    wasInsideBands = true;
+                    break;
+                }
             }
-            double innerHigh = highN - (highN - lowN) * 0.15;
-            double innerLow  = lowN  + (highN - lowN) * 0.15;
+            if (!wasInsideBands) return SignalDirection.None;
 
-            // Volume filter — skip when tick volume data unavailable (returns 0)
-            bool volOk = volSma <= 0 || vol >= volSma;
+            // ── LONG: price at/below lower BB, oversold, reversal candle ──
+            bool longBB     = close <= bbBot + atr * 0.1;   // at or just below lower band
+            bool longRsi    = rsi < 38;
+            bool longStoch  = double.IsNaN(stochK) || stochK < 28;
+            bool longCandle = close > open;                  // bullish confirming bar
 
-            // LONG: price in lower third of BB range (oversold zone), plus Stoch oversold
-            // BB "breakout" was too rare in tight markets — lower-third is more practical
-            double bbRange  = bbTop - bbBot;
-            double lowerThird = bbBot + bbRange * 0.33;
-            double upperThird = bbTop - bbRange * 0.33;
-            bool longBB    = close < lowerThird;   // lower third of band
-            bool longRsi   = rsi   < 50;           // not overbought (wide gate)
-            bool longStoch = stochK < 35;
-            bool longRange = close >= innerLow;
-
-            if (longBB && longRsi && longStoch && volOk && longRange)
+            if (longBB && longRsi && longStoch && longCandle)
             {
-                Print(string.Format("[MARS][MR-LONG] {0} close={1:F5} lowerThird={2:F5} RSI={3:F1} Stoch={4:F1}",
-                    Server.Time.ToString("yyyy-MM-dd HH:mm"), close, lowerThird, rsi, stochK));
+                Print(string.Format("[MARS][MR-LONG] {0} close={1:F5} bbBot={2:F5} RSI={3:F1} Stoch={4:F1}",
+                    Server.Time.ToString("yyyy-MM-dd HH:mm"), close, bbBot, rsi, stochK));
                 return SignalDirection.Long;
             }
 
-            // SHORT: price in upper third of BB range (overbought zone)
-            bool shortBB    = close > upperThird;
-            bool shortRsi   = rsi   > 50;
-            bool shortStoch = stochK > 65;
-            bool shortRange = close <= innerHigh;
+            // ── SHORT: price at/above upper BB, overbought, reversal candle ──
+            bool shortBB     = close >= bbTop - atr * 0.1;
+            bool shortRsi    = rsi > 62;
+            bool shortStoch  = double.IsNaN(stochK) || stochK > 72;
+            bool shortCandle = close < open;                 // bearish confirming bar
 
-            if (shortBB && shortRsi && shortStoch && volOk && shortRange)
+            if (shortBB && shortRsi && shortStoch && shortCandle)
             {
-                Print(string.Format("[MARS][MR-SHORT] {0} close={1:F5} upperThird={2:F5} RSI={3:F1} Stoch={4:F1}",
-                    Server.Time.ToString("yyyy-MM-dd HH:mm"), close, upperThird, rsi, stochK));
+                Print(string.Format("[MARS][MR-SHORT] {0} close={1:F5} bbTop={2:F5} RSI={3:F1} Stoch={4:F1}",
+                    Server.Time.ToString("yyyy-MM-dd HH:mm"), close, bbTop, rsi, stochK));
                 return SignalDirection.Short;
             }
 
@@ -917,23 +926,52 @@ namespace cAlgo.Robots
         private void OpenTrade(SignalDirection direction, int idx,
                                 string signalSource, double h4SizeMult)
         {
-            double atr           = _atr.Result[idx];
+            double atr = _atr.Result[idx];
             if (atr <= 0) return;
 
-            double entryPrice    = direction == SignalDirection.Long
-                ? Symbol.Ask : Symbol.Bid;
-            double slDistance    = atr * 1.5;
-            double tpDistance    = atr * 3.0;
+            double entryPrice = direction == SignalDirection.Long ? Symbol.Ask : Symbol.Bid;
+
+            double slDistance;
+            double tpDistance;
+
+            if (signalSource == "TREND")
+            {
+                // Trend pullback: SL below/above EMA50 structural level
+                double emaS = _emaSlow.Result[idx];
+                if (double.IsNaN(emaS)) emaS = entryPrice; // fallback
+                slDistance = direction == SignalDirection.Long
+                    ? entryPrice - (emaS - atr * 0.6)     // entry to (EMA50 - 0.6 ATR)
+                    : (emaS + atr * 0.6) - entryPrice;
+                slDistance = Math.Abs(slDistance);
+                tpDistance = slDistance * 2.5;             // 2.5:1 RR minimum
+            }
+            else // MEANREV
+            {
+                // Mean reversion: SL just beyond the band extreme
+                slDistance = atr * 1.2;
+                // TP = distance to BB mid from entry (at minimum 1.5:1 RR)
+                double bbMid, bbTop, bbBot;
+                CalcBB(idx, 20, 2.0, out bbMid, out bbTop, out bbBot);
+                if (!double.IsNaN(bbMid) && bbMid > 0)
+                {
+                    double distToMid = Math.Abs(entryPrice - bbMid);
+                    tpDistance = Math.Max(distToMid, slDistance * 1.5);
+                }
+                else
+                {
+                    tpDistance = slDistance * 1.5;
+                }
+            }
 
             // Enforce minimum stop distance
             double minStop = GetMinStopDistance();
             if (slDistance < minStop)
                 slDistance = minStop;
 
-            // Enforce minimum 2:1 RR
-            if (tpDistance < slDistance * 2.0)
+            // Enforce minimum 1.5:1 RR
+            if (tpDistance < slDistance * 1.5)
             {
-                Print("[MARS] Skipping trade — TP < 2:1 RR. ATR=" + atr.ToString("F5"));
+                Print("[MARS] Skipping trade — TP < 1.5:1 RR. ATR=" + atr.ToString("F5"));
                 return;
             }
 
