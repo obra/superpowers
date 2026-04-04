@@ -1,6 +1,6 @@
 ---
 name: writing-plans
-description: Use when you have a spec or requirements for a multi-step task, before touching code
+description: Turn an approved spec into a detailed implementation plan with concrete tasks and verification steps. Use when you have a spec or requirements for a multi-step task before touching code.
 ---
 
 # Writing Plans
@@ -14,6 +14,8 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
 **Context:** This plan is for a Codex-first repository. Assume Codex CLI is the primary execution surface unless the task explicitly calls out an App caveat.
+
+**Prerequisite:** This skill assumes brainstorming already produced an approved spec. If you only have a rough request or open design questions, stop and use `brainstorming` first.
 
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)

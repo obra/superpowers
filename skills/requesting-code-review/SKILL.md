@@ -5,7 +5,9 @@ description: Use when completing tasks, implementing major features, or before m
 
 # Requesting Code Review
 
-Use a dedicated Codex reviewer agent to catch issues before they compound.
+Use a dedicated reviewer agent to catch issues before they compound.
+
+The canonical reviewer role for this fork lives at `agents/code-reviewer.md`. That shared `agents/` path is the Codex-native location, but the reviewer contract intentionally stays close to upstream Superpowers.
 
 ## When to Request Review
 
@@ -22,6 +24,15 @@ Use a dedicated Codex reviewer agent to catch issues before they compound.
 4. Wait for the reviewer result
 5. If the reviewer finds blocking issues, fix them, commit the fixes, and rerun review against the same scope
 6. Repeat until the review passes cleanly
+
+## Reviewer Contract
+
+The reviewer returns:
+
+- `Strengths`
+- `Issues` grouped by severity
+- `Recommendations`
+- `Assessment`
 
 ## Diff Range
 

@@ -29,6 +29,8 @@ If `AGENTS.md` or a direct user request says "don't use TDD" and a skill says "a
 
 Codex discovers installed personal skills from `$HOME/.agents/skills`, and teams can also check shared skills into `.agents/skills` inside a repository.
 
+This fork keeps its source skills in `skills/` and exposes them to Codex through the installed Superpowers bundle. Do not assume every repository with Superpowers source files is itself using repo-local `.agents/skills`.
+
 When a relevant skill exists:
 
 - load the current `SKILL.md` content
@@ -55,7 +57,7 @@ Use Codex-native mechanisms directly:
 ```dot
 digraph skill_flow {
     "User message received" [shape=doublecircle];
-    "New implementation or bugfix request?" [shape=diamond];
+    "About to write a plan?" [shape=doublecircle];
     "Already brainstormed?" [shape=diamond];
     "Load brainstorming skill" [shape=box];
     "Might any skill apply?" [shape=diamond];
@@ -66,12 +68,11 @@ digraph skill_flow {
     "Follow skill exactly" [shape=box];
     "Respond or act" [shape=doublecircle];
 
-    "User message received" -> "New implementation or bugfix request?";
-    "New implementation or bugfix request?" -> "Already brainstormed?" [label="yes"];
-    "New implementation or bugfix request?" -> "Might any skill apply?" [label="no"];
+    "About to write a plan?" -> "Already brainstormed?";
     "Already brainstormed?" -> "Load brainstorming skill" [label="no"];
     "Already brainstormed?" -> "Might any skill apply?" [label="yes"];
     "Load brainstorming skill" -> "Might any skill apply?";
+    "User message received" -> "Might any skill apply?";
     "Might any skill apply?" -> "Load relevant skill" [label="yes, even 1%"];
     "Might any skill apply?" -> "Respond or act" [label="definitely not"];
     "Load relevant skill" -> "Announce: 'Using [skill] to [purpose]'";
@@ -82,6 +83,8 @@ digraph skill_flow {
     "Follow skill exactly" -> "Respond or act";
 }
 ```
+
+If you are about to use `writing-plans`, stop and verify that brainstorming already produced an approved spec. If not, use `brainstorming` first.
 
 ## Red Flags
 

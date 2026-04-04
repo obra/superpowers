@@ -17,7 +17,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/Jo-Atom/sup
 ```
 
 Documented install surfaces in this fork are Codex CLI on macOS, Linux, WSL, and native Windows PowerShell. Codex App remains best-effort and secondary.
-Native Windows PowerShell is part of the supported Codex CLI surface, but some bundled POSIX shell helper workflows are currently validated only on POSIX/WSL paths.
+Native Windows PowerShell is supported for installation and repo-root instruction loading only. Bundled POSIX shell helper workflows remain POSIX/WSL-first.
 
 For manual installation, global skill symlink setup, and troubleshooting, see `docs/README.codex.md`.
 

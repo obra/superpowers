@@ -3,6 +3,8 @@ set -euo pipefail
 
 test -f AGENTS.md
 test ! -L AGENTS.md
+test -f agents/code-reviewer.md
+test ! -f skills/requesting-code-review/code-reviewer.md
 test ! -e CLAUDE.md
 test ! -d .claude-plugin
 test ! -d .cursor-plugin

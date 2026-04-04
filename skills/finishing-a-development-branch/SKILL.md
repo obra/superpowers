@@ -107,7 +107,7 @@ EOF
 )"
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Keep worktree for follow-up review, fixes, or PR feedback.
 
 #### Option 3: Keep As-Is
 
@@ -139,7 +139,7 @@ Then: Cleanup worktree (Step 5)
 
 ### Step 5: Cleanup Worktree
 
-**For Options 1, 2, 4:**
+**For Options 1 and 4:**
 
 Check if in worktree:
 ```bash

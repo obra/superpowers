@@ -20,4 +20,4 @@ Use `agents/code-reviewer.md` with:
 - Is the implementation following the file structure from the plan?
 - Did this implementation create new files that are already large, or significantly grow existing files? (Don't flag pre-existing file sizes - focus on what this change contributed.)
 
-**Code reviewer returns:** Findings, Open Questions, Summary
+**Code reviewer returns:** Strengths, Issues (Critical/Important/Minor), Recommendations, Assessment

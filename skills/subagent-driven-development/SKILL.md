@@ -1,6 +1,6 @@
 ---
 name: subagent-driven-development
-description: Use when executing implementation plans with independent tasks in the current session
+description: Execute implementation plans with isolated task subagents and staged reviews. Use when implementing independent plan tasks in the current session.
 ---
 
 # Subagent-Driven Development
@@ -136,27 +136,31 @@ You: I'm using Subagent-Driven Development to execute this plan.
 [Extract all 5 tasks with full text and context]
 [Create update_plan with all tasks]
 
-Task 1: Hook installation script
+Task 1: Runtime smoke script
 
 [Get Task 1 text and context (already extracted)]
 [Dispatch implementation subagent with full task text + context]
 
-Implementer: "Before I begin - should the hook be installed at user or system level?"
+Implementer: "Before I begin - should this verify only repo-root instructions, or both repo-root instructions and the installed skill path?"
 
-You: "User level (~/.config/superpowers/hooks/)"
+You: "Both. Verify repo-root `AGENTS.md` and the installed `using-superpowers` skill path."
 
 Implementer: "Got it. Implementing now..."
 [Later] Implementer:
-  - Implemented install-hook command
+  - Added runtime smoke script
   - Added tests, 5/5 passing
-  - Self-review: Found I missed --force flag, added it
+  - Self-review: Found I missed temporary HOME cleanup, added it
   - Committed
 
 [Dispatch spec compliance reviewer]
 Spec reviewer: ✅ Spec compliant - all requirements met, nothing extra
 
 [Dispatch code quality reviewer]
-Code reviewer: Strengths: Good test coverage, clean. Issues: None. Approved.
+Code reviewer:
+  Strengths: Good test coverage, clean.
+  Issues: None
+  Recommendations: None
+  Assessment: Approved
 
 [Mark Task 1 complete]
 
@@ -184,13 +188,22 @@ Implementer: Removed --json flag, added progress reporting
 Spec reviewer: ✅ Spec compliant now
 
 [Dispatch code quality reviewer]
-Code reviewer: Strengths: Solid. Issues (Important): Magic number (100)
+Code reviewer:
+  Strengths: Solid.
+  Issues:
+    Important: Magic number (100)
+  Recommendations: None
+  Assessment: Fix important issue before proceeding
 
 [Send findings to the same implementer with send_input]
 Implementer: Extracted PROGRESS_INTERVAL constant
 
 [Code reviewer reviews again]
-Code reviewer: ✅ Approved
+Code reviewer:
+  Strengths: Clean follow-up fix.
+  Issues: None
+  Recommendations: None
+  Assessment: Approved
 
 [Mark Task 2 complete]
 
@@ -198,7 +211,11 @@ Code reviewer: ✅ Approved
 
 [After all tasks]
 [Dispatch final code-reviewer]
-Final reviewer: All requirements met, ready to merge
+Final reviewer:
+  Strengths: Requirements met, review clean.
+  Issues: None
+  Recommendations: None
+  Assessment: Ready to merge
 
 Done!
 ```

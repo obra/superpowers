@@ -29,13 +29,23 @@ ls -d worktrees 2>/dev/null      # Alternative
 
 **If found:** Use that directory. If both exist, `.worktrees` wins.
 
-### 2. Check AGENTS.md
+### 2. Check Active Instructions
+
+If there is no established worktree directory already in use, check whether the current conversation or active Codex instruction chain explicitly tells you where worktrees should live.
+
+In Codex, the applicable instruction chain is:
+
+1. global Codex home instructions: `${CODEX_HOME:-~/.codex}/AGENTS.override.md`, otherwise `${CODEX_HOME:-~/.codex}/AGENTS.md`
+2. project instructions from repo root down to the current working directory; in each directory, check `AGENTS.override.md`, then `AGENTS.md`, then any fallback names in `project_doc_fallback_filenames`
+
+Codex includes at most one file per directory. More specific nested instructions override broader ones because they appear later in the combined prompt. Do not only inspect the repo-root `AGENTS.md`, and do not ignore `AGENTS.override.md` or configured fallback instruction filenames.
 
 ```bash
-grep -i "worktree.*director" AGENTS.md 2>/dev/null
+# Inspect the full instruction chain, not just ./AGENTS.md.
+# Use the most specific explicit worktree-directory preference you find.
 ```
 
-**If preference specified:** Use it without asking.
+**If an explicit preference is present:** Use it when no local convention already exists. If the instruction conflicts with an existing `.worktrees/` or `worktrees/` convention, call out the conflict and ask before changing the team's layout.
 
 ## Codex App Note
 
@@ -43,7 +53,7 @@ If Codex App constrains background process behavior, choose the simplest support
 
 ### 3. Ask User
 
-If no directory exists and no AGENTS.md preference:
+If there is no explicit instruction and no existing directory:
 
 ```
 No worktree directory found. Where should I create worktrees?
@@ -151,10 +161,11 @@ Ready to implement <feature-name>
 
 | Situation | Action |
 |-----------|--------|
+| Explicit worktree instruction in active context and neither directory exists | Use it |
 | `.worktrees/` exists | Use it (verify ignored) |
 | `worktrees/` exists | Use it (verify ignored) |
 | Both exist | Use `.worktrees/` |
-| Neither exists | Check AGENTS.md → Ask user |
+| No explicit instruction and neither exists | Ask user |
 | Directory not ignored | Add to .gitignore + commit |
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
@@ -169,7 +180,7 @@ Ready to implement <feature-name>
 ### Assuming directory location
 
 - **Problem:** Creates inconsistency, violates project conventions
-- **Fix:** Follow priority: existing > AGENTS.md > ask
+- **Fix:** Follow priority: existing directories > explicit instruction chain > ask
 
 ### Proceeding with failing tests
 
@@ -203,11 +214,12 @@ Ready to implement auth feature
 - Create worktree without verifying it's ignored (project-local)
 - Skip baseline test verification
 - Proceed with failing tests without asking
-- Assume directory location when ambiguous
-- Skip AGENTS.md check
+- Assume directory location when instructions or conventions are ambiguous
+- Skip the active instruction chain
+- Treat repo-root `AGENTS.md` as the whole instruction set
 
 **Always:**
-- Follow directory priority: existing > AGENTS.md > ask
+- Follow directory priority: existing directories > explicit instruction chain > ask
 - Verify directory is ignored for project-local
 - Auto-detect and run project setup
 - Verify clean test baseline

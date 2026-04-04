@@ -54,7 +54,7 @@ scripts/start-server.sh --project-dir /path/to/project
 ```
 
 Run the server from Codex CLI and keep the returned `screen_dir` and `state_dir` for follow-up turns.
-`scripts/start-server.sh` is currently a POSIX shell helper. On native Windows, run this flow from WSL, Git Bash, or another POSIX shell while keeping the rest of the Codex workflow the same.
+`scripts/start-server.sh` is currently a POSIX shell helper. On native Windows, treat this helper flow as POSIX/WSL-first and run it from WSL, Git Bash, or another POSIX shell while keeping the rest of the Codex workflow the same.
 
 **Codex App (secondary compatibility):**
 
@@ -77,7 +77,7 @@ Use `--url-host` to control what hostname is printed in the returned URL JSON.
    - Before each write, check that `$STATE_DIR/server-info` exists. If it doesn't (or `$STATE_DIR/server-stopped` exists), the server has shut down — restart it with `start-server.sh` before continuing. The server auto-exits after 30 minutes of inactivity.
    - Use semantic filenames: `platform.html`, `visual-style.html`, `layout.html`
    - **Never reuse filenames** — each screen gets a fresh file
-   - Use Write tool — **never use cat/heredoc** (dumps noise into terminal)
+   - Use the normal Codex file-edit path — **never use cat/heredoc** (dumps noise into terminal)
    - Server automatically serves the newest file
 
 2. **Tell user what to expect and end your turn:**

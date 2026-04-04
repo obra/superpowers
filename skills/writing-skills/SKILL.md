@@ -10,6 +10,7 @@ description: Use when creating or revising skills and you need Codex-focused aut
 **Writing skills IS Test-Driven Development applied to process documentation.**
 
 **Personal Codex skills live in `$HOME/.agents/skills/`.**
+**This fork's source skills live in `skills/` and are exposed to Codex through the installed Superpowers bundle.**
 
 You write test cases (pressure scenarios with subagents), watch them fail (baseline behavior), write the skill (documentation), watch tests pass (agents comply), and refactor (close loopholes).
 
@@ -71,12 +72,23 @@ API docs, syntax guides, tool documentation (office docs)
 
 ## Directory Structure
 
+**When editing this fork:** add source files under `skills/`.
 
 ```
 skills/
   skill-name/
     SKILL.md              # Main reference (required)
     supporting-file.*     # Only if needed
+```
+
+**When authoring a repo-local Codex skill in another project:** use `.agents/skills/` so Codex can discover it natively.
+
+```
+.agents/
+  skills/
+    skill-name/
+      SKILL.md
+      supporting-file.*   # Only if needed
 ```
 
 **Flat namespace** - all skills in one searchable namespace

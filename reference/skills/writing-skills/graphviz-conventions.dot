@@ -1,0 +1,172 @@
+digraph STYLE_GUIDE {
+    // The style guide for our process DSL, written in the DSL itself
+
+    // Node type examples with their shapes
+    subgraph cluster_node_types {
+        label="NODE TYPES AND SHAPES";
+
+        // Questions are diamonds
+        "Is this a question?" [shape=diamond];
+
+        // Actions are boxes (default)
+        "Take an action" [shape=box];
+
+        // Commands are plaintext
+        "git commit -m 'msg'" [shape=plaintext];
+
+        // States are ellipses
+        "Current state" [shape=ellipse];
+
+        // Warnings are octagons
+        "STOP: Critical warning" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+
+        // Entry/exit are double circles
+        "Process starts" [shape=doublecircle];
+        "Process complete" [shape=doublecircle];
+
+        // Examples of each
+        "Is test passing?" [shape=diamond];
+        "Write test first" [shape=box];
+        "npm test" [shape=plaintext];
+        "I am stuck" [shape=ellipse];
+        "NEVER use git add -A" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+    }
+
+    // Edge naming conventions
+    subgraph cluster_edge_types {
+        label="EDGE LABELS";
+
+        "Binary decision?" [shape=diamond];
+        "Yes path" [shape=box];
+        "No path" [shape=box];
+
+        "Binary decision?" -> "Yes path" [label="yes"];
+        "Binary decision?" -> "No path" [label="no"];
+
+        "Multiple choice?" [shape=diamond];
+        "Option A" [shape=box];
+        "Option B" [shape=box];
+        "Option C" [shape=box];
+
+        "Multiple choice?" -> "Option A" [label="condition A"];
+        "Multiple choice?" -> "Option B" [label="condition B"];
+        "Multiple choice?" -> "Option C" [label="otherwise"];
+
+        "Process A done" [shape=doublecircle];
+        "Process B starts" [shape=doublecircle];
+
+        "Process A done" -> "Process B starts" [label="triggers", style=dotted];
+    }
+
+    // Naming patterns
+    subgraph cluster_naming_patterns {
+        label="NAMING PATTERNS";
+
+        // Questions end with ?
+        "Should I do X?";
+        "Can this be Y?";
+        "Is Z true?";
+        "Have I done W?";
+
+        // Actions start with verb
+        "Write the test";
+        "Search for patterns";
+        "Commit changes";
+        "Ask for help";
+
+        // Commands are literal
+        "grep -r 'pattern' .";
+        "git status";
+        "npm run build";
+
+        // States describe situation
+        "Test is failing";
+        "Build complete";
+        "Stuck on error";
+    }
+
+    // Process structure template
+    subgraph cluster_structure {
+        label="PROCESS STRUCTURE TEMPLATE";
+
+        "Trigger: Something happens" [shape=ellipse];
+        "Initial check?" [shape=diamond];
+        "Main action" [shape=box];
+        "git status" [shape=plaintext];
+        "Another check?" [shape=diamond];
+        "Alternative action" [shape=box];
+        "STOP: Don't do this" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+        "Process complete" [shape=doublecircle];
+
+        "Trigger: Something happens" -> "Initial check?";
+        "Initial check?" -> "Main action" [label="yes"];
+        "Initial check?" -> "Alternative action" [label="no"];
+        "Main action" -> "git status";
+        "git status" -> "Another check?";
+        "Another check?" -> "Process complete" [label="ok"];
+        "Another check?" -> "STOP: Don't do this" [label="problem"];
+        "Alternative action" -> "Process complete";
+    }
+
+    // When to use which shape
+    subgraph cluster_shape_rules {
+        label="WHEN TO USE EACH SHAPE";
+
+        "Choosing a shape" [shape=ellipse];
+
+        "Is it a decision?" [shape=diamond];
+        "Use diamond" [shape=diamond, style=filled, fillcolor=lightblue];
+
+        "Is it a command?" [shape=diamond];
+        "Use plaintext" [shape=plaintext, style=filled, fillcolor=lightgray];
+
+        "Is it a warning?" [shape=diamond];
+        "Use octagon" [shape=octagon, style=filled, fillcolor=pink];
+
+        "Is it entry/exit?" [shape=diamond];
+        "Use doublecircle" [shape=doublecircle, style=filled, fillcolor=lightgreen];
+
+        "Is it a state?" [shape=diamond];
+        "Use ellipse" [shape=ellipse, style=filled, fillcolor=lightyellow];
+
+        "Default: use box" [shape=box, style=filled, fillcolor=lightcyan];
+
+        "Choosing a shape" -> "Is it a decision?";
+        "Is it a decision?" -> "Use diamond" [label="yes"];
+        "Is it a decision?" -> "Is it a command?" [label="no"];
+        "Is it a command?" -> "Use plaintext" [label="yes"];
+        "Is it a command?" -> "Is it a warning?" [label="no"];
+        "Is it a warning?" -> "Use octagon" [label="yes"];
+        "Is it a warning?" -> "Is it entry/exit?" [label="no"];
+        "Is it entry/exit?" -> "Use doublecircle" [label="yes"];
+        "Is it entry/exit?" -> "Is it a state?" [label="no"];
+        "Is it a state?" -> "Use ellipse" [label="yes"];
+        "Is it a state?" -> "Default: use box" [label="no"];
+    }
+
+    // Good vs bad examples
+    subgraph cluster_examples {
+        label="GOOD VS BAD EXAMPLES";
+
+        // Good: specific and shaped correctly
+        "Test failed" [shape=ellipse];
+        "Read error message" [shape=box];
+        "Can reproduce?" [shape=diamond];
+        "git diff HEAD~1" [shape=plaintext];
+        "NEVER ignore errors" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+
+        "Test failed" -> "Read error message";
+        "Read error message" -> "Can reproduce?";
+        "Can reproduce?" -> "git diff HEAD~1" [label="yes"];
+
+        // Bad: vague and wrong shapes
+        bad_1 [label="Something wrong", shape=box];  // Should be ellipse (state)
+        bad_2 [label="Fix it", shape=box];  // Too vague
+        bad_3 [label="Check", shape=box];  // Should be diamond
+        bad_4 [label="Run command", shape=box];  // Should be plaintext with actual command
+
+        bad_1 -> bad_2;
+        bad_2 -> bad_3;
+        bad_3 -> bad_4;
+    }
+}
