@@ -273,7 +273,7 @@ namespace cAlgo.Robots
     // ─────────────────────────────────────────────────────────────
     //  MAIN ROBOT
     // ─────────────────────────────────────────────────────────────
-    [Robot("MARS v2 - AI Confluence Engine (EURUSD)", AccessRights = AccessRights.None)]
+    [Robot(AccessRights = AccessRights.None)]
     public class MARSTradingBot : Robot
     {
         #region Parameters
@@ -526,8 +526,6 @@ namespace cAlgo.Robots
             if (a == RiskAction.HardDaily || a == RiskAction.HardTotal)
                 CloseAllTrades("HARD_BREACH_TICK");
         }
-
-        protected override void OnStop() { PrintBacktestReport(); }
 
         private void OnPositionClosed(PositionClosedEventArgs args)
         {
