@@ -16,7 +16,7 @@ Tell Codex:
 Fetch and follow instructions from https://raw.githubusercontent.com/Jo-Atom/superpowers-codex/refs/heads/main/.codex/INSTALL.md
 ```
 
-For manual installation and troubleshooting, see `docs/README.codex.md`.
+For manual setup, repo-local discovery, and troubleshooting, see `docs/README.codex.md`.
 
 ## Workflow
 

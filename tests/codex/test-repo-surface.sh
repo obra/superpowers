@@ -4,6 +4,7 @@ set -euo pipefail
 test -f AGENTS.md
 test ! -L AGENTS.md
 test ! -e CLAUDE.md
+test -d .agents
 test ! -d .claude-plugin
 test ! -d .cursor-plugin
 test ! -d .opencode
