@@ -549,8 +549,7 @@ namespace cAlgo.Robots
             // Gate: session filter
             if (!IsSessionOpen(Server.Time))
             {
-                Print("[MARS][GATE] Session closed at " + Server.Time.ToString("HH:mm") + " UTC");
-                return;
+                return; // session closed — suppress log (was flooding output)
             }
 
             // Gate: news blackout
@@ -614,14 +613,24 @@ namespace cAlgo.Robots
 
             _diagCount++;
 
-            // ── Try Trend Signal ─────────────────────────────────
-            if (EnableTrendStrategy &&
-                _regimeEngine.CurrentRegime == MarketRegime.Trending)
+            // ── Periodic indicator snapshot ──────────────────────
+            if (_diagCount % 50 == 0)
+            {
+                double dBbMid2, dBbTop2, dBbBot2;
+                CalcBB(idx, 20, 2.0, out dBbMid2, out dBbTop2, out dBbBot2);
+                Print(string.Format(
+                    "[MARS][DIAG#{0}] Regime={1} close={2:F5} bbTop={3:F5} bbBot={4:F5} rsi={5:F1} stochK={6:F1} h4Bias={7}",
+                    _diagCount, _regimeEngine.CurrentRegime, Bars.ClosePrices[idx],
+                    dBbTop2, dBbBot2, CalcRSI(idx, 14), CalcStochK(idx, 5), h4Bias));
+            }
+
+            // ── Try Trend Signal (all regimes) ───────────────────
+            // Trend strategy runs on ANY regime — EMA crossovers occur in ranging markets too
+            if (EnableTrendStrategy)
             {
                 SignalDirection trendSig = GetTrendSignal(idx);
                 if (trendSig != SignalDirection.None)
                 {
-                    // Apply H4 filter
                     if (h4Bias != SignalDirection.None && h4Bias != trendSig) return;
                     OpenTrade(trendSig, idx, "TREND", h4SizeMult);
                     return;
@@ -629,38 +638,13 @@ namespace cAlgo.Robots
             }
 
             // ── Try Mean Reversion Signal ────────────────────────
-            if (EnableMeanReversionStrategy &&
-                (_regimeEngine.CurrentRegime == MarketRegime.Ranging ||
-                 _regimeEngine.CurrentRegime == MarketRegime.HighVolatility))
+            if (EnableMeanReversionStrategy)
             {
-                // Periodic diagnostic: dump indicator values every 50 session-evals
-                if (_diagCount % 50 == 0)
-                {
-                    double dClose  = Bars.ClosePrices[idx];
-                    double dBbMid, dBbTop, dBbBot;
-                    CalcBB(idx, 20, 2.0, out dBbMid, out dBbTop, out dBbBot);
-                    double dRsi    = CalcRSI(idx, 14);
-                    double dStochK = CalcStochK(idx, 5);
-                    Print(string.Format(
-                        "[MARS][DIAG#{0}] close={1:F5} bbTop={2:F5} bbBot={3:F5} rsi={4:F1} stochK={5:F1} h4Bias={6}",
-                        _diagCount, dClose, dBbTop, dBbBot, dRsi, dStochK, h4Bias));
-                }
-
                 SignalDirection mrSig = GetMeanReversionSignal(idx);
                 if (mrSig != SignalDirection.None)
                 {
                     if (h4Bias != SignalDirection.None && h4Bias != mrSig) return;
                     OpenTrade(mrSig, idx, "MEANREV", h4SizeMult);
-                }
-            }
-            else if (_regimeEngine.CurrentRegime == MarketRegime.Trending && _diagCount % 50 == 0)
-            {
-                // Log when MR is skipped because regime is Trending (not Ranging/HighVol)
-                {
-                    double tBbMid, tBbTop, tBbBot;
-                    CalcBB(idx, 20, 2.0, out tBbMid, out tBbTop, out tBbBot);
-                    Print(string.Format("[MARS][DIAG#{0}] Regime=Trending → MR skipped. close={1:F5} bbTop={2:F5} bbBot={3:F5} rsi={4:F1}",
-                        _diagCount, Bars.ClosePrices[idx], tBbTop, tBbBot, CalcRSI(idx, 14)));
                 }
             }
         }
@@ -857,10 +841,13 @@ namespace cAlgo.Robots
             // Volume filter — skip when tick volume data unavailable (returns 0)
             bool volOk = volSma <= 0 || vol >= volSma;
 
-            // LONG: price below lower BB
-            // Relaxed: RSI<40 (was 30), Stoch<35 (was 20), no candle gate — too many conditions kill signal rate
-            bool longBB    = close < bbBot;
-            bool longRsi   = rsi   < 40;
+            // LONG: price in lower third of BB range (oversold zone), plus Stoch oversold
+            // BB "breakout" was too rare in tight markets — lower-third is more practical
+            double bbRange  = bbTop - bbBot;
+            double lowerThird = bbBot + bbRange * 0.33;
+            double upperThird = bbTop - bbRange * 0.33;
+            bool longBB    = close < lowerThird;   // lower third of band
+            bool longRsi   = rsi   < 50;           // not overbought (wide gate)
             bool longStoch = stochK < 35;
             bool longRange = close >= innerLow;
 
@@ -872,15 +859,14 @@ namespace cAlgo.Robots
             }
             else if (longBB)
             {
-                Print(string.Format("[MARS][MR-MISS-LONG] RSI={0:F1}(<40={1}) Stoch={2:F1}(<35={3}) " +
-                    "VolOk={4} InRange={5}(close={6:F5} innerLow={7:F5})",
-                    rsi, longRsi, stochK, longStoch, volOk, longRange, close, innerLow));
+                Print(string.Format("[MARS][MR-MISS-LONG] RSI={0:F1}(<50={1}) Stoch={2:F1}(<35={3}) " +
+                    "VolOk={4} InRange={5}(close={6:F5} lowerThird={7:F5})",
+                    rsi, longRsi, stochK, longStoch, volOk, longRange, close, lowerThird));
             }
 
-            // SHORT: price above upper BB
-            // Relaxed: RSI>60 (was 70), Stoch>65 (was 80), no candle gate
-            bool shortBB    = close > bbTop;
-            bool shortRsi   = rsi   > 60;
+            // SHORT: price in upper third of BB range (overbought zone)
+            bool shortBB    = close > upperThird;  // upper third of band
+            bool shortRsi   = rsi   > 50;          // not oversold (wide gate)
             bool shortStoch = stochK > 65;
             bool shortRange = close <= innerHigh;
 
@@ -892,9 +878,9 @@ namespace cAlgo.Robots
             }
             else if (shortBB)
             {
-                Print(string.Format("[MARS][MR-MISS-SHORT] RSI={0:F1}(>60={1}) Stoch={2:F1}(>65={3}) " +
-                    "VolOk={4} InRange={5}(close={6:F5} innerHigh={7:F5})",
-                    rsi, shortRsi, stochK, shortStoch, volOk, shortRange, close, innerHigh));
+                Print(string.Format("[MARS][MR-MISS-SHORT] RSI={0:F1}(>50={1}) Stoch={2:F1}(>65={3}) " +
+                    "VolOk={4} InRange={5}(close={6:F5} upperThird={7:F5})",
+                    rsi, shortRsi, stochK, shortStoch, volOk, shortRange, close, upperThird));
             }
             else
             {
