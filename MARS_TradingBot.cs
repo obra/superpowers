@@ -419,8 +419,6 @@ namespace cAlgo.Robots
         // Bars inside Bollinger Bands counter
         private int _barsInsideBands = 0;
 
-        // Diagnostic counter (limits verbose output)
-        private int _diagCount = 0;
         #endregion
 
         // ═══════════════════════════════════════════════════════
@@ -472,7 +470,7 @@ namespace cAlgo.Robots
 
         protected override void OnBar()
         {
-            int idx = 1; // last closed bar index
+            int idx = Bars.Count - 2; // last closed bar — forward indexing: 0=oldest, Count-1=current forming
 
             // ── Daily reset check ────────────────────────────────
             DateTime today = Server.Time.Date;
@@ -576,14 +574,11 @@ namespace cAlgo.Robots
                 return;
             }
 
-            Print(string.Format("[MARS][EVAL] {0} Regime={1} H4Fast={2:F5} H4Slow={3:F5}",
-                Server.Time.ToString("yyyy-MM-dd HH:mm"),
-                _regimeEngine.CurrentRegime, _h4Ema50.Result[1], _h4Ema200.Result[1]));
-
             // ── Get H4 bias ──────────────────────────────────────
-            // Index 1 = last closed H4 bar (cAlgo convention: 0=current forming, 1=last closed)
-            double h4Fast   = _h4Ema50.Result[1];
-            double h4Slow   = _h4Ema200.Result[1];
+            // Forward indexing: Count-2 = last closed H4 bar
+            int h4Idx = _h4Bars.Count - 2;
+            double h4Fast   = h4Idx >= 0 ? _h4Ema50.Result[h4Idx]  : double.NaN;
+            double h4Slow   = h4Idx >= 0 ? _h4Ema200.Result[h4Idx] : double.NaN;
             SignalDirection h4Bias      = SignalDirection.None;
             double          h4SizeMult  = 1.0;
 
@@ -609,19 +604,6 @@ namespace cAlgo.Robots
                 {
                     h4Bias = SignalDirection.Short;
                 }
-            }
-
-            _diagCount++;
-
-            // ── Periodic indicator snapshot ──────────────────────
-            if (_diagCount % 50 == 0)
-            {
-                double dBbMid2, dBbTop2, dBbBot2;
-                CalcBB(idx, 20, 2.0, out dBbMid2, out dBbTop2, out dBbBot2);
-                Print(string.Format(
-                    "[MARS][DIAG#{0}] Regime={1} close={2:F5} bbTop={3:F5} bbBot={4:F5} rsi={5:F1} stochK={6:F1} h4Bias={7}",
-                    _diagCount, _regimeEngine.CurrentRegime, Bars.ClosePrices[idx],
-                    dBbTop2, dBbBot2, CalcRSI(idx, 14), CalcStochK(idx, 5), h4Bias));
             }
 
             // ── Try Trend Signal (all regimes) ───────────────────
@@ -711,16 +693,16 @@ namespace cAlgo.Robots
 
         private SignalDirection GetTrendSignal(int idx)
         {
-            // Need at least idx+3 bars loaded for momentum checks (accesses idx, idx+1, idx+2)
-            if (Bars.Count < idx + 4) return SignalDirection.None;
+            // Need at least 3 bars before idx for momentum checks
+            if (idx < 3) return SignalDirection.None;
 
             double emaF0 = _emaFast.Result[idx];
             double emaS0 = _emaSlow.Result[idx];
-            double emaF1 = _emaFast.Result[idx + 1]; // bar before last closed
-            double emaS1 = _emaSlow.Result[idx + 1];
+            double emaF1 = _emaFast.Result[idx - 1]; // one bar older (forward indexing: lower index = older)
+            double emaS1 = _emaSlow.Result[idx - 1];
             double rsi   = CalcRSI(idx, 14);
             double hist0 = _macd.Histogram[idx];
-            double hist1 = _macd.Histogram[idx + 1];
+            double hist1 = _macd.Histogram[idx - 1];
             double atr   = _atr.Result[idx];
             double close = Bars.ClosePrices[idx];
 
@@ -740,13 +722,13 @@ namespace cAlgo.Robots
             bool longCross  = _barsSinceLongCross  <= 5 && emaF0 > emaS0;
             bool shortCross = _barsSinceShortCross <= 5 && emaF0 < emaS0;
 
-            // Condition 5: last 3 bars all close in direction
+            // Condition 5: last 3 bars all close in direction (idx-1, idx-2 = older bars in forward indexing)
             bool last3Bull = Bars.ClosePrices[idx]     > Bars.OpenPrices[idx] &&
-                             Bars.ClosePrices[idx + 1] > Bars.OpenPrices[idx + 1] &&
-                             Bars.ClosePrices[idx + 2] > Bars.OpenPrices[idx + 2];
+                             Bars.ClosePrices[idx - 1] > Bars.OpenPrices[idx - 1] &&
+                             Bars.ClosePrices[idx - 2] > Bars.OpenPrices[idx - 2];
             bool last3Bear = Bars.ClosePrices[idx]     < Bars.OpenPrices[idx] &&
-                             Bars.ClosePrices[idx + 1] < Bars.OpenPrices[idx + 1] &&
-                             Bars.ClosePrices[idx + 2] < Bars.OpenPrices[idx + 2];
+                             Bars.ClosePrices[idx - 1] < Bars.OpenPrices[idx - 1] &&
+                             Bars.ClosePrices[idx - 2] < Bars.OpenPrices[idx - 2];
 
             // Condition 6: not too extended from crossover
             bool notExtendedLong  = true;
@@ -787,23 +769,13 @@ namespace cAlgo.Robots
                 return SignalDirection.Short;
             }
 
-            // Periodic diagnostic showing why trend signal failed
-            if (_diagCount % 50 == 0)
-            {
-                Print(string.Format(
-                    "[MARS][TREND-MISS#{0}] longCross={1}(barsAgo={2}) shortCross={3}(barsAgo={4}) " +
-                    "rsi={5:F1} hist={6:F5} last3Bull={7} last3Bear={8} notExt={9}",
-                    _diagCount, longCross, _barsSinceLongCross, shortCross, _barsSinceShortCross,
-                    rsi, hist0, last3Bull, last3Bear, notExtendedLong));
-            }
-
             return SignalDirection.None;
         }
 
         private SignalDirection GetMeanReversionSignal(int idx)
         {
-            // Need enough bars for lookback (idx+200 for inner range check)
-            if (Bars.Count < idx + 5) return SignalDirection.None;
+            // Need at least 20 bars before idx for BB calculation
+            if (idx < 20) return SignalDirection.None;
 
             double close  = Bars.ClosePrices[idx];
             double bbMid, bbTop, bbBot;
@@ -813,24 +785,15 @@ namespace cAlgo.Robots
             double vol    = Bars.TickVolumes[idx];
             double volSma = _volumeSma20.Result[idx];
 
-            if (double.IsNaN(bbTop) || double.IsNaN(bbBot))
-            {
-                Print(string.Format("[MARS][MR-NAN] BB NaN at idx={0} Bars.Count={1}", idx, Bars.Count));
-                return SignalDirection.None;
-            }
-            if (double.IsNaN(rsi) || double.IsNaN(stochK))
-            {
-                Print(string.Format("[MARS][MR-NAN] RSI={0} Stoch={1} NaN at idx={2}", rsi, stochK, idx));
-                return SignalDirection.None;
-            }
+            if (double.IsNaN(bbTop) || double.IsNaN(bbBot)) return SignalDirection.None;
+            if (double.IsNaN(rsi)   || double.IsNaN(stochK))  return SignalDirection.None;
 
-            // Condition 6: price within inner range of last 200 bars (~50 hrs on M15 = ~1 trading week)
-            // Prevents entries at multi-week extremes (falling knives / blowoff tops)
-            // 20-bar was wrong on M15 (= only 5 hours, contradicts "outside BB" condition)
-            int lookback = Math.Min(200, Bars.Count - idx - 1);
+            // Price within inner range of last 200 bars (prevents falling-knife entries)
+            // Forward indexing: scan backward from idx toward older bars (lower index)
+            int lookback = Math.Min(200, idx);
             double highN = double.MinValue;
             double lowN  = double.MaxValue;
-            for (int i = idx; i < idx + lookback && i < Bars.Count; i++)
+            for (int i = idx; i > idx - lookback && i >= 0; i--)
             {
                 if (Bars.HighPrices[i] > highN) highN = Bars.HighPrices[i];
                 if (Bars.LowPrices[i]  < lowN)  lowN  = Bars.LowPrices[i];
@@ -853,47 +816,22 @@ namespace cAlgo.Robots
 
             if (longBB && longRsi && longStoch && volOk && longRange)
             {
-                Print(string.Format("[MARS][MR-LONG] close={0:F5} bbBot={1:F5} RSI={2:F1} Stoch={3:F1}",
-                    close, bbBot, rsi, stochK));
+                Print(string.Format("[MARS][MR-LONG] {0} close={1:F5} lowerThird={2:F5} RSI={3:F1} Stoch={4:F1}",
+                    Server.Time.ToString("yyyy-MM-dd HH:mm"), close, lowerThird, rsi, stochK));
                 return SignalDirection.Long;
-            }
-            else if (longBB)
-            {
-                Print(string.Format("[MARS][MR-MISS-LONG] RSI={0:F1}(<50={1}) Stoch={2:F1}(<35={3}) " +
-                    "VolOk={4} InRange={5}(close={6:F5} lowerThird={7:F5})",
-                    rsi, longRsi, stochK, longStoch, volOk, longRange, close, lowerThird));
             }
 
             // SHORT: price in upper third of BB range (overbought zone)
-            bool shortBB    = close > upperThird;  // upper third of band
-            bool shortRsi   = rsi   > 50;          // not oversold (wide gate)
+            bool shortBB    = close > upperThird;
+            bool shortRsi   = rsi   > 50;
             bool shortStoch = stochK > 65;
             bool shortRange = close <= innerHigh;
 
             if (shortBB && shortRsi && shortStoch && volOk && shortRange)
             {
-                Print(string.Format("[MARS][MR-SHORT] close={0:F5} bbTop={1:F5} RSI={2:F1} Stoch={3:F1}",
-                    close, bbTop, rsi, stochK));
+                Print(string.Format("[MARS][MR-SHORT] {0} close={1:F5} upperThird={2:F5} RSI={3:F1} Stoch={4:F1}",
+                    Server.Time.ToString("yyyy-MM-dd HH:mm"), close, upperThird, rsi, stochK));
                 return SignalDirection.Short;
-            }
-            else if (shortBB)
-            {
-                Print(string.Format("[MARS][MR-MISS-SHORT] RSI={0:F1}(>50={1}) Stoch={2:F1}(>65={3}) " +
-                    "VolOk={4} InRange={5}(close={6:F5} upperThird={7:F5})",
-                    rsi, shortRsi, stochK, shortStoch, volOk, shortRange, close, upperThird));
-            }
-            else
-            {
-                // Price inside bands — log periodically so we can confirm indicators are live
-                if (_diagCount % 100 == 0)
-                {
-                    double bandWidth = bbTop - bbBot;
-                    double pctFromBot = bandWidth > 0 ? (close - bbBot) / bandWidth * 100 : 50;
-                    Print(string.Format(
-                        "[MARS][MR-INSIDE#{0}] close={1:F5} bbTop={2:F5} bbBot={3:F5} " +
-                        "pctPos={4:F1}% rsi={5:F1} stochK={6:F1}",
-                        _diagCount, close, bbTop, bbBot, pctFromBot, rsi, stochK));
-                }
             }
 
             return SignalDirection.None;
@@ -905,13 +843,14 @@ namespace cAlgo.Robots
         /// </summary>
         private double CalcRSI(int idx, int period)
         {
-            // Need period+1 extra bars to compute first gain/loss
-            if (Bars.Count < idx + period + 2) return double.NaN;
-            // Accumulate average gain / loss over initial period
+            // Forward indexing: older bars are at LOWER indices. Need period bars before idx.
+            if (idx < period + 1) return double.NaN;
             double avgGain = 0, avgLoss = 0;
-            for (int i = idx + 1; i < idx + period + 1; i++)
+            // Scan from idx backward (idx = newest, idx-period = oldest of window)
+            // change = close[i] - close[i-1] = newer minus older (positive = up move)
+            for (int i = idx; i > idx - period; i--)
             {
-                double change = Bars.ClosePrices[i - 1] - Bars.ClosePrices[i];
+                double change = Bars.ClosePrices[i] - Bars.ClosePrices[i - 1];
                 if (change > 0) avgGain += change;
                 else            avgLoss -= change;
             }
@@ -932,14 +871,14 @@ namespace cAlgo.Robots
             mid   = double.NaN;
             upper = double.NaN;
             lower = double.NaN;
-            // Need period bars starting at idx
-            if (Bars.Count < idx + period + 1) return;
+            // Forward indexing: older bars are at LOWER indices. Need period-1 bars before idx.
+            if (idx < period - 1) return;
             double sum = 0;
-            for (int i = idx; i < idx + period; i++)
+            for (int i = idx; i > idx - period; i--)
                 sum += Bars.ClosePrices[i];
             mid = sum / period;
             double sumSq = 0;
-            for (int i = idx; i < idx + period; i++)
+            for (int i = idx; i > idx - period; i--)
             {
                 double d = Bars.ClosePrices[i] - mid;
                 sumSq += d * d;
@@ -955,16 +894,17 @@ namespace cAlgo.Robots
         /// </summary>
         private double CalcStochK(int idx, int kPeriod)
         {
-            if (Bars.Count < idx + kPeriod + 1) return double.NaN;
+            // Forward indexing: older bars at LOWER indices. Need kPeriod-1 bars before idx.
+            if (idx < kPeriod - 1) return double.NaN;
             double highN = double.MinValue;
             double lowN  = double.MaxValue;
-            for (int i = idx; i < idx + kPeriod; i++)
+            for (int i = idx; i > idx - kPeriod; i--)
             {
                 if (Bars.HighPrices[i] > highN) highN = Bars.HighPrices[i];
                 if (Bars.LowPrices[i]  < lowN)  lowN  = Bars.LowPrices[i];
             }
             double range = highN - lowN;
-            if (range <= 0) return 50.0; // flat bars → neutral
+            if (range <= 0) return 50.0;
             return (Bars.ClosePrices[idx] - lowN) / range * 100.0;
         }
         #endregion
@@ -1225,9 +1165,9 @@ namespace cAlgo.Robots
 
         private bool IsBullishEngulfing(int idx)
         {
-            if (idx + 1 >= Bars.Count) return false;
-            double prevOpen  = Bars.OpenPrices[idx + 1];
-            double prevClose = Bars.ClosePrices[idx + 1];
+            if (idx < 1) return false; // need previous bar
+            double prevOpen  = Bars.OpenPrices[idx - 1];  // older bar = lower index in forward indexing
+            double prevClose = Bars.ClosePrices[idx - 1];
             double currOpen  = Bars.OpenPrices[idx];
             double currClose = Bars.ClosePrices[idx];
             // Previous bar is bearish, current bar is bullish and engulfs previous
@@ -1239,9 +1179,9 @@ namespace cAlgo.Robots
 
         private bool IsBearishEngulfing(int idx)
         {
-            if (idx + 1 >= Bars.Count) return false;
-            double prevOpen  = Bars.OpenPrices[idx + 1];
-            double prevClose = Bars.ClosePrices[idx + 1];
+            if (idx < 1) return false; // need previous bar
+            double prevOpen  = Bars.OpenPrices[idx - 1];
+            double prevClose = Bars.ClosePrices[idx - 1];
             double currOpen  = Bars.OpenPrices[idx];
             double currClose = Bars.ClosePrices[idx];
             // Previous bar is bullish, current bar is bearish and engulfs previous
