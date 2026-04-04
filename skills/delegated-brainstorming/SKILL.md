@@ -1,6 +1,6 @@
 ---
 name: delegated-brainstorming
-description: Use when designing features, APIs, or architecture in existing codebases where design decisions need validation against actual code. Alternative to single-agent brainstorming that splits design exploration from codebase review.
+description: Use when designing features, APIs, or architecture in existing codebases where design decisions need validation against actual DB schemas, service patterns, or architectural constraints.
 ---
 
 # Delegated Brainstorming
@@ -125,6 +125,8 @@ Use the Agent tool with the template in `./designer-prompt.md`. The prompt inclu
 
 Use `SendMessage` to continue the same subagent across the design loop — don't dispatch a new one each round.
 
+**Model selection:** Design work requires judgment — use the most capable available model for the design subagent.
+
 ## Step 3: Review Loop
 
 For each subagent output:
@@ -175,6 +177,7 @@ Wait for approval before proceeding.
 **Never:**
 - Let the subagent write the final spec (it lacks codebase context)
 - Relay subagent output without reviewing against actual code
+- Become a passive relay — if you're just forwarding messages without adding value, you're not coordinating
 - Give subagent raw file dumps instead of curated summaries
 - Skip codebase exploration in Step 1
 - Start implementation before spec is approved
@@ -183,6 +186,11 @@ Wait for approval before proceeding.
 **If subagent proposes something that conflicts with codebase:**
 - Don't silently fix it — tell the user what the subagent proposed AND what the codebase actually requires
 - This transparency builds trust and helps the user understand constraints
+
+**If subagent recommends scope decomposition:**
+- Agree with the decomposition — present sub-projects to user for prioritization
+- Brainstorm the first sub-project through the normal design loop
+- Each sub-project gets its own spec → plan → implementation cycle
 
 ## Integration
 

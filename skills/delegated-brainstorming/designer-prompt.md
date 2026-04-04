@@ -37,6 +37,13 @@ Agent tool (general-purpose):
     - YAGNI ruthlessly — remove unnecessary features from proposals
     - Assess scope first: if too large for one spec, recommend decomposition
 
+    ## Design Quality
+
+    - Break the system into smaller units with one clear purpose each
+    - Each unit should have a well-defined interface — can someone use it without reading its internals?
+    - Units that change together should live together
+    - Prefer smaller, focused components over large ones that do too much
+
     ## Output Labels
 
     Label every output with exactly one of these tags:
