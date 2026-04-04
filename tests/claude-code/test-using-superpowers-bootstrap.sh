@@ -56,7 +56,8 @@ assert_not_contains "$cursor_output" '"hookSpecificOutput"' "Cursor output suppr
 echo ""
 echo "Test 3: Fallback field without platform env vars..."
 fallback_output=$(HOME="$TEST_HOME" "$HOOK_SCRIPT")
-assert_contains "$fallback_output" '"additional_context"' "Fallback output uses additional_context" || exit 1
+assert_contains "$fallback_output" '"additionalContext"' "Fallback output uses additionalContext" || exit 1
+assert_not_contains "$fallback_output" '"additional_context"' "Fallback output avoids Cursor-only field" || exit 1
 assert_not_contains "$fallback_output" '"hookSpecificOutput"' "Fallback output omits Claude field" || exit 1
 
 echo ""

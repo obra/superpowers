@@ -18,8 +18,8 @@ trap cleanup_test_env EXIT
 echo "Setting up priority test fixtures..."
 
 # 1. Create in superpowers location (lowest priority)
-mkdir -p "$HOME/.config/opencode/superpowers/skills/priority-test"
-cat > "$HOME/.config/opencode/superpowers/skills/priority-test/SKILL.md" <<'EOF'
+mkdir -p "$SUPERPOWERS_SKILLS_DIR/priority-test"
+cat > "$SUPERPOWERS_SKILLS_DIR/priority-test/SKILL.md" <<'EOF'
 ---
 name: priority-test
 description: Superpowers version of priority test skill
@@ -32,8 +32,8 @@ PRIORITY_MARKER_SUPERPOWERS_VERSION
 EOF
 
 # 2. Create in personal location (medium priority)
-mkdir -p "$HOME/.config/opencode/skills/priority-test"
-cat > "$HOME/.config/opencode/skills/priority-test/SKILL.md" <<'EOF'
+mkdir -p "$OPENCODE_CONFIG_DIR/skills/priority-test"
+cat > "$OPENCODE_CONFIG_DIR/skills/priority-test/SKILL.md" <<'EOF'
 ---
 name: priority-test
 description: Personal version of priority test skill
@@ -65,14 +65,14 @@ echo "  Created priority-test skill in all three locations"
 echo ""
 echo "Test 1: Verifying test fixtures..."
 
-if [ -f "$HOME/.config/opencode/superpowers/skills/priority-test/SKILL.md" ]; then
+if [ -f "$SUPERPOWERS_SKILLS_DIR/priority-test/SKILL.md" ]; then
     echo "  [PASS] Superpowers version exists"
 else
     echo "  [FAIL] Superpowers version missing"
     exit 1
 fi
 
-if [ -f "$HOME/.config/opencode/skills/priority-test/SKILL.md" ]; then
+if [ -f "$OPENCODE_CONFIG_DIR/skills/priority-test/SKILL.md" ]; then
     echo "  [PASS] Personal version exists"
 else
     echo "  [FAIL] Personal version missing"
