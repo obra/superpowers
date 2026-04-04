@@ -793,41 +793,62 @@ namespace cAlgo.Robots
             if (double.IsNaN(bbTop) || double.IsNaN(bbBot)) return SignalDirection.None;
             if (double.IsNaN(rsi)   || double.IsNaN(stochK))  return SignalDirection.None;
 
-            // Condition 6: price within inner range of last 20 bars
-            double high20 = double.MinValue;
-            double low20  = double.MaxValue;
-            for (int i = idx; i < idx + 20 && i < Bars.Count; i++)
+            // Condition 6: price within inner range of last 200 bars (~50 hrs on M15 = ~1 trading week)
+            // Prevents entries at multi-week extremes (falling knives / blowoff tops)
+            // 20-bar was wrong on M15 (= only 5 hours, contradicts "outside BB" condition)
+            int lookback = Math.Min(200, Bars.Count - idx - 1);
+            double highN = double.MinValue;
+            double lowN  = double.MaxValue;
+            for (int i = idx; i < idx + lookback && i < Bars.Count; i++)
             {
-                if (Bars.HighPrices[i]  > high20) high20 = Bars.HighPrices[i];
-                if (Bars.LowPrices[i]   < low20)  low20  = Bars.LowPrices[i];
+                if (Bars.HighPrices[i] > highN) highN = Bars.HighPrices[i];
+                if (Bars.LowPrices[i]  < lowN)  lowN  = Bars.LowPrices[i];
             }
-            double innerHigh = high20 - (high20 - low20) * 0.1;
-            double innerLow  = low20  + (high20 - low20) * 0.1;
+            double innerHigh = highN - (highN - lowN) * 0.15;
+            double innerLow  = lowN  + (highN - lowN) * 0.15;
 
             // Volume filter — skip when tick volume data unavailable (returns 0)
             bool volOk = volSma <= 0 || vol >= volSma;
 
             // LONG: price below lower BB
-            if (close < bbBot &&
-                rsi    < 30 &&
-                stochK < 20 &&
-                volOk &&
-                close  >= innerLow)
+            bool longBB    = close < bbBot;
+            bool longRsi   = rsi   < 30;
+            bool longStoch = stochK < 20;
+            bool longRange = close >= innerLow;
+
+            if (longBB && longRsi && longStoch && volOk && longRange)
             {
-                // Check for reversal candle
-                if (IsBullishEngulfing(idx) || IsHammer(idx) || IsBullishPinBar(idx))
-                    return SignalDirection.Long;
+                bool candle = IsBullishEngulfing(idx) || IsHammer(idx) || IsBullishPinBar(idx);
+                Print(string.Format("[MARS][MR-LONG] BB={0} RSI={1:F1} Stoch={2:F1} Range={3} Candle={4}",
+                    longBB, rsi, stochK, longRange, candle));
+                if (candle) return SignalDirection.Long;
+            }
+            else if (longBB)
+            {
+                // Log why we're failing when we have the BB breakout
+                Print(string.Format("[MARS][MR-MISS-LONG] RSI={0:F1}(<30={1}) Stoch={2:F1}(<20={3}) " +
+                    "VolOk={4} InRange={5}(close={6:F5} innerLow={7:F5})",
+                    rsi, longRsi, stochK, longStoch, volOk, longRange, close, innerLow));
             }
 
             // SHORT: price above upper BB
-            if (close > bbTop &&
-                rsi    > 70 &&
-                stochK > 80 &&
-                volOk &&
-                close  <= innerHigh)
+            bool shortBB    = close > bbTop;
+            bool shortRsi   = rsi   > 70;
+            bool shortStoch = stochK > 80;
+            bool shortRange = close <= innerHigh;
+
+            if (shortBB && shortRsi && shortStoch && volOk && shortRange)
             {
-                if (IsBearishEngulfing(idx) || IsShootingStar(idx) || IsBearishPinBar(idx))
-                    return SignalDirection.Short;
+                bool candle = IsBearishEngulfing(idx) || IsShootingStar(idx) || IsBearishPinBar(idx);
+                Print(string.Format("[MARS][MR-SHORT] BB={0} RSI={1:F1} Stoch={2:F1} Range={3} Candle={4}",
+                    shortBB, rsi, stochK, shortRange, candle));
+                if (candle) return SignalDirection.Short;
+            }
+            else if (shortBB)
+            {
+                Print(string.Format("[MARS][MR-MISS-SHORT] RSI={0:F1}(>70={1}) Stoch={2:F1}(>80={3}) " +
+                    "VolOk={4} InRange={5}(close={6:F5} innerHigh={7:F5})",
+                    rsi, shortRsi, stochK, shortStoch, volOk, shortRange, close, innerHigh));
             }
 
             return SignalDirection.None;
