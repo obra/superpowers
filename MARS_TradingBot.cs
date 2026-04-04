@@ -390,9 +390,8 @@ namespace cAlgo.Robots
         private Dictionary<string, int>  _cooldownBars   = new Dictionary<string, int>();
         private Dictionary<int, TradeRecord> _openRecords = new Dictionary<int, TradeRecord>();
 
-        private DateTime _lastDayChecked    = DateTime.MinValue;
-        private bool     _tradedToday       = false;
-        private bool     _newDayInitialized = false;
+        private DateTime _lastDayChecked = DateTime.MinValue;
+        private bool     _tradedToday   = false;
 
         // VWAP state
         private double   _vwapNumerator   = 0;
@@ -412,10 +411,8 @@ namespace cAlgo.Robots
         private HashSet<DateTime> _fomcDates = new HashSet<DateTime>();
         private HashSet<DateTime> _ecbDates  = new HashSet<DateTime>();
 
-        // Crossover tracking for trend signal
-        private double   _lastEmaFastValue  = double.NaN;
-        private double   _lastEmaSlowValue  = double.NaN;
-        private double   _crossoverBarPrice = double.NaN;
+        // Crossover tracking for trend signal (extension check)
+        private double _crossoverBarPrice = double.NaN;
 
         // Bars inside Bollinger Bands counter
         private int _barsInsideBands = 0;
@@ -872,8 +869,8 @@ namespace cAlgo.Robots
                 label,
                 slPips,
                 tpPips,
-                SlippageTolerance,
-                signalSource);
+                signalSource,
+                false);
 
             if (!result.IsSuccessful)
             {
@@ -1019,7 +1016,9 @@ namespace cAlgo.Robots
                 if (modified && newSl != 0)
                 {
                     double tp = pos.TakeProfit ?? 0;
-                    ModifyPosition(pos, newSl, tp > 0 ? tp : (double?)null);
+                    double tpVal = tp > 0 ? tp : 0;
+                    ModifyPosition(pos, newSl, tpVal > 0 ? tpVal : (double?)null,
+                                   ProtectionType.Absolute);
                 }
             }
         }
