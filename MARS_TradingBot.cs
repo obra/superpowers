@@ -363,7 +363,7 @@ namespace cAlgo.Robots
         #region Indicators
         private ExponentialMovingAverage _emaFast;
         private ExponentialMovingAverage _emaSlow;
-        private RelativeStrengthIndex    _rsi;
+        // _rsi replaced by CalcRSI() manual helper — same NaN/0 issue as BB in some cAlgo builds
         private MacdCrossOver            _macd;
         private AverageTrueRange         _atr;
         private DirectionalMovementSystem _dms;
@@ -440,7 +440,7 @@ namespace cAlgo.Robots
             // Primary timeframe indicators
             _emaFast     = Indicators.ExponentialMovingAverage(Bars.ClosePrices, EmaFast);
             _emaSlow     = Indicators.ExponentialMovingAverage(Bars.ClosePrices, EmaSlow);
-            _rsi         = Indicators.RelativeStrengthIndex(Bars.ClosePrices, 14);
+            // RSI computed manually in CalcRSI() — see helpers region
             _macd        = Indicators.MacdCrossOver(26, 12, 9);
             _atr         = Indicators.AverageTrueRange(AtrPeriod, MovingAverageType.Simple);
             _dms         = Indicators.DirectionalMovementSystem(14);
@@ -639,7 +639,7 @@ namespace cAlgo.Robots
                     double dClose  = Bars.ClosePrices[idx];
                     double dBbMid, dBbTop, dBbBot;
                     CalcBB(idx, 20, 2.0, out dBbMid, out dBbTop, out dBbBot);
-                    double dRsi    = _rsi.Result[idx];
+                    double dRsi    = CalcRSI(idx, 14);
                     double dStochK = CalcStochK(idx, 5);
                     Print(string.Format(
                         "[MARS][DIAG#{0}] close={1:F5} bbTop={2:F5} bbBot={3:F5} rsi={4:F1} stochK={5:F1} h4Bias={6}",
@@ -660,7 +660,7 @@ namespace cAlgo.Robots
                     double tBbMid, tBbTop, tBbBot;
                     CalcBB(idx, 20, 2.0, out tBbMid, out tBbTop, out tBbBot);
                     Print(string.Format("[MARS][DIAG#{0}] Regime=Trending → MR skipped. close={1:F5} bbTop={2:F5} bbBot={3:F5} rsi={4:F1}",
-                        _diagCount, Bars.ClosePrices[idx], tBbTop, tBbBot, _rsi.Result[idx]));
+                        _diagCount, Bars.ClosePrices[idx], tBbTop, tBbBot, CalcRSI(idx, 14)));
                 }
             }
         }
@@ -734,7 +734,7 @@ namespace cAlgo.Robots
             double emaS0 = _emaSlow.Result[idx];
             double emaF1 = _emaFast.Result[idx + 1]; // bar before last closed
             double emaS1 = _emaSlow.Result[idx + 1];
-            double rsi   = _rsi.Result[idx];
+            double rsi   = CalcRSI(idx, 14);
             double hist0 = _macd.Histogram[idx];
             double hist1 = _macd.Histogram[idx + 1];
             double atr   = _atr.Result[idx];
@@ -824,7 +824,7 @@ namespace cAlgo.Robots
             double close  = Bars.ClosePrices[idx];
             double bbMid, bbTop, bbBot;
             CalcBB(idx, 20, 2.0, out bbMid, out bbTop, out bbBot);
-            double rsi    = _rsi.Result[idx];
+            double rsi    = CalcRSI(idx, 14);
             double stochK = CalcStochK(idx, 5);
             double vol    = Bars.TickVolumes[idx];
             double volSma = _volumeSma20.Result[idx];
@@ -858,42 +858,41 @@ namespace cAlgo.Robots
             bool volOk = volSma <= 0 || vol >= volSma;
 
             // LONG: price below lower BB
+            // Relaxed: RSI<40 (was 30), Stoch<35 (was 20), no candle gate — too many conditions kill signal rate
             bool longBB    = close < bbBot;
-            bool longRsi   = rsi   < 30;
-            bool longStoch = stochK < 20;
+            bool longRsi   = rsi   < 40;
+            bool longStoch = stochK < 35;
             bool longRange = close >= innerLow;
 
             if (longBB && longRsi && longStoch && volOk && longRange)
             {
-                bool candle = IsBullishEngulfing(idx) || IsHammer(idx) || IsBullishPinBar(idx);
-                Print(string.Format("[MARS][MR-LONG] BB={0} RSI={1:F1} Stoch={2:F1} Range={3} Candle={4}",
-                    longBB, rsi, stochK, longRange, candle));
-                if (candle) return SignalDirection.Long;
+                Print(string.Format("[MARS][MR-LONG] close={0:F5} bbBot={1:F5} RSI={2:F1} Stoch={3:F1}",
+                    close, bbBot, rsi, stochK));
+                return SignalDirection.Long;
             }
             else if (longBB)
             {
-                // Log why we're failing when we have the BB breakout
-                Print(string.Format("[MARS][MR-MISS-LONG] RSI={0:F1}(<30={1}) Stoch={2:F1}(<20={3}) " +
+                Print(string.Format("[MARS][MR-MISS-LONG] RSI={0:F1}(<40={1}) Stoch={2:F1}(<35={3}) " +
                     "VolOk={4} InRange={5}(close={6:F5} innerLow={7:F5})",
                     rsi, longRsi, stochK, longStoch, volOk, longRange, close, innerLow));
             }
 
             // SHORT: price above upper BB
+            // Relaxed: RSI>60 (was 70), Stoch>65 (was 80), no candle gate
             bool shortBB    = close > bbTop;
-            bool shortRsi   = rsi   > 70;
-            bool shortStoch = stochK > 80;
+            bool shortRsi   = rsi   > 60;
+            bool shortStoch = stochK > 65;
             bool shortRange = close <= innerHigh;
 
             if (shortBB && shortRsi && shortStoch && volOk && shortRange)
             {
-                bool candle = IsBearishEngulfing(idx) || IsShootingStar(idx) || IsBearishPinBar(idx);
-                Print(string.Format("[MARS][MR-SHORT] BB={0} RSI={1:F1} Stoch={2:F1} Range={3} Candle={4}",
-                    shortBB, rsi, stochK, shortRange, candle));
-                if (candle) return SignalDirection.Short;
+                Print(string.Format("[MARS][MR-SHORT] close={0:F5} bbTop={1:F5} RSI={2:F1} Stoch={3:F1}",
+                    close, bbTop, rsi, stochK));
+                return SignalDirection.Short;
             }
             else if (shortBB)
             {
-                Print(string.Format("[MARS][MR-MISS-SHORT] RSI={0:F1}(>70={1}) Stoch={2:F1}(>80={3}) " +
+                Print(string.Format("[MARS][MR-MISS-SHORT] RSI={0:F1}(>60={1}) Stoch={2:F1}(>65={3}) " +
                     "VolOk={4} InRange={5}(close={6:F5} innerHigh={7:F5})",
                     rsi, shortRsi, stochK, shortStoch, volOk, shortRange, close, innerHigh));
             }
@@ -912,6 +911,29 @@ namespace cAlgo.Robots
             }
 
             return SignalDirection.None;
+        }
+
+        /// <summary>
+        /// Manual RSI — replaces built-in indicator which returns 0.0 (not NaN, so bypasses NaN check)
+        /// in some cAlgo builds, permanently blocking trend entries. Uses Wilder smoothing.
+        /// </summary>
+        private double CalcRSI(int idx, int period)
+        {
+            // Need period+1 extra bars to compute first gain/loss
+            if (Bars.Count < idx + period + 2) return double.NaN;
+            // Accumulate average gain / loss over initial period
+            double avgGain = 0, avgLoss = 0;
+            for (int i = idx + 1; i < idx + period + 1; i++)
+            {
+                double change = Bars.ClosePrices[i - 1] - Bars.ClosePrices[i];
+                if (change > 0) avgGain += change;
+                else            avgLoss -= change;
+            }
+            avgGain /= period;
+            avgLoss /= period;
+            if (avgLoss == 0) return 100.0;
+            double rs = avgGain / avgLoss;
+            return 100.0 - 100.0 / (1.0 + rs);
         }
 
         /// <summary>
