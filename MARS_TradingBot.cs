@@ -700,7 +700,8 @@ namespace cAlgo.Robots
 
         private SignalDirection GetTrendSignal(int idx)
         {
-            if (idx < 3) return SignalDirection.None;
+            // Need at least idx+3 bars loaded for momentum checks (accesses idx, idx+1, idx+2)
+            if (Bars.Count < idx + 4) return SignalDirection.None;
 
             double emaF0 = _emaFast.Result[idx];
             double emaS0 = _emaSlow.Result[idx];
@@ -780,7 +781,8 @@ namespace cAlgo.Robots
 
         private SignalDirection GetMeanReversionSignal(int idx)
         {
-            if (idx < 3) return SignalDirection.None;
+            // Need enough bars for lookback (idx+200 for inner range check)
+            if (Bars.Count < idx + 5) return SignalDirection.None;
 
             double close   = Bars.ClosePrices[idx];
             double bbTop   = _bb.Top[idx];
