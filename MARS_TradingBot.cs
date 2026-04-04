@@ -508,7 +508,7 @@ namespace cAlgo.Robots
             double adx     = _dms.ADX[idx];
             double atr     = _atr.Result[idx];
             double atrSma  = _atrSma50.Result[idx];
-            _regimeEngine.Classify(adx, atr, atrSma, bbTop, bbBottom,
+            _regimeEngine.Classify(adx, atr, atrSma, bbTopC, bbBotC,
                                    closeIdx, _barsInsideBands, Print);
 
             // ── Risk breach check ────────────────────────────────
