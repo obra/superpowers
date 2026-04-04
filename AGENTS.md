@@ -4,6 +4,7 @@
 
 - This repository is a Codex-only fork of Superpowers.
 - Codex CLI is the primary target surface.
+- Codex CLI on macOS, Linux, WSL, and native Windows is part of the supported product surface.
 - Codex App compatibility is secondary and should not distort the main workflow.
 
 ## Operating Rules

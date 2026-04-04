@@ -1,12 +1,23 @@
-# Code Quality Reviewer Prompt
+# Code Quality Reviewer Prompt Template
 
-Review the implementation for correctness risks, maintainability issues, and missing tests after spec compliance has already passed.
+Use this template when dispatching a code quality reviewer subagent.
 
-Focus on:
+**Purpose:** Verify implementation is well-built (clean, tested, maintainable)
 
-- bugs and regressions
-- weak validation against stated contracts
-- missing tests
-- avoidable complexity
+**Only dispatch after spec compliance review passes.**
 
-Return findings ordered by severity, then a short approval decision.
+Use `agents/code-reviewer.md` with:
+
+- `WHAT_WAS_IMPLEMENTED`: from implementer's report
+- `PLAN_OR_REQUIREMENTS`: Task N from the active plan file
+- `BASE_SHA`: commit before task began
+- `HEAD_SHA`: current commit after implementer or fix commits
+- `EXTRA_REVIEW_FOCUS`: file boundaries, decomposition, and plan alignment for this task
+
+**In addition to standard code quality concerns, the reviewer should check:**
+- Does each file have one clear responsibility with a well-defined interface?
+- Are units decomposed so they can be understood and tested independently?
+- Is the implementation following the file structure from the plan?
+- Did this implementation create new files that are already large, or significantly grow existing files? (Don't flag pre-existing file sizes - focus on what this change contributed.)
+
+**Code reviewer returns:** Findings, Open Questions, Summary

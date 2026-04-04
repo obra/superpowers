@@ -406,7 +406,8 @@ async function runTests() {
       assert(template.includes('indicator-bar'), 'Should have indicator bar');
       assert(template.includes('indicator-text'), 'Should have indicator text');
       assert(template.includes('<!-- CONTENT -->'), 'Should have content placeholder');
-      assert(template.includes('claude-content'), 'Should have content container');
+      assert(template.includes('brainstorm-content'), 'Should have content container');
+      assert(template.includes('Jo-Atom/superpowers-codex'), 'Should link to the Codex fork');
       return Promise.resolve();
     });
 

@@ -15,10 +15,15 @@ Fetch and follow instructions from https://raw.githubusercontent.com/Jo-Atom/sup
 ### Prerequisites
 
 - Codex CLI
-- macOS, Linux, or WSL with a POSIX shell
 - Git
+- One supported shell environment:
+  - macOS or Linux with a POSIX shell
+  - WSL
+  - Windows PowerShell
 
 ### Steps
+
+#### POSIX Shell / WSL
 
 1. Clone the repository:
 
@@ -35,13 +40,34 @@ Fetch and follow instructions from https://raw.githubusercontent.com/Jo-Atom/sup
 
 3. Restart Codex.
 
-These commands assume a POSIX shell and default `CODEX_HOME` to `~/.codex` when it is unset. If you are on native Windows, use WSL or translate the commands manually.
+These commands assume a POSIX shell and default `CODEX_HOME` to `~/.codex` when it is unset.
+
+#### Native Windows PowerShell
+
+```powershell
+$codexHome = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $HOME ".codex" }
+$skillsRoot = Join-Path $HOME ".agents\\skills"
+$repoPath = Join-Path $codexHome "superpowers"
+git clone https://github.com/Jo-Atom/superpowers-codex.git $repoPath
+New-Item -ItemType Directory -Force -Path $skillsRoot | Out-Null
+cmd /c mklink /J "$skillsRoot\\superpowers" "$repoPath\\skills"
+```
+
+This creates a junction, which is the same lower-friction Windows install path upstream uses and normally does not require Developer Mode.
+
+After the junction is created, restart Codex.
+
+## Shell Expectations
+
+- Core installation and repo-root instruction loading work on Codex CLI across macOS, Linux, WSL, and native Windows PowerShell.
+- Some bundled helper workflows in this fork still invoke POSIX shell scripts directly.
+- On native Windows, run those helper flows from WSL, Git Bash, or another POSIX shell until native wrappers are added.
 
 ## How It Works
 
 - Codex reads `AGENTS.md` for repository instructions.
 - Codex discovers personal skills from `$HOME/.agents/skills`.
-- Superpowers adds workflow discipline on top of Codex-native skills and multi-agent tools.
+- Superpowers adds workflow discipline on top of Codex-native skills and multi-agent tools. On POSIX/WSL this usually appears as a symlink; on native Windows it is typically a junction.
 
 ## Codex CLI vs Codex App
 
@@ -71,10 +97,24 @@ ls -la "$HOME/.agents/skills/superpowers"
 ls "${CODEX_HOME:-$HOME/.codex}/superpowers/skills"
 ```
 
+PowerShell equivalent:
+
+```powershell
+$codexHome = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $HOME ".codex" }
+Get-Item (Join-Path $HOME ".agents\\skills\\superpowers") | Format-List FullName,LinkType,Target
+Get-ChildItem (Join-Path $codexHome "superpowers\\skills")
+```
+
+On native Windows, the first path may be reported as a junction rather than a symlink. Either is fine as long as it resolves to the repository `skills/` directory.
+
+### Windows junction issues
+
+Junction creation normally works without special permissions. If it fails, retry from a normal PowerShell session and confirm the destination paths exist before rerunning the command.
+
 ### Instructions look stale
 
 Restart Codex. `AGENTS.md` and skill discovery are evaluated when a session starts.
 
 ## Validation
 
-See `docs/testing.md` for the Codex-only validation steps.
+See `docs/testing.md` for the Codex-only validation steps. The automated suite currently covers the POSIX/bash execution path of this checkout and does not currently prove native Windows execution behavior.

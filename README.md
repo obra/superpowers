@@ -16,6 +16,9 @@ Tell Codex:
 Fetch and follow instructions from https://raw.githubusercontent.com/Jo-Atom/superpowers-codex/refs/heads/main/.codex/INSTALL.md
 ```
 
+Documented install surfaces in this fork are Codex CLI on macOS, Linux, WSL, and native Windows PowerShell. Codex App remains best-effort and secondary.
+Native Windows PowerShell is part of the supported Codex CLI surface, but some bundled POSIX shell helper workflows are currently validated only on POSIX/WSL paths.
+
 For manual installation, global skill symlink setup, and troubleshooting, see `docs/README.codex.md`.
 
 ## Workflow
@@ -24,8 +27,11 @@ For manual installation, global skill symlink setup, and troubleshooting, see `d
 2. `writing-plans` turns the design into a detailed implementation plan.
 3. `using-git-worktrees` isolates the work when needed.
 4. `subagent-driven-development` or `executing-plans` carries out the plan.
-5. `requesting-code-review` and `verification-before-completion` keep quality gates explicit.
-6. `finishing-a-development-branch` closes the loop.
+5. `test-driven-development` keeps red-green-refactor explicit during implementation rather than treating tests as cleanup work.
+6. `requesting-code-review` and `verification-before-completion` keep quality gates explicit.
+7. `finishing-a-development-branch` closes the loop.
+
+If Codex multi-agent tools are unavailable in your current environment or configuration, treat `executing-plans` as the default execution path.
 
 ## Skill Library
 
@@ -39,6 +45,7 @@ For manual installation, global skill symlink setup, and troubleshooting, see `d
 ## Validation
 
 Run the Codex-only checks described in `docs/testing.md` before considering the reorganization complete.
+The automated suite currently exercises the POSIX/bash execution path of the current checkout; shell-script-based helper workflows are not yet automatically verified on native Windows.
 
 ## Contributing
 

@@ -13,6 +13,8 @@ Git worktrees create isolated workspaces sharing the same repository, allowing w
 
 **Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
 
+**Shell note:** The examples below use POSIX shell syntax. On native Windows, run the same git workflow from WSL, Git Bash, or another POSIX shell until this repo ships native wrappers for the helper flows.
+
 ## Directory Selection Process
 
 Follow this priority order:

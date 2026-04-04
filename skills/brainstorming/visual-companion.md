@@ -54,6 +54,7 @@ scripts/start-server.sh --project-dir /path/to/project
 ```
 
 Run the server from Codex CLI and keep the returned `screen_dir` and `state_dir` for follow-up turns.
+`scripts/start-server.sh` is currently a POSIX shell helper. On native Windows, run this flow from WSL, Git Bash, or another POSIX shell while keeping the rest of the Codex workflow the same.
 
 **Codex App (secondary compatibility):**
 

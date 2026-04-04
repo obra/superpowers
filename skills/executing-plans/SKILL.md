@@ -1,6 +1,6 @@
 ---
 name: executing-plans
-description: Use when you have a written implementation plan to execute in a separate session with review checkpoints
+description: Use when you have a written implementation plan to execute in a separate session and follow it task by task
 ---
 
 # Executing Plans
@@ -11,7 +11,7 @@ Load plan, review critically, execute all tasks, report when complete.
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
-If Codex multi-agent support is available and you want same-session execution, prefer `superpowers:subagent-driven-development`. Use this skill when you intentionally want separate-session execution with checkpoints.
+If same-session multi-agent execution is available in your current Codex surface, prefer `subagent-driven-development`. Use this skill when you intentionally want separate-session execution with checkpoints.
 
 ## The Process
 
@@ -27,17 +27,14 @@ For each task:
 1. Mark as in_progress
 2. Follow each step exactly (plan has bite-sized steps)
 3. Run verifications as specified
-4. Commit the completed task or batch before the review checkpoint
-5. Run the review checkpoint required by the plan or batch using `superpowers:requesting-code-review`
-6. If review finds blocking issues, fix them, commit the fixes, and rerun review with the same task or batch scope
-7. Repeat the fix-and-rereview loop until the checkpoint passes
-8. Mark as completed
+4. If the plan or your human partner asks for a review checkpoint, run it at that milestone before continuing
+5. Mark as completed
 
 ### Step 3: Complete Development
 
 After all tasks complete and verified:
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
-- **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
+- **REQUIRED SUB-SKILL:** Use `finishing-a-development-branch`
 - Follow that skill to verify tests, present options, execute choice
 
 ## When to Stop and Ask for Help
@@ -69,7 +66,9 @@ After all tasks complete and verified:
 ## Integration
 
 **Required workflow skills:**
-- **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
-- **superpowers:writing-plans** - Creates the plan this skill executes
-- **superpowers:requesting-code-review** - Review checkpoint after each batch or milestone
-- **superpowers:finishing-a-development-branch** - Complete development after all tasks
+- **using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
+- **writing-plans** - Creates the plan this skill executes
+- **finishing-a-development-branch** - Complete development after all tasks
+
+**Optional supporting skill:**
+- **requesting-code-review** - Use when the plan or your human partner asks for a milestone review or checkpoint
