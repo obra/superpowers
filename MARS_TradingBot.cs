@@ -367,8 +367,8 @@ namespace cAlgo.Robots
         private MacdCrossOver            _macd;
         private AverageTrueRange         _atr;
         private DirectionalMovementSystem _dms;
-        private BollingerBands           _bb;
-        private StochasticOscillator     _stoch;
+        // _bb replaced by CalcBB() manual helper — BollingerBands.Top/.Bottom returns NaN in some cAlgo builds
+        // _stoch replaced by CalcStochK() manual helper — same precaution as BB
         private SimpleMovingAverage      _atrSma50;
         private SimpleMovingAverage      _volumeSma20;
 
@@ -444,8 +444,7 @@ namespace cAlgo.Robots
             _macd        = Indicators.MacdCrossOver(26, 12, 9);
             _atr         = Indicators.AverageTrueRange(AtrPeriod, MovingAverageType.Simple);
             _dms         = Indicators.DirectionalMovementSystem(14);
-            _bb          = Indicators.BollingerBands(Bars.ClosePrices, 20, 2.0, MovingAverageType.Simple);
-            _stoch       = Indicators.StochasticOscillator(5, 3, 3, MovingAverageType.Simple);
+            // BB and Stochastic computed manually in CalcBB()/CalcStochK() — see helpers region
             _atrSma50    = Indicators.SimpleMovingAverage(_atr.Result, 50);
             _volumeSma20 = Indicators.SimpleMovingAverage(Bars.TickVolumes, 20);
 
@@ -498,9 +497,9 @@ namespace cAlgo.Robots
 
             // ── Update Bollinger inside-bands counter ────────────
             double closeIdx  = Bars.ClosePrices[idx];
-            double bbTop     = _bb.Top[idx];
-            double bbBottom  = _bb.Bottom[idx];
-            if (closeIdx >= bbBottom && closeIdx <= bbTop)
+            double bbMidC, bbTopC, bbBotC;
+            CalcBB(idx, 20, 2.0, out bbMidC, out bbTopC, out bbBotC);
+            if (!double.IsNaN(bbTopC) && closeIdx >= bbBotC && closeIdx <= bbTopC)
                 _barsInsideBands++;
             else
                 _barsInsideBands = 0;
@@ -638,10 +637,10 @@ namespace cAlgo.Robots
                 if (_diagCount % 50 == 0)
                 {
                     double dClose  = Bars.ClosePrices[idx];
-                    double dBbTop  = _bb.Top[idx];
-                    double dBbBot  = _bb.Bottom[idx];
+                    double dBbMid, dBbTop, dBbBot;
+                    CalcBB(idx, 20, 2.0, out dBbMid, out dBbTop, out dBbBot);
                     double dRsi    = _rsi.Result[idx];
-                    double dStochK = _stoch.PercentK[idx];
+                    double dStochK = CalcStochK(idx, 5);
                     Print(string.Format(
                         "[MARS][DIAG#{0}] close={1:F5} bbTop={2:F5} bbBot={3:F5} rsi={4:F1} stochK={5:F1} h4Bias={6}",
                         _diagCount, dClose, dBbTop, dBbBot, dRsi, dStochK, h4Bias));
@@ -657,8 +656,12 @@ namespace cAlgo.Robots
             else if (_regimeEngine.CurrentRegime == MarketRegime.Trending && _diagCount % 50 == 0)
             {
                 // Log when MR is skipped because regime is Trending (not Ranging/HighVol)
-                Print(string.Format("[MARS][DIAG#{0}] Regime=Trending → MR skipped. close={1:F5} bbTop={2:F5} bbBot={3:F5} rsi={4:F1}",
-                    _diagCount, Bars.ClosePrices[idx], _bb.Top[idx], _bb.Bottom[idx], _rsi.Result[idx]));
+                {
+                    double tBbMid, tBbTop, tBbBot;
+                    CalcBB(idx, 20, 2.0, out tBbMid, out tBbTop, out tBbBot);
+                    Print(string.Format("[MARS][DIAG#{0}] Regime=Trending → MR skipped. close={1:F5} bbTop={2:F5} bbBot={3:F5} rsi={4:F1}",
+                        _diagCount, Bars.ClosePrices[idx], tBbTop, tBbBot, _rsi.Result[idx]));
+                }
             }
         }
 
@@ -818,13 +821,13 @@ namespace cAlgo.Robots
             // Need enough bars for lookback (idx+200 for inner range check)
             if (Bars.Count < idx + 5) return SignalDirection.None;
 
-            double close   = Bars.ClosePrices[idx];
-            double bbTop   = _bb.Top[idx];
-            double bbBot   = _bb.Bottom[idx];
-            double rsi     = _rsi.Result[idx];
-            double stochK  = _stoch.PercentK[idx];
-            double vol     = Bars.TickVolumes[idx];
-            double volSma  = _volumeSma20.Result[idx];
+            double close  = Bars.ClosePrices[idx];
+            double bbMid, bbTop, bbBot;
+            CalcBB(idx, 20, 2.0, out bbMid, out bbTop, out bbBot);
+            double rsi    = _rsi.Result[idx];
+            double stochK = CalcStochK(idx, 5);
+            double vol    = Bars.TickVolumes[idx];
+            double volSma = _volumeSma20.Result[idx];
 
             if (double.IsNaN(bbTop) || double.IsNaN(bbBot))
             {
@@ -909,6 +912,52 @@ namespace cAlgo.Robots
             }
 
             return SignalDirection.None;
+        }
+
+        /// <summary>
+        /// Manual Bollinger Bands — replaces built-in indicator which returns NaN in some cAlgo builds.
+        /// Indexes are cAlgo convention: 0 = current bar, 1 = last closed bar.
+        /// </summary>
+        private void CalcBB(int idx, int period, double stdDevMult,
+                            out double mid, out double upper, out double lower)
+        {
+            mid   = double.NaN;
+            upper = double.NaN;
+            lower = double.NaN;
+            // Need period bars starting at idx
+            if (Bars.Count < idx + period + 1) return;
+            double sum = 0;
+            for (int i = idx; i < idx + period; i++)
+                sum += Bars.ClosePrices[i];
+            mid = sum / period;
+            double sumSq = 0;
+            for (int i = idx; i < idx + period; i++)
+            {
+                double d = Bars.ClosePrices[i] - mid;
+                sumSq += d * d;
+            }
+            double sd = Math.Sqrt(sumSq / period);
+            upper = mid + stdDevMult * sd;
+            lower = mid - stdDevMult * sd;
+        }
+
+        /// <summary>
+        /// Manual fast Stochastic %K — replaces built-in indicator as precaution.
+        /// Returns value 0-100, or NaN if not enough bars.
+        /// </summary>
+        private double CalcStochK(int idx, int kPeriod)
+        {
+            if (Bars.Count < idx + kPeriod + 1) return double.NaN;
+            double highN = double.MinValue;
+            double lowN  = double.MaxValue;
+            for (int i = idx; i < idx + kPeriod; i++)
+            {
+                if (Bars.HighPrices[i] > highN) highN = Bars.HighPrices[i];
+                if (Bars.LowPrices[i]  < lowN)  lowN  = Bars.LowPrices[i];
+            }
+            double range = highN - lowN;
+            if (range <= 0) return 50.0; // flat bars → neutral
+            return (Bars.ClosePrices[idx] - lowN) / range * 100.0;
         }
         #endregion
 
