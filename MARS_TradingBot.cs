@@ -412,7 +412,9 @@ namespace cAlgo.Robots
         private HashSet<DateTime> _ecbDates  = new HashSet<DateTime>();
 
         // Crossover tracking for trend signal (extension check)
-        private double _crossoverBarPrice = double.NaN;
+        private double _crossoverBarPrice    = double.NaN;
+        private int    _barsSinceLongCross   = 999;
+        private int    _barsSinceShortCross  = 999;
 
         // Bars inside Bollinger Bands counter
         private int _barsInsideBands = 0;
@@ -693,13 +695,18 @@ namespace cAlgo.Robots
             if (double.IsNaN(emaF0) || double.IsNaN(emaS0)) return SignalDirection.None;
             if (double.IsNaN(emaF1) || double.IsNaN(emaS1)) return SignalDirection.None;
 
-            // EMA crossover detection
-            bool longCross  = emaF1 <= emaS1 && emaF0 > emaS0;
-            bool shortCross = emaF1 >= emaS1 && emaF0 < emaS0;
+            // EMA crossover detection on this bar
+            bool freshLongCross  = emaF1 <= emaS1 && emaF0 > emaS0;
+            bool freshShortCross = emaF1 >= emaS1 && emaF0 < emaS0;
 
-            // Track crossover bar price for extension check
-            if (longCross || shortCross)
-                _crossoverBarPrice = close;
+            // Track bars since last crossover (allow entry within 5 bars)
+            if (freshLongCross)  { _barsSinceLongCross  = 0; _crossoverBarPrice = close; }
+            else                 { _barsSinceLongCross++; }
+            if (freshShortCross) { _barsSinceShortCross = 0; _crossoverBarPrice = close; }
+            else                 { _barsSinceShortCross++; }
+
+            bool longCross  = _barsSinceLongCross  <= 5 && emaF0 > emaS0;
+            bool shortCross = _barsSinceShortCross <= 5 && emaF0 < emaS0;
 
             // Condition 5: last 3 bars all close in direction
             bool last3Bull = Bars.ClosePrices[idx]     > Bars.OpenPrices[idx] &&
@@ -722,11 +729,15 @@ namespace cAlgo.Robots
                 }
             }
 
+            // VWAP filter — skip if no volume data (tick volumes unavailable on some TFs)
+            bool vwapOkLong  = _vwapDenominator <= 0 || close >= _currentVwap;
+            bool vwapOkShort = _vwapDenominator <= 0 || close <= _currentVwap;
+
             // LONG signal
             if (longCross &&
                 rsi >= 45 && rsi <= 60 &&
                 hist0 > 0 && hist0 > hist1 &&
-                close > _currentVwap &&
+                vwapOkLong &&
                 last3Bull &&
                 notExtendedLong)
             {
@@ -737,7 +748,7 @@ namespace cAlgo.Robots
             if (shortCross &&
                 rsi >= 40 && rsi <= 55 &&
                 hist0 < 0 && hist0 < hist1 &&
-                close < _currentVwap &&
+                vwapOkShort &&
                 last3Bear &&
                 notExtendedShort)
             {
@@ -773,11 +784,14 @@ namespace cAlgo.Robots
             double innerHigh = high20 - (high20 - low20) * 0.1;
             double innerLow  = low20  + (high20 - low20) * 0.1;
 
+            // Volume filter — skip when tick volume data unavailable (returns 0)
+            bool volOk = volSma <= 0 || vol >= volSma;
+
             // LONG: price below lower BB
             if (close < bbBot &&
-                rsi    < 28 &&
+                rsi    < 30 &&
                 stochK < 20 &&
-                vol    > volSma &&
+                volOk &&
                 close  >= innerLow)
             {
                 // Check for reversal candle
@@ -787,9 +801,9 @@ namespace cAlgo.Robots
 
             // SHORT: price above upper BB
             if (close > bbTop &&
-                rsi    > 72 &&
+                rsi    > 70 &&
                 stochK > 80 &&
-                vol    > volSma &&
+                volOk &&
                 close  <= innerHigh)
             {
                 if (IsBearishEngulfing(idx) || IsShootingStar(idx) || IsBearishPinBar(idx))
