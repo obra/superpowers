@@ -1,6 +1,6 @@
 # Superpowers for Codex
 
-This guide explains how to set up and use the Codex-only Superpowers fork.
+This guide explains how to install and use the Codex-only Superpowers fork.
 
 ## Quick Install
 
@@ -26,30 +26,21 @@ Fetch and follow instructions from https://raw.githubusercontent.com/Jo-Atom/sup
    git clone https://github.com/Jo-Atom/superpowers-codex.git "${CODEX_HOME:-$HOME/.codex}/superpowers"
    ```
 
-2. Verify the repository exposes its skills through the official repo-local discovery path:
+2. Create the global skills symlink:
 
    ```bash
-   ls -ld "${CODEX_HOME:-$HOME/.codex}/superpowers/.agents/skills"
-   test -f "${CODEX_HOME:-$HOME/.codex}/superpowers/.agents/skills/using-superpowers/SKILL.md"
+   mkdir -p "$HOME/.agents/skills"
+   ln -s "${CODEX_HOME:-$HOME/.codex}/superpowers/skills" "$HOME/.agents/skills/superpowers"
    ```
 
-3. Start Codex from the repository root:
-
-   ```bash
-   cd "${CODEX_HOME:-$HOME/.codex}/superpowers"
-   codex
-   ```
-
-4. Restart Codex if it was already running before the clone finished.
-
-This fork currently relies on repo-local `.agents/skills` discovery. Personal Codex skills still belong in `$HOME/.agents/skills`.
+3. Restart Codex.
 
 These commands assume a POSIX shell and default `CODEX_HOME` to `~/.codex` when it is unset. If you are on native Windows, use WSL or translate the commands manually.
 
 ## How It Works
 
 - Codex reads `AGENTS.md` for repository instructions.
-- Codex discovers shared repo skills from `.agents/skills` and personal skills from `$HOME/.agents/skills`.
+- Codex discovers personal skills from `$HOME/.agents/skills`.
 - Superpowers adds workflow discipline on top of Codex-native skills and multi-agent tools.
 
 ## Codex CLI vs Codex App
@@ -67,6 +58,7 @@ cd "${CODEX_HOME:-$HOME/.codex}/superpowers" && git pull
 ## Uninstalling
 
 ```bash
+rm "$HOME/.agents/skills/superpowers"
 rm -rf "${CODEX_HOME:-$HOME/.codex}/superpowers"
 ```
 
@@ -75,8 +67,8 @@ rm -rf "${CODEX_HOME:-$HOME/.codex}/superpowers"
 ### Skills do not appear
 
 ```bash
-ls -ld "${CODEX_HOME:-$HOME/.codex}/superpowers/.agents/skills"
-ls "${CODEX_HOME:-$HOME/.codex}/superpowers/.agents/skills"
+ls -la "$HOME/.agents/skills/superpowers"
+ls "${CODEX_HOME:-$HOME/.codex}/superpowers/skills"
 ```
 
 ### Instructions look stale

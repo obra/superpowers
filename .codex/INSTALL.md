@@ -1,6 +1,6 @@
 # Installing Superpowers for Codex
 
-Install the Codex-only Superpowers fork by cloning it locally and using Codex's repo-local skill discovery.
+Install the Codex-only Superpowers fork by cloning it locally and linking its skills into Codex's global skill directory.
 
 These commands assume macOS, Linux, or WSL with a POSIX shell, and default `CODEX_HOME` to `~/.codex` when it is unset.
 
@@ -12,29 +12,20 @@ These commands assume macOS, Linux, or WSL with a POSIX shell, and default `CODE
    git clone https://github.com/Jo-Atom/superpowers-codex.git "${CODEX_HOME:-$HOME/.codex}/superpowers"
    ```
 
-2. Verify the cloned repository exposes `.agents/skills`:
+2. Create the global skills symlink:
 
    ```bash
-   ls -ld "${CODEX_HOME:-$HOME/.codex}/superpowers/.agents/skills"
-   test -f "${CODEX_HOME:-$HOME/.codex}/superpowers/.agents/skills/using-superpowers/SKILL.md"
+   mkdir -p "$HOME/.agents/skills"
+   ln -s "${CODEX_HOME:-$HOME/.codex}/superpowers/skills" "$HOME/.agents/skills/superpowers"
    ```
 
-3. Start Codex from the repository root:
-
-   ```bash
-   cd "${CODEX_HOME:-$HOME/.codex}/superpowers"
-   codex
-   ```
-
-4. Restart Codex if it was already open before you cloned the repository.
-
-This fork uses repo-local `.agents/skills` discovery. Personal Codex skills still live in `$HOME/.agents/skills`.
+3. Restart Codex.
 
 ## Verify
 
 ```bash
-ls -ld "${CODEX_HOME:-$HOME/.codex}/superpowers/.agents/skills"
-test -f "${CODEX_HOME:-$HOME/.codex}/superpowers/.agents/skills/using-superpowers/SKILL.md"
+ls -la "$HOME/.agents/skills/superpowers"
+ls "${CODEX_HOME:-$HOME/.codex}/superpowers/skills"
 ```
 
-Expected: the `.agents/skills` path exists and exposes the repository's skill directories.
+Expected: `~/.agents/skills/superpowers` is a symlink pointing at the repository's `skills/` directory.
