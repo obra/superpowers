@@ -418,6 +418,9 @@ namespace cAlgo.Robots
 
         // Bars inside Bollinger Bands counter
         private int _barsInsideBands = 0;
+
+        // Diagnostic counter (limits verbose output)
+        private int _diagCount = 0;
         #endregion
 
         // ═══════════════════════════════════════════════════════
@@ -610,6 +613,8 @@ namespace cAlgo.Robots
                 }
             }
 
+            _diagCount++;
+
             // ── Try Trend Signal ─────────────────────────────────
             if (EnableTrendStrategy &&
                 _regimeEngine.CurrentRegime == MarketRegime.Trending)
@@ -629,12 +634,31 @@ namespace cAlgo.Robots
                 (_regimeEngine.CurrentRegime == MarketRegime.Ranging ||
                  _regimeEngine.CurrentRegime == MarketRegime.HighVolatility))
             {
+                // Periodic diagnostic: dump indicator values every 50 session-evals
+                if (_diagCount % 50 == 0)
+                {
+                    double dClose  = Bars.ClosePrices[idx];
+                    double dBbTop  = _bb.Top[idx];
+                    double dBbBot  = _bb.Bottom[idx];
+                    double dRsi    = _rsi.Result[idx];
+                    double dStochK = _stoch.PercentK[idx];
+                    Print(string.Format(
+                        "[MARS][DIAG#{0}] close={1:F5} bbTop={2:F5} bbBot={3:F5} rsi={4:F1} stochK={5:F1} h4Bias={6}",
+                        _diagCount, dClose, dBbTop, dBbBot, dRsi, dStochK, h4Bias));
+                }
+
                 SignalDirection mrSig = GetMeanReversionSignal(idx);
                 if (mrSig != SignalDirection.None)
                 {
                     if (h4Bias != SignalDirection.None && h4Bias != mrSig) return;
                     OpenTrade(mrSig, idx, "MEANREV", h4SizeMult);
                 }
+            }
+            else if (_regimeEngine.CurrentRegime == MarketRegime.Trending && _diagCount % 50 == 0)
+            {
+                // Log when MR is skipped because regime is Trending (not Ranging/HighVol)
+                Print(string.Format("[MARS][DIAG#{0}] Regime=Trending → MR skipped. close={1:F5} bbTop={2:F5} bbBot={3:F5} rsi={4:F1}",
+                    _diagCount, Bars.ClosePrices[idx], _bb.Top[idx], _bb.Bottom[idx], _rsi.Result[idx]));
             }
         }
 
@@ -776,6 +800,16 @@ namespace cAlgo.Robots
                 return SignalDirection.Short;
             }
 
+            // Periodic diagnostic showing why trend signal failed
+            if (_diagCount % 50 == 0)
+            {
+                Print(string.Format(
+                    "[MARS][TREND-MISS#{0}] longCross={1}(barsAgo={2}) shortCross={3}(barsAgo={4}) " +
+                    "rsi={5:F1} hist={6:F5} last3Bull={7} last3Bear={8} notExt={9}",
+                    _diagCount, longCross, _barsSinceLongCross, shortCross, _barsSinceShortCross,
+                    rsi, hist0, last3Bull, last3Bear, notExtendedLong));
+            }
+
             return SignalDirection.None;
         }
 
@@ -792,8 +826,16 @@ namespace cAlgo.Robots
             double vol     = Bars.TickVolumes[idx];
             double volSma  = _volumeSma20.Result[idx];
 
-            if (double.IsNaN(bbTop) || double.IsNaN(bbBot)) return SignalDirection.None;
-            if (double.IsNaN(rsi)   || double.IsNaN(stochK))  return SignalDirection.None;
+            if (double.IsNaN(bbTop) || double.IsNaN(bbBot))
+            {
+                Print(string.Format("[MARS][MR-NAN] BB NaN at idx={0} Bars.Count={1}", idx, Bars.Count));
+                return SignalDirection.None;
+            }
+            if (double.IsNaN(rsi) || double.IsNaN(stochK))
+            {
+                Print(string.Format("[MARS][MR-NAN] RSI={0} Stoch={1} NaN at idx={2}", rsi, stochK, idx));
+                return SignalDirection.None;
+            }
 
             // Condition 6: price within inner range of last 200 bars (~50 hrs on M15 = ~1 trading week)
             // Prevents entries at multi-week extremes (falling knives / blowoff tops)
@@ -851,6 +893,19 @@ namespace cAlgo.Robots
                 Print(string.Format("[MARS][MR-MISS-SHORT] RSI={0:F1}(>70={1}) Stoch={2:F1}(>80={3}) " +
                     "VolOk={4} InRange={5}(close={6:F5} innerHigh={7:F5})",
                     rsi, shortRsi, stochK, shortStoch, volOk, shortRange, close, innerHigh));
+            }
+            else
+            {
+                // Price inside bands — log periodically so we can confirm indicators are live
+                if (_diagCount % 100 == 0)
+                {
+                    double bandWidth = bbTop - bbBot;
+                    double pctFromBot = bandWidth > 0 ? (close - bbBot) / bandWidth * 100 : 50;
+                    Print(string.Format(
+                        "[MARS][MR-INSIDE#{0}] close={1:F5} bbTop={2:F5} bbBot={3:F5} " +
+                        "pctPos={4:F1}% rsi={5:F1} stochK={6:F1}",
+                        _diagCount, close, bbTop, bbBot, pctFromBot, rsi, stochK));
+                }
             }
 
             return SignalDirection.None;
