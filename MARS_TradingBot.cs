@@ -312,8 +312,7 @@ namespace cAlgo.Robots
     // ─────────────────────────────────────────────────────────────
     //  MAIN ROBOT CLASS
     // ─────────────────────────────────────────────────────────────
-    [Robot(Name = "MARS - Multi-Factor Adaptive Regime System",
-           Version = "1.0",
+    [Robot("MARS - Multi-Factor Adaptive Regime System",
            AccessRights = AccessRights.None)]
     public class MARSTradingBot : Robot
     {
