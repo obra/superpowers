@@ -545,13 +545,23 @@ namespace cAlgo.Robots
             if (openMarsPositions >= MaxConcurrentTrades) return;
 
             // Gate: session filter
-            if (!IsSessionOpen(Server.Time)) return;
+            if (!IsSessionOpen(Server.Time))
+            {
+                Print("[MARS][GATE] Session closed at " + Server.Time.ToString("HH:mm") + " UTC");
+                return;
+            }
 
             // Gate: news blackout
             if (IsNewsBlackout(Server.Time)) return;
 
             // Gate: FTMO daily/total limits
-            if (!_riskManager.CanOpenTrade(Account.Equity, _dailyRealizedPnL)) return;
+            if (!_riskManager.CanOpenTrade(Account.Equity, _dailyRealizedPnL))
+            {
+                Print("[MARS][GATE] FTMO limit blocks entry. DailyLimitBreached=" +
+                      _riskManager.IsDailyLimitBreached + " TotalBreached=" +
+                      _riskManager.IsTotalLimitBreached);
+                return;
+            }
 
             // Gate: max 1 position per symbol
             bool alreadyHavePosition = Positions.Any(p =>
@@ -565,29 +575,39 @@ namespace cAlgo.Robots
                 return;
             }
 
+            Print(string.Format("[MARS][EVAL] {0} Regime={1} H4Fast={2:F5} H4Slow={3:F5}",
+                Server.Time.ToString("yyyy-MM-dd HH:mm"),
+                _regimeEngine.CurrentRegime, _h4Ema50.Result[1], _h4Ema200.Result[1]));
+
             // ── Get H4 bias ──────────────────────────────────────
-            int h4Idx = _h4Bars.Count - 2; // last closed H4 bar
-            if (h4Idx < 1) return;
-            double h4Fast   = _h4Ema50.Result[h4Idx];
-            double h4Slow   = _h4Ema200.Result[h4Idx];
+            // Index 1 = last closed H4 bar (cAlgo convention: 0=current forming, 1=last closed)
+            double h4Fast   = _h4Ema50.Result[1];
+            double h4Slow   = _h4Ema200.Result[1];
             SignalDirection h4Bias      = SignalDirection.None;
             double          h4SizeMult  = 1.0;
 
-            if (double.IsNaN(h4Fast) || double.IsNaN(h4Slow) || h4Slow == 0) return;
-
-            double pctDiff = Math.Abs(h4Fast - h4Slow) / h4Slow * 100.0;
-            if (pctDiff <= 0.05)
+            if (double.IsNaN(h4Fast) || double.IsNaN(h4Slow) || h4Slow == 0)
             {
-                h4Bias     = SignalDirection.None; // both directions allowed
-                h4SizeMult = 0.5;
-            }
-            else if (h4Fast > h4Slow)
-            {
-                h4Bias = SignalDirection.Long;
+                // H4 EMAs not yet warmed up — skip H4 filter, allow all directions
+                h4Bias     = SignalDirection.None;
+                h4SizeMult = 0.5; // cautious size while no H4 data
             }
             else
             {
-                h4Bias = SignalDirection.Short;
+                double pctDiff = Math.Abs(h4Fast - h4Slow) / h4Slow * 100.0;
+                if (pctDiff <= 0.05)
+                {
+                    h4Bias     = SignalDirection.None;
+                    h4SizeMult = 0.5;
+                }
+                else if (h4Fast > h4Slow)
+                {
+                    h4Bias = SignalDirection.Long;
+                }
+                else
+                {
+                    h4Bias = SignalDirection.Short;
+                }
             }
 
             // ── Try Trend Signal ─────────────────────────────────
