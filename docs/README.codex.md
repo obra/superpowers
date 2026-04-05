@@ -43,6 +43,8 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 If you want the full `using-superpowers` skill injected into every new Codex
 session, add this to `~/.codex/hooks.json`:
 
+**macOS/Linux:**
+
 ```json
 {
   "hooks": {
@@ -66,6 +68,32 @@ session, add this to `~/.codex/hooks.json`:
 This is intentionally Codex-specific. The hook script resolves its own plugin
 root, so Codex does not need `CLAUDE_PLUGIN_ROOT` to produce the correct
 `hookSpecificOutput.additionalContext` payload.
+
+**Windows (cmd or PowerShell):**
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "^(startup|resume)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cmd.exe /d /c powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"%USERPROFILE%\\.codex\\superpowers\\hooks\\session-start-codex.ps1\"",
+            "statusMessage": "loading superpowers",
+            "timeout": 600
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+On Windows, Codex can inherit PowerShell as the hook shell. The `cmd.exe /d /c`
+prefix ensures `%USERPROFILE%` expands before the repository's PowerShell
+wrapper runs.
 
 ### Windows
 
@@ -161,9 +189,10 @@ Optionally delete the clone: `rm -rf ~/.codex/superpowers` (Windows: `Remove-Ite
 
 ### SessionStart hook not injecting context
 
-1. Check `~/.codex/hooks.json` uses `SUPERPOWERS_HOOK_TARGET=codex`
-2. Make sure the command points to `~/.codex/superpowers/hooks/session-start`
-3. Restart Codex and verify with a fresh `codex exec --json` session
+1. On macOS/Linux, check `~/.codex/hooks.json` uses `SUPERPOWERS_HOOK_TARGET=codex bash ~/.codex/superpowers/hooks/session-start`
+2. On Windows, check `~/.codex/hooks.json` uses `cmd.exe /d /c powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\superpowers\hooks\session-start-codex.ps1"`
+3. Make sure the command points to the installed repository under `~/.codex/superpowers/hooks/`
+4. Restart Codex and verify with a fresh `codex exec --json` session
 
 ### Windows junction issues
 
