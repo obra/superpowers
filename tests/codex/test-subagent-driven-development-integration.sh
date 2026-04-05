@@ -12,7 +12,7 @@ echo ""
 echo "This test executes a real plan with Codex and verifies:"
 echo "  1. Todo list events are emitted from the plan"
 echo "  2. Subagents are spawned during execution"
-echo "  3. Native reviewer roles are visible in session metadata"
+echo "  3. Native workflow roles are visible in session metadata"
 echo "  4. The implementation is written to the fixture project"
 echo "  5. The generated tests pass"
 echo "  6. A persisted Codex session is written"
@@ -118,7 +118,7 @@ This repository is a disposable integration-test fixture that is already isolate
 Follow the skill exactly otherwise. In particular, do real work:
 - read the plan and maintain a todo list
 - use subagents for implementation and review
-- if native Superpowers Codex reviewer roles are available in this environment, use them instead of the legacy worker-inline fallback
+- if native Superpowers Codex workflow roles are available in this environment, use them instead of the generic worker or explorer fallback wherever the role matches the task
 - create the requested files in this repository
 - run the requested verification commands
 - finish the implementation instead of stopping at analysis
@@ -188,6 +188,33 @@ json_query() {
     printf '%s\n' "$result"
 }
 
+count_session_role_hits() {
+    local pattern="$1"
+    local matches_file
+    local status
+    local count
+
+    matches_file=$(mktemp)
+
+    set +e
+    find "$CODEX_HOME/sessions" -name "*.jsonl" -type f -exec rg -o --no-messages "$pattern" {} + > "$matches_file"
+    status=$?
+    set -e
+
+    if [ "$status" -eq 0 ]; then
+        count=$(wc -l < "$matches_file" | tr -d ' ')
+    elif [ "$status" -eq 1 ]; then
+        count=0
+    else
+        echo "ERROR: failed to count session role matches for pattern: $pattern" >&2
+        FAILED=$((FAILED + 1))
+        count=0
+    fi
+
+    rm -f "$matches_file"
+    printf '%s\n' "$count"
+}
+
 echo "=== Verification Tests ==="
 echo ""
 
@@ -212,19 +239,13 @@ else
 fi
 echo ""
 
-echo "Test 3: Native reviewer roles captured in session metadata..."
-native_role_hits=$(find "$CODEX_HOME/sessions" -name "*.jsonl" -type f -print0 \
-  | xargs -0 cat \
-  | rg -o '"agent_role":"superpowers_(spec_reviewer|reviewer)"' \
-  | wc -l | tr -d ' ')
-worker_role_hits=$(find "$CODEX_HOME/sessions" -name "*.jsonl" -type f -print0 \
-  | xargs -0 cat \
-  | rg -o '"agent_role":"worker"' \
-  | wc -l | tr -d ' ')
-if [ "$native_role_hits" -ge 2 ] && [ "$worker_role_hits" -ge 1 ]; then
-    echo "  [PASS] Found native reviewer roles ($native_role_hits) and worker role ($worker_role_hits)"
+echo "Test 3: Native workflow roles captured in session metadata..."
+implementer_role_hits=$(count_session_role_hits '"agent_role":"superpowers_implementer"')
+reviewer_role_hits=$(count_session_role_hits '"agent_role":"superpowers_(spec_reviewer|reviewer)"')
+if [ "$implementer_role_hits" -ge 1 ] && [ "$reviewer_role_hits" -ge 2 ]; then
+    echo "  [PASS] Found native implementer role ($implementer_role_hits) and native reviewer roles ($reviewer_role_hits)"
 else
-    echo "  [FAIL] Expected native reviewer roles and worker role in session metadata (native=$native_role_hits, worker=$worker_role_hits)"
+    echo "  [FAIL] Expected native implementer role and native reviewer roles in session metadata (implementer=$implementer_role_hits, reviewers=$reviewer_role_hits)"
     FAILED=$((FAILED + 1))
 fi
 echo ""

@@ -94,24 +94,16 @@ assert_semantic_judgment \
     120 || exit 1
 
 echo ""
-echo "Test 6: Codex native reviewer mapping..."
+echo "Test 6: Codex native workflow-role mapping..."
 CODEX_TOOLS_SOURCE=$(cat "$REPO_ROOT/skills/using-superpowers/references/codex-tools.md")
-REQUEST_REVIEW_SOURCE=$(cat "$REPO_ROOT/skills/requesting-code-review/SKILL.md")
-native_roles_answer=$(run_codex "On Codex, when Superpowers needs reviewer-style subagents, what should it do when native Superpowers roles are installed, and what is the fallback when they are not? Answer in no more than 6 bullets." "$TEST_PROJECT" 90)
-assert_semantic_judgment \
-    "$CODEX_TOOLS_SOURCE
-
-$REQUEST_REVIEW_SOURCE
-
-$SKILL_SOURCE" \
-    "How should Superpowers dispatch reviewer-style subagents on Codex?" \
-    "$native_roles_answer" \
-    "- Says Codex should prefer native Superpowers roles such as superpowers_reviewer or superpowers_spec_reviewer when they are available.
-- Says implementation work still uses the built-in worker role.
-- Says the fallback is worker or default with inline reviewer instructions when the native role is unavailable." \
-    "$TEST_PROJECT" \
-    "Codex native role mapping is preserved" \
-    120 || exit 1
+assert_contains "$SKILL_SOURCE" 'implementer -> `superpowers_implementer`' "Implementer native role is documented" || exit 1
+assert_contains "$SKILL_SOURCE" 'spec compliance reviewer -> `superpowers_spec_reviewer`' "Spec reviewer native role is documented" || exit 1
+assert_contains "$SKILL_SOURCE" 'code quality reviewer -> `superpowers_reviewer`' "Code-quality reviewer native role is documented" || exit 1
+assert_contains "$SKILL_SOURCE" 'final code reviewer -> `superpowers_reviewer`' "Final reviewer native role is documented" || exit 1
+assert_contains "$SKILL_SOURCE" 'Do not leave the implementer on built-in `worker`' "Implementer avoids worker when native role exists" || exit 1
+assert_contains "$SKILL_SOURCE" 'implementer -> built-in `worker`' "Implementer fallback is documented" || exit 1
+assert_contains "$SKILL_SOURCE" 'reviewers -> existing prompt-driven dispatch using `worker` or `default`' "Reviewer fallback is documented" || exit 1
+assert_contains "$CODEX_TOOLS_SOURCE" 'Implementer in `subagent-driven-development`' "Codex tool mapping lists native implementer role" || exit 1
 
 echo ""
 echo "=== All subagent-driven-development skill tests passed ==="

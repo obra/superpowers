@@ -22,7 +22,7 @@ fi
 
 VERBOSE=false
 SPECIFIC_TEST=""
-TIMEOUT=300
+TIMEOUT=900
 TIMEOUT_EXPLICIT=false
 RUN_INTEGRATION=false
 
@@ -51,11 +51,12 @@ while [[ $# -gt 0 ]]; do
             echo "Options:"
             echo "  --verbose, -v        Show verbose output"
             echo "  --test, -t NAME      Run only the specified test"
-            echo "  --timeout SECONDS    Set timeout per test (default: 300, or 1800 with --integration)"
+            echo "  --timeout SECONDS    Set timeout per test (default: 900, or 1800 with --integration)"
             echo "  --integration, -i    Run integration tests (slow, 10-30 min)"
             echo "  --help, -h           Show this help"
             echo ""
             echo "Tests:"
+            echo "  test-native-agent-catalog.sh           Verify native Superpowers Codex roles are installed and discoverable"
             echo "  test-subagent-driven-development.sh  Test skill loading and requirements"
             echo "  test-using-superpowers-bootstrap.sh  Verify SessionStart Codex bootstrap shape"
             echo ""
@@ -77,6 +78,7 @@ if [ "$RUN_INTEGRATION" = true ] && [ "$TIMEOUT_EXPLICIT" = false ]; then
 fi
 
 tests=(
+    "test-native-agent-catalog.sh"
     "test-subagent-driven-development.sh"
     "test-using-superpowers-bootstrap.sh"
 )

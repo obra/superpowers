@@ -125,7 +125,7 @@ find ~/.codex/agents -maxdepth 1 -name 'superpowers_*.toml' | sort
 You should see:
 
 - a symlink (or junction on Windows) for the skills directory
-- four native Codex agent TOMLs directly under `~/.codex/agents`
+- native Codex agent TOMLs directly under `~/.codex/agents`, including reviewer roles plus `superpowers_implementer`, `superpowers_explorer`, and `superpowers_verifier`
 
 ## Updating
 

@@ -116,9 +116,13 @@ Codex loads two Superpowers integration surfaces at startup:
 ```
 
 - the skills directory exposes SKILL.md files for native skill discovery
-- the agents directory exposes native Codex reviewer roles through copied TOML files such as `superpowers_reviewer.toml` and `superpowers_spec_reviewer.toml`
+- the agents directory exposes native Codex workflow roles through copied TOML files such as `superpowers_implementer.toml`, `superpowers_reviewer.toml`, and `superpowers_explorer.toml`
 
-The `using-superpowers` skill is discovered automatically and enforces skill usage discipline. When subagent workflows need specialized reviewers on Codex, Superpowers can now use native `superpowers_*` roles instead of treating `worker` plus inline prompts as the primary design. Direct TOML copies are used because current Codex role discovery does not recurse into symlinked subdirectories under `agents/`.
+The `using-superpowers` skill is discovered automatically and enforces skill usage discipline. When subagent workflows need specialized implementation, review, exploration, or verification behavior on Codex, Superpowers can now use native `superpowers_*` roles instead of leaning only on generic `worker` or `explorer` roles. Direct TOML copies are used because current Codex role discovery does not recurse into symlinked subdirectories under `agents/`.
+
+Current native workflow roles include reviewer roles plus
+`superpowers_implementer`, `superpowers_explorer`, and
+`superpowers_verifier`.
 
 ## Usage
 
