@@ -395,8 +395,9 @@ Generate three diagrams from the confirmed conceptual model. Each diagram is pro
 2. **Mermaid in document** (always) — written to `docs/ddd-model.md` for durable, git-friendly persistence
 
 **Check for Excalidraw MCP tools** (look for `mcp__claude_ai_Excalidraw__create_view`):
-- If available: call `read_me` first (if not already called this session), then use `create_view` for each diagram to render inline for the developer to review interactively
-- If not available: present diagrams as Mermaid code blocks in conversation instead
+- **Skip Excalidraw entirely in VS Code** — MCP Apps render as iframes that only display in claude.ai web UI. The `read_me` call alone wastes ~500 tokens of context for no visual output. Check the system context for "VSCode native extension environment" to detect this.
+- If running in **claude.ai web UI** and tools are available: call `read_me` first (if not already called this session), then use `create_view` for each diagram to render inline for the developer to review interactively.
+- If not available: present diagrams as Mermaid code blocks in conversation instead.
 
 **Regardless of Excalidraw availability,** Mermaid code blocks are always written to the DDD document for persistence. Do NOT use `export_to_excalidraw` — the exported URLs are unreliable.
 

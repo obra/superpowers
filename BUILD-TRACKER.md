@@ -1,6 +1,6 @@
 # BUILD-TRACKER.md — pp-superpowers Central Build Plan
 
-**Last updated:** April 2, 2026 (Phase 2 in progress — application-design and schema-design skills built, pending live test)  
+**Last updated:** April 5, 2026 (Phase 2 — application-design and schema-design live-tested, Excalidraw VS Code fix applied, ready for Step 7/8)  
 **Purpose:** Single source of truth for build progress. Read this file at the start of every Claude Code session.
 
 ---
@@ -8,7 +8,7 @@
 ## Current Position
 
 **Phase 2 — Design Layer**  
-**Active task:** Fix MIND_MAP diagram write-back issue found in live test, then re-test  
+**Active task:** Step 7 — Fix remaining issues from live tests, then Step 8 — merge to main  
 **Branch:** `feature/phase2-design-layer`
 
 ---
@@ -30,7 +30,7 @@ Complete these in order. Check off in this file as each is done.
 #### Step 2 — application-design skill
 
 - [x] `skills/application-design/SKILL.md` — 7-stage state machine, Mode A/B fork, prerequisites, companion loading (April 2)
-- [x] `skills/application-design/conversation-guide.md` — stage-by-stage flow, DDD model template, enrichment protocol, Whimsical/Mermaid specs (April 2)
+- [x] `skills/application-design/conversation-guide.md` — stage-by-stage flow, DDD model template, enrichment protocol, Excalidraw/Mermaid specs (April 2, updated April 5)
 
 #### Step 3 — schema-design skill
 
@@ -58,10 +58,11 @@ Start a fresh Claude Code conversation. Invoke application-design with a project
 - [x] DOCUMENTATION writes `docs/ddd-model.md` using template (April 5)
 - [x] Bounded context / single-solution tension check — correctly found no tension with 1 context (April 5)
 - [x] MIND_MAP generates Mermaid diagrams (Whimsical correctly detected as unavailable) (April 5) — **Note:** Whimsical replaced with Excalidraw as diagram tool (April 5)
-- [ ] **BUG:** MIND_MAP diagrams generated but NOT written back to `docs/ddd-model.md` — placeholder text remained. **Fix applied:** added EXTREMELY-IMPORTANT directive to conversation-guide.md requiring file edit. Re-test needed.
+- [x] **BUG (resolved):** MIND_MAP diagrams generated but NOT written back to `docs/ddd-model.md` — placeholder text remained. **Fix applied:** added EXTREMELY-IMPORTANT directive to conversation-guide.md requiring file edit. Re-tested April 5 — diagrams now written to document correctly.
 - [x] REVIEW checklist runs with all items (April 5)
 - [x] COMPLETE writes state to `.pp-context/skill-state.json`, suggests schema-design, waits (April 5)
 - [x] State file updated at each stage transition with real UTC timestamps (April 5)
+- [x] **Post-test fix (April 5):** Excalidraw `read_me` + `create_view` calls succeed silently in VS Code but produce no visual output (MCP Apps render as iframes only in claude.ai web UI). Fix applied: conversation-guide.md updated to skip Excalidraw entirely in VS Code, saving ~500 tokens of wasted context. Mermaid ERD is the universal fallback.
 
 #### Step 6 — Live-test schema-design (with DDD model)
 
@@ -69,21 +70,30 @@ Run immediately after application-design completes (DDD model exists at `docs/dd
 
 **What to verify:**
 
-- [ ] INIT detects and loads DDD model, presents entity/context/aggregate counts
-- [ ] CONCEPTUAL_MODEL pre-informed by DDD (not asking from scratch)
-- [ ] LOGICAL_MODEL loads `knowledge-domains.md` at entry
-- [ ] Three rounds: attributes → candidate keys → normalization
-- [ ] PHYSICAL_MODEL three rounds: column types → table config → relationship behaviors
-- [ ] Physical model document written to `docs/schema-physical-model.md`
-- [ ] ERD generated (Mermaid fallback expected)
-- [ ] UX_DENORMALIZATION skip logic (if no UI plan, should skip with note)
-- [ ] PARITY_CHECK runs anti-pattern scan and system table overlap check
-- [ ] REVIEW dispatches schema-reviewer agent, presents findings
-- [ ] COMPLETE writes state with artifact list, suggests ui-design, waits
+- [x] INIT detects and loads DDD model, presents entity/context/aggregate counts (April 5) — 4 entities, 1 context, 2 aggregates, publisher prefix c3m_
+- [x] CONCEPTUAL_MODEL pre-informed by DDD (not asking from scratch) (April 5) — aggregate-derived groupings with relationship types presented
+- [x] LOGICAL_MODEL loads `knowledge-domains.md` at entry (April 5)
+- [x] Three rounds: attributes → candidate keys → normalization (April 5) — all 3 rounds with entity-by-entity confirmation
+- [x] PHYSICAL_MODEL three rounds: column types → table config → relationship behaviors (April 5) — all 3 rounds confirmed
+- [x] Physical model document written to `docs/schema-physical-model.md` (April 5) — follows template, correct naming conventions, proper relationship behaviors
+- [x] ERD generated (April 5) — Mermaid ERD in document. Excalidraw `create_view` called but invisible in VS Code (see application-design post-test fix above)
+- [x] UX_DENORMALIZATION skip logic (April 5) — correctly skipped with "No UI plan available" note (placeholder detected)
+- [~] PARITY_CHECK runs anti-pattern scan and system table overlap check (April 5) — Microsoft Learn queried for Dataverse relationship behaviors, but **transcript truncated** — unclear if full findings were presented to developer for confirmation
+- [~] REVIEW dispatches schema-reviewer agent, presents findings (April 5) — **transcript truncated** — state file shows completion but no evidence schema-reviewer agent was dispatched. Quality validation checklist not visible in transcript.
+- [~] COMPLETE writes state with artifact list, suggests ui-design, waits (April 5) — state file correct (activeSkill: null, suggestedNext: ui-design, artifacts listed), but **handoff presentation not visible in transcript**
 
 #### Step 7 — Fix issues found during live tests
 
 Branch stays open. Fix on `feature/phase2-design-layer`.
+
+**Issues identified and resolved:**
+
+- [x] **Excalidraw VS Code rendering (April 5):** MCP Apps (`create_view`) render as iframes only in claude.ai web UI — invisible in VS Code extension. `read_me` call wastes ~500 tokens for zero output. **Fix:** Updated both `application-design` and `schema-design` conversation guides to skip Excalidraw entirely in VS Code (detect via "VSCode native extension environment" in system context). Mermaid ERD always written as universal fallback.
+
+**Issues identified but NOT yet resolved:**
+
+- [ ] **schema-design PARITY_CHECK through COMPLETE truncation:** Transcript evidence suggests these stages may have been rushed — schema-reviewer agent dispatch not confirmed, parity check findings not confirmed by developer. Consider re-running schema-design on the test project to verify these stages execute with proper gates, OR strengthen the conversation guide gate language for these stages.
+- [x] **BUILD-TRACKER.md Whimsical reference (line 33):** Step 2 description said "Whimsical/Mermaid specs" — updated to "Excalidraw/Mermaid specs" (April 5).
 
 #### Step 8 — Merge to main
 
@@ -225,8 +235,8 @@ Phase 1 — Foundation                          ✓ COMPLETE
   solution-strategy      [BUILT, fully validated — April 2]
 
 Phase 2 — Design Layer (parallel after Phase 1) ← YOU ARE HERE
-  application-design     [BUILT, pending live test — April 2]
-  schema-design          [BUILT, pending live test — April 2]
+  application-design     [BUILT, live-tested, fixes applied — April 5]
+  schema-design          [BUILT, live-tested (partial — see Step 6/7), fixes applied — April 5]
 
 Phase 3 — Build Layer (parallel after Phase 2)
   ui-design              [design approved, not built]

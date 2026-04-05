@@ -264,7 +264,10 @@ For each entity:
 After all three rounds are confirmed:
 
 1. **Write `docs/schema-physical-model.md`** using the template below
-2. **Generate ERD** — if Excalidraw MCP tools are available (`mcp__claude_ai_Excalidraw__create_view`), render the ERD inline with Excalidraw for interactive review. Regardless of Excalidraw availability, always write a Mermaid ER diagram code block to the document for durable persistence. Do NOT use `export_to_excalidraw` — the exported URLs are unreliable.
+2. **Generate ERD:**
+   - **Always** write a Mermaid ER diagram code block to the document for durable persistence.
+   - **Excalidraw inline rendering** (optional): If running in **claude.ai web UI** (not VS Code) and Excalidraw MCP tools are available (`mcp__claude_ai_Excalidraw__create_view`), render the ERD inline for interactive review. **Skip Excalidraw entirely in VS Code** — MCP Apps render as iframes that only display in claude.ai web, and the `read_me` call wastes ~500 tokens of context for no visual output. Check the system context for "VSCode native extension environment" to detect this.
+   - Do NOT use `export_to_excalidraw` — the exported URLs are unreliable.
 
 ### Physical Model Document Template — `docs/schema-physical-model.md`
 
