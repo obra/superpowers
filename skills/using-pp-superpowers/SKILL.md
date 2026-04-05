@@ -33,6 +33,8 @@ Use the `Skill` tool. When you invoke a skill, its content is loaded and present
 |-------|---------------|
 | `solution-discovery` | Starting a new Power Platform project, gathering requirements, establishing project foundations, or updating an existing `.foundation/` |
 | `solution-strategy` | Refining solution packaging, defining environment promotion paths, planning deployment strategy — when solution-discovery's packaging section needs deeper architecture |
+| `application-design` | Modeling domain boundaries, defining bounded contexts and aggregates, creating a DDD model, or analyzing an existing solution's domain structure |
+| `schema-design` | Designing Dataverse tables and columns, creating a physical data model, mapping logical attributes to Dataverse types, or reviewing schema against platform patterns |
 
 ## The Rule
 

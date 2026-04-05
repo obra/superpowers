@@ -1,6 +1,6 @@
 # BUILD-TRACKER.md — pp-superpowers Central Build Plan
 
-**Last updated:** April 2, 2026 (Phase 1 complete — solution-discovery and solution-strategy both built and merged)  
+**Last updated:** April 2, 2026 (Phase 2 in progress — application-design and schema-design skills built, pending live test)  
 **Purpose:** Single source of truth for build progress. Read this file at the start of every Claude Code session.
 
 ---
@@ -8,14 +8,100 @@
 ## Current Position
 
 **Phase 2 — Design Layer**  
-**Active task:** Build application-design and schema-design (can be built in parallel)  
-**Branch:** `main`
+**Active task:** Fix MIND_MAP diagram write-back issue found in live test, then re-test  
+**Branch:** `feature/phase2-design-layer`
 
 ---
 
 ## Immediate Next Actions
 
 Complete these in order. Check off in this file as each is done.
+
+### Phase 2: Build application-design and schema-design
+
+**Branch:** `feature/phase2-design-layer`
+
+#### Step 1 — Agents (parallel)
+
+- [x] `agents/domain-modeler.md` — dispatched by application-design Mode A (April 2)
+- [x] `agents/solution-analyzer.md` — dispatched by application-design Mode B (April 2)
+- [x] `agents/schema-reviewer.md` — dispatched by schema-design REVIEW (April 2)
+
+#### Step 2 — application-design skill
+
+- [x] `skills/application-design/SKILL.md` — 7-stage state machine, Mode A/B fork, prerequisites, companion loading (April 2)
+- [x] `skills/application-design/conversation-guide.md` — stage-by-stage flow, DDD model template, enrichment protocol, Whimsical/Mermaid specs (April 2)
+
+#### Step 3 — schema-design skill
+
+- [x] `skills/schema-design/SKILL.md` — 8-stage state machine, DDD detection, re-entry support, knowledge domain companion (April 2)
+- [x] `skills/schema-design/conversation-guide.md` — stage-by-stage flow, physical model template, denormalization log template, ERD specs (April 2)
+- [x] `skills/schema-design/knowledge-domains.md` — column types, table types, relationship behaviors, naming conventions, anti-patterns, parity check reference (April 2)
+
+#### Step 4 — Routing and tracker
+
+- [x] `skills/using-pp-superpowers/SKILL.md` — added application-design and schema-design to routing table (April 2)
+- [x] `BUILD-TRACKER.md` — updated current position, added Phase 2 checklist (April 2)
+
+#### Step 5 — Live-test application-design (Mode A)
+
+Start a fresh Claude Code conversation. Invoke application-design with a project that has a complete `.foundation/` (run solution-discovery CREATE mode first if needed).
+
+**What to verify:**
+
+- [x] Prerequisite gate — blocks if foundation files missing (April 5)
+- [x] Plan mode hard-gate fires (April 5)
+- [x] Mode selection presented at DOMAIN_ANALYSIS (April 5)
+- [x] domain-modeler agent dispatched (Mode A) — produced solid 4-entity model (April 5)
+- [x] Three-round confirmation: bounded contexts → aggregates → ubiquitous language (April 5)
+- [x] CONCEPTUAL_MODEL formalization presented (April 5)
+- [x] DOCUMENTATION writes `docs/ddd-model.md` using template (April 5)
+- [x] Bounded context / single-solution tension check — correctly found no tension with 1 context (April 5)
+- [x] MIND_MAP generates Mermaid diagrams (Whimsical correctly detected as unavailable) (April 5)
+- [ ] **BUG:** MIND_MAP diagrams generated but NOT written back to `docs/ddd-model.md` — placeholder text remained. **Fix applied:** added EXTREMELY-IMPORTANT directive to conversation-guide.md requiring file edit. Re-test needed.
+- [x] REVIEW checklist runs with all items (April 5)
+- [x] COMPLETE writes state to `.pp-context/skill-state.json`, suggests schema-design, waits (April 5)
+- [x] State file updated at each stage transition with real UTC timestamps (April 5)
+
+#### Step 6 — Live-test schema-design (with DDD model)
+
+Run immediately after application-design completes (DDD model exists at `docs/ddd-model.md`).
+
+**What to verify:**
+
+- [ ] INIT detects and loads DDD model, presents entity/context/aggregate counts
+- [ ] CONCEPTUAL_MODEL pre-informed by DDD (not asking from scratch)
+- [ ] LOGICAL_MODEL loads `knowledge-domains.md` at entry
+- [ ] Three rounds: attributes → candidate keys → normalization
+- [ ] PHYSICAL_MODEL three rounds: column types → table config → relationship behaviors
+- [ ] Physical model document written to `docs/schema-physical-model.md`
+- [ ] ERD generated (Mermaid fallback expected)
+- [ ] UX_DENORMALIZATION skip logic (if no UI plan, should skip with note)
+- [ ] PARITY_CHECK runs anti-pattern scan and system table overlap check
+- [ ] REVIEW dispatches schema-reviewer agent, presents findings
+- [ ] COMPLETE writes state with artifact list, suggests ui-design, waits
+
+#### Step 7 — Fix issues found during live tests
+
+Branch stays open. Fix on `feature/phase2-design-layer`.
+
+#### Step 8 — Merge to main
+
+```bash
+git checkout main
+git merge feature/phase2-design-layer
+git branch -d feature/phase2-design-layer
+```
+
+#### Deferred tests (not blocking merge)
+
+- [ ] application-design Mode B (needs real solution artifacts)
+- [ ] schema-design without DDD model
+- [ ] schema-design re-entry (delta mode)
+
+---
+
+### Phase 1 completed actions (archived)
 
 ### 1. Live-test solution-discovery (CREATE mode)
 
@@ -139,8 +225,8 @@ Phase 1 — Foundation                          ✓ COMPLETE
   solution-strategy      [BUILT, fully validated — April 2]
 
 Phase 2 — Design Layer (parallel after Phase 1) ← YOU ARE HERE
-  application-design     [design approved, not built]
-  schema-design          [design approved, not built]
+  application-design     [BUILT, pending live test — April 2]
+  schema-design          [BUILT, pending live test — April 2]
 
 Phase 3 — Build Layer (parallel after Phase 2)
   ui-design              [design approved, not built]
@@ -187,7 +273,7 @@ Tracked items that are not blocking the immediate next action but must be addres
 | 4 | pp-meta marker format may require retroactive SKILL.md updates | When pp-meta design starts | implementation plan §10 |
 | 5 | GitHub Issue templates (`fork-modification`, `skill-improvement`, `design-update`) not created | Before Phase 2 — volume increases | implementation plan §10 |
 | 6 | Validation checkpoint automation (verifying output files exist, linting SKILL.md) | Evaluate during Phase 2 | implementation plan §10 |
-| 7 | `domain-modeler`, `solution-analyzer`, and future agents — global agents vs local prompt templates | Decide per skill during that skill's build session | fork-modification-checklist |
+| 7 | ~~`domain-modeler`, `solution-analyzer`, and future agents — global agents vs local prompt templates~~ — **resolved:** all Phase 2 agents created as global agent files in `agents/`, matching architecture-advisor pattern | Done | fork-modification-checklist |
 | 8 | `using-git-worktrees/`, `finishing-a-development-branch/` — keep or adapt | During alm-workflow skill build | fork-modification-checklist |
 | 9 | UPDATE mode live testing for solution-discovery | After CREATE mode is validated and a complete `.foundation/` exists | next-session-prompt |
 | 10 | ~~Plan mode conflict~~ — **resolved:** HARD-GATE directive added to SKILL.md telling developer to exit plan mode before proceeding | Done | April 2 live test |
