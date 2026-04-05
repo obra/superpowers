@@ -41,6 +41,8 @@ Codex can discover the `using-superpowers` skill natively from the skills
 symlink. If you also want the full skill text injected at session start, add a
 `SessionStart` hook:
 
+**macOS/Linux:**
+
 ```json
 {
   "hooks": {
@@ -65,6 +67,32 @@ Use `SUPERPOWERS_HOOK_TARGET=codex` rather than `CLAUDE_PLUGIN_ROOT`. The hook
 script already discovers its own repository root, and the explicit Codex target
 keeps the output schema aligned with Codex's `hookSpecificOutput` format.
 
+**Windows (cmd or PowerShell):**
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "^(startup|resume)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cmd.exe /d /c powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"%USERPROFILE%\\.codex\\superpowers\\hooks\\session-start-codex.ps1\"",
+            "statusMessage": "loading superpowers",
+            "timeout": 600
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+On Windows, Codex can inherit PowerShell as the hook shell. The `cmd.exe /d /c`
+prefix ensures `%USERPROFILE%` expands reliably before the PowerShell wrapper
+is invoked.
+
 ## Migrating from old bootstrap
 
 If you installed superpowers before native skill discovery, you need to:
@@ -79,8 +107,9 @@ If you installed superpowers before native skill discovery, you need to:
 3. **Copy the agent TOMLs** (step 3 above).
 
 4. **Update any old hook command** in `~/.codex/hooks.json`:
-   - replace `CLAUDE_PLUGIN_ROOT=... bash ~/.codex/superpowers/hooks/session-start`
-   - with `SUPERPOWERS_HOOK_TARGET=codex bash ~/.codex/superpowers/hooks/session-start`
+   - macOS/Linux: replace `CLAUDE_PLUGIN_ROOT=... bash ~/.codex/superpowers/hooks/session-start`
+   - macOS/Linux: with `SUPERPOWERS_HOOK_TARGET=codex bash ~/.codex/superpowers/hooks/session-start`
+   - Windows: with `cmd.exe /d /c powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\superpowers\hooks\session-start-codex.ps1"`
 
 5. **Remove the old bootstrap block** from `~/.codex/AGENTS.md` - any block referencing `superpowers-codex bootstrap` is no longer needed.
 
