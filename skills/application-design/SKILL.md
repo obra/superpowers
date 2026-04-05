@@ -110,7 +110,7 @@ digraph create_flow {
     DOMAIN_ANALYSIS [label="DOMAIN_ANALYSIS\nMode A or B\nAgent dispatch"];
     CONCEPTUAL_MODEL [label="CONCEPTUAL_MODEL\nFormalize confirmed model"];
     DOCUMENTATION [label="DOCUMENTATION\nWrite ddd-model.md\nEnrichment (Mode B)"];
-    MIND_MAP [label="MIND_MAP\nGenerate diagrams\nWhimsical or Mermaid"];
+    MIND_MAP [label="MIND_MAP\nGenerate diagrams\nExcalidraw + Mermaid"];
     REVIEW [label="REVIEW\nValidate checklist"];
     COMPLETE [label="COMPLETE\nWrite state\nSuggest next skill"];
 
@@ -132,7 +132,7 @@ digraph create_flow {
 | DOMAIN_ANALYSIS | — | No | Agent dispatched, 3-round confirmation complete (Mode A) or gap analysis confirmed (Mode B) |
 | CONCEPTUAL_MODEL | — | No | Developer confirms formalized conceptual model |
 | DOCUMENTATION | `docs/ddd-model.md` | No | DDD document written; enrichment complete if Mode B |
-| MIND_MAP | Diagrams (Whimsical or Mermaid in doc) | No | Developer confirms diagrams are accurate |
+| MIND_MAP | Diagrams (Excalidraw inline + Mermaid in doc) | No | Developer confirms diagrams are accurate |
 | REVIEW | — | No | All checklist items pass, developer confirms |
 | COMPLETE | `.pp-context/skill-state.json` | No | State written, next skill suggested, developer responds |
 

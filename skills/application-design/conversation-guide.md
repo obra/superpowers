@@ -345,13 +345,13 @@ Update `activeStage` to `"DOCUMENTATION"`, add CONCEPTUAL_MODEL to stageHistory 
 ## Diagrams
 
 ### Bounded Context Map
-[Whimsical link or Mermaid code block]
+[Mermaid code block]
 
 ### Aggregate Relationship Map
-[Whimsical link or Mermaid code block]
+[Mermaid code block]
 
 ### Domain Event Flow
-[Whimsical link or Mermaid code block, or "Not applicable — no domain events identified"]
+[Mermaid code block, or "Not applicable — no domain events identified"]
 
 ---
 
@@ -389,15 +389,27 @@ Update `activeStage` to `"MIND_MAP"`, add DOCUMENTATION to stageHistory with `co
 
 ### Actions
 
-Generate three diagrams from the confirmed conceptual model.
+Generate three diagrams from the confirmed conceptual model. Each diagram is produced in two forms:
 
-**First, check if Whimsical MCP tools are available.** If not:
-> "Whimsical is not connected. I'll generate Mermaid diagrams instead — they'll be embedded in your DDD document."
+1. **Excalidraw inline** (if available) — interactive, rendered in the conversation for review
+2. **Mermaid in document** (always) — written to `docs/ddd-model.md` for durable, git-friendly persistence
+
+**Check for Excalidraw MCP tools** (look for `mcp__claude_ai_Excalidraw__create_view`):
+- If available: call `read_me` first (if not already called this session), then use `create_view` for each diagram to render inline for the developer to review interactively
+- If not available: present diagrams as Mermaid code blocks in conversation instead
+
+**Regardless of Excalidraw availability,** Mermaid code blocks are always written to the DDD document for persistence. Do NOT use `export_to_excalidraw` — the exported URLs are unreliable.
 
 #### Diagram 1 — Bounded Context Map
 
-Whimsical: `flowchart_create` with Mermaid syntax. Fallback: Mermaid code block.
+**Excalidraw layout** (inline rendering):
+- Use zone rectangles (opacity: 30) with `backgroundColor: "#dbe4ff"` for each bounded context
+- Place aggregate rectangles inside each zone with `backgroundColor: "#a5d8ff"` for roots and `"#b2f2bb"` for members
+- Use labeled arrows between contexts for integration patterns (shared kernel, customer-supplier, conformist)
+- Group by solution assignment if multi-solution
+- Use `cameraUpdate` as first element to frame the diagram
 
+**Mermaid** (written to document):
 ```mermaid
 graph TB
     subgraph "Solution: [solution name]"
@@ -412,28 +424,42 @@ graph TB
     A1 -->|"shared kernel"| A3
 ```
 
-Contexts grouped by solution assignment. Relationships labeled with integration pattern.
-
 #### Diagram 2 — Aggregate Relationship Map
 
-Whimsical: `mindmap_create` with indented text. Fallback: Mermaid mindmap.
+**Excalidraw layout** (inline rendering):
+- Title text at top
+- Each aggregate as a group: root entity in `backgroundColor: "#a5d8ff"` rectangle, child entities in `"#b2f2bb"`, references in `"#ffd8a8"`
+- Parental cascade arrows use solid lines with `strokeColor: "#22c55e"`
+- Cross-aggregate reference arrows use dashed lines with `strokeColor: "#8b5cf6"`
+- Layout top-down: aggregate root at top, children below, with clear spacing
 
-```
-[Project Name] Domain Model
-  [Aggregate 1] (root: [Entity A])
-    [Entity B] — child, cascade delete
-    [Entity C] — child, cascade delete
-  [Aggregate 2] (root: [Entity D])
-    [Entity E] — child, restrict delete
-    [Entity F] — reference, referential
-  Cross-aggregate references
-    [Entity B] → [Entity D] — lookup reference
+**Mermaid** (written to document):
+```mermaid
+graph TD
+    subgraph "Aggregate: [Name] (root: Entity A)"
+        A[Entity A] --> B[Entity B]
+        A --> C[Entity C]
+    end
+    subgraph "Aggregate: [Name] (root: Entity D)"
+        D[Entity D] --> E[Entity E]
+    end
+    B -.->|"lookup"| D
 ```
 
 #### Diagram 3 — Domain Event Flow
 
-Whimsical: `flowchart_create` with Mermaid syntax. Fallback: Mermaid code block.
+**Only generate if domain events were identified.** If no events exist:
+> "Domain Event Flow skipped — no domain events identified during analysis."
 
+**Excalidraw layout** (inline rendering):
+- Left-to-right flow
+- Trigger events as rounded rectangles with `backgroundColor: "#fff3bf"`
+- Handler nodes (plugin, flow, business rule) as rounded rectangles with `backgroundColor: "#d0bfff"`
+- Side effects/outputs as rounded rectangles with `backgroundColor: "#b2f2bb"`
+- Labeled arrows connecting trigger → handler → output
+- Use `cameraUpdate` to frame the flow
+
+**Mermaid** (written to document):
 ```mermaid
 graph LR
     T1[Record Created] -->|"Entity A"| P1[Plugin: ValidateA]
@@ -443,17 +469,14 @@ graph LR
     P2 --> S2[Email Sent]
 ```
 
-**Only generate if domain events were identified.** If no events exist:
-> "Domain Event Flow skipped — no domain events identified during analysis."
-
 ### Write Diagrams to DDD Document
 
 <EXTREMELY-IMPORTANT>
-After generating diagrams, you MUST edit `docs/ddd-model.md` to replace the placeholder text in the Diagrams section with the actual diagram content. This is a file write, not just a conversation presentation.
+After generating diagrams, you MUST edit `docs/ddd-model.md` to replace the placeholder text in the Diagrams section with Mermaid code blocks. This is a file write, not just a conversation presentation.
 
-**If using Mermaid fallback:** Replace each placeholder (e.g., `*Generated at MIND_MAP stage*`) with the corresponding Mermaid code block (wrapped in triple-backtick mermaid fences).
+Replace each placeholder (e.g., `*Generated at MIND_MAP stage*`) with the corresponding Mermaid code block (wrapped in triple-backtick mermaid fences).
 
-**If using Whimsical:** Replace each placeholder with the Whimsical link.
+Excalidraw is for interactive conversation rendering only — do NOT write Excalidraw URLs or JSON to the document. Mermaid is the durable format.
 
 Do NOT leave placeholder text in the document. The REVIEW stage will check that diagrams are present in the file.
 </EXTREMELY-IMPORTANT>
@@ -461,9 +484,11 @@ Do NOT leave placeholder text in the document. The REVIEW stage will check that 
 ### Presentation
 
 > "I've generated [two/three] diagrams for your domain model:
-> 1. **Bounded Context Map** — [Whimsical link or "see Mermaid diagram below"]
-> 2. **Aggregate Relationship Map** — [Whimsical link or "see Mermaid diagram below"]
-> 3. **Domain Event Flow** — [Whimsical link or "Skipped — no domain events identified"]
+> 1. **Bounded Context Map** — [rendered above via Excalidraw, or "see Mermaid diagram below"]
+> 2. **Aggregate Relationship Map** — [rendered above via Excalidraw, or "see Mermaid diagram below"]
+> 3. **Domain Event Flow** — [rendered above, or "Skipped — no domain events identified"]
+>
+> Mermaid versions have been written to `docs/ddd-model.md` for persistence.
 >
 > Review each diagram. Do any relationships or structures look wrong?"
 
@@ -493,7 +518,7 @@ Validate the complete DDD model against the foundation using this checklist:
 > - [checkmark/cross] Bounded context relationships documented (no orphaned contexts)
 > - [checkmark/cross] Domain events have handlers identified (if events exist)
 > - [checkmark/cross] DDD document complete per template
-> - [checkmark/cross] All diagrams written to `docs/ddd-model.md` (Mermaid code blocks or Whimsical links — no placeholder text remaining)
+> - [checkmark/cross] All diagrams written to `docs/ddd-model.md` as Mermaid code blocks — no placeholder text remaining
 > [If Mode B:]
 > - [checkmark/cross] Foundation enrichment protocol completed, all updates confirmed
 >

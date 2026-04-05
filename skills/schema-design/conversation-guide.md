@@ -264,7 +264,7 @@ For each entity:
 After all three rounds are confirmed:
 
 1. **Write `docs/schema-physical-model.md`** using the template below
-2. **Generate ERD** — check for Whimsical MCP tools. If available, use `flowchart_create` with Mermaid ER syntax. If not, generate Mermaid code block in the document.
+2. **Generate ERD** — if Excalidraw MCP tools are available (`mcp__claude_ai_Excalidraw__create_view`), render the ERD inline with Excalidraw for interactive review. Regardless of Excalidraw availability, always write a Mermaid ER diagram code block to the document for durable persistence. Do NOT use `export_to_excalidraw` — the exported URLs are unreliable.
 
 ### Physical Model Document Template — `docs/schema-physical-model.md`
 
@@ -363,7 +363,7 @@ After all three rounds are confirmed:
 ## ERD
 
 ### Full ERD
-[Whimsical link or "See Mermaid diagram below"]
+[See Mermaid diagram below]
 
 ### Mermaid (fallback or supplementary)
 
@@ -657,7 +657,7 @@ Update `activeStage` to `"COMPLETE"`, add REVIEW to stageHistory with `completed
    >
    > Artifacts produced:
    > - Physical model: `docs/schema-physical-model.md`
-   > - ERD: [Whimsical link or "Mermaid diagram in physical model document"]
+   > - ERD: [Mermaid diagram in physical model document]
    > - De-normalization log: `docs/schema-denormalization-log.md`
    >
    > I'd suggest moving to **ui-design** next — your forms and views need the column definitions from the physical model.

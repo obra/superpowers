@@ -57,7 +57,7 @@ Start a fresh Claude Code conversation. Invoke application-design with a project
 - [x] CONCEPTUAL_MODEL formalization presented (April 5)
 - [x] DOCUMENTATION writes `docs/ddd-model.md` using template (April 5)
 - [x] Bounded context / single-solution tension check — correctly found no tension with 1 context (April 5)
-- [x] MIND_MAP generates Mermaid diagrams (Whimsical correctly detected as unavailable) (April 5)
+- [x] MIND_MAP generates Mermaid diagrams (Whimsical correctly detected as unavailable) (April 5) — **Note:** Whimsical replaced with Excalidraw as diagram tool (April 5)
 - [ ] **BUG:** MIND_MAP diagrams generated but NOT written back to `docs/ddd-model.md` — placeholder text remained. **Fix applied:** added EXTREMELY-IMPORTANT directive to conversation-guide.md requiring file edit. Re-test needed.
 - [x] REVIEW checklist runs with all items (April 5)
 - [x] COMPLETE writes state to `.pp-context/skill-state.json`, suggests schema-design, waits (April 5)
