@@ -27,17 +27,22 @@ ls -d worktrees 2>/dev/null      # Alternative
 
 **If found:** Use that directory. If both exist, `.worktrees` wins.
 
-### 2. Check CLAUDE.md
+### 2. Check Agent Configuration
+
+Check the platform's agent-instruction file for a worktree directory preference:
 
 ```bash
-grep -i "worktree.*director" CLAUDE.md 2>/dev/null
+# Check known agent configuration files in priority order
+for config in CLAUDE.md AGENTS.md GEMINI.md .cursorrules CODEX.md; do
+  grep -i "worktree.*director" "$config" 2>/dev/null && break
+done
 ```
 
 **If preference specified:** Use it without asking.
 
 ### 3. Ask User
 
-If no directory exists and no CLAUDE.md preference:
+If no directory exists and no agent-configuration preference:
 
 ```
 No worktree directory found. Where should I create worktrees?
@@ -148,7 +153,7 @@ Ready to implement <feature-name>
 | `.worktrees/` exists | Use it (verify ignored) |
 | `worktrees/` exists | Use it (verify ignored) |
 | Both exist | Use `.worktrees/` |
-| Neither exists | Check CLAUDE.md → Ask user |
+| Neither exists | Check agent config → Ask user |
 | Directory not ignored | Add to .gitignore + commit |
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
@@ -163,7 +168,7 @@ Ready to implement <feature-name>
 ### Assuming directory location
 
 - **Problem:** Creates inconsistency, violates project conventions
-- **Fix:** Follow priority: existing > CLAUDE.md > ask
+- **Fix:** Follow priority: existing > agent config > ask
 
 ### Proceeding with failing tests
 
@@ -198,10 +203,10 @@ Ready to implement auth feature
 - Skip baseline test verification
 - Proceed with failing tests without asking
 - Assume directory location when ambiguous
-- Skip CLAUDE.md check
+- Skip agent configuration check
 
 **Always:**
-- Follow directory priority: existing > CLAUDE.md > ask
+- Follow directory priority: existing > agent config > ask
 - Verify directory is ignored for project-local
 - Auto-detect and run project setup
 - Verify clean test baseline
