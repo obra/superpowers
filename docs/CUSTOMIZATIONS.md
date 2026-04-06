@@ -37,23 +37,27 @@ All upstream skills received **reference extraction** — large inline examples 
 
 ## Versioning
 
-sspower uses its own independent version scheme starting at **v1.0.0**, separate from upstream superpowers versioning (v5.x). The fork base was superpowers v5.0.5.
+sspower v1.0.0 — independent from upstream superpowers v5.x.
 
-Version is tracked in these files (managed by `.version-bump.json`):
+Version tracked in:
 - `package.json`
 - `.claude-plugin/plugin.json`
 
-## Config Changes
-
-- `package.json` — name `sspower`, version `1.0.0`
-- `.claude-plugin/plugin.json` — name, author, homepage, repository updated to `sskys18/sspower`
-- `.version-bump.json` — trimmed to only Claude Code config files
-
 ## Removed from Upstream
 
-- `.cursor-plugin/` — Cursor plugin config (not needed)
-- `.opencode/` — OpenCode plugin config (not needed)
-- `gemini-extension.json`, `GEMINI.md` — Gemini config (not needed)
+| Removed | Reason |
+|---------|--------|
+| `.cursor-plugin/` | Cursor config |
+| `.opencode/` | OpenCode config |
+| `.codex/` | Codex install guide (for Superpowers, not sspower) |
+| `gemini-extension.json`, `GEMINI.md` | Gemini config |
+| `commands/` | Deprecated slash commands (replaced by skills) |
+| `hooks/hooks-cursor.json`, `hooks/run-hook.cmd` | Cursor hooks, Windows batch |
+| `scripts/`, `.version-bump.json` | Superpowers release tooling |
+| `.github/` | Superpowers issue/PR templates |
+| `AGENTS.md`, `CHANGELOG.md`, `CODE_OF_CONDUCT.md`, `RELEASE-NOTES.md` | Superpowers docs |
+| `skills/using-superpowers/` | Replaced by `using-sspower` |
+| `tests/opencode/` | OpenCode tests |
 
 ## Syncing with Upstream
 
