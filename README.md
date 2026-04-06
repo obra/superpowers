@@ -8,7 +8,17 @@ Composable "skills" that automatically trigger during your workflow: brainstormi
 
 ## Installation
 
-sspower is installed as a local plugin via the `sskys18` marketplace.
+In Claude Code:
+
+```bash
+# Add the marketplace
+/plugin marketplace add sskys18/sspower
+
+# Install the plugin
+/plugin install sspower@sspower
+```
+
+Skills auto-trigger from there — no extra setup needed.
 
 ## The Workflow
 
