@@ -55,14 +55,20 @@ Codex has native skill discovery — it scans `~/.agents/skills/` at startup, pa
 ~/.agents/skills/superpowers/ → ~/.codex/superpowers/skills/
 ```
 
-The `using-superpowers` skill is discovered automatically and enforces skill usage discipline — no additional configuration needed.
+The `router-first` skill is the default Superpowers entrypoint for Codex. It routes tasks onto the lightest safe path:
+
+- `small` -> inspect, act, verify
+- `medium` -> share a short plan, then execute
+- `large` -> ask before escalating into the full heavy workflow
+
+The original `using-superpowers` skill remains available as the heavy workflow entrypoint when you explicitly want the full planning-and-governance path.
 
 ## Usage
 
 Skills are discovered automatically. Codex activates them when:
 - You mention a skill by name (e.g., "use brainstorming")
 - The task matches a skill's description
-- The `using-superpowers` skill directs Codex to use one
+- The `router-first` skill routes you to one
 
 ### Personal Skills
 

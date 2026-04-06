@@ -1,6 +1,6 @@
 ---
 name: using-superpowers
-description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
+description: Use when the human explicitly wants the full superpowers workflow, or agrees to switch into a heavy planning and execution process for a high-risk task
 ---
 
 <SUBAGENT-STOP>
@@ -38,6 +38,8 @@ If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "alw
 Skills use Claude Code tool names. Non-CC platforms: see `references/codex-tools.md` (Codex) for tool equivalents. Gemini CLI users get the tool mapping loaded automatically via GEMINI.md.
 
 # Using Skills
+
+This is the full heavy Superpowers workflow entrypoint. In installs that include `router-first`, this skill is no longer the default starting mode. Enter it when the human explicitly asks for the complete workflow, or after they approve escalation from a high-risk task.
 
 ## The Rule
 

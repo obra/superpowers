@@ -1,18 +1,21 @@
 # Superpowers
 
-Superpowers is a complete software development workflow for your coding agents, built on top of a set of composable "skills" and some initial instructions that make sure your agent uses them.
+Superpowers is a software development workflow for coding agents, built on a set of composable skills and startup instructions that help the agent choose the right level of process for the task.
 
 ## How it works
 
-It starts from the moment you fire up your coding agent. As soon as it sees that you're building something, it *doesn't* just jump into trying to write code. Instead, it steps back and asks you what you're really trying to do. 
+By default, Superpowers now starts in a lightweight `router-first` mode. Instead of forcing every task through the full planning stack, the agent classifies the work and chooses the lightest safe path:
 
-Once it's teased a spec out of the conversation, it shows it to you in chunks short enough to actually read and digest. 
+- `small` -> inspect quickly, act directly, verify before claiming success
+- `medium` -> share a short execution plan, then execute
+- `large` -> explain the risk and ask whether to switch into the full heavy workflow
 
-After you've signed off on the design, your agent puts together an implementation plan that's clear enough for an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing to follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY. 
+The original full Superpowers flow is still here when you want it: collaborative design, written specs, implementation plans, and subagent-driven execution. It just is no longer the default for every task.
 
-Next up, once you say "go", it launches a *subagent-driven-development* process, having agents work through each engineering task, inspecting and reviewing their work, and continuing forward. It's not uncommon for Claude to be able to work autonomously for a couple hours at a time without deviating from the plan you put together.
+That gives you both modes:
 
-There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Superpowers.
+- `router-first` for fast, low-friction execution
+- `using-superpowers` for the complete heavy workflow
 
 
 ## Sponsorship
@@ -96,9 +99,29 @@ gemini extensions update superpowers
 
 ### Verify Installation
 
-Start a new session in your chosen platform and ask for something that should trigger a skill (for example, "help me plan this feature" or "let's debug this issue"). The agent should automatically invoke the relevant superpowers skill.
+Start a new session in your chosen platform and ask for something simple and concrete. The agent should default to the `router-first` mode, and only escalate into the heavy workflow when you explicitly ask for it or approve escalation for a high-risk task.
 
-## The Basic Workflow
+## Modes
+
+### `router-first` (default)
+
+Use this for everyday work. It keeps overhead low and only pulls in heavier skills when risk or ambiguity justifies it.
+
+- `small` -> inspect, act, verify
+- `medium` -> short plan, act, verify
+- `large` -> ask before entering heavy mode
+
+Always-on safeguards:
+- `verification-before-completion`
+
+Conditionally enforced:
+- `systematic-debugging` for bugs, test failures, flaky behavior, and unclear root causes
+
+### `using-superpowers` (heavy)
+
+Use this when you want the full planning and governance workflow up front, or when `router-first` flags a high-risk task and you approve escalation.
+
+## The Heavy Workflow
 
 1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
 
@@ -114,7 +137,7 @@ Start a new session in your chosen platform and ask for something that should tr
 
 7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
 
-**The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
+This heavy path remains available, but it is no longer the default for every task.
 
 ## What's Inside
 
@@ -128,6 +151,7 @@ Start a new session in your chosen platform and ask for something that should tr
 - **verification-before-completion** - Ensure it's actually fixed
 
 **Collaboration** 
+- **router-first** - Default entrypoint that chooses the lightest safe process
 - **brainstorming** - Socratic design refinement
 - **writing-plans** - Detailed implementation plans
 - **executing-plans** - Batch execution with checkpoints
@@ -140,11 +164,12 @@ Start a new session in your chosen platform and ask for something that should tr
 
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
-- **using-superpowers** - Introduction to the skills system
+- **using-superpowers** - Full heavy workflow entrypoint
 
 ## Philosophy
 
 - **Test-Driven Development** - Write tests first, always
+- **Right-sized process** - Use the lightest safe workflow for the task
 - **Systematic over ad-hoc** - Process over guessing
 - **Complexity reduction** - Simplicity as primary goal
 - **Evidence over claims** - Verify before declaring success
