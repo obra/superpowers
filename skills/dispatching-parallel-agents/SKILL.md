@@ -32,12 +32,26 @@ digraph when_to_use {
 
 **Don't use when:** Failures are related, need full system context, agents would interfere (editing same files).
 
+## Batch Sizing
+
+For **bulk file changes** (same edit across many files), batch 5-8 files per agent. Too few agents = slow. Too many files per agent = context overload.
+
+| Files | Agents | Files/Agent |
+|-------|--------|-------------|
+| 6-8   | 1      | 6-8         |
+| 9-16  | 2      | 5-8         |
+| 17-24 | 3      | 6-8         |
+| 25+   | 4-5    | 5-8         |
+
+For **distinct problem domains** (debugging, different subsystems), use 1 agent per domain regardless of file count.
+
 ## The Pattern
 
-1. **Identify independent domains** — group failures by what's broken
-2. **Create focused agent tasks** — each gets: specific scope, clear goal, constraints, expected output format
-3. **Dispatch in parallel** — all agents run concurrently
-4. **Review and integrate** — read summaries, verify no conflicts, run full suite
+1. **Identify independent domains** — group by what's broken or what's changing
+2. **Size batches** — bulk changes: 5-8 files/agent. Distinct problems: 1 agent/domain
+3. **Create focused agent tasks** — each gets: specific scope, clear goal, constraints, expected output format
+4. **Dispatch in parallel** — all agents run concurrently
+5. **Review and integrate** — read summaries, verify no conflicts, run full suite
 
 ## Verification After Integration
 

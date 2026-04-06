@@ -43,14 +43,22 @@ Which option?
 
 Read `references/option-details.md` for full bash commands and flows per option.
 
-### Step 5: Cleanup Worktree
+### Step 5: Cleanup Worktree (MANDATORY for Options 1, 3, 4)
 
-For Options 1, 2, 4: remove worktree. For Option 3: keep worktree.
+**Do not skip this step.** Orphaned worktrees waste disk and cause confusion.
 
 ```bash
+# List worktrees to find the one for this branch
 git worktree list | grep $(git branch --show-current)
+
+# Remove worktree (Options 1, 4 — branch is done)
 git worktree remove <worktree-path>
+
+# Option 2 (PR): keep worktree until PR merges, then remove
+# Option 3 (keep): keep worktree — user wants it
 ```
+
+Report cleanup result: "Cleaned up worktree at `<path>`" or "Keeping worktree at `<path>` for Option 2/3."
 
 ## Quick Reference
 

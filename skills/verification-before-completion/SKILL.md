@@ -62,6 +62,21 @@ BEFORE claiming any status:
 | "Partial check enough" | Partial proves nothing |
 | "I'm tired" | Exhaustion ≠ excuse |
 
+## Command Detection
+
+When the user claims "done" or "fixed", immediately identify the verification commands for this project:
+
+| Project Signal | Commands to Run |
+|---------------|-----------------|
+| `package.json` with `test` script | `npm test` or `yarn test` |
+| `tsconfig.json` | `npx tsc --noEmit` |
+| `.eslintrc` / `eslint.config` | `npx eslint .` |
+| `pytest.ini` / `pyproject.toml` | `pytest` |
+| `Cargo.toml` | `cargo test && cargo clippy` |
+| `go.mod` | `go test ./... && go vet ./...` |
+
+Run ALL applicable commands, not just one. A passing test suite with type errors is not "done."
+
 ## The Bottom Line
 
 Run the command. Read the output. THEN claim the result. Non-negotiable.

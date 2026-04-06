@@ -42,7 +42,23 @@ Return: Summary of what you found and what you fixed.
 **Vague output:** "Fix it" - you don't know what changed
 **Specific:** "Return summary of root cause and changes"
 
-## Real Example
+## Bulk File Change Example
+
+**Scenario:** Update error format in 12 API endpoint files
+
+**Decision:** Same change across independent files → batch by 6 files/agent
+
+**Dispatch:**
+```
+Agent 1 → Update endpoints 1-6 (users, auth, billing, orders, products, inventory)
+Agent 2 → Update endpoints 7-12 (shipping, notifications, webhooks, reports, admin, search)
+```
+
+Each agent gets: the new error format spec, the list of files, and constraint "touch only error-producing lines — do not refactor surrounding code."
+
+**Integration:** Review both summaries, run type-checker + linter, spot-check 2-3 files.
+
+## Debugging Example
 
 **Scenario:** 6 test failures across 3 files after major refactoring
 
