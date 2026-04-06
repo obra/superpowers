@@ -79,12 +79,11 @@ git merge <feature-branch>
 
 # Verify tests on merged result
 <test command>
-
-# If tests pass
-git branch -d <feature-branch>
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Cleanup worktree (Step 5) — **worktree removal must happen
+before `git branch -d`**, because the feature branch is still
+checked out in the agent worktree until the worktree is removed.
 
 #### Option 2: Push and Create PR
 
@@ -128,26 +127,68 @@ Wait for exact confirmation.
 If confirmed:
 ```bash
 git checkout <base-branch>
-git branch -D <feature-branch>
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Cleanup worktree (Step 5) — worktree removal must happen
+before `git branch -D`, same reason as Option 1.
 
-### Step 5: Cleanup Worktree
+### Step 5: Cleanup Worktree and Feature Branch
 
 **For Options 1, 2, 4:**
 
-Check if in worktree:
+Find the worktree that has the feature branch checked out — do NOT
+grep for the *current* branch, because after `git checkout <base>`
+in Step 4 the current branch is the base branch, not the feature
+branch.
+
 ```bash
-git worktree list | grep $(git branch --show-current)
+# Find the worktree path for the feature branch (column 3 of
+# `git worktree list` is the bracketed branch name).
+worktree_path=$(git worktree list | awk -v b="[<feature-branch>]" '$3==b {print $1}')
 ```
 
-If yes:
+If `$worktree_path` is non-empty and points to an agent worktree
+(typically under `.claude/worktrees/`), remove it:
+
 ```bash
-git worktree remove <worktree-path>
+git worktree remove "$worktree_path"
 ```
 
-**For Option 3:** Keep worktree.
+**Run this from the main repo, never from inside the worktree
+itself.** On Windows the shell holds a lock on its own cwd, so a
+process running inside the worktree cannot delete it — `git
+worktree remove` will fail with a permission error and `rm -rf`
+will report "Device or resource busy". This skill is intended to
+be invoked by the parent context that dispatched the subagent,
+*after* the subagent has returned, not by the subagent on itself.
+
+**Self-heal stale registrations.** If the worktree directory was
+already deleted outside git (common when a `.claude/` cleanup or
+the OS reclaimed it), `git worktree remove` will error. In that
+case, prune any registrations whose gitdir points to a missing
+location:
+
+```bash
+git worktree prune -v
+```
+
+After the worktree is gone (or pruned), the feature branch is no
+longer "checked out" anywhere and can be deleted safely:
+
+```bash
+# Option 1 (merged — safe delete):
+git branch -d <feature-branch>
+
+# Option 4 (discarded — force delete, already confirmed in Step 4):
+git branch -D <feature-branch>
+```
+
+**Defensive prune.** Even on successful runs it's cheap to finish
+with `git worktree prune` so any sibling stale registrations (left
+behind by earlier sessions that didn't clean up) get swept up too.
+
+**For Option 3:** Keep worktree. Don't prune — you might have
+legitimate orphans you want to recover.
 
 ## Quick Reference
 
