@@ -306,10 +306,10 @@ As of 2026-04-06, Claude Code is the only harness with an agent-callable mid-ses
 | Harness | Current worktree model | Skill mechanism | Tested |
 |---------|----------------------|-----------------|--------|
 | Claude Code | Agent-callable `EnterWorktree` | Step 1a | 50/50 (GREEN + PRESSURE) |
-| Codex CLI | No native tool (shell only) | Step 1b git fallback | 6/6 on `codex exec` |
+| Codex CLI | No native tool (shell only) | Step 1b git fallback | 6/6 (`codex exec`) |
+| Gemini CLI | Launch-time `--worktree` flag, no agent tool | Step 0 if launched with flag, Step 1b if not | Step 0: 1/1, Step 1b: 1/1 (`gemini -p`) |
+| Cursor Agent | User-facing `/worktree`, no agent tool | Step 0 if user activated, Step 1b if not | Step 0: 1/1, Step 1b: 1/1 (`cursor-agent -p`) |
 | Codex App | Platform-managed, detached HEAD, no agent tool | Step 0 detects existing | 1/1 simulated |
-| Gemini CLI | Launch-time `--worktree` flag, no agent tool | Step 0 if launched with flag, Step 1b if not | Untested (no CLI access) |
-| Cursor | User-facing `/worktree`, no agent tool | Step 0 if user activated, Step 1b if not | Untested (no CLI access) |
 | OpenCode | Detection only (`ctx.worktree`), no agent tool | Step 1b git fallback | Untested (no CLI access) |
 
 **Residual risks:**
