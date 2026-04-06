@@ -1,0 +1,47 @@
+{
+  "skill_name": "codex-enrich",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "enrich fix the bug in the debugging skill where it doesn't handle timeout errors",
+      "expected_output": "Codex should scan the sspower repo, find the systematic-debugging skill, identify actual file paths and relevant code sections, and produce an enriched prompt with specific file paths, function names, and context about timeout handling",
+      "files": [],
+      "expectations": [
+        "The word 'enrich' is stripped from the prompt before sending to Codex",
+        "The enriched prompt contains specific file paths from the actual repo (e.g., skills/systematic-debugging/SKILL.md)",
+        "The enriched prompt references actual content from the debugging skill files",
+        "Context notes include which files were identified as relevant",
+        "The output is presented in the specified format with Original, Enriched Prompt, and What Codex Found sections",
+        "The user is asked to approve before any action is taken"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I want to add a new review step to the workflow, enrich",
+      "expected_output": "Codex should scan the repo, find the existing workflow skills (brainstorming, executing-plans, finishing-a-development-branch, etc.), understand the current flow, and produce an enriched prompt that specifies where in the workflow a review step could go, which existing skills are involved, and what patterns to follow",
+      "files": [],
+      "expectations": [
+        "The enriched prompt identifies the existing workflow chain (brainstorming -> writing-plans -> executing-plans -> etc.)",
+        "The enriched prompt references actual skill names and file paths in the repo",
+        "The enriched prompt suggests where a review step fits in the existing flow",
+        "Context notes mention related skills like requesting-code-review or second-opinion",
+        "The user's original intent (add a review step) is preserved, not redirected",
+        "The user is asked to approve before any action is taken"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "enrich refactor the config loading in src/config.ts to support environment variables",
+      "expected_output": "Codex should scan the repo, discover that src/config.ts does NOT exist in sspower (it's a skills-only plugin with no src/ directory), correct this assumption, and identify the actual configuration mechanisms in the repo",
+      "files": [],
+      "expectations": [
+        "The enriched prompt corrects the wrong file path (src/config.ts doesn't exist)",
+        "Context notes explicitly call out that the original path was incorrect",
+        "The enriched prompt identifies actual config-related files or patterns in the repo",
+        "The user's intent (config + env vars) is preserved even though the specific file was wrong",
+        "The output clearly shows what was corrected vs what was kept from the original",
+        "The user is asked to approve before any action is taken"
+      ]
+    }
+  ]
+}
