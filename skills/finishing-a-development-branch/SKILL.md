@@ -109,12 +109,14 @@ git merge <feature-branch>
 # Verify tests on merged result
 <test command>
 
-# Only after merge succeeds: remove worktree, then delete branch
-# (See Step 6 for worktree cleanup)
-git branch -d <feature-branch>
+# Only after merge succeeds: cleanup worktree (Step 6), then delete branch
 ```
 
-Then: Cleanup worktree (Step 6)
+Then: Cleanup worktree (Step 6), then delete branch:
+
+```bash
+git branch -d <feature-branch>
+```
 
 #### Option 2: Push and Create PR
 

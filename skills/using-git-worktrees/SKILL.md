@@ -26,7 +26,7 @@ BRANCH=$(git branch --show-current)
 **Submodule guard:** `GIT_DIR != GIT_COMMON` is also true inside git submodules. Before concluding "already in a worktree," verify you are not in a submodule:
 
 ```bash
-# If this returns a path, you're in a submodule, not a worktree — proceed to Step 1
+# If this returns a path, you're in a submodule, not a worktree — treat as normal repo
 git rev-parse --show-superproject-working-tree 2>/dev/null
 ```
 
@@ -198,7 +198,7 @@ Ready to implement <feature-name>
 ### Assuming directory location
 
 - **Problem:** Creates inconsistency, violates project conventions
-- **Fix:** Follow priority: existing > instruction file > default
+- **Fix:** Follow priority: existing > global legacy > instruction file > default
 
 ### Proceeding with failing tests
 
@@ -217,7 +217,7 @@ Ready to implement <feature-name>
 **Always:**
 - Run Step 0 detection first
 - Prefer native tools over git fallback
-- Follow directory priority: existing > instruction file > default
+- Follow directory priority: existing > global legacy > instruction file > default
 - Verify directory is ignored for project-local
 - Auto-detect and run project setup
 - Verify clean test baseline
