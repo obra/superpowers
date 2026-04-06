@@ -46,15 +46,19 @@ If yes, proceed to Step 1. If no, work in place — skip to Step 3 with no workt
 
 **You have two mechanisms. Try them in this order.**
 
-### 1a. Native Worktree Tools (preferred)
+### 1a. Native Worktree Tools (preferred — STOP HERE if available)
 
-If your platform provides a worktree or workspace-isolation tool, use it. You know your own toolkit — the skill does not need to name specific tools. Native tools handle directory placement, branch creation, and cleanup automatically.
+The user has asked for an isolated workspace (Step 0 consent). Check your available tools — do you have `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, or a `--worktree` flag? **If YES: the user's consent to create a worktree is your authorization to use it. Use it now and skip to Step 3.**
 
-After using a native tool, skip to Step 3 (Project Setup).
+Native tools handle directory placement, branch creation, and cleanup automatically. Using `git worktree add` when you have a native tool creates phantom state — your harness can't see or manage worktrees it didn't create, and cleanup becomes impossible.
+
+**Even if `.worktrees/` already exists, even under time pressure, even if `git worktree add` feels faster — use your native tool.** There are no exceptions.
+
+**Only proceed to Step 1b if you have confirmed you have NO native worktree/isolation tool.**
 
 ### 1b. Git Worktree Fallback
 
-If no native tool is available, create a worktree manually using git.
+**Only use this if Step 1a does not apply** — you have no native worktree tool available. Create a worktree manually using git.
 
 #### Directory Selection
 
@@ -209,7 +213,8 @@ Ready to implement <feature-name>
 
 **Never:**
 - Create a worktree when Step 0 detects existing isolation
-- Use git commands when a native worktree tool is available
+- Use `git worktree add` when you have a native worktree tool (e.g., `EnterWorktree`). This is the #1 mistake — if you have it, use it.
+- Skip Step 1a by jumping straight to Step 1b's git commands
 - Create worktree without verifying it's ignored (project-local)
 - Skip baseline test verification
 - Proceed with failing tests without asking
