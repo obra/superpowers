@@ -42,7 +42,7 @@ Use `GIT_DIR != GIT_COMMON` to determine "am I already in a worktree?" rather th
 
 ### Declarative intent, prescriptive fallback
 
-The skill describes the goal ("ensure work happens in an isolated workspace") and defers to native tools when available. It prescribes specific git commands only as a fallback for harnesses without native worktree support. Structurally, the native-tool path (Step 1a) comes first and is short; the git fallback (Step 1b) comes second and is long. This prevents agents from anchoring on the detailed fallback and skipping the preferred path.
+The skill describes the goal ("ensure work happens in an isolated workspace") and defers to native tools when available. It prescribes specific git commands only as a fallback for harnesses without native worktree support. Step 1a comes first and names native tools explicitly (`EnterWorktree`, `WorktreeCreate`, `/worktree`, `--worktree`); Step 1b comes second with the git fallback. The original spec kept Step 1a abstract ("you know your own toolkit"), but TDD proved that agents anchor on Step 1b's concrete commands when Step 1a is too vague. Explicit tool naming and a consent-authorization bridge were required to make the preference reliable.
 
 ### Provenance-based ownership
 
@@ -93,11 +93,17 @@ This step is skipped entirely when Step 0 detects existing isolation (no point a
 
 #### Step 1a: Native Tools (preferred)
 
-> If your platform provides a worktree or workspace-isolation tool, use it. You know your own toolkit — the skill does not need to name specific tools. Native tools handle directory placement, branch creation, and cleanup automatically.
+> The user has asked for an isolated workspace (Step 0 consent). Check your available tools — do you have `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, or a `--worktree` flag? If YES: the user's consent to create a worktree is your authorization to use it. Use it now and skip to Step 3.
 
 After using a native tool, skip to Step 3 (project setup).
 
-This section is deliberately short (3 lines). Agents already know their available tools. Listing examples would risk agents attempting tools that don't exist on their platform.
+**Design note — TDD revision:** The original spec used a deliberately short, abstract Step 1a ("You know your own toolkit — the skill does not need to name specific tools"). TDD validation disproved this: agents anchored on Step 1b's concrete git commands and ignored the abstract guidance (2/6 pass rate). Three changes fixed it (50/50 pass rate across GREEN and PRESSURE tests):
+
+1. **Explicit tool naming** — listing `EnterWorktree`, `WorktreeCreate`, `/worktree`, `--worktree` by name transforms the decision from interpretation ("do I have a native tool?") into factual lookup ("is `EnterWorktree` in my tool list?"). Agents on platforms without these tools simply check, find nothing, and fall through to Step 1b. No false positives observed.
+2. **Consent bridge** — "the user's consent to create a worktree is your authorization to use it" directly addresses `EnterWorktree`'s tool-level guardrail ("ONLY when user explicitly asks"). Tool descriptions override skill instructions (Claude Code #29950), so the skill must frame user consent as the authorization the tool requires.
+3. **Red Flag entry** — naming the specific anti-pattern ("Use `git worktree add` when you have a native worktree tool — this is the #1 mistake") in the Red Flags section.
+
+File splitting (Step 1b in a separate skill) was tested and proven unnecessary. The anchoring problem is solved by the quality of Step 1a's text, not by physical separation of git commands. Control tests with the full 240-line skill (all git commands visible) passed 20/20.
 
 #### Step 1b: Git Worktree Fallback
 
@@ -287,11 +293,22 @@ This applies to directory preference checks in Step 1b.
 
 ## Risks
 
-### Step 1a is the load-bearing assumption
+### Step 1a is the load-bearing assumption — RESOLVED
 
-Step 1a — agents preferring native worktree tools over the git fallback — is not one feature among many. It is the foundation the entire design rests on. If agents ignore the short Step 1a and fall through to Step 1b on harnesses that have native support, then detect-and-defer fails entirely: superpowers still creates worktrees at `.worktrees/` on Claude Code, Cursor, Gemini CLI, and Codex App, which is the exact problem this spec exists to solve. Every issue marked "solved by detect-and-defer" (#1009, #918, #279) goes back to unsolved.
+Step 1a — agents preferring native worktree tools over the git fallback — is the foundation the entire design rests on. If agents ignore Step 1a and fall through to Step 1b on harnesses with native support, detect-and-defer fails entirely.
 
-**Mitigation:** TDD validation of Step 1a must be the first implementation task, before any other skill changes. Use Claude Code's native worktree support (the richest available) with RED/GREEN tests confirming agents use `EnterWorktree` when available instead of `git worktree add`. If Step 1a fails validation, stop and redesign the creation approach before proceeding with the rest of the spec.
+**Status:** This risk materialized during implementation. The original abstract Step 1a ("You know your own toolkit") failed at 2/6 on Claude Code. The TDD gate worked as designed — it caught the failure before any skill files were modified, preventing a broken release. Three REFACTOR iterations identified the root causes (agent anchoring on concrete commands, tool-description guardrail overriding skill instructions) and produced a fix validated at 50/50 across GREEN and PRESSURE tests. See Step 1a design note above for details.
+
+**Cross-platform validation:**
+
+| Harness | Mechanism | Tested |
+|---------|-----------|--------|
+| Claude Code | Step 1a → `EnterWorktree` | 50/50 |
+| Codex App | Step 0 → detects existing managed worktree | 1/1 |
+| Gemini CLI / Cursor | Step 0 if launched with flag, Step 1b if not | By design |
+| Codex CLI / OpenCode | Step 1b → git fallback (no native tool) | By design |
+
+**Residual risk:** If Anthropic changes `EnterWorktree`'s tool description to be more restrictive (e.g., "Do not use based on skill instructions"), the consent bridge breaks. Worth filing an issue requesting that the tool description accommodate skill-driven invocation.
 
 ### Provenance heuristic
 
