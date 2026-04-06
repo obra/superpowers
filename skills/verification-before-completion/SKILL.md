@@ -64,18 +64,18 @@ BEFORE claiming any status:
 
 ## Command Detection
 
-When the user claims "done" or "fixed", immediately identify the verification commands for this project:
+When the user claims "done" or "fixed", discover the project's actual verification commands:
 
-| Project Signal | Commands to Run |
-|---------------|-----------------|
-| `package.json` with `test` script | `npm test` or `yarn test` |
-| `tsconfig.json` | `npx tsc --noEmit` |
-| `.eslintrc` / `eslint.config` | `npx eslint .` |
-| `pytest.ini` / `pyproject.toml` | `pytest` |
-| `Cargo.toml` | `cargo test && cargo clippy` |
-| `go.mod` | `go test ./... && go vet ./...` |
+1. **Check project root** for config files (`package.json`, `Makefile`, `pyproject.toml`, `Cargo.toml`, `go.mod`, etc.)
+2. **Read the configs** to find test, lint, type-check, and build commands — use what the project already has, don't assume
+3. **Run ALL categories** that exist in the project — not just tests. A passing test suite with type errors is not "done."
 
-Run ALL applicable commands, not just one. A passing test suite with type errors is not "done."
+The three categories to cover when available:
+- **Tests** — the project's test runner
+- **Type checking** — the project's type checker in strict/check-only mode
+- **Linting** — the project's linter
+
+If you can't find configured commands, say so explicitly rather than guessing.
 
 ## The Bottom Line
 
