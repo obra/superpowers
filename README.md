@@ -18,7 +18,16 @@ In Claude Code:
 /plugin install sspower@sspower
 ```
 
-Skills auto-trigger from there — no extra setup needed.
+### Optional: Codex integration
+
+The `second-opinion` skill routes to Codex for independent code review. To use it, also install the Codex plugin:
+
+```bash
+/plugin marketplace add openai-codex
+/plugin install codex@openai-codex
+```
+
+Without Codex installed, all other skills work fine — `second-opinion` will just be unavailable.
 
 ## The Workflow
 
