@@ -126,6 +126,16 @@ git worktree add "$path" -b "$BRANCH_NAME"
 cd "$path"
 ```
 
+**Hooks awareness:** Git worktrees do not inherit the parent repo's hooks directory. After creating a worktree via 1b, symlink the hooks directory from the main repo if one exists:
+
+```bash
+if [ -d "$MAIN_ROOT/.git/hooks" ]; then
+    ln -sf "$MAIN_ROOT/.git/hooks" "$path/.git/hooks"
+fi
+```
+
+This prevents pre-commit checks, linters, and other hooks from silently stopping when work moves to a worktree. (Idea from PR #965.)
+
 **Sandbox fallback:** If `git worktree add` fails with a permission error, treat as a restricted environment. Skip creation, work in current directory, proceed to Step 3.
 
 **Step numbering note:** The current skill has Steps 1-4 as a flat list. This redesign uses 0, 0.5, 1a, 1b, 3, 4. There is no Step 2 — it was the old monolithic "Create Isolated Workspace" which is now split into the 1a/1b structure. The implementation should renumber cleanly (e.g., 0 → "Step 0: Detect", 0.5 → within Step 0's flow, 1a/1b → "Step 1", 3 → "Step 2", 4 → "Step 3") or keep the current numbering with a note. Implementer's choice.
@@ -229,6 +239,8 @@ else:
 
 Cleanup only runs for Options 1 and 4. Options 2 and 3 always preserve the worktree. (Bug #940 fix.)
 
+**Stale worktree pruning:** After any `git worktree remove`, run `git worktree prune` as a self-healing step. Worktree directories can get deleted out-of-band (e.g., by harness cleanup, manual `rm`, or `.claude/` cleanup), leaving stale registrations that cause confusing errors. One line, prevents silent rot. (Idea from PR #1072.)
+
 ### 3. Integration Updates
 
 #### `subagent-driven-development` and `executing-plans`
@@ -266,18 +278,20 @@ This applies to directory preference checks in Step 1b.
 | #940 | Direct fix (Bug #940) |
 | #991 | Opt-in consent in Step 0.5 |
 | #918 | Step 0 detection + Step 1.5 finishing detection |
-| #1009 | Step 0 detects harness-created worktrees and defers |
+| #1009 | Resolved by Step 1a — agents use native tools (e.g., `EnterWorktree`) which create at harness-native paths. Depends on Step 1a working; see Risks. |
 | #999 | Direct fix (Bug #999) |
 | #238 | Direct fix (Bug #238) |
 | #1049 | Platform-neutral instruction file references |
 | #279 | Solved by detect-and-defer — native paths respected because we don't override them |
-| #574 | Partially addressed: consent prompt replaces the implicit handoff gap. Full fix (brainstorming checklist step) deferred to Phase 4 |
+| #574 | **Deferred.** Nothing in this spec touches the brainstorming skill where the bug lives. Full fix (adding a worktree step to brainstorming's checklist) is Phase 4. |
 
 ## Risks
 
-### Step 1a agent anchoring
+### Step 1a is the load-bearing assumption
 
-The highest-risk element. Step 1a is deliberately short (3 lines) to prevent agents from anchoring on it over the detailed Step 1b fallback. However, the inverse risk exists: agents may skip the short Step 1a and go straight to the detailed Step 1b. Mitigation: TDD validation using Claude Code's native worktree support (the richest available), with RED/GREEN tests confirming agents use native tools when available.
+Step 1a — agents preferring native worktree tools over the git fallback — is not one feature among many. It is the foundation the entire design rests on. If agents ignore the short Step 1a and fall through to Step 1b on harnesses that have native support, then detect-and-defer fails entirely: superpowers still creates worktrees at `.worktrees/` on Claude Code, Cursor, Gemini CLI, and Codex App, which is the exact problem this spec exists to solve. Every issue marked "solved by detect-and-defer" (#1009, #918, #279) goes back to unsolved.
+
+**Mitigation:** TDD validation of Step 1a must be the first implementation task, before any other skill changes. Use Claude Code's native worktree support (the richest available) with RED/GREEN tests confirming agents use `EnterWorktree` when available instead of `git worktree add`. If Step 1a fails validation, stop and redesign the creation approach before proceeding with the rest of the spec.
 
 ### Provenance heuristic
 
