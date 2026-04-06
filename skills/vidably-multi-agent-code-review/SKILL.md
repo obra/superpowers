@@ -16,11 +16,23 @@ Do NOT open a PR or invoke finishing-a-development-branch until:
 1. Local verification passes (lint, typecheck, test, build)
 2. At least 2 independent model reviews have been collected
 3. Consensus scoring has been applied
-4. Critical/unanimous findings have been addressed
+4. Findings have been acted on based on consensus level (see Action Policy below)
 5. If fixes were applied, re-review has been run on the updated diff
-6. The user has reviewed and approved the final consensus map
-7. Convention extraction completed, proposals presented to user
+6. Convention extraction completed
 </HARD-GATE>
+
+## Action Policy
+
+Act on findings autonomously based on consensus level:
+
+| Consensus     | Action                                                                                                                                       |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Unanimous** | Fix immediately -- highest confidence                                                                                                        |
+| **Majority**  | Fix -- strong signal across models                                                                                                           |
+| **Split**     | Use judgment. Fix if the finding has concrete consequences; skip if it's a style or preference disagreement. Log your reasoning.             |
+| **Solo**      | Evaluate on merit. Fix if critical severity regardless of consensus. For important/minor, fix if the reasoning is sound. Log your reasoning. |
+
+Present the consensus map to the user for awareness, but do not wait for per-finding approval. The user reviews aggregate effectiveness data periodically, not individual findings.
 
 ## Step 1: Prepare the Diff
 
@@ -173,12 +185,14 @@ If the Gemini CLI is unavailable or you want faster results, call the Gemini API
 
 Deduplicate findings across models. Apply consensus scoring:
 
-| Consensus     | Definition                      | Action                                  |
-| ------------- | ------------------------------- | --------------------------------------- |
-| **Unanimous** | All reviewing models flagged it | Fix immediately — highest confidence    |
-| **Majority**  | >50% of models flagged it       | Strongly recommend fixing               |
-| **Split**     | Exactly 2 models disagree       | Use judgment — apply project philosophy |
-| **Solo**      | One model only                  | Evaluate on merit — do NOT auto-dismiss |
+| Consensus     | Definition                      |
+| ------------- | ------------------------------- |
+| **Unanimous** | All reviewing models flagged it |
+| **Majority**  | >50% of models flagged it       |
+| **Split**     | Exactly 2 models disagree       |
+| **Solo**      | One model only                  |
+
+See the **Action Policy** above for how to act on each level.
 
 **Critical finding from any model = fix it.** A solo critical (bug, security, data loss) should be fixed regardless of consensus. Consensus matters more for important/minor findings.
 
@@ -212,7 +226,7 @@ Deduplicate findings across models. Apply consensus scoring:
 - [finding] — [why: style preference / false positive / etc.]
 ```
 
-Then STOP and wait for user approval on which findings to fix.
+Present the consensus map, then proceed to apply fixes based on the Action Policy above. The user can intervene if they disagree, but the default is autonomous action.
 
 ## Step 6: Apply Fixes, Re-Verify, and Re-Review
 
@@ -269,7 +283,7 @@ Present each proposal:
 | [description] | Maturity-gated (scale) | None — revisit at `scale`                           |
 | [description] | One-off                | None                                                |
 
-Then STOP and wait for user approval on each convention/skill proposal. Apply approved changes and commit them alongside the PR.
+Then STOP and wait for user approval on each convention/skill proposal. Apply approved changes and commit them alongside the PR. (Convention proposals modify the review system itself, so they are excluded from the Action Policy and require explicit approval.)
 
 ## Step 8: Proceed to PR
 
@@ -341,6 +355,32 @@ Check the running trend in review-effectiveness.md:
 - Are any categories consistently missed by ALL local models? That's a systemic gap — consider adding a 4th model or a specialized linter.
 
 **The goal: CI should catch ZERO new findings that local review missed.** Every non-zero number is a learning opportunity, not a failure.
+
+### 9f: Downstream Surprise Check
+
+Check if this branch has upstream logs in `docs/research-effectiveness.md` or `docs/plan-review-effectiveness.md` by searching for the branch name.
+
+If upstream logs exist, review each code review finding and ask: **could upstream (research or plan review) have caught this?**
+
+For each finding where the answer is yes, route to the correct tracker:
+
+1. If the upstream log was in `docs/plan-review-effectiveness.md`, add an entry to **its** Downstream Surprise Log.
+2. If the upstream log was in `docs/research-effectiveness.md`, add an entry to **its** Downstream Surprise Log.
+3. If both stages had the opportunity, add one entry to each.
+
+Entry format:
+
+```markdown
+- **[Date]** -- Branch: `[branch-name]`. Code review found `[category]` issue: [one-line description]. [Research/Plan review] had the opportunity to catch this but didn't. (tagged_by: [agent], confidence: high/medium/low, reason: [one line])
+```
+
+This is agent-assisted tagging, not fully automatic. If confidence is "low," flag the entry for human review rather than auto-appending.
+
+4. Note the category and model attribution -- this feeds into the upstream model profiles over time.
+
+**Sanitization rule:** Log normalized summaries only. Do not include secrets, tokens, PII, customer identifiers, raw payloads, or exploit details in downstream surprise entries.
+
+If no upstream logs exist for this branch, skip this step. Not every branch goes through the full chain, and that's fine -- the data accumulates over time.
 
 ## Anti-Rationalization Table
 

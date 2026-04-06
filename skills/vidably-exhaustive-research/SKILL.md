@@ -65,6 +65,8 @@ Also dispatch to other models for additional perspectives if available:
 
 Collect their responses and incorporate unique suggestions you didn't find yourself.
 
+**Structured capture (for Step 7b logging):** Before synthesizing, record each model's raw option list separately in working memory, noting which options each model surfaced and any cited URLs. This is transient context only -- do not persist raw captures to files or logs (they may contain internal URLs or sensitive details). The per-model fields in the effectiveness tracker are derived from this captured data rather than reconstructed from memory.
+
 ## Step 3: Generate Exhaustive Options
 
 List every viable approach, including unconventional ones. Minimum 4 options.
@@ -153,6 +155,40 @@ echo "{\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"branch\":\"$(git branch --sho
 ```
 
 Replace `OPTIONS_COUNT` and `SOURCES_COUNT` with the actual numbers from this research session.
+
+## Step 7b: Log Research to Effectiveness Tracker
+
+After the user approves an option, append a new section to `docs/research-effectiveness.md` under the `## Research Log` heading:
+
+````markdown
+### [Branch Name] -- [Decision Topic]
+
+**Date:** [YYYY-MM-DD]
+**Models:** [list of models consulted]
+
+| Field                         | Value                                                                                       |
+| ----------------------------- | ------------------------------------------------------------------------------------------- |
+| **Per-model option count**    | Claude: X, Codex: Y, Gemini: Z                                                              |
+| **Decision source**           | [which model(s) surfaced the chosen option]                                                 |
+| **Per-model unique insights** | Claude: [one-liner or "none"]. Codex: [one-liner or "none"]. Gemini: [one-liner or "none"]. |
+| **Source quality**            | Claude: pass/fail. Codex: pass/fail. Gemini: pass/fail.                                     |
+| **Option overlap**            | [N options surfaced by 2+ models independently]                                             |
+| **Downstream surprise**       | [left blank -- tagged during code review retro if applicable]                               |
+
+**Decision:** [chosen option and one-line rationale]
+````
+
+Then update the **Aggregate Model Profiles** table in `docs/research-effectiveness.md`:
+
+- **Tends to Surface Winning Option**: Update based on whether this model surfaced the chosen option.
+- **Unique Insight Rate**: Update based on whether this model contributed insights no other model surfaced.
+- **Source Quality Rate**: Update based on pass/fail for this session.
+
+If the user rejects all options or abandons the decision, still log the entry with Decision: "[abandoned -- reason]". This tracks research quality even when it doesn't produce a decision.
+
+**Sanitization rule:** Log normalized summaries only. Do not include secrets, tokens, PII, customer identifiers, raw payloads, or exploit details in effectiveness tracker entries.
+
+This logging step is mandatory and automated -- if the skill runs, the data gets logged.
 
 ## Interaction With Other Skills
 
