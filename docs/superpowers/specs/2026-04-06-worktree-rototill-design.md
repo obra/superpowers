@@ -46,7 +46,7 @@ The skill describes the goal ("ensure work happens in an isolated workspace") an
 
 ### Provenance-based ownership
 
-Whoever creates the worktree owns its cleanup. If the harness created it, superpowers doesn't touch it. If superpowers created it (via git fallback), superpowers cleans it up. The heuristic: if the worktree lives under `.worktrees/`, superpowers owns it. Anything else (`.claude/worktrees/`, `~/.codex/worktrees/`, `.gemini/worktrees/`) belongs to the harness.
+Whoever creates the worktree owns its cleanup. If the harness created it, superpowers doesn't touch it. If superpowers created it (via git fallback), superpowers cleans it up. The heuristic: if the worktree lives under `.worktrees/` or `~/.config/superpowers/worktrees/`, superpowers owns it. Anything else (`.claude/worktrees/`, `~/.codex/worktrees/`, `.gemini/worktrees/`) belongs to the harness.
 
 ## Design
 
@@ -72,6 +72,15 @@ Three outcomes:
 
 Step 0 does not care who created the worktree or which harness is running. A worktree is a worktree regardless of origin.
 
+**Submodule guard:** `GIT_DIR != GIT_COMMON` is also true inside git submodules. Before concluding "already in a worktree," check that we're not in a submodule:
+
+```bash
+# If this returns a path, we're in a submodule, not a worktree
+git rev-parse --show-superproject-working-tree 2>/dev/null
+```
+
+If in a submodule, treat as `GIT_DIR == GIT_COMMON` (proceed to Step 0.5).
+
 #### Step 0.5: Consent
 
 When Step 0 finds no existing isolation (`GIT_DIR == GIT_COMMON`), ask before creating:
@@ -96,10 +105,11 @@ When no native tool is available, create a worktree manually.
 
 **Directory selection** (priority order):
 1. Check for existing `.worktrees/` or `worktrees/` directory — if found, use it. If both exist, `.worktrees/` wins.
-2. Check the project's agent instruction file (CLAUDE.md, GEMINI.md, AGENTS.md, .cursorrules, or equivalent) for a worktree directory preference.
-3. Default to `.worktrees/`.
+2. Check for existing `~/.config/superpowers/worktrees/<project>/` directory — if found, use it (backward compatibility with legacy global path).
+3. Check the project's agent instruction file (CLAUDE.md, GEMINI.md, AGENTS.md, .cursorrules, or equivalent) for a worktree directory preference.
+4. Default to `.worktrees/`.
 
-No interactive directory selection prompt. No global path option (`~/.config/superpowers/worktrees/` is dropped — no demonstrated user demand, adds cleanup and cross-device complexity).
+No interactive directory selection prompt. The global path (`~/.config/superpowers/worktrees/`) is no longer offered as a choice to new users, but existing worktrees at that location are detected and used for backward compatibility.
 
 **Safety verification** (project-local directories only):
 
@@ -117,6 +127,8 @@ cd "$path"
 ```
 
 **Sandbox fallback:** If `git worktree add` fails with a permission error, treat as a restricted environment. Skip creation, work in current directory, proceed to Step 3.
+
+**Step numbering note:** The current skill has Steps 1-4 as a flat list. This redesign uses 0, 0.5, 1a, 1b, 3, 4. There is no Step 2 — it was the old monolithic "Create Isolated Workspace" which is now split into the 1a/1b structure. The implementation should renumber cleanly (e.g., 0 → "Step 0: Detect", 0.5 → within Step 0's flow, 1a/1b → "Step 1", 3 → "Step 2", 4 → "Step 3") or keep the current numbering with a note. Implementer's choice.
 
 #### Steps 3-4: Project Setup and Baseline Tests (unchanged)
 
@@ -174,18 +186,20 @@ Three paths:
 ```bash
 # Get main repo root for CWD safety (Bug #238 fix)
 MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
-
-# Remove worktree BEFORE deleting branch (Bug #999 fix)
 cd "$MAIN_ROOT"
-git worktree remove "$WORKTREE_PATH"  # only if superpowers owns it
 
-# Now safe to work with branches
+# Merge first, verify success before removing anything
 git checkout <base-branch>
 git pull
 git merge <feature-branch>
 <run tests>
+
+# Only after merge succeeds: remove worktree, then delete branch (Bug #999 fix)
+git worktree remove "$WORKTREE_PATH"  # only if superpowers owns it
 git branch -d <feature-branch>
 ```
+
+The order is critical: merge → verify → remove worktree → delete branch. The old skill deleted the branch before removing the worktree (which fails because the worktree still references the branch). The naive fix of removing the worktree first is also wrong — if the merge then fails, the working directory is gone and changes are lost.
 
 **Option 2 (Create PR):**
 
@@ -202,7 +216,7 @@ if GIT_DIR == GIT_COMMON:
     # Normal repo, no worktree to clean up
     done
 
-if worktree path is under .worktrees/:
+if worktree path is under .worktrees/ or ~/.config/superpowers/worktrees/:
     # Superpowers created it — we own cleanup
     cd to main repo root       # Bug #238 fix
     git worktree remove <path>
@@ -242,7 +256,7 @@ This applies to directory preference checks in Step 1b.
 | Bug | Problem | Fix | Location |
 |-----|---------|-----|----------|
 | #940 | Option 2 prose says "Then: Cleanup worktree (Step 5)" but quick reference says keep it. Step 5 says "For Options 1, 2, 4" but Common Mistakes says "Options 1 and 4 only." | Remove cleanup from Option 2. Step 5 applies to Options 1 and 4 only. | finishing SKILL.md |
-| #999 | Option 1 deletes branch before removing worktree. `git branch -d` can fail because worktree still references the branch. | Reorder: remove worktree first, then delete branch. | finishing SKILL.md |
+| #999 | Option 1 deletes branch before removing worktree. `git branch -d` can fail because worktree still references the branch. | Reorder to: merge → verify tests → remove worktree → delete branch. Merge must succeed before anything is removed. | finishing SKILL.md |
 | #238 | `git worktree remove` fails silently if CWD is inside the worktree being removed. | Add CWD guard: `cd` to main repo root before `git worktree remove`. | finishing SKILL.md |
 
 ## Issues Resolved
@@ -267,11 +281,23 @@ The highest-risk element. Step 1a is deliberately short (3 lines) to prevent age
 
 ### Provenance heuristic
 
-The `.worktrees/ = ours, anything else = hands off` heuristic works for every current harness. If a future harness adopts `.worktrees/` as its convention, we'd have a false positive (superpowers tries to clean up a harness-owned worktree). Low risk — every harness uses branded paths — but worth noting.
+The `.worktrees/` or `~/.config/superpowers/worktrees/` = ours, anything else = hands off` heuristic works for every current harness. If a future harness adopts `.worktrees/` as its convention, we'd have a false positive (superpowers tries to clean up a harness-owned worktree). Similarly, if a user manually runs `git worktree add .worktrees/experiment` without superpowers, we'd incorrectly claim ownership. Both are low risk — every harness uses branded paths, and manual `.worktrees/` creation is unlikely — but worth noting.
 
 ### Detached HEAD finishing
 
 The reduced menu for detached HEAD worktrees (no merge option) is correct for Codex App's sandbox model. If a user is in detached HEAD for another reason, the reduced menu still makes sense — you genuinely can't merge from detached HEAD without creating a branch first.
+
+## Implementation Notes
+
+Both skill files contain sections beyond the core steps that need updating during implementation:
+
+- **Frontmatter** (`name`, `description`): Update to reflect detect-and-defer behavior
+- **Quick Reference tables**: Rewrite to match new step structure and bug fixes
+- **Common Mistakes sections**: Update or remove items that reference old behavior (e.g., "Skip CLAUDE.md check" is now wrong)
+- **Red Flags sections**: Update to reflect new priorities (e.g., "Never create a worktree when Step 0 detects existing isolation")
+- **Integration sections**: Update cross-references between skills
+
+The spec describes *what changes*; the implementation plan will specify exact edits to these secondary sections.
 
 ## Future Work (not in this spec)
 
