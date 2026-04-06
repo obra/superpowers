@@ -40,15 +40,39 @@ Skills auto-trigger from there — no extra setup needed.
 | Meta | `writing-skills`, `using-sspower` |
 | sspower-only | `second-opinion` |
 
-## Fork Customizations
+## Key Differences from Superpowers
 
-See [docs/CUSTOMIZATIONS.md](docs/CUSTOMIZATIONS.md) for the full list of changes from upstream.
+See [docs/CUSTOMIZATIONS.md](docs/CUSTOMIZATIONS.md) for the full changelog.
 
-Key differences:
-- **Reference extraction** — large inline examples moved to `references/` subdirs to reduce token load
-- **`using-sspower`** — custom skill routing replacing `using-superpowers`
-- **`second-opinion`** — independent review via Codex subagent
-- **Claude Code only** — removed Cursor, Gemini, OpenCode configs
+### Architecture: Token-Efficient Progressive Disclosure
+
+Superpowers loads entire skill content into context. sspower splits every skill into a lean `SKILL.md` (<100 lines) + `references/` subdirectory. The agent reads references only when needed, saving thousands of tokens per session.
+
+| Skill | Superpowers | sspower SKILL.md | sspower references/ |
+|-------|-------------|------------------|---------------------|
+| writing-skills | 647 lines | ~50 lines | 3 files (344 lines) |
+| test-driven-development | 313 lines | ~50 lines | 1 file (74 lines) |
+| systematic-debugging | 263 lines | ~50 lines | 2 files (227 lines) |
+| subagent-driven-development | 279 lines | ~50 lines | 2 files (143 lines) |
+
+### New Skills
+
+| Skill | What it does |
+|-------|-------------|
+| **`using-sspower`** | Replaces `using-superpowers` — custom routing with red-flags table and multi-platform tool mapping |
+| **`second-opinion`** | Routes to Codex for independent review: `/codex:rescue` when stuck, `/codex:adversarial-review` for high-risk merges, `/codex:review` otherwise |
+
+### Improved Skills (eval-tested)
+
+| Skill | What changed |
+|-------|-------------|
+| **dispatching-parallel-agents** | Added batch sizing table (5-8 files/agent) for bulk operations |
+| **finishing-a-development-branch** | Mandatory worktree cleanup with per-option reporting |
+| **verification-before-completion** | Language-agnostic command detection — reads project configs instead of hardcoded lookup |
+
+### Removed (Claude Code only)
+
+Cursor, Gemini, and OpenCode configs removed — sspower targets Claude Code exclusively.
 
 ## Syncing with upstream
 
