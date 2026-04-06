@@ -42,16 +42,18 @@ sspower uses its own independent version scheme starting at **v1.0.0**, separate
 Version is tracked in these files (managed by `.version-bump.json`):
 - `package.json`
 - `.claude-plugin/plugin.json`
-- `.cursor-plugin/plugin.json`
-- `gemini-extension.json`
 
 ## Config Changes
 
 - `package.json` — name `sspower`, version `1.0.0`
 - `.claude-plugin/plugin.json` — name, author, homepage, repository updated to `sskys18/sspower`
-- `.cursor-plugin/plugin.json` — name, author, homepage, repository updated to `sskys18/sspower`
-- `gemini-extension.json` — name updated to `sspower`
-- `.version-bump.json` — removed marketplace.json reference (lives in parent)
+- `.version-bump.json` — trimmed to only Claude Code config files
+
+## Removed from Upstream
+
+- `.cursor-plugin/` — Cursor plugin config (not needed)
+- `.opencode/` — OpenCode plugin config (not needed)
+- `gemini-extension.json`, `GEMINI.md` — Gemini config (not needed)
 
 ## Syncing with Upstream
 
