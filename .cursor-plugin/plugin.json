@@ -1,14 +1,13 @@
 {
-  "name": "superpowers",
-  "displayName": "Superpowers",
+  "name": "sspower",
+  "displayName": "sspower",
   "description": "Core skills library: TDD, debugging, collaboration patterns, and proven techniques",
-  "version": "5.0.7",
+  "version": "1.0.0",
   "author": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com"
+    "name": "sskys18"
   },
-  "homepage": "https://github.com/obra/superpowers",
-  "repository": "https://github.com/obra/superpowers",
+  "homepage": "https://github.com/sskys18/sspower",
+  "repository": "https://github.com/sskys18/sspower",
   "license": "MIT",
   "keywords": [
     "skills",

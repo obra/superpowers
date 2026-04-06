@@ -35,11 +35,23 @@ All upstream skills received **reference extraction** — large inline examples 
 - `docs/superpowers/plans/2026-04-04-codex-integration-fork.md` — Codex integration plan
 - `docs/superpowers/specs/2026-04-03-codex-integration-fork-design.md` — Codex integration design spec
 
+## Versioning
+
+sspower uses its own independent version scheme starting at **v1.0.0**, separate from upstream superpowers versioning (v5.x). The fork base was superpowers v5.0.5.
+
+Version is tracked in these files (managed by `.version-bump.json`):
+- `package.json`
+- `.claude-plugin/plugin.json`
+- `.cursor-plugin/plugin.json`
+- `gemini-extension.json`
+
 ## Config Changes
 
-- `package.json` — name changed to `sspower`
-- `.claude-plugin/plugin.json` — plugin identity updated
-- `.cursor-plugin/plugin.json` — plugin identity updated
+- `package.json` — name `sspower`, version `1.0.0`
+- `.claude-plugin/plugin.json` — name, author, homepage, repository updated to `sskys18/sspower`
+- `.cursor-plugin/plugin.json` — name, author, homepage, repository updated to `sskys18/sspower`
+- `gemini-extension.json` — name updated to `sspower`
+- `.version-bump.json` — removed marketplace.json reference (lives in parent)
 
 ## Syncing with Upstream
 
