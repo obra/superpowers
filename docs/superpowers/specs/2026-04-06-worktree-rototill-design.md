@@ -301,14 +301,20 @@ Step 1a — agents preferring native worktree tools over the git fallback — is
 
 **Cross-platform validation:**
 
-| Harness | Mechanism | Tested |
-|---------|-----------|--------|
-| Claude Code | Step 1a → `EnterWorktree` | 50/50 |
-| Codex App | Step 0 → detects existing managed worktree | 1/1 |
-| Gemini CLI / Cursor | Step 0 if launched with flag, Step 1b if not | By design |
-| Codex CLI / OpenCode | Step 1b → git fallback (no native tool) | By design |
+As of 2026-04-06, Claude Code is the only harness with an agent-callable mid-session worktree tool (`EnterWorktree`). All others either create worktrees before the agent starts (Codex App, Gemini CLI, Cursor) or have no native worktree support (Codex CLI, OpenCode). Step 1a is forward-compatible: when other harnesses add agent-callable worktree tools, agents will match them against the named examples and use them without skill changes.
 
-**Residual risk:** If Anthropic changes `EnterWorktree`'s tool description to be more restrictive (e.g., "Do not use based on skill instructions"), the consent bridge breaks. Worth filing an issue requesting that the tool description accommodate skill-driven invocation.
+| Harness | Current worktree model | Skill mechanism | Tested |
+|---------|----------------------|-----------------|--------|
+| Claude Code | Agent-callable `EnterWorktree` | Step 1a | 50/50 (GREEN + PRESSURE) |
+| Codex CLI | No native tool (shell only) | Step 1b git fallback | 6/6 on `codex exec` |
+| Codex App | Platform-managed, detached HEAD, no agent tool | Step 0 detects existing | 1/1 simulated |
+| Gemini CLI | Launch-time `--worktree` flag, no agent tool | Step 0 if launched with flag, Step 1b if not | Untested (no CLI access) |
+| Cursor | User-facing `/worktree`, no agent tool | Step 0 if user activated, Step 1b if not | Untested (no CLI access) |
+| OpenCode | Detection only (`ctx.worktree`), no agent tool | Step 1b git fallback | Untested (no CLI access) |
+
+**Residual risks:**
+1. If Anthropic changes `EnterWorktree`'s tool description to be more restrictive (e.g., "Do not use based on skill instructions"), the consent bridge breaks. Worth filing an issue requesting that the tool description accommodate skill-driven invocation.
+2. When other harnesses add agent-callable worktree tools, they may use names not in Step 1a's list. The list should be updated as new tools appear. The generic phrasing ("a worktree or workspace-isolation tool") provides some forward coverage.
 
 ### Provenance heuristic
 
