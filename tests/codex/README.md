@@ -68,7 +68,7 @@ Structured JSON events are preferred for workflow assertions:
 
 - `todo_list` indicates `update_plan`
 - `collab_tool_call` indicates subagent activity
-- subagent session files can expose `agent_role` values such as `superpowers_spec_reviewer`
+- subagent session files can expose `agent_role` values such as `superpowers_spec_reviewer` or `superpowers_implementer`
 - `turn.completed` indicates a real completed agent turn
 
 Fast semantic tests use a second Codex run as an evaluator. The evaluator receives:

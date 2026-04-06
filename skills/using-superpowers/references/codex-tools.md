@@ -15,7 +15,7 @@ Skills use Claude Code tool names. When you encounter these in a skill, use your
 
 ## Native Superpowers Codex Roles
 
-Superpowers for Codex installs native reviewer roles under:
+Superpowers for Codex installs native workflow roles under:
 
 - `~/.codex/agents/`
 
@@ -26,6 +26,9 @@ Codex currently discovers agent role files by walking the `agents/` directory an
 
 Current native roles:
 
+- `superpowers_implementer`
+- `superpowers_explorer`
+- `superpowers_verifier`
 - `superpowers_reviewer`
 - `superpowers_spec_reviewer`
 - `superpowers_plan_reviewer`
@@ -35,30 +38,39 @@ These are standard Codex custom roles, not a separate plugin-only mechanism.
 
 ## Preferred Dispatch Model
 
-When a skill references a specialized Superpowers reviewer on Codex:
+When a skill references a specialized Superpowers subagent on Codex:
 
 - use the matching native `superpowers_*` role if it appears in the `spawn_agent` role list
-- keep implementation work on the built-in `worker` role
-- keep read-heavy codebase exploration on the built-in `explorer` role
+- in `subagent-driven-development`, map the implementer to `superpowers_implementer` when that role is available
+- do not keep the implementer on built-in `worker` when `superpowers_implementer` is installed
+- use built-in Codex roles only as compatibility fallback when the matching native role is unavailable
 
 | Skill instruction | Preferred Codex mapping |
 |-------------------|-------------------------|
+| Implementer in `subagent-driven-development` | `spawn_agent(agent_type="superpowers_implementer", message=...)` |
 | `Task tool (superpowers:code-reviewer)` | `spawn_agent(agent_type="superpowers_reviewer", message=...)` |
 | Spec-compliance reviewer in `subagent-driven-development` | `spawn_agent(agent_type="superpowers_spec_reviewer", message=...)` |
 | Plan document reviewer | `spawn_agent(agent_type="superpowers_plan_reviewer", message=...)` |
 | Spec/design document reviewer | `spawn_agent(agent_type="superpowers_doc_reviewer", message=...)` |
+| Focused repository exploration | `spawn_agent(agent_type="superpowers_explorer", message=...)` |
+| Verification or test-only subagent | `spawn_agent(agent_type="superpowers_verifier", message=...)` |
 
 ## Compatibility Fallback
 
-If the native Superpowers role is not available in the current Codex installation:
+If the matching native Superpowers role is not available in the current Codex installation:
 
-1. find the prompt source (`agents/code-reviewer.md` or the skill-local reviewer prompt)
-2. fill any placeholders
-3. dispatch `worker` or `default` with the filled instructions in `message`
+1. reviewer-style or document-review work:
+   find the prompt source (`agents/code-reviewer.md` or the skill-local reviewer prompt), fill any placeholders, then dispatch `worker` or `default` with the filled instructions in `message`
+2. bounded implementation work:
+   dispatch the built-in `worker` role with the same task brief and context
+3. focused codebase exploration:
+   dispatch the built-in `explorer` role
+4. verification or test-only work:
+   dispatch the built-in `worker` role with explicit verification instructions
 
 Fallback is compatibility behavior, not the primary design.
 
-## Message Framing for Fallback
+## Message Framing for Prompt-Based Fallback
 
 The `message` parameter is user-level input, not a system prompt. Structure fallback dispatches like this:
 

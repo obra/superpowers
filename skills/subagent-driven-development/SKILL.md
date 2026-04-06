@@ -129,12 +129,18 @@ Question handling is part of the controller's job. When the implementer asks que
 
 When this workflow runs on Codex and the native Superpowers roles are installed:
 
-- implementer -> built-in `worker`
+- implementer -> `superpowers_implementer`
 - spec compliance reviewer -> `superpowers_spec_reviewer`
 - code quality reviewer -> `superpowers_reviewer`
 - final code reviewer -> `superpowers_reviewer`
 
-If a native Superpowers reviewer role is unavailable, fall back to the existing prompt-driven dispatch using `worker` or `default`.
+Do not leave the implementer on built-in `worker` when
+`superpowers_implementer` is available in the current Codex role list.
+
+If a matching native Superpowers role is unavailable, fall back to:
+
+- implementer -> built-in `worker`
+- reviewers -> existing prompt-driven dispatch using `worker` or `default`
 
 ## Example Workflow
 
