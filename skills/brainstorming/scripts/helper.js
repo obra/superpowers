@@ -11,7 +11,7 @@
       eventQueue = [];
       const statusEl = document.querySelector('.header .status');
       if (statusEl) {
-        statusEl.classList.remove('disconnected');
+        statusEl.classList.remove('disconnected', 'connecting');
         statusEl.textContent = 'Connected';
       }
     };
@@ -26,8 +26,9 @@
     ws.onclose = () => {
       const statusEl = document.querySelector('.header .status');
       if (statusEl) {
-        statusEl.classList.add('disconnected');
-        statusEl.textContent = 'Disconnected';
+        statusEl.classList.add('connecting');
+        statusEl.classList.remove('disconnected');
+        statusEl.textContent = 'Connecting...';
       }
       setTimeout(connect, 1000);
     };
