@@ -168,6 +168,7 @@ Ready to implement <feature-name>
 | Permission error on create | Sandbox fallback, work in place |
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
+| Plan touches multiple repos | Create a worktree in each repo (same Step 0→1a→1b flow, matching branch names) |
 
 ## Common Mistakes
 
