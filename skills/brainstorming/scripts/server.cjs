@@ -358,15 +358,20 @@ function handleMessage(text) {
   let event;
   try {
     event = JSON.parse(text);
+    if (!event || typeof event !== 'object' || Array.isArray(event)) {
+      throw new Error('Payload must be a JSON object');
+    }
   } catch (e) {
     console.error('Failed to parse WebSocket message:', e.message);
     return;
   }
   touchActivity();
-  console.log(JSON.stringify({ ...event, source: 'user-event' }));
-  if (event.choice) {
+
+  const secureEvent = { ...event, source: 'user-event' };
+  console.log(JSON.stringify(secureEvent));
+  if (secureEvent.choice) {
     const eventsFile = path.join(STATE_DIR, 'events');
-    fs.appendFileSync(eventsFile, JSON.stringify(event) + '\n');
+    fs.appendFileSync(eventsFile, JSON.stringify(secureEvent) + '\n');
   }
 }
 
