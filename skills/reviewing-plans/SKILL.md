@@ -38,7 +38,7 @@ Present two options:
 
 **A. Collaborative Walkthrough** — You and the user review the plan together, section by section. Best for important or complex plans where the user wants to understand and shape every decision.
 
-**B. Agent Review** — Dispatch architect agents (e.g., Whis) to review independently and produce a report. Best when the user trusts the design and wants a quality check.
+**B. Agent Review** — Dispatch a subagent to review independently and produce a report. Best when the user trusts the design and wants a quality check.
 
 ### Step 2: If Collaborative Walkthrough chosen
 
