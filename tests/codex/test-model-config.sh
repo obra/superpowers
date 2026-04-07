@@ -25,12 +25,15 @@ echo ""
 
 CONFIG_CONTENT=$(cat "$CONFIG_FILE")
 
-echo "Test 2: Model is pinned to gpt-5.4..."
-assert_contains "$CONFIG_CONTENT" '^model = "gpt-5\.4"$' "Model pinned to gpt-5.4" || exit 1
+EXPECTED_MODEL_PATTERN=$(printf '%s\n' "$CODEX_TEST_MODEL" | sed 's/[.[\\*^$()+?{|]/\\&/g')
+EXPECTED_REASONING_PATTERN=$(printf '%s\n' "$CODEX_TEST_REASONING_EFFORT" | sed 's/[.[\\*^$()+?{|]/\\&/g')
+
+echo "Test 2: Model is pinned to the configured Codex test model..."
+assert_contains "$CONFIG_CONTENT" "^model = \"$EXPECTED_MODEL_PATTERN\"$" "Model pinned to the configured test model" || exit 1
 echo ""
 
-echo "Test 3: Reasoning effort is pinned to xhigh..."
-assert_contains "$CONFIG_CONTENT" '^model_reasoning_effort = "xhigh"$' "Reasoning effort pinned to xhigh" || exit 1
+echo "Test 3: Reasoning effort is pinned to the configured Codex test effort..."
+assert_contains "$CONFIG_CONTENT" "^model_reasoning_effort = \"$EXPECTED_REASONING_PATTERN\"$" "Reasoning effort pinned to the configured test effort" || exit 1
 echo ""
 
 echo "Test 4: SessionStart hooks are enabled in the temp Codex home..."
