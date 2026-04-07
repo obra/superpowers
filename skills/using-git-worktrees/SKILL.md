@@ -109,19 +109,6 @@ git worktree add "$path" -b "$BRANCH_NAME"
 cd "$path"
 ```
 
-#### Hooks Awareness
-
-Git worktrees do not inherit the parent repo's hooks directory. After creating the worktree, symlink hooks from the main repo if they exist:
-
-```bash
-MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
-if [ -d "$MAIN_ROOT/.git/hooks" ]; then
-    ln -sf "$MAIN_ROOT/.git/hooks" "$path/.git/hooks"
-fi
-```
-
-This prevents pre-commit checks, linters, and other hooks from silently stopping when work moves to a worktree.
-
 **Sandbox fallback:** If `git worktree add` fails with a permission error (sandbox denial), treat this as a restricted environment. Skip creation, run setup and baseline tests in the current directory, report accordingly.
 
 ## Step 3: Project Setup
@@ -226,7 +213,6 @@ Ready to implement <feature-name>
 - Verify directory is ignored for project-local
 - Auto-detect and run project setup
 - Verify clean test baseline
-- Symlink hooks after creating worktree via 1b
 
 ## Integration
 
