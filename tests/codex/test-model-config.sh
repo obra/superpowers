@@ -51,4 +51,26 @@ assert_contains "$HOOKS_CONTENT" 'loading superpowers' "Hooks config keeps the l
 assert_contains "$HOOK_COMMAND" '^SUPERPOWERS_HOOK_TARGET=codex bash ".*/superpowers/hooks/session-start"$' "Hooks config quotes the Codex session-start hook path" || exit 1
 echo ""
 
+cleanup_codex_test_env
+
+OVERRIDE_CONFIG_CONTENT=$(
+    CODEX_TEST_MODEL="gpt-5.4-mini" \
+    CODEX_TEST_REASONING_EFFORT="medium" \
+    REPO_ROOT="$REPO_ROOT" \
+    bash -lc '
+        source "$REPO_ROOT/tests/codex/test-helpers.sh"
+        setup_codex_test_env
+        trap '\''cleanup_codex_test_env'\'' EXIT
+        cat "$CODEX_HOME/config.toml"
+    '
+)
+
+echo "Test 6: Temporary Codex config accepts an explicit model override..."
+assert_contains "$OVERRIDE_CONFIG_CONTENT" '^model = "gpt-5\.4-mini"$' "Model override is written to config.toml" || exit 1
+echo ""
+
+echo "Test 7: Temporary Codex config accepts an explicit reasoning-effort override..."
+assert_contains "$OVERRIDE_CONFIG_CONTENT" '^model_reasoning_effort = "medium"$' "Reasoning effort override is written to config.toml" || exit 1
+echo ""
+
 echo "=== Codex test model config passed ==="

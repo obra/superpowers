@@ -4,8 +4,8 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 ORIGINAL_CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
-CODEX_TEST_MODEL="gpt-5.4"
-CODEX_TEST_REASONING_EFFORT="xhigh"
+CODEX_TEST_MODEL="${CODEX_TEST_MODEL:-gpt-5.4}"
+CODEX_TEST_REASONING_EFFORT="${CODEX_TEST_REASONING_EFFORT:-xhigh}"
 
 normalize_codex_path() {
     local path="$1"
