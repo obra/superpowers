@@ -221,7 +221,12 @@ async function handleRequest(req, res) {
         html += helperInjection;
       }
 
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.writeHead(200, {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' ws: wss:;",
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY'
+      });
       res.end(html);
     } else if (req.method === 'GET' && req.url.startsWith('/files/')) {
       const fileName = req.url.slice(7);
@@ -237,7 +242,10 @@ async function handleRequest(req, res) {
 
       const ext = path.extname(filePath).toLowerCase();
       const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-      res.writeHead(200, { 'Content-Type': contentType });
+      res.writeHead(200, {
+        'Content-Type': contentType,
+        'X-Content-Type-Options': 'nosniff'
+      });
 
       const stream = fs.createReadStream(filePath);
       stream.on('error', (err) => {
