@@ -74,6 +74,7 @@ done
 # List of skill tests to run (fast unit tests)
 tests=(
     "test-subagent-driven-development.sh"
+    "test-using-git-worktrees.sh"
 )
 
 # Integration tests (slow, full execution)
