@@ -12,6 +12,12 @@ repo_checkout_fingerprint() {
             if [ -L "$path" ]; then
                 printf 'symlink %s %s\n' "$path" "$(readlink "$path")"
             elif [ -f "$path" ]; then
+                if mode=$(stat -c '%a' "$path" 2>/dev/null); then
+                    :
+                else
+                    mode=$(stat -f '%Lp' "$path")
+                fi
+                printf 'mode %s %s\n' "$mode" "$path"
                 sha256sum "$path"
             else
                 printf 'missing %s\n' "$path"
