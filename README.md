@@ -62,6 +62,18 @@ In Cursor Agent chat, install from marketplace:
 
 or search for "superpowers" in the plugin marketplace.
 
+### Kiro IDE (via Powers Panel)
+
+In Kiro, open the Powers panel and import from GitHub:
+
+1. Click "Import from GitHub"
+2. Enter: `https://github.com/obra/superpowers/tree/main/.kiro-power` (must point to the `.kiro-power` subdirectory, not the repo root)
+3. Install the power
+
+On first activation, the agent installs a global steering file. After that, the workflow loads automatically in every conversation — no file copying needed.
+
+**Manual install / detailed docs:** [.kiro-power/INSTALL.md](.kiro-power/INSTALL.md)
+
 ### Codex
 
 Tell Codex:
