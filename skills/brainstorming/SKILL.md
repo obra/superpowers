@@ -23,7 +23,7 @@ You MUST create a task for each of these items and complete them in order:
 
 1. **Explore project context** — check files, docs, recent commits
 2. **Offer visual companion** (if topic will involve visual questions) — this is its own message, not combined with a clarifying question. See the Visual Companion section below.
-3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
+3. **Clarifying question loop** — ask as many questions as needed, one per message, until purpose/constraints/success criteria are clear
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
 6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
@@ -38,7 +38,8 @@ digraph brainstorming {
     "Explore project context" [shape=box];
     "Visual questions ahead?" [shape=diamond];
     "Offer Visual Companion\n(own message, no other content)" [shape=box];
-    "Ask clarifying questions" [shape=box];
+    "Ask clarifying question" [shape=box];
+    "Enough context\nfor approaches?" [shape=diamond];
     "Propose 2-3 approaches" [shape=box];
     "Present design sections" [shape=box];
     "User approves design?" [shape=diamond];
@@ -49,9 +50,11 @@ digraph brainstorming {
 
     "Explore project context" -> "Visual questions ahead?";
     "Visual questions ahead?" -> "Offer Visual Companion\n(own message, no other content)" [label="yes"];
-    "Visual questions ahead?" -> "Ask clarifying questions" [label="no"];
-    "Offer Visual Companion\n(own message, no other content)" -> "Ask clarifying questions";
-    "Ask clarifying questions" -> "Propose 2-3 approaches";
+    "Visual questions ahead?" -> "Ask clarifying question" [label="no"];
+    "Offer Visual Companion\n(own message, no other content)" -> "Ask clarifying question";
+    "Ask clarifying question" -> "Enough context\nfor approaches?";
+    "Enough context\nfor approaches?" -> "Ask clarifying question" [label="no - ask the next question in a later message"];
+    "Enough context\nfor approaches?" -> "Propose 2-3 approaches" [label="yes"];
     "Propose 2-3 approaches" -> "Present design sections";
     "Present design sections" -> "User approves design?";
     "User approves design?" -> "Present design sections" [label="no, revise"];
@@ -72,10 +75,24 @@ digraph brainstorming {
 - Check out the current project state first (files, docs, recent commits)
 - Before asking detailed questions, assess scope: if the request describes multiple independent subsystems (e.g., "build a platform with chat, file storage, billing, and analytics"), flag this immediately. Don't spend questions refining details of a project that needs to be decomposed first.
 - If the project is too large for a single spec, help the user decompose into sub-projects: what are the independent pieces, how do they relate, what order should they be built? Then brainstorm the first sub-project through the normal design flow. Each sub-project gets its own spec → plan → implementation cycle.
-- For appropriately-scoped projects, ask questions one at a time to refine the idea
+- For appropriately-scoped projects, run a clarifying-question loop: ask one question, read the answer, decide whether you have enough context, then either ask the next question or move on
 - Prefer multiple choice questions when possible, but open-ended is fine too
-- Only one question per message - if a topic needs more exploration, break it into multiple questions
+- Only one question per message. This is a per-message rule, not a per-session limit. If the answer leaves important gaps, ask more questions in later messages until the gaps are closed.
+- When you preview this phase, do not frame it as "one question to close the scope." Frame it as starting with the first clarifying question and leaving room for additional questions as needed.
+- When you ask the first clarifying question, explicitly say that you may ask more clarifying questions after the answer if important ambiguity remains.
+- A good lead-in is: "I'll start with the first clarifying question. After your answer, I'll decide whether we need more clarifying questions or whether we have enough context to move on."
+- Avoid lead-ins that imply one answer will finish the whole scoping phase, such as "one question to close the scope", "this question will finish the design", or "if needed I can ask a second question".
+- If you create a plan or todo list, represent this as an open clarifying-question phase or loop, not as a hard one-question budget unless one answer truly resolves the remaining ambiguity.
 - Focus on understanding: purpose, constraints, success criteria
+
+**Example clarifying loop:**
+
+- Q1: "Which runtime matters first: Codex CLI, shared runtime, or both?"
+- User: "Codex CLI first."
+- Q2: "Should the first test use real org credentials or a fixture?"
+- User: "Real org."
+- Q3: "Does this need to run in CI, locally, or both?"
+- Only after the answers are sufficient do you move to approaches and design.
 
 **Exploring approaches:**
 
@@ -137,7 +154,7 @@ Wait for the user's response. If they request changes, make them and re-run the 
 
 ## Key Principles
 
-- **One question at a time** - Don't overwhelm with multiple questions
+- **One question per message** - Ask follow-ups in later messages if needed
 - **Multiple choice preferred** - Easier to answer than open-ended when possible
 - **YAGNI ruthlessly** - Remove unnecessary features from all designs
 - **Explore alternatives** - Always propose 2-3 approaches before settling

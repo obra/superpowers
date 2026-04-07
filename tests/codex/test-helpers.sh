@@ -4,6 +4,8 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 ORIGINAL_CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
+CODEX_TEST_MODEL="gpt-5.4"
+CODEX_TEST_REASONING_EFFORT="xhigh"
 
 normalize_codex_path() {
     local path="$1"
@@ -28,15 +30,48 @@ setup_codex_test_env() {
         "$HOME/.agents/skills" \
         "$HOME/.codex/agents" \
         "$HOME/.codex/superpowers/skills" \
-        "$CODEX_HOME/agents"
+        "$CODEX_HOME/agents" \
+        "$CODEX_HOME/superpowers/skills" \
+        "$CODEX_HOME/superpowers/hooks"
     ln -s "$REPO_ROOT/skills" "$HOME/.agents/skills/superpowers"
     cp -R "$REPO_ROOT/skills/." "$HOME/.codex/superpowers/skills/"
+    cp -R "$REPO_ROOT/skills/." "$CODEX_HOME/superpowers/skills/"
+    cp -R "$REPO_ROOT/hooks/." "$CODEX_HOME/superpowers/hooks/"
     cp "$REPO_ROOT/.codex/agents/"*.toml "$CODEX_HOME/agents/"
     cp "$REPO_ROOT/.codex/agents/"*.toml "$HOME/.codex/agents/"
+
+    cat > "$CODEX_HOME/config.toml" <<EOF
+model = "$CODEX_TEST_MODEL"
+model_reasoning_effort = "$CODEX_TEST_REASONING_EFFORT"
+EOF
 
     if [ -f "$ORIGINAL_CODEX_HOME/auth.json" ]; then
         cp "$ORIGINAL_CODEX_HOME/auth.json" "$CODEX_HOME/auth.json"
     fi
+
+    install_codex_session_start_hook
+}
+
+install_codex_session_start_hook() {
+    cat > "$CODEX_HOME/hooks.json" <<EOF
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "^(startup|resume)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SUPERPOWERS_HOOK_TARGET=codex bash $CODEX_HOME/superpowers/hooks/session-start",
+            "statusMessage": "loading superpowers",
+            "timeout": 600
+          }
+        ]
+      }
+    ]
+  }
+}
+EOF
 }
 
 cleanup_codex_test_env() {
@@ -320,6 +355,7 @@ assert_not_contains() {
 
 export -f setup_codex_test_env
 export -f cleanup_codex_test_env
+export -f install_codex_session_start_hook
 export -f create_test_project
 export -f cleanup_test_project
 export -f build_local_skill_preamble
@@ -331,3 +367,5 @@ export -f assert_semantic_judgment
 export -f assert_contains
 export -f assert_not_contains
 export REPO_ROOT
+export CODEX_TEST_MODEL
+export CODEX_TEST_REASONING_EFFORT

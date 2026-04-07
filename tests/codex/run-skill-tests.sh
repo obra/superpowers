@@ -78,6 +78,8 @@ if [ "$RUN_INTEGRATION" = true ] && [ "$TIMEOUT_EXPLICIT" = false ]; then
 fi
 
 tests=(
+    "test-brainstorming-clarifying-loop.sh"
+    "test-model-config.sh"
     "test-native-agent-catalog.sh"
     "test-subagent-driven-development.sh"
     "test-using-superpowers-bootstrap.sh"

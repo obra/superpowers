@@ -75,6 +75,8 @@ digraph skill_flow {
 }
 ```
 
+**Checklist interpretation matters:** if a skill checklist item describes an iterative phase or loop, create a todo for the whole phase and keep it open until its exit condition is met. Do not collapse a loop into a single attempt just because it appears as one checklist item.
+
 ## Red Flags
 
 These thoughts mean STOP—you're rationalizing:
