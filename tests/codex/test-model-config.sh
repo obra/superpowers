@@ -43,11 +43,12 @@ fi
 echo ""
 
 HOOKS_CONTENT=$(cat "$HOOKS_FILE")
+HOOK_COMMAND=$(jq -r '.hooks.SessionStart[0].hooks[0].command' "$HOOKS_FILE")
 
 echo "Test 5: Hooks config wires the Codex SessionStart hook..."
 assert_contains "$HOOKS_CONTENT" '"SessionStart"' "Hooks config defines SessionStart" || exit 1
 assert_contains "$HOOKS_CONTENT" 'loading superpowers' "Hooks config keeps the loading status message" || exit 1
-assert_contains "$HOOKS_CONTENT" 'SUPERPOWERS_HOOK_TARGET=codex bash .*/superpowers/hooks/session-start' "Hooks config points at the Codex session-start hook" || exit 1
+assert_contains "$HOOK_COMMAND" '^SUPERPOWERS_HOOK_TARGET=codex bash ".*/superpowers/hooks/session-start"$' "Hooks config quotes the Codex session-start hook path" || exit 1
 echo ""
 
 echo "=== Codex test model config passed ==="

@@ -26,6 +26,31 @@ TIMEOUT=900
 TIMEOUT_EXPLICIT=false
 RUN_INTEGRATION=false
 
+fast_test_entries=(
+    "test-brainstorming-clarifying-loop.sh|Verify brainstorming keeps the clarifying loop open-ended"
+    "test-model-config.sh|Verify the temp Codex config pins model, reasoning effort, and hooks"
+    "test-native-agent-catalog.sh|Verify native Superpowers Codex roles are installed and discoverable"
+    "test-subagent-driven-development.sh|Test skill loading and requirements"
+    "test-using-superpowers-bootstrap.sh|Verify SessionStart Codex bootstrap shape"
+)
+
+integration_test_entries=(
+    "test-subagent-driven-development-integration.sh|Full workflow execution"
+    "test-document-review-system.sh|Real document review behavior"
+)
+
+print_test_entries() {
+    local entry
+    local test_name
+    local description
+
+    for entry in "$@"; do
+        test_name="${entry%%|*}"
+        description="${entry#*|}"
+        printf '  %-45s %s\n' "$test_name" "$description"
+    done
+}
+
 while [[ $# -gt 0 ]]; do
     case $1 in
         --verbose|-v)
@@ -56,13 +81,10 @@ while [[ $# -gt 0 ]]; do
             echo "  --help, -h           Show this help"
             echo ""
             echo "Tests:"
-            echo "  test-native-agent-catalog.sh           Verify native Superpowers Codex roles are installed and discoverable"
-            echo "  test-subagent-driven-development.sh  Test skill loading and requirements"
-            echo "  test-using-superpowers-bootstrap.sh  Verify SessionStart Codex bootstrap shape"
+            print_test_entries "${fast_test_entries[@]}"
             echo ""
             echo "Integration Tests (use --integration):"
-            echo "  test-subagent-driven-development-integration.sh  Full workflow execution"
-            echo "  test-document-review-system.sh                   Real document review behavior"
+            print_test_entries "${integration_test_entries[@]}"
             exit 0
             ;;
         *)
@@ -77,18 +99,15 @@ if [ "$RUN_INTEGRATION" = true ] && [ "$TIMEOUT_EXPLICIT" = false ]; then
     TIMEOUT=1800
 fi
 
-tests=(
-    "test-brainstorming-clarifying-loop.sh"
-    "test-model-config.sh"
-    "test-native-agent-catalog.sh"
-    "test-subagent-driven-development.sh"
-    "test-using-superpowers-bootstrap.sh"
-)
+tests=()
+for entry in "${fast_test_entries[@]}"; do
+    tests+=("${entry%%|*}")
+done
 
-integration_tests=(
-    "test-subagent-driven-development-integration.sh"
-    "test-document-review-system.sh"
-)
+integration_tests=()
+for entry in "${integration_test_entries[@]}"; do
+    integration_tests+=("${entry%%|*}")
+done
 
 if [ "$RUN_INTEGRATION" = true ]; then
     tests+=("${integration_tests[@]}")

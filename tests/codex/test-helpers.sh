@@ -62,7 +62,7 @@ install_codex_session_start_hook() {
         "hooks": [
           {
             "type": "command",
-            "command": "SUPERPOWERS_HOOK_TARGET=codex bash $CODEX_HOME/superpowers/hooks/session-start",
+            "command": "SUPERPOWERS_HOOK_TARGET=codex bash \"$CODEX_HOME/superpowers/hooks/session-start\"",
             "statusMessage": "loading superpowers",
             "timeout": 600
           }
@@ -86,6 +86,21 @@ create_test_project() {
     test_dir="$(mktemp -d)"
     mkdir -p "$test_dir/.agents"
     ln -s "$REPO_ROOT/skills" "$test_dir/.agents/skills"
+
+    printf '%s\n' "$test_dir"
+}
+
+create_test_repo_copy() {
+    local test_dir
+
+    test_dir="$(mktemp -d)"
+
+    # Copy the current working tree into a disposable project so Codex cannot mutate the real checkout.
+    tar -C "$REPO_ROOT" --exclude='.git' -cf - . | tar -C "$test_dir" -xf -
+
+    mkdir -p "$test_dir/.agents"
+    rm -rf "$test_dir/.agents/skills"
+    ln -s "$test_dir/skills" "$test_dir/.agents/skills"
 
     printf '%s\n' "$test_dir"
 }
@@ -357,6 +372,7 @@ export -f setup_codex_test_env
 export -f cleanup_codex_test_env
 export -f install_codex_session_start_hook
 export -f create_test_project
+export -f create_test_repo_copy
 export -f cleanup_test_project
 export -f build_local_skill_preamble
 export -f normalize_codex_path

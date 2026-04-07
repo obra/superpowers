@@ -9,15 +9,23 @@ echo "=== Test: brainstorming clarifying-question loop ==="
 echo ""
 
 setup_codex_test_env
-EVAL_PROJECT=$(create_test_project)
+EVAL_PROJECT=$(create_test_repo_copy)
 OUTPUT_FILE=$(mktemp)
 trap 'rm -f "$OUTPUT_FILE"; cleanup_test_project "$EVAL_PROJECT"; cleanup_codex_test_env' EXIT
+INITIAL_REPO_STATUS=$(git -C "$REPO_ROOT" status --porcelain)
 
 SKILL_SOURCE=$(cat "$REPO_ROOT/skills/brainstorming/SKILL.md")
 PROMPT="quero que crie test e2e tal qual a nossa extensão com org real para o nosso runtime compartilhado/cli"
 
 echo "Running Codex brainstorming flow against the repository..."
-run_codex_json_to_file "$PROMPT" "$REPO_ROOT" "$OUTPUT_FILE" 240
+run_codex_json_to_file "$PROMPT" "$EVAL_PROJECT" "$OUTPUT_FILE" 240
+
+FINAL_REPO_STATUS=$(git -C "$REPO_ROOT" status --porcelain)
+if [ "$FINAL_REPO_STATUS" != "$INITIAL_REPO_STATUS" ]; then
+    echo "  [FAIL] Codex replay mutated the real repository checkout"
+    git -C "$REPO_ROOT" status --short | sed 's/^/    /'
+    exit 1
+fi
 
 TRANSCRIPT=$(grep '^{' "$OUTPUT_FILE" | jq -rs '
     map(
