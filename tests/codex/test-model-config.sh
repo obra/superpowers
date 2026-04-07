@@ -56,8 +56,9 @@ cleanup_codex_test_env
 OVERRIDE_CONFIG_CONTENT=$(
     CODEX_TEST_MODEL="gpt-5.4-mini" \
     CODEX_TEST_REASONING_EFFORT="medium" \
+    HOME="$REPO_ROOT" \
     REPO_ROOT="$REPO_ROOT" \
-    bash -lc '
+    bash -c '
         source "$REPO_ROOT/tests/codex/test-helpers.sh"
         setup_codex_test_env
         trap '\''cleanup_codex_test_env'\'' EXIT
