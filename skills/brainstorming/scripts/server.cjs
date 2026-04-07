@@ -157,19 +157,26 @@ function wrapInFrame(content) {
   return frameTemplate;
 }
 
-async function getNewestScreen() {
-  const fileNames = await fs.promises.readdir(CONTENT_DIR);
-  const htmlFiles = fileNames.filter(f => f.endsWith('.html'));
-  const fileStats = [];
+// Optimize: Cache the newest screen path to avoid `readdir` and `stat` on every HTTP request
+let cachedNewestScreen = null;
 
-  for (const f of htmlFiles) {
-    const fp = path.join(CONTENT_DIR, f);
-    const stat = await fs.promises.stat(fp);
-    fileStats.push({ path: fp, mtime: stat.mtime.getTime() });
+async function updateNewestScreen() {
+  try {
+    const fileNames = await fs.promises.readdir(CONTENT_DIR);
+    const htmlFiles = fileNames.filter(f => f.endsWith('.html'));
+    const fileStats = [];
+
+    for (const f of htmlFiles) {
+      const fp = path.join(CONTENT_DIR, f);
+      const stat = await fs.promises.stat(fp);
+      fileStats.push({ path: fp, mtime: stat.mtime.getTime() });
+    }
+
+    fileStats.sort((a, b) => b.mtime - a.mtime);
+    cachedNewestScreen = fileStats.length > 0 ? fileStats[0].path : null;
+  } catch (err) {
+    console.error('Failed to update newest screen:', err);
   }
-
-  fileStats.sort((a, b) => b.mtime - a.mtime);
-  return fileStats.length > 0 ? fileStats[0].path : null;
 }
 
 // ========== HTTP Request Handler ==========
@@ -206,7 +213,7 @@ async function handleRequest(req, res) {
 
   try {
     if (req.method === 'GET' && req.url === '/') {
-      const screenFile = await getNewestScreen();
+      const screenFile = cachedNewestScreen;
       let html;
       if (screenFile) {
         const raw = await fs.promises.readFile(screenFile, 'utf-8');
@@ -419,6 +426,8 @@ async function startServer() {
     contentFiles.filter(f => f.endsWith('.html'))
   );
 
+  await updateNewestScreen();
+
   const server = http.createServer(handleRequest);
   server.on('upgrade', handleUpgrade);
 
@@ -426,9 +435,11 @@ async function startServer() {
     if (!filename || !filename.endsWith('.html')) return;
 
     if (debounceTimers.has(filename)) clearTimeout(debounceTimers.get(filename));
-    debounceTimers.set(filename, setTimeout(() => {
+    debounceTimers.set(filename, setTimeout(async () => {
       debounceTimers.delete(filename);
       const filePath = path.join(CONTENT_DIR, filename);
+
+      await updateNewestScreen();
 
       if (!fs.existsSync(filePath)) return; // file was deleted
       touchActivity();
