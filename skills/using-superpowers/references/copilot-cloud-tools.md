@@ -43,9 +43,9 @@ Copilot cloud agent runs in a **sandboxed GitHub Actions environment**, not a lo
 
 The agent cannot run `git push` directly. Use `report_progress` to commit and push changes. This tool also updates the PR description with a progress checklist.
 
-### No `gh` CLI for PR creation
+### Use `create_pull_request` for PR creation
 
-Use the `create_pull_request` tool instead of `gh pr create`.
+Open pull requests with the `create_pull_request` tool in this environment, rather than using `gh pr create`.
 
 ### Git worktrees not needed
 

@@ -31,7 +31,7 @@ If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "alw
 
 **In Copilot CLI:** Use the `skill` tool. Skills are auto-discovered from installed plugins. The `skill` tool works the same as Claude Code's `Skill` tool.
 
-**In Copilot cloud agent (web):** Use the `skill` tool. Skills are discovered from `.github/skills/`, `.claude/skills/`, or `.agents/skills/` directories. See `references/copilot-cloud-tools.md` for environment-specific tool mappings and differences.
+**In Copilot cloud agent (web):** Use the `skill` tool. Skills are discovered from the repository-relative directories `.github/skills/`, `.claude/skills/`, or `.agents/skills/` (relative to the repository root). See `references/copilot-cloud-tools.md` for environment-specific tool mappings and differences.
 
 **In Gemini CLI:** Skills activate via the `activate_skill` tool. Gemini loads skill metadata at session start and activates the full content on demand.
 
