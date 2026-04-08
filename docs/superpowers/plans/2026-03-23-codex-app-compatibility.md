@@ -1,14 +1,14 @@
-# Codex App Compatibility Implementation Plan
+# Qwen App Compatibility Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make `using-git-worktrees`, `finishing-a-development-branch`, and related skills work in the Codex App's sandboxed worktree environment without breaking existing behavior.
+**Goal:** Make `using-git-worktrees`, `finishing-a-development-branch`, and related skills work in the Qwen App's sandboxed worktree environment without breaking existing behavior.
 
 **Architecture:** Read-only environment detection (`git-dir` vs `git-common-dir`) at the start of two skills. If already in a linked worktree, skip creation. If on detached HEAD, emit a handoff payload instead of the 4-option menu. Sandbox fallback catches permission errors during worktree creation.
 
 **Tech Stack:** Git, Markdown (skill files are instruction documents, not executable code)
 
-**Spec:** `docs/superpowers/specs/2026-03-23-codex-app-compatibility-design.md`
+**Spec:** `docs/superpowers/specs/2026-03-23-Qwen-app-compatibility-design.md`
 
 ---
 
@@ -20,7 +20,7 @@
 | `skills/finishing-a-development-branch/SKILL.md` | Branch finishing workflow | Add Step 1.5 detection + cleanup guard |
 | `skills/subagent-driven-development/SKILL.md` | Plan execution with subagents | Update Integration description |
 | `skills/executing-plans/SKILL.md` | Plan execution inline | Update Integration description |
-| `skills/using-superpowers/references/codex-tools.md` | Codex platform reference | Add detection + finishing docs |
+| `skills/using-superpowers/references/Qwen-tools.md` | Qwen platform reference | Add detection + finishing docs |
 
 ---
 
@@ -48,7 +48,7 @@ GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
 BRANCH=$(git branch --show-current)
 ```
 
-**If `GIT_DIR` differs from `GIT_COMMON`:** You are already inside a linked worktree (created by the Codex App, Claude Code's Agent tool, a previous skill run, or the user). Do NOT create another worktree. Instead:
+**If `GIT_DIR` differs from `GIT_COMMON`:** You are already inside a linked worktree (created by the Qwen App, Claude Code's Agent tool, a previous skill run, or the user). Do NOT create another worktree. Instead:
 
 1. Run project setup (auto-detect package manager as in "Run Project Setup" below)
 2. Verify clean baseline (run tests as in "Verify Clean Baseline" below)
@@ -166,7 +166,7 @@ Suggested branch name: <ticket-id/short-description>
 Suggested commit message: <summary-of-work>
 ```
 
-Branch name: use ticket ID if available (e.g., `pri-823/codex-compat`), otherwise slugify the first 5 words of the plan title, otherwise omit. Avoid sensitive content in branch names.
+Branch name: use ticket ID if available (e.g., `pri-823/Qwen-compat`), otherwise slugify the first 5 words of the plan title, otherwise omit. Avoid sensitive content in branch names.
 
 Skip to Step 5 (cleanup is a no-op — see guard below).
 
@@ -323,14 +323,14 @@ always creating one."
 
 ---
 
-### Task 6: Add environment detection docs to `codex-tools.md`
+### Task 6: Add environment detection docs to `Qwen-tools.md`
 
 **Files:**
-- Modify: `skills/using-superpowers/references/codex-tools.md:25` (append at end)
+- Modify: `skills/using-superpowers/references/Qwen-tools.md:25` (append at end)
 
 - [ ] **Step 1: Read the current file**
 
-Read `skills/using-superpowers/references/codex-tools.md` in full. Confirm it ends at line 25-26 after the multi_agent section.
+Read `skills/using-superpowers/references/Qwen-tools.md` in full. Confirm it ends at line 25-26 after the multi_agent section.
 
 - [ ] **Step 2: Append two new sections**
 
@@ -355,7 +355,7 @@ BRANCH=$(git branch --show-current)
 See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
 Step 1.5 for how each skill uses these signals.
 
-## Codex App Finishing
+## Qwen App Finishing
 
 When the sandbox blocks branch/push operations (detached HEAD in an
 externally managed worktree), the agent commits all work and informs
@@ -378,10 +378,10 @@ Read the full file. Confirm:
 - [ ] **Step 4: Commit**
 
 ```bash
-git add skills/using-superpowers/references/codex-tools.md
-git commit -m "docs(codex-tools): add environment detection and App finishing docs (PRI-823)
+git add skills/using-superpowers/references/Qwen-tools.md
+git commit -m "docs(Qwen-tools): add environment detection and App finishing docs (PRI-823)
 
-Document the git-dir vs git-common-dir detection pattern and the Codex
+Document the git-dir vs git-common-dir detection pattern and the Qwen
 App's native finishing flow for skills that need to adapt."
 ```
 
@@ -390,17 +390,17 @@ App's native finishing flow for skills that need to adapt."
 ### Task 7: Automated test — environment detection
 
 **Files:**
-- Create: `tests/codex-app-compat/test-environment-detection.sh`
+- Create: `tests/Qwen-app-compat/test-environment-detection.sh`
 
 - [ ] **Step 1: Create test directory**
 
 ```bash
-mkdir -p tests/codex-app-compat
+mkdir -p tests/Qwen-app-compat
 ```
 
 - [ ] **Step 2: Write the detection test script**
 
-Create `tests/codex-app-compat/test-environment-detection.sh`:
+Create `tests/Qwen-app-compat/test-environment-detection.sh`:
 
 ```bash
 #!/usr/bin/env bash
@@ -461,13 +461,13 @@ else
   log_fail "Detached HEAD: branch is '$branch' (expected empty)"
 fi
 
-echo "=== Test 4: Linked worktree + detached HEAD (Codex App simulation) ==="
+echo "=== Test 4: Linked worktree + detached HEAD (Qwen App simulation) ==="
 result=$(detect_worktree)
 branch=$(git branch --show-current)
 if [ "$result" = "linked" ] && [ -z "$branch" ]; then
-  log_pass "Codex App simulation: linked + detached HEAD"
+  log_pass "Qwen App simulation: linked + detached HEAD"
 else
-  log_fail "Codex App simulation: result='$result', branch='$branch'"
+  log_fail "Qwen App simulation: result='$result', branch='$branch'"
 fi
 
 echo "=== Test 5: Cleanup guard — linked worktree should NOT remove ==="
@@ -502,8 +502,8 @@ fi
 - [ ] **Step 3: Make it executable and run it**
 
 ```bash
-chmod +x tests/codex-app-compat/test-environment-detection.sh
-./tests/codex-app-compat/test-environment-detection.sh
+chmod +x tests/Qwen-app-compat/test-environment-detection.sh
+./tests/Qwen-app-compat/test-environment-detection.sh
 ```
 
 Expected output: 6 passed, 0 failed.
@@ -511,8 +511,8 @@ Expected output: 6 passed, 0 failed.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add tests/codex-app-compat/test-environment-detection.sh
-git commit -m "test: add environment detection tests for Codex App compat (PRI-823)
+git add tests/Qwen-app-compat/test-environment-detection.sh
+git commit -m "test: add environment detection tests for Qwen App compat (PRI-823)
 
 Tests git-dir vs git-common-dir comparison in normal repo, linked
 worktree, detached HEAD, and cleanup guard scenarios."
@@ -528,7 +528,7 @@ worktree, detached HEAD, and cleanup guard scenarios."
 - [ ] **Step 1: Run the automated detection tests**
 
 ```bash
-./tests/codex-app-compat/test-environment-detection.sh
+./tests/Qwen-app-compat/test-environment-detection.sh
 ```
 
 Expected: 6 passed, 0 failed.
@@ -540,7 +540,7 @@ Read each file end-to-end:
 - `skills/finishing-a-development-branch/SKILL.md` — Step 1.5 present, cleanup guard present, rest unchanged
 - `skills/subagent-driven-development/SKILL.md` — line 268 updated
 - `skills/executing-plans/SKILL.md` — line 68 updated
-- `skills/using-superpowers/references/codex-tools.md` — two new sections at end
+- `skills/using-superpowers/references/Qwen-tools.md` — two new sections at end
 
 - [ ] **Step 3: Verify no unintended changes**
 

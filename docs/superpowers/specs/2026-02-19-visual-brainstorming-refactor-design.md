@@ -143,7 +143,7 @@ Tests that need updating:
 
 ## Platform Compatibility
 
-The server code (`index.js`, `helper.js`, `frame-template.html`) is fully platform-agnostic — pure Node.js and browser JavaScript. No Claude Code-specific references. Already proven to work on Codex via background terminal interaction.
+The server code (`index.js`, `helper.js`, `frame-template.html`) is fully platform-agnostic — pure Node.js and browser JavaScript. No Claude Code-specific references. Already proven to work on Qwen via background terminal interaction.
 
 The skill instructions (`visual-companion.md`) are the platform-adaptive layer. Each platform's Claude uses its own tools to start the server, read `.events`, etc. The non-blocking model works naturally across platforms since it doesn't depend on any platform-specific blocking primitive.
 
@@ -153,7 +153,7 @@ The skill instructions (`visual-companion.md`) are the platform-adaptive layer. 
 - **Mixed input** — click in browser + type in terminal, naturally merged
 - **Graceful degradation** — browser down or user doesn't open it? Terminal still works
 - **Simpler architecture** — no background tasks, no polling scripts, no timeout management
-- **Cross-platform** — same server code works on Claude Code, Codex, and any future platform
+- **Cross-platform** — same server code works on Claude Code, Qwen, and any future platform
 
 ## What This Drops
 

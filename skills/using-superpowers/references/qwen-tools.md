@@ -1,21 +1,21 @@
-# Codex Tool Mapping
+# Qwen Tool Mapping
 
-Skills use Claude Code tool names. When you encounter these in a skill, use your platform equivalent:
+Skills use Qwen tool names. When you encounter these in a skill, use your platform equivalent:
 
-| Skill references | Codex equivalent |
+| Skill references | Qwen equivalent |
 |-----------------|------------------|
 | `Task` tool (dispatch subagent) | `spawn_agent` (see [Named agent dispatch](#named-agent-dispatch)) |
 | Multiple `Task` calls (parallel) | Multiple `spawn_agent` calls |
 | Task returns result | `wait` |
 | Task completes automatically | `close_agent` to free slot |
-| `TodoWrite` (task tracking) | `update_plan` |
+| `update_plan` (task tracking) | `update_plan` |
 | `Skill` tool (invoke a skill) | Skills load natively — just follow the instructions |
 | `Read`, `Write`, `Edit` (files) | Use your native file tools |
 | `Bash` (run commands) | Use your native shell tools |
 
 ## Subagent dispatch requires multi-agent support
 
-Add to your Codex config (`~/.codex/config.toml`):
+Add to your Qwen config (`~/.qwen/config.toml`):
 
 ```toml
 [features]
@@ -26,8 +26,8 @@ This enables `spawn_agent`, `wait`, and `close_agent` for skills like `dispatchi
 
 ## Named agent dispatch
 
-Claude Code skills reference named agent types like `superpowers:code-reviewer`.
-Codex does not have a named agent registry — `spawn_agent` creates generic agents
+Qwen skills reference named agent types like `superpowers:code-reviewer`.
+Qwen does not have a named agent registry — `spawn_agent` creates generic agents
 from built-in roles (`default`, `explorer`, `worker`).
 
 When a skill says to dispatch a named agent type:
@@ -38,7 +38,7 @@ When a skill says to dispatch a named agent type:
 3. Fill any template placeholders (`{BASE_SHA}`, `{WHAT_WAS_IMPLEMENTED}`, etc.)
 4. Spawn a `worker` agent with the filled content as the `message`
 
-| Skill instruction | Codex equivalent |
+| Skill instruction | Qwen equivalent |
 |-------------------|------------------|
 | `Task tool (superpowers:code-reviewer)` | `spawn_agent(agent_type="worker", message=...)` with `code-reviewer.md` content |
 | `Task tool (general-purpose)` with inline prompt | `spawn_agent(message=...)` with the same prompt |
@@ -65,7 +65,7 @@ specified in the instructions above.
 
 ### When this workaround can be removed
 
-This approach compensates for Codex's plugin system not yet supporting an `agents`
+This approach compensates for Qwen's plugin system not yet supporting an `agents`
 field in `plugin.json`. When `RawPluginManifest` gains an `agents` field, the
 plugin can symlink to `agents/` (mirroring the existing `skills/` symlink) and
 skills can dispatch named agent types directly.
@@ -87,7 +87,7 @@ BRANCH=$(git branch --show-current)
 See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
 Step 1 for how each skill uses these signals.
 
-## Codex App Finishing
+## Qwen App Finishing
 
 When the sandbox blocks branch/push operations (detached HEAD in an
 externally managed worktree), the agent commits all work and informs

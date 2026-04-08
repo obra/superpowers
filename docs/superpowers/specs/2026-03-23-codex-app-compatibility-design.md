@@ -1,18 +1,18 @@
-# Codex App Compatibility: Worktree and Finishing Skill Adaptation
+# Qwen App Compatibility: Worktree and Finishing Skill Adaptation
 
-Make superpowers skills work in the Codex App's sandboxed worktree environment without breaking existing Claude Code or Codex CLI behavior.
+Make superpowers skills work in the Qwen App's sandboxed worktree environment without breaking existing Claude Code or Qwen CLI behavior.
 
 **Ticket:** PRI-823
 
 ## Motivation
 
-The Codex App runs agents inside git worktrees it manages — detached HEAD, located under `$CODEX_HOME/worktrees/`, with a Seatbelt sandbox that blocks `git checkout -b`, `git push`, and network access. Three superpowers skills assume unrestricted git access: `using-git-worktrees` creates manual worktrees with named branches, `finishing-a-development-branch` merges/pushes/PRs by branch name, and `subagent-driven-development` requires both.
+The Qwen App runs agents inside git worktrees it manages — detached HEAD, located under `$Qwen_HOME/worktrees/`, with a Seatbelt sandbox that blocks `git checkout -b`, `git push`, and network access. Three superpowers skills assume unrestricted git access: `using-git-worktrees` creates manual worktrees with named branches, `finishing-a-development-branch` merges/pushes/PRs by branch name, and `subagent-driven-development` requires both.
 
-The Codex CLI (open source terminal tool) does NOT have this conflict — it has no built-in worktree management. Our manual worktree approach fills an isolation gap there. The problem is specifically with the Codex App.
+The Qwen CLI (open source terminal tool) does NOT have this conflict — it has no built-in worktree management. Our manual worktree approach fills an isolation gap there. The problem is specifically with the Qwen App.
 
 ## Empirical Findings
 
-Tested in the Codex App on 2026-03-23:
+Tested in the Qwen App on 2026-03-23:
 
 | Operation | workspace-write sandbox | Full access sandbox |
 |---|---|---|
@@ -41,7 +41,7 @@ BRANCH=$(git branch --show-current)
 
 Two signals derived:
 
-- **IN_LINKED_WORKTREE:** `GIT_DIR != GIT_COMMON` — the agent is in a worktree created by something else (Codex App, Claude Code Agent tool, previous skill run, or the user)
+- **IN_LINKED_WORKTREE:** `GIT_DIR != GIT_COMMON` — the agent is in a worktree created by something else (Qwen App, Claude Code Agent tool, previous skill run, or the user)
 - **ON_DETACHED_HEAD:** `BRANCH` is empty — no named branch exists
 
 Why `git-dir != git-common-dir` instead of checking `show-toplevel`:
@@ -54,9 +54,9 @@ Why `git-dir != git-common-dir` instead of checking `show-toplevel`:
 
 | Linked Worktree? | Detached HEAD? | Environment | Action |
 |---|---|---|---|
-| No | No | Claude Code / Codex CLI / normal git | Full skill behavior (unchanged) |
-| Yes | Yes | Codex App worktree (workspace-write) | Skip worktree creation; handoff payload at finish |
-| Yes | No | Codex App (Full access) or manual worktree | Skip worktree creation; full finishing flow |
+| No | No | Claude Code / Qwen CLI / normal git | Full skill behavior (unchanged) |
+| Yes | Yes | Qwen App worktree (workspace-write) | Skip worktree creation; handoff payload at finish |
+| Yes | No | Qwen App (Full access) or manual worktree | Skip worktree creation; full finishing flow |
 | No | Yes | Unusual (manual detached HEAD) | Create worktree normally; warn at finish |
 
 ## Changes
@@ -97,7 +97,7 @@ Run the detection commands. Three paths:
 
 **Path A — Externally managed worktree + detached HEAD** (`GIT_DIR != GIT_COMMON` AND `BRANCH` empty):
 
-First, ensure all work is staged and committed (`git add` + `git commit`). The Codex App's finishing controls operate on committed work.
+First, ensure all work is staged and committed (`git add` + `git commit`). The Qwen App's finishing controls operate on committed work.
 
 Then present this to the user (do NOT present the 4-option menu):
 
@@ -119,7 +119,7 @@ Suggested branch name: <ticket-id/short-description>
 Suggested commit message: <summary-of-work>
 ```
 
-Branch name derivation: use the ticket ID if available (e.g., `pri-823/codex-compat`), otherwise slugify the first 5 words of the plan title, otherwise omit the suggestion. Avoid including sensitive content (vulnerability descriptions, customer names) in branch names.
+Branch name derivation: use the ticket ID if available (e.g., `pri-823/Qwen-compat`), otherwise slugify the first 5 words of the plan title, otherwise omit the suggestion. Avoid including sensitive content (vulnerability descriptions, customer names) in branch names.
 
 Skip to Step 5 (cleanup is a no-op for externally managed worktrees).
 
@@ -152,7 +152,7 @@ To:
 
 **Everything else unchanged:** Dispatch/review loop, prompt templates, model selection, status handling, red flags.
 
-### 4. `codex-tools.md` — Add environment detection docs (~15 lines)
+### 4. `Qwen-tools.md` — Add environment detection docs (~15 lines)
 
 Two new sections at the end:
 
@@ -177,10 +177,10 @@ See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
 Step 1.5 for how each skill uses these signals.
 ```
 
-**Codex App Finishing:**
+**Qwen App Finishing:**
 
 ```markdown
-## Codex App Finishing
+## Qwen App Finishing
 
 When the sandbox blocks branch/push operations (detached HEAD in an
 externally managed worktree), the agent commits all work and informs
@@ -198,8 +198,8 @@ names, commit messages, and PR descriptions for the user to copy.
 - `implementer-prompt.md`, `spec-reviewer-prompt.md`, `code-quality-reviewer-prompt.md` — subagent prompts untouched
 - `executing-plans/SKILL.md` — only the 1-line Integration description changes (same as `subagent-driven-development`); all runtime behavior is unchanged
 - `dispatching-parallel-agents/SKILL.md` — no worktree or finishing operations
-- `.codex/INSTALL.md` — installation process unchanged
-- The 4-option finishing menu — preserved exactly for Claude Code and Codex CLI
+- `.Qwen/INSTALL.md` — installation process unchanged
+- The 4-option finishing menu — preserved exactly for Claude Code and Qwen CLI
 - The full worktree creation flow — preserved exactly for non-worktree environments
 - Subagent dispatch/review/iterate loop — unchanged (filesystem sharing confirmed)
 
@@ -211,7 +211,7 @@ names, commit messages, and PR descriptions for the user to copy.
 | `skills/finishing-a-development-branch/SKILL.md` | +20 lines (Step 1.5 + cleanup guard) |
 | `skills/subagent-driven-development/SKILL.md` | 1 line edit |
 | `skills/executing-plans/SKILL.md` | 1 line edit |
-| `skills/using-superpowers/references/codex-tools.md` | +15 lines |
+| `skills/using-superpowers/references/Qwen-tools.md` | +15 lines |
 
 ~50 lines added/changed across 5 files. Zero new files. Zero breaking changes.
 
@@ -229,13 +229,13 @@ If a third skill needs the same detection pattern, extract it into a shared `ref
 4. Finishing skill handoff output — verify handoff message (not 4-option menu) in restricted environment
 5. **Step 5 cleanup guard** — create a linked worktree (`git worktree add /tmp/test-cleanup -b test-cleanup`), `cd` into it, run the Step 5 cleanup detection (`GIT_DIR` vs `GIT_COMMON`), assert it would NOT call `git worktree remove`. Then `cd` back to main repo, run the same detection, assert it WOULD call `git worktree remove`. Clean up test worktree afterward.
 
-### Manual Codex App Tests (5 tests)
+### Manual Qwen App Tests (5 tests)
 
 1. Detection in Worktree thread (workspace-write) — verify GIT_DIR != GIT_COMMON, empty branch
 2. Detection in Worktree thread (Full access) — same detection, different sandbox behavior
 3. Finishing skill handoff format — verify agent emits handoff payload, not 4-option menu
 4. Full lifecycle — detection → commit → finishing detection → correct behavior → cleanup
-5. **Sandbox fallback in Local thread** — Start a Codex App **Local thread** (workspace-write sandbox). Prompt: "Use the superpowers skill `using-git-worktrees` to set up an isolated workspace for implementing a small change." Pre-check: `git checkout -b test-sandbox-check` should fail with `Operation not permitted`. Expected: the skill detects `GIT_DIR == GIT_COMMON` (normal repo), attempts `git worktree add -b`, hits Seatbelt denial, falls back to Step 0 "already in workspace" behavior — runs setup, baseline tests, reports ready from current directory. Pass: agent recovers gracefully without cryptic error messages. Fail: agent prints raw Seatbelt error, retries, or gives up with confusing output.
+5. **Sandbox fallback in Local thread** — Start a Qwen App **Local thread** (workspace-write sandbox). Prompt: "Use the superpowers skill `using-git-worktrees` to set up an isolated workspace for implementing a small change." Pre-check: `git checkout -b test-sandbox-check` should fail with `Operation not permitted`. Expected: the skill detects `GIT_DIR == GIT_COMMON` (normal repo), attempts `git worktree add -b`, hits Seatbelt denial, falls back to Step 0 "already in workspace" behavior — runs setup, baseline tests, reports ready from current directory. Pass: agent recovers gracefully without cryptic error messages. Fail: agent prints raw Seatbelt error, retries, or gives up with confusing output.
 
 ### Regression
 

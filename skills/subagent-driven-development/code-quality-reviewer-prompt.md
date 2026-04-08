@@ -7,7 +7,7 @@ Use this template when dispatching a code quality reviewer subagent.
 **Only dispatch after spec compliance review passes.**
 
 ```
-Task tool (superpowers:code-reviewer):
+Use spawn_agent with agent_type="worker". Read the prompt template from requesting-code-review/code-reviewer.md, fill in the placeholders below with the actual content, and pass the filled content as the message parameter.
   Use template at requesting-code-review/code-reviewer.md
 
   WHAT_WAS_IMPLEMENTED: [from implementer's report]

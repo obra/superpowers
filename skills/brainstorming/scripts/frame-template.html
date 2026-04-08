@@ -13,7 +13,7 @@
      * - Scrollable main content area
      * - CSS helpers for common UI patterns
      *
-     * Content is injected via placeholder comment in #claude-content.
+     * Content is injected via placeholder comment in #content.
      */
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -77,7 +77,7 @@
     .header .status::before { content: ''; width: 6px; height: 6px; background: var(--success); border-radius: 50%; }
 
     .main { flex: 1; overflow-y: auto; }
-    #claude-content { padding: 2rem; min-height: 100%; }
+    #content { padding: 2rem; min-height: 100%; }
 
     .indicator-bar {
       background: var(--bg-secondary);
@@ -201,7 +201,7 @@
   </div>
 
   <div class="main">
-    <div id="claude-content">
+    <div id="content">
       <!-- CONTENT -->
     </div>
   </div>

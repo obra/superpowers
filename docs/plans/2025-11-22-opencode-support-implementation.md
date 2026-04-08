@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Add full superpowers support for OpenCode.ai with a native JavaScript plugin that shares core functionality with the existing Codex implementation.
+**Goal:** Add full superpowers support for OpenCode.ai with a native JavaScript plugin that shares core functionality with the existing Qwen implementation.
 
-**Architecture:** Extract common skill discovery/parsing logic into `lib/skills-core.js`, refactor Codex to use it, then build OpenCode plugin using their native plugin API with custom tools and session hooks.
+**Architecture:** Extract common skill discovery/parsing logic into `lib/skills-core.js`, refactor Qwen to use it, then build OpenCode plugin using their native plugin API with custom tools and session hooks.
 
 **Tech Stack:** Node.js, JavaScript, OpenCode Plugin API, Git worktrees
 
@@ -16,7 +16,7 @@
 
 **Files:**
 - Create: `lib/skills-core.js`
-- Reference: `.codex/superpowers-codex` (lines 40-74)
+- Reference: `.Qwen/superpowers-Qwen` (lines 40-74)
 
 **Step 1: Create lib/skills-core.js with extractFrontmatter function**
 
@@ -98,7 +98,7 @@ git commit -m "feat: create shared skills core module with frontmatter parser"
 
 **Files:**
 - Modify: `lib/skills-core.js`
-- Reference: `.codex/superpowers-codex` (lines 97-136)
+- Reference: `.Qwen/superpowers-Qwen` (lines 97-136)
 
 **Step 1: Add findSkillsInDir function to skills-core.js**
 
@@ -180,7 +180,7 @@ git commit -m "feat: add skill discovery function to core module"
 
 **Files:**
 - Modify: `lib/skills-core.js`
-- Reference: `.codex/superpowers-codex` (lines 212-280)
+- Reference: `.Qwen/superpowers-Qwen` (lines 212-280)
 
 **Step 1: Add resolveSkillPath function**
 
@@ -259,7 +259,7 @@ git commit -m "feat: add skill path resolution with shadowing support"
 
 **Files:**
 - Modify: `lib/skills-core.js`
-- Reference: `.codex/superpowers-codex` (lines 16-38)
+- Reference: `.Qwen/superpowers-Qwen` (lines 16-38)
 
 **Step 1: Add checkForUpdates function**
 
@@ -328,12 +328,12 @@ git commit -m "feat: add git update checking to core module"
 
 ---
 
-## Phase 2: Refactor Codex to Use Shared Core
+## Phase 2: Refactor Qwen to Use Shared Core
 
-### Task 5: Update Codex to Import Shared Core
+### Task 5: Update Qwen to Import Shared Core
 
 **Files:**
-- Modify: `.codex/superpowers-codex` (add import at top)
+- Modify: `.Qwen/superpowers-Qwen` (add import at top)
 
 **Step 1: Add import statement**
 
@@ -345,14 +345,14 @@ const skillsCore = require('../lib/skills-core');
 
 **Step 2: Verify syntax**
 
-Run: `node -c .codex/superpowers-codex`
+Run: `node -c .Qwen/superpowers-Qwen`
 Expected: No output
 
 **Step 3: Commit**
 
 ```bash
-git add .codex/superpowers-codex
-git commit -m "refactor: import shared skills core in codex"
+git add .Qwen/superpowers-Qwen
+git commit -m "refactor: import shared skills core in Qwen"
 ```
 
 ---
@@ -360,7 +360,7 @@ git commit -m "refactor: import shared skills core in codex"
 ### Task 6: Replace extractFrontmatter with Core Version
 
 **Files:**
-- Modify: `.codex/superpowers-codex` (lines 40-74)
+- Modify: `.Qwen/superpowers-Qwen` (lines 40-74)
 
 **Step 1: Remove local extractFrontmatter function**
 
@@ -374,14 +374,14 @@ Affected lines approximately: 90, 310
 
 **Step 3: Verify script still works**
 
-Run: `.codex/superpowers-codex find-skills | head -20`
+Run: `.Qwen/superpowers-Qwen find-skills | head -20`
 Expected: Shows list of skills
 
 **Step 4: Commit**
 
 ```bash
-git add .codex/superpowers-codex
-git commit -m "refactor: use shared extractFrontmatter in codex"
+git add .Qwen/superpowers-Qwen
+git commit -m "refactor: use shared extractFrontmatter in Qwen"
 ```
 
 ---
@@ -389,7 +389,7 @@ git commit -m "refactor: use shared extractFrontmatter in codex"
 ### Task 7: Replace findSkillsInDir with Core Version
 
 **Files:**
-- Modify: `.codex/superpowers-codex` (lines 97-136, approximately)
+- Modify: `.Qwen/superpowers-Qwen` (lines 97-136, approximately)
 
 **Step 1: Remove local findSkillsInDir function**
 
@@ -401,14 +401,14 @@ Replace calls from `findSkillsInDir(` to `skillsCore.findSkillsInDir(`
 
 **Step 3: Verify script still works**
 
-Run: `.codex/superpowers-codex find-skills | head -20`
+Run: `.Qwen/superpowers-Qwen find-skills | head -20`
 Expected: Shows list of skills
 
 **Step 4: Commit**
 
 ```bash
-git add .codex/superpowers-codex
-git commit -m "refactor: use shared findSkillsInDir in codex"
+git add .Qwen/superpowers-Qwen
+git commit -m "refactor: use shared findSkillsInDir in Qwen"
 ```
 
 ---
@@ -416,7 +416,7 @@ git commit -m "refactor: use shared findSkillsInDir in codex"
 ### Task 8: Replace checkForUpdates with Core Version
 
 **Files:**
-- Modify: `.codex/superpowers-codex` (lines 16-38, approximately)
+- Modify: `.Qwen/superpowers-Qwen` (lines 16-38, approximately)
 
 **Step 1: Remove local checkForUpdates function**
 
@@ -428,14 +428,14 @@ Replace calls from `checkForUpdates(` to `skillsCore.checkForUpdates(`
 
 **Step 3: Verify script still works**
 
-Run: `.codex/superpowers-codex bootstrap | head -50`
+Run: `.Qwen/superpowers-Qwen bootstrap | head -50`
 Expected: Shows bootstrap content
 
 **Step 4: Commit**
 
 ```bash
-git add .codex/superpowers-codex
-git commit -m "refactor: use shared checkForUpdates in codex"
+git add .Qwen/superpowers-Qwen
+git commit -m "refactor: use shared checkForUpdates in Qwen"
 ```
 
 ---
@@ -903,7 +903,7 @@ git commit -m "docs: add opencode installation guide"
 
 **Step 1: Add OpenCode section**
 
-Find the section about supported platforms (search for "Codex" in the file), and add after it:
+Find the section about supported platforms (search for "Qwen" in the file), and add after it:
 
 ```markdown
 ### OpenCode
@@ -955,8 +955,8 @@ At the top of the file (after the header), add:
 
 ### Changed
 
-- **Refactored Codex Implementation**: Now uses shared `lib/skills-core.js` module
-  - Eliminates code duplication between Codex and OpenCode
+- **Refactored Qwen Implementation**: Now uses shared `lib/skills-core.js` module
+  - Eliminates code duplication between Qwen and OpenCode
   - Single source of truth for skill discovery and parsing
 
 ---
@@ -979,24 +979,24 @@ git commit -m "docs: add opencode support to release notes"
 
 ## Phase 5: Final Verification
 
-### Task 16: Test Codex Still Works
+### Task 16: Test Qwen Still Works
 
 **Files:**
-- Test: `.codex/superpowers-codex`
+- Test: `.Qwen/superpowers-Qwen`
 
 **Step 1: Test find-skills command**
 
-Run: `.codex/superpowers-codex find-skills | head -20`
+Run: `.Qwen/superpowers-Qwen find-skills | head -20`
 Expected: Shows list of skills with names and descriptions
 
 **Step 2: Test use-skill command**
 
-Run: `.codex/superpowers-codex use-skill superpowers:brainstorming | head -20`
+Run: `.Qwen/superpowers-Qwen use-skill superpowers:brainstorming | head -20`
 Expected: Shows brainstorming skill content
 
 **Step 3: Test bootstrap command**
 
-Run: `.codex/superpowers-codex bootstrap | head -30`
+Run: `.Qwen/superpowers-Qwen bootstrap | head -30`
 Expected: Shows bootstrap content with instructions
 
 **Step 4: If all tests pass, record success**
@@ -1058,8 +1058,8 @@ Expected: Shows all commits from this implementation
 Create a completion summary showing:
 - Total commits made
 - Files created: `lib/skills-core.js`, `.opencode/plugin/superpowers.js`, `.opencode/INSTALL.md`
-- Files modified: `.codex/superpowers-codex`, `README.md`, `RELEASE-NOTES.md`
-- Testing performed: Codex commands verified
+- Files modified: `.Qwen/superpowers-Qwen`, `README.md`, `RELEASE-NOTES.md`
+- Testing performed: Qwen commands verified
 - Ready for: Testing with actual OpenCode installation
 
 **Step 4: Report completion**
@@ -1086,8 +1086,8 @@ These steps require OpenCode to be installed and are not part of the automated i
 ## Success Criteria
 
 - [ ] `lib/skills-core.js` created with all core functions
-- [ ] `.codex/superpowers-codex` refactored to use shared core
-- [ ] Codex commands still work (find-skills, use-skill, bootstrap)
+- [ ] `.Qwen/superpowers-Qwen` refactored to use shared core
+- [ ] Qwen commands still work (find-skills, use-skill, bootstrap)
 - [ ] `.opencode/plugin/superpowers.js` created with tools and hooks
 - [ ] Installation guide created
 - [ ] README and RELEASE-NOTES updated

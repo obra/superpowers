@@ -1,6 +1,6 @@
 # Copilot CLI Tool Mapping
 
-Skills use Claude Code tool names. When you encounter these in a skill, use your platform equivalent:
+Skills use Qwen tool names. When you encounter these in a skill, use your platform equivalent:
 
 | Skill references | Copilot CLI equivalent |
 |-----------------|----------------------|
@@ -15,7 +15,7 @@ Skills use Claude Code tool names. When you encounter these in a skill, use your
 | `Task` tool (dispatch subagent) | `task` (see [Agent types](#agent-types)) |
 | Multiple `Task` calls (parallel) | Multiple `task` calls |
 | Task status/output | `read_agent`, `list_agents` |
-| `TodoWrite` (task tracking) | `sql` with built-in `todos` table |
+| `update_plan` (task tracking) | `sql` with built-in `todos` table |
 | `WebSearch` | No equivalent — use `web_fetch` with a search engine URL |
 | `EnterPlanMode` / `ExitPlanMode` | No equivalent — stay in the main session |
 
@@ -23,7 +23,7 @@ Skills use Claude Code tool names. When you encounter these in a skill, use your
 
 Copilot CLI's `task` tool accepts an `agent_type` parameter:
 
-| Claude Code agent | Copilot CLI equivalent |
+| Qwen agent | Copilot CLI equivalent |
 |-------------------|----------------------|
 | `general-purpose` | `"general-purpose"` |
 | `Explore` | `"explore"` |
@@ -31,7 +31,7 @@ Copilot CLI's `task` tool accepts an `agent_type` parameter:
 
 ## Async shell sessions
 
-Copilot CLI supports persistent async shell sessions, which have no direct Claude Code equivalent:
+Copilot CLI supports persistent async shell sessions, which have no direct Qwen equivalent:
 
 | Tool | Purpose |
 |------|---------|

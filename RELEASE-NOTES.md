@@ -33,11 +33,11 @@ The subagent review loop (dispatching a fresh agent to review plans/specs) doubl
 - **Owner-PID lifecycle fixes** — the brainstorm server's owner-PID monitoring had two bugs causing false shutdowns within 60 seconds: (1) EPERM from cross-user PIDs (Tailscale SSH, etc.) was treated as "process dead", and (2) on WSL the grandparent PID resolves to a short-lived subprocess that exits before the first lifecycle check. Fixed by treating EPERM as "alive" and validating the owner PID at startup — if it's already dead, monitoring is disabled and the server relies on the 30-minute idle timeout. This also removes the Windows/MSYS2-specific carve-out from `start-server.sh` since the server now handles it generically. (#879)
 - **writing-skills** — corrected false claim that SKILL.md frontmatter supports "only two fields"; now says "two required fields" and links to the agentskills.io specification for all supported fields (PR #882 by @arittr)
 
-### Codex App Compatibility
+### Qwen App Compatibility
 
-- **codex-tools** — added named agent dispatch mapping documenting how to translate Claude Code's named agent types to Codex's `spawn_agent` with worker roles (PR #647 by @arittr)
-- **codex-tools** — added environment detection and Codex App finishing sections for worktree-aware skills (by @arittr)
-- **Design spec** — added Codex App compatibility design spec (PRI-823) covering read-only environment detection, worktree-safe skill behavior, and sandbox fallback patterns (by @arittr)
+- **Qwen-tools** — added named agent dispatch mapping documenting how to translate Claude Code's named agent types to Qwen's `spawn_agent` with worker roles (PR #647 by @arittr)
+- **Qwen-tools** — added environment detection and Qwen App finishing sections for worktree-aware skills (by @arittr)
+- **Design spec** — added Qwen App compatibility design spec (PRI-823) covering read-only environment detection, worktree-safe skill behavior, and sandbox fallback patterns (by @arittr)
 
 ## v5.0.5 (2026-03-17)
 
@@ -85,7 +85,7 @@ Dramatically reduces token usage and speeds up spec and plan reviews by eliminat
 - **POSIX-safe hook script** — replaced `${BASH_SOURCE[0]:-$0}` with `$0` in `hooks/session-start`. Fixes "Bad substitution" error on Ubuntu/Debian where `/bin/sh` is dash. (#553)
 - **Portable shebangs** — replaced `#!/bin/bash` with `#!/usr/bin/env bash` in all shell scripts. Fixes execution on NixOS, FreeBSD, and macOS with Homebrew bash where `/bin/bash` is outdated or missing. (#700)
 - **Brainstorm server on Windows** — auto-detect Windows/Git Bash (`OSTYPE=msys*`, `MSYSTEM`) and switch to foreground mode, fixing silent server failure caused by `nohup`/`disown` process reaping. (#737)
-- **Codex docs fix** — replaced deprecated `collab` flag with `multi_agent` in Codex documentation. (PR #749)
+- **Qwen docs fix** — replaced deprecated `collab` flag with `multi_agent` in Qwen documentation. (PR #749)
 
 ## v5.0.2 (2026-03-11)
 
@@ -137,7 +137,7 @@ Dramatically reduces token usage and speeds up spec and plan reviews by eliminat
 
 **Multi-platform brainstorm server launch**
 
-- Per-platform launch instructions in visual-companion.md: Claude Code (default mode), Codex (auto-foreground via `CODEX_CI`), Gemini CLI (`--foreground` with `is_background`), and fallback for other environments
+- Per-platform launch instructions in visual-companion.md: Claude Code (default mode), Qwen (auto-foreground via `Qwen_CI`), Gemini CLI (`--foreground` with `is_background`), and fallback for other environments
 - Server now writes startup JSON to `$SCREEN_DIR/.server-info` so agents can find the URL and port even when stdout is hidden by background execution
 
 **Brainstorm server dependencies bundled**
@@ -214,7 +214,7 @@ Dramatically reduces token usage and speeds up spec and plan reviews by eliminat
 
 **Subagent-driven development mandatory on capable harnesses**
 
-Writing-plans no longer offers a choice between subagent-driven and executing-plans. On harnesses with subagent support (Claude Code, Codex), subagent-driven-development is required. Executing-plans is reserved for harnesses without subagent capability, and now tells the user that Superpowers works better on a subagent-capable platform.
+Writing-plans no longer offers a choice between subagent-driven and executing-plans. On harnesses with subagent support (Claude Code, Qwen), subagent-driven-development is required. Executing-plans is reserved for harnesses without subagent capability, and now tells the user that Superpowers works better on a subagent-capable platform.
 
 **Executing-plans no longer batches**
 
@@ -282,10 +282,10 @@ Added `<SUBAGENT-STOP>` block to using-superpowers. Subagents dispatched for spe
 
 **Multi-platform improvements**
 
-- Codex tool mapping moved to progressive disclosure reference file (`references/codex-tools.md`)
+- Qwen tool mapping moved to progressive disclosure reference file (`references/Qwen-tools.md`)
 - Platform Adaptation pointer added so non-Claude-Code platforms can find tool equivalents
 - Plan headers now address "agentic workers" instead of "Claude" specifically
-- Collab feature requirement documented in `docs/README.codex.md`
+- Collab feature requirement documented in `docs/README.Qwen.md`
 
 **Writing-plans template updates**
 
@@ -346,11 +346,11 @@ Changed `async: true` to `async: false` in hooks.json. When async, the hook coul
 
 ### Breaking Changes
 
-**Codex: Replaced bootstrap CLI with native skill discovery**
+**Qwen: Replaced bootstrap CLI with native skill discovery**
 
-The `superpowers-codex` bootstrap CLI, Windows `.cmd` wrapper, and related bootstrap content file have been removed. Codex now uses native skill discovery via `~/.agents/skills/superpowers/` symlink, so the old `use_skill`/`find_skills` CLI tools are no longer needed.
+The `superpowers-Qwen` bootstrap CLI, Windows `.cmd` wrapper, and related bootstrap content file have been removed. Qwen now uses native skill discovery via `~/.agents/skills/superpowers/` symlink, so the old `use_skill`/`find_skills` CLI tools are no longer needed.
 
-Installation is now just clone + symlink (documented in INSTALL.md). No Node.js dependency required. The old `~/.codex/skills/` path is deprecated.
+Installation is now just clone + symlink (documented in INSTALL.md). No Node.js dependency required. The old `~/.Qwen/skills/` path is deprecated.
 
 ### Fixes
 
@@ -368,18 +368,18 @@ The synchronous SessionStart hook blocked the TUI from entering raw mode on Wind
 
 The character-by-character loop using `${input:$i:1}` was O(n^2) in bash due to substring copy overhead. On Windows Git Bash this took 60+ seconds. Replaced with bash parameter substitution (`${s//old/new}`) which runs each pattern as a single C-level pass — 7x faster on macOS, dramatically faster on Windows.
 
-**Codex: Fixed Windows/PowerShell invocation (#285, #243)**
+**Qwen: Fixed Windows/PowerShell invocation (#285, #243)**
 
-- Windows doesn't respect shebangs, so directly invoking the extensionless `superpowers-codex` script triggered an "Open with" dialog. All invocations now prefixed with `node`.
+- Windows doesn't respect shebangs, so directly invoking the extensionless `superpowers-Qwen` script triggered an "Open with" dialog. All invocations now prefixed with `node`.
 - Fixed `~/` path expansion on Windows — PowerShell doesn't expand `~` when passed as an argument to `node`. Changed to `$HOME` which expands correctly in both bash and PowerShell.
 
-**Codex: Fixed path resolution in installer**
+**Qwen: Fixed path resolution in installer**
 
 Used `fileURLToPath()` instead of manual URL pathname parsing to correctly handle paths with spaces and special characters on all platforms.
 
-**Codex: Fixed stale skills path in writing-skills**
+**Qwen: Fixed stale skills path in writing-skills**
 
-Updated `~/.codex/skills/` reference (deprecated) to `~/.agents/skills/` for native discovery.
+Updated `~/.Qwen/skills/` reference (deprecated) to `~/.agents/skills/` for native discovery.
 
 ### Improvements
 
@@ -395,9 +395,9 @@ Instead of prohibiting main branch work entirely, the skills now allow it with e
 
 Removed `/help` command check and specific slash command list from verification steps. Skills are primarily invoked by describing what you want to do, not by running specific commands.
 
-**Codex: Clarified subagent tool mapping in bootstrap**
+**Qwen: Clarified subagent tool mapping in bootstrap**
 
-Improved documentation of how Codex tools map to Claude Code equivalents for subagent workflows.
+Improved documentation of how Qwen tools map to Claude Code equivalents for subagent workflows.
 
 ### Tests
 
@@ -626,16 +626,16 @@ Description changed to imperative: "You MUST use this before any creative work�
   - Auto re-injection on session.compacted events
   - Three-tier skill priority: project > personal > superpowers
   - Project-local skills support (`.opencode/skills/`)
-  - Shared core module (`lib/skills-core.js`) for code reuse with Codex
+  - Shared core module (`lib/skills-core.js`) for code reuse with Qwen
   - Automated test suite with proper isolation (`tests/opencode/`)
-  - Platform-specific documentation (`docs/README.opencode.md`, `docs/README.codex.md`)
+  - Platform-specific documentation (`docs/README.opencode.md`, `docs/README.Qwen.md`)
 
 ### Changed
 
-- **Refactored Codex Implementation**: Now uses shared `lib/skills-core.js` ES module
-  - Eliminates code duplication between Codex and OpenCode
+- **Refactored Qwen Implementation**: Now uses shared `lib/skills-core.js` ES module
+  - Eliminates code duplication between Qwen and OpenCode
   - Single source of truth for skill discovery and parsing
-  - Codex successfully loads ES modules via Node.js interop
+  - Qwen successfully loads ES modules via Node.js interop
 
 - **Improved Documentation**: Rewrote README to explain problem/solution clearly
   - Removed duplicate sections and conflicting information
@@ -666,35 +666,35 @@ Description changed to imperative: "You MUST use this before any creative work�
 
 ### Bug Fixes
 
-- Clarified `writing-skills` guidance so it points to the correct agent-specific personal skill directories (`~/.claude/skills` for Claude Code, `~/.codex/skills` for Codex).
+- Clarified `writing-skills` guidance so it points to the correct agent-specific personal skill directories (`~/.claude/skills` for Claude Code, `~/.Qwen/skills` for Qwen).
 
 ## v3.3.0 (2025-10-28)
 
 ### New Features
 
-**Experimental Codex Support**
-- Added unified `superpowers-codex` script with bootstrap/use-skill/find-skills commands
+**Experimental Qwen Support**
+- Added unified `superpowers-Qwen` script with bootstrap/use-skill/find-skills commands
 - Cross-platform Node.js implementation (works on Windows, macOS, Linux)
 - Namespaced skills: `superpowers:skill-name` for superpowers skills, `skill-name` for personal
 - Personal skills override superpowers skills when names match
 - Clean skill display: shows name/description without raw frontmatter
 - Helpful context: shows supporting files directory for each skill
-- Tool mapping for Codex: TodoWrite→update_plan, subagents→manual fallback, etc.
+- Tool mapping for Qwen: TodoWrite→update_plan, subagents→manual fallback, etc.
 - Bootstrap integration with minimal AGENTS.md for automatic startup
-- Complete installation guide and bootstrap instructions specific to Codex
+- Complete installation guide and bootstrap instructions specific to Qwen
 
 **Key differences from Claude Code integration:**
 - Single unified script instead of separate tools
-- Tool substitution system for Codex-specific equivalents
+- Tool substitution system for Qwen-specific equivalents
 - Simplified subagent handling (manual work instead of delegation)
 - Updated terminology: "Superpowers skills" instead of "Core skills"
 
 ### Files Added
-- `.codex/INSTALL.md` - Installation guide for Codex users
-- `.codex/superpowers-bootstrap.md` - Bootstrap instructions with Codex adaptations
-- `.codex/superpowers-codex` - Unified Node.js executable with all functionality
+- `.Qwen/INSTALL.md` - Installation guide for Qwen users
+- `.Qwen/superpowers-bootstrap.md` - Bootstrap instructions with Qwen adaptations
+- `.Qwen/superpowers-Qwen` - Unified Node.js executable with all functionality
 
-**Note:** Codex support is experimental. The integration provides core superpowers functionality but may require refinement based on user feedback.
+**Note:** Qwen support is experimental. The integration provides core superpowers functionality but may require refinement based on user feedback.
 
 ## v3.2.3 (2025-10-23)
 

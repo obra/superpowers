@@ -6,16 +6,16 @@
 
 ## Overview
 
-Add full superpowers support for OpenCode.ai using a native OpenCode plugin architecture that shares core functionality with the existing Codex implementation.
+Add full superpowers support for OpenCode.ai using a native OpenCode plugin architecture that shares core functionality with the existing Qwen implementation.
 
 ## Background
 
-OpenCode.ai is a coding agent similar to Claude Code and Codex. Previous attempts to port superpowers to OpenCode (PR #93, PR #116) used file-copying approaches. This design takes a different approach: building a native OpenCode plugin using their JavaScript/TypeScript plugin system while sharing code with the Codex implementation.
+OpenCode.ai is a coding agent similar to Claude Code and Qwen. Previous attempts to port superpowers to OpenCode (PR #93, PR #116) used file-copying approaches. This design takes a different approach: building a native OpenCode plugin using their JavaScript/TypeScript plugin system while sharing code with the Qwen implementation.
 
 ### Key Differences Between Platforms
 
 - **Claude Code**: Native Anthropic plugin system + file-based skills
-- **Codex**: No plugin system → bootstrap markdown + CLI script
+- **Qwen**: No plugin system → bootstrap markdown + CLI script
 - **OpenCode**: JavaScript/TypeScript plugins with event hooks and custom tools API
 
 ### OpenCode's Agent System
@@ -31,10 +31,10 @@ OpenCode.ai is a coding agent similar to Claude Code and Codex. Previous attempt
 
 1. **Shared Core Module** (`lib/skills-core.js`)
    - Common skill discovery and parsing logic
-   - Used by both Codex and OpenCode implementations
+   - Used by both Qwen and OpenCode implementations
 
 2. **Platform-Specific Wrappers**
-   - Codex: CLI script (`.codex/superpowers-codex`)
+   - Qwen: CLI script (`.Qwen/superpowers-Qwen`)
    - OpenCode: Plugin module (`.opencode/plugin/superpowers.js`)
 
 3. **Skill Directories**
@@ -43,7 +43,7 @@ OpenCode.ai is a coding agent similar to Claude Code and Codex. Previous attempt
 
 ### Code Reuse Strategy
 
-Extract common functionality from `.codex/superpowers-codex` into shared module:
+Extract common functionality from `.Qwen/superpowers-Qwen` into shared module:
 
 ```javascript
 // lib/skills-core.js
@@ -201,8 +201,8 @@ export const SuperpowersPlugin = async ({ client, directory, $ }) => {
 superpowers/
 ├── lib/
 │   └── skills-core.js           # NEW: Shared skill logic
-├── .codex/
-│   ├── superpowers-codex        # UPDATED: Use skills-core
+├── .Qwen/
+│   ├── superpowers-Qwen        # UPDATED: Use skills-core
 │   ├── superpowers-bootstrap.md
 │   └── INSTALL.md
 ├── .opencode/
@@ -217,17 +217,17 @@ superpowers/
 ### Phase 1: Refactor Shared Core
 
 1. Create `lib/skills-core.js`
-   - Extract frontmatter parsing from `.codex/superpowers-codex`
+   - Extract frontmatter parsing from `.Qwen/superpowers-Qwen`
    - Extract skill discovery logic
    - Extract path resolution (with shadowing)
    - Update to use only `name` and `description` (no `when_to_use`)
 
-2. Update `.codex/superpowers-codex` to use shared core
+2. Update `.Qwen/superpowers-Qwen` to use shared core
    - Import from `../lib/skills-core.js`
    - Remove duplicated code
    - Keep CLI wrapper logic
 
-3. Test Codex implementation still works
+3. Test Qwen implementation still works
    - Verify bootstrap command
    - Verify use-skill command
    - Verify find-skills command
@@ -256,7 +256,7 @@ superpowers/
 1. Update README with OpenCode support
 2. Add OpenCode installation to main docs
 3. Update RELEASE-NOTES
-4. Test both Codex and OpenCode work correctly
+4. Test both Qwen and OpenCode work correctly
 
 ## Next Steps
 
@@ -269,15 +269,15 @@ superpowers/
    - Integration tests for both platforms
 
 3. **Incremental implementation**
-   - Phase 1: Refactor shared core + update Codex
-   - Verify Codex still works before moving on
+   - Phase 1: Refactor shared core + update Qwen
+   - Verify Qwen still works before moving on
    - Phase 2: Build OpenCode plugin
    - Phase 3: Documentation and polish
 
 4. **Testing strategy**
    - Manual testing with real OpenCode installation
    - Verify skill loading, directories, scripts work
-   - Test both Codex and OpenCode side-by-side
+   - Test both Qwen and OpenCode side-by-side
    - Verify tool mappings work correctly
 
 5. **PR and merge**

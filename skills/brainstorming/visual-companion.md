@@ -49,13 +49,13 @@ Save `screen_dir` and `state_dir` from the response. Tell user to open the URL.
 
 **Launching the server by platform:**
 
-**Claude Code (macOS / Linux):**
+**Qwen (macOS / Linux):**
 ```bash
 # Default mode works — the script backgrounds the server itself
 scripts/start-server.sh --project-dir /path/to/project
 ```
 
-**Claude Code (Windows):**
+**Qwen (Windows):**
 ```bash
 # Windows auto-detects and uses foreground mode, which blocks the tool call.
 # Use run_in_background: true on the Bash tool call so the server survives
@@ -64,14 +64,14 @@ scripts/start-server.sh --project-dir /path/to/project
 ```
 When calling this via the Bash tool, set `run_in_background: true`. Then read `$STATE_DIR/server-info` on the next turn to get the URL and port.
 
-**Codex:**
+**Qwen:**
 ```bash
-# Codex reaps background processes. The script auto-detects CODEX_CI and
+# Qwen reaps background processes. The script auto-detects Qwen_CI and
 # switches to foreground mode. Run it normally — no extra flags needed.
 scripts/start-server.sh --project-dir /path/to/project
 ```
 
-**Gemini CLI:**
+**Qwen:**
 ```bash
 # Use --foreground and set is_background: true on your shell tool call
 # so the process survives across turns
@@ -97,7 +97,7 @@ Use `--url-host` to control what hostname is printed in the returned URL JSON.
    - Before each write, check that `$STATE_DIR/server-info` exists. If it doesn't (or `$STATE_DIR/server-stopped` exists), the server has shut down — restart it with `start-server.sh` before continuing. The server auto-exits after 30 minutes of inactivity.
    - Use semantic filenames: `platform.html`, `visual-style.html`, `layout.html`
    - **Never reuse filenames** — each screen gets a fresh file
-   - Use Write tool — **never use cat/heredoc** (dumps noise into terminal)
+   - Use write_file tool — **never use cat or heredoc** (dumps noise into terminal)
    - Server automatically serves the newest file
 
 2. **Tell user what to expect and end your turn:**
