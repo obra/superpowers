@@ -1,7 +1,7 @@
 {
   "name": "superpowers",
   "displayName": "Superpowers",
-  "description": "Core skills library: TDD, debugging, collaboration patterns, and proven techniques",
+  "description": "USER LEVEL: You get guardrails that prevent sloppy AI output—TDD, verification before claiming done, and systematic debugging instead of guess-and-retry. PROJECT LEVEL: Agent-driven work lands with fewer regressions because every change goes through structured review, worktree isolation, and evidence-based completion gates. Battle-tested skills for agentic coding—TDD, systematic debugging, parallel subagents, Git worktrees, verification gates, and disciplined review before merge. BEST SUITED FOR: • Solo developers who want agent discipline without a team process • Teams adopting agent-assisted coding and need quality guardrails • Projects where regressions from AI changes are costly",
   "version": "5.0.7",
   "author": {
     "name": "Jesse Vincent",
