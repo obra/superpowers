@@ -35,23 +35,23 @@ warning_escaped=$(escape_for_json "$warning_message")
 session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}\n</EXTREMELY_IMPORTANT>"
 
 # Output context injection as JSON.
-# Cursor hooks expect additional_context.
-# Claude Code hooks expect hookSpecificOutput.additionalContext.
-# Claude Code reads BOTH fields without deduplication, so we must only
-# emit the field consumed by the current platform to avoid double injection.
+# Cursor hooks expect additional_context (snake_case).
+# Claude Code hooks expect hookSpecificOutput.additionalContext (nested).
+# Copilot CLI (v1.0.11+) and others expect additionalContext (top-level, SDK standard).
+# Claude Code reads BOTH additional_context and hookSpecificOutput without
+# deduplication, so we must emit only the field the current platform consumes.
 #
-# Uses printf instead of heredoc (cat <<EOF) to work around a bash 5.3+
-# bug where heredoc variable expansion hangs when content exceeds ~512 bytes.
+# Uses printf instead of heredoc to work around bash 5.3+ heredoc hang.
 # See: https://github.com/obra/superpowers/issues/571
 if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
-  # Cursor sets CURSOR_PLUGIN_ROOT (may also set CLAUDE_PLUGIN_ROOT) — emit additional_context
+  # Cursor sets CURSOR_PLUGIN_ROOT (may also set CLAUDE_PLUGIN_ROOT)
   printf '{\n  "additional_context": "%s"\n}\n' "$session_context"
-elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ]; then
-  # Claude Code sets CLAUDE_PLUGIN_ROOT — emit only hookSpecificOutput
+elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -z "${COPILOT_CLI:-}" ]; then
+  # Claude Code sets CLAUDE_PLUGIN_ROOT without COPILOT_CLI
   printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$session_context"
 else
-  # Other platforms — emit additional_context as fallback
-  printf '{\n  "additional_context": "%s"\n}\n' "$session_context"
+  # Copilot CLI (sets COPILOT_CLI=1) or unknown platform — SDK standard format
+  printf '{\n  "additionalContext": "%s"\n}\n' "$session_context"
 fi
 
 exit 0

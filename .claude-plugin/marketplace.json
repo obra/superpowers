@@ -9,7 +9,7 @@
     {
       "name": "superpowers",
       "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
-      "version": "5.0.5",
+      "version": "5.0.7",
       "source": "./",
       "author": {
         "name": "Jesse Vincent",
