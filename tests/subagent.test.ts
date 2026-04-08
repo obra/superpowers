@@ -36,10 +36,14 @@ describe("buildRolePrompt", () => {
     expect(buildRolePrompt("spec-reviewer")).toBe("You are a spec-reviewer.");
   });
 
-  it("returns 'You are a code-quality-reviewer.' for role 'code-quality-reviewer'", () => {
-    expect(buildRolePrompt("code-quality-reviewer")).toBe(
-      "You are a code-quality-reviewer."
-    );
+  it("returns full Senior Code Reviewer prompt for role 'code-quality-reviewer'", () => {
+    const prompt = buildRolePrompt("code-quality-reviewer");
+    expect(prompt).toContain("Senior Code Reviewer");
+    expect(prompt).toContain("Plan Alignment Analysis");
+    expect(prompt).toContain("Code Quality Assessment");
+    expect(prompt).toContain("Architecture and Design Review");
+    expect(prompt).toContain("Critical (must fix)");
+    expect(prompt).not.toBe("You are a code-quality-reviewer.");
   });
 
   it("trims whitespace from role", () => {

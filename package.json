@@ -30,7 +30,7 @@
   "scripts": {
     "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --exclude 'tests/brainstorm-server/**'",
+    "test": "vitest run --exclude 'tests/brainstorm-server/**' && (cd tests/brainstorm-server && npm install --silent && npm test)",
     "test:watch": "vitest --exclude 'tests/brainstorm-server/**'",
     "prepublishOnly": "npm run build && npm test"
   },
