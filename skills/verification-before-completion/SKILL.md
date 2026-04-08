@@ -81,6 +81,13 @@ Skip any step = lying, not verifying
 ❌ "Should pass now" / "Looks correct"
 ```
 
+**Cash iOS Swift lint:**
+```
+✅ Before pushing Swift changes in cash-ios, run `cash lint --tasks swiftlint <changed-swift-files...>` and read the output before claiming lint is clean
+✅ If you need repo-default changed-file coverage instead of explicit file paths, run `cash lint --tasks swiftlint`
+❌ "Lint should be fine" / generic `cash lint` claims / partial checks on only some changed Swift files
+```
+
 **Regression tests (TDD Red-Green):**
 ```
 ✅ Write → Run (pass) → Revert fix → Run (MUST FAIL) → Restore → Run (pass)
@@ -121,6 +128,7 @@ From 24 failure memories:
 - ANY expression of satisfaction
 - ANY positive statement about work state
 - Committing, PR creation, task completion
+- Pushing Swift changes in cash-ios: run `cash lint --tasks swiftlint` for fresh Swift lint evidence first, preferably scoped to the changed Swift files
 - Moving to next task
 - Delegating to agents
 
