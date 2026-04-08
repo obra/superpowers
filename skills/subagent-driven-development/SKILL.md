@@ -264,14 +264,11 @@ Done!
 
 ## Integration
 
-**Workflow skills (invoke via Skill tool):**
+**Required workflow skills:**
 - **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
 - **superpowers:writing-plans** - Creates the plan this skill executes
-- **superpowers:requesting-code-review** - Review workflow guide (how to prepare context and act on feedback). This is a Skill, not an Agent — do NOT dispatch it via the Agent/Task tool
+- **superpowers:requesting-code-review** - Review workflow guide — prepares context and acts on feedback from reviewers (not an agent to dispatch)
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
-
-**Agent types (dispatch via Task tool):**
-- **superpowers:code-reviewer** - Dispatched for code quality reviews and final review (see `./code-quality-reviewer-prompt.md`)
 
 **Subagents should use:**
 - **superpowers:test-driven-development** - Subagents follow TDD for each task
