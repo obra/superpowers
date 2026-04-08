@@ -1,6 +1,6 @@
 ---
 name: test-driven-development
-description: Use when implementing any feature or bugfix, before writing implementation code
+description: Invoke only when the user explicitly asks to use TDD — do not invoke automatically for implementation tasks
 ---
 
 # Test-Driven Development (TDD)
