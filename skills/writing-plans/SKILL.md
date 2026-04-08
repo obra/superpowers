@@ -1,6 +1,9 @@
 ---
 name: writing-plans
-description: Use when you have a spec or requirements for a multi-step task, before touching code
+description: |
+  Use when you have a spec or requirements for a multi-step task, before touching code.
+  当有规格或需求需要执行多步骤任务时使用，在编写任何代码之前。
+  适用于：写实现计划、制定开发计划、做规划、拆分任务步骤、编写执行方案。
 ---
 
 # Writing Plans

@@ -1,6 +1,44 @@
 {
-  "name": "superpowers",
+  "name": "@weiping/pi-superpowers",
   "version": "5.0.7",
+  "description": "Superpowers skills library for Pi: TDD, debugging, collaboration workflows with Chinese trigger support",
+  "keywords": ["pi-package", "skills", "tdd", "debugging", "workflow", "chinese"],
+  "author": "Ported from obra/superpowers",
+  "license": "MIT",
   "type": "module",
-  "main": ".opencode/plugins/superpowers.js"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/weiping/pi-superpowers.git"
+  },
+  "homepage": "https://github.com/weiping/pi-superpowers#readme",
+  "bugs": {
+    "url": "https://github.com/weiping/pi-superpowers/issues"
+  },
+  "files": [
+    "extensions/**/*.ts",
+    "skills/**/*.md",
+    "prompts/**/*.md",
+    "README.md",
+    "INSTALL.md",
+    "package.json"
+  ],
+  "pi": {
+    "extensions": ["./extensions/bootstrap.ts", "./extensions/subagent.ts"],
+    "skills": ["./skills"],
+    "prompts": ["./prompts"]
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --exclude 'tests/brainstorm-server/**'",
+    "test:watch": "vitest --exclude 'tests/brainstorm-server/**'",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vitest": "^2.0.0"
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": "*"
+  }
 }

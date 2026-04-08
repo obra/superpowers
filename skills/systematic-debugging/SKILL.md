@@ -1,6 +1,10 @@
 ---
 name: systematic-debugging
-description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes
+description: |
+  Use when encountering any bug, test failure, or unexpected behavior,
+  before proposing fixes.
+  遇到任何错误、测试失败或意外行为时使用，在提出修复方案之前。
+  适用于：调试、找 bug、修复问题、测试失败、排查错误、系统性调试、根本原因分析。
 ---
 
 # Systematic Debugging

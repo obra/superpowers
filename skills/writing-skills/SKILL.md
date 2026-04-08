@@ -1,6 +1,10 @@
 ---
 name: writing-skills
-description: Use when creating new skills, editing existing skills, or verifying skills work before deployment
+description: |
+  Use when creating new skills, editing existing skills, or verifying skills work before deployment
+  work before deployment.
+  创建新技能、编辑现有技能或在部署前验证技能时使用。
+  适用于：写 skill、创建新技能、添加技能、设计工作流技能、编写 SKILL.md。
 ---
 
 # Writing Skills

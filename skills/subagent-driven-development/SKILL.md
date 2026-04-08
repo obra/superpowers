@@ -1,6 +1,9 @@
 ---
 name: subagent-driven-development
-description: Use when executing implementation plans with independent tasks in the current session
+description: |
+  Use when executing implementation plans with independent tasks in the current session.
+  在当前会话中执行含有独立任务的实现计划时使用。
+  适用于：执行计划、子代理开发、自动实现、开始实现计划、逐任务执行、两阶段代码审查。
 ---
 
 # Subagent-Driven Development
@@ -261,6 +264,10 @@ Done!
 **If subagent fails task:**
 - Dispatch fix subagent with specific instructions
 - Don't try to fix manually (context pollution)
+
+## Pi Platform Adaptation / Pi 平台适配
+
+On the Pi platform, the `Task` tool for parallel subagent dispatch is not available. Instead, use sequential execution (顺序执行): dispatch one subagent at a time, wait for completion, then dispatch the next. This maintains the same quality gates (spec compliance review, code quality review) while operating within Pi's tool constraints.
 
 ## Integration
 

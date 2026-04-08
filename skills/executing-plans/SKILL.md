@@ -1,6 +1,10 @@
 ---
 name: executing-plans
-description: Use when you have a written implementation plan to execute in a separate session with review checkpoints
+description: |
+  Use when you have a written implementation plan to execute in a separate session
+  with review checkpoints.
+  有书面实现计划需要批次执行并设置检查点时使用。
+  适用于：执行已有计划、按计划实现、批次执行任务、分批推进开发。
 ---
 
 # Executing Plans

@@ -1,6 +1,7 @@
 .worktrees/
 .private-journal/
 .claude/
+.pi/
 .DS_Store
 node_modules/
 inspo

@@ -1,6 +1,9 @@
 ---
 name: using-superpowers
-description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
+description: |
+  Use when starting any conversation - establishes how to find and use skills,
+  requiring Skill tool invocation before ANY response including clarifying questions.
+  开始任何对话时使用 - 建立如何查找和使用技能的规则，在任何回应（包括澄清问题）之前必须调用技能工具。
 ---
 
 <SUBAGENT-STOP>
@@ -38,6 +41,17 @@ If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "alw
 ## Platform Adaptation
 
 Skills use Claude Code tool names. Non-CC platforms: see `references/copilot-tools.md` (Copilot CLI), `references/codex-tools.md` (Codex) for tool equivalents. Gemini CLI users get the tool mapping loaded automatically via GEMINI.md.
+
+### Pi Platform Tool Mapping / Pi 平台工具映射
+
+On the Pi platform, some Claude Code tools are not available. Use these equivalents:
+
+| Claude Code Tool | Pi Equivalent |
+|-----------------|---------------|
+| `TodoWrite` | Write to `TODO.md` file in the project root |
+| `TaskCreate` / `TaskUpdate` / `TaskList` | Use `TODO.md` with checkboxes (`- [ ]` / `- [x]`) |
+
+When `TodoWrite` is unavailable, maintain a `TODO.md` file to track task progress instead of relying on the in-memory task system.
 
 # Using Skills
 
