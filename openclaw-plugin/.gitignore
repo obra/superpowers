@@ -1,0 +1,4 @@
+dist/
+skills/
+node_modules/
+.claude

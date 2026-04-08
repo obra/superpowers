@@ -1,0 +1,11 @@
+{
+  "id": "openclaw-superpowers",
+  "name": "Superpowers",
+  "description": "14 workflow skills with Chinese triggers: TDD, debugging, code review, planning and more",
+  "skills": ["./skills"],
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}

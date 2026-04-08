@@ -1,0 +1,50 @@
+{
+  "name": "@weiping/openclaw-superpowers",
+  "version": "5.0.7",
+  "description": "Superpowers workflow skills for OpenClaw: TDD, debugging, planning with Chinese trigger support",
+  "keywords": [
+    "openclaw",
+    "skills",
+    "tdd",
+    "debugging",
+    "workflow",
+    "chinese"
+  ],
+  "author": "weiping",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/",
+    "skills/",
+    "openclaw.plugin.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "node scripts/copy-skills.mjs && npm run build"
+  },
+  "openclaw": {
+    "extensions": [
+      "./dist/index.js"
+    ],
+    "skills": [
+      "./skills"
+    ]
+  },
+  "peerDependencies": {
+    "openclaw": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/weiping/pi-superpowers.git"
+  },
+  "homepage": "https://github.com/weiping/pi-superpowers#readme",
+  "bugs": {
+    "url": "https://github.com/weiping/pi-superpowers/issues"
+  }
+}
