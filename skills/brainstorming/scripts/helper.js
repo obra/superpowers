@@ -14,6 +14,11 @@
         statusEl.classList.remove('disconnected', 'connecting');
         statusEl.textContent = 'Connected';
       }
+
+      const mainEl = document.querySelector('main');
+      if (mainEl) {
+        mainEl.removeAttribute('aria-busy');
+      }
     };
 
     ws.onmessage = (msg) => {
@@ -29,6 +34,11 @@
         statusEl.classList.add('connecting');
         statusEl.classList.remove('disconnected');
         statusEl.textContent = 'Connecting...';
+      }
+
+      const mainEl = document.querySelector('main');
+      if (mainEl) {
+        mainEl.setAttribute('aria-busy', 'true');
       }
       setTimeout(connect, 1000);
     };
