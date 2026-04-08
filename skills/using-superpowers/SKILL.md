@@ -55,7 +55,7 @@ digraph skill_flow {
     "Check matching skills" [shape=box];
     "Announce: 'Using [skill] to [purpose]'" [shape=box];
     "Has checklist?" [shape=diamond];
-    "Create update_plan todo per item" [shape=box];
+    "Create TodoWrite todo per item" [shape=box];
     "Follow skill exactly" [shape=box];
     "Respond (including clarifications)" [shape=doublecircle];
 
@@ -69,9 +69,9 @@ digraph skill_flow {
     "Might any skill apply?" -> "Respond (including clarifications)" [label="definitely not"];
     "Check matching skills" -> "Announce: 'Using [skill] to [purpose]'";
     "Announce: 'Using [skill] to [purpose]'" -> "Has checklist?";
-    "Has checklist?" -> "Create update_plan todo per item" [label="yes"];
+    "Has checklist?" -> "Create TodoWrite todo per item" [label="yes"];
     "Has checklist?" -> "Follow skill exactly" [label="no"];
-    "Create update_plan todo per item" -> "Follow skill exactly";
+    "Create TodoWrite todo per item" -> "Follow skill exactly";
 }
 ```
 

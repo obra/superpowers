@@ -66,10 +66,10 @@ Each agent gets:
 ### 3. Dispatch in Parallel
 
 ```typescript
-// Dispatch in parallel using spawn_agent
-spawn_agent(agent_type="worker", message="Fix agent-tool-abort.test.ts failures")
-spawn_agent(agent_type="worker", message="Fix batch-completion-behavior.test.ts failures")
-spawn_agent(agent_type="worker", message="Fix tool-approval-race-conditions.test.ts failures")
+// Delegate each scope to a subagent
+delegate to your subagent: "Fix agent-tool-abort.test.ts failures"
+delegate to your subagent: "Fix batch-completion-behavior.test.ts failures"
+delegate to your subagent: "Fix tool-approval-race-conditions.test.ts failures"
 // All three run concurrently
 ```
 

@@ -19,7 +19,7 @@ Load plan, review critically, execute all tasks, report when complete.
 1. Read plan file
 2. Review critically - identify any questions or concerns about the plan
 3. If concerns: Raise them with your human partner before starting
-4. If no concerns: Create update_plan and proceed
+4. If no concerns: Create TodoWrite and proceed
 
 ### Step 2: Execute Tasks
 

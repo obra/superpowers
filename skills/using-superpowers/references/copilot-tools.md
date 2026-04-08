@@ -15,7 +15,7 @@ Skills use Qwen tool names. When you encounter these in a skill, use your platfo
 | `Task` tool (dispatch subagent) | `task` (see [Agent types](#agent-types)) |
 | Multiple `Task` calls (parallel) | Multiple `task` calls |
 | Task status/output | `read_agent`, `list_agents` |
-| `update_plan` (task tracking) | `sql` with built-in `todos` table |
+| `TodoWrite` (task tracking) | `sql` with built-in `todos` table |
 | `WebSearch` | No equivalent — use `web_fetch` with a search engine URL |
 | `EnterPlanMode` / `ExitPlanMode` | No equivalent — stay in the main session |
 
