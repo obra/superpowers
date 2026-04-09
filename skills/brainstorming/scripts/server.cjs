@@ -124,6 +124,22 @@ function getNewestScreen() {
   return files.length > 0 ? files[0].path : null;
 }
 
+function isLoopbackHost(hostname) {
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === HOST || hostname === URL_HOST;
+}
+
+function isTrustedWebSocketOrigin(originHeader) {
+  if (!originHeader) return true;
+
+  try {
+    const origin = new URL(originHeader);
+    const expectedPort = String(PORT);
+    return isLoopbackHost(origin.hostname) && origin.port === expectedPort;
+  } catch (error) {
+    return false;
+  }
+}
+
 // ========== HTTP Request Handler ==========
 
 function handleRequest(req, res) {
@@ -167,6 +183,12 @@ const clients = new Set();
 function handleUpgrade(req, socket) {
   const key = req.headers['sec-websocket-key'];
   if (!key) { socket.destroy(); return; }
+
+  const origin = req.headers.origin;
+  if (!isTrustedWebSocketOrigin(origin)) {
+    socket.destroy();
+    return;
+  }
 
   const accept = computeAcceptKey(key);
   socket.write(
@@ -351,4 +373,10 @@ if (require.main === module) {
   startServer();
 }
 
-module.exports = { computeAcceptKey, encodeFrame, decodeFrame, OPCODES };
+module.exports = {
+  computeAcceptKey,
+  encodeFrame,
+  decodeFrame,
+  OPCODES,
+  isTrustedWebSocketOrigin
+};
