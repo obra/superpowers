@@ -79,12 +79,15 @@ git merge <feature-branch>
 
 # Verify tests on merged result
 <test command>
+```
 
-# If tests pass
+Then: Cleanup worktree (Step 5), then delete the feature branch:
+
+```bash
 git branch -d <feature-branch>
 ```
 
-Then: Cleanup worktree (Step 5)
+**Note:** The branch must be deleted AFTER worktree removal — git refuses to delete a branch that a worktree has checked out.
 
 #### Option 2: Push and Create PR
 
@@ -103,7 +106,7 @@ EOF
 )"
 ```
 
-Then: Cleanup worktree (Step 5)
+Worktree preserved — you may need it for PR review changes.
 
 #### Option 3: Keep As-Is
 
@@ -135,7 +138,7 @@ Then: Cleanup worktree (Step 5)
 
 ### Step 5: Cleanup Worktree
 
-**For Options 1, 2, 4:**
+**For Options 1 and 4:**
 
 Check if in worktree:
 ```bash
