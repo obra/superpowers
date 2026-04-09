@@ -149,6 +149,13 @@ Start a new session in your chosen platform and ask for something that should tr
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
 - **using-superpowers** - Introduction to the skills system
 
+### Technology-Specific Plugins
+
+Superpowers separates **process skills** (how we work) from **technology skills** (what we use). Domain-specific expertise for languages, frameworks, or tools (e.g., Java, React, Infrastructure) lives in the `plugins/` directory. 
+
+This modular architecture allows the core to remain lean and methodology-focused, while allowing developers to plug in specialized knowledge as needed for their specific stack.
+
+
 ## Philosophy
 
 - **Test-Driven Development** - Write tests first, always

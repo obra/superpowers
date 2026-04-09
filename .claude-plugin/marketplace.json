@@ -15,6 +15,16 @@
         "name": "Jesse Vincent",
         "email": "jesse@fsck.com"
       }
+    },
+    {
+      "name": "tinystruct-plugin",
+      "description": "Enterprise-grade Java backend development patterns using the tinystruct framework.",
+      "version": "1.0.0",
+      "source": "./plugins/tinystruct",
+      "author": {
+        "name": "James",
+        "email": "moverinfo@gmail.com"
+      }
     }
   ]
 }
