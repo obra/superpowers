@@ -21,11 +21,12 @@ Follow this priority order:
 
 ```bash
 # Check in priority order
-ls -d .worktrees 2>/dev/null     # Preferred (hidden)
-ls -d worktrees 2>/dev/null      # Alternative
+ls -d .claude/worktrees 2>/dev/null  # CLI-compatible (enables claude -w resume)
+ls -d .worktrees 2>/dev/null         # Project-local (hidden)
+ls -d worktrees 2>/dev/null          # Alternative
 ```
 
-**If found:** Use that directory. If both exist, `.worktrees` wins.
+**If found:** Use that directory. Priority: `.claude/worktrees` > `.worktrees` > `worktrees`.
 
 ### 2. Check CLAUDE.md
 
@@ -42,21 +43,22 @@ If no directory exists and no CLAUDE.md preference:
 ```
 No worktree directory found. Where should I create worktrees?
 
-1. .worktrees/ (project-local, hidden)
-2. ~/.config/superpowers/worktrees/<project-name>/ (global location)
+1. .claude/worktrees/ (CLI-compatible — enables `claude -w <name>` resume)
+2. .worktrees/ (project-local, hidden)
+3. ~/.config/superpowers/worktrees/<project-name>/ (global location)
 
 Which would you prefer?
 ```
 
 ## Safety Verification
 
-### For Project-Local Directories (.worktrees or worktrees)
+### For Project-Local Directories (.claude/worktrees, .worktrees, or worktrees)
 
 **MUST verify directory is ignored before creating worktree:**
 
 ```bash
 # Check if directory is ignored (respects local, global, and system gitignore)
-git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
+git check-ignore -q .claude/worktrees 2>/dev/null || git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
 ```
 
 **If NOT ignored:**
@@ -85,6 +87,9 @@ project=$(basename "$(git rev-parse --show-toplevel)")
 ```bash
 # Determine full path
 case $LOCATION in
+  .claude/worktrees)
+    path=".claude/worktrees/$BRANCH_NAME"
+    ;;
   .worktrees|worktrees)
     path="$LOCATION/$BRANCH_NAME"
     ;;
@@ -145,10 +150,11 @@ Ready to implement <feature-name>
 
 | Situation | Action |
 |-----------|--------|
+| `.claude/worktrees/` exists | Use it (CLI-compatible, verify ignored) |
 | `.worktrees/` exists | Use it (verify ignored) |
 | `worktrees/` exists | Use it (verify ignored) |
-| Both exist | Use `.worktrees/` |
-| Neither exists | Check CLAUDE.md → Ask user |
+| Multiple exist | Priority: `.claude/worktrees` > `.worktrees` > `worktrees` |
+| None exist | Check CLAUDE.md → Ask user |
 | Directory not ignored | Add to .gitignore + commit |
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
