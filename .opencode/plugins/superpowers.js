@@ -2,7 +2,7 @@
  * Superpowers plugin for OpenCode.ai
  *
  * Injects superpowers bootstrap context via system prompt transform.
- * Auto-registers skills directory via config hook (no symlinks needed).
+ * Auto-registers skills directory via config hook, with filesystem symlink fallback.
  */
 
 import path from 'path';
@@ -81,6 +81,21 @@ ${toolMapping}
 </EXTREMELY_IMPORTANT>`;
   };
 
+
+  // Filesystem fallback: ensure skills are discoverable via OpenCode's
+  // default skills path, since the `config` hook may be silently ignored
+  // by some OpenCode versions (see #1087).
+  const ocSkillsTarget = path.join(configDir, 'skills', 'superpowers');
+  if (!fs.existsSync(ocSkillsTarget)) {
+    fs.mkdirSync(path.dirname(ocSkillsTarget), { recursive: true });
+    try {
+      // 'junction' works on Windows NTFS without admin privileges
+      fs.symlinkSync(superpowersSkillsDir, ocSkillsTarget, 'junction');
+    } catch {
+      // Fallback: copy directory if symlink/junction fails
+      fs.cpSync(superpowersSkillsDir, ocSkillsTarget, { recursive: true });
+    }
+  }
   return {
     // Inject skills path into live config so OpenCode discovers superpowers skills
     // without requiring manual symlinks or config file edits.
