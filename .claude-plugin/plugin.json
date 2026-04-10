@@ -1,13 +1,12 @@
 {
-  "name": "superpowers",
+  "name": "vmlpowers",
   "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
-  "version": "5.0.7",
+  "version": "0.0.1",
   "author": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com"
+    "name": "VML"
   },
-  "homepage": "https://github.com/obra/superpowers",
-  "repository": "https://github.com/obra/superpowers",
+  "homepage": "https://github.com/vismaml/vmlpowers",
+  "repository": "https://github.com/vismaml/vmlpowers",
   "license": "MIT",
   "keywords": [
     "skills",
