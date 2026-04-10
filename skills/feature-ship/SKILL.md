@@ -11,6 +11,8 @@ Most production incidents come from features that were done but not ready. Done 
 
 **Core principle:** A feature isn't shipped until every gate passes. Not mostly. Not "close enough." Every gate.
 
+**Relationship to existing skills:** `verification-before-completion` covers code correctness (does it work?). `finishing-a-development-branch` covers git integration (merge, PR, worktree). This skill covers the gap between them and production: the eight questions every team must answer before deploying, regardless of language, platform, or domain.
+
 **Announce at start:** "I'm using the feature-ship skill to run the release gate checklist."
 
 ## The Iron Law
@@ -220,6 +222,7 @@ Save to `docs/superpowers/ships/YYYY-MM-DD-[feature-name].md` before deploying. 
 | "The tests pass, we're good" | Tests are Gate 1 of 8. |
 | "It's a small change, no need for the full checklist" | Small changes cause small incidents. Or large ones. Run the checklist. |
 | "We need to ship now, we'll document after" | "Document later" means "document never." |
+| "It's a hotfix — no time for the full checklist" | Hotfixes go to production too. A 5-minute checklist is faster than a 2-hour rollback. Run Gates 1, 5, and 8 at minimum. |
 | "The rollback is obvious" | Obvious rollback plans fail under pressure. Write them down now. |
 | "No breaking changes in this PR" | What about the migration? The config key rename? The webhook shape change? Run the gate. |
 | "We don't have observability for this" | Add it. Or accept that you're flying blind in production. |
