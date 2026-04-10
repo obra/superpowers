@@ -42,6 +42,22 @@ This structure informs the task decomposition. Each task should produce self-con
 - "Run the tests and make sure they pass" - step
 - "Commit" - step
 
+## Model Directives (optional)
+
+If the user has a `plan-model-switch` hook installed, adding `<!-- model: xxx -->` directives before each step group enables automatic model switching as the agent works through the plan. Use the lowest-cost model sufficient for each step type:
+
+| Step type | Directive | Why |
+|-----------|-----------|-----|
+| Write tests, write implementation, refactor | `<!-- model: sonnet -->` | Needs codebase understanding |
+| Run commands, commit, install deps, mechanical steps | `<!-- model: haiku -->` | No reasoning needed — just execute |
+| Architecture decisions, hard debugging, design | `<!-- model: opus -->` | Deep reasoning required |
+
+**How it works:** The hook fires when the plan file is read. It finds the first unchecked task (`- [ ]`) and looks upward for the nearest `<!-- model: xxx -->` directive. As tasks complete and get checked off, re-reading the plan automatically advances to the next phase's model.
+
+**Opt-in:** Plans without directives behave exactly as before. Only add directives if the user has the hook installed or wants to annotate plans for cost awareness.
+
+**Split at model boundaries:** Don't mix step types under one directive. Give `haiku` steps (run/commit) their own group with their own directive.
+
 ## Plan Document Header
 
 **Every plan MUST start with this header:**
@@ -70,6 +86,7 @@ This structure informs the task decomposition. Each task should produce self-con
 - Modify: `exact/path/to/existing.py:123-145`
 - Test: `tests/exact/path/to/test.py`
 
+<!-- model: sonnet -->
 - [ ] **Step 1: Write the failing test**
 
 ```python
@@ -78,11 +95,13 @@ def test_specific_behavior():
     assert result == expected
 ```
 
+<!-- model: haiku -->
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: FAIL with "function not defined"
 
+<!-- model: sonnet -->
 - [ ] **Step 3: Write minimal implementation**
 
 ```python
@@ -90,6 +109,7 @@ def function(input):
     return expected
 ```
 
+<!-- model: haiku -->
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `pytest tests/path/test.py::test_name -v`
@@ -102,6 +122,8 @@ git add tests/path/test.py src/path/file.py
 git commit -m "feat: add specific feature"
 ```
 ````
+
+**Note:** The `<!-- model: xxx -->` directives are optional. Omit them if the user hasn't configured model switching. When present, they must immediately precede the `- [ ]` step(s) they apply to.
 
 ## No Placeholders
 
