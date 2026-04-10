@@ -49,6 +49,6 @@ Fix issues inline. If spec requirement has no task, add the task.
 **"Plan complete. Three execution options:**
 1. **Subagent-Driven (recommended)** → sspower:subagent-driven-development
 2. **Inline Execution** → sspower:executing-plans
-3. **Codex execute** → delegate via `/codex:rescue`
+3. **Codex execute** → delegate via `codex-bridge.mjs implement --write` or `codex-bridge.mjs rescue --write`
 
 **Which approach?"**

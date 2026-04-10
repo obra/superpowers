@@ -6,7 +6,7 @@
 # Each session gets its own directory to avoid conflicts.
 #
 # Options:
-#   --project-dir <path>  Store session files under <path>/.superpowers/brainstorm/
+#   --project-dir <path>  Store session files under <path>/.sspower/brainstorm/
 #                         instead of /tmp. Files persist after server stops.
 #   --host <bind-host>    Host/interface to bind (default: 127.0.0.1).
 #                         Use 0.0.0.0 in remote/containerized environments.
@@ -59,26 +59,12 @@ if [[ -z "$URL_HOST" ]]; then
   fi
 fi
 
-# Some environments reap detached/background processes. Auto-foreground when detected.
-if [[ -n "${CODEX_CI:-}" && "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
-  FOREGROUND="true"
-fi
-
-# Windows/Git Bash reaps nohup background processes. Auto-foreground when detected.
-if [[ "$FOREGROUND" != "true" && "$FORCE_BACKGROUND" != "true" ]]; then
-  case "${OSTYPE:-}" in
-    msys*|cygwin*|mingw*) FOREGROUND="true" ;;
-  esac
-  if [[ -n "${MSYSTEM:-}" ]]; then
-    FOREGROUND="true"
-  fi
-fi
 
 # Generate unique session directory
 SESSION_ID="$$-$(date +%s)"
 
 if [[ -n "$PROJECT_DIR" ]]; then
-  SESSION_DIR="${PROJECT_DIR}/.superpowers/brainstorm/${SESSION_ID}"
+  SESSION_DIR="${PROJECT_DIR}/.sspower/brainstorm/${SESSION_ID}"
 else
   SESSION_DIR="/tmp/brainstorm-${SESSION_ID}"
 fi

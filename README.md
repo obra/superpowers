@@ -20,14 +20,20 @@ In Claude Code:
 
 ### Optional: Codex integration
 
-The `second-opinion` skill routes to Codex for independent code review. To use it, also install the Codex plugin:
+Several skills use Codex (GPT-5.4) for independent review and implementation. sspower calls the Codex CLI directly via its own `codex-bridge.mjs` — no external Claude Code plugin needed.
 
 ```bash
-/plugin marketplace add openai-codex
-/plugin install codex@openai-codex
+# Install Codex CLI
+npm install -g @openai/codex
+
+# Authenticate
+codex login
+
+# Verify
+node scripts/codex-bridge.mjs setup
 ```
 
-Without Codex installed, all other skills work fine — `second-opinion` will just be unavailable.
+Without Codex CLI installed, all other skills work fine — Codex-dependent features (`second-opinion`, Codex engine in SDD, `codex-enrich`) will just be unavailable.
 
 ## The Workflow
 
@@ -49,15 +55,15 @@ Without Codex installed, all other skills work fine — `second-opinion` will ju
 | Meta | `writing-skills`, `using-sspower` |
 | sspower-only | `second-opinion` |
 
-## Key Differences from Superpowers
+## Key Differences from Upstream Superpowers
 
 See [docs/CUSTOMIZATIONS.md](docs/CUSTOMIZATIONS.md) for the full changelog.
 
 ### Architecture: Token-Efficient Progressive Disclosure
 
-Superpowers loads entire skill content into context. sspower splits every skill into a lean `SKILL.md` (<100 lines) + `references/` subdirectory. The agent reads references only when needed, saving thousands of tokens per session.
+Upstream Superpowers loads entire skill content into context. sspower splits every skill into a lean `SKILL.md` (<100 lines) + `references/` subdirectory. The agent reads references only when needed, saving thousands of tokens per session.
 
-| Skill | Superpowers | sspower SKILL.md | sspower references/ |
+| Skill | Upstream | sspower SKILL.md | sspower references/ |
 |-------|-------------|------------------|---------------------|
 | writing-skills | 647 lines | ~50 lines | 3 files (344 lines) |
 | test-driven-development | 313 lines | ~50 lines | 1 file (74 lines) |
@@ -68,8 +74,8 @@ Superpowers loads entire skill content into context. sspower splits every skill 
 
 | Skill | What it does |
 |-------|-------------|
-| **`using-sspower`** | Replaces `using-superpowers` — custom routing with red-flags table and multi-platform tool mapping |
-| **`second-opinion`** | Routes to Codex for independent review: `/codex:rescue` when stuck, `/codex:adversarial-review` for high-risk merges, `/codex:review` otherwise |
+| **`using-sspower`** | Replaces upstream `using-superpowers` — custom routing with red-flags table and multi-platform tool mapping |
+| **`second-opinion`** | Routes to Codex for independent review via native `codex-bridge.mjs`: rescue when stuck, adversarial review for high-risk merges, standard review otherwise |
 
 ### Improved Skills (eval-tested)
 

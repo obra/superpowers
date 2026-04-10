@@ -6,11 +6,11 @@
 
 ## Overview
 
-Add full superpowers support for OpenCode.ai using a native OpenCode plugin architecture that shares core functionality with the existing Codex implementation.
+Add full sspower support for OpenCode.ai using a native OpenCode plugin architecture that shares core functionality with the existing Codex implementation.
 
 ## Background
 
-OpenCode.ai is a coding agent similar to Claude Code and Codex. Previous attempts to port superpowers to OpenCode (PR #93, PR #116) used file-copying approaches. This design takes a different approach: building a native OpenCode plugin using their JavaScript/TypeScript plugin system while sharing code with the Codex implementation.
+OpenCode.ai is a coding agent similar to Claude Code and Codex. Previous attempts to port sspower to OpenCode (PR #93, PR #116) used file-copying approaches. This design takes a different approach: building a native OpenCode plugin using their JavaScript/TypeScript plugin system while sharing code with the Codex implementation.
 
 ### Key Differences Between Platforms
 
@@ -34,16 +34,16 @@ OpenCode.ai is a coding agent similar to Claude Code and Codex. Previous attempt
    - Used by both Codex and OpenCode implementations
 
 2. **Platform-Specific Wrappers**
-   - Codex: CLI script (`.codex/superpowers-codex`)
-   - OpenCode: Plugin module (`.opencode/plugin/superpowers.js`)
+   - Codex: CLI script (`.codex/sspower-codex`)
+   - OpenCode: Plugin module (`.opencode/plugin/sspower.js`)
 
 3. **Skill Directories**
-   - Core: `~/.config/opencode/superpowers/skills/` (or installed location)
+   - Core: `~/.config/opencode/sspower/skills/` (or installed location)
    - Personal: `~/.config/opencode/skills/` (shadows core skills)
 
 ### Code Reuse Strategy
 
-Extract common functionality from `.codex/superpowers-codex` into shared module:
+Extract common functionality from `.codex/sspower-codex` into shared module:
 
 ```javascript
 // lib/skills-core.js
@@ -80,7 +80,7 @@ Loads a specific skill's content into the conversation (equivalent to Claude's S
   name: 'use_skill',
   description: 'Load and read a specific skill to guide your work',
   schema: z.object({
-    skill_name: z.string().describe('Name of skill (e.g., "superpowers:brainstorming")')
+    skill_name: z.string().describe('Name of skill (e.g., "sspower:brainstorming")')
   }),
   execute: async ({ skill_name }) => {
     const { skillPath, content, frontmatter } = resolveAndReadSkill(skill_name);
@@ -120,8 +120,8 @@ Lists all available skills with metadata.
 
 When a new session starts (`session.started` event):
 
-1. **Inject using-superpowers content**
-   - Full content of the using-superpowers skill
+1. **Inject using-sspower content**
+   - Full content of the using-sspower skill
    - Establishes mandatory workflows
 
 2. **Run find_skills automatically**
@@ -150,24 +150,24 @@ When a new session starts (`session.started` event):
 ### Plugin Structure
 
 ```javascript
-// .opencode/plugin/superpowers.js
+// .opencode/plugin/sspower.js
 const skillsCore = require('../../lib/skills-core');
 const path = require('path');
 const fs = require('fs');
 const { z } = require('zod');
 
-export const SuperpowersPlugin = async ({ client, directory, $ }) => {
-  const superpowersDir = path.join(process.env.HOME, '.config/opencode/superpowers');
+export const sspowerPlugin = async ({ client, directory, $ }) => {
+  const sspowerDir = path.join(process.env.HOME, '.config/opencode/sspower');
   const personalDir = path.join(process.env.HOME, '.config/opencode/skills');
 
   return {
     'session.started': async () => {
-      const usingSuperpowers = await readSkill('using-superpowers');
+      const usingsspower = await readSkill('using-sspower');
       const skillsList = await findAllSkills();
       const toolMapping = getToolMappingInstructions();
 
       return {
-        context: `${usingSuperpowers}\n\n${skillsList}\n\n${toolMapping}`
+        context: `${usingsspower}\n\n${skillsList}\n\n${toolMapping}`
       };
     },
 
@@ -198,16 +198,16 @@ export const SuperpowersPlugin = async ({ client, directory, $ }) => {
 ## File Structure
 
 ```
-superpowers/
+sspower/
 ├── lib/
 │   └── skills-core.js           # NEW: Shared skill logic
 ├── .codex/
-│   ├── superpowers-codex        # UPDATED: Use skills-core
-│   ├── superpowers-bootstrap.md
+│   ├── sspower-codex        # UPDATED: Use skills-core
+│   ├── sspower-bootstrap.md
 │   └── INSTALL.md
 ├── .opencode/
 │   ├── plugin/
-│   │   └── superpowers.js       # NEW: OpenCode plugin
+│   │   └── sspower.js       # NEW: OpenCode plugin
 │   └── INSTALL.md               # NEW: Installation guide
 └── skills/                       # Unchanged
 ```
@@ -217,12 +217,12 @@ superpowers/
 ### Phase 1: Refactor Shared Core
 
 1. Create `lib/skills-core.js`
-   - Extract frontmatter parsing from `.codex/superpowers-codex`
+   - Extract frontmatter parsing from `.codex/sspower-codex`
    - Extract skill discovery logic
    - Extract path resolution (with shadowing)
    - Update to use only `name` and `description` (no `when_to_use`)
 
-2. Update `.codex/superpowers-codex` to use shared core
+2. Update `.codex/sspower-codex` to use shared core
    - Import from `../lib/skills-core.js`
    - Remove duplicated code
    - Keep CLI wrapper logic
@@ -234,7 +234,7 @@ superpowers/
 
 ### Phase 2: Build OpenCode Plugin
 
-1. Create `.opencode/plugin/superpowers.js`
+1. Create `.opencode/plugin/sspower.js`
    - Import shared core from `../../lib/skills-core.js`
    - Implement plugin function
    - Define custom tools (use_skill, find_skills)

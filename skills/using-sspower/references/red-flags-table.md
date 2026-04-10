@@ -1,4 +1,4 @@
-# Skill Usage — Red Flags & Platform Details
+# Skill Usage — Red Flags
 
 ## Red Flags
 
@@ -21,23 +21,15 @@ These thoughts mean STOP — you're rationalizing:
 
 ## Instruction Priority
 
-Superpowers skills override default system prompt behavior, but **user instructions always take precedence**:
+sspower skills override default system prompt behavior, but **user instructions always take precedence**:
 
-1. **User's explicit instructions** (CLAUDE.md, GEMINI.md, AGENTS.md, direct requests) — highest priority
-2. **Superpowers skills** — override default system behavior where they conflict
+1. **User's explicit instructions** (CLAUDE.md, direct requests) — highest priority
+2. **sspower skills** — override default system behavior where they conflict
 3. **Default system prompt** — lowest priority
-
-## Platform Adaptation
-
-Skills use Claude Code tool names. Non-CC platforms: see `references/copilot-tools.md` (Copilot CLI), `references/codex-tools.md` (Codex) for tool equivalents. Gemini CLI users get the tool mapping loaded automatically via GEMINI.md.
 
 ## How to Access Skills
 
-**In Claude Code:** Use the `Skill` tool. When you invoke a skill, its content is loaded and presented to you — follow it directly. Never use the Read tool on skill files.
-
-**In Copilot CLI:** Use the `skill` tool. Skills are auto-discovered from installed plugins.
-
-**In Gemini CLI:** Skills activate via the `activate_skill` tool. Gemini loads skill metadata at session start.
+Use the `Skill` tool. When you invoke a skill, its content is loaded and presented to you — follow it directly. Never use the Read tool on skill files.
 
 ## User Instructions
 

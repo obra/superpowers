@@ -23,22 +23,22 @@ digraph route {
     "Review before merge" [shape=box];
     "High risk?" [shape=diamond];
 
-    "/codex:rescue" [shape=box, style=filled, fillcolor="#ffcccc"];
-    "/codex:review" [shape=box, style=filled, fillcolor="#ccffcc"];
-    "/codex:adversarial-review" [shape=box, style=filled, fillcolor="#ccccff"];
+    "codex-bridge rescue" [shape=box, style=filled, fillcolor="#ffcccc"];
+    "codex-bridge review" [shape=box, style=filled, fillcolor="#ccffcc"];
+    "codex-bridge review (adversarial prompt)" [shape=box, style=filled, fillcolor="#ccccff"];
 
     "Why do you need a second opinion?" -> "Stuck after 2+ fix attempts" [label="stuck"];
     "Why do you need a second opinion?" -> "Review before merge" [label="review"];
-    "Stuck after 2+ fix attempts" -> "/codex:rescue";
+    "Stuck after 2+ fix attempts" -> "codex-bridge rescue";
     "Review before merge" -> "High risk?";
-    "High risk?" -> "/codex:adversarial-review" [label="yes"];
-    "High risk?" -> "/codex:review" [label="no"];
+    "High risk?" -> "codex-bridge review (adversarial prompt)" [label="yes"];
+    "High risk?" -> "codex-bridge review" [label="no"];
 }
 ```
 
 ## High-Risk Signals
 
-Use `/codex:adversarial-review` when changes touch:
+Use adversarial review prompt when changes touch:
 - Authentication, authorization, session handling
 - Payment, billing, financial data
 - Database migrations, schema changes
@@ -46,18 +46,23 @@ Use `/codex:adversarial-review` when changes touch:
 - Core architecture, shared abstractions
 - Public API contracts
 
-Otherwise use `/codex:review`.
+Otherwise use standard quality review.
 
 ## Execution
 
+Resolve the bridge path:
+```bash
+SSPOWER_PLUGIN_ROOT=$(dirname "$(dirname "$(find ~/.claude/plugins -name codex-bridge.mjs -path "*/sspower/*" | head -1)")")
+```
+
 1. **Check diff size:** `git diff --shortstat`
-2. **Pick the right command** based on flow above
-3. **Run it:**
-   - Small diff (1-3 files): foreground
-   - Large diff: `/codex:rescue --background` then check `/codex:status`
-4. **Present Codex output verbatim** — do NOT paraphrase or filter
-5. **If issues found:** ask user which to address, fix, re-run (max 2 iterations)
-6. **If approved:** proceed
+2. **Pick the right command** based on flow above:
+   - **Stuck:** `node "${SSPOWER_PLUGIN_ROOT}/scripts/codex-bridge.mjs" rescue --write --cd . --prompt @/tmp/rescue-prompt.md`
+   - **Standard review:** `node "${SSPOWER_PLUGIN_ROOT}/scripts/codex-bridge.mjs" review --cd . --prompt @/tmp/review-prompt.md`
+   - **Adversarial review:** Same as above but with adversarial prompt (challenge security, edge cases, failure modes)
+3. **Present Codex output verbatim** — do NOT paraphrase or filter
+4. **If issues found:** ask user which to address, fix, re-run (max 2 iterations)
+5. **If approved:** proceed
 
 ## Rules
 

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["verdict", "strengths", "issues", "assessment"],
+  "properties": {
+    "verdict": {
+      "type": "string",
+      "enum": ["approve", "needs-attention"],
+      "description": "Overall review verdict"
+    },
+    "strengths": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "What was done well"
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["severity", "title", "body", "file", "line_start", "line_end", "recommendation"],
+        "properties": {
+          "severity": {
+            "type": "string",
+            "enum": ["critical", "important", "minor"]
+          },
+          "title": { "type": "string", "description": "Brief issue title" },
+          "body": { "type": "string", "description": "Detailed explanation" },
+          "file": { "type": "string", "description": "File path" },
+          "line_start": { "type": "integer", "description": "Start line" },
+          "line_end": { "type": "integer", "description": "End line" },
+          "recommendation": { "type": "string", "description": "How to fix" }
+        }
+      }
+    },
+    "assessment": {
+      "type": "string",
+      "description": "Overall quality assessment"
+    }
+  }
+}

@@ -14,7 +14,7 @@ Codex has full repo access and a different model perspective — it spots things
 ## How It Works
 
 1. The user's message contains "enrich" — strip that word out, the rest is the raw prompt
-2. Build an enrichment task and send it to Codex via `/codex:rescue` in read-only mode
+2. Build an enrichment task and send it to Codex via `codex-bridge.mjs rescue` in read-only mode
 3. Codex scans the repo, validates the prompt against actual code, enriches it
 4. Present the enriched prompt + context notes to the user
 5. User approves, edits, or rejects before you act
@@ -34,7 +34,12 @@ If nothing remains after removing "enrich", ask: "What would you like me to enri
 
 ### Step 2: Send to Codex
 
-Invoke the `codex:rescue` skill with this task. Do NOT add `--write` — this is read-only analysis.
+Invoke the Codex bridge with this task. Do NOT add `--write` — this is read-only analysis.
+
+```bash
+SSPOWER_PLUGIN_ROOT=$(dirname "$(dirname "$(find ~/.claude/plugins -name codex-bridge.mjs -path "*/sspower/*" | head -1)")")
+node "${SSPOWER_PLUGIN_ROOT}/scripts/codex-bridge.mjs" rescue --cd . --prompt @/tmp/codex-enrich-prompt.md
+```
 
 ```
 Analyze this user prompt against the current repository and produce an enriched version.

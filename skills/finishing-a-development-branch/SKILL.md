@@ -86,7 +86,7 @@ Report cleanup result: "Cleaned up worktree at `<path>`" or "Keeping worktree at
 ## Integration
 
 **Prerequisite:**
-- **Codex review** - Run `/codex:review` for independent second opinion before finishing
+- **Codex review** - Run `codex-bridge.mjs review` for independent second opinion before finishing
 
 **Called by:**
 - **subagent-driven-development** (Step 7) - After all tasks complete

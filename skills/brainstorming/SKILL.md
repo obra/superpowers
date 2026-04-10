@@ -26,7 +26,7 @@ You MUST create a task for each item and complete them in order:
 5. **Present design** — sections scaled to complexity, get user approval after each
 6. **Write design doc** — save to `docs/specs/YYYY-MM-DD-<topic>-design.md` and commit
 7. **Spec self-review** — placeholder scan, consistency, scope, ambiguity (see `references/after-design.md`)
-8. **Codex spec review** — independent review via `/codex:rescue`
+8. **Codex spec review** — independent review via `codex-bridge.mjs rescue`
 9. **User reviews written spec** — ask user before proceeding
 10. **Transition to implementation** — invoke writing-plans skill (the ONLY next skill)
 

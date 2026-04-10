@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "summary", "files_changed", "tests", "self_review", "concerns", "questions", "blocked_reason"],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["DONE", "DONE_WITH_CONCERNS", "BLOCKED", "NEEDS_CONTEXT"],
+      "description": "Outcome of the implementation attempt"
+    },
+    "summary": {
+      "type": "string",
+      "description": "What was implemented or attempted"
+    },
+    "files_changed": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Paths of files created or modified"
+    },
+    "tests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ran", "passed", "failed", "details"],
+      "properties": {
+        "ran": { "type": "boolean", "description": "Whether tests were executed" },
+        "passed": { "type": "integer", "description": "Number of passing tests" },
+        "failed": { "type": "integer", "description": "Number of failing tests" },
+        "details": { "type": "string", "description": "Test runner output or notes" }
+      }
+    },
+    "self_review": {
+      "type": "string",
+      "description": "Findings from self-review before reporting"
+    },
+    "concerns": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Doubts or observations when status is DONE_WITH_CONCERNS, empty array otherwise"
+    },
+    "questions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "What is needed when status is NEEDS_CONTEXT, empty array otherwise"
+    },
+    "blocked_reason": {
+      "type": "string",
+      "description": "Why work cannot proceed when status is BLOCKED, empty string otherwise"
+    }
+  }
+}

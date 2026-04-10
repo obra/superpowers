@@ -1,6 +1,6 @@
 # Codex Integration Fork — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use sspower:subagent-driven-development (recommended) or sspower:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Fork obra/superpowers into a private repo with native Codex integration at 3 workflow points.
 
@@ -8,7 +8,7 @@
 
 **Tech Stack:** Git, GitHub CLI (`gh`), Claude Code plugin system, Markdown skill files
 
-**Spec:** `docs/superpowers/specs/2026-04-03-codex-integration-fork-design.md`
+**Spec:** `docs/sspower/specs/2026-04-03-codex-integration-fork-design.md`
 
 ---
 
@@ -89,7 +89,7 @@ Create `skills/codex-gate/SKILL.md` with this content:
 ```markdown
 ---
 name: codex-gate
-description: Codex integration for superpowers workflow. Activates at 3 points — spec review during brainstorming, execution delegation during implementation, and independent final review gate before finishing a branch. Invoke when the workflow reaches these decision points, or when the user says "codex review", "codex gate", or "second opinion".
+description: Codex integration for sspower workflow. Activates at 3 points — spec review during brainstorming, execution delegation during implementation, and independent final review gate before finishing a branch. Invoke when the workflow reaches these decision points, or when the user says "codex review", "codex gate", or "second opinion".
 allowed-tools: Bash, Read, Glob, Grep, Agent, AskUserQuestion, Skill
 ---
 
@@ -102,16 +102,16 @@ This skill connects Codex into the superpower workflow at three points:
 
 ## When this skill activates
 
-- During `superpowers:brainstorming`, after Claude subagent spec review passes and before user reviews
-- Inside `superpowers:subagent-driven-development` or `superpowers:executing-plans`, at each task execution decision point
-- After `superpowers:requesting-code-review` completes and before `superpowers:finishing-a-development-branch`
+- During `sspower:brainstorming`, after Claude subagent spec review passes and before user reviews
+- Inside `sspower:subagent-driven-development` or `sspower:executing-plans`, at each task execution decision point
+- After `sspower:requesting-code-review` completes and before `sspower:finishing-a-development-branch`
 - When the user says "codex review", "codex gate", "independent review", or "second opinion"
 
 ---
 
 ## Part 1: Spec review
 
-After the Claude subagent spec review loop passes during `superpowers:brainstorming`, run an independent Codex review before the user sees the spec.
+After the Claude subagent spec review loop passes during `sspower:brainstorming`, run an independent Codex review before the user sees the spec.
 
 ### Flow
 
@@ -170,7 +170,7 @@ codex-gate: spec review
 
 ## Part 2: Execution delegation
 
-When working inside `superpowers:subagent-driven-development` or `superpowers:executing-plans`, at each task:
+When working inside `sspower:subagent-driven-development` or `sspower:executing-plans`, at each task:
 
 1. Present the execution choice:
    ```
@@ -225,12 +225,12 @@ Current code:
 
 ## Part 3: Final review gate
 
-After Claude's own code review (`superpowers:requesting-code-review`) completes, run the Codex independent review gate before proceeding to `superpowers:finishing-a-development-branch`.
+After Claude's own code review (`sspower:requesting-code-review`) completes, run the Codex independent review gate before proceeding to `sspower:finishing-a-development-branch`.
 
 ### Flow
 
 ```
-superpowers:requesting-code-review
+sspower:requesting-code-review
     ↓ (Claude's review complete, issues addressed)
     ↓
 codex-gate: independent review
@@ -245,7 +245,7 @@ codex-gate: independent review
         Re-run review (max 2 iterations, then surface to user)
     ↓
     If verdict is "approve" or user says "proceed":
-        Continue to superpowers:finishing-a-development-branch
+        Continue to sspower:finishing-a-development-branch
 ```
 
 ### Execution steps
@@ -278,22 +278,22 @@ codex-gate: independent review
 The complete flow with Codex integration:
 
 ```
-superpowers:brainstorming
+sspower:brainstorming
     ↓ spec review: Claude subagent → Codex review → User review  (Part 1)
-superpowers:writing-plans
+sspower:writing-plans
     ↓
-superpowers:subagent-driven-development (or executing-plans)
+sspower:subagent-driven-development (or executing-plans)
     Per task:
         Choose: inline / subagent / Codex execute  (Part 2)
         → spec-compliance review
         → code-quality review
         → mark complete
     ↓
-superpowers:requesting-code-review (Claude's review)
+sspower:requesting-code-review (Claude's review)
     ↓
-superpowers:codex-gate (Codex independent review)  (Part 3)
+sspower:codex-gate (Codex independent review)  (Part 3)
     ↓
-superpowers:finishing-a-development-branch
+sspower:finishing-a-development-branch
 ```
 
 ---
@@ -301,7 +301,7 @@ superpowers:finishing-a-development-branch
 ## Integration with existing plugins
 
 This skill uses:
-- **superpowers** — the workflow framework (this plugin)
+- **sspower** — the workflow framework (this plugin)
 - **codex** (`codex@openai-codex`) — the execution and review runtime
   - `/codex:rescue` for task delegation and spec review
   - `/codex:review` for standard code review
@@ -338,7 +338,7 @@ In the `## Checklist` section, add a new step 8 between the current step 7 (spec
 
 ```
 7. **Spec review loop** — dispatch spec-document-reviewer subagent with precisely crafted review context (never your session history); fix issues and re-dispatch until approved (max 3 iterations, then surface to human)
-8. **Codex spec review** — invoke `superpowers:codex-gate` Part 1 for independent Codex review of the spec; fix issues and re-run (max 2 iterations)
+8. **Codex spec review** — invoke `sspower:codex-gate` Part 1 for independent Codex review of the spec; fix issues and re-run (max 2 iterations)
 9. **User reviews written spec** — ask user to review the spec file before proceeding
 10. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 ```
@@ -351,15 +351,15 @@ In the `digraph brainstorming` block, add the Codex review node and edges. Inser
 
 Add node:
 ```
-    "Codex spec review\n(superpowers:codex-gate Part 1)" [shape=box];
+    "Codex spec review\n(sspower:codex-gate Part 1)" [shape=box];
     "Codex review passed?" [shape=diamond];
 ```
 
 Change the edge from spec review to user review:
 ```
-    "Spec review passed?" -> "Codex spec review\n(superpowers:codex-gate Part 1)" [label="approved"];
-    "Codex spec review\n(superpowers:codex-gate Part 1)" -> "Codex review passed?";
-    "Codex review passed?" -> "Codex spec review\n(superpowers:codex-gate Part 1)" [label="issues found,\nfix and re-run"];
+    "Spec review passed?" -> "Codex spec review\n(sspower:codex-gate Part 1)" [label="approved"];
+    "Codex spec review\n(sspower:codex-gate Part 1)" -> "Codex review passed?";
+    "Codex review passed?" -> "Codex spec review\n(sspower:codex-gate Part 1)" [label="issues found,\nfix and re-run"];
     "Codex review passed?" -> "User reviews spec?" [label="approved"];
 ```
 
@@ -376,7 +376,7 @@ After the existing "**Spec Review Loop:**" section and before "**User Review Gat
 **Codex Spec Review:**
 After the Claude subagent spec review loop passes:
 
-1. Invoke `superpowers:codex-gate` Part 1 (Spec Review)
+1. Invoke `sspower:codex-gate` Part 1 (Spec Review)
 2. Codex reviews the spec independently via `/codex:rescue`
 3. If Issues Found: fix, re-run Codex review (max 2 iterations)
 4. If Approved: proceed to user review
@@ -410,7 +410,7 @@ git commit -m "Add Codex spec review step to brainstorming workflow"
 In the `## Integration` section at the bottom, add after the existing entries:
 
 ```markdown
-- **superpowers:codex-gate** - REQUIRED: At each task execution decision point, invoke codex-gate to present Codex as a third execution option (inline / subagent / Codex execute)
+- **sspower:codex-gate** - REQUIRED: At each task execution decision point, invoke codex-gate to present Codex as a third execution option (inline / subagent / Codex execute)
 ```
 
 The final Integration section should read:
@@ -419,10 +419,10 @@ The final Integration section should read:
 ## Integration
 
 **Required workflow skills:**
-- **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
-- **superpowers:writing-plans** - Creates the plan this skill executes
-- **superpowers:codex-gate** - REQUIRED: At each task execution decision point, invoke codex-gate to present Codex as a third execution option (inline / subagent / Codex execute)
-- **superpowers:finishing-a-development-branch** - Complete development after all tasks
+- **sspower:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
+- **sspower:writing-plans** - Creates the plan this skill executes
+- **sspower:codex-gate** - REQUIRED: At each task execution decision point, invoke codex-gate to present Codex as a third execution option (inline / subagent / Codex execute)
+- **sspower:finishing-a-development-branch** - Complete development after all tasks
 ```
 
 - [ ] **Step 2: Verify**
@@ -449,10 +449,10 @@ git commit -m "Add codex-gate to executing-plans Integration section"
 
 - [ ] **Step 1: Add codex-gate to Integration section**
 
-In the `## Integration` section, add after `superpowers:requesting-code-review`:
+In the `## Integration` section, add after `sspower:requesting-code-review`:
 
 ```markdown
-- **superpowers:codex-gate** - REQUIRED: At each task execution decision point, invoke codex-gate to present Codex as a third execution option (inline / subagent / Codex execute). Also runs as independent review gate after code review.
+- **sspower:codex-gate** - REQUIRED: At each task execution decision point, invoke codex-gate to present Codex as a third execution option (inline / subagent / Codex execute). Also runs as independent review gate after code review.
 ```
 
 The final Integration section should read:
@@ -461,17 +461,17 @@ The final Integration section should read:
 ## Integration
 
 **Required workflow skills:**
-- **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
-- **superpowers:writing-plans** - Creates the plan this skill executes
-- **superpowers:requesting-code-review** - Code review template for reviewer subagents
-- **superpowers:codex-gate** - REQUIRED: At each task execution decision point, invoke codex-gate to present Codex as a third execution option (inline / subagent / Codex execute). Also runs as independent review gate after code review.
-- **superpowers:finishing-a-development-branch** - Complete development after all tasks
+- **sspower:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
+- **sspower:writing-plans** - Creates the plan this skill executes
+- **sspower:requesting-code-review** - Code review template for reviewer subagents
+- **sspower:codex-gate** - REQUIRED: At each task execution decision point, invoke codex-gate to present Codex as a third execution option (inline / subagent / Codex execute). Also runs as independent review gate after code review.
+- **sspower:finishing-a-development-branch** - Complete development after all tasks
 
 **Subagents should use:**
-- **superpowers:test-driven-development** - Subagents follow TDD for each task
+- **sspower:test-driven-development** - Subagents follow TDD for each task
 
 **Alternative workflow:**
-- **superpowers:executing-plans** - Use for parallel session instead of same-session execution
+- **sspower:executing-plans** - Use for parallel session instead of same-session execution
 ```
 
 - [ ] **Step 2: Verify**
@@ -504,7 +504,7 @@ At the end of the file (after `See template at: requesting-code-review/code-revi
 
 ## After Code Review
 
-After all review issues are addressed, invoke `superpowers:codex-gate` Part 3 (Final Review Gate) for an independent Codex review before proceeding to `superpowers:finishing-a-development-branch`. This is a required step — do not skip directly to finishing the branch.
+After all review issues are addressed, invoke `sspower:codex-gate` Part 3 (Final Review Gate) for an independent Codex review before proceeding to `sspower:finishing-a-development-branch`. This is a required step — do not skip directly to finishing the branch.
 ```
 
 - [ ] **Step 2: Verify**
@@ -531,13 +531,13 @@ git commit -m "Add codex-gate handoff to requesting-code-review"
 
 - [ ] **Step 1: Add codex-gate as prerequisite**
 
-In the `## Integration` section at the bottom, add `superpowers:codex-gate` as a prerequisite. The section should read:
+In the `## Integration` section at the bottom, add `sspower:codex-gate` as a prerequisite. The section should read:
 
 ```markdown
 ## Integration
 
 **Prerequisite:**
-- **superpowers:codex-gate** - REQUIRED: Codex independent review must complete before finishing the branch
+- **sspower:codex-gate** - REQUIRED: Codex independent review must complete before finishing the branch
 
 **Called by:**
 - **subagent-driven-development** (Step 7) - After all tasks complete
@@ -575,7 +575,7 @@ git commit -m "Add codex-gate as prerequisite to finishing-a-development-branch"
 cat .claude-plugin/marketplace.json
 ```
 
-Expected: Shows `"name": "superpowers-dev"` (or similar).
+Expected: Shows `"name": "sspower-dev"` (or similar).
 
 - [ ] **Step 2: Update marketplace name and owner**
 
@@ -584,14 +584,14 @@ Change the `name` to `codex-integration` and update the owner info:
 ```json
 {
   "name": "codex-integration",
-  "description": "Superpowers fork with native Codex integration at 3 workflow points",
+  "description": "sspower fork with native Codex integration at 3 workflow points",
   "owner": {
     "name": "sskys18"
   },
   "plugins": [
     {
-      "name": "superpowers",
-      "description": "Superpowers with Codex integration: spec review, execution delegation, and independent final review gate",
+      "name": "sspower",
+      "description": "sspower with Codex integration: spec review, execution delegation, and independent final review gate",
       "version": "5.0.5",
       "source": "./",
       "author": {
@@ -608,7 +608,7 @@ Change the `name` to `codex-integration` and update the owner info:
 cat .claude-plugin/plugin.json
 ```
 
-Expected: `"name": "superpowers"` — no changes needed.
+Expected: `"name": "sspower"` — no changes needed.
 
 - [ ] **Step 4: Commit**
 
@@ -649,8 +649,8 @@ Verify this matches the shape of the existing `openai-codex` entry in the same s
 
 In `~/.claude/settings.json` `enabledPlugins`:
 
-- Set `"superpowers@claude-plugins-official": false` (or remove the entry)
-- Add `"superpowers@codex-integration": true`
+- Set `"sspower@claude-plugins-official": false` (or remove the entry)
+- Add `"sspower@codex-integration": true`
 
 - [ ] **Step 4: Commit settings change**
 
@@ -669,7 +669,7 @@ Exit and restart Claude Code to pick up new plugin configuration.
 
 - [ ] **Step 2: Verify skills load**
 
-Check that superpowers skills appear with the `superpowers:` prefix. The skill list should include `superpowers:codex-gate`.
+Check that sspower skills appear with the `sspower:` prefix. The skill list should include `sspower:codex-gate`.
 
 - [ ] **Step 3: Cleanup memory workaround**
 
@@ -701,9 +701,9 @@ If verification fails at any point:
 
 ```bash
 # In ~/.claude/settings.json:
-# Set "superpowers@claude-plugins-official": true
-# Remove "superpowers@codex-integration"
+# Set "sspower@claude-plugins-official": true
+# Remove "sspower@codex-integration"
 # Restart Claude Code
 ```
 
-Original superpowers restored immediately. Debug the fork without blocking work.
+Original sspower restored immediately. Debug the fork without blocking work.

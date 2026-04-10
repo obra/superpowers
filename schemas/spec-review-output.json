@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["verdict", "missing", "extra", "misunderstandings", "summary"],
+  "properties": {
+    "verdict": {
+      "type": "string",
+      "enum": ["compliant", "non-compliant"],
+      "description": "Whether implementation matches the spec"
+    },
+    "missing": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["requirement", "evidence", "file", "line"],
+        "properties": {
+          "requirement": { "type": "string", "description": "The spec requirement that was not met" },
+          "evidence": { "type": "string", "description": "What was found or not found in the code" },
+          "file": { "type": "string", "description": "File path where issue was found, empty if N/A" },
+          "line": { "type": "integer", "description": "Line number, 0 if N/A" }
+        }
+      },
+      "description": "Requirements from spec that are missing in implementation"
+    },
+    "extra": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["description", "file", "line"],
+        "properties": {
+          "description": { "type": "string", "description": "What was built beyond spec" },
+          "file": { "type": "string", "description": "File path, empty if N/A" },
+          "line": { "type": "integer", "description": "Line number, 0 if N/A" }
+        }
+      },
+      "description": "Work done beyond what spec requested"
+    },
+    "misunderstandings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["expected", "actual", "file", "line"],
+        "properties": {
+          "expected": { "type": "string", "description": "What the spec intended" },
+          "actual": { "type": "string", "description": "What was actually implemented" },
+          "file": { "type": "string", "description": "File path, empty if N/A" },
+          "line": { "type": "integer", "description": "Line number, 0 if N/A" }
+        }
+      },
+      "description": "Requirements interpreted differently than intended"
+    },
+    "summary": {
+      "type": "string",
+      "description": "Overall compliance assessment"
+    }
+  }
+}

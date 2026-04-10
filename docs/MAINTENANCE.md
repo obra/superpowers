@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repo is a private fork of [obra/superpowers](https://github.com/obra/superpowers) with native Codex integration. It replaces the official superpowers plugin via the `codex-integration` marketplace.
+This repo is a private fork of [obra/superpowers](https://github.com/obra/superpowers) with native Codex integration. It replaces the official sspower plugin via the `codex-integration` marketplace.
 
 ## Remotes
 
@@ -15,10 +15,10 @@ upstream  https://github.com/obra/superpowers.git         (upstream source)
 
 | Field | Value |
 |-------|-------|
-| plugin.json name | `superpowers` (namespace prefix) |
+| plugin.json name | `sspower` (namespace prefix) |
 | marketplace.json name | `codex-integration` |
-| settings.json key | `superpowers@codex-integration` |
-| Cache path | `~/.claude/plugins/cache/codex-integration/superpowers/5.0.7/` |
+| settings.json key | `sspower@codex-integration` |
+| Cache path | `~/.claude/plugins/cache/codex-integration/sspower/5.0.7/` |
 
 ## After Making Changes
 
@@ -32,7 +32,7 @@ git add -A && git commit -m "description" && git push origin main
 rsync -a --delete \
   --exclude '.git' \
   ~/Mine/claude-skills/ \
-  ~/.claude/plugins/cache/codex-integration/superpowers/5.0.7/
+  ~/.claude/plugins/cache/codex-integration/sspower/5.0.7/
 
 # 3. Restart Claude Code to pick up changes
 ```
@@ -62,7 +62,7 @@ git push origin main
 rsync -a --delete \
   --exclude '.git' \
   ~/Mine/claude-skills/ \
-  ~/.claude/plugins/cache/codex-integration/superpowers/5.0.7/
+  ~/.claude/plugins/cache/codex-integration/sspower/5.0.7/
 
 # 5. Restart Claude Code
 ```
@@ -73,8 +73,8 @@ rsync -a --delete \
 |------|-----------------|
 | `skills/codex-gate/SKILL.md` | NEW — Codex integration skill (3 parts) |
 | `skills/brainstorming/SKILL.md` | Added Codex spec review step (checklist item 8, flow diagram, prose section) |
-| `skills/executing-plans/SKILL.md` | Added `superpowers:codex-gate` to Integration section |
-| `skills/subagent-driven-development/SKILL.md` | Added `superpowers:codex-gate` to Integration section |
+| `skills/executing-plans/SKILL.md` | Added `sspower:codex-gate` to Integration section |
+| `skills/subagent-driven-development/SKILL.md` | Added `sspower:codex-gate` to Integration section |
 | `skills/requesting-code-review/SKILL.md` | Added "After Code Review" section with codex-gate handoff |
 | `skills/finishing-a-development-branch/SKILL.md` | Added codex-gate as prerequisite in Integration section |
 | `.claude-plugin/marketplace.json` | Name set to `codex-integration`, owner to `sskys18` |
@@ -84,16 +84,16 @@ rsync -a --delete \
 If something breaks:
 
 ```bash
-# Re-enable official superpowers
+# Re-enable official sspower
 # In ~/.claude/settings.json:
-#   "superpowers@claude-plugins-official": true
-#   "superpowers@codex-integration": false
+#   "sspower@claude-plugins-official": true
+#   "sspower@codex-integration": false
 # Restart Claude Code
 ```
 
 ## Key Config Files
 
 - `~/.claude/settings.json` — `enabledPlugins` and `extraKnownMarketplaces`
-- `~/.claude/plugins/installed_plugins.json` — install entry for `superpowers@codex-integration`
+- `~/.claude/plugins/installed_plugins.json` — install entry for `sspower@codex-integration`
 - `~/.claude/plugins/known_marketplaces.json` — marketplace registration
-- `~/.claude/plugins/cache/codex-integration/superpowers/5.0.7/` — cached plugin files
+- `~/.claude/plugins/cache/codex-integration/sspower/5.0.7/` — cached plugin files

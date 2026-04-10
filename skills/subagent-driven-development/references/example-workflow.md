@@ -14,7 +14,7 @@ Task 1: Hook installation script
 
 Implementer: "Before I begin - should the hook be installed at user or system level?"
 
-You: "User level (~/.config/superpowers/hooks/)"
+You: "User level (~/.config/sspower/hooks/)"
 
 Implementer: "Got it. Implementing now..."
 [Later] Implementer:
@@ -105,3 +105,81 @@ Done!
 - Controller does more prep work (extracting all tasks upfront)
 - Review loops add iterations
 - But catches issues early (cheaper than debugging later)
+
+---
+
+## Example: Codex Engine Workflow
+
+```
+You: I'm using Subagent-Driven Development with Codex to execute this plan.
+
+[Read plan file, extract all 3 tasks]
+[Create TodoWrite with all tasks]
+
+Task 1: API endpoint (complex, unfamiliar library → pick Codex)
+
+[Write prompt to /tmp/sdd-task-1.md using codex-implementer-prompt.md template]
+[Run: codex-bridge.mjs implement --write --cd ./project --prompt @/tmp/sdd-task-1.md]
+
+Codex returns:
+{
+  "status": "DONE",
+  "summary": "Implemented /api/users endpoint with validation...",
+  "files_changed": ["src/routes/users.ts", "src/routes/users.test.ts"],
+  "tests": {"ran": true, "passed": 4, "failed": 0, "details": "vitest pass"},
+  "self_review": "Clean implementation, follows existing route patterns",
+  "concerns": [],
+  "questions": [],
+  "blocked_reason": ""
+}
+
+[Write spec review prompt to /tmp/sdd-spec-review-1.md]
+[Run: codex-bridge.mjs spec-review --cd ./project --prompt @/tmp/sdd-spec-review-1.md]
+
+Codex spec reviewer returns:
+{
+  "verdict": "non-compliant",
+  "missing": [{"requirement": "Rate limiting", "evidence": "No rate limit middleware found", "file": "src/routes/users.ts", "line": 0}],
+  "extra": [],
+  "misunderstandings": [],
+  "summary": "Missing rate limiting requirement from spec"
+}
+
+[Resume Codex thread for fix]
+[Run: codex-bridge.mjs resume --session-id {SESSION_ID_FROM_IMPLEMENT} --prompt "Add rate limiting..."]
+
+Codex fixes and returns DONE.
+
+[Re-run spec review → compliant]
+
+[Run: codex-bridge.mjs review --cd ./project --prompt @/tmp/sdd-quality-1.md]
+
+Quality reviewer returns:
+{
+  "verdict": "approve",
+  "strengths": ["Good test coverage", "Follows existing patterns"],
+  "issues": [],
+  "assessment": "Clean implementation, ready to proceed"
+}
+
+[Mark Task 1 complete]
+
+Task 2: Simple utility (pick Claude subagent — quick and interactive)
+
+[Dispatch Claude subagent as usual — existing flow unchanged]
+...
+
+Task 3: Database migration (complex → pick Codex)
+
+[Same Codex flow as Task 1]
+...
+
+[After all tasks: final code review + finishing-branch]
+```
+
+**Key difference from Claude-only workflow:**
+- Codex is one-shot — no mid-task questions, all context front-loaded
+- Fix loops use `resume --session-id` (targets the implementer thread, not the last session)
+- Capture `[codex:session] <id>` from stderr during implement — needed for resume
+- Mixing engines per task is normal — pick the best tool for each job
+- Structured contracts are identical — controller logic doesn't change

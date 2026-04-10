@@ -4,7 +4,7 @@ sspower is a fork of [obra/superpowers](https://github.com/obra/superpowers) (v5
 
 ## Upstream
 
-- **Remote**: `upstream` → `https://github.com/obra/superpowers.git`
+- **Remote**: `upstream` → `https://github.com/obra/superpowers.git` *(upstream)*
 - **Fork base**: tag `v5.0.5`
 - **Origin**: `origin` → `https://github.com/sskys18/sspower.git`
 
@@ -12,7 +12,7 @@ sspower is a fork of [obra/superpowers](https://github.com/obra/superpowers) (v5
 
 | Skill | Purpose |
 |-------|---------|
-| `using-sspower` | Replaces `using-superpowers` — custom skill routing, red-flags table, platform adaptation |
+| `using-sspower` | Replaces `using-sspower` — custom skill routing, red-flags table, platform adaptation |
 | `second-opinion` | Independent review via Codex subagent before merging or after 2+ failed fix attempts |
 
 ## Modified Skills
@@ -32,12 +32,12 @@ All upstream skills received **reference extraction** — large inline examples 
 ## New Docs
 
 - `docs/MAINTENANCE.md` — maintenance guide for this fork
-- `docs/superpowers/plans/2026-04-04-codex-integration-fork.md` — Codex integration plan
-- `docs/superpowers/specs/2026-04-03-codex-integration-fork-design.md` — Codex integration design spec
+- `docs/sspower/plans/2026-04-04-codex-integration-fork.md` — Codex integration plan
+- `docs/sspower/specs/2026-04-03-codex-integration-fork-design.md` — Codex integration design spec
 
 ## Versioning
 
-sspower v1.0.0 — independent from upstream superpowers v5.x.
+sspower v1.0.0 — independent from upstream sspower v5.x.
 
 Version tracked in:
 - `package.json`
@@ -49,14 +49,14 @@ Version tracked in:
 |---------|--------|
 | `.cursor-plugin/` | Cursor config |
 | `.opencode/` | OpenCode config |
-| `.codex/` | Codex install guide (for Superpowers, not sspower) |
+| `.codex/` | Codex install guide (upstream, not sspower) |
 | `gemini-extension.json`, `GEMINI.md` | Gemini config |
 | `commands/` | Deprecated slash commands (replaced by skills) |
 | `hooks/hooks-cursor.json`, `hooks/run-hook.cmd` | Cursor hooks, Windows batch |
-| `scripts/`, `.version-bump.json` | Superpowers release tooling |
-| `.github/` | Superpowers issue/PR templates |
-| `AGENTS.md`, `CHANGELOG.md`, `CODE_OF_CONDUCT.md`, `RELEASE-NOTES.md` | Superpowers docs |
-| `skills/using-superpowers/` | Replaced by `using-sspower` |
+| `scripts/`, `.version-bump.json` | sspower release tooling |
+| `.github/` | sspower issue/PR templates |
+| `AGENTS.md`, `CHANGELOG.md`, `CODE_OF_CONDUCT.md`, `RELEASE-NOTES.md` | sspower docs |
+| `skills/using-sspower/` | Replaced by `using-sspower` |
 | `tests/opencode/` | OpenCode tests |
 
 ## Syncing with Upstream

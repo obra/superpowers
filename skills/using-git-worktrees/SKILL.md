@@ -15,7 +15,7 @@ Git worktrees create isolated workspaces sharing the same repository.
 
 1. **Check existing:** `ls -d .worktrees worktrees 2>/dev/null` — if found, use it (`.worktrees` wins if both exist)
 2. **Check CLAUDE.md:** `grep -i "worktree.*director" CLAUDE.md` — if preference specified, use it
-3. **Ask user:** Offer `.worktrees/` (project-local, hidden) or `~/.config/superpowers/worktrees/<project>/` (global)
+3. **Ask user:** Offer `.worktrees/` (project-local, hidden) or `~/.config/sspower/worktrees/<project>/` (global)
 
 ## Safety: Verify Ignored
 

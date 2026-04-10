@@ -1,0 +1,101 @@
+{
+  "skill_name": "subagent-driven-development-codex-integration",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Use the codex-bridge to implement a Node.js module: create a file `stack.js` that exports a Stack class with push(item), pop(), peek(), and isEmpty() methods. Create `stack.test.js` with tests covering all methods including edge cases (pop on empty stack should throw). Run tests with `node --test`. Use the implement subcommand with --write and --auto-commit targeting /tmp/sspower-eval-1.",
+      "expected_output": "Structured JSON with status DONE, files_changed including stack.js and stack.test.js, tests.ran=true with 0 failures, and a _commit SHA",
+      "assertions": [
+        {
+          "name": "returns-valid-json",
+          "text": "Bridge stdout is valid JSON parseable output",
+          "type": "programmatic"
+        },
+        {
+          "name": "status-is-done",
+          "text": "Response JSON has status field equal to 'DONE'",
+          "type": "programmatic"
+        },
+        {
+          "name": "files-changed-populated",
+          "text": "files_changed array contains at least 2 entries (stack.js and stack.test.js)",
+          "type": "programmatic"
+        },
+        {
+          "name": "tests-ran-and-passed",
+          "text": "tests.ran is true, tests.failed is 0, tests.passed is > 0",
+          "type": "programmatic"
+        },
+        {
+          "name": "auto-commit-created",
+          "text": "_commit field contains a git SHA (40 hex chars)",
+          "type": "programmatic"
+        },
+        {
+          "name": "schema-compliant",
+          "text": "Response contains all required fields: status, summary, files_changed, tests, self_review, concerns, questions, blocked_reason",
+          "type": "programmatic"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Use the codex-bridge spec-review subcommand to verify whether an implementation of a Stack class matches a spec requiring push, pop, peek, isEmpty, and a size() getter. The implementation is in /tmp/sspower-eval-1 (from eval 1) and does NOT have a size() method. The spec-review should detect this as non-compliant.",
+      "expected_output": "Structured JSON with verdict 'non-compliant', at least one entry in the missing array referencing the size() requirement",
+      "assertions": [
+        {
+          "name": "returns-valid-json",
+          "text": "Bridge stdout is valid JSON parseable output",
+          "type": "programmatic"
+        },
+        {
+          "name": "verdict-non-compliant",
+          "text": "Response verdict is 'non-compliant' because size() is missing",
+          "type": "programmatic"
+        },
+        {
+          "name": "missing-array-populated",
+          "text": "missing array has at least 1 entry mentioning size",
+          "type": "programmatic"
+        },
+        {
+          "name": "schema-compliant",
+          "text": "Response contains all required fields: verdict, missing, extra, misunderstandings, summary",
+          "type": "programmatic"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Use the codex-bridge review subcommand to perform a code quality review on the Stack implementation in /tmp/sspower-eval-1. The review should check architecture, tests, error handling, and maintainability.",
+      "expected_output": "Structured JSON with verdict (approve or needs-attention), strengths array, issues array with severity/title/file/recommendation fields, and an assessment string",
+      "assertions": [
+        {
+          "name": "returns-valid-json",
+          "text": "Bridge stdout is valid JSON parseable output",
+          "type": "programmatic"
+        },
+        {
+          "name": "verdict-is-valid",
+          "text": "verdict is either 'approve' or 'needs-attention'",
+          "type": "programmatic"
+        },
+        {
+          "name": "strengths-populated",
+          "text": "strengths array has at least 1 entry",
+          "type": "programmatic"
+        },
+        {
+          "name": "issues-well-structured",
+          "text": "If issues exist, each has severity, title, file, and recommendation fields",
+          "type": "programmatic"
+        },
+        {
+          "name": "schema-compliant",
+          "text": "Response contains all required fields: verdict, strengths, issues, assessment",
+          "type": "programmatic"
+        }
+      ]
+    }
+  ]
+}

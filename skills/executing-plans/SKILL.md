@@ -57,5 +57,5 @@ After all tasks complete and verified:
 **Required workflow skills:**
 - **sspower:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
 - **sspower:writing-plans** - Creates the plan this skill executes
-- **Codex option** - At each task, you may delegate to Codex via `/codex:rescue` as an alternative to inline or subagent execution
+- **Codex option** - At each task, you may delegate to Codex via `codex-bridge.mjs implement --write` or `codex-bridge.mjs rescue --write` as an alternative to inline or subagent execution
 - **sspower:finishing-a-development-branch** - Complete development after all tasks

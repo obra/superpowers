@@ -22,7 +22,7 @@ Fix any issues inline. No need to re-review — just fix and move on.
 
 After the spec self-review passes:
 
-1. Use `/codex:rescue` with a review task for independent spec review
+1. Use `codex-bridge.mjs rescue --cd . --prompt @spec-review-prompt.md` for independent spec review
 2. Codex reviews the spec independently
 3. If Issues Found: fix, re-run Codex review (max 2 iterations)
 4. If Approved: proceed to user review

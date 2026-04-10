@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# UserPromptSubmit hook for sspower plugin
+# Compact, self-contained reminder on every message. Survives compaction.
+# Replaces SessionStart injection — no duplication.
+
+set -euo pipefail
+
+CONTEXT="sspower: BEFORE responding, check which skills apply (even 1% chance = invoke via Skill tool). Priority: process skills first (brainstorming, systematic-debugging), then implementation skills (test-driven-development, writing-plans, executing-plans, subagent-driven-development). Rigid skills (TDD, debugging): follow exactly. Flexible skills: adapt to context. If about to claim done: verification-before-completion. If completing a feature: requesting-code-review. Skip only for pure Q&A with zero coding/planning intent."
+
+# Escape for JSON
+CONTEXT="${CONTEXT//\\/\\\\}"
+CONTEXT="${CONTEXT//\"/\\\"}"
+
+printf '{"hookSpecificOutput":{"hookEventName":"UserPromptSubmit","additionalContext":"%s"}}\n' "$CONTEXT"
+exit 0
