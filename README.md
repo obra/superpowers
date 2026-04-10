@@ -1,14 +1,10 @@
 # sspower
 
-A fork of [Superpowers](https://github.com/obra/superpowers) (v5.0.5) — a complete software development workflow for Claude Code, customized for personal use.
+A complete software development workflow for Claude Code. Fork of [Superpowers](https://github.com/obra/superpowers) v5.0.5, customized with native Codex integration and macOS-first design.
 
-## What it does
-
-Composable "skills" that automatically trigger during your workflow: brainstorming, planning, TDD, debugging, code review, subagent-driven development, and more. The agent checks for relevant skills before any task — mandatory workflows, not suggestions.
+**16 composable skills** that automatically trigger during your workflow — mandatory workflows, not suggestions. The agent checks for relevant skills before every task.
 
 ## Installation
-
-In Claude Code:
 
 ```bash
 # Add the marketplace
@@ -18,83 +14,244 @@ In Claude Code:
 /plugin install sspower@sspower
 ```
 
-### Optional: Codex integration
+### Codex Integration (Optional)
 
-Several skills use Codex (GPT-5.4) for independent review and implementation. sspower calls the Codex CLI directly via its own `codex-bridge.mjs` — no external Claude Code plugin needed.
+sspower calls the Codex CLI directly for independent review and implementation — no external Claude Code plugin needed.
 
 ```bash
-# Install Codex CLI
 npm install -g @openai/codex
-
-# Authenticate
 codex login
-
-# Verify
-node scripts/codex-bridge.mjs setup
 ```
 
-Without Codex CLI installed, all other skills work fine — Codex-dependent features (`second-opinion`, Codex engine in SDD, `codex-enrich`) will just be unavailable.
+Without Codex, all skills work except `second-opinion`, Codex engine in SDD, and `codex-enrich`.
 
-## The Workflow
+---
 
-1. **brainstorming** — Refines ideas through questions, explores alternatives, presents design in sections
-2. **using-git-worktrees** — Creates isolated workspace on new branch
-3. **writing-plans** — Breaks work into bite-sized tasks with exact file paths and verification steps
-4. **subagent-driven-development** / **executing-plans** — Dispatches subagents per task with two-stage review
-5. **test-driven-development** — RED-GREEN-REFACTOR cycle
-6. **requesting-code-review** — Reviews against plan, reports issues by severity
-7. **finishing-a-development-branch** — Verifies tests, presents merge/PR/keep/discard options
+## The Complete Flow
 
-## Skills
+```
+                          USER REQUEST
+                               |
+                               v
+                    +--------------------+
+                    |   using-sspower    |  <-- meta router
+                    |  "1% chance =      |      fires on every message
+                    |   invoke skill"    |
+                    +--------------------+
+                               |
+              +----------------+----------------+
+              |                |                |
+              v                v                v
+     +--------------+  +--------------+  +--------------+
+     | brainstorming|  | systematic-  |  |    codex-    |
+     |              |  |  debugging   |  |   enrich     |
+     | ideas -->    |  | 4-phase      |  | validate     |
+     | designs      |  | investigation|  | prompts via  |
+     +--------------+  +--------------+  | Codex        |
+              |                |          +--------------+
+              v                v
+     +--------------+  +--------------+
+     | writing-     |  | test-driven- |
+     |   plans      |  | development  |
+     |              |  |              |
+     | specs -->    |  | RED-GREEN-   |
+     | task plans   |  | REFACTOR     |
+     +--------------+  +--------------+
+              |
+              v
+     +--------------------+
+     | using-git-worktrees|
+     |                    |
+     | isolated branch    |
+     +--------------------+
+              |
+              v
++----------------------------------+
+|  EXECUTION (pick one)            |
+|                                  |
+|  +----------------------------+  |
+|  | subagent-driven-development|  |   <-- recommended
+|  |                            |  |
+|  | Per task:                  |  |
+|  |   Pick engine:             |  |
+|  |   +--------+  +---------+ |  |
+|  |   | Claude |  |  Codex  | |  |
+|  |   |subagent|  |(bridge) | |  |
+|  |   +--------+  +---------+ |  |
+|  |        |           |      |  |
+|  |        +-----+-----+     |  |
+|  |              |            |  |
+|  |              v            |  |
+|  |        Spec Review        |  |
+|  |     (compliant? --->)     |  |
+|  |              |            |  |
+|  |              v            |  |
+|  |      Quality Review       |  |
+|  |     (approve? --->)       |  |
+|  |              |            |  |
+|  |        Next Task          |  |
+|  +----------------------------+  |
+|                                  |
+|  +----------------------------+  |
+|  |     executing-plans        |  |   <-- simpler alternative
+|  |  inline / subagent / Codex |  |
+|  +----------------------------+  |
++----------------------------------+
+              |
+              v
++----------------------------------+
+|  REVIEW CHAIN                    |
+|                                  |
+|  verification-before-completion  |
+|  --> evidence before claims      |
+|                                  |
+|  requesting-code-review          |
+|  --> Claude reviewer subagent    |
+|                                  |
+|  second-opinion  [HARD GATE]     |
+|  --> independent Codex review    |
+|                                  |
+|  finishing-a-development-branch  |
+|  --> merge / PR / keep / discard |
++----------------------------------+
+```
 
-| Category | Skills |
-|----------|--------|
-| Testing | `test-driven-development` |
-| Debugging | `systematic-debugging`, `verification-before-completion` |
-| Collaboration | `brainstorming`, `writing-plans`, `executing-plans`, `dispatching-parallel-agents`, `requesting-code-review`, `receiving-code-review`, `using-git-worktrees`, `finishing-a-development-branch`, `subagent-driven-development` |
-| Meta | `writing-skills`, `using-sspower` |
-| sspower-only | `second-opinion` |
+---
 
-## Key Differences from Upstream Superpowers
+## How SDD Works with Codex
 
-See [docs/CUSTOMIZATIONS.md](docs/CUSTOMIZATIONS.md) for the full changelog.
+Subagent-Driven Development dispatches a fresh agent per task. Two engines share the same structured JSON contracts:
 
-### Architecture: Token-Efficient Progressive Disclosure
+```
+Controller reads plan --> extracts tasks
 
-Upstream Superpowers loads entire skill content into context. sspower splits every skill into a lean `SKILL.md` (<100 lines) + `references/` subdirectory. The agent reads references only when needed, saving thousands of tokens per session.
+  For each task:
+
+  IMPLEMENT
+  +------------------+     +-------------------+
+  | Claude subagent  | OR  | Codex (bridge)    |
+  | interactive Q&A  |     | --output-schema   |
+  | native JSON      |     | --worktree        |
+  +------------------+     | --auto-commit     |
+         |                 +-------------------+
+         |                        |
+         +----------+-------------+
+                    |
+                    v
+            { status: "DONE",
+              files_changed: [...],
+              tests: { passed: 5 },
+              _commit: "abc123",
+              _branch: "codex/task-1" }
+                    |
+  SPEC REVIEW       v
+  +----------------------------------+
+  | "Does it match the spec?"        |
+  | Reads actual code, not report    |
+  | Returns: compliant / non-compliant
+  | --> fix loop via resume if needed|
+  +----------------------------------+
+                    |
+  QUALITY REVIEW    v
+  +----------------------------------+
+  | "Is it well-built?"              |
+  | Architecture, tests, security    |
+  | Returns: approve / needs-attention
+  | --> fix loop via resume if needed|
+  +----------------------------------+
+                    |
+                    v
+              Next task
+```
+
+### Engine Selection
+
+| Task | Engine | Why |
+|------|--------|-----|
+| Simple, 1-2 files | Claude subagent | Fast, can ask questions mid-task |
+| Complex, unfamiliar code | Codex | Different model, full repo scan |
+| Needs mid-task Q&A | Claude subagent | Interactive dialogue |
+| User requests Codex | Codex | Respect preference |
+
+### Fix Loops
+
+When a review fails, the controller resumes the implementer's Codex session — Codex remembers everything it built:
+
+```
+implement --> session A (persisted)
+spec-review --> session B (ephemeral)
+  non-compliant!
+resume --session-id A --> Codex fixes with full context
+spec-review --> compliant
+```
+
+---
+
+## 5 Review Gates Before Merge
+
+| # | Gate | Who | When |
+|---|------|-----|------|
+| 1 | Self-review | Implementer | Per task |
+| 2 | Spec compliance | Claude or Codex | Per task |
+| 3 | Code quality | Claude or Codex | Per task |
+| 4 | Final review | Claude code-reviewer | All tasks |
+| 5 | Second opinion | Codex (independent) | Before merge |
+
+---
+
+## All 16 Skills
+
+| Skill | Category | What it does |
+|-------|----------|-------------|
+| `using-sspower` | Meta | Routes to relevant skills (1% rule) |
+| `brainstorming` | Design | Ideas through collaborative design |
+| `writing-plans` | Planning | Specs into implementation plans |
+| `subagent-driven-development` | Execution | Per-task subagents with dual-engine (Claude + Codex) |
+| `executing-plans` | Execution | Simpler inline/subagent/Codex execution |
+| `test-driven-development` | Testing | RED-GREEN-REFACTOR cycle |
+| `systematic-debugging` | Debugging | 4-phase root cause investigation |
+| `dispatching-parallel-agents` | Collaboration | Concurrent independent work |
+| `requesting-code-review` | Review | Dispatch reviewer subagent |
+| `receiving-code-review` | Review | Handle feedback with technical rigor |
+| `second-opinion` | Review | Independent Codex review (hard gate) |
+| `verification-before-completion` | QA | Evidence before claims |
+| `using-git-worktrees` | Workflow | Isolated workspace setup |
+| `finishing-a-development-branch` | Workflow | Merge/PR/keep/discard + cleanup |
+| `codex-enrich` | Codex | Validate prompts via Codex repo scan |
+| `writing-skills` | Meta | TDD for skill development |
+
+---
+
+## Architecture
+
+```
+sspower/
+  scripts/codex-bridge.mjs    -- Direct Codex CLI bridge
+  schemas/                     -- Structured output contracts
+    implementation-output.json
+    spec-review-output.json
+    quality-review-output.json
+  agents/
+    code-reviewer.md           -- Claude review subagent
+    codex-rescue.md            -- Codex delegation subagent
+  hooks/
+    session-start              -- Injects using-sspower context
+    prompt-submit              -- Per-message skill reminder
+  skills/                      -- 16 skill directories
+    */SKILL.md                 -- Lean entry point (<100 lines)
+    */references/              -- Detailed docs (loaded on demand)
+```
+
+### Token-Efficient Progressive Disclosure
 
 | Skill | Upstream | sspower SKILL.md | sspower references/ |
-|-------|-------------|------------------|---------------------|
+|-------|----------|------------------|---------------------|
 | writing-skills | 647 lines | ~50 lines | 3 files (344 lines) |
 | test-driven-development | 313 lines | ~50 lines | 1 file (74 lines) |
 | systematic-debugging | 263 lines | ~50 lines | 2 files (227 lines) |
-| subagent-driven-development | 279 lines | ~50 lines | 2 files (143 lines) |
+| subagent-driven-development | 279 lines | ~160 lines | 3 files (250 lines) |
 
-### New Skills
-
-| Skill | What it does |
-|-------|-------------|
-| **`using-sspower`** | Replaces upstream `using-superpowers` — custom routing with red-flags table and multi-platform tool mapping |
-| **`second-opinion`** | Routes to Codex for independent review via native `codex-bridge.mjs`: rescue when stuck, adversarial review for high-risk merges, standard review otherwise |
-
-### Improved Skills (eval-tested)
-
-| Skill | What changed |
-|-------|-------------|
-| **dispatching-parallel-agents** | Added batch sizing table (5-8 files/agent) for bulk operations |
-| **finishing-a-development-branch** | Mandatory worktree cleanup with per-option reporting |
-| **verification-before-completion** | Language-agnostic command detection — reads project configs instead of hardcoded lookup |
-
-### Removed (Claude Code only)
-
-Cursor, Gemini, and OpenCode configs removed — sspower targets Claude Code exclusively.
-
-## Syncing with upstream
-
-```bash
-git fetch upstream
-git merge upstream/main
-```
+---
 
 ## Credits
 
