@@ -43,6 +43,7 @@ git diff {BASE_SHA}..{HEAD_SHA}
 - Security concerns?
 
 **Testing:**
+- Tests use real code? (flag any mock that isn't an external network boundary)
 - Tests actually test logic (not mocks)?
 - Edge cases covered?
 - Integration tests where needed?

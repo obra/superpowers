@@ -4,18 +4,43 @@
 
 ## Overview
 
-Tests must verify real behavior, not mock behavior. Mocks are a means to isolate, not the thing being tested.
+**Default: real tests against real code. No mocks.**
 
-**Core principle:** Test what the code does, not what the mocks do.
+Mocks create a parallel universe where tests pass but production breaks. Every mock is a lie about how the system actually works. The more mocks in a test, the less it tells you about reality.
+
+**The only acceptable mock target:** external network boundaries you cannot control (third-party APIs, payment gateways, email services). Everything else — databases, file systems, internal modules, other classes — test with real implementations.
+
+**Why this matters:** A mocked database test passed for a quarter while the production migration was broken. Real tests against a real database would have caught it immediately.
 
 **Following strict TDD prevents these anti-patterns.**
 
 ## The Iron Laws
 
 ```
-1. NEVER test mock behavior
-2. NEVER add test-only methods to production classes
-3. NEVER mock without understanding dependencies
+1. NEVER mock internal code — test real implementations
+2. NEVER test mock behavior — test real behavior
+3. NEVER add test-only methods to production classes
+4. NEVER mock "to be safe" — that hides real bugs
+5. ONLY mock external network boundaries you cannot control
+```
+
+## The Mock Decision
+
+```
+Want to mock something?
+    |
+    v
+Is it an external network call you can't control?
+    |           |
+   yes          no
+    |           |
+    v           v
+  Mock it    DON'T MOCK IT
+             Use the real thing:
+             - Real DB (SQLite in-memory, test container)
+             - Real file system (temp dir)
+             - Real internal modules
+             - Real classes and functions
 ```
 
 ## Anti-Pattern 1: Testing Mock Behavior

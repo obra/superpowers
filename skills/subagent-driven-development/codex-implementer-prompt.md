@@ -29,7 +29,7 @@ Key dependencies and patterns:
 
 <instructions>
 1. Implement exactly what the task specifies — nothing more, nothing less
-2. Write tests that verify behavior (not just mock behavior)
+2. Write tests against REAL code — no mocks. Use real databases (SQLite in-memory), real file systems (temp dirs), real modules. Only mock external network calls you cannot control.
 3. Follow TDD if the task says to
 4. Follow existing codebase patterns and conventions
 5. Each file should have one clear responsibility
@@ -55,7 +55,8 @@ Before reporting, review your work:
 - Are names clear and accurate?
 - Did I avoid overbuilding (YAGNI)?
 - Did I only build what was requested?
-- Do tests actually verify behavior?
+- Do tests use real code with zero mocks? (only external network calls may be mocked)
+- Do tests verify real behavior?
 - Did I list ALL files I created or modified in files_changed?
 </self_review>
 

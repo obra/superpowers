@@ -9,6 +9,8 @@ Write the test first. Watch it fail. Write minimal code to pass.
 
 **Core principle:** If you didn't watch the test fail, you don't know if it tests the right thing.
 
+**Testing principle:** Real tests against real code. Mocks hide bugs — the test passes but production breaks. Default to integration-style tests that exercise actual behavior. Only mock at the outermost boundary (network calls, third-party APIs) when there is no alternative.
+
 **Violating the letter of the rules is violating the spirit of the rules.**
 
 ## The Iron Law
@@ -40,7 +42,7 @@ digraph tdd_cycle {
 }
 ```
 
-**RED:** Write one minimal test. Requirements: one behavior, clear name, real code (no mocks unless unavoidable). **Verify it fails** — MANDATORY. Confirm failure is because feature is missing, not typos.
+**RED:** Write one minimal test. Requirements: one behavior, clear name, real code. No mocks — test against real implementations, real databases, real file systems. Only mock external network boundaries you cannot control. **Verify it fails** — MANDATORY. Confirm failure is because feature is missing, not typos.
 
 **GREEN:** Write simplest code to pass. Don't add features, refactor other code, or "improve" beyond the test. **Verify it passes** — MANDATORY. Other tests still pass? Output pristine?
 
@@ -75,7 +77,7 @@ See `references/rationalizations.md` for full rationalization table, "why order 
 - [ ] Each test failed for expected reason
 - [ ] Wrote minimal code to pass
 - [ ] All tests pass, output pristine
-- [ ] Tests use real code (mocks only if unavoidable)
+- [ ] Tests use real code (zero mocks unless external network boundary)
 - [ ] Edge cases and errors covered
 
 ## Testing Anti-Patterns

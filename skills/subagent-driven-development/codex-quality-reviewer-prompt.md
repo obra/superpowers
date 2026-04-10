@@ -45,7 +45,8 @@ Code quality:
 
 Testing:
 - Test coverage and quality
-- Tests verify behavior, not just mocks
+- Tests use real code — flag any mock that isn't an external network boundary
+- Tests verify real behavior, not mock behavior
 - Edge cases covered
 
 This change specifically:

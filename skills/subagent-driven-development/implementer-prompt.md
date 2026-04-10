@@ -91,7 +91,8 @@ Task tool (general-purpose):
     - Did I follow existing patterns in the codebase?
 
     **Testing:**
-    - Do tests actually verify behavior (not just mock behavior)?
+    - Do tests use real code? (no mocks unless external network boundary)
+    - Do tests verify real behavior, not mock behavior?
     - Did I follow TDD if required?
     - Are tests comprehensive?
 
