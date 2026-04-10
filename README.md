@@ -47,19 +47,19 @@ Without Codex, all skills work except `second-opinion`, Codex engine in SDD, and
      |              |  |  debugging   |  |   enrich     |
      | ideas -->    |  | 4-phase      |  | validate     |
      | designs      |  | investigation|  | prompts via  |
-     +--------------+  +--------------+  | Codex        |
-              |                |          +--------------+
-              v                v
-     +--------------+  +--------------+
-     | writing-     |  | test-driven- |
-     |   plans      |  | development  |
-     |              |  |              |
-     | specs -->    |  | RED-GREEN-   |
-     | task plans   |  | REFACTOR     |
-     +--------------+  +--------------+
-              |
-              v
-     +--------------------+
+     +--------------+  |      |       |  | Codex        |
+              |        | Phase 4:     |  +--------------+
+              v        | invoke TDD   |
+     +--------------+  |      |       |
+     | writing-     |  +------+-------+
+     |   plans      |         |
+     |              |         v
+     | specs -->    |  +--------------+
+     | task plans   |  | test-driven- |  <-- TDD fires here:
+     +--------------+  | development  |      inside debugging (phase 4),
+              |        | RED-GREEN-   |      inside SDD implementer,
+              v        | REFACTOR     |      or standalone before
+     +--------------------+ +--------+      any implementation
      | using-git-worktrees|
      |                    |
      | isolated branch    |
@@ -80,6 +80,14 @@ Without Codex, all skills work except `second-opinion`, Codex engine in SDD, and
 |  |   +--------+  +---------+ |  |
 |  |        |           |      |  |
 |  |        +-----+-----+     |  |
+|  |              |            |  |
+|  |              v            |  |
+|  |     +----------------+   |  |
+|  |     |  TDD embedded  |   |  |   <-- implementer follows
+|  |     |  write test    |   |  |       RED-GREEN-REFACTOR
+|  |     |  watch fail    |   |  |       when building code
+|  |     |  make pass     |   |  |
+|  |     +----------------+   |  |
 |  |              |            |  |
 |  |              v            |  |
 |  |        Spec Review        |  |
