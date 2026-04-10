@@ -19,6 +19,7 @@ class MyAppTest {
         // Set a minimal configuration to trigger init() and annotation processing
         Settings config = new Settings();
         app.setConfiguration(config);
+        app.init();
     }
 
     @Test

@@ -14,7 +14,7 @@ response.put("status", "success");
 response.put("count", 42);
 response.put("data", someList);
 
-return response.toString(); // {"status":"success","count":42,...}
+return response; // {"status":"success","count":42,...}
 ```
 
 ### Parsing

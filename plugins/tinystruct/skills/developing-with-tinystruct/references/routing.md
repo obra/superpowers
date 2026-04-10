@@ -7,11 +7,8 @@
     value = "path/subpath",          // required: URI segment or CLI command
     description = "What it does",    // shown in --help output
     mode = Mode.HTTP_POST,           // default: Mode.DEFAULT (both CLI + HTTP)
-    arguments = {                    // optional: parameter metadata for CLI help
-        @Argument(key = "--id", description = "The item ID")
-    },
     options = {},                    // CLI option flags
-    example = "bin/dispatcher path/subpath --id 42"
+    example = "bin/dispatcher path/subpath/42"
 )
 public String myAction(int id) { ... }
 ```
