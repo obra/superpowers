@@ -168,8 +168,8 @@ After approval, invoke `superpowers:writing-plans`. The ACs become the implement
 ## Red Flags — STOP
 
 - Writing ACs before the spec is approved
-- ACs containing "appropriate," "reasonable," "user-friendly," "fast," "smooth," or any other unmeasurable adjective
-- ACs with "and" in the Then clause (split them)
+- ACs containing any unmeasurable adjective: "appropriate," "reasonable," "user-friendly," "fast," "smooth," "helpful," "clear," "intuitive," "meaningful" — if you cannot put a number or specific observable state on it, it does not belong in a Then clause
+- ACs with multiple outcomes in Then — whether written with "and," commas, or bullet points. One Then = one observable outcome. Split the rest into separate ACs.
 - ACs that describe internal implementation rather than observable behavior
 - ACs that require reading source code to verify
 - Skipping error path ACs ("we'll handle errors later")
