@@ -21,6 +21,15 @@ Dispatch superpowers:code-reviewer subagent to catch issues before they cascade.
 - Before refactoring (baseline check)
 - After fixing complex bug
 
+## When to Use a Specialized Reviewer
+
+Use a specialized reviewer instead of, or in addition to, the generic code reviewer when the completed change has a dominant risk area.
+
+Examples:
+- Use `superpowers:security-reviewer` when the diff touches trust boundaries, attacker-controlled input, authentication, authorization, secrets, dangerous sinks, or recent security fixes that might regress.
+
+If a change is both generally complex and security-sensitive, do both reviews: security review first, then generic code review.
+
 ## How to Request
 
 **1. Get git SHAs:**
@@ -29,9 +38,13 @@ BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
 HEAD_SHA=$(git rev-parse HEAD)
 ```
 
-**2. Dispatch code-reviewer subagent:**
+**2. Dispatch the right reviewer subagent:**
 
-Use Task tool with superpowers:code-reviewer type, fill template at `code-reviewer.md`
+Default: use Task tool with `superpowers:code-reviewer`, fill template at `code-reviewer.md`
+
+Security-sensitive changes: use Task tool with `superpowers:security-reviewer`, fill the specialized template at `../security-reviewer/security-reviewer.md`
+
+For mixed-risk changes, run the security reviewer first, then the generic code reviewer.
 
 **Placeholders:**
 - `{WHAT_WAS_IMPLEMENTED}` - What you just built
@@ -80,14 +93,17 @@ You: [Fix progress indicators]
 - Review after EACH task
 - Catch issues before they compound
 - Fix before moving to next task
+- If task is security-sensitive, dispatch `superpowers:security-reviewer` before the generic review
 
 **Executing Plans:**
 - Review after each batch (3 tasks)
 - Get feedback, apply, continue
+- Add specialized security review when the batch changes trust boundaries or security controls
 
 **Ad-Hoc Development:**
 - Review before merge
 - Review when stuck
+- Use specialized review for security-sensitive diffs
 
 ## Red Flags
 
