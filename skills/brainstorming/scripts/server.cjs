@@ -260,9 +260,29 @@ function handleRequest(req, res) {
 
 const clients = new Set();
 
+const MAX_BUFFER_SIZE = 10 * 1024 * 1024; // 10MB limit
+
 function handleUpgrade(req, socket) {
+  // Prevent Cross-Site WebSocket Hijacking (CSWSH)
+  const origin = req.headers.origin;
+  if (origin) {
+    try {
+      const parsedOrigin = new URL(origin);
+      if (parsedOrigin.hostname !== 'localhost' && parsedOrigin.hostname !== '127.0.0.1') {
+        socket.end('HTTP/1.1 403 Forbidden\r\n\r\n');
+        return;
+      }
+    } catch (e) {
+      socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
+      return;
+    }
+  }
+
   const key = req.headers['sec-websocket-key'];
-  if (!key) { socket.destroy(); return; }
+  if (!key) {
+    socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
+    return;
+  }
 
   const accept = computeAcceptKey(key);
   socket.write(
@@ -310,6 +330,16 @@ function handleUpgrade(req, socket) {
           return;
         }
       }
+    }
+
+    // Prevent Memory Exhaustion DoS
+    if (buffer.length > MAX_BUFFER_SIZE) {
+      const closeBuf = Buffer.alloc(2);
+      closeBuf.writeUInt16BE(1009); // Message Too Big
+      socket.end(encodeFrame(OPCODES.CLOSE, closeBuf));
+      socket.destroy();
+      clients.delete(socket);
+      return;
     }
   });
 

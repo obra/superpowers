@@ -26,3 +26,8 @@
 **Vulnerability:** The brainstorm server merged untrusted WebSocket events with trusted properties using `{ source: 'user-event', ...event }`. This allowed an attacker to spoof the `source` property by including it in the `event` payload, overriding the trusted value.
 **Learning:** When merging untrusted input objects with trusted overrides, the trusted properties must be placed after the spread operator to prevent spoofing by the incoming object payload.
 **Prevention:** Always place trusted properties after the spread operator (e.g., `{ ...event, source: 'user-event' }`) when creating merged objects.
+
+## 2026-04-10 - [Cross-Site WebSocket Hijacking Missing HTTP Error Response]
+**Vulnerability:** The CSWSH and bad WebSocket request handler used `socket.destroy()` which simply closes the TCP socket without giving the client an HTTP response.
+**Learning:** When rejecting a WebSocket upgrade in Node.js, we must send an appropriate HTTP status line (e.g. `HTTP/1.1 403 Forbidden\r\n\r\n`) via `socket.end()` before closing, so that the client (and any intermediate proxies) understands the failure mode instead of just getting a closed connection.
+**Prevention:** Instead of `socket.destroy()`, always use `socket.end('HTTP/1.1 <StatusCode> <StatusMessage>\r\n\r\n')`.
