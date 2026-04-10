@@ -301,3 +301,144 @@ Session transcripts are JSONL (JSON Lines) files where each line is a JSON objec
 ```
 
 The `agentId` field links to subagent sessions, and the `usage` field contains token usage for that specific subagent invocation.
+
+## Skill Validation: standards-context-retrieval
+
+This section documents a RED -> GREEN -> REFACTOR validation pass for `skills/standards-context-retrieval/SKILL.md`.
+
+### RED Baseline (without skill enforcement)
+
+Three pressure scenarios were run in read-only mode:
+
+1. Add `--json` output to a Node CLI under time pressure.
+2. Fix a flaky Python race-condition test with merge pressure.
+3. Refactor a skill doc quickly in an unfamiliar module.
+
+Observed baseline failures:
+
+- Agents sometimes used a "mental checklist" and skipped an explicit constraints artifact.
+- Standards retrieval was often "lightweight" and not tied to a code-type source map.
+- Compliance statements were provided, but not always backed by explicit source paths.
+
+### GREEN Changes Applied
+
+`skills/standards-context-retrieval/SKILL.md` was tightened to address RED failures:
+
+- Added an Iron Law: no implementation before an explicit Constraints Summary.
+- Added hard bans on "mental checklist only" and "retrieve standards later".
+- Added code-type to source quick-reference mapping.
+- Required `Sources Consulted` in the constraints template.
+- Added rationalization table and red-flag restart criteria.
+
+### REFACTOR Validation (with skill enforced)
+
+The same scenario classes were re-run after updates, requiring the agent to follow the skill first.
+
+Observed improvements:
+
+- Responses consistently started with an explicit Constraints Summary.
+- Source paths were listed before execution steps.
+- Missing categories were called out explicitly (for example, `none found`).
+- Time pressure no longer bypassed standards and verification constraints.
+
+Residual risk:
+
+- This validation uses scenario-driven subagent behavior checks, not a dedicated automated script under `tests/claude-code`.
+- If this skill becomes a hard repository gate, add an integration test script similar to other complex workflow skills.
+
+## Real-World Validation Loop (Automated)
+
+To validate a skill in a real project and auto-collect evidence for optimization, use:
+
+- Skill: `skills/real-world-skill-validation/SKILL.md`
+- Runner: `tests/claude-code/test-real-world-skill-validation.sh`
+- Analyzer: `tests/claude-code/analyze-real-world-skill-validation.py`
+
+### Run GREEN (skill enforced)
+
+```bash
+cd tests/claude-code
+./test-real-world-skill-validation.sh \
+  --target-repo /absolute/path/to/real-project \
+  --skill superpowers:standards-context-retrieval \
+  --scenario feature
+```
+
+### Run RED baseline (without skill enforcement)
+
+```bash
+cd tests/claude-code
+./test-real-world-skill-validation.sh \
+  --target-repo /absolute/path/to/real-project \
+  --skill superpowers:standards-context-retrieval \
+  --scenario feature \
+  --baseline
+```
+
+### Artifacts
+
+Each run creates a folder: `docs/testing-reports/<run-label>/`
+
+- `prompt.txt`: Exact prompt used
+- `claude-output.txt`: Raw command output
+- `meta.txt`: Run metadata (scenario, skill, baseline mode, session path)
+- `report.md`: Structured analysis report and compliance score
+
+### Suggested campaign
+
+Run both RED and GREEN for:
+
+1. `feature`
+2. `bugfix`
+3. `refactor`
+
+Then compare reports and update target skill with evidence-mapped changes:
+
+- Missing structure -> strengthen required sections
+- Rationalization hits -> add explicit counters and red flags
+- Weak source traceability -> tighten "Sources Consulted" requirements
+
+### V2 Report Template
+
+Use the V2 template for consistent RED/GREEN fairness control, pass/fail gates, and evidence-mapped REFACTOR inputs:
+
+- `docs/templates/real-world-skill-validation-v2.md`
+
+## Skill Validation: project-standards-authoring
+
+Validation attempted with RED -> GREEN runners:
+
+- RED report: `docs/testing-reports/project-standards-authoring-red/report.md`
+- GREEN report: `docs/testing-reports/project-standards-authoring-green/report.md`
+
+Key checks configured in the runner:
+
+- Propose 2-3 classification schemes before artifact generation
+- Require explicit human scheme selection before progressing
+- Require per-type retrieval framing (`standards-context-retrieval` / Constraints Summary)
+- Verify output path intents (`.cursor/rules/`, `docs/checklist/`, `reuse-inventory`)
+
+Environment note:
+
+- These runs were executed from Cursor where `claude -p` endpoint was unavailable (`404 page not found`), so both runs were marked `SKIPPED` by the runner's environment guard.
+- Re-run these commands in a working Claude Code runtime to collect behavioral evidence:
+  - `TIMEOUT_SECONDS=20 ./tests/claude-code/test-project-standards-authoring.sh red`
+  - `TIMEOUT_SECONDS=20 ./tests/claude-code/test-project-standards-authoring.sh green`
+
+### Cursor-specific RED/GREEN (supplemental)
+
+To keep validation moving in Cursor-only environments, we also captured a Cursor harness RED/GREEN pair:
+
+- Cursor RED report: `docs/testing-reports/project-standards-authoring-cursor-red/report.md`
+- Cursor GREEN report: `docs/testing-reports/project-standards-authoring-cursor-green/report.md`
+
+Artifacts include raw response captures:
+
+- `docs/testing-reports/project-standards-authoring-cursor-red/assistant-output.md`
+- `docs/testing-reports/project-standards-authoring-cursor-green/assistant-output.md`
+
+What this supplemental run verifies:
+
+- RED shows the expected failure mode (no classification gate, no retrieval framing).
+- GREEN shows stage-gated behavior and required output path discipline.
+- Both runs are suitable for behavior-shaping evidence when Claude CLI is unavailable.

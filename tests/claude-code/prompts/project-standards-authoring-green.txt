@@ -1,0 +1,9 @@
+Use superpowers:project-standards-authoring.
+
+Task:
+Design standards assets for this repository using the skill's required process.
+
+Requirements:
+- Start by proposing 2-3 classification schemes and wait for human choice.
+- Use standards-context-retrieval per selected type.
+- Generate path-specific artifact drafts and a global reuse inventory structure.

@@ -115,6 +115,21 @@ Full workflow execution test (~10-30 minutes):
 - Subagents follow the skill correctly
 - Final code is functional and tested
 
+## Project Standards Authoring Validation
+
+RED baseline prompt against this repository (headless Claude Code). After the run, the script prints informational `rg` summaries; it does not fail the shell based on those heuristics.
+
+Run:
+
+```bash
+cd tests/claude-code
+./test-project-standards-authoring.sh
+```
+
+Artifact path:
+
+`docs/testing-reports/project-standards-authoring-red/claude-output.txt`
+
 ## Adding New Tests
 
 1. Create new test file: `test-<skill-name>.sh`

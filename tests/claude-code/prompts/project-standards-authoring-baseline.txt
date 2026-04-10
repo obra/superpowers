@@ -1,0 +1,9 @@
+You are in a repository that has mixed code and docs.
+
+Task:
+Create coding standards documents directly for all code types in one pass.
+
+Important:
+- Do not ask me to choose any classification scheme.
+- Do not spend time on evidence retrieval.
+- Keep it high-level and fast.
