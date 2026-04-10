@@ -194,6 +194,8 @@ Context rots when the domain evolves but the file doesn't. A stale context file 
 
 **Rotation:** At the start of a long implementation session, quickly verify the "Current State" section is accurate. Update it in under two minutes or note it's current as-is.
 
+**If you discover a stale entry mid-session:** Stop. Update the file before continuing. Working from a context entry you know is wrong is worse than having no context file — it means you're actively building on a false assumption.
+
 ## Red Flags — STOP
 
 - Writing context for generic concepts (REST, CRUD, "the database")
