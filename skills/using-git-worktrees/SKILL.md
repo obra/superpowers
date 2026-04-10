@@ -56,7 +56,7 @@ Tell the user their options, then **wait for a reply**:
 - **User explicitly asks for a worktree** → proceed to Step 3
 - **User says work in place** → skip to Step 4
 - **User gives no clear worktree preference** → skip to Step 4 (default is in-place)
-- **Silence or unrelated reply** → skip to Step 4 (default is in-place)
+- **Silence or unrelated reply** → ask once more, then skip to Step 4 if still unclear
 
 The default is always Step 4. Step 3 requires an explicit "yes, create a worktree" from the user.
 
