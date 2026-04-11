@@ -198,3 +198,44 @@ git worktree remove <worktree-path>
 
 **Pairs with:**
 - **using-git-worktrees** - Cleans up worktree created by that skill
+
+## Wiki Integration
+
+**Trigger:** After branch completion (Options 1, 2, or 4 executed successfully)
+
+**Guard:** Skip this entire section if `docs/wiki/` directory does not exist.
+
+```bash
+# Check wiki exists
+if [ ! -d "docs/wiki" ]; then
+  # No wiki — skip wiki integration
+  return
+fi
+```
+
+### Steps
+
+1. **Gather branch commits**
+   ```bash
+   git log <base-branch>..HEAD --oneline --no-merges
+   ```
+
+2. **Select meaningful commits** — Filter out trivial commits (typo fixes, formatting). Focus on commits that represent feature additions, behavior changes, bug fixes, or architectural decisions.
+
+3. **Append to changelog.md** — Add selected commits to `docs/wiki/changelog.md` with date and branch name:
+   ```
+   ## YYYY-MM-DD — <branch-name>
+   - <commit summary> (commit: <short-hash>)
+   - <commit summary> (commit: <short-hash>)
+   ```
+
+4. **Update related wiki pages** — Based on the nature of the changes, update relevant wiki pages (e.g., `features.md`, `architecture.md`, `api-contracts.md`, `decisions.md`). Add or revise sections that reflect the completed work.
+
+5. **Refresh hot.md** — Rewrite `docs/wiki/hot.md` to reflect current project state including the just-completed work. Keep strictly under 500 words.
+
+6. **Append to log.md** — Record the wiki update in `docs/wiki/log.md` (append-only):
+   ```
+   - YYYY-MM-DD HH:MM: [branch-finish] updated changelog.md, <affected pages> (branch: <branch-name>)
+   ```
+
+7. **Update index.md** — Ensure all new or modified wiki pages are listed in `docs/wiki/index.md` with accurate one-line summaries.
