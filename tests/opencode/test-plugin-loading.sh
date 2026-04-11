@@ -17,19 +17,29 @@ plugin_link="$OPENCODE_CONFIG_DIR/plugins/superpowers.js"
 
 # Test 1: Verify plugin file exists and is registered
 echo "Test 1: Checking plugin registration..."
+is_symlink=false
 if [ -L "$plugin_link" ]; then
+    is_symlink=true
     echo "  [PASS] Plugin symlink exists"
-else
-    echo "  [FAIL] Plugin symlink not found at $plugin_link"
+elif [ -f "$plugin_link" ]; then
+    # On Windows, symlinks may require admin privileges.
+    # A copied file is acceptable for testing.
+    echo "  [PASS] Plugin file exists (symlink requires admin on Windows)"
+fi
+
+if [ "$is_symlink" = false ] && [ ! -f "$plugin_link" ]; then
+    echo "  [FAIL] Plugin file not found at $plugin_link"
     exit 1
 fi
 
-# Verify symlink target exists
-if [ -f "$(readlink -f "$plugin_link")" ]; then
-    echo "  [PASS] Plugin symlink target exists"
-else
-    echo "  [FAIL] Plugin symlink target does not exist"
-    exit 1
+# Verify file content is valid (symlink target or direct file)
+if [ "$is_symlink" = true ]; then
+    if [ -f "$(readlink -f "$plugin_link")" ]; then
+        echo "  [PASS] Plugin symlink target exists"
+    else
+        echo "  [FAIL] Plugin symlink target does not exist"
+        exit 1
+    fi
 fi
 
 # Test 2: Verify skills directory is populated
