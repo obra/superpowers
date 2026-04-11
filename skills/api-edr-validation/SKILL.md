@@ -192,3 +192,18 @@ For Event-Driven Records (events, webhooks, pub/sub):
 **Pairs with:**
 - **superpowers:audit-verification** — Audit Agent checks API consistency against `docs/api/`
 - **superpowers:verification-before-completion** — Final verification includes API doc check
+
+## Wiki Integration
+
+When `docs/wiki/` exists in the project, use the wiki as the **primary API reference** before exploring code. This reduces redundant codebase exploration by leveraging pre-compiled knowledge.
+
+### Guard
+
+If `docs/wiki/` does not exist, skip this section entirely and proceed with the normal validation workflow above.
+
+### Steps
+
+1. **Check `docs/wiki/api-contracts.md` first** — Before reading `docs/api/` files or exploring code, check `docs/wiki/api-contracts.md` for a summarized view of all API contracts. This is faster than scanning individual `docs/api/` files.
+2. **Use wiki as primary reference** — When answering questions about API shapes, endpoints, or shared types, prefer `docs/wiki/api-contracts.md` and related wiki pages over direct code exploration. Only fall back to code when the wiki lacks the needed information.
+3. **Update `docs/wiki/api-contracts.md` if new info found from code** — If you had to explore code because the wiki was incomplete, reflect your findings back into `docs/wiki/api-contracts.md` so future agents benefit from the discovery.
+4. **Append to `docs/wiki/log.md`** — After any wiki update, append an entry in the format: `- YYYY-MM-DD HH:MM: [updated] api-contracts.md (reason: [description of what was added/changed])`
