@@ -37,13 +37,13 @@ jobs:
         run: node server.test.js
 
       - name: Run skill triggering tests
-        run: bash tests/skill-triggering/run-tests.sh || true
+        run: bash tests/skill-triggering/run-all.sh || true
 
       - name: Run explicit skill request tests
-        run: bash tests/explicit-skill-requests/run-tests.sh || true
+        run: bash tests/explicit-skill-requests/run-all.sh || true
 
       - name: Run Claude Code tests
-        run: bash tests/claude-code/run-tests.sh || true
+        run: bash tests/claude-code/run-skill-tests.sh || true
 
       - name: Run Windows lifecycle tests (Windows only)
         if: runner.os == 'Windows'
