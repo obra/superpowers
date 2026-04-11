@@ -137,3 +137,18 @@ From 24 failure memories:
 Run the command. Read the output. THEN claim the result.
 
 This is non-negotiable.
+
+## Wiki Integration
+
+**Trigger**: After all verification gates pass, before committing or creating PRs.
+
+**Guard**: If `docs/wiki/` directory does not exist, skip this entire section. No errors, no warnings.
+
+**Steps** (run only when all verification has passed):
+
+1. **Update `docs/wiki/features.md`** — reflect completed feature status, mark done items, add new entries if the work introduced new capabilities
+2. **Update `docs/wiki/changelog.md`** — append entry for the completed work with date, summary, and relevant commit references
+3. **Refresh `docs/wiki/hot.md`** — regenerate current project state summary incorporating the just-verified work (keep under 500 words)
+4. **Append to `docs/wiki/log.md`** — add line: `- YYYY-MM-DD HH:MM: [update] target pages (verification-before-completion: work verified and committed)`
+
+**Principle**: Verified work that isn't reflected in the wiki is invisible to future sessions. Update the wiki while context is fresh.
