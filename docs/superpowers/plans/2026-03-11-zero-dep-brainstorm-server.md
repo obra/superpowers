@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace the brainstorm server's vendored node_modules with a single zero-dependency `server.js` using Node built-ins.
+**Goal:** Replace the brainstorm server's vendored node_modules with a single zero-dependency `server.cjs` using Node built-ins.
 
 **Architecture:** Single file with WebSocket protocol (RFC 6455 text frames), HTTP server (`http` module), and file watching (`fs.watch`). Exports protocol functions for unit testing when required as a module.
 
@@ -16,14 +16,16 @@
 
 ## File Map
 
-- **Create:** `skills/brainstorming/scripts/server.js` — the zero-dep replacement
-- **Modify:** `skills/brainstorming/scripts/start-server.sh:94,100` — change `index.js` to `server.js`
-- **Modify:** `.gitignore:6` — remove the `!skills/brainstorming/scripts/node_modules/` exception
-- **Delete:** `skills/brainstorming/scripts/index.js`
-- **Delete:** `skills/brainstorming/scripts/package.json`
-- **Delete:** `skills/brainstorming/scripts/package-lock.json`
-- **Delete:** `skills/brainstorming/scripts/node_modules/` (714 files)
+- **Created:** `skills/brainstorming/scripts/server.cjs` — the zero-dep server (CommonJS format)
+- **Modified:** `skills/brainstorming/scripts/start-server.sh` — updated to use `server.cjs`
+- **Modified:** `.gitignore` — removed the `!skills/brainstorming/scripts/node_modules/` exception
+- **Deleted:** `skills/brainstorming/scripts/index.js`
+- **Deleted:** `skills/brainstorming/scripts/package.json`
+- **Deleted:** `skills/brainstorming/scripts/package-lock.json`
+- **Deleted:** `skills/brainstorming/scripts/node_modules/` (714 files)
 - **No changes:** `skills/brainstorming/scripts/helper.js`, `skills/brainstorming/scripts/frame-template.html`, `skills/brainstorming/scripts/stop-server.sh`
+
+**Note:** The final implementation uses `.cjs` extension (CommonJS) rather than `.js` to ensure compatibility with all Node.js configurations.
 
 ---
 

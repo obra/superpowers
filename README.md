@@ -80,7 +80,7 @@ Tell OpenCode:
 Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
 ```
 
-**Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
+**Detailed docs:** [.opencode/OLLAMA.md](.opencode/OLLAMA.md) (for Ollama setup)
 
 ### GitHub Copilot CLI
 
@@ -100,6 +100,14 @@ To update:
 ```bash
 gemini extensions update superpowers
 ```
+
+### Using with Ollama (Local AI Models)
+
+Superpowers works with any AI provider, including local Ollama models. The skills are provider-agnostic — they provide behavioral instructions that work regardless of whether the underlying model is cloud-based or local.
+
+**Quick start:** See [docs/ollama-setup.md](docs/ollama-setup.md) for comprehensive platform configuration guide.
+
+OpenCode users: see [.opencode/OLLAMA.md](.opencode/OLLAMA.md) for quick configuration.
 
 ### Verify Installation
 

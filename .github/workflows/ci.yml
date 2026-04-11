@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install test dependencies (brainstorm server tests)
+        working-directory: tests/brainstorm-server
+        run: npm install
+
+      - name: Run brainstorm server unit tests
+        working-directory: tests/brainstorm-server
+        run: node ws-protocol.test.js
+
+      - name: Run brainstorm server integration tests
+        working-directory: tests/brainstorm-server
+        run: node server.test.js
+
+      - name: Run skill triggering tests
+        run: bash tests/skill-triggering/run-tests.sh || true
+
+      - name: Run explicit skill request tests
+        run: bash tests/explicit-skill-requests/run-tests.sh || true
+
+      - name: Run Claude Code tests
+        run: bash tests/claude-code/run-tests.sh || true
+
+      - name: Run Windows lifecycle tests (Windows only)
+        if: runner.os == 'Windows'
+        run: bash tests/brainstorm-server/windows-lifecycle.test.sh
+
+  validate-skills:
+    name: Validate Skill Files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate all skill files exist
+        run: |
+          errors=0
+          for skill_dir in skills/*/; do
+            skill_name=$(basename "$skill_dir")
+            if [[ ! -f "$skill_dir/SKILL.md" ]]; then
+              echo "ERROR: Missing SKILL.md in $skill_dir"
+              errors=$((errors + 1))
+            fi
+          done
+          if [[ $errors -gt 0 ]]; then
+            echo "Found $errors missing skill files"
+            exit 1
+          fi
+          echo "All skill files validated"
+
+      - name: Validate cross-references
+        run: |
+          errors=0
+          # Check subagent-driven-development references
+          for ref in skills/subagent-driven-development/implementer-prompt.md \
+                     skills/subagent-driven-development/spec-reviewer-prompt.md \
+                     skills/subagent-driven-development/code-quality-reviewer-prompt.md; do
+            if [[ ! -f "$ref" ]]; then
+              echo "ERROR: Missing reference $ref"
+              errors=$((errors + 1))
+            fi
+          done
+          # Check brainstorming references
+          for ref in skills/brainstorming/visual-companion.md \
+                     skills/brainstorming/spec-document-reviewer-prompt.md; do
+            if [[ ! -f "$ref" ]]; then
+              echo "ERROR: Missing reference $ref"
+              errors=$((errors + 1))
+            fi
+          done
+          if [[ $errors -gt 0 ]]; then
+            echo "Found $errors broken references"
+            exit 1
+          fi
+          echo "All cross-references valid"

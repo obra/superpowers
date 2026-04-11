@@ -1,5 +1,11 @@
 # Visual Brainstorming Refactor Implementation Plan
 
+> **⚠️ HISTORICAL DOCUMENT - FILE PATHS OUTDATED**
+>
+> This plan was created before the zero-dependency refactor. References to `lib/brainstorm-server/` are outdated.
+> The current implementation lives at `skills/brainstorming/scripts/` with `server.cjs` as the main server file.
+> This document is kept for historical purposes only. Do not use these file paths for new work.
+
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Refactor visual brainstorming from blocking TUI feedback model to non-blocking "Browser Displays, Terminal Commands" architecture.

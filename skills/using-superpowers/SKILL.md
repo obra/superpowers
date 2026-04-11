@@ -39,6 +39,15 @@ If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "alw
 
 Skills use Claude Code tool names. Non-CC platforms: see `references/copilot-tools.md` (Copilot CLI), `references/codex-tools.md` (Codex) for tool equivalents. Gemini CLI users get the tool mapping loaded automatically via GEMINI.md.
 
+## Local AI Models (Ollama)
+
+Superpowers works with any AI provider, including local Ollama models. Skills are provider-agnostic — they provide behavioral instructions that work regardless of whether the underlying model is cloud-based (Anthropic, OpenAI) or local (Ollama, LM Studio).
+
+For Ollama setup instructions:
+- Comprehensive guide: `docs/ollama-setup.md`
+- OpenCode + Ollama quick start: `.opencode/OLLAMA.md`
+- Or use the `ollama-local-setup` skill for guided setup
+
 # Using Skills
 
 ## The Rule

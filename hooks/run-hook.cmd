@@ -34,9 +34,11 @@ if %ERRORLEVEL% equ 0 (
     exit /b %ERRORLEVEL%
 )
 
-REM No bash found - exit silently rather than error
-REM (plugin still works, just without SessionStart context injection)
-exit /b 0
+REM No bash found - print clear error message
+echo WARNING: Git Bash not found. Superpowers SessionStart hook requires Git Bash on Windows. >&2
+echo Install Git for Windows from https://git-scm.com/download/win >&2
+echo Or add Git Bash to your PATH. >&2
+exit /b 1
 CMDBLOCK
 
 # Unix: run the named script directly

@@ -51,11 +51,14 @@ CMDBLOCK
 
 ## File Structure
 
+The current implementation uses a reusable polyglot dispatcher with extensionless hook scripts:
+
 ```
 hooks/
-├── hooks.json           # Points to the .cmd wrapper
-├── session-start.cmd    # Polyglot wrapper (cross-platform entry point)
-└── session-start.sh     # Actual hook logic (bash script)
+├── hooks.json           # Points to run-hook.cmd with script name
+├── hooks-cursor.json    # Cursor-specific hook config
+├── run-hook.cmd         # Reusable polyglot dispatcher (cross-platform entry point)
+└── session-start        # Actual hook logic (bash script, no extension)
 ```
 
 ### hooks.json
@@ -65,11 +68,11 @@ hooks/
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "startup|resume|clear|compact",
+        "matcher": "startup|clear|compact",
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.cmd\""
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start"
           }
         ]
       }
@@ -78,14 +81,15 @@ hooks/
 }
 ```
 
-Note: The path must be quoted because `${CLAUDE_PLUGIN_ROOT}` may contain spaces on Windows (e.g., `C:\Program Files\...`).
+Note: The script name is passed without extension. The `run-hook.cmd` dispatcher handles cross-platform execution.
 
 ## Requirements
 
 ### Windows
-- **Git for Windows** must be installed (provides `bash.exe` and `cygpath`)
+- **Git for Windows** must be installed (provides `bash.exe`)
 - Default installation path: `C:\Program Files\Git\bin\bash.exe`
-- If Git is installed elsewhere, the wrapper needs modification
+- If Git Bash is not installed, the hook will display a clear error message directing the user to install Git for Windows from https://git-scm.com/download/win
+- The dispatcher also checks for `bash` on PATH (MSYS2, Cygwin, user-installed Git Bash)
 
 ### Unix (macOS/Linux)
 - Standard bash or sh shell
@@ -135,23 +139,43 @@ escape_for_json() {
 
 ## Reusable Wrapper Pattern
 
-For plugins with multiple hooks, you can create a generic wrapper that takes the script name as an argument:
+The project uses a generic `run-hook.cmd` dispatcher that takes the script name as an argument:
 
-### run-hook.cmd
+### run-hook.cmd (actual implementation)
 ```cmd
 : << 'CMDBLOCK'
 @echo off
-set "SCRIPT_DIR=%~dp0"
-set "SCRIPT_NAME=%~1"
-"C:\Program Files\Git\bin\bash.exe" -l -c "cd \"$(cygpath -u \"%SCRIPT_DIR%\")\" && \"./%SCRIPT_NAME%\""
-exit /b
+set "HOOK_DIR=%~dp0"
+
+REM Try Git for Windows bash in standard locations
+if exist "C:\Program Files\Git\bin\bash.exe" (
+    "C:\Program Files\Git\bin\bash.exe" "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
+    exit /b %ERRORLEVEL%
+)
+if exist "C:\Program Files (x86)\Git\bin\bash.exe" (
+    "C:\Program Files (x86)\Git\bin\bash.exe" "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
+    exit /b %ERRORLEVEL%
+)
+
+REM Try bash on PATH
+where bash >nul 2>nul
+if %ERRORLEVEL% equ 0 (
+    bash "%HOOK_DIR%%~1" %2 %3 %4 %5 %6 %7 %8 %9
+    exit /b %ERRORLEVEL%
+)
+
+REM No bash found - print clear error message
+echo WARNING: Git Bash not found. Superpowers SessionStart hook requires Git Bash on Windows. >&2
+echo Install Git for Windows from https://git-scm.com/download/win >&2
+echo Or add Git Bash to your PATH. >&2
+exit /b 1
 CMDBLOCK
 
-# Unix shell runs from here
+# Unix: run the named script directly
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SCRIPT_NAME="$1"
 shift
-"${SCRIPT_DIR}/${SCRIPT_NAME}" "$@"
+exec bash "${SCRIPT_DIR}/${SCRIPT_NAME}" "$@"
 ```
 
 ### hooks.json using the reusable wrapper
@@ -160,22 +184,11 @@ shift
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "startup",
+        "matcher": "startup|clear|compact",
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start.sh"
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" validate-bash.sh"
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start"
           }
         ]
       }
@@ -184,26 +197,34 @@ shift
 }
 ```
 
+### hooks-cursor.json
+```json
+{
+  "hooks": [
+    {
+      "hookPoint": "sessionStart",
+      "command": "./hooks/session-start"
+    }
+  ]
+}
+```
+
+Note: Cursor hooks point directly to the hook script (no wrapper needed since Cursor handles cross-platform differently).
+
 ## Troubleshooting
 
-### "bash is not recognized"
-CMD can't find bash. The wrapper uses the full path `C:\Program Files\Git\bin\bash.exe`. If Git is installed elsewhere, update the path.
-
-### "cygpath: command not found" or "dirname: command not found"
-Bash isn't running as a login shell. Ensure `-l` flag is used.
-
-### Path has weird `\/` in it
-`${CLAUDE_PLUGIN_ROOT}` expanded to a Windows path ending with backslash, then `/hooks/...` was appended. Use `cygpath` to convert the entire path.
-
-### Script opens in text editor instead of running
-The hooks.json is pointing directly to the `.sh` file. Point to the `.cmd` wrapper instead.
+### "bash is not recognized" or "Git Bash not found"
+The dispatcher searches for Git Bash in standard locations (`C:\Program Files\Git\bin\bash.exe`, `C:\Program Files (x86)\Git\bin\bash.exe`) and on PATH. If none are found, a clear error message will be displayed directing you to install Git for Windows.
 
 ### Works in terminal but not as hook
 Claude Code may run hooks differently. Test by simulating the hook environment:
 ```powershell
 $env:CLAUDE_PLUGIN_ROOT = "C:\path\to\plugin"
-cmd /c "C:\path\to\plugin\hooks\session-start.cmd"
+cmd /c "C:\path\to\plugin\hooks\run-hook.cmd session-start"
 ```
+
+### "No such file or directory" for the hook script
+Ensure the hook script name passed to `run-hook.cmd` matches the actual filename (without extension). The hook scripts use extensionless names (e.g., `session-start`, not `session-start.sh`).
 
 ## Related Issues
 

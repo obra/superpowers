@@ -1,8 +1,14 @@
 # Visual Brainstorming Refactor: Browser Displays, Terminal Commands
 
+> **⚠️ HISTORICAL DOCUMENT - FILE PATHS OUTDATED**
+>
+> This spec was created before the zero-dependency refactor. References to `lib/brainstorm-server/` are outdated.
+> The current implementation lives at `skills/brainstorming/scripts/` with `server.cjs` as the main server file.
+> This document is kept for historical purposes only.
+
 **Date:** 2026-02-19
 **Status:** Approved
-**Scope:** `lib/brainstorm-server/`, `skills/brainstorming/visual-companion.md`, `tests/brainstorm-server/`
+**Scope:** `skills/brainstorming/scripts/` (was `lib/brainstorm-server/`), `skills/brainstorming/visual-companion.md`, `tests/brainstorm-server/`
 
 ## Problem
 

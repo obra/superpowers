@@ -20,7 +20,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="${SUPERPOWERS_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 START_SCRIPT="$REPO_ROOT/skills/brainstorming/scripts/start-server.sh"
 STOP_SCRIPT="$REPO_ROOT/skills/brainstorming/scripts/stop-server.sh"
-SERVER_JS="$REPO_ROOT/skills/brainstorming/scripts/server.js"
+SERVER_CJS="$REPO_ROOT/skills/brainstorming/scripts/server.cjs"
 
 TEST_DIR="${TMPDIR:-/tmp}/brainstorm-win-test-$$"
 
@@ -214,7 +214,7 @@ BRAINSTORM_HOST="127.0.0.1" \
 BRAINSTORM_URL_HOST="localhost" \
 BRAINSTORM_OWNER_PID="" \
 BRAINSTORM_PORT=$((49152 + RANDOM % 16383)) \
-  node "$SERVER_JS" > "$TEST_DIR/survival/.server.log" 2>&1 &
+  node "$SERVER_CJS" > "$TEST_DIR/survival/.server.log" 2>&1 &
 SERVER_PID=$!
 
 if ! wait_for_server_info "$TEST_DIR/survival"; then
@@ -272,7 +272,7 @@ BRAINSTORM_HOST="127.0.0.1" \
 BRAINSTORM_URL_HOST="localhost" \
 BRAINSTORM_OWNER_PID="$BAD_PID" \
 BRAINSTORM_PORT=$((49152 + RANDOM % 16383)) \
-  node "$SERVER_JS" > "$TEST_DIR/control/.server.log" 2>&1 &
+  node "$SERVER_CJS" > "$TEST_DIR/control/.server.log" 2>&1 &
 CONTROL_PID=$!
 
 if ! wait_for_server_info "$TEST_DIR/control"; then
@@ -316,7 +316,7 @@ BRAINSTORM_HOST="127.0.0.1" \
 BRAINSTORM_URL_HOST="localhost" \
 BRAINSTORM_OWNER_PID="" \
 BRAINSTORM_PORT=$((49152 + RANDOM % 16383)) \
-  node "$SERVER_JS" > "$TEST_DIR/stop-test/.server.log" 2>&1 &
+  node "$SERVER_CJS" > "$TEST_DIR/stop-test/.server.log" 2>&1 &
 STOP_TEST_PID=$!
 echo "$STOP_TEST_PID" > "$TEST_DIR/stop-test/.server.pid"
 
