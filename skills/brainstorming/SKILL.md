@@ -102,3 +102,15 @@ digraph brainstorming {
 - **Explore alternatives** - Always propose 2-3 approaches before settling
 - **Incremental validation** - Present design, get approval before moving on
 - **Be flexible** - Go back and clarify when something doesn't make sense
+
+## Wiki Integration
+
+After saving the design doc to `docs/plans/`, trigger wiki ingestion if the project has a wiki set up.
+
+**Guard**: Skip this entire section if `docs/wiki/` does not exist.
+
+**Steps**:
+1. Run wiki-management **Ingest** on the newly saved design doc (`docs/plans/YYYY-MM-DD-<topic>-design.md`)
+2. Update `docs/wiki/features.md` — extract new feature descriptions and status from the design
+3. Update `docs/wiki/decisions.md` — extract key decisions and rationale from the design
+4. Append to `docs/wiki/log.md` — record the ingest action: `- YYYY-MM-DD HH:MM: [ingest] brainstorming design doc (new design: <topic>)`
