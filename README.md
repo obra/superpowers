@@ -81,6 +81,15 @@
 3. 컨텍스트 압축
 4. 압축 완료 후 재개
 
+### Wiki 지식 베이스 (wiki-management)
+
+Andrej Karpathy의 **LLM Wiki 패턴**을 스킬로 통합합니다. 매 세션마다 코드베이스를 탐색하는 대신, 사전 편찬된 위키를 캐시로 활용하여 토큰과 시간을 절약합니다.
+
+- **3계층 구조**: Raw Sources (불변, 사람 관리) → Wiki (LLM 소유) → Schema (CLAUDE.md 규칙)
+- **L1/L2 캐시**: `hot.md`가 매 세션 자동 로딩 (L1), 나머지 위키 페이지는 필요 시 참조 (L2)
+- **자동 갱신**: brainstorming, writing-plans, finishing-a-development-branch 등 기존 스킬 완료 시 위키 자동 업데이트
+- **건강 점검**: 고아 페이지, 깨진 링크, 오래된 정보 감지
+
 ### 유틸리티 커맨드
 
 | 커맨드 | 설명 |
@@ -88,6 +97,9 @@
 | `/optimize-claude-md` | CLAUDE.md 분석 및 최적화 — 200줄 이하로 핵심만 남기고 상세 내용은 `docs/`로 분리 |
 | `/optimize-api-docs` | `docs/api/` 분석 및 최적화 — 초기 Bootstrap 또는 포맷 검증, 중복/고아/미문서화 API 감지 |
 | `/setup-hooks` | 프로젝트 생태계 감지 후 Claude Code hooks 자동 구성 |
+| `/wiki-init` | 프로젝트 위키 초기 생성 — `docs/wiki/`에 지식 베이스 구축 (최초 1회) |
+| `/wiki-sync` | Raw 소스 + 코드베이스 기반 위키 전체 동기화 |
+| `/wiki-lint` | 위키 건강 점검 — 고아 페이지, 깨진 링크, 오래된 정보 감지 |
 
 ---
 
@@ -106,6 +118,8 @@
 6. **requesting-code-review** — 태스크 간 활성화. 계획 대비 코드를 검토합니다.
 
 7. **finishing-a-development-branch** — 모든 태스크 완료 후 활성화. 테스트 검증, 병합/PR 옵션을 제시합니다.
+
+8. **wiki-management** — 주요 스킬 완료 시 자동 활성화. 프로젝트 위키를 갱신하여 다음 세션에서 코드 탐색 없이 컨텍스트를 확보합니다.
 
 ---
 
@@ -137,6 +151,7 @@
 | 검증 | api-edr-validation | API/EDR 계약 검증 |
 | | audit-verification | 태스크 완료 감사 |
 | 관리 | context-window-management | 160k 토큰 컨텍스트 압축 |
+| | wiki-management | LLM Wiki 패턴 기반 프로젝트 지식 캐시 |
 
 ### 추가 에이전트 역할
 

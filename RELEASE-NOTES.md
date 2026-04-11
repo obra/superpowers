@@ -1,5 +1,37 @@
 # Superpowers Release Notes
 
+## v1.4.0 (2026-04-11) — Wiki Knowledge Base
+
+Implements the Andrej Karpathy LLM Wiki pattern as a superpowers skill. Instead of Claude exploring the codebase every session, a pre-compiled wiki serves as a knowledge cache that accumulates over time.
+
+### New Skills
+- **wiki-management**: Core skill with 4 modes — Ingest (raw docs → wiki), Query (wiki-first lookup), Sync (full rebuild), Lint (health check)
+
+### New Commands
+- **/wiki-init**: One-time project wiki creation — scans existing docs and codebase, generates `docs/wiki/` with 9 structured pages
+- **/wiki-sync**: Full synchronization — rebuilds wiki from raw sources + codebase, detects spec↔implementation mismatches
+- **/wiki-lint**: Health check — finds orphan pages, broken `[[wikilinks]]`, stale content, missing coverage, contradictions
+
+### Wiki Architecture
+- **3-Layer Structure**: Raw Sources (`docs/specs/`, `docs/api/`, `docs/plans/`) → Wiki (`docs/wiki/`) → Schema (CLAUDE.md rules)
+- **L1/L2 Cache**: `hot.md` auto-loaded via CLAUDE.md `@` reference (~500 words), full wiki pages on-demand
+- **Raw Source Protection**: Wiki reads from raw docs but never modifies them
+
+### Existing Skill Integrations
+Six existing skills now include `## Wiki Integration` sections (all skip silently if `docs/wiki/` doesn't exist):
+- **brainstorming**: Ingests design docs → `features.md`, `decisions.md`
+- **writing-plans**: Ingests implementation plans → `features.md`
+- **api-edr-validation**: Uses `api-contracts.md` as primary reference before code exploration
+- **finishing-a-development-branch**: Updates `changelog.md`, related pages, `hot.md` on branch completion
+- **verification-before-completion**: Updates wiki after all verification passes
+- **audit-verification**: References wiki for spec vs implementation comparison
+
+### Design Documents
+- `docs/plans/2026-04-11-wiki-management-design.md`
+- `docs/plans/2026-04-11-wiki-management-implementation.md`
+
+---
+
 ## v1.3.0 (2026-02-27) — Experience-Driven Improvements
 
 Updates addressing friction patterns from 110 real sessions (2,251 messages, 310 hours) of production usage.
