@@ -117,3 +117,14 @@ After saving the plan, offer execution choice:
 **If Parallel Session chosen:**
 - Guide them to open new session in worktree
 - **REQUIRED SUB-SKILL:** New session uses superpowers:executing-plans
+
+## Wiki Integration
+
+**Trigger**: After plan document is saved to `docs/plans/`
+
+**Guard**: Skip entirely if `docs/wiki/` directory does not exist.
+
+**Steps**:
+1. Run wiki-management **Ingest** on the newly created plan document
+2. Update `docs/wiki/features.md` with the planned feature and its status
+3. Append entry to `docs/wiki/log.md`: `- YYYY-MM-DD HH:MM: [ingest] features.md (new plan: <plan-name>)`
