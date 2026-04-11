@@ -45,6 +45,26 @@ async function fetch(url) {
   });
 }
 
+async function fetchWithHeaders(url, headers = {}) {
+  return new Promise((resolve, reject) => {
+    const parsed = new URL(url);
+    http.get({
+      hostname: parsed.hostname,
+      port: parsed.port,
+      path: parsed.pathname + parsed.search,
+      headers
+    }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => resolve({
+        status: res.statusCode,
+        headers: res.headers,
+        body: data
+      }));
+    }).on('error', reject);
+  });
+}
+
 function startServer() {
   return spawn('node', [SERVER_PATH], {
     env: { ...process.env, BRAINSTORM_PORT: TEST_PORT, BRAINSTORM_DIR: TEST_DIR }
@@ -77,6 +97,11 @@ async function runTests() {
   server.stdout.on('data', (data) => { stdoutAccum += data.toString(); });
 
   const { stdout: initialStdout } = await waitForServer(server);
+
+  // Read auth token from server-info (will be undefined until auth is implemented)
+  const serverInfo = JSON.parse(fs.readFileSync(path.join(STATE_DIR, 'server-info'), 'utf-8').trim());
+  const token = serverInfo.token;
+
   let passed = 0;
   let failed = 0;
 
@@ -182,6 +207,85 @@ async function runTests() {
     await test('returns 404 for non-root paths', async () => {
       const res = await fetch(`http://localhost:${TEST_PORT}/other`);
       assert.strictEqual(res.status, 404);
+    });
+
+    // ========== Token Authentication ==========
+    console.log('\n--- Token Authentication ---');
+
+    await test('server-info contains token field (64-char hex)', async () => {
+      assert(token, 'server-info should contain a token field');
+      assert.strictEqual(typeof token, 'string', 'token should be a string');
+      assert.strictEqual(token.length, 64, 'token should be 64 characters (32 bytes hex)');
+      assert(/^[0-9a-f]{64}$/.test(token), 'token should be a hex string');
+    });
+
+    await test('returns 401 for HTTP request without token', async () => {
+      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      assert.strictEqual(res.status, 401, 'Should return 401 without token');
+    });
+
+    await test('returns 401 for HTTP request with invalid token', async () => {
+      const res = await fetch(`http://localhost:${TEST_PORT}/?token=invalid-token-value`);
+      assert.strictEqual(res.status, 401, 'Should return 401 with invalid token');
+    });
+
+    await test('returns 200 for HTTP request with valid token via query param', async () => {
+      const res = await fetch(`http://localhost:${TEST_PORT}/?token=${token}`);
+      assert.strictEqual(res.status, 200, 'Should return 200 with valid token');
+    });
+
+    await test('returns 200 for HTTP request with valid token via Authorization header', async () => {
+      const res = await fetchWithHeaders(`http://localhost:${TEST_PORT}/`, {
+        'Authorization': `Bearer ${token}`
+      });
+      assert.strictEqual(res.status, 200, 'Should return 200 with Bearer token');
+    });
+
+    await test('returns 401 for /files/ without token', async () => {
+      const testFile = path.join(CONTENT_DIR, 'auth-test.png');
+      fs.writeFileSync(testFile, 'fake-image-data');
+      const res = await fetch(`http://localhost:${TEST_PORT}/files/auth-test.png`);
+      assert.strictEqual(res.status, 401, 'Should return 401 for /files/ without token');
+    });
+
+    await test('rejects WebSocket upgrade without token', async () => {
+      const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      await new Promise((resolve, reject) => {
+        ws.on('open', () => reject(new Error('Should not connect without token')));
+        ws.on('unexpected-response', (req, res) => {
+          assert.strictEqual(res.statusCode, 401, 'Should return 401 for WS without token');
+          resolve();
+        });
+        ws.on('error', () => resolve()); // Connection refused is also acceptable
+      });
+    });
+
+    await test('rejects WebSocket upgrade with invalid token', async () => {
+      const ws = new WebSocket(`ws://localhost:${TEST_PORT}/?token=bad-token`);
+      await new Promise((resolve, reject) => {
+        ws.on('open', () => reject(new Error('Should not connect with invalid token')));
+        ws.on('unexpected-response', (req, res) => {
+          assert.strictEqual(res.statusCode, 401, 'Should return 401 for WS with invalid token');
+          resolve();
+        });
+        ws.on('error', () => resolve());
+      });
+    });
+
+    await test('accepts WebSocket upgrade with valid token', async () => {
+      const ws = new WebSocket(`ws://localhost:${TEST_PORT}/?token=${token}`);
+      await new Promise((resolve, reject) => {
+        ws.on('open', resolve);
+        ws.on('error', reject);
+      });
+      ws.close();
+    });
+
+    await test('injects auth-token meta tag into served HTML', async () => {
+      const res = await fetch(`http://localhost:${TEST_PORT}/?token=${token}`);
+      assert.strictEqual(res.status, 200);
+      assert(res.body.includes('<meta name="auth-token"'), 'Should contain auth-token meta tag');
+      assert(res.body.includes(`content="${token}"`), 'Meta tag should contain the server token');
     });
 
     // ========== WebSocket Communication ==========
