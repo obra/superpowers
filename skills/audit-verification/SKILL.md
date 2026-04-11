@@ -123,3 +123,28 @@ Workers MUST send this to the Audit Agent:
 **Pairs with:**
 - **superpowers:api-edr-validation** — Audit checks API consistency
 - **superpowers:test-driven-development** — Audit verifies TDD was followed
+
+## Wiki Integration
+
+When `docs/wiki/` exists in the project, the Audit Agent MUST include wiki-based spec comparison as part of the verification process.
+
+**Guard:** If `docs/wiki/` does not exist, skip this section entirely and proceed with normal audit steps above.
+
+### Steps
+
+1. **Reference wiki for spec vs implementation comparison**
+   - Before comparing spec to git diff, check `docs/wiki/index.md` for relevant wiki pages
+   - Use wiki pages as a pre-compiled summary of specs, reducing the need to re-read full raw documents
+
+2. **Check `docs/wiki/features.md`**
+   - Verify the completed task aligns with documented feature definitions and status
+   - Confirm the feature scope in wiki matches the task spec — flag any discrepancy
+
+3. **Check `docs/wiki/api-contracts.md`**
+   - Cross-reference API usage in the worker's changes against the wiki's API contract summary
+   - This supplements (not replaces) the existing API consistency check against `docs/api/`
+
+4. **Flag wiki-implementation discrepancies**
+   - If the implementation diverges from what the wiki documents, include this in the audit verdict
+   - Discrepancies are NOT automatic rejections — they may indicate the wiki is outdated
+   - When a discrepancy is found, note it in the audit report and recommend a wiki update as a follow-up
