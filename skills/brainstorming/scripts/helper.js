@@ -1,5 +1,7 @@
 (function() {
-  const WS_URL = 'ws://' + window.location.host;
+  const authMeta = document.querySelector('meta[name="auth-token"]');
+  const authToken = authMeta ? authMeta.getAttribute('content') : '';
+  const WS_URL = 'ws://' + window.location.host + '/?token=' + encodeURIComponent(authToken);
   let ws = null;
   let eventQueue = [];
 

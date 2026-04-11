@@ -144,20 +144,20 @@ async function runTests() {
     console.log('\n--- HTTP Serving ---');
 
     await test('serves waiting page when no screens exist', async () => {
-      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      const res = await fetch(`http://localhost:${TEST_PORT}/?token=${token}`);
       assert.strictEqual(res.status, 200);
       assert(res.body.includes('Waiting for the agent'), 'Should show waiting message');
     });
 
     await test('injects helper.js into waiting page', async () => {
-      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      const res = await fetch(`http://localhost:${TEST_PORT}/?token=${token}`);
       assert(res.body.includes('WebSocket'), 'Should have helper.js injected');
       assert(res.body.includes('toggleSelect'), 'Should have toggleSelect from helper');
       assert(res.body.includes('brainstorm'), 'Should have brainstorm API from helper');
     });
 
     await test('returns Content-Type text/html', async () => {
-      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      const res = await fetch(`http://localhost:${TEST_PORT}/?token=${token}`);
       assert(res.headers['content-type'].includes('text/html'), 'Should be text/html');
     });
 
@@ -166,7 +166,7 @@ async function runTests() {
       fs.writeFileSync(path.join(CONTENT_DIR, 'full-doc.html'), fullDoc);
       await sleep(300);
 
-      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      const res = await fetch(`http://localhost:${TEST_PORT}/?token=${token}`);
       assert(res.body.includes('<h1>Custom Page</h1>'), 'Should contain original content');
       assert(res.body.includes('WebSocket'), 'Should still inject helper.js');
       assert(!res.body.includes('indicator-bar'), 'Should NOT wrap in frame template');
@@ -177,7 +177,7 @@ async function runTests() {
       fs.writeFileSync(path.join(CONTENT_DIR, 'fragment.html'), fragment);
       await sleep(300);
 
-      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      const res = await fetch(`http://localhost:${TEST_PORT}/?token=${token}`);
       assert(res.body.includes('indicator-bar'), 'Fragment should get indicator bar');
       assert(!res.body.includes('<!-- CONTENT -->'), 'Placeholder should be replaced');
       assert(res.body.includes('Pick a layout'), 'Fragment content should be present');
@@ -190,7 +190,7 @@ async function runTests() {
       fs.writeFileSync(path.join(CONTENT_DIR, 'newer.html'), '<h2>Newer</h2>');
       await sleep(300);
 
-      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      const res = await fetch(`http://localhost:${TEST_PORT}/?token=${token}`);
       assert(res.body.includes('Newer'), 'Should serve newest file');
     });
 
@@ -199,13 +199,13 @@ async function runTests() {
       fs.writeFileSync(path.join(CONTENT_DIR, 'data.json'), '{"not": "html"}');
       await sleep(300);
 
-      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      const res = await fetch(`http://localhost:${TEST_PORT}/?token=${token}`);
       assert(res.body.includes('Newer'), 'Should still serve newest HTML');
       assert(!res.body.includes('"not"'), 'Should not serve JSON');
     });
 
     await test('returns 404 for non-root paths', async () => {
-      const res = await fetch(`http://localhost:${TEST_PORT}/other`);
+      const res = await fetch(`http://localhost:${TEST_PORT}/other?token=${token}`);
       assert.strictEqual(res.status, 404);
     });
 
@@ -292,7 +292,7 @@ async function runTests() {
     console.log('\n--- WebSocket Communication ---');
 
     await test('accepts WebSocket upgrade on /', async () => {
-      const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      const ws = new WebSocket(`ws://localhost:${TEST_PORT}/?token=${token}`);
       await new Promise((resolve, reject) => {
         ws.on('open', resolve);
         ws.on('error', reject);
@@ -302,7 +302,7 @@ async function runTests() {
 
     await test('relays user events to stdout with source field', async () => {
       stdoutAccum = '';
-      const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      const ws = new WebSocket(`ws://localhost:${TEST_PORT}/?token=${token}`);
       await new Promise(resolve => ws.on('open', resolve));
 
       ws.send(JSON.stringify({ type: 'click', text: 'Test Button' }));
@@ -318,7 +318,7 @@ async function runTests() {
       const eventsFile = path.join(STATE_DIR, 'events');
       if (fs.existsSync(eventsFile)) fs.unlinkSync(eventsFile);
 
-      const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      const ws = new WebSocket(`ws://localhost:${TEST_PORT}/?token=${token}`);
       await new Promise(resolve => ws.on('open', resolve));
 
       ws.send(JSON.stringify({ type: 'click', choice: 'b', text: 'Option B' }));
@@ -336,7 +336,7 @@ async function runTests() {
       const eventsFile = path.join(STATE_DIR, 'events');
       if (fs.existsSync(eventsFile)) fs.unlinkSync(eventsFile);
 
-      const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      const ws = new WebSocket(`ws://localhost:${TEST_PORT}/?token=${token}`);
       await new Promise(resolve => ws.on('open', resolve));
 
       ws.send(JSON.stringify({ type: 'hover', text: 'Something' }));
@@ -348,8 +348,8 @@ async function runTests() {
     });
 
     await test('handles multiple concurrent WebSocket clients', async () => {
-      const ws1 = new WebSocket(`ws://localhost:${TEST_PORT}`);
-      const ws2 = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      const ws1 = new WebSocket(`ws://localhost:${TEST_PORT}/?token=${token}`);
+      const ws2 = new WebSocket(`ws://localhost:${TEST_PORT}/?token=${token}`);
       await Promise.all([
         new Promise(resolve => ws1.on('open', resolve)),
         new Promise(resolve => ws2.on('open', resolve))
@@ -374,7 +374,7 @@ async function runTests() {
     });
 
     await test('cleans up closed clients from broadcast list', async () => {
-      const ws1 = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      const ws1 = new WebSocket(`ws://localhost:${TEST_PORT}/?token=${token}`);
       await new Promise(resolve => ws1.on('open', resolve));
       ws1.close();
       await sleep(100);
@@ -386,7 +386,7 @@ async function runTests() {
     });
 
     await test('handles malformed JSON from client gracefully', async () => {
-      const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      const ws = new WebSocket(`ws://localhost:${TEST_PORT}/?token=${token}`);
       await new Promise(resolve => ws.on('open', resolve));
 
       // Send invalid JSON — server should not crash
@@ -394,7 +394,7 @@ async function runTests() {
       await sleep(300);
 
       // Verify server is still responsive
-      const res = await fetch(`http://localhost:${TEST_PORT}/`);
+      const res = await fetch(`http://localhost:${TEST_PORT}/?token=${token}`);
       assert.strictEqual(res.status, 200, 'Server should still be running');
       ws.close();
     });
@@ -403,7 +403,7 @@ async function runTests() {
     console.log('\n--- File Watching ---');
 
     await test('sends reload on new .html file', async () => {
-      const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      const ws = new WebSocket(`ws://localhost:${TEST_PORT}/?token=${token}`);
       await new Promise(resolve => ws.on('open', resolve));
 
       let gotReload = false;
@@ -423,7 +423,7 @@ async function runTests() {
       fs.writeFileSync(filePath, '<h2>Original</h2>');
       await sleep(500);
 
-      const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      const ws = new WebSocket(`ws://localhost:${TEST_PORT}/?token=${token}`);
       await new Promise(resolve => ws.on('open', resolve));
 
       let gotReload = false;
@@ -439,7 +439,7 @@ async function runTests() {
     });
 
     await test('does NOT send reload for non-.html files', async () => {
-      const ws = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      const ws = new WebSocket(`ws://localhost:${TEST_PORT}/?token=${token}`);
       await new Promise(resolve => ws.on('open', resolve));
 
       let gotReload = false;

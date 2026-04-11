@@ -81,6 +81,25 @@ const CONTENT_DIR = path.join(SESSION_DIR, 'content');
 const STATE_DIR = path.join(SESSION_DIR, 'state');
 let ownerPid = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_OWNER_PID) : null;
 
+const AUTH_TOKEN = crypto.randomBytes(32).toString('hex');
+
+function validateToken(provided) {
+  if (!provided || typeof provided !== 'string') return false;
+  const a = Buffer.from(AUTH_TOKEN, 'utf-8');
+  const b = Buffer.from(provided, 'utf-8');
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
+}
+
+function extractToken(req) {
+  const url = new URL(req.url, 'http://localhost');
+  const fromQuery = url.searchParams.get('token');
+  if (fromQuery) return fromQuery;
+  const auth = req.headers['authorization'] || '';
+  if (auth.startsWith('Bearer ')) return auth.slice(7);
+  return null;
+}
+
 const MIME_TYPES = {
   '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript',
   '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg',
@@ -127,12 +146,28 @@ function getNewestScreen() {
 // ========== HTTP Request Handler ==========
 
 function handleRequest(req, res) {
+  const token = extractToken(req);
+  if (!validateToken(token)) {
+    res.writeHead(401, { 'Content-Type': 'text/plain' });
+    res.end('Unauthorized');
+    return;
+  }
   touchActivity();
-  if (req.method === 'GET' && req.url === '/') {
+  const urlPath = new URL(req.url, 'http://localhost').pathname;
+  if (req.method === 'GET' && urlPath === '/') {
     const screenFile = getNewestScreen();
     let html = screenFile
       ? (raw => isFullDocument(raw) ? raw : wrapInFrame(raw))(fs.readFileSync(screenFile, 'utf-8'))
       : WAITING_PAGE;
+
+    const metaTag = `<meta name="auth-token" content="${AUTH_TOKEN}">`;
+    if (html.includes('</head>')) {
+      html = html.replace('</head>', metaTag + '\n</head>');
+    } else if (html.includes('<head>')) {
+      html = html.replace('<head>', '<head>\n' + metaTag);
+    } else {
+      html = metaTag + '\n' + html;
+    }
 
     if (html.includes('</body>')) {
       html = html.replace('</body>', helperInjection + '\n</body>');
@@ -142,8 +177,8 @@ function handleRequest(req, res) {
 
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     res.end(html);
-  } else if (req.method === 'GET' && req.url.startsWith('/files/')) {
-    const fileName = req.url.slice(7);
+  } else if (req.method === 'GET' && urlPath.startsWith('/files/')) {
+    const fileName = urlPath.slice(7);
     const filePath = path.join(CONTENT_DIR, path.basename(fileName));
     if (!fs.existsSync(filePath)) {
       res.writeHead(404);
@@ -165,6 +200,12 @@ function handleRequest(req, res) {
 const clients = new Set();
 
 function handleUpgrade(req, socket) {
+  const token = extractToken(req);
+  if (!validateToken(token)) {
+    socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+    socket.destroy();
+    return;
+  }
   const key = req.headers['sec-websocket-key'];
   if (!key) { socket.destroy(); return; }
 
@@ -340,7 +381,8 @@ function startServer() {
     const info = JSON.stringify({
       type: 'server-started', port: Number(PORT), host: HOST,
       url_host: URL_HOST, url: 'http://' + URL_HOST + ':' + PORT,
-      screen_dir: CONTENT_DIR, state_dir: STATE_DIR
+      screen_dir: CONTENT_DIR, state_dir: STATE_DIR,
+      token: AUTH_TOKEN
     });
     console.log(info);
     fs.writeFileSync(path.join(STATE_DIR, 'server-info'), info + '\n');
@@ -351,4 +393,4 @@ if (require.main === module) {
   startServer();
 }
 
-module.exports = { computeAcceptKey, encodeFrame, decodeFrame, OPCODES };
+module.exports = { computeAcceptKey, encodeFrame, decodeFrame, OPCODES, AUTH_TOKEN, validateToken, extractToken };
