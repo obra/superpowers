@@ -146,9 +146,49 @@ In Cursor Agent chat:
 
 ### Claude Code
 
-Claude Code currently only supports Anthropic's models. Ollama integration is **not directly supported** at this time. You would need to use a proxy layer like [LiteLLM](https://github.com/BerriAI/litellm) to route Claude Code requests to Ollama.
+Claude Code currently only supports Anthropic's models. Ollama integration is **not directly supported** at this time. You need to use a proxy layer like [LiteLLM](https://github.com/BerriAI/litellm) to route Claude Code requests to Ollama.
 
-**Alternative:** Use OpenCode or Codex with Ollama — both have native Ollama support.
+**Using LiteLLM Proxy:**
+
+1. Install LiteLLM:
+```bash
+pip install litellm
+```
+
+2. Start the proxy pointing to Ollama:
+```bash
+litellm --model ollama/codellama:7b --port 4000
+```
+
+3. Set environment for Claude Code:
+```bash
+export ANTHROPIC_BASE_URL="http://localhost:4000"
+export ANTHROPIC_API_KEY="ollama"
+```
+
+4. Then install Superpowers as normal.
+
+---
+
+### Gemini CLI
+
+Gemini CLI currently only supports Google's Gemini models. Ollama integration is **not directly supported** at this time. You need to use a proxy layer like [LiteLLM](https://github.com/BerriAI/litellm).
+
+**Using LiteLLM Proxy:**
+
+1. Install LiteLLM:
+```bash
+pip install litellm
+```
+
+2. Start the proxy with Gemini-compatible model:
+```bash
+litellm --model ollama/gemma:7b --port 4000
+```
+
+3. Point Gemini CLI to the proxy (check Gemini CLI documentation for custom endpoint support).
+
+**Alternative:** If Gemini CLI doesn't support custom endpoints, you cannot use it with Ollama directly. Consider using OpenCode or Codex instead — both have native Ollama support.
 
 ---
 
@@ -236,6 +276,10 @@ Local models require significant compute. Consider:
 ### Skills not triggering
 
 Superpowers skills are provider-agnostic. If skills aren't triggering, it's not an Ollama issue — check that Superpowers is properly installed for your platform.
+
+### Platform doesn't support custom endpoints
+
+Claude Code and Gemini CLI don't natively support custom API endpoints. Use [LiteLLM Proxy](docs/ollama/litellm-proxy.md) as a bridge.
 
 ---
 

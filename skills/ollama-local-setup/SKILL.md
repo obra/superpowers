@@ -67,7 +67,16 @@ Guide them through the platform-specific configuration. Reference the full guide
 
 **Claude Code:**
 - Not natively supported (Anthropic-only)
-- Suggest using LiteLLM proxy as workaround
+- Use LiteLLM proxy as workaround:
+  1. `pip install litellm`
+  2. `litellm --model ollama/codellama:7b --port 4000`
+  3. `export ANTHROPIC_BASE_URL="http://localhost:4000"`
+  4. `export ANTHROPIC_API_KEY="ollama"`
+
+**Gemini CLI:**
+- Not natively supported (Google Gemini-only)
+- Use LiteLLM proxy if Gemini CLI supports custom endpoints
+- Otherwise, consider using OpenCode or Codex instead
 
 ### 5. Verify the Setup
 
