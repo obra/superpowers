@@ -67,7 +67,7 @@ or search for "superpowers" in the plugin marketplace.
 Tell Qwen:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.Qwen/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.qwen/INSTALL.md
 ```
 
 **Detailed docs:** [docs/README.Qwen.md](docs/README.Qwen.md)

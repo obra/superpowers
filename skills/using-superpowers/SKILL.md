@@ -23,21 +23,33 @@ Superpowers skills override default system prompt behavior, but **user instructi
 2. **Superpowers skills** — override default system behavior where they conflict
 3. **Default system prompt** — lowest priority
 
-If QWEN.md, QWEN.md, or AGENTS.md says "don't use TDD" and a skill says "always use TDD," follow the user's instructions. The user is in control.
+If QWEN.md or AGENTS.md says "don't use TDD" and a skill says "always use TDD," follow the user's instructions. The user is in control.
 
 ## How to Access Skills
 
-**In Qwen:** Skills load natively — follow the instructions. When you invoke a skill, its content is loaded and presented to you—follow it directly. Never use the Read tool on skill files.
+**In Qwen Code:** Skills load natively from `~/.qwen/skills/` — follow the instructions. When you invoke a skill, its content is loaded and presented to you — follow it directly. Never use the Read tool on skill files.
 
-**In Copilot CLI:** Use the `skill` tool. Skills are auto-discovered from installed plugins. The `skill` tool works the same as Qwen's `Skill` tool.
+**In Claude Code:** Skills load natively from the plugin. Follow the instructions directly.
 
-**In Qwen, skills load natively from `~/.qwen/skills/`.
+**In Copilot CLI:** Use the `skill` tool. Skills are auto-discovered from installed plugins.
+
+**In Gemini CLI:** Skills load natively via the extension. GEMINI.md @imports the using-superpowers skill at session start.
+
+**In OpenCode:** Skills load natively via the plugin's config hook. Use the `skill` tool to list and load skills.
+
+**In Cursor:** Skills load natively via the plugin system. Follow the instructions directly.
 
 **In other environments:** Check your platform's documentation for how skills are loaded.
 
 ## Platform Adaptation
 
-Skills use Qwen tool names. Non-CC platforms: see `references/copilot-tools.md` (Copilot CLI), `references/qwen-tools.md` (Qwen) for tool equivalents. Qwen users get the tool mapping loaded automatically 
+Skills use Claude Code tool names by default. Non-Claude Code platforms: see platform-specific tool mapping references:
+
+- **Qwen Code:** `skills/using-superpowers/references/qwen-tools.md`
+- **Copilot CLI:** `skills/using-superpowers/references/copilot-tools.md`
+- **Gemini CLI:** `skills/using-superpowers/references/gemini-tools.md`
+- **OpenCode:** See `docs/README.opencode.md` for tool mapping
+- **Cursor:** See `docs/README.codex.md` for tool mapping 
 
 # Using Skills
 
@@ -55,7 +67,7 @@ digraph skill_flow {
     "Check matching skills" [shape=box];
     "Announce: 'Using [skill] to [purpose]'" [shape=box];
     "Has checklist?" [shape=diamond];
-    "Create TodoWrite todo per item" [shape=box];
+    "Create todo_write todo per item" [shape=box];
     "Follow skill exactly" [shape=box];
     "Respond (including clarifications)" [shape=doublecircle];
 
@@ -69,9 +81,9 @@ digraph skill_flow {
     "Might any skill apply?" -> "Respond (including clarifications)" [label="definitely not"];
     "Check matching skills" -> "Announce: 'Using [skill] to [purpose]'";
     "Announce: 'Using [skill] to [purpose]'" -> "Has checklist?";
-    "Has checklist?" -> "Create TodoWrite todo per item" [label="yes"];
+    "Has checklist?" -> "Create todo_write todo per item" [label="yes"];
     "Has checklist?" -> "Follow skill exactly" [label="no"];
-    "Create TodoWrite todo per item" -> "Follow skill exactly";
+    "Create todo_write todo per item" -> "Follow skill exactly";
 }
 ```
 

@@ -4,10 +4,10 @@ Skills use generic tool names. When you encounter these in a skill, use your Qwe
 
 | Skill references | Qwen equivalent |
 |-----------------|------------------|
-| `TodoWrite` / `TodoWrite` | `TodoWrite` (built-in — already available) |
+| `TodoWrite` | `todo_write` (built-in) |
 | `Task` tool (subagent dispatch) | See [Subagent dispatch](#subagent-dispatch) below |
 | `Read`, `Write`, `Edit` (files) | `read_file`, `write_file`, `edit` |
-| `Bash` / shell | `bash` |
+| `Bash` / shell | `run_shell_command` |
 | `Skill` tool (invoke a skill) | Skills load natively — just follow the instructions |
 
 ## Subagent dispatch
