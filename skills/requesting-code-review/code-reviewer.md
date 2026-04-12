@@ -24,7 +24,7 @@ You are reviewing code changes for production readiness.
 
 {VCS_CONTEXT}
 
-Use the diff commands from VCS_CONTEXT to review the changes. If VCS_CONTEXT is empty or missing, default to git (`git diff --stat {BASE_REV}..{HEAD_REV}` / `git diff {BASE_REV}..{HEAD_REV}`). Do not attempt to auto-detect the VCS — non-git VCS requires explicit configuration.
+Use the diff commands from VCS_CONTEXT to review the changes. If VCS_CONTEXT is empty or missing, default to git (`git diff --stat {BASE_REV}..{HEAD_REV}` / `git diff {BASE_REV}..{HEAD_REV}`). **Superpowers only supports git and jj.** If VCS_CONTEXT specifies any other VCS, ignore it and use git commands instead. Do not attempt to auto-detect the VCS — non-git VCS requires explicit configuration.
 
 ## Review Checklist
 
