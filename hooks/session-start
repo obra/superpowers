@@ -9,11 +9,15 @@ PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 # Read VCS preference from user config (default: git)
 VCS="git"
+VCS_WARNING=""
 SUPERPOWERS_CONFIG="${HOME}/.config/superpowers/config.json"
 if [ -f "$SUPERPOWERS_CONFIG" ]; then
     vcs_detected=$(grep -o '"vcs"[[:space:]]*:[[:space:]]*"[^"]*"' "$SUPERPOWERS_CONFIG" 2>/dev/null | grep -o '"[^"]*"$' | tr -d '"' || true)
     if [ "$vcs_detected" = "git" ] || [ "$vcs_detected" = "jj" ]; then
         VCS="$vcs_detected"
+    elif [ -n "$vcs_detected" ]; then
+        VCS="git"
+        VCS_WARNING="Warning: Unrecognized VCS value '${vcs_detected}' in ~/.config/superpowers/config.json. Falling back to git. Accepted values: git, jj."
     fi
 fi
 
@@ -42,7 +46,7 @@ escape_for_json() {
 
 using_superpowers_escaped=$(escape_for_json "$using_superpowers_content")
 warning_escaped=$(escape_for_json "$warning_message")
-session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}\n\nVCS: ${VCS}\n\nYour user uses ${VCS} for version control. When skills reference VCS operations, use the ${VCS} column from references/vcs-operations.md for concrete commands.\n</EXTREMELY_IMPORTANT>"
+session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n\n${warning_escaped}\n\nVCS: ${VCS}\n\nYour user uses ${VCS} for version control. When skills reference VCS operations, use the ${VCS} column from references/vcs-operations.md for concrete commands.${VCS_WARNING:+\n\n${VCS_WARNING}}\n</EXTREMELY_IMPORTANT>"
 
 # Output context injection as JSON.
 # Cursor hooks expect additional_context (snake_case).

@@ -17,7 +17,7 @@ You are reviewing code changes for production readiness.
 
 {PLAN_REFERENCE}
 
-## Git Range to Review
+## Revision Range to Review
 
 **Base:** {BASE_REV}
 **Head:** {HEAD_REV}
