@@ -97,10 +97,9 @@ Expected: PASS
 
 - [ ] **Step 5: Commit**
 
-```bash
-git add tests/path/test.py src/path/file.py
-git commit -m "feat: add specific feature"
-```
+Use the "Stage and commit" operation from `references/vcs-operations.md`:
+- Stage the test file and implementation file
+- Commit with message: "feat: add specific feature"
 ````
 
 ## No Placeholders
