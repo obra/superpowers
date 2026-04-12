@@ -24,7 +24,7 @@ You are reviewing code changes for production readiness.
 
 {VCS_CONTEXT}
 
-Use the diff commands from VCS_CONTEXT to review the changes. **VCS_CONTEXT must be provided by the calling skill.** If it is empty or missing, you cannot review — report the error to the orchestrator and request VCS context.
+Use the diff commands from VCS_CONTEXT to review the changes. If VCS_CONTEXT is empty or missing, default to git (`git diff --stat {BASE_REV}..{HEAD_REV}` / `git diff {BASE_REV}..{HEAD_REV}`). Do not attempt to auto-detect the VCS — non-git VCS requires explicit configuration.
 
 ## Review Checklist
 
@@ -108,7 +108,7 @@ Use the diff commands from VCS_CONTEXT to review the changes. **VCS_CONTEXT must
 
 ## Example Output
 
-> **Note:** The diff commands in the review below came from VCS_CONTEXT, filled by the calling skill. For git users this includes `git diff`; for jj users, `jj diff`. The reviewer should never hard-code VCS commands.
+> **Note:** The reviewer defaults to git commands when VCS_CONTEXT is empty. For non-git users (e.g., jj), the calling skill must fill VCS_CONTEXT with the correct commands. Do not auto-detect VCS — it requires explicit configuration.
 
 ```
 ### Strengths
