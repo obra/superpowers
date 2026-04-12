@@ -15,6 +15,7 @@ Task tool (superpowers:code-reviewer):
   BASE_REV: [revision before task]
   HEAD_REV: [current revision]
   DESCRIPTION: [task summary]
+  VCS_CONTEXT: [VCS commands for diff/log — see "VCS Context Propagation" in SDD skill]
 ```
 
 **In addition to standard code quality concerns, the reviewer should check:**

@@ -22,7 +22,9 @@ You are reviewing code changes for production readiness.
 **Base:** {BASE_REV}
 **Head:** {HEAD_REV}
 
-Use the "Show diff for range" and "Diff stats for range" operations from `references/vcs-operations.md` to review the changes between BASE_REV and HEAD_REV.
+{VCS_CONTEXT}
+
+Use the diff commands from VCS_CONTEXT (or `git diff --stat {BASE_REV}..{HEAD_REV}` / `git diff {BASE_REV}..{HEAD_REV}` if no VCS_CONTEXT provided) to review the changes.
 
 ## Review Checklist
 

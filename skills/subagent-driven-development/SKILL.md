@@ -117,6 +117,33 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 **Never** ignore an escalation or force the same model to retry without changes. If the implementer said it's stuck, something needs to change.
 
+## VCS Context Propagation
+
+Subagents don't inherit your session context. They will NOT see the `VCS: jj` or `VCS: git` setting. You MUST propagate VCS context to every subagent you dispatch.
+
+**At the start of SDD execution:**
+1. Check the session context for `VCS: git` or `VCS: jj`
+2. If VCS is not git, read `references/vcs-operations.md` once
+3. Extract the commands your subagents will need (commit, diff, current revision at minimum)
+
+**When dispatching any subagent**, fill the `{VCS_CONTEXT}` placeholder in the prompt template with the relevant VCS commands. For git users, this can be empty (git is the default assumption). For jj users, include at minimum:
+
+```
+## VCS
+
+This project uses jj (not git). Key commands:
+- Commit: `jj describe -m "msg" && jj new` (no staging area — working copy is auto-tracked)
+- Current revision: `jj log -r @ --no-graph -T 'change_id ++ "\n"' | head -1`
+- Diff: `jj diff -r "$rev"`
+- Diff stats: `jj diff --stat -r "$rev"`
+- Log: `jj log --no-graph`
+- Push: `jj git push -b "$bookmark"`
+
+Do NOT use git commands. Use jj equivalents above.
+```
+
+**This is not optional.** If the session VCS is jj and you dispatch a subagent without VCS context, it will use git commands and fail or corrupt state.
+
 ## Prompt Templates
 
 - `./implementer-prompt.md` - Dispatch implementer subagent

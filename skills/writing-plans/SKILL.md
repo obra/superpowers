@@ -97,9 +97,9 @@ Expected: PASS
 
 - [ ] **Step 5: Commit**
 
-Use the "Stage and commit" operation from `references/vcs-operations.md`:
-- Stage the test file and implementation file
-- Commit with message: "feat: add specific feature"
+Stage and commit the changes with message: "feat: add specific feature"
+
+**Important:** Write the actual VCS commands in your plan based on the user's VCS (from session context). Plans are executed by subagents that won't have access to `references/vcs-operations.md`. For git: `git add <files> && git commit -m "msg"`. For jj: `jj describe -m "msg" && jj new`.
 ````
 
 ## No Placeholders

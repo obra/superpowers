@@ -16,6 +16,8 @@ Task tool (general-purpose):
 
     [Scene-setting: where this fits, dependencies, architectural context]
 
+    {VCS_CONTEXT}
+
     ## Before You Begin
 
     If you have questions about:

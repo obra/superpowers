@@ -37,6 +37,7 @@ Use Task tool with superpowers:code-reviewer type, fill template at `code-review
 - `{BASE_REV}` - Starting revision
 - `{HEAD_REV}` - Ending revision
 - `{DESCRIPTION}` - Brief summary
+- `{VCS_CONTEXT}` - VCS commands for diff/log (include if user's VCS is not git — the reviewer subagent won't inherit your session context)
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
