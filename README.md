@@ -26,7 +26,7 @@ Thanks!
 
 ## Installation
 
-**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex and OpenCode require manual setup.
+**Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex and OpenCode require manual setup. Superpowers supports both **git** and **jj** (Jujutsu) version control — set your preference in `~/.config/superpowers/config.json`.
 
 ### Claude Code Official Marketplace
 
