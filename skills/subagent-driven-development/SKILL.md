@@ -84,6 +84,19 @@ digraph process {
 }
 ```
 
+## Pre-Dispatch Context Enrichment (if GitNexus is indexed)
+
+Before dispatching each implementer, gather targeted context:
+
+```
+gitnexus_impact({target: "<primary symbol the task modifies>", direction: "upstream"})
+→ What depends on the symbol this task will change
+```
+
+Include the impact results in the implementer's `## Context` section. This prevents the implementer from making changes that break upstream consumers they can't see.
+
+Skip if no GitNexus index exists — dispatch with plan context only.
+
 ## Model Selection
 
 Use the least powerful model that can handle each role to conserve cost and increase speed.

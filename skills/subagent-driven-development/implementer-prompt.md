@@ -16,6 +16,15 @@ Task tool (general-purpose):
 
     [Scene-setting: where this fits, dependencies, architectural context]
 
+    ## Impact Context (if provided)
+
+    [Controller pastes gitnexus_impact results here, or removes this section if unavailable]
+
+    These symbols depend on code you'll be modifying. Keep them working:
+    - [list of upstream dependents from impact analysis]
+
+    If your implementation would break any of these, report DONE_WITH_CONCERNS.
+
     ## Before You Begin
 
     If you have questions about:

@@ -104,6 +104,22 @@ digraph brainstorming {
 - Where existing code has problems that affect the work (e.g., a file that's grown too large, unclear boundaries, tangled responsibilities), include targeted improvements as part of the design - the way a good developer improves code they're working in.
 - Don't propose unrelated refactoring. Stay focused on what serves the current goal.
 
+**GitNexus-accelerated exploration (if indexed):**
+
+When the project has a GitNexus index, use it during context exploration:
+
+```
+Read resource: gitnexus://repo/{name}/context
+→ Codebase overview, key statistics, index freshness
+
+Read resource: gitnexus://repo/{name}/clusters
+→ Functional areas and their relationships
+```
+
+This gives you architectural context faster than reading files individually. Use it to inform which areas to explore deeper and what questions to ask.
+
+Skip if no GitNexus index exists.
+
 ## After the Design
 
 **Documentation:**

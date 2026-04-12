@@ -35,7 +35,20 @@ Cannot proceed with merge/PR until tests pass.
 
 Stop. Don't proceed to Step 2.
 
-**If tests pass:** Continue to Step 2.
+**If tests pass:** Continue below.
+
+**If tests pass and GitNexus is indexed — verify change scope:**
+
+```bash
+gitnexus_detect_changes({scope: "compare", base_ref: "<base-branch>"})
+```
+
+Review the affected symbols list:
+- Do the changed symbols match what you expect from this branch's work?
+- Any unexpected symbols? Investigate before proceeding.
+- This is a sanity check, not a blocker — but unexpected scope warrants a pause.
+
+Skip if no GitNexus index exists. Continue to Step 2.
 
 ### Step 2: Determine Base Branch
 

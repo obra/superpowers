@@ -37,6 +37,18 @@ BEFORE claiming any status or expressing satisfaction:
 Skip any step = lying, not verifying
 ```
 
+**Scope verification (if GitNexus is indexed):**
+
+Before claiming "no unintended side effects" or "only changed what was needed":
+```
+gitnexus_detect_changes({scope: "staged"})
+→ Lists all symbols actually affected by your changes
+→ Compare against expected scope
+→ Unexpected symbols = investigate before claiming done
+```
+
+This is not a replacement for tests — it's an additional gate for scope claims.
+
 ## Common Failures
 
 | Claim | Requires | Not Sufficient |
@@ -48,6 +60,7 @@ Skip any step = lying, not verifying
 | Regression test works | Red-green cycle verified | Test passes once |
 | Agent completed | VCS diff shows changes | Agent reports "success" |
 | Requirements met | Line-by-line checklist | Tests passing |
+| No unintended side effects | `gitnexus_detect_changes({scope: "staged"})`: only expected symbols affected | Code review, "looks right" |
 
 ## Red Flags - STOP
 

@@ -69,7 +69,23 @@ You MUST complete each phase before proceeding to the next.
    - New dependencies, config changes
    - Environmental differences
 
-4. **Gather Evidence in Multi-Component Systems**
+4. **Trace Execution Flows (if GitNexus is indexed)**
+
+   Use the code knowledge graph to accelerate root cause investigation:
+
+   ```
+   gitnexus_query({query: "<error concept or failing behavior>"})
+   → Reveals execution flows that touch the failing area
+
+   gitnexus_context({name: "<suspect function or symbol>"})
+   → Shows callers, callees, and process participation
+   → Answers: Who calls this? What does it call? What flows use it?
+   ```
+
+   This narrows the search space before adding diagnostic instrumentation.
+   Skip if no GitNexus index exists — proceed to evidence gathering.
+
+5. **Gather Evidence in Multi-Component Systems**
 
    **WHEN system has multiple components (CI → build → signing, API → service → database):**
 
@@ -107,7 +123,7 @@ You MUST complete each phase before proceeding to the next.
 
    **This reveals:** Which layer fails (secrets → workflow ✓, workflow → build ✗)
 
-5. **Trace Data Flow**
+6. **Trace Data Flow**
 
    **WHEN error is deep in call stack:**
 
@@ -141,6 +157,7 @@ You MUST complete each phase before proceeding to the next.
    - What other components does this need?
    - What settings, config, environment?
    - What assumptions does it make?
+   - If GitNexus is indexed: `gitnexus_context({name: "<component>"})` gives a 360-degree view of what a component depends on and what depends on it
 
 ### Phase 3: Hypothesis and Testing
 

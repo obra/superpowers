@@ -22,6 +22,32 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
 
+## Codebase Reconnaissance (if GitNexus is indexed)
+
+Before mapping file structure, understand the terrain. If the project has a GitNexus index:
+
+1. **Understand existing architecture** around the feature area:
+   ```
+   gitnexus_context({name: "<key symbol that will be extended or modified>"})
+   → Who calls it, what it calls, what processes it participates in
+   ```
+
+2. **Assess blast radius** of planned changes:
+   ```
+   gitnexus_impact({target: "<symbol or file to modify>", direction: "upstream"})
+   → What will be affected by changes here
+   ```
+
+3. **Map functional clusters** the feature touches:
+   ```
+   Read resource: gitnexus://repo/{name}/clusters
+   → Identifies which functional areas the work spans
+   ```
+
+Use these results to inform File Structure decisions — they reveal hidden dependencies and coupling that specs don't mention.
+
+Skip this section if no GitNexus index exists.
+
 ## File Structure
 
 Before defining tasks, map out which files will be created or modified and what each one is responsible for. This is where decomposition decisions get locked in.
