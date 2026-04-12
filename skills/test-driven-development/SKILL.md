@@ -9,6 +9,12 @@ description: Use when implementing any feature or bugfix, before writing impleme
 
 Write the test first. Watch it fail. Write minimal code to pass.
 
+Build in vertical tracer bullets:
+- one end-to-end behavior
+- one failing test
+- one minimal implementation
+- repeat based on what you learned from the last cycle
+
 **Core principle:** If you didn't watch the test fail, you don't know if it tests the right thing.
 
 **Violating the letter of the rules is violating the spirit of the rules.**
@@ -44,6 +50,34 @@ Write code before the test? Delete it. Start over.
 
 Implement fresh from tests. Period.
 
+## Slice Vertically, Not Horizontally
+
+Do not break work into layers like:
+- tests for parser
+- tests for service
+- tests for UI
+- then parser implementation
+- then service implementation
+- then UI implementation
+
+That is horizontal slicing. It front-loads speculation and weakens feedback.
+
+Instead, pick the smallest useful behavior that crosses the real seam the user
+cares about. Finish that slice completely before starting the next one.
+
+Wrong:
+- RED: test parser rules, test repository, test UI states
+- GREEN: implement parser, implement repository, implement UI
+
+Right:
+- RED: one user-visible or public-interface behavior
+- GREEN: minimum code across whatever layers are needed
+- REFACTOR: clean up while staying green
+- Repeat for the next behavior
+
+Each new test should respond to what the previous cycle taught you.
+Do not write a queue of speculative tests up front.
+
 ## Red-Green-Refactor
 
 ```dot
@@ -70,7 +104,8 @@ digraph tdd_cycle {
 
 ### RED - Write Failing Test
 
-Write one minimal test showing what should happen.
+Write one minimal test showing what should happen for the current tracer bullet.
+Choose the narrowest public seam that proves the whole behavior.
 
 <Good>
 ```typescript
@@ -109,6 +144,7 @@ Vague name, tests mock not code
 - One behavior
 - Clear name
 - Real code (no mocks unless unavoidable)
+- Targets a vertical slice, not an internal layer in isolation
 
 ### Verify RED - Watch It Fail
 
@@ -165,6 +201,9 @@ Over-engineered
 
 Don't add features, refactor other code, or "improve" beyond the test.
 
+If the test requires touching multiple layers, that is fine. Add only the
+minimum code in each layer needed to make this one behavior pass.
+
 ### Verify GREEN - Watch It Pass
 
 **MANDATORY.**
@@ -193,7 +232,8 @@ Keep tests green. Don't add behavior.
 
 ### Repeat
 
-Next failing test for next feature.
+Next failing test for the next thin vertical behavior.
+Do not write test 2 until test 1 is green.
 
 ## Good Tests
 
@@ -202,6 +242,7 @@ Next failing test for next feature.
 | **Minimal** | One thing. "and" in name? Split it. | `test('validates email and domain and whitespace')` |
 | **Clear** | Name describes behavior | `test('test1')` |
 | **Shows intent** | Demonstrates desired API | Obscures what code should do |
+| **Vertical** | Proves a complete behavior through a public seam | Proves one internal layer while the behavior still doesn't work |
 
 ## Why Order Matters
 
@@ -268,6 +309,7 @@ Tests-first force edge case discovery before implementing. Tests-after verify yo
 | "TDD will slow me down" | TDD faster than debugging. Pragmatic = test-first. |
 | "Manual test faster" | Manual doesn't prove edge cases. You'll re-test every change. |
 | "Existing code has no tests" | You're improving it. Add tests for existing code. |
+| "I'll write all the tests first, then implement" | That's horizontal slicing. Finish one tracer bullet before starting the next. |
 
 ## Red Flags - STOP and Start Over
 
@@ -276,6 +318,7 @@ Tests-first force edge case discovery before implementing. Tests-after verify yo
 - Test passes immediately
 - Can't explain why test failed
 - Tests added "later"
+- Stack of failing tests waiting for future implementation
 - Rationalizing "just this once"
 - "I already manually tested it"
 - "Tests after achieve the same purpose"
@@ -332,6 +375,7 @@ Before marking work complete:
 - [ ] Watched each test fail before implementing
 - [ ] Each test failed for expected reason (feature missing, not typo)
 - [ ] Wrote minimal code to pass each test
+- [ ] Finished one tracer bullet before writing the next test
 - [ ] All tests pass
 - [ ] Output pristine (no errors, warnings)
 - [ ] Tests use real code (mocks only if unavoidable)
