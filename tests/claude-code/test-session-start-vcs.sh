@@ -67,6 +67,11 @@ if echo "$output" | grep -q 'VCS: git'; then
 else
     fail "invalid value falls back to git — got: $(echo "$output" | grep 'VCS:' || echo 'no VCS line')"
 fi
+if echo "$output" | grep -q 'important-reminder.*Unsupported VCS'; then
+    pass "invalid value emits visible warning"
+else
+    fail "invalid value emits visible warning — no important-reminder found"
+fi
 export HOME="$HOME_ORIG"
 rm -rf "$TMPDIR_T"
 

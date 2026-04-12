@@ -17,7 +17,7 @@ if [ -f "$SUPERPOWERS_CONFIG" ]; then
         VCS="$vcs_detected"
     elif [ -n "$vcs_detected" ]; then
         VCS="git"
-        VCS_WARNING="Warning: Unrecognized VCS value '${vcs_detected}' in ~/.config/superpowers/config.json. Falling back to git. Accepted values: git, jj."
+        VCS_WARNING="\n\n<important-reminder>IN YOUR FIRST REPLY AFTER SEEING THIS MESSAGE YOU MUST TELL THE USER:⚠️ **Unsupported VCS '${vcs_detected}' in ~/.config/superpowers/config.json.** Falling back to git. Accepted values: git, jj. Fix your config to silence this warning.</important-reminder>"
     fi
 fi
 
