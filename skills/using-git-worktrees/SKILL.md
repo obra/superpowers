@@ -48,7 +48,9 @@ echo "Current branch: $BRANCH"
 echo "Repository: $(basename "$(git rev-parse --show-toplevel)")"
 ```
 
-Tell the user their options, then **wait for a reply**:
+**Check the user's most recent message first.** If they already asked for a worktree, named the worktree skill, or asked for an isolated workspace in the message that invoked you, that IS the explicit ask — proceed directly to Step 3 without re-prompting.
+
+Otherwise, tell the user their options and **wait for a reply**:
 
 > "You're on `<branch>` in `<repo>`. I can set up an isolated worktree, or we can work directly here. What do you prefer?"
 
@@ -241,7 +243,7 @@ Ready to implement <feature-name>
 - Create worktree without verifying it's ignored (project-local)
 - Skip baseline test verification
 - Proceed with failing tests without asking
-- Infer worktree consent from the task description, plan, or skill invocation — only an explicit user reply counts
+- Infer worktree consent from the task description or plan — only an explicit user request counts
 
 **Always:**
 - Run Step 1 detection first
@@ -256,9 +258,9 @@ Ready to implement <feature-name>
 ## Integration
 
 **Called by:**
-- **subagent-driven-development** - Ensures isolated workspace (creates one or verifies existing)
-- **executing-plans** - Ensures isolated workspace (creates one or verifies existing)
-- Any skill needing isolated workspace
+- **subagent-driven-development** - Calls this to detect the workspace and optionally set up worktree isolation on request
+- **executing-plans** - Calls this to detect the workspace and optionally set up worktree isolation on request
+- Any skill that may use worktree isolation
 
 **Pairs with:**
 - **finishing-a-development-branch** - REQUIRED for cleanup after work complete
