@@ -1,5 +1,5 @@
 ---
-description: "已弃用 - 请改用 superpowers:头脑风暴技能"
+description: "已弃用 - 请改用 superpowers:brainstorming 技能"
 ---
 
-告诉你的合作伙伴，这个命令已被弃用，并将在下一个主要版本中移除。他们应该要求你使用“superpowers 头脑风暴”技能代替。
+告诉你的合作伙伴，该命令已弃用，并将在下一个主要版本中移除。他们应要求你使用“superpowers brainstorming”技能代替。
