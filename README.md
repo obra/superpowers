@@ -7,35 +7,153 @@ Power Platform development skills for Claude Code. Guides you through structured
 ## Installation
 
 ```bash
-/plugin install pp-superpowers
+/plugin install superpowers@claude-plugins-official
 ```
 
-## Current Skills
+### Claude Code (via Plugin Marketplace)
 
-**Foundation (Phase 1)**
-- **solution-discovery** — Structured requirements conversation that produces a `.foundation/` directory consumed by all downstream skills. Supports CREATE, RESUME, and UPDATE modes.
+In Claude Code, register the marketplace first:
 
-**Kept from upstream** (evaluate during alm-workflow phase)
-- **using-git-worktrees** — Isolated development workspaces via git worktrees
-- **finishing-a-development-branch** — Merge/PR decision workflow
+```bash
+/plugin marketplace add obra/superpowers-marketplace
+```
 
-## Planned Skills
+Then install the plugin from this marketplace:
 
-| Phase | Skills |
-|---|---|
-| Phase 1b | solution-strategy |
-| Phase 2 | application-design, schema-design |
-| Phase 3 | ui-design, business-logic, security |
-| Phase 4 | integration, alm-workflow, environment-setup |
+```bash
+/plugin install superpowers@superpowers-marketplace
+```
 
-## How It Works
+### Cursor (via Plugin Marketplace)
 
-Start a conversation and describe your Power Platform project. The session-start hook loads `using-pp-superpowers`, which routes you to the right skill. For new projects, `solution-discovery` walks you through 10 stages of requirements gathering and produces the `.foundation/` directory that all downstream skills consume.
+In Cursor Agent chat, install from marketplace:
 
-## Attribution
+```text
+/add-plugin superpowers
+```
 
-Forked from [Superpowers](https://github.com/obra/superpowers) by Jesse Vincent / Prime Radiant. Adapted for Power Platform by Chris Treichel / SDFX Studios.
+or search for "superpowers" in the plugin marketplace.
+
+### Codex
+
+Tell Codex:
+
+```
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md
+```
+
+**Detailed docs:** [docs/README.codex.md](docs/README.codex.md)
+
+### OpenCode
+
+Tell OpenCode:
+
+```
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
+```
+
+**Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
+
+### Gemini CLI
+
+```bash
+gemini extensions install https://github.com/obra/superpowers
+```
+
+To update:
+
+```bash
+gemini extensions update superpowers
+```
+
+### Verify Installation
+
+Start a new session in your chosen platform and ask for something that should trigger a skill (for example, "help me plan this feature" or "let's debug this issue"). The agent should automatically invoke the relevant superpowers skill.
+
+## The Basic Workflow
+
+1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
+
+2. **using-git-worktrees** - Activates after design approval. Creates isolated workspace on new branch, runs project setup, verifies clean test baseline.
+
+3. **writing-plans** - Activates with approved design. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
+
+4. **subagent-driven-development** or **executing-plans** - Activates with plan. Dispatches fresh subagent per task with two-stage review (spec compliance, then code quality), or executes in batches with human checkpoints.
+
+5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
+
+6. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
+
+7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
+
+**The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
+
+## What's Inside
+
+### Skills Library
+
+**Testing**
+- **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
+
+**Debugging**
+- **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
+- **verification-before-completion** - Ensure it's actually fixed
+
+**Collaboration** 
+- **brainstorming** - Socratic design refinement
+- **writing-plans** - Detailed implementation plans
+- **executing-plans** - Batch execution with checkpoints
+- **dispatching-parallel-agents** - Concurrent subagent workflows
+- **requesting-code-review** - Pre-review checklist
+- **receiving-code-review** - Responding to feedback
+- **using-git-worktrees** - Parallel development branches
+- **finishing-a-development-branch** - Merge/PR decision workflow
+- **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
+
+**Meta**
+- **writing-skills** - Create new skills following best practices (includes testing methodology)
+- **using-superpowers** - Introduction to the skills system
+
+## Philosophy
+
+- **Test-Driven Development** - Write tests first, always
+- **Systematic over ad-hoc** - Process over guessing
+- **Complexity reduction** - Simplicity as primary goal
+- **Evidence over claims** - Verify before declaring success
+
+Read more: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
+
+## Contributing
+
+Skills live directly in this repository. To contribute:
+
+1. Fork the repository
+2. Create a branch for your skill
+3. Follow the `writing-skills` skill for creating and testing new skills
+4. Submit a PR
+
+See `skills/writing-skills/SKILL.md` for the complete guide.
+
+## Updating
+
+Skills update automatically when you update the plugin:
+
+```bash
+/plugin update superpowers
+```
 
 ## License
 
-MIT License — see LICENSE file for details.
+MIT License - see LICENSE file for details
+
+## Community
+
+Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of the folks at [Prime Radiant](https://primeradiant.com).
+
+For community support, questions, and sharing what you're building with Superpowers, join us on [Discord](https://discord.gg/Jd8Vphy9jq).
+
+## Support
+
+- **Discord**: [Join us on Discord](https://discord.gg/Jd8Vphy9jq)
+- **Issues**: https://github.com/obra/superpowers/issues
+- **Marketplace**: https://github.com/obra/superpowers-marketplace
