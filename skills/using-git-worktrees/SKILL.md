@@ -48,15 +48,13 @@ Honor any existing declared preference without asking. If the user declines cons
 
 **You have two mechanisms. Try them in this order.**
 
-### 1a. Native Worktree Tools (preferred — STOP HERE if available)
+### 1a. Native Worktree Tools (preferred)
 
-The user has asked for an isolated workspace (Step 0 consent). Check your available tools — do you have `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, or a `--worktree` flag? **If YES: the user's consent to create a worktree is your authorization to use it. Use it now and skip to Step 3.**
+The user has asked for an isolated workspace (Step 0 consent). Do you already have a way to create a worktree? It might be a tool with a name like `EnterWorktree`, `WorktreeCreate`, a `/worktree` command, or a `--worktree` flag. If you do, use it and skip to Step 3.
 
-Native tools handle directory placement, branch creation, and cleanup automatically. Using `git worktree add` when you have a native tool creates phantom state — your harness can't see or manage worktrees it didn't create, and cleanup becomes impossible.
+Native tools handle directory placement, branch creation, and cleanup automatically. Using `git worktree add` when you have a native tool creates phantom state your harness can't see or manage.
 
-**Even if `.worktrees/` already exists, even under time pressure, even if `git worktree add` feels faster — use your native tool.** There are no exceptions.
-
-**Only proceed to Step 1b if you have confirmed you have NO native worktree/isolation tool.**
+Only proceed to Step 1b if you have no native worktree tool available.
 
 ### 1b. Git Worktree Fallback
 
