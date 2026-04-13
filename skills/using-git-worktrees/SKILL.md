@@ -30,7 +30,11 @@ BRANCH=$(git branch --show-current)
 git rev-parse --show-superproject-working-tree 2>/dev/null
 ```
 
-**If `GIT_DIR != GIT_COMMON` (and not a submodule):** You are already in a linked worktree. Skip to Step 4 (Project Setup). Do NOT create another worktree.
+**If `GIT_DIR != GIT_COMMON` (and not a submodule):** You are already in a linked worktree. The current workspace is your working environment — use it for whatever the user is asking about. Skip to Step 4 (Project Setup).
+
+**Do not offer alternatives, and do not create another worktree — not here as a nested one, not as a sibling from the main repo, and not anywhere else.** If the user's request mentions "isolation" or "a worktree" explicitly, the current worktree already satisfies that need. Explain this and work in place.
+
+**If the user insists on different isolation for unrelated work:** stop and ask them to exit this workspace and re-invoke the skill from the main repo. Do not create siblings on their behalf.
 
 Report with branch state:
 - On a branch: "Already in isolated workspace at `<path>` on branch `<name>`."
