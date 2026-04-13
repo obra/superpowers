@@ -1,6 +1,6 @@
 # BUILD-TRACKER.md — pp-superpowers Central Build Plan
 
-**Last updated:** April 5, 2026 (Phase 2 — application-design and schema-design live-tested, Excalidraw VS Code fix applied, ready for Step 7/8)  
+**Last updated:** April 13, 2026 (Phase 2 — all Step 7 issues resolved, ready for Step 8 merge to main)  
 **Purpose:** Single source of truth for build progress. Read this file at the start of every Claude Code session.
 
 ---
@@ -92,7 +92,7 @@ Branch stays open. Fix on `feature/phase2-design-layer`.
 
 **Issues identified but NOT yet resolved:**
 
-- [ ] **schema-design PARITY_CHECK through COMPLETE truncation:** Transcript evidence suggests these stages may have been rushed — schema-reviewer agent dispatch not confirmed, parity check findings not confirmed by developer. Consider re-running schema-design on the test project to verify these stages execute with proper gates, OR strengthen the conversation guide gate language for these stages.
+- [x] **schema-design PARITY_CHECK through COMPLETE truncation (April 13):** Strengthened conversation-guide gate language — added EXTREMELY-IMPORTANT directives to PARITY_CHECK (must present findings and wait for confirmation), REVIEW (must dispatch schema-reviewer agent, must not skip or substitute, must wait between Stage 1 and Stage 2), and COMPLETE (must present full handoff summary and wait for response).
 - [x] **BUILD-TRACKER.md Whimsical reference (line 33):** Step 2 description said "Whimsical/Mermaid specs" — updated to "Excalidraw/Mermaid specs" (April 5).
 
 #### Step 8 — Merge to main

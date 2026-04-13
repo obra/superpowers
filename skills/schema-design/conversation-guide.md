@@ -516,6 +516,10 @@ Update `activeStage` to `"PARITY_CHECK"`, add UX_DENORMALIZATION to stageHistory
 
 ## Stage: PARITY_CHECK
 
+<EXTREMELY-IMPORTANT>
+**Do not rush this stage.** You MUST present parity check findings to the developer and receive explicit confirmation before proceeding to REVIEW. Even if there are zero findings, present the "no issues found" result and wait for the developer to confirm. Do not combine this stage with REVIEW or skip the presentation.
+</EXTREMELY-IMPORTANT>
+
 ### Actions
 
 Compare the proposed schema against known patterns. Use the reference material from `./knowledge-domains.md` section 6 (Parity Check Reference).
@@ -576,6 +580,10 @@ Update `activeStage` to `"REVIEW"`, add PARITY_CHECK to stageHistory with `compl
 
 ## Stage: REVIEW
 
+<EXTREMELY-IMPORTANT>
+**You MUST dispatch the schema-reviewer agent.** This is not optional. Stage 1 requires dispatching the agent defined in `agents/schema-reviewer.md` and presenting its findings to the developer. Do not skip the agent dispatch, do not substitute your own review, and do not combine Stage 1 and Stage 2 into a single presentation. Wait for developer confirmation after Stage 1 before proceeding to Stage 2.
+</EXTREMELY-IMPORTANT>
+
 ### Stage 1 — Spec compliance (schema-reviewer agent)
 
 Dispatch the **schema-reviewer** agent (defined in `agents/schema-reviewer.md`) with:
@@ -624,6 +632,10 @@ Update `activeStage` to `"COMPLETE"`, add REVIEW to stageHistory with `completed
 ---
 
 ## Stage: COMPLETE
+
+<EXTREMELY-IMPORTANT>
+**Do not truncate the handoff.** You MUST present the full completion summary including all artifacts produced, the suggested next skill, and the alternative options. Wait for the developer's explicit response before ending. Do not end the conversation or auto-proceed after writing the state file.
+</EXTREMELY-IMPORTANT>
 
 ### Actions
 

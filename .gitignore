@@ -8,3 +8,6 @@ triage/
 .pp-context/
 .foundation/
 .discovery-state.json
+docs/ddd-model.md
+docs/schema-physical-model.md
+docs/schema-denormalization-log.md
