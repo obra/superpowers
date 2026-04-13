@@ -33,7 +33,7 @@ If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "alw
 
 **In Gemini CLI:** Skills activate via the `activate_skill` tool. Gemini loads skill metadata at session start and activates the full content on demand.
 
-**In Kimi CLI:** Skills load natively via `~/.config/agents/skills/` discovery. Use `/skill:name` to invoke skills manually.
+**In Kimi CLI:** Skills load natively from `--skills-dir` or built-in discovery paths. Use `/skill:name` to invoke skills manually.
 
 **In other environments:** Check your platform's documentation for how skills are loaded.
 

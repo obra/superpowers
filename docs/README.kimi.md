@@ -14,74 +14,84 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 ### Prerequisites
 
-- Kimi Code CLI 1.12+ (skill discovery support)
+- Kimi Code CLI 1.29+ (hierarchical AGENTS.md loading); tested on 1.32.0
 - Git
 
 ### Steps
 
 1. Clone the repo:
    ```bash
-   git clone https://github.com/obra/superpowers.git ~/.config/agents/superpowers
+   git clone https://github.com/obra/superpowers.git ~/superpowers
    ```
 
-2. Symlink each skill into the discovery directory:
+2. Point Kimi at the skills directory at launch:
    ```bash
-   mkdir -p ~/.config/agents/skills
-   for skill in ~/.config/agents/superpowers/skills/*/; do
-     ln -s "$skill" ~/.config/agents/skills/"$(basename "$skill")"
-   done
+   kimi --skills-dir ~/superpowers/skills
    ```
 
-   Kimi CLI expects skills directly at `~/.config/agents/skills/<skill-name>/SKILL.md` — a single directory symlink adds an extra nesting level that prevents discovery.
+   Or make it permanent with a shell alias:
+   ```bash
+   echo 'alias kimi="kimi --skills-dir ~/superpowers/skills"' >> ~/.bashrc
+   source ~/.bashrc
+   ```
 
-3. Restart Kimi Code CLI.
+3. (Recommended) Add AGENTS.md reinforcement — see below.
 
-### Windows
+## Why AGENTS.md Reinforcement
 
-Use a junction instead of a symlink (works without Developer Mode):
+Kimi's native skill discovery injects skill *names, paths, and descriptions* into the system prompt. In testing, this was not sufficient for Kimi to consistently invoke skills on ambiguous prompts — it would see the skills but skip them.
 
-```powershell
-New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.config\agents\skills"
-Get-ChildItem "$env:USERPROFILE\.config\agents\superpowers\skills" -Directory | ForEach-Object {
-  cmd /c mklink /J "$env:USERPROFILE\.config\agents\skills\$($_.Name)" $_.FullName
-}
+Adding an `~/.kimi/AGENTS.md` with explicit "invoke skills first" rules produces the same reinforcement that Claude Code's plugin provides natively. Kimi 1.29 added hierarchical AGENTS.md loading (merged into the system prompt, 32 KiB budget).
+
+### Recommended AGENTS.md
+
+Create `~/.kimi/AGENTS.md` (user-level, one-time setup) or `./AGENTS.md` in your project (per-project):
+
+```markdown
+# Superpowers skill reinforcement
+
+This machine uses the superpowers skill library. The rules below override default behavior.
+
+## Using Superpowers skills
+
+If you think there is even a 1% chance a skill might apply, invoke the skill via `/skill:<name>` before any other action — including clarifying questions.
+
+### Priority order
+
+1. Process skills first — `brainstorming` (creative work), `systematic-debugging` (bugs), `writing-plans` (multi-step tasks)
+2. Implementation skills second — only after the process skill has run
+
+### Examples
+
+- "Build me X" / "help me build X" → `/skill:brainstorming` first. No code until brainstorming is complete.
+- "Fix this bug" / "something is broken" → `/skill:systematic-debugging` first.
+- Writing new tests or features → `/skill:test-driven-development`.
+
+### Red flags — stop and invoke a skill
+
+- "This is just a simple question" → skills still apply
+- "Let me explore first" → skills tell you HOW
+- "The skill is overkill" → use it anyway
 ```
+
+Keep it under 32 KiB. Project-level AGENTS.md overrides user-level where they conflict.
 
 ## How It Works
 
-Kimi Code CLI has native skill discovery — it scans `~/.config/agents/skills/` for subdirectories containing `SKILL.md` files at startup. Skills must be **directly** inside the discovery directory (not nested in a subdirectory). The per-skill symlinks make each superpowers skill visible individually:
+Kimi Code CLI scans multiple skill directories at startup:
 
-```
-~/.config/agents/skills/brainstorming/    → ~/.config/agents/superpowers/skills/brainstorming/
-~/.config/agents/skills/writing-plans/    → ~/.config/agents/superpowers/skills/writing-plans/
-~/.config/agents/skills/using-superpowers/ → ~/.config/agents/superpowers/skills/using-superpowers/
-...
-```
+- User-level: `~/.kimi/skills/`, `~/.claude/skills/`, `~/.codex/skills/` (brand group, mutually exclusive), plus `~/.config/agents/skills/` and `~/.agents/skills/` (generic)
+- Project-level: `.kimi/skills/`, `.claude/skills/`, `.agents/skills/`
+- Custom: any path passed with `--skills-dir`
 
-The `using-superpowers` skill is discovered automatically and enforces skill usage discipline — no additional configuration needed.
-
-### Alternative skill directories
-
-Kimi Code CLI also scans `~/.kimi/skills/` and `~/.claude/skills/`. If you prefer one of those locations, adjust the symlink target accordingly.
-
-To load skills from multiple brand directories simultaneously, enable in your Kimi config:
-
-```toml
-merge_all_available_skills = true
-```
-
-You can also pass additional skill directories at launch:
-
-```bash
-kimi --skills-dir /path/to/more-skills
-```
+The `--skills-dir` flag is the cleanest integration — no files copied or symlinked, updates via `git pull` in the clone dir. If you already have superpowers installed for Claude Code at `~/.claude/skills/`, Kimi reads it there natively with no flag needed.
 
 ## Usage
 
 Skills are discovered automatically. Kimi activates them when:
 - You mention a skill by name (e.g., "use brainstorming")
 - The task matches a skill's description
-- The `using-superpowers` skill directs Kimi to use one
+- AGENTS.md rules point Kimi at one
 
 Invoke a skill manually with the `/skill` slash command:
 
@@ -93,13 +103,13 @@ Invoke a skill manually with the `/skill` slash command:
 
 ### Personal Skills
 
-Create your own skills in `~/.config/agents/skills/`:
+Create your own skills in `~/.kimi/skills/`:
 
 ```bash
-mkdir -p ~/.config/agents/skills/my-skill
+mkdir -p ~/.kimi/skills/my-skill
 ```
 
-Create `~/.config/agents/skills/my-skill/SKILL.md`:
+Create `~/.kimi/skills/my-skill/SKILL.md`:
 
 ```markdown
 ---
@@ -117,50 +127,40 @@ The `description` field is how Kimi decides when to activate a skill automatical
 ## Limitations
 
 - **Skill tool**: Kimi CLI uses `/skill:name` slash commands instead of a `Skill` tool. See `references/kimi-tools.md` for the full tool mapping.
-- **Task management**: Kimi uses `SetTodoList` (full list replacement) rather than Claude Code's per-task CRUD tools. Skills that reference `TaskCreate`/`TaskUpdate` work — just use `SetTodoList` to update the full list.
+- **Task management**: Kimi uses `SetTodoList` (full list replacement) rather than Claude Code's per-task CRUD tools.
 - **Named agents**: Subagent skills dispatch using Kimi's `coder`/`explore`/`plan` types with the agent's prompt template as content.
 - **NotebookEdit**: No equivalent in Kimi CLI.
+- **SessionStart hooks**: Kimi's `[[hooks]] event = "SessionStart"` fires and runs the script, but the script's stdout is not injected into LLM context. Don't try to replicate Claude Code's plugin priming this way — use AGENTS.md instead.
 
 ## Updating
 
 ```bash
-cd ~/.config/agents/superpowers && git pull
+cd ~/superpowers && git pull
 ```
 
-Skills update instantly through the symlink.
+Skills update instantly — `--skills-dir` reads the current state of the clone.
 
 ## Uninstalling
 
-Remove all superpowers skill symlinks:
-
-```bash
-for skill in ~/.config/agents/superpowers/skills/*/; do
-  rm -f ~/.config/agents/skills/"$(basename "$skill")"
-done
-```
-
-**Windows (PowerShell):**
-```powershell
-Get-ChildItem "$env:USERPROFILE\.config\agents\superpowers\skills" -Directory | ForEach-Object {
-  Remove-Item "$env:USERPROFILE\.config\agents\skills\$($_.Name)"
-}
-```
-
-Optionally delete the clone: `rm -rf ~/.config/agents/superpowers`
+1. Remove the alias from `~/.bashrc` (if added).
+2. Delete the clone: `rm -rf ~/superpowers`
+3. Remove `~/.kimi/AGENTS.md` (if added) or revert any per-project AGENTS.md.
 
 ## Troubleshooting
 
 ### Skills not showing up
 
-1. Verify symlinks exist: `ls -la ~/.config/agents/skills/ | grep superpowers`
-2. Check skills exist: `ls ~/.config/agents/superpowers/skills`
-3. Verify a skill is accessible: `ls ~/.config/agents/skills/using-superpowers/SKILL.md`
-3. Restart Kimi Code CLI — skills are discovered at startup
-4. Check Kimi CLI version: `kimi --version` (requires 1.12+)
+1. Check Kimi CLI version: `kimi --version` (requires 1.29+ for AGENTS.md)
+2. Verify the skills directory: `ls ~/superpowers/skills` — should show `brainstorming`, `writing-plans`, etc.
+3. Inside Kimi, ask: `list every skill you can see and which directory each comes from` — all 15 superpowers skills should be listed with paths in `~/superpowers/skills/`.
 
-### Windows junction issues
+### Kimi ignores skills on ambiguous prompts
 
-Junctions normally work without special permissions. If creation fails, try running PowerShell as administrator.
+This is the default behavior without AGENTS.md. Add `~/.kimi/AGENTS.md` with the template above — see "Why AGENTS.md Reinforcement."
+
+### Hook didn't fire / stdout missing from context
+
+SessionStart hooks execute but their stdout isn't injected. This is documented in Limitations. Use AGENTS.md for context injection instead.
 
 ## Getting Help
 
