@@ -62,6 +62,18 @@ In Cursor Agent chat, install from marketplace:
 
 or search for "superpowers" in the plugin marketplace.
 
+### Qoder
+
+Install via Skills CLI in Qoder IDE terminal:
+
+```bash
+npx skills add https://github.com/obra/superpowers -a qoder
+```
+
+Or manually clone and link skills to `~/.qoder/skills/`.
+
+**Detailed docs:** [docs/README.qoder.md](docs/README.qoder.md)
+
 ### Codex
 
 Tell Codex:
