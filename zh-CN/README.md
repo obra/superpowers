@@ -80,6 +80,13 @@ Superpowers 可通过[官方 Claude 插件市场](https://claude.com/plugins/sup
 
 **详细文档：** [docs/README.opencode.md](docs/README.opencode.md)
 
+### GitHub Copilot CLI
+
+```bash
+copilot plugin marketplace add obra/superpowers-marketplace
+copilot plugin install superpowers@superpowers-marketplace
+```
+
 ### Gemini CLI
 
 ```bash
@@ -180,10 +187,6 @@ MIT 许可证 - 详见 LICENSE 文件
 
 Superpowers 由 [Jesse Vincent](https://blog.fsck.com) 和 [Prime Radiant](https://primeradiant.com) 的其他成员共同构建。
 
-如需社区支持、问题咨询，或分享您使用 Superpowers 构建的项目，欢迎加入我们的 [Discord](https://discord.gg/Jd8Vphy9jq)。
-
-## 支持
-
-* **Discord**：[加入我们的 Discord](https://discord.gg/Jd8Vphy9jq)
-* **问题反馈**：https://github.com/obra/superpowers/issues
-* **市场**：https://github.com/obra/superpowers-marketplace
+* **Discord**: [加入我们](https://discord.gg/35wsABTejz)获取社区支持、提问以及分享你使用 Superpowers 构建的项目
+* **Issues**: https://github.com/obra/superpowers/issues
+* **发布公告**: [注册](https://primeradiant.com/superpowers/)以获取新版本通知

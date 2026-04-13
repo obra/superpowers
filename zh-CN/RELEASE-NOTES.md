@@ -1,5 +1,44 @@
 # Superpowers 发布说明
 
+## v5.0.7 (2026-03-31)
+
+### GitHub Copilot CLI 支持
+
+* **SessionStart 上下文注入** — Copilot CLI v1.0.11 添加了对会话启动钩子输出中 `additionalContext` 的支持。session-start 钩子现在检测 `COPILOT_CLI` 环境变量并发出 SDK 标准的 `{ "additionalContext": "..." }` 格式，为 Copilot CLI 用户在会话开始时提供完整的 superpowers 引导。(原始修复由 @culinablaz 在 PR #910 中提供)
+* **工具映射** — 添加了 `references/copilot-tools.md`，其中包含完整的 Claude Code 到 Copilot CLI 工具等价表
+* **技能和 README 更新** — 将 Copilot CLI 添加到 `using-superpowers` 技能的平台说明和 README 安装部分
+
+### OpenCode 修复
+
+* **技能路径一致性** — 引导文本不再宣传与运行时路径不匹配的误导性 `configDir/skills/superpowers/` 路径。代理应使用本机 `skill` 工具，而不是通过路径导航到文件。测试现在使用源自单一真实来源的一致路径。(#847, #916)
+* **引导作为用户消息** — 将引导注入从 `experimental.chat.system.transform` 移至 `experimental.chat.messages.transform`，将其前置到第一条用户消息，而不是添加一条系统消息。避免了因每轮对话重复系统消息而导致的令牌膨胀 (#750)，并修复了与 Qwen 等遇到多条系统消息会出错的模型的兼容性问题 (#894)。
+
+## v5.0.6 (2026-03-24)
+
+### 内联自审取代子代理审阅循环
+
+子代理审阅循环（派遣一个新代理来审阅计划/规范）使执行时间翻倍（约 25 分钟开销），但并未显著提高计划质量。对 5 个版本进行的回归测试（每个版本 5 次试验）显示，无论是否运行审阅循环，质量得分都相同。
+
+* **brainstorming** — 将规范审阅循环（子代理派遣 + 3 次迭代上限）替换为内联规范自审清单：占位符扫描、内部一致性、范围检查、模糊性检查
+* **writing-plans** — 将计划审阅循环（子代理派遣 + 3 次迭代上限）替换为内联自审清单：规范覆盖率、占位符扫描、类型一致性
+* **writing-plans** — 添加了明确的"无占位符"部分，定义了计划失败的情况（待定、模糊描述、未定义的引用、"类似于任务 N"）
+* 自审每次运行可在约 30 秒内发现 3-5 个真实错误，而不是约 25 分钟，其缺陷率与子代理方法相当
+
+### Brainstorm 服务器
+
+* **会话目录重构** — brainstorm 服务器会话目录现在包含两个同级子目录：`content/`（提供给浏览器的 HTML 文件）和 `state/`（事件、服务器信息、pid、日志）。以前，服务器状态和用户交互数据与提供的内容存储在一起，使得它们可以通过 HTTP 访问。`screen_dir` 和 `state_dir` 路径现在都包含在服务器启动 JSON 中。(由 吉田仁 报告)
+
+### 错误修复
+
+* **所有者-PID 生命周期修复** — brainstorm 服务器的所有者-PID 监控存在两个导致在 60 秒内错误关闭的缺陷：(1) 来自跨用户 PID（Tailscale SSH 等）的 EPERM 被误判为"进程已终止"，以及 (2) 在 WSL 上，祖进程 PID 解析为一个短暂存在的子进程，该子进程在首次生命周期检查之前就退出了。已通过将 EPERM 视为"存活"并在启动时验证所有者 PID 来修复 —— 如果它已经终止，则禁用监控，服务器依赖 30 分钟空闲超时。这也移除了 `start-server.sh` 中特定于 Windows/MSYS2 的例外处理，因为服务器现在可以通用地处理它。(#879)
+* **writing-skills** — 更正了关于 SKILL.md 前置元数据"仅支持两个字段"的错误说法；现在说明是"两个必填字段"，并链接到 agentskills.io 规范以了解所有支持的字段 (由 @arittr 在 PR #882 中提供)
+
+### Codex 应用兼容性
+
+* **codex-tools** — 添加了命名代理派遣映射，记录了如何将 Claude Code 的命名代理类型转换为 Codex 的 `spawn_agent` 及工作者角色 (由 @arittr 在 PR #647 中提供)
+* **codex-tools** — 为感知工作树的技能添加了环境检测和 Codex 应用完成部分 (由 @arittr 提供)
+* **设计规范** — 添加了 Codex 应用兼容性设计规范 (PRI-823)，涵盖只读环境检测、工作树安全的技能行为以及沙箱回退模式 (由 @arittr 提供)
+
 ## v5.0.5 (2026-03-17)
 
 ### 错误修复

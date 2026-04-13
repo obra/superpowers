@@ -26,7 +26,7 @@
 
 ## 工作原理
 
-服务器监视一个目录中的 HTML 文件，并将最新的文件提供给浏览器。您编写 HTML 内容，用户在浏览器中查看并可以点击选择选项。选择记录到 `.events` 文件中，您在下一轮可以读取。
+服务器监视一个目录中的 HTML 文件，并将最新的一个提供给浏览器。你将 HTML 内容写入 `screen_dir`，用户即可在浏览器中查看并点击选择选项。选择记录会被保存到 `state_dir/events`，你可以在下一轮读取。
 
 **内容片段与完整文档：** 如果您的 HTML 文件以 `<!DOCTYPE` 或 `<html` 开头，服务器会按原样提供（仅注入辅助脚本）。否则，服务器会自动将您的内容包装在框架模板中——添加页眉、CSS 主题、选择指示器以及所有交互式基础设施。**默认编写内容片段。** 仅在需要完全控制页面时才编写完整文档。
 
@@ -37,12 +37,13 @@
 scripts/start-server.sh --project-dir /path/to/project
 
 # Returns: {"type":"server-started","port":52341,"url":"http://localhost:52341",
-#           "screen_dir":"/path/to/project/.superpowers/brainstorm/12345-1706000000"}
+#           "screen_dir":"/path/to/project/.superpowers/brainstorm/12345-1706000000/content",
+#           "state_dir":"/path/to/project/.superpowers/brainstorm/12345-1706000000/state"}
 ```
 
-从响应中保存 `screen_dir`。告诉用户打开 URL。
+从响应中保存 `screen_dir` 和 `state_dir`。告知用户打开 URL。
 
-**查找连接信息：** 服务器将其启动 JSON 写入 `$SCREEN_DIR/.server-info`。如果您在后台启动了服务器且未捕获 stdout，请读取该文件以获取 URL 和端口。使用 `--project-dir` 时，检查 `<project>/.superpowers/brainstorm/` 以获取会话目录。
+**查找连接信息：** 服务器会将其启动 JSON 写入 `$STATE_DIR/server-info`。如果你在后台启动了服务器且未捕获标准输出，请读取该文件以获取 URL 和端口。使用 `--project-dir` 时，请检查 `<project>/.superpowers/brainstorm/` 以找到会话目录。
 
 **注意：** 将项目根目录作为 `--project-dir` 传递，以便原型图持久保存在 `.superpowers/brainstorm/` 中并在服务器重启后保留。没有它，文件会进入 `/tmp` 并被清理。如果 `.superpowers/` 尚未存在，请提醒用户将其添加到 `.gitignore`。
 
@@ -64,7 +65,7 @@ scripts/start-server.sh --project-dir /path/to/project
 scripts/start-server.sh --project-dir /path/to/project
 ```
 
-通过 Bash 工具调用时，请设置 `run_in_background: true`。然后在下一轮读取 `$SCREEN_DIR/.server-info` 以获取 URL 和端口。
+通过 Bash 工具调用此功能时，请设置 `run_in_background: true`。然后在下一轮读取 `$STATE_DIR/server-info` 以获取 URL 和端口。
 
 **Codex：**
 
@@ -97,35 +98,35 @@ scripts/start-server.sh \
 
 ## 循环流程
 
-1. **检查服务器是否存活**，然后**将 HTML 写入** `screen_dir` 中的新文件：
-   * 每次写入前，检查 `$SCREEN_DIR/.server-info` 是否存在。如果不存在（或 `.server-stopped` 存在），则服务器已关闭——在继续之前使用 `start-server.sh` 重新启动它。服务器在 30 分钟不活动后自动退出。
-   * 使用语义化文件名：`platform.html`、`visual-style.html`、`layout.html`
-   * **切勿重复使用文件名**——每个屏幕使用一个新文件
-   * 使用 Write 工具——**切勿使用 cat/heredoc**（会在终端中产生噪音）
-   * 服务器自动提供最新的文件
+1. **检查服务器是否存活**，然后**将 HTML 写入** `screen_dir` 中的一个新文件：
+   * 每次写入前，检查 `$STATE_DIR/server-info` 是否存在。如果不存在（或存在 `$STATE_DIR/server-stopped`），则表示服务器已关闭——请使用 `start-server.sh` 重新启动它，然后再继续。服务器在 30 分钟无活动后会自动退出。
+   * 使用语义化的文件名：`platform.html`、`visual-style.html`、`layout.html`
+   * **切勿重复使用文件名**——每个界面都应使用一个新文件
+   * 使用 Write 工具——**切勿使用 cat/heredoc**（会在终端中输出冗余信息）
+   * 服务器会自动提供最新的文件
 
-2. **告诉用户预期结果并结束您的回合：**
+2. **告知用户预期内容并结束你的回合：**
    * 提醒他们 URL（每一步都要提醒，不仅仅是第一步）
-   * 简要总结屏幕上的内容（例如，“显示首页的 3 种布局选项”）
-   * 要求他们在终端中回复：“看一下，告诉我你的想法。如果愿意，请点击选择一个选项。”
+   * 简要总结屏幕上的内容（例如：“为主页展示了 3 种布局选项”）
+   * 请他们在终端中回应：“看一下并告诉我你的想法。如果愿意，可以点击选择一个选项。”
 
-3. **在您的下一回合**——用户在终端中回复后：
-   * 如果存在，读取 `$SCREEN_DIR/.events`——这包含用户的浏览器交互（点击、选择）作为 JSON 行
-   * 与用户的终端文本合并，以获得完整情况
-   * 终端消息是主要反馈；`.events` 提供结构化的交互数据
+3. **在你的下一轮**——用户在终端中回应后：
+   * 如果 `$STATE_DIR/events` 存在，请读取它——该文件包含用户的浏览器交互（点击、选择），格式为 JSON 行
+   * 将其与用户的终端文本合并，以获取完整情况
+   * 终端消息是主要反馈；`state_dir/events` 提供结构化的交互数据
 
-4. **迭代或推进**——如果反馈改变了当前屏幕，则写入一个新文件（例如 `layout-v2.html`）。仅当当前步骤得到验证后才进入下一个问题。
+4. **迭代或推进**——如果反馈改变了当前界面，请写入一个新文件（例如 `layout-v2.html`）。只有在当前步骤得到确认后，才进入下一个问题。
 
-5. **返回终端时卸载**——当下一步不需要浏览器时（例如，澄清性问题、权衡讨论），推送一个等待屏幕以清除陈旧内容：
+5. **返回终端时卸载**——当下一步不需要浏览器时（例如澄清问题、权衡讨论），推送一个等待界面以清除过时内容：
 
    ```html
    <!-- filename: waiting.html (或 waiting-2.html 等) -->
    <div style="display:flex;align-items:center;justify-content:center;min-height:60vh">
-     <p class="subtitle">继续在终端中...</p>
+     <p class="subtitle">正在切换至终端...</p>
    </div>
    ```
 
-   这可以防止用户在对话已继续进行时盯着已解决的选项。当下一个视觉问题出现时，照常推送新的内容文件。
+   这可以避免用户在对话已推进时仍盯着已解决的选项。当下一个视觉问题出现时，照常推送新的内容文件。
 
 6. 重复直到完成。
 
@@ -249,7 +250,7 @@ scripts/start-server.sh \
 
 ## 浏览器事件格式
 
-当用户在浏览器中点击选项时，他们的交互记录到 `$SCREEN_DIR/.events`（每行一个 JSON 对象）。当您推送新屏幕时，该文件会自动清除。
+当用户在浏览器中点击选项时，他们的交互会被记录到 `$STATE_DIR/events`（每行一个 JSON 对象）。当你推送新界面时，该文件会自动清空。
 
 ```jsonl
 {"type":"click","choice":"a","text":"Option A - Simple Layout","timestamp":1706000101}
@@ -259,7 +260,7 @@ scripts/start-server.sh \
 
 完整的事件流显示了用户的探索路径——他们可能在确定前点击了多个选项。最后的 `choice` 事件通常是最终选择，但点击模式可能揭示值得询问的犹豫或偏好。
 
-如果 `.events` 不存在，则用户没有与浏览器交互——仅使用他们的终端文本。
+如果 `$STATE_DIR/events` 不存在，则表示用户未与浏览器交互——请仅使用他们的终端文本。
 
 ## 设计技巧
 
@@ -280,7 +281,7 @@ scripts/start-server.sh \
 ## 清理
 
 ```bash
-scripts/stop-server.sh $SCREEN_DIR
+scripts/stop-server.sh $SESSION_DIR
 ```
 
 如果会话使用了 `--project-dir`，原型图文件将持久保存在 `.superpowers/brainstorm/` 中以供日后参考。只有 `/tmp` 会话会在停止时被删除。

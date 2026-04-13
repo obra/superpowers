@@ -140,7 +140,7 @@ python scripts/migrate.py --verify --backup
 ## 技能结构
 
 <Note>
-  **YAML Frontmatter**：SKILL.md 前置元数据支持两个字段：
+  **YAML 前置元数据**：SKILL.md 的前置元数据需要两个字段：
 
 * `name` - 技能的人类可读名称（最多 64 个字符）
   * `description` - 对技能功能及使用场景的单行描述（最多 1024 个字符）
@@ -1086,7 +1086,7 @@ reader = PdfReader("file.pdf")
 
 ### YAML 前置元数据要求
 
-SKILL.md 的前置元数据仅包含 `name`（最长 64 个字符）和 `description`（最长 1024 个字符）字段。有关完整结构详情，请参阅[技能概述](../../../../../../../en/docs/agents-and-tools/agent-skills/overview#skill-structure)。
+SKILL.md 前置元数据需要 `name`（最多 64 个字符）和 `description`（最多 1024 个字符）字段。完整结构详情请参阅[技能概述](../../../../../../../en/docs/agents-and-tools/agent-skills/overview#skill-structure)。
 
 ### 令牌预算
 

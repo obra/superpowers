@@ -22,13 +22,13 @@ description: "在进行任何创意工作之前，您必须使用此方法——
 你必须为以下每一项创建任务，并按顺序完成：
 
 1. **探索项目背景** — 检查文件、文档、近期提交记录
-2. **提供视觉辅助**（如果主题涉及视觉问题）— 这是独立的消息，不与澄清问题合并。请参阅下方的视觉辅助部分。
-3. **提出澄清问题** — 一次一个，理解目的/约束/成功标准
-4. **提出2-3种方案** — 包括权衡利弊和你的建议
-5. **呈现设计** — 按复杂度分节呈现，每节后获取用户批准
-6. **撰写设计文档** — 保存至 `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` 并提交
-7. **规范评审循环** — 派遣规范文档评审子代理，附带精确构建的评审上下文（切勿使用你的会话历史）；修复问题并重新派遣直至批准（最多3次迭代，然后提交给人工处理）
-8. **用户评审书面规范** — 请用户在继续前评审规范文件
+2. **提供视觉助手**（若主题涉及视觉问题）— 此为独立消息，不与澄清问题合并。请参阅下方的视觉助手部分。
+3. **提出澄清问题** — 逐一提问，理解目的/限制条件/成功标准
+4. **提出 2-3 种方案** — 包含权衡取舍和你的推荐
+5. **呈现设计** — 按复杂程度分章节呈现，每部分完成后获取用户批准
+6. **编写设计文档** — 保存至 `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` 并提交
+7. **规格自审** — 快速内联检查占位符、矛盾之处、模糊性、范围（见下文）
+8. **用户审阅书面规格** — 请用户在继续前审阅规格文件
 9. **过渡到实施阶段** — 调用写作计划技能以创建实施计划
 
 ## 流程
@@ -43,8 +43,7 @@ digraph brainstorming {
     "Present design sections" [shape=box];
     "User approves design?" [shape=diamond];
     "Write design doc" [shape=box];
-    "Spec review loop" [shape=box];
-    "Spec review passed?" [shape=diamond];
+    "Spec self-review\n(fix inline)" [shape=box];
     "User reviews spec?" [shape=diamond];
     "Invoke writing-plans skill" [shape=doublecircle];
 
@@ -57,10 +56,8 @@ digraph brainstorming {
     "Present design sections" -> "User approves design?";
     "User approves design?" -> "Present design sections" [label="no, revise"];
     "User approves design?" -> "Write design doc" [label="yes"];
-    "Write design doc" -> "Spec review loop";
-    "Spec review loop" -> "Spec review passed?";
-    "Spec review passed?" -> "Spec review loop" [label="issues found,\nfix and re-dispatch"];
-    "Spec review passed?" -> "User reviews spec?" [label="approved"];
+    "Write design doc" -> "Spec self-review\n(fix inline)";
+    "Spec self-review\n(fix inline)" -> "User reviews spec?";
     "User reviews spec?" -> "Write design doc" [label="changes requested"];
     "User reviews spec?" -> "Invoke writing-plans skill" [label="approved"];
 }
@@ -116,12 +113,15 @@ digraph brainstorming {
 * 如果可用，使用 elements-of-style:writing-clearly-and-concisely 技能
 * 将设计文档提交到 git
 
-**规格审查循环：**
-编写规格文档后：
+**规格自审：**
+编写规格文档后，以全新视角审视：
 
-1. 派遣规范文档评审子代理（参见 spec-document-reviewer-prompt.md）
-2. 如果发现问题：修复、重新派遣、重复直至批准
-3. 如果循环超过3次迭代，提交给人工指导
+1. **占位符扫描：** 是否存在“待定”、“待办”、不完整章节或模糊要求？修正它们。
+2. **内部一致性：** 是否有章节相互矛盾？架构是否与功能描述匹配？
+3. **范围检查：** 其是否足够聚焦于单个实施计划，或需要进一步分解？
+4. **模糊性检查：** 是否有任何要求可能存在两种不同解读？若有，选择一种并明确表述。
+
+内联修正所有问题。无需重新审阅——直接修正并继续。
 
 **用户审查关卡：**
 在规格审查循环通过后，请用户在继续之前审查书面规格：
