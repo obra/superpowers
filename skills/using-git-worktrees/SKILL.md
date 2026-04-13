@@ -36,11 +36,13 @@ Report with branch state:
 - On a branch: "Already in isolated workspace at `<path>` on branch `<name>`."
 - Detached HEAD: "Already in isolated workspace at `<path>` (detached HEAD, externally managed). Branch creation needed at finish time."
 
-**If `GIT_DIR == GIT_COMMON` (or in a submodule):** You are in a normal repo checkout. Ask for consent before creating a workspace:
+**If `GIT_DIR == GIT_COMMON` (or in a submodule):** You are in a normal repo checkout.
 
-> "Would you like me to set up an isolated worktree? This protects your current branch from changes. (y/n)"
+If the user has not already made their preferences about worktree isolation clear — check global and project agent instruction files (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursorrules`, or equivalent) — ask for consent before creating a worktree:
 
-If yes, proceed to Step 1. If no, work in place — skip to Step 3 with no worktree.
+> "Would you like me to set up an isolated worktree? It protects your current branch from changes."
+
+Honor any existing declared preference without asking. If the user declines consent, work in place and skip to Step 3.
 
 ## Step 1: Create Isolated Workspace
 
@@ -62,25 +64,25 @@ Native tools handle directory placement, branch creation, and cleanup automatica
 
 #### Directory Selection
 
-Follow this priority order:
+Follow this priority order. Explicit user preference always beats observed filesystem state.
 
-1. **Check existing directories:**
+1. **Check global and project agent instruction files** (`~/.claude/CLAUDE.md`, `~/.config/gemini/AGENTS.md`, project-level `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursorrules`, or equivalent) for a declared worktree directory preference. If specified, use it without asking.
+
+2. **Check for an existing project-local worktree directory:**
    ```bash
    ls -d .worktrees 2>/dev/null     # Preferred (hidden)
    ls -d worktrees 2>/dev/null      # Alternative
    ```
-   If found, use that directory. If both exist, `.worktrees` wins.
+   If found, use it. If both exist, `.worktrees` wins.
 
-2. **Check for existing global directory:**
+3. **Check for an existing global directory:**
    ```bash
    project=$(basename "$(git rev-parse --show-toplevel)")
    ls -d ~/.config/superpowers/worktrees/$project 2>/dev/null
    ```
    If found, use it (backward compatibility with legacy global path).
 
-3. **Check your project's agent instruction file** (CLAUDE.md, GEMINI.md, AGENTS.md, .cursorrules, or equivalent) for a worktree directory preference. If specified, use it without asking.
-
-4. **Default to `.worktrees/`.**
+4. **If there is no other guidance available**, default to `.worktrees/` at the project root.
 
 #### Safety Verification (project-local directories only)
 
@@ -109,7 +111,7 @@ git worktree add "$path" -b "$BRANCH_NAME"
 cd "$path"
 ```
 
-**Sandbox fallback:** If `git worktree add` fails with a permission error (sandbox denial), treat this as a restricted environment. Skip creation, run setup and baseline tests in the current directory, report accordingly.
+**Sandbox fallback:** If `git worktree add` fails with a permission error (sandbox denial), tell the user the sandbox blocked worktree creation and you're working in the current directory instead. Then run setup and baseline tests in place.
 
 ## Step 3: Project Setup
 

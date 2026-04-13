@@ -249,11 +249,13 @@ Report with branch state:
 - On a branch: "Already in isolated workspace at `<path>` on branch `<name>`."
 - Detached HEAD: "Already in isolated workspace at `<path>` (detached HEAD, externally managed). Branch creation needed at finish time."
 
-**If `GIT_DIR == GIT_COMMON` (or in a submodule):** You are in a normal repo checkout. Ask for consent before creating a workspace:
+**If `GIT_DIR == GIT_COMMON` (or in a submodule):** You are in a normal repo checkout.
 
-> "Would you like me to set up an isolated worktree? This protects your current branch from changes. (y/n)"
+If the user has not already made their preferences about worktree isolation clear — check global and project agent instruction files (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursorrules`, or equivalent) — ask for consent before creating a worktree:
 
-If yes, proceed to Step 1. If no, work in place — skip to Step 3 with no worktree.
+> "Would you like me to set up an isolated worktree? It protects your current branch from changes."
+
+Honor any existing declared preference without asking. If the user declines consent, work in place and skip to Step 3.
 
 ## Step 1: Create Isolated Workspace
 
