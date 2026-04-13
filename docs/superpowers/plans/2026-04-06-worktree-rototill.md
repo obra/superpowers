@@ -251,7 +251,7 @@ Report with branch state:
 
 **If `GIT_DIR == GIT_COMMON` (or in a submodule):** You are in a normal repo checkout.
 
-If the user has not already made their preferences about worktree isolation clear — check global and project agent instruction files (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursorrules`, or equivalent) — ask for consent before creating a worktree:
+Has the user already indicated their worktree preference in your instructions? If not, ask for consent before creating a worktree:
 
 > "Would you like me to set up an isolated worktree? It protects your current branch from changes."
 
@@ -289,7 +289,7 @@ Follow this priority order:
    ```
    If found, use it (backward compatibility with legacy global path).
 
-3. **Check your project's agent instruction file** (CLAUDE.md, GEMINI.md, AGENTS.md, .cursorrules, or equivalent) for a worktree directory preference. If specified, use it without asking.
+3. **Check your instructions for a worktree directory preference.** If specified, use it without asking.
 
 4. **Default to `.worktrees/`.**
 
