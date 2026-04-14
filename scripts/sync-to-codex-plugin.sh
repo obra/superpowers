@@ -113,15 +113,9 @@ generate_plugin_json() {
       "Read",
       "Write"
     ],
-    "websiteURL": "https://github.com/obra/superpowers",
-    "privacyPolicyURL": "https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement",
-    "termsOfServiceURL": "https://docs.github.com/en/site-policy/github-terms/github-terms-of-service",
-    "defaultPrompt": [
-      "Use Superpowers to plan this feature before we code",
-      "Debug this bug with a systematic root-cause workflow",
-      "Turn this approved design into an implementation plan"
-    ],
     "brandColor": "#F59E0B",
+    "composerIcon": "./assets/superpowers-small.svg",
+    "logo": "./assets/app-icon.png",
     "screenshots": []
   }
 }
