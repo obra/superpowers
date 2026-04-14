@@ -26,8 +26,9 @@ Load plan, review critically, execute all tasks, report when complete.
 For each task:
 1. Mark as in_progress
 2. Follow each step exactly (plan has bite-sized steps)
-3. Run verifications as specified
-4. Mark as completed
+3. **Surgical changes only:** match existing style, remove any imports/variables/functions your changes made unused, and don't refactor adjacent code
+4. Run verifications as specified
+5. Mark as completed
 
 ### Step 3: Complete Development
 
