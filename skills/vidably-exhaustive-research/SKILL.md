@@ -150,45 +150,53 @@ json.dump(d, open('$STATE', 'w'))
 "
 fi
 
-# Append to event log
-echo "{\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"branch\":\"$(git branch --show-current)\",\"event\":\"skill_complete\",\"skill\":\"vidably-exhaustive-research\",\"sha\":\"$(git rev-parse --short HEAD)\",\"options\":OPTIONS_COUNT,\"sources\":SOURCES_COUNT}" >> .claude/workflow-events.jsonl
+# Append structured event log entry
+cat <<JSON | node scripts/measurement/emit-event.mjs
+{
+  "stage": "research",
+  "event": "research_run_completed",
+  "source": "skill",
+  "payload": {
+    "decisionSummary": "DECISION_SUMMARY",
+    "models": MODELS_LIST,
+    "optionsByModel": OPTIONS_BY_MODEL,
+    "chosenOptionId": "CHOSEN_OPTION_ID",
+    "chosenByModels": CHOSEN_BY_MODELS,
+    "uniqueInsightsByModel": UNIQUE_INSIGHTS_BY_MODEL,
+    "sourceQualityByModel": SOURCE_QUALITY_BY_MODEL,
+    "overlapCount": OVERLAP_COUNT,
+    "sourcesCount": SOURCES_COUNT
+  }
+}
+JSON
+
+# Refresh the local talk report (best effort)
+node scripts/measurement/render-talk-report.mjs >/dev/null 2>&1 || true
 ```
 
-Replace `OPTIONS_COUNT` and `SOURCES_COUNT` with the actual numbers from this research session.
+Replace the placeholders with actual values from this research session:
 
-## Step 7b: Log Research to Effectiveness Tracker
+- `DECISION_SUMMARY`: one-line summary of the decision researched
+- `MODELS_LIST`: JSON array of logical model names, e.g. `["claude","codex","gemini"]`
+- `OPTIONS_BY_MODEL`: JSON object, e.g. `{"claude":4,"codex":3,"gemini":4}`
+- `CHOSEN_OPTION_ID`: short stable label for the selected option
+- `CHOSEN_BY_MODELS`: JSON array of models that independently surfaced the selected option
+- `UNIQUE_INSIGHTS_BY_MODEL`: JSON object with numeric counts
+- `SOURCE_QUALITY_BY_MODEL`: JSON object with `pass`/`fail` values
+- `OVERLAP_COUNT`: number of options surfaced by 2+ models
+- `SOURCES_COUNT`: total external sources consulted
 
-After the user approves an option, append a new section to `docs/research-effectiveness.md` under the `## Research Log` heading:
+## Step 7b: Refresh the Talk Data Report
 
-````markdown
-### [Branch Name] -- [Decision Topic]
+After the structured event is written, refresh the local talk-data report:
 
-**Date:** [YYYY-MM-DD]
-**Models:** [list of models consulted]
+```bash
+node scripts/measurement/render-talk-report.mjs
+```
 
-| Field                         | Value                                                                                       |
-| ----------------------------- | ------------------------------------------------------------------------------------------- |
-| **Per-model option count**    | Claude: X, Codex: Y, Gemini: Z                                                              |
-| **Decision source**           | [which model(s) surfaced the chosen option]                                                 |
-| **Per-model unique insights** | Claude: [one-liner or "none"]. Codex: [one-liner or "none"]. Gemini: [one-liner or "none"]. |
-| **Source quality**            | Claude: pass/fail. Codex: pass/fail. Gemini: pass/fail.                                     |
-| **Option overlap**            | [N options surfaced by 2+ models independently]                                             |
-| **Downstream surprise**       | [left blank -- tagged during code review retro if applicable]                               |
+This writes `.claude/talk-report.md`, which rolls up the current research, plan review, and code review data for the talk. Do not hand-edit tracker docs during the skill.
 
-**Decision:** [chosen option and one-line rationale]
-````
-
-Then update the **Aggregate Model Profiles** table in `docs/research-effectiveness.md`:
-
-- **Tends to Surface Winning Option**: Update based on whether this model surfaced the chosen option.
-- **Unique Insight Rate**: Update based on whether this model contributed insights no other model surfaced.
-- **Source Quality Rate**: Update based on pass/fail for this session.
-
-If the user rejects all options or abandons the decision, still log the entry with Decision: "[abandoned -- reason]". This tracks research quality even when it doesn't produce a decision.
-
-**Sanitization rule:** Log normalized summaries only. Do not include secrets, tokens, PII, customer identifiers, raw payloads, or exploit details in effectiveness tracker entries.
-
-This logging step is mandatory and automated -- if the skill runs, the data gets logged.
+**Sanitization rule:** Event payloads and the talk report must contain normalized summaries only. Do not include secrets, tokens, PII, customer identifiers, raw payloads, or exploit details.
 
 ## Interaction With Other Skills
 

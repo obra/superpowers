@@ -255,8 +255,22 @@ This is the same re-review pattern the GH Action uses — each round reviews fre
 After all rounds complete and verification passes, update the event log:
 
 ```bash
-# Append to event log
-echo "{\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"branch\":\"$(git branch --show-current)\",\"event\":\"code_review_complete\",\"sha\":\"$(git rev-parse --short HEAD)\",\"models\":MODELS_LIST,\"findings\":FINDINGS_COUNT,\"rounds\":ROUNDS_COUNT}" >> .claude/workflow-events.jsonl
+# Append structured event log entry
+cat <<JSON | node scripts/measurement/emit-event.mjs
+{
+  "stage": "code_review",
+  "event": "code_review_complete",
+  "source": "skill",
+  "payload": {
+    "models": MODELS_LIST,
+    "rounds": ROUNDS_COUNT,
+    "findingCount": FINDINGS_COUNT
+  }
+}
+JSON
+
+# Refresh the local talk report (best effort)
+node scripts/measurement/render-talk-report.mjs >/dev/null 2>&1 || true
 ```
 
 Replace `MODELS_LIST` with a JSON array (e.g., `[\"codex\",\"gemini\"]`), `FINDINGS_COUNT` with total findings, and `ROUNDS_COUNT` with review rounds completed.

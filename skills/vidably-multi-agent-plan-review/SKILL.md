@@ -185,40 +185,47 @@ json.dump(d, open('$STATE', 'w'))
 "
 fi
 
-# Append to event log
-echo "{\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"branch\":\"$(git branch --show-current)\",\"event\":\"plan_review_complete\",\"sha\":\"$(git rev-parse --short HEAD)\",\"models\":MODELS_LIST,\"findings\":FINDINGS_COUNT,\"rounds\":ROUNDS_COUNT}" >> .claude/workflow-events.jsonl
+# Append structured event log entry
+cat <<JSON | node scripts/measurement/emit-event.mjs
+{
+  "stage": "plan_review",
+  "event": "plan_review_run_completed",
+  "source": "skill",
+  "payload": {
+    "planPath": "PLAN_PATH",
+    "models": MODELS_LIST,
+    "rounds": ROUNDS_COUNT,
+    "findingCount": FINDINGS_COUNT,
+    "categoryCounts": CATEGORY_COUNTS,
+    "consensusCounts": CONSENSUS_COUNTS
+  }
+}
+JSON
+
+# Refresh the local talk report (best effort)
+node scripts/measurement/render-talk-report.mjs >/dev/null 2>&1 || true
 ```
 
-Replace `MODELS_LIST` with a JSON array of model names used (e.g., `[\"codex\",\"gemini\"]`), `FINDINGS_COUNT` with total findings across all rounds, and `ROUNDS_COUNT` with the number of review rounds.
+Replace the placeholders with actual values from this review:
 
-## Step 6b: Log Findings to Effectiveness Tracker
+- `PLAN_PATH`: repo-relative path to the reviewed plan file
+- `MODELS_LIST`: JSON array of logical model names
+- `ROUNDS_COUNT`: number of review rounds completed
+- `FINDINGS_COUNT`: total findings accepted or recorded across all rounds
+- `CATEGORY_COUNTS`: JSON object of findings by category
+- `CONSENSUS_COUNTS`: JSON object of findings by consensus bucket
 
-After all review rounds complete, append a new section to `docs/plan-review-effectiveness.md` under the `## Plan Review Log` heading:
+## Step 6b: Refresh the Talk Data Report
 
-```markdown
-### [Branch Name] -- [Feature Description]
+After the structured event is written, refresh the local talk-data report:
 
-**Date:** [YYYY-MM-DD]
-**Models:** [list of models used]
-**Rounds:** [number of review rounds]
-
-| Finding       | Flagged By    | Category         | Consensus | Disposition | Reasoning |
-| ------------- | ------------- | ---------------- | --------- | ----------- | --------- |
-| [description] | Claude, Codex | `failure-modes`  | Majority  | Fixed       | --        |
-| [description] | Gemini        | `data-integrity` | Solo      | Skipped     | [why]     |
-
-**Key takeaways:** [auto-generated summary of what was found and patterns observed]
+```bash
+node scripts/measurement/render-talk-report.mjs
 ```
 
-Then update the tracking tables in `docs/plan-review-effectiveness.md`:
+This writes `.claude/talk-report.md`, which rolls up the current structured data for the talk. Do not hand-edit plan-review tracker docs during the skill.
 
-- **Model Hit Rate by Category**: For each finding, increment `total opportunities` for every model that reviewed. Increment `caught` for each model that flagged the finding.
-- **Model Profiles**: Update if new strengths or blind spots become apparent.
-- **Aggregate Metrics**: Update with the new data point.
-
-**Sanitization rule:** Log normalized summaries only. Do not include secrets, tokens, PII, customer identifiers, raw payloads, or exploit details in effectiveness tracker entries.
-
-This logging step is mandatory and automated -- if the skill runs, the data gets logged.
+**Sanitization rule:** Event payloads and the talk report must contain normalized summaries only. Do not include secrets, tokens, PII, customer identifiers, raw payloads, or exploit details.
 
 ## Interaction With Other Skills
 
