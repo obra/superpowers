@@ -52,7 +52,6 @@ EXCLUDES=(
   "AGENTS.md"
   "CHANGELOG.md"
   "CLAUDE.md"
-  "CODE_OF_CONDUCT.md"
   "GEMINI.md"
   "RELEASE-NOTES.md"
   "gemini-extension.json"
