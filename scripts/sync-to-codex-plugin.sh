@@ -40,42 +40,48 @@ DEST_REL="plugins/superpowers"
 # Paths in upstream that should NOT land in the embedded plugin.
 # The Codex-only paths are here too — they're managed by generate/bootstrap
 # steps, not by rsync.
+#
+# All patterns use a leading "/" to anchor them to the source root.
+# Unanchored patterns like "scripts/" would match any directory named
+# "scripts" at any depth — including legitimate nested dirs like
+# skills/brainstorming/scripts/. Anchoring prevents that.
+# (.DS_Store is intentionally unanchored — Finder creates them everywhere.)
 EXCLUDES=(
-  # Dotfiles and infra
-  ".claude/"
-  ".claude-plugin/"
-  ".codex/"
-  ".cursor-plugin/"
-  ".git/"
-  ".gitattributes"
-  ".github/"
-  ".gitignore"
-  ".opencode/"
-  ".version-bump.json"
-  ".worktrees/"
+  # Dotfiles and infra — top-level only
+  "/.claude/"
+  "/.claude-plugin/"
+  "/.codex/"
+  "/.cursor-plugin/"
+  "/.git/"
+  "/.gitattributes"
+  "/.github/"
+  "/.gitignore"
+  "/.opencode/"
+  "/.version-bump.json"
+  "/.worktrees/"
   ".DS_Store"
 
   # Root ceremony files
-  "AGENTS.md"
-  "CHANGELOG.md"
-  "CLAUDE.md"
-  "GEMINI.md"
-  "RELEASE-NOTES.md"
-  "gemini-extension.json"
-  "package.json"
+  "/AGENTS.md"
+  "/CHANGELOG.md"
+  "/CLAUDE.md"
+  "/GEMINI.md"
+  "/RELEASE-NOTES.md"
+  "/gemini-extension.json"
+  "/package.json"
 
   # Directories not shipped by canonical Codex plugins
-  "commands/"
-  "docs/"
-  "hooks/"
-  "lib/"
-  "scripts/"
-  "tests/"
-  "tmp/"
+  "/commands/"
+  "/docs/"
+  "/hooks/"
+  "/lib/"
+  "/scripts/"
+  "/tests/"
+  "/tmp/"
 
   # Codex-only paths — managed outside rsync
-  ".codex-plugin/"
-  "assets/"
+  "/.codex-plugin/"
+  "/assets/"
 )
 
 # =============================================================================
