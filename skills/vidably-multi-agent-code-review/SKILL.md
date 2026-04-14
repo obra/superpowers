@@ -34,6 +34,18 @@ Act on findings autonomously based on consensus level:
 
 Present the consensus map to the user for awareness, but do not wait for per-finding approval. The user reviews aggregate effectiveness data periodically, not individual findings.
 
+### Convergence rule: dismissing 2+ reviewers requires a citation
+
+When **two or more independent models** flag the same class of issue (`Unanimous` or `Majority`), rejection is only valid with a direct citation to an authoritative source:
+
+1. **Installed SDK / library types** in `node_modules` (grep and quote the docstring).
+2. **Current official API reference** by specific versioned URL — not marketing pages.
+3. **Prior user instruction** with a direct quote that explicitly addresses the disputed design.
+
+**No citation = accept the fix.** Prose reasoning alone ("I think Codex misunderstood…") is not a valid dismissal of converged findings. Writing confident rejection prose locks in a position before it's been verified — don't write it until the citation is in hand.
+
+**Case study (PR #133):** Codex flagged Mux `master_access: 'temporary'` auto-reverts after 24h. Gemini echoed the next round. Both were rejected with prose calling it a misunderstanding. 10 seconds of `grep` on the installed SDK types would have surfaced the authoritative docstring confirming the finding. The rejection would have shipped the exact bug the PR was supposed to prevent. This rule exists so that mistake is not repeatable.
+
 ## Step 1: Prepare the Diff
 
 Compute the diff against the base branch:
