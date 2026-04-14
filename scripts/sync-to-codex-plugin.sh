@@ -4,8 +4,8 @@
 #
 # Sync this superpowers checkout → prime-radiant-inc/openai-codex-plugins.
 # Clones the fork fresh into a temp dir, rsyncs upstream content, regenerates
-# the Codex overlay files (.codex-plugin/plugin.json + agents/openai.yaml)
-# inline, commits, pushes a sync branch, and opens a PR.
+# the Codex overlay file (.codex-plugin/plugin.json) inline, commits, pushes a
+# sync branch, and opens a PR.
 # Path/user agnostic — auto-detects upstream from script location.
 #
 # Deterministic: running twice against the same upstream SHA produces PRs with
@@ -31,8 +31,8 @@ DEFAULT_BASE="main"
 DEST_REL="plugins/superpowers"
 
 # Paths in upstream that should NOT land in the embedded plugin.
-# Both the Codex-overlay files are here too — they're managed by the
-# generate-overlays step, not by rsync.
+# The Codex-overlay file is here too — it's managed by the generate step,
+# not by rsync.
 EXCLUDES=(
   # Dotfiles and infra
   ".claude/"
@@ -67,13 +67,12 @@ EXCLUDES=(
   "tests/"
   "tmp/"
 
-  # Codex-overlay files — regenerated below, not synced
+  # Codex-overlay file — regenerated below, not synced
   ".codex-plugin/"
-  "agents/openai.yaml"
 )
 
 # =============================================================================
-# Generated overlay files
+# Generated overlay file
 # =============================================================================
 
 # Writes the Codex plugin manifest to "$1" with the given upstream version.
@@ -127,19 +126,6 @@ generate_plugin_json() {
     "screenshots": []
   }
 }
-EOF
-}
-
-# Writes the plugin-level agents/openai.yaml to "$1".
-# Args: dest_path
-generate_agents_openai_yaml() {
-  local dest="$1"
-  mkdir -p "$(dirname "$dest")"
-  cat > "$dest" <<'EOF'
-interface:
-  display_name: "Superpowers"
-  short_description: "Planning, TDD, debugging, and delivery workflows for coding agents"
-  default_prompt: "Use Superpowers to brainstorm a design, write an implementation plan, run test-driven development, debug bugs systematically, or finish and ship a development branch."
 EOF
 }
 
@@ -250,7 +236,7 @@ SYNC_BRANCH="sync/superpowers-${UPSTREAM_SHORT}-${TIMESTAMP}"
 git checkout -q -b "$SYNC_BRANCH"
 
 # =============================================================================
-# Build rsync args (excludes only — no protects, overlays are regenerated)
+# Build rsync args (excludes only — overlay is regenerated separately)
 # =============================================================================
 
 RSYNC_ARGS=(-av --delete)
@@ -271,8 +257,8 @@ echo "=== Preview (rsync --dry-run) ==="
 rsync "${RSYNC_ARGS[@]}" --dry-run --itemize-changes "$UPSTREAM/" "$DEST/"
 echo "=== End preview ==="
 echo ""
-echo "Overlay files (.codex-plugin/plugin.json, agents/openai.yaml) will be"
-echo "regenerated with version $UPSTREAM_VERSION regardless of rsync output."
+echo "Overlay file (.codex-plugin/plugin.json) will be regenerated with"
+echo "version $UPSTREAM_VERSION regardless of rsync output."
 
 if [[ $DRY_RUN -eq 1 ]]; then
   echo ""
@@ -291,9 +277,8 @@ echo ""
 echo "Syncing upstream content..."
 rsync "${RSYNC_ARGS[@]}" "$UPSTREAM/" "$DEST/"
 
-echo "Regenerating overlay files..."
+echo "Regenerating overlay file..."
 generate_plugin_json "$DEST/.codex-plugin/plugin.json" "$UPSTREAM_VERSION"
-generate_agents_openai_yaml "$DEST/agents/openai.yaml"
 
 # Bail early if nothing actually changed
 cd "$DEST_REPO"
