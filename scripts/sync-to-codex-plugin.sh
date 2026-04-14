@@ -12,11 +12,18 @@
 # identical diffs, so two back-to-back runs can verify the tool itself.
 #
 # Usage:
-#   ./scripts/sync-to-codex-plugin.sh                  # full run with confirm
-#   ./scripts/sync-to-codex-plugin.sh -n               # dry run, no clone/push/PR
-#   ./scripts/sync-to-codex-plugin.sh -y               # skip confirmation
-#   ./scripts/sync-to-codex-plugin.sh --local PATH     # use existing checkout
-#   ./scripts/sync-to-codex-plugin.sh --base BRANCH    # target branch (default: main)
+#   ./scripts/sync-to-codex-plugin.sh                              # full run
+#   ./scripts/sync-to-codex-plugin.sh -n                           # dry run
+#   ./scripts/sync-to-codex-plugin.sh -y                           # skip confirm
+#   ./scripts/sync-to-codex-plugin.sh --local PATH                 # existing checkout
+#   ./scripts/sync-to-codex-plugin.sh --base BRANCH                # default: main
+#   ./scripts/sync-to-codex-plugin.sh --bootstrap --assets-src DIR # create initial plugin
+#
+# Bootstrap mode: skips the "plugin must exist on base" check and seeds
+# plugins/superpowers/assets/ from --assets-src <dir> which must contain
+# PrimeRadiant_Favicon.svg and PrimeRadiant_Favicon.png. Run once by one
+# team member to create the initial PR; every subsequent run is a normal
+# (non-bootstrap) sync.
 #
 # Requires: bash, rsync, git, gh (authenticated), python3.
 
@@ -31,8 +38,8 @@ DEFAULT_BASE="main"
 DEST_REL="plugins/superpowers"
 
 # Paths in upstream that should NOT land in the embedded plugin.
-# The Codex-overlay file is here too — it's managed by the generate step,
-# not by rsync.
+# The Codex-only paths are here too — they're managed by generate/bootstrap
+# steps, not by rsync.
 EXCLUDES=(
   # Dotfiles and infra
   ".claude/"
@@ -66,8 +73,9 @@ EXCLUDES=(
   "tests/"
   "tmp/"
 
-  # Codex-overlay file — regenerated below, not synced
+  # Codex-only paths — managed outside rsync
   ".codex-plugin/"
+  "assets/"
 )
 
 # =============================================================================
@@ -132,20 +140,24 @@ BASE="$DEFAULT_BASE"
 DRY_RUN=0
 YES=0
 LOCAL_CHECKOUT=""
+BOOTSTRAP=0
+ASSETS_SRC=""
 
 usage() {
-  sed -n 's/^# \{0,1\}//;2,20p' "$0"
+  sed -n 's/^# \{0,1\}//;2,27p' "$0"
   exit "${1:-0}"
 }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -n|--dry-run) DRY_RUN=1; shift ;;
-    -y|--yes)     YES=1; shift ;;
-    --local)      LOCAL_CHECKOUT="$2"; shift 2 ;;
-    --base)       BASE="$2"; shift 2 ;;
-    -h|--help)    usage 0 ;;
-    *)            echo "Unknown arg: $1" >&2; usage 2 ;;
+    -n|--dry-run)  DRY_RUN=1; shift ;;
+    -y|--yes)      YES=1; shift ;;
+    --local)       LOCAL_CHECKOUT="$2"; shift 2 ;;
+    --base)        BASE="$2"; shift 2 ;;
+    --bootstrap)   BOOTSTRAP=1; shift ;;
+    --assets-src)  ASSETS_SRC="$2"; shift 2 ;;
+    -h|--help)     usage 0 ;;
+    *)             echo "Unknown arg: $1" >&2; usage 2 ;;
   esac
 done
 
@@ -162,8 +174,16 @@ command -v python3 >/dev/null || die "python3 not found in PATH"
 
 gh auth status >/dev/null 2>&1 || die "gh not authenticated — run 'gh auth login'"
 
-[[ -d "$UPSTREAM/.git" ]]            || die "upstream '$UPSTREAM' is not a git checkout"
-[[ -f "$UPSTREAM/package.json" ]]    || die "upstream has no package.json — cannot read version"
+[[ -d "$UPSTREAM/.git" ]]         || die "upstream '$UPSTREAM' is not a git checkout"
+[[ -f "$UPSTREAM/package.json" ]] || die "upstream has no package.json — cannot read version"
+
+# Bootstrap-mode validation
+if [[ $BOOTSTRAP -eq 1 ]]; then
+  [[ -n "$ASSETS_SRC" ]] || die "--bootstrap requires --assets-src <path>"
+  ASSETS_SRC="$(cd "$ASSETS_SRC" 2>/dev/null && pwd)" || die "assets source '$ASSETS_SRC' is not a directory"
+  [[ -f "$ASSETS_SRC/PrimeRadiant_Favicon.svg" ]] || die "assets source missing PrimeRadiant_Favicon.svg"
+  [[ -f "$ASSETS_SRC/PrimeRadiant_Favicon.png" ]] || die "assets source missing PrimeRadiant_Favicon.png"
+fi
 
 # Read the upstream version from package.json
 UPSTREAM_VERSION="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$UPSTREAM/package.json")"
@@ -218,18 +238,28 @@ DEST="$DEST_REPO/$DEST_REL"
 cd "$DEST_REPO"
 git checkout -q "$BASE" 2>/dev/null || die "base branch '$BASE' doesn't exist in $FORK"
 
-[[ -d "$DEST" ]] || die "base branch '$BASE' has no '$DEST_REL/' — merge the bootstrap PR first, or pass --base <branch>"
+# Plugin-existence check depends on mode
+if [[ $BOOTSTRAP -eq 1 ]]; then
+  [[ ! -d "$DEST" ]] || die "--bootstrap but base branch '$BASE' already has '$DEST_REL/' — use normal sync instead"
+  mkdir -p "$DEST"
+else
+  [[ -d "$DEST" ]] || die "base branch '$BASE' has no '$DEST_REL/' — use --bootstrap + --assets-src, or pass --base <branch>"
+fi
 
 # =============================================================================
 # Create sync branch
 # =============================================================================
 
 TIMESTAMP="$(date -u +%Y%m%d-%H%M%S)"
-SYNC_BRANCH="sync/superpowers-${UPSTREAM_SHORT}-${TIMESTAMP}"
+if [[ $BOOTSTRAP -eq 1 ]]; then
+  SYNC_BRANCH="bootstrap/superpowers-${UPSTREAM_SHORT}-${TIMESTAMP}"
+else
+  SYNC_BRANCH="sync/superpowers-${UPSTREAM_SHORT}-${TIMESTAMP}"
+fi
 git checkout -q -b "$SYNC_BRANCH"
 
 # =============================================================================
-# Build rsync args (excludes only — overlay is regenerated separately)
+# Build rsync args
 # =============================================================================
 
 RSYNC_ARGS=(-av --delete)
@@ -245,6 +275,10 @@ echo "Version:  $UPSTREAM_VERSION"
 echo "Fork:     $FORK"
 echo "Base:     $BASE"
 echo "Branch:   $SYNC_BRANCH"
+if [[ $BOOTSTRAP -eq 1 ]]; then
+  echo "Mode:     BOOTSTRAP (creating initial plugin from scratch)"
+  echo "Assets:   $ASSETS_SRC"
+fi
 echo ""
 echo "=== Preview (rsync --dry-run) ==="
 rsync "${RSYNC_ARGS[@]}" --dry-run --itemize-changes "$UPSTREAM/" "$DEST/"
@@ -252,6 +286,10 @@ echo "=== End preview ==="
 echo ""
 echo "Overlay file (.codex-plugin/plugin.json) will be regenerated with"
 echo "version $UPSTREAM_VERSION regardless of rsync output."
+if [[ $BOOTSTRAP -eq 1 ]]; then
+  echo "Assets (superpowers-small.svg, app-icon.png) will be seeded from:"
+  echo "  $ASSETS_SRC"
+fi
 
 if [[ $DRY_RUN -eq 1 ]]; then
   echo ""
@@ -270,6 +308,13 @@ echo ""
 echo "Syncing upstream content..."
 rsync "${RSYNC_ARGS[@]}" "$UPSTREAM/" "$DEST/"
 
+if [[ $BOOTSTRAP -eq 1 ]]; then
+  echo "Seeding brand assets..."
+  mkdir -p "$DEST/assets"
+  cp "$ASSETS_SRC/PrimeRadiant_Favicon.svg" "$DEST/assets/superpowers-small.svg"
+  cp "$ASSETS_SRC/PrimeRadiant_Favicon.png" "$DEST/assets/app-icon.png"
+fi
+
 echo "Regenerating overlay file..."
 generate_plugin_json "$DEST/.codex-plugin/plugin.json" "$UPSTREAM_VERSION"
 
@@ -285,7 +330,28 @@ fi
 # =============================================================================
 
 git add "$DEST_REL"
-git commit --quiet -m "sync superpowers v$UPSTREAM_VERSION from upstream main @ $UPSTREAM_SHORT
+
+if [[ $BOOTSTRAP -eq 1 ]]; then
+  COMMIT_TITLE="bootstrap superpowers v$UPSTREAM_VERSION from upstream main @ $UPSTREAM_SHORT"
+  PR_BODY="Initial bootstrap of the superpowers plugin from upstream \`main\` @ \`$UPSTREAM_SHORT\` (v$UPSTREAM_VERSION).
+
+Creates \`plugins/superpowers/\` from scratch: upstream content via rsync, \`.codex-plugin/plugin.json\` regenerated inline, brand assets seeded from a local Brand Assets directory.
+
+Run via: \`scripts/sync-to-codex-plugin.sh --bootstrap --assets-src <path>\`
+Upstream commit: https://github.com/obra/superpowers/commit/$UPSTREAM_SHA
+
+This is a one-time bootstrap. Subsequent syncs will be normal (non-bootstrap) runs and will not touch the \`assets/\` directory."
+else
+  COMMIT_TITLE="sync superpowers v$UPSTREAM_VERSION from upstream main @ $UPSTREAM_SHORT"
+  PR_BODY="Automated sync from superpowers upstream \`main\` @ \`$UPSTREAM_SHORT\` (v$UPSTREAM_VERSION).
+
+Run via: \`scripts/sync-to-codex-plugin.sh\`
+Upstream commit: https://github.com/obra/superpowers/commit/$UPSTREAM_SHA
+
+Running the sync tool again against the same upstream SHA should produce a PR with an identical diff — use that to verify the tool is behaving."
+fi
+
+git commit --quiet -m "$COMMIT_TITLE
 
 Automated sync via scripts/sync-to-codex-plugin.sh
 Upstream: https://github.com/obra/superpowers/commit/$UPSTREAM_SHA
@@ -294,20 +360,12 @@ Branch:   $SYNC_BRANCH"
 echo "Pushing $SYNC_BRANCH to $FORK..."
 git push -u origin "$SYNC_BRANCH" --quiet
 
-PR_TITLE="sync superpowers v$UPSTREAM_VERSION from upstream main @ $UPSTREAM_SHORT"
-PR_BODY="Automated sync from superpowers upstream \`main\` @ \`$UPSTREAM_SHORT\` (v$UPSTREAM_VERSION).
-
-Run via: \`scripts/sync-to-codex-plugin.sh\`
-Upstream commit: https://github.com/obra/superpowers/commit/$UPSTREAM_SHA
-
-Running the sync tool again against the same upstream SHA should produce a PR with an identical diff — use that to verify the tool is behaving."
-
 echo "Opening PR..."
 PR_URL="$(gh pr create \
   --repo "$FORK" \
   --base "$BASE" \
   --head "$SYNC_BRANCH" \
-  --title "$PR_TITLE" \
+  --title "$COMMIT_TITLE" \
   --body "$PR_BODY")"
 
 PR_NUM="${PR_URL##*/}"
