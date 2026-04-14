@@ -80,7 +80,29 @@ No .gitignore verification needed - outside project entirely.
 project=$(basename "$(git rev-parse --show-toplevel)")
 ```
 
-### 2. Create Worktree
+### 2. Detect Default Branch
+
+Determine the repository's default trunk branch and fetch the latest state:
+
+```bash
+# Try symbolic-ref first, then remote show, then fall back to main/master
+default_branch=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
+if [ -z "$default_branch" ]; then
+  default_branch=$(git remote show origin 2>/dev/null | grep 'HEAD branch' | awk '{print $NF}')
+fi
+if [ -z "$default_branch" ]; then
+  if git show-ref --verify --quiet refs/remotes/origin/main; then
+    default_branch=main
+  elif git show-ref --verify --quiet refs/remotes/origin/master; then
+    default_branch=master
+  fi
+fi
+
+# Fetch latest trunk
+git fetch origin "$default_branch"
+```
+
+### 3. Create Worktree
 
 ```bash
 # Determine full path
@@ -93,12 +115,12 @@ case $LOCATION in
     ;;
 esac
 
-# Create worktree with new branch
-git worktree add "$path" -b "$BRANCH_NAME"
+# Create worktree with new branch based on the latest trunk
+git worktree add "$path" -b "$BRANCH_NAME" "origin/$default_branch"
 cd "$path"
 ```
 
-### 3. Run Project Setup
+### 4. Run Project Setup
 
 Auto-detect and run appropriate setup:
 
@@ -117,7 +139,7 @@ if [ -f pyproject.toml ]; then poetry install; fi
 if [ -f go.mod ]; then go mod download; fi
 ```
 
-### 4. Verify Clean Baseline
+### 5. Verify Clean Baseline
 
 Run tests to ensure worktree starts clean:
 
@@ -133,7 +155,7 @@ go test ./...
 
 **If tests pass:** Report ready.
 
-### 5. Report Location
+### 6. Report Location
 
 ```
 Worktree ready at <full-path>
@@ -182,7 +204,9 @@ You: I'm using the using-git-worktrees skill to set up an isolated workspace.
 
 [Check .worktrees/ - exists]
 [Verify ignored - git check-ignore confirms .worktrees/ is ignored]
-[Create worktree: git worktree add .worktrees/auth -b feature/auth]
+[Detect default branch: main]
+[Fetch origin/main]
+[Create worktree: git worktree add .worktrees/auth -b feature/auth origin/main]
 [Run npm install]
 [Run npm test - 47 passing]
 
