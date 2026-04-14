@@ -80,8 +80,22 @@ digraph brainstorming {
 **Exploring approaches:**
 
 - Propose 2-3 different approaches with trade-offs
-- Present options conversationally with your recommendation and reasoning
-- Lead with your recommended option and explain why
+- **Always mark your recommendation explicitly** using `**(Recommended)**` next to the option label
+- Present your recommended option first, then alternatives
+- State clearly why you recommend it (1-2 sentences of reasoning, not just "it's simpler")
+
+Example format:
+```
+**Option A — [name] (Recommended)**
+[description and trade-offs]
+→ Why recommended: [specific reasoning]
+
+**Option B — [name]**
+[description and trade-offs]
+
+**Option C — [name]**
+[description and trade-offs]
+```
 
 **Presenting the design:**
 
