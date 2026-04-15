@@ -84,17 +84,19 @@ Do NOT proceed to model review if verification fails. Fix first.
 
 Tag every finding with a category. This taxonomy grows over time — add new categories in the Post-CI Retrospective (Step 9) when findings don't fit existing ones.
 
-| Category           | What it covers                                                               | Source PR |
-| ------------------ | ---------------------------------------------------------------------------- | --------- |
-| `auth/security`    | Authorization bypass, injection, OWASP, auth error handling                  | baseline  |
-| `failure-modes`    | Retry exhaustion, stuck states, partial failures, missing onFailure handlers | #61       |
-| `data-integrity`   | Case sensitivity, uniqueness edge cases, nullability, type coercion          | #61       |
-| `api-correctness`  | External API query format, field names, pagination, SDK usage                | #61       |
-| `dev-compat`       | MSW mocks, env var assumptions, zero-secret contract compliance              | #61       |
-| `react-lifecycle`  | useEffect deps, stale closures, re-render storms, ref stability              | #61       |
-| `performance`      | N+1 queries, batch vs sequential, unnecessary computation                    | baseline  |
-| `type-safety`      | any casts, missing null checks, unsafe assertions                            | baseline  |
-| `plan-conformance` | Does the code match the spec/plan?                                           | baseline  |
+| Category             | What it covers                                                                                                                      | Source PR |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| `auth/security`      | Authorization bypass, injection, OWASP, auth error handling                                                                         | baseline  |
+| `failure-modes`      | Retry exhaustion, stuck states, partial failures, missing onFailure handlers                                                        | #61       |
+| `data-integrity`     | Case sensitivity, uniqueness edge cases, nullability, type coercion                                                                 | #61       |
+| `api-correctness`    | External API query format, field names, pagination, SDK usage                                                                       | #61       |
+| `dev-compat`         | MSW mocks, env var assumptions, zero-secret contract compliance                                                                     | #61       |
+| `react-lifecycle`    | useEffect deps, stale closures, re-render storms, ref stability                                                                     | #61       |
+| `performance`        | N+1 queries, batch vs sequential, unnecessary computation                                                                           | baseline  |
+| `type-safety`        | any casts, missing null checks, unsafe assertions                                                                                   | baseline  |
+| `plan-conformance`   | Does the code match the spec/plan?                                                                                                  | baseline  |
+| `resource-lifecycle` | External resources created without TTL/expiry; unbounded growth of vendor-side objects (Shopify discounts, S3 keys, queue messages) | #147      |
+| `scope-coverage`     | Shopify/OAuth/IAM scopes don't cover all queries/mutations the code actually makes                                                  | #147      |
 
 ## Model Profiles
 
@@ -132,6 +134,12 @@ ALSO specifically check for (learned from past reviews):
 - Contract preservation: when migrating auth or refactoring, verify return types don't change (null → throw breaks callers). When fixing a pattern bug, grep for ALL instances of the same pattern. (PR #64)
 - Webhook retry safety: when changing webhook error responses from 200 to 500, verify ALL handlers are idempotent. Non-idempotent handlers (insert without unique guard) must return 200 on error to prevent retry-induced data duplication. (PR #66)
 - JSON serialization safety: when building strings for JSON output (especially script tags with JSON-LD), verify that escape sequences produce valid JSON. Backslash-bang is not a valid JSON escape — use Unicode escapes like `\u003C` instead. (PR #67)
+- Brand/tenant scoping in server actions: every server action that takes a session token AND a resource ID must verify resource ownership via `AND resource.brandId = auth.brandId` (or equivalent). Do not assume authentication implies authorization. (PR #147)
+- Inngest function idempotency: every `inngest.createFunction` needs an `idempotency` key derived from `event.data.<uniqueField>` so duplicate/replayed events don't trigger duplicate side effects. (PR #147, AGENTS.md defensive checklist)
+- UI refresh after server action: every server action called from a React component that mutates persistent state must trigger a UI re-fetch or state update afterwards (via `router.refresh()`, optimistic update, or explicit reload). A stale "Current: X" line after a successful save is a contradiction the user will notice. For App Bridge embedded apps, `router.refresh()` does not cross the iframe — use `window.location.reload()`. (PR #147)
+- External resource lifecycle: any vendor-side object created by the code (Shopify discount codes, S3 keys, Mux uploads, Inngest events that trigger persistent work) needs either a TTL/expiry or a documented cleanup path. Unbounded growth of vendor-side objects is a slow-burn liability. (PR #147)
+- OAuth/API scope coverage: for every external GraphQL query or mutation in the PR, verify the required scope is declared in the app config. e.g., a Shopify `orders(...)` query requires `read_orders` in `shopify.app.toml`. (PR #147)
+- Implementer-raised concerns tracking: if the implementing subagent's report flags a concern that you decide to defer, file a Linear ticket or add `// TODO(issue): ...` at the flagged site. Do NOT rely on "the next task will handle it" — the next task may not reference the concern. (PR #147)
 
 For each finding:
 - File and line number
@@ -143,13 +151,15 @@ For each finding:
 
 Do NOT flag: style/formatting, missing comments, import ordering, test coverage for unchanged code, or suggestions that add complexity without proportional value.
 
+SEVERITY FLOOR: if a finding maps directly to a rule in AGENTS.md's defensive checklist, severity is AT LEAST `important`. Do not downgrade to `minor` or "non-blocking" for something the project has explicitly documented as a required pattern. If you want to argue the rule doesn't apply here, quote the rule and explain why — don't silently lower the severity. (PR #147 — `sql NOW()` rule was rated minor, actually important.)
+
 [DIFF or FILE CONTENT]
 ```
 
 **Per-model prompt specialization:** After the base prompt, append a section for each model emphasizing its blind spots:
 
-- **Claude:** "Pay EXTRA attention to: dev-environment compatibility (MSW mocks, env var fallbacks, zero-secret contract), failure modes (retry exhaustion, partial failures, stuck states, webhook retry semantics), and API correctness (verify webhook payload fields against official spec, don't assume — check)."
-- **Codex:** "Pay EXTRA attention to: authorization and security (brand-scoping, auth bypass, OWASP), auth error handling (401 vs 500 responses), and API correctness (verify all fields in external API payloads are consumed, not just the obvious ones)."
+- **Claude:** "Pay EXTRA attention to: dev-environment compatibility (MSW mocks, env var fallbacks, zero-secret contract), failure modes (retry exhaustion, partial failures, stuck states, webhook retry semantics, **Inngest function idempotency keys — is `idempotency: 'event.data.<X>'` set on every createFunction?**), API correctness (verify webhook payload fields against official spec, don't assume — check), and UI-refresh-after-server-action patterns (no stale summary lines after save)."
+- **Codex:** "Pay EXTRA attention to: authorization and security (**brand/tenant scoping — every server action with a resource ID must verify ownership against auth**, auth bypass, OWASP), auth error handling (401 vs 500 responses), API correctness (verify all fields in external API payloads are consumed, not just the obvious ones), and **OAuth/scope coverage — for every external query, is the required scope declared in the app config?**"
 - **Gemini:** "Pay EXTRA attention to: failure modes (what happens when handlers throw — do callers get retries?), authorization/security (PII in logs, auth bypass), and contract preservation (do return types change when refactoring?)."
 
 The goal: **each model compensates for the others' weaknesses**, not duplicate their strengths.
