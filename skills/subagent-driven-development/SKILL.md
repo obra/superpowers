@@ -1,6 +1,6 @@
 ---
 name: subagent-driven-development
-description: Use when executing implementation plans with independent tasks in the current session
+description: Use when executing a written implementation plan in the current session and most tasks can be handled independently, even if a few tasks still need sequential coordination
 ---
 
 # Subagent-Driven Development
@@ -10,6 +10,42 @@ Execute plan by dispatching fresh subagent per task, with two-stage review after
 **Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
 
 **Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
+
+## Quick Start
+
+### Use this for
+
+- executing a written implementation plan in the current session
+- plans whose tasks are mostly independent
+- plans with a mostly independent backbone plus a few tightly coupled tasks that should stay sequential
+- work that benefits from fresh context per task
+- implementations where spec-compliance and code-quality reviews should both gate progress
+
+### Core flow
+
+1. Read the plan once and extract task text plus required context.
+2. Dispatch a fresh implementer subagent for one task.
+3. Resolve missing context before letting that task continue.
+4. Run spec review first, then code-quality review.
+5. Send findings back to the implementer until both reviews pass.
+6. Keep tightly coupled tasks sequential under the same controller instead of forcing parallelism.
+7. Mark the task complete and move to the next one.
+8. Finish with a final review and branch-finishing flow.
+
+### Do not
+
+- use this before a real plan exists
+- reuse the same implementer across multiple tasks
+- skip spec review because the code "looks right"
+- use this for tightly coupled work that needs continuous local reasoning
+- treat reviewer findings as optional
+- let a few independent tasks trick you into parallelizing the whole plan when core tasks are still coupled
+
+This skill is for controlled execution, not ad-hoc delegation.
+
+If you just need generic parallel task splitting, use `dispatching-parallel-agents`. If the plan should be executed in a separate session, use `executing-plans`.
+
+Mixed plans are allowed when the main flow is still controller-driven: keep coupled tasks sequential, and only parallelize the clearly isolated slices.
 
 ## When to Use
 

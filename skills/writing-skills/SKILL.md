@@ -9,7 +9,7 @@ description: Use when creating new skills, editing existing skills, or verifying
 
 **Writing skills IS Test-Driven Development applied to process documentation.**
 
-**Personal skills live in agent-specific directories (`~/.claude/skills` for Claude Code, `~/.agents/skills/` for Codex)** 
+**Personal skills live in agent-specific directories (`~/.claude/skills` for Claude Code, `~/.codex/skills` for Codex)**
 
 You write test cases (pressure scenarios with subagents), watch them fail (baseline behavior), write the skill (documentation), watch tests pass (agents comply), and refactor (close loopholes).
 
@@ -18,6 +18,35 @@ You write test cases (pressure scenarios with subagents), watch them fail (basel
 **REQUIRED BACKGROUND:** You MUST understand superpowers:test-driven-development before using this skill. That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill adapts TDD to documentation.
 
 **Official guidance:** For Anthropic's official skill authoring best practices, see anthropic-best-practices.md. This document provides additional patterns and guidelines that complement the TDD-focused approach in this skill.
+
+## Quick Start
+
+### Use this for
+
+- creating a new reusable skill
+- editing an existing skill's instructions, description, or boundaries
+- pressure-testing whether a skill actually changes agent behavior
+- tightening a skill after discovering loopholes or rationalizations
+
+### Core flow
+
+1. Write or choose the pressure scenario first.
+2. Run it without the skill change and capture the baseline failure.
+3. Document the exact rationalizations or gaps you observed.
+4. Make the smallest skill change that addresses those failures.
+5. Re-run the same scenario and confirm behavior improves.
+6. Close new loopholes before moving on.
+7. Ship one tested skill at a time.
+
+### Do not
+
+- write or edit a skill before observing baseline behavior
+- batch multiple skills without testing each one
+- summarize workflow in `description`
+- turn one-off project instructions into a reusable skill
+- install or sync skills and call that "skill writing"
+
+If you are only installing or syncing skills, use `skill-installer`. If you are editing ordinary code rather than process documentation, use the relevant implementation skill instead.
 
 ## What is a Skill?
 

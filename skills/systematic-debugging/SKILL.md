@@ -13,6 +13,43 @@ Random fixes waste time and create new bugs. Quick patches mask underlying issue
 
 **Violating the letter of this process is violating the spirit of debugging.**
 
+## Quick Start
+
+### Use this for
+
+- test failures
+- production bugs
+- broken builds and CI failures
+- integration issues
+- performance regressions with unclear causes
+- any issue where the first fix is not obviously safe
+
+### Core flow
+
+1. Read the real error output.
+2. Reproduce the issue consistently.
+3. Check recent relevant changes.
+4. Trace the failing data or control flow to the boundary where it breaks.
+5. Form one hypothesis and test it with the smallest possible change.
+6. Create a failing test before the real fix.
+7. Verify the fix and stop if the evidence does not support it.
+
+### Evidence to gather
+
+- exact failing command
+- exact error lines
+- reproduction steps
+- likely source boundary
+- proof that the fix addresses the cause, not just the symptom
+
+### Do not
+
+- guess a fix because it feels obvious
+- stack speculative changes together
+- patch symptoms without evidence
+- declare something fixed because the code looks right
+- continue past 3 failed fix attempts without questioning the architecture
+
 ## The Iron Law
 
 ```

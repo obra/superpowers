@@ -13,6 +13,34 @@ When you have multiple unrelated failures (different test files, different subsy
 
 **Core principle:** Dispatch one agent per independent problem domain. Let them work concurrently.
 
+## Quick Start
+
+### Use this for
+
+- 2+ independent bugs, failures, or bounded tasks that do not depend on each other
+- separate problem domains that can be investigated without shared context
+- parallel read-heavy or analysis-heavy work where agents will not step on the same files
+- splitting unrelated implementation or debugging tasks for speed
+
+### Core flow
+
+1. Confirm the tasks are truly independent.
+2. Group work by problem domain, not by arbitrary count.
+3. Give each agent one focused, self-contained task.
+4. Let them run in parallel without overlapping ownership.
+5. Review each result before integrating.
+6. Run the relevant combined verification after integration.
+
+### Do not
+
+- use this when one task's result determines the next task
+- use this for tightly coupled changes with overlapping files or shared state
+- split work before you understand whether failures are related
+- give one agent a vague "fix everything" brief
+- skip integration review and full verification after agents return
+
+If you are executing a written plan in the current session, use `subagent-driven-development`. If the execution should happen in a separate session, use `executing-plans`. If you do not yet understand the bug boundary, use `systematic-debugging` first.
+
 ## When to Use
 
 ```dot

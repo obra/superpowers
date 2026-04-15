@@ -1,6 +1,6 @@
 ---
 name: brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
+description: "Use before creative work such as creating features, building components, adding functionality, or modifying behavior, especially when requirements, constraints, or design need clarification before implementation."
 ---
 
 # Brainstorming Ideas Into Designs
@@ -13,9 +13,32 @@ Start by understanding the current project context, then ask questions one at a 
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
 </HARD-GATE>
 
-## Anti-Pattern: "This Is Too Simple To Need A Design"
+## Quick Start
 
-Every project goes through this process. A todo list, a single-function utility, a config change — all of them. "Simple" projects are where unexamined assumptions cause the most wasted work. The design can be short (a few sentences for truly simple projects), but you MUST present it and get approval.
+### Use this for
+
+- new features, components, and behavior changes
+- vague requests where requirements or trade-offs are still fuzzy
+- UI or UX work where the right structure is not obvious yet
+- any creative change that should be aligned before code is written
+
+### Core flow
+
+1. Explore project context first.
+2. Ask one clarifying question at a time.
+3. Propose 2-3 approaches with trade-offs.
+4. Present a design and get user approval.
+5. Write the spec document.
+6. Hand off to `writing-plans` and only then move toward implementation.
+
+### Do not
+
+- write code or invoke implementation skills before the design is approved
+- skip design because the task feels "simple"
+- ask multi-part questions that overwhelm the user
+- propose unrelated refactors instead of a focused design
+
+Even tiny changes still need a design pass. The design can be short, but it must exist and be approved.
 
 ## Checklist
 

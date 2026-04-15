@@ -1,6 +1,6 @@
 ---
 name: verification-before-completion
-description: Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
+description: Use when about to claim work is complete, fixed, or passing, especially before committing, opening a PR, or reporting status where fresh verification evidence is required
 ---
 
 # Verification Before Completion
@@ -12,6 +12,33 @@ Claiming work is complete without verification is dishonesty, not efficiency.
 **Core principle:** Evidence before claims, always.
 
 **Violating the letter of this rule is violating the spirit of this rule.**
+
+## Quick Start
+
+### Use this for
+
+- claiming tests pass
+- claiming a bug is fixed
+- claiming a build or lint step succeeded
+- claiming a task, phase, or change is complete
+- preparing to commit, open a PR, or report status upward
+- validating work done by a delegated agent
+
+### Core flow
+
+1. Identify the exact command or manual check that proves the claim.
+2. Run that verification now, fresh and complete.
+3. Read the full output, including exit code and failures.
+4. State the real result based on that evidence.
+5. Only then make any success or completion claim.
+
+### Do not
+
+- say "should work" or "looks good" without checking
+- rely on stale, partial, or adjacent evidence
+- trust an agent report without verifying the result yourself
+- imply success through tone or wording before evidence exists
+- turn narrow evidence into a broad completion claim
 
 ## The Iron Law
 
@@ -48,6 +75,11 @@ Skip any step = lying, not verifying
 | Regression test works | Red-green cycle verified | Test passes once |
 | Agent completed | VCS diff shows changes | Agent reports "success" |
 | Requirements met | Line-by-line checklist | Tests passing |
+
+**Partial evidence rule:** partial verification only supports a narrow claim.
+
+- If one focused test passes, you may claim that focused test passes.
+- You may not claim the bug is fixed everywhere, the task is complete, or the branch is ready unless the broader proving checks also ran.
 
 ## Red Flags - STOP
 
@@ -91,6 +123,12 @@ Skip any step = lying, not verifying
 ```
 ✅ [Run build] [See: exit 0] "Build passes"
 ❌ "Linter passed" (linter doesn't check compilation)
+```
+
+**Partial evidence:**
+```
+✅ "The focused retry test passes"
+❌ "The retry issue is fully fixed" (when only one focused test ran)
 ```
 
 **Requirements:**

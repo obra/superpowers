@@ -1,6 +1,6 @@
 ---
 name: finishing-a-development-branch
-description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup
+description: Use when implementation is complete and verified, and you need to decide how to merge, hand off, preserve, or discard a development branch or worktree
 ---
 
 # Finishing a Development Branch
@@ -12,6 +12,34 @@ Guide completion of development work by presenting clear options and handling ch
 **Core principle:** Verify tests → Present options → Execute choice → Clean up.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
+
+## Quick Start
+
+### Use this for
+
+- work that is implemented and already ready for completion handling
+- deciding between local merge, PR handoff, leaving the branch alone, or discarding it
+- cleaning up branch and worktree state after implementation is done
+- end-of-task transitions after `subagent-driven-development` or `executing-plans`
+
+### Core flow
+
+1. Verify the work still passes the relevant tests now.
+2. Identify the correct base branch.
+3. Present exactly four completion options.
+4. Execute only the option the user chooses.
+5. Require explicit confirmation before any destructive discard path.
+6. Clean up branch and worktree state only when that option calls for it.
+
+### Do not
+
+- use this while implementation or debugging is still in progress
+- present completion options before fresh verification
+- improvise extra workflow choices
+- delete a branch or worktree without explicit confirmation
+- clean up PR branches/worktrees by default
+
+If the work is not actually verified yet, use `verification-before-completion` first. If implementation is still underway, stay in `subagent-driven-development` or `executing-plans`.
 
 ## The Process
 
@@ -103,7 +131,7 @@ EOF
 )"
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Keep branch and worktree unless the user explicitly asks for cleanup.
 
 #### Option 3: Keep As-Is
 
@@ -135,7 +163,7 @@ Then: Cleanup worktree (Step 5)
 
 ### Step 5: Cleanup Worktree
 
-**For Options 1, 2, 4:**
+**For Options 1 and 4:**
 
 Check if in worktree:
 ```bash
@@ -147,7 +175,7 @@ If yes:
 git worktree remove <worktree-path>
 ```
 
-**For Option 3:** Keep worktree.
+**For Options 2 and 3:** Keep worktree unless the user explicitly requests cleanup.
 
 ## Quick Reference
 

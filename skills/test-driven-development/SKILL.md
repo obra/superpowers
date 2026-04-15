@@ -13,6 +13,38 @@ Write the test first. Watch it fail. Write minimal code to pass.
 
 **Violating the letter of the rules is violating the spirit of the rules.**
 
+## Quick Start
+
+### Use this for
+
+- new features
+- bug fixes
+- behavior changes
+- refactors where behavior must stay correct
+- any implementation task where production code would otherwise be written first
+
+### Core flow
+
+1. Write one small test for one behavior.
+2. Run it and confirm it fails for the expected reason.
+3. Write the minimum production code needed to pass.
+4. Re-run the focused test, then relevant broader checks.
+5. Refactor only after green.
+6. Repeat one behavior at a time.
+
+### Do not
+
+- write production code before a failing test exists
+- keep pre-written implementation as "reference"
+- let a test pass without first seeing it fail
+- bundle multiple behaviors into one red-green cycle
+- refactor while still red
+- use this instead of `brainstorming` or `writing-plans` when the task is still vague or not yet broken into executable work
+
+Even when the task is small, the cycle still needs to be real: red first, then green, then refactor.
+
+If requirements are still fuzzy, use `brainstorming` first. If the work is already specified but multi-step, use `writing-plans` before implementation.
+
 ## When to Use
 
 **Always:**

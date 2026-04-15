@@ -1,6 +1,6 @@
 ---
 name: using-git-worktrees
-description: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - creates isolated git worktrees with smart directory selection and safety verification
+description: Use when starting feature work or plan execution that should happen in an isolated workspace separate from the current branch, files, or repo state
 ---
 
 # Using Git Worktrees
@@ -12,6 +12,34 @@ Git worktrees create isolated workspaces sharing the same repository, allowing w
 **Core principle:** Systematic directory selection + safety verification = reliable isolation.
 
 **Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
+
+## Quick Start
+
+### Use this for
+
+- starting non-trivial feature work that should not disturb the current workspace
+- executing a plan in isolation before substantial edits begin
+- keeping multiple branches or implementation threads available at once
+- creating a clean baseline when you need setup plus verification before coding
+
+### Core flow
+
+1. Choose the worktree location using existing directory, repo preference, or user preference.
+2. Verify project-local worktree directories are ignored before creation.
+3. Create the worktree on a new branch and enter it.
+4. Run project setup for the detected stack.
+5. Verify the baseline with the appropriate test command.
+6. Report the exact path and readiness state before implementation starts.
+
+### Do not
+
+- create a worktree when isolation is unnecessary for the task
+- skip ignore verification for project-local worktrees
+- assume a location when repo conventions or user preferences say otherwise
+- begin implementation on a dirty or failing baseline without surfacing it
+- use this skill for branch cleanup after work is done
+
+If you are already finishing or cleaning up completed work, use `finishing-a-development-branch`. If you are about to execute a plan, this prepares the workspace; `subagent-driven-development` or `executing-plans` still governs the implementation flow afterward.
 
 ## Directory Selection Process
 

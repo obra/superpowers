@@ -1,6 +1,6 @@
 ---
 name: receiving-code-review
-description: Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation
+description: Use when receiving code review feedback before making changes, especially when suggestions are ambiguous, external, broad, or may conflict with codebase constraints
 ---
 
 # Code Review Reception
@@ -10,6 +10,34 @@ description: Use when receiving code review feedback, before implementing sugges
 Code review requires technical evaluation, not emotional performance.
 
 **Core principle:** Verify before implementing. Ask before assuming. Technical correctness over social comfort.
+
+## Quick Start
+
+### Use this for
+
+- PR feedback from your human partner
+- external review suggestions that may be incomplete or wrong for this codebase
+- multi-item review batches that need clarification or sequencing
+- feedback that may conflict with architecture, compatibility, or YAGNI
+
+### Core flow
+
+1. Read the full feedback without agreeing yet.
+2. Clarify any unclear items before implementing anything.
+3. Verify each suggestion against codebase reality and project constraints.
+4. Implement one item at a time.
+5. Test each change and watch for regressions.
+6. Push back with technical reasoning when the feedback is wrong.
+
+### Do not
+
+- respond with performative agreement or gratitude
+- implement unclear items "for now" and ask later
+- trust external review without checking the codebase
+- batch many review fixes together without verification
+- avoid pushback when the suggestion is technically unsound
+
+If you are asking for a review rather than responding to one, use `requesting-code-review`.
 
 ## The Response Pattern
 
