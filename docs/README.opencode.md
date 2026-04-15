@@ -104,7 +104,45 @@ Skills written for Claude Code are automatically adapted for OpenCode:
 - `Skill` tool → OpenCode's native `skill` tool
 - File operations → Native OpenCode tools
 
+## Windows: Manual Install (Workaround)
+
+On Windows, the git-based plugin spec fails with an `ENOENT` error because
+OpenCode embeds the raw spec string in the cache directory path, producing an
+invalid path like:
+
+```
+C:\Users\<USER>\.cache\opencode\packages\superpowers@git+https:\github.com\obra\superpowers.git
+```
+
+The `+https:` gets backslash-mangled into a filesystem path. Until this is
+fixed upstream in OpenCode, use a local clone instead:
+
+```powershell
+# 1. Clone superpowers
+git clone https://github.com/obra/superpowers.git "$HOME\.config\opencode\superpowers"
+
+# 2. Use a file:// plugin spec in opencode.json
+```
+
+```json
+{
+  "plugin": ["superpowers@file://~/.config/opencode/superpowers"]
+}
+```
+
+```powershell
+# 3. Restart OpenCode and verify
+opencode debug skill --pure
+```
+
+To update later: `cd "$HOME\.config\opencode\superpowers" && git pull`
+
 ## Troubleshooting
+
+### Windows: ENOENT when installing plugin
+
+This is the path-mangling bug described above. Use the local clone workaround
+in the "Windows: Manual Install" section. See [#1068](https://github.com/obra/superpowers/issues/1068) for details.
 
 ### Plugin not loading
 

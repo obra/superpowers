@@ -56,7 +56,50 @@ To pin a specific version:
 }
 ```
 
+## Windows: Manual Install (Workaround)
+
+On Windows, the git-based plugin spec can fail with an `ENOENT` error because
+OpenCode embeds the raw spec string in the cache directory path, producing an
+invalid path like:
+
+```
+C:\Users\<USER>\.cache\opencode\packages\superpowers@git+https:\github.com\obra\superpowers.git
+```
+
+Until this is fixed upstream in OpenCode, use a local clone instead:
+
+```powershell
+# 1. Clone superpowers into the OpenCode config directory
+git clone https://github.com/obra/superpowers.git "$HOME\.config\opencode\superpowers"
+
+# 2. Point your opencode.json at the local clone (use forward slashes)
+#    Edit %USERPROFILE%\.config\opencode\opencode.json:
+```
+
+```json
+{
+  "plugin": ["superpowers@file://~/.config/opencode/superpowers"]
+}
+```
+
+```powershell
+# 3. Restart OpenCode and verify
+opencode debug skill --pure
+```
+
+To update, pull the latest changes:
+
+```powershell
+cd "$HOME\.config\opencode\superpowers"
+git pull
+```
+
 ## Troubleshooting
+
+### Windows: ENOENT when installing plugin
+
+This is the path-mangling bug described above. Use the local clone workaround
+in the "Windows: Manual Install" section.
 
 ### Plugin not loading
 
