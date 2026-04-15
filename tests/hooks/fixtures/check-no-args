@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Fixture: verify that no extra args are passed when run-hook.cmd is called
+# with only the script name (simulates: run-hook.cmd session-start).
+# Exits non-zero if any positional argument is received.
+set -euo pipefail
+if [ "$#" -ne 0 ]; then
+  echo "check-no-args: expected 0 args, got $# ($*)" >&2
+  exit 23
+fi
+exit 0
