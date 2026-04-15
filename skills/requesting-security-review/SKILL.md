@@ -7,7 +7,7 @@ description: Use when completed or planned changes affect authentication, author
 
 Request a focused security review before risky changes merge.
 
-**Core principle:** Security review is evidence-based risk analysis, not a generic checklist. Review the actual diff, the intended behavior, and the trust boundaries.
+**Core principle:** Security review is evidence-based risk analysis, not a generic checklist. Code review asks "does this work and is it clean?" Security review asks "can this be abused?"
 
 ## When to Use
 
@@ -19,7 +19,7 @@ Use this skill when work touches:
 - File uploads, downloads, previews, import/export
 - Webhooks, callbacks, redirects, URL fetching
 - Admin tools, moderation tools, audit logs
-- User-controlled input rendered into HTML, SQL, shell, templates, paths, URLs, or prompts
+- User-controlled input rendered into HTML, SQL, shell, templates, paths, URLs, regular expressions, or prompts
 - AI agents, tool execution, sandboxing, filesystem access, network access
 - Dependency, build, deployment, or configuration changes that affect trust
 
@@ -39,10 +39,14 @@ Provide the reviewer:
 
 - What changed
 - Why it changed
-- Threat model or product requirement
+- Assets protected by the changed code
+- Actors who can reach the changed code path
+- Trust boundary crossed by the change
 - Base and head SHAs
 - Relevant test commands
 - Known constraints or accepted risks
+
+If assets, actors, or trust boundaries are unclear, clarify them before dispatching. A security review without a threat model usually collapses into a generic checklist.
 
 ## Dispatch
 
@@ -60,6 +64,8 @@ The reviewer must check:
 | Authorization | Can users access, mutate, export, or infer data they do not own? |
 | Input handling | Can input reach SQL, shell, HTML, paths, templates, URLs, or prompts unsafely? |
 | Data protection | Are secrets, credentials, tokens, PII, or sensitive errors exposed? |
+| File handling | Can uploads, downloads, previews, archives, or exports cross ownership or path boundaries? |
+| External surfaces | Are webhooks, redirects, callbacks, CORS, CSP, cookies, or URL fetches weakening trust? |
 | Abuse resistance | Can the feature be spammed, automated, replayed, or used for privilege escalation? |
 | Dependency/config | Did defaults, CORS, CSP, cookies, TLS, env vars, or dependency versions weaken security? |
 | Observability | Are security-relevant failures logged without leaking sensitive data? |
@@ -67,11 +73,11 @@ The reviewer must check:
 
 ## Severity
 
-- **Critical:** likely exploit causing auth bypass, data exposure, remote code execution, secret leak, or cross-tenant access
-- **Important:** plausible security weakness, missing authorization check, unsafe default, or missing regression test
+- **Critical:** concrete attack path causing auth bypass, data exposure, remote code execution, secret leak, destructive admin action, or cross-tenant access
+- **Important:** plausible security weakness, missing authorization check, unsafe default, or missing regression test for a security boundary
 - **Minor:** defense-in-depth, documentation, logging, or hardening improvement
 
-Critical issues block progress. Important issues should be fixed before merge unless the human partner explicitly accepts the risk.
+Critical issues block progress. Important issues should be fixed before merge unless the human partner explicitly accepts the risk. Do not inflate severity: a Critical finding needs a realistic attacker, reachable code path, and material impact.
 
 ## Red Flags
 
@@ -85,6 +91,29 @@ Stop and request security review if you catch yourself saying:
 - "We can add security tests later"
 - "The model should know not to call dangerous tools"
 
+## Example
+
+```
+Change: GET /api/export streams the caller's documents as a ZIP file.
+
+Assets:
+- Private document contents
+- Document IDs that should not cross account boundaries
+
+Actors:
+- Authenticated users
+
+Trust boundary:
+- Query parameter ?ids=... accepts user-controlled document IDs before filesystem reads
+
+Security review focus:
+- IDOR or missing ownership checks for each requested document
+- Path traversal or unsafe archive entry names
+- Unbounded ZIP size or decompression/preview risks
+- Sensitive document names in logs or audit trails
+- Regression tests for cross-user document access
+```
+
 ## Output Format
 
 The security reviewer must return:
@@ -94,7 +123,10 @@ The security reviewer must return:
 [Files, feature area, base/head SHAs]
 
 ### Threat Model
-[Assets, actors, trust boundaries, risky inputs]
+- Assets:
+- Actors:
+- Trust boundary:
+- Risky inputs:
 
 ### Findings
 
@@ -117,6 +149,13 @@ The security reviewer must return:
 Ready to merge: Yes / No / With fixes
 Reasoning: [1-2 sentences]
 ```
+
+## What This Skill Is Not
+
+- **Not compliance sign-off.** HIPAA, SOC2, PCI, and similar programs need separate review.
+- **Not dependency scanning.** Use SCA tooling for full dependency audits; this skill only flags dependency changes that affect trust.
+- **Not penetration testing.** The reviewer reads the diff; it does not probe a running system.
+- **Not required for every PR.** Skip it when the change does not touch a security boundary.
 
 ## Related Skills
 
