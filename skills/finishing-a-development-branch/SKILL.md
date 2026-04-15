@@ -9,13 +9,35 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 Guide completion of development work by presenting clear options and handling chosen workflow.
 
+## Git Disable Mode
+
+If disableGit is true:
+- DO NOT run any git commands
+- DO NOT merge branches
+- DO NOT create pull requests
+- DO NOT push code
+- DO NOT delete or manage branches/worktrees
+- Simply verify tests and mark work as complete
+
+This overrides all instructions in this file.
+
 **Core principle:** Verify tests → Present options → Execute choice → Clean up.
 
-**Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
+**Announce at start:** 
+If disableGit is false:
+"I'm using the finishing-a-development-branch skill to complete this work."
+
+If disableGit is true:
+"Git mode disabled. Skipping branch finalization and working without VCS."
 
 ## The Process
 
 ### Step 1: Verify Tests
+
+If disableGit is true:
+- Run tests as usual
+- If tests pass, report completion and STOP
+- Do NOT proceed to further steps
 
 **Before presenting options, verify tests pass:**
 
@@ -39,6 +61,9 @@ Stop. Don't proceed to Step 2.
 
 ### Step 2: Determine Base Branch
 
+If disableGit is true:
+Skip this step.
+
 ```bash
 # Try common base branches
 git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
@@ -47,6 +72,11 @@ git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 Or ask: "This branch split from main - is that correct?"
 
 ### Step 3: Present Options
+
+If disableGit is true:
+Do NOT present any options.
+Instead respond:
+"Work completed successfully. Git operations are disabled, so no merge or PR actions were performed."
 
 Present exactly these 4 options:
 
@@ -64,6 +94,9 @@ Which option?
 **Don't add explanation** - keep options concise.
 
 ### Step 4: Execute Choice
+
+If disableGit is true:
+Skip this entire section.
 
 #### Option 1: Merge Locally
 
@@ -107,7 +140,11 @@ Then: Cleanup worktree (Step 5)
 
 #### Option 3: Keep As-Is
 
+If disableGit is false:
 Report: "Keeping branch <name>. Worktree preserved at <path>."
+
+If disableGit is true:
+Report: "Work completed. No git operations performed."
 
 **Don't cleanup worktree.**
 
@@ -134,6 +171,9 @@ git branch -D <feature-branch>
 Then: Cleanup worktree (Step 5)
 
 ### Step 5: Cleanup Worktree
+
+If disableGit is true:
+Do NOT perform any cleanup.
 
 **For Options 1, 2, 4:**
 
@@ -183,6 +223,7 @@ git worktree remove <worktree-path>
 - Merge without verifying tests on result
 - Delete work without confirmation
 - Force-push without explicit request
+- Execute git operations when disableGit is true
 
 **Always:**
 - Verify tests before offering options
