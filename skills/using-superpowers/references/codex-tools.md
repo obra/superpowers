@@ -35,7 +35,7 @@ When a skill says to dispatch a named agent type:
 1. Find the agent's prompt file (e.g., `agents/code-reviewer.md` or the skill's
    local prompt template like `code-quality-reviewer-prompt.md`)
 2. Read the prompt content
-3. Fill any template placeholders (`{BASE_SHA}`, `{WHAT_WAS_IMPLEMENTED}`, etc.)
+3. Fill any template placeholders (`{BASE_REV}`, `{WHAT_WAS_IMPLEMENTED}`, etc.)
 4. Spawn a `worker` agent with the filled content as the `message`
 
 | Skill instruction | Codex equivalent |
@@ -72,8 +72,11 @@ skills can dispatch named agent types directly.
 
 ## Environment Detection
 
-Skills that create worktrees or finish branches should detect their
-environment with read-only git commands before proceeding:
+Skills that create workspaces or finish development work should detect their
+environment before proceeding. The approach depends on the user's VCS
+(injected as `VCS: git` or `VCS: jj` in session context).
+
+**For git users:**
 
 ```bash
 GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
@@ -84,8 +87,17 @@ BRANCH=$(git branch --show-current)
 - `GIT_DIR != GIT_COMMON` → already in a linked worktree (skip creation)
 - `BRANCH` empty → detached HEAD (cannot branch/push/PR from sandbox)
 
-See `using-git-worktrees` Step 0 and `finishing-a-development-branch`
-Step 1 for how each skill uses these signals.
+**For jj users:**
+
+```bash
+jj workspace list 2>/dev/null
+```
+
+- More than one workspace listed → already in a linked workspace (skip creation)
+- Check if current workspace has a bookmark: `jj bookmark list`
+
+See `using-workspaces` and `finishing-development-work`
+for how each skill uses these signals.
 
 ## Codex App Finishing
 

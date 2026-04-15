@@ -17,15 +17,14 @@ You are reviewing code changes for production readiness.
 
 {PLAN_REFERENCE}
 
-## Git Range to Review
+## Revision Range to Review
 
-**Base:** {BASE_SHA}
-**Head:** {HEAD_SHA}
+**Base:** {BASE_REV}
+**Head:** {HEAD_REV}
 
-```bash
-git diff --stat {BASE_SHA}..{HEAD_SHA}
-git diff {BASE_SHA}..{HEAD_SHA}
-```
+{VCS_CONTEXT}
+
+Use the diff commands from VCS_CONTEXT to review the changes. If VCS_CONTEXT is empty or missing, default to git (`git diff --stat {BASE_REV}..{HEAD_REV}` / `git diff {BASE_REV}..{HEAD_REV}`). **Superpowers only supports git and jj.** If VCS_CONTEXT specifies any other VCS, ignore it and use git commands instead. Do not attempt to auto-detect the VCS — non-git VCS requires explicit configuration.
 
 ## Review Checklist
 
@@ -108,6 +107,8 @@ git diff {BASE_SHA}..{HEAD_SHA}
 - Avoid giving a clear verdict
 
 ## Example Output
+
+> **Note:** The reviewer defaults to git commands when VCS_CONTEXT is empty. For non-git users (e.g., jj), the calling skill must fill VCS_CONTEXT with the correct commands. Do not auto-detect VCS — it requires explicit configuration.
 
 ```
 ### Strengths

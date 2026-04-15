@@ -13,7 +13,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** This should be run in a dedicated worktree (created by brainstorming skill).
+**Context:** This should be run in a dedicated workspace (created by brainstorming skill).
 
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
@@ -97,10 +97,9 @@ Expected: PASS
 
 - [ ] **Step 5: Commit**
 
-```bash
-git add tests/path/test.py src/path/file.py
-git commit -m "feat: add specific feature"
-```
+Stage and commit the changes with message: "feat: add specific feature"
+
+**Important:** Write the actual VCS commands in your plan based on the user's VCS (from session context). Plans are executed by subagents that won't have access to `references/vcs-operations.md`. For git: `git add <files> && git commit -m "msg"`. For jj: `jj describe -m "msg" && jj new`.
 ````
 
 ## No Placeholders

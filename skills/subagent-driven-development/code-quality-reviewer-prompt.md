@@ -12,9 +12,10 @@ Task tool (superpowers:code-reviewer):
 
   WHAT_WAS_IMPLEMENTED: [from implementer's report]
   PLAN_OR_REQUIREMENTS: Task N from [plan-file]
-  BASE_SHA: [commit before task]
-  HEAD_SHA: [current commit]
+  BASE_REV: [revision before task]
+  HEAD_REV: [current revision]
   DESCRIPTION: [task summary]
+  VCS_CONTEXT: [VCS commands for diff/log — see "VCS Context Propagation" in SDD skill]
 ```
 
 **In addition to standard code quality concerns, the reviewer should check:**

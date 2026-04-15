@@ -16,6 +16,10 @@ Task tool (general-purpose):
 
     [Scene-setting: where this fits, dependencies, architectural context]
 
+    {VCS_CONTEXT}
+
+    **Superpowers only supports git and jj.** If VCS_CONTEXT above specifies any other VCS, ignore it and use git commands instead.
+
     ## Before You Begin
 
     If you have questions about:
