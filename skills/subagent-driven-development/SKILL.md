@@ -39,6 +39,18 @@ digraph when_to_use {
 
 ## The Process
 
+## Git Disable Mode
+
+If disableGit is true:
+- DO NOT start or assume any git-based workflow
+- DO NOT create branches, commits, or worktrees
+- Subagents should NOT commit code
+- Execute tasks directly in the current workspace
+- Skip any steps involving version control
+- At completion, do NOT call finishing-a-development-branch
+
+This overrides all git-related behavior in this file.
+
 ```dot
 digraph process {
     rankdir=TB;
@@ -61,14 +73,21 @@ digraph process {
     "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
-    "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
+    If disableGit is false:
+    Use superpowers:finishing-a-development-branch
+    If disableGit is true:
+    Skip this step and report completion directly [shape=box style=filled fillcolor=lightgreen];
 
     "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Implementer subagent asks questions?" -> "Implementer subagent implements, tests, commits, self-reviews" [label="no"];
-    "Implementer subagent implements, tests, commits, self-reviews" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)";
+    Implementer subagent implements, tests, self-reviews
+    If disableGit is false:
+    - Commit changes
+    If disableGit is true:
+    - Do NOT commit changes -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)";
     "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" -> "Spec reviewer subagent confirms code matches spec?";
     "Spec reviewer subagent confirms code matches spec?" -> "Implementer subagent fixes spec gaps" [label="no"];
     "Implementer subagent fixes spec gaps" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="re-review"];
@@ -246,6 +265,7 @@ Done!
 - Let implementer self-review replace actual review (both are needed)
 - **Start code quality review before spec compliance is ✅** (wrong order)
 - Move to next task while either review has open issues
+- Perform commits or git operations when disableGit is true
 
 **If subagent asks questions:**
 - Answer clearly and completely
@@ -265,10 +285,10 @@ Done!
 ## Integration
 
 **Required workflow skills:**
-- **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
+- **superpowers:using-git-worktrees** - REQUIRED only if disableGit is false
 - **superpowers:writing-plans** - Creates the plan this skill executes
 - **superpowers:requesting-code-review** - Code review template for reviewer subagents
-- **superpowers:finishing-a-development-branch** - Complete development after all tasks
+- **superpowers:finishing-a-development-branch** - Only if disableGit is false
 
 **Subagents should use:**
 - **superpowers:test-driven-development** - Subagents follow TDD for each task
