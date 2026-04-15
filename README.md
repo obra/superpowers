@@ -86,7 +86,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 ```bash
 copilot plugin marketplace add obra/superpowers-marketplace
-copilot plugin install superpowers@superpowers-marketplace
+copilot plugin install spectral@superpowers-marketplace
 ```
 
 ### Gemini CLI
@@ -98,7 +98,7 @@ gemini extensions install https://github.com/obra/superpowers
 To update:
 
 ```bash
-gemini extensions update superpowers
+gemini extensions update spectral
 ```
 
 ### Verify Installation

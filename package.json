@@ -1,5 +1,5 @@
 {
-  "name": "superpowers",
+  "name": "spectral",
   "version": "5.0.7",
   "type": "module",
   "main": ".opencode/plugins/superpowers.js"
