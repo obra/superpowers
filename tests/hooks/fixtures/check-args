@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Fixture: verify that exactly 2 args are received and match expected values.
+# Called by the Windows CMD integration test via run-hook.cmd.
+#   $1 must equal "alpha beta"
+#   $2 must equal "gamma"
+set -euo pipefail
+if [ "$#" -ne 2 ]; then
+  echo "check-args: expected 2 args, got $# ($*)" >&2
+  exit 20
+fi
+if [ "$1" != "alpha beta" ]; then
+  echo "check-args: arg1='$1', expected 'alpha beta'" >&2
+  exit 21
+fi
+if [ "$2" != "gamma" ]; then
+  echo "check-args: arg2='$2', expected 'gamma'" >&2
+  exit 22
+fi
+exit 0
