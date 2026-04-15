@@ -127,6 +127,10 @@ generate_plugin_json() {
       "Read",
       "Write"
     ],
+    "defaultPrompt": [
+      "I've got an idea for something I'd like to build.",
+      "Let's add a feature to this project."
+    ],
     "brandColor": "#F59E0B",
     "composerIcon": "./assets/superpowers-small.svg",
     "logo": "./assets/app-icon.png",
