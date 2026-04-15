@@ -101,6 +101,13 @@ skills/
   - Include specific symptoms, situations, and contexts
   - **NEVER summarize the skill's process or workflow** (see CSO section for why)
   - Keep under 500 characters if possible
+  - **Always wrap in double quotes.** Unquoted values containing `: ` (colon + space) break YAML parsing silently — the skill won't be detected by `npx skills add` with no error message.
+    ```yaml
+    # BAD — silently breaks if description contains ": "
+    description: Use when configuring X for production applications: tuning and sizing
+    # GOOD
+    description: "Use when configuring X for production applications: tuning and sizing"
+    ```
 
 ```markdown
 ---
