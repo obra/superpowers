@@ -9,13 +9,33 @@ description: Use when starting feature work that needs isolation from current wo
 
 Git worktrees create isolated workspaces sharing the same repository, allowing work on multiple branches simultaneously without switching.
 
+## Git Disable Mode
+
+If disableGit is true:
+- DO NOT create git worktrees
+- DO NOT create branches
+- DO NOT run any git commands
+- Work in the current directory only
+- Skip directory selection and safety verification steps entirely
+- Proceed directly to implementation
+
+This overrides all instructions in this file.
+
 **Core principle:** Systematic directory selection + safety verification = reliable isolation.
 
-**Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
+**Announce at start:** 
+If disableGit is false:
+"I'm using the using-git-worktrees skill to set up an isolated workspace."
+
+If disableGit is true:
+"Git mode disabled. Working in current directory without worktrees."
 
 ## Directory Selection Process
 
 Follow this priority order:
+
+If disableGit is true:
+Skip this entire section.
 
 ### 1. Check Existing Directories
 
@@ -73,6 +93,12 @@ Per Jesse's rule "Fix broken things immediately":
 No .gitignore verification needed - outside project entirely.
 
 ## Creation Steps
+
+If disableGit is true:
+- Do NOT run any commands in this section
+- Do NOT create worktrees or branches
+- Stay in current directory
+- Continue with project setup if needed
 
 ### 1. Detect Project Name
 
@@ -136,7 +162,11 @@ go test ./...
 ### 5. Report Location
 
 ```
+If disableGit is false:
 Worktree ready at <full-path>
+
+If disableGit is true:
+Working in current directory (git disabled)
 Tests passing (<N> tests, 0 failures)
 Ready to implement <feature-name>
 ```
@@ -199,6 +229,7 @@ Ready to implement auth feature
 - Proceed with failing tests without asking
 - Assume directory location when ambiguous
 - Skip CLAUDE.md check
+- Run git commands when disableGit is true
 
 **Always:**
 - Follow directory priority: existing > CLAUDE.md > ask
