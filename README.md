@@ -56,15 +56,15 @@ Then install the plugin from this marketplace:
 
 ### OpenAI Codex CLI
 
-In Codex, type "/plugins" to open the plugin search.
-Type "Superpowers" to search for Superpowers.
-Select "Install Plugin"
+- Type `/plugins` to open the plugin search.
+- Type `Superpowers` to search for Superpowers.
+- Select `Install Plugin`
 
 ### OpenAI Codex App
 
-In the Codex app, first click on Plugins in the sidebar.
-You should see Superpowers in the Coding section. 
-Click the + next to Superpowers and follow the prompts.
+- In the Codex app, click on Plugins in the sidebar.
+- You should see `Superpowers` in the Coding section. 
+- Click the `+` next to Superpowers and follow the prompts.
 
 
 ### Cursor (via Plugin Marketplace)
