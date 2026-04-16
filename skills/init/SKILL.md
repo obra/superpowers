@@ -17,18 +17,21 @@ Create the following folder structure:
   memory/
 ```
 
-> **NOTE**: Do NOT create a `.agent` folder at this time.
-
 ## Steps
 
-1. **Install Templates**:
-   - Locate the source templates in `skills/init/templates/` (relative to this skill).
-   - Use your **file writing tool** to create each file in the project's `.spectral/templates/` folder. 
-   - **Crucial**: Do not use a shell/terminal to `mkdir` if it triggers a `pwsh` error. Simply write the files directly; your tools should create the parent directories automatically.
-   - Files: `spec-template.md`, `plan-template.md`, `tasks-template.md`, `constitution-template.md`.
+1. **Create Folders (Step-by-Step)**:
+   - On Windows, do **NOT** use `pwsh`. Use `cmd.exe /C` with **individual** `mkdir` commands.
+   - Run these exact commands one-by-one:
+     1. `cmd.exe /C "mkdir .spectral\templates"`
+     2. `cmd.exe /C "mkdir .spectral\memory"`
+   - Use backslashes (`\`) for all paths.
 
-2. **Initialize Memory**:
-   - Write a copy of `constitution-template.md` to `.spectral/memory/constitution.md`.
+2. **Install Templates**:
+   - Locate source templates in `skills/init/templates/` (relative to this skill).
+   - Write/Copy `spec-template.md`, `plan-template.md`, `tasks-template.md`, and `constitution-template.md` to the project's `.spectral\templates\` folder.
 
-3. **Confirm & Report**:
-   - Verify that the `.spectral` structure is complete and report success.
+3. **Initialize Memory**:
+   - Write a copy of `constitution-template.md` to `.spectral\memory\constitution.md`.
+
+4. **Confirm**:
+   - Verify all files and folders exist and report success.
