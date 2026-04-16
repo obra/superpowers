@@ -1,28 +1,45 @@
 ---
 name: init
-description: "Use when initializing a new Spectral workspace in the current directory. Creates a .spectral folder with a test subfolder."
+description: "Use when initializing a new Spectral workspace. Creates .spectral (templates, memory) and .agent folders."
 ---
 
 # Spectral Init
 
-Use this skill when the user wants to initialize Spectral in the current working directory.
+Use this skill when the user wants to initialize a new Spectral workspace in the current working directory.
 
-## First Version Behavior
+## Directory Structure
 
 Create the following directory structure relative to the current working directory:
 
 ```text
 .spectral/
-  test/
+  templates/
+  memory/
+.agent/
 ```
 
 ## Steps
 
-1. Use the platform shell tool to create `.spectral/test` in the current working directory.
-2. Do not overwrite existing files or directories.
-3. Confirm the directory was created successfully.
-4. Report the resulting path back to the user.
+1. **Create Directories**:
+   - Create `.spectral/templates`
+   - Create `.spectral/memory`
+   - Create `.agent`
 
-## Scope
+2. **Install Templates**:
+   - Copy all Markdown templates from the Spectral source `templates/` directory to `.spectral/templates/`.
+   - Files to copy:
+     - `spec-template.md`
+     - `plan-template.md`
+     - `tasks-template.md`
+     - `constitution-template.md`
 
-This first version only initializes the folder structure. Do not add additional configuration files yet.
+3. **Initialize Memory**:
+   - Copy `.spectral/templates/constitution-template.md` to `.spectral/memory/constitution.md`.
+   - This serves as the starting project constitution.
+
+4. **Confirm**:
+   - Verify that all folders and files were created and copied successfully.
+   - Do not overwrite existing files if they already exist, unless the user explicitly asks for a reset.
+
+5. **Report**:
+   - Report the successful initialization to the user, highlighting the `.spectral` and `.agent` folders.
