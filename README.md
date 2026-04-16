@@ -54,16 +54,6 @@ Then install the plugin from this marketplace:
 /plugin install superpowers@superpowers-marketplace
 ```
 
-### Cursor (via Plugin Marketplace)
-
-In Cursor Agent chat, install from marketplace:
-
-```text
-/add-plugin superpowers
-```
-
-or search for "superpowers" in the plugin marketplace.
-
 ### OpenAI Codex CLI
 
 In Codex, type "/plugins" to open the plugin search.
@@ -75,6 +65,17 @@ Select "Install Plugin"
 In the Codex app, first click on Plugins in the sidebar.
 You should see Superpowers in the Coding section. 
 Click the + next to Superpowers and follow the prompts.
+
+
+### Cursor (via Plugin Marketplace)
+
+In Cursor Agent chat, install from marketplace:
+
+```text
+/add-plugin superpowers
+```
+
+or search for "superpowers" in the plugin marketplace.
 
 ### OpenCode
 
