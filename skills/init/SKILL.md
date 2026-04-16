@@ -1,6 +1,6 @@
 ---
 name: init
-description: "Use when initializing a new Spectral workspace. Creates .spectral (templates, memory) and .agent folders."
+description: "Use when initializing a new Spectral workspace. Creates the .spectral directory (templates and memory)."
 ---
 
 # Spectral Init
@@ -9,28 +9,26 @@ Use this skill when the user wants to initialize a new Spectral workspace in the
 
 ## Directory Structure
 
-Create the following directory structure relative to the current working directory:
+Create the following folder structure:
 
 ```text
 .spectral/
   templates/
   memory/
-.agent/
 ```
+
+> **NOTE**: Do NOT create a `.agent` folder at this time.
 
 ## Steps
 
-1. **Create Infrastructure**:
-   - Use your **native filesystem tools** (like `write_to_file` or `mkdir`) to create the folders.
-   - **Do NOT rely on `pwsh`** as it may not be installed. If you must use a shell on Windows, use `powershell.exe -Command` or `cmd /C`.
-
-2. **Install Templates**:
-   - Locate the source templates in `skills/init/templates/` relative to this skill file.
-   - Read each file and write it to the project's `.spectral/templates/` directory.
+1. **Install Templates**:
+   - Locate the source templates in `skills/init/templates/` (relative to this skill).
+   - Use your **file writing tool** to create each file in the project's `.spectral/templates/` folder. 
+   - **Crucial**: Do not use a shell/terminal to `mkdir` if it triggers a `pwsh` error. Simply write the files directly; your tools should create the parent directories automatically.
    - Files: `spec-template.md`, `plan-template.md`, `tasks-template.md`, `constitution-template.md`.
 
-3. **Initialize Memory**:
+2. **Initialize Memory**:
    - Write a copy of `constitution-template.md` to `.spectral/memory/constitution.md`.
 
-4. **Confirm & Report**:
-   - Verify all files exist in the project and report success to the user.
+3. **Confirm & Report**:
+   - Verify that the `.spectral` structure is complete and report success.
