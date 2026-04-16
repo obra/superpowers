@@ -10,14 +10,14 @@
 
 ```dot
 digraph when_to_use {
-    "Test uses setTimeout/sleep?" [shape=diamond];
-    "Testing timing behavior?" [shape=diamond];
-    "Document WHY timeout needed" [shape=box];
-    "Use condition-based waiting" [shape=box];
+    "测试是否使用 setTimeout/sleep?" [shape=diamond];
+    "测试计时行为?" [shape=diamond];
+    "记录 WHY 需要超时" [shape=box];
+    "使用基于条件的等待" [shape=box];
 
-    "Test uses setTimeout/sleep?" -> "Testing timing behavior?" [label="yes"];
-    "Testing timing behavior?" -> "Document WHY timeout needed" [label="yes"];
-    "Testing timing behavior?" -> "Use condition-based waiting" [label="no"];
+    "测试是否使用 setTimeout/sleep?" -> "测试计时行为?" [label="yes"];
+    "测试计时行为?" -> "记录 WHY 需要超时" [label="yes"];
+    "测试计时行为?" -> "使用基于条件的等待" [label="no"];
 }
 ```
 

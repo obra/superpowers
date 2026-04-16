@@ -52,20 +52,20 @@ NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
 ```dot
 digraph tdd_cycle {
     rankdir=LR;
-    red [label="RED\nWrite failing test", shape=box, style=filled, fillcolor="#ffcccc"];
-    verify_red [label="Verify fails\ncorrectly", shape=diamond];
-    green [label="GREEN\nMinimal code", shape=box, style=filled, fillcolor="#ccffcc"];
-    verify_green [label="Verify passes\nAll green", shape=diamond];
-    refactor [label="REFACTOR\nClean up", shape=box, style=filled, fillcolor="#ccccff"];
-    next [label="Next", shape=ellipse];
+    red [label="RED\n编写失败测试", shape=box, style=filled, fillcolor="#ffcccc"];
+    verify_red [label="验证失败\n正确", shape=diamond];
+    green [label="GREEN\n最小化代码", shape=box, style=filled, fillcolor="#ccffcc"];
+    verify_green [label="验证通过\n全部绿色", shape=diamond];
+    refactor [label="REFACTOR\n清理", shape=box, style=filled, fillcolor="#ccccff"];
+    next [label="下一步", shape=ellipse];
 
     red -> verify_red;
-    verify_red -> green [label="yes"];
-    verify_red -> red [label="wrong\nfailure"];
+    verify_red -> green [label="是"];
+    verify_red -> red [label="错误\n失败"];
     green -> verify_green;
-    verify_green -> refactor [label="yes"];
-    verify_green -> green [label="no"];
-    refactor -> verify_green [label="stay\ngreen"];
+    verify_green -> refactor [label="是"];
+    verify_green -> green [label="否"];
+    refactor -> verify_green [label="保持\n绿色"];
     verify_green -> next;
     next -> red;
 }

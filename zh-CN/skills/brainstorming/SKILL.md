@@ -35,31 +35,31 @@ description: "在进行任何创意工作之前，您必须使用此方法——
 
 ```dot
 digraph brainstorming {
-    "Explore project context" [shape=box];
-    "Visual questions ahead?" [shape=diamond];
-    "Offer Visual Companion\n(own message, no other content)" [shape=box];
-    "Ask clarifying questions" [shape=box];
-    "Propose 2-3 approaches" [shape=box];
-    "Present design sections" [shape=box];
-    "User approves design?" [shape=diamond];
-    "Write design doc" [shape=box];
-    "Spec self-review\n(fix inline)" [shape=box];
-    "User reviews spec?" [shape=diamond];
-    "Invoke writing-plans skill" [shape=doublecircle];
+    "探索项目背景" [shape=box];
+    "有可视化问题吗？" [shape=diamond];
+    "提供可视化伴侣\n（独立消息，无其他内容）" [shape=box];
+    "提出澄清性问题" [shape=box];
+    "提出2-3种方案" [shape=box];
+    "呈现设计章节" [shape=box];
+    "用户批准设计？" [shape=diamond];
+    "撰写设计文档" [shape=box];
+    "规格自审\n（内联修复）" [shape=box];
+    "用户评审规格？" [shape=diamond];
+    "调用写作计划技能" [shape=doublecircle];
 
-    "Explore project context" -> "Visual questions ahead?";
-    "Visual questions ahead?" -> "Offer Visual Companion\n(own message, no other content)" [label="yes"];
-    "Visual questions ahead?" -> "Ask clarifying questions" [label="no"];
-    "Offer Visual Companion\n(own message, no other content)" -> "Ask clarifying questions";
-    "Ask clarifying questions" -> "Propose 2-3 approaches";
-    "Propose 2-3 approaches" -> "Present design sections";
-    "Present design sections" -> "User approves design?";
-    "User approves design?" -> "Present design sections" [label="no, revise"];
-    "User approves design?" -> "Write design doc" [label="yes"];
-    "Write design doc" -> "Spec self-review\n(fix inline)";
-    "Spec self-review\n(fix inline)" -> "User reviews spec?";
-    "User reviews spec?" -> "Write design doc" [label="changes requested"];
-    "User reviews spec?" -> "Invoke writing-plans skill" [label="approved"];
+    "探索项目背景" -> "有可视化问题吗？";
+    "有可视化问题吗？" -> "提供可视化伴侣\n（独立消息，无其他内容）" [label="是"];
+    "有可视化问题吗？" -> "提出澄清性问题" [label="否"];
+    "提供可视化伴侣\n（独立消息，无其他内容）" -> "提出澄清性问题";
+    "提出澄清性问题" -> "提出2-3种方案";
+    "提出2-3种方案" -> "呈现设计章节";
+    "呈现设计章节" -> "用户批准设计？";
+    "用户批准设计？" -> "呈现设计章节" [label="否，修订"];
+    "用户批准设计？" -> "撰写设计文档" [label="是"];
+    "撰写设计文档" -> "规格自审\n（内联修复）";
+    "规格自审\n（内联修复）" -> "用户评审规格？";
+    "用户评审规格？" -> "撰写设计文档" [label="请求更改"];
+    "用户评审规格？" -> "调用写作计划技能" [label="已批准"];
 }
 ```
 

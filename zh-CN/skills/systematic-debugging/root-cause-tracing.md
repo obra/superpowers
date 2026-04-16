@@ -144,23 +144,23 @@ npm test 2>&1 | grep 'DEBUG git init'
 
 ```dot
 digraph principle {
-    "Found immediate cause" [shape=ellipse];
-    "Can trace one level up?" [shape=diamond];
-    "Trace backwards" [shape=box];
-    "Is this the source?" [shape=diamond];
-    "Fix at source" [shape=box];
-    "Add validation at each layer" [shape=box];
-    "Bug impossible" [shape=doublecircle];
-    "NEVER fix just the symptom" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+    "找到直接原因" [shape=ellipse];
+    "能否向上追踪一层？" [shape=diamond];
+    "向后追踪" [shape=box];
+    "这是根源吗？" [shape=diamond];
+    "在根源处修复" [shape=box];
+    "在每一层添加验证" [shape=box];
+    "Bug 不可能发生" [shape=doublecircle];
+    "切勿只修复症状" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
 
-    "Found immediate cause" -> "Can trace one level up?";
-    "Can trace one level up?" -> "Trace backwards" [label="yes"];
-    "Can trace one level up?" -> "NEVER fix just the symptom" [label="no"];
-    "Trace backwards" -> "Is this the source?";
-    "Is this the source?" -> "Trace backwards" [label="no - keeps going"];
-    "Is this the source?" -> "Fix at source" [label="yes"];
-    "Fix at source" -> "Add validation at each layer";
-    "Add validation at each layer" -> "Bug impossible";
+    "找到直接原因" -> "能否向上追踪一层？";
+    "能否向上追踪一层？" -> "向后追踪" [label="是"];
+    "能否向上追踪一层？" -> "切勿只修复症状" [label="否"];
+    "向后追踪" -> "这是根源吗？";
+    "这是根源吗？" -> "向后追踪" [label="否 - 继续"];
+    "这是根源吗？" -> "在根源处修复" [label="是"];
+    "在根源处修复" -> "在每一层添加验证";
+    "在每一层添加验证" -> "Bug 不可能发生";
 }
 ```
 

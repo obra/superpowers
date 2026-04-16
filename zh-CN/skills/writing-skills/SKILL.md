@@ -309,14 +309,14 @@ wc -w skills/path/SKILL.md
 
 ```dot
 digraph when_flowchart {
-    "Need to show information?" [shape=diamond];
-    "Decision where I might go wrong?" [shape=diamond];
-    "Use markdown" [shape=box];
-    "Small inline flowchart" [shape=box];
+    "需要展示信息吗？" [shape=diamond];
+    "决策中可能出错的地方？" [shape=diamond];
+    "使用 markdown" [shape=box];
+    "小型内联流程图" [shape=box];
 
-    "Need to show information?" -> "Decision where I might go wrong?" [label="yes"];
-    "Decision where I might go wrong?" -> "Small inline flowchart" [label="yes"];
-    "Decision where I might go wrong?" -> "Use markdown" [label="no"];
+    "需要展示信息吗？" -> "决策中可能出错的地方？" [label="是"];
+    "决策中可能出错的地方？" -> "小型内联流程图" [label="是"];
+    "决策中可能出错的地方？" -> "使用 markdown" [label="否"];
 }
 ```
 
