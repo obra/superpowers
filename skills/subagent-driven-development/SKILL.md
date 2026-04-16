@@ -59,11 +59,13 @@ digraph process {
     }
 
     "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
+    "Check for applicable skills (invoke Skill tool, include output in implementer prompt)" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
+    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Check for applicable skills (invoke Skill tool, include output in implementer prompt)";
+    "Check for applicable skills (invoke Skill tool, include output in implementer prompt)" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -132,10 +134,13 @@ You: I'm using Subagent-Driven Development to execute this plan.
 [Extract all 5 tasks with full text and context]
 [Create TodoWrite with all tasks]
 
+[Check for applicable skills: invoke Skill tool for shell scripting, hook installation patterns]
+[Found: superpowers:test-driven-development — include in implementer prompt]
+
 Task 1: Hook installation script
 
 [Get Task 1 text and context (already extracted)]
-[Dispatch implementation subagent with full task text + context]
+[Dispatch implementation subagent with full task text + context + skill content]
 
 Implementer: "Before I begin - should the hook be installed at user or system level?"
 
@@ -231,11 +236,39 @@ Done!
 - Review loops add iterations
 - But catches issues early (cheaper than debugging later)
 
+## Skill Discovery Before Dispatch
+
+Subagents operate with isolated context and cannot discover skills on their own. They have no access to the Skill tool and no system prompt that loads skills. **The orchestrator is responsible for checking skills before composing any implementer prompt.**
+
+Before dispatching each implementer, invoke the Skill tool for skills relevant to the task. Include the full skill content in the implementer's prompt.
+
+**What to check:**
+- What kind of work does this task require? (testing, frontend, data migration, etc.) — check for skills matching that domain
+- Are there project-specific skills in the installed plugins for this domain?
+- Does the task touch a pattern or tool that typically has a skill?
+
+**How to include skills in the implementer prompt:**
+```
+Context: You are implementing [task description].
+
+Applicable skills you MUST follow:
+---
+[full content of skill 1]
+---
+[full content of skill 2]
+---
+
+Task: [full task text]
+```
+
+If no skills apply, proceed without them — but you must check first.
+
 ## Red Flags
 
 **Never:**
 - Start implementation on main/master branch without explicit user consent
 - Skip reviews (spec compliance OR code quality)
+- **Dispatch implementer without checking for applicable skills first** (subagents can't discover skills on their own — the orchestrator must check and include relevant skill content in the prompt)
 - Proceed with unfixed issues
 - Dispatch multiple implementation subagents in parallel (conflicts)
 - Make subagent read plan file (provide full text instead)
