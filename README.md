@@ -56,9 +56,19 @@ Then install the plugin from this marketplace:
 
 ### OpenAI Codex CLI
 
-- Type `/plugins` to open the plugin search.
-- Type `Superpowers` to search for Superpowers.
-- Select `Install Plugin`
+- Open plugin search interface
+
+```bash
+/plugins
+```
+
+Search for Superpowers
+
+```bash
+superpowers
+```
+
+Select `Install Plugin`
 
 ### OpenAI Codex App
 
