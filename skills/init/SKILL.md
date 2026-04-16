@@ -20,30 +20,17 @@ Create the following directory structure relative to the current working directo
 
 ## Steps
 
-1. **Create Directories**:
-   - Create `.spectral/templates`
-   - Create `.spectral/memory`
-   - Create `.agent`
+1. **Create Infrastructure**:
+   - Use your **native filesystem tools** (like `write_to_file` or `mkdir`) to create the folders.
+   - **Do NOT rely on `pwsh`** as it may not be installed. If you must use a shell on Windows, use `powershell.exe -Command` or `cmd /C`.
 
 2. **Install Templates**:
-   - Locate the source templates directory: it is the `templates/` folder located in the same directory as this `SKILL.md` file (i.e., `skills/init/templates/` within the Spectral repository).
-   - Copy all Markdown templates from that source directory to the local project's `.spectral/templates/`.
-   - Files to copy:
-     - `spec-template.md`
-     - `plan-template.md`
-     - `tasks-template.md`
-     - `constitution-template.md`
+   - Locate the source templates in `skills/init/templates/` relative to this skill file.
+   - Read each file and write it to the project's `.spectral/templates/` directory.
+   - Files: `spec-template.md`, `plan-template.md`, `tasks-template.md`, `constitution-template.md`.
 
 3. **Initialize Memory**:
-   - Copy the newly created `.spectral/templates/constitution-template.md` to `.spectral/memory/constitution.md`.
-   - This starts the project constitution.
+   - Write a copy of `constitution-template.md` to `.spectral/memory/constitution.md`.
 
-4. **Compatibility Note**:
-   - If using a shell to copy files on Windows, prefer `powershell.exe` or standard `cmd` commands (`mkdir`, `copy`) if `pwsh` is not available.
-
-5. **Confirm**:
-   - Verify that all folders and files were created and copied successfully.
-   - Do not overwrite existing files if they already exist, unless the user explicitly asks for a reset.
-
-6. **Report**:
-   - Report the successful initialization to the user, highlighting the `.spectral` and `.agent` folders.
+4. **Confirm & Report**:
+   - Verify all files exist in the project and report success to the user.
