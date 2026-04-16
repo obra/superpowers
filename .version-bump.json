@@ -4,7 +4,8 @@
     { "path": ".claude-plugin/plugin.json", "field": "version" },
     { "path": ".cursor-plugin/plugin.json", "field": "version" },
     { "path": ".claude-plugin/marketplace.json", "field": "plugins.0.version" },
-    { "path": "gemini-extension.json", "field": "version" }
+    { "path": "gemini-extension.json", "field": "version" },
+    { "path": ".vscode-extension/package.json", "field": "version" }
   ],
   "audit": {
     "exclude": [

@@ -3,6 +3,7 @@
   "displayName": "Superpowers",
   "description": "Development workflow skills for any AI agent via MCP: TDD, debugging, brainstorming, planning, and code review",
   "version": "5.0.7",
+  "icon": "icon.png",
   "publisher": "obra",
   "license": "MIT",
   "repository": "https://github.com/obra/superpowers",
