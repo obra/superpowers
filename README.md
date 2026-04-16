@@ -24,6 +24,7 @@ Thanks!
 - Jesse
 
 
+
 ## Installation
 
 **Note:** Installation differs by platform. Claude Code or Cursor have built-in plugin marketplaces. Codex and OpenCode require manual setup.
@@ -144,6 +145,10 @@ Start a new session in your chosen platform and ask for something that should tr
 - **using-git-worktrees** - Parallel development branches
 - **finishing-a-development-branch** - Merge/PR decision workflow
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
+
+**Security**
+
+* **requesting-security-review** — Dispatch security-reviewer subagent when changes touch auth, authz, sensitive data, input handling, file uploads, webhooks, or agent execution. Returns Critical / Important / Minor findings with merge readiness assessment.
 
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
