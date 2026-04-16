@@ -23,10 +23,22 @@ Dispatch superpowers:code-reviewer subagent to catch issues before they cascade.
 
 ## How to Request
 
-**1. Get git SHAs:**
+**1. Decide what the reviewer should inspect:**
+
+If you created a checkpoint commit, get git SHAs:
 ```bash
 BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
 HEAD_SHA=$(git rev-parse HEAD)
+```
+
+If you intentionally kept the work uncommitted, ask the reviewer to inspect the current working tree diff instead:
+
+```bash
+git status --short
+git diff --stat
+git diff
+git diff --staged --stat
+git diff --staged
 ```
 
 **2. Dispatch code-reviewer subagent:**

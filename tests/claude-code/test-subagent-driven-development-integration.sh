@@ -256,13 +256,16 @@ else
 fi
 echo ""
 
-# Test 7: Git commits show proper workflow
-echo "Test 7: Git commit history..."
+# Test 7: Workflow does not require task-by-task auto-commits
+echo "Test 7: Diff visibility..."
 commit_count=$(git -C "$TEST_PROJECT" log --oneline | wc -l)
-if [ "$commit_count" -gt 2 ]; then  # Initial + at least 2 task commits
-    echo "  [PASS] Multiple commits created ($commit_count total)"
+status_output=$(git -C "$TEST_PROJECT" status --short)
+if [ "$commit_count" -gt 1 ]; then
+    echo "  [PASS] Changes were checkpointed in git history ($commit_count total commits)"
+elif [ -n "$status_output" ]; then
+    echo "  [PASS] Changes remain visible in working tree without forced auto-commit"
 else
-    echo "  [FAIL] Too few commits ($commit_count, expected >2)"
+    echo "  [FAIL] No visible implementation changes found in git history or working tree"
     FAILED=$((FAILED + 1))
 fi
 echo ""

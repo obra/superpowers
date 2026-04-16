@@ -1,6 +1,6 @@
 ---
 name: using-git-worktrees
-description: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - creates isolated git worktrees with smart directory selection and safety verification
+description: Use when starting feature work or before executing implementation plans - choose the safest workspace for the job, creating a git worktree only when isolation materially helps
 ---
 
 # Using Git Worktrees
@@ -9,9 +9,42 @@ description: Use when starting feature work that needs isolation from current wo
 
 Git worktrees create isolated workspaces sharing the same repository, allowing work on multiple branches simultaneously without switching.
 
-**Core principle:** Systematic directory selection + safety verification = reliable isolation.
+**Core principle:** Prefer the cheapest safe workspace. Stay in the current workspace when it's already a good fit; create a worktree when isolation materially reduces risk.
 
 **Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
+
+## Step 0: Decide Whether You Actually Need a New Worktree
+
+Do not create a worktree by reflex. First decide whether the current workspace is already the right place to work.
+
+**Stay in the current workspace when all of these are true:**
+- The current workspace is clean, or your human partner explicitly accepts the current dirty state
+- The task is short-lived or tightly coupled to what is already happening here
+- You do not need parallel branch work
+- A normal feature branch in this workspace is sufficient
+
+If staying in the current workspace:
+
+1. Create or switch to an appropriate branch here if needed
+2. Run project setup only if needed
+3. Run the narrowest meaningful baseline check
+4. Report clearly that you are intentionally using the current workspace
+
+Example report:
+
+```
+Using current workspace at <full-path> on branch <branch-name>
+Baseline check: <command/result>
+No new worktree created because the workspace is already clean and this task is low-risk.
+```
+
+**Create a new worktree when any of these are true:**
+- The current workspace is dirty or mid-task
+- Parallel work is happening or likely
+- The task is risky, long-lived, or investigative
+- You need hard isolation from the current branch or environment
+
+If a new worktree is justified, continue with the directory selection and safety flow below.
 
 ## Directory Selection Process
 
@@ -119,10 +152,16 @@ if [ -f go.mod ]; then go mod download; fi
 
 ### 4. Verify Clean Baseline
 
-Run tests to ensure worktree starts clean:
+Run the narrowest meaningful verification for the workspace you're about to use.
+
+**Prefer:**
+- A fast smoke test or targeted verification for setup confidence
+- The relevant package/test target if the repo is large
+- The full suite only if it is fast enough to be routine or the task touches shared foundations
 
 ```bash
-# Examples - use project-appropriate command
+# Examples - use the cheapest project-appropriate command that proves the baseline you need
+npm test -- --runInBand path/to/target.test.js
 npm test
 cargo test
 pytest
@@ -136,8 +175,8 @@ go test ./...
 ### 5. Report Location
 
 ```
-Worktree ready at <full-path>
-Tests passing (<N> tests, 0 failures)
+Workspace ready at <full-path>
+Baseline verification passed (<command/result>)
 Ready to implement <feature-name>
 ```
 
@@ -145,6 +184,7 @@ Ready to implement <feature-name>
 
 | Situation | Action |
 |-----------|--------|
+| Clean current workspace, small task | Stay in current workspace |
 | `.worktrees/` exists | Use it (verify ignored) |
 | `worktrees/` exists | Use it (verify ignored) |
 | Both exist | Use `.worktrees/` |
@@ -169,6 +209,11 @@ Ready to implement <feature-name>
 
 - **Problem:** Can't distinguish new bugs from pre-existing issues
 - **Fix:** Report failures, get explicit permission to proceed
+
+### Creating a worktree out of habit
+
+- **Problem:** Wastes setup and cleanup time when the current workspace was already safe
+- **Fix:** Decide whether isolation is actually needed before creating anything
 
 ### Hardcoding setup commands
 
@@ -201,10 +246,11 @@ Ready to implement auth feature
 - Skip CLAUDE.md check
 
 **Always:**
-- Follow directory priority: existing > CLAUDE.md > ask
-- Verify directory is ignored for project-local
-- Auto-detect and run project setup
-- Verify clean test baseline
+- Choose the cheapest safe workspace first
+- Follow directory priority: existing > CLAUDE.md > ask when a new worktree is actually needed
+- Verify directory is ignored for project-local worktrees
+- Auto-detect and run project setup when needed
+- Prefer the narrowest meaningful baseline verification
 
 ## Integration
 

@@ -17,14 +17,23 @@ You are reviewing code changes for production readiness.
 
 {PLAN_REFERENCE}
 
-## Git Range to Review
+## Diff to Review
 
-**Base:** {BASE_SHA}
-**Head:** {HEAD_SHA}
+If `{BASE_SHA}` and `{HEAD_SHA}` are provided, review that checkpoint range:
 
 ```bash
 git diff --stat {BASE_SHA}..{HEAD_SHA}
 git diff {BASE_SHA}..{HEAD_SHA}
+```
+
+If the work is intentionally uncommitted, review the current working tree instead:
+
+```bash
+git status --short
+git diff --stat
+git diff
+git diff --staged --stat
+git diff --staged
 ```
 
 ## Review Checklist

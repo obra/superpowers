@@ -37,6 +37,18 @@ Stop. Don't proceed to Step 2.
 
 **If tests pass:** Continue to Step 2.
 
+### Step 1.5: Check Working Tree State
+
+```bash
+git status --short
+```
+
+If the working tree is dirty, do **not** auto-commit just because you're finishing. Keep that state in mind for the options below:
+
+- Option 1 (merge locally) and Option 2 (push/create PR) require a final commit before they can complete
+- Prefer a **single final checkpoint commit** rather than many automatic task commits
+- Show your human partner the diff summary before creating that final commit
+
 ### Step 2: Determine Base Branch
 
 ```bash

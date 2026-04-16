@@ -32,11 +32,16 @@ Task tool (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Commit your work
+    4. Leave a clean, reviewable diff
     5. Self-review (see below)
     6. Report back
 
     Work from: [directory]
+
+    **Commit policy:** Do NOT create a commit unless one of these is true:
+    - The task explicitly asks for a checkpoint commit
+    - The controller asks for a commit to support review or handoff
+    - The environment requires committed work for finishing/handoff
 
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
@@ -104,6 +109,7 @@ Task tool (general-purpose):
     - What you implemented (or what you attempted, if blocked)
     - What you tested and test results
     - Files changed
+    - Whether the work is committed or left in the working tree
     - Self-review findings (if any)
     - Any issues or concerns
 

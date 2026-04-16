@@ -12,8 +12,8 @@ Task tool (superpowers:code-reviewer):
 
   WHAT_WAS_IMPLEMENTED: [from implementer's report]
   PLAN_OR_REQUIREMENTS: Task N from [plan-file]
-  BASE_SHA: [commit before task]
-  HEAD_SHA: [current commit]
+  BASE_SHA / HEAD_SHA: [use when reviewing a checkpoint commit]
+  OR: [tell reviewer to inspect the current working tree diff if no commit was created]
   DESCRIPTION: [task summary]
 ```
 

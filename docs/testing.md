@@ -60,7 +60,7 @@ The integration test verifies the `subagent-driven-development` skill correctly:
    - TodoWrite was used for tracking
    - Implementation files were created
    - Tests pass
-   - Git commits show proper workflow
+  - Changes are visible either as checkpoint commits or in the working tree diff
 4. **Token Analysis**: Shows token usage breakdown by subagent
 
 ### Test Output
@@ -90,8 +90,8 @@ Test 6: Implementation verification...
   [PASS] test/math.test.js created
   [PASS] Tests pass
 
-Test 7: Git commit history...
-  [PASS] Multiple commits created (3 total)
+Test 7: Diff visibility...
+  [PASS] Changes remain visible in working tree without forced auto-commit
 
 Test 8: No extra features added...
   [PASS] No extra features added
