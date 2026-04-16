@@ -89,6 +89,12 @@ Task tool (general-purpose):
     - Did I avoid overbuilding (YAGNI)?
     - Did I only build what was requested?
     - Did I follow existing patterns in the codebase?
+    - Did I match existing style, even if I would do it differently?
+    - Did I remove imports/variables/functions that my changes made unused?
+
+    Clean up your own mess: remove anything your changes made unused
+    (imports, variables, functions), but don't delete pre-existing dead code
+    unless asked.
 
     **Testing:**
     - Do tests actually verify behavior (not just mock behavior)?
