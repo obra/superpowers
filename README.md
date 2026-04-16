@@ -30,12 +30,10 @@ Thanks!
 
 ### Claude Code Official Marketplace
 
-Superpowers is available via the [official Claude plugin marketplace](https://claude.com/plugins/superpowers)
-
-Install the plugin from Claude marketplace:
+If you publish Spectral to the official Claude plugin marketplace, install it with:
 
 ```bash
-/plugin install superpowers@claude-plugins-official
+/plugin install spectral@claude-plugins-official
 ```
 
 ### Claude Code (via Plugin Marketplace)
@@ -43,13 +41,13 @@ Install the plugin from Claude marketplace:
 In Claude Code, register the marketplace first:
 
 ```bash
-/plugin marketplace add obra/superpowers-marketplace
+/plugin marketplace add <your-github-username>/spectral-marketplace
 ```
 
 Then install the plugin from this marketplace:
 
 ```bash
-/plugin install superpowers@superpowers-marketplace
+/plugin install spectral@spectral-marketplace
 ```
 
 ### Cursor (via Plugin Marketplace)
@@ -57,17 +55,17 @@ Then install the plugin from this marketplace:
 In Cursor Agent chat, install from marketplace:
 
 ```text
-/add-plugin superpowers
+/add-plugin spectral
 ```
 
-or search for "superpowers" in the plugin marketplace.
+or search for "spectral" in the plugin marketplace.
 
 ### Codex
 
 Tell Codex:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/<your-github-username>/spectral/refs/heads/main/.codex/INSTALL.md
 ```
 
 **Detailed docs:** [docs/README.codex.md](docs/README.codex.md)
@@ -77,7 +75,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 Tell OpenCode:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/<your-github-username>/spectral/refs/heads/main/.opencode/INSTALL.md
 ```
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
@@ -85,14 +83,14 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 ### GitHub Copilot CLI
 
 ```bash
-copilot plugin marketplace add obra/superpowers-marketplace
-copilot plugin install spectral@superpowers-marketplace
+copilot plugin marketplace add <your-github-username>/spectral-marketplace
+copilot plugin install spectral@spectral-marketplace
 ```
 
 ### Gemini CLI
 
 ```bash
-gemini extensions install https://github.com/obra/superpowers
+gemini extensions install https://github.com/<your-github-username>/spectral
 ```
 
 To update:
@@ -103,7 +101,7 @@ gemini extensions update spectral
 
 ### Verify Installation
 
-Start a new session in your chosen platform and ask for something that should trigger a skill (for example, "help me plan this feature" or "let's debug this issue"). The agent should automatically invoke the relevant superpowers skill.
+Start a new session in your chosen platform and ask for something that should trigger a skill (for example, "help me plan this feature" or "let's debug this issue"). The agent should automatically invoke the relevant spectral skill.
 
 ## The Basic Workflow
 
@@ -174,7 +172,7 @@ See `skills/writing-skills/SKILL.md` for the complete guide.
 Skills update automatically when you update the plugin:
 
 ```bash
-/plugin update superpowers
+/plugin update spectral
 ```
 
 ## License
