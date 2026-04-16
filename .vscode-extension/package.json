@@ -11,9 +11,22 @@
     "vscode": "^1.99.0",
     "node": ">=20.0.0"
   },
-  "categories": ["AI", "Chat"],
-  "keywords": ["mcp", "skills", "tdd", "debugging", "brainstorming", "copilot", "cline"],
-  "activationEvents": ["onStartupFinished"],
+  "categories": [
+    "AI",
+    "Chat"
+  ],
+  "keywords": [
+    "mcp",
+    "skills",
+    "tdd",
+    "debugging",
+    "brainstorming",
+    "copilot",
+    "cline"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "mcpServerDefinitionProviders": [
@@ -47,5 +60,9 @@
     "esbuild": "^0.25.0",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
+  },
+  "type": "module",
+  "bin": {
+    "superpowers-mcp": "./bin/superpowers-mcp.js"
   }
 }
