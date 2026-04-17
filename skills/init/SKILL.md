@@ -23,27 +23,27 @@ If shell execution is unavailable (for example: `pwsh.exe` missing on Windows), 
 2. **Build a Compact Rules Summary**:
    - Convert the user request into 3-8 short bullets.
    - Keep this summary concise to reduce token usage.
-   - Save it to .spectral/memory/rules-input.md.
+    - Keep it in memory as `<compact rules summary>` for script input.
 
-3. **Execute Initialization Script First**:
+3. **Execute Initialization Script Immediately**:
+    - Do NOT create any files manually before running the script.
+    - Do NOT use shell commands for directory or file creation.
+    - Directly run:
+       - `node scripts/init.js`
+    - Pass user rules via environment variable:
+       - `SPECTRAL_INIT_RULES="<compact rules summary>"`
 
-- Always attempt to run the Node script directly:
-  `node scripts/init.js`
+4. **If Script Fails -> Fallback**:
+    - Only if the Node script execution fails, create files manually using file tools (NOT shell).
 
-- Do NOT perform any shell or pwsh checks.
-
-- Do NOT skip this step.
-
-- If the script runs successfully, skip Step 5 entirely.
-
-4. **Fallback Only If Script Fails**:
-
-- Only if the Node script execution fails, proceed to No-Shell Fallback (Step 5).
-
-5. **No-Shell Fallback (Required when shell is unavailable)**:
-   - Create these paths with file tools (not shell):
-     - .spectral/memory/rules-input.md
-     - .spectral/memory/constitution.md
+5. **No-Shell Fallback (File Tools Only)**:
+    - Create these paths with file tools (NOT shell):
+       - .spectral/memory/rules-input.md
+       - .spectral/memory/constitution.md
+       - .spectral/templates/spec-template.md
+       - .spectral/templates/plan-template.md
+       - .spectral/templates/tasks-template.md
+       - .spectral/templates/constitution-template.md
    - Infer project signals with file listing/search tools (for example: package.json, angular.json, src/, apps/, libs/).
    - Write a compact but concrete constitution directly to .spectral/memory/constitution.md using:
      - Project name from current directory
