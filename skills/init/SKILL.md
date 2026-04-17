@@ -29,7 +29,7 @@ If shell execution is unavailable (for example: `pwsh.exe` missing on Windows), 
     - Do NOT create any files manually before running the script.
     - Do NOT use shell commands for directory or file creation.
     - Directly run:
-       - `node scripts/init.js`
+       - `node "~/.copilot/installed-plugins/spectral-marketplace/spectral/scripts/init.js"`
     - Pass user rules via environment variable:
        - `SPECTRAL_INIT_RULES="<compact rules summary>"`
 
