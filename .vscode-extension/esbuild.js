@@ -1,6 +1,9 @@
-const esbuild = require('esbuild');
-const path = require('path');
-const fs = require('fs');
+import * as esbuild from 'esbuild';
+import * as path from 'path';
+import * as fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const watch = process.argv.includes('--watch');
 

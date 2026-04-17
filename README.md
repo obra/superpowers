@@ -116,6 +116,32 @@ To update:
 gemini extensions update superpowers
 ```
 
+### VS Code (via Marketplace)
+
+Install from the VS Code Extensions Marketplace:
+
+1. Open VS Code
+2. Press `Ctrl+Shift+X` → search **"Superpowers"** → Install
+3. Restart VS Code
+4. The MCP server registers automatically in Copilot Agent Mode, Cline, Roo Code, and any MCP-compatible agent
+
+**Manual configuration** — add to `.vscode/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "superpowers": {
+      "command": "npx",
+      "args": ["superpowers-mcp"]
+    }
+  }
+}
+```
+
+### Verify Installation
+
+Start a new session in your chosen platform and ask for something that should trigger a skill (for example, "help me plan this feature" or "let's debug this issue"). The agent should automatically invoke the relevant superpowers skill.
+
 ## The Basic Workflow
 
 1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
