@@ -21,20 +21,117 @@ Every project goes through this process. A todo list, a single-function utility,
 
 You MUST create a task for each of these items and complete them in order:
 
-1. **Explore project context** — check files, docs, recent commits
-2. **Offer visual companion** (if topic will involve visual questions) — this is its own message, not combined with a clarifying question. See the Visual Companion section below.
-3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-4. **Propose 2-3 approaches** — with trade-offs and your recommendation
-5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
-7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
-8. **User reviews written spec** — ask user to review the spec file before proceeding
-9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+1. **Determine base branch and base revision** — see the "Base branch and revision" section below
+2. **Explore project context** — check files, docs, recent commits
+3. **Offer visual companion** (if topic will involve visual questions) — this is its own message, not combined with a clarifying question. See the Visual Companion section below.
+4. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
+5. **Propose 2-3 approaches** — with trade-offs and your recommendation
+6. **Present design** — in sections scaled to their complexity, get user approval after each section
+7. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
+8. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
+9. **User reviews written spec** — ask user to review the spec file before proceeding
+10. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+
+## Base branch and revision
+
+Every spec must record the commit and branch it was written against. This information is used later by `finishing-a-development-branch` to detect drift on the base branch, safely rebase, and route to the right fix flow when drift is found.
+
+### If invoked with inherited context
+
+If another skill (typically `finishing-a-development-branch` for drift recovery) dispatched this brainstorming session and provided `base_branch` and `base_revision` values, use them verbatim and skip the detection below. The invoker knows what it's doing — do not re-ask the user which branch to merge to, do not second-guess the revision.
+
+### Otherwise, detect the base branch
+
+Check the current branch:
+
+```bash
+CURRENT_BRANCH=$(git branch --show-current)
+```
+
+**If the current branch is one of** `main`, `master`, `dev`, `develop`, `developer`, or `trunk`: use the current branch as the base branch. Do not ask the user — the intent is unambiguous.
+
+**Otherwise:** present the following numbered-list question (generate options 2..N-1 dynamically, one per default-ish branch that actually exists in the repo, as reported by `git for-each-ref refs/heads/`):
+
+```
+You're on branch `<CURRENT_BRANCH>`. Which best describes your situation?
+
+1. This is a long-term branch. Start a new feature branch from here,
+   and later merge the feature back to `<CURRENT_BRANCH>`.
+2. This is the feature branch for this work. Complete the work here
+   and later merge back to `<default-branch-1>`.
+<additional options per existing default-ish branch>
+N. Something else — let me specify the base branch name.
+```
+
+Interpret the user's choice:
+- **Option 1 ("long-term branch"):** base branch = `<CURRENT_BRANCH>`. The feature will be built from here and merged back here.
+- **Options 2..N-1 ("feature branch"):** base branch = the named default-ish branch.
+- **Option N ("something else"):** ask the user to type the base branch name. Verify the name refers to an existing branch; if not, ask again.
+
+**Do not create new branches yourself.** Brainstorming records the intended base branch; it does not modify the git state.
+
+### Record the base revision
+
+Once the base branch is known, capture its current HEAD:
+
+```bash
+BASE_REVISION=$(git rev-parse "$BASE_BRANCH")
+```
+
+Also record the current UTC timestamp in ISO 8601 format.
+
+### Write the header into the spec
+
+When you write the spec document (checklist step 7), include these lines near the top of the file, after the title and before any section headings:
+
+```markdown
+This spec was written against the following baseline:
+
+**Base revision:** `<BASE_REVISION>` on branch `<BASE_BRANCH>` (as of <ISO 8601 UTC timestamp>)
+```
+
+Example:
+
+```markdown
+# Add Lowercase Function
+
+This spec was written against the following baseline:
+
+**Base revision:** `9c107a3cafa81a3acb32d12d25495baf958a1846` on branch `main` (as of 2026-04-12T14:30:00Z)
+
+## Summary
+...
+```
+
+The `**Base revision:**` line is **required** for drift detection to work. Do not omit it. Do not reword its format — `finishing-a-development-branch` parses this line.
+
+### When updating an existing spec (drift recovery)
+
+If you are invoked to update an existing spec (via the `spec_update` routing from `finishing-a-development-branch`), the spec already has a `**Base revision:**` header. Preserve the original `created at` commit, but add (or update) a "later updated to reflect" clause with the passed-in `base_revision`:
+
+Before:
+```markdown
+This spec was written against the following baseline:
+
+**Base revision:** `9c107a3...` on branch `main` (as of 2026-04-11T10:00:00Z)
+```
+
+After:
+```markdown
+This spec was written against the following baseline:
+
+**Base revision:** `9c107a3...` on branch `main`, later updated to reflect `b43f566...` (as of 2026-04-12T14:30:00Z)
+```
+
+If the header already has a "later updated to reflect" clause from a previous update, **replace** the old `<new_revision>` value with the current one — do not accumulate a chain of updates. The header always carries at most two values: the original creation revision and the most recent update revision.
+
+The branch name does not change across updates.
 
 ## Process Flow
 
 ```dot
 digraph brainstorming {
+    "Determine base branch/revision" [shape=box];
     "Explore project context" [shape=box];
     "Visual questions ahead?" [shape=diamond];
     "Offer Visual Companion\n(own message, no other content)" [shape=box];
@@ -47,6 +144,7 @@ digraph brainstorming {
     "User reviews spec?" [shape=diamond];
     "Invoke writing-plans skill" [shape=doublecircle];
 
+    "Determine base branch/revision" -> "Explore project context";
     "Explore project context" -> "Visual questions ahead?";
     "Visual questions ahead?" -> "Offer Visual Companion\n(own message, no other content)" [label="yes"];
     "Visual questions ahead?" -> "Ask clarifying questions" [label="no"];
@@ -110,6 +208,7 @@ digraph brainstorming {
 
 - Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
+- **Include the `**Base revision:**` header near the top of the spec** (see "Base branch and revision" section above). This is mandatory for drift detection.
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 
@@ -120,6 +219,7 @@ After writing the spec document, look at it with fresh eyes:
 2. **Internal consistency:** Do any sections contradict each other? Does the architecture match the feature descriptions?
 3. **Scope check:** Is this focused enough for a single implementation plan, or does it need decomposition?
 4. **Ambiguity check:** Could any requirement be interpreted two different ways? If so, pick one and make it explicit.
+5. **Base revision header:** Is the `**Base revision:**` line present and correctly formatted?
 
 Fix any issues inline. No need to re-review — just fix and move on.
 
