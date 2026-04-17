@@ -28,6 +28,7 @@ For each task:
 2. Follow each step exactly (plan has bite-sized steps)
 3. Run verifications as specified
 4. Mark as completed
+5. Update the plan file: change `- [ ]` to `- [x]` for completed steps using the `Edit` tool
 
 ### Step 3: Complete Development
 
