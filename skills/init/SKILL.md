@@ -36,8 +36,8 @@ If shell execution is unavailable (for example: `pwsh.exe` missing on Windows), 
 ## Steps
 
 1. **Run the Initialization Script**:
-   - Locate the `scripts/init.js` file in the Spectral repository.
-   - Run it using Node.js: `node scripts/init.js`
+   - Locate the `skills/init/scripts/init.js` file in the Spectral repository.
+   - Run it using Node.js: `node skills/init/scripts/init.js`
    - This script will automatically create the `.spectral` folders and copy the templates for you, bypassing any shell compatibility issues.
 
 2. **Manual Fallback (only if Node.js is missing)**:

@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { generateConstitution } from './generate-constitution.js';
-import { generateCodeIndex } from './generate-code-index.js';
+import { generateConstitution } from '../../../scripts/generate-constitution.js';
+import { generateCodeIndex } from '../../../scripts/generate-code-index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const spectralRoot = path.resolve(__dirname, '..', '..', '..');
