@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { generateConstitution } from './generate-constitution.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const spectralRoot = path.resolve(__dirname, '..');
@@ -42,13 +43,18 @@ function init() {
             }
         });
 
-        // 4. Initialize constitution in memory
-        const constitutionSrc = path.join(templatesFolder, 'constitution-template.md');
+        // 4. Generate constitution from project signals and optional user rules.
         const constitutionDest = path.join(memoryFolder, 'constitution.md');
-        if (fs.existsSync(constitutionSrc)) {
-            fs.copyFileSync(constitutionSrc, constitutionDest);
-            console.log(`Created: .spectral/memory/constitution.md`);
-        }
+        const rulesFile = path.join(memoryFolder, 'rules-input.md');
+        const envRules = process.env.SPECTRAL_INIT_RULES || '';
+        const fileRules = fs.existsSync(rulesFile) ? fs.readFileSync(rulesFile, 'utf8') : '';
+        const rulesText = envRules || fileRules;
+        generateConstitution({
+            targetDir,
+            outPath: constitutionDest,
+            rulesText
+        });
+        console.log('Created: .spectral/memory/constitution.md');
 
         console.log('\nSuccess: Spectral workspace initialized successfully.');
     } catch (error) {
