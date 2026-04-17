@@ -7,6 +7,10 @@ description: "Use when initializing a new Spectral workspace. Creates the .spect
 
 Use this skill when the user wants to initialize a new Spectral workspace in the current working directory.
 
+## Copilot CLI Requirement
+
+In Copilot CLI, after `/spectral:init` is activated, the agent must draft the constitution automatically. It must not leave `.spectral/memory/constitution.md` as raw template placeholders.
+
 ## Steps
 
 1. **Send an Immediate User Prompt**:
@@ -25,6 +29,24 @@ Use this skill when the user wants to initialize a new Spectral workspace in the
 4. **Confirm**:
    - Verify that the `.spectral` structure is complete and report success.
 
-5. **Collect Constitution Input**:
-   - After initialization, if the user has provided rules, acknowledge them and say they will be used to build the constitution in `.spectral/memory/constitution.md`.
-   - If the user has not provided rules yet, ask once more: `Please share your project rules so I can draft your constitution.`
+5. **Analyze Context for Constitution Drafting**:
+   - Extract rules and constraints from the user's prompt and any rules they provide after init starts.
+   - Inspect the current project structure (top-level folders/files and key signals like language/framework/testing setup).
+   - Infer practical defaults when user rules are incomplete.
+
+6. **Auto-Draft Constitution (Required)**:
+   - Write a fully drafted constitution to `.spectral/memory/constitution.md`.
+   - Replace placeholders with concrete content based on user intent + project structure.
+   - Never leave unresolved placeholders like `[PROJECT_NAME]`, `[PRINCIPLE_1_NAME]`, or `[SECTION_2_CONTENT]` in the final file.
+   - Include at minimum:
+     - Project name
+     - 5 concrete core principles
+     - Additional constraints section
+     - Development workflow section
+     - Governance rules
+     - Version and current date fields
+
+7. **User Confirmation Loop**:
+   - Show a concise summary of what was written.
+   - Ask: `I drafted your constitution in .spectral/memory/constitution.md. What would you like to change?`
+   - If user provides edits, update the constitution immediately.
