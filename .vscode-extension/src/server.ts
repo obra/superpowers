@@ -4,6 +4,8 @@ import * as path from 'path';
 import * as url from 'url';
 import { SkillLoader } from './mcp/skillLoader.js';
 import { registerTools } from './mcp/tools.js';
+import { registerResources } from './mcp/resources.js';
+import { registerPrompts } from './mcp/prompts.js';
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -20,8 +22,8 @@ const server = new McpServer({
 });
 
 registerTools(server, loader);
-
-// Resources (Phase 4) and Prompts (Phase 5) will be added next.
+registerResources(server, loader);
+registerPrompts(server, loader);
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
