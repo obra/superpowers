@@ -1,6 +1,6 @@
 {
   "name": "vmlpowers",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "type": "module",
   "main": ".opencode/plugins/vmlpowers.js"
 }
