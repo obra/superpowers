@@ -11,9 +11,16 @@ Use this skill when the user wants to initialize a new Spectral workspace in the
 
 After init, `.spectral/code_index.json` is the default source of truth for code discovery.
 
-- For file/function/code lookup, query `.spectral/code_index.json` first.
-- Only if the requested file is not found in the index, manually inspect/search folders.
-- Do not run full-repository search as the default path for every request.
+- Mandatory pre-step before any coding reasoning: load `.spectral/code_index.json`.
+- Select top 3-5 relevant files using `featureTags`, `summary`, and `kind`.
+- Explicitly state which files were selected and why, then continue with implementation.
+- Do not run full-repository search as a default path.
+- If a required file is missing from the index, state `Index is insufficient` and run minimal targeted folder search as fallback.
+
+## Hard Rule
+
+- The agent must not blindly scan the whole repository before consulting `.spectral/code_index.json`.
+- The agent must not open random files before selecting relevant candidates from the index.
 
 ## Incremental Indexing Requirement
 
@@ -77,6 +84,7 @@ If shell execution is unavailable (for example: `pwsh.exe` missing on Windows), 
    - Verify that the `.spectral` structure is complete and report success.
    - Confirm that `.spectral/memory/constitution.md` contains concrete sections with no unresolved placeholder tokens.
    - Confirm that `.spectral/code_index.json` exists and was generated as metadata-only output.
+   - Confirm that `.spectral/code_index.json` is pretty-printed (multi-line JSON with 2-space indentation).
 
 7. **User Confirmation Loop**:
    - Show a concise summary of what was written.
