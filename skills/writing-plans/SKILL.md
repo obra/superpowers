@@ -14,8 +14,10 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
 **Context:** This should be run in a dedicated worktree (created by brainstorming skill).
-
-**Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
+what 
+**Save plans to:** `feature_directory/plan.md`
+- Identify `feature_directory` from `.spectral/feature.json`.
+- Populate `feature_directory/plan.md` using the template at `.spectral/templates/plan-template.md`.
 - (User preferences for plan location override this default)
 
 ## Scope Check

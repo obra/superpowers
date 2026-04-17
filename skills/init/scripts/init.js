@@ -1,16 +1,19 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { generateConstitution } from './generate-constitution.js';
-import { generateCodeIndex } from './generate-code-index.js';
+import { generateConstitution } from '../../../scripts/generate-constitution.js';
+import { generateCodeIndex } from '../../../scripts/generate-code-index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const spectralRoot = path.resolve(__dirname, '..');
+const spectralRoot = path.resolve(__dirname, '..', '..', '..');
 const targetDir = process.cwd();
 
 const spectralFolder = path.join(targetDir, '.spectral');
 const templatesFolder = path.join(spectralFolder, 'templates');
 const memoryFolder = path.join(spectralFolder, 'memory');
+const tasksFolder = path.join(spectralFolder, 'tasks');
+const registryFolder = path.join(spectralFolder, 'registry');
+const specsFolder = path.join(targetDir, 'specs');
 
 const sourceTemplatesDir = path.join(spectralRoot, 'skills', 'init', 'templates');
 
@@ -24,6 +27,9 @@ console.log("Shell env:", process.env.SHELL || process.env.ComSpec);
         if (!fs.existsSync(spectralFolder)) fs.mkdirSync(spectralFolder);
         if (!fs.existsSync(templatesFolder)) fs.mkdirSync(templatesFolder);
         if (!fs.existsSync(memoryFolder)) fs.mkdirSync(memoryFolder);
+        if (!fs.existsSync(tasksFolder)) fs.mkdirSync(tasksFolder);
+        if (!fs.existsSync(registryFolder)) fs.mkdirSync(registryFolder);
+        if (!fs.existsSync(specsFolder)) fs.mkdirSync(specsFolder);
 
         // 2. Identify templates to copy
         const templates = [
