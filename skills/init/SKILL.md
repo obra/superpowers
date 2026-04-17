@@ -25,9 +25,17 @@ If shell execution is unavailable (for example: `pwsh.exe` missing on Windows), 
    - Keep this summary concise to reduce token usage.
    - Save it to .spectral/memory/rules-input.md.
 
-3. **Preflight Shell Capability**:
-   - Try one minimal shell check before running script-driven init.
-   - If shell reports `pwsh.exe` missing (or shell unavailable), skip directly to Step 4.
+3. **Determine Execution Path**:
+
+- Do NOT run any shell-based preflight checks.
+- Assume shell may be unavailable by default.
+
+- If Node.js is available, directly run:
+  `node scripts/init.js`
+
+- If script execution fails for any reason, immediately switch to Step 5 (No-Shell Fallback).
+
+- Never attempt to check for `pwsh.exe` or run PowerShell commands.
 
 4. **Run the Initialization Script (Preferred Path)**:
    - Locate the `scripts/init.js` file in the Spectral repository.
