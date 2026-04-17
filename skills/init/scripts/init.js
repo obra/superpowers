@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { generateConstitution } from './generate-constitution.js';
+import { generateCodeIndex } from './generate-code-index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const spectralRoot = path.resolve(__dirname, '..', '..', '..');
@@ -15,9 +17,11 @@ const specsFolder = path.join(targetDir, 'specs');
 
 const sourceTemplatesDir = path.join(spectralRoot, 'skills', 'init', 'templates');
 
-function init() {
+async function init() {
     console.log(`Initializing Spectral in: ${targetDir}`);
-
+    console.log("Running init.js via Node...");
+console.log("Platform:", process.platform);
+console.log("Shell env:", process.env.SHELL || process.env.ComSpec);
     try {
         // 1. Create directory structure
         if (!fs.existsSync(spectralFolder)) fs.mkdirSync(spectralFolder);
@@ -48,12 +52,32 @@ function init() {
             }
         });
 
-        // 4. Initialize constitution in memory
-        const constitutionSrc = path.join(templatesFolder, 'constitution-template.md');
+        // 4. Generate constitution from project signals and optional user rules.
         const constitutionDest = path.join(memoryFolder, 'constitution.md');
-        if (fs.existsSync(constitutionSrc)) {
-            fs.copyFileSync(constitutionSrc, constitutionDest);
-            console.log(`Created: .spectral/memory/constitution.md`);
+        const rulesFile = path.join(memoryFolder, 'rules-input.md');
+        const envRules = process.env.SPECTRAL_INIT_RULES || '';
+        const fileRules = fs.existsSync(rulesFile) ? fs.readFileSync(rulesFile, 'utf8') : '';
+        const rulesText = envRules || fileRules;
+        generateConstitution({
+            targetDir,
+            outPath: constitutionDest,
+            rulesText
+        });
+        console.log('Created: .spectral/memory/constitution.md');
+
+        // 5. Generate a metadata-only code index for index-first retrieval.
+        const codeIndexDest = path.join(spectralFolder, 'code_index.json');
+        try {
+            const codeIndexResult = await generateCodeIndex({
+                targetDir,
+                outPath: codeIndexDest,
+                mode: 'incremental'
+            });
+            console.log(
+                `Created: .spectral/code_index.json (${codeIndexResult.stats.scannedFiles} scanned, ${codeIndexResult.stats.reusedFiles} reused, ${codeIndexResult.stats.changedFiles} changed, ${codeIndexResult.stats.deletedFiles} deleted)`
+            );
+        } catch (indexError) {
+            console.warn(`Warning: code index generation failed (${indexError.message}). Init will continue without index.`);
         }
 
         console.log('\nSuccess: Spectral workspace initialized successfully.');

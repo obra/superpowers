@@ -83,9 +83,11 @@ Fetch and follow instructions from https://raw.githubusercontent.com/<your-githu
 ### GitHub Copilot CLI
 
 ```bash
-copilot plugin marketplace add <your-github-username>/spectral-marketplace
+copilot plugin marketplace add srineelx23/spectral-marketplace
 copilot plugin install spectral@spectral-marketplace
 ```
+
+Windows note: Copilot CLI shell execution may require PowerShell 7 (`pwsh`). If `pwsh.exe` is unavailable, install it from https://aka.ms/powershell. Spectral init includes a no-shell fallback path, but script-driven init is the fastest and most token-efficient path.
 
 ### Gemini CLI
 

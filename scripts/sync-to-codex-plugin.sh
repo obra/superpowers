@@ -98,7 +98,7 @@ generate_plugin_json() {
 {
   "name": "superpowers",
   "version": "$version",
-  "description": "Core skills library for Codex: planning, TDD, debugging, and collaboration workflows.",
+  "description": "An agentic skills framework & software development methodology that works: planning, TDD, debugging, and collaboration workflows.",
   "author": {
     "name": "Jesse Vincent",
     "email": "jesse@fsck.com",
@@ -108,6 +108,8 @@ generate_plugin_json() {
   "repository": "https://github.com/obra/superpowers",
   "license": "MIT",
   "keywords": [
+    "brainstorming",
+    "subagent-driven-development",
     "skills",
     "planning",
     "tdd",
@@ -119,13 +121,17 @@ generate_plugin_json() {
   "interface": {
     "displayName": "Superpowers",
     "shortDescription": "Planning, TDD, debugging, and delivery workflows for coding agents",
-    "longDescription": "Use Superpowers to guide agent work through brainstorming, implementation planning, test-driven development, systematic debugging, parallel execution, code review, and finish-the-branch workflows adapted for Codex.",
+    "longDescription": "Use Superpowers to guide agent work through brainstorming, implementation planning, test-driven development, systematic debugging, parallel execution, code review, and finish-the-branch workflows.",
     "developerName": "Jesse Vincent",
     "category": "Coding",
     "capabilities": [
       "Interactive",
       "Read",
       "Write"
+    ],
+    "defaultPrompt": [
+      "I've got an idea for something I'd like to build.",
+      "Let's add a feature to this project."
     ],
     "brandColor": "#F59E0B",
     "composerIcon": "./assets/superpowers-small.svg",
