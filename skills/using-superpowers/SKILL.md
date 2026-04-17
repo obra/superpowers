@@ -41,6 +41,10 @@ Skills use Claude Code tool names. Non-CC platforms: see `references/copilot-too
 
 # Using Skills
 
+## Asking Questions in Claude Code
+
+When a skill or workflow needs to ask the user something in Claude Code, use the `AskUserQuestions` tool instead of asking in plain chat. This applies to clarifying questions, multiple-choice questions, and approval prompts. If the current platform does not expose `AskUserQuestions`, fall back to the platform's normal user-question mechanism.
+
 ## The Rule
 
 **Invoke relevant or requested skills BEFORE any response or action.** Even a 1% chance a skill might apply means that you should invoke the skill to check. If an invoked skill turns out to be wrong for the situation, you don't need to use it.
