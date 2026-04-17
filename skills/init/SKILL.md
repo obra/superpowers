@@ -25,23 +25,20 @@ If shell execution is unavailable (for example: `pwsh.exe` missing on Windows), 
    - Keep this summary concise to reduce token usage.
    - Save it to .spectral/memory/rules-input.md.
 
-3. **Determine Execution Path**:
+3. **Execute Initialization Script First**:
 
-- Do NOT run any shell-based preflight checks.
-- Assume shell may be unavailable by default.
-
-- If Node.js is available, directly run:
+- Always attempt to run the Node script directly:
   `node scripts/init.js`
 
-- If script execution fails for any reason, immediately switch to Step 5 (No-Shell Fallback).
+- Do NOT perform any shell or pwsh checks.
 
-- Never attempt to check for `pwsh.exe` or run PowerShell commands.
+- Do NOT skip this step.
 
-4. **Run the Initialization Script (Preferred Path)**:
-   - Locate the `scripts/init.js` file in the Spectral repository.
-   - Run it using Node.js: `node scripts/init.js`
-   - The script reads rules from .spectral/memory/rules-input.md automatically.
-   - This script will automatically create the `.spectral` folders and copy the templates for you, bypassing any shell compatibility issues.
+- If the script runs successfully, skip Step 5 entirely.
+
+4. **Fallback Only If Script Fails**:
+
+- Only if the Node script execution fails, proceed to No-Shell Fallback (Step 5).
 
 5. **No-Shell Fallback (Required when shell is unavailable)**:
    - Create these paths with file tools (not shell):
