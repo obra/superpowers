@@ -116,6 +116,20 @@ To update:
 gemini extensions update superpowers
 ```
 
+### Factory Droid
+
+In Droid, register the marketplace:
+
+```bash
+droid plugin marketplace add https://github.com/obra/superpowers
+```
+
+Then install:
+
+```bash
+droid plugin install superpowers@superpowers
+```
+
 ## The Basic Workflow
 
 1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
