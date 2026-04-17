@@ -83,6 +83,23 @@ IF conflicts with your human partner's prior decisions:
   Stop and discuss with your human partner first
 ```
 
+### Fetching GitHub PR Feedback
+
+When receiving code review from GitHub PRs, fetch ALL three comment types before evaluating:
+
+```
+# 1. Inline review comments (line-specific annotations)
+gh api repos/{owner}/{repo}/pulls/{pr}/comments
+
+# 2. Review bodies (summary text + nitpick sections posted with each review)
+gh api repos/{owner}/{repo}/pulls/{pr}/reviews
+
+# 3. Direct PR comments (top-level conversation, often bots post here)
+gh api repos/{owner}/{repo}/issues/{pr}/comments
+```
+
+**Why all three:** Inline comments may contain ~25% of feedback. Review bodies often contain nitpick summaries. Direct PR comments (where bots like Claude CodeRabbit post) often contain the most critical findings. Missing any type means incomplete evaluation.
+
 **your human partner's rule:** "External feedback - be skeptical, but check carefully"
 
 ## YAGNI Check for "Professional" Features
