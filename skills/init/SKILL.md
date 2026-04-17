@@ -35,15 +35,46 @@ If shell execution is unavailable (for example: `pwsh.exe` missing on Windows), 
 
 ## Steps
 
-1. **Run the Initialization Script**:
-   - Locate the `skills/init/scripts/init.js` file in the Spectral repository.
-   - Run it using Node.js: `node skills/init/scripts/init.js`
-   - This script will automatically create the `.spectral` folders and copy the templates for you, bypassing any shell compatibility issues.
+1. **Send an Immediate User Prompt**:
+   - First response after activation must be a clear status message so the user knows init is running.
+   - Use this exact message:
+     - `Spectral init started. I am creating your .spectral workspace and preparing your project constitution. Please enter your project rules (bullet points are fine).`
 
-2. **Manual Fallback (only if Node.js is missing)**:
-   - If `node` is not available, you must manually create `.spectral/templates` and `.spectral/memory` and copy the files from `skills/init/templates/`.
+2. **Build a Compact Rules Summary**:
+   - Convert the user request into 3-8 short bullets.
+   - Keep this summary concise to reduce token usage.
+    - Keep it in memory as `<compact rules summary>` for script input.
 
-3. **Confirm**:
+3. **Execute Initialization Script Immediately**:
+    - Do NOT create any files manually before running the script.
+    - Do NOT use shell commands for directory or file creation.
+    - Directly run:
+       - `node "~/.copilot/installed-plugins/spectral-marketplace/spectral/scripts/init.js"`
+    - Pass user rules via environment variable:
+       - `SPECTRAL_INIT_RULES="<compact rules summary>"`
+
+4. **If Script Fails -> Fallback**:
+    - Only if the Node script execution fails, create files manually using file tools (NOT shell).
+
+5. **No-Shell Fallback (File Tools Only)**:
+    - Create these paths with file tools (NOT shell):
+       - .spectral/memory/rules-input.md
+       - .spectral/memory/constitution.md
+       - .spectral/templates/spec-template.md
+       - .spectral/templates/plan-template.md
+       - .spectral/templates/tasks-template.md
+       - .spectral/templates/constitution-template.md
+   - Infer project signals with file listing/search tools (for example: package.json, angular.json, src/, apps/, libs/).
+   - Write a compact but concrete constitution directly to .spectral/memory/constitution.md using:
+     - Project name from current directory
+     - 5 concrete principles
+     - User rules section
+     - Workflow section
+     - Governance section with current date
+   - Never leave placeholders in .spectral/memory/constitution.md.
+   - Keep output concise; avoid verbose narrative to reduce tokens.
+
+6. **Confirm**:
    - Verify that the `.spectral` structure is complete and report success.
    - Confirm that `.spectral/memory/constitution.md` contains concrete sections with no unresolved placeholder tokens.
    - Confirm that `.spectral/code_index.json` exists and was generated as metadata-only output.

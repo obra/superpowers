@@ -54,10 +54,8 @@ console.log("Shell env:", process.env.SHELL || process.env.ComSpec);
 
         // 4. Generate constitution from project signals and optional user rules.
         const constitutionDest = path.join(memoryFolder, 'constitution.md');
-        const rulesFile = path.join(memoryFolder, 'rules-input.md');
         const envRules = process.env.SPECTRAL_INIT_RULES || '';
-        const fileRules = fs.existsSync(rulesFile) ? fs.readFileSync(rulesFile, 'utf8') : '';
-        const rulesText = envRules || fileRules;
+        const rulesText = envRules;
         generateConstitution({
             targetDir,
             outPath: constitutionDest,

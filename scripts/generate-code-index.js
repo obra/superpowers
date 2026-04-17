@@ -13,97 +13,56 @@ const EXCLUDED_DIRS = new Set([
 ]);
 
 const CODE_EXTENSIONS = new Set([
-  '.ts',
-  '.tsx',
-  '.js',
-  '.jsx',
-  '.mjs',
-  '.cjs',
-  '.py',
-  '.rb',
-  '.php',
-  '.swift',
-  '.kt',
-  '.kts',
-  '.go',
-  '.rs',
-  '.java',
-  '.cs',
-  '.c',
-  '.h',
-  '.cpp',
-  '.cc',
-  '.cxx',
-  '.hpp',
-  '.scala',
-  '.dart',
-  '.lua',
-  '.r',
-  '.pl',
-  '.sql',
-  '.sh',
-  '.bash',
-  '.zsh',
-  '.ps1',
-  '.psm1',
-  '.psd1',
-  '.clj',
-  '.cljs',
-  '.ex',
-  '.exs',
-  '.erl',
-  '.hrl',
-  '.fs',
-  '.fsi',
-  '.fsx',
-  '.vue',
-  '.svelte'
+  '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
+  '.py', '.rb', '.php', '.swift', '.kt', '.kts',
+  '.go', '.rs', '.java', '.cs', '.c', '.h', '.cpp', '.cc', '.cxx', '.hpp',
+  '.scala', '.dart', '.lua', '.r', '.pl', '.sql',
+  '.sh', '.bash', '.zsh', '.ps1', '.psm1', '.psd1',
+  '.clj', '.cljs', '.ex', '.exs', '.erl', '.hrl',
+  '.fs', '.fsi', '.fsx', '.vue', '.svelte'
 ]);
 
 const STRUCTURED_TEXT_EXTENSIONS = new Set([
-  '.json',
-  '.md',
-  '.yaml',
-  '.yml',
-  '.toml'
+  '.json', '.md', '.yaml', '.yml', '.toml'
 ]);
 
-const CODE_FILENAMES = new Set([
+const CONFIG_BASENAMES = new Set([
+  'package.json',
+  'angular.json',
+  'tsconfig.json',
+  'jsconfig.json',
+  'vite.config.ts',
+  'vite.config.js',
+  'webpack.config.js',
+  'next.config.js',
+  'next.config.mjs',
   'Dockerfile',
-  'Makefile',
-  'Rakefile',
-  'CMakeLists.txt'
+  'docker-compose.yml',
+  'docker-compose.yaml'
 ]);
 
 const TREE_SITTER_LANGUAGE_LOADERS = {
-  '.js': [
-    async () => (await import('tree-sitter-javascript')).default
-  ],
-  '.jsx': [
-    async () => (await import('tree-sitter-javascript')).default
-  ],
-  '.ts': [
-    async () => (await import('tree-sitter-typescript')).typescript
-  ],
-  '.tsx': [
-    async () => (await import('tree-sitter-typescript')).tsx
-  ],
-  '.py': [
-    async () => (await import('tree-sitter-python')).default
-  ],
-  '.go': [
-    async () => (await import('tree-sitter-go')).default
-  ],
-  '.rs': [
-    async () => (await import('tree-sitter-rust')).default
-  ],
-  '.java': [
-    async () => (await import('tree-sitter-java')).default
-  ],
-  '.cs': [
-    async () => (await import('tree-sitter-c-sharp')).default
-  ]
+  '.js': async () => (await import('tree-sitter-javascript')).default,
+  '.jsx': async () => (await import('tree-sitter-javascript')).default,
+  '.ts': async () => (await import('tree-sitter-typescript')).typescript,
+  '.tsx': async () => (await import('tree-sitter-typescript')).tsx,
+  '.py': async () => (await import('tree-sitter-python')).default,
+  '.go': async () => (await import('tree-sitter-go')).default,
+  '.rs': async () => (await import('tree-sitter-rust')).default,
+  '.java': async () => (await import('tree-sitter-java')).default,
+  '.cs': async () => (await import('tree-sitter-c-sharp')).default
 };
+
+const FEATURE_STOP_WORDS = new Set([
+  'src', 'app', 'apps', 'lib', 'libs', 'shared', 'common', 'core', 'components',
+  'component', 'services', 'service', 'utils', 'util', 'helpers', 'helper', 'api',
+  'server', 'client', 'config', 'configs', 'test', 'tests', 'spec', 'docs', 'doc',
+  'assets', 'styles', 'style', 'hooks', 'hook', 'pages', 'page', 'modules', 'module',
+  'index', 'main', 'dist', 'build', 'scripts', 'types', 'models', 'model', 'controllers',
+  'controller', 'routes', 'route', 'json', 'ts', 'tsx', 'js', 'jsx', 'md', 'yaml', 'yml', 'toml'
+]);
+
+const EXTERNAL_IMPORT_PREFIXES = ['@angular/', 'react', 'vue', 'svelte', 'next/', 'express', 'rxjs'];
 
 function normalizePath(p) {
   return p.replace(/\\/g, '/');
@@ -137,45 +96,21 @@ function parseArgs(argv) {
   return args;
 }
 
-function classifyFile(ext, baseName, text = null) {
-  if (CODE_EXTENSIONS.has(ext) || CODE_FILENAMES.has(baseName)) return 'code';
-  if (STRUCTURED_TEXT_EXTENSIONS.has(ext)) return 'structured-text';
-
-  if (text !== null && looksCodeLike(text)) {
-    return 'code';
-  }
-
-  return 'other';
-}
-
-function looksCodeLike(text) {
-  const sample = text.slice(0, 4000);
-  return (
-    /(^|\n)\s*(import\s+|from\s+.+\s+import\s+|package\s+[A-Za-z_]|using\s+[A-Za-z_.]+;|#include\s+[<"]|module\s+[A-Za-z_]|namespace\s+[A-Za-z_])/.test(sample) ||
-    /(^|\n)\s*(class|interface|struct|enum|def|fn|function)\s+[A-Za-z_]/.test(sample) ||
-    /(^|\n)\s*#!/.test(sample)
-  );
-}
-
 function walkFiles(targetDir, currentDir = targetDir, files = []) {
   const entries = fs.readdirSync(currentDir, { withFileTypes: true });
+
   for (const entry of entries) {
     const fullPath = path.join(currentDir, entry.name);
-    const relPath = path.relative(targetDir, fullPath);
+    const relPath = normalizePath(path.relative(targetDir, fullPath));
 
     if (entry.isDirectory()) {
-      if (EXCLUDED_DIRS.has(entry.name)) {
-        continue;
-      }
+      if (EXCLUDED_DIRS.has(entry.name)) continue;
       walkFiles(targetDir, fullPath, files);
       continue;
     }
 
     if (entry.isFile()) {
-      files.push({
-        fullPath,
-        relPath: normalizePath(relPath)
-      });
+      files.push({ fullPath, relPath });
     }
   }
 
@@ -192,100 +127,149 @@ function safeReadText(filePath) {
 
 function loadExistingIndex(indexPath) {
   try {
-    if (!fs.existsSync(indexPath)) {
-      return null;
-    }
-    const raw = fs.readFileSync(indexPath, 'utf8');
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object') {
-      return null;
-    }
+    if (!fs.existsSync(indexPath)) return null;
+    const parsed = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+    if (!parsed || typeof parsed !== 'object') return null;
     return parsed;
   } catch {
     return null;
   }
 }
 
-function getLineCount(text) {
-  if (!text) return 0;
-  if (text.length === 0) return 0;
-  return text.split(/\r?\n/).length;
+function detectLanguage(relPath) {
+  const ext = path.extname(relPath).toLowerCase();
+  if (ext === '.ts' || ext === '.tsx') return 'typescript';
+  if (ext === '.js' || ext === '.jsx' || ext === '.mjs' || ext === '.cjs') return 'javascript';
+  if (ext === '.py') return 'python';
+  if (ext === '.json') return 'json';
+  if (ext === '.md') return 'markdown';
+  if (ext === '.yaml' || ext === '.yml') return 'yaml';
+  if (ext === '.toml') return 'toml';
+  if (ext) return ext.slice(1);
+  return 'unknown';
 }
 
-function extractMarkdownMetadata(text) {
-  const lines = text.split(/\r?\n/);
-  let headingCount = 0;
-  for (const line of lines) {
-    if (/^\s{0,3}#{1,6}\s+/.test(line)) {
-      headingCount += 1;
+function looksCodeLike(text) {
+  const sample = text.slice(0, 4000);
+  return (
+    /(^|\n)\s*(import\s+|from\s+.+\s+import\s+|package\s+[A-Za-z_]|using\s+[A-Za-z_.]+;|#include\s+[<"]|module\s+[A-Za-z_]|namespace\s+[A-Za-z_])/.test(sample) ||
+    /(^|\n)\s*(class|interface|struct|enum|def|fn|function)\s+[A-Za-z_]/.test(sample) ||
+    /(^|\n)\s*#!/.test(sample)
+  );
+}
+
+function isStructuredText(relPath) {
+  const ext = path.extname(relPath).toLowerCase();
+  return STRUCTURED_TEXT_EXTENSIONS.has(ext);
+}
+
+function isCodeFile(relPath, text) {
+  const ext = path.extname(relPath).toLowerCase();
+  if (CODE_EXTENSIONS.has(ext)) return true;
+  if (text && looksCodeLike(text)) return true;
+  return false;
+}
+
+function inferKind(relPath, language) {
+  const lcPath = relPath.toLowerCase();
+  const base = path.basename(relPath).toLowerCase();
+
+  if (CONFIG_BASENAMES.has(base) || language === 'json' || language === 'yaml' || language === 'toml') {
+    if (base.includes('db.json')) return 'module';
+    return 'config';
+  }
+
+  if (lcPath.includes('/hooks/') || /^use[A-Z]/.test(path.basename(relPath))) return 'hook';
+  if (lcPath.includes('/services/') || base.includes('service')) return 'service';
+  if (lcPath.includes('/controllers/') || lcPath.includes('/routes/') || base.includes('controller') || base.includes('route') || base.includes('api')) return 'api';
+  if (lcPath.includes('/components/') || lcPath.includes('/pages/') || base.includes('component') || base.includes('page') || base.includes('view')) return 'component';
+  if (lcPath.includes('/utils/') || lcPath.includes('/helpers/') || base.includes('util') || base.includes('helper')) return 'util';
+
+  if (CODE_EXTENSIONS.has(path.extname(relPath).toLowerCase())) return 'module';
+  return 'unknown';
+}
+
+function splitWords(value) {
+  return value
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[_\-.]/g, ' ')
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+function inferFeatureTags(relPath, text) {
+  const fromPath = normalizePath(relPath)
+    .split('/')
+    .flatMap((token) => splitWords(token))
+    .filter((token) => token.length > 2 && !FEATURE_STOP_WORDS.has(token));
+
+  const keywordHits = [];
+  const lcText = (text || '').toLowerCase();
+  const commonFeatures = ['todo', 'auth', 'user', 'account', 'payment', 'checkout', 'cart', 'order', 'profile', 'search', 'admin', 'chat', 'notification'];
+  for (const feature of commonFeatures) {
+    if (lcText.includes(feature)) keywordHits.push(feature);
+  }
+
+  const tags = Array.from(new Set([...fromPath, ...keywordHits]));
+  return tags.slice(0, 4);
+}
+
+function inferEntryPoint(relPath, kind, text) {
+  const base = path.basename(relPath).toLowerCase();
+  const lcPath = relPath.toLowerCase();
+  const body = (text || '').toLowerCase();
+
+  const isUiEntry = [
+    'main.ts', 'main.js', 'main.tsx', 'main.jsx',
+    'index.ts', 'index.js', 'index.tsx', 'index.jsx',
+    'app.component.ts', 'app.tsx', 'app.jsx'
+  ].includes(base);
+
+  const isApiEntry = (
+    base.includes('route') || base.includes('controller') || lcPath.includes('/routes/') || lcPath.includes('/controllers/')
+  ) && (
+    body.includes('router.') || body.includes('app.get(') || body.includes('app.post(') || body.includes('@controller') || body.includes('fastapi(')
+  );
+
+  return isUiEntry || isApiEntry || (kind === 'api' && (base === 'server.ts' || base === 'server.js'));
+}
+
+function inferPurposeFromName(name) {
+  const words = splitWords(name);
+  if (words.length === 0) return 'Performs internal logic for this file.';
+
+  const phrase = words.join(' ');
+  if (words[0] === 'get' || words[0] === 'fetch' || words[0] === 'load') return `Retrieves ${words.slice(1).join(' ') || 'data'} for this feature.`;
+  if (words[0] === 'create' || words[0] === 'add') return `Creates ${words.slice(1).join(' ') || 'a new record'} for this feature.`;
+  if (words[0] === 'update' || words[0] === 'edit') return `Updates ${words.slice(1).join(' ') || 'existing data'} for this feature.`;
+  if (words[0] === 'delete' || words[0] === 'remove') return `Removes ${words.slice(1).join(' ') || 'data'} for this feature.`;
+
+  return `Handles ${phrase} logic in this file.`;
+}
+
+function extractCalls(snippet) {
+  const calls = new Set();
+
+  const memberCallRegex = /\b([A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*)\s*\(/g;
+  let match = memberCallRegex.exec(snippet);
+  while (match) {
+    calls.add(match[1]);
+    match = memberCallRegex.exec(snippet);
+  }
+
+  const simpleCallRegex = /\b([A-Za-z_][A-Za-z0-9_]*)\s*\(/g;
+  const excluded = new Set(['if', 'for', 'while', 'switch', 'catch', 'return', 'function', 'class', 'new']);
+  match = simpleCallRegex.exec(snippet);
+  while (match) {
+    const callee = match[1];
+    if (!excluded.has(callee)) {
+      calls.add(callee);
     }
+    match = simpleCallRegex.exec(snippet);
   }
 
-  return {
-    lineCount: lines.length,
-    headingCount
-  };
-}
-
-function extractJsonMetadata(text) {
-  const lineCount = getLineCount(text);
-  try {
-    const parsed = JSON.parse(text);
-    const topLevelKeyCount = parsed && typeof parsed === 'object' && !Array.isArray(parsed)
-      ? Object.keys(parsed).length
-      : 0;
-
-    return {
-      lineCount,
-      topLevelKeyCount
-    };
-  } catch {
-    return {
-      lineCount,
-      topLevelKeyCount: 0,
-      parseError: true
-    };
-  }
-}
-
-function extractYamlLikeMetadata(text) {
-  const lines = text.split(/\r?\n/);
-  let topLevelKeyCount = 0;
-
-  for (const rawLine of lines) {
-    const line = rawLine.trim();
-    if (!line || line.startsWith('#')) continue;
-    if (/^[A-Za-z0-9_.-]+\s*:\s*/.test(line)) {
-      topLevelKeyCount += 1;
-    }
-  }
-
-  return {
-    lineCount: lines.length,
-    estimatedTopLevelKeyCount: topLevelKeyCount
-  };
-}
-
-function extractTomlMetadata(text) {
-  const lines = text.split(/\r?\n/);
-  let keyValueCount = 0;
-  let tableCount = 0;
-
-  for (const rawLine of lines) {
-    const line = rawLine.trim();
-    if (!line || line.startsWith('#')) continue;
-    if (/^\[[^\]]+\]$/.test(line)) {
-      tableCount += 1;
-    } else if (/^[A-Za-z0-9_.-]+\s*=\s*/.test(line)) {
-      keyValueCount += 1;
-    }
-  }
-
-  return {
-    lineCount: lines.length,
-    tableCount,
-    keyValueCount
-  };
+  return Array.from(calls).slice(0, 10);
 }
 
 async function getTreeSitterRuntime() {
@@ -298,45 +282,135 @@ async function getTreeSitterRuntime() {
 }
 
 async function getLanguageForExtension(ext) {
-  const loaders = TREE_SITTER_LANGUAGE_LOADERS[ext] || [];
-  for (const loadLanguage of loaders) {
-    try {
-      const language = await loadLanguage();
-      if (language) return language;
-    } catch {
-      // Ignore missing language packages and fall back to lightweight parsing.
-    }
+  const loader = TREE_SITTER_LANGUAGE_LOADERS[ext];
+  if (!loader) return null;
+  try {
+    return await loader();
+  } catch {
+    return null;
   }
-  return null;
 }
 
-function collectTreeSitterStructure(rootNode, source) {
-  const result = {
-    imports: [],
-    classes: [],
-    functions: []
-  };
+function collectImportsWithRegex(text) {
+  const imports = new Set();
+
+  const jsImportRegex = /import\s+[^'"\n]*from\s+['"]([^'"]+)['"]/g;
+  const jsSideEffectImportRegex = /import\s+['"]([^'"]+)['"]/g;
+  const requireRegex = /require\(\s*['"]([^'"]+)['"]\s*\)/g;
+  const pyFromRegex = /^\s*from\s+([A-Za-z0-9_\.]+)\s+import\s+/gm;
+  const pyImportRegex = /^\s*import\s+([A-Za-z0-9_\.]+)/gm;
+  const goImportRegex = /import\s*(?:\(\s*([\s\S]*?)\)|\s*"([^"]+)")/g;
+
+  let m = jsImportRegex.exec(text);
+  while (m) {
+    imports.add(m[1]);
+    m = jsImportRegex.exec(text);
+  }
+
+  m = jsSideEffectImportRegex.exec(text);
+  while (m) {
+    imports.add(m[1]);
+    m = jsSideEffectImportRegex.exec(text);
+  }
+
+  m = requireRegex.exec(text);
+  while (m) {
+    imports.add(m[1]);
+    m = requireRegex.exec(text);
+  }
+
+  m = pyFromRegex.exec(text);
+  while (m) {
+    imports.add(m[1]);
+    m = pyFromRegex.exec(text);
+  }
+
+  m = pyImportRegex.exec(text);
+  while (m) {
+    imports.add(m[1]);
+    m = pyImportRegex.exec(text);
+  }
+
+  m = goImportRegex.exec(text);
+  while (m) {
+    if (m[2]) {
+      imports.add(m[2]);
+    } else if (m[1]) {
+      const block = m[1];
+      const paths = block.match(/"([^"]+)"/g) || [];
+      for (const p of paths) {
+        imports.add(p.replace(/"/g, ''));
+      }
+    }
+    m = goImportRegex.exec(text);
+  }
+
+  return Array.from(imports).slice(0, 40);
+}
+
+function collectFunctionsWithRegex(text) {
+  const signatures = [];
+  const patterns = [
+    /\bfunction\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/g,
+    /\b(?:const|let|var)\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(?:async\s*)?\([^)]*\)\s*=>/g,
+    /^\s*def\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/gm,
+    /^\s*func\s+(?:\([^)]*\)\s*)?([A-Za-z_][A-Za-z0-9_]*)\s*\(/gm,
+    /\b(?:public|private|protected)?\s*(?:static\s+)?[A-Za-z_][A-Za-z0-9_<>,\[\]\s]*\s+([A-Za-z_][A-Za-z0-9_]*)\s*\([^;]*\)\s*\{/g
+  ];
+
+  for (const regex of patterns) {
+    let match = regex.exec(text);
+    while (match) {
+      signatures.push({
+        name: match[1],
+        start: match.index
+      });
+      match = regex.exec(text);
+    }
+  }
+
+  signatures.sort((a, b) => a.start - b.start);
+
+  const unique = [];
+  const seen = new Set();
+  for (const item of signatures) {
+    const key = `${item.name}:${item.start}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(item);
+  }
+
+  const functions = [];
+  for (let i = 0; i < unique.length; i += 1) {
+    const current = unique[i];
+    const next = unique[i + 1];
+    const end = next ? Math.min(next.start, current.start + 1200) : Math.min(text.length, current.start + 1200);
+    const snippet = text.slice(current.start, end);
+
+    functions.push({
+      name: current.name,
+      purpose: inferPurposeFromName(current.name),
+      calls: extractCalls(snippet)
+    });
+  }
+
+  return functions.slice(0, 30);
+}
+
+function collectFunctionsWithTreeSitter(tree, text) {
+  const nodes = [];
 
   const visit = (node) => {
     const type = node.type || '';
-
-    if (type.includes('import')) {
-      result.imports.push(source.slice(node.startIndex, node.endIndex).trim());
-    }
-
-    if (type.includes('class')) {
-      result.classes.push({
-        type,
-        startLine: node.startPosition.row + 1,
-        endLine: node.endPosition.row + 1
-      });
-    }
-
     if (type.includes('function') || type.includes('method')) {
-      result.functions.push({
-        type,
-        startLine: node.startPosition.row + 1,
-        endLine: node.endPosition.row + 1
+      const snippet = text.slice(node.startIndex, Math.min(node.endIndex, node.startIndex + 1200));
+      const header = text.slice(node.startIndex, Math.min(node.endIndex, node.startIndex + 240));
+      const nameMatch = header.match(/([A-Za-z_][A-Za-z0-9_]*)\s*\(/);
+      const name = nameMatch ? nameMatch[1] : `anonymous_${node.startPosition.row + 1}`;
+      nodes.push({
+        name,
+        purpose: inferPurposeFromName(name),
+        calls: extractCalls(snippet)
       });
     }
 
@@ -345,65 +419,21 @@ function collectTreeSitterStructure(rootNode, source) {
     }
   };
 
-  visit(rootNode);
+  visit(tree.rootNode);
 
-  return {
-    imports: Array.from(new Set(result.imports)).slice(0, 200),
-    classes: result.classes.slice(0, 500),
-    functions: result.functions.slice(0, 2000)
-  };
-}
-
-function collectRegexStructure(text) {
-  const lines = text.split(/\r?\n/);
-  const imports = [];
-  const classes = [];
-  const functions = [];
-
-  for (let i = 0; i < lines.length; i += 1) {
-    const line = lines[i];
-    const trimmed = line.trim();
-
-    if (/^(import\s+.+|from\s+.+\s+import\s+.+|using\s+.+;|#include\s+.+)$/.test(trimmed)) {
-      imports.push(trimmed);
-    }
-
-    if (/\b(class|interface|struct|enum)\s+[A-Za-z_][A-Za-z0-9_]*/.test(trimmed)) {
-      classes.push({
-        type: 'declaration',
-        startLine: i + 1,
-        endLine: i + 1
-      });
-    }
-
-    if (/\b(function\s+[A-Za-z_][A-Za-z0-9_]*\s*\(|def\s+[A-Za-z_][A-Za-z0-9_]*\s*\(|fn\s+[A-Za-z_][A-Za-z0-9_]*\s*\(|(public|private|protected)?\s*(static\s+)?[A-Za-z_][A-Za-z0-9_<>,\[\]\s]*\s+[A-Za-z_][A-Za-z0-9_]*\s*\()/.test(trimmed)) {
-      functions.push({
-        type: 'declaration',
-        startLine: i + 1,
-        endLine: i + 1
-      });
-    }
+  const deduped = [];
+  const seen = new Set();
+  for (const fn of nodes) {
+    if (seen.has(fn.name)) continue;
+    seen.add(fn.name);
+    deduped.push(fn);
   }
 
-  return {
-    imports: Array.from(new Set(imports)).slice(0, 200),
-    classes: classes.slice(0, 500),
-    functions: functions.slice(0, 2000)
-  };
+  return deduped.slice(0, 30);
 }
 
-async function extractCodeMetadata(filePath, ext, treeSitterParserCtor) {
-  const text = safeReadText(filePath);
-  if (text === null) {
-    return {
-      parser: 'unreadable',
-      metadata: {
-        imports: [],
-        classes: [],
-        functions: []
-      }
-    };
-  }
+async function extractCodeSemantics(relPath, text, treeSitterParserCtor) {
+  const ext = path.extname(relPath).toLowerCase();
 
   if (treeSitterParserCtor) {
     const language = await getLanguageForExtension(ext);
@@ -412,131 +442,237 @@ async function extractCodeMetadata(filePath, ext, treeSitterParserCtor) {
         const parser = new treeSitterParserCtor();
         parser.setLanguage(language);
         const tree = parser.parse(text);
+
         return {
           parser: 'tree-sitter',
-          metadata: collectTreeSitterStructure(tree.rootNode, text)
+          imports: collectImportsWithRegex(text),
+          functions: collectFunctionsWithTreeSitter(tree, text)
         };
       } catch {
-        // Fall through to regex parser.
+        // Fall back to regex extraction.
       }
     }
   }
 
   return {
     parser: 'regex-fallback',
-    metadata: collectRegexStructure(text)
+    imports: collectImportsWithRegex(text),
+    functions: collectFunctionsWithRegex(text)
   };
 }
 
-async function buildIndexEntry(file, treeSitterParserCtor) {
-  const ext = path.extname(file.relPath).toLowerCase();
-  const stat = fs.statSync(file.fullPath);
-  const baseName = path.basename(file.relPath);
+function resolveInternalImport(importValue, currentPath, allPathsSet) {
+  if (!importValue) return null;
 
-  const baseEntry = {
+  const normalizedImport = normalizePath(importValue);
+  if (EXTERNAL_IMPORT_PREFIXES.some((prefix) => normalizedImport.startsWith(prefix))) {
+    return null;
+  }
+
+  const baseDir = normalizePath(path.dirname(currentPath));
+  const ext = path.extname(normalizedImport);
+
+  const candidateRoots = [];
+  if (normalizedImport.startsWith('./') || normalizedImport.startsWith('../')) {
+    candidateRoots.push(normalizePath(path.normalize(path.join(baseDir, normalizedImport))));
+  } else if (normalizedImport.startsWith('/')) {
+    candidateRoots.push(normalizedImport.replace(/^\//, ''));
+  } else if (normalizedImport.startsWith('@/')) {
+    candidateRoots.push(normalizedImport.slice(2));
+    candidateRoots.push(`src/${normalizedImport.slice(2)}`);
+  } else if (normalizedImport.includes('.')) {
+    candidateRoots.push(normalizedImport.replace(/\./g, '/'));
+  }
+
+  const extensionCandidates = ['', '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.py', '.go', '.java', '.cs', '.json'];
+
+  for (const root of candidateRoots) {
+    if (ext) {
+      if (allPathsSet.has(root)) return root;
+    }
+
+    for (const suffix of extensionCandidates) {
+      const candidate = `${root}${suffix}`;
+      if (allPathsSet.has(candidate)) return candidate;
+    }
+
+    for (const suffix of extensionCandidates.slice(1)) {
+      const candidate = `${root}/index${suffix}`;
+      if (allPathsSet.has(candidate)) return candidate;
+    }
+  }
+
+  return null;
+}
+
+function inferResponsibility(kind, relPath, featureTags, functionCount) {
+  const primaryFeature = featureTags[0] || 'core';
+  const baseName = path.basename(relPath);
+
+  if (kind === 'service') {
+    return `Provides ${primaryFeature} business logic and coordination used by other layers.`;
+  }
+  if (kind === 'component') {
+    return `Implements ${primaryFeature} UI behavior and presentation for end users.`;
+  }
+  if (kind === 'api') {
+    return `Handles ${primaryFeature} API routing or controller logic for external requests.`;
+  }
+  if (kind === 'hook') {
+    return `Encapsulates reusable ${primaryFeature} stateful behavior for UI modules.`;
+  }
+  if (kind === 'util') {
+    return `Supplies shared helper logic used across ${primaryFeature} flows.`;
+  }
+  if (kind === 'config') {
+    return `Defines project or runtime configuration that affects ${primaryFeature} behavior.`;
+  }
+
+  return `Contains ${primaryFeature} module logic in ${baseName} with ${functionCount} key function(s).`;
+}
+
+function buildSummary(responsibility, dependsOn, usedBy, isEntryPoint) {
+  const depsText = dependsOn.length === 0 ? 'no internal dependencies' : `${dependsOn.length} internal dependency file(s)`;
+  const usedByText = usedBy.length === 0 ? 'is not referenced by indexed files yet' : `is used by ${usedBy.length} file(s)`;
+  const entryText = isEntryPoint ? ' It acts as an entry point.' : '';
+  return `${responsibility} It has ${depsText} and ${usedByText}.${entryText}`;
+}
+
+function buildNonCodeFunctions(text) {
+  const lineCount = text ? text.split(/\r?\n/).length : 0;
+  return lineCount > 0
+    ? [{
+      name: 'nonCodeMetadata',
+      purpose: 'Provides lightweight metadata for retrieval without source dumping.',
+      calls: []
+    }]
+    : [];
+}
+
+async function buildFileEntry(file, allPathsSet, treeSitterParserCtor) {
+  const stat = fs.statSync(file.fullPath);
+  const text = safeReadText(file.fullPath) || '';
+  const language = detectLanguage(file.relPath);
+
+  let parser = 'none';
+  let imports = [];
+  let functions = [];
+  const codeLike = isCodeFile(file.relPath, text);
+
+  if (codeLike) {
+    const codeSemantics = await extractCodeSemantics(file.relPath, text, treeSitterParserCtor);
+    parser = codeSemantics.parser;
+    imports = codeSemantics.imports;
+    functions = codeSemantics.functions;
+  } else if (isStructuredText(file.relPath)) {
+    parser = 'structured-lite';
+    functions = buildNonCodeFunctions(text);
+  }
+
+  const kind = inferKind(file.relPath, language);
+  const featureTags = inferFeatureTags(file.relPath, text);
+  const dependsOn = imports
+    .map((importPath) => resolveInternalImport(importPath, file.relPath, allPathsSet))
+    .filter(Boolean);
+
+  const uniqueDependsOn = Array.from(new Set(dependsOn)).slice(0, 40);
+  const uniqueFunctions = Array.from(new Map(functions.map((fn) => [fn.name, fn])).values()).slice(0, 25);
+
+  const responsibility = inferResponsibility(kind, file.relPath, featureTags, uniqueFunctions.length);
+  const isEntryPoint = inferEntryPoint(file.relPath, kind, text);
+
+  return {
+    language,
+    kind,
+    responsibility,
+    featureTags,
+    dependsOn: uniqueDependsOn,
+    usedBy: [],
+    functions: uniqueFunctions,
+    isEntryPoint,
+    summary: buildSummary(responsibility, uniqueDependsOn, [], isEntryPoint),
+    parser,
     mtimeMs: stat.mtimeMs,
     size: stat.size
   };
-
-  let type = classifyFile(ext, baseName, null);
-  if (type === 'other') {
-    const textProbe = safeReadText(file.fullPath);
-    type = classifyFile(ext, baseName, textProbe);
-  }
-
-  if (type === 'code') {
-    const codeData = await extractCodeMetadata(file.fullPath, ext, treeSitterParserCtor);
-    return {
-      ...baseEntry,
-      type,
-      parser: codeData.parser,
-      metadata: codeData.metadata
-    };
-  }
-
-  if (type === 'structured-text') {
-    const structuredData = extractStructuredTextMetadata(file.fullPath, ext);
-    return {
-      ...baseEntry,
-      type,
-      parser: structuredData.parser,
-      metadata: structuredData.metadata
-    };
-  }
-
-  return {
-    ...baseEntry,
-    type,
-    parser: 'none',
-    metadata: {}
-  };
 }
 
-function summarizeIndex(indexEntries) {
-  const summary = {
+function createFeaturesMap(filesObject) {
+  const features = {};
+
+  for (const [filePath, entry] of Object.entries(filesObject)) {
+    const tags = entry.featureTags.length > 0 ? entry.featureTags : ['core'];
+
+    for (const tag of tags) {
+      if (!features[tag]) {
+        features[tag] = {
+          files: [],
+          entryPoints: []
+        };
+      }
+
+      features[tag].files.push(filePath);
+      if (entry.isEntryPoint) {
+        features[tag].entryPoints.push(filePath);
+      }
+    }
+  }
+
+  for (const feature of Object.values(features)) {
+    feature.files = Array.from(new Set(feature.files)).sort();
+    feature.entryPoints = Array.from(new Set(feature.entryPoints)).sort();
+  }
+
+  return features;
+}
+
+function wireReverseDependencies(filesObject) {
+  for (const entry of Object.values(filesObject)) {
+    entry.usedBy = [];
+  }
+
+  for (const [filePath, entry] of Object.entries(filesObject)) {
+    for (const dep of entry.dependsOn) {
+      if (filesObject[dep]) {
+        filesObject[dep].usedBy.push(filePath);
+      }
+    }
+  }
+
+  for (const entry of Object.values(filesObject)) {
+    entry.usedBy = Array.from(new Set(entry.usedBy)).sort();
+    entry.summary = buildSummary(entry.responsibility, entry.dependsOn, entry.usedBy, entry.isEntryPoint);
+  }
+}
+
+function summarizeStats(filesObject, operationStats) {
+  const stats = {
+    ...operationStats,
     totalFiles: 0,
-    codeFiles: 0,
-    structuredTextFiles: 0,
-    otherFiles: 0,
-    treeSitterFiles: 0,
-    fallbackCodeFiles: 0,
-    unreadableFiles: 0
+    codeOrCodeLikeFiles: 0,
+    entryPoints: 0,
+    kinds: {
+      component: 0,
+      service: 0,
+      module: 0,
+      util: 0,
+      api: 0,
+      hook: 0,
+      config: 0,
+      unknown: 0
+    }
   };
 
-  for (const entry of Object.values(indexEntries)) {
-    summary.totalFiles += 1;
-    if (entry.type === 'code') summary.codeFiles += 1;
-    if (entry.type === 'structured-text') summary.structuredTextFiles += 1;
-    if (entry.type === 'other') summary.otherFiles += 1;
-    if (entry.parser === 'tree-sitter') summary.treeSitterFiles += 1;
-    if (entry.parser === 'regex-fallback') summary.fallbackCodeFiles += 1;
-    if (entry.parser === 'unreadable') summary.unreadableFiles += 1;
+  for (const entry of Object.values(filesObject)) {
+    stats.totalFiles += 1;
+    if (entry.parser !== 'none' || entry.kind === 'module') stats.codeOrCodeLikeFiles += 1;
+    if (entry.isEntryPoint) stats.entryPoints += 1;
+    if (Object.prototype.hasOwnProperty.call(stats.kinds, entry.kind)) {
+      stats.kinds[entry.kind] += 1;
+    }
   }
 
-  return summary;
-}
-
-function extractStructuredTextMetadata(filePath, ext) {
-  const text = safeReadText(filePath);
-  if (text === null) {
-    return {
-      parser: 'unreadable',
-      metadata: { lineCount: 0 }
-    };
-  }
-
-  if (ext === '.json') {
-    return {
-      parser: 'json-lite',
-      metadata: extractJsonMetadata(text)
-    };
-  }
-
-  if (ext === '.md') {
-    return {
-      parser: 'markdown-lite',
-      metadata: extractMarkdownMetadata(text)
-    };
-  }
-
-  if (ext === '.yaml' || ext === '.yml') {
-    return {
-      parser: 'yaml-lite',
-      metadata: extractYamlLikeMetadata(text)
-    };
-  }
-
-  if (ext === '.toml') {
-    return {
-      parser: 'toml-lite',
-      metadata: extractTomlMetadata(text)
-    };
-  }
-
-  return {
-    parser: 'text-lite',
-    metadata: { lineCount: getLineCount(text) }
-  };
+  return stats;
 }
 
 function compressIndexObject(indexObject) {
@@ -554,23 +690,18 @@ export async function generateCodeIndex({
     : path.join(resolvedTarget, '.spectral', 'code_index.json');
 
   const files = walkFiles(resolvedTarget);
+  const allPathsSet = new Set(files.map((f) => f.relPath));
   const treeSitterParserCtor = await getTreeSitterRuntime();
 
   const previous = mode === 'incremental' ? loadExistingIndex(outputPath) : null;
-  const previousEntries = {};
-  if (previous && typeof previous === 'object') {
-    for (const [k, v] of Object.entries(previous)) {
-      if (k === '__meta') continue;
-      previousEntries[k] = v;
-    }
-  }
+  const previousFiles = previous && previous.files && typeof previous.files === 'object' ? previous.files : {};
 
-  const nextIndex = {};
+  const nextFiles = {};
   const currentPathSet = new Set();
   const operationStats = {
     mode,
     scannedFiles: 0,
-    previousIndexLoaded: previous !== null,
+    previousIndexLoaded: Boolean(previous),
     reusedFiles: 0,
     newFiles: 0,
     changedFiles: 0,
@@ -580,21 +711,16 @@ export async function generateCodeIndex({
 
   for (const file of files) {
     const stat = fs.statSync(file.fullPath);
+    const oldEntry = previousFiles[file.relPath];
     currentPathSet.add(file.relPath);
 
-    const oldEntry = previousEntries[file.relPath];
-    const isUnchanged =
-      mode === 'incremental' &&
-      oldEntry &&
-      oldEntry.mtimeMs === stat.mtimeMs &&
-      oldEntry.size === stat.size;
+    const isUnchanged = mode === 'incremental' && oldEntry && oldEntry.mtimeMs === stat.mtimeMs && oldEntry.size === stat.size;
 
     if (isUnchanged) {
-      nextIndex[file.relPath] = oldEntry;
+      nextFiles[file.relPath] = oldEntry;
       operationStats.reusedFiles += 1;
     } else {
-      const entry = await buildIndexEntry(file, treeSitterParserCtor);
-      nextIndex[file.relPath] = entry;
+      nextFiles[file.relPath] = await buildFileEntry(file, allPathsSet, treeSitterParserCtor);
       operationStats.reprocessedFiles += 1;
       if (!oldEntry) {
         operationStats.newFiles += 1;
@@ -607,27 +733,26 @@ export async function generateCodeIndex({
   }
 
   if (mode === 'incremental') {
-    for (const prevPath of Object.keys(previousEntries)) {
+    for (const prevPath of Object.keys(previousFiles)) {
       if (!currentPathSet.has(prevPath)) {
         operationStats.deletedFiles += 1;
       }
     }
   }
 
-  const inventoryStats = summarizeIndex(nextIndex);
+  wireReverseDependencies(nextFiles);
+  const features = createFeaturesMap(nextFiles);
+  const stats = summarizeStats(nextFiles, operationStats);
 
   const finalObject = {
-    __meta: {
-      schemaVersion: '1.0.0',
-      generatedAt: new Date().toISOString(),
-      root: normalizePath(resolvedTarget),
-      excludedDirectories: Array.from(EXCLUDED_DIRS),
-      stats: {
-        ...operationStats,
-        ...inventoryStats
-      }
-    },
-    ...nextIndex
+    version: 1,
+    mode,
+    metadataOnly: true,
+    generatedAt: new Date().toISOString(),
+    root: normalizePath(resolvedTarget),
+    files: nextFiles,
+    features,
+    stats
   };
 
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
@@ -637,7 +762,7 @@ export async function generateCodeIndex({
 
   return {
     outPath: outputPath,
-    stats: finalObject.__meta.stats
+    stats
   };
 }
 
