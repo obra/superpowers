@@ -83,7 +83,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/<your-githu
 ### GitHub Copilot CLI
 
 ```bash
-copilot plugin marketplace add <your-github-username>/spectral-marketplace
+copilot plugin marketplace add srineelx23/spectral-marketplace
 copilot plugin install spectral@spectral-marketplace
 ```
 
