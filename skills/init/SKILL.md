@@ -65,7 +65,6 @@ If shell execution is unavailable (for example: `pwsh.exe` missing on Windows), 
 
 5. **No-Shell Fallback (File Tools Only)**:
     - Create these paths with file tools (NOT shell):
-       - .spectral/memory/rules-input.md
        - .spectral/memory/constitution.md
        - .spectral/templates/spec-template.md
        - .spectral/templates/plan-template.md
