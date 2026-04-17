@@ -4,10 +4,10 @@
   "description": "Development workflow skills for any AI agent via MCP: TDD, debugging, brainstorming, planning, and code review",
   "version": "5.0.7",
   "icon": "icon.png",
-  "publisher": "obra",
+  "publisher": "keyurbhogayata",
   "license": "MIT",
-  "repository": "https://github.com/obra/superpowers",
-  "homepage": "https://github.com/obra/superpowers",
+  "repository": "https://github.com/keyurbhogayata/superpowers",
+  "homepage": "https://github.com/keyurbhogayata/superpowers",
   "engines": {
     "vscode": "^1.99.0",
     "node": ">=20.0.0"
@@ -52,7 +52,9 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.11.0"
+    "@modelcontextprotocol/sdk": "^1.11.0",
+    "gray-matter": "^4.0.3",
+    "yaml": "^2.8.3"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

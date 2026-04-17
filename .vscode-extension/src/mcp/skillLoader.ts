@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import matter from 'gray-matter';
 
 export interface SkillMeta {
   dirName: string;
@@ -77,27 +78,17 @@ export class SkillLoader {
   }
 
   /**
-   * Parse YAML frontmatter from a Markdown file.
-   * Frontmatter is delimited by --- ... --- at the top.
+   * Parse YAML frontmatter from a Markdown file using gray-matter.
    */
   parseFrontmatter(raw: string): ParsedSkill {
-    const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
-    if (!match) {
+    try {
+      const parsed = matter(raw);
+      return {
+        frontmatter: parsed.data as Record<string, string>,
+        body: parsed.content,
+      };
+    } catch (e) {
       return { frontmatter: {}, body: raw };
     }
-
-    const frontmatterStr = match[1];
-    const body = match[2];
-    const frontmatter: Record<string, string> = {};
-
-    for (const line of frontmatterStr.split('\n')) {
-      const colonIdx = line.indexOf(':');
-      if (colonIdx < 1) continue;
-      const key = line.slice(0, colonIdx).trim();
-      const value = line.slice(colonIdx + 1).trim().replace(/^["']|["']$/g, '');
-      frontmatter[key] = value;
-    }
-
-    return { frontmatter, body };
   }
 }

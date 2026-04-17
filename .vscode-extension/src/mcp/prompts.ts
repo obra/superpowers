@@ -50,8 +50,7 @@ export function buildPrompt(
 
   return {
     messages: [
-      { role: 'user', content: { type: 'text', text: systemText } },
-      { role: 'user', content: { type: 'text', text: userTextMap[name] } },
+      { role: 'user', content: { type: 'text', text: `${systemText}\n\n${userTextMap[name]}` } },
     ],
   };
 }

@@ -1,4 +1,4 @@
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { SkillLoader } from './skillLoader.js';
 import { getVSCodeToolMapping } from './toolMapping.js';
 
@@ -36,27 +36,37 @@ export function registerResources(server: McpServer, loader: SkillLoader): void 
     }),
   );
 
-  // One resource per skill
-  const skills = loader.listSkills();
-  for (const skill of skills) {
-    const uri = `superpowers://skills/${skill.dirName}`;
-
-    server.resource(
-      `superpowers-skill-${skill.dirName}`,
-      uri,
-      {
-        description: skill.description || `Superpowers skill: ${skill.name}`,
-        mimeType: 'text/markdown',
+  // Dynamic resources for skills
+  server.resource(
+    'superpowers-skill',
+    new ResourceTemplate('superpowers://skills/{skillName}', {
+      list: async () => {
+        const skills = loader.listSkills();
+        return {
+          resources: skills.map((skill) => ({
+            uri: `superpowers://skills/${skill.dirName}`,
+            name: `superpowers-skill-${skill.dirName}`,
+            description: skill.description || `Superpowers skill: ${skill.name}`,
+            mimeType: 'text/markdown',
+          })),
+        };
       },
-      async (_uri) => ({
+    }),
+    async (uri, { skillName }) => {
+      const skills = loader.listSkills();
+      const skill = skills.find((s) => s.dirName === skillName);
+      if (!skill) {
+        throw new Error(`Skill not found: ${skillName}`);
+      }
+      return {
         contents: [
           {
-            uri,
+            uri: uri.href,
             mimeType: 'text/markdown',
             text: buildSkillResourceContent(loader, skill.dirName),
           },
         ],
-      }),
-    );
-  }
+      };
+    },
+  );
 }

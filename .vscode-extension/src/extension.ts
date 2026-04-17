@@ -1,21 +1,33 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as fs from 'fs';
 
 export function activate(context: vscode.ExtensionContext): void {
   const serverPath = path.join(context.extensionPath, 'dist', 'server.js');
-  const skillsDir = path.join(context.extensionPath, 'skills');
+  
+  let skillsDir = path.join(context.extensionPath, 'skills');
+  if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
+    for (const folder of vscode.workspace.workspaceFolders) {
+      const workspaceSkillsPath = path.join(folder.uri.fsPath, 'skills');
+      if (fs.existsSync(workspaceSkillsPath)) {
+        skillsDir = workspaceSkillsPath;
+        break;
+      }
+    }
+  }
 
   const provider: vscode.McpServerDefinitionProvider = {
     provideMcpServerDefinitions: async () => {
       return [
         new vscode.McpStdioServerDefinition(
           'Superpowers Skills',   // Label shown in MCP server list
-          'node',                  // Command
-          [serverPath],            // Args
-          {                        // Environment variables
+          process.execPath,       // Command
+          [serverPath],           // Args
+          {                       // Environment variables
             SUPERPOWERS_SKILLS_DIR: skillsDir,
+            ELECTRON_RUN_AS_NODE: '1',
           },
-          '5.0.7',                 // Version
+          '5.0.7',                // Version
         ),
       ];
     },
