@@ -43,7 +43,7 @@ Skills use Claude Code tool names. Non-CC platforms: see `references/copilot-too
 
 ## Asking Questions in Claude Code
 
-When a skill or workflow needs to ask the user something in Claude Code, use the `AskUserQuestions` tool instead of asking in plain chat. This applies to clarifying questions, multiple-choice questions, and approval prompts. If the current platform does not expose `AskUserQuestions`, fall back to the platform's normal user-question mechanism.
+When a skill or workflow needs to ask the user something in Claude Code, use the `AskUserQuestion` tool instead of asking in plain chat. This applies to clarifying questions, multiple-choice questions, and approval prompts. If the current platform does not expose `AskUserQuestion`, fall back to the platform's normal user-question mechanism.
 
 ## The Rule
 
