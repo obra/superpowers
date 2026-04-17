@@ -35,22 +35,24 @@ grep -i "worktree.*director" CLAUDE.md 2>/dev/null
 
 **If preference specified:** Use it without asking.
 
-### 3. Ask User
+### 3. Auto-Create .worktrees/
 
-If no directory exists and no CLAUDE.md preference:
+If no directory exists and no CLAUDE.md preference, **always create `.worktrees/` in the project root**:
 
+```bash
+mkdir -p .worktrees
+# Ensure it's gitignored
+git check-ignore -q .worktrees 2>/dev/null || echo ".worktrees" >> .gitignore
 ```
-No worktree directory found. Where should I create worktrees?
 
-1. .worktrees/ (project-local, hidden)
-2. ~/.config/superpowers/worktrees/<project-name>/ (global location)
+**Why not a global directory?** In autonomous modes (autopilot, subagent-driven-development, etc.), agents don't ask the user — they silently pick the fallback. A global directory like `~/.config/` leads to:
+- Worktrees accumulating outside the project (1GB+ for a few branches)
+- Code changes, tests, and builds running in unexpected locations
+- Confusing file system layout where code lives inside config folders
 
-Which would you prefer?
-```
+Worktrees should always be local to the project they belong to.
 
 ## Safety Verification
-
-### For Project-Local Directories (.worktrees or worktrees)
 
 **MUST verify directory is ignored before creating worktree:**
 
@@ -68,10 +70,6 @@ Per Jesse's rule "Fix broken things immediately":
 
 **Why critical:** Prevents accidentally committing worktree contents to repository.
 
-### For Global Directory (~/.config/superpowers/worktrees)
-
-No .gitignore verification needed - outside project entirely.
-
 ## Creation Steps
 
 ### 1. Detect Project Name
@@ -83,15 +81,8 @@ project=$(basename "$(git rev-parse --show-toplevel)")
 ### 2. Create Worktree
 
 ```bash
-# Determine full path
-case $LOCATION in
-  .worktrees|worktrees)
-    path="$LOCATION/$BRANCH_NAME"
-    ;;
-  ~/.config/superpowers/worktrees/*)
-    path="~/.config/superpowers/worktrees/$project/$BRANCH_NAME"
-    ;;
-esac
+# Always use project-local .worktrees/
+path=".worktrees/$BRANCH_NAME"
 
 # Create worktree with new branch
 git worktree add "$path" -b "$BRANCH_NAME"
@@ -148,7 +139,7 @@ Ready to implement <feature-name>
 | `.worktrees/` exists | Use it (verify ignored) |
 | `worktrees/` exists | Use it (verify ignored) |
 | Both exist | Use `.worktrees/` |
-| Neither exists | Check CLAUDE.md → Ask user |
+| Neither exists | Check CLAUDE.md → Auto-create `.worktrees/` |
 | Directory not ignored | Add to .gitignore + commit |
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
@@ -160,10 +151,10 @@ Ready to implement <feature-name>
 - **Problem:** Worktree contents get tracked, pollute git status
 - **Fix:** Always use `git check-ignore` before creating project-local worktree
 
-### Assuming directory location
+### Creating worktrees outside the project
 
-- **Problem:** Creates inconsistency, violates project conventions
-- **Fix:** Follow priority: existing > CLAUDE.md > ask
+- **Problem:** Code changes end up in `~/.config/` or other global directories, causing confusion and wasting disk space
+- **Fix:** Always use `.worktrees/` in the project root. Never use global fallback paths.
 
 ### Proceeding with failing tests
 
@@ -195,13 +186,13 @@ Ready to implement auth feature
 
 **Never:**
 - Create worktree without verifying it's ignored (project-local)
+- Create worktrees in `~/.config/`, home directory, or any path outside the project
 - Skip baseline test verification
 - Proceed with failing tests without asking
-- Assume directory location when ambiguous
 - Skip CLAUDE.md check
 
 **Always:**
-- Follow directory priority: existing > CLAUDE.md > ask
+- Follow directory priority: existing > CLAUDE.md > auto-create `.worktrees/`
 - Verify directory is ignored for project-local
 - Auto-detect and run project setup
 - Verify clean test baseline
