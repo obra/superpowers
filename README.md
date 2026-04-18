@@ -87,6 +87,22 @@ In Cursor Agent chat, install from marketplace:
 
 or search for "superpowers" in the plugin marketplace.
 
+### Factory Droid
+
+In Droid, register the marketplace first:
+
+```bash
+/plugin marketplace add obra/superpowers
+```
+
+Then install the plugin from this marketplace:
+
+```bash
+/plugin install superpowers@superpowers
+```
+
+**Detailed docs:** [docs/README.droid.md](docs/README.droid.md)
+
 ### OpenCode
 
 Tell OpenCode:
