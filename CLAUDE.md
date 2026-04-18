@@ -284,3 +284,15 @@ Before proposing changes to skill design, workflow philosophy, or architecture, 
 - One problem per PR
 - Test on at least one harness and report results in the environment table
 - Describe the problem you solved, not just what you changed
+
+## Evolver Integration
+
+This project has [Evolver](https://github.com/EvoMap/evolver) hooks registered via `.claude/settings.json`.
+
+Evolver automatically:
+- **Injects evolution memory** at session start (if the local proxy is running)
+- **Detects evolution signals** when files are written (`log_error`, `perf_bottleneck`, `user_feature_request`, `capability_gap`, `deployment_issue`, `test_failure`)
+- **Records session outcomes** when Claude Code stops
+
+To start the evolver proxy: `node src/ops/lifecycle.js start`
+To configure the proxy port: set `EVOLVER_PORT` (default: 7700)
