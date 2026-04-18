@@ -78,5 +78,15 @@ else
     exit 1
 fi
 
+# Test 7: Verify bootstrap cache exists to avoid repeated disk reads
+echo "Test 7: Checking bootstrap content cache..."
+if grep -q 'let cachedBootstrapContent = null;' "$SUPERPOWERS_PLUGIN_FILE" && \
+   grep -q 'if (cachedBootstrapContent !== null)' "$SUPERPOWERS_PLUGIN_FILE"; then
+    echo "  [PASS] Module-level bootstrap cache is present"
+else
+    echo "  [FAIL] Bootstrap cache markers not found in plugin"
+    exit 1
+fi
+
 echo ""
 echo "=== All plugin loading tests passed ==="
