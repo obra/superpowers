@@ -60,6 +60,8 @@ Or ask: "This branch split from main - is that correct?"
 
 ### Step 3: Present Options
 
+If the built-in question tool is available, use it to present this menu instead of waiting for a manual reaction.
+
 Present exactly these 4 options:
 
 ```

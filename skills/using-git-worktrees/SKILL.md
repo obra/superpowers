@@ -15,7 +15,19 @@ Git worktrees create isolated workspaces sharing the same repository, allowing w
 
 ## Step 0: Decide Whether You Actually Need a New Worktree
 
-Do not create a worktree by reflex. First decide whether the current workspace is already the right place to work.
+Before creating a worktree, ask the user what they want. Use the built-in question tool when available so the choice is captured directly instead of waiting for a manual reaction.
+
+Offer three options:
+
+1. Stay in the current workspace
+2. Create a new worktree
+3. Decide for me using the safety criteria below
+
+If the user chooses **Stay in the current workspace**, use the current workspace if it is already a good fit.
+
+If the user chooses **Create a new worktree**, continue with the directory selection and safety flow below.
+
+If the user chooses **Decide for me**, apply the safety criteria below and pick the cheapest safe workspace.
 
 **Stay in the current workspace when all of these are true:**
 - The current workspace is clean, or your human partner explicitly accepts the current dirty state

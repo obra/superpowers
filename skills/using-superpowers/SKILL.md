@@ -115,3 +115,5 @@ The skill itself tells you which.
 ## User Instructions
 
 Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
+
+When a workflow presents a user choice, prefer the built-in question tool in your environment instead of waiting for a manual reply.

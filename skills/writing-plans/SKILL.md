@@ -35,11 +35,13 @@ This structure informs the task decomposition. Each task should produce self-con
 
 ## Bite-Sized Task Granularity
 
-**Each step is one action (roughly 5-15 minutes):**
+**Each step is one action (roughly 10-20 minutes):**
 - "Write the failing test" - step
 - "Run it to make sure it fails" - step
 - "Implement the minimal code to make the test pass" - step
 - "Run the tests and make sure they pass" - step
+
+Aim for steps that are large enough that the review loop is worth the overhead, but small enough that one task still fits comfortably in working memory. If a step is tiny enough that review would dominate the work, combine it with a neighboring step; if it is large enough that implementation feels fuzzy, split it by checkpoint.
 
 ## Plan Document Header
 
@@ -141,6 +143,8 @@ After saving the plan, offer execution choice:
 **1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
 
 **2. Inline Execution** - Execute tasks in this session using executing-plans, batch execution with checkpoints
+
+If the built-in question tool is available, use it to present this choice instead of waiting for a manual reply.
 
 **Which approach?"**
 
