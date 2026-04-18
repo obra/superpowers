@@ -52,8 +52,14 @@ export const SuperpowersPlugin = async ({ client, directory }) => {
   const envConfigDir = normalizePath(process.env.OPENCODE_CONFIG_DIR, homeDir);
   const configDir = envConfigDir || path.join(homeDir, '.config/opencode');
 
-  // Helper to generate bootstrap content
+  // Module-level cache for bootstrap content (avoids per-step file I/O)
+  // Cache is plugin-instance-global so it persists across hook invocations within a session
+  let _bootstrapCache = null;
+
+  // Helper to generate bootstrap content (cached after first call)
   const getBootstrapContent = () => {
+    if (_bootstrapCache !== null) return _bootstrapCache;
+
     // Try to load using-superpowers skill
     const skillPath = path.join(superpowersSkillsDir, 'using-superpowers', 'SKILL.md');
     if (!fs.existsSync(skillPath)) return null;
@@ -70,7 +76,7 @@ When skills reference tools you don't have, substitute OpenCode equivalents:
 
 Use OpenCode's native \`skill\` tool to list and load skills.`;
 
-    return `<EXTREMELY_IMPORTANT>
+    _bootstrapCache = `<EXTREMELY_IMPORTANT>
 You have superpowers.
 
 **IMPORTANT: The using-superpowers skill content is included below. It is ALREADY LOADED - you are currently following it. Do NOT use the skill tool to load "using-superpowers" again - that would be redundant.**
@@ -79,6 +85,7 @@ ${content}
 
 ${toolMapping}
 </EXTREMELY_IMPORTANT>`;
+    return _bootstrapCache;
   };
 
   return {
