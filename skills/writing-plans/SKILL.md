@@ -99,8 +99,10 @@ Expected: PASS
 
 ```bash
 git add tests/path/test.py src/path/file.py
-git commit -m "feat: add specific feature"
+git commit -m "Add specific feature"
 ```
+
+Use the repository's existing commit style. Do not enforce conventional commits unless the project already uses them.
 ````
 
 ## No Placeholders
