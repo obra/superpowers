@@ -37,8 +37,6 @@ digraph when_to_use {
 - Two-stage review after each task: spec compliance first, then code quality
 - Faster iteration (no human-in-loop between tasks)
 
-If the work is small, tightly coupled, or mostly one-file-at-a-time implementation, prefer `executing-plans` instead. This skill is for cases where isolated context buys you more than it costs.
-
 ## The Process
 
 ```dot

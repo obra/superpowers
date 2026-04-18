@@ -11,11 +11,7 @@ Load plan, review critically, execute all tasks, report when complete.
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
-**Use this path when:**
-- The tasks are small or tightly coupled
-- You want one easy-to-inspect working diff instead of many checkpoint commits
-- Subagent coordination would cost more time than it saves
-- You're on a platform where multi-agent orchestration is available but not actually worth it for this task
+**Note:** Tell your human partner that Superpowers works much better with access to subagents. The quality of its work will be significantly higher if run on a platform with subagent support (such as Claude Code or Codex). If subagents are available, use superpowers:subagent-driven-development instead of this skill.
 
 ## The Process
 
@@ -30,11 +26,8 @@ Load plan, review critically, execute all tasks, report when complete.
 For each task:
 1. Mark as in_progress
 2. Follow each step exactly (plan has bite-sized steps)
-3. Batch adjacent tiny steps when they touch the same files and clearly belong together
-4. Run the narrowest verification that proves the current change
-5. Keep the work visible in the working tree unless a checkpoint commit is explicitly needed
-6. Request review at meaningful checkpoints, not by ritual after every tiny step
-7. Mark as completed
+3. Run verifications as specified
+4. Mark as completed
 
 ### Step 3: Complete Development
 
@@ -65,8 +58,6 @@ After all tasks complete and verified:
 - Review plan critically first
 - Follow plan steps exactly
 - Don't skip verifications
-- Prefer targeted verification during execution; save the broader suite for the end unless risk says otherwise
-- Don't auto-commit after every task
 - Reference skills when plan says to
 - Stop when blocked, don't guess
 - Never start implementation on main/master branch without explicit user consent
