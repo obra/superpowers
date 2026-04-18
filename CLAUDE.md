@@ -4,6 +4,8 @@
 
 **Superpowers** (v5.0.7) is a zero-dependency plugin that provides composable "skills" for AI coding agents. Skills are Markdown documents that guide agents through structured development practices: test-driven development, systematic debugging, brainstorming, planning, code review, and collaborative workflows. The project runs on Claude Code, Cursor, GitHub Copilot CLI, Gemini CLI, Codex, and OpenCode.
 
+> **Note:** The repository also contains `chalkpicks/backend/` — a separate Node.js sports-betting-analyzer API project. It has its own npm dependencies and is not part of the zero-dependency superpowers plugin.
+
 - **Author:** Jesse Vincent
 - **License:** MIT
 - **Design principle:** Zero external dependencies — no npm installs, no third-party services
@@ -26,12 +28,20 @@ superpowers/
 │   └── sync-to-codex-plugin.sh # Sync to Codex distribution
 ├── docs/                       # Internal planning docs, design specs, platform guides
 ├── tests/                      # Integration and regression test suites
+├── chalkpicks/                 # Separate project: sports-betting-analyzer API (NOT part of superpowers plugin)
+│   └── backend/                # Node.js/Express backend (has its own npm dependencies)
+│       ├── middleware/         # auth.js, rateLimiter.js
+│       ├── models/             # db.js, schema.sql
+│       ├── .env.example        # Environment variables template
+│       └── package.json        # Own dependencies: express, better-sqlite3, stripe, etc.
 ├── .claude-plugin/             # Claude Code plugin manifest
 ├── .cursor-plugin/             # Cursor IDE plugin manifest
 ├── .opencode/                  # OpenCode plugin (ES module, auto-registers skills)
 ├── .codex/                     # Codex install instructions
 ├── .github/                    # PR template, issue templates, funding
+├── .version-bump.json          # Version management config for bump-version.sh
 ├── gemini-extension.json       # Gemini CLI extension config
+├── CODE_OF_CONDUCT.md          # Community guidelines
 ├── GEMINI.md                   # Gemini session context (imports using-superpowers)
 ├── AGENTS.md                   # Alias of CLAUDE.md for other agent runtimes
 ├── package.json                # Minimal Node.js metadata (type: "module")
@@ -164,6 +174,21 @@ Tests live in `tests/` organized by type:
 | `tests/subagent-driven-dev/` | End-to-end subagent workflows (Go, Svelte projects) |
 
 Brainstorm server tests use Node.js built-ins (zero external test dependencies). Skill tests are bash scripts that run Claude Code sessions and evaluate output.
+
+## Chalkpicks Backend (Separate Project)
+
+`chalkpicks/backend/` is an independent Node.js/Express REST API that lives in this repository but is **not** part of the superpowers plugin. It has its own `package.json` with external npm dependencies and does not follow the zero-dependency constraint of the superpowers plugin.
+
+Key components:
+- `middleware/auth.js` — JWT-based authentication
+- `middleware/rateLimiter.js` — Request rate limiting
+- `models/db.js` — SQLite database via `better-sqlite3`
+- `models/schema.sql` — Database schema definitions
+- `.env.example` — Required environment variables (copy to `.env` before running)
+
+Runtime dependencies include: `express`, `cors`, `dotenv`, `bcryptjs`, `jsonwebtoken`, `better-sqlite3`, `stripe`, `nodemailer`, `node-cron`.
+
+When working on the chalkpicks backend, treat it as a standalone Node.js project. Changes to it do not require superpowers skill evaluations or the zero-dependency PR rules described elsewhere in this document.
 
 ## Platform Support
 
