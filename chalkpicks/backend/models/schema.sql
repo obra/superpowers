@@ -1,4 +1,4 @@
--- Chalkpicks.xyz Database Schema
+-- SharpAction.io Database Schema
 -- SQLite via better-sqlite3
 
 PRAGMA foreign_keys = ON;

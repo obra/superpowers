@@ -1,7 +1,7 @@
 {
   "name": "chalkpicks-backend",
   "version": "1.0.0",
-  "description": "Chalkpicks.xyz Sports Betting Analyzer API",
+  "description": "SharpAction.io Sports Betting Analyzer API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

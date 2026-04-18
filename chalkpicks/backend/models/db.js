@@ -453,6 +453,79 @@ function updateUser(id, fields) {
   return getUserById(id);
 }
 
+// --- Subscription helpers ---
+
+function getSubscription(userId) {
+  const database = getDb();
+  return database
+    .prepare('SELECT * FROM subscriptions WHERE user_id = ? ORDER BY created_at DESC LIMIT 1')
+    .get(userId);
+}
+
+function upsertSubscription({ userId, stripeSubscriptionId, tier, status, currentPeriodStart, currentPeriodEnd }) {
+  const database = getDb();
+  const existing = database
+    .prepare('SELECT id FROM subscriptions WHERE stripe_subscription_id = ?')
+    .get(stripeSubscriptionId);
+
+  if (existing) {
+    database.prepare(`
+      UPDATE subscriptions
+      SET tier = @tier, status = @status,
+          current_period_start = @currentPeriodStart,
+          current_period_end = @currentPeriodEnd
+      WHERE stripe_subscription_id = @stripeSubscriptionId
+    `).run({ tier, status, currentPeriodStart, currentPeriodEnd, stripeSubscriptionId });
+  } else {
+    database.prepare(`
+      INSERT INTO subscriptions
+        (user_id, stripe_subscription_id, tier, status, current_period_start, current_period_end)
+      VALUES
+        (@userId, @stripeSubscriptionId, @tier, @status, @currentPeriodStart, @currentPeriodEnd)
+    `).run({ userId, stripeSubscriptionId, tier, status, currentPeriodStart, currentPeriodEnd });
+  }
+
+  return getSubscription(userId);
+}
+
+function cancelSubscriptionRecord(stripeSubscriptionId) {
+  const database = getDb();
+  database.prepare(`
+    UPDATE subscriptions SET status = 'canceled' WHERE stripe_subscription_id = ?
+  `).run(stripeSubscriptionId);
+}
+
+function getUserByStripeCustomerId(stripeCustomerId) {
+  const database = getDb();
+  return database
+    .prepare('SELECT * FROM users WHERE stripe_customer_id = ? AND is_deleted = 0')
+    .get(stripeCustomerId);
+}
+
+// --- Password reset helpers ---
+
+function createPasswordResetToken({ userId, token, expiresAt }) {
+  const database = getDb();
+  // Invalidate previous tokens
+  database.prepare('UPDATE password_reset_tokens SET used = 1 WHERE user_id = ?').run(userId);
+  database.prepare(`
+    INSERT INTO password_reset_tokens (user_id, token, expires_at)
+    VALUES (@userId, @token, @expiresAt)
+  `).run({ userId, token, expiresAt });
+}
+
+function getPasswordResetToken(token) {
+  const database = getDb();
+  return database
+    .prepare('SELECT * FROM password_reset_tokens WHERE token = ? AND used = 0')
+    .get(token);
+}
+
+function markPasswordResetTokenUsed(token) {
+  const database = getDb();
+  database.prepare('UPDATE password_reset_tokens SET used = 1 WHERE token = ?').run(token);
+}
+
 // Initialize and export
 const database = initializeDatabase();
 
@@ -463,6 +536,13 @@ module.exports = {
   getUserById,
   createUser,
   updateUser,
+  getSubscription,
+  upsertSubscription,
+  cancelSubscriptionRecord,
+  getUserByStripeCustomerId,
+  createPasswordResetToken,
+  getPasswordResetToken,
+  markPasswordResetTokenUsed,
 };
 
 // Allow direct execution for setup
