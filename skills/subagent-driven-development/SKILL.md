@@ -11,6 +11,8 @@ Execute plan by dispatching a fresh implementer subagent per task, a task review
 
 **Core principle:** Fresh subagent per task + task review (spec + quality) + broad final review = high quality, fast iteration
 
+If the repo defines repo-local verification tiers, review contracts, PR templates, or branch/worktree lifecycle records, collect those inputs before dispatching implementers or reviewers so each task is judged against the repo's real gates instead of generic defaults.
+
 **Narration:** between tool calls, narrate at most one short line — the
 ledger and the tool results carry the record.
 

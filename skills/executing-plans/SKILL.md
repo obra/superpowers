@@ -13,25 +13,29 @@ Load plan, review critically, execute all tasks, report when complete.
 
 **Note:** Tell your human partner that Superpowers works much better with access to subagents. The quality of its work will be significantly higher if run on a platform with subagent support (Claude Code, Codex CLI, Codex App, Copilot CLI, and Gemini CLI all qualify; see the per-platform tool refs in `../using-superpowers/references/`). If subagents are available, use superpowers:subagent-driven-development instead of this skill.
 
+If the repo defines repo-local verification tiers, review contracts, PR templates, lifecycle records, or worktree rules, treat them as execution inputs alongside the plan before you start making changes.
+
 ## The Process
 
 ### Step 1: Load and Review Plan
 1. Read plan file
-2. Review critically - identify any questions or concerns about the plan
-3. If concerns: Raise them with your human partner before starting
-4. If no concerns: Create todos for the plan items and proceed
+2. Check for repo-local review, verification, and lifecycle docs that constrain how the plan should run
+3. Review critically - identify any questions or concerns about the plan
+4. If concerns: Raise them with your human partner before starting
+5. If no concerns: Create TodoWrite and proceed
 
 ### Step 2: Execute Tasks
 
 For each task:
 1. Mark as in_progress
 2. Follow each step exactly (plan has bite-sized steps)
-3. Run verifications as specified
+3. Run the repo-owned verifications and review gates the plan or repo requires
 4. Mark as completed
 
 ### Step 3: Complete Development
 
 After all tasks complete and verified:
+- Update any required repo-local handoff or closeout record before presenting completion
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
 - **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
 - Follow that skill to verify tests, present options, execute choice

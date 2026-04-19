@@ -22,6 +22,8 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
 
+If the repo defines its own verification tiers, requirements/rollback rules, or docs-impact gates, the plan must point to those repo-local entrypoints and checks instead of relying only on generic `pytest`/`npm test` examples.
+
 ## File Structure
 
 Before defining tasks, map out which files will be created or modified and what each one is responsible for. This is where decomposition decisions get locked in.

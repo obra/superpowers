@@ -13,6 +13,19 @@ Claiming work is complete without verification is dishonesty, not efficiency.
 
 **Violating the letter of this rule is violating the spirit of this rule.**
 
+## Repo-Aware Verification
+
+Before choosing the proof, check whether the repository defines a stronger local gate:
+
+- documented verification tiers
+- secret-sensitive paths or workflows
+- current-head or fresh-build evidence requirements
+- release, bootstrap, smoke, or consumer-facing gates
+
+If the repo does, use that repo-local gate to choose the evidence you gather. Do not stop at "some command passed" when the repo expects a specific proof for the change scope or risk level.
+
+If the repo requires current-head evidence, make sure the proof comes from the current commit or build, not an older branch, cached artifact, or unrelated success.
+
 ## The Iron Law
 
 ```

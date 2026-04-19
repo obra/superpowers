@@ -21,6 +21,10 @@ Write the test first. Watch it fail. Write minimal code to pass.
 - Refactoring
 - Behavior changes
 
+**At the right boundary:**
+- When the repo's accepted proof is a contract test, smoke test, gate, or harness, use that instead of forcing the behavior into a unit test
+- Prefer the smallest repo-owned test that genuinely exercises the change and can fail for the right reason
+
 **Exceptions (ask your human partner):**
 - Throwaway prototypes
 - Generated code

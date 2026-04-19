@@ -62,6 +62,8 @@ You MUST complete each phase before proceeding to the next.
    - What are the exact steps?
    - Does it happen every time?
    - If not reproducible → gather more data, don't guess
+   - If the repo documents a smoke, bootstrap, consumer-contract, install-package, or workflow gate, reproduce through that repo-owned entrypoint first
+   - Use the repo's own reproducer before deciding whether a unit test is the right next step
 
 3. **Check Recent Changes**
    - What changed that could cause this?
@@ -177,6 +179,7 @@ You MUST complete each phase before proceeding to the next.
    - One-off test script if no framework
    - MUST have before fixing
    - Use the `superpowers:test-driven-development` skill for writing proper failing tests
+   - If the repo-owned reproducer already captures the bug, prefer that first; add or convert to a unit test only when the repo's contract or harness is not enough to prove the cause and guard the fix
 
 2. **Implement Single Fix**
    - Address the root cause identified

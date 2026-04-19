@@ -11,6 +11,8 @@ Guide completion of development work by presenting clear options and handling ch
 
 **Core principle:** Verify tests → Detect environment → Present options → Execute choice → Clean up.
 
+If the repo defines a PR handoff, Post-Merge Closeout, or branch/worktree lifecycle template, update that written record before treating the work as complete, and include owner, next action, and lifecycle state in the completion conditions.
+
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
 ## The Process
@@ -89,6 +91,8 @@ Implementation complete. You're on a detached HEAD (externally managed workspace
 
 Which option?
 ```
+
+If a repo-local handoff or closeout record is required, make sure it has been updated before you present these options.
 
 **Don't add explanation** - keep options concise.
 

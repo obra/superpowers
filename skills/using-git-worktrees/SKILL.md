@@ -11,6 +11,8 @@ Ensure work happens in an isolated workspace. Prefer your platform's native work
 
 **Core principle:** Detect existing isolation first. Then use native tools. Then fall back to git. Never fight the harness.
 
+If the repo documents a handoff artifact or lifecycle source of truth, treat the worktree as an execution workspace only; before creating or cleaning it up, check the repo or portfolio lifecycle doc so branch/worktree state stays aligned with the written record.
+
 **Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
 
 ## Step 0: Detect Existing Isolation

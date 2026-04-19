@@ -29,7 +29,11 @@ BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
 HEAD_SHA=$(git rev-parse HEAD)
 ```
 
-**2. Dispatch code reviewer subagent:**
+**2. Check repo-local review rules:**
+
+Before dispatching review, look for repo-specific review contracts, PR templates, and manual merge gates. If they exist, include them in the review request context so the reviewer evaluates the change against the repo's own expectations, not just generic best practices.
+
+**3. Dispatch code-reviewer subagent:**
 
 Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md](code-reviewer.md)
 
@@ -39,7 +43,7 @@ Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md
 - `{BASE_SHA}` - Starting commit
 - `{HEAD_SHA}` - Ending commit
 
-**3. Act on feedback:**
+**4. Act on feedback:**
 - Fix Critical issues immediately
 - Fix Important issues before proceeding
 - Note Minor issues for later

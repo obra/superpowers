@@ -67,6 +67,7 @@ You understand 1,2,3,6. Unclear on 4,5.
 ### From External Reviewers
 ```
 BEFORE implementing:
+  0. Check repo-local PR template and review contract/manual gate docs
   1. Check: Technically correct for THIS codebase?
   2. Check: Breaks existing functionality?
   3. Check: Reason for current implementation?
@@ -82,6 +83,8 @@ IF can't easily verify:
 IF conflicts with your human partner's prior decisions:
   Stop and discuss with your human partner first
 ```
+
+If the feedback conflicts with the repo's PR template or review contract, use those local rules to decide whether the comment is actually actionable, needs clarification, or should be pushed back on.
 
 **your human partner's rule:** "External feedback - be skeptical, but check carefully"
 
