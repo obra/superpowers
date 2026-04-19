@@ -37,6 +37,10 @@ Stop. Don't proceed to Step 2.
 
 **If tests pass:** Continue to Step 2.
 
+### Step 1.5: Run Pre-Finish Extensions
+
+**Check extensions registry** for `pre-finish` extensions and invoke each in order. These run after tests pass but before presenting completion options — useful for final compliance checks, changelog generation, or other pre-merge gates.
+
 ### Step 2: Detect Environment
 
 **Determine workspace state before presenting options:**
