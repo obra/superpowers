@@ -89,7 +89,7 @@ copilot plugin marketplace add obra/superpowers-marketplace
 copilot plugin install superpowers@superpowers-marketplace
 ```
 
-### GitHub Copilot chat in Visual Studio Code vscode)
+### GitHub Copilot chat in Visual Studio Code (vscode)
 
 * In the copilot chat pane, click the settings icon top-right
 * Click on Plugins and next to "Browse Marketplace" button, click the "+" to add a marketplace
