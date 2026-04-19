@@ -59,11 +59,13 @@ digraph brainstorming {
     "Write design doc" -> "Spec self-review\n(fix inline)";
     "Spec self-review\n(fix inline)" -> "User reviews spec?";
     "User reviews spec?" -> "Write design doc" [label="changes requested"];
-    "User reviews spec?" -> "Invoke writing-plans skill" [label="approved"];
+    "Run post-brainstorm extensions" [shape=box];
+    "User reviews spec?" -> "Run post-brainstorm extensions" [label="approved"];
+    "Run post-brainstorm extensions" -> "Invoke writing-plans skill";
 }
 ```
 
-**The terminal state is invoking writing-plans.** Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY skill you invoke after brainstorming is writing-plans.
+**The terminal state is invoking writing-plans.** Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. Before invoking writing-plans, check the extensions registry for `post-brainstorm` extensions and invoke each in order. Then invoke writing-plans.
 
 ## The Process
 
@@ -132,8 +134,9 @@ Wait for the user's response. If they request changes, make them and re-run the 
 
 **Implementation:**
 
+- **Check extensions registry** for `post-brainstorm` extensions and invoke each in order
 - Invoke the writing-plans skill to create a detailed implementation plan
-- Do NOT invoke any other skill. writing-plans is the next step.
+- Do NOT invoke any other implementation skill.
 
 ## Key Principles
 
