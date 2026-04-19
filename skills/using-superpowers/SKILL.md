@@ -104,6 +104,19 @@ When multiple skills could apply, use this order:
 "Let's build X" → brainstorming first, then implementation skills.
 "Fix this bug" → debugging first, then domain-specific skills.
 
+## Lifecycle Extensions
+
+Users can register custom skills to run at specific lifecycle events via `~/.superpowers/extensions.yaml` (personal) or `.superpowers/extensions.yaml` (project). When an extensions registry is present in your session context, you MUST check it at each lifecycle event and invoke every registered skill in order via the Skill tool.
+
+**Lifecycle events (checked by core skills):**
+`post-brainstorm`, `post-plan`, `pre-task`, `post-task`, `post-execution`, `post-review`, `pre-finish`
+
+**Rules:**
+- Extensions are regular skills — invoke them via the Skill tool like any other skill
+- Run them in the order listed in the registry
+- Extensions don't block the workflow — if one fails or isn't found, report and continue
+- Only check events that appear in the registry — no registry means no extensions
+
 ## Skill Types
 
 **Rigid** (TDD, debugging): Follow exactly. Don't adapt away discipline.
