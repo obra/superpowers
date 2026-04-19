@@ -16,54 +16,69 @@ Phase 0 → Phase 1 → [Gate 1] → Phase 2 → [Gate 2] → Phase 3 → [Gate 
 ### Phase 0 — Run 초기화 (순차)
 **Agent:** `phase0-run-initializer`
 **입력:** `lecture_dir` (필수)
-**출력:** `runs/run-YYYYMMDD-HHMM-N/`, `current-run.md`, `phase1~5/`
+**출력:** `runs/run-YYYYMMDD-HHMM-N/`, `current-run.md`, `phase0~5/`, `phase0/invocation-rq-fanout.md`
 **모델:** haiku
 
 ### Phase 1 — RQ 세트 생성
 
 **1-1. RQ 관점 분리 (순차)**
-**Agent:** `rq-fanout-orchestrator`
-**입력:** `rq-input.md` (topic, audience, keywords, rq_per_set, constraints)
-**출력:** `fanout-invocations.md` (3개 Invocation 블록)
+**Agent:** `agent-rq-fanout-orchestrator`
+**입력:** `current_run_path` (current-run.md 절대 경로, 필수)
+**출력:** `phase1/set/fanout/_agent_rq_fanout.md`, `phase1/set/rq-set-a/b/c.md` (병렬 실행 후)
 **모델:** sonnet
 
-**1-2. RQ 생성 (병렬 ×3)**
-**Agent:** `rq-list-generator`
-- Set A: Concept/Theory → `rq-set-a.md`
-- Set B: Implementation/OSS → `rq-set-b.md`
-- Set C: Trade-off/Ops → `rq-set-c.md`
+**1-2. RQ 생성 (병렬 ×3, fanout-orchestrator가 자동 실행)**
+**Agent:** `agent-rq-list-generator`
+- Set A: Concept/Theory → `phase1/set/rq-set-a.md`
+- Set B: Implementation/OSS → `phase1/set/rq-set-b.md`
+- Set C: Trade-off/Ops → `phase1/set/rq-set-c.md`
 **모델:** sonnet
 
 **1-3. RQ 통합 (순차)**
 **Agent:** `rq-set-merger`
-**출력:** `rq-set.md`, `rq-set-merge-report.md`, invocation plans
+**입력:** `current_run_path`
+**출력:** `phase1/merge/rq-set.md`, `phase1/merge/rq-set-merge-report.md`, `next-step-invocation.md`, `rerun-merge-invocation.md`
 **모델:** sonnet
-⛔ **Manual Gate 1**: rq-set.md 검토 후 진행
+⛔ **Manual Gate 1**: `phase1/merge/rq-set.md` 검토 후 진행
 
 **1-4. RQ 파일 분리 (순차)**
-**Agent:** `rq-set-to-rq-files`
-**출력:** `RQ-files/*.md`, `phase2-evidence-master-invocation-plan.md`
+**Agent:** `rq-set-a-to-rq-files`
+**입력:** `current_run_path`
+**출력:** `phase1/{PREFIX}-NN-{slug}.md` (RQ 개별 파일들), `phase1/phase2-evidence-master-invocation-plan.md`
 **모델:** haiku
 
 ### Phase 2 — Evidence 수집
 
-**Agent:** `evidence-master` (오케스트레이터)
-→ `evidence-collector` ×N (RQ별 병렬)
-→ `evidence-summary` (자동 실행)
-**입력:** `lecture_dir`
-**출력:** `evidence/*.md`, `rq-evidence-map.md`, `evidence/README.md`
-**모델:** sonnet (master/summary), haiku (collector)
-⛔ **Manual Gate 2**: rq-evidence-map.md 검토 후 진행
+**2-1. Invocation 계획 수립 (순차)**
+**Agent:** `evidence-master`
+**입력:** `current_run_path`
+**출력:** `phase2/invocation/evidence-collector-{RQ-ID}.md` (RQ별 개별 파일), `phase2/invocation/evidence-collection-invocations.md`, `phase2/summary/README.md`
+**모델:** sonnet
+※ 직접 실행하지 않고 Invocation Block 파일만 생성
+
+**2-2. Evidence 수집 (RQ별 개별 실행 또는 병렬)**
+**Agent:** `evidence-collector`
+**입력:** `current_run_path`, `rq_file` (RQ 문서 경로)
+**출력:** `phase2/E-NN-{slug}.md`, `phase2/summary/evidence-summary-{RQ-ID}.md`
+**모델:** sonnet
+
+**2-3. 매핑 생성 (순차)**
+**Agent:** `evidence-summary`
+**입력:** `current_run_path`
+**출력:** `phase2/rq-evidence-map.md`, `phase2/summary/README.md`
+**모델:** sonnet
+⛔ **Manual Gate 2**: `phase2/rq-evidence-map.md` 검토 후 진행
 
 ### Phase 3 — Outline & Example 설계 (병렬)
 
 **Agent:** `outline-architect`
-**출력:** `lecture-outline.md`, `outline-rq-evidence-mapping.md`
+**입력:** `current_run_path`, `mode` (create/review)
+**출력:** `phase3/outline/draft-NN/lecture-outline.md`, `outline-rq-evidence-mapping.md`, `outline-review-notes.md`, `outline-architect-log.md`
 **모델:** inherit
 
-**Agent:** `example-designer` ×N (병렬)
-**입력:** `current_run_path`, `example_id`, `target_rqs`
-**출력:** `examples/{example_id}-example-plan.md`
+**Agent:** `agent-example-designer` ×N (병렬)
+**입력:** `current_run_path`, `rq_evidence_mapping_path`, `example_id` (또는 `examples` 배열)
+**출력:** `phase3/examples/{example_id}-example-plan.md`, `phase3/invocation/example-designer-{example_id}.md`
 **모델:** sonnet
 ⛔ **Manual Gate 3**: outline + examples 검토 후 진행
 
@@ -75,7 +90,7 @@ Phase 0 → Phase 1 → [Gate 1] → Phase 2 → [Gate 2] → Phase 3 → [Gate 
 **모델:** sonnet
 
 **Agent:** `script-reviewer`
-**입력:** `lecture_dir`
+**입력:** `current_run_path`
 **출력:** `phase4/review/YYYY_MM_DD_ver_N_script_review.md`
 **모델:** sonnet
 
@@ -86,16 +101,44 @@ Phase 0 → Phase 1 → [Gate 1] → Phase 2 → [Gate 2] → Phase 3 → [Gate 
 └── runs/
     └── run-YYYYMMDD-HHMM-N/
         ├── current-run.md
+        ├── phase0/
+        │   └── invocation-rq-fanout.md
         ├── phase1/
-        │   ├── rq-set-a.md, rq-set-b.md, rq-set-c.md
-        │   ├── rq-set.md
-        │   └── RQ-files/RQ-001-*.md ...
+        │   ├── set/
+        │   │   ├── fanout/_agent_rq_fanout.md
+        │   │   ├── rq-set-a.md
+        │   │   ├── rq-set-b.md
+        │   │   └── rq-set-c.md
+        │   ├── merge/
+        │   │   ├── rq-set.md
+        │   │   ├── rq-set-merge-report.md
+        │   │   ├── next-step-invocation.md
+        │   │   └── rerun-merge-invocation.md
+        │   ├── CONCEPT-01-{slug}.md
+        │   ├── IMPL-01-{slug}.md
+        │   ├── TRADEOFF-01-{slug}.md
+        │   └── phase2-evidence-master-invocation-plan.md
         ├── phase2/
-        │   ├── evidence/E-01-*.md ...
+        │   ├── invocation/
+        │   │   ├── evidence-collection-invocations.md
+        │   │   └── evidence-collector-{RQ-ID}.md ...
+        │   ├── summary/
+        │   │   ├── README.md
+        │   │   └── evidence-summary-{RQ-ID}.md ...
+        │   ├── E-01-{slug}.md
+        │   ├── E-02-{slug}.md
         │   └── rq-evidence-map.md
         ├── phase3/
-        │   ├── outline/lecture-outline.md
-        │   └── examples/Example-01-example-plan.md ...
+        │   ├── outline/
+        │   │   └── draft-NN/
+        │   │       ├── lecture-outline.md
+        │   │       ├── outline-rq-evidence-mapping.md
+        │   │       ├── outline-review-notes.md
+        │   │       └── outline-architect-log.md
+        │   ├── invocation/
+        │   │   └── example-designer-{example_id}.md ...
+        │   └── examples/
+        │       └── {example_id}-example-plan.md ...
         └── phase4/
             ├── script/section-01-*.md ...
             └── review/YYYY_MM_DD_ver_N_script_review.md
@@ -107,14 +150,15 @@ Phase 0 → Phase 1 → [Gate 1] → Phase 2 → [Gate 2] → Phase 3 → [Gate 
 
 1. `lecture_dir` 경로를 정한다 (예: `lectures/lecture-02`)
 2. `phase0-run-initializer` 실행 → `lecture_dir` 전달
-3. `rq-input.md` 작성 (topic, audience, keywords, rq_count)
-4. Phase 1 순서대로 실행
-5. 각 Manual Gate에서 검토 후 승인
+3. 생성된 `current-run.md`의 `Suggested Keywords`, `Suggested Topics` 섹션을 작성
+4. `phase0/invocation-rq-fanout.md` 내용을 `agent-rq-fanout-orchestrator`에 전달
+5. Phase 1 순서대로 실행 (fanout → merger → rq-files)
+6. 각 Manual Gate에서 검토 후 승인
 
 ## Manual Gate 요약
 
 | Gate | 위치 | 검토 대상 | 승인 후 |
 |------|------|----------|--------|
-| Gate 1 | Phase 1-3 완료 후 | `rq-set.md` | rq-set-to-rq-files 실행 |
-| Gate 2 | Phase 2 완료 후 | `rq-evidence-map.md` | Phase 3 실행 |
-| Gate 3 | Phase 3 완료 후 | `lecture-outline.md`, examples | Phase 4 실행 |
+| Gate 1 | Phase 1-3 완료 후 | `phase1/merge/rq-set.md` | rq-set-a-to-rq-files 실행 |
+| Gate 2 | Phase 2 완료 후 | `phase2/rq-evidence-map.md` | Phase 3 실행 |
+| Gate 3 | Phase 3 완료 후 | `phase3/outline/draft-NN/lecture-outline.md`, examples | Phase 4 실행 |
