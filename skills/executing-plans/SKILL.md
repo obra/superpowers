@@ -24,14 +24,17 @@ Load plan, review critically, execute all tasks, report when complete.
 ### Step 2: Execute Tasks
 
 For each task:
-1. Mark as in_progress
-2. Follow each step exactly (plan has bite-sized steps)
-3. Run verifications as specified
-4. Mark as completed
+1. **Check extensions registry** for `pre-task` extensions and invoke each in order
+2. Mark as in_progress
+3. Follow each step exactly (plan has bite-sized steps)
+4. Run verifications as specified
+5. **Check extensions registry** for `post-task` extensions and invoke each in order
+6. Mark as completed
 
 ### Step 3: Complete Development
 
 After all tasks complete and verified:
+- **Check extensions registry** for `post-execution` extensions and invoke each in order
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
 - **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
 - Follow that skill to verify tests, present options, execute choice
