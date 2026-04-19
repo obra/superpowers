@@ -242,10 +242,14 @@ Invocation plan 파일 생성 후, 사용자에게 다음 메시지를 출력:
 - {생성된 파일 개수}개 RQ 파일 ({output_dir})
 - phase2-evidence-master-invocation-plan.md
 
-📋 다음 단계:
-1. 생성된 RQ 파일들을 검토해주세요.
-2. 만족하시면 Phase 2 Evidence Master를 실행해주세요.
+📋 생성된 RQ 파일들을 검토해주세요.
+
+❓ 지금 evidence-master를 실행하여 Phase 2 Evidence 수집을 시작할까요? (Y/N)
 ```
+
+- **Y(예)인 경우**: Task 도구를 사용하여 `evidence-master` agent를 실행한다.
+  - 전달 파라미터: `current_run_path: {current_run_path}`
+- **N(아니오)인 경우**: 파일 경로만 안내하고 즉시 종료한다.
 
 # 실행 절차 요약
 

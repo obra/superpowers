@@ -91,6 +91,30 @@ C) **`{evidence_readme}`**: Phase2 안내 문서
    - 경로: `{run_dir}/phase2/summary/README.md`
 
 **수행하지 않는 작업:**
-- Evidence-Collector 병렬 실행
 - Evidence 중복 탐지/통합
 - RQ↔Evidence 매핑 생성
+
+# 5) 사용자 확인 및 선택적 실행 (필수)
+
+모든 파일 생성 완료 후, 사용자에게 다음 메시지를 출력한다:
+
+```
+✅ Evidence Invocation 계획 수립 완료
+
+생성된 파일:
+- {N}개 RQ별 invocation 파일 ({run_dir}/phase2/invocation/)
+- evidence-collection-invocations.md (인덱스)
+- phase2/summary/README.md
+
+❓ 지금 evidence-collector를 각 RQ별로 순차 실행할까요? (Y/N)
+   (총 {N}개 RQ, 각 RQ당 별도 실행)
+```
+
+- **Y(예)인 경우**: Task 도구를 사용하여 각 RQ의 `evidence-collector`를 **순차적으로** 실행한다.
+  - 각 invocation 파일의 파라미터를 읽어 evidence-collector에 전달
+  - 전달 파라미터: `current_run_path: {current_run_path}`, `rq_file: {rq_file}`
+  - 모든 실행 완료 후 evidence-summary agent 실행 여부를 추가로 질문한다:
+    ```
+    ✅ Evidence 수집 완료. evidence-summary를 실행하여 매핑 문서를 생성할까요? (Y/N)
+    ```
+- **N(아니오)인 경우**: invocation 파일 경로만 안내하고 즉시 종료한다.
