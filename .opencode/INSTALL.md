@@ -10,7 +10,7 @@ Add superpowers to the `plugin` array in your `opencode.json` (global or project
 
 ```json
 {
-  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git"]
+  "plugin": ["superpowers@git+https://github.com/kijewskimateusz/superpowers.git"]
 }
 ```
 
@@ -48,11 +48,11 @@ use skill tool to load superpowers/brainstorming
 
 Superpowers updates automatically when you restart OpenCode.
 
-To pin a specific version:
+To use a specific ref, such as a branch or tag:
 
 ```json
 {
-  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git#v5.0.3"]
+  "plugin": ["superpowers@git+https://github.com/kijewskimateusz/superpowers.git#main"]
 }
 ```
 
@@ -79,5 +79,5 @@ When skills reference Claude Code tools:
 
 ## Getting Help
 
-- Report issues: https://github.com/obra/superpowers/issues
-- Full documentation: https://github.com/obra/superpowers/blob/main/docs/README.opencode.md
+- Report issues: https://github.com/kijewskimateusz/superpowers/issues
+- Full documentation: https://github.com/kijewskimateusz/superpowers/blob/main/docs/README.opencode.md

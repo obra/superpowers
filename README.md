@@ -92,10 +92,12 @@ or search for "superpowers" in the plugin marketplace.
 Tell OpenCode:
 
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/kijewskimateusz/superpowers/refs/heads/main/.opencode/INSTALL.md
 ```
 
 **Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
+
+**Local development mode:** If you're working on a fork and want to test skill changes in real OpenCode sessions without pushing, you can run Superpowers from a local checkout via symlinks. See [.opencode/DEV-SETUP.md](.opencode/DEV-SETUP.md) for setup instructions.
 
 ### GitHub Copilot CLI
 

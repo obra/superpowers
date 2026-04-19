@@ -8,7 +8,7 @@ Add superpowers to the `plugin` array in your `opencode.json` (global or project
 
 ```json
 {
-  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git"]
+  "plugin": ["superpowers@git+https://github.com/kijewskimateusz/superpowers.git"]
 }
 ```
 
@@ -80,11 +80,11 @@ Create project-specific skills in `.opencode/skills/` within your project.
 
 Superpowers updates automatically when you restart OpenCode. The plugin is re-installed from the git repository on each launch.
 
-To pin a specific version, use a branch or tag:
+To use a specific ref, such as a branch or tag:
 
 ```json
 {
-  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git#v5.0.3"]
+  "plugin": ["superpowers@git+https://github.com/kijewskimateusz/superpowers.git#main"]
 }
 ```
 
@@ -125,6 +125,6 @@ Skills written for Claude Code are automatically adapted for OpenCode:
 
 ## Getting Help
 
-- Report issues: https://github.com/obra/superpowers/issues
-- Main documentation: https://github.com/obra/superpowers
+- Report issues: https://github.com/kijewskimateusz/superpowers/issues
+- Main documentation: https://github.com/kijewskimateusz/superpowers
 - OpenCode docs: https://opencode.ai/docs/
