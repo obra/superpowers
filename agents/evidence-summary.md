@@ -80,3 +80,21 @@ B) `{summary_output}/README.md`: Summary 디렉토리 README
 - `{mapping_output}` 파일이 생성되고 `{summary_output}/README.md` 가 갱신되면 성공
 - RQ 또는 Evidence 디렉토리가 없으면 실패
 - current-run.md에서 필수 정보를 추출하지 못하면 실패
+
+# 6) 사용자 확인 및 선택적 실행 (필수)
+
+모든 파일 생성 완료 후, 사용자에게 다음 메시지를 출력한다:
+
+```
+✅ Evidence 매핑 완료
+
+생성된 파일:
+- rq-evidence-map.md ({FULL}개 FULL / {PARTIAL}개 PARTIAL / {MISSING}개 MISSING)
+- phase2/summary/README.md
+
+❓ 지금 outline-architect를 실행하여 Phase 3 강의 구성을 시작할까요? (Y/N)
+```
+
+- **Y(예)인 경우**: Task 도구를 사용하여 `outline-architect` agent를 실행한다.
+  - 전달 파라미터: `current_run_path: {current_run_path}`, `mode: create`
+- **N(아니오)인 경우**: 파일 경로만 안내하고 즉시 종료한다.

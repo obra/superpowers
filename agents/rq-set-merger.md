@@ -35,11 +35,6 @@ model: sonnet
 - 최종적으로 **rq-set.md(단일 소스 오브 트루스)** 를 생성한다.
 또한 머지 의사결정 근거를 **rq-set-merge-report.md** 로 남긴다.
 
-**중요: 다음 단계 실행 금지**
-- 이 Agent는 **rq-set.md와 rq-set-merge-report.md를 생성한 후 즉시 종료**한다.
-- **절대로 다음 단계(RQ-Split, Evidence 수집 등)를 자동 실행하지 말 것.**
-- 사용자가 rq-set.md를 검토하고 승인한 후에만 다음 단계를 진행해야 한다.
-- 마지막으로 사용자에게 **"rq-set.md를 검토하고, 만족하면 다음 단계를 요청해주세요"** 라고 안내한다.
 
 # 2) 입력(Inputs)
 
