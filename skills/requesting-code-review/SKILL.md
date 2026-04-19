@@ -46,6 +46,8 @@ Use Task tool with superpowers:code-reviewer type, fill template at `code-review
 - Note Minor issues for later
 - Push back if reviewer is wrong (with reasoning)
 
+**4. Check extensions registry** for `post-review` extensions and invoke each in order.
+
 ## Example
 
 ```
@@ -80,14 +82,17 @@ You: [Fix progress indicators]
 - Review after EACH task
 - Catch issues before they compound
 - Fix before moving to next task
+- Run `post-review` extensions after each review cycle
 
 **Executing Plans:**
 - Review after each batch (3 tasks)
 - Get feedback, apply, continue
+- Run `post-review` extensions after each review cycle
 
 **Ad-Hoc Development:**
 - Review before merge
 - Review when stuck
+- Run `post-review` extensions after review
 
 ## Red Flags
 
