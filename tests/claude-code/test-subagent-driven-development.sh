@@ -136,8 +136,27 @@ fi
 
 echo ""
 
-# Test 8: Verify worktree requirement
-echo "Test 8: Worktree requirement..."
+# Test 8: Verify reconnaissance happens before implementation when context is unfamiliar
+echo "Test 8: Reconnaissance before implementation..."
+
+output=$(run_claude "In subagent-driven-development, what should the controller do before assigning implementer tasks if the plan touches unfamiliar files?" 30)
+
+if assert_contains "$output" "explore.*subagent\|subagent.*explore" "Uses explore subagents for reconnaissance"; then
+    : # pass
+else
+    exit 1
+fi
+
+if assert_contains "$output" "reconnaissance\|unfamiliar\|missing context" "Mentions when reconnaissance is needed"; then
+    : # pass
+else
+    exit 1
+fi
+
+echo ""
+
+# Test 9: Verify worktree requirement
+echo "Test 9: Worktree requirement..."
 
 output=$(run_claude "What workflow skills are required before using subagent-driven-development? List any prerequisites or required skills." 30)
 
@@ -149,8 +168,8 @@ fi
 
 echo ""
 
-# Test 9: Verify main branch warning
-echo "Test 9: Main branch red flag..."
+# Test 10: Verify main branch warning
+echo "Test 10: Main branch red flag..."
 
 output=$(run_claude "In subagent-driven-development, is it okay to start implementation directly on the main branch?" 30)
 

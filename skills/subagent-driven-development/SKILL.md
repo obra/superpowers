@@ -11,6 +11,11 @@ Execute plan by dispatching fresh subagent per task, with two-stage review after
 
 **Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
 
+## Reconnaissance
+
+When a plan touches unfamiliar code, unclear boundaries, or missing context, dispatch `explore` subagents first to map the relevant surface area and return a concise summary.
+Use that reconnaissance to brief the implementer subagents; don't make them do the discovery work themselves.
+
 ## When to Use
 
 ```dot
@@ -42,6 +47,7 @@ digraph when_to_use {
 ```dot
 digraph process {
     rankdir=TB;
+    "Start" [shape=ellipse];
 
     subgraph cluster_per_task {
         label="Per Task";
@@ -58,11 +64,17 @@ digraph process {
         "Mark task complete in TodoWrite" [shape=box];
     }
 
+    "Need reconnaissance first?" [shape=diamond];
+    "Dispatch explore subagents to map unfamiliar files" [shape=box];
     "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
+    "Start" -> "Need reconnaissance first?";
+    "Need reconnaissance first?" -> "Dispatch explore subagents to map unfamiliar files" [label="yes"];
+    "Need reconnaissance first?" -> "Read plan, extract all tasks with full text, note context, create TodoWrite" [label="no"];
+    "Dispatch explore subagents to map unfamiliar files" -> "Read plan, extract all tasks with full text, note context, create TodoWrite";
     "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
@@ -107,7 +119,7 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 **DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
 
-**NEEDS_CONTEXT:** The implementer needs information that wasn't provided. Provide the missing context and re-dispatch.
+**NEEDS_CONTEXT:** The implementer needs information that wasn't provided. If the gap is broad or the area is unfamiliar, dispatch `explore` subagents to gather it before re-dispatching. If it's a narrow question, provide the missing context directly and re-dispatch.
 
 **BLOCKED:** The implementer cannot complete the task. Assess the blocker:
 1. If it's a context problem, provide more context and re-dispatch with the same model

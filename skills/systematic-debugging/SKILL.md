@@ -71,9 +71,11 @@ You MUST complete each phase before proceeding to the next.
 
 4. **Gather Evidence in Multi-Component Systems**
 
-   **WHEN system has multiple components (CI → build → signing, API → service → database):**
+    **WHEN system has multiple components (CI → build → signing, API → service → database):**
 
-   **BEFORE proposing fixes, add diagnostic instrumentation:**
+    If the issue spans several independent areas, use `explore` subagents to gather evidence in parallel instead of reading every file yourself.
+
+    **BEFORE proposing fixes, add diagnostic instrumentation:**
    ```
    For EACH component boundary:
      - Log what data enters component

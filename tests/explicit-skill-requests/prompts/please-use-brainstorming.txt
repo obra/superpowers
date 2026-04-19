@@ -1,1 +1,1 @@
-please use the brainstorming skill to help me think through this feature
+please use the brainstorming skill to help me think through this feature. The codebase is unfamiliar and the context is spread across many files, so use explore subagents first.

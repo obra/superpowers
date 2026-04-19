@@ -18,6 +18,11 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
 
+## Context Gathering
+
+If the codebase or problem space is unfamiliar, dispatch `explore` subagents to map the relevant files, patterns, and open questions before locking the plan.
+Use their findings to shape file structure and task boundaries; the main session should synthesize, not do all the reading.
+
 ## Scope Check
 
 If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.

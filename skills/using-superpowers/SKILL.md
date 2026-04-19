@@ -83,9 +83,9 @@ These thoughts mean STOP—you're rationalizing:
 |---------|---------|
 | "This is just a simple question" | Questions are tasks. Check for skills. |
 | "I need more context first" | Skill check comes BEFORE clarifying questions. |
-| "Let me explore the codebase first" | Skills tell you HOW to explore. Check first. |
+| "Let me explore the codebase first" | If the investigation is broad, use `explore` subagents instead of reading everything inline. |
 | "I can check git/files quickly" | Files lack conversation context. Check for skills. |
-| "Let me gather information first" | Skills tell you HOW to gather information. |
+| "Let me gather information first" | Gather broad or scattered context with `explore` subagents, then synthesize. |
 | "This doesn't need a formal skill" | If a skill exists, use it. |
 | "I remember this skill" | Skills evolve. Read current version. |
 | "This doesn't count as a task" | Action = task. Check for skills. |
@@ -93,6 +93,12 @@ These thoughts mean STOP—you're rationalizing:
 | "I'll just do this one thing first" | Check BEFORE doing anything. |
 | "This feels productive" | Undisciplined action wastes time. Skills prevent this. |
 | "I know what that means" | Knowing the concept ≠ using the skill. Invoke it. |
+
+## Information Gathering
+
+- Use `explore` subagents when the question is broad, the codebase is unfamiliar, or the evidence is scattered across many files.
+- Keep the main session focused on synthesis, decisions, and follow-up questions.
+- Do small, targeted lookups inline; don't spend the main context on a large scavenger hunt.
 
 ## Skill Priority
 

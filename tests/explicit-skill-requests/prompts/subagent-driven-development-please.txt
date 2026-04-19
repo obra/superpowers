@@ -1,1 +1,1 @@
-subagent-driven-development, please
+subagent-driven-development, please. The plan touches unfamiliar files, so start with reconnaissance if needed.
