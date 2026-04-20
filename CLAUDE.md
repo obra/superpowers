@@ -32,6 +32,7 @@ superpowers/
 │   └── backend/                # Node.js/Express backend (has its own npm dependencies)
 │       ├── middleware/         # auth.js, rateLimiter.js
 │       ├── models/             # db.js, schema.sql
+│       ├── routes/             # auth.js, subscriptions.js
 │       ├── .env.example        # Environment variables template
 │       └── package.json        # Own dependencies: express, better-sqlite3, stripe, etc.
 ├── .claude-plugin/             # Claude Code plugin manifest
@@ -41,6 +42,7 @@ superpowers/
 ├── .github/                    # PR template, issue templates, funding
 ├── .version-bump.json          # Version management config for bump-version.sh
 ├── gemini-extension.json       # Gemini CLI extension config
+├── README.md                   # Project overview and installation guide
 ├── CODE_OF_CONDUCT.md          # Community guidelines
 ├── GEMINI.md                   # Gemini session context (imports using-superpowers)
 ├── AGENTS.md                   # Alias of CLAUDE.md for other agent runtimes
@@ -58,7 +60,10 @@ skills/
     SKILL.md              # Required: frontmatter + skill content
     supporting-file.*     # Optional: heavy reference, reusable scripts, or prompt templates
     scripts/              # Optional: executables (e.g., brainstorm server, render-graphs.js)
+    references/           # Optional: platform-specific or supplementary reference docs
 ```
+
+The `using-superpowers` skill includes a `references/` directory with platform-specific tool guides (`codex-tools.md`, `copilot-tools.md`, `gemini-tools.md`) that document available tools for each supported harness.
 
 **Current skills (14 total):**
 
@@ -184,6 +189,8 @@ Key components:
 - `middleware/rateLimiter.js` — Request rate limiting
 - `models/db.js` — SQLite database via `better-sqlite3`
 - `models/schema.sql` — Database schema definitions
+- `routes/auth.js` — Authentication endpoints
+- `routes/subscriptions.js` — Subscription and checkout routes
 - `.env.example` — Required environment variables (copy to `.env` before running)
 
 Runtime dependencies include: `express`, `cors`, `dotenv`, `bcryptjs`, `jsonwebtoken`, `better-sqlite3`, `stripe`, `nodemailer`, `node-cron`.
@@ -287,9 +294,8 @@ Before proposing changes to skill design, workflow philosophy, or architecture, 
 
 ## Evolver Integration
 
-This project has [Evolver](https://github.com/EvoMap/evolver) hooks registered via `.claude/settings.json`.
+[Evolver](https://github.com/EvoMap/evolver) hooks can be configured for this project via `.claude/settings.json` (not committed to the repo). If enabled, Evolver:
 
-Evolver automatically:
 - **Injects evolution memory** at session start (if the local proxy is running)
 - **Detects evolution signals** when files are written (`log_error`, `perf_bottleneck`, `user_feature_request`, `capability_gap`, `deployment_issue`, `test_failure`)
 - **Records session outcomes** when Claude Code stops
