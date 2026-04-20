@@ -1,5 +1,5 @@
 ---
-name: evidence-collector
+name: plugin-evidence-collector
 description: RQ 문서의 Suggested Evidence / Verification 힌트를 기반으로 GitHub MCP(우선) 및 제한적 WebFetch로 검증 가능한 근거를 수집해 Evidence 파일을 생성한다.
 model: sonnet
 color: green

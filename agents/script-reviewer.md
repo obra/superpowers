@@ -1,5 +1,5 @@
 ---
-name: script-reviewer
+name: plugin-script-reviewer
 description: run_dir의 Phase3 산출물(lecture-outline + slide script)을 비교하여 리뷰/평가/진행도를 산출하고 Phase4에 리포트를 기록한다.
 model: sonnet
 color: yellow

@@ -1,5 +1,5 @@
 ---
-name: outline-architect
+name: plugin-outline-architect
 description: >
   RQ와 Evidence를 기반으로 강의 전체 구조(Section 단위)를 설계한다.
   다음 단계로 자동 진행하지 않으며,

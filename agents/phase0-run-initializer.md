@@ -1,5 +1,5 @@
 ---
-name: phase0-run-initializer
+name: plugin-phase0-run-initializer
 description: Phase 0에서 lectures/lecture-XX/runs/ 아래에 run-YYYYMMDD-HHMM-시퀀스 디렉토리를 생성(불변 아카이브)하고, 생성된 run 디렉토리 내부에 current-run.md를 생성해 이후 모든 agent가 동일 run 경로를 참조하게 한다.
 model: haiku
 color: cyan
@@ -83,7 +83,7 @@ repo_commit: "<GIT_SHA_OR_EMPTY>"
 
 ## Next Step: Phase 1 - RQ Fanout
 
-다음 단계로 `agent-rq-fanout-orchestrator`를 실행하여 Research Questions를 생성합니다.
+다음 단계로 `plugin-rq-fanout-orchestrator`를 실행하여 Research Questions를 생성합니다.
 
 **Invocation 파일:** `phase0/invocation-rq-fanout.md`
 ```
@@ -92,7 +92,7 @@ repo_commit: "<GIT_SHA_OR_EMPTY>"
 
 ```markdown
 ---
-agent: agent-rq-fanout-orchestrator
+agent: plugin-rq-fanout-orchestrator
 phase: 1
 description: Research Questions 생성을 위한 fanout orchestrator 실행
 ---
@@ -102,7 +102,7 @@ description: Research Questions 생성을 위한 fanout orchestrator 실행
 ## Invocation Block
 
 \`\`\`yaml
-agent: agent-rq-fanout-orchestrator
+agent: plugin-rq-fanout-orchestrator
 current_run_path: "<RUN_DIR>/current-run.md"
 rq_per_set: 5
 constraints:
@@ -112,10 +112,10 @@ constraints:
 
 ## 실행 방법
 
-1. 위 Invocation Block을 복사하여 agent-rq-fanout-orchestrator에 전달
+1. 위 Invocation Block을 복사하여 plugin-rq-fanout-orchestrator에 전달
 2. 또는 아래 명령어로 직접 실행:
    ```
-   Task agent-rq-fanout-orchestrator: current_run_path="<RUN_DIR>/current-run.md"
+   Task plugin-rq-fanout-orchestrator: current_run_path="<RUN_DIR>/current-run.md"
    ```
 
 ## 파라미터 설명

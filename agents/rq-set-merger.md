@@ -1,5 +1,5 @@
 ---
-name: rq-set-merger
+name: plugin-rq-set-merger
 description: 관점별로 생성된 RQ 후보(rq-candidates-*.md / rq-set-*.md)를 수집·정규화·중복제거·우선순위화하여 단일 최종 RQ 목록(rq-set.md)을 만든다. 머지 과정은 rq-set-merge-report.md로 추적 가능하게 기록한다.
 tools: Read, Grep, Glob, Bash, Write
 model: sonnet

@@ -1,5 +1,5 @@
 ---
-name: evidence-summary
+name: plugin-evidence-summary
 description: RQ별 수집된 Evidence를 분석하여 RQ↔Evidence 매핑 문서를 생성하고 README를 갱신한다.
 model: sonnet
 color: cyan

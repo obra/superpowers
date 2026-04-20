@@ -1,5 +1,5 @@
 ---
-name: agent-rq-list-generator
+name: plugin-rq-list-generator
 description: 단일 주제에서 Research Question 목록(RQ-List) 생성
 model: sonnet
 color: red

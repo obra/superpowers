@@ -1,5 +1,5 @@
 ---
-name: evidence-master
+name: plugin-evidence-master
 description: RQ 목록을 기준으로 Evidence-Collector 실행을 위한 Invocation Block을 생성한다. 병렬 실행은 하지 않으며, 계획 수립 후 사용자 확인을 거쳐 순차적으로 실행할 수 있다.
 model: sonnet
 color: yellow

@@ -1,5 +1,5 @@
 ---
-name: agent-rq-fanout-orchestrator
+name: plugin-rq-fanout-orchestrator
 description: 단일 주제를 3관점(A/B/C)으로 분리해 RQ 목록을 생성하는 오케스트레이터
 model: sonnet
 color: blue
@@ -9,9 +9,9 @@ color: blue
 
 ## 미션
 - 단일 주제(topic)를 입력받아 관점 A/B/C 각각에 대해
-  `agent-rq-list-generator`를 실행할 수 있는 "Invocation Block"을 생성한다.
+  `plugin-rq-list-generator`를 실행할 수 있는 "Invocation Block"을 생성한다.
 - 오케스트레이터 자신은 RQ를 직접 생성하지 않는다.
-- `agent-rq-list-generator` 들이 모두 생성을 하고난뒤에 그 결과를 요약해서 output_dir/rq-candidates.md 로 생성한다.
+- `plugin-rq-list-generator` 들이 모두 생성을 하고난뒤에 그 결과를 요약해서 output_dir/rq-candidates.md 로 생성한다.
 - 출력은 Markdown만 제공한다.
 
 ## 입력(사용자가 제공)
@@ -144,10 +144,10 @@ color: blue
 ### 자동 실행 절차(필수)
 **저장이 완료되면 즉시 아래 절차를 수행한다.**
 
-5) **agent-rq-list-generator 병렬 실행**
+5) **plugin-rq-list-generator 병렬 실행**
    - Task 도구를 사용하여 3개의 agent를 **병렬로** 실행
    - **단일 메시지**에서 3개의 Task 도구 호출을 동시에 수행
-   - 각 Task는 `subagent_type: "agent-rq-list-generator"` 사용
+   - 각 Task는 `subagent_type: "plugin-rq-list-generator"` 사용
 
 6) **각 Task에 전달할 프롬프트 구성**
    - 추출된 `topic`, `audience`, `keywords` 값을 사용
@@ -288,7 +288,7 @@ color: blue
 - `keywords`: `## Suggested Keywords` 섹션에서 읽음
 
 ## How to run
-1) 아래 "Invocation A"를 `agent-rq-list-generator` 실행에 그대로 넣는다.
+1) 아래 "Invocation A"를 `plugin-rq-list-generator` 실행에 그대로 넣는다.
 2) 동일하게 B, C를 각각 실행한다.
 3) 실행 결과 파일을 output_dir 아래에 저장한다(권장 파일명 참고).
 
@@ -296,7 +296,7 @@ color: blue
 
 ## Invocation A — Concept/Theory
 ```yaml
-agent: agent-rq-list-generator
+agent: plugin-rq-list-generator
 rq_type: concept
 output_file: "<output_dir>/rq-set-a.md"
 topic: "<topic>"
@@ -313,7 +313,7 @@ constraints:
 
 ## Invocation B — Implementation/Oss
 ```yaml
-agent: agent-rq-list-generator
+agent: plugin-rq-list-generator
 rq_type: OSS
 output_file: "<output_dir>/rq-set-b.md"
 topic: "<topic>"
@@ -369,7 +369,7 @@ constraints:
 
 ## Invocation C — Trade-off/Failure/Ops
 ```yaml
-agent: agent-rq-list-generator
+agent: plugin-rq-list-generator
 rq_type: OPS
 output_file: "<output_dir>/rq-set-c.md"
 topic: "<topic>"

@@ -1,164 +1,146 @@
 ---
 name: brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
+description: "강의 제작 시작 전 사전정보를 탐색한다. '강의 만들어줘', '강의 주제 정리', '브레인스토밍', 'lecture brainstorming' 등의 키워드가 나오면 이 skill을 사용한다. 최종 목적은 강의 Topic(문장)과 Keyword(단어)를 3개 관점(개념/구현/트레이드오프)으로 추출하는 것이다."
 ---
 
-# Brainstorming Ideas Into Designs
+# 강의 제작 사전정보 탐색 (Brainstorming)
 
-Help turn ideas into fully formed designs and specs through natural collaborative dialogue.
+## 역할
 
-Start by understanding the current project context, then ask questions one at a time to refine the idea. Once you understand what you're building, present the design and get user approval.
+강의를 만들기 전에 사용자와 대화를 통해 강의 주제를 구체화하고,
+3개 관점(개념/구현/트레이드오프)을 기준으로 **Topic(문장)**과 **Keyword(단어)**를 추출한다.
+
+추출 결과는 `current-run.md`의 `Suggested Topics`와 `Suggested Keywords` 섹션에 그대로 사용된다.
 
 <HARD-GATE>
-Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
+Topic과 Keyword를 확정하기 전까지 phase0-run-initializer를 실행하지 않는다.
+사용자가 결과를 승인한 후에만 다음 단계로 넘어간다.
 </HARD-GATE>
 
-## Anti-Pattern: "This Is Too Simple To Need A Design"
+## 질문 절차 (순서대로)
 
-Every project goes through this process. A todo list, a single-function utility, a config change — all of them. "Simple" projects are where unexamined assumptions cause the most wasted work. The design can be short (a few sentences for truly simple projects), but you MUST present it and get approval.
+질문은 **한 번에 하나씩** 한다.
 
-## Checklist
+### 1단계 — 주제 파악
+- "어떤 주제로 강의를 만들려고 하시나요?"
+- 답변을 받으면 다음 질문으로 넘어간다.
 
-You MUST create a task for each of these items and complete them in order:
+### 2단계 — 대상/수준 파악
+- "수강 대상의 경험 수준은 어느 정도인가요? (예: Java 3~7년차, 백엔드 개발자 등)"
 
-1. **Explore project context** — check files, docs, recent commits
-2. **Offer visual companion** (if topic will involve visual questions) — this is its own message, not combined with a clarifying question. See the Visual Companion section below.
-3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-4. **Propose 2-3 approaches** — with trade-offs and your recommendation
-5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
-7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
-8. **User reviews written spec** — ask user to review the spec file before proceeding
-9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+### 3단계 — 강의 형식 파악
+- "강의 시간은 얼마나 예상하시나요? (예: 30분, 60분, 90분)"
 
-## Process Flow
+### 4단계 — 강조 포인트 파악
+- "특별히 깊게 다루고 싶은 부분이 있나요? 또는 꼭 포함하고 싶은 내용이 있나요?"
 
-```dot
-digraph brainstorming {
-    "Explore project context" [shape=box];
-    "Visual questions ahead?" [shape=diamond];
-    "Offer Visual Companion\n(own message, no other content)" [shape=box];
-    "Ask clarifying questions" [shape=box];
-    "Propose 2-3 approaches" [shape=box];
-    "Present design sections" [shape=box];
-    "User approves design?" [shape=diamond];
-    "Write design doc" [shape=box];
-    "Spec self-review\n(fix inline)" [shape=box];
-    "User reviews spec?" [shape=diamond];
-    "Invoke writing-plans skill" [shape=doublecircle];
+### 5단계 — 제외 사항 파악
+- "다루지 않아도 되는 내용이나 제외하고 싶은 범위가 있나요? (없으면 없다고 해주세요)"
 
-    "Explore project context" -> "Visual questions ahead?";
-    "Visual questions ahead?" -> "Offer Visual Companion\n(own message, no other content)" [label="yes"];
-    "Visual questions ahead?" -> "Ask clarifying questions" [label="no"];
-    "Offer Visual Companion\n(own message, no other content)" -> "Ask clarifying questions";
-    "Ask clarifying questions" -> "Propose 2-3 approaches";
-    "Propose 2-3 approaches" -> "Present design sections";
-    "Present design sections" -> "User approves design?";
-    "User approves design?" -> "Present design sections" [label="no, revise"];
-    "User approves design?" -> "Write design doc" [label="yes"];
-    "Write design doc" -> "Spec self-review\n(fix inline)";
-    "Spec self-review\n(fix inline)" -> "User reviews spec?";
-    "User reviews spec?" -> "Write design doc" [label="changes requested"];
-    "User reviews spec?" -> "Invoke writing-plans skill" [label="approved"];
-}
+---
+
+## Topic/Keyword 추출
+
+5단계 질문이 완료되면, 아래 3개 관점을 기준으로 Topic과 Keyword를 추출한다.
+
+### 관점 정의
+
+| 관점 | 핵심 질문 | 탐구 방향 |
+|------|-----------|-----------|
+| **A. 개념/배경** | "이것이 무엇인가? 왜 존재하는가?" | 정의·배경·메커니즘·개념적 경계·유사 개념과의 차이 |
+| **B. 구현/OSS** | "어떻게 만들어졌는가? 어떻게 발전시켰는가?" | 실제 구현·OSS 사례·**진화 포인트** |
+| **C. 트레이드오프/운영** | "어떤 상황에서 선택하는가? 어떻게 검증하는가?" | 트레이드오프·실패 모드·운영·테스트·대안 비교 |
+
+#### B 관점 — 진화 포인트 정의
+
+> 진화 포인트란 패턴/구조를 "사용했다"가 아니라 "어떻게 발전시켰는가"다.
+> 기존 구조를 깨지 않고 새로운 요구사항을 수용하기 위해
+> **책임·생성·확장 방식이 변화하는 지점**을 탐구한다.
+
+진화 포인트 탐구 예시:
+- 단순 구현 → 멀티스레드 안전 구현으로의 전환
+- 직접 생성 → 팩토리/컨테이너 위임으로의 변화
+- 단일 인스턴스 → 스코프 기반(request/session) 인스턴스로의 확장
+- 어떤 OSS가 어떤 요구사항 때문에 기존 패턴을 어떻게 변형했는가
+
+### 추출 규칙
+
+**Topic (문장)** — 강의에서 탐구할 핵심 질문들
+- 각 관점에서 2~4개를 추출한다.
+- 단, 강의 시간·수준·사용자가 강조한 포인트를 반영해 개수를 조절한다.
+- 형식은 자유롭되, 검증/관찰 가능한 형태를 선호한다:
+  - "~는 어떤 조건에서 ~하는가?"
+  - "~가 ~로 변화한 이유는 무엇인가?"
+  - "A와 B는 어떤 기준으로 구분되는가?"
+
+**Keyword (단어)** — RQ 생성 시 검색·필터 기준어
+- 각 관점에서 3~6개를 추출한다.
+- 기술 용어, OSS 이름, 패턴명, 개념어, 핵심 API·클래스명 중심으로 선정한다.
+- 진화 포인트 관련 키워드는 변화의 "전"과 "후"를 모두 포함하면 좋다.
+
+---
+
+## 출력 형식
+
+추출 완료 후 아래 형식으로 결과를 출력한다:
+
+```
+📋 강의 사전정보 추출 결과
+
+주제: {주제}
+대상: {대상/수준}
+시간: {강의 시간}
+
+## Suggested Topics
+
+### A. 개념/배경
+- {topic-A-1}
+- {topic-A-2}
+...
+
+### B. 구현/OSS
+- {topic-B-1}
+- {topic-B-2}
+...
+
+### C. 트레이드오프/운영
+- {topic-C-1}
+- {topic-C-2}
+...
+
+## Suggested Keywords
+
+### A. 개념/배경
+{keyword-1}, {keyword-2}, {keyword-3}, ...
+
+### B. 구현/OSS
+{keyword-1}, {keyword-2}, {keyword-3}, ...
+
+### C. 트레이드오프/운영
+{keyword-1}, {keyword-2}, {keyword-3}, ...
 ```
 
-**The terminal state is invoking writing-plans.** Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY skill you invoke after brainstorming is writing-plans.
+---
 
-## The Process
+## 확정 및 다음 단계
 
-**Understanding the idea:**
+결과 출력 후:
 
-- Check out the current project state first (files, docs, recent commits)
-- Before asking detailed questions, assess scope: if the request describes multiple independent subsystems (e.g., "build a platform with chat, file storage, billing, and analytics"), flag this immediately. Don't spend questions refining details of a project that needs to be decomposed first.
-- If the project is too large for a single spec, help the user decompose into sub-projects: what are the independent pieces, how do they relate, what order should they be built? Then brainstorm the first sub-project through the normal design flow. Each sub-project gets its own spec → plan → implementation cycle.
-- For appropriately-scoped projects, ask questions one at a time to refine the idea
-- Prefer multiple choice questions when possible, but open-ended is fine too
-- Only one question per message - if a topic needs more exploration, break it into multiple questions
-- Focus on understanding: purpose, constraints, success criteria
+```
+❓ 이 내용으로 확정할까요? 수정할 부분이 있으면 말씀해 주세요.
+   확정되면 phase0-run-initializer 실행 안내를 드립니다.
+```
 
-**Exploring approaches:**
+- **수정 요청**: 해당 관점의 Topic/Keyword만 수정하고 재출력한다.
+- **확정**: 아래 안내를 출력하고 종료한다.
 
-- Propose 2-3 different approaches with trade-offs
-- Present options conversationally with your recommendation and reasoning
-- Lead with your recommended option and explain why
+```
+✅ 확정되었습니다.
 
-**Presenting the design:**
-
-- Once you believe you understand what you're building, present the design
-- Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
-- Ask after each section whether it looks right so far
-- Cover: architecture, components, data flow, error handling, testing
-- Be ready to go back and clarify if something doesn't make sense
-
-**Design for isolation and clarity:**
-
-- Break the system into smaller units that each have one clear purpose, communicate through well-defined interfaces, and can be understood and tested independently
-- For each unit, you should be able to answer: what does it do, how do you use it, and what does it depend on?
-- Can someone understand what a unit does without reading its internals? Can you change the internals without breaking consumers? If not, the boundaries need work.
-- Smaller, well-bounded units are also easier for you to work with - you reason better about code you can hold in context at once, and your edits are more reliable when files are focused. When a file grows large, that's often a signal that it's doing too much.
-
-**Working in existing codebases:**
-
-- Explore the current structure before proposing changes. Follow existing patterns.
-- Where existing code has problems that affect the work (e.g., a file that's grown too large, unclear boundaries, tangled responsibilities), include targeted improvements as part of the design - the way a good developer improves code they're working in.
-- Don't propose unrelated refactoring. Stay focused on what serves the current goal.
-
-## After the Design
-
-**Documentation:**
-
-- Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
-  - (User preferences for spec location override this default)
-- Use elements-of-style:writing-clearly-and-concisely skill if available
-- Commit the design document to git
-
-**Spec Self-Review:**
-After writing the spec document, look at it with fresh eyes:
-
-1. **Placeholder scan:** Any "TBD", "TODO", incomplete sections, or vague requirements? Fix them.
-2. **Internal consistency:** Do any sections contradict each other? Does the architecture match the feature descriptions?
-3. **Scope check:** Is this focused enough for a single implementation plan, or does it need decomposition?
-4. **Ambiguity check:** Could any requirement be interpreted two different ways? If so, pick one and make it explicit.
-
-Fix any issues inline. No need to re-review — just fix and move on.
-
-**User Review Gate:**
-After the spec review loop passes, ask the user to review the written spec before proceeding:
-
-> "Spec written and committed to `<path>`. Please review it and let me know if you want to make any changes before we start writing out the implementation plan."
-
-Wait for the user's response. If they request changes, make them and re-run the spec review loop. Only proceed once the user approves.
-
-**Implementation:**
-
-- Invoke the writing-plans skill to create a detailed implementation plan
-- Do NOT invoke any other skill. writing-plans is the next step.
-
-## Key Principles
-
-- **One question at a time** - Don't overwhelm with multiple questions
-- **Multiple choice preferred** - Easier to answer than open-ended when possible
-- **YAGNI ruthlessly** - Remove unnecessary features from all designs
-- **Explore alternatives** - Always propose 2-3 approaches before settling
-- **Incremental validation** - Present design, get approval before moving on
-- **Be flexible** - Go back and clarify when something doesn't make sense
-
-## Visual Companion
-
-A browser-based companion for showing mockups, diagrams, and visual options during brainstorming. Available as a tool — not a mode. Accepting the companion means it's available for questions that benefit from visual treatment; it does NOT mean every question goes through the browser.
-
-**Offering the companion:** When you anticipate that upcoming questions will involve visual content (mockups, layouts, diagrams), offer it once for consent:
-> "Some of what we're working on might be easier to explain if I can show it to you in a web browser. I can put together mockups, diagrams, comparisons, and other visuals as we go. This feature is still new and can be token-intensive. Want to try it? (Requires opening a local URL)"
-
-**This offer MUST be its own message.** Do not combine it with clarifying questions, context summaries, or any other content. The message should contain ONLY the offer above and nothing else. Wait for the user's response before continuing. If they decline, proceed with text-only brainstorming.
-
-**Per-question decision:** Even after the user accepts, decide FOR EACH QUESTION whether to use the browser or the terminal. The test: **would the user understand this better by seeing it than reading it?**
-
-- **Use the browser** for content that IS visual — mockups, wireframes, layout comparisons, architecture diagrams, side-by-side visual designs
-- **Use the terminal** for content that is text — requirements questions, conceptual choices, tradeoff lists, A/B/C/D text options, scope decisions
-
-A question about a UI topic is not automatically a visual question. "What does personality mean in this context?" is a conceptual question — use the terminal. "Which wizard layout works better?" is a visual question — use the browser.
-
-If they agree to the companion, read the detailed guide before proceeding:
-`skills/brainstorming/visual-companion.md`
+다음 단계:
+1. lecture_dir 경로를 정한다 (예: lectures/lecture-01-{주제슬러그})
+2. phase0-run-initializer 실행:
+   "phase0-run-initializer를 실행해줘. lecture_dir: {경로}"
+3. 생성된 current-run.md의 Suggested Topics/Keywords 섹션에
+   위 내용을 붙여넣는다.
+```

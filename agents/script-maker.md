@@ -1,5 +1,5 @@
 ---
-name: script-maker
+name: plugin-script-maker
 description: run_dir의 Phase2 Evidence와 Phase3 lecture-outline을 기반으로 실제 강의 슬라이드 스크립트를 작성하고 Phase4/script에 저장한다.
 model: sonnet
 color: green

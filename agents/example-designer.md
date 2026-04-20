@@ -1,5 +1,5 @@
 ---
-name: agent-example-designer
+name: plugin-example-designer
 description: Define lecture scope + RQ/Evidence(있으면) + Outline-Architect의 제약을 입력으로 받아, 강의에서 사용할 "단일 예제(Example-01 등)"의 설계안을 만든다. (코드 작성 전 단계)
 tools: Read, Grep, Glob, Bash, WebFetch, NotebookEdit, mcp__github__search_code, mcp__github__search_issues, mcp__github__search_pull_requests, mcp__github__search_repositories, mcp__github__list_commits, mcp__github__list_issues, mcp__github__list_pull_requests, mcp__github__list_releases, mcp__github__list_tags, mcp__github__list_branches, mcp__github__get_commit, mcp__github__get_file_contents, mcp__github__get_latest_release, mcp__github__get_label, mcp__github__get_me, mcp__github__get_release_by_tag, mcp__github__get_tag, mcp__github__issue_read
 model: sonnet
