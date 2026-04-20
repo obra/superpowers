@@ -1,6 +1,6 @@
-# Superpowers Lecture Pipeline
+# Superpowers Lecture & Study Pipeline
 
-Superpowers fork with a full lecture production pipeline — research-driven workflow for creating technical lectures using AI agents and skills.
+Superpowers fork with two AI-driven pipelines — a full **lecture production pipeline** for creating technical lectures, and a **3-day study pipeline** for deep-diving into coding concepts.
 
 ## How it works
 
@@ -94,11 +94,36 @@ git clone https://github.com/soyotime0118/superpowers.git
 - **plugin-script-maker** — Marp 형식 강의 스크립트 작성
 - **plugin-script-reviewer** — 스크립트 품질 검토
 
+### Study Pipeline Agents (3-Day Study Workflow)
+
+**Day 0**
+- **plugin-study-run-initializer** — 스터디 Run 디렉토리 초기화 (`day1/`, `day2/`, `day3/` 구조 생성)
+
+**Day 1 — Concept 학습**
+- **plugin-study-term-extractor** — 학습 주제에서 핵심 용어 추출 및 정의 수집
+- **plugin-study-quiz-generator** — terms.md 기반 Checkpoint 1 퀴즈 생성
+- **plugin-study-concept-diagram** — 핵심 개념 간 관계를 Mermaid 다이어그램으로 시각화 (선택)
+
+**Day 2 — 실습**
+- **plugin-study-tutorial-guide** — 단계별 튜토리얼 가이드 생성
+- **plugin-study-oss-analyzer** — 관련 OSS 코드 분석 (Best Practice / Anti-pattern 도출)
+- **plugin-study-practice-reviewer** — 실습 코드 리뷰 및 Checkpoint 2 점검
+
+**Day 3 — 프로젝트**
+- **plugin-study-project-designer** — 학습 개념을 적용한 미니 프로젝트 명세 설계
+- **plugin-study-code-reviewer** — 구현된 프로젝트 코드 리뷰 및 Checkpoint 3 평가
+- **plugin-study-retrospective-guide** — 3일 학습 회고 문서 작성 가이드
+
 ### Skills Library
 
 **Lecture Pipeline**
-- **lecture-workflow** — 전체 파이프라인 가이드
+- **lecture-workflow** — 전체 강의 파이프라인 가이드
 - **rq-review** — Gate 1: RQ 목록 대화형 검토·수정·확정
+
+**Study Pipeline**
+- **study-workflow** — 전체 스터디 파이프라인 가이드
+- **quiz-session** — Checkpoint 1: 퀴즈 대화형 Q&A 진행 및 즉시 채점
+- **retrospective** — Day 3: KPT/4L 대화형 회고 → evaluation.md + retrospective.md 자동 작성
 
 **General (Superpowers 기본 제공)**
 - **brainstorming** — 아이디어를 구조화된 설계로 정리
@@ -135,6 +160,53 @@ Phase 0 → Phase 1 → [Gate 1] → Phase 2 → [Gate 2] → Phase 3 → [Gate 
 - **Agent vs Skill 분리**: 대량 파일 처리·병렬 작업 → Agent / 사용자 상호작용·반복 수정 → Skill
 - **Manual Gate**: 각 단계 전 사용자 검토 및 확인 단계 포함
 - **plugin-evidence-collector 실행 모드**: 순차(Y) / 병렬(P, Rate Limit 위험 고지 포함) / 건너뜀(N) 선택 가능
+
+## Study Pipeline
+
+```
+Day 0 → Day 1 → Day 2 → Day 3
+```
+
+| Day | 역할 | Agent/Skill |
+|-----|------|-------------|
+| Day 0 | Run 초기화 | `plugin-study-run-initializer` |
+| Day 1 | 용어 추출 | `plugin-study-term-extractor` |
+| Day 1 | 퀴즈 생성 | `plugin-study-quiz-generator` |
+| Day 1 (선택) | 개념 다이어그램 | `plugin-study-concept-diagram` |
+| **Checkpoint 1** | **대화형 퀴즈 세션** | **`quiz-session` skill** |
+| Day 2 | 튜토리얼 생성 | `plugin-study-tutorial-guide` |
+| Day 2 | OSS 분석 | `plugin-study-oss-analyzer` |
+| Day 2 | 실습 코드 리뷰 | `plugin-study-practice-reviewer` |
+| Day 3 | 미니 프로젝트 설계 | `plugin-study-project-designer` |
+| Day 3 | 코드 리뷰 | `plugin-study-code-reviewer` |
+| **Day 3 완료** | **대화형 회고** | **`retrospective` skill** |
+
+### Study 빠른 시작
+
+```
+1. plugin-study-run-initializer 실행
+   → study_dir: studies/study-01-factory-method
+   → topic: "Factory Method Pattern"
+
+2. current-run.md 경로를 복사하여 이후 agent에 전달
+
+3. Day 1 순서대로 실행:
+   plugin-study-term-extractor → plugin-study-quiz-generator → (plugin-study-concept-diagram 선택)
+
+4. "퀴즈 풀어볼게" → quiz-session skill로 Checkpoint 1 진행
+
+5. Day 2: plugin-study-tutorial-guide ∥ plugin-study-oss-analyzer → plugin-study-practice-reviewer
+
+6. Day 3: plugin-study-project-designer → [직접 구현] → plugin-study-code-reviewer
+
+7. "회고 시작해줘" → retrospective skill로 마무리
+```
+
+### 주요 설계 원칙 (Study)
+
+- **current_run_path 패턴**: 강의 파이프라인과 동일. `current-run.md` 경로 하나로 모든 agent 연결
+- **Checkpoint**: 학습 단계별 자가 점검 (1: 용어/개념, 2: 실습, 3: 프로젝트)
+- **대화형 Skill**: 퀴즈(즉시 채점·해설)와 회고(KPT/4L 대화 → 문서 자동 작성)는 컨텍스트 유지가 필요하여 skill로 구현
 
 ## License
 
