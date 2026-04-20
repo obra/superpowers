@@ -148,6 +148,10 @@ Phase 0 → Phase 1 → [Gate 1] → Phase 2 → [Gate 2] → Phase 3 → [Gate 
 
 새 강의를 만들려면:
 
+0. **강의 주제/방향 정리** → `brainstorming` skill 사용 (선택, 권장)
+   - "어떤 주제로 강의를 만들까?" 단계에서 활용
+   - 강의 목표, 대상 수강생, 핵심 개념, 다룰 범위를 대화로 정리
+   - brainstorming 결과를 바탕으로 `Suggested Keywords`, `Suggested Topics` 초안 작성
 1. `lecture_dir` 경로를 정한다 (예: `lectures/lecture-02`)
 2. `phase0-run-initializer` 실행 → `lecture_dir` 전달
 3. 생성된 `current-run.md`의 `Suggested Keywords`, `Suggested Topics` 섹션을 작성

@@ -189,6 +189,9 @@ Phase 0 → Phase 1 → [Gate 1] → Phase 2 → [Gate 2] → Phase 3 → [Gate 
 ### 빠른 시작
 
 ```
+0. [선택, 권장] brainstorming skill → 강의 주제·목표·범위 대화로 정리
+   → Suggested Keywords/Topics 초안 도출
+
 1. phase0-run-initializer 실행 → lecture_dir 전달
 2. current-run.md의 Suggested Keywords/Topics 작성
 3. rq-fanout-orchestrator 실행 (RQ 생성 자동화)
@@ -199,6 +202,8 @@ Phase 0 → Phase 1 → [Gate 1] → Phase 2 → [Gate 2] → Phase 3 → [Gate 
 8. outline-architect + example-designer (Phase 3)
 9. script-maker → script-reviewer (Phase 4)
 ```
+
+> **Phase 0 이전**: 강의 주제가 명확하지 않다면 `brainstorming` skill을 먼저 실행하세요. 강의 목표, 대상 수강생, 핵심 개념을 대화로 정리한 뒤 `current-run.md`의 Keywords/Topics를 채우면 이후 RQ 품질이 크게 향상됩니다.
 
 ### 주요 설계 원칙
 
