@@ -58,8 +58,8 @@ Day 0 → Day 1 → Day 2 → Day 3
 **2-3. 실습 리뷰 (순차, 2-1·2-2 완료 후)**
 **Agent:** `plugin-study-practice-reviewer`
 **입력:** `current_run_path`
-**출력:** `day2/basic-example/`, `day2/evaluation.md`
-**모델:** sonnet
+**출력:** `day2/practice-review.md`
+**모델:** haiku
 
 ### Day 3 — 프로젝트
 
