@@ -1,6 +1,6 @@
 ---
 name: rq-set-merger
-description: 관점별로 생성된 RQ 후보(rq-candidates-*.md / rq-set-*.md)를 수집·정규화·중복제거·우선순위화하여 단일 최종 RQ 목록(rq-set.md)을 만든다. 머지 과정은 rq-set-merge-report.md로 추적 가능하게 기록한다. 또한 다음 단계 실행 및 재실행을 위한 invocation plan 파일들을 생성한다.
+description: 관점별로 생성된 RQ 후보(rq-candidates-*.md / rq-set-*.md)를 수집·정규화·중복제거·우선순위화하여 단일 최종 RQ 목록(rq-set.md)을 만든다. 머지 과정은 rq-set-merge-report.md로 추적 가능하게 기록한다.
 tools: Read, Grep, Glob, Bash, Write
 model: sonnet
 ---
@@ -85,13 +85,7 @@ model: sonnet
 3) rq-set.v-<stamp>.md
 4) rq-set-merge-report.v-<stamp>.md
 
-## 3.3 Invocation Plan 파일 (필수)
-다음 단계를 위한 실행 계획 파일들을 생성한다:
-
-1) `next-step-invocation.md` - 다음 단계(RQ 개별 파일 생성) 실행 블록
-2) `rerun-merge-invocation.md` - 병합 재실행 블록
-
-## 3.4 사용자 안내 메시지 (필수)
+## 3.3 사용자 안내 메시지 (필수)
 작업 완료 후 사용자에게 다음 내용을 출력:
 ```
 ✅ RQ 병합이 완료되었습니다.
@@ -99,14 +93,10 @@ model: sonnet
 생성된 파일:
 - rq-set.md (최종 {N}개 RQ)
 - rq-set-merge-report.md (병합 리포트)
-- next-step-invocation.md (다음 단계 실행 블록)
-- rerun-merge-invocation.md (재실행 블록)
 
 📋 다음 단계:
-1. "RQ 검토해줘" 또는 "Gate 1 시작" → rq-review skill로 대화형 검토·수정·확정
-
-2. 병합 결과가 마음에 들지 않으면:
-   - rerun-merge-invocation.md의 파라미터를 수정하여 재실행
+- "RQ 검토해줘" 또는 "Gate 1 시작" → rq-review skill로 대화형 검토·수정·확정
+- 병합 결과를 다시 하려면: target_rq_count, view_distribution 파라미터를 전달하여 재실행
 ```
 
 ## 3.5 출력 템플릿 (엄격히 준수)
@@ -180,76 +170,7 @@ model: sonnet
   3) "{output_dir}/rq-set.md"  (최신본 포인터: 위 v- 파일과 동일 내용)
   4) "{output_dir}/rq-set-merge-report.md" (최신본 포인터: 위 v- 파일과 동일 내용)
 
-## Step H. Invocation Plan 파일 생성 (필수)
-다음 두 파일을 생성한다:
-
-### H-1. next-step-invocation.md
-```markdown
-# 다음 단계: RQ 개별 파일 생성
-
-## 입력
-- rq-set.md: {output_dir}/rq-set.md
-
-## 출력
-- RQ 개별 파일들: {output_dir}/ (phase1 바로 하위)
-
-## 실행 방법
-
-다음 프롬프트를 복사하여 Claude에게 요청:
-
-\```
-Phase 1 RQ 개별 파일 생성을 실행해주세요.
-
-입력: {output_dir}/rq-set.md
-출력: {output_dir}/
-
-rq-set.md의 각 RQ를 개별 파일로 생성해주세요.
-\```
-
-또는 agent 호출:
-\```yaml
-agent: rq-set-a-to-rq-files
-rq_set_file: "{output_dir}/rq-set.md"
-rq_files_dir: "{output_dir}"
-\```
-```
-
-### H-2. rerun-merge-invocation.md
-```markdown
-# RQ 병합 재실행
-
-## 파라미터 조정
-
-{output_dir}/rq-merge-params.md 파일을 생성/편집:
-
-\```yaml
----
-add_rq_ids:
-  - "RQ-A-001"  # 반드시 포함할 RQ
-target_rq_count: 12
-view_distribution:
-  concept: 4
-  impl: 4
-  tradeoff: 2
-  ops: 2
----
-\```
-
-## 실행 방법
-
-파라미터 파일을 편집한 후, 다음 프롬프트로 재실행:
-
-\```
-Phase 1 RQ 병합을 재실행해주세요.
-
-파라미터: {output_dir}/rq-merge-params.md
-출력: {output_dir}/
-
-rq-merge-params.md의 설정을 반영하여 RQ 병합을 다시 수행해주세요.
-\```
-```
-
-## Step I. 사용자 안내 출력 및 종료
+## Step H. 사용자 안내 출력 및 종료
 - 섹션 3.4에 명시된 안내 메시지를 사용자에게 출력한다.
 - 안내 메시지 마지막에 다음 내용을 추가한다:
   ```
@@ -264,7 +185,5 @@ rq-merge-params.md의 설정을 반영하여 RQ 병합을 다시 수행해주세
 - <output_dir>/rq-set-merge-report.md
 - <output_dir>/rq-set.v-<stamp>.md
 - <output_dir>/rq-set-merge-report.v-<stamp>.md
-- <output_dir>/next-step-invocation.md
-- <output_dir>/rerun-merge-invocation.md
 
-그리고 섹션 3.4의 안내 메시지를 출력하고 종료하라.
+그리고 섹션 3.3의 안내 메시지를 출력하고 종료하라.
