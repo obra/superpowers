@@ -29,7 +29,7 @@ color: red
   - OSS: 실제 구현/OSS 근거/진화 포인트 중심(B)
   - OPS: 트레이드오프/실패모드/운영/테스트 중심(C)
 - keywords: (선택) 핵심 키워드 2~6개
-- audience: (선택) 대상 수준 (예: junior / mid / senior) 기본값 juninor, mid
+- audience: (선택) 대상 수준 (예: junior / mid / senior) 기본값 junior, mid
 - rq_count: (선택) 생성 개수 (기본 4, 범위 3~8), RQ + SRQ 합
 - constraints: (선택) 제외/포함 규칙
   - include: [...]
