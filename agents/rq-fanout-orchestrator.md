@@ -279,7 +279,7 @@ color: blue
    - `audience`가 없으면 기본값 "mid" 사용
    - `keywords`가 없으면 빈 목록 사용
 
-3) `output_dir = {run_dir}/phase1/` 로 자동 설정한다.  # (자동 결정 값)
+3) `output_dir = {run_dir}/phase1/set` 로 자동 설정한다.  # (자동 결정 값)
 
 4) 이후 모든 **입력 경로는 `{run_dir}/` 기준 상대 경로**로 해석한다.
 
