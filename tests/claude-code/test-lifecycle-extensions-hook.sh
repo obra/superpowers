@@ -227,6 +227,39 @@ fi
 rm -rf "$tmpdir"
 echo ""
 
+# Test 10: Project manifest resolves from repo root when started in subdir
+echo "Test 10: Repo-root project manifest from subdir..."
+tmpdir=$(mktemp -d)
+projdir=$(mktemp -d)
+mkdir -p "$projdir/.superpowers" "$projdir/subdir"
+cat > "$projdir/.superpowers/extensions.yaml" << 'YAML'
+extensions:
+  post-review:
+    - repo-root-skill
+YAML
+(cd "$projdir" && git init --quiet)
+output=$(run_hook "$tmpdir" "$projdir/subdir")
+check_present "$output" "post-review: repo-root-skill" "Repo-root manifest loaded from nested directory"
+rm -rf "$tmpdir" "$projdir"
+echo ""
+
+# Test 11: Namespaced skill names preserved
+echo "Test 11: Namespaced skill names..."
+tmpdir=$(mktemp -d)
+mkdir -p "$tmpdir/.superpowers"
+cat > "$tmpdir/.superpowers/extensions.yaml" << 'YAML'
+extensions:
+  post-review:
+    - github:gh-fix-ci
+  pre-finish:
+    - google-calendar:google-calendar
+YAML
+output=$(run_hook "$tmpdir")
+check_present "$output" "post-review: github:gh-fix-ci" "Plugin skill name preserved"
+check_present "$output" "pre-finish: google-calendar:google-calendar" "Multiple colons preserved"
+rm -rf "$tmpdir"
+echo ""
+
 # Summary
 echo "=== Results ==="
 echo "  Passed: $PASSED"
