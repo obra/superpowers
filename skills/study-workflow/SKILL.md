@@ -122,6 +122,19 @@ Day 2: tutorial-guide ∥ oss-analyzer → practice-reviewer
 Day 3: project-designer → [직접 구현] → code-reviewer → retrospective-guide
 ```
 
+## 대화형 Skills
+
+특정 단계에서 단순 파일 생성이 아닌 **대화형 인터랙션**이 필요할 때 사용하는 skill:
+
+| Skill | 시점 | 역할 |
+|-------|------|------|
+| `quiz-session` | Day 1 완료 후 | 퀴즈를 실시간 Q&A로 진행, 즉시 채점/해설 |
+| `retrospective` | Day 3 완료 후 | KPT/4L 대화형 회고 후 evaluation.md + retrospective.md 작성 |
+
+호출 방법:
+- "퀴즈 풀어볼게" → `quiz-session` skill 사용
+- "회고 시작해줘" → `retrospective` skill 사용
+
 ## 파라미터 참조
 
 | 변수 | 설명 | 예시 |
