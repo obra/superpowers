@@ -160,6 +160,53 @@ gemini extensions update superpowers
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
 - **using-superpowers** - Introduction to the skills system
 
+## Lecture Production Pipeline
+
+This fork adds a full lecture production pipeline for creating technical lectures through a structured, research-driven workflow.
+
+### Workflow Overview
+
+```
+Phase 0 → Phase 1 → [Gate 1] → Phase 2 → [Gate 2] → Phase 3 → [Gate 3] → Phase 4
+```
+
+| Phase | 역할 | Agent/Skill |
+|-------|------|-------------|
+| Phase 0 | Run 초기화, 디렉토리 구조 생성 | `phase0-run-initializer` |
+| Phase 1-1 | RQ 관점 분리 (fanout) | `rq-fanout-orchestrator` |
+| Phase 1-2 | 관점별 RQ 생성 (병렬 ×3) | `rq-list-generator` |
+| Phase 1-3 | RQ 병합 및 통합 | `rq-set-merger` |
+| **Gate 1** | **RQ 목록 대화형 검토·수정·확정** | **`rq-review` skill** |
+| Phase 1-4 | RQ 개별 파일 분리 생성 | `rq-set-a-to-rq-files` |
+| Phase 2-1 | Evidence 수집 계획 수립 | `evidence-master` |
+| Phase 2-2 | RQ별 Evidence 수집 | `evidence-collector` |
+| Phase 2-3 | RQ↔Evidence 매핑 생성 | `evidence-summary` |
+| **Gate 2** | **Evidence 커버리지 검토** | 수동 |
+| Phase 3 | 강의 구성(outline) 및 예제 설계 | `outline-architect`, `example-designer` |
+| **Gate 3** | **Outline + 예제 검토** | 수동 |
+| Phase 4 | 스크립트 작성 및 리뷰 | `script-maker`, `script-reviewer` |
+
+### 빠른 시작
+
+```
+1. phase0-run-initializer 실행 → lecture_dir 전달
+2. current-run.md의 Suggested Keywords/Topics 작성
+3. rq-fanout-orchestrator 실행 (RQ 생성 자동화)
+4. rq-set-merger 실행 (RQ 병합)
+5. "RQ 검토해줘" → rq-review skill로 Gate 1 진행
+6. rq-set-a-to-rq-files 실행
+7. evidence-master → evidence-collector → evidence-summary (Phase 2)
+8. outline-architect + example-designer (Phase 3)
+9. script-maker → script-reviewer (Phase 4)
+```
+
+### 주요 설계 원칙
+
+- **current_run_path 패턴**: 모든 agent가 `current-run.md` 경로 하나를 받아 `run_dir`, `lecture_dir`을 추출
+- **Agent vs Skill 분리**: 대량 파일 처리·병렬 작업 → Agent / 사용자 상호작용·반복 수정 → Skill
+- **Manual Gate**: 각 단계 전 사용자 검토 및 확인 단계 포함
+- **evidence-collector 실행 모드**: 순차(Y) / 병렬(P, Rate Limit 위험 고지 포함) / 건너뜀(N) 선택 가능
+
 ## Philosophy
 
 - **Test-Driven Development** - Write tests first, always
