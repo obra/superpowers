@@ -106,32 +106,14 @@ C) **`{evidence_readme}`**: Phase2 안내 문서
 - evidence-collection-invocations.md (인덱스)
 - phase2/summary/README.md
 
-❓ 지금 evidence-collector를 실행할까요?
-   Y = 순차 실행 (안정적, 느림)
-   P = 병렬 실행 (빠름, ⚠️ 주의사항 있음)
-   N = 실행하지 않음
-   (총 {N}개 RQ)
+❓ 지금 evidence-collector를 각 RQ별로 순차 실행할까요? (Y/N)
+   (총 {N}개 RQ, 각 RQ당 별도 실행)
 ```
 
-- **Y(순차 실행)인 경우**: Task 도구를 사용하여 각 RQ의 `evidence-collector`를 **순차적으로** 실행한다.
+- **Y(예)인 경우**: Task 도구를 사용하여 각 RQ의 `evidence-collector`를 **순차적으로** 실행한다.
   - 각 invocation 파일의 파라미터를 읽어 evidence-collector에 전달
   - 전달 파라미터: `current_run_path: {current_run_path}`, `rq_file: {rq_file}`
   - 모든 실행 완료 후 evidence-summary agent 실행 여부를 추가로 질문한다:
-    ```
-    ✅ Evidence 수집 완료. evidence-summary를 실행하여 매핑 문서를 생성할까요? (Y/N)
-    ```
-
-- **P(병렬 실행)인 경우**: 병렬 실행 전 반드시 아래 주의사항을 출력한다:
-  ```
-  ⚠️ 병렬 실행 주의사항:
-  - 각 agent가 독립 컨텍스트를 사용하므로 총 토큰 소비량이 N배 증가합니다.
-  - GitHub API / 검색 API Rate Limit에 걸릴 수 있습니다.
-  - E-NN 파일 번호 채번이 충돌할 수 있습니다.
-  계속 진행하시겠습니까? (Y/N)
-  ```
-  - 재확인 Y인 경우: Task 도구를 사용하여 모든 RQ의 `evidence-collector`를 **병렬로** 실행한다.
-  - 재확인 N인 경우: 순차/병렬 선택 질문으로 돌아간다.
-  - 병렬 실행 완료 후 evidence-summary agent 실행 여부를 추가로 질문한다:
     ```
     ✅ Evidence 수집 완료. evidence-summary를 실행하여 매핑 문서를 생성할까요? (Y/N)
     ```
