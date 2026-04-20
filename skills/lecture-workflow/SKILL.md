@@ -22,13 +22,13 @@ Phase 0 → Phase 1 → [Gate 1] → Phase 2 → [Gate 2] → Phase 3 → [Gate 
 ### Phase 1 — RQ 세트 생성
 
 **1-1. RQ 관점 분리 (순차)**
-**Agent:** `agent-rq-fanout-orchestrator`
+**Agent:** `plugin-rq-fanout-orchestrator`
 **입력:** `current_run_path` (current-run.md 절대 경로, 필수)
 **출력:** `phase1/set/fanout/_agent_rq_fanout.md`, `phase1/set/rq-set-a/b/c.md` (병렬 실행 후)
 **모델:** sonnet
 
 **1-2. RQ 생성 (병렬 ×3, fanout-orchestrator가 자동 실행)**
-**Agent:** `agent-rq-list-generator`
+**Agent:** `plugin-rq-list-generator`
 - Set A: Concept/Theory → `phase1/set/rq-set-a.md`
 - Set B: Implementation/OSS → `phase1/set/rq-set-b.md`
 - Set C: Trade-off/Ops → `phase1/set/rq-set-c.md`
@@ -76,7 +76,7 @@ Phase 0 → Phase 1 → [Gate 1] → Phase 2 → [Gate 2] → Phase 3 → [Gate 
 **출력:** `phase3/outline/draft-NN/lecture-outline.md`, `outline-rq-evidence-mapping.md`, `outline-review-notes.md`, `outline-architect-log.md`
 **모델:** inherit
 
-**Agent:** `agent-example-designer` ×N (병렬)
+**Agent:** `plugin-example-designer` ×N (병렬)
 **입력:** `current_run_path`, `rq_evidence_mapping_path`, `example_id` (또는 `examples` 배열)
 **출력:** `phase3/examples/{example_id}-example-plan.md`, `phase3/invocation/example-designer-{example_id}.md`
 **모델:** sonnet
@@ -155,7 +155,7 @@ Phase 0 → Phase 1 → [Gate 1] → Phase 2 → [Gate 2] → Phase 3 → [Gate 
 1. `lecture_dir` 경로를 정한다 (예: `lectures/lecture-02`)
 2. `phase0-run-initializer` 실행 → `lecture_dir` 전달
 3. 생성된 `current-run.md`의 `Suggested Keywords`, `Suggested Topics` 섹션을 작성
-4. `phase0/invocation-rq-fanout.md` 내용을 `agent-rq-fanout-orchestrator`에 전달
+4. `phase0/invocation-rq-fanout.md` 내용을 `plugin-rq-fanout-orchestrator`에 전달
 5. Phase 1 순서대로 실행 (fanout → merger → rq-files)
 6. 각 Manual Gate에서 검토 후 승인
 

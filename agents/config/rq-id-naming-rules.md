@@ -71,7 +71,7 @@ OPS 타입은 **내용에 따라** agent가 다음과 같이 판단합니다:
 
 ## 사용 예시
 
-### agent-rq-list-generator 출력 예시
+### plugin-rq-list-generator 출력 예시
 
 ```markdown
 ## 1) RQ List
@@ -103,8 +103,8 @@ OPS 타입은 **내용에 따라** agent가 다음과 같이 판단합니다:
 
 이 설정 파일을 참조하는 agent들:
 
-1. **agent-rq-list-generator**: RQ 목록 생성 시 prefix 결정
-2. **agent-rq-fanout-orchestrator**: 3개 관점별 RQ 생성 오케스트레이션
+1. **plugin-rq-list-generator**: RQ 목록 생성 시 prefix 결정
+2. **plugin-rq-fanout-orchestrator**: 3개 관점별 RQ 생성 오케스트레이션
 3. **rq-set-merger**: 관점별 RQ 병합 시 prefix 이해
 4. **agent-rq-split-file**: RQ 개별 파일 생성 시 파일명 결정
 

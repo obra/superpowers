@@ -47,7 +47,7 @@ git clone https://github.com/soyotime0118/superpowers.git
 
 1. **phase0-run-initializer** — `lecture_dir`을 전달하여 run 디렉토리 구조 생성 (`runs/run-YYYYMMDD-HHMM-N/`).
 
-2. **agent-rq-fanout-orchestrator** — `current_run_path` 전달. Concept/Implementation/Trade-off 3개 관점으로 RQ를 병렬 생성.
+2. **plugin-rq-fanout-orchestrator** — `current_run_path` 전달. Concept/Implementation/Trade-off 3개 관점으로 RQ를 병렬 생성.
 
 3. **rq-set-merger** — 3개 관점의 RQ 후보를 통합·중복제거·우선순위화하여 `phase1/merge/rq-set.md` 생성.
 
@@ -63,7 +63,7 @@ git clone https://github.com/soyotime0118/superpowers.git
 
 9. **outline-architect** — 강의 구성(outline) 설계. `mode: create`로 실행.
 
-10. **agent-example-designer** ⛔ Gate 3 — 예제 설계. outline + examples 검토 후 진행.
+10. **plugin-example-designer** ⛔ Gate 3 — 예제 설계. outline + examples 검토 후 진행.
 
 11. **script-maker** — Marp 슬라이드 형식 스크립트 작성.
 
@@ -78,7 +78,7 @@ git clone https://github.com/soyotime0118/superpowers.git
 
 **Phase 1 — RQ 세트 생성**
 - **rq-fanout-orchestrator** — 3개 관점 병렬 RQ 생성 오케스트레이션
-- **agent-rq-list-generator** — 관점별 RQ 목록 생성 (Concept / Implementation / Trade-off)
+- **plugin-rq-list-generator** — 관점별 RQ 목록 생성 (Concept / Implementation / Trade-off)
 - **rq-set-merger** — RQ 통합·정규화·우선순위화
 
 **Phase 2 — Evidence 수집**
