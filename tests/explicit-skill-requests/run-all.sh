@@ -58,6 +58,17 @@ else
 fi
 echo ""
 
+# Test: execute-task explicit request
+echo ">>> Test 5: execute-task-please"
+if "$SCRIPT_DIR/run-test.sh" "execute-task" "$PROMPTS_DIR/execute-task-please.txt"; then
+    PASSED=$((PASSED + 1))
+    RESULTS="$RESULTS\nPASS: execute-task-please"
+else
+    FAILED=$((FAILED + 1))
+    RESULTS="$RESULTS\nFAIL: execute-task-please"
+fi
+echo ""
+
 echo "=== Summary ==="
 echo -e "$RESULTS"
 echo ""
