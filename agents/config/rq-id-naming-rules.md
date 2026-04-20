@@ -105,7 +105,7 @@ OPS 타입은 **내용에 따라** agent가 다음과 같이 판단합니다:
 
 1. **plugin-rq-list-generator**: RQ 목록 생성 시 prefix 결정
 2. **plugin-rq-fanout-orchestrator**: 3개 관점별 RQ 생성 오케스트레이션
-3. **rq-set-merger**: 관점별 RQ 병합 시 prefix 이해
+3. **plugin-rq-set-merger**: 관점별 RQ 병합 시 prefix 이해
 4. **agent-rq-split-file**: RQ 개별 파일 생성 시 파일명 결정
 
 ## 변경 이력
