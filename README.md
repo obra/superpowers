@@ -47,7 +47,7 @@ git clone https://github.com/soyotime0118/superpowers.git
 
 1. **phase0-run-initializer** — `lecture_dir`을 전달하여 run 디렉토리 구조 생성 (`runs/run-YYYYMMDD-HHMM-N/`).
 
-2. **rq-fanout-orchestrator** — `current_run_path` 전달. Concept/Implementation/Trade-off 3개 관점으로 RQ를 병렬 생성.
+2. **agent-rq-fanout-orchestrator** — `current_run_path` 전달. Concept/Implementation/Trade-off 3개 관점으로 RQ를 병렬 생성.
 
 3. **rq-set-merger** — 3개 관점의 RQ 후보를 통합·중복제거·우선순위화하여 `phase1/merge/rq-set.md` 생성.
 
