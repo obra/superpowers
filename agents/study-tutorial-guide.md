@@ -207,7 +207,7 @@ classDiagram
 
 ```bash
 mkdir -p tutorial/src/main/java/com/example
-mkdir -p tutorial/test/java/com/example
+mkdir -p tutorial/src/test/java/com/example
 cd tutorial
 ```
 
