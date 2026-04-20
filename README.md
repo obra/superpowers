@@ -63,7 +63,7 @@ git clone https://github.com/soyotime0118/superpowers.git
 
 9. **outline-architect** — 강의 구성(outline) 설계. `mode: create`로 실행.
 
-10. **example-designer** ⛔ Gate 3 — 예제 설계. outline + examples 검토 후 진행.
+10. **agent-example-designer** ⛔ Gate 3 — 예제 설계. outline + examples 검토 후 진행.
 
 11. **script-maker** — Marp 슬라이드 형식 스크립트 작성.
 
