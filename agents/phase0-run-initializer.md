@@ -1,5 +1,5 @@
 ---
-name: phase0-run-initializer
+name: plugin-phase0-run-initializer
 description: Phase 0에서 lectures/lecture-XX/runs/ 아래에 run-YYYYMMDD-HHMM-시퀀스 디렉토리를 생성(불변 아카이브)하고, 생성된 run 디렉토리 내부에 current-run.md를 생성해 이후 모든 agent가 동일 run 경로를 참조하게 한다.
 model: haiku
 color: cyan

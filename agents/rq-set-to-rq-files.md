@@ -1,5 +1,5 @@
 ---
-name: rq-set-a-to-rq-files
+name: plugin-rq-set-a-to-rq-files
 description: rq-set-a.md(또는 rq-set 파일)에 적힌 각 항목을 개별 RQ 문서로 분리 생성한다. 항목 순서를 유지하고, 파일명/프론트매터/본문 템플릿을 표준화한다.
 tools: Read, Grep, Glob, Bash, Write
 model: haiku

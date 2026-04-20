@@ -45,54 +45,54 @@ git clone https://github.com/soyotime0118/superpowers.git
 
 0. **brainstorming** (선택, 권장) — 강의 주제/목표/범위를 대화로 정리. `current-run.md`의 Keywords/Topics 초안 도출.
 
-1. **phase0-run-initializer** — `lecture_dir`을 전달하여 run 디렉토리 구조 생성 (`runs/run-YYYYMMDD-HHMM-N/`).
+1. **plugin-phase0-run-initializer** — `lecture_dir`을 전달하여 run 디렉토리 구조 생성 (`runs/run-YYYYMMDD-HHMM-N/`).
 
 2. **plugin-rq-fanout-orchestrator** — `current_run_path` 전달. Concept/Implementation/Trade-off 3개 관점으로 RQ를 병렬 생성.
 
-3. **rq-set-merger** — 3개 관점의 RQ 후보를 통합·중복제거·우선순위화하여 `phase1/merge/rq-set.md` 생성.
+3. **plugin-rq-set-merger** — 3개 관점의 RQ 후보를 통합·중복제거·우선순위화하여 `phase1/merge/rq-set.md` 생성.
 
 4. **rq-review skill** ⛔ Gate 1 — `rq-set.md`를 대화형으로 검토·수정·확정. "RQ 검토해줘"로 시작.
 
-5. **rq-set-a-to-rq-files** — 확정된 RQ를 관점별 개별 파일로 분리 생성.
+5. **plugin-rq-set-a-to-rq-files** — 확정된 RQ를 관점별 개별 파일로 분리 생성.
 
-6. **evidence-master** — RQ별 Evidence-Collector 실행 계획 수립 (Invocation Block 파일 생성).
+6. **plugin-evidence-master** — RQ별 Evidence-Collector 실행 계획 수립 (Invocation Block 파일 생성).
 
-7. **evidence-collector** — RQ별로 실행. 순차(Y) / 병렬(P, 위험 고지 포함) / 건너뜀(N) 선택.
+7. **plugin-evidence-collector** — RQ별로 실행. 순차(Y) / 병렬(P, 위험 고지 포함) / 건너뜀(N) 선택.
 
-8. **evidence-summary** ⛔ Gate 2 — RQ↔Evidence 매핑 생성. `rq-evidence-map.md` 검토 후 진행.
+8. **plugin-evidence-summary** ⛔ Gate 2 — RQ↔Evidence 매핑 생성. `rq-evidence-map.md` 검토 후 진행.
 
-9. **outline-architect** — 강의 구성(outline) 설계. `mode: create`로 실행.
+9. **plugin-outline-architect** — 강의 구성(outline) 설계. `mode: create`로 실행.
 
 10. **plugin-example-designer** ⛔ Gate 3 — 예제 설계. outline + examples 검토 후 진행.
 
-11. **script-maker** — Marp 슬라이드 형식 스크립트 작성.
+11. **plugin-script-maker** — Marp 슬라이드 형식 스크립트 작성.
 
-12. **script-reviewer** — 스크립트 품질 검토 (DONE/PARTIAL/MISSING/MISALIGNED 평가).
+12. **plugin-script-reviewer** — 스크립트 품질 검토 (DONE/PARTIAL/MISSING/MISALIGNED 평가).
 
 ## What's Inside
 
 ### Lecture Pipeline Agents
 
 **Phase 0**
-- **phase0-run-initializer** — Run 디렉토리 초기화 및 `current-run.md` 생성
+- **plugin-phase0-run-initializer** — Run 디렉토리 초기화 및 `current-run.md` 생성
 
 **Phase 1 — RQ 세트 생성**
 - **rq-fanout-orchestrator** — 3개 관점 병렬 RQ 생성 오케스트레이션
 - **plugin-rq-list-generator** — 관점별 RQ 목록 생성 (Concept / Implementation / Trade-off)
-- **rq-set-merger** — RQ 통합·정규화·우선순위화
+- **plugin-rq-set-merger** — RQ 통합·정규화·우선순위화
 
 **Phase 2 — Evidence 수집**
-- **evidence-master** — Evidence 수집 Invocation Block 생성
-- **evidence-collector** — RQ별 코드/문서/PR 증거 수집
-- **evidence-summary** — RQ↔Evidence 매핑 문서 생성
+- **plugin-evidence-master** — Evidence 수집 Invocation Block 생성
+- **plugin-evidence-collector** — RQ별 코드/문서/PR 증거 수집
+- **plugin-evidence-summary** — RQ↔Evidence 매핑 문서 생성
 
 **Phase 3 — 구성 설계**
-- **outline-architect** — 강의 outline 설계 (CREATE/REVIEW 모드)
+- **plugin-outline-architect** — 강의 outline 설계 (CREATE/REVIEW 모드)
 - **example-designer** — 예제 코드 설계
 
 **Phase 4 — 스크립트**
-- **script-maker** — Marp 형식 강의 스크립트 작성
-- **script-reviewer** — 스크립트 품질 검토
+- **plugin-script-maker** — Marp 형식 강의 스크립트 작성
+- **plugin-script-reviewer** — 스크립트 품질 검토
 
 ### Skills Library
 
@@ -115,26 +115,26 @@ Phase 0 → Phase 1 → [Gate 1] → Phase 2 → [Gate 2] → Phase 3 → [Gate 
 
 | Phase | 역할 | Agent/Skill |
 |-------|------|-------------|
-| Phase 0 | Run 초기화, 디렉토리 구조 생성 | `phase0-run-initializer` |
+| Phase 0 | Run 초기화, 디렉토리 구조 생성 | `plugin-phase0-run-initializer` |
 | Phase 1-1 | RQ 관점 분리 (fanout) | `rq-fanout-orchestrator` |
 | Phase 1-2 | 관점별 RQ 생성 (병렬 ×3) | `rq-list-generator` |
-| Phase 1-3 | RQ 병합 및 통합 | `rq-set-merger` |
+| Phase 1-3 | RQ 병합 및 통합 | `plugin-rq-set-merger` |
 | **Gate 1** | **RQ 목록 대화형 검토·수정·확정** | **`rq-review` skill** |
-| Phase 1-4 | RQ 개별 파일 분리 생성 | `rq-set-a-to-rq-files` |
-| Phase 2-1 | Evidence 수집 계획 수립 | `evidence-master` |
-| Phase 2-2 | RQ별 Evidence 수집 | `evidence-collector` |
-| Phase 2-3 | RQ↔Evidence 매핑 생성 | `evidence-summary` |
+| Phase 1-4 | RQ 개별 파일 분리 생성 | `plugin-rq-set-a-to-rq-files` |
+| Phase 2-1 | Evidence 수집 계획 수립 | `plugin-evidence-master` |
+| Phase 2-2 | RQ별 Evidence 수집 | `plugin-evidence-collector` |
+| Phase 2-3 | RQ↔Evidence 매핑 생성 | `plugin-evidence-summary` |
 | **Gate 2** | **Evidence 커버리지 검토** | 수동 |
-| Phase 3 | 강의 구성(outline) 및 예제 설계 | `outline-architect`, `example-designer` |
+| Phase 3 | 강의 구성(outline) 및 예제 설계 | `plugin-outline-architect`, `example-designer` |
 | **Gate 3** | **Outline + 예제 검토** | 수동 |
-| Phase 4 | 스크립트 작성 및 리뷰 | `script-maker`, `script-reviewer` |
+| Phase 4 | 스크립트 작성 및 리뷰 | `plugin-script-maker`, `plugin-script-reviewer` |
 
 ### 주요 설계 원칙
 
 - **current_run_path 패턴**: 모든 agent가 `current-run.md` 경로 하나를 받아 `run_dir`, `lecture_dir`을 추출
 - **Agent vs Skill 분리**: 대량 파일 처리·병렬 작업 → Agent / 사용자 상호작용·반복 수정 → Skill
 - **Manual Gate**: 각 단계 전 사용자 검토 및 확인 단계 포함
-- **evidence-collector 실행 모드**: 순차(Y) / 병렬(P, Rate Limit 위험 고지 포함) / 건너뜀(N) 선택 가능
+- **plugin-evidence-collector 실행 모드**: 순차(Y) / 병렬(P, Rate Limit 위험 고지 포함) / 건너뜀(N) 선택 가능
 
 ## License
 
