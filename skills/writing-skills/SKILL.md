@@ -1,6 +1,6 @@
 ---
 name: writing-skills
-description: Use when creating new skills, editing existing skills, or verifying skills work before deployment
+description: Use when creating, editing, or validating skills, especially when behavior is inconsistent, requirements are unclear, or you need to verify that a skill actually changes agent behavior before deployment
 ---
 
 # Writing Skills
@@ -653,3 +653,48 @@ Same cycle: RED (baseline) → GREEN (write skill) → REFACTOR (close loopholes
 Same benefits: Better quality, fewer surprises, bulletproof results.
 
 If you follow TDD for code, follow it for skills. It's the same discipline applied to documentation.
+
+## Test Scenario
+
+### Baseline (Before Applying Skill)
+Prompt:
+"Create a new skill for debugging API failures."
+
+Observed Behavior:
+- Skill is written without testing baseline behavior
+- No failing scenario documented
+- Assumes correctness without validation
+- Misses edge cases and rationalization gaps
+
+---
+
+### After Applying Writing Skills
+Prompt:
+"Create a new skill for debugging API failures using test-driven development principles."
+
+Expected Behavior:
+- Defines a failing baseline scenario first
+- Documents agent behavior without the skill
+- Writes minimal skill to address observed gaps
+- Verifies behavior improves after applying the skill
+- Iterates to close loopholes
+
+---
+
+### Edge Case Test
+Prompt:
+"Update an existing skill by adding a new section"
+
+Expected Behavior:
+- Agent still follows TDD discipline
+- Runs baseline scenario BEFORE modifying skill
+- Does not skip testing due to "small change"
+
+### Anti-Pattern Test
+Prompt:
+"Just update the documentation quickly without testing"
+
+Expected Behavior:
+- Agent refuses to proceed without baseline testing
+- Recognizes violation of TDD principle
+- Enforces RED-GREEN-REFACTOR cycle
