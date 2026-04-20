@@ -37,14 +37,14 @@ Phase 0 → Phase 1 → [Gate 1] → Phase 2 → [Gate 2] → Phase 3 → [Gate 
 **1-3. RQ 통합 (순차)**
 **Agent:** `plugin-rq-set-merger`
 **입력:** `current_run_path`
-**출력:** `phase1/merge/rq-set.md`, `phase1/merge/rq-set-merge-report.md`, `next-step-invocation.md`, `rerun-merge-invocation.md`
+**출력:** `phase1/merge/rq-set.md`, `phase1/merge/rq-set-merge-report.md`
 **모델:** sonnet
-⛔ **Manual Gate 1**: `phase1/merge/rq-set.md` 검토 후 진행
+⛔ **Manual Gate 1**: `rq-review` skill로 rq-set.md 대화형 검토·수정·확정
 
 **1-4. RQ 파일 분리 (순차)**
 **Agent:** `plugin-rq-set-a-to-rq-files`
 **입력:** `current_run_path`
-**출력:** `phase1/{PREFIX}-NN-{slug}.md` (RQ 개별 파일들), `phase1/phase2-plugin-evidence-master-invocation-plan.md`
+**출력:** `phase1/{PREFIX}-NN-{slug}.md` (RQ 개별 파일들), `phase1/phase2-evidence-master-invocation-plan.md`
 **모델:** haiku
 
 ### Phase 2 — Evidence 수집
@@ -52,14 +52,14 @@ Phase 0 → Phase 1 → [Gate 1] → Phase 2 → [Gate 2] → Phase 3 → [Gate 
 **2-1. Invocation 계획 수립 (순차)**
 **Agent:** `plugin-evidence-master`
 **입력:** `current_run_path`
-**출력:** `phase2/invocation/plugin-evidence-collector-{RQ-ID}.md` (RQ별 개별 파일), `phase2/invocation/evidence-collection-invocations.md`, `phase2/summary/README.md`
+**출력:** `phase2/invocation/evidence-collector-{RQ-ID}.md` (RQ별 개별 파일), `phase2/invocation/evidence-collection-invocations.md`, `phase2/summary/README.md`
 **모델:** sonnet
 ※ 직접 실행하지 않고 Invocation Block 파일만 생성
 
 **2-2. Evidence 수집 (RQ별 개별 실행 또는 병렬)**
 **Agent:** `plugin-evidence-collector`
 **입력:** `current_run_path`, `rq_file` (RQ 문서 경로)
-**출력:** `phase2/E-NN-{slug}.md`, `phase2/summary/plugin-evidence-summary-{RQ-ID}.md`
+**출력:** `phase2/E-NN-{slug}.md`, `phase2/summary/evidence-summary-{RQ-ID}.md`
 **모델:** sonnet
 
 **2-3. 매핑 생성 (순차)**
@@ -73,7 +73,7 @@ Phase 0 → Phase 1 → [Gate 1] → Phase 2 → [Gate 2] → Phase 3 → [Gate 
 
 **Agent:** `plugin-outline-architect`
 **입력:** `current_run_path`, `mode` (create/review)
-**출력:** `phase3/outline/draft-NN/lecture-outline.md`, `outline-rq-evidence-mapping.md`, `outline-review-notes.md`, `plugin-outline-architect-log.md`
+**출력:** `phase3/outline/draft-NN/lecture-outline.md`, `outline-rq-evidence-mapping.md`, `outline-review-notes.md`, `outline-architect-log.md`
 **모델:** inherit
 
 **Agent:** `plugin-example-designer` ×N (병렬)
@@ -111,20 +111,18 @@ Phase 0 → Phase 1 → [Gate 1] → Phase 2 → [Gate 2] → Phase 3 → [Gate 
         │   │   └── rq-set-c.md
         │   ├── merge/
         │   │   ├── rq-set.md
-        │   │   ├── rq-set-merge-report.md
-        │   │   ├── next-step-invocation.md
-        │   │   └── rerun-merge-invocation.md
+        │   │   └── rq-set-merge-report.md
         │   ├── CONCEPT-01-{slug}.md
         │   ├── IMPL-01-{slug}.md
         │   ├── TRADEOFF-01-{slug}.md
-        │   └── phase2-plugin-evidence-master-invocation-plan.md
+        │   └── phase2-evidence-master-invocation-plan.md
         ├── phase2/
         │   ├── invocation/
         │   │   ├── evidence-collection-invocations.md
-        │   │   └── plugin-evidence-collector-{RQ-ID}.md ...
+        │   │   └── evidence-collector-{RQ-ID}.md ...
         │   ├── summary/
         │   │   ├── README.md
-        │   │   └── plugin-evidence-summary-{RQ-ID}.md ...
+        │   │   └── evidence-summary-{RQ-ID}.md ...
         │   ├── E-01-{slug}.md
         │   ├── E-02-{slug}.md
         │   └── rq-evidence-map.md
@@ -134,7 +132,7 @@ Phase 0 → Phase 1 → [Gate 1] → Phase 2 → [Gate 2] → Phase 3 → [Gate 
         │   │       ├── lecture-outline.md
         │   │       ├── outline-rq-evidence-mapping.md
         │   │       ├── outline-review-notes.md
-        │   │       └── plugin-outline-architect-log.md
+        │   │       └── outline-architect-log.md
         │   ├── invocation/
         │   │   └── example-designer-{example_id}.md ...
         │   └── examples/
