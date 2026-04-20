@@ -29,7 +29,7 @@ Retrieve tickets from external sources and normalize them into the Spectral work
 ### 4. Generate `ticket.md`
 - Create `.spectral/tasks/{TICKET_ID}/ticket.md` using the template:
 
-# {TICKET_ID} - {TITLE}
+# {TICKET_ID}-{TITLE}
 
 ## Status
 PENDING
