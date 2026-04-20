@@ -39,14 +39,6 @@ color: red
 
 ## 출력 위치
 
-1. **_agent-info.md** (필수):
-   - {output_dir}/fanout 에 저장한다.
-   - 파일명 _{rq-type}_rq_gen_agent-info.md
-   - Agent 실행 정보 기록
-   - 템플릿은 `.claude/agents/template/_agent-info-template.md` 참조
-Markdown만 출력한다. 입력 파라미터포함하고 불필요한 설명 금지.
-형식은 markdown 의 tab 으로 들여쓰기한 bullet 타입으로 한다 
-
 ### 1) RQ List
 - {prefix}-001 ~ {prefix}-N
   - **prefix 매핑 규칙**: `.claude/agents/config/rq-id-naming-rules.md` 참조
