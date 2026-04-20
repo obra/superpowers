@@ -100,6 +100,7 @@ Day 0 → Day 1 → Day 2 → Day 3
         └── day3/
             ├── project-spec.md
             ├── project/
+            ├── code-review.md
             ├── evaluation.md
             └── retrospective.md
 ```
