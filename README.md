@@ -1,198 +1,141 @@
-# Superpowers
+# Superpowers Lecture Pipeline
 
-Superpowers is a complete software development methodology for your coding agents, built on top of a set of composable skills and some initial instructions that make sure your agent uses them.
+Superpowers fork with a full lecture production pipeline — research-driven workflow for creating technical lectures using AI agents and skills.
 
 ## How it works
 
-It starts from the moment you fire up your coding agent. As soon as it sees that you're building something, it *doesn't* just jump into trying to write code. Instead, it steps back and asks you what you're really trying to do. 
-
-Once it's teased a spec out of the conversation, it shows it to you in chunks short enough to actually read and digest. 
-
-After you've signed off on the design, your agent puts together an implementation plan that's clear enough for an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing to follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY. 
-
-Next up, once you say "go", it launches a *subagent-driven-development* process, having agents work through each engineering task, inspecting and reviewing their work, and continuing forward. It's not uncommon for Claude to be able to work autonomously for a couple hours at a time without deviating from the plan you put together.
-
-There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Superpowers.
-
-
-## Sponsorship
-
-If Superpowers has helped you do stuff that makes money and you are so inclined, I'd greatly appreciate it if you'd consider [sponsoring my opensource work](https://github.com/sponsors/obra).
-
-Thanks! 
-
-- Jesse
-
-
 ## Installation
 
-**Note:** Installation differs by platform. 
+### Claude Code — 로컬 디렉토리로 직접 로드
 
-### Claude Code Official Marketplace
-
-Superpowers is available via the [official Claude plugin marketplace](https://claude.com/plugins/superpowers)
-
-Install the plugin from Anthropic's official marketplace:
+1. 이 저장소를 클론한다:
 
 ```bash
-/plugin install superpowers@claude-plugins-official
+git clone https://github.com/soyotime0118/superpowers.git
 ```
 
-### Claude Code (Superpowers Marketplace)
-
-The Superpowers marketplace provides Superpowers and some other related plugins for Claude Code.
-
-In Claude Code, register the marketplace first:
+2. Claude Code에서 로컬 마켓플레이스로 등록한다:
 
 ```bash
-/plugin marketplace add obra/superpowers-marketplace
+/plugin marketplace add /path/to/superpowers
 ```
 
-Then install the plugin from this marketplace:
+3. 플러그인을 설치한다:
 
 ```bash
-/plugin install superpowers@superpowers-marketplace
+/plugin install superpowers-lecture-pipeline@local
 ```
 
-### OpenAI Codex CLI
+또는 `~/.claude/settings.json`에 직접 추가:
 
-- Open plugin search interface
-
-```bash
-/plugins
-```
-
-Search for Superpowers
-
-```bash
-superpowers
-```
-
-Select `Install Plugin`
-
-### OpenAI Codex App
-
-- In the Codex app, click on Plugins in the sidebar.
-- You should see `Superpowers` in the Coding section. 
-- Click the `+` next to Superpowers and follow the prompts.
-
-
-### Cursor (via Plugin Marketplace)
-
-In Cursor Agent chat, install from marketplace:
-
-```text
-/add-plugin superpowers
-```
-
-or search for "superpowers" in the plugin marketplace.
-
-### OpenCode
-
-Tell OpenCode:
-
-```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
-```
-
-**Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
-
-### GitHub Copilot CLI
-
-```bash
-copilot plugin marketplace add obra/superpowers-marketplace
-copilot plugin install superpowers@superpowers-marketplace
-```
-
-### Gemini CLI
-
-```bash
-gemini extensions install https://github.com/obra/superpowers
-```
-
-To update:
-
-```bash
-gemini extensions update superpowers
+```json
+{
+  "extraKnownMarketplaces": {
+    "lecture-pipeline": {
+      "source": {
+        "source": "directory",
+        "path": "/path/to/superpowers"
+      }
+    }
+  }
+}
 ```
 
 ## The Basic Workflow
 
-1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
+0. **brainstorming** (선택, 권장) — 강의 주제/목표/범위를 대화로 정리. `current-run.md`의 Keywords/Topics 초안 도출.
 
-2. **using-git-worktrees** - Activates after design approval. Creates isolated workspace on new branch, runs project setup, verifies clean test baseline.
+1. **phase0-run-initializer** — `lecture_dir`을 전달하여 run 디렉토리 구조 생성 (`runs/run-YYYYMMDD-HHMM-N/`).
 
-3. **writing-plans** - Activates with approved design. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
+2. **agent-rq-fanout-orchestrator** — `current_run_path` 전달. Concept/Implementation/Trade-off 3개 관점으로 RQ를 병렬 생성.
 
-4. **subagent-driven-development** or **executing-plans** - Activates with plan. Dispatches fresh subagent per task with two-stage review (spec compliance, then code quality), or executes in batches with human checkpoints.
+3. **rq-set-merger** — 3개 관점의 RQ 후보를 통합·중복제거·우선순위화하여 `phase1/merge/rq-set.md` 생성.
 
-5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
+4. **rq-review skill** ⛔ Gate 1 — `rq-set.md`를 대화형으로 검토·수정·확정. "RQ 검토해줘"로 시작.
 
-6. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
+5. **rq-set-a-to-rq-files** — 확정된 RQ를 관점별 개별 파일로 분리 생성.
 
-7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
+6. **evidence-master** — RQ별 Evidence-Collector 실행 계획 수립 (Invocation Block 파일 생성).
 
-**The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
+7. **evidence-collector** — RQ별로 실행. 순차(Y) / 병렬(P, 위험 고지 포함) / 건너뜀(N) 선택.
+
+8. **evidence-summary** ⛔ Gate 2 — RQ↔Evidence 매핑 생성. `rq-evidence-map.md` 검토 후 진행.
+
+9. **outline-architect** — 강의 구성(outline) 설계. `mode: create`로 실행.
+
+10. **agent-example-designer** ⛔ Gate 3 — 예제 설계. outline + examples 검토 후 진행.
+
+11. **script-maker** — Marp 슬라이드 형식 스크립트 작성.
+
+12. **script-reviewer** — 스크립트 품질 검토 (DONE/PARTIAL/MISSING/MISALIGNED 평가).
 
 ## What's Inside
 
+### Lecture Pipeline Agents
+
+**Phase 0**
+- **phase0-run-initializer** — Run 디렉토리 초기화 및 `current-run.md` 생성
+
+**Phase 1 — RQ 세트 생성**
+- **rq-fanout-orchestrator** — 3개 관점 병렬 RQ 생성 오케스트레이션
+- **agent-rq-list-generator** — 관점별 RQ 목록 생성 (Concept / Implementation / Trade-off)
+- **rq-set-merger** — RQ 통합·정규화·우선순위화
+
+**Phase 2 — Evidence 수집**
+- **evidence-master** — Evidence 수집 Invocation Block 생성
+- **evidence-collector** — RQ별 코드/문서/PR 증거 수집
+- **evidence-summary** — RQ↔Evidence 매핑 문서 생성
+
+**Phase 3 — 구성 설계**
+- **outline-architect** — 강의 outline 설계 (CREATE/REVIEW 모드)
+- **example-designer** — 예제 코드 설계
+
+**Phase 4 — 스크립트**
+- **script-maker** — Marp 형식 강의 스크립트 작성
+- **script-reviewer** — 스크립트 품질 검토
+
 ### Skills Library
 
-**Testing**
-- **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
+**Lecture Pipeline**
+- **lecture-workflow** — 전체 파이프라인 가이드
+- **rq-review** — Gate 1: RQ 목록 대화형 검토·수정·확정
 
-**Debugging**
-- **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
-- **verification-before-completion** - Ensure it's actually fixed
+**General (Superpowers 기본 제공)**
+- **brainstorming** — 아이디어를 구조화된 설계로 정리
+- **dispatching-parallel-agents** — 독립 작업 병렬 실행
+- **systematic-debugging** — 체계적 디버깅 4단계 프로세스
+- **test-driven-development** — RED-GREEN-REFACTOR 사이클
+- **writing-plans** — 구현 계획 작성
 
-**Collaboration** 
-- **brainstorming** - Socratic design refinement
-- **writing-plans** - Detailed implementation plans
-- **executing-plans** - Batch execution with checkpoints
-- **dispatching-parallel-agents** - Concurrent subagent workflows
-- **requesting-code-review** - Pre-review checklist
-- **receiving-code-review** - Responding to feedback
-- **using-git-worktrees** - Parallel development branches
-- **finishing-a-development-branch** - Merge/PR decision workflow
-- **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
+## Lecture Production Pipeline
 
-**Meta**
-- **writing-skills** - Create new skills following best practices (includes testing methodology)
-- **using-superpowers** - Introduction to the skills system
+```
+Phase 0 → Phase 1 → [Gate 1] → Phase 2 → [Gate 2] → Phase 3 → [Gate 3] → Phase 4
+```
 
-## Philosophy
+| Phase | 역할 | Agent/Skill |
+|-------|------|-------------|
+| Phase 0 | Run 초기화, 디렉토리 구조 생성 | `phase0-run-initializer` |
+| Phase 1-1 | RQ 관점 분리 (fanout) | `rq-fanout-orchestrator` |
+| Phase 1-2 | 관점별 RQ 생성 (병렬 ×3) | `rq-list-generator` |
+| Phase 1-3 | RQ 병합 및 통합 | `rq-set-merger` |
+| **Gate 1** | **RQ 목록 대화형 검토·수정·확정** | **`rq-review` skill** |
+| Phase 1-4 | RQ 개별 파일 분리 생성 | `rq-set-a-to-rq-files` |
+| Phase 2-1 | Evidence 수집 계획 수립 | `evidence-master` |
+| Phase 2-2 | RQ별 Evidence 수집 | `evidence-collector` |
+| Phase 2-3 | RQ↔Evidence 매핑 생성 | `evidence-summary` |
+| **Gate 2** | **Evidence 커버리지 검토** | 수동 |
+| Phase 3 | 강의 구성(outline) 및 예제 설계 | `outline-architect`, `example-designer` |
+| **Gate 3** | **Outline + 예제 검토** | 수동 |
+| Phase 4 | 스크립트 작성 및 리뷰 | `script-maker`, `script-reviewer` |
 
-- **Test-Driven Development** - Write tests first, always
-- **Systematic over ad-hoc** - Process over guessing
-- **Complexity reduction** - Simplicity as primary goal
-- **Evidence over claims** - Verify before declaring success
+### 주요 설계 원칙
 
-Read [the original release announcement](https://blog.fsck.com/2025/10/09/superpowers/).
-
-## Contributing
-
-The general contribution process for Superpowers is below. Keep in mind that we don't generally accept contributions of new skills and that any updates to skills must work across all of the coding agents we support.
-
-1. Fork the repository
-2. Switch to the 'dev' branch
-3. Create a branch for your work
-4. Follow the `writing-skills` skill for creating and testing new and modified skills
-5. Submit a PR, being sure to fill in the pull request template.
-
-See `skills/writing-skills/SKILL.md` for the complete guide.
-
-## Updating
-
-Superpowers updates are somewhat coding-agent dependent, but are often automatic.
+- **current_run_path 패턴**: 모든 agent가 `current-run.md` 경로 하나를 받아 `run_dir`, `lecture_dir`을 추출
+- **Agent vs Skill 분리**: 대량 파일 처리·병렬 작업 → Agent / 사용자 상호작용·반복 수정 → Skill
+- **Manual Gate**: 각 단계 전 사용자 검토 및 확인 단계 포함
+- **evidence-collector 실행 모드**: 순차(Y) / 병렬(P, Rate Limit 위험 고지 포함) / 건너뜀(N) 선택 가능
 
 ## License
 
 MIT License - see LICENSE file for details
-
-## Community
-
-Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of the folks at [Prime Radiant](https://primeradiant.com).
-
-- **Discord**: [Join us](https://discord.gg/35wsABTejz) for community support, questions, and sharing what you're building with Superpowers
-- **Issues**: https://github.com/obra/superpowers/issues
-- **Release announcements**: [Sign up](https://primeradiant.com/superpowers/) to get notified about new versions
