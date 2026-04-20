@@ -24,8 +24,10 @@ permissionMode: acceptEdits
 
 3) 기준 파일 경로를 확정한다:
    - 명시적으로 제공된 경우 해당 경로 사용
-   - 미제공 시: `outline_path = {run_dir}/phase3/outline/lecture-outline.md`
-   - 존재하지 않으면 즉시 실패(중단)
+   - 미제공 시: Glob으로 `{run_dir}/phase3/outline/draft-*/lecture-outline.md` 를 탐색
+     - 존재하면 가장 번호가 높은 draft-NN 디렉토리의 파일을 사용
+     - 없으면 `{run_dir}/phase3/outline/lecture-outline.md` 를 fallback으로 시도
+   - 최종적으로 파일이 존재하지 않으면 즉시 실패(중단)
 
 4) `output_dir = {run_dir}/phase4/review/` 로 자동 설정한다.
 
@@ -38,9 +40,9 @@ permissionMode: acceptEdits
 - 각 Section에 대해: section_no, section_title, section_range, section_expected 추출
 
 ## 2.2 스크립트 파일 후보 수집
-- 기본 스캔: `Glob: {run_dir}/phase3/**/*.md`
-- 제외: `{run_dir}/phase3/outline/lecture-outline.md`
-- 스크립트 후보 분류: script/, scripts/, slides/, slide/ 하위 또는 해당 키워드 포함
+- 기본 스캔: `Glob: {run_dir}/phase4/script/*.md`
+- 없으면 `{run_dir}/phase4/**/*.md` 로 확장 탐색
+- 스크립트 후보 분류: section-NN-*.md 패턴 우선, 그 외 script/slides 키워드 포함 파일
 
 # 3) 비교 로직 (핵심)
 각 outline Section에 대해 "스크립트 매칭"을 시도한다:
