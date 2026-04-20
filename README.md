@@ -78,7 +78,7 @@ git clone https://github.com/soyotime0118/superpowers.git
 
 **Phase 1 — RQ 세트 생성**
 - **rq-fanout-orchestrator** — 3개 관점 병렬 RQ 생성 오케스트레이션
-- **rq-list-generator** — 관점별 RQ 목록 생성 (Concept / Implementation / Trade-off)
+- **agent-rq-list-generator** — 관점별 RQ 목록 생성 (Concept / Implementation / Trade-off)
 - **rq-set-merger** — RQ 통합·정규화·우선순위화
 
 **Phase 2 — Evidence 수집**
