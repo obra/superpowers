@@ -46,17 +46,29 @@ const normalizePath = (p, homeDir) => {
   return path.resolve(normalized);
 };
 
+// Module-level cache for bootstrap content.
+// The SKILL.md file does not change during a session, so reading + parsing it
+// once eliminates redundant fs.existsSync + fs.readFileSync + regex work on
+// every agent step.  See #1202 for the full analysis.
+let _bootstrapCache = undefined; // undefined = not yet loaded, null = file missing
+
 export const SuperpowersPlugin = async ({ client, directory }) => {
   const homeDir = os.homedir();
   const superpowersSkillsDir = path.resolve(__dirname, '../../skills');
   const envConfigDir = normalizePath(process.env.OPENCODE_CONFIG_DIR, homeDir);
   const configDir = envConfigDir || path.join(homeDir, '.config/opencode');
 
-  // Helper to generate bootstrap content
+  // Helper to generate bootstrap content (cached after first call)
   const getBootstrapContent = () => {
+    // Return cached result on subsequent calls
+    if (_bootstrapCache !== undefined) return _bootstrapCache;
+
     // Try to load using-superpowers skill
     const skillPath = path.join(superpowersSkillsDir, 'using-superpowers', 'SKILL.md');
-    if (!fs.existsSync(skillPath)) return null;
+    if (!fs.existsSync(skillPath)) {
+      _bootstrapCache = null;
+      return null;
+    }
 
     const fullContent = fs.readFileSync(skillPath, 'utf8');
     const { content } = extractAndStripFrontmatter(fullContent);
@@ -70,7 +82,7 @@ When skills reference tools you don't have, substitute OpenCode equivalents:
 
 Use OpenCode's native \`skill\` tool to list and load skills.`;
 
-    return `<EXTREMELY_IMPORTANT>
+    _bootstrapCache = `<EXTREMELY_IMPORTANT>
 You have superpowers.
 
 **IMPORTANT: The using-superpowers skill content is included below. It is ALREADY LOADED - you are currently following it. Do NOT use the skill tool to load "using-superpowers" again - that would be redundant.**
@@ -79,6 +91,8 @@ ${content}
 
 ${toolMapping}
 </EXTREMELY_IMPORTANT>`;
+
+    return _bootstrapCache;
   };
 
   return {
@@ -98,15 +112,36 @@ ${toolMapping}
     // Using a user message instead of a system message avoids:
     //   1. Token bloat from system messages repeated every turn (#750)
     //   2. Multiple system messages breaking Qwen and other models (#894)
+    //
+    // The hook fires on every agent step (not just every turn) because
+    // opencode's prompt.ts reloads messages from DB each step.  The guard
+    // below prevents duplicate injection on the fresh in-memory objects.
     'experimental.chat.messages.transform': async (_input, output) => {
       const bootstrap = getBootstrapContent();
       if (!bootstrap || !output.messages.length) return;
       const firstUser = output.messages.find(m => m.info.role === 'user');
       if (!firstUser || !firstUser.parts.length) return;
-      // Only inject once
+
+      // Guard: skip if first user message already contains bootstrap.
+      // Because messages are loaded fresh from DB each step (the previous
+      // in-memory injection is never persisted), this guard fires on the
+      // *new* in-memory objects.  It still works correctly: the first step
+      // injects, and on subsequent steps the content-based check catches it
+      // because we're looking at the same logical first-user message that
+      // was just injected into (the DB hasn't changed between steps within
+      // a single turn, so filterCompactedEffect returns the same message
+      // contents and we re-inject the same bootstrap — the guard prevents
+      // doubling up within the same messages array).
       if (firstUser.parts.some(p => p.type === 'text' && p.text.includes('EXTREMELY_IMPORTANT'))) return;
+
       const ref = firstUser.parts[0];
       firstUser.parts.unshift({ ...ref, type: 'text', text: bootstrap });
     }
   };
+};
+
+// Exported for testing — allows tests to reset the cache between runs
+export const _testing = {
+  resetCache: () => { _bootstrapCache = undefined; },
+  getCache: () => _bootstrapCache,
 };
