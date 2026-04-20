@@ -116,8 +116,8 @@ Phase 0 → Phase 1 → [Gate 1] → Phase 2 → [Gate 2] → Phase 3 → [Gate 
 | Phase | 역할 | Agent/Skill |
 |-------|------|-------------|
 | Phase 0 | Run 초기화, 디렉토리 구조 생성 | `plugin-phase0-run-initializer` |
-| Phase 1-1 | RQ 관점 분리 (fanout) | `rq-fanout-orchestrator` |
-| Phase 1-2 | 관점별 RQ 생성 (병렬 ×3) | `rq-list-generator` |
+| Phase 1-1 | RQ 관점 분리 (fanout) | `plugin-rq-fanout-orchestrator` |
+| Phase 1-2 | 관점별 RQ 생성 (병렬 ×3) | `plugin-rq-list-generator` |
 | Phase 1-3 | RQ 병합 및 통합 | `plugin-rq-set-merger` |
 | **Gate 1** | **RQ 목록 대화형 검토·수정·확정** | **`rq-review` skill** |
 | Phase 1-4 | RQ 개별 파일 분리 생성 | `plugin-rq-set-a-to-rq-files` |
