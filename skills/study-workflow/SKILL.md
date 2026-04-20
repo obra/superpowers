@@ -33,7 +33,7 @@ Day 0 → Day 1 → Day 2 → Day 3
 **Agent:** `plugin-study-quiz-generator`
 **입력:** `current_run_path`
 **출력:** `day1/quiz.md`
-**모델:** sonnet
+**모델:** haiku
 
 **1-3. 개념 다이어그램 (선택, 병렬 가능)**
 **Agent:** `plugin-study-concept-diagram`
