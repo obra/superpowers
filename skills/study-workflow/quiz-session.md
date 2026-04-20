@@ -82,12 +82,12 @@ Q{N}/{TOTAL} [{난이도}] {유형}
 
 ### quiz.md 결과 업데이트
 
-종료 시 `{run_dir}/day1/quiz.md`의 채점표 섹션을 실제 결과로 업데이트(Write)한다.
+종료 시 `{run_dir}/day1/quiz.md`의 `## ✅ Checkpoint 1 통과 기준` 아래 `### 결과` 섹션을 실제 결과로 업데이트(Write)한다.
+채점표 표 형식은 그대로 두고, 아래 bullet만 템플릿 형식에 맞게 갱신한다.
 
 ```markdown
 - **점수**: {SCORE}/100
 - **통과 여부**: {통과/재도전 필요}
-- **세션 일시**: YYYY-MM-DD HH:MM KST
 ```
 
 ## 핵심 원칙
