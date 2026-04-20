@@ -103,13 +103,9 @@ model: sonnet
 - rerun-merge-invocation.md (재실행 블록)
 
 📋 다음 단계:
-1. rq-set.md를 열어 최종 RQ 목록을 검토해주세요.
+1. "RQ 검토해줘" 또는 "Gate 1 시작" → rq-review skill로 대화형 검토·수정·확정
 
-2. 만족하시면:
-   - next-step-invocation.md의 내용을 복사하여 실행하거나
-   - "Phase 1 RQ 개별 파일 생성을 실행해주세요" 요청
-
-3. 수정이 필요하면:
+2. 병합 결과가 마음에 들지 않으면:
    - rerun-merge-invocation.md의 파라미터를 수정하여 재실행
 ```
 
@@ -253,15 +249,13 @@ rq-merge-params.md의 설정을 반영하여 RQ 병합을 다시 수행해주세
 \```
 ```
 
-## Step I. 사용자 확인 및 선택적 실행 (필수)
+## Step I. 사용자 안내 출력 및 종료
 - 섹션 3.4에 명시된 안내 메시지를 사용자에게 출력한다.
-- 메시지 마지막에 다음 질문을 추가한다:
+- 안내 메시지 마지막에 다음 내용을 추가한다:
   ```
-  ❓ 지금 rq-set-a-to-rq-files를 실행하여 RQ 개별 파일을 생성할까요? (Y/N)
+  📋 RQ 목록 검토 및 수정이 필요하면 rq-review skill을 사용하세요.
   ```
-- **Y(예)인 경우**: Task 도구를 사용하여 `rq-set-a-to-rq-files` agent를 실행한다.
-  - 전달 파라미터: `current_run_path: {current_run_path}`
-- **N(아니오)인 경우**: 파일 경로만 안내하고 즉시 종료한다.
+- 파일 경로를 출력하고 즉시 종료한다.
 
 # 실행
 위 절차대로 수행하고,
