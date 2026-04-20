@@ -30,8 +30,10 @@ permissionMode: acceptEdits
 
 3) 기준 파일 경로를 확정한다:
    - 명시적으로 제공된 경우 해당 경로 사용
-   - 미제공 시: `outline_path = {run_dir}/phase3/outline/lecture-outline.md`
-   - 존재하지 않으면 즉시 실패(중단)
+   - 미제공 시: Glob으로 `{run_dir}/phase3/outline/draft-*/lecture-outline.md` 를 탐색
+     - 존재하면 가장 번호가 높은 draft-NN 디렉토리의 파일을 사용
+     - 없으면 `{run_dir}/phase3/outline/lecture-outline.md` 를 fallback으로 시도
+   - 최종적으로 파일이 존재하지 않으면 즉시 실패(중단)
 
 4) Evidence 디렉토리 확정:
    - 미지정 시: `evidence_dir = {run_dir}/phase2/`
