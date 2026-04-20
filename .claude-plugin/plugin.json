@@ -1,20 +1,21 @@
 {
-  "name": "superpowers",
-  "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
-  "version": "5.0.7",
+  "name": "superpowers-lecture-pipeline",
+  "description": "Superpowers fork with lecture production pipeline: Phase 0-4 agents for research-driven lecture creation (RQ generation, evidence collection, outline, script)",
+  "version": "0.0.1",
   "author": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com"
+    "name": "soyotime0118",
+    "email": "soyotime0118@gmail.com"
   },
-  "homepage": "https://github.com/obra/superpowers",
-  "repository": "https://github.com/obra/superpowers",
+  "homepage": "https://github.com/soyotime0118/superpowers",
+  "repository": "https://github.com/soyotime0118/superpowers",
   "license": "MIT",
   "keywords": [
     "skills",
+    "lecture",
+    "pipeline",
+    "agents",
     "tdd",
     "debugging",
-    "collaboration",
-    "best-practices",
-    "workflows"
+    "collaboration"
   ]
 }

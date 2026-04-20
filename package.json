@@ -1,6 +1,9 @@
 {
-  "name": "superpowers",
-  "version": "5.0.7",
+  "name": "superpowers-lecture-pipeline",
+  "version": "0.0.1",
   "type": "module",
-  "main": ".opencode/plugins/superpowers.js"
+  "main": ".opencode/plugins/superpowers.js",
+  "devDependencies": {
+    "eslint": "^10.2.1"
+  }
 }
