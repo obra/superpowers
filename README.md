@@ -191,13 +191,13 @@ Day 0 → Day 1 → Day 2 → Day 3
 2. current-run.md 경로를 복사하여 이후 agent에 전달
 
 3. Day 1 순서대로 실행:
-   term-extractor → quiz-generator → (concept-diagram 선택)
+   plugin-study-term-extractor → plugin-study-quiz-generator → (plugin-study-concept-diagram 선택)
 
 4. "퀴즈 풀어볼게" → quiz-session skill로 Checkpoint 1 진행
 
-5. Day 2: tutorial-guide ∥ oss-analyzer → practice-reviewer
+5. Day 2: plugin-study-tutorial-guide ∥ plugin-study-oss-analyzer → plugin-study-practice-reviewer
 
-6. Day 3: project-designer → [직접 구현] → code-reviewer
+6. Day 3: plugin-study-project-designer → [직접 구현] → plugin-study-code-reviewer
 
 7. "회고 시작해줘" → retrospective skill로 마무리
 ```
