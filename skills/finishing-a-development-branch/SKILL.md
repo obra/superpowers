@@ -17,7 +17,11 @@ Guide completion of development work by presenting clear options and handling ch
 
 ### Step 1: Verify Tests
 
-**Before presenting options, verify tests pass:**
+**Before presenting options, confirm non-negotiables were handled properly:**
+
+If this branch touched anything listed in using-superpowers § Non-Negotiables (secrets/.env, auth/session, RLS, data migrations, destructive ops, new external deps, CI/CD), confirm that the full critical-tier ceremony was applied to those commits (brainstorming design, full review pair at the relevant batch). If not, escalate to the user before merging — do not proceed silently.
+
+**Then verify tests pass:**
 
 ```bash
 # Run project's test suite
