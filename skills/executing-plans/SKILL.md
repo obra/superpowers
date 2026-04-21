@@ -5,80 +5,49 @@ description: Use when you have a written implementation plan to execute in a sep
 
 # Executing Plans
 
-## Overview
+Load plan, review critically, execute in sprint mode, report when done.
 
-Load plan, review critically, execute all tasks, report when complete.
+**Note:** If subagents are available, prefer `superpowers:subagent-driven-development` — it ships higher-quality output on platforms that support it.
 
-**Announce at start:** "I'm using the executing-plans skill to implement this plan."
+## Process
 
-**Note:** Tell your human partner that Superpowers works much better with access to subagents. The quality of its work will be significantly higher if run on a platform with subagent support (such as Claude Code or Codex). If subagents are available, use superpowers:subagent-driven-development instead of this skill.
+### 1. Load & Review
 
-## The Process
+Read plan. If concerns (gaps, unclear steps, wrong approach), raise with the user before starting. Otherwise create TodoWrite and proceed.
 
-### Step 1: Load and Review Plan
-1. Read plan file
-2. Review critically - identify any questions or concerns about the plan
-3. If concerns: Raise them with your human partner before starting
-4. If no concerns: Create TodoWrite and proceed
+### 2. Execute (Sprint Mode)
 
-### Step 2: Execute Tasks (Sprint Mode)
-
-A plan = ONE sprint. Concentrate ceremony at sprint boundaries and critical checkpoints, not between every step. See `superpowers:using-superpowers` § Sprint Mode.
+One plan = one sprint. Ceremony at boundaries + critical checkpoints, not between every step. See `using-superpowers` § Sprint Mode.
 
 **Sprint entry (once):**
-- Acknowledge the Golden Rule (see `using-superpowers` § The Golden Rule)
-- Confirm the risk tier for this plan (default: standard; critical if any task touches a Non-Negotiable — see `using-superpowers` § Non-Negotiables)
+- Acknowledge the Golden Rule (`using-superpowers` § The Golden Rule)
+- Confirm risk tier (default standard; critical if any task touches a Non-Negotiable — see `using-superpowers` § Non-Negotiables)
 - For standard/critical, skim the plan once for scope surprises
 
 **Per task:**
-1. Mark as in_progress
-2. Follow each step exactly (plan has bite-sized steps)
-3. Run only the verifications the plan explicitly names for this task
-4. Mark as completed, move to next
+- Mark in_progress, follow steps exactly, run only the verifications the plan names, mark completed.
 
 **Batch checkpoints (every 3-5 tasks, or at plan-indicated batch boundaries):**
-- Run batch-level verification (tests, build) if the plan specifies; otherwise a light self-check
-- Light self-review for critical tier; skip for trivial/standard unless something feels off
-- Do NOT dispatch a per-task code review — reviews are per-batch or per-sprint
+- Run batch-level verification if the plan specifies; otherwise a light self-check.
+- Light self-review for critical tier; skip for trivial/standard unless something feels off.
+- No per-task code reviews.
 
-**Sprint exit (once, after the final task):** proceed to Step 3 below.
+**Sprint exit (once):** → Step 3.
 
-### Step 3: Complete Development
+### 3. Finish
 
-After all tasks complete and verified:
-- Announce: "I'm using the finishing-a-development-branch skill to complete this work."
-- **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
-- Follow that skill to verify tests, present options, execute choice
+`superpowers:finishing-a-development-branch` — verify tests, present options, execute choice.
 
-## When to Stop and Ask for Help
+## When to Stop
 
-**STOP executing immediately when:**
-- Hit a blocker (missing dependency, test fails, instruction unclear)
-- Plan has critical gaps preventing starting
-- You don't understand an instruction
-- Verification fails repeatedly
+Blocker, critical gap, unclear instruction, verification fails repeatedly → stop and ask rather than guess.
 
-**Ask for clarification rather than guessing.**
+If the partner updates the plan based on your feedback, return to Step 1.
 
-## When to Revisit Earlier Steps
-
-**Return to Review (Step 1) when:**
-- Partner updates the plan based on your feedback
-- Fundamental approach needs rethinking
-
-**Don't force through blockers** - stop and ask.
-
-## Remember
-- Review plan critically first
-- Follow plan steps exactly
-- Don't skip verifications
-- Reference skills when plan says to
-- Stop when blocked, don't guess
-- Never start implementation on main/master branch without explicit user consent
+Never start implementation on main/master without explicit consent.
 
 ## Integration
 
-**Required workflow skills:**
-- **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
-- **superpowers:writing-plans** - Creates the plan this skill executes
-- **superpowers:finishing-a-development-branch** - Complete development after all tasks
+- `superpowers:using-git-worktrees` — isolated workspace before starting (REQUIRED)
+- `superpowers:writing-plans` — creates the plan
+- `superpowers:finishing-a-development-branch` — sprint exit

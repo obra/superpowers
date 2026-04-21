@@ -1,176 +1,87 @@
 ---
 name: brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
+description: "Use before any creative work — creating features, building components, adding functionality, or modifying behavior. Explores intent, requirements, and design before implementation."
 ---
 
 # Brainstorming Ideas Into Designs
 
-Help turn ideas into fully formed designs and specs through natural collaborative dialogue.
-
-Start by understanding the current project context, then ask questions one at a time to refine the idea. Once you understand what you're building, present the design and get user approval.
+Turn an idea into a design through collaborative dialogue. Understand the project, ask questions, present a design, get approval before implementing.
 
 <HARD-GATE>
-For **standard** and **critical** tier work: do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it.
+For **standard** and **critical** tier work: no implementation skill, no code, no scaffolding until a design is presented and approved.
 
-For **trivial** tier work (config value change, typo, one-line fix, copy edit): you MAY skip brainstorming and go straight to the change. The Golden Rule (see using-superpowers) still applies.
+For **trivial** tier (config value, typo, one-line fix, copy edit): skip brainstorming; the Golden Rule still applies.
 
-See using-superpowers § Risk Tiers for the tier definitions.
+See `using-superpowers` § Risk Tiers.
 </HARD-GATE>
 
 ## Routing by Risk Tier
 
-Not every project goes through the full 9-step process. Simple projects waste work on unstated assumptions, but trivial projects waste more time on full ceremony than they save. Route by tier:
-
 | Tier | Ceremony | Examples |
 |------|----------|----------|
-| **Trivial — skip** | No brainstorming. Just make the change following the Golden Rule. | Config value change, typo fix, one-line bug fix, copy edit, comment addition |
-| **Light — steps 1, 3, 5 only** | Explore project context → 1-2 clarifying questions → 3-line design inline (no spec file needed) | Bug fix with clear behavior, well-scoped utility inside an existing module, small internal refactor |
-| **Full — all 9 steps** | Full checklist below, spec document written and reviewed | New features, architectural decisions, cross-cutting concerns, critical tier work, anything touching a Non-Negotiable (see using-superpowers § Non-Negotiables) |
+| **Trivial — skip** | Make the change, follow the Golden Rule | Config value, typo, one-line fix, copy edit, comment |
+| **Light — steps 1, 3, 5** | Explore context → 1-2 clarifying questions → 3-line inline design (no spec file) | Bug fix with clear behavior, well-scoped utility in an existing module, small internal refactor |
+| **Full — all 9 steps** | Full checklist, spec doc written and reviewed | New features, architectural decisions, cross-cutting concerns, critical tier, anything touching a Non-Negotiable (`using-superpowers` § Non-Negotiables) |
 
-When in doubt between Light and Full, go Full. When in doubt between Trivial and Light, go Light.
+When in doubt between Light and Full → Full. Between Trivial and Light → Light.
 
 ## Checklist (Full tier)
 
-For **full tier** work, create a task for each item and complete in order. For **light tier**, only steps 1, 3, and 5 are required — skip the rest. For **trivial tier**, skip the checklist entirely.
+Create a task per item, in order. Light tier runs only 1, 3, 5. Trivial skips the checklist.
 
-1. **Explore project context** — check files, docs, recent commits
-2. **Offer visual companion** (if topic will involve visual questions) — this is its own message, not combined with a clarifying question. See the Visual Companion section below. *(full tier only)*
-3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-4. **Propose 2-3 approaches** — with trade-offs and your recommendation *(full tier only)*
-5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit *(full tier only)*
-7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below) *(full tier only)*
-8. **User reviews written spec** — ask user to review the spec file before proceeding *(full tier only)*
-9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+1. Explore project context (files, docs, recent commits)
+2. Offer visual companion if upcoming questions are visual — its own message, no other content (see Visual Companion section) *[full only]*
+3. Ask clarifying questions — one at a time, purpose/constraints/success criteria
+4. Propose 2-3 approaches with trade-offs and your recommendation *[full only]*
+5. Present design — sections scaled to complexity, approval after each section
+6. Write design doc to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit *[full only]*
+7. Spec self-review (placeholders, contradictions, ambiguity, scope) *[full only]*
+8. User reviews written spec *[full only]*
+9. Invoke `writing-plans` to create the implementation plan
 
-## Process Flow
+Terminal state = invoking `writing-plans`. No other implementation skill comes next.
 
-```dot
-digraph brainstorming {
-    "Explore project context" [shape=box];
-    "Visual questions ahead?" [shape=diamond];
-    "Offer Visual Companion\n(own message, no other content)" [shape=box];
-    "Ask clarifying questions" [shape=box];
-    "Propose 2-3 approaches" [shape=box];
-    "Present design sections" [shape=box];
-    "User approves design?" [shape=diamond];
-    "Write design doc" [shape=box];
-    "Spec self-review\n(fix inline)" [shape=box];
-    "User reviews spec?" [shape=diamond];
-    "Invoke writing-plans skill" [shape=doublecircle];
+## Scope Pre-Check
 
-    "Explore project context" -> "Visual questions ahead?";
-    "Visual questions ahead?" -> "Offer Visual Companion\n(own message, no other content)" [label="yes"];
-    "Visual questions ahead?" -> "Ask clarifying questions" [label="no"];
-    "Offer Visual Companion\n(own message, no other content)" -> "Ask clarifying questions";
-    "Ask clarifying questions" -> "Propose 2-3 approaches";
-    "Propose 2-3 approaches" -> "Present design sections";
-    "Present design sections" -> "User approves design?";
-    "User approves design?" -> "Present design sections" [label="no, revise"];
-    "User approves design?" -> "Write design doc" [label="yes"];
-    "Write design doc" -> "Spec self-review\n(fix inline)";
-    "Spec self-review\n(fix inline)" -> "User reviews spec?";
-    "User reviews spec?" -> "Write design doc" [label="changes requested"];
-    "User reviews spec?" -> "Invoke writing-plans skill" [label="approved"];
-}
-```
+If the request describes multiple independent subsystems (e.g., "platform with chat, files, billing, analytics"), flag it before spending questions on details. Help decompose into sub-projects — each gets its own spec → plan → implementation cycle.
 
-**The terminal state is invoking writing-plans.** Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY skill you invoke after brainstorming is writing-plans.
+## Asking Questions
 
-## The Process
+- One per message. Multiple choice when possible; open-ended is fine otherwise.
+- Focus on purpose, constraints, success criteria.
+- Be ready to loop back and reclarify.
 
-**Understanding the idea:**
+## Presenting the Design
 
-- Check out the current project state first (files, docs, recent commits)
-- Before asking detailed questions, assess scope: if the request describes multiple independent subsystems (e.g., "build a platform with chat, file storage, billing, and analytics"), flag this immediately. Don't spend questions refining details of a project that needs to be decomposed first.
-- If the project is too large for a single spec, help the user decompose into sub-projects: what are the independent pieces, how do they relate, what order should they be built? Then brainstorm the first sub-project through the normal design flow. Each sub-project gets its own spec → plan → implementation cycle.
-- For appropriately-scoped projects, ask questions one at a time to refine the idea
-- Prefer multiple choice questions when possible, but open-ended is fine too
-- Only one question per message - if a topic needs more exploration, break it into multiple questions
-- Focus on understanding: purpose, constraints, success criteria
+Scale sections to complexity (a few sentences for simple parts, up to ~300 words when nuanced). Approval per section. Cover architecture, components, data flow, error handling, testing.
 
-**Exploring approaches:**
+**Design for isolation:** smaller units with clear single responsibility and well-defined interfaces. For each unit: what it does, how to use it, what it depends on. You reason better about code you can hold in context.
 
-- Propose 2-3 different approaches with trade-offs
-- Present options conversationally with your recommendation and reasoning
-- Lead with your recommended option and explain why
+**Existing codebases:** follow existing patterns. Targeted improvements where they serve the current goal; no unrelated refactor.
 
-**Presenting the design:**
+## After the Design (Full tier)
 
-- Once you believe you understand what you're building, present the design
-- Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
-- Ask after each section whether it looks right so far
-- Cover: architecture, components, data flow, error handling, testing
-- Be ready to go back and clarify if something doesn't make sense
+Write the spec to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`, use `elements-of-style:writing-clearly-and-concisely` if available, commit.
 
-**Design for isolation and clarity:**
+**Self-review:** placeholders, internal consistency, scope focused enough for one plan, ambiguity. Fix inline.
 
-- Break the system into smaller units that each have one clear purpose, communicate through well-defined interfaces, and can be understood and tested independently
-- For each unit, you should be able to answer: what does it do, how do you use it, and what does it depend on?
-- Can someone understand what a unit does without reading its internals? Can you change the internals without breaking consumers? If not, the boundaries need work.
-- Smaller, well-bounded units are also easier for you to work with - you reason better about code you can hold in context at once, and your edits are more reliable when files are focused. When a file grows large, that's often a signal that it's doing too much.
+**User review gate:** "Spec at `<path>`. Review it before I write the implementation plan." Wait for approval; if changes requested, re-loop.
 
-**Working in existing codebases:**
-
-- Explore the current structure before proposing changes. Follow existing patterns.
-- Where existing code has problems that affect the work (e.g., a file that's grown too large, unclear boundaries, tangled responsibilities), include targeted improvements as part of the design - the way a good developer improves code they're working in.
-- Don't propose unrelated refactoring. Stay focused on what serves the current goal.
-
-## After the Design
-
-**Documentation:**
-
-- Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
-  - (User preferences for spec location override this default)
-- Use elements-of-style:writing-clearly-and-concisely skill if available
-- Commit the design document to git
-
-**Spec Self-Review:**
-After writing the spec document, look at it with fresh eyes:
-
-1. **Placeholder scan:** Any "TBD", "TODO", incomplete sections, or vague requirements? Fix them.
-2. **Internal consistency:** Do any sections contradict each other? Does the architecture match the feature descriptions?
-3. **Scope check:** Is this focused enough for a single implementation plan, or does it need decomposition?
-4. **Ambiguity check:** Could any requirement be interpreted two different ways? If so, pick one and make it explicit.
-
-Fix any issues inline. No need to re-review — just fix and move on.
-
-**User Review Gate:**
-After the spec review loop passes, ask the user to review the written spec before proceeding:
-
-> "Spec written and committed to `<path>`. Please review it and let me know if you want to make any changes before we start writing out the implementation plan."
-
-Wait for the user's response. If they request changes, make them and re-run the spec review loop. Only proceed once the user approves.
-
-**Implementation:**
-
-- Invoke the writing-plans skill to create a detailed implementation plan
-- Do NOT invoke any other skill. writing-plans is the next step.
-
-## Key Principles
-
-- **One question at a time** - Don't overwhelm with multiple questions
-- **Multiple choice preferred** - Easier to answer than open-ended when possible
-- **YAGNI ruthlessly** - Remove unnecessary features from all designs
-- **Explore alternatives** - Always propose 2-3 approaches before settling
-- **Incremental validation** - Present design, get approval before moving on
-- **Be flexible** - Go back and clarify when something doesn't make sense
+Then: invoke `writing-plans`. Nothing else.
 
 ## Visual Companion
 
-A browser-based companion for showing mockups, diagrams, and visual options during brainstorming. Available as a tool — not a mode. Accepting the companion means it's available for questions that benefit from visual treatment; it does NOT mean every question goes through the browser.
+Browser-based companion for mockups/diagrams/visual options during brainstorming. Available as a tool, not a mode.
 
-**Offering the companion:** When you anticipate that upcoming questions will involve visual content (mockups, layouts, diagrams), offer it once for consent:
+**Offer (its own message, no other content):**
 > "Some of what we're working on might be easier to explain if I can show it to you in a web browser. I can put together mockups, diagrams, comparisons, and other visuals as we go. This feature is still new and can be token-intensive. Want to try it? (Requires opening a local URL)"
 
-**This offer MUST be its own message.** Do not combine it with clarifying questions, context summaries, or any other content. The message should contain ONLY the offer above and nothing else. Wait for the user's response before continuing. If they decline, proceed with text-only brainstorming.
+Wait for the response. If declined, continue text-only.
 
-**Per-question decision:** Even after the user accepts, decide FOR EACH QUESTION whether to use the browser or the terminal. The test: **would the user understand this better by seeing it than reading it?**
+**Per-question decision (even after they accept):** would the user understand this better by seeing it than reading it?
+- Browser: mockups, wireframes, layout comparisons, architecture diagrams, side-by-side designs
+- Terminal: requirements, conceptual choices, tradeoffs, text A/B/C/D, scope decisions
 
-- **Use the browser** for content that IS visual — mockups, wireframes, layout comparisons, architecture diagrams, side-by-side visual designs
-- **Use the terminal** for content that is text — requirements questions, conceptual choices, tradeoff lists, A/B/C/D text options, scope decisions
+UI topic ≠ visual question. "What does personality mean here?" = terminal. "Which wizard layout works better?" = browser.
 
-A question about a UI topic is not automatically a visual question. "What does personality mean in this context?" is a conceptual question — use the terminal. "Which wizard layout works better?" is a visual question — use the browser.
-
-If they agree to the companion, read the detailed guide before proceeding:
-`skills/brainstorming/visual-companion.md`
+If they accept, read `skills/brainstorming/visual-companion.md` before proceeding.

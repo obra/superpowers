@@ -1,6 +1,6 @@
 {
   "name": "superpowers",
-  "version": "5.0.7-surgical.1",
+  "version": "5.0.7-surgical-smart.1",
   "type": "module",
   "main": ".opencode/plugins/superpowers.js"
 }
