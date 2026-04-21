@@ -99,16 +99,28 @@ IF reviewer suggests "implementing properly":
 
 ## Implementation Order
 
+**Multi-item (default for batch reviews):**
 ```
-FOR multi-item feedback:
-  1. Clarify anything unclear FIRST
-  2. Then implement in this order:
-     - Blocking issues (breaks, security)
-     - Simple fixes (typos, imports)
-     - Complex fixes (refactoring, logic)
-  3. Test each fix individually
-  4. Verify no regressions
+FOR a batch review with multiple items (the common case):
+  1. Clarify all ambiguous items FIRST — in a single pass
+  2. Cluster items by zone (data model / UI / tests / infra)
+  3. Inside each cluster, implement in this order:
+     - Blocking issues (breaks, security, Non-Negotiables)
+     - Simple fixes (typos, imports, naming)
+     - Complex fixes (refactor, logic)
+  4. Test per cluster as you close it
+  5. Run the full suite once at the end, not after every item
 ```
+
+**Single-item (rare, opt-in per-task reviews):**
+```
+FOR a review covering one isolated issue:
+  1. Clarify if unclear
+  2. Implement
+  3. Test that one item, move on
+```
+
+Clustering beats ping-ponging. The full suite at the end catches cross-cluster regressions without paying the cost on every fix.
 
 ## When To Push Back
 

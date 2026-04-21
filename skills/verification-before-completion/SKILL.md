@@ -116,19 +116,27 @@ From 24 failure memories:
 
 ## When To Apply
 
+The Iron Law applies to **USER-VISIBLE or IRREVERSIBLE completion claims**. Progress notes within a sprint are not completion claims.
+
 **ALWAYS before:**
-- ANY variation of success/completion claims
-- ANY expression of satisfaction
-- ANY positive statement about work state
-- Committing, PR creation, task completion
-- Moving to next task
-- Delegating to agents
+- PR creation, merge commit, or push to shared branch
+- Claim of end of sprint, end of plan, or major feature complete
+- Bug fixed claim once the fix has touched main
+- Destructive ops (drop, reset, delete, force-push)
+- Delegation handoff to external systems (CI, deploy, customer-facing)
+- Closing a batch review or dismissing reviewer feedback
+
+**NOT required for:**
+- Each intermediate commit inside a sprint
+- Progress updates ("Task 2 done", "Step 3 green")
+- Exploratory runs followed by more work
+- Internal subagent status reports (still verify the final batch, not each step)
 
 **Rule applies to:**
 - Exact phrases
 - Paraphrases and synonyms
 - Implications of success
-- ANY communication suggesting completion/correctness
+- ANY communication suggesting completion/correctness at a sprint boundary
 
 ## The Bottom Line
 

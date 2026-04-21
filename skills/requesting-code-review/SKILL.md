@@ -12,9 +12,20 @@ Dispatch superpowers:code-reviewer subagent to catch issues before they cascade.
 ## When to Request Review
 
 **Mandatory:**
-- After each task in subagent-driven development
+- After each batch (3-5 tasks) in subagent-driven development
 - After completing major feature
 - Before merge to main
+- At sprint/plan exit (final global review)
+
+**Opt-in per task:**
+- Risk tier is critical (see using-superpowers § Risk Tiers / Non-Negotiables)
+- Blocked on a complex bug and want a fresh perspective mid-batch
+- Task touches a non-negotiable and warrants an early check
+
+**Skip for:**
+- Trivial tier work (typo, copy, config one-liner) — self-check is enough
+- Intermediate commits inside a batch that the batch review will catch
+- Refactor already covered by the current batch's reviewer pass
 
 **Optional but valuable:**
 - When stuck (fresh perspective)
@@ -77,13 +88,13 @@ You: [Fix progress indicators]
 ## Integration with Workflows
 
 **Subagent-Driven Development:**
-- Review after EACH task
-- Catch issues before they compound
-- Fix before moving to next task
+- Review after each BATCH of 3-5 tasks (default)
+- Per-task review only when tier = critical or you hit a blocker
+- Final global review at sprint exit, before finishing-a-development-branch
 
 **Executing Plans:**
-- Review after each batch (3 tasks)
-- Get feedback, apply, continue
+- Review at batch checkpoints (3-5 tasks) and at sprint exit
+- Skip between intermediate tasks inside a batch
 
 **Ad-Hoc Development:**
 - Review before merge

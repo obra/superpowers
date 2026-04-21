@@ -15,18 +15,20 @@ Write the test first. Watch it fail. Write minimal code to pass.
 
 ## When to Use
 
-**Always:**
+**Always (default):**
 - New features
 - Bug fixes
 - Refactoring
 - Behavior changes
 
-**Exceptions (ask your human partner):**
-- Throwaway prototypes
-- Generated code
-- Configuration files
+**Exceptions (document why in the commit, don't just skip):**
+- Trivial tier work: typo fixes, copy edits, config value changes, one-line comment additions (see using-superpowers § Risk Tiers)
+- Throwaway prototypes (commit message: "prototype, TDD waived")
+- Generated code (commit message: cite generator)
+- Configuration files with no runtime behavior
+- Refactors already covered by existing tests — name the test file(s) that cover the change in the commit message
 
-Thinking "skip TDD just this once"? Stop. That's rationalization.
+Thinking "skip TDD just this once"? Stop. That's rationalization — unless it falls in the list above AND you document it.
 
 ## The Iron Law
 
@@ -368,4 +370,4 @@ Production code → test exists and failed first
 Otherwise → not TDD
 ```
 
-No exceptions without your human partner's permission.
+Exceptions documented in the commit message so the user can audit. Silent TDD skips are a violation; documented skips in the allowed categories are fine.

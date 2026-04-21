@@ -23,13 +23,22 @@ If you haven't completed Phase 1, you cannot propose fixes.
 
 ## When to Use
 
-Use for ANY technical issue:
-- Test failures
-- Bugs in production
-- Unexpected behavior
-- Performance problems
-- Build failures
-- Integration issues
+Covers ANY technical issue: test failures, bugs in production, unexpected behavior, performance problems, build failures, integration issues.
+
+**Phase 1 (Root Cause Investigation) is REQUIRED when:**
+- The bug reached main, CI, staging, or production
+- At least one fix has already been attempted and failed
+- You have been debugging the same issue for more than ~15 minutes
+- The failure spans multiple components or layers
+- Risk tier is critical (see using-superpowers § Risk Tiers)
+- The bug touches a Non-Negotiable (auth, RLS, secrets, data migration, destructive ops, CI/CD) — see using-superpowers § Non-Negotiables. Treat as tier = critical regardless of surface signals.
+
+**Phase 1 may be skipped (note why in the commit) when:**
+- Clear typo or syntax error with a compiler/linter pointing at the exact line
+- Fresh code, immediate reproduction, cause is obvious on first read
+- Failing test with a single, unambiguous line-level cause
+
+**Phases 2-4 still apply once a fix is proposed, even if Phase 1 was skipped.**
 
 **Use this ESPECIALLY when:**
 - Under time pressure (emergencies make guessing tempting)
