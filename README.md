@@ -101,6 +101,16 @@ To update:
 gemini extensions update superpowers
 ```
 
+### Kimi Code 2.6
+
+Tell Kimi Code:
+
+```
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.kimi/INSTALL.md
+```
+
+**Detailed docs:** [docs/README.kimi.md](docs/README.kimi.md)
+
 ### Verify Installation
 
 Start a new session in your chosen platform and ask for something that should trigger a skill (for example, "help me plan this feature" or "let's debug this issue"). The agent should automatically invoke the relevant superpowers skill.
