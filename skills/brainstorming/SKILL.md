@@ -10,25 +10,37 @@ Help turn ideas into fully formed designs and specs through natural collaborativ
 Start by understanding the current project context, then ask questions one at a time to refine the idea. Once you understand what you're building, present the design and get user approval.
 
 <HARD-GATE>
-Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
+For **standard** and **critical** tier work: do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it.
+
+For **trivial** tier work (config value change, typo, one-line fix, copy edit): you MAY skip brainstorming and go straight to the change. The Golden Rule (see using-superpowers) still applies.
+
+See using-superpowers § Risk Tiers for the tier definitions.
 </HARD-GATE>
 
-## Anti-Pattern: "This Is Too Simple To Need A Design"
+## Routing by Risk Tier
 
-Every project goes through this process. A todo list, a single-function utility, a config change — all of them. "Simple" projects are where unexamined assumptions cause the most wasted work. The design can be short (a few sentences for truly simple projects), but you MUST present it and get approval.
+Not every project goes through the full 9-step process. Simple projects waste work on unstated assumptions, but trivial projects waste more time on full ceremony than they save. Route by tier:
 
-## Checklist
+| Tier | Ceremony | Examples |
+|------|----------|----------|
+| **Trivial — skip** | No brainstorming. Just make the change following the Golden Rule. | Config value change, typo fix, one-line bug fix, copy edit, comment addition |
+| **Light — steps 1, 3, 5 only** | Explore project context → 1-2 clarifying questions → 3-line design inline (no spec file needed) | Bug fix with clear behavior, well-scoped utility inside an existing module, small internal refactor |
+| **Full — all 9 steps** | Full checklist below, spec document written and reviewed | New features, architectural decisions, cross-cutting concerns, critical tier work, anything touching a Non-Negotiable (see using-superpowers § Non-Negotiables) |
 
-You MUST create a task for each of these items and complete them in order:
+When in doubt between Light and Full, go Full. When in doubt between Trivial and Light, go Light.
+
+## Checklist (Full tier)
+
+For **full tier** work, create a task for each item and complete in order. For **light tier**, only steps 1, 3, and 5 are required — skip the rest. For **trivial tier**, skip the checklist entirely.
 
 1. **Explore project context** — check files, docs, recent commits
-2. **Offer visual companion** (if topic will involve visual questions) — this is its own message, not combined with a clarifying question. See the Visual Companion section below.
+2. **Offer visual companion** (if topic will involve visual questions) — this is its own message, not combined with a clarifying question. See the Visual Companion section below. *(full tier only)*
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-4. **Propose 2-3 approaches** — with trade-offs and your recommendation
+4. **Propose 2-3 approaches** — with trade-offs and your recommendation *(full tier only)*
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
-7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
-8. **User reviews written spec** — ask user to review the spec file before proceeding
+6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit *(full tier only)*
+7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below) *(full tier only)*
+8. **User reviews written spec** — ask user to review the spec file before proceeding *(full tier only)*
 9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow

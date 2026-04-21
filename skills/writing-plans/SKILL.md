@@ -113,6 +113,16 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - Steps that describe what to do without showing how (code blocks required for code steps)
 - References to types, functions, or methods not defined in any task
 
+**Allowed shortcut — reference by file:line:** If the pattern to reuse already exists in the codebase, a `See <file:line-range>` reference is acceptable **when the referenced location contains exactly the pattern to apply**. This supports REUSE > CREATE (see using-superpowers § The Golden Rule).
+
+Examples:
+- ✅ `"Add validator following the pattern in src/validators/email.ts:12-34"` — the engineer can read the exact pattern.
+- ✅ `"Handle errors the same way as src/api/users.ts:45-62 (catch + toast + log)"` — specific enough.
+- ❌ `"Add appropriate validator"` — vague, no reference.
+- ❌ `"See existing validators"` — no file, no line, no anchor.
+
+The reference must point to concrete line ranges. "See the existing code" without a location is still a plan failure.
+
 ## Remember
 - Exact file paths always
 - Complete code in every step — if a step changes code, show the code

@@ -580,18 +580,18 @@ step2 [label="read file"];
 helper1, helper2, step3, pattern4
 **Why bad:** Labels should have semantic meaning
 
-## STOP: Before Moving to Next Skill
+## Before Moving to Next Skill
 
-**After writing ANY skill, you MUST STOP and complete the deployment process.**
+After writing a skill, completing the deployment process is **recommended before deploying** — particularly for skills that other skills depend on, or skills intended for general release.
 
-**Do NOT:**
-- Create multiple skills in batch without testing each
-- Move to next skill before current one is verified
-- Skip testing because "batching is more efficient"
+**Avoid:**
+- Creating multiple skills in batch without testing any of them
+- Shipping to main / tagging a release with an untested skill
+- Skipping testing because "batching is more efficient"
 
-**The deployment checklist below is MANDATORY for EACH skill.**
+For skills that are local-only experiments or drafts intended for a later testing pass, batching is OK — but the deployment checklist below must run before the skill is used in anger or merged to main.
 
-Deploying untested skills = deploying untested code. It's a violation of quality standards.
+Deploying untested skills = deploying untested code.
 
 ## Skill Creation Checklist (TDD Adapted)
 
