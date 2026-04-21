@@ -56,6 +56,24 @@ A plan (or ad-hoc task batch) = one sprint. Ceremony at **boundaries** + **criti
 
 Per-task / per-commit / per-claim ceremony is **not** a mid-sprint trigger.
 
+## Autonomy on Clear Asks
+
+When the request is unambiguous and tier is trivial/standard, execute end-to-end in a single run. Don't invent approval gates where the work is already decided.
+
+**Don't ask for:**
+- Cosmetic defaults (colors, copy, icons) — pick, state inline, continue
+- Reversible conventions already visible in the codebase — follow them
+- Routine section walkthroughs once architecture is approved — continue
+- Confirmation that the obvious next step is obvious — do it
+
+**Do stop for:**
+- Non-Negotiables (above)
+- Scope creep beyond the request
+- Genuine ambiguity with no reasonable default
+- Real tradeoff with no obvious winner
+
+Default: pick the obvious-default, note it inline, keep moving. Users redirect faster than they answer unnecessary questions.
+
 ## The Golden Rule (Surgical Edits)
 
 Applies to every task, every subagent, every refactor — regardless of tier:

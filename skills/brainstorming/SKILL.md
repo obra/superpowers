@@ -31,9 +31,9 @@ Create a task per item, in order. Light tier runs only 1, 3, 5. Trivial skips th
 
 1. Explore project context (files, docs, recent commits)
 2. Offer visual companion if upcoming questions are visual — its own message, no other content (see Visual Companion section) *[full only]*
-3. Ask clarifying questions — one at a time, purpose/constraints/success criteria
+3. Batch clarifying questions with a recommended default for each; serialize only when an answer genuinely affects the next question
 4. Propose 2-3 approaches with trade-offs and your recommendation *[full only]*
-5. Present design — sections scaled to complexity, approval after each section
+5. Present design — one approval at the architecture level; walk the rest without per-section gates unless a real tradeoff surfaces
 6. Write design doc to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit *[full only]*
 7. Spec self-review (placeholders, contradictions, ambiguity, scope) *[full only]*
 8. User reviews written spec *[full only]*
@@ -47,13 +47,15 @@ If the request describes multiple independent subsystems (e.g., "platform with c
 
 ## Asking Questions
 
-- One per message. Multiple choice when possible; open-ended is fine otherwise.
+- **Batch first** — independent questions in one message, each with a recommended default. Serialize only when an answer genuinely changes the next question.
+- **Pick trivial defaults yourself** — cosmetic choices (colors, copy, icons) and reversible conventions already visible in the codebase don't warrant a question. State the choice inline; the user redirects if needed.
+- Multiple choice when possible; open-ended is fine otherwise.
 - Focus on purpose, constraints, success criteria.
 - Be ready to loop back and reclarify.
 
 ## Presenting the Design
 
-Scale sections to complexity (a few sentences for simple parts, up to ~300 words when nuanced). Approval per section. Cover architecture, components, data flow, error handling, testing.
+Scale sections to complexity (a few sentences for simple parts, up to ~300 words when nuanced). **One approval at the architecture level**, then walk the remaining sections in sequence. Stop mid-walk only if a genuine tradeoff surfaces — not for routine sections or to re-confirm what architecture approval already settled. Cover architecture, components, data flow, error handling, testing.
 
 **Design for isolation:** smaller units with clear single responsibility and well-defined interfaces. For each unit: what it does, how to use it, what it depends on. You reason better about code you can hold in context.
 
