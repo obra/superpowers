@@ -50,6 +50,7 @@ test('skills tree ships the unified skill set directly', () => {
   assert.equal(codexPlugin.name, 'nimbou-skills')
   assert.equal(codexPlugin.skills, './skills/')
   assert.equal(codexMarketplace.name, 'nimbou-skills')
+  assert.equal(codexMarketplace.plugins[0].policy.installation, 'INSTALLED_BY_DEFAULT')
   assert.equal(codexMarketplace.plugins[0].source.source, 'local')
   assert.equal(codexMarketplace.plugins[0].source.path, './plugins/nimbou-skills')
 })
@@ -63,6 +64,7 @@ test('command and agent scaffolds exist for guided feature development', () => {
     '.codex/skills/design-md/SKILL.md',
     '.codex/skills/merge-pr/SKILL.md',
     'scripts/setup-chrome-devtools-wrapper.sh',
+    'scripts/setup-codex-skills.sh',
     'plugins/nimbou-skills/agents/code-explorer.md',
     'plugins/nimbou-skills/agents/code-architect.md',
     'plugins/nimbou-skills/agents/code-reviewer.md',
@@ -236,11 +238,14 @@ test('README documents backend-first core and prefixed NestJS and Nuxt skills', 
   assert.match(install, /setup-codex-full-wrapper\.sh/)
   assert.match(install, /setup-chrome-devtools-wrapper\.sh/)
   assert.match(install, /setup-vscode-copilot-chat\.sh/)
+  assert.match(install, /setup-codex-skills\.sh/)
   assert.match(install, /CODEX_WRAPPER_PATH/)
   assert.match(install, /CHROME_DEVTOOLS_MCP_WRAPPER_PATH/)
   assert.match(install, /VS Code Copilot Chat/i)
   assert.match(install, /COPILOT_CHAT_SKILLS_DIR/)
   assert.match(install, /VSCODE_USER_PROMPTS_DIR/)
+  assert.match(install, /Codex skills/i)
+  assert.match(install, /\.codex\/skills/)
   assert.match(install, /\.claude-plugin\/plugin\.json/)
   assert.match(install, /claude plugin list --json/)
   assert.match(install, /Claude Code plugin already installed at version/)
@@ -251,7 +256,6 @@ test('README documents backend-first core and prefixed NestJS and Nuxt skills', 
   assert.match(install, /\.agents\/plugins\/marketplace\.json/)
   assert.doesNotMatch(install, /local skill-tree fallback/)
   assert.doesNotMatch(install, /link_skill_tree/)
-  assert.doesNotMatch(install, /\.codex\/skills/)
   assert.equal(existsSync(resolve(root, 'scripts/setup-vscode-copilot-chat.sh')), true)
   assert.equal(existsSync(resolve(root, 'LICENSE')), true)
 })
