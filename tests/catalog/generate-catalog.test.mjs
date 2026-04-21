@@ -38,7 +38,7 @@ test('catalog command generates aggregate and per-component metadata', () => {
     )
     const perComponent = JSON.parse(
       readFileSync(
-        resolve(projectRoot, 'components/ProjectStatusBadge.meta.json'),
+        resolve(projectRoot, 'components/ProjectsProjectStatusBadge.meta.json'),
         'utf8',
       ),
     )
@@ -50,7 +50,7 @@ test('catalog command generates aggregate and per-component metadata', () => {
     )
 
     assert.equal(aggregate.components.length, 2)
-    assert.equal(aggregate.components[1].name, 'ProjectStatusBadge')
+    assert.equal(aggregate.components[1].name, 'ProjectsProjectStatusBadge')
     assert.equal(aggregate.components[1].catalog.domain, 'projects')
     assert.equal(aggregate.components[1].meta.props[0].name, 'status')
     assert.equal(aggregate.components[0].catalog.status, 'experimental')
@@ -60,9 +60,9 @@ test('catalog command generates aggregate and per-component metadata', () => {
     assert.equal(compatibilityAggregate.components[0].status, 'experimental')
     assert.deepEqual(
       compatibilityAggregate.indexes.byCategory.display,
-      ['ProjectStatusBadge', 'StatusChip'],
+      ['ProjectsProjectStatusBadge', 'SharedStatusChip'],
     )
-    assert.deepEqual(compatibilityAggregate.indexes.byDomain.projects, ['ProjectStatusBadge'])
+    assert.deepEqual(compatibilityAggregate.indexes.byDomain.projects, ['ProjectsProjectStatusBadge'])
   })
 })
 
@@ -109,7 +109,7 @@ test('catalog domain filter emits only the requested domain', () => {
 
     assert.deepEqual(
       aggregate.components.map((component) => component.name),
-      ['ProjectStatusBadge'],
+      ['ProjectsProjectStatusBadge'],
     )
   }, { includeBroken: true })
 })
@@ -139,7 +139,7 @@ test('catalog removes stale generated metadata after a failed full generation ru
     assert.equal(firstRun.status, 0, firstRun.stderr)
     assert.equal(existsSync(resolve(projectRoot, 'components.meta.json')), true)
     assert.equal(
-      existsSync(resolve(projectRoot, 'components/ProjectStatusBadge.meta.json')),
+      existsSync(resolve(projectRoot, 'components/ProjectsProjectStatusBadge.meta.json')),
       true,
     )
 
@@ -162,7 +162,7 @@ test('catalog removes stale generated metadata after a failed full generation ru
       false,
     )
     assert.equal(
-      existsSync(resolve(projectRoot, 'components/ProjectStatusBadge.meta.json')),
+      existsSync(resolve(projectRoot, 'components/ProjectsProjectStatusBadge.meta.json')),
       false,
     )
   })

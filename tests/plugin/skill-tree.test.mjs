@@ -57,7 +57,6 @@ test('distribution manifests exist for Claude and Codex packaging', () => {
 test('nuxt think and plan skills explain catalog-aware design and execution topology', () => {
   const files = [
     'plugins/nimbou-skills/skills/nuxt-think/SKILL.md',
-    'plugins/nimbou-skills/skills/nuxt-think/reference/conventions.md',
     'plugins/nimbou-skills/skills/nuxt-plan/SKILL.md',
     'plugins/nimbou-skills/skills/nuxt-plan/reference/plan-format.md',
     'plugins/nimbou-skills/skills/nuxt-audit/reference/design-md-template.md',
@@ -207,8 +206,8 @@ test('core and audit skills document their new guardrails', () => {
   assert.match(nuxtDebug, /Boundary With `nuxt-test`/)
   assert.match(designMdTemplate, /Nuxt Frontend DESIGN\.MD Template/)
   assert.match(designMdTemplate, /Product and Interface Context/)
-  assert.match(designMdTemplate, /Component Responsibility Model/)
-  assert.match(designMdTemplate, /Visual Guardrails/)
+  assert.match(designMdTemplate, /Component Architecture/)
+  assert.match(designMdTemplate, /Visual Posture/)
   assert.match(designMdTemplate, /Hardening Expectations/)
   assert.match(designMdTemplate, /Audit Expectations/)
 })
@@ -234,8 +233,7 @@ test('feature development command and agents describe the guided orchestration w
   assert.match(featureCommand, /nuxt-think/)
   assert.match(featureCommand, /fullstack-think/)
   assert.match(featureCommand, /shared contract is closed by `fullstack-think`/i)
-  assert.match(featureCommand, /`nuxt-plan` and `nestjs-plan` in parallel/i)
-  assert.match(featureCommand, /do not dispatch planning until the shared contract is closed by `fullstack-think`/i)
+  assert.match(featureCommand, /invoke the `fullstack-think` skill — it closes the shared contract, then invokes `nestjs-plan` followed by `nuxt-plan` sequentially/i)
   assert.doesNotMatch(
     featureCommand,
     /do not start `nuxt-think` when the frontend depends on an unsettled backend contract/i,
@@ -255,7 +253,7 @@ test('feature development command and agents describe the guided orchestration w
   assert.match(featureSkill, /nuxt-think/)
   assert.match(featureSkill, /fullstack-think/)
   assert.match(featureSkill, /shared contract is closed by `fullstack-think`/i)
-  assert.match(featureSkill, /`nuxt-plan` and `nestjs-plan` in parallel/i)
+  assert.match(featureSkill, /`fullstack-think`, then `nuxt-plan` and `nestjs-plan` in parallel after the shared contract is closed by `fullstack-think`/i)
   assert.match(featureSkill, /do not dispatch planning until the shared contract is closed by `fullstack-think`/i)
   assert.doesNotMatch(
     featureSkill,

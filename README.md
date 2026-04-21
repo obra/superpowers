@@ -81,7 +81,7 @@ The bootstrap script:
 - creates `~/.local/bin/codex-full` when missing, wired to `codex --dangerously-bypass-approvals-and-sandbox`
 - creates `~/.local/bin/chrome-devtools-mcp-wayland` and rewrites `~/.codex/config.toml` so the `chrome-devtools` MCP inherits the local X/Wayland session automatically
 
-If your installed Codex build does not support `codex marketplace add`, upgrade to `rust-v0.121.0+` or newer and rerun `./install.sh`.
+If your installed Codex build does not support `codex plugin marketplace add`, upgrade to `rust-v0.121.0+` or newer and rerun `./install.sh`.
 
 After the bootstrap finishes, restart Claude Code and Codex, then reload VS Code so VS Code Copilot Chat picks up the updated skills and agents.
 

@@ -69,7 +69,7 @@ require_codex_marketplace_support() {
     exit 1
   fi
 
-  if ! codex help 2>/dev/null | grep -q 'marketplace'; then
+  if ! codex plugin marketplace --help >/dev/null 2>&1; then
     echo "Codex marketplace support is required. Install Codex rust-v0.121.0+ or newer, then rerun install.sh." >&2
     exit 1
   fi
@@ -94,7 +94,7 @@ EXPECTED_PLUGIN_VERSION="$(read_plugin_version)"
 INSTALLED_PLUGIN_VERSION="$(get_installed_plugin_version)"
 INSTALLED_COPILOT_PLUGIN_VERSION="$(get_installed_copilot_plugin_version)"
 
-codex marketplace add "$CODEX_MARKETPLACE_DIR" \
+codex plugin marketplace add "$CODEX_MARKETPLACE_DIR" \
   && echo "Codex marketplace added: $CODEX_MARKETPLACE_DIR" \
   || {
     echo "Failed to register the Codex marketplace. Install Codex rust-v0.121.0+ or newer and rerun install.sh." >&2
