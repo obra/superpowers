@@ -1,8 +1,45 @@
 {
   "name": "superpowers-lecture-pipeline",
-  "version": "0.0.1",
+  "version": "0.1.0",
+  "description": "AI-driven lecture production and coding study pipelines for Claude Code — Phase 0-4 lecture agents, 3-day study agents, and interactive skills",
   "type": "module",
   "main": ".opencode/plugins/superpowers.js",
+  "files": [
+    "agents/",
+    "skills/",
+    "commands/",
+    "hooks/",
+    ".claude-plugin/",
+    ".cursor-plugin/",
+    "gemini-extension.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "claude-code",
+    "claude",
+    "superpowers",
+    "agents",
+    "skills",
+    "lecture",
+    "pipeline",
+    "study",
+    "tdd",
+    "debugging"
+  ],
+  "author": {
+    "name": "soyotime0118",
+    "email": "soyotime0118@gmail.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/soyotime0118/superpowers",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/soyotime0118/superpowers.git"
+  },
+  "bugs": {
+    "url": "https://github.com/soyotime0118/superpowers/issues"
+  },
   "devDependencies": {
     "eslint": "^10.2.1"
   }

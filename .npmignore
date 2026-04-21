@@ -1,0 +1,16 @@
+# 개발/테스트 파일
+node_modules/
+tests/
+scripts/
+docs/
+
+# 설정 파일
+.github/
+CLAUDE.md
+GEMINI.md
+AGENTS.md
+.eslintrc*
+
+# 불필요한 메타
+CODE_OF_CONDUCT.md
+RELEASE-NOTES.md

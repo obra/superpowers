@@ -1,7 +1,7 @@
 {
   "name": "superpowers-lecture-pipeline",
-  "description": "Superpowers fork with lecture production pipeline: Phase 0-4 agents for research-driven lecture creation (RQ generation, evidence collection, outline, script)",
-  "version": "0.0.1",
+  "description": "AI-driven lecture production and 3-day coding study pipelines — Phase 0-4 lecture agents, study agents (Day 1-3), and interactive skills for Claude Code",
+  "version": "0.1.0",
   "author": {
     "name": "soyotime0118",
     "email": "soyotime0118@gmail.com"
