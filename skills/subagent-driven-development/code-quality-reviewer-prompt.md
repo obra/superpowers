@@ -22,5 +22,6 @@ Task tool (superpowers:code-reviewer):
 - Are units decomposed so they can be understood and tested independently?
 - Is the implementation following the file structure from the plan?
 - Did this implementation create new files that are already large, or significantly grow existing files? (Don't flag pre-existing file sizes — focus on what this change contributed.)
+- **Golden Rule compliance:** Did the implementation stay minimal and surgical, or does it show scope creep (unrelated refactor, duplicated logic that could reuse an existing helper, new files or deps that weren't required)?
 
 **Code reviewer returns:** Strengths, Issues (Critical/Important/Minor), Assessment

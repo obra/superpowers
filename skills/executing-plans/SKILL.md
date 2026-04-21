@@ -21,13 +21,27 @@ Load plan, review critically, execute all tasks, report when complete.
 3. If concerns: Raise them with your human partner before starting
 4. If no concerns: Create TodoWrite and proceed
 
-### Step 2: Execute Tasks
+### Step 2: Execute Tasks (Sprint Mode)
 
-For each task:
+A plan = ONE sprint. Concentrate ceremony at sprint boundaries and critical checkpoints, not between every step. See `superpowers:using-superpowers` § Sprint Mode.
+
+**Sprint entry (once):**
+- Acknowledge the Golden Rule (see `using-superpowers` § The Golden Rule)
+- Confirm the risk tier for this plan (default: standard; critical if any task touches a Non-Negotiable — see `using-superpowers` § Non-Negotiables)
+- For standard/critical, skim the plan once for scope surprises
+
+**Per task:**
 1. Mark as in_progress
 2. Follow each step exactly (plan has bite-sized steps)
-3. Run verifications as specified
-4. Mark as completed
+3. Run only the verifications the plan explicitly names for this task
+4. Mark as completed, move to next
+
+**Batch checkpoints (every 3-5 tasks, or at plan-indicated batch boundaries):**
+- Run batch-level verification (tests, build) if the plan specifies; otherwise a light self-check
+- Light self-review for critical tier; skip for trivial/standard unless something feels off
+- Do NOT dispatch a per-task code review — reviews are per-batch or per-sprint
+
+**Sprint exit (once, after the final task):** proceed to Step 3 below.
 
 ### Step 3: Complete Development
 

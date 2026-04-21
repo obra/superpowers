@@ -34,6 +34,17 @@ Task tool (general-purpose):
     - Check for missing pieces they claimed to implement
     - Look for extra features they didn't mention
 
+    ## Also Flag: Golden Rule Violations
+
+    Beyond spec conformity, note (non-blocking flags) any of these:
+    - New files or folders created when an existing one could fit
+    - Logic duplicated when an existing helper could be reused
+    - Opportunistic refactor outside the task scope
+    - New external dependencies added silently
+
+    These are observations for the controller, not review-blocking by themselves.
+    The controller decides whether to send back for cleanup.
+
     ## Your Job
 
     Read the implementation code and verify:

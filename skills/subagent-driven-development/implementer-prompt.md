@@ -8,6 +8,19 @@ Task tool (general-purpose):
   prompt: |
     You are implementing Task N: [task name]
 
+    ## Directive — Surgical Edits (non-negotiable)
+
+    1. MINIMAL: change only what Task N requires
+    2. SURGICAL: no opportunistic refactor, no style churn, no unrelated cleanup
+    3. REUSE > CREATE: extend existing helpers; don't duplicate
+    4. AGGREGATE > FRAGMENT: one solution over several
+    5. DIRECTED REFACTOR: factor only across sites you already touch
+    6. UNCERTAINTY = ASK: new lib / pattern / folder → report BLOCKED with a scope concern
+
+    Scope guard: if the task would produce more than 2 new files, more than ~150 LoC,
+    or require a new external dependency, STOP and report DONE_WITH_CONCERNS with a
+    scope note before implementing the oversized version.
+
     ## Task Description
 
     [FULL TEXT of task from plan - paste it here, don't make subagent read file]

@@ -5,11 +5,11 @@ description: Use when executing implementation plans with independent tasks in t
 
 # Subagent-Driven Development
 
-Execute plan by dispatching fresh subagent per task, with two-stage review after each: spec compliance review first, then code quality review.
+Execute plan by dispatching fresh subagent per task. Reviews (spec compliance + code quality) run **per batch of 3-5 tasks or at end of sprint**, not after every task — this keeps the inner loop fast while still catching drift at natural checkpoints.
 
 **Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
 
-**Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
+**Core principle:** Fresh subagent per task + batched two-stage review (spec then quality) = high quality, tight inner loop. See `using-superpowers` § Sprint Mode for the rationale.
 
 ## When to Use
 
@@ -34,7 +34,7 @@ digraph when_to_use {
 **vs. Executing Plans (parallel session):**
 - Same session (no context switch)
 - Fresh subagent per task (no context pollution)
-- Two-stage review after each task: spec compliance first, then code quality
+- Two-stage review per batch (3-5 tasks) or per sprint: spec compliance first, then code quality
 - Faster iteration (no human-in-loop between tasks)
 
 ## The Process
@@ -43,46 +43,67 @@ digraph when_to_use {
 digraph process {
     rankdir=TB;
 
+    "Read plan, extract all tasks with full text, note context, confirm risk tier, create TodoWrite" [shape=box];
+
     subgraph cluster_per_task {
-        label="Per Task";
-        "Dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
-        "Implementer subagent asks questions?" [shape=diamond];
+        label="Per Task (lightweight inner loop)";
+        "Dispatch implementer subagent (./implementer-prompt.md — includes Golden Rule directive)" [shape=box];
+        "Implementer asks questions?" [shape=diamond];
         "Answer questions, provide context" [shape=box];
-        "Implementer subagent implements, tests, commits, self-reviews" [shape=box];
-        "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [shape=box];
-        "Spec reviewer subagent confirms code matches spec?" [shape=diamond];
-        "Implementer subagent fixes spec gaps" [shape=box];
-        "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
-        "Code quality reviewer subagent approves?" [shape=diamond];
-        "Implementer subagent fixes quality issues" [shape=box];
+        "Implementer implements, tests, commits, self-reviews" [shape=box];
         "Mark task complete in TodoWrite" [shape=box];
     }
 
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
+    "End of batch (3-5 tasks) or end of plan?" [shape=diamond];
+
+    subgraph cluster_per_batch {
+        label="Per Batch (review pair)";
+        "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md) for the batch" [shape=box];
+        "Spec reviewer confirms batch matches spec?" [shape=diamond];
+        "Implementer fixes spec gaps in affected tasks" [shape=box];
+        "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md) for the batch" [shape=box];
+        "Code quality reviewer approves?" [shape=diamond];
+        "Implementer fixes quality issues" [shape=box];
+    }
+
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
-    "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
-    "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
-    "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
-    "Implementer subagent asks questions?" -> "Implementer subagent implements, tests, commits, self-reviews" [label="no"];
-    "Implementer subagent implements, tests, commits, self-reviews" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)";
-    "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" -> "Spec reviewer subagent confirms code matches spec?";
-    "Spec reviewer subagent confirms code matches spec?" -> "Implementer subagent fixes spec gaps" [label="no"];
-    "Implementer subagent fixes spec gaps" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="re-review"];
-    "Spec reviewer subagent confirms code matches spec?" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="yes"];
-    "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
-    "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
-    "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
-    "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
-    "Mark task complete in TodoWrite" -> "More tasks remain?";
-    "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
+    "Read plan, extract all tasks with full text, note context, confirm risk tier, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md — includes Golden Rule directive)";
+    "Dispatch implementer subagent (./implementer-prompt.md — includes Golden Rule directive)" -> "Implementer asks questions?";
+    "Implementer asks questions?" -> "Answer questions, provide context" [label="yes"];
+    "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md — includes Golden Rule directive)";
+    "Implementer asks questions?" -> "Implementer implements, tests, commits, self-reviews" [label="no"];
+    "Implementer implements, tests, commits, self-reviews" -> "Mark task complete in TodoWrite";
+    "Mark task complete in TodoWrite" -> "End of batch (3-5 tasks) or end of plan?";
+    "End of batch (3-5 tasks) or end of plan?" -> "Dispatch implementer subagent (./implementer-prompt.md — includes Golden Rule directive)" [label="no — next task"];
+    "End of batch (3-5 tasks) or end of plan?" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md) for the batch" [label="yes"];
+    "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md) for the batch" -> "Spec reviewer confirms batch matches spec?";
+    "Spec reviewer confirms batch matches spec?" -> "Implementer fixes spec gaps in affected tasks" [label="no"];
+    "Implementer fixes spec gaps in affected tasks" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md) for the batch" [label="re-review"];
+    "Spec reviewer confirms batch matches spec?" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md) for the batch" [label="yes"];
+    "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md) for the batch" -> "Code quality reviewer approves?";
+    "Code quality reviewer approves?" -> "Implementer fixes quality issues" [label="no"];
+    "Implementer fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md) for the batch" [label="re-review"];
+    "Code quality reviewer approves?" -> "More tasks remain?" [label="yes"];
+    "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md — includes Golden Rule directive)" [label="yes — next batch"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
     "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
+
+## Scaling Reviews by Risk Tier
+
+The batched review pair (spec + quality) runs at batch boundaries, not after every task. The **depth** of each review pair scales with the risk tier of the batch (see `using-superpowers` § Risk Tiers):
+
+- **Trivial batch:** skip the spec reviewer dispatch; rely on the implementer's self-review + a light controller-side quality glance only.
+- **Standard batch:** spec reviewer + code quality reviewer at batch end, with fix loops as needed.
+- **Critical batch:** spec + quality reviewers at batch end + always run the final global code reviewer before `finishing-a-development-branch`.
+
+Any batch that touches a Non-Negotiable (see `using-superpowers` § Non-Negotiables) is treated as **critical** regardless of size or surface signals.
+
+The final global review before `finishing-a-development-branch` is always run at sprint exit, regardless of tier.
 
 ## Model Selection
 
@@ -103,7 +124,7 @@ Use the least powerful model that can handle each role to conserve cost and incr
 
 Implementer subagents report one of four statuses. Handle each appropriately:
 
-**DONE:** Proceed to spec compliance review.
+**DONE:** Mark the task complete in TodoWrite and move on. Spec compliance review runs at the batch boundary (every 3-5 tasks) or at end of sprint, not after this single task.
 
 **DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
 
@@ -226,26 +247,29 @@ Done!
 - Code quality ensures implementation is well-built
 
 **Cost:**
-- More subagent invocations (implementer + 2 reviewers per task)
-- Controller does more prep work (extracting all tasks upfront)
-- Review loops add iterations
-- But catches issues early (cheaper than debugging later)
+- Per task: only the implementer subagent (plus its self-review)
+- Per batch (3-5 tasks) or per sprint: spec + code quality reviewers applied to the batch as a whole
+- Per sprint exit: one final code reviewer before finishing-a-development-branch
+- Controller does prep work upfront (extracting tasks, curating context)
+- Review loops add iterations but catch issues early (cheaper than debugging later)
+- Net effect: reviews are batched, not per-task, keeping the inner loop tight
 
 ## Red Flags
 
 **Never:**
 - Start implementation on main/master branch without explicit user consent
-- Skip reviews (spec compliance OR code quality)
-- Proceed with unfixed issues
+- Skip the batch review pair (spec + quality) at batch or sprint boundaries
+- Skip the final code reviewer at sprint exit
+- Proceed with unfixed issues from a batch review
 - Dispatch multiple implementation subagents in parallel (conflicts)
 - Make subagent read plan file (provide full text instead)
 - Skip scene-setting context (subagent needs to understand where task fits)
 - Ignore subagent questions (answer before letting them proceed)
 - Accept "close enough" on spec compliance (spec reviewer found issues = not done)
 - Skip review loops (reviewer found issues = implementer fixes = review again)
-- Let implementer self-review replace actual review (both are needed)
+- Let implementer self-review replace the batch review pair (both are needed)
 - **Start code quality review before spec compliance is ✅** (wrong order)
-- Move to next task while either review has open issues
+- Close a sprint while either the batch review pair or the final review has open issues
 
 **If subagent asks questions:**
 - Answer clearly and completely

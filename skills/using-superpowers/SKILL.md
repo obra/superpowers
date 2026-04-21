@@ -7,13 +7,11 @@ description: Use when starting any conversation - establishes how to find and us
 If you were dispatched as a subagent to execute a specific task, skip this skill.
 </SUBAGENT-STOP>
 
-<EXTREMELY-IMPORTANT>
-If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.
+<IMPORTANT>
+If a skill clearly applies to the task, invoke it. For standard and critical tier work (see Risk Tiers below), invoking applicable skills is required. For trivial tier work you MAY skip process skills and go straight to code — but the Golden Rule (see below) always applies.
 
-IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
-
-This is not negotiable. This is not optional. You cannot rationalize your way out of this.
-</EXTREMELY-IMPORTANT>
+This is not about ceremony for its own sake; it's about not making up process mid-work. If an existing skill fits, use it.
+</IMPORTANT>
 
 ## Instruction Priority
 
@@ -77,7 +75,7 @@ digraph skill_flow {
 
 ## Red Flags
 
-These thoughts mean STOP—you're rationalizing:
+These apply when you're about to skip a skill that tier-gating hasn't already excused. For trivial tier work you may already be exempt; for standard/critical work, these thoughts mean STOP—you're rationalizing:
 
 | Thought | Reality |
 |---------|---------|
@@ -115,3 +113,87 @@ The skill itself tells you which.
 ## User Instructions
 
 Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
+
+## Risk Tiers
+
+Before invoking process skills, classify the work. This determines how much ceremony to apply. When ambiguous, default to **standard**; escalate to **critical** if any Non-Negotiable (see below) applies.
+
+| Tier | Signals | Applied ceremony |
+|------|---------|------------------|
+| **trivial** | Config tweak, typo, copy change, single-line fix, dependency bump, rename, comment addition | Skip brainstorming, skip plan, go straight to code + tests; single final verification |
+| **standard** | New feature within existing module, bug fix requiring investigation, refactor of 1-3 files | Light brainstorming if unclear, plan optional, TDD required, review at bundle end |
+| **critical** | Security/auth, data migrations, RLS changes, destructive ops, cross-cutting architecture, new external dep, > 5 files or > 200 LoC expected | Full brainstorming, full plan, subagent-driven-development with per-batch reviews, full verification |
+
+Default when ambiguous: **standard**. Anything touching a Non-Negotiable escalates to **critical** regardless of surface signals.
+
+## Non-Negotiables
+
+These items bypass the tier system. A task that touches any of them is **critical** tier by definition, even if surface signals suggest trivial or standard. Always apply full ceremony:
+
+- Secrets, credentials, `.env` changes
+- Auth, authorization, session logic
+- Supabase RLS policies or data migrations
+- Destructive ops (`rm -rf`, `DROP TABLE`, force-push to main)
+- New external dependencies
+- Changes to CI/CD hooks or deploy scripts
+
+## Sprint Mode
+
+Treat a whole plan (or an ad-hoc task batch) as ONE sprint, not N independent micro-tasks. Ceremony concentrates at **sprint boundaries** and **critical checkpoints**, not between every step.
+
+**Sprint entry checkpoint (once):**
+- Acknowledge the Golden Rule (see below)
+- Confirm risk tier
+- For standard/critical: brief plan skim for non-negotiables
+
+**Sprint exit checkpoint (once):**
+- Full verification (tests, build, lint)
+- Final code review, scaled to tier
+- Use `finishing-a-development-branch`
+
+**Mid-sprint critical checkpoints** (trigger a mini-review even mid-sprint):
+- 3+ consecutive failed fix attempts → invoke `systematic-debugging` Phase 1
+- Scope creep beyond plan → pause and ask
+- Touching a Non-Negotiable → full review before commit
+- Batch of 3-5 tasks complete in subagent-driven-dev → batched review pair
+
+**NOT triggers for mid-sprint ceremony:**
+- Each commit, each task, each claim in isolation
+- Trivial edits that pass tests locally
+- Progress updates within a batch ("Task 2 done, moving on")
+
+The idea: concentrate rigor where it catches real errors (sprint boundaries, scope violations, non-negotiables) instead of spreading it thin across every micro-step.
+
+## The Golden Rule (Surgical Edits)
+
+Apply to every implementation task, every subagent dispatch, every refactor — regardless of tier:
+
+1. **MINIMAL** — change as little as possible to solve the task
+2. **SURGICAL** — touch only what the task requires; no opportunistic cleanup, no unrelated refactor, no style churn
+3. **REUSE > CREATE** — extend existing helpers, hooks, patterns; don't duplicate what's already in the repo
+4. **AGGREGATE > FRAGMENT** — one solution covering several needs beats three specialized ones
+5. **DIRECTED REFACTOR** — factor only when the task already touches both sites; if a duplication is out of scope, note it but don't fix it
+6. **UNCERTAINTY = ASK** — new lib, new pattern, new folder? Ask the user first rather than add silently
+
+The Golden Rule is injected verbatim into every subagent prompt via the Subagent Directive Block (below). It complements tier-specific rigor by preventing over-engineering within whatever tier applies.
+
+## Subagent Directive Block (template)
+
+When dispatching any subagent (implementer, reviewer, debugger), include this block verbatim at the top of the prompt:
+
+```
+## Directive — Surgical Edits (non-negotiable)
+
+1. MINIMAL: change only what the task requires
+2. SURGICAL: no opportunistic refactor, no style churn, no unrelated cleanup
+3. REUSE > CREATE: extend existing code; don't duplicate
+4. AGGREGATE > FRAGMENT: one solution over several
+5. DIRECTED REFACTOR: factor only across sites you already touch
+6. UNCERTAINTY = ASK: new lib / pattern / folder → report BLOCKED with a scope concern
+
+Scope guard: if the task would produce more than 2 new files, more than ~150 LoC,
+or require a new external dependency, STOP and report DONE_WITH_CONCERNS with a
+scope note before implementing the oversized version.
+```
+
+The block is short by design so it fits at the top of any subagent prompt without crowding the task-specific content.
