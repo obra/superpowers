@@ -1,6 +1,7 @@
 ---
 name: subagent-delegation
-description: Use before executing any non-trivial task to decide whether to delegate to a subagent or execute inline. Covers research-heavy tasks, independent parallel work, fresh-perspective review, pre-commit verification, and pipeline workflows. When in doubt, bias toward delegating.
+description: Use before executing any non-trivial task to decide whether to delegate to a subagent or execute inline. Covers research-heavy tasks, external resource aggregation, independent parallel work, fresh-perspective review, pre-commit verification, and pipeline workflows. When in doubt, bias toward delegating.
+when_to_use: Trigger before executing tasks like "read this codebase and summarize", "compare these implementations", "validate this spec against the code", "review this code for issues", "verify before I commit", "write docs based on git diff", or any multi-stage task where phases can be handed off cleanly. Also trigger when the task involves 10+ files, 3+ independent pieces of work, or aggregating results from 3+ external sources.
 ---
 
 # Subagent Delegation
@@ -26,6 +27,7 @@ Delegate when **any** of these apply:
 | Signal | Threshold | Why |
 |---|---|---|
 | **Research-heavy** | 10+ files to explore | Raw reads pollute context; you need synthesized findings |
+| **External resource aggregation** | 3+ external repos, URLs, or APIs to fetch and integrate | Each fetch result pollutes main context; subagent returns only the synthesis |
 | **Multiple independent tasks** | 3+ pieces with no dependencies | Parallel subagents finish faster; each stays focused |
 | **Fresh perspective needed** | Review, verification, challenging assumptions | Subagent doesn't inherit your blind spots |
 | **Verification before committing** | Pre-commit quality check | Independent eyes catch what familiarity obscures |
@@ -38,7 +40,7 @@ Delegate when **any** of these apply:
 Hard blockers — keep inline when **any** of these are true:
 
 - **Tight feedback loop** — debugging where you need error → hypothesis → fix → observe in one thread
-- **Context-state dependency** — step B needs the full conversational output of step A, and that state can't be written to a file. Note: if the dependency is a *file* (step A writes `spec.md`, step B reads it), that's a pipeline — delegate each stage with file-based handoffs
+- **Context-state dependency** — step B needs the full conversational output of step A, and that state can't be written to a file. Note: if the dependency is a *file* (step A writes `spec.md`, step B reads it), that's a **pipeline** — delegate each stage with file-based handoffs
 - **Shared file writes** — task writes to files the main thread is also modifying (conflict risk)
 - **Agent coordination** — subagents can't talk to each other; tasks requiring inter-agent negotiation stay inline
 - **Truly trivial** — a single-function lookup or single-file read with minimal output
@@ -104,10 +106,12 @@ This skill is a **pre-execution layer** — it runs before other skills, not ins
 ## Examples
 
 **Delegate:**
-- "Read the auth implementation in this repo and summarize how it works" → research-heavy → `Explore` subagent
+- "Read the auth implementation in this repo and summarize how it works" → research-heavy (10+ files) → `Explore` subagent
 - "Check whether our implementation matches this spec" → verification → `Explore` subagent, output: pass/fail + gaps
 - "Review this implementation before I commit — I want unbiased eyes" → fresh perspective → read-only subagent, "evaluate independently"
+- "Write docs based on the git diff" → independent task → `general-purpose` subagent reads diff, writes docs, returns draft
 - "Design API contract, then implement endpoints, then write tests" → pipeline with file handoffs → chain subagents, each reads previous stage's output file
+- "Search GitHub trending and gather info on 20 repos" → external resource aggregation → `Explore` subagent returns synthesis only
 
 **Keep inline:**
 - Debugging a failing test → tight feedback loop
