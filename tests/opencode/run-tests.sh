@@ -58,6 +58,7 @@ done
 
 # List of tests to run (no external dependencies)
 tests=(
+    "test-bootstrap-agent-control.sh"
     "test-plugin-loading.sh"
 )
 
