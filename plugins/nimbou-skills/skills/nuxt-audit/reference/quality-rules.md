@@ -5,6 +5,7 @@
 - Local `DESIGN.MD` beats generic preference.
 - App-level or root-level `DESIGN.MD` is fallback, not override, when a closer file exists.
 - If implementation repeats a known primitive or composition rule, audit against `DESIGN.MD` before proposing new structure.
+- Audit primarily against the local `DESIGN.MD`. Only fall back to `nimbou-skills:nuxt-design-posture` / `nimbou-skills:nuxt-design-composition` / `nimbou-skills:nuxt-design-architecture` for dimensions the project chose not to declare locally.
 
 ## Ownership and Architecture
 
@@ -14,6 +15,7 @@
 - Utils stay pure and stateless.
 - Avoid prop drilling across 3+ layers when composable or provide/inject is a better fit.
 - Avoid page-level god handlers for child-only interactions.
+- For the generic ruleset (tiers, SOLID per layer, communication contracts, testability), see `nimbou-skills:nuxt-design-architecture`.
 
 ## Extraction and Reuse
 
@@ -22,6 +24,7 @@
 - Declarative tables, tabs, menus, and step flows should move toward config.
 - Do not extract hypothetical reuse. Prefer the second real consumer as the trigger.
 - Flag hard-coded spacing, colors, or one-off variants that should be driven by existing primitives or tokens.
+- For the generic ruleset (extraction heuristics, refactor triggers, SFC size thresholds), see `nimbou-skills:nuxt-design-architecture`.
 
 ## Hardening
 

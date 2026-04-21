@@ -2,27 +2,21 @@
 
 Use this file as the starting point for a project- or feature-level `DESIGN.MD`.
 
-The goal is to give `nuxt-think`, `nuxt-plan`, and `nuxt-audit` a local source of truth for:
-- page and component responsibilities
-- composable and util boundaries
-- preferred UI primitives and layout shells
-- data flow decisions
-- visual guardrails
-- review and audit expectations
+`DESIGN.MD` is the **single source of truth** for frontend standards in this project. `nuxt-think`, `nuxt-plan`, and `nuxt-audit` consult it first and always. The generic skills (`nuxt-design-posture`, `nuxt-design-composition`, `nuxt-design-architecture`) are posture/fallback when the local file does not declare a dimension.
 
-When a feature area has its own closer `DESIGN.MD`, that local file should override a broader project- or app-level one for that subtree.
+When a feature area has its own closer `DESIGN.MD`, that local file overrides a broader project- or app-level one for that subtree.
 
 ---
 
 ## Purpose
 
 Use this document to align:
-- page and component responsibilities
-- composable and util boundaries
-- preferred UI primitives and layout shells
-- data flow decisions
-- visual guardrails
-- review and audit expectations
+
+- product and interface context
+- page composition mode (landing / product UI / hybrid)
+- visual posture (typography, color, spacing, absolute bans)
+- component architecture (tiers, SOLID boundaries, communication contracts)
+- hardening, performance, and audit expectations
 
 If a repeated pattern becomes stable, update this file instead of rewriting the same rationale in one-off plans.
 
@@ -37,101 +31,129 @@ If a repeated pattern becomes stable, update this file instead of rewriting the 
 
 ---
 
-## Component Responsibility Model
+## Mode
 
-### Page
+Classify the primary mode of this app or feature area:
 
-A page owns:
-- route params, query sync, and navigation
-- initial data loading and top-level orchestration
-- high-level actions that affect the whole route
-- passing stable props into child sections
+- `landing` — marketing, brand-led, imagery-first
+- `product-ui` — operational, utility-first, dense and readable
+- `hybrid` — both (e.g. marketing site + logged-in app), with section noting which routes belong to which mode
 
-A page should not accumulate child-only handlers, display-only transforms, or repeated local interaction logic.
-
-### Domain Component
-
-A domain component owns:
-- local rendering logic
-- local interaction flow
-- local validation and formatting
-- emits only when a parent truly owns the next decision
-
-Prefer solving child-local behavior inside the child rather than bouncing every action back to the page.
-
-### Composable
-
-Use a composable when:
-- logic is reactive
-- state or behavior is reused
-- async work needs loading or error state
-- the page or component script is getting too large
-
-### Util
-
-Use a util when:
-- logic is pure
-- no reactive state is needed
-- the same transform is reused in multiple places
-
-### Config
-
-Use config when the feature is mostly declarative:
-- tabs
-- sections
-- menu items
-- table columns
-- step lists
+> For mode-specific rules (landing hero canon, product UI restraint, utility copy rules), see `nimbou-skills:nuxt-design-composition`.
 
 ---
 
-## Reuse and Extraction Rules
+## Visual Posture
 
-- Repeated semantic markup should become a component.
-- Repeated reactive behavior should become a composable.
-- Repeated static definitions should become config.
-- Do not extract speculative reuse. The second real consumer is the normal trigger.
-- Prefer existing primitives and shells before creating local wrappers.
+Declare the local visual posture. Everything here overrides the generic skill.
+
+### Typography
+
+- Display font (with rationale): _e.g. "Söhne Breit for headings — geometric, opinionated, matches mechanical brand voice"_
+- Body font (with rationale): _e.g. "Inter Tight for body — neutral, high x-height for dense dashboards"_
+- Scale (fluid `clamp` on marketing, fixed `rem` on product UI)
+
+### Color & Theme
+
+- Hue base (OKLCH) and rationale.
+- Theme default (`light` / `dark` / system) and why, tied to audience context.
+- Neutral tint chroma (typically `0.005-0.01` toward brand hue).
+- Accent usage rule (60-30-10 weight).
+
+### Spacing
+
+- Token scale (default 4pt: 4, 8, 12, 16, 24, 32, 48, 64, 96) or documented override.
+- Token naming (semantic `--space-sm`, not `--spacing-8`).
+
+### Absolute Bans Accepted Locally
+
+- List any project-specific exceptions to the generic bans, with rationale. Default is "no exceptions" — keep `border-left > 1px` and `background-clip: text` gradients banned.
+
+> For deeper rules (`reflex_fonts_to_reject`, theme selection by context, OKLCH reasoning, CSS patterns), see `nimbou-skills:nuxt-design-posture`.
 
 ---
 
-## Data Flow
+## Page Composition
 
-- Keep state as local as possible while still serving all consumers.
-- Prefer direct props plus emits for parent-child communication.
-- Use composables or provide/inject when prop drilling becomes unnatural.
-- Introduce Pinia only when state must survive route boundaries or sync across unrelated trees.
+Required when Mode is `landing` or `hybrid`. Optional for `product-ui` (section replaced by Product UI Shell below).
 
-Anti-patterns:
-- page with 20+ handlers for child-local actions
-- prop drilling across 3+ levels without a strong reason
-- local UI fixes hiding stale or duplicated reactive state
-- store creation for one narrow parent-child interaction
+### Canonical Page Sequence
+
+- Default section order: _Hero → Support → Detail → Final CTA_
+- Deviations (e.g. landing variants for campaigns)
+
+### Hero Rules
+
+- Full-bleed canonical (edge-to-edge, inner text column constrained)
+- Order: brand first, headline second, body third, CTA fourth
+- Viewport budget (`calc(100svh - header-height)` or overlay header)
+- Destructive tests: remove image → still works? hide nav → brand disappears?
+
+### Motion Ritmo
+
+- 2-3 intentional motions for landing (hero entrance, scroll-linked, hover/reveal)
+- 1 motion for product UI transitions (drawer, skeleton → content)
+
+> See `nimbou-skills:nuxt-design-composition` for working model (visual/content/interaction thesis), hero anti-patterns, and product UI shell restraint.
+
+---
+
+## Component Architecture
+
+How this project decomposes its UI. Everything here overrides the generic skill.
+
+### Tiers (local layout)
+
+| Tier | Location | Naming | Notes |
+|---|---|---|---|
+| Primitive | `components/ui/` | `AppButton`, `AppCard` | No domain coupling |
+| Domain component | `components/<feature>/` | `ProjectCard`, `OrderLineRow` | Feature-local |
+| Page / Route owner | `pages/` | route-colocated | Orchestrates only |
+| Layout shell | `layouts/` | `default.vue`, `admin.vue` | Chrome only |
+
+### Ownership (SOLID applied)
+
+- **Page owns**: route params, query sync, initial data loading, top-level actions, passing stable props down.
+- **Domain component owns**: local rendering, local interaction, local validation/formatting, emits only when the parent really owns the next decision.
+- **Composable owns**: reactive state reused across views, async + loading/error state, extracted script weight.
+- **Util owns**: pure stateless transforms reused in multiple places.
+- **Config owns**: declarative lists (tabs, steps, table columns, menu items).
+
+### Extraction Triggers (local rules)
+
+- Repeated semantic markup in 3+ places → component.
+- SFC exceeds 150 lines → review; exceeds 300 lines → split.
+- API grows to 5+ props or 2+ named slots → likely split responsibility.
+- Reactive logic leaves its view → composable.
+- "Do not extract speculative reuse. The second real consumer is the trigger."
+
+### Communication
+
+- `≤ 2` levels: props + emits.
+- `3` levels in the same subtree: `provide` / `inject` regional.
+- Multi-route, cross-tree, app state: Pinia store.
+- `v-model` / `defineModel` only when the child genuinely manages the value.
+
+### Anti-patterns (local)
+
+- List project-specific anti-patterns the team has hit before (emit bubbling across 3+ levels, god props > N, etc.).
+
+> See `nimbou-skills:nuxt-design-architecture` for the generic ruleset: tier definitions, SOLID per layer, composable vs util vs config vs plugin, refactor triggers, testability as criterion.
 
 ---
 
 ## UI Primitives and Layout
 
-- Prefer established page shells, section shells, and form/layout primitives before inventing new wrappers.
-- Prefer simple, legible composition over deep nesting.
-- Layout should create clear hierarchy through spacing, grouping, and emphasis.
-- Responsive behavior should adapt the interaction model, not just compress the same layout.
-
----
-
-## Visual Guardrails
-
-- Avoid generic AI-looking UI patterns and safe filler layouts.
-- Choose a clear density and emphasis level per feature.
-- Keep visual weight aligned with action importance.
-- Loading, empty, error, and success states must feel like part of the same interface, not bolted-on afterthoughts.
-- Reuse existing visual primitives before introducing new accents, borders, or one-off containers.
+- Preferred page shells, section shells, and form/layout primitives (name the ones this project actually uses).
+- Preferred Vuetify components and local wrappers.
+- Preferred composition (flat over deep, spacing rhythm, responsive adaptation over compression).
 
 ---
 
 ## Hardening Expectations
 
 Every significant flow should account for:
+
 - loading
 - empty
 - error
@@ -166,9 +188,14 @@ If a feature cannot survive those cases, it is not ready.
 
 ## Audit Expectations
 
-Frontend review should check:
+Frontend review (`nuxt-audit`) audits **primarily against this `DESIGN.MD`**. When a dimension is not declared here, the generic skills (`nuxt-design-posture`, `nuxt-design-composition`, `nuxt-design-architecture`) are the fallback.
+
+Coverage:
+
 - ownership and architecture
 - reuse and extraction
+- visual posture drift
+- page composition drift (mode, hero, motion)
 - hardening gaps
 - performance issues
 - polish and consistency drift
@@ -180,7 +207,9 @@ Frontend review should check:
 ## When To Update This File
 
 Update `DESIGN.MD` when:
+
 - a pattern becomes stable and repeatable
 - a recurring refactor keeps reaching the same conclusion
 - a shared primitive becomes the preferred solution
 - a review rule should become explicit instead of being rediscovered each time
+- a generic skill posture proved too loose or too tight for this project and needs local override

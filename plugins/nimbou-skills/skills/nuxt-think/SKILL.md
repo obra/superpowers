@@ -50,7 +50,7 @@ Treat `docs/domain/<domain>/` as the canonical specification bundle for the feat
    - what visual direction should guide the UI so it does not drift into generic output
 7. Produce the structured output below with the domain and Gherkin artifacts, present it for approval, and only then hand off to `nuxt-plan`. Do not write code.
 
-Read `reference/conventions.md` before proposing component splits.
+Consult `nimbou-skills:nuxt-design-architecture` and the local `DESIGN.MD` (when it exists) before proposing component splits. Local `DESIGN.MD` wins on conflict.
 
 ## Think Output
 
@@ -79,6 +79,7 @@ Describe the requested page, flow, or component in one sentence.
 - State the intended tone in one short line.
 - Prefer existing shells, spacing, and primitives from `DESIGN.MD` before inventing new presentation patterns.
 - Call out any anti-genericity guardrails that matter for this feature, such as density, emphasis, or when to stay visually quiet.
+- **RELATED SKILLS:** Use `nimbou-skills:nuxt-design-composition` to frame page hierarchy, hero, and landing vs product UI mode. Use `nimbou-skills:nuxt-design-posture` to close micro aesthetic details (fonts, color tokens, CSS bans). Use `nimbou-skills:nuxt-design-architecture` to frame component tiers, SOLID boundaries, extraction rules, and communication contracts. Local `DESIGN.MD` still wins on conflict.
 
 ### Estados e interacoes
 

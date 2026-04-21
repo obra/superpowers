@@ -56,7 +56,15 @@ Do not ask questions the codebase already answered.
 
 ## Phase 4: Create or Refresh DESIGN.MD
 
-Use `skills/nuxt-audit/reference/design-md-template.md` as the base structure.
+Use `skills/nuxt-audit/reference/design-md-template.md` as the base structure, and consult `skills/nuxt-audit/reference/design-md-example.md` for a concrete example of how each section should be filled in a real project (fictional SaaS `Haven`, hybrid mode). Use the example for granularity and format, not for its values — every project preenche com suas próprias fontes, hues, paths e convenções.
+
+When writing each section, consult the corresponding skill as the source of generic posture, and let local project decisions override:
+
+- **Mode** and **Page Composition** → `nimbou-skills:nuxt-design-composition` (landing vs product UI, hero rules, motion ritmo).
+- **Visual Posture** → `nimbou-skills:nuxt-design-posture` (typography, color tokens, spacing scale, CSS bans).
+- **Component Architecture** → `nimbou-skills:nuxt-design-architecture` (tiers, SOLID boundaries, extraction heuristics, communication contracts).
+
+Local DESIGN.MD decisions always win over the skills.
 
 The resulting `DESIGN.MD` should be:
 - specific to the target app
