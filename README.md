@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/readme-banner.png" alt="Superpowers banner" width="100%">
+</p>
+
 # Superpowers
 
 Superpowers is a complete software development methodology for your coding agents, built on top of a set of composable skills and some initial instructions that make sure your agent uses them.
