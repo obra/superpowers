@@ -76,6 +76,14 @@ require_codex_marketplace_support() {
   fi
 }
 
+sync_marketplace_cache() {
+  local cache_dir="$HOME/.claude/plugins/marketplaces/$PLUGIN_NAME"
+  if [ -d "$cache_dir" ]; then
+    echo "Syncing local plugin to Claude marketplace cache..."
+    rsync -a --delete "$REPO_ROOT/plugins/$PLUGIN_NAME/" "$cache_dir/plugins/$PLUGIN_NAME/"
+  fi
+}
+
 require_cmd node
 require_cmd claude
 require_cmd copilot
@@ -108,14 +116,15 @@ claude plugin marketplace add "$MARKETPLACE_REPO" 2>/dev/null \
   && echo "Marketplace added: $MARKETPLACE_REPO" \
   || echo "Marketplace already registered or updated."
 
-if [ "$INSTALLED_PLUGIN_VERSION" = "$EXPECTED_PLUGIN_VERSION" ]; then
-  echo "Claude Code plugin already installed at version $INSTALLED_PLUGIN_VERSION; skipping reinstall."
-else
-  echo "Installing Claude Code plugin version $EXPECTED_PLUGIN_VERSION..."
-  claude plugin install "$PLUGIN_NAME" --scope user 2>/dev/null \
-    && echo "Plugin installed: $PLUGIN_NAME@$EXPECTED_PLUGIN_VERSION" \
-    || echo "Plugin already installed or updated."
+sync_marketplace_cache
+
+echo "Installing Claude Code plugin version $EXPECTED_PLUGIN_VERSION..."
+if [ -n "$INSTALLED_PLUGIN_VERSION" ]; then
+  claude plugin uninstall "$PLUGIN_NAME" --scope user 2>/dev/null || true
 fi
+claude plugin install "$PLUGIN_NAME" --scope user 2>/dev/null \
+  && echo "Plugin installed: $PLUGIN_NAME@$EXPECTED_PLUGIN_VERSION" \
+  || echo "Plugin install failed."
 
 # GitHub Copilot plugin
 if [ "$INSTALLED_COPILOT_PLUGIN_VERSION" = "$EXPECTED_PLUGIN_VERSION" ]; then
