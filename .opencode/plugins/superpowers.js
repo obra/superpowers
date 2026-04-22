@@ -5,13 +5,13 @@
  * Auto-registers skills directory via config hook (no symlinks needed).
  */
 
-import path from "path";
-import fs from "fs/promises";
+import path from 'path';
+import fs from 'fs/promises';
 
 const bootstrapPrelude = `<EXTREMELY_IMPORTANT>
 You have superpowers.
 
-**IMPORTANT: The using-superpowers skill content is included below. It is ALREADY LOADED - you are currently following it. Do NOT use the skill tool to load "using-superpowers" again - that would be redundant.**`;
+**IMPORTANT: The using-superpowers skill content is included below. It is ALREADY LOADED - you are currently following it. Do NOT use the skill tool to load 'using-superpowers' again - that would be redundant.**`;
 
 // Simple frontmatter extraction (avoid dependency on skills-core for bootstrap)
 const extractAndStripFrontmatter = (content) => {
@@ -22,14 +22,14 @@ const extractAndStripFrontmatter = (content) => {
   const body = match[2];
   const frontmatter = {};
 
-  for (const line of frontmatterStr.split("\n")) {
-    const colonIdx = line.indexOf(":");
+  for (const line of frontmatterStr.split('\n')) {
+    const colonIdx = line.indexOf(':');
     if (colonIdx > 0) {
       const key = line.slice(0, colonIdx).trim();
       const value = line
         .slice(colonIdx + 1)
         .trim()
-        .replace(/^["']|["']$/g, "");
+        .replace(/^['']|['']$/g, '');
       frontmatter[key] = value;
     }
   }
@@ -40,7 +40,7 @@ const extractAndStripFrontmatter = (content) => {
 export const SuperpowersPlugin = async () => {
   const superpowersSkillsDir = path.resolve(
     import.meta.dirname,
-    "../../skills",
+    '../../skills',
   );
 
   // Helper to generate bootstrap content
@@ -48,11 +48,11 @@ export const SuperpowersPlugin = async () => {
     // Try to load using-superpowers skill
     const skillPath = path.join(
       superpowersSkillsDir,
-      "using-superpowers",
-      "SKILL.md",
+      'using-superpowers',
+      'SKILL.md',
     );
-    const fullContent = await fs.readFile(skillPath, "utf8").catch((error) => {
-      if (error?.code === "ENOENT") return null;
+    const fullContent = await fs.readFile(skillPath, 'utf8').catch((error) => {
+      if (error?.code === 'ENOENT') return null;
       throw error;
     });
     if (!fullContent) return null;
@@ -91,20 +91,20 @@ ${toolMapping}
     // Using a user message instead of a system message avoids:
     //   1. Token bloat from system messages repeated every turn (#750)
     //   2. Multiple system messages breaking Qwen and other models (#894)
-    "experimental.chat.messages.transform": async (_input, output) => {
+    'experimental.chat.messages.transform': async (_input, output) => {
       const bootstrap = await getBootstrapContent();
       if (!bootstrap || !output.messages.length) return;
-      const firstUser = output.messages.find((m) => m.info.role === "user");
+      const firstUser = output.messages.find((m) => m.info.role === 'user');
       if (!firstUser || !firstUser.parts.length) return;
       // Only inject once
       if (
         firstUser.parts.some(
-          (p) => p.type === "text" && p.text.startsWith(bootstrapPrelude),
+          (p) => p.type === 'text' && p.text.startsWith(bootstrapPrelude),
         )
       )
         return;
       const ref = firstUser.parts[0];
-      firstUser.parts.unshift({ ...ref, type: "text", text: bootstrap });
+      firstUser.parts.unshift({ ...ref, type: 'text', text: bootstrap });
     },
   };
 };
