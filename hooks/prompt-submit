@@ -70,7 +70,8 @@ should_enrich() {
   [[ "$USER_PROMPT" =~ ^(raw:|noenrich:|RAW:) ]] && return 1
 
   # Pure read / meta prompts
-  local lc="${USER_PROMPT,,}"
+  local lc
+  lc="$(printf '%s' "$USER_PROMPT" | tr '[:upper:]' '[:lower:]')"
   case "$lc" in
     "what is"*|"what's"*|"show"*|"list"*|"explain"*|"describe"*|"tell me"*) return 1 ;;
     "hi"|"hello"|"hey"|"thanks"|"thank you"|"ok"|"yes"|"no"|"done"|"go"|"push") return 1 ;;
