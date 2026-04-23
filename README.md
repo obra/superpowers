@@ -134,6 +134,9 @@ Start a new session in your chosen platform and ask for something that should tr
 - **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
 - **verification-before-completion** - Ensure it's actually fixed
 
+**Agent Architecture**
+- **agent-architecture-audit** - Full-stack audit for agent/LLM applications (wrapper regression, memory pollution, tool discipline, hidden repair loops)
+
 **Collaboration** 
 - **brainstorming** - Socratic design refinement
 - **writing-plans** - Detailed implementation plans
