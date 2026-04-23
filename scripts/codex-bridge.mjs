@@ -34,6 +34,43 @@ const SCHEMAS_DIR = path.join(PLUGIN_ROOT, "schemas");
 const VALID_EFFORTS = new Set(["none", "minimal", "low", "medium", "high", "xhigh"]);
 const MODEL_ALIASES = new Map([["spark", "gpt-5.3-codex-spark"]]);
 
+// ── Diagnostics log ──────────────────────────────────────────────────
+// Single append-only file at ~/.claude/sspower-codex.log, rotated at 1000 lines.
+// Captures errors + warnings for post-mortem via `codex-diagnostics` skill.
+
+const LOG_FILE = path.join(os.homedir(), ".claude", "sspower-codex.log");
+const LOG_MAX_LINES = 1000;
+const LOG_KEEP_TAIL = 500;
+
+let _logRotated = false;
+function rotateLogOnce() {
+  if (_logRotated) return;
+  _logRotated = true;
+  try {
+    if (!fs.existsSync(LOG_FILE)) return;
+    const content = fs.readFileSync(LOG_FILE, "utf8");
+    const lines = content.split("\n");
+    if (lines.length > LOG_MAX_LINES) {
+      const kept = lines.slice(-LOG_KEEP_TAIL).join("\n");
+      fs.writeFileSync(LOG_FILE, kept, { mode: 0o600 });
+    }
+  } catch { /* best effort */ }
+}
+
+function logEvent(kind /* "error" | "warn" | "info" */, source /* e.g. "bridge.enrich" */, fields = {}) {
+  rotateLogOnce();
+  const ts = new Date().toISOString();
+  const parts = Object.entries(fields)
+    .filter(([, v]) => v !== undefined && v !== null && v !== "")
+    .map(([k, v]) => `${k}=${JSON.stringify(typeof v === "string" ? v.slice(0, 500) : v)}`)
+    .join(" ");
+  const line = `${ts} [${kind}] ${source}${parts ? " " + parts : ""}\n`;
+  try {
+    fs.mkdirSync(path.dirname(LOG_FILE), { recursive: true });
+    fs.appendFileSync(LOG_FILE, line, { mode: 0o600 });
+  } catch { /* fail open */ }
+}
+
 // ── Secure temp files ────────────────────────────────────────────────
 
 let _tmpDir = null;
@@ -62,6 +99,7 @@ function cleanupTmpDir() {
 
 function die(msg) {
   cleanupTmpDir();
+  logEvent("error", "bridge.die", { msg, subcommand: process.argv[2] });
   console.error(`codex-bridge: ${msg}`);
   process.exit(1);
 }
@@ -194,6 +232,7 @@ function autoCommit(dir, message) {
 
     return sha;
   } catch (e) {
+    logEvent("warn", "bridge.auto_commit", { kind: "commit_failed", msg: e.message, dir });
     process.stderr.write(`[codex:auto-commit] Failed: ${e.message}\n`);
     return null;
   }
@@ -506,6 +545,12 @@ function output(result, options = {}) {
   // Check exit code — non-zero means Codex failed
   if (result.exitCode !== 0) {
     const msg = result.stderr || result.lastMessage || "unknown error";
+    logEvent("error", `bridge.${process.argv[2]}`, {
+      exitCode: result.exitCode,
+      session: result.sessionId,
+      duration_ms: result.trace?.duration_ms,
+      msg: msg.slice(0, 300),
+    });
     console.error(JSON.stringify({
       error: true,
       exitCode: result.exitCode,
@@ -538,6 +583,11 @@ function output(result, options = {}) {
     console.log(JSON.stringify(result.structured, null, 2));
   } else if (expectStructured) {
     // Schema was set but we couldn't parse — report as error
+    logEvent("error", `bridge.${process.argv[2]}`, {
+      kind: "schema_parse_fail",
+      session: result.sessionId,
+      raw_preview: result.lastMessage?.slice(0, 120) || "",
+    });
     console.error(JSON.stringify({
       error: true,
       exitCode: 0,
@@ -722,6 +772,13 @@ async function cmdEnrich(argv) {
 
   // Fail-open: if Codex errored, emit raw prompt + stderr warning
   if (result.exitCode !== 0) {
+    logEvent("warn", "bridge.enrich", {
+      kind: "exit_nonzero_fallback",
+      exitCode: result.exitCode,
+      session: result.sessionId,
+      duration_ms: result.trace?.duration_ms,
+      stderr_preview: result.stderr?.slice(0, 200),
+    });
     process.stderr.write(`[codex:enrich] failed exit=${result.exitCode}, passing raw prompt\n`);
     console.log(rawPrompt);
     cleanupTmpDir();
@@ -734,8 +791,20 @@ async function cmdEnrich(argv) {
   const enriched = match ? match[1].trim() : raw.trim();
 
   if (!enriched) {
+    logEvent("warn", "bridge.enrich", {
+      kind: "empty_output_fallback",
+      session: result.sessionId,
+      duration_ms: result.trace?.duration_ms,
+    });
     process.stderr.write(`[codex:enrich] empty output, passing raw prompt\n`);
     console.log(rawPrompt);
+  } else if (!match) {
+    logEvent("warn", "bridge.enrich", {
+      kind: "missing_enriched_markers",
+      session: result.sessionId,
+      raw_preview: raw.slice(0, 120),
+    });
+    console.log(enriched);
   } else {
     console.log(enriched);
   }

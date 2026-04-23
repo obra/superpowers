@@ -15,6 +15,15 @@ set -euo pipefail
 
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
 BRIDGE="${PLUGIN_ROOT}/scripts/codex-bridge.mjs"
+DIAG_LOG="${HOME}/.claude/sspower-codex.log"
+
+log_hook() {
+  # $1 = kind (error|warn|info)  $2 = key=value pairs
+  local ts
+  ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  mkdir -p "$(dirname "$DIAG_LOG")" 2>/dev/null
+  printf '%s [%s] hook.enrich %s\n' "$ts" "$1" "$2" >> "$DIAG_LOG" 2>/dev/null || true
+}
 
 REMINDER="sspower: BEFORE responding, check which skills apply (even 1% chance = invoke via Skill tool). Priority: process skills first (brainstorming, systematic-debugging), then implementation skills (test-driven-development, writing-plans, executing-plans, subagent-driven-development). Rigid skills (TDD, debugging): follow exactly. Flexible skills: adapt to context. If about to claim done: verification-before-completion. If completing a feature: requesting-code-review. Skip only for pure Q&A with zero coding/planning intent."
 
@@ -109,12 +118,25 @@ if should_enrich; then
   fi
 
   ENRICHED=""
+  ENRICH_START="$(date +%s)"
   if ENRICHED="$(eval "$TIMEOUT_CMD node \"$BRIDGE\" enrich --prompt \"@$TMP_PROMPT\" --cd \"$CWD\" --effort minimal" 2>/dev/null)"; then
+    ENRICH_DUR=$(( $(date +%s) - ENRICH_START ))
     if [[ -n "$ENRICHED" && "$ENRICHED" != "$USER_PROMPT" ]]; then
       CONTEXT="${CONTEXT}
 
 [codex-enriched prompt — validated against actual repo]:
 ${ENRICHED}"
+      log_hook info "kind=enriched dur=${ENRICH_DUR}s cwd=$CWD"
+    else
+      log_hook warn "kind=passthrough_empty dur=${ENRICH_DUR}s cwd=$CWD"
+    fi
+  else
+    RC=$?
+    ENRICH_DUR=$(( $(date +%s) - ENRICH_START ))
+    if [[ "$RC" == "124" || "$RC" == "142" ]]; then
+      log_hook warn "kind=timeout dur=${ENRICH_DUR}s cwd=$CWD"
+    else
+      log_hook error "kind=bridge_failed rc=$RC dur=${ENRICH_DUR}s cwd=$CWD"
     fi
   fi
 fi

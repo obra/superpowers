@@ -150,7 +150,9 @@ Controller reads plan --> extracts tasks
               files_changed: [...],
               tests: { passed: 5 },
               _commit: "abc123",
-              _branch: "codex/task-1" }
+              _branch: "codex/task-1",
+              _meta: { session_id, duration_ms,
+                       tool_calls, edits, tokens } }
                     |
   SPEC REVIEW       v
   +----------------------------------+
@@ -244,7 +246,7 @@ sspower/
     codex-rescue.md            -- Codex delegation subagent
   hooks/
     session-start              -- Injects using-sspower context
-    prompt-submit              -- Per-message skill reminder
+    prompt-submit              -- Skill reminder + Codex enrichment (gated)
   skills/                      -- 16 skill directories
     */SKILL.md                 -- Lean entry point (<100 lines)
     */references/              -- Detailed docs (loaded on demand)
