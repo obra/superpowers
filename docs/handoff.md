@@ -21,6 +21,11 @@ Codex bridge observability + per-prompt enrichment — phase 1 & 2 shipped.
   - Appends enriched block to existing skill-routing reminder
 - Live-verified: setup, review (18.7s), enrich (140s default, produced real file paths + line numbers), heartbeat firing at 30/60/90/120s
 
+### Post-handoff additions
+- `fe8f352` added diagnostics log (`~/.claude/sspower-codex.log`) w/ error+warn+info events from bridge & hook
+- New skill `skills/codex-diagnostics/SKILL.md` — reads log, groups patterns, proposes patches
+- README: added "Codex Observability" section, bumped skill count to 17
+
 ### In Progress
 None. Clean tree. Untracked worktree dirs (`skills/codex-enrich-workspace/`, `subagent-driven-development-workspace/`) unrelated to this commit.
 
@@ -46,7 +51,9 @@ None. Clean tree. Untracked worktree dirs (`skills/codex-enrich-workspace/`, `su
 
 ## Context
 - **Branch**: `main`, pushed to `origin/main`
-- **HEAD**: `21e90be fix: bash 3.2 compat in prompt-submit hook`
-- **Prior**: `6b59374 feat: codex bridge observability + prompt enrichment hook`
+- **HEAD**: `fe8f352 feat: codex bridge diagnostics log + codex-diagnostics skill`
+- **Prior**:
+  - `21e90be fix: bash 3.2 compat in prompt-submit hook`
+  - `6b59374 feat: codex bridge observability + prompt enrichment hook`
 - **Tests**: none run (no bridge test suite exists); smoke verified live
 - **Plugin root**: `/Users/sskys/.claude/plugins/marketplaces/sskys18/plugins/sspower`

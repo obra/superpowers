@@ -2,7 +2,7 @@
 
 A complete software development workflow for Claude Code. Fork of [Superpowers](https://github.com/obra/superpowers) v5.0.5, customized with native Codex integration and macOS-first design.
 
-**16 composable skills** that automatically trigger during your workflow — mandatory workflows, not suggestions. The agent checks for relevant skills before every task.
+**17 composable skills** that automatically trigger during your workflow — mandatory workflows, not suggestions. The agent checks for relevant skills before every task.
 
 ## Installation
 
@@ -209,7 +209,7 @@ spec-review --> compliant
 
 ---
 
-## All 16 Skills
+## All 17 Skills
 
 | Skill | Category | What it does |
 |-------|----------|-------------|
@@ -228,7 +228,57 @@ spec-review --> compliant
 | `using-git-worktrees` | Workflow | Isolated workspace setup |
 | `finishing-a-development-branch` | Workflow | Merge/PR/keep/discard + cleanup |
 | `codex-enrich` | Codex | Validate prompts via Codex repo scan |
+| `codex-diagnostics` | Codex | Examine bridge log, propose patches for recurring errors |
 | `writing-skills` | Meta | TDD for skill development |
+
+---
+
+## Codex Observability
+
+The bridge + hook write errors and warnings to a single log file:
+
+```
+~/.claude/sspower-codex.log
+```
+
+One line per event, append-only, rotated at 1000 lines (keeps last 500).
+
+**Format**:
+```
+2026-04-23T14:22:01Z [error] bridge.enrich kind="schema_parse_fail" session="..." raw_preview="..."
+2026-04-23T14:22:33Z [warn]  hook.enrich kind=timeout dur=31s cwd=/Users/...
+2026-04-23T14:22:50Z [info]  hook.enrich kind=enriched dur=18s cwd=/...
+```
+
+**Sources**:
+- `bridge.die` — fatal bridge errors (missing flag, codex CLI not found, trust issues)
+- `bridge.<subcommand>` — runtime errors from implement/review/enrich/rescue/resume
+- `bridge.auto_commit` — worktree commit failures
+- `hook.enrich` — hook-side outcomes (`enriched` / `timeout` / `bridge_failed` / `passthrough_empty`)
+
+**Live event stream** (during runs, stderr):
+- `[codex:session]` / `[codex:agent]` / `[codex:think]` / `[codex:tool]` / `[codex:edit]` / `[codex:exec]` / `[codex:token]` / `[codex:error]` / `[codex:alive]` (30s heartbeat) / `[codex:done]`
+
+**Final envelope** (structured JSON, `_meta`):
+```json
+{
+  "status": "DONE",
+  "files_changed": [...],
+  "tests": {...},
+  "_commit": "abc123",
+  "_branch": "codex/task-1",
+  "_meta": {
+    "session_id": "...",
+    "duration_ms": 47823,
+    "tool_calls": 12,
+    "edits": 3,
+    "errors": 0,
+    "tokens": { "input": 45230, "output": 8910, "total": 54140 }
+  }
+}
+```
+
+**Diagnose**: say "examine codex log" or invoke the `codex-diagnostics` skill — it groups errors, matches known patterns, and proposes patches.
 
 ---
 
