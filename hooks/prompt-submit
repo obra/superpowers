@@ -1,15 +1,122 @@
 #!/usr/bin/env bash
-# UserPromptSubmit hook for sspower plugin
-# Compact, self-contained reminder on every message. Survives compaction.
-# Replaces SessionStart injection — no duplication.
+# UserPromptSubmit hook for sspower plugin.
+#
+# Two jobs:
+#   1. Inject the skill-routing reminder (survives compaction).
+#   2. Optionally enrich coding-intent prompts via Codex (read-only repo scan).
+#
+# Enrichment is gated — skipped for trivial prompts, slash commands, and
+# opt-out prefixes. Fails open: any error → raw prompt passes through.
+#
+# Opt-out: start prompt with "raw:" or "noenrich:" to skip enrichment.
+# Disable entirely: export SSPOWER_ENRICH=0 in environment.
 
 set -euo pipefail
 
-CONTEXT="sspower: BEFORE responding, check which skills apply (even 1% chance = invoke via Skill tool). Priority: process skills first (brainstorming, systematic-debugging), then implementation skills (test-driven-development, writing-plans, executing-plans, subagent-driven-development). Rigid skills (TDD, debugging): follow exactly. Flexible skills: adapt to context. If about to claim done: verification-before-completion. If completing a feature: requesting-code-review. Skip only for pure Q&A with zero coding/planning intent."
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
+BRIDGE="${PLUGIN_ROOT}/scripts/codex-bridge.mjs"
 
-# Escape for JSON
-CONTEXT="${CONTEXT//\\/\\\\}"
-CONTEXT="${CONTEXT//\"/\\\"}"
+REMINDER="sspower: BEFORE responding, check which skills apply (even 1% chance = invoke via Skill tool). Priority: process skills first (brainstorming, systematic-debugging), then implementation skills (test-driven-development, writing-plans, executing-plans, subagent-driven-development). Rigid skills (TDD, debugging): follow exactly. Flexible skills: adapt to context. If about to claim done: verification-before-completion. If completing a feature: requesting-code-review. Skip only for pure Q&A with zero coding/planning intent."
 
-printf '{"hookSpecificOutput":{"hookEventName":"UserPromptSubmit","additionalContext":"%s"}}\n' "$CONTEXT"
+# Hook receives JSON via stdin: { "prompt": "...", "cwd": "...", ... }
+INPUT="$(cat)"
+
+extract_field() {
+  # crude JSON field extractor using jq if present, else python, else sed fallback
+  local field="$1"
+  if command -v jq >/dev/null 2>&1; then
+    printf '%s' "$INPUT" | jq -r ".${field} // empty"
+  elif command -v python3 >/dev/null 2>&1; then
+    printf '%s' "$INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('${field}','') or '', end='')"
+  else
+    # best-effort fallback; may fail on complex prompts
+    printf '%s' "$INPUT" | sed -n "s/.*\"${field}\"[[:space:]]*:[[:space:]]*\"\([^\"]*\)\".*/\1/p"
+  fi
+}
+
+USER_PROMPT="$(extract_field prompt)"
+CWD="$(extract_field cwd)"
+[[ -z "$CWD" ]] && CWD="$(pwd)"
+
+emit_json() {
+  local ctx="$1"
+  # Escape for JSON: backslash, double-quote, newline, tab, carriage return
+  ctx="${ctx//\\/\\\\}"
+  ctx="${ctx//\"/\\\"}"
+  ctx="${ctx//$'\n'/\\n}"
+  ctx="${ctx//$'\r'/\\r}"
+  ctx="${ctx//$'\t'/\\t}"
+  printf '{"hookSpecificOutput":{"hookEventName":"UserPromptSubmit","additionalContext":"%s"}}\n' "$ctx"
+}
+
+# ── Gate: decide whether to enrich ────────────────────────────────────
+
+should_enrich() {
+  # Disabled by env
+  [[ "${SSPOWER_ENRICH:-1}" == "0" ]] && return 1
+
+  # Bridge not available
+  [[ ! -x "$(command -v node 2>/dev/null)" ]] && return 1
+  [[ ! -f "$BRIDGE" ]] && return 1
+
+  # Empty or too-short prompt
+  [[ -z "$USER_PROMPT" ]] && return 1
+  (( ${#USER_PROMPT} < 20 )) && return 1
+
+  # Slash commands
+  [[ "$USER_PROMPT" =~ ^/ ]] && return 1
+
+  # Opt-out prefix
+  [[ "$USER_PROMPT" =~ ^(raw:|noenrich:|RAW:) ]] && return 1
+
+  # Pure read / meta prompts
+  local lc="${USER_PROMPT,,}"
+  case "$lc" in
+    "what is"*|"what's"*|"show"*|"list"*|"explain"*|"describe"*|"tell me"*) return 1 ;;
+    "hi"|"hello"|"hey"|"thanks"|"thank you"|"ok"|"yes"|"no"|"done"|"go"|"push") return 1 ;;
+    "help"|"status"|"why"*) return 1 ;;
+  esac
+
+  # Require coding-intent keyword
+  if echo "$lc" | grep -qE '\b(add|fix|build|refactor|implement|change|write|create|debug|update|modify|remove|delete|rename|move|migrate|port|wire|ship|integrate|setup|install|configure|test|bug|error|broken|failing|crash)\b'; then
+    return 0
+  fi
+
+  return 1
+}
+
+# ── Build context ─────────────────────────────────────────────────────
+
+CONTEXT="$REMINDER"
+
+if should_enrich; then
+  # Write prompt to temp file to avoid arg-escaping hell
+  TMP_PROMPT="$(mktemp -t sspower-enrich.XXXXXX)"
+  printf '%s' "$USER_PROMPT" > "$TMP_PROMPT"
+  trap 'rm -f "$TMP_PROMPT"' EXIT
+
+  # Call bridge with portable timeout. 30s hard cap. Fail-open.
+  # Pick timeout binary: gtimeout (brew coreutils) > timeout > perl alarm fallback.
+  TIMEOUT_CMD=""
+  if command -v gtimeout >/dev/null 2>&1; then
+    TIMEOUT_CMD="gtimeout 30"
+  elif command -v timeout >/dev/null 2>&1; then
+    TIMEOUT_CMD="timeout 30"
+  else
+    # perl-based portable timeout
+    TIMEOUT_CMD="perl -e \"alarm shift; exec @ARGV\" 30"
+  fi
+
+  ENRICHED=""
+  if ENRICHED="$(eval "$TIMEOUT_CMD node \"$BRIDGE\" enrich --prompt \"@$TMP_PROMPT\" --cd \"$CWD\" --effort minimal" 2>/dev/null)"; then
+    if [[ -n "$ENRICHED" && "$ENRICHED" != "$USER_PROMPT" ]]; then
+      CONTEXT="${CONTEXT}
+
+[codex-enriched prompt — validated against actual repo]:
+${ENRICHED}"
+    fi
+  fi
+fi
+
+emit_json "$CONTEXT"
 exit 0

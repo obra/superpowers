@@ -284,11 +284,96 @@ function runCodexResume(prompt, options = {}) {
 }
 
 /**
+ * Render a Codex JSONL event as a tagged stderr line.
+ * Covers the event types we care about; unknown types get a generic tag.
+ * Returns the event "kind" for heartbeat/trace tracking.
+ */
+function renderEvent(event) {
+  const trunc = (s, n = 120) => {
+    if (!s) return "";
+    const one = String(s).replace(/\s+/g, " ").trim();
+    return one.length > n ? one.slice(0, n) + "…" : one;
+  };
+
+  const t = event.type || event.kind || "";
+
+  if (event.session_id || event.conversation?.id) {
+    const id = event.session_id || event.conversation.id;
+    process.stderr.write(`[codex:session] ${id}\n`);
+    return "session";
+  }
+
+  if (t === "agent" && event.agent?.content) {
+    process.stderr.write(`[codex:agent] ${trunc(event.agent.content)}\n`);
+    return "agent";
+  }
+  if (t === "reasoning" || t === "reasoning.delta" || event.reasoning) {
+    const text = event.reasoning?.content || event.delta || event.text || "";
+    if (text) process.stderr.write(`[codex:think] ${trunc(text)}\n`);
+    return "think";
+  }
+  if (t === "tool_call" || t === "tool.call" || event.tool_call) {
+    const tc = event.tool_call || event;
+    const name = tc.name || tc.tool || "?";
+    const argsPreview = trunc(JSON.stringify(tc.arguments || tc.args || {}), 80);
+    process.stderr.write(`[codex:tool] ${name}(${argsPreview})\n`);
+    return "tool";
+  }
+  if (t === "tool_result" || t === "tool.result") {
+    const r = event.result || event.output || "";
+    process.stderr.write(`[codex:result] ${trunc(r, 80)}\n`);
+    return "result";
+  }
+  if (t === "file_change" || t === "patch" || event.file_change) {
+    const fc = event.file_change || event;
+    const path = fc.path || fc.file || "?";
+    const add = fc.added ?? fc.additions ?? "";
+    const del = fc.removed ?? fc.deletions ?? "";
+    process.stderr.write(`[codex:edit] ${path} +${add} -${del}\n`);
+    return "edit";
+  }
+  if (t === "exec" || t === "shell" || event.command) {
+    const cmd = event.command || event.cmd || "";
+    process.stderr.write(`[codex:exec] ${trunc(cmd, 100)}\n`);
+    return "exec";
+  }
+  if (t === "token_count" || t === "usage" || event.usage || event.tokens) {
+    const u = event.usage || event.tokens || {};
+    process.stderr.write(`[codex:token] in=${u.input ?? u.prompt_tokens ?? "?"} out=${u.output ?? u.completion_tokens ?? "?"} total=${u.total ?? u.total_tokens ?? "?"}\n`);
+    return "token";
+  }
+  if (t === "error" || event.error) {
+    const msg = event.error?.message || event.message || JSON.stringify(event.error || {});
+    process.stderr.write(`[codex:error] ${trunc(msg, 200)}\n`);
+    return "error";
+  }
+  if (t === "turn_complete" || t === "done") {
+    return "done";
+  }
+  // Unknown event — surface compact so schema drift is visible
+  if (t) {
+    process.stderr.write(`[codex:event] ${t}\n`);
+    return t;
+  }
+  return "unknown";
+}
+
+/**
  * Shared spawn logic for both exec and resume paths.
+ * Streams Codex JSONL to stderr as tagged events and tracks a trace summary.
  */
 function _spawnAndCapture(bin, args, promptFile, resultFile, schema, cwd = null) {
   return new Promise((resolve, reject) => {
     let stderr = "";
+    const startedAt = Date.now();
+    let sessionIdEmitted = null;
+    const trace = {
+      tool_calls: 0,
+      edits: 0,
+      execs: 0,
+      errors: 0,
+      tokens: { input: null, output: null, total: null },
+    };
 
     const promptStream = fs.createReadStream(promptFile);
     const spawnOpts = {
@@ -300,25 +385,57 @@ function _spawnAndCapture(bin, args, promptFile, resultFile, schema, cwd = null)
 
     promptStream.pipe(child.stdin);
 
+    // Heartbeat: surface liveness if no event for >30s of silence
+    let lastEventAt = Date.now();
+    let lastEventKind = "start";
+    const heartbeat = setInterval(() => {
+      const silent = Date.now() - lastEventAt;
+      if (silent >= 30_000) {
+        const elapsed = ((Date.now() - startedAt) / 1000).toFixed(0);
+        process.stderr.write(`[codex:alive] ${elapsed}s elapsed, silent ${(silent / 1000).toFixed(0)}s, last: ${lastEventKind}\n`);
+      }
+    }, 30_000);
+
     child.stderr.on("data", (chunk) => {
       stderr += chunk.toString();
     });
 
     const stdoutChunks = [];
+    let lineBuf = "";
     child.stdout.on("data", (chunk) => {
       stdoutChunks.push(chunk);
-      const lines = chunk.toString().split("\n").filter(Boolean);
+      lineBuf += chunk.toString();
+      const lines = lineBuf.split("\n");
+      lineBuf = lines.pop() ?? "";
       for (const line of lines) {
-        try {
-          const event = JSON.parse(line);
-          if (event.type === "agent" && event.agent?.content) {
-            process.stderr.write(`[codex] ${event.agent.content.slice(0, 120)}\n`);
-          }
-        } catch { /* not JSON */ }
+        if (!line) continue;
+        let event;
+        try { event = JSON.parse(line); } catch { continue; }
+
+        // Emit session id at first sight, not at end
+        const id = event.session_id || event.conversation?.id;
+        if (id && !sessionIdEmitted) {
+          sessionIdEmitted = id;
+        }
+
+        const kind = renderEvent(event);
+        lastEventAt = Date.now();
+        lastEventKind = kind;
+        if (kind === "tool") trace.tool_calls++;
+        else if (kind === "edit") trace.edits++;
+        else if (kind === "exec") trace.execs++;
+        else if (kind === "error") trace.errors++;
+        else if (kind === "token") {
+          const u = event.usage || event.tokens || {};
+          if (u.input ?? u.prompt_tokens) trace.tokens.input = u.input ?? u.prompt_tokens;
+          if (u.output ?? u.completion_tokens) trace.tokens.output = u.output ?? u.completion_tokens;
+          if (u.total ?? u.total_tokens) trace.tokens.total = u.total ?? u.total_tokens;
+        }
       }
     });
 
     child.on("close", (code) => {
+      clearInterval(heartbeat);
       let lastMessage = "";
       try {
         lastMessage = fs.readFileSync(resultFile, "utf8").trim();
@@ -335,8 +452,11 @@ function _spawnAndCapture(bin, args, promptFile, resultFile, schema, cwd = null)
         structured = parseStructuredOutput(lastMessage);
       }
 
-      // Extract session ID for resume tracking
-      const sessionId = extractSessionId(stderr + "\n" + stdout);
+      // Fallback to post-hoc extraction if streaming missed it
+      const sessionId = sessionIdEmitted || extractSessionId(stderr + "\n" + stdout);
+
+      const duration_ms = Date.now() - startedAt;
+      process.stderr.write(`[codex:done] exit=${code} dur=${(duration_ms / 1000).toFixed(1)}s tools=${trace.tool_calls} edits=${trace.edits} errors=${trace.errors}\n`);
 
       resolve({
         exitCode: code,
@@ -345,10 +465,12 @@ function _spawnAndCapture(bin, args, promptFile, resultFile, schema, cwd = null)
         sessionId,
         stderr: cleanStderr(stderr),
         stdout,
+        trace: { ...trace, duration_ms },
       });
     });
 
     child.on("error", (err) => {
+      clearInterval(heartbeat);
       reject(new Error(`Failed to spawn codex: ${err.message}`));
     });
   });
@@ -393,12 +515,26 @@ function output(result, options = {}) {
     process.exit(1);
   }
 
-  // Emit session ID to stderr for resume tracking
-  if (result.sessionId) {
+  // Session ID already emitted inline at first-sight; only emit here
+  // as a fallback if the stream never surfaced it.
+  if (result.sessionId && !result.stderr.includes(`[codex:session] ${result.sessionId}`)) {
     process.stderr.write(`[codex:session] ${result.sessionId}\n`);
   }
 
   if (result.structured) {
+    // Attach _meta envelope (duration, tool counts, tokens, session id).
+    // Preserves any fields callers already stamped (_commit, _branch, _worktree).
+    const existingMeta = result.structured._meta || {};
+    result.structured._meta = {
+      session_id: result.sessionId ?? null,
+      duration_ms: result.trace?.duration_ms ?? null,
+      tool_calls: result.trace?.tool_calls ?? 0,
+      edits: result.trace?.edits ?? 0,
+      execs: result.trace?.execs ?? 0,
+      errors: result.trace?.errors ?? 0,
+      tokens: result.trace?.tokens ?? null,
+      ...existingMeta,
+    };
     console.log(JSON.stringify(result.structured, null, 2));
   } else if (expectStructured) {
     // Schema was set but we couldn't parse — report as error
@@ -482,14 +618,23 @@ async function cmdImplement(argv) {
     const sha = autoCommit(workDir || ".", commitMsg);
     if (sha) {
       process.stderr.write(`[codex:auto-commit] ${sha.slice(0, 8)} ${commitMsg}\n`);
-      if (result.structured) result.structured._commit = sha;
+      if (result.structured) {
+        // Dual-write: top-level for existing consumers, _meta for new
+        result.structured._commit = sha;
+        result.structured._meta = { ...(result.structured._meta || {}), commit: sha };
+      }
     }
   }
 
-  // Report worktree path in output
+  // Report worktree path in output (dual-write for back-compat)
   if (worktree && result.structured) {
     result.structured._worktree = worktree.worktreePath;
     result.structured._branch = worktree.branch;
+    result.structured._meta = {
+      ...(result.structured._meta || {}),
+      worktree: worktree.worktreePath,
+      branch: worktree.branch,
+    };
   }
 
   output(result, { expectStructured: true });
@@ -535,6 +680,66 @@ async function cmdRescue(argv) {
     ephemeral: !opts.write, // persist write sessions for potential resume
   });
   output(result);
+}
+
+async function cmdEnrich(argv) {
+  const opts = parseOpts(argv);
+  const rawPrompt = resolvePrompt(opts.prompt);
+
+  // Wrap user prompt with enrichment instructions.
+  // Codex scans repo (read-only), corrects assumptions, returns enriched prompt.
+  const wrapped = [
+    "You are a prompt-enrichment assistant for Claude Code.",
+    "",
+    "Original user prompt:",
+    "<<<PROMPT",
+    rawPrompt,
+    "PROMPT>>>",
+    "",
+    "Task: Produce an enriched version of the prompt that Claude will use to do the work.",
+    "Rules:",
+    "  1. Scan relevant files in this repository (read-only).",
+    "  2. Quote exact file paths and line numbers. Do not guess.",
+    "  3. If the user made wrong assumptions about the codebase, correct them.",
+    "  4. Add concrete technical context Claude will need (types, function signatures, existing patterns).",
+    "  5. Preserve the user's intent and tone. Do not answer the request — only enrich it.",
+    "  6. Keep enrichment under 1500 tokens. Cut fluff.",
+    "",
+    "Output format: plain text only. No markdown fences. No preamble.",
+    "Start with '<ENRICHED>' on its own line.",
+    "End with '</ENRICHED>' on its own line.",
+    "Everything inside those markers is the enriched prompt Claude will see.",
+  ].join("\n");
+
+  const result = await runCodexExec(wrapped, {
+    schema: null,
+    sandbox: "read-only",
+    model: resolveModel(opts.model),
+    effort: opts.effort || "low",
+    cd: opts.cd,
+    ephemeral: true,
+  });
+
+  // Fail-open: if Codex errored, emit raw prompt + stderr warning
+  if (result.exitCode !== 0) {
+    process.stderr.write(`[codex:enrich] failed exit=${result.exitCode}, passing raw prompt\n`);
+    console.log(rawPrompt);
+    cleanupTmpDir();
+    process.exit(0);
+  }
+
+  // Extract enriched body between markers
+  const raw = result.lastMessage || "";
+  const match = raw.match(/<ENRICHED>\s*\n?([\s\S]*?)\n?<\/ENRICHED>/);
+  const enriched = match ? match[1].trim() : raw.trim();
+
+  if (!enriched) {
+    process.stderr.write(`[codex:enrich] empty output, passing raw prompt\n`);
+    console.log(rawPrompt);
+  } else {
+    console.log(enriched);
+  }
+  cleanupTmpDir();
 }
 
 async function cmdResume(argv) {
@@ -634,6 +839,7 @@ async function main() {
       "  codex-bridge.mjs review     --prompt <text|@file> [--model <m>] [--cd <dir>]",
       "  codex-bridge.mjs rescue     --prompt <text|@file> [--write] [--model <m>] [--effort <e>] [--cd <dir>]",
       "  codex-bridge.mjs resume     --prompt <text|@file> [--session-id <id>] [--model <m>] [--no-schema]",
+      "  codex-bridge.mjs enrich     --prompt <text|@file> [--model <m>] [--effort <e>] [--cd <dir>]",
       "",
       "Prompt: literal text or @/path/to/file.md to read from file",
       "",
@@ -668,6 +874,9 @@ async function main() {
       break;
     case "resume":
       await cmdResume(argv);
+      break;
+    case "enrich":
+      await cmdEnrich(argv);
       break;
     default:
       die(`unknown subcommand: ${subcommand}. Run with --help for usage.`);
