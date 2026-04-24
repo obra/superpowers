@@ -83,6 +83,7 @@ The bootstrap script:
 - requires Codex `rust-v0.121.0+` or newer for marketplace installation
 - registers the Codex marketplace from the repository root, backed by `.agents/plugins/marketplace.json`, and marks `nimbou-skills` as installed by default
 - runs `npm link` for `nb-catalog`
+- installs `@google/design.md` globally into the same local npm prefix so `design.md lint` is available
 - creates `~/.local/bin/codex-full` when missing, wired to `codex --dangerously-bypass-approvals-and-sandbox`
 - creates `~/.local/bin/chrome-devtools-mcp-wayland` and rewrites `~/.codex/config.toml` so the `chrome-devtools` MCP inherits the local X/Wayland session automatically
 
@@ -116,7 +117,9 @@ If a project wants a copied local fallback instead of depending on `/var/www/nim
 ## Notes
 
 - `/design-md` and `/merge-pr` stay as Claude commands, with matching Codex mirrors in `.codex/skills/`.
+- `/design-md` validates generated `DESIGN.md` files with the official Google CLI via `design.md lint` (or `npx @google/design.md lint` as fallback).
 - `feat-spec` is the mixed-request entry point. It closes the shared feature contract and ownership boundary first, then hands backend contract closure to `nestjs-think`. Frontend-only requests stay in `nuxt-think`; backend-only requests stay in `nestjs-think`.
+- `nestjs-think` keeps backend contract and persistence viability together, including Prisma/schema impact when relevant, instead of splitting data modeling into a separate default step.
 - `doc-openapi` publishes the canonical HTTP transport artifact beside `domain.md` and the approved `.feature` files after `nestjs-think` and before `nuxt-think`.
 - `nestjs-think` and `nestjs-plan` stay backend-first; `nuxt-think` and `nuxt-plan` cover Nuxt planning.
 - `nestjs-test` handles Gherkin-driven backend coverage, audit routing, and backend test stabilization.

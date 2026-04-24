@@ -7,6 +7,8 @@ description: "Use before backend design or implementation work. Drive NestJS, Pr
 
 Turn backend requests into concrete NestJS-first designs before code changes. This skill is not stack-neutral: default to `NestJS + Prisma + Clean Architecture + SOLID`.
 
+This skill owns backend coherence end to end at the design level: use-cases, transport, error mapping, and persistence viability stay together here unless the user explicitly asks to split them.
+
 When the request is clearly frontend-first for Nuxt/Vuetify, use `nuxt-think` instead of forcing this workflow.
 Use `feat-spec` when the request changes both frontend and backend or when the frontend depends on a new backend contract.
 
@@ -29,7 +31,8 @@ Before writing the implementation plan:
 7. do not do the `domain.md` or `*.feature` work inline inside `nestjs-think`; delegate it to the shared spec skills
 8. if the request splits into multiple independent domains, split them and close one domain at a time
 9. for HTTP features, close the backend-viable transport contract before handing off to `doc-openapi`
-10. only after `doc-openapi` and `nuxt-think` are approved, invoke `nestjs-plan`
+10. close persistence viability for the approved backend shape: repositories, transactions, Prisma boundaries, constraints, and schema impact when relevant
+11. only after `doc-openapi` and `nuxt-think` are approved, invoke `nestjs-plan`
 
 Treat the domain directory as the approved specification bundle for backend planning, route coverage, and later test generation. `doc-openapi` publishes the canonical transport contract after this skill closes the backend-viable shape.
 
@@ -37,7 +40,7 @@ Treat the domain directory as the approved specification bundle for backend plan
 
 - `docs/domain/<domain>/domain.md` approved.
 - `docs/domain/<domain>/*.feature` approved.
-- Backend-viable contract, persistence shape, and review constraints are closed.
+- Backend-viable contract, persistence viability, Prisma/schema impact, and review constraints are closed.
 - `doc-openapi` is ready to publish `docs/domain/<domain>/openapi.yaml` when the feature changes HTTP.
 
 ## Checklist
@@ -100,6 +103,7 @@ digraph nestjs_think {
   - public contract: HTTP, jobs, events, or internal use-case API
   - boundary placement: controller, application, domain, infrastructure
   - persistence shape: repository contracts, Prisma queries, transactions
+  - persistence viability: cardinality, constraints, idempotency, auditing, and migration pressure
   - constraints: auth, validation, idempotency, migrations, observability
   - success criteria and test evidence
 
@@ -112,6 +116,7 @@ digraph nestjs_think {
   - dependency direction
   - repository and use-case responsibilities
   - where Prisma belongs and where it must not leak
+  - whether the approved backend contract is actually supportable by the intended persistence strategy
   - how SOLID influences the design
 
 ## Presenting the Design
@@ -124,6 +129,7 @@ Cover, when relevant:
 - use-cases and service boundaries
 - repository contracts and Prisma adapters
 - transaction boundaries and error mapping
+- schema impact, constraints, and persistence risks that could force contract changes
 - test strategy across HTTP, application, and persistence layers
 
 Ask after each section whether it looks right so far. If something is wrong or vague, revise before moving on.
@@ -133,6 +139,7 @@ Ask after each section whether it looks right so far. If something is wrong or v
 - Break the system into units with one clear purpose and explicit interfaces.
 - Keep framework concerns, application logic, domain policies, and infrastructure separate.
 - Treat Prisma as infrastructure. Repositories and adapters own persistence details.
+- Do not postpone obvious persistence contradictions to planning. If the contract and the data model fight each other, surface that here.
 - If the existing code leaks Prisma into controllers or collapses use-cases into large services, call that out and propose the smallest correction that improves the current work.
 - Stay focused on the requested goal. Do not propose unrelated refactors.
 
