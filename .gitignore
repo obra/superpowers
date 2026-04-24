@@ -5,3 +5,4 @@
 node_modules/
 inspo
 triage/
+.claude/ultrapowers-preferences.json
