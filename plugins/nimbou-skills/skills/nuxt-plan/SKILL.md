@@ -49,6 +49,7 @@ Before writing tasks, map the file structure and responsibility of each file.
 - Treat the relevant `DESIGN.md` and `GUIDELINES.md` rules as constraints. Do not reopen them here unless they contradict the approved `nuxt-think` output.
 - Make state ownership explicit: what stays in the page, what moves into child components, what belongs in a composable, and what truly justifies a store.
 - Prefer the target project's existing wrappers and primitives for forms, tables, dialogs, empty states, filters, and entity pickers before planning feature-local equivalents.
+- Make naming and placement explicit when the project depends on feature-grouped domain components, shared roots, or route-owner naming conventions.
 - Make hardening explicit in the file map when the feature has meaningful loading, empty, error, success, autosave, overflow, or responsive states.
 - If the current structure is muddy, plan the smallest refactor that restores clear ownership.
 

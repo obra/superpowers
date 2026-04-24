@@ -157,6 +157,16 @@ Teste rápido: se a page tem 20 handlers onde 15 só repassam pra outro filho, 1
 - Se o projeto já tem autocomplete ou picker específico para uma entidade, reutilize isso antes de montar `v-autocomplete` com fetch manual.
 - Se o projeto já define grid/shell padrão de formulário, não reintroduza layout local equivalente só porque o markup parece curto.
 
+## Naming defaults
+
+Quando o projeto não declarar uma convenção local mais forte:
+
+- componentes de domínio ficam agrupados por feature ou `pathPrefix`
+- componentes shared ou primitives ficam na raiz do espaço compartilhado do projeto
+- páginas e route owners vivem sob `pages/`
+- identificadores de código ficam em inglês
+- strings de UI seguem o idioma do produto, não o idioma do código
+
 ## Testabilidade como critério
 
 Critério de divisão que decide sem precisar opinar:
