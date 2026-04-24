@@ -22,15 +22,17 @@ Every project goes through this process. A todo list, a single-function utility,
 You MUST create a task for each of these items and complete them in order:
 
 1. **Explore project context** — check files, docs, recent commits
-2. **Offer visual companion** (if topic will involve visual questions) — this is its own message, not combined with a clarifying question. See the Visual Companion section below.
-3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-4. **Load or ask workflow preferences** — check for saved preferences in .claude/ultrapowers-preferences.json; if missing, ask and save (see Workflow Preferences section below)
-5. **Propose 2-3 approaches** — with trade-offs and your recommendation
-6. **Present design** — in sections scaled to their complexity, get user approval after each section
-7. **Write design doc** — save to `docs/ultrapowers/specs/YYYY-MM-DD-<topic>-design.md` (commit only if user opted in)
-8. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
-9. **User reviews written spec** — ask user to review the spec file before proceeding
-10. **Transition to research** — invoke deep-research skill to capture current state of the art
+2. **Match architecture profile** — read `~/.claude/ultrapowers-architecture-defaults.json` (then repo-level override if present); match signals from user's idea; if a profile fits, suggest its stack before asking clarifying questions (see Architecture Profile Matching section)
+3. **Offer visual companion** (if topic will involve visual questions) — this is its own message, not combined with a clarifying question. See the Visual Companion section below.
+4. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
+5. **Load or ask workflow preferences** — check for saved preferences in .claude/ultrapowers-preferences.json; if missing, ask and save (see Workflow Preferences section below)
+6. **Propose 2-3 approaches** — with trade-offs and your recommendation
+7. **Present design** — in sections scaled to their complexity, get user approval after each section
+8. **Scan for sibling-pack skills** — after design is approved, match the design against `${CLAUDE_SKILL_DIR}/sibling-pack-map.md`; bucket matches into installed vs missing; for missing packs, emit a blocking prompt per pack (see Sibling-Pack Scan section)
+9. **Write design doc** — save to `docs/ultrapowers/specs/YYYY-MM-DD-<topic>-design.md` (commit only if user opted in). If a profile matched in step 2 or skills matched in step 8, include them in a `## Referenced Skills` section inside the spec.
+10. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
+11. **User reviews written spec** — ask user to review the spec file before proceeding
+12. **Transition to research** — invoke deep-research skill to capture current state of the art
 
 ## Process Flow
 
@@ -203,6 +205,54 @@ The `suggestSiblingPacks` object is additive and controls whether Step 6a (below
 If `.claude/` directory doesn't exist, create it. Suggest adding `.claude/ultrapowers-preferences.json` to `.gitignore` if not already ignored.
 
 All downstream skills (`writing-plans`, `subagent-driven-development`, `executing-plans`, `finishing-a-development-branch`, `project-setup`) read this file and respect the values. Unknown keys (like `suggestSiblingPacks` in older consumers) are ignored gracefully. If the file is missing, fall back to defaults documented above (all three workflow flags ON for auto-commit/auto-push, OFF for commitDesignDocs; both `suggestSiblingPacks` flags ON).
+
+## Architecture Profile Matching
+
+**Step 2 — Match architecture profile:**
+
+Before asking clarifying questions, check if the user's described idea matches a pre-defined architecture profile. Profiles encode the user's default stack choices and feed directly into the design's Architecture section + skills-audit's "External" list.
+
+1. Read `~/.claude/ultrapowers-architecture-defaults.json` (user-level, baseline) and `<repo>/.claude/ultrapowers-architecture-defaults.json` (repo-level override — replaces user-level if present).
+2. If neither file exists AND this is the first run of modified brainstorming:
+   > "I don't see your architecture defaults file at `~/.claude/ultrapowers-architecture-defaults.json`. I can seed one with two profiles (marketing/content site + SaaS product app) based on your current reference projects. Want me to create it? (`yes` / `skip`)"
+
+   On `yes`: write the seed file using the two profiles from `${CLAUDE_SKILL_DIR}/architecture-profile-matching.md`. On `skip`: proceed without matching, don't ask again this session.
+3. If a file exists, apply the matching algorithm in `${CLAUDE_SKILL_DIR}/architecture-profile-matching.md` against the user's idea text.
+4. Present the result:
+   - **No match:** skip silently; proceed to clarifying questions.
+   - **Single match:** suggest the profile using the wording in the reference file; user accepts or declines.
+   - **Multiple matches:** present top 2-3 with signal counts; user picks or says `neither`.
+5. If accepted, store the profile ID for the session and bake its `stack` values into the design's Architecture section when you reach step 7.
+
+**Never auto-edit the defaults file.** Any change to profiles (including seed write) requires explicit user consent.
+
+## Sibling-Pack Scan
+
+**Step 8 — Scan for sibling-pack skills (runs after design is approved, before writing the spec):**
+
+1. Read `${CLAUDE_SKILL_DIR}/sibling-pack-map.md`.
+2. Extract signals from the approved design: architecture section, tech stack mentions, domain descriptions, profile `stack` values (if a profile was matched in step 2).
+3. For each signal, look up matching skills in both the `ultrapowers-dev` and `ultrapowers-business` tables.
+4. For each matched skill, scan the session's available-skills list (injected as `<system-reminder>`) for the corresponding prefix:
+   - `ultrapowers-dev:<name>` present → **installed match** for `ultrapowers-dev`.
+   - `ultrapowers-business:<name>` present → **installed match** for `ultrapowers-business`.
+   - Pack prefix entirely absent from available-skills → **missing pack** (candidate for install prompt).
+5. Handle results:
+   - **Installed matches** (any count) → append a `## Referenced Skills` section to the spec (written in step 9) listing them with one-line rationale per skill. Done silently — no user prompt.
+   - **Missing pack, relevant AND `suggestSiblingPacks.<pack>: true`** → emit a blocking prompt, one per missing pack, sequentially. Do not combine packs into a single prompt.
+
+**Blocking prompt template (one per missing pack):**
+
+> "This project looks like it would benefit from the **ultrapowers-{dev|business}** pack. Detected signals: `{signal1}`, `{signal2}`, `{signal3}`. It's optional but would give the implementation plan access to current best-practice skills. Options:
+>
+> 1. **Install** — I'll pause while you run `/plugin install ultrapowers-{dev|business}@ultrapowers` (or use the interactive `/plugin` menu). When done, say `installed` and I'll re-scan.
+> 2. **Skip** — proceed without; I won't reference these skills in the spec.
+> 3. **Skip and stop suggesting** — sets `suggestSiblingPacks.{dev|business}: false` in `.claude/ultrapowers-preferences.json` so I don't suggest this pack again in this repo."
+
+Wait for user response:
+- `installed` → call `/reload-plugins` if needed, re-read the available-skills list (ask the user to paste the updated list if not automatically visible), re-bucket matches, and proceed. If the pack still doesn't appear, ask the user to verify the install and fall back to `skip` after one retry.
+- `skip` → drop matches for this pack for this session; don't write to prefs.
+- `skip and stop suggesting` → read current `.claude/ultrapowers-preferences.json`, set `suggestSiblingPacks.<pack>: false`, write it back (preserving all other keys), drop matches for this session.
 
 ## Visual Companion
 
