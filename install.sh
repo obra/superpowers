@@ -118,6 +118,10 @@ claude plugin marketplace add "$MARKETPLACE_REPO" 2>/dev/null \
 
 sync_marketplace_cache
 
+if [ "$INSTALLED_PLUGIN_VERSION" = "$EXPECTED_PLUGIN_VERSION" ]; then
+  echo "Claude Code plugin already installed at version $INSTALLED_PLUGIN_VERSION; reinstalling to refresh marketplace copy."
+fi
+
 echo "Installing Claude Code plugin version $EXPECTED_PLUGIN_VERSION..."
 if [ -n "$INSTALLED_PLUGIN_VERSION" ]; then
   claude plugin uninstall "$PLUGIN_NAME" --scope user 2>/dev/null || true
