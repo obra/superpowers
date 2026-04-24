@@ -39,7 +39,10 @@ Phase 0 → Phase 1 → [Gate 1] → Phase 2 → [Gate 2] → Phase 3 → [Gate 
 **입력:** `current_run_path`
 **출력:** `phase1/merge/rq-set.md`, `phase1/merge/rq-set-merge-report.md`
 **모델:** sonnet
-⛔ **Manual Gate 1**: `rq-review` skill로 rq-set.md 대화형 검토·수정·확정
+⛔ **Manual Gate 1** (필수 — 이 단계 없이 Phase 2로 진행 불가)
+- rq-set-merger 완료 후 **반드시** "RQ 검토해줘" 또는 "Gate 1 시작"을 입력한다.
+- `rq-review` skill이 RQ 목록을 대화형으로 검토·수정·확정한다.
+- 확정 후 `plugin-rq-set-a-to-rq-files`가 자동 실행되어 RQ 개별 파일이 생성된다.
 
 **1-4. RQ 파일 분리 (순차)**
 **Agent:** `plugin-rq-set-a-to-rq-files`

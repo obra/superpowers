@@ -94,9 +94,15 @@ model: sonnet
 - rq-set.md (최종 {N}개 RQ)
 - rq-set-merge-report.md (병합 리포트)
 
-📋 다음 단계:
-- "RQ 검토해줘" 또는 "Gate 1 시작" → rq-review skill로 대화형 검토·수정·확정
-- 병합 결과를 다시 하려면: target_rq_count, view_distribution 파라미터를 전달하여 재실행
+⛔ Gate 1 — 반드시 RQ 목록을 검토해야 합니다
+다음 단계로 넘어가기 전에 RQ 내용을 확인하고 확정해주세요.
+
+"RQ 검토해줘" 또는 "Gate 1 시작" 이라고 입력하면
+rq-review skill이 대화형 검토를 시작합니다.
+
+검토 완료 후 확정하면 RQ 개별 파일(phase1/CONCEPT-NN-*.md 등)이 자동 생성됩니다.
+
+병합 결과를 다시 하려면: target_rq_count, view_distribution 파라미터를 전달하여 재실행
 ```
 
 ## 3.5 출력 템플릿 (엄격히 준수)
