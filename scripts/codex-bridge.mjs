@@ -402,6 +402,45 @@ function renderEvent(event) {
 
   if (t === "turn.started") return "turn";
   if (t === "turn.completed") return "done";
+  if (t === "turn_aborted") {
+    process.stderr.write(`[codex:error] turn aborted${event.reason ? `: ${event.reason}` : ""}\n`);
+    return "error";
+  }
+  if (t === "stream_error") {
+    process.stderr.write(`[codex:error] stream_error ${trunc(event.message || event.error || JSON.stringify(event), 200)}\n`);
+    return "error";
+  }
+
+  // v0.124 top-level command_execution events (not always wrapped in item.*)
+  if (t === "exec_command_begin") {
+    process.stderr.write(`[codex:exec] ${trunc(event.command || event.cmd || "", 100)}\n`);
+    return "exec";
+  }
+  if (t === "exec_command_output_delta") return "exec";
+  if (t === "exec_command_end") {
+    const code = event.exit_code ?? "?";
+    process.stderr.write(`[codex:result] exit=${code} ${trunc(event.aggregated_output || event.output || "", 80)}\n`);
+    return "result";
+  }
+
+  // v0.124 top-level patch_apply events
+  if (t === "patch_apply_begin" || t === "patch_apply_updated" || t === "patch_apply_end") {
+    const p = event.path || event.file || (Array.isArray(event.changes) ? event.changes.map(c => c.path).filter(Boolean).join(",") : "?");
+    process.stderr.write(`[codex:edit] ${p}${t === "patch_apply_end" ? " (done)" : ""}\n`);
+    return "edit";
+  }
+
+  // v0.124 top-level MCP tool events
+  if (t === "mcp_tool_call_begin") {
+    const name = event.name || event.tool || "?";
+    const argsPreview = trunc(JSON.stringify(event.arguments || event.args || {}), 80);
+    process.stderr.write(`[codex:tool] ${name}(${argsPreview})\n`);
+    return "tool";
+  }
+  if (t === "mcp_tool_call_end") {
+    process.stderr.write(`[codex:result] ${trunc(event.result || event.output || "", 80)}\n`);
+    return "result";
+  }
 
   if (t === "agent" && event.agent?.content) {
     process.stderr.write(`[codex:agent] ${trunc(event.agent.content)}\n`);

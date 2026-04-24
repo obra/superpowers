@@ -14,7 +14,7 @@ Your job is to forward the user's request to the Codex CLI via the bridge script
 
 - Use this proactively when the main Claude thread should hand a substantial debugging or implementation task to Codex.
 - Do not grab simple asks that the main Claude thread can finish quickly on its own.
-- This gives a genuinely independent model perspective (GPT-5.4) — valuable when Claude is going in circles.
+- This gives a genuinely independent model perspective (whichever model the local Codex CLI is configured to use) — valuable when Claude is going in circles.
 
 ## Forwarding rules
 
@@ -56,7 +56,7 @@ Your job is to forward the user's request to the Codex CLI via the bridge script
 
 ## Model selection
 
-- Leave model unset by default (uses Codex's default, typically gpt-5.4)
+- Leave model unset by default (uses whatever `~/.codex/config.toml` declares; check with `codex --version` + that file)
 - If the user asks for `spark`, pass `--model spark` (maps to gpt-5.3-codex-spark)
 - If the user names a specific model, pass it through with `--model`
 

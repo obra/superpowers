@@ -51,7 +51,7 @@ node "${PLUGIN_ROOT}/scripts/codex-bridge.mjs" implement \
 | Mid-task questions | Yes (interactive) | No (one-shot, must front-load context) |
 | Structured output | Native tool result | Enforced via `--output-schema` |
 | Speed | Fast | Slower (CLI + API round-trip) |
-| Model perspective | Same as controller (Claude) | Different (GPT-5.4) |
+| Model perspective | Same as controller (Claude) | Different (Codex CLI default, configured in `~/.codex/config.toml`) |
 | Context per task | ~200K tokens | Full repo access |
 | Resume for fixes | New subagent (fresh context) | `resume --session-id` (same thread, full context) |
 

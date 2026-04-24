@@ -65,7 +65,7 @@ SDD supports two execution engines. Pick per task — they share the same struct
 |---|---|---|
 | 1-2 files, complete spec | Claude subagent | Fast/cheap model |
 | Multi-file, well-specified | Claude subagent | Standard model |
-| Complex / unfamiliar codebase | **Codex** | Default (gpt-5.4) |
+| Complex / unfamiliar codebase | **Codex** | Codex CLI default (per `~/.codex/config.toml`) |
 | Needs mid-task Q&A | Claude subagent | Standard model |
 | Architecture/design/review | Claude subagent | Most capable model |
 | User explicitly requests Codex | **Codex** | Default or specified |
