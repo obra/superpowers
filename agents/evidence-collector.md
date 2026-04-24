@@ -70,6 +70,9 @@ color: green
 - repo_scope: (필수) 검색 범위(예: ["helix-core/**"] 또는 "entire repo")
 - web_sources: (선택) 참고 URL 리스트(비 GitHub 문서만)
 - constraints: (선택) 포함/제외 키워드 등
+- **e_start**: (선택) E-NN 시작 번호 (evidence-master가 사전 배정한 값)
+  - 제공된 경우: 디렉토리 스캔 없이 이 번호부터 순차 사용 (충돌 방지)
+  - 미제공 시: output_dir 스캔으로 기존 최대 NN+1부터 시작 (하위 호환)
 
 # 3) Phase 2 시작 절차(필수, 경로 확정)
 1) **current_run_path 파라미터 검증 (최우선)**
@@ -112,12 +115,17 @@ color: green
 - output_dir (`{run_dir}/phase2/`) 바로 하위에 Evidence 파일을 생성한다.
 - 파일명 규칙(필수): `E-<NN>-<slug-5-words>.md`
   - **NN 넘버링 규칙(중요)**:
-    1. output_dir 내 기존 `E-*.md` 파일을 스캔한다.
-    2. **제외 패턴**: 파일명/디렉토리명에 `backup`, `archive`, `temp`, `tmp` 포함 시 무시
-    3. 기존 파일의 E-NN 중 가장 큰 NN 값을 찾는다.
-    4. 새 파일은 (가장 큰 NN + 1)부터 순차 증가한다.
-    5. 기존 파일이 없으면 01부터 시작한다.
-    6. NN은 반드시 2자리 숫자로 zero-padding한다 (예: 01, 02, ... 99).
+    1. `e_start` 파라미터가 제공된 경우 (evidence-master 사전 배정):
+       - 디렉토리 스캔 없이 `e_start` 값부터 시작한다.
+       - 이후 파일은 e_start, e_start+1, e_start+2 ... 순으로 증가한다.
+       - Race condition 없이 안전하게 번호 사용 가능.
+    2. `e_start` 파라미터가 없는 경우 (하위 호환 fallback):
+       - output_dir 내 기존 `E-*.md` 파일을 스캔한다.
+       - **제외 패턴**: 파일명/디렉토리명에 `backup`, `archive`, `temp`, `tmp` 포함 시 무시
+       - 기존 파일의 E-NN 중 가장 큰 NN 값을 찾는다.
+       - 새 파일은 (가장 큰 NN + 1)부터 순차 증가한다.
+       - 기존 파일이 없으면 01부터 시작한다.
+    3. NN은 반드시 2자리 숫자로 zero-padding한다 (예: 01, 02, ... 99).
 - frontmatter 필수 필드(생략 금지):
 
 ```yaml
