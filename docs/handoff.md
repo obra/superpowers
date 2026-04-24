@@ -1,72 +1,89 @@
 # Session Handoff
-> Generated: 2026-04-23 (rev 2026-04-24: pass-1..3 codex-review hardening + doc alignment)
+> Generated: 2026-04-25 00:40 KST
 
 ## Task
-Codex bridge observability + per-prompt enrichment — phase 1 & 2 shipped.
+Port caveman plugin (token-compression) + session_archive (rich session logger) into sspower under new names. Drop rtk entirely. Branch: `feat/diet-and-wiki`.
+
+Renamed concepts:
+- `caveman` → `diet` (token-terseness mode)
+- `session_archive` → `project-wiki` (per-project `<cwd>/.claude/wiki/sessions/`)
 
 ## Status
-### Completed (pushed through `21e90be` on `main`)
-- `scripts/codex-bridge.mjs`:
-  - `renderEvent()` covers all Codex JSONL event types → tagged stderr (`[codex:agent|think|tool|result|edit|exec|token|error|session|alive|done]`)
-  - Line-buffered JSONL parser emits `[codex:session] <id>` at first sight
-  - Trace counters (`tool_calls`, `edits`, `execs`, `errors`, `tokens`, `duration_ms`)
-  - 30s-silence heartbeat ticker (`setInterval`, cleared on close/error)
-  - `_meta` envelope on stdout JSON; `_commit`/`_branch`/`_worktree` kept top-level for SDD eval back-compat
-  - New `enrich` subcommand: read-only repo scan, wraps prompt, extracts `<ENRICHED>…</ENRICHED>`, fail-open
-- `hooks/prompt-submit`:
-  - Reads stdin JSON (`prompt`, `cwd`) via jq → python3 → sed cascade
-  - Gate: skips `SSPOWER_ENRICH=0`, <20 chars, slash cmds, `raw:`/`noenrich:` prefixes, pure-read verbs, prompts lacking coding-intent keywords
-  - Portable timeout (gtimeout → timeout → perl alarm), 30s cap, `--effort minimal`
-  - bash 3.2 compat (`tr` for lowercase, no `${VAR,,}`) — macOS default bash
-  - Appends enriched block to existing skill-routing reminder
-- Live-verified: setup, review (18.7s), enrich (140s default, produced real file paths + line numbers), heartbeat firing at 30/60/90/120s
 
-### Post-handoff additions
-- `fe8f352` added diagnostics log (`~/.claude/sspower-codex.log`) w/ error+warn+info events from bridge & hook
-- New skill `skills/codex-diagnostics/SKILL.md` — reads log, groups patterns, proposes patches
-- README: added "Codex Observability" section, bumped skill count to 17
-- **Event-stream gap fixed** (addresses Resume item 4):
-  - `scripts/codex-bridge.mjs`: pass `--json` to both `codex exec` and `codex exec resume` (CLI v0.124.0 requires the flag to emit JSONL to stdout)
-  - Updated `renderEvent()` for v0.124.0 shape: `thread.started` (thread_id), `item.started|completed` (unwraps nested `item.type`: `agent_message`, `reasoning`, `command_execution` (with exit_code + aggregated_output), `file_change`/`patch_apply`, `error`), `turn.completed` (usage w/ `input_tokens`/`output_tokens`/`cached_input_tokens`)
-  - Session-id capture now recognizes `event.thread_id` in both the streaming parser and `extractSessionId()` fallback
-  - Token counter in `_spawnAndCapture` handles `input_tokens`/`output_tokens` schema
-  - Live smoke: real tokens populated (`in=12163 out=60 total=12223 cached=2432`), `_meta.session_id` now set, duration ~6s on trivial review
-- **Hook latency knobs** (addresses Resume item 3) + **end-to-end enrichment verified** (Resume item 2):
-  - Default timeout 30s → **180s** (large repos need ~120-150s under `--effort minimal`). Override via `SSPOWER_ENRICH_TIMEOUT`.
-  - New length gate: prompts >`SSPOWER_ENRICH_MAX_CHARS` (default 2000) skip enrichment — already carry context.
-  - End-to-end smoke on sspower repo: `kind=enriched dur=146s`, 3.4KB stdout containing `[codex-enriched prompt — validated against actual repo]:` block with real file paths + line numbers.
-- `.gitignore`: added `*-workspace/` to cover skill-creator eval output dirs (`codex-enrich-workspace/`, `subagent-driven-development-workspace/`, and future ones).
-- **Codex-review hardening** (three review passes by `codex-bridge.mjs review` on live commits):
-  - `6d28127` — dropped `eval` in hook (shell-injection class via `SSPOWER_ENRICH_TIMEOUT`); validated both env vars as `^[0-9]+$` before arithmetic; added `renderEvent` cases for top-level v0.124 events missing from the wrapped `item.*` path: `exec_command_{begin,output_delta,end}`, `patch_apply_{begin,updated,end}`, `mcp_tool_call_{begin,end}`, `stream_error`, `turn_aborted`. Refreshed stale `gpt-5.4` doc refs (agents/codex-rescue.md, SKILL.md, codex-integration.md) to point at `~/.codex/config.toml`.
-  - `e137a15` — `exec_command_output_delta` now returns non-counted `"stream"` kind (deltas stream per command, don't inflate `trace.execs`). `patch_apply` lifecycle: only `_end` returns `"edit"`; `_begin`/`_updated` return `"patch_phase"`. Empty change-path renders `?`. Forced `10#$var` in hook arithmetic so `08`/`010` don't trigger bash octal parsing.
-  - `f7db4d2` — failed `patch_apply_end` (any of `event.success === false`, `status === "failed"`, non-null `event.error`) renders `(failed)` tag but no longer counts as applied edit.
-- **Model references**: local Codex CLI currently pinned to `gpt-5.5` (was `gpt-5.4` earlier same session). Docs now reference `~/.codex/config.toml` as source of truth instead of hard-coding model names.
+### Completed (Phases 1-3 + codex review fixes)
+
+**Phase 1 — Diet mode core:**
+- `hooks/_diet-config.js` — shared flag r/w (symlink-safe, O_NOFOLLOW, size-capped)
+- `hooks/diet-activate.js` — SessionStart, reads `skills/diet/SKILL.md`, filters to active intensity
+- `hooks/diet-track.js` — UserPromptSubmit, parses `/diet [lite|full|ultra|off]`, per-turn reinforcement
+- `hooks/package.json` — `{"type":"commonjs"}` (sspower root is ESM, hooks need CJS)
+- `skills/diet/SKILL.md` — source of truth ruleset (intensity table, rules, examples)
+- `hooks/hooks.json` — diet handlers appended to SessionStart + UserPromptSubmit arrays
+
+**Phase 2 — Diet sub-skills:**
+- `skills/diet-commit/SKILL.md`, `skills/diet-review/SKILL.md`, `skills/compress-memory/SKILL.md`
+- `commands/diet.toml`, `diet-commit.toml`, `diet-review.toml`
+- Compress is skill-instructions only — dropped upstream's 24KB Python CLI, Claude does it inline
+
+**Phase 3 — Project wiki:**
+- `hooks/wiki-archive.py` — port of `~/.claude/hooks/session_archive.py` (~430 LoC)
+  - `resolve_out_dir(cwd)` → `<cwd>/.claude/wiki/sessions/` with writability probe
+  - Fallback: `~/.claude/wiki/<basename>-<sha256[:8]>/sessions/`
+  - Adds markdown summary writer (top files, git ops, user prompts, errors)
+- `hooks/wiki-archive.sh` — `${CLAUDE_PLUGIN_ROOT}`-based, no `$HOME` hardcode
+- `hooks.json` — `PreCompact` + `SessionEnd` handlers (async)
+
+**Codex review (pass 1) — 6 fixes applied:**
+1. `hooks.json` matcher: `startup|clear|compact` → `startup|resume|clear|compact`
+2. `diet-activate.js` mode=off → silent exit (no `OK` stdout)
+3. `diet-track.js` one-shot commands (`/diet-commit|review|compress`) no longer clobber flag
+4. `diet-track.js` removed INDEPENDENT_MODES gate on reinforcement (not needed now)
+5. `wiki-archive.py` `replace("~", home, 1)` → `Path(transcript_path).expanduser()`
+6. `wiki-archive.py` dropped hardcoded KST → `datetime.now().astimezone()`; also threshold `<3 tool uses` → `not events` (archive short real sessions)
+
+All functional tests pass: `/diet ultra` writes flag, `/diet-commit` leaves flag alone, mode=off silent, 1-tool session archives.
 
 ### In Progress
-None. Clean tree.
+- **Phase 4 not started** — wiki index.md auto-append + seed `decisions.md` / `gotchas.md` templates
+
+### Not Started
+- Phase 5: wire existing sspower skills (`brainstorming`, `writing-plans`, `systematic-debugging`) to read `<cwd>/.claude/wiki/{decisions,gotchas}.md` + last N sessions
+- Phase 6: migrate `~/.claude/settings.json` — remove `PreCompact`/`SessionEnd` (old session_archive) + `PreToolUse:Bash` (rtk-rewrite); disable `caveman@caveman` in enabledPlugins
+- Phase 7: README/CLAUDE.md docs + bump `plugin.json` 1.0.0 → 1.1.0 + push
 
 ## Resume Here
-All handoff items shipped. For next session: watch `~/.claude/sspower-codex.log` for real-world `hook.enrich` timings. If `kind=timeout` keeps appearing in big repos, bump `SSPOWER_ENRICH_TIMEOUT` or `SSPOWER_ENRICH=0` that cwd via directory-scoped settings. If `kind=enriched` dominates but duration feels long, experiment with opt-in-only mode (prefix-triggered) rather than auto.
+
+1. **Phase 4 — wiki index.md:** Extend `hooks/wiki-archive.py` `main()` to append a line to `<out_dir>/../index.md` after each session: timestamp, duration, tool count, cost, top-3 files. Seed empty `<out_dir>/../decisions.md` and `../gotchas.md` with heading templates if missing. Verify with same test harness as Phase 3.
+
+2. **Phase 5 — skill wiring:** Edit 3 SKILL.md files:
+   - `skills/brainstorming/SKILL.md` — prepend "Before proposing, read `<cwd>/.claude/wiki/decisions.md` + last 3 session `.md` files."
+   - `skills/writing-plans/SKILL.md` — same.
+   - `skills/systematic-debugging/SKILL.md` — prepend "Read `<cwd>/.claude/wiki/gotchas.md` first. Match current bug to known gotcha before new investigation."
+
+3. **Phase 6 — migration:** Use `update-config` skill or edit `~/.claude/settings.json` directly to remove old hooks + disable caveman plugin. Confirm no duplicate SessionEnd fires.
+
+4. **Phase 7 — release:** Update `README.md`, `CLAUDE.md`, bump `.claude-plugin/plugin.json` to 1.1.0, commit in logical groups, push to origin.
 
 ## Decisions
-- **No log folder** (`.codex-runs/` rejected): user dislikes extra dirs. Rely on stderr streaming only. If background mode ever needed → revisit w/ `~/.claude/codex-runs/`.
-- **Dual-write `_commit`/`_branch`/`_worktree`**: top-level + `_meta.*`. Back-compat for `skills/subagent-driven-development/evals/evals.json` which still checks top-level.
-- **Fail-open everywhere**: hook never blocks prompt; bridge error → raw passthrough + stderr warning.
-- **Gate enrichment, don't enrich every prompt**: trivia/slash-cmd/meta prompts skipped. Coding-intent keyword required.
-- **Phase 2 scope cut**: skipped `--background` mode, `status`/`watch` subcommands, persistent log. YAGNI until real need.
+
+- **Name = `diet`** (not `caveman`/`lean`/`terse`). User picked.
+- **Drop rtk entirely** — user said "erase rtk, only diet". Bash command-rewriter not ported.
+- **Wiki layout = A (per-project)** — `<cwd>/.claude/wiki/sessions/`, not `~/.claude/wiki/<slug>/`. User requested "without env things".
+- **Diet default mode = `full`** — always-on, matches caveman default. Override via `SSPOWER_DIET_DEFAULT=off` or `/diet off`.
+- **Compress skill has no Python backend** — simpler than caveman; Claude applies rules inline.
+- **Flag path `~/.claude/.sspower-diet`** — deliberately different from `.caveman-active` to avoid collision during migration.
+- **One-shot commands don't mutate flag** — codex finding #2. `/diet-commit` runs its skill without touching intensity level.
 
 ## Gotchas
-- **macOS lacks `timeout`**: hook cascades to `gtimeout` (brew coreutils) → `timeout` → `perl alarm`. If none work enrichment silently fails → pass-through.
-- **Heartbeat can show `last: start` for whole run**: Codex CLI v0.123.0 apparently buffers stdout events, emitting only final payload. Streaming tags work when Codex emits; this version emits rarely.
-- **Hook doesn't activate mid-session**: UserPromptSubmit hooks load once at session start.
-- **Enrichment adds 20-140s latency per coding prompt**: monitor real-world use, may need aggressive gating or cache.
-- **Token counts land as `null`**: Codex event shape for usage may differ from parser assumptions. No crash, just missing metric.
+
+- **sspower root `package.json` has `"type": "module"`** — all `.js` default to ESM. `hooks/package.json` `{"type":"commonjs"}` scopes hook files back to CJS. Don't delete it.
+- **Both old + new wiki archivers fire until Phase 6 migration** — `~/.claude/settings.json` still has `PreCompact`/`SessionEnd` for old `session_archive.sh`. Sessions will be written to BOTH `~/.claude/sessions/` (flat) AND `<cwd>/.claude/wiki/sessions/`. Acceptable transition state.
+- **Caveman plugin still enabled** in `~/.claude/settings.json` `enabledPlugins`. Its SessionStart/UserPromptSubmit hooks fire alongside sspower's diet hooks. Diet uses `.sspower-diet` flag so no state collision, but SessionStart context is emitted twice. Disable in Phase 6.
+- **`hooks/__pycache__/`** currently untracked. Ignore before committing.
+- **Codex review was standard (not adversarial)** — security-critical symlink logic was ported verbatim from caveman, hardened upstream. Codex spot-checked + passed.
 
 ## Context
-- **Branch**: `main`, pushed to `origin/main`
-- **HEAD**: `fe8f352 feat: codex bridge diagnostics log + codex-diagnostics skill`
-- **Prior**:
-  - `21e90be fix: bash 3.2 compat in prompt-submit hook`
-  - `6b59374 feat: codex bridge observability + prompt enrichment hook`
-- **Tests**: none run (no bridge test suite exists); smoke verified live
-- **Plugin root**: `/Users/sskys/.claude/plugins/marketplaces/sskys18/plugins/sspower`
+- **Branch:** `feat/diet-and-wiki` (local only, not pushed)
+- **Diff:** 14 files, +1251 lines vs main
+- **Tests:** Manual functional tests passed (syntax + flag-state + archive roundtrip). No CI yet.
+- **Codex session id:** `019dc01b-5abc-7620-9d36-b3ac56008f02` (Phase 1-3 review, 6 fixes applied)
