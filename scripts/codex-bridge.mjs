@@ -435,9 +435,15 @@ function renderEvent(event) {
       return joined || null;
     };
     const p = extractPaths(event) || "?";
-    const suffix = t === "patch_apply_end" ? " (done)" : (t === "patch_apply_begin" ? " (begin)" : "");
+    const failed = event.success === false || event.status === "failed" || event.error != null;
+    const suffix = t === "patch_apply_end"
+      ? (failed ? " (failed)" : " (done)")
+      : (t === "patch_apply_begin" ? " (begin)" : "");
     process.stderr.write(`[codex:edit] ${p}${suffix}\n`);
-    return t === "patch_apply_end" ? "edit" : "patch_phase";
+    // Only count a successful _end as an applied edit; failures and interim
+    // phases render for visibility but don't inflate trace.edits.
+    if (t === "patch_apply_end" && !failed) return "edit";
+    return "patch_phase";
   }
 
   // v0.124 top-level MCP tool events
