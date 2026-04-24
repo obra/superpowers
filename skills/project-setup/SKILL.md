@@ -62,16 +62,25 @@ Generate a tailored CLAUDE.md for the current project by scanning the codebase a
 
 ## Preferences Mode
 
-When invoked as "project-setup preferences" or "change my workflow preferences":
+When invoked as "project-setup preferences", "change my workflow preferences", or `change prefs`:
 
-1. Read current `.claude/ultrapowers-preferences.json` if it exists
-2. Show current values
-3. Ask all three preferences in a single message:
-   - Auto-commit (on/off)
-   - Auto-push (on/off)
-   - Commit design docs (on/off)
-4. Write updated values to `.claude/ultrapowers-preferences.json`
-5. Suggest adding to `.gitignore` if not already ignored
+1. Read current `.claude/ultrapowers-preferences.json` if it exists.
+2. Show current values in the prompt itself:
+
+   > "Current workflow prefs: auto-commit {on|off}, auto-push {on|off}, commit design docs {on|off}, suggest `ultrapowers-dev` {on|off}, suggest `ultrapowers-business` {on|off}. Reply `ok` to keep, or tell me what to change (e.g., `no auto-push`, `stop suggesting dev`)."
+
+3. Parse reply using the same rules documented in `skills/brainstorming/SKILL.md` Workflow Preferences section, extended with:
+
+   | User reply | Resulting change |
+   |---|---|
+   | `stop suggesting dev` / `no dev suggestions` | `suggestSiblingPacks.dev: false` |
+   | `stop suggesting business` / `no business suggestions` | `suggestSiblingPacks.business: false` |
+   | `resume suggesting dev` / `suggest dev again` | `suggestSiblingPacks.dev: true` |
+   | `resume suggesting business` / `suggest business again` | `suggestSiblingPacks.business: true` |
+   | `reset sibling suggestions` | both `suggestSiblingPacks` flags to `true` |
+
+4. Write updated values to `.claude/ultrapowers-preferences.json`. Preserve keys the user didn't change.
+5. Suggest adding to `.gitignore` if not already ignored.
 
 ## Principles
 
