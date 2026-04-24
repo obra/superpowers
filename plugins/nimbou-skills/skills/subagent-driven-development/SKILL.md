@@ -1,15 +1,15 @@
 ---
 name: subagent-driven-development
-description: Use when executing implementation plans with independent tasks in the current session
+description: Use when executing an approved implementation plan through subagents, especially when task-level spec compliance and code quality review gates are required.
 ---
 
 # Subagent-Driven Development
 
-Execute plan by dispatching fresh subagent per task, with two-stage review after each: spec compliance review first, then code quality review.
+Execute plan by dispatching a fresh implementer subagent per task, with two-stage review after each: spec compliance review first, then code quality review.
 
 **Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
 
-**Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
+**Core principle:** Fresh implementer subagent per task + two-stage review (spec then quality) = high quality, fast iteration
 
 ## When to Use
 
@@ -27,15 +27,23 @@ digraph when_to_use {
     "Tasks mostly independent?" -> "Stay in this session?" [label="yes"];
     "Tasks mostly independent?" -> "Manual execution or brainstorm first" [label="no - tightly coupled"];
     "Stay in this session?" -> "subagent-driven-development" [label="yes"];
-    "Stay in this session?" -> "executing-plans" [label="no - parallel session"];
+    "Stay in this session?" -> "executing-plans" [label="no - direct inline execution preferred"];
 }
 ```
 
-**vs. Executing Plans (parallel session):**
-- Same session (no context switch)
-- Fresh subagent per task (no context pollution)
-- Two-stage review after each task: spec compliance first, then code quality
-- Faster iteration (no human-in-loop between tasks)
+**vs. Executing Plans:**
+- `executing-plans` is the direct executor: the controller agent performs the plan itself
+- `subagent-driven-development` executes the plan through subagents
+- Each task gets mandatory staged reviews: spec compliance first, then code quality
+- Use this when stronger quality gates matter more than minimizing orchestration overhead
+
+## Boundary
+
+Use this skill for full plan execution when subagents are the implementation mechanism.
+
+Do not use it just to fan out unrelated failures. That belongs to `nimbou-skills:dispatching-parallel-agents`.
+
+Do not use it when the plan should simply be executed inline by the controller agent with normal verification steps. That belongs to `nimbou-skills:executing-plans`.
 
 ## The Process
 
@@ -208,9 +216,9 @@ Done!
 - Subagent can ask questions (before AND during work)
 
 **vs. Executing Plans:**
-- Same session (no handoff)
-- Continuous progress (no waiting)
-- Review checkpoints automatic
+- More orchestration overhead
+- Stronger review discipline
+- Better fit when per-task implementation and review should be delegated explicitly
 
 **Efficiency gains:**
 - No file reading overhead (controller provides full text)
@@ -237,7 +245,7 @@ Done!
 - Start implementation on main/master branch without explicit user consent
 - Skip reviews (spec compliance OR code quality)
 - Proceed with unfixed issues
-- Dispatch multiple implementation subagents in parallel (conflicts)
+- Dispatch multiple implementation subagents in parallel for the same execution stream (conflicts)
 - Make subagent read plan file (provide full text instead)
 - Skip scene-setting context (subagent needs to understand where task fits)
 - Ignore subagent questions (answer before letting them proceed)
@@ -274,4 +282,4 @@ Done!
 - **nimbou-skills:test-driven-development** - Subagents follow TDD for each task
 
 **Alternative workflow:**
-- **nimbou-skills:executing-plans** - Use for parallel session instead of same-session execution
+- **nimbou-skills:executing-plans** - Use when the controller agent should execute the plan directly instead of routing each task through subagents

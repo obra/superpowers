@@ -1,6 +1,6 @@
 ---
 name: executing-plans
-description: Use when you have an approved implementation plan and need to execute it with review checkpoints, including dependency-aware parallel groups when the plan defines them.
+description: Use when you have an approved implementation plan and want to execute it directly in the main session, while respecting task order, dependency groups, and required verifications.
 ---
 
 # Executing Plans
@@ -9,9 +9,11 @@ description: Use when you have an approved implementation plan and need to execu
 
 Load the plan, review it critically, detect whether it is task-driven or group-driven, then execute it without guessing.
 
+This skill is the direct executor. The main agent performs the work itself and only uses parallelism when the plan already defines independent grouped items.
+
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
-If subagents are available, `nimbou-skills:subagent-driven-development` is still the better default. Use this skill when execution should stay inline in the current session.
+Prefer `nimbou-skills:subagent-driven-development` when the goal is to execute the plan through dedicated subagents with per-task review loops. Use this skill when execution should remain primarily in the controller agent.
 
 ## Step 1: Load and Review
 
@@ -45,6 +47,14 @@ For each execution group:
 5. Report the exact file, task, or group that blocked the flow
 
 Use group mode when the plan explicitly models dependency order for multi-slice or frontend-heavy work. Do not flatten the topology unless the user approves it.
+
+## Boundary
+
+Use this skill for full plan execution.
+
+Do not use it just because parallel work exists. If the real need is "split 3 unrelated failures across 3 agents", use `nimbou-skills:dispatching-parallel-agents` instead.
+
+Do not use it when the desired workflow is "one subagent implements, then spec review, then code quality review for every task". That belongs to `nimbou-skills:subagent-driven-development`.
 
 ## Step 3: Complete Development
 

@@ -1,6 +1,6 @@
 ---
 name: dispatching-parallel-agents
-description: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies
+description: Use when facing 2+ independent failures or work items that can be investigated or implemented in parallel without shared state or sequential dependencies.
 ---
 
 # Dispatching Parallel Agents
@@ -8,6 +8,8 @@ description: Use when facing 2+ independent tasks that can be worked on without 
 ## Overview
 
 You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
+
+This is a coordination pattern, not a full development workflow. It is for splitting independent domains so they can proceed concurrently.
 
 When you have multiple unrelated failures (different test files, different subsystems, different bugs), investigating them sequentially wastes time. Each investigation is independent and can happen in parallel.
 
@@ -43,6 +45,13 @@ digraph when_to_use {
 - Failures are related (fix one might fix others)
 - Need to understand full system state
 - Agents would interfere with each other
+- You already have a full implementation plan that should be executed end-to-end
+
+## Boundary
+
+Use this skill to break apart independent domains.
+
+Do not treat it as a substitute for `nimbou-skills:executing-plans`, which runs an approved plan directly, or `nimbou-skills:subagent-driven-development`, which executes a plan through one implementer subagent plus structured review gates per task.
 
 ## The Pattern
 
