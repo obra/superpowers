@@ -416,18 +416,28 @@ function renderEvent(event) {
     process.stderr.write(`[codex:exec] ${trunc(event.command || event.cmd || "", 100)}\n`);
     return "exec";
   }
-  if (t === "exec_command_output_delta") return "exec";
+  // Output deltas stream many times per command — render but don't count as a new exec
+  if (t === "exec_command_output_delta") return "stream";
   if (t === "exec_command_end") {
     const code = event.exit_code ?? "?";
     process.stderr.write(`[codex:result] exit=${code} ${trunc(event.aggregated_output || event.output || "", 80)}\n`);
     return "result";
   }
 
-  // v0.124 top-level patch_apply events
+  // v0.124 top-level patch_apply events. Render each lifecycle phase for
+  // visibility, but only count patch_apply_end (or patch_apply_updated) as a
+  // finished edit so trace.edits reflects applied changes, not events.
   if (t === "patch_apply_begin" || t === "patch_apply_updated" || t === "patch_apply_end") {
-    const p = event.path || event.file || (Array.isArray(event.changes) ? event.changes.map(c => c.path).filter(Boolean).join(",") : "?");
-    process.stderr.write(`[codex:edit] ${p}${t === "patch_apply_end" ? " (done)" : ""}\n`);
-    return "edit";
+    const extractPaths = (ev) => {
+      if (ev.path || ev.file) return ev.path || ev.file;
+      if (!Array.isArray(ev.changes)) return null;
+      const joined = ev.changes.map(c => c.path || c.file).filter(Boolean).join(",");
+      return joined || null;
+    };
+    const p = extractPaths(event) || "?";
+    const suffix = t === "patch_apply_end" ? " (done)" : (t === "patch_apply_begin" ? " (begin)" : "");
+    process.stderr.write(`[codex:edit] ${p}${suffix}\n`);
+    return t === "patch_apply_end" ? "edit" : "patch_phase";
   }
 
   // v0.124 top-level MCP tool events

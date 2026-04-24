@@ -78,7 +78,8 @@ should_enrich() {
   # Already rich — skip to save latency (caller supplied their own context)
   local max_chars="${SSPOWER_ENRICH_MAX_CHARS:-2000}"
   [[ "$max_chars" =~ ^[0-9]+$ ]] || max_chars=2000
-  (( ${#USER_PROMPT} > max_chars )) && return 1
+  # Force base-10 so leading-zero values don't trigger bash octal parsing (e.g. 08).
+  (( ${#USER_PROMPT} > 10#$max_chars )) && return 1
 
   # Slash commands
   [[ "$USER_PROMPT" =~ ^/ ]] && return 1
@@ -118,6 +119,8 @@ if should_enrich; then
   # (this one, ~200k input tokens) run ~120s with margin. Override via SSPOWER_ENRICH_TIMEOUT.
   ENRICH_TIMEOUT="${SSPOWER_ENRICH_TIMEOUT:-180}"
   [[ "$ENRICH_TIMEOUT" =~ ^[0-9]+$ ]] || ENRICH_TIMEOUT=180
+  # Strip leading zeros so downstream binaries get a clean decimal.
+  ENRICH_TIMEOUT=$((10#$ENRICH_TIMEOUT))
   # Pick timeout binary: gtimeout (brew coreutils) > timeout > perl alarm fallback.
   # Use argv arrays (no eval) to prevent shell injection via env vars.
   ENRICH_ARGS=(node "$BRIDGE" enrich --prompt "@$TMP_PROMPT" --cd "$CWD" --effort minimal)
