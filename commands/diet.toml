@@ -1,0 +1,2 @@
+description = "Switch diet intensity level (lite/full/ultra/off)"
+prompt = "Switch to diet {{args}} mode. If no level specified, use full. Respond terse — drop articles, filler, pleasantries. Fragments OK. Technical terms exact. Code unchanged. Pattern: [thing] [action] [reason]. [next step]."
