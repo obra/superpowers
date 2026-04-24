@@ -10,6 +10,9 @@
 #
 # Opt-out: start prompt with "raw:" or "noenrich:" to skip enrichment.
 # Disable entirely: export SSPOWER_ENRICH=0 in environment.
+# Tune timeout: export SSPOWER_ENRICH_TIMEOUT=60 (seconds, default 180).
+# Length gate:  export SSPOWER_ENRICH_MAX_CHARS=4000 (default 2000 — prompts
+#               longer than this are assumed to already carry context).
 
 set -euo pipefail
 
@@ -72,6 +75,10 @@ should_enrich() {
   [[ -z "$USER_PROMPT" ]] && return 1
   (( ${#USER_PROMPT} < 20 )) && return 1
 
+  # Already rich — skip to save latency (caller supplied their own context)
+  local max_chars="${SSPOWER_ENRICH_MAX_CHARS:-2000}"
+  (( ${#USER_PROMPT} > max_chars )) && return 1
+
   # Slash commands
   [[ "$USER_PROMPT" =~ ^/ ]] && return 1
 
@@ -105,16 +112,19 @@ if should_enrich; then
   printf '%s' "$USER_PROMPT" > "$TMP_PROMPT"
   trap 'rm -f "$TMP_PROMPT"' EXIT
 
-  # Call bridge with portable timeout. 30s hard cap. Fail-open.
+  # Call bridge with portable timeout. Fail-open on any error.
+  # Default 180s — typical enrichment on medium repos runs 20-90s; large repos
+  # (this one, ~200k input tokens) run ~120s with margin. Override via SSPOWER_ENRICH_TIMEOUT.
+  ENRICH_TIMEOUT="${SSPOWER_ENRICH_TIMEOUT:-180}"
   # Pick timeout binary: gtimeout (brew coreutils) > timeout > perl alarm fallback.
   TIMEOUT_CMD=""
   if command -v gtimeout >/dev/null 2>&1; then
-    TIMEOUT_CMD="gtimeout 30"
+    TIMEOUT_CMD="gtimeout ${ENRICH_TIMEOUT}"
   elif command -v timeout >/dev/null 2>&1; then
-    TIMEOUT_CMD="timeout 30"
+    TIMEOUT_CMD="timeout ${ENRICH_TIMEOUT}"
   else
     # perl-based portable timeout
-    TIMEOUT_CMD="perl -e \"alarm shift; exec @ARGV\" 30"
+    TIMEOUT_CMD="perl -e \"alarm shift; exec @ARGV\" ${ENRICH_TIMEOUT}"
   fi
 
   ENRICHED=""

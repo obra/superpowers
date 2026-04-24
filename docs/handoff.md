@@ -31,15 +31,17 @@ Codex bridge observability + per-prompt enrichment — phase 1 & 2 shipped.
   - Session-id capture now recognizes `event.thread_id` in both the streaming parser and `extractSessionId()` fallback
   - Token counter in `_spawnAndCapture` handles `input_tokens`/`output_tokens` schema
   - Live smoke: real tokens populated (`in=12163 out=60 total=12223 cached=2432`), `_meta.session_id` now set, duration ~6s on trivial review
+- **Hook latency knobs** (addresses Resume item 3) + **end-to-end enrichment verified** (Resume item 2):
+  - Default timeout 30s → **180s** (large repos need ~120-150s under `--effort minimal`). Override via `SSPOWER_ENRICH_TIMEOUT`.
+  - New length gate: prompts >`SSPOWER_ENRICH_MAX_CHARS` (default 2000) skip enrichment — already carry context.
+  - End-to-end smoke on sspower repo: `kind=enriched dur=146s`, 3.4KB stdout containing `[codex-enriched prompt — validated against actual repo]:` block with real file paths + line numbers.
+- `.gitignore`: added `*-workspace/` to cover skill-creator eval output dirs (`codex-enrich-workspace/`, `subagent-driven-development-workspace/`, and future ones).
 
 ### In Progress
-None. Clean tree. Untracked worktree dirs (`skills/codex-enrich-workspace/`, `subagent-driven-development-workspace/`) unrelated to this commit.
+None. Clean tree.
 
 ## Resume Here
-1. **Restart Claude Code session** — UserPromptSubmit hook loads at session start, current session still runs old hook
-2. Try real coding-intent prompt ("fix auth bug in X") → confirm enrichment block appears in context, latency acceptable
-3. If latency painful: consider caching enrichment per-cwd for N seconds, or lower `--effort` further, or skip enrichment when prompt already >N tokens
-4. ~~Investigate event-stream gap~~ — **done** (see Post-handoff additions). Streaming now live on v0.124.0. If Codex bumps schema again, `codex-diagnostics` skill + `[codex:event] item.<unknown>` fallback will surface drift.
+All handoff items shipped. For next session: watch `~/.claude/sspower-codex.log` for real-world `hook.enrich` timings. If `kind=timeout` keeps appearing in big repos, bump `SSPOWER_ENRICH_TIMEOUT` or `SSPOWER_ENRICH=0` that cwd via directory-scoped settings. If `kind=enriched` dominates but duration feels long, experiment with opt-in-only mode (prefix-triggered) rather than auto.
 
 ## Decisions
 - **No log folder** (`.codex-runs/` rejected): user dislikes extra dirs. Rely on stderr streaming only. If background mode ever needed → revisit w/ `~/.claude/codex-runs/`.
