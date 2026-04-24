@@ -1,6 +1,6 @@
 ---
 name: doc-openapi
-description: Use when an approved feature changes or adds an HTTP API contract and frontend/backend work need one canonical transport artifact. Generate or refresh domain-local OpenAPI only after `domain.md` and `.feature` files are approved.
+description: Use when `nestjs-think` has closed a backend-viable HTTP contract and frontend/backend work need one canonical transport artifact. Generate or refresh domain-local OpenAPI after `domain.md`, `.feature` files, and backend contract decisions are approved.
 ---
 
 # Doc OpenAPI
@@ -11,7 +11,7 @@ Create or update `docs/domain/<domain>/openapi.yaml` as the canonical HTTP trans
 
 ## When to Use
 
-Use this from `feat-spec`, `nestjs-think`, and `nuxt-think` when the approved feature adds or changes an HTTP endpoint that frontend and backend both depend on.
+Use this after `nestjs-think` and before `nuxt-think` when the approved feature adds or changes an HTTP endpoint that frontend and backend both depend on.
 
 Do not use this skill for:
 
@@ -26,13 +26,15 @@ Before generating `openapi.yaml`:
 
 1. `docs/domain/<domain>/domain.md` must exist and be approved
 2. the relevant `docs/domain/<domain>/*.feature` files must exist and be approved
-3. the HTTP contract must be traceable to those approved artifacts
+3. the backend-viable HTTP contract must already be closed in `nestjs-think`
+4. the HTTP contract must be traceable to those approved artifacts
 
 ## Output
 
 - `docs/domain/<domain>/openapi.yaml`
 - keep it beside `domain.md` and the `.feature` files
 - treat it as the shared transport contract for backend and frontend planning
+- `nuxt-think` should consume this contract instead of redefining it
 
 ## Rules
 

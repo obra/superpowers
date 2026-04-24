@@ -116,8 +116,8 @@ If a project wants a copied local fallback instead of depending on `/var/www/nim
 ## Notes
 
 - `/design-md` and `/merge-pr` stay as Claude commands, with matching Codex mirrors in `.codex/skills/`.
-- `feat-spec` is the mixed-request entry point. It closes the shared feature contract and ownership boundary first, generates `docs/domain/<domain>/openapi.yaml` when HTTP changes, then routes into `nuxt-think`, `nestjs-think`, or both for platform-specific design closure. Frontend-only requests stay in `nuxt-think`; backend-only requests stay in `nestjs-think`.
-- `doc-openapi` writes the canonical HTTP transport artifact beside `domain.md` and the approved `.feature` files.
+- `feat-spec` is the mixed-request entry point. It closes the shared feature contract and ownership boundary first, then hands backend contract closure to `nestjs-think`. Frontend-only requests stay in `nuxt-think`; backend-only requests stay in `nestjs-think`.
+- `doc-openapi` publishes the canonical HTTP transport artifact beside `domain.md` and the approved `.feature` files after `nestjs-think` and before `nuxt-think`.
 - `nestjs-think` and `nestjs-plan` stay backend-first; `nuxt-think` and `nuxt-plan` cover Nuxt planning.
 - `nestjs-test` handles Gherkin-driven backend coverage, audit routing, and backend test stabilization.
 - `nestjs-debug` handles NestJS, Prisma, and boundary failures across controller, use-case, repository, and transaction layers.

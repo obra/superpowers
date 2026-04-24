@@ -23,14 +23,12 @@ Apply this gate during step 6 of `## Flow`, before considering the design step c
 Before closing design decisions:
 
 1. identify the target domain
-2. use `doc-domain` to create or update `docs/domain/<domain>/domain.md`
-3. use `doc-gherkin` to create or update `docs/domain/<domain>/*.feature`
-4. if the feature adds or changes an HTTP contract, use `doc-openapi` to create or update `docs/domain/<domain>/openapi.yaml`
-5. present the domain, Gherkin, and OpenAPI artifacts for approval
-6. only after approval, invoke `nuxt-plan`
-7. do not advance to `nuxt-plan` with stale domain, Gherkin, or OpenAPI artifacts
-8. if state transitions changed, regenerate the affected `.feature` files before planning
-9. do not do the `domain.md`, `*.feature`, or `openapi.yaml` work inline inside `nuxt-think`; delegate it to the shared spec skills
+2. confirm `docs/domain/<domain>/domain.md` is approved
+3. confirm the relevant `docs/domain/<domain>/*.feature` files are approved
+4. for HTTP features, confirm `docs/domain/<domain>/openapi.yaml` is approved and treat it as the canonical transport contract
+5. only after approval, invoke `nuxt-plan`
+6. do not advance to `nuxt-plan` with stale domain, Gherkin, or OpenAPI artifacts
+7. do not redefine the HTTP contract inside `nuxt-think`; consume the approved `openapi.yaml`
 
 Treat `docs/domain/<domain>/` as the canonical specification bundle for the feature slice. If the request touches multiple independent domains, split them and close one domain at a time.
 
@@ -49,7 +47,7 @@ Treat `docs/domain/<domain>/` as the canonical specification bundle for the feat
    - what responsive layout shifts matter
    - what existing primitives, shells, or local patterns from `DESIGN.md` and `GUIDELINES.md` must be preferred
    - what visual direction should guide the UI so it does not drift into generic output
-7. Produce the structured output below with the generated specification artifacts, present it for approval, and only then hand off to `nuxt-plan`. Do not write code.
+7. Produce the structured output below with explicit references to the approved specification artifacts, present it for approval, and only then hand off to `nuxt-plan`. Do not write code.
 
 Consult `nimbou-skills:nuxt-design-architecture`, the local `GUIDELINES.md`, and the local `DESIGN.md` before proposing component splits. `GUIDELINES.md` owns implementation rules; `DESIGN.md` owns visual rules and wins on visual conflict.
 

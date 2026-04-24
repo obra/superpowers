@@ -23,22 +23,22 @@ Before writing the implementation plan:
 1. identify the target business domain
 2. use `doc-domain` to create or update `docs/domain/<domain>/domain.md`
 3. use `doc-gherkin` to create or update `docs/domain/<domain>/*.feature`
-4. if the feature adds or changes an HTTP contract, use `doc-openapi` to create or update `docs/domain/<domain>/openapi.yaml`
-5. present the domain, Gherkin, and OpenAPI artifacts for approval
-6. do not advance to `nestjs-plan` with stale domain, Gherkin, or OpenAPI artifacts
-7. if state transitions changed, regenerate the affected `.feature` files before planning
-8. do not do the `domain.md`, `*.feature`, or `openapi.yaml` work inline inside `nestjs-think`; delegate it to the shared spec skills
-9. if the request splits into multiple independent domains, split them and close one domain at a time
-10. only after approval, invoke `nestjs-plan`
+4. present the domain and Gherkin artifacts for approval
+5. do not advance with stale domain or Gherkin artifacts
+6. if state transitions changed, regenerate the affected `.feature` files before planning
+7. do not do the `domain.md` or `*.feature` work inline inside `nestjs-think`; delegate it to the shared spec skills
+8. if the request splits into multiple independent domains, split them and close one domain at a time
+9. for HTTP features, close the backend-viable transport contract before handing off to `doc-openapi`
+10. only after `doc-openapi` and `nuxt-think` are approved, invoke `nestjs-plan`
 
-Treat the domain directory as the approved specification bundle for backend planning, route coverage, and later test generation. When HTTP changes, `docs/domain/<domain>/openapi.yaml` is the canonical transport contract inside that bundle.
+Treat the domain directory as the approved specification bundle for backend planning, route coverage, and later test generation. `doc-openapi` publishes the canonical transport contract after this skill closes the backend-viable shape.
 
 **Pronto para planejar**
 
 - `docs/domain/<domain>/domain.md` approved.
 - `docs/domain/<domain>/*.feature` approved.
-- `docs/domain/<domain>/openapi.yaml` approved when the feature changes HTTP.
-- Backend contract, persistence shape, and review constraints are closed.
+- Backend-viable contract, persistence shape, and review constraints are closed.
+- `doc-openapi` is ready to publish `docs/domain/<domain>/openapi.yaml` when the feature changes HTTP.
 
 ## Checklist
 
@@ -60,8 +60,7 @@ digraph nestjs_think {
     "Identify target domain" [shape=box];
     "Use doc-domain" [shape=box];
     "Use doc-gherkin" [shape=box];
-    "Use doc-openapi when HTTP changes" [shape=box];
-    "User approves domain, Gherkin, and OpenAPI?" [shape=diamond];
+    "Close backend-viable transport contract" [shape=box];
     "Domain Specification Gate complete" [shape=box];
     "Explore project context" [shape=box];
     "Ask clarifying questions" [shape=box];
@@ -86,10 +85,8 @@ digraph nestjs_think {
 
     "Identify target domain" -> "Use doc-domain";
     "Use doc-domain" -> "Use doc-gherkin";
-    "Use doc-gherkin" -> "Use doc-openapi when HTTP changes";
-    "Use doc-openapi when HTTP changes" -> "User approves domain, Gherkin, and OpenAPI?";
-    "User approves domain, Gherkin, and OpenAPI?" -> "Use doc-openapi when HTTP changes" [label="no, revise"];
-    "User approves domain, Gherkin, and OpenAPI?" -> "Domain Specification Gate complete" [label="yes"];
+    "Use doc-gherkin" -> "Close backend-viable transport contract";
+    "Close backend-viable transport contract" -> "Domain Specification Gate complete";
     "Domain Specification Gate complete" -> "Explore project context";
 }
 ```
@@ -181,4 +178,8 @@ Wait for approval. If the user requests changes, update the spec and re-run the 
 
 ## Transition
 
-When the design is approved, the ONLY next skill is `nestjs-plan`.
+When the backend design is approved, the next skill is:
+
+- `doc-openapi` for HTTP features
+- `nuxt-think` for frontend design on top of the published contract
+- `nestjs-plan` only after `doc-openapi` and `nuxt-think` are closed when the feature is fullstack
