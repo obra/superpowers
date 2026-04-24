@@ -46,7 +46,7 @@ grep -oE 'kind="?[a-z_]+' "$LOG" | sort | uniq -c | sort -rn | head -10
 
 | Pattern | Likely cause | Patch |
 |---------|-------------|-------|
-| `kind=timeout` repeated | Enrich too slow for 30s cap | Raise `TIMEOUT_CMD` budget in hook or lower `--effort` further |
+| `kind=timeout` repeated | Enrich slower than the cap (default 180s) | Raise `SSPOWER_ENRICH_TIMEOUT`, bump `SSPOWER_ENRICH_MAX_CHARS` so more prompts skip, or set `SSPOWER_ENRICH=0` for that repo |
 | `kind=schema_parse_fail` | Codex returned non-JSON despite schema | Check Codex CLI version; schema-to-model mismatch; add fallback extraction |
 | `kind=bridge_failed rc=1` | Codex CLI error (auth, trust) | Run `node scripts/codex-bridge.mjs setup` — check auth + trusted dir |
 | `kind=empty_output_fallback` | Enrich prompt too weak, Codex returned nothing | Tighten `cmdEnrich` wrap, bump effort |

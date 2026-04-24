@@ -1,5 +1,5 @@
 # Session Handoff
-> Generated: 2026-04-23
+> Generated: 2026-04-23 (rev 2026-04-24: pass-1..3 codex-review hardening + doc alignment)
 
 ## Task
 Codex bridge observability + per-prompt enrichment — phase 1 & 2 shipped.
@@ -36,6 +36,11 @@ Codex bridge observability + per-prompt enrichment — phase 1 & 2 shipped.
   - New length gate: prompts >`SSPOWER_ENRICH_MAX_CHARS` (default 2000) skip enrichment — already carry context.
   - End-to-end smoke on sspower repo: `kind=enriched dur=146s`, 3.4KB stdout containing `[codex-enriched prompt — validated against actual repo]:` block with real file paths + line numbers.
 - `.gitignore`: added `*-workspace/` to cover skill-creator eval output dirs (`codex-enrich-workspace/`, `subagent-driven-development-workspace/`, and future ones).
+- **Codex-review hardening** (three review passes by `codex-bridge.mjs review` on live commits):
+  - `6d28127` — dropped `eval` in hook (shell-injection class via `SSPOWER_ENRICH_TIMEOUT`); validated both env vars as `^[0-9]+$` before arithmetic; added `renderEvent` cases for top-level v0.124 events missing from the wrapped `item.*` path: `exec_command_{begin,output_delta,end}`, `patch_apply_{begin,updated,end}`, `mcp_tool_call_{begin,end}`, `stream_error`, `turn_aborted`. Refreshed stale `gpt-5.4` doc refs (agents/codex-rescue.md, SKILL.md, codex-integration.md) to point at `~/.codex/config.toml`.
+  - `e137a15` — `exec_command_output_delta` now returns non-counted `"stream"` kind (deltas stream per command, don't inflate `trace.execs`). `patch_apply` lifecycle: only `_end` returns `"edit"`; `_begin`/`_updated` return `"patch_phase"`. Empty change-path renders `?`. Forced `10#$var` in hook arithmetic so `08`/`010` don't trigger bash octal parsing.
+  - `f7db4d2` — failed `patch_apply_end` (any of `event.success === false`, `status === "failed"`, non-null `event.error`) renders `(failed)` tag but no longer counts as applied edit.
+- **Model references**: local Codex CLI currently pinned to `gpt-5.5` (was `gpt-5.4` earlier same session). Docs now reference `~/.codex/config.toml` as source of truth instead of hard-coding model names.
 
 ### In Progress
 None. Clean tree.

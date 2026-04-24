@@ -257,7 +257,8 @@ One line per event, append-only, rotated at 1000 lines (keeps last 500).
 - `hook.enrich` — hook-side outcomes (`enriched` / `timeout` / `bridge_failed` / `passthrough_empty`)
 
 **Live event stream** (during runs, stderr):
-- `[codex:session]` / `[codex:agent]` / `[codex:think]` / `[codex:tool]` / `[codex:edit]` / `[codex:exec]` / `[codex:token]` / `[codex:error]` / `[codex:alive]` (30s heartbeat) / `[codex:done]`
+- `[codex:session]` / `[codex:agent]` / `[codex:think]` / `[codex:tool]` / `[codex:result]` / `[codex:exec]` / `[codex:edit]` / `[codex:token]` / `[codex:error]` / `[codex:alive]` (30s heartbeat) / `[codex:done]` / `[codex:event]` (unknown/schema-drift)
+- Requires `codex exec --json`; bridge passes this automatically on CLI v0.124+. Output-delta streams render but don't inflate counters; `patch_apply_end (failed)` renders for visibility but doesn't count as an applied edit.
 
 **Final envelope** (structured JSON, `_meta`):
 ```json
@@ -279,6 +280,13 @@ One line per event, append-only, rotated at 1000 lines (keeps last 500).
 ```
 
 **Diagnose**: say "examine codex log" or invoke the `codex-diagnostics` skill — it groups errors, matches known patterns, and proposes patches.
+
+**Enrichment knobs** (read by `hooks/prompt-submit`):
+- `SSPOWER_ENRICH=0` — disable per-prompt enrichment entirely
+- `SSPOWER_ENRICH_TIMEOUT=<seconds>` — default `180`; large repos (≈200k input tokens) run ~120-150s under `--effort minimal`
+- `SSPOWER_ENRICH_MAX_CHARS=<n>` — default `2000`; prompts longer than this skip enrichment (assumed already context-rich)
+- Opt out one prompt: prefix with `raw:` or `noenrich:`
+- Non-numeric or octal-looking values (`abc`, `08`) fall back to defaults — hook never breaks prompt submission
 
 ---
 
