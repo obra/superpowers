@@ -19,9 +19,9 @@ Skills use Claude Code tool names. When you encounter these in a skill, use your
 
 ## Skill Discovery and Loading
 
-Kimi Code 2.6 has native skill discovery. When Superpowers is installed via the `.kimi/skills/` symlink:
+Kimi Code 2.6 has native skill discovery. When Superpowers is installed:
 
-1. **Auto-discovery**: Kimi Code scans `.kimi/skills/` at startup, parses `SKILL.md` frontmatter, and injects skill names and descriptions into the system prompt.
+1. **Auto-discovery**: Kimi Code scans `~/.config/agents/skills/` at startup, parses `SKILL.md` frontmatter, and injects skill names and descriptions into the system prompt.
 2. **Auto-triggering**: The AI automatically reads skill content when it determines a skill is relevant to the current task.
 3. **Explicit loading**: Use `/skill:<name>` to force-load a skill. Examples:
    - `/skill:using-superpowers`

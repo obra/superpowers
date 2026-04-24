@@ -10,47 +10,30 @@ Complete guide for using Superpowers with [Kimi Code](https://www.moonshot.cn/ki
 git clone https://github.com/obra/superpowers.git ~/.kimi/superpowers
 ```
 
-### 2. Create the skills symlink
+### 2. Run the install script
 
-Kimi Code discovers skills from `~/.kimi/skills/` (user-level) and `.kimi/skills/` (project-level). Link the superpowers skills directory globally.
+The install script copies skills to the cross-compatible `~/.config/agents/skills/` directory and configures a global `SessionStart` hook for bootstrap injection.
 
-Kimi Code scans **direct subdirectories** of `~/.kimi/skills/` for `SKILL.md` files. We junction `~/.kimi/skills/` directly to the repo's `skills/` directory.
-
-> **Note:** This replaces your entire `~/.kimi/skills/` directory. If you have other Kimi skills, back them up first or use `~/.config/agents/skills/` instead.
-
+**macOS / Linux:**
 ```bash
-# macOS / Linux
-rm -rf ~/.kimi/skills
-ln -s ~/.kimi/superpowers/skills ~/.kimi/skills
+~/.kimi/superpowers/.kimi/install.sh
 ```
 
 **Windows (PowerShell):**
 ```powershell
-$skillsDir = "$env:USERPROFILE\.kimi\skills"
-$repoSkills = "$env:USERPROFILE\.kimi\superpowers\skills"
-if (Test-Path $skillsDir) {
-    Remove-Item $skillsDir -Recurse -Force
-}
-cmd /c mklink /J $skillsDir $repoSkills
+& "$env:USERPROFILE\.kimi\superpowers\.kimi\install.ps1"
 ```
 
-### 3. Add the bootstrap to your project(s)
+What the script does:
+- Copies all skills from the repo to `~/.config/agents/skills/` (the recommended, cross-tool skills path)
+- Enables `merge_all_available_skills` in `~/.kimi/config.toml`
+- Adds a `SessionStart` hook that injects the Superpowers bootstrap into every session
 
-Copy the bootstrap into any project where you want Superpowers active:
+> **Note:** No symlinks or junctions are created. Skills are copied so they work reliably across all platforms and filesystems.
 
-```bash
-cp ~/.kimi/superpowers/.kimi/AGENTS.md .kimi/AGENTS.md
-```
+### 3. Verify
 
-**Windows (PowerShell):**
-```powershell
-New-Item -ItemType Directory -Force -Path ".kimi"
-Copy-Item "$env:USERPROFILE\.kimi\superpowers\.kimi\AGENTS.md" ".kimi\AGENTS.md"
-```
-
-### 4. Verify
-
-Start Kimi Code and ask:
+Start Kimi Code in any project directory and ask:
 
 ```
 Tell me about your superpowers
@@ -68,12 +51,14 @@ You should see the skill content load and the agent announce it.
 
 ### Finding Skills
 
-Kimi Code auto-discovers skills at startup. Their names and descriptions are injected into the system prompt automatically.
+Kimi Code auto-discovers skills at startup from `~/.config/agents/skills/`. Their names, paths, and descriptions are injected into the system prompt automatically.
 
-Skills are installed globally at `~/.kimi/skills/` (or `%USERPROFILE%\.kimi\skills\` on Windows):
+The Superpowers bootstrap tells Kimi: **when a skill description matches your current task, you MUST read its full `SKILL.md` automatically before responding.** This ensures skills trigger without explicit user commands.
+
+Skills are installed globally at `~/.config/agents/skills/`:
 
 ```
-~/.kimi/skills/
+~/.config/agents/skills/
   brainstorming/SKILL.md
   writing-plans/SKILL.md
   test-driven-development/SKILL.md
@@ -102,7 +87,7 @@ You can also append a task description:
 
 ### Personal Skills
 
-Create your own skills in `~/.kimi/skills/` (global) or `.kimi/skills/` (project-level):
+Create your own skills in `~/.config/agents/skills/` (global) or `.kimi/skills/` (project-level):
 
 ```bash
 mkdir -p .kimi/skills/my-skill
@@ -125,18 +110,24 @@ Restart Kimi Code to discover new skills.
 
 ## Updating
 
-Pull the latest changes:
+Pull the latest changes and re-run the install script:
 
+**macOS / Linux:**
 ```bash
-git pull https://github.com/obra/superpowers.git main
+~/.kimi/superpowers/.kimi/update.sh
 ```
 
-Skills update instantly through the symlink — no build step or restart required.
+**Windows (PowerShell):**
+```powershell
+& "$env:USERPROFILE\.kimi\superpowers\.kimi\update.ps1"
+```
+
+This re-copies skills from the latest repo state and ensures your hook is up to date.
 
 ## How It Works
 
-1. **Bootstrap injection** via `.kimi/AGENTS.md` — Kimi Code auto-merges `.kimi/AGENTS.md` into the system prompt at session start. This file survives `/init`.
-2. **Skill discovery** — Kimi Code scans `.kimi/skills/` at startup, parses `SKILL.md` frontmatter, and injects skill metadata into the system prompt. The AI reads skill content automatically when relevant.
+1. **Bootstrap injection** via a global `SessionStart` hook — The hook runs at the start of every Kimi Code session and injects the `using-superpowers` skill content plus tool mapping into the conversation context.
+2. **Skill discovery** — Kimi Code scans `~/.config/agents/skills/` at startup, parses `SKILL.md` frontmatter, and injects skill metadata into the system prompt. The AI reads skill content automatically when relevant.
 
 ### Tool Mapping
 
@@ -154,26 +145,44 @@ Skills written for Claude Code are adapted for Kimi Code via the bootstrap:
 | `Task` (subagent) | `Agent` |
 | `WebSearch` | `SearchWeb` |
 | `WebFetch` | `FetchURL` |
-| `Skill` | Auto-discovery + `/skill:<name>` |
+| `Skill` tool | Auto-discovery + `/skill:<name>` |
+
+## Project-Level Bootstrap (Optional)
+
+If you prefer project-level bootstrap instead of (or in addition to) the global hook, copy the bootstrap file into your project:
+
+```bash
+mkdir -p .kimi
+cp ~/.kimi/superpowers/.kimi/AGENTS.md .kimi/AGENTS.md
+```
+
+**Windows (PowerShell):**
+```powershell
+New-Item -ItemType Directory -Force -Path ".kimi"
+Copy-Item "$env:USERPROFILE\.kimi\superpowers\.kimi\AGENTS.md" ".kimi\AGENTS.md"
+```
+
+This file is **not** overwritten by `/init` and is auto-merged into Kimi Code's system prompt at session start.
 
 ## Troubleshooting
 
 ### Bootstrap not appearing
 
-1. Confirm `.kimi/AGENTS.md` exists in the repository
-2. Restart Kimi Code (`.kimi/AGENTS.md` is read at session start)
+1. Confirm the SessionStart hook is in `~/.kimi/config.toml`
+2. Restart Kimi Code (hooks are read at session start)
 3. If using the VS Code extension, run "Developer: Reload Window" from the Command Palette
+4. As a fallback, copy `.kimi/AGENTS.md` into your project directory
 
 ### Skills not showing up
 
-1. Verify the junction: `ls -la ~/.kimi/skills/`
-2. Check skills exist: `ls ~/.kimi/skills/`
+1. Verify skills exist: `ls ~/.config/agents/skills/` or `dir $env:USERPROFILE\.config\agents\skills\`
+2. Check that `merge_all_available_skills = true` is set in `~/.kimi/config.toml`
 3. Restart Kimi Code — skills are discovered at startup
 4. Try `/skill:using-superpowers` to confirm skills are accessible
 
 ### `/init` overwrote root AGENTS.md
 
-This is expected. `/init` only overwrites root `AGENTS.md`; it does not touch `.kimi/AGENTS.md` or the skills symlink. Your Superpowers bootstrap remains active.
+This is expected. `/init` only overwrites root `AGENTS.md`; it does not touch `.kimi/AGENTS.md`, the global SessionStart hook, or your skills installation.
 
 If you want to restore the upstream minimal root `AGENTS.md`:
 

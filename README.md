@@ -103,10 +103,18 @@ gemini extensions update superpowers
 
 ### Kimi Code 2.6
 
-Tell Kimi Code:
+Clone the repo and run the install script:
 
+**macOS / Linux:**
+```bash
+git clone https://github.com/obra/superpowers.git ~/.kimi/superpowers
+~/.kimi/superpowers/.kimi/install.sh
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.kimi/INSTALL.md
+
+**Windows (PowerShell):**
+```powershell
+git clone https://github.com/obra/superpowers.git "$env:USERPROFILE\.kimi\superpowers"
+& "$env:USERPROFILE\.kimi\superpowers\.kimi\install.ps1"
 ```
 
 **Detailed docs:** [docs/README.kimi.md](docs/README.kimi.md)

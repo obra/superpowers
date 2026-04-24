@@ -1,5 +1,5 @@
-# Verify Superpowers Kimi Code installation
-# Run this in your project directory after installing Superpowers
+# Verify Superpowers Kimi Code installation (no-symlink version)
+# Checks skills in ~/.config/agents/skills/ and SessionStart hook in config.toml.
 
 $errors = 0
 
@@ -15,12 +15,25 @@ function Test-PathOrFail {
 
 Write-Host "=== Superpowers Kimi Code Installation Verification ===`n"
 
-# 1. Global skills symlink
-$skillsDir = "$env:USERPROFILE\.kimi\skills"
-Test-PathOrFail -Path $skillsDir -Description "Global skills directory"
+$skillsDir = "$env:USERPROFILE\.config\agents\skills"
+$configFile = "$env:USERPROFILE\.kimi\config.toml"
 
-# 2. Project bootstrap
-Test-PathOrFail -Path ".kimi\AGENTS.md" -Description "Project bootstrap (.kimi/AGENTS.md)"
+# 1. Skills directory exists
+Test-PathOrFail -Path $skillsDir -Description "Global skills directory (~/.config/agents/skills)"
+
+# 2. SessionStart hook configured
+if (Test-Path $configFile) {
+    $configContent = Get-Content $configFile -Raw
+    if ($configContent -match 'event\s*=\s*"SessionStart"') {
+        Write-Host "PASS: SessionStart hook configured in ~/.kimi/config.toml"
+    } else {
+        Write-Error "FAIL: SessionStart hook not found in ~/.kimi/config.toml"
+        $errors++
+    }
+} else {
+    Write-Error "FAIL: ~/.kimi/config.toml not found"
+    $errors++
+}
 
 # 3. Core skills present
 $requiredSkills = @(
@@ -40,20 +53,19 @@ foreach ($skill in $requiredSkills) {
     Test-PathOrFail -Path "$skillsDir\$skill\SKILL.md" -Description "Skill: $skill"
 }
 
-# 4. Bootstrap content check
-$bootstrap = Get-Content ".kimi\AGENTS.md" -Raw
-if ($bootstrap -notmatch "You have superpowers") {
-    Write-Error "FAIL: Bootstrap missing 'You have superpowers' preamble"
-    $errors++
+# 4. merge_all_available_skills enabled
+if ($configContent -match "(?m)^merge_all_available_skills\s*=\s*true") {
+    Write-Host "PASS: merge_all_available_skills enabled"
 } else {
-    Write-Host "PASS: Bootstrap contains superpowers preamble"
+    Write-Error "FAIL: merge_all_available_skills not enabled in ~/.kimi/config.toml"
+    $errors++
 }
 
-if ($bootstrap -notmatch "ReadFile") {
-    Write-Error "FAIL: Bootstrap missing Kimi tool mapping"
-    $errors++
+# 5. Project bootstrap (optional, warn only)
+if (Test-Path ".kimi\AGENTS.md") {
+    Write-Host "INFO: Project-level bootstrap found (.kimi/AGENTS.md) — optional"
 } else {
-    Write-Host "PASS: Bootstrap contains tool mapping"
+    Write-Host "INFO: No project-level bootstrap (.kimi/AGENTS.md) — global hook handles this"
 }
 
 Write-Host "`n===================================="

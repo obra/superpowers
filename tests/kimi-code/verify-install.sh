@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Verify Superpowers Kimi Code installation
-# Run this in your project directory after installing Superpowers
+# Verify Superpowers Kimi Code installation (no-symlink version)
+# Checks skills in ~/.config/agents/skills/ and SessionStart hook in config.toml.
 
 set -euo pipefail
 
@@ -20,13 +20,19 @@ check_path() {
 echo "=== Superpowers Kimi Code Installation Verification ==="
 echo ""
 
-skills_dir="$HOME/.kimi/skills"
+skills_dir="${HOME}/.config/agents/skills"
+config_file="${HOME}/.kimi/config.toml"
 
-# 1. Global skills directory
-check_path "$skills_dir" "Global skills directory"
+# 1. Skills directory exists
+check_path "$skills_dir" "Global skills directory (~/.config/agents/skills)"
 
-# 2. Project bootstrap
-check_path ".kimi/AGENTS.md" "Project bootstrap (.kimi/AGENTS.md)"
+# 2. SessionStart hook configured
+if [ -f "$config_file" ] && grep -q 'event = "SessionStart"' "$config_file" 2>/dev/null; then
+    echo "PASS: SessionStart hook configured in ~/.kimi/config.toml"
+else
+    echo "FAIL: SessionStart hook not found in ~/.kimi/config.toml" >&2
+    ((errors++))
+fi
 
 # 3. Core skills present
 required_skills=(
@@ -46,19 +52,19 @@ for skill in "${required_skills[@]}"; do
     check_path "$skills_dir/$skill/SKILL.md" "Skill: $skill"
 done
 
-# 4. Bootstrap content check
-if grep -q "You have superpowers" ".kimi/AGENTS.md"; then
-    echo "PASS: Bootstrap contains superpowers preamble"
+# 4. merge_all_available_skills enabled
+if [ -f "$config_file" ] && grep -q "^merge_all_available_skills = true" "$config_file" 2>/dev/null; then
+    echo "PASS: merge_all_available_skills enabled"
 else
-    echo "FAIL: Bootstrap missing 'You have superpowers' preamble" >&2
+    echo "FAIL: merge_all_available_skills not enabled in ~/.kimi/config.toml" >&2
     ((errors++))
 fi
 
-if grep -q "ReadFile" ".kimi/AGENTS.md"; then
-    echo "PASS: Bootstrap contains tool mapping"
+# 5. Project bootstrap (optional, warn only)
+if [ -f ".kimi/AGENTS.md" ]; then
+    echo "INFO: Project-level bootstrap found (.kimi/AGENTS.md) — optional"
 else
-    echo "FAIL: Bootstrap missing Kimi tool mapping" >&2
-    ((errors++))
+    echo "INFO: No project-level bootstrap (.kimi/AGENTS.md) — global hook handles this"
 fi
 
 echo ""

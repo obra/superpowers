@@ -28,6 +28,11 @@ Kimi Code auto-discovers skills from `.kimi/skills/` and injects their names and
 - `WebFetch` → `FetchURL`
 - `Skill` tool → Auto-read the skill's `SKILL.md` or use `/skill:<name>`
 
+**How to invoke skills in Kimi Code:**
+Kimi Code auto-discovers skills and lists their names, paths, and descriptions in your system prompt. When a skill's description matches the current task, you MUST read its full SKILL.md file automatically using ReadFile on the path shown in your system prompt BEFORE responding. Do not wait for the user to ask. If you are unsure whether a skill applies, read it anyway — you can discard it if it's not relevant.
+
+Example: If you see "brainstorming: You MUST use this before any creative work..." in your available skills, you MUST immediately use ReadFile to load its full SKILL.md and follow it exactly.
+
 **Red Flags — STOP, you're rationalizing:**
 
 | Thought | Reality |
