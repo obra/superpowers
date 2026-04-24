@@ -267,7 +267,7 @@ Done!
 **Required workflow skills:**
 - **nimbou-skills:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
 - **nimbou-skills:nestjs-plan** - Creates the plan this skill executes
-- **nimbou-skills:requesting-code-review** - Code review template for reviewer subagents
+- **nimbou-skills:request-review** - Code review template for reviewer subagents
 - **nimbou-skills:finishing-a-development-branch** - Complete development after all tasks
 
 **Subagents should use:**

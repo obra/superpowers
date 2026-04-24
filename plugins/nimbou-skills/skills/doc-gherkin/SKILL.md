@@ -1,9 +1,9 @@
 ---
-name: generating-gherkin-specs
+name: doc-gherkin
 description: Generate or refresh domain-local Gherkin files from an approved domain map so planning and test skills can consume the same scenarios.
 ---
 
-# Generating Gherkin Specs
+# Doc Gherkin
 
 ## Purpose
 

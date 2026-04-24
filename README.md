@@ -17,7 +17,10 @@ This fork consolidates:
 
 ### Core workflow skills
 
-- `fullstack-think`
+- `feat-spec`
+- `doc-domain`
+- `doc-gherkin`
+- `doc-openapi`
 - `nestjs-think`
 - `nestjs-plan`
 - `executing-plans`
@@ -27,8 +30,8 @@ This fork consolidates:
 - `e2e-test-quality`
 - `nestjs-debug` backend-first debugging for NestJS/Prisma work
 - `verification-before-completion`
-- `requesting-code-review`
-- `receiving-code-review`
+- `request-review`
+- `apply-review`
 - `using-git-worktrees`
 - `finishing-a-development-branch`
 - `writing-skills`
@@ -50,7 +53,7 @@ This fork consolidates:
 
 - `plugins/nimbou-skills/skills/` — shared skill library
 - `plugins/nimbou-skills/agents/` — auxiliary review and auditing agents
-- `plugins/nimbou-skills/commands/` — Claude command entrypoints such as `/feature-dev`, `/design-md`, and `/merge-pr`
+- `plugins/nimbou-skills/commands/` — Claude command entrypoints such as `/design-md` and `/merge-pr`
 - `~/.codex/skills/` — Codex skill links installed from the shared library and command mirrors
 - `.codex/skills/` — Codex-only mirrors for the Claude command workflows
 - `.agents/plugins/marketplace.json` — repo-scoped Codex marketplace catalog
@@ -112,8 +115,9 @@ If a project wants a copied local fallback instead of depending on `/var/www/nim
 
 ## Notes
 
-- `/feature-dev`, `/design-md`, and `/merge-pr` stay as Claude commands, with matching Codex mirrors in `.codex/skills/`.
-- `fullstack-think` is the mixed-request entry point. It closes the shared specification first, dispatches `nuxt-plan` and `nestjs-plan` in parallel, and reconciles the result before execution. Frontend-only requests stay in `nuxt-think`; backend-only requests stay in `nestjs-think`.
+- `/design-md` and `/merge-pr` stay as Claude commands, with matching Codex mirrors in `.codex/skills/`.
+- `feat-spec` is the mixed-request entry point. It closes the shared feature contract and ownership boundary first, generates `docs/domain/<domain>/openapi.yaml` when HTTP changes, then routes into `nuxt-think`, `nestjs-think`, or both for platform-specific design closure. Frontend-only requests stay in `nuxt-think`; backend-only requests stay in `nestjs-think`.
+- `doc-openapi` writes the canonical HTTP transport artifact beside `domain.md` and the approved `.feature` files.
 - `nestjs-think` and `nestjs-plan` stay backend-first; `nuxt-think` and `nuxt-plan` cover Nuxt planning.
 - `nestjs-test` handles Gherkin-driven backend coverage, audit routing, and backend test stabilization.
 - `nestjs-debug` handles NestJS, Prisma, and boundary failures across controller, use-case, repository, and transaction layers.

@@ -1,9 +1,9 @@
 ---
-name: mapping-domain-states
+name: doc-domain
 description: Map one business domain into NestJS and Prisma local architecture terms, states, transitions, and derived statuses before planning or test generation.
 ---
 
-# Mapping Domain States
+# Doc Domain
 
 ## Purpose
 

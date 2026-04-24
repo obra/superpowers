@@ -60,6 +60,7 @@ test('nuxt think and plan skills explain catalog-aware design and execution topo
     'plugins/nimbou-skills/skills/nuxt-plan/SKILL.md',
     'plugins/nimbou-skills/skills/nuxt-plan/reference/plan-format.md',
     'plugins/nimbou-skills/skills/nuxt-audit/reference/design-md-template.md',
+    'plugins/nimbou-skills/skills/nuxt-audit/reference/guidelines-template.md',
   ]
 
   for (const file of files) {
@@ -74,7 +75,7 @@ test('nuxt think and plan skills explain catalog-aware design and execution topo
   assert.match(think, /tags`, `category`, and `domain/)
   assert.match(think, /## Think Output/)
   assert.match(think, /This skill owns discovery and design closure/i)
-  assert.match(think, /nearest `DESIGN\.MD`/i)
+  assert.match(think, /`DESIGN\.md` and `GUIDELINES\.md`/i)
   assert.match(think, /loading, empty, error, and success states/i)
   assert.match(think, /responsive layout shifts/i)
   assert.match(think, /### Direcao visual/)
@@ -87,7 +88,8 @@ test('nuxt think and plan skills explain catalog-aware design and execution topo
   assert.match(plan, /Do not reopen settled UX, reuse, state, interaction, or responsive decisions/i)
   assert.match(plan, /## Self-Review/)
   assert.match(plan, /## Grupos de Execucao/)
-  assert.match(plan, /DESIGN\.MD/)
+  assert.match(plan, /DESIGN\.md/)
+  assert.match(plan, /GUIDELINES\.md/)
   assert.match(plan, /catalog verification/i)
   assert.match(plan, /validate -> generate/)
   assert.match(plan, /wait for user approval/i)
@@ -95,9 +97,12 @@ test('nuxt think and plan skills explain catalog-aware design and execution topo
 })
 
 test('shared specification skills are shipped with the tree', () => {
-  assert.ok(shippedSkills.includes('mapping-domain-states'))
-  assert.ok(shippedSkills.includes('generating-gherkin-specs'))
-  assert.ok(shippedSkills.includes('fullstack-think'))
+  assert.ok(shippedSkills.includes('doc-domain'))
+  assert.ok(shippedSkills.includes('doc-gherkin'))
+  assert.ok(shippedSkills.includes('doc-openapi'))
+  assert.ok(shippedSkills.includes('feat-spec'))
+  assert.ok(shippedSkills.includes('request-review'))
+  assert.ok(shippedSkills.includes('apply-review'))
 })
 
 test('platform test skills are shipped with the tree', () => {
@@ -140,6 +145,7 @@ test('core and audit skills document their new guardrails', () => {
   const nestjsTestRules = read('plugins/nimbou-skills/skills/nestjs-test/reference/test-conventions.md')
   const nuxtDebug = read('plugins/nimbou-skills/skills/nuxt-debug/SKILL.md')
   const designMdTemplate = read('plugins/nimbou-skills/skills/nuxt-audit/reference/design-md-template.md')
+  const guidelinesTemplate = read('plugins/nimbou-skills/skills/nuxt-audit/reference/guidelines-template.md')
   assert.match(nestjsThink, /^---\nname: nestjs-think/m)
   assert.match(nestjsThink, /NestJS/)
   assert.match(nestjsThink, /Prisma/)
@@ -165,7 +171,7 @@ test('core and audit skills document their new guardrails', () => {
   assert.match(systematic, /request, module, use-case, repository, Prisma flow/i)
   assert.match(nuxtAudit, /^---\nname: nuxt-audit/m)
   assert.match(nuxtAudit, /single frontend review pass/i)
-  assert.match(nuxtAudit, /nearest `DESIGN\.MD`/i)
+  assert.match(nuxtAudit, /nearest `DESIGN\.md` and `GUIDELINES\.md`/i)
   assert.match(nuxtAudit, /Hardening/i)
   assert.match(nuxtAudit, /Performance/i)
   assert.match(nuxtAudit, /Polish/i)
@@ -204,19 +210,21 @@ test('core and audit skills document their new guardrails', () => {
   assert.match(nuxtDebug, /NO FRONTEND FIXES BEFORE LIVE BROWSER EVIDENCE/)
   assert.match(nuxtDebug, /QA inventory/i)
   assert.match(nuxtDebug, /Boundary With `nuxt-test`/)
-  assert.match(designMdTemplate, /Nuxt Frontend DESIGN\.MD Template/)
-  assert.match(designMdTemplate, /Product and Interface Context/)
-  assert.match(designMdTemplate, /Component Architecture/)
-  assert.match(designMdTemplate, /Visual Posture/)
-  assert.match(designMdTemplate, /Hardening Expectations/)
-  assert.match(designMdTemplate, /Audit Expectations/)
+  assert.match(designMdTemplate, /Nuxt Frontend DESIGN\.md Template/)
+  assert.match(designMdTemplate, /version: alpha/)
+  assert.match(designMdTemplate, /## Overview/)
+  assert.match(designMdTemplate, /## Colors/)
+  assert.match(designMdTemplate, /## Components/)
+  assert.match(designMdTemplate, /## Do's and Don'ts/)
+  assert.match(guidelinesTemplate, /Nuxt Frontend GUIDELINES\.md Template/)
+  assert.match(guidelinesTemplate, /## Component Architecture/)
+  assert.match(guidelinesTemplate, /## Hardening Expectations/)
+  assert.match(guidelinesTemplate, /## Audit Expectations/)
 })
 
-test('feature development command and agents describe the guided orchestration workflow', () => {
-  const featureCommand = read('plugins/nimbou-skills/commands/feature-dev.md')
+test('design, merge, and review agents remain scaffolded', () => {
   const designCommand = read('plugins/nimbou-skills/commands/design-md.md')
   const mergeCommand = read('plugins/nimbou-skills/commands/merge-pr.md')
-  const featureSkill = read('.codex/skills/feature-dev/SKILL.md')
   const designSkill = read('.codex/skills/design-md/SKILL.md')
   const mergeSkill = read('.codex/skills/merge-pr/SKILL.md')
   const explorer = read('plugins/nimbou-skills/agents/code-explorer.md')
@@ -225,56 +233,19 @@ test('feature development command and agents describe the guided orchestration w
   const guidelinesAnalyzer = read('plugins/nimbou-skills/agents/guidelines-gap-analyzer.md')
   const e2eAuditor = read('plugins/nimbou-skills/agents/e2e-quality-auditor.md')
 
-  assert.match(featureCommand, /^---\ndescription:/m)
-  assert.match(featureCommand, /backend-only/)
-  assert.match(featureCommand, /frontend-only/)
-  assert.match(featureCommand, /fullstack/)
-  assert.match(featureCommand, /nestjs-think/)
-  assert.match(featureCommand, /nuxt-think/)
-  assert.match(featureCommand, /fullstack-think/)
-  assert.match(featureCommand, /shared contract is closed by `fullstack-think`/i)
-  assert.match(featureCommand, /invoke the `fullstack-think` skill — it closes the shared contract, then invokes `nestjs-plan` followed by `nuxt-plan` sequentially/i)
-  assert.doesNotMatch(
-    featureCommand,
-    /do not start `nuxt-think` when the frontend depends on an unsettled backend contract/i,
-  )
-  assert.doesNotMatch(
-    featureCommand,
-    /fullstack: `nestjs-think`, `nestjs-plan`, `nuxt-think`, `nuxt-plan`/i,
-  )
-  assert.match(featureCommand, /code-explorer/)
-  assert.match(featureCommand, /code-architect/)
-  assert.match(featureCommand, /code-reviewer/)
-  assert.match(featureCommand, /Phase 1: Discovery/)
-  assert.match(featureCommand, /Phase 6: Quality Review/)
-  assert.match(featureSkill, /^---\nname: feature-dev/m)
-  assert.match(featureSkill, /Capture the current user request from the conversation/)
-  assert.match(featureSkill, /nestjs-think/)
-  assert.match(featureSkill, /nuxt-think/)
-  assert.match(featureSkill, /fullstack-think/)
-  assert.match(featureSkill, /shared contract is closed by `fullstack-think`/i)
-  assert.match(featureSkill, /`fullstack-think`, then `nuxt-plan` and `nestjs-plan` in parallel after the shared contract is closed by `fullstack-think`/i)
-  assert.match(featureSkill, /do not dispatch planning until the shared contract is closed by `fullstack-think`/i)
-  assert.doesNotMatch(
-    featureSkill,
-    /do not start `nuxt-think` when the frontend depends on an unsettled backend contract/i,
-  )
-  assert.doesNotMatch(
-    featureSkill,
-    /fullstack: `nestjs-think`, `nestjs-plan`, `nuxt-think`, `nuxt-plan`/i,
-  )
-  assert.match(featureSkill, /Phase 4: Architecture and Design/)
-
   assert.match(designCommand, /^---\ndescription:/m)
-  assert.match(designCommand, /DESIGN\.MD/)
+  assert.match(designCommand, /DESIGN\.md/)
+  assert.match(designCommand, /GUIDELINES\.md/)
   assert.match(designCommand, /monorepo/i)
   assert.match(designCommand, /app root/i)
   assert.match(designCommand, /repository root/i)
   assert.match(designCommand, /design-md-template\.md/i)
+  assert.match(designCommand, /guidelines-template\.md/i)
   assert.match(designCommand, /create or refresh/i)
   assert.match(designSkill, /^---\nname: design-md/m)
   assert.match(designSkill, /Capture the target from the user's request/)
   assert.match(designSkill, /Ask only the missing high-impact design questions/)
+  assert.match(designSkill, /complement it instead of replacing it/i)
 
   assert.match(mergeCommand, /^---\ndescription:/m)
   assert.match(mergeCommand, /Single mode/)

@@ -8,7 +8,7 @@ description: "Use before backend design or implementation work. Drive NestJS, Pr
 Turn backend requests into concrete NestJS-first designs before code changes. This skill is not stack-neutral: default to `NestJS + Prisma + Clean Architecture + SOLID`.
 
 When the request is clearly frontend-first for Nuxt/Vuetify, use `nuxt-think` instead of forcing this workflow.
-Use `fullstack-think` when the request changes both frontend and backend or when the frontend depends on a new backend contract.
+Use `feat-spec` when the request changes both frontend and backend or when the frontend depends on a new backend contract.
 
 <HARD-GATE>
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it.
@@ -21,21 +21,23 @@ Complete this gate before checklist step 1.
 Before writing the implementation plan:
 
 1. identify the target business domain
-2. use `mapping-domain-states` to create or update `docs/domain/<domain>/domain.md`
-3. use `generating-gherkin-specs` to create or update `docs/domain/<domain>/*.feature`
-4. present the domain and Gherkin changes for approval
-5. do not advance to `nestjs-plan` with stale domain or Gherkin artifacts
-6. if state transitions changed, regenerate the affected `.feature` files before planning
-7. do not do the `domain.md` or `*.feature` work inline inside `nestjs-think`; delegate it to the shared spec skills
-8. if the request splits into multiple independent domains, split them and close one domain at a time
-9. only after approval, invoke `nestjs-plan`
+2. use `doc-domain` to create or update `docs/domain/<domain>/domain.md`
+3. use `doc-gherkin` to create or update `docs/domain/<domain>/*.feature`
+4. if the feature adds or changes an HTTP contract, use `doc-openapi` to create or update `docs/domain/<domain>/openapi.yaml`
+5. present the domain, Gherkin, and OpenAPI artifacts for approval
+6. do not advance to `nestjs-plan` with stale domain, Gherkin, or OpenAPI artifacts
+7. if state transitions changed, regenerate the affected `.feature` files before planning
+8. do not do the `domain.md`, `*.feature`, or `openapi.yaml` work inline inside `nestjs-think`; delegate it to the shared spec skills
+9. if the request splits into multiple independent domains, split them and close one domain at a time
+10. only after approval, invoke `nestjs-plan`
 
-Treat the domain directory as the approved contract for backend planning, route coverage, and later test generation.
+Treat the domain directory as the approved specification bundle for backend planning, route coverage, and later test generation. When HTTP changes, `docs/domain/<domain>/openapi.yaml` is the canonical transport contract inside that bundle.
 
 **Pronto para planejar**
 
 - `docs/domain/<domain>/domain.md` approved.
 - `docs/domain/<domain>/*.feature` approved.
+- `docs/domain/<domain>/openapi.yaml` approved when the feature changes HTTP.
 - Backend contract, persistence shape, and review constraints are closed.
 
 ## Checklist
@@ -56,9 +58,10 @@ You MUST create a task for each of these items and complete them in order:
 ```dot
 digraph nestjs_think {
     "Identify target domain" [shape=box];
-    "Use mapping-domain-states" [shape=box];
-    "Use generating-gherkin-specs" [shape=box];
-    "User approves domain and Gherkin?" [shape=diamond];
+    "Use doc-domain" [shape=box];
+    "Use doc-gherkin" [shape=box];
+    "Use doc-openapi when HTTP changes" [shape=box];
+    "User approves domain, Gherkin, and OpenAPI?" [shape=diamond];
     "Domain Specification Gate complete" [shape=box];
     "Explore project context" [shape=box];
     "Ask clarifying questions" [shape=box];
@@ -81,11 +84,12 @@ digraph nestjs_think {
     "User reviews spec?" -> "Write design doc" [label="changes requested"];
     "User reviews spec?" -> "Invoke nestjs-plan" [label="approved"];
 
-    "Identify target domain" -> "Use mapping-domain-states";
-    "Use mapping-domain-states" -> "Use generating-gherkin-specs";
-    "Use generating-gherkin-specs" -> "User approves domain and Gherkin?";
-    "User approves domain and Gherkin?" -> "Use generating-gherkin-specs" [label="no, revise"];
-    "User approves domain and Gherkin?" -> "Domain Specification Gate complete" [label="yes"];
+    "Identify target domain" -> "Use doc-domain";
+    "Use doc-domain" -> "Use doc-gherkin";
+    "Use doc-gherkin" -> "Use doc-openapi when HTTP changes";
+    "Use doc-openapi when HTTP changes" -> "User approves domain, Gherkin, and OpenAPI?";
+    "User approves domain, Gherkin, and OpenAPI?" -> "Use doc-openapi when HTTP changes" [label="no, revise"];
+    "User approves domain, Gherkin, and OpenAPI?" -> "Domain Specification Gate complete" [label="yes"];
     "Domain Specification Gate complete" -> "Explore project context";
 }
 ```
