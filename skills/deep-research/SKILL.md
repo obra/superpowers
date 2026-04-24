@@ -100,10 +100,55 @@ Which pattern fits our use case and why.
 - Configuration gotchas
 - Common pitfalls
 
+### Architecture Defaults Resolved
+(Include this section only if brainstorming matched an architecture profile — see step 6 below.)
+
+| Tool | Latest | Status | Notes |
+|---|---|---|---|
+| astro | 6.1.9 | ✅ | Recommended for content sites |
+| next.js | 16.2.4 | ✅ | App Router standard |
+
 ### Sources
 - [Source 1]: What it confirmed
 - [Source 2]: What it confirmed
 ```
+
+### 6. Resolve Architecture Defaults (conditional sub-step)
+
+**Runs only when brainstorming matched an architecture profile** (stored as a session identifier in the spec's Architecture section or as a `profile_id` field).
+
+For each tool listed in the profile's `stack`:
+
+1. Query current latest stable version (npm registry / upstream docs).
+2. Check deprecation / replacement status.
+3. One-line sanity check on "still recommended for <use case>".
+4. Classify:
+   - **✅ Current & recommended** — latest version noted, no user action required.
+   - **🚫 Deprecated / replaced** — EOL or strongly superseded; name the replacement.
+
+**Dispatch in parallel** — each tool is independent. Use general-purpose subagents for batches.
+
+**Minor-version drift** (e.g., 1.58 → 1.59) is NOT a classification — it's just the current latest. Only deprecations block.
+
+**Populate the "Architecture Defaults Resolved" table** in the research brief (above) with one row per tool in the profile's `stack`.
+
+**Blocking behavior:** if any 🚫 shows up, pause research and prompt:
+
+> "Your default stack has a deprecated tool:
+> - 🚫 `<tool>`: <reason> — suggested replacement: `<replacement>`
+>
+> Options:
+> 1. Update `~/.claude/ultrapowers-architecture-defaults.json` to replace it (I'll show the diff first).
+> 2. Use the replacement for this project only (creates `<repo>/.claude/ultrapowers-architecture-defaults.json` as an override).
+> 3. Stick with current defaults and proceed anyway."
+
+On option 1, read the user-level file, swap the deprecated tool for the replacement in the matching profile's `stack`, show a diff, and write only after user confirms `apply`.
+
+On option 2, generate the repo-level override file with just the affected profile + replacement.
+
+On option 3, note the deprecation in the research brief and proceed.
+
+**Failure mode:** if a per-tool resolution query fails (timeout, no source available), mark that row as `"unable to verify"` in the table and proceed. Don't block the research step on sub-step failures.
 
 ## Red Flags
 

@@ -117,11 +117,34 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - Steps that describe what to do without showing how (code blocks required for code steps)
 - References to types, functions, or methods not defined in any task
 
+## Annotating Tasks with Skill Pointers
+
+When the upstream `skills-audit` output includes a "Skills to Reference in Plan" list:
+
+1. Include the full list in the plan's header (under a "Skills referenced during implementation:" subheading).
+2. For each task, identify which of those skills apply (match against files touched, languages used, concerns involved).
+3. Prepend applicable skills to the task body as `@<skill-name>` pointers, one per line. Examples:
+
+   ```
+   ### Task 3: Add Clerk auth middleware
+
+   @ultrapowers-dev:nextjs-patterns
+   @clerk-nextjs-patterns
+
+   **Files:**
+   - Modify: ...
+   ```
+
+4. Do not sprinkle pointers gratuitously — only on tasks where the skill materially shapes the implementation. A task that just writes a JSON file doesn't need every language skill appended.
+5. If skills-audit did not produce a list (or the project has no sibling-pack skills), skip annotation entirely. No placeholder `@nothing` pointers.
+
+The implementation skill (`subagent-driven-development` or `executing-plans`) reads these annotations when dispatching per-task subagents, ensuring they invoke the right skills.
+
 ## Remember
 - Exact file paths always
 - Complete code in every step — if a step changes code, show the code
 - Exact commands with expected output
-- Reference relevant skills with @ syntax
+- Reference relevant skills with @ syntax (see Annotating Tasks above)
 - DRY, YAGNI, TDD
 - **Commit steps are conditional** — include them in the plan but mark them as "only if auto-commit enabled". If the user chose manual commits, skip commit steps during execution.
 - **NEVER include design docs in commit steps** — design docs are local only

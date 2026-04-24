@@ -106,7 +106,11 @@ Not every project needs every category. Use the spec to determine which are rele
 
 ### Checking installed skills
 
-Many category skills may already be installed as plugins. Check the available skills list in the current session. Mark installed ones as **External** — they don't need to be created, just referenced in the plan.
+Many category skills may already be installed as plugins. Check the available-skills list in the current session (injected as `<system-reminder>`). Mark installed ones as **External** — they don't need to be created, just referenced in the plan.
+
+**Sibling-pack prefixes are always External.** Any skill whose name starts with `ultrapowers-dev:` or `ultrapowers-business:` is part of a sibling plugin and is classified **External** without further investigation. If a matched profile from brainstorming provided a pre-populated `skills` list, seed the External set from that list before scanning domain competencies — this avoids re-deriving skills the profile already resolved.
+
+When a base-plugin skill and a sibling-pack skill both cover the same concern, **prefer the sibling-pack version** (it's more specialized). Example: prefer `ultrapowers-dev:testing-tdd` over a less-specific reference.
 
 ## Domain Competencies
 
