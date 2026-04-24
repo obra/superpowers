@@ -23,6 +23,7 @@ This fork consolidates:
 - `doc-openapi`
 - `nestjs-think`
 - `nestjs-plan`
+- `nestjs-refactor`
 - `executing-plans`
 - `subagent-driven-development`
 - `dispatching-parallel-agents`
@@ -38,6 +39,7 @@ This fork consolidates:
 
 ### NestJS-specific skills
 
+- `nestjs-refactor`
 - `nestjs-test`
 
 ### Nuxt-specific skills
@@ -122,6 +124,7 @@ If a project wants a copied local fallback instead of depending on `/var/www/nim
 - `nestjs-think` keeps backend contract and persistence viability together, including Prisma/schema impact when relevant, instead of splitting data modeling into a separate default step.
 - `doc-openapi` publishes the canonical HTTP transport artifact beside `domain.md` and the approved `.feature` files after `nestjs-think` and before `nuxt-think`.
 - `nestjs-think` and `nestjs-plan` stay backend-first; `nuxt-think` and `nuxt-plan` cover Nuxt planning.
+- `nestjs-refactor` is the structural cleanup workflow for existing NestJS backends that need SOLID and Clean Architecture restoration in bounded batches.
 - `nestjs-test` handles Gherkin-driven backend coverage, audit routing, and backend test stabilization.
 - `nestjs-debug` handles NestJS, Prisma, and boundary failures across controller, use-case, repository, and transaction layers.
 - `nuxt-debug` is the Codex browser-debugging flow; `nuxt-test` turns the result into bounded coverage.

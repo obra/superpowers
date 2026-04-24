@@ -20,6 +20,7 @@ test('skills tree ships the unified skill set directly', () => {
   assert.equal(existsSync(skillsRoot), true)
   assert.ok(shippedSkills.includes('nestjs-think'))
   assert.ok(shippedSkills.includes('nestjs-plan'))
+  assert.ok(shippedSkills.includes('nestjs-refactor'))
   assert.ok(shippedSkills.includes('executing-plans'))
   assert.ok(shippedSkills.includes('e2e-test-quality'))
   assert.ok(shippedSkills.includes('feat-spec'))
@@ -73,6 +74,8 @@ test('command and agent scaffolds exist for design, merge, and review workflows'
     'plugins/nimbou-skills/agents/code-reviewer.md',
     'plugins/nimbou-skills/agents/guidelines-gap-analyzer.md',
     'plugins/nimbou-skills/agents/e2e-quality-auditor.md',
+    'plugins/nimbou-skills/agents/nestjs-boundary-refactorer.md',
+    'plugins/nimbou-skills/agents/prisma-boundary-refactorer.md',
     'plugins/nimbou-skills/skills/nuxt-audit/reference/design-md-template.md',
     'plugins/nimbou-skills/skills/nuxt-audit/reference/guidelines-template.md',
   ]
@@ -198,6 +201,44 @@ test('platform test skills consume approved Gherkin and route backend audits', (
   assert.match(nestjsRules, /nestjs-debug/i)
 })
 
+test('nestjs-refactor defines bounded backend refactor orchestration and agent ownership', () => {
+  const skillFile = 'plugins/nimbou-skills/skills/nestjs-refactor/SKILL.md'
+  const boundaryAgentFile = 'plugins/nimbou-skills/agents/nestjs-boundary-refactorer.md'
+  const prismaAgentFile = 'plugins/nimbou-skills/agents/prisma-boundary-refactorer.md'
+
+  for (const file of [skillFile, boundaryAgentFile, prismaAgentFile]) {
+    assert.equal(existsSync(resolve(root, file)), true, `${file} should exist`)
+  }
+
+  const skill = read(skillFile)
+  const boundaryAgent = read(boundaryAgentFile)
+  const prismaAgent = read(prismaAgentFile)
+
+  assert.match(skill, /^---\nname: nestjs-refactor/m)
+  assert.match(skill, /restore SOLID and Clean Architecture boundaries/i)
+  assert.match(skill, /Stabilize behavior first\. Refactor structure second\./i)
+  assert.match(skill, /docs\/plans\/YYYY-MM-DD-<topic>-refactor\.md/i)
+  assert.match(skill, /`nestjs-boundary-refactorer`/i)
+  assert.match(skill, /`prisma-boundary-refactorer`/i)
+  assert.match(skill, /Dispatch agents in parallel only when they have different bounded slices and disjoint write sets/i)
+  assert.match(skill, /if the refactor is within one module, run the batches sequentially/i)
+  assert.match(skill, /use `nestjs-debug`/i)
+  assert.match(skill, /use `nestjs-think`/i)
+  assert.match(skill, /use `nestjs-test`/i)
+
+  assert.match(boundaryAgent, /^---\nname: 'nestjs-boundary-refactorer'/m)
+  assert.match(boundaryAgent, /controllers stay thin/i)
+  assert.match(boundaryAgent, /You are not alone in the codebase/i)
+  assert.match(boundaryAgent, /Prisma schema changes/i)
+  assert.match(boundaryAgent, /application-layer interfaces such as repository contracts/i)
+
+  assert.match(prismaAgent, /^---\nname: 'prisma-boundary-refactorer'/m)
+  assert.match(prismaAgent, /Prisma remains an infrastructure concern/i)
+  assert.match(prismaAgent, /You are not alone in the codebase/i)
+  assert.match(prismaAgent, /repository integration tests and persistence fixtures/i)
+  assert.match(prismaAgent, /controller or DTO refactors/i)
+})
+
 test('README documents backend-first core and prefixed NestJS and Nuxt skills', () => {
   const readme = readFileSync(resolve(root, 'README.md'), 'utf8')
   const install = readFileSync(resolve(root, 'install.sh'), 'utf8')
@@ -214,6 +255,7 @@ test('README documents backend-first core and prefixed NestJS and Nuxt skills', 
   assert.match(readme, /doc-domain/)
   assert.match(readme, /doc-gherkin/)
   assert.match(readme, /doc-openapi/)
+  assert.match(readme, /nestjs-refactor/)
   assert.match(readme, /request-review/)
   assert.match(readme, /apply-review/)
   assert.match(
