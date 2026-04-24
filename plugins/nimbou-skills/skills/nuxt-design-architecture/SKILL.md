@@ -32,6 +32,8 @@ Esta skill é a fonte genérica. O `GUIDELINES.md` do projeto vence em conflito 
 
 O **Working Model** (visual thesis, content plan, interaction thesis) precisa estar escrito — ver `nuxt-design-composition`. Decisão de arquitetura sem content plan tende a quebrar nos próximos dois commits.
 
+Antes de propor uma nova estrutura, verifique se o projeto já tem `GUIDELINES.md` com wrappers, primitives, naming, state patterns, extraction heuristics, ou anti-padrões locais. Quando existir, ele vence sobre esta skill.
+
 ## Component Tiers
 
 | Tier                   | Dono de                                            | Exemplos                                            | Location típica                           |
@@ -118,6 +120,15 @@ Se uma função responde "faz X **e** Y", parta em duas.
 Não use store para uma única interação parent-child.
 Não use `provide` como atalho para evitar pensar na API de props.
 
+## Localidade de estado
+
+O estado deve viver no nível mais baixo que ainda atende todos os consumidores.
+
+- Se só um child precisa decidir e salvar algo local, o child é dono.
+- Se a page só orquestra rota, fetch inicial, tabs e ações de recurso, não empilhe handlers filho-only nela.
+- Se duas views ou regiões compartilham a mesma lógica stateful, extraia um composable antes de pensar em store.
+- Store é para estado cross-route, cross-tree, ou persistente na navegação.
+
 ## Composable vs util vs config vs plugin
 
 | Qual usar quando... | Sinais                                                                                           |
@@ -139,6 +150,12 @@ Erros comuns:
 - **Domain component resolve internamente**: não bounce-back de toda ação. Emite só quando o parent é **realmente** dono da próxima decisão (ex: navegação entre rotas, mutação que afeta outras árvores).
 
 Teste rápido: se a page tem 20 handlers onde 15 só repassam pra outro filho, 15 estão no lugar errado.
+
+## Reuso antes de invenção
+
+- Antes de criar shell local para form, card, section, data table, dialog, empty state, filter bar, ou picker de entidade, procure wrappers e primitives já consolidados no projeto.
+- Se o projeto já tem autocomplete ou picker específico para uma entidade, reutilize isso antes de montar `v-autocomplete` com fetch manual.
+- Se o projeto já define grid/shell padrão de formulário, não reintroduza layout local equivalente só porque o markup parece curto.
 
 ## Testabilidade como critério
 
@@ -173,6 +190,9 @@ Sinais concretos:
 - **Page-god**: page com 300+ linhas orquestrando tudo. Extraia seções para domain components.
 - **Prop drilling evitando inject**: 4 níveis passando a mesma prop quando um `provide` regional resolveria.
 - **`defineExpose` generalizado**: expor métodos internos como API. Prefira v-model, slots ou composable compartilhado.
+- **Shell local duplicado**: recriar form shells, detail wrappers, empty states, ou dialogs que o projeto já consolidou.
+- **Fetch espelhado**: page e composable buscando a mesma coisa sem ownership claro.
+- **Parent proxy**: parent recebe evento só para chamar handler que o child poderia resolver sozinho.
 
 ## Contrato com skills e artefatos
 

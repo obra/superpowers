@@ -46,6 +46,17 @@ Use Task tool with `nimbou-skills:code-reviewer`, fill template at `code-reviewe
 - Note Minor issues for later
 - Push back if reviewer is wrong (with reasoning)
 
+## Guideline-Aware Review Focus
+
+When the target project has a relevant local `GUIDELINES.md`, include its constraints in the review context instead of asking for a generic code-quality pass.
+
+High-value checks to include when relevant:
+
+- Frontend: ignored local primitive or wrapper, rebuilt shell locally, duplicated fetch ownership, store introduced for simple parent-child communication, missing loading/empty/error handling, local style drift from required tokens or preprocessors
+- Backend: Prisma leaking outside infrastructure, repository doing orchestration or domain logic, chatty endpoint where a chunky/batch contract fits, per-id validation loops instead of batch lookup, full-form payloads sent to partial update endpoints, schema evolution without expand-migrate-contract thinking
+
+If the work is scoped to one flow, route, or module, ask the reviewer to stay bounded to that slice instead of broad cleanup advice.
+
 ## Example
 
 ```

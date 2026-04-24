@@ -42,3 +42,6 @@ Do not use this skill as the default runtime investigation workflow. Use `nestjs
 - choose one module or persistence slice at a time
 - keep HTTP and Prisma confidence explicit instead of mixing them implicitly
 - use the existing backend audit agents as internal execution tools, not as user-facing skills
+- keep stable fixtures in `beforeAll` when tests do not mutate them, and keep `beforeEach` cleanup surgical
+- extract helpers only after real duplication appears, not preemptively
+- helpers may simplify mechanics, but they must not hide the domain state the test is supposed to prove

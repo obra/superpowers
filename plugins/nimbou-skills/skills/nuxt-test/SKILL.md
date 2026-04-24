@@ -40,7 +40,9 @@ When `docs/domain/<domain>/*.feature` exists and is approved, treat it as the ca
 3. Build a small QA checklist for that flow:
    - critical happy path
    - at least one meaningful non-happy-path state
+   - the meaningful loading, empty, error, or success feedback that the route should expose
    - controls and text that prove the flow worked
+   - whether keyboard navigation or focus behavior is part of the user-visible claim
    - whether any visual claim actually matters
 4. Diagnose whether each failure belongs to the test, the frontend, the environment/setup, or more than one of these.
 5. Fix selectors and waits first when the bug is test-side.
@@ -55,6 +57,7 @@ When `docs/domain/<domain>/*.feature` exists and is approved, treat it as the ca
 - Keep viewport or visual assertions only when the claim is visual or the bug was visual.
 - Keep frontend edits minimal, but allow small hooks when they create a stable contract the UI otherwise lacks.
 - Do not turn a module-bounded update into a suite-wide cleanup pass.
+- Prefer observable inline feedback, empty states, and explicit form semantics over implementation-detail assertions.
 
 ## Stable Observable Contracts
 

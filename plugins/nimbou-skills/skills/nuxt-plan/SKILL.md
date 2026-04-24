@@ -47,6 +47,9 @@ Before writing tasks, map the file structure and responsibility of each file.
   - tests and catalog verification
 - Treat reuse decisions from `nuxt-think` as inputs. Do not re-decide them here.
 - Treat the relevant `DESIGN.md` and `GUIDELINES.md` rules as constraints. Do not reopen them here unless they contradict the approved `nuxt-think` output.
+- Make state ownership explicit: what stays in the page, what moves into child components, what belongs in a composable, and what truly justifies a store.
+- Prefer the target project's existing wrappers and primitives for forms, tables, dialogs, empty states, filters, and entity pickers before planning feature-local equivalents.
+- Make hardening explicit in the file map when the feature has meaningful loading, empty, error, success, autosave, overflow, or responsive states.
 - If the current structure is muddy, plan the smallest refactor that restores clear ownership.
 
 This file map drives the execution groups.
@@ -61,6 +64,7 @@ This file map drives the execution groups.
 - Make dependency order explicit when a page depends on shared components, composables, or contracts.
 - Keep page integration, catalog verification, and test suggestions at the end.
 - Make the handoff between page, components, and composables explicit.
+- Call out any local anti-pattern avoidance that the execution must preserve, such as not duplicating fetch ownership between page and composable or not introducing store state for simple parent-child communication.
 - If the plan is better expressed as execution groups with dependencies, use `## Grupos de Execucao` so `executing-plans` can run in group mode.
 
 ## Response Shape
@@ -113,7 +117,8 @@ After writing the complete plan, check:
 2. **Topology clarity:** exact file ownership and dependency order are explicit
 3. **Execution clarity:** parallel versus serial groups are justified by dependencies
 4. **Boundary clarity:** page, component, and composable responsibilities are clear
-5. **Verification clarity:** catalog verification and test suggestions still appear at the end
+5. **Guideline clarity:** local wrapper reuse, state locality, and hardening obligations are represented where relevant
+6. **Verification clarity:** catalog verification and test suggestions still appear at the end
 
 Fix issues inline before handing off the plan.
 

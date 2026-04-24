@@ -16,6 +16,8 @@ Assume the engineer is competent but does not know the domain, layering rules, o
 **Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
 - User preferences override this default.
 
+When the target backend has a relevant `GUIDELINES.md`, consume it as a constraint source before writing the plan. Default to the nearest app-level or module-level file and let a closer file override a broader one.
+
 ## Scope Check
 
 If the approved spec still covers multiple independent subsystems, split it before writing the plan. Each plan should produce working, testable software on its own.
@@ -31,6 +33,7 @@ Before writing tasks, map the file structure and responsibility of each file.
   - domain contracts or policies
   - infrastructure adapters and Prisma repositories
   - tests per boundary
+- Make migration sequencing explicit when schema, persistence semantics, or shared contracts change.
 - Keep Prisma outside controllers and use-cases unless the existing codebase already violates this and the plan includes the cleanup.
 - In existing codebases, follow established patterns when they are sound. If the current structure is muddy, plan the smallest refactor that restores a clean boundary.
 
@@ -148,6 +151,9 @@ These are plan failures:
 - If the request is HTTP-facing, include controller, DTO, guard, filter or interceptor, and route-level verification tasks.
 - If the request is persistence-heavy, include repository contracts, Prisma adapters, fixture strategy, and integration-test tasks.
 - If the request spans both, make dependency direction explicit so application logic does not depend on Prisma or NestJS transport details.
+- If arrays of identifiers or related entities are validated, plan `findByIds`-style repository support and batch assertions instead of per-id loops.
+- If update endpoints are partial by contract, plan DTO, test, and repository work so only changed fields are sent and handled.
+- If a lint or static rule enforces Prisma boundaries, include the exact verification command near the end.
 - If the plan is better expressed as execution groups with dependencies, include `## Grupos de Execucao` so `executing-plans` can run in group mode.
 
 ## Remember
@@ -166,7 +172,9 @@ After writing the complete plan, check:
 2. **Placeholder scan:** no red-flag placeholders remain
 3. **Type consistency:** later tasks use the same names and signatures defined earlier
 4. **Boundary consistency:** controllers stay thin, use-cases stay framework-light, Prisma stays in infrastructure tasks
-5. **Test coverage:** the plan proves behavior at HTTP, application, and persistence levels when relevant
+5. **Migration consistency:** schema-impacting work has ordered expand, migrate, and contract steps when relevant
+6. **Contract efficiency:** chatty endpoints, per-id validation loops, and full-payload updates are not planned by accident
+7. **Test coverage:** the plan proves behavior at HTTP, application, and persistence levels when relevant
 
 Fix issues inline before handing off the plan.
 

@@ -40,13 +40,20 @@ Treat `docs/domain/<domain>/` as the canonical specification bundle for the feat
 4. Search for reusable components by `tags`, `category`, and `domain`. Use `useWhen` only when the rich catalog includes it.
 5. Ask focused follow-up questions only when the request still has material ambiguity.
 6. Close the design decisions that matter for implementation:
+   - what product context affects the implementation posture, such as dense data, keyboard-heavy use, responsive priority, or long-session workflows
    - what screen, route, modal, or dashboard slice owns the work
    - which existing components are reused versus newly created
+   - whether the target project already has local wrappers or primitives for forms, tables, dialogs, filters, empty states, feedback, or entity autocompletes that should be preferred over local markup
+   - where state should live by locality: child, page, subtree composable, or app-wide store
+   - whether communication should use props/emits, `defineModel`, `provide`/`inject`, or Pinia
    - what loading, empty, error, and success states must exist
+   - what inline feedback or autosave behavior must be observable when the flow edits data in place
    - what user interactions change navigation, filtering, or local state
    - what responsive layout shifts matter
+   - what performance constraints matter, such as avoiding duplicated fetch ownership between page and composable or avoiding mirrored watchers
    - what existing primitives, shells, or local patterns from `DESIGN.md` and `GUIDELINES.md` must be preferred
    - what visual direction should guide the UI so it does not drift into generic output
+   - what local anti-patterns must be avoided, such as rebuilding an existing shell locally, creating a store for simple parent-child communication, or pushing child-only handlers up into the page
 7. Produce the structured output below with explicit references to the approved specification artifacts, present it for approval, and only then hand off to `nuxt-plan`. Do not write code.
 
 Consult `nimbou-skills:nuxt-design-architecture`, the local `GUIDELINES.md`, and the local `DESIGN.md` before proposing component splits. `GUIDELINES.md` owns implementation rules; `DESIGN.md` owns visual rules and wins on visual conflict.
@@ -72,6 +79,8 @@ Describe the requested page, flow, or component in one sentence.
 ### Decisoes tomadas
 
 - Split the header and sidebar because the concerns and reuse surface are different.
+- Keep state at the lowest level that serves all consumers; do not invent a store when props/emits or a local composable already solve it.
+- Reuse local wrappers for forms, tables, dialogs, empty states, and entity selection before creating equivalent feature-local markup.
 
 ### Direcao visual
 
@@ -85,12 +94,14 @@ Describe the requested page, flow, or component in one sentence.
 - Loading: show skeletons in the main content area.
 - Empty: show a neutral empty state when no records exist.
 - Error: show inline retry feedback near the failing block.
+- Success: prefer inline confirmation when the action is local and obvious; avoid redundant toast noise when the UI already proves success.
 - Interaction: sidebar actions trigger navigation and local refresh only.
 
 ### Responsividade
 
 - Collapse the sidebar below tablet width.
 - Preserve the header summary above the content stack on mobile.
+- Preserve scanability for dense or tabular flows before optimizing decorative layout moves.
 
 ### Pronto para planejar
 

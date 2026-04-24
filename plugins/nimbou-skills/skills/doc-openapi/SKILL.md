@@ -42,6 +42,9 @@ Before generating `openapi.yaml`:
 - generate only HTTP transport contracts
 - reflect approved domain states and approved Gherkin behavior; do not invent transport behavior
 - include paths, methods, params, request body, success responses, error responses, and auth expectations when relevant
+- preserve approved batch operations instead of decomposing them into multiple chatty endpoints
+- preserve approved partial update semantics when the contract is intentionally minimal-payload
+- include error response shapes that make batch validation failures and missing identifiers explicit when relevant
 - include only the minimum schemas needed for the approved feature slice
 - keep examples compact and illustrative
 - do not include controller names, class names, Prisma models, SQL details, or framework wiring

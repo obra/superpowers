@@ -12,6 +12,8 @@ This skill owns backend coherence end to end at the design level: use-cases, tra
 When the request is clearly frontend-first for Nuxt/Vuetify, use `nuxt-think` instead of forcing this workflow.
 Use `feat-spec` when the request changes both frontend and backend or when the frontend depends on a new backend contract.
 
+Before closing backend design decisions, locate the nearest backend `GUIDELINES.md` in the target project when one exists. Start from the likely owning module or app, walk upward, and treat the closest file as the primary local implementation source. If none exists, continue with this skill as the fallback baseline.
+
 <HARD-GATE>
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it.
 </HARD-GATE>
@@ -97,6 +99,7 @@ digraph nestjs_think {
 ## Understanding the Request
 
 - Check the current project state first: modules, controllers, DTOs, use-cases, repositories, Prisma schema, test suites, and recent commits.
+- Extract any local backend rules from the nearest `GUIDELINES.md` before proposing the final shape. Focus on migration strategy, Prisma boundaries, repository responsibilities, API granularity, and test discipline.
 - If the request describes multiple independent subsystems, decompose it before refining details. Each subsystem should get its own spec and later its own implementation plan.
 - Ask one question per message. Prefer multiple choice when it keeps the answer precise.
 - Focus on:
@@ -112,9 +115,12 @@ digraph nestjs_think {
 - Propose 2-3 backend approaches with trade-offs.
 - Lead with your recommendation and explain why.
 - Explicitly discuss:
+  - migration shape and rollback posture when schema or persistence behavior changes
   - module boundaries
   - dependency direction
+  - whether the public contract should be chunky or batch-oriented instead of chatty
   - repository and use-case responsibilities
+  - whether update flows should be partial/minimal payload or full replacement, and why
   - where Prisma belongs and where it must not leak
   - whether the approved backend contract is actually supportable by the intended persistence strategy
   - how SOLID influences the design
@@ -130,6 +136,9 @@ Cover, when relevant:
 - repository contracts and Prisma adapters
 - transaction boundaries and error mapping
 - schema impact, constraints, and persistence risks that could force contract changes
+- migration phases when contract or schema evolution is not atomic
+- batch validation strategy when arrays of identifiers or related entities are involved
+- payload granularity expectations for update endpoints
 - test strategy across HTTP, application, and persistence layers
 
 Ask after each section whether it looks right so far. If something is wrong or vague, revise before moving on.
@@ -139,6 +148,10 @@ Ask after each section whether it looks right so far. If something is wrong or v
 - Break the system into units with one clear purpose and explicit interfaces.
 - Keep framework concerns, application logic, domain policies, and infrastructure separate.
 - Treat Prisma as infrastructure. Repositories and adapters own persistence details.
+- Prefer small, reversible changes and explicit expand-migrate-contract strategies over all-at-once rewrites when persistence shape changes.
+- Prefer chunky contracts over chatty ones when the use case naturally supports batch operations.
+- When validating arrays of identifiers, default to batch repository access patterns instead of N sequential lookups.
+- Repositories persist and retrieve. They do not orchestrate multi-entity workflows, derive domain status, or absorb application caching concerns.
 - Do not postpone obvious persistence contradictions to planning. If the contract and the data model fight each other, surface that here.
 - If the existing code leaks Prisma into controllers or collapses use-cases into large services, call that out and propose the smallest correction that improves the current work.
 - Stay focused on the requested goal. Do not propose unrelated refactors.
@@ -160,6 +173,8 @@ After writing the spec, check:
 4. **Ambiguity check:** requirements cannot be interpreted in multiple incompatible ways
 5. **Boundary check:** controller, application, domain, and infrastructure concerns are separated
 6. **Prisma check:** Prisma is confined to repository or adapter boundaries
+7. **Migration check:** schema-impacting changes have a reversible evolution story when needed
+8. **Contract check:** chatty endpoints, looped validations, or full-form update payloads are justified instead of accidental
 
 Fix issues inline before asking the user to review.
 

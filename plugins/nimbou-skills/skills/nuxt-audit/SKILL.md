@@ -32,6 +32,7 @@ If one or both files do not exist, continue with the repository rules, call out 
 
 - Componentizacao e ownership
 - Arquitetura, SOLID, e fluxo de dados
+- Localidade de estado e canal de comunicacao
 - Reuso e extracao de componentes, composables, utils, e config
 - Hardening: erro, vazio, loading, overflow, i18n, e dados extremos
 - Performance: rendering, requests, hydration, images, and bundle behavior
@@ -51,7 +52,10 @@ If one or both files do not exist, continue with the repository rules, call out 
    - missing extraction opportunity
    - hardening gap
    - performance or polish debt
-5. Do not fix code. Produce a report that can drive the next implementation pass directly.
+5. Check whether the implementation ignored an obvious local primitive, wrapper, table shell, dialog pattern, empty-state pattern, or entity autocomplete that the project already provides.
+6. Check whether state is living too high: page handlers that only proxy child work, prop drilling without a natural reason, or a store introduced for simple parent-child coordination.
+7. Check whether the same data is fetched or watched in multiple owners without a clear reason.
+8. Do not fix code. Produce a report that can drive the next implementation pass directly.
 
 ## Output
 
@@ -72,6 +76,15 @@ List each finding with:
 - file or feature reference
 - why it is a problem
 - the smallest concrete correction direction
+
+Common high-value findings to look for when the local guideline supports them:
+- rebuilt local shell instead of existing project primitive or wrapper
+- destructive action confirmed with browser-native confirm instead of local pattern
+- manual entity autocomplete despite existing domain-specific picker
+- duplicated page/composable fetch ownership
+- store used for simple parent-child communication
+- missing loading, empty, error, success, overflow, or responsive handling in a meaningful flow
+- local style drift such as raw CSS values where project tokens or required preprocessors should apply
 
 ### Proximo passo sugerido
 

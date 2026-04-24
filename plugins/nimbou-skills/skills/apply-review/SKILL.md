@@ -72,6 +72,7 @@ BEFORE implementing:
   3. Check: Reason for current implementation?
   4. Check: Works on all platforms/versions?
   5. Check: Does reviewer understand full context?
+  6. Check: Conflicts with the nearest local `GUIDELINES.md` or project guardrails?
 
 IF suggestion seems wrong:
   Push back with technical reasoning
@@ -119,6 +120,7 @@ Push back when:
 - Technically incorrect for this stack
 - Legacy/compatibility reasons exist
 - Conflicts with your human partner's architectural decisions
+- Conflicts with local project guidelines on boundaries, reuse, migration strategy, or test semantics
 
 **How to push back:**
 - Use technical reasoning, not defensiveness
@@ -191,6 +193,18 @@ Reviewer: "Remove legacy code"
 ```
 Reviewer: "Implement proper metrics tracking with database, date filters, CSV export"
 ✅ "Grepped codebase - nothing calls this endpoint. Remove it (YAGNI)? Or is there usage I'm missing?"
+```
+
+**Guideline Pushback (Good):**
+```
+Reviewer: "Just inject PrismaService into the use case to keep it simple"
+✅ "Local backend boundary rules keep Prisma in infrastructure. I can add the repository method instead and keep the use case framework-light."
+```
+
+**Contract Pushback (Good):**
+```
+Reviewer: "Loop through the ids and call findById for each one"
+✅ "This flow validates an id array. Batch lookup is the project default here to avoid N queries. I'll add findByIds and report the missing ids explicitly."
 ```
 
 **Unclear Item (Good):**

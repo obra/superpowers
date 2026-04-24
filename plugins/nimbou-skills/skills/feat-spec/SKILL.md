@@ -29,7 +29,10 @@ Before routing to backend contract design:
 
 - target feature slice and owning domain
 - preliminary HTTP, event, or state contract shape shared by both sides
+- whether the contract should be chunky or batch-oriented rather than chatty
+- whether update flows are partial/minimal-payload or full replacement, and what both sides must preserve
 - error mapping and user-visible state expectations tied to the contract
+- explicit lifecycle states when frontend behavior or backend processing depends on them
 - ownership boundary: what frontend owns locally vs what backend owns centrally
 - cross-stack naming that both sides should preserve
 - backend assumptions the transport contract must preserve
@@ -42,9 +45,10 @@ Do not use this skill to finish NestJS module design, Prisma boundaries, or use-
 1. confirm the request is genuinely mixed
 2. close shared specification and contract decisions
 3. decide which questions are truly shared and which belong to frontend-only or backend-only design
-4. write the shared feature design and ownership boundary in a way both sides can consume
-5. route the next contract step to `nestjs-think`
-6. do not route to `doc-openapi`, `nuxt-think`, `nuxt-plan`, or `nestjs-plan` directly from this skill
+4. challenge accidental chatty contracts, array-by-array validation loops, and payloads that resend unchanged data
+5. write the shared feature design and ownership boundary in a way both sides can consume
+6. route the next contract step to `nestjs-think`
+7. do not route to `doc-openapi`, `nuxt-think`, `nuxt-plan`, or `nestjs-plan` directly from this skill
 
 ## Output
 
