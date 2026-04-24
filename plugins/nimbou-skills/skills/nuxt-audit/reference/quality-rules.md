@@ -2,10 +2,11 @@
 
 ## Design File First
 
-- Local `DESIGN.MD` beats generic preference.
-- App-level or root-level `DESIGN.MD` is fallback, not override, when a closer file exists.
-- If implementation repeats a known primitive or composition rule, audit against `DESIGN.MD` before proposing new structure.
-- Audit primarily against the local `DESIGN.MD`. Only fall back to `nimbou-skills:nuxt-design-posture` / `nimbou-skills:nuxt-design-composition` / `nimbou-skills:nuxt-design-architecture` for dimensions the project chose not to declare locally.
+- Local `GUIDELINES.md` beats generic implementation preference.
+- Local `DESIGN.md` beats generic visual preference.
+- App-level or root-level `GUIDELINES.md` and `DESIGN.md` are fallback, not override, when a closer file exists.
+- If implementation repeats a known primitive or composition rule, audit against `GUIDELINES.md` before proposing new structure.
+- Audit primarily against the local `GUIDELINES.md` plus the local `DESIGN.md`. Only fall back to `nimbou-skills:nuxt-design-posture` / `nimbou-skills:nuxt-design-composition` / `nimbou-skills:nuxt-design-architecture` for dimensions the project chose not to declare locally.
 
 ## Ownership and Architecture
 

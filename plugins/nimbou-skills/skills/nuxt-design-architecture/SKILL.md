@@ -1,6 +1,6 @@
 ---
 name: nuxt-design-architecture
-description: Use when deciding how to decompose a Nuxt 4 + Vuetify 3 interface into components, composables, utils, and config — component tiers, SOLID boundaries, extraction heuristics, and communication contracts. Pairs with nuxt-design-posture (micro visual) and nuxt-design-composition (macro hierarchy). Local DESIGN.MD wins on conflict.
+description: Use when deciding how to decompose a Nuxt 4 + Vuetify 3 interface into components, composables, utils, and config — component tiers, SOLID boundaries, extraction heuristics, and communication contracts. Pairs with nuxt-design-posture (micro visual) and nuxt-design-composition (macro hierarchy). Local GUIDELINES.md wins on implementation conflict.
 ---
 
 # Nuxt Design — Architecture
@@ -9,7 +9,7 @@ description: Use when deciding how to decompose a Nuxt 4 + Vuetify 3 interface i
 
 Disciplina de decomposição de interfaces Nuxt/Vuetify em componentes, composables, utils e config. Foco em SOLID aplicado ao frontend Vue 3: onde cortar, o que cada camada owns, como comunicar entre níveis.
 
-Esta skill é a fonte genérica. O `DESIGN.MD` do projeto vence em conflito — vide `Contrato` no fim.
+Esta skill é a fonte genérica. O `GUIDELINES.md` do projeto vence em conflito de implementação — vide `Contrato` no fim.
 
 ## When to Use
 
@@ -19,7 +19,7 @@ Esta skill é a fonte genérica. O `DESIGN.MD` do projeto vence em conflito — 
 - Modelando comunicação: props, emits, v-model, slots, provide/inject ou store.
 - `nuxt-think` precisa fechar "Componentes a reutilizar / a criar / Composables".
 - `nuxt-audit` auditando "Componentização e ownership".
-- `/design-md` preenchendo a seção **Component Architecture** do template.
+- `/design-md` preenchendo a seção **Component Architecture** do `GUIDELINES.md`.
 
 ## When NOT to Use
 
@@ -178,10 +178,10 @@ Sinais concretos:
 
 - **`nuxt-design-posture`**: fonte para micro estética (fontes, cor, tokens, CSS bans). Ortogonal a esta skill.
 - **`nuxt-design-composition`**: fonte para hierarquia macro (hero, landing vs product UI, motion ritmo). Esta skill preenche os componentes que a composition organiza.
-- **`nuxt-think`**: consulta esta skill + `DESIGN.MD` local ao fechar "Componentes a reutilizar / a criar / Composables".
-- **`nuxt-audit`**: audita "Componentização e ownership" contra `DESIGN.MD` primário; esta skill é fallback para dimensões não declaradas localmente.
-- **`/design-md` (comando)**: usa esta skill como fonte da seção **Component Architecture** do `DESIGN.MD`.
-- **`DESIGN.MD` do projeto**: quando existir, vence em conflito. Esta skill é a postura genérica/fallback.
+- **`nuxt-think`**: consulta esta skill + `GUIDELINES.md` local ao fechar "Componentes a reutilizar / a criar / Composables".
+- **`nuxt-audit`**: audita "Componentização e ownership" contra `GUIDELINES.md` primário; esta skill é fallback para dimensões não declaradas localmente.
+- **`/design-md` (comando)**: usa esta skill como fonte da seção **Component Architecture** do `GUIDELINES.md`.
+- **`GUIDELINES.md` do projeto**: quando existir, vence em conflito. Esta skill é a postura genérica/fallback.
 
 ## Red flags — pare e reconsidere
 

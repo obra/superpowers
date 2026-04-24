@@ -11,15 +11,16 @@ This is the single frontend review pass for Nuxt/Vuetify work in this repository
 
 ## Design File Resolution
 
-Before auditing, locate the nearest `DESIGN.MD` in the target project for the area being changed.
+Before auditing, locate the nearest `DESIGN.md` and `GUIDELINES.md` in the target project for the area being changed.
 
 Resolution order:
 1. If the request names a route, page, feature, or component path, start from that directory and walk upward.
 2. If the request does not name a path, infer the likely ownership area from the target feature and inspect that subtree first.
-3. Use the first local `DESIGN.MD` you find as the primary source.
-4. If a broader app-level or project-level `DESIGN.MD` also exists higher in the tree, use it as fallback context only.
+3. Use the first local `GUIDELINES.md` you find as the primary implementation source.
+4. Use the first local `DESIGN.md` you find as the primary visual source.
+5. If broader app-level or project-level files also exist higher in the tree, use them as fallback context only.
 
-If no `DESIGN.MD` exists, continue with the repository rules, call out the missing design file as a `Sugestao`, and suggest generating one with `/design-md`.
+If one or both files do not exist, continue with the repository rules, call out the missing file as a `Sugestao`, and suggest generating or refreshing them with `/design-md`.
 
 ## Severity
 
@@ -41,7 +42,7 @@ If no `DESIGN.MD` exists, continue with the repository rules, call out the missi
 
 ## Audit Method
 
-1. Read the nearest `DESIGN.MD` and extract the local rules that apply to the target area.
+1. Read the nearest `GUIDELINES.md` and `DESIGN.md` and extract the local rules that apply to the target area.
 2. Inspect the route/page owner first, then child components, composables, stores, and styles.
 3. Compare the implementation to existing patterns before inventing a better one.
 4. Separate issues by type:
@@ -59,7 +60,8 @@ Produce a report with:
 ### Resumo
 
 - Scope audited
-- DESIGN.MD files consulted
+- `GUIDELINES.md` files consulted
+- `DESIGN.md` files consulted
 - Counts per severity
 
 ### Achados

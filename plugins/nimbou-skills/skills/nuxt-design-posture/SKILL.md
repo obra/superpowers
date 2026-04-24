@@ -13,7 +13,7 @@ Disciplina de micro-detalhes estéticos para interfaces Nuxt/Vuetify: o que pint
 
 - Decidindo fonte, paleta, tokens de espaçamento, easing, bans CSS.
 - `nuxt-design-composition` já fechou a hierarquia macro e falta o tratamento fino.
-- `/design-md` precisa preencher "Visual Guardrails" com regras concretas.
+- `/design-md` precisa fechar tokens e guardrails visuais concretos no `DESIGN.md`.
 
 ## When NOT to Use
 
@@ -148,7 +148,7 @@ Estes padrões CSS **nunca** são aceitáveis. São as impressões digitais mais
 - **DO** CSS transitions, `<Transition>` e `<TransitionGroup>` do Vue antes de qualquer dependência adicional.
 - **DO NOT** animar layout (`width`, `height`, `padding`, `margin`). Só `transform` e `opacity`.
 - **DO NOT** bounce ou elastic. Parece datado; objetos reais desaceleram suavemente.
-- **DO NOT** bibliotecas de motion extras sem justificativa no `DESIGN.MD`.
+- **DO NOT** bibliotecas de motion extras sem justificativa no `GUIDELINES.md`.
 
 Para o **ritmo** (quantos motions por página, quais momentos ancoram) → `nuxt-design-composition`.
 
@@ -156,7 +156,7 @@ Para o **ritmo** (quantos motions por página, quais momentos ancoram) → `nuxt
 
 - Customize tokens no `vuetify.config` antes de escrever CSS local.
 - Use `v-theme-provider` para escopar variantes de tema em seções específicas.
-- Quando sobrescrever CSS de componente Vuetify, documente a razão no `DESIGN.MD`.
+- Quando sobrescrever CSS de componente Vuetify, documente a razão no `GUIDELINES.md`.
 - `slots` e `density` resolvem a maioria dos ajustes antes de qualquer CSS custom.
 - Vuetify traz Material Design como default — se a marca não é Material, redefina os tokens no tema em vez de fugir via `!important`.
 
@@ -165,8 +165,8 @@ Para o **ritmo** (quantos motions por página, quais momentos ancoram) → `nuxt
 - **`nuxt-design-composition`**: define a arquitetura visual (hierarquia, hero, sequência, landing vs product UI). Esta skill preenche-a com tokens, fontes, cores e técnicas.
 - **`nuxt-design-architecture`**: decompõe a UI em componentes/composables/utils. Ortogonal a esta skill — arquitetura ≠ estética.
 - **`nuxt-think`**: consulta esta skill ao preencher `Direcao visual` da feature, depois de `nuxt-design-composition` fechar a estrutura.
-- **`/design-md` (comando)**: esta skill é fonte da seção "Visual Posture" do `DESIGN.MD`.
-- **`DESIGN.MD` do projeto**: quando existir, vence em conflito. Esta skill justifica, não substitui.
+- **`/design-md` (comando)**: esta skill é fonte dos tokens e guardrails visuais do `DESIGN.md`.
+- **`DESIGN.md` do projeto**: quando existir, vence em conflito. Esta skill justifica, não substitui.
 
 ## Red flags — pare e reconsidere
 

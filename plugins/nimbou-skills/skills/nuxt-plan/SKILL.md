@@ -16,7 +16,7 @@ By default, return the plan in the chat as a structured response. Do not write a
 
 Read `reference/plan-format.md` before writing the plan.
 
-When the target project has a relevant `DESIGN.MD`, consume it as an input constraint. In a monorepo, default to the relevant app-level `DESIGN.MD` and let a closer feature-level file override it.
+When the target project has relevant `DESIGN.md` and `GUIDELINES.md` files, consume them as input constraints. In a monorepo, default to the relevant app-level files and let a closer feature-level file override them.
 
 ## Scope Check
 
@@ -46,7 +46,7 @@ Before writing tasks, map the file structure and responsibility of each file.
   - shared types or config when needed
   - tests and catalog verification
 - Treat reuse decisions from `nuxt-think` as inputs. Do not re-decide them here.
-- Treat the relevant `DESIGN.MD` rules as constraints. Do not reopen them here unless they contradict the approved `nuxt-think` output.
+- Treat the relevant `DESIGN.md` and `GUIDELINES.md` rules as constraints. Do not reopen them here unless they contradict the approved `nuxt-think` output.
 - If the current structure is muddy, plan the smallest refactor that restores clear ownership.
 
 This file map drives the execution groups.
@@ -54,7 +54,7 @@ This file map drives the execution groups.
 ## Planning Rules For This Repository
 
 - Consume the latest `nuxt-think` output or a direct request with equivalent detail.
-- Read the nearest relevant `DESIGN.MD` in the target project when the feature has a concrete target path or app.
+- Read the nearest relevant `DESIGN.md` and `GUIDELINES.md` in the target project when the feature has a concrete target path or app.
 - Read `components.meta.json` when the plan references reusable components. Fall back to `.generated/component-catalog/components.meta.json` when the project only ships the slim catalog.
 - Define exact file paths before describing execution groups.
 - Convert approved design decisions into file ownership and execution order. Do not expand discovery scope.
