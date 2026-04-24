@@ -152,6 +152,7 @@ function extractSessionId(stdout) {
       const event = JSON.parse(line);
       if (event.session_id) return event.session_id;
       if (event.conversation?.id) return event.conversation.id;
+      if (event.thread_id) return event.thread_id;
     } catch { /* not JSON */ }
   }
   // Try banner format: "session id: <uuid>"
@@ -259,6 +260,7 @@ function runCodexExec(prompt, options = {}) {
 
   const args = ["exec"];
   args.push("--full-auto");
+  args.push("--json");
   if (ephemeral) args.push("--ephemeral");
   args.push("--sandbox", sandbox);
   args.push("-o", resultFile);
@@ -304,6 +306,7 @@ function runCodexResume(prompt, options = {}) {
   }
 
   args.push("--full-auto");
+  args.push("--json");
   args.push("-o", resultFile);
   if (model) args.push("-m", model);
 
@@ -336,11 +339,69 @@ function renderEvent(event) {
 
   const t = event.type || event.kind || "";
 
+  // v0.124+ shape: thread.started carries thread_id (session identifier)
+  if (t === "thread.started" && event.thread_id) {
+    process.stderr.write(`[codex:session] ${event.thread_id}\n`);
+    return "session";
+  }
+
   if (event.session_id || event.conversation?.id) {
     const id = event.session_id || event.conversation.id;
     process.stderr.write(`[codex:session] ${id}\n`);
     return "session";
   }
+
+  // v0.124+ shape: item.started / item.completed wrap the real payload in event.item
+  if ((t === "item.started" || t === "item.completed") && event.item) {
+    const it = event.item;
+    const itype = it.type || "";
+    if (itype === "agent_message") {
+      if (t === "item.completed" && it.text) {
+        process.stderr.write(`[codex:agent] ${trunc(it.text)}\n`);
+      }
+      return "agent";
+    }
+    if (itype === "reasoning") {
+      const text = it.text || it.content || "";
+      if (text && t === "item.completed") process.stderr.write(`[codex:think] ${trunc(text)}\n`);
+      return "think";
+    }
+    if (itype === "command_execution") {
+      if (t === "item.started") {
+        process.stderr.write(`[codex:exec] ${trunc(it.command, 100)}\n`);
+        return "exec";
+      }
+      const code = it.exit_code ?? "?";
+      const out = trunc(it.aggregated_output || "", 80);
+      process.stderr.write(`[codex:result] exit=${code} ${out}\n`);
+      return "result";
+    }
+    if (itype === "file_change" || itype === "patch_apply" || itype === "edit") {
+      const p = it.path || it.file || "?";
+      process.stderr.write(`[codex:edit] ${p}\n`);
+      return "edit";
+    }
+    if (itype === "error") {
+      process.stderr.write(`[codex:error] ${trunc(it.message || JSON.stringify(it), 200)}\n`);
+      return "error";
+    }
+    process.stderr.write(`[codex:event] item.${itype}\n`);
+    return itype;
+  }
+
+  // v0.124+ shape: turn.completed carries usage at top level
+  if (t === "turn.completed" && event.usage) {
+    const u = event.usage;
+    const inTok = u.input_tokens ?? u.input ?? u.prompt_tokens;
+    const outTok = u.output_tokens ?? u.output ?? u.completion_tokens;
+    const cached = u.cached_input_tokens;
+    const total = (inTok != null && outTok != null) ? inTok + outTok : (u.total ?? u.total_tokens);
+    process.stderr.write(`[codex:token] in=${inTok ?? "?"} out=${outTok ?? "?"} total=${total ?? "?"}${cached != null ? ` cached=${cached}` : ""}\n`);
+    return "token";
+  }
+
+  if (t === "turn.started") return "turn";
+  if (t === "turn.completed") return "done";
 
   if (t === "agent" && event.agent?.content) {
     process.stderr.write(`[codex:agent] ${trunc(event.agent.content)}\n`);
@@ -452,7 +513,7 @@ function _spawnAndCapture(bin, args, promptFile, resultFile, schema, cwd = null)
         try { event = JSON.parse(line); } catch { continue; }
 
         // Emit session id at first sight, not at end
-        const id = event.session_id || event.conversation?.id;
+        const id = event.session_id || event.conversation?.id || event.thread_id;
         if (id && !sessionIdEmitted) {
           sessionIdEmitted = id;
         }
@@ -466,9 +527,12 @@ function _spawnAndCapture(bin, args, promptFile, resultFile, schema, cwd = null)
         else if (kind === "error") trace.errors++;
         else if (kind === "token") {
           const u = event.usage || event.tokens || {};
-          if (u.input ?? u.prompt_tokens) trace.tokens.input = u.input ?? u.prompt_tokens;
-          if (u.output ?? u.completion_tokens) trace.tokens.output = u.output ?? u.completion_tokens;
-          if (u.total ?? u.total_tokens) trace.tokens.total = u.total ?? u.total_tokens;
+          const inTok = u.input_tokens ?? u.input ?? u.prompt_tokens;
+          const outTok = u.output_tokens ?? u.output ?? u.completion_tokens;
+          if (inTok != null) trace.tokens.input = inTok;
+          if (outTok != null) trace.tokens.output = outTok;
+          const total = u.total ?? u.total_tokens ?? ((inTok != null && outTok != null) ? inTok + outTok : null);
+          if (total != null) trace.tokens.total = total;
         }
       }
     });

@@ -25,6 +25,12 @@ Codex bridge observability + per-prompt enrichment — phase 1 & 2 shipped.
 - `fe8f352` added diagnostics log (`~/.claude/sspower-codex.log`) w/ error+warn+info events from bridge & hook
 - New skill `skills/codex-diagnostics/SKILL.md` — reads log, groups patterns, proposes patches
 - README: added "Codex Observability" section, bumped skill count to 17
+- **Event-stream gap fixed** (addresses Resume item 4):
+  - `scripts/codex-bridge.mjs`: pass `--json` to both `codex exec` and `codex exec resume` (CLI v0.124.0 requires the flag to emit JSONL to stdout)
+  - Updated `renderEvent()` for v0.124.0 shape: `thread.started` (thread_id), `item.started|completed` (unwraps nested `item.type`: `agent_message`, `reasoning`, `command_execution` (with exit_code + aggregated_output), `file_change`/`patch_apply`, `error`), `turn.completed` (usage w/ `input_tokens`/`output_tokens`/`cached_input_tokens`)
+  - Session-id capture now recognizes `event.thread_id` in both the streaming parser and `extractSessionId()` fallback
+  - Token counter in `_spawnAndCapture` handles `input_tokens`/`output_tokens` schema
+  - Live smoke: real tokens populated (`in=12163 out=60 total=12223 cached=2432`), `_meta.session_id` now set, duration ~6s on trivial review
 
 ### In Progress
 None. Clean tree. Untracked worktree dirs (`skills/codex-enrich-workspace/`, `subagent-driven-development-workspace/`) unrelated to this commit.
@@ -33,7 +39,7 @@ None. Clean tree. Untracked worktree dirs (`skills/codex-enrich-workspace/`, `su
 1. **Restart Claude Code session** — UserPromptSubmit hook loads at session start, current session still runs old hook
 2. Try real coding-intent prompt ("fix auth bug in X") → confirm enrichment block appears in context, latency acceptable
 3. If latency painful: consider caching enrichment per-cwd for N seconds, or lower `--effort` further, or skip enrichment when prompt already >N tokens
-4. Investigate event-stream gap: `codex-bridge.mjs` live test showed `last: start` whole 140s run. Codex CLI v0.123.0 may need `--json` flag or different event emission config. Check `codex exec --help` for stream options.
+4. ~~Investigate event-stream gap~~ — **done** (see Post-handoff additions). Streaming now live on v0.124.0. If Codex bumps schema again, `codex-diagnostics` skill + `[codex:event] item.<unknown>` fallback will surface drift.
 
 ## Decisions
 - **No log folder** (`.codex-runs/` rejected): user dislikes extra dirs. Rely on stderr streaming only. If background mode ever needed → revisit w/ `~/.claude/codex-runs/`.
