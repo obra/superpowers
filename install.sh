@@ -149,6 +149,15 @@ if ! command -v nb-catalog >/dev/null 2>&1; then
   exit 1
 fi
 
+# Google DESIGN.md CLI
+echo "Installing @google/design.md globally..."
+npm_config_prefix="$HOME/.local" npm install -g @google/design.md
+
+if ! command -v design.md >/dev/null 2>&1; then
+  echo "@google/design.md was not found in PATH after installation." >&2
+  exit 1
+fi
+
 echo "Ensuring Codex wrapper exists..."
 bash "$CODEX_WRAPPER_SCRIPT"
 
@@ -167,6 +176,7 @@ echo "  Codex marketplace: $CODEX_MARKETPLACE_DIR"
 echo "  Claude plugin: $PLUGIN_NAME@$MARKETPLACE_REPO"
 echo "  Copilot plugin:  $COPILOT_PLUGIN_SOURCE"
 echo "  CLI:           $(command -v nb-catalog)"
+echo "  DESIGN CLI:    $(command -v design.md)"
 echo "  Wrapper:       ${CODEX_WRAPPER_PATH:-$HOME/.local/bin/codex-full}"
 echo "  DevTools MCP:  ${CHROME_DEVTOOLS_MCP_WRAPPER_PATH:-$HOME/.local/bin/chrome-devtools-mcp-wayland}"
 echo "  Codex skills:  ${CODEX_SKILLS_DIR:-$HOME/.codex/skills}"

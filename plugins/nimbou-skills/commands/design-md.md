@@ -129,6 +129,20 @@ When extracting into front matter:
 - keep token keys close to the project's real naming when that naming is already coherent
 - use prose to explain role and tone; use tokens to hold the normative values
 
+## Phase 6b: Validate `DESIGN.md` With The Google CLI
+
+After writing or updating `DESIGN.md`, validate it with the official CLI:
+
+- prefer `design.md lint <path-to-DESIGN.md>` when the bootstrap installed the global binary
+- otherwise run `npx @google/design.md lint <path-to-DESIGN.md>`
+
+Validation rules:
+
+- if lint reports errors, fix the file before considering the work complete
+- if lint reports warnings, keep fixing the ones caused by bad references, broken structure, or avoidable schema drift
+- if a warning is intentional because the project keeps a non-Stitch-native value such as OKLCH in front matter, keep the value and call the warning out explicitly in the result
+- do not claim the file is complete without mentioning the effective lint result
+
 ## Phase 7: Create or Refresh `GUIDELINES.md`
 
 Use `skills/nuxt-audit/reference/guidelines-template.md` as the base structure, and consult `skills/nuxt-audit/reference/guidelines-example.md` for a concrete example of how project-specific implementation rules should look.
@@ -161,6 +175,7 @@ After writing or updating the files:
 - show the inferred `register`
 - show whether `DESIGN.md` was created or updated
 - show whether `GUIDELINES.md` was created, updated, or only complemented
+- show the `design.md lint` result for `DESIGN.md`
 - summarize the most important visual rules captured in `DESIGN.md`
 - summarize the most important implementation rules captured in `GUIDELINES.md`
 - point out any important unknowns that remain intentionally undecided
