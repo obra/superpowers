@@ -34,12 +34,12 @@ O **Working Model** (visual thesis, content plan, interaction thesis) precisa es
 
 ## Component Tiers
 
-| Tier | Dono de | Exemplos | Location típica |
-|---|---|---|---|
-| **Primitive** | Apresentação neutra, sem domínio | `AppButton`, `AppTextField`, `AppChip` | `components/ui/`, `components/base/` |
-| **Domain Component** | Semântica de negócio, rendering + interação local | `ProjectCard`, `OrderLineRow`, `InvoiceStatusBadge` | `components/<feature>/` próximo à feature |
-| **Page / Route Owner** | Route params, data loading, orquestração top-level | `pages/projects/[id].vue` | `pages/` |
-| **Layout Shell** | Chrome persistente (header, sidebar, grid base) | `default.vue`, `admin.vue` | `layouts/` |
+| Tier                   | Dono de                                            | Exemplos                                            | Location típica                           |
+| ---------------------- | -------------------------------------------------- | --------------------------------------------------- | ----------------------------------------- |
+| **Primitive**          | Apresentação neutra, sem domínio                   | `AppButton`, `AppTextField`, `AppChip`              | `components/ui/`, `components/base/`      |
+| **Domain Component**   | Semântica de negócio, rendering + interação local  | `ProjectCard`, `OrderLineRow`, `InvoiceStatusBadge` | `components/<feature>/` próximo à feature |
+| **Page / Route Owner** | Route params, data loading, orquestração top-level | `pages/projects/[id].vue`                           | `pages/`                                  |
+| **Layout Shell**       | Chrome persistente (header, sidebar, grid base)    | `default.vue`, `admin.vue`                          | `layouts/`                                |
 
 Regras de tier:
 
@@ -68,12 +68,12 @@ Gatilhos para **NÃO** extrair:
 
 ### SRP — Single Responsibility
 
-| Camada | Responsabilidade única |
-|---|---|
-| Page | Route + data + orquestração |
+| Camada           | Responsabilidade única               |
+| ---------------- | ------------------------------------ |
+| Page             | Route + data + orquestração          |
 | Domain component | Renderização local + interação local |
-| Composable | Estado reativo reutilizável |
-| Util | Transformação pura |
+| Composable       | Estado reativo reutilizável          |
+| Util             | Transformação pura                   |
 
 Se uma função responde "faz X **e** Y", parta em duas.
 
@@ -100,14 +100,14 @@ Se uma função responde "faz X **e** Y", parta em duas.
 
 ## Contratos de comunicação
 
-| Mecanismo | Quando |
-|---|---|
-| **Props down + emits up** | Default para parent ↔ child direto. |
-| **`defineModel` / v-model** | Componente gerencia valor bidirecional. |
-| **Named slots** | Conteúdo composto ou customização estrutural. |
-| **Scoped slots** | Componente empresta estado interno ao consumidor. |
-| **`provide` / `inject`** | Cross-level regional, até ~3 níveis no mesmo subtree. |
-| **Store (Pinia)** | Estado que sobrevive navegação OU cruza árvores não relacionadas. |
+| Mecanismo                   | Quando                                                            |
+| --------------------------- | ----------------------------------------------------------------- |
+| **Props down + emits up**   | Default para parent ↔ child direto.                               |
+| **`defineModel` / v-model** | Componente gerencia valor bidirecional.                           |
+| **Named slots**             | Conteúdo composto ou customização estrutural.                     |
+| **Scoped slots**            | Componente empresta estado interno ao consumidor.                 |
+| **`provide` / `inject`**    | Cross-level regional, até ~3 níveis no mesmo subtree.             |
+| **Store (Pinia)**           | Estado que sobrevive navegação OU cruza árvores não relacionadas. |
 
 ## Regra de níveis (prop drilling vs provide vs store)
 
@@ -120,12 +120,12 @@ Não use `provide` como atalho para evitar pensar na API de props.
 
 ## Composable vs util vs config vs plugin
 
-| Qual usar quando... | Sinais |
-|---|---|
-| **Composable** | Usa `ref`/`computed`/`watch`/lifecycle. Retorna estado reativo + funções. Nome começa com `use`. |
-| **Util** | Função pura, stateless, sem reatividade. Entrada → saída determinística. |
-| **Config** | Declarativo: `const columns = [{ key, label, sortable }, ...]`. Tabs, steps, colunas, menus. |
-| **Plugin** | Side-effect de app: diretiva global, interceptor de `$fetch`, registrar `i18n`. |
+| Qual usar quando... | Sinais                                                                                           |
+| ------------------- | ------------------------------------------------------------------------------------------------ |
+| **Composable**      | Usa `ref`/`computed`/`watch`/lifecycle. Retorna estado reativo + funções. Nome começa com `use`. |
+| **Util**            | Função pura, stateless, sem reatividade. Entrada → saída determinística.                         |
+| **Config**          | Declarativo: `const columns = [{ key, label, sortable }, ...]`. Tabs, steps, colunas, menus.     |
+| **Plugin**          | Side-effect de app: diretiva global, interceptor de `$fetch`, registrar `i18n`.                  |
 
 Erros comuns:
 
