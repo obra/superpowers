@@ -150,35 +150,59 @@ Wait for the user's response. If they request changes, make them and re-run the 
 
 **Step 4 — Load or ask workflow preferences:**
 
-Read `.claude/ultrapowers-preferences.json` in the project root using the Read tool. If it exists and contains valid JSON with `autoCommit`, `autoPush`, and `commitDesignDocs` keys, load the values silently and announce:
+Read `.claude/ultrapowers-preferences.json` in the project root using the Read tool. If it exists and contains valid JSON, load the values silently and announce:
 
-> "Using saved preferences (auto-commit: on/off, auto-push: on/off, commit docs: on/off). Say 'change preferences' to update."
+> "Using saved workflow prefs (auto-commit: on/off, auto-push: on/off, commit docs: on/off). Say 'change prefs' to update."
 
-If the file does not exist or is invalid, ask the user all three questions in **a single message**:
+If the file does not exist or is invalid, ask the user **one** question with the defaults visible:
 
-> "Before we move on to approaches, a few workflow preferences:
-> 1. **Auto-commit** — Should I commit autonomously as I complete tasks, or would you prefer to handle commits yourself?
-> 2. **Auto-push** — Should I push to remote autonomously, or would you prefer to push manually?
-> 3. **Commit design docs** — Should I commit design specs and research briefs to git, or keep them local only?"
+> "Workflow defaults for this repo: **auto-commit on**, **auto-push on**, **commit design docs off**. Reply `ok` to accept, or tell me what to change (e.g., `no auto-push`, `commit docs too`, `all off`)."
 
-**Defaults if the user doesn't answer or says "whatever":**
-- Auto-commit: **OFF** (user commits manually)
-- Auto-push: **OFF** (user pushes manually)
-- Commit design docs: **OFF** (local only)
+**Defaults:**
+- `autoCommit`: **ON** (commit autonomously as tasks complete)
+- `autoPush`: **ON** (push to remote after commits)
+- `commitDesignDocs`: **OFF** (design specs/research briefs stay local)
+- `suggestSiblingPacks.dev`: **ON** (suggest installing `ultrapowers-dev` when relevant and missing)
+- `suggestSiblingPacks.business`: **ON** (suggest installing `ultrapowers-business` when relevant and missing)
 
-After collecting answers, write them to `.claude/ultrapowers-preferences.json`:
+**Deterministic reply parsing** (apply in order; multiple modifiers combine):
+
+| User reply | Resulting change |
+|---|---|
+| `ok` / `yes` / `accept` / empty | all defaults as-is |
+| `no auto-commit` / `manual commits` | `autoCommit: false` |
+| `no auto-push` / `manual push` | `autoPush: false` |
+| `commit docs` / `include design docs` | `commitDesignDocs: true` |
+| `all off` | `autoCommit: false`, `autoPush: false`, `commitDesignDocs: false` |
+| `all on` | `autoCommit: true`, `autoPush: true`, `commitDesignDocs: true` |
+
+Combined example: `no auto-push, commit docs` → `autoPush: false`, `commitDesignDocs: true`.
+
+If the reply is ambiguous (e.g., `push but not commit`), ask **one** targeted follow-up:
+
+> "To confirm: auto-push on, auto-commit off, commit docs off — correct?"
+
+Do not guess.
+
+**Schema written to `.claude/ultrapowers-preferences.json`:**
 
 ```json
 {
   "autoCommit": true,
-  "autoPush": false,
-  "commitDesignDocs": false
+  "autoPush": true,
+  "commitDesignDocs": false,
+  "suggestSiblingPacks": {
+    "dev": true,
+    "business": true
+  }
 }
 ```
 
+The `suggestSiblingPacks` object is additive and controls whether Step 6a (below) fires blocking "install missing sibling pack" prompts. If the file is missing this key, treat both flags as `true`. If a user replies `stop suggesting ultrapowers-dev` (or the flag is written via the sibling-pack scan step), persist `suggestSiblingPacks.dev: false` without touching other fields.
+
 If `.claude/` directory doesn't exist, create it. Suggest adding `.claude/ultrapowers-preferences.json` to `.gitignore` if not already ignored.
 
-All downstream skills (writing-plans, subagent-driven-development, executing-plans, finishing-a-development-branch) read this file and respect the values. If the file is missing, fall back to defaults (all OFF).
+All downstream skills (`writing-plans`, `subagent-driven-development`, `executing-plans`, `finishing-a-development-branch`, `project-setup`) read this file and respect the values. Unknown keys (like `suggestSiblingPacks` in older consumers) are ignored gracefully. If the file is missing, fall back to defaults documented above (all three workflow flags ON for auto-commit/auto-push, OFF for commitDesignDocs; both `suggestSiblingPacks` flags ON).
 
 ## Visual Companion
 
