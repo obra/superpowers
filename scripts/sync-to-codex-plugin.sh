@@ -3,9 +3,9 @@
 # sync-to-codex-plugin.sh
 #
 # Sync this superpowers checkout → prime-radiant-inc/openai-codex-plugins.
-# Clones the fork fresh into a temp dir, rsyncs upstream content, regenerates
-# the Codex overlay file (.codex-plugin/plugin.json) inline, commits, pushes a
-# sync branch, and opens a PR.
+# Clones the fork fresh into a temp dir, rsyncs tracked upstream plugin content
+# (including committed Codex files under .codex-plugin/ and assets/), commits,
+# pushes a sync branch, and opens a PR.
 # Path/user agnostic — auto-detects upstream from script location.
 #
 # Deterministic: running twice against the same upstream SHA produces PRs with
@@ -17,13 +17,11 @@
 #   ./scripts/sync-to-codex-plugin.sh -y                           # skip confirm
 #   ./scripts/sync-to-codex-plugin.sh --local PATH                 # existing checkout
 #   ./scripts/sync-to-codex-plugin.sh --base BRANCH                # default: main
-#   ./scripts/sync-to-codex-plugin.sh --bootstrap --assets-src DIR # create initial plugin
+#   ./scripts/sync-to-codex-plugin.sh --bootstrap                  # create plugin dir if missing
 #
-# Bootstrap mode: skips the "plugin must exist on base" check and seeds
-# plugins/superpowers/assets/ from --assets-src <dir> which must contain
-# PrimeRadiant_Favicon.svg and PrimeRadiant_Favicon.png. Run once by one
-# team member to create the initial PR; every subsequent run is a normal
-# (non-bootstrap) sync.
+# Bootstrap mode: skips the "plugin must exist on base" requirement and creates
+# plugins/superpowers/ when absent, then copies the tracked plugin files from
+# upstream just like a normal sync.
 #
 # Requires: bash, rsync, git, gh (authenticated), python3.
 
@@ -38,9 +36,6 @@ DEFAULT_BASE="main"
 DEST_REL="plugins/superpowers"
 
 # Paths in upstream that should NOT land in the embedded plugin.
-# The Codex-only paths are here too — they're managed by generate/bootstrap
-# steps, not by rsync.
-#
 # All patterns use a leading "/" to anchor them to the source root.
 # Unanchored patterns like "scripts/" would match any directory named
 # "scripts" at any depth — including legitimate nested dirs like
@@ -78,68 +73,57 @@ EXCLUDES=(
   "/scripts/"
   "/tests/"
   "/tmp/"
-
-  # Codex-only paths — managed outside rsync
-  "/.codex-plugin/"
-  "/assets/"
 )
 
 # =============================================================================
-# Generated overlay file
+# Ignored-path helpers
 # =============================================================================
 
-# Writes the Codex plugin manifest to "$1" with the given upstream version.
-# Args: dest_path, version
-generate_plugin_json() {
-  local dest="$1"
-  local version="$2"
-  mkdir -p "$(dirname "$dest")"
-  cat > "$dest" <<EOF
-{
-  "name": "superpowers",
-  "version": "$version",
-  "description": "An agentic skills framework & software development methodology that works: planning, TDD, debugging, and collaboration workflows.",
-  "author": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com",
-    "url": "https://github.com/obra"
-  },
-  "homepage": "https://github.com/obra/superpowers",
-  "repository": "https://github.com/obra/superpowers",
-  "license": "MIT",
-  "keywords": [
-    "brainstorming",
-    "subagent-driven-development",
-    "skills",
-    "planning",
-    "tdd",
-    "debugging",
-    "code-review",
-    "workflow"
-  ],
-  "skills": "./skills/",
-  "interface": {
-    "displayName": "Superpowers",
-    "shortDescription": "Planning, TDD, debugging, and delivery workflows for coding agents",
-    "longDescription": "Use Superpowers to guide agent work through brainstorming, implementation planning, test-driven development, systematic debugging, parallel execution, code review, and finish-the-branch workflows.",
-    "developerName": "Jesse Vincent",
-    "category": "Coding",
-    "capabilities": [
-      "Interactive",
-      "Read",
-      "Write"
-    ],
-    "defaultPrompt": [
-      "I've got an idea for something I'd like to build.",
-      "Let's add a feature to this project."
-    ],
-    "brandColor": "#F59E0B",
-    "composerIcon": "./assets/superpowers-small.svg",
-    "logo": "./assets/app-icon.png",
-    "screenshots": []
-  }
+IGNORED_DIR_EXCLUDES=()
+
+path_has_directory_exclude() {
+  local path="$1"
+  local dir
+
+  if [[ ${#IGNORED_DIR_EXCLUDES[@]} -eq 0 ]]; then
+    return 1
+  fi
+
+  for dir in "${IGNORED_DIR_EXCLUDES[@]}"; do
+    [[ "$path" == "$dir"* ]] && return 0
+  done
+
+  return 1
 }
-EOF
+
+ignored_directory_has_tracked_descendants() {
+  local path="$1"
+
+  [[ -n "$(git -C "$UPSTREAM" ls-files --cached -- "$path/")" ]]
+}
+
+append_git_ignored_directory_excludes() {
+  local path
+  local lookup_path
+
+  while IFS= read -r -d '' path; do
+    [[ "$path" == */ ]] || continue
+
+    lookup_path="${path%/}"
+    if ! ignored_directory_has_tracked_descendants "$lookup_path"; then
+      IGNORED_DIR_EXCLUDES+=("$path")
+      RSYNC_ARGS+=(--exclude="/$path")
+    fi
+  done < <(git -C "$UPSTREAM" ls-files --others --ignored --exclude-standard --directory -z)
+}
+
+append_git_ignored_file_excludes() {
+  local path
+
+  while IFS= read -r -d '' path; do
+    path_has_directory_exclude "$path" && continue
+    RSYNC_ARGS+=(--exclude="/$path")
+  done < <(git -C "$UPSTREAM" ls-files --others --ignored --exclude-standard -z)
 }
 
 # =============================================================================
@@ -153,10 +137,9 @@ DRY_RUN=0
 YES=0
 LOCAL_CHECKOUT=""
 BOOTSTRAP=0
-ASSETS_SRC=""
 
 usage() {
-  sed -n 's/^# \{0,1\}//;2,27p' "$0"
+  sed -n '/^# Usage:/,/^# Requires:/s/^# \{0,1\}//p' "$0"
   exit "${1:-0}"
 }
 
@@ -167,7 +150,6 @@ while [[ $# -gt 0 ]]; do
     --local)       LOCAL_CHECKOUT="$2"; shift 2 ;;
     --base)        BASE="$2"; shift 2 ;;
     --bootstrap)   BOOTSTRAP=1; shift ;;
-    --assets-src)  ASSETS_SRC="$2"; shift 2 ;;
     -h|--help)     usage 0 ;;
     *)             echo "Unknown arg: $1" >&2; usage 2 ;;
   esac
@@ -187,19 +169,11 @@ command -v python3 >/dev/null || die "python3 not found in PATH"
 gh auth status >/dev/null 2>&1 || die "gh not authenticated — run 'gh auth login'"
 
 [[ -d "$UPSTREAM/.git" ]]         || die "upstream '$UPSTREAM' is not a git checkout"
-[[ -f "$UPSTREAM/package.json" ]] || die "upstream has no package.json — cannot read version"
+[[ -f "$UPSTREAM/.codex-plugin/plugin.json" ]] || die "committed Codex manifest missing at $UPSTREAM/.codex-plugin/plugin.json"
 
-# Bootstrap-mode validation
-if [[ $BOOTSTRAP -eq 1 ]]; then
-  [[ -n "$ASSETS_SRC" ]] || die "--bootstrap requires --assets-src <path>"
-  ASSETS_SRC="$(cd "$ASSETS_SRC" 2>/dev/null && pwd)" || die "assets source '$ASSETS_SRC' is not a directory"
-  [[ -f "$ASSETS_SRC/PrimeRadiant_Favicon.svg" ]] || die "assets source missing PrimeRadiant_Favicon.svg"
-  [[ -f "$ASSETS_SRC/PrimeRadiant_Favicon.png" ]] || die "assets source missing PrimeRadiant_Favicon.png"
-fi
-
-# Read the upstream version from package.json
-UPSTREAM_VERSION="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$UPSTREAM/package.json")"
-[[ -n "$UPSTREAM_VERSION" ]] || die "could not read 'version' from upstream package.json"
+# Read the upstream version from the committed Codex manifest.
+UPSTREAM_VERSION="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$UPSTREAM/.codex-plugin/plugin.json")"
+[[ -n "$UPSTREAM_VERSION" ]] || die "could not read 'version' from committed Codex manifest"
 
 UPSTREAM_BRANCH="$(cd "$UPSTREAM" && git branch --show-current)"
 UPSTREAM_SHA="$(cd "$UPSTREAM" && git rev-parse HEAD)"
@@ -230,7 +204,9 @@ fi
 
 CLEANUP_DIR=""
 cleanup() {
-  [[ -n "$CLEANUP_DIR" ]] && rm -rf "$CLEANUP_DIR"
+  if [[ -n "$CLEANUP_DIR" ]]; then
+    rm -rf "$CLEANUP_DIR"
+  fi
 }
 trap cleanup EXIT
 
@@ -245,22 +221,84 @@ else
 fi
 
 DEST="$DEST_REPO/$DEST_REL"
+PREVIEW_REPO="$DEST_REPO"
+PREVIEW_DEST="$DEST"
 
-# Checkout base branch
-cd "$DEST_REPO"
-git checkout -q "$BASE" 2>/dev/null || die "base branch '$BASE' doesn't exist in $FORK"
+overlay_destination_paths() {
+  local repo="$1"
+  local path
+  local source_path
+  local preview_path
 
-# Plugin-existence check depends on mode
-if [[ $BOOTSTRAP -eq 1 ]]; then
-  [[ ! -d "$DEST" ]] || die "--bootstrap but base branch '$BASE' already has '$DEST_REL/' — use normal sync instead"
-  mkdir -p "$DEST"
-else
-  [[ -d "$DEST" ]] || die "base branch '$BASE' has no '$DEST_REL/' — use --bootstrap + --assets-src, or pass --base <branch>"
-fi
+  while IFS= read -r -d '' path; do
+    source_path="$repo/$path"
+    preview_path="$PREVIEW_REPO/$path"
 
-# =============================================================================
-# Create sync branch
-# =============================================================================
+    if [[ -e "$source_path" ]]; then
+      mkdir -p "$(dirname "$preview_path")"
+      cp -R "$source_path" "$preview_path"
+    else
+      rm -rf "$preview_path"
+    fi
+  done
+}
+
+copy_local_destination_overlay() {
+  overlay_destination_paths "$DEST_REPO" < <(
+    git -C "$DEST_REPO" diff --name-only -z -- "$DEST_REL"
+  )
+  overlay_destination_paths "$DEST_REPO" < <(
+    git -C "$DEST_REPO" diff --cached --name-only -z -- "$DEST_REL"
+  )
+  overlay_destination_paths "$DEST_REPO" < <(
+    git -C "$DEST_REPO" ls-files --others --exclude-standard -z -- "$DEST_REL"
+  )
+  overlay_destination_paths "$DEST_REPO" < <(
+    git -C "$DEST_REPO" ls-files --others --ignored --exclude-standard -z -- "$DEST_REL"
+  )
+}
+
+local_checkout_has_uncommitted_destination_changes() {
+  [[ -n "$(git -C "$DEST_REPO" status --porcelain=1 --untracked-files=all --ignored=matching -- "$DEST_REL")" ]]
+}
+
+prepare_preview_checkout() {
+  if [[ -n "$LOCAL_CHECKOUT" ]]; then
+    [[ -n "$CLEANUP_DIR" ]] || CLEANUP_DIR="$(mktemp -d)"
+    PREVIEW_REPO="$CLEANUP_DIR/preview"
+    git clone -q --no-local "$DEST_REPO" "$PREVIEW_REPO"
+    PREVIEW_DEST="$PREVIEW_REPO/$DEST_REL"
+  fi
+
+  git -C "$PREVIEW_REPO" checkout -q "$BASE" 2>/dev/null || die "base branch '$BASE' doesn't exist in $FORK"
+  if [[ -n "$LOCAL_CHECKOUT" ]]; then
+    copy_local_destination_overlay
+  fi
+  if [[ $BOOTSTRAP -ne 1 ]]; then
+    [[ -d "$PREVIEW_DEST" ]] || die "base branch '$BASE' has no '$DEST_REL/' — use --bootstrap, or pass --base <branch>"
+  fi
+}
+
+prepare_apply_checkout() {
+  git -C "$DEST_REPO" checkout -q "$BASE" 2>/dev/null || die "base branch '$BASE' doesn't exist in $FORK"
+  if [[ $BOOTSTRAP -ne 1 ]]; then
+    [[ -d "$DEST" ]] || die "base branch '$BASE' has no '$DEST_REL/' — use --bootstrap, or pass --base <branch>"
+  fi
+}
+
+apply_to_preview_checkout() {
+  if [[ $BOOTSTRAP -eq 1 ]]; then
+    mkdir -p "$PREVIEW_DEST"
+  fi
+
+  rsync "${RSYNC_ARGS[@]}" "$UPSTREAM/" "$PREVIEW_DEST/"
+}
+
+preview_checkout_has_changes() {
+  [[ -n "$(git -C "$PREVIEW_REPO" status --porcelain "$DEST_REL")" ]]
+}
+
+prepare_preview_checkout
 
 TIMESTAMP="$(date -u +%Y%m%d-%H%M%S)"
 if [[ $BOOTSTRAP -eq 1 ]]; then
@@ -268,14 +306,15 @@ if [[ $BOOTSTRAP -eq 1 ]]; then
 else
   SYNC_BRANCH="sync/superpowers-${UPSTREAM_SHORT}-${TIMESTAMP}"
 fi
-git checkout -q -b "$SYNC_BRANCH"
 
 # =============================================================================
 # Build rsync args
 # =============================================================================
 
-RSYNC_ARGS=(-av --delete)
+RSYNC_ARGS=(-av --delete --delete-excluded)
 for pat in "${EXCLUDES[@]}"; do RSYNC_ARGS+=(--exclude="$pat"); done
+append_git_ignored_directory_excludes
+append_git_ignored_file_excludes
 
 # =============================================================================
 # Dry run preview (always shown)
@@ -288,20 +327,13 @@ echo "Fork:     $FORK"
 echo "Base:     $BASE"
 echo "Branch:   $SYNC_BRANCH"
 if [[ $BOOTSTRAP -eq 1 ]]; then
-  echo "Mode:     BOOTSTRAP (creating initial plugin from scratch)"
-  echo "Assets:   $ASSETS_SRC"
+  echo "Mode:     BOOTSTRAP (creating plugins/superpowers/ when absent)"
 fi
 echo ""
 echo "=== Preview (rsync --dry-run) ==="
-rsync "${RSYNC_ARGS[@]}" --dry-run --itemize-changes "$UPSTREAM/" "$DEST/"
+rsync "${RSYNC_ARGS[@]}" --dry-run --itemize-changes "$UPSTREAM/" "$PREVIEW_DEST/"
 echo "=== End preview ==="
 echo ""
-echo "Overlay file (.codex-plugin/plugin.json) will be regenerated with"
-echo "version $UPSTREAM_VERSION regardless of rsync output."
-if [[ $BOOTSTRAP -eq 1 ]]; then
-  echo "Assets (superpowers-small.svg, app-icon.png) will be seeded from:"
-  echo "  $ASSETS_SRC"
-fi
 
 if [[ $DRY_RUN -eq 1 ]]; then
   echo ""
@@ -317,18 +349,26 @@ echo ""
 confirm "Apply changes, push branch, and open PR?" || { echo "Aborted."; exit 1; }
 
 echo ""
-echo "Syncing upstream content..."
-rsync "${RSYNC_ARGS[@]}" "$UPSTREAM/" "$DEST/"
+if [[ -n "$LOCAL_CHECKOUT" ]]; then
+  if local_checkout_has_uncommitted_destination_changes; then
+    die "local checkout has uncommitted changes under '$DEST_REL' — commit, stash, or discard them before syncing"
+  fi
 
-if [[ $BOOTSTRAP -eq 1 ]]; then
-  echo "Seeding brand assets..."
-  mkdir -p "$DEST/assets"
-  cp "$ASSETS_SRC/PrimeRadiant_Favicon.svg" "$DEST/assets/superpowers-small.svg"
-  cp "$ASSETS_SRC/PrimeRadiant_Favicon.png" "$DEST/assets/app-icon.png"
+  apply_to_preview_checkout
+  if ! preview_checkout_has_changes; then
+    echo "No changes — embedded plugin was already in sync with upstream $UPSTREAM_SHORT (v$UPSTREAM_VERSION)."
+    exit 0
+  fi
 fi
 
-echo "Regenerating overlay file..."
-generate_plugin_json "$DEST/.codex-plugin/plugin.json" "$UPSTREAM_VERSION"
+prepare_apply_checkout
+cd "$DEST_REPO"
+git checkout -q -b "$SYNC_BRANCH"
+echo "Syncing upstream content..."
+if [[ $BOOTSTRAP -eq 1 ]]; then
+  mkdir -p "$DEST"
+fi
+rsync "${RSYNC_ARGS[@]}" "$UPSTREAM/" "$DEST/"
 
 # Bail early if nothing actually changed
 cd "$DEST_REPO"
@@ -347,15 +387,17 @@ if [[ $BOOTSTRAP -eq 1 ]]; then
   COMMIT_TITLE="bootstrap superpowers v$UPSTREAM_VERSION from upstream main @ $UPSTREAM_SHORT"
   PR_BODY="Initial bootstrap of the superpowers plugin from upstream \`main\` @ \`$UPSTREAM_SHORT\` (v$UPSTREAM_VERSION).
 
-Creates \`plugins/superpowers/\` from scratch: upstream content via rsync, \`.codex-plugin/plugin.json\` regenerated inline, brand assets seeded from a local Brand Assets directory.
+Creates \`plugins/superpowers/\` by copying the tracked plugin files from upstream, including \`.codex-plugin/plugin.json\` and \`assets/\`.
 
-Run via: \`scripts/sync-to-codex-plugin.sh --bootstrap --assets-src <path>\`
+Run via: \`scripts/sync-to-codex-plugin.sh --bootstrap\`
 Upstream commit: https://github.com/obra/superpowers/commit/$UPSTREAM_SHA
 
-This is a one-time bootstrap. Subsequent syncs will be normal (non-bootstrap) runs and will not touch the \`assets/\` directory."
+This is a one-time bootstrap. Subsequent syncs will be normal (non-bootstrap) runs using the same tracked upstream plugin files."
 else
   COMMIT_TITLE="sync superpowers v$UPSTREAM_VERSION from upstream main @ $UPSTREAM_SHORT"
   PR_BODY="Automated sync from superpowers upstream \`main\` @ \`$UPSTREAM_SHORT\` (v$UPSTREAM_VERSION).
+
+Copies the tracked plugin files from upstream, including the committed Codex manifest and assets.
 
 Run via: \`scripts/sync-to-codex-plugin.sh\`
 Upstream commit: https://github.com/obra/superpowers/commit/$UPSTREAM_SHA
