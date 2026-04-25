@@ -94,8 +94,8 @@ You: [Fix progress indicators]
 - Fix before moving to next task
 
 **Executing Plans:**
-- Review after each batch (3 tasks)
-- Get feedback, apply, continue
+- Review at explicit checkpoints or before merge
+- Get feedback, apply it, continue
 
 **Ad-Hoc Development:**
 - Review before merge

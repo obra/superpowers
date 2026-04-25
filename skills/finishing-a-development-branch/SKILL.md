@@ -117,7 +117,7 @@ EOF
 )"
 ```
 
-Then: Cleanup worktree (Step 5)
+Then report: "Branch pushed and PR opened. Worktree preserved at <path>."
 
 #### Option 3: Keep As-Is
 
@@ -149,7 +149,7 @@ Then: Cleanup worktree (Step 5)
 
 ### Step 5: Cleanup Worktree
 
-**For Options 1, 2, 4:**
+**For Options 1 and 4:**
 
 Check if in worktree:
 ```bash
@@ -208,7 +208,7 @@ git worktree remove <worktree-path>
 
 **Called by:**
 - **subagent-driven-development** (Step 7) - After all tasks complete
-- **executing-plans** (Step 5) - After all batches complete
+- **executing-plans** (Step 5) - After all tasks complete
 
 **Pairs with:**
 - **using-git-worktrees** - Cleans up worktree created by that skill

@@ -147,7 +147,7 @@ After saving the plan, offer execution choice:
 
 **1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
 
-**2. Inline Execution** - Execute tasks in this session using executing-plans, batch execution with checkpoints
+**2. Inline Execution** - Execute tasks in this session using executing-plans, with critical review first and task-by-task execution until complete or blocked
 
 If the built-in question tool is available, use it to present this choice instead of waiting for a manual reply.
 
@@ -159,4 +159,4 @@ If the built-in question tool is available, use it to present this choice instea
 
 **If Inline Execution chosen:**
 - **REQUIRED SUB-SKILL:** Use superpowers:executing-plans
-- Batch execution with checkpoints for review
+- Review the plan critically, then execute tasks one by one until complete or blocked
