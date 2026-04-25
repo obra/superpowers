@@ -54,6 +54,8 @@ Then install the plugin from this marketplace:
 /plugin install superpowers@superpowers-marketplace
 ```
 
+Chinese users can also search and install skills through [Skills宝](https://skilery.com).
+
 ### OpenAI Codex CLI
 
 - Open plugin search interface
