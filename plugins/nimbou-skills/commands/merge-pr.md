@@ -1,46 +1,32 @@
 ---
-description: Merge one PR or multiple ready PRs after validating status, showing the effective state, and getting explicit confirmation.
-argument-hint: Optional PR number or batch intent
+description: Merge a single PR after validating status, showing the effective state, and getting explicit confirmation.
+argument-hint: PR number
 ---
 
 # Merge Pull Request
 
-Use this command when the user wants the AI to merge one PR or several ready PRs.
+Use this command when the user wants the AI to merge one PR.
 
 This command is merge-focused. It does not perform code review. If the user wants review first, that is a separate workflow.
-
-## Modes
-
-Choose the mode from `$ARGUMENTS`:
-
-- **Single mode**: a PR number or one clearly identified PR is provided
-- **Batch mode**: the user asks to merge ready PRs, merge multiple PRs, or merge all eligible PRs
 
 ## Core Rules
 
 - Never merge without showing the effective PR state first
-- Never batch-merge without explicit confirmation
 - Never merge a draft PR
 - If immediate merge is blocked but the PR is otherwise eligible, offer auto-merge
 - Prefer remote PR state over local branch assumptions
 
 ## Phase 1: Resolve Target
 
-### Single mode
+1. Resolve the target PR number from `$ARGUMENTS`.
+2. Fetch PR metadata.
+3. Confirm the repo, base branch, head branch, title, and current state.
 
-1. Resolve the target PR number
-2. Fetch PR metadata
-3. Confirm the repo, base branch, head branch, title, and current state
-
-### Batch mode
-
-1. List candidate PRs
-2. Filter to ready or mergeable PRs
-3. Build a concise summary table before acting
+If `$ARGUMENTS` does not provide a PR number, ask the user for it before proceeding.
 
 ## Phase 2: Validate Eligibility
 
-For each PR, verify:
+Verify:
 
 - PR is open
 - PR is not draft
@@ -48,11 +34,11 @@ For each PR, verify:
 - required checks are complete or passing
 - required approvals or review gates are satisfied when that status is available
 
-If any PR is not eligible, classify it as:
+Classify the PR as:
 
-- `blocked`
-- `auto-merge candidate`
 - `ready now`
+- `auto-merge candidate`
+- `blocked`
 
 ## Phase 3: Show Effective State
 
@@ -65,11 +51,7 @@ Before any merge action, show:
 - mergeability status
 - changed files summary
 
-For batch mode, show one line per PR with the intended action.
-
 ## Phase 4: Confirm Action
-
-### Single mode
 
 Ask:
 
@@ -79,15 +61,6 @@ Action:
 1. Merge now
 2. Enable auto-merge
 3. Cancel
-```
-
-### Batch mode
-
-Ask for explicit confirmation after showing the table:
-
-```text
-<N> PRs are eligible for merge or auto-merge.
-Type `merge` to continue, or `cancel` to stop.
 ```
 
 ## Phase 5: Execute
@@ -106,18 +79,9 @@ Use `--squash` or `--rebase` only if the user explicitly requests a different st
 
 If immediate merge is blocked but the PR is otherwise eligible, enable auto-merge through the GitHub integration when supported.
 
-### Batch execution
-
-Process PRs one by one:
-
-1. Merge immediately if ready now
-2. Enable auto-merge if not ready now but eligible for it
-3. Skip blocked PRs
-4. Keep going after per-PR failures and report them clearly
-
 ## Phase 6: Report Result
 
-For each PR, report one of:
+Report one of:
 
 - `merged`
 - `auto-merge enabled`
@@ -134,5 +98,4 @@ Always include:
 
 - Do not guess mergeability from local git state alone
 - Do not silently downgrade from merge to auto-merge
-- Do not merge multiple PRs just because they share a branch target
-- Do not delete branches unless the user explicitly asks for it
+- Do not delete the branch unless the user explicitly asks for it
