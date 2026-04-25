@@ -1,4 +1,5 @@
 ---
+name: execute-plan
 description: "Deprecated - use the superpowers:executing-plans skill instead"
 ---
 

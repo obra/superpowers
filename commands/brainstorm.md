@@ -1,4 +1,5 @@
 ---
+name: brainstorm
 description: "Deprecated - use the superpowers:brainstorming skill instead"
 ---
 

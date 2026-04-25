@@ -1,4 +1,5 @@
 ---
+name: write-plan
 description: "Deprecated - use the superpowers:writing-plans skill instead"
 ---
 
