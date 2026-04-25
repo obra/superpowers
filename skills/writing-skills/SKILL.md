@@ -371,6 +371,53 @@ pptx/
 ```
 When: Reference material too large for inline
 
+## Script vs Prose
+
+This is a per-step decision during skill authoring, distinct from the per-skill decision in "When to Create a Skill" above (which asks whether to write a skill at all, vs ship a standalone tool).
+
+Skills often mix deterministic steps (data gathering, format conversion, pattern matching) with judgment calls (architecture decisions, risk assessment, priority ranking). Putting both in prose wastes agent reasoning on mechanical work and introduces inconsistency.
+
+**Decision rule:** If a step produces the same output given the same input regardless of who runs it, extract it to a script. Reserve prose for steps that require context, judgment, or adaptation.
+
+| Step Type | Belongs In | Examples |
+|-----------|-----------|----------|
+| **Deterministic** | Script (bash/python) | Collect configs, detect patterns, parse JSON, count occurrences, diff files |
+| **Judgment** | Prose (SKILL.md) | Decide if pattern is intentional, evaluate risk, choose between approaches |
+| **Hybrid** | Script generates report → prose interprets | Audit tools, code analysis, migration planning |
+
+### Pattern: Script + Prose Pipeline
+
+```
+script (gather) → script (analyze) → agent (interpret + decide) → agent (apply)
+```
+
+The skill document orchestrates: it tells the agent WHEN to run each script, WHAT the output means, and WHERE judgment is needed.
+
+````markdown
+### Step 1: Gather Data (scripted)
+```bash
+bash path/to/gather.sh | python3 path/to/analyze.py
+```
+
+### Step 2: Review Report
+Scripts handle: [deterministic parts].
+Agent handles: [judgment calls requiring context].
+````
+
+### Concrete Example: Permissions Audit
+
+A skill that audits project permissions for redundancy splits cleanly:
+- **Deterministic** (script): scan settings files, parse JSON, expand globs, compute subset relationships across permission lists
+- **Judgment** (prose): decide whether a covered entry is intentionally project-specific or should be folded into a user-level glob
+
+Without this split, the agent re-derives subset detection via LLM each run, burning tokens on work a 30-line `analyze.py` does deterministically.
+
+### When NOT to Extract
+
+- Steps that need conversation context or codebase-specific knowledge
+- One-liners that are clearer inline than in a separate file
+- Logic that changes per-project (put adaptation guidance in prose instead)
+
 ## The Iron Law (Same as TDD)
 
 ```
@@ -627,6 +674,7 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 - [ ] Common mistakes section
 - [ ] No narrative storytelling
 - [ ] Supporting files only for tools or heavy reference
+- [ ] Each step reviewed: deterministic steps extracted to scripts (see Script vs Prose)
 
 **Deployment:**
 - [ ] Commit skill to git and push to your fork (if configured)
