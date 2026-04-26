@@ -7,9 +7,9 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 ## Overview
 
-Guide completion of development work by presenting clear options and handling chosen workflow.
+Guide completion of development work by preserving the current state by default and only handling merge, PR, discard, or cleanup when your human partner explicitly asks for one of those outcomes.
 
-**Core principle:** Verify tests → Present options → Execute choice → Clean up.
+**Core principle:** Verify tests → Preserve as-is by default → Execute explicit integration/discard requests → Clean up only when required.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
@@ -58,22 +58,22 @@ git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 
 Or ask: "This branch split from main - is that correct?"
 
-### Step 3: Present Options
+### Step 3: Default Outcome
 
-If the built-in question tool is available, use it to present this menu instead of waiting for a manual reaction.
-
-Present exactly these 4 options:
+If your human partner has not explicitly asked to merge locally, push/create a PR, or discard the work, stop here and report:
 
 ```
-Implementation complete. What would you like to do?
+Implementation complete. Keeping branch <name> and worktree at <path> as-is.
+```
+
+Do not present a forced decision menu by default.
+
+If your human partner explicitly asks what the available finish paths are, or asks you to handle the branch differently, present these 4 options:
 
 1. Merge back to <base-branch> locally
 2. Push and create a Pull Request
 3. Keep the branch as-is (I'll handle it later)
 4. Discard this work
-
-Which option?
-```
 
 **Don't add explanation** - keep options concise.
 
@@ -178,9 +178,9 @@ git worktree remove <worktree-path>
 - **Problem:** Merge broken code, create failing PR
 - **Fix:** Always verify tests before offering options
 
-**Open-ended questions**
-- **Problem:** "What should I do next?" → ambiguous
-- **Fix:** Present exactly 4 structured options
+**Pushing a decision when none was requested**
+- **Problem:** Turn a finished task into an unnecessary branch-management prompt
+- **Fix:** Preserve the branch/worktree by default unless your human partner explicitly asks for another finish path
 
 **Automatic worktree cleanup**
 - **Problem:** Remove worktree when might need it (Option 2, 3)
@@ -199,10 +199,10 @@ git worktree remove <worktree-path>
 - Force-push without explicit request
 
 **Always:**
-- Verify tests before offering options
-- Present exactly 4 options
+- Verify tests before handling any finish path
+- Preserve by default when no explicit integration/discard request was given
 - Get typed confirmation for Option 4
-- Clean up worktree for Options 1 & 4 only
+- Clean up worktree only when the chosen path requires it
 
 ## Integration
 

@@ -15,8 +15,8 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Context:** This should run in a safe workspace. That may be a dedicated worktree, or it may be the current workspace if it is already clean and appropriate for the task.
 
-**Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
-- (User preferences for plan location override this default)
+**Save plans to:** the current session plan file by default
+- Save in the repository only if your human partner explicitly asks for an in-repo plan
 
 ## Context Gathering
 
@@ -143,7 +143,7 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 After saving the plan, offer execution choice:
 
-**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two execution options:**
+**"Plan complete and saved to `<path>`. Two execution options:**
 
 **1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
 

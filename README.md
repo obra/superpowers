@@ -119,7 +119,7 @@ Start a new session in your chosen platform and ask for something that should tr
 
 6. **requesting-code-review** - Use for explicit review checkpoints, major features, or before merge.
 
-7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), and cleans up the worktree when the chosen finish path requires it.
+7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, preserves the branch/worktree by default, and only handles merge/PR/discard flows when the chosen finish path requires it.
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
@@ -142,7 +142,7 @@ Start a new session in your chosen platform and ask for something that should tr
 - **requesting-code-review** - Pre-review checklist
 - **receiving-code-review** - Responding to feedback
 - **using-git-worktrees** - Parallel development branches
-- **finishing-a-development-branch** - Merge/PR decision workflow
+- **finishing-a-development-branch** - Activates when tasks complete; preserves the branch/worktree by default.
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
 
 **Meta**
