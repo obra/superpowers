@@ -180,18 +180,29 @@ Fix issues inline before handing off the plan.
 
 ## Execution Handoff
 
-After saving the plan, offer the execution choice:
+After saving the plan, offer the execution choice using the `AskUserQuestion` tool. Do not narrate the options as prose.
 
-**"Plan complete and saved to `docs/plans/<filename>.md`. Two execution options:**
+Question: "Plan saved to `docs/plans/<filename>.md`. Which execution mode?"
 
-**1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
+Options (in this order):
 
-**2. Inline Execution** - Execute tasks in this session using executing-plans, with checkpoints and dependency-aware group execution when the plan defines groups
+1. **Subagent-Driven (Recommended)** — dispatch a fresh subagent per task, review between tasks, fast iteration
+2. **Inline Execution** — execute tasks in this session via `executing-plans`, with checkpoints and dependency-aware group execution when the plan defines groups
 
-**Which approach?"**
+If Subagent-Driven is chosen, use `nimbou-skills:subagent-driven-development`.
+If Inline Execution is chosen, use `nimbou-skills:executing-plans`.
 
-If Subagent-Driven is chosen:
-- use `nimbou-skills:subagent-driven-development`
+## How To Ask The User
 
-If Inline Execution is chosen:
-- use `nimbou-skills:executing-plans`
+This skill assumes design is closed. Use `AskUserQuestion` only when execution topology is genuinely blocked by a missing structural decision that resolves to 2-4 discrete options, such as:
+
+- whether a shared file or contract must land before dependent files (serial vs parallel groups)
+- which target file path or module owns a contested capability when more than one is viable
+- whether to reuse an existing repository/use-case or introduce a new one
+
+Lead with your recommendation as the first option and append `(Recommended)` to its label.
+
+Do not use `AskUserQuestion` for:
+
+- open file naming or describing prose
+- plan-approval gates — present the plan and wait for review, do not multiple-choice the approval itself

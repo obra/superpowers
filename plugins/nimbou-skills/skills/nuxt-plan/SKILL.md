@@ -33,6 +33,13 @@ Ask follow-up questions only when the execution topology is blocked by missing s
 - whether a shared file must land before dependent files
 - whether the work should stay in one execution group or split into parallel groups
 
+When such a question reduces to 2-4 discrete, mutually-exclusive options, use the `AskUserQuestion` tool. Lead with your recommendation as the first option and append `(Recommended)` to its label. Do not narrate the options as free-form prose.
+
+Do not use `AskUserQuestion` for:
+
+- open file or component naming
+- plan-approval gates — present the plan and wait for review
+
 Do not reopen settled UX, reuse, state, interaction, or responsive decisions unless the prior output is contradictory.
 
 ## File Structure First

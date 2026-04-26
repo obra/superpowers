@@ -37,6 +37,26 @@ Before routing to backend contract design:
 - cross-stack naming that both sides should preserve
 - backend assumptions the transport contract must preserve
 
+## How To Ask The User
+
+When any decision above resolves to 2-4 discrete, mutually-exclusive options, use the `AskUserQuestion` tool instead of free-form prose. The structured UI keeps shared decisions auditable on both sides of the boundary.
+
+Use `AskUserQuestion` for:
+
+- contract shape (chunky/batch vs chatty)
+- update payload posture (partial vs full replacement)
+- ownership of a contested capability (frontend-local vs backend-central)
+- where lifecycle state lives (client-derived vs server-authoritative)
+- error-mapping posture (transport-level vs domain-shaped errors)
+
+Lead with your recommendation as the first option and append `(Recommended)` to its label. Keep options to 2-4. Use free-form text only when the answer is genuinely open (naming, descriptions, free-text rationale).
+
+Do not use `AskUserQuestion` for:
+
+- yes/no confirmations of an obvious next step
+- plan-approval gates (those belong to the user-review step, not a multiple-choice question)
+- requests for prose-level explanations from the user
+
 Do not use this skill to finish Nuxt component decomposition, visual direction, or route-level UI structure. Hand that to `nuxt-think` after `doc-openapi`.
 Do not use this skill to finish NestJS module design, Prisma boundaries, or use-case decomposition. Hand that to `nestjs-think`.
 

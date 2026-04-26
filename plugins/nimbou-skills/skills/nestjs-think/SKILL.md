@@ -101,7 +101,7 @@ digraph nestjs_think {
 - Check the current project state first: modules, controllers, DTOs, use-cases, repositories, Prisma schema, test suites, and recent commits.
 - Extract any local backend rules from the nearest `GUIDELINES.md` before proposing the final shape. Focus on migration strategy, Prisma boundaries, repository responsibilities, API granularity, and test discipline.
 - If the request describes multiple independent subsystems, decompose it before refining details. Each subsystem should get its own spec and later its own implementation plan.
-- Ask one question per message. Prefer multiple choice when it keeps the answer precise.
+- Ask one question per message. When the question reduces to 2-4 discrete, mutually-exclusive options, use the `AskUserQuestion` tool — do not narrate the choices as free-form prose. Lead with your recommendation as the first option and append `(Recommended)` to its label.
 - Focus on:
   - public contract: HTTP, jobs, events, or internal use-case API
   - boundary placement: controller, application, domain, infrastructure
@@ -114,6 +114,7 @@ digraph nestjs_think {
 
 - Propose 2-3 backend approaches with trade-offs.
 - Lead with your recommendation and explain why.
+- When asking the user to pick between the proposed approaches, use `AskUserQuestion` with one option per approach. Put the recommended approach first with `(Recommended)` appended to its label, and use the option `description` field to surface the trade-off in one sentence.
 - Explicitly discuss:
   - migration shape and rollback posture when schema or persistence behavior changes
   - module boundaries
@@ -189,7 +190,7 @@ Wait for approval. If the user requests changes, update the spec and re-run the 
 ## Key Principles
 
 - **One question at a time**
-- **Multiple choice preferred when it improves precision**
+- **Use `AskUserQuestion` whenever the question is multiple choice with 2-4 options** — never narrate options as prose when they fit the structured tool
 - **YAGNI ruthlessly**
 - **Explore alternatives before committing**
 - **Incremental validation**

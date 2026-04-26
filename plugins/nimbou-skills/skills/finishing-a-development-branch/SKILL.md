@@ -48,20 +48,18 @@ Or ask: "This branch split from main - is that correct?"
 
 ### Step 3: Present Options
 
-Present exactly these 4 options:
+Present the 4 options using the `AskUserQuestion` tool. Do not narrate them as free-form prose.
 
-```
-Implementation complete. What would you like to do?
+Question: "Implementation complete. What would you like to do?"
 
-1. Merge back to <base-branch> locally
-2. Push and create a Pull Request
-3. Keep the branch as-is (I'll handle it later)
-4. Discard this work
+Options (in this order, single-select):
 
-Which option?
-```
+1. **Merge locally** — merge back to `<base-branch>` and delete the feature branch
+2. **Create PR** — push the branch and open a Pull Request
+3. **Keep as-is** — leave the branch and worktree untouched
+4. **Discard** — delete the branch and worktree (requires typed confirmation in Step 4)
 
-**Don't add explanation** - keep options concise.
+**Don't add explanation outside the option `description` fields** — keep the prompt tight.
 
 ### Step 4: Execute Choice
 
@@ -166,7 +164,7 @@ git worktree remove <worktree-path>
 
 **Open-ended questions**
 - **Problem:** "What should I do next?" → ambiguous
-- **Fix:** Present exactly 4 structured options
+- **Fix:** Present exactly 4 structured options via `AskUserQuestion`
 
 **Automatic worktree cleanup**
 - **Problem:** Remove worktree when might need it (Option 2, 3)

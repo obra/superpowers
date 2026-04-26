@@ -38,7 +38,7 @@ Treat `docs/domain/<domain>/` as the canonical specification bundle for the feat
 2. Read the nearest `DESIGN.md` and `GUIDELINES.md` that apply to the target area in the target project. If one or both do not exist, note that explicitly, continue, and suggest generating or refreshing them with `/design-md`.
 3. Classify the request as simple, medium, or complex.
 4. Search for reusable components by `tags`, `category`, and `domain`. Use `useWhen` only when the rich catalog includes it.
-5. Ask focused follow-up questions only when the request still has material ambiguity.
+5. Ask focused follow-up questions only when the request still has material ambiguity. When the question reduces to 2-4 discrete, mutually-exclusive options, use the `AskUserQuestion` tool — do not narrate the options as free-form prose.
 6. Close the design decisions that matter for implementation:
    - what product context affects the implementation posture, such as dense data, keyboard-heavy use, responsive priority, or long-session workflows
    - what screen, route, modal, or dashboard slice owns the work
@@ -57,6 +57,24 @@ Treat `docs/domain/<domain>/` as the canonical specification bundle for the feat
 7. Produce the structured output below with explicit references to the approved specification artifacts, present it for approval, and only then hand off to `nuxt-plan`. Do not write code.
 
 Consult `nimbou-skills:nuxt-design-architecture`, the local `GUIDELINES.md`, and the local `DESIGN.md` before proposing component splits. `GUIDELINES.md` owns implementation rules; `DESIGN.md` owns visual rules and wins on visual conflict.
+
+## How To Ask The User
+
+Decisions inside this skill that should use `AskUserQuestion` when they resolve to 2-4 discrete options:
+
+- which existing component or wrapper to reuse versus creating a new one
+- where state lives (child component, page, subtree composable, app-wide store)
+- which communication primitive to use (props/emits, `defineModel`, `provide/inject`, Pinia)
+- which responsive posture to take when more than one is viable
+- which inline-feedback vs toast posture to use when the project supports both
+
+Lead with your recommendation as the first option and append `(Recommended)` to its label. Keep options to 2-4.
+
+Do not use `AskUserQuestion` for:
+
+- open naming, copy, or visual-direction prose
+- yes/no confirmations of an already-recommended path
+- plan-approval gates — those belong to the structured-output review step, not a multiple-choice question
 
 ## Think Output
 
