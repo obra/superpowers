@@ -3,6 +3,7 @@
  *
  * Injects superpowers bootstrap context via system prompt transform.
  * Auto-registers skills directory via config hook (no symlinks needed).
+ * Validates skill graph integrity at startup and surfaces warnings.
  */
 
 import path from 'path';
@@ -46,11 +47,77 @@ const normalizePath = (p, homeDir) => {
   return path.resolve(normalized);
 };
 
+// Expected skills that must exist for the workflow graph to be consistent.
+// Update this list when adding/removing skills from the repository.
+const EXPECTED_SKILLS = [
+  'brainstorming',
+  'dispatching-parallel-agents',
+  'executing-plans',
+  'finishing-a-development-branch',
+  'receiving-code-review',
+  'requesting-code-review',
+  'subagent-driven-development',
+  'systematic-debugging',
+  'test-driven-development',
+  'using-git-worktrees',
+  'using-superpowers',
+  'verification-before-completion',
+  'writing-plans',
+  'writing-skills',
+];
+
+// Validate that all expected skills exist on disk.
+// Returns { missing: string[], extra: string[] }
+const validateSkillGraph = (skillsDir) => {
+  const missing = [];
+  const extra = [];
+
+  // Check expected skills
+  for (const name of EXPECTED_SKILLS) {
+    const skillFile = path.join(skillsDir, name, 'SKILL.md');
+    if (!fs.existsSync(skillFile)) {
+      missing.push(name);
+    }
+  }
+
+  // Check for unexpected skill directories (not in EXPECTED_SKILLS)
+  try {
+    const entries = fs.readdirSync(skillsDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isDirectory() && !EXPECTED_SKILLS.includes(entry.name)) {
+        const hasSkillMd = fs.existsSync(path.join(skillsDir, entry.name, 'SKILL.md'));
+        if (hasSkillMd) {
+          extra.push(entry.name);
+        }
+      }
+    }
+  } catch {
+    // skillsDir may not exist yet
+  }
+
+  return { missing, extra };
+};
+
 export const SuperpowersPlugin = async ({ client, directory }) => {
   const homeDir = os.homedir();
   const superpowersSkillsDir = path.resolve(__dirname, '../../skills');
   const envConfigDir = normalizePath(process.env.OPENCODE_CONFIG_DIR, homeDir);
   const configDir = envConfigDir || path.join(homeDir, '.config/opencode');
+
+  // Run skill graph health check at startup
+  const healthCheck = validateSkillGraph(superpowersSkillsDir);
+  const hasWarnings = healthCheck.missing.length > 0 || healthCheck.extra.length > 0;
+  if (hasWarnings) {
+    if (healthCheck.missing.length > 0) {
+      console.warn(`[superpowers] ⚠️ Missing skills: ${healthCheck.missing.join(', ')}`);
+    }
+    if (healthCheck.extra.length > 0) {
+      console.warn(`[superpowers] ℹ️ Unregistered skills (not in EXPECTED_SKILLS): ${healthCheck.extra.join(', ')}`);
+    }
+    console.warn('[superpowers] Run `git pull` in the superpowers directory or update EXPECTED_SKILLS in the plugin to fix.');
+  } else {
+    console.log('[superpowers] ✅ Skill graph validated: all 14 skills present, no orphans');
+  }
 
   // Helper to generate bootstrap content
   const getBootstrapContent = () => {
@@ -105,8 +172,15 @@ ${toolMapping}
       if (!firstUser || !firstUser.parts.length) return;
       // Only inject once
       if (firstUser.parts.some(p => p.type === 'text' && p.text.includes('EXTREMELY_IMPORTANT'))) return;
+
+      // Build health warning if skills are missing
+      let healthWarning = '';
+      if (hasWarnings && healthCheck.missing.length > 0) {
+        healthWarning = `\n\n<SUPERPOWERS_HEALTH_WARNING>\n⚠️ Skill graph inconsistency detected: ${healthCheck.missing.length} skill(s) missing — ${healthCheck.missing.map(s => `\`${s}\``).join(', ')}. Workflow links referencing these skills may be broken. Inform the user and suggest running \`git pull\` in the superpowers directory or checking skill installation.\n</SUPERPOWERS_HEALTH_WARNING>`;
+      }
+
       const ref = firstUser.parts[0];
-      firstUser.parts.unshift({ ...ref, type: 'text', text: bootstrap });
+      firstUser.parts.unshift({ ...ref, type: 'text', text: bootstrap + healthWarning });
     }
   };
 };
