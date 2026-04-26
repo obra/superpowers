@@ -13,6 +13,15 @@ When you have multiple unrelated failures (different test files, different subsy
 
 **Core principle:** Dispatch one agent per independent problem domain. Let them work concurrently.
 
+## Agent Teams Branch (check first)
+
+If Claude Code Agent Teams is active in this session, prefer the Teams runtime for parallel work — long-lived teammates with shared task state and direct messaging are a better fit than one-shot subagents.
+
+**Teams is active when** `<agent-teams-status>active</agent-teams-status>` appears in session context, or `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set, and the `Agent` tool exposes `team_name`/`name` parameters.
+
+- **Teams active →** stop here and use `superpowers:agent-teams-orchestration` instead. That skill covers decomposition with file ownership, custom-subagent discovery, plan approval, and shutdown.
+- **Teams inactive →** continue with the rest of this skill (subagent dispatch).
+
 ## When to Use
 
 ```dot

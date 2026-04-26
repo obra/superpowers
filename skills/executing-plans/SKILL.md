@@ -13,6 +13,20 @@ Load plan, review critically, execute all tasks, report when complete.
 
 **Note:** Tell your human partner that Superpowers works much better with access to subagents. The quality of its work will be significantly higher if run on a platform with subagent support (such as Claude Code or Codex). If subagents are available, use superpowers:subagent-driven-development instead of this skill.
 
+## Agent Teams Branch (check first)
+
+If the plan contains independent parallel branches AND Claude Code Agent Teams is active in this session, route execution through the Teams runtime instead of sequential subagents.
+
+**Teams is active when** `<agent-teams-status>active</agent-teams-status>` appears in session context, or `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set, and the `Agent` tool exposes `team_name`/`name` parameters.
+
+Decision flow:
+
+1. Read the plan and tag each task as `parallel-safe` or `sequential` (parallel-safe = no shared file edits, no ordering dependency on an unfinished task).
+2. **Teams active AND ≥2 parallel-safe branches →** delegate to `superpowers:agent-teams-orchestration`. Each plan branch maps to one teammate with explicit file ownership. Sequential tasks remain in this session or run after the team shuts down.
+3. **Teams inactive OR plan is fully sequential →** fall back to the rest of this skill.
+
+Do not attempt to call `team_name`, `SendMessage`, or `TeamCreate` if Teams is inactive — the tool calls will fail.
+
 ## The Process
 
 ### Step 1: Load and Review Plan
@@ -68,3 +82,6 @@ After all tasks complete and verified:
 - **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
 - **superpowers:writing-plans** - Creates the plan this skill executes
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
+
+**Parallel execution alternative:**
+- **superpowers:agent-teams-orchestration** - Use when Agent Teams is active and the plan has independent parallel branches
