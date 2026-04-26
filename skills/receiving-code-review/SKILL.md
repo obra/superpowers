@@ -1,6 +1,6 @@
 ---
 name: receiving-code-review
-description: Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation
+description: "Use when receiving code review feedback, before implementing suggestions. Chain: pairs with→requesting-code-review; upstream→finishing-a-development-branch(review before merge). Verify before implementing. Push back with technical reasoning if wrong. No performative agreement"
 ---
 
 # Code Review Reception

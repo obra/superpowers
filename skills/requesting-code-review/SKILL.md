@@ -1,6 +1,6 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
+description: "Use when completing tasks, implementing major features, or before merging. Chain: comes after→verification-before-completion; leads to→receiving-code-review; upstream→finishing-a-development-branch. Template-based review with specific criteria categories"
 ---
 
 # Requesting Code Review

@@ -1,6 +1,6 @@
 ---
 name: verification-before-completion
-description: Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
+description: "MANDATORY before claiming done/fixed/passing. Run verification commands, confirm output, then claim. Chain: triggered by→TDD(confirm green),systematic-debugging(confirm fix),finishing-a-development-branch(pre-merge). Iron Law: NO completion claims without fresh verification evidence"
 ---
 
 # Verification Before Completion

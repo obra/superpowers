@@ -1,6 +1,6 @@
 ---
 name: systematic-debugging
-description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes
+description: "Use on ANY bug/failure/unexpected behavior BEFORE proposing fixes. Chain: invoke freeze first(lock scope→fault module), careful(if hw register/flash ops); Phase4→TDD(create failing test),verification(confirm fix). 4 phases: root cause→pattern→hypothesis→implementation. 3+ failed fixes→question architecture"
 ---
 
 # Systematic Debugging

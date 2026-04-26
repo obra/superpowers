@@ -1,6 +1,6 @@
 ---
 name: executing-plans
-description: Use when you have a written implementation plan to execute in a separate session with review checkpoints
+description: "Execute plan inline with batch checkpoints. Chain: requires→using-git-worktrees; uses→careful,freeze,karpathy-guidelines; downstream→finishing-a-development-branch. Alternative→subagent-driven-development(same-session,subagent-per-task)"
 ---
 
 # Executing Plans

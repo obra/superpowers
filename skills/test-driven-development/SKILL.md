@@ -1,6 +1,6 @@
 ---
 name: test-driven-development
-description: Use when implementing any feature or bugfix, before writing implementation code
+description: "Write test first, watch it fail, then minimal code to pass. RED→GREEN→REFACTOR. Chain: RED input←test-cases(if generated from PRD); downstream→verification-before-completion(confirm green); also used by→systematic-debugging(Phase4),subagent-driven-development. Iron Law: NO code without failing test first"
 ---
 
 # Test-Driven Development (TDD)

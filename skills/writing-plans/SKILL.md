@@ -1,6 +1,6 @@
 ---
 name: writing-plans
-description: Use when you have a spec or requirements for a multi-step task, before touching code
+description: "Convert spec/requirements to step-by-step implementation plan. Chain: upstream←brainstorming,product-requirements,mcu-selection; downstream→subagent-driven-development|executing-plans+test-cases. Zero-context assumption, 2-5min tasks"
 ---
 
 # Writing Plans

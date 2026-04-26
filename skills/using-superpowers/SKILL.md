@@ -1,6 +1,6 @@
 ---
 name: using-superpowers
-description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
+description: "Session entry point. Route: new project→product-requirements→brainstorming→writing-plans; feature→brainstorming; bug→systematic-debugging+freeze+careful; embedded→mcu-selection; traceability→sparv; See workflow-graph.md"
 ---
 
 <SUBAGENT-STOP>

@@ -1,6 +1,6 @@
 ---
 name: subagent-driven-development
-description: Use when executing implementation plans with independent tasks in the current session
+description: "Execute plan with fresh subagent per task + two-stage review. Chain: requires→using-git-worktrees; uses→test-driven-development,careful,freeze,karpathy-guidelines; downstream→finishing-a-development-branch. Preferred over executing-plans for same-session work"
 ---
 
 # Subagent-Driven Development

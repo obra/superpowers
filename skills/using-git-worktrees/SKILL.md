@@ -1,6 +1,6 @@
 ---
 name: using-git-worktrees
-description: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - creates isolated git worktrees with smart directory selection and safety verification
+description: "Use when starting feature work needing isolation or before executing implementation plans. Chain: required by→subagent-driven-development,executing-plans; pairs with→finishing-a-development-branch(worktree cleanup). Creates isolated workspace away from main branch"
 ---
 
 # Using Git Worktrees

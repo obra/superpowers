@@ -1,6 +1,6 @@
 ---
 name: writing-skills
-description: Use when creating new skills, editing existing skills, or verifying skills work before deployment
+description: "TDD for process docs: write failing test→write skill→refactor. Chain: complementary with→skill-creator(evaluate,benchmark,optimize). Also used by→skill-install(validates skill quality). Applies same RED→GREEN→REFACTOR cycle to documentation as code"
 ---
 
 # Writing Skills

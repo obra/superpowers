@@ -1,6 +1,6 @@
 ---
 name: brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
+description: "You MUST use this before any creative work. Explores intent, requirements, design. Chain: upstream→product-requirements(if no PRD); parallel→mcu-selection(if embedded); downstream→writing-plans(HARD GATE: design approved→plans only, no code). Skip if: ≤3 files or mechanical change"
 ---
 
 # Brainstorming Ideas Into Designs
