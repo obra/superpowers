@@ -99,6 +99,32 @@ Use the least powerful model that can handle each role to conserve cost and incr
 - Touches multiple files with integration concerns → standard model
 - Requires design judgment or broad codebase understanding → most capable model
 
+## Cost Discipline
+
+**The orchestrator is on the most expensive model. Every orchestrator turn re-bills the accumulated session context. The dominant cost lever in long subagent-driven sessions is keeping mechanical work *out* of the orchestrator — not skipping reviews on trivial files.**
+
+**The drift trap.** Early in a session, dispatching subagents feels natural. As the session progresses and the orchestrator's context grows, "I'll just do this one inline because it's a 3-line edit" starts to feel faster than dispatching. It is faster — *for that single edit*. But:
+
+- The orchestrator session is on the most capable (most expensive) model.
+- Each new turn re-bills the entire growing context (with cache discount, but still at top tier).
+- The same edit on a fresh subagent costs ~1/5 as much because the subagent only sees the focused brief, not the session history.
+- Across a 20-task plan, drifting from "always dispatch" to "sometimes inline" can double total session cost.
+
+**The decision rule.** If the next action is to write code (any quantity, any file, any reason), dispatch a subagent. Reserve the orchestrator turn for: design tradeoffs, edge-case reasoning, debugging non-obvious issues, adversarial review, judgment calls.
+
+**Watch for the drift trigger.** "I'll just do this one inline because it's a 3-line edit / one tool call / a quick fix" — that thought *is* the failure mode. Dispatch anyway. Three lines on a subagent costs the same as 30 lines, and the subagent doesn't pollute the orchestrator's context.
+
+**This rule applies during post-review fixes too.** When a reviewer flags issues and the implementer subagent has already returned its result, the temptation is to apply the fixes inline ("just two small edits"). Dispatch a fix subagent every time, with the specific changes to apply.
+
+**Reservation list — orchestrator may edit inline ONLY when:**
+- Reverting a clearly broken subagent output where re-dispatching would take longer than the undo
+- Editing within a single tool call as part of demonstrating something interactively to the user
+- Updating session-level memory or scratch files (orchestrator state, not codebase work)
+
+**Self-check.** If the orchestrator has done >2 inline mechanical edits on the codebase in a single session, stop and explicitly ask whether you've drifted. If you have, dispatch the remaining work and resume orchestration mode.
+
+**Reviews are not the cost driver.** The per-task spec + quality reviews described above feel like overhead, but they're the cheap part — typically a few cents each on standard or cheap models. Skipping them to save cost is false economy. Skipping the inline-drift discipline is the real lever.
+
 ## Handling Implementer Status
 
 Implementer subagents report one of four statuses. Handle each appropriately:
@@ -246,6 +272,7 @@ Done!
 - Let implementer self-review replace actual review (both are needed)
 - **Start code quality review before spec compliance is ✅** (wrong order)
 - Move to next task while either review has open issues
+- **Edit code inline as the orchestrator** — even small mechanical edits, even "one tool call," even when "it would be faster than dispatching." See the Cost Discipline section above. The drift to inline edits is the dominant cost leak in long sessions.
 
 **If subagent asks questions:**
 - Answer clearly and completely
