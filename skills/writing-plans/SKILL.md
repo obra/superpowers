@@ -11,6 +11,15 @@ Write comprehensive implementation plans assuming the engineer has zero context 
 
 **Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md` (user preferences override)
 
+## Pre-flight: read project wiki
+
+Before drafting the plan, read these if they exist:
+
+- `<cwd>/.claude/wiki/decisions.md` — prior architectural calls; align plan with them or flag conflicts
+- `<cwd>/.claude/wiki/sessions/` — last 3 session `.md` files for recent project state
+
+Skip silently if the directory doesn't exist.
+
 ## Scope Check
 
 If the spec covers multiple independent subsystems, suggest breaking into separate plans — one per subsystem. Each plan should produce working, testable software on its own.

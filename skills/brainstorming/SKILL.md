@@ -7,6 +7,15 @@ description: Use when planning creative work - features, components, functionali
 
 Help turn ideas into fully formed designs through collaborative dialogue.
 
+## Pre-flight: read project wiki
+
+Before proposing any approach, read these if they exist:
+
+- `<cwd>/.claude/wiki/decisions.md` — prior architectural calls, ground new design in them
+- `<cwd>/.claude/wiki/sessions/` — last 3 session `.md` files (sort by name, newest = highest YYMMDD prefix) for recent context
+
+Skip silently if the directory doesn't exist (project hasn't archived yet). Surface any contradiction between the user's request and prior decisions before proposing.
+
 <HARD-GATE>
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
 </HARD-GATE>

@@ -7,6 +7,12 @@ description: Use when encountering any bug, test failure, or unexpected behavior
 
 **Violating the letter of this process is violating the spirit of debugging.**
 
+## Pre-flight: check known gotchas
+
+Before Phase 1, read `<cwd>/.claude/wiki/gotchas.md` if it exists. Match the current symptom against known gotchas FIRST — if the bug is already documented, apply the recorded fix and skip a fresh investigation. Skip silently if the file doesn't exist.
+
+After fixing a new (un-documented) gotcha, append it to that file so the next session benefits.
+
 ## The Iron Law
 
 ```
