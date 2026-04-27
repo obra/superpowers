@@ -89,6 +89,9 @@ or search for "superpowers" in the plugin marketplace.
 
 ### OpenCode
 
+OpenCode uses its own plugin install; install Superpowers separately even if you
+already use it in another harness.
+
 Tell OpenCode:
 
 ```
