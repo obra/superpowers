@@ -89,6 +89,36 @@ def _has_symlink_component(p: Path, until: Path) -> bool:
         cur = cur.parent
 
 
+def _safe_writability_probe(directory: Path) -> bool:
+    """Test writability of `directory` without following symlinks. Uses a
+    unique probe name + O_NOFOLLOW|O_EXCL|O_CREAT so an attacker cannot
+    pre-place a symlink at the probe path to redirect writes."""
+    probe = directory / f".sspower-probe.{os.getpid()}.{int(datetime.now().timestamp() * 1000)}"
+    o_nofollow = getattr(os, "O_NOFOLLOW", 0)
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | o_nofollow
+    fd = None
+    try:
+        fd = os.open(str(probe), flags, 0o600)
+        return True
+    except OSError:
+        return False
+    finally:
+        if fd is not None:
+            try:
+                os.close(fd)
+            except OSError:
+                pass
+            try:
+                # Only unlink if it's a regular file we just created (not a
+                # symlink and not pre-existing). lstat refuses to follow.
+                st = os.lstat(str(probe))
+                import stat as _stat
+                if _stat.S_ISREG(st.st_mode):
+                    os.unlink(str(probe))
+            except OSError:
+                pass
+
+
 def resolve_out_dir(cwd: str):
     """Returns (out_dir, trust_root). trust_root is the boundary above
     which we will not write — a hostile repo cannot place a symlink at or
@@ -103,10 +133,8 @@ def resolve_out_dir(cwd: str):
             if not _has_symlink_component(project_dir, cwd_path):
                 project_dir.mkdir(parents=True, exist_ok=True)
                 if not _has_symlink_component(project_dir, cwd_path):
-                    probe = project_dir / ".write-probe"
-                    probe.touch()
-                    probe.unlink()
-                    return project_dir, cwd_path
+                    if _safe_writability_probe(project_dir):
+                        return project_dir, cwd_path
         except (OSError, PermissionError):
             pass
 
