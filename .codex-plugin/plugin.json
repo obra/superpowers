@@ -36,6 +36,9 @@
       "I've got an idea for something I'd like to build.",
       "Let's add a feature to this project."
     ],
+    "websiteURL": "https://github.com/obra/superpowers",
+    "privacyPolicyURL": "https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement",
+    "termsOfServiceURL": "https://docs.github.com/en/site-policy/github-terms/github-terms-of-service",
     "brandColor": "#F59E0B",
     "composerIcon": "./assets/superpowers-small.svg",
     "logo": "./assets/app-icon.png",
