@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# Test: Tools Functionality
-# Verifies that use_skill and find_skills tools work correctly
+# Test: Native Skill Tool Functionality
+# Verifies that OpenCode's native skill tool can load personal, project,
+# and bundled superpowers skills.
 # NOTE: These tests require OpenCode to be installed and configured
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+OPENCODE_TEST_TIMEOUT_SECONDS="${OPENCODE_TEST_TIMEOUT_SECONDS:-120}"
 
 echo "=== Test: Tools Functionality ==="
 
@@ -21,84 +23,73 @@ if ! command -v opencode &> /dev/null; then
     exit 0
 fi
 
-# Test 1: Test find_skills tool via direct invocation
-echo "Test 1: Testing find_skills tool..."
-echo "  Running opencode with find_skills request..."
+run_opencode() {
+    local result_var="$1"
+    local dir="$2"
+    local prompt="$3"
+    local command_output
+    local exit_code
 
-# Use timeout to prevent hanging, capture both stdout and stderr
-output=$(timeout 60s opencode run --print-logs "Use the find_skills tool to list available skills. Just call the tool and show me the raw output." 2>&1) || {
+    set +e
+    command_output=$(cd "$dir" && timeout "${OPENCODE_TEST_TIMEOUT_SECONDS}s" opencode run --print-logs --format json "$prompt" 2>&1)
     exit_code=$?
+    set -e
+
     if [ $exit_code -eq 124 ]; then
-        echo "  [FAIL] OpenCode timed out after 60s"
+        echo "  [FAIL] OpenCode timed out after ${OPENCODE_TEST_TIMEOUT_SECONDS}s"
         exit 1
     fi
-    echo "  [WARN] OpenCode returned non-zero exit code: $exit_code"
-}
 
-# Check for expected patterns in output
-if echo "$output" | grep -qi "superpowers:brainstorming\|superpowers:using-superpowers\|Available skills"; then
-    echo "  [PASS] find_skills tool discovered superpowers skills"
-else
-    echo "  [FAIL] find_skills did not return expected skills"
-    echo "  Output was:"
-    echo "$output" | head -50
-    exit 1
-fi
-
-# Check if personal test skill was found
-if echo "$output" | grep -qi "personal-test"; then
-    echo "  [PASS] find_skills found personal test skill"
-else
-    echo "  [WARN] personal test skill not found in output (may be ok if tool returned subset)"
-fi
-
-# Test 2: Test use_skill tool
-echo ""
-echo "Test 2: Testing use_skill tool..."
-echo "  Running opencode with use_skill request..."
-
-output=$(timeout 60s opencode run --print-logs "Use the use_skill tool to load the personal-test skill and show me what you get." 2>&1) || {
-    exit_code=$?
-    if [ $exit_code -eq 124 ]; then
-        echo "  [FAIL] OpenCode timed out after 60s"
+    if [ $exit_code -ne 0 ]; then
+        echo "  [FAIL] OpenCode returned non-zero exit code: $exit_code"
+        echo "  Output was:"
+        awk 'NR <= 80 { print }' <<<"$command_output"
         exit 1
     fi
-    echo "  [WARN] OpenCode returned non-zero exit code: $exit_code"
+
+    printf -v "$result_var" '%s' "$command_output"
 }
 
-# Check for the skill marker we embedded
-if echo "$output" | grep -qi "PERSONAL_SKILL_MARKER_12345\|Personal Test Skill\|Launching skill"; then
-    echo "  [PASS] use_skill loaded personal-test skill content"
-else
-    echo "  [FAIL] use_skill did not load personal-test skill correctly"
-    echo "  Output was:"
-    echo "$output" | head -50
-    exit 1
-fi
+assert_contains() {
+    local output="$1"
+    local needle="$2"
+    local message="$3"
 
-# Test 3: Test use_skill with superpowers: prefix
-echo ""
-echo "Test 3: Testing use_skill with superpowers: prefix..."
-echo "  Running opencode with superpowers:brainstorming skill..."
-
-output=$(timeout 60s opencode run --print-logs "Use the use_skill tool to load superpowers:brainstorming and tell me the first few lines of what you received." 2>&1) || {
-    exit_code=$?
-    if [ $exit_code -eq 124 ]; then
-        echo "  [FAIL] OpenCode timed out after 60s"
+    if [[ "$output" == *"$needle"* ]]; then
+        echo "  [PASS] $message"
+    else
+        echo "  [FAIL] $message"
+        echo "  Expected to find: $needle"
+        echo "  Output was:"
+        awk 'NR <= 80 { print }' <<<"$output"
         exit 1
     fi
-    echo "  [WARN] OpenCode returned non-zero exit code: $exit_code"
 }
 
-# Check for expected content from brainstorming skill
-if echo "$output" | grep -qi "brainstorming\|Launching skill\|skill.*loaded"; then
-    echo "  [PASS] use_skill loaded superpowers:brainstorming skill"
-else
-    echo "  [FAIL] use_skill did not load superpowers:brainstorming correctly"
-    echo "  Output was:"
-    echo "$output" | head -50
-    exit 1
-fi
+# Test 1: Test personal skill loading via OpenCode's native skill tool
+echo "Test 1: Testing native skill tool with a personal skill..."
+echo "  Running opencode with personal-test request..."
+
+run_opencode output "$TEST_HOME/test-project" "Call the skill tool with name \"personal-test\". Then print the PERSONAL_SKILL_MARKER_12345 marker."
+assert_contains "$output" '"tool":"skill"' "OpenCode called the native skill tool"
+assert_contains "$output" "PERSONAL_SKILL_MARKER_12345" "native skill tool loaded personal-test skill content"
+
+# Test 2: Test project skill loading
+echo ""
+echo "Test 2: Testing native skill tool with a project skill..."
+echo "  Running opencode with project-test request..."
+
+run_opencode output "$TEST_HOME/test-project" "Call the skill tool with name \"project-test\". Then print the PROJECT_SKILL_MARKER_67890 marker."
+assert_contains "$output" "PROJECT_SKILL_MARKER_67890" "native skill tool loaded project-test skill content"
+
+# Test 3: Test bundled superpowers skill loading
+echo ""
+echo "Test 3: Testing native skill tool with a superpowers skill..."
+echo "  Running opencode with brainstorming skill..."
+
+run_opencode output "$TEST_HOME/test-project" "Call the skill tool with name \"brainstorming\". Then tell me the loaded skill title."
+assert_contains "$output" '"name":"brainstorming"' "native skill tool loaded bundled brainstorming skill"
+assert_contains "$output" "Brainstorming Ideas Into Designs" "brainstorming skill content was returned"
 
 echo ""
-echo "=== All tools tests passed ==="
+echo "=== All native skill tool tests passed ==="
