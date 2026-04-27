@@ -52,19 +52,18 @@ test_debugging_four_phases() {
     fi
 }
 
-# Test: debugging starts with reproduction
-test_debugging_reproduce_first() {
-    echo "Test: debugging starts with reproduction..."
+# Test: debugging loads document context before investigation
+test_debugging_context_loading_first() {
+    echo "Test: debugging loads document context first..."
 
     local output
-    output=$(run_claude "What is the first step in systematic-debugging?" 120)
+    output=$(run_claude "What happens before systematic-debugging starts root cause investigation?" 120)
 
-    # Support both English and Chinese keywords
-    if echo "$output" | grep -qiE "(reproduce|reproducible|复现|reproducibility|第一步|first.*step)"; then
-        echo "  [PASS] debugging starts with reproduction"
+    if echo "$output" | grep -qiE "(Phase 0|BUG_DOC|TASK_DOC|文档上下文|context)"; then
+        echo "  [PASS] debugging loads context before investigation"
         return 0
     else
-        echo "  [FAIL] debugging should start with reproduction"
+        echo "  [FAIL] debugging should load document context first"
         echo "  Output: $(echo "$output" | head -30)"
         return 1
     fi
@@ -111,7 +110,7 @@ test_debugging_no_premature_fix() {
     local output
     output=$(run_claude "Does systematic-debugging allow fixing before understanding the root cause?" 120)
 
-    if echo "$output" | grep -qi "no\|not.*allow\|understand.*first\|root.*cause"; then
+    if echo "$output" | grep -qiE "(no|not.*allow|understand.*first|root.*cause|根本原因|绝对不允许)"; then
         echo "  [PASS] debugging prevents premature fixes"
         return 0
     else
@@ -133,7 +132,7 @@ echo ""
 
 test_debugging_availability || ((failed++))
 test_debugging_four_phases || ((failed++))
-test_debugging_reproduce_first || ((failed++))
+test_debugging_context_loading_first || ((failed++))
 test_debugging_hypothesis || ((failed++))
 test_debugging_verify_fix || ((failed++))
 test_debugging_no_premature_fix || ((failed++))
