@@ -4,11 +4,21 @@ Use this template when dispatching a spec compliance reviewer subagent.
 
 **Purpose:** Verify implementer built what was requested (nothing more, nothing less)
 
+**Role context:** Read the task's `**Role:**` slug from the plan and pass it to the reviewer as `[ROLE]`. The reviewer uses it to anchor the boundary contract for that role (e.g., a `nestjs-usecase-author` task must not import `@prisma/client` or `@nestjs/common` HTTP symbols; a `vue-component-author` task must not introduce a composable). When `Role:` is missing, pass `general-purpose` and ask the reviewer to flag the missing role as a planning gap.
+
 ```
 Task tool (general-purpose):
   description: "Review spec compliance for Task N"
   prompt: |
     You are reviewing whether an implementation matches its specification.
+
+    ## Role Under Review
+
+    [ROLE]
+
+    The role implies a boundary contract documented in
+    `plugins/nimbou-skills/agents/[ROLE].md` — especially the "You may / You may not"
+    section. Use it as additional spec when verifying the diff.
 
     ## What Was Requested
 

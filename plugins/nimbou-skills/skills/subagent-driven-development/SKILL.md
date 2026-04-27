@@ -45,6 +45,24 @@ Do not use it just to fan out unrelated failures. That belongs to `nimbou-skills
 
 Do not use it when the plan should simply be executed inline by the controller agent with normal verification steps. That belongs to `nimbou-skills:executing-plans`.
 
+## Role Routing
+
+Plans produced by `nimbou-skills:nestjs-plan` and `nimbou-skills:nuxt-plan` declare a `**Role:**` slug per task. Before dispatching the implementer for a task, read that slug and pass it as the `subagent_type` argument of the `Task` tool. The role agent already carries Clean Architecture, naming, and boundary rules — keep the dispatch prompt lean (task spec + scene-setting + delivery contract).
+
+| Role slug | Subagent dispatched as | Use when |
+|---|---|---|
+| `prisma-schema-author` | `prisma-schema-author` | task evolves `schema.prisma` and/or migrations |
+| `prisma-repository-author` | `prisma-repository-author` | task implements/extends a repository adapter against an application port |
+| `nestjs-usecase-author` | `nestjs-usecase-author` | task creates one application use-case (one verb) and its ports |
+| `nestjs-controller-author` | `nestjs-controller-author` | task wires HTTP transport: controller, DTOs, guards, module |
+| `vue-component-author` | `vue-component-author` | task creates/evolves a Vue SFC under `components/` |
+| `nuxt-composable-author` | `nuxt-composable-author` | task creates/evolves a composable or its util |
+| `nuxt-page-author` | `nuxt-page-author` | task creates/evolves a page, layout, or route wiring |
+
+**Fallback:** if a task has no `**Role:**` field, dispatch with `general-purpose` and surface the missing role as a planning warning in your TodoWrite/post-task report. Do not silently rely on the fallback — fix the plan instead.
+
+The same `Role:` slug also feeds `./spec-reviewer-prompt.md` and `./code-quality-reviewer-prompt.md`, which use it to anchor the boundary contract during review. See those templates for the per-role focus list.
+
 ## The Process
 
 ```dot
@@ -53,6 +71,7 @@ digraph process {
 
     subgraph cluster_per_task {
         label="Per Task";
+        "Read task's Role: slug (fallback: general-purpose with warning)" [shape=box];
         "Dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
         "Implementer subagent asks questions?" [shape=diamond];
         "Answer questions, provide context" [shape=box];
@@ -71,7 +90,8 @@ digraph process {
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
     "Use nimbou-skills:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
+    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Read task's Role: slug (fallback: general-purpose with warning)";
+    "Read task's Role: slug (fallback: general-purpose with warning)" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -86,7 +106,7 @@ digraph process {
     "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
     "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
     "Mark task complete in TodoWrite" -> "More tasks remain?";
-    "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
+    "More tasks remain?" -> "Read task's Role: slug (fallback: general-purpose with warning)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
     "Dispatch final code reviewer subagent for entire implementation" -> "Use nimbou-skills:finishing-a-development-branch";
 }
@@ -270,6 +290,8 @@ Done!
 - **Start code quality review before spec compliance is ✅** (wrong order)
 - Move to next task while either review has open issues
 - Open the next wave while the post-wave review has open blockers
+- Dispatch with `general-purpose` when the task carries a valid `**Role:**` slug (always honor the role; the fallback is only for missing/unknown slugs)
+- Silently swallow the missing-role warning when a task arrives without `**Role:**` (always surface it as a planning gap)
 
 **If subagent asks questions:**
 - Answer clearly and completely

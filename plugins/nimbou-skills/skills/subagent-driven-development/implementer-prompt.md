@@ -2,8 +2,12 @@
 
 Use this template when dispatching an implementer subagent.
 
+**Routing:** Read the task's `**Role:**` field from the plan. Substitute `[ROLE]` below with the matching role slug (`prisma-schema-author`, `prisma-repository-author`, `nestjs-usecase-author`, `nestjs-controller-author`, `vue-component-author`, `nuxt-composable-author`, `nuxt-page-author`). If the task has no `**Role:**` field, fall back to `general-purpose` and surface the missing role as a planning warning in your post-task report.
+
+The role agent already carries Clean Architecture, naming, and boundary rules in its own system prompt. Do not repeat those rules in this template — keep the dispatch lean.
+
 ```
-Task tool (general-purpose):
+Task tool ([ROLE]):
   description: "Implement Task N: [task name]"
   prompt: |
     You are implementing Task N: [task name]
@@ -14,7 +18,7 @@ Task tool (general-purpose):
 
     ## Context
 
-    [Scene-setting: where this fits, dependencies, architectural context]
+    [Scene-setting: where this fits, which earlier-wave outputs you may consume, file paths to read first]
 
     ## Before You Begin
 
