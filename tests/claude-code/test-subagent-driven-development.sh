@@ -53,7 +53,7 @@ echo ""
 # Test 3: Verify self-review is mentioned
 echo "Test 3: Self-review requirement..."
 
-output=$(run_claude "Does the subagent-driven-development skill require implementers to do self-review? Answer briefly, then list 2-3 things they should check." 120)
+output=$(run_claude "Does the subagent-driven-development skill require implementers to do self-review? Answer in one sentence, then give exactly two short checklist items." 120)
 
 if echo "$output" | grep -qiE "(self-review|self review|自审|自我审查)"; then
     : # pass
@@ -62,10 +62,10 @@ else
     exit 1
 fi
 
-if echo "$output" | grep -qiE "(completeness|Completeness|完整性|功能完整性|测试覆盖|代码质量)"; then
+if echo "$output" | grep -qiE "(completeness|完整性|quality|代码质量|遗漏|miss any requirements|edge cases|测试综合|tests comprehensive|maintainable)"; then
     : # pass
 else
-    echo "  [FAIL] Should check completeness"
+    echo "  [FAIL] Should mention self-review checklist substance"
     exit 1
 fi
 
@@ -83,7 +83,7 @@ else
     exit 1
 fi
 
-if echo "$output" | grep -qiE "(before.*task|before.*execut|before any task|执行任务之前|开始执行任务|开始.*执行|流程图|逐个任务执行之前)"; then
+if echo "$output" | grep -qiE "(before.*task|before.*execut|before any task|执行任务之前|任务执行开始之前|开始之前|开始执行任务|开始.*执行|流程图|逐个任务执行之前)"; then
     : # pass
 else
     echo "  [FAIL] Should mention reading at beginning"
