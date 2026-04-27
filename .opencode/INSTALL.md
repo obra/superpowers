@@ -1,58 +1,101 @@
-# Installing Superpowers for OpenCode
+# Installing DevKit DotNet + Superpowers
 
 ## Prerequisites
 
 - [OpenCode.ai](https://opencode.ai) installed
+- .NET SDK 8/9/10 (for .NET development)
 
 ## Installation
 
-Add superpowers to the `plugin` array in your `opencode.json` (global or project-level):
+### Step 1: Add plugins to opencode.json
+
+Add both plugins to the `plugin` array in your `opencode.json` (global or project-level):
 
 ```json
 {
-  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git"]
+  "plugin": [
+    "superpowers@git+https://github.com/obra/superpowers.git",
+    "devkit-dotnet@git+https://github.com/Hayr06/superpowers.git"
+  ]
 }
 ```
 
-Restart OpenCode. That's it — the plugin auto-installs and registers all skills.
+**Important:** Superpowers must be listed FIRST, then devkit-dotnet. The plugin order matters.
 
-Verify by asking: "Tell me about your superpowers"
+### Step 2: Restart OpenCode
 
-## Migrating from the old symlink-based install
+Restart OpenCode. Both plugins will auto-install and register all skills, agents, and commands.
 
-If you previously installed superpowers using `git clone` and symlinks, remove the old setup:
+Verify by asking: "Tell me about your superpowers and devkit-dotnet"
+
+## Setup Script
+
+After installation, run the setup script to install dependencies:
 
 ```bash
-# Remove old symlinks
-rm -f ~/.config/opencode/plugins/superpowers.js
-rm -rf ~/.config/opencode/skills/superpowers
-
-# Optionally remove the cloned repo
-rm -rf ~/.config/opencode/superpowers
-
-# Remove skills.paths from opencode.json if you added one for superpowers
+bash .opencode/scripts/setup.sh
 ```
 
-Then follow the installation steps above.
+This installs:
+- Python dependencies (OpenCV, Pillow, PyTesseract for Vision)
+- Tesseract OCR
+- RAG dependencies (PyMuPDF, openpyxl, python-docx)
 
-## Usage
+## Included Content
 
-Use OpenCode's native `skill` tool:
+### Agents
+- `orchestrator` - Main agent hub, single point of contact for developers
 
-```
-use skill tool to list skills
-use skill tool to load superpowers/brainstorming
-```
+### Skills (40+ total)
+
+**Methodology (13 Superpowers skills):**
+- brainstorming, writing-plans, test-driven-development
+- subagent-driven-development, systematic-debugging
+- verification-before-completion, requesting-code-review
+- receiving-code-review, finishing-a-development-branch
+- using-git-worktrees, dispatching-parallel-agents, writing-skills, executing-plans
+
+**.NET Technical (25+ skills):**
+- scaffolding, clean-arch-design, ddd-aggregate, domain-analysis
+- blazor-component, blazor-authentication, blazor-debugging, blazor-error-handling, blazor-hosting
+- fluentui-blazor, yarp-config, dapr-microservices
+- jwt-auth, ef-core-filters, row-level-security, tenant-resolution
+- sql-optimization, sql-code-review, dapper-reading, sqlserver-migration
+- document-export, nuget-manager, dotnet-best-practices
+- error-handling-patterns, fix-errors, frontend-design
+- i18n-localization, microsoft-docs, rate-limiting
+
+**RAG & Utils:**
+- rag-document-retrieval, document-parsing, find-skills
+
+### Commands
+- `/start` - Full session with brainstorming
+- `/brainstorm` - Design session
+- `/plan` - Create implementation plan
+- `/execute` - Execute plan
+- `/poc` - Proof of concept
+- `/test` - Run tests with coverage
+- `/review` - Code review
+- `/migrate` - Monolith to microservices
+- rag-load, rag-search, analyze-image
+
+### Scripts
+- `setup.sh` - Install dependencies
+- `test-endpoints.sh` - Test microservices /health endpoints
+- `test-connections.sh` - Test SQL Server, Redis, Dapr connections
 
 ## Updating
 
-Superpowers updates automatically when you restart OpenCode.
+Both plugins update automatically when you restart OpenCode.
 
-To pin a specific version:
+To pin specific versions:
 
 ```json
 {
-  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git#v5.0.3"]
+  "plugin": [
+    "superpowers@git+https://github.com/obra/superpowers.git#v5.0.3",
+    "devkit-dotnet@git+https://github.com/Hayr06/superpowers.git#main"
+  ]
 }
 ```
 
@@ -60,24 +103,31 @@ To pin a specific version:
 
 ### Plugin not loading
 
-1. Check logs: `opencode run --print-logs "hello" 2>&1 | grep -i superpowers`
-2. Verify the plugin line in your `opencode.json`
-3. Make sure you're running a recent version of OpenCode
+1. Check plugin order (superpowers FIRST, devkit-dotnet SECOND)
+2. Check logs: `opencode run --print-logs "hello" 2>&1 | grep -i devkit`
+3. Verify plugins are installed: `ls ~/.config/opencode/plugins/`
 
 ### Skills not found
 
-1. Use `skill` tool to list what's discovered
-2. Check that the plugin is loading (see above)
+Use `skill` tool to list what's discovered:
+```
+use skill tool to list skills
+```
 
-### Tool mapping
+### Scripts not working
 
-When skills reference Claude Code tools:
-- `TodoWrite` → `todowrite`
-- `Task` with subagents → `@mention` syntax
-- `Skill` tool → OpenCode's native `skill` tool
-- File operations → your native tools
+Make scripts executable:
+```bash
+chmod +x .opencode/scripts/*.sh
+```
+
+## Documentation
+
+- [AGENTS.md](AGENTS.md) - Agent documentation
+- [docs/METHODOLOGY.md](docs/METHODOLOGY.md) - Superpowers methodology guide
+- [docs/INSTALL.md](docs/INSTALL.md) - Full installation guide
 
 ## Getting Help
 
-- Report issues: https://github.com/obra/superpowers/issues
-- Full documentation: https://github.com/obra/superpowers/blob/main/docs/README.opencode.md
+- DevKit issues: https://github.com/Hayr06/superpowers/issues
+- Superpowers: https://github.com/obra/superpowers/issues

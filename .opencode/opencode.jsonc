@@ -1,0 +1,77 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  "plugin": [
+    "superpowers@git+https://github.com/obra/superpowers.git",
+    "devkit-dotnet@git+https://github.com/Hayr06/superpowers.git"
+  ],
+
+  "provider": {
+    "pcai": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "PSW PCAI",
+      "options": {
+        "baseURL": "https://llm-qwen3-30b-042026.project-pyxiia-proyectos.serving.ai-application.ciisagl.local/v1",
+        "toolParser": "hermes-strict"
+      },
+      "models": {
+        "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8": {
+          "name": "Qwen 3",
+          "limit": {
+            "context": 200000,
+            "output": 32768
+          }
+        }
+      }
+    }
+  },
+
+  "model": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8",
+
+  "permission": {
+    "edit": "allow",
+    "bash": {
+      "*": "allow",
+      "dotnet build*": "allow",
+      "dotnet test*": "allow",
+      "dotnet restore*": "allow",
+      "dotnet add*": "allow",
+      "dotnet new*": "allow",
+      "dotnet run*": "allow",
+      "git status": "allow",
+      "git diff*": "allow",
+      "git log*": "allow",
+      "git add*": "allow",
+      "git commit*": "allow",
+      "git branch*": "allow",
+      "git checkout*": "allow",
+      "docker compose*": "allow",
+      "docker build*": "allow",
+      "docker run*": "allow",
+      "dapr *": "allow",
+      "npm install*": "allow",
+      "pip3 install*": "allow",
+      "pip install*": "allow"
+    },
+    "skill": {
+      "*": "allow"
+    },
+    "task": {
+      "*": "allow"
+    },
+    "question": "allow",
+    "external_directory": "allow",
+    "read": "allow",
+    "glob": "allow",
+    "grep": "allow"
+  },
+
+  "agent": {
+    "build": {
+      "disable": false
+    },
+    "plan": {
+      "disable": false
+    }
+  }
+}
