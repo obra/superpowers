@@ -6,7 +6,7 @@ Fork of [Superpowers](https://github.com/obra/superpowers) v5.0.5 — customized
 
 ```
 skills/          — one dir per skill, each with SKILL.md + references/
-hooks/           — SessionStart (diet-activate), UserPromptSubmit (diet-track), PreCompact + SessionEnd (wiki-archive)
+hooks/           — SessionStart (diet-activate), UserPromptSubmit (diet-track), PreToolUse:Bash (rtk-rewrite), PreCompact + SessionEnd (wiki-archive)
 agents/          — subagent prompts (code-reviewer, codex-rescue)
 scripts/         — codex-bridge.mjs (native Codex CLI integration)
 schemas/         — structured output contracts for Codex (implementation, spec-review, quality-review)

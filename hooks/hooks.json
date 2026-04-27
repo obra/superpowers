@@ -36,6 +36,17 @@
         ]
       }
     ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/rtk-rewrite.sh\""
+          }
+        ]
+      }
+    ],
     "PreCompact": [
       {
         "matcher": "*",

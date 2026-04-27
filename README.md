@@ -10,6 +10,7 @@ A complete software development workflow for Claude Code. Fork of [Superpowers](
 - **Project wiki** — PreCompact + SessionEnd hooks archive each session as a structured JSON sidecar plus human-readable markdown summary into `<cwd>/.claude/wiki/sessions/`. Auto-seeds `decisions.md` + `gotchas.md` and appends a one-row index entry per session. Symlinked into `~/.claude/sessions/` for compatibility with cross-project tooling (e.g. daily-rollup skills).
 - **Wired skills** — `brainstorming`, `writing-plans`, and `systematic-debugging` now read the project wiki before proposing work, so prior decisions and gotchas inform every new design and bug investigation.
 - **Codex defaults** — `codex-bridge.mjs` defaults to `gpt-5.5` model with `xhigh` reasoning effort. Override per-call with `--model` / `--effort`.
+- **RTK rewrite hook** — `PreToolUse:Bash` hook (`hooks/rtk-rewrite.sh`) routes shell commands through the [`rtk`](https://github.com/rtk-ai/rtk) Rust binary for token-saving rewrites (e.g. `grep -r` → `rtk grep`). Optional — needs `rtk >= 0.23.0` and `jq` on PATH; warns once and exits cleanly if either is missing.
 
 ## Installation
 
