@@ -153,10 +153,14 @@ test('core and audit skills document their new guardrails', () => {
   assert.match(nestjsPlan, /^---\nname: nestjs-plan/m)
   assert.match(nestjsPlan, /repository contracts/i)
   assert.match(nestjsPlan, /Prisma adapters/i)
-  assert.match(execute, /Group mode/)
+  assert.match(execute, /wave mode only/i)
   assert.match(execute, /parallel/)
   assert.match(execute, /nimbou-skills:nuxt-plan/)
-  assert.match(execute, /group-driven frontend plans/i)
+  assert.match(execute, /wave-structured frontend plans/i)
+  assert.match(execute, /spec-reviewer-prompt\.md/)
+  assert.match(execute, /followups-template\.md/)
+  assert.match(execute, /commit once per wave/i)
+  assert.doesNotMatch(execute, /task mode/i)
   assert.match(e2eQuality, /^---\nname: e2e-test-quality/m)
   assert.match(e2eQuality, /e2e-quality-auditor/)
   assert.match(e2eQuality, /Playwright/)
@@ -302,4 +306,117 @@ test('design, merge, and review agents remain scaffolded', () => {
   assert.match(e2eAuditor, /Run only the target E2E tests/i)
   assert.match(e2eAuditor, /selectors tied to unstable markup/i)
   assert.match(e2eAuditor, /waitForTimeout/i)
+})
+
+test('role-specialized author agents are scaffolded for SDD routing', () => {
+  const roleAgents = [
+    {
+      file: 'plugins/nimbou-skills/agents/prisma-schema-author.md',
+      slug: 'prisma-schema-author',
+      scopeMatch: /schema\.prisma/,
+      boundaryMatch: /expand\/migrate\/contract/i,
+    },
+    {
+      file: 'plugins/nimbou-skills/agents/prisma-repository-author.md',
+      slug: 'prisma-repository-author',
+      scopeMatch: /repository adapter/i,
+      boundaryMatch: /Prisma stays here, port lives in application/i,
+    },
+    {
+      file: 'plugins/nimbou-skills/agents/nestjs-usecase-author.md',
+      slug: 'nestjs-usecase-author',
+      scopeMatch: /one application use-case/i,
+      boundaryMatch: /No imports from `@prisma\/client`/,
+    },
+    {
+      file: 'plugins/nimbou-skills/agents/nestjs-controller-author.md',
+      slug: 'nestjs-controller-author',
+      scopeMatch: /HTTP transport/,
+      boundaryMatch: /3-step coordinator/i,
+    },
+    {
+      file: 'plugins/nimbou-skills/agents/vue-component-author.md',
+      slug: 'vue-component-author',
+      scopeMatch: /Vue 3 SFC/,
+      boundaryMatch: /component catalog/i,
+    },
+    {
+      file: 'plugins/nimbou-skills/agents/nuxt-composable-author.md',
+      slug: 'nuxt-composable-author',
+      scopeMatch: /composable/,
+      boundaryMatch: /no markup/i,
+    },
+    {
+      file: 'plugins/nimbou-skills/agents/nuxt-page-author.md',
+      slug: 'nuxt-page-author',
+      scopeMatch: /Nuxt page, layout, or route/i,
+      boundaryMatch: /No new component\/composable\/store crept in/i,
+    },
+  ]
+
+  for (const { file, slug, scopeMatch, boundaryMatch } of roleAgents) {
+    assert.equal(existsSync(resolve(root, file)), true, `${file} should exist`)
+    const body = read(file)
+    assert.match(body, new RegExp(`^---\\nname: ${slug}`, 'm'), `${slug} frontmatter name`)
+    assert.match(body, /model: inherit/, `${slug} should set model: inherit`)
+    assert.match(body, /memory: project/, `${slug} should set memory: project`)
+    assert.match(body, /## Scope/, `${slug} should declare ## Scope`)
+    assert.match(body, /## Mandatory Execution Order/, `${slug} should declare ## Mandatory Execution Order`)
+    assert.match(body, /## You may not/, `${slug} should declare ## You may not`)
+    assert.match(body, /## Delivery Format/, `${slug} should declare ## Delivery Format`)
+    assert.match(body, /DONE_WITH_CONCERNS/, `${slug} should mention DONE_WITH_CONCERNS`)
+    assert.match(body, /NEEDS_CONTEXT/, `${slug} should mention NEEDS_CONTEXT`)
+    assert.match(body, /BLOCKED/, `${slug} should mention BLOCKED`)
+    assert.match(body, scopeMatch, `${slug} body should mention its scope keyword`)
+    assert.match(body, boundaryMatch, `${slug} body should mention its boundary rule`)
+  }
+})
+
+test('planners and SDD wire the Role: routing contract', () => {
+  const nestjsPlan = read('plugins/nimbou-skills/skills/nestjs-plan/SKILL.md')
+  const nuxtPlan = read('plugins/nimbou-skills/skills/nuxt-plan/SKILL.md')
+  const nuxtPlanFormat = read('plugins/nimbou-skills/skills/nuxt-plan/reference/plan-format.md')
+  const sdd = read('plugins/nimbou-skills/skills/subagent-driven-development/SKILL.md')
+  const sddImplementer = read('plugins/nimbou-skills/skills/subagent-driven-development/implementer-prompt.md')
+  const sddSpec = read('plugins/nimbou-skills/skills/subagent-driven-development/spec-reviewer-prompt.md')
+  const sddQuality = read('plugins/nimbou-skills/skills/subagent-driven-development/code-quality-reviewer-prompt.md')
+
+  assert.match(nestjsPlan, /## Role Mapping/)
+  assert.match(nestjsPlan, /\*\*Role:\*\*/)
+  assert.match(nestjsPlan, /prisma-schema-author/)
+  assert.match(nestjsPlan, /prisma-repository-author/)
+  assert.match(nestjsPlan, /nestjs-usecase-author/)
+  assert.match(nestjsPlan, /nestjs-controller-author/)
+
+  assert.match(nuxtPlan, /## Role Mapping/)
+  assert.match(nuxtPlan, /vue-component-author/)
+  assert.match(nuxtPlan, /nuxt-composable-author/)
+  assert.match(nuxtPlan, /nuxt-page-author/)
+  assert.match(nuxtPlan, /\| Acao \| Caminho \| Onda \| Role \| Depende de \|/)
+
+  assert.match(nuxtPlanFormat, /Role per file/)
+  assert.match(nuxtPlanFormat, /vue-component-author/)
+  assert.match(nuxtPlanFormat, /nuxt-composable-author/)
+  assert.match(nuxtPlanFormat, /nuxt-page-author/)
+
+  assert.match(sdd, /## Role Routing/)
+  for (const slug of [
+    'prisma-schema-author',
+    'prisma-repository-author',
+    'nestjs-usecase-author',
+    'nestjs-controller-author',
+    'vue-component-author',
+    'nuxt-composable-author',
+    'nuxt-page-author',
+  ]) {
+    assert.match(sdd, new RegExp(slug), `SDD should list ${slug} in Role Routing`)
+  }
+  assert.match(sdd, /Fallback:.*general-purpose/i)
+
+  assert.match(sddImplementer, /\[ROLE\]/)
+  assert.match(sddImplementer, /Task tool \(\[ROLE\]\):/)
+  assert.match(sddSpec, /## Role Under Review/)
+  assert.match(sddSpec, /\[ROLE\]/)
+  assert.match(sddQuality, /Role-specific focus/)
+  assert.match(sddQuality, /\[ROLE\]/)
 })
