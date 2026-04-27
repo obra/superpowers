@@ -119,6 +119,18 @@ To update:
 gemini extensions update superpowers
 ```
 
+### Google Antigravity
+
+- Clone this repository to `~/.agents/superpowers` (or the location of your choice):
+
+  ```bash
+  git clone https://github.com/obra/superpowers.git ~/.agents/superpowers
+  ```
+
+- In Antigravity, open Antigravity -> Settings -> Antigravity Settings -> Customizations -> Skill Custom Paths.
+- Add `~/.agents/superpowers` (or your chosen checkout path) as a global skills path.
+- Verify the setup by asking Antigravity whether it can access `superpowers:brainstorming`.
+
 ### Factory Droid
 
 In Droid, register the marketplace:
