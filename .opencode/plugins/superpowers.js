@@ -114,8 +114,9 @@ ${toolMapping}
     //   2. Multiple system messages breaking Qwen and other models (#894)
     //
     // The hook fires on every agent step (not just every turn) because
-    // opencode's prompt.ts reloads messages from DB each step.  The guard
-    // below prevents duplicate injection on the fresh in-memory objects.
+    // opencode's prompt.ts reloads messages from DB each step.  Fresh message
+    // arrays may need injection again, so getBootstrapContent() must not do
+    // repeated disk work.
     'experimental.chat.messages.transform': async (_input, output) => {
       const bootstrap = getBootstrapContent();
       if (!bootstrap || !output.messages.length) return;
@@ -123,25 +124,12 @@ ${toolMapping}
       if (!firstUser || !firstUser.parts.length) return;
 
       // Guard: skip if first user message already contains bootstrap.
-      // Because messages are loaded fresh from DB each step (the previous
-      // in-memory injection is never persisted), this guard fires on the
-      // *new* in-memory objects.  It still works correctly: the first step
-      // injects, and on subsequent steps the content-based check catches it
-      // because we're looking at the same logical first-user message that
-      // was just injected into (the DB hasn't changed between steps within
-      // a single turn, so filterCompactedEffect returns the same message
-      // contents and we re-inject the same bootstrap — the guard prevents
-      // doubling up within the same messages array).
+      // This prevents double injection when OpenCode passes an already
+      // transformed in-memory message array through the hook again.
       if (firstUser.parts.some(p => p.type === 'text' && p.text.includes('EXTREMELY_IMPORTANT'))) return;
 
       const ref = firstUser.parts[0];
       firstUser.parts.unshift({ ...ref, type: 'text', text: bootstrap });
     }
   };
-};
-
-// Exported for testing — allows tests to reset the cache between runs
-export const _testing = {
-  resetCache: () => { _bootstrapCache = undefined; },
-  getCache: () => _bootstrapCache,
 };
