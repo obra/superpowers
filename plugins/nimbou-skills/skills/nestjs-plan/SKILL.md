@@ -27,9 +27,9 @@ If the approved spec still covers multiple independent subsystems, split it befo
 Before writing tasks, map the file structure and responsibility of each file.
 
 - Make the boundary explicit:
-  - controller or transport
+  - controller or transport (one controller per resource/aggregate, 5-20 routes; split by sub-aspect — lifecycle, attachments, workflow, queries — never one controller per use case)
   - DTOs and validation
-  - application or use-case layer
+  - application or use-case layer (one use case per business verb; each use case has one `execute` method and one reason to change)
   - domain contracts or policies
   - infrastructure adapters and Prisma repositories
   - tests per boundary
@@ -156,6 +156,7 @@ These are plan failures:
 - If arrays of identifiers or related entities are validated, plan `findByIds`-style repository support and batch assertions instead of per-id loops.
 - If update endpoints are partial by contract, plan DTO, test, and repository work so only changed fields are sent and handled.
 - If a lint or static rule enforces Prisma boundaries, include the exact verification command in the final wave.
+- Plan one use case per business verb and group endpoints under the resource controller that already owns the aggregate. If a planned controller exceeds ~20 routes, split it by sub-aspect (lifecycle / attachments / workflow / queries) instead of creating one controller per use case.
 
 ## Remember
 
@@ -172,7 +173,7 @@ After writing the complete plan, check:
 1. **Spec coverage:** every approved requirement maps to one or more tasks
 2. **Placeholder scan:** no red-flag placeholders remain
 3. **Type consistency:** later tasks use the same names and signatures defined earlier
-4. **Boundary consistency:** controllers stay thin, use-cases stay framework-light, Prisma stays in infrastructure tasks
+4. **Boundary consistency:** controllers stay thin and resource-grouped (5-20 routes, split by sub-aspect when larger), use-cases stay framework-light with one verb per class, Prisma stays in infrastructure tasks
 5. **Migration consistency:** schema-impacting work has ordered expand, migrate, and contract steps when relevant
 6. **Contract efficiency:** chatty endpoints, per-id validation loops, and full-payload updates are not planned by accident
 7. **Test coverage:** the plan proves behavior at HTTP, application, and persistence levels when relevant

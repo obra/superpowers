@@ -36,12 +36,22 @@ Do not use architecture cleanup as a cover for changing business behavior. Lock 
 ## Refactor Targets
 
 This skill organizes backend work around a target shape like:
-- thin controllers and transport adapters
-- explicit use-cases or application services with one clear purpose
+- thin controllers and transport adapters, grouped per resource/aggregate, with 5-20 routes each
+- explicit use-cases or application services with one clear purpose, named after a business verb, exposing a single `execute` method
+- a controller calling many use cases (correct) — never one controller per use case (CQRS-handler anti-pattern)
 - repository interfaces owned by the application boundary
 - Prisma confined to infrastructure adapters, repositories, and persistence mappers
 - module wiring that reflects dependency direction instead of convenience imports
 - test coverage aligned to the boundary being changed
+
+### Granularity Heuristics
+
+When deciding whether to split or merge:
+
+- **Split a controller** when it exceeds ~20 routes or mixes lifecycle, attachments, workflow, and queries in one file. Split by sub-aspect, not by individual operation.
+- **Merge controllers** when several have ≤5 routes each and share a clear category (lookups, settings, integration configs). Aim for cohesive resource grouping.
+- **Split a use case** when its `execute` method has unrelated branches driven by input flags (`if (input.action === 'X') ... else ...`). Each branch is usually a separate use case.
+- **Reject** any refactor proposal that produces "one controller per use case." Re-route to resource-grouped controllers instead.
 
 ## Workflow
 

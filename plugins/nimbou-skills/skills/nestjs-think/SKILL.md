@@ -144,6 +144,19 @@ Cover, when relevant:
 
 Ask after each section whether it looks right so far. If something is wrong or vague, revise before moving on.
 
+## Clean Architecture Granularity
+
+Use cases and controllers are not the same artifact and do not map 1-to-1.
+
+- **Use case = one business operation expressed as a verb.** One class, one `execute` method, one transaction of intent (`CreateProject`, `ApprovePaymentRequest`, `RejectScholarshipGrant`). Many small use cases beat one fat use case with internal branching.
+- **Controller = transport adapter grouped by resource (noun).** Translates request to DTO, applies guards, calls a single use case per endpoint, maps the output to HTTP. A controller calls **many** use cases; that is correct and desired.
+- **Healthy controller size: 5-20 routes per resource.** Above that, split by sub-aspect (lifecycle vs. attachments vs. workflow vs. queries) — never by individual operation.
+- **Dependency direction:** Presentation → Application → Domain ← Infrastructure. Use cases never import Prisma, NestJS transport types, or `Request`/`Response`. Repositories implement domain interfaces.
+
+Reject the anti-pattern "one controller per use case." That is CQRS-handler style (MediatR), not Clean Architecture. Adopting it inflates file count, breaks resource cohesion that NestJS and Swagger expect (`@ApiTags`, RBAC guards), and mixes transport with orchestration.
+
+When the requested design pushes toward this anti-pattern, surface it explicitly and propose the resource-grouped shape instead.
+
 ## Design Rules
 
 - Break the system into units with one clear purpose and explicit interfaces.
@@ -196,6 +209,7 @@ Wait for approval. If the user requests changes, update the spec and re-run the 
 - **Incremental validation**
 - **NestJS-first for backend work**
 - **Clean boundaries over convenience**
+- **Use case per business verb, controller per resource noun** — never one controller per use case
 - **Prisma discipline**
 - **SOLID over short-lived hacks**
 

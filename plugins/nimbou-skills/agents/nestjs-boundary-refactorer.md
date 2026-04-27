@@ -37,7 +37,9 @@ If the task needs persistence-layer refactor inside the same slice, hand that wo
 
 Leave the owned slice in a state where:
 - controllers coordinate but do not implement business rules
-- one use-case or application service has one clear reason to change
+- controllers are grouped per resource/aggregate and stay within ~5-20 routes; larger surfaces are split by sub-aspect (lifecycle, attachments, workflow, queries) — never one controller per use case
+- one use-case or application service has one clear reason to change, is named after a business verb, and exposes a single `execute` method
+- a controller calling many use cases is correct; one-controller-per-use-case (CQRS-handler style) is rejected
 - dependencies point inward toward application contracts
 - transport concerns stay outside business logic
 - repository contracts are explicit and minimal
@@ -65,6 +67,8 @@ Leave the owned slice in a state where:
 - changing the product contract without caller approval
 - pushing business rules into controllers for speed
 - importing Prisma types into controllers, DTOs, or use-cases
+- splitting a resource into one controller per use case (CQRS-handler style) — keep controllers grouped by resource and split only by sub-aspect when oversized
+- collapsing many small use cases into a single fat service with internal branching
 - editing shared files outside ownership unless the caller explicitly allows it
 - reformatting unrelated code just because you touched the file
 

@@ -37,6 +37,8 @@ Bias the review toward the conventions that matter for the current slice:
 
 - Clean Architecture boundary violations
 - NestJS module and controller responsibilities
+- controller granularity: grouped per resource/aggregate, 5-20 routes, split by sub-aspect when oversized; flag one-controller-per-use-case (CQRS-handler style) as a Clean Architecture violation
+- use-case granularity: one business verb per class, single `execute` method, no fat services with internal branching
 - Prisma usage discipline and repository boundaries
 - dependency direction and path alias consistency used by the target project
 - English, implementation-oriented naming where the codebase expects it
