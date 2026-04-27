@@ -33,6 +33,8 @@ const SCHEMAS_DIR = path.join(PLUGIN_ROOT, "schemas");
 
 const VALID_EFFORTS = new Set(["none", "minimal", "low", "medium", "high", "xhigh"]);
 const MODEL_ALIASES = new Map([["spark", "gpt-5.3-codex-spark"]]);
+const DEFAULT_MODEL = "gpt-5.5";
+const DEFAULT_EFFORT = "xhigh";
 
 // ── Diagnostics log ──────────────────────────────────────────────────
 // Single append-only file at ~/.claude/sspower-codex.log, rotated at 1000 lines.
@@ -105,8 +107,12 @@ function die(msg) {
 }
 
 function resolveModel(raw) {
-  if (!raw) return null;
+  if (!raw) return DEFAULT_MODEL;
   return MODEL_ALIASES.get(raw) ?? raw;
+}
+
+function resolveEffort(raw) {
+  return raw || DEFAULT_EFFORT;
 }
 
 function resolvePrompt(raw) {
@@ -774,7 +780,7 @@ async function cmdImplement(argv) {
     schema: schemaPath("implementation-output"),
     sandbox: opts.write ? "workspace-write" : "read-only",
     model: resolveModel(opts.model),
-    effort: opts.effort,
+    effort: resolveEffort(opts.effort),
     cd: workDir,
     ephemeral: false, // persist session for resume-based fix loops
   });
@@ -816,7 +822,7 @@ async function cmdSpecReview(argv) {
     schema: schemaPath("spec-review-output"),
     sandbox: "read-only",
     model: resolveModel(opts.model),
-    effort: opts.effort,
+    effort: resolveEffort(opts.effort),
     cd: opts.cd,
     ephemeral: true, // reviews don't need resume
   });
@@ -830,7 +836,7 @@ async function cmdReview(argv) {
     schema: schemaPath("quality-review-output"),
     sandbox: "read-only",
     model: resolveModel(opts.model),
-    effort: opts.effort,
+    effort: resolveEffort(opts.effort),
     cd: opts.cd,
     ephemeral: true, // reviews don't need resume
   });
@@ -844,7 +850,7 @@ async function cmdRescue(argv) {
     schema: null,
     sandbox: opts.write ? "workspace-write" : "read-only",
     model: resolveModel(opts.model),
-    effort: opts.effort,
+    effort: resolveEffort(opts.effort),
     cd: opts.cd,
     ephemeral: !opts.write, // persist write sessions for potential resume
   });
