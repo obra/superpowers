@@ -24,13 +24,6 @@ if (mode === 'off') {
 
 safeWriteFlag(flagPath, mode);
 
-const INDEPENDENT_MODES = new Set(['commit', 'review', 'compress']);
-
-if (INDEPENDENT_MODES.has(mode)) {
-  process.stdout.write('DIET MODE ACTIVE — level: ' + mode + '. Behavior defined by /diet-' + mode + ' skill.');
-  process.exit(0);
-}
-
 // Read SKILL.md — single source of truth for diet behavior.
 // Plugin layout: __dirname = <plugin_root>/hooks/, SKILL.md at <plugin_root>/skills/diet/SKILL.md
 let skillContent = '';

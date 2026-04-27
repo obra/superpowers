@@ -18,7 +18,10 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-const VALID_MODES = ['off', 'lite', 'full', 'ultra', 'commit', 'review', 'compress'];
+// Persistent modes only. One-shot skills (diet-commit, diet-review,
+// compress-memory) do their work via slash commands and must never be
+// written to the persistent flag.
+const VALID_MODES = ['off', 'lite', 'full', 'ultra'];
 
 function getConfigDir() {
   if (process.env.XDG_CONFIG_HOME) {

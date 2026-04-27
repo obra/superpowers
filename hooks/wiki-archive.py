@@ -70,26 +70,77 @@ def parse_ts(ts: str):
         return None
 
 
-def resolve_out_dir(cwd: str) -> Path:
-    """Per-project wiki dir, or central fallback if cwd unusable."""
-    if cwd:
-        project_dir = Path(cwd) / ".claude" / "wiki" / "sessions"
+def _has_symlink_component(p: Path, until: Path) -> bool:
+    """True if any path component from `until` down to `p` (inclusive) is a
+    symlink. Stops at `until` (treated as trusted; not resolved, since
+    resolving would follow legitimate platform symlinks like macOS /tmp).
+    Used to refuse writes that could escape the project via attacker-placed
+    symlinks below the trust root."""
+    until_str = str(Path(until).absolute())
+    cur = Path(p).absolute()
+    while True:
         try:
-            project_dir.mkdir(parents=True, exist_ok=True)
-            # Writability check — some cwd are read-only (container volumes etc.)
-            probe = project_dir / ".write-probe"
-            probe.touch()
-            probe.unlink()
-            return project_dir
+            if cur.is_symlink():
+                return True
+        except OSError:
+            return True
+        if str(cur) == until_str or cur.parent == cur:
+            return False
+        cur = cur.parent
+
+
+def resolve_out_dir(cwd: str):
+    """Returns (out_dir, trust_root). trust_root is the boundary above
+    which we will not write — a hostile repo cannot place a symlink at or
+    above trust_root.
+
+    Per-project wiki dir, or central fallback if cwd unusable. Refuses to
+    follow symlinks anywhere on the wiki path."""
+    if cwd:
+        cwd_path = Path(cwd)
+        project_dir = cwd_path / ".claude" / "wiki" / "sessions"
+        try:
+            if not _has_symlink_component(project_dir, cwd_path):
+                project_dir.mkdir(parents=True, exist_ok=True)
+                if not _has_symlink_component(project_dir, cwd_path):
+                    probe = project_dir / ".write-probe"
+                    probe.touch()
+                    probe.unlink()
+                    return project_dir, cwd_path
         except (OSError, PermissionError):
             pass
 
     # Fallback: ~/.claude/wiki/<basename>-<hash8>/sessions/
     basename = os.path.basename(cwd) if cwd else "unknown"
     slug_hash = hashlib.sha256(cwd.encode("utf-8") if cwd else b"unknown").hexdigest()[:8]
-    fallback = Path.home() / ".claude" / "wiki" / f"{basename}-{slug_hash}" / "sessions"
+    central_root = Path.home() / ".claude" / "wiki"
+    fallback = central_root / f"{basename}-{slug_hash}" / "sessions"
     fallback.mkdir(parents=True, exist_ok=True)
-    return fallback
+    return fallback, central_root
+
+
+def _safe_write_text(path: Path, content: str, trust_root: Path):
+    """Write `content` to `path` only if neither `path` nor any parent (up
+    to `trust_root`) is a symlink. Best-effort; silent on refusal."""
+    if _has_symlink_component(path, trust_root):
+        return False
+    try:
+        path.write_text(content, encoding="utf-8")
+        return True
+    except OSError:
+        return False
+
+
+def _safe_append_text(path: Path, content: str, trust_root: Path):
+    """Append-only; refuses symlink components."""
+    if _has_symlink_component(path, trust_root):
+        return False
+    try:
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(content)
+        return True
+    except OSError:
+        return False
 
 
 def parse_events(path: str) -> list:
@@ -104,17 +155,6 @@ def parse_events(path: str) -> list:
             except json.JSONDecodeError:
                 continue
     return events
-
-
-def count_tool_uses(events: list) -> int:
-    count = 0
-    for e in events:
-        if e.get("type") != "assistant":
-            continue
-        for c in (e.get("message", {}).get("content") or []):
-            if isinstance(c, dict) and c.get("type") == "tool_use":
-                count += 1
-    return count
 
 
 def extract_all(events: list, session_id: str, cwd: str, event_name: str) -> dict:
@@ -140,9 +180,6 @@ def extract_all(events: list, session_id: str, cwd: str, event_name: str) -> dic
     file_ops = defaultdict(lambda: {"read": 0, "edit": 0, "write": 0})
     git_ops = []
     tool_counts = defaultdict(int)
-    tool_use_map = {}
-    request_contents = defaultdict(list)
-    request_meta = {}
 
     for e in events:
         etype = e.get("type")
@@ -177,7 +214,6 @@ def extract_all(events: list, session_id: str, cwd: str, event_name: str) -> dic
                 for block in content:
                     if not isinstance(block, dict):
                         continue
-                    request_contents[rid].append(block)
 
                     btype = block.get("type")
 
@@ -190,10 +226,8 @@ def extract_all(events: list, session_id: str, cwd: str, event_name: str) -> dic
                     elif btype == "tool_use":
                         tool_name = block.get("name", "unknown")
                         tool_input = block.get("input", {})
-                        tool_id = block.get("id", "")
 
                         tool_counts[tool_name] += 1
-                        tool_use_map[tool_id] = {"name": tool_name, "input": tool_input, "ts": ts}
 
                         fp_raw = tool_input.get("file_path", "") or tool_input.get("path", "")
                         file_path = rel_path(fp_raw, cwd) if fp_raw else ""
@@ -224,15 +258,13 @@ def extract_all(events: list, session_id: str, cwd: str, event_name: str) -> dic
                     "input": inp, "output": out,
                     "cache_read": cr, "cache_create": cc,
                 }
-                request_meta[rid] = {"model": m, "stop_reason": stop, "ts": ts}
 
         elif etype == "user":
             msg = e.get("message")
             tool_result = e.get("toolUseResult")
-            source_uuid = e.get("sourceToolAssistantUUID")
 
             if tool_result is not None:
-                _collect_tool_result(tool_result, msg, ts, source_uuid, conversation, errors, commands)
+                _collect_tool_result(tool_result, msg, ts, conversation, errors, commands)
             else:
                 text = _extract_user_text(msg)
                 if text:
@@ -409,7 +441,10 @@ def _collect_tool_data(name, inp, ts, cwd, edits, commands, searches, agents, we
         })
 
 
-def _collect_tool_result(tool_result, msg, ts, source_uuid, conversation, errors, commands):
+def _collect_tool_result(tool_result, msg, ts, conversation, errors, commands):
+    # Bash stdout/stderr is attached to the most recent command lacking
+    # output. The transcript places tool_result events strictly after their
+    # tool_use, so this ordering is reliable for current Claude Code output.
     if isinstance(tool_result, str):
         if "reject" in tool_result.lower():
             errors.append({"type": "rejection", "ts": ts, "message": tool_result})
@@ -479,14 +514,27 @@ def _collect_tool_result(tool_result, msg, ts, source_uuid, conversation, errors
 
 
 def _infer_exit_code(stderr: str, result: dict):
+    """Best-effort exit code from a Bash tool result.
+
+    Returns the explicit exit code when present; otherwise infers failure
+    from stderr text. Returns None when nothing reliably indicates success
+    or failure — callers must not treat that as success.
+    """
+    explicit = result.get("exit_code")
+    if explicit is None:
+        explicit = result.get("exitCode")
+    if isinstance(explicit, int):
+        return explicit
     if result.get("interrupted"):
         return -1
     if stderr and re.search(r"error|fail|not found|command not found", stderr, re.I):
         return 1
-    return 0
+    return None
 
 
-def write_json(data: dict, path: Path):
+def write_json(data: dict, path: Path, trust_root: Path):
+    if _has_symlink_component(path, trust_root):
+        return
     clean_conversation = []
     for entry in data["conversation"]:
         e = dict(entry)
@@ -514,11 +562,16 @@ def write_json(data: dict, path: Path):
         "tool_counts": data["tool_counts"],
     }
 
-    with open(path, "w") as f:
-        json.dump(out, f, indent=2, ensure_ascii=False, default=str)
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(out, f, indent=2, ensure_ascii=False, default=str)
+    except OSError:
+        pass
 
 
-def write_markdown(data: dict, path: Path):
+def write_markdown(data: dict, path: Path, trust_root: Path):
+    if _has_symlink_component(path, trust_root):
+        return
     """Human-readable session summary for wiki browsing."""
     meta = data["meta"]
     tokens = data["tokens"]
@@ -586,7 +639,10 @@ def write_markdown(data: dict, path: Path):
             lines.append(f"- **{err['type']}:** {err['message']}")
         lines.append("")
 
-    path.write_text("\n".join(lines), encoding="utf-8")
+    try:
+        path.write_text("\n".join(lines), encoding="utf-8")
+    except OSError:
+        pass
 
 
 WIKI_DECISIONS_SEED = """# Decisions
@@ -612,26 +668,25 @@ Auto-appended by `wiki-archive.py` on PreCompact / SessionEnd. Newest at the bot
 """
 
 
-def seed_wiki_files(wiki_root: Path):
-    """Create decisions.md / gotchas.md heading templates if missing."""
+def seed_wiki_files(wiki_root: Path, trust_root: Path):
+    """Create decisions.md / gotchas.md heading templates if missing.
+    Refuses to write through symlink components."""
     decisions = wiki_root / "decisions.md"
     gotchas = wiki_root / "gotchas.md"
     if not decisions.exists():
-        try:
-            decisions.write_text(WIKI_DECISIONS_SEED, encoding="utf-8")
-        except OSError:
-            pass
+        _safe_write_text(decisions, WIKI_DECISIONS_SEED, trust_root)
     if not gotchas.exists():
-        try:
-            gotchas.write_text(WIKI_GOTCHAS_SEED, encoding="utf-8")
-        except OSError:
-            pass
+        _safe_write_text(gotchas, WIKI_GOTCHAS_SEED, trust_root)
 
 
-def fan_out_to_central_sidecars(json_path: Path):
+def fan_out_to_central_sidecars(json_path: Path, cwd: str, session_id: str):
     """Symlink per-project JSON sidecar into ~/.claude/sessions/ so the
     /daily skill (which reads ~/.claude/sessions/*.json) keeps working
     after the old session_archive hook is retired.
+
+    The link name embeds project hash + short session id so two different
+    projects ending the same minute with the same event can't overwrite
+    each other. Refuses to clobber non-symlink files.
 
     Best-effort: skipped silently on filesystems without symlink support."""
     central = Path.home() / ".claude" / "sessions"
@@ -640,24 +695,30 @@ def fan_out_to_central_sidecars(json_path: Path):
     except OSError:
         return
 
-    link = central / json_path.name
+    proj_hash = hashlib.sha256((cwd or "unknown").encode("utf-8")).hexdigest()[:8]
+    sid_short = (session_id or "noid")[:8]
+    link_name = f"{json_path.stem}_{proj_hash}_{sid_short}.json"
+    link = central / link_name
+
     try:
-        if link.is_symlink() or link.exists():
+        # Only replace if it's our own previous symlink. Never clobber a
+        # real file — that would be cross-project data loss.
+        if link.is_symlink():
             link.unlink()
+        elif link.exists():
+            return
         link.symlink_to(json_path.resolve())
     except (OSError, NotImplementedError):
         # Symlinks unsupported (Windows w/o privilege, exotic FS) — just skip.
-        # Old session_archive may still write here if user kept dual-hook setup.
         pass
 
 
-def append_index_entry(wiki_root: Path, data: dict, md_path: Path):
-    """Append one-line summary row to <wiki_root>/index.md."""
+def append_index_entry(wiki_root: Path, data: dict, md_path: Path, trust_root: Path):
+    """Append one-line summary row to <wiki_root>/index.md.
+    Refuses to write through symlink components."""
     index = wiki_root / "index.md"
     if not index.exists():
-        try:
-            index.write_text(WIKI_INDEX_HEADER, encoding="utf-8")
-        except OSError:
+        if not _safe_write_text(index, WIKI_INDEX_HEADER, trust_root):
             return
 
     meta = data["meta"]
@@ -681,11 +742,7 @@ def append_index_entry(wiki_root: Path, data: dict, md_path: Path):
         f"| ${tokens['cost_estimate']} "
         f"| {top_str} |\n"
     )
-    try:
-        with open(index, "a", encoding="utf-8") as f:
-            f.write(row)
-    except OSError:
-        pass
+    _safe_append_text(index, row, trust_root)
 
 
 def main():
@@ -714,7 +771,7 @@ def main():
 
     data = extract_all(events, session_id, cwd, event)
 
-    out_dir = resolve_out_dir(cwd)
+    out_dir, trust_root = resolve_out_dir(cwd)
 
     now = datetime.now().astimezone()
     prefix = now.strftime("%y%m%d_%H-%M")
@@ -729,13 +786,13 @@ def main():
         json_path = out_dir / f"{base}_{short_id}.json"
         md_path = out_dir / f"{base}_{short_id}.md"
 
-    write_json(data, json_path)
-    write_markdown(data, md_path)
+    write_json(data, json_path, trust_root)
+    write_markdown(data, md_path, trust_root)
 
     wiki_root = out_dir.parent
-    seed_wiki_files(wiki_root)
-    append_index_entry(wiki_root, data, md_path)
-    fan_out_to_central_sidecars(json_path)
+    seed_wiki_files(wiki_root, trust_root)
+    append_index_entry(wiki_root, data, md_path, trust_root)
+    fan_out_to_central_sidecars(json_path, cwd, session_id)
 
 
 if __name__ == "__main__":

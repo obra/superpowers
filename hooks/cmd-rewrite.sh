@@ -24,16 +24,8 @@ if ! command -v "$REWRITER" &>/dev/null; then
   exit 0
 fi
 
-# Version guard: rewrite protocol requires >= 0.23.0.
-REWRITER_VERSION=$("$REWRITER" --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-if [ -n "$REWRITER_VERSION" ]; then
-  MAJOR=$(echo "$REWRITER_VERSION" | cut -d. -f1)
-  MINOR=$(echo "$REWRITER_VERSION" | cut -d. -f2)
-  if [ "$MAJOR" -eq 0 ] && [ "$MINOR" -lt 23 ]; then
-    echo "[cmd-rewrite] WARNING: rewriter '$REWRITER' $REWRITER_VERSION is too old (need >= 0.23.0)." >&2
-    exit 0
-  fi
-fi
+# NOTE: version guard removed — was a per-Bash-call subprocess. If the
+# rewriter is too old, `rewrite` will exit non-0 below and we fall through.
 
 INPUT=$(cat)
 CMD=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
