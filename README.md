@@ -128,7 +128,7 @@ If a project wants a copied local fallback instead of depending on `/var/www/nim
 - `nestjs-test` handles Gherkin-driven backend coverage, audit routing, and backend test stabilization.
 - `nestjs-debug` handles NestJS, Prisma, and boundary failures across controller, use-case, repository, and transaction layers.
 - `nuxt-debug` is the Codex browser-debugging flow; `nuxt-test` turns the result into bounded coverage.
-- `nuxt-audit` is the single frontend review pass; `executing-plans` handles explicit execution groups.
+- `nuxt-audit` is the single frontend review pass; `executing-plans` runs wave-structured plans inline with a per-task spec gate, per-wave review and commit, and an end-of-plan follow-ups artifact.
 - `e2e-test-quality` covers broader end-to-end reliability beyond one Nuxt module slice.
 - This fork intentionally removed upstream bootstrap hooks and unsupported harness integrations.
 
