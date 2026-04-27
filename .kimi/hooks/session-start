@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# SessionStart hook for Superpowers (Kimi Code)
+# Injects bootstrap context at the start of every session.
+
+set -euo pipefail
+
+# Determine repo root from script location
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Read using-superpowers skill content
+SKILL_PATH="${REPO_ROOT}/skills/using-superpowers/SKILL.md"
+if [ ! -f "$SKILL_PATH" ]; then
+    echo "Error: using-superpowers skill not found at ${SKILL_PATH}" >&2
+    exit 1
+fi
+
+SKILL_CONTENT=$(cat "$SKILL_PATH")
+
+# JSON escape using bash parameter substitution
+escape_for_json() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\n'/\\n}"
+    s="${s//$'\r'/\\r}"
+    s="${s//$'\t'/\\t}"
+    printf '%s' "$s"
+}
+
+SKILL_ESCAPED=$(escape_for_json "$SKILL_CONTENT")
+
+KIMI_INVOCATION=$(cat <<'EOF'
+**How to invoke skills in Kimi Code:**
+Kimi Code auto-discovers skills and lists their names, paths, and descriptions in your system prompt. When a skill's description matches the current task, you MUST read its full SKILL.md file automatically using ReadFile on the path shown in your system prompt BEFORE responding. Do not wait for the user to ask. If you are unsure whether a skill applies, read it anyway — you can discard it if it's not relevant.
+
+Example: If you see "brainstorming: You MUST use this before any creative work..." in your available skills, you MUST immediately use ReadFile to load its full SKILL.md and follow it exactly.
+EOF
+)
+
+TOOL_MAPPING=$(cat <<'EOF'
+**Tool Mapping for Kimi Code:**
+When skills reference Claude Code tools, use your Kimi Code equivalents:
+- `Read` → `ReadFile`
+- `Write` → `WriteFile`
+- `Edit` → `StrReplaceFile`
+- `Bash` → `Shell`
+- `Grep` → `Grep`
+- `Glob` → `Glob`
+- `TodoWrite` → `SetTodoList`
+- `Task` (subagent) → `Agent`
+- `WebSearch` → `SearchWeb`
+- `WebFetch` → `FetchURL`
+- `Skill` tool → Auto-read the skill's `SKILL.md` or use `/skill:<name>`
+EOF
+)
+
+KIMI_INVOCATION_ESCAPED=$(escape_for_json "$KIMI_INVOCATION")
+TOOL_MAPPING_ESCAPED=$(escape_for_json "$TOOL_MAPPING")
+
+SESSION_CONTEXT="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**IMPORTANT: The using-superpowers skill content is included below. It is ALREADY LOADED - you are currently following it. Do NOT use the skill tool to load \"using-superpowers\" again - that would be redundant.**\n\n${SKILL_ESCAPED}\n\n${KIMI_INVOCATION_ESCAPED}\n\n${TOOL_MAPPING_ESCAPED}\n</EXTREMELY_IMPORTANT>"
+
+# Output in the structured format compatible with Kimi Code hooks
+printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$SESSION_CONTEXT"
+
+exit 0
