@@ -21,9 +21,10 @@ Prefer `nimbou-skills:subagent-driven-development` when the goal is to execute t
 2. Review it critically
 3. Raise any blockers or missing assumptions before starting
 4. Detect execution shape:
-   - **Task mode:** traditional ordered tasks with checklists
-   - **Group mode:** explicit execution groups with dependency order and parallelizable items
-5. Create TodoWrite and proceed only when the plan is executable
+   - **Wave mode (default):** explicit `## Ondas de Execução` (or legacy `## Grupos de Execucao`) with parallel-by-default tasks per wave; later waves only exist to consume contracts produced earlier
+   - **Task mode (legacy):** traditional ordered tasks with checklists, no wave structure
+5. Detect plan origin: if the header references `nestjs-plan` or the plan path matches a backend slice, the final wave MUST run `nimbou-skills:nestjs-test`. Add the dispatch to TodoWrite if the plan author forgot it.
+6. Create TodoWrite and proceed only when the plan is executable
 
 ## Step 2: Execute
 
@@ -36,17 +37,20 @@ For each task:
 3. Run the specified verifications
 4. Mark it complete
 
-### Group mode
+### Wave mode
 
-For each execution group:
+For each wave:
 
-1. Confirm which files or tasks are independent inside the group
-2. Dispatch independent items in parallel when the tool/runtime supports it
-3. Wait for the whole group to finish before starting dependent groups
-4. If one item in the group fails, stop all downstream dependent groups
-5. Report the exact file, task, or group that blocked the flow
+1. Confirm which files or tasks are independent inside the wave (default: all of them)
+2. Dispatch all items in the wave in parallel — single message, multiple tool calls
+3. Wait for the whole wave to finish before opening the next one
+4. **After the wave completes, automatically dispatch `nimbou-skills:request-review` over the wave's diff.** Do not advance to the next wave until the review returns and any blocker-class findings are resolved
+5. If one item in the wave fails, stop all downstream waves
+6. Report the exact file, task, or wave that blocked the flow
 
-Use group mode when the plan explicitly models dependency order for multi-slice or frontend-heavy work. Do not flatten the topology unless the user approves it.
+If the plan came from `nestjs-plan`, the final wave is `nimbou-skills:nestjs-test`. Run it after the last implementation wave's review checkpoint, not before. The dispatch scope must cover **every prior wave's output** — controllers, use-cases, repositories, Prisma adapters, and migrations across the whole plan — not just the last wave's diff. When briefing `nestjs-test`, list the suites/files derived from the full plan surface.
+
+Use wave mode whenever the plan models dependency order. Do not flatten the topology unless the user approves it; do not invent serial dependencies that the plan did not declare.
 
 ## Boundary
 
@@ -88,7 +92,9 @@ Return to Step 1 when:
 - review the plan critically first
 - follow plan steps exactly
 - do not skip verifications
-- respect dependency order and parallel groups when they exist
+- respect wave order; dispatch in parallel within a wave by default
+- never skip the post-wave `nimbou-skills:request-review` checkpoint
+- run `nimbou-skills:nestjs-test` as the final wave when the plan came from `nestjs-plan`, scoped to every prior wave's output (not only the last wave's diff)
 - stop when blocked
 - do not start implementation on `main` or `master` without explicit user consent
 
@@ -108,4 +114,4 @@ When execution completes or stops, report:
 - what was executed
 - what was verified
 - what failed or remains blocked
-- whether the failure belongs to one task, one file, or one execution group
+- whether the failure belongs to one task, one file, or one wave

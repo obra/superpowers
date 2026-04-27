@@ -1,6 +1,6 @@
 ---
 name: nuxt-plan
-description: Use after frontend design approval to write a Nuxt implementation plan with exact files, dependency order, reuse decisions, and execution groups.
+description: Use after frontend design approval to write a Nuxt implementation plan with exact files, reuse decisions, and execution waves that maximize parallelism.
 ---
 
 # Nuxt Plan
@@ -31,7 +31,7 @@ Ask follow-up questions only when the execution topology is blocked by missing s
 - the exact route or page file path
 - the exact component or composable names to create
 - whether a shared file must land before dependent files
-- whether the work should stay in one execution group or split into parallel groups
+- whether the work should stay in one wave or split because a later wave consumes a contract from an earlier one
 
 When such a question reduces to 2-4 discrete, mutually-exclusive options, use the `AskUserQuestion` tool. Lead with your recommendation as the first option and append `(Recommended)` to its label. Do not narrate the options as free-form prose.
 
@@ -60,20 +60,24 @@ Before writing tasks, map the file structure and responsibility of each file.
 - Make hardening explicit in the file map when the feature has meaningful loading, empty, error, success, autosave, overflow, or responsive states.
 - If the current structure is muddy, plan the smallest refactor that restores clear ownership.
 
-This file map drives the execution groups.
+This file map drives the waves.
 
 ## Planning Rules For This Repository
 
 - Consume the latest `nuxt-think` output or a direct request with equivalent detail.
 - Read the nearest relevant `DESIGN.md` and `GUIDELINES.md` in the target project when the feature has a concrete target path or app.
 - Read `components.meta.json` when the plan references reusable components. Fall back to `.generated/component-catalog/components.meta.json` when the project only ships the slim catalog.
-- Define exact file paths before describing execution groups.
-- Convert approved design decisions into file ownership and execution order. Do not expand discovery scope.
-- Make dependency order explicit when a page depends on shared components, composables, or contracts.
-- Keep page integration, catalog verification, and test suggestions at the end.
+- Define exact file paths before describing waves.
+- Always express execution as **`## Ondas de Execução`**. Within a wave, every file runs in parallel by default. The only reason to push work to a later wave is that it consumes a contract, composable signature, prop API, or shared type produced earlier.
+- Default wave shape:
+  1. **Onda 1 — Contratos compartilhados:** shared types, composables that expose APIs consumed elsewhere, route file when it owns the data contract for child components.
+  2. **Onda 2 — Componentes e configs independentes:** isolated components, feature-local utils, configs. Parallel.
+  3. **Onda 3 — Integração de página e estados:** page composition, loading/empty/error/success wiring, responsive checks.
+  4. **Onda Final — Verificação:** catalog validate→generate and the suggested test scope (e.g., `/test <route>`).
+- Collapse waves when there is no contract dependency between them. Two single-task waves with no dependency should be one wave.
+- After each wave, the executor MUST automatically dispatch `nimbou-skills:request-review` over the wave's diff before opening the next wave. Mark each checkpoint inside the plan; do not leave it implicit.
 - Make the handoff between page, components, and composables explicit.
 - Call out any local anti-pattern avoidance that the execution must preserve, such as not duplicating fetch ownership between page and composable or not introducing store state for simple parent-child communication.
-- If the plan is better expressed as execution groups with dependencies, use `## Grupos de Execucao` so `executing-plans` can run in group mode.
 
 ## Response Shape
 
@@ -89,11 +93,14 @@ Create a project details page using the existing status badge and a new sidebar.
 - Keep filtering state in a page-level composable.
 
 ## Arquivos
-| Acao | Caminho | Grupo | Depende de |
+| Acao | Caminho | Onda | Depende de |
 
-## Grupos de Execucao
-### Grupo 1 - paralelo
-### Grupo 2 - serial
+## Ondas de Execução
+### Onda 1 — Contratos compartilhados (paralelo)
+### Onda 2 — Componentes e configs independentes (paralelo)
+### Onda 3 — Integração de página (paralelo dentro da onda)
+
+> Checkpoint após cada onda: dispatch `nimbou-skills:request-review` sobre o diff da onda antes de abrir a próxima.
 
 ## Riscos e Validacoes
 - Confirm mobile collapse behavior on the sidebar.
@@ -121,12 +128,13 @@ These are plan failures:
 
 After writing the complete plan, check:
 
-1. **Design coverage:** every approved UI requirement maps to files or execution groups
+1. **Design coverage:** every approved UI requirement maps to files or waves
 2. **Topology clarity:** exact file ownership and dependency order are explicit
-3. **Execution clarity:** parallel versus serial groups are justified by dependencies
-4. **Boundary clarity:** page, component, and composable responsibilities are clear
-5. **Guideline clarity:** local wrapper reuse, state locality, and hardening obligations are represented where relevant
-6. **Verification clarity:** catalog verification and test suggestions still appear at the end
+3. **Wave shape:** every later wave is justified by a real contract dependency on an earlier wave; tasks inside a wave are genuinely parallel-safe
+4. **Review checkpoints:** every wave ends with an explicit `nimbou-skills:request-review` checkpoint
+5. **Boundary clarity:** page, component, and composable responsibilities are clear
+6. **Guideline clarity:** local wrapper reuse, state locality, and hardening obligations are represented where relevant
+7. **Verification clarity:** catalog verification and test suggestions still appear at the end
 
 Fix issues inline before handing off the plan.
 

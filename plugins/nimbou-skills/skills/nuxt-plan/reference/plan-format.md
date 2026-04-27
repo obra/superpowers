@@ -7,8 +7,8 @@ Return it directly in the chat by default. Only turn it into a saved Markdown do
 
 - `## Contexto` for the concrete frontend slice being implemented
 - `## Decisoes Fechadas` for resolved reuse, ownership, and state decisions
-- `## Arquivos` with exact paths and dependency grouping
-- `## Grupos de Execucao` for parallel versus serial work
+- `## Arquivos` with exact paths and wave assignment
+- `## Ondas de Execução` with parallel-by-default tasks per wave and a `nimbou-skills:request-review` checkpoint after each wave
 - `## Riscos e Validacoes` for responsive, data, or interaction risks
 - `## Pos-execucao` for catalog verification and testing follow-up
 
@@ -30,15 +30,16 @@ Return it directly in the chat by default. Only turn it into a saved Markdown do
 - Flexbox for 1D alignment.
 - Container queries when local responsiveness matters.
 
-## Grouping rules
+## Wave rules
 
-- Parallel for independent components and isolated configs.
-- Serial for shared contracts, shared composables, and final page integration.
-- Always leave page integration, catalog verification, and `/test` suggestions for the end.
+- Parallel within a wave is the default. Tasks share a wave when they have no contract dependency on each other.
+- A new wave is justified only when its tasks consume a contract, composable signature, prop API, or shared type produced by an earlier wave.
+- Page integration belongs to the last implementation wave; catalog verification and `/test` suggestions live in `## Pos-execucao`.
+- Every wave ends with an explicit `nimbou-skills:request-review` checkpoint over the wave's diff before the next wave starts.
 
 ## Questions to close before planning
 
 - Which exact route or page file owns the work?
 - Which exact component and composable file names are being created or modified?
-- Which files can run in parallel versus serial based on dependencies?
+- Which files share a wave (no contract dependency) and which must move to a later wave?
 - Which test scope matters most after implementation?

@@ -56,7 +56,7 @@ Every plan MUST start with this header:
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use nimbou-skills:subagent-driven-development (recommended) or nimbou-skills:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use nimbou-skills:subagent-driven-development (recommended) or nimbou-skills:executing-plans to implement this plan wave-by-wave. Steps use checkbox (`- [ ]`) syntax for tracking. Each wave ends with an automatic `nimbou-skills:request-review` checkpoint, and the final wave runs `nimbou-skills:nestjs-test` with scope covering every prior wave's output.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -142,19 +142,20 @@ These are plan failures:
 
 ## Planning Rules For This Repository
 
-- Default to a task sequence that protects boundaries:
-  1. contracts and tests
-  2. use-cases and domain services
-  3. repositories and Prisma adapters
-  4. NestJS transport wiring
-  5. verification and review
+- Always express execution as **`## Ondas de Execução`** (waves). Within a wave, every task runs in parallel by default; the only reason to put work in a later wave is that it consumes a contract, schema, type, or shared module produced by an earlier wave.
+- Default wave shape:
+  1. **Onda 1 — Contratos e Testes:** failing HTTP/use-case/repository tests, DTOs, domain contracts, Prisma migrations expand-step. Anything downstream consumes types or behavior defined here.
+  2. **Onda 2 — Implementação Independente:** use-cases, domain services, repository adapters, fixtures. Dispatch in parallel — they share no mutable state.
+  3. **Onda 3 — Wiring NestJS:** controllers, guards, filters, interceptors, module composition. Parallel per module.
+  4. **Onda Final — Verificação:** dispatch `nimbou-skills:nestjs-test` with scope covering **every prior wave's output** — controllers, use-cases, repositories, Prisma adapters, and migrations from waves 1 through N. The final-wave task list must enumerate the suites/files that need stabilization or expansion, derived from the full plan surface rather than just the previous wave's diff.
+- Collapse or split waves only when a real dependency or its absence justifies it. Two waves with no shared contract should be one wave.
+- After each wave, the executor MUST automatically dispatch `nimbou-skills:request-review` over the wave's diff before opening the next wave. Mark this as a checkpoint inside the plan; do not leave it implicit.
 - If the request is HTTP-facing, include controller, DTO, guard, filter or interceptor, and route-level verification tasks.
 - If the request is persistence-heavy, include repository contracts, Prisma adapters, fixture strategy, and integration-test tasks.
 - If the request spans both, make dependency direction explicit so application logic does not depend on Prisma or NestJS transport details.
 - If arrays of identifiers or related entities are validated, plan `findByIds`-style repository support and batch assertions instead of per-id loops.
 - If update endpoints are partial by contract, plan DTO, test, and repository work so only changed fields are sent and handled.
-- If a lint or static rule enforces Prisma boundaries, include the exact verification command near the end.
-- If the plan is better expressed as execution groups with dependencies, include `## Grupos de Execucao` so `executing-plans` can run in group mode.
+- If a lint or static rule enforces Prisma boundaries, include the exact verification command in the final wave.
 
 ## Remember
 
@@ -175,6 +176,9 @@ After writing the complete plan, check:
 5. **Migration consistency:** schema-impacting work has ordered expand, migrate, and contract steps when relevant
 6. **Contract efficiency:** chatty endpoints, per-id validation loops, and full-payload updates are not planned by accident
 7. **Test coverage:** the plan proves behavior at HTTP, application, and persistence levels when relevant
+8. **Wave shape:** every later wave is justified by a real contract dependency on an earlier wave; tasks inside a wave are genuinely parallel-safe (no shared file writes, no implicit ordering)
+9. **Review checkpoints:** every wave ends with an explicit `nimbou-skills:request-review` checkpoint
+10. **Final wave:** the final wave dispatches `nimbou-skills:nestjs-test` with scope spanning **all prior waves** — every controller, use-case, repository, and migration introduced anywhere in the plan, not only the last wave's diff
 
 Fix issues inline before handing off the plan.
 

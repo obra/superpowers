@@ -128,4 +128,4 @@ Describe the requested page, flow, or component in one sentence.
 - `docs/domain/<domain>/*.feature` approved.
 - `docs/domain/<domain>/openapi.yaml` approved when the feature changes HTTP.
 - The relevant `DESIGN.md` and `GUIDELINES.md` constraints are closed.
-- `nuxt-plan` should only turn this into exact file paths, dependency order, and execution groups.
+- `nuxt-plan` should only turn this into exact file paths and execution waves (parallel-by-default, sequential only for contract dependencies).

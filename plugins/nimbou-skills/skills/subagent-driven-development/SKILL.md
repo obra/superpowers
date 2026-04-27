@@ -5,11 +5,11 @@ description: Use when executing an approved implementation plan through subagent
 
 # Subagent-Driven Development
 
-Execute plan by dispatching a fresh implementer subagent per task, with two-stage review after each: spec compliance review first, then code quality review.
+Execute plan by dispatching a fresh implementer subagent per task, with two-stage review after each: spec compliance review first, then code quality review. Tasks inside the same wave dispatch in parallel; after every wave, run an automatic `nimbou-skills:request-review` over the wave's diff before advancing. When the plan came from `nestjs-plan`, the final wave is `nimbou-skills:nestjs-test`.
 
 **Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
 
-**Core principle:** Fresh implementer subagent per task + two-stage review (spec then quality) = high quality, fast iteration
+**Core principle:** Fresh implementer subagent per task + two-stage review (spec then quality) = high quality, fast iteration. Parallel within a wave, sequential between waves only when a contract dependency justifies it, automatic `nimbou-skills:request-review` checkpoint between waves.
 
 ## When to Use
 
@@ -91,6 +91,19 @@ digraph process {
     "Dispatch final code reviewer subagent for entire implementation" -> "Use nimbou-skills:finishing-a-development-branch";
 }
 ```
+
+## Wave Coordination
+
+Plans from `nestjs-plan` and `nuxt-plan` ship as `## Ondas de Execução`. Honor that topology:
+
+1. Group the extracted tasks by their declared wave.
+2. For each wave, dispatch every task's implementer subagent in parallel — single message, multiple `Agent` tool calls. The per-task spec → code-quality review loop still runs per task.
+3. Wait for the entire wave to finish (all tasks complete and approved by both reviewers) before opening the next wave.
+4. **After every wave, dispatch a single `nimbou-skills:request-review` over the wave's combined diff.** Resolve any blocker-class findings via the implementer subagents before opening the next wave. Note this as a checkpoint in TodoWrite.
+5. If the plan originated from `nestjs-plan`, the final wave is `nimbou-skills:nestjs-test`. Run it after the last implementation wave's review checkpoint, and brief it with scope covering **every prior wave's output** — controllers, use-cases, repositories, Prisma adapters, and migrations introduced across the whole plan — not only the last wave's diff.
+6. Never dispatch a later wave's tasks until earlier waves are reviewed and green — that is the only legitimate reason a later wave exists.
+
+A later wave that introduces no contract dependency on earlier work is a planning bug. Flag it instead of executing it as-is.
 
 ## Model Selection
 
@@ -245,7 +258,9 @@ Done!
 - Start implementation on main/master branch without explicit user consent
 - Skip reviews (spec compliance OR code quality)
 - Proceed with unfixed issues
-- Dispatch multiple implementation subagents in parallel for the same execution stream (conflicts)
+- Serialize tasks that share a wave (the wave is the parallelism boundary; only different waves are sequential)
+- Skip the post-wave `nimbou-skills:request-review` checkpoint
+- Skip the final-wave `nimbou-skills:nestjs-test` dispatch when the plan came from `nestjs-plan`, or scope it to only the last wave's diff (must span every prior wave)
 - Make subagent read plan file (provide full text instead)
 - Skip scene-setting context (subagent needs to understand where task fits)
 - Ignore subagent questions (answer before letting them proceed)
@@ -254,6 +269,7 @@ Done!
 - Let implementer self-review replace actual review (both are needed)
 - **Start code quality review before spec compliance is ✅** (wrong order)
 - Move to next task while either review has open issues
+- Open the next wave while the post-wave review has open blockers
 
 **If subagent asks questions:**
 - Answer clearly and completely
@@ -275,8 +291,9 @@ Done!
 **Required workflow skills:**
 - **nimbou-skills:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
 - **nimbou-skills:nestjs-plan** - Creates the plan this skill executes
-- **nimbou-skills:request-review** - Code review template for reviewer subagents
-- **nimbou-skills:finishing-a-development-branch** - Complete development after all tasks
+- **nimbou-skills:request-review** - REQUIRED: dispatched automatically after every wave's diff
+- **nimbou-skills:nestjs-test** - REQUIRED final wave when the plan came from `nestjs-plan`, scoped to every prior wave's output
+- **nimbou-skills:finishing-a-development-branch** - Complete development after all waves
 
 **Subagents should use:**
 - **nimbou-skills:test-driven-development** - Subagents follow TDD for each task
