@@ -35,6 +35,9 @@ const VALID_EFFORTS = new Set(["none", "minimal", "low", "medium", "high", "xhig
 const MODEL_ALIASES = new Map([["spark", "gpt-5.3-codex-spark"]]);
 const DEFAULT_MODEL = "gpt-5.5";
 const DEFAULT_EFFORT = "xhigh";
+// Enrich is a fast prompt-rewrite. xhigh reasoning would multiply latency
+// for no real quality win. Override to "minimal" so enrich stays snappy.
+const ENRICH_EFFORT = "minimal";
 
 // ── Diagnostics log ──────────────────────────────────────────────────
 // Single append-only file at ~/.claude/sspower-codex.log, rotated at 1000 lines.
@@ -890,7 +893,7 @@ async function cmdEnrich(argv) {
     schema: null,
     sandbox: "read-only",
     model: resolveModel(opts.model),
-    effort: resolveEffort(opts.effort),
+    effort: opts.effort || ENRICH_EFFORT,
     cd: opts.cd,
     ephemeral: true,
   });
