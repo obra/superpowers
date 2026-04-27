@@ -9,13 +9,43 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 Guide completion of development work by presenting clear options and handling chosen workflow.
 
-**Core principle:** Verify tests → Present options → Execute choice → Clean up.
+**Core principle:** Product audit → Verify tests → Present options → Execute choice → Clean up.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
 ## The Process
 
-### Step 1: Verify Tests
+### Step 1: Product Audit
+
+**Before checking tests, dispatch a product audit subagent** that re-reads the **original user request** (spec or conversation) and traces the implemented experience end-to-end. This catches intent-vs-implementation drift that per-task reviews miss.
+
+**The audit checks:**
+```
+1. Does the UI/output match what the user actually asked for?
+   (not just what the spec decomposed into)
+2. Data flow: does every UI element have real data behind it?
+   (seed scripts, default values, mock data → actual content)
+3. Integration gaps: do features connect to each other?
+   (events wired up, navigation working, state shared correctly)
+4. Display quality: raw values vs display labels, empty states,
+   error states, loading states
+```
+
+**If audit finds issues:**
+```
+Product audit found <N> gaps between intent and implementation:
+
+1. [Gap description] — [Which task/file is affected]
+2. ...
+
+Fix these before proceeding to tests and merge options.
+```
+
+Fix all gaps, then continue to Step 2.
+
+**If audit passes:** Continue to Step 2.
+
+### Step 2: Verify Tests
 
 **Before presenting options, verify tests pass:**
 
@@ -33,11 +63,11 @@ Tests failing (<N> failures). Must fix before completing:
 Cannot proceed with merge/PR until tests pass.
 ```
 
-Stop. Don't proceed to Step 2.
+Stop. Don't proceed to Step 3.
 
-**If tests pass:** Continue to Step 2.
+**If tests pass:** Continue to Step 3.
 
-### Step 2: Determine Base Branch
+### Step 3: Determine Base Branch
 
 ```bash
 # Try common base branches
@@ -46,7 +76,7 @@ git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 
 Or ask: "This branch split from main - is that correct?"
 
-### Step 3: Present Options
+### Step 4: Present Options
 
 Present exactly these 4 options:
 
@@ -63,7 +93,7 @@ Which option?
 
 **Don't add explanation** - keep options concise.
 
-### Step 4: Execute Choice
+### Step 5: Execute Choice
 
 #### Option 1: Merge Locally
 
@@ -84,7 +114,7 @@ git merge <feature-branch>
 git branch -d <feature-branch>
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Cleanup worktree (Step 6)
 
 #### Option 2: Push and Create PR
 
@@ -103,7 +133,7 @@ EOF
 )"
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Cleanup worktree (Step 6)
 
 #### Option 3: Keep As-Is
 
@@ -131,9 +161,9 @@ git checkout <base-branch>
 git branch -D <feature-branch>
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Cleanup worktree (Step 6)
 
-### Step 5: Cleanup Worktree
+### Step 6: Cleanup Worktree
 
 **For Options 1, 2, 4:**
 
@@ -159,6 +189,10 @@ git worktree remove <worktree-path>
 | 4. Discard | - | - | - | ✓ (force) |
 
 ## Common Mistakes
+
+**Skipping product audit**
+- **Problem:** All tests pass, all reviews pass, but product doesn't match user intent
+- **Fix:** Always run product audit before tests — check intent vs implementation
 
 **Skipping test verification**
 - **Problem:** Merge broken code, create failing PR
@@ -194,7 +228,7 @@ git worktree remove <worktree-path>
 
 **Called by:**
 - **subagent-driven-development** (Step 7) - After all tasks complete
-- **executing-plans** (Step 5) - After all batches complete
+- **executing-plans** (Step 6) - After all batches complete
 
 **Pairs with:**
 - **using-git-worktrees** - Cleans up worktree created by that skill
