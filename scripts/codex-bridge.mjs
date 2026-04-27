@@ -890,7 +890,7 @@ async function cmdEnrich(argv) {
     schema: null,
     sandbox: "read-only",
     model: resolveModel(opts.model),
-    effort: opts.effort || "low",
+    effort: resolveEffort(opts.effort),
     cd: opts.cd,
     ephemeral: true,
   });
