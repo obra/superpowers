@@ -1,7 +1,7 @@
 {
   "name": "sspower",
   "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": {
     "name": "sskys18"
   },
@@ -14,6 +14,8 @@
     "debugging",
     "collaboration",
     "best-practices",
-    "workflows"
+    "workflows",
+    "diet",
+    "project-wiki"
   ]
 }

@@ -2,7 +2,14 @@
 
 A complete software development workflow for Claude Code. Fork of [Superpowers](https://github.com/obra/superpowers) v5.0.5, customized with native Codex integration and macOS-first design.
 
-**17 composable skills** that automatically trigger during your workflow — mandatory workflows, not suggestions. The agent checks for relevant skills before every task.
+**22 composable skills** that automatically trigger during your workflow — mandatory workflows, not suggestions. The agent checks for relevant skills before every task.
+
+## What's new in 1.1
+
+- **Diet mode** — terse-output mode for token efficiency. SessionStart hook activates `full` by default; `/diet lite|full|ultra|off` toggles intensity. Per-turn reinforcement keeps it from drifting. Three sub-skills: `/diet-commit`, `/diet-review`, `/compress-memory`.
+- **Project wiki** — PreCompact + SessionEnd hooks archive each session as a structured JSON sidecar plus human-readable markdown summary into `<cwd>/.claude/wiki/sessions/`. Auto-seeds `decisions.md` + `gotchas.md` and appends a one-row index entry per session. Symlinked into `~/.claude/sessions/` for compatibility with cross-project tooling (e.g. daily-rollup skills).
+- **Wired skills** — `brainstorming`, `writing-plans`, and `systematic-debugging` now read the project wiki before proposing work, so prior decisions and gotchas inform every new design and bug investigation.
+- **Codex defaults** — `codex-bridge.mjs` defaults to `gpt-5.5` model with `xhigh` reasoning effort. Override per-call with `--model` / `--effort`.
 
 ## Installation
 
@@ -209,7 +216,7 @@ spec-review --> compliant
 
 ---
 
-## All 17 Skills
+## All 22 Skills
 
 | Skill | Category | What it does |
 |-------|----------|-------------|
@@ -230,6 +237,11 @@ spec-review --> compliant
 | `codex-enrich` | Codex | Validate prompts via Codex repo scan |
 | `codex-diagnostics` | Codex | Examine bridge log, propose patches for recurring errors |
 | `writing-skills` | Meta | TDD for skill development |
+| `diet` | Output | Terse-mode toggle (`/diet lite\|full\|ultra\|off`) |
+| `diet-commit` | Output | One-shot terse commit-message generator |
+| `diet-review` | Output | One-shot terse PR-review comments |
+| `compress-memory` | Output | Compress CLAUDE.md / preferences into terse format |
+| `codex-enrich-workspace` | Codex | Codex-assisted workspace enrichment |
 
 ---
 
