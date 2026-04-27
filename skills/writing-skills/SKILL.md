@@ -105,7 +105,7 @@ skills/
 ```markdown
 ---
 name: Skill-Name-With-Hyphens
-description: Use when [specific triggering conditions and symptoms]
+description: "Use when [specific triggering conditions and symptoms]"
 ---
 
 # Skill Name
@@ -157,18 +157,23 @@ When the description was changed to just "Use when executing implementation plan
 
 **The trap:** Descriptions that summarize workflow create a shortcut Claude will take. The skill body becomes documentation Claude skips.
 
+**Always quote `description` values in double quotes.** Plain YAML scalars containing `: ` (colon + space) are silently parsed as nested mappings, causing the skill to be invisible to `npx skills add` with no error message.
+
 ```yaml
+# ❌ BAD: Unquoted colon+space breaks YAML parsing — skill silently ignored
+description: Use when configuring X for production: tuning and sizing
+
 # ❌ BAD: Summarizes workflow - Claude may follow this instead of reading skill
-description: Use when executing plans - dispatches subagent per task with code review between tasks
+description: "Use when executing plans - dispatches subagent per task with code review between tasks"
 
 # ❌ BAD: Too much process detail
-description: Use for TDD - write test first, watch it fail, write minimal code, refactor
+description: "Use for TDD - write test first, watch it fail, write minimal code, refactor"
 
-# ✅ GOOD: Just triggering conditions, no workflow summary
-description: Use when executing implementation plans with independent tasks in the current session
+# ✅ GOOD: Quoted, just triggering conditions, no workflow summary
+description: "Use when executing implementation plans with independent tasks in the current session"
 
-# ✅ GOOD: Triggering conditions only
-description: Use when implementing any feature or bugfix, before writing implementation code
+# ✅ GOOD: Quoted, triggering conditions only
+description: "Use when implementing any feature or bugfix, before writing implementation code"
 ```
 
 **Content:**
@@ -181,16 +186,16 @@ description: Use when implementing any feature or bugfix, before writing impleme
 
 ```yaml
 # ❌ BAD: Too abstract, vague, doesn't include when to use
-description: For async testing
+description: "For async testing"
 
 # ❌ BAD: First person
-description: I can help you with async tests when they're flaky
+description: "I can help you with async tests when they're flaky"
 
 # ❌ BAD: Mentions technology but skill isn't specific to it
-description: Use when tests use setTimeout/sleep and are flaky
+description: "Use when tests use setTimeout/sleep and are flaky"
 
 # ✅ GOOD: Starts with "Use when", describes problem, no workflow
-description: Use when tests have race conditions, timing dependencies, or pass/fail inconsistently
+description: "Use when tests have race conditions, timing dependencies, or pass/fail inconsistently"
 
 # ✅ GOOD: Technology-specific skill with explicit trigger
 description: Use when using React Router and handling authentication redirects
