@@ -70,10 +70,11 @@ specified in the instructions above.
 
 ### When this workaround can be removed
 
-This approach compensates for Codex's plugin system not yet supporting an `agents`
-field in `plugin.json`. When `RawPluginManifest` gains an `agents` field, the
-plugin can symlink to `agents/` (mirroring the existing `skills/` symlink) and
-skills can dispatch named agent types directly.
+This approach compensates for Codex not yet exposing plugin-packaged custom
+agents as named `spawn_agent` targets. OpenAI plugin examples can include
+plugin-level `agents/` directories, but skills still need to read those prompts
+and spawn a built-in agent role. When Codex exposes plugin agents as callable
+named agent types, this manual prompt-loading workaround can be removed.
 
 ## Environment Detection
 
