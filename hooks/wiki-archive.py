@@ -628,6 +628,29 @@ def seed_wiki_files(wiki_root: Path):
             pass
 
 
+def fan_out_to_central_sidecars(json_path: Path):
+    """Symlink per-project JSON sidecar into ~/.claude/sessions/ so the
+    /daily skill (which reads ~/.claude/sessions/*.json) keeps working
+    after the old session_archive hook is retired.
+
+    Best-effort: skipped silently on filesystems without symlink support."""
+    central = Path.home() / ".claude" / "sessions"
+    try:
+        central.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        return
+
+    link = central / json_path.name
+    try:
+        if link.is_symlink() or link.exists():
+            link.unlink()
+        link.symlink_to(json_path.resolve())
+    except (OSError, NotImplementedError):
+        # Symlinks unsupported (Windows w/o privilege, exotic FS) — just skip.
+        # Old session_archive may still write here if user kept dual-hook setup.
+        pass
+
+
 def append_index_entry(wiki_root: Path, data: dict, md_path: Path):
     """Append one-line summary row to <wiki_root>/index.md."""
     index = wiki_root / "index.md"
@@ -712,6 +735,7 @@ def main():
     wiki_root = out_dir.parent
     seed_wiki_files(wiki_root)
     append_index_entry(wiki_root, data, md_path)
+    fan_out_to_central_sidecars(json_path)
 
 
 if __name__ == "__main__":
