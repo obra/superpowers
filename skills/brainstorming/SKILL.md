@@ -88,8 +88,20 @@ digraph brainstorming {
 - Once you believe you understand what you're building, present the design
 - Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
 - Ask after each section whether it looks right so far
-- Cover: architecture, components, data flow, error handling, testing
+- Cover: architecture, components, data flow, error handling, testing, **user-facing surface** (see below)
 - Be ready to go back and clarify if something doesn't make sense
+
+**User-facing surface (REQUIRED for any feature a human will see or interact with):**
+
+A working endpoint and a rendering component is not the same as a usable feature. Every spec for a UI-touching feature MUST explicitly answer:
+
+1. **Discoverability** — How does the target user find this? Name the navigation entry, breadcrumb, link, or surfacing. "It's at `/admin/x`" is not an answer; users don't memorise URLs. If the answer is "no nav yet, will add later," the spec must include the nav as part of THIS feature, not a follow-up MR.
+2. **Empty / loading / error states** — What does the user see before data loads, when there is none, and when something fails? For each error path, write the exact copy the user will see. "Show an error" is not a spec; "Show 'Domain already exists in the blocklist.'" is.
+3. **Realistic-content edge cases** — If the feature renders content (article body, list of items, overlay), what happens at the realistic ends of the distribution? An overlay over a 1-paragraph stub is not the same as over a 5,000-word article. Specify what scale the design assumes and what degrades.
+4. **Copy redundancy / tone** — Read every user-visible string the feature ships. Does the same identity / call-to-action / disclaimer appear in two places? If yes, justify or remove. Does the tone match neighbouring features (formal vs casual, terse vs verbose)?
+5. **Permission gating from the user's view** — If the feature is role-gated, what does an unauthorised user see? A 403 page, a hidden nav item, a disabled control with a tooltip? Pick one explicitly.
+
+These are the failure modes that ship "technically correct" features that are unusable. Every UI spec MUST address all five before transitioning to writing-plans. Non-UI features (pure backend services, internal pipelines) can skip this section but should say so.
 
 **Design for isolation and clarity:**
 
@@ -120,6 +132,7 @@ After writing the spec document, look at it with fresh eyes:
 2. **Internal consistency:** Do any sections contradict each other? Does the architecture match the feature descriptions?
 3. **Scope check:** Is this focused enough for a single implementation plan, or does it need decomposition?
 4. **Ambiguity check:** Could any requirement be interpreted two different ways? If so, pick one and make it explicit.
+5. **User-facing surface check (UI features only):** Does the spec answer all five points from the "User-facing surface" section above — discoverability (named nav entry), empty/loading/error states with exact copy, realistic-content edge cases, copy redundancy/tone, permission gating from user's view? A spec that ships "the page exists at /x/y" without saying how a user finds /x/y is incomplete. Add the missing surfaces to the spec; do not defer to "follow-up MR."
 
 Fix any issues inline. No need to re-review — just fix and move on.
 
